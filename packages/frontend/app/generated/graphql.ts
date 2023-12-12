@@ -2319,21 +2319,21 @@ export type DepositOutgoingPaymentLiquidityVariables = Exact<{
 }>;
 
 
-export type DepositOutgoingPaymentLiquidity = { __typename?: 'Mutation', depositOutgoingPaymentLiquidity?: { __typename?: 'LiquidityMutationResponse', code: string, success: boolean, message: string, error?: LiquidityError | null } | null };
+export type DepositOutgoingPaymentLiquidity = { __typename?: 'Mutation', depositOutgoingPaymentLiquidity?: { __typename?: 'LiquidityMutationResponse', success: boolean, message: string } | null };
 
 export type WithdrawOutgoingPaymentLiquidityVariables = Exact<{
   input: WithdrawOutgoingPaymentLiquidityInput;
 }>;
 
 
-export type WithdrawOutgoingPaymentLiquidity = { __typename?: 'Mutation', withdrawOutgoingPaymentLiquidity?: { __typename?: 'LiquidityMutationResponse', code: string, success: boolean, message: string, error?: LiquidityError | null } | null };
+export type WithdrawOutgoingPaymentLiquidity = { __typename?: 'Mutation', withdrawOutgoingPaymentLiquidity?: { __typename?: 'LiquidityMutationResponse', success: boolean, message: string } | null };
 
 export type WithdrawIncomingPaymentLiquidityVariables = Exact<{
   input: WithdrawIncomingPaymentLiquidityInput;
 }>;
 
 
-export type WithdrawIncomingPaymentLiquidity = { __typename?: 'Mutation', withdrawIncomingPaymentLiquidity?: { __typename?: 'LiquidityMutationResponse', code: string, success: boolean, message: string, error?: LiquidityError | null } | null };
+export type WithdrawIncomingPaymentLiquidity = { __typename?: 'Mutation', withdrawIncomingPaymentLiquidity?: { __typename?: 'LiquidityMutationResponse', success: boolean, message: string } | null };
 
 export type GetPeerQueryVariables = Exact<{
   id: Scalars['String']['input'];
@@ -2392,7 +2392,7 @@ export type GetWalletAddressQueryVariables = Exact<{
 }>;
 
 
-export type GetWalletAddressQuery = { __typename?: 'Query', walletAddress?: { __typename?: 'WalletAddress', id: string, url: string, publicName?: string | null, status: WalletAddressStatus, createdAt: string, asset: { __typename?: 'Asset', id: string, code: string, scale: number, withdrawalThreshold?: bigint | null } } | null };
+export type GetWalletAddressQuery = { __typename?: 'Query', walletAddress?: { __typename?: 'WalletAddress', id: string, url: string, publicName?: string | null, status: WalletAddressStatus, createdAt: string, liquidity?: bigint | null, asset: { __typename?: 'Asset', id: string, code: string, scale: number, withdrawalThreshold?: bigint | null } } | null };
 
 export type ListWalletAddresssQueryVariables = Exact<{
   after?: InputMaybe<Scalars['String']['input']>;
@@ -2417,6 +2417,13 @@ export type CreateWalletAddressMutationVariables = Exact<{
 
 
 export type CreateWalletAddressMutation = { __typename?: 'Mutation', createWalletAddress: { __typename?: 'CreateWalletAddressMutationResponse', code: string, success: boolean, message: string, walletAddress?: { __typename?: 'WalletAddress', id: string } | null } };
+
+export type CreateWalletAddressWithdrawalVariables = Exact<{
+  input: CreateWalletAddressWithdrawalInput;
+}>;
+
+
+export type CreateWalletAddressWithdrawal = { __typename?: 'Mutation', createWalletAddressWithdrawal?: { __typename?: 'WalletAddressWithdrawalMutationResponse', success: boolean, message: string } | null };
 
 export type ListWebhookEventsVariables = Exact<{
   after?: InputMaybe<Scalars['String']['input']>;

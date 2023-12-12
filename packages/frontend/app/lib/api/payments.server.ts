@@ -151,10 +151,8 @@ export const depositOutgoingPaymentLiquidity = async (
         $input: DepositOutgoingPaymentLiquidityInput!
       ) {
         depositOutgoingPaymentLiquidity(input: $input) {
-          code
           success
           message
-          error
         }
       }
     `,
@@ -178,10 +176,8 @@ export const withdrawOutgoingPaymentLiquidity = async (
         $input: WithdrawOutgoingPaymentLiquidityInput!
       ) {
         withdrawOutgoingPaymentLiquidity(input: $input) {
-          code
           success
           message
-          error
         }
       }
     `,
@@ -205,10 +201,8 @@ export const withdrawIncomingPaymentLiquidity = async (
         $input: WithdrawIncomingPaymentLiquidityInput!
       ) {
         withdrawIncomingPaymentLiquidity(input: $input) {
-          code
           success
           message
-          error
         }
       }
     `,

@@ -143,10 +143,8 @@ export const createWalletAddressWithdrawal = async (
         $input: CreateWalletAddressWithdrawalInput!
       ) {
         createWalletAddressWithdrawal(input: $input) {
-          code
           success
           message
-          error
         }
       }
     `,
