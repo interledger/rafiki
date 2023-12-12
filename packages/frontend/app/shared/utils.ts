@@ -1,5 +1,8 @@
 import { BadgeColor } from '~/components'
-import type { IncomingPaymentState, OutgoingPaymentState } from '~/generated/graphql'
+import type {
+  IncomingPaymentState,
+  OutgoingPaymentState
+} from '~/generated/graphql'
 
 const COLORS = {
   key: 'text-tealish',
