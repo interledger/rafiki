@@ -42,8 +42,7 @@ export const LiquidityConfirmDialog = ({
                   Are you sure you want to {type.toLowerCase()} this amount?
                 </p>
                 <Form method='post' replace preventScrollReset>
-                  {/* value is unimportant, just need to know form was submitted */}
-                  <Input name='confirmed' type='hidden' value={1} />
+                  {/* no input needed - form submit is confirmation */}
                   <div className='flex justify-end space-x-4'>
                     <Button
                       className='mr-1'

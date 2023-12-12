@@ -4,7 +4,6 @@ import { v4 } from 'uuid'
 import { LiquidityConfirmDialog } from '~/components/LiquidityConfirmDialog'
 import { depositOutgoingPaymentLiquidity } from '~/lib/api/payments.server'
 import { messageStorage, setMessageAndRedirect } from '~/lib/message.server'
-import { confirmedSchema } from '~/lib/validate.server'
 
 export default function OutgoingPaymentDepositLiquidity() {
   const navigate = useNavigate()
@@ -28,20 +27,6 @@ export async function action({ request, params }: ActionArgs) {
       session,
       message: {
         content: 'Missing outgoing payment ID',
-        type: 'error'
-      },
-      location: '.'
-    })
-  }
-
-  const formData = await request.formData()
-  const result = confirmedSchema.safeParse(formData.get('confirmed'))
-
-  if (!result.success) {
-    return setMessageAndRedirect({
-      session,
-      message: {
-        content: 'Something went wrong. Please try again!',
         type: 'error'
       },
       location: '.'
