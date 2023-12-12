@@ -233,12 +233,6 @@ export const isOutgoingPaymentEventType = (
 export const isOutgoingPaymentEvent = (o: any): o is OutgoingPaymentEvent =>
   o instanceof WebhookEvent && isOutgoingPaymentEventType(o.type)
 
-export const isOutgoingPaymentDepositEvenType = (
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
-  o: any
-): o is OutgoingPaymentDepositType =>
-  Object.values(OutgoingPaymentDepositType).includes(o)
-
 export enum OutgoingPaymentEventError {
   OutgoingPaymentIdRequired = 'Outgoing Payment ID is required for outgoing payment events'
 }
