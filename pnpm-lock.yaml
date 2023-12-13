@@ -103,8 +103,8 @@ importers:
         specifier: ^1.19.3
         version: 1.19.3(@remix-run/serve@1.19.3)(@types/node@18.11.9)
       '@types/react':
-        specifier: ^18.2.43
-        version: 18.2.43
+        specifier: ^18.2.45
+        version: 18.2.45
       '@types/react-dom':
         specifier: ^18.2.17
         version: 18.2.17
@@ -532,8 +532,8 @@ importers:
         specifier: ^0.5.7
         version: 0.5.7(tailwindcss@3.3.6)
       '@types/react':
-        specifier: ^18.2.43
-        version: 18.2.43
+        specifier: ^18.2.45
+        version: 18.2.45
       '@types/react-dom':
         specifier: ^18.2.17
         version: 18.2.17
@@ -5857,11 +5857,11 @@ packages:
   /@types/react-dom@18.2.17:
     resolution: {integrity: sha512-rvrT/M7Df5eykWFxn6MYt5Pem/Dbyc1N8Y0S9Mrkw2WFCRiqUgw9P7ul2NpwsXCSM1DVdENzdG9J5SreqfAIWg==}
     dependencies:
-      '@types/react': 18.2.43
+      '@types/react': 18.2.45
     dev: true
 
-  /@types/react@18.2.43:
-    resolution: {integrity: sha512-nvOV01ZdBdd/KW6FahSbcNplt2jCJfyWdTos61RYHV+FVv5L/g9AOX1bmbVcWcLFL8+KHQfh1zVIQrud6ihyQA==}
+  /@types/react@18.2.45:
+    resolution: {integrity: sha512-TtAxCNrlrBp8GoeEp1npd5g+d/OejJHFxS3OWmrPBMFaVQMSN0OFySozJio5BHxTuTeug00AVXVAjfDSfk+lUg==}
     dependencies:
       '@types/prop-types': 15.7.5
       '@types/scheduler': 0.16.2
