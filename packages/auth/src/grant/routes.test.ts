@@ -227,14 +227,16 @@ describe('Grant Routes', (): void => {
       })
 
       test('Can initiate a grant request', async (): Promise<void> => {
-        const scope = nock(CLIENT).get('/').reply(200, {
-          id: CLIENT,
-          publicName: TEST_CLIENT_DISPLAY.name,
-          assetCode: 'USD',
-          assetScale: 2,
-          authServer: Config.authServerDomain,
-          resourceServer: faker.internet.url({ appendSlash: false })
-        })
+        const scope = nock(CLIENT)
+          .get('/')
+          .reply(200, {
+            id: CLIENT,
+            publicName: TEST_CLIENT_DISPLAY.name,
+            assetCode: 'USD',
+            assetScale: 2,
+            authServer: Config.authServerDomain,
+            resourceServer: faker.internet.url({ appendSlash: false })
+          })
 
         const ctx = createContext<CreateContext>(
           {
@@ -611,6 +613,47 @@ describe('Grant Routes', (): void => {
         })
       })
 
+      test('Honors wait value when continuing too early', async (): Promise<void> => {
+        const grantWithWait = await Grant.query().insert(
+          generateBaseGrant({
+            wait: 60 * 1000 * 30 // 30 minutes
+          })
+        )
+
+        await Access.query().insert({
+          ...BASE_GRANT_ACCESS,
+          grantId: grantWithWait.id
+        })
+
+        const interactionWithWait = await Interaction.query().insert(
+          generateBaseInteraction(grantWithWait, {
+            state: InteractionState.Pending
+          })
+        )
+
+        const ctx = createContext<ContinueContext>(
+          {
+            headers: {
+              Accept: 'application/json',
+              'Content-Type': 'application/json',
+              Authorization: `GNAP ${grantWithWait.continueToken}`
+            }
+          },
+          {
+            id: grantWithWait.continueId
+          }
+        )
+
+        ctx.request.body = {
+          interact_ref: interactionWithWait.ref
+        }
+
+        await expect(grantRoutes.continue(ctx)).rejects.toMatchObject({
+          status: 401,
+          error: 'too_fast'
+        })
+      })
+
       test.each`
         state                    | description
         ${GrantState.Processing} | ${'processing'}
@@ -629,6 +672,12 @@ describe('Grant Routes', (): void => {
             ...BASE_GRANT_ACCESS,
             grantId: polledGrant.id
           })
+
+          await Interaction.query().insert(
+            generateBaseInteraction(grant, {
+              state: InteractionState.Approved
+            })
+          )
 
           const ctx = createContext<ContinueContext>(
             {
@@ -741,6 +790,48 @@ describe('Grant Routes', (): void => {
         await expect(grantRoutes.continue(ctx)).rejects.toMatchObject({
           status: 401,
           error: 'request_denied'
+        })
+      })
+
+      test('Cannot poll a grant faster than its wait method', async (): Promise<void> => {
+        const polledGrant = await Grant.query().insert(
+          generateBaseGrant({
+            noFinishMethod: true,
+            wait: 30 * 60 * 1000
+          })
+        )
+
+        await Access.query().insert({
+          ...BASE_GRANT_ACCESS,
+          grantId: polledGrant.id
+        })
+
+        await Interaction.query().insert(
+          generateBaseInteraction(grant, {
+            state: InteractionState.Approved
+          })
+        )
+
+        const ctx = createContext<ContinueContext>(
+          {
+            headers: {
+              Accept: 'application/json',
+              'Content-Type': 'application/json',
+              Authorization: `GNAP ${polledGrant.continueToken}`
+            },
+            url: `/continue/${polledGrant.continueId}`,
+            method: 'POST'
+          },
+          {
+            id: polledGrant.continueId
+          }
+        )
+
+        ctx.request.body = {}
+
+        await expect(grantRoutes.continue(ctx)).rejects.toMatchObject({
+          status: 401,
+          error: 'too_fast'
         })
       })
 

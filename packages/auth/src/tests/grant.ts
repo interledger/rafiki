@@ -53,13 +53,15 @@ export interface GenerateBaseGrantOptions {
   state?: GrantState
   finalizationReason?: GrantFinalization
   noFinishMethod?: boolean
+  wait?: number
 }
 
 export const generateBaseGrant = (options: GenerateBaseGrantOptions = {}) => {
   const {
     state = GrantState.Processing,
     finalizationReason = undefined,
-    noFinishMethod = false
+    noFinishMethod = false,
+    wait = undefined
   } = options
   return {
     state,
@@ -70,6 +72,7 @@ export const generateBaseGrant = (options: GenerateBaseGrantOptions = {}) => {
     finishMethod: noFinishMethod ? undefined : FinishMethod.Redirect,
     finishUri: 'https://example.com',
     clientNonce: generateNonce(),
-    client: CLIENT
+    client: CLIENT,
+    wait
   }
 }
