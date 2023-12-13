@@ -2,9 +2,9 @@
 title: TigerBeetle
 ---
 
-TigerBeetle is a distributed financial accounting database designed for mission critical safety and performance. Since Rafiki implements the [Interledger Protocol](../../reference/glossary.md#interledger-protocol), which splits payments into packets, we need a high performing and safe database to store all that payment data. For detailed information on TigerBeetle, including its consensus mechanism and its limitations, visit the official TigerBeetle [documentation](https://docs.tigerbeetle.com/) and [blog](https://tigerbeetle.com/blog/).
+TigerBeetle is a distributed financial accounting database designed for mission critical safety and performance. Since Rafiki implements the [Interledger Protocol](/reference/glossary#interledger-protocol), which splits payments into packets, we need a high performing and safe database to store all that payment data. For detailed information on TigerBeetle, including its consensus mechanism and its limitations, visit the official TigerBeetle [documentation](https://docs.tigerbeetle.com/) and [blog](https://tigerbeetle.com/blog/).
 
-Rafiki uses a combination of liquidity and settlement accounts to perform double-entry accounting. These accounts correspond to TigerBeetle credit and debit accounts, respectively. For more information on Rafiki's accounting, refer to [Accounts and Transfers](./accounts-and-transfers.md). Note that TigerBeetle only holds balance data and not any other additional metadata included in ILP packets.
+Rafiki uses a combination of liquidity and settlement accounts to perform double-entry accounting. These accounts correspond to TigerBeetle credit and debit accounts, respectively. For more information on Rafiki's accounting, refer to [Accounts and Transfers](/concepts/accounting/accounts-and-transfers). Note that TigerBeetle only holds balance data and not any other additional metadata included in ILP packets.
 
 ## Changing TigerBeetle Version within Rafiki
 
