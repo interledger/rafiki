@@ -34,7 +34,7 @@
     "ilp-protocol-stream": "^2.7.1",
     "jest-openapi": "^0.14.2",
     "nock": "^13.4.0",
-    "node-mocks-http": "^1.13.0",
+    "node-mocks-http": "^1.14.0",
     "openapi-types": "^12.1.3",
     "pino-pretty": "^10.2.3",
     "react": "~18.2.0",
