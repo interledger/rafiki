@@ -56,7 +56,7 @@ describe('Payment', (): void => {
     const outgoingPayment = await createOutgoingPayment(deps, {
       walletAddressId: outWalletAddressId,
       method: 'ilp',
-      receiver: `${Config.publicHost}/${uuid()}`,
+      receiver: `${Config.openPaymentsUrl}/${uuid()}`,
       debitAmount: {
         value: BigInt(56),
         assetCode: asset.code,
@@ -141,7 +141,7 @@ describe('Payment', (): void => {
     })
 
     const baseOutgoingPayment = {
-      receiver: `${Config.publicHost}/${uuid()}`,
+      receiver: `${Config.openPaymentsUrl}/${uuid()}`,
       debitAmount: {
         value: BigInt(56),
         assetCode: asset.code,

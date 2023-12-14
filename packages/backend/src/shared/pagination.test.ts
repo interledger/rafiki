@@ -29,7 +29,7 @@ describe('Pagination', (): void => {
 
   beforeAll(async (): Promise<void> => {
     config = Config
-    config.publicHost = 'https://wallet.example'
+    config.openPaymentsUrl = 'https://wallet.example'
     deps = await initIocContainer(config)
     appContainer = await createTestApp(deps)
   })
