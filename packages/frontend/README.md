@@ -22,7 +22,7 @@ Now you can access the application on [http://localhost:3005](http://localhost:3
 
 > NOTE: When running Rafiki Admin in the development environment, it will connect to Cloud Nine Wallet Admin GraphQL - [http://localhost:3001/graphql](http://localhost:3001/graphql).
 
-To add a new typed apollo request, you will need to add an untyped request and regenerate the graphql types. This will generate new types tailored the specific request being made. The generated type will reflect the request's query or mutation name, variables used, and requested fields.
+To add a new typed apollo request, you will need to add an untyped request and regenerate the graphql types. This will generate new types tailored to the specific request being made. The generated type will reflect the request's query or mutation name, variables used, and requested fields.
 
 ## Structure
 
