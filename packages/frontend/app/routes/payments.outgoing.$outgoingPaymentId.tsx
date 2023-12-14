@@ -16,7 +16,7 @@ export async function loader({ params }: LoaderArgs) {
   if (!result.success) {
     throw json(null, {
       status: 400,
-      statusText: 'Invalid outgoing payment ID.'
+      statusText: 'Outgoing payment ID is not valid.'
     })
   }
 
