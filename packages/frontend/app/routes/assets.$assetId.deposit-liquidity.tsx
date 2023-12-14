@@ -6,15 +6,15 @@ import { addAssetLiquidity } from '~/lib/api/asset.server'
 import { messageStorage, setMessageAndRedirect } from '~/lib/message.server'
 import { amountSchema } from '~/lib/validate.server'
 
-export default function AssetAddLiquidity() {
+export default function AssetDepositLiquidity() {
   const navigate = useNavigate()
   const dismissDialog = () => navigate('..', { preventScrollReset: true })
 
   return (
     <LiquidityDialog
       onClose={dismissDialog}
-      title='Add asset liquidity'
-      type='Add'
+      title='Deposit asset liquidity'
+      type='Deposit'
     />
   )
 }
@@ -61,7 +61,7 @@ export async function action({ request, params }: ActionArgs) {
       message: {
         content:
           response?.message ??
-          'Could not add asset liquidity. Please try again!',
+          'Could not deposit asset liquidity. Please try again!',
         type: 'error'
       },
       location: '.'

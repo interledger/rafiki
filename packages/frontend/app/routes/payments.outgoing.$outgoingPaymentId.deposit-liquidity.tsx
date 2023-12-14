@@ -13,7 +13,7 @@ export default function OutgoingPaymentDepositLiquidity() {
     <LiquidityConfirmDialog
       onClose={dismissDialog}
       title='Deposit outgoing payment liquidity'
-      type='Add'
+      type='Deposit'
     />
   )
 }

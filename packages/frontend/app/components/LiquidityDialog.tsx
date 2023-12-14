@@ -6,7 +6,7 @@ import { Button, Input } from '~/components/ui'
 type LiquidityDialogProps = {
   title: string
   onClose: () => void
-  type: 'Add' | 'Withdraw'
+  type: 'Deposit' | 'Withdraw'
 }
 
 export const LiquidityDialog = ({

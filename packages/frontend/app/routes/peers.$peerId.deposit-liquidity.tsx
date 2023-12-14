@@ -6,15 +6,15 @@ import { addPeerLiquidity } from '~/lib/api/peer.server'
 import { messageStorage, setMessageAndRedirect } from '~/lib/message.server'
 import { amountSchema } from '~/lib/validate.server'
 
-export default function PeerAddLiquidity() {
+export default function PeerDepositLiquidity() {
   const navigate = useNavigate()
   const dismissDialog = () => navigate('..', { preventScrollReset: true })
 
   return (
     <LiquidityDialog
       onClose={dismissDialog}
-      title='Add peer liquidity'
-      type='Add'
+      title='Deposit peer liquidity'
+      type='Deposit'
     />
   )
 }
@@ -61,7 +61,7 @@ export async function action({ request, params }: ActionArgs) {
       message: {
         content:
           response?.message ??
-          'Could not add peer liquidity. Please try again!',
+          'Could not deposit peer liquidity. Please try again!',
         type: 'error'
       },
       location: '.'
