@@ -15,7 +15,7 @@ services:
       PORT: 80
       SEED_FILE_LOCATION: /workspace/seed.yml
       KEY_FILE: /workspace/private-key.pem
-      PUBLIC_HOST: ${HAPPY_LIFE_BANK_PUBLIC_HOST:-https://happy-life-bank-backend}
+      OPEN_PAYMENTS_URL: ${HAPPY_LIFE_BANK_OPEN_PAYMENTS_URL:-https://happy-life-bank-backend}
     volumes:
       - ../happy-life-bank/seed.yml:/workspace/seed.yml
       - ../happy-life-bank/private-key.pem:/workspace/private-key.pem
@@ -47,7 +47,6 @@ services:
       AUTH_SERVER_INTROSPECTION_URL: http://happy-life-bank-auth:3007
       ILP_ADDRESS: test.happy-life-bank
       STREAM_SECRET: BjPXtnd00G2mRQwP/8ZpwyZASOch5sUXT5o0iR5b5wU=
-      PUBLIC_HOST: ${HAPPY_LIFE_BANK_PUBLIC_HOST:-http://happy-life-bank-backend}
       WEBHOOK_URL: http://happy-life-bank/webhooks
       OPEN_PAYMENTS_URL: ${HAPPY_LIFE_BANK_OPEN_PAYMENTS_URL:-http://happy-life-bank-backend}
       EXCHANGE_RATES_URL: http://happy-life-bank/rates

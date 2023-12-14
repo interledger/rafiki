@@ -17,7 +17,7 @@ services:
       PORT: 80
       SEED_FILE_LOCATION: /workspace/seed.yml
       KEY_FILE: /workspace/private-key.pem
-      PUBLIC_HOST: ${CLOUD_NINE_PUBLIC_HOST:-https://cloud-nine-wallet-backend}
+      OPEN_PAYMENTS_URL: ${CLOUD_NINE_OPEN_PAYMENTS_URL:-https://cloud-nine-wallet-backend}
       AUTH_SERVER_DOMAIN: ${CLOUD_NINE_AUTH_SERVER_DOMAIN:-http://localhost:3006}
       TESTNET_AUTOPEER_URL: ${TESTNET_AUTOPEER_URL}
     volumes:
@@ -54,7 +54,6 @@ services:
       AUTH_SERVER_INTROSPECTION_URL: http://cloud-nine-wallet-auth:3007
       ILP_ADDRESS: ${ILP_ADDRESS:-test.cloud-nine-wallet}
       STREAM_SECRET: BjPXtnd00G2mRQwP/8ZpwyZASOch5sUXT5o0iR5b5wU=
-      PUBLIC_HOST: ${CLOUD_NINE_PUBLIC_HOST:-http://cloud-nine-wallet-backend}
       OPEN_PAYMENTS_URL: ${CLOUD_NINE_OPEN_PAYMENTS_URL:-http://cloud-nine-wallet-backend}
       WEBHOOK_URL: http://cloud-nine-wallet/webhooks
       EXCHANGE_RATES_URL: http://cloud-nine-wallet/rates

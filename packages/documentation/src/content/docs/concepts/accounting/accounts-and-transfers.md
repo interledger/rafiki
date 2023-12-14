@@ -14,7 +14,7 @@ There is one liquidity account for each of the following resource:
 
 - Asset
 - Peer
-- Wallet Address (for [SPSP](../../reference/glossary#simple-payments-setup-protocol-spsp) / [Web Monetization](../../reference/glossary#web-monetization) receiving)
+- Wallet Address (for [SPSP](/reference/glossary#simple-payments-setup-protocol-spsp) / [Web Monetization](/reference/glossary#web-monetization) receiving)
 - Incoming Payment
 - Outgoing Payment
 
