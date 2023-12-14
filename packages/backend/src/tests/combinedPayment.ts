@@ -55,7 +55,7 @@ export async function createCombinedPayment(
       : await createOutgoingPayment(deps, {
           walletAddressId: sendWalletAddressId,
           method: 'ilp',
-          receiver: `${Config.publicHost}/${uuid()}`,
+          receiver: `${Config.openPaymentsUrl}/${uuid()}`,
           validDestination: false
         })
   return toCombinedPayment(type, payment)

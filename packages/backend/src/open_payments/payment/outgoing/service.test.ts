@@ -680,8 +680,8 @@ describe('OutgoingPaymentService', (): void => {
               const firstPayment = await createOutgoingPayment(deps, {
                 walletAddressId,
                 receiver: `${
-                  Config.publicHost
-                }/${uuid()}/incoming-payments/${uuid()}`,
+                  Config.openPaymentsUrl
+                }/incoming-payments/${uuid()}`,
                 debitAmount: debitAmount ? paymentAmount : undefined,
                 receiveAmount: debitAmount ? undefined : paymentAmount,
                 grant,
@@ -766,8 +766,8 @@ describe('OutgoingPaymentService', (): void => {
                 const firstPayment = await createOutgoingPayment(deps, {
                   walletAddressId,
                   receiver: `${
-                    Config.publicHost
-                  }/${uuid()}/incoming-payments/${uuid()}`,
+                    Config.openPaymentsUrl
+                  }/incoming-payments/${uuid()}`,
                   debitAmount: debitAmount ? paymentAmount : undefined,
                   receiveAmount: debitAmount ? undefined : paymentAmount,
                   client,
