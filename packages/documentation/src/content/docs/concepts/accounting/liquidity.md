@@ -2,7 +2,7 @@
 title: Liquidity
 ---
 
-Rafiki implements a clearing protocol - the [Interledger Protocol](../../reference/glossary.md#interledger-protocol). As such, it does not hold liquidity but keeps track of liquidity moving through it.
+Rafiki implements a clearing protocol - the [Interledger Protocol](/reference/glossary#interledger-protocol). As such, it does not hold liquidity but keeps track of liquidity moving through it.
 
 ## Types of Liquidity
 
