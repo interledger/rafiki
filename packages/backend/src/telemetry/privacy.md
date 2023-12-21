@@ -1,6 +1,6 @@
 # Privacy in Rafiki Telemetry
 
-Rafiki telemetry is designed with privacy in mind. User data is anonymized and no identifiable information is collected from the user. Transactions can come from any user to a Rafiki instance, so the privacy concerns we are addressing are at the Rafiki instance level in the network, not at the user level.
+Rafiki telemetry is designed with a strong emphasis on privacy. The system anonymizes user data and refrains from collecting identifiable information. Since transactions can originate from any user to a Rafiki instance, the privacy measures are implemented at the Rafiki instance level in the network. This means that at the individual level, the data is already anonymous as single Rafiki instances service transactions for multiple users.
 
 ## Differential Privacy and Local Differential Privacy
 
@@ -12,17 +12,19 @@ In our implementation, we use a rounding technique that essentially aggregates m
 
 The bucket size is calculated based on the raw transaction value. For lower value transactions, which are expected to occur more frequently, the bucket sizes are determined linearly for higher granularity. However, after a certain threshold, the bucket size calculation switches to a logarithmic function to ensure privacy for higher value transactions, which are less frequent but pose greater privacy concerns.
 
-To handle outliers, we also implement a "clipping" technique where the buckets are capped. Any value that exceeds a given threshold is placed in a single bucket. This ensures that outliers do not disproportionately affect the overall data, providing further privacy guarantees for these high-value transactions.
+To handle outliers, a "clipping" technique is implemented, capping the buckets. Any value that exceeds a given threshold is placed in a single bucket. Conversely, any value that falls below a certain minimum is also placed in a single bucket. This ensures that both high and low outliers do not disproportionately affect the overall data, providing further privacy guarantees for these transactions.
 
-## Laplacian Noise
+## Laplacian Distribution
 
-To achieve LDP, we add Laplacian noise to the rounded values. The Laplacian noise is generated based on a privacy parameter, which is calculated using the sensitivity of the function.
+The Laplacian distribution is often used in differential privacy due to its double exponential decay property. This property ensures that a small change in the data will not significantly affect the probability distribution of the output, providing a strong privacy guarantee.
 
-The sensitivity of a function in differential privacy is the maximum amount that any single observation can change the output of the function. In our case, we consider the sensitivity to be the maximum of the rounded value and the bucket size.
+To achieve Local Differential Privacy (LDP), noise is selected from the Laplacian distribution and added to the rounded values. The noise is generated based on a privacy parameter, which is calculated using the sensitivity of the function.
+
+The sensitivity of a function in differential privacy is the maximum amount that any single observation can change the output of the function. In this case, the sensitivity is considered to be the maximum of the rounded value and the bucket size.
 
 The privacy parameter is computed as one-tenth of the sensitivity. This parameter controls the trade-off between privacy and utility: a smaller privacy parameter means more privacy but less utility, and a larger privacy parameter means less privacy but more utility.
 
-The Laplacian noise is then generated using this privacy parameter and added to the rounded value. If the resulting value is zero, it is set to half the bucket size to ensure that the noise does not completely obscure the transaction value.
+The noise, selected from the Laplacian distribution, is then generated using this privacy parameter and added to the rounded value. If the resulting value is zero, it is set to half the bucket size to ensure that the noise does not completely obscure the transaction value.
 
 ## Achieving Local Differential Privacy
 
