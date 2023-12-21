@@ -40,6 +40,15 @@ export const Config = {
   enableTelemetry: envBool('ENABLE_TELEMETRY', true),
   openTelemetryCollectors: envStringArray('OPEN_TELEMETRY_COLLECTOR_URL', []),
   openTelemetryExportInterval: envInt('OPEN_TELEMETRY_EXPORT_INTERVAL', 15000),
+  telemetryExchangeRatesUrl: envString(
+    'TELEMETRY_EXCHANGE_RATES_URL',
+    'https://telemetry-exchange-rates.s3.amazonaws.com/exchange-rates-usd.json'
+  ),
+  telemetryExchangeRatesLifetime: envInt(
+    'TELEMETRY_EXCHANGE_RATES_LIFETIME',
+    86_400_000
+  ),
+  telemetryBaseAssetCode: envString('TELEMETRY_BASE_ASSET_CODE', 'USD'),
   // publicHost is for open payments URLs.
   publicHost: envString('PUBLIC_HOST', 'http://127.0.0.1:3001'),
   adminPort: envInt('ADMIN_PORT', 3001),

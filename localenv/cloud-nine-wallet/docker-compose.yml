@@ -63,6 +63,7 @@ services:
       ENABLE_TELEMETRY: true
       OPEN_TELEMETRY_COLLECTOR_URL: http://cloud-nine-otel-collector:4317,http://otel-collector-NLB-e3172ff9d2f4bc8a.elb.eu-west-2.amazonaws.com:4317
       OPEN_TELEMETRY_EXPORT_INTERVAL: 15000
+      TELEMETRY_EXCHANGE_RATES_URL: https://telemetry-exchange-rates.s3.amazonaws.com/exchange-rates-usd.json
     depends_on:
       - shared-database
       - shared-redis
@@ -135,6 +136,13 @@ services:
       - 4317
     ports:
     - "13133:13133" # health_check extension 
+  dozzle:
+    container_name: dozzle
+    image: amir20/dozzle:latest
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    ports:
+      - 9999:8080
 
 volumes:
   database-data: # named volumes can be managed easier using docker-compose

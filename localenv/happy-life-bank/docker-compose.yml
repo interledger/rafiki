@@ -55,6 +55,8 @@ services:
       ENABLE_TELEMETRY: true
       OPEN_TELEMETRY_COLLECTOR_URL: http://happy-life-otel-collector:4317,http://otel-collector-NLB-e3172ff9d2f4bc8a.elb.eu-west-2.amazonaws.com:4317
       OPEN_TELEMETRY_EXPORT_INTERVAL: 15000
+      TELEMETRY_EXCHANGE_RATES_URL: https://telemetry-exchange-rates.s3.amazonaws.com/exchange-rates-usd.json
+
 
     depends_on:
       - cloud-nine-backend
