@@ -19,7 +19,7 @@ import { BaseService } from '../shared/baseService'
 export interface TelemetryService {
   getOrCreate(name: string, options?: MetricOptions): Counter
   getServiceName(): string | undefined
-  getRatesService(): RatesService // Add this line
+  getRatesService(): RatesService
   getBaseAssetCode(): string
 }
 

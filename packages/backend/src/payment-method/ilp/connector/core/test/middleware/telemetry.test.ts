@@ -1,12 +1,15 @@
 import { ValueType } from '@opentelemetry/api'
 import assert from 'assert'
 import { OutgoingAccount, ZeroCopyIlpPrepare } from '../..'
+import { ConvertError } from '../../../../../../rates/service'
+import { privacy } from '../../../../../../telemetry/privacy'
 import { mockCounter } from '../../../../../../tests/meter'
 import { IncomingAccountFactory, RafikiServicesFactory } from '../../factories'
-import { createTelemetryMiddleware } from '../../middleware/telemetry'
+import {
+  collectTelemetryAmount,
+  createTelemetryMiddleware
+} from '../../middleware/telemetry'
 import { createILPContext } from '../../utils'
-import { privacy } from '../../../../../../telemetry/privacy'
-import { ConvertError } from '../../../../../../rates/service'
 
 const incomingAccount = IncomingAccountFactory.build({ id: 'alice' })
 
@@ -54,57 +57,10 @@ describe('Telemetry Middleware', function () {
 
     await middleware(ctx, next)
 
-    expect(next).toHaveBeenCalled()
     expect(getOrCreateSpy).not.toHaveBeenCalled()
-
-    // Restore the original value of services.telemetry
-    ctx.services.telemetry = originalTelemetry
-  })
-
-  it('should convert to telemetry asset,apply privacy, collect telemetry and call next', async () => {
-    const getOrCreateSpy = jest
-      .spyOn(ctx.services.telemetry!, 'getOrCreate')
-      .mockImplementation(() => mockCounter)
-
-    const convertSpy = jest
-      .spyOn(ctx.services.telemetry!.getRatesService(), 'convert')
-      .mockImplementation(() => Promise.resolve(10000n))
-
-    const applyPrivacySpy = jest
-      .spyOn(privacy, 'applyPrivacy')
-      .mockImplementation(() => 9992)
-
-    await middleware(ctx, next)
-
-    expect(convertSpy).toHaveBeenCalledWith({
-      sourceAmount: BigInt(ctx.request.prepare.amount),
-      sourceAsset: {
-        code: ctx.accounts.outgoing.asset.code,
-        scale: ctx.accounts.outgoing.asset.scale
-      },
-      destinationAsset: {
-        code: services.telemetry!.getBaseAssetCode(),
-        scale: 4
-      }
-    })
-
-    expect(getOrCreateSpy).toHaveBeenCalledWith('transactions_amount', {
-      description: expect.any(String),
-      valueType: ValueType.DOUBLE
-    })
-
-    expect(applyPrivacySpy).toHaveBeenCalledWith(10000)
-
-    expect(
-      ctx.services.telemetry!.getOrCreate('transactions_amount').add
-    ).toHaveBeenCalledWith(
-      9992,
-      expect.objectContaining({
-        source: 'serviceName'
-      })
-    )
-
     expect(next).toHaveBeenCalled()
+
+    ctx.services.telemetry = originalTelemetry
   })
 
   it('should call next without gathering telemetry when state is unfulfillable', async () => {
@@ -117,6 +73,7 @@ describe('Telemetry Middleware', function () {
     await middleware(ctx, next)
 
     expect(getOrCreateSpy).not.toHaveBeenCalled()
+    expect(next).toHaveBeenCalled()
   })
 
   it('should call next without gathering telemetry when convert returns ConvertError.InvalidDestinationPrice', async () => {
@@ -148,5 +105,55 @@ describe('Telemetry Middleware', function () {
 
     expect(getOrCreateSpy).not.toHaveBeenCalled()
     expect(next).toHaveBeenCalled()
+  })
+
+  describe('collectTelemetry', () => {
+    it('should convert to telemetry asset,apply privacy, collect telemetry', async () => {
+      const ratesService = ctx.services.telemetry!.getRatesService()
+      const convertSpy = jest
+        .spyOn(ratesService, 'convert')
+        .mockResolvedValue(10000n)
+
+      const addSpy = jest.spyOn(
+        ctx.services.telemetry!.getOrCreate('transactions_amount', {
+          description: 'Amount sent through the network',
+          valueType: ValueType.DOUBLE
+        }),
+        'add'
+      )
+
+      const applyPrivacySpy = jest
+        .spyOn(privacy, 'applyPrivacy')
+        .mockReturnValue(10000)
+
+      await collectTelemetryAmount(ctx.services.telemetry!, {
+        sourceAmount: BigInt(ctx.request.prepare.amount),
+        sourceAsset: {
+          code: ctx.accounts.outgoing.asset.code,
+          scale: ctx.accounts.outgoing.asset.scale
+        },
+        destinationAsset: {
+          code: services.telemetry!.getBaseAssetCode(),
+          scale: 4
+        }
+      })
+
+      expect(convertSpy).toHaveBeenCalledWith({
+        sourceAmount: BigInt(ctx.request.prepare.amount),
+        sourceAsset: {
+          code: ctx.accounts.outgoing.asset.code,
+          scale: ctx.accounts.outgoing.asset.scale
+        },
+        destinationAsset: {
+          code: services.telemetry!.getBaseAssetCode(),
+          scale: 4
+        }
+      })
+
+      expect(applyPrivacySpy).toHaveBeenCalledWith(10000)
+      expect(addSpy).toHaveBeenCalledWith(10000, {
+        source: ctx.services.telemetry!.getServiceName()
+      })
+    })
   })
 })
