@@ -49,8 +49,6 @@ export const Config = {
     86_400_000
   ),
   telemetryBaseAssetCode: envString('TELEMETRY_BASE_ASSET_CODE', 'USD'),
-  // publicHost is for open payments URLs.
-  publicHost: envString('PUBLIC_HOST', 'http://127.0.0.1:3001'),
   adminPort: envInt('ADMIN_PORT', 3001),
   openPaymentsUrl: envString('OPEN_PAYMENTS_URL', 'http://127.0.0.1:3000'),
   openPaymentsPort: envInt('OPEN_PAYMENTS_PORT', 3003),
