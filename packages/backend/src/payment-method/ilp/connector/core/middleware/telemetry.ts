@@ -1,5 +1,7 @@
 import { ValueType } from '@opentelemetry/api'
 import { ILPContext, ILPMiddleware } from '../rafiki'
+import { privacy } from '../../../../../telemetry/privacy'
+import { ConvertError } from '../../../../../rates/service'
 
 export function createTelemetryMiddleware(): ILPMiddleware {
   return async (
@@ -15,31 +17,31 @@ export function createTelemetryMiddleware(): ILPMiddleware {
       await next()
       return
     }
-
-    const senderAssetCode = accounts.outgoing.asset.code
-    const senderScale = accounts.outgoing.asset.scale
+    const senderAsset = accounts.outgoing.asset
 
     const convertOptions = {
       sourceAmount: BigInt(amount),
-      sourceAsset: { code: senderAssetCode, scale: senderScale },
+      sourceAsset: { code: senderAsset.code, scale: senderAsset.scale },
       destinationAsset: {
         code: services.telemetry!.getBaseAssetCode(),
         scale: 4
       }
     }
 
-    const converted = Number(
-      await services.telemetry
-        .getTelemetryRatesService()
-        .convert(convertOptions)
-    )
+    const converted = await services.telemetry
+      .getRatesService()
+      .convert(convertOptions)
+    if (converted === ConvertError.InvalidDestinationPrice) {
+      await next()
+      return
+    }
 
     services.telemetry
       ?.getOrCreate('transactions_amount', {
         description: 'Amount sent through the network',
         valueType: ValueType.DOUBLE
       })
-      .add(services.telemetry.applyPrivacy(converted), {
+      .add(privacy.applyPrivacy(Number(converted)), {
         source: services.telemetry?.getServiceName()
       })
 

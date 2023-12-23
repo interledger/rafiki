@@ -6,7 +6,7 @@ export const mockCounter = { add: jest.fn() } as Counter
 
 export class MockRatesService implements RatesService {
   async convert(): Promise<bigint> {
-    return BigInt(1)
+    return BigInt(10000)
   }
   async rates(): Promise<Rates> {
     return {
@@ -27,6 +27,7 @@ export class MockRatesService implements RatesService {
 }
 
 export class MockTelemetryService implements TelemetryService {
+  ratesService = new MockRatesService()
   getOrCreate(
     _name: string,
     _options?: MetricOptions | undefined
@@ -37,8 +38,8 @@ export class MockTelemetryService implements TelemetryService {
     return 'serviceName'
   }
 
-  getTelemetryRatesService(): RatesService {
-    return new MockRatesService()
+  getRatesService(): RatesService {
+    return this.ratesService
   }
 
   getBaseAssetCode(): string {

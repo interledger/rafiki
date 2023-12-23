@@ -5,6 +5,8 @@ import { mockCounter } from '../../../../../../tests/meter'
 import { IncomingAccountFactory, RafikiServicesFactory } from '../../factories'
 import { createTelemetryMiddleware } from '../../middleware/telemetry'
 import { createILPContext } from '../../utils'
+import { privacy } from '../../../../../../telemetry/privacy'
+import { ConvertError } from '../../../../../../rates/service'
 
 const incomingAccount = IncomingAccountFactory.build({ id: 'alice' })
 
@@ -19,7 +21,10 @@ const ctx = createILPContext({
     } as unknown as ZeroCopyIlpPrepare,
     rawPrepare: Buffer.from('')
   },
-  accounts: { incoming: incomingAccount, outgoing: {} as OutgoingAccount },
+  accounts: {
+    incoming: incomingAccount,
+    outgoing: { asset: { code: 'USD', scale: 2 } } as OutgoingAccount
+  },
   state: {
     unfulfillable: false,
     incomingAccount: {
@@ -39,28 +44,62 @@ beforeEach(async () => {
 })
 
 describe('Telemetry Middleware', function () {
-  it('should gather telemetry in correct asset scale and call next', async () => {
+  it('should call next without gathering telemetry when telemetry is not enabled (service is undefined)', async () => {
     const getOrCreateSpy = jest
       .spyOn(ctx.services.telemetry!, 'getOrCreate')
       .mockImplementation(() => mockCounter)
 
-    const expectedScaledValue =
-      Number(ctx.request.prepare.amount) *
-      Math.pow(10, 4 - incomingAccount.asset.scale)
+    const originalTelemetry = ctx.services.telemetry
+    ctx.services.telemetry = undefined
 
     await middleware(ctx, next)
+
+    expect(next).toHaveBeenCalled()
+    expect(getOrCreateSpy).not.toHaveBeenCalled()
+
+    // Restore the original value of services.telemetry
+    ctx.services.telemetry = originalTelemetry
+  })
+
+  it('should convert to telemetry asset,apply privacy, collect telemetry and call next', async () => {
+    const getOrCreateSpy = jest
+      .spyOn(ctx.services.telemetry!, 'getOrCreate')
+      .mockImplementation(() => mockCounter)
+
+    const convertSpy = jest
+      .spyOn(ctx.services.telemetry!.getRatesService(), 'convert')
+      .mockImplementation(() => Promise.resolve(10000n))
+
+    const applyPrivacySpy = jest
+      .spyOn(privacy, 'applyPrivacy')
+      .mockImplementation(() => 9992)
+
+    await middleware(ctx, next)
+
+    expect(convertSpy).toHaveBeenCalledWith({
+      sourceAmount: BigInt(ctx.request.prepare.amount),
+      sourceAsset: {
+        code: ctx.accounts.outgoing.asset.code,
+        scale: ctx.accounts.outgoing.asset.scale
+      },
+      destinationAsset: {
+        code: services.telemetry!.getBaseAssetCode(),
+        scale: 4
+      }
+    })
 
     expect(getOrCreateSpy).toHaveBeenCalledWith('transactions_amount', {
       description: expect.any(String),
       valueType: ValueType.DOUBLE
     })
 
+    expect(applyPrivacySpy).toHaveBeenCalledWith(10000)
+
     expect(
       ctx.services.telemetry!.getOrCreate('transactions_amount').add
     ).toHaveBeenCalledWith(
-      expectedScaledValue,
+      9992,
       expect.objectContaining({
-        asset_code: 'USD',
         source: 'serviceName'
       })
     )
@@ -80,8 +119,12 @@ describe('Telemetry Middleware', function () {
     expect(getOrCreateSpy).not.toHaveBeenCalled()
   })
 
-  it('should only gather amount data on the sending side of a transaction. It should call next when there is no quote on the incomingAccount.', async () => {
-    ctx.state.incomingAccount.quote = ''
+  it('should call next without gathering telemetry when convert returns ConvertError.InvalidDestinationPrice', async () => {
+    const convertSpy = jest
+      .spyOn(ctx.services.telemetry!.getRatesService(), 'convert')
+      .mockImplementation(() =>
+        Promise.resolve(ConvertError.InvalidDestinationPrice)
+      )
 
     const getOrCreateSpy = jest
       .spyOn(ctx.services.telemetry!, 'getOrCreate')
@@ -89,7 +132,9 @@ describe('Telemetry Middleware', function () {
 
     await middleware(ctx, next)
 
+    expect(convertSpy).toHaveBeenCalled()
     expect(getOrCreateSpy).not.toHaveBeenCalled()
+    expect(next).toHaveBeenCalled()
   })
 
   it('should handle invalid amount by calling next without gathering telemetry', async () => {
