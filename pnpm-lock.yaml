@@ -239,8 +239,8 @@ importers:
         specifier: ^12.1.3
         version: 12.1.3
       pino-pretty:
-        specifier: ^10.2.3
-        version: 10.2.3
+        specifier: ^10.3.1
+        version: 10.3.1
       testcontainers:
         specifier: ^10.3.2
         version: 10.3.2
@@ -432,8 +432,8 @@ importers:
         specifier: ^12.1.3
         version: 12.1.3
       pino-pretty:
-        specifier: ^10.2.3
-        version: 10.2.3
+        specifier: ^10.3.1
+        version: 10.3.1
       react:
         specifier: ~18.2.0
         version: 18.2.0
@@ -10143,17 +10143,6 @@ packages:
       path-is-absolute: 1.0.1
     dev: true
 
-  /glob@8.0.3:
-    resolution: {integrity: sha512-ull455NHSHI/Y1FqGaaYFaLGkNMMJbavMrEGFXG/PGrg6y7sutWHUHrz6gy6WEBH6akM1M414dWKCNs+IhKdiQ==}
-    engines: {node: '>=12'}
-    dependencies:
-      fs.realpath: 1.0.0
-      inflight: 1.0.6
-      inherits: 2.0.4
-      minimatch: 5.1.0
-      once: 1.4.0
-    dev: true
-
   /globals@11.12.0:
     resolution: {integrity: sha512-WOBp/EEGUiIsJSp7wcv/y6MO+lV9UoncWqxuFfm8eBwzWNgyfBd6Gz+IeKQ9jCmyhoH99g15M3T+QaVHFjizVA==}
     engines: {node: '>=4'}
@@ -10643,11 +10632,8 @@ packages:
     resolution: {integrity: sha512-2bsegYkkHO+h/9MGbn6KWcE45cHZgPANo5LXF7EvWdT0yT2EguSVO1nDgU5c8+ZOPwp2vMNa7YFsJhVcDR9Sdg==}
     dev: false
 
-  /help-me@4.0.1:
-    resolution: {integrity: sha512-PLv01Z+OhEPKj2QPYB4kjoCUkopYNPUK3EROlaPIf5bib752fZ+VCvGDAoA+FXo/OwCyLEA4D2e0mX8+Zhcplw==}
-    dependencies:
-      glob: 8.0.3
-      readable-stream: 3.6.0
+  /help-me@5.0.0:
+    resolution: {integrity: sha512-7xgomUX6ADmcYzFik0HzAxh/73YlKR9bmFzf51CZwR+b6YtzU2m0u49hQCqV6SvlqIqsaxovfwdvbnsw3b/zpg==}
     dev: true
 
   /hoist-non-react-statics@3.3.2:
@@ -14633,15 +14619,15 @@ packages:
       readable-stream: 4.1.0
       split2: 4.1.0
 
-  /pino-pretty@10.2.3:
-    resolution: {integrity: sha512-4jfIUc8TC1GPUfDyMSlW1STeORqkoxec71yhxIpLDQapUu8WOuoz2TTCoidrIssyz78LZC69whBMPIKCMbi3cw==}
+  /pino-pretty@10.3.1:
+    resolution: {integrity: sha512-az8JbIYeN/1iLj2t0jR9DV48/LQ3RC6hZPpapKPkb84Q+yTidMCpgWxIT3N0flnBDilyBQ1luWNpOeJptjdp/g==}
     hasBin: true
     dependencies:
       colorette: 2.0.19
       dateformat: 4.6.3
       fast-copy: 3.0.0
       fast-safe-stringify: 2.1.1
-      help-me: 4.0.1
+      help-me: 5.0.0
       joycon: 3.1.1
       minimist: 1.2.6
       on-exit-leak-free: 2.1.0
@@ -14649,7 +14635,7 @@ packages:
       pump: 3.0.0
       readable-stream: 4.1.0
       secure-json-parse: 2.5.0
-      sonic-boom: 3.2.0
+      sonic-boom: 3.7.0
       strip-json-comments: 3.1.1
     dev: true
 
@@ -16112,17 +16098,10 @@ packages:
       smart-buffer: 4.2.0
     dev: true
 
-  /sonic-boom@3.2.0:
-    resolution: {integrity: sha512-SbbZ+Kqj/XIunvIAgUZRlqd6CGQYq71tRRbXR92Za8J/R3Yh4Av+TWENiSiEgnlwckYLyP0YZQWVfyNC0dzLaA==}
-    dependencies:
-      atomic-sleep: 1.0.0
-    dev: true
-
   /sonic-boom@3.7.0:
     resolution: {integrity: sha512-IudtNvSqA/ObjN97tfgNmOKyDOs4dNcg4cUUsHDebqsgb8wGBBwb31LIgShNO8fye0dFI52X1+tFoKKI6Rq1Gg==}
     dependencies:
       atomic-sleep: 1.0.0
-    dev: false
 
   /sort-object-keys@1.1.3:
     resolution: {integrity: sha512-855pvK+VkU7PaKYPc+Jjnmt4EzejQHyhhF33q31qG8x7maDzkeFhAAThdCYay11CISO+qAMwjOBP+fPZe0IPyg==}
