@@ -1,8 +1,9 @@
-import { BaseModel, Pagination } from './baseModel'
+import { BaseModel, Pagination, SortOrder } from './baseModel'
+import { getPageInfo } from './pagination'
 
 interface PageTestsOptions<Type> {
   createModel: () => Promise<Type>
-  getPage: (pagination?: Pagination) => Promise<Type[]>
+  getPage: (pagination?: Pagination, sortOrder?: SortOrder) => Promise<Type[]>
 }
 
 export const getPageTests = <Type extends BaseModel>({
@@ -17,6 +18,7 @@ export const getPageTests = <Type extends BaseModel>({
       for (let i = 0; i < 22; i++) {
         modelsCreated.push(await createModel())
       }
+      modelsCreated.reverse() // default sort order is DESC
     })
 
     test.each`
@@ -52,20 +54,74 @@ export const getPageTests = <Type extends BaseModel>({
       await expect(getPage(pagination)).rejects.toThrow(expectedError)
     })
 
-    test('Backwards/Forwards pagination results in same order.', async (): Promise<void> => {
+    test.each`
+      order             | description
+      ${SortOrder.Asc}  | ${'Backwards/Forwards pagination results in same order for ASC.'}
+      ${SortOrder.Desc} | ${'Backwards/Forwards pagination results in same order for DESC.'}
+    `('$description', async ({ order }): Promise<void> => {
+      if (order === SortOrder.Asc) {
+        // model was in DESC order so needs to be reverted back to ASC
+        modelsCreated.reverse()
+      }
       const paginationForwards = {
         first: 10
       }
-      const modelsForwards = await getPage(paginationForwards)
+      const modelsForwards = await getPage(paginationForwards, order)
       const paginationBackwards = {
         last: 10,
         before: modelsCreated[10].id
       }
-      const modelsBackwards = await getPage(paginationBackwards)
+      const modelsBackwards = await getPage(paginationBackwards, order)
       expect(modelsForwards).toHaveLength(10)
       expect(modelsBackwards).toHaveLength(10)
       expect(modelsForwards).toEqual(modelsBackwards)
     })
+
+    test.each`
+      pagination       | cursor  | start | end   | hasNextPage | hasPreviousPage | sortOrder
+      ${null}          | ${null} | ${0}  | ${19} | ${true}     | ${false}        | ${SortOrder.Desc}
+      ${{ first: 5 }}  | ${null} | ${0}  | ${4}  | ${true}     | ${false}        | ${SortOrder.Desc}
+      ${{ first: 22 }} | ${null} | ${0}  | ${21} | ${false}    | ${false}        | ${SortOrder.Desc}
+      ${{ first: 3 }}  | ${3}    | ${4}  | ${6}  | ${true}     | ${true}         | ${SortOrder.Desc}
+      ${{ last: 5 }}   | ${9}    | ${4}  | ${8}  | ${true}     | ${true}         | ${SortOrder.Desc}
+      ${null}          | ${null} | ${0}  | ${19} | ${true}     | ${false}        | ${SortOrder.Asc}
+      ${{ first: 5 }}  | ${null} | ${0}  | ${4}  | ${true}     | ${false}        | ${SortOrder.Asc}
+      ${{ first: 22 }} | ${null} | ${0}  | ${21} | ${false}    | ${false}        | ${SortOrder.Asc}
+      ${{ first: 3 }}  | ${3}    | ${4}  | ${6}  | ${true}     | ${true}         | ${SortOrder.Asc}
+      ${{ last: 5 }}   | ${9}    | ${4}  | ${8}  | ${true}     | ${true}         | ${SortOrder.Asc}
+    `(
+      'pagination $pagination with cursor $cursor in $sortOrder order',
+      async ({
+        pagination,
+        cursor,
+        start,
+        end,
+        hasNextPage,
+        hasPreviousPage,
+        sortOrder
+      }): Promise<void> => {
+        if (sortOrder === SortOrder.Asc) {
+          modelsCreated.reverse()
+        }
+        if (cursor) {
+          if (pagination.last) pagination.before = modelsCreated[cursor].id
+          else pagination.after = modelsCreated[cursor].id
+        }
+
+        const page = await getPage(pagination, sortOrder)
+        const pageInfo = await getPageInfo(
+          (pagination, sortOrder) => getPage(pagination, sortOrder),
+          page,
+          sortOrder
+        )
+        expect(pageInfo).toEqual({
+          startCursor: modelsCreated[start].id,
+          endCursor: modelsCreated[end].id,
+          hasNextPage,
+          hasPreviousPage
+        })
+      }
+    )
   })
 }
 

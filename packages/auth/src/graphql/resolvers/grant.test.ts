@@ -1,4 +1,4 @@
-import { ApolloError, gql } from '@apollo/client'
+import { ApolloError, ApolloQueryResult, gql } from '@apollo/client'
 import { v4 as uuid } from 'uuid'
 
 import { createTestApp, TestContainer } from '../../tests/app'
@@ -11,12 +11,21 @@ import {
   GrantFinalization,
   GrantsConnection,
   GrantState,
+  Query,
   RevokeGrantInput,
   RevokeGrantMutationResponse
 } from '../generated/graphql'
 import { Grant, Grant as GrantModel } from '../../grant/model'
 import { getPageTests } from './page.test'
 import { createGrant } from '../../tests/grant'
+
+const responseHandler = (query: ApolloQueryResult<Query>): GrantsConnection => {
+  if (query.data) {
+    return query.data.grants
+  } else {
+    throw new Error('Data was empty')
+  }
+}
 
 describe('Grant Resolvers', (): void => {
   let deps: IocContract<AppServices>
@@ -83,6 +92,70 @@ describe('Grant Resolvers', (): void => {
           id: grant.id,
           state: grant.state
         })
+      })
+    })
+
+    describe('Can order grants', (): void => {
+      let grants: GrantModel[] = []
+      beforeEach(async () => {
+        const identifier = 'https://example.com/test'
+        const grantData = [
+          { identifier },
+          { identifier },
+          { identifier: 'https://abc.com/xyz' }
+        ]
+        for (const { identifier } of grantData) {
+          const grant = await createGrant(deps, { identifier })
+          grants.push(grant)
+        }
+      })
+
+      afterEach(() => {
+        grants = []
+      })
+
+      test('ASC', async (): Promise<void> => {
+        const query = await appContainer.apolloClient
+          .query({
+            query: gql`
+              query grants($sortOrder: SortOrder) {
+                grants(sortOrder: $sortOrder) {
+                  edges {
+                    node {
+                      id
+                      state
+                    }
+                    cursor
+                  }
+                }
+              }
+            `,
+            variables: { sortOrder: 'ASC' }
+          })
+          .then(responseHandler)
+        expect(query.edges[0].node.id).toBe(grants[0].id)
+      })
+
+      test('DESC', async (): Promise<void> => {
+        const query = await appContainer.apolloClient
+          .query({
+            query: gql`
+              query grants($sortOrder: SortOrder) {
+                grants(sortOrder: $sortOrder) {
+                  edges {
+                    node {
+                      id
+                      state
+                    }
+                    cursor
+                  }
+                }
+              }
+            `,
+            variables: { sortOrder: 'DESC' }
+          })
+          .then(responseHandler)
+        expect(query.edges[0].node.id).toBe(grants[grants.length - 1].id)
       })
     })
 

@@ -1,8 +1,24 @@
-import { BaseModel, PageInfo, Pagination } from './baseModel'
+import { PaginationArgs } from '@interledger/open-payments'
+
+import { BaseModel, PageInfo, Pagination, SortOrder } from './baseModel'
+
+export function parsePaginationQueryParameters({
+  first,
+  last,
+  cursor
+}: PaginationArgs): Pagination {
+  return {
+    first,
+    last,
+    before: last ? cursor : undefined,
+    after: cursor && !last ? cursor : undefined
+  }
+}
 
 export async function getPageInfo<T extends BaseModel>(
-  getPage: (pagination: Pagination) => Promise<T[]>,
-  page: T[]
+  getPage: (pagination: Pagination, sortOrder?: SortOrder) => Promise<T[]>,
+  page: T[],
+  sortOrder?: SortOrder
 ): Promise<PageInfo> {
   if (page.length == 0)
     return {
@@ -15,18 +31,24 @@ export async function getPageInfo<T extends BaseModel>(
   let hasNextPage, hasPreviousPage
 
   try {
-    hasNextPage = await getPage({
-      after: lastId,
-      first: 1
-    })
+    hasNextPage = await getPage(
+      {
+        after: lastId,
+        first: 1
+      },
+      sortOrder
+    )
   } catch (e) {
     hasNextPage = []
   }
   try {
-    hasPreviousPage = await getPage({
-      before: firstId,
-      last: 1
-    })
+    hasPreviousPage = await getPage(
+      {
+        before: firstId,
+        last: 1
+      },
+      sortOrder
+    )
   } catch (e) {
     hasPreviousPage = []
   }

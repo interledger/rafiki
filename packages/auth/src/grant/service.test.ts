@@ -22,6 +22,7 @@ import { AccessType, AccessAction } from '@interledger/open-payments'
 import { createGrant } from '../tests/grant'
 import { AccessToken } from '../accessToken/model'
 import { Interaction, InteractionState } from '../interaction/model'
+import { SortOrder } from '../shared/baseModel'
 
 describe('Grant Service', (): void => {
   let deps: IocContract<AppServices>
@@ -412,37 +413,59 @@ describe('Grant Service', (): void => {
       const page = await grantService.getPage(
         {
           first: 1,
-          after: grants?.[0].id
+          after: grants?.[1].id
         },
         filter
       )
 
-      expect(page[0].id).toBe(grants?.[1].id)
+      expect(page[0].id).toBe(grants?.[0].id)
       expect(page.length).toBe(1)
+    })
+
+    describe('SortOrder', () => {
+      test('ASC', async () => {
+        const fetchedGrants = await grantService.getPage(
+          undefined,
+          undefined,
+          SortOrder.Asc
+        )
+
+        expect(fetchedGrants[0].id).toBe(grants[0].id)
+      })
+
+      test('DESC', async () => {
+        const fetchedGrants = await grantService.getPage(
+          undefined,
+          undefined,
+          SortOrder.Desc
+        )
+
+        expect(fetchedGrants[0].id).toBe(grants[grants.length - 1].id)
+      })
     })
 
     describe('GrantFilter', () => {
       describe('identifier', () => {
         test('in', async () => {
-          const grants = await grantService.getPage(undefined, {
+          const fetchedGrants = await grantService.getPage(undefined, {
             identifier: {
               in: [walletAddress]
             }
           })
 
-          expect(grants.length).toBe(2)
+          expect(fetchedGrants.length).toBe(2)
         })
       })
 
       describe('state', () => {
         test('in', async () => {
-          const grants = await grantService.getPage(undefined, {
+          const fetchedGrants = await grantService.getPage(undefined, {
             state: {
               in: [GrantState.Finalized]
             }
           })
 
-          expect(grants.length).toBe(1)
+          expect(fetchedGrants.length).toBe(1)
         })
         test('notIn', async () => {
           const fetchedGrants = await grantService.getPage(undefined, {
@@ -457,22 +480,22 @@ describe('Grant Service', (): void => {
 
       describe('finalizationReason', () => {
         test('in', async () => {
-          const grants = await grantService.getPage(undefined, {
+          const fetchedGrants = await grantService.getPage(undefined, {
             finalizationReason: {
               in: [GrantFinalization.Revoked]
             }
           })
 
-          expect(grants.length).toBe(1)
+          expect(fetchedGrants.length).toBe(1)
         })
         test('notIn', async () => {
-          const grants = await grantService.getPage(undefined, {
+          const fetchedGrants = await grantService.getPage(undefined, {
             finalizationReason: {
               notIn: [GrantFinalization.Revoked]
             }
           })
 
-          expect(grants.length).toBe(2)
+          expect(fetchedGrants.length).toBe(2)
         })
       })
     })
