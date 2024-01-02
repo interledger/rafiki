@@ -45,7 +45,23 @@ export const loader = async ({ request }: LoaderArgs) => {
     nextPageUrl = `/payments?after=${payments.pageInfo.endCursor}`
   }
 
-  return json({ payments, previousPageUrl, nextPageUrl, type })
+  const formattedPayments = {
+    ...payments,
+    edges: payments.edges.map((edge) => ({
+      ...edge,
+      node: {
+        ...edge.node,
+        createdAt: new Date(edge.node.createdAt).toLocaleString()
+      }
+    }))
+  }
+
+  return json({
+    payments: formattedPayments,
+    previousPageUrl,
+    nextPageUrl,
+    type
+  })
 }
 
 export default function PaymentsPage() {
@@ -110,7 +126,7 @@ export default function PaymentsPage() {
           </div>
         </div>
         <Table>
-          <Table.Head columns={['ID', 'Type', 'State']} />
+          <Table.Head columns={['ID', 'Type', 'State', 'Date']} />
           <Table.Body>
             {payments.edges.length ? (
               payments.edges.map((payment) => (
@@ -137,6 +153,7 @@ export default function PaymentsPage() {
                       </Badge>
                     }
                   </Table.Cell>
+                  <Table.Cell>{payment.node.createdAt}</Table.Cell>
                 </Table.Row>
               ))
             ) : (
