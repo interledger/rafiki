@@ -4,6 +4,7 @@ import { Link, Outlet, useLoaderData } from '@remix-run/react'
 import { z } from 'zod'
 import { Badge, PageHeader } from '~/components'
 import { Button } from '~/components/ui'
+import { IncomingPaymentState } from '~/generated/graphql'
 import { getIncomingPayment } from '~/lib/api/payments.server'
 import {
   badgeColorByPaymentState,
@@ -39,6 +40,12 @@ export async function loader({ params }: LoaderArgs) {
 
 export default function ViewIncomingPaymentPage() {
   const { incomingPayment } = useLoaderData<typeof loader>()
+
+  const canWithdrawLiquidity =
+    BigInt(incomingPayment.liquidity ?? '0') &&
+    [IncomingPaymentState.Expired, IncomingPaymentState.Completed].includes(
+      incomingPayment.state
+    )
 
   return (
     <div className='pt-4 flex flex-col space-y-4'>
@@ -149,7 +156,7 @@ export default function ViewIncomingPaymentPage() {
                 </p>
               </div>
               <div className='flex space-x-4'>
-                {BigInt(incomingPayment.liquidity ?? '0') ? (
+                {canWithdrawLiquidity ? (
                   <Button
                     aria-label='withdraw incoming payment liquidity page'
                     preventScrollReset
