@@ -7,7 +7,11 @@ import { listPayments } from '~/lib/api/payments.server'
 import { paymentsSearchParams } from '~/lib/validate.server'
 import { PaymentType } from '~/generated/graphql'
 import type { CombinedPaymentState } from '~/shared/utils'
-import { capitalize, badgeColorByState } from '~/shared/utils'
+import {
+  capitalize,
+  badgeColorByState,
+  paymentSubpathByType
+} from '~/shared/utils'
 
 export const loader = async ({ request }: LoaderArgs) => {
   const url = new URL(request.url)
@@ -70,13 +74,6 @@ export default function PaymentsPage() {
         type: newParams
       })
     })
-  }
-
-  const paymentSubpathByType: {
-    [key in PaymentType]: string
-  } = {
-    [PaymentType.Incoming]: 'incoming',
-    [PaymentType.Outgoing]: 'outgoing'
   }
 
   return (

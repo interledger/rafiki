@@ -1,10 +1,10 @@
 import { json, type LoaderArgs } from '@remix-run/node'
 import { useLoaderData, useNavigate } from '@remix-run/react'
-import { Badge, BadgeColor, PageHeader } from '~/components'
+import { Badge, PageHeader } from '~/components'
 import { Button, Table } from '~/components/ui'
-import { WalletAddressStatus } from '~/generated/graphql'
 import { listWalletAddresses } from '~/lib/api/wallet-address.server'
 import { paginationSchema } from '~/lib/validate.server'
+import { badgeColorByWalletAddressStatus } from '~/shared/utils'
 
 export const loader = async ({ request }: LoaderArgs) => {
   const url = new URL(request.url)
@@ -38,11 +38,6 @@ export default function WalletAddressesPage() {
   const { walletAddresses, previousPageUrl, nextPageUrl } =
     useLoaderData<typeof loader>()
   const navigate = useNavigate()
-
-  const badgeColorByStatus: Record<WalletAddressStatus, BadgeColor> = {
-    [WalletAddressStatus.Active]: BadgeColor.Green,
-    [WalletAddressStatus.Inactive]: BadgeColor.Red
-  }
 
   return (
     <div className='pt-4 flex flex-col space-y-8'>
@@ -83,7 +78,9 @@ export default function WalletAddressesPage() {
                     </div>
                   </Table.Cell>
                   <Table.Cell>
-                    <Badge color={badgeColorByStatus[pp.node.status]}>
+                    <Badge
+                      color={badgeColorByWalletAddressStatus[pp.node.status]}
+                    >
                       {pp.node.status}
                     </Badge>
                   </Table.Cell>

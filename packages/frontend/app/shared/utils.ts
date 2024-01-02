@@ -1,8 +1,10 @@
 import { BadgeColor } from '~/components'
-import type {
+import {
   IncomingPaymentState,
-  OutgoingPaymentState
+  OutgoingPaymentState,
+  WalletAddressStatus
 } from '~/generated/graphql'
+import { PaymentType } from '~/generated/graphql'
 
 const COLORS = {
   key: 'text-tealish',
@@ -77,4 +79,19 @@ export const badgeColorByState: {
   FAILED: BadgeColor.Red,
   FUNDING: BadgeColor.Yellow,
   SENDING: BadgeColor.Yellow
+}
+
+export const badgeColorByWalletAddressStatus: Record<
+  WalletAddressStatus,
+  BadgeColor
+> = {
+  [WalletAddressStatus.Active]: BadgeColor.Green,
+  [WalletAddressStatus.Inactive]: BadgeColor.Red
+}
+
+export const paymentSubpathByType: {
+  [key in PaymentType]: string
+} = {
+  [PaymentType.Incoming]: 'incoming',
+  [PaymentType.Outgoing]: 'outgoing'
 }
