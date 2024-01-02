@@ -66,7 +66,7 @@ export const CONFIG: Config = {
     ).toString('utf8')
   ),
   key: loadOrGenerateKey(process.env.KEY_FILE),
-  publicHost: process.env.PUBLIC_HOST ?? '',
+  publicHost: process.env.OPEN_PAYMENTS_URL ?? '',
   testnetAutoPeerUrl: process.env.TESTNET_AUTOPEER_URL ?? '',
   authServerDomain: process.env.AUTH_SERVER_DOMAIN || 'http://localhost:3006'
 }

@@ -42,7 +42,7 @@ export const Config = {
   identityServerSecret: envString('IDENTITY_SERVER_SECRET', 'replace-me'),
   authServerDomain: envString(
     'AUTH_SERVER_DOMAIN',
-    `http://localhost:${envInt('PORT', 3006)}`
+    `http://localhost:${envInt('AUTH_PORT', 3006)}`
   ),
   waitTimeSeconds: envInt('WAIT_SECONDS', 5),
   cookieKey: envString('COOKIE_KEY', crypto.randomBytes(32).toString('hex')),
