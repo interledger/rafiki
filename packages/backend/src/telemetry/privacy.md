@@ -26,13 +26,9 @@ The privacy parameter is computed as one-tenth of the sensitivity. This paramete
 
 The noise, selected from the Laplacian distribution, is then generated using this privacy parameter and added to the rounded value. If the resulting value is zero, it is set to half the bucket size to ensure that the noise does not completely obscure the transaction value.
 
-## Achieving Local Differential Privacy
-
-This implementation achieves Local Differential Privacy by adding noise to each individual's data before it is sent to the server. The noise is generated based on the sensitivity of the function and a privacy parameter, ensuring that the server never sees the actual data. This provides a strong privacy guarantee, while still allowing for useful patterns in the data to be observed at the Rafiki instance level.
-
 ## Currency Conversion
 
-Another factor that increases deniability is currency conversion. In cross-currency transactions, we use exchange rates that are not traced back. This introduces an additional layer of noise and further protects the privacy of the transactions.
+Another factor that obscures sensitive data is currency conversion. In cross-currency transactions, we use exchange rates that are not traced back. This introduces an additional layer of noise and further protects the privacy of the transactions.
 
 ## References
 
