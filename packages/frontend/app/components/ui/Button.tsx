@@ -13,7 +13,6 @@ const buttonStyles = cva(
           'disabled:bg-red-200 bg-red-500 hover:bg-red-600 shadow-md text-white'
       },
       size: {
-        xs: 'px-1 py-0 rounded-md font-medium',
         sm: 'px-2 py-1 rounded-md font-medium',
         md: 'px-3 py-2 rounded-md font-medium'
       }
@@ -31,11 +30,11 @@ type ButtonProps = VariantProps<typeof buttonStyles> &
   }
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ intent, children, className, size, ...props }, ref) => {
+  ({ intent, children, className, ...props }, ref) => {
     return (
       <ButtonOrLink
         ref={ref}
-        className={cx(buttonStyles({ intent, size }), className)}
+        className={cx(buttonStyles({ intent }), className)}
         {...props}
       >
         {children}
