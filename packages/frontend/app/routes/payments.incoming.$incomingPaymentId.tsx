@@ -98,7 +98,7 @@ export default function ViewIncomingPaymentPage() {
                     ' ' +
                     incomingPayment.incomingAmount.assetCode
                   ) : (
-                    <em>None</em>
+                    <i>None</i>
                   )}
                 </p>
               </div>
@@ -128,7 +128,7 @@ export default function ViewIncomingPaymentPage() {
                   <div>
                     <p className='font-medium'>Metadata</p>
                     <p className='mt-1'>
-                      <em>None</em>
+                      <i>None</i>
                     </p>
                   </div>
                 )}

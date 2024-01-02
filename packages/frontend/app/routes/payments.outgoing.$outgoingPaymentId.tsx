@@ -129,7 +129,7 @@ export default function ViewOutgoingPaymentPage() {
                 {outgoingPayment.error ? (
                   <p className='mt-1 text-red-500'>{outgoingPayment.error}</p>
                 ) : (
-                  <em>None</em>
+                  <i>None</i>
                 )}
               </div>
               <div>
@@ -147,7 +147,7 @@ export default function ViewOutgoingPaymentPage() {
                   <div>
                     <p className='font-medium'>Metadata</p>
                     <p className='mt-1'>
-                      <em>None</em>
+                      <i>None</i>
                     </p>
                   </div>
                 )}
