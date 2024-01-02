@@ -40,7 +40,6 @@ export async function loader({ params }: LoaderArgs) {
 
 export default function ViewOutgoingPaymentPage() {
   const { outgoingPayment } = useLoaderData<typeof loader>()
-  const [showMetadata, setShowMetadata] = useState(false)
 
   return (
     <div className='pt-4 flex flex-col space-y-4'>
@@ -135,30 +134,22 @@ export default function ViewOutgoingPaymentPage() {
               </div>
               <div>
                 {outgoingPayment.metadata ? (
-                  <>
-                    <button
-                      className='font-medium mb-1 cursor-pointer'
-                      aria-label='toggle metadata visibility'
-                      onClick={() => setShowMetadata(!showMetadata)}
-                    >
-                      {showMetadata ? '▼' : '►'} Metadata
-                    </button>
-                    {showMetadata && outgoingPayment.metadata && (
-                      <pre
-                        className='mt-1 text-sm'
-                        dangerouslySetInnerHTML={{
-                          __html: prettify(outgoingPayment.metadata)
-                        }}
-                      />
-                    )}
-                  </>
+                  <details>
+                    <summary>Metadata</summary>
+                    <pre
+                      className='mt-1 text-sm'
+                      dangerouslySetInnerHTML={{
+                        __html: prettify(outgoingPayment.metadata)
+                      }}
+                    />
+                  </details>
                 ) : (
-                  <>
+                  <div>
                     <p className='font-medium'>Metadata</p>
                     <p className='mt-1'>
                       <em>None</em>
                     </p>
-                  </>
+                  </div>
                 )}
               </div>
             </div>
