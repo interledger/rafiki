@@ -1,9 +1,9 @@
 import { BadgeColor } from '~/components'
-import {
+import type {
   IncomingPaymentState,
-  OutgoingPaymentState,
-  WalletAddressStatus
+  OutgoingPaymentState
 } from '~/generated/graphql'
+import { WalletAddressStatus } from '~/generated/graphql'
 import { PaymentType } from '~/generated/graphql'
 
 const COLORS = {
