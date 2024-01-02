@@ -1,7 +1,6 @@
 import type { LoaderArgs } from '@remix-run/node'
 import { json } from '@remix-run/node'
 import { Link, Outlet, useLoaderData } from '@remix-run/react'
-import { useState } from 'react'
 import { z } from 'zod'
 import { Badge, PageHeader } from '~/components'
 import { Button } from '~/components/ui'
@@ -56,9 +55,6 @@ export default function ViewOutgoingPaymentPage() {
             <h3 className='text-lg font-medium'>General Information</h3>
             <p className='text-sm mb-2'>
               Created at {outgoingPayment.createdAt}{' '}
-              <Badge color={badgeColorByPaymentState[outgoingPayment.state]}>
-                {outgoingPayment.state}
-              </Badge>
             </p>
           </div>
           <div className='md:col-span-2 bg-white rounded-md shadow-md'>
@@ -81,6 +77,12 @@ export default function ViewOutgoingPaymentPage() {
                   </Button>
                 </p>
                 <p className='mt-1'>{outgoingPayment.walletAddressId}</p>
+              </div>
+              <div>
+                <p className='font-medium'>State</p>
+                <Badge color={badgeColorByPaymentState[outgoingPayment.state]}>
+                  {outgoingPayment.state}
+                </Badge>
               </div>
               <div>
                 <p className='font-medium'>Receiver</p>
