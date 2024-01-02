@@ -64,19 +64,13 @@ export default function ViewOutgoingPaymentPage() {
                 <p className='mt-1'>{outgoingPayment.id}</p>
               </div>
               <div>
-                <p className='font-medium'>
-                  Wallet Address ID{' '}
-                  <Button
-                    className='mt-1 ml-1'
-                    aria-label='go to wallet address page'
-                    type='button'
-                    size='xs'
-                    to={`/wallet-addresses/${outgoingPayment.walletAddressId}`}
-                  >
-                    ↗️
-                  </Button>
-                </p>
-                <p className='mt-1'>{outgoingPayment.walletAddressId}</p>
+                <p className='font-medium'>Wallet Address ID </p>
+                <Link
+                  to={`/wallet-addresses/${outgoingPayment.walletAddressId}`}
+                  className='mt-1 underline text-blue-600 hover:text-blue-800 visited:text-purple-600'
+                >
+                  {outgoingPayment.walletAddressId}
+                </Link>
               </div>
               <div>
                 <p className='font-medium'>State</p>

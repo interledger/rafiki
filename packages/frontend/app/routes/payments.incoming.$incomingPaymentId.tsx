@@ -1,6 +1,6 @@
 import type { LoaderArgs } from '@remix-run/node'
 import { json } from '@remix-run/node'
-import { Outlet, useLoaderData } from '@remix-run/react'
+import { Link, Outlet, useLoaderData } from '@remix-run/react'
 import { z } from 'zod'
 import { Badge, PageHeader } from '~/components'
 import { Button } from '~/components/ui'
@@ -67,19 +67,13 @@ export default function ViewIncomingPaymentPage() {
                 <p className='mt-1'>{incomingPayment.id}</p>
               </div>
               <div>
-                <p className='font-medium'>
-                  Wallet Address ID{' '}
-                  <Button
-                    className='mt-1 ml-1'
-                    aria-label='go to wallet address page'
-                    type='button'
-                    size='xs'
-                    to={`/wallet-addresses/${incomingPayment.walletAddressId}`}
-                  >
-                    ↗️
-                  </Button>
-                </p>
-                <p className='mt-1'>{incomingPayment.walletAddressId}</p>
+                <p className='font-medium'>Wallet Address ID </p>
+                <Link
+                  to={`/wallet-addresses/${incomingPayment.walletAddressId}`}
+                  className='mt-1 underline text-blue-600 hover:text-blue-800 visited:text-purple-600'
+                >
+                  {incomingPayment.walletAddressId}
+                </Link>
               </div>
               <div>
                 <p className='font-medium'>State</p>
