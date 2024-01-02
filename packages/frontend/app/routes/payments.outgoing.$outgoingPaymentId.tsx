@@ -174,9 +174,9 @@ export default function ViewOutgoingPaymentPage() {
                 <p className='mt-1'>
                   {formatAmount(
                     outgoingPayment.liquidity ?? '0',
-                    outgoingPayment.receiveAmount.assetScale
+                    outgoingPayment.sentAmount.assetScale
                   )}{' '}
-                  {outgoingPayment.receiveAmount.assetCode}
+                  {outgoingPayment.sentAmount.assetCode}
                 </p>
               </div>
               <div className='flex space-x-4'>
