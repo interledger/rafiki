@@ -9,7 +9,7 @@ import { PaymentType } from '~/generated/graphql'
 import type { CombinedPaymentState } from '~/shared/utils'
 import {
   capitalize,
-  badgeColorByState,
+  badgeColorByPaymentState,
   paymentSubpathByType
 } from '~/shared/utils'
 
@@ -128,7 +128,7 @@ export default function PaymentsPage() {
                     {
                       <Badge
                         color={
-                          badgeColorByState[
+                          badgeColorByPaymentState[
                             payment.node.state as CombinedPaymentState
                           ]
                         }

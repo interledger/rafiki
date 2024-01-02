@@ -7,7 +7,11 @@ import { Badge, PageHeader } from '~/components'
 import { Button } from '~/components/ui'
 import { OutgoingPaymentState } from '~/generated/graphql'
 import { getOutgoingPayment } from '~/lib/api/payments.server'
-import { badgeColorByState, formatAmount, prettify } from '~/shared/utils'
+import {
+  badgeColorByPaymentState,
+  formatAmount,
+  prettify
+} from '~/shared/utils'
 
 export async function loader({ params }: LoaderArgs) {
   const outgoingPaymentId = params.outgoingPaymentId
@@ -53,7 +57,7 @@ export default function ViewOutgoingPaymentPage() {
             <h3 className='text-lg font-medium'>General Information</h3>
             <p className='text-sm mb-2'>
               Created at {outgoingPayment.createdAt}{' '}
-              <Badge color={badgeColorByState[outgoingPayment.state]}>
+              <Badge color={badgeColorByPaymentState[outgoingPayment.state]}>
                 {outgoingPayment.state}
               </Badge>
             </p>

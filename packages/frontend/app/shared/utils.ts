@@ -69,7 +69,7 @@ export function getOpenPaymentsUrl() {
 
 export type CombinedPaymentState = IncomingPaymentState | OutgoingPaymentState
 
-export const badgeColorByState: {
+export const badgeColorByPaymentState: {
   [key in CombinedPaymentState]: BadgeColor
 } = {
   COMPLETED: BadgeColor.Green,

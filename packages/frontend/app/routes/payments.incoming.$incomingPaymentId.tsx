@@ -6,7 +6,11 @@ import { z } from 'zod'
 import { Badge, PageHeader } from '~/components'
 import { Button } from '~/components/ui'
 import { getIncomingPayment } from '~/lib/api/payments.server'
-import { badgeColorByState, formatAmount, prettify } from '~/shared/utils'
+import {
+  badgeColorByPaymentState,
+  formatAmount,
+  prettify
+} from '~/shared/utils'
 
 export async function loader({ params }: LoaderArgs) {
   const incomingPaymentId = params.incomingPaymentId
@@ -53,7 +57,7 @@ export default function ViewIncomingPaymentPage() {
             <h3 className='text-lg font-medium'>General Information</h3>
             <p className='text-sm'>
               Created at {incomingPayment.createdAt}{' '}
-              <Badge color={badgeColorByState[incomingPayment.state]}>
+              <Badge color={badgeColorByPaymentState[incomingPayment.state]}>
                 {incomingPayment.state}
               </Badge>
             </p>
