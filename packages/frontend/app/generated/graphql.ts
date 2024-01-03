@@ -332,13 +332,13 @@ export type DepositOutgoingPaymentLiquidityInput = {
 };
 
 export type DepositPeerLiquidityInput = {
-  /** Amount of liquidity to add. */
+  /** Amount of liquidity to deposit. */
   amount: Scalars['UInt64']['input'];
   /** The id of the transfer. */
   id: Scalars['String']['input'];
   /** Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence) */
   idempotencyKey: Scalars['String']['input'];
-  /** The id of the peer to add liquidity. */
+  /** The id of the peer to deposit liquidity. */
   peerId: Scalars['String']['input'];
 };
 
@@ -561,7 +561,7 @@ export type Mutation = {
   createWalletAddressWithdrawal?: Maybe<WalletAddressWithdrawalMutationResponse>;
   /** Delete a peer */
   deletePeer: DeletePeerMutationResponse;
-  /** Add asset liquidity */
+  /** Deposit asset liquidity */
   depositAssetLiquidity?: Maybe<LiquidityMutationResponse>;
   /**
    * Deposit webhook event liquidity
@@ -570,7 +570,7 @@ export type Mutation = {
   depositEventLiquidity?: Maybe<LiquidityMutationResponse>;
   /** Deposit outgoing payment liquidity */
   depositOutgoingPaymentLiquidity?: Maybe<LiquidityMutationResponse>;
-  /** Add peer liquidity */
+  /** Deposit peer liquidity */
   depositPeerLiquidity?: Maybe<LiquidityMutationResponse>;
   /** Post liquidity withdrawal. Withdrawals are two-phase commits and are committed via this mutation. */
   postLiquidityWithdrawal?: Maybe<LiquidityMutationResponse>;

@@ -102,7 +102,7 @@ type Mutation {
   "Update an asset"
   updateAsset(input: UpdateAssetInput!): AssetMutationResponse!
 
-  "Add asset liquidity"
+  "Deposit asset liquidity"
   depositAssetLiquidity(
     input: DepositAssetLiquidityInput!
   ): LiquidityMutationResponse
@@ -126,7 +126,7 @@ type Mutation {
   "Delete a peer"
   deletePeer(input: DeletePeerInput!): DeletePeerMutationResponse!
 
-  "Add peer liquidity"
+  "Deposit peer liquidity"
   depositPeerLiquidity(
     input: DepositPeerLiquidityInput!
   ): LiquidityMutationResponse
@@ -353,9 +353,9 @@ input HttpOutgoingInput {
 }
 
 input DepositPeerLiquidityInput {
-  "The id of the peer to add liquidity."
+  "The id of the peer to deposit liquidity."
   peerId: String!
-  "Amount of liquidity to add."
+  "Amount of liquidity to deposit."
   amount: UInt64!
   "The id of the transfer."
   id: String!

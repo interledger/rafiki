@@ -2218,7 +2218,7 @@
         "inputFields": [
           {
             "name": "amount",
-            "description": "Amount of liquidity to add.",
+            "description": "Amount of liquidity to deposit.",
             "type": {
               "kind": "NON_NULL",
               "name": null,
@@ -2266,7 +2266,7 @@
           },
           {
             "name": "peerId",
-            "description": "The id of the peer to add liquidity.",
+            "description": "The id of the peer to deposit liquidity.",
             "type": {
               "kind": "NON_NULL",
               "name": null,
@@ -4038,7 +4038,7 @@
           },
           {
             "name": "depositAssetLiquidity",
-            "description": "Add asset liquidity",
+            "description": "Deposit asset liquidity",
             "args": [
               {
                 "name": "input",
@@ -4125,7 +4125,7 @@
           },
           {
             "name": "depositPeerLiquidity",
-            "description": "Add peer liquidity",
+            "description": "Deposit peer liquidity",
             "args": [
               {
                 "name": "input",
