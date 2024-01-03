@@ -112,7 +112,7 @@ export const depositPeerLiquidity: MutationResolvers<ApolloContext>['depositPeer
       )
       return {
         code: '400',
-        message: 'Error trying to add peer liquidity',
+        message: 'Error trying to deposit peer liquidity',
         success: false
       }
     }
@@ -157,7 +157,7 @@ export const depositAssetLiquidity: MutationResolvers<ApolloContext>['depositAss
       )
       return {
         code: '400',
-        message: 'Error trying to add asset liquidity',
+        message: 'Error trying to deposit asset liquidity',
         success: false
       }
     }
