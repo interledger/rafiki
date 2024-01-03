@@ -271,8 +271,10 @@ describe('Liquidity Resolvers', (): void => {
       const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
-            mutation AddAssetLiquidity($input: AddAssetLiquidityInput!) {
-              addAssetLiquidity(input: $input) {
+            mutation DepositAssetLiquidity(
+              $input: DepositAssetLiquidityInput!
+            ) {
+              depositAssetLiquidity(input: $input) {
                 code
                 success
                 message
@@ -291,7 +293,7 @@ describe('Liquidity Resolvers', (): void => {
         })
         .then((query): LiquidityMutationResponse => {
           if (query.data) {
-            return query.data.addAssetLiquidity
+            return query.data.depositAssetLiquidity
           } else {
             throw new Error('Data was empty')
           }
@@ -306,8 +308,10 @@ describe('Liquidity Resolvers', (): void => {
       const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
-            mutation AddAssetLiquidity($input: AddAssetLiquidityInput!) {
-              addAssetLiquidity(input: $input) {
+            mutation DepositAssetLiquidity(
+              $input: DepositAssetLiquidityInput!
+            ) {
+              depositAssetLiquidity(input: $input) {
                 code
                 success
                 message
@@ -326,7 +330,7 @@ describe('Liquidity Resolvers', (): void => {
         })
         .then((query): LiquidityMutationResponse => {
           if (query.data) {
-            return query.data.addAssetLiquidity
+            return query.data.depositAssetLiquidity
           } else {
             throw new Error('Data was empty')
           }
@@ -342,8 +346,10 @@ describe('Liquidity Resolvers', (): void => {
       const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
-            mutation AddAssetLiquidity($input: AddAssetLiquidityInput!) {
-              addAssetLiquidity(input: $input) {
+            mutation DepositAssetLiquidity(
+              $input: DepositAssetLiquidityInput!
+            ) {
+              depositAssetLiquidity(input: $input) {
                 code
                 success
                 message
@@ -362,7 +368,7 @@ describe('Liquidity Resolvers', (): void => {
         })
         .then((query): LiquidityMutationResponse => {
           if (query.data) {
-            return query.data.addAssetLiquidity
+            return query.data.depositAssetLiquidity
           } else {
             throw new Error('Data was empty')
           }
@@ -386,8 +392,10 @@ describe('Liquidity Resolvers', (): void => {
       const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
-            mutation AddAssetLiquidity($input: AddAssetLiquidityInput!) {
-              addAssetLiquidity(input: $input) {
+            mutation DepositAssetLiquidity(
+              $input: DepositAssetLiquidityInput!
+            ) {
+              depositAssetLiquidity(input: $input) {
                 code
                 success
                 message
@@ -406,7 +414,7 @@ describe('Liquidity Resolvers', (): void => {
         })
         .then((query): LiquidityMutationResponse => {
           if (query.data) {
-            return query.data.addAssetLiquidity
+            return query.data.depositAssetLiquidity
           } else {
             throw new Error('Data was empty')
           }
@@ -422,8 +430,10 @@ describe('Liquidity Resolvers', (): void => {
       const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
-            mutation AddAssetLiquidity($input: AddAssetLiquidityInput!) {
-              addAssetLiquidity(input: $input) {
+            mutation DepositAssetLiquidity(
+              $input: DepositAssetLiquidityInput!
+            ) {
+              depositAssetLiquidity(input: $input) {
                 code
                 success
                 message
@@ -442,7 +452,7 @@ describe('Liquidity Resolvers', (): void => {
         })
         .then((query): LiquidityMutationResponse => {
           if (query.data) {
-            return query.data.addAssetLiquidity
+            return query.data.depositAssetLiquidity
           } else {
             throw new Error('Data was empty')
           }

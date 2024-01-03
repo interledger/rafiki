@@ -19,17 +19,6 @@ export type Scalars = {
   UInt64: { input: bigint; output: bigint; }
 };
 
-export type AddAssetLiquidityInput = {
-  /** Amount of liquidity to add. */
-  amount: Scalars['UInt64']['input'];
-  /** The id of the asset to add liquidity. */
-  assetId: Scalars['String']['input'];
-  /** The id of the transfer. */
-  id: Scalars['String']['input'];
-  /** Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence) */
-  idempotencyKey: Scalars['String']['input'];
-};
-
 export type AddPeerLiquidityInput = {
   /** Amount of liquidity to add. */
   amount: Scalars['UInt64']['input'];
@@ -328,6 +317,17 @@ export type DeletePeerMutationResponse = MutationResponse & {
   success: Scalars['Boolean']['output'];
 };
 
+export type DepositAssetLiquidityInput = {
+  /** Amount of liquidity to add. */
+  amount: Scalars['UInt64']['input'];
+  /** The id of the asset to add liquidity. */
+  assetId: Scalars['String']['input'];
+  /** The id of the transfer. */
+  id: Scalars['String']['input'];
+  /** Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence) */
+  idempotencyKey: Scalars['String']['input'];
+};
+
 export type DepositEventLiquidityInput = {
   /** The id of the event to deposit into. */
   eventId: Scalars['String']['input'];
@@ -535,8 +535,6 @@ export type Model = {
 
 export type Mutation = {
   __typename?: 'Mutation';
-  /** Add asset liquidity */
-  addAssetLiquidity?: Maybe<LiquidityMutationResponse>;
   /** Add peer liquidity */
   addPeerLiquidity?: Maybe<LiquidityMutationResponse>;
   /** Create an asset */
@@ -565,6 +563,8 @@ export type Mutation = {
   createWalletAddressWithdrawal?: Maybe<WalletAddressWithdrawalMutationResponse>;
   /** Delete a peer */
   deletePeer: DeletePeerMutationResponse;
+  /** Add asset liquidity */
+  depositAssetLiquidity?: Maybe<LiquidityMutationResponse>;
   /**
    * Deposit webhook event liquidity
    * @deprecated Use `depositOutgoingPaymentLiquidity`
@@ -597,11 +597,6 @@ export type Mutation = {
   withdrawIncomingPaymentLiquidity?: Maybe<LiquidityMutationResponse>;
   /** Withdraw outgoing payment liquidity */
   withdrawOutgoingPaymentLiquidity?: Maybe<LiquidityMutationResponse>;
-};
-
-
-export type MutationAddAssetLiquidityArgs = {
-  input: AddAssetLiquidityInput;
 };
 
 
@@ -672,6 +667,11 @@ export type MutationCreateWalletAddressWithdrawalArgs = {
 
 export type MutationDeletePeerArgs = {
   input: DeletePeerInput;
+};
+
+
+export type MutationDepositAssetLiquidityArgs = {
+  input: DepositAssetLiquidityInput;
 };
 
 
@@ -1430,7 +1430,6 @@ export type ResolversInterfaceTypes<RefType extends Record<string, unknown>> = {
 
 /** Mapping between all available schema types and the resolvers types */
 export type ResolversTypes = {
-  AddAssetLiquidityInput: ResolverTypeWrapper<Partial<AddAssetLiquidityInput>>;
   AddPeerLiquidityInput: ResolverTypeWrapper<Partial<AddPeerLiquidityInput>>;
   Alg: ResolverTypeWrapper<Partial<Alg>>;
   Amount: ResolverTypeWrapper<Partial<Amount>>;
@@ -1461,6 +1460,7 @@ export type ResolversTypes = {
   Crv: ResolverTypeWrapper<Partial<Crv>>;
   DeletePeerInput: ResolverTypeWrapper<Partial<DeletePeerInput>>;
   DeletePeerMutationResponse: ResolverTypeWrapper<Partial<DeletePeerMutationResponse>>;
+  DepositAssetLiquidityInput: ResolverTypeWrapper<Partial<DepositAssetLiquidityInput>>;
   DepositEventLiquidityInput: ResolverTypeWrapper<Partial<DepositEventLiquidityInput>>;
   DepositOutgoingPaymentLiquidityInput: ResolverTypeWrapper<Partial<DepositOutgoingPaymentLiquidityInput>>;
   Fee: ResolverTypeWrapper<Partial<Fee>>;
@@ -1547,7 +1547,6 @@ export type ResolversTypes = {
 
 /** Mapping between all available schema types and the resolvers parents */
 export type ResolversParentTypes = {
-  AddAssetLiquidityInput: Partial<AddAssetLiquidityInput>;
   AddPeerLiquidityInput: Partial<AddPeerLiquidityInput>;
   Amount: Partial<Amount>;
   AmountInput: Partial<AmountInput>;
@@ -1576,6 +1575,7 @@ export type ResolversParentTypes = {
   CreateWalletAddressWithdrawalInput: Partial<CreateWalletAddressWithdrawalInput>;
   DeletePeerInput: Partial<DeletePeerInput>;
   DeletePeerMutationResponse: Partial<DeletePeerMutationResponse>;
+  DepositAssetLiquidityInput: Partial<DepositAssetLiquidityInput>;
   DepositEventLiquidityInput: Partial<DepositEventLiquidityInput>;
   DepositOutgoingPaymentLiquidityInput: Partial<DepositOutgoingPaymentLiquidityInput>;
   Fee: Partial<Fee>;
@@ -1842,7 +1842,6 @@ export type ModelResolvers<ContextType = any, ParentType extends ResolversParent
 };
 
 export type MutationResolvers<ContextType = any, ParentType extends ResolversParentTypes['Mutation'] = ResolversParentTypes['Mutation']> = {
-  addAssetLiquidity?: Resolver<Maybe<ResolversTypes['LiquidityMutationResponse']>, ParentType, ContextType, RequireFields<MutationAddAssetLiquidityArgs, 'input'>>;
   addPeerLiquidity?: Resolver<Maybe<ResolversTypes['LiquidityMutationResponse']>, ParentType, ContextType, RequireFields<MutationAddPeerLiquidityArgs, 'input'>>;
   createAsset?: Resolver<ResolversTypes['AssetMutationResponse'], ParentType, ContextType, RequireFields<MutationCreateAssetArgs, 'input'>>;
   createAssetLiquidityWithdrawal?: Resolver<Maybe<ResolversTypes['LiquidityMutationResponse']>, ParentType, ContextType, RequireFields<MutationCreateAssetLiquidityWithdrawalArgs, 'input'>>;
@@ -1857,6 +1856,7 @@ export type MutationResolvers<ContextType = any, ParentType extends ResolversPar
   createWalletAddressKey?: Resolver<Maybe<ResolversTypes['CreateWalletAddressKeyMutationResponse']>, ParentType, ContextType, RequireFields<MutationCreateWalletAddressKeyArgs, 'input'>>;
   createWalletAddressWithdrawal?: Resolver<Maybe<ResolversTypes['WalletAddressWithdrawalMutationResponse']>, ParentType, ContextType, RequireFields<MutationCreateWalletAddressWithdrawalArgs, 'input'>>;
   deletePeer?: Resolver<ResolversTypes['DeletePeerMutationResponse'], ParentType, ContextType, RequireFields<MutationDeletePeerArgs, 'input'>>;
+  depositAssetLiquidity?: Resolver<Maybe<ResolversTypes['LiquidityMutationResponse']>, ParentType, ContextType, RequireFields<MutationDepositAssetLiquidityArgs, 'input'>>;
   depositEventLiquidity?: Resolver<Maybe<ResolversTypes['LiquidityMutationResponse']>, ParentType, ContextType, RequireFields<MutationDepositEventLiquidityArgs, 'input'>>;
   depositOutgoingPaymentLiquidity?: Resolver<Maybe<ResolversTypes['LiquidityMutationResponse']>, ParentType, ContextType, RequireFields<MutationDepositOutgoingPaymentLiquidityArgs, 'input'>>;
   postLiquidityWithdrawal?: Resolver<Maybe<ResolversTypes['LiquidityMutationResponse']>, ParentType, ContextType, RequireFields<MutationPostLiquidityWithdrawalArgs, 'input'>>;
@@ -2225,160 +2225,3 @@ export type Resolvers<ContextType = any> = {
   WebhookEventsEdge?: WebhookEventsEdgeResolvers<ContextType>;
 };
 
-
-export type GetAssetQueryVariables = Exact<{
-  id: Scalars['String']['input'];
-}>;
-
-
-export type GetAssetQuery = { __typename?: 'Query', asset?: { __typename?: 'Asset', id: string, code: string, scale: number, withdrawalThreshold?: bigint | null, liquidity?: bigint | null, createdAt: string, sendingFee?: { __typename?: 'Fee', basisPoints: number, fixed: bigint, createdAt: string } | null } | null };
-
-export type GetAssetWithFeesQueryVariables = Exact<{
-  id: Scalars['String']['input'];
-  after?: InputMaybe<Scalars['String']['input']>;
-  before?: InputMaybe<Scalars['String']['input']>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  last?: InputMaybe<Scalars['Int']['input']>;
-}>;
-
-
-export type GetAssetWithFeesQuery = { __typename?: 'Query', asset?: { __typename?: 'Asset', fees?: { __typename?: 'FeesConnection', edges: Array<{ __typename?: 'FeeEdge', cursor: string, node: { __typename?: 'Fee', assetId: string, basisPoints: number, createdAt: string, fixed: bigint, id: string, type: FeeType } }>, pageInfo: { __typename?: 'PageInfo', endCursor?: string | null, hasNextPage: boolean, hasPreviousPage: boolean, startCursor?: string | null } } | null } | null };
-
-export type ListAssetsQueryVariables = Exact<{
-  after?: InputMaybe<Scalars['String']['input']>;
-  before?: InputMaybe<Scalars['String']['input']>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  last?: InputMaybe<Scalars['Int']['input']>;
-}>;
-
-
-export type ListAssetsQuery = { __typename?: 'Query', assets: { __typename?: 'AssetsConnection', edges: Array<{ __typename?: 'AssetEdge', node: { __typename?: 'Asset', code: string, id: string, scale: number, withdrawalThreshold?: bigint | null, createdAt: string } }>, pageInfo: { __typename?: 'PageInfo', startCursor?: string | null, endCursor?: string | null, hasNextPage: boolean, hasPreviousPage: boolean } } };
-
-export type CreateAssetMutationVariables = Exact<{
-  input: CreateAssetInput;
-}>;
-
-
-export type CreateAssetMutation = { __typename?: 'Mutation', createAsset: { __typename?: 'AssetMutationResponse', code: string, success: boolean, message: string, asset?: { __typename?: 'Asset', id: string } | null } };
-
-export type UpdateAssetMutationVariables = Exact<{
-  input: UpdateAssetInput;
-}>;
-
-
-export type UpdateAssetMutation = { __typename?: 'Mutation', updateAsset: { __typename?: 'AssetMutationResponse', code: string, success: boolean, message: string } };
-
-export type SetFeeMutationVariables = Exact<{
-  input: SetFeeInput;
-}>;
-
-
-export type SetFeeMutation = { __typename?: 'Mutation', setFee: { __typename?: 'SetFeeResponse', code: string, message: string, success: boolean, fee?: { __typename?: 'Fee', assetId: string, basisPoints: number, createdAt: string, fixed: bigint, id: string, type: FeeType } | null } };
-
-export type AddAssetLiquidityMutationVariables = Exact<{
-  input: AddAssetLiquidityInput;
-}>;
-
-
-export type AddAssetLiquidityMutation = { __typename?: 'Mutation', addAssetLiquidity?: { __typename?: 'LiquidityMutationResponse', code: string, success: boolean, message: string, error?: LiquidityError | null } | null };
-
-export type WithdrawAssetLiquidityVariables = Exact<{
-  input: CreateAssetLiquidityWithdrawalInput;
-}>;
-
-
-export type WithdrawAssetLiquidity = { __typename?: 'Mutation', createAssetLiquidityWithdrawal?: { __typename?: 'LiquidityMutationResponse', code: string, success: boolean, message: string, error?: LiquidityError | null } | null };
-
-export type GetPeerQueryVariables = Exact<{
-  id: Scalars['String']['input'];
-}>;
-
-
-export type GetPeerQuery = { __typename?: 'Query', peer?: { __typename?: 'Peer', id: string, name?: string | null, staticIlpAddress: string, maxPacketAmount?: bigint | null, liquidity?: bigint | null, createdAt: string, asset: { __typename?: 'Asset', id: string, code: string, scale: number, withdrawalThreshold?: bigint | null }, http: { __typename?: 'Http', outgoing: { __typename?: 'HttpOutgoing', endpoint: string, authToken: string } } } | null };
-
-export type ListPeersQueryVariables = Exact<{
-  after?: InputMaybe<Scalars['String']['input']>;
-  before?: InputMaybe<Scalars['String']['input']>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  last?: InputMaybe<Scalars['Int']['input']>;
-}>;
-
-
-export type ListPeersQuery = { __typename?: 'Query', peers: { __typename?: 'PeersConnection', edges: Array<{ __typename?: 'PeerEdge', node: { __typename?: 'Peer', id: string, name?: string | null, staticIlpAddress: string, http: { __typename?: 'Http', outgoing: { __typename?: 'HttpOutgoing', endpoint: string } }, asset: { __typename?: 'Asset', code: string, scale: number } } }>, pageInfo: { __typename?: 'PageInfo', startCursor?: string | null, endCursor?: string | null, hasNextPage: boolean, hasPreviousPage: boolean } } };
-
-export type CreatePeerMutationVariables = Exact<{
-  input: CreatePeerInput;
-}>;
-
-
-export type CreatePeerMutation = { __typename?: 'Mutation', createPeer: { __typename?: 'CreatePeerMutationResponse', code: string, success: boolean, message: string, peer?: { __typename?: 'Peer', id: string } | null } };
-
-export type UpdatePeerMutationVariables = Exact<{
-  input: UpdatePeerInput;
-}>;
-
-
-export type UpdatePeerMutation = { __typename?: 'Mutation', updatePeer: { __typename?: 'UpdatePeerMutationResponse', code: string, success: boolean, message: string } };
-
-export type DeletePeerMutationVariables = Exact<{
-  input: DeletePeerInput;
-}>;
-
-
-export type DeletePeerMutation = { __typename?: 'Mutation', deletePeer: { __typename?: 'DeletePeerMutationResponse', code: string, success: boolean, message: string } };
-
-export type AddPeerLiquidityMutationVariables = Exact<{
-  input: AddPeerLiquidityInput;
-}>;
-
-
-export type AddPeerLiquidityMutation = { __typename?: 'Mutation', addPeerLiquidity?: { __typename?: 'LiquidityMutationResponse', code: string, success: boolean, message: string, error?: LiquidityError | null } | null };
-
-export type WithdrawPeerLiquidityVariables = Exact<{
-  input: CreatePeerLiquidityWithdrawalInput;
-}>;
-
-
-export type WithdrawPeerLiquidity = { __typename?: 'Mutation', createPeerLiquidityWithdrawal?: { __typename?: 'LiquidityMutationResponse', code: string, success: boolean, message: string, error?: LiquidityError | null } | null };
-
-export type GetWalletAddressQueryVariables = Exact<{
-  id: Scalars['String']['input'];
-}>;
-
-
-export type GetWalletAddressQuery = { __typename?: 'Query', walletAddress?: { __typename?: 'WalletAddress', id: string, url: string, publicName?: string | null, status: WalletAddressStatus, createdAt: string, asset: { __typename?: 'Asset', id: string, code: string, scale: number, withdrawalThreshold?: bigint | null } } | null };
-
-export type ListWalletAddresssQueryVariables = Exact<{
-  after?: InputMaybe<Scalars['String']['input']>;
-  before?: InputMaybe<Scalars['String']['input']>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  last?: InputMaybe<Scalars['Int']['input']>;
-}>;
-
-
-export type ListWalletAddresssQuery = { __typename?: 'Query', walletAddresses: { __typename?: 'WalletAddressesConnection', edges: Array<{ __typename?: 'WalletAddressEdge', cursor: string, node: { __typename?: 'WalletAddress', id: string, publicName?: string | null, status: WalletAddressStatus, url: string } }>, pageInfo: { __typename?: 'PageInfo', startCursor?: string | null, endCursor?: string | null, hasNextPage: boolean, hasPreviousPage: boolean } } };
-
-export type UpdateWalletAddressMutationVariables = Exact<{
-  input: UpdateWalletAddressInput;
-}>;
-
-
-export type UpdateWalletAddressMutation = { __typename?: 'Mutation', updateWalletAddress: { __typename?: 'UpdateWalletAddressMutationResponse', code: string, message: string, success: boolean } };
-
-export type CreateWalletAddressMutationVariables = Exact<{
-  input: CreateWalletAddressInput;
-}>;
-
-
-export type CreateWalletAddressMutation = { __typename?: 'Mutation', createWalletAddress: { __typename?: 'CreateWalletAddressMutationResponse', code: string, success: boolean, message: string, walletAddress?: { __typename?: 'WalletAddress', id: string } | null } };
-
-export type ListWebhookEventsVariables = Exact<{
-  after?: InputMaybe<Scalars['String']['input']>;
-  before?: InputMaybe<Scalars['String']['input']>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  last?: InputMaybe<Scalars['Int']['input']>;
-  filter?: InputMaybe<WebhookEventFilter>;
-}>;
-
-
-export type ListWebhookEvents = { __typename?: 'Query', webhookEvents: { __typename?: 'WebhookEventsConnection', edges: Array<{ __typename?: 'WebhookEventsEdge', cursor: string, node: { __typename?: 'WebhookEvent', id: string, data: any, type: string } }>, pageInfo: { __typename?: 'PageInfo', startCursor?: string | null, endCursor?: string | null, hasNextPage: boolean, hasPreviousPage: boolean } } };

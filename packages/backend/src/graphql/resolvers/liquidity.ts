@@ -118,7 +118,7 @@ export const addPeerLiquidity: MutationResolvers<ApolloContext>['addPeerLiquidit
     }
   }
 
-export const addAssetLiquidity: MutationResolvers<ApolloContext>['addAssetLiquidity'] =
+export const depositAssetLiquidity: MutationResolvers<ApolloContext>['depositAssetLiquidity'] =
   async (
     parent,
     args,
