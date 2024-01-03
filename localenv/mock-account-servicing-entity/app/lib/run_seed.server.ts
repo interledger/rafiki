@@ -7,11 +7,11 @@ import {
 import {
   createAsset,
   createPeer,
-  addPeerLiquidity,
+  depositPeerLiquidity,
   createWalletAddress,
   createWalletAddressKey,
   setFee,
-  addAssetLiquidity,
+  depositAssetLiquidity,
   createAutoPeer
 } from './requesters'
 import { v4 } from 'uuid'
@@ -28,7 +28,11 @@ export async function setupFromSeed(config: Config): Promise<void> {
       throw new Error('asset not defined')
     }
 
-    const addedLiquidity = await addAssetLiquidity(asset.id, liquidity, v4())
+    const addedLiquidity = await depositAssetLiquidity(
+      asset.id,
+      liquidity,
+      v4()
+    )
 
     assets[code] = asset
     console.log(JSON.stringify({ asset, addedLiquidity }, null, 2))
@@ -55,7 +59,7 @@ export async function setupFromSeed(config: Config): Promise<void> {
           throw new Error('peer response not defined')
         }
         const transferUid = v4()
-        const liquidity = await addPeerLiquidity(
+        const liquidity = await depositPeerLiquidity(
           peerResponse.id,
           peer.initialLiquidity,
           transferUid

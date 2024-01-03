@@ -5,8 +5,8 @@ import { mockAccounts } from './accounts.server'
 import { apolloClient } from './apolloClient'
 import { v4 as uuid } from 'uuid'
 import {
-  addAssetLiquidity,
-  addPeerLiquidity,
+  depositAssetLiquidity,
+  depositPeerLiquidity,
   createWalletAddress
 } from './requesters'
 
@@ -210,8 +210,8 @@ export async function handleLowLiquidity(wh: WebHook) {
   }
 
   if (wh.type == 'asset.liquidity_low') {
-    await addAssetLiquidity(id, 1000000, uuid())
+    await depositAssetLiquidity(id, 1000000, uuid())
   } else {
-    await addPeerLiquidity(id, '1000000', uuid())
+    await depositPeerLiquidity(id, '1000000', uuid())
   }
 }
