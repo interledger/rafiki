@@ -2,7 +2,7 @@ import { type ActionArgs } from '@remix-run/node'
 import { useNavigate } from '@remix-run/react'
 import { v4 } from 'uuid'
 import { LiquidityDialog } from '~/components/LiquidityDialog'
-import { addAssetLiquidity } from '~/lib/api/asset.server'
+import { depositAssetLiquidity } from '~/lib/api/asset.server'
 import { messageStorage, setMessageAndRedirect } from '~/lib/message.server'
 import { amountSchema } from '~/lib/validate.server'
 
@@ -48,7 +48,7 @@ export async function action({ request, params }: ActionArgs) {
     })
   }
 
-  const response = await addAssetLiquidity({
+  const response = await depositAssetLiquidity({
     assetId,
     amount: result.data,
     id: v4(),
