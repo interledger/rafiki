@@ -1982,7 +1982,9 @@ describe('Liquidity Resolvers', (): void => {
       outgoingPayment = await createOutgoingPayment(deps, {
         walletAddressId,
         method: 'ilp',
-        receiver: `${Config.publicHost}/${uuid()}/incoming-payments/${uuid()}`,
+        receiver: `${
+          Config.openPaymentsUrl
+        }/${uuid()}/incoming-payments/${uuid()}`,
         debitAmount: {
           value: BigInt(456),
           assetCode: walletAddress.asset.code,
