@@ -125,7 +125,7 @@ Query Variables (substitute the asset ID from the "create asset" response for `I
       "outgoing": {"endpoint": "ilp.othergreatwallet.com", "authToken": "theirtoken"}
     },
     "assetId": "INSERT_ASSET_ID",
-    "initialLiquidity: <optionally, and intial amount of liquity to provision. Liquidity can also be added via the `AddPeerLiquidity` mutation described below>
+    "initialLiquidity: <optionally, and intial amount of liquity to provision. Liquidity can also be deposited via the `DepositPeerLiquidity` mutation described below>
   }
 }
 ```
@@ -159,13 +159,13 @@ Example Successful Response
 }
 ```
 
-### Add Peer Liquidity
+### Deposit Peer Liquidity
 
 Query:
 
 ```graphql
-mutation AddPeerLiquidity($input: AddPeerLiquidityInput!) {
-  addPeerLiquidity(input: $input) {
+mutation DepositPeerLiquidity($input: DepositPeerLiquidityInput!) {
+  depositPeerLiquidity(input: $input) {
     code
     success
     message
@@ -193,10 +193,10 @@ Example successful response:
 ```json
 {
   "data": {
-    "addPeerLiquidity": {
+    "depositPeerLiquidity": {
       "code": "200",
       "success": true,
-      "message": "Added peer liquidity",
+      "message": "Deposited peer liquidity",
       "error": null
     }
   }

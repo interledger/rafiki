@@ -32,7 +32,7 @@ A configured peer _Cloud Nine Wallet_ within Rafiki has a peer liquidity of 100 
 
 When Open Payments incoming or outgoing payments are created, a liquidity account is created within the accounting database. Liquidity needs to be deposited to an outgoing payment before the payment can be processed. The Account Servicing Entity is notified to deposit liquidity via the `outgoing_payment.created` event. Similarly, packets that are received for an incoming payment increase its liquidity. The Account Servicing Entity is notified to withdraw that liquidity via the `incoming_payment.completed` event.
 
-## Adding and Withdrawing Liquidity
+## Depositing and Withdrawing Liquidity
 
 > **Note:** The `idempotencyKey` must be provided whenever calling mutations dealing with liquidity.
 > This key allows safely retrying requests, without performing the operation multiple times.
@@ -40,11 +40,11 @@ When Open Payments incoming or outgoing payments are created, a liquidity accoun
 
 ### Asset Liquidity
 
-Add and withdraw asset liquidity via the Admin API (or UI):
+Deposit and withdraw asset liquidity via the Admin API (or UI):
 
 ```graphql
-mutation AddAssetLiquidity($input: AddAssetLiquidityInput!) {
-  addAssetLiquidity(input: $input) {
+mutation DepositAssetLiquidity($input: DepositAssetLiquidityInput!) {
+  depositAssetLiquidity(input: $input) {
     code
     success
     message
@@ -96,11 +96,11 @@ where
 
 ### Peer Liquidity
 
-Add and withdraw peer liquidity via the Admin API (or UI):
+Deposit and withdraw peer liquidity via the Admin API (or UI):
 
 ```graphql
-mutation AddPeerLiquidity($input: AddPeerLiquidityInput!) {
-  addPeerLiquidity(input: $input) {
+mutation DepositPeerLiquidity($input: DepositPeerLiquidityInput!) {
+  depositPeerLiquidity(input: $input) {
     code
     success
     message

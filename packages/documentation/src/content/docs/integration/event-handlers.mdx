@@ -158,7 +158,7 @@ Example: The asset liquidity for USD (scale: 2) drops below 100.00 USD.
     participant R as Rafiki
 
     R->>ASE: webhook event: liquidity (asset) low,<br>asset: USD (scale: 2, id: "abc")
-    ASE->>R: admin API call: AddAssetLiquidity
+    ASE->>R: admin API call: DepositAssetLiquidity
 
 `}
 />
@@ -175,7 +175,7 @@ Example: The peer liquidity for Happy Life Bank drops below 100.00 USD.
     participant R as Rafiki
 
     R->>ASE: webhook event: liquidity (peer) low,<br>peer: Happy Life Bank (asset: "USD", scale: 2, id: "abc")
-    ASE->>R: admin API call: AddPeerLiquidity
+    ASE->>R: admin API call: DepositPeerLiquidity
 
 `}
 />
