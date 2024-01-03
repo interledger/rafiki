@@ -19,17 +19,6 @@ export type Scalars = {
   UInt64: { input: bigint; output: bigint; }
 };
 
-export type AddPeerLiquidityInput = {
-  /** Amount of liquidity to add. */
-  amount: Scalars['UInt64']['input'];
-  /** The id of the transfer. */
-  id: Scalars['String']['input'];
-  /** Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence) */
-  idempotencyKey: Scalars['String']['input'];
-  /** The id of the peer to add liquidity. */
-  peerId: Scalars['String']['input'];
-};
-
 export enum Alg {
   EdDsa = 'EdDSA'
 }
@@ -318,9 +307,9 @@ export type DeletePeerMutationResponse = MutationResponse & {
 };
 
 export type DepositAssetLiquidityInput = {
-  /** Amount of liquidity to add. */
+  /** Amount of liquidity to deposit. */
   amount: Scalars['UInt64']['input'];
-  /** The id of the asset to add liquidity. */
+  /** The id of the asset to deposit liquidity. */
   assetId: Scalars['String']['input'];
   /** The id of the transfer. */
   id: Scalars['String']['input'];
@@ -340,6 +329,17 @@ export type DepositOutgoingPaymentLiquidityInput = {
   idempotencyKey: Scalars['String']['input'];
   /** The id of the outgoing payment to deposit into. */
   outgoingPaymentId: Scalars['String']['input'];
+};
+
+export type DepositPeerLiquidityInput = {
+  /** Amount of liquidity to add. */
+  amount: Scalars['UInt64']['input'];
+  /** The id of the transfer. */
+  id: Scalars['String']['input'];
+  /** Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence) */
+  idempotencyKey: Scalars['String']['input'];
+  /** The id of the peer to add liquidity. */
+  peerId: Scalars['String']['input'];
 };
 
 export type Fee = Model & {
@@ -535,8 +535,6 @@ export type Model = {
 
 export type Mutation = {
   __typename?: 'Mutation';
-  /** Add peer liquidity */
-  addPeerLiquidity?: Maybe<LiquidityMutationResponse>;
   /** Create an asset */
   createAsset: AssetMutationResponse;
   /** Withdraw asset liquidity */
@@ -572,6 +570,8 @@ export type Mutation = {
   depositEventLiquidity?: Maybe<LiquidityMutationResponse>;
   /** Deposit outgoing payment liquidity */
   depositOutgoingPaymentLiquidity?: Maybe<LiquidityMutationResponse>;
+  /** Add peer liquidity */
+  depositPeerLiquidity?: Maybe<LiquidityMutationResponse>;
   /** Post liquidity withdrawal. Withdrawals are two-phase commits and are committed via this mutation. */
   postLiquidityWithdrawal?: Maybe<LiquidityMutationResponse>;
   /** Revoke a public key associated with a wallet address. Open Payment requests using this key for request signatures will be denied going forward. */
@@ -597,11 +597,6 @@ export type Mutation = {
   withdrawIncomingPaymentLiquidity?: Maybe<LiquidityMutationResponse>;
   /** Withdraw outgoing payment liquidity */
   withdrawOutgoingPaymentLiquidity?: Maybe<LiquidityMutationResponse>;
-};
-
-
-export type MutationAddPeerLiquidityArgs = {
-  input: AddPeerLiquidityInput;
 };
 
 
@@ -682,6 +677,11 @@ export type MutationDepositEventLiquidityArgs = {
 
 export type MutationDepositOutgoingPaymentLiquidityArgs = {
   input: DepositOutgoingPaymentLiquidityInput;
+};
+
+
+export type MutationDepositPeerLiquidityArgs = {
+  input: DepositPeerLiquidityInput;
 };
 
 
@@ -1430,7 +1430,6 @@ export type ResolversInterfaceTypes<RefType extends Record<string, unknown>> = {
 
 /** Mapping between all available schema types and the resolvers types */
 export type ResolversTypes = {
-  AddPeerLiquidityInput: ResolverTypeWrapper<Partial<AddPeerLiquidityInput>>;
   Alg: ResolverTypeWrapper<Partial<Alg>>;
   Amount: ResolverTypeWrapper<Partial<Amount>>;
   AmountInput: ResolverTypeWrapper<Partial<AmountInput>>;
@@ -1463,6 +1462,7 @@ export type ResolversTypes = {
   DepositAssetLiquidityInput: ResolverTypeWrapper<Partial<DepositAssetLiquidityInput>>;
   DepositEventLiquidityInput: ResolverTypeWrapper<Partial<DepositEventLiquidityInput>>;
   DepositOutgoingPaymentLiquidityInput: ResolverTypeWrapper<Partial<DepositOutgoingPaymentLiquidityInput>>;
+  DepositPeerLiquidityInput: ResolverTypeWrapper<Partial<DepositPeerLiquidityInput>>;
   Fee: ResolverTypeWrapper<Partial<Fee>>;
   FeeDetails: ResolverTypeWrapper<Partial<FeeDetails>>;
   FeeEdge: ResolverTypeWrapper<Partial<FeeEdge>>;
@@ -1547,7 +1547,6 @@ export type ResolversTypes = {
 
 /** Mapping between all available schema types and the resolvers parents */
 export type ResolversParentTypes = {
-  AddPeerLiquidityInput: Partial<AddPeerLiquidityInput>;
   Amount: Partial<Amount>;
   AmountInput: Partial<AmountInput>;
   Asset: Partial<Asset>;
@@ -1578,6 +1577,7 @@ export type ResolversParentTypes = {
   DepositAssetLiquidityInput: Partial<DepositAssetLiquidityInput>;
   DepositEventLiquidityInput: Partial<DepositEventLiquidityInput>;
   DepositOutgoingPaymentLiquidityInput: Partial<DepositOutgoingPaymentLiquidityInput>;
+  DepositPeerLiquidityInput: Partial<DepositPeerLiquidityInput>;
   Fee: Partial<Fee>;
   FeeDetails: Partial<FeeDetails>;
   FeeEdge: Partial<FeeEdge>;
@@ -1842,7 +1842,6 @@ export type ModelResolvers<ContextType = any, ParentType extends ResolversParent
 };
 
 export type MutationResolvers<ContextType = any, ParentType extends ResolversParentTypes['Mutation'] = ResolversParentTypes['Mutation']> = {
-  addPeerLiquidity?: Resolver<Maybe<ResolversTypes['LiquidityMutationResponse']>, ParentType, ContextType, RequireFields<MutationAddPeerLiquidityArgs, 'input'>>;
   createAsset?: Resolver<ResolversTypes['AssetMutationResponse'], ParentType, ContextType, RequireFields<MutationCreateAssetArgs, 'input'>>;
   createAssetLiquidityWithdrawal?: Resolver<Maybe<ResolversTypes['LiquidityMutationResponse']>, ParentType, ContextType, RequireFields<MutationCreateAssetLiquidityWithdrawalArgs, 'input'>>;
   createIncomingPayment?: Resolver<ResolversTypes['IncomingPaymentResponse'], ParentType, ContextType, RequireFields<MutationCreateIncomingPaymentArgs, 'input'>>;
@@ -1859,6 +1858,7 @@ export type MutationResolvers<ContextType = any, ParentType extends ResolversPar
   depositAssetLiquidity?: Resolver<Maybe<ResolversTypes['LiquidityMutationResponse']>, ParentType, ContextType, RequireFields<MutationDepositAssetLiquidityArgs, 'input'>>;
   depositEventLiquidity?: Resolver<Maybe<ResolversTypes['LiquidityMutationResponse']>, ParentType, ContextType, RequireFields<MutationDepositEventLiquidityArgs, 'input'>>;
   depositOutgoingPaymentLiquidity?: Resolver<Maybe<ResolversTypes['LiquidityMutationResponse']>, ParentType, ContextType, RequireFields<MutationDepositOutgoingPaymentLiquidityArgs, 'input'>>;
+  depositPeerLiquidity?: Resolver<Maybe<ResolversTypes['LiquidityMutationResponse']>, ParentType, ContextType, RequireFields<MutationDepositPeerLiquidityArgs, 'input'>>;
   postLiquidityWithdrawal?: Resolver<Maybe<ResolversTypes['LiquidityMutationResponse']>, ParentType, ContextType, RequireFields<MutationPostLiquidityWithdrawalArgs, 'input'>>;
   revokeWalletAddressKey?: Resolver<Maybe<ResolversTypes['RevokeWalletAddressKeyMutationResponse']>, ParentType, ContextType, RequireFields<MutationRevokeWalletAddressKeyArgs, 'input'>>;
   setFee?: Resolver<ResolversTypes['SetFeeResponse'], ParentType, ContextType, RequireFields<MutationSetFeeArgs, 'input'>>;

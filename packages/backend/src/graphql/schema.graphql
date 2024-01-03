@@ -127,7 +127,9 @@ type Mutation {
   deletePeer(input: DeletePeerInput!): DeletePeerMutationResponse!
 
   "Add peer liquidity"
-  addPeerLiquidity(input: AddPeerLiquidityInput!): LiquidityMutationResponse
+  depositPeerLiquidity(
+    input: DepositPeerLiquidityInput!
+  ): LiquidityMutationResponse
 
   "Withdraw peer liquidity"
   createPeerLiquidityWithdrawal(
@@ -350,7 +352,7 @@ input HttpOutgoingInput {
   endpoint: String!
 }
 
-input AddPeerLiquidityInput {
+input DepositPeerLiquidityInput {
   "The id of the peer to add liquidity."
   peerId: String!
   "Amount of liquidity to add."
