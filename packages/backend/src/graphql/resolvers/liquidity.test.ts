@@ -260,14 +260,14 @@ describe('Liquidity Resolvers', (): void => {
     })
   })
 
-  describe('Add asset liquidity', (): void => {
+  describe('Deposit asset liquidity', (): void => {
     let asset: Asset
 
     beforeEach(async (): Promise<void> => {
       asset = await createAsset(deps)
     })
 
-    test('Can add liquidity to asset', async (): Promise<void> => {
+    test('Can deposit liquidity to asset', async (): Promise<void> => {
       const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
