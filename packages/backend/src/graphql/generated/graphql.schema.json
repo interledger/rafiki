@@ -861,18 +861,6 @@
         "fields": null,
         "inputFields": [
           {
-            "name": "addedLiquidity",
-            "description": "Initial amount of liquidity to add for peer",
-            "type": {
-              "kind": "SCALAR",
-              "name": "UInt64",
-              "ofType": null
-            },
-            "defaultValue": null,
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
             "name": "assetId",
             "description": "Asset id of peering relationship",
             "type": {
@@ -883,6 +871,18 @@
                 "name": "String",
                 "ofType": null
               }
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "depositedLiquidity",
+            "description": "Initial amount of liquidity to deposit for peer",
+            "type": {
+              "kind": "SCALAR",
+              "name": "UInt64",
+              "ofType": null
             },
             "defaultValue": null,
             "isDeprecated": false,
@@ -1153,7 +1153,7 @@
           },
           {
             "name": "initialLiquidity",
-            "description": "Initial amount of liquidity to add for peer",
+            "description": "Initial amount of liquidity to deposit for peer",
             "type": {
               "kind": "SCALAR",
               "name": "UInt64",

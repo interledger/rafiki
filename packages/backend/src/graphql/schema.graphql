@@ -293,7 +293,7 @@ input CreatePeerInput {
   name: String
   "Account Servicing Entity will be notified via a webhook event if peer liquidity falls below this value"
   liquidityThreshold: UInt64
-  "Initial amount of liquidity to add for peer"
+  "Initial amount of liquidity to deposit for peer"
   initialLiquidity: UInt64
   "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)"
   idempotencyKey: String
@@ -310,8 +310,8 @@ input CreateOrUpdatePeerByUrlInput {
   name: String
   "Account Servicing Entity will be notified via a webhook event if peer liquidity falls below this value"
   liquidityThreshold: UInt64
-  "Initial amount of liquidity to add for peer"
-  addedLiquidity: UInt64
+  "Initial amount of liquidity to deposit for peer"
+  depositedLiquidity: UInt64
   "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)"
   idempotencyKey: String
 }

@@ -28,14 +28,14 @@ export async function setupFromSeed(config: Config): Promise<void> {
       throw new Error('asset not defined')
     }
 
-    const addedLiquidity = await depositAssetLiquidity(
+    const depositedLiquidity = await depositAssetLiquidity(
       asset.id,
       liquidity,
       v4()
     )
 
     assets[code] = asset
-    console.log(JSON.stringify({ asset, addedLiquidity }, null, 2))
+    console.log(JSON.stringify({ asset, depositedLiquidity }, null, 2))
 
     const { fees } = config.seed
     const fee = fees.find((fee) => fee.asset === code && fee.scale == scale)

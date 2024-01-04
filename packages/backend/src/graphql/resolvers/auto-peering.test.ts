@@ -106,7 +106,7 @@ describe('Auto Peering Resolvers', (): void => {
   describe('Create Peer By Url', (): void => {
     test('Can create a peer', async (): Promise<void> => {
       const input = createOrUpdatePeerByUrlInput({
-        addedLiquidity: 1000n
+        depositedLiquidity: 1000n
       })
 
       const peerDetails = {
@@ -141,14 +141,14 @@ describe('Auto Peering Resolvers', (): void => {
         },
         maxPacketAmount: input.maxPacketAmount?.toString(),
         staticIlpAddress: peerDetails.staticIlpAddress,
-        liquidity: input.addedLiquidity?.toString(),
+        liquidity: input.depositedLiquidity?.toString(),
         name: input.name
       })
       scope.done()
     })
 
     test('Can update a peer', async (): Promise<void> => {
-      const input = createOrUpdatePeerByUrlInput({ addedLiquidity: 1000n })
+      const input = createOrUpdatePeerByUrlInput({ depositedLiquidity: 1000n })
 
       const peerDetails = {
         staticIlpAddress: 'test.peer2',
@@ -191,7 +191,7 @@ describe('Auto Peering Resolvers', (): void => {
         },
         maxPacketAmount: input.maxPacketAmount?.toString(),
         staticIlpAddress: peerDetails.staticIlpAddress,
-        liquidity: input.addedLiquidity?.toString(),
+        liquidity: input.depositedLiquidity?.toString(),
         name: input.name
       })
 
@@ -199,7 +199,7 @@ describe('Auto Peering Resolvers', (): void => {
         ...input,
         name: 'Updated Name',
         maxPacketAmount: 1000n,
-        addedLiquidity: 2000n
+        depositedLiquidity: 2000n
       })
 
       const secondResponse = await callCreateOrUpdatePeerByUrl(secondInput)
@@ -226,7 +226,7 @@ describe('Auto Peering Resolvers', (): void => {
         maxPacketAmount: secondInput.maxPacketAmount?.toString(),
         staticIlpAddress: peerDetails.staticIlpAddress,
         liquidity: (
-          input.addedLiquidity! + secondInput.addedLiquidity!
+          input.depositedLiquidity! + secondInput.depositedLiquidity!
         ).toString(),
         name: secondInput.name
       })
