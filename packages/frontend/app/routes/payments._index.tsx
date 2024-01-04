@@ -97,7 +97,7 @@ export default function PaymentsPage() {
       <div className='flex flex-col rounded-md bg-offwhite px-6'>
         <PageHeader>
           <div className='flex-1'>
-            <h3 className='text-2xl'>Payments</h3>
+            <h3 className='text-2xl leading-10'>Payments</h3>
           </div>
         </PageHeader>
         <div className='p-1'>
