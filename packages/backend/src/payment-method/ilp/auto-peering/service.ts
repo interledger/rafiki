@@ -44,7 +44,7 @@ interface UpdatePeerArgs {
   name?: string
 }
 
-interface AddLiquidityArgs {
+interface DepositLiquidityArgs {
   peer: Peer
   amount: bigint
 }
@@ -148,18 +148,18 @@ async function initiatePeeringRequest(
   }
 
   return args.addedLiquidity
-    ? await addLiquidity(deps, {
+    ? await depositLiquidity(deps, {
         peer: peerOrError,
         amount: args.addedLiquidity
       })
     : peerOrError
 }
 
-async function addLiquidity(
+async function depositLiquidity(
   deps: ServiceDependencies,
-  args: AddLiquidityArgs
+  args: DepositLiquidityArgs
 ): Promise<Peer | AutoPeeringError.LiquidityError> {
-  const transferOrPeerError = await deps.peerService.addLiquidity({
+  const transferOrPeerError = await deps.peerService.depositLiquidity({
     peerId: args.peer.id,
     amount: args.amount
   })

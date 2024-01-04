@@ -85,7 +85,7 @@ export const depositPeerLiquidity: MutationResolvers<ApolloContext>['depositPeer
         return responses[LiquidityError.AmountZero]
       }
       const peerService = await ctx.container.use('peerService')
-      const peerOrError = await peerService.addLiquidity({
+      const peerOrError = await peerService.depositLiquidity({
         transferId: args.input.id,
         peerId: args.input.peerId,
         amount: args.input.amount
