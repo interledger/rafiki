@@ -252,12 +252,12 @@ export default function ViewPeerPage() {
               </div>
               <div className='flex space-x-4'>
                 <Button
-                  aria-label='add peer liquidity page'
+                  aria-label='deposit peer liquidity page'
                   preventScrollReset
                   type='button'
-                  to={`/peers/${peer.id}/add-liquidity`}
+                  to={`/peers/${peer.id}/deposit-liquidity`}
                 >
-                  Add liquidity
+                  Deposit liquidity
                 </Button>
                 <Button
                   aria-label='withdraw peer liquidity page'

@@ -2,32 +2,32 @@ import { type ActionArgs } from '@remix-run/node'
 import { useNavigate } from '@remix-run/react'
 import { v4 } from 'uuid'
 import { LiquidityDialog } from '~/components/LiquidityDialog'
-import { depositPeerLiquidity } from '~/lib/api/peer.server'
+import { depositAssetLiquidity } from '~/lib/api/asset.server'
 import { messageStorage, setMessageAndRedirect } from '~/lib/message.server'
 import { amountSchema } from '~/lib/validate.server'
 
-export default function PeerAddLiquidity() {
+export default function AssetDepositLiquidity() {
   const navigate = useNavigate()
   const dismissDialog = () => navigate('..', { preventScrollReset: true })
 
   return (
     <LiquidityDialog
       onClose={dismissDialog}
-      title='Add peer liquidity'
-      type='Add'
+      title='Deposit asset liquidity'
+      type='Deposit'
     />
   )
 }
 
 export async function action({ request, params }: ActionArgs) {
   const session = await messageStorage.getSession(request.headers.get('cookie'))
-  const peerId = params.peerId
+  const assetId = params.assetId
 
-  if (!peerId) {
+  if (!assetId) {
     return setMessageAndRedirect({
       session,
       message: {
-        content: 'Missing peer ID',
+        content: 'Missing asset ID',
         type: 'error'
       },
       location: '.'
@@ -48,8 +48,8 @@ export async function action({ request, params }: ActionArgs) {
     })
   }
 
-  const response = await depositPeerLiquidity({
-    peerId,
+  const response = await depositAssetLiquidity({
+    assetId,
     amount: result.data,
     id: v4(),
     idempotencyKey: v4()
@@ -61,7 +61,7 @@ export async function action({ request, params }: ActionArgs) {
       message: {
         content:
           response?.message ??
-          'Could not add peer liquidity. Please try again!',
+          'Could not deposit asset liquidity. Please try again!',
         type: 'error'
       },
       location: '.'
