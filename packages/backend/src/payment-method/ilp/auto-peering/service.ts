@@ -170,7 +170,7 @@ async function depositLiquidity(
   ) {
     deps.logger.error(
       { err: transferOrPeerError, args, peerId: args.peer.id },
-      'Could not add liquidity to peer'
+      'Could not deposit liquidity to peer'
     )
 
     return AutoPeeringError.LiquidityError

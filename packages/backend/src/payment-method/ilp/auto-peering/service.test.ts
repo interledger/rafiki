@@ -312,7 +312,7 @@ describe('Auto Peering Service', (): void => {
       scope.done()
     })
 
-    test('returns error if could not add liquidity during peer creation', async (): Promise<void> => {
+    test('returns error if could not deposit liquidity during peer creation', async (): Promise<void> => {
       const asset = await createAsset(deps)
 
       const args: InitiatePeeringRequestArgs = {
@@ -605,7 +605,7 @@ describe('Auto Peering Service', (): void => {
       scope.done()
     })
 
-    test('returns error if could not add liquidity during peer update', async (): Promise<void> => {
+    test('returns error if could not deposit liquidity during peer update', async (): Promise<void> => {
       const asset = await createAsset(deps)
 
       const args: InitiatePeeringRequestArgs = {

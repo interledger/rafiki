@@ -451,8 +451,8 @@ describe('Peer Service', (): void => {
     })
   })
 
-  describe('Add Liquidity', (): void => {
-    test('Can add liquidity to peer', async (): Promise<void> => {
+  describe('Deposit Liquidity', (): void => {
+    test('Can deposit liquidity to peer', async (): Promise<void> => {
       const peer = await createPeer(deps)
 
       const liquidity = 100n
