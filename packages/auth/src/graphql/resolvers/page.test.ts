@@ -83,7 +83,7 @@ export const getPageTests = <T extends Model, M extends BaseModel>({
       for (let i = 0; i < 50; i++) {
         models.push(await createModel())
       }
-      return models
+      return models.reverse()
     }
 
     test('pageInfo is correct on default query without params', async (): Promise<void> => {

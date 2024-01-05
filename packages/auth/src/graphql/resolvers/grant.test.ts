@@ -59,6 +59,7 @@ describe('Grant Resolvers', (): void => {
         const grant = await createGrant(deps)
         grants.push(grant)
       }
+      grants.reverse()
 
       const query = await appContainer.apolloClient
         .query({
@@ -173,6 +174,8 @@ describe('Grant Resolvers', (): void => {
           grants.push(grant)
         }
 
+        const filteredGrants = grants.slice(0, 2).reverse()
+
         const filter = {
           identifier: {
             in: [identifier]
@@ -205,7 +208,7 @@ describe('Grant Resolvers', (): void => {
           })
         expect(query.edges).toHaveLength(2)
         query.edges.forEach((edge, idx) => {
-          const grant = grants[idx]
+          const grant = filteredGrants[idx]
           expect(edge.cursor).toEqual(grant.id)
           expect(edge.node).toEqual({
             __typename: 'Grant',
