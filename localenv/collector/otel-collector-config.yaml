@@ -1,3 +1,5 @@
+#Serves as example for the configuration of a local OpenTelemetry Collector
+#Sigv4auth required for AWS Prometheus Remote Write access (USER with accesss keys needed)
 extensions:
   sigv4auth:
     assume_role:
@@ -21,7 +23,7 @@ exporters:
   logging:
     verbosity: 'normal'
   prometheusremotewrite:
-    endpoint: 'https://aps-workspaces.eu-west-2.amazonaws.com/workspaces/ws-7c8fd050-cb3b-451f-9971-1e6099db2e8f/api/v1/remote_write'
+    endpoint: 'https://aps-workspaces.YOUR-REGION.amazonaws.com/workspaces/ws-YOUR-WORKSPACE-IDENTIFIER/api/v1/remote_write'
     auth:
       authenticator: sigv4auth
 

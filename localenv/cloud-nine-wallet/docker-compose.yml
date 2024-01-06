@@ -61,7 +61,8 @@ services:
       WALLET_ADDRESS_URL: ${CLOUD_NINE_WALLET_ADDRESS_URL:-https://cloud-nine-wallet-backend/.well-known/pay}
       ILP_CONNECTOR_ADDRESS: ${CLOUD_NINE_CONNECTOR_URL}
       ENABLE_TELEMETRY: true
-      OPEN_TELEMETRY_COLLECTOR_URL: http://cloud-nine-otel-collector:4317,http://otel-collector-NLB-e3172ff9d2f4bc8a.elb.eu-west-2.amazonaws.com:4317
+      # url is a list of csv. Example for including local collector: http://cloud-nine-otel-collector:4317,http://otel-collector-NLB-e3172ff9d2f4bc8a.elb.eu-west-2.amazonaws.com:4317
+      OPEN_TELEMETRY_COLLECTOR_URL: http://otel-collector-NLB-e3172ff9d2f4bc8a.elb.eu-west-2.amazonaws.com:4317
       OPEN_TELEMETRY_EXPORT_INTERVAL: 15000
       TELEMETRY_EXCHANGE_RATES_URL: https://telemetry-exchange-rates.s3.amazonaws.com/exchange-rates-usd.json
     depends_on:
@@ -122,27 +123,22 @@ services:
       ENABLE_INSECURE_MESSAGE_COOKIE: true
     depends_on:
       - cloud-nine-backend
-  cloud-nine-otel-collector:
-    image: otel/opentelemetry-collector-contrib:latest
-    command: ["--config=/etc/otel-collector-config.yaml", ""]
-    environment:
-      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID-''}
-      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY-''}
-    volumes:
-      - ../collector/otel-collector-config.yaml:/etc/otel-collector-config.yaml
-    networks:
-      - rafiki
-    expose:
-      - 4317
-    ports:
-    - "13133:13133" # health_check extension 
-  dozzle:
-    container_name: dozzle
-    image: amir20/dozzle:latest
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-    ports:
-      - 9999:8080
+
+  #Serves as example for optional local collector 
+  # cloud-nine-otel-collector:
+  #   image: otel/opentelemetry-collector-contrib:latest
+  #   command: ["--config=/etc/otel-collector-config.yaml", ""]
+  #   environment:
+  #     - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID-''}
+  #     - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY-''}
+  #   volumes:
+  #     - ../collector/otel-collector-config.yaml:/etc/otel-collector-config.yaml
+  #   networks:
+  #     - rafiki
+  #   expose:
+  #     - 4317
+  #   ports:
+  #   - "13133:13133" # health_check extension 
 
 volumes:
   database-data: # named volumes can be managed easier using docker-compose

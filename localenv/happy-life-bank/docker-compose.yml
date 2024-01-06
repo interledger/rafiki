@@ -53,7 +53,8 @@ services:
       REDIS_URL: redis://shared-redis:6379/1
       WALLET_ADDRESS_URL: ${HAPPY_LIFE_BANK_WALLET_ADDRESS_URL:-https://happy-life-bank-backend/.well-known/pay}
       ENABLE_TELEMETRY: true
-      OPEN_TELEMETRY_COLLECTOR_URL: http://happy-life-otel-collector:4317,http://otel-collector-NLB-e3172ff9d2f4bc8a.elb.eu-west-2.amazonaws.com:4317
+       # url is a list of csv. Example for including local collector: http://happy-life-otel-collector:4317,http://otel-collector-NLB-e3172ff9d2f4bc8a.elb.eu-west-2.amazonaws.com:4317
+      OPEN_TELEMETRY_COLLECTOR_URL: http://otel-collector-NLB-e3172ff9d2f4bc8a.elb.eu-west-2.amazonaws.com:4317
       OPEN_TELEMETRY_EXPORT_INTERVAL: 15000
       TELEMETRY_EXCHANGE_RATES_URL: https://telemetry-exchange-rates.s3.amazonaws.com/exchange-rates-usd.json
 
@@ -93,20 +94,22 @@ services:
     depends_on:
       - cloud-nine-admin
       - happy-life-backend
-  happy-life-otel-collector:
-    image: otel/opentelemetry-collector-contrib:latest
-    command: ["--config=/etc/otel-collector-config.yaml", ""]
-    environment:
-      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID-''}
-      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY-''}
-    volumes:
-      - ../collector/otel-collector-config.yaml:/etc/otel-collector-config.yaml
-    networks:
-      - rafiki
-    expose:
-      - 4317
-    ports:
-    - "13132:13133" # health_check extension
+
+  #Serves as example for optional local collector configuration
+  # happy-life-otel-collector:
+  #   image: otel/opentelemetry-collector-contrib:latest
+  #   command: ["--config=/etc/otel-collector-config.yaml", ""]
+  #   environment:
+  #     - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID-''}
+  #     - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY-''}
+  #   volumes:
+  #     - ../collector/otel-collector-config.yaml:/etc/otel-collector-config.yaml
+  #   networks:
+  #     - rafiki
+  #   expose:
+  #     - 4317
+  #   ports:
+  #   - "13132:13133" # health_check extension
  
 
 networks:
