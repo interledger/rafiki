@@ -178,8 +178,8 @@ importers:
         specifier: ^8.11.3
         version: 8.11.3
       pino:
-        specifier: ^8.16.2
-        version: 8.16.2
+        specifier: ^8.17.2
+        version: 8.17.2
       token-introspection:
         specifier: workspace:*
         version: link:../token-introspection
@@ -356,8 +356,8 @@ importers:
         specifier: ^8.11.3
         version: 8.11.3
       pino:
-        specifier: ^8.16.2
-        version: 8.16.2
+        specifier: ^8.17.2
+        version: 8.17.2
       raw-body:
         specifier: ^2.5.2
         version: 2.5.2
@@ -574,8 +574,8 @@ importers:
         specifier: ^1.6.2
         version: 1.6.2
       pino:
-        specifier: ^8.16.2
-        version: 8.16.2
+        specifier: ^8.17.2
+        version: 8.17.2
     devDependencies:
       '@types/node':
         specifier: ^18.7.12
@@ -4398,7 +4398,7 @@ packages:
       axios: 1.6.2
       base64url: 3.0.1
       http-message-signatures: 0.1.2
-      pino: 8.16.2
+      pino: 8.17.2
       uuid: 9.0.1
     transitivePeerDependencies:
       - debug
@@ -14657,8 +14657,8 @@ packages:
     resolution: {integrity: sha512-mMMOwSKrmyl+Y12Ri2xhH1lbzQxwwpuru9VjyJpgFIH4asSj88F2csdMwN6+M5g1Ll4rmsYghHLQJw81tgZ7LQ==}
     dev: false
 
-  /pino@8.16.2:
-    resolution: {integrity: sha512-2advCDGVEvkKu9TTVSa/kWW7Z3htI/sBKEZpqiHk6ive0i/7f5b1rsU8jn0aimxqfnSz5bj/nOYkwhBUn5xxvg==}
+  /pino@8.17.2:
+    resolution: {integrity: sha512-LA6qKgeDMLr2ux2y/YiUt47EfgQ+S9LznBWOJdN3q1dx2sv0ziDLUBeVpyVv17TEcGCBuWf0zNtg3M5m1NhhWQ==}
     hasBin: true
     dependencies:
       atomic-sleep: 1.0.0
@@ -14666,7 +14666,7 @@ packages:
       on-exit-leak-free: 2.1.0
       pino-abstract-transport: 1.1.0
       pino-std-serializers: 6.0.0
-      process-warning: 2.0.0
+      process-warning: 3.0.0
       quick-format-unescaped: 4.0.4
       real-require: 0.2.0
       safe-stable-stringify: 2.3.1
@@ -14955,8 +14955,8 @@ packages:
     resolution: {integrity: sha512-3ouUOpQhtgrbOa17J7+uxOTpITYWaGP7/AhoR3+A+/1e9skrzelGi/dXzEYyvbxubEF6Wn2ypscTKiKJFFn1ag==}
     dev: true
 
-  /process-warning@2.0.0:
-    resolution: {integrity: sha512-+MmoAXoUX+VTHAlwns0h+kFUWFs/3FZy+ZuchkgjyOu3oioLAo2LB5aCfKPh2+P9O18i3m43tUEv3YqttSy0Ww==}
+  /process-warning@3.0.0:
+    resolution: {integrity: sha512-mqn0kFRl0EoqhnL0GQ0veqFHyIN1yig9RHh/InzORTUiZHFRAur+aMtRkELNwGs9aNwKS6tg/An4NYBPGwvtzQ==}
     dev: false
 
   /promise-inflight@1.0.1:
