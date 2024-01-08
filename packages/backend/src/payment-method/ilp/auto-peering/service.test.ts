@@ -274,7 +274,7 @@ describe('Auto Peering Service', (): void => {
         assetId: asset.id,
         maxPacketAmount: 1000n,
         liquidityThreshold: 100n,
-        depositedLiquidity: 10000n
+        liquidityToDeposit: 10000n
       }
 
       const peerDetails: PeeringDetails = {
@@ -306,7 +306,7 @@ describe('Auto Peering Service', (): void => {
       assert(!isAutoPeeringError(peer))
 
       await expect(accountingService.getBalance(peer.id)).resolves.toBe(
-        args.depositedLiquidity
+        args.liquidityToDeposit
       )
 
       scope.done()
@@ -320,7 +320,7 @@ describe('Auto Peering Service', (): void => {
         assetId: asset.id,
         maxPacketAmount: 1000n,
         liquidityThreshold: 100n,
-        depositedLiquidity: -10000n
+        liquidityToDeposit: -10000n
       }
 
       const peerDetails: PeeringDetails = {
@@ -573,7 +573,7 @@ describe('Auto Peering Service', (): void => {
       const args: InitiatePeeringRequestArgs = {
         peerUrl: 'http://peer.rafiki.money',
         assetId: asset.id,
-        depositedLiquidity: 1000n
+        liquidityToDeposit: 1000n
       }
 
       const peerDetails: PeeringDetails = {
@@ -590,7 +590,7 @@ describe('Auto Peering Service', (): void => {
 
       const newArgs: InitiatePeeringRequestArgs = {
         ...args,
-        depositedLiquidity: 2000n
+        liquidityToDeposit: 2000n
       }
 
       const updatedPeer =
@@ -600,7 +600,7 @@ describe('Auto Peering Service', (): void => {
       expect(createdPeer.id).toBe(updatedPeer.id)
 
       await expect(accountingService.getBalance(createdPeer.id)).resolves.toBe(
-        args.depositedLiquidity! + newArgs.depositedLiquidity!
+        args.liquidityToDeposit! + newArgs.liquidityToDeposit!
       )
       scope.done()
     })
@@ -611,7 +611,7 @@ describe('Auto Peering Service', (): void => {
       const args: InitiatePeeringRequestArgs = {
         peerUrl: 'http://peer.rafiki.money',
         assetId: asset.id,
-        depositedLiquidity: 1000n
+        liquidityToDeposit: 1000n
       }
 
       const peerDetails: PeeringDetails = {
@@ -628,7 +628,7 @@ describe('Auto Peering Service', (): void => {
 
       const newArgs: InitiatePeeringRequestArgs = {
         ...args,
-        depositedLiquidity: -2000n
+        liquidityToDeposit: -2000n
       }
 
       await expect(

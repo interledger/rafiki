@@ -21,7 +21,7 @@ export interface InitiatePeeringRequestArgs {
   assetId: string
   name?: string
   maxPacketAmount?: bigint
-  depositedLiquidity?: bigint
+  liquidityToDeposit?: bigint
   liquidityThreshold?: bigint
 }
 
@@ -147,10 +147,10 @@ async function initiatePeeringRequest(
     return handlePeerError(deps, peerOrError, 'Could not create or update peer')
   }
 
-  return args.depositedLiquidity
+  return args.liquidityToDeposit
     ? await depositLiquidity(deps, {
         peer: peerOrError,
-        amount: args.depositedLiquidity
+        amount: args.liquidityToDeposit
       })
     : peerOrError
 }

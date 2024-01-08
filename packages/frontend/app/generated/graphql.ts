@@ -140,12 +140,12 @@ export type CreateIncomingPaymentInput = {
 export type CreateOrUpdatePeerByUrlInput = {
   /** Asset id of peering relationship */
   assetId: Scalars['String']['input'];
-  /** Initial amount of liquidity to deposit for peer */
-  depositedLiquidity?: InputMaybe<Scalars['UInt64']['input']>;
   /** Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence) */
   idempotencyKey?: InputMaybe<Scalars['String']['input']>;
   /** Account Servicing Entity will be notified via a webhook event if peer liquidity falls below this value */
   liquidityThreshold?: InputMaybe<Scalars['UInt64']['input']>;
+  /** Amount of liquidity to deposit for peer */
+  liquidityToDeposit?: InputMaybe<Scalars['UInt64']['input']>;
   /** Maximum packet amount that the peer accepts */
   maxPacketAmount?: InputMaybe<Scalars['UInt64']['input']>;
   /** Peer's internal name for overriding auto-peer's default naming */

@@ -271,7 +271,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "mutation CreateOrUpdatePeerByUrl ($input: CreateOrUpdatePeerByUrlInput!) {\n    createOrUpdatePeerByUrl (input: $input) {\n        code\n        message\n        success\n        peer {\n            id\n            name\n            asset {\n                id\n                scale\n                code\n                withdrawalThreshold\n            }\n        }\n    }\n}",
-								"variables": "{\n  \"input\": {\n    \"peerUrl\": \"http://happy-life-bank-backend:3005\",\n    \"assetId\": \"{{assetId}}\",\n    \"depositedLiquidity\": 100000\n  }\n}"
+								"variables": "{\n  \"input\": {\n    \"peerUrl\": \"http://happy-life-bank-backend:3005\",\n    \"assetId\": \"{{assetId}}\",\n    \"liquidityToDeposit\": 100000\n  }\n}"
 							}
 						},
 						"url": {
