@@ -119,82 +119,111 @@ describe('Grant Routes', (): void => {
 
       describe('non-interactive grants', () => {
         describe.each`
-          interactionFlagsEnabled | description
-          ${true}                 | ${'enabled'}
-          ${false}                | ${'disabled'}
-        `(
-          'with interaction flags $description',
-          ({ interactionFlagsEnabled }) => {
-            test.each`
-              accessTypes                                       | description
-              ${[AccessType.IncomingPayment]}                   | ${'grant for incoming payments'}
-              ${[AccessType.Quote]}                             | ${'grant for quotes'}
-              ${[AccessType.IncomingPayment, AccessType.Quote]} | ${'grant for incoming payments and quotes'}
-            `(
-              `can${interactionFlagsEnabled ? 'not' : ''} get $description`,
-              withConfigOverride(
-                () => config,
-                {
-                  incomingPaymentInteraction: interactionFlagsEnabled,
-                  quoteInteraction: interactionFlagsEnabled
-                },
-                async ({ accessTypes }): Promise<void> => {
-                  const ctx = createContext<CreateContext>(
+          accessTypes                                       | description
+          ${[AccessType.IncomingPayment]}                   | ${'grant for incoming payments'}
+          ${[AccessType.Quote]}                             | ${'grant for quotes'}
+          ${[AccessType.IncomingPayment, AccessType.Quote]} | ${'grant for incoming payments and quotes'}
+        `('for $description', ({ accessTypes }) => {
+          describe.each`
+            resourceInteractionFlagsEnabled | listAllInteractionFlagEnabled | listAllGrant | description
+            ${true}                         | ${false}                      | ${false}     | ${'no list-all grant'}
+            ${false}                        | ${false}                      | ${false}     | ${'no list-all grant'}
+            ${true}                         | ${false}                      | ${true}      | ${'including a list-all grant'}
+            ${false}                        | ${false}                      | ${true}      | ${'including a list-all grant'}
+            ${true}                         | ${true}                       | ${true}      | ${'including a list-all grant'}
+            ${false}                        | ${true}                       | ${true}      | ${'including a list-all grant'}
+          `(
+            'with resource interaction flags set to $resourceInteractionFlagsEnabled, list all grant interaction flag set to $listAllInteractionFlagEnabled, and $description',
+            ({
+              resourceInteractionFlagsEnabled,
+              listAllInteractionFlagEnabled,
+              listAllGrant
+            }) => {
+              // Quotes don't have list-all access type
+              if (
+                !(
+                  accessTypes.length === 1 &&
+                  accessTypes[0] === AccessType.Quote &&
+                  listAllGrant
+                )
+              ) {
+                test(
+                  `can${
+                    resourceInteractionFlagsEnabled || listAllGrant ? 'not' : ''
+                  } get grant`,
+                  withConfigOverride(
+                    () => config,
                     {
-                      headers: {
-                        Accept: 'application/json',
-                        'Content-Type': 'application/json'
-                      },
-                      url,
-                      method
+                      incomingPaymentInteraction:
+                        resourceInteractionFlagsEnabled,
+                      quoteInteraction: resourceInteractionFlagsEnabled,
+                      listAllInteraction: listAllInteractionFlagEnabled
                     },
-                    {}
-                  )
-                  const body = {
-                    access_token: {
-                      access: accessTypes.map((accessType: AccessType) => ({
-                        type: accessType,
-                        actions: [AccessAction.Create, AccessAction.Read],
-                        identifier: `https://example.com/${v4()}`
-                      }))
-                    },
-                    client: CLIENT
-                  }
-                  ctx.request.body = body
-
-                  if (interactionFlagsEnabled) {
-                    await expect(grantRoutes.create(ctx)).rejects.toMatchObject(
-                      {
-                        status: 400,
-                        error: 'interaction_required'
-                      }
-                    )
-                  } else {
-                    await expect(
-                      grantRoutes.create(ctx)
-                    ).resolves.toBeUndefined()
-                    expect(ctx.response).toSatisfyApiSpec()
-                    expect(ctx.status).toBe(200)
-                    expect(ctx.body).toEqual({
-                      access_token: {
-                        value: expect.any(String),
-                        manage: expect.any(String),
-                        access: body.access_token.access,
-                        expires_in: 600
-                      },
-                      continue: {
-                        access_token: {
-                          value: expect.any(String)
+                    async (): Promise<void> => {
+                      const ctx = createContext<CreateContext>(
+                        {
+                          headers: {
+                            Accept: 'application/json',
+                            'Content-Type': 'application/json'
+                          },
+                          url,
+                          method
                         },
-                        uri: expect.any(String)
+                        {}
+                      )
+                      const body = {
+                        access_token: {
+                          access: accessTypes.map((accessType: AccessType) => ({
+                            type: accessType,
+                            actions:
+                              listAllGrant && accessType !== AccessType.Quote
+                                ? [AccessAction.Create, AccessAction.ListAll]
+                                : [AccessAction.Create, AccessAction.Read],
+                            identifier: `https://example.com/${v4()}`
+                          }))
+                        },
+                        client: CLIENT
                       }
-                    })
-                  }
-                }
-              )
-            )
-          }
-        )
+                      ctx.request.body = body
+
+                      if (
+                        resourceInteractionFlagsEnabled ||
+                        (listAllInteractionFlagEnabled && listAllGrant)
+                      ) {
+                        await expect(
+                          grantRoutes.create(ctx)
+                        ).rejects.toMatchObject({
+                          status: 400,
+                          error: 'interaction_required'
+                        })
+                      } else {
+                        await expect(
+                          grantRoutes.create(ctx)
+                        ).resolves.toBeUndefined()
+                        expect(ctx.response).toSatisfyApiSpec()
+                        expect(ctx.status).toBe(200)
+                        expect(ctx.body).toEqual({
+                          access_token: {
+                            value: expect.any(String),
+                            manage: expect.any(String),
+                            access: body.access_token.access,
+                            expires_in: 600
+                          },
+                          continue: {
+                            access_token: {
+                              value: expect.any(String)
+                            },
+                            uri: expect.any(String)
+                          }
+                        })
+                      }
+                    }
+                  )
+                )
+              }
+            }
+          )
+        })
       })
 
       test('Can initiate a grant request', async (): Promise<void> => {
@@ -297,6 +326,40 @@ describe('Grant Routes', (): void => {
         await expect(grantRoutes.create(ctx)).rejects.toMatchObject({
           status: 400,
           error: 'interaction_required'
+        })
+      })
+
+      test('Fails to initiate a grant w/o identifier field if interaction required', async (): Promise<void> => {
+        const ctx = createContext<CreateContext>(
+          {
+            headers: {
+              Accept: 'application/json',
+              'Content-Type': 'application/json'
+            },
+            url,
+            method
+          },
+          {}
+        )
+
+        const grantRequest = {
+          access_token: {
+            access: [
+              {
+                type: AccessType.IncomingPayment,
+                actions: [AccessAction.Create, AccessAction.ListAll]
+              }
+            ]
+          },
+          client: CLIENT,
+          interact: BASE_GRANT_REQUEST.interact
+        }
+
+        ctx.request.body = grantRequest
+
+        await expect(grantRoutes.create(ctx)).rejects.toMatchObject({
+          status: 400,
+          error: 'identifier_required'
         })
       })
 
