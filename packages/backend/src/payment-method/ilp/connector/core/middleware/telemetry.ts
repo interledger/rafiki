@@ -51,9 +51,7 @@ export async function collectTelemetryAmount(
       description: 'Amount sent through the network',
       valueType: ValueType.DOUBLE
     })
-    .add(privacy.applyPrivacy(Number(converted)), {
-      source: telemetryService.getServiceName()
-    })
+    .add(privacy.applyPrivacy(Number(converted)))
 }
 
 export async function convertAmount(
