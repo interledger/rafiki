@@ -46,6 +46,10 @@ export default function ViewAssetPage() {
   const navigation = useNavigation()
 
   const isSubmitting = navigation.state === 'submitting'
+  const displayLiquidityAmount = `${formatAmount(
+    walletAddress.liquidity ?? '0',
+    walletAddress.asset.scale
+  )} ${walletAddress.asset.code}`
 
   return (
     <div className='pt-4 flex flex-col space-y-4'>
@@ -156,13 +160,7 @@ export default function ViewAssetPage() {
             <div className='w-full p-4 flex justify-between items-center'>
               <div>
                 <p className='font-medium'>Amount</p>
-                <p className='mt-1'>
-                  {formatAmount(
-                    walletAddress.liquidity ?? '0',
-                    walletAddress.asset.scale
-                  )}{' '}
-                  {walletAddress.asset.code}
-                </p>
+                <p className='mt-1'>{displayLiquidityAmount}</p>
               </div>
               <div className='flex space-x-4'>
                 {BigInt(walletAddress.liquidity ?? '0') ? (
@@ -186,7 +184,7 @@ export default function ViewAssetPage() {
           </div>
         </div>
       </div>
-      <Outlet />
+      <Outlet context={displayLiquidityAmount} />
     </div>
   )
 }

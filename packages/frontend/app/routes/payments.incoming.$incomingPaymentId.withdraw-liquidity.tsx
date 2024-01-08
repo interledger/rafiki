@@ -1,11 +1,12 @@
 import { type ActionArgs } from '@remix-run/node'
-import { useNavigate } from '@remix-run/react'
+import { useNavigate, useOutletContext } from '@remix-run/react'
 import { v4 } from 'uuid'
 import { LiquidityConfirmDialog } from '~/components/LiquidityConfirmDialog'
 import { withdrawIncomingPaymentLiquidity } from '~/lib/api/payments.server'
 import { messageStorage, setMessageAndRedirect } from '~/lib/message.server'
 
 export default function IncomingPaymentWithdrawLiquidity() {
+  const displayLiquidityAmount = useOutletContext<string>()
   const navigate = useNavigate()
   const dismissDialog = () => navigate('..', { preventScrollReset: true })
 
@@ -14,6 +15,7 @@ export default function IncomingPaymentWithdrawLiquidity() {
       onClose={dismissDialog}
       title='Withdraw incoming payment liquidity'
       type='Withdraw'
+      displayAmount={displayLiquidityAmount}
     />
   )
 }

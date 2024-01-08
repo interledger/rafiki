@@ -47,6 +47,12 @@ export default function ViewIncomingPaymentPage() {
       incomingPayment.state
     )
 
+  const displayLiquidityAmount = `${formatAmount(
+    incomingPayment.liquidity ?? '0',
+    incomingPayment.receivedAmount.assetScale
+  )} 
+  ${incomingPayment.receivedAmount.assetCode}`
+
   return (
     <div className='pt-4 flex flex-col space-y-4'>
       <div className='flex flex-col rounded-md bg-offwhite px-6'>
@@ -147,13 +153,7 @@ export default function ViewIncomingPaymentPage() {
             <div className='w-full p-4 flex justify-between items-center'>
               <div>
                 <p className='font-medium'>Amount</p>
-                <p className='mt-1'>
-                  {formatAmount(
-                    incomingPayment.liquidity ?? '0',
-                    incomingPayment.receivedAmount.assetScale
-                  )}{' '}
-                  {incomingPayment.receivedAmount.assetCode}
-                </p>
+                <p className='mt-1'>{displayLiquidityAmount}</p>
               </div>
               <div className='flex space-x-4'>
                 {canWithdrawLiquidity ? (
@@ -178,7 +178,7 @@ export default function ViewIncomingPaymentPage() {
         </div>
         {/* Incoming Payment Liquidity - END */}
       </div>
-      <Outlet />
+      <Outlet context={displayLiquidityAmount} />
     </div>
   )
 }

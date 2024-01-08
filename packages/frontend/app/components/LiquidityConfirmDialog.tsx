@@ -7,12 +7,14 @@ type LiquidityConfirmDialogProps = {
   title: string
   onClose: () => void
   type: 'Deposit' | 'Withdraw'
+  displayAmount: string
 }
 
 export const LiquidityConfirmDialog = ({
   title,
   onClose,
-  type
+  type,
+  displayAmount
 }: LiquidityConfirmDialogProps) => {
   return (
     <Dialog as='div' className='relative z-10' onClose={onClose} open={true}>
@@ -39,7 +41,7 @@ export const LiquidityConfirmDialog = ({
               </Dialog.Title>
               <div className='mt-2'>
                 <p className='m-6 text-center'>
-                  Are you sure you want to {type.toLowerCase()} this amount?
+                  Are you sure you want to {type.toLowerCase()} {displayAmount}?
                 </p>
                 <Form method='post' replace preventScrollReset>
                   {/* no input needed - form submit is confirmation */}
