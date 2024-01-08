@@ -1,10 +1,10 @@
-#Serves as example for the configuration of a local OpenTelemetry Collector
+#Serves as example for the configuration of a local OpenTelemetry Collector that sends metrics to an AWS Managed Prometheus Workspace
 #Sigv4auth required for AWS Prometheus Remote Write access (USER with accesss keys needed)
 extensions:
   sigv4auth:
     assume_role:
-      arn: 'arn:aws:iam::145795521759:role/PrometheusRemoteWrite'
-      sts_region: 'eu-west-2'
+      arn: 'arn:aws:iam::YOUR-ROLE:role/PrometheusRemoteWrite'
+      sts_region: 'YOUR-REGION'
 
 receivers:
   otlp:

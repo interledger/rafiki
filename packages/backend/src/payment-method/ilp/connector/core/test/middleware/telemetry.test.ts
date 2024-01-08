@@ -78,7 +78,7 @@ describe('Telemetry Middleware', function () {
 
   it('should call next without gathering telemetry when convert returns ConvertError.InvalidDestinationPrice', async () => {
     const convertSpy = jest
-      .spyOn(ctx.services.telemetry!.getRatesService(), 'convert')
+      .spyOn(ctx.services.rates!, 'convert')
       .mockImplementation(() =>
         Promise.resolve(ConvertError.InvalidDestinationPrice)
       )
@@ -108,8 +108,39 @@ describe('Telemetry Middleware', function () {
   })
 
   describe('collectTelemetry', () => {
+    it(`should first try to convert to telemetry base currency using the ASE provided rates through the aseRatesService, 
+    and fallback to convert using external rates from telemetryRatesService`, async () => {
+      const aseRatesService = ctx.services.rates
+      const telemetryRatesService = ctx.services.telemetry!.getRatesService()
+
+      const aseConvertSpy = jest
+        .spyOn(aseRatesService, 'convert')
+        .mockImplementation(() =>
+          Promise.reject(ConvertError.InvalidDestinationPrice)
+        )
+
+      const telemetryConvertSpy = jest
+        .spyOn(telemetryRatesService, 'convert')
+        .mockImplementation(() => Promise.resolve(10000n))
+
+      await collectTelemetryAmount(ctx.services.telemetry!, aseRatesService, {
+        sourceAmount: BigInt(ctx.request.prepare.amount),
+        sourceAsset: {
+          code: ctx.accounts.outgoing.asset.code,
+          scale: ctx.accounts.outgoing.asset.scale
+        },
+        destinationAsset: {
+          code: services.telemetry!.getBaseAssetCode(),
+          scale: 4
+        }
+      })
+
+      expect(aseConvertSpy).toHaveBeenCalled()
+      expect(telemetryConvertSpy).toHaveBeenCalled()
+    })
     it('should convert to telemetry asset,apply privacy, collect telemetry', async () => {
-      const ratesService = ctx.services.telemetry!.getRatesService()
+      const ratesService = ctx.services.rates
+
       const convertSpy = jest
         .spyOn(ratesService, 'convert')
         .mockResolvedValue(10000n)
@@ -126,7 +157,7 @@ describe('Telemetry Middleware', function () {
         .spyOn(privacy, 'applyPrivacy')
         .mockReturnValue(10000)
 
-      await collectTelemetryAmount(ctx.services.telemetry!, {
+      await collectTelemetryAmount(ctx.services.telemetry!, ratesService, {
         sourceAmount: BigInt(ctx.request.prepare.amount),
         sourceAsset: {
           code: ctx.accounts.outgoing.asset.code,
