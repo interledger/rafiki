@@ -125,7 +125,7 @@ Query Variables (substitute the asset ID from the "create asset" response for `I
       "outgoing": {"endpoint": "ilp.othergreatwallet.com", "authToken": "theirtoken"}
     },
     "assetId": "INSERT_ASSET_ID",
-    "initialLiquidity: <optionally, and intial amount of liquity to provision. Liquidity can also be deposited via the `DepositPeerLiquidity` mutation described below>
+    "initialLiquidity": <optionally, an intial amount of liquity to provision. Liquidity can also be deposited via the `DepositPeerLiquidity` mutation described below>
   }
 }
 ```
@@ -355,7 +355,7 @@ with the input being:
 ```json
 {
   "input": {
-    "peerUrl: "PEER_URL",
+    "peerUrl": "PEER_URL",
     "assetId": "INSERT_ASSET_ID",
     "liquidityToDeposit": <optional amount of liquidity to deposit>
   }
