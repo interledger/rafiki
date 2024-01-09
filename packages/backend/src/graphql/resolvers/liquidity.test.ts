@@ -65,19 +65,19 @@ describe('Liquidity Resolvers', (): void => {
     await appContainer.shutdown()
   })
 
-  describe('Add peer liquidity', (): void => {
+  describe('Deposit peer liquidity', (): void => {
     let peer: Peer
 
     beforeEach(async (): Promise<void> => {
       peer = await createPeer(deps)
     })
 
-    test('Can add liquidity to peer', async (): Promise<void> => {
+    test('Can deposit liquidity to peer', async (): Promise<void> => {
       const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
-            mutation AddPeerLiquidity($input: AddPeerLiquidityInput!) {
-              addPeerLiquidity(input: $input) {
+            mutation DepositPeerLiquidity($input: DepositPeerLiquidityInput!) {
+              depositPeerLiquidity(input: $input) {
                 code
                 success
                 message
@@ -96,7 +96,7 @@ describe('Liquidity Resolvers', (): void => {
         })
         .then((query): LiquidityMutationResponse => {
           if (query.data) {
-            return query.data.addPeerLiquidity
+            return query.data.depositPeerLiquidity
           } else {
             throw new Error('Data was empty')
           }
@@ -111,8 +111,8 @@ describe('Liquidity Resolvers', (): void => {
       const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
-            mutation AddPeerLiquidity($input: AddPeerLiquidityInput!) {
-              addPeerLiquidity(input: $input) {
+            mutation DepositPeerLiquidity($input: DepositPeerLiquidityInput!) {
+              depositPeerLiquidity(input: $input) {
                 code
                 success
                 message
@@ -131,7 +131,7 @@ describe('Liquidity Resolvers', (): void => {
         })
         .then((query): LiquidityMutationResponse => {
           if (query.data) {
-            return query.data.addPeerLiquidity
+            return query.data.depositPeerLiquidity
           } else {
             throw new Error('Data was empty')
           }
@@ -147,8 +147,8 @@ describe('Liquidity Resolvers', (): void => {
       const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
-            mutation AddPeerLiquidity($input: AddPeerLiquidityInput!) {
-              addPeerLiquidity(input: $input) {
+            mutation DepositPeerLiquidity($input: DepositPeerLiquidityInput!) {
+              depositPeerLiquidity(input: $input) {
                 code
                 success
                 message
@@ -167,7 +167,7 @@ describe('Liquidity Resolvers', (): void => {
         })
         .then((query): LiquidityMutationResponse => {
           if (query.data) {
-            return query.data.addPeerLiquidity
+            return query.data.depositPeerLiquidity
           } else {
             throw new Error('Data was empty')
           }
@@ -191,8 +191,8 @@ describe('Liquidity Resolvers', (): void => {
       const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
-            mutation AddPeerLiquidity($input: AddPeerLiquidityInput!) {
-              addPeerLiquidity(input: $input) {
+            mutation DepositPeerLiquidity($input: DepositPeerLiquidityInput!) {
+              depositPeerLiquidity(input: $input) {
                 code
                 success
                 message
@@ -211,7 +211,7 @@ describe('Liquidity Resolvers', (): void => {
         })
         .then((query): LiquidityMutationResponse => {
           if (query.data) {
-            return query.data.addPeerLiquidity
+            return query.data.depositPeerLiquidity
           } else {
             throw new Error('Data was empty')
           }
@@ -227,8 +227,8 @@ describe('Liquidity Resolvers', (): void => {
       const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
-            mutation AddPeerLiquidity($input: AddPeerLiquidityInput!) {
-              addPeerLiquidity(input: $input) {
+            mutation DepositPeerLiquidity($input: DepositPeerLiquidityInput!) {
+              depositPeerLiquidity(input: $input) {
                 code
                 success
                 message
@@ -247,7 +247,7 @@ describe('Liquidity Resolvers', (): void => {
         })
         .then((query): LiquidityMutationResponse => {
           if (query.data) {
-            return query.data.addPeerLiquidity
+            return query.data.depositPeerLiquidity
           } else {
             throw new Error('Data was empty')
           }
@@ -260,19 +260,21 @@ describe('Liquidity Resolvers', (): void => {
     })
   })
 
-  describe('Add asset liquidity', (): void => {
+  describe('Deposit asset liquidity', (): void => {
     let asset: Asset
 
     beforeEach(async (): Promise<void> => {
       asset = await createAsset(deps)
     })
 
-    test('Can add liquidity to asset', async (): Promise<void> => {
+    test('Can deposit liquidity to asset', async (): Promise<void> => {
       const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
-            mutation AddAssetLiquidity($input: AddAssetLiquidityInput!) {
-              addAssetLiquidity(input: $input) {
+            mutation DepositAssetLiquidity(
+              $input: DepositAssetLiquidityInput!
+            ) {
+              depositAssetLiquidity(input: $input) {
                 code
                 success
                 message
@@ -291,7 +293,7 @@ describe('Liquidity Resolvers', (): void => {
         })
         .then((query): LiquidityMutationResponse => {
           if (query.data) {
-            return query.data.addAssetLiquidity
+            return query.data.depositAssetLiquidity
           } else {
             throw new Error('Data was empty')
           }
@@ -306,8 +308,10 @@ describe('Liquidity Resolvers', (): void => {
       const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
-            mutation AddAssetLiquidity($input: AddAssetLiquidityInput!) {
-              addAssetLiquidity(input: $input) {
+            mutation DepositAssetLiquidity(
+              $input: DepositAssetLiquidityInput!
+            ) {
+              depositAssetLiquidity(input: $input) {
                 code
                 success
                 message
@@ -326,7 +330,7 @@ describe('Liquidity Resolvers', (): void => {
         })
         .then((query): LiquidityMutationResponse => {
           if (query.data) {
-            return query.data.addAssetLiquidity
+            return query.data.depositAssetLiquidity
           } else {
             throw new Error('Data was empty')
           }
@@ -342,8 +346,10 @@ describe('Liquidity Resolvers', (): void => {
       const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
-            mutation AddAssetLiquidity($input: AddAssetLiquidityInput!) {
-              addAssetLiquidity(input: $input) {
+            mutation DepositAssetLiquidity(
+              $input: DepositAssetLiquidityInput!
+            ) {
+              depositAssetLiquidity(input: $input) {
                 code
                 success
                 message
@@ -362,7 +368,7 @@ describe('Liquidity Resolvers', (): void => {
         })
         .then((query): LiquidityMutationResponse => {
           if (query.data) {
-            return query.data.addAssetLiquidity
+            return query.data.depositAssetLiquidity
           } else {
             throw new Error('Data was empty')
           }
@@ -386,8 +392,10 @@ describe('Liquidity Resolvers', (): void => {
       const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
-            mutation AddAssetLiquidity($input: AddAssetLiquidityInput!) {
-              addAssetLiquidity(input: $input) {
+            mutation DepositAssetLiquidity(
+              $input: DepositAssetLiquidityInput!
+            ) {
+              depositAssetLiquidity(input: $input) {
                 code
                 success
                 message
@@ -406,7 +414,7 @@ describe('Liquidity Resolvers', (): void => {
         })
         .then((query): LiquidityMutationResponse => {
           if (query.data) {
-            return query.data.addAssetLiquidity
+            return query.data.depositAssetLiquidity
           } else {
             throw new Error('Data was empty')
           }
@@ -422,8 +430,10 @@ describe('Liquidity Resolvers', (): void => {
       const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
-            mutation AddAssetLiquidity($input: AddAssetLiquidityInput!) {
-              addAssetLiquidity(input: $input) {
+            mutation DepositAssetLiquidity(
+              $input: DepositAssetLiquidityInput!
+            ) {
+              depositAssetLiquidity(input: $input) {
                 code
                 success
                 message
@@ -442,7 +452,7 @@ describe('Liquidity Resolvers', (): void => {
         })
         .then((query): LiquidityMutationResponse => {
           if (query.data) {
-            return query.data.addAssetLiquidity
+            return query.data.depositAssetLiquidity
           } else {
             throw new Error('Data was empty')
           }

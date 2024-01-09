@@ -140,13 +140,13 @@ Example Successful Response
 }
 ```
 
-Next, run the following query to add liquidity for the secondary instance
+Next, run the following query to deposit liquidity for the secondary instance
 
 Query:
 
 ```
-mutation AddPeerLiquidity ($input: AddPeerLiquidityInput!) {
-  addPeerLiquidity(input: $input) {
+mutation DepositPeerLiquidity ($input: DepositPeerLiquidityInput!) {
+  depositPeerLiquidity(input: $input) {
     code
     success
     message
@@ -172,10 +172,10 @@ Example successful response:
 ```
 {
   "data": {
-    "addPeerLiquidity": {
+    "depositPeerLiquidity": {
       "code": "200",
       "success": true,
-      "message": "Added peer liquidity",
+      "message": "Deposited peer liquidity",
       "error": null
     }
   }
@@ -296,13 +296,13 @@ Example successful response:
 }
 ```
 
-Next, run the following query to add liquidity for the primary instance
+Next, run the following query to deposit liquidity for the primary instance
 
 Query:
 
 ```
-mutation AddPeerLiquidity ($input: AddPeerLiquidityInput!) {
-  addPeerLiquidity(input: $input) {
+mutation DepositPeerLiquidity ($input: DepositPeerLiquidityInput!) {
+  depositPeerLiquidity(input: $input) {
     code
     success
     message
@@ -328,10 +328,10 @@ Example successful response:
 ```
 {
   "data": {
-    "addPeerLiquidity": {
+    "depositPeerLiquidity": {
       "code": "200",
       "success": true,
-      "message": "Added peer liquidity",
+      "message": "Deposited peer liquidity",
       "error": null
     }
   }

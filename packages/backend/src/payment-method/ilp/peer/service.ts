@@ -50,7 +50,7 @@ export type UpdateOptions = Partial<Options> & {
   id: string
 }
 
-interface AddPeerLiquidityArgs {
+interface DepositPeerLiquidityArgs {
   amount: bigint
   transferId?: string
   peerId: string
@@ -66,8 +66,8 @@ export interface PeerService {
   ): Promise<Peer | undefined>
   getByIncomingToken(token: string): Promise<Peer | undefined>
   getPage(pagination?: Pagination, sortOrder?: SortOrder): Promise<Peer[]>
-  addLiquidity(
-    args: AddPeerLiquidityArgs
+  depositLiquidity(
+    args: DepositPeerLiquidityArgs
   ): Promise<void | PeerError.UnknownPeer | TransferError>
   delete(id: string): Promise<Peer | undefined>
 }
@@ -105,7 +105,7 @@ export async function createPeerService({
     getByIncomingToken: (token) => getPeerByIncomingToken(deps, token),
     getPage: (pagination?, sortOrder?) =>
       getPeersPage(deps, pagination, sortOrder),
-    addLiquidity: (args) => addLiquidityById(deps, args),
+    depositLiquidity: (args) => depositLiquidityById(deps, args),
     delete: (id) => deletePeer(deps, id)
   }
 }
@@ -164,7 +164,7 @@ async function createPeer(
       )
 
       if (options.initialLiquidity) {
-        const transferError = await addLiquidity(
+        const transferError = await depositLiquidity(
           deps,
           { peer, amount: options.initialLiquidity },
           trx
@@ -173,7 +173,7 @@ async function createPeer(
         if (transferError) {
           deps.logger.error(
             { err: transferError },
-            'error trying to add initial liquidity'
+            'error trying to deposit initial liquidity'
           )
 
           throw PeerError.InvalidInitialLiquidity
@@ -247,9 +247,9 @@ async function updatePeer(
   }
 }
 
-async function addLiquidityById(
+async function depositLiquidityById(
   deps: ServiceDependencies,
-  args: AddPeerLiquidityArgs
+  args: DepositPeerLiquidityArgs
 ): Promise<void | PeerError.UnknownPeer | TransferError> {
   const { peerId, amount, transferId } = args
 
@@ -258,10 +258,10 @@ async function addLiquidityById(
     return PeerError.UnknownPeer
   }
 
-  return addLiquidity(deps, { peer, amount, transferId })
+  return depositLiquidity(deps, { peer, amount, transferId })
 }
 
-async function addLiquidity(
+async function depositLiquidity(
   deps: ServiceDependencies,
   args: { peer: Peer; amount: bigint; transferId?: string },
   trx?: TransactionOrKnex

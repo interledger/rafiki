@@ -102,8 +102,10 @@ type Mutation {
   "Update an asset"
   updateAsset(input: UpdateAssetInput!): AssetMutationResponse!
 
-  "Add asset liquidity"
-  addAssetLiquidity(input: AddAssetLiquidityInput!): LiquidityMutationResponse
+  "Deposit asset liquidity"
+  depositAssetLiquidity(
+    input: DepositAssetLiquidityInput!
+  ): LiquidityMutationResponse
 
   "Withdraw asset liquidity"
   createAssetLiquidityWithdrawal(
@@ -124,8 +126,10 @@ type Mutation {
   "Delete a peer"
   deletePeer(input: DeletePeerInput!): DeletePeerMutationResponse!
 
-  "Add peer liquidity"
-  addPeerLiquidity(input: AddPeerLiquidityInput!): LiquidityMutationResponse
+  "Deposit peer liquidity"
+  depositPeerLiquidity(
+    input: DepositPeerLiquidityInput!
+  ): LiquidityMutationResponse
 
   "Withdraw peer liquidity"
   createPeerLiquidityWithdrawal(
@@ -289,7 +293,7 @@ input CreatePeerInput {
   name: String
   "Account Servicing Entity will be notified via a webhook event if peer liquidity falls below this value"
   liquidityThreshold: UInt64
-  "Initial amount of liquidity to add for peer"
+  "Initial amount of liquidity to deposit for peer"
   initialLiquidity: UInt64
   "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)"
   idempotencyKey: String
@@ -306,8 +310,8 @@ input CreateOrUpdatePeerByUrlInput {
   name: String
   "Account Servicing Entity will be notified via a webhook event if peer liquidity falls below this value"
   liquidityThreshold: UInt64
-  "Initial amount of liquidity to add for peer"
-  addedLiquidity: UInt64
+  "Amount of liquidity to deposit for peer"
+  liquidityToDeposit: UInt64
   "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)"
   idempotencyKey: String
 }
@@ -348,10 +352,10 @@ input HttpOutgoingInput {
   endpoint: String!
 }
 
-input AddPeerLiquidityInput {
-  "The id of the peer to add liquidity."
+input DepositPeerLiquidityInput {
+  "The id of the peer to deposit liquidity."
   peerId: String!
-  "Amount of liquidity to add."
+  "Amount of liquidity to deposit."
   amount: UInt64!
   "The id of the transfer."
   id: String!
@@ -359,10 +363,10 @@ input AddPeerLiquidityInput {
   idempotencyKey: String!
 }
 
-input AddAssetLiquidityInput {
-  "The id of the asset to add liquidity."
+input DepositAssetLiquidityInput {
+  "The id of the asset to deposit liquidity."
   assetId: String!
-  "Amount of liquidity to add."
+  "Amount of liquidity to deposit."
   amount: UInt64!
   "The id of the transfer."
   id: String!

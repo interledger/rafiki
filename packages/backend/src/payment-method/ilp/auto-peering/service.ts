@@ -21,7 +21,7 @@ export interface InitiatePeeringRequestArgs {
   assetId: string
   name?: string
   maxPacketAmount?: bigint
-  addedLiquidity?: bigint
+  liquidityToDeposit?: bigint
   liquidityThreshold?: bigint
 }
 
@@ -44,7 +44,7 @@ interface UpdatePeerArgs {
   name?: string
 }
 
-interface AddLiquidityArgs {
+interface DepositLiquidityArgs {
   peer: Peer
   amount: bigint
 }
@@ -147,19 +147,19 @@ async function initiatePeeringRequest(
     return handlePeerError(deps, peerOrError, 'Could not create or update peer')
   }
 
-  return args.addedLiquidity
-    ? await addLiquidity(deps, {
+  return args.liquidityToDeposit
+    ? await depositLiquidity(deps, {
         peer: peerOrError,
-        amount: args.addedLiquidity
+        amount: args.liquidityToDeposit
       })
     : peerOrError
 }
 
-async function addLiquidity(
+async function depositLiquidity(
   deps: ServiceDependencies,
-  args: AddLiquidityArgs
+  args: DepositLiquidityArgs
 ): Promise<Peer | AutoPeeringError.LiquidityError> {
-  const transferOrPeerError = await deps.peerService.addLiquidity({
+  const transferOrPeerError = await deps.peerService.depositLiquidity({
     peerId: args.peer.id,
     amount: args.amount
   })
@@ -170,7 +170,7 @@ async function addLiquidity(
   ) {
     deps.logger.error(
       { err: transferOrPeerError, args, peerId: args.peer.id },
-      'Could not add liquidity to peer'
+      'Could not deposit liquidity to peer'
     )
 
     return AutoPeeringError.LiquidityError

@@ -451,14 +451,14 @@ describe('Peer Service', (): void => {
     })
   })
 
-  describe('Add Liquidity', (): void => {
-    test('Can add liquidity to peer', async (): Promise<void> => {
+  describe('Deposit Liquidity', (): void => {
+    test('Can deposit liquidity to peer', async (): Promise<void> => {
       const peer = await createPeer(deps)
 
       const liquidity = 100n
 
       await expect(
-        peerService.addLiquidity({ peerId: peer.id, amount: liquidity })
+        peerService.depositLiquidity({ peerId: peer.id, amount: liquidity })
       ).resolves.toBeUndefined()
 
       await expect(accountingService.getBalance(peer.id)).resolves.toBe(
@@ -470,7 +470,7 @@ describe('Peer Service', (): void => {
       const peer = await createPeer(deps)
 
       await expect(
-        peerService.addLiquidity({
+        peerService.depositLiquidity({
           peerId: peer.id,
           amount: 100n,
           transferId: ''
@@ -482,7 +482,7 @@ describe('Peer Service', (): void => {
 
     test('Returns error if cannot find peer', async (): Promise<void> => {
       await expect(
-        peerService.addLiquidity({
+        peerService.depositLiquidity({
           peerId: uuid(),
           amount: 100n
         })

@@ -74,7 +74,7 @@ const getPeerOrAssetLiquidity = async (
   return liquidity
 }
 
-export const addPeerLiquidity: MutationResolvers<ApolloContext>['addPeerLiquidity'] =
+export const depositPeerLiquidity: MutationResolvers<ApolloContext>['depositPeerLiquidity'] =
   async (
     parent,
     args,
@@ -85,7 +85,7 @@ export const addPeerLiquidity: MutationResolvers<ApolloContext>['addPeerLiquidit
         return responses[LiquidityError.AmountZero]
       }
       const peerService = await ctx.container.use('peerService')
-      const peerOrError = await peerService.addLiquidity({
+      const peerOrError = await peerService.depositLiquidity({
         transferId: args.input.id,
         peerId: args.input.peerId,
         amount: args.input.amount
@@ -112,13 +112,13 @@ export const addPeerLiquidity: MutationResolvers<ApolloContext>['addPeerLiquidit
       )
       return {
         code: '400',
-        message: 'Error trying to add peer liquidity',
+        message: 'Error trying to deposit peer liquidity',
         success: false
       }
     }
   }
 
-export const addAssetLiquidity: MutationResolvers<ApolloContext>['addAssetLiquidity'] =
+export const depositAssetLiquidity: MutationResolvers<ApolloContext>['depositAssetLiquidity'] =
   async (
     parent,
     args,
@@ -157,7 +157,7 @@ export const addAssetLiquidity: MutationResolvers<ApolloContext>['addAssetLiquid
       )
       return {
         code: '400',
-        message: 'Error trying to add asset liquidity',
+        message: 'Error trying to deposit asset liquidity',
         success: false
       }
     }
