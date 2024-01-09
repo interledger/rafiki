@@ -2289,6 +2289,52 @@ export type WithdrawAssetLiquidityVariables = Exact<{
 
 export type WithdrawAssetLiquidity = { __typename?: 'Mutation', createAssetLiquidityWithdrawal?: { __typename?: 'LiquidityMutationResponse', code: string, success: boolean, message: string, error?: LiquidityError | null } | null };
 
+export type GetIncomingPaymentVariables = Exact<{
+  id: Scalars['String']['input'];
+}>;
+
+
+export type GetIncomingPayment = { __typename?: 'Query', incomingPayment?: { __typename?: 'IncomingPayment', id: string, walletAddressId: string, state: IncomingPaymentState, expiresAt: string, metadata?: any | null, createdAt: string, liquidity?: bigint | null, incomingAmount?: { __typename?: 'Amount', value: bigint, assetCode: string, assetScale: number } | null, receivedAmount: { __typename?: 'Amount', value: bigint, assetCode: string, assetScale: number } } | null };
+
+export type GetOutgoingPaymentVariables = Exact<{
+  id: Scalars['String']['input'];
+}>;
+
+
+export type GetOutgoingPayment = { __typename?: 'Query', outgoingPayment?: { __typename?: 'OutgoingPayment', id: string, createdAt: string, error?: string | null, receiver: string, walletAddressId: string, state: OutgoingPaymentState, metadata?: any | null, liquidity?: bigint | null, receiveAmount: { __typename?: 'Amount', assetCode: string, assetScale: number, value: bigint }, debitAmount: { __typename?: 'Amount', assetCode: string, assetScale: number, value: bigint }, sentAmount: { __typename?: 'Amount', assetCode: string, assetScale: number, value: bigint } } | null };
+
+export type ListPaymentsQueryVariables = Exact<{
+  after?: InputMaybe<Scalars['String']['input']>;
+  before?: InputMaybe<Scalars['String']['input']>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+  filter?: InputMaybe<PaymentFilter>;
+}>;
+
+
+export type ListPaymentsQuery = { __typename?: 'Query', payments: { __typename?: 'PaymentConnection', edges: Array<{ __typename?: 'PaymentEdge', node: { __typename?: 'Payment', id: string, type: PaymentType, state: string, createdAt: string } }>, pageInfo: { __typename?: 'PageInfo', startCursor?: string | null, endCursor?: string | null, hasNextPage: boolean, hasPreviousPage: boolean } } };
+
+export type DepositOutgoingPaymentLiquidityVariables = Exact<{
+  input: DepositOutgoingPaymentLiquidityInput;
+}>;
+
+
+export type DepositOutgoingPaymentLiquidity = { __typename?: 'Mutation', depositOutgoingPaymentLiquidity?: { __typename?: 'LiquidityMutationResponse', success: boolean, message: string } | null };
+
+export type WithdrawOutgoingPaymentLiquidityVariables = Exact<{
+  input: WithdrawOutgoingPaymentLiquidityInput;
+}>;
+
+
+export type WithdrawOutgoingPaymentLiquidity = { __typename?: 'Mutation', withdrawOutgoingPaymentLiquidity?: { __typename?: 'LiquidityMutationResponse', success: boolean, message: string } | null };
+
+export type WithdrawIncomingPaymentLiquidityVariables = Exact<{
+  input: WithdrawIncomingPaymentLiquidityInput;
+}>;
+
+
+export type WithdrawIncomingPaymentLiquidity = { __typename?: 'Mutation', withdrawIncomingPaymentLiquidity?: { __typename?: 'LiquidityMutationResponse', success: boolean, message: string } | null };
+
 export type GetPeerQueryVariables = Exact<{
   id: Scalars['String']['input'];
 }>;
@@ -2346,7 +2392,7 @@ export type GetWalletAddressQueryVariables = Exact<{
 }>;
 
 
-export type GetWalletAddressQuery = { __typename?: 'Query', walletAddress?: { __typename?: 'WalletAddress', id: string, url: string, publicName?: string | null, status: WalletAddressStatus, createdAt: string, asset: { __typename?: 'Asset', id: string, code: string, scale: number, withdrawalThreshold?: bigint | null } } | null };
+export type GetWalletAddressQuery = { __typename?: 'Query', walletAddress?: { __typename?: 'WalletAddress', id: string, url: string, publicName?: string | null, status: WalletAddressStatus, createdAt: string, liquidity?: bigint | null, asset: { __typename?: 'Asset', id: string, code: string, scale: number, withdrawalThreshold?: bigint | null } } | null };
 
 export type ListWalletAddresssQueryVariables = Exact<{
   after?: InputMaybe<Scalars['String']['input']>;
@@ -2372,6 +2418,13 @@ export type CreateWalletAddressMutationVariables = Exact<{
 
 export type CreateWalletAddressMutation = { __typename?: 'Mutation', createWalletAddress: { __typename?: 'CreateWalletAddressMutationResponse', code: string, success: boolean, message: string, walletAddress?: { __typename?: 'WalletAddress', id: string } | null } };
 
+export type CreateWalletAddressWithdrawalVariables = Exact<{
+  input: CreateWalletAddressWithdrawalInput;
+}>;
+
+
+export type CreateWalletAddressWithdrawal = { __typename?: 'Mutation', createWalletAddressWithdrawal?: { __typename?: 'WalletAddressWithdrawalMutationResponse', success: boolean, message: string } | null };
+
 export type ListWebhookEventsVariables = Exact<{
   after?: InputMaybe<Scalars['String']['input']>;
   before?: InputMaybe<Scalars['String']['input']>;
@@ -2381,4 +2434,4 @@ export type ListWebhookEventsVariables = Exact<{
 }>;
 
 
-export type ListWebhookEvents = { __typename?: 'Query', webhookEvents: { __typename?: 'WebhookEventsConnection', edges: Array<{ __typename?: 'WebhookEventsEdge', cursor: string, node: { __typename?: 'WebhookEvent', id: string, data: any, type: string } }>, pageInfo: { __typename?: 'PageInfo', startCursor?: string | null, endCursor?: string | null, hasNextPage: boolean, hasPreviousPage: boolean } } };
+export type ListWebhookEvents = { __typename?: 'Query', webhookEvents: { __typename?: 'WebhookEventsConnection', edges: Array<{ __typename?: 'WebhookEventsEdge', cursor: string, node: { __typename?: 'WebhookEvent', id: string, data: any, type: string, createdAt: string } }>, pageInfo: { __typename?: 'PageInfo', startCursor?: string | null, endCursor?: string | null, hasNextPage: boolean, hasPreviousPage: boolean } } };

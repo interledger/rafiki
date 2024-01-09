@@ -123,11 +123,11 @@ export default function ViewAssetPage() {
               </div>
               <div className='flex space-x-4'>
                 <Button
-                  aria-label='add asset liquidity page'
+                  aria-label='deposit asset liquidity page'
                   type='button'
-                  to={`/assets/${asset.id}/add-liquidity`}
+                  to={`/assets/${asset.id}/deposit-liquidity`}
                 >
-                  Add liquidity
+                  Deposit liquidity
                 </Button>
                 <Button
                   aria-label='withdraw asset liquidity page'
