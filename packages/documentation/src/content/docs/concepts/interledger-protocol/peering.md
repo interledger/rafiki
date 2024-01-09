@@ -357,7 +357,7 @@ with the input being:
   "input": {
     "peerUrl: "PEER_URL",
     "assetId": "INSERT_ASSET_ID",
-    "liquidityToDeposit": <optionally, and initial amount of liquidity to provision>
+    "liquidityToDeposit": <optional amount of liquidity to deposit>
   }
 }
 ```
