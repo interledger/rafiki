@@ -16,9 +16,9 @@ export const getPageTests = <Type extends BaseModel>({
     beforeEach(async (): Promise<void> => {
       modelsCreated = []
       for (let i = 0; i < 22; i++) {
-        modelsCreated.push(await createModel())
+        // default sort order is DESC
+        modelsCreated[21 - i] = await createModel()
       }
-      modelsCreated.reverse() // default sort order is DESC
     })
 
     test.each`

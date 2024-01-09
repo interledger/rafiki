@@ -22,7 +22,8 @@ import { AccessType, AccessAction } from '@interledger/open-payments'
 import { createGrant } from '../tests/grant'
 import { AccessToken } from '../accessToken/model'
 import { Interaction, InteractionState } from '../interaction/model'
-import { SortOrder } from '../shared/baseModel'
+import { Pagination, SortOrder } from '../shared/baseModel'
+import { getPageTests } from '../shared/baseModel.test'
 
 describe('Grant Service', (): void => {
   let deps: IocContract<AppServices>
@@ -43,6 +44,14 @@ describe('Grant Service', (): void => {
 
   afterAll(async (): Promise<void> => {
     await appContainer.shutdown()
+  })
+
+  describe('getPage', (): void => {
+    getPageTests({
+      createModel: () => createGrant(deps),
+      getPage: (pagination?: Pagination, sortOrder?: SortOrder) =>
+        grantService.getPage(pagination, undefined, sortOrder)
+    })
   })
 
   describe('grant flow', (): void => {

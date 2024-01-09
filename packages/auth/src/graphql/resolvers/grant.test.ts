@@ -56,10 +56,8 @@ describe('Grant Resolvers', (): void => {
       const grants: GrantModel[] = []
 
       for (let i = 0; i < 2; i++) {
-        const grant = await createGrant(deps)
-        grants.push(grant)
+        grants[1 - i] = await createGrant(deps)
       }
-      grants.reverse()
 
       const query = await appContainer.apolloClient
         .query({
