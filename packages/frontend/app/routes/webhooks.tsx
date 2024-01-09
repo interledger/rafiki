@@ -115,13 +115,16 @@ export default function WebhookEventsPage() {
             </div>
           </div>
           <Table>
-            <Table.Head columns={['ID', 'Type', 'Data']} />
+            <Table.Head columns={['ID', 'Type', 'Date', 'Data']} />
             <Table.Body>
               {webhooks.edges.length ? (
                 webhooks.edges.map((webhook) => (
                   <Table.Row key={webhook.node.id}>
                     <Table.Cell>{webhook.node.id}</Table.Cell>
                     <Table.Cell>{webhook.node.type}</Table.Cell>
+                    <Table.Cell>
+                      {new Date(webhook.node.createdAt).toLocaleString()}
+                    </Table.Cell>
                     <Table.Cell>
                       <Button
                         aria-label='view webhook data'
