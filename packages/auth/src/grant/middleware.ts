@@ -2,6 +2,7 @@ import { ContinueContext } from './routes'
 
 export async function grantLastContinueAttemptMiddleware(
   ctx: ContinueContext,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   next: () => Promise<any>
 ): Promise<void> {
   await next()

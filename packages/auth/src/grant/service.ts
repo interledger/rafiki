@@ -317,9 +317,7 @@ async function getGrantsPage(
   return query.getPage(pagination, sortOrder)
 }
 
-async function updateLastContinuedAt(
-  id: string
-): Promise<Grant> {
+async function updateLastContinuedAt(id: string): Promise<Grant> {
   return Grant.query().patchAndFetchById(id, {
     lastContinuedAt: new Date()
   })

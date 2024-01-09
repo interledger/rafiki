@@ -1,4 +1,4 @@
-import { Model } from 'objection'
+import { Model, Pojo, QueryContext } from 'objection'
 import { BaseModel } from '../shared/baseModel'
 import { Access } from '../access/model'
 import { join } from 'path'
@@ -79,6 +79,19 @@ export class Grant extends BaseModel {
   public clientNonce?: string // client-generated nonce for post-interaction hash
 
   public lastContinuedAt!: Date
+
+  public $beforeInsert(context: QueryContext): void {
+    super.$beforeInsert(context)
+    this.lastContinuedAt = new Date()
+  }
+
+  $formatJson(json: Pojo): Pojo {
+    json = super.$formatJson(json)
+    return {
+      ...json,
+      lastContinuedAt: json.lastContinuedAt.toISOString()
+    }
+  }
 }
 
 interface ToOpenPaymentsPendingGrantArgs {

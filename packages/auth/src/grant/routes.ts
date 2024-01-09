@@ -188,7 +188,7 @@ function isContinuableGrant(grant: Grant): boolean {
 
 function isGrantStillWaiting(grant: Grant): boolean {
   if (!grant.wait) return false
-  const grantWaitTime = grant.lastContinuedAt.getTime() + (grant.wait * 1000)
+  const grantWaitTime = grant.lastContinuedAt.getTime() + grant.wait * 1000
   const currentTime = Date.now()
 
   return currentTime < grantWaitTime
