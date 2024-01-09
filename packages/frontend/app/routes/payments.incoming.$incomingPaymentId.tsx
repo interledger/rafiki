@@ -29,13 +29,7 @@ export async function loader({ params }: LoaderArgs) {
     throw json(null, { status: 400, statusText: 'Incoming payment not found.' })
   }
 
-  return json({
-    incomingPayment: {
-      ...incomingPayment,
-      createdAt: new Date(incomingPayment.createdAt).toLocaleString(),
-      expiresAt: new Date(incomingPayment.expiresAt).toLocaleString()
-    }
-  })
+  return json({ incomingPayment })
 }
 
 export default function ViewIncomingPaymentPage() {
@@ -53,6 +47,8 @@ export default function ViewIncomingPaymentPage() {
   )} 
   ${incomingPayment.receivedAmount.assetCode}`
 
+  const expiresAtLocale = new Date(incomingPayment.expiresAt).toLocaleString()
+
   return (
     <div className='pt-4 flex flex-col space-y-4'>
       <div className='flex flex-col rounded-md bg-offwhite px-6'>
@@ -66,11 +62,11 @@ export default function ViewIncomingPaymentPage() {
           {/* Incoming Payment General Info*/}
           <div className='col-span-1 pt-3'>
             <h3 className='text-lg font-medium'>General Information</h3>
-            <p className='text-sm'>Created at {incomingPayment.createdAt} </p>
-            {new Date(incomingPayment.expiresAt) > new Date() && (
-              <p className='text-sm mb-2'>
-                Expires at {incomingPayment.expiresAt}{' '}
-              </p>
+            <p className='text-sm'>
+              Created at {new Date(incomingPayment.createdAt).toLocaleString()}{' '}
+            </p>
+            {new Date(expiresAtLocale) > new Date() && (
+              <p className='text-sm mb-2'>Expires at {expiresAtLocale} </p>
             )}
           </div>
           <div className='md:col-span-2 bg-white rounded-md shadow-md'>

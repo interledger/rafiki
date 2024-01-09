@@ -28,31 +28,18 @@ export const loader = async ({ request, params }: LoaderArgs) => {
     throw json(null, { status: 404, statusText: 'Asset not found.' })
   }
 
-  const fees = asset.fees
-    ? {
-        pageInfo: asset.fees.pageInfo,
-        edges: asset.fees.edges.map((edge) => ({
-          cursor: edge.cursor,
-          node: {
-            ...edge.node,
-            createdAt: new Date(edge.node.createdAt).toLocaleString()
-          }
-        }))
-      }
-    : undefined
-
   let previousPageUrl = '',
     nextPageUrl = ''
 
-  if (fees?.pageInfo.hasPreviousPage) {
-    previousPageUrl = `/assets/${assetId}/fee-history?before=${fees.pageInfo.startCursor}`
+  if (asset.fees?.pageInfo.hasPreviousPage) {
+    previousPageUrl = `/assets/${assetId}/fee-history?before=${asset.fees.pageInfo.startCursor}`
   }
 
-  if (fees?.pageInfo.hasNextPage) {
-    nextPageUrl = `/assets/${assetId}/fee-history?after=${fees.pageInfo.endCursor}`
+  if (asset.fees?.pageInfo.hasNextPage) {
+    nextPageUrl = `/assets/${assetId}/fee-history?after=${asset.fees.pageInfo.endCursor}`
   }
 
-  return json({ assetId, fees, previousPageUrl, nextPageUrl })
+  return json({ assetId, fees: asset.fees, previousPageUrl, nextPageUrl })
 }
 
 export default function AssetFeesPage() {
@@ -90,7 +77,9 @@ export default function AssetFeesPage() {
                   <Table.Cell>{fee.node.type}</Table.Cell>
                   <Table.Cell>{fee.node.fixed}</Table.Cell>
                   <Table.Cell>{fee.node.basisPoints}</Table.Cell>
-                  <Table.Cell>{fee.node.createdAt}</Table.Cell>
+                  <Table.Cell>
+                    {new Date(fee.node.createdAt).toLocaleString()}
+                  </Table.Cell>
                 </Table.Row>
               ))
             ) : (

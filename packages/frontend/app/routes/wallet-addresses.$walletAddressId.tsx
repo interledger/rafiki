@@ -32,12 +32,7 @@ export async function loader({ params }: LoaderArgs) {
     throw json(null, { status: 404, statusText: 'Wallet address not found.' })
   }
 
-  return json({
-    walletAddress: {
-      ...walletAddress,
-      createdAt: new Date(walletAddress.createdAt).toLocaleString()
-    }
-  })
+  return json({ walletAddress })
 }
 
 export default function ViewAssetPage() {
@@ -65,7 +60,9 @@ export default function ViewAssetPage() {
         <div className='grid grid-cols-1 py-3 gap-6 md:grid-cols-3 border-b border-pearl'>
           <div className='col-span-1 pt-3'>
             <h3 className='text-lg font-medium'>General Information</h3>
-            <p className='text-sm'>Created at {walletAddress.createdAt}</p>
+            <p className='text-sm'>
+              Created at {new Date(walletAddress.createdAt).toLocaleString()}
+            </p>
             <ErrorPanel errors={response?.errors.message} />
           </div>
           <div className='md:col-span-2 bg-white rounded-md shadow-md'>
