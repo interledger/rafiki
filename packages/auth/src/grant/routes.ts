@@ -188,7 +188,7 @@ function isContinuableGrant(grant: Grant): boolean {
 
 function isGrantStillWaiting(grant: Grant): boolean {
   if (!grant.wait) return false
-  const grantWaitTime = grant.createdAt.getTime() + grant.wait * 1000
+  const grantWaitTime = grant.lastContinuedAt.getTime() + (grant.wait * 1000)
   const currentTime = Date.now()
 
   return currentTime < grantWaitTime
@@ -233,6 +233,7 @@ async function pollGrantContinuation(
   } else {
     const accessToken = await accessTokenService.create(grant.id)
     const access = await accessService.getByGrant(grant.id)
+    await grantService.finalize(grant.id, GrantFinalization.Issued)
     ctx.body = toOpenPaymentsGrant(
       grant,
       {

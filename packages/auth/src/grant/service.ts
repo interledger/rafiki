@@ -39,6 +39,7 @@ export interface GrantService {
     filter?: GrantFilter,
     sortOrder?: SortOrder
   ): Promise<Grant[]>
+  updateLastContinuedAt(id: string): Promise<Grant>
   lock(grantId: string, trx: Transaction, timeoutMs?: number): Promise<void>
 }
 
@@ -128,6 +129,7 @@ export async function createGrantService({
     revokeGrant: (grantId) => revokeGrant(deps, grantId),
     getPage: (pagination?, filter?, sortOrder?) =>
       getGrantsPage(deps, pagination, filter, sortOrder),
+    updateLastContinuedAt: (id) => updateLastContinuedAt(id),
     lock: (grantId: string, trx: Transaction, timeoutMs?: number) =>
       lock(deps, grantId, trx, timeoutMs)
   }
@@ -313,6 +315,14 @@ async function getGrantsPage(
   }
 
   return query.getPage(pagination, sortOrder)
+}
+
+async function updateLastContinuedAt(
+  id: string
+): Promise<Grant> {
+  return Grant.query().patchAndFetchById(id, {
+    lastContinuedAt: new Date()
+  })
 }
 
 async function lock(
