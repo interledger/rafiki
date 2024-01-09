@@ -81,8 +81,8 @@ importers:
         specifier: ^9.0.7
         version: 9.0.7
       axios:
-        specifier: ^1.6.2
-        version: 1.6.2
+        specifier: ^1.6.5
+        version: 1.6.5
       graphql:
         specifier: ^16.8.1
         version: 16.8.1
@@ -148,8 +148,8 @@ importers:
         specifier: ^8.12.0
         version: 8.12.0
       axios:
-        specifier: ^1.6.2
-        version: 1.6.2
+        specifier: ^1.6.5
+        version: 1.6.5
       dotenv:
         specifier: ^16.3.1
         version: 16.3.1
@@ -293,8 +293,8 @@ importers:
         specifier: ^8.12.0
         version: 8.12.0
       axios:
-        specifier: 1.6.2
-        version: 1.6.2
+        specifier: 1.6.5
+        version: 1.6.5
       base64url:
         specifier: ^3.0.1
         version: 3.0.1
@@ -571,8 +571,8 @@ importers:
         specifier: 1.2.1
         version: 1.2.1
       axios:
-        specifier: ^1.6.2
-        version: 1.6.2
+        specifier: ^1.6.5
+        version: 1.6.5
       pino:
         specifier: ^8.17.2
         version: 8.17.2
@@ -4396,7 +4396,7 @@ packages:
     dependencies:
       '@interledger/http-signature-utils': 2.0.0
       '@interledger/openapi': 1.2.1
-      axios: 1.6.2
+      axios: 1.6.5
       base64url: 3.0.1
       http-message-signatures: 0.1.2
       pino: 8.17.2
@@ -7038,10 +7038,10 @@ packages:
       - debug
     dev: true
 
-  /axios@1.6.2:
-    resolution: {integrity: sha512-7i24Ri4pmDRfJTR7LDBhsOTtcm+9kjX5WiY1X3wIisx6G9So3pfMkEiU7emUBe46oceVImccTEM3k6C5dbVW8A==}
+  /axios@1.6.5:
+    resolution: {integrity: sha512-Ii012v05KEVuUoFWmMW/UQv9aRIc3ZwkWDcM+h5Il8izZCtRVpDUfwpoFf7eOtajT3QiGR4yDUx7lPqHJULgbg==}
     dependencies:
-      follow-redirects: 1.15.1
+      follow-redirects: 1.15.4
       form-data: 4.0.0
       proxy-from-env: 1.1.0
     transitivePeerDependencies:
@@ -9942,6 +9942,16 @@ packages:
 
   /follow-redirects@1.15.1:
     resolution: {integrity: sha512-yLAMQs+k0b2m7cVxpS1VKJVvoz7SS9Td1zss3XRwXj+ZDH00RJgnuLx7E44wx02kQLrdM3aOOy+FpzS7+8OizA==}
+    engines: {node: '>=4.0'}
+    peerDependencies:
+      debug: '*'
+    peerDependenciesMeta:
+      debug:
+        optional: true
+    dev: true
+
+  /follow-redirects@1.15.4:
+    resolution: {integrity: sha512-Cr4D/5wlrb0z9dgERpUL3LrmPKVDsETIJhaCMeDfuFYcqa5bldGV6wBsAN6X/vxlXQtFBMrXdXxdL8CbDTGniw==}
     engines: {node: '>=4.0'}
     peerDependencies:
       debug: '*'
@@ -17025,7 +17035,7 @@ packages:
       '@types/source-map-support': 0.5.9
       '@types/validator': 13.11.5
       '@types/ws': 7.4.7
-      axios: 1.6.2
+      axios: 1.6.5
       commander: 5.1.0
       deep-equal: 2.2.0
       deepmerge: 4.2.2

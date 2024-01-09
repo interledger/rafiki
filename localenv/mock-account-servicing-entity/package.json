@@ -14,7 +14,7 @@
     "@remix-run/serve": "^1.19.3",
     "@types/node": "^18.7.12",
     "@types/uuid": "^9.0.7",
-    "axios": "^1.6.2",
+    "axios": "^1.6.5",
     "graphql": "^16.8.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
