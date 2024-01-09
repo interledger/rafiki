@@ -1,4 +1,6 @@
-# Telemetry
+---
+title: Overview
+---
 
 ## Purpose
 
@@ -20,7 +22,7 @@ The telemetry feature is optional for ASEs.
 
 The architecture of the telemetry feature is illustrated below:
 
-![Telemetry Architecture](telemetry_architecture.png)
+![Telemetry architecture](/img/telemetry-architecture.png)
 
 ## Opentelemetry
 

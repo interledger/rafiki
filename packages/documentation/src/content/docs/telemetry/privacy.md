@@ -1,4 +1,6 @@
-# Privacy in Rafiki Telemetry
+---
+title: Privacy in Rafiki Telemetry
+---
 
 Rafiki telemetry is designed with a strong emphasis on privacy. The system anonymizes user data and refrains from collecting identifiable information. Since transactions can originate from any user to a Rafiki instance, the privacy measures are implemented at the Rafiki instance level in the network. This means that at the individual level, the data is already anonymous as single Rafiki instances service transactions for multiple users.
 
@@ -6,7 +8,7 @@ Rafiki telemetry is designed with a strong emphasis on privacy. The system anony
 
 Differential Privacy is a system for publicly sharing information about a dataset by describing the patterns of groups within the dataset while withholding information about individuals in the dataset. Local Differential Privacy (LDP) is a variant of differential privacy where noise is added to each individual's data before it is sent to the server. This ensures that the server never sees the actual data, providing a strong privacy guarantee.
 
-# Rounding Technique and Bucketing
+## Rounding Technique and Bucketing
 
 In our implementation, we use a rounding technique that essentially aggregates multiple transactions into the same value, making them indistinguishable. This is achieved by dividing the transaction values into buckets and rounding the values to the nearest bucket.
 

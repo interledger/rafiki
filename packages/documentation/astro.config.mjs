@@ -144,6 +144,13 @@ export default defineConfig({
               ]
             },
             {
+              label: 'Telemetry',
+              collapsed: true,
+              autogenerate: {
+                directory: 'telemetry'
+              }
+            },
+            {
               label: 'Local Playground',
               collapsed: true,
               items: [
