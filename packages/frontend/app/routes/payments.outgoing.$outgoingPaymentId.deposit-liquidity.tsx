@@ -4,9 +4,11 @@ import { v4 } from 'uuid'
 import { LiquidityConfirmDialog } from '~/components/LiquidityConfirmDialog'
 import { depositOutgoingPaymentLiquidity } from '~/lib/api/payments.server'
 import { messageStorage, setMessageAndRedirect } from '~/lib/message.server'
+import { LiquidityActionOutletContext } from './payments.outgoing.$outgoingPaymentId'
 
 export default function OutgoingPaymentDepositLiquidity() {
-  const displayLiquidityAmount = useOutletContext<string>()
+  const { depositLiquidityDisplayAmount } =
+    useOutletContext<LiquidityActionOutletContext>()[0]
   const navigate = useNavigate()
   const dismissDialog = () => navigate('..', { preventScrollReset: true })
 
@@ -15,7 +17,7 @@ export default function OutgoingPaymentDepositLiquidity() {
       onClose={dismissDialog}
       title='Deposit outgoing payment liquidity'
       type='Deposit'
-      displayAmount={displayLiquidityAmount}
+      displayAmount={depositLiquidityDisplayAmount}
     />
   )
 }

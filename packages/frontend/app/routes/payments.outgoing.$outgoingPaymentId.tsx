@@ -12,6 +12,11 @@ import {
   prettify
 } from '~/shared/utils'
 
+export type LiquidityActionOutletContext = {
+  withdrawLiquidityDisplayAmount: string
+  depositLiquidityDisplayAmount: string
+}[]
+
 export async function loader({ params }: LoaderArgs) {
   const outgoingPaymentId = params.outgoingPaymentId
 
@@ -35,10 +40,20 @@ export async function loader({ params }: LoaderArgs) {
 export default function ViewOutgoingPaymentPage() {
   const { outgoingPayment } = useLoaderData<typeof loader>()
 
-  const displayLiquidityAmount = `${formatAmount(
+  const withdrawLiquidityDisplayAmount = `${formatAmount(
     outgoingPayment.liquidity ?? '0',
     outgoingPayment.sentAmount.assetScale
   )} ${outgoingPayment.sentAmount.assetCode}`
+
+  const outletContext: LiquidityActionOutletContext = [
+    {
+      withdrawLiquidityDisplayAmount,
+      depositLiquidityDisplayAmount: `${formatAmount(
+        outgoingPayment.debitAmount.value,
+        outgoingPayment.debitAmount.assetScale
+      )} ${outgoingPayment.debitAmount.assetCode}`
+    }
+  ]
 
   return (
     <div className='pt-4 flex flex-col space-y-4'>
@@ -162,7 +177,7 @@ export default function ViewOutgoingPaymentPage() {
             <div className='w-full p-4 flex justify-between items-center'>
               <div>
                 <p className='font-medium'>Amount</p>
-                <p className='mt-1'>{displayLiquidityAmount}</p>
+                <p className='mt-1'>{withdrawLiquidityDisplayAmount}</p>
               </div>
               <div className='flex space-x-4'>
                 {BigInt(outgoingPayment.liquidity ?? '0') ? (
@@ -203,7 +218,8 @@ export default function ViewOutgoingPaymentPage() {
         </div>
         {/* Outgoing Payment Liquidity - END */}
       </div>
-      <Outlet context={displayLiquidityAmount} />
+      {/* <Outlet context={{ displayLiquidityAmount, anotherValue: 1 }} /> */}
+      <Outlet context={outletContext} />
     </div>
   )
 }
