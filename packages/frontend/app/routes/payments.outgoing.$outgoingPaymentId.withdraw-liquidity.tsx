@@ -4,7 +4,7 @@ import { v4 } from 'uuid'
 import { LiquidityConfirmDialog } from '~/components/LiquidityConfirmDialog'
 import { withdrawOutgoingPaymentLiquidity } from '~/lib/api/payments.server'
 import { messageStorage, setMessageAndRedirect } from '~/lib/message.server'
-import { LiquidityActionOutletContext } from './payments.outgoing.$outgoingPaymentId'
+import type { LiquidityActionOutletContext } from './payments.outgoing.$outgoingPaymentId'
 
 export default function OutgoingPaymentWithdrawLiquidity() {
   const { withdrawLiquidityDisplayAmount } =
