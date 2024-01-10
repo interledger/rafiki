@@ -204,11 +204,18 @@ async function pollGrantContinuation(
 
   const grant = await grantService.getByContinue(continueId, continueToken)
   if (!grant) {
-    ctx.throw(404, { error: 'unknown_request' })
+    ctx.throw(404, {
+      error: {
+        code: 'unknown_request',
+        description: 'grant not found'
+      }
+    })
   }
 
   if (isGrantStillWaiting(grant)) {
-    ctx.throw(401, { error: 'too_fast' })
+    ctx.throw(401, {
+      error: { code: 'too_fast', description: 'polled grant too quickly' }
+    })
   }
 
   /*
@@ -216,7 +223,9 @@ async function pollGrantContinuation(
     "When the client instance does not include a finish parameter, the client instance will often need to poll the AS until the RO has authorized the request."
   */
   if (grant.finishMethod) {
-    ctx.throw(401, { error: 'request_denied' })
+    ctx.throw(401, {
+      error: { code: 'request_denied', description: 'grant cannot be polled' }
+    })
   } else if (
     grant.state === GrantState.Pending ||
     grant.state === GrantState.Processing
@@ -229,7 +238,12 @@ async function pollGrantContinuation(
     grant.state !== GrantState.Approved ||
     !isContinuableGrant(grant)
   ) {
-    ctx.throw(401, { error: 'request_denied' })
+    ctx.throw(401, {
+      error: {
+        code: 'request_denied',
+        description: 'grant cannot be continued'
+      }
+    })
   } else {
     const accessToken = await accessTokenService.create(grant.id)
     const access = await accessService.getByGrant(grant.id)
@@ -262,7 +276,12 @@ async function continueGrant(
   const { interact_ref: interactRef } = ctx.request.body
 
   if (!continueId || !continueToken) {
-    ctx.throw(401, { error: 'invalid_request' })
+    ctx.throw(401, {
+      error: {
+        code: 'invalid_request',
+        description: 'missing continuation information'
+      }
+    })
   }
 
   const {
@@ -284,13 +303,22 @@ async function continueGrant(
     !isContinuableGrant(interaction.grant) ||
     !isMatchingContinueRequest(continueId, continueToken, interaction.grant)
   ) {
-    ctx.throw(404, { error: 'unknown_request' })
+    ctx.throw(404, {
+      error: { code: 'unknown_request', description: 'grant not found' }
+    })
   } else if (isGrantStillWaiting(interaction.grant)) {
-    ctx.throw(401, { error: 'too_fast' })
+    ctx.throw(401, {
+      error: { code: 'too_fast', description: 'continued grant too quickly' }
+    })
   } else {
     const { grant } = interaction
     if (grant.state !== GrantState.Approved) {
-      ctx.throw(401, { error: 'request_denied' })
+      ctx.throw(401, {
+        error: {
+          code: 'request_denied',
+          description: 'grant interaction not approved'
+        }
+      })
     }
 
     const accessToken = await accessTokenService.create(grant.id)

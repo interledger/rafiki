@@ -487,7 +487,10 @@ describe('Grant Routes', (): void => {
 
         await expect(grantRoutes.continue(ctx)).rejects.toMatchObject({
           status: 404,
-          error: 'unknown_request'
+          error: {
+            code: 'unknown_request',
+            description: 'grant not found'
+          }
         })
       })
 
@@ -525,7 +528,10 @@ describe('Grant Routes', (): void => {
 
         await expect(grantRoutes.continue(ctx)).rejects.toMatchObject({
           status: 401,
-          error: 'request_denied'
+          error: {
+            code: 'request_denied',
+            description: 'grant interaction not approved'
+          }
         })
       })
 
@@ -564,7 +570,10 @@ describe('Grant Routes', (): void => {
 
         await expect(grantRoutes.continue(ctx)).rejects.toMatchObject({
           status: 404,
-          error: 'unknown_request'
+          error: {
+            code: 'unknown_request',
+            description: 'grant not found'
+          }
         })
       })
 
@@ -587,7 +596,10 @@ describe('Grant Routes', (): void => {
 
         await expect(grantRoutes.continue(ctx)).rejects.toMatchObject({
           status: 401,
-          error: 'invalid_request'
+          error: {
+            code: 'invalid_request',
+            description: 'missing continuation information'
+          }
         })
       })
 
@@ -609,7 +621,10 @@ describe('Grant Routes', (): void => {
 
         await expect(grantRoutes.continue(ctx)).rejects.toMatchObject({
           status: 401,
-          error: 'invalid_request'
+          error: {
+            code: 'invalid_request',
+            description: 'missing continuation information'
+          }
         })
       })
 
@@ -650,7 +665,10 @@ describe('Grant Routes', (): void => {
 
         await expect(grantRoutes.continue(ctx)).rejects.toMatchObject({
           status: 401,
-          error: 'too_fast'
+          error: {
+            code: 'too_fast',
+            description: 'continued grant too quickly'
+          }
         })
       })
 
@@ -765,7 +783,10 @@ describe('Grant Routes', (): void => {
         ctx.request.body = {}
         await expect(grantRoutes.continue(ctx)).rejects.toMatchObject({
           status: 401,
-          error: 'request_denied'
+          error: {
+            code: 'request_denied',
+            description: 'grant cannot be continued'
+          }
         })
       })
 
@@ -789,7 +810,10 @@ describe('Grant Routes', (): void => {
 
         await expect(grantRoutes.continue(ctx)).rejects.toMatchObject({
           status: 401,
-          error: 'request_denied'
+          error: {
+            code: 'request_denied',
+            description: 'grant cannot be polled'
+          }
         })
       })
 
@@ -831,7 +855,10 @@ describe('Grant Routes', (): void => {
 
         await expect(grantRoutes.continue(ctx)).rejects.toMatchObject({
           status: 401,
-          error: 'too_fast'
+          error: {
+            code: 'too_fast',
+            description: 'polled grant too quickly'
+          }
         })
       })
 
