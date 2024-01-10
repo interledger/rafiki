@@ -45,6 +45,7 @@ export interface Fee {
 export interface SeedInstance {
   self: Self
   assets: Array<Asset>
+  peeringAsset: string
   peers: Array<Peering>
   accounts: Array<Account>
   fees: Array<Fee>
@@ -57,7 +58,6 @@ export interface Config {
   publicHost: string
   testnetAutoPeerUrl: string
   authServerDomain: string
-  peeringAsset: string
 }
 
 export const CONFIG: Config = {
@@ -69,6 +69,5 @@ export const CONFIG: Config = {
   key: loadOrGenerateKey(process.env.KEY_FILE),
   publicHost: process.env.PUBLIC_HOST ?? '',
   testnetAutoPeerUrl: process.env.TESTNET_AUTOPEER_URL ?? '',
-  authServerDomain: process.env.AUTH_SERVER_DOMAIN || 'http://localhost:3006',
-  peeringAsset: process.env.PEERING_ASSET || 'USD'
+  authServerDomain: process.env.AUTH_SERVER_DOMAIN || 'http://localhost:3006'
 }

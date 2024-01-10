@@ -40,7 +40,7 @@ export async function setupFromSeed(config: Config): Promise<void> {
     }
   }
 
-  const peeringAsset = config.peeringAsset
+  const peeringAsset = config.seed.peeringAsset
 
   const peerResponses = await Promise.all(
     config.seed.peers.map(async (peer: Peering) => {
