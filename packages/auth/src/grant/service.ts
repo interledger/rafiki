@@ -12,7 +12,7 @@ import {
 } from './model'
 import { AccessRequest } from '../access/types'
 import { AccessService } from '../access/service'
-import { Pagination } from '../shared/baseModel'
+import { Pagination, SortOrder } from '../shared/baseModel'
 import { FilterString } from '../shared/filters'
 import { AccessTokenService } from '../accessToken/service'
 import { canSkipInteraction } from './utils'
@@ -34,7 +34,11 @@ export interface GrantService {
     options?: GetByContinueOpts
   ): Promise<Grant | undefined>
   revokeGrant(grantId: string): Promise<boolean>
-  getPage(pagination?: Pagination, filter?: GrantFilter): Promise<Grant[]>
+  getPage(
+    pagination?: Pagination,
+    filter?: GrantFilter,
+    sortOrder?: SortOrder
+  ): Promise<Grant[]>
   lock(grantId: string, trx: Transaction, timeoutMs?: number): Promise<void>
 }
 
@@ -122,7 +126,8 @@ export async function createGrantService({
       opts: GetByContinueOpts
     ) => getByContinue(continueId, continueToken, opts),
     revokeGrant: (grantId) => revokeGrant(deps, grantId),
-    getPage: (pagination?, filter?) => getGrantsPage(deps, pagination, filter),
+    getPage: (pagination?, filter?, sortOrder?) =>
+      getGrantsPage(deps, pagination, filter, sortOrder),
     lock: (grantId: string, trx: Transaction, timeoutMs?: number) =>
       lock(deps, grantId, trx, timeoutMs)
   }
@@ -279,7 +284,8 @@ async function getByContinue(
 async function getGrantsPage(
   deps: ServiceDependencies,
   pagination?: Pagination,
-  filter?: GrantFilter
+  filter?: GrantFilter,
+  sortOrder?: SortOrder
 ): Promise<Grant[]> {
   const query = Grant.query(deps.knex).withGraphJoined('access')
   const { identifier, state, finalizationReason } = filter ?? {}
@@ -306,7 +312,7 @@ async function getGrantsPage(
       .orWhereNotIn('finalizationReason', finalizationReason.notIn)
   }
 
-  return query.getPage(pagination)
+  return query.getPage(pagination, sortOrder)
 }
 
 async function lock(

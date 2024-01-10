@@ -81,7 +81,7 @@ export const getPageTests = <T extends Model, M extends BaseModel>({
     async function createModels(): Promise<M[]> {
       const models: M[] = []
       for (let i = 0; i < 50; i++) {
-        models.push(await createModel())
+        models[49 - i] = await createModel()
       }
       return models
     }
