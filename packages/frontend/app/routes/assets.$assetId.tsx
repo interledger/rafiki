@@ -32,20 +32,7 @@ export async function loader({ params }: LoaderArgs) {
     throw json(null, { status: 404, statusText: 'Asset not found.' })
   }
 
-  return json({
-    asset: {
-      ...asset,
-      createdAt: new Date(asset.createdAt).toLocaleString(),
-      ...(asset.sendingFee
-        ? {
-            sendingFee: {
-              ...asset.sendingFee,
-              createdAt: new Date(asset.sendingFee.createdAt).toLocaleString()
-            }
-          }
-        : {})
-    }
-  })
+  return json({ asset })
 }
 
 export default function ViewAssetPage() {
@@ -72,7 +59,9 @@ export default function ViewAssetPage() {
         <div className='grid grid-cols-1 py-3 gap-6 md:grid-cols-3 border-b border-pearl'>
           <div className='col-span-1 pt-3'>
             <h3 className='text-lg font-medium'>General Information</h3>
-            <p className='text-sm'>Created at {asset.createdAt}</p>
+            <p className='text-sm'>
+              Created at {new Date(asset.createdAt).toLocaleString()}
+            </p>
             <ErrorPanel errors={response?.errors.general.message} />
           </div>
           <div className='md:col-span-2 bg-white rounded-md shadow-md'>
@@ -123,11 +112,11 @@ export default function ViewAssetPage() {
               </div>
               <div className='flex space-x-4'>
                 <Button
-                  aria-label='add asset liquidity page'
+                  aria-label='deposit asset liquidity page'
                   type='button'
-                  to={`/assets/${asset.id}/add-liquidity`}
+                  to={`/assets/${asset.id}/deposit-liquidity`}
                 >
-                  Add liquidity
+                  Deposit liquidity
                 </Button>
                 <Button
                   aria-label='withdraw asset liquidity page'
@@ -146,7 +135,10 @@ export default function ViewAssetPage() {
           <div className='col-span-1 pt-3'>
             <h3 className='text-lg font-medium'>Sending Fee</h3>
             {asset.sendingFee ? (
-              <p className='text-sm'>Created at {asset.sendingFee.createdAt}</p>
+              <p className='text-sm'>
+                Created at{' '}
+                {new Date(asset.sendingFee.createdAt).toLocaleString()}
+              </p>
             ) : null}
             <ErrorPanel errors={response?.errors.sendingFee.message} />
           </div>

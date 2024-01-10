@@ -21,11 +21,16 @@ import { initIocContainer } from '../'
 import { AppServices } from '../app'
 import { getPageTests } from '../shared/baseModel.test'
 import { Pagination, SortOrder } from '../shared/baseModel'
+import { createWebhookEvent, webhookEventTypes } from '../tests/webhook'
+import { IncomingPaymentEventType } from '../open_payments/payment/incoming/model'
+import { OutgoingPaymentEventType } from '../open_payments/payment/outgoing/model'
+import { createIncomingPayment } from '../tests/incomingPayment'
+import { createWalletAddress } from '../tests/walletAddress'
 import {
-  createWebhookEvent,
-  randomWebhookEvent,
-  webhookEventTypes
-} from '../tests/webhook'
+  WalletAddress,
+  WalletAddressEventType
+} from '../open_payments/wallet_address/model'
+import { createOutgoingPayment } from '../tests/outgoingPayment'
 
 describe('Webhook Service', (): void => {
   let deps: IocContract<AppServices>
@@ -76,7 +81,7 @@ describe('Webhook Service', (): void => {
     beforeEach(async (): Promise<void> => {
       event = await WebhookEvent.query(knex).insertAndFetch({
         id: uuid(),
-        type: 'account.test_event',
+        type: WalletAddressEventType.WalletAddressNotFound,
         data: {
           account: {
             id: uuid()
@@ -97,6 +102,127 @@ describe('Webhook Service', (): void => {
 
     test('Cannot fetch a bogus webhook event', async (): Promise<void> => {
       await expect(webhookService.getEvent(uuid())).resolves.toBeUndefined()
+    })
+  })
+
+  describe('Get Webhook Event by account id and types', (): void => {
+    let walletAddressIn: WalletAddress
+    let walletAddressOut: WalletAddress
+    let incomingPaymentIds: string[]
+    let outgoingPaymentIds: string[]
+    let events: WebhookEvent[] = []
+
+    beforeEach(async (): Promise<void> => {
+      walletAddressIn = await createWalletAddress(deps)
+      walletAddressOut = await createWalletAddress(deps)
+      incomingPaymentIds = [
+        (
+          await createIncomingPayment(deps, {
+            walletAddressId: walletAddressIn.id
+          })
+        ).id,
+        (
+          await createIncomingPayment(deps, {
+            walletAddressId: walletAddressIn.id
+          })
+        ).id
+      ]
+      outgoingPaymentIds = [
+        (
+          await createOutgoingPayment(deps, {
+            method: 'ilp',
+            walletAddressId: walletAddressOut.id,
+            receiver: '',
+            validDestination: false
+          })
+        ).id,
+        (
+          await createOutgoingPayment(deps, {
+            method: 'ilp',
+            walletAddressId: walletAddressOut.id,
+            receiver: '',
+            validDestination: false
+          })
+        ).id
+      ]
+
+      events = [
+        await WebhookEvent.query(knex).insertAndFetch({
+          id: uuid(),
+          type: IncomingPaymentEventType.IncomingPaymentCompleted,
+          data: { id: uuid() },
+          incomingPaymentId: incomingPaymentIds[0]
+        }),
+        await WebhookEvent.query(knex).insertAndFetch({
+          id: uuid(),
+          type: IncomingPaymentEventType.IncomingPaymentExpired,
+          data: { id: uuid() },
+          incomingPaymentId: incomingPaymentIds[0]
+        }),
+        await WebhookEvent.query(knex).insertAndFetch({
+          id: uuid(),
+          type: IncomingPaymentEventType.IncomingPaymentCompleted,
+          data: { id: uuid() },
+          incomingPaymentId: incomingPaymentIds[1]
+        }),
+        await WebhookEvent.query(knex).insertAndFetch({
+          id: uuid(),
+          type: OutgoingPaymentEventType.PaymentCreated,
+          data: { id: uuid() },
+          outgoingPaymentId: outgoingPaymentIds[0]
+        })
+      ]
+    })
+
+    test('Gets latest event matching account id and type', async (): Promise<void> => {
+      await expect(
+        webhookService.getLatestByResourceId({
+          incomingPaymentId: incomingPaymentIds[0],
+          types: [
+            IncomingPaymentEventType.IncomingPaymentCompleted,
+            IncomingPaymentEventType.IncomingPaymentExpired
+          ]
+        })
+      ).resolves.toEqual(events[1])
+      await expect(
+        webhookService.getLatestByResourceId({
+          outgoingPaymentId: outgoingPaymentIds[0],
+          types: [OutgoingPaymentEventType.PaymentCreated]
+        })
+      ).resolves.toEqual(events[3])
+    })
+
+    test('Gets latest of any type when type not provided', async (): Promise<void> => {
+      const newLatestEvent = await WebhookEvent.query(knex).insertAndFetch({
+        id: uuid(),
+        type: 'some_new_type',
+        data: { id: uuid() },
+        incomingPaymentId: incomingPaymentIds[0]
+      })
+      await expect(
+        webhookService.getLatestByResourceId({
+          incomingPaymentId: incomingPaymentIds[0]
+        })
+      ).resolves.toEqual(newLatestEvent)
+    })
+
+    describe('Returns undefined if no match', (): void => {
+      test('Good account id, bad event type', async (): Promise<void> => {
+        await expect(
+          webhookService.getLatestByResourceId({
+            incomingPaymentId: incomingPaymentIds[0],
+            types: ['nonexistant.event']
+          })
+        ).resolves.toBeUndefined()
+      })
+      test('Bad account id, good event type', async (): Promise<void> => {
+        await expect(
+          webhookService.getLatestByResourceId({
+            incomingPaymentId: uuid(),
+            types: [IncomingPaymentEventType.IncomingPaymentCompleted]
+          })
+        ).resolves.toBeUndefined()
+      })
     })
   })
 
@@ -121,9 +247,7 @@ describe('Webhook Service', (): void => {
 
     beforeEach(async (): Promise<void> => {
       for (const eventOverride of eventOverrides) {
-        webhookEvents.push(
-          await createWebhookEvent(deps, randomWebhookEvent(eventOverride))
-        )
+        webhookEvents.push(await createWebhookEvent(deps, eventOverride))
       }
     })
     afterEach(async (): Promise<void> => {

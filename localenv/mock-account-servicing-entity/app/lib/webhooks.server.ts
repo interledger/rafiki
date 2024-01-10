@@ -5,8 +5,8 @@ import { mockAccounts } from './accounts.server'
 import { apolloClient } from './apolloClient'
 import { v4 as uuid } from 'uuid'
 import {
-  addAssetLiquidity,
-  addPeerLiquidity,
+  depositAssetLiquidity,
+  depositPeerLiquidity,
   createWalletAddress
 } from './requesters'
 
@@ -93,8 +93,10 @@ export async function handleOutgoingPaymentCreated(wh: WebHook) {
   await apolloClient
     .mutate({
       mutation: gql`
-        mutation DepositEventLiquidity($input: DepositEventLiquidityInput!) {
-          depositEventLiquidity(input: $input) {
+        mutation DepositOutgoingPaymentLiquidity(
+          $input: DepositOutgoingPaymentLiquidityInput!
+        ) {
+          depositOutgoingPaymentLiquidity(input: $input) {
             code
             success
             message
@@ -104,14 +106,14 @@ export async function handleOutgoingPaymentCreated(wh: WebHook) {
       `,
       variables: {
         input: {
-          eventId: wh.id,
+          outgoingPaymentId: payment.id,
           idempotencyKey: uuid()
         }
       }
     })
     .then((query): LiquidityMutationResponse => {
       if (query.data) {
-        return query.data.depositEventLiquidity
+        return query.data.depositOutgoingPaymentLiquidity
       } else {
         throw new Error('Data was empty')
       }
@@ -143,8 +145,10 @@ export async function handleIncomingPaymentCompletedExpired(wh: WebHook) {
   await apolloClient
     .mutate({
       mutation: gql`
-        mutation WithdrawEventLiquidity($input: WithdrawEventLiquidityInput!) {
-          withdrawEventLiquidity(input: $input) {
+        mutation WithdrawIncomingPaymentLiquidity(
+          $input: WithdrawIncomingPaymentLiquidityInput!
+        ) {
+          withdrawIncomingPaymentLiquidity(input: $input) {
             code
             success
             message
@@ -154,14 +158,14 @@ export async function handleIncomingPaymentCompletedExpired(wh: WebHook) {
       `,
       variables: {
         input: {
-          eventId: wh.id,
+          incomingPaymentId: payment.id,
           idempotencyKey: uuid()
         }
       }
     })
     .then((query): LiquidityMutationResponse => {
       if (query.data) {
-        return query.data.withdrawEventLiquidity
+        return query.data.withdrawIncomingPaymentLiquidity
       } else {
         throw new Error('Data was empty')
       }
@@ -206,8 +210,8 @@ export async function handleLowLiquidity(wh: WebHook) {
   }
 
   if (wh.type == 'asset.liquidity_low') {
-    await addAssetLiquidity(id, 1000000, uuid())
+    await depositAssetLiquidity(id, 1000000, uuid())
   } else {
-    await addPeerLiquidity(id, '1000000', uuid())
+    await depositPeerLiquidity(id, '1000000', uuid())
   }
 }

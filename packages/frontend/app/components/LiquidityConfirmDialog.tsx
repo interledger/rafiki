@@ -1,19 +1,21 @@
 import { Dialog } from '@headlessui/react'
 import { Form } from '@remix-run/react'
 import { XIcon } from '~/components/icons'
-import { Button, Input } from '~/components/ui'
+import { Button } from '~/components/ui'
 
-type LiquidityDialogProps = {
+type LiquidityConfirmDialogProps = {
   title: string
   onClose: () => void
   type: 'Deposit' | 'Withdraw'
+  displayAmount: string
 }
 
-export const LiquidityDialog = ({
+export const LiquidityConfirmDialog = ({
   title,
   onClose,
-  type
-}: LiquidityDialogProps) => {
+  type,
+  displayAmount
+}: LiquidityConfirmDialogProps) => {
   return (
     <Dialog as='div' className='relative z-10' onClose={onClose} open={true}>
       <div className='fixed inset-0 bg-tealish/30 bg-opacity-75 transition-opacity' />
@@ -38,17 +40,25 @@ export const LiquidityDialog = ({
                 {title}
               </Dialog.Title>
               <div className='mt-2'>
+                <p className='m-6 text-center'>
+                  Are you sure you want to {type.toLowerCase()} {displayAmount}?
+                </p>
                 <Form method='post' replace preventScrollReset>
-                  <Input
-                    required
-                    min={1}
-                    type='number'
-                    name='amount'
-                    label='Amount'
-                  />
-                  <div className='flex justify-end py-3'>
-                    <Button aria-label={`${type} liquidity`} type='submit'>
-                      {type} liquidity
+                  {/* no input needed - form submit is confirmation */}
+                  <div className='flex justify-end space-x-4'>
+                    <Button
+                      className='mr-1'
+                      aria-label={`${type} liquidity`}
+                      type='submit'
+                    >
+                      {type}
+                    </Button>
+                    <Button
+                      aria-label={`cancel ${type} liquidity`}
+                      type='reset'
+                      onClick={onClose}
+                    >
+                      Cancel
                     </Button>
                   </div>
                 </Form>

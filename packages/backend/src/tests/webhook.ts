@@ -5,24 +5,23 @@ import { AppServices } from '../app'
 import { WebhookEvent } from '../webhook/model'
 import { sample } from 'lodash'
 import { EventPayload } from '../webhook/service'
+import { createAsset } from './asset'
 
 export const webhookEventTypes = ['event1', 'event2', 'event3'] as const
+type WebhookEventPayload = EventPayload & { assetId: string }
 
-export function randomWebhookEvent(
-  overrides?: Partial<EventPayload>
-): EventPayload {
-  return {
+export async function createWebhookEvent(
+  deps: IocContract<AppServices>,
+  overrides?: Partial<WebhookEventPayload>
+): Promise<WebhookEvent> {
+  const knex = await deps.use('knex')
+  const asset = await createAsset(deps)
+  const newEvent = {
     id: uuid(),
+    assetId: asset.id,
     type: sample(webhookEventTypes) as string,
     data: { field1: faker.string.sample() },
     ...overrides
   }
-}
-
-export async function createWebhookEvent(
-  deps: IocContract<AppServices>,
-  newEvent?: EventPayload
-): Promise<WebhookEvent> {
-  const knex = await deps.use('knex')
-  return await WebhookEvent.query(knex).insert(newEvent || randomWebhookEvent())
+  return await WebhookEvent.query(knex).insert(newEvent)
 }

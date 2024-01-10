@@ -1,8 +1,8 @@
 import { gql } from '@apollo/client'
 import type {
-  AddPeerLiquidityInput,
-  AddPeerLiquidityMutation,
-  AddPeerLiquidityMutationVariables,
+  DepositPeerLiquidityInput,
+  DepositPeerLiquidityMutation,
+  DepositPeerLiquidityMutationVariables,
   CreatePeerInput,
   CreatePeerLiquidityWithdrawalInput,
   CreatePeerMutation,
@@ -170,14 +170,16 @@ export const deletePeer = async (args: MutationDeletePeerArgs) => {
   return response.data?.deletePeer
 }
 
-export const addPeerLiquidity = async (args: AddPeerLiquidityInput) => {
+export const depositPeerLiquidity = async (args: DepositPeerLiquidityInput) => {
   const response = await apolloClient.mutate<
-    AddPeerLiquidityMutation,
-    AddPeerLiquidityMutationVariables
+    DepositPeerLiquidityMutation,
+    DepositPeerLiquidityMutationVariables
   >({
     mutation: gql`
-      mutation AddPeerLiquidityMutation($input: AddPeerLiquidityInput!) {
-        addPeerLiquidity(input: $input) {
+      mutation DepositPeerLiquidityMutation(
+        $input: DepositPeerLiquidityInput!
+      ) {
+        depositPeerLiquidity(input: $input) {
           code
           success
           message
@@ -190,7 +192,7 @@ export const addPeerLiquidity = async (args: AddPeerLiquidityInput) => {
     }
   })
 
-  return response.data?.addPeerLiquidity
+  return response.data?.depositPeerLiquidity
 }
 
 export const withdrawPeerLiquidity = async (

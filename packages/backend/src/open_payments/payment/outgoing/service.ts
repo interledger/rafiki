@@ -15,7 +15,7 @@ import {
   OutgoingPayment,
   OutgoingPaymentGrant,
   OutgoingPaymentState,
-  PaymentEventType
+  OutgoingPaymentEventType
 } from './model'
 import { Grant } from '../../auth/middleware'
 import {
@@ -169,7 +169,7 @@ async function createOutgoingPayment(
           knex: trx
         },
         payment,
-        PaymentEventType.PaymentCreated
+        OutgoingPaymentEventType.PaymentCreated
       )
       return await addSentAmount(deps, payment, BigInt(0))
     })

@@ -30,15 +30,22 @@ import { getPeer, getPeers, createPeer, updatePeer, deletePeer } from './peer'
 import {
   getAssetLiquidity,
   getPeerLiquidity,
-  addAssetLiquidity,
-  addPeerLiquidity,
+  getWalletAddressLiquidity,
+  getIncomingPaymentLiquidity,
+  getOutgoingPaymentLiquidity,
+  getPaymentLiquidity,
+  depositAssetLiquidity,
+  depositPeerLiquidity,
   createAssetLiquidityWithdrawal,
   createPeerLiquidityWithdrawal,
   createWalletAddressWithdrawal,
   postLiquidityWithdrawal,
   voidLiquidityWithdrawal,
   depositEventLiquidity,
-  withdrawEventLiquidity
+  withdrawEventLiquidity,
+  depositOutgoingPaymentLiquidity,
+  withdrawIncomingPaymentLiquidity,
+  withdrawOutgoingPaymentLiquidity
 } from './liquidity'
 import { GraphQLBigInt, GraphQLUInt8 } from '../scalars'
 import {
@@ -80,9 +87,19 @@ export const resolvers: Resolvers = {
     receiver: getReceiver
   },
   WalletAddress: {
+    liquidity: getWalletAddressLiquidity,
     incomingPayments: getWalletAddressIncomingPayments,
     outgoingPayments: getWalletAddressOutgoingPayments,
     quotes: getWalletAddressQuotes
+  },
+  IncomingPayment: {
+    liquidity: getIncomingPaymentLiquidity
+  },
+  OutgoingPayment: {
+    liquidity: getOutgoingPaymentLiquidity
+  },
+  Payment: {
+    liquidity: getPaymentLiquidity
   },
   Mutation: {
     createWalletAddressKey,
@@ -100,8 +117,8 @@ export const resolvers: Resolvers = {
     createOrUpdatePeerByUrl: createOrUpdatePeerByUrl,
     updatePeer: updatePeer,
     deletePeer: deletePeer,
-    addAssetLiquidity: addAssetLiquidity,
-    addPeerLiquidity: addPeerLiquidity,
+    depositAssetLiquidity,
+    depositPeerLiquidity,
     createAssetLiquidityWithdrawal: createAssetLiquidityWithdrawal,
     createPeerLiquidityWithdrawal: createPeerLiquidityWithdrawal,
     createWalletAddressWithdrawal,
@@ -109,6 +126,9 @@ export const resolvers: Resolvers = {
     voidLiquidityWithdrawal: voidLiquidityWithdrawal,
     depositEventLiquidity,
     withdrawEventLiquidity,
+    depositOutgoingPaymentLiquidity,
+    withdrawIncomingPaymentLiquidity,
+    withdrawOutgoingPaymentLiquidity,
     setFee
   }
 }

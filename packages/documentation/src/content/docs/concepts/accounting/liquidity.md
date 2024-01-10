@@ -28,19 +28,23 @@ Peer Liquidity defines the line of credit, denominated in the asset of the peeri
 
 A configured peer _Cloud Nine Wallet_ within Rafiki has a peer liquidity of 100 USD. Rafiki can send packets up to 100 USD to wallet addresses issued by _Cloud Nine Wallet_. Once that liquidity is used up, we should settle with _Cloud Nine Wallet_ and then reset their liquidity to 100 USD.
 
-### Event Liquidity
+### Payment Liquidity
 
-When Open Payments incoming or outgoing payments are created, a liquidity account is created within the accounting database. Liquidity needs to be added to an outgoing payment before the payment can be processed. The Account Servicing Entity is notified to add liquidity via the `outgoing_payment.created` event, hence the name _Event Liquidity_. Similarly, packets that are received for an incoming payment increase its liquidity. The Account Servicing Entity is notified to withdraw that liquidity via the `incoming_payment.completed` event.
+When Open Payments incoming or outgoing payments are created, a liquidity account is created within the accounting database. Liquidity needs to be deposited to an outgoing payment before the payment can be processed. The Account Servicing Entity is notified to deposit liquidity via the `outgoing_payment.created` event. Similarly, packets that are received for an incoming payment increase its liquidity. The Account Servicing Entity is notified to withdraw that liquidity via the `incoming_payment.completed` event.
 
-## Adding and Withdrawing Liquidity
+## Depositing and Withdrawing Liquidity
+
+> **Note:** The `idempotencyKey` must be provided whenever calling mutations dealing with liquidity.
+> This key allows safely retrying requests, without performing the operation multiple times.
+> This should be a unique key (typically, a V4 UUID). For more information on Rafiki's idempotency, [see more](/apis/idempotency).
 
 ### Asset Liquidity
 
-Add and withdraw asset liquidity via the Admin API (or UI):
+Deposit and withdraw asset liquidity via the Admin API (or UI):
 
 ```graphql
-mutation AddAssetLiquidity($input: AddAssetLiquidityInput!) {
-  addAssetLiquidity(input: $input) {
+mutation DepositAssetLiquidity($input: DepositAssetLiquidityInput!) {
+  depositAssetLiquidity(input: $input) {
     code
     success
     message
@@ -92,11 +96,11 @@ where
 
 ### Peer Liquidity
 
-Add and withdraw peer liquidity via the Admin API (or UI):
+Deposit and withdraw peer liquidity via the Admin API (or UI):
 
 ```graphql
-mutation AddPeerLiquidity($input: AddPeerLiquidityInput!) {
-  addPeerLiquidity(input: $input) {
+mutation DepositPeerLiquidity($input: DepositPeerLiquidityInput!) {
+  depositPeerLiquidity(input: $input) {
     code
     success
     message
@@ -145,13 +149,17 @@ where
 }
 ```
 
-### Event Liquidity
+### Payment Liquidity
 
-Add and withdraw event liquidity via the Admin API only:
+#### Outgoing payment
+
+Deposit and withdraw outgoing payment liquidity via the Admin API only:
 
 ```graphql
-mutation DepositEventLiquidity($input: DepositEventLiquidityInput!) {
-  depositEventLiquidity(input: $input) {
+mutation DepositOutgoingPaymentLiquidity(
+  $input: DepositOutgoingPaymentLiquidityInput!
+) {
+  depositOutgoingPaymentLiquidity(input: $input) {
     code
     error
     message
@@ -165,7 +173,7 @@ where
 ```json
 {
   "input": {
-    "eventId": "b4f85d5c-652d-472d-873c-4ba2a5e39052",
+    "outgoingPaymentId": "b4f85d5c-652d-472d-873c-4ba2a5e39052",
     "idempotencyKey": "a09b730d-8610-4fda-98fa-ec7acb19c775"
   }
 }
@@ -174,8 +182,10 @@ where
 and
 
 ```graphql
-mutation WithdrawEventLiquidity($input: WithdrawEventLiquidityInput!) {
-  withdrawEventLiquidity(input: $input) {
+mutation WithdrawOutgoingPaymentLiquidity(
+  $input: WithdrawOutgoingPaymentLiquidityInput!
+) {
+  withdrawOutgoingPaymentLiquidity(input: $input) {
     code
     error
     message
@@ -189,7 +199,35 @@ where
 ```json
 {
   "input": {
-    "eventId": "b4f85d5c-652d-472d-873c-4ba2a5e39052",
+    "outgoingPaymentId": "b4f85d5c-652d-472d-873c-4ba2a5e39052",
+    "idempotencyKey": "a09b730d-8610-4fda-98fa-ec7acb19c775"
+  }
+}
+```
+
+#### Incoming payment
+
+Withdraw incoming payment liquidity via the Admin API only:
+
+```graphql
+mutation WithdrawIncomingPaymentLiquidity(
+  $input: WithdrawIncomingPaymentLiquidityInput!
+) {
+  withdrawIncomingPaymentLiquidity(input: $input) {
+    code
+    error
+    message
+    success
+  }
+}
+```
+
+where
+
+```json
+{
+  "input": {
+    "incomingPaymentId": "b4f85d5c-652d-472d-873c-4ba2a5e39052",
     "idempotencyKey": "a09b730d-8610-4fda-98fa-ec7acb19c775"
   }
 }

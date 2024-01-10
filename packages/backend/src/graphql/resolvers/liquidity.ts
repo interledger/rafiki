@@ -6,7 +6,11 @@ import {
   LiquidityMutationResponse,
   WalletAddressWithdrawalMutationResponse,
   AssetResolvers,
-  PeerResolvers
+  PeerResolvers,
+  WalletAddressResolvers,
+  IncomingPaymentResolvers,
+  OutgoingPaymentResolvers,
+  PaymentResolvers
 } from '../generated/graphql'
 import { ApolloContext } from '../../app'
 import {
@@ -14,34 +18,63 @@ import {
   isFundingError
 } from '../../open_payments/payment/outgoing/errors'
 import {
-  isPaymentEvent,
-  PaymentDepositType
+  isOutgoingPaymentEvent,
+  OutgoingPaymentDepositType,
+  OutgoingPaymentEventType
 } from '../../open_payments/payment/outgoing/model'
 import { PeerError } from '../../payment-method/ilp/peer/errors'
+import { IncomingPaymentEventType } from '../../open_payments/payment/incoming/model'
 
 export const getAssetLiquidity: AssetResolvers<ApolloContext>['liquidity'] =
   async (parent, args, ctx): Promise<ResolversTypes['UInt64']> => {
-    return await getLiquidity(ctx, parent.id as string)
+    return await getPeerOrAssetLiquidity(ctx, parent.id as string)
   }
 
 export const getPeerLiquidity: PeerResolvers<ApolloContext>['liquidity'] =
   async (parent, args, ctx): Promise<ResolversTypes['UInt64']> => {
-    return await getLiquidity(ctx, parent.id as string)
+    return await getPeerOrAssetLiquidity(ctx, parent.id as string)
+  }
+
+export const getWalletAddressLiquidity: WalletAddressResolvers<ApolloContext>['liquidity'] =
+  async (parent, args, ctx): Promise<ResolversTypes['UInt64'] | null> => {
+    return (await getLiquidity(ctx, parent.id as string)) ?? null
+  }
+
+export const getIncomingPaymentLiquidity: IncomingPaymentResolvers<ApolloContext>['liquidity'] =
+  async (parent, args, ctx): Promise<ResolversTypes['UInt64'] | null> => {
+    return (await getLiquidity(ctx, parent.id as string)) ?? null
+  }
+
+export const getOutgoingPaymentLiquidity: OutgoingPaymentResolvers<ApolloContext>['liquidity'] =
+  async (parent, args, ctx): Promise<ResolversTypes['UInt64'] | null> => {
+    return (await getLiquidity(ctx, parent.id as string)) ?? null
+  }
+
+export const getPaymentLiquidity: PaymentResolvers<ApolloContext>['liquidity'] =
+  async (parent, args, ctx): Promise<ResolversTypes['UInt64'] | null> => {
+    return (await getLiquidity(ctx, parent.id as string)) ?? null
   }
 
 const getLiquidity = async (
   ctx: ApolloContext,
   id: string
-): Promise<bigint> => {
+): Promise<bigint | undefined> => {
   const accountingService = await ctx.container.use('accountingService')
-  const liquidity = await accountingService.getBalance(id)
+  return await accountingService.getBalance(id)
+}
+
+const getPeerOrAssetLiquidity = async (
+  ctx: ApolloContext,
+  id: string
+): Promise<bigint> => {
+  const liquidity = await getLiquidity(ctx, id)
   if (liquidity === undefined) {
     throw new Error('No liquidity account found')
   }
   return liquidity
 }
 
-export const addPeerLiquidity: MutationResolvers<ApolloContext>['addPeerLiquidity'] =
+export const depositPeerLiquidity: MutationResolvers<ApolloContext>['depositPeerLiquidity'] =
   async (
     parent,
     args,
@@ -52,7 +85,7 @@ export const addPeerLiquidity: MutationResolvers<ApolloContext>['addPeerLiquidit
         return responses[LiquidityError.AmountZero]
       }
       const peerService = await ctx.container.use('peerService')
-      const peerOrError = await peerService.addLiquidity({
+      const peerOrError = await peerService.depositLiquidity({
         transferId: args.input.id,
         peerId: args.input.peerId,
         amount: args.input.amount
@@ -79,13 +112,13 @@ export const addPeerLiquidity: MutationResolvers<ApolloContext>['addPeerLiquidit
       )
       return {
         code: '400',
-        message: 'Error trying to add peer liquidity',
+        message: 'Error trying to deposit peer liquidity',
         success: false
       }
     }
   }
 
-export const addAssetLiquidity: MutationResolvers<ApolloContext>['addAssetLiquidity'] =
+export const depositAssetLiquidity: MutationResolvers<ApolloContext>['depositAssetLiquidity'] =
   async (
     parent,
     args,
@@ -124,7 +157,7 @@ export const addAssetLiquidity: MutationResolvers<ApolloContext>['addAssetLiquid
       )
       return {
         code: '400',
-        message: 'Error trying to add asset liquidity',
+        message: 'Error trying to deposit asset liquidity',
         success: false
       }
     }
@@ -328,8 +361,8 @@ export const voidLiquidityWithdrawal: MutationResolvers<ApolloContext>['voidLiqu
     }
   }
 
-export const DepositEventType = PaymentDepositType
-export type DepositEventType = PaymentDepositType
+export const DepositEventType = OutgoingPaymentDepositType
+export type DepositEventType = OutgoingPaymentDepositType
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
 const isDepositEventType = (o: any): o is DepositEventType =>
@@ -344,7 +377,11 @@ export const depositEventLiquidity: MutationResolvers<ApolloContext>['depositEve
     try {
       const webhookService = await ctx.container.use('webhookService')
       const event = await webhookService.getEvent(args.input.eventId)
-      if (!event || !isPaymentEvent(event) || !isDepositEventType(event.type)) {
+      if (
+        !event ||
+        !isOutgoingPaymentEvent(event) ||
+        !isDepositEventType(event.type)
+      ) {
         return responses[LiquidityError.InvalidId]
       }
       if (!event.data.debitAmount) {
@@ -422,6 +459,183 @@ export const withdrawEventLiquidity: MutationResolvers<ApolloContext>['withdrawE
         {
           eventId: args.input.eventId,
           err
+        },
+        'error withdrawing liquidity'
+      )
+      return {
+        code: '400',
+        message: 'Error trying to withdraw liquidity',
+        success: false
+      }
+    }
+  }
+
+export const depositOutgoingPaymentLiquidity: MutationResolvers<ApolloContext>['depositOutgoingPaymentLiquidity'] =
+  async (
+    parent,
+    args,
+    ctx
+  ): Promise<ResolversTypes['LiquidityMutationResponse']> => {
+    try {
+      const { outgoingPaymentId } = args.input
+      const webhookService = await ctx.container.use('webhookService')
+      const event = await webhookService.getLatestByResourceId({
+        outgoingPaymentId,
+        types: [OutgoingPaymentDepositType.PaymentCreated]
+      })
+      if (!event || !isOutgoingPaymentEvent(event)) {
+        return responses[LiquidityError.InvalidId]
+      }
+
+      if (!event.data.debitAmount) {
+        throw new Error('No debit amount')
+      }
+      const outgoingPaymentService = await ctx.container.use(
+        'outgoingPaymentService'
+      )
+      const paymentOrErr = await outgoingPaymentService.fund({
+        id: outgoingPaymentId,
+        amount: BigInt(event.data.debitAmount.value),
+        transferId: event.id
+      })
+      if (isFundingError(paymentOrErr)) {
+        return errorToResponse(paymentOrErr)
+      }
+      return {
+        code: '200',
+        success: true,
+        message: 'Deposited liquidity'
+      }
+    } catch (err) {
+      ctx.logger.error(
+        {
+          outgoingPaymentId: args.input.outgoingPaymentId,
+          err
+        },
+        'error depositing liquidity'
+      )
+      return {
+        code: '400',
+        message: 'Error trying to deposit liquidity',
+        success: false
+      }
+    }
+  }
+
+export const withdrawIncomingPaymentLiquidity: MutationResolvers<ApolloContext>['withdrawIncomingPaymentLiquidity'] =
+  async (
+    parent,
+    args,
+    ctx
+  ): Promise<ResolversTypes['LiquidityMutationResponse']> => {
+    const { incomingPaymentId } = args.input
+    try {
+      const incomingPaymentService = await ctx.container.use(
+        'incomingPaymentService'
+      )
+      const incomingPayment = await incomingPaymentService.get({
+        id: incomingPaymentId
+      })
+      const webhookService = await ctx.container.use('webhookService')
+      const event = await webhookService.getLatestByResourceId({
+        incomingPaymentId,
+        types: [
+          IncomingPaymentEventType.IncomingPaymentCompleted,
+          IncomingPaymentEventType.IncomingPaymentExpired
+        ]
+      })
+      if (!incomingPayment || !incomingPayment.receivedAmount || !event?.id) {
+        return responses[LiquidityError.InvalidId]
+      }
+
+      const accountingService = await ctx.container.use('accountingService')
+      const error = await accountingService.createWithdrawal({
+        id: event.id,
+        account: {
+          id: incomingPaymentId,
+          asset: incomingPayment.asset
+        },
+        amount: incomingPayment.receivedAmount.value
+      })
+
+      if (error) {
+        return errorToResponse(error)
+      }
+      return {
+        code: '200',
+        success: true,
+        message: 'Withdrew liquidity'
+      }
+    } catch (error) {
+      ctx.logger.error(
+        {
+          incomingPaymentId,
+          error
+        },
+        'error withdrawing liquidity'
+      )
+      return {
+        code: '400',
+        message: 'Error trying to withdraw liquidity',
+        success: false
+      }
+    }
+  }
+
+export const withdrawOutgoingPaymentLiquidity: MutationResolvers<ApolloContext>['withdrawOutgoingPaymentLiquidity'] =
+  async (
+    parent,
+    args,
+    ctx
+  ): Promise<ResolversTypes['LiquidityMutationResponse']> => {
+    const { outgoingPaymentId } = args.input
+    try {
+      const outgoingPaymentService = await ctx.container.use(
+        'outgoingPaymentService'
+      )
+      const outgoingPayment = await outgoingPaymentService.get({
+        id: outgoingPaymentId
+      })
+      const webhookService = await ctx.container.use('webhookService')
+      const event = await webhookService.getLatestByResourceId({
+        outgoingPaymentId,
+        types: [
+          OutgoingPaymentEventType.PaymentCompleted,
+          OutgoingPaymentEventType.PaymentFailed
+        ]
+      })
+      if (!outgoingPayment || !event?.id) {
+        return responses[LiquidityError.InvalidId]
+      }
+
+      const accountingService = await ctx.container.use('accountingService')
+      const balance = await accountingService.getBalance(outgoingPayment.id)
+      if (!balance) {
+        return responses[LiquidityError.InsufficientBalance]
+      }
+
+      const error = await accountingService.createWithdrawal({
+        id: event.id,
+        account: {
+          id: outgoingPaymentId,
+          asset: outgoingPayment.asset
+        },
+        amount: balance
+      })
+
+      if (error) {
+        return errorToResponse(error)
+      }
+      return {
+        code: '200',
+        success: true,
+        message: 'Withdrew liquidity'
+      }
+    } catch (error) {
+      ctx.logger.error(
+        {
+          outgoingPaymentId,
+          error
         },
         'error withdrawing liquidity'
       )

@@ -4,6 +4,7 @@ import { Badge, PageHeader } from '~/components'
 import { Button, Table } from '~/components/ui'
 import { listWalletAddresses } from '~/lib/api/wallet-address.server'
 import { paginationSchema } from '~/lib/validate.server'
+import { badgeColorByWalletAddressStatus } from '~/shared/utils'
 
 export const loader = async ({ request }: LoaderArgs) => {
   const url = new URL(request.url)
@@ -77,7 +78,11 @@ export default function WalletAddressesPage() {
                     </div>
                   </Table.Cell>
                   <Table.Cell>
-                    <Badge status={pp.node.status} />
+                    <Badge
+                      color={badgeColorByWalletAddressStatus[pp.node.status]}
+                    >
+                      {pp.node.status}
+                    </Badge>
                   </Table.Cell>
                 </Table.Row>
               ))
