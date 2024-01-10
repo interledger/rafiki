@@ -45,6 +45,7 @@ export interface Fee {
 export interface SeedInstance {
   self: Self
   assets: Array<Asset>
+  peeringAsset: string
   peers: Array<Peering>
   accounts: Array<Account>
   fees: Array<Fee>
