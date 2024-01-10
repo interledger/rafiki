@@ -1107,6 +1107,34 @@
 					"response": []
 				},
 				{
+					"name": "Deposit Outgoing Payment Liquidity",
+					"id": "f50e3c66-f1c2-4cdc-9902-739f752b909c",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation DepositOutgoingPaymentLiquidity($input: DepositOutgoingPaymentLiquidityInput!) {\n  depositOutgoingPaymentLiquidity(input: $input) {\n    code\n    error\n    message\n    success\n  }\n}\n",
+								"variables": "{\n    \"input\": {\n        \"outgoingPaymentId\": \"{{outgoingPaymentId}}\",\n        \"idempotencyKey\":\"{{$guid}}\"\n    }\n}"
+							}
+						},
+						"url": {
+							"raw": "{{RafikiGraphqlHost}}/graphql",
+							"host": [
+								"{{RafikiGraphqlHost}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
 					"name": "Withdraw Event Liquidity",
 					"id": "2d788367-7019-4a9a-94c6-e0655e9200c7",
 					"protocolProfileBehavior": {
