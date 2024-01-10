@@ -148,7 +148,7 @@
 					"response": []
 				},
 				{
-					"name": "Add Asset Liquidity",
+					"name": "Deposit Asset Liquidity",
 					"id": "64b586a1-d9a9-4d14-b756-42f9368ed519",
 					"protocolProfileBehavior": {
 						"disableBodyPruning": true
@@ -159,7 +159,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation AddAssetLiquidity ($input: AddAssetLiquidityInput!) {\n  addAssetLiquidity(input: $input) {\n    code\n    success\n    message\n    error\n  }\n}",
+								"query": "mutation DepositAssetLiquidity ($input: DepositAssetLiquidityInput!) {\n  depositAssetLiquidity(input: $input) {\n    code\n    success\n    message\n    error\n  }\n}",
 								"variables": "{\n  \"input\": {\n    \"id\": \"3615a385-4c7e-43ec-9d66-f5d2e421108a\",\n    \"assetId\": \"{{assetId}}\",\n    \"amount\": \"1000000\",\n    \"idempotencyKey\":\"{{$guid}}\"\n  }\n}\n"
 							}
 						},
@@ -440,7 +440,7 @@
 					"response": []
 				},
 				{
-					"name": "Add Peer Liquidity",
+					"name": "Deposit Peer Liquidity",
 					"id": "99935f5e-8ff6-48c4-8ba7-c69954dfbb5d",
 					"protocolProfileBehavior": {
 						"disableBodyPruning": true
@@ -451,7 +451,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation AddPeerLiquidity ($input: AddPeerLiquidityInput!) {\n  addPeerLiquidity(input: $input) {\n    code\n    success\n    message\n    error\n  }\n}",
+								"query": "mutation DepositPeerLiquidity ($input: DepositPeerLiquidityInput!) {\n  depositPeerLiquidity(input: $input) {\n    code\n    success\n    message\n    error\n  }\n}",
 								"variables": "{\n  \"input\": {\n    \"id\": \"a09b730d-8610-4fda-98fa-ec7acb19c775\",\n    \"peerId\": \"{{peerId}}\",\n    \"amount\": \"1000000\",\n    \"idempotencyKey\":\"{{$guid}}\"\n  }\n}\n"
 							}
 						},
