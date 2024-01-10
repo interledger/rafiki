@@ -15,6 +15,7 @@
 						{
 							"listen": "test",
 							"script": {
+								"id": "e7beece0-0845-4132-8a9c-d953845e4d53",
 								"exec": [
 									"const body = pm.response.json();",
 									"",
@@ -56,6 +57,7 @@
 						{
 							"listen": "test",
 							"script": {
+								"id": "e0bd8a21-0e47-4a33-a75d-c80c51c02ec6",
 								"exec": [
 									""
 								],
@@ -207,6 +209,7 @@
 						{
 							"listen": "test",
 							"script": {
+								"id": "d6664b3a-d748-4652-a3c0-528cc72b64ba",
 								"exec": [
 									""
 								],
