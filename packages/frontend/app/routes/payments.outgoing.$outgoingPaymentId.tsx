@@ -103,7 +103,7 @@ export default function ViewOutgoingPaymentPage() {
                 </Link>
               </div>
               <div>
-                <p className='font-medium'>Received Amount</p>
+                <p className='font-medium'>Receive Amount</p>
                 <p className='mt-1'>
                   {formatAmount(
                     outgoingPayment.receiveAmount.value,
