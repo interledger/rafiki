@@ -11,6 +11,7 @@ assets:
     scale: 2
     liquidity: 10000
     liquidityThreshold: 1000
+peeringAsset: 'USD'
 peers:
   - initialLiquidity: '100000'
     peerUrl: http://peer-backend:3002

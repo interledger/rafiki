@@ -19,6 +19,7 @@ assets:
     scale: 0
     liquidity: 10000
     liquidityThreshold: 1000
+peeringAsset: 'USD'
 peers:
   - initialLiquidity: '100000'
     peerUrl: http://happy-life-bank-backend:3002
