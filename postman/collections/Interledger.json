@@ -836,6 +836,20 @@
 				},
 				{
 					"name": "Create Receiver (remote Incoming Payment)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "b1b39804-334e-458d-b03a-2db4e866d458",
+								"exec": [
+									"const body = pm.response.json();",
+									"",
+									"pm.environment.set(\"receiverId\", body.data.createReceiver.receiver.id);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
 					"id": "c7f63ae6-c790-43f5-8c8e-163297708693",
 					"protocolProfileBehavior": {
 						"disableBodyPruning": true
@@ -847,7 +861,35 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "mutation CreateReceiver($input: CreateReceiverInput!) {\n  createReceiver(input: $input) {\n    code\n    message\n    receiver {\n      completed\n      createdAt\n      expiresAt\n      metadata\n      id\n      incomingAmount {\n        assetCode\n        assetScale\n        value\n      }\n      walletAddressUrl\n      receivedAmount {\n        assetCode\n        assetScale\n        value\n      }\n      updatedAt\n    }\n    success\n  }\n}",
-								"variables": "{\n  \"input\": {\n    \"expiresAt\": null,\n    \"metadata\": {\n        \"description\": \"Hello my friend\",\n        \"externalRef\": null\n    },\n    \"incomingAmount\": {\n      \"assetCode\": \"USD\",\n      \"assetScale\": 2,\n      \"value\": 100\n    },\n    \"walletAddressUrl\": \"https://happy-life-bank-backend/accounts/pfry\"\n  }\n}"
+								"variables": "{\n  \"input\": {\n    \"expiresAt\": null,\n    \"metadata\": {\n        \"description\": \"Hello my friend\",\n        \"externalRef\": null\n    },\n    \"incomingAmount\": {\n      \"assetCode\": \"USD\",\n      \"assetScale\": 2,\n      \"value\": 1002\n    },\n    \"walletAddressUrl\": \"https://happy-life-bank-backend/accounts/pfry\"\n  }\n}"
+							}
+						},
+						"url": {
+							"raw": "{{RafikiGraphqlHost}}/graphql",
+							"host": [
+								"{{RafikiGraphqlHost}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Receiver (remote Incoming Payment)",
+					"id": "d5db39cc-f511-4fdb-9200-52fd8d93a820",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "query GetReceiver($id: String!) {\n    receiver(id: $id) {\n        id\n        completed\n        expiresAt\n        metadata\n        incomingAmount {\n            assetCode\n            assetScale\n            value\n        }\n        walletAddressUrl\n        receivedAmount {\n            assetCode\n            assetScale\n            value\n        }\n        createdAt\n        updatedAt\n    }\n}",
+								"variables": "{\n    \"id\": \"{{receiverId}}\"\n}"
 							}
 						},
 						"url": {
