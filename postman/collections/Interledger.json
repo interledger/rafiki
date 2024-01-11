@@ -312,7 +312,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "mutation CreateOrUpdatePeerByUrl ($input: CreateOrUpdatePeerByUrlInput!) {\n    createOrUpdatePeerByUrl (input: $input) {\n        code\n        message\n        success\n        peer {\n            id\n            name\n            asset {\n                id\n                scale\n                code\n                withdrawalThreshold\n            }\n        }\n    }\n}",
-								"variables": "{\n  \"input\": {\n    \"peerUrl\": \"http://happy-life-bank-backend:3005\",\n    \"assetId\": \"{{assetId}}\",\n    \"addedLiquidity\": 100000\n  }\n}"
+								"variables": "{\n  \"input\": {\n    \"peerUrl\": \"http://happy-life-bank-backend:3005\",\n    \"assetId\": \"{{assetId}}\",\n    \"liquidityToDeposit\": 100000\n  }\n}"
 							}
 						},
 						"url": {
@@ -835,6 +835,34 @@
 					"response": []
 				},
 				{
+					"name": "Withdraw Incoming Payment Liquidity",
+					"id": "0119e113-d8b1-41f2-8021-a1549896a159",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation WithdrawIncomingPaymentLiquidity($input: WithdrawIncomingPaymentLiquidityInput!) {  \n    withdrawIncomingPaymentLiquidity(input: $input) {    \n        code    \n        error    \n        message    \n        success  \n    }\n}",
+								"variables": "{\n    \"input\": {\n        \"incomingPaymentId\": \"{{incomingPaymentId}}\",\n        \"idempotencyKey\":\"{{$guid}}\"\n    }\n}"
+							}
+						},
+						"url": {
+							"raw": "{{RafikiGraphqlHost}}/graphql",
+							"host": [
+								"{{RafikiGraphqlHost}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
 					"name": "Create Receiver (remote Incoming Payment)",
 					"event": [
 						{
@@ -1161,6 +1189,34 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "mutation DepositOutgoingPaymentLiquidity($input: DepositOutgoingPaymentLiquidityInput!) {\n  depositOutgoingPaymentLiquidity(input: $input) {\n    code\n    error\n    message\n    success\n  }\n}\n",
+								"variables": "{\n    \"input\": {\n        \"outgoingPaymentId\": \"{{outgoingPaymentId}}\",\n        \"idempotencyKey\":\"{{$guid}}\"\n    }\n}"
+							}
+						},
+						"url": {
+							"raw": "{{RafikiGraphqlHost}}/graphql",
+							"host": [
+								"{{RafikiGraphqlHost}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Withdraw Outgoing Payment Liquidity",
+					"id": "714d51c4-fe2e-4711-b297-97254b015acd",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation WithdrawOutgoingPaymentLiquidity($input: WithdrawOutgoingPaymentLiquidityInput!) {  \n    withdrawOutgoingPaymentLiquidity(input: $input) {\n        code    \n        error    \n        message    \n        success  \n    }\n}",
 								"variables": "{\n    \"input\": {\n        \"outgoingPaymentId\": \"{{outgoingPaymentId}}\",\n        \"idempotencyKey\":\"{{$guid}}\"\n    }\n}"
 							}
 						},
