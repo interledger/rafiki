@@ -127,12 +127,20 @@ export function initIocContainer(
       replica_addresses: config.tigerbeetleReplicaAddresses
     })
   })
-  container.singleton('openApi', async () => {
+  container.singleton('resourceServerOpenApi', async () => {
     const resourceServerSpec = await createOpenAPI(
       path.resolve(__dirname, './openapi/resource-server.yaml')
     )
     return {
       resourceServerSpec
+    }
+  })
+  container.singleton('walletAddressServerOpenApi', async () => {
+    const walletAddressServerSpec = await createOpenAPI(
+      path.resolve(__dirname, './openapi/wallet-address-server.yaml')
+    )
+    return {
+      walletAddressServerSpec
     }
   })
   container.singleton('openPaymentsClient', async (deps) => {
@@ -273,7 +281,8 @@ export function initIocContainer(
   container.singleton('walletAddressRoutes', async (deps) => {
     const config = await deps.use('config')
     return createWalletAddressRoutes({
-      authServer: config.authServerGrantUrl
+      authServer: config.authServerGrantUrl,
+      resourceServer: config.openPaymentsUrl
     })
   })
   container.singleton('walletAddressKeyRoutes', async (deps) => {
