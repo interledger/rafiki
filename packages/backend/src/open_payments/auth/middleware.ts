@@ -124,9 +124,10 @@ export function createTokenIntrospectionMiddleware({
       ) {
         ctx.grant = {
           id: tokenInfo.grant,
-          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-          // @ts-ignore
-          limits: access['limits'] ? parseLimits(access['limits']) : undefined
+          limits:
+            'limits' in access && access.limits
+              ? parseLimits(access.limits)
+              : undefined
         }
       }
       await next()
