@@ -628,6 +628,33 @@ describe('Grant Routes', (): void => {
         })
       })
 
+      test('Cannot issue access token if body provided without interaction reference', async (): Promise<void> => {
+        const ctx = createContext<ContinueContext>(
+          {
+            headers: {
+              Accept: 'application/json',
+              'Content-Type': 'application/json',
+              Authorization: `GNAP ${grant.continueToken}`
+            }
+          },
+          {
+            id: grant.continueId
+          }
+        )
+
+        ctx.request.body = {
+          interact_ref: undefined
+        }
+
+        await expect(grantRoutes.continue(ctx)).rejects.toMatchObject({
+          status: 401,
+          error: {
+            code: 'invalid_request',
+            description: 'missing interaction reference'
+          }
+        })
+      })
+
       test('Honors wait value when continuing too early', async (): Promise<void> => {
         const grantWithWait = await Grant.query().insert(
           generateBaseGrant({

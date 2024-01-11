@@ -273,7 +273,6 @@ async function continueGrant(
   const continueToken = (ctx.headers['authorization'] as string)?.split(
     'GNAP '
   )[1]
-  const { interact_ref: interactRef } = ctx.request.body
 
   if (!continueId || !continueToken) {
     ctx.throw(401, {
@@ -297,7 +296,17 @@ async function continueGrant(
     return
   }
 
-  const interaction = await interactionService.getByRef(interactRef as string)
+  const { interact_ref: interactRef } = ctx.request.body
+  if (!interactRef) {
+    ctx.throw(401, {
+      error: {
+        code: 'invalid_request',
+        description: 'missing interaction reference'
+      }
+    })
+  }
+
+  const interaction = await interactionService.getByRef(interactRef)
   if (
     !interaction ||
     !isContinuableGrant(interaction.grant) ||
