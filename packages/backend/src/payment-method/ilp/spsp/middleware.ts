@@ -1,11 +1,4 @@
-import { AppContext, WalletAddressContext, SPSPContext } from '../../../app'
-import { IncomingPayment } from '../../../open_payments/payment/incoming/model'
-
-export type SPSPConnectionContext = AppContext &
-  SPSPContext & {
-    walletAddress?: never
-    incomingPayment: IncomingPayment
-  }
+import { WalletAddressContext, SPSPContext } from '../../../app'
 
 export type SPSPWalletAddressContext = WalletAddressContext &
   SPSPContext & {
@@ -13,7 +6,7 @@ export type SPSPWalletAddressContext = WalletAddressContext &
   }
 
 export const spspMiddleware = async (
-  ctx: SPSPConnectionContext | SPSPWalletAddressContext,
+  ctx: SPSPWalletAddressContext,
   next: () => Promise<unknown>
 ): Promise<void> => {
   // Fall back to legacy protocols if client doesn't support Open Payments.
