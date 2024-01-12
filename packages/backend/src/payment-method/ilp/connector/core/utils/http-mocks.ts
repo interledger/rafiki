@@ -63,8 +63,7 @@ export class MockIncomingMessage extends Transform {
     const reservedOptions = ['method', 'url', 'headers', 'rawHeaders']
     Object.keys(options).forEach((key) => {
       if (reservedOptions.indexOf(key) === -1) {
-        // @ts-ignore
-        this[key] = options[key]
+        ;(this as Record<string, any>)[key] = options[key]
       }
     })
 
