@@ -21,12 +21,10 @@ export class MockIncomingMessage extends Transform {
   readonly httpVersion = '1.1'
   readonly httpVersionMajor = 1
   readonly httpVersionMinor = 1
-  // @ts-ignore: Property has no initializer and is not definitely assigned in the constructor.
-  id: string | number | Record<string, unknown>
+  id!: string | number | Record<string, unknown>
   aborted = false
   complete = false
-  // @ts-ignore: Property has no initializer and is not definitely assigned in the constructor.
-  connection: Socket
+  connection!: Socket
   headers: IncomingHttpHeaders
   rawHeaders: string[]
   trailers: { [key: string]: string | undefined } = {}
@@ -41,8 +39,7 @@ export class MockIncomingMessage extends Transform {
   url?: string | undefined
   statusCode?: number | undefined
   statusMessage?: string | undefined
-  // @ts-ignore: Property has no initializer and is not definitely assigned in the constructor.
-  socket: Socket
+  socket!: Socket
 
   private _failError?: Error
 
@@ -116,12 +113,10 @@ export class MockServerResponse extends Transform {
   sendDate = true
   finished = false
   headersSent = false
-  // @ts-ignore: Property has no initializer and is not definitely assigned in the constructor.
-  connection: Socket
+  connection!: Socket
   socket: Socket | null = null
 
-  // @ts-ignore: Property has no initializer and is not definitely assigned in the constructor.
-  setTimeout: (msecs: number, callback?: () => void) => this
+  setTimeout!: (msecs: number, callback?: () => void) => this
   setHeader = (name: string, value: number | string | string[]): void => {
     this._headers[name.toLowerCase()] = value
   }
@@ -146,14 +141,10 @@ export class MockServerResponse extends Transform {
     delete this._headers[name.toLowerCase()]
   }
 
-  // @ts-ignore: Property has no initializer and is not definitely assigned in the constructor.
-  addTrailers: (headers: OutgoingHttpHeaders | Array<[string, string]>) => void
-  // @ts-ignore: Property has no initializer and is not definitely assigned in the constructor.
-  flushHeaders: () => void
-  // @ts-ignore: Property has no initializer and is not definitely assigned in the constructor.
-  assignSocket: (socket: Socket) => void
-  // @ts-ignore: Property has no initializer and is not definitely assigned in the constructor.
-  detachSocket: (socket: Socket) => void
+  addTrailers!: (headers: OutgoingHttpHeaders | Array<[string, string]>) => void
+  flushHeaders!: () => void
+  assignSocket!: (socket: Socket) => void
+  detachSocket!: (socket: Socket) => void
 
   writeContinue = (callback?: () => void): void => {
     if (callback) callback()
