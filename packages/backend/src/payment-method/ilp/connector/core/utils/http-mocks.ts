@@ -169,7 +169,6 @@ export class MockServerResponse extends Transform {
       reasonPhrase = undefined
     }
     this.statusCode = statusCode
-    // @ts-ignore
     this.statusMessage = reasonPhrase || STATUS_CODES[statusCode] || 'unknown'
     if (headers) {
       for (const [name, header] of Object.entries(headers)) {

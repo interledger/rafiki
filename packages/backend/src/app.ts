@@ -553,8 +553,6 @@ export class App {
       quoteRoutes.get
     )
 
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
     router.get(
       WALLET_ADDRESS_PATH + '/jwks.json',
       createWalletAddressMiddleware(),
