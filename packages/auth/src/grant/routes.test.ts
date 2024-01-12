@@ -694,7 +694,7 @@ describe('Grant Routes', (): void => {
           status: 401,
           error: {
             code: 'too_fast',
-            description: 'continued grant too quickly'
+            description: 'continued grant faster than "wait" period'
           }
         })
       })
@@ -703,6 +703,7 @@ describe('Grant Routes', (): void => {
         state                    | description
         ${GrantState.Processing} | ${'processing'}
         ${GrantState.Pending}    | ${'pending'}
+        ${GrantState.Approved}   | ${'approved'}
       `(
         'Polls correctly for continuation on a $description grant',
         async ({ state }): Promise<void> => {
@@ -753,6 +754,13 @@ describe('Grant Routes', (): void => {
               },
               uri: expect.any(String)
             }
+          }
+
+          if (state === GrantState.Processing || state === GrantState.Pending) {
+            const updatedPolledGrant = await Grant.query().findById(polledGrant.id)
+            expect(updatedPolledGrant.lastContinuedAt.getTime()).toBeGreaterThan(
+              polledGrant.lastContinuedAt.getTime()
+            )
           }
 
           if (state === GrantState.Approved) {
@@ -884,7 +892,7 @@ describe('Grant Routes', (): void => {
           status: 401,
           error: {
             code: 'too_fast',
-            description: 'polled grant too quickly'
+            description: 'polled grant faster than "wait" period'
           }
         })
       })

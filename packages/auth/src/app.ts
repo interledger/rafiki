@@ -46,7 +46,6 @@ import {
   grantContinueHttpsigMiddleware,
   tokenHttpsigMiddleware
 } from './signature/middleware'
-import { grantLastContinueAttemptMiddleware } from './grant/middleware'
 import { AccessService } from './access/service'
 import { AccessTokenService } from './accessToken/service'
 import { InteractionRoutes } from './interaction/routes'
@@ -236,8 +235,7 @@ export class App {
         method: HttpMethod.POST
       }),
       grantContinueHttpsigMiddleware,
-      grantRoutes.continue,
-      grantLastContinueAttemptMiddleware
+      grantRoutes.continue
     )
 
     // Grant Cancel

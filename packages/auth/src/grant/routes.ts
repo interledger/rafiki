@@ -213,8 +213,8 @@ async function pollGrantContinuation(
   }
 
   if (isGrantStillWaiting(grant)) {
-    ctx.throw(401, {
-      error: { code: 'too_fast', description: 'polled grant too quickly' }
+    ctx.throw(400, {
+      error: { code: 'too_fast', description: 'polled grant faster than "wait" period' }
     })
   }
 
@@ -230,6 +230,7 @@ async function pollGrantContinuation(
     grant.state === GrantState.Pending ||
     grant.state === GrantState.Processing
   ) {
+    await grantService.updateLastContinuedAt(grant.id)
     ctx.body = toOpenPaymentsGrantContinuation(grant, {
       authServerUrl: config.authServerDomain
     })
@@ -316,8 +317,8 @@ async function continueGrant(
       error: { code: 'unknown_request', description: 'grant not found' }
     })
   } else if (isGrantStillWaiting(interaction.grant)) {
-    ctx.throw(401, {
-      error: { code: 'too_fast', description: 'continued grant too quickly' }
+    ctx.throw(400, {
+      error: { code: 'too_fast', description: 'continued grant faster than "wait" period' }
     })
   } else {
     const { grant } = interaction
