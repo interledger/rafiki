@@ -242,8 +242,8 @@ importers:
         specifier: ^10.3.1
         version: 10.3.1
       testcontainers:
-        specifier: ^10.4.0
-        version: 10.4.0
+        specifier: ^10.5.0
+        version: 10.5.0
       typescript:
         specifier: ^4.9.5
         version: 4.9.5
@@ -441,8 +441,8 @@ importers:
         specifier: ^2.1.1
         version: 2.1.1
       testcontainers:
-        specifier: ^10.4.0
-        version: 10.4.0
+        specifier: ^10.5.0
+        version: 10.5.0
       tmp:
         specifier: ^0.2.1
         version: 0.2.1
@@ -16652,8 +16652,8 @@ packages:
       minimatch: 3.1.2
     dev: true
 
-  /testcontainers@10.4.0:
-    resolution: {integrity: sha512-kMmJXOAuJeQTRbGSrIEBaAzTzGzmY4+DU5xW5CxgzxgywCoy53ubeiTh3eZ1rzT54YR3zf0nijlb/l7OT4E+/g==}
+  /testcontainers@10.5.0:
+    resolution: {integrity: sha512-VgZeX3CRDvJXx2mdBW4/tF4AaCpIvE7nztxvGq5I/N6fgkQg9JoB16cUBdoAZJB/uyHDtCqtw9b/eFrTBanEjQ==}
     dependencies:
       '@balena/dockerignore': 1.0.2
       '@types/dockerode': 3.3.23
