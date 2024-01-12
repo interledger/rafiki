@@ -214,7 +214,10 @@ async function pollGrantContinuation(
 
   if (isGrantStillWaiting(grant)) {
     ctx.throw(400, {
-      error: { code: 'too_fast', description: 'polled grant faster than "wait" period' }
+      error: {
+        code: 'too_fast',
+        description: 'polled grant faster than "wait" period'
+      }
     })
   }
 
@@ -318,7 +321,10 @@ async function continueGrant(
     })
   } else if (isGrantStillWaiting(interaction.grant)) {
     ctx.throw(400, {
-      error: { code: 'too_fast', description: 'continued grant faster than "wait" period' }
+      error: {
+        code: 'too_fast',
+        description: 'continued grant faster than "wait" period'
+      }
     })
   } else {
     const { grant } = interaction

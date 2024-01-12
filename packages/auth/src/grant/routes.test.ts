@@ -691,7 +691,7 @@ describe('Grant Routes', (): void => {
         }
 
         await expect(grantRoutes.continue(ctx)).rejects.toMatchObject({
-          status: 401,
+          status: 400,
           error: {
             code: 'too_fast',
             description: 'continued grant faster than "wait" period'
@@ -757,10 +757,12 @@ describe('Grant Routes', (): void => {
           }
 
           if (state === GrantState.Processing || state === GrantState.Pending) {
-            const updatedPolledGrant = await Grant.query().findById(polledGrant.id)
-            expect(updatedPolledGrant.lastContinuedAt.getTime()).toBeGreaterThan(
-              polledGrant.lastContinuedAt.getTime()
+            const updatedPolledGrant = await Grant.query().findById(
+              polledGrant.id
             )
+            expect(
+              updatedPolledGrant?.lastContinuedAt.getTime()
+            ).toBeGreaterThan(polledGrant.lastContinuedAt.getTime())
           }
 
           if (state === GrantState.Approved) {
@@ -889,7 +891,7 @@ describe('Grant Routes', (): void => {
         ctx.request.body = {}
 
         await expect(grantRoutes.continue(ctx)).rejects.toMatchObject({
-          status: 401,
+          status: 400,
           error: {
             code: 'too_fast',
             description: 'polled grant faster than "wait" period'

@@ -75,7 +75,10 @@ export function initIocContainer(
 
   container.singleton('openPaymentsClient', async (deps) => {
     const logger = await deps.use('logger')
-    return createOpenPaymentsClient({ logger })
+    return createOpenPaymentsClient({
+      logger,
+      useHttp: process.env.NODE_ENV === 'development'
+    })
   })
 
   container.singleton(
