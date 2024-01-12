@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-non-null-assertion, @typescript-eslint/ban-ts-comment */
 import {
   IncomingMessage,
   IncomingHttpHeaders,
@@ -9,8 +8,10 @@ import {
 import { Transform } from 'stream'
 import { Socket } from 'net'
 
+type GenericOptionValues = string | undefined | string[] | IncomingHttpHeaders
+
 export interface MockIncomingMessageOptions {
-  [key: string]: string | undefined | string[] | IncomingHttpHeaders
+  [key: string]: GenericOptionValues
   method?: string
   url?: string
   headers?: IncomingHttpHeaders
@@ -63,7 +64,8 @@ export class MockIncomingMessage extends Transform {
     const reservedOptions = ['method', 'url', 'headers', 'rawHeaders']
     Object.keys(options).forEach((key) => {
       if (reservedOptions.indexOf(key) === -1) {
-        ;(this as Record<string, any>)[key] = options[key]
+        ;(this as unknown as Record<string, GenericOptionValues>)[key] =
+          options[key]
       }
     })
 
