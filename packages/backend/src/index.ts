@@ -142,7 +142,8 @@ export function initIocContainer(
         serviceName: config.instanceName,
         collectorUrls: config.openTelemetryCollectors,
         exportIntervalMillis: config.openTelemetryExportInterval,
-        baseAssetCode: config.telemetryBaseAssetCode
+        baseAssetCode: 'USD',
+        baseScale: 4
       })
     })
   }

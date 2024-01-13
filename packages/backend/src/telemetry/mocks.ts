@@ -46,6 +46,10 @@ export class MockTelemetryService implements TelemetryService {
     return 'USD'
   }
 
+  getBaseScale(): number {
+    return 4
+  }
+
   applyPrivacy(rawValue: number): number {
     return rawValue + Math.random() * 100
   }

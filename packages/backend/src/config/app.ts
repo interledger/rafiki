@@ -50,7 +50,6 @@ export const Config = {
     'TELEMETRY_EXCHANGE_RATES_LIFETIME',
     86_400_000
   ),
-  telemetryBaseAssetCode: envString('TELEMETRY_BASE_ASSET_CODE', 'USD'),
   adminPort: envInt('ADMIN_PORT', 3001),
   openPaymentsUrl: envString('OPEN_PAYMENTS_URL', 'http://127.0.0.1:3000'),
   openPaymentsPort: envInt('OPEN_PAYMENTS_PORT', 3003),

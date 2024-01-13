@@ -21,6 +21,7 @@ export interface TelemetryService {
   getServiceName(): string | undefined
   getRatesService(): RatesService
   getBaseAssetCode(): string
+  getBaseScale(): number
 }
 
 interface TelemetryServiceDependencies extends BaseService {
@@ -29,6 +30,7 @@ interface TelemetryServiceDependencies extends BaseService {
   exportIntervalMillis?: number
   telemetryRatesService: RatesService
   baseAssetCode: string
+  baseScale: number
 }
 
 export function createTelemetryService(
@@ -106,5 +108,9 @@ class TelemetryServiceImpl implements TelemetryService {
 
   getBaseAssetCode(): string {
     return this.deps.baseAssetCode
+  }
+
+  getBaseScale(): number {
+    return this.deps.baseScale
   }
 }
