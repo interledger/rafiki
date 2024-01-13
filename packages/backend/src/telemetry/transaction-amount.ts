@@ -18,7 +18,7 @@ export async function collectTelemetryAmount(
     sourceAsset: { code: asset.code, scale: asset.scale },
     destinationAsset: {
       code: telemetryService.getBaseAssetCode(),
-      scale: 4
+      scale: telemetryService.getBaseScale()
     }
   }
   const converted = await convertAmount(
