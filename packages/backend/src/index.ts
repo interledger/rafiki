@@ -46,8 +46,8 @@ import { createPeerService } from './payment-method/ilp/peer/service'
 import { createIlpPaymentService } from './payment-method/ilp/service'
 import { createSPSPRoutes } from './payment-method/ilp/spsp/routes'
 import { createStreamCredentialsService } from './payment-method/ilp/stream-credentials/service'
-import { createRatesService } from './rates/service'
-import { createTelemetryService } from './telemetry/meter'
+import { RatesService, createRatesService } from './rates/service'
+import { TelemetryService, createTelemetryService } from './telemetry/service'
 import { createWebhookService } from './webhook/service'
 
 BigInt.prototype.toJSON = function () {
@@ -204,11 +204,20 @@ export function initIocContainer(
     const knex = await deps.use('knex')
     const config = await deps.use('config')
 
+    let telemetry: TelemetryService | undefined
+    let aseRatesService: RatesService | undefined
+    if (config.enableTelemetry) {
+      telemetry = await deps.use('telemetry')
+      aseRatesService = await deps.use('ratesService')
+    }
+
     if (config.useTigerbeetle) {
       const tigerbeetle = await deps.use('tigerbeetle')
 
       return createTigerbeetleAccountingService({
         logger,
+        telemetry,
+        aseRatesService,
         knex,
         tigerbeetle,
         withdrawalThrottleDelay: config.withdrawalThrottleDelay
@@ -217,6 +226,8 @@ export function initIocContainer(
 
     return createPsqlAccountingService({
       logger,
+      telemetry,
+      aseRatesService,
       knex,
       withdrawalThrottleDelay: config.withdrawalThrottleDelay
     })
@@ -361,10 +372,7 @@ export function initIocContainer(
       peerService: await deps.use('peerService'),
       ratesService: await deps.use('ratesService'),
       streamServer: await deps.use('streamServer'),
-      ilpAddress: config.ilpAddress,
-      telemetry: config.enableTelemetry
-        ? await deps.use('telemetry')
-        : undefined
+      ilpAddress: config.ilpAddress
     })
   })
 

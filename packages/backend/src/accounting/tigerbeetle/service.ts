@@ -26,6 +26,8 @@ import {
 } from './errors'
 import { NewTransferOptions, createTransfers } from './transfers'
 import { toTigerbeetleId } from './utils'
+import { TelemetryService } from '../../telemetry/service'
+import { RatesService } from '../../rates/service'
 
 export enum TigerbeetleAccountCode {
   LIQUIDITY_WEB_MONETIZATION = 1,
@@ -48,6 +50,8 @@ export const convertToTigerbeetleAccountCode: {
 }
 
 export interface ServiceDependencies extends BaseService {
+  telemetry?: TelemetryService
+  aseRatesService?: RatesService
   tigerbeetle: Client
   withdrawalThrottleDelay?: number
 }
@@ -216,6 +220,8 @@ export async function createTransfer(
   args: TransferOptions
 ): Promise<Transaction | TransferError> {
   return createAccountToAccountTransfer({
+    telemetry: deps.telemetry,
+    aseRatesService: deps.aseRatesService,
     transferArgs: args,
     withdrawalThrottleDelay: deps.withdrawalThrottleDelay,
     voidTransfers: async (transferIds) => {

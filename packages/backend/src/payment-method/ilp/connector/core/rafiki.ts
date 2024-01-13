@@ -19,7 +19,6 @@ import { AssetOptions } from '../../../../asset/service'
 import { IncomingPaymentService } from '../../../../open_payments/payment/incoming/service'
 import { WalletAddressService } from '../../../../open_payments/wallet_address/service'
 import { RatesService } from '../../../../rates/service'
-import { TelemetryService } from '../../../../telemetry/meter'
 import { PeerService } from '../../peer/service'
 import { createTokenAuthMiddleware } from './middleware'
 import {
@@ -72,7 +71,6 @@ export interface AccountingService {
 export interface RafikiServices {
   //router: Router
   accounting: AccountingService
-  telemetry?: TelemetryService
   walletAddresses: WalletAddressService
   logger: Logger
   incomingPayments: IncomingPaymentService
@@ -161,9 +159,7 @@ export class Rafiki<T = any> {
       get walletAddresses(): WalletAddressService {
         return config.walletAddresses
       },
-      get telemetry(): TelemetryService | undefined {
-        return config.telemetry
-      },
+
       logger
     }
 

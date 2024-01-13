@@ -1,11 +1,11 @@
 import { Attributes, Counter, MetricOptions } from '@opentelemetry/api'
-import { TelemetryService } from '../telemetry/meter'
-import { Rates, RatesService } from '../rates/service'
+import { TelemetryService } from './service'
+import { ConvertError, Rates, RatesService } from '../rates/service'
 
 export const mockCounter = { add: jest.fn() } as Counter
 
 export class MockRatesService implements RatesService {
-  async convert(): Promise<bigint> {
+  async convert(): Promise<bigint | ConvertError> {
     return BigInt(10000)
   }
   async rates(): Promise<Rates> {

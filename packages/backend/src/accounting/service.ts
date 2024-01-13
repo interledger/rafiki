@@ -1,5 +1,8 @@
 import { TransactionOrKnex } from 'objection'
 import { TransferError, isTransferError } from './errors'
+import { TelemetryService } from '../telemetry/service'
+import { RatesService } from '../rates/service'
+import { collectTelemetryAmount } from '../telemetry/transaction-amount'
 
 export enum LiquidityAccountType {
   ASSET = 'ASSET',
@@ -91,6 +94,8 @@ export interface TransferToCreate {
 }
 
 interface CreateAccountToAccountTransferArgs {
+  telemetry?: TelemetryService
+  aseRatesService?: RatesService
   transferArgs: TransferOptions
   voidTransfers(transferIds: string[]): Promise<void | TransferError>
   postTransfers(transferIds: string[]): Promise<void | TransferError>
@@ -112,7 +117,9 @@ export async function createAccountToAccountTransfer(
     getAccountReceived,
     getAccountBalance,
     withdrawalThrottleDelay,
-    transferArgs
+    transferArgs,
+    telemetry,
+    aseRatesService
   } = args
 
   const { sourceAccount, destinationAccount, sourceAmount, destinationAmount } =
@@ -186,6 +193,21 @@ export async function createAccountToAccountTransfer(
         await destinationAccount.onCredit({
           totalReceived,
           withdrawalThrottleDelay
+        })
+      }
+      if (
+        destinationAccount.onDebit &&
+        telemetry &&
+        aseRatesService &&
+        sourceAccount.asset.code &&
+        sourceAccount.asset.scale
+      ) {
+        collectTelemetryAmount(telemetry, aseRatesService, {
+          amount: sourceAmount,
+          asset: {
+            code: sourceAccount.asset.code,
+            scale: sourceAccount.asset.scale
+          }
         })
       }
     },

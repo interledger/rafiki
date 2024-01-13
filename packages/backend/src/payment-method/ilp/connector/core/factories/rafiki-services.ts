@@ -5,11 +5,9 @@ import { StreamServer } from '@interledger/stream-receiver'
 import { RafikiServices } from '../rafiki'
 import { MockAccountingService } from '../test/mocks/accounting-service'
 import { TestLoggerFactory } from './test-logger'
-import { MockTelemetryService } from '../../../../../tests/meter'
 
 interface MockRafikiServices extends RafikiServices {
   accounting: MockAccountingService
-  telemetry: MockTelemetryService
 }
 
 export const RafikiServicesFactory = Factory.define<MockRafikiServices>(
@@ -21,9 +19,6 @@ export const RafikiServicesFactory = Factory.define<MockRafikiServices>(
   .option('ilpAddress', 'test.rafiki')
   .attr('accounting', () => {
     return new MockAccountingService()
-  })
-  .attr('telemetry', () => {
-    return new MockTelemetryService()
   })
   .attr('logger', TestLoggerFactory.build())
   .attr(

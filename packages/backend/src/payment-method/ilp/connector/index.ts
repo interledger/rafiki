@@ -6,7 +6,6 @@ import { IncomingPaymentService } from '../../../open_payments/payment/incoming/
 import { WalletAddressService } from '../../../open_payments/wallet_address/service'
 import { RatesService } from '../../../rates/service'
 import { BaseService } from '../../../shared/baseService'
-import { TelemetryService } from '../../../telemetry/meter'
 import { PeerService } from '../peer/service'
 import {
   ILPContext,
@@ -28,13 +27,11 @@ import {
   createStreamAddressMiddleware,
   createStreamController
 } from './core'
-import { createTelemetryMiddleware } from './core/middleware/telemetry'
 
 interface ServiceDependencies extends BaseService {
   redis: Redis
   ratesService: RatesService
   accountingService: AccountingService
-  telemetry?: TelemetryService
   walletAddressService: WalletAddressService
   incomingPaymentService: IncomingPaymentService
   peerService: PeerService
@@ -47,7 +44,6 @@ export async function createConnectorService({
   redis,
   ratesService,
   accountingService,
-  telemetry,
   walletAddressService,
   incomingPaymentService,
   peerService,
@@ -61,7 +57,6 @@ export async function createConnectorService({
         service: 'ConnectorService'
       }),
       accounting: accountingService,
-      telemetry,
       walletAddresses: walletAddressService,
       incomingPayments: incomingPaymentService,
       peers: peerService,
@@ -84,7 +79,6 @@ export async function createConnectorService({
 
       // Outgoing Rules
       createStreamController(),
-      createTelemetryMiddleware(),
       createOutgoingThroughputMiddleware(),
       createOutgoingReduceExpiryMiddleware({}),
       createOutgoingExpireMiddleware(),

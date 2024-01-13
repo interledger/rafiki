@@ -33,8 +33,12 @@ import {
   voidTransfers
 } from './ledger-transfer'
 import { LedgerTransfer, LedgerTransferType } from './ledger-transfer/model'
+import { TelemetryService } from '../../telemetry/service'
+import { RatesService } from '../../rates/service'
 
 export interface ServiceDependencies extends BaseService {
+  telemetry?: TelemetryService
+  aseRatesService?: RatesService
   knex: TransactionOrKnex
   withdrawalThrottleDelay?: number
 }
@@ -201,6 +205,8 @@ export async function createTransfer(
   args: TransferOptions
 ): Promise<Transaction | TransferError> {
   return createAccountToAccountTransfer({
+    telemetry: deps.telemetry,
+    aseRatesService: deps.aseRatesService,
     transferArgs: args,
     withdrawalThrottleDelay: deps.withdrawalThrottleDelay,
     voidTransfers: async (transferRefs) => voidTransfers(deps, transferRefs),

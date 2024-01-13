@@ -1,4 +1,4 @@
-import { MockTelemetryService, mockCounter } from '../tests/meter'
+import { MockTelemetryService, mockCounter } from './mocks'
 
 const telemetryService = new MockTelemetryService()
 describe('TelemetryServiceImpl', () => {
