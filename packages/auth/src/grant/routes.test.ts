@@ -488,7 +488,7 @@ describe('Grant Routes', (): void => {
         await expect(grantRoutes.continue(ctx)).rejects.toMatchObject({
           status: 404,
           error: {
-            code: 'unknown_request',
+            code: 'invalid_continuation',
             description: 'grant not found'
           }
         })
@@ -571,7 +571,7 @@ describe('Grant Routes', (): void => {
         await expect(grantRoutes.continue(ctx)).rejects.toMatchObject({
           status: 404,
           error: {
-            code: 'unknown_request',
+            code: 'invalid_continuation',
             description: 'grant not found'
           }
         })
@@ -597,7 +597,7 @@ describe('Grant Routes', (): void => {
         await expect(grantRoutes.continue(ctx)).rejects.toMatchObject({
           status: 401,
           error: {
-            code: 'invalid_request',
+            code: 'invalid_continuation',
             description: 'missing continuation information'
           }
         })
@@ -622,7 +622,7 @@ describe('Grant Routes', (): void => {
         await expect(grantRoutes.continue(ctx)).rejects.toMatchObject({
           status: 401,
           error: {
-            code: 'invalid_request',
+            code: 'invalid_continuation',
             description: 'missing continuation information'
           }
         })

@@ -281,7 +281,7 @@ async function continueGrant(
   if (!continueId || !continueToken) {
     ctx.throw(401, {
       error: {
-        code: 'invalid_request',
+        code: 'invalid_continuation',
         description: 'missing continuation information'
       }
     })
@@ -311,13 +311,15 @@ async function continueGrant(
   }
 
   const interaction = await interactionService.getByRef(interactRef)
+  // TODO: distinguish error reasons between missing interaction, revoked, etc.
+  // https://github.com/interledger/rafiki/issues/2344
   if (
     !interaction ||
     !isContinuableGrant(interaction.grant) ||
     !isMatchingContinueRequest(continueId, continueToken, interaction.grant)
   ) {
     ctx.throw(404, {
-      error: { code: 'unknown_request', description: 'grant not found' }
+      error: { code: 'invalid_continuation', description: 'grant not found' }
     })
   } else if (isGrantStillWaiting(interaction.grant)) {
     ctx.throw(400, {
