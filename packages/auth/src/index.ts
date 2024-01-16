@@ -230,9 +230,7 @@ export const start = async (
       logger.info('completed graceful shutdown.')
       process.exit(0)
     } catch (err) {
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
-      const errInfo = err instanceof Error && error.stack ? err.stack : err
+      const errInfo = err instanceof Error && err.stack ? err.stack : err
       logger.error({ err: errInfo }, 'error while shutting down')
       process.exit(1)
     }
@@ -255,9 +253,7 @@ export const start = async (
       logger.info('completed graceful shutdown.')
       process.exit(0)
     } catch (err) {
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
-      const errInfo = err instanceof Error && error.stack ? err.stack : err
+      const errInfo = err instanceof Error && err.stack ? err.stack : err
       logger.error({ err: errInfo }, 'error while shutting down')
       process.exit(1)
     }
