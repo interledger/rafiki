@@ -553,8 +553,6 @@ export class App {
       quoteRoutes.get
     )
 
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
     router.get(
       WALLET_ADDRESS_PATH + '/jwks.json',
       createWalletAddressMiddleware(),
@@ -568,8 +566,6 @@ export class App {
 
     // Add the wallet address query route last.
     // Otherwise it will be matched instead of other Open Payments endpoints.
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
     router.get(
       WALLET_ADDRESS_PATH,
       createWalletAddressMiddleware(),
