@@ -17,11 +17,9 @@ import { getPageInfo } from '../../shared/pagination'
 import { Pagination, SortOrder } from '../../shared/baseModel'
 import { CreateQuoteOptions } from '../../open_payments/quote/service'
 
-export const getQuote: QueryResolvers<ApolloContext>['quote'] = async (
-  parent,
-  args,
-  ctx
-): Promise<ResolversTypes['Quote']> => {
+export const getQuote: NonNullable<
+  QueryResolvers<ApolloContext>['quote']
+> = async (parent, args, ctx): Promise<ResolversTypes['Quote']> => {
   const quoteService = await ctx.container.use('quoteService')
   const quote = await quoteService.get({
     id: args.id
@@ -30,68 +28,69 @@ export const getQuote: QueryResolvers<ApolloContext>['quote'] = async (
   return quoteToGraphql(quote)
 }
 
-export const createQuote: MutationResolvers<ApolloContext>['createQuote'] =
-  async (parent, args, ctx): Promise<ResolversTypes['QuoteResponse']> => {
-    const quoteService = await ctx.container.use('quoteService')
-    const options: CreateQuoteOptions = {
-      walletAddressId: args.input.walletAddressId,
-      receiver: args.input.receiver,
-      method: 'ilp'
-    }
-    if (args.input.debitAmount) options.debitAmount = args.input.debitAmount
-    if (args.input.receiveAmount)
-      options.receiveAmount = args.input.receiveAmount
-    return quoteService
-      .create(options)
-      .then((quoteOrErr: Quote | QuoteError) =>
-        isQuoteError(quoteOrErr)
-          ? {
-              code: errorToCode[quoteOrErr].toString(),
-              success: false,
-              message: errorToMessage[quoteOrErr]
-            }
-          : {
-              code: '200',
-              success: true,
-              quote: quoteToGraphql(quoteOrErr)
-            }
-      )
-      .catch(() => ({
-        code: '500',
-        success: false,
-        message: 'Error trying to create quote'
-      }))
+export const createQuote: NonNullable<
+  MutationResolvers<ApolloContext>['createQuote']
+> = async (parent, args, ctx): Promise<ResolversTypes['QuoteResponse']> => {
+  const quoteService = await ctx.container.use('quoteService')
+  const options: CreateQuoteOptions = {
+    walletAddressId: args.input.walletAddressId,
+    receiver: args.input.receiver,
+    method: 'ilp'
   }
-
-export const getWalletAddressQuotes: WalletAddressResolvers<ApolloContext>['quotes'] =
-  async (parent, args, ctx): Promise<ResolversTypes['QuoteConnection']> => {
-    if (!parent.id) throw new Error('missing wallet address id')
-    const quoteService = await ctx.container.use('quoteService')
-    const { sortOrder, ...pagination } = args
-    const order = sortOrder === 'ASC' ? SortOrder.Asc : SortOrder.Desc
-    const quotes = await quoteService.getWalletAddressPage({
-      walletAddressId: parent.id,
-      pagination,
-      sortOrder: order
-    })
-    const pageInfo = await getPageInfo(
-      (pagination: Pagination, sortOrder?: SortOrder) =>
-        quoteService.getWalletAddressPage({
-          walletAddressId: parent.id as string,
-          pagination,
-          sortOrder
-        }),
-      quotes,
-      order
+  if (args.input.debitAmount) options.debitAmount = args.input.debitAmount
+  if (args.input.receiveAmount) options.receiveAmount = args.input.receiveAmount
+  return quoteService
+    .create(options)
+    .then((quoteOrErr: Quote | QuoteError) =>
+      isQuoteError(quoteOrErr)
+        ? {
+            code: errorToCode[quoteOrErr].toString(),
+            success: false,
+            message: errorToMessage[quoteOrErr]
+          }
+        : {
+            code: '200',
+            success: true,
+            quote: quoteToGraphql(quoteOrErr)
+          }
     )
-    return {
-      pageInfo,
-      edges: quotes.map((quote: Quote) => ({
-        cursor: quote.id,
-        node: quoteToGraphql(quote)
-      }))
-    }
+    .catch(() => ({
+      code: '500',
+      success: false,
+      message: 'Error trying to create quote'
+    }))
+}
+
+export const getWalletAddressQuotes: NonNullable<
+  WalletAddressResolvers<ApolloContext>['quotes']
+> = async (parent, args, ctx): Promise<ResolversTypes['QuoteConnection']> => {
+  if (!parent.id) throw new Error('missing wallet address id')
+  const quoteService = await ctx.container.use('quoteService')
+  const { sortOrder, ...pagination } = args
+  const order = sortOrder === 'ASC' ? SortOrder.Asc : SortOrder.Desc
+  const quotes = await quoteService.getWalletAddressPage({
+    walletAddressId: parent.id,
+    pagination,
+    sortOrder: order
+  })
+  const pageInfo = await getPageInfo(
+    (pagination: Pagination, sortOrder?: SortOrder) =>
+      quoteService.getWalletAddressPage({
+        walletAddressId: parent.id as string,
+        pagination,
+        sortOrder
+      }),
+    quotes,
+    order
+  )
+  return {
+    pageInfo,
+    edges: quotes.map((quote: Quote) => ({
+      cursor: quote.id,
+      node: quoteToGraphql(quote)
+    }))
   }
+}
 
 export function quoteToGraphql(quote: Quote): SchemaQuote {
   return {

@@ -17,135 +17,135 @@ import { WalletAddress } from '../../open_payments/wallet_address/model'
 import { getPageInfo } from '../../shared/pagination'
 import { Pagination, SortOrder } from '../../shared/baseModel'
 
-export const getWalletAddresses: QueryResolvers<ApolloContext>['walletAddresses'] =
-  async (
-    parent,
-    args,
-    ctx
-  ): Promise<ResolversTypes['WalletAddressesConnection']> => {
-    const walletAddressService = await ctx.container.use('walletAddressService')
-    const { sortOrder, ...pagination } = args
-    const order = sortOrder === 'ASC' ? SortOrder.Asc : SortOrder.Desc
-    const walletAddresses = await walletAddressService.getPage(
-      pagination,
-      order
+export const getWalletAddresses: NonNullable<
+  QueryResolvers<ApolloContext>['walletAddresses']
+> = async (
+  parent,
+  args,
+  ctx
+): Promise<ResolversTypes['WalletAddressesConnection']> => {
+  const walletAddressService = await ctx.container.use('walletAddressService')
+  const { sortOrder, ...pagination } = args
+  const order = sortOrder === 'ASC' ? SortOrder.Asc : SortOrder.Desc
+  const walletAddresses = await walletAddressService.getPage(pagination, order)
+  const pageInfo = await getPageInfo(
+    (pagination: Pagination, sortOrder?: SortOrder) =>
+      walletAddressService.getPage(pagination, sortOrder),
+    walletAddresses,
+    order
+  )
+  return {
+    pageInfo,
+    edges: walletAddresses.map((walletAddress: WalletAddress) => ({
+      cursor: walletAddress.id,
+      node: walletAddressToGraphql(walletAddress)
+    }))
+  }
+}
+
+export const getWalletAddress: NonNullable<
+  QueryResolvers<ApolloContext>['walletAddress']
+> = async (parent, args, ctx): Promise<ResolversTypes['WalletAddress']> => {
+  const walletAddressService = await ctx.container.use('walletAddressService')
+  const walletAddress = await walletAddressService.get(args.id)
+  if (!walletAddress) {
+    throw new Error('No wallet address')
+  }
+  return walletAddressToGraphql(walletAddress)
+}
+
+export const createWalletAddress: NonNullable<
+  MutationResolvers<ApolloContext>['createWalletAddress']
+> = async (
+  parent,
+  args,
+  ctx
+): Promise<ResolversTypes['CreateWalletAddressMutationResponse']> => {
+  const walletAddressService = await ctx.container.use('walletAddressService')
+  return walletAddressService
+    .create(args.input)
+    .then((walletAddressOrError: WalletAddress | WalletAddressError) =>
+      isWalletAddressError(walletAddressOrError)
+        ? {
+            code: errorToCode[walletAddressOrError].toString(),
+            success: false,
+            message: errorToMessage[walletAddressOrError]
+          }
+        : {
+            code: '200',
+            success: true,
+            message: 'Created wallet address',
+            walletAddress: walletAddressToGraphql(walletAddressOrError)
+          }
     )
-    const pageInfo = await getPageInfo(
-      (pagination: Pagination, sortOrder?: SortOrder) =>
-        walletAddressService.getPage(pagination, sortOrder),
-      walletAddresses,
-      order
+    .catch(() => ({
+      code: '500',
+      success: false,
+      message: 'Error trying to create wallet address'
+    }))
+}
+export const updateWalletAddress: NonNullable<
+  MutationResolvers<ApolloContext>['updateWalletAddress']
+> = async (
+  parent,
+  args,
+  ctx
+): Promise<ResolversTypes['UpdateWalletAddressMutationResponse']> => {
+  const walletAddressService = await ctx.container.use('walletAddressService')
+  return walletAddressService
+    .update(args.input)
+    .then((walletAddressOrError: WalletAddress | WalletAddressError) =>
+      isWalletAddressError(walletAddressOrError)
+        ? {
+            code: errorToCode[walletAddressOrError].toString(),
+            success: false,
+            message: errorToMessage[walletAddressOrError]
+          }
+        : {
+            code: '200',
+            success: true,
+            message: 'Updated wallet address',
+            walletAddress: walletAddressToGraphql(walletAddressOrError)
+          }
+    )
+    .catch(() => ({
+      code: '500',
+      success: false,
+      message: 'Error trying to update wallet address'
+    }))
+}
+
+export const triggerWalletAddressEvents: NonNullable<
+  MutationResolvers<ApolloContext>['triggerWalletAddressEvents']
+> = async (
+  parent,
+  args,
+  ctx
+): Promise<ResolversTypes['TriggerWalletAddressEventsMutationResponse']> => {
+  try {
+    const walletAddressService = await ctx.container.use('walletAddressService')
+    const count = await walletAddressService.triggerEvents(args.input.limit)
+    return {
+      code: '200',
+      success: true,
+      message: 'Triggered Wallet Address Events',
+      count
+    }
+  } catch (err) {
+    ctx.logger.error(
+      {
+        options: args.input.limit,
+        err
+      },
+      'error triggering wallet address events'
     )
     return {
-      pageInfo,
-      edges: walletAddresses.map((walletAddress: WalletAddress) => ({
-        cursor: walletAddress.id,
-        node: walletAddressToGraphql(walletAddress)
-      }))
+      code: '500',
+      message: 'Error trying to trigger wallet address events',
+      success: false
     }
   }
-
-export const getWalletAddress: QueryResolvers<ApolloContext>['walletAddress'] =
-  async (parent, args, ctx): Promise<ResolversTypes['WalletAddress']> => {
-    const walletAddressService = await ctx.container.use('walletAddressService')
-    const walletAddress = await walletAddressService.get(args.id)
-    if (!walletAddress) {
-      throw new Error('No wallet address')
-    }
-    return walletAddressToGraphql(walletAddress)
-  }
-
-export const createWalletAddress: MutationResolvers<ApolloContext>['createWalletAddress'] =
-  async (
-    parent,
-    args,
-    ctx
-  ): Promise<ResolversTypes['CreateWalletAddressMutationResponse']> => {
-    const walletAddressService = await ctx.container.use('walletAddressService')
-    return walletAddressService
-      .create(args.input)
-      .then((walletAddressOrError: WalletAddress | WalletAddressError) =>
-        isWalletAddressError(walletAddressOrError)
-          ? {
-              code: errorToCode[walletAddressOrError].toString(),
-              success: false,
-              message: errorToMessage[walletAddressOrError]
-            }
-          : {
-              code: '200',
-              success: true,
-              message: 'Created wallet address',
-              walletAddress: walletAddressToGraphql(walletAddressOrError)
-            }
-      )
-      .catch(() => ({
-        code: '500',
-        success: false,
-        message: 'Error trying to create wallet address'
-      }))
-  }
-export const updateWalletAddress: MutationResolvers<ApolloContext>['updateWalletAddress'] =
-  async (
-    parent,
-    args,
-    ctx
-  ): Promise<ResolversTypes['UpdateWalletAddressMutationResponse']> => {
-    const walletAddressService = await ctx.container.use('walletAddressService')
-    return walletAddressService
-      .update(args.input)
-      .then((walletAddressOrError: WalletAddress | WalletAddressError) =>
-        isWalletAddressError(walletAddressOrError)
-          ? {
-              code: errorToCode[walletAddressOrError].toString(),
-              success: false,
-              message: errorToMessage[walletAddressOrError]
-            }
-          : {
-              code: '200',
-              success: true,
-              message: 'Updated wallet address',
-              walletAddress: walletAddressToGraphql(walletAddressOrError)
-            }
-      )
-      .catch(() => ({
-        code: '500',
-        success: false,
-        message: 'Error trying to update wallet address'
-      }))
-  }
-
-export const triggerWalletAddressEvents: MutationResolvers<ApolloContext>['triggerWalletAddressEvents'] =
-  async (
-    parent,
-    args,
-    ctx
-  ): Promise<ResolversTypes['TriggerWalletAddressEventsMutationResponse']> => {
-    try {
-      const walletAddressService = await ctx.container.use(
-        'walletAddressService'
-      )
-      const count = await walletAddressService.triggerEvents(args.input.limit)
-      return {
-        code: '200',
-        success: true,
-        message: 'Triggered Wallet Address Events',
-        count
-      }
-    } catch (err) {
-      ctx.logger.error(
-        {
-          options: args.input.limit,
-          err
-        },
-        'error triggering wallet address events'
-      )
-      return {
-        code: '500',
-        message: 'Error trying to trigger wallet address events',
-        success: false
-      }
-    }
-  }
+}
 
 export const walletAddressToGraphql = (
   walletAddress: WalletAddress

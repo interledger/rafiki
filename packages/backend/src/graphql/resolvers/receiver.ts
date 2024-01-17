@@ -12,11 +12,9 @@ import {
   errorToMessage as receiverErrorToMessage
 } from '../../open_payments/receiver/errors'
 
-export const getReceiver: QueryResolvers<ApolloContext>['receiver'] = async (
-  _,
-  args,
-  ctx
-): Promise<ResolversTypes['Receiver']> => {
+export const getReceiver: NonNullable<
+  QueryResolvers<ApolloContext>['receiver']
+> = async (_, args, ctx): Promise<ResolversTypes['Receiver']> => {
   const receiverService = await ctx.container.use('receiverService')
   const receiver = await receiverService.get(args.id)
   if (!receiver) {
@@ -26,44 +24,45 @@ export const getReceiver: QueryResolvers<ApolloContext>['receiver'] = async (
   return receiverToGraphql(receiver)
 }
 
-export const createReceiver: MutationResolvers<ApolloContext>['createReceiver'] =
-  async (_, args, ctx): Promise<ResolversTypes['CreateReceiverResponse']> => {
-    const receiverService = await ctx.container.use('receiverService')
+export const createReceiver: NonNullable<
+  MutationResolvers<ApolloContext>['createReceiver']
+> = async (_, args, ctx): Promise<ResolversTypes['CreateReceiverResponse']> => {
+  const receiverService = await ctx.container.use('receiverService')
 
-    try {
-      const receiverOrError = await receiverService.create({
-        walletAddressUrl: args.input.walletAddressUrl,
-        expiresAt: args.input.expiresAt
-          ? new Date(args.input.expiresAt)
-          : undefined,
-        incomingAmount: args.input.incomingAmount,
-        metadata: args.input.metadata
-      })
+  try {
+    const receiverOrError = await receiverService.create({
+      walletAddressUrl: args.input.walletAddressUrl,
+      expiresAt: args.input.expiresAt
+        ? new Date(args.input.expiresAt)
+        : undefined,
+      incomingAmount: args.input.incomingAmount,
+      metadata: args.input.metadata
+    })
 
-      if (isReceiverError(receiverOrError)) {
-        return {
-          code: receiverErrorToCode(receiverOrError).toString(),
-          success: false,
-          message: receiverErrorToMessage(receiverOrError)
-        }
-      }
-
+    if (isReceiverError(receiverOrError)) {
       return {
-        code: '200',
-        success: true,
-        receiver: receiverToGraphql(receiverOrError)
-      }
-    } catch (err) {
-      const errorMessage = 'Error trying to create receiver'
-      ctx.logger.error({ err, args }, errorMessage)
-
-      return {
-        code: '500',
+        code: receiverErrorToCode(receiverOrError).toString(),
         success: false,
-        message: errorMessage
+        message: receiverErrorToMessage(receiverOrError)
       }
     }
+
+    return {
+      code: '200',
+      success: true,
+      receiver: receiverToGraphql(receiverOrError)
+    }
+  } catch (err) {
+    const errorMessage = 'Error trying to create receiver'
+    ctx.logger.error({ err, args }, errorMessage)
+
+    return {
+      code: '500',
+      success: false,
+      message: errorMessage
+    }
   }
+}
 
 export function receiverToGraphql(receiver: Receiver): SchemaReceiver {
   if (!receiver.incomingPayment) {

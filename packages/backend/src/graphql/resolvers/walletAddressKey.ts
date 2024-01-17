@@ -9,83 +9,85 @@ import {
 import { ApolloContext } from '../../app'
 import { WalletAddressKey } from '../../open_payments/wallet_address/key/model'
 
-export const revokeWalletAddressKey: MutationResolvers<ApolloContext>['revokeWalletAddressKey'] =
-  async (
-    parent,
-    args,
-    ctx
-  ): Promise<ResolversTypes['RevokeWalletAddressKeyMutationResponse']> => {
-    try {
-      const walletAddressKeyService = await ctx.container.use(
-        'walletAddressKeyService'
-      )
-      const key = await walletAddressKeyService.revoke(args.input.id)
-      if (!key) {
-        return {
-          code: '404',
-          success: false,
-          message: 'Wallet address key not found'
-        }
-      }
-
+export const revokeWalletAddressKey: NonNullable<
+  MutationResolvers<ApolloContext>['revokeWalletAddressKey']
+> = async (
+  parent,
+  args,
+  ctx
+): Promise<ResolversTypes['RevokeWalletAddressKeyMutationResponse']> => {
+  try {
+    const walletAddressKeyService = await ctx.container.use(
+      'walletAddressKeyService'
+    )
+    const key = await walletAddressKeyService.revoke(args.input.id)
+    if (!key) {
       return {
-        code: '200',
-        success: true,
-        message: 'Wallet address key revoked',
-        walletAddressKey: walletAddressKeyToGraphql(key)
-      }
-    } catch (err) {
-      ctx.logger.error(
-        {
-          options: args.input.id,
-          err
-        },
-        'error revoking wallet address key'
-      )
-
-      return {
-        code: '500',
-        message: 'Error trying to revoke wallet address key',
-        success: false
+        code: '404',
+        success: false,
+        message: 'Wallet address key not found'
       }
     }
-  }
 
-export const createWalletAddressKey: MutationResolvers<ApolloContext>['createWalletAddressKey'] =
-  async (
-    parent,
-    args,
-    ctx
-  ): Promise<ResolversTypes['CreateWalletAddressKeyMutationResponse']> => {
-    try {
-      const walletAddressKeyService = await ctx.container.use(
-        'walletAddressKeyService'
-      )
+    return {
+      code: '200',
+      success: true,
+      message: 'Wallet address key revoked',
+      walletAddressKey: walletAddressKeyToGraphql(key)
+    }
+  } catch (err) {
+    ctx.logger.error(
+      {
+        options: args.input.id,
+        err
+      },
+      'error revoking wallet address key'
+    )
 
-      const key = await walletAddressKeyService.create(args.input)
-
-      return {
-        code: '200',
-        success: true,
-        message: 'Added Key To Wallet Address',
-        walletAddressKey: walletAddressKeyToGraphql(key)
-      }
-    } catch (err) {
-      ctx.logger.error(
-        {
-          options: args.input,
-          err
-        },
-        'error creating wallet address key'
-      )
-
-      return {
-        code: '500',
-        message: 'Error trying to create wallet address key',
-        success: false
-      }
+    return {
+      code: '500',
+      message: 'Error trying to revoke wallet address key',
+      success: false
     }
   }
+}
+
+export const createWalletAddressKey: NonNullable<
+  MutationResolvers<ApolloContext>['createWalletAddressKey']
+> = async (
+  parent,
+  args,
+  ctx
+): Promise<ResolversTypes['CreateWalletAddressKeyMutationResponse']> => {
+  try {
+    const walletAddressKeyService = await ctx.container.use(
+      'walletAddressKeyService'
+    )
+
+    const key = await walletAddressKeyService.create(args.input)
+
+    return {
+      code: '200',
+      success: true,
+      message: 'Added Key To Wallet Address',
+      walletAddressKey: walletAddressKeyToGraphql(key)
+    }
+  } catch (err) {
+    ctx.logger.error(
+      {
+        options: args.input,
+        err
+      },
+      'error creating wallet address key'
+    )
+
+    return {
+      code: '500',
+      message: 'Error trying to create wallet address key',
+      success: false
+    }
+  }
+}
 
 export const walletAddressKeyToGraphql = (
   walletAddressKey: WalletAddressKey

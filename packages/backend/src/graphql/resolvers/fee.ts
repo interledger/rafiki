@@ -7,11 +7,9 @@ import { ApolloContext } from '../../app'
 import { isFeeError, errorToCode, errorToMessage } from '../../fee/errors'
 import { Fee } from '../../fee/model'
 
-export const setFee: MutationResolvers<ApolloContext>['setFee'] = async (
-  parent,
-  args,
-  ctx
-): Promise<ResolversTypes['SetFeeResponse']> => {
+export const setFee: NonNullable<
+  MutationResolvers<ApolloContext>['setFee']
+> = async (parent, args, ctx): Promise<ResolversTypes['SetFeeResponse']> => {
   const feeService = await ctx.container.use('feeService')
   try {
     const feeOrError = await feeService.create(args.input)

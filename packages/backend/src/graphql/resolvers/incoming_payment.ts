@@ -16,93 +16,96 @@ import { ApolloContext } from '../../app'
 import { getPageInfo } from '../../shared/pagination'
 import { Pagination, SortOrder } from '../../shared/baseModel'
 
-export const getIncomingPayment: QueryResolvers<ApolloContext>['incomingPayment'] =
-  async (parent, args, ctx): Promise<ResolversTypes['IncomingPayment']> => {
-    const incomingPaymentService = await ctx.container.use(
-      'incomingPaymentService'
-    )
-    const payment = await incomingPaymentService.get({
-      id: args.id
-    })
-    if (!payment) throw new Error('payment does not exist')
-    return paymentToGraphql(payment)
-  }
+export const getIncomingPayment: NonNullable<
+  QueryResolvers<ApolloContext>['incomingPayment']
+> = async (parent, args, ctx): Promise<ResolversTypes['IncomingPayment']> => {
+  const incomingPaymentService = await ctx.container.use(
+    'incomingPaymentService'
+  )
+  const payment = await incomingPaymentService.get({
+    id: args.id
+  })
+  if (!payment) throw new Error('payment does not exist')
+  return paymentToGraphql(payment)
+}
 
-export const getWalletAddressIncomingPayments: WalletAddressResolvers<ApolloContext>['incomingPayments'] =
-  async (
-    parent,
-    args,
-    ctx
-  ): Promise<ResolversTypes['IncomingPaymentConnection']> => {
-    if (!parent.id) throw new Error('missing wallet address id')
-    const incomingPaymentService = await ctx.container.use(
-      'incomingPaymentService'
-    )
-    const { sortOrder, ...pagination } = args
-    const order = sortOrder === 'ASC' ? SortOrder.Asc : SortOrder.Desc
-    const incomingPayments = await incomingPaymentService.getWalletAddressPage({
-      walletAddressId: parent.id,
-      pagination,
-      sortOrder: order
-    })
-    const pageInfo = await getPageInfo(
-      (pagination: Pagination, sortOrder?: SortOrder) =>
-        incomingPaymentService.getWalletAddressPage({
-          walletAddressId: parent.id as string,
-          pagination,
-          sortOrder
-        }),
-      incomingPayments,
-      order
-    )
+export const getWalletAddressIncomingPayments: NonNullable<
+  WalletAddressResolvers<ApolloContext>['incomingPayments']
+> = async (
+  parent,
+  args,
+  ctx
+): Promise<ResolversTypes['IncomingPaymentConnection']> => {
+  if (!parent.id) throw new Error('missing wallet address id')
+  const incomingPaymentService = await ctx.container.use(
+    'incomingPaymentService'
+  )
+  const { sortOrder, ...pagination } = args
+  const order = sortOrder === 'ASC' ? SortOrder.Asc : SortOrder.Desc
+  const incomingPayments = await incomingPaymentService.getWalletAddressPage({
+    walletAddressId: parent.id,
+    pagination,
+    sortOrder: order
+  })
+  const pageInfo = await getPageInfo(
+    (pagination: Pagination, sortOrder?: SortOrder) =>
+      incomingPaymentService.getWalletAddressPage({
+        walletAddressId: parent.id as string,
+        pagination,
+        sortOrder
+      }),
+    incomingPayments,
+    order
+  )
 
-    return {
-      pageInfo,
-      edges: incomingPayments.map((incomingPayment: IncomingPayment) => {
-        return {
-          cursor: incomingPayment.id,
-          node: paymentToGraphql(incomingPayment)
-        }
-      })
-    }
+  return {
+    pageInfo,
+    edges: incomingPayments.map((incomingPayment: IncomingPayment) => {
+      return {
+        cursor: incomingPayment.id,
+        node: paymentToGraphql(incomingPayment)
+      }
+    })
   }
-export const createIncomingPayment: MutationResolvers<ApolloContext>['createIncomingPayment'] =
-  async (
-    parent,
-    args,
-    ctx
-  ): Promise<ResolversTypes['IncomingPaymentResponse']> => {
-    const incomingPaymentService = await ctx.container.use(
-      'incomingPaymentService'
+}
+export const createIncomingPayment: NonNullable<
+  MutationResolvers<ApolloContext>['createIncomingPayment']
+> = async (
+  parent,
+  args,
+  ctx
+): Promise<ResolversTypes['IncomingPaymentResponse']> => {
+  const incomingPaymentService = await ctx.container.use(
+    'incomingPaymentService'
+  )
+  return incomingPaymentService
+    .create({
+      walletAddressId: args.input.walletAddressId,
+      expiresAt: !args.input.expiresAt
+        ? undefined
+        : new Date(args.input.expiresAt),
+      incomingAmount: args.input.incomingAmount,
+      metadata: args.input.metadata
+    })
+    .then((paymentOrErr: IncomingPayment | IncomingPaymentError) =>
+      isIncomingPaymentError(paymentOrErr)
+        ? {
+            code: errorToCode[paymentOrErr].toString(),
+            success: false,
+            message: errorToMessage[paymentOrErr]
+          }
+        : {
+            code: '200',
+            success: true,
+            payment: paymentToGraphql(paymentOrErr)
+          }
     )
-    return incomingPaymentService
-      .create({
-        walletAddressId: args.input.walletAddressId,
-        expiresAt: !args.input.expiresAt
-          ? undefined
-          : new Date(args.input.expiresAt),
-        incomingAmount: args.input.incomingAmount,
-        metadata: args.input.metadata
-      })
-      .then((paymentOrErr: IncomingPayment | IncomingPaymentError) =>
-        isIncomingPaymentError(paymentOrErr)
-          ? {
-              code: errorToCode[paymentOrErr].toString(),
-              success: false,
-              message: errorToMessage[paymentOrErr]
-            }
-          : {
-              code: '200',
-              success: true,
-              payment: paymentToGraphql(paymentOrErr)
-            }
-      )
-      .catch(() => ({
-        code: '500',
-        success: false,
-        message: 'Error trying to create incoming payment'
-      }))
-  }
+    .catch(() => ({
+      code: '500',
+      success: false,
+      message: 'Error trying to create incoming payment'
+    }))
+}
 
 export function paymentToGraphql(
   payment: IncomingPayment
