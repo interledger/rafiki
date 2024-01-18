@@ -235,7 +235,8 @@ describe('Peer Service', (): void => {
         const updateOptions: UpdateOptions = {
           id: peer.id,
           http,
-          staticIlpAddress
+          staticIlpAddress,
+          liquidityThreshold: liquidityThreshold ?? null
         }
 
         if (maxPacketAmount !== undefined) {
@@ -244,10 +245,6 @@ describe('Peer Service', (): void => {
 
         if (name !== undefined) {
           updateOptions.name = name
-        }
-
-        if (liquidityThreshold !== undefined) {
-          updateOptions.liquidityThreshold = liquidityThreshold
         }
 
         const peerOrError = await peerService.update(updateOptions)

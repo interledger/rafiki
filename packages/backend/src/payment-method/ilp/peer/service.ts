@@ -1,4 +1,4 @@
-import {
+import Objection, {
   ForeignKeyViolationError,
   UniqueViolationError,
   NotFoundError,
@@ -131,15 +131,25 @@ async function createPeer(
 
   try {
     return await Peer.transaction(deps.knex, async (trx) => {
+      const peerInsert: Objection.PartialModelObject<Peer> = {
+        assetId: options.assetId,
+        http: options.http,
+        staticIlpAddress: options.staticIlpAddress,
+        liquidityThreshold: options.liquidityThreshold ?? null
+      }
+
+      const { name, maxPacketAmount } = options
+
+      if (name !== undefined) {
+        peerInsert.name = name
+      }
+
+      if (maxPacketAmount) {
+        peerInsert.maxPacketAmount = maxPacketAmount
+      }
+
       const peer = await Peer.query(trx)
-        .insertAndFetch({
-          assetId: options.assetId,
-          http: options.http,
-          maxPacketAmount: options.maxPacketAmount,
-          staticIlpAddress: options.staticIlpAddress,
-          name: options.name,
-          liquidityThreshold: options.liquidityThreshold
-        })
+        .insertAndFetch(peerInsert)
         .withGraphFetched('asset')
 
       if (options.http?.incoming) {
