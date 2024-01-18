@@ -6,10 +6,11 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
-  useCatch,
-  useLoaderData
+  useLoaderData,
+  useRouteError,
+  isRouteErrorResponse
 } from '@remix-run/react'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, ReactNode } from 'react'
 import logo from '../public/logo.svg'
 import { XCircle } from './components/icons'
 import { Sidebar } from './components/Sidebar'
@@ -95,81 +96,74 @@ export default function App() {
   )
 }
 
-export function ErrorBoundary({ error }: { error: Error }) {
-  return (
-    <html
-      lang='en'
-      className='h-full bg-polkadot bg-cover bg-no-repeat bg-center bg-fixed'
-    >
-      <head>
-        <Meta />
-        <Links />
-      </head>
-      <body className='h-full text-tealish'>
-        <div className='min-h-full'>
-          <Sidebar />
-          <div className='flex pt-20 md:pt-0 md:pl-60 flex-1 flex-col'>
-            <main className='grid min-h-screen place-items-center'>
-              <div className='flex items-center justify-center flex-col bg-offwhite p-10 rounded-md shadow-md space-y-5'>
-                <div className='grid place-items-center'>
-                  <XCircle className='w-10 h-10 text-red-500' />
-                  <p className='text-lg font-semibold'>
-                    There was an issue with your request.
-                  </p>
-                </div>
-                <div>
-                  <span className='font-light'>Cause:</span>{' '}
-                  <span>{error.message}</span>
-                </div>
-                <Button to='/' aria-label='go to homepage'>
-                  Go to homepage
-                </Button>
-              </div>
-            </main>
-          </div>
-        </div>
-        <ScrollRestoration />
-        <Scripts />
-        <LiveReload />
-      </body>
-    </html>
-  )
-}
+export function ErrorBoundary() {
+  const error = useRouteError()
 
-export function CatchBoundary() {
-  const caughtResponse = useCatch()
+  const ErrorPage = ({ children }: { children: ReactNode }) => {
+    return (
+      <html
+        lang='en'
+        className='h-full bg-polkadot bg-cover bg-no-repeat bg-center bg-fixed'
+      >
+        <head>
+          <Meta />
+          <Links />
+        </head>
+        <body className='h-full text-tealish'>
+          <div className='min-h-full'>
+            <Sidebar />
+            <div className='flex pt-20 md:pt-0 md:pl-60 flex-1 flex-col'>
+              <main className='grid min-h-screen place-items-center'>
+                {children}
+              </main>
+            </div>
+          </div>
+          <ScrollRestoration />
+          <Scripts />
+          <LiveReload />
+        </body>
+      </html>
+    )
+  }
+
+  if (isRouteErrorResponse(error)) {
+    return (
+      <ErrorPage>
+        <div className='flex items-center justify-center flex-col bg-offwhite p-10 rounded-md shadow-md space-y-2'>
+          <h4 className='font-semibold text-xl -tracking-widest text-[#F37F64]'>
+            {error.status}
+          </h4>
+          <h2 className='text-xl'>{error.statusText}</h2>
+          <Button to='/' aria-label='go to homepage'>
+            Go to homepage
+          </Button>
+        </div>
+      </ErrorPage>
+    )
+  }
+
+  let errorMessage = 'Unknown error'
+  if (error instanceof Error) {
+    errorMessage = error.message
+  }
 
   return (
-    <html
-      lang='en'
-      className='h-full bg-polkadot bg-cover bg-no-repeat bg-center bg-fixed'
-    >
-      <head>
-        <Meta />
-        <Links />
-      </head>
-      <body className='h-full text-tealish'>
-        <div className='min-h-full'>
-          <Sidebar />
-          <div className='flex pt-20 md:pt-0 md:pl-60 flex-1 flex-col'>
-            <main className='grid min-h-screen place-items-center'>
-              <div className='flex items-center justify-center flex-col bg-offwhite p-10 rounded-md shadow-md space-y-2'>
-                <h4 className='font-semibold text-xl -tracking-widest text-[#F37F64]'>
-                  {caughtResponse.status}
-                </h4>
-                <h2 className='text-xl'>{caughtResponse.statusText}</h2>
-                <Button to='/' aria-label='go to homepage'>
-                  Go to homepage
-                </Button>
-              </div>
-            </main>
-          </div>
+    <ErrorPage>
+      <div className='flex items-center justify-center flex-col bg-offwhite p-10 rounded-md shadow-md space-y-5'>
+        <div className='grid place-items-center'>
+          <XCircle className='w-10 h-10 text-red-500' />
+          <p className='text-lg font-semibold'>
+            There was an issue with your request.
+          </p>
         </div>
-        <ScrollRestoration />
-        <Scripts />
-        <LiveReload />
-      </body>
-    </html>
+        <div>
+          <span className='font-light'>Cause:</span> <span>{errorMessage}</span>
+        </div>
+        <Button to='/' aria-label='go to homepage'>
+          Go to homepage
+        </Button>
+      </div>
+    </ErrorPage>
   )
 }
 
