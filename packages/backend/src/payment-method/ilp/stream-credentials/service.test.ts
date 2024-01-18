@@ -11,7 +11,6 @@ import { createWalletAddress } from '../../../tests/walletAddress'
 import { truncateTables } from '../../../tests/tableManager'
 import assert from 'assert'
 import { IncomingPaymentState } from '../../../graphql/generated/graphql'
-import Objection from 'objection'
 
 describe('Stream Credentials Service', (): void => {
   let deps: IocContract<AppServices>
@@ -59,7 +58,7 @@ describe('Stream Credentials Service', (): void => {
     `(
       `returns undefined for $state incoming payment`,
       async ({ state }: { state: IncomingPaymentState }): Promise<void> => {
-        let paymentPatch: Partial<IncomingPayment> = {
+        const paymentPatch: Partial<IncomingPayment> = {
           state
         }
 

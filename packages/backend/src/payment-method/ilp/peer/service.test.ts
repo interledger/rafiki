@@ -232,7 +232,7 @@ describe('Peer Service', (): void => {
         const peer = await createPeer(deps)
         const { http, maxPacketAmount, staticIlpAddress, name } = randomPeer()
 
-        let updateOptions: UpdateOptions = {
+        const updateOptions: UpdateOptions = {
           id: peer.id,
           http,
           staticIlpAddress

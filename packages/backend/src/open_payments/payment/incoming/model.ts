@@ -211,7 +211,7 @@ export class IncomingPayment
   public toOpenPaymentsType(
     walletAddress: WalletAddress
   ): OpenPaymentsIncomingPayment {
-    let openPaymentsIncomingPayment: OpenPaymentsIncomingPayment = {
+    const openPaymentsIncomingPayment: OpenPaymentsIncomingPayment = {
       id: this.getUrl(walletAddress),
       walletAddress: walletAddress.url,
       receivedAmount: serializeAmount(this.receivedAmount),
