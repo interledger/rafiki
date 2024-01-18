@@ -211,19 +211,27 @@ export class IncomingPayment
   public toOpenPaymentsType(
     walletAddress: WalletAddress
   ): OpenPaymentsIncomingPayment {
-    return {
+    let openPaymentsIncomingPayment: OpenPaymentsIncomingPayment = {
       id: this.getUrl(walletAddress),
       walletAddress: walletAddress.url,
-      incomingAmount: this.incomingAmount
-        ? serializeAmount(this.incomingAmount)
-        : undefined,
       receivedAmount: serializeAmount(this.receivedAmount),
       completed: this.completed,
-      metadata: this.metadata ?? undefined,
       createdAt: this.createdAt.toISOString(),
       updatedAt: this.updatedAt.toISOString(),
       expiresAt: this.expiresAt.toISOString()
     }
+
+    if (this.incomingAmount) {
+      openPaymentsIncomingPayment.incomingAmount = serializeAmount(
+        this.incomingAmount
+      )
+    }
+
+    if (this.metadata) {
+      openPaymentsIncomingPayment.metadata = this.metadata
+    }
+
+    return openPaymentsIncomingPayment
   }
 
   public toOpenPaymentsTypeWithMethods(

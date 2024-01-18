@@ -231,13 +231,23 @@ describe('Peer Service', (): void => {
       async ({ liquidityThreshold }): Promise<void> => {
         const peer = await createPeer(deps)
         const { http, maxPacketAmount, staticIlpAddress, name } = randomPeer()
-        const updateOptions: UpdateOptions = {
+
+        let updateOptions: UpdateOptions = {
           id: peer.id,
           http,
-          maxPacketAmount,
-          staticIlpAddress,
-          name,
-          liquidityThreshold
+          staticIlpAddress
+        }
+
+        if (maxPacketAmount !== undefined) {
+          updateOptions.maxPacketAmount = maxPacketAmount
+        }
+
+        if (name !== undefined) {
+          updateOptions.name = name
+        }
+
+        if (liquidityThreshold !== undefined) {
+          updateOptions.liquidityThreshold = liquidityThreshold
         }
 
         const peerOrError = await peerService.update(updateOptions)
