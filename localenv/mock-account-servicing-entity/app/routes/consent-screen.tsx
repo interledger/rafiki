@@ -278,8 +278,9 @@ export default function ConsentScreen() {
             })
           } else {
             const outgoingPaymentAccess =
-              response.payload.find((p) => p.type === 'outgoing-payment') ||
-              null
+              response.payload.find(
+                (p: Record<string, any>) => p.type === 'outgoing-payment'
+              ) || null
             const returnUrlObject = new URL(ctx.returnUrl)
             returnUrlObject.searchParams.append(
               'grantId',

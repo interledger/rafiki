@@ -31,8 +31,7 @@ export type Quote = {
 
 export async function action({ request }: ActionFunctionArgs) {
   const receivedQuote: Quote = await request.json()
-
-  const fee = CONFIG.seed.sendingFee
+  const fee = CONFIG.seed.fees[0]
   const supportedAssets = CONFIG.seed.assets.map(({ code }) => code)
 
   if (receivedQuote.paymentType == PaymentType.FixedDelivery) {
@@ -43,7 +42,7 @@ export async function action({ request }: ActionFunctionArgs) {
     const sendAmountValue = BigInt(receivedQuote.debitAmount.value)
     const fees =
       // TODO: bigint/float multiplication
-      BigInt(Math.floor(Number(sendAmountValue) * fee.percentage)) +
+      BigInt(Math.floor(Number(sendAmountValue) * fee.basisPoints)) +
       BigInt(fee.fixed * Math.pow(10, receivedQuote.debitAmount.assetScale))
 
     receivedQuote.debitAmount.value = (sendAmountValue + fees).toString()
@@ -53,7 +52,7 @@ export async function action({ request }: ActionFunctionArgs) {
     }
     const receiveAmountValue = BigInt(receivedQuote.receiveAmount.value)
     const fees =
-      BigInt(Math.floor(Number(receiveAmountValue) * fee.percentage)) +
+      BigInt(Math.floor(Number(receiveAmountValue) * fee.basisPoints)) +
       BigInt(fee.fixed * Math.pow(10, receivedQuote.receiveAmount.assetScale))
 
     if (receiveAmountValue <= fees) {
