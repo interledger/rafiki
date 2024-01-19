@@ -18,6 +18,7 @@ module.exports = {
   ],
   serverModuleFormat: 'cjs',
   future: {
-    v2_routeConvention: true
+    v2_routeConvention: true,
+    v2_dev: true
   }
 }
