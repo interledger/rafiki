@@ -1,4 +1,4 @@
-import type { ActionArgs } from '@remix-run/node'
+import type { ActionFunctionArgs } from '@remix-run/node'
 import { json } from '@remix-run/node'
 
 import { CONFIG } from '~/lib/parse_config.server'
@@ -29,7 +29,7 @@ export type Quote = {
   expiresAt: string
 }
 
-export async function action({ request }: ActionArgs) {
+export async function action({ request }: ActionFunctionArgs) {
   const receivedQuote: Quote = await request.json()
 
   const fee = CONFIG.seed.sendingFee

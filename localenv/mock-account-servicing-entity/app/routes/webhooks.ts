@@ -1,4 +1,4 @@
-import type { ActionArgs } from '@remix-run/node'
+import type { ActionFunctionArgs } from '@remix-run/node'
 import { json } from '@remix-run/node'
 import {
   handleLowLiquidity,
@@ -16,7 +16,7 @@ export function parseError(e: unknown): string {
   return e instanceof Error && e.stack ? e.stack : String(e)
 }
 
-export async function action({ request }: ActionArgs) {
+export async function action({ request }: ActionFunctionArgs) {
   const wh: WebHook = await request.json()
   console.log('received webhook: ', JSON.stringify(wh))
 

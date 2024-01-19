@@ -1,8 +1,7 @@
-import type { LoaderArgs } from '@remix-run/node'
-import { Response } from '@remix-run/node'
+import type { LoaderFunctionArgs } from '@remix-run/node'
 import { parseQueryString } from '~/lib/utils'
 
-export function loader({ request }: LoaderArgs) {
+export function loader({ request }: LoaderFunctionArgs) {
   const url = new URL(request.url)
   return new Response(
     JSON.stringify({
