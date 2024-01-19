@@ -1,4 +1,5 @@
-import { json, V2_MetaFunction, type LoaderArgs } from '@remix-run/node'
+import type { V2_MetaFunction } from '@remix-run/node'
+import { json, type LoaderArgs } from '@remix-run/node'
 import {
   Links,
   LiveReload,
@@ -10,7 +11,8 @@ import {
   useRouteError,
   isRouteErrorResponse
 } from '@remix-run/react'
-import { useEffect, useState, ReactNode } from 'react'
+import type { ReactNode } from 'react'
+import { useEffect, useState } from 'react'
 import logo from '../public/logo.svg'
 import { XCircle } from './components/icons'
 import { Sidebar } from './components/Sidebar'
