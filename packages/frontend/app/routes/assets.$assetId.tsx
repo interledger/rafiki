@@ -1,4 +1,8 @@
-import { json, type ActionArgs, type LoaderArgs } from '@remix-run/node'
+import {
+  json,
+  type ActionFunctionArgs,
+  type LoaderFunctionArgs
+} from '@remix-run/node'
 import {
   Form,
   Outlet,
@@ -18,7 +22,7 @@ import { updateAssetSchema, setAssetFeeSchema } from '~/lib/validate.server'
 import type { ZodFieldErrors } from '~/shared/types'
 import { formatAmount } from '~/shared/utils'
 
-export async function loader({ params }: LoaderArgs) {
+export async function loader({ params }: LoaderFunctionArgs) {
   const assetId = params.assetId
 
   const result = z.string().uuid().safeParse(assetId)
@@ -200,7 +204,7 @@ export default function ViewAssetPage() {
   )
 }
 
-export async function action({ request }: ActionArgs) {
+export async function action({ request }: ActionFunctionArgs) {
   const actionResponse: {
     errors: {
       general: {

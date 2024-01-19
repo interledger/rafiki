@@ -1,4 +1,4 @@
-import { json, type LoaderArgs } from '@remix-run/node'
+import { json, type LoaderFunctionArgs } from '@remix-run/node'
 import {
   Outlet,
   useLoaderData,
@@ -12,7 +12,7 @@ import { listWebhooks } from '~/lib/api/webhook.server'
 import { webhooksSearchParams } from '~/lib/validate.server'
 import { WebhookEventType } from '~/shared/enums'
 
-export const loader = async ({ request }: LoaderArgs) => {
+export const loader = async ({ request }: LoaderFunctionArgs) => {
   const url = new URL(request.url)
   const searchParams = Object.fromEntries(url.searchParams.entries())
   const result = webhooksSearchParams.safeParse(

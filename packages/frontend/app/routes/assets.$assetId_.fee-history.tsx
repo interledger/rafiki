@@ -1,11 +1,11 @@
-import { json, type LoaderArgs } from '@remix-run/node'
+import { json, type LoaderFunctionArgs } from '@remix-run/node'
 import { paginationSchema } from '~/lib/validate.server'
 import { getAssetWithFees } from '~/lib/api/asset.server'
 import { useLoaderData, useNavigate } from '@remix-run/react'
 import { PageHeader } from '~/components'
 import { Button, Table } from '~/components/ui'
 
-export const loader = async ({ request, params }: LoaderArgs) => {
+export const loader = async ({ request, params }: LoaderFunctionArgs) => {
   const assetId = params.assetId
   if (!assetId) {
     throw json(null, { status: 404, statusText: 'Asset not found.' })

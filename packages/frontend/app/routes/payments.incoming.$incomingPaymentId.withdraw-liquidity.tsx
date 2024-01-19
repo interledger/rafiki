@@ -1,4 +1,4 @@
-import { type ActionArgs } from '@remix-run/node'
+import { type ActionFunctionArgs } from '@remix-run/node'
 import { useNavigate, useOutletContext } from '@remix-run/react'
 import { v4 } from 'uuid'
 import { LiquidityConfirmDialog } from '~/components/LiquidityConfirmDialog'
@@ -20,7 +20,7 @@ export default function IncomingPaymentWithdrawLiquidity() {
   )
 }
 
-export async function action({ request, params }: ActionArgs) {
+export async function action({ request, params }: ActionFunctionArgs) {
   const session = await messageStorage.getSession(request.headers.get('cookie'))
   const incomingPaymentId = params.incomingPaymentId
 

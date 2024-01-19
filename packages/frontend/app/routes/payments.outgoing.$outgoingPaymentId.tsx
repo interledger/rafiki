@@ -1,4 +1,4 @@
-import type { LoaderArgs } from '@remix-run/node'
+import type { LoaderFunctionArgs } from '@remix-run/node'
 import { json } from '@remix-run/node'
 import { Link, Outlet, useLoaderData } from '@remix-run/react'
 import { z } from 'zod'
@@ -17,7 +17,7 @@ export type LiquidityActionOutletContext = {
   depositLiquidityDisplayAmount: string
 }[]
 
-export async function loader({ params }: LoaderArgs) {
+export async function loader({ params }: LoaderFunctionArgs) {
   const outgoingPaymentId = params.outgoingPaymentId
 
   const result = z.string().uuid().safeParse(outgoingPaymentId)

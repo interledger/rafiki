@@ -1,4 +1,4 @@
-import { json, type LoaderArgs } from '@remix-run/node'
+import { json, type LoaderFunctionArgs } from '@remix-run/node'
 import { useLoaderData, useNavigate } from '@remix-run/react'
 import { Badge, PageHeader } from '~/components'
 import { Button, Table } from '~/components/ui'
@@ -6,7 +6,7 @@ import { listWalletAddresses } from '~/lib/api/wallet-address.server'
 import { paginationSchema } from '~/lib/validate.server'
 import { badgeColorByWalletAddressStatus } from '~/shared/utils'
 
-export const loader = async ({ request }: LoaderArgs) => {
+export const loader = async ({ request }: LoaderFunctionArgs) => {
   const url = new URL(request.url)
   const pagination = paginationSchema.safeParse(
     Object.fromEntries(url.searchParams.entries())
