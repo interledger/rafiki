@@ -15,6 +15,9 @@
     "paths": {
       "~/*": ["./app/*"]
     },
+    // TODO: remove skipLibCheck when ugprading remix to v2
+    // https://github.com/remix-run/remix/issues/4371
+    "skipLibCheck": true,
 
     // Remix takes care of building everything in `remix build`.
     "noEmit": true
