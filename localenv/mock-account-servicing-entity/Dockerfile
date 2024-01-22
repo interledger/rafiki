@@ -59,4 +59,5 @@ COPY --from=builder /home/rafiki/localenv/mock-account-servicing-entity/build ./
 COPY --from=builder /home/rafiki/localenv/mock-account-servicing-entity/public ./localenv/mock-account-servicing-entity/public
 
 WORKDIR /home/rafiki/localenv/mock-account-servicing-entity
-CMD ["sh", "./node_modules/.bin/remix-serve", "build"]
+
+CMD ["sh", "-c", "NODE_ENV=production ./node_modules/.bin/remix-serve ./build/index.js"]

@@ -7,7 +7,7 @@
     "dev": "PORT=3005 remix dev",
     "lint:fix": "eslint --fix app/",
     "lint:check": "eslint app/",
-    "start": "remix-serve build",
+    "start": "remix-serve ./build/index.js",
     "typecheck": "tsc"
   },
   "dependencies": {
