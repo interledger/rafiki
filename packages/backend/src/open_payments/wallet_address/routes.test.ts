@@ -21,9 +21,7 @@ describe('Wallet Address Routes', (): void => {
     config.authServerGrantUrl = 'https://auth.wallet.example/authorize'
     deps = await initIocContainer(config)
     appContainer = await createTestApp(deps)
-    const { walletAddressServerSpec } = await deps.use(
-      'walletAddressServerOpenApi'
-    )
+    const { walletAddressServerSpec } = await deps.use('openApi')
     jestOpenAPI(walletAddressServerSpec)
   })
 

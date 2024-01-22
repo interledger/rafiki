@@ -40,7 +40,7 @@ describe('Incoming Payment Routes', (): void => {
     config = Config
     deps = await initIocContainer(config)
     appContainer = await createTestApp(deps)
-    const { resourceServerSpec } = await deps.use('resourceServerOpenApi')
+    const { resourceServerSpec } = await deps.use('openApi')
     jestOpenAPI(resourceServerSpec)
   })
 

@@ -370,12 +370,8 @@ export class App {
       'outgoingPaymentRoutes'
     )
     const quoteRoutes = await this.container.use('quoteRoutes')
-    const { resourceServerSpec } = await this.container.use(
-      'resourceServerOpenApi'
-    )
-    const { walletAddressServerSpec } = await this.container.use(
-      'walletAddressServerOpenApi'
-    )
+    const { resourceServerSpec, walletAddressServerSpec } =
+      await this.container.use('openApi')
 
     // POST /incoming-payments
     // Create incoming payment

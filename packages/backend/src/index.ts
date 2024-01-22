@@ -127,19 +127,15 @@ export function initIocContainer(
       replica_addresses: config.tigerbeetleReplicaAddresses
     })
   })
-  container.singleton('resourceServerOpenApi', async () => {
+  container.singleton('openApi', async () => {
     const resourceServerSpec = await createOpenAPI(
       path.resolve(__dirname, './openapi/resource-server.yaml')
     )
-    return {
-      resourceServerSpec
-    }
-  })
-  container.singleton('walletAddressServerOpenApi', async () => {
     const walletAddressServerSpec = await createOpenAPI(
       path.resolve(__dirname, './openapi/wallet-address-server.yaml')
     )
     return {
+      resourceServerSpec,
       walletAddressServerSpec
     }
   })
