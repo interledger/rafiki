@@ -279,6 +279,7 @@ export default function ConsentScreen() {
           } else {
             const outgoingPaymentAccess =
               response.payload.find(
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 (p: Record<string, any>) => p.type === 'outgoing-payment'
               ) || null
             const returnUrlObject = new URL(ctx.returnUrl)
