@@ -35,12 +35,13 @@ function handleBotRequest(
   remixContext: EntryContext
 ) {
   return new Promise((resolve, reject) => {
-    let didError = false
+    let shellRendered = false
 
     const { pipe, abort } = renderToPipeableStream(
       <RemixServer context={remixContext} url={request.url} />,
       {
         onAllReady() {
+          shellRendered = true
           const body = new PassThrough()
           const stream = createReadableStreamFromReadable(body)
 
@@ -49,7 +50,7 @@ function handleBotRequest(
           resolve(
             new Response(stream, {
               headers: responseHeaders,
-              status: didError ? 500 : responseStatusCode
+              status: responseStatusCode
             })
           )
 
@@ -59,9 +60,13 @@ function handleBotRequest(
           reject(error)
         },
         onError(error: unknown) {
-          didError = true
-
-          console.error(error)
+          responseStatusCode = 500
+          // Log streaming rendering errors from inside the shell.  Don't log
+          // errors encountered during initial shell rendering since they'll
+          // reject and get logged in handleDocumentRequest.
+          if (shellRendered) {
+            console.error(error)
+          }
         }
       }
     )
@@ -77,12 +82,13 @@ function handleBrowserRequest(
   remixContext: EntryContext
 ) {
   return new Promise((resolve, reject) => {
-    let didError = false
+    let shellRendered = false
 
     const { pipe, abort } = renderToPipeableStream(
       <RemixServer context={remixContext} url={request.url} />,
       {
         onShellReady() {
+          shellRendered = true
           const body = new PassThrough()
           const stream = createReadableStreamFromReadable(body)
 
@@ -91,7 +97,7 @@ function handleBrowserRequest(
           resolve(
             new Response(stream, {
               headers: responseHeaders,
-              status: didError ? 500 : responseStatusCode
+              status: responseStatusCode
             })
           )
 
@@ -101,9 +107,13 @@ function handleBrowserRequest(
           reject(err)
         },
         onError(error: unknown) {
-          didError = true
-
-          console.error(error)
+          responseStatusCode = 500
+          // Log streaming rendering errors from inside the shell.  Don't log
+          // errors encountered during initial shell rendering since they'll
+          // reject and get logged in handleDocumentRequest.
+          if (shellRendered) {
+            console.error(error)
+          }
         }
       }
     )
