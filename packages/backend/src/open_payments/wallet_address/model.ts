@@ -96,16 +96,19 @@ export class WalletAddress
   }
 
   public toOpenPaymentsType({
-    authServer
+    authServer,
+    resourceServer
   }: {
     authServer: string
+    resourceServer: string
   }): OpenPaymentsWalletAddress {
     return {
       id: this.url,
       publicName: this.publicName,
       assetCode: this.asset.code,
       assetScale: this.asset.scale,
-      authServer
+      authServer,
+      resourceServer
     }
   }
 }

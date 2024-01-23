@@ -131,8 +131,12 @@ export function initIocContainer(
     const resourceServerSpec = await createOpenAPI(
       path.resolve(__dirname, './openapi/resource-server.yaml')
     )
+    const walletAddressServerSpec = await createOpenAPI(
+      path.resolve(__dirname, './openapi/wallet-address-server.yaml')
+    )
     return {
-      resourceServerSpec
+      resourceServerSpec,
+      walletAddressServerSpec
     }
   })
   container.singleton('openPaymentsClient', async (deps) => {
@@ -273,7 +277,8 @@ export function initIocContainer(
   container.singleton('walletAddressRoutes', async (deps) => {
     const config = await deps.use('config')
     return createWalletAddressRoutes({
-      authServer: config.authServerGrantUrl
+      authServer: config.authServerGrantUrl,
+      resourceServer: config.openPaymentsUrl
     })
   })
   container.singleton('walletAddressKeyRoutes', async (deps) => {

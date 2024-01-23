@@ -24,12 +24,12 @@ export const getCombinedPayments: QueryResolvers<ApolloContext>['payments'] =
       })
 
     const payments = await getPageFn(pagination, order)
-    const pageInfo = await getPageInfo(
-      (pagination_: Pagination, sortOrder_?: SortOrder) =>
+    const pageInfo = await getPageInfo({
+      getPage: (pagination_: Pagination, sortOrder_?: SortOrder) =>
         getPageFn(pagination_, sortOrder_),
-      payments,
-      order
-    )
+      page: payments,
+      sortOrder: order
+    })
 
     return {
       pageInfo,

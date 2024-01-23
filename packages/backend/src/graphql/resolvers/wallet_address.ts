@@ -30,12 +30,12 @@ export const getWalletAddresses: QueryResolvers<ApolloContext>['walletAddresses'
       pagination,
       order
     )
-    const pageInfo = await getPageInfo(
-      (pagination: Pagination, sortOrder?: SortOrder) =>
+    const pageInfo = await getPageInfo({
+      getPage: (pagination: Pagination, sortOrder?: SortOrder) =>
         walletAddressService.getPage(pagination, sortOrder),
-      walletAddresses,
-      order
-    )
+      page: walletAddresses,
+      sortOrder: order
+    })
     return {
       pageInfo,
       edges: walletAddresses.map((walletAddress: WalletAddress) => ({

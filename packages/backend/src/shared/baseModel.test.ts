@@ -109,11 +109,11 @@ export const getPageTests = <Type extends BaseModel>({
         }
 
         const page = await getPage(pagination, sortOrder)
-        const pageInfo = await getPageInfo(
-          (pagination, sortOrder) => getPage(pagination, sortOrder),
+        const pageInfo = await getPageInfo({
+          getPage: (pagination, sortOrder) => getPage(pagination, sortOrder),
           page,
           sortOrder
-        )
+        })
         expect(pageInfo).toEqual({
           startCursor: modelsCreated[start].id,
           endCursor: modelsCreated[end].id,

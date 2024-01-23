@@ -74,16 +74,16 @@ export const getWalletAddressQuotes: WalletAddressResolvers<ApolloContext>['quot
       pagination,
       sortOrder: order
     })
-    const pageInfo = await getPageInfo(
-      (pagination: Pagination, sortOrder?: SortOrder) =>
+    const pageInfo = await getPageInfo({
+      getPage: (pagination: Pagination, sortOrder?: SortOrder) =>
         quoteService.getWalletAddressPage({
           walletAddressId: parent.id as string,
           pagination,
           sortOrder
         }),
-      quotes,
-      order
-    )
+      page: quotes,
+      sortOrder: order
+    })
     return {
       pageInfo,
       edges: quotes.map((quote: Quote) => ({

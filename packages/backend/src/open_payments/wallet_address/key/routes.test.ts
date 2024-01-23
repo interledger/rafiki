@@ -28,8 +28,8 @@ describe('Wallet Address Keys Routes', (): void => {
     deps = await initIocContainer(Config)
     deps.bind('messageProducer', async () => mockMessageProducer)
     appContainer = await createTestApp(deps)
-    const { resourceServerSpec } = await deps.use('openApi')
-    jestOpenAPI(resourceServerSpec)
+    const { walletAddressServerSpec } = await deps.use('openApi')
+    jestOpenAPI(walletAddressServerSpec)
     walletAddressKeyService = await deps.use('walletAddressKeyService')
   })
 
