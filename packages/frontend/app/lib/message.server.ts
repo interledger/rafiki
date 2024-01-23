@@ -19,7 +19,7 @@ export const messageStorage = createCookieSessionStorage<
     httpOnly: true,
     sameSite: 'lax',
     maxAge: ONE_MINUTE_IN_S,
-    secrets: 'MY_SUPER_SECRET_TOKEN',
+    secrets: ['MY_SUPER_SECRET_TOKEN'],
     secure: process.env.NODE_ENV === 'production'
   }
 })
