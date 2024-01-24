@@ -21,8 +21,8 @@ describe('Wallet Address Routes', (): void => {
     config.authServerGrantUrl = 'https://auth.wallet.example/authorize'
     deps = await initIocContainer(config)
     appContainer = await createTestApp(deps)
-    const { resourceServerSpec } = await deps.use('openApi')
-    jestOpenAPI(resourceServerSpec)
+    const { walletAddressServerSpec } = await deps.use('openApi')
+    jestOpenAPI(walletAddressServerSpec)
   })
 
   beforeEach(async (): Promise<void> => {
@@ -66,7 +66,8 @@ describe('Wallet Address Routes', (): void => {
         publicName: walletAddress.publicName,
         assetCode: walletAddress.asset.code,
         assetScale: walletAddress.asset.scale,
-        authServer: 'https://auth.wallet.example/authorize'
+        authServer: 'https://auth.wallet.example/authorize',
+        resourceServer: 'https://op.example'
       })
     })
   })
