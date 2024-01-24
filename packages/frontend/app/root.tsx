@@ -26,7 +26,7 @@ import { PublicEnv, type PublicEnvironment } from './PublicEnv'
 export const meta: MetaFunction = () => [
   { title: 'Rafiki Admin' },
   { charset: 'utf-8' },
-  { viewport: 'width=device-width,initial-scale=1' }
+  { name: 'viewport', content: 'width=device-width,initial-scale=1' }
 ]
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
