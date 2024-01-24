@@ -146,7 +146,8 @@ export function initIocContainer(
       logger,
       keyId: config.keyId,
       privateKey: config.privateKey,
-      walletAddressUrl: config.walletAddressUrl
+      walletAddressUrl: config.walletAddressUrl,
+      useHttp: process.env.NODE_ENV === 'development'
     })
   })
   container.singleton('tokenIntrospectionClient', async (deps) => {

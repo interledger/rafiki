@@ -134,6 +134,7 @@ export function toOpenPaymentPendingGrant(
 
 interface ToOpenPaymentsGrantArgs {
   authServerUrl: string
+  waitTimeSeconds?: number
 }
 
 export function toOpenPaymentsGrantContinuation(
@@ -146,7 +147,7 @@ export function toOpenPaymentsGrantContinuation(
         value: grant.continueToken
       },
       uri: `${args.authServerUrl}/continue/${grant.continueId}`,
-      wait: grant.wait ?? undefined
+      wait: args.waitTimeSeconds
     }
   }
 }

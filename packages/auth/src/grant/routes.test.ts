@@ -411,6 +411,11 @@ describe('Grant Routes', (): void => {
             state: InteractionState.Approved
           })
         )
+
+        const now = new Date(
+          grant.createdAt.getTime() + (config.waitTimeSeconds + 1) * 1000
+        )
+        jest.useFakeTimers({ now })
       })
 
       test('Can issue access token', async (): Promise<void> => {
@@ -504,6 +509,11 @@ describe('Grant Routes', (): void => {
           ...BASE_GRANT_ACCESS,
           grantId: grant.id
         })
+
+        const now = new Date(
+          grant.createdAt.getTime() + (config.waitTimeSeconds + 1) * 1000
+        )
+        jest.useFakeTimers({ now })
 
         const interaction = await Interaction.query().insert(
           generateBaseInteraction(grant)
@@ -725,6 +735,12 @@ describe('Grant Routes', (): void => {
             })
           )
 
+          const now = new Date(
+            polledGrant.createdAt.getTime() +
+              (config.waitTimeSeconds + 1) * 1000
+          )
+          jest.useFakeTimers({ now })
+
           const ctx = createContext<ContinueContext>(
             {
               headers: {
@@ -802,6 +818,11 @@ describe('Grant Routes', (): void => {
           })
         )
 
+        const now = new Date(
+          finalizedPolledGrant.createdAt.getTime() +
+            (config.waitTimeSeconds + 1) * 1000
+        )
+        jest.useFakeTimers({ now })
         const ctx = createContext<ContinueContext>(
           {
             headers: {

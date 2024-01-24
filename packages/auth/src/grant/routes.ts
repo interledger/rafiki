@@ -186,9 +186,8 @@ function isContinuableGrant(grant: Grant): boolean {
   return !isRejectedGrant(grant) && !isRevokedGrant(grant)
 }
 
-function isGrantStillWaiting(grant: Grant): boolean {
-  if (!grant.wait) return false
-  const grantWaitTime = grant.lastContinuedAt.getTime() + grant.wait * 1000
+function isGrantStillWaiting(grant: Grant, waitTimeSeconds: number): boolean {
+  const grantWaitTime = grant.lastContinuedAt.getTime() + waitTimeSeconds * 1000
   const currentTime = Date.now()
 
   return currentTime < grantWaitTime
@@ -212,7 +211,7 @@ async function pollGrantContinuation(
     })
   }
 
-  if (isGrantStillWaiting(grant)) {
+  if (isGrantStillWaiting(grant, config.waitTimeSeconds)) {
     ctx.throw(400, {
       error: {
         code: 'too_fast',
@@ -234,8 +233,10 @@ async function pollGrantContinuation(
     grant.state === GrantState.Processing
   ) {
     await grantService.updateLastContinuedAt(grant.id)
+    ctx.status = 200
     ctx.body = toOpenPaymentsGrantContinuation(grant, {
-      authServerUrl: config.authServerDomain
+      authServerUrl: config.authServerDomain,
+      waitTimeSeconds: config.waitTimeSeconds
     })
     return
   } else if (
@@ -252,6 +253,7 @@ async function pollGrantContinuation(
     const accessToken = await accessTokenService.create(grant.id)
     const access = await accessService.getByGrant(grant.id)
     await grantService.finalize(grant.id, GrantFinalization.Issued)
+    ctx.status = 200
     ctx.body = toOpenPaymentsGrant(
       grant,
       {
@@ -321,7 +323,7 @@ async function continueGrant(
     ctx.throw(404, {
       error: { code: 'invalid_continuation', description: 'grant not found' }
     })
-  } else if (isGrantStillWaiting(interaction.grant)) {
+  } else if (isGrantStillWaiting(interaction.grant, config.waitTimeSeconds)) {
     ctx.throw(400, {
       error: {
         code: 'too_fast',
