@@ -11,7 +11,7 @@
     "typecheck": "tsc"
   },
   "dependencies": {
-    "@apollo/client": "^3.8.9",
+    "@apollo/client": "^3.8.10",
     "@headlessui/react": "^1.7.18",
     "@remix-run/node": "^2.5.1",
     "@remix-run/react": "^2.5.1",
