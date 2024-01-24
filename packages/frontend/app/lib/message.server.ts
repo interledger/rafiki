@@ -20,7 +20,10 @@ export const messageStorage = createCookieSessionStorage<
     sameSite: 'lax',
     maxAge: ONE_MINUTE_IN_S,
     secrets: ['MY_SUPER_SECRET_TOKEN'],
-    secure: process.env.NODE_ENV === 'production'
+    secure:
+      process.env.COOKIE_SECURE === undefined
+        ? true
+        : ['true', 't', '1'].includes(process.env.COOKIE_SECURE.toLowerCase())
   }
 })
 

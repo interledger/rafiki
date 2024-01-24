@@ -57,4 +57,4 @@ COPY --from=builder /home/rafiki/packages/frontend/public ./packages/frontend/pu
 
 WORKDIR /home/rafiki/packages/frontend
 
-CMD ["sh", "-c", "NODE_ENV=production ./node_modules/.bin/remix-serve ./build/index.js"]
+CMD ["sh", "-c", "NODE_ENV=production COOKIE_SECURE=false ./node_modules/.bin/remix-serve ./build/index.js"]
