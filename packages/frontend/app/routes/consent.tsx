@@ -31,25 +31,28 @@ export const loader = async ({ request }: LoaderArgs) => {
   } else if (sessionConsentChallenge) {
     const HYDRA_ADMIN_URL = 'http://localhost:4445'
     const hydraUrl = `${HYDRA_ADMIN_URL}/oauth2/auth/requests/consent?consent_challenge=${sessionConsentChallenge}`
+
     try {
-      const response = await axios.get(hydraUrl)
-      if (response.status !== 200) {
-        throw new Error(`Hydra responded with status: ${response.status}: ${response.statusText}`)
+      const hydraGetResponse = await axios.get(hydraUrl)
+      if (hydraGetResponse.status !== 200) {
+        throw new Error(`Hydra responded with status: ${hydraGetResponse.status}: ${hydraGetResponse.statusText}`)
       }
 
       // TODO: skipping for now instead of checking, WIP
-      // if (!response.data.skip) {
-      //   return response.data
+      // if (!hydraGetResponse.data.skip) {
+      //   return hydraGetResponse.data
       // } else {
       //   await axios.put(`http://localhost:4445/oauth2/auth/requests/consent/accept?consent_challenge=${sessionConsentChallenge}`, {
       //     // other data Hydra needs
       //   })
       // }
 
-      return await axios.put(`http://localhost:4445/oauth2/auth/requests/consent/accept?consent_challenge=${sessionConsentChallenge}`, {
+      const hydraPutResponse = await axios.put(`http://localhost:4445/oauth2/auth/requests/consent/accept?consent_challenge=${sessionConsentChallenge}`, {
           // other data Hydra needs
           grant_scope: ['full_access']
         })
+
+    return redirect(hydraPutResponse.data.redirect_to)
 
     } catch (error) {
       throw new Error(`There was an error: ${error}`)
