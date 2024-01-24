@@ -9,9 +9,9 @@
   "dependencies": {
     "@apollo/client": "^3.8.9",
     "@interledger/http-signature-utils": "2.0.0",
-    "@remix-run/node": "^1.19.3",
-    "@remix-run/react": "^1.19.3",
-    "@remix-run/serve": "^1.19.3",
+    "@remix-run/node": "^2.5.1",
+    "@remix-run/react": "^2.5.1",
+    "@remix-run/serve": "^2.5.1",
     "@types/node": "^18.7.12",
     "@types/uuid": "^9.0.7",
     "axios": "^1.6.5",
@@ -22,7 +22,7 @@
     "yaml": "^2.3.4"
   },
   "devDependencies": {
-    "@remix-run/dev": "^1.19.3",
+    "@remix-run/dev": "^2.5.1",
     "@types/react": "^18.2.48",
     "@types/react-dom": "^18.2.18"
   },
