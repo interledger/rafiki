@@ -45,16 +45,16 @@ export const getWalletAddressIncomingPayments: WalletAddressResolvers<ApolloCont
       pagination,
       sortOrder: order
     })
-    const pageInfo = await getPageInfo({
-      getPage: (pagination: Pagination, sortOrder?: SortOrder) =>
+    const pageInfo = await getPageInfo(
+      (pagination: Pagination, sortOrder?: SortOrder) =>
         incomingPaymentService.getWalletAddressPage({
           walletAddressId: parent.id as string,
           pagination,
           sortOrder
         }),
-      page: incomingPayments,
-      sortOrder: order
-    })
+      incomingPayments,
+      order
+    )
 
     return {
       pageInfo,

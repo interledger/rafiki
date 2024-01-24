@@ -10,7 +10,7 @@ function coerceUInt8Value(value: number | string | unknown): number {
     throw new TypeError('Provided value is not number or string.')
   }
   const nValue = Number(value)
-  if (Number.isInteger(nValue) && nValue >= 0 && nValue <= 255) {
+  if (Number.isInteger(nValue) && value >= 0 && value <= 255) {
     return nValue
   }
   throw new GraphQLError('Provided value is not a UInt8.', {

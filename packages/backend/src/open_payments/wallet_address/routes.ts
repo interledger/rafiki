@@ -9,7 +9,6 @@ import {
 
 interface ServiceDependencies {
   authServer: string
-  resourceServer: string
 }
 
 export interface WalletAddressRoutes {
@@ -34,8 +33,7 @@ export async function getWalletAddress(
   }
 
   ctx.body = ctx.walletAddress.toOpenPaymentsType({
-    authServer: deps.authServer,
-    resourceServer: deps.resourceServer
+    authServer: deps.authServer
   })
 }
 
@@ -64,16 +62,15 @@ export const listSubresource = async <M extends WalletAddressSubresource>({
     pagination,
     client
   })
-  const pageInfo = await getPageInfo({
-    getPage: (pagination) =>
+  const pageInfo = await getPageInfo(
+    (pagination) =>
       getWalletAddressPage({
         walletAddressId: ctx.walletAddress.id,
         pagination,
         client
       }),
-    page,
-    walletAddress: ctx.request.query['wallet-address']
-  })
+    page
+  )
   const result = {
     pagination: pageInfo,
     result: page.map((item: M) => toBody(item))

@@ -10,7 +10,6 @@ import { DbErrors } from 'objection-db-errors'
 import { v4 as uuid } from 'uuid'
 
 export interface Pagination {
-  walletAddress?: string
   after?: string // Forward pagination: cursor.
   before?: string // Backward pagination: cursor.
   first?: number // Forward pagination: limit.

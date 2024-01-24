@@ -22,12 +22,12 @@ export const getAssets: QueryResolvers<ApolloContext>['assets'] = async (
   const { sortOrder, ...pagination } = args
   const order = sortOrder === 'ASC' ? SortOrder.Asc : SortOrder.Desc
   const assets = await assetService.getPage(pagination, order)
-  const pageInfo = await getPageInfo({
-    getPage: (pagination: Pagination, sortOrder?: SortOrder) =>
+  const pageInfo = await getPageInfo(
+    (pagination: Pagination, sortOrder?: SortOrder) =>
       assetService.getPage(pagination, sortOrder),
-    page: assets,
-    sortOrder: order
-  })
+    assets,
+    order
+  )
   return {
     pageInfo,
     edges: assets.map((asset: Asset) => ({
@@ -177,12 +177,12 @@ export const getFees: AssetResolvers<ApolloContext>['fees'] = async (
   }
   const order = sortOrder === 'ASC' ? SortOrder.Asc : SortOrder.Desc
   const fees = await getPageFn(pagination, order)
-  const pageInfo = await getPageInfo({
-    getPage: (pagination_: Pagination, sortOrder_?: SortOrder) =>
+  const pageInfo = await getPageInfo(
+    (pagination_: Pagination, sortOrder_?: SortOrder) =>
       getPageFn(pagination_, sortOrder_),
-    page: fees,
-    sortOrder
-  })
+    fees,
+    order
+  )
   return {
     pageInfo,
     edges: fees.map((fee: Fee) => ({

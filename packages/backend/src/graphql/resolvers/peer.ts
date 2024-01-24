@@ -25,12 +25,12 @@ export const getPeers: QueryResolvers<ApolloContext>['peers'] = async (
   const { sortOrder, ...pagination } = args
   const order = sortOrder === 'ASC' ? SortOrder.Asc : SortOrder.Desc
   const peers = await peerService.getPage(pagination, order)
-  const pageInfo = await getPageInfo({
-    getPage: (pagination: Pagination, sortOrder?: SortOrder) =>
+  const pageInfo = await getPageInfo(
+    (pagination: Pagination, sortOrder?: SortOrder) =>
       peerService.getPage(pagination, sortOrder),
-    page: peers,
-    sortOrder: order
-  })
+    peers,
+    order
+  )
   return {
     pageInfo,
     edges: peers.map((peer: Peer) => ({

@@ -24,12 +24,12 @@ export const getWebhookEvents: QueryResolvers<ApolloContext>['webhookEvents'] =
         sortOrder: sortOrder_
       })
     const webhookEvents = await getPageFn(pagination, order)
-    const pageInfo = await getPageInfo({
-      getPage: (pagination_: Pagination, sortOrder_?: SortOrder) =>
+    const pageInfo = await getPageInfo(
+      (pagination_: Pagination, sortOrder_?: SortOrder) =>
         getPageFn(pagination_, sortOrder_),
-      page: webhookEvents,
-      sortOrder: order
-    })
+      webhookEvents,
+      order
+    )
     return {
       pageInfo,
       edges: webhookEvents.map((webhookEvent: WebhookEvent) => ({
