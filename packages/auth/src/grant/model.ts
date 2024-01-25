@@ -71,7 +71,6 @@ export class Grant extends BaseModel {
 
   public continueToken!: string
   public continueId!: string
-  public wait?: number
 
   public finishMethod?: FinishMethod
   public finishUri?: string

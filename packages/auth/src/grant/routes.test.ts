@@ -667,9 +667,7 @@ describe('Grant Routes', (): void => {
 
       test('Honors wait value when continuing too early', async (): Promise<void> => {
         const grantWithWait = await Grant.query().insert(
-          generateBaseGrant({
-            wait: 60 * 1000 * 30 // 30 minutes
-          })
+          generateBaseGrant()
         )
 
         await Access.query().insert({
@@ -773,6 +771,7 @@ describe('Grant Routes', (): void => {
           }
 
           if (state === GrantState.Processing || state === GrantState.Pending) {
+            expectedBody.continue.wait = config.waitTimeSeconds
             const updatedPolledGrant = await Grant.query().findById(
               polledGrant.id
             )
