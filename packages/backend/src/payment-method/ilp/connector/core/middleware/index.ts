@@ -1,7 +1,6 @@
 export * from './account'
 export * from './auth'
 export * from './balance'
-//export * from '../controllers/ccp-protocol'
 export * from '../controllers/echo-protocol'
 export * from './error-handler'
 export * from './expire'

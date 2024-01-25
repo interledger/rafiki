@@ -313,9 +313,6 @@ importers:
       ilp-packet:
         specifier: 3.1.4-alpha.2
         version: 3.1.4-alpha.2
-      ilp-protocol-ccp:
-        specifier: ^1.2.3
-        version: 1.2.3
       ilp-protocol-ildcp:
         specifier: ^2.2.3
         version: 2.2.3
@@ -10820,13 +10817,6 @@ packages:
     resolution: {integrity: sha512-0a75sI7o/1NG9qgJlObg9M264pnezcPEse1+UQV8gkgQAuKesj5b6qyPw7WbkvjIDXAtIQ61Qg48wRpkaddbQw==}
     dependencies:
       oer-utils: 5.1.3-alpha.2
-
-  /ilp-protocol-ccp@1.2.3:
-    resolution: {integrity: sha512-dYYAaaOxx7/Ghc/DiWNzP0qbqBp5d3fruVqpbGqhG9fpdztbLAfpmj0RIgFQ6BR2fnNokGtPyw0EwjBzJvHbZw==}
-    dependencies:
-      ilp-packet: 3.1.3
-      oer-utils: 5.1.2
-    dev: false
 
   /ilp-protocol-ildcp@2.2.3:
     resolution: {integrity: sha512-cz1q5dAZ4vYYlNyGy++waUfSa1W5/xyUtu7YYtcNk2klbLXqzBcflDuQj3/MmmTNhDS8WTxdRUydFMeGEpL13w==}
