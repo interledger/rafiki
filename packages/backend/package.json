@@ -31,7 +31,7 @@
     "@types/uuid": "^9.0.7",
     "cross-fetch": "^4.0.0",
     "ilp-protocol-ildcp": "^2.2.3",
-    "ilp-protocol-stream": "^2.7.1",
+    "ilp-protocol-stream": "^2.7.2-alpha.2",
     "jest-openapi": "^0.14.2",
     "nock": "^13.5.0",
     "node-mocks-http": "^1.14.1",

@@ -414,8 +414,8 @@ importers:
         specifier: ^4.0.0
         version: 4.0.0
       ilp-protocol-stream:
-        specifier: ^2.7.1
-        version: 2.7.1
+        specifier: ^2.7.2-alpha.2
+        version: 2.7.2-alpha.2
       jest-openapi:
         specifier: ^0.14.2
         version: 0.14.2
@@ -4589,10 +4589,10 @@ packages:
 
   /@types/long@4.0.1:
     resolution: {integrity: sha512-5tXH6Bx/kNGd3MgffdmP4dy2Z+G4eaXw0SE81Tq3BNadtnMR5/ySMzX4SLEzHJzSmPNn4HIdpQsBvXMUykr58w==}
+    dev: false
 
   /@types/long@4.0.2:
     resolution: {integrity: sha512-MqTGEo5bj5t157U6fA/BiDynNkn0YknVdh48CMPkTSpFTVmvao5UQmm7uEF6xBEo7qIMAlY/JSleYaE6VOdpaA==}
-    dev: false
 
   /@types/luxon@3.4.2:
     resolution: {integrity: sha512-TifLZlFudklWlMBfhubvgqTXRzLDI5pCbGa4P8a3wPyUQSW+1xQ5eDsreP9DWHX3tjq1ke96uYG/nwundroWcA==}
@@ -4648,10 +4648,6 @@ packages:
     resolution: {integrity: sha512-etovBJhoENhCxgmxf1gEnu4Wsq/JQy2lTaXVypuA85KkY0A7/pGbgwELtXTgwj2DVgRUb6IAhG8GHEqLPCogVA==}
     dependencies:
       '@types/node': 18.18.5
-    dev: true
-
-  /@types/node@10.17.60:
-    resolution: {integrity: sha512-F0KIgDJfy2nA3zMLmWGKxcH2ZVEtCZXHHdOQs2gSaQ27+lNeEfGxzkIw90aXswATX7AZ33tahPbzy6KAfUreVw==}
     dev: true
 
   /@types/node@17.0.45:
@@ -8326,6 +8322,7 @@ packages:
 
   /extensible-error@1.0.2:
     resolution: {integrity: sha512-kXU1FiTsGT8PyMKtFM074RK/VBpzwuQJicAHqBpsPDeTXBQiSALPjkjKXlyKdG/GP6lR7bBaEkq8qdoO2geu9g==}
+    dev: false
 
   /external-editor@3.1.0:
     resolution: {integrity: sha512-hMQ4CX1p1izmuLYyZqLMO/qGNw10wSv9QDCPfzXfyFrOaCSSoRfqE1Kf1s5an66J5JZC62NewG+mK49jOCtQew==}
@@ -9394,12 +9391,12 @@ packages:
     dependencies:
       extensible-error: 1.0.2
       oer-utils: 5.1.2
+    dev: false
 
   /ilp-packet@3.1.4-alpha.2:
     resolution: {integrity: sha512-0a75sI7o/1NG9qgJlObg9M264pnezcPEse1+UQV8gkgQAuKesj5b6qyPw7WbkvjIDXAtIQ61Qg48wRpkaddbQw==}
     dependencies:
       oer-utils: 5.1.3-alpha.2
-    dev: false
 
   /ilp-protocol-ccp@1.2.3:
     resolution: {integrity: sha512-dYYAaaOxx7/Ghc/DiWNzP0qbqBp5d3fruVqpbGqhG9fpdztbLAfpmj0RIgFQ6BR2fnNokGtPyw0EwjBzJvHbZw==}
@@ -9416,6 +9413,7 @@ packages:
       oer-utils: 5.1.2
     transitivePeerDependencies:
       - supports-color
+    dev: false
 
   /ilp-protocol-ildcp@2.2.4-alpha.2:
     resolution: {integrity: sha512-pMBHAXwTnOA1E9TzJAXxbVxrCpqqcYEPJ5w+9kj/gTr3Lmu8M5U/h0W7bGx/pgfGQ2jHXKdO8IJurojDjfoURA==}
@@ -9425,21 +9423,6 @@ packages:
       oer-utils: 5.1.3-alpha.2
     transitivePeerDependencies:
       - supports-color
-    dev: false
-
-  /ilp-protocol-stream@2.7.1:
-    resolution: {integrity: sha512-BhGyvC9D5jYgzOvA6gjqw+0o9BWvuJubosch4U1J8NeKzQ5PzLtOL7RC/wJ/AnQ1F876r1EXimBvB8zBsY/6yQ==}
-    dependencies:
-      '@types/node': 10.17.60
-      ilp-logger: 1.4.4
-      ilp-packet: 3.1.3
-      ilp-protocol-ildcp: 2.2.3
-      long: 4.0.0
-      oer-utils: 5.1.2
-      uuid: 3.4.0
-    transitivePeerDependencies:
-      - supports-color
-    dev: true
 
   /ilp-protocol-stream@2.7.2-alpha.2:
     resolution: {integrity: sha512-dr9TgdNpFn0yoU4X7M+l/yHkTH3/hPEtMaF0LhfTHr4m0sfnbGLEREazctmTTj6461WL2OuDneiAcboevmFw+w==}
@@ -9452,7 +9435,6 @@ packages:
       uuid: 8.3.2
     transitivePeerDependencies:
       - supports-color
-    dev: false
 
   /immutable@3.7.6:
     resolution: {integrity: sha512-AizQPcaofEtO11RZhPPHBOJRdo/20MKQF9mBLnVkBoyHi1/zXK8fzVdnEpSV9gxqtnh6Qomfp3F0xT5qP/vThw==}
@@ -12547,13 +12529,13 @@ packages:
     dependencies:
       '@types/long': 4.0.1
       long: 4.0.0
+    dev: false
 
   /oer-utils@5.1.3-alpha.2:
     resolution: {integrity: sha512-BX/8xcb+TXGTRtu97a/ZvcrWSyMd8wt8GSQMD7MvKxPEFqN4lX9w+Pk/Wm4HxwfHQQO9EhTYryR5hosTgWxP+A==}
     dependencies:
       '@types/long': 4.0.2
       long: 4.0.0
-    dev: false
 
   /on-exit-leak-free@2.1.0:
     resolution: {integrity: sha512-VuCaZZAjReZ3vUwgOB8LxAosIurDiAW0s13rI1YwmaP++jvcxP77AWoQvenZebpCA2m8WC1/EosPYPMjnRAp/w==}
@@ -15689,16 +15671,9 @@ packages:
     resolution: {integrity: sha512-pMZTvIkT1d+TFGvDOqodOclx0QWkkgi6Tdoa8gC8ffGAAqz9pzPTZWAybbsHHoED/ztMtkv/VoYTYyShUn81hA==}
     engines: {node: '>= 0.4.0'}
 
-  /uuid@3.4.0:
-    resolution: {integrity: sha512-HjSDRw6gZE5JMggctHBcjVak08+KEVhSIiDzFnT9S9aegmp85S/bReBVTb4QTFaRNptJ9kuYaNhnbNEOkbKb/A==}
-    deprecated: Please upgrade  to version 7 or higher.  Older versions may use Math.random() in certain circumstances, which is known to be problematic.  See https://v8.dev/blog/math-random for details.
-    hasBin: true
-    dev: true
-
   /uuid@8.3.2:
     resolution: {integrity: sha512-+NYs2QeMWy+GWFOEm9xnn6HCDp0l7QBD7ml8zLUmJ+93Q5NF0NocErnwkTkXVFNiX3/fpC6afS8Dhb/gz7R7eg==}
     hasBin: true
-    dev: false
 
   /uuid@9.0.1:
     resolution: {integrity: sha512-b+1eJOlsR9K8HJpow9Ok3fiWOWSIcIzXodvv0rQjVoOVNpWMpxf1wZNpt4y9h10odCNrqnYp1OBzRktckBe3sA==}
