@@ -1,5 +1,6 @@
 import { type Session, type SessionData, redirect } from '@remix-run/node'
 import { createCookieSessionStorage } from '@remix-run/node'
+import { parseBool } from '~/shared/utils'
 
 const ONE_MINUTE_IN_S = 60
 
@@ -20,10 +21,9 @@ export const messageStorage = createCookieSessionStorage<
     sameSite: 'lax',
     maxAge: ONE_MINUTE_IN_S,
     secrets: ['MY_SUPER_SECRET_TOKEN'],
-    secure:
-      process.env.COOKIE_SECURE === undefined
-        ? true
-        : ['true', 't', '1'].includes(process.env.COOKIE_SECURE.toLowerCase())
+    secure: process.env.ENABLE_INSECURE_MESSAGE_COOKIE
+      ? !parseBool(process.env.ENABLE_INSECURE_MESSAGE_COOKIE)
+      : process.env.NODE_ENV === 'production'
   }
 })
 

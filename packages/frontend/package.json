@@ -4,10 +4,10 @@
   "sideEffects": false,
   "scripts": {
     "build": "remix build",
-    "dev": "PORT=3005 COOKIE_SECURE=false remix dev",
+    "dev": "PORT=3005 remix dev",
     "lint:fix": "eslint --fix app/",
     "lint:check": "eslint app/",
-    "start": "COOKIE_SECURE=false remix-serve ./build/index.js",
+    "start": "ENABLE_INSECURE_MESSAGE_COOKIE=true remix-serve ./build/index.js",
     "typecheck": "tsc"
   },
   "dependencies": {
