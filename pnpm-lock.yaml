@@ -81,8 +81,8 @@ importers:
         specifier: ^9.0.7
         version: 9.0.7
       axios:
-        specifier: ^1.6.5
-        version: 1.6.5
+        specifier: ^1.6.6
+        version: 1.6.6
       graphql:
         specifier: ^16.8.1
         version: 16.8.1
@@ -148,8 +148,8 @@ importers:
         specifier: ^8.12.0
         version: 8.12.0
       axios:
-        specifier: ^1.6.5
-        version: 1.6.5
+        specifier: ^1.6.6
+        version: 1.6.6
       dotenv:
         specifier: ^16.3.1
         version: 16.3.1
@@ -290,8 +290,8 @@ importers:
         specifier: ^8.12.0
         version: 8.12.0
       axios:
-        specifier: 1.6.5
-        version: 1.6.5
+        specifier: 1.6.6
+        version: 1.6.6
       base64url:
         specifier: ^3.0.1
         version: 3.0.1
@@ -562,8 +562,8 @@ importers:
         specifier: 1.2.1
         version: 1.2.1
       axios:
-        specifier: ^1.6.5
-        version: 1.6.5
+        specifier: ^1.6.6
+        version: 1.6.6
       pino:
         specifier: ^8.17.2
         version: 8.17.2
@@ -4384,7 +4384,7 @@ packages:
     dependencies:
       '@interledger/http-signature-utils': 2.0.0
       '@interledger/openapi': 1.2.1
-      axios: 1.6.5
+      axios: 1.6.6
       base64url: 3.0.1
       http-message-signatures: 0.1.2
       pino: 8.17.2
@@ -4399,7 +4399,7 @@ packages:
     dependencies:
       '@interledger/http-signature-utils': 2.0.0
       '@interledger/openapi': 1.2.1
-      axios: 1.6.5
+      axios: 1.6.6
       base64url: 3.0.1
       http-message-signatures: 0.1.2
       pino: 8.17.2
@@ -7003,13 +7003,13 @@ packages:
   /axios@0.21.4:
     resolution: {integrity: sha512-ut5vewkiu8jjGBdqpM44XxjuCjq9LAKeHVmoVfHVzy8eHgxxq8SbAVQNovDA8mVi05kP0Ea/n/UzcSHcTJQfNg==}
     dependencies:
-      follow-redirects: 1.15.1
+      follow-redirects: 1.15.4
     transitivePeerDependencies:
       - debug
     dev: true
 
-  /axios@1.6.5:
-    resolution: {integrity: sha512-Ii012v05KEVuUoFWmMW/UQv9aRIc3ZwkWDcM+h5Il8izZCtRVpDUfwpoFf7eOtajT3QiGR4yDUx7lPqHJULgbg==}
+  /axios@1.6.6:
+    resolution: {integrity: sha512-XZLZDFfXKM9U/Y/B4nNynfCRUqNyVZ4sBC/n9GDRCkq9vd2mIvKjKKsbIh1WPmHmNbg6ND7cTBY3Y2+u1G3/2Q==}
     dependencies:
       follow-redirects: 1.15.4
       form-data: 4.0.0
@@ -9895,16 +9895,6 @@ packages:
     resolution: {integrity: sha512-xU99gDEnciIwJdGcBmNHnzTJ/w5AT+VFJOu6sTB6WM8diOYNA3Sa+K1DiEBQ7XH4QikQq3iFW1U+jRVcotQnBw==}
     engines: {node: '>=8'}
     dev: false
-
-  /follow-redirects@1.15.1:
-    resolution: {integrity: sha512-yLAMQs+k0b2m7cVxpS1VKJVvoz7SS9Td1zss3XRwXj+ZDH00RJgnuLx7E44wx02kQLrdM3aOOy+FpzS7+8OizA==}
-    engines: {node: '>=4.0'}
-    peerDependencies:
-      debug: '*'
-    peerDependenciesMeta:
-      debug:
-        optional: true
-    dev: true
 
   /follow-redirects@1.15.4:
     resolution: {integrity: sha512-Cr4D/5wlrb0z9dgERpUL3LrmPKVDsETIJhaCMeDfuFYcqa5bldGV6wBsAN6X/vxlXQtFBMrXdXxdL8CbDTGniw==}
@@ -16948,7 +16938,7 @@ packages:
       '@types/source-map-support': 0.5.9
       '@types/validator': 13.11.5
       '@types/ws': 7.4.7
-      axios: 1.6.5
+      axios: 1.6.6
       commander: 5.1.0
       deep-equal: 2.2.0
       deepmerge: 4.2.2
