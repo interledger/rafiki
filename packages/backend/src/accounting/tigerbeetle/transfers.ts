@@ -112,7 +112,9 @@ export async function createTransfers(
       case CreateTransferErrorCode.exists:
       case CreateTransferErrorCode.exists_with_different_debit_account_id:
       case CreateTransferErrorCode.exists_with_different_credit_account_id:
+      case CreateTransferErrorCode.exists_with_different_user_data_32:
       case CreateTransferErrorCode.exists_with_different_user_data_64:
+      case CreateTransferErrorCode.exists_with_different_user_data_128:
       case CreateTransferErrorCode.exists_with_different_pending_id:
       case CreateTransferErrorCode.exists_with_different_code:
       case CreateTransferErrorCode.exists_with_different_amount:
