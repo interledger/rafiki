@@ -314,8 +314,8 @@ importers:
         specifier: 3.1.4-alpha.2
         version: 3.1.4-alpha.2
       ilp-protocol-ccp:
-        specifier: ^1.2.3
-        version: 1.2.3
+        specifier: ^1.2.4-alpha.2
+        version: 1.2.4-alpha.2
       ilp-protocol-ildcp:
         specifier: ^2.2.4-alpha.2
         version: 2.2.4-alpha.2
@@ -5778,10 +5778,6 @@ packages:
   /@types/lodash@4.14.202:
     resolution: {integrity: sha512-OvlIYQK9tNneDlS0VN54LLd5uiPCBOp7gS5Z0f1mjoJYBrtStzgmJBxONW3U6OZqdtNzZPmn9BS/7WI7BFFcFQ==}
 
-  /@types/long@4.0.1:
-    resolution: {integrity: sha512-5tXH6Bx/kNGd3MgffdmP4dy2Z+G4eaXw0SE81Tq3BNadtnMR5/ySMzX4SLEzHJzSmPNn4HIdpQsBvXMUykr58w==}
-    dev: false
-
   /@types/long@4.0.2:
     resolution: {integrity: sha512-MqTGEo5bj5t157U6fA/BiDynNkn0YknVdh48CMPkTSpFTVmvao5UQmm7uEF6xBEo7qIMAlY/JSleYaE6VOdpaA==}
 
@@ -10809,23 +10805,16 @@ packages:
       supports-color: 9.4.0
     dev: false
 
-  /ilp-packet@3.1.3:
-    resolution: {integrity: sha512-FBsiPQbHPdLPI6jdA+sQO+4fFBuMc212yCdNXMqoGJdic2GFHF/E8P9bTorIVRZRVExhWDE5givqCMguupW8VA==}
-    dependencies:
-      extensible-error: 1.0.2
-      oer-utils: 5.1.2
-    dev: false
-
   /ilp-packet@3.1.4-alpha.2:
     resolution: {integrity: sha512-0a75sI7o/1NG9qgJlObg9M264pnezcPEse1+UQV8gkgQAuKesj5b6qyPw7WbkvjIDXAtIQ61Qg48wRpkaddbQw==}
     dependencies:
       oer-utils: 5.1.3-alpha.2
 
-  /ilp-protocol-ccp@1.2.3:
-    resolution: {integrity: sha512-dYYAaaOxx7/Ghc/DiWNzP0qbqBp5d3fruVqpbGqhG9fpdztbLAfpmj0RIgFQ6BR2fnNokGtPyw0EwjBzJvHbZw==}
+  /ilp-protocol-ccp@1.2.4-alpha.2:
+    resolution: {integrity: sha512-y/86eHTILmLc0tDpaQ998lmNKJOpFdFv8gfjdvZorBTgqAJ2mkEpCDpoQZnDCGshS4NFtu/56wbV8DT2Fs66gQ==}
     dependencies:
-      ilp-packet: 3.1.3
-      oer-utils: 5.1.2
+      ilp-packet: 3.1.4-alpha.2
+      oer-utils: 5.1.3-alpha.2
     dev: false
 
   /ilp-protocol-ildcp@2.2.4-alpha.2:
@@ -13996,13 +13985,6 @@ packages:
       ajv-formats: 2.1.1(ajv@8.12.0)
       db-errors: 0.2.3
       knex: 3.1.0(pg@8.11.3)
-    dev: false
-
-  /oer-utils@5.1.2:
-    resolution: {integrity: sha512-VhkvT3bthHrbnwBOG9vGpDFB8XHrIitpZY2nC+3scZI2Tf17g8YmeDK6wsA7HpdjGXMsbf14fRgltBXwhzrWOw==}
-    dependencies:
-      '@types/long': 4.0.1
-      long: 4.0.0
     dev: false
 
   /oer-utils@5.1.3-alpha.2:
