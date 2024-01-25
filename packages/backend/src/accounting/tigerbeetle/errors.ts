@@ -30,7 +30,7 @@ export function areAllAccountExistsErrors(
 ): boolean {
   return areAllOfTypeAccountErrors(errors, [
     CreateAccountErrorCode.exists_with_different_flags,
-    CreateAccountErrorCode.exists_with_different_user_data,
+    CreateAccountErrorCode.exists_with_different_user_data_64,
     CreateAccountErrorCode.exists_with_different_ledger,
     CreateAccountErrorCode.exists_with_different_code,
     CreateAccountErrorCode.exists

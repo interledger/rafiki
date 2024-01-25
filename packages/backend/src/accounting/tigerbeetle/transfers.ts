@@ -62,10 +62,11 @@ export async function createTransfers(
       id: 0n,
       debit_account_id: 0n,
       credit_account_id: 0n,
-      user_data: 0n,
-      reserved: 0n,
+      user_data_32: 0,
+      user_data_64: 0n,
+      user_data_128: 0n,
       pending_id: 0n,
-      timeout: 0n,
+      timeout: 0,
       ledger: 0,
       code: ACCOUNT_TYPE,
       flags: 0,
@@ -85,7 +86,7 @@ export async function createTransfers(
       )
       if (transfer.timeout) {
         tbTransfer.flags |= TransferFlags.pending
-        tbTransfer.timeout = transfer.timeout * BigInt(10e6) // ms -> ns
+        tbTransfer.timeout = Number(transfer.timeout * BigInt(10e6)) // ms -> ns
       }
     } else {
       tbTransfer.id = toTigerbeetleId(uuid())
@@ -111,7 +112,7 @@ export async function createTransfers(
       case CreateTransferErrorCode.exists:
       case CreateTransferErrorCode.exists_with_different_debit_account_id:
       case CreateTransferErrorCode.exists_with_different_credit_account_id:
-      case CreateTransferErrorCode.exists_with_different_user_data:
+      case CreateTransferErrorCode.exists_with_different_user_data_64:
       case CreateTransferErrorCode.exists_with_different_pending_id:
       case CreateTransferErrorCode.exists_with_different_code:
       case CreateTransferErrorCode.exists_with_different_amount:
