@@ -12,7 +12,6 @@ services:
     ports:
       - '3030:80'
     environment:
-      NODE_ENV: ${NODE_ENV:-development}
       LOG_LEVEL: debug
       PORT: 80
       SEED_FILE_LOCATION: /workspace/seed.yml
@@ -115,6 +114,7 @@ services:
       PORT: 3010
       GRAPHQL_URL: http://cloud-nine-wallet-backend:3001/graphql
       OPEN_PAYMENTS_URL: https://cloud-nine-wallet-backend/
+      ENABLE_INSECURE_MESSAGE_COOKIE: true
     depends_on:
       - cloud-nine-backend
 

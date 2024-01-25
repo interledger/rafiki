@@ -57,4 +57,4 @@ COPY --from=builder /home/rafiki/packages/frontend/public ./packages/frontend/pu
 
 WORKDIR /home/rafiki/packages/frontend
 
-CMD ["sh", "-c", "NODE_ENV=production ENABLE_INSECURE_MESSAGE_COOKIE=true ./node_modules/.bin/remix-serve ./build/index.js"]
+CMD ["sh", "./node_modules/.bin/remix-serve", "./build/index.js"]
