@@ -24,7 +24,7 @@
   },
   "dependencies": {
     "@interledger/openapi": "1.2.1",
-    "axios": "^1.6.5",
+    "axios": "^1.6.6",
     "pino": "^8.17.2"
   }
 }
