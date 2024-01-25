@@ -3216,7 +3216,7 @@ packages:
     dependencies:
       '@interledger/http-signature-utils': 2.0.0
       '@interledger/openapi': 1.2.1
-      axios: 1.6.5
+      axios: 1.6.6
       base64url: 3.0.1
       http-message-signatures: 0.1.2
       pino: 8.17.2
