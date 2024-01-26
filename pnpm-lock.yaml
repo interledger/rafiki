@@ -81,8 +81,8 @@ importers:
         specifier: ^9.0.8
         version: 9.0.8
       axios:
-        specifier: ^1.6.6
-        version: 1.6.6
+        specifier: ^1.6.7
+        version: 1.6.7
       graphql:
         specifier: ^16.8.1
         version: 16.8.1
@@ -148,8 +148,8 @@ importers:
         specifier: ^8.12.0
         version: 8.12.0
       axios:
-        specifier: ^1.6.6
-        version: 1.6.6
+        specifier: ^1.6.7
+        version: 1.6.7
       dotenv:
         specifier: ^16.3.1
         version: 16.3.1
@@ -290,8 +290,8 @@ importers:
         specifier: ^8.12.0
         version: 8.12.0
       axios:
-        specifier: 1.6.6
-        version: 1.6.6
+        specifier: 1.6.7
+        version: 1.6.7
       base64url:
         specifier: ^3.0.1
         version: 3.0.1
@@ -559,8 +559,8 @@ importers:
         specifier: 1.2.1
         version: 1.2.1
       axios:
-        specifier: ^1.6.6
-        version: 1.6.6
+        specifier: ^1.6.7
+        version: 1.6.7
       pino:
         specifier: ^8.17.2
         version: 8.17.2
@@ -4381,7 +4381,7 @@ packages:
     dependencies:
       '@interledger/http-signature-utils': 2.0.0
       '@interledger/openapi': 1.2.1
-      axios: 1.6.6
+      axios: 1.6.7
       base64url: 3.0.1
       http-message-signatures: 0.1.2
       pino: 8.17.2
@@ -4396,7 +4396,7 @@ packages:
     dependencies:
       '@interledger/http-signature-utils': 2.0.0
       '@interledger/openapi': 1.2.1
-      axios: 1.6.6
+      axios: 1.6.7
       base64url: 3.0.1
       http-message-signatures: 0.1.2
       pino: 8.17.2
@@ -6997,8 +6997,8 @@ packages:
       - debug
     dev: true
 
-  /axios@1.6.6:
-    resolution: {integrity: sha512-XZLZDFfXKM9U/Y/B4nNynfCRUqNyVZ4sBC/n9GDRCkq9vd2mIvKjKKsbIh1WPmHmNbg6ND7cTBY3Y2+u1G3/2Q==}
+  /axios@1.6.7:
+    resolution: {integrity: sha512-/hDJGff6/c7u0hDkvkGxR/oy6CbCs8ziCsC7SqmhjfozqiJGc8Z11wrv9z9lYfY4K8l+H9TpjcMDX0xOZmx+RA==}
     dependencies:
       follow-redirects: 1.15.4
       form-data: 4.0.0
@@ -16889,7 +16889,7 @@ packages:
       '@types/source-map-support': 0.5.9
       '@types/validator': 13.11.5
       '@types/ws': 7.4.7
-      axios: 1.6.6
+      axios: 1.6.7
       commander: 5.1.0
       deep-equal: 2.2.0
       deepmerge: 4.2.2
