@@ -36,7 +36,7 @@ export interface Deposit {
 }
 
 export interface Withdrawal extends Deposit {
-  timeout?: bigint
+  timeout?: number
 }
 
 export interface TransferOptions {
@@ -44,7 +44,7 @@ export interface TransferOptions {
   destinationAccount: LiquidityAccount
   sourceAmount: bigint
   destinationAmount?: bigint
-  timeout: bigint
+  timeout: number
 }
 
 export interface Transaction {

@@ -501,7 +501,7 @@ describe('Psql Accounting Service', (): void => {
     let account: LedgerAccount
 
     const startingBalance = 10n
-    const timeout = 10_000n
+    const timeout = 10
 
     beforeEach(async (): Promise<void> => {
       ;[, account] = await Promise.all([
@@ -647,7 +647,7 @@ describe('Psql Accounting Service', (): void => {
     let account: LedgerAccount
 
     const startingBalance = 10n
-    const timeout = 10_000n
+    const timeout = 10
 
     beforeEach(async (): Promise<void> => {
       ;[, account] = await Promise.all([
@@ -714,7 +714,7 @@ describe('Psql Accounting Service', (): void => {
     let account: LedgerAccount
 
     const startingBalance = 10n
-    const timeout = 10_000n
+    const timeout = 10
 
     beforeEach(async (): Promise<void> => {
       ;[, account] = await Promise.all([
@@ -794,7 +794,7 @@ describe('Psql Accounting Service', (): void => {
       let destinationAccount: FactoryAccount
       const startingSourceBalance = 10n
       const startingDestinationLiquidity = 100n
-      const timeout = 10_000n // 10 seconds
+      const timeout = 10 // 10 seconds
 
       beforeEach(async (): Promise<void> => {
         const sourceAsset = await assetService.create(randomAsset())

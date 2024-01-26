@@ -100,7 +100,7 @@ export class MockAccountingService implements AccountingService {
     destinationAccount: MockOutgoingAccount
     sourceAmount: bigint
     destinationAmount: bigint
-    timeout: bigint
+    timeout: number
   }): Promise<Transaction | TransferError> {
     if (sourceAccount.balance < sourceAmount) {
       return TransferError.InsufficientBalance
