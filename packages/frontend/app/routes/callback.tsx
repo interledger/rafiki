@@ -49,7 +49,7 @@ export let action = async ({ request }: ActionArgs) => {
 
     try {
         const response = await axios.post('http://localhost:4444/oauth2/token', qs.stringify({
-            client_id: 'fecdaf06-26dc-495f-8720-68010b5295af',
+            client_id: process.env.REACT_APP_CLIENT_ID,
             client_secret: 'YourClientSecret',
             grant_type: 'authorization_code',
             code: authorizationCode,
