@@ -1,4 +1,4 @@
-import { json, type LoaderArgs } from '@remix-run/node'
+import { json, type LoaderFunctionArgs } from '@remix-run/node'
 import { useLoaderData, useNavigate, useSearchParams } from '@remix-run/react'
 import { Badge, PageHeader } from '~/components'
 import { PopoverFilter } from '~/components/Filters'
@@ -13,7 +13,7 @@ import {
   paymentSubpathByType
 } from '~/shared/utils'
 
-export const loader = async ({ request }: LoaderArgs) => {
+export const loader = async ({ request }: LoaderFunctionArgs) => {
   const url = new URL(request.url)
   const searchParams = Object.fromEntries(url.searchParams.entries())
 

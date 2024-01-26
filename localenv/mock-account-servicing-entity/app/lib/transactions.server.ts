@@ -24,12 +24,12 @@ interface Transaction {
 }
 
 export interface IncomingPayment extends Transaction {
-  incomingAmountValue: string
+  incomingAmountValue?: string
 }
 
 export interface OutgoingPayment extends Transaction {
   receiver: string
-  sendAmountValue: string
+  sentAmountValue: string
   receiveAmount: Amount
 }
 
@@ -45,30 +45,36 @@ export async function getAccountTransactions(
   const { incomingPayments, outgoingPayments } = await getWalletAddressPayments(
     account.walletAddressID
   )
-  const transactions = incomingPayments.edges.map(({ node }) => {
-    return {
-      id: node.id,
-      metadata: node.metadata,
-      incomingAmountValue: node.incomingAmount?.value,
-      amountValue: node.receivedAmount.value,
-      assetCode: node.receivedAmount.assetCode,
-      assetScale: node.receivedAmount.assetScale,
-      state: node.state,
-      createdAt: node.createdAt,
-      type: TransactionType.IncomingPayment
-    }
-  })
+
+  const incomingPaymentEdges = incomingPayments?.edges || []
+  const outgoingPaymentEdges = outgoingPayments?.edges || []
+
+  const transactions: Array<IncomingPayment | OutgoingPayment> =
+    incomingPaymentEdges.map(({ node }) => {
+      return {
+        id: node.id,
+        metadata: node.metadata,
+        incomingAmountValue: node.incomingAmount?.value?.toString(),
+        amountValue: node.receivedAmount.value.toString(),
+        assetCode: node.receivedAmount.assetCode,
+        assetScale: node.receivedAmount.assetScale,
+        state: node.state,
+        createdAt: node.createdAt,
+        type: TransactionType.IncomingPayment
+      }
+    })
+
   return transactions.concat(
-    outgoingPayments.edges.map(({ node }) => {
+    outgoingPaymentEdges.map(({ node }) => {
       return {
         id: node.id,
         receiver: node.receiver,
         metadata: node.metadata,
-        debitAmountValue: node.debitAmount.value,
-        amountValue: node.sentAmount.value,
+        sentAmountValue: node.sentAmount.value.toString(),
+        amountValue: node.sentAmount.value.toString(),
         receiveAmount: node.receiveAmount,
-        assetCode: node.debitAmount.assetCode,
-        assetScale: node.debitAmount.assetScale,
+        assetCode: node.sentAmount.assetCode,
+        assetScale: node.sentAmount.assetScale,
         state: node.state,
         createdAt: node.createdAt,
         type: TransactionType.OutgoingPayment

@@ -1,4 +1,8 @@
-import { json, type ActionArgs, type LoaderArgs } from '@remix-run/node'
+import {
+  json,
+  type ActionFunctionArgs,
+  type LoaderFunctionArgs
+} from '@remix-run/node'
 import {
   Form,
   Outlet,
@@ -18,7 +22,7 @@ import { updateWalletAddressSchema } from '~/lib/validate.server'
 import type { ZodFieldErrors } from '~/shared/types'
 import { capitalize, formatAmount } from '~/shared/utils'
 
-export async function loader({ params }: LoaderArgs) {
+export async function loader({ params }: LoaderFunctionArgs) {
   const walletAddressId = params.walletAddressId
 
   const result = z.string().uuid().safeParse(walletAddressId)
@@ -186,7 +190,7 @@ export default function ViewAssetPage() {
   )
 }
 
-export async function action({ request }: ActionArgs) {
+export async function action({ request }: ActionFunctionArgs) {
   const actionResponse: {
     errors: {
       fieldErrors: ZodFieldErrors<typeof updateWalletAddressSchema>
