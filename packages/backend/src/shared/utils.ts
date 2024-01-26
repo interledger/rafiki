@@ -33,12 +33,19 @@ export async function requestWithTimeout<T>(
   request: () => Promise<T>,
   timeoutMs: number
 ): Promise<T> {
+  let timeoutId
   const timeout = async (): Promise<never> =>
-    new Promise((_, reject) =>
-      setTimeout(() => reject(new Error('Request timed out')), timeoutMs)
+    new Promise(
+      (_, reject) =>
+        (timeoutId = setTimeout(
+          () => reject(new Error('Request timed out')),
+          timeoutMs
+        ))
     )
 
-  return Promise.race([request(), timeout()])
+  const response = await Promise.race([request(), timeout()])
+  clearTimeout(timeoutId)
+  return response
 }
 
 interface PollArgs<T> {
