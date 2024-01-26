@@ -713,7 +713,7 @@ describe('Accounting Service', (): void => {
         await expect(
           accountingService.createWithdrawal(expiringWithdrawal)
         ).resolves.toBeUndefined()
-        await new Promise((resolve) => setImmediate(resolve))
+        await new Promise((resolve) => setTimeout(resolve, 1000))
         await expect(
           accountingService.postWithdrawal(expiringWithdrawal.id)
         ).resolves.toEqual(TransferError.TransferExpired)
@@ -780,7 +780,7 @@ describe('Accounting Service', (): void => {
         await expect(
           accountingService.createWithdrawal(expiringWithdrawal)
         ).resolves.toBeUndefined()
-        await new Promise((resolve) => setImmediate(resolve))
+        await new Promise((resolve) => setTimeout(resolve, 1000))
         await expect(
           accountingService.voidWithdrawal(expiringWithdrawal.id)
         ).resolves.toEqual(TransferError.TransferExpired)
