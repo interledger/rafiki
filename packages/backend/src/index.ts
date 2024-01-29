@@ -46,7 +46,7 @@ import { createPeerService } from './payment-method/ilp/peer/service'
 import { createIlpPaymentService } from './payment-method/ilp/service'
 import { createSPSPRoutes } from './payment-method/ilp/spsp/routes'
 import { createStreamCredentialsService } from './payment-method/ilp/stream-credentials/service'
-import { RatesService, createRatesService } from './rates/service'
+import { createRatesService } from './rates/service'
 import { TelemetryService, createTelemetryService } from './telemetry/service'
 import { createWebhookService } from './webhook/service'
 
@@ -129,12 +129,22 @@ export function initIocContainer(
     })
   })
 
+  container.singleton('ratesService', async (deps) => {
+    const config = await deps.use('config')
+    return createRatesService({
+      logger: await deps.use('logger'),
+      exchangeRatesUrl: config.exchangeRatesUrl,
+      exchangeRatesLifetime: config.exchangeRatesLifetime
+    })
+  })
+
   if (config.enableTelemetry) {
     container.singleton('telemetry', async (deps) => {
       const config = await deps.use('config')
       return createTelemetryService({
         logger: await deps.use('logger'),
-        telemetryRatesService: createRatesService({
+        aseRatesService: await deps.use('ratesService'),
+        fallbackRatesService: createRatesService({
           logger: await deps.use('logger'),
           exchangeRatesUrl: config.telemetryExchangeRatesUrl,
           exchangeRatesLifetime: config.telemetryExchangeRatesLifetime
@@ -206,10 +216,8 @@ export function initIocContainer(
     const config = await deps.use('config')
 
     let telemetry: TelemetryService | undefined
-    let aseRatesService: RatesService | undefined
     if (config.enableTelemetry) {
       telemetry = await deps.use('telemetry')
-      aseRatesService = await deps.use('ratesService')
     }
 
     if (config.useTigerbeetle) {
@@ -218,7 +226,6 @@ export function initIocContainer(
       return createTigerbeetleAccountingService({
         logger,
         telemetry,
-        aseRatesService,
         knex,
         tigerbeetle,
         withdrawalThrottleDelay: config.withdrawalThrottleDelay
@@ -228,7 +235,6 @@ export function initIocContainer(
     return createPsqlAccountingService({
       logger,
       telemetry,
-      aseRatesService,
       knex,
       withdrawalThrottleDelay: config.withdrawalThrottleDelay
     })
@@ -343,15 +349,6 @@ export function initIocContainer(
         'remoteIncomingPaymentService'
       ),
       config: await deps.use('config')
-    })
-  })
-
-  container.singleton('ratesService', async (deps) => {
-    const config = await deps.use('config')
-    return createRatesService({
-      logger: await deps.use('logger'),
-      exchangeRatesUrl: config.exchangeRatesUrl,
-      exchangeRatesLifetime: config.exchangeRatesLifetime
     })
   })
 

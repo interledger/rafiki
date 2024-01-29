@@ -16,7 +16,7 @@ import { setContext } from '@apollo/client/link/context'
 
 import { start, gracefulShutdown } from '..'
 import { App, AppServices } from '../app'
-import { MockTelemetryService } from '../telemetry/mocks'
+import { MockTelemetryService } from './telemetry'
 export const testAccessToken = 'test-app-access'
 
 export interface TestContainer {

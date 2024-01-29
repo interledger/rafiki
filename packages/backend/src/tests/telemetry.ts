@@ -1,6 +1,7 @@
 import { Attributes, Counter, MetricOptions } from '@opentelemetry/api'
-import { TelemetryService } from './service'
+import { TelemetryService } from '../telemetry/service'
 import { ConvertError, Rates, RatesService } from '../rates/service'
+import { ConvertOptions } from '../rates/util'
 
 export const mockCounter = { add: jest.fn() } as Counter
 
@@ -27,30 +28,37 @@ export class MockRatesService implements RatesService {
 }
 
 export class MockTelemetryService implements TelemetryService {
-  ratesService = new MockRatesService()
-  getOrCreate(
+  public aseRatesService = new MockRatesService()
+  public fallbackRatesService = new MockRatesService()
+  public getOrCreate(
     _name: string,
     _options?: MetricOptions | undefined
   ): Counter<Attributes> {
     return mockCounter
   }
-  getServiceName(): string | undefined {
+  public getServiceName(): string | undefined {
     return 'serviceName'
   }
 
-  getRatesService(): RatesService {
-    return this.ratesService
+  public async convertAmount(
+    _convertOptions: Omit<ConvertOptions, 'exchangeRate'>
+  ): Promise<bigint | ConvertError> {
+    let converted = await this.aseRatesService.convert()
+    if (typeof converted !== 'bigint' && converted in ConvertError) {
+      converted = await this.fallbackRatesService.convert()
+    }
+    return Promise.resolve(converted)
   }
 
-  getBaseAssetCode(): string {
+  public getBaseAssetCode(): string {
     return 'USD'
   }
 
-  getBaseScale(): number {
+  public getBaseScale(): number {
     return 4
   }
 
-  applyPrivacy(rawValue: number): number {
-    return rawValue + Math.random() * 100
-  }
+  // public applyPrivacy(rawValue: number): number {
+  //   return rawValue + Math.random() * 100
+  // }
 }

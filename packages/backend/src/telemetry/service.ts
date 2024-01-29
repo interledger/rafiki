@@ -13,22 +13,26 @@ import {
   PeriodicExportingMetricReader
 } from '@opentelemetry/sdk-metrics'
 
-import { RatesService } from '../rates/service'
+import { ConvertError, RatesService } from '../rates/service'
+import { ConvertOptions } from '../rates/util'
 import { BaseService } from '../shared/baseService'
 
 export interface TelemetryService {
   getOrCreate(name: string, options?: MetricOptions): Counter
   getServiceName(): string | undefined
-  getRatesService(): RatesService
   getBaseAssetCode(): string
   getBaseScale(): number
+  convertAmount(
+    convertOptions: Omit<ConvertOptions, 'exchangeRate'>
+  ): Promise<bigint | ConvertError>
 }
 
 interface TelemetryServiceDependencies extends BaseService {
   serviceName: string
   collectorUrls: string[]
   exportIntervalMillis?: number
-  telemetryRatesService: RatesService
+  aseRatesService: RatesService
+  fallbackRatesService: RatesService
   baseAssetCode: string
   baseScale: number
 }
@@ -42,13 +46,15 @@ export function createTelemetryService(
 class TelemetryServiceImpl implements TelemetryService {
   private serviceName: string
   private meterProvider?: MeterProvider
-  private ratesService: RatesService
+  private fallbackRatesService: RatesService
+  private aseRatesService: RatesService
 
   private counters = new Map()
   constructor(private deps: TelemetryServiceDependencies) {
     diag.setLogger(new DiagConsoleLogger(), DiagLogLevel.DEBUG)
     this.serviceName = deps.serviceName
-    this.ratesService = deps.telemetryRatesService
+    this.fallbackRatesService = deps.fallbackRatesService
+    this.aseRatesService = deps.aseRatesService
 
     if (
       deps.collectorUrls &&
@@ -98,12 +104,21 @@ class TelemetryServiceImpl implements TelemetryService {
     return this.createCounter(name, options)
   }
 
-  public getServiceName(): string | undefined {
-    return this.serviceName
+  public async convertAmount(
+    convertOptions: Omit<ConvertOptions, 'exchangeRate'>
+  ) {
+    let converted = await this.aseRatesService.convert(convertOptions)
+    if (typeof converted !== 'bigint' && converted in ConvertError) {
+      converted = await this.fallbackRatesService.convert(convertOptions)
+      if (typeof converted !== 'bigint' && converted in ConvertError) {
+        this.deps.logger.error(`Unable to convert amount: ${converted}`)
+      }
+    }
+    return converted
   }
 
-  getRatesService(): RatesService {
-    return this.ratesService
+  public getServiceName(): string | undefined {
+    return this.serviceName
   }
 
   getBaseAssetCode(): string {
