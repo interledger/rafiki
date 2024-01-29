@@ -95,23 +95,6 @@ services:
       - cloud-nine-admin
       - happy-life-backend
 
-  #Serves as example for optional local collector configuration
-  # happy-life-otel-collector:
-  #   image: otel/opentelemetry-collector-contrib:latest
-  #   command: ["--config=/etc/otel-collector-config.yaml", ""]
-  #   environment:
-  #     - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID-''}
-  #     - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY-''}
-  #   volumes:
-  #     - ../collector/otel-collector-config.yaml:/etc/otel-collector-config.yaml
-  #   networks:
-  #     - rafiki
-  #   expose:
-  #     - 4317
-  #   ports:
-  #   - "13132:13133" # health_check extension
- 
-
 networks:
   rafiki:
     external: true

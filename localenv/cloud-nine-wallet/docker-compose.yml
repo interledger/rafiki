@@ -124,21 +124,6 @@ services:
     depends_on:
       - cloud-nine-backend
 
-  #Serves as example for optional local collector 
-  # cloud-nine-otel-collector:
-  #   image: otel/opentelemetry-collector-contrib:latest
-  #   command: ["--config=/etc/otel-collector-config.yaml", ""]
-  #   environment:
-  #     - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID-''}
-  #     - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY-''}
-  #   volumes:
-  #     - ../collector/otel-collector-config.yaml:/etc/otel-collector-config.yaml
-  #   networks:
-  #     - rafiki
-  #   expose:
-  #     - 4317
-  #   ports:
-  #   - "13133:13133" # health_check extension 
 
 volumes:
   database-data: # named volumes can be managed easier using docker-compose
