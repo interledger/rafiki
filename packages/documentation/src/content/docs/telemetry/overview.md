@@ -30,7 +30,7 @@ We have adopted [Opentelemetry](https://opentelemetry.io/) to ensure compliance 
 
 ## Telemetry ECS Cluster
 
-The Telemetry Replica service is hosted on AWS ECS Fargate and is configured for availability and load balancing of custom ADOT Collectors (AWS Distro for Opentelemetry) ECS tasks.
+The Telemetry Replica service is hosted on AWS ECS Fargate and is configured for availability and load balancing of custom ADOT (AWS Distro for Opentelemetry) Collector ECS tasks.
 
 When ASEs opt for telemetry, metrics are sent to our Telemetry Service. To enable ASEs to build their own telemetry solutions, instrumented Rafiki can send data to multiple endpoints. This allows the integration of a local Otel collector container that can support custom requirements. Metrics communication is facilitated through GRPC.
 
