@@ -5,17 +5,6 @@ describe('Privacy functions', () => {
     maxBucketSize: 10000
   }
 
-  let originalModule: typeof privacy
-
-  beforeEach(() => {
-    originalModule = { ...privacy }
-
-    jest.mock('./privacy', () => ({
-      ...originalModule,
-      applyPrivacy: jest.fn()
-    }))
-  })
-
   afterEach(() => {
     jest.unmock('./privacy')
   })
