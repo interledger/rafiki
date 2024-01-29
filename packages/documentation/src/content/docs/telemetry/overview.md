@@ -10,11 +10,11 @@ The objective of the telemetry feature is to gather metrics and establish an inf
 - The number of transactions from outgoing payments that have been at least partially successful.
 - The average amount of money held within the network per transaction.
 
-Our goal is to use these data for our own insights and to enable Account Servicing Entities (ASEs) to gain their own insights. We aim to track the growth of the network in terms of transaction sizes and the number of transactions processed.
+Our goal is to use these data for our own insights and to enable [Account Servicing Entities](/reference/glossary#account-servicing-entity) (ASEs) to gain their own insights. We aim to track the growth of the network in terms of transaction sizes and the number of transactions processed.
 
 ## Privacy and Optionality
 
-Privacy is a paramount concern for us. Rafiki's telemetry feature is designed to provide valuable network insights without violating privacy or aiding malicious ASEs. For more information, please [Read the privacy docs](./privacy.md).
+Privacy is a paramount concern for us. Rafiki's telemetry feature is designed to provide valuable network insights without violating privacy or aiding malicious ASEs. For more information, please [Read the privacy docs](../privacy).
 
 The telemetry feature is optional for ASEs.
 
@@ -26,11 +26,11 @@ The architecture of the telemetry feature is illustrated below:
 
 ## Opentelemetry
 
-We have adopted Opentelemetry to ensure compliance with a standardized framework that is compatible with a variety of tool suites. This allows clients to use their preferred tools for data analysis, while Rafiki is instrumented and observable through a standardized metrics format.
+We have adopted [Opentelemetry](https://opentelemetry.io/) to ensure compliance with a standardized framework that is compatible with a variety of tool suites. This allows clients to use their preferred tools for data analysis, while Rafiki is instrumented and observable through a standardized metrics format.
 
 ## Telemetry ECS Cluster
 
-The Telemetry Replica service is hosted on AWS ECS Fargate and is configured for availability and load balancing of custom ADOT collector ECS tasks.
+The Telemetry Replica service is hosted on AWS ECS Fargate and is configured for availability and load balancing of custom AWS Distro for Opentelemetry Collector (ADOT) ECS tasks.
 
 When ASEs opt for telemetry, metrics are sent to our Telemetry Service. To enable ASEs to build their own telemetry solutions, instrumented Rafiki can send data to multiple endpoints. This allows the integration of a local Otel collector container that can support custom requirements. Metrics communication is facilitated through GRPC.
 
@@ -64,11 +64,11 @@ Rafiki currently has two counter metrics. All data points (counter increases) ar
 
 Currently collected metrics:
 
-- `transactions_total` (Open-payments) - Counter metric
+- `transactions_total` - Counter metric
   - Description: “Count of funded transactions”
   - This counter metric increases by 1 for each successfully sent transaction.
   - It is collected in the open-payments module, outgoing payment service.
-- `transactions_amount` (ILP Connector) - Counter metric
+- `transactions_amount` - Counter metric
   - Description: “Amount sent through the network”.
   - This amount metric increases by the amount sent in each ILP packet.
   - It is collected inside the ILP connector core, by a new telemetry middleware.
