@@ -1,5 +1,5 @@
 ---
-title: Privacy in Rafiki Telemetry
+title: Privacy
 ---
 
 Rafiki telemetry is designed with a strong emphasis on privacy. The system anonymizes user data and refrains from collecting identifiable information. Since transactions can originate from any user to a Rafiki instance, the privacy measures are implemented at the Rafiki instance level in the network. This means that at the individual level, the data is already anonymous as single Rafiki instances service transactions for multiple users.
@@ -30,7 +30,7 @@ The noise, selected from the Laplacian distribution, is then generated using thi
 
 ## Currency Conversion
 
-Another factor that obscures sensitive data is currency conversion. In cross-currency transactions, we use exchange rates that are not traced back. This introduces an additional layer of noise and further protects the privacy of the transactions.
+Another factor that obscures sensitive data is currency conversion. In cross-currency transactions, we use exchange rates that are not traced back. The rates are provided by the integrating [ASE](/reference/glossary#account-servicing-entity) at runtime and are not persisted. If the needed rates are not provided, external API's for exchange rates are used. The obtained exchange rates are overwritten frequently in this case, with no versioning or history access. This introduces an additional layer of noise and further protects the privacy of the transactions.
 
 ## References
 

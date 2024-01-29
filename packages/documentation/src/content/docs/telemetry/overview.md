@@ -14,7 +14,7 @@ Our goal is to use these data for our own insights and to enable [Account Servic
 
 ## Privacy and Optionality
 
-Privacy is a paramount concern for us. Rafiki's telemetry feature is designed to provide valuable network insights without violating privacy or aiding malicious ASEs. For more information, please [Read the privacy docs](../privacy).
+Privacy is a paramount concern for us. Rafiki's telemetry feature is designed to provide valuable network insights without violating privacy or aiding malicious ASEs. For more information, please [read the privacy docs](../privacy).
 
 The telemetry feature is optional for ASEs.
 
@@ -26,7 +26,7 @@ The architecture of the telemetry feature is illustrated below:
 
 ## Opentelemetry
 
-We have adopted [Opentelemetry](https://opentelemetry.io/) to ensure compliance with a standardized framework that is compatible with a variety of tool suites. This allows clients to use their preferred tools for data analysis, while Rafiki is instrumented and observable through a standardized metrics format.
+We have adopted [OpenTelemetry](https://opentelemetry.io/) to ensure compliance with a standardized framework that is compatible with a variety of tool suites. This allows clients to use their preferred tools for data analysis, while Rafiki is instrumented and observable through a standardized metrics format.
 
 ## Telemetry ECS Cluster
 
