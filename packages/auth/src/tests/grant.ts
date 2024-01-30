@@ -68,7 +68,7 @@ export const generateBaseGrant = (options: GenerateBaseGrantOptions = {}) => {
     continueToken: generateToken(),
     continueId: v4(),
     finishMethod: noFinishMethod ? undefined : FinishMethod.Redirect,
-    finishUri: 'https://example.com',
+    finishUri: noFinishMethod ? undefined : 'https://example.com',
     clientNonce: generateNonce(),
     client: CLIENT
   }

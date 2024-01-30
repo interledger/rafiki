@@ -666,9 +666,7 @@ describe('Grant Routes', (): void => {
       })
 
       test('Honors wait value when continuing too early', async (): Promise<void> => {
-        const grantWithWait = await Grant.query().insert(
-          generateBaseGrant()
-        )
+        const grantWithWait = await Grant.query().insert(generateBaseGrant())
 
         await Access.query().insert({
           ...BASE_GRANT_ACCESS,
@@ -771,7 +769,9 @@ describe('Grant Routes', (): void => {
           }
 
           if (state === GrantState.Processing || state === GrantState.Pending) {
-            expectedBody.continue.wait = config.waitTimeSeconds
+            Object.assign(expectedBody.continue, {
+              wait: config.waitTimeSeconds
+            })
             const updatedPolledGrant = await Grant.query().findById(
               polledGrant.id
             )
@@ -877,8 +877,7 @@ describe('Grant Routes', (): void => {
       test('Cannot poll a grant faster than its wait method', async (): Promise<void> => {
         const polledGrant = await Grant.query().insert(
           generateBaseGrant({
-            noFinishMethod: true,
-            wait: 30 * 60 * 1000
+            noFinishMethod: true
           })
         )
 

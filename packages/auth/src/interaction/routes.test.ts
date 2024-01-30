@@ -256,142 +256,266 @@ describe('Interaction Routes', (): void => {
         })
       })
 
-      test('Can finish accepted interaction', async (): Promise<void> => {
-        const grant = await Grant.query().insert({
-          ...generateBaseGrant(),
-          state: GrantState.Approved
-        })
-
-        await Access.query().insert({
-          ...BASE_GRANT_ACCESS,
-          grantId: grant.id
-        })
-
-        const interaction = await Interaction.query().insert(
-          generateBaseInteraction(grant, {
-            state: InteractionState.Approved
+      describe('Interactions for grant with finish method', (): void => {
+        test('Can finish accepted interaction', async (): Promise<void> => {
+          const grant = await Grant.query().insert({
+            ...generateBaseGrant(),
+            state: GrantState.Approved
           })
-        )
 
-        const ctx = createContext<FinishContext>(
-          {
-            headers: {
-              Accept: 'application/json',
-              'Content-Type': 'application/json'
+          await Access.query().insert({
+            ...BASE_GRANT_ACCESS,
+            grantId: grant.id
+          })
+
+          const interaction = await Interaction.query().insert(
+            generateBaseInteraction(grant, {
+              state: InteractionState.Approved
+            })
+          )
+
+          const ctx = createContext<FinishContext>(
+            {
+              headers: {
+                Accept: 'application/json',
+                'Content-Type': 'application/json'
+              },
+              session: {
+                nonce: interaction.nonce
+              },
+              url: `/interact/${interaction.id}/${interaction.nonce}/finish`
             },
-            session: {
-              nonce: interaction.nonce
+            { id: interaction.id, nonce: interaction.nonce }
+          )
+
+          assert.ok(grant.finishUri)
+          const clientRedirectUri = new URL(grant.finishUri)
+          const { clientNonce } = grant
+          const { nonce: interactNonce, ref: interactRef } = interaction
+
+          const grantRequestUrl = config.authServerDomain + `/`
+
+          const data = `${clientNonce}\n${interactNonce}\n${interactRef}\n${grantRequestUrl}`
+          const hash = crypto
+            .createHash('sha-256')
+            .update(data)
+            .digest('base64')
+          clientRedirectUri.searchParams.set('hash', hash)
+          assert.ok(interactRef)
+          clientRedirectUri.searchParams.set('interact_ref', interactRef)
+
+          const redirectSpy = jest.spyOn(ctx, 'redirect')
+
+          await expect(interactionRoutes.finish(ctx)).resolves.toBeUndefined()
+          expect(ctx.response).toSatisfyApiSpec()
+          expect(ctx.status).toBe(302)
+          expect(redirectSpy).toHaveBeenCalledWith(clientRedirectUri.toString())
+
+          const issuedGrant = await Grant.query().findById(grant.id)
+          assert.ok(issuedGrant)
+          expect(issuedGrant.state).toEqual(GrantState.Approved)
+        })
+
+        test('Can finish rejected interaction', async (): Promise<void> => {
+          const grant = await Grant.query().insert({
+            ...generateBaseGrant(),
+            state: GrantState.Finalized,
+            finalizationReason: GrantFinalization.Rejected
+          })
+
+          await Access.query().insert({
+            ...BASE_GRANT_ACCESS,
+            grantId: grant.id
+          })
+
+          const interaction = await Interaction.query().insert({
+            ...generateBaseInteraction(grant),
+            state: InteractionState.Denied
+          })
+
+          const ctx = createContext<FinishContext>(
+            {
+              headers: {
+                Accept: 'application/json',
+                'Content-Type': 'application/json'
+              },
+              session: {
+                nonce: interaction.nonce
+              },
+              url: `/interact/${interaction.id}/${interaction.nonce}/finish`
             },
-            url: `/interact/${interaction.id}/${interaction.nonce}/finish`
-          },
-          { id: interaction.id, nonce: interaction.nonce }
-        )
+            { id: interaction.id, nonce: interaction.nonce }
+          )
 
-        assert.ok(grant.finishUri)
-        const clientRedirectUri = new URL(grant.finishUri)
-        const { clientNonce } = grant
-        const { nonce: interactNonce, ref: interactRef } = interaction
+          assert.ok(grant.finishUri)
+          const clientRedirectUri = new URL(grant.finishUri)
+          clientRedirectUri.searchParams.set('result', 'grant_rejected')
 
-        const grantRequestUrl = config.authServerDomain + `/`
+          const redirectSpy = jest.spyOn(ctx, 'redirect')
 
-        const data = `${clientNonce}\n${interactNonce}\n${interactRef}\n${grantRequestUrl}`
-        const hash = crypto.createHash('sha-256').update(data).digest('base64')
-        clientRedirectUri.searchParams.set('hash', hash)
-        assert.ok(interactRef)
-        clientRedirectUri.searchParams.set('interact_ref', interactRef)
+          await expect(interactionRoutes.finish(ctx)).resolves.toBeUndefined()
+          expect(ctx.response).toSatisfyApiSpec()
+          expect(ctx.status).toBe(302)
+          expect(redirectSpy).toHaveBeenCalledWith(clientRedirectUri.toString())
 
-        const redirectSpy = jest.spyOn(ctx, 'redirect')
+          const rejectedGrant = await Grant.query().findById(grant.id)
+          assert.ok(rejectedGrant)
+          expect(rejectedGrant.state).toEqual(GrantState.Finalized)
+          expect(rejectedGrant.finalizationReason).toEqual(
+            GrantFinalization.Rejected
+          )
+        })
 
-        await expect(interactionRoutes.finish(ctx)).resolves.toBeUndefined()
-        expect(ctx.response).toSatisfyApiSpec()
-        expect(ctx.status).toBe(302)
-        expect(redirectSpy).toHaveBeenCalledWith(clientRedirectUri.toString())
+        test('Cannot finish invalid interaction', async (): Promise<void> => {
+          const interaction = await Interaction.query().insert(
+            generateBaseInteraction(grant, {
+              state: InteractionState.Pending
+            })
+          )
+          const ctx = createContext<FinishContext>(
+            {
+              headers: {
+                Accept: 'application/json',
+                'Content-Type': 'application/json'
+              },
+              session: {
+                nonce: interaction.nonce
+              },
+              url: `/interact/${interaction.id}/${interaction.nonce}/finish`
+            },
+            { id: interaction.id, nonce: interaction.nonce }
+          )
 
-        const issuedGrant = await Grant.query().findById(grant.id)
-        assert.ok(issuedGrant)
-        expect(issuedGrant.state).toEqual(GrantState.Approved)
+          assert.ok(grant.finishUri)
+          const clientRedirectUri = new URL(grant.finishUri)
+          clientRedirectUri.searchParams.set('result', 'grant_invalid')
+
+          const redirectSpy = jest.spyOn(ctx, 'redirect')
+
+          await expect(interactionRoutes.finish(ctx)).resolves.toBeUndefined()
+          expect(ctx.response).toSatisfyApiSpec()
+          expect(ctx.status).toBe(302)
+          expect(redirectSpy).toHaveBeenCalledWith(clientRedirectUri.toString())
+        })
       })
 
-      test('Can finish rejected interaction', async (): Promise<void> => {
-        const grant = await Grant.query().insert({
-          ...generateBaseGrant(),
-          state: GrantState.Finalized,
-          finalizationReason: GrantFinalization.Rejected
-        })
+      describe('Interactions for grant without finish method', (): void => {
+        let grantWithoutFinish: Grant
+        beforeEach(async (): Promise<void> => {
+          grantWithoutFinish = await Grant.query().insert(
+            generateBaseGrant({ noFinishMethod: true })
+          )
 
-        await Access.query().insert({
-          ...BASE_GRANT_ACCESS,
-          grantId: grant.id
-        })
-
-        const interaction = await Interaction.query().insert({
-          ...generateBaseInteraction(grant),
-          state: InteractionState.Denied
-        })
-
-        const ctx = createContext<FinishContext>(
-          {
-            headers: {
-              Accept: 'application/json',
-              'Content-Type': 'application/json'
-            },
-            session: {
-              nonce: interaction.nonce
-            },
-            url: `/interact/${interaction.id}/${interaction.nonce}/finish`
-          },
-          { id: interaction.id, nonce: interaction.nonce }
-        )
-
-        assert.ok(grant.finishUri)
-        const clientRedirectUri = new URL(grant.finishUri)
-        clientRedirectUri.searchParams.set('result', 'grant_rejected')
-
-        const redirectSpy = jest.spyOn(ctx, 'redirect')
-
-        await expect(interactionRoutes.finish(ctx)).resolves.toBeUndefined()
-        expect(ctx.response).toSatisfyApiSpec()
-        expect(ctx.status).toBe(302)
-        expect(redirectSpy).toHaveBeenCalledWith(clientRedirectUri.toString())
-
-        const rejectedGrant = await Grant.query().findById(grant.id)
-        assert.ok(rejectedGrant)
-        expect(rejectedGrant.state).toEqual(GrantState.Finalized)
-        expect(rejectedGrant.finalizationReason).toEqual(
-          GrantFinalization.Rejected
-        )
-      })
-
-      test('Cannot finish invalid interaction', async (): Promise<void> => {
-        const interaction = await Interaction.query().insert(
-          generateBaseInteraction(grant, {
-            state: InteractionState.Pending
+          await Access.query().insert({
+            ...BASE_GRANT_ACCESS,
+            grantId: grantWithoutFinish.id
           })
-        )
-        const ctx = createContext<FinishContext>(
-          {
-            headers: {
-              Accept: 'application/json',
-              'Content-Type': 'application/json'
+        })
+
+        test('Can finish approved interaction', async (): Promise<void> => {
+          const interaction = await Interaction.query().insert(
+            generateBaseInteraction(grantWithoutFinish, {
+              state: InteractionState.Approved
+            })
+          )
+
+          const ctx = createContext<FinishContext>(
+            {
+              headers: {
+                Accept: 'application/json',
+                'Content-Type': 'application/json'
+              },
+              session: {
+                nonce: interaction.nonce
+              },
+              url: `/interact/${interaction.id}/${interaction.nonce}/finish`
             },
-            session: {
-              nonce: interaction.nonce
+            { id: interaction.id, nonce: interaction.nonce }
+          )
+
+          await expect(interactionRoutes.finish(ctx)).resolves.toBeUndefined()
+          expect(ctx.response).toSatisfyApiSpec()
+          expect(ctx.status).toBe(202)
+        })
+
+        test('Can finish rejected interaction', async (): Promise<void> => {
+          const grant = await Grant.query().insert({
+            ...generateBaseGrant({
+              noFinishMethod: true
+            }),
+            state: GrantState.Finalized,
+            finalizationReason: GrantFinalization.Rejected
+          })
+
+          await Access.query().insert({
+            ...BASE_GRANT_ACCESS,
+            grantId: grant.id
+          })
+
+          const interaction = await Interaction.query().insert(
+            generateBaseInteraction(grant, {
+              state: InteractionState.Denied
+            })
+          )
+
+          const ctx = createContext<FinishContext>(
+            {
+              headers: {
+                Accept: 'application/json',
+                'Content-Type': 'application/json'
+              },
+              session: {
+                nonce: interaction.nonce
+              },
+              url: `/interact/${interaction.id}/${interaction.nonce}/finish`
             },
-            url: `/interact/${interaction.id}/${interaction.nonce}/finish`
-          },
-          { id: interaction.id, nonce: interaction.nonce }
-        )
+            { id: interaction.id, nonce: interaction.nonce }
+          )
 
-        assert.ok(grant.finishUri)
-        const clientRedirectUri = new URL(grant.finishUri)
-        clientRedirectUri.searchParams.set('result', 'grant_invalid')
+          await expect(interactionRoutes.finish(ctx)).resolves.toBeUndefined()
+          expect(ctx.response).toSatisfyApiSpec()
+          expect(ctx.status).toBe(202)
+        })
 
-        const redirectSpy = jest.spyOn(ctx, 'redirect')
+        test('Cannot finish invalid interaction', async (): Promise<void> => {
+          const grant = await Grant.query().insert({
+            ...generateBaseGrant({
+              noFinishMethod: true
+            }),
+            state: GrantState.Finalized,
+            finalizationReason: GrantFinalization.Rejected
+          })
 
-        await expect(interactionRoutes.finish(ctx)).resolves.toBeUndefined()
-        expect(ctx.response).toSatisfyApiSpec()
-        expect(ctx.status).toBe(302)
-        expect(redirectSpy).toHaveBeenCalledWith(clientRedirectUri.toString())
+          await Access.query().insert({
+            ...BASE_GRANT_ACCESS,
+            grantId: grant.id
+          })
+
+          const interaction = await Interaction.query().insert(
+            generateBaseInteraction(grant, {
+              state: InteractionState.Pending
+            })
+          )
+          const ctx = createContext<FinishContext>(
+            {
+              headers: {
+                Accept: 'application/json',
+                'Content-Type': 'application/json'
+              },
+              session: {
+                nonce: interaction.nonce
+              },
+              url: `/interact/${interaction.id}/${interaction.nonce}/finish`
+            },
+            { id: interaction.id, nonce: interaction.nonce }
+          )
+
+          await expect(interactionRoutes.finish(ctx)).rejects.toMatchObject({
+            status: 401
+          })
+
+          console.log('ctx.response=', ctx.response)
+        })
       })
     })
 
