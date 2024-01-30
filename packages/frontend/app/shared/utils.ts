@@ -95,3 +95,7 @@ export const paymentSubpathByType: {
   [PaymentType.Incoming]: 'incoming',
   [PaymentType.Outgoing]: 'outgoing'
 }
+
+export const parseBool = (str: string) => {
+  return ['true', 't', '1'].includes(str.toLowerCase())
+}

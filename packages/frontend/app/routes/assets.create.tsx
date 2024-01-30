@@ -1,4 +1,4 @@
-import { json, type ActionArgs } from '@remix-run/node'
+import { json, type ActionFunctionArgs } from '@remix-run/node'
 import { Form, useActionData, useNavigation } from '@remix-run/react'
 import { PageHeader } from '~/components'
 import { Button, ErrorPanel, Input } from '~/components/ui'
@@ -71,7 +71,7 @@ export default function CreateAssetPage() {
   )
 }
 
-export async function action({ request }: ActionArgs) {
+export async function action({ request }: ActionFunctionArgs) {
   const errors: {
     fieldErrors: ZodFieldErrors<typeof createAssetSchema>
     message: string[]

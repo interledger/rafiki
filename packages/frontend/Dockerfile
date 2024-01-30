@@ -56,4 +56,4 @@ COPY --from=builder /home/rafiki/packages/frontend/build ./packages/frontend/bui
 COPY --from=builder /home/rafiki/packages/frontend/public ./packages/frontend/public
 
 WORKDIR /home/rafiki/packages/frontend
-CMD ["sh", "./node_modules/.bin/remix-serve", "build"]
+CMD ["sh", "./node_modules/.bin/remix-serve", "./build/index.js"]

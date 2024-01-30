@@ -1,4 +1,8 @@
-import { json, type ActionArgs, type LoaderArgs } from '@remix-run/node'
+import {
+  json,
+  type ActionFunctionArgs,
+  type LoaderFunctionArgs
+} from '@remix-run/node'
 import {
   Form,
   Outlet,
@@ -26,7 +30,7 @@ import {
 import type { ZodFieldErrors } from '~/shared/types'
 import { formatAmount } from '~/shared/utils'
 
-export async function loader({ params }: LoaderArgs) {
+export async function loader({ params }: LoaderFunctionArgs) {
   const peerId = params.peerId
 
   const result = z.string().uuid().safeParse(peerId)
@@ -292,7 +296,7 @@ export default function ViewPeerPage() {
   )
 }
 
-export async function action({ request }: ActionArgs) {
+export async function action({ request }: ActionFunctionArgs) {
   const actionResponse: {
     errors: {
       general: {

@@ -3,7 +3,6 @@ import type { Dispatch, SetStateAction } from 'react'
 import { useEffect, useState } from 'react'
 import { ApiClient } from '~/lib/apiClient'
 import type { Access } from '~/lib/types'
-import { parseQueryString } from '~/lib/utils'
 
 interface ConsentScreenContext {
   ready: boolean
@@ -230,19 +229,20 @@ export default function ConsentScreen() {
     errors: new Array<Error>()
   } as ConsentScreenContext)
   const location = useLocation()
-  const queryParams = parseQueryString(location.search)
+  const queryParams = new URLSearchParams(location.search)
 
   useEffect(() => {
     if (
       ctx.errors.length === 0 &&
       !ctx.ready &&
-      queryParams.has('interactId', 'nonce')
+      queryParams.has('interactId') &&
+      queryParams.has('nonce')
     ) {
-      const interactId = queryParams.getAsString('interactId')
-      const nonce = queryParams.getAsString('nonce')
-      const returnUrl = queryParams.getAsString('returnUrl')
-      const clientName = queryParams.getAsString('clientName') as string
-      const clientUri = queryParams.getAsString('clientUri') as string
+      const interactId = queryParams.get('interactId')
+      const nonce = queryParams.get('nonce')
+      const returnUrl = queryParams.get('returnUrl')
+      const clientName = queryParams.get('clientName')
+      const clientUri = queryParams.get('clientUri')
       if (interactId && nonce) {
         setCtx({
           ...ctx,
@@ -250,8 +250,8 @@ export default function ConsentScreen() {
           interactId,
           nonce,
           returnUrl: returnUrl || ctx.returnUrl,
-          thirdPartyName: clientName,
-          thirdPartyUri: clientUri
+          thirdPartyName: clientName || '',
+          thirdPartyUri: clientUri || ''
         })
       }
     }
@@ -278,8 +278,10 @@ export default function ConsentScreen() {
             })
           } else {
             const outgoingPaymentAccess =
-              response.payload.find((p) => p.type === 'outgoing-payment') ||
-              null
+              response.payload.find(
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                (p: Record<string, any>) => p.type === 'outgoing-payment'
+              ) || null
             const returnUrlObject = new URL(ctx.returnUrl)
             returnUrlObject.searchParams.append(
               'grantId',

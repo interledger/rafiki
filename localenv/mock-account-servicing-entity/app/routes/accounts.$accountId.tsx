@@ -1,4 +1,4 @@
-import { json } from '@remix-run/node'
+import { LoaderFunctionArgs, json } from '@remix-run/node'
 import { useLoaderData } from '@remix-run/react'
 import { getAccountTransactions } from '../lib/transactions.server'
 import tableStyle from '../styles/table.css'
@@ -7,9 +7,14 @@ type LoaderData = {
   transactions: Awaited<ReturnType<typeof getAccountTransactions>>
 }
 
-export const loader = async ({ params }) => {
+export const loader = async ({ params }: LoaderFunctionArgs) => {
+  const { accountId } = params
+
+  if (!accountId) {
+    throw json(null, { status: 400, statusText: 'Account not provided.' })
+  }
   return json<LoaderData>({
-    transactions: await getAccountTransactions(params.accountId)
+    transactions: await getAccountTransactions(accountId)
   })
 }
 
