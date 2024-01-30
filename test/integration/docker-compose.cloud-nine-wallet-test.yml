@@ -1,0 +1,59 @@
+name: cloud-nine-wallet-test
+services:
+  cloud-nine-wallet-test-backend:
+    hostname: cloud-nine-wallet-test-backend
+    image: rafiki-backend
+    build:
+      context: ../..
+      dockerfile: ./packages/backend/Dockerfile
+    restart: always
+    privileged: true
+    ports:
+      - '3000:80'
+      - '3001:3001'
+      - '3002:3002'
+    networks:
+      - rafiki-test
+    environment:
+      NODE_ENV: ${NODE_ENV:-development}
+      TRUST_PROXY: ${TRUST_PROXY}
+      LOG_LEVEL: debug
+      ADMIN_PORT: 3001
+      CONNECTOR_PORT: 3002
+      OPEN_PAYMENTS_PORT: 80
+      DATABASE_URL: postgresql://cloud_nine_wallet_test_backend:cloud_nine_wallet_test_backend@shared-database/cloud_nine_wallet_test_backend
+      USE_TIGERBEETLE: ${USE_TIGERBEETLE-false}
+      TIGERBEETLE_CLUSTER_ID: ${TIGERBEETLE_CLUSTER_ID-0}
+      TIGERBEETLE_REPLICA_ADDRESSES: ${TIGERBEETLE_REPLICA_ADDRESSES-''}
+      AUTH_SERVER_GRANT_URL: ${CLOUD_NINE_WALLET_TEST_AUTH_SERVER_DOMAIN:-http://cloud-nine-wallet-test-auth:3006}
+      AUTH_SERVER_INTROSPECTION_URL: http://cloud-nine-wallet-test-auth:3007
+      ILP_ADDRESS: ${ILP_ADDRESS:-test.cloud-nine-wallet-test}
+      STREAM_SECRET: BjPXtnd00G2mRQwP/8ZpwyZASOch5sUXT5o0iR5b5wU=
+      OPEN_PAYMENTS_URL: ${CLOUD_NINE_WALLET_TEST_OPEN_PAYMENTS_URL:-http://cloud-nine-wallet-test-backend}
+      WEBHOOK_URL: http://cloud-nine-wallet-test/webhooks
+      EXCHANGE_RATES_URL: http://cloud-nine-wallet-test/rates
+      REDIS_URL: redis://shared-redis:6379/0
+      WALLET_ADDRESS_URL: ${CLOUD_NINE_WALLET_TEST_WALLET_ADDRESS_URL:-https://cloud-nine-wallet-test/.well-known/pay}
+      ILP_CONNECTOR_ADDRESS: ${CLOUD_NINE_WALLET_TEST_CONNECTOR_URL}
+    depends_on:
+      - shared-database
+      - shared-redis
+  cloud-nine-wallet-test-auth:
+    hostname: cloud-nine-wallet-test-auth
+    image: rafiki-auth
+    build:
+      context: ../..
+      dockerfile: ./packages/auth/Dockerfile
+    restart: always
+    networks:
+      - rafiki-test
+    ports:
+      - '3003:3003'
+      - '3006:3006'
+    environment:
+      NODE_ENV: ${NODE_ENV:-development}
+      TRUST_PROXY: ${TRUST_PROXY}
+      AUTH_DATABASE_URL: postgresql://cloud_nine_wallet_test_auth:cloud_nine_wallet_test_auth@shared-database/cloud_nine_wallet_test_auth
+      AUTH_SERVER_DOMAIN: ${CLOUD_NINE_WALLET_TEST_AUTH_SERVER_DOMAIN:-http://localhost:3006}
+    depends_on:
+      - shared-database

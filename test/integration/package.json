@@ -1,0 +1,17 @@
+{
+  "name": "integration",
+  "private": true,
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "testenv:compose": "docker-compose -f docker-compose.cloud-nine-wallet-test.yml -f docker-compose.happy_life_bank_test.yml -f docker-compose.yml",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "testcontainers": "^10.6.0"
+  }
+}
