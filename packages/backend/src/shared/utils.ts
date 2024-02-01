@@ -37,10 +37,10 @@ export async function requestWithTimeout<T>(
   const timeout = async (): Promise<never> =>
     new Promise(
       (_, reject) =>
-        (timeoutId = setTimeout(
+        { timeoutId = setTimeout(
           () => reject(new Error('Request timed out')),
           timeoutMs
-        ))
+        } )
     )
 
   const response = await Promise.race([request(), timeout()])
