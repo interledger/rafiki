@@ -67,10 +67,8 @@ Currently collected metrics:
 - `transactions_total` - Counter metric
   - Description: “Count of funded transactions”
   - This counter metric increases by 1 for each successfully sent transaction.
-  - It is collected in the open-payments module, outgoing payment service.
 - `transactions_amount` - Counter metric
   - Description: “Amount sent through the network”.
   - This amount metric increases by the amount sent in each ILP packet.
-  - It is collected inside the ILP connector core, by a new telemetry middleware.
 
 **Note**: The current implementation only collects metrics on the SENDING side of a transaction. Metrics for external open-payments transactions RECEIVED by a Rafiki instance in the network are not collected.
