@@ -24,7 +24,7 @@ The architecture of the telemetry feature is illustrated below:
 
 ![Telemetry architecture](/img/telemetry-architecture.png)
 
-## Opentelemetry
+## OpenTelemetry
 
 We have adopted [OpenTelemetry](https://opentelemetry.io/) to ensure compliance with a standardized framework that is compatible with a variety of tool suites. This allows clients to use their preferred tools for data analysis, while Rafiki is instrumented and observable through a standardized metrics format.
 

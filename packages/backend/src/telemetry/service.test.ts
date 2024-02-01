@@ -4,13 +4,14 @@ import { MockTelemetryService, mockCounter } from '../tests/telemetry'
 const telemetryService = new MockTelemetryService()
 describe('TelemetryServiceImpl', () => {
   it('should create a counter when getOrCreate is called for a new metric', () => {
-    const counter = telemetryService.getOrCreate('testMetric')
+    const counter = telemetryService.getOrCreateMetric('testMetric')
     expect(counter).toBe(mockCounter)
   })
 
   it('should return an existing counter when getOrCreate is called for an existing metric', () => {
-    const existingCounter = telemetryService.getOrCreate('existingMetric')
-    const retrievedCounter = telemetryService.getOrCreate('existingMetric')
+    const existingCounter = telemetryService.getOrCreateMetric('existingMetric')
+    const retrievedCounter =
+      telemetryService.getOrCreateMetric('existingMetric')
     expect(retrievedCounter).toBe(existingCounter)
   })
 

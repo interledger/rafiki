@@ -18,12 +18,12 @@ import { ConvertOptions } from '../rates/util'
 import { BaseService } from '../shared/baseService'
 
 export interface TelemetryService {
-  getOrCreate(name: string, options?: MetricOptions): Counter
+  getOrCreateMetric(name: string, options?: MetricOptions): Counter
   getServiceName(): string | undefined
   getBaseAssetCode(): string
   getBaseScale(): number
   convertAmount(
-    convertOptions: Omit<ConvertOptions, 'exchangeRate'>
+    convertOptions: Omit<ConvertOptions, 'exchangeRate' | 'destinationAsset'>
   ): Promise<bigint | ConvertError>
 }
 
@@ -96,7 +96,7 @@ class TelemetryServiceImpl implements TelemetryService {
     return counter
   }
 
-  public getOrCreate(name: string, options?: MetricOptions): Counter {
+  public getOrCreateMetric(name: string, options?: MetricOptions): Counter {
     const existing = this.counters.get(name)
     if (existing) {
       return existing
@@ -107,11 +107,27 @@ class TelemetryServiceImpl implements TelemetryService {
   public async convertAmount(
     convertOptions: Omit<ConvertOptions, 'exchangeRate'>
   ) {
-    let converted = await this.aseRatesService.convert(convertOptions)
+    const destinationAsset = {
+      code: this.deps.baseAssetCode,
+      scale: this.deps.baseScale
+    }
+
+    let converted = await this.aseRatesService.convert({
+      ...convertOptions,
+      destinationAsset
+    })
     if (typeof converted !== 'bigint' && converted in ConvertError) {
-      converted = await this.fallbackRatesService.convert(convertOptions)
+      this.deps.logger.error(
+        `Unable to convert amount from provided rates: ${converted}`
+      )
+      converted = await this.fallbackRatesService.convert({
+        ...convertOptions,
+        destinationAsset
+      })
       if (typeof converted !== 'bigint' && converted in ConvertError) {
-        this.deps.logger.error(`Unable to convert amount: ${converted}`)
+        this.deps.logger.error(
+          `Unable to convert amount from fallback rates: ${converted}`
+        )
       }
     }
     return converted

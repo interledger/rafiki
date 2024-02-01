@@ -1,24 +1,25 @@
 import { ValueType } from '@opentelemetry/api'
 import { ConvertError } from '../rates/service'
-import { Asset } from '../rates/util'
+import { Asset, ConvertOptions } from '../rates/util'
 import { privacy } from './privacy'
 import { TelemetryService } from './service'
+import { Logger } from 'pino'
 
 export async function collectTelemetryAmount(
   telemetryService: TelemetryService,
+  logger: Logger,
   { amount, asset }: { amount: bigint; asset: Asset }
 ) {
   if (!amount) {
     return
   }
 
-  const convertOptions = {
+  const convertOptions: Omit<
+    ConvertOptions,
+    'exchangeRate' | 'destinationAsset'
+  > = {
     sourceAmount: amount,
-    sourceAsset: { code: asset.code, scale: asset.scale },
-    destinationAsset: {
-      code: telemetryService.getBaseAssetCode(),
-      scale: telemetryService.getBaseScale()
-    }
+    sourceAsset: { code: asset.code, scale: asset.scale }
   }
 
   try {
@@ -28,12 +29,14 @@ export async function collectTelemetryAmount(
     }
 
     telemetryService
-      .getOrCreate('transactions_amount', {
+      .getOrCreateMetric('transactions_amount', {
         description: 'Amount sent through the network',
         valueType: ValueType.DOUBLE
       })
       .add(privacy.applyPrivacy(Number(converted)))
+
+    console.log('AFTER TELEMEGTRY AMOUNT', converted)
   } catch (e) {
-    console.error(`Unable to collect telemetry`, e)
+    logger.error(e, `Unable to collect telemetry`)
   }
 }

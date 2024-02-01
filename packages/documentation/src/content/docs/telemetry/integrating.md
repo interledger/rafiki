@@ -1,5 +1,5 @@
 ---
-title: Building on Top of Rafiki Metrics
+title: Deploying Custom Telemetry Service
 ---
 
 Rafiki allows for integrating [Account Servicing Entities](/reference/glossary#account-servicing-entity) (ASE) to build their own telemetry solution based on the [OpenTelemetry](https://opentelemetry.io/) standardized metrics format that Rafiki exposes.
@@ -8,12 +8,13 @@ In order to do so, the integrating ASE must deploy its own OpenTelemetry collect
 
 ## Rafiki Telemetry Environment Variables
 
-- `ENABLE_TELEMETRY`: boolean, defaults to `true`.
-- `OPEN_TELEMETRY_COLLECTOR_URL`: CSV of URLs (e.g., `http://otel-collector-NLB-e3172ff9d2f4bc8a.elb.eu-west-2.amazonaws.com:4317,http://happy-life-otel-collector:4317`).
-- `OPEN_TELEMETRY_EXPORT_INTERVAL`: number in milliseconds, defaults to `15000`.
-- `TELEMETRY_EXCHANGE_RATES_URL`: string URL, defaults to `https://telemetry-exchange-rates.s3.amazonaws.com/exchange-rates-usd.json`. If set, the response format of the external exchange rates API should be of type Rates, as the rates service expects.
+- `ENABLE_TELEMETRY`: boolean, defaults to `true`. Enables the telemetry service on Rafiki.
+- `OPEN_TELEMETRY_COLLECTOR_URL`: CSV of URLs for Open Telemetry collectors (e.g., `http://otel-collector-NLB-e3172ff9d2f4bc8a.elb.eu-west-2.amazonaws.com:4317,http://happy-life-otel-collector:4317`).
+- `OPEN_TELEMETRY_EXPORT_INTERVAL`: number in milliseconds, defaults to `15000`. Defines how often the instrumented Rafiki instance should send metrics.
+- `TELEMETRY_EXCHANGE_RATES_URL`: string URL, defaults to `https://telemetry-exchange-rates.s3.amazonaws.com/exchange-rates-usd.json`. It defines the endpoint that Rafiki will query for exchange rates, as a fallback when ASE does not provide them. If set, the response format of the external exchange rates API should be of type Rates, as the rates service expects.
+  The default endpoint set here points to a public S3 that has the previously mentioned required format, updated daily.
 
-## Example Docker OpentTelemetry Collector Image and Configuration
+## Example Docker OpenTelemetry Collector Image and Configuration
 
 Example of Docker OpenTelemetry Collector image and configuration that integrates with Rafiki and sends data to a Prometheus remote write endpoint:
 
@@ -40,6 +41,8 @@ happy-life-otel-collector:
 ```
 
 #### OpenTelemetry OTEL collector config:
+
+[OTEL Collector config docs](https://opentelemetry.io/docs/collector/configuration/)
 
 ```yaml
 # Serves as example for the configuration of a local OpenTelemetry Collector that sends metrics to an AWS Managed Prometheus Workspace

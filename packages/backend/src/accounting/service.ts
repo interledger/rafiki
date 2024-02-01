@@ -1,4 +1,5 @@
 import { TransactionOrKnex } from 'objection'
+import { BaseService } from '../shared/baseService'
 import { TelemetryService } from '../telemetry/service'
 import { collectTelemetryAmount } from '../telemetry/transaction-amount'
 import { TransferError, isTransferError } from './errors'
@@ -92,8 +93,12 @@ export interface TransferToCreate {
   ledger: number
 }
 
-interface CreateAccountToAccountTransferArgs {
+export interface BaseAccountingServiceDependencies extends BaseService {
   telemetry?: TelemetryService
+  withdrawalThrottleDelay?: number
+}
+
+interface CreateAccountToAccountTransferArgs {
   transferArgs: TransferOptions
   voidTransfers(transferIds: string[]): Promise<void | TransferError>
   postTransfers(transferIds: string[]): Promise<void | TransferError>
@@ -102,10 +107,10 @@ interface CreateAccountToAccountTransferArgs {
   createPendingTransfers(
     transfers: TransferToCreate[]
   ): Promise<string[] | TransferError>
-  withdrawalThrottleDelay?: number
 }
 
 export async function createAccountToAccountTransfer(
+  deps: BaseAccountingServiceDependencies,
   args: CreateAccountToAccountTransferArgs
 ): Promise<Transaction | TransferError> {
   const {
@@ -114,10 +119,10 @@ export async function createAccountToAccountTransfer(
     createPendingTransfers,
     getAccountReceived,
     getAccountBalance,
-    withdrawalThrottleDelay,
-    transferArgs,
-    telemetry
+    transferArgs
   } = args
+
+  const { withdrawalThrottleDelay, telemetry, logger } = deps
 
   const { sourceAccount, destinationAccount, sourceAmount, destinationAmount } =
     transferArgs
@@ -192,13 +197,14 @@ export async function createAccountToAccountTransfer(
           withdrawalThrottleDelay
         })
       }
+
       if (
         destinationAccount.onDebit &&
         telemetry &&
         sourceAccount.asset.code &&
         sourceAccount.asset.scale
       ) {
-        collectTelemetryAmount(telemetry, {
+        collectTelemetryAmount(telemetry, logger, {
           amount: sourceAmount,
           asset: {
             code: sourceAccount.asset.code,

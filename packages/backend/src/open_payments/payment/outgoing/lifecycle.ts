@@ -80,9 +80,8 @@ export async function handleSending(
     finalDebitAmount: maxDebitAmount,
     finalReceiveAmount: maxReceiveAmount
   })
-
   deps.telemetry
-    ?.getOrCreate('transactions_total', {
+    ?.getOrCreateMetric('transactions_total', {
       description: 'Count of funded transactions'
     })
     .add(1, {

@@ -30,7 +30,7 @@ export class MockRatesService implements RatesService {
 export class MockTelemetryService implements TelemetryService {
   public aseRatesService = new MockRatesService()
   public fallbackRatesService = new MockRatesService()
-  public getOrCreate(
+  public getOrCreateMetric(
     _name: string,
     _options?: MetricOptions | undefined
   ): Counter<Attributes> {
@@ -57,8 +57,4 @@ export class MockTelemetryService implements TelemetryService {
   public getBaseScale(): number {
     return 4
   }
-
-  // public applyPrivacy(rawValue: number): number {
-  //   return rawValue + Math.random() * 100
-  // }
 }

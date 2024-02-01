@@ -4,8 +4,10 @@ import { Asset } from '../rates/util'
 import { MockTelemetryService } from '../tests/telemetry'
 import { privacy } from './privacy'
 import { collectTelemetryAmount } from './transaction-amount'
+import { Logger } from 'pino'
 
 const telemetryService = new MockTelemetryService()
+const mockLogger = { error: jest.fn() } as unknown as Logger
 
 const asset: Asset = { code: 'USD', scale: 2 }
 
@@ -18,14 +20,14 @@ describe('Telemetry Amount Collection', function () {
       )
 
     const addSpy = jest.spyOn(
-      telemetryService.getOrCreate('transactions_amount', {
+      telemetryService.getOrCreateMetric('transactions_amount', {
         description: 'Amount sent through the network',
         valueType: ValueType.DOUBLE
       }),
       'add'
     )
 
-    await collectTelemetryAmount(telemetryService, {
+    await collectTelemetryAmount(telemetryService, mockLogger, {
       amount: 100n,
       asset
     })
@@ -40,7 +42,7 @@ describe('Telemetry Amount Collection', function () {
         Promise.resolve(ConvertError.InvalidDestinationPrice)
       )
 
-    await collectTelemetryAmount(telemetryService, {
+    await collectTelemetryAmount(telemetryService, mockLogger, {
       amount: 0n,
       asset
     })
@@ -53,7 +55,7 @@ describe('Telemetry Amount Collection', function () {
       .spyOn(telemetryService, 'convertAmount')
       .mockImplementation(() => Promise.resolve(10000n))
     const addSpy = jest.spyOn(
-      telemetryService.getOrCreate('transactions_amount', {
+      telemetryService.getOrCreateMetric('transactions_amount', {
         description: 'Amount sent through the network',
         valueType: ValueType.DOUBLE
       }),
@@ -61,7 +63,7 @@ describe('Telemetry Amount Collection', function () {
     )
     jest.spyOn(privacy, 'applyPrivacy').mockReturnValue(12000)
 
-    await collectTelemetryAmount(telemetryService, {
+    await collectTelemetryAmount(telemetryService, mockLogger, {
       amount: 100n,
       asset
     })
@@ -78,14 +80,14 @@ describe('Telemetry Amount Collection', function () {
       .spyOn(privacy, 'applyPrivacy')
       .mockReturnValue(12000)
     const addSpy = jest.spyOn(
-      telemetryService.getOrCreate('transactions_amount', {
+      telemetryService.getOrCreateMetric('transactions_amount', {
         description: 'Amount sent through the network',
         valueType: ValueType.DOUBLE
       }),
       'add'
     )
 
-    await collectTelemetryAmount(telemetryService, {
+    await collectTelemetryAmount(telemetryService, mockLogger, {
       amount: 100n,
       asset
     })
