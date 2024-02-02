@@ -1,11 +1,4 @@
-import {
-  Counter,
-  DiagConsoleLogger,
-  DiagLogLevel,
-  MetricOptions,
-  diag,
-  metrics
-} from '@opentelemetry/api'
+import { Counter, MetricOptions, metrics } from '@opentelemetry/api'
 import { OTLPMetricExporter } from '@opentelemetry/exporter-metrics-otlp-grpc'
 import { Resource } from '@opentelemetry/resources'
 import {
@@ -54,7 +47,8 @@ class TelemetryServiceImpl implements TelemetryService {
 
   private counters = new Map()
   constructor(private deps: TelemetryServiceDependencies) {
-    diag.setLogger(new DiagConsoleLogger(), DiagLogLevel.DEBUG)
+    // debug logger:
+    // diag.setLogger(new DiagConsoleLogger(), DiagLogLevel.DEBUG)
     this.instanceName = deps.instanceName
     this.fallbackRatesService = deps.fallbackRatesService
     this.aseRatesService = deps.aseRatesService
