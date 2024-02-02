@@ -12,8 +12,8 @@ importers:
         specifier: ^29.6.3
         version: 29.6.3
       '@swc/jest':
-        specifier: ^0.2.31
-        version: 0.2.31(@swc/core@1.3.92)
+        specifier: ^0.2.34
+        version: 0.2.34(@swc/core@1.3.92)
       '@types/jest':
         specifier: ^29.5.11
         version: 29.5.11
@@ -4321,8 +4321,8 @@ packages:
     resolution: {integrity: sha512-9F4ys4C74eSTEUNndnER3VJ15oru2NumfQxS8geE+f3eB5xvfxpWyqE5XlVnxb/R14uoXi6SLbBwwiDSkv+XEw==}
     dev: true
 
-  /@swc/jest@0.2.31(@swc/core@1.3.92):
-    resolution: {integrity: sha512-Gh0Ste380O8KUY1IqsKr+aOvqqs2Loa+WcWWVNwl+lhXqOWK1iTFAP1K0IDfLqAuFP68+D/PxcpBJn21e6Quvw==}
+  /@swc/jest@0.2.34(@swc/core@1.3.92):
+    resolution: {integrity: sha512-MrS4m3yHFfnkYjxr3eqxshWi6fVhPViHQsb6XfiTO81niwEqYXeR58YhGJee6R0bfQHC69cv5OJ9+dYTYaYKRg==}
     engines: {npm: '>= 7.0.0'}
     peerDependencies:
       '@swc/core': '*'
