@@ -44,7 +44,7 @@ describe('TelemetryServiceImpl', () => {
       enableTelemetry: true,
       telemetryExchangeRatesUrl: 'http://example-rates.com',
       telemetryExchangeRatesLifetime: 100,
-      openTelemetryCollectors: ['http://example-collector.com']
+      openTelemetryCollectors: []
     })
 
     appContainer = await createTestApp(deps)
