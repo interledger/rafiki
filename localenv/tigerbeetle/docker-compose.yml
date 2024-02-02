@@ -2,7 +2,7 @@ services:
   tigerbeetle:
     env_file:
       - ../tigerbeetle/.env.tigerbeetle
-    image: ghcr.io/tigerbeetle/tigerbeetle:0.13.57
+    image: ghcr.io/tigerbeetle/tigerbeetle:0.14.176
     privileged: true
     volumes:
       - tigerbeetle-data:/var/lib/tigerbeetle

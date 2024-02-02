@@ -123,7 +123,7 @@ export function initIocContainer(
   container.singleton('tigerbeetle', async (deps) => {
     const config = await deps.use('config')
     return createClient({
-      cluster_id: config.tigerbeetleClusterId,
+      cluster_id: BigInt(config.tigerbeetleClusterId),
       replica_addresses: config.tigerbeetleReplicaAddresses
     })
   })

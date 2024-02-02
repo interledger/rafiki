@@ -50,7 +50,7 @@ describe('Liquidity Resolvers', (): void => {
   let appContainer: TestContainer
   let accountingService: AccountingService
   let knex: Knex
-  const timeout = BigInt(10_000) // 10 seconds
+  const timeout = 10
 
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer(Config)

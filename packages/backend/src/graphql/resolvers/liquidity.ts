@@ -183,7 +183,7 @@ export const createPeerLiquidityWithdrawal: MutationResolvers<ApolloContext>['cr
         id: args.input.id,
         account: peer,
         amount: args.input.amount,
-        timeout: BigInt(60e9) // 1 minute
+        timeout: 60
       })
       if (error) {
         return errorToResponse(error)
@@ -229,7 +229,7 @@ export const createAssetLiquidityWithdrawal: MutationResolvers<ApolloContext>['c
         id: args.input.id,
         account: asset,
         amount: args.input.amount,
-        timeout: BigInt(60e9) // 1 minute
+        timeout: 60
       })
       if (error) {
         return errorToResponse(error)
@@ -287,7 +287,7 @@ export const createWalletAddressWithdrawal: MutationResolvers<ApolloContext>['cr
         id,
         account: walletAddress,
         amount,
-        timeout: BigInt(60e9) // 1 minute
+        timeout: 60
       })
 
       if (error) {

@@ -247,7 +247,7 @@ export async function createTransfer(
             debitAccount: accountMap[transfer.sourceAccountId],
             creditAccount: accountMap[transfer.destinationAccountId],
             amount: transfer.amount,
-            timeoutMs: args.timeout
+            timeoutMs: BigInt(args.timeout * 1000)
           }))
         )
       )
@@ -363,7 +363,7 @@ async function createAccountWithdrawal(
     creditAccount: settlementAccount,
     amount,
     type: LedgerTransferType.WITHDRAWAL,
-    timeoutMs: timeout
+    timeoutMs: timeout ? BigInt(timeout * 1000) : undefined
   }
 
   const { errors } = await createTransfers(deps, [transfer])

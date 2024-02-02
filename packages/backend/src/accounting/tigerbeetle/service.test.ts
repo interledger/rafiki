@@ -25,7 +25,7 @@ describe('Accounting Service', (): void => {
   let appContainer: TestContainer
   let accountingService: AccountingService
   let accountFactory: AccountFactory
-  const timeout = BigInt(10_000) // 10 seconds
+  const timeout = 10
 
   let ledger = 1
   function newLedger() {
@@ -209,7 +209,7 @@ describe('Accounting Service', (): void => {
             sourceAccount: account,
             sourceAmount: BigInt(10 * (i + 1)),
             destinationAccount: receivingAccount,
-            timeout: 0n
+            timeout: 0
           })
           assert.ok(!isTransferError(transfer))
           await transfer.post()
@@ -708,12 +708,12 @@ describe('Accounting Service', (): void => {
         const expiringWithdrawal = {
           ...withdrawal,
           id: uuid(),
-          timeout: BigInt(1)
+          timeout: 1
         }
         await expect(
           accountingService.createWithdrawal(expiringWithdrawal)
         ).resolves.toBeUndefined()
-        await new Promise((resolve) => setImmediate(resolve))
+        await new Promise((resolve) => setTimeout(resolve, 1000))
         await expect(
           accountingService.postWithdrawal(expiringWithdrawal.id)
         ).resolves.toEqual(TransferError.TransferExpired)
@@ -775,12 +775,12 @@ describe('Accounting Service', (): void => {
         const expiringWithdrawal = {
           ...withdrawal,
           id: uuid(),
-          timeout: BigInt(1)
+          timeout: 1
         }
         await expect(
           accountingService.createWithdrawal(expiringWithdrawal)
         ).resolves.toBeUndefined()
-        await new Promise((resolve) => setImmediate(resolve))
+        await new Promise((resolve) => setTimeout(resolve, 1000))
         await expect(
           accountingService.voidWithdrawal(expiringWithdrawal.id)
         ).resolves.toEqual(TransferError.TransferExpired)

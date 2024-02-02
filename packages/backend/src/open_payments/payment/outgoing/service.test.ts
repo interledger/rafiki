@@ -123,7 +123,7 @@ describe('OutgoingPaymentService', (): void => {
       destinationAccount: incomingPayment,
       sourceAmount: args.debitAmount,
       destinationAmount: args.receiveAmount,
-      timeout: 0n
+      timeout: 0
     })
 
     assert.ok(!isTransferError(transfer))

@@ -57,7 +57,7 @@ export interface TransferOptions {
   destinationAccount: OutgoingAccount
   sourceAmount: bigint
   destinationAmount?: bigint
-  timeout: bigint
+  timeout: number
 }
 
 export interface AccountingService {

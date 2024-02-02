@@ -8,8 +8,6 @@ import { ServiceDependencies, TigerbeetleAccountCode } from './service'
 import { TigerbeetleCreateAccountError } from './errors'
 import { AccountId, toTigerbeetleId } from './utils'
 
-const ACCOUNT_RESERVED = Buffer.alloc(48)
-
 export interface CreateAccountOptions {
   id: AccountId
   ledger: number
@@ -23,8 +21,10 @@ export async function createAccounts(
   const errors = await deps.tigerbeetle.createAccounts(
     accounts.map((account) => ({
       id: toTigerbeetleId(account.id),
-      user_data: 0n,
-      reserved: ACCOUNT_RESERVED,
+      user_data_32: 0,
+      user_data_64: 0n,
+      user_data_128: 0n,
+      reserved: 0,
       ledger: account.ledger,
       code: account.code,
       // Credit and debit accounts can both send and receive
