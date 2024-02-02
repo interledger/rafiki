@@ -8,7 +8,14 @@ import { GrantService } from '../grant/service'
 import { AccessService } from '../access/service'
 import { InteractionService } from '../interaction/service'
 import { Interaction, InteractionState } from '../interaction/model'
-import { GrantState, GrantFinalization, isRevokedGrant } from '../grant/model'
+import {
+  Grant,
+  FinishableGrant,
+  GrantState,
+  GrantFinalization,
+  isRevokedGrant,
+  isFinishableGrant
+} from '../grant/model'
 import { toOpenPaymentsAccess } from '../access/model'
 
 interface ServiceDependencies extends BaseService {
@@ -147,6 +154,14 @@ async function startInteraction(
     interaction.state !== InteractionState.Pending ||
     isRevokedGrant(interaction.grant)
   ) {
+    deps.logger.info(
+      {
+        interaction,
+        interactId,
+        nonce
+      },
+      'returning 401 for unknown request'
+    )
     ctx.throw(401, { error: 'unknown_request' })
   }
 
@@ -223,6 +238,65 @@ async function handleInteractionChoice(
   }
 }
 
+async function handleFinishableGrant(
+  deps: ServiceDependencies,
+  ctx: FinishContext,
+  interaction: Interaction,
+  grant: FinishableGrant
+): Promise<void> {
+  const { grantService, config } = deps
+  const clientRedirectUri = new URL(grant.finishUri as string)
+  if (interaction.state === InteractionState.Approved) {
+    await grantService.approve(interaction.grantId)
+
+    const { clientNonce } = grant
+    const { nonce: interactNonce, ref: interactRef } = interaction
+    const grantRequestUrl = config.authServerDomain + `/`
+
+    // https://datatracker.ietf.org/doc/html/draft-ietf-gnap-core-protocol#section-4.2.3
+    const data = `${clientNonce}\n${interactNonce}\n${interactRef}\n${grantRequestUrl}`
+
+    const hash = crypto.createHash('sha-256').update(data).digest('base64')
+    clientRedirectUri.searchParams.set('hash', hash)
+    clientRedirectUri.searchParams.set('interact_ref', interactRef)
+    ctx.redirect(clientRedirectUri.toString())
+  } else if (interaction.state === InteractionState.Denied) {
+    await grantService.finalize(grant.id, GrantFinalization.Rejected)
+    clientRedirectUri.searchParams.set('result', 'grant_rejected')
+    ctx.redirect(clientRedirectUri.toString())
+  } else {
+    // Interaction is not in an accepted or rejected state
+    clientRedirectUri.searchParams.set('result', 'grant_invalid')
+    ctx.redirect(clientRedirectUri.toString())
+  }
+}
+
+async function handleUnfinishableGrant(
+  deps: ServiceDependencies,
+  ctx: FinishContext,
+  interaction: Interaction,
+  grant: Grant
+): Promise<void> {
+  const { grantService } = deps
+  if (interaction.state === InteractionState.Approved) {
+    await grantService.approve(grant.id)
+    ctx.status = 202
+    return
+  } else if (interaction.state === InteractionState.Denied) {
+    await grantService.finalize(grant.id, GrantFinalization.Rejected)
+    ctx.status = 202
+    return
+  } else {
+    // Interaction is not in an accepted or rejected state
+    ctx.throw(401, {
+      error: {
+        code: 'invalid_interaction',
+        message: 'interaction is still pending'
+      }
+    })
+  }
+}
+
 async function finishInteraction(
   deps: ServiceDependencies,
   ctx: FinishContext
@@ -235,40 +309,18 @@ async function finishInteraction(
     ctx.throw(401, { error: 'invalid_request' })
   }
 
-  const { grantService, interactionService, config } = deps
+  const { interactionService } = deps
   const interaction = await interactionService.getBySession(interactId, nonce)
 
   // TODO: redirect with this error in query string
   if (!interaction || isRevokedGrant(interaction.grant)) {
     ctx.throw(404, { error: 'unknown_request' })
+  }
+
+  const { grant } = interaction
+  if (isFinishableGrant(grant)) {
+    await handleFinishableGrant(deps, ctx, interaction, grant)
   } else {
-    const { grant } = interaction
-    const clientRedirectUri = new URL(grant.finishUri as string)
-    if (interaction.state === InteractionState.Approved) {
-      await grantService.approve(interaction.grantId)
-
-      const {
-        grant: { clientNonce },
-        nonce: interactNonce,
-        ref: interactRef
-      } = interaction
-      const grantRequestUrl = config.authServerDomain + `/`
-
-      // https://datatracker.ietf.org/doc/html/draft-ietf-gnap-core-protocol#section-4.2.3
-      const data = `${clientNonce}\n${interactNonce}\n${interactRef}\n${grantRequestUrl}`
-
-      const hash = crypto.createHash('sha-256').update(data).digest('base64')
-      clientRedirectUri.searchParams.set('hash', hash)
-      clientRedirectUri.searchParams.set('interact_ref', interactRef)
-      ctx.redirect(clientRedirectUri.toString())
-    } else if (interaction.state === InteractionState.Denied) {
-      await grantService.finalize(grant.id, GrantFinalization.Rejected)
-      clientRedirectUri.searchParams.set('result', 'grant_rejected')
-      ctx.redirect(clientRedirectUri.toString())
-    } else {
-      // Interaction is not in an accepted or rejected state
-      clientRedirectUri.searchParams.set('result', 'grant_invalid')
-      ctx.redirect(clientRedirectUri.toString())
-    }
+    await handleUnfinishableGrant(deps, ctx, interaction, grant)
   }
 }

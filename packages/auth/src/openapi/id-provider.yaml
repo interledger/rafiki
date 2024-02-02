@@ -73,6 +73,8 @@ paths:
       summary: Finish user interaction
       operationId: get-finish-interaction
       responses:
+        '202':
+          description: Accepted
         '302':
           content:
             text/html:

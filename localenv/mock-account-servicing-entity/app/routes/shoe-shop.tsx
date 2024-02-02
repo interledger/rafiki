@@ -50,7 +50,16 @@ function AuthorizedView({
   )
 }
 
-function RejectedView({ thirdPartyName }: { thirdPartyName: string }) {
+function RejectedView({
+  thirdPartyName,
+  interactId,
+  nonce
+}: {
+  thirdPartyName: string
+  interactId: string
+  nonce: string
+}) {
+  const authServerDomain = useLoaderData<typeof loader>()
   return (
     <>
       <div className='row'>
@@ -62,6 +71,16 @@ function RejectedView({ thirdPartyName }: { thirdPartyName: string }) {
         <div className='col-12'>
           <p>You denied {thirdPartyName} access to your account.</p>
         </div>
+      </div>
+      <div className='row'>
+        <button
+          className='btn btn-primary'
+          onClick={() => {
+            ApiClient.endInteraction(interactId, nonce, authServerDomain)
+          }}
+        >
+          Continue
+        </button>
       </div>
     </>
   )
@@ -163,7 +182,11 @@ export default function ShoeShop() {
                   nonce={ctx.nonce}
                 />
               ) : (
-                <RejectedView thirdPartyName={ctx.thirdPartyName || ''} />
+                <RejectedView
+                  thirdPartyName={ctx.thirdPartyName || ''}
+                  interactId={ctx.interactId}
+                  nonce={ctx.nonce}
+                />
               )}
             </div>
           </div>

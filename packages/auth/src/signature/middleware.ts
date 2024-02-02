@@ -88,18 +88,6 @@ export async function grantContinueHttpsigMiddleware(
     return
   }
 
-  const interactionService = await ctx.container.use('interactionService')
-  const interaction =
-    interactRef && (await interactionService.getByRef(interactRef))
-
-  if (!interaction) {
-    ctx.status = 401
-    ctx.body = {
-      error: 'invalid_continuation',
-      message: 'invalid interaction'
-    }
-  }
-
   const sigVerified = await verifySigFromClient(grant.client, ctx)
   if (!sigVerified) {
     ctx.throw(401, 'invalid signature')

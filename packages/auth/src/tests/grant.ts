@@ -52,19 +52,23 @@ export async function createGrant(
 export interface GenerateBaseGrantOptions {
   state?: GrantState
   finalizationReason?: GrantFinalization
+  noFinishMethod?: boolean
 }
 
 export const generateBaseGrant = (options: GenerateBaseGrantOptions = {}) => {
-  const { state = GrantState.Processing, finalizationReason = undefined } =
-    options
+  const {
+    state = GrantState.Processing,
+    finalizationReason = undefined,
+    noFinishMethod = false
+  } = options
   return {
     state,
     finalizationReason,
     startMethod: [StartMethod.Redirect],
     continueToken: generateToken(),
     continueId: v4(),
-    finishMethod: FinishMethod.Redirect,
-    finishUri: 'https://example.com',
+    finishMethod: noFinishMethod ? undefined : FinishMethod.Redirect,
+    finishUri: noFinishMethod ? undefined : 'https://example.com',
     clientNonce: generateNonce(),
     client: CLIENT
   }
