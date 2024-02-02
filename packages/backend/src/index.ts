@@ -139,17 +139,21 @@ export function initIocContainer(
   })
 
   if (config.enableTelemetry) {
+    container.singleton('fallbackRatesService', async (deps) => {
+      return createRatesService({
+        logger: await deps.use('logger'),
+        exchangeRatesUrl: config.telemetryExchangeRatesUrl,
+        exchangeRatesLifetime: config.telemetryExchangeRatesLifetime
+      })
+    })
+
     container.singleton('telemetry', async (deps) => {
       const config = await deps.use('config')
       return createTelemetryService({
         logger: await deps.use('logger'),
         aseRatesService: await deps.use('ratesService'),
-        fallbackRatesService: createRatesService({
-          logger: await deps.use('logger'),
-          exchangeRatesUrl: config.telemetryExchangeRatesUrl,
-          exchangeRatesLifetime: config.telemetryExchangeRatesLifetime
-        }),
-        serviceName: config.instanceName,
+        fallbackRatesService: await deps.use('fallbackRatesService')!,
+        instanceName: config.instanceName,
         collectorUrls: config.openTelemetryCollectors,
         exportIntervalMillis: config.openTelemetryExportInterval,
         baseAssetCode: 'USD',
