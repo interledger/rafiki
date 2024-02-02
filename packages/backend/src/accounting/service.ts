@@ -12,18 +12,17 @@ export enum LiquidityAccountType {
   WEB_MONETIZATION = 'WEB_MONETIZATION'
 }
 
-export type LiquidityAccountAsset = {
+export interface LiquidityAccountAsset {
   id: string
   code?: string
   scale?: number
   ledger: number
+  onDebit?: (options: OnDebitOptions) => Promise<LiquidityAccount>
 }
 
 export interface LiquidityAccount {
   id: string
-  asset: LiquidityAccountAsset & {
-    onDebit?: (options: OnDebitOptions) => Promise<LiquidityAccount>
-  }
+  asset: LiquidityAccountAsset
   onCredit?: (options: OnCreditOptions) => Promise<LiquidityAccount>
   onDebit?: (options: OnDebitOptions) => Promise<LiquidityAccount>
 }

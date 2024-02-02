@@ -13,13 +13,13 @@ import {
   PeriodicExportingMetricReader
 } from '@opentelemetry/sdk-metrics'
 
-import { ConvertError, RatesService } from '../rates/service'
+import { ConvertError, RatesService, isConvertError } from '../rates/service'
 import { ConvertOptions } from '../rates/util'
 import { BaseService } from '../shared/baseService'
 
 export interface TelemetryService {
   getOrCreateMetric(name: string, options?: MetricOptions): Counter
-  getServiceName(): string | undefined
+  getInstanceName(): string | undefined
   getBaseAssetCode(): string
   getBaseScale(): number
   convertAmount(
@@ -28,7 +28,7 @@ export interface TelemetryService {
 }
 
 interface TelemetryServiceDependencies extends BaseService {
-  serviceName: string
+  instanceName: string
   collectorUrls: string[]
   exportIntervalMillis?: number
   aseRatesService: RatesService
@@ -37,6 +37,9 @@ interface TelemetryServiceDependencies extends BaseService {
   baseScale: number
 }
 
+const METER_NAME = 'Rafiki'
+const SERVICE_NAME = 'RAFIKI_NETWORK'
+
 export function createTelemetryService(
   deps: TelemetryServiceDependencies
 ): TelemetryService {
@@ -44,7 +47,7 @@ export function createTelemetryService(
 }
 
 class TelemetryServiceImpl implements TelemetryService {
-  private serviceName: string
+  private instanceName: string
   private meterProvider?: MeterProvider
   private fallbackRatesService: RatesService
   private aseRatesService: RatesService
@@ -52,15 +55,11 @@ class TelemetryServiceImpl implements TelemetryService {
   private counters = new Map()
   constructor(private deps: TelemetryServiceDependencies) {
     diag.setLogger(new DiagConsoleLogger(), DiagLogLevel.DEBUG)
-    this.serviceName = deps.serviceName
+    this.instanceName = deps.instanceName
     this.fallbackRatesService = deps.fallbackRatesService
     this.aseRatesService = deps.aseRatesService
 
-    if (
-      deps.collectorUrls &&
-      Array.isArray(deps.collectorUrls) &&
-      deps.collectorUrls.length === 0
-    ) {
+    if (deps.collectorUrls.length === 0) {
       deps.logger.info(
         'No collector URLs specified, metrics will not be exported'
       )
@@ -68,7 +67,7 @@ class TelemetryServiceImpl implements TelemetryService {
     }
 
     this.meterProvider = new MeterProvider({
-      resource: new Resource({ 'service.name': 'RAFIKI_NETWORK' })
+      resource: new Resource({ 'service.name': SERVICE_NAME })
     })
 
     deps.collectorUrls.forEach((url) => {
@@ -91,7 +90,7 @@ class TelemetryServiceImpl implements TelemetryService {
     name: string,
     options: MetricOptions | undefined
   ): Counter {
-    const counter = metrics.getMeter('Rafiki').createCounter(name, options)
+    const counter = metrics.getMeter(METER_NAME).createCounter(name, options)
     this.counters.set(name, counter)
     return counter
   }
@@ -116,7 +115,7 @@ class TelemetryServiceImpl implements TelemetryService {
       ...convertOptions,
       destinationAsset
     })
-    if (typeof converted !== 'bigint' && converted in ConvertError) {
+    if (isConvertError(converted)) {
       this.deps.logger.error(
         `Unable to convert amount from provided rates: ${converted}`
       )
@@ -124,7 +123,7 @@ class TelemetryServiceImpl implements TelemetryService {
         ...convertOptions,
         destinationAsset
       })
-      if (typeof converted !== 'bigint' && converted in ConvertError) {
+      if (isConvertError(converted)) {
         this.deps.logger.error(
           `Unable to convert amount from fallback rates: ${converted}`
         )
@@ -133,8 +132,8 @@ class TelemetryServiceImpl implements TelemetryService {
     return converted
   }
 
-  public getServiceName(): string | undefined {
-    return this.serviceName
+  public getInstanceName(): string | undefined {
+    return this.instanceName
   }
 
   getBaseAssetCode(): string {

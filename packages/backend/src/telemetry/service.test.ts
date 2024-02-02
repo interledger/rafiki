@@ -16,7 +16,7 @@ describe('TelemetryServiceImpl', () => {
   })
 
   it('should return the instance name when calling getServiceName', () => {
-    const serviceName = telemetryService.getServiceName()
+    const serviceName = telemetryService.getInstanceName()
 
     expect(serviceName).toBe('serviceName')
   })

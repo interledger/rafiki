@@ -85,7 +85,7 @@ export async function handleSending(
       description: 'Count of funded transactions'
     })
     .add(1, {
-      source: deps.telemetry.getServiceName()
+      source: deps.telemetry.getInstanceName()
     })
 
   await handleCompleted(deps, payment)

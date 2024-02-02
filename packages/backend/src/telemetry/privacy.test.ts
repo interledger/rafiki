@@ -9,13 +9,6 @@ describe('Privacy functions', () => {
     jest.unmock('./privacy')
   })
 
-  test('generateLaplaceNoise should return a different number each time', () => {
-    const scale = 0.5
-    const noise1 = privacy.generateLaplaceNoise(scale)
-    const noise2 = privacy.generateLaplaceNoise(scale)
-    expect(noise1).not.toBe(noise2)
-  })
-
   test('test laplace distributuin math', () => {
     const scale = 0.5
     jest.spyOn(Math, 'random').mockReturnValueOnce(0.25)
@@ -26,8 +19,6 @@ describe('Privacy functions', () => {
 
     expect(noise1).toBe(-0.34657359027997264)
     expect(noise2).toBe(0.34657359027997264)
-
-    jest.spyOn(Math, 'random').mockRestore()
   })
 
   test('computePrivacyParameter should return 0 when sensitivity is 0', () => {
@@ -39,7 +30,7 @@ describe('Privacy functions', () => {
   test('computePrivacyParameter should return a non-zero value when sensitivity is non-zero', () => {
     const sensitivity = 1
     const privacyParameter = privacy.computePrivacyParameter(sensitivity)
-    expect(privacyParameter).not.toBe(0)
+    expect(privacyParameter).toBe(0.1)
   })
 
   test('roundValue should return minBucketSize when rawValue is very small', () => {

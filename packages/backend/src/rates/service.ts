@@ -29,6 +29,10 @@ export enum ConvertError {
   InvalidDestinationPrice = 'InvalidDestinationPrice'
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
+export const isConvertError = (o: any): o is ConvertError =>
+  Object.values(ConvertError).includes(o)
+
 export function createRatesService(deps: ServiceDependencies): RatesService {
   return new RatesServiceImpl(deps)
 }

@@ -36,7 +36,7 @@ export class MockTelemetryService implements TelemetryService {
   ): Counter<Attributes> {
     return mockCounter
   }
-  public getServiceName(): string | undefined {
+  public getInstanceName(): string | undefined {
     return 'serviceName'
   }
 

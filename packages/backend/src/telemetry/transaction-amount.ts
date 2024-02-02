@@ -34,8 +34,6 @@ export async function collectTelemetryAmount(
         valueType: ValueType.DOUBLE
       })
       .add(privacy.applyPrivacy(Number(converted)))
-
-    console.log('AFTER TELEMEGTRY AMOUNT', converted)
   } catch (e) {
     logger.error(e, `Unable to collect telemetry`)
   }
