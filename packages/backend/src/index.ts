@@ -508,6 +508,11 @@ export const gracefulShutdown = async (
   tigerbeetle.destroy()
   const redis = await container.use('redis')
   redis.disconnect()
+
+  const telemetry = await container.use('telemetry')
+  if (telemetry) {
+    telemetry.shutdown()
+  }
 }
 
 export const start = async (

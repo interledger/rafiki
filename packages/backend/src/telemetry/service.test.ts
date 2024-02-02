@@ -21,8 +21,11 @@ jest.mock('@opentelemetry/exporter-metrics-otlp-grpc', () => ({
   OTLPMetricExporter: jest.fn().mockImplementation(() => ({}))
 }))
 
+jest.mock('@opentelemetry/resources', () => ({ Resource: jest.fn() }))
+
 jest.mock('@opentelemetry/sdk-metrics', () => ({
   MeterProvider: jest.fn().mockImplementation(() => ({
+    shutdown: jest.fn(),
     addMetricReader: jest.fn()
   })),
   PeriodicExportingMetricReader: jest.fn().mockImplementation(() => ({}))

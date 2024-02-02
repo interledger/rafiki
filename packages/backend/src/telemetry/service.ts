@@ -11,6 +11,7 @@ import { ConvertOptions } from '../rates/util'
 import { BaseService } from '../shared/baseService'
 
 export interface TelemetryService {
+  shutdown(): void
   getOrCreateMetric(name: string, options?: MetricOptions): Counter
   getInstanceName(): string | undefined
   getBaseAssetCode(): string
@@ -78,6 +79,10 @@ class TelemetryServiceImpl implements TelemetryService {
     })
 
     metrics.setGlobalMeterProvider(this.meterProvider)
+  }
+
+  public shutdown(): void {
+    this.meterProvider?.shutdown()
   }
 
   private createCounter(
