@@ -3,7 +3,10 @@ import type { EntryContext } from '@remix-run/node'
 import { createReadableStreamFromReadable } from '@remix-run/node'
 import { RemixServer } from '@remix-run/react'
 import { renderToPipeableStream } from 'react-dom/server'
-import { runSeed } from './lib/run_seed.server'
+import { setupFromSeed } from 'mock-account-servicing-lib'
+import { CONFIG } from './lib/parse_config.server'
+import { apolloClient } from './lib/apolloClient'
+import { mockAccounts } from './lib/accounts.server'
 
 declare global {
   // eslint-disable-next-line no-var
@@ -27,7 +30,10 @@ async function callWithRetry(fn: () => any, depth = 0): Promise<void> {
 }
 
 if (!global.__seeded) {
-  callWithRetry(runSeed)
+  callWithRetry(async () => {
+    console.log('setting up from seed...')
+    return setupFromSeed(CONFIG, apolloClient, mockAccounts, { debug: true })
+  })
     .then(() => {
       global.__seeded = true
     })

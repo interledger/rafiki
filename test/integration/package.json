@@ -5,13 +5,16 @@
   "description": "",
   "scripts": {
     "testenv:compose": "docker-compose -f docker-compose.cloud-nine-wallet-test.yml -f docker-compose.happy_life_bank_test.yml -f docker-compose.yml",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "jest": "^29.7.0",
-    "testcontainers": "^10.6.0"
+    "@apollo/client": "^3.8.10",
+    "@interledger/http-signature-utils": "2.0.0",
+    "@interledger/open-payments": "^6.5.0",
+    "mock-account-servicing-lib": "workspace:*",
+    "yaml": "^2.3.4"
   }
 }

@@ -1,0 +1,24 @@
+{
+  "name": "mock-account-servicing-lib",
+  "description": "Common library for mock account servicing",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist/**/*"
+  ],
+  "scripts": {
+    "build": "pnpm clean && tsc --build tsconfig.json",
+    "clean": "rm -fr dist/",
+    "test": "jest"
+  },
+  "devDependencies": {
+    "@apollo/client": "^3.8.10",
+    "@types/node": "^18.7.12",
+    "@types/uuid": "^9.0.8"
+  },
+  "dependencies": {
+    "@interledger/http-signature-utils": "2.0.0",
+    "graphql": "^16.8.1",
+    "uuid": "^9.0.1"
+  }
+}

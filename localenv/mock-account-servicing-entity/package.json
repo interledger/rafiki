@@ -2,7 +2,8 @@
   "name": "mock-account-servicing-entity",
   "sideEffects": false,
   "scripts": {
-    "build": "remix build",
+    "build:deps": "pnpm --filter mock-account-servicing-lib build",
+    "build": "pnpm build:deps && remix build",
     "dev": "PORT=3300 remix dev",
     "start": "remix-serve ./build/index.js",
     "typecheck": "tsc"
@@ -17,6 +18,7 @@
     "@types/uuid": "^9.0.8",
     "axios": "^1.6.7",
     "graphql": "^16.8.1",
+    "mock-account-servicing-lib": "workspace:*",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "uuid": "^9.0.1",
