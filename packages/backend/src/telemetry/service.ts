@@ -81,8 +81,8 @@ class TelemetryServiceImpl implements TelemetryService {
     metrics.setGlobalMeterProvider(this.meterProvider)
   }
 
-  public shutdown(): void {
-    this.meterProvider?.shutdown()
+  public async shutdown(): Promise<void> {
+    await this.meterProvider?.shutdown()
   }
 
   private createCounter(

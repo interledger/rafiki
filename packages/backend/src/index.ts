@@ -511,7 +511,7 @@ export const gracefulShutdown = async (
 
   const telemetry = await container.use('telemetry')
   if (telemetry) {
-    telemetry.shutdown()
+    await telemetry.shutdown()
   }
 }
 
