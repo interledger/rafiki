@@ -370,7 +370,8 @@ export class App {
       'outgoingPaymentRoutes'
     )
     const quoteRoutes = await this.container.use('quoteRoutes')
-    const { resourceServerSpec } = await this.container.use('openApi')
+    const { resourceServerSpec, walletAddressServerSpec } =
+      await this.container.use('openApi')
 
     // POST /incoming-payments
     // Create incoming payment
@@ -556,10 +557,13 @@ export class App {
     router.get(
       WALLET_ADDRESS_PATH + '/jwks.json',
       createWalletAddressMiddleware(),
-      createValidatorMiddleware<WalletAddressKeysContext>(resourceServerSpec, {
-        path: '/jwks.json',
-        method: HttpMethod.GET
-      }),
+      createValidatorMiddleware<WalletAddressKeysContext>(
+        walletAddressServerSpec,
+        {
+          path: '/jwks.json',
+          method: HttpMethod.GET
+        }
+      ),
       async (ctx: WalletAddressKeysContext): Promise<void> =>
         await walletAddressKeyRoutes.getKeysByWalletAddressId(ctx)
     )
@@ -570,7 +574,7 @@ export class App {
       WALLET_ADDRESS_PATH,
       createWalletAddressMiddleware(),
       spspMiddleware,
-      createValidatorMiddleware<WalletAddressContext>(resourceServerSpec, {
+      createValidatorMiddleware<WalletAddressContext>(walletAddressServerSpec, {
         path: '/',
         method: HttpMethod.GET
       }),

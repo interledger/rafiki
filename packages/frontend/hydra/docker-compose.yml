@@ -1,0 +1,42 @@
+#This configuration is set for dev purposes not appropriate for a production environment
+services:
+  shared-database:
+    image: 'postgres:15' # use latest official postgres version
+    restart: unless-stopped
+    networks:
+      - rafiki
+    volumes:
+      - database-data:/var/lib/postgresql/data/ # persist data even if container shuts down
+      - ../cloud-nine-wallet/dbinit.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - '5432:5432'
+    environment:
+      POSTGRES_PASSWORD: password
+      POSTGRES_USER: postgres
+  hydra:
+    build:
+      context: /home/sarah/Documents/rafiki/packages/frontend/hydra
+      dockerfile: Dockerfile
+    depends_on:
+      - shared-database
+    environment:
+      - DSN=postgres://hydra:hydra_password@shared-database:5432/hydra?sslmode=disable
+      - URLS_SELF_ISSUER=http://hydra:4444/
+      - URLS_CONSENT=http://cloud-nine-admin:3010/consent
+      - URLS_LOGIN=http://cloud-nine-admin:3010/login
+      - SECRETS_SYSTEM=some-random-secret
+      - OAUTH2_EXPOSE_INTERNAL_ERRORS=true
+      - LOG_LEVEL=debug
+      - LOG_LEAK_SENSITIVE_VALUES=true
+    ports:
+      - "4444:4444" # Public port
+      - "4445:4445" # Admin port
+    networks:
+      - rafiki
+
+volumes:
+  database-data: # named volumes can be managed easier using docker-compose
+
+networks:
+  rafiki:
+    external: true

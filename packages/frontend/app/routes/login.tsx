@@ -36,18 +36,22 @@ export const loader = async ({ request }: LoaderArgs) => {
     const sessionLoginChallenge = getLoginChallenge(session)
 
     if (urlLoginChallenge && !sessionLoginChallenge) {
+        console.log('setting cookie')
         return setChallengeAndRedirect({session, location: '.', challengeName: 'login_challenge', challenge: urlLoginChallenge})
     } else if (sessionLoginChallenge) {
-        const HYDRA_ADMIN_URL = 'http://localhost:4445'
-        const hydraUrl = `${HYDRA_ADMIN_URL}/oauth2/auth/requests/login?login_challenge=${sessionLoginChallenge}`
+        console.log('getting login challenge')
+        const hydraUrl = `http://hydra:4445/oauth2/auth/requests/login?login_challenge=${sessionLoginChallenge}`
+        console.log('HydraUrl: ', hydraUrl)
         try {
             const response = await axios.get(hydraUrl)
+            console.log('got a response')
             if (response.status !== 200) {
                 throw new Error(`Hydra responded with status: ${response.status}: ${response.statusText}`)
             }
             return response.data
         } catch (error) {
-            throw new Error(`There was an error: ${error}`)
+            console.error("There was an error in the request:", error)
+            throw error
         }
     }
     return {}
@@ -65,7 +69,7 @@ export async function action({ request }: ActionArgs) {
         throw new Error('Login challenge empty')
     }
 
-    const response = await axios.put(`http://localhost:4445/oauth2/auth/requests/login/accept?login_challenge=${loginChallenge}`, {
+    const response = await axios.put(`http://hydra:4445/oauth2/auth/requests/login/accept?login_challenge=${loginChallenge}`, {
       subject: username,
       // other data Hydra needs
     })

@@ -25,6 +25,7 @@ services:
       - ../cloud-nine-wallet/private-key.pem:/workspace/private-key.pem
     depends_on:
       - cloud-nine-backend
+      - hydra
   cloud-nine-backend:
     hostname: cloud-nine-wallet-backend
     image: rafiki-backend
@@ -115,6 +116,9 @@ services:
       PORT: 3010
       GRAPHQL_URL: http://cloud-nine-wallet-backend:3001/graphql
       OPEN_PAYMENTS_URL: https://cloud-nine-wallet-backend/
+      HYDRA_CLIENT_ID: 'cloud-nine-client'
+      HYDRA_CLIENT_NAME: 'cloud-nine'
+      HYDRA_CLIENT_REDIRECT_URI: 'http://cloud-nine-admin:3010/callback'
     depends_on:
       - cloud-nine-backend
 

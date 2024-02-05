@@ -2,6 +2,10 @@ self:
   graphqlUrl: http://happy-life-bank-backend:3001/graphql
   mapHostname: 'primary-mase'
   openPaymentPublishedPort: 4000
+hydra:
+  clientId: 'happy-life-client'
+  name: 'happy-life'
+  redirectUri: 'http://happy-life-admin:4010/callback'
 assets:
   - code: USD
     scale: 2

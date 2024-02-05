@@ -48,12 +48,12 @@ export let action = async ({ request }: ActionArgs) => {
     let authorizationCode = formData.get('code')
 
     try {
-        const response = await axios.post('http://localhost:4444/oauth2/token', qs.stringify({
+        const response = await axios.post('http://hydra:4444/oauth2/token', qs.stringify({
             client_id: process.env.REACT_APP_CLIENT_ID,
             client_secret: 'YourClientSecret',
             grant_type: 'authorization_code',
             code: authorizationCode,
-            redirect_uri: 'http://localhost:3005/callback'
+            redirect_uri: process.env.HYDRA_CLIENT_REDIRECT_URI
         }), {
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded'

@@ -1,3 +1,4 @@
+// TODO: cookie should only store session ID and that should be used to reference the login challenge and consent challenege and access token on the server
 import { type Session, type SessionData, redirect } from '@remix-run/node'
 import { createCookieSessionStorage } from '@remix-run/node'
 

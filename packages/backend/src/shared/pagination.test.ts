@@ -42,6 +42,15 @@ describe('Pagination', (): void => {
     await appContainer.shutdown()
   })
   describe('parsePaginationQueryParameters', (): void => {
+    let walletAddress: WalletAddress
+
+    beforeEach(async (): Promise<void> => {
+      const asset = await createAsset(deps)
+      walletAddress = await createWalletAddress(deps, {
+        assetId: asset.id
+      })
+    })
+
     test.each`
       first        | last         | cursor   | result
       ${undefined} | ${undefined} | ${''}    | ${{ first: undefined, last: undefined, before: undefined, after: undefined }}
@@ -51,9 +60,14 @@ describe('Pagination', (): void => {
     `(
       "success with first: '$first', last: '$last', cursor: '$cursor'",
       async ({ first, last, cursor, result }): Promise<void> => {
-        expect(parsePaginationQueryParameters({ first, last, cursor })).toEqual(
-          result
-        )
+        expect(
+          parsePaginationQueryParameters({
+            first,
+            last,
+            cursor,
+            'wallet-address': walletAddress.url
+          })
+        ).toEqual({ ...result, walletAddress: walletAddress.url })
       }
     )
   })
@@ -117,14 +131,15 @@ describe('Pagination', (): void => {
               walletAddressId: defaultWalletAddress.id,
               pagination
             })
-            const pageInfo = await getPageInfo(
-              (pagination) =>
+            const pageInfo = await getPageInfo({
+              getPage: (pagination) =>
                 incomingPaymentService.getWalletAddressPage({
                   walletAddressId: defaultWalletAddress.id,
                   pagination
                 }),
-              page
-            )
+              page,
+              walletAddress: defaultWalletAddress.url
+            })
             expect(pageInfo).toEqual({
               startCursor: paymentIds[start],
               endCursor: paymentIds[end],
@@ -173,14 +188,15 @@ describe('Pagination', (): void => {
               walletAddressId: defaultWalletAddress.id,
               pagination
             })
-            const pageInfo = await getPageInfo(
-              (pagination) =>
+            const pageInfo = await getPageInfo({
+              getPage: (pagination) =>
                 outgoingPaymentService.getWalletAddressPage({
                   walletAddressId: defaultWalletAddress.id,
                   pagination
                 }),
-              page
-            )
+              page,
+              walletAddress: defaultWalletAddress.url
+            })
             expect(pageInfo).toEqual({
               startCursor: paymentIds[start],
               endCursor: paymentIds[end],
@@ -199,7 +215,7 @@ describe('Pagination', (): void => {
           ${10} | ${{ first: 3 }}  | ${3}    | ${4}    | ${6}    | ${true}     | ${true}
           ${10} | ${{ last: 5 }}   | ${9}    | ${4}    | ${8}    | ${true}     | ${true}
         `(
-          '$num payments, pagination $pagination with cursor $cursor',
+          '$num quotes, pagination $pagination with cursor $cursor',
           async ({
             num,
             pagination,
@@ -229,14 +245,15 @@ describe('Pagination', (): void => {
               walletAddressId: defaultWalletAddress.id,
               pagination
             })
-            const pageInfo = await getPageInfo(
-              (pagination) =>
+            const pageInfo = await getPageInfo({
+              getPage: (pagination) =>
                 quoteService.getWalletAddressPage({
                   walletAddressId: defaultWalletAddress.id,
                   pagination
                 }),
-              page
-            )
+              page,
+              walletAddress: defaultWalletAddress.url
+            })
             expect(pageInfo).toEqual({
               startCursor: quoteIds[start],
               endCursor: quoteIds[end],
@@ -263,7 +280,7 @@ describe('Pagination', (): void => {
           ${10} | ${{ first: 3 }}  | ${3}    | ${4}    | ${6}    | ${true}     | ${true}
           ${10} | ${{ last: 5 }}   | ${9}    | ${4}    | ${8}    | ${true}     | ${true}
         `(
-          '$num payments, pagination $pagination with cursor $cursor',
+          '$num assets, pagination $pagination with cursor $cursor',
           async ({
             num,
             pagination,
@@ -284,10 +301,10 @@ describe('Pagination', (): void => {
               else pagination.after = assetIds[cursor]
             }
             const page = await assetService.getPage(pagination)
-            const pageInfo = await getPageInfo(
-              (pagination) => assetService.getPage(pagination),
+            const pageInfo = await getPageInfo({
+              getPage: (pagination) => assetService.getPage(pagination),
               page
-            )
+            })
             expect(pageInfo).toEqual({
               startCursor: assetIds[start],
               endCursor: assetIds[end],
@@ -306,7 +323,7 @@ describe('Pagination', (): void => {
           ${10} | ${{ first: 3 }}  | ${3}    | ${4}    | ${6}    | ${true}     | ${true}
           ${10} | ${{ last: 5 }}   | ${9}    | ${4}    | ${8}    | ${true}     | ${true}
         `(
-          '$num payments, pagination $pagination with cursor $cursor',
+          '$num peers, pagination $pagination with cursor $cursor',
           async ({
             num,
             pagination,
@@ -327,10 +344,10 @@ describe('Pagination', (): void => {
               else pagination.after = peerIds[cursor]
             }
             const page = await peerService.getPage(pagination)
-            const pageInfo = await getPageInfo(
-              (pagination) => peerService.getPage(pagination),
+            const pageInfo = await getPageInfo({
+              getPage: (pagination) => peerService.getPage(pagination),
               page
-            )
+            })
             expect(pageInfo).toEqual({
               startCursor: peerIds[start],
               endCursor: peerIds[end],
