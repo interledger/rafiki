@@ -12,5 +12,6 @@ export const CONFIG: Config = {
   key: loadOrGenerateKey(process.env.KEY_FILE),
   publicHost: process.env.OPEN_PAYMENTS_URL ?? '',
   testnetAutoPeerUrl: process.env.TESTNET_AUTOPEER_URL ?? '',
-  authServerDomain: process.env.AUTH_SERVER_DOMAIN || 'http://localhost:3006'
+  authServerDomain: process.env.AUTH_SERVER_DOMAIN || 'http://localhost:3006',
+  graphqlUrl: process.env.GRAPHQL_URL ?? ''
 }

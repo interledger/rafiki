@@ -1,16 +1,19 @@
-import { AccountProvider, setupFromSeed } from 'mock-account-servicing-lib'
+import {
+  AccountProvider,
+  setupFromSeed,
+  Config
+} from 'mock-account-servicing-lib'
 import { createApolloClient } from './apolloClient'
-import { TestConfig } from './config'
 import { ApolloClient, NormalizedCacheObject } from '@apollo/client'
 
 export class MockASE {
-  private config: TestConfig
+  private config: Config
   private apolloClient: ApolloClient<NormalizedCacheObject>
   public accounts: AccountProvider
   // private opClient: AuthenticatedClient
 
   // Use .create factory because async construction
-  public static async create(config: TestConfig) {
+  public static async create(config: Config) {
     const mase = new MockASE(config)
     await mase.initAsync()
     return mase
@@ -18,7 +21,7 @@ export class MockASE {
 
   // Private to ensure it doesnt get called directly.
   // Use static MockASE.create instead.
-  private constructor(config: TestConfig) {
+  private constructor(config: Config) {
     this.config = config
     this.apolloClient = createApolloClient(config.graphqlUrl)
     this.accounts = new AccountProvider()

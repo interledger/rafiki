@@ -5,11 +5,7 @@ import type { Config } from 'mock-account-servicing-lib'
 
 import { resolve } from 'path'
 
-export type TestConfig = Config & {
-  graphqlUrl: string
-}
-
-export const c9Config: TestConfig = {
+export const c9Config: Config = {
   seed: parse(
     readFileSync(
       resolve(__dirname, '../seed.cloud-nine-wallet-test.yml')
@@ -24,7 +20,7 @@ export const c9Config: TestConfig = {
   graphqlUrl: 'http://localhost:3001/graphql'
 } as const
 
-export const hlbConfig: TestConfig = {
+export const hlbConfig: Config = {
   seed: parse(
     readFileSync(
       resolve(__dirname, '../seed.happy-life-bank-test.yml')

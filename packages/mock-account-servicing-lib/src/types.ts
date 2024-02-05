@@ -1,12 +1,5 @@
 import type { KeyObject } from 'crypto'
 
-interface Self {
-  graphqlUrl: string
-  hostname: string
-  mapHostname: string
-  openPaymentPublishedPort: number
-}
-
 interface Asset {
   code: string
   scale: number
@@ -40,7 +33,6 @@ interface Fee {
 }
 
 interface SeedInstance {
-  self: Self
   assets: Array<Asset>
   peeringAsset: string
   peers: Array<Peering>
@@ -55,4 +47,5 @@ export interface Config {
   publicHost: string
   testnetAutoPeerUrl: string
   authServerDomain: string
+  graphqlUrl: string
 }

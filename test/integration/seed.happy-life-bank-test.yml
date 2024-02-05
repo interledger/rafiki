@@ -1,7 +1,3 @@
-self:
-  graphqlUrl: http://happy-life-bank-test-backend:3001/graphql
-  mapHostname: 'primary-mase'
-  openPaymentPublishedPort: 4000
 assets:
   - code: USD
     scale: 2
