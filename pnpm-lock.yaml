@@ -133,8 +133,8 @@ importers:
         specifier: 2.0.0
         version: 2.0.0
       '@interledger/open-payments':
-        specifier: 6.5.0
-        version: 6.5.0
+        specifier: 6.5.1
+        version: 6.5.1
       '@interledger/openapi':
         specifier: 1.2.1
         version: 1.2.1
@@ -272,8 +272,8 @@ importers:
         specifier: 2.0.0
         version: 2.0.0
       '@interledger/open-payments':
-        specifier: 6.5.0
-        version: 6.5.0
+        specifier: 6.5.1
+        version: 6.5.1
       '@interledger/openapi':
         specifier: 1.2.1
         version: 1.2.1
@@ -3196,25 +3196,19 @@ packages:
       uuid: 9.0.1
     dev: false
 
-  /@interledger/open-payments@6.4.0:
-    resolution: {integrity: sha512-hvvHa67hVvVVOkwOmoyNJvCp05yS2cGdegef2XxIwsmH9eKmzKMss0JjQ/LpSKb0W1XsTYzJWgvHXZyzFkBxUw==}
+  /@interledger/http-signature-utils@2.0.1:
+    resolution: {integrity: sha512-aELLCsl3x1Xtyv4N9lyF3TmCynkYyap5WYOQNQDVi74+BRyP1sHPE9u8HQJJAi2r6yU7+qRTMrM2uU6aD7RQmA==}
     dependencies:
-      '@interledger/http-signature-utils': 2.0.0
-      '@interledger/openapi': 1.2.1
-      axios: 1.6.7
-      base64url: 3.0.1
       http-message-signatures: 0.1.2
-      pino: 8.17.2
+      httpbis-digest-headers: 1.0.0
+      jose: 4.13.1
       uuid: 9.0.1
-    transitivePeerDependencies:
-      - debug
-      - supports-color
     dev: false
 
-  /@interledger/open-payments@6.5.0:
-    resolution: {integrity: sha512-+gNeg6gZhAEy0XgPSl7pEgFHyPAx/l0ikQwNRuSr85H3F0iauS0NyQYg258q1hCL6t/FpufGpooiNJGCxiXE+A==}
+  /@interledger/open-payments@6.5.1:
+    resolution: {integrity: sha512-YbtvONYc+aE64vVp40npFqY2lnf8x+7ZuWBOE75JmMUv4z3nCkMPRnk/oNk2TldHkXY/51TJAQSvDLvUCgqJ0w==}
     dependencies:
-      '@interledger/http-signature-utils': 2.0.0
+      '@interledger/http-signature-utils': 2.0.1
       '@interledger/openapi': 1.2.1
       axios: 1.6.7
       base64url: 3.0.1
