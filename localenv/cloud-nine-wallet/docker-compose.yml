@@ -24,6 +24,7 @@ services:
       - ../cloud-nine-wallet/private-key.pem:/workspace/private-key.pem
     depends_on:
       - cloud-nine-backend
+      - hydra
   cloud-nine-backend:
     hostname: cloud-nine-wallet-backend
     image: rafiki-backend

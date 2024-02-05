@@ -36,7 +36,7 @@ export const loader = async ({ request }: LoaderArgs) => {
     return setChallengeAndRedirect({ session, location: '.', challengeName: 'consent_challenge', challenge: urlConsentChallenge })
   }
 
-  const HYDRA_ADMIN_URL = 'http://localhost:4445'
+  const HYDRA_ADMIN_URL = 'http://hydra:4445'
   const hydraUrl = `${HYDRA_ADMIN_URL}/oauth2/auth/requests/consent?consent_challenge=${sessionConsentChallenge}`
 
   try {
@@ -64,7 +64,7 @@ export const action = async ({ request }: ActionArgs) => {
   //   })
   // }
   try {
-    const hydraPutResponse = await axios.put(`http://localhost:4445/oauth2/auth/requests/consent/accept?consent_challenge=${sessionConsentChallenge}`, {
+    const hydraPutResponse = await axios.put(`http://hydra:4445/oauth2/auth/requests/consent/accept?consent_challenge=${sessionConsentChallenge}`, {
       // other data Hydra needs
       grant_scope: ['full_access']
     })

@@ -21,6 +21,7 @@ services:
     depends_on:
       - cloud-nine-mock-ase
       - happy-life-backend
+      - hydra
   happy-life-backend:
     hostname: happy-life-bank-backend
     image: rafiki-backend

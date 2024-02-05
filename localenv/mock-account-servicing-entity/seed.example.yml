@@ -2,6 +2,10 @@ self:
   graphqlUrl: http://localhost:3001/graphql
   hostname: 'backend'
   mapHostname: 'primary-mase'
+hydra:
+  clientId: 'unique-client-id'
+  name: 'client-name'
+  redirectUri: 'http://localhost:3005/callback'
 assets:
   - code: USD
     scale: 2

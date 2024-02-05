@@ -1,3 +1,5 @@
+import { redirect } from '@remix-run/node'
+
 export default function Index() {
   return (
     <div className='pt-4 flex flex-col'>
@@ -19,8 +21,17 @@ export default function Index() {
               https://rafiki.dev
             </a>
           </p>
+          <form method="post" action="/">
+            <input type="hidden" name="username" value="Username" />
+            <button type="submit">Log In</button>
+          </form>
         </div>
       </div>
     </div>
   )
+}
+
+export async function action() {
+  console.log('REDIRECTING TO >>>> ', `http://hydra:4444/oauth2/auth?response_type=code&client_id=${process.env.HYDRA_CLIENT_ID}&redirect_uri=${process.env.HYDRA_CLIENT_REDIRECT_URI}&scope=full_access&state=ab4R32wFF`)
+  return redirect(`http://hydra:4444/oauth2/auth?response_type=code&client_id=${process.env.HYDRA_CLIENT_ID}&redirect_uri=${process.env.HYDRA_CLIENT_REDIRECT_URI}&scope=full_access&state=ab4R32wFF`)
 }

@@ -2,6 +2,10 @@ self:
   graphqlUrl: http://cloud-nine-wallet-backend:3001/graphql
   mapHostname: 'primary-mase'
   openPaymentPublishedPort: 3000
+hydra:
+  clientId: 'cloud-nine-client'
+  name: 'cloud-nine'
+  redirectUri: 'http://cloud-nine-admin:3010/callback'
 assets:
   - code: USD
     scale: 2
