@@ -1,7 +1,5 @@
 import Axios from 'axios'
-import createLogger from 'pino'
 import { Knex } from 'knex'
-import nock from 'nock'
 import fetch from 'cross-fetch'
 import { IocContract } from '@adonisjs/fold'
 import {
@@ -13,9 +11,9 @@ import {
 } from '@apollo/client'
 import { onError } from '@apollo/client/link/error'
 import { setContext } from '@apollo/client/link/context'
-
 import { start, gracefulShutdown } from '..'
 import { App, AppServices } from '../app'
+
 export const testAccessToken = 'test-app-access'
 
 export interface TestContainer {
@@ -38,23 +36,12 @@ export const createTestApp = async (
   config.autoPeeringServerPort = 0
   config.openPaymentsUrl = 'https://op.example'
   config.walletAddressUrl = 'https://wallet.example/.well-known/pay'
-  const logger = createLogger({
-    transport: {
-      target: 'pino-pretty',
-      options: {
-        colorize: true,
-        translateTime: true,
-        ignore: 'pid,hostname'
-      }
-    },
-    level: process.env.LOG_LEVEL || 'silent',
-    name: 'test-logger'
-  })
-
-  container.bind('logger', async () => logger)
+  const logger = await container.use('logger')
 
   const app = new App(container)
   await start(container, app)
+
+  const nock = (global as unknown as { nock: typeof import('nock') }).nock
 
   // Since wallet addresses MUST use HTTPS, manually mock an HTTPS proxy to the Open Payments / SPSP server
   nock(config.openPaymentsUrl)
@@ -122,6 +109,11 @@ export const createTestApp = async (
     connectionUrl: config.databaseUrl,
     shutdown: async () => {
       nock.cleanAll()
+      nock.abortPendingRequests()
+      nock.restore()
+      nock.activate()
+
+      client.stop()
       await gracefulShutdown(container, app)
     }
   }

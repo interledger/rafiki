@@ -12,6 +12,7 @@ module.exports = {
   globalSetup: `<rootDir>/packages/${packageName}/jest.setup.ts`,
   globalTeardown: `<rootDir>/packages/${packageName}/jest.teardown.js`,
   testRegex: `(packages/${packageName}/.*/__tests__/.*|\\.(test|spec))\\.tsx?$`,
+  testEnvironment: `<rootDir>/packages/${packageName}/jest.custom-environment.ts`,
   moduleDirectories: [
     `node_modules`,
     `packages/${packageName}/node_modules`,

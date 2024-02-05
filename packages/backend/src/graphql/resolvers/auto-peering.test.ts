@@ -1,7 +1,6 @@
 import { faker } from '@faker-js/faker'
 import { gql } from '@apollo/client'
 import assert from 'assert'
-import nock from 'nock'
 
 import { createTestApp, TestContainer } from '../../tests/app'
 import { IocContract } from '@adonisjs/fold'
@@ -19,6 +18,8 @@ import { createAsset } from '../../tests/asset'
 import { CreateOrUpdatePeerByUrlInput } from '../generated/graphql'
 import { AutoPeeringService } from '../../payment-method/ilp/auto-peering/service'
 import { v4 as uuid } from 'uuid'
+
+const nock = (global as unknown as { nock: typeof import('nock') }).nock
 
 describe('Auto Peering Resolvers', (): void => {
   let deps: IocContract<AppServices>

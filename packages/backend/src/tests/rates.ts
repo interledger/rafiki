@@ -1,5 +1,6 @@
-import nock from 'nock'
 import { Rates } from '../rates/service'
+
+const nock = (global as unknown as { nock: typeof import('nock') }).nock
 
 export function mockRatesApi(
   exchangeRatesUrl: string,
