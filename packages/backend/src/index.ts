@@ -468,7 +468,7 @@ export const gracefulShutdown = async (
   const config = await container.use('config')
   if (config.useTigerbeetle) {
     const tigerbeetle = await container.use('tigerbeetle')
-    tigerbeetle.destroy()
+    tigerbeetle?.destroy()
   }
 
   const redis = await container.use('redis')

@@ -31,6 +31,7 @@
     "@types/uuid": "^9.0.8",
     "cross-fetch": "^4.0.0",
     "ilp-protocol-stream": "^2.7.2-alpha.2",
+    "jest-environment-node": "^29.7.0",
     "jest-openapi": "^0.14.2",
     "nock": "^13.5.1",
     "node-mocks-http": "^1.14.1",
