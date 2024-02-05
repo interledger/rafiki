@@ -5,7 +5,7 @@ import { faker } from '@faker-js/faker'
 
 export const IlpPrepareFactory = Factory.define<IlpPrepare>('IlpPrepare').attrs(
   {
-    amount: faker.finance.amount(1, 100, 0),
+    amount: faker.finance.amount({ min: 1, max: 100, dec: 0 }),
     data: Buffer.alloc(0),
     destination: 'test.rafiki.' + faker.person.firstName(),
     expiresAt: new Date(Date.now() + 10 * 1000),
