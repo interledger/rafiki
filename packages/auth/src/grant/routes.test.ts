@@ -194,7 +194,10 @@ describe('Grant Routes', (): void => {
                           grantRoutes.create(ctx)
                         ).rejects.toMatchObject({
                           status: 400,
-                          error: 'interaction_required'
+                          error: {
+                            code: 'interaction_required',
+                            description: 'missing required request field'
+                          }
                         })
                       } else {
                         await expect(
@@ -328,7 +331,10 @@ describe('Grant Routes', (): void => {
 
         await expect(grantRoutes.create(ctx)).rejects.toMatchObject({
           status: 400,
-          error: 'interaction_required'
+          error: {
+            code: 'interaction_required',
+            description: 'missing required request field'
+          }
         })
       })
 
@@ -385,7 +391,10 @@ describe('Grant Routes', (): void => {
 
         await expect(grantRoutes.create(ctx)).rejects.toMatchObject({
           status: 400,
-          error: 'invalid_client'
+          error: {
+            code: 'invalid_client',
+            description: 'missing required request field'
+          }
         })
       })
     })
@@ -981,7 +990,10 @@ describe('Grant Routes', (): void => {
         )
         await expect(grantRoutes.revoke(ctx)).rejects.toMatchObject({
           status: 404,
-          error: 'unknown_request'
+          error: {
+            code: 'unknown_request',
+            description: 'unknown grant'
+          }
         })
       })
 
@@ -1000,14 +1012,17 @@ describe('Grant Routes', (): void => {
         )
         await expect(grantRoutes.revoke(ctx)).rejects.toMatchObject({
           status: 404,
-          error: 'unknown_request'
+          error: {
+            code: 'unknown_request',
+            description: 'unknown grant'
+          }
         })
       })
 
       test.each`
         token    | description    | status | error
-        ${true}  | ${' matching'} | ${404} | ${'unknown_request'}
-        ${false} | ${''}          | ${401} | ${'invalid_request'}
+        ${true}  | ${' matching'} | ${404} | ${{ code: 'unknown_request', description: 'unknown grant' }}
+        ${false} | ${''}          | ${401} | ${{ code: 'invalid_request', description: 'invalid continuation information' }}
       `(
         'Cannot delete without$description continueToken',
         async ({ token, status, error }): Promise<void> => {

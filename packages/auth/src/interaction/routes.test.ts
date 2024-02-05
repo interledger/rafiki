@@ -91,7 +91,10 @@ describe('Interaction Routes', (): void => {
 
         await expect(interactionRoutes.start(ctx)).rejects.toMatchObject({
           status: 401,
-          error: 'unknown_request'
+          error: {
+            code: 'unknown_request',
+            description: 'unknown interaction'
+          }
         })
       })
 
@@ -119,7 +122,10 @@ describe('Interaction Routes', (): void => {
 
         await expect(interactionRoutes.start(ctx)).rejects.toMatchObject({
           status: 401,
-          error: 'unknown_request'
+          error: {
+            code: 'unknown_request',
+            description: 'unknown interaction'
+          }
         })
       })
 
@@ -185,7 +191,10 @@ describe('Interaction Routes', (): void => {
 
         await expect(interactionRoutes.finish(ctx)).rejects.toMatchObject({
           status: 404,
-          error: 'unknown_request'
+          error: {
+            code: 'unknown_request',
+            description: 'unknown interaction'
+          }
         })
       })
 
@@ -204,7 +213,10 @@ describe('Interaction Routes', (): void => {
 
         await expect(interactionRoutes.finish(ctx)).rejects.toMatchObject({
           status: 401,
-          error: 'invalid_request'
+          error: {
+            code: 'invalid_request',
+            description: 'invalid session'
+          }
         })
       })
 
@@ -223,7 +235,10 @@ describe('Interaction Routes', (): void => {
 
         await expect(interactionRoutes.finish(ctx)).rejects.toMatchObject({
           status: 404,
-          error: 'unknown_request'
+          error: {
+            code: 'unknown_request',
+            description: 'unknown interaction'
+          }
         })
       })
 
@@ -252,7 +267,10 @@ describe('Interaction Routes', (): void => {
 
         await expect(interactionRoutes.finish(ctx)).rejects.toMatchObject({
           status: 404,
-          error: 'unknown_request'
+          error: {
+            code: 'unknown_request',
+            description: 'unknown interaction'
+          }
         })
       })
 
@@ -513,8 +531,6 @@ describe('Interaction Routes', (): void => {
           await expect(interactionRoutes.finish(ctx)).rejects.toMatchObject({
             status: 401
           })
-
-          console.log('ctx.response=', ctx.response)
         })
       })
     })
@@ -676,7 +692,10 @@ describe('Interaction Routes', (): void => {
           interactionRoutes.acceptOrReject(ctx)
         ).rejects.toMatchObject({
           status: 401,
-          error: 'invalid_interaction'
+          error: {
+            code: 'invalid_interaction',
+            description: 'invalid x-idp-secret'
+          }
         })
       })
 
@@ -732,7 +751,10 @@ describe('Interaction Routes', (): void => {
           interactionRoutes.acceptOrReject(ctx)
         ).rejects.toMatchObject({
           status: 404,
-          error: 'unknown_request'
+          error: {
+            code: 'unknown_request',
+            description: 'unknown interaction'
+          }
         })
       })
 

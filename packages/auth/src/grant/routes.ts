@@ -144,12 +144,12 @@ async function createPendingGrant(
   const { body } = ctx.request
   const { grantService, interactionService, config } = deps
   if (!body.interact) {
-    ctx.throw(400, 'interaction_required', { error: 'interaction_required' })
+    ctx.throw(400, 'interaction_required', { error: { code: 'interaction_required', description: 'missing required request field' } })
   }
 
   const client = await deps.clientService.get(body.client)
   if (!client) {
-    ctx.throw(400, 'invalid_client', { error: 'invalid_client' })
+    ctx.throw(400, 'invalid_client', { error: { code: 'invalid_client', description: 'missing required request field' } })
   }
 
   const trx = await Grant.startTransaction()
@@ -364,16 +364,16 @@ async function revokeGrant(
     'GNAP '
   )[1]
   if (!continueId || !continueToken) {
-    ctx.throw(401, { error: 'invalid_request' })
+    ctx.throw(401, { error: { code: 'invalid_request', description: 'invalid continuation information' } })
   }
   const grant = await deps.grantService.getByContinue(continueId, continueToken)
   if (!grant) {
-    ctx.throw(404, { error: 'unknown_request' })
+    ctx.throw(404, { error: { code: 'unknown_request', description: 'unknown grant' } })
   }
 
   const revoked = await deps.grantService.revokeGrant(grant.id)
   if (!revoked) {
-    ctx.throw(404, { error: 'unknown_request' })
+    ctx.throw(404, { error: { code: 'unknown_request', description: 'invalid grant' } })
   }
   ctx.status = 204
 }

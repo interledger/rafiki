@@ -154,15 +154,12 @@ async function startInteraction(
     interaction.state !== InteractionState.Pending ||
     isRevokedGrant(interaction.grant)
   ) {
-    deps.logger.info(
-      {
-        interaction,
-        interactId,
-        nonce
-      },
-      'returning 401 for unknown request'
-    )
-    ctx.throw(401, { error: 'unknown_request' })
+    ctx.throw(401, 'unknown_request', { 
+      error: {
+        code: 'unknown_request',
+        description: 'unknown interaction'
+      }
+    })
   }
 
   const trx = await Interaction.startTransaction()
@@ -202,12 +199,22 @@ async function handleInteractionChoice(
       Buffer.from(config.identityServerSecret)
     )
   ) {
-    ctx.throw(401, { error: 'invalid_interaction' })
+    ctx.throw(401, 'invalid_interaction', { 
+      error: {
+        code: 'invalid_interaction',
+        description: 'invalid x-idp-secret'
+      }
+    })
   }
 
   const interaction = await interactionService.getBySession(interactId, nonce)
   if (!interaction) {
-    ctx.throw(404, { error: 'unknown_request' })
+    ctx.throw(404, 'unknown_request', {
+      error: {
+        code: 'unknown_request',
+        description: 'unknown interaction'
+      }
+    })
   } else {
     const { grant } = interaction
     // If grant was already rejected or revoked
@@ -215,7 +222,12 @@ async function handleInteractionChoice(
       grant.state === GrantState.Finalized &&
       grant.finalizationReason !== GrantFinalization.Issued
     ) {
-      ctx.throw(401, { error: 'user_denied' })
+      ctx.throw(401, 'user_denied', { 
+        error: {
+          code: 'user_denied',
+          description: 'user denied interaction'
+        }
+      })
     }
 
     // If grant is otherwise not pending interaction
@@ -223,7 +235,12 @@ async function handleInteractionChoice(
       interaction.state !== InteractionState.Pending ||
       isInteractionExpired(interaction)
     ) {
-      ctx.throw(400, { error: 'request_denied' })
+      ctx.throw(400, 'request_denied', { 
+        error: {
+          code: 'request_denied',
+          description: 'invalid interaction'
+        }
+      })
     }
 
     if (choice === InteractionChoices.Accept) {
@@ -288,10 +305,10 @@ async function handleUnfinishableGrant(
     return
   } else {
     // Interaction is not in an accepted or rejected state
-    ctx.throw(401, {
+    ctx.throw(401, 'invalid_interaction', {
       error: {
         code: 'invalid_interaction',
-        message: 'interaction is still pending'
+        description: 'interaction is still pending'
       }
     })
   }
@@ -306,7 +323,12 @@ async function finishInteraction(
 
   // TODO: redirect with this error in query string
   if (sessionNonce !== nonce) {
-    ctx.throw(401, { error: 'invalid_request' })
+    ctx.throw(401, 'invalid_request', { 
+      error: {
+        code: 'invalid_request',
+        description: 'invalid session'
+      }
+    })
   }
 
   const { interactionService } = deps
@@ -314,7 +336,14 @@ async function finishInteraction(
 
   // TODO: redirect with this error in query string
   if (!interaction || isRevokedGrant(interaction.grant)) {
-    ctx.throw(404, { error: 'unknown_request' })
+    ctx.throw(404, 'unknown_request',
+      {
+        error: {
+          code: 'unknown_request',
+          description: 'unknown interaction'
+        }
+      }
+    )
   }
 
   const { grant } = interaction
