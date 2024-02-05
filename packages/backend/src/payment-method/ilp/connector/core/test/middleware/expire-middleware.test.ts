@@ -10,7 +10,7 @@ describe('Expire Middleware', function () {
     jest.useFakeTimers()
   })
 
-  afterEach(async (): Promise<void> => {
+  afterAll(async (): Promise<void> => {
     jest.useRealTimers()
   })
 
