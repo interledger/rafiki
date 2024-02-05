@@ -9,7 +9,7 @@ process.env.LOG_LEVEL = 'silent'
 module.exports = {
   ...baseConfig,
   clearMocks: true,
-  testTimeout: 60000,
+  testTimeout: 30000,
   roots: [`<rootDir>/packages/${packageName}`],
   globalSetup: `<rootDir>/packages/${packageName}/jest.setup.ts`,
   globalTeardown: `<rootDir>/packages/${packageName}/jest.teardown.js`,
