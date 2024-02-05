@@ -1,4 +1,4 @@
-import { c9Config, hlbConfig } from './lib/config'
+import { C9_CONFIG, HLB_CONFIG } from './lib/config'
 import { MockASE } from './lib/MockASE'
 
 describe('Open Payments Flow', (): void => {
@@ -6,8 +6,8 @@ describe('Open Payments Flow', (): void => {
   let hlb: MockASE
 
   beforeAll(async () => {
-    c9 = await MockASE.create(c9Config)
-    hlb = await MockASE.create(hlbConfig)
+    c9 = await MockASE.create(C9_CONFIG)
+    hlb = await MockASE.create(HLB_CONFIG)
   })
 
   test('Grant Request Incoming Payment', async (): Promise<void> => {
