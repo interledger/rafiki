@@ -16,7 +16,8 @@ services:
       networks:
         - rafiki-test
       volumes:
-        - ./dbinit.sql:/docker-entrypoint-initdb.d/init.sql
+      # this path should be relative to the docker-compose file that uses shared-database
+        - ../dbinit.sql:/docker-entrypoint-initdb.d/init.sql
       ports:
         - '5432:5432'
       environment:

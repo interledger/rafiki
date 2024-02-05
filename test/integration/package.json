@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "description": "",
   "scripts": {
-    "testenv:compose": "docker-compose -f docker-compose.cloud-nine-wallet-test.yml -f docker-compose.happy_life_bank_test.yml -f docker-compose.yml",
+    "testenv:compose": "docker-compose -f ./testenv/cloud-nine-wallet/docker-compose.yml -f ./testenv/happy-life-bank/docker-compose.yml -f ./testenv/docker-compose.yml",
     "test": "jest"
   },
   "keywords": [],
