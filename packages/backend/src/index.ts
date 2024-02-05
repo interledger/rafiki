@@ -53,9 +53,6 @@ BigInt.prototype.toJSON = function () {
   return this.toString()
 }
 
-const container = initIocContainer(Config)
-const app = new App(container)
-
 export function initIocContainer(
   config: typeof Config
 ): IocContract<AppServices> {
@@ -120,13 +117,7 @@ export function initIocContainer(
       serverAddress: config.ilpAddress
     })
   })
-  container.singleton('tigerbeetle', async (deps) => {
-    const config = await deps.use('config')
-    return createClient({
-      cluster_id: BigInt(config.tigerbeetleClusterId),
-      replica_addresses: config.tigerbeetleReplicaAddresses
-    })
-  })
+
   container.singleton('openApi', async () => {
     const resourceServerSpec = await createOpenAPI(
       path.resolve(__dirname, './openapi/resource-server.yaml')
@@ -185,7 +176,15 @@ export function initIocContainer(
     const config = await deps.use('config')
 
     if (config.useTigerbeetle) {
-      const tigerbeetle = await deps.use('tigerbeetle')
+      container.singleton('tigerbeetle', async (deps) => {
+        const config = await deps.use('config')
+        return createClient({
+          cluster_id: BigInt(config.tigerbeetleClusterId),
+          replica_addresses: config.tigerbeetleReplicaAddresses
+        })
+      })
+
+      const tigerbeetle = await deps.use('tigerbeetle')!
 
       return createTigerbeetleAccountingService({
         logger,
@@ -465,10 +464,15 @@ export const gracefulShutdown = async (
   await app.shutdown()
   const knex = await container.use('knex')
   await knex.destroy()
-  const tigerbeetle = await container.use('tigerbeetle')
-  tigerbeetle.destroy()
+
+  const config = await container.use('config')
+  if (config.useTigerbeetle) {
+    const tigerbeetle = await container.use('tigerbeetle')
+    tigerbeetle.destroy()
+  }
+
   const redis = await container.use('redis')
-  redis.disconnect()
+  await redis.quit()
 }
 
 export const start = async (
@@ -556,7 +560,10 @@ export const start = async (
 }
 
 // If this script is run directly, start the server
-if (!module.parent) {
+if (require.main === module) {
+  const container = initIocContainer(Config)
+  const app = new App(container)
+
   start(container, app).catch(async (e): Promise<void> => {
     const errInfo = e && typeof e === 'object' && e.stack ? e.stack : e
     const logger = await container.use('logger')
