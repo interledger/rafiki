@@ -19,12 +19,15 @@ import {
   LiquidityAccountType,
   Withdrawal
 } from '../service'
+import { StartedTestContainer } from 'testcontainers'
 
 describe('Accounting Service', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let accountingService: AccountingService
   let accountFactory: AccountFactory
+  let tbContainer: StartedTestContainer
+
   const timeout = 10
 
   let ledger = 1
@@ -33,8 +36,9 @@ describe('Accounting Service', (): void => {
   }
 
   beforeAll(async (): Promise<void> => {
-    const { port } = await startTigerbeetleContainer()
+    const { port, container } = await startTigerbeetleContainer()
     Config.tigerbeetleReplicaAddresses = [port.toString()]
+    tbContainer = container
 
     deps = await initIocContainer({ ...Config, useTigerbeetle: true })
     appContainer = await createTestApp(deps)
@@ -48,6 +52,7 @@ describe('Accounting Service', (): void => {
 
   afterAll(async (): Promise<void> => {
     await appContainer.shutdown()
+    await tbContainer.stop()
     // TODO: find a way to gracefully stop TB container without running into a thread panic
   })
 
