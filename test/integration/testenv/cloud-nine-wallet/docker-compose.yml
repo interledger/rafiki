@@ -40,7 +40,7 @@ services:
       # WEBHOOK_URL: http://cloud-nine-wallet-test/webhooks
       
       # TODO: should point to the integration ASE, similar to webhook url
-      # EXCHANGE_RATES_URL: http://cloud-nine-wallet-test/rates
+      EXCHANGE_RATES_URL: http://cloud-nine-wallet-test/rates
       REDIS_URL: redis://shared-redis:6379/0
     depends_on:
       - shared-database
