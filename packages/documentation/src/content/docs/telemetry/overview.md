@@ -10,7 +10,7 @@ The objective of the telemetry feature is to gather metrics and establish an inf
 - The number of transactions from outgoing payments that have been at least partially successful.
 - The average amount of money held within the network per transaction.
 
-Our goal is to use these data for our own insights and to enable [Account Servicing Entities](/reference/glossary#account-servicing-entity) (ASEs) to gain their own insights. We aim to track the growth of the network in terms of transaction sizes and the number of transactions processed.
+We aim to track the growth of the network in terms of transaction sizes and the number of transactions processed. Our goal is to use these data for our own insights and to enable [Account Servicing Entities](/reference/glossary#account-servicing-entity) (ASEs) to gain their own insights.
 
 ## Privacy and Optionality
 

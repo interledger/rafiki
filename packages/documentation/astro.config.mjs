@@ -146,9 +146,14 @@ export default defineConfig({
             {
               label: 'Telemetry',
               collapsed: true,
-              autogenerate: {
-                directory: 'telemetry'
-              }
+              items: [
+                { label: 'Overview', link: 'telemetry/overview' },
+                { label: 'Privacy', link: 'telemetry/privacy' },
+                {
+                  label: 'Deploying Custom Telemetry',
+                  link: 'telemetry/integrating'
+                }
+              ]
             },
             {
               label: 'Local Playground',

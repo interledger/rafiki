@@ -2,11 +2,11 @@
 title: Privacy
 ---
 
-Rafiki telemetry is designed with a strong emphasis on privacy. The system anonymizes user data and refrains from collecting identifiable information. Since transactions can originate from any user to a Rafiki instance, the privacy measures are implemented at the Rafiki instance level in the network. This means that at the individual level, the data is already anonymous as single Rafiki instances service transactions for multiple users.
+Rafiki telemetry is designed with a strong emphasis on privacy. The system anonymizes user data and refrains from collecting identifiable information. Since transactions can originate from any user to a Rafiki instance, the privacy measures are implemented directly at the source (each Rafiki instance). This means that at the individual level, the data is already anonymous as single Rafiki instances service transactions for multiple users.
 
 ## Differential Privacy and Local Differential Privacy
 
-Differential Privacy is a system for publicly sharing information about a dataset by describing the patterns of groups within the dataset while withholding information about individuals in the dataset. Local Differential Privacy (LDP) is a variant of differential privacy where noise is added to each individual's data before it is sent to the server. This ensures that the server never sees the actual data, providing a strong privacy guarantee.
+Differential Privacy is a system for publicly sharing information about a dataset by describing the patterns of groups within the dataset while withholding information about individuals in the dataset. Local Differential Privacy (LDP) is a variant of differential privacy where noise is added to each individual's data point before it is sent to the server. This ensures that the server never sees the actual data, providing a strong privacy guarantee.
 
 ## Rounding Technique and Bucketing
 
@@ -30,7 +30,7 @@ The noise, selected from the Laplacian distribution, is then generated using thi
 
 ## Currency Conversion
 
-Another factor that obscures sensitive data is currency conversion. In cross-currency transactions, we use exchange rates that are not traced back. The rates are provided by the integrating [ASE](/reference/glossary#account-servicing-entity) at runtime and are not persisted. If the needed rates are not provided, external API's for exchange rates are used. The obtained exchange rates are overwritten frequently in this case, with no versioning or history access. This introduces an additional layer of noise and further protects the privacy of the transactions.
+Another factor that obscures sensitive data is currency conversion. In cross-currency transactions, exchange rates are provided by [ASE](/reference/glossary#account-servicing-entity) internally. As such, they cannot be correlated to an individual transaction. If the necessary rates are not provided or not available from the ASE, an external API for exchange rates is used. The obtained exchange rates are overwritten frequently in this case, with no versioning or history access. This introduces an additional layer of noise and further protects the privacy of the transactions.
 
 ## References
 
