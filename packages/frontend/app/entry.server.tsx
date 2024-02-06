@@ -4,6 +4,12 @@ import { Response } from '@remix-run/node'
 import { RemixServer } from '@remix-run/react'
 import { isbot } from 'isbot'
 import { renderToPipeableStream } from 'react-dom/server'
+import { runSeed } from './lib/run_seed.server'
+
+declare global {
+  // eslint-disable-next-line no-var
+  var __seeded: boolean | undefined
+}
 
 const ABORT_DELAY = 5000
 
@@ -108,4 +114,33 @@ function handleBrowserRequest(
 
     setTimeout(abort, ABORT_DELAY)
   })
+}
+
+// Used for running seeds in a try loop with exponential backoff
+// eslint-disable-next-line  @typescript-eslint/no-explicit-any
+async function callWithRetry(fn: () => any, depth = 0): Promise<void> {
+  const wait = (ms: number) => new Promise((res) => setTimeout(res, ms))
+
+  try {
+    return await fn()
+  } catch (e) {
+    if (depth > 7) {
+      throw e
+    }
+    await wait(2 ** depth * 30)
+    return callWithRetry(fn, depth + 1)
+  }
+}
+
+// Right now each mock ASE admin UI will try add the two same clients so only one will succeed.
+if (!global.__seeded) {
+  callWithRetry(runSeed)
+    .then(() => {
+      global.__seeded = true
+    })
+    .catch((e) => {
+      console.log(
+        `seeding failed with ${e}. If seeding has already completed this can probably be ignored`
+      )
+    })
 }

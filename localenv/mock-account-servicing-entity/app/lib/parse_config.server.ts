@@ -10,12 +10,6 @@ export interface Self {
   openPaymentPublishedPort: number
 }
 
-export interface Hydra {
-  clientId: string
-  name: string
-  redirectUri: string
-}
-
 export interface Asset {
   code: string
   scale: number
@@ -50,7 +44,6 @@ export interface Fee {
 
 export interface SeedInstance {
   self: Self
-  hydra: Hydra
   assets: Array<Asset>
   peeringAsset: string
   peers: Array<Peering>

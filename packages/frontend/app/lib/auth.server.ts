@@ -60,7 +60,10 @@ export async function setChallengeAndRedirect(args: AuthRedirectArgs) {
 }
 
 // TODO: remove used login and consent challenges
-export async function removeAuthSessionAndRedirect(session: Session, location: string){
+export async function removeAuthSessionAndRedirect(
+  session: Session,
+  location: string
+) {
   session.unset('login_challenge')
   session.unset('consent_challenge')
   return redirect(location, {

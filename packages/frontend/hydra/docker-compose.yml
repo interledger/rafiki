@@ -1,29 +1,28 @@
 #This configuration is set for dev purposes not appropriate for a production environment
 services:
-  shared-database:
+  hydra-database:
     image: 'postgres:15' # use latest official postgres version
     restart: unless-stopped
-    networks:
-      - rafiki
+    network_mode: host
     volumes:
-      - database-data:/var/lib/postgresql/data/ # persist data even if container shuts down
-      - ../cloud-nine-wallet/dbinit.sql:/docker-entrypoint-initdb.d/init.sql
-    ports:
-      - '5432:5432'
+      - hydra-database-data:/var/lib/postgresql/data/ # persist data even if container shuts down
+      - ../../packages/frontend/hydra/dbinit.sql:/docker-entrypoint-initdb.d/init.sql
     environment:
       POSTGRES_PASSWORD: password
       POSTGRES_USER: postgres
+      # Assign a different port since 5432 is already in use
+      PGPORT: 5433
   hydra:
     build:
-      context: /home/sarah/Documents/rafiki/packages/frontend/hydra
+      context: ../../packages/frontend/hydra # TODO: Is there a better approach to specify this path?
       dockerfile: Dockerfile
     depends_on:
-      - shared-database
+      - hydra-database
     environment:
-      - DSN=postgres://hydra:hydra_password@shared-database:5432/hydra?sslmode=disable
-      - URLS_SELF_ISSUER=http://hydra:4444/
-      - URLS_CONSENT=http://cloud-nine-admin:3010/consent
-      - URLS_LOGIN=http://cloud-nine-admin:3010/login
+      - DSN=postgres://hydra:hydra_password@localhost:5433/hydra?sslmode=disable
+      - URLS_SELF_ISSUER=http://localhost:4444/
+      - URLS_CONSENT=http://localhost:3010/consent
+      - URLS_LOGIN=http://localhost:3010/login
       - SECRETS_SYSTEM=some-random-secret
       - OAUTH2_EXPOSE_INTERNAL_ERRORS=true
       - LOG_LEVEL=debug
@@ -31,12 +30,7 @@ services:
     ports:
       - "4444:4444" # Public port
       - "4445:4445" # Admin port
-    networks:
-      - rafiki
+    network_mode: host
 
 volumes:
-  database-data: # named volumes can be managed easier using docker-compose
-
-networks:
-  rafiki:
-    external: true
+  hydra-database-data: # named volumes can be managed easier using docker-compose

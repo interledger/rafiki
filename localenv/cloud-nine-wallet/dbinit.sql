@@ -13,7 +13,3 @@ ALTER DATABASE happy_life_bank_backend OWNER TO happy_life_bank_backend;
 CREATE USER happy_life_bank_auth WITH PASSWORD 'happy_life_bank_auth';
 CREATE DATABASE happy_life_bank_auth;
 ALTER DATABASE happy_life_bank_auth OWNER TO happy_life_bank_auth;
-
-CREATE USER hydra WITH PASSWORD 'hydra_password';
-CREATE DATABASE hydra;
-ALTER DATABASE hydra OWNER TO hydra;

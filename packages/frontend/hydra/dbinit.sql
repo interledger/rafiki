@@ -1,0 +1,3 @@
+CREATE USER hydra WITH PASSWORD 'hydra_password';
+CREATE DATABASE hydra;
+ALTER DATABASE hydra OWNER TO hydra;
