@@ -3,22 +3,21 @@ services:
   shared-database:
     image: 'postgres:15'
     restart: unless-stopped
-    networks:
-      - rafiki
+    network_mode: host
     volumes:
-      - database-data:/var/lib/postgresql/data/ # persist data even if container shuts down
-      - ../cloud-nine-wallet/dbinit.sql:/docker-entrypoint-initdb.d/init.sql
-    ports:
-      - '5432:5432'
+      - hydra-database-data:/var/lib/postgresql/data/ # persist data even if container shuts down
+      - ../../packages/frontend/hydra/dbinit.sql:/docker-entrypoint-initdb.d/init.sql
     environment:
       POSTGRES_PASSWORD: password
       POSTGRES_USER: postgres
+      # Assign a different port since 5432 is already in use
+      PGPORT: 5433
   hydra:
     build:
       context: ../../packages/frontend/hydra
       dockerfile: Dockerfile
     depends_on:
-      - shared-database
+      - hydra-database
     environment:
       - DSN=postgres://hydra:hydra_password@shared-database:5432/hydra?sslmode=disable
       - URLS_SELF_ISSUER=http://127.0.0.1:4444/
@@ -31,8 +30,7 @@ services:
     ports:
       - "4444:4444" # Public port
       - "4445:4445" # Admin port
-    networks:
-      - rafiki
+    network_mode: host
 
 volumes:
   database-data: # named volumes can be managed easier using docker-compose

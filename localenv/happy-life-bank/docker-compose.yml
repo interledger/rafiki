@@ -77,15 +77,14 @@ services:
     image: rafiki-frontend
     pull_policy: never
     restart: always
-    networks:
-      - rafiki
+    network_mode: host
     ports:
       - '4010:4010'
     volumes:
       - ../../packages/frontend/app/seed.example.yml:/workspace/seed.yml
     environment:
       PORT: 4010
-      GRAPHQL_URL: http://happy-life-bank-backend:3001/graphql
+      GRAPHQL_URL: http://localhost:3001/graphql
       OPEN_PAYMENTS_URL: https://happy-life-bank-backend/
       ENABLE_INSECURE_MESSAGE_COOKIE: true
       HYDRA_CLIENT_ID: 'happy-life-client'

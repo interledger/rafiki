@@ -2,8 +2,7 @@ import {
   CONFIG,
   type Config,
   type Account,
-  type Peering,
-  type Hydra
+  type Peering
 } from './parse_config.server'
 import {
   createAsset,
@@ -19,43 +18,8 @@ import { v4 } from 'uuid'
 import { mockAccounts } from './accounts.server'
 import { generateJwk } from '@interledger/http-signature-utils'
 import { Asset, FeeType } from 'generated/graphql'
-import axios from 'axios'
-
-// TODO move to appropriate location
-async function createHydraClient(clientId: string, clientName: string, redirectUri: string) {
-  const clientData = {
-    grant_types: ['authorization_code'],
-    client_id: clientId,
-    client_name: clientName,
-    redirect_uris: [redirectUri],
-    response_types: ['code'],
-    scope: 'full_access',
-    client_secret:'YourClientSecret',
-    skip_consent: true,
-    token_endpoint_auth_method: 'client_secret_post'
-  }
-
-  // TODO: error handling
-  try {
-    const existingClientResponse = await axios.get(`http://hydra:4445/admin/clients/${clientId}`)
-    if (existingClientResponse.data) {
-      console.log(`Client already exists: ${clientId}`)
-      return
-    }
-  } catch (error) {
-    if (error.response && error.response.status === 404) {
-      const response = await axios.post('http://hydra:4445/admin/clients', clientData)
-      console.log('Hydra client created: ', response.data)
-      return
-    }
-    throw new Error(`Error creating Hydra client: ${error}`)
-  }
-}
 
 export async function setupFromSeed(config: Config): Promise<void> {
-  //set env var for client_id
-  createHydraClient(config.seed.hydra.clientId, config.seed.hydra.name, config.seed.hydra.redirectUri)
-  
   const assets: Record<string, Asset> = {}
   for (const { code, scale, liquidity, liquidityThreshold } of config.seed
     .assets) {
