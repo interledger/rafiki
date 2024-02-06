@@ -8,6 +8,16 @@ describe('Open Payments Flow', (): void => {
   beforeAll(async () => {
     c9 = await MockASE.create(C9_CONFIG)
     hlb = await MockASE.create(HLB_CONFIG)
+
+    const walletAddressGet = await c9.opClient.walletAddress.get({
+      url: 'http://localhost:4000/accounts/pfry'
+    })
+    console.log({ walletAddressGet })
+  })
+
+  afterAll(async () => {
+    c9.shutdown()
+    hlb.shutdown()
   })
 
   test('Grant Request Incoming Payment', async (): Promise<void> => {

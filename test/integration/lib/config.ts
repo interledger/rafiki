@@ -6,22 +6,33 @@ import { parse as envParse } from 'dotenv'
 
 import { resolve } from 'path'
 
+export type TestConfig = Config & {
+  webhookServerPort: number
+  walletAddressUrl: string
+  keyId: string
+}
+
 type EnvConfig = {
   OPEN_PAYMENTS_URL: string
   AUTH_SERVER_DOMAIN: string
+  WEBHOOK_SERVER_PORT: string
+  WALLET_ADDRESS_URL: string
+  KEY_ID: string
 }
+const REQUIRED_KEYS: (keyof EnvConfig)[] = [
+  'OPEN_PAYMENTS_URL',
+  'AUTH_SERVER_DOMAIN',
+  'WEBHOOK_SERVER_PORT',
+  'WALLET_ADDRESS_URL',
+  'KEY_ID'
+]
 
 const loadEnv = (filePath: string): EnvConfig => {
   const fileContent = readFileSync(filePath)
   const envVars = envParse(fileContent)
 
-  const requiredKeys: (keyof EnvConfig)[] = [
-    'OPEN_PAYMENTS_URL',
-    'AUTH_SERVER_DOMAIN'
-  ]
-
   const missingKeys: string[] = []
-  requiredKeys.forEach((key) => {
+  REQUIRED_KEYS.forEach((key) => {
     if (!envVars[key]) {
       missingKeys.push(key)
     }
@@ -39,7 +50,7 @@ type ConfigOptions = {
   graphqlUrl: string
 }
 
-const createConfig = (name: string, opts: ConfigOptions): Config => {
+const createConfig = (name: string, opts: ConfigOptions): TestConfig => {
   const keyPath = resolve(__dirname, `../testenv/${name}/private-key.pem`)
   const seedPath = resolve(__dirname, `../testenv/${name}/seed.yml`)
   const env = loadEnv(resolve(__dirname, `../testenv/${name}/.env`))
@@ -50,13 +61,16 @@ const createConfig = (name: string, opts: ConfigOptions): Config => {
     publicHost: env.OPEN_PAYMENTS_URL,
     testnetAutoPeerUrl: '',
     authServerDomain: env.AUTH_SERVER_DOMAIN,
+    webhookServerPort: parseInt(env.WEBHOOK_SERVER_PORT),
+    walletAddressUrl: env.WALLET_ADDRESS_URL,
+    keyId: env.KEY_ID,
     ...opts
-  } as const
+  }
 }
 
-export const C9_CONFIG: Config = createConfig('cloud-nine-wallet', {
+export const C9_CONFIG: TestConfig = createConfig('cloud-nine-wallet', {
   graphqlUrl: 'http://localhost:3001/graphql'
 })
-export const HLB_CONFIG: Config = createConfig('happy-life-bank', {
+export const HLB_CONFIG: TestConfig = createConfig('happy-life-bank', {
   graphqlUrl: 'http://localhost:4001/graphql'
 })
