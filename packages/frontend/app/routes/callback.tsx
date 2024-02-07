@@ -54,7 +54,7 @@ export const action = async ({ request }: ActionArgs) => {
 
   try {
     const response = await axios.post(
-      'http://localhost:4444/oauth2/token',
+      'http://hydra:4444/oauth2/token',
       qs.stringify({
         client_id: process.env.HYDRA_CLIENT_ID,
         client_secret: 'YourClientSecret',

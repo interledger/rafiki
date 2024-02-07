@@ -109,14 +109,15 @@ services:
       context: ../..
       dockerfile: ./packages/frontend/Dockerfile
     restart: always
-    network_mode: host
+    networks:
+      - rafiki
     ports:
       - '3010:3010'
     volumes:
       - ../../packages/frontend/app/seed.example.yml:/workspace/seed.yml
     environment:
       PORT: 3010
-      GRAPHQL_URL: http://localhost:3001/graphql
+      GRAPHQL_URL: http://cloud-nine-wallet-backend:3001/graphql
       OPEN_PAYMENTS_URL: https://cloud-nine-wallet-backend/
       ENABLE_INSECURE_MESSAGE_COOKIE: true
       HYDRA_CLIENT_ID: 'cloud-nine-client'
