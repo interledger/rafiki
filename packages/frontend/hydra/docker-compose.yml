@@ -1,28 +1,29 @@
 #This configuration is set for dev purposes not appropriate for a production environment
 services:
-  hydra-database:
+  shared-database:
     image: 'postgres:15' # use latest official postgres version
     restart: unless-stopped
-    network_mode: host
+    networks:
+      - rafiki
     volumes:
-      - hydra-database-data:/var/lib/postgresql/data/ # persist data even if container shuts down
-      - ../../packages/frontend/hydra/dbinit.sql:/docker-entrypoint-initdb.d/init.sql
+      - database-data:/var/lib/postgresql/data/ # persist data even if container shuts down
+      - ../cloud-nine-wallet/dbinit.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - '5432:5432'
     environment:
       POSTGRES_PASSWORD: password
       POSTGRES_USER: postgres
-      # Assign a different port since 5432 is already in use
-      PGPORT: 5433
   hydra:
     build:
       context: ../../packages/frontend/hydra # TODO: Is there a better approach to specify this path?
       dockerfile: Dockerfile
     depends_on:
-      - hydra-database
+      - shared-database
     environment:
-      - DSN=postgres://hydra:hydra_password@localhost:5433/hydra?sslmode=disable
-      - URLS_SELF_ISSUER=http://localhost:4444/
-      - URLS_CONSENT=http://localhost:3010/consent
-      - URLS_LOGIN=http://localhost:3010/login
+      - DSN=postgres://hydra:hydra_password@shared-database:5432/hydra?sslmode=disable
+      - URLS_SELF_ISSUER=http://host.docker.internal:4444/
+      - URLS_CONSENT=http://host.docker.internal:3010/consent
+      - URLS_LOGIN=http://host.docker.internal:3010/login
       - SECRETS_SYSTEM=some-random-secret
       - OAUTH2_EXPOSE_INTERNAL_ERRORS=true
       - LOG_LEVEL=debug
@@ -30,7 +31,12 @@ services:
     ports:
       - "4444:4444" # Public port
       - "4445:4445" # Admin port
-    network_mode: host
+    networks:
+      - rafiki
 
 volumes:
   hydra-database-data: # named volumes can be managed easier using docker-compose
+
+networks:
+  rafiki:
+    external: true
