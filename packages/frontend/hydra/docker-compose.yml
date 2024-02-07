@@ -35,7 +35,7 @@ services:
       - rafiki
 
 volumes:
-  hydra-database-data: # named volumes can be managed easier using docker-compose
+  database-data: # named volumes can be managed easier using docker-compose
 
 networks:
   rafiki:
