@@ -30,3 +30,5 @@ pnpm localenv:compose down --volumes
 ```
 
 This is necessary since on a new run of the scripts (with autopeering or not), the wallet address urls will differ.
+
+TESTTEST
