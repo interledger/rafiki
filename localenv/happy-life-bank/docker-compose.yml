@@ -88,7 +88,7 @@ services:
       OPEN_PAYMENTS_URL: https://happy-life-bank-backend/
       HYDRA_CLIENT_ID: 'happy-life-client'
       HYDRA_CLIENT_NAME: 'happy-life'
-      HYDRA_CLIENT_REDIRECT_URI: 'http://host.docker.internal:4010/callback'
+      HYDRA_CLIENT_REDIRECT_URI: 'http://localhost:4010/callback'
       SEED_FILE_LOCATION: /workspace/seed.yml
     depends_on:
       - cloud-nine-admin

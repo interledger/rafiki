@@ -120,7 +120,7 @@ services:
       OPEN_PAYMENTS_URL: https://cloud-nine-wallet-backend/
       HYDRA_CLIENT_ID: 'cloud-nine-client'
       HYDRA_CLIENT_NAME: 'cloud-nine'
-      HYDRA_CLIENT_REDIRECT_URI: 'http://host.docker.internal:3010/callback'
+      HYDRA_CLIENT_REDIRECT_URI: 'http://localhost:3010/callback'
       SEED_FILE_LOCATION: /workspace/seed.yml
     depends_on:
       - cloud-nine-backend
