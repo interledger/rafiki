@@ -76,7 +76,8 @@ services:
     image: rafiki-frontend
     pull_policy: never
     restart: always
-    network_mode: host
+    networks:
+      - rafiki
     ports:
       - '4010:4010'
     volumes:

@@ -108,7 +108,8 @@ services:
       context: ../..
       dockerfile: ./packages/frontend/Dockerfile
     restart: always
-    network_mode: host
+    networks:
+      - rafiki
     ports:
       - '3010:3010'
     volumes:

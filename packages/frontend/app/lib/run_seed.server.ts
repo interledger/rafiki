@@ -23,7 +23,7 @@ async function createHydraClient(
   // TODO: error handling
   try {
     const existingClientResponse = await axios.get(
-      `http://localhost:4445/admin/clients/${id}`
+      `http://hydra:4445/admin/clients/${id}`
     )
     if (existingClientResponse.data) {
       console.log(`Client already exists: ${id}`)
@@ -32,7 +32,7 @@ async function createHydraClient(
   } catch (error) {
     if (error.response && error.response.status === 404) {
       const response = await axios.post(
-        'http://localhost:4445/admin/clients',
+        'http://hydra:4445/admin/clients',
         clientData
       )
       console.log('Hydra client created: ', response.data)
