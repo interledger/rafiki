@@ -59,7 +59,7 @@ export const loader = async ({ request }: LoaderArgs) => {
     })
   } else if (sessionLoginChallenge) {
     console.log('getting login challenge')
-    const hydraUrl = `http://hydra:4445/oauth2/auth/requests/login?login_challenge=${sessionLoginChallenge}`
+    const hydraUrl = `http://hydra:4445/admin/oauth2/auth/requests/login?login_challenge=${sessionLoginChallenge}`
     console.log('HydraUrl: ', hydraUrl)
     try {
       const response = await axios.get(hydraUrl)
@@ -91,7 +91,7 @@ export async function action({ request }: ActionArgs) {
   }
 
   const response = await axios.put(
-    `http://hydra:4445/oauth2/auth/requests/login/accept?login_challenge=${loginChallenge}`,
+    `http://hydra:4445/admin/oauth2/auth/requests/login/accept?login_challenge=${loginChallenge}`,
     {
       subject: username
       // other data Hydra needs
