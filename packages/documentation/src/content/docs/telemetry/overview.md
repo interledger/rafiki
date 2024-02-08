@@ -4,7 +4,7 @@ title: Overview
 
 ## Purpose
 
-The objective of the telemetry feature is to gather metrics and establish an infrastructure for visualizing valuable network insights. The metrics we at the Interledger Foundation (interledger.org) collect include:
+The objective of the telemetry feature is to gather metrics and establish an infrastructure for visualizing valuable network insights. The metrics we at the Interledger Foundation collect include:
 
 - The total amount of money transferred via packet data within a specified time frame (daily, weekly, monthly).
 - The number of transactions from outgoing payments that have been at least partially successful.
