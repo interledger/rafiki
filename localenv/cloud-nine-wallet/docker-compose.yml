@@ -127,6 +127,5 @@ services:
       - cloud-nine-backend
       - hydra
 
-
 volumes:
   database-data: # named volumes can be managed easier using docker-compose
