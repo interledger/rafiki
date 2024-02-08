@@ -4,7 +4,7 @@ title: Overview
 
 ## Purpose
 
-The objective of the telemetry feature is to gather metrics and establish an infrastructure for visualizing valuable network insights. The metrics we collect include:
+The objective of the telemetry feature is to gather metrics and establish an infrastructure for visualizing valuable network insights. The metrics we at the Interledger Foundation (interledger.org) collect include:
 
 - The total amount of money transferred via packet data within a specified time frame (daily, weekly, monthly).
 - The number of transactions from outgoing payments that have been at least partially successful.
@@ -32,7 +32,7 @@ We have adopted [OpenTelemetry](https://opentelemetry.io/) to ensure compliance 
 
 The Telemetry Replica service is hosted on AWS ECS Fargate and is configured for availability and load balancing of custom ADOT (AWS Distro for Opentelemetry) Collector ECS tasks.
 
-When ASEs opt for telemetry, metrics are sent to our Telemetry Service. To enable ASEs to build their own telemetry solutions, instrumented Rafiki can send data to multiple endpoints. This allows the integration of a local Otel collector container that can support custom requirements. Metrics communication is facilitated through GRPC.
+When ASEs opt for telemetry, metrics are sent to our Telemetry Service. To enable ASEs to build their own telemetry solutions, instrumented Rafiki can send data to multiple endpoints. This allows the integration of a local [Otel collector](https://opentelemetry.io/docs/collector/) container that can support custom requirements. Metrics communication is facilitated through [gRPC](https://grpc.io/).
 
 ## Otel SDK - Rafiki Instrumentation
 
@@ -40,7 +40,7 @@ The Opentelemetry SDK is integrated into Rafiki to create, collect, and export m
 
 ## Prometheus - AMP
 
-We use Amazon's managed service for Prometheus to collect data from the Telemetry cluster.
+We use Amazon's managed service for Prometheus (AMP) to collect data from the Telemetry cluster.
 
 **Note**: AMP offers limited configuration options and cannot crawl data outside of AWS. This limitation led us to adopt a push model, using prometheusRemoteWrite, instead of a pull model. For future development, we may consider hosting our own Prometheus.
 

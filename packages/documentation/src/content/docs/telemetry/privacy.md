@@ -30,13 +30,13 @@ The noise, selected from the Laplacian distribution, is then generated using thi
 
 ## Currency Conversion
 
-Another factor that obscures sensitive data is currency conversion. In cross-currency transactions, exchange rates are provided by [ASE](/reference/glossary#account-servicing-entity) internally. As such, they cannot be correlated to an individual transaction. If the necessary rates are not provided or not available from the ASE, an external API for exchange rates is used. The obtained exchange rates are overwritten frequently in this case, with no versioning or history access. This introduces an additional layer of noise and further protects the privacy of the transactions.
+Another factor that obscures sensitive data is currency conversion. In cross-currency transactions, exchange rates are provided by [ASEs](/reference/glossary#account-servicing-entity) internally. As such, they cannot be correlated to an individual transaction. If the necessary rates are not provided or not available from the ASE, an external API for exchange rates is used. The obtained exchange rates are overwritten frequently in this case, with no versioning or history access. This introduces an additional layer of noise and further protects the privacy of the transactions.
 
 ## References
 
 Rafiki's telemetry solution is a combination of techniques described in various white papers on privacy-preserving data collection. For more information, you can refer to the following papers:
 
-- [Local Differential Privacy for Human-Centered Computing](https://proceedings.neurips.cc/paper_files/paper/2017/file/253614bbac999b38b5b60cae531c4969-Paper.pdf)
+- [Local Differential Privacy for Human-Centered Computing](https://jwcn-eurasipjournals.springeropen.com/articles/10.1186/s13638-020-01675-8)
 - [Collecting Telemetry Data Privately](https://www.microsoft.com/en-us/research/blog/collecting-telemetry-data-privately/)
 - [Collecting Telemetry Data Privately - NeurIPS Publication](https://proceedings.neurips.cc/paper_files/paper/2017/file/253614bbac999b38b5b60cae531c4969-Paper.pdf) by Bolin Ding, Janardhan Kulkarni, Sergey Yekhanin from Microsoft Research.
 - [RAPPOR: Randomized Aggregatable Privacy-Preserving Ordinal Response](https://static.googleusercontent.com/media/research.google.com/en//pubs/archive/42852.pdf)
