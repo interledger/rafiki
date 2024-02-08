@@ -1,13 +1,24 @@
-import { CONFIG, type Config, type Client } from '../parse_config.server'
+import { CONFIG, type Config } from '../parse_config.server'
+import axios, { AxiosError } from 'axios'
 
-import axios from 'axios'
+interface HydraClientData {
+  grant_types: string[];
+  client_id: string;
+  client_name: string;
+  redirect_uris: string[];
+  response_types: string[];
+  scope: string;
+  client_secret: string;
+  skip_consent: boolean;
+  token_endpoint_auth_method: string;
+}
 
 async function createHydraClient(
   id: string,
   name: string,
   redirectUri: string
 ) {
-  const clientData = {
+  const clientData: HydraClientData = {
     grant_types: ['authorization_code'],
     client_id: id,
     client_name: name,
@@ -19,25 +30,27 @@ async function createHydraClient(
     token_endpoint_auth_method: 'client_secret_post'
   }
 
-  // TODO: error handling
   try {
     const existingClientResponse = await axios.get(
       `http://hydra:4445/admin/clients/${id}`
     )
     if (existingClientResponse.data) {
-      console.log(`Client already exists: ${id}`)
+      console.log(`Hydra client already exists: ${id}`)
       return
     }
   } catch (error) {
-    if (error.response && error.response.status === 404) {
-      const response = await axios.post(
-        'http://hydra:4445/admin/clients',
-        clientData
-      )
-      console.log('Hydra client created: ', response.data)
-      return
+    const axiosError = error as AxiosError
+    if (axiosError.response && axiosError.response.status === 404) {
+      try {
+        await axios.post(
+          'http://hydra:4445/admin/clients',
+          clientData
+        )
+      } catch(postError) {
+        throw new Error(`Error creating Hydra client: ${postError}`)
+      }
     }
-    throw new Error(`Error creating Hydra client: ${error}`)
+    throw new Error(`Error creating Hydra client: ${axiosError}`)
   }
 }
 
@@ -48,6 +61,5 @@ export async function setupFromSeed(config: Config): Promise<void> {
 }
 
 export async function runSeed(): Promise<void> {
-  console.log('calling run_seed')
   return setupFromSeed(CONFIG)
 }
