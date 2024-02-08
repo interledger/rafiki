@@ -16,13 +16,16 @@
     "@remix-run/node": "^2.6.0",
     "@remix-run/react": "^2.6.0",
     "@remix-run/serve": "^2.6.0",
+    "axios": "^1.6.5",
     "class-variance-authority": "^0.7.0",
     "graphql": "^16.8.1",
     "ilp-packet": "3.1.4-alpha.2",
     "isbot": "^5.1.1",
+    "qs": "^6.11.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "uuid": "^9.0.1",
+    "yaml": "^2.3.4",
     "zod": "^3.22.4"
   },
   "devDependencies": {
