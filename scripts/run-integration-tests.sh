@@ -1,12 +1,17 @@
 #!/bin/bash
 
+# Starts test env, runs tests, and stops test env. 
+# testenv container logs saved to file.
+
 timeout=30
+log_file="/tmp/rafiki_integration_logs.txt"
 
 pnpm --filter integration testenv:compose down
 pnpm --filter integration testenv:compose up -d
+pnpm --filter integration testenv:compose logs -f --tail=0 > "$log_file" 2>&1 &
 
-# perform healthcheck until OK, or errors if timeout.
-function makeRequest() {
+# perform health check until OK, or errors if timeout.
+function pollUrl() {
   local url="$1"
   local start_time=$(date +%s)
 
@@ -30,6 +35,6 @@ function makeRequest() {
   done
 }
 
-makeRequest "http://localhost:4000/healthz"
-
+pollUrl "http://localhost:4000/healthz"
 pnpm --filter integration test
+pnpm --filter integration testenv:compose down

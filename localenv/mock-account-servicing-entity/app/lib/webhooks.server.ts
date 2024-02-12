@@ -9,24 +9,7 @@ import {
   depositPeerLiquidity,
   createWalletAddress
 } from './requesters'
-
-export enum EventType {
-  IncomingPaymentCreated = 'incoming_payment.created',
-  IncomingPaymentCompleted = 'incoming_payment.completed',
-  IncomingPaymentExpired = 'incoming_payment.expired',
-  OutgoingPaymentCreated = 'outgoing_payment.created',
-  OutgoingPaymentCompleted = 'outgoing_payment.completed',
-  OutgoingPaymentFailed = 'outgoing_payment.failed',
-  WalletAddressNotFound = 'wallet_address.not_found',
-  AssetLiquidityLow = 'asset.liquidity_low',
-  PeerLiquidityLow = 'peer.liquidity_low'
-}
-
-export interface WebHook {
-  id: string
-  type: EventType
-  data: Record<string, unknown>
-}
+import { Webhook, WebhookEventType } from 'mock-account-servicing-lib'
 
 export interface AmountJSON {
   value: string
@@ -42,10 +25,10 @@ export function parseAmount(amount: AmountJSON): Amount {
   }
 }
 
-export async function handleOutgoingPaymentCompletedFailed(wh: WebHook) {
+export async function handleOutgoingPaymentCompletedFailed(wh: Webhook) {
   if (
-    wh.type !== EventType.OutgoingPaymentCompleted &&
-    wh.type !== EventType.OutgoingPaymentFailed
+    wh.type !== WebhookEventType.OutgoingPaymentCompleted &&
+    wh.type !== WebhookEventType.OutgoingPaymentFailed
   ) {
     throw new Error('Invalid event type when handling outgoing payment webhook')
   }
@@ -72,8 +55,8 @@ export async function handleOutgoingPaymentCompletedFailed(wh: WebHook) {
   return
 }
 
-export async function handleOutgoingPaymentCreated(wh: WebHook) {
-  if (wh.type !== EventType.OutgoingPaymentCreated) {
+export async function handleOutgoingPaymentCreated(wh: Webhook) {
+  if (wh.type !== WebhookEventType.OutgoingPaymentCreated) {
     throw new Error('Invalid event type when handling outgoing payment webhook')
   }
 
@@ -122,10 +105,10 @@ export async function handleOutgoingPaymentCreated(wh: WebHook) {
   return
 }
 
-export async function handleIncomingPaymentCompletedExpired(wh: WebHook) {
+export async function handleIncomingPaymentCompletedExpired(wh: Webhook) {
   if (
-    wh.type !== EventType.IncomingPaymentCompleted &&
-    wh.type !== EventType.IncomingPaymentExpired
+    wh.type !== WebhookEventType.IncomingPaymentCompleted &&
+    wh.type !== WebhookEventType.IncomingPaymentExpired
   ) {
     throw new Error('Invalid event type when handling incoming payment webhook')
   }
@@ -174,7 +157,7 @@ export async function handleIncomingPaymentCompletedExpired(wh: WebHook) {
   return
 }
 
-export async function handleWalletAddressNotFound(wh: WebHook) {
+export async function handleWalletAddressNotFound(wh: Webhook) {
   const walletAddressUrl = wh.data['walletAddressUrl'] as string | undefined
 
   if (!walletAddressUrl) {
@@ -202,7 +185,7 @@ export async function handleWalletAddressNotFound(wh: WebHook) {
   )
 }
 
-export async function handleLowLiquidity(wh: WebHook) {
+export async function handleLowLiquidity(wh: Webhook) {
   const id = wh.data['id'] as string | undefined
 
   if (!id) {

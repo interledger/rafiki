@@ -21,23 +21,13 @@ services:
       CONNECTOR_PORT: 3002
       OPEN_PAYMENTS_PORT: 80
       DATABASE_URL: postgresql://happy_life_bank_test_backend:happy_life_bank_test_backend@shared-database/happy_life_bank_test_backend
-      AUTH_SERVER_GRANT_URL: http://happy-life-bank-test-auth:3006
-      AUTH_SERVER_INTROSPECTION_URL: http://happy-life-bank-test-auth:3007
+      AUTH_SERVER_GRANT_URL: http://localhost:4006
+      AUTH_SERVER_INTROSPECTION_URL: http://localhost:4007
+      # AUTH_SERVER_GRANT_URL: http://happy-life-bank-test-auth:3006
+      # AUTH_SERVER_INTROSPECTION_URL: http://happy-life-bank-test-auth:3007
       ILP_ADDRESS: test.happy-life-bank-test
       STREAM_SECRET: BjPXtnd00G2mRQwP/8ZpwyZASOch5sUXT5o0iR5b5wU=
-
-      # TODO: figure out right url. localhost will probably be wrong (relative to container im guessing)
-      # WEBHOOK_URL: http://localhost:${WEBHOOK_SERVER_PORT}/webhooks
-
-      # Maybe this will work?
       WEBHOOK_URL: http://host.docker.internal:${WEBHOOK_SERVER_PORT}/webhooks
-
-      # Or this? (set as env var soemwhere). looks like thats what above does though.
-      # WEBHOOK_URL=http://<host_machine_ip>:8888/webhooks
-
-      # Original (assumes there is some cloud-nine-wallet-test, which there isnt because the server is on localhost):
-      # WEBHOOK_URL: http://happy-life-bank-test/webhooks
-      
       # TODO: should point to the integration ASE, similar to webhook url
       EXCHANGE_RATES_URL: http://happy-life-bank-test/rates
       REDIS_URL: redis://shared-redis:6379/1

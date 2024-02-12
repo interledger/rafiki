@@ -1,4 +1,5 @@
 import type { KeyObject } from 'crypto'
+import { WebhookEventType } from './WebhookEventType'
 
 interface Asset {
   code: string
@@ -48,4 +49,9 @@ export interface Config {
   testnetAutoPeerUrl: string
   authServerDomain: string
   graphqlUrl: string
+}
+export interface Webhook {
+  id: string
+  type: WebhookEventType
+  data: Record<string, unknown>
 }

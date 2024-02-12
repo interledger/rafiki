@@ -14,10 +14,10 @@ export class MockASE {
   private apolloClient: ApolloClient<NormalizedCacheObject>
   public accounts: AccountProvider
   public opClient!: AuthenticatedClient
-  private webhookServer: WebhookServer
+  public webhookServer: WebhookServer
 
   // Use .create factory because async construction
-  public static async create(config: TestConfig) {
+  public static async create(config: TestConfig): Promise<MockASE> {
     const mase = new MockASE(config)
     await mase.initAsync()
     return mase
@@ -29,7 +29,7 @@ export class MockASE {
     this.config = config
     this.apolloClient = createApolloClient(config.graphqlUrl)
     this.accounts = new AccountProvider()
-    this.webhookServer = new WebhookServer()
+    this.webhookServer = new WebhookServer(this.apolloClient, this.accounts)
     this.webhookServer.start(this.config.webhookServerPort)
   }
 
