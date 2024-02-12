@@ -63,8 +63,8 @@ importers:
         specifier: ^3.8.10
         version: 3.8.10(graphql@16.8.1)(react-dom@18.2.0)(react@18.2.0)
       '@interledger/http-signature-utils':
-        specifier: 2.0.0
-        version: 2.0.0
+        specifier: 2.0.1
+        version: 2.0.1
       '@remix-run/node':
         specifier: ^2.6.0
         version: 2.6.0(typescript@5.3.3)
@@ -130,8 +130,8 @@ importers:
         specifier: ^10.0.2
         version: 10.0.2(graphql@16.8.1)
       '@interledger/http-signature-utils':
-        specifier: 2.0.0
-        version: 2.0.0
+        specifier: 2.0.1
+        version: 2.0.1
       '@interledger/open-payments':
         specifier: 6.5.1
         version: 6.5.1
@@ -269,8 +269,8 @@ importers:
         specifier: ^10.0.2
         version: 10.0.2(graphql@16.8.1)
       '@interledger/http-signature-utils':
-        specifier: 2.0.0
-        version: 2.0.0
+        specifier: 2.0.1
+        version: 2.0.1
       '@interledger/open-payments':
         specifier: 6.5.1
         version: 6.5.1
@@ -3178,15 +3178,6 @@ packages:
       mermaid: 10.7.0
     transitivePeerDependencies:
       - supports-color
-    dev: false
-
-  /@interledger/http-signature-utils@2.0.0:
-    resolution: {integrity: sha512-zJTuTzkb9Y8ZJe8L0KcYnRtha8KyrYVpdM0FLL3HEOscWXRNrYC75IkJLzeTZnjzog77q9DT9PmxLitHuPl8iQ==}
-    dependencies:
-      http-message-signatures: 0.1.2
-      httpbis-digest-headers: 1.0.0
-      jose: 4.13.1
-      uuid: 9.0.1
     dev: false
 
   /@interledger/http-signature-utils@2.0.1:
