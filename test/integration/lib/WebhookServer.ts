@@ -43,6 +43,7 @@ export class WebhookServer {
     })
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private isWebhookEvent(body: any): body is Webhook {
     return (
       typeof body === 'object' &&

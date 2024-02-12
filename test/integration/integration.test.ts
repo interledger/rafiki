@@ -43,6 +43,7 @@ describe('Open Payments Flow', (): void => {
       if (!(e instanceof OpenPaymentsClientError)) throw e
     }
 
+    expect(walletAddress).toBeUndefined()
     expect(handleWebhookEventSpy).toHaveBeenCalledWith(
       expect.objectContaining({
         type: WebhookEventType.WalletAddressNotFound,
