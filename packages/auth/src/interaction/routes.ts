@@ -154,7 +154,7 @@ async function startInteraction(
     interaction.state !== InteractionState.Pending ||
     isRevokedGrant(interaction.grant)
   ) {
-    ctx.throw(401, 'unknown_request', { 
+    ctx.throw(401, 'unknown_request', {
       error: {
         code: 'unknown_request',
         description: 'unknown interaction'
@@ -199,7 +199,7 @@ async function handleInteractionChoice(
       Buffer.from(config.identityServerSecret)
     )
   ) {
-    ctx.throw(401, 'invalid_interaction', { 
+    ctx.throw(401, 'invalid_interaction', {
       error: {
         code: 'invalid_interaction',
         description: 'invalid x-idp-secret'
@@ -222,7 +222,7 @@ async function handleInteractionChoice(
       grant.state === GrantState.Finalized &&
       grant.finalizationReason !== GrantFinalization.Issued
     ) {
-      ctx.throw(401, 'user_denied', { 
+      ctx.throw(401, 'user_denied', {
         error: {
           code: 'user_denied',
           description: 'user denied interaction'
@@ -235,7 +235,7 @@ async function handleInteractionChoice(
       interaction.state !== InteractionState.Pending ||
       isInteractionExpired(interaction)
     ) {
-      ctx.throw(400, 'request_denied', { 
+      ctx.throw(400, 'request_denied', {
         error: {
           code: 'request_denied',
           description: 'invalid interaction'
@@ -323,7 +323,7 @@ async function finishInteraction(
 
   // TODO: redirect with this error in query string
   if (sessionNonce !== nonce) {
-    ctx.throw(401, 'invalid_request', { 
+    ctx.throw(401, 'invalid_request', {
       error: {
         code: 'invalid_request',
         description: 'invalid session'
@@ -336,14 +336,12 @@ async function finishInteraction(
 
   // TODO: redirect with this error in query string
   if (!interaction || isRevokedGrant(interaction.grant)) {
-    ctx.throw(404, 'unknown_request',
-      {
-        error: {
-          code: 'unknown_request',
-          description: 'unknown interaction'
-        }
+    ctx.throw(404, 'unknown_request', {
+      error: {
+        code: 'unknown_request',
+        description: 'unknown interaction'
       }
-    )
+    })
   }
 
   const { grant } = interaction

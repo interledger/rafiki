@@ -144,12 +144,22 @@ async function createPendingGrant(
   const { body } = ctx.request
   const { grantService, interactionService, config } = deps
   if (!body.interact) {
-    ctx.throw(400, 'interaction_required', { error: { code: 'interaction_required', description: 'missing required request field' } })
+    ctx.throw(400, 'interaction_required', {
+      error: {
+        code: 'interaction_required',
+        description: 'missing required request field'
+      }
+    })
   }
 
   const client = await deps.clientService.get(body.client)
   if (!client) {
-    ctx.throw(400, 'invalid_client', { error: { code: 'invalid_client', description: 'missing required request field' } })
+    ctx.throw(400, 'invalid_client', {
+      error: {
+        code: 'invalid_client',
+        description: 'missing required request field'
+      }
+    })
   }
 
   const trx = await Grant.startTransaction()
@@ -203,7 +213,7 @@ async function pollGrantContinuation(
 
   const grant = await grantService.getByContinue(continueId, continueToken)
   if (!grant) {
-    ctx.throw(404, {
+    ctx.throw(404, 'unknown_request', {
       error: {
         code: 'unknown_request',
         description: 'grant not found'
@@ -212,7 +222,7 @@ async function pollGrantContinuation(
   }
 
   if (isGrantStillWaiting(grant, config.waitTimeSeconds)) {
-    ctx.throw(400, {
+    ctx.throw(400, 'too_fast', {
       error: {
         code: 'too_fast',
         description: 'polled grant faster than "wait" period'
@@ -225,7 +235,7 @@ async function pollGrantContinuation(
     "When the client instance does not include a finish parameter, the client instance will often need to poll the AS until the RO has authorized the request."
   */
   if (grant.finishMethod) {
-    ctx.throw(401, {
+    ctx.throw(401, 'request_denied', {
       error: { code: 'request_denied', description: 'grant cannot be polled' }
     })
   } else if (
@@ -243,7 +253,7 @@ async function pollGrantContinuation(
     grant.state !== GrantState.Approved ||
     !isContinuableGrant(grant)
   ) {
-    ctx.throw(401, {
+    ctx.throw(401, 'request_denied', {
       error: {
         code: 'request_denied',
         description: 'grant cannot be continued'
@@ -281,7 +291,7 @@ async function continueGrant(
   )[1]
 
   if (!continueId || !continueToken) {
-    ctx.throw(401, {
+    ctx.throw(401, 'invalid_continuation', {
       error: {
         code: 'invalid_continuation',
         description: 'missing continuation information'
@@ -304,7 +314,7 @@ async function continueGrant(
 
   const { interact_ref: interactRef } = ctx.request.body
   if (!interactRef) {
-    ctx.throw(401, {
+    ctx.throw(401, 'invalid_request', {
       error: {
         code: 'invalid_request',
         description: 'missing interaction reference'
@@ -320,11 +330,11 @@ async function continueGrant(
     !isContinuableGrant(interaction.grant) ||
     !isMatchingContinueRequest(continueId, continueToken, interaction.grant)
   ) {
-    ctx.throw(404, {
+    ctx.throw(404, 'invalid_continuation', {
       error: { code: 'invalid_continuation', description: 'grant not found' }
     })
   } else if (isGrantStillWaiting(interaction.grant, config.waitTimeSeconds)) {
-    ctx.throw(400, {
+    ctx.throw(400, 'too_fast', {
       error: {
         code: 'too_fast',
         description: 'continued grant faster than "wait" period'
@@ -333,7 +343,7 @@ async function continueGrant(
   } else {
     const { grant } = interaction
     if (grant.state !== GrantState.Approved) {
-      ctx.throw(401, {
+      ctx.throw(401, 'request_denied', {
         error: {
           code: 'request_denied',
           description: 'grant interaction not approved'
@@ -364,16 +374,25 @@ async function revokeGrant(
     'GNAP '
   )[1]
   if (!continueId || !continueToken) {
-    ctx.throw(401, { error: { code: 'invalid_request', description: 'invalid continuation information' } })
+    ctx.throw(401, 'invalid_request', {
+      error: {
+        code: 'invalid_request',
+        description: 'invalid continuation information'
+      }
+    })
   }
   const grant = await deps.grantService.getByContinue(continueId, continueToken)
   if (!grant) {
-    ctx.throw(404, { error: { code: 'unknown_request', description: 'unknown grant' } })
+    ctx.throw(404, 'unknown_request', {
+      error: { code: 'unknown_request', description: 'unknown grant' }
+    })
   }
 
   const revoked = await deps.grantService.revokeGrant(grant.id)
   if (!revoked) {
-    ctx.throw(404, { error: { code: 'unknown_request', description: 'invalid grant' } })
+    ctx.throw(404, 'unknown_request', {
+      error: { code: 'unknown_request', description: 'invalid grant' }
+    })
   }
   ctx.status = 204
 }
