@@ -46,6 +46,7 @@ export async function getAccountTransfers(
         creditAccountId: accountId
       })
     )
+    // Get transfers for POSTED or non-expired PENDING transfers. VOIDED transfers are ignored.
     .where((query) =>
       query
         .where({ state: LedgerTransferState.POSTED })
