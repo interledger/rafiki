@@ -393,7 +393,7 @@ describe('Ledger Transfer', (): void => {
       ${'credit'}
       ${'debit'}
     `(
-      `gets POSTED transfer for $accountType account `,
+      `gets POSTED transfer for $accountType account`,
       async ({ accountType }): Promise<void> => {
         const transfer = await createLedgerTransfer(
           {
@@ -423,14 +423,15 @@ describe('Ledger Transfer', (): void => {
       ${'credit'}
       ${'debit'}
     `(
-      `gets PENDING transfer for $accountType account `,
+      `gets POSTED transfer for $accountType account even if expired`,
       async ({ accountType }): Promise<void> => {
         const transfer = await createLedgerTransfer(
           {
             ledger: account.ledger,
             creditAccountId: creditAccount.id,
             debitAccountId: debitAccount.id,
-            state: LedgerTransferState.PENDING
+            state: LedgerTransferState.POSTED,
+            expiresAt: new Date(Date.now() - 10)
           },
           knex
         )
@@ -453,7 +454,38 @@ describe('Ledger Transfer', (): void => {
       ${'credit'}
       ${'debit'}
     `(
-      `ignores expired transfer for $accountType account `,
+      `gets PENDING transfer for $accountType account `,
+      async ({ accountType }): Promise<void> => {
+        const transfer = await createLedgerTransfer(
+          {
+            ledger: account.ledger,
+            creditAccountId: creditAccount.id,
+            debitAccountId: debitAccount.id,
+            state: LedgerTransferState.PENDING,
+            expiresAt: new Date(Date.now() + 10)
+          },
+          knex
+        )
+
+        await expect(
+          getAccountTransfers(
+            serviceDeps,
+            accountType === 'credit' ? creditAccount.id : debitAccount.id
+          )
+        ).resolves.toEqual(
+          accountType === 'credit'
+            ? { credits: [transfer], debits: [] }
+            : { credits: [], debits: [transfer] }
+        )
+      }
+    )
+
+    test.each`
+      accountType
+      ${'credit'}
+      ${'debit'}
+    `(
+      `ignores expired PENDING transfer for $accountType account`,
       async ({ accountType }): Promise<void> => {
         await createLedgerTransfer(
           {

@@ -46,12 +46,12 @@ export async function getAccountTransfers(
         creditAccountId: accountId
       })
     )
-    .where((query) =>
-      query.where({ expiresAt: null }).orWhere('expiresAt', '>', new Date())
+    .where((query) => query.where({ state: LedgerTransferState.POSTED }))
+    .orWhere((query) =>
+      query
+        .where({ state: LedgerTransferState.PENDING })
+        .andWhere('expiresAt', '>', new Date())
     )
-    .andWhereNot({
-      state: LedgerTransferState.VOIDED
-    })
 
   return transfers.reduce(
     (results, transfer) => {
