@@ -266,8 +266,10 @@ describe('Signature Service', (): void => {
 
       await expect(tokenHttpsigMiddleware(ctx, next)).rejects.toMatchObject({
         status: 500,
-        error: 'internal_server_error',
-        message: 'internal server error'
+        error: {
+          code: 'internal_server_error',
+          description: 'internal server error'
+        }
       })
       expect(tokenSpy).toHaveBeenCalledWith(managementId)
       expect(next).not.toHaveBeenCalled()
@@ -295,8 +297,10 @@ describe('Signature Service', (): void => {
       }
       await expect(tokenHttpsigMiddleware(ctx, next)).rejects.toMatchObject({
         status: 400,
-        error: 'invalid_request',
-        message: 'invalid signature headers'
+        error: {
+          code: 'invalid_request',
+          description: 'invalid signature headers'
+        }
       })
     })
 
@@ -327,7 +331,13 @@ describe('Signature Service', (): void => {
 
       await expect(
         grantContinueHttpsigMiddleware(ctx, next)
-      ).rejects.toHaveProperty('status', 401)
+      ).rejects.toMatchObject({
+        status: 401,
+        error: {
+          code: 'invalid_request',
+          description: 'invalid signature'
+        }
+      })
 
       scope.done()
     })
@@ -356,11 +366,14 @@ describe('Signature Service', (): void => {
         deps
       )
 
-      await grantContinueHttpsigMiddleware(ctx, next)
-      expect(ctx.response.status).toBe(401)
-      expect(ctx.response.body).toMatchObject({
-        error: 'invalid_continuation',
-        message: 'invalid grant'
+      await expect(
+        grantContinueHttpsigMiddleware(ctx, next)
+      ).rejects.toMatchObject({
+        status: 401,
+        error: {
+          code: 'invalid_continuation',
+          description: 'invalid grant'
+        }
       })
     })
 
@@ -386,7 +399,10 @@ describe('Signature Service', (): void => {
         grantInitiationHttpsigMiddleware(ctx, next)
       ).rejects.toMatchObject({
         status: 400,
-        message: 'invalid client'
+        error: {
+          code: 'invalid_client',
+          description: 'could not determine client'
+        }
       })
     })
 
@@ -415,7 +431,10 @@ describe('Signature Service', (): void => {
         grantInitiationHttpsigMiddleware(ctx, next)
       ).rejects.toMatchObject({
         status: 400,
-        message: 'invalid signature headers'
+        error: {
+          code: 'invalid_request',
+          description: 'invalid signature headers'
+        }
       })
     })
   })

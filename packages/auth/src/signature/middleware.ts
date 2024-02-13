@@ -31,7 +31,9 @@ async function verifySigFromClient(
   const sigInput = ctx.headers['signature-input'] as string
   const keyId = getKeyId(sigInput)
   if (!keyId) {
-    ctx.throw(401, 'invalid signature input', { error: 'invalid_request' })
+    ctx.throw(401, 'invalid signature input', {
+      error: { code: 'invalid_request', description: 'invalid signature input' }
+    })
   }
 
   const clientService = await ctx.container.use('clientService')
@@ -41,7 +43,12 @@ async function verifySigFromClient(
   })
 
   if (!clientKey) {
-    ctx.throw(400, 'invalid client', { error: 'invalid_client' })
+    ctx.throw(400, 'invalid client', {
+      error: {
+        code: 'invalid_client',
+        description: 'could not determine client'
+      }
+    })
   }
   return validateSignature(clientKey, contextToRequestLike(ctx))
 }
@@ -54,7 +61,12 @@ export async function grantContinueHttpsigMiddleware(
     !validateSignatureHeaders(contextToRequestLike(ctx)) ||
     !ctx.headers['authorization']
   ) {
-    ctx.throw(400, 'invalid signature headers', { error: 'invalid_request' })
+    ctx.throw(400, 'invalid signature headers', {
+      error: {
+        code: 'invalid_request',
+        description: 'invalid signature headers'
+      }
+    })
   }
 
   const continueToken = ctx.headers['authorization'].replace(
@@ -80,17 +92,17 @@ export async function grantContinueHttpsigMiddleware(
   )
 
   if (!grant) {
-    ctx.status = 401
-    ctx.body = {
-      error: 'invalid_continuation',
-      message: 'invalid grant'
-    }
+    ctx.throw(401, 'invalid grant', {
+      error: { code: 'invalid_continuation', description: 'invalid grant' }
+    })
     return
   }
 
   const sigVerified = await verifySigFromClient(grant.client, ctx)
   if (!sigVerified) {
-    ctx.throw(401, 'invalid signature')
+    ctx.throw(401, 'invalid signature', {
+      error: { code: 'invalid_request', description: 'invalid signature' }
+    })
   }
   await next()
 }
@@ -100,14 +112,21 @@ export async function grantInitiationHttpsigMiddleware(
   next: () => Promise<any>
 ): Promise<void> {
   if (!validateSignatureHeaders(contextToRequestLike(ctx))) {
-    ctx.throw(400, 'invalid signature headers', { error: 'invalid_request' })
+    ctx.throw(400, 'invalid signature headers', {
+      error: {
+        code: 'invalid_request',
+        description: 'invalid signature headers'
+      }
+    })
   }
 
   const { body } = ctx.request
 
   const sigVerified = await verifySigFromClient(body.client, ctx)
   if (!sigVerified) {
-    ctx.throw(401, 'invalid signature')
+    ctx.throw(401, 'invalid signature', {
+      error: { code: 'invalid_request', description: 'invalid signature' }
+    })
   }
   await next()
 }
@@ -117,7 +136,12 @@ export async function tokenHttpsigMiddleware(
   next: () => Promise<any>
 ): Promise<void> {
   if (!validateSignatureHeaders(contextToRequestLike(ctx))) {
-    ctx.throw(400, 'invalid signature headers', { error: 'invalid_request' })
+    ctx.throw(400, 'invalid signature headers', {
+      error: {
+        code: 'invalid_request',
+        description: 'invalid signature headers'
+      }
+    })
   }
 
   const accessTokenService = await ctx.container.use('accessTokenService')
@@ -125,11 +149,9 @@ export async function tokenHttpsigMiddleware(
     ctx.params['id']
   )
   if (!accessToken) {
-    ctx.status = 401
-    ctx.body = {
-      error: 'invalid_client',
-      message: 'invalid access token'
-    }
+    ctx.throw(401, 'invalid access token', {
+      error: { code: 'invalid_client', description: 'invalid access token' }
+    })
     return
   }
 
@@ -138,12 +160,19 @@ export async function tokenHttpsigMiddleware(
     logger.error(
       `access token with management id ${ctx.params['id']} has no grant associated with it.`
     )
-    ctx.throw(500, 'internal server error', { error: 'internal_server_error' })
+    ctx.throw(500, 'internal server error', {
+      error: {
+        code: 'internal_server_error',
+        description: 'internal server error'
+      }
+    })
   }
 
   const sigVerified = await verifySigFromClient(accessToken.grant.client, ctx)
   if (!sigVerified) {
-    ctx.throw(401, 'invalid signature')
+    ctx.throw(401, 'invalid signature', {
+      error: { code: 'invalid_request', description: 'invalid signature' }
+    })
   }
 
   ctx.accessToken = accessToken

@@ -26,6 +26,7 @@ import {
   GrantFinalization
 } from '../grant/model'
 import { Interaction, InteractionState } from '../interaction/model'
+import { InteractionService } from '../interaction/service'
 import { AccessToken } from '../accessToken/model'
 import { AccessTokenService } from '../accessToken/service'
 import { generateNonce } from '../shared/utils'
@@ -76,6 +77,7 @@ describe('Grant Routes', (): void => {
   let config: IAppConfig
   let accessTokenService: AccessTokenService
   let clientService: ClientService
+  let interactionService: InteractionService
 
   let grant: Grant
 
@@ -97,6 +99,7 @@ describe('Grant Routes', (): void => {
     config = await deps.use('config')
     accessTokenService = await deps.use('accessTokenService')
     clientService = await deps.use('clientService')
+    interactionService = await deps.use('interactionService')
   })
 
   afterEach(async (): Promise<void> => {
@@ -309,10 +312,13 @@ describe('Grant Routes', (): void => {
         }
         ctx.request.body = body
 
-        await expect(grantRoutes.create(ctx)).rejects.toHaveProperty(
-          'status',
-          500
-        )
+        await expect(grantRoutes.create(ctx)).rejects.toMatchObject({
+          status: 500,
+          error: {
+            code: 'internal_server_error',
+            description: 'internal server error'
+          }
+        })
       })
       test('Fails to initiate a grant w/o interact field', async (): Promise<void> => {
         const ctx = createContext<CreateContext>(
@@ -334,6 +340,45 @@ describe('Grant Routes', (): void => {
           error: {
             code: 'interaction_required',
             description: 'missing required request field'
+          }
+        })
+      })
+
+      test('Does not create interactive grant if interaction creation fails', async (): Promise<void> => {
+        jest
+          .spyOn(interactionService, 'create')
+          .mockRejectedValueOnce(new Error())
+
+        nock(CLIENT)
+          .get('/')
+          .reply(200, {
+            id: CLIENT,
+            publicName: TEST_CLIENT_DISPLAY.name,
+            assetCode: 'USD',
+            assetScale: 2,
+            authServer: Config.authServerDomain,
+            resourceServer: faker.internet.url({ appendSlash: false })
+          })
+
+        const ctx = createContext<CreateContext>(
+          {
+            headers: {
+              Accept: 'application/json',
+              'Content-Type': 'application/json'
+            },
+            url,
+            method
+          },
+          {}
+        )
+
+        ctx.request.body = BASE_GRANT_REQUEST
+
+        await expect(grantRoutes.create(ctx)).rejects.toMatchObject({
+          status: 500,
+          error: {
+            code: 'internal_server_error',
+            description: 'internal server error'
           }
         })
       })
@@ -368,7 +413,10 @@ describe('Grant Routes', (): void => {
 
         await expect(grantRoutes.create(ctx)).rejects.toMatchObject({
           status: 400,
-          error: 'identifier_required'
+          error: {
+            code: 'identifier_required',
+            description: 'access identifier required'
+          }
         })
       })
 

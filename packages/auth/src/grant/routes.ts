@@ -101,7 +101,12 @@ async function createGrant(
   try {
     noInteractionRequired = canSkipInteraction(deps.config, ctx.request.body)
   } catch (err) {
-    ctx.throw(400, 'identifier_required', { error: 'identifier_required' })
+    ctx.throw(400, 'identifier_required', {
+      error: {
+        code: 'identifier_required',
+        description: 'access identifier required'
+      }
+    })
   }
   if (noInteractionRequired) {
     await createApprovedGrant(deps, ctx)
@@ -125,7 +130,12 @@ async function createApprovedGrant(
     await trx.commit()
   } catch (err) {
     await trx.rollback()
-    ctx.throw(500)
+    ctx.throw(500, 'internal_server_error', {
+      error: {
+        code: 'internal_server_error',
+        description: 'internal server error'
+      }
+    })
   }
   const access = await deps.accessService.getByGrant(grant.id)
   ctx.status = 200
@@ -177,7 +187,12 @@ async function createPendingGrant(
     })
   } catch (err) {
     await trx.rollback()
-    ctx.throw(500)
+    ctx.throw(500, 'internal_server_error', {
+      error: {
+        code: 'internal_server_error',
+        description: 'internal server error'
+      }
+    })
   }
 }
 
