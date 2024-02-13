@@ -11,12 +11,11 @@ services:
       - "4001:3001"
     networks:
       - rafiki-test
-    # use .env file for env vars common to test config
-    env_file:
-      - .env
     environment:
       NODE_ENV: development
       LOG_LEVEL: debug
+      OPEN_PAYMENTS_URL: https://localhost:4000
+      WALLET_ADDRESS_URL: https://happy-life-bank-test-backend/.well-known/pay
       ADMIN_PORT: 3001
       CONNECTOR_PORT: 3002
       OPEN_PAYMENTS_PORT: 80
@@ -25,9 +24,10 @@ services:
       AUTH_SERVER_INTROSPECTION_URL: http://localhost:4007
       # AUTH_SERVER_GRANT_URL: http://happy-life-bank-test-auth:3006
       # AUTH_SERVER_INTROSPECTION_URL: http://happy-life-bank-test-auth:3007
+      KEY_ID: rafiki
       ILP_ADDRESS: test.happy-life-bank-test
       STREAM_SECRET: BjPXtnd00G2mRQwP/8ZpwyZASOch5sUXT5o0iR5b5wU=
-      WEBHOOK_URL: http://host.docker.internal:${WEBHOOK_SERVER_PORT}/webhooks
+      WEBHOOK_URL: http://host.docker.internal:8889/webhooks
       # TODO: should point to the integration ASE, similar to webhook url
       EXCHANGE_RATES_URL: http://happy-life-bank-test/rates
       REDIS_URL: redis://shared-redis:6379/1
@@ -43,11 +43,9 @@ services:
     ports:
       - '4003:3003'
       - '4006:3006'
-    # use .env file for env vars common to test config
-    env_file:
-      - .env
     environment:
       NODE_ENV: development
       AUTH_DATABASE_URL: postgresql://happy_life_bank_test_auth:happy_life_bank_test_auth@shared-database/happy_life_bank_test_auth
+      AUTH_SERVER_DOMAIN: http://localhost:4006
     depends_on:
       - cloud-nine-wallet-test-auth
