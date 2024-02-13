@@ -22,6 +22,7 @@ services:
       OPEN_PAYMENTS_URL: https://localhost:3000
       WALLET_ADDRESS_URL: https://cloud-nine-wallet-test-backend/.well-known/pay
       KEY_ID: rafiki
+      PRIVATE_KEY_FILE: /workspace/private-key.pem
       AUTH_SERVER_GRANT_URL: http://cloud-nine-wallet-test-auth:3006
       AUTH_SERVER_INTROSPECTION_URL: http://cloud-nine-wallet-test-auth:3007
       ILP_ADDRESS: test.cloud-nine-wallet-test
@@ -30,6 +31,8 @@ services:
       # TODO: should point to the integration ASE, similar to webhook url
       EXCHANGE_RATES_URL: http://cloud-nine-wallet-test/rates
       REDIS_URL: redis://shared-redis:6379/0
+    volumes:
+      - ../private-key.pem:/workspace/private-key.pem
     depends_on:
       - shared-database
       - shared-redis

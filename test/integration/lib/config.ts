@@ -1,6 +1,6 @@
 import { parse } from 'yaml'
 import { readFileSync } from 'fs'
-import { loadOrGenerateKey } from '@interledger/http-signature-utils'
+import { loadKey } from '@interledger/http-signature-utils'
 import type { Config } from 'mock-account-servicing-lib'
 import { parse as envParse } from 'dotenv'
 
@@ -51,13 +51,13 @@ type ConfigOptions = {
 }
 
 const createConfig = (name: string, opts: ConfigOptions): TestConfig => {
-  const keyPath = resolve(__dirname, `../testenv/${name}/private-key.pem`)
   const seedPath = resolve(__dirname, `../testenv/${name}/seed.yml`)
   const env = loadEnv(resolve(__dirname, `../testenv/${name}/.env`))
+  const keyPath = resolve(__dirname, `../testenv/private-key.pem`)
 
   return {
     seed: parse(readFileSync(seedPath).toString('utf8')),
-    key: loadOrGenerateKey(keyPath),
+    key: loadKey(keyPath),
     publicHost: env.OPEN_PAYMENTS_URL,
     testnetAutoPeerUrl: '',
     authServerDomain: env.AUTH_SERVER_DOMAIN,

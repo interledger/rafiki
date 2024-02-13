@@ -25,12 +25,15 @@ services:
       # AUTH_SERVER_GRANT_URL: http://happy-life-bank-test-auth:3006
       # AUTH_SERVER_INTROSPECTION_URL: http://happy-life-bank-test-auth:3007
       KEY_ID: rafiki
+      PRIVATE_KEY_FILE: /workspace/private-key.pem
       ILP_ADDRESS: test.happy-life-bank-test
       STREAM_SECRET: BjPXtnd00G2mRQwP/8ZpwyZASOch5sUXT5o0iR5b5wU=
       WEBHOOK_URL: http://host.docker.internal:8889/webhooks
       # TODO: should point to the integration ASE, similar to webhook url
       EXCHANGE_RATES_URL: http://happy-life-bank-test/rates
       REDIS_URL: redis://shared-redis:6379/1
+    volumes:
+      - ../private-key.pem:/workspace/private-key.pem
     depends_on:
       - cloud-nine-wallet-test-backend
   happy-life-auth:
