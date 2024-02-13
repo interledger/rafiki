@@ -19,6 +19,7 @@ assets:
     scale: 0
     liquidity: 1000000000
     liquidityThreshold: 1000000
+peeringAsset: 'USD'
 peers:
   - initialLiquidity: '1000000000000'
     peerUrl: http://cloud-nine-wallet-backend:3002
