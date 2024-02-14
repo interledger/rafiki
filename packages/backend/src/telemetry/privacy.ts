@@ -6,8 +6,15 @@ export type ClipParams = {
 export const privacy = {
   getBucketSize: function (rawValue: number, clip: ClipParams): number {
     const { minBucketSize, maxBucketSize } = clip
+
+    // Base parameter is used in the logarithimc function for calculating the bucket size when the rawValue exceeds the threshold.
+    // Increasing the base would result in larger bucket sizes.
     const base = 2
+    // The scale parameter is used in both the linear and logarithmic functions for calculating the bucket size.
+    // Increasing the scale would result in larger bucket sizes.
     const scale = 5000
+    // Used to determine when to switch from linear to logarithmic function
+    // Increasing the threshold would result in smaller bucket sizes.
     const threshold = 20000
 
     let bucketSize

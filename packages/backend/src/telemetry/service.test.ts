@@ -91,5 +91,22 @@ describe('TelemetryServiceImpl', () => {
       expect(internalConvertSpy).toHaveBeenCalled()
       expect(converted).toBe(10000n)
     })
+
+    it('should not call the fallback internalRatesService if aseRatesService call is successful', async () => {
+      const aseConvertSpy = jest
+        .spyOn(aseRatesService, 'convert')
+        .mockImplementation(() => Promise.resolve(500n))
+
+      const internalConvertSpy = jest.spyOn(internalRatesService, 'convert')
+
+      const converted = await telemetryService.convertAmount({
+        sourceAmount: 100n,
+        sourceAsset: { code: 'USD', scale: 2 }
+      })
+
+      expect(aseConvertSpy).toHaveBeenCalled()
+      expect(internalConvertSpy).not.toHaveBeenCalled()
+      expect(converted).toBe(500n)
+    })
   })
 })
