@@ -29,7 +29,7 @@ export class MockRatesService implements RatesService {
 
 export class MockTelemetryService implements TelemetryService {
   public aseRatesService = new MockRatesService()
-  public fallbackRatesService = new MockRatesService()
+  public internalRatesService = new MockRatesService()
   public getOrCreateMetric(
     _name: string,
     _options?: MetricOptions | undefined
@@ -48,7 +48,7 @@ export class MockTelemetryService implements TelemetryService {
   ): Promise<bigint | ConvertError> {
     let converted = await this.aseRatesService.convert()
     if (typeof converted !== 'bigint' && converted in ConvertError) {
-      converted = await this.fallbackRatesService.convert()
+      converted = await this.internalRatesService.convert()
     }
     return Promise.resolve(converted)
   }

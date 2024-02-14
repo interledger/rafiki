@@ -139,7 +139,7 @@ export function initIocContainer(
   })
 
   if (config.enableTelemetry) {
-    container.singleton('fallbackRatesService', async (deps) => {
+    container.singleton('internalRatesService', async (deps) => {
       return createRatesService({
         logger: await deps.use('logger'),
         exchangeRatesUrl: config.telemetryExchangeRatesUrl,
@@ -152,7 +152,7 @@ export function initIocContainer(
       return createTelemetryService({
         logger: await deps.use('logger'),
         aseRatesService: await deps.use('ratesService'),
-        fallbackRatesService: await deps.use('fallbackRatesService')!,
+        internalRatesService: await deps.use('internalRatesService')!,
         instanceName: config.instanceName,
         collectorUrls: config.openTelemetryCollectors,
         exportIntervalMillis: config.openTelemetryExportInterval,

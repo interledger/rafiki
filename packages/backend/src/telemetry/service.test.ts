@@ -31,7 +31,7 @@ describe('TelemetryServiceImpl', () => {
   let appContainer: TestContainer
   let telemetryService: TelemetryService
   let aseRatesService: RatesService
-  let fallbackRatesService: RatesService
+  let internalRatesService: RatesService
 
   beforeAll(async (): Promise<void> => {
     deps = initIocContainer({
@@ -45,7 +45,7 @@ describe('TelemetryServiceImpl', () => {
     appContainer = await createTestApp(deps)
     telemetryService = await deps.use('telemetry')!
     aseRatesService = await deps.use('ratesService')!
-    fallbackRatesService = await deps.use('fallbackRatesService')!
+    internalRatesService = await deps.use('internalRatesService')!
   })
 
   afterAll(async (): Promise<void> => {
@@ -71,15 +71,15 @@ describe('TelemetryServiceImpl', () => {
   })
 
   describe('conversion', () => {
-    it('should try to convert using aseRatesService and fallback to fallbackRatesService', async () => {
+    it('should try to convert using aseRatesService and fallback to internalRatesService', async () => {
       const aseConvertSpy = jest
         .spyOn(aseRatesService, 'convert')
         .mockImplementation(() =>
           Promise.resolve(ConvertError.InvalidDestinationPrice)
         )
 
-      const fallbackConvertSpy = jest
-        .spyOn(fallbackRatesService, 'convert')
+      const internalConvertSpy = jest
+        .spyOn(internalRatesService, 'convert')
         .mockImplementation(() => Promise.resolve(10000n))
 
       const converted = await telemetryService.convertAmount({
@@ -88,7 +88,7 @@ describe('TelemetryServiceImpl', () => {
       })
 
       expect(aseConvertSpy).toHaveBeenCalled()
-      expect(fallbackConvertSpy).toHaveBeenCalled()
+      expect(internalConvertSpy).toHaveBeenCalled()
       expect(converted).toBe(10000n)
     })
   })

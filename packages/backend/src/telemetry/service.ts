@@ -26,7 +26,7 @@ interface TelemetryServiceDependencies extends BaseService {
   collectorUrls: string[]
   exportIntervalMillis?: number
   aseRatesService: RatesService
-  fallbackRatesService: RatesService
+  internalRatesService: RatesService
   baseAssetCode: string
   baseScale: number
 }
@@ -43,7 +43,7 @@ export function createTelemetryService(
 class TelemetryServiceImpl implements TelemetryService {
   private instanceName: string
   private meterProvider?: MeterProvider
-  private fallbackRatesService: RatesService
+  private internalRatesService: RatesService
   private aseRatesService: RatesService
 
   private counters = new Map()
@@ -51,7 +51,7 @@ class TelemetryServiceImpl implements TelemetryService {
     // debug logger:
     // diag.setLogger(new DiagConsoleLogger(), DiagLogLevel.DEBUG)
     this.instanceName = deps.instanceName
-    this.fallbackRatesService = deps.fallbackRatesService
+    this.internalRatesService = deps.internalRatesService
     this.aseRatesService = deps.aseRatesService
 
     if (deps.collectorUrls.length === 0) {
@@ -118,13 +118,13 @@ class TelemetryServiceImpl implements TelemetryService {
       this.deps.logger.error(
         `Unable to convert amount from provided rates: ${converted}`
       )
-      converted = await this.fallbackRatesService.convert({
+      converted = await this.internalRatesService.convert({
         ...convertOptions,
         destinationAsset
       })
       if (isConvertError(converted)) {
         this.deps.logger.error(
-          `Unable to convert amount from fallback rates: ${converted}`
+          `Unable to convert amount from internal rates: ${converted}`
         )
       }
     }
