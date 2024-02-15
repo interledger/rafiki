@@ -1,0 +1,29 @@
+meta {
+  name: Revoke Grant
+  type: graphql
+  seq: 3
+}
+
+post {
+  url: {{RafikiAuthGraphqlHost}}/graphql
+  body: graphql
+  auth: none
+}
+
+body:graphql {
+  mutation revokeGrant($input: RevokeGrantInput!) {
+      revokeGrant(input: $input) {
+          code
+          message
+          success
+      }
+  }
+}
+
+body:graphql:vars {
+  {
+      "input": {
+          "grantId": "e6684d05-6cc5-4a0e-a490-7ed05923fa89"
+      }
+  }
+}

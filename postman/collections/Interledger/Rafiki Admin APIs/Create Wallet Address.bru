@@ -1,0 +1,61 @@
+meta {
+  name: Create Wallet Address
+  type: graphql
+  seq: 18
+}
+
+post {
+  url: {{RafikiGraphqlHost}}/graphql
+  body: graphql
+  auth: none
+}
+
+body:graphql {
+  mutation CreateWalletAddres($input: CreateWalletAddressInput!) {
+    createWalletAddress(input: $input) {
+      code
+      success
+      message
+      walletAddress {
+        id
+        createdAt
+        publicName
+        url
+        status
+        asset {
+          code
+          createdAt
+          id
+          scale
+          withdrawalThreshold
+        }
+      }
+    }
+  }
+}
+
+body:graphql:vars {
+  {
+    "input": {
+      "assetId": "{{assetId}}",
+      "url": "https://{{senderOpenPaymentsHost}}/timon/{{$randomInt}}",
+      "publicName": "Timon"
+    }
+  }
+}
+
+script:pre-request {
+  // 
+}
+
+tests {
+  // const body = pm.response.json();
+  // 
+  // pm.environment.set("walletAddressId", body.data.createWalletAddress.walletAddress.id);
+  // pm.expect(pm.environment.get("walletAddressId")).to.be.a('string');
+  // 
+  // pm.environment.set("walletAddressUrl", body.data.createWalletAddress.walletAddress.url);
+  // pm.expect(pm.environment.get("walletAddressUrl")).to.be.a('string');
+  // 
+  // pm.environment.set("createWalletAddressRequest", pm.request);
+}

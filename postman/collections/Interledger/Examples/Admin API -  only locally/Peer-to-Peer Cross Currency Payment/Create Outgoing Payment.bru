@@ -1,0 +1,62 @@
+meta {
+  name: Create Outgoing Payment
+  type: graphql
+  seq: 3
+}
+
+post {
+  url: {{RafikiGraphqlHost}}/graphql
+  body: graphql
+  auth: none
+}
+
+body:graphql {
+  mutation CreateOutgoingPayment($input: CreateOutgoingPaymentInput!) {
+    createOutgoingPayment(input: $input) {
+      code
+      message
+      payment {
+        createdAt
+        error
+        metadata
+        id
+        walletAddressId
+        receiveAmount {
+          assetCode
+          assetScale
+          value
+        }
+        receiver
+        debitAmount {
+          assetCode
+          assetScale
+          value
+        }
+        sentAmount {
+          assetCode
+          assetScale
+          value
+        }
+        state
+        stateAttempts
+      }
+      success
+    }
+  }
+}
+
+body:graphql:vars {
+  {
+    "input": {
+      "walletAddressId": "{{gfranklinWalletAddressId}}",
+      "quoteId": "{{quoteId}}"
+    }
+  }
+}
+
+tests {
+  // const body = pm.response.json();
+  // 
+  // pm.environment.set("outgoingPaymentId", body.data.createOutgoingPayment.payment.id);
+  // pm.expect(pm.environment.get("outgoingPaymentId")).to.be.a('string');
+}

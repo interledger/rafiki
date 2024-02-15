@@ -1,0 +1,42 @@
+meta {
+  name: Get Payments
+  type: graphql
+  seq: 33
+}
+
+post {
+  url: {{RafikiGraphqlHost}}/graphql
+  body: graphql
+  auth: none
+}
+
+body:graphql {
+  query Payments($filter: PaymentFilter) {
+      payments(filter: $filter) {
+          edges {
+          node {
+              id
+              type
+              walletAddressId
+              state
+              metadata
+              createdAt
+          }
+          cursor
+          }
+      }
+  }
+}
+
+body:graphql:vars {
+  {          
+      "filter": {
+          "type": {
+              "in": ["OUTGOING"]
+          },
+          "walletAddressId": {
+             "in": ["{{secondWalletAddressId}}"]
+          }
+      }
+  }
+}

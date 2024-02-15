@@ -1,0 +1,31 @@
+meta {
+  name: Withdraw Outgoing Payment Liquidity
+  type: graphql
+  seq: 36
+}
+
+post {
+  url: {{RafikiGraphqlHost}}/graphql
+  body: graphql
+  auth: none
+}
+
+body:graphql {
+  mutation WithdrawOutgoingPaymentLiquidity($input: WithdrawOutgoingPaymentLiquidityInput!) {  
+      withdrawOutgoingPaymentLiquidity(input: $input) {
+          code    
+          error    
+          message    
+          success  
+      }
+  }
+}
+
+body:graphql:vars {
+  {
+      "input": {
+          "outgoingPaymentId": "{{outgoingPaymentId}}",
+          "idempotencyKey":"{{$guid}}"
+      }
+  }
+}

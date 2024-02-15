@@ -1,0 +1,40 @@
+meta {
+  name: Grant Request Incoming Payment
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{receiverOpenPaymentsAuthHost}}/
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+      "access_token": {
+          "access": [
+              {
+                  "type": "incoming-payment",
+                  "actions": [
+                      "create", "read", "list", "complete"
+                  ]
+              }
+          ]
+      },
+      "client": "{{clientWalletAddress}}"
+  }
+}
+
+script:pre-request {
+  // eval(pm.environment.get('preRequestSignatures'))
+  // 
+}
+
+tests {
+  // const body = pm.response.json();
+  // pm.environment.set("accessToken", body?.access_token?.value);
+  // pm.environment.set("continueToken", body.continue.access_token.value);
+  // pm.environment.set("continueId", body.continue.uri.split("/").pop());
+  // pm.environment.set("tokenId", body.access_token.manage.split('/').pop())
+}

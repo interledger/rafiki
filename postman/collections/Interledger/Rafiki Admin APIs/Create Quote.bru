@@ -1,0 +1,103 @@
+meta {
+  name: Create Quote
+  type: graphql
+  seq: 29
+}
+
+post {
+  url: {{RafikiGraphqlHost}}/graphql
+  body: graphql
+  auth: none
+}
+
+body:graphql {
+  mutation CreateQuote($input: CreateQuoteInput!) {
+    createQuote(input: $input) {
+      code
+      message
+      quote {
+        createdAt
+        expiresAt
+        highEstimatedExchangeRate
+        id
+        lowEstimatedExchangeRate
+        maxPacketAmount
+        minExchangeRate
+        walletAddressId
+        receiveAmount {
+          assetCode
+          assetScale
+          value
+        }
+        receiver
+        debitAmount {
+          assetCode
+          assetScale
+          value
+        }
+      }
+    }
+  }
+}
+
+body:graphql:vars {
+  {
+    "input": {
+      "walletAddressId": "{{secondWalletAddressId}}",
+      "receiveAmount": null,
+      "receiver": "{{receiverOpenPaymentsHost}}/incoming-payments/{{incomingPaymentId}}",
+      "debitAmount": {
+        "assetCode": "USD",
+        "assetScale": 6,
+        "value": 5000000
+      }
+    }
+  }
+}
+
+script:pre-request {
+  // // Create an additional wallet address to represent the account that will be sending money
+  // 
+  // // Reset the uniqueWalletAddress value
+  // pm.environment.set("uniqueWalletAddress", Math.floor(Math.random() * (1001)));
+  // 
+  // const initialRequest = pm.environment.get("createWalletAddressRequest");
+  // 
+  // const postRequest = {
+  //   url: initialRequest.url,
+  //   method: initialRequest.method,
+  //   body: {
+  //     mode: 'graphql',
+  //     graphql: {
+  //         query: initialRequest.body.graphql.query,
+  //         variables: JSON.stringify({
+  //             "input": {
+  //                 "assetId": pm.environment.get("assetId"),
+  //                 "url": "https://" + pm.environment.get("OpenPaymentsHost") + "/simon/" + pm.environment.get("uniqueWalletAddress"),
+  //                 "publicName": "Simon"
+  //             }
+  //         })
+  //     }
+  //   }
+  // };
+  // 
+  // pm.sendRequest(postRequest, (error, response) => {
+  //     if (error) {
+  //         console.log(error);
+  //     }
+  //     const body = response.json();
+  //     pm.test('response should be okay to process', () => {
+  //         pm.expect(error).to.equal(null);
+  //         pm.expect(body.data.createWalletAddress.code).to.equal('200');
+  //         pm.expect(body.data.createWalletAddress.success).to.equal(true);
+  //     });
+  //     pm.environment.set("secondWalletAddressId", body.data.createWalletAddress.walletAddress.id);
+  // });
+}
+
+tests {
+  // const body = pm.response.json();
+  // 
+  // pm.environment.set("quoteId", body.data.createQuote.quote.id);
+  // pm.expect(pm.environment.get("quoteId")).to.be.a('string');
+}

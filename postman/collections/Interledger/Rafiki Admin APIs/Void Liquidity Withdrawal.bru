@@ -1,0 +1,32 @@
+meta {
+  name: Void Liquidity Withdrawal
+  type: graphql
+  seq: 17
+}
+
+post {
+  url: {{RafikiGraphqlHost}}/graphql
+  body: graphql
+  auth: none
+}
+
+body:graphql {
+  mutation VoidLiquidityWithdrawal($input: VoidLiquidityWithdrawalInput!) {
+    voidLiquidityWithdrawal(input: $input) {
+      code
+      error
+      message
+      success
+    }
+  }
+}
+
+body:graphql:vars {
+  {
+      "input": {
+          "withdrawalId": "421fae87-9a59-4217-9ff8-faf55ffab9c6",
+          "idempotencyKey":"{{$guid}}"
+      }
+  }
+  
+}

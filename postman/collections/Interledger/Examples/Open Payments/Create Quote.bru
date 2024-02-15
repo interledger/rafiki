@@ -1,0 +1,42 @@
+meta {
+  name: Create Quote
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{senderOpenPaymentsHost}}/quotes
+  body: json
+  auth: none
+}
+
+headers {
+  Authorization: GNAP {{accessToken}}
+}
+
+body:json {
+  {
+      "walletAddress": "{{senderWalletAddress}}",
+      "receiver": "{{receiverOpenPaymentsHost}}/incoming-payments/{{incomingPaymentId}}",
+      "method": "ilp"
+  }
+}
+
+script:pre-request {
+  // if(pm.environment.get('preRequestHost')){
+  //     eval(pm.environment.get('preRequestHost'))
+  // }
+  // eval(pm.environment.get('preRequestSignatures'))
+}
+
+tests {
+  // pm.test("Status code is 201", function () {
+  //     pm.response.to.have.status(201);
+  // });
+  // 
+  // const body = pm.response.json();
+  // pm.environment.set("quoteId", body.id.split("/").pop());
+  // pm.environment.set("quoteDebitAmount", JSON.stringify(body.debitAmount))
+  // pm.environment.set("quoteReceiveAmount", JSON.stringify(body.receiveAmount))
+  // 
+}

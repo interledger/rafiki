@@ -1,0 +1,29 @@
+meta {
+  name: Get Outgoing Payment
+  type: http
+  seq: 10
+}
+
+get {
+  url: {{senderOpenPaymentsHost}}/outgoing-payments/{{outgoingPaymentId}}
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: GNAP {{accessToken}}
+}
+
+script:pre-request {
+  // if(pm.environment.get('preRequestHost')){
+  //     eval(pm.environment.get('preRequestHost'))
+  // }
+  // eval(pm.environment.get('preRequestSignatures'))
+}
+
+tests {
+  // pm.test("Status code is 200", function () {
+  //     pm.response.to.have.status(200);
+  // });
+  // 
+}

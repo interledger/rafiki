@@ -1,0 +1,27 @@
+meta {
+  name: Get Incoming Payment -Unauthenticated-
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{receiverOpenPaymentsHost}}/incoming-payments/{{incomingPaymentId}}
+  body: none
+  auth: none
+}
+
+headers {
+  Host: happy-life-bank-backend
+  ~Authorization: GNAP {{accessToken}}
+}
+
+script:pre-request {
+  // 
+}
+
+tests {
+  // pm.test("Status code is 200", function () {
+  //     pm.response.to.have.status(200);
+  // });
+  // 
+}

@@ -1,0 +1,47 @@
+meta {
+  name: Create Or Update Peer By Url
+  type: graphql
+  seq: 9
+}
+
+post {
+  url: {{RafikiGraphqlHost}}/graphql
+  body: graphql
+  auth: none
+}
+
+body:graphql {
+  mutation CreateOrUpdatePeerByUrl ($input: CreateOrUpdatePeerByUrlInput!) {
+      createOrUpdatePeerByUrl (input: $input) {
+          code
+          message
+          success
+          peer {
+              id
+              name
+              asset {
+                  id
+                  scale
+                  code
+                  withdrawalThreshold
+              }
+          }
+      }
+  }
+}
+
+body:graphql:vars {
+  {
+    "input": {
+      "peerUrl": "http://happy-life-bank-backend:3005",
+      "assetId": "{{assetId}}",
+      "liquidityToDeposit": 100000
+    }
+  }
+}
+
+tests {
+  // const body = pm.response.json();
+  // 
+  // pm.environment.set("peerId", body.data.createOrUpdatePeerByUrl.peer.id);
+}

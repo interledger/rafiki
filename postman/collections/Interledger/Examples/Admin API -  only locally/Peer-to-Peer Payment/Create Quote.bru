@@ -1,0 +1,93 @@
+meta {
+  name: Create Quote
+  type: graphql
+  seq: 2
+}
+
+post {
+  url: {{RafikiGraphqlHost}}/graphql
+  body: graphql
+  auth: none
+}
+
+body:graphql {
+  mutation CreateQuote($input: CreateQuoteInput!) {
+    createQuote(input: $input) {
+      code
+      message
+      quote {
+        createdAt
+        expiresAt
+        highEstimatedExchangeRate
+        id
+        lowEstimatedExchangeRate
+        maxPacketAmount
+        minExchangeRate
+        walletAddressId
+        receiveAmount {
+          assetCode
+          assetScale
+          value
+        }
+        receiver
+        debitAmount {
+          assetCode
+          assetScale
+          value
+        }
+      }
+    }
+  }
+}
+
+body:graphql:vars {
+  {
+    "input": {
+      "walletAddressId": "{{gfranklinWalletAddressId}}",
+      "receiver": "{{receiverId}}"
+    }
+  }
+}
+
+script:pre-request {
+  // 
+  // const getWalletAddressesQuery = `
+  // query GetWalletAddresses {
+  //     walletAddresses {
+  //         edges {
+  //             cursor
+  //             node {
+  //                 id
+  //                 publicName
+  //                 url
+  //             }
+  //         }
+  //     }
+  // }`
+  // 
+  // const postRequest = {
+  //   url: `${pm.environment.get("RafikiGraphqlHost")}/graphql`,
+  //   method: 'POST',
+  //   body: {
+  //     mode: 'graphql',
+  //     graphql: {
+  //         query:getWalletAddressesQuery
+  //     }
+  //   }
+  // };
+  // 
+  // 
+  // pm.sendRequest(postRequest, (error, response) => {
+  //     const body = response.json();
+  //     const gfranklinWalletAddressId = body.data.walletAddresses.edges.map(e => e.node).find(node => node.publicName === 'Grace Franklin')?.id
+  // 
+  //     pm.environment.set("gfranklinWalletAddressId", gfranklinWalletAddressId)
+  // });
+}
+
+tests {
+  // const body = pm.response.json();
+  // 
+  // pm.environment.set("quoteId", body.data.createQuote.quote.id);
+  // pm.expect(pm.environment.get("quoteId")).to.be.a('string');
+}

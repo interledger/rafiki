@@ -1,0 +1,25 @@
+meta {
+  name: Rotate Access Token
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{receiverOpenPaymentsAuthHost}}/token/{{tokenId}}
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: GNAP {{accessToken}}
+}
+
+script:pre-request {
+  // eval(pm.environment.get('preRequestSignatures'))
+}
+
+tests {
+  // const body = pm.response.json();
+  // pm.environment.set("accessToken", body.access_token.value);
+  // pm.environment.set("tokenId", body.access_token.manage.split('/').pop())
+}

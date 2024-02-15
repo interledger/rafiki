@@ -1,0 +1,31 @@
+meta {
+  name: Withdraw Event Liquidity
+  type: graphql
+  seq: 37
+}
+
+post {
+  url: {{RafikiGraphqlHost}}/graphql
+  body: graphql
+  auth: none
+}
+
+body:graphql {
+  mutation WithdrawEventLiquidity($input: WithdrawEventLiquidityInput!) {
+    withdrawEventLiquidity(input: $input) {
+      code
+      error
+      message
+      success
+    }
+  }
+}
+
+body:graphql:vars {
+  {
+      "input": {
+          "eventId": "b4f85d5c-652d-472d-873c-4ba2a5e39052",
+          "idempotencyKey":"{{$guid}}"
+      }
+  }
+}

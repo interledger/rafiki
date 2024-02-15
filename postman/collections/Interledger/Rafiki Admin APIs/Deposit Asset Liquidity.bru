@@ -1,0 +1,34 @@
+meta {
+  name: Deposit Asset Liquidity
+  type: graphql
+  seq: 5
+}
+
+post {
+  url: {{RafikiGraphqlHost}}/graphql
+  body: graphql
+  auth: none
+}
+
+body:graphql {
+  mutation DepositAssetLiquidity ($input: DepositAssetLiquidityInput!) {
+    depositAssetLiquidity(input: $input) {
+      code
+      success
+      message
+      error
+    }
+  }
+}
+
+body:graphql:vars {
+  {
+    "input": {
+      "id": "3615a385-4c7e-43ec-9d66-f5d2e421108a",
+      "assetId": "{{assetId}}",
+      "amount": "1000000",
+      "idempotencyKey":"{{$guid}}"
+    }
+  }
+  
+}

@@ -1,0 +1,42 @@
+meta {
+  name: Create Outgoing Payment
+  type: http
+  seq: 9
+}
+
+post {
+  url: {{senderOpenPaymentsHost}}/outgoing-payments
+  body: json
+  auth: none
+}
+
+headers {
+  Authorization: GNAP {{accessToken}}
+}
+
+body:json {
+  {
+      "walletAddress": "{{senderWalletAddress}}",
+      "quoteId": "{{senderWalletAddress}}/quotes/{{quoteId}}",
+      "metadata": {
+          "description": "Free Money!"
+      }
+  }
+}
+
+script:pre-request {
+  // if(pm.environment.get('preRequestHost')){
+  //     eval(pm.environment.get('preRequestHost'))
+  // }
+  // eval(pm.environment.get('preRequestSignatures'))
+}
+
+tests {
+  // pm.test("Status code is 201", function () {
+  //     pm.response.to.have.status(201);
+  // });
+  // 
+  // const body = pm.response.json();
+  // pm.environment.set("outgoingPaymentId", body.id.split("/").pop());
+  // 
+}

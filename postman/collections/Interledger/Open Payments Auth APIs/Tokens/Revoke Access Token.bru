@@ -1,0 +1,15 @@
+meta {
+  name: Revoke Access Token
+  type: http
+  seq: 2
+}
+
+delete {
+  url: {{receiverOpenPaymentsAuthHost}}/token/{{tokenId}}
+  body: none
+  auth: none
+}
+
+script:pre-request {
+  // eval(pm.environment.get('preRequestSignatures'))
+}

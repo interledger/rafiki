@@ -1,0 +1,55 @@
+meta {
+  name: Grant Request Outgoing Payment
+  type: http
+  seq: 7
+}
+
+post {
+  url: {{senderOpenPaymentsAuthHost}}/
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+      "access_token": {
+          "access": [
+              {
+                  "type": "outgoing-payment",
+                  "actions": [
+                      "create", "read", "list"
+                  ],
+                  "identifier": "{{senderWalletAddress}}",
+                  "limits": {
+                      "debitAmount": {{quoteDebitAmount}},
+                      "receiveAmount": {{quoteReceiveAmount}}
+                  }
+              }
+          ]
+      },
+      "client": "{{clientWalletAddress}}",
+      "interact": {
+          "start": [
+              "redirect"
+          ],
+          "finish": {
+              "method": "redirect",
+              "uri": "https://example.com",
+              "nonce": "456"
+          }
+      }
+  }
+  
+}
+
+script:pre-request {
+  // eval(pm.environment.get('preRequestSignatures'))
+}
+
+tests {
+  // const body = pm.response.json();
+  // pm.environment.set("accessToken", body?.access_token?.value);
+  // pm.environment.set("continueToken", body.continue.access_token.value);
+  // pm.environment.set("continueId", body.continue.uri.split("/").pop());
+  // 
+}

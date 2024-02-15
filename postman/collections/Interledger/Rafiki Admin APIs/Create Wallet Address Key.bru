@@ -1,0 +1,55 @@
+meta {
+  name: Create Wallet Address Key
+  type: graphql
+  seq: 22
+}
+
+post {
+  url: {{RafikiGraphqlHost}}/graphql
+  body: graphql
+  auth: none
+}
+
+body:graphql {
+  mutation CreateWalletAddressKey ($input: CreateWalletAddressKeyInput!) {
+      createWalletAddressKey(input: $input) {
+          code
+          message
+          success
+          walletAddressKey {
+              id
+              revoked
+              walletAddressId
+              createdAt
+              jwk {
+                  alg
+                  crv
+                  kid
+                  kty
+                  x
+              }
+          }
+      }
+  }
+}
+
+body:graphql:vars {
+  {
+      "input": {
+          "walletAddressId": "{{walletAddressId}}",
+          "jwk": {
+              "alg": "EdDSA",
+              "crv": "Ed25519",
+              "kid": "kid_dad93e7f-f40b-484d-99d2-df12c8523176",
+              "kty": "OKP", 
+              "x": "ubqoInifJ5sssIPPnQR1gVPfmoZnJtPhTkyMXNoJF_8"
+          }
+      }
+  }
+}
+
+tests {
+  // const body = pm.response.json();
+  // 
+  // pm.environment.set("walletAddressKeyId", body.data.createWalletAddressKey.walletAddressKey.id);
+}

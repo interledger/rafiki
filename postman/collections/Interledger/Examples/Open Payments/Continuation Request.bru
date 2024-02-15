@@ -1,0 +1,31 @@
+meta {
+  name: Continuation Request
+  type: http
+  seq: 8
+}
+
+post {
+  url: {{senderOpenPaymentsAuthHost}}/continue/{{continueId}}
+  body: json
+  auth: none
+}
+
+headers {
+  Authorization: GNAP {{continueToken}}
+}
+
+body:json {
+  {
+       "interact_ref": "6d519566-234f-4c2e-b56f-6d4a305fc067"
+  }
+}
+
+script:pre-request {
+  // eval(pm.environment.get('preRequestSignatures'))
+}
+
+tests {
+  // const body = pm.response.json();
+  // pm.environment.set("accessToken", body.access_token.value);
+  // pm.environment.set("tokenId", body.access_token.manage.split('/').pop())
+}

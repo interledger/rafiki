@@ -1,0 +1,34 @@
+meta {
+  name: Withdraw Asset Liquidity
+  type: graphql
+  seq: 6
+}
+
+post {
+  url: {{RafikiGraphqlHost}}/graphql
+  body: graphql
+  auth: none
+}
+
+body:graphql {
+  mutation CreateAssetLiquidityWithdrawal ($input: CreateAssetLiquidityWithdrawalInput!) {
+    createAssetLiquidityWithdrawal(input: $input) {
+      code
+      success
+      message
+      error
+    }
+  }
+}
+
+body:graphql:vars {
+  {
+    "input": {
+      "id": "b97fd85a-126e-42ef-b40d-1a50a70ffa6f",
+      "assetId": "{{assetId}}",
+      "amount": "100",
+      "idempotencyKey":"{{$guid}}"
+    }
+  }
+  
+}
