@@ -2,7 +2,7 @@
   "name": "backend",
   "scripts": {
     "test": "jest --passWithNoTests --maxWorkers=50%",
-    "test:ci": "jest --passWithNoTests --runInBand",
+    "test:ci": "jest --passWithNoTests --maxWorkers=2",
     "test:cov": "pnpm test -- --coverage",
     "test:sincemain": "pnpm test -- --changedSince=main",
     "test:sincemain:cov": "pnpm test:sincemain --coverage",
