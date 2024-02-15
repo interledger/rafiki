@@ -39,9 +39,7 @@ export class MockTelemetryService implements TelemetryService {
   public getInstanceName(): string | undefined {
     return 'serviceName'
   }
-  public shutdown(): void {
-    console.log('telemetry service shutdown')
-  }
+  public shutdown(): void {}
 
   public async convertAmount(
     _convertOptions: Omit<ConvertOptions, 'exchangeRate'>
