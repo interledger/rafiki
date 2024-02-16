@@ -292,6 +292,86 @@ describe('OutgoingPaymentService', (): void => {
     })
   })
 
+  describe('get', (): void => {
+    test('throws error if cannot find liquidity account for SENDING payment', async () => {
+      const quote = await createQuote(deps, {
+        walletAddressId,
+        receiver,
+        debitAmount,
+        method: 'ilp'
+      })
+
+      const payment = await outgoingPaymentService.create({
+        walletAddressId,
+        quoteId: quote.id
+      })
+      assert.ok(!isOutgoingPaymentError(payment))
+
+      await expect(
+        outgoingPaymentService.get({
+          id: payment.id
+        })
+      ).resolves.toEqual(payment)
+      await expect(
+        outgoingPaymentService.fund({
+          id: payment.id,
+          amount: payment.debitAmount.value,
+          transferId: uuid()
+        })
+      ).resolves.toBeDefined()
+      jest
+        .spyOn(accountingService, 'getTotalSent')
+        .mockResolvedValueOnce(undefined)
+      await expect(
+        outgoingPaymentService.get({
+          id: payment.id
+        })
+      ).rejects.toThrow(
+        'Could not get amount sent for payment. There was a problem getting the associated liquidity account.'
+      )
+    })
+  })
+
+  describe('getWalletAddressPage', (): void => {
+    test('throws error if cannot find liquidity account for SENDING payment', async () => {
+      const quote = await createQuote(deps, {
+        walletAddressId,
+        receiver,
+        debitAmount,
+        method: 'ilp'
+      })
+
+      const payment = await outgoingPaymentService.create({
+        walletAddressId,
+        quoteId: quote.id
+      })
+      assert.ok(!isOutgoingPaymentError(payment))
+
+      await expect(
+        outgoingPaymentService.get({
+          id: payment.id
+        })
+      ).resolves.toEqual(payment)
+      await expect(
+        outgoingPaymentService.fund({
+          id: payment.id,
+          amount: payment.debitAmount.value,
+          transferId: uuid()
+        })
+      ).resolves.toBeDefined()
+      jest
+        .spyOn(accountingService, 'getAccountsTotalSent')
+        .mockResolvedValueOnce([undefined])
+      await expect(
+        outgoingPaymentService.getWalletAddressPage({
+          walletAddressId: walletAddressId
+        })
+      ).rejects.toThrow(
+        'Could not get amount sent for payment. There was a problem getting the associated liquidity account.'
+      )
+    })
+  })
+
   describe('create', (): void => {
     enum GrantOption {
       Existing = 'existing',
