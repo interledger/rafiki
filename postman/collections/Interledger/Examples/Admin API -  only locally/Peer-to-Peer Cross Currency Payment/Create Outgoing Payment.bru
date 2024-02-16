@@ -54,9 +54,18 @@ body:graphql:vars {
   }
 }
 
+script:post-response {
+  const body = res.getBody();
+  
+  bru.setEnvVar("outgoingPaymentId", body.data.createOutgoingPayment.payment.id);
+}
+
 tests {
-  // const body = pm.response.json();
-  // 
-  // pm.environment.set("outgoingPaymentId", body.data.createOutgoingPayment.payment.id);
-  // pm.expect(pm.environment.get("outgoingPaymentId")).to.be.a('string');
+  test("Status code is 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+  
+  test("Outgoing Payment id is string", function() {
+    expect(bru.getEnvVar("outgoingPaymentId")).to.be.a("string");
+  })
 }

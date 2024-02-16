@@ -50,44 +50,23 @@ body:graphql:vars {
 }
 
 script:pre-request {
-  // 
-  // const getWalletAddressesQuery = `
-  // query GetWalletAddresses {
-  //     walletAddresses {
-  //         edges {
-  //             cursor
-  //             node {
-  //                 id
-  //                 publicName
-  //                 url
-  //             }
-  //         }
-  //     }
-  // }`
-  // 
-  // const postRequest = {
-  //   url: `${pm.environment.get("RafikiGraphqlHost")}/graphql`,
-  //   method: 'POST',
-  //   body: {
-  //     mode: 'graphql',
-  //     graphql: {
-  //         query:getWalletAddressesQuery
-  //     }
-  //   }
-  // };
-  // 
-  // 
-  // pm.sendRequest(postRequest, (error, response) => {
-  //     const body = response.json();
-  //     const gfranklinWalletAddressId = body.data.walletAddresses.edges.map(e => e.node).find(node => node.publicName === 'Grace Franklin')?.id
-  // 
-  //     pm.environment.set("gfranklinWalletAddressId", gfranklinWalletAddressId)
-  // });
+  const scripts = require('./scripts/scripts');
+  
+  await scripts.getWalletAddressId('RafikiGraphqlHost', 'Grace Franklin', 'gfranklinWalletAddressId');
+}
+
+script:post-response {
+  const body = res.getBody();
+  
+  bru.setEnvVar("quoteId", body.data.createQuote.quote.id);
 }
 
 tests {
-  // const body = pm.response.json();
-  // 
-  // pm.environment.set("quoteId", body.data.createQuote.quote.id);
-  // pm.expect(pm.environment.get("quoteId")).to.be.a('string');
+  test("Status code is 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+  
+  test("Quote id is string", function() {
+    expect(bru.getEnvVar("quoteId")).to.be.a("string");
+  })
 }

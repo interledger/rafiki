@@ -62,7 +62,7 @@ const scripts = {
     const headers = this.sanitizeHeaders()
     const body = this.sanitizeBody()
     req.setBody(body)
-    const signatureHeaders = await this.requestSigHeaders(url, req.method, headers, body)
+    const signatureHeaders = await this.requestSigHeaders(url, req.getMethod(), headers, body)
     this.setHeaders(signatureHeaders)
   },
   
@@ -88,6 +88,34 @@ const scripts = {
     bru.setEnvVar("continueToken", body.continue.access_token.value);
     bru.setEnvVar("continueId", body.continue.uri.split("/").pop());
     bru.setEnvVar("tokenId", body?.access_token?.manage.split('/').pop())
+  },
+
+  getWalletAddressId: async function(host, publicName, varName) {
+    const getWalletAddressesQuery = `
+    query GetWalletAddresses {
+        walletAddresses {
+            edges {
+                cursor
+                node {
+                    id
+                    publicName
+                    url
+                }
+            }
+        }
+    }`
+
+    const postRequest = {
+      method: 'post',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({query: getWalletAddressesQuery})
+    };
+
+
+    const response = await fetch(`${bru.getEnvVar(host)}/graphql`, postRequest);
+    const body = await response.json();
+    const walletAddressId = body.data.walletAddresses.edges.map(e => e.node).find(node => node.publicName === publicName)?.id
+    bru.setEnvVar(varName, walletAddressId)
   }
 }
 
