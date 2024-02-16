@@ -25,18 +25,21 @@ body:json {
 }
 
 script:pre-request {
-  // if(pm.environment.get('preRequestHost')){
-  //     eval(pm.environment.get('preRequestHost'))
-  // }
-  // eval(pm.environment.get('preRequestSignatures'))
+  const scripts = require('./scripts/scripts');
+  
+  scripts.addHostHeader();
+  
+  await scripts.addSignatureHeaders();
+}
+
+script:post-response {
+  const body = res.getBody();
+  bru.setEnvVar("outgoingPaymentId", body.id.split("/").pop());
+  
 }
 
 tests {
-  // pm.test("Status code is 201", function () {
-  //     pm.response.to.have.status(201);
-  // });
-  // 
-  // const body = pm.response.json();
-  // pm.environment.set("outgoingPaymentId", body.id.split("/").pop());
-  // 
+  test("Status code is 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
 }

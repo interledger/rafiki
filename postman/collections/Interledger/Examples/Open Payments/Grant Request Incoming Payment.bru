@@ -27,14 +27,19 @@ body:json {
 }
 
 script:pre-request {
-  // eval(pm.environment.get('preRequestSignatures'))
-  // 
+  const scripts = require('./scripts/scripts');
+  
+  await scripts.addSignatureHeaders();
+}
+
+script:post-response {
+  const scripts = require('./scripts/scripts');
+  
+  scripts.storeTokenDetails();
 }
 
 tests {
-  // const body = pm.response.json();
-  // pm.environment.set("accessToken", body?.access_token?.value);
-  // pm.environment.set("continueToken", body.continue.access_token.value);
-  // pm.environment.set("continueId", body.continue.uri.split("/").pop());
-  // pm.environment.set("tokenId", body.access_token.manage.split('/').pop())
+  test("Status code is 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
 }

@@ -15,21 +15,9 @@ headers {
 }
 
 script:pre-request {
-  const url = require('url')
+  const scripts = require('./scripts/scripts');
   
-  const requestUrl = url.parse(req.url
-    .replace(/{{([A-Za-z]\w+)}}/g, (_, key) => bru.getEnvVar(key)))
-  
-  bru.setEnvVar("senderOpenPaymentsHost", requestUrl.protocol + '//' + requestUrl.host);
-  
-  // if(bru.getEnvVar('preRequestHost')){
-  //     eval(bru.getEnvVar('preRequestHost'))
-  // }
-  
-  if(requestUrl.hostname === 'localhost'){
-      const hostHeader = requestUrl.port === '3000'? bru.getEnvVar('host3000'): bru.getEnvVar('host4000')
-      req.headers.host = hostHeader
-  }
+  scripts.addHostHeader("senderOpenPaymentsHost");
 }
 
 script:post-response {
@@ -49,9 +37,6 @@ script:post-response {
   } else {
       bru.setEnvVar("senderOpenPaymentsAuthHost", body?.authServer);
   }
-  
-  
-  
 }
 
 tests {

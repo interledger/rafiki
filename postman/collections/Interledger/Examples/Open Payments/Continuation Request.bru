@@ -16,16 +16,24 @@ headers {
 
 body:json {
   {
-       "interact_ref": "6d519566-234f-4c2e-b56f-6d4a305fc067"
+       "interact_ref": "8c55602c-f777-44cf-bbe7-f4f6589d6aeb"
   }
 }
 
 script:pre-request {
-  // eval(pm.environment.get('preRequestSignatures'))
+  const scripts = require('./scripts/scripts');
+  
+  await scripts.addSignatureHeaders();
+}
+
+script:post-response {
+  const body = res.getBody();
+  bru.setEnvVar("accessToken", body.access_token.value);
+  bru.setEnvVar("tokenId", body.access_token.manage.split('/').pop())
 }
 
 tests {
-  // const body = pm.response.json();
-  // pm.environment.set("accessToken", body.access_token.value);
-  // pm.environment.set("tokenId", body.access_token.manage.split('/').pop())
+  test("Status code is 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
 }

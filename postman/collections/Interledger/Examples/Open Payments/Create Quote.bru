@@ -23,20 +23,23 @@ body:json {
 }
 
 script:pre-request {
-  // if(pm.environment.get('preRequestHost')){
-  //     eval(pm.environment.get('preRequestHost'))
-  // }
-  // eval(pm.environment.get('preRequestSignatures'))
+  const scripts = require('./scripts/scripts');
+  
+  scripts.addHostHeader();
+  
+  await scripts.addSignatureHeaders();
+}
+
+script:post-response {
+  const body = res.getBody();
+  bru.setEnvVar("quoteId", body.id.split("/").pop());
+  bru.setEnvVar("quoteDebitAmount", JSON.stringify(body.debitAmount))
+  bru.setEnvVar("quoteReceiveAmount", JSON.stringify(body.receiveAmount))
+  
 }
 
 tests {
-  // pm.test("Status code is 201", function () {
-  //     pm.response.to.have.status(201);
-  // });
-  // 
-  // const body = pm.response.json();
-  // pm.environment.set("quoteId", body.id.split("/").pop());
-  // pm.environment.set("quoteDebitAmount", JSON.stringify(body.debitAmount))
-  // pm.environment.set("quoteReceiveAmount", JSON.stringify(body.receiveAmount))
-  // 
+  test("Status code is 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
 }
