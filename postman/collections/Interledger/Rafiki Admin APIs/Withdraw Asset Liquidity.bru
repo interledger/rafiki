@@ -24,11 +24,18 @@ body:graphql {
 body:graphql:vars {
   {
     "input": {
-      "id": "b97fd85a-126e-42ef-b40d-1a50a70ffa6f",
+      "id": "{{transferId}}",
       "assetId": "{{assetId}}",
       "amount": "100",
-      "idempotencyKey":"{{$guid}}"
+      "idempotencyKey":"{{idempotencyKey}}"
     }
   }
   
+}
+
+script:pre-request {
+  const { v4: uuidv4 } = require('uuid');
+  
+  bru.setVar("transferId",uuidv4());
+  bru.setVar("idempotencyKey",uuidv4());
 }

@@ -48,8 +48,8 @@ body:graphql:vars {
   }
 }
 
-tests {
-  // const body = pm.response.json();
-  // 
-  // pm.environment.set("walletAddressKeyId", body.data.createWalletAddressKey.walletAddressKey.id);
+script:post-response {
+  const body = res.getBody();
+  
+  bru.setEnvVar("walletAddressKeyId", body.data.createWalletAddressKey.walletAddressKey.id);
 }

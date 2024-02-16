@@ -24,11 +24,18 @@ body:graphql {
 body:graphql:vars {
   {
     "input": {
-      "id": "421fae87-9a59-4217-9ff8-faf55ffab9c6",
+      "id": "{{withdrawalId}}",
       "peerId": "{{peerId}}",
       "amount": "100",
-      "idempotencyKey":"{{$guid}}"
+      "idempotencyKey":"{{idempotencyKey}}"
     }
   }
   
+}
+
+script:pre-request {
+  const { v4: uuidv4 } = require('uuid');
+  
+  bru.setEnvVar("withdrawalId",uuidv4());
+  bru.setVar("idempotencyKey",uuidv4());
 }

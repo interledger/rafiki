@@ -52,9 +52,14 @@ body:graphql:vars {
   }
 }
 
+script:post-response {
+  const body = res.getBody();
+  
+  bru.setEnvVar("incomingPaymentId", body.data.createIncomingPayment.payment.id);
+}
+
 tests {
-  // const body = pm.response.json();
-  // 
-  // pm.environment.set("incomingPaymentId", body.data.createIncomingPayment.payment.id);
-  // pm.expect(pm.environment.get("incomingPaymentId")).to.be.a('string');
+  test("incomingPaymentId is string", function() {
+    expect(bru.getEnvVar("incomingPaymentId")).to.be.a("string");
+  })
 }

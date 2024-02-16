@@ -56,48 +56,38 @@ body:graphql:vars {
 }
 
 script:pre-request {
-  // // Create an additional wallet address to represent the account that will be sending money
-  // 
-  // // Reset the uniqueWalletAddress value
-  // pm.environment.set("uniqueWalletAddress", Math.floor(Math.random() * (1001)));
-  // 
-  // const initialRequest = pm.environment.get("createWalletAddressRequest");
-  // 
-  // const postRequest = {
-  //   url: initialRequest.url,
-  //   method: initialRequest.method,
-  //   body: {
-  //     mode: 'graphql',
-  //     graphql: {
-  //         query: initialRequest.body.graphql.query,
-  //         variables: JSON.stringify({
-  //             "input": {
-  //                 "assetId": pm.environment.get("assetId"),
-  //                 "url": "https://" + pm.environment.get("OpenPaymentsHost") + "/simon/" + pm.environment.get("uniqueWalletAddress"),
-  //                 "publicName": "Simon"
-  //             }
-  //         })
-  //     }
-  //   }
-  // };
-  // 
-  // pm.sendRequest(postRequest, (error, response) => {
-  //     if (error) {
-  //         console.log(error);
-  //     }
-  //     const body = response.json();
-  //     pm.test('response should be okay to process', () => {
-  //         pm.expect(error).to.equal(null);
-  //         pm.expect(body.data.createWalletAddress.code).to.equal('200');
-  //         pm.expect(body.data.createWalletAddress.success).to.equal(true);
-  //     });
-  //     pm.environment.set("secondWalletAddressId", body.data.createWalletAddress.walletAddress.id);
-  // });
+  // Create an additional wallet address to represent the account that will be sending money
+  
+  const fetch = require('node-fetch')
+  
+  const randomInt = Math.floor(Math.random() * (1001));
+  
+  const initialRequest = bru.getEnvVar("initialWalletAddressRequest");
+  
+  console.log(initialRequest)
+  
+  const postRequest = {
+    method: 'post',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({
+      query: initialRequest.body.query,
+      variables: {
+        "input": {
+          "assetId": bru.getEnvVar("assetId"),
+          "url": "https://" + bru.getEnvVar("OpenPaymentsHost") + "/simon/" + randomInt,
+          "publicName": "Simon"
+      }
+      }
+    })
+  };
+  
+  const response = await fetch(`${initialRequest.url}`, postRequest);
+  const body = await response.json();
+  bru.setEnvVar("secondWalletAddressId", body.data.createWalletAddress.walletAddress.id);
 }
 
-tests {
-  // const body = pm.response.json();
-  // 
-  // pm.environment.set("quoteId", body.data.createQuote.quote.id);
-  // pm.expect(pm.environment.get("quoteId")).to.be.a('string');
+script:post-response {
+  const body = res.getBody();
+  
+  bru.setEnvVar("quoteId", body.data.createQuote.quote.id);
 }

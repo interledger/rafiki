@@ -38,24 +38,34 @@ body:graphql:vars {
   {
     "input": {
       "assetId": "{{assetId}}",
-      "url": "https://{{senderOpenPaymentsHost}}/timon/{{$randomInt}}",
+      "url": "https://{{senderOpenPaymentsHost}}/timon/{{randomId}}",
       "publicName": "Timon"
     }
   }
 }
 
 script:pre-request {
-  // 
+  const { nanoid } = require("nanoid");
+  
+  bru.setVar('randomId', nanoid());
+}
+
+script:post-response {
+  const body = res.getBody();
+  
+  bru.setEnvVar("walletAddressId", body.data.createWalletAddress.walletAddress.id);
+  
+  bru.setEnvVar("walletAddressUrl", body.data.createWalletAddress.walletAddress.url);
+  
+  bru.setEnvVar('initialWalletAddressRequest',req)
 }
 
 tests {
-  // const body = pm.response.json();
-  // 
-  // pm.environment.set("walletAddressId", body.data.createWalletAddress.walletAddress.id);
-  // pm.expect(pm.environment.get("walletAddressId")).to.be.a('string');
-  // 
-  // pm.environment.set("walletAddressUrl", body.data.createWalletAddress.walletAddress.url);
-  // pm.expect(pm.environment.get("walletAddressUrl")).to.be.a('string');
-  // 
-  // pm.environment.set("createWalletAddressRequest", pm.request);
+  test("walletAddressId is string", function() {
+    expect(bru.getEnvVar("walletAddressId")).to.be.a("string");
+  })
+  test("walletAddressUrl is string", function() {
+    expect(bru.getEnvVar("walletAddressUrl")).to.be.a("string");
+  })
+  
 }

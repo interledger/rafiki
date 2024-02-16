@@ -26,7 +26,13 @@ body:graphql:vars {
   {
       "input": {
           "outgoingPaymentId": "{{outgoingPaymentId}}",
-          "idempotencyKey":"{{$guid}}"
+          "idempotencyKey":"{{idempotencyKey}}"
       }
   }
+}
+
+script:pre-request {
+  const { v4: uuidv4 } = require('uuid');
+  
+  bru.setVar("idempotencyKey",uuidv4());
 }

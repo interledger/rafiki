@@ -39,8 +39,8 @@ body:graphql:vars {
   }
 }
 
-tests {
-  // const body = pm.response.json();
-  // 
-  // pm.environment.set("assetId", body.data.createAsset.asset.id);
+script:post-response {
+  const body = res.getBody();
+  
+  bru.setEnvVar("assetId", body.data.createAsset.asset.id);
 }

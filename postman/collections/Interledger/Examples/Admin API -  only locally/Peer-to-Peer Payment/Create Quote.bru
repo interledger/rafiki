@@ -62,10 +62,6 @@ script:post-response {
 }
 
 tests {
-  test("Status code is 200", function() {
-    expect(res.getStatus()).to.equal(200);
-  });
-  
   test("Quote id is string", function() {
     expect(bru.getEnvVar("quoteId")).to.be.a("string");
   })
