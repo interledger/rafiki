@@ -37,7 +37,7 @@ dotenv.config({
 
 export const Config = {
   logLevel: envString('LOG_LEVEL', 'info'),
-  enableTelemetry: envBool('ENABLE_TELEMETRY', true),
+  enableTelemetry: envBool('ENABLE_TELEMETRY', false),
   openTelemetryCollectors: envStringArray('OPEN_TELEMETRY_COLLECTOR_URL', [
     'http://otel-collector-NLB-e3172ff9d2f4bc8a.elb.eu-west-2.amazonaws.com:4317'
   ]),
