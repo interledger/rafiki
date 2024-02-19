@@ -15,11 +15,13 @@ headers {
 }
 
 script:pre-request {
-  // eval(pm.environment.get('preRequestSignatures'))
+  const scripts = require('./scripts/scripts');
+  
+  await scripts.addSignatureHeaders();
 }
 
-tests {
-  // const body = pm.response.json();
-  // pm.environment.set("accessToken", body.access_token.value);
-  // pm.environment.set("tokenId", body.access_token.manage.split('/').pop())
+script:post-response {
+  const scripts = require('./scripts/scripts');
+  
+  scripts.storeTokenDetails();
 }
