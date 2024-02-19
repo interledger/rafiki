@@ -64,8 +64,6 @@ script:pre-request {
   
   const initialRequest = bru.getEnvVar("initialWalletAddressRequest");
   
-  console.log(initialRequest)
-  
   const postRequest = {
     method: 'post',
     headers: {'Content-Type': 'application/json'},
