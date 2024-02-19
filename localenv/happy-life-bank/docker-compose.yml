@@ -52,13 +52,6 @@ services:
       EXCHANGE_RATES_URL: http://happy-life-bank/rates
       REDIS_URL: redis://shared-redis:6379/1
       WALLET_ADDRESS_URL: ${HAPPY_LIFE_BANK_WALLET_ADDRESS_URL:-https://happy-life-bank-backend/.well-known/pay}
-      ENABLE_TELEMETRY: true
-       # url is a list of csv. Example for including local collector: http://happy-life-otel-collector:4317,http://otel-collector-NLB-e3172ff9d2f4bc8a.elb.eu-west-2.amazonaws.com:4317
-      OPEN_TELEMETRY_COLLECTOR_URL: http://otel-collector-NLB-e3172ff9d2f4bc8a.elb.eu-west-2.amazonaws.com:4317
-      OPEN_TELEMETRY_EXPORT_INTERVAL: 15000
-      TELEMETRY_EXCHANGE_RATES_URL: https://telemetry-exchange-rates.s3.amazonaws.com/exchange-rates-usd.json
-
-
     depends_on:
       - cloud-nine-backend
   happy-life-auth:
