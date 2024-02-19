@@ -47,7 +47,7 @@
   },
   "devDependencies": {
     "@apollo/client": "^3.8.10",
-    "@faker-js/faker": "^8.4.0",
+    "@faker-js/faker": "^8.4.1",
     "@graphql-codegen/cli": "5.0.2",
     "@graphql-codegen/introspection": "4.0.2",
     "@graphql-codegen/typescript": "4.0.4",
