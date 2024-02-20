@@ -86,7 +86,3 @@ services:
     depends_on:
       - cloud-nine-admin
       - happy-life-backend
-
-networks:
-  rafiki:
-    external: true

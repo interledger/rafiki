@@ -28,7 +28,3 @@ services:
         ./tigerbeetle start --addresses=0.0.0.0:4342 $$DATA_FILE
 volumes:
   tigerbeetle-data:
-
-networks:
-  rafiki:
-    external: true
