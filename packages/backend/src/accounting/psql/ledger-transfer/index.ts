@@ -46,12 +46,20 @@ export async function getAccountTransfers(
         creditAccountId: accountId
       })
     )
+    // Get transfers for POSTED or non-expired PENDING transfers. VOIDED transfers are ignored.
     .where((query) =>
-      query.where({ expiresAt: null }).orWhere('expiresAt', '>', new Date())
+      query
+        .where({ state: LedgerTransferState.POSTED })
+        .orWhere((query) =>
+          query
+            .where({ state: LedgerTransferState.PENDING })
+            .where((query) =>
+              query
+                .where({ expiresAt: null })
+                .orWhere('expiresAt', '>', new Date())
+            )
+        )
     )
-    .andWhereNot({
-      state: LedgerTransferState.VOIDED
-    })
 
   return transfers.reduce(
     (results, transfer) => {

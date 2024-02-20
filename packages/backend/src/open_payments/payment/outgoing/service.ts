@@ -80,8 +80,10 @@ async function getOutgoingPayment(
   const outgoingPayment = await OutgoingPayment.query(deps.knex)
     .get(options)
     .withGraphFetched('[quote.asset, walletAddress]')
-  if (outgoingPayment) return await addSentAmount(deps, outgoingPayment)
-  else return
+
+  if (outgoingPayment) {
+    return addSentAmount(deps, outgoingPayment)
+  }
 }
 
 export interface CreateOutgoingPaymentOptions {
@@ -139,12 +141,10 @@ async function createOutgoingPayment(
       if (options.grant) {
         if (
           !(await validateGrant(
-            {
-              ...deps,
-              knex: trx
-            },
+            deps,
             payment,
             options.grant,
+            trx,
             options.callback,
             options.grantLockTimeoutMs
           ))
@@ -164,12 +164,10 @@ async function createOutgoingPayment(
       }
 
       await sendWebhookEvent(
-        {
-          ...deps,
-          knex: trx
-        },
+        deps,
         payment,
-        OutgoingPaymentEventType.PaymentCreated
+        OutgoingPaymentEventType.PaymentCreated,
+        trx
       )
       return await addSentAmount(deps, payment, BigInt(0))
     })
@@ -189,7 +187,10 @@ async function createOutgoingPayment(
     } else if (isOutgoingPaymentError(err)) {
       return err
     } else if (err instanceof knex.KnexTimeoutError) {
-      deps.logger.error({ grant: grantId }, 'grant locked')
+      deps.logger.error(
+        { grant: grantId },
+        'Could not create outgoing payment: grant locked'
+      )
     }
     throw err
   }
@@ -255,6 +256,7 @@ async function validateGrant(
   deps: ServiceDependencies,
   payment: OutgoingPayment,
   grant: Grant,
+  trx: TransactionOrKnex,
   callback?: (f: unknown) => NodeJS.Timeout,
   grantLockTimeoutMs: number = 5000
 ): Promise<boolean> {
@@ -276,18 +278,14 @@ async function validateGrant(
     return false
   }
 
-  // Lock grant
-  // TODO: update to use objection once it supports forNoKeyUpdate
-  await deps
-    .knex<OutgoingPaymentGrant>('outgoingPaymentGrants')
-    .select()
+  await OutgoingPaymentGrant.query(trx || deps.knex)
     .where('id', grant.id)
     .forNoKeyUpdate()
     .timeout(grantLockTimeoutMs)
 
   if (callback) await new Promise(callback)
 
-  const grantPayments = await OutgoingPayment.query(deps.knex)
+  const grantPayments = await OutgoingPayment.query(trx || deps.knex)
     .where({
       grantId: grant.id
     })
@@ -310,12 +308,12 @@ async function validateGrant(
       })
     ) {
       if (grantPayment.failed) {
-        const totalSent = await deps.accountingService.getTotalSent(
-          grantPayment.id
+        const totalSent = validateSentAmount(
+          deps,
+          payment,
+          await deps.accountingService.getTotalSent(grantPayment.id)
         )
-        if (totalSent === undefined) {
-          throw new Error()
-        }
+
         if (totalSent === BigInt(0)) {
           continue
         }
@@ -407,27 +405,10 @@ async function getWalletAddressPage(
   )
   // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
   return page.map((payment: OutgoingPayment, i: number) => {
-    try {
-      if (
-        amounts[i] === undefined &&
-        payment.state !== OutgoingPaymentState.Funding
-      ) {
-        throw new Error()
-      }
-      payment.sentAmount = {
-        value: amounts[i] ?? BigInt(0),
-        assetCode: payment.asset.code,
-        assetScale: payment.asset.scale
-      }
-    } catch (err) {
-      deps.logger.error(
-        { payment: payment.id },
-        'outgoing account not found',
-        err
-      )
-      throw new Error(
-        `Underlying TB account not found, outgoing payment id: ${payment.id}`
-      )
+    payment.sentAmount = {
+      value: validateSentAmount(deps, payment, amounts[i]),
+      assetCode: payment.asset.code,
+      assetScale: payment.asset.scale
     }
     return payment
   })
@@ -438,27 +419,37 @@ async function addSentAmount(
   payment: OutgoingPayment,
   value?: bigint
 ): Promise<OutgoingPayment> {
-  const fundingZeroOrUndefined =
-    payment.state === OutgoingPaymentState.Funding ? BigInt(0) : undefined
-  const sent =
-    value ??
-    (await deps.accountingService.getTotalSent(payment.id)) ??
-    fundingZeroOrUndefined
+  const sentAmount =
+    value ?? (await deps.accountingService.getTotalSent(payment.id))
 
-  if (sent !== undefined) {
-    payment.sentAmount = {
-      value: sent,
-      assetCode: payment.asset.code,
-      assetScale: payment.asset.scale
-    }
-  } else {
-    deps.logger.error(
-      { outgoingPayment: payment.id, state: payment.state, sent: sent },
-      'account not found for addSentAmount'
-    )
-    throw new Error(
-      `Underlying TB account not found, outgoing payment id: ${payment.id}`
-    )
+  payment.sentAmount = {
+    value: validateSentAmount(deps, payment, sentAmount),
+    assetCode: payment.asset.code,
+    assetScale: payment.asset.scale
   }
+
   return payment
+}
+
+function validateSentAmount(
+  deps: ServiceDependencies,
+  payment: OutgoingPayment,
+  sentAmount: bigint | undefined
+): bigint {
+  if (sentAmount !== undefined) {
+    return sentAmount
+  }
+
+  if (payment.state === OutgoingPaymentState.Funding) {
+    return BigInt(0)
+  }
+
+  const errorMessage =
+    'Could not get amount sent for payment. There was a problem getting the associated liquidity account.'
+
+  deps.logger.error(
+    { outgoingPayment: payment.id, state: payment.state },
+    errorMessage
+  )
+  throw new Error(errorMessage)
 }

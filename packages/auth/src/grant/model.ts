@@ -1,10 +1,11 @@
-import { Model } from 'objection'
+import { Model, Pojo, QueryContext } from 'objection'
 import { BaseModel } from '../shared/baseModel'
 import { Access } from '../access/model'
 import { join } from 'path'
 import {
   PendingGrant as OpenPaymentsPendingGrant,
-  Grant as OpenPaymentsGrant
+  Grant as OpenPaymentsGrant,
+  GrantContinuation as OpenPaymentsGrantContinuation
 } from '@interledger/open-payments'
 import { AccessToken, toOpenPaymentsAccessToken } from '../accessToken/model'
 import { Interaction } from '../interaction/model'
@@ -70,12 +71,26 @@ export class Grant extends BaseModel {
 
   public continueToken!: string
   public continueId!: string
-  public wait?: number
 
   public finishMethod?: FinishMethod
   public finishUri?: string
   public client!: string
   public clientNonce?: string // client-generated nonce for post-interaction hash
+
+  public lastContinuedAt!: Date
+
+  public $beforeInsert(context: QueryContext): void {
+    super.$beforeInsert(context)
+    this.lastContinuedAt = new Date()
+  }
+
+  $formatJson(json: Pojo): Pojo {
+    json = super.$formatJson(json)
+    return {
+      ...json,
+      lastContinuedAt: json.lastContinuedAt.toISOString()
+    }
+  }
 }
 
 interface ToOpenPaymentsPendingGrantArgs {
@@ -118,6 +133,22 @@ export function toOpenPaymentPendingGrant(
 
 interface ToOpenPaymentsGrantArgs {
   authServerUrl: string
+  waitTimeSeconds?: number
+}
+
+export function toOpenPaymentsGrantContinuation(
+  grant: Grant,
+  args: ToOpenPaymentsGrantArgs
+): OpenPaymentsGrantContinuation {
+  return {
+    continue: {
+      access_token: {
+        value: grant.continueToken
+      },
+      uri: `${args.authServerUrl}/continue/${grant.continueId}`,
+      wait: args.waitTimeSeconds
+    }
+  }
 }
 
 export function toOpenPaymentsGrant(

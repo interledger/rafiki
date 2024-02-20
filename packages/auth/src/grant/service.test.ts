@@ -332,6 +332,16 @@ describe('Grant Service', (): void => {
       })
     })
 
+    describe('updateLastContinuedAt', (): void => {
+      test("Can update a grant's last continue attempt timestamp", async (): Promise<void> => {
+        const updatedGrant = await grantService.updateLastContinuedAt(grant.id)
+
+        expect(updatedGrant.lastContinuedAt.getTime()).toBeGreaterThan(
+          grant.lastContinuedAt.getTime()
+        )
+      })
+    })
+
     describe('revoke', (): void => {
       test('Can revoke a grant', async (): Promise<void> => {
         await expect(grantService.revokeGrant(grant.id)).resolves.toEqual(true)

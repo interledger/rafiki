@@ -227,13 +227,16 @@ describe('Grant Routes', (): void => {
       })
 
       test('Can initiate a grant request', async (): Promise<void> => {
-        const scope = nock(CLIENT).get('/').reply(200, {
-          id: CLIENT,
-          publicName: TEST_CLIENT_DISPLAY.name,
-          assetCode: 'USD',
-          assetScale: 2,
-          authServer: Config.authServerDomain
-        })
+        const scope = nock(CLIENT)
+          .get('/')
+          .reply(200, {
+            id: CLIENT,
+            publicName: TEST_CLIENT_DISPLAY.name,
+            assetCode: 'USD',
+            assetScale: 2,
+            authServer: Config.authServerDomain,
+            resourceServer: faker.internet.url({ appendSlash: false })
+          })
 
         const ctx = createContext<CreateContext>(
           {
@@ -408,6 +411,11 @@ describe('Grant Routes', (): void => {
             state: InteractionState.Approved
           })
         )
+
+        const now = new Date(
+          grant.createdAt.getTime() + (config.waitTimeSeconds + 1) * 1000
+        )
+        jest.useFakeTimers({ now })
       })
 
       test('Can issue access token', async (): Promise<void> => {
@@ -484,7 +492,10 @@ describe('Grant Routes', (): void => {
 
         await expect(grantRoutes.continue(ctx)).rejects.toMatchObject({
           status: 404,
-          error: 'unknown_request'
+          error: {
+            code: 'invalid_continuation',
+            description: 'grant not found'
+          }
         })
       })
 
@@ -498,6 +509,11 @@ describe('Grant Routes', (): void => {
           ...BASE_GRANT_ACCESS,
           grantId: grant.id
         })
+
+        const now = new Date(
+          grant.createdAt.getTime() + (config.waitTimeSeconds + 1) * 1000
+        )
+        jest.useFakeTimers({ now })
 
         const interaction = await Interaction.query().insert(
           generateBaseInteraction(grant)
@@ -522,7 +538,10 @@ describe('Grant Routes', (): void => {
 
         await expect(grantRoutes.continue(ctx)).rejects.toMatchObject({
           status: 401,
-          error: 'request_denied'
+          error: {
+            code: 'request_denied',
+            description: 'grant interaction not approved'
+          }
         })
       })
 
@@ -561,31 +580,10 @@ describe('Grant Routes', (): void => {
 
         await expect(grantRoutes.continue(ctx)).rejects.toMatchObject({
           status: 404,
-          error: 'unknown_request'
-        })
-      })
-
-      test('Cannot issue access token without interact ref', async (): Promise<void> => {
-        const ctx = createContext<ContinueContext>(
-          {
-            headers: {
-              Accept: 'application/json',
-              'Content-Type': 'application/json',
-              Authorization: `GNAP ${grant.continueToken}`
-            }
-          },
-          {
-            id: grant.continueId
+          error: {
+            code: 'invalid_continuation',
+            description: 'grant not found'
           }
-        )
-
-        ctx.request.body = {} as {
-          interact_ref: string
-        }
-
-        await expect(grantRoutes.continue(ctx)).rejects.toMatchObject({
-          status: 401,
-          error: 'invalid_request'
         })
       })
 
@@ -608,7 +606,10 @@ describe('Grant Routes', (): void => {
 
         await expect(grantRoutes.continue(ctx)).rejects.toMatchObject({
           status: 401,
-          error: 'invalid_request'
+          error: {
+            code: 'invalid_continuation',
+            description: 'missing continuation information'
+          }
         })
       })
 
@@ -630,7 +631,290 @@ describe('Grant Routes', (): void => {
 
         await expect(grantRoutes.continue(ctx)).rejects.toMatchObject({
           status: 401,
-          error: 'invalid_request'
+          error: {
+            code: 'invalid_continuation',
+            description: 'missing continuation information'
+          }
+        })
+      })
+
+      test('Cannot issue access token if body provided without interaction reference', async (): Promise<void> => {
+        const ctx = createContext<ContinueContext>(
+          {
+            headers: {
+              Accept: 'application/json',
+              'Content-Type': 'application/json',
+              Authorization: `GNAP ${grant.continueToken}`
+            }
+          },
+          {
+            id: grant.continueId
+          }
+        )
+
+        ctx.request.body = {
+          interact_ref: undefined
+        }
+
+        await expect(grantRoutes.continue(ctx)).rejects.toMatchObject({
+          status: 401,
+          error: {
+            code: 'invalid_request',
+            description: 'missing interaction reference'
+          }
+        })
+      })
+
+      test('Honors wait value when continuing too early', async (): Promise<void> => {
+        const grantWithWait = await Grant.query().insert(generateBaseGrant())
+
+        await Access.query().insert({
+          ...BASE_GRANT_ACCESS,
+          grantId: grantWithWait.id
+        })
+
+        const interactionWithWait = await Interaction.query().insert(
+          generateBaseInteraction(grantWithWait, {
+            state: InteractionState.Pending
+          })
+        )
+
+        const ctx = createContext<ContinueContext>(
+          {
+            headers: {
+              Accept: 'application/json',
+              'Content-Type': 'application/json',
+              Authorization: `GNAP ${grantWithWait.continueToken}`
+            }
+          },
+          {
+            id: grantWithWait.continueId
+          }
+        )
+
+        ctx.request.body = {
+          interact_ref: interactionWithWait.ref
+        }
+
+        await expect(grantRoutes.continue(ctx)).rejects.toMatchObject({
+          status: 400,
+          error: {
+            code: 'too_fast',
+            description: 'continued grant faster than "wait" period'
+          }
+        })
+      })
+
+      test.each`
+        state                    | description
+        ${GrantState.Processing} | ${'processing'}
+        ${GrantState.Pending}    | ${'pending'}
+        ${GrantState.Approved}   | ${'approved'}
+      `(
+        'Polls correctly for continuation on a $description grant',
+        async ({ state }): Promise<void> => {
+          const polledGrant = await Grant.query().insert(
+            generateBaseGrant({
+              state,
+              noFinishMethod: true
+            })
+          )
+
+          const polledGrantAccess = await Access.query().insert({
+            ...BASE_GRANT_ACCESS,
+            grantId: polledGrant.id
+          })
+
+          await Interaction.query().insert(
+            generateBaseInteraction(grant, {
+              state: InteractionState.Approved
+            })
+          )
+
+          const now = new Date(
+            polledGrant.createdAt.getTime() +
+              (config.waitTimeSeconds + 1) * 1000
+          )
+          jest.useFakeTimers({ now })
+
+          const ctx = createContext<ContinueContext>(
+            {
+              headers: {
+                Accept: 'application/json',
+                'Content-Type': 'application/json',
+                Authorization: `GNAP ${polledGrant.continueToken}`
+              },
+              url: `/continue/${polledGrant.continueId}`,
+              method: 'POST'
+            },
+            {
+              id: polledGrant.continueId
+            }
+          )
+
+          ctx.request.body = {}
+
+          await expect(grantRoutes.continue(ctx)).resolves.toBeUndefined()
+
+          expect(ctx.response).toSatisfyApiSpec()
+          expect(ctx.status).toBe(200)
+
+          const expectedBody = {
+            continue: {
+              access_token: {
+                value: expect.any(String)
+              },
+              uri: expect.any(String)
+            }
+          }
+
+          if (state === GrantState.Processing || state === GrantState.Pending) {
+            Object.assign(expectedBody.continue, {
+              wait: config.waitTimeSeconds
+            })
+            const updatedPolledGrant = await Grant.query().findById(
+              polledGrant.id
+            )
+            expect(
+              updatedPolledGrant?.lastContinuedAt.getTime()
+            ).toBeGreaterThan(polledGrant.lastContinuedAt.getTime())
+          }
+
+          if (state === GrantState.Approved) {
+            const accessToken = await AccessToken.query().findOne({
+              grantId: polledGrant.id
+            })
+
+            assert.ok(accessToken)
+
+            Object.assign(expectedBody, {
+              access_token: {
+                value: accessToken.value,
+                manage:
+                  Config.authServerDomain +
+                  `/token/${accessToken.managementId}`,
+                access: expect.arrayContaining([
+                  {
+                    actions: expect.arrayContaining(['create', 'read', 'list']),
+                    identifier: polledGrantAccess.identifier,
+                    type: 'incoming-payment'
+                  }
+                ]),
+                expires_in: 600
+              }
+            })
+          }
+
+          expect(ctx.body).toEqual(expectedBody)
+        }
+      )
+
+      test('Cannot poll a finalized grant', async (): Promise<void> => {
+        const finalizedPolledGrant = await Grant.query().insert(
+          generateBaseGrant({
+            state: GrantState.Finalized,
+            noFinishMethod: true
+          })
+        )
+
+        const now = new Date(
+          finalizedPolledGrant.createdAt.getTime() +
+            (config.waitTimeSeconds + 1) * 1000
+        )
+        jest.useFakeTimers({ now })
+        const ctx = createContext<ContinueContext>(
+          {
+            headers: {
+              Accept: 'application/json',
+              'Content-Type': 'application/json',
+              Authorization: `GNAP ${finalizedPolledGrant.continueToken}`
+            },
+            url: `/continue/${finalizedPolledGrant.continueId}`,
+            method: 'POST'
+          },
+          {
+            id: finalizedPolledGrant.continueId
+          }
+        )
+
+        ctx.request.body = {}
+        await expect(grantRoutes.continue(ctx)).rejects.toMatchObject({
+          status: 401,
+          error: {
+            code: 'request_denied',
+            description: 'grant cannot be continued'
+          }
+        })
+      })
+
+      test('Cannot poll a grant with a finish method', async (): Promise<void> => {
+        const ctx = createContext<ContinueContext>(
+          {
+            headers: {
+              Accept: 'application/json',
+              'Content-Type': 'application/json',
+              Authorization: `GNAP ${grant.continueToken}`
+            }
+          },
+          {
+            id: grant.continueId
+          }
+        )
+
+        ctx.request.body = {} as {
+          interact_ref: string
+        }
+
+        await expect(grantRoutes.continue(ctx)).rejects.toMatchObject({
+          status: 401,
+          error: {
+            code: 'request_denied',
+            description: 'grant cannot be polled'
+          }
+        })
+      })
+
+      test('Cannot poll a grant faster than its wait method', async (): Promise<void> => {
+        const polledGrant = await Grant.query().insert(
+          generateBaseGrant({
+            noFinishMethod: true
+          })
+        )
+
+        await Access.query().insert({
+          ...BASE_GRANT_ACCESS,
+          grantId: polledGrant.id
+        })
+
+        await Interaction.query().insert(
+          generateBaseInteraction(grant, {
+            state: InteractionState.Approved
+          })
+        )
+
+        const ctx = createContext<ContinueContext>(
+          {
+            headers: {
+              Accept: 'application/json',
+              'Content-Type': 'application/json',
+              Authorization: `GNAP ${polledGrant.continueToken}`
+            },
+            url: `/continue/${polledGrant.continueId}`,
+            method: 'POST'
+          },
+          {
+            id: polledGrant.continueId
+          }
+        )
+
+        ctx.request.body = {}
+
+        await expect(grantRoutes.continue(ctx)).rejects.toMatchObject({
+          status: 400,
+          error: {
+            code: 'too_fast',
+            description: 'polled grant faster than "wait" period'
+          }
         })
       })
 

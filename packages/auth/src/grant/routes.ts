@@ -8,6 +8,7 @@ import {
   GrantState,
   toOpenPaymentPendingGrant,
   toOpenPaymentsGrant,
+  toOpenPaymentsGrantContinuation,
   isRevokedGrant,
   isRejectedGrant
 } from './model'
@@ -47,7 +48,7 @@ type GrantContext<BodyT = never, QueryT = ParsedUrlQuery> = Exclude<
 export type CreateContext = GrantContext<GrantRequestBody>
 
 interface GrantContinueBody {
-  interact_ref: string
+  interact_ref?: string
 }
 
 interface GrantParams {
@@ -185,6 +186,86 @@ function isContinuableGrant(grant: Grant): boolean {
   return !isRejectedGrant(grant) && !isRevokedGrant(grant)
 }
 
+function isGrantStillWaiting(grant: Grant, waitTimeSeconds: number): boolean {
+  const grantWaitTime = grant.lastContinuedAt.getTime() + waitTimeSeconds * 1000
+  const currentTime = Date.now()
+
+  return currentTime < grantWaitTime
+}
+
+async function pollGrantContinuation(
+  deps: ServiceDependencies,
+  ctx: ContinueContext,
+  continueId: string,
+  continueToken: string
+): Promise<void> {
+  const { config, grantService, accessService, accessTokenService } = deps
+
+  const grant = await grantService.getByContinue(continueId, continueToken)
+  if (!grant) {
+    ctx.throw(404, {
+      error: {
+        code: 'unknown_request',
+        description: 'grant not found'
+      }
+    })
+  }
+
+  if (isGrantStillWaiting(grant, config.waitTimeSeconds)) {
+    ctx.throw(400, {
+      error: {
+        code: 'too_fast',
+        description: 'polled grant faster than "wait" period'
+      }
+    })
+  }
+
+  /*
+    https://datatracker.ietf.org/doc/html/draft-ietf-gnap-core-protocol-15#name-continuing-during-pending-i
+    "When the client instance does not include a finish parameter, the client instance will often need to poll the AS until the RO has authorized the request."
+  */
+  if (grant.finishMethod) {
+    ctx.throw(401, {
+      error: { code: 'request_denied', description: 'grant cannot be polled' }
+    })
+  } else if (
+    grant.state === GrantState.Pending ||
+    grant.state === GrantState.Processing
+  ) {
+    await grantService.updateLastContinuedAt(grant.id)
+    ctx.status = 200
+    ctx.body = toOpenPaymentsGrantContinuation(grant, {
+      authServerUrl: config.authServerDomain,
+      waitTimeSeconds: config.waitTimeSeconds
+    })
+    return
+  } else if (
+    grant.state !== GrantState.Approved ||
+    !isContinuableGrant(grant)
+  ) {
+    ctx.throw(401, {
+      error: {
+        code: 'request_denied',
+        description: 'grant cannot be continued'
+      }
+    })
+  } else {
+    const accessToken = await accessTokenService.create(grant.id)
+    const access = await accessService.getByGrant(grant.id)
+    await grantService.finalize(grant.id, GrantFinalization.Issued)
+    ctx.status = 200
+    ctx.body = toOpenPaymentsGrant(
+      grant,
+      {
+        authServerUrl: config.authServerDomain
+      },
+      accessToken,
+      access
+    )
+    return
+  }
+}
+
 /* 
   GNAP indicates that a grant may be continued even if it didn't require interaction.
   Rafiki only needs to continue a grant if it required an interaction, noninteractive grants immediately issue an access token without needing continuation
@@ -198,10 +279,14 @@ async function continueGrant(
   const continueToken = (ctx.headers['authorization'] as string)?.split(
     'GNAP '
   )[1]
-  const { interact_ref: interactRef } = ctx.request.body
 
-  if (!continueId || !continueToken || !interactRef) {
-    ctx.throw(401, { error: 'invalid_request' })
+  if (!continueId || !continueToken) {
+    ctx.throw(401, {
+      error: {
+        code: 'invalid_continuation',
+        description: 'missing continuation information'
+      }
+    })
   }
 
   const {
@@ -212,17 +297,48 @@ async function continueGrant(
     interactionService
   } = deps
 
+  if (!ctx.request.body || Object.keys(ctx.request.body).length === 0) {
+    await pollGrantContinuation(deps, ctx, continueId, continueToken)
+    return
+  }
+
+  const { interact_ref: interactRef } = ctx.request.body
+  if (!interactRef) {
+    ctx.throw(401, {
+      error: {
+        code: 'invalid_request',
+        description: 'missing interaction reference'
+      }
+    })
+  }
+
   const interaction = await interactionService.getByRef(interactRef)
+  // TODO: distinguish error reasons between missing interaction, revoked, etc.
+  // https://github.com/interledger/rafiki/issues/2344
   if (
     !interaction ||
     !isContinuableGrant(interaction.grant) ||
     !isMatchingContinueRequest(continueId, continueToken, interaction.grant)
   ) {
-    ctx.throw(404, { error: 'unknown_request' })
+    ctx.throw(404, {
+      error: { code: 'invalid_continuation', description: 'grant not found' }
+    })
+  } else if (isGrantStillWaiting(interaction.grant, config.waitTimeSeconds)) {
+    ctx.throw(400, {
+      error: {
+        code: 'too_fast',
+        description: 'continued grant faster than "wait" period'
+      }
+    })
   } else {
     const { grant } = interaction
     if (grant.state !== GrantState.Approved) {
-      ctx.throw(401, { error: 'request_denied' })
+      ctx.throw(401, {
+        error: {
+          code: 'request_denied',
+          description: 'grant interaction not approved'
+        }
+      })
     }
 
     const accessToken = await accessTokenService.create(grant.id)
