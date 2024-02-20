@@ -40,8 +40,8 @@ body:graphql:vars {
   }
 }
 
-tests {
-  // const body = pm.response.json();
-  // 
-  // pm.environment.set("peerId", body.data.createOrUpdatePeerByUrl.peer.id);
+script:post-response {
+  const body = res.getBody();
+  
+  bru.setEnvVar("peerId", body.data.createOrUpdatePeerByUrl?.peer.id);
 }
