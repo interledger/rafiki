@@ -133,8 +133,8 @@ importers:
         specifier: 2.0.1
         version: 2.0.1
       '@interledger/open-payments':
-        specifier: 6.5.1
-        version: 6.5.1
+        specifier: 6.6.0
+        version: 6.6.0
       '@interledger/openapi':
         specifier: 1.2.1
         version: 1.2.1
@@ -272,8 +272,8 @@ importers:
         specifier: 2.0.1
         version: 2.0.1
       '@interledger/open-payments':
-        specifier: 6.5.1
-        version: 6.5.1
+        specifier: 6.6.0
+        version: 6.6.0
       '@interledger/openapi':
         specifier: 1.2.1
         version: 1.2.1
@@ -3191,10 +3191,19 @@ packages:
       uuid: 9.0.1
     dev: false
 
-  /@interledger/open-payments@6.5.1:
-    resolution: {integrity: sha512-YbtvONYc+aE64vVp40npFqY2lnf8x+7ZuWBOE75JmMUv4z3nCkMPRnk/oNk2TldHkXY/51TJAQSvDLvUCgqJ0w==}
+  /@interledger/http-signature-utils@2.0.2:
+    resolution: {integrity: sha512-gTAPFMt7xwG1zv1rbrltcZTAqOw/ZJwkVdnNjQzu5G9JTfvJQzS6pcpiVUej1cblpewotbOzosgdX00f93q9zA==}
     dependencies:
-      '@interledger/http-signature-utils': 2.0.1
+      http-message-signatures: 1.0.4
+      httpbis-digest-headers: 1.0.0
+      jose: 4.13.1
+      uuid: 9.0.1
+    dev: false
+
+  /@interledger/open-payments@6.6.0:
+    resolution: {integrity: sha512-9xbzppUtvMZ4bja3kkmhAZ9x6+0K07v0VQflo3VXR6rEnf//LZQezKc0ygtdvQIVDcXz2W07asM/TWR0Mvfg5w==}
+    dependencies:
+      '@interledger/http-signature-utils': 2.0.2
       '@interledger/openapi': 1.2.1
       axios: 1.6.7
       base64url: 3.0.1
@@ -9360,6 +9369,12 @@ packages:
     resolution: {integrity: sha512-gjJYDgFBy+xnlAs2G0gIWpiorCv9Xi7pIlOnnd91zHAK7BtkLxonmm/JAtd5e6CakOuW03IwEuJzj2YMy8lfWQ==}
     dev: false
 
+  /http-message-signatures@1.0.4:
+    resolution: {integrity: sha512-gavCQWnxHFg0BVlKs6CmYK7hNSH1o0x0mHTC68yBAHYOYuTVXPv52mEE7QuT5TenfiagTdOa/zPJzen4lEX7Rg==}
+    dependencies:
+      structured-headers: 1.0.1
+    dev: false
+
   /http-proxy-agent@7.0.0:
     resolution: {integrity: sha512-+ZT+iBxVUQ1asugqnD6oWoRiS25AkjNfG085dKJGtGxkdwLQrMKU5wJr2bOOFAXzKcTuqq+7fZlTMgG3SRfIYQ==}
     engines: {node: '>= 14'}
@@ -14750,6 +14765,11 @@ packages:
 
   /structured-headers@0.5.0:
     resolution: {integrity: sha512-oLnmXSsjhud+LxRJpvokwP8ImEB2wTg8sg30buwfVViKMuluTv3BlOJHUX9VW9pJ2nQOxmx87Z0kB86O4cphag==}
+    dev: false
+
+  /structured-headers@1.0.1:
+    resolution: {integrity: sha512-QYBxdBtA4Tl5rFPuqmbmdrS9kbtren74RTJTcs0VSQNVV5iRhJD4QlYTLD0+81SBwUQctjEQzjTRI3WG4DzICA==}
+    engines: {node: '>= 14', npm: '>=6'}
     dev: false
 
   /style-to-object@0.3.0:
