@@ -8,7 +8,7 @@
     "typecheck": "tsc"
   },
   "dependencies": {
-    "@apollo/client": "^3.8.10",
+    "@apollo/client": "^3.9.5",
     "@interledger/http-signature-utils": "2.0.1",
     "@remix-run/node": "^2.6.0",
     "@remix-run/react": "^2.6.0",
