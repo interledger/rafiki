@@ -117,12 +117,16 @@ async function getGrantDetails(
       Buffer.from(config.identityServerSecret)
     )
   ) {
-    ctx.throw(401)
+    ctx.throw(401, 'invalid_request', {
+      error: { code: 'invalid_request', description: 'invalid x-idp-secret' }
+    })
   }
   const { id: interactId, nonce } = ctx.params
   const interaction = await interactionService.getBySession(interactId, nonce)
   if (!interaction || isRevokedGrant(interaction.grant)) {
-    ctx.throw(404)
+    ctx.throw(404, 'unknown_request', {
+      error: { code: 'unknown_request', description: 'unknown interaction' }
+    })
   }
 
   const access = await accessService.getByGrant(interaction.grantId)

@@ -592,7 +592,11 @@ describe('Interaction Routes', (): void => {
           { id: v4(), nonce: interaction.nonce }
         )
         await expect(interactionRoutes.details(ctx)).rejects.toMatchObject({
-          status: 404
+          status: 404,
+          error: {
+            code: 'unknown_request',
+            description: 'unknown interaction'
+          }
         })
       })
 
@@ -619,7 +623,11 @@ describe('Interaction Routes', (): void => {
           { id: interaction.id, nonce: interaction.nonce }
         )
         await expect(interactionRoutes.details(ctx)).rejects.toMatchObject({
-          status: 404
+          status: 404,
+          error: {
+            code: 'unknown_request',
+            description: 'unknown interaction'
+          }
         })
       })
 
@@ -637,7 +645,11 @@ describe('Interaction Routes', (): void => {
         )
 
         await expect(interactionRoutes.details(ctx)).rejects.toMatchObject({
-          status: 401
+          status: 401,
+          error: {
+            code: 'invalid_request',
+            description: 'invalid x-idp-secret'
+          }
         })
       })
 
@@ -655,7 +667,11 @@ describe('Interaction Routes', (): void => {
           { id: v4(), nonce: interaction.nonce }
         )
         await expect(interactionRoutes.details(ctx)).rejects.toMatchObject({
-          status: 404
+          status: 404,
+          error: {
+            code: 'unknown_request',
+            description: 'unknown interaction'
+          }
         })
       })
     })
