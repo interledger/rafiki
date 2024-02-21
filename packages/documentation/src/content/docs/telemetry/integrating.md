@@ -9,6 +9,7 @@ In order to do so, the integrating ASE must deploy its own OpenTelemetry collect
 ## Rafiki Telemetry Environment Variables
 
 - `ENABLE_TELEMETRY`: boolean, defaults to `true`. Enables the telemetry service on Rafiki.
+- `LIVENET`: boolean. Should be set to `true` on production environments. If it is not set, it will default to `false`, and metrics will get sent to the testnet otel-collector
 - `OPEN_TELEMETRY_COLLECTOR_URL`: CSV of URLs for Open Telemetry collectors (e.g., `http://otel-collector-NLB-e3172ff9d2f4bc8a.elb.eu-west-2.amazonaws.com:4317,http://happy-life-otel-collector:4317`).
 - `OPEN_TELEMETRY_EXPORT_INTERVAL`: number in milliseconds, defaults to `15000`. Defines how often the instrumented Rafiki instance should send metrics.
 - `TELEMETRY_EXCHANGE_RATES_URL`: string URL, defaults to `https://telemetry-exchange-rates.s3.amazonaws.com/exchange-rates-usd.json`. It defines the endpoint that Rafiki will query for exchange rates, as a fallback when ASE does not [provide them](/integration/getting-started/#exchange-rates). If set, the response format of the external exchange rates API should be of type Rates, as the rates service expects.
