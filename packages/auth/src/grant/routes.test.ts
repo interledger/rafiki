@@ -198,8 +198,9 @@ describe('Grant Routes', (): void => {
                         ).rejects.toMatchObject({
                           status: 400,
                           error: {
-                            code: 'interaction_required',
-                            description: 'missing required request field'
+                            code: 'invalid_request',
+                            description:
+                              "missing required request field 'interact'"
                           }
                         })
                       } else {
@@ -338,8 +339,8 @@ describe('Grant Routes', (): void => {
         await expect(grantRoutes.create(ctx)).rejects.toMatchObject({
           status: 400,
           error: {
-            code: 'interaction_required',
-            description: 'missing required request field'
+            code: 'invalid_request',
+            description: "missing required request field 'interact'"
           }
         })
       })
@@ -441,7 +442,7 @@ describe('Grant Routes', (): void => {
           status: 400,
           error: {
             code: 'invalid_client',
-            description: 'missing required request field'
+            description: "missing required request field 'client'"
           }
         })
       })

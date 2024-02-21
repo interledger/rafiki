@@ -154,10 +154,10 @@ async function createPendingGrant(
   const { body } = ctx.request
   const { grantService, interactionService, config } = deps
   if (!body.interact) {
-    ctx.throw(400, 'interaction_required', {
+    ctx.throw(400, 'invalid_request', {
       error: {
-        code: 'interaction_required',
-        description: 'missing required request field'
+        code: 'invalid_request',
+        description: "missing required request field 'interact'"
       }
     })
   }
@@ -167,7 +167,7 @@ async function createPendingGrant(
     ctx.throw(400, 'invalid_client', {
       error: {
         code: 'invalid_client',
-        description: 'missing required request field'
+        description: "missing required request field 'client'"
       }
     })
   }
