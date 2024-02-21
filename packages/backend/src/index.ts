@@ -220,7 +220,7 @@ export function initIocContainer(
     const config = await deps.use('config')
 
     let telemetry: TelemetryService | undefined
-    if (config.enableTelemetry) {
+    if (config.enableTelemetry && config.openTelemetryCollectors.length > 0) {
       telemetry = await deps.use('telemetry')
     }
 
