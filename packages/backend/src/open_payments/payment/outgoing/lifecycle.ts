@@ -81,6 +81,13 @@ export async function handleSending(
     finalDebitAmount: maxDebitAmount,
     finalReceiveAmount: maxReceiveAmount
   })
+  deps.telemetry
+    ?.getOrCreateMetric('transactions_total', {
+      description: 'Count of funded transactions'
+    })
+    .add(1, {
+      source: deps.telemetry.getInstanceName()
+    })
 
   await handleCompleted(deps, payment)
 }

@@ -41,6 +41,7 @@ services:
       - rafiki
     environment:
       NODE_ENV: ${NODE_ENV:-development}
+      INSTANCE_NAME: CLOUD-NINE
       TRUST_PROXY: ${TRUST_PROXY}
       LOG_LEVEL: debug
       ADMIN_PORT: 3001
@@ -60,6 +61,7 @@ services:
       REDIS_URL: redis://shared-redis:6379/0
       WALLET_ADDRESS_URL: ${CLOUD_NINE_WALLET_ADDRESS_URL:-https://cloud-nine-wallet-backend/.well-known/pay}
       ILP_CONNECTOR_ADDRESS: ${CLOUD_NINE_CONNECTOR_URL}
+      ENABLE_TELEMETRY: false
     depends_on:
       - shared-database
       - shared-redis
@@ -118,6 +120,7 @@ services:
       ENABLE_INSECURE_MESSAGE_COOKIE: true
     depends_on:
       - cloud-nine-backend
+
 
 volumes:
   database-data: # named volumes can be managed easier using docker-compose
