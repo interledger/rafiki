@@ -16,12 +16,12 @@ Your local Rafiki instance will be automatically peered with the remote [Rafiki.
 The required services will be exposed externally using the [tunnelmole](https://www.npmjs.com/package/tunnelmole) package.
 The exposed ports are 3000(open-payments), 3006(auth server), 3002(ILP connector).
 
-To use the [Postman API examples](/playground/overview/#postman--open-payments-apis), follow these steps:
+To use the [Bruno API examples](/playground/overview/#bruno--open-payments-apis), follow these steps:
 
 1. run `docker logs rafiki-cloud-nine-mock-ase-1` (alternatively, check http://localhost:3030)
 2. find the list of created wallet addresses
 3. copy the url of one of the wallet addresses
-4. set the `senderWalletAddress` variable in the Postman `Remote Environment` to that wallet address
+4. set the `senderWalletAddress` variable in the Bruno `Remote` environment to that wallet address
 
 To shut down the connection and to clear the environment, run
 

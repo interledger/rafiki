@@ -137,7 +137,7 @@ export async function setupFromSeed(config: Config): Promise<void> {
   console.log(JSON.stringify(accountResponses, null, 2))
   const hostname = new URL(CONFIG.publicHost).hostname
   const envVarStrings = config.seed.accounts.map((account) => {
-    return `${account.postmanEnvVar}: ${CONFIG.publicHost}/${account.path} hostname: ${hostname}`
+    return `${account.brunoEnvVar}: ${CONFIG.publicHost}/${account.path} hostname: ${hostname}`
   })
   console.log(envVarStrings.join('\n'))
 }
