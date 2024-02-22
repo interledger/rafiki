@@ -40,7 +40,7 @@ export const Config = {
   enableTelemetry: envBool('ENABLE_TELEMETRY', true),
   livenet: envBool('LIVENET', false),
   openTelemetryCollectors: envStringArray(
-    'OPEN_TELEMETRY_COLLECTOR_URL',
+    'OPEN_TELEMETRY_COLLECTOR_URLS',
     process.env.LIVENET
       ? []
       : [
