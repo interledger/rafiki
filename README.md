@@ -4,7 +4,7 @@
 
 ## What is Rafiki?
 
-Rafiki is open source software that provides a more efficient method for an [Account Servicing Entity](https://rafiki.dev/concepts/account-servicing-entity/) to enable Interledger functionality on its users' accounts.
+Rafiki is open source software that provides an efficient solution for an [Account Servicing Entity](https://rafiki.dev/concepts/account-servicing-entity/) to enable Interledger functionality on its users' accounts.
 
 This includes
 
