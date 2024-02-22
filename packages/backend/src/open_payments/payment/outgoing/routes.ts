@@ -3,7 +3,12 @@ import { Logger } from 'pino'
 import { ReadContext, CreateContext, ListContext } from '../../../app'
 import { IAppConfig } from '../../../config/app'
 import { OutgoingPaymentService } from './service'
-import { isOutgoingPaymentError, errorToCode, errorToMessage } from './errors'
+import {
+  isOutgoingPaymentError,
+  errorToCode,
+  errorToMessage,
+  OutgoingPaymentError
+} from './errors'
 import { OutgoingPayment } from './model'
 import { listSubresource } from '../../wallet_address/routes'
 import {
@@ -49,8 +54,13 @@ async function getOutgoingPayment(
       id: ctx.params.id,
       client: ctx.accessAction === AccessAction.Read ? ctx.client : undefined
     })
-  } catch (_) {
-    ctx.throw(500, 'Error trying to get outgoing payment')
+  } catch (err) {
+    const errorMessage = 'Unhandled error when trying to get outgoing payment'
+    deps.logger.error(
+      { err, id: ctx.params.id, walletAddressId: ctx.walletAddress.id },
+      errorMessage
+    )
+    return ctx.throw(500, errorMessage)
   }
   if (!outgoingPayment || !outgoingPayment.walletAddress) return ctx.throw(404)
   ctx.body = outgoingPaymentToBody(
@@ -77,19 +87,34 @@ async function createOutgoingPayment(
     return ctx.throw(400, 'invalid quoteId')
   }
 
-  const paymentOrErr = await deps.outgoingPaymentService.create({
-    walletAddressId: ctx.walletAddress.id,
-    quoteId,
-    metadata: body.metadata,
-    client: ctx.client,
-    grant: ctx.grant
-  })
+  let outgoingPaymentOrError: OutgoingPayment | OutgoingPaymentError
 
-  if (isOutgoingPaymentError(paymentOrErr)) {
-    return ctx.throw(errorToCode[paymentOrErr], errorToMessage[paymentOrErr])
+  try {
+    outgoingPaymentOrError = await deps.outgoingPaymentService.create({
+      walletAddressId: ctx.walletAddress.id,
+      quoteId,
+      metadata: body.metadata,
+      client: ctx.client,
+      grant: ctx.grant
+    })
+  } catch (err) {
+    const errorMessage =
+      'Unhandled error when trying to create outgoing payment'
+    deps.logger.error(
+      { err, quoteId, walletAddressId: ctx.walletAddress.id },
+      errorMessage
+    )
+    return ctx.throw(500, errorMessage)
+  }
+
+  if (isOutgoingPaymentError(outgoingPaymentOrError)) {
+    return ctx.throw(
+      errorToCode[outgoingPaymentOrError],
+      errorToMessage[outgoingPaymentOrError]
+    )
   }
   ctx.status = 201
-  ctx.body = outgoingPaymentToBody(ctx.walletAddress, paymentOrErr)
+  ctx.body = outgoingPaymentToBody(ctx.walletAddress, outgoingPaymentOrError)
 }
 
 async function listOutgoingPayments(
@@ -106,7 +131,17 @@ async function listOutgoingPayments(
     if (err instanceof Koa.HttpError) {
       throw err
     }
-    ctx.throw(500, 'Error trying to list outgoing payments')
+
+    const errorMessage = 'Unhandled error when trying to list outgoing payments'
+    deps.logger.error(
+      {
+        err,
+        request: ctx.request.query,
+        walletAddressId: ctx.walletAddress.id
+      },
+      errorMessage
+    )
+    return ctx.throw(500, errorMessage)
   }
 }
 

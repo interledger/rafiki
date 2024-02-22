@@ -1,20 +1,20 @@
-import Axios from 'axios'
-import createLogger from 'pino'
-import { Knex } from 'knex'
-import nock from 'nock'
-import fetch from 'cross-fetch'
 import { IocContract } from '@adonisjs/fold'
 import {
   ApolloClient,
+  ApolloLink,
   InMemoryCache,
   NormalizedCacheObject,
-  createHttpLink,
-  ApolloLink
+  createHttpLink
 } from '@apollo/client'
-import { onError } from '@apollo/client/link/error'
 import { setContext } from '@apollo/client/link/context'
+import { onError } from '@apollo/client/link/error'
+import Axios from 'axios'
+import fetch from 'cross-fetch'
+import { Knex } from 'knex'
+import nock from 'nock'
+import createLogger from 'pino'
 
-import { start, gracefulShutdown } from '..'
+import { gracefulShutdown, start } from '..'
 import { App, AppServices } from '../app'
 export const testAccessToken = 'test-app-access'
 
