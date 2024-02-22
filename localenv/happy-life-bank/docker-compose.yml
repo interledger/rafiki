@@ -34,6 +34,7 @@ services:
       - rafiki
     environment:
       NODE_ENV: development
+      INSTANCE_NAME: HAPPY-LIFE
       LOG_LEVEL: debug
       ADMIN_PORT: 3001
       CONNECTOR_PORT: 3002
@@ -51,6 +52,7 @@ services:
       EXCHANGE_RATES_URL: http://happy-life-bank/rates
       REDIS_URL: redis://shared-redis:6379/1
       WALLET_ADDRESS_URL: ${HAPPY_LIFE_BANK_WALLET_ADDRESS_URL:-https://happy-life-bank-backend/.well-known/pay}
+      ENABLE_TELEMETRY: false
     depends_on:
       - cloud-nine-backend
   happy-life-auth:

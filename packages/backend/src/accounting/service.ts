@@ -1,5 +1,8 @@
 import { TransactionOrKnex } from 'objection'
-import { isTransferError, TransferError } from './errors'
+import { BaseService } from '../shared/baseService'
+import { TelemetryService } from '../telemetry/service'
+import { collectTelemetryAmount } from '../telemetry/transaction-amount'
+import { TransferError, isTransferError } from './errors'
 
 export enum LiquidityAccountType {
   ASSET = 'ASSET',
@@ -9,13 +12,17 @@ export enum LiquidityAccountType {
   WEB_MONETIZATION = 'WEB_MONETIZATION'
 }
 
+export interface LiquidityAccountAsset {
+  id: string
+  code?: string
+  scale?: number
+  ledger: number
+  onDebit?: (options: OnDebitOptions) => Promise<LiquidityAccount>
+}
+
 export interface LiquidityAccount {
   id: string
-  asset: {
-    id: string
-    ledger: number
-    onDebit?: (options: OnDebitOptions) => Promise<LiquidityAccount>
-  }
+  asset: LiquidityAccountAsset
   onCredit?: (options: OnCreditOptions) => Promise<LiquidityAccount>
   onDebit?: (options: OnDebitOptions) => Promise<LiquidityAccount>
 }
@@ -85,6 +92,11 @@ export interface TransferToCreate {
   ledger: number
 }
 
+export interface BaseAccountingServiceDependencies extends BaseService {
+  telemetry?: TelemetryService
+  withdrawalThrottleDelay?: number
+}
+
 interface CreateAccountToAccountTransferArgs {
   transferArgs: TransferOptions
   voidTransfers(transferIds: string[]): Promise<void | TransferError>
@@ -94,10 +106,10 @@ interface CreateAccountToAccountTransferArgs {
   createPendingTransfers(
     transfers: TransferToCreate[]
   ): Promise<string[] | TransferError>
-  withdrawalThrottleDelay?: number
 }
 
 export async function createAccountToAccountTransfer(
+  deps: BaseAccountingServiceDependencies,
   args: CreateAccountToAccountTransferArgs
 ): Promise<Transaction | TransferError> {
   const {
@@ -106,9 +118,10 @@ export async function createAccountToAccountTransfer(
     createPendingTransfers,
     getAccountReceived,
     getAccountBalance,
-    withdrawalThrottleDelay,
     transferArgs
   } = args
+
+  const { withdrawalThrottleDelay, telemetry, logger } = deps
 
   const { sourceAccount, destinationAccount, sourceAmount, destinationAmount } =
     transferArgs
@@ -181,6 +194,21 @@ export async function createAccountToAccountTransfer(
         await destinationAccount.onCredit({
           totalReceived,
           withdrawalThrottleDelay
+        })
+      }
+
+      if (
+        destinationAccount.onDebit &&
+        telemetry &&
+        sourceAccount.asset.code &&
+        sourceAccount.asset.scale
+      ) {
+        collectTelemetryAmount(telemetry, logger, {
+          amount: sourceAmount,
+          asset: {
+            code: sourceAccount.asset.code,
+            scale: sourceAccount.asset.scale
+          }
         })
       }
     },

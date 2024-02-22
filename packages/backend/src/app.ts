@@ -83,7 +83,7 @@ import { Rafiki as ConnectorApp } from './payment-method/ilp/connector/core'
 import { AxiosInstance } from 'axios'
 import { PaymentMethodHandlerService } from './payment-method/handler/service'
 import { IlpPaymentService } from './payment-method/ilp/service'
-
+import { TelemetryService } from './telemetry/service'
 export interface AppContextData {
   logger: Logger
   container: AppContainer
@@ -204,6 +204,8 @@ const WALLET_ADDRESS_PATH = '/:walletAddressPath+'
 
 export interface AppServices {
   logger: Promise<Logger>
+  telemetry?: Promise<TelemetryService>
+  internalRatesService?: Promise<RatesService>
   knex: Promise<Knex>
   axios: Promise<AxiosInstance>
   config: Promise<IAppConfig>
