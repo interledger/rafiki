@@ -9,6 +9,7 @@ import Koa, { DefaultState } from 'koa'
 import bodyParser from 'koa-bodyparser'
 import { Logger } from 'pino'
 import Router from '@koa/router'
+import cors from '@koa/cors'
 import { ApolloServer } from '@apollo/server'
 import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer'
 import { koaMiddleware } from '@as-integrations/koa'
@@ -583,6 +584,7 @@ export class App {
       walletAddressRoutes.get
     )
 
+    koa.use(cors())
     koa.use(router.routes())
 
     this.openPaymentsServer = koa.listen(port)
