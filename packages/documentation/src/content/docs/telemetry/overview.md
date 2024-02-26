@@ -16,7 +16,7 @@ We aim to track the growth of the network in terms of transaction sizes and the 
 
 Privacy is a paramount concern for us. Rafiki's telemetry feature is designed to provide valuable network insights without violating privacy or aiding malicious ASEs. For more information, please [read the privacy docs](../privacy).
 
-The telemetry functionality, while optional for Application Service Environments (ASEs), is enabled by default. When active, it transmits metrics to the TESTNET collector. However, for those operating in a production environment, there is an option to redirect these metrics. By defining the LIVENET environment variable, the metrics will be sent to the LIVENET collector instead.
+The telemetry functionality is currently enabled by default on non-livenet enviroment, i.e. any environment that is not dealing with real money. Account Servicing Entities (ASEs) can opt-out of telemetry completely. When active, it transmits metrics to the TESTNET collector. In the future, those ASEs operating in a production livenet environment (real money) can opt-in to share their metrics with a LIVENET collector.  
 
 ## Architecture
 
