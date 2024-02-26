@@ -4,14 +4,15 @@ import fetch from 'cross-fetch'
 import { IocContract } from '@adonisjs/fold'
 import {
   ApolloClient,
+  ApolloLink,
   InMemoryCache,
   NormalizedCacheObject,
-  createHttpLink,
-  ApolloLink
+  createHttpLink
 } from '@apollo/client'
-import { onError } from '@apollo/client/link/error'
 import { setContext } from '@apollo/client/link/context'
 import { start, gracefulShutdown } from '..'
+import { onError } from '@apollo/client/link/error'
+
 import { App, AppServices } from '../app'
 
 export const testAccessToken = 'test-app-access'

@@ -11,7 +11,7 @@
     "typecheck": "tsc"
   },
   "dependencies": {
-    "@apollo/client": "^3.8.10",
+    "@apollo/client": "^3.9.5",
     "@headlessui/react": "^1.7.18",
     "@remix-run/node": "^2.6.0",
     "@remix-run/react": "^2.6.0",
@@ -29,8 +29,8 @@
     "@remix-run/dev": "^2.6.0",
     "@remix-run/eslint-config": "^2.6.0",
     "@tailwindcss/forms": "^0.5.7",
-    "@types/react": "^18.2.51",
-    "@types/react-dom": "^18.2.18",
+    "@types/react": "^18.2.57",
+    "@types/react-dom": "^18.2.19",
     "@types/uuid": "^9.0.8",
     "autoprefixer": "^10.4.17",
     "eslint": "^8.56.0",

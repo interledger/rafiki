@@ -7,6 +7,7 @@ import {
 } from './model'
 import { ServiceDependencies } from './service'
 import { Receiver } from '../../receiver/model'
+import { TransactionOrKnex } from 'objection'
 
 // "payment" is locked by the "deps.knex" transaction.
 export async function handleSending(
@@ -80,6 +81,13 @@ export async function handleSending(
     finalDebitAmount: maxDebitAmount,
     finalReceiveAmount: maxReceiveAmount
   })
+  deps.telemetry
+    ?.getOrCreateMetric('transactions_total', {
+      description: 'Count of funded transactions'
+    })
+    .add(1, {
+      source: deps.telemetry.getInstanceName()
+    })
 
   await handleCompleted(deps, payment)
 }
@@ -143,7 +151,8 @@ async function handleCompleted(
 export async function sendWebhookEvent(
   deps: ServiceDependencies,
   payment: OutgoingPayment,
-  type: OutgoingPaymentEventType
+  type: OutgoingPaymentEventType,
+  trx?: TransactionOrKnex
 ): Promise<void> {
   // TigerBeetle accounts are only created as the OutgoingPayment is funded.
   // So default the amountSent and balance to 0 for outgoing payments still in the funding state
@@ -168,7 +177,7 @@ export async function sendWebhookEvent(
       }
     : undefined
 
-  await OutgoingPaymentEvent.query(deps.knex).insert({
+  await OutgoingPaymentEvent.query(trx || deps.knex).insert({
     outgoingPaymentId: payment.id,
     type,
     data: payment.toData({ amountSent, balance }),
