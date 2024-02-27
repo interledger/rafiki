@@ -22,7 +22,7 @@ assets:
 peeringAsset: 'USD'
 peers:
   - initialLiquidity: '1000000000000'
-    peerUrl: http://cloud-nine-wallet-backend:3002
+    peerUrl: http://host.docker.internal:3002
     peerIlpAddress: test.cloud-nine-wallet
     liquidityThreshold: 1000000
 accounts:

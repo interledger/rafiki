@@ -22,7 +22,7 @@ assets:
 peeringAsset: 'USD'
 peers:
   - initialLiquidity: '10000000'
-    peerUrl: http://happy-life-bank-backend:3002
+    peerUrl: http://host.docker.internal:4002
     peerIlpAddress: test.happy-life-bank
     liquidityThreshold: 1000000
 accounts:

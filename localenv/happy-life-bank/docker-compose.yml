@@ -1,7 +1,7 @@
 name: hl
 services:
   happy-life-mock-ase:
-    hostname: happy-life-bank
+    # hostname: happy-life-bank
     image: rafiki-mock-ase
     pull_policy: never
     restart: always
@@ -14,7 +14,10 @@ services:
       PORT: 80
       SEED_FILE_LOCATION: /workspace/seed.yml
       KEY_FILE: /workspace/private-key.pem
-      OPEN_PAYMENTS_URL: ${HAPPY_LIFE_BANK_OPEN_PAYMENTS_URL:-https://happy-life-bank-backend}
+      OPEN_PAYMENTS_URL: ${HAPPY_LIFE_BANK_OPEN_PAYMENTS_URL:-https://host.docker.internal:4000}
+      GRAPHQL_URL: http://host.docker.internal:4001/graphql
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
     volumes:
       - ../happy-life-bank/seed.yml:/workspace/seed.yml
       - ../happy-life-bank/private-key.pem:/workspace/private-key.pem
@@ -22,7 +25,7 @@ services:
       - cloud-nine-mock-ase
       - happy-life-backend
   happy-life-backend:
-    hostname: happy-life-bank-backend
+    # hostname: happy-life-bank-backend
     image: rafiki-backend
     pull_policy: never
     restart: always
@@ -30,6 +33,7 @@ services:
     ports:
       - "4000:80"
       - "4001:3001"
+      - "4002:3002"
     networks:
       - rafiki
     environment:
@@ -43,20 +47,22 @@ services:
       USE_TIGERBEETLE: ${USE_TIGERBEETLE-false}
       TIGERBEETLE_CLUSTER_ID: ${TIGERBEETLE_CLUSTER_ID-0}
       TIGERBEETLE_REPLICA_ADDRESSES: ${TIGERBEETLE_REPLICA_ADDRESSES-''}
-      AUTH_SERVER_GRANT_URL: ${HAPPY_LIFE_BANK_AUTH_SERVER_DOMAIN:-http://happy-life-bank-auth:3006}
-      AUTH_SERVER_INTROSPECTION_URL: http://happy-life-bank-auth:3007
+      AUTH_SERVER_GRANT_URL: ${HAPPY_LIFE_BANK_AUTH_SERVER_DOMAIN:-http://host.docker.internal:4006}
+      AUTH_SERVER_INTROSPECTION_URL: http://host.docker.internal:4007
       ILP_ADDRESS: test.happy-life-bank
       STREAM_SECRET: BjPXtnd00G2mRQwP/8ZpwyZASOch5sUXT5o0iR5b5wU=
-      WEBHOOK_URL: http://happy-life-bank/webhooks
-      OPEN_PAYMENTS_URL: ${HAPPY_LIFE_BANK_OPEN_PAYMENTS_URL:-http://happy-life-bank-backend}
-      EXCHANGE_RATES_URL: http://happy-life-bank/rates
+      WEBHOOK_URL: http://host.docker.internal:3031/webhooks
+      OPEN_PAYMENTS_URL: ${HAPPY_LIFE_BANK_OPEN_PAYMENTS_URL:-http://host.docker.internal:4000}
+      EXCHANGE_RATES_URL: http://host.docker.internal:3031/rates
       REDIS_URL: redis://shared-redis:6379/1
-      WALLET_ADDRESS_URL: ${HAPPY_LIFE_BANK_WALLET_ADDRESS_URL:-https://happy-life-bank-backend/.well-known/pay}
+      WALLET_ADDRESS_URL: ${HAPPY_LIFE_BANK_WALLET_ADDRESS_URL:-https://host.docker.internal:4000/.well-known/pay}
       ENABLE_TELEMETRY: false
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
     depends_on:
       - cloud-nine-backend
   happy-life-auth:
-    hostname: happy-life-bank-auth
+    # hostname: happy-life-bank-auth
     image: rafiki-auth
     pull_policy: never
     restart: always
@@ -65,14 +71,17 @@ services:
     ports:
       - '4003:3003'
       - '4006:3006'
+      - '4007:3007'
     environment:
       NODE_ENV: development
       AUTH_DATABASE_URL: postgresql://happy_life_bank_auth:happy_life_bank_auth@shared-database/happy_life_bank_auth
-      AUTH_SERVER_DOMAIN: ${HAPPY_LIFE_BANK_AUTH_SERVER_DOMAIN:-http://localhost:4006}
+      AUTH_SERVER_DOMAIN: ${HAPPY_LIFE_BANK_AUTH_SERVER_DOMAIN:-http://host.docker.internal:4006}
     depends_on:
       - cloud-nine-auth
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'      
   happy-life-admin:
-    hostname: happy-life-bank-admin
+    # hostname: happy-life-bank-admin
     image: rafiki-frontend
     pull_policy: never
     restart: always
@@ -82,9 +91,12 @@ services:
       - '4010:4010'
     environment:
       PORT: 4010
-      GRAPHQL_URL: http://happy-life-bank-backend:3001/graphql
-      OPEN_PAYMENTS_URL: https://happy-life-bank-backend/
+      GRAPHQL_URL: http://host.docker.internal:3001/graphql
+      OPEN_PAYMENTS_URL: https://host.docker.internal/
       ENABLE_INSECURE_MESSAGE_COOKIE: true
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
     depends_on:
       - cloud-nine-admin
       - happy-life-backend
+
