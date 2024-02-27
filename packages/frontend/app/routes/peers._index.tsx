@@ -4,6 +4,7 @@ import { PageHeader } from '~/components'
 import { Button, Table } from '~/components/ui'
 import { listPeers } from '~/lib/api/peer.server'
 import { paginationSchema } from '~/lib/validate.server'
+import { authStorage, getApiToken } from '~/lib/auth.server'
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const url = new URL(request.url)
@@ -15,9 +16,15 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     throw json(null, { status: 400, statusText: 'Invalid pagination.' })
   }
 
-  const peers = await listPeers({
-    ...pagination.data
-  })
+  const session = await authStorage.getSession(request.headers.get('cookie'))
+  const apiToken = getApiToken(session) as string
+
+  const peers = await listPeers(
+    {
+      ...pagination.data
+    },
+    apiToken
+  )
 
   let previousPageUrl = '',
     nextPageUrl = ''

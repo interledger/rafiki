@@ -24,9 +24,10 @@ import type {
   WithdrawAssetLiquidity,
   WithdrawAssetLiquidityVariables
 } from '~/generated/graphql'
-import { apolloClient } from '../apollo.server'
+import { getApolloClient } from '../apollo.server'
 
-export const getAssetInfo = async (args: QueryAssetArgs) => {
+export const getAssetInfo = async (args: QueryAssetArgs, apiToken: string) => {
+  const apolloClient = getApolloClient(apiToken)
   const response = await apolloClient.query<
     GetAssetQuery,
     GetAssetQueryVariables
@@ -53,7 +54,11 @@ export const getAssetInfo = async (args: QueryAssetArgs) => {
   return response.data.asset
 }
 
-export const getAssetWithFees = async (args: QueryAssetArgs) => {
+export const getAssetWithFees = async (
+  args: QueryAssetArgs,
+  apiToken: string
+) => {
+  const apolloClient = getApolloClient(apiToken)
   const response = await apolloClient.query<
     GetAssetWithFeesQuery,
     GetAssetWithFeesQueryVariables
@@ -94,7 +99,8 @@ export const getAssetWithFees = async (args: QueryAssetArgs) => {
   return response.data.asset
 }
 
-export const listAssets = async (args: QueryAssetsArgs) => {
+export const listAssets = async (args: QueryAssetsArgs, apiToken: string) => {
+  const apolloClient = getApolloClient(apiToken)
   const response = await apolloClient.query<
     ListAssetsQuery,
     ListAssetsQueryVariables
@@ -131,7 +137,8 @@ export const listAssets = async (args: QueryAssetsArgs) => {
   return response.data.assets
 }
 
-export const createAsset = async (args: CreateAssetInput) => {
+export const createAsset = async (args: CreateAssetInput, apiToken: string) => {
+  const apolloClient = getApolloClient(apiToken)
   const response = await apolloClient.mutate<
     CreateAssetMutation,
     CreateAssetMutationVariables
@@ -156,7 +163,8 @@ export const createAsset = async (args: CreateAssetInput) => {
   return response.data?.createAsset
 }
 
-export const updateAsset = async (args: UpdateAssetInput) => {
+export const updateAsset = async (args: UpdateAssetInput, apiToken: string) => {
+  const apolloClient = getApolloClient(apiToken)
   const response = await apolloClient.mutate<
     UpdateAssetMutation,
     UpdateAssetMutationVariables
@@ -178,7 +186,8 @@ export const updateAsset = async (args: UpdateAssetInput) => {
   return response.data?.updateAsset
 }
 
-export const setFee = async (args: SetFeeInput) => {
+export const setFee = async (args: SetFeeInput, apiToken: string) => {
+  const apolloClient = getApolloClient(apiToken)
   const response = await apolloClient.mutate<
     SetFeeMutation,
     SetFeeMutationVariables
@@ -209,8 +218,10 @@ export const setFee = async (args: SetFeeInput) => {
 }
 
 export const depositAssetLiquidity = async (
-  args: DepositAssetLiquidityInput
+  args: DepositAssetLiquidityInput,
+  apiToken: string
 ) => {
+  const apolloClient = getApolloClient(apiToken)
   const response = await apolloClient.mutate<
     DepositAssetLiquidityMutation,
     DepositAssetLiquidityMutationVariables
@@ -236,8 +247,10 @@ export const depositAssetLiquidity = async (
 }
 
 export const withdrawAssetLiquidity = async (
-  args: CreateAssetLiquidityWithdrawalInput
+  args: CreateAssetLiquidityWithdrawalInput,
+  apiToken: string
 ) => {
+  const apolloClient = getApolloClient(apiToken)
   const response = await apolloClient.mutate<
     WithdrawAssetLiquidity,
     WithdrawAssetLiquidityVariables
@@ -262,13 +275,13 @@ export const withdrawAssetLiquidity = async (
   return response.data?.createAssetLiquidityWithdrawal
 }
 
-export const loadAssets = async () => {
+export const loadAssets = async (apiToken: string) => {
   let assets: ListAssetsQuery['assets']['edges'] = []
   let hasNextPage = true
   let after: string | undefined
 
   while (hasNextPage) {
-    const response = await listAssets({ first: 100, after })
+    const response = await listAssets({ first: 100, after }, apiToken)
 
     if (response.edges) {
       assets = [...assets, ...response.edges]

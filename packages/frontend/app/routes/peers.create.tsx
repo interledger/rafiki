@@ -1,4 +1,8 @@
-import { json, type ActionFunctionArgs } from '@remix-run/node'
+import {
+  json,
+  type ActionFunctionArgs,
+  type LoaderFunctionArgs
+} from '@remix-run/node'
 import {
   Form,
   useActionData,
@@ -10,11 +14,16 @@ import { Button, ErrorPanel, Input, Select } from '~/components/ui'
 import { loadAssets } from '~/lib/api/asset.server'
 import { createPeer } from '~/lib/api/peer.server'
 import { messageStorage, setMessageAndRedirect } from '~/lib/message.server'
+import { authStorage, getApiToken } from '~/lib/auth.server'
 import { createPeerSchema } from '~/lib/validate.server'
 import type { ZodFieldErrors } from '~/shared/types'
 
-export async function loader() {
-  return json({ assets: await loadAssets() })
+export async function loader({ request }: LoaderFunctionArgs) {
+  const authSession = await authStorage.getSession(
+    request.headers.get('cookie')
+  )
+  const apiToken = getApiToken(authSession) as string
+  return json({ assets: await loadAssets(apiToken) })
 }
 
 export default function CreatePeerPage() {
@@ -136,6 +145,10 @@ export default function CreatePeerPage() {
 }
 
 export async function action({ request }: ActionFunctionArgs) {
+  const authSession = await authStorage.getSession(
+    request.headers.get('cookie')
+  )
+  const apiToken = getApiToken(authSession) as string
   const errors: {
     fieldErrors: ZodFieldErrors<typeof createPeerSchema>
     message: string[]
@@ -153,27 +166,30 @@ export async function action({ request }: ActionFunctionArgs) {
     return json({ errors }, { status: 400 })
   }
 
-  const response = await createPeer({
-    name: result.data.name,
-    http: {
-      outgoing: {
-        endpoint: result.data.outgoingEndpoint,
-        authToken: result.data.outgoingAuthToken
+  const response = await createPeer(
+    {
+      name: result.data.name,
+      http: {
+        outgoing: {
+          endpoint: result.data.outgoingEndpoint,
+          authToken: result.data.outgoingAuthToken
+        },
+        incoming: result.data.incomingAuthTokens
+          ? {
+              authTokens: result.data.incomingAuthTokens
+                ?.replace(/ /g, '')
+                .split(',')
+            }
+          : undefined
       },
-      incoming: result.data.incomingAuthTokens
-        ? {
-            authTokens: result.data.incomingAuthTokens
-              ?.replace(/ /g, '')
-              .split(',')
-          }
-        : undefined
+      assetId: result.data.asset,
+      staticIlpAddress: result.data.staticIlpAddress,
+      ...(result.data.maxPacketAmount
+        ? { maxPacketAmount: result.data.maxPacketAmount }
+        : { maxPacketAmount: undefined })
     },
-    assetId: result.data.asset,
-    staticIlpAddress: result.data.staticIlpAddress,
-    ...(result.data.maxPacketAmount
-      ? { maxPacketAmount: result.data.maxPacketAmount }
-      : { maxPacketAmount: undefined })
-  })
+    apiToken
+  )
 
   if (!response?.success) {
     errors.message = [
@@ -182,10 +198,12 @@ export async function action({ request }: ActionFunctionArgs) {
     return json({ errors }, { status: 400 })
   }
 
-  const session = await messageStorage.getSession(request.headers.get('cookie'))
+  const messageSession = await messageStorage.getSession(
+    request.headers.get('cookie')
+  )
 
   return setMessageAndRedirect({
-    session,
+    session: messageSession,
     message: {
       content: 'Peer created.',
       type: 'success'

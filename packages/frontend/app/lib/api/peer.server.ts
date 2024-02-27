@@ -22,9 +22,10 @@ import type {
   WithdrawPeerLiquidity,
   WithdrawPeerLiquidityVariables
 } from '~/generated/graphql'
-import { apolloClient } from '../apollo.server'
+import { getApolloClient } from '../apollo.server'
 
-export const getPeer = async (args: QueryPeerArgs) => {
+export const getPeer = async (args: QueryPeerArgs, apiToken: string) => {
+  const apolloClient = getApolloClient(apiToken)
   const response = await apolloClient.query<
     GetPeerQuery,
     GetPeerQueryVariables
@@ -59,7 +60,8 @@ export const getPeer = async (args: QueryPeerArgs) => {
   return response.data.peer
 }
 
-export const listPeers = async (args: QueryPeersArgs) => {
+export const listPeers = async (args: QueryPeersArgs, apiToken: string) => {
+  const apolloClient = getApolloClient(apiToken)
   const response = await apolloClient.query<
     ListPeersQuery,
     ListPeersQueryVariables
@@ -103,7 +105,8 @@ export const listPeers = async (args: QueryPeersArgs) => {
   return response.data.peers
 }
 
-export const createPeer = async (args: CreatePeerInput) => {
+export const createPeer = async (args: CreatePeerInput, apiToken: string) => {
+  const apolloClient = getApolloClient(apiToken)
   const response = await apolloClient.mutate<
     CreatePeerMutation,
     CreatePeerMutationVariables
@@ -128,7 +131,8 @@ export const createPeer = async (args: CreatePeerInput) => {
   return response.data?.createPeer
 }
 
-export const updatePeer = async (args: UpdatePeerInput) => {
+export const updatePeer = async (args: UpdatePeerInput, apiToken: string) => {
+  const apolloClient = getApolloClient(apiToken)
   const response = await apolloClient.mutate<
     UpdatePeerMutation,
     UpdatePeerMutationVariables
@@ -150,7 +154,11 @@ export const updatePeer = async (args: UpdatePeerInput) => {
   return response.data?.updatePeer
 }
 
-export const deletePeer = async (args: MutationDeletePeerArgs) => {
+export const deletePeer = async (
+  args: MutationDeletePeerArgs,
+  apiToken: string
+) => {
+  const apolloClient = getApolloClient(apiToken)
   const response = await apolloClient.mutate<
     DeletePeerMutation,
     DeletePeerMutationVariables
@@ -170,7 +178,11 @@ export const deletePeer = async (args: MutationDeletePeerArgs) => {
   return response.data?.deletePeer
 }
 
-export const depositPeerLiquidity = async (args: DepositPeerLiquidityInput) => {
+export const depositPeerLiquidity = async (
+  args: DepositPeerLiquidityInput,
+  apiToken: string
+) => {
+  const apolloClient = getApolloClient(apiToken)
   const response = await apolloClient.mutate<
     DepositPeerLiquidityMutation,
     DepositPeerLiquidityMutationVariables
@@ -196,8 +208,10 @@ export const depositPeerLiquidity = async (args: DepositPeerLiquidityInput) => {
 }
 
 export const withdrawPeerLiquidity = async (
-  args: CreatePeerLiquidityWithdrawalInput
+  args: CreatePeerLiquidityWithdrawalInput,
+  apiToken: string
 ) => {
+  const apolloClient = getApolloClient(apiToken)
   const response = await apolloClient.mutate<
     WithdrawPeerLiquidity,
     WithdrawPeerLiquidityVariables

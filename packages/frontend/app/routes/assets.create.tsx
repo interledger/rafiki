@@ -4,6 +4,7 @@ import { PageHeader } from '~/components'
 import { Button, ErrorPanel, Input } from '~/components/ui'
 import { createAsset } from '~/lib/api/asset.server'
 import { messageStorage, setMessageAndRedirect } from '~/lib/message.server'
+import { authStorage, getApiToken } from '~/lib/auth.server'
 import { createAssetSchema } from '~/lib/validate.server'
 import type { ZodFieldErrors } from '~/shared/types'
 
@@ -89,12 +90,20 @@ export async function action({ request }: ActionFunctionArgs) {
     return json({ errors }, { status: 400 })
   }
 
-  const response = await createAsset({
-    ...result.data,
-    ...(result.data.withdrawalThreshold
-      ? { withdrawalThreshold: result.data.withdrawalThreshold }
-      : { withdrawalThreshold: undefined })
-  })
+  const authSession = await authStorage.getSession(
+    request.headers.get('cookie')
+  )
+  const apiToken = getApiToken(authSession) as string
+
+  const response = await createAsset(
+    {
+      ...result.data,
+      ...(result.data.withdrawalThreshold
+        ? { withdrawalThreshold: result.data.withdrawalThreshold }
+        : { withdrawalThreshold: undefined })
+    },
+    apiToken
+  )
 
   if (!response?.success) {
     errors.message = [

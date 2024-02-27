@@ -6,6 +6,7 @@ import { Badge, PageHeader } from '~/components'
 import { Button } from '~/components/ui'
 import { OutgoingPaymentState } from '~/generated/graphql'
 import { getOutgoingPayment } from '~/lib/api/payments.server'
+import { authStorage, getApiToken } from '~/lib/auth.server'
 import {
   badgeColorByPaymentState,
   formatAmount,
@@ -17,7 +18,7 @@ export type LiquidityActionOutletContext = {
   depositLiquidityDisplayAmount: string
 }[]
 
-export async function loader({ params }: LoaderFunctionArgs) {
+export async function loader({ request, params }: LoaderFunctionArgs) {
   const outgoingPaymentId = params.outgoingPaymentId
 
   const result = z.string().uuid().safeParse(outgoingPaymentId)
@@ -28,7 +29,15 @@ export async function loader({ params }: LoaderFunctionArgs) {
     })
   }
 
-  const outgoingPayment = await getOutgoingPayment({ id: result.data })
+  const authSession = await authStorage.getSession(
+    request.headers.get('cookie')
+  )
+  const apiToken = getApiToken(authSession) as string
+
+  const outgoingPayment = await getOutgoingPayment(
+    { id: result.data },
+    apiToken
+  )
 
   if (!outgoingPayment) {
     throw json(null, { status: 400, statusText: 'Outgoing payment not found.' })

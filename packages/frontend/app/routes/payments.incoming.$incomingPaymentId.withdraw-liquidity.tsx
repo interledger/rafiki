@@ -4,6 +4,7 @@ import { v4 } from 'uuid'
 import { LiquidityConfirmDialog } from '~/components/LiquidityConfirmDialog'
 import { withdrawIncomingPaymentLiquidity } from '~/lib/api/payments.server'
 import { messageStorage, setMessageAndRedirect } from '~/lib/message.server'
+import { authStorage, getApiToken } from '~/lib/auth.server'
 
 export default function IncomingPaymentWithdrawLiquidity() {
   const displayLiquidityAmount = useOutletContext<string>()
@@ -21,12 +22,14 @@ export default function IncomingPaymentWithdrawLiquidity() {
 }
 
 export async function action({ request, params }: ActionFunctionArgs) {
-  const session = await messageStorage.getSession(request.headers.get('cookie'))
+  const messageSession = await messageStorage.getSession(
+    request.headers.get('cookie')
+  )
   const incomingPaymentId = params.incomingPaymentId
 
   if (!incomingPaymentId) {
     return setMessageAndRedirect({
-      session,
+      session: messageSession,
       message: {
         content: 'Missing incoming payment ID',
         type: 'error'
@@ -35,14 +38,22 @@ export async function action({ request, params }: ActionFunctionArgs) {
     })
   }
 
-  const response = await withdrawIncomingPaymentLiquidity({
-    incomingPaymentId,
-    idempotencyKey: v4()
-  })
+  const authSession = await authStorage.getSession(
+    request.headers.get('cookie')
+  )
+  const apiToken = getApiToken(authSession) as string
+
+  const response = await withdrawIncomingPaymentLiquidity(
+    {
+      incomingPaymentId,
+      idempotencyKey: v4()
+    },
+    apiToken
+  )
 
   if (!response?.success) {
     return setMessageAndRedirect({
-      session,
+      session: messageSession,
       message: {
         content:
           response?.message ??
@@ -54,7 +65,7 @@ export async function action({ request, params }: ActionFunctionArgs) {
   }
 
   return setMessageAndRedirect({
-    session,
+    session: messageSession,
     message: {
       content: response.message,
       type: 'success'

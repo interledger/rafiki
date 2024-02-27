@@ -8,6 +8,7 @@ import { useLoaderData } from '@remix-run/react'
 import { useEffect, useRef } from 'react'
 import axios from 'axios'
 import qs from 'qs'
+import { authStorage, setApiToken } from '../lib/auth.server'
 
 export default function Callback() {
   const data = useLoaderData<typeof loader>()
@@ -52,6 +53,7 @@ export const action = async ({ request }: ActionArgs) => {
   const formData = await request.formData()
   const authorizationCode = formData.get('code')
 
+  // Redirect or return a response
   try {
     const response = await axios.post(
       'http://hydra:4444/oauth2/token',
@@ -69,11 +71,12 @@ export const action = async ({ request }: ActionArgs) => {
       }
     )
 
-    console.log('Auth Token: ', response.data)
+    const session = await authStorage.getSession(request.headers.get('cookie'))
+    setApiToken(session, response.data.access_token)
+    return redirect('/', {
+      headers: { 'Set-Cookie': await authStorage.commitSession(session) }
+    })
   } catch (error) {
     throw new Error(`There was an error: ${error}`)
   }
-
-  // Redirect or return a response
-  return redirect('/')
 }

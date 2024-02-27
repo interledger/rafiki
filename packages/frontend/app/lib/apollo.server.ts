@@ -1,10 +1,7 @@
-import { ApolloClient, InMemoryCache } from '@apollo/client'
-import type { NormalizedCacheObject } from '@apollo/client'
+import { ApolloClient, InMemoryCache, createHttpLink } from '@apollo/client'
 
 /* eslint-disable no-var */
 declare global {
-  var __apolloClient: ApolloClient<NormalizedCacheObject> | undefined
-
   interface BigInt {
     toJSON(): string
   }
@@ -16,8 +13,8 @@ BigInt.prototype.toJSON = function (this: bigint) {
   return this.toString()
 }
 
-if (!global.__apolloClient) {
-  global.__apolloClient = new ApolloClient({
+export function getApolloClient(token?: string) {
+  return new ApolloClient({
     cache: new InMemoryCache({}),
     defaultOptions: {
       query: {
@@ -27,9 +24,11 @@ if (!global.__apolloClient) {
         fetchPolicy: 'no-cache'
       }
     },
-    uri: process.env.GRAPHQL_URL ?? 'http://localhost:3001/graphql'
+    link: createHttpLink({
+      uri: process.env.GRAPHQL_URL ?? 'http://localhost:3001/graphql',
+      headers: {
+        authorization: token ? `Bearer ${token}` : ''
+      }
+    })
   })
 }
-const apolloClient = global.__apolloClient
-
-export { apolloClient }

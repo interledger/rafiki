@@ -6,13 +6,14 @@ import { Badge, PageHeader } from '~/components'
 import { Button } from '~/components/ui'
 import { IncomingPaymentState } from '~/generated/graphql'
 import { getIncomingPayment } from '~/lib/api/payments.server'
+import { authStorage, getApiToken } from '~/lib/auth.server'
 import {
   badgeColorByPaymentState,
   formatAmount,
   prettify
 } from '~/shared/utils'
 
-export async function loader({ params }: LoaderFunctionArgs) {
+export async function loader({ request, params }: LoaderFunctionArgs) {
   const incomingPaymentId = params.incomingPaymentId
 
   const result = z.string().uuid().safeParse(incomingPaymentId)
@@ -23,7 +24,15 @@ export async function loader({ params }: LoaderFunctionArgs) {
     })
   }
 
-  const incomingPayment = await getIncomingPayment({ id: result.data })
+  const authSession = await authStorage.getSession(
+    request.headers.get('cookie')
+  )
+  const apiToken = getApiToken(authSession) as string
+
+  const incomingPayment = await getIncomingPayment(
+    { id: result.data },
+    apiToken
+  )
 
   if (!incomingPayment) {
     throw json(null, { status: 400, statusText: 'Incoming payment not found.' })

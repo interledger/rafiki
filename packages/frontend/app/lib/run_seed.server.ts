@@ -1,5 +1,5 @@
 import { CONFIG, type Config } from '../parse_config.server'
-import type { AxiosError } from 'axios';
+import type { AxiosError } from 'axios'
 import axios from 'axios'
 
 interface HydraClientData {

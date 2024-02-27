@@ -21,9 +21,13 @@ import {
   type GetOutgoingPaymentVariables,
   type GetOutgoingPayment
 } from '~/generated/graphql'
-import { apolloClient } from '../apollo.server'
+import { getApolloClient } from '../apollo.server'
 
-export const getIncomingPayment = async (args: QueryIncomingPaymentArgs) => {
+export const getIncomingPayment = async (
+  args: QueryIncomingPaymentArgs,
+  apiToken: string
+) => {
+  const apolloClient = getApolloClient(apiToken)
   await apolloClient.query
   const response = await apolloClient.query<
     GetIncomingPayment,
@@ -57,7 +61,11 @@ export const getIncomingPayment = async (args: QueryIncomingPaymentArgs) => {
   return response.data.incomingPayment
 }
 
-export const getOutgoingPayment = async (args: QueryOutgoingPaymentArgs) => {
+export const getOutgoingPayment = async (
+  args: QueryOutgoingPaymentArgs,
+  apiToken: string
+) => {
+  const apolloClient = getApolloClient(apiToken)
   const response = await apolloClient.query<
     GetOutgoingPayment,
     GetOutgoingPaymentVariables
@@ -96,7 +104,11 @@ export const getOutgoingPayment = async (args: QueryOutgoingPaymentArgs) => {
   return response.data.outgoingPayment
 }
 
-export const listPayments = async (args: QueryPaymentsArgs) => {
+export const listPayments = async (
+  args: QueryPaymentsArgs,
+  apiToken: string
+) => {
+  const apolloClient = getApolloClient(apiToken)
   const response = await apolloClient.query<
     ListPaymentsQuery,
     ListPaymentsQueryVariables
@@ -140,8 +152,10 @@ export const listPayments = async (args: QueryPaymentsArgs) => {
 }
 
 export const depositOutgoingPaymentLiquidity = async (
-  args: DepositOutgoingPaymentLiquidityInput
+  args: DepositOutgoingPaymentLiquidityInput,
+  apiToken: string
 ) => {
+  const apolloClient = getApolloClient(apiToken)
   const response = await apolloClient.mutate<
     DepositOutgoingPaymentLiquidity,
     DepositOutgoingPaymentLiquidityVariables
@@ -165,8 +179,10 @@ export const depositOutgoingPaymentLiquidity = async (
 }
 
 export const withdrawOutgoingPaymentLiquidity = async (
-  args: WithdrawOutgoingPaymentLiquidityInput
+  args: WithdrawOutgoingPaymentLiquidityInput,
+  apiToken: string
 ) => {
+  const apolloClient = getApolloClient(apiToken)
   const response = await apolloClient.mutate<
     WithdrawOutgoingPaymentLiquidity,
     WithdrawOutgoingPaymentLiquidityVariables
@@ -190,8 +206,10 @@ export const withdrawOutgoingPaymentLiquidity = async (
 }
 
 export const withdrawIncomingPaymentLiquidity = async (
-  args: WithdrawIncomingPaymentLiquidityInput
+  args: WithdrawIncomingPaymentLiquidityInput,
+  apiToken: string
 ) => {
+  const apolloClient = getApolloClient(apiToken)
   const response = await apolloClient.mutate<
     WithdrawIncomingPaymentLiquidity,
     WithdrawIncomingPaymentLiquidityVariables

@@ -18,11 +18,12 @@ import {
   updateWalletAddress
 } from '~/lib/api/wallet-address.server'
 import { messageStorage, setMessageAndRedirect } from '~/lib/message.server'
+import { authStorage, getApiToken } from '~/lib/auth.server'
 import { updateWalletAddressSchema } from '~/lib/validate.server'
 import type { ZodFieldErrors } from '~/shared/types'
 import { capitalize, formatAmount } from '~/shared/utils'
 
-export async function loader({ params }: LoaderFunctionArgs) {
+export async function loader({ request, params }: LoaderFunctionArgs) {
   const walletAddressId = params.walletAddressId
 
   const result = z.string().uuid().safeParse(walletAddressId)
@@ -30,7 +31,12 @@ export async function loader({ params }: LoaderFunctionArgs) {
     throw json(null, { status: 400, statusText: 'Invalid wallet address ID.' })
   }
 
-  const walletAddress = await getWalletAddress({ id: result.data })
+  const authSession = await authStorage.getSession(
+    request.headers.get('cookie')
+  )
+  const apiToken = getApiToken(authSession) as string
+
+  const walletAddress = await getWalletAddress({ id: result.data }, apiToken)
 
   if (!walletAddress) {
     throw json(null, { status: 404, statusText: 'Wallet address not found.' })
@@ -212,9 +218,17 @@ export async function action({ request }: ActionFunctionArgs) {
     return json({ ...actionResponse }, { status: 400 })
   }
 
-  const response = await updateWalletAddress({
-    ...result.data
-  })
+  const authSession = await authStorage.getSession(
+    request.headers.get('cookie')
+  )
+  const apiToken = getApiToken(authSession) as string
+
+  const response = await updateWalletAddress(
+    {
+      ...result.data
+    },
+    apiToken
+  )
 
   if (!response?.success) {
     actionResponse.errors.message = [
@@ -224,10 +238,12 @@ export async function action({ request }: ActionFunctionArgs) {
     return json({ ...actionResponse }, { status: 400 })
   }
 
-  const session = await messageStorage.getSession(request.headers.get('cookie'))
+  const messageSession = await messageStorage.getSession(
+    request.headers.get('cookie')
+  )
 
   return setMessageAndRedirect({
-    session,
+    session: messageSession,
     message: {
       content: 'Wallet address was updated',
       type: 'success'

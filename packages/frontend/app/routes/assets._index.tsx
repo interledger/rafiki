@@ -4,6 +4,7 @@ import { PageHeader } from '~/components'
 import { Button, Table } from '~/components/ui'
 import { listAssets } from '~/lib/api/asset.server'
 import { paginationSchema } from '~/lib/validate.server'
+import { authStorage, getApiToken } from '~/lib/auth.server'
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const url = new URL(request.url)
@@ -15,9 +16,17 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     throw json(null, { status: 400, statusText: 'Invalid pagination.' })
   }
 
-  const assets = await listAssets({
-    ...pagination.data
-  })
+  const authSession = await authStorage.getSession(
+    request.headers.get('cookie')
+  )
+  const apiToken = getApiToken(authSession) as string
+
+  const assets = await listAssets(
+    {
+      ...pagination.data
+    },
+    apiToken
+  )
 
   let previousPageUrl = '',
     nextPageUrl = ''

@@ -2,6 +2,8 @@
 import { type Session, type SessionData, redirect } from '@remix-run/node'
 import { createCookieSessionStorage } from '@remix-run/node'
 
+const API_TOKEN_SESSION_NAME = 'api_token'
+
 export type AuthStorageData = {
   loginChallenge?: string
   consetChallenge?: string
@@ -30,12 +32,20 @@ export function setConsentSession(session: Session, consentChallenge: string) {
   session.set('consent_challenge', consentChallenge)
 }
 
+export function setApiToken(session: Session, apiToken: string) {
+  session.set(API_TOKEN_SESSION_NAME, apiToken)
+}
+
 export function getLoginChallenge(session: Session): string | null {
   return session.get('login_challenge')
 }
 
 export function getConsentChallenge(session: Session): string | null {
   return session.get('consent_challenge')
+}
+
+export function getApiToken(session: Session): string | null {
+  return session.get(API_TOKEN_SESSION_NAME)
 }
 
 export async function redirectWithChallenge(

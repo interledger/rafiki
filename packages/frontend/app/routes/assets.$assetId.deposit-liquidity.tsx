@@ -4,6 +4,7 @@ import { v4 } from 'uuid'
 import { LiquidityDialog } from '~/components/LiquidityDialog'
 import { depositAssetLiquidity } from '~/lib/api/asset.server'
 import { messageStorage, setMessageAndRedirect } from '~/lib/message.server'
+import { authStorage, getApiToken } from '~/lib/auth.server'
 import { amountSchema } from '~/lib/validate.server'
 
 export default function AssetDepositLiquidity() {
@@ -48,12 +49,20 @@ export async function action({ request, params }: ActionFunctionArgs) {
     })
   }
 
-  const response = await depositAssetLiquidity({
-    assetId,
-    amount: result.data,
-    id: v4(),
-    idempotencyKey: v4()
-  })
+  const authSession = await authStorage.getSession(
+    request.headers.get('cookie')
+  )
+  const apiToken = getApiToken(authSession) as string
+
+  const response = await depositAssetLiquidity(
+    {
+      assetId,
+      amount: result.data,
+      id: v4(),
+      idempotencyKey: v4()
+    },
+    apiToken
+  )
 
   if (!response?.success) {
     return setMessageAndRedirect({

@@ -4,6 +4,7 @@ import { v4 } from 'uuid'
 import { LiquidityConfirmDialog } from '~/components/LiquidityConfirmDialog'
 import { withdrawOutgoingPaymentLiquidity } from '~/lib/api/payments.server'
 import { messageStorage, setMessageAndRedirect } from '~/lib/message.server'
+import { authStorage, getApiToken } from '~/lib/auth.server'
 import type { LiquidityActionOutletContext } from './payments.outgoing.$outgoingPaymentId'
 
 export default function OutgoingPaymentWithdrawLiquidity() {
@@ -23,12 +24,14 @@ export default function OutgoingPaymentWithdrawLiquidity() {
 }
 
 export async function action({ request, params }: ActionFunctionArgs) {
-  const session = await messageStorage.getSession(request.headers.get('cookie'))
+  const messageSession = await messageStorage.getSession(
+    request.headers.get('cookie')
+  )
   const outgoingPaymentId = params.outgoingPaymentId
 
   if (!outgoingPaymentId) {
     return setMessageAndRedirect({
-      session,
+      session: messageSession,
       message: {
         content: 'Missing outgoing payment ID',
         type: 'error'
@@ -37,14 +40,22 @@ export async function action({ request, params }: ActionFunctionArgs) {
     })
   }
 
-  const response = await withdrawOutgoingPaymentLiquidity({
-    outgoingPaymentId,
-    idempotencyKey: v4()
-  })
+  const authSession = await authStorage.getSession(
+    request.headers.get('cookie')
+  )
+  const apiToken = getApiToken(authSession) as string
+
+  const response = await withdrawOutgoingPaymentLiquidity(
+    {
+      outgoingPaymentId,
+      idempotencyKey: v4()
+    },
+    apiToken
+  )
 
   if (!response?.success) {
     return setMessageAndRedirect({
-      session,
+      session: messageSession,
       message: {
         content:
           response?.message ??
@@ -56,7 +67,7 @@ export async function action({ request, params }: ActionFunctionArgs) {
   }
 
   return setMessageAndRedirect({
-    session,
+    session: messageSession,
     message: {
       content: response.message,
       type: 'success'
