@@ -1,4 +1,3 @@
-import nock from 'nock'
 import { IlpPaymentService, retryableIlpErrors } from './service'
 import { initIocContainer } from '../../'
 import { createTestApp, TestContainer } from '../../tests/app'
@@ -21,6 +20,8 @@ import { AccountingService } from '../../accounting/service'
 import { IncomingPayment } from '../../open_payments/payment/incoming/model'
 import { truncateTables } from '../../tests/tableManager'
 import { createOutgoingPaymentWithReceiver } from '../../tests/outgoingPayment'
+
+const nock = (global as unknown as { nock: typeof import('nock') }).nock
 
 describe('IlpPaymentService', (): void => {
   let deps: IocContract<AppServices>
@@ -70,7 +71,11 @@ describe('IlpPaymentService', (): void => {
   afterEach(async (): Promise<void> => {
     await truncateTables(appContainer.knex)
     jest.restoreAllMocks()
+
     nock.cleanAll()
+    nock.abortPendingRequests()
+    nock.restore()
+    nock.activate()
   })
 
   afterAll(async (): Promise<void> => {

@@ -1,6 +1,5 @@
 import { generateKeyPairSync } from 'crypto'
 import { faker } from '@faker-js/faker'
-import nock from 'nock'
 import { Client, ActiveTokenInfo } from 'token-introspection'
 import { v4 as uuid } from 'uuid'
 import {
@@ -29,6 +28,8 @@ import { createWalletAddress } from '../../tests/walletAddress'
 import { setup } from '../wallet_address/model.test'
 import { parseLimits } from '../payment/outgoing/limits'
 import { AccessAction, AccessType } from '@interledger/open-payments'
+
+const nock = (global as unknown as { nock: typeof import('nock') }).nock
 
 type AppMiddleware = (
   ctx: WalletAddressContext,

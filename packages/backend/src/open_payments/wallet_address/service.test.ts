@@ -413,8 +413,7 @@ describe('Open Payments Wallet Address Service', (): void => {
         let delayProcessAt: Date | null = null
 
         beforeEach((): void => {
-          jest.useFakeTimers()
-          jest.setSystemTime(new Date())
+          jest.useFakeTimers({ now: Date.now() })
           if (withdrawalThrottleDelay !== undefined) {
             delayProcessAt = new Date(Date.now() + withdrawalThrottleDelay)
           }

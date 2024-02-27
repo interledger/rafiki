@@ -5,8 +5,9 @@ import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../'
 import { AppServices } from '../app'
 import { CacheDataStore } from '../middleware/cache/data-stores'
-import nock from 'nock'
 import { mockRatesApi } from '../tests/rates'
+
+const nock = (global as unknown as { nock: typeof import('nock') }).nock
 
 describe('Rates service', function () {
   let deps: IocContract<AppServices>
@@ -49,26 +50,27 @@ describe('Rates service', function () {
     apiRequestCount = 0
   })
 
+  afterEach(() => {
+    jest.useRealTimers()
+  })
+
   afterAll(async (): Promise<void> => {
     await appContainer.shutdown()
-    jest.useRealTimers()
   })
 
   describe('convert', () => {
     beforeAll(() => {
       mockRatesApi(exchangeRatesUrl, (base) => {
         apiRequestCount++
-
-        return {
-          ...exampleRates[base as keyof typeof exampleRates],
-          NEGATIVE: -0.5,
-          ZERO: 0.0
-        }
+        return exampleRates[base as keyof typeof exampleRates]
       })
     })
 
     afterAll(() => {
       nock.cleanAll()
+      nock.abortPendingRequests()
+      nock.restore()
+      nock.activate()
     })
 
     it('returns the source amount when assets are alike', async () => {
@@ -153,6 +155,9 @@ describe('Rates service', function () {
 
     afterAll(() => {
       nock.cleanAll()
+      nock.abortPendingRequests()
+      nock.restore()
+      nock.activate()
     })
 
     beforeEach(async (): Promise<void> => {
