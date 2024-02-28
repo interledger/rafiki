@@ -175,8 +175,8 @@ importers:
         specifier: ^8.11.3
         version: 8.11.3
       pino:
-        specifier: ^8.17.2
-        version: 8.17.2
+        specifier: ^8.19.0
+        version: 8.19.0
       token-introspection:
         specifier: workspace:*
         version: link:../token-introspection
@@ -365,8 +365,8 @@ importers:
         specifier: ^8.11.3
         version: 8.11.3
       pino:
-        specifier: ^8.17.2
-        version: 8.17.2
+        specifier: ^8.19.0
+        version: 8.19.0
       raw-body:
         specifier: ^2.5.2
         version: 2.5.2
@@ -574,8 +574,8 @@ importers:
         specifier: ^1.6.7
         version: 1.6.7
       pino:
-        specifier: ^8.17.2
-        version: 8.17.2
+        specifier: ^8.19.0
+        version: 8.19.0
     devDependencies:
       '@types/node':
         specifier: ^18.7.12
@@ -3439,7 +3439,7 @@ packages:
       axios: 1.6.7
       base64url: 3.0.1
       http-message-signatures: 0.1.2
-      pino: 8.17.2
+      pino: 8.19.0
       uuid: 9.0.1
     transitivePeerDependencies:
       - debug
@@ -13533,8 +13533,8 @@ packages:
     resolution: {integrity: sha512-mMMOwSKrmyl+Y12Ri2xhH1lbzQxwwpuru9VjyJpgFIH4asSj88F2csdMwN6+M5g1Ll4rmsYghHLQJw81tgZ7LQ==}
     dev: false
 
-  /pino@8.17.2:
-    resolution: {integrity: sha512-LA6qKgeDMLr2ux2y/YiUt47EfgQ+S9LznBWOJdN3q1dx2sv0ziDLUBeVpyVv17TEcGCBuWf0zNtg3M5m1NhhWQ==}
+  /pino@8.19.0:
+    resolution: {integrity: sha512-oswmokxkav9bADfJ2ifrvfHUwad6MLp73Uat0IkQWY3iAw5xTRoznXbXksZs8oaOUMpmhVWD+PZogNzllWpJaA==}
     hasBin: true
     dependencies:
       atomic-sleep: 1.0.0
