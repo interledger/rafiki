@@ -7,16 +7,20 @@ import {
   Webhook
 } from 'mock-account-servicing-lib'
 import { ApolloClient, NormalizedCacheObject } from '@apollo/client'
+import { TestConfig } from './config'
 
-export class WebhookServer {
+export class IntegrationServer {
+  private config: TestConfig
   private app: Koa
   private server?: http.Server
   public webhookEventHandler: WebhookEventHandler
 
   constructor(
+    config: TestConfig,
     apolloClient: ApolloClient<NormalizedCacheObject>,
     accounts: AccountProvider
   ) {
+    this.config = config
     this.app = new Koa()
     this.app.use(bodyParser())
     this.webhookEventHandler = new WebhookEventHandler(apolloClient, accounts)
@@ -36,10 +40,20 @@ export class WebhookServer {
           ctx.body = 'Invalid WebhookEvent payload'
         }
       }
+
+      if (ctx.path === '/rates' && ctx.method === 'GET') {
+        const { base } = ctx.query
+        ctx.body = {
+          base,
+          rates: {
+            ...this.config.seed.rates[base as string]
+          }
+        }
+      }
     })
 
     this.server = this.app.listen(port, () => {
-      console.log(`Webhook server listening on port ${port}`)
+      console.log(`Integration server listening on port ${port}`)
     })
   }
 
@@ -85,6 +99,9 @@ export class WebhookEventHandler {
       case WebhookEventType.WalletAddressNotFound:
         await this.handleWalletAddressNotFound(webhookEvent)
         break
+      case WebhookEventType.IncomingPaymentCreated:
+        // await this.handleIncomingPaymentCreated(webhookEvent)
+        break
       default:
         console.log(`unknown event type: ${webhookEvent.type}`)
     }
@@ -106,4 +123,9 @@ export class WebhookEventHandler {
 
     // TODO: create wallet address via apolloClient
   }
+
+  // private async handleIncomingPaymentCreated(webhookEvent: Webhook) {
+  //   console.log('handleIncomingPaymentCreated')
+  //   console.log({ webhookEvent })
+  // }
 }

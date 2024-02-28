@@ -7,7 +7,7 @@ import { parse as envParse } from 'dotenv'
 import { resolve } from 'path'
 
 export type TestConfig = Config & {
-  webhookServerPort: number
+  integrationServerPort: number
   walletAddressUrl: string
   keyId: string
 }
@@ -15,14 +15,14 @@ export type TestConfig = Config & {
 type EnvConfig = {
   OPEN_PAYMENTS_URL: string
   AUTH_SERVER_DOMAIN: string
-  WEBHOOK_SERVER_PORT: string
+  INTEGRATION_SERVER_PORT: string
   WALLET_ADDRESS_URL: string
   KEY_ID: string
 }
 const REQUIRED_KEYS: (keyof EnvConfig)[] = [
   'OPEN_PAYMENTS_URL',
   'AUTH_SERVER_DOMAIN',
-  'WEBHOOK_SERVER_PORT',
+  'INTEGRATION_SERVER_PORT',
   'WALLET_ADDRESS_URL',
   'KEY_ID'
 ]
@@ -61,7 +61,7 @@ const createConfig = (name: string, opts: ConfigOptions): TestConfig => {
     publicHost: env.OPEN_PAYMENTS_URL,
     testnetAutoPeerUrl: '',
     authServerDomain: env.AUTH_SERVER_DOMAIN,
-    webhookServerPort: parseInt(env.WEBHOOK_SERVER_PORT),
+    integrationServerPort: parseInt(env.INTEGRATION_SERVER_PORT),
     walletAddressUrl: env.WALLET_ADDRESS_URL,
     keyId: env.KEY_ID,
     ...opts

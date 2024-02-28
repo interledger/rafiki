@@ -1,11 +1,49 @@
-import { OpenPaymentsClientError } from '@interledger/open-payments'
+import assert from 'assert'
+import {
+  OpenPaymentsClientError,
+  isPendingGrant,
+  WalletAddress
+} from '@interledger/open-payments'
 import { C9_CONFIG, HLB_CONFIG } from './lib/config'
 import { MockASE } from './lib/MockASE'
 import { WebhookEventType } from 'mock-account-servicing-lib'
+import { wait } from './lib/utils'
+import { resourceLimits } from 'worker_threads'
+
+// jest.setTimeout(20000)
+// TODO: remove after fixing tests
+jest.setTimeout(1_000_000)
 
 describe('Open Payments Flow', (): void => {
   let c9: MockASE
   let hlb: MockASE
+
+  // TODO: can I get this from somewhere instead? config? MockASE accounts?
+  // From op client responses (ie use receiverWalletAddress.resourceServer instead of receiverOpenPaymentsHost)?
+  const receiverWalletAddressUrl = 'http://localhost:4000/accounts/pfry'
+  const receiverOpenPaymentsHost = 'http://localhost:4000'
+  const senderOpenPaymentsAuthHost = 'http://localhost:3006'
+  const senderOpenPaymentsHost = 'http://localhost:3000'
+  const senderWalletAddressUrl = 'https://localhost:3000/accounts/gfranklin'
+  const receiverAssetCode = 'USD'
+  const receiverAssetScale = 2
+
+  // TODO: Figure out a better way to organize tests so that there arent many tests
+  // with side effects (changing this global state) which subsequent tests rely on.
+  // Because 🤮
+
+  // Assigned in test: Can Get Existing Wallet Address
+  let receiverWalletAddress: WalletAddress
+
+  // Assigned initially in test: Grant Request Incoming Payment
+  // Then re-assigned in test: Grant Request Quote
+  // - could set new vars but just following whats in postman for now
+  let accessToken: string
+  let continueToken: string
+  let continueId: string
+  let tokenId: string
+
+  let incomingPaymentId: string
 
   beforeAll(async () => {
     c9 = await MockASE.create(C9_CONFIG)
@@ -18,20 +56,22 @@ describe('Open Payments Flow', (): void => {
   })
 
   test('Can Get Existing Wallet Address', async (): Promise<void> => {
-    const walletAddress = await c9.opClient.walletAddress.get({
-      url: 'http://localhost:4000/accounts/pfry'
+    receiverWalletAddress = await c9.opClient.walletAddress.get({
+      url: receiverWalletAddressUrl
     })
+    console.log({ receiverWalletAddress })
     // TODO: better expect.
     // tried jestOpenapi.toSatifyApiSpec but loading throws errors
     // for invalid spec? something not right there because that works in other pkgs
-    expect(walletAddress).toBeTruthy()
+    expect(receiverWalletAddress).toBeTruthy()
   })
 
+  // TODO: fix account not found error in webhook handler
   test.skip('Get Non-Existing Wallet Address Triggers Not Found Webhook Event', async (): Promise<void> => {
     let walletAddress
 
     const handleWebhookEventSpy = jest.spyOn(
-      c9.webhookServer.webhookEventHandler,
+      c9.integrationServer.webhookEventHandler,
       'handleWebhookEvent'
     )
     try {
@@ -53,105 +93,132 @@ describe('Open Payments Flow', (): void => {
   })
 
   test('Grant Request Incoming Payment', async (): Promise<void> => {
-    const receiverWalletAddressUrl = 'http://localhost:4000/accounts/pfry'
-    console.log({ receiverWalletAddressUrl })
-    const walletAddress = await c9.opClient.walletAddress.get({
-      url: receiverWalletAddressUrl
-    })
-    console.log({ walletAddress })
-
-    // TODO: remove try catch when done debugging
-    // ERROR: 401, invalid signature
-    // - with env var: WALLET_ADDRESS_URL=https://cloud-nine-wallet-test-backend/.well-known/pay
-    // error happens in auth's grantInitiationHttpsigMiddleware
-    // ultimately, http-sig-middleware > validateSignatures > crypto.verify resolves to false
-
-    // Also fails with "invalid client" with env var: WALLET_ADDRESS_URL=http://localhost:3000/.well-known/pay
-    // This is also in grantInitiationHttpsigMiddleware, but doesnt get as far (clientService.getKey doesn't find anything)
-
-    // Make sure that the public key used for verification (publicKey) matches the private key used for signing. Ensure that the key parameters (algorithm, key type, curve, etc.) are correct.
-    // Verify that the data being signed (data) is identical to the data used during the signing process. Any difference in the data will cause the verification to fail.
-
-    // explorse this more (from cat /tmp/rafiki_integration_logs.txt):
-    // rafiki-test-happy-life-auth-1 | entering grantInitiationHttpsigMiddleware
-    // rafiki-test-happy-life-auth-1 | {"level":50,"time":1707515411497,"pid":1,"hostname":"happy-life-bank-test-auth","url":"http://localhost:3001/.well-known/pay/jwks.json","msg":"Error when making Open Payments GET request: connect ECONNREFUSED 127.0.0.1:3001"}
-
-    // here are the args passed into validateSignature(clientKey, contextToRequestLike(ctx)).
-    // can i unit test in http-signature-utils with this exact object?
-
-    // {
-    //   clientKey: {
-    //     alg: 'EdDSA',
-    //     kid: 'rafiki-test',
-    //     kty: 'OKP',
-    //     crv: 'Ed25519',
-    //     x: 'ZK_FZg674Yr7WkXpmmX0Ms8JpHkFxIlvT49KMdZUOz4'
-    //   },
-    //   'contextToRequestLike(ctx)': {
-    //     url: 'http://localhost:4006/',
-    //     method: 'POST',
-    //     headers: {
-    //       accept: 'application/json',
-    //       'content-type': 'application/json',
-    //       'content-digest': 'sha-512=:eUzgyjzaPgekk/GPjfrUqKkpHgvtOmtk/rhASd5TlPc+LzOcLRkjFBwNEoPYdl5JxrlRe8RctRinw+o3W3RAkA==:',
-    //       'content-length': '169',
-    //       signature: 'sig1=:gticfDAmsDWpS/lbF3R5SZDoOdaPLGm81POFw5BI/TFFmGkpOE3lDZRYDjVJVnZKw5jU2/X5eGFzoz3Lx2phCA==:',
-    //       'signature-input': 'sig1=("@method" "@target-uri" "content-digest" "content-length" "content-type");created=1707358816;keyid="rafiki-test";alg="ed25519"',
-    //       'user-agent': 'axios/1.6.7',
-    //       'accept-encoding': 'gzip, compress, deflate, br',
-    //       host: 'localhost:4006',
-    //       connection: 'close'
-    //     },
-    //     body: '{"access_token":{"access":[{"type":"incoming-payment","actions":["create","read","list","complete"]}]},"client":"https://cloud-nine-wallet-test-backend/.well-known/pay"}'
-    //   }
-    try {
-      const grant = await c9.opClient.grant.request(
-        {
-          url: walletAddress.authServer
-        },
-        {
-          access_token: {
-            access: [
-              {
-                type: 'incoming-payment',
-                actions: ['create', 'read', 'list', 'complete']
-              }
-            ]
-          }
-          // TODO: do we need this?
-          // interact: {
-          //   start: ['redirect']
-          // }
+    const grant = await c9.opClient.grant.request(
+      {
+        // url: receiverWalletAddress.authServer
+        url: 'http://localhost:4006' // should be receiverWalletAddress.authServer but that uses the hostname
+      },
+      {
+        access_token: {
+          access: [
+            {
+              type: 'incoming-payment',
+              actions: ['create', 'read', 'list', 'complete']
+            }
+          ]
         }
-      )
+      }
+    )
 
-      console.log({ grant })
-    } catch (e) {
-      console.log({ e })
-      throw e
-    }
+    assert(!isPendingGrant(grant))
+    const continueId_ = grant.continue.uri.split('/').pop()
+    assert(continueId_)
+    const tokenId_ = grant.access_token.manage.split('/').pop()
+    assert(tokenId_)
 
-    // if (!isPendingGrant(grant)) {
-    //   throw new Error('Expected interactive grant')
-    // }
-    // expect(true).toBe(false)
+    accessToken = grant.access_token.value
+    continueToken = grant.continue.access_token.value
+    continueId = continueId_
+    tokenId = tokenId_
   })
 
-  // test('Create Incoming Payment', async (): Promise<void> => {
-  //   expect(true).toBe(true)
-  // })
+  test('Create Incoming Payment', async (): Promise<void> => {
+    const now = new Date()
+    const tomorrow = new Date(now)
+    tomorrow.setDate(now.getDate() + 1)
 
-  // test('Grant Request Quote', async (): Promise<void> => {
-  //   expect(true).toBe(true)
-  // })
+    const handleWebhookEventSpy = jest.spyOn(
+      hlb.integrationServer.webhookEventHandler,
+      'handleWebhookEvent'
+    )
 
-  // test('Grant Request Quote', async (): Promise<void> => {
-  //   expect(true).toBe(true)
-  // })
+    const incomingPayment = await c9.opClient.incomingPayment.create(
+      {
+        url: receiverOpenPaymentsHost,
+        accessToken
+      },
+      {
+        // TODO: Improve this (calling https when we use http elsewhere)
+        // requires https because thats whats in the DB because wallet addresses must be created as https (isValidWalletAddressUrl)
+        // Comes from OPEN_PAYMENTS_URL env var and seed data.
+        walletAddress: 'https://localhost:4000/accounts/pfry',
+        // walletAddress: receiverWalletAddressUrl,
+        incomingAmount: {
+          value: '100',
+          assetCode: receiverAssetCode,
+          assetScale: receiverAssetScale
+        },
+        metadata: { description: 'Free Money!' },
+        expiresAt: tomorrow.toISOString()
+      }
+    )
 
-  // test('Grant Request Outgoing Payment', async (): Promise<void> => {
-  //   expect(true).toBe(true)
-  // })
+    const incomingPaymentId_ = incomingPayment.id.split('/').pop()
+    assert(incomingPaymentId_)
+    incomingPaymentId = incomingPaymentId_
+
+    // Delay to ensure webhook is received
+    await wait(1000)
+    expect(handleWebhookEventSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: WebhookEventType.IncomingPaymentCreated,
+        data: expect.any(Object)
+      })
+    )
+  })
+
+  test('Grant Request Quote', async (): Promise<void> => {
+    const grant = await c9.opClient.grant.request(
+      {
+        url: senderOpenPaymentsAuthHost
+      },
+      {
+        access_token: {
+          access: [
+            {
+              type: 'quote',
+              actions: ['read', 'create']
+            }
+          ]
+        }
+      }
+    )
+
+    assert(!isPendingGrant(grant))
+    const continueId_ = grant.continue.uri.split('/').pop()
+    assert(continueId_)
+    const tokenId_ = grant.access_token.manage.split('/').pop()
+    assert(tokenId_)
+
+    accessToken = grant.access_token.value
+    continueToken = grant.continue.access_token.value
+    continueId = continueId_
+    tokenId = tokenId_
+  })
+
+  test('Create Quote', async (): Promise<void> => {
+    // TODO: Got this working with hacky stuff which needs real solutions:
+    // - changed receiver regex in open payments schema to icnlude http then set this in body: `http://happy-life-bank-test-backend/incoming-payments/${incomingPaymentId}`
+    const quote = await c9.opClient.quote.create(
+      {
+        url: senderOpenPaymentsHost, // TODO: does it need to be https?
+        accessToken
+      },
+      {
+        // TODO: Improve this (calling https when we use http elsewhere)
+        // requires https because thats whats in the DB because wallet addresses must be created as https (isValidWalletAddressUrl)
+        // Comes from OPEN_PAYMENTS_URL env var and seed data.
+        walletAddress: 'https://localhost:3000/accounts/gfranklin',
+        receiver: `http://happy-life-bank-test-backend/incoming-payments/${incomingPaymentId}`,
+        method: 'ilp'
+      }
+    )
+    // TODO: assertions. what to check that isnt tested by virtue of future tests passing?
+  })
+
+  test('Grant Request Outgoing Payment', async (): Promise<void> => {
+    expect(true).toBe(false)
+  })
 
   // test('Continuation Request', async (): Promise<void> => {
   //   expect(true).toBe(true)
