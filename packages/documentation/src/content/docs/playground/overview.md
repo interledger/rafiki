@@ -75,7 +75,7 @@ When clicking on the Account Name, a list of Transactions appears.
 
 - [Rafiki local environment setup](https://github.com/interledger/rafiki/blob/main/README.md#environment-setup)
 - [docker](https://docs.docker.com/get-docker/)
-- [Bruno](https://www.usebruno.com/downloads)
+- [Bruno](https://www.usebruno.com/downloads), an open source API client
 
 ### Setup
 
@@ -137,9 +137,14 @@ pnpm localenv:compose down --volumes
 
 #### Bruno & Open Payments APIs
 
-The Open Payments APIs can be interacted with using the [Bruno collection](https://github.com/interledger/rafiki/main/bruno/collections/Interledger) and its ([Open Payments APIs](https://github.com/interledger/rafiki/main/bruno/collections/Interledger/Open%20Payments%20APIs) and [Open Payments Auth APIs](https://github.com/interledger/rafiki/main/bruno/collections/Interledger/Open%20Payments%20Auth%20APIs)). It requires you to either load the [Local Environment](https://github.com/interledger/rafiki/main/bruno/collections/Interledger/environments/Local%20Playground.bru) or the [Remote Environment](https://github.com/interledger/rafiki/main/bruno/collections/Interledger/environments/Remote.bru).
+The Open Payments APIs can be interacted with using the [Bruno collection](https://github.com/interledger/rafiki/main/bruno/collections/Interledger) ([resource server endpoints](https://github.com/interledger/rafiki/main/bruno/collections/Interledger/Open%20Payments%20APIs) and [auth server endpoints](https://github.com/interledger/rafiki/main/bruno/collections/Interledger/Open%20Payments%20Auth%20APIs)). It requires you to
 
-The Examples folder in the Bruno API collection includes an eCommerce (Open Payments) example that can be executed one by one. It
+1. load the collection into Bruno by clicking "Open Collection"
+2. navigating to `/rafiki/main/bruno/collections/Interledger` on your machine and
+3. clicking "Open"
+   Furthermore, you need to either load the [Local Environment](https://github.com/interledger/rafiki/main/bruno/collections/Interledger/environments/Local%20Playground.bru) or the [Remote Environment](https://github.com/interledger/rafiki/main/bruno/collections/Interledger/environments/Remote.bru).
+
+The Examples folder in the Bruno collection includes an [Open Payments](https://github.com/interledger/rafiki/main/bruno/collections/Interledger/Examples/Open%20Payments) example that can be executed one by one. It
 
 1. requests the sender's wallet address
 2. requests the receiver's wallet address
@@ -153,11 +158,6 @@ The Examples folder in the Bruno API collection includes an eCommerce (Open Paym
 10. fetches the outgoing payment on the sender's account
 
 Note that one has to go through the interaction flow after requesting a grant for an outgoing payment. More information about the interaction flow can be found [here](/concepts/open-payments/grant-interaction).
-
-<!-- TODO: Update! -->
-<!-- Example walkthrough:
-
-https://user-images.githubusercontent.com/15069181/230445040-6fa505f5-86e5-44b2-841e-77c97d646368.mp4 -->
 
 #### Admin UI
 
