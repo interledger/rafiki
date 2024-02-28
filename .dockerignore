@@ -17,8 +17,7 @@ Dockerfile
 commitlint.config.js
 jest.config.base.js
 renovate.json
-postman
-.postman
+bruno
 
 **/jest.config.js
 **/jest.setup.js
