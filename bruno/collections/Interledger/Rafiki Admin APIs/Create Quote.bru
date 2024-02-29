@@ -1,0 +1,91 @@
+meta {
+  name: Create Quote
+  type: graphql
+  seq: 29
+}
+
+post {
+  url: {{RafikiGraphqlHost}}/graphql
+  body: graphql
+  auth: none
+}
+
+body:graphql {
+  mutation CreateQuote($input: CreateQuoteInput!) {
+    createQuote(input: $input) {
+      code
+      message
+      quote {
+        createdAt
+        expiresAt
+        highEstimatedExchangeRate
+        id
+        lowEstimatedExchangeRate
+        maxPacketAmount
+        minExchangeRate
+        walletAddressId
+        receiveAmount {
+          assetCode
+          assetScale
+          value
+        }
+        receiver
+        debitAmount {
+          assetCode
+          assetScale
+          value
+        }
+      }
+    }
+  }
+}
+
+body:graphql:vars {
+  {
+    "input": {
+      "walletAddressId": "{{secondWalletAddressId}}",
+      "receiveAmount": null,
+      "receiver": "{{receiverOpenPaymentsHost}}/incoming-payments/{{incomingPaymentId}}",
+      "debitAmount": {
+        "assetCode": "USD",
+        "assetScale": 6,
+        "value": 5000000
+      }
+    }
+  }
+}
+
+script:pre-request {
+  // Create an additional wallet address to represent the account that will be sending money
+  
+  const fetch = require('node-fetch')
+  
+  const randomInt = Math.floor(Math.random() * (1001));
+  
+  const initialRequest = bru.getEnvVar("initialWalletAddressRequest");
+  
+  const postRequest = {
+    method: 'post',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({
+      query: initialRequest.body.query,
+      variables: {
+        "input": {
+          "assetId": bru.getEnvVar("assetId"),
+          "url": "https://" + bru.getEnvVar("OpenPaymentsHost") + "/simon/" + randomInt,
+          "publicName": "Simon"
+      }
+      }
+    })
+  };
+  
+  const response = await fetch(`${initialRequest.url}`, postRequest);
+  const body = await response.json();
+  bru.setEnvVar("secondWalletAddressId", body.data.createWalletAddress.walletAddress.id);
+}
+
+script:post-response {
+  const body = res.getBody();
+  
+  bru.setEnvVar("quoteId", body.data.createQuote.quote.id);
+}

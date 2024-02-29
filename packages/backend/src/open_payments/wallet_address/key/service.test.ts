@@ -16,19 +16,14 @@ describe('Wallet Address Key Service', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let walletAddressKeyService: WalletAddressKeyService
-  const mockMessageProducer = {
-    send: jest.fn()
-  }
 
   beforeAll(async (): Promise<void> => {
-    deps = await initIocContainer(Config)
-    deps.bind('messageProducer', async () => mockMessageProducer)
+    deps = initIocContainer(Config)
     appContainer = await createTestApp(deps)
     walletAddressKeyService = await deps.use('walletAddressKeyService')
   })
 
   afterEach(async (): Promise<void> => {
-    jest.useRealTimers()
     await truncateTables(appContainer.knex)
   })
 

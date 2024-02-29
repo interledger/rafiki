@@ -1,0 +1,46 @@
+meta {
+  name: Create Wallet Address Withdrawal
+  type: graphql
+  seq: 38
+}
+
+post {
+  url: {{RafikiGraphqlHost}}/graphql
+  body: graphql
+  auth: none
+}
+
+body:graphql {
+  mutation CreateWalletAddressWithdrawal($input: CreateWalletAddressWithdrawalInput!) {
+    createWalletAddressWithdrawal(input: $input) {
+      code
+      error
+      message
+      success
+      withdrawal {
+        amount
+        id
+        walletAddress {
+          id
+          url
+          asset {
+            id
+            code
+            scale
+            withdrawalThreshold
+          }
+        }
+      }
+    }
+  }
+}
+
+body:graphql:vars {
+  {
+    "input": {
+      "id": "02ac56f7-ae5d-4abb-8306-17bf2327b43c",
+      "walletAddressId": "{{walletAddressId}}",
+      "idempotencyKey":"{{idempotencyKey}}"
+    }
+  }
+}

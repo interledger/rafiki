@@ -1,0 +1,35 @@
+meta {
+  name: Revoke Wallet Address Key
+  type: graphql
+  seq: 23
+}
+
+post {
+  url: {{RafikiGraphqlHost}}/graphql
+  body: graphql
+  auth: none
+}
+
+body:graphql {
+  mutation RevokeWalletAddressKey ($input: RevokeWalletAddressKeyInput!) {
+      revokeWalletAddressKey (input: $input) {
+          code
+          message
+          success
+          walletAddressKey {
+              id
+              revoked
+              walletAddressId
+              createdAt
+          }
+      }
+  }
+}
+
+body:graphql:vars {
+  {
+      "input": {
+          "id": "{{walletAddressKeyId}}"
+      }
+  }
+}

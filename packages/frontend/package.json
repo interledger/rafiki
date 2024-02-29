@@ -29,14 +29,14 @@
     "@remix-run/dev": "^2.6.0",
     "@remix-run/eslint-config": "^2.6.0",
     "@tailwindcss/forms": "^0.5.7",
-    "@types/react": "^18.2.57",
+    "@types/react": "^18.2.60",
     "@types/react-dom": "^18.2.19",
     "@types/uuid": "^9.0.8",
     "autoprefixer": "^10.4.17",
     "eslint": "^8.56.0",
     "eslint-plugin-jsx-a11y": "^6.8.0",
     "eslint-plugin-react": "^7.33.2",
-    "postcss": "^8.4.30",
+    "postcss": "^8.4.35",
     "tailwindcss": "^3.4.1"
   },
   "engines": {

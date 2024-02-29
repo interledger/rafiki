@@ -1,0 +1,44 @@
+meta {
+  name: Get a Wallet Address
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{receiverWalletAddress}}
+  body: none
+  auth: none
+}
+
+headers {
+  Accept: application/json
+}
+
+script:pre-request {
+  // if(pm.environment.get('preRequestHost')){
+  //     eval(pm.environment.get('preRequestHost'))
+  // }
+}
+
+tests {
+  // pm.test("Status code is 200", function () {
+  //     pm.response.to.have.status(200);
+  // });
+  // 
+  // const body = pm.response.json();
+  // pm.environment.set("receiverAssetCode", body?.assetCode)
+  // pm.environment.set("receiverAssetScale", body?.assetScale)
+  // 
+  // const authUrl = url.parse(body?.authServer)
+  // if (
+  //     authUrl.hostname.includes('cloud-nine-wallet') || 
+  //     authUrl.hostname.includes('happy-life-bank')
+  // ){
+  //     const port = authUrl.hostname.includes('cloud-nine-wallet') 
+  //         ? authUrl.port
+  //         : Number(authUrl.port) + 1000
+  //     pm.environment.set("receiverOpenPaymentsAuthHost", authUrl.protocol + '//localhost:' + port );
+  // } else {
+  //     pm.environment.set("receiverOpenPaymentsAuthHost", body?.authServer);
+  // }
+}

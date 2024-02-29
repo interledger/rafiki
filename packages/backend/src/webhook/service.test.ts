@@ -1,5 +1,5 @@
 import assert from 'assert'
-import nock, { Definition, ReplyHeaderValue } from 'nock'
+import { Definition, ReplyHeaderValue, Scope } from 'nock'
 import { URL } from 'url'
 import { Knex } from 'knex'
 import { v4 as uuid } from 'uuid'
@@ -31,6 +31,8 @@ import {
   WalletAddressEventType
 } from '../open_payments/wallet_address/model'
 import { createOutgoingPayment } from '../tests/outgoingPayment'
+
+const nock = (global as unknown as { nock: typeof import('nock') }).nock
 
 describe('Webhook Service', (): void => {
   let deps: IocContract<AppServices>
@@ -296,7 +298,7 @@ describe('Webhook Service', (): void => {
   })
 
   describe.skip('processNext', (): void => {
-    function mockWebhookServer(status = 200): nock.Scope {
+    function mockWebhookServer(status = 200): Scope {
       return nock(webhookUrl.origin)
         .post(webhookUrl.pathname, function (this: Definition, body) {
           assert.ok(this.headers)

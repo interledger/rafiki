@@ -1,0 +1,40 @@
+meta {
+  name: Get Incoming Payment
+  type: graphql
+  seq: 25
+}
+
+post {
+  url: {{RafikiGraphqlHost}}/graphql
+  body: graphql
+  auth: none
+}
+
+body:graphql {
+  query GetIncomingPayment($id: String!) {
+  incomingPayment(id: $id) {
+      id
+      walletAddressId
+      state
+      expiresAt
+      incomingAmount {
+          value
+          assetCode
+          assetScale
+      }
+      receivedAmount {
+          value
+          assetCode
+          assetScale
+      }
+      metadata
+      createdAt
+    }
+  }
+}
+
+body:graphql:vars {
+  {
+      "id": "{{incomingPaymentId}}"
+  }
+}

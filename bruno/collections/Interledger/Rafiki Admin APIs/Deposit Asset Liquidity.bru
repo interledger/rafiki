@@ -1,0 +1,41 @@
+meta {
+  name: Deposit Asset Liquidity
+  type: graphql
+  seq: 5
+}
+
+post {
+  url: {{RafikiGraphqlHost}}/graphql
+  body: graphql
+  auth: none
+}
+
+body:graphql {
+  mutation DepositAssetLiquidity ($input: DepositAssetLiquidityInput!) {
+    depositAssetLiquidity(input: $input) {
+      code
+      success
+      message
+      error
+    }
+  }
+}
+
+body:graphql:vars {
+  {
+    "input": {
+      "id": "{{transferId}}",
+      "assetId": "{{assetId}}",
+      "amount": "1000000",
+      "idempotencyKey":"{{idempotencyKey}}"
+    }
+  }
+  
+}
+
+script:pre-request {
+  const { v4: uuidv4 } = require('uuid');
+  
+  bru.setVar("transferId",uuidv4());
+  bru.setVar("idempotencyKey",uuidv4());
+}

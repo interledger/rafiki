@@ -1,0 +1,49 @@
+meta {
+  name: Get Grant
+  type: graphql
+  seq: 1
+}
+
+post {
+  url: {{RafikiAuthGraphqlHost}}/graphql
+  body: graphql
+  auth: none
+}
+
+body:graphql {
+  query Grant($id: ID!) {
+      grant(id: $id) {
+          id
+          state
+          createdAt
+          client
+          access {
+              type
+              actions
+              createdAt
+              id
+              identifier
+              limits {
+                  interval
+                  receiveAmount {
+                      assetCode
+                      assetScale
+                      value
+                  }
+                  receiver
+                  debitAmount {
+                      assetCode
+                      assetScale
+                      value
+                  }
+              }
+          }
+      }
+  }
+}
+
+body:graphql:vars {
+  {
+      "id": "97de60d6-cafa-4c8c-a847-f63ca04eb3bf"
+  }
+}

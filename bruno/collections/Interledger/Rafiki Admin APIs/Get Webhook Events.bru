@@ -1,0 +1,41 @@
+meta {
+  name: Get Webhook Events
+  type: graphql
+  seq: 40
+}
+
+post {
+  url: {{RafikiGraphqlHost}}/graphql
+  body: graphql
+  auth: none
+}
+
+body:graphql {
+  query WebhookEvents($after: String, $before: String, $first: Int, $last: Int, $filter: WebhookEventFilter) {
+    webhookEvents(after: $after, before: $before, first:$first, last: $last, filter: $filter) {
+      edges {
+        cursor
+        node {
+          createdAt
+          data
+          id
+          type
+        }
+      }
+    }
+  }
+}
+
+body:graphql:vars {
+  {
+      "filter": {
+          "type": { 
+              "in": []
+          }
+      },
+      "after": null,
+      "before": null,
+      "first": null,
+      "last": null
+  }
+}

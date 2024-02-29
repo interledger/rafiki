@@ -21,7 +21,7 @@ export interface Account {
   id: string
   initialBalance: bigint
   path: string
-  postmanEnvVar: string
+  brunoEnvVar: string
   assetCode: string
   skipWalletAddressCreation?: boolean
 }

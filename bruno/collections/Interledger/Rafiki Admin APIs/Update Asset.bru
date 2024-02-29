@@ -1,0 +1,39 @@
+meta {
+  name: Update Asset
+  type: graphql
+  seq: 2
+}
+
+post {
+  url: {{RafikiGraphqlHost}}/graphql
+  body: graphql
+  auth: none
+}
+
+body:graphql {
+  mutation UpdateAsset($input: UpdateAssetInput!) {
+    updateAsset(input: $input) {
+      asset {
+        code
+        createdAt
+        id
+        scale
+        withdrawalThreshold
+        liquidityThreshold
+      }
+      code
+      message
+      success
+    }
+  }
+}
+
+body:graphql:vars {
+  {
+    "input": {
+      "id": "{{assetId}}",
+      "withdrawalThreshold": 100,
+      "liquidityThreshold": 100
+    }
+  }
+}

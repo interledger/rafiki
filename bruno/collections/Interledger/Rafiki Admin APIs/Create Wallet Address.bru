@@ -1,0 +1,71 @@
+meta {
+  name: Create Wallet Address
+  type: graphql
+  seq: 18
+}
+
+post {
+  url: {{RafikiGraphqlHost}}/graphql
+  body: graphql
+  auth: none
+}
+
+body:graphql {
+  mutation CreateWalletAddres($input: CreateWalletAddressInput!) {
+    createWalletAddress(input: $input) {
+      code
+      success
+      message
+      walletAddress {
+        id
+        createdAt
+        publicName
+        url
+        status
+        asset {
+          code
+          createdAt
+          id
+          scale
+          withdrawalThreshold
+        }
+      }
+    }
+  }
+}
+
+body:graphql:vars {
+  {
+    "input": {
+      "assetId": "{{assetId}}",
+      "url": "https://{{senderOpenPaymentsHost}}/timon/{{randomId}}",
+      "publicName": "Timon"
+    }
+  }
+}
+
+script:pre-request {
+  const { nanoid } = require("nanoid");
+  
+  bru.setVar('randomId', nanoid());
+}
+
+script:post-response {
+  const body = res.getBody();
+  
+  bru.setEnvVar("walletAddressId", body.data.createWalletAddress.walletAddress.id);
+  
+  bru.setEnvVar("walletAddressUrl", body.data.createWalletAddress.walletAddress.url);
+  
+  bru.setEnvVar('initialWalletAddressRequest',req)
+}
+
+tests {
+  test("walletAddressId is string", function() {
+    expect(bru.getEnvVar("walletAddressId")).to.be.a("string");
+  })
+  test("walletAddressUrl is string", function() {
+    expect(bru.getEnvVar("walletAddressUrl")).to.be.a("string");
+  })
+  
+}

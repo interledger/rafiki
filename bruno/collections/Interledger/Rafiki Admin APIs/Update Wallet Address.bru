@@ -1,0 +1,45 @@
+meta {
+  name: Update Wallet Address
+  type: graphql
+  seq: 19
+}
+
+post {
+  url: {{RafikiGraphqlHost}}/graphql
+  body: graphql
+  auth: none
+}
+
+body:graphql {
+  mutation UpdateWalletAddress($input: UpdateWalletAddressInput!) {
+      updateWalletAddress(input: $input) {
+          code
+          message
+          walletAddress {
+              id
+              asset {
+                  id
+                  code
+                  scale
+                  withdrawalThreshold
+                  createdAt
+              }
+              url
+              publicName
+              createdAt
+              status
+          }
+          success
+      }
+  }
+}
+
+body:graphql:vars {
+  {
+    "input": {
+      "id": "{{walletAddressId}}",
+      "publicName": "New Name",
+      "status": "ACTIVE"
+    }
+  }
+}

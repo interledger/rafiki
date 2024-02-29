@@ -1,0 +1,48 @@
+meta {
+  name: Update Peer
+  type: graphql
+  seq: 10
+}
+
+post {
+  url: {{RafikiGraphqlHost}}/graphql
+  body: graphql
+  auth: none
+}
+
+body:graphql {
+  mutation UpdatePeer ($input: UpdatePeerInput!){  
+    updatePeer(input: $input) {
+      code
+      success
+      message
+      peer {
+        id
+        name
+        http {
+          outgoing {
+            authToken
+            endpoint
+          }
+        }
+        liquidity
+        liquidityThreshold
+      }
+    }
+  }
+}
+
+body:graphql:vars {
+  {
+    "input": {
+      "id": "{{peerId}}",
+      "name": "Wall-y",
+      "http": {
+        "incoming": {"authTokens": ["test-123"]},
+        "outgoing": {"endpoint": "http://peer-backend:3002", "authToken": "test"}
+      },
+      "maxPacketAmount": 1000,
+      "liquidityThreshold": 100
+    }
+  }
+}

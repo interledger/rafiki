@@ -239,7 +239,7 @@ export interface AppServices {
   autoPeeringService: Promise<AutoPeeringService>
   autoPeeringRoutes: Promise<AutoPeeringRoutes>
   connectorApp: Promise<ConnectorApp>
-  tigerbeetle: Promise<TigerbeetleClient>
+  tigerbeetle?: Promise<TigerbeetleClient>
   paymentMethodHandlerService: Promise<PaymentMethodHandlerService>
   ilpPaymentService: Promise<IlpPaymentService>
 }
@@ -615,8 +615,8 @@ export class App {
     if (this.openPaymentsServer) {
       await this.stopServer(this.openPaymentsServer)
     }
-    if (this.adminServer) {
-      await this.stopServer(this.adminServer)
+    if (this.apolloServer) {
+      await this.apolloServer.stop()
     }
     if (this.ilpConnectorService) {
       await this.stopServer(this.ilpConnectorService)

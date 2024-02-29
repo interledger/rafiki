@@ -26,7 +26,7 @@
   },
   "devDependencies": {
     "@remix-run/dev": "^2.6.0",
-    "@types/react": "^18.2.57",
+    "@types/react": "^18.2.60",
     "@types/react-dom": "^18.2.19"
   },
   "engines": {

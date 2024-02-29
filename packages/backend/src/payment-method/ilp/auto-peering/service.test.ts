@@ -1,6 +1,5 @@
 import assert from 'assert'
 import { IocContract } from '@adonisjs/fold'
-import nock from 'nock'
 import { initIocContainer } from '../../..'
 import { AppServices } from '../../../app'
 import { Config, IAppConfig } from '../../../config/app'
@@ -18,6 +17,8 @@ import { PeerService } from '../peer/service'
 import { PeerError } from '../peer/errors'
 import { v4 as uuid } from 'uuid'
 import { AccountingService } from '../../../accounting/service'
+
+const nock = (global as unknown as { nock: typeof import('nock') }).nock
 
 describe('Auto Peering Service', (): void => {
   let deps: IocContract<AppServices>

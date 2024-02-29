@@ -13,12 +13,12 @@ describe('Redis Data Store', (): void => {
   const dataStore = createRedisDataStore(redis, ttlMs)
 
   afterEach(async () => {
+    jest.useRealTimers()
     await redis.flushall()
   })
 
   afterAll(async () => {
-    redis.disconnect()
-    jest.useRealTimers()
+    await redis.quit()
   })
 
   describe('set', (): void => {

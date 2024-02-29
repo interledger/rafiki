@@ -1,6 +1,6 @@
 # Local Playground
 
-We have created a suite of packages that, together, mock an account servicing entity that has deployed Rafiki, exposing an [SPSP](https://rafiki.dev/reference/glossary/#simple-payments-setup-protocol-spsp) endpoint, the [Open Payments](https://rafiki.dev/concepts/open-payments/overview/) APIs with its required [GNAP](https://rafiki.dev/reference/glossary/#grant-negotiation-authorization-protocol) auth endpoints to request grants, a STREAM endpoint for receiving Interledger packets, and a UI to view and manage the Rafiki instance. Additionally, we provide a simple request signing service that is used by Postman to generate request signatures required by the Open Payments APIs.
+We have created a suite of packages that, together, mock an account servicing entity that has deployed Rafiki, exposing an [SPSP](https://rafiki.dev/reference/glossary/#simple-payments-setup-protocol-spsp) endpoint, the [Open Payments](https://rafiki.dev/concepts/open-payments/overview/) APIs with its required [GNAP](https://rafiki.dev/reference/glossary/#grant-negotiation-authorization-protocol) auth endpoints to request grants, a STREAM endpoint for receiving Interledger packets, and a UI to view and manage the Rafiki instance.
 
 These packages include:
 
@@ -29,35 +29,31 @@ This environment will set up an playground where you can use the Rafiki Admin AP
 
 (b) Admin API - accessible at http://localhost:3001/graphql
 
-(c) Auth API - accessible at http://localhost:3003/graphql
+(c) Open Payments API - accessible at http://localhost:3000
 
-(d) Open Payments API - accessible at http://localhost:3000
+(d) Admin UI - accessible at http://localhost:3010
 
-(e) Rafiki Admin - accessible at http://localhost:3010
+(e) Auth Admin API - accessible at http://localhost:3003/graphql
 
 (f) Open Payments Auth API - accessible at http://localhost:3006
 
-(g) Postman Signature Service - accessible at http://localhost:3040
-
 #### Happy Life Bank
 
-(h) User Interface - accessible at http://localhost:3031
+(g) User Interface - accessible at http://localhost:3031
 
-(i) Admin API - accessible at http://localhost:4001/graphql
+(h) Admin API - accessible at http://localhost:4001/graphql
 
-(j) Auth API - accessible at http://localhost:4003/graphql
+(i) Open Payments API - accessible at http://localhost:4000
 
-(k) Open Payments API - accessible at http://localhost:4000
+(j) Admin UI - accessible at http://localhost:4010
 
-(l) Rafiki Admin - accessible at http://localhost:4010
+(k) Auth Admin API - accessible at http://localhost:4003/graphql
 
-(m) Open Payments Auth API - accessible at http://localhost:4006
-
-(n) Postman Signature Service - accessible at http://localhost:3041
+(l) Open Payments Auth API - accessible at http://localhost:4006
 
 #### Database
 
-(m) Postgres Server - accessible at http://localhost:5432
+Postgres Server - accessible at http://localhost:5432
 
 ### Exploring Accounts on Mock Account Servicing Entity
 
@@ -77,7 +73,7 @@ When clicking on the Account Name, a list of Transactions appears.
 
 - [Rafiki local environment setup](../README.md#environment-setup)
 - [docker](https://docs.docker.com/get-docker/)
-- [postman](https://www.postman.com/downloads/)
+- [Bruno](https://www.usebruno.com/downloads), an open source API client
 
 ### Setup
 
@@ -103,8 +99,7 @@ pnpm localenv:compose:psql down --volumes
 The local environment consists of a primary Rafiki instance and a secondary Rafiki instance, each with
 its own docker compose files ([Cloud Nine Wallet](./cloud-nine-wallet/docker-compose.yml), [Happy Life Bank](./happy-life-bank/docker-compose.yml)).
 The primary Cloud Nine Wallet docker compose file (`./cloud-nine-wallet/docker-compose.yml`) includes the main Rafiki services `backend` and `auth`, as well
-as the required data stores tigerbeetle (if enabled), redis, and postgres, so it can be run on its own. Furthermore,
-both include the `local-signature-utils` signature generation app for Postman.
+as the required data stores tigerbeetle (if enabled), redis, and postgres, so it can be run on its own.
 The secondary Happy Life Bank docker compose file (`./happy-life-bank/docker-compose.yml`) includes only the Rafiki services, not the data stores. It uses the
 data stores created by the primary Rafiki instance so it can't be run by itself.
 The `pnpm localenv:compose up` command starts both the primary instance and the secondary.
@@ -124,12 +119,12 @@ Your local cloud nine rafiki instance will be peered automatically in this case 
 The required services will be exposed externally using [tunnelmole](https://www.npmjs.com/package/tunnelmole) package.
 The exposed ports are 3000(open-payments), 3006(auth server), 3002(ilp connector).
 
-To use the postman collection examples follow the steps:
+To use the Bruno collection examples follow the steps:
 
 1. run `docker logs rafiki-cloud-nine-mock-ase-1`
 2. find the list of created wallet addresses
 3. copy the url of one of the wallet addresses
-4. set the url into `senderWalletAddress` postman variable in `Remote Environment`
+4. set the url as `senderWalletAddress` variable in the Bruno `Remote` environment
 
 After stopping the script it is necessary to clear the environment using the command described in [Shutting down](#Shutting-down). This is necessary as on a new run of the scripts (with autopeering or not) the wallet address url will differ.
 
@@ -162,26 +157,29 @@ pnpm localenv:compose down --volumes
 
 ### Usage
 
-#### Postman & Open Payments APIs
+#### Bruno & Open Payments APIs
 
-The Open Payments APIs can be interacted with using the Postman collection ([Open Payments APIs](https://www.postman.com/interledger/workspace/interledger/folder/22855701-1b204bc1-c8e5-44d4-bab9-444d7204b15a?ctx=documentation) and [Open Payments Auth APIs](https://www.postman.com/interledger/workspace/interledger/folder/22855701-ae80b96d-4d25-42b9-94fa-8ed17f0e5ed9?ctx=documentation)). It is configured to use the default endpoints of the local environment.
+The Open Payments APIs can be interacted with using the [Bruno collection](https://github.com/interledger/rafiki/main/bruno/collections/Interledger) ([resource server endpoints](https://github.com/interledger/rafiki/main/bruno/collections/Interledger/Open%20Payments%20APIs) and [auth server endpoints](https://github.com/interledger/rafiki/main/bruno/collections/Interledger/Open%20Payments%20Auth%20APIs)). It requires you to
 
-The Examples folder in the Postman collection includes an [eCommerce example](https://www.postman.com/interledger/workspace/interledger/folder/22855701-e27838da-dd72-4b5e-9f1e-086ddfa4d098?ctx=documentation) that can be executed one by one. It
+1. load the collection into Bruno by clicking "Open Collection"
+2. navigating to `/rafiki/main/bruno/collections/Interledger` on your machine and
+3. clicking "Open"
+   Furthermore, you need to either load the [Local Environment](https://github.com/interledger/rafiki/main/bruno/collections/Interledger/environments/Local%20Playground.bru) or the [Remote Environment](https://github.com/interledger/rafiki/main/bruno/collections/Interledger/environments/Remote.bru).
 
-1. requests a grant to create an incoming payment on Philip Fry's account
-2. creates an incoming payment on Philip Fry's account
-3. requests a grant to create (and read) a quote on Grace Franklin's account
-4. creates a quote on Grace Franklin's account
-5. requests a grant to create (and read) an outgoing payment on Grace Franklin's account
-6. continues the grant request (via the interaction flow)
-7. creates an outgoing payment on Grace Franklin's account
-8. fetches the outgoing payment on Grace Franklin's account
+The Examples folder in the Bruno collection includes an [Open Payments](https://github.com/interledger/rafiki/main/bruno/collections/Interledger/Examples/Open%20Payments) example that can be executed one by one. It
+
+1. requests the sender's wallet address
+2. requests the receiver's wallet address
+3. requests a grant to create an incoming payment on the receiver's account
+4. creates an incoming payment on receiver's account
+5. requests a grant to create (and read) a quote on the sender's account
+6. creates a quote on the sender's account
+7. requests a grant to create (and read) an outgoing payment on the sender's account
+8. continues the grant request (via the interaction flow)
+9. creates an outgoing payment on the sender's account
+10. fetches the outgoing payment on the sender's account
 
 Note that one has to go through the interaction flow after requesting a grant for a outgoing payment. More information about the interaction flow can be found [here](../docs/grant-interaction.md).
-
-Example walkthrough:
-
-https://user-images.githubusercontent.com/15069181/230445040-6fa505f5-86e5-44b2-841e-77c97d646368.mp4
 
 #### Admin UI
 
@@ -189,7 +187,7 @@ In order to manage, and view information about the Rafiki instance(s) using a UI
 
 #### Admin APIs
 
-In addition to the using the Admin UI for interacting with the Admin APIs, you can also use the Apollo explorer (on [`localhost:3001/graphql`](http://localhost:3001/graphql) and [`localhost:4001/graphql`](http://localhost:4001/graphql), respectively), and also via the [Postman collection](https://www.postman.com/interledger/workspace/interledger/folder/22855701-ba745403-c5e8-4893-9dff-bccb72ea0614?ctx=documentation). The Postman collection is configured to use the default endpoints of the local environment.
+In addition to the using the Admin UI for interacting with the Admin APIs, you can also use the Apollo explorer (on [`localhost:3001/graphql`](http://localhost:3001/graphql) and [`localhost:4001/graphql`](http://localhost:4001/graphql), respectively), and also via the [Bruno collection](https://github.com/interledger/rafiki/main/bruno/collections/Interledger/Rafiki%20Admin%20APIs). The Bruno collection is configured to use the default endpoints of the local environment.
 
 #### SPSP
 
