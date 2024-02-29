@@ -1,0 +1,26 @@
+meta {
+  name: Get Wallet Addresses
+  type: graphql
+  seq: 21
+}
+
+post {
+  url: {{RafikiGraphqlHost}}/graphql
+  body: graphql
+  auth: none
+}
+
+body:graphql {
+  query GetWalletAddresses {
+      walletAddresses {
+          edges {
+              cursor
+              node {
+                  id
+                  publicName
+                  url
+              }
+          }
+      }
+  }
+}

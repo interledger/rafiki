@@ -1,0 +1,28 @@
+meta {
+  name: Get Peer
+  type: graphql
+  seq: 11
+}
+
+post {
+  url: {{RafikiGraphqlHost}}/graphql
+  body: graphql
+  auth: none
+}
+
+body:graphql {
+  query GetPeer {
+    peer (id: "{{peerId}}") {
+      id
+      name
+      http {
+        outgoing {
+          authToken
+          endpoint
+        }
+      }
+      liquidity
+      liquidityThreshold
+    }
+  }
+}

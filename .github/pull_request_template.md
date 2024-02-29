@@ -28,4 +28,4 @@ Checklist items become clickable check boxes once the pull request is created. T
 - [ ] Tests added/updated
 - [ ] Documentation added
 - [ ] Make sure that all checks pass
-- [ ] Postman collection updated
+- [ ] Bruno collection updated

@@ -1,0 +1,30 @@
+meta {
+  name: Trigger Wallet Address Events
+  type: graphql
+  seq: 39
+}
+
+post {
+  url: {{RafikiGraphqlHost}}/graphql
+  body: graphql
+  auth: none
+}
+
+body:graphql {
+  mutation TriggerWalletAddressEvents($input: TriggerWalletAddressEventsInput!) {
+    triggerWalletAddressEvents(input: $input) {
+      code
+      count
+      message
+      success
+    }
+  }
+}
+
+body:graphql:vars {
+  {
+      "input": {
+          "limit": 5
+      }
+  }
+}

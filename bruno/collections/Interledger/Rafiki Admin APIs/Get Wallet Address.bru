@@ -1,0 +1,55 @@
+meta {
+  name: Get Wallet Address
+  type: graphql
+  seq: 20
+}
+
+post {
+  url: {{RafikiGraphqlHost}}/graphql
+  body: graphql
+  auth: none
+}
+
+body:graphql {
+  query GetWalletAddress($id: String!) {
+      walletAddress(id: $id) {
+          id
+          asset {
+              id
+              code
+              scale
+              withdrawalThreshold
+              createdAt
+          }
+          createdAt
+          incomingPayments {
+              edges {
+                  node {
+                      id
+                      state
+                      incomingAmount {
+                          value
+                      }
+                      receivedAmount {
+                          value
+                      }
+                  }
+                  cursor
+              }
+              pageInfo {
+                  endCursor
+                  hasNextPage
+                  hasPreviousPage
+                  startCursor
+              }
+          }
+          status
+      }
+  }
+}
+
+body:graphql:vars {
+  {
+      "id": "{{walletAddressId}}"
+  }
+}

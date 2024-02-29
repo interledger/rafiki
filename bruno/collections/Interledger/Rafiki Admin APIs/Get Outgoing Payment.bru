@@ -1,0 +1,68 @@
+meta {
+  name: Get Outgoing Payment
+  type: graphql
+  seq: 32
+}
+
+post {
+  url: {{RafikiGraphqlHost}}/graphql
+  body: graphql
+  auth: none
+}
+
+body:graphql {
+  query GetOutgoingPayment($id: String!) {
+  outgoingPayment(id: $id) {
+      createdAt
+      error
+      metadata
+      id
+      walletAddressId
+      quote {
+        createdAt
+        expiresAt
+        highEstimatedExchangeRate
+        id
+        lowEstimatedExchangeRate
+        maxPacketAmount
+        minExchangeRate
+        walletAddressId
+        receiveAmount {
+          assetCode
+          assetScale
+          value
+        }
+        receiver
+        debitAmount {
+          assetCode
+          assetScale
+          value
+        }
+      }
+      receiveAmount {
+        assetCode
+        assetScale
+        value
+      }
+      receiver
+      debitAmount {
+        assetCode
+        assetScale
+        value
+      }
+      sentAmount {
+        assetCode
+        assetScale
+        value
+      }
+      state
+      stateAttempts
+    }
+  }
+}
+
+body:graphql:vars {
+  {
+      "id": "{{outgoingPaymentId}}"
+  }
+}

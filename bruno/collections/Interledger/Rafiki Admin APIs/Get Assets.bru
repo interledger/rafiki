@@ -1,0 +1,57 @@
+meta {
+  name: Get Assets
+  type: graphql
+  seq: 4
+}
+
+post {
+  url: {{RafikiGraphqlHost}}/graphql
+  body: graphql
+  auth: none
+}
+
+body:graphql {
+  query GetAssets($after: String, $before: String, $first: Int, $last: Int) {
+      assets(after: $after, before: $before, first:$first, last: $last) {
+          edges {
+              cursor
+              node {
+                  code
+                  createdAt
+                  id
+                  scale
+                  withdrawalThreshold
+                  liquidityThreshold
+                  liquidity
+                  sendingFee {
+                      id
+                      type
+                      basisPoints
+                      fixed
+                  }
+                  receivingFee {
+                      id
+                      type
+                      basisPoints
+                      fixed
+                  }
+              }
+          }
+          pageInfo {
+              endCursor
+              hasNextPage
+              hasPreviousPage
+              startCursor
+          }
+      }
+  }
+}
+
+body:graphql:vars {
+  {
+    "after": null,
+    "before": null,
+    "first": null,
+    "last": null
+  }
+}

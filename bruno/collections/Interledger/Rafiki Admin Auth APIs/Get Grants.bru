@@ -1,0 +1,73 @@
+meta {
+  name: Get Grants
+  type: graphql
+  seq: 2
+}
+
+post {
+  url: {{RafikiAuthGraphqlHost}}/graphql
+  body: graphql
+  auth: none
+}
+
+body:graphql {
+  query Grants($after: String, $before: String, $first: Int, $last: Int, $filter: GrantFilter) {
+      grants(after: $after, before: $before, first: $first, last: $last, filter: $filter) {
+          edges {
+              cursor
+              node {
+                  access {
+                      createdAt
+                      id
+                      identifier
+                      limits {
+                          interval
+                          receiveAmount {
+                              assetScale
+                              value
+                              assetCode
+                          }
+                          receiver
+                          debitAmount {
+                              assetCode
+                              assetScale
+                              value
+                          }
+                      }
+                      actions
+                      type
+                  }
+                  client
+                  createdAt
+                  id
+                  state
+              }
+          }
+          pageInfo {
+              endCursor
+              hasNextPage
+              hasPreviousPage
+              startCursor
+          }
+      }
+  }
+  
+}
+
+body:graphql:vars {
+  {
+      "after": null,
+      "before": null,
+      "first": null,
+      "last": null,
+      "filter": {
+          "state": {
+              "in": ["PROCESSING", "PENDING", "APPROVED", "FINALIZED"]
+          },
+          "finalizationReason": {
+              "notIn": ["REVOKED"]
+          }
+      }
+  }
+  
+}

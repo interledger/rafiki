@@ -1,0 +1,41 @@
+meta {
+  name: Withdraw Peer Liquidity
+  type: graphql
+  seq: 15
+}
+
+post {
+  url: {{RafikiGraphqlHost}}/graphql
+  body: graphql
+  auth: none
+}
+
+body:graphql {
+  mutation CreatePeerLiquidityWithdrawal ($input: CreatePeerLiquidityWithdrawalInput!) {
+    createPeerLiquidityWithdrawal(input: $input) {
+      code
+      success
+      message
+      error
+    }
+  }
+}
+
+body:graphql:vars {
+  {
+    "input": {
+      "id": "{{withdrawalId}}",
+      "peerId": "{{peerId}}",
+      "amount": "100",
+      "idempotencyKey":"{{idempotencyKey}}"
+    }
+  }
+  
+}
+
+script:pre-request {
+  const { v4: uuidv4 } = require('uuid');
+  
+  bru.setEnvVar("withdrawalId",uuidv4());
+  bru.setVar("idempotencyKey",uuidv4());
+}

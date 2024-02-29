@@ -1,0 +1,17 @@
+meta {
+  name: Get Wallet Address Keys
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{receiverWalletAddress}}/jwks.json
+  body: none
+  auth: none
+}
+
+script:pre-request {
+  // if(pm.environment.get('preRequestHost')){
+  //     eval(pm.environment.get('preRequestHost'))
+  // }
+}
