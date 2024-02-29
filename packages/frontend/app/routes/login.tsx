@@ -91,11 +91,7 @@ export async function action({ request }: ActionArgs) {
   }
 
   const response = await axios.put(
-<<<<<<< HEAD
-    `http://hydra:4445/oauth2/auth/requests/login/accept?login_challenge=${loginChallenge}`,
-=======
     `http://hydra:4445/admin/oauth2/auth/requests/login/accept?login_challenge=${loginChallenge}`,
->>>>>>> 5addf52d (feat(frontend, backend): graphql api security with hydra)
     {
       subject: username
       // other data Hydra needs
