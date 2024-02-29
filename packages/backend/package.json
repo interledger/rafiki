@@ -40,7 +40,7 @@
     "react": "~18.2.0",
     "rosie": "^2.1.1",
     "testcontainers": "^10.7.1",
-    "tmp": "^0.2.1"
+    "tmp": "^0.2.3"
   },
   "dependencies": {
     "@adonisjs/fold": "^8.2.0",
