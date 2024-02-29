@@ -119,10 +119,11 @@ services:
       PORT: 3010
       GRAPHQL_URL: http://cloud-nine-wallet-backend:3001/graphql
       OPEN_PAYMENTS_URL: https://cloud-nine-wallet-backend/
+      SEED_FILE_LOCATION: /workspace/seed.yml
       ENABLE_INSECURE_MESSAGE_COOKIE: true
       HYDRA_CLIENT_ID: 'cloud-nine-client'
+      HYDRA_CLIENT_NAME: 'cloud-nine'
       HYDRA_CLIENT_REDIRECT_URI: 'http://localhost:3010/callback'
-      SEED_FILE_LOCATION: /workspace/seed.yml
     depends_on:
       - cloud-nine-backend
       - hydra
