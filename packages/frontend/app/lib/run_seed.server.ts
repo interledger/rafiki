@@ -1,16 +1,17 @@
 import { CONFIG, type Config } from '../parse_config.server'
-import axios, { AxiosError } from 'axios'
+import type { AxiosError } from 'axios';
+import axios from 'axios'
 
 interface HydraClientData {
-  grant_types: string[];
-  client_id: string;
-  client_name: string;
-  redirect_uris: string[];
-  response_types: string[];
-  scope: string;
-  client_secret: string;
-  skip_consent: boolean;
-  token_endpoint_auth_method: string;
+  grant_types: string[]
+  client_id: string
+  client_name: string
+  redirect_uris: string[]
+  response_types: string[]
+  scope: string
+  client_secret: string
+  skip_consent: boolean
+  token_endpoint_auth_method: string
 }
 
 async function createHydraClient(
@@ -42,11 +43,8 @@ async function createHydraClient(
     const axiosError = error as AxiosError
     if (axiosError.response && axiosError.response.status === 404) {
       try {
-        await axios.post(
-          'http://hydra:4445/admin/clients',
-          clientData
-        )
-      } catch(postError) {
+        await axios.post('http://hydra:4445/admin/clients', clientData)
+      } catch (postError) {
         throw new Error(`Error creating Hydra client: ${postError}`)
       }
     }

@@ -21,9 +21,9 @@ services:
       - shared-database
     environment:
       - DSN=postgres://hydra:hydra_password@shared-database:5432/hydra?sslmode=disable
-      - URLS_SELF_ISSUER=http://localhost:4444/
-      - URLS_CONSENT=http://localhost:3010/consent
-      - URLS_LOGIN=http://localhost:3010/login
+      - URLS_SELF_ISSUER=http://127.0.0.1:4444/
+      - URLS_CONSENT=http://127.0.0.1:3010/consent
+      - URLS_LOGIN=http://127.0.0.1:3010/login
       - SECRETS_SYSTEM=some-random-secret
       - OAUTH2_EXPOSE_INTERNAL_ERRORS=true
       - LOG_LEVEL=debug
@@ -36,7 +36,3 @@ services:
 
 volumes:
   database-data: # named volumes can be managed easier using docker-compose
-
-networks:
-  rafiki:
-    external: true

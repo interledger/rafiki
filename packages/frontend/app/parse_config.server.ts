@@ -12,7 +12,7 @@ export interface Config {
 }
 
 export const CONFIG: Config = parse(
-  readFileSync(
-    process.env.SEED_FILE_LOCATION || `./seed.example.yml`
-  ).toString('utf8')
+  readFileSync(process.env.SEED_FILE_LOCATION || `./seed.example.yml`).toString(
+    'utf8'
+  )
 )
