@@ -37,7 +37,7 @@ Please read the [contribution guidelines](.github/contributing.md) before submit
 
 ## Community Calls
 
-Our Rafiki community calls are open to our community. We have them every Tuesday at 14:30 GMT, via Google Meet.
+Our Rafiki community calls are open to our community members. We have them every Tuesday at 14:30 GMT, via Google Meet.
 
 **Google Meet joining info**
 
