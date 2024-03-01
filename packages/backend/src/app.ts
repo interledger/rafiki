@@ -374,6 +374,9 @@ export class App {
         return
       }
       const token = parts[1]
+      if (process.env.NODE_ENV === 'development' && token === 'seed_file') {
+        return next()
+      }
 
       const axios = await this.container.use('axios')
       // TODO: Replace with env variable
