@@ -94,7 +94,3 @@ services:
       - cloud-nine-admin
       - happy-life-backend
       - hydra
-
-networks:
-  rafiki:
-    external: true
