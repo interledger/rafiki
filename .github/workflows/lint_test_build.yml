@@ -1,13 +1,13 @@
+name: PR Checks
+
 on:
   push:
     branches:
-      - '!main'
+      - '!release'
   pull_request:
     types:
       - opened
       - synchronize
-
-name: PR Checks
 
 jobs:
   checkout:
@@ -116,9 +116,26 @@ jobs:
       - uses: ./.github/workflows/rafiki/env-setup
       - run: pnpm build
 
+  build-docker:
+    runs-on: ubuntu-22.04
+    needs: build
+    strategy:
+      matrix:
+        package: [auth, backend, frontend]
+    steps:
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Build
+        uses: docker/build-push-action@v5
+        with:
+          push: false
+          file: packages/${{ matrix.package }}/Dockerfile
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
   all_pr_checks_passed:
     runs-on: ubuntu-22.04
     needs:
-      - build
+      - build-docker
     steps:
       - run: echo 'PR Checks Passed'
