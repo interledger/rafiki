@@ -13,7 +13,6 @@ import cors from '@koa/cors'
 import { ApolloServer } from '@apollo/server'
 import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer'
 import { koaMiddleware } from '@as-integrations/koa'
-import cors from '@koa/cors'
 
 import { IAppConfig } from './config/app'
 import { addResolversToSchema } from '@graphql-tools/schema'
