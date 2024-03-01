@@ -2,13 +2,13 @@ import assert from 'assert'
 import {
   OpenPaymentsClientError,
   isPendingGrant,
-  WalletAddress
+  WalletAddress,
+  Quote
 } from '@interledger/open-payments'
 import { C9_CONFIG, HLB_CONFIG } from './lib/config'
 import { MockASE } from './lib/MockASE'
 import { WebhookEventType } from 'mock-account-servicing-lib'
 import { wait } from './lib/utils'
-import { resourceLimits } from 'worker_threads'
 
 // jest.setTimeout(20000)
 // TODO: remove after fixing tests
@@ -24,7 +24,7 @@ describe('Open Payments Flow', (): void => {
   const receiverOpenPaymentsHost = 'http://localhost:4000'
   const senderOpenPaymentsAuthHost = 'http://localhost:3006'
   const senderOpenPaymentsHost = 'http://localhost:3000'
-  const senderWalletAddressUrl = 'https://localhost:3000/accounts/gfranklin'
+  const senderWalletAddressUrl = 'http://localhost:3000/accounts/gfranklin'
   const receiverAssetCode = 'USD'
   const receiverAssetScale = 2
 
@@ -43,7 +43,11 @@ describe('Open Payments Flow', (): void => {
   let continueId: string
   let tokenId: string
 
+  // Assigned in Create Incoming Payment
   let incomingPaymentId: string
+
+  // Assigned in Create Quote
+  let quote: Quote
 
   beforeAll(async () => {
     c9 = await MockASE.create(C9_CONFIG)
@@ -197,9 +201,7 @@ describe('Open Payments Flow', (): void => {
   })
 
   test('Create Quote', async (): Promise<void> => {
-    // TODO: Got this working with hacky stuff which needs real solutions:
-    // - changed receiver regex in open payments schema to icnlude http then set this in body: `http://happy-life-bank-test-backend/incoming-payments/${incomingPaymentId}`
-    const quote = await c9.opClient.quote.create(
+    quote = await c9.opClient.quote.create(
       {
         url: senderOpenPaymentsHost, // TODO: does it need to be https?
         accessToken
@@ -217,7 +219,47 @@ describe('Open Payments Flow', (): void => {
   })
 
   test('Grant Request Outgoing Payment', async (): Promise<void> => {
-    expect(true).toBe(false)
+    const grant = await hlb.opClient.grant.request(
+      {
+        url: senderOpenPaymentsAuthHost
+      },
+      {
+        access_token: {
+          access: [
+            {
+              type: 'outgoing-payment',
+              actions: ['create', 'read', 'list'],
+              identifier: senderWalletAddressUrl,
+              limits: {
+                debitAmount: quote.debitAmount,
+                receiveAmount: quote.receiveAmount
+              }
+            }
+          ]
+        },
+        interact: {
+          start: ['redirect'],
+          finish: {
+            method: 'redirect',
+            uri: 'https://example.com',
+            nonce: '456'
+          }
+        }
+      }
+    )
+
+    console.log({ grant })
+
+    assert(!isPendingGrant(grant))
+    const continueId_ = grant.continue.uri.split('/').pop()
+    assert(continueId_)
+    const tokenId_ = grant.access_token.manage.split('/').pop()
+    assert(tokenId_)
+
+    accessToken = grant.access_token.value
+    continueToken = grant.continue.access_token.value
+    continueId = continueId_
+    tokenId = tokenId_
   })
 
   // test('Continuation Request', async (): Promise<void> => {

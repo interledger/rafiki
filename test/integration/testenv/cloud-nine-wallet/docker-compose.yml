@@ -21,7 +21,8 @@ services:
       OPEN_PAYMENTS_PORT: 80
       DATABASE_URL: postgresql://cloud_nine_wallet_test_backend:cloud_nine_wallet_test_backend@shared-database/cloud_nine_wallet_test_backend
       OPEN_PAYMENTS_URL: https://localhost:3000
-      WALLET_ADDRESS_URL: https://cloud-nine-wallet-test-backend/.well-known/pay
+      # WALLET_ADDRESS_URL: https://cloud-nine-wallet-test-backend/.well-known/pay
+      WALLET_ADDRESS_URL: https://cloud-nine-wallet-test-backend/accounts/gfranklin
       # OPEN_PAYMENTS_URL: http://localhost:3000
       # WALLET_ADDRESS_URL: http://cloud-nine-wallet-test-backend/.well-known/pay
       KEY_ID: rafiki
