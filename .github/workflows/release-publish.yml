@@ -1,0 +1,26 @@
+name: Release & Publish
+
+on:
+  workflow_dispatch:
+    inputs:
+      releaseType:
+        type: choice
+        required: true
+        default: alpha
+        description: Type of release (alpha, beta, standard)
+        options: 
+        - alpha
+        - beta
+        - standard
+  push:
+    branches:
+      - 'release/*'
+
+jobs:
+  build-test-stage:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 1
+    steps:
+     - uses: actions/checkout@v4
+     - uses: ./.github/workflows/rafiki/env-setup
+     - run: pnpm checks
