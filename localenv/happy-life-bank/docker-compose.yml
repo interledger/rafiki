@@ -90,7 +90,6 @@ services:
       SEED_FILE_LOCATION: /workspace/seed.yml
       ENABLE_INSECURE_MESSAGE_COOKIE: true
       HYDRA_CLIENT_ID: 'happy-life-client'
-      HYDRA_CLIENT_NAME: 'happy-life'
       HYDRA_CLIENT_REDIRECT_URI: 'http://localhost:4010/callback'
     depends_on:
       - cloud-nine-admin
