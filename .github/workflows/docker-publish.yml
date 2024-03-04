@@ -114,7 +114,7 @@ jobs:
   
   push:
     name: Push to registry
-    needs: [docker-grype, docker-trivy, check-tag-format]
+    needs: [docker-grype, docker-trivy, version-generator]
     runs-on: ubuntu-latest
 
     strategy:
