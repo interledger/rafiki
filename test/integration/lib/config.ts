@@ -17,6 +17,7 @@ type EnvConfig = {
   AUTH_SERVER_DOMAIN: string
   INTEGRATION_SERVER_PORT: string
   WALLET_ADDRESS_URL: string
+  GRAPHQL_URL: string
   KEY_ID: string
 }
 const REQUIRED_KEYS: (keyof EnvConfig)[] = [
@@ -24,6 +25,7 @@ const REQUIRED_KEYS: (keyof EnvConfig)[] = [
   'AUTH_SERVER_DOMAIN',
   'INTEGRATION_SERVER_PORT',
   'WALLET_ADDRESS_URL',
+  'GRAPHQL_URL',
   'KEY_ID'
 ]
 
@@ -46,11 +48,7 @@ const loadEnv = (filePath: string): EnvConfig => {
   return envVars as EnvConfig
 }
 
-type ConfigOptions = {
-  graphqlUrl: string
-}
-
-const createConfig = (name: string, opts: ConfigOptions): TestConfig => {
+const createConfig = (name: string): TestConfig => {
   const seedPath = resolve(__dirname, `../testenv/${name}/seed.yml`)
   const env = loadEnv(resolve(__dirname, `../testenv/${name}/.env`))
   const keyPath = resolve(__dirname, `../testenv/private-key.pem`)
@@ -63,14 +61,10 @@ const createConfig = (name: string, opts: ConfigOptions): TestConfig => {
     authServerDomain: env.AUTH_SERVER_DOMAIN,
     integrationServerPort: parseInt(env.INTEGRATION_SERVER_PORT),
     walletAddressUrl: env.WALLET_ADDRESS_URL,
-    keyId: env.KEY_ID,
-    ...opts
+    graphqlUrl: env.GRAPHQL_URL,
+    keyId: env.KEY_ID
   }
 }
 
-export const C9_CONFIG: TestConfig = createConfig('cloud-nine-wallet', {
-  graphqlUrl: 'http://localhost:3001/graphql'
-})
-export const HLB_CONFIG: TestConfig = createConfig('happy-life-bank', {
-  graphqlUrl: 'http://localhost:4001/graphql'
-})
+export const C9_CONFIG: TestConfig = createConfig('cloud-nine-wallet')
+export const HLB_CONFIG: TestConfig = createConfig('happy-life-bank')
