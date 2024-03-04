@@ -10,7 +10,6 @@ on:
 jobs:
   version-generator:
     runs-on: ubuntu-latest
-    needs: check-release-branch
     if: startsWith(github.ref_name, 'release/v*') 
     outputs:
       version: ${{ steps.version-generator.outputs.NEW_VERSION }}
