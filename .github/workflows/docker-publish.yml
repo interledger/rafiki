@@ -1,49 +1,46 @@
 name: Docker Build, Scan & Publish
 
+# on:
+#   workflow_run:
+#     workflows: [Release & Publish]
+#     types:
+#       - completed
+
 on:
-  workflow_run:
-    workflows: [Release & Publish]
-    types:
-      - completed
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - '**'
+  push:
+    branches:
+      - main
+      - release/v*
 
 # tests and code analysis should be done before
 jobs:
   version-generator:
     runs-on: ubuntu-latest
-    if: startsWith(github.ref_name, 'release/v*') 
+    if: startsWith(github.ref_name, 'release/v') 
     outputs:
       version: ${{ steps.version-generator.outputs.NEW_VERSION }}
     steps:
       - id: version-generator
         run: |
-          # Remove that prefix stuff
+          ls -lah
           VERSION_PREFIX=$(echo "${{ github.ref_name }}" | sed 's|release/||')
-
-          # Use awk to separate the version into major, minor, patch, and pre-release components
           read major minor patch pre_release <<< $(echo "$VERSION_PREFIX" | awk -F'[.v-]' '{print $2, $3, $4, $5}')
+          patch=$((patch + 1))
 
-          # Check if there is a pre-release identifier. If so, handle it separately.
           if [ -n "$pre_release" ]; then
-              # Fetch the most recent tag, considering it might have a pre-release identifier
               VERSION_PREFIX=$(git tag -l "v$major.$minor.*-$pre_release" --sort=-taggerdate | head -n 1)
-
-              # Increment the patch version
-              patch=$((patch + 1))
-
-              # Construct the new version with the pre-release identifier
               NEW_VERSION="v${major}.${minor}.${patch}-${pre_release}"
           else
-              # Fetch the most recent tag, considering it might have a pre-release identifier
               VERSION_PREFIX=$(git tag -l "v$major.$minor.*" --sort=-taggerdate | head -n 1)
-
-              # Increment the patch version
-              patch=$((patch + 1))
-
-              # Construct the new version without a pre-release identifier
               NEW_VERSION="v${major}.${minor}.${patch}"
           fi
 
           echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "New version will be: $NEW_VERSION"
   
   docker-build:
     runs-on: ubuntu-latest
@@ -88,7 +85,7 @@ jobs:
           image: /tmp/${{ matrix.package }}.tar
           fail-build: true
           only-fixed: true
-          severity-cutoff: critical
+          severity-cutoff: high
           output-format: table
 
   docker-trivy:
@@ -110,11 +107,11 @@ jobs:
           curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /tmp
       - name: Scan docker image
         run: |
-          /tmp/trivy image --ignore-unfixed --format table --vuln-type os,library --exit-code 1 --severity CRITICAL --input /tmp/${{ matrix.package }}.tar
+          /tmp/trivy image --ignore-unfixed --format table --vuln-type os,library --exit-code 1 --severity HIGH --input /tmp/${{ matrix.package }}.tar
   
   push:
     name: Push to registry
-    needs: [docker-grype, docker-trivy, check-tag-format]
+    needs: [docker-grype, docker-trivy, version-generator]
     runs-on: ubuntu-latest
 
     strategy:
