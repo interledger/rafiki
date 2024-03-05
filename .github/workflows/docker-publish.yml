@@ -41,6 +41,8 @@ jobs:
 
           echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_OUTPUT
           echo "New version will be: $NEW_VERSION"
+
+          git tag -a $NEW_VERSION -m "$NEW_VERSION"
   
   docker-build:
     runs-on: ubuntu-latest
