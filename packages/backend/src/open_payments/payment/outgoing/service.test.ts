@@ -59,6 +59,7 @@ describe('OutgoingPaymentService', (): void => {
   let incomingPayment: IncomingPayment
   let receiverWalletAddress: MockWalletAddress
   let receiver: string
+  let client: string
   let amtDelivered: bigint
   let trx: Knex.Transaction
 
@@ -185,13 +186,15 @@ describe('OutgoingPaymentService', (): void => {
       amountDelivered,
       accountBalance,
       incomingPaymentReceived,
-      withdrawAmount
+      withdrawAmount,
+      client
     }: {
       amountSent?: bigint
       amountDelivered?: bigint
       accountBalance?: bigint
       incomingPaymentReceived?: bigint
-      withdrawAmount?: bigint
+      withdrawAmount?: bigint,
+      client?: string
     }
   ) {
     if (amountSent !== undefined) {
@@ -222,6 +225,9 @@ describe('OutgoingPaymentService', (): void => {
         })
       ).resolves.toHaveLength(1)
     }
+    if (client !== undefined) {
+      expect(payment.client).toEqual(client)
+    }
   }
 
   beforeAll(async (): Promise<void> => {
@@ -245,6 +251,7 @@ describe('OutgoingPaymentService', (): void => {
       assetId: sendAssetId
     })
     walletAddressId = walletAddress.id
+    client = walletAddress.url
     const { id: destinationAssetId } = await createAsset(deps, destinationAsset)
     receiverWalletAddress = await createWalletAddress(deps, {
       assetId: destinationAssetId,
@@ -259,7 +266,8 @@ describe('OutgoingPaymentService', (): void => {
     ).resolves.toBeUndefined()
 
     incomingPayment = await createIncomingPayment(deps, {
-      walletAddressId: receiverWalletAddress.id
+      walletAddressId: receiverWalletAddress.id,
+      client: client
     })
     receiver = incomingPayment.getUrl(receiverWalletAddress)
 
@@ -303,13 +311,15 @@ describe('OutgoingPaymentService', (): void => {
 
       const payment = await outgoingPaymentService.create({
         walletAddressId,
-        quoteId: quote.id
+        quoteId: quote.id,
+        client: client
       })
       assert.ok(!isOutgoingPaymentError(payment))
 
       await expect(
         outgoingPaymentService.get({
-          id: payment.id
+          id: payment.id,
+          client: client
         })
       ).resolves.toEqual(payment)
       await expect(
@@ -324,7 +334,8 @@ describe('OutgoingPaymentService', (): void => {
         .mockResolvedValueOnce(undefined)
       await expect(
         outgoingPaymentService.get({
-          id: payment.id
+          id: payment.id,
+          client: client
         })
       ).rejects.toThrow(
         'Could not get amount sent for payment. There was a problem getting the associated liquidity account.'
@@ -343,13 +354,15 @@ describe('OutgoingPaymentService', (): void => {
 
       const payment = await outgoingPaymentService.create({
         walletAddressId,
-        quoteId: quote.id
+        quoteId: quote.id,
+        client: client
       })
       assert.ok(!isOutgoingPaymentError(payment))
 
       await expect(
         outgoingPaymentService.get({
-          id: payment.id
+          id: payment.id,
+          client: client
         })
       ).resolves.toEqual(payment)
       await expect(
@@ -500,6 +513,7 @@ describe('OutgoingPaymentService', (): void => {
       it('fails to create on "consumed" quote', async () => {
         const { quote } = await createOutgoingPayment(deps, {
           walletAddressId,
+          client,
           receiver,
           validDestination: false,
           method: 'ilp'
@@ -507,6 +521,7 @@ describe('OutgoingPaymentService', (): void => {
         await expect(
           outgoingPaymentService.create({
             walletAddressId,
+            client,
             quoteId: quote.id
           })
         ).resolves.toEqual(OutgoingPaymentError.InvalidQuote)
@@ -614,6 +629,7 @@ describe('OutgoingPaymentService', (): void => {
           const options = quotes.map((quote) => {
             return {
               walletAddressId,
+              client,
               quoteId: quote.id,
               metadata: {
                 description: 'rent',
@@ -759,6 +775,7 @@ describe('OutgoingPaymentService', (): void => {
               }
               const firstPayment = await createOutgoingPayment(deps, {
                 walletAddressId,
+                client,
                 receiver: `${
                   Config.openPaymentsUrl
                 }/incoming-payments/${uuid()}`,
@@ -845,12 +862,12 @@ describe('OutgoingPaymentService', (): void => {
                 }
                 const firstPayment = await createOutgoingPayment(deps, {
                   walletAddressId,
+                  client,
                   receiver: `${
                     Config.openPaymentsUrl
                   }/incoming-payments/${uuid()}`,
                   debitAmount: debitAmount ? paymentAmount : undefined,
                   receiveAmount: debitAmount ? undefined : paymentAmount,
-                  client,
                   grant,
                   validDestination: false,
                   method: 'ilp'
@@ -893,6 +910,7 @@ describe('OutgoingPaymentService', (): void => {
       }
       const payment = await createOutgoingPayment(deps, {
         walletAddressId,
+        client,
         ...opts
       })
 
@@ -1230,10 +1248,16 @@ describe('OutgoingPaymentService', (): void => {
         receiver,
         debitAmount,
         validDestination: false,
-        method: 'ilp'
+        method: 'ilp',
+        client: client
       })
       quoteAmount = payment.debitAmount.value
-      await expectOutcome(payment, { accountBalance: BigInt(0) })
+      await expectOutcome(payment,
+        {
+          accountBalance: BigInt(0),
+          client: client
+        }
+      )
     }, 10_000)
 
     it('fails when no payment exists', async (): Promise<void> => {
