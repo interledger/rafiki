@@ -1,20 +1,10 @@
 name: Docker Build, Scan & Publish
 
-# on:
-#   workflow_run:
-#     workflows: [Release & Publish]
-#     types:
-#       - completed
-
 on:
-  workflow_dispatch:
-  pull_request:
-    branches:
-      - '**'
-  push:
-    branches:
-      - main
-      - release/v*
+  workflow_run:
+    workflows: [Node Build]
+    types:
+      - completed
 
 # tests and code analysis should be done before
 jobs:
