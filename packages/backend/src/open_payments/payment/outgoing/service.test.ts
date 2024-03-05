@@ -193,7 +193,7 @@ describe('OutgoingPaymentService', (): void => {
       amountDelivered?: bigint
       accountBalance?: bigint
       incomingPaymentReceived?: bigint
-      withdrawAmount?: bigint,
+      withdrawAmount?: bigint
       client?: string
     }
   ) {
@@ -1252,12 +1252,10 @@ describe('OutgoingPaymentService', (): void => {
         client: client
       })
       quoteAmount = payment.debitAmount.value
-      await expectOutcome(payment,
-        {
-          accountBalance: BigInt(0),
-          client: client
-        }
-      )
+      await expectOutcome(payment, {
+        accountBalance: BigInt(0),
+        client: client
+      })
     }, 10_000)
 
     it('fails when no payment exists', async (): Promise<void> => {
