@@ -203,8 +203,8 @@ importers:
         specifier: 4.0.6
         version: 4.0.6(graphql@16.8.1)
       '@types/koa':
-        specifier: 2.14.0
-        version: 2.14.0
+        specifier: 2.15.0
+        version: 2.15.0
       '@types/koa-bodyparser':
         specifier: ^4.3.12
         version: 4.3.12
@@ -399,8 +399,8 @@ importers:
         specifier: 4.0.6
         version: 4.0.6(graphql@16.8.1)
       '@types/koa':
-        specifier: 2.14.0
-        version: 2.14.0
+        specifier: 2.15.0
+        version: 2.15.0
       '@types/koa-bodyparser':
         specifier: ^4.3.12
         version: 4.3.12
@@ -3407,7 +3407,7 @@ packages:
     engines: {node: ^8.13.0 || >=10.10.0}
     dependencies:
       '@grpc/proto-loader': 0.7.10
-      '@types/node': 20.11.21
+      '@types/node': 18.19.19
     dev: false
 
   /@grpc/proto-loader@0.7.10:
@@ -3596,14 +3596,14 @@ packages:
       '@jest/test-result': 29.7.0
       '@jest/transform': 29.7.0
       '@jest/types': 29.6.3
-      '@types/node': 18.18.5
+      '@types/node': 18.19.19
       ansi-escapes: 4.3.2
       chalk: 4.1.2
       ci-info: 3.8.0
       exit: 0.1.2
       graceful-fs: 4.2.10
       jest-changed-files: 29.7.0
-      jest-config: 29.7.0(@types/node@18.18.5)
+      jest-config: 29.7.0(@types/node@18.19.19)
       jest-haste-map: 29.7.0
       jest-message-util: 29.7.0
       jest-regex-util: 29.6.3
@@ -3638,7 +3638,7 @@ packages:
     dependencies:
       '@jest/fake-timers': 29.7.0
       '@jest/types': 29.6.3
-      '@types/node': 18.18.5
+      '@types/node': 18.19.19
       jest-mock: 29.7.0
     dev: true
 
@@ -3665,7 +3665,7 @@ packages:
     dependencies:
       '@jest/types': 29.6.3
       '@sinonjs/fake-timers': 10.0.2
-      '@types/node': 18.18.5
+      '@types/node': 18.19.19
       jest-message-util: 29.7.0
       jest-mock: 29.7.0
       jest-util: 29.7.0
@@ -3785,7 +3785,7 @@ packages:
     dependencies:
       '@types/istanbul-lib-coverage': 2.0.4
       '@types/istanbul-reports': 3.0.1
-      '@types/node': 18.18.5
+      '@types/node': 18.19.19
       '@types/yargs': 15.0.14
       chalk: 4.1.2
     dev: true
@@ -4779,12 +4779,6 @@ packages:
       commander: 10.0.1
     dev: true
 
-  /@types/connect@3.4.35:
-    resolution: {integrity: sha512-cdeYyv4KWoEgpBISTxWvqYsVy444DOqehiF3fM3ne10AmJ62RSyNkUnxMJXHQWRQQX2eR94m5y1IZyDwBjV9FQ==}
-    dependencies:
-      '@types/node': 18.19.19
-    dev: true
-
   /@types/connect@3.4.38:
     resolution: {integrity: sha512-K6uROf1LD88uDQqJCktA4yzL1YYAK6NgfsI0v/mTgyPKWsX1CnJ0XPSDhViejru1GcRkLWb8RlzFYJRqGUbaug==}
     dependencies:
@@ -4804,7 +4798,7 @@ packages:
   /@types/cookies@0.7.7:
     resolution: {integrity: sha512-h7BcvPUogWbKCzBR2lY4oqaZbO3jXZksexYJVFvkrFeLgbZjQkU4x8pRq6eg2MHXQhY0McQdqmmsxRWlVAHooA==}
     dependencies:
-      '@types/connect': 3.4.35
+      '@types/connect': 3.4.38
       '@types/express': 4.17.21
       '@types/keygrip': 1.0.2
       '@types/node': 18.19.19
@@ -4896,10 +4890,6 @@ packages:
     resolution: {integrity: sha512-FyAOrDuQmBi8/or3ns4rwPno7/9tJTijVW6aQQjK02+kOQ8zmoNg2XJtAuQhvQcy1ASJq38wirX5//9J1EqoUA==}
     dev: true
 
-  /@types/http-errors@1.8.2:
-    resolution: {integrity: sha512-EqX+YQxINb+MeXaIqYDASb6U6FCHbWjkj4a1CKDBks3d/QiB2+PqBLyO72vLDgAO1wUI4O+9gweRcQK11bTL/w==}
-    dev: true
-
   /@types/http-errors@2.0.4:
     resolution: {integrity: sha512-D0CFMMtydbJAegzOyHjtiKPLlvnm3iTZyZRSZoLq2mRhDdmLfIWOCYPfQJ4cu2erKghU++QvjcUjp/5h7hESpA==}
 
@@ -4956,45 +4946,45 @@ packages:
   /@types/koa-bodyparser@4.3.12:
     resolution: {integrity: sha512-hKMmRMVP889gPIdLZmmtou/BijaU1tHPyMNmcK7FAHAdATnRcGQQy78EqTTxLH1D4FTsrxIzklAQCso9oGoebQ==}
     dependencies:
-      '@types/koa': 2.14.0
+      '@types/koa': 2.15.0
     dev: true
 
   /@types/koa-compose@3.2.5:
     resolution: {integrity: sha512-B8nG/OoE1ORZqCkBVsup/AKcvjdgoHnfi4pZMn5UwAPCbhk/96xyv284eBYW8JlQbQ7zDmnpFr68I/40mFoIBQ==}
     dependencies:
-      '@types/koa': 2.14.0
+      '@types/koa': 2.15.0
     dev: true
 
   /@types/koa-session@6.4.5:
     resolution: {integrity: sha512-Vc6+fslnPuMH2v9y80WYeo39UMo8mweuNNthKCwYU2ZE6l5vnRrzRU3BRvexKwsoI5sxsRl5CxDsBlLI8kY/XA==}
     dependencies:
       '@types/cookies': 0.7.7
-      '@types/koa': 2.14.0
+      '@types/koa': 2.15.0
     dev: true
 
-  /@types/koa@2.14.0:
-    resolution: {integrity: sha512-DTDUyznHGNHAl+wd1n0z1jxNajduyTh8R53xoewuerdBzGo6Ogj6F2299BFtrexJw4NtgjsI5SMPCmV9gZwGXA==}
+  /@types/koa@2.15.0:
+    resolution: {integrity: sha512-7QFsywoE5URbuVnG3loe03QXuGajrnotr3gQkXcEBShORai23MePfFYdhz90FEtBBpkyIYQbVD+evKtloCgX3g==}
     dependencies:
       '@types/accepts': 1.3.5
       '@types/content-disposition': 0.5.5
       '@types/cookies': 0.7.7
       '@types/http-assert': 1.5.3
-      '@types/http-errors': 1.8.2
+      '@types/http-errors': 2.0.4
       '@types/keygrip': 1.0.2
       '@types/koa-compose': 3.2.5
-      '@types/node': 18.18.5
+      '@types/node': 18.19.19
     dev: true
 
   /@types/koa__cors@5.0.0:
     resolution: {integrity: sha512-LCk/n25Obq5qlernGOK/2LUwa/2YJb2lxHUkkvYFDOpLXlVI6tKcdfCHRBQnOY4LwH6el5WOLs6PD/a8Uzau6g==}
     dependencies:
-      '@types/koa': 2.14.0
+      '@types/koa': 2.15.0
     dev: true
 
   /@types/koa__router@12.0.4:
     resolution: {integrity: sha512-Y7YBbSmfXZpa/m5UGGzb7XadJIRBRnwNY9cdAojZGp65Cpe5MAP3mOZE7e3bImt8dfKS4UFcR16SLH8L/z7PBw==}
     dependencies:
-      '@types/koa': 2.14.0
+      '@types/koa': 2.15.0
     dev: true
 
   /@types/lodash.clonedeep@4.5.7:
@@ -5093,11 +5083,6 @@ packages:
     dependencies:
       undici-types: 5.26.5
     dev: true
-
-  /@types/node@20.11.21:
-    resolution: {integrity: sha512-/ySDLGscFPNasfqStUuWWPfL78jompfIoVzLJPVVAHBh6rpG68+pI2Gk+fNLeI8/f1yPYL4s46EleVIc20F1Ow==}
-    dependencies:
-      undici-types: 5.26.5
 
   /@types/normalize-package-data@2.4.4:
     resolution: {integrity: sha512-37i+OaWTh9qeK4LSHPsyRC7NahnGotNuZvjLSgcPzblpHB3rrCJxAOgI5gCdKm7coonsaX1Of0ILiTcnZjbfxA==}
@@ -5228,7 +5213,7 @@ packages:
   /@types/ws@8.5.3:
     resolution: {integrity: sha512-6YOoWjruKj1uLf3INHH7D3qTXwFfEsg1kf3c0uDdSBJwfa/llkwIjrAGV7j7mVgGNbzTQ3HiHKKDXl6bJPD97w==}
     dependencies:
-      '@types/node': 20.11.21
+      '@types/node': 18.19.19
 
   /@types/yargs-parser@21.0.0:
     resolution: {integrity: sha512-iO9ZQHkZxHn4mSakYV0vFHAVDyEOIJQrV2uZ06HxEPcx+mt8swXoZHIbaaJ2crJYFfErySgktuTZ3BeLz+XmFA==}
@@ -7145,7 +7130,7 @@ packages:
       chalk: 4.1.2
       exit: 0.1.2
       graceful-fs: 4.2.10
-      jest-config: 29.7.0(@types/node@18.18.5)
+      jest-config: 29.7.0(@types/node@18.19.19)
       jest-util: 29.7.0
       prompts: 2.4.2
     transitivePeerDependencies:
@@ -10633,7 +10618,7 @@ packages:
       create-jest: 29.7.0
       exit: 0.1.2
       import-local: 3.1.0
-      jest-config: 29.7.0(@types/node@18.18.5)
+      jest-config: 29.7.0(@types/node@18.19.19)
       jest-util: 29.7.0
       jest-validate: 29.7.0
       yargs: 17.7.1
@@ -10644,7 +10629,7 @@ packages:
       - ts-node
     dev: true
 
-  /jest-config@29.7.0(@types/node@18.18.5):
+  /jest-config@29.7.0(@types/node@18.19.19):
     resolution: {integrity: sha512-uXbpfeQ7R6TZBqI3/TxCU4q4ttk3u0PJeC+E0zbfSoSjq6bJ7buBPxzQPL0ifrkY4DNu4JUdk0ImlBUYi840eQ==}
     engines: {node: ^14.15.0 || ^16.10.0 || >=18.0.0}
     peerDependencies:
@@ -10659,7 +10644,7 @@ packages:
       '@babel/core': 7.23.9
       '@jest/test-sequencer': 29.7.0
       '@jest/types': 29.6.3
-      '@types/node': 18.18.5
+      '@types/node': 18.19.19
       babel-jest: 29.7.0(@babel/core@7.23.9)
       chalk: 4.1.2
       ci-info: 3.8.0
@@ -10811,7 +10796,7 @@ packages:
     engines: {node: ^14.15.0 || ^16.10.0 || >=18.0.0}
     dependencies:
       '@jest/types': 29.6.3
-      '@types/node': 18.18.5
+      '@types/node': 18.19.19
       jest-util: 29.7.0
     dev: true
 
@@ -10958,7 +10943,7 @@ packages:
     engines: {node: ^14.15.0 || ^16.10.0 || >=18.0.0}
     dependencies:
       '@jest/types': 29.6.3
-      '@types/node': 18.18.5
+      '@types/node': 18.19.19
       chalk: 4.1.2
       ci-info: 3.8.0
       graceful-fs: 4.2.10
@@ -14045,7 +14030,7 @@ packages:
       '@protobufjs/path': 1.1.2
       '@protobufjs/pool': 1.1.0
       '@protobufjs/utf8': 1.1.0
-      '@types/node': 20.11.21
+      '@types/node': 18.19.19
       long: 5.2.3
     dev: false
 
