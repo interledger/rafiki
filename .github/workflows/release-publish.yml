@@ -2,13 +2,13 @@ name: Release & Publish
 
 on:
   workflow_dispatch:
-  pull_request:
-    branches:
-      - '**'
-  push:
-    branches:
-      - main
-      - release/v*
+  # pull_request:
+  #   branches:
+  #     - '**'
+  # push:
+  #   branches:
+  #     - main
+  #     - release/v*
 
 jobs:
   prerequisite:
