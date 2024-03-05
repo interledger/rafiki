@@ -4,7 +4,7 @@ import {
   createAuthenticatedClient
 } from '@interledger/open-payments'
 import { AccountProvider, setupFromSeed } from 'mock-account-servicing-lib'
-import { createApolloClient } from './apolloClient'
+import { AdminClient, createApolloClient } from './apolloClient'
 import { IntegrationServer } from './IntegrationServer'
 import { TestConfig } from './config'
 
@@ -12,6 +12,8 @@ import { TestConfig } from './config'
 export class MockASE {
   private config: TestConfig
   private apolloClient: ApolloClient<NormalizedCacheObject>
+
+  public adminClient: AdminClient
   public accounts: AccountProvider
   public opClient!: AuthenticatedClient
   public integrationServer: IntegrationServer
@@ -28,10 +30,11 @@ export class MockASE {
   private constructor(config: TestConfig) {
     this.config = config
     this.apolloClient = createApolloClient(config.graphqlUrl)
+    this.adminClient = new AdminClient(this.apolloClient)
     this.accounts = new AccountProvider()
     this.integrationServer = new IntegrationServer(
       this.config,
-      this.apolloClient,
+      this.adminClient,
       this.accounts
     )
     this.integrationServer.start(this.config.integrationServerPort)

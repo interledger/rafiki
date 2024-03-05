@@ -629,6 +629,9 @@ importers:
       '@types/koa-bodyparser':
         specifier: ^4.3.12
         version: 4.3.12
+      '@types/uuid':
+        specifier: ^9.0.8
+        version: 9.0.8
       dotenv:
         specifier: ^16.4.1
         version: 16.4.5
@@ -641,6 +644,9 @@ importers:
       mock-account-servicing-lib:
         specifier: workspace:*
         version: link:../../packages/mock-account-servicing-lib
+      uuid:
+        specifier: ^9.0.1
+        version: 9.0.1
       yaml:
         specifier: ^2.3.4
         version: 2.4.0
@@ -5420,7 +5426,7 @@ packages:
       '@babel/plugin-syntax-typescript': 7.23.3(@babel/core@7.24.0)
       '@vanilla-extract/babel-plugin-debug-ids': 1.0.5
       '@vanilla-extract/css': 1.14.1
-      esbuild: 0.17.6
+      esbuild: 0.19.12
       eval: 0.1.8
       find-up: 5.0.0
       javascript-stringify: 2.1.0
