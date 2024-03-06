@@ -17,6 +17,7 @@ import {
   isFinishableGrant
 } from '../grant/model'
 import { toOpenPaymentsAccess } from '../access/model'
+import { GNAPErrorCode, generateGNAPErrorResponse } from '../shared/gnapErrors'
 
 interface ServiceDependencies extends BaseService {
   grantService: GrantService
@@ -117,16 +118,26 @@ async function getGrantDetails(
       Buffer.from(config.identityServerSecret)
     )
   ) {
-    ctx.throw(401, 'invalid_request', {
-      error: { code: 'invalid_request', description: 'invalid x-idp-secret' }
-    })
+    ctx.throw(
+      401,
+      GNAPErrorCode.InvalidRequest,
+      generateGNAPErrorResponse(
+        GNAPErrorCode.InvalidRequest,
+        'invalid x-idp-secret'
+      )
+    )
   }
   const { id: interactId, nonce } = ctx.params
   const interaction = await interactionService.getBySession(interactId, nonce)
   if (!interaction || isRevokedGrant(interaction.grant)) {
-    ctx.throw(404, 'unknown_request', {
-      error: { code: 'unknown_request', description: 'unknown interaction' }
-    })
+    ctx.throw(
+      404,
+      GNAPErrorCode.UnknownInteraction,
+      generateGNAPErrorResponse(
+        GNAPErrorCode.UnknownInteraction,
+        'unknown interaction'
+      )
+    )
   }
 
   const access = await accessService.getByGrant(interaction.grantId)
@@ -158,12 +169,14 @@ async function startInteraction(
     interaction.state !== InteractionState.Pending ||
     isRevokedGrant(interaction.grant)
   ) {
-    ctx.throw(401, 'unknown_request', {
-      error: {
-        code: 'unknown_request',
-        description: 'unknown interaction'
-      }
-    })
+    ctx.throw(
+      401,
+      GNAPErrorCode.UnknownInteraction,
+      generateGNAPErrorResponse(
+        GNAPErrorCode.UnknownInteraction,
+        'unknown interaction'
+      )
+    )
   }
 
   const trx = await Interaction.startTransaction()
@@ -183,7 +196,14 @@ async function startInteraction(
     ctx.redirect(interactionUrl.toString())
   } catch (err) {
     await trx.rollback()
-    ctx.throw(500)
+    ctx.throw(
+      500,
+      GNAPErrorCode.RequestDenied,
+      generateGNAPErrorResponse(
+        GNAPErrorCode.RequestDenied,
+        'internal server error'
+      )
+    )
   }
 }
 
@@ -203,22 +223,26 @@ async function handleInteractionChoice(
       Buffer.from(config.identityServerSecret)
     )
   ) {
-    ctx.throw(401, 'invalid_interaction', {
-      error: {
-        code: 'invalid_interaction',
-        description: 'invalid x-idp-secret'
-      }
-    })
+    ctx.throw(
+      401,
+      GNAPErrorCode.InvalidInteraction,
+      generateGNAPErrorResponse(
+        GNAPErrorCode.InvalidInteraction,
+        'invalid x-idp-secret'
+      )
+    )
   }
 
   const interaction = await interactionService.getBySession(interactId, nonce)
   if (!interaction) {
-    ctx.throw(404, 'unknown_request', {
-      error: {
-        code: 'unknown_request',
-        description: 'unknown interaction'
-      }
-    })
+    ctx.throw(
+      404,
+      GNAPErrorCode.UnknownInteraction,
+      generateGNAPErrorResponse(
+        GNAPErrorCode.UnknownInteraction,
+        'unknown interaction'
+      )
+    )
   } else {
     const { grant } = interaction
     // If grant was already rejected or revoked
@@ -226,12 +250,14 @@ async function handleInteractionChoice(
       grant.state === GrantState.Finalized &&
       grant.finalizationReason !== GrantFinalization.Issued
     ) {
-      ctx.throw(401, 'user_denied', {
-        error: {
-          code: 'user_denied',
-          description: 'user denied interaction'
-        }
-      })
+      ctx.throw(
+        401,
+        GNAPErrorCode.UserDenied,
+        generateGNAPErrorResponse(
+          GNAPErrorCode.UserDenied,
+          'user denied interaction'
+        )
+      )
     }
 
     // If grant is otherwise not pending interaction
@@ -239,12 +265,14 @@ async function handleInteractionChoice(
       interaction.state !== InteractionState.Pending ||
       isInteractionExpired(interaction)
     ) {
-      ctx.throw(400, 'request_denied', {
-        error: {
-          code: 'request_denied',
-          description: 'invalid interaction'
-        }
-      })
+      ctx.throw(
+        400,
+        GNAPErrorCode.InvalidInteraction,
+        generateGNAPErrorResponse(
+          GNAPErrorCode.InvalidInteraction,
+          'invalid interaction'
+        )
+      )
     }
 
     if (choice === InteractionChoices.Accept) {
@@ -252,7 +280,14 @@ async function handleInteractionChoice(
     } else if (choice === InteractionChoices.Reject) {
       await interactionService.deny(interactId)
     } else {
-      ctx.throw(404)
+      ctx.throw(
+        400,
+        GNAPErrorCode.InvalidRequest,
+        generateGNAPErrorResponse(
+          GNAPErrorCode.InvalidRequest,
+          'invalid interaction choice'
+        )
+      )
     }
 
     ctx.status = 202
@@ -309,12 +344,14 @@ async function handleUnfinishableGrant(
     return
   } else {
     // Interaction is not in an accepted or rejected state
-    ctx.throw(401, 'invalid_interaction', {
-      error: {
-        code: 'invalid_interaction',
-        description: 'interaction is still pending'
-      }
-    })
+    ctx.throw(
+      401,
+      GNAPErrorCode.InvalidInteraction,
+      generateGNAPErrorResponse(
+        GNAPErrorCode.InvalidInteraction,
+        'interaction is not active'
+      )
+    )
   }
 }
 
@@ -327,12 +364,11 @@ async function finishInteraction(
 
   // TODO: redirect with this error in query string
   if (sessionNonce !== nonce) {
-    ctx.throw(401, 'invalid_request', {
-      error: {
-        code: 'invalid_request',
-        description: 'invalid session'
-      }
-    })
+    ctx.throw(
+      401,
+      GNAPErrorCode.InvalidRequest,
+      generateGNAPErrorResponse(GNAPErrorCode.InvalidRequest, 'invalid session')
+    )
   }
 
   const { interactionService } = deps
@@ -340,12 +376,14 @@ async function finishInteraction(
 
   // TODO: redirect with this error in query string
   if (!interaction || isRevokedGrant(interaction.grant)) {
-    ctx.throw(404, 'unknown_request', {
-      error: {
-        code: 'unknown_request',
-        description: 'unknown interaction'
-      }
-    })
+    ctx.throw(
+      404,
+      GNAPErrorCode.UnknownInteraction,
+      generateGNAPErrorResponse(
+        GNAPErrorCode.UnknownInteraction,
+        'unknown interaction'
+      )
+    )
   }
 
   const { grant } = interaction

@@ -328,7 +328,10 @@ describe('Access Token Routes', (): void => {
 
       await expect(accessTokenRoutes.rotate(ctx)).rejects.toMatchObject({
         status: 400,
-        message: 'Could not rotate token'
+        error: {
+          code: 'invalid_rotation',
+          description: 'invalid access token'
+        }
       })
     })
   })

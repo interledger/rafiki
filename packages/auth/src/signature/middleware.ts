@@ -10,6 +10,7 @@ import {
 import { AppContext } from '../app'
 import { ContinueContext, CreateContext, RevokeContext } from '../grant/routes'
 import { Config } from '../config/app'
+import { GNAPErrorCode, generateGNAPErrorResponse } from '../shared/gnapErrors'
 
 function contextToRequestLike(ctx: AppContext): RequestLike {
   const url =
@@ -31,9 +32,14 @@ async function verifySigFromClient(
   const sigInput = ctx.headers['signature-input'] as string
   const keyId = getKeyId(sigInput)
   if (!keyId) {
-    ctx.throw(401, 'invalid signature input', {
-      error: { code: 'invalid_request', description: 'invalid signature input' }
-    })
+    ctx.throw(
+      401,
+      GNAPErrorCode.InvalidClient,
+      generateGNAPErrorResponse(
+        GNAPErrorCode.InvalidClient,
+        'invalid signature input'
+      )
+    )
   }
 
   const clientService = await ctx.container.use('clientService')
@@ -43,12 +49,14 @@ async function verifySigFromClient(
   })
 
   if (!clientKey) {
-    ctx.throw(400, 'invalid client', {
-      error: {
-        code: 'invalid_client',
-        description: 'could not determine client'
-      }
-    })
+    ctx.throw(
+      400,
+      GNAPErrorCode.InvalidClient,
+      generateGNAPErrorResponse(
+        GNAPErrorCode.InvalidClient,
+        'could not determine client'
+      )
+    )
   }
   return validateSignature(clientKey, contextToRequestLike(ctx))
 }
@@ -61,12 +69,14 @@ export async function grantContinueHttpsigMiddleware(
     !validateSignatureHeaders(contextToRequestLike(ctx)) ||
     !ctx.headers['authorization']
   ) {
-    ctx.throw(400, 'invalid signature headers', {
-      error: {
-        code: 'invalid_request',
-        description: 'invalid signature headers'
-      }
-    })
+    ctx.throw(
+      401,
+      GNAPErrorCode.InvalidClient,
+      generateGNAPErrorResponse(
+        GNAPErrorCode.InvalidClient,
+        'invalid signature headers'
+      )
+    )
   }
 
   const continueToken = ctx.headers['authorization'].replace(
@@ -92,17 +102,27 @@ export async function grantContinueHttpsigMiddleware(
   )
 
   if (!grant) {
-    ctx.throw(401, 'invalid grant', {
-      error: { code: 'invalid_continuation', description: 'invalid grant' }
-    })
+    ctx.throw(
+      401,
+      GNAPErrorCode.InvalidContinuation,
+      generateGNAPErrorResponse(
+        GNAPErrorCode.InvalidContinuation,
+        'invalid grant'
+      )
+    )
     return
   }
 
   const sigVerified = await verifySigFromClient(grant.client, ctx)
   if (!sigVerified) {
-    ctx.throw(401, 'invalid signature', {
-      error: { code: 'invalid_request', description: 'invalid signature' }
-    })
+    ctx.throw(
+      401,
+      GNAPErrorCode.InvalidClient,
+      generateGNAPErrorResponse(
+        GNAPErrorCode.InvalidClient,
+        'invalid signature'
+      )
+    )
   }
   await next()
 }
@@ -112,21 +132,28 @@ export async function grantInitiationHttpsigMiddleware(
   next: () => Promise<any>
 ): Promise<void> {
   if (!validateSignatureHeaders(contextToRequestLike(ctx))) {
-    ctx.throw(400, 'invalid signature headers', {
-      error: {
-        code: 'invalid_request',
-        description: 'invalid signature headers'
-      }
-    })
+    ctx.throw(
+      401,
+      GNAPErrorCode.InvalidClient,
+      generateGNAPErrorResponse(
+        GNAPErrorCode.InvalidClient,
+        'invalid signature headers'
+      )
+    )
   }
 
   const { body } = ctx.request
 
   const sigVerified = await verifySigFromClient(body.client, ctx)
   if (!sigVerified) {
-    ctx.throw(401, 'invalid signature', {
-      error: { code: 'invalid_request', description: 'invalid signature' }
-    })
+    ctx.throw(
+      401,
+      GNAPErrorCode.InvalidClient,
+      generateGNAPErrorResponse(
+        GNAPErrorCode.InvalidClient,
+        'invalid signature'
+      )
+    )
   }
   await next()
 }
@@ -136,12 +163,14 @@ export async function tokenHttpsigMiddleware(
   next: () => Promise<any>
 ): Promise<void> {
   if (!validateSignatureHeaders(contextToRequestLike(ctx))) {
-    ctx.throw(400, 'invalid signature headers', {
-      error: {
-        code: 'invalid_request',
-        description: 'invalid signature headers'
-      }
-    })
+    ctx.throw(
+      401,
+      GNAPErrorCode.InvalidClient,
+      generateGNAPErrorResponse(
+        GNAPErrorCode.InvalidClient,
+        'invalid signature headers'
+      )
+    )
   }
 
   const accessTokenService = await ctx.container.use('accessTokenService')
@@ -149,10 +178,14 @@ export async function tokenHttpsigMiddleware(
     ctx.params['id']
   )
   if (!accessToken) {
-    ctx.throw(401, 'invalid access token', {
-      error: { code: 'invalid_client', description: 'invalid access token' }
-    })
-    return
+    ctx.throw(
+      401,
+      GNAPErrorCode.InvalidClient,
+      generateGNAPErrorResponse(
+        GNAPErrorCode.InvalidClient,
+        'invalid access token'
+      )
+    )
   }
 
   if (!accessToken.grant) {
@@ -160,19 +193,26 @@ export async function tokenHttpsigMiddleware(
     logger.error(
       `access token with management id ${ctx.params['id']} has no grant associated with it.`
     )
-    ctx.throw(500, 'internal server error', {
-      error: {
-        code: 'internal_server_error',
-        description: 'internal server error'
-      }
-    })
+    ctx.throw(
+      500,
+      GNAPErrorCode.RequestDenied,
+      generateGNAPErrorResponse(
+        GNAPErrorCode.RequestDenied,
+        'internal server error'
+      )
+    )
   }
 
   const sigVerified = await verifySigFromClient(accessToken.grant.client, ctx)
   if (!sigVerified) {
-    ctx.throw(401, 'invalid signature', {
-      error: { code: 'invalid_request', description: 'invalid signature' }
-    })
+    ctx.throw(
+      401,
+      GNAPErrorCode.InvalidClient,
+      generateGNAPErrorResponse(
+        GNAPErrorCode.InvalidClient,
+        'invalid signature'
+      )
+    )
   }
 
   ctx.accessToken = accessToken
