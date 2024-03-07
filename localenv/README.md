@@ -124,7 +124,7 @@ To use the Bruno collection examples follow the steps:
 1. run `docker logs rafiki-cloud-nine-mock-ase-1`
 2. find the list of created wallet addresses
 3. copy the url of one of the wallet addresses
-4. set the url as `senderWalletAddress` variable in the Bruno `Remote` environment
+4. set the url as `senderWalletAddress` variable in the Bruno `Autopeering` environment
 
 After stopping the script it is necessary to clear the environment using the command described in [Shutting down](#Shutting-down). This is necessary as on a new run of the scripts (with autopeering or not) the wallet address url will differ.
 
