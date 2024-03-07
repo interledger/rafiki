@@ -52,7 +52,7 @@ export async function createContextWithSigHeaders<T extends AppContext>(
   const request = {
     url,
     method,
-    headers: JSON.parse(JSON.stringify(headers)),
+    headers: headers ? JSON.parse(JSON.stringify(headers)) : undefined,
     body: JSON.stringify(requestBody)
   }
   const sigHeaders = await createHeaders({

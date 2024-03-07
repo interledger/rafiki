@@ -19,7 +19,7 @@ function contextToRequestLike(ctx: AppContext): RequestLike {
   return {
     url,
     method: ctx.method,
-    headers: JSON.parse(JSON.stringify(ctx.headers)),
+    headers: ctx.headers ? JSON.parse(JSON.stringify(ctx.headers)) : undefined,
     body: ctx.request.body ? JSON.stringify(ctx.request.body) : undefined
   }
 }
