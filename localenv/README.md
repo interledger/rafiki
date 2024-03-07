@@ -175,7 +175,7 @@ The Examples folder in the Bruno collection includes an [Open Payments](https://
 6. creates a quote on the sender's account
 7. requests a grant to create (and read) an outgoing payment on the sender's account
 
-Note that you have to go through an interaction flow by clicking on the `redirect` link in the grant request response. Cope the `interaction_ref` from the url query parameters after clicking "Continue" in the interaction flow.
+Note that you have to go through an interaction flow by clicking on the `redirect` link in the grant request response. Copy the `interaction_ref` from the url query parameters after clicking "Continue" in the interaction flow.
 
 8. continues the grant request (after inserting the `interact_ref` in the body)
 9. creates an outgoing payment on the sender's account
