@@ -2806,6 +2806,18 @@
         "description": null,
         "fields": [
           {
+            "name": "client",
+            "description": "Information about the client resource requesting the incoming payment.",
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "createdAt",
             "description": "Date-time of creation",
             "args": [],
@@ -2923,7 +2935,7 @@
           },
           {
             "name": "walletAddressId",
-            "description": "Id of the wallet address under which this incoming payment was created",
+            "description": "Id of the wallet address under which this incoming payment was created.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -4632,6 +4644,18 @@
         "name": "OutgoingPayment",
         "description": null,
         "fields": [
+          {
+            "name": "client",
+            "description": "Information about the client resource requesting the outgoing payment.",
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
           {
             "name": "createdAt",
             "description": "Date-time of creation",
