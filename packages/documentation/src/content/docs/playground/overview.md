@@ -140,9 +140,8 @@ pnpm localenv:compose down --volumes
 The Open Payments APIs can be interacted with using the [Bruno collection](https://github.com/interledger/rafiki/tree/main/bruno/collections/Interledger) ([resource server endpoints](https://github.com/interledger/rafiki/tree/main/bruno/collections/Interledger/Open%20Payments%20APIs) and [auth server endpoints](https://github.com/interledger/rafiki/tree/main/bruno/collections/Interledger/Open%20Payments%20Auth%20APIs)). It requires you to
 
 1. load the collection into Bruno by clicking "Open Collection"
-2. navigating to `/rafiki/bruno/collections/Interledger` on your machine and
-3. clicking "Open"
-   Furthermore, you need to either load the [Local Environment](https://github.com/interledger/rafiki/tree/main/bruno/collections/Interledger/environments/Local%20Playground.bru) or the [Remote Environment](https://github.com/interledger/rafiki/tree/main/bruno/collections/Interledger/environments/Remote.bru).
+2. navigating to `/rafiki/bruno/collections/Interledger` on your machine and clicking "Open"
+3. Furthermore, you need to either load the [Local Environment](https://github.com/interledger/rafiki/tree/main/bruno/collections/Interledger/environments/Local%20Playground.bru) or the [Remote Environment](https://github.com/interledger/rafiki/tree/main/bruno/collections/Interledger/environments/Remote.bru).
 
 The Examples folder in the Bruno collection includes an [Open Payments](https://github.com/interledger/rafiki/tree/main/bruno/collections/Interledger/Examples/Open%20Payments) example that can be executed one by one. It
 
