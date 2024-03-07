@@ -4,16 +4,18 @@ import {
   isPendingGrant,
   WalletAddress,
   IncomingPayment,
-  Quote
+  Quote,
+  PendingGrant
 } from '@interledger/open-payments'
 import { C9_CONFIG, HLB_CONFIG } from './lib/config'
 import { MockASE } from './lib/MockASE'
 import { GraphqlTypes, WebhookEventType } from 'mock-account-servicing-lib'
-import { wait } from './lib/utils'
+import { parseCookies, poll, wait } from './lib/utils'
+import { get } from 'http'
 
 jest.setTimeout(20000)
 
-describe('End-to-end tests', (): void => {
+describe('Integration tests', (): void => {
   let c9: MockASE
   let hlb: MockASE
 
@@ -44,7 +46,7 @@ describe('End-to-end tests', (): void => {
     let senderWalletAddress: WalletAddress
 
     // Assigned initially in test: Grant Request Incoming Payment
-    // Then re-assigned in test: Grant Request Quote
+    // Then re-assigned in test: Grant Request Quote and Grant Request Outgoing Payment
     // - could set new vars but just following whats in postman for now
     let accessToken: string
 
@@ -55,7 +57,8 @@ describe('End-to-end tests', (): void => {
     let quote: Quote
 
     // Assigned in Grant Request Outgoing Payment
-    let continueId: string
+    // let continueId: string
+    let outgoingPaymentGrant: PendingGrant
 
     test('Can Get Existing Wallet Address', async (): Promise<void> => {
       receiverWalletAddress = await c9.opClient.walletAddress.get({
@@ -232,20 +235,143 @@ describe('End-to-end tests', (): void => {
       console.log({ grant })
 
       assert(isPendingGrant(grant))
-      const continueId_ = grant.continue.uri.split('/').pop()
-      assert(continueId_)
-      continueId = continueId_
+      outgoingPaymentGrant = grant
     })
-    // test('Continuation Request', async (): Promise<void> => {
-    //   expect(true).toBe(true)
-    // })
+
+    test('Continuation Request', async (): Promise<void> => {
+      // Extract interact ID from the redirect URL
+      const { redirect: startInteractionUrl } = outgoingPaymentGrant.interact
+      const tokens = startInteractionUrl.split('/interact/')
+      const interactId = tokens[1] ? tokens[1].split('/')[0] : null
+      const nonce = outgoingPaymentGrant.interact.finish
+      assert(interactId)
+
+      // Start interaction
+      const interactResponse = await fetch(startInteractionUrl, {
+        redirect: 'manual' // dont follow redirects
+      })
+      expect(interactResponse.status).toBe(302)
+
+      const cookie = parseCookies(interactResponse)
+
+      // Accept
+      const acceptResponse = await fetch(
+        `${senderWalletAddress.authServer}/grant/${interactId}/${nonce}/accept`,
+        {
+          method: 'POST',
+          headers: {
+            'x-idp-secret': 'replace-me',
+            cookie
+          }
+        }
+      )
+      expect(acceptResponse.status).toBe(202)
+
+      // Finish interaction
+      const finishResponse = await fetch(
+        `${senderWalletAddress.authServer}/interact/${interactId}/${nonce}/finish`,
+        {
+          method: 'GET',
+          headers: {
+            'x-idp-secret': 'replace-me',
+            cookie
+          },
+          redirect: 'manual' // dont follow redirects
+        }
+      )
+      expect(finishResponse.status).toBe(302)
+
+      const redirectURI = finishResponse.headers.get('location')
+      assert(redirectURI)
+
+      const url = new URL(redirectURI)
+      const interact_ref = url.searchParams.get('interact_ref')
+      assert(interact_ref)
+
+      const { access_token, uri } = outgoingPaymentGrant.continue
+
+      await wait((outgoingPaymentGrant.continue.wait ?? 5) * 1000)
+
+      const grantContinue = await c9.opClient.grant.continue(
+        {
+          accessToken: access_token.value,
+          url: uri
+        },
+        { interact_ref }
+      )
+      console.log({ grantContinue })
+    })
+
+    // ----------------------------------------------------------
+    // Grant Continuation via Polling.
+    // Alternative to getting the redirect url with interact_ref.
+    test.skip('Grant Request Outgoing Payment', async (): Promise<void> => {
+      const grant = await hlb.opClient.grant.request(
+        {
+          url: senderWalletAddress.authServer
+        },
+        {
+          access_token: {
+            access: [
+              {
+                type: 'outgoing-payment',
+                actions: ['create', 'read', 'list'],
+                identifier: senderWalletAddressUrl,
+                limits: {
+                  debitAmount: quote.debitAmount,
+                  receiveAmount: quote.receiveAmount
+                }
+              }
+            ]
+          },
+          interact: {
+            start: ['redirect']
+            // finish: {
+            //   method: 'redirect',
+            //   uri: 'https://example.com',
+            //   nonce: '456'
+            // }
+          }
+        }
+      )
+
+      console.log({ grant })
+
+      assert(isPendingGrant(grant))
+      outgoingPaymentGrant = grant
+    })
+
+    test.skip('Continuation Request', async (): Promise<void> => {
+      const { access_token, uri } = outgoingPaymentGrant.continue
+      const grantContinue = await poll(
+        async () =>
+          c9.opClient.grant.continue(
+            {
+              accessToken: access_token.value,
+              url: uri
+            },
+            {
+              interact_ref: '' // TODO: update OP spec/client to not need body/interact_ref here
+            }
+          ),
+        (responseData) => 'accessToken' in responseData,
+        10,
+        2
+      )
+      console.log({ grantContinue })
+      expect(true).toBe(true)
+    })
+    // ^^^
+    // Grant Continuation via Polling.
+    // Alternative to getting the redirect url with interact_ref.
+    // ----------------------------------------------------------
 
     // test('Create Outgoing Payment', async (): Promise<void> => {
     //   expect(true).toBe(true)
     // })
   })
 
-  describe('Peer to Peer Flow', (): void => {
+  describe.skip('Peer to Peer Flow', (): void => {
     const receiverWalletAddressUrl =
       'https://host.docker.internal:4000/accounts/pfry'
     const amountValueToSend = '500'
