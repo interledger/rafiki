@@ -42,7 +42,7 @@ function contextToRequestLike(ctx: HttpSigContext): RequestLike {
   return {
     url,
     method: ctx.method,
-    headers: ctx.headers,
+    headers: JSON.parse(JSON.stringify(ctx.headers)),
     body: ctx.request.body ? JSON.stringify(ctx.request.body) : undefined
   }
 }
