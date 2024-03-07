@@ -21,7 +21,7 @@ body:json {
 }
 
 script:pre-request {
-  const scripts = require('./scripts/scripts');
+  const scripts = require('./scripts');
   
   await scripts.addSignatureHeaders();
 }

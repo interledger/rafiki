@@ -50,7 +50,7 @@ body:graphql:vars {
 }
 
 script:pre-request {
-  const scripts = require('./scripts/scripts');
+  const scripts = require('./scripts');
   
   await scripts.getWalletAddressId('RafikiGraphqlHost', 'Grace Franklin', 'gfranklinWalletAddressId');
 }
