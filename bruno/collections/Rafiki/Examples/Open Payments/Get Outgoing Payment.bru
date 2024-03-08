@@ -15,7 +15,7 @@ headers {
 }
 
 script:pre-request {
-  const scripts = require('./scripts/scripts');
+  const scripts = require('./scripts');
   
   scripts.addHostHeader();
   

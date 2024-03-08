@@ -33,6 +33,47 @@ exports.up = function (knex) {
         .onDelete('CASCADE')
     })
     .then(() => {
+      // Delete webhook events with data corresponding to a deleted entity (otherwise this migration will fail when populating the foreign keys in the next step)
+      return knex.raw(
+        `
+        DELETE FROM "webhookEvents" WHERE id IN (
+          SELECT "webhookEvents".id FROM "webhookEvents" 
+          LEFT JOIN "incomingPayments" ON ("webhookEvents".data->>'id')::uuid = "incomingPayments".id
+          WHERE "webhookEvents".type IN ('incoming_payment.created', 'incoming_payment.completed', 'incoming_payment.expired')
+          AND "incomingPayments".id IS NULL
+        );
+  
+        DELETE FROM "webhookEvents" WHERE id IN (
+          SELECT "webhookEvents".id FROM "webhookEvents"
+          LEFT JOIN "outgoingPayments" ON ("webhookEvents".data->>'id')::uuid = "outgoingPayments".id
+          WHERE "webhookEvents".type IN ('outgoing_payment.created', 'outgoing_payment.completed','outgoing_payment.failed')
+          AND "outgoingPayments".id IS NULL
+        );
+        
+        DELETE FROM "webhookEvents" WHERE id IN (
+          SELECT "webhookEvents".id FROM "webhookEvents"
+          LEFT JOIN "peers" ON ("webhookEvents".data->>'id')::uuid = "peers".id
+          WHERE "webhookEvents".type IN ('peer.liquidity_low')
+          AND "peers".id IS NULL
+        );
+        
+        DELETE FROM "webhookEvents" WHERE id IN (
+          SELECT "webhookEvents".id FROM "webhookEvents"
+          LEFT JOIN "assets" ON ("webhookEvents".data->>'id')::uuid = "assets".id
+          WHERE "webhookEvents".type IN ('asset.liquidity_low')
+          AND "assets".id IS NULL
+        );
+        
+        DELETE FROM "webhookEvents" WHERE id IN (
+          SELECT "webhookEvents".id FROM "webhookEvents"
+          LEFT JOIN "walletAddresses" ON ("webhookEvents".data->'walletAddress'->>'id')::uuid = "walletAddresses".id
+          WHERE "webhookEvents".type IN ('wallet_address.web_monetization')
+          AND "walletAddresses".id IS NULL
+        );
+        `
+      )
+    })
+    .then(() => {
       return knex('webhookEvents').update({
         incomingPaymentId: knex.raw(
           "CASE WHEN type LIKE 'incoming_payment.%' THEN (data->>'id')::uuid END"

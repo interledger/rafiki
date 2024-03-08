@@ -9,8 +9,8 @@
     "typecheck": "tsc"
   },
   "dependencies": {
-    "@apollo/client": "^3.9.5",
-    "@interledger/http-signature-utils": "2.0.1",
+    "@apollo/client": "^3.9.6",
+    "@interledger/http-signature-utils": "2.0.2",
     "@remix-run/node": "^2.6.0",
     "@remix-run/react": "^2.6.0",
     "@remix-run/serve": "^2.6.0",
@@ -22,12 +22,12 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "uuid": "^9.0.1",
-    "yaml": "^2.3.4"
+    "yaml": "^2.4.1"
   },
   "devDependencies": {
     "@remix-run/dev": "^2.6.0",
-    "@types/react": "^18.2.62",
-    "@types/react-dom": "^18.2.19"
+    "@types/react": "^18.2.64",
+    "@types/react-dom": "^18.2.21"
   },
   "engines": {
     "node": "18"
