@@ -52,19 +52,17 @@ export const getPageTests = <T extends Model, M extends BaseModel>({
   const toConnection = (query: ApolloQueryResult<T>): Connection<T> => {
     if (query.data) {
       if (parent) {
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        if (query.data[parent.query]) {
-          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-          // @ts-ignore
-          return query.data[parent.query][pagedQuery]
+        const parentData = query.data[parent.query as keyof typeof query.data]
+
+        if (parentData) {
+          return (parentData as Record<string, Connection<T>>)[pagedQuery]
         } else {
           throw new Error(`Parent ${parent.query} was empty`)
         }
       } else {
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        return query.data[pagedQuery]
+        return query.data[
+          pagedQuery as keyof typeof query.data
+        ] as Connection<T>
       }
     } else {
       throw new Error('Data was empty')
@@ -81,7 +79,7 @@ export const getPageTests = <T extends Model, M extends BaseModel>({
     async function createModels(): Promise<M[]> {
       const models: M[] = []
       for (let i = 0; i < 50; i++) {
-        models.push(await createModel())
+        models[49 - i] = await createModel()
       }
       return models
     }

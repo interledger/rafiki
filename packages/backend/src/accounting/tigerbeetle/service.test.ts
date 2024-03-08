@@ -1,3 +1,7 @@
+/**
+ * @jest-environment ./packages/backend/jest.tigerbeetle-environment.ts
+ */
+
 import assert from 'assert'
 import { CreateAccountError as CreateTbAccountError } from 'tigerbeetle-node'
 import { v4 as uuid } from 'uuid'
@@ -9,7 +13,6 @@ import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../../'
 import { AppServices } from '../../app'
 import { truncateTables } from '../../tests/tableManager'
-import { startTigerbeetleContainer } from '../../tests/tigerbeetle'
 import { AccountFactory, FactoryAccount } from '../../tests/accountFactory'
 import { isTransferError, TransferError } from '../errors'
 import {
@@ -20,12 +23,12 @@ import {
   Withdrawal
 } from '../service'
 
-describe('Accounting Service', (): void => {
+describe('Tigerbeetle Accounting Service', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let accountingService: AccountingService
   let accountFactory: AccountFactory
-  const timeout = BigInt(10_000) // 10 seconds
+  const timeout = 10
 
   let ledger = 1
   function newLedger() {
@@ -33,10 +36,14 @@ describe('Accounting Service', (): void => {
   }
 
   beforeAll(async (): Promise<void> => {
-    const { port } = await startTigerbeetleContainer()
-    Config.tigerbeetleReplicaAddresses = [port.toString()]
+    const tigerbeetlePort = (global as unknown as { tigerbeetlePort: number })
+      .tigerbeetlePort
 
-    deps = await initIocContainer({ ...Config, useTigerbeetle: true })
+    deps = initIocContainer({
+      ...Config,
+      tigerbeetleReplicaAddresses: [tigerbeetlePort.toString()],
+      useTigerbeetle: true
+    })
     appContainer = await createTestApp(deps)
     accountingService = await deps.use('accountingService')
     accountFactory = new AccountFactory(accountingService, newLedger)
@@ -48,7 +55,6 @@ describe('Accounting Service', (): void => {
 
   afterAll(async (): Promise<void> => {
     await appContainer.shutdown()
-    // TODO: find a way to gracefully stop TB container without running into a thread panic
   })
 
   describe('Create Liquidity Account', (): void => {
@@ -83,11 +89,11 @@ describe('Accounting Service', (): void => {
           },
           LiquidityAccountType.ASSET
         )
-      ).rejects.toThrowError('unable to create account, invalid id')
+      ).rejects.toThrow('unable to create account, invalid id')
     })
 
     test('Create throws on error', async (): Promise<void> => {
-      const tigerbeetle = await deps.use('tigerbeetle')
+      const tigerbeetle = await deps.use('tigerbeetle')!
       jest.spyOn(tigerbeetle, 'createAccounts').mockResolvedValueOnce([
         {
           index: 0,
@@ -106,7 +112,7 @@ describe('Accounting Service', (): void => {
           },
           LiquidityAccountType.ASSET
         )
-      ).rejects.toThrowError(
+      ).rejects.toThrow(
         new TigerbeetleCreateAccountError(
           CreateTbAccountError.exists_with_different_ledger
         )
@@ -209,7 +215,7 @@ describe('Accounting Service', (): void => {
             sourceAccount: account,
             sourceAmount: BigInt(10 * (i + 1)),
             destinationAccount: receivingAccount,
-            timeout: 0n
+            timeout: 0
           })
           assert.ok(!isTransferError(transfer))
           await transfer.post()
@@ -708,12 +714,12 @@ describe('Accounting Service', (): void => {
         const expiringWithdrawal = {
           ...withdrawal,
           id: uuid(),
-          timeout: BigInt(1)
+          timeout: 1
         }
         await expect(
           accountingService.createWithdrawal(expiringWithdrawal)
         ).resolves.toBeUndefined()
-        await new Promise((resolve) => setImmediate(resolve))
+        await new Promise((resolve) => setTimeout(resolve, 1000))
         await expect(
           accountingService.postWithdrawal(expiringWithdrawal.id)
         ).resolves.toEqual(TransferError.TransferExpired)
@@ -775,12 +781,12 @@ describe('Accounting Service', (): void => {
         const expiringWithdrawal = {
           ...withdrawal,
           id: uuid(),
-          timeout: BigInt(1)
+          timeout: 1
         }
         await expect(
           accountingService.createWithdrawal(expiringWithdrawal)
         ).resolves.toBeUndefined()
-        await new Promise((resolve) => setImmediate(resolve))
+        await new Promise((resolve) => setTimeout(resolve, 1000))
         await expect(
           accountingService.voidWithdrawal(expiringWithdrawal.id)
         ).resolves.toEqual(TransferError.TransferExpired)

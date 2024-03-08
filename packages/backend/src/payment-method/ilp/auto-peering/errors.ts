@@ -35,5 +35,5 @@ export const errorToMessage: {
   [AutoPeeringError.InvalidPeerUrl]:
     'Peer URL is invalid or peer does not support auto-peering',
   [AutoPeeringError.InvalidPeeringRequest]: 'Invalid peering request',
-  [AutoPeeringError.LiquidityError]: 'Could not add liquidity to peer'
+  [AutoPeeringError.LiquidityError]: 'Could not deposit liquidity to peer'
 }

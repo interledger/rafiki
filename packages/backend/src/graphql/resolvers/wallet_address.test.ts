@@ -380,10 +380,11 @@ describe('Wallet Address Resolvers', (): void => {
       ${'Alice'}
       ${undefined}
     `(
-      'Can get an wallet address (publicName: $publicName)',
+      'Can get a wallet address (publicName: $publicName)',
       async ({ publicName }): Promise<void> => {
         const walletAddress = await createWalletAddress(deps, {
-          publicName
+          publicName,
+          createLiquidityAccount: true
         })
         const query = await appContainer.apolloClient
           .query({
@@ -391,6 +392,7 @@ describe('Wallet Address Resolvers', (): void => {
               query WalletAddress($walletAddressId: String!) {
                 walletAddress(id: $walletAddressId) {
                   id
+                  liquidity
                   asset {
                     code
                     scale
@@ -415,6 +417,7 @@ describe('Wallet Address Resolvers', (): void => {
         expect(query).toEqual({
           __typename: 'WalletAddress',
           id: walletAddress.id,
+          liquidity: '0',
           asset: {
             __typename: 'Asset',
             code: walletAddress.asset.code,

@@ -1,4 +1,4 @@
-import { json, type LoaderArgs } from '@remix-run/node'
+import { json, type LoaderFunctionArgs } from '@remix-run/node'
 import {
   Outlet,
   useLoaderData,
@@ -12,7 +12,7 @@ import { listWebhooks } from '~/lib/api/webhook.server'
 import { webhooksSearchParams } from '~/lib/validate.server'
 import { WebhookEventType } from '~/shared/enums'
 
-export const loader = async ({ request }: LoaderArgs) => {
+export const loader = async ({ request }: LoaderFunctionArgs) => {
   const url = new URL(request.url)
   const searchParams = Object.fromEntries(url.searchParams.entries())
   const result = webhooksSearchParams.safeParse(
@@ -115,13 +115,16 @@ export default function WebhookEventsPage() {
             </div>
           </div>
           <Table>
-            <Table.Head columns={['ID', 'Type', 'Data']} />
+            <Table.Head columns={['ID', 'Type', 'Date', 'Data']} />
             <Table.Body>
               {webhooks.edges.length ? (
                 webhooks.edges.map((webhook) => (
                   <Table.Row key={webhook.node.id}>
                     <Table.Cell>{webhook.node.id}</Table.Cell>
                     <Table.Cell>{webhook.node.type}</Table.Cell>
+                    <Table.Cell>
+                      {new Date(webhook.node.createdAt).toLocaleString()}
+                    </Table.Cell>
                     <Table.Cell>
                       <Button
                         aria-label='view webhook data'

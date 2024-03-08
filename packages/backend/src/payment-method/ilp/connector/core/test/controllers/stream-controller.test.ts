@@ -30,7 +30,7 @@ describe('Stream Controller', function () {
 
   afterAll(async () => {
     await services.redis.flushdb()
-    await services.redis.disconnect()
+    await services.redis.quit()
   })
 
   test('constructs a reply for a receive account', async () => {

@@ -3,6 +3,7 @@ import { v4 as uuid } from 'uuid'
 
 import { AssetError, isAssetError } from './errors'
 import { AssetService } from './service'
+import { Asset } from './model'
 import { Pagination, SortOrder } from '../shared/baseModel'
 import { getPageTests } from '../shared/baseModel.test'
 import { createTestApp, TestContainer } from '../tests/app'
@@ -14,7 +15,6 @@ import { initIocContainer } from '../'
 import { AppServices } from '../app'
 import { LiquidityAccountType } from '../accounting/service'
 import { CheckViolationError } from 'objection'
-import { orderBy } from 'lodash'
 
 describe('Asset Service', (): void => {
   let deps: IocContract<AppServices>
@@ -217,15 +217,13 @@ describe('Asset Service', (): void => {
 
   describe('getAll', (): void => {
     test('returns all assets', async (): Promise<void> => {
-      const assets = await Promise.all([
-        assetService.create(randomAsset()),
-        assetService.create(randomAsset()),
-        assetService.create(randomAsset())
-      ])
+      const assets: (Asset | AssetError)[] = []
+      for (let i = 0; i < 3; i++) {
+        const asset = await assetService.create(randomAsset())
+        assets.push(asset)
+      }
 
-      await expect(assetService.getAll()).resolves.toEqual(
-        orderBy(assets, 'createdAt', 'asc')
-      )
+      await expect(assetService.getAll()).resolves.toEqual(assets)
     })
 
     test('returns empty array if no assets', async (): Promise<void> => {

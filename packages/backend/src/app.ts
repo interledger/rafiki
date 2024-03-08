@@ -9,6 +9,7 @@ import Koa, { DefaultState } from 'koa'
 import bodyParser from 'koa-bodyparser'
 import { Logger } from 'pino'
 import Router from '@koa/router'
+import cors from '@koa/cors'
 import { ApolloServer } from '@apollo/server'
 import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer'
 import { koaMiddleware } from '@as-integrations/koa'
@@ -83,7 +84,7 @@ import { Rafiki as ConnectorApp } from './payment-method/ilp/connector/core'
 import { AxiosInstance } from 'axios'
 import { PaymentMethodHandlerService } from './payment-method/handler/service'
 import { IlpPaymentService } from './payment-method/ilp/service'
-
+import { TelemetryService } from './telemetry/service'
 export interface AppContextData {
   logger: Logger
   container: AppContainer
@@ -204,6 +205,8 @@ const WALLET_ADDRESS_PATH = '/:walletAddressPath+'
 
 export interface AppServices {
   logger: Promise<Logger>
+  telemetry?: Promise<TelemetryService>
+  internalRatesService?: Promise<RatesService>
   knex: Promise<Knex>
   axios: Promise<AxiosInstance>
   config: Promise<IAppConfig>
@@ -236,7 +239,7 @@ export interface AppServices {
   autoPeeringService: Promise<AutoPeeringService>
   autoPeeringRoutes: Promise<AutoPeeringRoutes>
   connectorApp: Promise<ConnectorApp>
-  tigerbeetle: Promise<TigerbeetleClient>
+  tigerbeetle?: Promise<TigerbeetleClient>
   paymentMethodHandlerService: Promise<PaymentMethodHandlerService>
   ilpPaymentService: Promise<IlpPaymentService>
 }
@@ -313,7 +316,8 @@ export class App {
     // Setup Apollo
     this.apolloServer = new ApolloServer({
       schema: schemaWithMiddleware,
-      plugins: [ApolloServerPluginDrainHttpServer({ httpServer })]
+      plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
+      introspection: this.config.env !== 'production'
     })
 
     await this.apolloServer.start()
@@ -370,7 +374,8 @@ export class App {
       'outgoingPaymentRoutes'
     )
     const quoteRoutes = await this.container.use('quoteRoutes')
-    const { resourceServerSpec } = await this.container.use('openApi')
+    const { resourceServerSpec, walletAddressServerSpec } =
+      await this.container.use('openApi')
 
     // POST /incoming-payments
     // Create incoming payment
@@ -553,34 +558,34 @@ export class App {
       quoteRoutes.get
     )
 
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
     router.get(
       WALLET_ADDRESS_PATH + '/jwks.json',
       createWalletAddressMiddleware(),
-      createValidatorMiddleware<WalletAddressKeysContext>(resourceServerSpec, {
-        path: '/jwks.json',
-        method: HttpMethod.GET
-      }),
+      createValidatorMiddleware<WalletAddressKeysContext>(
+        walletAddressServerSpec,
+        {
+          path: '/jwks.json',
+          method: HttpMethod.GET
+        }
+      ),
       async (ctx: WalletAddressKeysContext): Promise<void> =>
         await walletAddressKeyRoutes.getKeysByWalletAddressId(ctx)
     )
 
     // Add the wallet address query route last.
     // Otherwise it will be matched instead of other Open Payments endpoints.
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
     router.get(
       WALLET_ADDRESS_PATH,
       createWalletAddressMiddleware(),
       spspMiddleware,
-      createValidatorMiddleware<WalletAddressContext>(resourceServerSpec, {
+      createValidatorMiddleware<WalletAddressContext>(walletAddressServerSpec, {
         path: '/',
         method: HttpMethod.GET
       }),
       walletAddressRoutes.get
     )
 
+    koa.use(cors())
     koa.use(router.routes())
 
     this.openPaymentsServer = koa.listen(port)
@@ -611,8 +616,8 @@ export class App {
     if (this.openPaymentsServer) {
       await this.stopServer(this.openPaymentsServer)
     }
-    if (this.adminServer) {
-      await this.stopServer(this.adminServer)
+    if (this.apolloServer) {
+      await this.apolloServer.stop()
     }
     if (this.ilpConnectorService) {
       await this.stopServer(this.ilpConnectorService)

@@ -32,6 +32,7 @@ export const listWebhooks = async (args: QueryWebhookEventsArgs) => {
               id
               data
               type
+              createdAt
             }
           }
           pageInfo {

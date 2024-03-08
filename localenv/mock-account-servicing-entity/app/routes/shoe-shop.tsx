@@ -1,7 +1,6 @@
 import { useLoaderData, useLocation } from '@remix-run/react'
 import { useEffect, useState } from 'react'
 import { ApiClient } from '~/lib/apiClient'
-import { parseQueryString } from '~/lib/utils'
 import { CONFIG as config } from '~/lib/parse_config.server'
 
 export function loader() {
@@ -51,7 +50,16 @@ function AuthorizedView({
   )
 }
 
-function RejectedView({ thirdPartyName }: { thirdPartyName: string }) {
+function RejectedView({
+  thirdPartyName,
+  interactId,
+  nonce
+}: {
+  thirdPartyName: string
+  interactId: string
+  nonce: string
+}) {
+  const authServerDomain = useLoaderData<typeof loader>()
   return (
     <>
       <div className='row'>
@@ -64,32 +72,42 @@ function RejectedView({ thirdPartyName }: { thirdPartyName: string }) {
           <p>You denied {thirdPartyName} access to your account.</p>
         </div>
       </div>
+      <div className='row'>
+        <button
+          className='btn btn-primary'
+          onClick={() => {
+            ApiClient.endInteraction(interactId, nonce, authServerDomain)
+          }}
+        >
+          Continue
+        </button>
+      </div>
     </>
   )
 }
 
 export default function ShoeShop() {
   const location = useLocation()
-  const queryParams = parseQueryString(location.search)
+  const queryParams = new URLSearchParams(location.search)
   const [ctx, setCtx] = useState({
     done: false,
     authorized: false,
     interactId: '',
     nonce: '',
-    grantId: queryParams.getAsString('grantId'),
-    thirdPartyName: queryParams.getAsString('thirdPartyName'),
-    thirdPartyUri: queryParams.getAsString('thirdPartyUri'),
-    currencyDisplayCode: queryParams.getAsString('currencyDisplayCode'),
+    grantId: queryParams.get('grantId'),
+    thirdPartyName: queryParams.get('thirdPartyName'),
+    thirdPartyUri: queryParams.get('thirdPartyUri'),
+    currencyDisplayCode: queryParams.get('currencyDisplayCode'),
     amount:
-      Number(queryParams.getAsString('sendAmountValue')) /
-      Math.pow(10, Number(queryParams.getAsString('sendAmountScale')))
+      Number(queryParams.get('sendAmountValue')) /
+      Math.pow(10, Number(queryParams.get('sendAmountScale')))
   })
 
   useEffect(() => {
     if (!ctx.done) {
-      const interactId = queryParams.getAsString('interactId')
-      const nonce = queryParams.getAsString('nonce')
-      const decision = queryParams.getAsString('decision')
+      const interactId = queryParams.get('interactId')
+      const nonce = queryParams.get('nonce')
+      const decision = queryParams.get('decision')
 
       if (interactId && nonce) {
         const acceptanceDecision =
@@ -164,7 +182,11 @@ export default function ShoeShop() {
                   nonce={ctx.nonce}
                 />
               ) : (
-                <RejectedView thirdPartyName={ctx.thirdPartyName || ''} />
+                <RejectedView
+                  thirdPartyName={ctx.thirdPartyName || ''}
+                  interactId={ctx.interactId}
+                  nonce={ctx.nonce}
+                />
               )}
             </div>
           </div>

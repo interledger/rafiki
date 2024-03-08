@@ -14,17 +14,17 @@ There is one liquidity account for each of the following resource:
 
 - Asset
 - Peer
-- Wallet Address (for [SPSP](../../reference/glossary#simple-payments-setup-protocol-spsp) / [Web Monetization](../../reference/glossary#web-monetization) receiving)
+- Wallet Address (for [SPSP](/reference/glossary#simple-payments-setup-protocol-spsp) / [Web Monetization](/reference/glossary#web-monetization) receiving)
 - Incoming Payment
 - Outgoing Payment
 
 Asset and Peer liquidity accounts are created when calling `createAsset` and `createPeer` [GraphQL Admin API mutations](/apis/backend/mutations) respectively, while liquidity accounts for wallet addresses, incoming and outgoing payments are created on-the-fly during payment processing or web monetization events.
 
-Any liquidity management is done by the [Account Servicing Entity](../../reference/glossary#account-servicing-entity) through the GraphQL Admin API. See [integration](../../integration/event-handlers.md) and [liquidity documentation](./liquidity.md) for more information.
+Any liquidity management is done by the [Account Servicing Entity](/reference/glossary#account-servicing-entity) through the GraphQL Admin API. See [integration](/integration/event-handlers) and [liquidity documentation](/concepts/accounting/liquidity) for more information.
 
 ### Settlement account
 
-A settlement account may only hold a negative balance. Rafiki enforces that its total credits MUST NOT exceed its total debits amount. A settlement account represents those total amount of funds an [Account Servicing Entity](../../reference/glossary#account-servicing-entity) has deposited into Rafiki.
+A settlement account may only hold a negative balance. Rafiki enforces that its total credits MUST NOT exceed its total debits amount. A settlement account represents those total amount of funds an [Account Servicing Entity](/reference/glossary#account-servicing-entity) has deposited into Rafiki.
 
 There is one settlement account for each asset.
 

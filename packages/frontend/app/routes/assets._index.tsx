@@ -1,11 +1,11 @@
-import { json, type LoaderArgs } from '@remix-run/node'
+import { json, type LoaderFunctionArgs } from '@remix-run/node'
 import { useLoaderData, useNavigate } from '@remix-run/react'
 import { PageHeader } from '~/components'
 import { Button, Table } from '~/components/ui'
 import { listAssets } from '~/lib/api/asset.server'
 import { paginationSchema } from '~/lib/validate.server'
 
-export const loader = async ({ request }: LoaderArgs) => {
+export const loader = async ({ request }: LoaderFunctionArgs) => {
   const url = new URL(request.url)
   const pagination = paginationSchema.safeParse(
     Object.fromEntries(url.searchParams.entries())

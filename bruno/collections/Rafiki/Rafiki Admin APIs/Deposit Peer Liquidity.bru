@@ -1,0 +1,41 @@
+meta {
+  name: Deposit Peer Liquidity
+  type: graphql
+  seq: 14
+}
+
+post {
+  url: {{RafikiGraphqlHost}}/graphql
+  body: graphql
+  auth: none
+}
+
+body:graphql {
+  mutation DepositPeerLiquidity ($input: DepositPeerLiquidityInput!) {
+    depositPeerLiquidity(input: $input) {
+      code
+      success
+      message
+      error
+    }
+  }
+}
+
+body:graphql:vars {
+  {
+    "input": {
+      "id": "{{transferId}}",
+      "peerId": "{{peerId}}",
+      "amount": "1000000",
+      "idempotencyKey":"{{idempotencyKey}}"
+    }
+  }
+  
+}
+
+script:pre-request {
+  const { v4: uuidv4 } = require('uuid');
+  
+  bru.setVar("transferId",uuidv4());
+  bru.setVar("idempotencyKey",uuidv4());
+}

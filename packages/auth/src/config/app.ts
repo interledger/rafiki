@@ -42,7 +42,7 @@ export const Config = {
   identityServerSecret: envString('IDENTITY_SERVER_SECRET', 'replace-me'),
   authServerDomain: envString(
     'AUTH_SERVER_DOMAIN',
-    `http://localhost:${envInt('PORT', 3006)}`
+    `http://localhost:${envInt('AUTH_PORT', 3006)}`
   ),
   waitTimeSeconds: envInt('WAIT_SECONDS', 5),
   cookieKey: envString('COOKIE_KEY', crypto.randomBytes(32).toString('hex')),
@@ -51,5 +51,6 @@ export const Config = {
   databaseCleanupWorkers: envInt('DATABASE_CLEANUP_WORKERS', 1),
   accessTokenDeletionDays: envInt('ACCESS_TOKEN_DELETION_DAYS', 30),
   incomingPaymentInteraction: envBool('INCOMING_PAYMENT_INTERACTION', false),
-  quoteInteraction: envBool('QUOTE_INTERACTION', false)
+  quoteInteraction: envBool('QUOTE_INTERACTION', false),
+  listAllInteraction: envBool('LIST_ALL_ACCESS_INTERACTION', true)
 }

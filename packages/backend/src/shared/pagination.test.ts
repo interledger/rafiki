@@ -18,7 +18,6 @@ import { getPageInfo, parsePaginationQueryParameters } from './pagination'
 import { AssetService } from '../asset/service'
 import { PeerService } from '../payment-method/ilp/peer/service'
 import { createPeer } from '../tests/peer'
-import { SortOrder } from './baseModel'
 
 describe('Pagination', (): void => {
   let deps: IocContract<AppServices>
@@ -27,14 +26,12 @@ describe('Pagination', (): void => {
   let outgoingPaymentService: OutgoingPaymentService
   let quoteService: QuoteService
   let config: IAppConfig
-  let sortOrder: SortOrder
 
   beforeAll(async (): Promise<void> => {
     config = Config
-    config.publicHost = 'https://wallet.example'
+    config.openPaymentsUrl = 'https://wallet.example'
     deps = await initIocContainer(config)
     appContainer = await createTestApp(deps)
-    sortOrder = Math.random() < 0.5 ? SortOrder.Asc : SortOrder.Desc
   })
 
   afterEach(async (): Promise<void> => {
@@ -45,6 +42,15 @@ describe('Pagination', (): void => {
     await appContainer.shutdown()
   })
   describe('parsePaginationQueryParameters', (): void => {
+    let walletAddress: WalletAddress
+
+    beforeEach(async (): Promise<void> => {
+      const asset = await createAsset(deps)
+      walletAddress = await createWalletAddress(deps, {
+        assetId: asset.id
+      })
+    })
+
     test.each`
       first        | last         | cursor   | result
       ${undefined} | ${undefined} | ${''}    | ${{ first: undefined, last: undefined, before: undefined, after: undefined }}
@@ -54,9 +60,14 @@ describe('Pagination', (): void => {
     `(
       "success with first: '$first', last: '$last', cursor: '$cursor'",
       async ({ first, last, cursor, result }): Promise<void> => {
-        expect(parsePaginationQueryParameters({ first, last, cursor })).toEqual(
-          result
-        )
+        expect(
+          parsePaginationQueryParameters({
+            first,
+            last,
+            cursor,
+            'wallet-address': walletAddress.url
+          })
+        ).toEqual({ ...result, walletAddress: walletAddress.url })
       }
     )
   })
@@ -111,28 +122,24 @@ describe('Pagination', (): void => {
               })
               paymentIds.push(payment.id)
             }
-            if (sortOrder === SortOrder.Desc) {
-              paymentIds.reverse()
-            }
+            paymentIds.reverse() // default order is descending
             if (cursor) {
               if (pagination.last) pagination.before = paymentIds[cursor]
               else pagination.after = paymentIds[cursor]
             }
             const page = await incomingPaymentService.getWalletAddressPage({
               walletAddressId: defaultWalletAddress.id,
-              pagination,
-              sortOrder
+              pagination
             })
-            const pageInfo = await getPageInfo(
-              (pagination, sortOrder) =>
+            const pageInfo = await getPageInfo({
+              getPage: (pagination) =>
                 incomingPaymentService.getWalletAddressPage({
                   walletAddressId: defaultWalletAddress.id,
-                  pagination,
-                  sortOrder
+                  pagination
                 }),
               page,
-              sortOrder
-            )
+              walletAddress: defaultWalletAddress.url
+            })
             expect(pageInfo).toEqual({
               startCursor: paymentIds[start],
               endCursor: paymentIds[end],
@@ -172,28 +179,24 @@ describe('Pagination', (): void => {
               })
               paymentIds.push(payment.id)
             }
-            if (sortOrder === SortOrder.Desc) {
-              paymentIds.reverse()
-            }
+            paymentIds.reverse() // default order is descending
             if (cursor) {
               if (pagination.last) pagination.before = paymentIds[cursor]
               else pagination.after = paymentIds[cursor]
             }
             const page = await outgoingPaymentService.getWalletAddressPage({
               walletAddressId: defaultWalletAddress.id,
-              pagination,
-              sortOrder
+              pagination
             })
-            const pageInfo = await getPageInfo(
-              (pagination, sortOrder) =>
+            const pageInfo = await getPageInfo({
+              getPage: (pagination) =>
                 outgoingPaymentService.getWalletAddressPage({
                   walletAddressId: defaultWalletAddress.id,
-                  pagination,
-                  sortOrder
+                  pagination
                 }),
               page,
-              sortOrder
-            )
+              walletAddress: defaultWalletAddress.url
+            })
             expect(pageInfo).toEqual({
               startCursor: paymentIds[start],
               endCursor: paymentIds[end],
@@ -212,7 +215,7 @@ describe('Pagination', (): void => {
           ${10} | ${{ first: 3 }}  | ${3}    | ${4}    | ${6}    | ${true}     | ${true}
           ${10} | ${{ last: 5 }}   | ${9}    | ${4}    | ${8}    | ${true}     | ${true}
         `(
-          '$num payments, pagination $pagination with cursor $cursor',
+          '$num quotes, pagination $pagination with cursor $cursor',
           async ({
             num,
             pagination,
@@ -233,28 +236,24 @@ describe('Pagination', (): void => {
               })
               quoteIds.push(quote.id)
             }
-            if (sortOrder === SortOrder.Desc) {
-              quoteIds.reverse()
-            }
+            quoteIds.reverse() // default order is descending
             if (cursor) {
               if (pagination.last) pagination.before = quoteIds[cursor]
               else pagination.after = quoteIds[cursor]
             }
             const page = await quoteService.getWalletAddressPage({
               walletAddressId: defaultWalletAddress.id,
-              pagination,
-              sortOrder
+              pagination
             })
-            const pageInfo = await getPageInfo(
-              (pagination, sortOrder) =>
+            const pageInfo = await getPageInfo({
+              getPage: (pagination) =>
                 quoteService.getWalletAddressPage({
                   walletAddressId: defaultWalletAddress.id,
-                  pagination,
-                  sortOrder
+                  pagination
                 }),
               page,
-              sortOrder
-            )
+              walletAddress: defaultWalletAddress.url
+            })
             expect(pageInfo).toEqual({
               startCursor: quoteIds[start],
               endCursor: quoteIds[end],
@@ -281,7 +280,7 @@ describe('Pagination', (): void => {
           ${10} | ${{ first: 3 }}  | ${3}    | ${4}    | ${6}    | ${true}     | ${true}
           ${10} | ${{ last: 5 }}   | ${9}    | ${4}    | ${8}    | ${true}     | ${true}
         `(
-          '$num payments, pagination $pagination with cursor $cursor',
+          '$num assets, pagination $pagination with cursor $cursor',
           async ({
             num,
             pagination,
@@ -296,19 +295,16 @@ describe('Pagination', (): void => {
               const asset = await createAsset(deps)
               assetIds.push(asset.id)
             }
-            if (sortOrder === SortOrder.Desc) {
-              assetIds.reverse()
-            }
+            assetIds.reverse() // default order is descending
             if (cursor) {
               if (pagination.last) pagination.before = assetIds[cursor]
               else pagination.after = assetIds[cursor]
             }
-            const page = await assetService.getPage(pagination, sortOrder)
-            const pageInfo = await getPageInfo(
-              (pagination) => assetService.getPage(pagination, sortOrder),
-              page,
-              sortOrder
-            )
+            const page = await assetService.getPage(pagination)
+            const pageInfo = await getPageInfo({
+              getPage: (pagination) => assetService.getPage(pagination),
+              page
+            })
             expect(pageInfo).toEqual({
               startCursor: assetIds[start],
               endCursor: assetIds[end],
@@ -327,7 +323,7 @@ describe('Pagination', (): void => {
           ${10} | ${{ first: 3 }}  | ${3}    | ${4}    | ${6}    | ${true}     | ${true}
           ${10} | ${{ last: 5 }}   | ${9}    | ${4}    | ${8}    | ${true}     | ${true}
         `(
-          '$num payments, pagination $pagination with cursor $cursor',
+          '$num peers, pagination $pagination with cursor $cursor',
           async ({
             num,
             pagination,
@@ -342,20 +338,16 @@ describe('Pagination', (): void => {
               const peer = await createPeer(deps)
               peerIds.push(peer.id)
             }
-            if (sortOrder === SortOrder.Desc) {
-              peerIds.reverse()
-            }
+            peerIds.reverse() // default order is descending
             if (cursor) {
               if (pagination.last) pagination.before = peerIds[cursor]
               else pagination.after = peerIds[cursor]
             }
-            const page = await peerService.getPage(pagination, sortOrder)
-            const pageInfo = await getPageInfo(
-              (pagination, sortOrder) =>
-                peerService.getPage(pagination, sortOrder),
-              page,
-              sortOrder
-            )
+            const page = await peerService.getPage(pagination)
+            const pageInfo = await getPageInfo({
+              getPage: (pagination) => peerService.getPage(pagination),
+              page
+            })
             expect(pageInfo).toEqual({
               startCursor: peerIds[start],
               endCursor: peerIds[end],

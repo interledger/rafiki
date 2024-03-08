@@ -32,8 +32,8 @@ describe('Grant Service', (): void => {
   })
 
   afterEach(async (): Promise<void> => {
-    await truncateTables(knex)
     jest.useRealTimers()
+    await truncateTables(knex)
   })
 
   afterAll(async (): Promise<void> => {

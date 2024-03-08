@@ -17,10 +17,11 @@ export const getGrants: QueryResolvers<ApolloContext>['grants'] = async (
   ctx
 ): Promise<ResolversTypes['GrantsConnection']> => {
   const grantService = await ctx.container.use('grantService')
-  const { filter, ...pagination } = args
-  const grants = await grantService.getPage(pagination, filter)
+  const { filter, sortOrder, ...pagination } = args
+  const grants = await grantService.getPage(pagination, filter, sortOrder)
   const pageInfo = await getPageInfo(
-    (pagination: Pagination) => grantService.getPage(pagination, filter),
+    (pagination: Pagination) =>
+      grantService.getPage(pagination, filter, sortOrder),
     grants
   )
 
@@ -79,11 +80,11 @@ export const revokeGrant: MutationResolvers<ApolloContext>['revokeGrant'] =
         success: true,
         message: 'Grant revoked'
       }
-    } catch (error) {
+    } catch (err) {
       ctx.logger.error(
         {
           options: args.input.grantId,
-          error
+          err
         },
         'error revoking grant'
       )

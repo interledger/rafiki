@@ -185,20 +185,22 @@ export enum OutgoingPaymentState {
   Completed = 'COMPLETED'
 }
 
-export enum PaymentDepositType {
+export enum OutgoingPaymentDepositType {
   PaymentCreated = 'outgoing_payment.created'
 }
 
-export enum PaymentWithdrawType {
+export enum OutgoingPaymentWithdrawType {
   PaymentFailed = 'outgoing_payment.failed',
   PaymentCompleted = 'outgoing_payment.completed'
 }
 
-export const PaymentEventType = {
-  ...PaymentDepositType,
-  ...PaymentWithdrawType
+export const OutgoingPaymentEventType = {
+  ...OutgoingPaymentDepositType,
+  ...OutgoingPaymentWithdrawType
 }
-export type PaymentEventType = PaymentDepositType | PaymentWithdrawType
+export type OutgoingPaymentEventType =
+  | OutgoingPaymentDepositType
+  | OutgoingPaymentWithdrawType
 
 export interface OutgoingPaymentResponse {
   id: string
@@ -221,15 +223,29 @@ export type PaymentData = Omit<OutgoingPaymentResponse, 'failed'> & {
   peerId?: string
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
-export const isPaymentEventType = (o: any): o is PaymentEventType =>
-  Object.values(PaymentEventType).includes(o)
+export const isOutgoingPaymentEventType = (
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
+  o: any
+): o is OutgoingPaymentEventType =>
+  Object.values(OutgoingPaymentEventType).includes(o)
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
-export const isPaymentEvent = (o: any): o is PaymentEvent =>
-  o instanceof WebhookEvent && isPaymentEventType(o.type)
+export const isOutgoingPaymentEvent = (o: any): o is OutgoingPaymentEvent =>
+  o instanceof WebhookEvent && isOutgoingPaymentEventType(o.type)
 
-export class PaymentEvent extends WebhookEvent {
-  public type!: PaymentEventType
+export enum OutgoingPaymentEventError {
+  OutgoingPaymentIdRequired = 'Outgoing Payment ID is required for outgoing payment events'
+}
+
+export class OutgoingPaymentEvent extends WebhookEvent {
+  public type!: OutgoingPaymentEventType
   public data!: PaymentData
+
+  public $beforeInsert(context: QueryContext): void {
+    super.$beforeInsert(context)
+
+    if (!this.outgoingPaymentId) {
+      throw new Error(OutgoingPaymentEventError.OutgoingPaymentIdRequired)
+    }
+  }
 }

@@ -25,12 +25,12 @@ export const getPeers: QueryResolvers<ApolloContext>['peers'] = async (
   const { sortOrder, ...pagination } = args
   const order = sortOrder === 'ASC' ? SortOrder.Asc : SortOrder.Desc
   const peers = await peerService.getPage(pagination, order)
-  const pageInfo = await getPageInfo(
-    (pagination: Pagination, sortOrder?: SortOrder) =>
+  const pageInfo = await getPageInfo({
+    getPage: (pagination: Pagination, sortOrder?: SortOrder) =>
       peerService.getPage(pagination, sortOrder),
-    peers,
-    order
-  )
+    page: peers,
+    sortOrder: order
+  })
   return {
     pageInfo,
     edges: peers.map((peer: Peer) => ({
@@ -76,11 +76,11 @@ export const createPeer: MutationResolvers<ApolloContext>['createPeer'] =
               peer: peerToGraphql(peerOrError)
             }
       )
-      .catch((error) => {
+      .catch((err) => {
         ctx.logger.error(
           {
             options: args.input,
-            error
+            err
           },
           'error creating peer'
         )
@@ -115,11 +115,11 @@ export const updatePeer: MutationResolvers<ApolloContext>['updatePeer'] =
               peer: peerToGraphql(peerOrError)
             }
       )
-      .catch((error) => {
+      .catch((err) => {
         ctx.logger.error(
           {
             options: args.input,
-            error
+            err
           },
           'error updating peer'
         )
@@ -153,11 +153,11 @@ export const deletePeer: MutationResolvers<ApolloContext>['deletePeer'] =
               message: errorToMessage[PeerError.UnknownPeer]
             }
       )
-      .catch((error) => {
+      .catch((err) => {
         ctx.logger.error(
           {
             id: args.input.id,
-            error
+            err
           },
           'error deleting peer'
         )

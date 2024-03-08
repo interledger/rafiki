@@ -316,6 +316,7 @@ async function createWithdrawalEvent(
   deps.logger.trace({ amount }, 'creating webhook withdrawal event')
 
   await WalletAddressEvent.query(deps.knex).insert({
+    walletAddressId: walletAddress.id,
     type: WalletAddressEventType.WalletAddressWebMonetization,
     data: walletAddress.toData(amount),
     withdrawal: {

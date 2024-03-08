@@ -32,8 +32,8 @@ import {
   OutgoingPaymentGrant,
   OutgoingPaymentState,
   PaymentData,
-  PaymentEvent,
-  PaymentEventType
+  OutgoingPaymentEvent,
+  OutgoingPaymentEventType
 } from './model'
 import { RETRY_BACKOFF_SECONDS } from './worker'
 import { IncomingPayment, IncomingPaymentState } from '../incoming/model'
@@ -81,12 +81,12 @@ describe('OutgoingPaymentService', (): void => {
   const exchangeRate = 0.5
 
   const webhookTypes: {
-    [key in OutgoingPaymentState]: PaymentEventType | undefined
+    [key in OutgoingPaymentState]: OutgoingPaymentEventType | undefined
   } = {
-    [OutgoingPaymentState.Funding]: PaymentEventType.PaymentCreated,
+    [OutgoingPaymentState.Funding]: OutgoingPaymentEventType.PaymentCreated,
     [OutgoingPaymentState.Sending]: undefined,
-    [OutgoingPaymentState.Failed]: PaymentEventType.PaymentFailed,
-    [OutgoingPaymentState.Completed]: PaymentEventType.PaymentCompleted
+    [OutgoingPaymentState.Failed]: OutgoingPaymentEventType.PaymentFailed,
+    [OutgoingPaymentState.Completed]: OutgoingPaymentEventType.PaymentCompleted
   }
 
   async function processNext(
@@ -104,7 +104,7 @@ describe('OutgoingPaymentService', (): void => {
     const type = webhookTypes[payment.state]
     if (type) {
       await expect(
-        PaymentEvent.query(knex).where({
+        OutgoingPaymentEvent.query(knex).where({
           type
         })
       ).resolves.not.toHaveLength(0)
@@ -123,7 +123,7 @@ describe('OutgoingPaymentService', (): void => {
       destinationAccount: incomingPayment,
       sourceAmount: args.debitAmount,
       destinationAmount: args.receiveAmount,
-      timeout: 0n
+      timeout: 0
     })
 
     assert.ok(!isTransferError(transfer))
@@ -216,7 +216,7 @@ describe('OutgoingPaymentService', (): void => {
     }
     if (withdrawAmount !== undefined && withdrawAmount > 0) {
       await expect(
-        PaymentEvent.query(knex).where({
+        OutgoingPaymentEvent.query(knex).where({
           withdrawalAccountId: payment.id,
           withdrawalAmount: withdrawAmount
         })
@@ -289,6 +289,86 @@ describe('OutgoingPaymentService', (): void => {
         }),
       get: (options) => outgoingPaymentService.get(options),
       list: (options) => outgoingPaymentService.getWalletAddressPage(options)
+    })
+  })
+
+  describe('get', (): void => {
+    test('throws error if cannot find liquidity account for SENDING payment', async () => {
+      const quote = await createQuote(deps, {
+        walletAddressId,
+        receiver,
+        debitAmount,
+        method: 'ilp'
+      })
+
+      const payment = await outgoingPaymentService.create({
+        walletAddressId,
+        quoteId: quote.id
+      })
+      assert.ok(!isOutgoingPaymentError(payment))
+
+      await expect(
+        outgoingPaymentService.get({
+          id: payment.id
+        })
+      ).resolves.toEqual(payment)
+      await expect(
+        outgoingPaymentService.fund({
+          id: payment.id,
+          amount: payment.debitAmount.value,
+          transferId: uuid()
+        })
+      ).resolves.toBeDefined()
+      jest
+        .spyOn(accountingService, 'getTotalSent')
+        .mockResolvedValueOnce(undefined)
+      await expect(
+        outgoingPaymentService.get({
+          id: payment.id
+        })
+      ).rejects.toThrow(
+        'Could not get amount sent for payment. There was a problem getting the associated liquidity account.'
+      )
+    })
+  })
+
+  describe('getWalletAddressPage', (): void => {
+    test('throws error if cannot find liquidity account for SENDING payment', async () => {
+      const quote = await createQuote(deps, {
+        walletAddressId,
+        receiver,
+        debitAmount,
+        method: 'ilp'
+      })
+
+      const payment = await outgoingPaymentService.create({
+        walletAddressId,
+        quoteId: quote.id
+      })
+      assert.ok(!isOutgoingPaymentError(payment))
+
+      await expect(
+        outgoingPaymentService.get({
+          id: payment.id
+        })
+      ).resolves.toEqual(payment)
+      await expect(
+        outgoingPaymentService.fund({
+          id: payment.id,
+          amount: payment.debitAmount.value,
+          transferId: uuid()
+        })
+      ).resolves.toBeDefined()
+      jest
+        .spyOn(accountingService, 'getAccountsTotalSent')
+        .mockResolvedValueOnce([undefined])
+      await expect(
+        outgoingPaymentService.getWalletAddressPage({
+          walletAddressId: walletAddressId
+        })
+      ).rejects.toThrow(
+        'Could not get amount sent for payment. There was a problem getting the associated liquidity account.'
+      )
     })
   })
 
@@ -379,12 +459,13 @@ describe('OutgoingPaymentService', (): void => {
               expectedPaymentData.peerId = peer.id
             }
             await expect(
-              PaymentEvent.query(knex).where({
-                type: PaymentEventType.PaymentCreated
+              OutgoingPaymentEvent.query(knex).where({
+                type: OutgoingPaymentEventType.PaymentCreated
               })
             ).resolves.toMatchObject([
               {
-                data: expectedPaymentData
+                data: expectedPaymentData,
+                outgoingPaymentId: payment.id
               }
             ])
           }
@@ -679,8 +760,8 @@ describe('OutgoingPaymentService', (): void => {
               const firstPayment = await createOutgoingPayment(deps, {
                 walletAddressId,
                 receiver: `${
-                  Config.publicHost
-                }/${uuid()}/incoming-payments/${uuid()}`,
+                  Config.openPaymentsUrl
+                }/incoming-payments/${uuid()}`,
                 debitAmount: debitAmount ? paymentAmount : undefined,
                 receiveAmount: debitAmount ? undefined : paymentAmount,
                 grant,
@@ -765,8 +846,8 @@ describe('OutgoingPaymentService', (): void => {
                 const firstPayment = await createOutgoingPayment(deps, {
                   walletAddressId,
                   receiver: `${
-                    Config.publicHost
-                  }/${uuid()}/incoming-payments/${uuid()}`,
+                    Config.openPaymentsUrl
+                  }/incoming-payments/${uuid()}`,
                   debitAmount: debitAmount ? paymentAmount : undefined,
                   receiveAmount: debitAmount ? undefined : paymentAmount,
                   client,

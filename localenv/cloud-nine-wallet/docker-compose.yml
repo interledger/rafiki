@@ -12,12 +12,11 @@ services:
     ports:
       - '3030:80'
     environment:
-      NODE_ENV: ${NODE_ENV:-development}
       LOG_LEVEL: debug
       PORT: 80
       SEED_FILE_LOCATION: /workspace/seed.yml
       KEY_FILE: /workspace/private-key.pem
-      PUBLIC_HOST: ${CLOUD_NINE_PUBLIC_HOST:-https://cloud-nine-wallet-backend}
+      OPEN_PAYMENTS_URL: ${CLOUD_NINE_OPEN_PAYMENTS_URL:-https://cloud-nine-wallet-backend}
       AUTH_SERVER_DOMAIN: ${CLOUD_NINE_AUTH_SERVER_DOMAIN:-http://localhost:3006}
       TESTNET_AUTOPEER_URL: ${TESTNET_AUTOPEER_URL}
     volumes:
@@ -41,6 +40,7 @@ services:
       - rafiki
     environment:
       NODE_ENV: ${NODE_ENV:-development}
+      INSTANCE_NAME: CLOUD-NINE
       TRUST_PROXY: ${TRUST_PROXY}
       LOG_LEVEL: debug
       ADMIN_PORT: 3001
@@ -54,13 +54,13 @@ services:
       AUTH_SERVER_INTROSPECTION_URL: http://cloud-nine-wallet-auth:3007
       ILP_ADDRESS: ${ILP_ADDRESS:-test.cloud-nine-wallet}
       STREAM_SECRET: BjPXtnd00G2mRQwP/8ZpwyZASOch5sUXT5o0iR5b5wU=
-      PUBLIC_HOST: ${CLOUD_NINE_PUBLIC_HOST:-http://cloud-nine-wallet-backend}
       OPEN_PAYMENTS_URL: ${CLOUD_NINE_OPEN_PAYMENTS_URL:-http://cloud-nine-wallet-backend}
       WEBHOOK_URL: http://cloud-nine-wallet/webhooks
       EXCHANGE_RATES_URL: http://cloud-nine-wallet/rates
       REDIS_URL: redis://shared-redis:6379/0
       WALLET_ADDRESS_URL: ${CLOUD_NINE_WALLET_ADDRESS_URL:-https://cloud-nine-wallet-backend/.well-known/pay}
       ILP_CONNECTOR_ADDRESS: ${CLOUD_NINE_CONNECTOR_URL}
+      ENABLE_TELEMETRY: false
     depends_on:
       - shared-database
       - shared-redis
@@ -116,12 +116,10 @@ services:
       PORT: 3010
       GRAPHQL_URL: http://cloud-nine-wallet-backend:3001/graphql
       OPEN_PAYMENTS_URL: https://cloud-nine-wallet-backend/
+      ENABLE_INSECURE_MESSAGE_COOKIE: true
     depends_on:
       - cloud-nine-backend
 
+
 volumes:
   database-data: # named volumes can be managed easier using docker-compose
-
-networks:
-  rafiki:
-    external: true

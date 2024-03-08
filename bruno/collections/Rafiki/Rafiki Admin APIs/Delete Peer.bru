@@ -1,0 +1,30 @@
+meta {
+  name: Delete Peer
+  type: graphql
+  seq: 13
+}
+
+post {
+  url: {{RafikiGraphqlHost}}/graphql
+  body: graphql
+  auth: none
+}
+
+body:graphql {
+  mutation DeletePeer($input: DeletePeerInput!) {
+    deletePeer(input: $input) {
+      code
+      message
+      success
+    }
+  }
+  
+}
+
+body:graphql:vars {
+  {
+      "input": {
+          "id": "{{peerId}}"
+      }
+  }
+}

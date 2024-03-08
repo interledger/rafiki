@@ -2,7 +2,7 @@
 title: Overview
 ---
 
-We have created a suite of packages that, together, mock an account servicing entity that has deployed Rafiki, exposing an [SPSP](/reference/glossary#simple-payments-setup-protocol-spsp) endpoint, the [Open Payments](/reference/glossary#open-payments) APIs with its required [GNAP](/reference/glossary#grant-negotiation-authorization-protocol) auth endpoints to request grants, a STREAM endpoint for receiving Interledger packets, and a UI to view and manage the Rafiki instance. Additionally, we provide a simple request signing service that is used by Postman to generate request signatures required by the Open Payments APIs.
+We have created a suite of packages that, together, mock an account servicing entity that has deployed Rafiki, exposing an [SPSP](/reference/glossary#simple-payments-setup-protocol-spsp) endpoint, the [Open Payments](/reference/glossary#open-payments) APIs with its required [GNAP](/reference/glossary#grant-negotiation-authorization-protocol) auth endpoints to request grants, a STREAM endpoint for receiving Interledger packets, and a UI to view and manage the Rafiki instance.
 
 These packages include:
 
@@ -33,11 +33,11 @@ This environment will set up a playground where you can use the Rafiki Admin API
 
 (c) Open Payments API - accessible at http://localhost:3000
 
-(d) Rafiki Admin - accessible at http://localhost:3010
+(d) Admin UI - accessible at http://localhost:3010
 
-(e) Open Payments Auth API - accessible at http://localhost:3006
+(e) Auth Admin API - accessible at http://localhost:3003/graphql
 
-(f) DEPRECATED: ~~Postman Signature Service - accessible at http://localhost:3040~~
+(f) Open Payments Auth API - accessible at http://localhost:3006
 
 #### Happy Life Bank
 
@@ -47,15 +47,15 @@ This environment will set up a playground where you can use the Rafiki Admin API
 
 (i) Open Payments API - accessible at http://localhost:4000
 
-(j) Rafiki Admin - accessible at http://localhost:4010
+(j) Admin UI - accessible at http://localhost:4010
 
-(k) Open Payments Auth API - accessible at http://localhost:4006
+(k) Auth Admin API - accessible at http://localhost:4003/graphql
 
-(l) DEPRECATED: ~~Postman Signature Service - accessible at http://localhost:3041~~
+(l) Open Payments Auth API - accessible at http://localhost:4006
 
 #### Database
 
-(m) Postgres Server - accessible at http://localhost:5432
+Postgres Server - accessible at http://localhost:5432
 
 ### Exploring Accounts on Mock Account Servicing Entity
 
@@ -75,7 +75,7 @@ When clicking on the Account Name, a list of Transactions appears.
 
 - [Rafiki local environment setup](https://github.com/interledger/rafiki/blob/main/README.md#environment-setup)
 - [docker](https://docs.docker.com/get-docker/)
-- ([postman](https://www.postman.com/downloads/))
+- [Bruno](https://www.usebruno.com/downloads), an open source API client
 
 ### Setup
 
@@ -135,28 +135,29 @@ pnpm localenv:compose down --volumes
 
 ### Usage
 
-#### Postman & Open Payments APIs
+#### Bruno & Open Payments APIs
 
-The Open Payments APIs can be interacted with using the [Postman API collection](https://www.postman.com/interledger/workspace/interledger/api/84fc90ca-3153-4865-8b49-b91218e5d574). You can either log into Postman and fork the collection or you can [import it from source](https://raw.githubusercontent.com/interledger/rafiki/main/postman/collections/Interledger.json). It requires you to either load the [Local Environment](https://raw.githubusercontent.com/interledger/rafiki/main/postman/environments/Local%20Playground%20Environment.postman_environment.json) or the [Remote Environment](https://raw.githubusercontent.com/interledger/rafiki/main/postman/environments/Remote%20Environment.postman_environment.json).
+The Open Payments APIs can be interacted with using the [Bruno collection](https://github.com/interledger/rafiki/tree/main/bruno/collections/Rafiki) ([resource server endpoints](https://github.com/interledger/rafiki/tree/main/bruno/collections/Rafiki/Open%20Payments%20APIs) and [auth server endpoints](https://github.com/interledger/rafiki/tree/main/bruno/collections/Rafiki/Open%20Payments%20Auth%20APIs)). It requires you to
 
-The Examples folder in the Postman API collection includes an eCommerce (Open Payments) example that can be executed one by one. It
+1. load the collection into Bruno by clicking "Open Collection"
+2. navigating to `/rafiki/bruno/collections/Rafiki` on your machine and clicking "Open"
+3. Furthermore, you need to either load the [Local Environment](https://github.com/interledger/rafiki/tree/main/bruno/collections/Rafiki/environments/Local%20Playground.bru) or the [Remote Environment](https://github.com/interledger/rafiki/tree/main/bruno/collections/Rafiki/environments/Remote.bru).
 
-1. gets the sender's wallet address
-2. gets the receiver's wallet address
+The Examples folder in the Bruno collection includes an [Open Payments](https://github.com/interledger/rafiki/tree/main/bruno/collections/Rafiki/Examples/Open%20Payments) example that can be executed one by one. It
+
+1. requests the sender's wallet address
+2. requests the receiver's wallet address
 3. requests a grant to create an incoming payment on the receiver's account
-4. creates an incoming payment on the receiver's account
-5. requests a grant to create (and read) a quote on the senders's account
+4. creates an incoming payment on receiver's account
+5. requests a grant to create (and read) a quote on the sender's account
 6. creates a quote on the sender's account
 7. requests a grant to create (and read) an outgoing payment on the sender's account
-8. creates an outgoing payment on the sender's account
-9. fetches the outgoing payment on the sender's account
 
-Note that one has to go through the interaction flow after requesting a grant for an outgoing payment. More information about the interaction flow can be found [here](/concepts/open-payments/grant-interaction).
+Note that you have to go through an interaction flow by clicking on the `redirect` link in the grant request response. Copy the `interaction_ref` from the url query parameters after clicking "Continue" in the interaction flow. More information about the interaction flow can be found [here](/concepts/open-payments/grant-interaction).
 
-<!-- TODO: Update! -->
-<!-- Example walkthrough:
-
-https://user-images.githubusercontent.com/15069181/230445040-6fa505f5-86e5-44b2-841e-77c97d646368.mp4 -->
+8. continues the grant request (after inserting the `interact_ref` in the body)
+9. creates an outgoing payment on the sender's account
+10. fetches the outgoing payment on the sender's account
 
 #### Admin UI
 
@@ -164,7 +165,7 @@ In order to manage, and view information about the Rafiki instance(s) using a UI
 
 #### Admin APIs
 
-In addition to the using the Admin UI for interacting with the Admin APIs, you can also use the Apollo explorer (on [`localhost:3001/graphql`](http://localhost:3001/graphql) and [`localhost:4001/graphql`](http://localhost:4001/graphql), respectively), and also via the [Postman collection](https://www.postman.com/interledger/workspace/interledger/folder/22855701-ba745403-c5e8-4893-9dff-bccb72ea0614?ctx=documentation). The Postman collection is configured to use the default endpoints of the local environment.
+In addition to the using the Admin UI for interacting with the Admin APIs, you can also use the Apollo explorer (on [`localhost:3001/graphql`](http://localhost:3001/graphql) and [`localhost:4001/graphql`](http://localhost:4001/graphql), respectively), and also via the [Bruno collection](https://github.com/interledger/rafiki/tree/main/bruno/collections/Rafiki/Rafiki%20Admin%20APIs). The Bruno collection is configured to use the default endpoints of the local environment.
 
 #### SPSP
 

@@ -14,12 +14,6 @@ This website is built with [Starlight](https://starlight.astro.build/), a docume
 $ pnpm i
 ```
 
-- In order to support Mermaid syntax in markdown, we are relying on the [rehype-mermaid](https://github.com/remcohaszing/rehype-mermaid) plugin. This plugin has an unfortunate dependency on [Playwright](https://playwright.dev/).
-
-```sh
-$ pnpm dlx playwright install chromium
-```
-
 - Run the dev server from the /packages/documentation folder:
 
 ```sh

@@ -142,12 +142,12 @@ export async function createAutoPeer(
     }
   `
 
-  const addedLiquidity = '10000' as unknown as bigint
+  const liquidityToDeposit = '10000' as unknown as bigint
   const createPeerInput: { input: CreateOrUpdatePeerByUrlInput } = {
     input: {
       peerUrl,
       assetId,
-      addedLiquidity
+      liquidityToDeposit
     }
   }
   return apolloClient
@@ -164,14 +164,14 @@ export async function createAutoPeer(
     })
 }
 
-export async function addPeerLiquidity(
+export async function depositPeerLiquidity(
   peerId: string,
   amount: string,
   transferUid: string
 ): Promise<LiquidityMutationResponse> {
-  const addPeerLiquidityMutation = gql`
-    mutation AddPeerLiquidity($input: AddPeerLiquidityInput!) {
-      addPeerLiquidity(input: $input) {
+  const depositPeerLiquidityMutation = gql`
+    mutation DepositPeerLiquidity($input: DepositPeerLiquidityInput!) {
+      depositPeerLiquidity(input: $input) {
         code
         success
         message
@@ -179,7 +179,7 @@ export async function addPeerLiquidity(
       }
     }
   `
-  const addPeerLiquidityInput = {
+  const depositPeerLiquidityInput = {
     input: {
       peerId: peerId,
       amount: amount,
@@ -189,26 +189,26 @@ export async function addPeerLiquidity(
   }
   return apolloClient
     .mutate({
-      mutation: addPeerLiquidityMutation,
-      variables: addPeerLiquidityInput
+      mutation: depositPeerLiquidityMutation,
+      variables: depositPeerLiquidityInput
     })
     .then(({ data }): LiquidityMutationResponse => {
       console.log(data)
-      if (!data.addPeerLiquidity.success) {
+      if (!data.depositPeerLiquidity.success) {
         throw new Error('Data was empty')
       }
-      return data.addPeerLiquidity
+      return data.depositPeerLiquidity
     })
 }
 
-export async function addAssetLiquidity(
+export async function depositAssetLiquidity(
   assetId: string,
   amount: number,
   transferId: string
 ): Promise<LiquidityMutationResponse> {
-  const addAssetLiquidityMutation = gql`
-    mutation AddAssetLiquidity($input: AddAssetLiquidityInput!) {
-      addAssetLiquidity(input: $input) {
+  const depositAssetLiquidityMutation = gql`
+    mutation DepositAssetLiquidity($input: DepositAssetLiquidityInput!) {
+      depositAssetLiquidity(input: $input) {
         code
         success
         message
@@ -216,7 +216,7 @@ export async function addAssetLiquidity(
       }
     }
   `
-  const addAssetLiquidityInput = {
+  const depositAssetLiquidityInput = {
     input: {
       assetId,
       amount,
@@ -226,15 +226,15 @@ export async function addAssetLiquidity(
   }
   return apolloClient
     .mutate({
-      mutation: addAssetLiquidityMutation,
-      variables: addAssetLiquidityInput
+      mutation: depositAssetLiquidityMutation,
+      variables: depositAssetLiquidityInput
     })
     .then(({ data }): LiquidityMutationResponse => {
       console.log(data)
-      if (!data.addAssetLiquidity.success) {
+      if (!data.depositAssetLiquidity.success) {
         throw new Error('Data was empty')
       }
-      return data.addAssetLiquidity
+      return data.depositAssetLiquidity
     })
 }
 

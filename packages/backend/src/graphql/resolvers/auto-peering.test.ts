@@ -1,7 +1,6 @@
 import { faker } from '@faker-js/faker'
 import { gql } from '@apollo/client'
 import assert from 'assert'
-import nock from 'nock'
 
 import { createTestApp, TestContainer } from '../../tests/app'
 import { IocContract } from '@adonisjs/fold'
@@ -19,6 +18,8 @@ import { createAsset } from '../../tests/asset'
 import { CreateOrUpdatePeerByUrlInput } from '../generated/graphql'
 import { AutoPeeringService } from '../../payment-method/ilp/auto-peering/service'
 import { v4 as uuid } from 'uuid'
+
+const nock = (global as unknown as { nock: typeof import('nock') }).nock
 
 describe('Auto Peering Resolvers', (): void => {
   let deps: IocContract<AppServices>
@@ -106,7 +107,7 @@ describe('Auto Peering Resolvers', (): void => {
   describe('Create Peer By Url', (): void => {
     test('Can create a peer', async (): Promise<void> => {
       const input = createOrUpdatePeerByUrlInput({
-        addedLiquidity: 1000n
+        liquidityToDeposit: 1000n
       })
 
       const peerDetails = {
@@ -141,14 +142,14 @@ describe('Auto Peering Resolvers', (): void => {
         },
         maxPacketAmount: input.maxPacketAmount?.toString(),
         staticIlpAddress: peerDetails.staticIlpAddress,
-        liquidity: input.addedLiquidity?.toString(),
+        liquidity: input.liquidityToDeposit?.toString(),
         name: input.name
       })
       scope.done()
     })
 
     test('Can update a peer', async (): Promise<void> => {
-      const input = createOrUpdatePeerByUrlInput({ addedLiquidity: 1000n })
+      const input = createOrUpdatePeerByUrlInput({ liquidityToDeposit: 1000n })
 
       const peerDetails = {
         staticIlpAddress: 'test.peer2',
@@ -191,7 +192,7 @@ describe('Auto Peering Resolvers', (): void => {
         },
         maxPacketAmount: input.maxPacketAmount?.toString(),
         staticIlpAddress: peerDetails.staticIlpAddress,
-        liquidity: input.addedLiquidity?.toString(),
+        liquidity: input.liquidityToDeposit?.toString(),
         name: input.name
       })
 
@@ -199,7 +200,7 @@ describe('Auto Peering Resolvers', (): void => {
         ...input,
         name: 'Updated Name',
         maxPacketAmount: 1000n,
-        addedLiquidity: 2000n
+        liquidityToDeposit: 2000n
       })
 
       const secondResponse = await callCreateOrUpdatePeerByUrl(secondInput)
@@ -226,7 +227,7 @@ describe('Auto Peering Resolvers', (): void => {
         maxPacketAmount: secondInput.maxPacketAmount?.toString(),
         staticIlpAddress: peerDetails.staticIlpAddress,
         liquidity: (
-          input.addedLiquidity! + secondInput.addedLiquidity!
+          input.liquidityToDeposit! + secondInput.liquidityToDeposit!
         ).toString(),
         name: secondInput.name
       })

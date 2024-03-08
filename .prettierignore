@@ -14,6 +14,5 @@ build
 **/styles/*.css
 .docusaurus
 .cache-loader
-postman
-.postman
 packages/documentation/src/content/docs/apis
+.astro

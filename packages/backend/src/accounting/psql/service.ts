@@ -3,17 +3,18 @@ import { TransactionOrKnex } from 'objection'
 import { v4 as uuid } from 'uuid'
 import { Asset } from '../../asset/model'
 import { BaseService } from '../../shared/baseService'
+import { TelemetryService } from '../../telemetry/service'
 import { isTransferError, TransferError } from '../errors'
 import {
   AccountingService,
+  createAccountToAccountTransfer,
   Deposit,
   LiquidityAccount,
   LiquidityAccountType,
   Transaction,
   TransferOptions,
   TransferToCreate,
-  Withdrawal,
-  createAccountToAccountTransfer
+  Withdrawal
 } from '../service'
 import { getAccountBalances } from './balance'
 import {
@@ -35,6 +36,7 @@ import {
 import { LedgerTransfer, LedgerTransferType } from './ledger-transfer/model'
 
 export interface ServiceDependencies extends BaseService {
+  telemetry?: TelemetryService
   knex: TransactionOrKnex
   withdrawalThrottleDelay?: number
 }
@@ -200,9 +202,8 @@ export async function createTransfer(
   deps: ServiceDependencies,
   args: TransferOptions
 ): Promise<Transaction | TransferError> {
-  return createAccountToAccountTransfer({
+  return createAccountToAccountTransfer(deps, {
     transferArgs: args,
-    withdrawalThrottleDelay: deps.withdrawalThrottleDelay,
     voidTransfers: async (transferRefs) => voidTransfers(deps, transferRefs),
     postTransfers: async (transferRefs) => postTransfers(deps, transferRefs),
     getAccountReceived: async (accountRef) =>
@@ -247,7 +248,7 @@ export async function createTransfer(
             debitAccount: accountMap[transfer.sourceAccountId],
             creditAccount: accountMap[transfer.destinationAccountId],
             amount: transfer.amount,
-            timeoutMs: args.timeout
+            timeoutMs: BigInt(args.timeout * 1000)
           }))
         )
       )
@@ -363,7 +364,7 @@ async function createAccountWithdrawal(
     creditAccount: settlementAccount,
     amount,
     type: LedgerTransferType.WITHDRAWAL,
-    timeoutMs: timeout
+    timeoutMs: timeout ? BigInt(timeout * 1000) : undefined
   }
 
   const { errors } = await createTransfers(deps, [transfer])

@@ -6,6 +6,7 @@ import {
   MockServerResponse
 } from '.'
 import { ILPContext } from '..'
+import { ServerResponse, IncomingMessage } from 'http'
 
 export type Options<StateT, CustomT> = {
   app?: Koa<StateT, CustomT>
@@ -20,9 +21,10 @@ export function createContext<StateT = unknown, CustomT = unknown>(
 ): Koa.ParameterizedContext<StateT, CustomT> {
   const app = options.app || new Koa<StateT, CustomT>()
   const req = new MockIncomingMessage(options.req || {})
-  const res = new MockServerResponse(req, options.res)
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore
+  const res = new MockServerResponse(
+    req,
+    options.res
+  ) as unknown as ServerResponse<IncomingMessage>
   const context = app.createContext<StateT>(req, res)
 
   Object.keys(options).forEach((key) => {

@@ -1,7 +1,7 @@
 import { Model } from 'objection'
 import { join } from 'path'
 import { BaseModel } from '../shared/baseModel'
-import { FinishableGrant, isFinishableGrant } from '../grant/model'
+import { Grant } from '../grant/model'
 
 export enum InteractionState {
   Pending = 'PENDING', // Awaiting interaction from resource owner (RO)
@@ -31,7 +31,7 @@ export class Interaction extends BaseModel {
   public state!: InteractionState
   public expiresIn!: number
 
-  public grant?: FinishableGrant
+  public grant?: Grant
 }
 
 export interface InteractionWithGrant extends Interaction {
@@ -41,5 +41,5 @@ export interface InteractionWithGrant extends Interaction {
 export function isInteractionWithGrant(
   interaction: Interaction
 ): interaction is InteractionWithGrant {
-  return !!(interaction.grant && isFinishableGrant(interaction.grant))
+  return !!interaction.grant
 }

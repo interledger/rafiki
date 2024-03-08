@@ -30,7 +30,7 @@ export interface Account {
   id: string
   initialBalance: bigint
   path: string
-  postmanEnvVar: string
+  brunoEnvVar: string
   assetCode: string
   skipWalletAddressCreation?: boolean
 }
@@ -45,6 +45,7 @@ export interface Fee {
 export interface SeedInstance {
   self: Self
   assets: Array<Asset>
+  peeringAsset: string
   peers: Array<Peering>
   accounts: Array<Account>
   fees: Array<Fee>
@@ -66,7 +67,7 @@ export const CONFIG: Config = {
     ).toString('utf8')
   ),
   key: loadOrGenerateKey(process.env.KEY_FILE),
-  publicHost: process.env.PUBLIC_HOST ?? '',
+  publicHost: process.env.OPEN_PAYMENTS_URL ?? '',
   testnetAutoPeerUrl: process.env.TESTNET_AUTOPEER_URL ?? '',
   authServerDomain: process.env.AUTH_SERVER_DOMAIN || 'http://localhost:3006'
 }

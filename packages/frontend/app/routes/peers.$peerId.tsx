@@ -1,4 +1,8 @@
-import { json, type ActionArgs, type LoaderArgs } from '@remix-run/node'
+import {
+  json,
+  type ActionFunctionArgs,
+  type LoaderFunctionArgs
+} from '@remix-run/node'
 import {
   Form,
   Outlet,
@@ -26,7 +30,7 @@ import {
 import type { ZodFieldErrors } from '~/shared/types'
 import { formatAmount } from '~/shared/utils'
 
-export async function loader({ params }: LoaderArgs) {
+export async function loader({ params }: LoaderFunctionArgs) {
   const peerId = params.peerId
 
   const result = z.string().uuid().safeParse(peerId)
@@ -40,12 +44,7 @@ export async function loader({ params }: LoaderArgs) {
     throw json(null, { status: 400, statusText: 'Peer not found.' })
   }
 
-  return json({
-    peer: {
-      ...peer,
-      createdAt: new Date(peer.createdAt).toLocaleString()
-    }
-  })
+  return json({ peer })
 }
 
 export default function ViewPeerPage() {
@@ -95,7 +94,9 @@ export default function ViewPeerPage() {
           {/* Peer General Info*/}
           <div className='col-span-1 pt-3'>
             <h3 className='text-lg font-medium'>General Information</h3>
-            <p className='text-sm'>Created at {peer.createdAt}</p>
+            <p className='text-sm'>
+              Created at {new Date(peer.createdAt).toLocaleString()}
+            </p>
             <ErrorPanel errors={response?.errors.general.message} />
           </div>
           <div className='md:col-span-2 bg-white rounded-md shadow-md'>
@@ -252,12 +253,12 @@ export default function ViewPeerPage() {
               </div>
               <div className='flex space-x-4'>
                 <Button
-                  aria-label='add peer liquidity page'
+                  aria-label='deposit peer liquidity page'
                   preventScrollReset
                   type='button'
-                  to={`/peers/${peer.id}/add-liquidity`}
+                  to={`/peers/${peer.id}/deposit-liquidity`}
                 >
-                  Add liquidity
+                  Deposit liquidity
                 </Button>
                 <Button
                   aria-label='withdraw peer liquidity page'
@@ -295,7 +296,7 @@ export default function ViewPeerPage() {
   )
 }
 
-export async function action({ request }: ActionArgs) {
+export async function action({ request }: ActionFunctionArgs) {
   const actionResponse: {
     errors: {
       general: {

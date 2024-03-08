@@ -7,7 +7,10 @@ import {
   WalletAddress,
   WalletAddressSubresource,
   GetOptions,
-  ListOptions
+  ListOptions,
+  WalletAddressEventError,
+  WalletAddressEventType,
+  WalletAddressEvent
 } from './model'
 import { Grant } from '../auth/middleware'
 import {
@@ -18,7 +21,6 @@ import {
   AuthenticatedStatusContext
 } from '../../app'
 import { getPageTests } from '../../shared/baseModel.test'
-import { SortOrder } from '../../shared/baseModel'
 import { createContext } from '../../tests/context'
 import { createWalletAddress } from '../../tests/walletAddress'
 import { truncateTables } from '../../tests/tableManager'
@@ -28,6 +30,7 @@ import { Config } from '../../config/app'
 import { IocContract } from '@adonisjs/fold'
 import assert from 'assert'
 import { ReadContextWithAuthenticatedStatus } from '../payment/incoming/routes'
+import { Knex } from 'knex'
 
 export interface SetupOptions {
   reqOpts: httpMocks.RequestOptions
@@ -69,7 +72,6 @@ interface BaseTestsOptions<M> {
   createModel: (options: { client?: string }) => Promise<M>
   testGet: (options: TestGetOptions, expectedMatch?: M) => void
   testList?: (options: ListOptions, expectedMatch?: M) => void
-  sortOrder?: SortOrder
 }
 
 const baseGetTests = <M extends WalletAddressSubresource>({
@@ -196,7 +198,6 @@ type RouteTestsOptions<M> = Omit<
   getBody: (model: M, list?: boolean) => Record<string, unknown>
   list?: (ctx: ListContext) => Promise<void>
   urlPath: string
-  sortOrder?: SortOrder
 }
 
 export const getRouteTests = <M extends WalletAddressSubresource>({
@@ -205,8 +206,7 @@ export const getRouteTests = <M extends WalletAddressSubresource>({
   get,
   getBody,
   list,
-  urlPath,
-  sortOrder
+  urlPath
 }: RouteTestsOptions<M>): void => {
   const testList = async (
     { walletAddressId, client }: ListOptions,
@@ -271,8 +271,7 @@ export const getRouteTests = <M extends WalletAddressSubresource>({
       }
     },
     // tests walletAddressId / client filtering
-    testList: list && testList,
-    sortOrder: sortOrder
+    testList: list && testList
   })
 
   if (list) {
@@ -284,9 +283,7 @@ export const getRouteTests = <M extends WalletAddressSubresource>({
         for (let i = 0; i < 3; i++) {
           models.push(await createModel({}))
         }
-        if (sortOrder === SortOrder.Desc) {
-          models.reverse()
-        }
+        models.reverse() // default order is descending
       })
 
       test.each`
@@ -358,12 +355,14 @@ export const getRouteTests = <M extends WalletAddressSubresource>({
   }
 }
 
-describe('Wallet Address Model', (): void => {
+describe('Models', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
+  let knex: Knex
 
   beforeAll(async (): Promise<void> => {
     deps = initIocContainer(Config)
+    knex = await deps.use('knex')
     appContainer = await createTestApp(deps)
   })
 
@@ -375,43 +374,82 @@ describe('Wallet Address Model', (): void => {
     await appContainer.shutdown()
   })
 
-  describe('deactivatedAt', () => {
-    const getDateRelativeToToday = (daysFromToday: number) => {
-      const d = new Date()
-      d.setDate(d.getDate() + daysFromToday)
-      return d
-    }
-
-    const deactivatedAtCases = [
-      {
-        value: null,
-        expectedIsActive: true,
-        description: 'No deactivatedAt is active'
-      },
-      {
-        value: getDateRelativeToToday(1),
-        expectedIsActive: true,
-        description: 'Future deactivatedAt is inactive'
-      },
-      {
-        value: getDateRelativeToToday(-1),
-        expectedIsActive: false,
-        description: 'Past deactivatedAt is inactive'
+  describe('Wallet Address Model', (): void => {
+    describe('deactivatedAt', () => {
+      const getDateRelativeToToday = (daysFromToday: number) => {
+        const d = new Date()
+        d.setDate(d.getDate() + daysFromToday)
+        return d
       }
-    ]
 
-    test.each(deactivatedAtCases)(
-      '$description',
-      async ({ value, expectedIsActive }) => {
-        const walletAddress = await createWalletAddress(deps)
-        if (value) {
-          await walletAddress
-            .$query(appContainer.knex)
-            .patch({ deactivatedAt: value })
-          assert.ok(walletAddress.deactivatedAt === value)
+      const deactivatedAtCases = [
+        {
+          value: null,
+          expectedIsActive: true,
+          description: 'No deactivatedAt is active'
+        },
+        {
+          value: getDateRelativeToToday(1),
+          expectedIsActive: true,
+          description: 'Future deactivatedAt is inactive'
+        },
+        {
+          value: getDateRelativeToToday(-1),
+          expectedIsActive: false,
+          description: 'Past deactivatedAt is inactive'
         }
-        expect(walletAddress.isActive).toEqual(expectedIsActive)
-      }
-    )
+      ]
+
+      test.each(deactivatedAtCases)(
+        '$description',
+        async ({ value, expectedIsActive }) => {
+          const walletAddress = await createWalletAddress(deps)
+          if (value) {
+            await walletAddress
+              .$query(appContainer.knex)
+              .patch({ deactivatedAt: value })
+            assert.ok(walletAddress.deactivatedAt === value)
+          }
+          expect(walletAddress.isActive).toEqual(expectedIsActive)
+        }
+      )
+    })
+  })
+
+  describe('Wallet Address Event Model', (): void => {
+    describe('beforeInsert', (): void => {
+      test.each([
+        {
+          type: WalletAddressEventType.WalletAddressWebMonetization,
+          error: WalletAddressEventError.WalletAddressIdRequired
+        }
+      ])(
+        'Wallet Address Id is required for event type: $type',
+        async ({ type, error }): Promise<void> => {
+          expect(
+            WalletAddressEvent.query(knex).insert({
+              type
+            })
+          ).rejects.toThrow(error)
+        }
+      )
+
+      test.each([
+        {
+          type: WalletAddressEventType.WalletAddressNotFound,
+          error: WalletAddressEventError.WalletAddressIdProhibited
+        }
+      ])(
+        'Wallet Address Id is prohibited for event type: $type',
+        async ({ type, error }): Promise<void> => {
+          expect(
+            WalletAddressEvent.query(knex).insert({
+              walletAddressId: uuid(),
+              type
+            })
+          ).rejects.toThrow(error)
+        }
+      )
+    })
   })
 })

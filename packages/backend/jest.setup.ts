@@ -1,5 +1,3 @@
-require('ts-node/register')
-
 import { knex } from 'knex'
 import { GenericContainer, Wait } from 'testcontainers'
 

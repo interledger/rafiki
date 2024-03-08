@@ -1,0 +1,62 @@
+meta {
+  name: Create Peer
+  type: graphql
+  seq: 8
+}
+
+post {
+  url: {{RafikiGraphqlHost}}/graphql
+  body: graphql
+  auth: none
+}
+
+body:graphql {
+  mutation CreatePeer ($input: CreatePeerInput!) {
+      createPeer (input: $input) {
+          code
+          message
+          success
+          peer {
+              id
+              name
+              liquidity
+              liquidityThreshold
+              asset{
+                  id
+                  scale
+                  code
+                  withdrawalThreshold
+              }
+          }
+      }
+  }
+}
+
+body:graphql:vars {
+  {
+    "input": {
+      "name": "Wallet1",
+      "staticIlpAddress": "test.peer",
+      "http": {
+        "incoming": {"authTokens": ["test123abc"]},
+        "outgoing": {"endpoint": "http://peer-backend:3002", "authToken": "test123abc"}
+      },
+      "assetId": "{{assetId}}",
+      "maxPacketAmount": 1000,
+      "liquidityThreshold": 100000000,
+      "initialLiquidity": 200000000
+    }
+  }
+}
+
+script:post-response {
+  const body = res.getBody();
+  
+  bru.setEnvVar("peerId", body.data.createPeer.peer.id);
+}
+
+tests {
+  // const body = pm.response.json();
+  // 
+  // pm.environment.set("peerId", body.data.createPeer.peer.id);
+}

@@ -45,8 +45,8 @@ Note that each GraphQL request has two parts: a _query_ and an object containing
 
 Query:
 
-```
-mutation CreateAsset ($input: CreateAssetInput!) {
+```graphql
+mutation CreateAsset($input: CreateAssetInput!) {
   createAsset(input: $input) {
     code
     success
@@ -62,7 +62,7 @@ mutation CreateAsset ($input: CreateAssetInput!) {
 
 Query Variables:
 
-```
+```json
 {
   "input": {
     "code": "USD",
@@ -73,7 +73,7 @@ Query Variables:
 
 Example Successful Response
 
-```
+```json
 {
   "data": {
     "createAsset": {
@@ -94,9 +94,9 @@ Example Successful Response
 
 Query:
 
-```
-mutation CreatePeer ($input: CreatePeerInput!) {
-  createPeer (input: $input) {
+```graphql
+mutation CreatePeer($input: CreatePeerInput!) {
+  createPeer(input: $input) {
     code
     success
     message
@@ -115,7 +115,7 @@ mutation CreatePeer ($input: CreatePeerInput!) {
 
 Query Variables (substitute the asset ID from the "create asset" response for `INSERT_ASSET_ID`):
 
-```
+```json
 {
   "input": {
     "staticIlpAddress": "g.othergreatwallet",
@@ -125,7 +125,7 @@ Query Variables (substitute the asset ID from the "create asset" response for `I
       "outgoing": {"endpoint": "ilp.othergreatwallet.com", "authToken": "theirtoken"}
     },
     "assetId": "INSERT_ASSET_ID",
-    "initialLiquidity: <optionally, and intial amount of liquity to provision. Liquidity can also be added via the `AddPeerLiquidity` mutation described below>
+    "initialLiquidity": <optionally, an intial amount of liquity to provision. Liquidity can also be deposited via the `DepositPeerLiquidity` mutation described below>
   }
 }
 ```
@@ -138,7 +138,7 @@ Notes:
 
 Example Successful Response
 
-```
+```json
 {
   "data": {
     "createPeer": {
@@ -159,13 +159,13 @@ Example Successful Response
 }
 ```
 
-### Add Peer Liquidity
+### Deposit Peer Liquidity
 
 Query:
 
-```
-mutation AddPeerLiquidity ($input: AddPeerLiquidityInput!) {
-  addPeerLiquidity(input: $input) {
+```graphql
+mutation DepositPeerLiquidity($input: DepositPeerLiquidityInput!) {
+  depositPeerLiquidity(input: $input) {
     code
     success
     message
@@ -176,7 +176,7 @@ mutation AddPeerLiquidity ($input: AddPeerLiquidityInput!) {
 
 Query Variables (substitute the peer ID from the "create peer" response for `INSERT_PEER_ID`):
 
-```
+```json
 {
   "input": {
     "peerId": "INSERT_PEER_ID",
@@ -190,13 +190,13 @@ Note that the peer has a liquidity of 100 USD. How this is secured, whether the 
 
 Example successful response:
 
-```
+```json
 {
   "data": {
-    "addPeerLiquidity": {
+    "depositPeerLiquidity": {
       "code": "200",
       "success": true,
-      "message": "Added peer liquidity",
+      "message": "Deposited peer liquidity",
       "error": null
     }
   }
@@ -211,8 +211,10 @@ This is a two-phase transaction, so the withdrawal needs to be created first and
 
 Query:
 
-```
-mutation CreatePeerLiquidityWithdrawal ($input: CreatePeerLiquidityWithdrawalInput!) {
+```graphql
+mutation CreatePeerLiquidityWithdrawal(
+  $input: CreatePeerLiquidityWithdrawalInput!
+) {
   createPeerLiquidityWithdrawal(input: $input) {
     code
     success
@@ -224,7 +226,7 @@ mutation CreatePeerLiquidityWithdrawal ($input: CreatePeerLiquidityWithdrawalInp
 
 Query Variables (substitute the ID from the "create peer" response for `INSERT_PEER_ID`):
 
-```
+```json
 {
   "input": {
     "peerId": "INSERT_PEER_ID",
@@ -236,7 +238,7 @@ Query Variables (substitute the ID from the "create peer" response for `INSERT_P
 
 Example successful response:
 
-```
+```json
 {
   "data": {
     "createPeerLiquidityWithdrawal": {
@@ -253,7 +255,7 @@ Example successful response:
 
 Query:
 
-```
+```graphql
 mutation PostLiquidityWithdrawal ($withdrawalId: String!) {
   postLiquidityWithdrawal($withdrawalId: String!) {
     code
@@ -266,7 +268,7 @@ mutation PostLiquidityWithdrawal ($withdrawalId: String!) {
 
 Query Variables (substitute the withdrawal ID from the "create withdrawal" request for `INSERT_WITHDRAWAL_ID`):
 
-```
+```json
 {
   "withdrawalId": "INSERT_WITHDRAWAL_ID"
 }
@@ -274,7 +276,7 @@ Query Variables (substitute the withdrawal ID from the "create withdrawal" reque
 
 Example successful response:
 
-```
+```json
 {
   "data": {
     "postLiquidityWithdrawal": {
@@ -291,7 +293,7 @@ Example successful response:
 
 Query:
 
-```
+```graphql
 mutation VoidLiquidityWithdrawal ($withdrawalId: String!) {
   voidLiquidityWithdrawal($withdrawalId: String!) {
     code
@@ -304,7 +306,7 @@ mutation VoidLiquidityWithdrawal ($withdrawalId: String!) {
 
 Query Variables (substitute the withdrawal ID from the "create withdrawal" request for `INSERT_WITHDRAWAL_ID`):
 
-```
+```json
 {
   "withdrawalId": "INSERT_WITHDRAWAL_ID"
 }
@@ -312,7 +314,7 @@ Query Variables (substitute the withdrawal ID from the "create withdrawal" reque
 
 Example successful response:
 
-```
+```json
 {
   "data": {
     "voidLiquidityWithdrawal": {
@@ -329,7 +331,7 @@ Example successful response:
 
 Additionally, certain peers will have _auto-peering_ available. This feature is only for sandbox environments, and should not be used in production environments. Auto-peering enables easier peering integration between Rafiki instances. In order to use this feature, it requires the peer you want to peer with to publish an "auto-peering" URL. Once this `peerUrl` is provided, instead of using `createPeer` mutation to create a peer, you can call `createOrUpdatePeerByUrl`:
 
-```gql
+```graphql
 mutation CreateOrUpdatePeerByUrl($input: CreateOrUpdatePeerByUrlInput!) {
   createOrUpdatePeerByUrl(input: $input) {
     code
@@ -350,12 +352,12 @@ mutation CreateOrUpdatePeerByUrl($input: CreateOrUpdatePeerByUrlInput!) {
 
 with the input being:
 
-```
+```json
 {
   "input": {
-    "peerUrl: "PEER_URL",
+    "peerUrl": "PEER_URL",
     "assetId": "INSERT_ASSET_ID",
-    "initialLiquidity: <optionally, and initial amount of liquidity to provision>
+    "liquidityToDeposit": <optional amount of liquidity to deposit>
   }
 }
 ```

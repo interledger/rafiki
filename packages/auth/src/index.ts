@@ -75,7 +75,10 @@ export function initIocContainer(
 
   container.singleton('openPaymentsClient', async (deps) => {
     const logger = await deps.use('logger')
-    return createOpenPaymentsClient({ logger })
+    return createOpenPaymentsClient({
+      logger,
+      useHttp: process.env.NODE_ENV === 'development'
+    })
   })
 
   container.singleton(
@@ -230,10 +233,8 @@ export const start = async (
       logger.info('completed graceful shutdown.')
       process.exit(0)
     } catch (err) {
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
-      const errInfo = err instanceof Error && error.stack ? err.stack : err
-      logger.error({ error: errInfo }, 'error while shutting down')
+      const errInfo = err instanceof Error && err.stack ? err.stack : err
+      logger.error({ err: errInfo }, 'error while shutting down')
       process.exit(1)
     }
   })
@@ -255,10 +256,8 @@ export const start = async (
       logger.info('completed graceful shutdown.')
       process.exit(0)
     } catch (err) {
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
-      const errInfo = err instanceof Error && error.stack ? err.stack : err
-      logger.error({ error: errInfo }, 'error while shutting down')
+      const errInfo = err instanceof Error && err.stack ? err.stack : err
+      logger.error({ err: errInfo }, 'error while shutting down')
       process.exit(1)
     }
   })
@@ -292,7 +291,7 @@ if (!module.parent) {
   start(container, app).catch(async (e): Promise<void> => {
     const errInfo = e && typeof e === 'object' && e.stack ? e.stack : e
     const logger = await container.use('logger')
-    logger.error(errInfo)
+    logger.error({ err: errInfo })
   })
 }
 

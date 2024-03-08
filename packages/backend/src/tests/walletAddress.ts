@@ -1,7 +1,7 @@
 import axios from 'axios'
 import { IocContract } from '@adonisjs/fold'
 import { faker } from '@faker-js/faker'
-import nock from 'nock'
+import { Scope } from 'nock'
 import { URL } from 'url'
 
 import { testAccessToken } from './app'
@@ -12,6 +12,8 @@ import { WalletAddress } from '../open_payments/wallet_address/model'
 import { CreateOptions as BaseCreateOptions } from '../open_payments/wallet_address/service'
 import { LiquidityAccountType } from '../accounting/service'
 
+const nock = (global as unknown as { nock: typeof import('nock') }).nock
+
 interface CreateOptions extends Partial<BaseCreateOptions> {
   mockServerPort?: number
   createLiquidityAccount?: boolean
@@ -19,7 +21,7 @@ interface CreateOptions extends Partial<BaseCreateOptions> {
 }
 
 export type MockWalletAddress = WalletAddress & {
-  scope?: nock.Scope
+  scope?: Scope
 }
 
 export async function createWalletAddress(

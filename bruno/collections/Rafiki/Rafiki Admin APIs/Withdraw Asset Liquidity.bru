@@ -1,0 +1,41 @@
+meta {
+  name: Withdraw Asset Liquidity
+  type: graphql
+  seq: 6
+}
+
+post {
+  url: {{RafikiGraphqlHost}}/graphql
+  body: graphql
+  auth: none
+}
+
+body:graphql {
+  mutation CreateAssetLiquidityWithdrawal ($input: CreateAssetLiquidityWithdrawalInput!) {
+    createAssetLiquidityWithdrawal(input: $input) {
+      code
+      success
+      message
+      error
+    }
+  }
+}
+
+body:graphql:vars {
+  {
+    "input": {
+      "id": "{{transferId}}",
+      "assetId": "{{assetId}}",
+      "amount": "100",
+      "idempotencyKey":"{{idempotencyKey}}"
+    }
+  }
+  
+}
+
+script:pre-request {
+  const { v4: uuidv4 } = require('uuid');
+  
+  bru.setVar("transferId",uuidv4());
+  bru.setVar("idempotencyKey",uuidv4());
+}

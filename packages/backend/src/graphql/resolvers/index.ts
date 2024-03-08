@@ -30,22 +30,29 @@ import { getPeer, getPeers, createPeer, updatePeer, deletePeer } from './peer'
 import {
   getAssetLiquidity,
   getPeerLiquidity,
-  addAssetLiquidity,
-  addPeerLiquidity,
+  getWalletAddressLiquidity,
+  getIncomingPaymentLiquidity,
+  getOutgoingPaymentLiquidity,
+  getPaymentLiquidity,
+  depositAssetLiquidity,
+  depositPeerLiquidity,
   createAssetLiquidityWithdrawal,
   createPeerLiquidityWithdrawal,
   createWalletAddressWithdrawal,
   postLiquidityWithdrawal,
   voidLiquidityWithdrawal,
   depositEventLiquidity,
-  withdrawEventLiquidity
+  withdrawEventLiquidity,
+  depositOutgoingPaymentLiquidity,
+  withdrawIncomingPaymentLiquidity,
+  withdrawOutgoingPaymentLiquidity
 } from './liquidity'
 import { GraphQLBigInt, GraphQLUInt8 } from '../scalars'
 import {
   createWalletAddressKey,
   revokeWalletAddressKey
 } from './walletAddressKey'
-import { createReceiver } from './receiver'
+import { createReceiver, getReceiver } from './receiver'
 import { getWebhookEvents } from './webhooks'
 import { setFee } from './fee'
 import { GraphQLJSONObject } from 'graphql-scalars'
@@ -76,12 +83,23 @@ export const resolvers: Resolvers = {
     peers: getPeers,
     quote: getQuote,
     webhookEvents: getWebhookEvents,
-    payments: getCombinedPayments
+    payments: getCombinedPayments,
+    receiver: getReceiver
   },
   WalletAddress: {
+    liquidity: getWalletAddressLiquidity,
     incomingPayments: getWalletAddressIncomingPayments,
     outgoingPayments: getWalletAddressOutgoingPayments,
     quotes: getWalletAddressQuotes
+  },
+  IncomingPayment: {
+    liquidity: getIncomingPaymentLiquidity
+  },
+  OutgoingPayment: {
+    liquidity: getOutgoingPaymentLiquidity
+  },
+  Payment: {
+    liquidity: getPaymentLiquidity
   },
   Mutation: {
     createWalletAddressKey,
@@ -99,8 +117,8 @@ export const resolvers: Resolvers = {
     createOrUpdatePeerByUrl: createOrUpdatePeerByUrl,
     updatePeer: updatePeer,
     deletePeer: deletePeer,
-    addAssetLiquidity: addAssetLiquidity,
-    addPeerLiquidity: addPeerLiquidity,
+    depositAssetLiquidity,
+    depositPeerLiquidity,
     createAssetLiquidityWithdrawal: createAssetLiquidityWithdrawal,
     createPeerLiquidityWithdrawal: createPeerLiquidityWithdrawal,
     createWalletAddressWithdrawal,
@@ -108,6 +126,9 @@ export const resolvers: Resolvers = {
     voidLiquidityWithdrawal: voidLiquidityWithdrawal,
     depositEventLiquidity,
     withdrawEventLiquidity,
+    depositOutgoingPaymentLiquidity,
+    withdrawIncomingPaymentLiquidity,
+    withdrawOutgoingPaymentLiquidity,
     setFee
   }
 }

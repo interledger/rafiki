@@ -42,7 +42,7 @@ function contextToRequestLike(ctx: HttpSigContext): RequestLike {
   return {
     url,
     method: ctx.method,
-    headers: ctx.headers,
+    headers: ctx.headers ? JSON.parse(JSON.stringify(ctx.headers)) : undefined,
     body: ctx.request.body ? JSON.stringify(ctx.request.body) : undefined
   }
 }
@@ -124,9 +124,10 @@ export function createTokenIntrospectionMiddleware({
       ) {
         ctx.grant = {
           id: tokenInfo.grant,
-          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-          // @ts-ignore
-          limits: access['limits'] ? parseLimits(access['limits']) : undefined
+          limits:
+            'limits' in access && access.limits
+              ? parseLimits(access.limits)
+              : undefined
         }
       }
       await next()

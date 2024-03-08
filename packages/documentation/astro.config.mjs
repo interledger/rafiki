@@ -3,7 +3,6 @@ import starlight from '@astrojs/starlight'
 
 import remarkMath from 'remark-math'
 import rehypeMathjax from 'rehype-mathjax'
-import remarkMermaid from 'remark-mermaidjs'
 import GraphQL from 'astro-graphql-plugin'
 
 // https://astro.build/config
@@ -11,7 +10,7 @@ export default defineConfig({
   site: 'https://rafiki.dev',
   outDir: './build',
   markdown: {
-    remarkPlugins: [remarkMath, remarkMermaid],
+    remarkPlugins: [remarkMath],
     rehypePlugins: [rehypeMathjax]
   },
   integrations: [
@@ -24,6 +23,12 @@ export default defineConfig({
         './node_modules/@interledger/docs-design-system/src/styles/ilf-docs.css',
         './src/styles/rafiki.css'
       ],
+      expressiveCode: {
+        styleOverrides: {
+          borderColor: 'transparent',
+          borderRadius: 'var(--border-radius)'
+        }
+      },
       components: {
         Header: './src/components/Header.astro'
       },
@@ -139,6 +144,18 @@ export default defineConfig({
               ]
             },
             {
+              label: 'Telemetry',
+              collapsed: true,
+              items: [
+                { label: 'Overview', link: 'telemetry/overview' },
+                { label: 'Privacy', link: 'telemetry/privacy' },
+                {
+                  label: 'Deploying Custom Telemetry',
+                  link: 'telemetry/integrating'
+                }
+              ]
+            },
+            {
               label: 'Local Playground',
               collapsed: true,
               items: [
@@ -164,6 +181,10 @@ export default defineConfig({
         {
           label: 'Admin APIs',
           items: [
+            {
+              label: 'Idempotency',
+              link: 'apis/idempotency'
+            },
             {
               label: 'Backend Admin API',
               collapsed: true,

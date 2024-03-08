@@ -19,7 +19,7 @@ function contextToRequestLike(ctx: AppContext): RequestLike {
   return {
     url,
     method: ctx.method,
-    headers: ctx.headers,
+    headers: ctx.headers ? JSON.parse(JSON.stringify(ctx.headers)) : undefined,
     body: ctx.request.body ? JSON.stringify(ctx.request.body) : undefined
   }
 }
@@ -86,18 +86,6 @@ export async function grantContinueHttpsigMiddleware(
       message: 'invalid grant'
     }
     return
-  }
-
-  const interactionService = await ctx.container.use('interactionService')
-  const interaction =
-    interactRef && (await interactionService.getByRef(interactRef))
-
-  if (!interaction) {
-    ctx.status = 401
-    ctx.body = {
-      error: 'invalid_continuation',
-      message: 'invalid interaction'
-    }
   }
 
   const sigVerified = await verifySigFromClient(grant.client, ctx)

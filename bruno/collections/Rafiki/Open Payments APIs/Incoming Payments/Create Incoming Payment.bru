@@ -1,0 +1,50 @@
+meta {
+  name: Create Incoming Payment
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{receiverOpenPaymentsHost}}/incoming-payments
+  body: json
+  auth: none
+}
+
+headers {
+  Authorization: GNAP {{accessToken}}
+}
+
+body:json {
+  {
+      "walletAddress": "{{clientWalletAddress}}",
+      "incomingAmount": {
+          "value": "2000",
+          "assetCode": "USD",
+          "assetScale": 2
+      },
+      "expiresAt": "{{tomorrow}}",
+      "metadata": {
+          "description": "Incoming Payment on Own Account",
+          "externalRef": "INV-001"
+      }
+  }
+}
+
+script:pre-request {
+  // pm.environment.set("tomorrow", (new Date(new Date().setDate(new Date().getDate() + 1))).toISOString());
+  // 
+  // if(pm.environment.get('preRequestHost')){
+  //     eval(pm.environment.get('preRequestHost'))
+  // }
+  // eval(pm.environment.get('preRequestSignatures'))
+}
+
+tests {
+  // pm.test("Status code is 201", function () {
+  //     pm.response.to.have.status(201);
+  // });
+  // 
+  // const body = pm.response.json();
+  // pm.environment.set("incomingPaymentId", body.id.split("/").pop());
+  // 
+}

@@ -9,6 +9,11 @@ function envString(name: string, value: string): string {
   return envValue == null ? value : envValue
 }
 
+function envStringArray(name: string, value: string[]): string[] {
+  const envValue = process.env[name]
+  return envValue == null ? value : envValue.split(',').map((s) => s.trim())
+}
+
 function envInt(name: string, value: number): number {
   const envValue = process.env[name]
   return envValue == null ? value : parseInt(envValue)
@@ -32,10 +37,27 @@ dotenv.config({
 
 export const Config = {
   logLevel: envString('LOG_LEVEL', 'info'),
-  // publicHost is for open payments URLs.
-  publicHost: envString('PUBLIC_HOST', 'http://127.0.0.1:3001'),
+  enableTelemetry: envBool('ENABLE_TELEMETRY', true),
+  livenet: envBool('LIVENET', false),
+  openTelemetryCollectors: envStringArray(
+    'OPEN_TELEMETRY_COLLECTOR_URLS',
+    process.env.LIVENET
+      ? []
+      : [
+          'http://otel-collector-NLB-e3172ff9d2f4bc8a.elb.eu-west-2.amazonaws.com:4317'
+        ]
+  ),
+  openTelemetryExportInterval: envInt('OPEN_TELEMETRY_EXPORT_INTERVAL', 15000),
+  telemetryExchangeRatesUrl: envString(
+    'TELEMETRY_EXCHANGE_RATES_URL',
+    'https://telemetry-exchange-rates.s3.amazonaws.com/exchange-rates-usd.json'
+  ),
+  telemetryExchangeRatesLifetime: envInt(
+    'TELEMETRY_EXCHANGE_RATES_LIFETIME',
+    86_400_000
+  ),
   adminPort: envInt('ADMIN_PORT', 3001),
-  openPaymentsUrl: envString('OPEN_PAYMENTS_URL', 'http://127.0.0.1:3003'),
+  openPaymentsUrl: envString('OPEN_PAYMENTS_URL', 'http://127.0.0.1:3000'),
   openPaymentsPort: envInt('OPEN_PAYMENTS_PORT', 3003),
   connectorPort: envInt('CONNECTOR_PORT', 3002),
   autoPeeringServerPort: envInt('AUTO_PEERING_SERVER_PORT', 3005),

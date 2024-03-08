@@ -24,6 +24,10 @@ const navigation = [
   {
     name: 'Webhooks',
     href: '/webhooks'
+  },
+  {
+    name: 'Payments',
+    href: '/payments'
   }
 ]
 

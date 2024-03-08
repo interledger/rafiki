@@ -8,11 +8,10 @@ import { initIocContainer } from '../'
 import { AppServices } from '../app'
 import { randomAsset } from '../tests/asset'
 import { truncateTables } from '../tests/tableManager'
-import { Asset } from './model'
+import { Asset, AssetEvent, AssetEventError, AssetEventType } from './model'
 import { isAssetError } from './errors'
-import { WebhookEvent } from '../webhook/model'
 
-describe('Asset Model', (): void => {
+describe('Models', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let assetService: AssetService
@@ -33,50 +32,72 @@ describe('Asset Model', (): void => {
     await appContainer.shutdown()
   })
 
-  describe('onDebit', (): void => {
-    let asset: Asset
-    beforeEach(async (): Promise<void> => {
-      const options = {
-        ...randomAsset(),
-        liquidityThreshold: BigInt(100)
-      }
-      const assetOrError = await assetService.create(options)
-      if (!isAssetError(assetOrError)) {
-        asset = assetOrError
-      }
-    })
-    test.each`
-      balance
-      ${BigInt(50)}
-      ${BigInt(99)}
-      ${BigInt(100)}
-    `(
-      'creates webhook event if balance=$balance <= liquidityThreshold',
-      async ({ balance }): Promise<void> => {
-        await asset.onDebit({ balance })
-        const event = (
-          await WebhookEvent.query(knex).where('type', 'asset.liquidity_low')
-        )[0]
-        expect(event).toMatchObject({
-          type: 'asset.liquidity_low',
-          data: {
-            id: asset.id,
-            asset: {
+  describe('Asset Model', (): void => {
+    describe('onDebit', (): void => {
+      let asset: Asset
+      beforeEach(async (): Promise<void> => {
+        const options = {
+          ...randomAsset(),
+          liquidityThreshold: BigInt(100)
+        }
+        const assetOrError = await assetService.create(options)
+        if (!isAssetError(assetOrError)) {
+          asset = assetOrError
+        }
+      })
+      test.each`
+        balance
+        ${BigInt(50)}
+        ${BigInt(99)}
+        ${BigInt(100)}
+      `(
+        'creates webhook event if balance=$balance <= liquidityThreshold',
+        async ({ balance }): Promise<void> => {
+          await asset.onDebit({ balance })
+          const event = (
+            await AssetEvent.query(knex).where(
+              'type',
+              AssetEventType.LiquidityLow
+            )
+          )[0]
+          expect(event).toMatchObject({
+            type: AssetEventType.LiquidityLow,
+            data: {
               id: asset.id,
-              code: asset.code,
-              scale: asset.scale
-            },
-            liquidityThreshold: asset.liquidityThreshold?.toString(),
-            balance: balance.toString()
-          }
-        })
-      }
-    )
-    test('does not create webhook event if balance > liquidityThreshold', async (): Promise<void> => {
-      await asset.onDebit({ balance: BigInt(110) })
-      await expect(
-        WebhookEvent.query(knex).where('type', 'asset.liquidity_low')
-      ).resolves.toEqual([])
+              asset: {
+                id: asset.id,
+                code: asset.code,
+                scale: asset.scale
+              },
+              liquidityThreshold: asset.liquidityThreshold?.toString(),
+              balance: balance.toString()
+            }
+          })
+        }
+      )
+      test('does not create webhook event if balance > liquidityThreshold', async (): Promise<void> => {
+        await asset.onDebit({ balance: BigInt(110) })
+        await expect(
+          AssetEvent.query(knex).where('type', AssetEventType.LiquidityLow)
+        ).resolves.toEqual([])
+      })
+    })
+  })
+
+  describe('Asset Event Model', (): void => {
+    describe('beforeInsert', (): void => {
+      test.each(
+        Object.values(AssetEventType).map((type) => ({
+          type,
+          error: AssetEventError.AssetIdRequired
+        }))
+      )('Asset Id is required', async ({ type, error }): Promise<void> => {
+        expect(
+          AssetEvent.query().insert({
+            type
+          })
+        ).rejects.toThrow(error)
+      })
     })
   })
 })

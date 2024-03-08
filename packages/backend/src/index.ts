@@ -1,60 +1,58 @@
-import path from 'path'
-import createLogger from 'pino'
-import { knex } from 'knex'
-import { Model } from 'objection'
 import { Ioc, IocContract } from '@adonisjs/fold'
 import { Redis } from 'ioredis'
+import { knex } from 'knex'
+import { Model } from 'objection'
+import path from 'path'
+import createLogger from 'pino'
 import { createClient } from 'tigerbeetle-node'
 import { createClient as createIntrospectionClient } from 'token-introspection'
 
-import { App, AppServices } from './app'
-import { Config } from './config/app'
-import { createRatesService } from './rates/service'
-import { createQuoteRoutes } from './open_payments/quote/routes'
-import { createQuoteService } from './open_payments/quote/service'
-import { createOutgoingPaymentRoutes } from './open_payments/payment/outgoing/routes'
-import { createOutgoingPaymentService } from './open_payments/payment/outgoing/service'
-import {
-  createIlpPlugin,
-  IlpPlugin,
-  IlpPluginOptions
-} from './payment-method/ilp/ilp_plugin'
-import { createHttpTokenService } from './payment-method/ilp/peer-http-token/service'
-import { createAssetService } from './asset/service'
-import { createAccountingService as createTigerbeetleAccountingService } from './accounting/tigerbeetle/service'
+import { createAuthenticatedClient as createOpenPaymentsClient } from '@interledger/open-payments'
+import { createOpenAPI } from '@interledger/openapi'
+import { StreamServer } from '@interledger/stream-receiver'
+import axios from 'axios'
 import { createAccountingService as createPsqlAccountingService } from './accounting/psql/service'
-import { createPeerService } from './payment-method/ilp/peer/service'
+import { createAccountingService as createTigerbeetleAccountingService } from './accounting/tigerbeetle/service'
+import { App, AppServices } from './app'
+import { createAssetService } from './asset/service'
+import { Config } from './config/app'
+import { createFeeService } from './fee/service'
 import { createAuthServerService } from './open_payments/authServer/service'
 import { createGrantService } from './open_payments/grant/service'
-import { createSPSPRoutes } from './payment-method/ilp/spsp/routes'
-import { createWalletAddressService } from './open_payments/wallet_address/service'
-import { createWalletAddressKeyRoutes } from './open_payments/wallet_address/key/routes'
-import { createWalletAddressRoutes } from './open_payments/wallet_address/routes'
+import { createCombinedPaymentService } from './open_payments/payment/combined/service'
 import { createIncomingPaymentRoutes } from './open_payments/payment/incoming/routes'
 import { createIncomingPaymentService } from './open_payments/payment/incoming/service'
-import { StreamServer } from '@interledger/stream-receiver'
-import { createWebhookService } from './webhook/service'
-import { createConnectorService } from './payment-method/ilp/connector'
-import { createOpenAPI } from '@interledger/openapi'
-import { createAuthenticatedClient as createOpenPaymentsClient } from '@interledger/open-payments'
-import { createStreamCredentialsService } from './payment-method/ilp/stream-credentials/service'
-import { createWalletAddressKeyService } from './open_payments/wallet_address/key/service'
-import { createReceiverService } from './open_payments/receiver/service'
 import { createRemoteIncomingPaymentService } from './open_payments/payment/incoming_remote/service'
-import { createCombinedPaymentService } from './open_payments/payment/combined/service'
-import { createFeeService } from './fee/service'
-import { createAutoPeeringService } from './payment-method/ilp/auto-peering/service'
-import { createAutoPeeringRoutes } from './payment-method/ilp/auto-peering/routes'
-import axios from 'axios'
-import { createIlpPaymentService } from './payment-method/ilp/service'
+import { createOutgoingPaymentRoutes } from './open_payments/payment/outgoing/routes'
+import { createOutgoingPaymentService } from './open_payments/payment/outgoing/service'
+import { createQuoteRoutes } from './open_payments/quote/routes'
+import { createQuoteService } from './open_payments/quote/service'
+import { createReceiverService } from './open_payments/receiver/service'
+import { createWalletAddressKeyRoutes } from './open_payments/wallet_address/key/routes'
+import { createWalletAddressKeyService } from './open_payments/wallet_address/key/service'
+import { createWalletAddressRoutes } from './open_payments/wallet_address/routes'
+import { createWalletAddressService } from './open_payments/wallet_address/service'
 import { createPaymentMethodHandlerService } from './payment-method/handler/service'
+import { createAutoPeeringRoutes } from './payment-method/ilp/auto-peering/routes'
+import { createAutoPeeringService } from './payment-method/ilp/auto-peering/service'
+import { createConnectorService } from './payment-method/ilp/connector'
+import {
+  IlpPlugin,
+  IlpPluginOptions,
+  createIlpPlugin
+} from './payment-method/ilp/ilp_plugin'
+import { createHttpTokenService } from './payment-method/ilp/peer-http-token/service'
+import { createPeerService } from './payment-method/ilp/peer/service'
+import { createIlpPaymentService } from './payment-method/ilp/service'
+import { createSPSPRoutes } from './payment-method/ilp/spsp/routes'
+import { createStreamCredentialsService } from './payment-method/ilp/stream-credentials/service'
+import { createRatesService } from './rates/service'
+import { TelemetryService, createTelemetryService } from './telemetry/service'
+import { createWebhookService } from './webhook/service'
 
 BigInt.prototype.toJSON = function () {
   return this.toString()
 }
-
-const container = initIocContainer(Config)
-const app = new App(container)
 
 export function initIocContainer(
   config: typeof Config
@@ -120,19 +118,50 @@ export function initIocContainer(
       serverAddress: config.ilpAddress
     })
   })
-  container.singleton('tigerbeetle', async (deps) => {
+
+  container.singleton('ratesService', async (deps) => {
     const config = await deps.use('config')
-    return createClient({
-      cluster_id: config.tigerbeetleClusterId,
-      replica_addresses: config.tigerbeetleReplicaAddresses
+    return createRatesService({
+      logger: await deps.use('logger'),
+      exchangeRatesUrl: config.exchangeRatesUrl,
+      exchangeRatesLifetime: config.exchangeRatesLifetime
     })
   })
+
+  if (config.enableTelemetry) {
+    container.singleton('internalRatesService', async (deps) => {
+      return createRatesService({
+        logger: await deps.use('logger'),
+        exchangeRatesUrl: config.telemetryExchangeRatesUrl,
+        exchangeRatesLifetime: config.telemetryExchangeRatesLifetime
+      })
+    })
+
+    container.singleton('telemetry', async (deps) => {
+      const config = await deps.use('config')
+      return createTelemetryService({
+        logger: await deps.use('logger'),
+        aseRatesService: await deps.use('ratesService'),
+        internalRatesService: await deps.use('internalRatesService')!,
+        instanceName: config.instanceName,
+        collectorUrls: config.openTelemetryCollectors,
+        exportIntervalMillis: config.openTelemetryExportInterval,
+        baseAssetCode: 'USD',
+        baseScale: 4
+      })
+    })
+  }
+
   container.singleton('openApi', async () => {
     const resourceServerSpec = await createOpenAPI(
       path.resolve(__dirname, './openapi/resource-server.yaml')
     )
+    const walletAddressServerSpec = await createOpenAPI(
+      path.resolve(__dirname, './openapi/wallet-address-server.yaml')
+    )
     return {
-      resourceServerSpec
+      resourceServerSpec,
+      walletAddressServerSpec
     }
   })
   container.singleton('openPaymentsClient', async (deps) => {
@@ -142,7 +171,8 @@ export function initIocContainer(
       logger,
       keyId: config.keyId,
       privateKey: config.privateKey,
-      walletAddressUrl: config.walletAddressUrl
+      walletAddressUrl: config.walletAddressUrl,
+      useHttp: process.env.NODE_ENV === 'development'
     })
   })
   container.singleton('tokenIntrospectionClient', async (deps) => {
@@ -179,11 +209,25 @@ export function initIocContainer(
     const knex = await deps.use('knex')
     const config = await deps.use('config')
 
+    let telemetry: TelemetryService | undefined
+    if (config.enableTelemetry && config.openTelemetryCollectors.length > 0) {
+      telemetry = await deps.use('telemetry')
+    }
+
     if (config.useTigerbeetle) {
-      const tigerbeetle = await deps.use('tigerbeetle')
+      container.singleton('tigerbeetle', async (deps) => {
+        const config = await deps.use('config')
+        return createClient({
+          cluster_id: BigInt(config.tigerbeetleClusterId),
+          replica_addresses: config.tigerbeetleReplicaAddresses
+        })
+      })
+
+      const tigerbeetle = await deps.use('tigerbeetle')!
 
       return createTigerbeetleAccountingService({
         logger,
+        telemetry,
         knex,
         tigerbeetle,
         withdrawalThrottleDelay: config.withdrawalThrottleDelay
@@ -192,6 +236,7 @@ export function initIocContainer(
 
     return createPsqlAccountingService({
       logger,
+      telemetry,
       knex,
       withdrawalThrottleDelay: config.withdrawalThrottleDelay
     })
@@ -273,7 +318,8 @@ export function initIocContainer(
   container.singleton('walletAddressRoutes', async (deps) => {
     const config = await deps.use('config')
     return createWalletAddressRoutes({
-      authServer: config.authServerGrantUrl
+      authServer: config.authServerGrantUrl,
+      resourceServer: config.openPaymentsUrl
     })
   })
   container.singleton('walletAddressKeyRoutes', async (deps) => {
@@ -308,32 +354,11 @@ export function initIocContainer(
     })
   })
 
-  container.singleton('ratesService', async (deps) => {
-    const config = await deps.use('config')
-    return createRatesService({
-      logger: await deps.use('logger'),
-      exchangeRatesUrl: config.exchangeRatesUrl,
-      exchangeRatesLifetime: config.exchangeRatesLifetime
-    })
-  })
-
   container.singleton('walletAddressKeyService', async (deps) => {
     return createWalletAddressKeyService({
       logger: await deps.use('logger'),
       knex: await deps.use('knex')
     })
-  })
-
-  container.singleton('makeIlpPlugin', async (deps) => {
-    const connectorApp = await deps.use('connectorApp')
-    return ({
-      sourceAccount,
-      unfulfillable = false
-    }: IlpPluginOptions): IlpPlugin => {
-      return createIlpPlugin((data: Buffer): Promise<Buffer> => {
-        return connectorApp.handleIlpData(sourceAccount, unfulfillable, data)
-      })
-    }
   })
 
   container.singleton('connectorApp', async (deps) => {
@@ -349,6 +374,19 @@ export function initIocContainer(
       streamServer: await deps.use('streamServer'),
       ilpAddress: config.ilpAddress
     })
+  })
+
+  container.singleton('makeIlpPlugin', async (deps) => {
+    const connectorApp = await deps.use('connectorApp')
+
+    return ({
+      sourceAccount,
+      unfulfillable = false
+    }: IlpPluginOptions): IlpPlugin => {
+      return createIlpPlugin((data: Buffer): Promise<Buffer> => {
+        return connectorApp.handleIlpData(sourceAccount, unfulfillable, data)
+      })
+    }
   })
 
   container.singleton('combinedPaymentService', async (deps) => {
@@ -427,6 +465,7 @@ export function initIocContainer(
   })
 
   container.singleton('outgoingPaymentService', async (deps) => {
+    const config = await deps.use('config')
     return await createOutgoingPaymentService({
       logger: await deps.use('logger'),
       knex: await deps.use('knex'),
@@ -436,9 +475,13 @@ export function initIocContainer(
         'paymentMethodHandlerService'
       ),
       peerService: await deps.use('peerService'),
-      walletAddressService: await deps.use('walletAddressService')
+      walletAddressService: await deps.use('walletAddressService'),
+      telemetry: config.enableTelemetry
+        ? await deps.use('telemetry')
+        : undefined
     })
   })
+
   container.singleton('outgoingPaymentRoutes', async (deps) => {
     return createOutgoingPaymentRoutes({
       config: await deps.use('config'),
@@ -459,10 +502,21 @@ export const gracefulShutdown = async (
   await app.shutdown()
   const knex = await container.use('knex')
   await knex.destroy()
-  const tigerbeetle = await container.use('tigerbeetle')
-  tigerbeetle.destroy()
+
+  const config = await container.use('config')
+  if (config.useTigerbeetle) {
+    const tigerbeetle = await container.use('tigerbeetle')
+    tigerbeetle?.destroy()
+  }
+
   const redis = await container.use('redis')
+  await redis.quit()
   redis.disconnect()
+
+  const telemetry = await container.use('telemetry')
+  if (telemetry) {
+    await telemetry.shutdown()
+  }
 }
 
 export const start = async (
@@ -489,7 +543,7 @@ export const start = async (
       process.exit(0)
     } catch (err) {
       const errInfo = err instanceof Error && err.stack ? err.stack : err
-      logger.error({ error: errInfo }, 'error while shutting down')
+      logger.error({ err: errInfo }, 'error while shutting down')
       process.exit(1)
     }
   })
@@ -513,7 +567,7 @@ export const start = async (
       process.exit(0)
     } catch (err) {
       const errInfo = err instanceof Error && err.stack ? err.stack : err
-      logger.error({ error: errInfo }, 'error while shutting down')
+      logger.error({ err: errInfo }, 'error while shutting down')
       process.exit(1)
     }
   })
@@ -550,11 +604,14 @@ export const start = async (
 }
 
 // If this script is run directly, start the server
-if (!module.parent) {
+if (require.main === module) {
+  const container = initIocContainer(Config)
+  const app = new App(container)
+
   start(container, app).catch(async (e): Promise<void> => {
     const errInfo = e && typeof e === 'object' && e.stack ? e.stack : e
     const logger = await container.use('logger')
-    logger.error(errInfo)
+    logger.error({ err: errInfo })
   })
 }
 

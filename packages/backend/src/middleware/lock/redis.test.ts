@@ -15,7 +15,7 @@ describe('Redis Lock', (): void => {
   })
 
   afterAll(async () => {
-    redis.disconnect()
+    await redis.quit()
   })
 
   describe('acquire', () => {
