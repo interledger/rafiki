@@ -21,7 +21,7 @@ To use the [Bruno API examples](/playground/overview/#bruno--open-payments-apis)
 1. run `docker logs rafiki-cloud-nine-mock-ase-1` (alternatively, check http://localhost:3030)
 2. find the list of created wallet addresses
 3. copy the url of one of the wallet addresses
-4. set the url as `senderWalletAddress` variable in the Bruno `Remote` environment
+4. set the url as `senderWalletAddress` variable in the Bruno `Autopeering` environment
 
 To shut down the connection and to clear the environment, run
 
