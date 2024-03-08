@@ -322,9 +322,7 @@ export class App {
           maxAge: 60 * 1000,
           signed: true
         },
-        // Only accepts Middleware<DefaultState, DefaultContext> for some reason, this.koa is Middleware<DefaultState, AppContext>
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        koa as any
+        koa
       )
     )
 
