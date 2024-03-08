@@ -1,17 +1,20 @@
 import assert from 'assert'
+import { validate as isUuid } from 'uuid'
 import {
   OpenPaymentsClientError,
   isPendingGrant,
+  isFinalizedGrant,
   WalletAddress,
   IncomingPayment,
   Quote,
-  PendingGrant
+  PendingGrant,
+  Grant,
+  OutgoingPayment
 } from '@interledger/open-payments'
 import { C9_CONFIG, HLB_CONFIG } from './lib/config'
 import { MockASE } from './lib/MockASE'
 import { GraphqlTypes, WebhookEventType } from 'mock-account-servicing-lib'
 import { parseCookies, poll, wait } from './lib/utils'
-import { get } from 'http'
 
 jest.setTimeout(20000)
 
@@ -59,6 +62,12 @@ describe('Integration tests', (): void => {
     // Assigned in Grant Request Outgoing Payment
     // let continueId: string
     let outgoingPaymentGrant: PendingGrant
+
+    // set in Continuation Request
+    let grantContinue: Grant
+
+    // set in Create Outgoing Payment
+    let outgoingPayment: OutgoingPayment
 
     test('Can Get Existing Wallet Address', async (): Promise<void> => {
       receiverWalletAddress = await c9.opClient.walletAddress.get({
@@ -213,7 +222,7 @@ describe('Integration tests', (): void => {
               {
                 type: 'outgoing-payment',
                 actions: ['create', 'read', 'list'],
-                identifier: senderWalletAddressUrl,
+                identifier: senderWalletAddressUrl.replace('http', 'https'),
                 limits: {
                   debitAmount: quote.debitAmount,
                   receiveAmount: quote.receiveAmount
@@ -292,14 +301,16 @@ describe('Integration tests', (): void => {
 
       await wait((outgoingPaymentGrant.continue.wait ?? 5) * 1000)
 
-      const grantContinue = await c9.opClient.grant.continue(
+      const grantContinue_ = await c9.opClient.grant.continue(
         {
           accessToken: access_token.value,
           url: uri
         },
         { interact_ref }
       )
-      console.log({ grantContinue })
+      console.log(JSON.stringify(grantContinue_, null, 2))
+      assert(isFinalizedGrant(grantContinue_))
+      grantContinue = grantContinue_
     })
 
     // ----------------------------------------------------------
@@ -366,12 +377,54 @@ describe('Integration tests', (): void => {
     // Alternative to getting the redirect url with interact_ref.
     // ----------------------------------------------------------
 
-    // test('Create Outgoing Payment', async (): Promise<void> => {
-    //   expect(true).toBe(true)
-    // })
+    test('Create Outgoing Payment', async (): Promise<void> => {
+      const handleWebhookEventSpy = jest.spyOn(
+        c9.integrationServer.webhookEventHandler,
+        'handleWebhookEvent'
+      )
+
+      outgoingPayment = await c9.opClient.outgoingPayment.create(
+        {
+          url: senderWalletAddress.resourceServer,
+          accessToken: grantContinue.access_token.value
+        },
+        {
+          walletAddress: senderWalletAddressUrl.replace('http', 'https'),
+          metadata: {},
+          quoteId: quote.id
+        }
+      )
+      console.log({ outgoingPayment })
+      // Delay gives time for webhooks to be received
+      await wait(1000)
+      expect(handleWebhookEventSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: WebhookEventType.OutgoingPaymentCreated,
+          data: expect.any(Object)
+        })
+      )
+      expect(handleWebhookEventSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: WebhookEventType.OutgoingPaymentCompleted,
+          data: expect.any(Object)
+        })
+      )
+    })
+
+    test('Get Outgoing Payment', async (): Promise<void> => {
+      const id = outgoingPayment.id.split('/').pop()
+      assert(id)
+      expect(isUuid(id)).toBe(true)
+
+      const outgoingPayment_ = await c9.opClient.outgoingPayment.get({
+        url: `${senderWalletAddress.resourceServer}/outgoing-payments/${id}`,
+        accessToken: grantContinue.access_token.value
+      })
+      console.log({ outgoingPayment_ })
+    })
   })
 
-  describe.skip('Peer to Peer Flow', (): void => {
+  describe('Peer to Peer Flow', (): void => {
     const receiverWalletAddressUrl =
       'https://host.docker.internal:4000/accounts/pfry'
     const amountValueToSend = '500'

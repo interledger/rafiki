@@ -136,12 +136,6 @@ export class WebhookEventHandler {
   }
 
   private async handleOutgoingPaymentCreated(webhookEvent: Webhook) {
-    if (webhookEvent.type !== WebhookEventType.OutgoingPaymentCreated) {
-      throw new Error(
-        'Invalid event type when handling outgoing payment webhook'
-      )
-    }
-
     const payment = webhookEvent.data
     const walletAddressId = payment['walletAddressId'] as string
     const account = await this.accounts.getByWalletAddressId(walletAddressId)
