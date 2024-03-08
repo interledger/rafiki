@@ -316,7 +316,8 @@ export class App {
     // Setup Apollo
     this.apolloServer = new ApolloServer({
       schema: schemaWithMiddleware,
-      plugins: [ApolloServerPluginDrainHttpServer({ httpServer })]
+      plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
+      introspection: this.config.env !== 'production'
     })
 
     await this.apolloServer.start()
