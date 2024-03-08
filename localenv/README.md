@@ -181,8 +181,6 @@ Note that you have to go through an interaction flow by clicking on the `redirec
 9. creates an outgoing payment on the sender's account
 10. fetches the outgoing payment on the sender's account
 
-Note that one has to go through the interaction flow after requesting a grant for a outgoing payment. More information about the interaction flow can be found [here](../docs/grant-interaction.md).
-
 #### Admin UI
 
 In order to manage, and view information about the Rafiki instance(s) using a UI, you can navigate to [`localhost:3010`](http://localhost:3010) (Cloud Nine Wallet) or [`localhost:4010`](http://localhost:4010) (Happy Life Bank). This is the `frontend` project which runs a Remix app for querying info and executing mutations against the Rafiki [Admin APIs](#admin-apis).
