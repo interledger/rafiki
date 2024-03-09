@@ -76,36 +76,46 @@ describe('Integration tests', (): void => {
       senderWalletAddress = await c9.opClient.walletAddress.get({
         url: senderWalletAddressUrl
       })
+
       console.log({ receiverWalletAddress, senderWalletAddress })
-      // TODO: better expect.
-      // tried jestOpenapi.toSatifyApiSpec but loading throws errors
-      // for invalid spec? something not right there because that works in other pkgs
-      expect(receiverWalletAddress).toBeTruthy()
-      expect(senderWalletAddress).toBeTruthy()
+
+      expect(receiverWalletAddress.id).toBe(
+        receiverWalletAddressUrl.replace('http', 'https')
+      )
+      expect(senderWalletAddress.id).toBe(
+        senderWalletAddressUrl.replace('http', 'https')
+      )
     })
 
-    // TODO: fix account not found error in webhook handler
-    test.skip('Get Non-Existing Wallet Address Triggers Not Found Webhook Event', async (): Promise<void> => {
-      let walletAddress
+    test('Can Get Non-Existing Wallet Address', async (): Promise<void> => {
+      const notFoundWalletAddress =
+        'https://host.docker.internal:4000/accounts/asmith'
 
       const handleWebhookEventSpy = jest.spyOn(
-        c9.integrationServer.webhookEventHandler,
+        hlb.integrationServer.webhookEventHandler,
         'handleWebhookEvent'
       )
-      try {
-        walletAddress = await c9.opClient.walletAddress.get({
-          url: 'http://host.docker.internal:4000/accounts/asmith'
-        })
-      } catch (e) {
-        // 404 error from client is expected - swallow it
-        if (!(e instanceof OpenPaymentsClientError)) throw e
-      }
 
-      expect(walletAddress).toBeUndefined()
+      // Poll in case the webhook response to create wallet address is slow,
+      // but initial request may very well resolve immediately.
+      const walletAddress = await poll(
+        async () =>
+          c9.opClient.walletAddress.get({
+            url: notFoundWalletAddress
+          }),
+        (responseData) => responseData.id === notFoundWalletAddress,
+        5,
+        0.5
+      )
+
+      assert(walletAddress)
+      expect(walletAddress.id).toBe(notFoundWalletAddress)
       expect(handleWebhookEventSpy).toHaveBeenCalledWith(
         expect.objectContaining({
           type: WebhookEventType.WalletAddressNotFound,
-          data: expect.any(Object)
+          data: expect.objectContaining({
+            walletAddressUrl: notFoundWalletAddress
+          })
         })
       )
     })
@@ -315,7 +325,8 @@ describe('Integration tests', (): void => {
 
     // ----------------------------------------------------------
     // Grant Continuation via Polling.
-    // Alternative to getting the redirect url with interact_ref.
+    // Alternative to gettiang the redirect url with interact_ref.
+    // TODO: Test this way as well when OP client doesnt require interact_ref.
     test.skip('Grant Request Outgoing Payment', async (): Promise<void> => {
       const grant = await hlb.opClient.grant.request(
         {
@@ -361,20 +372,17 @@ describe('Integration tests', (): void => {
               accessToken: access_token.value,
               url: uri
             },
-            {
-              interact_ref: '' // TODO: update OP spec/client to not need body/interact_ref here
-            }
+            // TODO: pull in latest spec which shouldn't need interact_ref
+            { interact_ref: '' }
           ),
         (responseData) => 'accessToken' in responseData,
+        // TODO: update timing to be based on the grant.continue.wait
         10,
         2
       )
       console.log({ grantContinue })
       expect(true).toBe(true)
     })
-    // ^^^
-    // Grant Continuation via Polling.
-    // Alternative to getting the redirect url with interact_ref.
     // ----------------------------------------------------------
 
     test('Create Outgoing Payment', async (): Promise<void> => {

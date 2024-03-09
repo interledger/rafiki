@@ -8,7 +8,7 @@ import {
   Webhook
 } from 'mock-account-servicing-lib'
 import { TestConfig } from './config'
-import { AdminClient } from './apolloClient'
+import { AdminClient } from './AdminClient'
 
 export class IntegrationServer {
   private config: TestConfig
@@ -119,20 +119,46 @@ export class WebhookEventHandler {
   }
 
   private async handleWalletAddressNotFound(webhookEvent: Webhook) {
-    const walletAddressUrl = webhookEvent.data['walletAddressUrl']
+    const url = webhookEvent.data['walletAddressUrl']
 
-    if (!walletAddressUrl || typeof walletAddressUrl !== 'string') {
+    if (!url || typeof url !== 'string') {
       throw new Error('No walletAddressUrl found')
     }
 
-    const accountPath = new URL(walletAddressUrl).pathname.substring(1)
+    const accountPath = new URL(url).pathname.substring(1)
     const account = await this.accounts.getByPath(accountPath)
 
     if (!account) {
       throw new Error('No account found for wallet address')
     }
 
-    // TODO: create wallet address via apolloClient
+    const { assetId, name: publicName } = account
+
+    console.log('would have tried to create wallet address', {
+      assetId,
+      publicName,
+      url
+    })
+
+    const response = await this.adminClient.createWalletAddress({
+      assetId,
+      publicName,
+      url
+    })
+    const { walletAddress } = response
+
+    if (!response.success) {
+      throw new Error('Failed to create wallet address')
+    }
+    if (!walletAddress) {
+      throw new Error('Could not get wallet address')
+    }
+
+    await this.accounts.setWalletAddress(
+      account.id,
+      walletAddress.id,
+      walletAddress.url
+    )
   }
 
   private async handleOutgoingPaymentCreated(webhookEvent: Webhook) {

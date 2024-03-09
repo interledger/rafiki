@@ -16,6 +16,7 @@
     "@interledger/open-payments": "^6.7.0",
     "@types/koa": "2.14.0",
     "@types/koa-bodyparser": "^4.3.12",
+    "@types/node": "^18.19.19",
     "@types/uuid": "^9.0.8",
     "dotenv": "^16.4.1",
     "koa": "^2.15.0",
