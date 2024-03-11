@@ -1,5 +1,5 @@
 import type { NormalizedCacheObject } from '@apollo/client'
-import { ApolloClient, InMemoryCache, gql } from '@apollo/client'
+import { ApolloClient, InMemoryCache } from '@apollo/client'
 
 export function createApolloClient(
   graphqlUrl: string

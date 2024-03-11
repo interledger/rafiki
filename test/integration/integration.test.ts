@@ -1,7 +1,6 @@
 import assert from 'assert'
 import { validate as isUuid } from 'uuid'
 import {
-  OpenPaymentsClientError,
   isPendingGrant,
   isFinalizedGrant,
   WalletAddress,
@@ -372,8 +371,8 @@ describe('Integration tests', (): void => {
               accessToken: access_token.value,
               url: uri
             },
-            // TODO: pull in latest spec which shouldn't need interact_ref
-            { interact_ref: '' }
+            // TODO: pull in latest from OP (when merged) which shouldn't need body at all
+            { interact_ref: undefined }
           ),
         (responseData) => 'accessToken' in responseData,
         // TODO: update timing to be based on the grant.continue.wait
