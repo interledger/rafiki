@@ -55,7 +55,6 @@ COPY --from=prod-deps /home/rafiki/packages/token-introspection/package.json ./p
 
 COPY --from=builder /home/rafiki/openapi ./openapi
 COPY --from=builder /home/rafiki/packages/auth/migrations/ ./packages/auth/migrations
-COPY --from=builder /home/rafiki/packages/token-introspection/src/openapi/token-introspection.yaml ./packages/token-introspection/src/openapi/token-introspection.yaml
 COPY --from=builder /home/rafiki/packages/auth/dist ./packages/auth/dist
 COPY --from=builder /home/rafiki/packages/token-introspection/dist ./packages/token-introspection/dist
 

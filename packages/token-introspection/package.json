@@ -9,8 +9,8 @@
   "scripts": {
     "build": "pnpm clean && tsc --build tsconfig.json && pnpm copy-files",
     "clean": "rm -fr dist/",
-    "copy-files": "cp -r ./src/openapi/*.yaml ./dist/openapi",
-    "generate:types": "openapi-typescript src/openapi/token-introspection.yaml --output src/openapi/generated/types.ts -t",
+    "copy-files": "cp ../../openapi/auth-server.yaml ../../openapi/schemas.yaml ../../openapi/token-introspection.yaml ./dist/openapi",
+    "generate:types": "openapi-typescript ../../openapi/token-introspection.yaml --output src/openapi/generated/types.ts -t",
     "prepack": "pnpm build",
     "test": "jest --passWithNoTests",
     "test:cov": "pnpm test -- --coverage",
