@@ -220,7 +220,9 @@ describe('Integration tests', (): void => {
       console.log({ quote })
     })
 
-    test('Grant Request Outgoing Payment', async (): Promise<void> => {
+    // --- GRANT CONTINUATION WITH FINISH METHOD ---
+    // TODO: Grant Continuation w/ finish in another Open Payments Flow test
+    test.skip('Grant Request Outgoing Payment', async (): Promise<void> => {
       const grant = await hlb.opClient.grant.request(
         {
           url: senderWalletAddress.authServer
@@ -254,9 +256,12 @@ describe('Integration tests', (): void => {
 
       assert(isPendingGrant(grant))
       outgoingPaymentGrant = grant
+
+      // TODO: I assumed I needed to do this. Can I skip? Probably not but I should
+      await wait((outgoingPaymentGrant.continue.wait ?? 5) * 1000)
     })
 
-    test('Continuation Request', async (): Promise<void> => {
+    test.skip('Continuation Request', async (): Promise<void> => {
       // Extract interact ID from the redirect URL
       const { redirect: startInteractionUrl } = outgoingPaymentGrant.interact
       const tokens = startInteractionUrl.split('/interact/')
@@ -307,9 +312,6 @@ describe('Integration tests', (): void => {
       assert(interact_ref)
 
       const { access_token, uri } = outgoingPaymentGrant.continue
-
-      await wait((outgoingPaymentGrant.continue.wait ?? 5) * 1000)
-
       const grantContinue_ = await c9.opClient.grant.continue(
         {
           accessToken: access_token.value,
@@ -321,12 +323,9 @@ describe('Integration tests', (): void => {
       assert(isFinalizedGrant(grantContinue_))
       grantContinue = grantContinue_
     })
+    // --- GRANT CONTINUATION WITH FINISH METHOD ---
 
-    // ----------------------------------------------------------
-    // Grant Continuation via Polling.
-    // Alternative to gettiang the redirect url with interact_ref.
-    // TODO: Test this way as well when OP client doesnt require interact_ref.
-    test.skip('Grant Request Outgoing Payment', async (): Promise<void> => {
+    test('Grant Request Outgoing Payment', async (): Promise<void> => {
       const grant = await hlb.opClient.grant.request(
         {
           url: senderWalletAddress.authServer
@@ -337,7 +336,7 @@ describe('Integration tests', (): void => {
               {
                 type: 'outgoing-payment',
                 actions: ['create', 'read', 'list'],
-                identifier: senderWalletAddressUrl,
+                identifier: senderWalletAddressUrl.replace('http', 'https'),
                 limits: {
                   debitAmount: quote.debitAmount,
                   receiveAmount: quote.receiveAmount
@@ -347,11 +346,6 @@ describe('Integration tests', (): void => {
           },
           interact: {
             start: ['redirect']
-            // finish: {
-            //   method: 'redirect',
-            //   uri: 'https://example.com',
-            //   nonce: '456'
-            // }
           }
         }
       )
@@ -360,11 +354,56 @@ describe('Integration tests', (): void => {
 
       assert(isPendingGrant(grant))
       outgoingPaymentGrant = grant
+
+      // Delay following request according to the continue wait time
+      await wait((outgoingPaymentGrant.continue.wait ?? 5) * 1000)
     })
 
-    test.skip('Continuation Request', async (): Promise<void> => {
+    test('Continuation Request', async (): Promise<void> => {
+      // Extract interact ID from the redirect URL
+      const { redirect: startInteractionUrl } = outgoingPaymentGrant.interact
+      const tokens = startInteractionUrl.split('/interact/')
+      const interactId = tokens[1] ? tokens[1].split('/')[0] : null
+      const nonce = outgoingPaymentGrant.interact.finish
+      assert(interactId)
+
+      // Start interaction
+      const interactResponse = await fetch(startInteractionUrl, {
+        redirect: 'manual' // dont follow redirects
+      })
+      expect(interactResponse.status).toBe(302)
+
+      const cookie = parseCookies(interactResponse)
+
+      // Accept
+      const acceptResponse = await fetch(
+        `${senderWalletAddress.authServer}/grant/${interactId}/${nonce}/accept`,
+        {
+          method: 'POST',
+          headers: {
+            'x-idp-secret': 'replace-me',
+            cookie
+          }
+        }
+      )
+
+      expect(acceptResponse.status).toBe(202)
+
+      // Finish interaction
+      const finishResponse = await fetch(
+        `${senderWalletAddress.authServer}/interact/${interactId}/${nonce}/finish`,
+        {
+          method: 'GET',
+          headers: {
+            'x-idp-secret': 'replace-me',
+            cookie
+          }
+        }
+      )
+      expect(finishResponse.status).toBe(202)
+
       const { access_token, uri } = outgoingPaymentGrant.continue
-      const grantContinue = await poll(
+      const grantContinue_ = await poll(
         async () =>
           c9.opClient.grant.continue(
             {
@@ -374,13 +413,14 @@ describe('Integration tests', (): void => {
             // TODO: pull in latest from OP (when merged) which shouldn't need body at all
             { interact_ref: undefined }
           ),
-        (responseData) => 'accessToken' in responseData,
-        // TODO: update timing to be based on the grant.continue.wait
-        10,
-        2
+        (responseData) => 'access_token' in responseData,
+        20,
+        5
       )
-      console.log({ grantContinue })
-      expect(true).toBe(true)
+
+      console.log('grantContinue', JSON.stringify(grantContinue_, null, 2))
+      assert(isFinalizedGrant(grantContinue_))
+      grantContinue = grantContinue_
     })
     // ----------------------------------------------------------
 

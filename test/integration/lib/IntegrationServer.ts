@@ -134,12 +134,6 @@ export class WebhookEventHandler {
 
     const { assetId, name: publicName } = account
 
-    console.log('would have tried to create wallet address', {
-      assetId,
-      publicName,
-      url
-    })
-
     const response = await this.adminClient.createWalletAddress({
       assetId,
       publicName,
