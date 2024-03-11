@@ -1,5 +1,3 @@
-import { version } from '../../../../package.json'
-
 export default function Index() {
   return (
     <div className='pt-4 flex flex-col'>
@@ -11,7 +9,6 @@ export default function Index() {
           <div className='space-y-8'>
             <p className='text-4xl md:text-7xl'>Rafiki Admin</p>
             <p>This is Rafiki&apos;s administrative user interface.</p>
-            <p>v{version}</p>
           </div>
           <p>
             In this web application, you&apos;ll be able to manage peering
