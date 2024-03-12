@@ -571,8 +571,8 @@ importers:
   packages/mock-account-servicing-lib:
     dependencies:
       '@interledger/http-signature-utils':
-        specifier: 2.0.0
-        version: 2.0.0
+        specifier: 2.0.2
+        version: 2.0.2
       graphql:
         specifier: ^16.8.1
         version: 16.8.1
@@ -618,8 +618,8 @@ importers:
         specifier: ^3.8.10
         version: 3.9.6(@types/react@18.2.64)(graphql@16.8.1)(react-dom@18.2.0)(react@18.2.0)
       '@interledger/http-signature-utils':
-        specifier: 2.0.0
-        version: 2.0.0
+        specifier: 2.0.2
+        version: 2.0.2
       '@interledger/open-payments':
         specifier: ^6.7.1
         version: 6.7.1
@@ -3532,14 +3532,6 @@ packages:
     transitivePeerDependencies:
       - supports-color
     dev: false
-
-  /@interledger/http-signature-utils@2.0.0:
-    resolution: {integrity: sha512-zJTuTzkb9Y8ZJe8L0KcYnRtha8KyrYVpdM0FLL3HEOscWXRNrYC75IkJLzeTZnjzog77q9DT9PmxLitHuPl8iQ==}
-    dependencies:
-      http-message-signatures: 0.1.2
-      httpbis-digest-headers: 1.0.0
-      jose: 4.13.1
-      uuid: 9.0.1
 
   /@interledger/http-signature-utils@2.0.2:
     resolution: {integrity: sha512-gTAPFMt7xwG1zv1rbrltcZTAqOw/ZJwkVdnNjQzu5G9JTfvJQzS6pcpiVUej1cblpewotbOzosgdX00f93q9zA==}

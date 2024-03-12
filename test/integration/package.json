@@ -12,7 +12,7 @@
   "license": "ISC",
   "devDependencies": {
     "@apollo/client": "^3.8.10",
-    "@interledger/http-signature-utils": "2.0.0",
+    "@interledger/http-signature-utils": "2.0.2",
     "@interledger/open-payments": "^6.7.1",
     "@types/koa": "2.14.0",
     "@types/koa-bodyparser": "^4.3.12",
