@@ -37,35 +37,13 @@ describe('Integration tests', (): void => {
     const senderWalletAddressUrl =
       'http://host.docker.internal:3000/accounts/gfranklin'
 
-    // TODO: Is there a better way to organize these tests so that there arent many tests
-    // with side effects (changing this global state) which subsequent tests rely on? In
-    // some ways these tests should all be 1 since they aren't independant but I would
-    // prefer not to make them literally 1 test for readability of code and results and
-    // easier developement and debugging.
-
-    // Assigned in test: Can Get Existing Wallet Address
     let receiverWalletAddress: WalletAddress
     let senderWalletAddress: WalletAddress
-
-    // Assigned initially in test: Grant Request Incoming Payment
-    // Then re-assigned in test: Grant Request Quote and Grant Request Outgoing Payment
-    // - could set new vars but just following whats in postman for now
     let accessToken: string
-
-    // Assigned in Create Incoming Payment
     let incomingPayment: IncomingPayment
-
-    // Assigned in Create Quote
     let quote: Quote
-
-    // Assigned in Grant Request Outgoing Payment
-    // let continueId: string
     let outgoingPaymentGrant: PendingGrant
-
-    // set in Continuation Request
     let grantContinue: Grant
-
-    // set in Create Outgoing Payment
     let outgoingPayment: OutgoingPayment
 
     test('Can Get Existing Wallet Address', async (): Promise<void> => {
@@ -75,8 +53,6 @@ describe('Integration tests', (): void => {
       senderWalletAddress = await c9.opClient.walletAddress.get({
         url: senderWalletAddressUrl
       })
-
-      console.log({ receiverWalletAddress, senderWalletAddress })
 
       expect(receiverWalletAddress.id).toBe(
         receiverWalletAddressUrl.replace('http', 'https')
@@ -136,8 +112,6 @@ describe('Integration tests', (): void => {
         }
       )
 
-      console.log({ grant })
-
       assert(!isPendingGrant(grant))
       accessToken = grant.access_token.value
     })
@@ -169,8 +143,6 @@ describe('Integration tests', (): void => {
         }
       )
 
-      console.log({ incomingPayment })
-
       // Delay gives time for webhook to be received
       await wait(1000)
       expect(handleWebhookEventSpy).toHaveBeenCalledWith(
@@ -198,8 +170,6 @@ describe('Integration tests', (): void => {
         }
       )
 
-      console.log(JSON.stringify(grant, null, 2))
-
       assert(!isPendingGrant(grant))
       accessToken = grant.access_token.value
     })
@@ -216,8 +186,6 @@ describe('Integration tests', (): void => {
           method: 'ilp'
         }
       )
-
-      console.log({ quote })
     })
 
     // --- GRANT CONTINUATION WITH FINISH METHOD ---
@@ -252,17 +220,14 @@ describe('Integration tests', (): void => {
         }
       )
 
-      console.log({ grant })
-
       assert(isPendingGrant(grant))
       outgoingPaymentGrant = grant
 
-      // TODO: I assumed I needed to do this. Can I skip? Probably not but I should
+      // Delay following request according to the continue wait time
       await wait((outgoingPaymentGrant.continue.wait ?? 5) * 1000)
     })
 
     test.skip('Continuation Request', async (): Promise<void> => {
-      // Extract interact ID from the redirect URL
       const { redirect: startInteractionUrl } = outgoingPaymentGrant.interact
       const tokens = startInteractionUrl.split('/interact/')
       const interactId = tokens[1] ? tokens[1].split('/')[0] : null
@@ -319,7 +284,6 @@ describe('Integration tests', (): void => {
         },
         { interact_ref }
       )
-      console.log(JSON.stringify(grantContinue_, null, 2))
       assert(isFinalizedGrant(grantContinue_))
       grantContinue = grantContinue_
     })
@@ -350,8 +314,6 @@ describe('Integration tests', (): void => {
         }
       )
 
-      console.log({ grant })
-
       assert(isPendingGrant(grant))
       outgoingPaymentGrant = grant
 
@@ -360,7 +322,6 @@ describe('Integration tests', (): void => {
     })
 
     test('Continuation Request', async (): Promise<void> => {
-      // Extract interact ID from the redirect URL
       const { redirect: startInteractionUrl } = outgoingPaymentGrant.interact
       const tokens = startInteractionUrl.split('/interact/')
       const interactId = tokens[1] ? tokens[1].split('/')[0] : null
@@ -418,11 +379,9 @@ describe('Integration tests', (): void => {
         5
       )
 
-      console.log('grantContinue', JSON.stringify(grantContinue_, null, 2))
       assert(isFinalizedGrant(grantContinue_))
       grantContinue = grantContinue_
     })
-    // ----------------------------------------------------------
 
     test('Create Outgoing Payment', async (): Promise<void> => {
       const handleWebhookEventSpy = jest.spyOn(
@@ -441,7 +400,6 @@ describe('Integration tests', (): void => {
           quoteId: quote.id
         }
       )
-      console.log({ outgoingPayment })
       // Delay gives time for webhooks to be received
       await wait(1000)
       expect(handleWebhookEventSpy).toHaveBeenCalledWith(
@@ -467,7 +425,8 @@ describe('Integration tests', (): void => {
         url: `${senderWalletAddress.resourceServer}/outgoing-payments/${id}`,
         accessToken: grantContinue.access_token.value
       })
-      console.log({ outgoingPayment_ })
+
+      expect(outgoingPayment_.id).toBe(outgoingPayment.id)
     })
   })
 

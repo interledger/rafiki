@@ -30,7 +30,8 @@ export class IntegrationServer {
   public start(port: number): void {
     this.app.use(async (ctx) => {
       if (ctx.path === '/webhooks' && ctx.method === 'POST') {
-        const { body } = ctx.request
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { body } = ctx.request as Koa.Request & { body?: any }
 
         if (this.isWebhookEvent(body)) {
           this.webhookEventHandler.handleWebhookEvent(body)
@@ -93,25 +94,16 @@ export class WebhookEventHandler {
   }
 
   public async handleWebhookEvent(webhookEvent: Webhook) {
-    console.log('handling webhook')
-    console.log((await this.accounts.listAll())[0].walletAddress)
     switch (webhookEvent.type) {
       case WebhookEventType.WalletAddressNotFound:
         await this.handleWalletAddressNotFound(webhookEvent)
         break
       case WebhookEventType.IncomingPaymentCreated:
-        console.log('incoming payment created')
-        // await this.handleIncomingPaymentCreated(webhookEvent)
-        break
-      case WebhookEventType.IncomingPaymentCompleted:
-        console.log('incoming payemnt completed')
         break
       case WebhookEventType.OutgoingPaymentCreated:
-        console.log('outgoing payemnt created')
         await this.handleOutgoingPaymentCreated(webhookEvent)
         break
       case WebhookEventType.OutgoingPaymentCompleted:
-        console.log('outgoing payemnt completed')
         break
       default:
         console.log(`unknown event type: ${webhookEvent.type}`)
@@ -184,62 +176,7 @@ export class WebhookEventHandler {
 
     if (response.code !== '200') {
       const msg = 'Deposit outgoing payment liquidity failed'
-      console.log(msg, { response })
       throw new Error(msg)
     }
-
-    // TODO: remove this debug log
-    console.log({ response })
-
-    return
   }
-
-  // private async handleOutgoingPaymentCompletedFailed(webhookEvent: Webhook) {
-  //   const payment = webhookEvent.data
-  //   const walletAddressId = payment.walletAddressId
-  //   if (typeof walletAddressId !== 'string') {
-  //     throw new Error('No walletAddressId found')
-  //   }
-  //   const account = await this.accounts.getByWalletAddressId(walletAddressId)
-
-  //   if (!account) {
-  //     throw new Error(
-  //       `No account found for walletAddressId: ${walletAddressId}`
-  //     )
-  //   }
-
-  //   console.log({
-  //     'payment.sentAmount': payment.sentAmount,
-  //     'payment.debitAmount': payment.debitAmount
-  //   })
-
-  //   // 'payment.sentAmount': { value: '0', assetCode: 'USD', assetScale: 2 },
-  //   // 'payment.debitAmount': { value: '617', assetCode: 'USD', assetScale: 2 }
-
-  //   let sentAmount: bigint
-  //   let debitAmount: bigint
-
-  //   try {
-  //     sentAmount = BigInt((payment.sentAmount as any).value)
-  //     debitAmount = BigInt((payment.debitAmount as any).value)
-  //   } catch (err) {
-  //     throw new Error('Invalid sentAmount or debitAmount')
-  //   }
-
-  //   const toVoid = debitAmount - sentAmount
-
-  //   await this.accounts.debit(account.id, sentAmount, true)
-  //   if (toVoid > 0) {
-  //     await this.accounts.voidPendingDebit(account.id, toVoid)
-  //   }
-
-  //   // TODO: withdraw remaining liquidity
-
-  //   return
-  // }
-
-  // private async handleIncomingPaymentCreated(webhookEvent: Webhook) {
-  //   console.log('handleIncomingPaymentCreated')
-  //   console.log({ webhookEvent })
-  // }
 }

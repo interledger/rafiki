@@ -222,7 +222,6 @@ export class AdminClient {
         variables: { input }
       })
       .then(({ data }): GraphqlTypes.CreateWalletAddressMutationResponse => {
-        console.log({ data })
         return data.createWalletAddress
       })
   }
