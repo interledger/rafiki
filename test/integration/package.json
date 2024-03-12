@@ -20,7 +20,7 @@
     "@types/uuid": "^9.0.8",
     "dotenv": "^16.4.1",
     "koa": "^2.15.0",
-    "koa-bodyparser": "^4.4.1",
+    "@koa/bodyparser": "^5.0.0",
     "mock-account-servicing-lib": "workspace:*",
     "uuid": "^9.0.1",
     "yaml": "^2.3.4"
