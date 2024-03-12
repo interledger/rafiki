@@ -1,6 +1,18 @@
 import type { NormalizedCacheObject } from '@apollo/client'
 import { ApolloClient, gql } from '@apollo/client'
-import { GraphqlTypes } from 'mock-account-servicing-lib'
+import {
+  CreateOutgoingPaymentInput,
+  CreateQuoteInput,
+  CreateReceiverInput,
+  CreateReceiverResponse,
+  CreateWalletAddressInput,
+  CreateWalletAddressMutationResponse,
+  DepositOutgoingPaymentLiquidityInput,
+  LiquidityMutationResponse,
+  OutgoingPayment,
+  OutgoingPaymentResponse,
+  QuoteResponse
+} from './generated/graphql'
 
 export class AdminClient {
   private apolloClient: ApolloClient<NormalizedCacheObject>
@@ -10,8 +22,8 @@ export class AdminClient {
   }
 
   async createReceiver(
-    input: GraphqlTypes.CreateReceiverInput
-  ): Promise<GraphqlTypes.CreateReceiverResponse> {
+    input: CreateReceiverInput
+  ): Promise<CreateReceiverResponse> {
     return await this.apolloClient
       .mutate({
         mutation: gql`
@@ -44,14 +56,12 @@ export class AdminClient {
         `,
         variables: { input }
       })
-      .then(({ data }): GraphqlTypes.CreateReceiverResponse => {
+      .then(({ data }): CreateReceiverResponse => {
         return data.createReceiver
       })
   }
 
-  async createQuote(
-    input: GraphqlTypes.CreateQuoteInput
-  ): Promise<GraphqlTypes.QuoteResponse> {
+  async createQuote(input: CreateQuoteInput): Promise<QuoteResponse> {
     return await this.apolloClient
       .mutate({
         mutation: gql`
@@ -85,14 +95,14 @@ export class AdminClient {
         `,
         variables: { input }
       })
-      .then(({ data }): GraphqlTypes.QuoteResponse => {
+      .then(({ data }): QuoteResponse => {
         return data.createQuote
       })
   }
 
   async createOutgoingPayment(
-    input: GraphqlTypes.CreateOutgoingPaymentInput
-  ): Promise<GraphqlTypes.OutgoingPaymentResponse> {
+    input: CreateOutgoingPaymentInput
+  ): Promise<OutgoingPaymentResponse> {
     return await this.apolloClient
       .mutate({
         mutation: gql`
@@ -131,12 +141,12 @@ export class AdminClient {
         `,
         variables: { input }
       })
-      .then(({ data }): GraphqlTypes.OutgoingPaymentResponse => {
+      .then(({ data }): OutgoingPaymentResponse => {
         return data.createOutgoingPayment
       })
   }
 
-  async getOutgoingPayment(id: string): Promise<GraphqlTypes.OutgoingPayment> {
+  async getOutgoingPayment(id: string): Promise<OutgoingPayment> {
     return await this.apolloClient
       .query({
         query: gql`
@@ -173,14 +183,14 @@ export class AdminClient {
         `,
         variables: { id }
       })
-      .then((response): GraphqlTypes.OutgoingPayment => {
+      .then((response): OutgoingPayment => {
         return response.data.outgoingPayment
       })
   }
 
   async depositOutgoingPaymentLiquidity(
-    input: GraphqlTypes.DepositOutgoingPaymentLiquidityInput
-  ): Promise<GraphqlTypes.LiquidityMutationResponse> {
+    input: DepositOutgoingPaymentLiquidityInput
+  ): Promise<LiquidityMutationResponse> {
     return await this.apolloClient
       .mutate({
         mutation: gql`
@@ -197,14 +207,14 @@ export class AdminClient {
         `,
         variables: { input }
       })
-      .then(({ data }): GraphqlTypes.LiquidityMutationResponse => {
+      .then(({ data }): LiquidityMutationResponse => {
         return data.depositOutgoingPaymentLiquidity
       })
   }
 
   async createWalletAddress(
-    input: GraphqlTypes.CreateWalletAddressInput
-  ): Promise<GraphqlTypes.CreateWalletAddressMutationResponse> {
+    input: CreateWalletAddressInput
+  ): Promise<CreateWalletAddressMutationResponse> {
     return await this.apolloClient
       .mutate({
         mutation: gql`
@@ -221,7 +231,7 @@ export class AdminClient {
         `,
         variables: { input }
       })
-      .then(({ data }): GraphqlTypes.CreateWalletAddressMutationResponse => {
+      .then(({ data }): CreateWalletAddressMutationResponse => {
         return data.createWalletAddress
       })
   }

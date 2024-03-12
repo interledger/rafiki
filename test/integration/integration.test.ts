@@ -12,8 +12,14 @@ import {
 } from '@interledger/open-payments'
 import { C9_CONFIG, HLB_CONFIG } from './lib/config'
 import { MockASE } from './lib/MockASE'
-import { GraphqlTypes, WebhookEventType } from 'mock-account-servicing-lib'
+import { WebhookEventType } from 'mock-account-servicing-lib'
 import { parseCookies, poll, wait } from './lib/utils'
+import {
+  Receiver as ReceiverGql,
+  Quote as QuoteGql,
+  OutgoingPayment as OutgoingPaymentGql,
+  OutgoingPaymentState
+} from './lib/generated/graphql'
 
 jest.setTimeout(20000)
 
@@ -436,9 +442,9 @@ describe('Integration tests', (): void => {
     const amountValueToSend = '500'
 
     let gfranklinWalletAddressId: string
-    let receiver: GraphqlTypes.Receiver
-    let quote: GraphqlTypes.Quote
-    let outgoingPayment: GraphqlTypes.OutgoingPayment
+    let receiver: ReceiverGql
+    let quote: QuoteGql
+    let outgoingPayment: OutgoingPaymentGql
 
     beforeAll(async () => {
       const gfranklinWalletAddress = await c9.accounts.getByWalletAddressUrl(
@@ -525,7 +531,7 @@ describe('Integration tests', (): void => {
       const payment = await c9.adminClient.getOutgoingPayment(
         outgoingPayment.id
       )
-      expect(payment.state).toBe(GraphqlTypes.OutgoingPaymentState.Completed)
+      expect(payment.state).toBe(OutgoingPaymentState.Completed)
       expect(payment.receiveAmount.value).toBe(amountValueToSend)
       expect(payment.sentAmount.value).toBe(amountValueToSend)
     })
