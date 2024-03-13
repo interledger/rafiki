@@ -19,7 +19,6 @@ import { mockAccounts } from './accounts.server'
 import { generateJwk } from '@interledger/http-signature-utils'
 import { Asset, FeeType } from 'generated/graphql'
 
-const SEED_TOKEN = 'seed_file'
 
 export async function setupFromSeed(config: Config): Promise<void> {
   const assets: Record<string, Asset> = {}
@@ -28,8 +27,7 @@ export async function setupFromSeed(config: Config): Promise<void> {
     const { asset } = await createAsset(
       code,
       scale,
-      liquidityThreshold,
-      SEED_TOKEN
+      liquidityThreshold
     )
     if (!asset) {
       throw new Error('asset not defined')
@@ -38,8 +36,7 @@ export async function setupFromSeed(config: Config): Promise<void> {
     const initialLiquidity = await depositAssetLiquidity(
       asset.id,
       liquidity,
-      v4(),
-      SEED_TOKEN
+      v4()
     )
 
     assets[code] = asset
@@ -91,8 +88,7 @@ export async function setupFromSeed(config: Config): Promise<void> {
     console.log('autopeering url: ', CONFIG.testnetAutoPeerUrl)
     const autoPeerResponse = await createAutoPeer(
       CONFIG.testnetAutoPeerUrl,
-      assets[peeringAsset].id,
-      SEED_TOKEN
+      assets[peeringAsset].id
     ).catch((e) => {
       console.log('error on autopeering: ', e)
       return

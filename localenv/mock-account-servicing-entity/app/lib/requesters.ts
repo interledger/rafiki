@@ -13,7 +13,7 @@ import type {
   CreateOrUpdatePeerByUrlMutationResponse,
   CreateOrUpdatePeerByUrlInput
 } from 'generated/graphql'
-import { apolloClient, getApolloClient } from './apolloClient'
+import { apolloClient } from './apolloClient'
 import { v4 as uuid } from 'uuid'
 
 export interface GraphqlQueryConfig {
@@ -32,8 +32,7 @@ export interface GraphqlResponseElement {
 export async function createAsset(
   code: string,
   scale: number,
-  liquidityThreshold: number,
-  token?: string
+  liquidityThreshold: number
 ): Promise<AssetMutationResponse> {
   const createAssetMutation = gql`
     mutation CreateAsset($input: CreateAssetInput!) {
@@ -57,7 +56,6 @@ export async function createAsset(
       liquidityThreshold
     }
   }
-  const apolloClient = getApolloClient(token)
   return apolloClient
     .mutate({
       mutation: createAssetMutation,
@@ -77,8 +75,7 @@ export async function createPeer(
   assetId: string,
   assetCode: string,
   name: string,
-  liquidityThreshold: number,
-  token?: string
+  liquidityThreshold: number
 ): Promise<CreatePeerMutationResponse> {
   const createPeerMutation = gql`
     mutation CreatePeer($input: CreatePeerInput!) {
@@ -107,7 +104,6 @@ export async function createPeer(
       liquidityThreshold
     }
   }
-  const apolloClient = getApolloClient(token)
   return apolloClient
     .mutate({
       mutation: createPeerMutation,
@@ -124,8 +120,7 @@ export async function createPeer(
 
 export async function createAutoPeer(
   peerUrl: string,
-  assetId: string,
-  token?: string
+  assetId: string
 ): Promise<CreateOrUpdatePeerByUrlMutationResponse | undefined> {
   const createAutoPeerMutation = gql`
     mutation CreateOrUpdatePeerByUrl($input: CreateOrUpdatePeerByUrlInput!) {
@@ -155,7 +150,6 @@ export async function createAutoPeer(
       liquidityToDeposit
     }
   }
-  const apolloClient = getApolloClient(token)
   return apolloClient
     .mutate({
       mutation: createAutoPeerMutation,
@@ -173,8 +167,7 @@ export async function createAutoPeer(
 export async function depositPeerLiquidity(
   peerId: string,
   amount: string,
-  transferUid: string,
-  token?: string
+  transferUid: string
 ): Promise<LiquidityMutationResponse> {
   const depositPeerLiquidityMutation = gql`
     mutation DepositPeerLiquidity($input: DepositPeerLiquidityInput!) {
@@ -194,7 +187,6 @@ export async function depositPeerLiquidity(
       idempotencyKey: uuid()
     }
   }
-  const apolloClient = getApolloClient(token)
   return apolloClient
     .mutate({
       mutation: depositPeerLiquidityMutation,
@@ -212,8 +204,7 @@ export async function depositPeerLiquidity(
 export async function depositAssetLiquidity(
   assetId: string,
   amount: number,
-  transferId: string,
-  token?: string
+  transferId: string
 ): Promise<LiquidityMutationResponse> {
   const depositAssetLiquidityMutation = gql`
     mutation DepositAssetLiquidity($input: DepositAssetLiquidityInput!) {
@@ -233,7 +224,6 @@ export async function depositAssetLiquidity(
       idempotencyKey: uuid()
     }
   }
-  const apolloClient = getApolloClient(token)
   return apolloClient
     .mutate({
       mutation: depositAssetLiquidityMutation,
@@ -251,8 +241,7 @@ export async function depositAssetLiquidity(
 export async function createWalletAddress(
   accountName: string,
   accountUrl: string,
-  assetId: string,
-  token?: string
+  assetId: string
 ): Promise<WalletAddress> {
   const createWalletAddressMutation = gql`
     mutation CreateWalletAddress($input: CreateWalletAddressInput!) {
@@ -274,7 +263,6 @@ export async function createWalletAddress(
     publicName: accountName
   }
 
-  const apolloClient = getApolloClient(token)
   return apolloClient
     .mutate({
       mutation: createWalletAddressMutation,
@@ -303,8 +291,7 @@ export async function createWalletAddressKey(
   }: {
     walletAddressId: string
     jwk: string
-  },
-  token?: string
+  }
 ): Promise<CreateWalletAddressKeyMutationResponse> {
   const createWalletAddressKeyMutation = gql`
     mutation CreateWalletAddressKey($input: CreateWalletAddressKeyInput!) {
@@ -320,7 +307,6 @@ export async function createWalletAddressKey(
     jwk: jwk as unknown as JwkInput
   }
 
-  const apolloClient = getApolloClient(token)
   return apolloClient
     .mutate({
       mutation: createWalletAddressKeyMutation,
@@ -406,6 +392,7 @@ export async function getWalletAddressPayments(
       }
     }
   `
+
   return apolloClient
     .query({
       query,
@@ -425,8 +412,7 @@ export async function setFee(
   assetId: string,
   type: FeeType,
   fixed: number,
-  basisPoints: number,
-  token?: string
+  basisPoints: number
 ): Promise<SetFeeResponse> {
   const setFeeMutation = gql`
     mutation SetFee($input: SetFeeInput!) {
@@ -454,7 +440,6 @@ export async function setFee(
     }
   }
 
-  const apolloClient = getApolloClient(token)
   return apolloClient
     .mutate({
       mutation: setFeeMutation,
