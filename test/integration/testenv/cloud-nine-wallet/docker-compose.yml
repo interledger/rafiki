@@ -64,8 +64,3 @@ services:
       ADMIN_PORT: 3003
     depends_on:
       - shared-database
-    healthcheck:
-      test: ["CMD", "wget", "http://host.docker.internal:4000/healthz"]
-      interval: 5s
-      retries: 10
-      timeout: 3s

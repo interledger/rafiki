@@ -37,6 +37,11 @@ services:
       - ../private-key.pem:/workspace/private-key.pem
     depends_on:
       - cloud-nine-wallet-test-backend
+    healthcheck:
+      test: ["CMD", "wget", "http://localhost:4000/healthz"]
+      interval: 5s
+      retries: 10
+      timeout: 3s
   happy-life-auth:
     hostname: happy-life-bank-test-auth
     image: rafiki-auth
