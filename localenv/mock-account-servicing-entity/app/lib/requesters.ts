@@ -273,7 +273,7 @@ export async function createWalletAddress(
     url: accountUrl,
     publicName: accountName
   }
-  
+
   const apolloClient = getApolloClient(token)
   return apolloClient
     .mutate({
@@ -296,13 +296,16 @@ export async function createWalletAddress(
     })
 }
 
-export async function createWalletAddressKey({
-  walletAddressId,
-  jwk
-}: {
-  walletAddressId: string
-  jwk: string
-}, token?: string): Promise<CreateWalletAddressKeyMutationResponse> {
+export async function createWalletAddressKey(
+  {
+    walletAddressId,
+    jwk
+  }: {
+    walletAddressId: string
+    jwk: string
+  },
+  token?: string
+): Promise<CreateWalletAddressKeyMutationResponse> {
   const createWalletAddressKeyMutation = gql`
     mutation CreateWalletAddressKey($input: CreateWalletAddressKeyInput!) {
       createWalletAddressKey(input: $input) {

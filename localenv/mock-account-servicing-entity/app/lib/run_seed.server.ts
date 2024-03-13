@@ -25,7 +25,12 @@ export async function setupFromSeed(config: Config): Promise<void> {
   const assets: Record<string, Asset> = {}
   for (const { code, scale, liquidity, liquidityThreshold } of config.seed
     .assets) {
-    const { asset } = await createAsset(code, scale, liquidityThreshold, SEED_TOKEN)
+    const { asset } = await createAsset(
+      code,
+      scale,
+      liquidityThreshold,
+      SEED_TOKEN
+    )
     if (!asset) {
       throw new Error('asset not defined')
     }
@@ -43,7 +48,13 @@ export async function setupFromSeed(config: Config): Promise<void> {
     const { fees } = config.seed
     const fee = fees.find((fee) => fee.asset === code && fee.scale == scale)
     if (fee) {
-      await setFee(asset.id, FeeType.Sending, fee.fixed, fee.basisPoints, SEED_TOKEN)
+      await setFee(
+        asset.id,
+        FeeType.Sending,
+        fee.fixed,
+        fee.basisPoints,
+        SEED_TOKEN
+      )
     }
   }
 
@@ -129,13 +140,16 @@ export async function setupFromSeed(config: Config): Promise<void> {
         walletAddress.url
       )
 
-      await createWalletAddressKey({
-        walletAddressId: walletAddress.id,
-        jwk: generateJwk({
-          keyId: `keyid-${account.id}`,
-          privateKey: config.key
-        }) as unknown as string
-      }, SEED_TOKEN)
+      await createWalletAddressKey(
+        {
+          walletAddressId: walletAddress.id,
+          jwk: generateJwk({
+            keyId: `keyid-${account.id}`,
+            privateKey: config.key
+          }) as unknown as string
+        },
+        SEED_TOKEN
+      )
 
       return walletAddress
     })

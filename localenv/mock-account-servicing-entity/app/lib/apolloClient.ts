@@ -56,29 +56,31 @@ export const apolloClient: ApolloClient<NormalizedCacheObject> =
     }
   })
 
-  export const getApolloClient = (token?: string): ApolloClient<NormalizedCacheObject> => {
-    const authLink = setContext((_, { headers }) => {
-      return {
-        headers: {
-          ...headers,
-          authorization: token ? `Bearer ${token}` : ''
-        }
+export const getApolloClient = (
+  token?: string
+): ApolloClient<NormalizedCacheObject> => {
+  const authLink = setContext((_, { headers }) => {
+    return {
+      headers: {
+        ...headers,
+        authorization: token ? `Bearer ${token}` : ''
       }
-    })
-    const link = ApolloLink.from([errorLink, authLink, httpLink])
-    return new ApolloClient({
-      cache: new InMemoryCache({}),
-      link: link,
-      defaultOptions: {
-        query: {
-          fetchPolicy: 'no-cache'
-        },
-        mutate: {
-          fetchPolicy: 'no-cache'
-        },
-        watchQuery: {
-          fetchPolicy: 'no-cache'
-        }
+    }
+  })
+  const link = ApolloLink.from([errorLink, authLink, httpLink])
+  return new ApolloClient({
+    cache: new InMemoryCache({}),
+    link: link,
+    defaultOptions: {
+      query: {
+        fetchPolicy: 'no-cache'
+      },
+      mutate: {
+        fetchPolicy: 'no-cache'
+      },
+      watchQuery: {
+        fetchPolicy: 'no-cache'
       }
-    })
-  }
+    }
+  })
+}

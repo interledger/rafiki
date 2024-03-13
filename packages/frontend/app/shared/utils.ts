@@ -1,3 +1,6 @@
+import type { ServerError } from '@apollo/client'
+import { ApolloError } from '@apollo/client'
+import { json } from '@remix-run/node'
 import { BadgeColor } from '~/components'
 import type {
   IncomingPaymentState,
@@ -98,4 +101,25 @@ export const paymentSubpathByType: {
 
 export const parseBool = (str: string) => {
   return ['true', 't', '1'].includes(str.toLowerCase())
+}
+
+// eslint-disable-next-line  @typescript-eslint/no-explicit-any
+export const isApolloUnauthenticatedServerError = (error: any): boolean => {
+  return (
+    error instanceof ApolloError &&
+    (error.networkError as ServerError)?.statusCode === 401
+  )
+}
+
+export const generateUnauthenticatedError = () =>
+  json('Unauthenticated', {
+    status: 401,
+    statusText: 'Unauthenticated - Invalid Token'
+  })
+
+// eslint-disable-next-line  @typescript-eslint/no-explicit-any
+export const throwUnauthenticatedErrorOrError = (error: any) => {
+  if (isApolloUnauthenticatedServerError(error))
+    throw generateUnauthenticatedError()
+  throw error
 }

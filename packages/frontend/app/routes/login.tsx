@@ -42,15 +42,10 @@ export const loader = async ({ request }: LoaderArgs) => {
   const url = new URL(request.url)
   const urlLoginChallenge = url.searchParams.get('login_challenge')
   // TODO: Add safe parse
-  // const result = z.string().uuid().safeParse(urlLoginChallenge)
-  // if (!result.success) {
-  //     throw json(null, { status: 400, statusText: 'Login challenge is required.' })
-  // }
   const session = await authStorage.getSession(request.headers.get('cookie'))
   const sessionLoginChallenge = getLoginChallenge(session)
 
   if (urlLoginChallenge && !sessionLoginChallenge) {
-    console.log('setting cookie')
     return setChallengeAndRedirect({
       session,
       location: '.',
@@ -58,12 +53,9 @@ export const loader = async ({ request }: LoaderArgs) => {
       challenge: urlLoginChallenge
     })
   } else if (sessionLoginChallenge) {
-    console.log('getting login challenge')
     const hydraUrl = `http://hydra:4445/admin/oauth2/auth/requests/login?login_challenge=${sessionLoginChallenge}`
-    console.log('HydraUrl: ', hydraUrl)
     try {
       const response = await axios.get(hydraUrl)
-      console.log('got a response')
       if (response.status !== 200) {
         throw new Error(
           `Hydra responded with status: ${response.status}: ${response.statusText}`
@@ -81,7 +73,6 @@ export const loader = async ({ request }: LoaderArgs) => {
 export async function action({ request }: ActionArgs) {
   const formData = await request.formData()
   const username = formData.get('username')
-  const password = formData.get('password')
   const session = await authStorage.getSession(request.headers.get('cookie'))
 
   const loginChallenge = getLoginChallenge(session)
