@@ -49,8 +49,7 @@ export async function setupFromSeed(config: Config): Promise<void> {
         asset.id,
         FeeType.Sending,
         fee.fixed,
-        fee.basisPoints,
-        SEED_TOKEN
+        fee.basisPoints
       )
     }
   }
@@ -65,8 +64,7 @@ export async function setupFromSeed(config: Config): Promise<void> {
         assets[peeringAsset].id,
         assets[peeringAsset].code,
         peer.name,
-        peer.liquidityThreshold,
-        SEED_TOKEN
+        peer.liquidityThreshold
       ).then((response) => response.peer)
       if (!peerResponse) {
         throw new Error('peer response not defined')
@@ -75,8 +73,7 @@ export async function setupFromSeed(config: Config): Promise<void> {
       const liquidity = await depositPeerLiquidity(
         peerResponse.id,
         peer.initialLiquidity,
-        transferUid,
-        SEED_TOKEN
+        transferUid
       )
       return [peerResponse, liquidity]
     })
@@ -126,8 +123,7 @@ export async function setupFromSeed(config: Config): Promise<void> {
       const walletAddress = await createWalletAddress(
         account.name,
         `${CONFIG.publicHost}/${account.path}`,
-        accountAsset.id,
-        SEED_TOKEN
+        accountAsset.id
       )
 
       await mockAccounts.setWalletAddress(
@@ -143,8 +139,7 @@ export async function setupFromSeed(config: Config): Promise<void> {
             keyId: `keyid-${account.id}`,
             privateKey: config.key
           }) as unknown as string
-        },
-        SEED_TOKEN
+        }
       )
 
       return walletAddress
