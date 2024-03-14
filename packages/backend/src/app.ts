@@ -342,7 +342,8 @@ export class App {
       plugins: [
         ...protection.plugins,
         ApolloServerPluginDrainHttpServer({ httpServer })
-      ]
+      ],
+      introspection: this.config.env !== 'production'
     })
 
     await this.apolloServer.start()

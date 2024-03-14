@@ -1,11 +1,11 @@
 meta {
-  name: Grant Request Incoming Payment
+  name: Grant Request Quote
   type: http
-  seq: 3
+  seq: 5
 }
 
 post {
-  url: {{receiverOpenPaymentsAuthHost}}/
+  url: {{senderOpenPaymentsAuthHost}}/
   body: json
   auth: none
 }
@@ -15,25 +15,26 @@ body:json {
       "access_token": {
           "access": [
               {
-                  "type": "incoming-payment",
+                  "type": "quote",
                   "actions": [
-                      "create", "read", "list", "complete"
+                      "create", "read"
                   ]
               }
           ]
       },
       "client": "{{clientWalletAddress}}"
   }
+  
 }
 
 script:pre-request {
-  const scripts = require('./scripts/scripts');
+  const scripts = require('./scripts');
   
   await scripts.addSignatureHeaders();
 }
 
 script:post-response {
-  const scripts = require('./scripts/scripts');
+  const scripts = require('./scripts');
   
   scripts.storeTokenDetails();
 }
