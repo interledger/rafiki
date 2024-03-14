@@ -158,7 +158,7 @@ export function initIocContainer(
   container.singleton('openApi', async () => {
     const authServerSpec = await getAuthServerOpenAPI()
     const idpSpec = await createOpenAPI(
-      path.resolve(__dirname, './openapi/id-provider.yaml')
+      path.resolve(__dirname, './openapi/specs/id-provider.yaml')
     )
     const tokenIntrospectionSpec = await getTokenIntrospectionOpenAPI()
 
