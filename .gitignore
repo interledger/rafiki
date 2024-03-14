@@ -56,3 +56,9 @@ build
 
 # AWS Lambda
 *.zip
+
+# Open Payments schemas
+packages/**/src/openapi/specs/schemas.yaml
+packages/**/src/openapi/specs/auth-server.yaml
+packages/**/src/openapi/specs/resource-server.yaml
+packages/**/src/openapi/specs/wallet-address-server.yaml
