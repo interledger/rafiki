@@ -284,15 +284,13 @@ export async function createWalletAddress(
     })
 }
 
-export async function createWalletAddressKey(
-  {
-    walletAddressId,
-    jwk
-  }: {
-    walletAddressId: string
-    jwk: string
-  }
-): Promise<CreateWalletAddressKeyMutationResponse> {
+export async function createWalletAddressKey({
+  walletAddressId,
+  jwk
+}: {
+  walletAddressId: string
+  jwk: string
+}): Promise<CreateWalletAddressKeyMutationResponse> {
   const createWalletAddressKeyMutation = gql`
     mutation CreateWalletAddressKey($input: CreateWalletAddressKeyInput!) {
       createWalletAddressKey(input: $input) {
