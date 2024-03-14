@@ -7,7 +7,12 @@ import createLogger from 'pino'
 import { createClient } from 'tigerbeetle-node'
 import { createClient as createIntrospectionClient } from 'token-introspection'
 
-import { createAuthenticatedClient as createOpenPaymentsClient } from '@interledger/open-payments'
+import {
+  createAuthenticatedClient as createOpenPaymentsClient,
+  getAuthServerOpenAPI,
+  getResourceServerOpenAPI,
+  getWalletAddressServerOpenAPI
+} from '@interledger/open-payments'
 import { createOpenAPI } from '@interledger/openapi'
 import { StreamServer } from '@interledger/stream-receiver'
 import axios from 'axios'
@@ -153,12 +158,9 @@ export function initIocContainer(
   }
 
   container.singleton('openApi', async () => {
-    const resourceServerSpec = await createOpenAPI(
-      path.resolve(__dirname, './openapi/resource-server.yaml')
-    )
-    const walletAddressServerSpec = await createOpenAPI(
-      path.resolve(__dirname, './openapi/wallet-address-server.yaml')
-    )
+    const resourceServerSpec = await getResourceServerOpenAPI()
+    const walletAddressServerSpec = await getWalletAddressServerOpenAPI()
+
     return {
       resourceServerSpec,
       walletAddressServerSpec
