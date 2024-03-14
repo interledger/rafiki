@@ -203,6 +203,7 @@ type ContextType<T> = T extends (
   : never
 
 const WALLET_ADDRESS_PATH = '/:walletAddressPath+'
+const API_TOKEN_EXCEPTIONS = ['seed_file', 'test_file']
 
 export interface AppServices {
   logger: Promise<Logger>
@@ -374,7 +375,7 @@ export class App {
         return
       }
       const token = parts[1]
-      if (process.env.NODE_ENV === 'development' && token === 'seed_file') {
+      if ((process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test') && API_TOKEN_EXCEPTIONS.includes(token)) {
         return next()
       }
 
