@@ -372,14 +372,10 @@ describe('Integration tests', (): void => {
       const { access_token, uri } = outgoingPaymentGrant.continue
       const grantContinue_ = await poll(
         async () =>
-          c9.opClient.grant.continue(
-            {
-              accessToken: access_token.value,
-              url: uri
-            },
-            // TODO: pull in latest from OP (when merged) which shouldn't need body at all
-            { interact_ref: undefined }
-          ),
+          c9.opClient.grant.continue({
+            accessToken: access_token.value,
+            url: uri
+          }),
         (responseData) => 'access_token' in responseData,
         20,
         5
