@@ -22,6 +22,7 @@
     "@adonisjs/fold": "^8.2.0",
     "@apollo/server": "^4.10.1",
     "@as-integrations/koa": "^1.1.1",
+    "@escape.tech/graphql-armor": "^2.4.0",
     "@graphql-tools/graphql-file-loader": "^8.0.1",
     "@graphql-tools/load": "^8.0.2",
     "@graphql-tools/schema": "^10.0.3",
