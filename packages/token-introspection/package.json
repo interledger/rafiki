@@ -9,9 +9,11 @@
   "scripts": {
     "build": "pnpm clean && tsc --build tsconfig.json && pnpm copy-files",
     "clean": "rm -fr dist/",
-    "copy-files": "cp ../../openapi/auth-server.yaml ../../openapi/schemas.yaml ../../openapi/token-introspection.yaml ./dist/openapi",
+    "copy-files": "mkdir ./dist/openapi/specs && cp -r ./src/openapi/specs/*.yaml ./dist/openapi/specs/",
+    "copy-op-schemas": "cp ./node_modules/@interledger/open-payments/dist/openapi/specs/{auth-server,schemas}.yaml ./src/openapi/specs/",
     "generate:types": "openapi-typescript ../../openapi/token-introspection.yaml --output src/openapi/generated/types.ts -t",
     "prepack": "pnpm build",
+    "postinstall": "pnpm copy-op-schemas",
     "test": "jest --passWithNoTests",
     "test:cov": "pnpm test -- --coverage",
     "test:sincemain": "pnpm test -- --changedSince=main",

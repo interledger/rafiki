@@ -11,15 +11,13 @@ import {
   silentLogger
 } from '../test/helpers'
 import nock from 'nock'
-import path from 'path'
+import { getTokenIntrospectionOpenAPI } from '../openapi'
 
 describe('introspection', (): void => {
   let openApi: OpenAPI
 
   beforeAll(async () => {
-    openApi = await createOpenAPI(
-      path.resolve(__dirname, '../openapi/token-introspection.yaml')
-    )
+    openApi = await getTokenIntrospectionOpenAPI()
   })
 
   const axiosInstance = defaultAxiosInstance
