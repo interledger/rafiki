@@ -132,7 +132,7 @@ async function processNextWebhookEvent(
       .where('processAt', '<=', new Date(now).toISOString())
 
     const event = events[0]
-    if (!event) return
+    if (!event || event.attempts === deps_.config.webhookMaxRetry) return
 
     const deps = {
       ...deps_,
