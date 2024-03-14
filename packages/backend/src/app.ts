@@ -318,11 +318,12 @@ export class App {
 
     const armor = new ApolloArmor({
       blockFieldSuggestion: {
-        enabled: false
+        enabled: true
       },
       maxDepth: {
         enabled: true,
-        n: 10
+        n: 10,
+        ignoreIntrospection: false
       },
       costLimit: {
         enabled: true,
