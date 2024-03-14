@@ -9,7 +9,7 @@
     "typecheck": "tsc"
   },
   "dependencies": {
-    "@apollo/client": "^3.9.6",
+    "@apollo/client": "^3.9.7",
     "@interledger/http-signature-utils": "2.0.2",
     "@remix-run/node": "^2.6.0",
     "@remix-run/react": "^2.6.0",
@@ -26,8 +26,8 @@
   },
   "devDependencies": {
     "@remix-run/dev": "^2.6.0",
-    "@types/react": "^18.2.64",
-    "@types/react-dom": "^18.2.21"
+    "@types/react": "^18.2.65",
+    "@types/react-dom": "^18.2.22"
   },
   "engines": {
     "node": "18"
