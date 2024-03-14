@@ -15,7 +15,7 @@ import type {
   CreateWalletAddressWithdrawal,
   CreateWalletAddressWithdrawalInput
 } from '~/generated/graphql'
-import { throwUnauthenticatedErrorOrError } from '~/shared/utils'
+import { maybeThrowUnauthenticatedError } from '~/shared/utils'
 
 export const getWalletAddress = async (
   args: QueryWalletAddressArgs,
@@ -50,7 +50,8 @@ export const getWalletAddress = async (
 
     return response.data.walletAddress
   } catch (error) {
-    throwUnauthenticatedErrorOrError(error)
+    maybeThrowUnauthenticatedError(error)
+    throw error
   }
 }
 
@@ -100,7 +101,8 @@ export const listWalletAddresses = async (
 
     return response.data.walletAddresses
   } catch (error) {
-    throwUnauthenticatedErrorOrError(error)
+    maybeThrowUnauthenticatedError(error)
+    throw error
   }
 }
 
@@ -129,7 +131,8 @@ export const updateWalletAddress = async (
 
     return response.data.updateWalletAddress
   } catch (error) {
-    throwUnauthenticatedErrorOrError(error)
+    maybeThrowUnauthenticatedError(error)
+    throw error
   }
 }
 
@@ -164,7 +167,8 @@ export const createWalletAddress = async (
 
     return response.data?.createWalletAddress
   } catch (error) {
-    throwUnauthenticatedErrorOrError(error)
+    maybeThrowUnauthenticatedError(error)
+    throw error
   }
 }
 
@@ -195,6 +199,7 @@ export const createWalletAddressWithdrawal = async (
 
     return response.data?.createWalletAddressWithdrawal
   } catch (error) {
-    throwUnauthenticatedErrorOrError(error)
+    maybeThrowUnauthenticatedError(error)
+    throw error
   }
 }

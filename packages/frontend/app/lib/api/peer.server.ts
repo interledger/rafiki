@@ -23,7 +23,8 @@ import type {
   WithdrawPeerLiquidityVariables
 } from '~/generated/graphql'
 import { getApolloClient } from '../apollo.server'
-import { throwUnauthenticatedErrorOrError } from '../../shared/utils'
+import { maybeThrowUnauthenticatedError } from '../../shared/utils'
+import { maybe } from '@apollo/client/utilities'
 
 export const getPeer = async (args: QueryPeerArgs, apiToken: string) => {
   try {
@@ -61,7 +62,8 @@ export const getPeer = async (args: QueryPeerArgs, apiToken: string) => {
 
     return response.data.peer
   } catch (error) {
-    throwUnauthenticatedErrorOrError(error)
+    maybeThrowUnauthenticatedError(error)
+    throw error
   }
 }
 
@@ -90,7 +92,7 @@ export const listPeers = async (args: QueryPeersArgs, apiToken: string) => {
                     endpoint
                   }
                 }
-                asset {
+                asset {S
                   code
                   scale
                 }
@@ -111,7 +113,8 @@ export const listPeers = async (args: QueryPeersArgs, apiToken: string) => {
 
     return response.data.peers
   } catch (error) {
-    throwUnauthenticatedErrorOrError(error)
+    maybeThrowUnauthenticatedError(error)
+    throw error
   }
 }
 
@@ -141,7 +144,8 @@ export const createPeer = async (args: CreatePeerInput, apiToken: string) => {
 
     return response.data?.createPeer
   } catch (error) {
-    throwUnauthenticatedErrorOrError(error)
+    maybeThrowUnauthenticatedError(error)
+    throw error
   }
 }
 
@@ -168,7 +172,8 @@ export const updatePeer = async (args: UpdatePeerInput, apiToken: string) => {
 
     return response.data?.updatePeer
   } catch (error) {
-    throwUnauthenticatedErrorOrError(error)
+    maybeThrowUnauthenticatedError(error)
+    throw error
   }
 }
 
@@ -196,7 +201,8 @@ export const deletePeer = async (
 
     return response.data?.deletePeer
   } catch (error) {
-    throwUnauthenticatedErrorOrError(error)
+    maybeThrowUnauthenticatedError(error)
+    throw error
   }
 }
 
@@ -229,7 +235,8 @@ export const depositPeerLiquidity = async (
 
     return response.data?.depositPeerLiquidity
   } catch (error) {
-    throwUnauthenticatedErrorOrError(error)
+    maybeThrowUnauthenticatedError(error)
+    throw error
   }
 }
 
@@ -262,6 +269,7 @@ export const withdrawPeerLiquidity = async (
 
     return response.data?.createPeerLiquidityWithdrawal
   } catch (error) {
-    throwUnauthenticatedErrorOrError(error)
+    maybeThrowUnauthenticatedError(error)
+    throw error
   }
 }

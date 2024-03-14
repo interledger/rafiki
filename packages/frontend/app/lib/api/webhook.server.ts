@@ -5,7 +5,7 @@ import type {
   ListWebhookEvents,
   ListWebhookEventsVariables
 } from '~/generated/graphql'
-import { throwUnauthenticatedErrorOrError } from '~/shared/utils'
+import { maybeThrowUnauthenticatedError } from '~/shared/utils'
 
 export const listWebhooks = async (
   args: QueryWebhookEventsArgs,
@@ -55,6 +55,7 @@ export const listWebhooks = async (
 
     return response.data.webhookEvents
   } catch (error) {
-    throwUnauthenticatedErrorOrError(error)
+    maybeThrowUnauthenticatedError(error)
+    throw error
   }
 }

@@ -104,7 +104,7 @@ export const parseBool = (str: string) => {
 }
 
 // eslint-disable-next-line  @typescript-eslint/no-explicit-any
-export const isApolloUnauthenticatedServerError = (error: any): boolean => {
+export const isUnauthenticatedApolloServerError = (error: any): boolean => {
   return (
     error instanceof ApolloError &&
     (error.networkError as ServerError)?.statusCode === 401
@@ -118,8 +118,7 @@ export const generateUnauthenticatedError = () =>
   })
 
 // eslint-disable-next-line  @typescript-eslint/no-explicit-any
-export const throwUnauthenticatedErrorOrError = (error: any) => {
-  if (isApolloUnauthenticatedServerError(error))
+export const maybeThrowUnauthenticatedError = (error: any) => {
+  if (isUnauthenticatedApolloServerError(error))
     throw generateUnauthenticatedError()
-  throw error
 }

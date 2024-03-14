@@ -1,4 +1,4 @@
-import { redirect, type LoaderArgs, type ActionArgs } from '@remix-run/node'
+import { redirect, type LoaderFunctionArgs, type ActionFunctionArgs } from '@remix-run/node'
 import {
   getConsentChallenge,
   setChallengeAndRedirect,
@@ -25,7 +25,7 @@ export default function Consent() {
   )
 }
 
-export const loader = async ({ request }: LoaderArgs) => {
+export const loader = async ({ request }: LoaderFunctionArgs) => {
   const url = new URL(request.url)
   const urlConsentChallenge = url.searchParams.get('consent_challenge')
   // TODO: Add safe parse
@@ -62,7 +62,7 @@ export const loader = async ({ request }: LoaderArgs) => {
 }
 
 // TODO: Submit accept/reject response to consent screen
-export const action = async ({ request }: ActionArgs) => {
+export const action = async ({ request }: ActionFunctionArgs) => {
   const session = await authStorage.getSession(request.headers.get('cookie'))
   const sessionConsentChallenge = getConsentChallenge(session)
 

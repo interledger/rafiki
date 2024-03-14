@@ -1,8 +1,8 @@
 import {
   redirect,
   json,
-  type LoaderArgs,
-  type ActionArgs
+  type LoaderFunctionArgs,
+  type ActionFunctionArgs
 } from '@remix-run/node'
 import { useLoaderData } from '@remix-run/react'
 import { useEffect, useRef } from 'react'
@@ -40,7 +40,7 @@ export default function Callback() {
   )
 }
 
-export const loader = async ({ request }: LoaderArgs) => {
+export const loader = async ({ request }: LoaderFunctionArgs) => {
   const url = new URL(request.url)
   const authorizationCode = url.searchParams.get('code')
   if (!authorizationCode) {
@@ -49,7 +49,7 @@ export const loader = async ({ request }: LoaderArgs) => {
   return json({ authorizationCode })
 }
 
-export const action = async ({ request }: ActionArgs) => {
+export const action = async ({ request }: ActionFunctionArgs) => {
   const formData = await request.formData()
   const authorizationCode = formData.get('code')
 

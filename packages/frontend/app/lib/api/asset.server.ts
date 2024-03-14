@@ -25,7 +25,7 @@ import type {
   WithdrawAssetLiquidityVariables
 } from '~/generated/graphql'
 import { getApolloClient } from '../apollo.server'
-import { throwUnauthenticatedErrorOrError } from '~/shared/utils'
+import { maybeThrowUnauthenticatedError } from '~/shared/utils'
 
 export const getAssetInfo = async (args: QueryAssetArgs, apiToken: string) => {
   try {
@@ -55,7 +55,8 @@ export const getAssetInfo = async (args: QueryAssetArgs, apiToken: string) => {
     })
     return response.data.asset
   } catch (error) {
-    throwUnauthenticatedErrorOrError(error)
+    maybeThrowUnauthenticatedError(error)
+    throw error
   }
 }
 
@@ -104,7 +105,8 @@ export const getAssetWithFees = async (
     })
     return response.data.asset
   } catch (error) {
-    throwUnauthenticatedErrorOrError(error)
+    maybeThrowUnauthenticatedError(error)
+    throw error
   }
 }
 
@@ -146,7 +148,8 @@ export const listAssets = async (args: QueryAssetsArgs, apiToken: string) => {
 
     return response.data.assets
   } catch (error) {
-    throwUnauthenticatedErrorOrError(error)
+    maybeThrowUnauthenticatedError(error)
+    throw error
   }
 }
 
@@ -176,7 +179,8 @@ export const createAsset = async (args: CreateAssetInput, apiToken: string) => {
 
     return response.data?.createAsset
   } catch (error) {
-    throwUnauthenticatedErrorOrError(error)
+    maybeThrowUnauthenticatedError(error)
+    throw error
   }
 }
 
@@ -203,7 +207,8 @@ export const updateAsset = async (args: UpdateAssetInput, apiToken: string) => {
 
     return response.data?.updateAsset
   } catch (error) {
-    throwUnauthenticatedErrorOrError(error)
+    maybeThrowUnauthenticatedError(error)
+    throw error
   }
 }
 
@@ -238,7 +243,8 @@ export const setFee = async (args: SetFeeInput, apiToken: string) => {
 
     return response.data?.setFee
   } catch (error) {
-    throwUnauthenticatedErrorOrError(error)
+    maybeThrowUnauthenticatedError(error)
+    throw error
   }
 }
 
@@ -271,7 +277,8 @@ export const depositAssetLiquidity = async (
 
     return response.data?.depositAssetLiquidity
   } catch (error) {
-    throwUnauthenticatedErrorOrError(error)
+    maybeThrowUnauthenticatedError(error)
+    throw error
   }
 }
 
@@ -304,7 +311,8 @@ export const withdrawAssetLiquidity = async (
 
     return response.data?.createAssetLiquidityWithdrawal
   } catch (error) {
-    throwUnauthenticatedErrorOrError(error)
+    maybeThrowUnauthenticatedError(error)
+    throw error
   }
 }
 

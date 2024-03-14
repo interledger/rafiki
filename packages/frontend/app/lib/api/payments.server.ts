@@ -22,7 +22,7 @@ import {
   type GetOutgoingPayment
 } from '~/generated/graphql'
 import { getApolloClient } from '../apollo.server'
-import { throwUnauthenticatedErrorOrError } from '~/shared/utils'
+import { maybeThrowUnauthenticatedError } from '~/shared/utils'
 
 export const getIncomingPayment = async (
   args: QueryIncomingPaymentArgs,
@@ -30,7 +30,6 @@ export const getIncomingPayment = async (
 ) => {
   try {
     const apolloClient = getApolloClient(apiToken)
-    await apolloClient.query
     const response = await apolloClient.query<
       GetIncomingPayment,
       GetIncomingPaymentVariables
@@ -62,7 +61,8 @@ export const getIncomingPayment = async (
     })
     return response.data.incomingPayment
   } catch (error) {
-    throwUnauthenticatedErrorOrError(error)
+    maybeThrowUnauthenticatedError(error)
+    throw error
   }
 }
 
@@ -109,7 +109,8 @@ export const getOutgoingPayment = async (
     })
     return response.data.outgoingPayment
   } catch (error) {
-    throwUnauthenticatedErrorOrError(error)
+    maybeThrowUnauthenticatedError(error)
+    throw error
   }
 }
 
@@ -160,7 +161,8 @@ export const listPayments = async (
 
     return response.data.payments
   } catch (error) {
-    throwUnauthenticatedErrorOrError(error)
+    maybeThrowUnauthenticatedError(error)
+    throw error
   }
 }
 
@@ -191,7 +193,8 @@ export const depositOutgoingPaymentLiquidity = async (
 
     return response.data?.depositOutgoingPaymentLiquidity
   } catch (error) {
-    throwUnauthenticatedErrorOrError(error)
+    maybeThrowUnauthenticatedError(error)
+    throw error
   }
 }
 
@@ -222,7 +225,8 @@ export const withdrawOutgoingPaymentLiquidity = async (
 
     return response.data?.withdrawOutgoingPaymentLiquidity
   } catch (error) {
-    throwUnauthenticatedErrorOrError(error)
+    maybeThrowUnauthenticatedError(error)
+    throw error
   }
 }
 
@@ -253,6 +257,7 @@ export const withdrawIncomingPaymentLiquidity = async (
 
     return response.data?.withdrawIncomingPaymentLiquidity
   } catch (error) {
-    throwUnauthenticatedErrorOrError(error)
+    maybeThrowUnauthenticatedError(error)
+    throw error
   }
 }

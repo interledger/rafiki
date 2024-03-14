@@ -1,6 +1,6 @@
 // This is a dummy page
 // TODO: Integrate with Ory Kratos
-import { redirect, type LoaderArgs, type ActionArgs } from '@remix-run/node'
+import { redirect, type LoaderFunctionArgs, type ActionFunctionArgs } from '@remix-run/node'
 // import { z } from 'zod'
 import axios from 'axios'
 import {
@@ -38,7 +38,7 @@ export default function Login() {
   )
 }
 
-export const loader = async ({ request }: LoaderArgs) => {
+export const loader = async ({ request }: LoaderFunctionArgs) => {
   const url = new URL(request.url)
   const urlLoginChallenge = url.searchParams.get('login_challenge')
   // TODO: Add safe parse
@@ -70,7 +70,7 @@ export const loader = async ({ request }: LoaderArgs) => {
   return {}
 }
 
-export async function action({ request }: ActionArgs) {
+export async function action({ request }: ActionFunctionArgs) {
   const formData = await request.formData()
   const username = formData.get('username')
   const session = await authStorage.getSession(request.headers.get('cookie'))
