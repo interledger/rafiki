@@ -117,6 +117,9 @@ importers:
       '@as-integrations/koa':
         specifier: ^1.1.1
         version: 1.1.1(@apollo/server@4.10.1)(koa@2.15.0)
+      '@escape.tech/graphql-armor':
+        specifier: ^2.4.0
+        version: 2.4.0(@apollo/server@4.10.1)
       '@graphql-tools/graphql-file-loader':
         specifier: ^8.0.1
         version: 8.0.1(graphql@16.8.1)
