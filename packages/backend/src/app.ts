@@ -315,7 +315,6 @@ export class App {
     )
 
     // Setup Armor
-
     const armor = new ApolloArmor({
       blockFieldSuggestion: {
         enabled: true
