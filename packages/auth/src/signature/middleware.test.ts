@@ -35,7 +35,8 @@ import { AccessType, AccessAction } from '@interledger/open-payments'
 import { ContinueContext, CreateContext } from '../grant/routes'
 import { Interaction, InteractionState } from '../interaction/model'
 import { generateNonce } from '../shared/utils'
-import { GNAPErrorCode, generateGNAPErrorResponse } from '../shared/gnapErrors'
+import { generateGNAPErrorResponse } from '../tests/errors'
+import { GNAPErrorCode } from '../shared/gnapErrors'
 
 describe('Signature Service', (): void => {
   let deps: IocContract<AppServices>

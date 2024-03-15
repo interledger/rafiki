@@ -1,3 +1,5 @@
+import { ExtendableContext } from 'koa'
+
 export enum GNAPErrorCode {
   InvalidRequest = 'invalid_request',
   InvalidClient = 'invalid_client',
@@ -10,21 +12,18 @@ export enum GNAPErrorCode {
   TooFast = 'too_fast'
 }
 
-interface GNAPErrorResponse {
+export interface GNAPErrorResponse {
   error: {
     code: GNAPErrorCode
     description?: string
   }
 }
 
-export function generateGNAPErrorResponse(
-  code: GNAPErrorCode,
+export function throwGNAPError(
+  ctx: ExtendableContext,
+  httpCode: number,
+  gnapCode: GNAPErrorCode,
   description?: string
-): GNAPErrorResponse {
-  return {
-    error: {
-      code,
-      description
-    }
-  }
+): never {
+  ctx.throw(httpCode, gnapCode, { error: { code: gnapCode, description } })
 }

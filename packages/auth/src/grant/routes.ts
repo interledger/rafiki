@@ -20,7 +20,7 @@ import { AccessService } from '../access/service'
 import { AccessToken } from '../accessToken/model'
 import { InteractionService } from '../interaction/service'
 import { canSkipInteraction } from './utils'
-import { GNAPErrorCode, generateGNAPErrorResponse } from '../shared/gnapErrors'
+import { GNAPErrorCode, throwGNAPError } from '../shared/gnapErrors'
 
 interface ServiceDependencies extends BaseService {
   grantService: GrantService
@@ -102,12 +102,12 @@ async function createGrant(
   try {
     noInteractionRequired = canSkipInteraction(deps.config, ctx.request.body)
   } catch (err) {
-    ctx.throw(400, GNAPErrorCode.InvalidRequest, {
-      error: {
-        code: GNAPErrorCode.InvalidRequest,
-        description: 'access identifier required'
-      }
-    })
+    throwGNAPError(
+      ctx,
+      400,
+      GNAPErrorCode.InvalidRequest,
+      'access identifier required'
+    )
   }
   if (noInteractionRequired) {
     await createApprovedGrant(deps, ctx)
@@ -131,13 +131,11 @@ async function createApprovedGrant(
     await trx.commit()
   } catch (err) {
     await trx.rollback()
-    ctx.throw(
+    throwGNAPError(
+      ctx,
       500,
       GNAPErrorCode.RequestDenied,
-      generateGNAPErrorResponse(
-        GNAPErrorCode.RequestDenied,
-        'internal server error'
-      )
+      'internal server error'
     )
   }
   const access = await deps.accessService.getByGrant(grant.id)
@@ -157,25 +155,21 @@ async function createPendingGrant(
   const { body } = ctx.request
   const { grantService, interactionService, config } = deps
   if (!body.interact) {
-    ctx.throw(
+    throwGNAPError(
+      ctx,
       400,
       GNAPErrorCode.InvalidRequest,
-      generateGNAPErrorResponse(
-        GNAPErrorCode.InvalidRequest,
-        "missing required request field 'interact'"
-      )
+      "missing required request field 'interact'"
     )
   }
 
   const client = await deps.clientService.get(body.client)
   if (!client) {
-    ctx.throw(
+    throwGNAPError(
+      ctx,
       400,
       GNAPErrorCode.InvalidClient,
-      generateGNAPErrorResponse(
-        GNAPErrorCode.InvalidClient,
-        "missing required request field 'client'"
-      )
+      "missing required request field 'client'"
     )
   }
 
@@ -194,13 +188,11 @@ async function createPendingGrant(
     })
   } catch (err) {
     await trx.rollback()
-    ctx.throw(
+    throwGNAPError(
+      ctx,
       500,
       GNAPErrorCode.RequestDenied,
-      generateGNAPErrorResponse(
-        GNAPErrorCode.RequestDenied,
-        'internal server error'
-      )
+      'internal server error'
     )
   }
 }
@@ -237,21 +229,15 @@ async function pollGrantContinuation(
 
   const grant = await grantService.getByContinue(continueId, continueToken)
   if (!grant) {
-    ctx.throw(
-      404,
-      GNAPErrorCode.InvalidRequest,
-      generateGNAPErrorResponse(GNAPErrorCode.InvalidRequest, 'grant not found')
-    )
+    throwGNAPError(ctx, 404, GNAPErrorCode.InvalidRequest, 'grant not found')
   }
 
   if (isGrantStillWaiting(grant, config.waitTimeSeconds)) {
-    ctx.throw(
+    throwGNAPError(
+      ctx,
       400,
       GNAPErrorCode.TooFast,
-      generateGNAPErrorResponse(
-        GNAPErrorCode.TooFast,
-        'polled grant faster than "wait" period'
-      )
+      'polled grant faster than "wait" period'
     )
   }
 
@@ -260,13 +246,11 @@ async function pollGrantContinuation(
     "When the client instance does not include a finish parameter, the client instance will often need to poll the AS until the RO has authorized the request."
   */
   if (grant.finishMethod) {
-    ctx.throw(
+    throwGNAPError(
+      ctx,
       401,
       GNAPErrorCode.RequestDenied,
-      generateGNAPErrorResponse(
-        GNAPErrorCode.RequestDenied,
-        'grant cannot be polled'
-      )
+      'grant cannot be polled'
     )
   } else if (
     grant.state === GrantState.Pending ||
@@ -283,13 +267,11 @@ async function pollGrantContinuation(
     grant.state !== GrantState.Approved ||
     !isContinuableGrant(grant)
   ) {
-    ctx.throw(
+    throwGNAPError(
+      ctx,
       401,
       GNAPErrorCode.RequestDenied,
-      generateGNAPErrorResponse(
-        GNAPErrorCode.RequestDenied,
-        'grant cannot be continued'
-      )
+      'grant cannot be continued'
     )
   } else {
     const accessToken = await accessTokenService.create(grant.id)
@@ -323,13 +305,11 @@ async function continueGrant(
   )[1]
 
   if (!continueId || !continueToken) {
-    ctx.throw(
+    throwGNAPError(
+      ctx,
       401,
       GNAPErrorCode.InvalidContinuation,
-      generateGNAPErrorResponse(
-        GNAPErrorCode.InvalidContinuation,
-        'missing continuation information'
-      )
+      'missing continuation information'
     )
   }
 
@@ -348,13 +328,11 @@ async function continueGrant(
 
   const { interact_ref: interactRef } = ctx.request.body
   if (!interactRef) {
-    ctx.throw(
+    throwGNAPError(
+      ctx,
       401,
       GNAPErrorCode.InvalidRequest,
-      generateGNAPErrorResponse(
-        GNAPErrorCode.InvalidRequest,
-        'missing interaction reference'
-      )
+      'missing interaction reference'
     )
   }
 
@@ -366,33 +344,27 @@ async function continueGrant(
     !isContinuableGrant(interaction.grant) ||
     !isMatchingContinueRequest(continueId, continueToken, interaction.grant)
   ) {
-    ctx.throw(
+    throwGNAPError(
+      ctx,
       404,
       GNAPErrorCode.InvalidContinuation,
-      generateGNAPErrorResponse(
-        GNAPErrorCode.InvalidContinuation,
-        'grant not found'
-      )
+      'grant not found'
     )
   } else if (isGrantStillWaiting(interaction.grant, config.waitTimeSeconds)) {
-    ctx.throw(
+    throwGNAPError(
+      ctx,
       400,
       GNAPErrorCode.TooFast,
-      generateGNAPErrorResponse(
-        GNAPErrorCode.TooFast,
-        'continued grant faster than "wait" period'
-      )
+      'continued grant faster than "wait" period'
     )
   } else {
     const { grant } = interaction
     if (grant.state !== GrantState.Approved) {
-      ctx.throw(
+      throwGNAPError(
+        ctx,
         401,
         GNAPErrorCode.RequestDenied,
-        generateGNAPErrorResponse(
-          GNAPErrorCode.RequestDenied,
-          'grant interaction not approved'
-        )
+        'grant interaction not approved'
       )
     }
 
@@ -419,31 +391,21 @@ async function revokeGrant(
     'GNAP '
   )[1]
   if (!continueId || !continueToken) {
-    ctx.throw(
+    throwGNAPError(
+      ctx,
       401,
       GNAPErrorCode.InvalidRequest,
-      generateGNAPErrorResponse(
-        GNAPErrorCode.InvalidRequest,
-        'invalid continuation information'
-      )
+      'invalid continuation information'
     )
   }
   const grant = await deps.grantService.getByContinue(continueId, continueToken)
   if (!grant) {
-    ctx.throw(
-      404,
-      GNAPErrorCode.InvalidRequest,
-      generateGNAPErrorResponse(GNAPErrorCode.InvalidRequest, 'unknown grant')
-    )
+    throwGNAPError(ctx, 404, GNAPErrorCode.InvalidRequest, 'unknown grant')
   }
 
   const revoked = await deps.grantService.revokeGrant(grant.id)
   if (!revoked) {
-    ctx.throw(
-      404,
-      GNAPErrorCode.InvalidRequest,
-      generateGNAPErrorResponse(GNAPErrorCode.InvalidRequest, 'invalid grant')
-    )
+    throwGNAPError(ctx, 404, GNAPErrorCode.InvalidRequest, 'invalid grant')
   }
   ctx.status = 204
 }
