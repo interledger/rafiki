@@ -41,7 +41,7 @@ export const Config = {
   livenet: envBool('LIVENET', false),
   openTelemetryCollectors: envStringArray(
     'OPEN_TELEMETRY_COLLECTOR_URLS',
-    process.env.LIVENET
+    envBool(process.env.LIVENET, false)
       ? [
           'http://livenet-otel-collector-NLB-f7992547e797f23d.elb.eu-west-2.amazonaws.com:4317'
         ]
