@@ -17,7 +17,7 @@ These packages depend on the following databases:
 
 We provide containerized versions of our packages together with two pre-configured docker-compose files ([peer1](./cloud-nine-wallet/docker-compose.yml) and [peer2](./happy-life-bank/docker-compose.yml)) to start two Mock Account Servicing Entities with their respective Rafiki backend and auth servers. They automatically peer and 2 to 3 user accounts are created on both of them.
 
-This environment will set up an playground where you can use the Rafiki Admin APIs and the Open Payments APIs.
+This environment will set up a playground where you can use the Rafiki Admin APIs and the Open Payments APIs.
 
 ## Environment overview
 
@@ -210,3 +210,20 @@ Keep-Alive: timeout=5
 }
 
 ```
+
+### Known Issues
+
+#### No data in Mock Account Servicing Entity (MASE)
+
+It is possible that upon (re)starting the local playground, you may run into an issue where there are no accounts/wallet addresses visible in the mock account servicing entities' pages (http://localhost:3030, http://localhost:3031). This is because seeding of the intial account data only works against an empty database. To correct this, clear the volumes, and restart the container via:
+
+```
+pnpm localenv:compose down --volumes
+pnpm localenv:compose up -d
+```
+
+#### TigerBeetle container exits with code 137
+
+This is a known [issue](https://docs.tigerbeetle.com/quick-start/with-docker-compose/#exited-with-code-137) when running TigerBeetle in Docker: the container exits without logs and simply shows error code 137. To fix this, increase the Docker memory limit.
+
+If you are running the local playground in Docker on a Windows machine using WSL, you can increase the memory limit by [configuring](https://learn.microsoft.com/en-us/windows/wsl/wsl-config#example-wslconfig-file) your `.wslconfig` file.
