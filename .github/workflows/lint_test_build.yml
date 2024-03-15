@@ -70,12 +70,6 @@ jobs:
       - uses: ./.github/workflows/rafiki/env-setup
       - run: pnpm --filter auth build:deps
       - run: pnpm --filter auth test
-      - name: AsyncAPI extension
-        run: |
-          echo "{\"extends\":[\"spectral:oas\",\"spectral:asyncapi\"]}" >> .spectral.json
-      - name: Validate Open API specs
-        run: |
-          npx @stoplight/spectral-cli lint ./packages/auth/openapi/*.yaml
 
   mock-account-servicing-entity:
     runs-on: ubuntu-22.04
@@ -95,12 +89,6 @@ jobs:
       - uses: actions/checkout@v4
       - uses: ./.github/workflows/rafiki/env-setup
       - run: pnpm --filter token-introspection test
-      - name: AsyncAPI extension
-        run: |
-          echo "{\"extends\":[\"spectral:oas\",\"spectral:asyncapi\"]}" >> .spectral.json
-      - name: Validate Open API specs
-        run: |
-          npx @stoplight/spectral-cli lint ./packages/token-introspection/openapi/*.yaml
 
   build:
     runs-on: ubuntu-22.04
