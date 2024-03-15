@@ -37,6 +37,15 @@ describe('Integration tests', (): void => {
     hlb.shutdown()
   })
 
+  // TODO: remove. using these dummy tests for easier testing of
+  // running the tests in docker
+  test('should never fail', async () => {
+    expect(true).toBe(true)
+  })
+  test.only('should always fail', async () => {
+    expect(true).toBe(false)
+  })
+
   describe('Open Payments Flow', (): void => {
     const receiverWalletAddressUrl =
       'http://host.docker.internal:4000/accounts/pfry'

@@ -1,5 +1,5 @@
 import { faker } from '@faker-js/faker'
-import { gql } from '@apollo/client'
+import { gql } from '@apollo/client/core'
 import assert from 'assert'
 
 import { createTestApp, TestContainer } from '../../tests/app'

@@ -25,3 +25,4 @@ bruno
 **/docker-compose.yml
 
 **/*.test.ts
+!test/integration/*.test.ts

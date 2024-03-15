@@ -1,4 +1,4 @@
-import { gql } from '@apollo/client'
+import { gql } from '@apollo/client/core'
 import { v4 as uuid } from 'uuid'
 import { createTestApp, TestContainer } from '../../tests/app'
 import { IocContract } from '@adonisjs/fold'

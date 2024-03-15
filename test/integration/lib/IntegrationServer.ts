@@ -1,5 +1,5 @@
 import Koa from 'koa'
-import bodyParser from 'koa-bodyparser'
+import bodyParser from '@koa/bodyparser'
 import http from 'http'
 import { v4 as uuid } from 'uuid'
 import {

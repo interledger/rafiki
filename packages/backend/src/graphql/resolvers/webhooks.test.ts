@@ -1,4 +1,4 @@
-import { gql } from '@apollo/client'
+import { gql } from '@apollo/client/core'
 import { getPageTests } from './page.test'
 import { createTestApp, TestContainer } from '../../tests/app'
 import { IocContract } from '@adonisjs/fold'

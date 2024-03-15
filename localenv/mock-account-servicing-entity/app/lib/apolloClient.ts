@@ -1,10 +1,10 @@
-import type { NormalizedCacheObject } from '@apollo/client'
+import type { NormalizedCacheObject } from '@apollo/client/core'
 import {
   createHttpLink,
   ApolloLink,
   ApolloClient,
   InMemoryCache
-} from '@apollo/client'
+} from '@apollo/client/core'
 import { setContext } from '@apollo/client/link/context'
 import { CONFIG } from './parse_config.server'
 import { onError } from '@apollo/client/link/error'

@@ -1,5 +1,5 @@
 import { IocContract } from '@adonisjs/fold'
-import { gql } from '@apollo/client'
+import { gql } from '@apollo/client/core'
 import { AppServices } from '../../app'
 import { createTestApp, TestContainer } from '../../tests/app'
 import { initIocContainer } from '../..'

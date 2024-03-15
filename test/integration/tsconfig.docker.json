@@ -1,0 +1,16 @@
+// TODO: this just inlines the base config here to make it easier to port to docker.
+// however, this means running locally (on non-docker config) could diverge
+// fromm running on docker when the one in the root of the directory is updated.
+// Should probably copy the base tscfonig over to docker and use the regular tsconfig instead of this
+{
+  "compilerOptions": {
+    "lib": ["ESNext"],
+    "target": "ES2020",
+    "module": "commonjs",
+    "strict": true,
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true
+  }
+}

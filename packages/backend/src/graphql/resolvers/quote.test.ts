@@ -1,4 +1,4 @@
-import { gql } from '@apollo/client'
+import { gql } from '@apollo/client/core'
 import { v4 as uuid } from 'uuid'
 
 import { getPageTests } from './page.test'

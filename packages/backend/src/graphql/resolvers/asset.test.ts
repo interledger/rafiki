@@ -1,7 +1,7 @@
-import { gql } from '@apollo/client'
+import { gql } from '@apollo/client/core'
 import assert from 'assert'
 import { v4 as uuid } from 'uuid'
-import { ApolloError } from '@apollo/client'
+import { ApolloError } from '@apollo/client/core'
 
 import { getPageTests } from './page.test'
 import { createTestApp, TestContainer } from '../../tests/app'

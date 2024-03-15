@@ -1,5 +1,5 @@
 import { v4 } from 'uuid'
-import { ApolloClient, NormalizedCacheObject } from '@apollo/client'
+import { ApolloClient, NormalizedCacheObject } from '@apollo/client/core'
 import { generateJwk } from '@interledger/http-signature-utils'
 import { createRequesters } from './requesters'
 import { Config, Account, Peering } from './types'

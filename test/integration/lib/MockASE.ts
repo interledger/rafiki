@@ -1,4 +1,4 @@
-import { ApolloClient, NormalizedCacheObject } from '@apollo/client'
+import { ApolloClient, NormalizedCacheObject } from '@apollo/client/core'
 import {
   AuthenticatedClient,
   createAuthenticatedClient

@@ -1,4 +1,4 @@
-import { gql, ApolloClient, NormalizedCacheObject } from '@apollo/client'
+import { gql, ApolloClient, NormalizedCacheObject } from '@apollo/client/core'
 import type {
   AssetMutationResponse,
   CreatePeerMutationResponse,

@@ -1,5 +1,5 @@
-import { ApolloClient, InMemoryCache } from '@apollo/client'
-import type { NormalizedCacheObject } from '@apollo/client'
+import { ApolloClient, InMemoryCache } from '@apollo/client/core'
+import type { NormalizedCacheObject } from '@apollo/client/core'
 
 /* eslint-disable no-var */
 declare global {

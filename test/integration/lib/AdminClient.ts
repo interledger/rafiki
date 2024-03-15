@@ -1,5 +1,5 @@
-import type { NormalizedCacheObject } from '@apollo/client'
-import { ApolloClient, gql } from '@apollo/client'
+import type { NormalizedCacheObject } from '@apollo/client/core'
+import { ApolloClient, gql } from '@apollo/client/core'
 import {
   CreateOutgoingPaymentInput,
   CreateQuoteInput,

@@ -8,7 +8,7 @@ import {
   NormalizedCacheObject,
   createHttpLink,
   ApolloLink
-} from '@apollo/client'
+} from '@apollo/client/core'
 import { onError } from '@apollo/client/link/error'
 import { setContext } from '@apollo/client/link/context'
 

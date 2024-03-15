@@ -2,8 +2,8 @@ import {
   ApolloClient,
   NormalizedCacheObject,
   ApolloQueryResult
-} from '@apollo/client'
-import { gql } from '@apollo/client'
+} from '@apollo/client/core'
+import { gql } from '@apollo/client/core'
 
 import { Model, PageInfo } from '../generated/graphql'
 import { BaseModel } from '../../shared/baseModel'

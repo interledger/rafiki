@@ -11,19 +11,32 @@ networks:
 
 services:
   shared-database:
-      image: 'postgres:16'
-      restart: unless-stopped
-      networks:
-        - rafiki-test
-      volumes:
-        - ../dbinit.sql:/docker-entrypoint-initdb.d/init.sql
-      ports:
-        - '5432:5432'
-      environment:
-        POSTGRES_PASSWORD: password
-        POSTGRES_USER: postgres
+    image: 'postgres:16'
+    restart: unless-stopped
+    networks:
+      - rafiki-test
+    volumes:
+      - ../dbinit.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - '5432:5432'
+    environment:
+      POSTGRES_PASSWORD: password
+      POSTGRES_USER: postgres
   shared-redis:
     image: 'redis:7'
     restart: unless-stopped
     networks:
       - rafiki-test
+  # TODO: put this in seperate compose and merge in (new?) package.json script?
+  # Would make it easier to have a docker/local version.
+  test-runner:
+    image: test-runner
+    container_name: rafik-integration-test-runner
+    build:
+      context: ../../../..
+      dockerfile: ./test/integration/Dockerfile
+    networks:
+      - rafiki-test
+    depends_on:
+      - happy-life-bank-test-backend
+    

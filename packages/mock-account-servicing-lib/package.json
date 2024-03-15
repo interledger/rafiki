@@ -8,15 +8,14 @@
   ],
   "scripts": {
     "build": "pnpm clean && tsc --build tsconfig.json",
-    "clean": "rm -fr dist/",
-    "test": "jest"
+    "clean": "rm -fr dist/"
   },
   "devDependencies": {
-    "@apollo/client": "^3.8.10",
     "@types/node": "^18.7.12",
     "@types/uuid": "^9.0.8"
   },
   "dependencies": {
+    "@apollo/client": "^3.9.7",
     "@interledger/http-signature-utils": "2.0.2",
     "graphql": "^16.8.1",
     "uuid": "^9.0.1"

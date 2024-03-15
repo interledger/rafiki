@@ -8,7 +8,7 @@ import {
   InMemoryCache,
   NormalizedCacheObject,
   createHttpLink
-} from '@apollo/client'
+} from '@apollo/client/core'
 import { setContext } from '@apollo/client/link/context'
 import { start, gracefulShutdown } from '..'
 import { onError } from '@apollo/client/link/error'
