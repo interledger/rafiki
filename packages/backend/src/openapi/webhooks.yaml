@@ -142,6 +142,9 @@ components:
             walletAddressId:
               type: string
               format: uuid
+            client:
+              type: string
+              format: url
             completed:
               type: boolean
             incomingAmount:
@@ -197,6 +200,9 @@ components:
             walletAddressId:
               type: string
               format: uuid
+            client:
+              type: string
+              format: url
             state:
               type: string
               enum:

@@ -32,6 +32,7 @@ describe('Incoming Payment Service', (): void => {
   let incomingPaymentService: IncomingPaymentService
   let knex: Knex
   let walletAddressId: string
+  let client: string
   let accountingService: AccountingService
   let asset: Asset
   let config: IAppConfig
@@ -47,8 +48,9 @@ describe('Incoming Payment Service', (): void => {
 
   beforeEach(async (): Promise<void> => {
     asset = await createAsset(deps)
-    walletAddressId = (await createWalletAddress(deps, { assetId: asset.id }))
-      .id
+    const address = await createWalletAddress(deps, { assetId: asset.id })
+    walletAddressId = address.id
+    client = address.url
   })
 
   afterEach(async (): Promise<void> => {
@@ -81,14 +83,17 @@ describe('Incoming Payment Service', (): void => {
           type: IncomingPaymentEventType.IncomingPaymentCreated
         })
       ).resolves.toHaveLength(0)
+      options.client = client
       const incomingPayment = await incomingPaymentService.create({
         walletAddressId,
+        client,
         ...options,
         incomingAmount: options.incomingAmount ? amount : undefined
       })
       assert.ok(!isIncomingPaymentError(incomingPayment))
       expect(incomingPayment).toMatchObject({
         id: incomingPayment.id,
+        client,
         asset,
         processAt: new Date(incomingPayment.expiresAt.getTime()),
         metadata: options.metadata ?? null
