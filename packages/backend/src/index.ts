@@ -2,18 +2,15 @@ import { Ioc, IocContract } from '@adonisjs/fold'
 import { Redis } from 'ioredis'
 import { knex } from 'knex'
 import { Model } from 'objection'
-import path from 'path'
 import createLogger from 'pino'
 import { createClient } from 'tigerbeetle-node'
 import { createClient as createIntrospectionClient } from 'token-introspection'
 
 import {
   createAuthenticatedClient as createOpenPaymentsClient,
-  getAuthServerOpenAPI,
   getResourceServerOpenAPI,
   getWalletAddressServerOpenAPI
 } from '@interledger/open-payments'
-import { createOpenAPI } from '@interledger/openapi'
 import { StreamServer } from '@interledger/stream-receiver'
 import axios from 'axios'
 import { createAccountingService as createPsqlAccountingService } from './accounting/psql/service'
