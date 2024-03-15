@@ -28,7 +28,7 @@ Every Interledger payment is preceded by a rate probe that estimates the costs f
 
 The response status code for a successful request is a `200`. The `mock-account-servicing-entity` includes a [minimalistic example](https://github.com/interledger/rafiki/blob/main/localenv/mock-account-servicing-entity/app/routes/rates.ts).
 
-The `backend` package requires an environment variable called `EXCHANGE_RATES_URL` which MUST specify the URL of this endpoint. An OpenAPI specification of that endpoint can be found [here](https://github.com/interledger/rafiki/blob/main/packages/backend/src/openapi/exchange-rates.yaml).
+The `backend` package requires an environment variable called `EXCHANGE_RATES_URL` which MUST specify the URL of this endpoint. An OpenAPI specification of that endpoint can be found [here](https://github.com/interledger/rafiki/blob/main/packages/backend/src/openapi/specs/exchange-rates.yaml).
 
 ### Rate Probe Quotes and Fees
 
@@ -124,7 +124,7 @@ The endpoint accepts a `POST` request with
 
 The Account Servicing Entity's expected behavior when observing these webhook events is detailed in the [Event Handlers](/integration/event-handlers) documentation.
 
-The `backend` package requires an environment variable called `WEBHOOK_URL` which MUST specify this endpoint. An OpenAPI specification of that endpoint can be found [here](https://github.com/interledger/rafiki/blob/main/packages/backend/src/openapi/webhooks.yaml).
+The `backend` package requires an environment variable called `WEBHOOK_URL` which MUST specify this endpoint. An OpenAPI specification of that endpoint can be found [here](https://github.com/interledger/rafiki/blob/main/packages/backend/src/openapi/specs/webhooks.yaml).
 
 ## Identity Provider
 
