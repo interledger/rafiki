@@ -11,6 +11,7 @@ Thank you for contributing to Rafiki :tada: Your contributions are essential to 
 
 - [Types of contributions](#types-of-contributions)
   - [:mega: Discussions](#mega-discussions)
+  - [:rocket: Feature Requests](#rocket-feature-requests)
   - [:beetle: Issues](#beetle-issues)
   - [:hammer_and_wrench: Pull requests](#hammer_and_wrench-pull-requests)
 - [Working in the rafiki repository](#working-in-the-rafiki-repository)
@@ -34,6 +35,9 @@ You can contribute to Rafiki in several ways.
 Discussions are where we have conversations about Rafiki.
 
 If you would like to discuss topics about the broader ecosystem, have a new idea, or want to show off your work - join us in [discussions](https://github.com/interledger/rafiki/discussions).
+
+### :rocket: Feature Requests
+We use GitHub issues to track feature requests. If there is something that you would like to see implemented in Rafiki, open an issue using the "Feature or Feature Subtask" template. Please make sure you check whether the feature has already been requested by searching existing open issues first before opening a new one. 
 
 ### :beetle: Issues
 
