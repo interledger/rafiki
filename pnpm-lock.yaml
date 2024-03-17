@@ -576,19 +576,25 @@ importers:
 
   packages/mock-account-servicing-lib:
     dependencies:
+      '@apollo/client':
+        specifier: ^3.8.10
+        version: 3.9.7(@types/react@18.2.66)(graphql@16.8.1)(react-dom@18.2.0)(react@18.2.0)
       '@interledger/http-signature-utils':
         specifier: 2.0.2
         version: 2.0.2
       graphql:
         specifier: ^16.8.1
         version: 16.8.1
+      pino:
+        specifier: ^8.19.0
+        version: 8.19.0
+      pino-pretty:
+        specifier: ^10.3.1
+        version: 10.3.1
       uuid:
         specifier: ^9.0.1
         version: 9.0.1
     devDependencies:
-      '@apollo/client':
-        specifier: ^3.8.10
-        version: 3.9.7(@types/react@18.2.66)(graphql@16.8.1)(react-dom@18.2.0)(react@18.2.0)
       '@types/node':
         specifier: ^18.7.12
         version: 18.19.19
@@ -7733,7 +7739,6 @@ packages:
 
   /dateformat@4.6.3:
     resolution: {integrity: sha512-2P0p0pFGzHS5EMnhdxQi7aJN+iMheud0UhG4dlE1DLAlvL8JHjJJTX/CSm4JXwV0Ka5nGk3zC5mcb5bUQUxxMA==}
-    dev: true
 
   /dayjs@1.11.10:
     resolution: {integrity: sha512-vjAczensTgRcqDERK0SR2XMwsF/tSvnvlv6VcF2GIhg6Sx4yOIt/irsr1RDJsKiIyBzJDpCoXiWWq28MqH2cnQ==}
@@ -9072,7 +9077,6 @@ packages:
 
   /fast-copy@3.0.0:
     resolution: {integrity: sha512-4HzS+9pQ5Yxtv13Lhs1Z1unMXamBdn5nA4bEi1abYpDNSpSp7ODYQ1KPMF6nTatfEzgH6/zPvXKU1zvHiUjWlA==}
-    dev: true
 
   /fast-decode-uri-component@1.0.1:
     resolution: {integrity: sha512-WKgKWg5eUxvRZGwW8FvfbaH7AXSh2cL+3j5fMGzUMCxWBJ3dV3a7Wz8y2f/uQ0e3B6WmodD3oS54jTQ9HVTIIg==}
@@ -9123,7 +9127,6 @@ packages:
 
   /fast-safe-stringify@2.1.1:
     resolution: {integrity: sha512-W+KJc2dmILlPplD/H4K9l9LcAHAfPtP6BY84uVLXQ6Evcz9Lcg33Y2z1IVblT6xdY54PXYVHEv+0Wpq8Io6zkA==}
-    dev: true
 
   /fast-url-parser@1.1.3:
     resolution: {integrity: sha512-5jOCVXADYNuRkKFzNJ0dCCewsZiYo0dz8QNYljkOpFC6r2U4OBmKtvm/Tsuh4w1YYdDqDb31a8TVhBJ2OJKdqQ==}
@@ -9985,7 +9988,6 @@ packages:
 
   /help-me@5.0.0:
     resolution: {integrity: sha512-7xgomUX6ADmcYzFik0HzAxh/73YlKR9bmFzf51CZwR+b6YtzU2m0u49hQCqV6SvlqIqsaxovfwdvbnsw3b/zpg==}
-    dev: true
 
   /hoist-non-react-statics@3.3.2:
     resolution: {integrity: sha512-/gGivxi8JPKWNm/W0jSmzcMPpfpPLc3dY/6GxhX2hQ9iGj3aDfklV4ET7NjKpSinLpJ5vafa9iiGIEZg10SfBw==}
@@ -11254,7 +11256,6 @@ packages:
   /joycon@3.1.1:
     resolution: {integrity: sha512-34wB/Y7MW7bzjKRjUKTa46I2Z7eV62Rkhva+KkopW7Qvv/OSWBqvkSY7vusOPrNuZcUG3tApvdVgNB8POj3SPw==}
     engines: {node: '>=10'}
-    dev: true
 
   /js-tokens@4.0.0:
     resolution: {integrity: sha512-RdJUflcE3cUzKiMqQgsCu06FPu9UdIJO0beYbPhHN4k6apgJtifcoCtT9bcxOpYBtpD2kCM6Sbzg4CausW/PKQ==}
@@ -13792,7 +13793,6 @@ packages:
       secure-json-parse: 2.5.0
       sonic-boom: 3.7.0
       strip-json-comments: 3.1.1
-    dev: true
 
   /pino-std-serializers@6.0.0:
     resolution: {integrity: sha512-mMMOwSKrmyl+Y12Ri2xhH1lbzQxwwpuru9VjyJpgFIH4asSj88F2csdMwN6+M5g1Ll4rmsYghHLQJw81tgZ7LQ==}
@@ -14963,7 +14963,6 @@ packages:
 
   /secure-json-parse@2.5.0:
     resolution: {integrity: sha512-ZQruFgZnIWH+WyO9t5rWt4ZEGqCKPwhiw+YbzTwpmT9elgLrLcfuyUiSnwwjUiVy9r4VM3urtbNF1xmEh9IL2w==}
-    dev: true
 
   /semver@6.3.1:
     resolution: {integrity: sha512-BR7VvDCVHO+q2xBEWskxS6DJE1qRnb7DxzUrogb71CWoSficBxYsiAGd+Kl0mmq/MprG9yArRkyrQxTO6XjMzA==}
@@ -15538,7 +15537,6 @@ packages:
   /strip-json-comments@3.1.1:
     resolution: {integrity: sha512-6fPc+R4ihwqP6N/aIv2f1gMH8lOVtWQHoqC4yK6oSDVVocumAsfCqjkXnqiYMhmMwS/mEHLp7Vehlt3ql6lEig==}
     engines: {node: '>=8'}
-    dev: true
 
   /structured-headers@0.5.0:
     resolution: {integrity: sha512-oLnmXSsjhud+LxRJpvokwP8ImEB2wTg8sg30buwfVViKMuluTv3BlOJHUX9VW9pJ2nQOxmx87Z0kB86O4cphag==}

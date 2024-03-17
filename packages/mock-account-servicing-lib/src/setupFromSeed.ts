@@ -1,5 +1,6 @@
 import { v4 } from 'uuid'
 import { ApolloClient, NormalizedCacheObject } from '@apollo/client'
+import createLogger, { LevelWithSilent, LoggerOptions } from 'pino'
 import { generateJwk } from '@interledger/http-signature-utils'
 import { createRequesters } from './requesters'
 import { Config, Account, Peering } from './types'
@@ -7,7 +8,8 @@ import { Asset, FeeType } from './generated/graphql'
 import { AccountProvider } from './AccountProvider'
 
 interface SetupFromSeedOptions {
-  debug?: boolean
+  logLevel?: LevelWithSilent
+  pinoPretty?: boolean
 }
 
 export async function setupFromSeed(
@@ -16,7 +18,17 @@ export async function setupFromSeed(
   mockAccounts: AccountProvider,
   options: SetupFromSeedOptions = {}
 ): Promise<void> {
-  const { debug = false } = options
+  const { logLevel = 'info', pinoPretty = false } = options
+
+  const loggerOptions: LoggerOptions<never> = {
+    level: logLevel
+  }
+
+  if (pinoPretty) {
+    loggerOptions.transport = { target: 'pino-pretty' }
+  }
+
+  const logger = createLogger(loggerOptions)
   const {
     createAsset,
     depositAssetLiquidity,
@@ -26,7 +38,7 @@ export async function setupFromSeed(
     createAutoPeer,
     createWalletAddress,
     createWalletAddressKey
-  } = createRequesters(apolloClient, debug)
+  } = createRequesters(apolloClient, logger)
 
   const assets: Record<string, Asset> = {}
   for (const { code, scale, liquidity, liquidityThreshold } of config.seed
@@ -43,9 +55,7 @@ export async function setupFromSeed(
     )
 
     assets[code] = asset
-    if (debug) {
-      console.log(JSON.stringify({ asset, initialLiquidity }, null, 2))
-    }
+    logger.debug({ asset, initialLiquidity })
 
     const { fees } = config.seed
     const fee = fees.find((fee) => fee.asset === code && fee.scale == scale)
@@ -79,26 +89,18 @@ export async function setupFromSeed(
     })
   )
 
-  if (debug) {
-    console.log(JSON.stringify(peerResponses, null, 2))
-  }
+  logger.debug(peerResponses)
 
   if (config.testnetAutoPeerUrl) {
-    if (debug) {
-      console.log('autopeering url: ', config.testnetAutoPeerUrl)
-    }
+    logger.debug('autopeering url: ', config.testnetAutoPeerUrl)
     const autoPeerResponse = await createAutoPeer(
       config.testnetAutoPeerUrl,
       assets[peeringAsset].id
     ).catch((e) => {
-      if (debug) {
-        console.log('error on autopeering: ', e)
-      }
+      logger.debug('error on autopeering: ', e)
       return
     })
-    if (debug) {
-      console.log(JSON.stringify(autoPeerResponse, null, 2))
-    }
+    logger.debug(autoPeerResponse)
   }
 
   // Clear the accounts before seeding.
@@ -127,9 +129,7 @@ export async function setupFromSeed(
         return
       }
 
-      if (debug) {
-        console.log('hostname: ', config.publicHost)
-      }
+      logger.debug('hostname: ', config.publicHost)
       const walletAddress = await createWalletAddress(
         account.name,
         `${config.publicHost}/${account.path}`,
@@ -153,15 +153,11 @@ export async function setupFromSeed(
       return walletAddress
     })
   )
-  if (debug) {
-    console.log('seed complete')
-    console.log(JSON.stringify(accountResponses, null, 2))
-  }
+  logger.debug('seed complete')
+  logger.debug(accountResponses)
   const hostname = new URL(config.publicHost).hostname
   const envVarStrings = config.seed.accounts.map((account) => {
     return `${account.brunoEnvVar}: ${config.publicHost}/${account.path} hostname: ${hostname}`
   })
-  if (debug) {
-    console.log(envVarStrings.join('\n'))
-  }
+  logger.debug(envVarStrings)
 }

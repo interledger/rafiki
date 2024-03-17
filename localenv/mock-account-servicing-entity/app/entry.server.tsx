@@ -32,7 +32,10 @@ async function callWithRetry(fn: () => any, depth = 0): Promise<void> {
 if (!global.__seeded) {
   callWithRetry(async () => {
     console.log('setting up from seed...')
-    return setupFromSeed(CONFIG, apolloClient, mockAccounts, { debug: true })
+    return setupFromSeed(CONFIG, apolloClient, mockAccounts, {
+      logLevel: 'debug',
+      pinoPretty: true
+    })
   })
     .then(() => {
       global.__seeded = true

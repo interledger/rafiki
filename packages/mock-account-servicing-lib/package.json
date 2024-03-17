@@ -12,13 +12,15 @@
     "test": "jest"
   },
   "devDependencies": {
-    "@apollo/client": "^3.8.10",
     "@types/node": "^18.7.12",
     "@types/uuid": "^9.0.8"
   },
   "dependencies": {
+    "@apollo/client": "^3.8.10",
     "@interledger/http-signature-utils": "2.0.2",
     "graphql": "^16.8.1",
+    "pino": "^8.19.0",
+    "pino-pretty": "^10.3.1",
     "uuid": "^9.0.1"
   }
 }

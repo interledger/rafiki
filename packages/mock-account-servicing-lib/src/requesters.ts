@@ -1,4 +1,5 @@
 import { gql, ApolloClient, NormalizedCacheObject } from '@apollo/client'
+import { Logger } from 'pino'
 import type {
   AssetMutationResponse,
   CreatePeerMutationResponse,
@@ -17,7 +18,7 @@ import { v4 as uuid } from 'uuid'
 
 export function createRequesters(
   apolloClient: ApolloClient<NormalizedCacheObject>,
-  debug: boolean
+  logger: Logger
 ): {
   createAsset: (
     code: string,
@@ -78,32 +79,32 @@ export function createRequesters(
     ) =>
       createPeer(
         apolloClient,
+        logger,
         staticIlpAddress,
         outgoingEndpoint,
         assetId,
         assetCode,
         name,
-        liquidityThreshold,
-        debug
+        liquidityThreshold
       ),
     createAutoPeer: (peerUrl, assetId) =>
-      createAutoPeer(apolloClient, peerUrl, assetId, debug),
+      createAutoPeer(apolloClient, logger, peerUrl, assetId),
     depositPeerLiquidity: (peerId, amount, transferUid) =>
-      depositPeerLiquidity(apolloClient, peerId, amount, transferUid, debug),
+      depositPeerLiquidity(apolloClient, logger, peerId, amount, transferUid),
     depositAssetLiquidity: (assetId, amount, transferId) =>
-      depositAssetLiquidity(apolloClient, assetId, amount, transferId, debug),
+      depositAssetLiquidity(apolloClient, logger, assetId, amount, transferId),
     createWalletAddress: (accountName, accountUrl, assetId) =>
       createWalletAddress(
         apolloClient,
+        logger,
         accountName,
         accountUrl,
-        assetId,
-        debug
+        assetId
       ),
     createWalletAddressKey: ({ walletAddressId, jwk }) =>
-      createWalletAddressKey(apolloClient, { walletAddressId, jwk }, debug),
+      createWalletAddressKey(apolloClient, logger, { walletAddressId, jwk }),
     setFee: (assetId, type, fixed, basisPoints) =>
-      setFee(apolloClient, assetId, type, fixed, basisPoints, debug)
+      setFee(apolloClient, logger, assetId, type, fixed, basisPoints)
   }
 }
 
@@ -150,13 +151,13 @@ export async function createAsset(
 
 export async function createPeer(
   apolloClient: ApolloClient<NormalizedCacheObject>,
+  logger: Logger,
   staticIlpAddress: string,
   outgoingEndpoint: string,
   assetId: string,
   assetCode: string,
   name: string,
-  liquidityThreshold: number,
-  debug: boolean
+  liquidityThreshold: number
 ): Promise<CreatePeerMutationResponse> {
   const createPeerMutation = gql`
     mutation CreatePeer($input: CreatePeerInput!) {
@@ -188,9 +189,7 @@ export async function createPeer(
       variables: createPeerInput
     })
     .then(({ data }): CreatePeerMutationResponse => {
-      if (debug) {
-        console.log(data)
-      }
+      logger.debug(data)
       if (!data.createPeer.success) {
         throw new Error('Data was empty')
       }
@@ -200,9 +199,9 @@ export async function createPeer(
 
 export async function createAutoPeer(
   apolloClient: ApolloClient<NormalizedCacheObject>,
+  logger: Logger,
   peerUrl: string,
-  assetId: string,
-  debug: boolean
+  assetId: string
 ): Promise<CreateOrUpdatePeerByUrlMutationResponse | undefined> {
   const createAutoPeerMutation = gql`
     mutation CreateOrUpdatePeerByUrl($input: CreateOrUpdatePeerByUrlInput!) {
@@ -239,9 +238,7 @@ export async function createAutoPeer(
     })
     .then(({ data }): CreateOrUpdatePeerByUrlMutationResponse => {
       if (!data.createOrUpdatePeerByUrl.success) {
-        if (debug) {
-          console.log(data.createOrUpdatePeerByUrl)
-        }
+        logger.debug(data.createOrUpdatePeerByUrl)
         throw new Error(`Data was empty for assetId: ${assetId}`)
       }
       return data.createOrUpdatePeerByUrl
@@ -250,10 +247,10 @@ export async function createAutoPeer(
 
 export async function depositPeerLiquidity(
   apolloClient: ApolloClient<NormalizedCacheObject>,
+  logger: Logger,
   peerId: string,
   amount: string,
-  transferUid: string,
-  debug: boolean
+  transferUid: string
 ): Promise<LiquidityMutationResponse> {
   const depositPeerLiquidityMutation = gql`
     mutation DepositPeerLiquidity($input: DepositPeerLiquidityInput!) {
@@ -279,9 +276,7 @@ export async function depositPeerLiquidity(
       variables: depositPeerLiquidityInput
     })
     .then(({ data }): LiquidityMutationResponse => {
-      if (debug) {
-        console.log(data)
-      }
+      logger.debug(data)
       if (!data.depositPeerLiquidity.success) {
         throw new Error('Data was empty')
       }
@@ -291,10 +286,10 @@ export async function depositPeerLiquidity(
 
 export async function depositAssetLiquidity(
   apolloClient: ApolloClient<NormalizedCacheObject>,
+  logger: Logger,
   assetId: string,
   amount: number,
-  transferId: string,
-  debug: boolean
+  transferId: string
 ): Promise<LiquidityMutationResponse> {
   const depositAssetLiquidityMutation = gql`
     mutation DepositAssetLiquidity($input: DepositAssetLiquidityInput!) {
@@ -320,9 +315,7 @@ export async function depositAssetLiquidity(
       variables: depositAssetLiquidityInput
     })
     .then(({ data }): LiquidityMutationResponse => {
-      if (debug) {
-        console.log(data)
-      }
+      logger.debug(data)
       if (!data.depositAssetLiquidity.success) {
         throw new Error('Data was empty')
       }
@@ -332,10 +325,10 @@ export async function depositAssetLiquidity(
 
 export async function createWalletAddress(
   apolloClient: ApolloClient<NormalizedCacheObject>,
+  logger: Logger,
   accountName: string,
   accountUrl: string,
-  assetId: string,
-  debug: boolean
+  assetId: string
 ): Promise<WalletAddress> {
   const createWalletAddressMutation = gql`
     mutation CreateWalletAddress($input: CreateWalletAddressInput!) {
@@ -365,9 +358,7 @@ export async function createWalletAddress(
       }
     })
     .then(({ data }) => {
-      if (debug) {
-        console.log(data)
-      }
+      logger.debug(data)
 
       if (
         !data.createWalletAddress.success ||
@@ -382,14 +373,14 @@ export async function createWalletAddress(
 
 export async function createWalletAddressKey(
   apolloClient: ApolloClient<NormalizedCacheObject>,
+  logger: Logger,
   {
     walletAddressId,
     jwk
   }: {
     walletAddressId: string
     jwk: string
-  },
-  debug: boolean
+  }
 ): Promise<CreateWalletAddressKeyMutationResponse> {
   const createWalletAddressKeyMutation = gql`
     mutation CreateWalletAddressKey($input: CreateWalletAddressKeyInput!) {
@@ -413,9 +404,7 @@ export async function createWalletAddressKey(
       }
     })
     .then(({ data }): CreateWalletAddressKeyMutationResponse => {
-      if (debug) {
-        console.log(data)
-      }
+      logger.debug(data)
       if (!data.createWalletAddressKey.success) {
         throw new Error('Data was empty')
       }
@@ -425,11 +414,11 @@ export async function createWalletAddressKey(
 
 export async function setFee(
   apolloClient: ApolloClient<NormalizedCacheObject>,
+  logger: Logger,
   assetId: string,
   type: FeeType,
   fixed: number,
-  basisPoints: number,
-  debug: boolean
+  basisPoints: number
 ): Promise<SetFeeResponse> {
   const setFeeMutation = gql`
     mutation SetFee($input: SetFeeInput!) {
@@ -465,9 +454,7 @@ export async function setFee(
       }
     })
     .then(({ data }): SetFeeResponse => {
-      if (debug) {
-        console.log(data)
-      }
+      logger.debug(data)
       if (!data.setFee) {
         throw new Error('Data was empty')
       }
