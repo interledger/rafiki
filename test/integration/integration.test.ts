@@ -13,7 +13,7 @@ import {
 import { C9_CONFIG, HLB_CONFIG } from './lib/config'
 import { MockASE } from './lib/mockASE'
 import { WebhookEventType } from 'mock-account-service-lib'
-import { parseCookies, poll, wait } from './lib/utils'
+import { parseCookies, poll, pollCondition, wait } from './lib/utils'
 import {
   Receiver as ReceiverGql,
   Quote as QuoteGql,
@@ -149,8 +149,7 @@ describe('Integration tests', (): void => {
         }
       )
 
-      await poll(
-        () => Promise.resolve(), // no request, just check webhook
+      await pollCondition(
         () => {
           return handleWebhookEventSpy.mock.calls.some(
             (call) => call[0]?.type === WebhookEventType.IncomingPaymentCreated
@@ -412,8 +411,7 @@ describe('Integration tests', (): void => {
         }
       )
 
-      await poll(
-        () => Promise.resolve(), // no request, just check webhook
+      await pollCondition(
         () => {
           return (
             handleWebhookEventSpy.mock.calls.some(
@@ -498,8 +496,7 @@ describe('Integration tests', (): void => {
 
       receiver = response.receiver
 
-      await poll(
-        () => Promise.resolve(), // no request, just check webhook
+      await pollCondition(
         () => {
           return handleWebhookEventSpy.mock.calls.some(
             (call) => call[0]?.type === WebhookEventType.IncomingPaymentCreated
@@ -543,8 +540,7 @@ describe('Integration tests', (): void => {
 
       outgoingPayment = response.payment
 
-      await poll(
-        () => Promise.resolve(), // no request, just check webhook
+      await pollCondition(
         () => {
           return (
             handleWebhookEventSpy.mock.calls.some(
