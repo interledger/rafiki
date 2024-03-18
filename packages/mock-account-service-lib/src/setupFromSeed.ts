@@ -5,7 +5,7 @@ import { generateJwk } from '@interledger/http-signature-utils'
 import { createRequesters } from './requesters'
 import { Config, Account, Peering } from './types'
 import { Asset, FeeType } from './generated/graphql'
-import { AccountProvider } from './AccountProvider'
+import { AccountProvider } from './accountProvider'
 
 interface SetupFromSeedOptions {
   logLevel?: LevelWithSilent
