@@ -1,7 +1,7 @@
 import { parse } from 'yaml'
 import { readFileSync } from 'fs'
 import { loadOrGenerateKey } from '@interledger/http-signature-utils'
-import type { Config } from 'mock-account-servicing-lib'
+import type { Config } from 'mock-account-service-lib'
 
 export const CONFIG: Config = {
   seed: parse(

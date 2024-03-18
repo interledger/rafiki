@@ -22,7 +22,7 @@
     "@types/uuid": "^9.0.8",
     "dotenv": "^16.4.1",
     "koa": "^2.15.0",
-    "mock-account-servicing-lib": "workspace:*",
+    "mock-account-service-lib": "workspace:*",
     "uuid": "^9.0.1",
     "yaml": "^2.3.4"
   }

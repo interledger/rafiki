@@ -40,7 +40,7 @@ generates:
       scalars:
         UInt8: number
         UInt64: bigint
-  ../mock-account-servicing-lib/src/generated/graphql.ts:
+  ../mock-account-service-lib/src/generated/graphql.ts:
     plugins:
       - 'typescript'
       - 'typescript-resolvers'

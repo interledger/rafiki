@@ -9,7 +9,7 @@ import {
   depositPeerLiquidity,
   createWalletAddress
 } from './requesters'
-import { Webhook, WebhookEventType } from 'mock-account-servicing-lib'
+import { Webhook, WebhookEventType } from 'mock-account-service-lib'
 
 export interface AmountJSON {
   value: string

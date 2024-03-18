@@ -9,7 +9,7 @@ import {
   handleOutgoingPaymentCompletedFailed,
   handleIncomingPaymentCompletedExpired
 } from '~/lib/webhooks.server'
-import { WebhookEventType, Webhook } from 'mock-account-servicing-lib'
+import { WebhookEventType, Webhook } from 'mock-account-service-lib'
 
 export function parseError(e: unknown): string {
   return e instanceof Error && e.stack ? e.stack : String(e)

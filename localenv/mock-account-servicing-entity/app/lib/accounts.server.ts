@@ -1,3 +1,3 @@
-import { AccountProvider } from 'mock-account-servicing-lib'
+import { AccountProvider } from 'mock-account-service-lib'
 
 export const mockAccounts = new AccountProvider()

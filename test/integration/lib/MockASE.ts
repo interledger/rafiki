@@ -3,7 +3,7 @@ import {
   AuthenticatedClient,
   createAuthenticatedClient
 } from '@interledger/open-payments'
-import { AccountProvider, setupFromSeed } from 'mock-account-servicing-lib'
+import { AccountProvider, setupFromSeed } from 'mock-account-service-lib'
 import { createApolloClient } from './apolloClient'
 import { AdminClient } from './AdminClient'
 import { IntegrationServer } from './IntegrationServer'

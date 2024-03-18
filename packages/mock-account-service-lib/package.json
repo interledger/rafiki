@@ -1,5 +1,5 @@
 {
-  "name": "mock-account-servicing-lib",
+  "name": "mock-account-service-lib",
   "description": "Common library for mock account service",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

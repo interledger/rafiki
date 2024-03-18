@@ -6,7 +6,7 @@ import {
   AccountProvider,
   WebhookEventType,
   Webhook
-} from 'mock-account-servicing-lib'
+} from 'mock-account-service-lib'
 import { TestConfig } from './config'
 import { AdminClient } from './AdminClient'
 

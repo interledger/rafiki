@@ -1,7 +1,7 @@
 import { parse } from 'yaml'
 import { readFileSync } from 'fs'
 import { loadKey } from '@interledger/http-signature-utils'
-import type { Config } from 'mock-account-servicing-lib'
+import type { Config } from 'mock-account-service-lib'
 import { parse as envParse } from 'dotenv'
 
 import { resolve } from 'path'

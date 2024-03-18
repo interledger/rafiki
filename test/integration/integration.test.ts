@@ -12,7 +12,7 @@ import {
 } from '@interledger/open-payments'
 import { C9_CONFIG, HLB_CONFIG } from './lib/config'
 import { MockASE } from './lib/MockASE'
-import { WebhookEventType } from 'mock-account-servicing-lib'
+import { WebhookEventType } from 'mock-account-service-lib'
 import { parseCookies, poll, wait } from './lib/utils'
 import {
   Receiver as ReceiverGql,
