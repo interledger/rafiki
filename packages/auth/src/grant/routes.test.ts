@@ -26,6 +26,7 @@ import {
   GrantFinalization
 } from '../grant/model'
 import { Interaction, InteractionState } from '../interaction/model'
+import { InteractionService } from '../interaction/service'
 import { AccessToken } from '../accessToken/model'
 import { AccessTokenService } from '../accessToken/service'
 import { generateNonce } from '../shared/utils'
@@ -34,6 +35,8 @@ import { withConfigOverride } from '../tests/helpers'
 import { AccessAction, AccessType } from '@interledger/open-payments'
 import { generateBaseGrant } from '../tests/grant'
 import { generateBaseInteraction } from '../tests/interaction'
+import { GNAPErrorCode } from '../shared/gnapErrors'
+import { generateGNAPErrorResponse } from '../tests/errors'
 
 export const TEST_CLIENT_DISPLAY = {
   name: 'Test Client',
@@ -76,6 +79,7 @@ describe('Grant Routes', (): void => {
   let config: IAppConfig
   let accessTokenService: AccessTokenService
   let clientService: ClientService
+  let interactionService: InteractionService
 
   let grant: Grant
 
@@ -97,6 +101,7 @@ describe('Grant Routes', (): void => {
     config = await deps.use('config')
     accessTokenService = await deps.use('accessTokenService')
     clientService = await deps.use('clientService')
+    interactionService = await deps.use('interactionService')
   })
 
   afterEach(async (): Promise<void> => {
@@ -194,7 +199,10 @@ describe('Grant Routes', (): void => {
                           grantRoutes.create(ctx)
                         ).rejects.toMatchObject({
                           status: 400,
-                          error: 'interaction_required'
+                          ...generateGNAPErrorResponse(
+                            GNAPErrorCode.InvalidRequest,
+                            "missing required request field 'interact'"
+                          )
                         })
                       } else {
                         await expect(
@@ -306,10 +314,13 @@ describe('Grant Routes', (): void => {
         }
         ctx.request.body = body
 
-        await expect(grantRoutes.create(ctx)).rejects.toHaveProperty(
-          'status',
-          500
-        )
+        await expect(grantRoutes.create(ctx)).rejects.toMatchObject({
+          status: 500,
+          ...generateGNAPErrorResponse(
+            GNAPErrorCode.RequestDenied,
+            'internal server error'
+          )
+        })
       })
       test('Fails to initiate a grant w/o interact field', async (): Promise<void> => {
         const ctx = createContext<CreateContext>(
@@ -328,7 +339,49 @@ describe('Grant Routes', (): void => {
 
         await expect(grantRoutes.create(ctx)).rejects.toMatchObject({
           status: 400,
-          error: 'interaction_required'
+          ...generateGNAPErrorResponse(
+            GNAPErrorCode.InvalidRequest,
+            "missing required request field 'interact'"
+          )
+        })
+      })
+
+      test('Does not create interactive grant if interaction creation fails', async (): Promise<void> => {
+        jest
+          .spyOn(interactionService, 'create')
+          .mockRejectedValueOnce(new Error())
+
+        nock(CLIENT)
+          .get('/')
+          .reply(200, {
+            id: CLIENT,
+            publicName: TEST_CLIENT_DISPLAY.name,
+            assetCode: 'USD',
+            assetScale: 2,
+            authServer: Config.authServerDomain,
+            resourceServer: faker.internet.url({ appendSlash: false })
+          })
+
+        const ctx = createContext<CreateContext>(
+          {
+            headers: {
+              Accept: 'application/json',
+              'Content-Type': 'application/json'
+            },
+            url,
+            method
+          },
+          {}
+        )
+
+        ctx.request.body = BASE_GRANT_REQUEST
+
+        await expect(grantRoutes.create(ctx)).rejects.toMatchObject({
+          status: 500,
+          ...generateGNAPErrorResponse(
+            GNAPErrorCode.RequestDenied,
+            'internal server error'
+          )
         })
       })
 
@@ -362,7 +415,10 @@ describe('Grant Routes', (): void => {
 
         await expect(grantRoutes.create(ctx)).rejects.toMatchObject({
           status: 400,
-          error: 'identifier_required'
+          ...generateGNAPErrorResponse(
+            GNAPErrorCode.InvalidRequest,
+            'access identifier required'
+          )
         })
       })
 
@@ -385,7 +441,10 @@ describe('Grant Routes', (): void => {
 
         await expect(grantRoutes.create(ctx)).rejects.toMatchObject({
           status: 400,
-          error: 'invalid_client'
+          ...generateGNAPErrorResponse(
+            GNAPErrorCode.InvalidClient,
+            "missing required request field 'client'"
+          )
         })
       })
     })
@@ -492,10 +551,10 @@ describe('Grant Routes', (): void => {
 
         await expect(grantRoutes.continue(ctx)).rejects.toMatchObject({
           status: 404,
-          error: {
-            code: 'invalid_continuation',
-            description: 'grant not found'
-          }
+          ...generateGNAPErrorResponse(
+            GNAPErrorCode.InvalidContinuation,
+            'grant not found'
+          )
         })
       })
 
@@ -538,10 +597,10 @@ describe('Grant Routes', (): void => {
 
         await expect(grantRoutes.continue(ctx)).rejects.toMatchObject({
           status: 401,
-          error: {
-            code: 'request_denied',
-            description: 'grant interaction not approved'
-          }
+          ...generateGNAPErrorResponse(
+            GNAPErrorCode.RequestDenied,
+            'grant interaction not approved'
+          )
         })
       })
 
@@ -580,10 +639,10 @@ describe('Grant Routes', (): void => {
 
         await expect(grantRoutes.continue(ctx)).rejects.toMatchObject({
           status: 404,
-          error: {
-            code: 'invalid_continuation',
-            description: 'grant not found'
-          }
+          ...generateGNAPErrorResponse(
+            GNAPErrorCode.InvalidContinuation,
+            'grant not found'
+          )
         })
       })
 
@@ -606,10 +665,10 @@ describe('Grant Routes', (): void => {
 
         await expect(grantRoutes.continue(ctx)).rejects.toMatchObject({
           status: 401,
-          error: {
-            code: 'invalid_continuation',
-            description: 'missing continuation information'
-          }
+          ...generateGNAPErrorResponse(
+            GNAPErrorCode.InvalidContinuation,
+            'missing continuation information'
+          )
         })
       })
 
@@ -631,10 +690,10 @@ describe('Grant Routes', (): void => {
 
         await expect(grantRoutes.continue(ctx)).rejects.toMatchObject({
           status: 401,
-          error: {
-            code: 'invalid_continuation',
-            description: 'missing continuation information'
-          }
+          ...generateGNAPErrorResponse(
+            GNAPErrorCode.InvalidContinuation,
+            'missing continuation information'
+          )
         })
       })
 
@@ -658,10 +717,10 @@ describe('Grant Routes', (): void => {
 
         await expect(grantRoutes.continue(ctx)).rejects.toMatchObject({
           status: 401,
-          error: {
-            code: 'invalid_request',
-            description: 'missing interaction reference'
-          }
+          ...generateGNAPErrorResponse(
+            GNAPErrorCode.InvalidRequest,
+            'missing interaction reference'
+          )
         })
       })
 
@@ -698,10 +757,10 @@ describe('Grant Routes', (): void => {
 
         await expect(grantRoutes.continue(ctx)).rejects.toMatchObject({
           status: 400,
-          error: {
-            code: 'too_fast',
-            description: 'continued grant faster than "wait" period'
-          }
+          ...generateGNAPErrorResponse(
+            GNAPErrorCode.TooFast,
+            'continued grant faster than "wait" period'
+          )
         })
       })
 
@@ -840,10 +899,10 @@ describe('Grant Routes', (): void => {
         ctx.request.body = {}
         await expect(grantRoutes.continue(ctx)).rejects.toMatchObject({
           status: 401,
-          error: {
-            code: 'request_denied',
-            description: 'grant cannot be continued'
-          }
+          ...generateGNAPErrorResponse(
+            GNAPErrorCode.RequestDenied,
+            'grant cannot be continued'
+          )
         })
       })
 
@@ -867,10 +926,10 @@ describe('Grant Routes', (): void => {
 
         await expect(grantRoutes.continue(ctx)).rejects.toMatchObject({
           status: 401,
-          error: {
-            code: 'request_denied',
-            description: 'grant cannot be polled'
-          }
+          ...generateGNAPErrorResponse(
+            GNAPErrorCode.RequestDenied,
+            'grant cannot be polled'
+          )
         })
       })
 
@@ -911,10 +970,10 @@ describe('Grant Routes', (): void => {
 
         await expect(grantRoutes.continue(ctx)).rejects.toMatchObject({
           status: 400,
-          error: {
-            code: 'too_fast',
-            description: 'polled grant faster than "wait" period'
-          }
+          ...generateGNAPErrorResponse(
+            GNAPErrorCode.TooFast,
+            'polled grant faster than "wait" period'
+          )
         })
       })
 
@@ -981,7 +1040,10 @@ describe('Grant Routes', (): void => {
         )
         await expect(grantRoutes.revoke(ctx)).rejects.toMatchObject({
           status: 404,
-          error: 'unknown_request'
+          ...generateGNAPErrorResponse(
+            GNAPErrorCode.InvalidRequest,
+            'unknown grant'
+          )
         })
       })
 
@@ -1000,14 +1062,17 @@ describe('Grant Routes', (): void => {
         )
         await expect(grantRoutes.revoke(ctx)).rejects.toMatchObject({
           status: 404,
-          error: 'unknown_request'
+          ...generateGNAPErrorResponse(
+            GNAPErrorCode.InvalidRequest,
+            'unknown grant'
+          )
         })
       })
 
       test.each`
         token    | description    | status | error
-        ${true}  | ${' matching'} | ${404} | ${'unknown_request'}
-        ${false} | ${''}          | ${401} | ${'invalid_request'}
+        ${true}  | ${' matching'} | ${404} | ${{ code: 'invalid_request', description: 'unknown grant' }}
+        ${false} | ${''}          | ${401} | ${{ code: 'invalid_request', description: 'invalid continuation information' }}
       `(
         'Cannot delete without$description continueToken',
         async ({ token, status, error }): Promise<void> => {
