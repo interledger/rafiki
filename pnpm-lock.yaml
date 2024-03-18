@@ -58,7 +58,7 @@ importers:
     dependencies:
       '@apollo/client':
         specifier: ^3.9.7
-        version: 3.9.7(@types/react@18.2.66)(graphql@16.8.1)(react-dom@18.2.0)(react@18.2.0)
+        version: 3.9.7(@types/react@18.2.67)(graphql@16.8.1)(react-dom@18.2.0)(react@18.2.0)
       '@interledger/http-signature-utils':
         specifier: 2.0.2
         version: 2.0.2
@@ -100,8 +100,8 @@ importers:
         specifier: ^2.6.0
         version: 2.6.0(@remix-run/serve@2.6.0)(@types/node@18.11.9)(typescript@5.4.2)
       '@types/react':
-        specifier: ^18.2.66
-        version: 18.2.66
+        specifier: ^18.2.67
+        version: 18.2.67
       '@types/react-dom':
         specifier: ^18.2.22
         version: 18.2.22
@@ -189,7 +189,7 @@ importers:
     devDependencies:
       '@apollo/client':
         specifier: ^3.9.7
-        version: 3.9.7(@types/react@18.2.66)(graphql@16.8.1)(react-dom@18.2.0)(react@18.2.0)
+        version: 3.9.7(@types/react@18.2.67)(graphql@16.8.1)(react-dom@18.2.0)(react@18.2.0)
       '@faker-js/faker':
         specifier: ^8.4.1
         version: 8.4.1
@@ -388,7 +388,7 @@ importers:
     devDependencies:
       '@apollo/client':
         specifier: ^3.9.7
-        version: 3.9.7(@types/react@18.2.66)(graphql@16.8.1)(react-dom@18.2.0)(react@18.2.0)
+        version: 3.9.7(@types/react@18.2.67)(graphql@16.8.1)(react-dom@18.2.0)(react@18.2.0)
       '@graphql-codegen/cli':
         specifier: 5.0.2
         version: 5.0.2(@babel/core@7.23.9)(@types/node@18.19.19)(graphql@16.8.1)
@@ -496,7 +496,7 @@ importers:
     dependencies:
       '@apollo/client':
         specifier: ^3.9.7
-        version: 3.9.7(@types/react@18.2.66)(graphql@16.8.1)(react-dom@18.2.0)(react@18.2.0)
+        version: 3.9.7(@types/react@18.2.67)(graphql@16.8.1)(react-dom@18.2.0)(react@18.2.0)
       '@headlessui/react':
         specifier: ^1.7.18
         version: 1.7.18(react-dom@18.2.0)(react@18.2.0)
@@ -544,8 +544,8 @@ importers:
         specifier: ^0.5.7
         version: 0.5.7(tailwindcss@3.4.1)
       '@types/react':
-        specifier: ^18.2.66
-        version: 18.2.66
+        specifier: ^18.2.67
+        version: 18.2.67
       '@types/react-dom':
         specifier: ^18.2.22
         version: 18.2.22
@@ -637,7 +637,7 @@ packages:
       graphql: 16.8.1
     dev: false
 
-  /@apollo/client@3.9.7(@types/react@18.2.66)(graphql@16.8.1)(react-dom@18.2.0)(react@18.2.0):
+  /@apollo/client@3.9.7(@types/react@18.2.67)(graphql@16.8.1)(react-dom@18.2.0)(react@18.2.0):
     resolution: {integrity: sha512-OEEwt55bkFhqihCT5d75KUxZt50JZ9MuIYwG7VZlyPPIAb9K+qzVWlXWlf3tB5DaV43yXkUSLQfNpdIBFOB55Q==}
     peerDependencies:
       graphql: ^15.0.0 || ^16.0.0
@@ -666,7 +666,7 @@ packages:
       prop-types: 15.8.1
       react: 18.2.0
       react-dom: 18.2.0(react@18.2.0)
-      rehackt: 0.0.6(@types/react@18.2.66)(react@18.2.0)
+      rehackt: 0.0.6(@types/react@18.2.67)(react@18.2.0)
       response-iterator: 0.2.6
       symbol-observable: 4.0.0
       ts-invariant: 0.10.3
@@ -5321,11 +5321,11 @@ packages:
   /@types/react-dom@18.2.22:
     resolution: {integrity: sha512-fHkBXPeNtfvri6gdsMYyW+dW7RXFo6Ad09nLFK0VQWR7yGLai/Cyvyj696gbwYvBnhGtevUG9cET0pmUbMtoPQ==}
     dependencies:
-      '@types/react': 18.2.66
+      '@types/react': 18.2.67
     dev: true
 
-  /@types/react@18.2.66:
-    resolution: {integrity: sha512-OYTmMI4UigXeFMF/j4uv0lBBEbongSgptPrHBxqME44h9+yNov+oL6Z3ocJKo0WyXR84sQUNeyIp9MRfckvZpg==}
+  /@types/react@18.2.67:
+    resolution: {integrity: sha512-vkIE2vTIMHQ/xL0rgmuoECBCkZFZeHr49HeWSc24AptMbNRo7pwSBvj73rlJJs9fGKj0koS+V7kQB1jHS0uCgw==}
     dependencies:
       '@types/prop-types': 15.7.5
       '@types/scheduler': 0.16.2
@@ -14603,7 +14603,7 @@ packages:
     engines: {node: '>=8'}
     dev: true
 
-  /rehackt@0.0.6(@types/react@18.2.66)(react@18.2.0):
+  /rehackt@0.0.6(@types/react@18.2.67)(react@18.2.0):
     resolution: {integrity: sha512-l3WEzkt4ntlEc/IB3/mF6SRgNHA6zfQR7BlGOgBTOmx7IJJXojDASav+NsgXHFjHn+6RmwqsGPFgZpabWpeOdw==}
     peerDependencies:
       '@types/react': '*'
@@ -14614,7 +14614,7 @@ packages:
       react:
         optional: true
     dependencies:
-      '@types/react': 18.2.66
+      '@types/react': 18.2.67
       react: 18.2.0
 
   /rehype-mathjax@6.0.0:
