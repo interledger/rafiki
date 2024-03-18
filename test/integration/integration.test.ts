@@ -11,7 +11,7 @@ import {
   OutgoingPayment
 } from '@interledger/open-payments'
 import { C9_CONFIG, HLB_CONFIG } from './lib/config'
-import { MockASE } from './lib/mockASE'
+import { MockASE } from './lib/mock-ase'
 import { WebhookEventType } from 'mock-account-service-lib'
 import { parseCookies, poll, pollCondition, wait } from './lib/utils'
 import {

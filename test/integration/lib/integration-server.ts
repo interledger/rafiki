@@ -8,7 +8,7 @@ import {
   Webhook
 } from 'mock-account-service-lib'
 import { TestConfig } from './config'
-import { AdminClient } from './adminClient'
+import { AdminClient } from './admin-client'
 
 export class IntegrationServer {
   private config: TestConfig

@@ -5,8 +5,8 @@ import {
 } from '@interledger/open-payments'
 import { AccountProvider, setupFromSeed } from 'mock-account-service-lib'
 import { createApolloClient } from './apolloClient'
-import { AdminClient } from './adminClient'
-import { IntegrationServer } from './integrationServer'
+import { AdminClient } from './admin-client'
+import { IntegrationServer } from './integration-server'
 import { TestConfig } from './config'
 
 /** Mock Account Servicing Entity */
