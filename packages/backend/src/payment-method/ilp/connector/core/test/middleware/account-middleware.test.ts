@@ -120,8 +120,29 @@ describe('Account Middleware', () => {
         rawPrepare: Buffer.alloc(0) // ignored
       }
     })
-    await expect(middleware(ctx, next)).rejects.toThrowError(
+    await expect(middleware(ctx, next)).rejects.toThrow(
       'destination account is disabled'
+    )
+  })
+
+  test('return an error when the destination account unknown', async () => {
+    const middleware = createAccountMiddleware(ADDRESS)
+    const next = jest.fn()
+    const ctx = createILPContext({
+      state: {
+        incomingAccount,
+        streamDestination: 'no-destination'
+      },
+      services: rafikiServices,
+      request: {
+        prepare: new ZeroCopyIlpPrepare(
+          IlpPrepareFactory.build({ destination: 'test.123' })
+        ),
+        rawPrepare: Buffer.alloc(0) // ignored
+      }
+    })
+    await expect(middleware(ctx, next)).rejects.toThrow(
+      'unknown destination account'
     )
   })
 
