@@ -9,7 +9,7 @@
   "scripts": {
     "build": "pnpm clean && tsc --build tsconfig.json && pnpm copy-files",
     "clean": "rm -fr dist/",
-    "copy-files": "mkdir ./dist/openapi/specs && cp -r ./src/openapi/specs/*.yaml ./dist/openapi/specs/",
+    "copy-files": "mkdir -p ./dist/openapi/specs && cp -r ./src/openapi/specs/*.yaml ./dist/openapi/specs/",
     "copy-op-schemas": "cp ./node_modules/@interledger/open-payments/dist/openapi/specs/auth-server.yaml ./node_modules/@interledger/open-payments/dist/openapi/specs/schemas.yaml ./src/openapi/specs/",
     "generate:types": "openapi-typescript ../../openapi/token-introspection.yaml --output src/openapi/generated/types.ts -t",
     "postinstall": "pnpm copy-op-schemas",
