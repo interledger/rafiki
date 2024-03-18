@@ -14,12 +14,6 @@ headers {
   Authorization: GNAP {{continueToken}}
 }
 
-body:json {
-  {
-       "interact_ref": "83d168de-e907-4056-b170-a0cd010f5090"
-  }
-}
-
 script:pre-request {
   const scripts = require('./scripts');
   
