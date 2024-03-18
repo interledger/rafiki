@@ -149,8 +149,17 @@ describe('Integration tests', (): void => {
         }
       )
 
-      // Delay gives time for webhook to be received
-      await wait(1000)
+      await poll(
+        () => Promise.resolve(), // no request, just check webhook
+        () => {
+          return handleWebhookEventSpy.mock.calls.some(
+            (call) => call[0]?.type === WebhookEventType.IncomingPaymentCreated
+          )
+        },
+        5,
+        0.5
+      )
+
       expect(handleWebhookEventSpy).toHaveBeenCalledWith(
         expect.objectContaining({
           type: WebhookEventType.IncomingPaymentCreated,
@@ -402,8 +411,25 @@ describe('Integration tests', (): void => {
           quoteId: quote.id
         }
       )
-      // Delay gives time for webhooks to be received
-      await wait(1000)
+
+      await poll(
+        () => Promise.resolve(), // no request, just check webhook
+        () => {
+          return (
+            handleWebhookEventSpy.mock.calls.some(
+              (call) =>
+                call[0]?.type === WebhookEventType.OutgoingPaymentCreated
+            ) &&
+            handleWebhookEventSpy.mock.calls.some(
+              (call) =>
+                call[0]?.type === WebhookEventType.OutgoingPaymentCompleted
+            )
+          )
+        },
+        5,
+        0.5
+      )
+
       expect(handleWebhookEventSpy).toHaveBeenCalledWith(
         expect.objectContaining({
           type: WebhookEventType.OutgoingPaymentCreated,
@@ -472,8 +498,17 @@ describe('Integration tests', (): void => {
 
       receiver = response.receiver
 
-      // Delay gives time for webhook to be received
-      await wait(1000)
+      await poll(
+        () => Promise.resolve(), // no request, just check webhook
+        () => {
+          return handleWebhookEventSpy.mock.calls.some(
+            (call) => call[0]?.type === WebhookEventType.IncomingPaymentCreated
+          )
+        },
+        5,
+        0.5
+      )
+
       expect(handleWebhookEventSpy).toHaveBeenCalledWith(
         expect.objectContaining({
           type: WebhookEventType.IncomingPaymentCreated,
@@ -508,8 +543,24 @@ describe('Integration tests', (): void => {
 
       outgoingPayment = response.payment
 
-      // Delay gives time for payment to complete and for webhooks to be received
-      await wait(1000)
+      await poll(
+        () => Promise.resolve(), // no request, just check webhook
+        () => {
+          return (
+            handleWebhookEventSpy.mock.calls.some(
+              (call) =>
+                call[0]?.type === WebhookEventType.OutgoingPaymentCreated
+            ) &&
+            handleWebhookEventSpy.mock.calls.some(
+              (call) =>
+                call[0]?.type === WebhookEventType.OutgoingPaymentCompleted
+            )
+          )
+        },
+        5,
+        0.5
+      )
+
       expect(handleWebhookEventSpy).toHaveBeenCalledWith(
         expect.objectContaining({
           type: WebhookEventType.OutgoingPaymentCreated,
