@@ -85,6 +85,7 @@ import { AxiosInstance } from 'axios'
 import { PaymentMethodHandlerService } from './payment-method/handler/service'
 import { IlpPaymentService } from './payment-method/ilp/service'
 import { TelemetryService } from './telemetry/service'
+import { ApolloArmor } from '@escape.tech/graphql-armor'
 export interface AppContextData {
   logger: Logger
   container: AppContainer
@@ -313,10 +314,35 @@ export class App {
       )
     )
 
+    // Setup Armor
+    const armor = new ApolloArmor({
+      blockFieldSuggestion: {
+        enabled: true
+      },
+      maxDepth: {
+        enabled: true,
+        n: 10,
+        ignoreIntrospection: false
+      },
+      costLimit: {
+        enabled: true,
+        maxCost: 5000,
+        objectCost: 2,
+        scalarCost: 1,
+        depthCostFactor: 1.5,
+        ignoreIntrospection: true
+      }
+    })
+    const protection = armor.protect()
+
     // Setup Apollo
     this.apolloServer = new ApolloServer({
       schema: schemaWithMiddleware,
-      plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
+      ...protection,
+      plugins: [
+        ...protection.plugins,
+        ApolloServerPluginDrainHttpServer({ httpServer })
+      ],
       introspection: this.config.env !== 'production'
     })
 

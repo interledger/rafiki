@@ -35,6 +35,8 @@ import { AccessType, AccessAction } from '@interledger/open-payments'
 import { ContinueContext, CreateContext } from '../grant/routes'
 import { Interaction, InteractionState } from '../interaction/model'
 import { generateNonce } from '../shared/utils'
+import { generateGNAPErrorResponse } from '../tests/errors'
+import { GNAPErrorCode } from '../shared/gnapErrors'
 
 describe('Signature Service', (): void => {
   let deps: IocContract<AppServices>
@@ -266,8 +268,10 @@ describe('Signature Service', (): void => {
 
       await expect(tokenHttpsigMiddleware(ctx, next)).rejects.toMatchObject({
         status: 500,
-        error: 'internal_server_error',
-        message: 'internal server error'
+        ...generateGNAPErrorResponse(
+          GNAPErrorCode.RequestDenied,
+          'internal server error'
+        )
       })
       expect(tokenSpy).toHaveBeenCalledWith(managementId)
       expect(next).not.toHaveBeenCalled()
@@ -294,9 +298,11 @@ describe('Signature Service', (): void => {
         resource_server: 'test'
       }
       await expect(tokenHttpsigMiddleware(ctx, next)).rejects.toMatchObject({
-        status: 400,
-        error: 'invalid_request',
-        message: 'invalid signature headers'
+        status: 401,
+        ...generateGNAPErrorResponse(
+          GNAPErrorCode.InvalidClient,
+          'invalid signature headers'
+        )
       })
     })
 
@@ -327,7 +333,13 @@ describe('Signature Service', (): void => {
 
       await expect(
         grantContinueHttpsigMiddleware(ctx, next)
-      ).rejects.toHaveProperty('status', 401)
+      ).rejects.toMatchObject({
+        status: 401,
+        ...generateGNAPErrorResponse(
+          GNAPErrorCode.InvalidClient,
+          'invalid signature'
+        )
+      })
 
       scope.done()
     })
@@ -356,11 +368,14 @@ describe('Signature Service', (): void => {
         deps
       )
 
-      await grantContinueHttpsigMiddleware(ctx, next)
-      expect(ctx.response.status).toBe(401)
-      expect(ctx.response.body).toMatchObject({
-        error: 'invalid_continuation',
-        message: 'invalid grant'
+      await expect(
+        grantContinueHttpsigMiddleware(ctx, next)
+      ).rejects.toMatchObject({
+        status: 401,
+        ...generateGNAPErrorResponse(
+          GNAPErrorCode.InvalidContinuation,
+          'invalid grant'
+        )
       })
     })
 
@@ -386,7 +401,10 @@ describe('Signature Service', (): void => {
         grantInitiationHttpsigMiddleware(ctx, next)
       ).rejects.toMatchObject({
         status: 400,
-        message: 'invalid client'
+        ...generateGNAPErrorResponse(
+          GNAPErrorCode.InvalidClient,
+          'could not determine client'
+        )
       })
     })
 
@@ -414,8 +432,11 @@ describe('Signature Service', (): void => {
       await expect(
         grantInitiationHttpsigMiddleware(ctx, next)
       ).rejects.toMatchObject({
-        status: 400,
-        message: 'invalid signature headers'
+        status: 401,
+        ...generateGNAPErrorResponse(
+          GNAPErrorCode.InvalidClient,
+          'invalid signature headers'
+        )
       })
     })
   })
