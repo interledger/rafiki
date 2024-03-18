@@ -78,7 +78,8 @@ export const createTestApp = async (
   const authLink = setContext((_, { headers }) => {
     return {
       headers: {
-        ...headers
+        ...headers,
+        authorization: `Bearer test_file`
       }
     }
   })

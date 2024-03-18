@@ -4,6 +4,7 @@ import { v4 } from 'uuid'
 import { LiquidityConfirmDialog } from '~/components/LiquidityConfirmDialog'
 import { createWalletAddressWithdrawal } from '~/lib/api/wallet-address.server'
 import { messageStorage, setMessageAndRedirect } from '~/lib/message.server'
+import { authStorage, getApiToken } from '~/lib/auth.server'
 
 export default function WalletAddressWithdrawLiquidity() {
   const displayLiquidityAmount = useOutletContext<string>()
@@ -35,11 +36,19 @@ export async function action({ request, params }: ActionFunctionArgs) {
     })
   }
 
-  const response = await createWalletAddressWithdrawal({
-    id: v4(),
-    walletAddressId,
-    idempotencyKey: v4()
-  })
+  const authSession = await authStorage.getSession(
+    request.headers.get('cookie')
+  )
+  const apiToken = getApiToken(authSession) as string
+
+  const response = await createWalletAddressWithdrawal(
+    {
+      id: v4(),
+      walletAddressId,
+      idempotencyKey: v4()
+    },
+    apiToken
+  )
 
   if (!response?.success) {
     return setMessageAndRedirect({

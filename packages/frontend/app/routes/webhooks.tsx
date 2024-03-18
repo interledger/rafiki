@@ -10,6 +10,7 @@ import { PopoverFilter } from '~/components/Filters'
 import { Button, Table } from '~/components/ui'
 import { listWebhooks } from '~/lib/api/webhook.server'
 import { webhooksSearchParams } from '~/lib/validate.server'
+import { authStorage, getApiToken } from '~/lib/auth.server'
 import { WebhookEventType } from '~/shared/enums'
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
@@ -26,10 +27,18 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   }
 
   const { type, ...pagination } = result.data
-  const webhooks = await listWebhooks({
-    ...pagination,
-    ...(type ? { filter: { type: { in: type } } } : {})
-  })
+
+  const authSession = await authStorage.getSession(
+    request.headers.get('cookie')
+  )
+  const apiToken = getApiToken(authSession) as string
+  const webhooks = await listWebhooks(
+    {
+      ...pagination,
+      ...(type ? { filter: { type: { in: type } } } : {})
+    },
+    apiToken
+  )
 
   let previousPageUrl = '',
     nextPageUrl = ''

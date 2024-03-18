@@ -20,7 +20,7 @@ import {
   type ConfirmationDialogRef
 } from '~/components/ConfirmationDialog'
 import { Button, ErrorPanel, Input, PasswordInput } from '~/components/ui'
-import { deletePeer, getPeer, updatePeer } from '~/lib/api/peer.server'
+import { getPeer, deletePeer, updatePeer } from '~/lib/api/peer.server'
 import { messageStorage, setMessageAndRedirect } from '~/lib/message.server'
 import {
   peerGeneralInfoSchema,
@@ -29,8 +29,9 @@ import {
 } from '~/lib/validate.server'
 import type { ZodFieldErrors } from '~/shared/types'
 import { formatAmount } from '~/shared/utils'
+import { authStorage, getApiToken } from '~/lib/auth.server'
 
-export async function loader({ params }: LoaderFunctionArgs) {
+export async function loader({ params, request }: LoaderFunctionArgs) {
   const peerId = params.peerId
 
   const result = z.string().uuid().safeParse(peerId)
@@ -38,7 +39,9 @@ export async function loader({ params }: LoaderFunctionArgs) {
     throw json(null, { status: 400, statusText: 'Invalid peer ID.' })
   }
 
-  const peer = await getPeer({ id: result.data })
+  const session = await authStorage.getSession(request.headers.get('cookie'))
+  const apiToken = getApiToken(session) as string
+  const peer = await getPeer({ id: result.data }, apiToken)
 
   if (!peer) {
     throw json(null, { status: 400, statusText: 'Peer not found.' })
@@ -321,7 +324,14 @@ export async function action({ request }: ActionFunctionArgs) {
     }
   }
 
-  const session = await messageStorage.getSession(request.headers.get('cookie'))
+  const authSession = await authStorage.getSession(
+    request.headers.get('cookie')
+  )
+  const apiToken = getApiToken(authSession) as string
+
+  const messageSession = await messageStorage.getSession(
+    request.headers.get('cookie')
+  )
   const formData = await request.formData()
   const intent = formData.get('intent')
   formData.delete('intent')
@@ -338,12 +348,15 @@ export async function action({ request }: ActionFunctionArgs) {
         return json({ ...actionResponse }, { status: 400 })
       }
 
-      const response = await updatePeer({
-        ...result.data,
-        ...(result.data.maxPacketAmount
-          ? { maxPacketAmount: result.data.maxPacketAmount }
-          : { maxPacketAmount: undefined })
-      })
+      const response = await updatePeer(
+        {
+          ...result.data,
+          ...(result.data.maxPacketAmount
+            ? { maxPacketAmount: result.data.maxPacketAmount }
+            : { maxPacketAmount: undefined })
+        },
+        apiToken
+      )
 
       if (!response?.success) {
         actionResponse.errors.general.message = [
@@ -363,24 +376,27 @@ export async function action({ request }: ActionFunctionArgs) {
         return json({ ...actionResponse }, { status: 400 })
       }
 
-      const response = await updatePeer({
-        id: result.data.id,
-        http: {
-          ...(result.data.incomingAuthTokens
-            ? {
-                incoming: {
-                  authTokens: result.data.incomingAuthTokens
-                    ?.replace(/ /g, '')
-                    .split(',')
+      const response = await updatePeer(
+        {
+          id: result.data.id,
+          http: {
+            ...(result.data.incomingAuthTokens
+              ? {
+                  incoming: {
+                    authTokens: result.data.incomingAuthTokens
+                      ?.replace(/ /g, '')
+                      .split(',')
+                  }
                 }
-              }
-            : {}),
-          outgoing: {
-            endpoint: result.data.outgoingEndpoint,
-            authToken: result.data.outgoingAuthToken
+              : {}),
+            outgoing: {
+              endpoint: result.data.outgoingEndpoint,
+              authToken: result.data.outgoingAuthToken
+            }
           }
-        }
-      })
+        },
+        apiToken
+      )
 
       if (!response?.success) {
         actionResponse.errors.general.message = [
@@ -395,7 +411,7 @@ export async function action({ request }: ActionFunctionArgs) {
       const result = uuidSchema.safeParse(Object.fromEntries(formData))
       if (!result.success) {
         return setMessageAndRedirect({
-          session,
+          session: messageSession,
           message: {
             content: 'Invalid peer ID.',
             type: 'error'
@@ -404,10 +420,13 @@ export async function action({ request }: ActionFunctionArgs) {
         })
       }
 
-      const response = await deletePeer({ input: { id: result.data.id } })
+      const response = await deletePeer(
+        { input: { id: result.data.id } },
+        apiToken
+      )
       if (!response?.success) {
         return setMessageAndRedirect({
-          session,
+          session: messageSession,
           message: {
             content: 'Could not delete peer.',
             type: 'error'
@@ -417,7 +436,7 @@ export async function action({ request }: ActionFunctionArgs) {
       }
 
       return setMessageAndRedirect({
-        session,
+        session: messageSession,
         message: {
           content: 'Peer was deleted.',
           type: 'success'
@@ -430,7 +449,7 @@ export async function action({ request }: ActionFunctionArgs) {
   }
 
   return setMessageAndRedirect({
-    session,
+    session: messageSession,
     message: {
       content: 'Peer information was updated.',
       type: 'success'

@@ -390,6 +390,7 @@ export async function getWalletAddressPayments(
       }
     }
   `
+
   return apolloClient
     .query({
       query,

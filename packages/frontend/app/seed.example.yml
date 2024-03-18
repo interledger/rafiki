@@ -1,0 +1,7 @@
+clients:
+- id: 'happy-life-client'
+  name: 'happy-life'
+  redirectUri: 'http://localhost:4010/callback'
+- id: 'cloud-nine-client'
+  name: 'cloud-nine'
+  redirectUri: 'http://localhost:3010/callback'

@@ -4,6 +4,7 @@ import { Badge, PageHeader } from '~/components'
 import { Button, Table } from '~/components/ui'
 import { listWalletAddresses } from '~/lib/api/wallet-address.server'
 import { paginationSchema } from '~/lib/validate.server'
+import { authStorage, getApiToken } from '~/lib/auth.server'
 import { badgeColorByWalletAddressStatus } from '~/shared/utils'
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
@@ -16,9 +17,17 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     throw json(null, { status: 400, statusText: 'Invalid pagination.' })
   }
 
-  const walletAddresses = await listWalletAddresses({
-    ...pagination.data
-  })
+  const authSession = await authStorage.getSession(
+    request.headers.get('cookie')
+  )
+  const apiToken = getApiToken(authSession) as string
+
+  const walletAddresses = await listWalletAddresses(
+    {
+      ...pagination.data
+    },
+    apiToken
+  )
 
   let previousPageUrl = '',
     nextPageUrl = ''

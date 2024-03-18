@@ -1,3 +1,4 @@
+import type { LoaderFunctionArgs } from '@remix-run/node'
 import { json, type ActionFunctionArgs } from '@remix-run/node'
 import {
   Form,
@@ -9,13 +10,18 @@ import { PageHeader } from '~/components'
 import { Button, ErrorPanel, Input, Select } from '~/components/ui'
 import { loadAssets } from '~/lib/api/asset.server'
 import { createWalletAddress } from '~/lib/api/wallet-address.server'
+import { authStorage, getApiToken } from '~/lib/auth.server'
 import { messageStorage, setMessageAndRedirect } from '~/lib/message.server'
 import { createWalletAddressSchema } from '~/lib/validate.server'
 import type { ZodFieldErrors } from '~/shared/types'
 import { getOpenPaymentsUrl } from '~/shared/utils'
 
-export async function loader() {
-  return json({ assets: await loadAssets() })
+export async function loader({ request }: LoaderFunctionArgs) {
+  const authSession = await authStorage.getSession(
+    request.headers.get('cookie')
+  )
+  const apiToken = getApiToken(authSession) as string
+  return json({ assets: await loadAssets(apiToken) })
 }
 
 export default function CreateWalletAddressPage() {
@@ -105,11 +111,19 @@ export async function action({ request }: ActionFunctionArgs) {
     return json({ errors }, { status: 400 })
   }
 
-  const response = await createWalletAddress({
-    url: `${getOpenPaymentsUrl()}${result.data.name}`,
-    publicName: result.data.publicName,
-    assetId: result.data.asset
-  })
+  const authSession = await authStorage.getSession(
+    request.headers.get('cookie')
+  )
+  const apiToken = getApiToken(authSession) as string
+
+  const response = await createWalletAddress(
+    {
+      url: `${getOpenPaymentsUrl()}${result.data.name}`,
+      publicName: result.data.publicName,
+      assetId: result.data.asset
+    },
+    apiToken
+  )
 
   if (!response?.success) {
     errors.message = [
@@ -118,10 +132,12 @@ export async function action({ request }: ActionFunctionArgs) {
     return json({ errors }, { status: 400 })
   }
 
-  const session = await messageStorage.getSession(request.headers.get('cookie'))
+  const messageSession = await messageStorage.getSession(
+    request.headers.get('cookie')
+  )
 
   return setMessageAndRedirect({
-    session,
+    session: messageSession,
     message: {
       content: 'Wallet address was created.',
       type: 'success'

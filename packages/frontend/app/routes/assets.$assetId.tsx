@@ -18,11 +18,12 @@ import { Button, ErrorPanel, Input } from '~/components/ui'
 import { FeeType } from '~/generated/graphql'
 import { getAssetInfo, updateAsset, setFee } from '~/lib/api/asset.server'
 import { messageStorage, setMessageAndRedirect } from '~/lib/message.server'
+import { authStorage, getApiToken } from '~/lib/auth.server'
 import { updateAssetSchema, setAssetFeeSchema } from '~/lib/validate.server'
 import type { ZodFieldErrors } from '~/shared/types'
 import { formatAmount } from '~/shared/utils'
 
-export async function loader({ params }: LoaderFunctionArgs) {
+export async function loader({ request, params }: LoaderFunctionArgs) {
   const assetId = params.assetId
 
   const result = z.string().uuid().safeParse(assetId)
@@ -30,7 +31,12 @@ export async function loader({ params }: LoaderFunctionArgs) {
     throw json(null, { status: 400, statusText: 'Invalid asset ID.' })
   }
 
-  const asset = await getAssetInfo({ id: result.data })
+  const authSession = await authStorage.getSession(
+    request.headers.get('cookie')
+  )
+  const apiToken = getApiToken(authSession) as string
+
+  const asset = await getAssetInfo({ id: result.data }, apiToken)
 
   if (!asset) {
     throw json(null, { status: 404, statusText: 'Asset not found.' })
@@ -205,6 +211,11 @@ export default function ViewAssetPage() {
 }
 
 export async function action({ request }: ActionFunctionArgs) {
+  const authSession = await authStorage.getSession(
+    request.headers.get('cookie')
+  )
+  const apiToken = getApiToken(authSession) as string
+
   const actionResponse: {
     errors: {
       general: {
@@ -242,12 +253,15 @@ export async function action({ request }: ActionFunctionArgs) {
         return json({ ...actionResponse }, { status: 400 })
       }
 
-      const response = await updateAsset({
-        ...result.data,
-        ...(result.data.withdrawalThreshold
-          ? { withdrawalThreshold: result.data.withdrawalThreshold }
-          : { withdrawalThreshold: undefined })
-      })
+      const response = await updateAsset(
+        {
+          ...result.data,
+          ...(result.data.withdrawalThreshold
+            ? { withdrawalThreshold: result.data.withdrawalThreshold }
+            : { withdrawalThreshold: undefined })
+        },
+        apiToken
+      )
 
       if (!response?.success) {
         actionResponse.errors.general.message = [
@@ -266,14 +280,17 @@ export async function action({ request }: ActionFunctionArgs) {
         return json({ ...actionResponse }, { status: 400 })
       }
 
-      const response = await setFee({
-        assetId: result.data.assetId,
-        type: FeeType.Sending,
-        fee: {
-          fixed: result.data.fixed,
-          basisPoints: result.data.basisPoints
-        }
-      })
+      const response = await setFee(
+        {
+          assetId: result.data.assetId,
+          type: FeeType.Sending,
+          fee: {
+            fixed: result.data.fixed,
+            basisPoints: result.data.basisPoints
+          }
+        },
+        apiToken
+      )
 
       if (!response?.success) {
         actionResponse.errors.sendingFee.message = [

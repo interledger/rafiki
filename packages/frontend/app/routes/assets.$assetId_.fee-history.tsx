@@ -1,5 +1,6 @@
 import { json, type LoaderFunctionArgs } from '@remix-run/node'
 import { paginationSchema } from '~/lib/validate.server'
+import { authStorage, getApiToken } from '~/lib/auth.server'
 import { getAssetWithFees } from '~/lib/api/asset.server'
 import { useLoaderData, useNavigate } from '@remix-run/react'
 import { PageHeader } from '~/components'
@@ -19,10 +20,18 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
     throw json(null, { status: 400, statusText: 'Invalid pagination.' })
   }
 
-  const asset = await getAssetWithFees({
-    ...pagination.data,
-    id: assetId
-  })
+  const authSession = await authStorage.getSession(
+    request.headers.get('cookie')
+  )
+  const apiToken = getApiToken(authSession) as string
+
+  const asset = await getAssetWithFees(
+    {
+      ...pagination.data,
+      id: assetId
+    },
+    apiToken
+  )
 
   if (!asset) {
     throw json(null, { status: 404, statusText: 'Asset not found.' })

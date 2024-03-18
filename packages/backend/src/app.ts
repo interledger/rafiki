@@ -1,6 +1,6 @@
 import { join } from 'path'
 import http, { Server } from 'http'
-import { ParsedUrlQuery } from 'querystring'
+import querystring, { ParsedUrlQuery } from 'querystring'
 import { Client as TigerbeetleClient } from 'tigerbeetle-node'
 
 import { IocContract } from '@adonisjs/fold'
@@ -203,6 +203,7 @@ type ContextType<T> = T extends (
   : never
 
 const WALLET_ADDRESS_PATH = '/:walletAddressPath+'
+const API_TOKEN_EXCEPTIONS = ['seed_file', 'test_file']
 
 export interface AppServices {
   logger: Promise<Logger>
@@ -348,6 +349,7 @@ export class App {
 
     await this.apolloServer.start()
 
+    koa.use(cors())
     koa.use(bodyParser())
 
     koa.use(
@@ -365,6 +367,31 @@ export class App {
         }
       }
     )
+
+    koa.use(async (ctx, next: Koa.Next): Promise<void> => {
+      const parts = ctx.request.headers.authorization?.split(' ')
+      if (parts?.length !== 2 || parts[0] !== 'Bearer') {
+        ctx.throw(401, 'Unauthorized')
+        return
+      }
+      const token = parts[1]
+      if ((process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test') && API_TOKEN_EXCEPTIONS.includes(token)) {
+        return next()
+      }
+
+      const axios = await this.container.use('axios')
+      // TODO: Replace with env variable
+      const introspection = await axios.post(
+        'http://hydra:4445/admin/oauth2/introspect',
+        querystring.stringify({ token })
+      )
+      if (introspection.status !== 200) {
+        ctx.throw(401, 'Unauthorized')
+        return
+      }
+
+      return next()
+    })
 
     koa.use(
       koaMiddleware(this.apolloServer, {
