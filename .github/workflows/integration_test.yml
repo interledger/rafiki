@@ -1,0 +1,33 @@
+on:
+  push:
+    branches:
+      - '!main'
+  pull_request:
+    types:
+      - opened
+      - synchronize
+
+name: Integration Tests
+
+jobs:
+  checkout:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/workflows/rafiki/env-setup
+
+  setup-hosts:
+    runs-on: ubuntu-22.04
+    needs: checkout
+    steps:
+      - name: Add host.docker.internal to hosts file
+        run: echo "127.0.0.1 host.docker.internal" | sudo tee -a /etc/hosts
+
+  test:
+    runs-on: ubuntu-22.04
+    needs: checkout
+    timeout-minutes: 10 # TODO: lower?
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/workflows/rafiki/env-setup
+      - run: pnpm --filter integration run-tests
