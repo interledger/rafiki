@@ -63,6 +63,7 @@ describe('Webhook Service', (): void => {
 
   beforeAll(async (): Promise<void> => {
     Config.signatureSecret = WEBHOOK_SECRET
+    Config.webhookMaxRetry = 10
     deps = await initIocContainer(Config)
     appContainer = await createTestApp(deps)
     knex = appContainer.knex
@@ -389,11 +390,18 @@ describe('Webhook Service', (): void => {
     })
 
     test('Does not send event if webhookMaxAttempts is reached', async (): Promise<void> => {
+      const scope = nock(webhookUrl.origin)
       await event.$query(knex).patch({
         attempts: 10
       })
       await expect(webhookService.getEvent(event.id)).resolves.toEqual(event)
       await expect(webhookService.processNext()).resolves.toBeUndefined()
+      expect(
+        nock.emitter.on('no match', (_req) => {
+          return true
+        })
+      ).toBeTruthy()
+      scope.done()
     })
   })
 })
