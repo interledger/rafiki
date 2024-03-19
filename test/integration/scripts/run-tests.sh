@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # This script runs the integration tests. It starts the test environment, runs the tests,
-# saves the container logs to a file, and stops the containers.
+# and stops the containers. It saves the container logs to a file and edits /etc/hosts.
 # Usage:
 #   ./script.sh            # Run the script with default options
 #   ./script.sh --build    # Re-build the docker images (-b or --build)
