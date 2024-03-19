@@ -127,6 +127,7 @@ export const Config = {
   webhookWorkerIdle: envInt('WEBHOOK_WORKER_IDLE', 200), // milliseconds
   webhookUrl: envString('WEBHOOK_URL', 'http://127.0.0.1:4001/webhook'),
   webhookTimeout: envInt('WEBHOOK_TIMEOUT', 2000), // milliseconds
+  webhookMaxRetry: envInt('WEBHOOK_MAX_RETRY', 10),
 
   withdrawalThrottleDelay:
     process.env.WITHDRAWAL_THROTTLE_DELAY == null
