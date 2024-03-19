@@ -9,6 +9,8 @@ on:
 
 name: Integration Tests
 
+# TODO: these show as seperate checks in PR... shouldn't 
+
 jobs:
   checkout:
     runs-on: ubuntu-22.04
@@ -30,7 +32,5 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/workflows/rafiki/env-setup
-      - run: docker-compose -v
-      - run: docker compose version
       - run: pnpm --filter integration build:deps
       - run: pnpm --filter integration run-tests
