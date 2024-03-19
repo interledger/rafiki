@@ -24,7 +24,6 @@ import type {
 } from '~/generated/graphql'
 import { getApolloClient } from '../apollo.server'
 import { maybeThrowUnauthenticatedError } from '../../shared/utils'
-import { maybe } from '@apollo/client/utilities'
 
 export const getPeer = async (args: QueryPeerArgs, apiToken: string) => {
   try {
@@ -92,7 +91,7 @@ export const listPeers = async (args: QueryPeersArgs, apiToken: string) => {
                     endpoint
                   }
                 }
-                asset {S
+                asset {
                   code
                   scale
                 }

@@ -375,7 +375,11 @@ export class App {
         return
       }
       const token = parts[1]
-      if ((process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test') && API_TOKEN_EXCEPTIONS.includes(token)) {
+      if (
+        (process.env.NODE_ENV === 'development' ||
+          process.env.NODE_ENV === 'test') &&
+        API_TOKEN_EXCEPTIONS.includes(token)
+      ) {
         return next()
       }
 
