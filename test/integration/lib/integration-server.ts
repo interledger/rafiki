@@ -54,9 +54,7 @@ export class IntegrationServer {
       }
     })
 
-    this.server = this.app.listen(port, () => {
-      console.log(`Integration server listening on port ${port}`)
-    })
+    this.server = this.app.listen(port)
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
