@@ -390,18 +390,18 @@ describe('Webhook Service', (): void => {
     })
 
     test('Does not send event if webhookMaxAttempts is reached', async (): Promise<void> => {
-      const scope = nock(webhookUrl.origin)
+      let requests = 0
+      nock(webhookUrl.origin)
+        .post('/')
+        .reply(200, () => {
+          requests++
+        })
       await event.$query(knex).patch({
-        attempts: 10
+        attempts: Config.webhookMaxRetry
       })
       await expect(webhookService.getEvent(event.id)).resolves.toEqual(event)
       await expect(webhookService.processNext()).resolves.toBeUndefined()
-      expect(
-        nock.emitter.on('no match', (_req) => {
-          return true
-        })
-      ).toBeTruthy()
-      scope.done()
+      expect(requests).toBe(0)
     })
   })
 })
