@@ -42,7 +42,9 @@ export class MockASE {
   }
 
   private async initAsync() {
-    await setupFromSeed(this.config, this.apolloClient, this.accounts)
+    await setupFromSeed(this.config, this.apolloClient, this.accounts, {
+      logLevel: 'debug'
+    })
 
     this.opClient = await createAuthenticatedClient({
       privateKey: this.config.key,
