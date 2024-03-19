@@ -31,5 +31,6 @@ jobs:
       - uses: actions/checkout@v4
       - uses: ./.github/workflows/rafiki/env-setup
       - run: docker-compose -v
+      - run: docker compose version
       - run: pnpm --filter integration build:deps
       - run: pnpm --filter integration run-tests
