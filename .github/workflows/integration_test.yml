@@ -30,4 +30,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/workflows/rafiki/env-setup
+      - run: docker-compose -v
+      - run: pnpm --filter integration build:deps
       - run: pnpm --filter integration run-tests
