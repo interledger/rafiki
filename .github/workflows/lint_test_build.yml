@@ -84,8 +84,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/workflows/rafiki/env-setup
-      - run: pnpm --filter mock-account-servicing-entity typecheck
       - run: pnpm --filter mock-account-servicing-entity build
+      - run: pnpm --filter mock-account-servicing-entity typecheck
 
   token-introspection:
     runs-on: ubuntu-22.04
