@@ -19,6 +19,7 @@ services:
       OPEN_PAYMENTS_URL: ${CLOUD_NINE_OPEN_PAYMENTS_URL:-https://cloud-nine-wallet-backend}
       AUTH_SERVER_DOMAIN: ${CLOUD_NINE_AUTH_SERVER_DOMAIN:-http://localhost:3006}
       TESTNET_AUTOPEER_URL: ${TESTNET_AUTOPEER_URL}
+      GRAPHQL_URL: http://cloud-nine-wallet-backend:3001/graphql
     volumes:
       - ../cloud-nine-wallet/seed.yml:/workspace/seed.yml
       - ../cloud-nine-wallet/private-key.pem:/workspace/private-key.pem
