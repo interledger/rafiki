@@ -10,6 +10,10 @@ post {
   auth: none
 }
 
+headers {
+  Authorization: Bearer {{AdminApiToken}}
+}
+
 body:graphql {
   query GetOutgoingPayment($id: String!) {
   outgoingPayment(id: $id) {

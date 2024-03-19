@@ -1,4 +1,16 @@
+import { json, type LoaderFunctionArgs } from '@remix-run/node'
+import { useLoaderData } from '@remix-run/react'
+
+import { authStorage, getApiToken } from '~/lib/auth.server'
+
+export const loader = async ({ request }: LoaderFunctionArgs) => {
+  const session = await authStorage.getSession(request.headers.get('cookie'))
+  const apiToken = getApiToken(session) as string
+  return json({ apiToken })
+}
+
 export default function Index() {
+  const { apiToken } = useLoaderData<typeof loader>()
   return (
     <div className='pt-4 flex flex-col'>
       <div className='flex flex-col rounded-md bg-offwhite px-6 text-center min-h-[calc(100vh-7rem)] md:min-h-[calc(100vh-3rem)]'>
@@ -19,6 +31,9 @@ export default function Index() {
               https://rafiki.dev
             </a>
           </p>
+          <>
+            {apiToken ? (<p>Your API Token is: {apiToken}</p>) : null}
+          </>
         </div>
       </div>
     </div>

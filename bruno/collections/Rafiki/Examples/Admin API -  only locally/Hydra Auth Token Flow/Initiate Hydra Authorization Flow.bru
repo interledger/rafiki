@@ -1,0 +1,19 @@
+meta {
+  name: Initiate Hydra Authorization Flow
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{HydraHost}}/oauth2/auth?response_type=code&client_id=cloud-nine-client&redirect_uri=http://localhost:3010/callback&scope=full_access&state=ab4R32wFF
+  body: none
+  auth: none
+}
+
+query {
+  response_type: code
+  client_id: cloud-nine-client
+  redirect_uri: http://localhost:3010/callback
+  scope: full_access
+  state: ab4R32wFF
+}

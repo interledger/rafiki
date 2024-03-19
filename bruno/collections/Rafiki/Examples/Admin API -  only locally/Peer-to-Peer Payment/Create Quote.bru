@@ -10,6 +10,10 @@ post {
   auth: none
 }
 
+headers {
+  Authorization: Bearer {{AdminApiToken}}
+}
+
 body:graphql {
   mutation CreateQuote($input: CreateQuoteInput!) {
     createQuote(input: $input) {
