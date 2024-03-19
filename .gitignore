@@ -53,6 +53,7 @@ build
 
 # Env variables
 .env
+!test/**/.env
 
 # AWS Lambda
 *.zip

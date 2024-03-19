@@ -1,25 +1,45 @@
-import {
-  CONFIG,
-  type Config,
-  type Account,
-  type Peering
-} from './parse_config.server'
-import {
-  createAsset,
-  createPeer,
-  depositPeerLiquidity,
-  createWalletAddress,
-  createWalletAddressKey,
-  setFee,
-  depositAssetLiquidity,
-  createAutoPeer
-} from './requesters'
 import { v4 } from 'uuid'
-import { mockAccounts } from './accounts.server'
+import { ApolloClient, NormalizedCacheObject } from '@apollo/client'
+import createLogger, { LevelWithSilent, LoggerOptions } from 'pino'
 import { generateJwk } from '@interledger/http-signature-utils'
-import { Asset, FeeType } from 'generated/graphql'
+import { createRequesters } from './requesters'
+import { Config, Account, Peering } from './types'
+import { Asset, FeeType } from './generated/graphql'
+import { AccountProvider } from './account-provider'
 
-export async function setupFromSeed(config: Config): Promise<void> {
+interface SetupFromSeedOptions {
+  logLevel?: LevelWithSilent
+  pinoPretty?: boolean
+}
+
+export async function setupFromSeed(
+  config: Config,
+  apolloClient: ApolloClient<NormalizedCacheObject>,
+  mockAccounts: AccountProvider,
+  options: SetupFromSeedOptions = {}
+): Promise<void> {
+  const { logLevel = 'info', pinoPretty = false } = options
+
+  const loggerOptions: LoggerOptions<never> = {
+    level: logLevel
+  }
+
+  if (pinoPretty) {
+    loggerOptions.transport = { target: 'pino-pretty' }
+  }
+
+  const logger = createLogger(loggerOptions)
+  const {
+    createAsset,
+    depositAssetLiquidity,
+    setFee,
+    createPeer,
+    depositPeerLiquidity,
+    createAutoPeer,
+    createWalletAddress,
+    createWalletAddressKey
+  } = createRequesters(apolloClient, logger)
+
   const assets: Record<string, Asset> = {}
   for (const { code, scale, liquidity, liquidityThreshold } of config.seed
     .assets) {
@@ -35,7 +55,7 @@ export async function setupFromSeed(config: Config): Promise<void> {
     )
 
     assets[code] = asset
-    console.log(JSON.stringify({ asset, initialLiquidity }, null, 2))
+    logger.debug({ asset, initialLiquidity })
 
     const { fees } = config.seed
     const fee = fees.find((fee) => fee.asset === code && fee.scale == scale)
@@ -69,18 +89,18 @@ export async function setupFromSeed(config: Config): Promise<void> {
     })
   )
 
-  console.log(JSON.stringify(peerResponses, null, 2))
+  logger.debug(peerResponses)
 
-  if (CONFIG.testnetAutoPeerUrl) {
-    console.log('autopeering url: ', CONFIG.testnetAutoPeerUrl)
+  if (config.testnetAutoPeerUrl) {
+    logger.debug('autopeering url: ', config.testnetAutoPeerUrl)
     const autoPeerResponse = await createAutoPeer(
-      CONFIG.testnetAutoPeerUrl,
+      config.testnetAutoPeerUrl,
       assets[peeringAsset].id
     ).catch((e) => {
-      console.log('error on autopeering: ', e)
+      logger.debug('error on autopeering: ', e)
       return
     })
-    console.log(JSON.stringify(autoPeerResponse, null, 2))
+    logger.debug(autoPeerResponse)
   }
 
   // Clear the accounts before seeding.
@@ -109,10 +129,10 @@ export async function setupFromSeed(config: Config): Promise<void> {
         return
       }
 
-      console.log('hostname: ', CONFIG.publicHost)
+      logger.debug('hostname: ', config.publicHost)
       const walletAddress = await createWalletAddress(
         account.name,
-        `${CONFIG.publicHost}/${account.path}`,
+        `${config.publicHost}/${account.path}`,
         accountAsset.id
       )
 
@@ -133,16 +153,11 @@ export async function setupFromSeed(config: Config): Promise<void> {
       return walletAddress
     })
   )
-  console.log('seed complete')
-  console.log(JSON.stringify(accountResponses, null, 2))
-  const hostname = new URL(CONFIG.publicHost).hostname
+  logger.debug('seed complete')
+  logger.debug(accountResponses)
+  const hostname = new URL(config.publicHost).hostname
   const envVarStrings = config.seed.accounts.map((account) => {
-    return `${account.brunoEnvVar}: ${CONFIG.publicHost}/${account.path} hostname: ${hostname}`
+    return `${account.brunoEnvVar}: ${config.publicHost}/${account.path} hostname: ${hostname}`
   })
-  console.log(envVarStrings.join('\n'))
-}
-
-export async function runSeed(): Promise<void> {
-  console.log('calling run_seed')
-  return setupFromSeed(CONFIG)
+  logger.debug(envVarStrings)
 }
