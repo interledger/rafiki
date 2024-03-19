@@ -50,6 +50,12 @@ jobs:
       - uses: ./.github/workflows/rafiki/env-setup
       - run: pnpm --filter backend build:deps
       - run: NODE_OPTIONS=--max-old-space-size=4096 pnpm --filter backend test:ci
+      - name: AsyncAPI extension
+        run: |
+          echo "{\"extends\":[\"spectral:oas\",\"spectral:asyncapi\"]}" >> .spectral.json
+      - name: Validate Open API specs
+        run: |
+          npx @stoplight/spectral-cli lint ./packages/backend/openapi/specs/webhooks.yaml
 
   frontend:
     runs-on: ubuntu-22.04
@@ -75,7 +81,7 @@ jobs:
           echo "{\"extends\":[\"spectral:oas\",\"spectral:asyncapi\"]}" >> .spectral.json
       - name: Validate Open API specs
         run: |
-          npx @stoplight/spectral-cli lint ./packages/auth/openapi/*.yaml
+          npx @stoplight/spectral-cli lint ./packages/auth/openapi/specs/id-provider.yaml
 
   mock-account-servicing-entity:
     runs-on: ubuntu-22.04
@@ -100,7 +106,7 @@ jobs:
           echo "{\"extends\":[\"spectral:oas\",\"spectral:asyncapi\"]}" >> .spectral.json
       - name: Validate Open API specs
         run: |
-          npx @stoplight/spectral-cli lint ./packages/token-introspection/openapi/*.yaml
+          npx @stoplight/spectral-cli lint ./packages/token-introspection/openapi/specs/token-introspection.yaml
 
   build:
     runs-on: ubuntu-22.04

@@ -7,10 +7,6 @@ ENV PATH="$PNPM_HOME:$PATH"
 
 RUN corepack enable
 RUN corepack prepare pnpm@8.7.4 --activate
-RUN apk add --no-cache \
-    python3 \
-    make \
-    g++
 
 COPY pnpm-lock.yaml ./
 
@@ -36,7 +32,6 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
 FROM base AS builder   
 
 COPY package.json pnpm-workspace.yaml .npmrc tsconfig.json tsconfig.build.json ./
-COPY openapi ./openapi
 COPY packages/auth ./packages/auth
 COPY packages/token-introspection ./packages/token-introspection
 
@@ -57,9 +52,7 @@ COPY --from=prod-deps /home/rafiki/packages/auth/package.json ./packages/auth/pa
 COPY --from=prod-deps /home/rafiki/packages/token-introspection/node_modules ./packages/token-introspection/node_modules
 COPY --from=prod-deps /home/rafiki/packages/token-introspection/package.json ./packages/token-introspection/package.json
 
-COPY --from=builder /home/rafiki/openapi ./openapi
 COPY --from=builder /home/rafiki/packages/auth/migrations/ ./packages/auth/migrations
-COPY --from=builder /home/rafiki/packages/token-introspection/src/openapi/token-introspection.yaml ./packages/token-introspection/src/openapi/token-introspection.yaml
 COPY --from=builder /home/rafiki/packages/auth/dist ./packages/auth/dist
 COPY --from=builder /home/rafiki/packages/token-introspection/dist ./packages/token-introspection/dist
 

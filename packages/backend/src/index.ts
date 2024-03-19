@@ -2,13 +2,15 @@ import { Ioc, IocContract } from '@adonisjs/fold'
 import { Redis } from 'ioredis'
 import { knex } from 'knex'
 import { Model } from 'objection'
-import path from 'path'
 import createLogger from 'pino'
 import { createClient } from 'tigerbeetle-node'
 import { createClient as createIntrospectionClient } from 'token-introspection'
 
-import { createAuthenticatedClient as createOpenPaymentsClient } from '@interledger/open-payments'
-import { createOpenAPI } from '@interledger/openapi'
+import {
+  createAuthenticatedClient as createOpenPaymentsClient,
+  getResourceServerOpenAPI,
+  getWalletAddressServerOpenAPI
+} from '@interledger/open-payments'
 import { StreamServer } from '@interledger/stream-receiver'
 import axios from 'axios'
 import { createAccountingService as createPsqlAccountingService } from './accounting/psql/service'
@@ -153,12 +155,9 @@ export function initIocContainer(
   }
 
   container.singleton('openApi', async () => {
-    const resourceServerSpec = await createOpenAPI(
-      path.resolve(__dirname, './openapi/resource-server.yaml')
-    )
-    const walletAddressServerSpec = await createOpenAPI(
-      path.resolve(__dirname, './openapi/wallet-address-server.yaml')
-    )
+    const resourceServerSpec = await getResourceServerOpenAPI()
+    const walletAddressServerSpec = await getWalletAddressServerOpenAPI()
+
     return {
       resourceServerSpec,
       walletAddressServerSpec
