@@ -5,7 +5,20 @@ export type SPSPWalletAddressContext = WalletAddressContext &
     incomingPayment?: never
   }
 
-export const spspMiddleware = async (
+export function createSpspMiddleware(spspEnabled: boolean) {
+  if (spspEnabled) {
+    return spspMiddleware
+  } else {
+    return async (
+      _ctx: SPSPWalletAddressContext,
+      next: () => Promise<unknown>
+    ): Promise<void> => {
+      await next()
+    }
+  }
+}
+
+const spspMiddleware = async (
   ctx: SPSPWalletAddressContext,
   next: () => Promise<unknown>
 ): Promise<void> => {

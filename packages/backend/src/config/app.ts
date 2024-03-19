@@ -160,7 +160,8 @@ export const Config = {
   incomingPaymentExpiryMaxMs: envInt(
     'INCOMING_PAYMENT_EXPIRY_MAX_MS',
     2592000000
-  ) // 30 days
+  ), // 30 days
+  spspEnabled: envBool('ENABLE_SPSP', true)
 }
 
 function parseRedisTlsConfig(

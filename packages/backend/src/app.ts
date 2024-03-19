@@ -35,7 +35,7 @@ import {
   authenticatedStatusMiddleware
 } from './open_payments/auth/middleware'
 import { RatesService } from './rates/service'
-import { spspMiddleware } from './payment-method/ilp/spsp/middleware'
+import { createSpspMiddleware } from './payment-method/ilp/spsp/middleware'
 import { SPSPRoutes } from './payment-method/ilp/spsp/routes'
 import {
   IncomingPaymentRoutes,
@@ -603,7 +603,7 @@ export class App {
     router.get(
       WALLET_ADDRESS_PATH,
       createWalletAddressMiddleware(),
-      spspMiddleware,
+      createSpspMiddleware(this.config.spspEnabled),
       createValidatorMiddleware<WalletAddressContext>(walletAddressServerSpec, {
         path: '/',
         method: HttpMethod.GET
