@@ -9,8 +9,6 @@ on:
 
 name: Integration Tests
 
-# TODO: these show as seperate checks in PR... shouldn't 
-
 jobs:
   test:
     runs-on: ubuntu-22.04
