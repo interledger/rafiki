@@ -1,3 +1,4 @@
+import { Errors } from 'ilp-packet'
 import { ZeroCopyIlpPrepare } from '../..'
 import { AccountAlreadyExistsError } from '../../../../../../accounting/errors'
 import { LiquidityAccountType } from '../../../../../../accounting/service'
@@ -144,6 +145,7 @@ describe('Account Middleware', () => {
     await expect(middleware(ctx, next)).rejects.toThrow(
       'unknown destination account'
     )
+    await expect(middleware(ctx, next)).rejects.toThrow(Errors.UnreachableError)
   })
 
   test('sets disabled destination account if amount is 0', async () => {
