@@ -22,6 +22,12 @@ import { messageStorage, type Message } from './lib/message.server'
 import tailwind from './styles/tailwind.css'
 import { getOpenPaymentsUrl } from './shared/utils'
 import { PublicEnv, type PublicEnvironment } from './PublicEnv'
+import {
+  isLoggedIn,
+  redirectIfUnauthorizedAccess
+} from './lib/kratos_checks.server'
+import variables from './utils/envConfig.server'
+import axios from 'axios'
 
 export const meta: MetaFunction = () => [
   { title: 'Rafiki Admin' },
@@ -30,7 +36,25 @@ export const meta: MetaFunction = () => [
 ]
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
-  const session = await messageStorage.getSession(request.headers.get('cookie'))
+  const cookies = request.headers.get('cookie')
+  await redirectIfUnauthorizedAccess(request.url, cookies)
+
+  let logoutUrl = ''
+  const loggedIn = await isLoggedIn(cookies)
+  if (loggedIn) {
+    const response = await axios.get(
+      `${variables.kratosContainerPublicUrl}/self-service/logout/browser`,
+      {
+        headers: {
+          cookie: cookies
+        },
+        withCredentials: true
+      }
+    )
+    //TODO handle response, set logoutUrl blank if error here, but throw if user is signed in
+    logoutUrl = response.data.logout_url
+  }
+  const session = await messageStorage.getSession(cookies)
   const message = session.get('message') as Message
 
   const publicEnv: PublicEnvironment = {
@@ -38,11 +62,11 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   }
 
   if (!message) {
-    return json({ message: null, publicEnv })
+    return json({ message: null, publicEnv, logoutUrl, loggedIn })
   }
 
   return json(
-    { message, publicEnv },
+    { message, publicEnv, logoutUrl, loggedIn },
     {
       headers: {
         'Set-Cookie': await messageStorage.destroySession(session, {
@@ -54,7 +78,8 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 }
 
 export default function App() {
-  const { message, publicEnv } = useLoaderData<typeof loader>()
+  const { message, publicEnv, logoutUrl, loggedIn } =
+    useLoaderData<typeof loader>()
   const [snackbarOpen, setSnackbarOpen] = useState(false)
 
   useEffect(() => {
@@ -75,8 +100,10 @@ export default function App() {
       </head>
       <body className='h-full text-tealish'>
         <div className='min-h-full'>
-          <Sidebar />
-          <div className='pt-20 md:pt-0 flex md:pl-60 flex-1 flex-col'>
+          {loggedIn && <Sidebar logoutUrl={logoutUrl} />}
+          <div
+            className={`pt-20 md:pt-0 flex ${loggedIn ? 'md:pl-60' : ''} flex-1 flex-col`}
+          >
             <main className='pb-8 px-4'>
               <Outlet />
             </main>
@@ -101,6 +128,7 @@ export default function App() {
 export function ErrorBoundary() {
   const error = useRouteError()
 
+  // TODO fix logout situation on error page
   const ErrorPage = ({ children }: { children: ReactNode }) => {
     return (
       <html
@@ -113,7 +141,7 @@ export function ErrorBoundary() {
         </head>
         <body className='h-full text-tealish'>
           <div className='min-h-full'>
-            <Sidebar />
+            <Sidebar logoutUrl='' />
             <div className='flex pt-20 md:pt-0 md:pl-60 flex-1 flex-col'>
               <main className='grid min-h-screen place-items-center'>
                 {children}
