@@ -28,8 +28,16 @@ describe('Integration tests', (): void => {
   let hlb: MockASE
 
   beforeAll(async () => {
-    c9 = await MockASE.create(C9_CONFIG)
-    hlb = await MockASE.create(HLB_CONFIG)
+    try {
+      c9 = await MockASE.create(C9_CONFIG)
+      hlb = await MockASE.create(HLB_CONFIG)
+    } catch (e) {
+      console.error(e)
+      // Prevents jest from running all tests, which obfuscates error,
+      // when beforeAll errors.
+      // https://github.com/jestjs/jest/issues/2713
+      process.exit(1)
+    }
   })
 
   afterAll(async () => {
