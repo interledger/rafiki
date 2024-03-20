@@ -50,3 +50,15 @@ To add a new typed apollo request, you will need to add an untyped request and r
   - `shared`: utilility functions or types
   - `styles`: CSS files
 - `public`: static files and assets that are served to the browser
+
+## Auth
+
+TODO: add docs here
+Current set up
+How to make this setup suitable for prod
+How to get access tokens without Admin UI - maybe this should go in backend docs
+Links to Hydra and Kratos docs and GitHub
+Ory Kratos and your UI must be on the hosted on same top level domain! You can not host Ory Kratos and your UI on separate top level domains.
+Explain version requirements, had to downgrade to be compatible with Kratos login_challenge handling
+Add explanation for all the new environment variables that are needed
+Run docker exec -it rafiki-cloud-nine-admin-1 npm run invite-user -- example@mail.com and it will output recovery link on screen

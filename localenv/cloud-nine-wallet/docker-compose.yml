@@ -145,6 +145,7 @@ services:
       - "4433:4433"
     networks:
       - rafiki
+      # Currently not using it but it is required if we want to send any emails or do email verification locally
   mailslurper:
     image: oryd/mailslurper:latest-smtps
     ports:

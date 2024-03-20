@@ -11,13 +11,17 @@ import {
   formatAmount,
   prettify
 } from '~/shared/utils'
+import { redirectIfUnauthorizedAccess } from '../lib/kratos_checks.server'
 
 export type LiquidityActionOutletContext = {
   withdrawLiquidityDisplayAmount: string
   depositLiquidityDisplayAmount: string
 }[]
 
-export async function loader({ params }: LoaderFunctionArgs) {
+export async function loader({ request, params }: LoaderFunctionArgs) {
+  const cookies = request.headers.get('cookie')
+  await redirectIfUnauthorizedAccess(request.url, cookies)
+
   const outgoingPaymentId = params.outgoingPaymentId
 
   const result = z.string().uuid().safeParse(outgoingPaymentId)

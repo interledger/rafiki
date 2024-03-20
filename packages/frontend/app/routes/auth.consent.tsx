@@ -30,7 +30,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   }
 
   if (redirectTo) {
-    throw redirect(redirectTo)
+    return redirect(redirectTo)
   } else {
     // TODO: TMP measure - need proper error handling
     throw json(null, {

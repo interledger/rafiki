@@ -35,7 +35,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 
     return { responseData }
   } else {
-    throw redirect(
+    return redirect(
       `${variables.kratosBrowserPublicUrl}/self-service/settings/browser`
     )
   }
