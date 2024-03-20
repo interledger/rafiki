@@ -7,13 +7,13 @@
 #   ./script.sh --build    # Re-build the docker images (-b or --build)
 
 log_file="./tmp/rafiki_integration_logs.txt"
-build_flag=""
+build_flag="--build"
 
 # Parse cli args
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    -b|--build)
-      build_flag="--build"
+    -nb|--no-build)
+      build_flag=""
       shift
       ;;
     *)
