@@ -42,7 +42,7 @@
     "npm-run-all2": "^6.1.2",
     "prettier": "^3.2.5",
     "tunnelmole": "^2.2.14",
-    "typescript": "^5.4.2",
+    "typescript": "^5.4.3",
     "uuid": "^9.0.1"
   },
   "dependenciesMeta": {
