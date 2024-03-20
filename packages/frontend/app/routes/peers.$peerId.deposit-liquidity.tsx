@@ -5,6 +5,14 @@ import { LiquidityDialog } from '~/components/LiquidityDialog'
 import { depositPeerLiquidity } from '~/lib/api/peer.server'
 import { messageStorage, setMessageAndRedirect } from '~/lib/message.server'
 import { amountSchema } from '~/lib/validate.server'
+import { redirectIfUnauthorizedAccess } from '../lib/kratos_checks.server'
+import { type LoaderFunctionArgs } from '@remix-run/node'
+
+export const loader = async ({ request }: LoaderFunctionArgs) => {
+  const cookies = request.headers.get('cookie')
+  await redirectIfUnauthorizedAccess(request.url, cookies)
+  return null
+}
 
 export default function PeerDepositLiquidity() {
   const navigate = useNavigate()

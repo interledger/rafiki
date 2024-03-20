@@ -1,8 +1,14 @@
 import { Dialog, Transition } from '@headlessui/react'
 import { NavLink } from '@remix-run/react'
 import { cx } from 'class-variance-authority'
+import type { FC } from 'react'
 import { Fragment, useState } from 'react'
 import { Bars, XIcon } from './icons'
+import { Button } from '~/components/ui'
+
+interface SidebarProps {
+  logoutUrl: string
+}
 
 const navigation = [
   {
@@ -28,10 +34,14 @@ const navigation = [
   {
     name: 'Payments',
     href: '/payments'
+  },
+  {
+    name: 'Account Settings',
+    href: '/settings'
   }
 ]
 
-export const Sidebar = () => {
+export const Sidebar: FC<SidebarProps> = ({ logoutUrl }) => {
   const [sidebarIsOpen, setSidebarIsOpen] = useState(false)
 
   return (
@@ -91,6 +101,11 @@ export const Sidebar = () => {
                           {name}
                         </NavLink>
                       ))}
+                      {logoutUrl && (
+                        <Button aria-label='logout' href={logoutUrl}>
+                          Logout
+                        </Button>
+                      )}
                     </div>
                   </nav>
                 </div>
@@ -128,6 +143,11 @@ export const Sidebar = () => {
                   {name}
                 </NavLink>
               ))}
+              {logoutUrl && (
+                <Button aria-label='logout' href={logoutUrl}>
+                  Logout
+                </Button>
+              )}
             </div>
           </div>
           {/* Desktop Navigation - END */}

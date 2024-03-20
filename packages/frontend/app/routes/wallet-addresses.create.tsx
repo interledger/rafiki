@@ -13,8 +13,12 @@ import { messageStorage, setMessageAndRedirect } from '~/lib/message.server'
 import { createWalletAddressSchema } from '~/lib/validate.server'
 import type { ZodFieldErrors } from '~/shared/types'
 import { getOpenPaymentsUrl } from '~/shared/utils'
+import { redirectIfUnauthorizedAccess } from '../lib/kratos_checks.server'
+import { type LoaderFunctionArgs } from '@remix-run/node'
 
-export async function loader() {
+export const loader = async ({ request }: LoaderFunctionArgs) => {
+  const cookies = request.headers.get('cookie')
+  await redirectIfUnauthorizedAccess(request.url, cookies)
   return json({ assets: await loadAssets() })
 }
 
