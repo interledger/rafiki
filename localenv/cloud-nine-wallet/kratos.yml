@@ -19,7 +19,7 @@ selfservice:
     link:
       config:
         lifespan: 1h
-        base_url: http://127.0.0.1:3010
+        base_url: http://127.0.0.1:4433
       enabled: true
     password:
       enabled: true
