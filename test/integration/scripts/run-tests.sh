@@ -4,7 +4,7 @@
 # saves the container logs to a file, and stops the containers.
 # Usage:
 #   ./script.sh            # Run the script with default options
-#   ./script.sh --build    # Re-build the docker images (-b or --build)
+#   ./script.sh --build    # Skip building the docker images and internal test dependencies (-nb or --no-build)
 
 log_file="./tmp/rafiki_integration_logs.txt"
 build_flag="--build"
@@ -22,6 +22,10 @@ while [[ $# -gt 0 ]]; do
       ;;
   esac
 done
+
+if [ "$build_flag" == "--build" ]; then
+  pnpm --filter integration build:deps
+fi
 
 pnpm --filter integration testenv:compose down --volumes
 pnpm --filter integration testenv:compose up -d --wait $build_flag
