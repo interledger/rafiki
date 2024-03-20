@@ -86,6 +86,47 @@ services:
       GRAPHQL_URL: http://happy-life-bank-backend:3001/graphql
       OPEN_PAYMENTS_URL: https://happy-life-bank-backend/
       ENABLE_INSECURE_MESSAGE_COOKIE: true
+      HYDRA_CLIENT_NAME: 'happy-life-client'
+      HYDRA_CLIENT_REDIRECT_URI: 'http://127.0.0.1:4010/callback'
+      HYDRA_ADMIN_URL: 'http://happy-life-hydra:4445/admin'
+      HYDRA_PUBLIC_URL: 'http://happy-life-hydra:4444'
+      HYDRA_PUBLIC_PORT: '5444'
+      KRATOS_CONTAINER_PULIC_URL: 'http://happy-life-kratos:4433'
+      KRATOS_BROWSER_PUBLIC_URL: 'http://127.0.0.1:5433'
+      KRATOS_ADMIN_URL: 'http://happy-life-kratos:4434/admin'
     depends_on:
       - cloud-nine-admin
       - happy-life-backend
+      - happy-life-hydra
+      - happy-life-kratos
+  happy-life-kratos:
+    build:
+      context: ../..
+      dockerfile: ./packages/frontend/kratos/Dockerfile
+      args:
+        PATH_TO_KRATOS_CONFIG: ./localenv/happy-life-bank/kratos.yml
+    depends_on:
+      - shared-database
+      - mailslurper
+    environment:
+      DSN: postgres://happy_life_kratos:kratos_password@shared-database:5432/happy_life_kratos?sslmode=disable&max_conns=20&max_idle_conns=4
+    ports:
+      - "5433:4433"
+    networks:
+      - rafiki
+  happy-life-hydra:
+    build:
+      context: ../..
+      dockerfile: ./packages/frontend/hydra/Dockerfile
+    depends_on:
+      - shared-database
+    environment:
+      DSN: postgres://happy_life_hydra:hydra_password@shared-database:5432/happy_life_hydra?sslmode=disable
+      URLS_SELF_ISSUER: http://127.0.0.1:5444/
+      URLS_CONSENT: http://127.0.0.1:4010/auth/consent
+      URLS_LOGIN: http://127.0.0.1:5433/self-service/login/browser
+      SECRETS_SYSTEM: some-random-secret
+    ports:
+      - "5444:4444"
+    networks:
+      - rafiki

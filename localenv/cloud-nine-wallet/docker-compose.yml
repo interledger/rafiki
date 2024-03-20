@@ -118,9 +118,56 @@ services:
       GRAPHQL_URL: http://cloud-nine-wallet-backend:3001/graphql
       OPEN_PAYMENTS_URL: https://cloud-nine-wallet-backend/
       ENABLE_INSECURE_MESSAGE_COOKIE: true
+      HYDRA_CLIENT_NAME: 'cloud-nine-client'
+      HYDRA_CLIENT_REDIRECT_URI: 'http://127.0.0.1:3010/callback'
+      HYDRA_ADMIN_URL: 'http://cloud-nine-hydra:4445/admin'
+      HYDRA_PUBLIC_URL: 'http://cloud-nine-hydra:4444'
+      HYDRA_PUBLIC_PORT: '4444'
+      KRATOS_CONTAINER_PULIC_URL: 'http://cloud-nine-kratos:4433'
+      KRATOS_BROWSER_PUBLIC_URL: 'http://127.0.0.1:4433'
+      KRATOS_ADMIN_URL: 'http://cloud-nine-kratos:4434/admin'
     depends_on:
       - cloud-nine-backend
-
+      - cloud-nine-hydra
+      - cloud-nine-kratos
+  cloud-nine-kratos:
+    build:
+      context: ../..
+      dockerfile: ./packages/frontend/kratos/Dockerfile
+      args:
+        PATH_TO_KRATOS_CONFIG: ./localenv/cloud-nine-wallet/kratos.yml
+    depends_on:
+      - shared-database
+      - mailslurper
+    environment:
+      DSN: postgres://cloud_nine_kratos:kratos_password@shared-database:5432/cloud_nine_kratos?sslmode=disable&max_conns=20&max_idle_conns=4
+    ports:
+      - "4433:4433"
+    networks:
+      - rafiki
+  mailslurper:
+    image: oryd/mailslurper:latest-smtps
+    ports:
+      - "4436:4436"
+      - "4437:4437"
+    networks:
+      - rafiki
+  cloud-nine-hydra:
+    build:
+      context: ../..
+      dockerfile: ./packages/frontend/hydra/Dockerfile
+    depends_on:
+      - shared-database
+    environment:
+      DSN: postgres://cloud_nine_hydra:hydra_password@shared-database:5432/cloud_nine_hydra?sslmode=disable
+      URLS_SELF_ISSUER: http://127.0.0.1:4444/
+      URLS_CONSENT: http://127.0.0.1:3010/auth/consent
+      URLS_LOGIN: http://127.0.0.1:4433/self-service/login/browser
+      SECRETS_SYSTEM: some-random-secret
+    ports:
+      - "4444:4444"
+    networks:
+      - rafiki
 
 volumes:
   database-data: # named volumes can be managed easier using docker-compose
