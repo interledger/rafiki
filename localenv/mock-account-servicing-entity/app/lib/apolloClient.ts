@@ -39,6 +39,33 @@ const authLink = setContext((_, { headers }) => {
 
 const link = ApolloLink.from([errorLink, authLink, httpLink])
 
+export const getApolloClient = (apiToken?: string): ApolloClient<NormalizedCacheObject> => {
+  const authLink = setContext((_, { headers }) => {
+    return {
+      headers: {
+        authorization: apiToken ? `Bearer ${apiToken}` : '',
+        ...headers
+      }
+    }
+  })
+
+  return new ApolloClient({
+    cache: new InMemoryCache({}),
+    link: ApolloLink.from([errorLink, authLink, httpLink]),
+    defaultOptions: {
+      query: {
+        fetchPolicy: 'no-cache'
+      },
+      mutate: {
+        fetchPolicy: 'no-cache'
+      },
+      watchQuery: {
+        fetchPolicy: 'no-cache'
+      }
+    }
+  })
+}
+
 export const apolloClient: ApolloClient<NormalizedCacheObject> =
   new ApolloClient({
     cache: new InMemoryCache({}),

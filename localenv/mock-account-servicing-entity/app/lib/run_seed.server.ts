@@ -19,6 +19,8 @@ import { mockAccounts } from './accounts.server'
 import { generateJwk } from '@interledger/http-signature-utils'
 import { Asset, FeeType } from 'generated/graphql'
 
+const API_BYPASS_TOKEN = 'seed_file'
+
 export async function setupFromSeed(config: Config): Promise<void> {
   const assets: Record<string, Asset> = {}
   for (const { code, scale, liquidity, liquidityThreshold } of config.seed
@@ -31,7 +33,8 @@ export async function setupFromSeed(config: Config): Promise<void> {
     const initialLiquidity = await depositAssetLiquidity(
       asset.id,
       liquidity,
-      v4()
+      v4(),
+      API_BYPASS_TOKEN
     )
 
     assets[code] = asset
@@ -40,7 +43,7 @@ export async function setupFromSeed(config: Config): Promise<void> {
     const { fees } = config.seed
     const fee = fees.find((fee) => fee.asset === code && fee.scale == scale)
     if (fee) {
-      await setFee(asset.id, FeeType.Sending, fee.fixed, fee.basisPoints)
+      await setFee(asset.id, FeeType.Sending, fee.fixed, fee.basisPoints, API_BYPASS_TOKEN)
     }
   }
 
@@ -54,7 +57,8 @@ export async function setupFromSeed(config: Config): Promise<void> {
         assets[peeringAsset].id,
         assets[peeringAsset].code,
         peer.name,
-        peer.liquidityThreshold
+        peer.liquidityThreshold,
+        API_BYPASS_TOKEN
       ).then((response) => response.peer)
       if (!peerResponse) {
         throw new Error('peer response not defined')
@@ -63,7 +67,8 @@ export async function setupFromSeed(config: Config): Promise<void> {
       const liquidity = await depositPeerLiquidity(
         peerResponse.id,
         peer.initialLiquidity,
-        transferUid
+        transferUid,
+        API_BYPASS_TOKEN
       )
       return [peerResponse, liquidity]
     })
@@ -75,7 +80,8 @@ export async function setupFromSeed(config: Config): Promise<void> {
     console.log('autopeering url: ', CONFIG.testnetAutoPeerUrl)
     const autoPeerResponse = await createAutoPeer(
       CONFIG.testnetAutoPeerUrl,
-      assets[peeringAsset].id
+      assets[peeringAsset].id,
+      API_BYPASS_TOKEN
     ).catch((e) => {
       console.log('error on autopeering: ', e)
       return
@@ -113,7 +119,8 @@ export async function setupFromSeed(config: Config): Promise<void> {
       const walletAddress = await createWalletAddress(
         account.name,
         `${CONFIG.publicHost}/${account.path}`,
-        accountAsset.id
+        accountAsset.id,
+        API_BYPASS_TOKEN
       )
 
       await mockAccounts.setWalletAddress(
@@ -127,8 +134,8 @@ export async function setupFromSeed(config: Config): Promise<void> {
         jwk: generateJwk({
           keyId: `keyid-${account.id}`,
           privateKey: config.key
-        }) as unknown as string
-      })
+        }) as unknown as string,
+      }, API_BYPASS_TOKEN)
 
       return walletAddress
     })
