@@ -119,7 +119,7 @@ importers:
         version: 4.10.1(graphql@16.8.1)
       '@as-integrations/koa':
         specifier: ^1.1.1
-        version: 1.1.1(@apollo/server@4.10.1)(koa@2.15.1)
+        version: 1.1.1(@apollo/server@4.10.1)(koa@2.15.2)
       '@escape.tech/graphql-armor':
         specifier: ^2.4.0
         version: 2.4.0(@apollo/server@4.10.1)
@@ -163,8 +163,8 @@ importers:
         specifier: ^3.1.0
         version: 3.1.0(pg@8.11.3)
       koa:
-        specifier: ^2.15.1
-        version: 2.15.1
+        specifier: ^2.15.2
+        version: 2.15.2
       koa-bodyparser:
         specifier: ^4.4.1
         version: 4.4.1
@@ -258,7 +258,7 @@ importers:
         version: 4.10.1(graphql@16.8.1)
       '@as-integrations/koa':
         specifier: ^1.1.1
-        version: 1.1.1(@apollo/server@4.10.1)(koa@2.15.1)
+        version: 1.1.1(@apollo/server@4.10.1)(koa@2.15.2)
       '@escape.tech/graphql-armor':
         specifier: ^2.4.0
         version: 2.4.0(@apollo/server@4.10.1)
@@ -350,8 +350,8 @@ importers:
         specifier: ^3.1.0
         version: 3.1.0(pg@8.11.3)
       koa:
-        specifier: ^2.15.1
-        version: 2.15.1
+        specifier: ^2.15.2
+        version: 2.15.2
       koa-bodyparser:
         specifier: ^4.4.1
         version: 4.4.1
@@ -966,7 +966,7 @@ packages:
     transitivePeerDependencies:
       - encoding
 
-  /@as-integrations/koa@1.1.1(@apollo/server@4.10.1)(koa@2.15.1):
+  /@as-integrations/koa@1.1.1(@apollo/server@4.10.1)(koa@2.15.2):
     resolution: {integrity: sha512-v84cVhkLUxAH9l19pajbWp/Z9ZYTzO7jkAOiY1xndTclfpXZstiWDKejZYq7xpkBtUSSAKzNyM66uox8MP9qVg==}
     engines: {node: '>=16.0'}
     peerDependencies:
@@ -974,7 +974,7 @@ packages:
       koa: ^2.0.0
     dependencies:
       '@apollo/server': 4.10.1(graphql@16.8.1)
-      koa: 2.15.1
+      koa: 2.15.2
     dev: false
 
   /@astrojs/compiler@2.3.2:
@@ -3822,7 +3822,7 @@ packages:
       '@apidevtools/json-schema-ref-parser': 10.1.0
       ajv: 8.12.0
       ajv-formats: 2.1.1(ajv@8.12.0)
-      koa: 2.15.1
+      koa: 2.15.2
       openapi-default-setter: 12.1.3
       openapi-request-coercer: 12.1.3
       openapi-request-validator: 12.1.3
@@ -11745,6 +11745,37 @@ packages:
 
   /koa@2.15.1:
     resolution: {integrity: sha512-kpxzGxsv7tlc0WmccWd6CfdWqYXk4o/FsCTjnKaDnHLjPK/Sy1MpoBkuKO5LN7GdPHgPljrAVmMO3wbFxEJTeA==}
+    engines: {node: ^4.8.4 || ^6.10.1 || ^7.10.1 || >= 8.1.4}
+    dependencies:
+      accepts: 1.3.8
+      cache-content-type: 1.0.1
+      content-disposition: 0.5.4
+      content-type: 1.0.5
+      cookies: 0.9.1
+      debug: 4.3.4(supports-color@9.4.0)
+      delegates: 1.0.0
+      depd: 2.0.0
+      destroy: 1.2.0
+      encodeurl: 1.0.2
+      escape-html: 1.0.3
+      fresh: 0.5.2
+      http-assert: 1.5.0
+      http-errors: 1.8.1
+      is-generator-function: 1.0.10
+      koa-compose: 4.1.0
+      koa-convert: 2.0.0
+      on-finished: 2.4.1
+      only: 0.0.2
+      parseurl: 1.3.3
+      statuses: 1.5.0
+      type-is: 1.6.18
+      vary: 1.1.2
+    transitivePeerDependencies:
+      - supports-color
+    dev: true
+
+  /koa@2.15.2:
+    resolution: {integrity: sha512-MXTeZH3M6AJ8ukW2QZ8wqO3Dcdfh2WRRmjCBkEP+NhKNCiqlO5RDqHmSnsyNrbRJrdjyvIGSJho4vQiWgQJSVA==}
     engines: {node: ^4.8.4 || ^6.10.1 || ^7.10.1 || >= 8.1.4}
     dependencies:
       accepts: 1.3.8
