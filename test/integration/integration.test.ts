@@ -50,6 +50,7 @@ describe('Integration tests', (): void => {
       'http://host.docker.internal:4100/accounts/pfry'
     const senderWalletAddressUrl =
       'http://host.docker.internal:3100/accounts/gfranklin'
+    const amountValueToSend = '100'
 
     let receiverWalletAddress: WalletAddress
     let senderWalletAddress: WalletAddress
@@ -148,7 +149,7 @@ describe('Integration tests', (): void => {
         {
           walletAddress: receiverWalletAddressUrl.replace('http', 'https'),
           incomingAmount: {
-            value: '100',
+            value: amountValueToSend,
             assetCode: receiverWalletAddress.assetCode,
             assetScale: receiverWalletAddress.assetScale
           },
@@ -461,6 +462,8 @@ describe('Integration tests', (): void => {
       })
 
       expect(outgoingPayment_.id).toBe(outgoingPayment.id)
+      expect(outgoingPayment_.receiveAmount.value).toBe(amountValueToSend)
+      expect(outgoingPayment_.sentAmount.value).toBe(amountValueToSend)
     })
   })
 

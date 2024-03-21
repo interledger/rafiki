@@ -98,6 +98,8 @@ export class WebhookEventHandler {
         break
       case WebhookEventType.IncomingPaymentCreated:
         break
+      case WebhookEventType.IncomingPaymentCompleted:
+        break
       case WebhookEventType.OutgoingPaymentCreated:
         await this.handleOutgoingPaymentCreated(webhookEvent)
         break
