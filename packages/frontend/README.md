@@ -4,24 +4,6 @@
 
 This project assumes that you have a local Rafiki backend instance up and running. Typically, both `backend` and this project would be used within the local Rafiki playground. See the [local environment setup](../../localenv) for more information on how to set it up.
 
-To start the project in development mode, we first need to generate the GraphQL types for our queries and mutations.
-
-To generate the GraphQL types file run:
-
-```sh
-pnpm --filter backend generate
-```
-
-To start the application run:
-
-```sh
-pnpm --filter frontend dev
-```
-
-Now you can access the application on [http://localhost:3005](http://localhost:3005).
-
-> NOTE: When running Rafiki Admin in the development environment, it will connect to Cloud Nine Wallet Admin GraphQL - [http://localhost:3001/graphql](http://localhost:3001/graphql).
-
 To add a new typed apollo request, you will need to add an untyped request and regenerate the graphql types. This will generate new types tailored to the specific request being made. The generated type will reflect the request's query or mutation name, variables used, and requested fields.
 
 ## Structure
@@ -37,6 +19,9 @@ To add a new typed apollo request, you will need to add an untyped request and r
  ┃ ┣ 📂routes
  ┃ ┣ 📂shared
  ┃ ┣ 📂styles
+ ┣ 📂kratos
+ ┃ ┣ 📂config
+ ┃ ┣ 📂scripts
  ┣ 📂public
 ```
 
@@ -49,17 +34,13 @@ To add a new typed apollo request, you will need to add an untyped request and r
   - `routes`: outer layer of the application
   - `shared`: utilility functions or types
   - `styles`: CSS files
+- `kratos`: Dockerfile and setup files
+  - `config`: contains the Kratos identity schema
+  - `scripts`: scripts to start Kratos, as well as, add and delete users
 - `public`: static files and assets that are served to the browser
 
-## Auth
+## Login
 
-TODO: add docs here
-Current set up
-How to make this setup suitable for prod
-How to get access tokens without Admin UI - maybe this should go in backend docs
-Links to Kratos docs and GitHub
-Ory Kratos and your UI must be on the hosted on same top level domain! You can not host Ory Kratos and your UI on separate top level domains.
-Explain version requirements, had to downgrade to be compatible with Kratos login_challenge handling
-Add explanation for all the new environment variables that are needed
-Run docker exec -it rafiki-cloud-nine-admin-1 npm run invite-user -- example@mail.com and it will output recovery link on screen
-Run docker exec -it rafiki-cloud-nine-admin-1 npm run delete-user -- example@mail.com to delete a user
+We have secured access to the Admin UI using [Ory Kratos](https://www.ory.sh/docs/kratos/ory-kratos-intro), a secure and fully open-source identity and user management solution. Check it out on [GitHub](https://github.com/ory/kratos). Since access to the UI is on an invitation-only basis the registration flow is not publicly available. As such, in order to access the UI you'll need to add a new user with the invite-user script. Run `docker exec -it <admin-container-name> npm run invite-user -- example@mail.com` and it will output recovery link to the terminal. The recovery link doubles as the invitation method. Copy and paste this link in your browser and you will automatically be logged in and directed to the account settings page. The next step is changing your password. We're using a simple email and password authentication method. We've also included a script to remove users: `docker exec -it <admin-container-name> npm run delete-user -- example@mail.com`.
+
+Note: Ory Kratos and the Rafiki Admin UI must be on the hosted on same top level domain.

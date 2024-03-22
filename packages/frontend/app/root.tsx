@@ -26,7 +26,7 @@ import {
   isLoggedIn,
   redirectIfUnauthorizedAccess
 } from './lib/kratos_checks.server'
-import variables from './utils/envConfig.server'
+import variables from './lib/envConfig.server'
 import axios from 'axios'
 
 export const meta: MetaFunction = () => [

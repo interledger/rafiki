@@ -8,7 +8,7 @@ import type { UiContainer } from '@ory/client'
 import { useLoaderData } from '@remix-run/react'
 import { PageHeader } from '~/components'
 import { Button, Input } from '../components/ui'
-import variables from '../utils/envConfig.server'
+import variables from '../lib/envConfig.server'
 import { redirectIfUnauthorizedAccess } from '../lib/kratos_checks.server'
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {

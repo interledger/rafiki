@@ -1,5 +1,5 @@
 import { Button } from '../components/ui'
-import variables from '../utils/envConfig.server'
+import variables from '../lib/envConfig.server'
 import { redirectIfAlreadyAuthorized } from '../lib/kratos_checks.server'
 import { type LoaderFunctionArgs } from '@remix-run/node'
 

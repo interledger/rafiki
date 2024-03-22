@@ -1,6 +1,6 @@
 import { redirect } from '@remix-run/node'
 import axios from 'axios'
-import variables from '../utils/envConfig.server'
+import variables from './envConfig.server'
 
 export async function isLoggedIn(
   cookieHeader?: string | null

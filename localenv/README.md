@@ -8,6 +8,8 @@ These packages include:
 - `auth` (GNAP auth server)
 - `mock-account-servicing-entity` (mocks an [Account Servicing Entity](https://rafiki.dev/concepts/account-servicing-entity/)
 - `frontend` (Remix app to expose a UI for Rafiki Admin management via interaction with the `backend` Admin APIs)
+- `kratos` (An identity and user management solution for the `frontend`)
+- `mailslurper` (A SMTP mail server to catch account recovery emails)
 
 These packages depend on the following databases:
 
@@ -33,23 +35,27 @@ This environment will set up a playground where you can use the Rafiki Admin API
 
 (d) Admin UI - accessible at http://localhost:3010
 
-(e) Auth Admin API - accessible at http://localhost:3003/graphql
+(e) Mail server - accessible at http://127.0.0.1:4436
 
-(f) Open Payments Auth API - accessible at http://localhost:3006
+(f) Auth Admin API - accessible at http://localhost:3003/graphql
+
+(g) Open Payments Auth API - accessible at http://localhost:3006
 
 #### Happy Life Bank
 
-(g) User Interface - accessible at http://localhost:3031
+(h) User Interface - accessible at http://localhost:3031
 
-(h) Admin API - accessible at http://localhost:4001/graphql
+(i) Admin API - accessible at http://localhost:4001/graphql
 
-(i) Open Payments API - accessible at http://localhost:4000
+(j) Open Payments API - accessible at http://localhost:4000
 
-(j) Admin UI - accessible at http://localhost:4010
+(k) Admin UI - accessible at http://localhost:4010
 
-(k) Auth Admin API - accessible at http://localhost:4003/graphql
+(l) Mail server - accessible at http://127.0.0.1:4436
 
-(l) Open Payments Auth API - accessible at http://localhost:4006
+(m) Auth Admin API - accessible at http://localhost:4003/graphql
+
+(n) Open Payments Auth API - accessible at http://localhost:4006
 
 #### Database
 
@@ -184,6 +190,8 @@ Note that you have to go through an interaction flow by clicking on the `redirec
 #### Admin UI
 
 In order to manage, and view information about the Rafiki instance(s) using a UI, you can navigate to [`localhost:3010`](http://localhost:3010) (Cloud Nine Wallet) or [`localhost:4010`](http://localhost:4010) (Happy Life Bank). This is the `frontend` project which runs a Remix app for querying info and executing mutations against the Rafiki [Admin APIs](#admin-apis).
+
+The Admin UI is secured using Ory Kratos. See the `frontend` [README](../packages/frontend/README.md) for more information about how to register a user and log in.
 
 #### Admin APIs
 

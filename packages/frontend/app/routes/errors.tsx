@@ -1,7 +1,7 @@
 // This page handles User-facing errors in the browser for Kratos
 import { json, type LoaderFunctionArgs } from '@remix-run/node'
 import { useLoaderData } from '@remix-run/react'
-import variables from '../utils/envConfig.server'
+import variables from '../lib/envConfig.server'
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const cookies = request.headers.get('cookie')
