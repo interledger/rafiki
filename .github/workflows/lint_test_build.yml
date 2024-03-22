@@ -119,20 +119,18 @@ jobs:
       - name: Setup environment
         uses: ./.github/workflows/rafiki/env-setup
 
-      # - name: Setup hosts
-      #   run: |
-      #     echo "127.0.0.1 cloud-nine-wallet-test-backend" | sudo tee -a /etc/hosts
-      #     echo "127.0.0.1 cloud-nine-wallet-test-auth" | sudo tee -a /etc/hosts
-      #     echo "127.0.0.1 happy-life-bank-test-backend" | sudo tee -a /etc/hosts
-      #     echo "127.0.0.1 happy-life-bank-test-auth" | sudo tee -a /etc/hosts
+      - name: Setup hosts
+        run: |
+          echo "127.0.0.1 cloud-nine-wallet-test-backend" | sudo tee -a /etc/hosts
+          echo "127.0.0.1 cloud-nine-wallet-test-auth" | sudo tee -a /etc/hosts
+          echo "127.0.0.1 happy-life-bank-test-backend" | sudo tee -a /etc/hosts
+          echo "127.0.0.1 happy-life-bank-test-auth" | sudo tee -a /etc/hosts
 
       - name: Build dependencies
         run: pnpm --filter integration build:deps
 
       - name: Run tests
-        run: |
-          which pnpm
-          sudo env "PATH=$PATH:$(dirname $(which pnpm))" pnpm --filter integration run-tests
+        run: pnpm --filter integration run-tests
 
   build:
     runs-on: ubuntu-22.04
