@@ -27,17 +27,23 @@ done
 addHost() {
   local hostname="$1"
   
-  # check first to avoid sudo prompt if host is already set
+  check first to avoid sudo prompt if host is already set
   if pnpm --filter integration hostile list | grep -q "127.0.0.1 $hostname"; then
     echo "$hostname already set"
   else
-  sudo pnpm --filter integration hostile set 127.0.0.1 "$hostname"
+    sudo pnpm --filter integration hostile set 127.0.0.1 "$hostname"
+    if [ $? -ne 0 ]; then
+      echo "Error: Failed to write hosts to hostfile."
+      exit 1
+    fi
   fi
 }
 addHost "cloud-nine-wallet-test-backend"
 addHost "cloud-nine-wallet-test-auth"
 addHost "happy-life-bank-test-backend"
 addHost "happy-life-bank-test-auth"
+
+exit 0
 
 # idempotent start
 pnpm --filter integration testenv:compose down --volumes
