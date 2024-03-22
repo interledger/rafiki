@@ -120,8 +120,7 @@ jobs:
         uses: ./.github/workflows/rafiki/env-setup
 
       - name: Setup hosts
-        run: |
-          echo "127.0.0.1 host.docker.internal" | sudo tee -a /etc/hosts
+        run: echo "127.0.0.1 cloud-nine-wallet-test-backend cloud-nine-wallet-test-auth happy-life-bank-test-backend happy-life-bank-test-auth" | sudo tee -a /etc/hosts
 
       - name: Build dependencies
         run: pnpm --filter integration build:deps
