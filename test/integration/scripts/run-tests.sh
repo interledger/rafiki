@@ -8,7 +8,6 @@
 
 log_file="./tmp/rafiki_integration_logs.txt"
 build_flag=""
-pnpm_bin=""
 
 # Parse cli args
 while [[ $# -gt 0 ]]; do
