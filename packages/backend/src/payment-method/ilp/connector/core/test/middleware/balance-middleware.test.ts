@@ -87,7 +87,7 @@ describe('Balance Middleware', function () {
     ${true}           | ${'single phase transfer'}
     ${false}          | ${'two phase transfer'}
   `(
-    'creates $description if state.streamDestination',
+    'creates $description if state.streamDestination $streamDestination',
     async ({ streamDestination }): Promise<void> => {
       const prepare = IlpPrepareFactory.build({ amount: '100' })
       const fulfill = IlpFulfillFactory.build()
