@@ -22,7 +22,6 @@ export async function isLoggedIn(
 
     return isLoggedIn
   } catch {
-    // TODO: error handling
     return false
   }
 }

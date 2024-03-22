@@ -1,9 +1,13 @@
 import { json, redirect, type LoaderFunctionArgs } from '@remix-run/node'
 import { uuidSchema } from '~/lib/validate.server'
-import { isUiNodeInputAttributes } from '@ory/integrations/ui'
+import {
+  isUiNodeInputAttributes,
+  filterNodesByGroups
+} from '@ory/integrations/ui'
 import type { UiContainer } from '@ory/client'
 import { useLoaderData } from '@remix-run/react'
-import { Button } from '../components/ui'
+import { PageHeader } from '~/components'
+import { Button, Input } from '../components/ui'
 import variables from '../utils/envConfig.server'
 import { redirectIfUnauthorizedAccess } from '../lib/kratos_checks.server'
 
@@ -41,71 +45,163 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   }
 }
 
-// TODO: need spacing between label and input, or perhaps put them vertically
 export default function Settings() {
   const { responseData } = useLoaderData<typeof loader>()
   const uiContainer: UiContainer = responseData.ui
   const uiNodes = uiContainer.nodes
+  const profileNodes = filterNodesByGroups({
+    nodes: uiNodes,
+    groups: ['profile']
+  })
+  const passwordNodes = filterNodesByGroups({
+    nodes: uiNodes,
+    groups: ['password']
+  })
   const actionUrl = uiContainer.action
   return (
-    <div className='pt-4 flex flex-col'>
-      <div className='flex flex-col rounded-md bg-offwhite px-6 text-center min-h-[calc(100vh-3rem)]'>
-        <div className='p-10 space-y-16'>
-          <h3 className='text-2xl pt-16'>Rafiki Admin Account Settings</h3>
-          <div className='space-y-8'>
+    <div className='pt-4 flex flex-col space-y-4'>
+      <div className='flex flex-col rounded-md bg-offwhite px-6'>
+        <PageHeader>
+          <div className='flex-1'>
+            <h3 className='text-2xl'>Account Settings</h3>
             {uiContainer.messages?.map((message) => {
               return <p key={message.id}>{message.text}</p>
             })}
+          </div>
+        </PageHeader>
+        {/* Profile Settings */}
+        <div className='grid grid-cols-1 py-3 gap-6 md:grid-cols-3 border-b border-pearl'>
+          <div className='col-span-1 pt-3'>
+            <h3 className='text-lg font-medium'>Profile</h3>
+          </div>
+          <div className='md:col-span-2 bg-white rounded-md shadow-md'>
             <form method='post' action={actionUrl}>
-              <div className='p-4 space-y-3'>
-                {uiNodes.map((field, index) => {
-                  const { attributes, meta } = field
-                  if (
-                    isUiNodeInputAttributes(attributes) &&
-                    attributes.type !== 'submit'
-                  ) {
-                    const messages = field.messages.map((message) => {
-                      return <p key={index}>{message.text}</p>
-                    })
-                    return (
-                      <div key={index}>
-                        {attributes.type !== 'hidden' && (
-                          <label htmlFor={attributes.name}>
-                            {meta?.label?.text || attributes.name}
-                          </label>
-                        )}
-                        <input
-                          type={attributes.type}
-                          name={attributes.name}
-                          required={attributes.required}
-                          disabled={attributes.disabled}
-                          defaultValue={attributes.value}
-                        />
-                        <div>{messages}</div>
-                      </div>
-                    )
-                  } else if (
-                    isUiNodeInputAttributes(attributes) &&
-                    attributes.type === 'submit'
-                  ) {
-                    return (
-                      <div key={index}>
-                        <Button
-                          type={attributes.type}
-                          aria-label={attributes.label?.text || attributes.name}
-                          name={attributes.name}
-                          disabled={attributes.disabled}
-                          value={attributes.value}
-                          className='ml-2'
-                        >
-                          {meta?.label?.text || 'Submit'}
-                        </Button>
-                      </div>
-                    )
-                  }
-                  return null
-                })}
-              </div>
+              <fieldset>
+                <div className='w-full p-4 space-y-3'>
+                  {profileNodes.map((field, index) => {
+                    const { attributes, meta } = field
+                    const label = meta?.label?.text
+                    if (
+                      isUiNodeInputAttributes(attributes) &&
+                      attributes.type !== 'submit'
+                    ) {
+                      return (
+                        <div className='w-full md:w-1/2 lg:w-1/3' key={index}>
+                          <Input
+                            type={attributes.type}
+                            name={attributes.name}
+                            required={attributes.required}
+                            disabled={attributes.disabled}
+                            defaultValue={attributes.value}
+                            label={
+                              attributes.type !== 'hidden' ? label : undefined
+                            }
+                            error={field.messages
+                              .map((message) => message.text)
+                              .join('; ')}
+                          />
+                        </div>
+                      )
+                    }
+                    return null
+                  })}
+                </div>
+                <div className='flex justify-end p-4'>
+                  {profileNodes.map((field, index) => {
+                    const { attributes, meta } = field
+                    if (
+                      isUiNodeInputAttributes(attributes) &&
+                      attributes.type === 'submit'
+                    ) {
+                      return (
+                        <div key={index}>
+                          <Button
+                            type={attributes.type}
+                            aria-label={
+                              attributes.label?.text || attributes.name
+                            }
+                            name={attributes.name}
+                            disabled={attributes.disabled}
+                            value={attributes.value}
+                            className='ml-2'
+                          >
+                            {meta?.label?.text || 'Submit'}
+                          </Button>
+                        </div>
+                      )
+                    }
+                    return null
+                  })}
+                </div>
+              </fieldset>
+            </form>
+          </div>
+        </div>
+        {/* Password Settings */}
+        <div className='grid grid-cols-1 py-3 gap-6 md:grid-cols-3 border-b border-pearl'>
+          <div className='col-span-1 pt-3'>
+            <h3 className='text-lg font-medium'>Password</h3>
+          </div>
+          <div className='md:col-span-2 bg-white rounded-md shadow-md'>
+            <form method='post' action={actionUrl}>
+              <fieldset>
+                <div className='w-full p-4 space-y-3'>
+                  {passwordNodes.map((field, index) => {
+                    const { attributes, meta } = field
+                    const label = meta?.label?.text
+                    if (
+                      isUiNodeInputAttributes(attributes) &&
+                      attributes.type !== 'submit'
+                    ) {
+                      return (
+                        <div className='w-full md:w-1/2 lg:w-1/3' key={index}>
+                          <Input
+                            type={attributes.type}
+                            name={attributes.name}
+                            required={attributes.required}
+                            disabled={attributes.disabled}
+                            defaultValue={attributes.value}
+                            label={
+                              attributes.type !== 'hidden' ? label : undefined
+                            }
+                            error={field.messages
+                              .map((message) => message.text)
+                              .join('; ')}
+                          />
+                        </div>
+                      )
+                    }
+                    return null
+                  })}
+                </div>
+                <div className='flex justify-end p-4'>
+                  {passwordNodes.map((field, index) => {
+                    const { attributes, meta } = field
+                    if (
+                      isUiNodeInputAttributes(attributes) &&
+                      attributes.type === 'submit'
+                    ) {
+                      return (
+                        <div key={index}>
+                          <Button
+                            type={attributes.type}
+                            aria-label={
+                              attributes.label?.text || attributes.name
+                            }
+                            name={attributes.name}
+                            disabled={attributes.disabled}
+                            value={attributes.value}
+                            className='ml-2'
+                          >
+                            {meta?.label?.text || 'Submit'}
+                          </Button>
+                        </div>
+                      )
+                    }
+                    return null
+                  })}
+                </div>
+              </fieldset>
             </form>
           </div>
         </div>

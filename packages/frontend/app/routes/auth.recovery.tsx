@@ -3,7 +3,7 @@ import { uuidSchema } from '~/lib/validate.server'
 import { isUiNodeInputAttributes } from '@ory/integrations/ui'
 import type { UiContainer } from '@ory/client'
 import { useLoaderData } from '@remix-run/react'
-import { Button } from '../components/ui'
+import { Button, Input } from '../components/ui'
 import variables from '../utils/envConfig.server'
 import { redirectIfAlreadyAuthorized } from '../lib/kratos_checks.server'
 
@@ -56,55 +56,67 @@ export default function Recovery() {
             {uiContainer.messages?.map((message) => {
               return <p key={message.id}>{message.text}</p>
             })}
-            <form method='post' action={actionUrl}>
-              <div className='p-4 space-y-3'>
-                {uiNodes.map((field, index) => {
-                  const { attributes, meta } = field
-                  if (
-                    isUiNodeInputAttributes(attributes) &&
-                    attributes.type !== 'submit'
-                  ) {
-                    const messages = field.messages.map((message) => {
-                      return <p key={index}>{message.text}</p>
-                    })
-                    return (
-                      <div key={index}>
-                        {attributes.type !== 'hidden' && (
-                          <label htmlFor={attributes.name}>
-                            {meta?.label?.text || attributes.name}
-                          </label>
-                        )}
-                        <input
-                          type={attributes.type}
-                          name={attributes.name}
-                          required={attributes.required}
-                          disabled={attributes.disabled}
-                          defaultValue={attributes.value}
-                        />
-                        <div>{messages}</div>
-                      </div>
-                    )
-                  } else if (
-                    isUiNodeInputAttributes(attributes) &&
-                    attributes.type === 'submit'
-                  ) {
-                    return (
-                      <div key={index}>
-                        <Button
-                          type={attributes.type}
-                          aria-label={attributes.label?.text || attributes.name}
-                          name={attributes.name}
-                          disabled={attributes.disabled}
-                          value={attributes.value}
-                          className='ml-2'
-                        >
-                          {meta?.label?.text || 'Submit'}
-                        </Button>
-                      </div>
-                    )
-                  }
-                  return null
-                })}
+            <form
+              method='post'
+              action={actionUrl}
+              className='flex justify-center flex-col items-center'
+            >
+              <div className='max-w-sm'>
+                <fieldset>
+                  <div className='p-4 space-y-3'>
+                    {uiNodes.map((field, index) => {
+                      const { attributes, meta } = field
+                      const label = meta?.label?.text
+                      if (
+                        isUiNodeInputAttributes(attributes) &&
+                        attributes.type !== 'submit'
+                      ) {
+                        return (
+                          <Input
+                            key={index}
+                            type={attributes.type}
+                            name={attributes.name}
+                            required={attributes.required}
+                            disabled={attributes.disabled}
+                            defaultValue={attributes.value}
+                            label={
+                              attributes.type !== 'hidden' ? label : undefined
+                            }
+                            error={field.messages
+                              .map((message) => message.text)
+                              .join('; ')}
+                          />
+                        )
+                      }
+                      return null
+                    })}
+                  </div>
+                  <div className='flex p-4 justify-center'>
+                    {uiNodes.map((field, index) => {
+                      const { attributes, meta } = field
+                      if (
+                        isUiNodeInputAttributes(attributes) &&
+                        attributes.type === 'submit'
+                      ) {
+                        return (
+                          <Button
+                            key={index}
+                            type={attributes.type}
+                            aria-label={
+                              attributes.label?.text || attributes.name
+                            }
+                            name={attributes.name}
+                            disabled={attributes.disabled}
+                            value={attributes.value}
+                          >
+                            {meta?.label?.text || 'Submit'}
+                          </Button>
+                        )
+                      }
+                      return null
+                    })}
+                  </div>
+                </fieldset>
               </div>
             </form>
           </div>
