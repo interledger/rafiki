@@ -53,8 +53,6 @@ services:
       - '3003:3003'
       - '3006:3006'
       - '3007:3007'
-    extra_hosts:
-      - 'host.docker.internal:host-gateway'  
     environment:
       NODE_ENV: ${NODE_ENV:-development}
       AUTH_SERVER_DOMAIN: http://cloud-nine-wallet-test-auth:3006

@@ -53,8 +53,6 @@ services:
       - '4003:4003'
       - '4006:4006'
       - '4007:4007'
-    extra_hosts:
-      - 'host.docker.internal:host-gateway'  
     environment:
       NODE_ENV: development
       AUTH_DATABASE_URL: postgresql://happy_life_bank_test_auth:happy_life_bank_test_auth@shared-database/happy_life_bank_test_auth
