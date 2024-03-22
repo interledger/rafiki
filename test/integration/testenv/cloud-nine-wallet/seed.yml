@@ -1,0 +1,76 @@
+assets:
+  - code: USD
+    scale: 2
+    liquidity: 1000000
+    liquidityThreshold: 100000
+  - code: EUR
+    scale: 2
+    liquidity: 1000000
+    liquidityThreshold: 100000
+  - code: MXN
+    scale: 2
+    liquidity: 1000000
+    liquidityThreshold: 100000
+  - code: JPY
+    scale: 0
+    liquidity: 10000
+    liquidityThreshold: 1000
+peeringAsset: 'USD'
+peers:
+  - initialLiquidity: '100000'
+    peerUrl: http://host.docker.internal:4002
+    peerIlpAddress: test.happy-life-bank-test
+    liquidityThreshold: 10000
+accounts:
+  - name: 'Grace Franklin'
+    path: accounts/gfranklin
+    id: 742ab7cd-1624-4d2e-af6e-e15a71638669
+    initialBalance: 50000
+    postmanEnvVar: gfranklinWalletAddress
+    assetCode: USD
+  - name: 'Bert Hamchest'
+    id: a9adbe1a-df31-4766-87c9-d2cb2e636a9b
+    initialBalance: 50000
+    path: accounts/bhamchest
+    postmanEnvVar: bhamchestWalletAddress
+    assetCode: USD
+  - name: "World's Best Donut Co"
+    id: 5726eefe-8737-459d-a36b-0acce152cb90
+    initialBalance: 2000
+    path: accounts/wbdc
+    postmanEnvVar: wbdcWalletAddress
+    assetCode: USD
+rates:
+  EUR:
+    MXN: 18.78
+    USD: 1.10
+    JPY: 157.83
+  USD:
+    MXN: 17.07
+    EUR: 0.91
+    JPY: 147.71
+  MXN:
+    USD: 0.059
+    EUR: 0.054
+    JPY: 8.65
+  JPY:
+    USD: 0.007
+    EUR: 0.006
+    MXN: 0.12
+fees:
+  - fixed: 100
+    basisPoints: 200
+    asset: USD
+    scale: 2
+  - fixed: 100
+    basisPoints: 200
+    asset: EUR
+    scale: 2
+  - fixed: 100
+    basisPoints: 200
+    asset: MXN
+    scale: 2
+  - fixed: 1
+    basisPoints: 200
+    asset: JPY
+    scale: 0

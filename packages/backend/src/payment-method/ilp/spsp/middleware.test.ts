@@ -1,4 +1,4 @@
-import { spspMiddleware, SPSPWalletAddressContext } from './middleware'
+import { createSpspMiddleware, SPSPWalletAddressContext } from './middleware'
 import { setup } from '../../../open_payments/wallet_address/model.test'
 import { Config } from '../../../config/app'
 import { IocContract } from '@adonisjs/fold'
@@ -46,30 +46,35 @@ describe('SPSP Middleware', (): void => {
       ctx.container = deps
     })
 
-    test('calls next for non-SPSP request', async (): Promise<void> => {
-      const spspRoutes = await ctx.container.use('spspRoutes')
-      const spspSpy = jest.spyOn(spspRoutes, 'get')
-      ctx.headers['accept'] = 'application/json'
-      await expect(spspMiddleware(ctx, next)).resolves.toBeUndefined()
-      expect(spspSpy).not.toHaveBeenCalled()
-      expect(next).toHaveBeenCalled()
-    })
-
-    test('calls SPSP route for SPSP query', async (): Promise<void> => {
-      const spspRoutes = await ctx.container.use('spspRoutes')
-      const spspSpy = jest
-        .spyOn(spspRoutes, 'get')
-        .mockResolvedValueOnce(undefined)
-
-      ctx.headers['accept'] = 'application/spsp4+json'
-      await expect(spspMiddleware(ctx, next)).resolves.toBeUndefined()
-      expect(spspSpy).toHaveBeenCalledTimes(1)
-      expect(next).not.toHaveBeenCalled()
-      expect(ctx.paymentTag).toEqual(ctx.walletAddress.id)
-      expect(ctx.asset).toEqual({
-        code: ctx.walletAddress.asset.code,
-        scale: ctx.walletAddress.asset.scale
-      })
-    })
+    test.each`
+      header                      | spspEnabled | description
+      ${'application/json'}       | ${true}     | ${'calls next'}
+      ${'application/json'}       | ${false}    | ${'calls next'}
+      ${'application/spsp4+json'} | ${true}     | ${'calls SPSP route'}
+      ${'application/spsp4+json'} | ${false}    | ${'calls next'}
+    `(
+      '$description for accept header: $header and spspEnabled: $spspEnabled',
+      async ({ header, spspEnabled }): Promise<void> => {
+        const spspRoutes = await ctx.container.use('spspRoutes')
+        const spspSpy = jest
+          .spyOn(spspRoutes, 'get')
+          .mockResolvedValueOnce(undefined)
+        ctx.headers['accept'] = header
+        const spspMiddleware = createSpspMiddleware(spspEnabled)
+        await expect(spspMiddleware(ctx, next)).resolves.toBeUndefined()
+        if (!spspEnabled || header == 'application/json') {
+          expect(spspSpy).not.toHaveBeenCalled()
+          expect(next).toHaveBeenCalled()
+        } else {
+          expect(spspSpy).toHaveBeenCalledTimes(1)
+          expect(next).not.toHaveBeenCalled()
+          expect(ctx.paymentTag).toEqual(ctx.walletAddress.id)
+          expect(ctx.asset).toEqual({
+            code: ctx.walletAddress.asset.code,
+            scale: ctx.walletAddress.asset.scale
+          })
+        }
+      }
+    )
   })
 })

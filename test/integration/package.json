@@ -1,0 +1,29 @@
+{
+  "name": "integration",
+  "private": true,
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "testenv:compose": "docker-compose -f ./testenv/cloud-nine-wallet/docker-compose.yml -f ./testenv/happy-life-bank/docker-compose.yml -f ./testenv/docker-compose.yml",
+    "test": "jest",
+    "run-tests": "./scripts/run-tests.sh"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@apollo/client": "^3.8.10",
+    "@interledger/http-signature-utils": "2.0.2",
+    "@interledger/open-payments": "^6.7.2",
+    "@koa/bodyparser": "^5.0.0",
+    "@types/koa": "2.14.0",
+    "@types/koa-bodyparser": "^4.3.12",
+    "@types/node": "^18.19.19",
+    "@types/uuid": "^9.0.8",
+    "dotenv": "^16.4.1",
+    "koa": "^2.15.0",
+    "mock-account-service-lib": "workspace:*",
+    "uuid": "^9.0.1",
+    "yaml": "^2.3.4"
+  }
+}

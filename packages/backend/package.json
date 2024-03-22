@@ -12,7 +12,9 @@
     "build": "pnpm build:deps && pnpm clean && tsc --build tsconfig.json && pnpm copy-files",
     "clean": "rm -fr dist/",
     "copy-files": "cp src/graphql/schema.graphql dist/graphql/ && cp -r ./src/openapi ./dist/",
-    "prepack": "pnpm build"
+    "copy-op-schemas": "cp ./node_modules/@interledger/open-payments/dist/openapi/specs/schemas.yaml ./src/openapi/specs/",
+    "prepack": "pnpm build",
+    "postinstall": "pnpm copy-op-schemas"
   },
   "devDependencies": {
     "@apollo/client": "^3.9.7",
@@ -69,7 +71,7 @@
     "extensible-error": "^1.0.2",
     "graphql": "^16.8.1",
     "graphql-middleware": "^6.1.35",
-    "graphql-scalars": "^1.22.5",
+    "graphql-scalars": "^1.23.0",
     "ilp-packet": "3.1.4-alpha.2",
     "ilp-protocol-ccp": "^1.2.4-alpha.2",
     "ilp-protocol-ildcp": "^2.2.4-alpha.2",

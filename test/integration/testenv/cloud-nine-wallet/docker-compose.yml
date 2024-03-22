@@ -1,0 +1,66 @@
+name: cloud-nine-wallet-test
+services:
+  cloud-nine-wallet-test-backend:
+    hostname: cloud-nine-wallet-test-backend
+    image: rafiki-backend
+    build:
+      context: ../../../..
+      dockerfile: ./packages/backend/Dockerfile
+    restart: always
+    privileged: true
+    ports:
+      - '3000:3000'
+      - '3001:3001'
+      - '3002:3002'
+    networks:
+      - rafiki-test
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'  
+    environment:
+      LOG_LEVEL: debug
+      NODE_ENV: development
+      CONNECTOR_PORT: 3002
+      ADMIN_PORT: 3001
+      OPEN_PAYMENTS_PORT: 3000
+      DATABASE_URL: postgresql://cloud_nine_wallet_test_backend:cloud_nine_wallet_test_backend@shared-database/cloud_nine_wallet_test_backend
+      OPEN_PAYMENTS_URL: https://host.docker.internal:3000
+      WALLET_ADDRESS_URL: https://host.docker.internal:3000/.well-known/pay
+      # matches pfry key id
+      KEY_ID: keyid-97a3a431-8ee1-48fc-ac85-70e2f5eba8e5
+      PRIVATE_KEY_FILE: /workspace/private-key.pem
+      AUTH_SERVER_INTROSPECTION_URL: http://host.docker.internal:3007
+      AUTH_SERVER_GRANT_URL: http://host.docker.internal:3006
+      ILP_ADDRESS: test.cloud-nine-wallet-test
+      STREAM_SECRET: BjPXtnd00G2mRQwP/8ZpwyZASOch5sUXT5o0iR5b5wU=
+      WEBHOOK_URL: http://host.docker.internal:8888/webhooks
+      EXCHANGE_RATES_URL: http://host.docker.internal:8888/rates
+      REDIS_URL: redis://shared-redis:6379/0
+    volumes:
+      - ../private-key.pem:/workspace/private-key.pem
+    depends_on:
+      - shared-database
+      - shared-redis
+  cloud-nine-wallet-test-auth:
+    hostname: cloud-nine-wallet-test-auth
+    image: rafiki-auth
+    build:
+      context: ../../../..
+      dockerfile: ./packages/auth/Dockerfile
+    restart: always
+    networks:
+      - rafiki-test
+    ports:
+      - '3003:3003'
+      - '3006:3006'
+      - '3007:3007'
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'  
+    environment:
+      NODE_ENV: ${NODE_ENV:-development}
+      AUTH_SERVER_DOMAIN: http://host.docker.internal:3006
+      AUTH_DATABASE_URL: postgresql://cloud_nine_wallet_test_auth:cloud_nine_wallet_test_auth@shared-database/cloud_nine_wallet_test_auth
+      INTROSPECTION_PORT: 3007
+      AUTH_PORT: 3006
+      ADMIN_PORT: 3003
+    depends_on:
+      - shared-database

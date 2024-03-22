@@ -2,44 +2,43 @@ import type { ActionFunctionArgs } from '@remix-run/node'
 import { json } from '@remix-run/node'
 import {
   handleLowLiquidity,
-  handleWalletAddressNotFound,
-  WebHook
+  handleWalletAddressNotFound
 } from '~/lib/webhooks.server'
 import {
   handleOutgoingPaymentCreated,
   handleOutgoingPaymentCompletedFailed,
-  handleIncomingPaymentCompletedExpired,
-  EventType
+  handleIncomingPaymentCompletedExpired
 } from '~/lib/webhooks.server'
+import { WebhookEventType, Webhook } from 'mock-account-service-lib'
 
 export function parseError(e: unknown): string {
   return e instanceof Error && e.stack ? e.stack : String(e)
 }
 
 export async function action({ request }: ActionFunctionArgs) {
-  const wh: WebHook = await request.json()
+  const wh: Webhook = await request.json()
   console.log('received webhook: ', JSON.stringify(wh))
 
   try {
     switch (wh.type) {
-      case EventType.OutgoingPaymentCreated:
+      case WebhookEventType.OutgoingPaymentCreated:
         await handleOutgoingPaymentCreated(wh)
         break
-      case EventType.OutgoingPaymentCompleted:
-      case EventType.OutgoingPaymentFailed:
+      case WebhookEventType.OutgoingPaymentCompleted:
+      case WebhookEventType.OutgoingPaymentFailed:
         await handleOutgoingPaymentCompletedFailed(wh)
         break
-      case EventType.IncomingPaymentCreated:
+      case WebhookEventType.IncomingPaymentCreated:
         break
-      case EventType.IncomingPaymentCompleted:
-      case EventType.IncomingPaymentExpired:
+      case WebhookEventType.IncomingPaymentCompleted:
+      case WebhookEventType.IncomingPaymentExpired:
         await handleIncomingPaymentCompletedExpired(wh)
         break
-      case EventType.WalletAddressNotFound:
+      case WebhookEventType.WalletAddressNotFound:
         await handleWalletAddressNotFound(wh)
         break
-      case EventType.AssetLiquidityLow:
-      case EventType.PeerLiquidityLow:
+      case WebhookEventType.AssetLiquidityLow:
+      case WebhookEventType.PeerLiquidityLow:
         await handleLowLiquidity(wh)
         break
       default:

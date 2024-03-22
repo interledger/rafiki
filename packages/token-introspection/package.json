@@ -9,8 +9,10 @@
   "scripts": {
     "build": "pnpm clean && tsc --build tsconfig.json && pnpm copy-files",
     "clean": "rm -fr dist/",
-    "copy-files": "cp -r ./src/openapi/*.yaml ./dist/openapi",
-    "generate:types": "openapi-typescript src/openapi/token-introspection.yaml --output src/openapi/generated/types.ts -t",
+    "copy-files": "mkdir -p ./dist/openapi/specs && cp -r ./src/openapi/specs/*.yaml ./dist/openapi/specs/",
+    "copy-op-schemas": "cp ./node_modules/@interledger/open-payments/dist/openapi/specs/auth-server.yaml ./node_modules/@interledger/open-payments/dist/openapi/specs/schemas.yaml ./src/openapi/specs/",
+    "generate:types": "openapi-typescript ../../openapi/token-introspection.yaml --output src/openapi/generated/types.ts -t",
+    "postinstall": "pnpm copy-op-schemas",
     "prepack": "pnpm build",
     "test": "jest --passWithNoTests",
     "test:cov": "pnpm test -- --coverage",
@@ -23,6 +25,7 @@
     "openapi-typescript": "^6.7.5"
   },
   "dependencies": {
+    "@interledger/open-payments": "6.8.0",
     "@interledger/openapi": "1.2.1",
     "axios": "^1.6.8",
     "pino": "^8.19.0"

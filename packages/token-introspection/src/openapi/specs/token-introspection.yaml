@@ -1,0 +1,116 @@
+openapi: 3.1.0
+info:
+  title: Rafiki Authorization Server - Resource Server Connection
+  version: '1.0'
+  license:
+    name: Apache 2.0
+    identifier: Apache-2.0
+  summary: Rafiki Authorization Server - Resource Server Connection
+  description: 'The Open Payments API is secured via [GNAP](https://datatracker.ietf.org/doc/html/draft-ietf-gnap-core-protocol). This specification describes the connection between the Rafiki Open Payments Authorization Server and the Rafiki Open Payments Resource Server, which is an opinionated version of the [Grant Negotiation and Authorization Protocol Resource Server Connections](https://datatracker.ietf.org/doc/html/draft-ietf-gnap-resource-servers).'
+  contact:
+    email: tech@interledger.org
+servers:
+  - url: 'https://openpayments.guide/auth'
+tags:
+  - name: introspection
+    description: Token introspection
+paths:
+  /:
+    parameters: []
+    post:
+      summary: Introspect Access Token
+      operationId: post-introspect
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - properties:
+                      active:
+                        type: boolean
+                        enum:
+                          - false
+                    required:
+                      - active
+                  - $ref: '#/components/schemas/token-info'
+              examples:
+                Token Introspection:
+                  value:
+                    active: true
+                    grant: 1ee48d97-8fa1-4ab4-b89d-95284b665517
+                    access:
+                      - type: outgoing-payment
+                        actions:
+                          - create
+                          - read
+                        identifier: 'https://openpayments.guide/alice'
+                        limits:
+                          interval: 'R12/2019-08-24T14:15:22Z/P1M'
+                          receiver: 'https://openpayments.guide/bob/incoming-payments/48884225-b393-4872-90de-1b737e2491c2'
+                          debitAmount:
+                            value: '500'
+                            assetCode: USD
+                            assetScale: 2
+                    client: 'https://webmonize.com/.well-known/pay'
+        '404':
+          description: Not Found
+      description: Introspect an access token to get grant details.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                access_token:
+                  type: string
+                  description: The access token value presented to the RS by the client instance.
+                access:
+                  $ref: ./auth-server.yaml#/components/schemas/access
+              required:
+                - access_token
+            examples:
+              Introspect token:
+                value:
+                  access_token: OS9M2PMHKUR64TB8N6BW7OZB8CDFONP219RP1LT0
+      tags:
+        - introspection
+components:
+  schemas:
+    token-info:
+      title: token-info
+      type: object
+      properties:
+        active:
+          type: boolean
+          enum:
+            - true
+        grant:
+          type: string
+        access:
+          $ref: ./auth-server.yaml#/components/schemas/access
+        client:
+          title: client
+          type: string
+          description: |-
+            Wallet address of the client instance that is making this request.
+
+            When sending a non-continuation request to the AS, the client instance MUST identify itself by including the client field of the request and by signing the request.
+
+            A JSON Web Key Set document, including the public key that the client instance will use to protect this request and any continuation requests at the AS and any user-facing information about the client instance used in interactions, MUST be available at the wallet address + `/jwks.json` url.
+
+            If sending a grant initiation request that requires RO interaction, the wallet address MUST serve necessary client display information.
+      required:
+        - active
+        - grant
+        - access
+        - client
+  securitySchemes:
+    GNAP:
+      name: Authorization
+      type: apiKey
+      in: header
+security:
+  - GNAP: []
