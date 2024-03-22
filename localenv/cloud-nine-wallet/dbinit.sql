@@ -14,14 +14,6 @@ CREATE USER happy_life_bank_auth WITH PASSWORD 'happy_life_bank_auth';
 CREATE DATABASE happy_life_bank_auth;
 ALTER DATABASE happy_life_bank_auth OWNER TO happy_life_bank_auth;
 
-CREATE USER happy_life_hydra WITH PASSWORD 'hydra_password';
-CREATE DATABASE happy_life_hydra;
-ALTER DATABASE happy_life_hydra OWNER TO happy_life_hydra;
-
-CREATE USER cloud_nine_hydra WITH PASSWORD 'hydra_password';
-CREATE DATABASE cloud_nine_hydra;
-ALTER DATABASE cloud_nine_hydra OWNER TO cloud_nine_hydra;
-
 CREATE USER happy_life_kratos WITH PASSWORD 'kratos_password';
 CREATE DATABASE happy_life_kratos;
 ALTER DATABASE happy_life_kratos OWNER TO happy_life_kratos;

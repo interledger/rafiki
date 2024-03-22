@@ -1,5 +1,3 @@
-import { Form } from '@remix-run/react'
-import { redirect, type ActionFunctionArgs } from '@remix-run/node'
 import { Button } from '../components/ui'
 import variables from '../utils/envConfig.server'
 import { redirectIfAlreadyAuthorized } from '../lib/kratos_checks.server'
@@ -8,10 +6,12 @@ import { type LoaderFunctionArgs } from '@remix-run/node'
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const cookies = request.headers.get('cookie')
   await redirectIfAlreadyAuthorized(request.url, cookies)
+
   return null
 }
 
 export default function Auth() {
+  const loginUrl = `${variables.kratosBrowserPublicUrl}/self-service/login/browser`
   return (
     <div className='pt-4 flex flex-col'>
       <div className='flex flex-col rounded-md bg-offwhite px-6 text-center min-h-[calc(100vh-7rem)] md:min-h-[calc(100vh-3rem)]'>
@@ -33,34 +33,12 @@ export default function Auth() {
             </a>
           </p>
           <div>
-            <Form method='post'>
-              <Button
-                type='submit'
-                name='action'
-                value='login'
-                aria-label='Login'
-                className='mr-2'
-              >
-                Login
-              </Button>
-            </Form>
+            <Button aria-label='logout' href={loginUrl} className='mr-2'>
+              Login
+            </Button>
           </div>
         </div>
       </div>
     </div>
   )
-}
-
-export async function action({ request }: ActionFunctionArgs) {
-  const formData = await request.formData()
-  const action = formData.get('action')
-
-  // Should we move this to the frontend? Or is the client ID considered sensitive?
-  if (action === 'login') {
-    const clientId = process.env.HYDRA_CLIENT_ID
-    const redirectUri = variables.hydraClientRedirectUri
-    return redirect(
-      `http://127.0.0.1:${variables.hydraPublicPort}/oauth2/auth?response_type=code&client_id=${clientId}&redirect_uri=${redirectUri}&scope=full_access&state=ab4R32wFF`
-    )
-  }
 }

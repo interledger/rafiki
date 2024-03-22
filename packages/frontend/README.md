@@ -57,7 +57,7 @@ TODO: add docs here
 Current set up
 How to make this setup suitable for prod
 How to get access tokens without Admin UI - maybe this should go in backend docs
-Links to Hydra and Kratos docs and GitHub
+Links to Kratos docs and GitHub
 Ory Kratos and your UI must be on the hosted on same top level domain! You can not host Ory Kratos and your UI on separate top level domains.
 Explain version requirements, had to downgrade to be compatible with Kratos login_challenge handling
 Add explanation for all the new environment variables that are needed
