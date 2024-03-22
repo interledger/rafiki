@@ -78,9 +78,7 @@ export default function Login() {
                           name={attributes.name}
                           required={attributes.required}
                           disabled={attributes.disabled}
-                          value={
-                            attributes.value ? attributes.value : undefined
-                          }
+                          defaultValue={attributes.value}
                         />
                         <div>{messages}</div>
                       </div>

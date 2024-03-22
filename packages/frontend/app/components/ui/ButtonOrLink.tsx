@@ -16,13 +16,7 @@ const AnchorOrLink = forwardRef<HTMLAnchorElement, AnchorOrLinkProps>(
       }
 
       return (
-        <a
-          ref={ref}
-          target='_blank'
-          rel='noreferrer noopener'
-          href={href}
-          {...props}
-        >
+        <a ref={ref} rel='noreferrer' href={href} {...props}>
           {children}
         </a>
       )
