@@ -44,14 +44,15 @@ export async function redirectIfUnauthorizedAccess(
 
 export async function redirectIfAlreadyAuthorized(
   url: string,
-  cookieHeader?: string | null
+  cookieHeader: string | null,
+  redirectPath: string = '/'
 ) {
   const isAuthPath = new URL(url).pathname.startsWith('/auth')
 
   if (isAuthPath) {
     const loggedIn = await isLoggedIn(cookieHeader)
     if (loggedIn) {
-      throw redirect('/')
+      throw redirect(redirectPath)
     }
   }
   return

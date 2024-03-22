@@ -87,7 +87,7 @@ services:
       OPEN_PAYMENTS_URL: https://happy-life-bank-backend/
       ENABLE_INSECURE_MESSAGE_COOKIE: true
       KRATOS_CONTAINER_PULIC_URL: 'http://happy-life-kratos:4433'
-      KRATOS_BROWSER_PUBLIC_URL: 'http://127.0.0.1:5433'
+      KRATOS_BROWSER_PUBLIC_URL: 'http://127.0.0.1:4432'
       KRATOS_ADMIN_URL: 'http://happy-life-kratos:4434/admin'
     depends_on:
       - cloud-nine-admin
@@ -105,6 +105,6 @@ services:
     environment:
       DSN: postgres://happy_life_kratos:kratos_password@shared-database:5432/happy_life_kratos?sslmode=disable&max_conns=20&max_idle_conns=4
     ports:
-      - "5433:4433"
+      - "4432:4433"
     networks:
       - rafiki

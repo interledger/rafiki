@@ -1,4 +1,3 @@
-// TODO: What should happen if a user ends up here and has an active session?
 import { json, type LoaderFunctionArgs } from '@remix-run/node'
 import { uuidSchema } from '~/lib/validate.server'
 import { isUiNodeInputAttributes } from '@ory/integrations/ui'
@@ -6,9 +5,12 @@ import type { UiContainer } from '@ory/client'
 import { useLoaderData } from '@remix-run/react'
 import { Button } from '../components/ui'
 import variables from '../utils/envConfig.server'
+import { redirectIfAlreadyAuthorized } from '../lib/kratos_checks.server'
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const cookies = request.headers.get('cookie')
+  await redirectIfAlreadyAuthorized(request.url, cookies, '/settings')
+
   const url = new URL(request.url)
 
   const flowResult = uuidSchema.safeParse({ id: url.searchParams.get('flow') })
@@ -45,7 +47,6 @@ export default function Recovery() {
   const uiContainer: UiContainer = responseData.ui
   const uiNodes = uiContainer.nodes
   const actionUrl = uiContainer.action
-  // TODO: render different UI depending on state
   return (
     <div className='pt-4 flex flex-col'>
       <div className='flex flex-col rounded-md bg-offwhite px-6 text-center min-h-[calc(100vh-3rem)]'>
