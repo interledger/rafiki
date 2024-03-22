@@ -76,7 +76,7 @@ export function createBalanceMiddleware(): ILPMiddleware {
     if (state.streamDestination) {
       await next()
       if (response.fulfill) await createTransfer()
-    } else  {
+    } else {
       const trx = await createTransfer(5)
 
       await next()
