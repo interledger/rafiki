@@ -43,8 +43,6 @@ addHost "cloud-nine-wallet-test-auth"
 addHost "happy-life-bank-test-backend"
 addHost "happy-life-bank-test-auth"
 
-exit 0
-
 # idempotent start
 pnpm --filter integration testenv:compose down --volumes
 pnpm --filter integration testenv:compose up -d --wait $build_flag

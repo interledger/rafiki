@@ -122,13 +122,6 @@ jobs:
       - name: Build dependencies
         run: pnpm --filter integration build:deps
 
-      - name: debug
-        run: |
-          which pnpm
-          cat /etc/environment
-          echo "PATH=$PATH:/home/runner/setup-pnpm/node_modules/.bin" | sudo tee -a /etc/environment
-          cat /etc/environment
-
       - name: Run tests
         run: pnpm --filter integration run-tests
 
