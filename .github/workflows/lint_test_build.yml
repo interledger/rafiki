@@ -108,6 +108,27 @@ jobs:
         run: |
           npx @stoplight/spectral-cli lint ./packages/token-introspection/openapi/specs/token-introspection.yaml
 
+  integration-test:
+    runs-on: ubuntu-22.04
+    needs: checkout
+    timeout-minutes: 5
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup environment
+        uses: ./.github/workflows/rafiki/env-setup
+
+      - name: Setup hosts
+        run: |
+          echo "127.0.0.1 host.docker.internal" | sudo tee -a /etc/hosts
+
+      - name: Build dependencies
+        run: pnpm --filter integration build:deps
+
+      - name: Run tests
+        run: pnpm --filter integration run-tests
+
   build:
     runs-on: ubuntu-22.04
     timeout-minutes: 5
@@ -126,5 +147,6 @@ jobs:
     runs-on: ubuntu-22.04
     needs:
       - build
+      - integration-test
     steps:
       - run: echo 'PR Checks Passed'
