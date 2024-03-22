@@ -27,7 +27,7 @@ done
 addHost() {
   local hostname="$1"
   
-  check first to avoid sudo prompt if host is already set
+  # check first to avoid sudo prompt if host is already set
   if pnpm --filter integration hostile list | grep -q "127.0.0.1 $hostname"; then
     echo "$hostname already set"
   else
