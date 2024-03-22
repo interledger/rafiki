@@ -20,6 +20,13 @@ module.exports = async (globalConfig) => {
       .withEnvironment({
         POSTGRES_PASSWORD: 'password'
       })
+      .withHealthCheck({
+        test: ['CMD-SHELL', 'pg_isready -d testing'],
+        interval: 10000,
+        timeout: 5000,
+        retries: 5
+      })
+      .withWaitStrategy(Wait.forHealthCheck())
       .start()
 
     process.env.AUTH_DATABASE_URL = `postgresql://postgres:password@localhost:${postgresContainer.getMappedPort(
