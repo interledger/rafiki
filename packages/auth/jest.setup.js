@@ -1,7 +1,7 @@
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { knex } = require('knex')
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const { GenericContainer } = require('testcontainers')
+const { GenericContainer, Wait } = require('testcontainers')
 
 const POSTGRES_PORT = 5432
 
