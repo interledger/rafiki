@@ -129,13 +129,11 @@ jobs:
       - name: Build dependencies
         run: pnpm --filter integration build:deps
 
-      - name: Add pnpm to sudo PATH
-        run:  |
+      - name: Run tests
+        run: |
           which pnpm
           sudo env "PATH=$PATH:$(dirname $(which pnpm))"
-
-      - name: Run tests
-        run: pnpm --filter integration run-tests
+          pnpm --filter integration run-tests
 
   build:
     runs-on: ubuntu-22.04
