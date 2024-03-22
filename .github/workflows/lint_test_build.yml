@@ -122,6 +122,11 @@ jobs:
       - name: Build dependencies
         run: pnpm --filter integration build:deps
 
+      - name: debug
+        run: |
+          which pnpm
+          cat /etc/environment
+
       - name: Run tests
         run: pnpm --filter integration run-tests
 
