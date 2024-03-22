@@ -329,8 +329,8 @@ importers:
         specifier: ^6.1.35
         version: 6.1.35(graphql@16.8.1)
       graphql-scalars:
-        specifier: ^1.22.5
-        version: 1.22.5(graphql@16.8.1)
+        specifier: ^1.23.0
+        version: 1.23.0(graphql@16.8.1)
       ilp-packet:
         specifier: 3.1.4-alpha.2
         version: 3.1.4-alpha.2
@@ -9859,8 +9859,8 @@ packages:
       - encoding
     dev: true
 
-  /graphql-scalars@1.22.5(graphql@16.8.1):
-    resolution: {integrity: sha512-Mw7uaqRscjdaXmxlHbt3sYGLU8o1hfFvTvN2VRrYEJyEPy6zGIbaFyJ4PPyt9H6GRHp01MQwS6HqXroRYHyGOg==}
+  /graphql-scalars@1.23.0(graphql@16.8.1):
+    resolution: {integrity: sha512-YTRNcwitkn8CqYcleKOx9IvedA8JIERn8BRq21nlKgOr4NEcTaWEG0sT+H92eF3ALTFbPgsqfft4cw+MGgv0Gg==}
     engines: {node: '>=10'}
     peerDependencies:
       graphql: ^0.8.0 || ^0.9.0 || ^0.10.0 || ^0.11.0 || ^0.12.0 || ^0.13.0 || ^14.0.0 || ^15.0.0 || ^16.0.0
