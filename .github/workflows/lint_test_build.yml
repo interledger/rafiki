@@ -113,9 +113,9 @@ jobs:
       - name: Setup environment
         uses: ./.github/workflows/rafiki/env-setup
 
-      - name: Setup hosts
-        run: |
-          echo "127.0.0.1 host.docker.internal" | sudo tee -a /etc/hosts
+      # - name: Setup hosts
+      #   run: |
+      #     echo "127.0.0.1 host.docker.internal" | sudo tee -a /etc/hosts
 
       - name: Build dependencies
         run: pnpm --filter integration build:deps
