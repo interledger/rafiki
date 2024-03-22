@@ -126,7 +126,7 @@ jobs:
         run: |
           which pnpm
           cat /etc/environment
-          echo "PATH=$PATH:/home/runner/setup-pnpm/node_modules/.bin/pnpm" | sudo tee /etc/environment
+          echo "PATH=$PATH:/home/runner/setup-pnpm/node_modules/.bin/pnpm" | sudo tee -a /etc/environment
           cat /etc/environment
 
       - name: Run tests
