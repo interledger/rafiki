@@ -132,8 +132,7 @@ jobs:
       - name: Run tests
         run: |
           which pnpm
-          sudo env "PATH=$PATH:$(dirname $(which pnpm))"
-          pnpm --filter integration run-tests
+          sudo env "PATH=$PATH:$(dirname $(which pnpm))" pnpm --filter integration run-tests
 
   build:
     runs-on: ubuntu-22.04
