@@ -3,8 +3,9 @@
   "private": true,
   "sideEffects": false,
   "scripts": {
+    "delete-user": "node ./build/deleteUser.js",
     "invite-user": "node ./build/userInvitation.js",
-    "build": "remix build && tsc ./kratos/scripts/userInvitation.ts --esModuleInterop --outDir ./build/",
+    "build": "remix build && tsc ./kratos/scripts/*.ts --esModuleInterop --outDir ./build/",
     "dev": "PORT=3005 remix dev",
     "lint:fix": "eslint --fix app/",
     "lint:check": "eslint app/",

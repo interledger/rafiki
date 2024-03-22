@@ -62,3 +62,4 @@ Ory Kratos and your UI must be on the hosted on same top level domain! You can n
 Explain version requirements, had to downgrade to be compatible with Kratos login_challenge handling
 Add explanation for all the new environment variables that are needed
 Run docker exec -it rafiki-cloud-nine-admin-1 npm run invite-user -- example@mail.com and it will output recovery link on screen
+Run docker exec -it rafiki-cloud-nine-admin-1 npm run delete-user -- example@mail.com to delete a user

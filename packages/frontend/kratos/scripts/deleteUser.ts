@@ -44,24 +44,14 @@ const getIdentityId = async () => {
   }
 }
 
-const createIdentity = async () => {
+const deleteIdentity = async (identityId: string) => {
   try {
-    const response = await axios.post(
-      `${KRATOS_INSTANCE}/identities`,
-      {
-        schema_id: 'default',
-        traits: {
-          email: USER_EMAIL
-        }
-      },
-      {
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      }
+    const response = await axios.delete(
+      `${KRATOS_INSTANCE}/identities/${identityId}`
     )
-    console.log('Successfully created user with ID ', response.data.id)
-    return response.data.id
+    if (response.status === 204)
+      console.log('Successfully deleted user with ID ', identityId)
+    return
   } catch (error) {
     if (axios.isAxiosError(error)) {
       console.error(
@@ -76,42 +66,11 @@ const createIdentity = async () => {
   }
 }
 
-const createRecoveryLink = async (identityId: string) => {
-  try {
-    const response = await axios.post(
-      `${KRATOS_INSTANCE}/recovery/link`,
-      {
-        expires_in: '12h',
-        identity_id: identityId
-      },
-      {
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      }
-    )
-    return response.data.recovery_link
-  } catch (error) {
-    if (axios.isAxiosError(error)) {
-      console.error(
-        'Error creating recovery link:',
-        error.response?.status,
-        error.response?.data
-      )
-    } else {
-      console.error('An unexpected error occurred:', error)
-    }
-    process.exit(1)
-  }
-}
-
 const run = async () => {
-  let identityId = await getIdentityId()
-  if (identityId === null) {
-    identityId = await createIdentity()
+  const identityId = await getIdentityId()
+  if (identityId !== null) {
+    await deleteIdentity(identityId)
   }
-  const recoveryLink = await createRecoveryLink(identityId)
-  console.log('Recovery link:', recoveryLink)
 }
 
 run()
