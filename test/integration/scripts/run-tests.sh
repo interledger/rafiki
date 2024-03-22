@@ -28,10 +28,10 @@ addHost() {
   local hostname="$1"
   
   # check first to avoid sudo prompt if host is already set
-  if hostile list | grep -q "127.0.0.1 $hostname"; then
+  if pnpm --filter integration hostile list | grep -q "127.0.0.1 $hostname"; then
     echo "$hostname already set"
   else
-    sudo hostile set 127.0.0.1 "$hostname"
+  sudo pnpm --filter integration hostile set 127.0.0.1 "$hostname"
   fi
 }
 addHost "cloud-nine-wallet-test-backend"
