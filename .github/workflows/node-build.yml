@@ -199,7 +199,17 @@ jobs:
     steps:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
-      - name: Build
+      - name: Build linux/amd64
+        if: ${{ !startsWith(github.ref_name, 'release/v') }}
+        uses: docker/build-push-action@v5
+        with:
+          push: false
+          platforms: linux/amd64
+          file: packages/${{ matrix.package }}/Dockerfile
+          tags: ghcr.io/${{ github.repository_owner }}/rafiki-${{ matrix.package }}:${{ needs.version-generator.outputs.version }}
+          outputs: type=docker,dest=/tmp/${{ matrix.package }}.tar
+      - name: Build linux/amd64 & linux/arm64
+        if: ${{ startsWith(github.ref_name, 'release/v') }}
         uses: docker/build-push-action@v5
         with:
           push: false
