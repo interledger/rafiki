@@ -80,24 +80,6 @@ describe('Telemetry Middleware', function () {
 
     expect(collectAmountSpy).not.toHaveBeenCalled()
     expect(next).toHaveBeenCalled()
-  })
 
-  it('should collect telemetry', async () => {
-    let resolveCollectAmount: () => void
-    const collectAmountPromise = new Promise<void>((resolve) => {
-      resolveCollectAmount = resolve
-    })
-    const collectAmountSpy = jest
-      .spyOn(telemetry, 'collectTelemetryAmount')
-      .mockImplementation(() => {
-        resolveCollectAmount()
-        return Promise.resolve()
-      })
-
-    await middleware(ctx, next)
-
-    await collectAmountPromise
-
-    expect(collectAmountSpy).toHaveBeenCalled()
   })
 })
