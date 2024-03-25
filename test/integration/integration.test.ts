@@ -20,14 +20,12 @@ import {
   OutgoingPayment as OutgoingPaymentGql,
   OutgoingPaymentState
 } from './lib/generated/graphql'
-import { TestActions, createTestActions } from './lib/test-actions'
 
-jest.setTimeout(20_000)
+jest.setTimeout(20000)
 
 describe('Integration tests', (): void => {
   let c9: MockASE
   let hlb: MockASE
-  let testActions: TestActions
 
   beforeAll(async () => {
     try {
@@ -40,8 +38,6 @@ describe('Integration tests', (): void => {
       // https://github.com/jestjs/jest/issues/2713
       process.exit(1)
     }
-
-    testActions = createTestActions({ sendingASE: c9, receivingASE: hlb })
   })
 
   afterAll(async () => {
@@ -49,8 +45,38 @@ describe('Integration tests', (): void => {
     hlb.shutdown()
   })
 
-  // Individual requests
-  describe('Requests', (): void => {
+  describe('Open Payments Flow', (): void => {
+    const receiverWalletAddressUrl =
+      'http://host.docker.internal:4100/accounts/pfry'
+    const senderWalletAddressUrl =
+      'http://host.docker.internal:3100/accounts/gfranklin'
+    const amountValueToSend = '100'
+
+    let receiverWalletAddress: WalletAddress
+    let senderWalletAddress: WalletAddress
+    let accessToken: string
+    let incomingPayment: IncomingPayment
+    let quote: Quote
+    let outgoingPaymentGrant: PendingGrant
+    let grantContinue: Grant
+    let outgoingPayment: OutgoingPayment
+
+    test('Can Get Existing Wallet Address', async (): Promise<void> => {
+      receiverWalletAddress = await c9.opClient.walletAddress.get({
+        url: receiverWalletAddressUrl
+      })
+      senderWalletAddress = await c9.opClient.walletAddress.get({
+        url: senderWalletAddressUrl
+      })
+
+      expect(receiverWalletAddress.id).toBe(
+        receiverWalletAddressUrl.replace('http', 'https')
+      )
+      expect(senderWalletAddress.id).toBe(
+        senderWalletAddressUrl.replace('http', 'https')
+      )
+    })
+
     test('Can Get Non-Existing Wallet Address', async (): Promise<void> => {
       const notFoundWalletAddress =
         'https://host.docker.internal:4100/accounts/asmith'
@@ -83,153 +109,6 @@ describe('Integration tests', (): void => {
         })
       )
     })
-  })
-
-  // Series of requests depending on eachother
-  describe('Flows', () => {
-    test('Open Payments with Continuation via Polling', async (): Promise<void> => {})
-    test('Open Payments with Continuation via "interact_ref"', async (): Promise<void> => {})
-    test('Peer to Peer', async (): Promise<void> => {
-      const {
-        createReceiver,
-        createQuote,
-        createOutgoingPayment,
-        getOutgoingPayemnt
-      } = testActions
-
-      const senderWalletAddress = await c9.accounts.getByWalletAddressUrl(
-        'https://host.docker.internal:3100/accounts/gfranklin'
-      )
-      assert(senderWalletAddress?.walletAddressID)
-      const senderWalletAddressId = senderWalletAddress.walletAddressID
-      const value = '500'
-      const createReceiverInput = {
-        metadata: {
-          description: 'For lunch!'
-        },
-        incomingAmount: {
-          assetCode: 'USD',
-          assetScale: 2,
-          value: value as unknown as bigint
-        },
-        walletAddressUrl: 'https://host.docker.internal:4100/accounts/pfry'
-      }
-
-      const receiver = await createReceiver(createReceiverInput)
-      const quote = await createQuote(senderWalletAddressId, receiver)
-      const outgoingPayment = await createOutgoingPayment(
-        senderWalletAddressId,
-        quote
-      )
-      const outgoingPayment_ = await getOutgoingPayemnt(
-        outgoingPayment.id,
-        value
-      )
-      expect(outgoingPayment_.sentAmount.value).toBe(value)
-    })
-    test('Peer to Peer - Cross Currency', async (): Promise<void> => {
-      const {
-        createReceiver,
-        createQuote,
-        createOutgoingPayment,
-        getOutgoingPayemnt
-      } = testActions
-
-      const senderWalletAddress = await c9.accounts.getByWalletAddressUrl(
-        'https://host.docker.internal:3100/accounts/gfranklin'
-      )
-      assert(senderWalletAddress?.walletAddressID)
-      const senderWalletAddressId = senderWalletAddress.walletAddressID
-      const value = '500'
-      const createReceiverInput = {
-        metadata: {
-          description: 'cross-currency'
-        },
-        incomingAmount: {
-          assetCode: 'EUR',
-          assetScale: 2,
-          value: value as unknown as bigint
-        },
-        walletAddressUrl: 'https://host.docker.internal:4100/accounts/lars'
-      }
-
-      const receiver = await createReceiver(createReceiverInput)
-      const quote = await createQuote(senderWalletAddressId, receiver)
-      const outgoingPayment = await createOutgoingPayment(
-        senderWalletAddressId,
-        quote
-      )
-      await getOutgoingPayemnt(outgoingPayment.id, value)
-      // TODO: more assertions about cross currecny? not sure what assumptions
-      // we want to bake-in here. conversion rate/fees/asset code/scale etc.
-    })
-  })
-
-  // Previous implementation of tests
-  describe.skip('Open Payments Flow', (): void => {
-    const receiverWalletAddressUrl =
-      'http://host.docker.internal:4100/accounts/pfry'
-    const senderWalletAddressUrl =
-      'http://host.docker.internal:3100/accounts/gfranklin'
-    const amountValueToSend = '100'
-
-    let receiverWalletAddress: WalletAddress
-    let senderWalletAddress: WalletAddress
-    let accessToken: string
-    let incomingPayment: IncomingPayment
-    let quote: Quote
-    let outgoingPaymentGrant: PendingGrant
-    let grantContinue: Grant
-    let outgoingPayment: OutgoingPayment
-
-    test('Can Get Existing Wallet Address', async (): Promise<void> => {
-      receiverWalletAddress = await c9.opClient.walletAddress.get({
-        url: receiverWalletAddressUrl
-      })
-      senderWalletAddress = await c9.opClient.walletAddress.get({
-        url: senderWalletAddressUrl
-      })
-
-      expect(receiverWalletAddress.id).toBe(
-        receiverWalletAddressUrl.replace('http', 'https')
-      )
-      expect(senderWalletAddress.id).toBe(
-        senderWalletAddressUrl.replace('http', 'https')
-      )
-    })
-
-    // test('Can Get Non-Existing Wallet Address', async (): Promise<void> => {
-    //   const notFoundWalletAddress =
-    //     'https://host.docker.internal:4100/accounts/asmith'
-
-    //   const handleWebhookEventSpy = jest.spyOn(
-    //     hlb.integrationServer.webhookEventHandler,
-    //     'handleWebhookEvent'
-    //   )
-
-    //   // Poll in case the webhook response to create wallet address is slow,
-    //   // but initial request may very well resolve immediately.
-    //   const walletAddress = await poll(
-    //     async () =>
-    //       c9.opClient.walletAddress.get({
-    //         url: notFoundWalletAddress
-    //       }),
-    //     (responseData) => responseData.id === notFoundWalletAddress,
-    //     5,
-    //     0.5
-    //   )
-
-    //   assert(walletAddress)
-    //   expect(walletAddress.id).toBe(notFoundWalletAddress)
-    //   expect(handleWebhookEventSpy).toHaveBeenCalledWith(
-    //     expect.objectContaining({
-    //       type: WebhookEventType.WalletAddressNotFound,
-    //       data: expect.objectContaining({
-    //         walletAddressUrl: notFoundWalletAddress
-    //       })
-    //     })
-    //   )
-    // })
 
     test('Grant Request Incoming Payment', async (): Promise<void> => {
       const grant = await c9.opClient.grant.request(
@@ -587,7 +466,8 @@ describe('Integration tests', (): void => {
       expect(outgoingPayment_.sentAmount.value).toBe(amountValueToSend)
     })
   })
-  describe.skip('Peer to Peer Flow', (): void => {
+
+  describe('Peer to Peer Flow', (): void => {
     const receiverWalletAddressUrl =
       'https://host.docker.internal:4100/accounts/pfry'
     const amountValueToSend = '500'
