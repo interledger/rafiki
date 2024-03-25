@@ -77,6 +77,7 @@ rafiki-frontend:
   serviceUrls:
     GRAPHQL_URL: http://rafiki-rafiki-backend:3001/graphql
     OPEN_PAYMENTS_URL: https://rafiki-rafiki-backend/
+    NODE_ENV: production
   port: 3010
 
 postgresql:
