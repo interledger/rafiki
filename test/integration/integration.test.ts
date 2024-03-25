@@ -94,7 +94,7 @@ describe('Integration tests', (): void => {
         createReceiver,
         createQuote,
         createOutgoingPayment,
-        getOutgoingPayemnt
+        getOutgoingPayment
       } = testActions
 
       const senderWalletAddress = await c9.accounts.getByWalletAddressUrl(
@@ -121,7 +121,7 @@ describe('Integration tests', (): void => {
         senderWalletAddressId,
         quote
       )
-      const outgoingPayment_ = await getOutgoingPayemnt(
+      const outgoingPayment_ = await getOutgoingPayment(
         outgoingPayment.id,
         value
       )
@@ -132,7 +132,7 @@ describe('Integration tests', (): void => {
         createReceiver,
         createQuote,
         createOutgoingPayment,
-        getOutgoingPayemnt
+        getOutgoingPayment
       } = testActions
 
       const senderWalletAddress = await c9.accounts.getByWalletAddressUrl(
@@ -159,7 +159,7 @@ describe('Integration tests', (): void => {
         senderWalletAddressId,
         quote
       )
-      await getOutgoingPayemnt(outgoingPayment.id, value)
+      await getOutgoingPayment(outgoingPayment.id, value)
       // TODO: more assertions about cross currecny? not sure what assumptions
       // we want to bake-in here. conversion rate/fees/asset code/scale etc.
     })

@@ -26,7 +26,7 @@ export interface TestActions {
     walletAddressId: string,
     quote: Quote
   ): Promise<OutgoingPayment>
-  getOutgoingPayemnt(
+  getOutgoingPayment(
     outgoingPaymentId: string,
     amountValueToSend: string
   ): Promise<OutgoingPayment>
@@ -40,8 +40,8 @@ export function createTestActions(deps: TestActionDeps): TestActions {
       createQuote(deps, walletAddressId, receiver),
     createOutgoingPayment: (walletAddressId, quote) =>
       createOutgoingPayment(deps, walletAddressId, quote),
-    getOutgoingPayemnt: (outgoingPaymentId, amountValueToSend) =>
-      getOutgoingPayemnt(deps, outgoingPaymentId, amountValueToSend)
+    getOutgoingPayment: (outgoingPaymentId, amountValueToSend) =>
+      getOutgoingPayment(deps, outgoingPaymentId, amountValueToSend)
   }
 }
 
@@ -56,7 +56,7 @@ async function createReceiver(
     receivingASE.integrationServer.webhookEventHandler,
     'handleWebhookEvent'
   )
-  // TODO: paramaterize metadata and expect in getOutgoingPayemnt?
+  // TODO: paramaterize metadata and expect in getOutgoingPayment?
   // const response = await sendingASE.adminClient.createReceiver({
   //   metadata: {
   //     description: 'For lunch!'
@@ -159,7 +159,7 @@ async function createOutgoingPayment(
 
   return response.payment
 }
-async function getOutgoingPayemnt(
+async function getOutgoingPayment(
   deps: TestActionDeps,
   outgoingPaymentId: string,
   amountValueToSend: string
