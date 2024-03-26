@@ -80,6 +80,5 @@ describe('Telemetry Middleware', function () {
 
     expect(collectAmountSpy).not.toHaveBeenCalled()
     expect(next).toHaveBeenCalled()
-
   })
 })
