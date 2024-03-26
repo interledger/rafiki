@@ -41,7 +41,9 @@ const loadEnv = (filePath: string): EnvConfig => {
   })
 
   if (missingKeys.length > 0) {
-    const errorMessage = `Missing required environment variable(s): ${missingKeys.join(', ')}`
+    const errorMessage = `Missing required environment variable(s): ${missingKeys.join(
+      ', '
+    )}`
     throw new Error(errorMessage)
   }
 

@@ -49,7 +49,7 @@ import { createIlpPaymentService } from './payment-method/ilp/service'
 import { createSPSPRoutes } from './payment-method/ilp/spsp/routes'
 import { createStreamCredentialsService } from './payment-method/ilp/stream-credentials/service'
 import { createRatesService } from './rates/service'
-import { TelemetryService, createTelemetryService } from './telemetry/service'
+import { createTelemetryService } from './telemetry/service'
 import { createWebhookService } from './webhook/service'
 
 BigInt.prototype.toJSON = function () {
