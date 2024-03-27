@@ -47,9 +47,9 @@ describe('Integration tests', (): void => {
 
   describe('Open Payments Flow', (): void => {
     const receiverWalletAddressUrl =
-      'http://host.docker.internal:4100/accounts/pfry'
+      'http://happy-life-bank-test-backend:4100/accounts/pfry'
     const senderWalletAddressUrl =
-      'http://host.docker.internal:3100/accounts/gfranklin'
+      'http://cloud-nine-wallet-test-backend:3100/accounts/gfranklin'
     const amountValueToSend = '100'
 
     let receiverWalletAddress: WalletAddress
@@ -79,7 +79,7 @@ describe('Integration tests', (): void => {
 
     test('Can Get Non-Existing Wallet Address', async (): Promise<void> => {
       const notFoundWalletAddress =
-        'https://host.docker.internal:4100/accounts/asmith'
+        'https://happy-life-bank-test-backend:4100/accounts/asmith'
 
       const handleWebhookEventSpy = jest.spyOn(
         hlb.integrationServer.webhookEventHandler,
@@ -469,7 +469,7 @@ describe('Integration tests', (): void => {
 
   describe('Peer to Peer Flow', (): void => {
     const receiverWalletAddressUrl =
-      'https://host.docker.internal:4100/accounts/pfry'
+      'https://happy-life-bank-test-backend:4100/accounts/pfry'
     const amountValueToSend = '500'
 
     let gfranklinWalletAddressId: string
@@ -479,7 +479,7 @@ describe('Integration tests', (): void => {
 
     beforeAll(async () => {
       const gfranklinWalletAddress = await c9.accounts.getByWalletAddressUrl(
-        'https://host.docker.internal:3100/accounts/gfranklin'
+        'https://cloud-nine-wallet-test-backend:3100/accounts/gfranklin'
       )
       assert(gfranklinWalletAddress?.walletAddressID)
       gfranklinWalletAddressId = gfranklinWalletAddress.walletAddressID

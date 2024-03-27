@@ -656,6 +656,9 @@ importers:
       dotenv:
         specifier: ^16.4.1
         version: 16.4.5
+      hostile:
+        specifier: ^1.4.0
+        version: 1.4.0
       koa:
         specifier: ^2.15.0
         version: 2.15.1
@@ -4262,6 +4265,13 @@ packages:
       methods: 1.1.2
       path-to-regexp: 6.2.1
     dev: false
+
+  /@ljharb/through@2.3.13:
+    resolution: {integrity: sha512-/gKJun8NNiWGZJkGzI/Ragc53cOdcLNdzjLaIa+GEjguQs0ulsurx8WN0jijdK9yPqDvziX995sMRLyLt1uZMQ==}
+    engines: {node: '>= 0.4'}
+    dependencies:
+      call-bind: 1.0.7
+    dev: true
 
   /@mdx-js/mdx@2.3.0:
     resolution: {integrity: sha512-jLuwRlz8DQfQNiUCJR50Y09CGPq3fLtmtUQfVrj79E0JWu3dvsVcxVIcfhR5h0iXu+/z++zDrYeiJqifRynJkA==}
@@ -10259,6 +10269,17 @@ packages:
       lru-cache: 7.18.3
     dev: true
 
+  /hostile@1.4.0:
+    resolution: {integrity: sha512-q5eniv6NnjeQ2S1Wh3/knyl4UE2FAQ9xz7yT0f6y5FK2j3fFHBI2jyaUVwAiAU20G6LQMAkRGM1WbTMXoeUwMg==}
+    hasBin: true
+    dependencies:
+      '@ljharb/through': 2.3.13
+      chalk: 4.1.2
+      minimist: 1.2.8
+      once: 1.4.0
+      split: 1.0.1
+    dev: true
+
   /html-encoding-sniffer@4.0.0:
     resolution: {integrity: sha512-Y22oTqIU4uuPgEemfz7NDJz6OeKf12Lsu+QC+s3BVpda64lTiMYCyGwg5ki4vFxkMwQdeZDl2adZoqUgdFuTgQ==}
     engines: {node: '>=18'}
@@ -13052,6 +13073,10 @@ packages:
   /minimist@1.2.6:
     resolution: {integrity: sha512-Jsjnk4bw3YJqYzbdyBiNsPWHPfO++UGG749Cxs6peCu5Xg4nrena6OVxOYxrQTqww0Jmwt+Ref8rggumkTLz9Q==}
 
+  /minimist@1.2.8:
+    resolution: {integrity: sha512-2yyAR8qBkN3YuheJanUpWC5U3bb5osDywNB8RzDVlDwDHbocAJveqqj1u8+SVD7jkWT4yvsHCpWqqWqAxb0zCA==}
+    dev: true
+
   /minipass-collect@1.0.2:
     resolution: {integrity: sha512-6T6lH0H8OG9kITm/Jm6tdooIbogG9e0tLgpY6mphXSm/A9u8Nq1ryBG+Qspiub9LjWlBPsPS3tWQ/Botq4FdxA==}
     engines: {node: '>= 8'}
@@ -15644,6 +15669,12 @@ packages:
   /split2@4.1.0:
     resolution: {integrity: sha512-VBiJxFkxiXRlUIeyMQi8s4hgvKCSjtknJv/LVYbrgALPwf5zSKmEwV9Lst25AkvMDnvxODugjdl6KZgwKM1WYQ==}
     engines: {node: '>= 10.x'}
+
+  /split@1.0.1:
+    resolution: {integrity: sha512-mTyOoPbrivtXnwnIxZRFYRrPNtEFKlpB2fvjSnCQUiAA6qAZzqwna5envK4uk6OIeP17CsdF3rSBGYVBsU0Tkg==}
+    dependencies:
+      through: 2.3.8
+    dev: true
 
   /sponge-case@1.0.1:
     resolution: {integrity: sha512-dblb9Et4DAtiZ5YSUZHLl4XhH4uK80GhAZrVXdN4O2P4gQ40Wa5UIOPUHlA/nFd2PLblBZWUioLMMAVrgpoYcA==}
