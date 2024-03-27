@@ -1,29 +1,25 @@
 import assert from 'assert'
-import { MockASE } from './mock-ase'
 import {
   Receiver,
   Quote,
   OutgoingPayment,
   OutgoingPaymentState,
   CreateReceiverInput
-} from './generated/graphql'
-import { pollCondition } from './utils'
+} from '../generated/graphql'
+import { MockASE } from '../mock-ase'
+import { pollCondition } from '../utils'
 import { WebhookEventType } from 'mock-account-service-lib'
 
-interface TestActionDeps {
+interface AdminActionsDeps {
   sendingASE: MockASE
   receivingASE: MockASE
 }
 
-export interface TestActions {
+export interface AdminActions {
   createReceiver(createReceiverInput: CreateReceiverInput): Promise<Receiver>
-  createQuote(
-    // TODO: refactor to senderWalletAddressId (its is sender right?). or senderWalletAddress
-    walletAddressId: string,
-    receiver: Receiver
-  ): Promise<Quote>
+  createQuote(senderWalletAddressId: string, receiver: Receiver): Promise<Quote>
   createOutgoingPayment(
-    walletAddressId: string,
+    senderWalletAddressId: string,
     quote: Quote
   ): Promise<OutgoingPayment>
   getOutgoingPayment(
@@ -32,42 +28,28 @@ export interface TestActions {
   ): Promise<OutgoingPayment>
 }
 
-export function createTestActions(deps: TestActionDeps): TestActions {
+export function createAdminActions(deps: AdminActionsDeps): AdminActions {
   return {
     createReceiver: (createReceiverInput) =>
       createReceiver(deps, createReceiverInput),
-    createQuote: (walletAddressId, receiver) =>
-      createQuote(deps, walletAddressId, receiver),
-    createOutgoingPayment: (walletAddressId, quote) =>
-      createOutgoingPayment(deps, walletAddressId, quote),
+    createQuote: (senderWalletAddressId, receiver) =>
+      createQuote(deps, senderWalletAddressId, receiver),
+    createOutgoingPayment: (senderWalletAddressId, quote) =>
+      createOutgoingPayment(deps, senderWalletAddressId, quote),
     getOutgoingPayment: (outgoingPaymentId, amountValueToSend) =>
       getOutgoingPayment(deps, outgoingPaymentId, amountValueToSend)
   }
 }
 
 async function createReceiver(
-  deps: TestActionDeps,
+  deps: AdminActionsDeps,
   createReceiverInput: CreateReceiverInput
-  // receiverWalletAddressUrl: string,
-  // amountValueToSend: string
 ): Promise<Receiver> {
   const { receivingASE, sendingASE } = deps
   const handleWebhookEventSpy = jest.spyOn(
     receivingASE.integrationServer.webhookEventHandler,
     'handleWebhookEvent'
   )
-  // TODO: paramaterize metadata and expect in getOutgoingPayment?
-  // const response = await sendingASE.adminClient.createReceiver({
-  //   metadata: {
-  //     description: 'For lunch!'
-  //   },
-  //   incomingAmount: {
-  //     assetCode: 'USD',
-  //     assetScale: 2,
-  //     value: amountValueToSend as unknown as bigint
-  //   },
-  //   walletAddressUrl: receiverWalletAddressUrl
-  // })
   const response =
     await sendingASE.adminClient.createReceiver(createReceiverInput)
 
@@ -94,14 +76,13 @@ async function createReceiver(
   return response.receiver
 }
 async function createQuote(
-  deps: TestActionDeps,
-  // TODO: refactor to senderWalletAddressId (its is sender right?). or senderWalletAddress
-  walletAddressId: string,
+  deps: AdminActionsDeps,
+  senderWalletAddressId: string,
   receiver: Receiver
 ): Promise<Quote> {
   const { sendingASE } = deps
   const response = await sendingASE.adminClient.createQuote({
-    walletAddressId,
+    walletAddressId: senderWalletAddressId,
     receiver: receiver.id
   })
 
@@ -111,8 +92,8 @@ async function createQuote(
   return response.quote
 }
 async function createOutgoingPayment(
-  deps: TestActionDeps,
-  walletAddressId: string,
+  deps: AdminActionsDeps,
+  senderWalletAddressId: string,
   quote: Quote
 ): Promise<OutgoingPayment> {
   const { sendingASE } = deps
@@ -122,7 +103,7 @@ async function createOutgoingPayment(
   )
 
   const response = await sendingASE.adminClient.createOutgoingPayment({
-    walletAddressId,
+    walletAddressId: senderWalletAddressId,
     quoteId: quote.id
   })
 
@@ -160,7 +141,7 @@ async function createOutgoingPayment(
   return response.payment
 }
 async function getOutgoingPayment(
-  deps: TestActionDeps,
+  deps: AdminActionsDeps,
   outgoingPaymentId: string,
   amountValueToSend: string
 ): Promise<OutgoingPayment> {
@@ -169,8 +150,5 @@ async function getOutgoingPayment(
     await sendingASE.adminClient.getOutgoingPayment(outgoingPaymentId)
   expect(payment.state).toBe(OutgoingPaymentState.Completed)
   expect(payment.receiveAmount.value).toBe(amountValueToSend)
-  //
-  // expect(payment.sentAmount.value).toBe(amountValueToSend)
-
   return payment
 }
