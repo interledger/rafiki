@@ -3,13 +3,14 @@ import { ILPContext, ILPMiddleware } from '../rafiki'
 
 export function createTelemetryMiddleware(): ILPMiddleware {
   return async (
-    { request, services, accounts, state }: ILPContext,
+    { request, services, accounts, response }: ILPContext,
     next: () => Promise<void>
   ): Promise<void> => {
+    await next()
     if (
       services.telemetry &&
       Number(request.prepare.amount) &&
-      !state.unfulfillable
+      response.fulfill
     ) {
       const { code, scale } = accounts.outgoing.asset
       collectTelemetryAmount(services.telemetry, services.logger, {
@@ -17,6 +18,5 @@ export function createTelemetryMiddleware(): ILPMiddleware {
         asset: { code: code, scale: scale }
       })
     }
-    await next()
   }
 }
