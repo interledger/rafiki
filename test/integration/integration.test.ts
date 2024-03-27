@@ -35,7 +35,7 @@ describe('Integration tests', (): void => {
   describe('Requests', (): void => {
     test('Can Get Non-Existing Wallet Address', async (): Promise<void> => {
       const notFoundWalletAddress =
-        'https://host.docker.internal:4100/accounts/asmith'
+        'https://happy-life-bank-test-backend:4100/accounts/asmith'
 
       const handleWebhookEventSpy = jest.spyOn(
         hlb.integrationServer.webhookEventHandler,
@@ -83,24 +83,20 @@ describe('Integration tests', (): void => {
       const { consentInteraction } = testActions
 
       const receiverWalletAddressUrl =
-        'http://host.docker.internal:4100/accounts/pfry'
+        'https://happy-life-bank-test-backend:4100/accounts/pfry'
       const senderWalletAddressUrl =
-        'http://host.docker.internal:3100/accounts/gfranklin'
+        'https://cloud-nine-wallet-test-backend:3100/accounts/gfranklin'
       const amountValueToSend = '100'
 
       const receiverWalletAddress = await c9.opClient.walletAddress.get({
         url: receiverWalletAddressUrl
       })
-      expect(receiverWalletAddress.id).toBe(
-        receiverWalletAddressUrl.replace('http', 'https')
-      )
+      expect(receiverWalletAddress.id).toBe(receiverWalletAddressUrl)
 
       const senderWalletAddress = await c9.opClient.walletAddress.get({
         url: senderWalletAddressUrl
       })
-      expect(senderWalletAddress.id).toBe(
-        senderWalletAddressUrl.replace('http', 'https')
-      )
+      expect(senderWalletAddress.id).toBe(senderWalletAddressUrl)
 
       const incomingPaymentGrant = await grantRequestIncomingPayment(
         receiverWalletAddress
@@ -148,24 +144,20 @@ describe('Integration tests', (): void => {
       const { consentInteractionWithInteractRef } = testActions
 
       const receiverWalletAddressUrl =
-        'http://host.docker.internal:4100/accounts/pfry'
+        'https://happy-life-bank-test-backend:4100/accounts/pfry'
       const senderWalletAddressUrl =
-        'http://host.docker.internal:3100/accounts/gfranklin'
+        'https://cloud-nine-wallet-test-backend:3100/accounts/gfranklin'
       const amountValueToSend = '100'
 
       const receiverWalletAddress = await c9.opClient.walletAddress.get({
         url: receiverWalletAddressUrl
       })
-      expect(receiverWalletAddress.id).toBe(
-        receiverWalletAddressUrl.replace('http', 'https')
-      )
+      expect(receiverWalletAddress.id).toBe(receiverWalletAddressUrl)
 
       const senderWalletAddress = await c9.opClient.walletAddress.get({
         url: senderWalletAddressUrl
       })
-      expect(senderWalletAddress.id).toBe(
-        senderWalletAddressUrl.replace('http', 'https')
-      )
+      expect(senderWalletAddress.id).toBe(senderWalletAddressUrl)
 
       const incomingPaymentGrant = await grantRequestIncomingPayment(
         receiverWalletAddress
@@ -219,7 +211,7 @@ describe('Integration tests', (): void => {
       } = testActions.admin
 
       const senderWalletAddress = await c9.accounts.getByWalletAddressUrl(
-        'https://host.docker.internal:3100/accounts/gfranklin'
+        'https://cloud-nine-wallet-test-backend:3100/accounts/gfranklin'
       )
       assert(senderWalletAddress?.walletAddressID)
       const senderWalletAddressId = senderWalletAddress.walletAddressID
@@ -233,7 +225,8 @@ describe('Integration tests', (): void => {
           assetScale: 2,
           value: value as unknown as bigint
         },
-        walletAddressUrl: 'https://host.docker.internal:4100/accounts/pfry'
+        walletAddressUrl:
+          'https://happy-life-bank-test-backend:4100/accounts/pfry'
       }
 
       const receiver = await createReceiver(createReceiverInput)
@@ -257,7 +250,7 @@ describe('Integration tests', (): void => {
       } = testActions.admin
 
       const senderWalletAddress = await c9.accounts.getByWalletAddressUrl(
-        'https://host.docker.internal:3100/accounts/gfranklin'
+        'https://cloud-nine-wallet-test-backend:3100/accounts/gfranklin'
       )
       assert(senderWalletAddress?.walletAddressID)
       const senderWalletAddressId = senderWalletAddress.walletAddressID
@@ -271,7 +264,8 @@ describe('Integration tests', (): void => {
           assetScale: 2,
           value: value as unknown as bigint
         },
-        walletAddressUrl: 'https://host.docker.internal:4100/accounts/lars'
+        walletAddressUrl:
+          'https://happy-life-bank-test-backend:4100/accounts/lars'
       }
 
       const receiver = await createReceiver(createReceiverInput)

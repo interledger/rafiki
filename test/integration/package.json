@@ -7,7 +7,8 @@
     "build:deps": "pnpm --filter mock-account-service-lib build",
     "testenv:compose": "docker compose -f ./testenv/cloud-nine-wallet/docker-compose.yml -f ./testenv/happy-life-bank/docker-compose.yml -f ./testenv/docker-compose.yml",
     "test": "jest",
-    "run-tests": "./scripts/run-tests.sh"
+    "run-tests": "./scripts/run-tests.sh",
+    "hostile": "hostile"
   },
   "keywords": [],
   "author": "",
@@ -21,6 +22,7 @@
     "@types/koa-bodyparser": "^4.3.12",
     "@types/node": "^18.19.19",
     "dotenv": "^16.4.1",
+    "hostile": "^1.4.0",
     "koa": "^2.15.0",
     "mock-account-service-lib": "workspace:*",
     "yaml": "^2.3.4"
