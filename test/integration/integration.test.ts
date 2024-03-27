@@ -465,6 +465,14 @@ describe('Integration tests', (): void => {
       expect(outgoingPayment_.receiveAmount.value).toBe(amountValueToSend)
       expect(outgoingPayment_.sentAmount.value).toBe(amountValueToSend)
     })
+
+    test('Get Incoming Payment', async (): Promise<void> => {
+      const incomingPayment_ = await hlb.opClient.incomingPayment.getPublic({
+        url: `${incomingPayment.id}`
+      })
+      assert(incomingPayment_.receivedAmount)
+      expect(incomingPayment_.receivedAmount.value).toBe(amountValueToSend)
+    })
   })
 
   describe('Peer to Peer Flow', (): void => {
