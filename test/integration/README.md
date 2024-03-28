@@ -24,6 +24,6 @@ Install
 
 # Developing Integration tests
 
-Jest logs to stanadrd output and the container logs are available at `./tmp/rafiki_integration_logs.txt`. To speed up the development loop, docker image and internal depency building can be skipped when running tests by using the --no-build or -nb arguments:
+Jest logs to standard output and the container logs are available at `./tmp/rafiki_integration_logs.txt`. To speed up the development loop, docker image and internal dependency building can be skipped when running tests by using the --no-build or -nb arguments:
 
     pnpm --filter run-tests -nb
