@@ -4,7 +4,7 @@ This package contains a test environment and suite for our payment flows and api
 
 # Test Environment
 
-The test environment consists of a docker network that includes the `backend` and `auth` services and a shared database for two mock account servicing entities, `cloud-nine-wallet-test` and `happy-life-bank-test`. The test suite is run from the host machine and performs the the mock accounting logic and integration server for each of these entities. The tests rely on `mock-account-service-lib` to perfom seeding and business logic in a consistent manner with `mock-account-servicing-entity`.
+The test environment consists of a docker network that includes the `backend` and `auth` services and a shared database for two mock account servicing entities, `cloud-nine-wallet-test` and `happy-life-bank-test`. The test suite is run from the host machine and performs the mock accounting logic and integration server for each of these entities. The tests rely on `mock-account-service-lib` to perfom seeding and business logic in a consistent manner with `mock-account-servicing-entity`.
 
 # Running the tests
 
