@@ -78,7 +78,8 @@ describe('Integration tests', (): void => {
         grantRequestOutgoingPayment,
         pollGrantContinue,
         createOutgoingPayment,
-        getOutgoingPayment
+        getOutgoingPayment,
+        getPublicIncomingPayment
       } = testActions.openPayments
       const { consentInteraction } = testActions
 
@@ -123,12 +124,18 @@ describe('Integration tests', (): void => {
         grantContinue,
         quote
       )
-      const outgoingPayment_ = await getOutgoingPayment(
+      await getOutgoingPayment(
         outgoingPayment.id,
-        grantContinue
+        grantContinue,
+        amountValueToSend
       )
-      expect(outgoingPayment_.receiveAmount.value).toBe(amountValueToSend)
-      expect(outgoingPayment_.sentAmount.value).toBe(amountValueToSend)
+      await getPublicIncomingPayment(incomingPayment.id, amountValueToSend)
+
+      const incomingPayment_ = await hlb.opClient.incomingPayment.getPublic({
+        url: incomingPayment.id
+      })
+      assert(incomingPayment_.receivedAmount)
+      expect(incomingPayment_.receivedAmount.value).toBe(amountValueToSend)
     })
     test('Open Payments with Continuation via finish method', async (): Promise<void> => {
       const {
@@ -139,7 +146,8 @@ describe('Integration tests', (): void => {
         grantRequestOutgoingPayment,
         grantContinue,
         createOutgoingPayment,
-        getOutgoingPayment
+        getOutgoingPayment,
+        getPublicIncomingPayment
       } = testActions.openPayments
       const { consentInteractionWithInteractRef } = testActions
 
@@ -195,12 +203,12 @@ describe('Integration tests', (): void => {
         finalizedGrant,
         quote
       )
-      const outgoingPayment_ = await getOutgoingPayment(
+      await getOutgoingPayment(
         outgoingPayment.id,
-        finalizedGrant
+        finalizedGrant,
+        amountValueToSend
       )
-      expect(outgoingPayment_.receiveAmount.value).toBe(amountValueToSend)
-      expect(outgoingPayment_.sentAmount.value).toBe(amountValueToSend)
+      await getPublicIncomingPayment(incomingPayment.id, amountValueToSend)
     })
     test('Peer to Peer', async (): Promise<void> => {
       const {
