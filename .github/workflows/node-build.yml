@@ -83,8 +83,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/workflows/rafiki/env-setup
-      - run: pnpm --filter mock-account-servicing-entity typecheck
       - run: pnpm --filter mock-account-servicing-entity build
+      - run: pnpm --filter mock-account-servicing-entity typecheck
 
   graphql:
     runs-on: ubuntu-latest
