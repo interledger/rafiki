@@ -28,8 +28,16 @@ describe('Integration tests', (): void => {
   let hlb: MockASE
 
   beforeAll(async () => {
-    c9 = await MockASE.create(C9_CONFIG)
-    hlb = await MockASE.create(HLB_CONFIG)
+    try {
+      c9 = await MockASE.create(C9_CONFIG)
+      hlb = await MockASE.create(HLB_CONFIG)
+    } catch (e) {
+      console.error(e)
+      // Prevents jest from running all tests, which obfuscates error,
+      // when beforeAll errors.
+      // https://github.com/jestjs/jest/issues/2713
+      process.exit(1)
+    }
   })
 
   afterAll(async () => {
@@ -39,9 +47,10 @@ describe('Integration tests', (): void => {
 
   describe('Open Payments Flow', (): void => {
     const receiverWalletAddressUrl =
-      'http://happy-life-bank-test-backend:4000/accounts/pfry'
+      'http://happy-life-bank-test-backend:4100/accounts/pfry'
     const senderWalletAddressUrl =
-      'http://cloud-nine-wallet-test-backend:3000/accounts/gfranklin'
+      'http://cloud-nine-wallet-test-backend:3100/accounts/gfranklin'
+    const amountValueToSend = '100'
 
     let receiverWalletAddress: WalletAddress
     let senderWalletAddress: WalletAddress
@@ -70,7 +79,7 @@ describe('Integration tests', (): void => {
 
     test('Can Get Non-Existing Wallet Address', async (): Promise<void> => {
       const notFoundWalletAddress =
-        'https://happy-life-bank-test-backend:4000/accounts/asmith'
+        'https://happy-life-bank-test-backend:4100/accounts/asmith'
 
       const handleWebhookEventSpy = jest.spyOn(
         hlb.integrationServer.webhookEventHandler,
@@ -140,7 +149,7 @@ describe('Integration tests', (): void => {
         {
           walletAddress: receiverWalletAddressUrl.replace('http', 'https'),
           incomingAmount: {
-            value: '100',
+            value: amountValueToSend,
             assetCode: receiverWalletAddress.assetCode,
             assetScale: receiverWalletAddress.assetScale
           },
@@ -453,12 +462,22 @@ describe('Integration tests', (): void => {
       })
 
       expect(outgoingPayment_.id).toBe(outgoingPayment.id)
+      expect(outgoingPayment_.receiveAmount.value).toBe(amountValueToSend)
+      expect(outgoingPayment_.sentAmount.value).toBe(amountValueToSend)
+    })
+
+    test('Get Incoming Payment', async (): Promise<void> => {
+      const incomingPayment_ = await hlb.opClient.incomingPayment.getPublic({
+        url: `${incomingPayment.id}`
+      })
+      assert(incomingPayment_.receivedAmount)
+      expect(incomingPayment_.receivedAmount.value).toBe(amountValueToSend)
     })
   })
 
   describe('Peer to Peer Flow', (): void => {
     const receiverWalletAddressUrl =
-      'https://happy-life-bank-test-backend:4000/accounts/pfry'
+      'https://happy-life-bank-test-backend:4100/accounts/pfry'
     const amountValueToSend = '500'
 
     let gfranklinWalletAddressId: string
@@ -468,7 +487,7 @@ describe('Integration tests', (): void => {
 
     beforeAll(async () => {
       const gfranklinWalletAddress = await c9.accounts.getByWalletAddressUrl(
-        'https://cloud-nine-wallet-test-backend:3000/accounts/gfranklin'
+        'https://cloud-nine-wallet-test-backend:3100/accounts/gfranklin'
       )
       assert(gfranklinWalletAddress?.walletAddressID)
       gfranklinWalletAddressId = gfranklinWalletAddress.walletAddressID

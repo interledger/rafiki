@@ -7,9 +7,9 @@ services:
     restart: always
     privileged: true
     ports:
-      - "4000:4000"
-      - "4001:4001"
-      - "4002:4002"
+      - "4100:4100"
+      - "4101:4101"
+      - "4102:4102"
     networks:
       - rafiki-test
     extra_hosts:
@@ -17,14 +17,14 @@ services:
     environment:
       NODE_ENV: development
       LOG_LEVEL: debug
-      OPEN_PAYMENTS_URL: https://happy-life-bank-test-backend:4000
-      WALLET_ADDRESS_URL: https://happy-life-bank-test-backend:4000/.well-known/pay
-      ADMIN_PORT: 4001
-      CONNECTOR_PORT: 4002
-      OPEN_PAYMENTS_PORT: 4000
+      OPEN_PAYMENTS_URL: https://happy-life-bank-test-backend:4100
+      WALLET_ADDRESS_URL: https://happy-life-bank-test-backend:4100/.well-known/pay
+      ADMIN_PORT: 4101
+      CONNECTOR_PORT: 4102
+      OPEN_PAYMENTS_PORT: 4100
       DATABASE_URL: postgresql://happy_life_bank_test_backend:happy_life_bank_test_backend@shared-database/happy_life_bank_test_backend
-      AUTH_SERVER_GRANT_URL: http://happy-life-bank-test-auth:4006
-      AUTH_SERVER_INTROSPECTION_URL: http://happy-life-bank-test-auth:4007
+      AUTH_SERVER_GRANT_URL: http://happy-life-bank-test-auth:4106
+      AUTH_SERVER_INTROSPECTION_URL: http://happy-life-bank-test-auth:4107
       # matches pfry key id
       KEY_ID: keyid-97a3a431-8ee1-48fc-ac85-70e2f5eba8e5
       PRIVATE_KEY_FILE: /workspace/private-key.pem
@@ -38,7 +38,7 @@ services:
     depends_on:
       - cloud-nine-wallet-test-backend
     healthcheck:
-      test: ["CMD", "wget", "http://localhost:4000/healthz"]
+      test: ["CMD", "wget", "http://localhost:4100/healthz"]
       interval: 5s
       retries: 10
       timeout: 3s
@@ -50,15 +50,15 @@ services:
     networks:
       - rafiki-test
     ports:
-      - '4003:4003'
-      - '4006:4006'
-      - '4007:4007'
+      - '4103:4103'
+      - '4106:4106'
+      - '4107:4107'
     environment:
       NODE_ENV: development
       AUTH_DATABASE_URL: postgresql://happy_life_bank_test_auth:happy_life_bank_test_auth@shared-database/happy_life_bank_test_auth
-      AUTH_SERVER_DOMAIN: http://happy-life-bank-test-auth:4006
-      INTROSPECTION_PORT: 4007
-      ADMIN_PORT: 4003
-      AUTH_PORT: 4006
+      AUTH_SERVER_DOMAIN: http://happy-life-bank-test-auth:4106
+      INTROSPECTION_PORT: 4107
+      ADMIN_PORT: 4103
+      AUTH_PORT: 4106
     depends_on:
       - cloud-nine-wallet-test-auth

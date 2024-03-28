@@ -4,16 +4,16 @@
 # and stops the containers. It saves the container logs to a file and edits /etc/hosts.
 # Usage:
 #   ./script.sh            # Run the script with default options
-#   ./script.sh --build    # Re-build the docker images (-b or --build)
+#   ./script.sh --no-build    # Skip building the docker images and internal test dependencies (-nb or --no-build)
 
 log_file="./tmp/rafiki_integration_logs.txt"
-build_flag=""
+build_flag="--build"
 
 # Parse cli args
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    -b|--build)
-      build_flag="--build"
+    -nb|--no-build)
+      build_flag=""
       shift
       ;;
     *)
@@ -22,6 +22,10 @@ while [[ $# -gt 0 ]]; do
       ;;
   esac
 done
+
+if [ "$build_flag" == "--build" ]; then
+  pnpm --filter integration build:deps
+fi
 
 # setup hosts
 addHost() {

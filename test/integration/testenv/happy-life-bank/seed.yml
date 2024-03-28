@@ -18,7 +18,7 @@ assets:
 peeringAsset: 'USD'
 peers:
   - initialLiquidity: '1000000000000'
-    peerUrl: http://cloud-nine-wallet-test-backend:3002
+    peerUrl: http://cloud-nine-wallet-test-backend:3102
     peerIlpAddress: test.cloud-nine-wallet-test
     liquidityThreshold: 100000
 accounts:
