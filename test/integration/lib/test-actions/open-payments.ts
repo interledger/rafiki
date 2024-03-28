@@ -5,6 +5,7 @@ import {
   IncomingPayment,
   OutgoingPayment,
   PendingGrant,
+  PublicIncomingPayment,
   Quote,
   WalletAddress,
   isFinalizedGrant,
@@ -51,8 +52,13 @@ export interface OpenPaymentsActions {
   ): Promise<OutgoingPayment>
   getOutgoingPayment(
     url: string,
-    grantContinue: Grant
+    grantContinue: Grant,
+    amountValueToSend: string
   ): Promise<OutgoingPayment>
+  getPublicIncomingPayment(
+    url: string,
+    amountValueToSend: string
+  ): Promise<PublicIncomingPayment>
 }
 
 export function createOpenPaymentsActions(
@@ -84,8 +90,10 @@ export function createOpenPaymentsActions(
       grantContinue(deps, outgoingPaymentGrant, interact_ref),
     createOutgoingPayment: (senderWalletAddress, grant, quote) =>
       createOutgoingPayment(deps, senderWalletAddress, grant, quote),
-    getOutgoingPayment: (url, grantContinue) =>
-      getOutgoingPayment(deps, url, grantContinue)
+    getOutgoingPayment: (url, grantContinue, amountValueToSend) =>
+      getOutgoingPayment(deps, url, grantContinue, amountValueToSend),
+    getPublicIncomingPayment: (url, amountValueToSend) =>
+      getPublicIncomingPayment(deps, url, amountValueToSend)
   }
 }
 async function grantRequestIncomingPayment(
@@ -351,8 +359,9 @@ async function createOutgoingPayment(
 async function getOutgoingPayment(
   deps: OpenPaymentsActionsDeps,
   url: string,
-  grantContinue: Grant
-) {
+  grantContinue: Grant,
+  amountValueToSend: string
+): Promise<OutgoingPayment> {
   const { sendingASE } = deps
   const outgoingPayment = await sendingASE.opClient.outgoingPayment.get({
     url,
@@ -360,6 +369,24 @@ async function getOutgoingPayment(
   })
 
   expect(outgoingPayment.id).toBe(outgoingPayment.id)
+  expect(outgoingPayment.receiveAmount.value).toBe(amountValueToSend)
+  expect(outgoingPayment.sentAmount.value).toBe(amountValueToSend)
 
   return outgoingPayment
+}
+
+async function getPublicIncomingPayment(
+  deps: OpenPaymentsActionsDeps,
+  url: string,
+  amountValueToSend: string
+): Promise<PublicIncomingPayment> {
+  const { receivingASE } = deps
+  const incomingPayment = await receivingASE.opClient.incomingPayment.getPublic(
+    { url }
+  )
+
+  assert(incomingPayment.receivedAmount)
+  expect(incomingPayment.receivedAmount.value).toBe(amountValueToSend)
+
+  return incomingPayment
 }
