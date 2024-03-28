@@ -1,10 +1,11 @@
 import assert from 'assert'
-import { OutgoingAccount, ZeroCopyIlpPrepare } from '../..'
+import { IlpResponse, OutgoingAccount, ZeroCopyIlpPrepare } from '../..'
 import { IncomingAccountFactory, RafikiServicesFactory } from '../../factories'
 import { createTelemetryMiddleware } from '../../middleware/telemetry'
 import { createILPContext } from '../../utils'
 
 import * as telemetry from '../../../../../../telemetry/transaction-amount'
+import { IlpFulfill } from 'ilp-packet'
 
 const incomingAccount = IncomingAccountFactory.build({ id: 'alice' })
 
@@ -28,7 +29,10 @@ const ctx = createILPContext({
     incomingAccount: {
       quote: 'exists'
     }
-  }
+  },
+  response: {
+    fulfill: 'exists' as unknown as IlpFulfill
+  } as IlpResponse
 })
 
 jest.mock('../../../../../../telemetry/transaction-amount')
@@ -60,8 +64,8 @@ describe('Telemetry Middleware', function () {
     ctx.services.telemetry = originalTelemetry
   })
 
-  it('should call next without gathering telemetry when state is unfulfillable', async () => {
-    ctx.state.unfulfillable = true
+  it('should call next without gathering telemetry when outgoing payment is not yet completed (checked by the existance of response.fulfill)', async () => {
+    ctx.response.fulfill = undefined
 
     const collectAmountSpy = jest.spyOn(telemetry, 'collectTelemetryAmount')
 

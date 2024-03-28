@@ -49,7 +49,7 @@ import { createIlpPaymentService } from './payment-method/ilp/service'
 import { createSPSPRoutes } from './payment-method/ilp/spsp/routes'
 import { createStreamCredentialsService } from './payment-method/ilp/stream-credentials/service'
 import { createRatesService } from './rates/service'
-import { createTelemetryService } from './telemetry/service'
+import { TelemetryService, createTelemetryService } from './telemetry/service'
 import { createWebhookService } from './webhook/service'
 
 BigInt.prototype.toJSON = function () {
@@ -355,6 +355,10 @@ export function initIocContainer(
 
   container.singleton('connectorApp', async (deps) => {
     const config = await deps.use('config')
+    let telemetry: TelemetryService | undefined
+    if (config.enableTelemetry) {
+      telemetry = await deps.use('telemetry')
+    }
     return await createConnectorService({
       logger: await deps.use('logger'),
       redis: await deps.use('redis'),
@@ -365,7 +369,7 @@ export function initIocContainer(
       ratesService: await deps.use('ratesService'),
       streamServer: await deps.use('streamServer'),
       ilpAddress: config.ilpAddress,
-      telemetry: await deps.use('telemetry')
+      telemetry
     })
   })
 
