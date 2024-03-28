@@ -3,7 +3,6 @@ import { v4 as uuid } from 'uuid'
 
 import { BaseService } from '../../shared/baseService'
 import { validateId } from '../../shared/utils'
-import { TelemetryService } from '../../telemetry/service'
 import {
   AccountAlreadyExistsError,
   BalanceTransferError,
@@ -49,7 +48,6 @@ export const convertToTigerbeetleAccountCode: {
 }
 
 export interface ServiceDependencies extends BaseService {
-  telemetry?: TelemetryService
   tigerbeetle: Client
   withdrawalThrottleDelay?: number
 }

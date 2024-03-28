@@ -208,11 +208,6 @@ export function initIocContainer(
     const knex = await deps.use('knex')
     const config = await deps.use('config')
 
-    let telemetry: TelemetryService | undefined
-    if (config.enableTelemetry && config.openTelemetryCollectors.length > 0) {
-      telemetry = await deps.use('telemetry')
-    }
-
     if (config.useTigerbeetle) {
       container.singleton('tigerbeetle', async (deps) => {
         const config = await deps.use('config')
@@ -226,7 +221,6 @@ export function initIocContainer(
 
       return createTigerbeetleAccountingService({
         logger,
-        telemetry,
         knex,
         tigerbeetle,
         withdrawalThrottleDelay: config.withdrawalThrottleDelay
@@ -235,7 +229,6 @@ export function initIocContainer(
 
     return createPsqlAccountingService({
       logger,
-      telemetry,
       knex,
       withdrawalThrottleDelay: config.withdrawalThrottleDelay
     })
@@ -362,6 +355,10 @@ export function initIocContainer(
 
   container.singleton('connectorApp', async (deps) => {
     const config = await deps.use('config')
+    let telemetry: TelemetryService | undefined
+    if (config.enableTelemetry) {
+      telemetry = await deps.use('telemetry')
+    }
     return await createConnectorService({
       logger: await deps.use('logger'),
       redis: await deps.use('redis'),
@@ -371,7 +368,8 @@ export function initIocContainer(
       peerService: await deps.use('peerService'),
       ratesService: await deps.use('ratesService'),
       streamServer: await deps.use('streamServer'),
-      ilpAddress: config.ilpAddress
+      ilpAddress: config.ilpAddress,
+      telemetry
     })
   })
 

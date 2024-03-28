@@ -3,7 +3,6 @@ import { TransactionOrKnex } from 'objection'
 import { v4 as uuid } from 'uuid'
 import { Asset } from '../../asset/model'
 import { BaseService } from '../../shared/baseService'
-import { TelemetryService } from '../../telemetry/service'
 import { isTransferError, TransferError } from '../errors'
 import {
   AccountingService,
@@ -36,7 +35,6 @@ import {
 import { LedgerTransfer, LedgerTransferType } from './ledger-transfer/model'
 
 export interface ServiceDependencies extends BaseService {
-  telemetry?: TelemetryService
   knex: TransactionOrKnex
   withdrawalThrottleDelay?: number
 }
