@@ -57,8 +57,8 @@ importers:
   localenv/mock-account-servicing-entity:
     dependencies:
       '@apollo/client':
-        specifier: ^3.9.8
-        version: 3.9.8(@types/react@18.2.73)(graphql@16.8.1)(react-dom@18.2.0)(react@18.2.0)
+        specifier: ^3.9.9
+        version: 3.9.9(@types/react@18.2.73)(graphql@16.8.1)(react-dom@18.2.0)(react@18.2.0)
       '@interledger/http-signature-utils':
         specifier: 2.0.2
         version: 2.0.2
@@ -115,14 +115,14 @@ importers:
         specifier: ^8.2.0
         version: 8.2.0
       '@apollo/server':
-        specifier: ^4.10.1
-        version: 4.10.1(graphql@16.8.1)
+        specifier: ^4.10.2
+        version: 4.10.2(graphql@16.8.1)
       '@as-integrations/koa':
         specifier: ^1.1.1
-        version: 1.1.1(@apollo/server@4.10.1)(koa@2.15.2)
+        version: 1.1.1(@apollo/server@4.10.2)(koa@2.15.2)
       '@escape.tech/graphql-armor':
         specifier: ^2.4.0
-        version: 2.4.0(@apollo/server@4.10.1)
+        version: 2.4.0(@apollo/server@4.10.2)
       '@graphql-tools/graphql-file-loader':
         specifier: ^8.0.1
         version: 8.0.1(graphql@16.8.1)
@@ -191,8 +191,8 @@ importers:
         version: 9.0.1
     devDependencies:
       '@apollo/client':
-        specifier: ^3.9.8
-        version: 3.9.8(@types/react@18.2.73)(graphql@16.8.1)(react-dom@18.2.0)(react@18.2.0)
+        specifier: ^3.9.9
+        version: 3.9.9(@types/react@18.2.73)(graphql@16.8.1)(react-dom@18.2.0)(react@18.2.0)
       '@faker-js/faker':
         specifier: ^8.4.1
         version: 8.4.1
@@ -254,14 +254,14 @@ importers:
         specifier: ^8.2.0
         version: 8.2.0
       '@apollo/server':
-        specifier: ^4.10.1
-        version: 4.10.1(graphql@16.8.1)
+        specifier: ^4.10.2
+        version: 4.10.2(graphql@16.8.1)
       '@as-integrations/koa':
         specifier: ^1.1.1
-        version: 1.1.1(@apollo/server@4.10.1)(koa@2.15.2)
+        version: 1.1.1(@apollo/server@4.10.2)(koa@2.15.2)
       '@escape.tech/graphql-armor':
         specifier: ^2.4.0
-        version: 2.4.0(@apollo/server@4.10.1)
+        version: 2.4.0(@apollo/server@4.10.2)
       '@faker-js/faker':
         specifier: ^8.4.1
         version: 8.4.1
@@ -390,8 +390,8 @@ importers:
         version: 9.0.1
     devDependencies:
       '@apollo/client':
-        specifier: ^3.9.8
-        version: 3.9.8(@types/react@18.2.73)(graphql@16.8.1)(react-dom@18.2.0)(react@18.2.0)
+        specifier: ^3.9.9
+        version: 3.9.9(@types/react@18.2.73)(graphql@16.8.1)(react-dom@18.2.0)(react@18.2.0)
       '@graphql-codegen/cli':
         specifier: 5.0.2
         version: 5.0.2(@babel/core@7.24.0)(@types/node@18.19.24)(graphql@16.8.1)
@@ -498,8 +498,8 @@ importers:
   packages/frontend:
     dependencies:
       '@apollo/client':
-        specifier: ^3.9.8
-        version: 3.9.8(@types/react@18.2.73)(graphql@16.8.1)(react-dom@18.2.0)(react@18.2.0)
+        specifier: ^3.9.9
+        version: 3.9.9(@types/react@18.2.73)(graphql@16.8.1)(react-dom@18.2.0)(react@18.2.0)
       '@headlessui/react':
         specifier: ^1.7.18
         version: 1.7.18(react-dom@18.2.0)(react@18.2.0)
@@ -577,8 +577,8 @@ importers:
   packages/mock-account-service-lib:
     dependencies:
       '@apollo/client':
-        specifier: ^3.9.8
-        version: 3.9.8(@types/react@18.2.73)(graphql@16.8.1)(react-dom@18.2.0)(react@18.2.0)
+        specifier: ^3.9.9
+        version: 3.9.9(@types/react@18.2.73)(graphql@16.8.1)(react-dom@18.2.0)(react@18.2.0)
       '@interledger/http-signature-utils':
         specifier: 2.0.2
         version: 2.0.2
@@ -760,8 +760,8 @@ packages:
       - '@types/react'
     dev: true
 
-  /@apollo/client@3.9.8(@types/react@18.2.73)(graphql@16.8.1)(react-dom@18.2.0)(react@18.2.0):
-    resolution: {integrity: sha512-ausPftEb2xAUkZqz+VkSSIhNxKraShJXdV2/NJ7JbHAAciGsFlapGtZ++b7lF0/+3Jp/p34g/i6dvO8b4WjQig==}
+  /@apollo/client@3.9.9(@types/react@18.2.73)(graphql@16.8.1)(react-dom@18.2.0)(react@18.2.0):
+    resolution: {integrity: sha512-/sMecU/M0WK9knrguts1lSLV8xFKzIgOMVb4mi6MOxgJXjliDB8PvOtmXhTqh2cVMMR4TzXgOnb+af/690zlQw==}
     peerDependencies:
       graphql: ^15.0.0 || ^16.0.0
       graphql-ws: ^5.5.5
@@ -829,8 +829,8 @@ packages:
       graphql: 16.8.1
     dev: false
 
-  /@apollo/server@4.10.1(graphql@16.8.1):
-    resolution: {integrity: sha512-XGMOgTyzV4EBHQq0xQVKFry9hZF7AA/6nxxGLamqdxodhdSdGbU9jrlb5/XDveeGuXP3+5JDdrB2HcziVLJcMA==}
+  /@apollo/server@4.10.2(graphql@16.8.1):
+    resolution: {integrity: sha512-qlTZE4XyzMPprtkxFjmPxMwc2KC4nvNQrKXk2PMotEACKcaLXVZFIgstxbSqBCNl2KgzbsgU1g6vvbV6Xcfikw==}
     engines: {node: '>=14.16.0'}
     peerDependencies:
       graphql: ^16.6.0
@@ -1006,14 +1006,14 @@ packages:
     transitivePeerDependencies:
       - encoding
 
-  /@as-integrations/koa@1.1.1(@apollo/server@4.10.1)(koa@2.15.2):
+  /@as-integrations/koa@1.1.1(@apollo/server@4.10.2)(koa@2.15.2):
     resolution: {integrity: sha512-v84cVhkLUxAH9l19pajbWp/Z9ZYTzO7jkAOiY1xndTclfpXZstiWDKejZYq7xpkBtUSSAKzNyM66uox8MP9qVg==}
     engines: {node: '>=16.0'}
     peerDependencies:
       '@apollo/server': ^4.0.0
       koa: ^2.0.0
     dependencies:
-      '@apollo/server': 4.10.1(graphql@16.8.1)
+      '@apollo/server': 4.10.2(graphql@16.8.1)
       koa: 2.15.2
     dev: false
 
@@ -2912,7 +2912,7 @@ packages:
     dev: false
     optional: true
 
-  /@escape.tech/graphql-armor@2.4.0(@apollo/server@4.10.1):
+  /@escape.tech/graphql-armor@2.4.0(@apollo/server@4.10.2):
     resolution: {integrity: sha512-/ef11cDjzg3Rjsa7jxtUzM9hRVlj+GB4z/YCChNqNGW+BvYrv6E6esbdGzIiaoauKfszXSQXSu0CgPXe0I7NbQ==}
     engines: {node: '>=16.0.0'}
     peerDependencies:
@@ -2927,7 +2927,7 @@ packages:
       '@escape.tech/graphql-armor-types':
         optional: true
     dependencies:
-      '@apollo/server': 4.10.1(graphql@16.8.1)
+      '@apollo/server': 4.10.2(graphql@16.8.1)
       '@escape.tech/graphql-armor-block-field-suggestions': 2.1.0
       '@escape.tech/graphql-armor-cost-limit': 2.1.0
       '@escape.tech/graphql-armor-max-aliases': 2.3.0
@@ -3763,7 +3763,7 @@ packages:
     engines: {node: ^8.13.0 || >=10.10.0}
     dependencies:
       '@grpc/proto-loader': 0.7.10
-      '@types/node': 18.19.19
+      '@types/node': 18.19.24
     dev: false
 
   /@grpc/proto-loader@0.7.10:
@@ -3935,7 +3935,7 @@ packages:
     engines: {node: ^14.15.0 || ^16.10.0 || >=18.0.0}
     dependencies:
       '@jest/types': 29.6.3
-      '@types/node': 18.19.19
+      '@types/node': 18.19.24
       chalk: 4.1.2
       jest-message-util: 29.7.0
       jest-util: 29.7.0
@@ -4058,7 +4058,7 @@ packages:
       '@jest/transform': 29.7.0
       '@jest/types': 29.6.3
       '@jridgewell/trace-mapping': 0.3.23
-      '@types/node': 18.19.19
+      '@types/node': 18.19.24
       chalk: 4.1.2
       collect-v8-coverage: 1.0.1
       exit: 0.1.2
@@ -5315,7 +5315,7 @@ packages:
   /@types/docker-modem@3.0.6:
     resolution: {integrity: sha512-yKpAGEuKRSS8wwx0joknWxsmLha78wNMe9R2S3UNsVOkZded8UqOrV8KoeDXoXsjndxwyF3eIhyClGbO1SEhEg==}
     dependencies:
-      '@types/node': 18.19.19
+      '@types/node': 18.19.24
       '@types/ssh2': 0.5.52
     dev: true
 
@@ -5353,7 +5353,7 @@ packages:
   /@types/graceful-fs@4.1.5:
     resolution: {integrity: sha512-anKkLmZZ+xm4p8JWBf4hElkM4XR+EZeA2M9BAkkTldmcyDY4mbdIJnRghDJH3Ov5ooY7/UAoENtmdMSkaAd7Cw==}
     dependencies:
-      '@types/node': 18.19.19
+      '@types/node': 18.19.24
     dev: true
 
   /@types/hast@2.3.4:
@@ -5536,27 +5536,27 @@ packages:
   /@types/node-fetch@2.6.11:
     resolution: {integrity: sha512-24xFj9R5+rfQJLRyM56qh+wnVSYhyXC2tkoBndtY0U+vubqNsYXGjufB2nn8Q6gt0LrARwL6UBtMCSVCwl4B1g==}
     dependencies:
-      '@types/node': 18.19.19
+      '@types/node': 18.19.24
       form-data: 4.0.0
     dev: false
 
   /@types/node-fetch@2.6.2:
     resolution: {integrity: sha512-DHqhlq5jeESLy19TYhLakJ07kNumXWjcDdxXsLUMJZ6ue8VZJj4kLPQVE/2mdHh3xZziNF1xppu5lwmS53HR+A==}
     dependencies:
-      '@types/node': 18.19.19
+      '@types/node': 18.19.24
       form-data: 3.0.1
     dev: true
 
   /@types/node-localstorage@1.3.2:
     resolution: {integrity: sha512-i3KDc7Y5xQgR395Gw9nn0H/HbY0VC131pqfF2PYMbvNpvDugJ95xpSseudiJV4vcQxnj2g24yys83eMEB+Ewgw==}
     dependencies:
-      '@types/node': 18.19.19
+      '@types/node': 18.19.24
     dev: true
 
   /@types/node-persist@3.1.5:
     resolution: {integrity: sha512-etovBJhoENhCxgmxf1gEnu4Wsq/JQy2lTaXVypuA85KkY0A7/pGbgwELtXTgwj2DVgRUb6IAhG8GHEqLPCogVA==}
     dependencies:
-      '@types/node': 18.19.19
+      '@types/node': 18.19.24
     dev: true
 
   /@types/node@17.0.45:
@@ -5615,7 +5615,7 @@ packages:
     resolution: {integrity: sha512-whjk1EDJPcAR2kYHRbFl/lKeeKYTi05A15K9bnLInCVroNDCtXce57xKdI0/rQaA3K+6q0eFyUBPmqfSndUZdQ==}
     dependencies:
       '@types/caseless': 0.12.2
-      '@types/node': 18.19.19
+      '@types/node': 18.19.24
       '@types/tough-cookie': 4.0.2
       form-data: 2.5.1
     dev: true
@@ -5627,7 +5627,7 @@ packages:
   /@types/sax@1.2.4:
     resolution: {integrity: sha512-pSAff4IAxJjfAXUG6tFkO7dsSbTmf8CtUpfhhZ5VhkRpC4628tJhh3+V6H1E+/Gs9piSzYKT5yzHO5M4GG9jkw==}
     dependencies:
-      '@types/node': 18.19.19
+      '@types/node': 18.19.24
     dev: false
 
   /@types/semver@7.5.0:
@@ -5656,13 +5656,13 @@ packages:
   /@types/ssh2-streams@0.1.9:
     resolution: {integrity: sha512-I2J9jKqfmvXLR5GomDiCoHrEJ58hAOmFrekfFqmCFd+A6gaEStvWnPykoWUwld1PNg4G5ag1LwdA+Lz1doRJqg==}
     dependencies:
-      '@types/node': 18.19.19
+      '@types/node': 18.19.24
     dev: true
 
   /@types/ssh2@0.5.52:
     resolution: {integrity: sha512-lbLLlXxdCZOSJMCInKH2+9V/77ET2J6NPQHpFI0kda61Dd1KglJs+fPQBchizmzYSOJBgdTajhPqBO1xxLywvg==}
     dependencies:
-      '@types/node': 18.19.19
+      '@types/node': 18.19.24
       '@types/ssh2-streams': 0.1.9
     dev: true
 
@@ -5674,7 +5674,7 @@ packages:
     resolution: {integrity: sha512-mu/N4uvfDN2zVQQ5AYJI/g4qxn2bHB6521t1UuH09ShNWjebTqN0ZFuYK9uYjcgmI0dTQEs+Owi1EO6U0OkOZQ==}
     dependencies:
       '@types/cookiejar': 2.1.2
-      '@types/node': 18.19.19
+      '@types/node': 18.19.24
     dev: true
 
   /@types/tmp@0.2.6:
@@ -5701,13 +5701,13 @@ packages:
   /@types/ws@7.4.7:
     resolution: {integrity: sha512-JQbbmxZTZehdc2iszGKs5oC3NFnjeay7mtAWrdt7qNtAVK0g19muApzAy4bm9byz79xa2ZnO/BOBC2R8RC5Lww==}
     dependencies:
-      '@types/node': 18.19.19
+      '@types/node': 18.19.24
     dev: true
 
   /@types/ws@8.5.3:
     resolution: {integrity: sha512-6YOoWjruKj1uLf3INHH7D3qTXwFfEsg1kf3c0uDdSBJwfa/llkwIjrAGV7j7mVgGNbzTQ3HiHKKDXl6bJPD97w==}
     dependencies:
-      '@types/node': 18.19.19
+      '@types/node': 18.19.24
 
   /@types/yargs-parser@21.0.0:
     resolution: {integrity: sha512-iO9ZQHkZxHn4mSakYV0vFHAVDyEOIJQrV2uZ06HxEPcx+mt8swXoZHIbaaJ2crJYFfErySgktuTZ3BeLz+XmFA==}
@@ -11102,7 +11102,7 @@ packages:
       '@jest/expect': 29.7.0
       '@jest/test-result': 29.7.0
       '@jest/types': 29.6.3
-      '@types/node': 18.19.19
+      '@types/node': 18.19.24
       chalk: 4.1.2
       co: 4.6.0
       dedent: 1.2.0
@@ -11257,7 +11257,7 @@ packages:
     dependencies:
       '@jest/types': 29.6.3
       '@types/graceful-fs': 4.1.5
-      '@types/node': 18.19.19
+      '@types/node': 18.19.24
       anymatch: 3.1.2
       fb-watchman: 2.0.1
       graceful-fs: 4.2.10
@@ -11382,7 +11382,7 @@ packages:
       '@jest/test-result': 29.7.0
       '@jest/transform': 29.7.0
       '@jest/types': 29.6.3
-      '@types/node': 18.19.19
+      '@types/node': 18.19.24
       chalk: 4.1.2
       emittery: 0.13.1
       graceful-fs: 4.2.10
@@ -11413,7 +11413,7 @@ packages:
       '@jest/test-result': 29.7.0
       '@jest/transform': 29.7.0
       '@jest/types': 29.6.3
-      '@types/node': 18.19.19
+      '@types/node': 18.19.24
       chalk: 4.1.2
       cjs-module-lexer: 1.2.2
       collect-v8-coverage: 1.0.1
@@ -11490,7 +11490,7 @@ packages:
     dependencies:
       '@jest/test-result': 29.7.0
       '@jest/types': 29.6.3
-      '@types/node': 18.19.19
+      '@types/node': 18.19.24
       ansi-escapes: 4.3.2
       chalk: 4.1.2
       emittery: 0.13.1
@@ -11502,7 +11502,7 @@ packages:
     resolution: {integrity: sha512-eIz2msL/EzL9UFTFFx7jBTkeZfku0yUAyZZZmJ93H2TYEiroIx2PQjEXcwYtYl8zXCxb+PAmA2hLIt/6ZEkPHw==}
     engines: {node: ^14.15.0 || ^16.10.0 || >=18.0.0}
     dependencies:
-      '@types/node': 18.19.19
+      '@types/node': 18.19.24
       jest-util: 29.7.0
       merge-stream: 2.0.0
       supports-color: 8.1.1
@@ -14592,7 +14592,7 @@ packages:
       '@protobufjs/path': 1.1.2
       '@protobufjs/pool': 1.1.0
       '@protobufjs/utf8': 1.1.0
-      '@types/node': 18.19.19
+      '@types/node': 18.19.24
       long: 5.2.3
     dev: false
 
