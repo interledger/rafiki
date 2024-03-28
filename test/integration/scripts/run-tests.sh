@@ -4,7 +4,7 @@
 # and stops the containers. It saves the container logs to a file and edits /etc/hosts.
 # Usage:
 #   ./script.sh            # Run the script with default options
-#   ./script.sh --build    # Skip building the docker images and internal test dependencies (-nb or --no-build)
+#   ./script.sh --no-build    # Skip building the docker images and internal test dependencies (-nb or --no-build)
 
 log_file="./tmp/rafiki_integration_logs.txt"
 build_flag="--build"
