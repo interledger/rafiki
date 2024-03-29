@@ -90,7 +90,7 @@ describe('Telemetry Middleware', function () {
     expect(next).toHaveBeenCalled()
   })
 
-  it('gathers telemetry after next was called', async () => {
+  it('gathers telemetry without blocking middleware chain', async () => {
     let nextCalled = false
     const next = jest.fn().mockImplementation(() => {
       nextCalled = true
