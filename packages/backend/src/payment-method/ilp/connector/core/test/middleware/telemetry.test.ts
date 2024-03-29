@@ -44,27 +44,23 @@ beforeEach(async () => {
   incomingAccount.balance = 100n
   incomingAccount.asset.scale = 2
   incomingAccount.asset.code = 'USD'
-  ctx.state.unfulfillable = false
 })
 
 describe('Telemetry Middleware', function () {
-  it('should call next without gathering telemetry when telemetry is not enabled (service is undefined)', async () => {
+  it('does not gather telemetry if telemetry is not enabled (service is undefined)', async () => {
     const collectAmountSpy = jest
       .spyOn(telemetry, 'collectTelemetryAmount')
       .mockImplementation(() => Promise.resolve())
 
-    const originalTelemetry = ctx.services.telemetry
-    ctx.services.telemetry = undefined
-
-    await middleware(ctx, next)
-
-    expect(collectAmountSpy).not.toHaveBeenCalled()
-    expect(next).toHaveBeenCalled()
-
-    ctx.services.telemetry = originalTelemetry
+      await middleware(
+        { ...ctx, services: { ...ctx.services, telemetry: undefined } },
+        next
+      )
+      expect(collectAmountSpy).not.toHaveBeenCalled()
+      expect(next).toHaveBeenCalled()
   })
 
-  it('should call next without gathering telemetry when outgoing payment is not yet completed (checked by the existance of response.fulfill)', async () => {
+  it('does not gather telemetry if response.fulfill undefined', async () => {
     ctx.response.fulfill = undefined
 
     const collectAmountSpy = jest.spyOn(telemetry, 'collectTelemetryAmount')
@@ -75,7 +71,7 @@ describe('Telemetry Middleware', function () {
     expect(next).toHaveBeenCalled()
   })
 
-  it('should handle invalid amount by calling next without gathering telemetry', async () => {
+  it('does not gather telemetry if amount is invalid', async () => {
     ctx.request.prepare.amount = '0'
 
     const collectAmountSpy = jest.spyOn(telemetry, 'collectTelemetryAmount')
