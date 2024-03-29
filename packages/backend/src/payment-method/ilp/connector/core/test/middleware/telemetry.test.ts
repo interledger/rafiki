@@ -52,33 +52,61 @@ describe('Telemetry Middleware', function () {
       .spyOn(telemetry, 'collectTelemetryAmount')
       .mockImplementation(() => Promise.resolve())
 
-      await middleware(
-        { ...ctx, services: { ...ctx.services, telemetry: undefined } },
-        next
-      )
-      expect(collectAmountSpy).not.toHaveBeenCalled()
-      expect(next).toHaveBeenCalled()
+    await middleware(
+      { ...ctx, services: { ...ctx.services, telemetry: undefined } },
+      next
+    )
+    expect(collectAmountSpy).not.toHaveBeenCalled()
+    expect(next).toHaveBeenCalled()
   })
 
   it('does not gather telemetry if response.fulfill undefined', async () => {
-    ctx.response.fulfill = undefined
-
     const collectAmountSpy = jest.spyOn(telemetry, 'collectTelemetryAmount')
 
-    await middleware(ctx, next)
+    await middleware(
+      { ...ctx, response: { fulfill: undefined } as IlpResponse },
+      next
+    )
 
     expect(collectAmountSpy).not.toHaveBeenCalled()
     expect(next).toHaveBeenCalled()
   })
 
   it('does not gather telemetry if amount is invalid', async () => {
-    ctx.request.prepare.amount = '0'
-
     const collectAmountSpy = jest.spyOn(telemetry, 'collectTelemetryAmount')
+
+    await middleware(
+      {
+        ...ctx,
+        request: {
+          ...ctx.request,
+          prepare: { amount: '0' } as ZeroCopyIlpPrepare
+        }
+      },
+      next
+    )
+
+    expect(collectAmountSpy).not.toHaveBeenCalled()
+    expect(next).toHaveBeenCalled()
+  })
+
+  it('gathers telemetry after next was called', async () => {
+    let nextCalled = false
+    const next = jest.fn().mockImplementation(() => {
+      nextCalled = true
+      return Promise.resolve()
+    })
+
+    const collectAmountSpy = jest
+      .spyOn(telemetry, 'collectTelemetryAmount')
+      .mockImplementation(() => {
+        expect(nextCalled).toBe(true)
+        return Promise.resolve()
+      })
 
     await middleware(ctx, next)
 
-    expect(collectAmountSpy).not.toHaveBeenCalled()
+    expect(collectAmountSpy).toHaveBeenCalled()
     expect(next).toHaveBeenCalled()
   })
 })
