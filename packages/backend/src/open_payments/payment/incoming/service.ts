@@ -207,7 +207,7 @@ async function handleDeactivated(
   incomingPayment: IncomingPayment
 ): Promise<void> {
   if (!incomingPayment.processAt) {
-    throw new Error()
+    throw new Error('processAt field is not defined')
   }
   try {
     const amountReceived = await deps.accountingService.getTotalReceived(
