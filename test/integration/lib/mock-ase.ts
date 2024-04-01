@@ -11,9 +11,9 @@ import { TestConfig } from './config'
 
 /** Mock Account Servicing Entity */
 export class MockASE {
-  private config: TestConfig
   private apolloClient: ApolloClient<NormalizedCacheObject>
 
+  public config: TestConfig
   public adminClient: AdminClient
   public accounts: AccountProvider
   public opClient!: AuthenticatedClient

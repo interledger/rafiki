@@ -148,7 +148,10 @@ async function getOutgoingPayment(
   const { sendingASE } = deps
   const payment =
     await sendingASE.adminClient.getOutgoingPayment(outgoingPaymentId)
+  payment.receiveAmount.value = BigInt(payment.receiveAmount.value)
+  payment.sentAmount.value = BigInt(payment.sentAmount.value)
+  payment.debitAmount.value = BigInt(payment.debitAmount.value)
   expect(payment.state).toBe(OutgoingPaymentState.Completed)
-  expect(payment.receiveAmount.value).toBe(amountValueToSend)
+  expect(payment.receiveAmount.value).toBe(BigInt(amountValueToSend))
   return payment
 }

@@ -247,7 +247,7 @@ describe('Integration tests', (): void => {
         outgoingPayment.id,
         value
       )
-      expect(outgoingPayment_.sentAmount.value).toBe(value)
+      expect(outgoingPayment_.sentAmount.value).toBe(BigInt(value))
     })
     test('Peer to Peer - Cross Currency', async (): Promise<void> => {
       const {
@@ -260,7 +260,8 @@ describe('Integration tests', (): void => {
       const senderWalletAddress = await c9.accounts.getByWalletAddressUrl(
         'https://cloud-nine-wallet-test-backend:3100/accounts/gfranklin'
       )
-      assert(senderWalletAddress?.walletAddressID)
+      assert(senderWalletAddress)
+      const senderAssetCode = senderWalletAddress.assetCode
       const senderWalletAddressId = senderWalletAddress.walletAddressID
       const value = '500'
       const createReceiverInput = {
@@ -277,12 +278,29 @@ describe('Integration tests', (): void => {
       }
 
       const receiver = await createReceiver(createReceiverInput)
+      assert(receiver.incomingAmount)
+      assert(
+        receiver.incomingAmount.assetScale === senderWalletAddress.assetScale
+      )
+      const receiverAssetCode = receiver.incomingAmount.assetCode
+
       const quote = await createQuote(senderWalletAddressId, receiver)
       const outgoingPayment = await createOutgoingPayment(
         senderWalletAddressId,
         quote
       )
-      await getOutgoingPayment(outgoingPayment.id, value)
+      const payment = await getOutgoingPayment(outgoingPayment.id, value)
+      const exchangeRate =
+        c9.config.seed.rates[receiverAssetCode][senderAssetCode]
+      const { sentAmount, receiveAmount } = payment
+
+      if (exchangeRate > 1) {
+        expect(sentAmount.value).toBeGreaterThan(receiveAmount.value)
+      } else if (exchangeRate < 1) {
+        expect(sentAmount.value).toBeLessThan(receiveAmount.value)
+      } else {
+        expect(sentAmount.value).toBe(receiveAmount.value)
+      }
     })
   })
 })
