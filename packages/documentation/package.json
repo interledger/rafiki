@@ -9,7 +9,7 @@
     "astro": "astro"
   },
   "dependencies": {
-    "@astrojs/starlight": "^0.13.1",
+    "@astrojs/starlight": "^0.21.3",
     "@interledger/docs-design-system": "^0.3.2",
     "astro": "3.6.5",
     "astro-graphql-plugin": "^0.1.0",
