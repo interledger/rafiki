@@ -300,6 +300,7 @@ describe('Integration tests', (): void => {
       )
       assert(senderWalletAddress.assetScale === 2)
       assert(exchangeRate === 0.91)
+      assert(fee)
       assert(fee.fixed === 100)
       assert(fee.basisPoints === 200)
       assert(fee.asset === 'USD')
