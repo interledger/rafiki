@@ -263,18 +263,22 @@ export const start = async (
     }
   })
 
+  const config = await container.use('config')
+
   // Do migrations
   const knex = await container.use('knex')
-  // Needs a wrapped inline function
-  await callWithRetry(async () => {
-    await knex.migrate.latest({
-      directory: __dirname + '/../migrations'
+
+  if (!config.enableManualMigrations) {
+    // Needs a wrapped inline function
+    await callWithRetry(async () => {
+      await knex.migrate.latest({
+        directory: __dirname + '/../migrations'
+      })
     })
-  })
+  }
 
   Model.knex(knex)
 
-  const config = await container.use('config')
   await app.boot()
 
   await app.startAdminServer(config.adminPort)
