@@ -162,7 +162,7 @@ export async function createAccountToAccountTransfer(
       const balance = await getAccountBalance(account.id)
 
       if (balance === undefined) {
-        throw new Error()
+        throw new Error('undefined account balance')
       }
 
       await account.onDebit({
@@ -188,7 +188,7 @@ export async function createAccountToAccountTransfer(
         const totalReceived = await getAccountReceived(destinationAccount.id)
 
         if (totalReceived === undefined) {
-          throw new Error()
+          throw new Error('total received is undefined')
         }
 
         await destinationAccount.onCredit({

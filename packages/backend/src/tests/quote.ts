@@ -76,14 +76,14 @@ export async function createQuote(
   const walletAddressService = await deps.use('walletAddressService')
   const walletAddress = await walletAddressService.get(walletAddressId)
   if (!walletAddress) {
-    throw new Error()
+    throw new Error('wallet not found')
   }
   if (
     debitAmount &&
     (walletAddress.asset.code !== debitAmount.assetCode ||
       walletAddress.asset.scale !== debitAmount.assetScale)
   ) {
-    throw new Error()
+    throw new Error('asset code or scale do not match')
   }
 
   const config = await deps.use('config')
@@ -92,23 +92,23 @@ export async function createQuote(
     const receiverService = await deps.use('receiverService')
     const receiver = await receiverService.get(receiverUrl)
     if (!receiver) {
-      throw new Error()
+      throw new Error('receiver not found')
     }
     if (!receiver.incomingAmount && !receiveAmount && !debitAmount) {
-      throw new Error()
+      throw new Error('missing amount')
     }
     if (receiveAmount) {
       if (
         receiver.assetCode !== receiveAmount.assetCode ||
         receiver.assetScale !== receiveAmount.assetScale
       ) {
-        throw new Error()
+        throw new Error('asset code or asset scale do not match')
       }
       if (
         receiver.incomingAmount &&
         receiveAmount.value > receiver.incomingAmount.value
       ) {
-        throw new Error()
+        throw new Error('receive amount is higher than the incoming amount')
       }
     } else {
       receiveAsset = receiver.asset
@@ -129,7 +129,7 @@ export async function createQuote(
 
   if (debitAmount) {
     if (!receiveAsset) {
-      throw new Error()
+      throw new Error('receive asset is not defined')
     }
     receiveAmount = {
       value: BigInt(
@@ -143,7 +143,7 @@ export async function createQuote(
     }
   } else {
     if (!receiveAmount) {
-      throw new Error()
+      throw new Error('receive amount is not defined')
     }
     debitAmount = {
       value: BigInt(
