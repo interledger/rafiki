@@ -1,7 +1,7 @@
 import assert from 'assert'
 import { C9_CONFIG, HLB_CONFIG } from './lib/config'
 import { MockASE } from './lib/mock-ase'
-import { WebhookEventType } from 'mock-account-service-lib'
+import { Fee, WebhookEventType } from 'mock-account-service-lib'
 import { poll } from './lib/utils'
 import { TestActions, createTestActions } from './lib/test-actions'
 
@@ -279,10 +279,6 @@ describe('Integration tests', (): void => {
 
       const receiver = await createReceiver(createReceiverInput)
       assert(receiver.incomingAmount)
-      assert(
-        receiver.incomingAmount.assetScale === senderWalletAddress.assetScale
-      )
-      const receiverAssetCode = receiver.incomingAmount.assetCode
 
       const quote = await createQuote(senderWalletAddressId, receiver)
       const outgoingPayment = await createOutgoingPayment(
@@ -290,17 +286,39 @@ describe('Integration tests', (): void => {
         quote
       )
       const payment = await getOutgoingPayment(outgoingPayment.id, value)
-      const exchangeRate =
-        c9.config.seed.rates[receiverAssetCode][senderAssetCode]
-      const { sentAmount, receiveAmount } = payment
 
-      if (exchangeRate > 1) {
-        expect(sentAmount.value).toBeGreaterThan(receiveAmount.value)
-      } else if (exchangeRate < 1) {
-        expect(sentAmount.value).toBeLessThan(receiveAmount.value)
-      } else {
-        expect(sentAmount.value).toBe(receiveAmount.value)
-      }
+      const receiverAssetCode = receiver.incomingAmount.assetCode
+      const exchangeRate =
+        hlb.config.seed.rates[senderAssetCode][receiverAssetCode]
+      const fee = c9.config.seed.fees.find((fee: Fee) => fee.asset === 'USD')
+
+      // Expected amounts depend on the configuration of asset codes, scale, exchange rate, and fees.
+      assert(receiverAssetCode === 'EUR')
+      assert(senderAssetCode === 'USD')
+      assert(
+        receiver.incomingAmount.assetScale === senderWalletAddress.assetScale
+      )
+      assert(senderWalletAddress.assetScale === 2)
+      assert(exchangeRate === 0.91)
+      assert(fee.fixed === 100)
+      assert(fee.basisPoints === 200)
+      assert(fee.asset === 'USD')
+      assert(fee.scale === 2)
+      expect(payment.receiveAmount).toMatchObject({
+        assetCode: 'EUR',
+        assetScale: 2,
+        value: 500n
+      })
+      expect(payment.debitAmount).toMatchObject({
+        assetCode: 'USD',
+        assetScale: 2,
+        value: 668n
+      })
+      expect(payment.sentAmount).toMatchObject({
+        assetCode: 'USD',
+        assetScale: 2,
+        value: 550n
+      })
     })
   })
 })
