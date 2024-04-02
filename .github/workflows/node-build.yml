@@ -134,6 +134,29 @@ jobs:
      - name: Perform CodeQL Analysis
        uses: github/codeql-action/analyze@v3
 
+  integration-test:
+    runs-on: ubuntu-22.04
+    needs: prerequisite
+    timeout-minutes: 5
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup environment
+        uses: ./.github/workflows/rafiki/env-setup
+
+      - name: Setup hosts
+        run: |
+          echo "127.0.0.1 cloud-nine-wallet-test-backend" | sudo tee -a /etc/hosts
+          echo "127.0.0.1 cloud-nine-wallet-test-auth" | sudo tee -a /etc/hosts
+          echo "127.0.0.1 happy-life-bank-test-backend" | sudo tee -a /etc/hosts
+          echo "127.0.0.1 happy-life-bank-test-auth" | sudo tee -a /etc/hosts
+      - name: Build dependencies
+        run: pnpm --filter integration build:deps
+
+      - name: Run tests
+        run: pnpm --filter integration run-tests
+
   node-build:
     runs-on: ubuntu-latest
     timeout-minutes: 5
