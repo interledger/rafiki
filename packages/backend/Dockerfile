@@ -17,6 +17,7 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
 FROM base AS prod-deps
 
 COPY package.json pnpm-workspace.yaml .npmrc ./
+COPY packages/backend/knexfile.js ./packages/backend/knexfile.js
 COPY packages/backend/package.json ./packages/backend/package.json
 COPY packages/token-introspection/package.json ./packages/token-introspection/package.json
 
@@ -51,10 +52,11 @@ COPY --from=prod-deps /home/rafiki/packages/backend/node_modules ./packages/back
 COPY --from=prod-deps /home/rafiki/packages/backend/package.json ./packages/backend/package.json
 COPY --from=prod-deps /home/rafiki/packages/token-introspection/node_modules ./packages/token-introspection/node_modules
 COPY --from=prod-deps /home/rafiki/packages/token-introspection/package.json ./packages/token-introspection/package.json
+COPY --from=prod-deps /home/rafiki/packages/backend/knexfile.js ./packages/backend/knexfile.js
 
 COPY --from=builder /home/rafiki/packages/backend/migrations/ ./packages/backend/migrations
 COPY --from=builder /home/rafiki/packages/backend/dist ./packages/backend/dist
 COPY --from=builder /home/rafiki/packages/token-introspection/dist ./packages/token-introspection/dist
-
+COPY --from=builder /home/rafiki/packages/backend/knexfile.js ./packages/backend/knexfile.js
 
 CMD ["node", "/home/rafiki/packages/backend/dist/index.js"]
