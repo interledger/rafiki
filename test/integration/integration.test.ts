@@ -1,31 +1,16 @@
 import assert from 'assert'
-import { validate as isUuid } from 'uuid'
-import {
-  isPendingGrant,
-  isFinalizedGrant,
-  WalletAddress,
-  IncomingPayment,
-  Quote,
-  PendingGrant,
-  Grant,
-  OutgoingPayment
-} from '@interledger/open-payments'
 import { C9_CONFIG, HLB_CONFIG } from './lib/config'
 import { MockASE } from './lib/mock-ase'
-import { WebhookEventType } from 'mock-account-service-lib'
-import { parseCookies, poll, pollCondition, wait } from './lib/utils'
-import {
-  Receiver as ReceiverGql,
-  Quote as QuoteGql,
-  OutgoingPayment as OutgoingPaymentGql,
-  OutgoingPaymentState
-} from './lib/generated/graphql'
+import { Fee, WebhookEventType } from 'mock-account-service-lib'
+import { poll } from './lib/utils'
+import { TestActions, createTestActions } from './lib/test-actions'
 
-jest.setTimeout(20000)
+jest.setTimeout(20_000)
 
 describe('Integration tests', (): void => {
   let c9: MockASE
   let hlb: MockASE
+  let testActions: TestActions
 
   beforeAll(async () => {
     try {
@@ -33,11 +18,12 @@ describe('Integration tests', (): void => {
       hlb = await MockASE.create(HLB_CONFIG)
     } catch (e) {
       console.error(e)
-      // Prevents jest from running all tests, which obfuscates error,
-      // when beforeAll errors.
+      // Prevents jest from running all tests, which obfuscates errors in beforeAll
       // https://github.com/jestjs/jest/issues/2713
       process.exit(1)
     }
+
+    testActions = createTestActions({ sendingASE: c9, receivingASE: hlb })
   })
 
   afterAll(async () => {
@@ -45,38 +31,8 @@ describe('Integration tests', (): void => {
     hlb.shutdown()
   })
 
-  describe('Open Payments Flow', (): void => {
-    const receiverWalletAddressUrl =
-      'http://happy-life-bank-test-backend:4100/accounts/pfry'
-    const senderWalletAddressUrl =
-      'http://cloud-nine-wallet-test-backend:3100/accounts/gfranklin'
-    const amountValueToSend = '100'
-
-    let receiverWalletAddress: WalletAddress
-    let senderWalletAddress: WalletAddress
-    let accessToken: string
-    let incomingPayment: IncomingPayment
-    let quote: Quote
-    let outgoingPaymentGrant: PendingGrant
-    let grantContinue: Grant
-    let outgoingPayment: OutgoingPayment
-
-    test('Can Get Existing Wallet Address', async (): Promise<void> => {
-      receiverWalletAddress = await c9.opClient.walletAddress.get({
-        url: receiverWalletAddressUrl
-      })
-      senderWalletAddress = await c9.opClient.walletAddress.get({
-        url: senderWalletAddressUrl
-      })
-
-      expect(receiverWalletAddress.id).toBe(
-        receiverWalletAddressUrl.replace('http', 'https')
-      )
-      expect(senderWalletAddress.id).toBe(
-        senderWalletAddressUrl.replace('http', 'https')
-      )
-    })
-
+  // Individual requests
+  describe('Requests', (): void => {
     test('Can Get Non-Existing Wallet Address', async (): Promise<void> => {
       const notFoundWalletAddress =
         'https://happy-life-bank-test-backend:4100/accounts/asmith'
@@ -109,493 +65,260 @@ describe('Integration tests', (): void => {
         })
       )
     })
+  })
 
-    test('Grant Request Incoming Payment', async (): Promise<void> => {
-      const grant = await c9.opClient.grant.request(
-        {
-          url: receiverWalletAddress.authServer
-        },
-        {
-          access_token: {
-            access: [
-              {
-                type: 'incoming-payment',
-                actions: ['create', 'read', 'list', 'complete']
-              }
-            ]
-          }
-        }
-      )
+  // Series of requests depending on eachother
+  describe('Flows', () => {
+    test('Open Payments with Continuation via Polling', async (): Promise<void> => {
+      const {
+        grantRequestIncomingPayment,
+        createIncomingPayment,
+        grantRequestQuote,
+        createQuote,
+        grantRequestOutgoingPayment,
+        pollGrantContinue,
+        createOutgoingPayment,
+        getOutgoingPayment,
+        getPublicIncomingPayment
+      } = testActions.openPayments
+      const { consentInteraction } = testActions
 
-      assert(!isPendingGrant(grant))
-      accessToken = grant.access_token.value
-    })
+      const receiverWalletAddressUrl =
+        'https://happy-life-bank-test-backend:4100/accounts/pfry'
+      const senderWalletAddressUrl =
+        'https://cloud-nine-wallet-test-backend:3100/accounts/gfranklin'
+      const amountValueToSend = '100'
 
-    test('Create Incoming Payment', async (): Promise<void> => {
-      const now = new Date()
-      const tomorrow = new Date(now)
-      tomorrow.setDate(now.getDate() + 1)
-
-      const handleWebhookEventSpy = jest.spyOn(
-        hlb.integrationServer.webhookEventHandler,
-        'handleWebhookEvent'
-      )
-
-      incomingPayment = await c9.opClient.incomingPayment.create(
-        {
-          url: receiverWalletAddress.resourceServer,
-          accessToken
-        },
-        {
-          walletAddress: receiverWalletAddressUrl.replace('http', 'https'),
-          incomingAmount: {
-            value: amountValueToSend,
-            assetCode: receiverWalletAddress.assetCode,
-            assetScale: receiverWalletAddress.assetScale
-          },
-          metadata: { description: 'Free Money!' },
-          expiresAt: tomorrow.toISOString()
-        }
-      )
-
-      await pollCondition(
-        () => {
-          return handleWebhookEventSpy.mock.calls.some(
-            (call) => call[0]?.type === WebhookEventType.IncomingPaymentCreated
-          )
-        },
-        5,
-        0.5
-      )
-
-      expect(handleWebhookEventSpy).toHaveBeenCalledWith(
-        expect.objectContaining({
-          type: WebhookEventType.IncomingPaymentCreated,
-          data: expect.any(Object)
-        })
-      )
-    })
-
-    test('Grant Request Quote', async (): Promise<void> => {
-      const grant = await c9.opClient.grant.request(
-        {
-          url: senderWalletAddress.authServer
-        },
-        {
-          access_token: {
-            access: [
-              {
-                type: 'quote',
-                actions: ['read', 'create']
-              }
-            ]
-          }
-        }
-      )
-
-      assert(!isPendingGrant(grant))
-      accessToken = grant.access_token.value
-    })
-
-    test('Create Quote', async (): Promise<void> => {
-      quote = await c9.opClient.quote.create(
-        {
-          url: senderWalletAddress.resourceServer,
-          accessToken
-        },
-        {
-          walletAddress: senderWalletAddressUrl.replace('http', 'https'),
-          receiver: incomingPayment.id.replace('https', 'http'),
-          method: 'ilp'
-        }
-      )
-    })
-
-    // --- GRANT CONTINUATION WITH FINISH METHOD ---
-    // TODO: Grant Continuation w/ finish in another Open Payments Flow test
-    test.skip('Grant Request Outgoing Payment', async (): Promise<void> => {
-      const grant = await hlb.opClient.grant.request(
-        {
-          url: senderWalletAddress.authServer
-        },
-        {
-          access_token: {
-            access: [
-              {
-                type: 'outgoing-payment',
-                actions: ['create', 'read', 'list'],
-                identifier: senderWalletAddressUrl.replace('http', 'https'),
-                limits: {
-                  debitAmount: quote.debitAmount,
-                  receiveAmount: quote.receiveAmount
-                }
-              }
-            ]
-          },
-          interact: {
-            start: ['redirect'],
-            finish: {
-              method: 'redirect',
-              uri: 'https://example.com',
-              nonce: '456'
-            }
-          }
-        }
-      )
-
-      assert(isPendingGrant(grant))
-      outgoingPaymentGrant = grant
-
-      // Delay following request according to the continue wait time
-      await wait((outgoingPaymentGrant.continue.wait ?? 5) * 1000)
-    })
-
-    test.skip('Continuation Request', async (): Promise<void> => {
-      const { redirect: startInteractionUrl } = outgoingPaymentGrant.interact
-      const tokens = startInteractionUrl.split('/interact/')
-      const interactId = tokens[1] ? tokens[1].split('/')[0] : null
-      const nonce = outgoingPaymentGrant.interact.finish
-      assert(interactId)
-
-      // Start interaction
-      const interactResponse = await fetch(startInteractionUrl, {
-        redirect: 'manual' // dont follow redirects
+      const receiverWalletAddress = await c9.opClient.walletAddress.get({
+        url: receiverWalletAddressUrl
       })
-      expect(interactResponse.status).toBe(302)
+      expect(receiverWalletAddress.id).toBe(receiverWalletAddressUrl)
 
-      const cookie = parseCookies(interactResponse)
-
-      // Accept
-      const acceptResponse = await fetch(
-        `${senderWalletAddress.authServer}/grant/${interactId}/${nonce}/accept`,
-        {
-          method: 'POST',
-          headers: {
-            'x-idp-secret': 'replace-me',
-            cookie
-          }
-        }
-      )
-      expect(acceptResponse.status).toBe(202)
-
-      // Finish interaction
-      const finishResponse = await fetch(
-        `${senderWalletAddress.authServer}/interact/${interactId}/${nonce}/finish`,
-        {
-          method: 'GET',
-          headers: {
-            'x-idp-secret': 'replace-me',
-            cookie
-          },
-          redirect: 'manual' // dont follow redirects
-        }
-      )
-      expect(finishResponse.status).toBe(302)
-
-      const redirectURI = finishResponse.headers.get('location')
-      assert(redirectURI)
-
-      const url = new URL(redirectURI)
-      const interact_ref = url.searchParams.get('interact_ref')
-      assert(interact_ref)
-
-      const { access_token, uri } = outgoingPaymentGrant.continue
-      const grantContinue_ = await c9.opClient.grant.continue(
-        {
-          accessToken: access_token.value,
-          url: uri
-        },
-        { interact_ref }
-      )
-      assert(isFinalizedGrant(grantContinue_))
-      grantContinue = grantContinue_
-    })
-    // --- GRANT CONTINUATION WITH FINISH METHOD ---
-
-    test('Grant Request Outgoing Payment', async (): Promise<void> => {
-      const grant = await hlb.opClient.grant.request(
-        {
-          url: senderWalletAddress.authServer
-        },
-        {
-          access_token: {
-            access: [
-              {
-                type: 'outgoing-payment',
-                actions: ['create', 'read', 'list'],
-                identifier: senderWalletAddressUrl.replace('http', 'https'),
-                limits: {
-                  debitAmount: quote.debitAmount,
-                  receiveAmount: quote.receiveAmount
-                }
-              }
-            ]
-          },
-          interact: {
-            start: ['redirect']
-          }
-        }
-      )
-
-      assert(isPendingGrant(grant))
-      outgoingPaymentGrant = grant
-
-      // Delay following request according to the continue wait time
-      await wait((outgoingPaymentGrant.continue.wait ?? 5) * 1000)
-    })
-
-    test('Continuation Request', async (): Promise<void> => {
-      const { redirect: startInteractionUrl } = outgoingPaymentGrant.interact
-      const tokens = startInteractionUrl.split('/interact/')
-      const interactId = tokens[1] ? tokens[1].split('/')[0] : null
-      const nonce = outgoingPaymentGrant.interact.finish
-      assert(interactId)
-
-      // Start interaction
-      const interactResponse = await fetch(startInteractionUrl, {
-        redirect: 'manual' // dont follow redirects
+      const senderWalletAddress = await c9.opClient.walletAddress.get({
+        url: senderWalletAddressUrl
       })
-      expect(interactResponse.status).toBe(302)
+      expect(senderWalletAddress.id).toBe(senderWalletAddressUrl)
 
-      const cookie = parseCookies(interactResponse)
-
-      // Accept
-      const acceptResponse = await fetch(
-        `${senderWalletAddress.authServer}/grant/${interactId}/${nonce}/accept`,
-        {
-          method: 'POST',
-          headers: {
-            'x-idp-secret': 'replace-me',
-            cookie
-          }
-        }
+      const incomingPaymentGrant = await grantRequestIncomingPayment(
+        receiverWalletAddress
       )
-
-      expect(acceptResponse.status).toBe(202)
-
-      // Finish interaction
-      const finishResponse = await fetch(
-        `${senderWalletAddress.authServer}/interact/${interactId}/${nonce}/finish`,
-        {
-          method: 'GET',
-          headers: {
-            'x-idp-secret': 'replace-me',
-            cookie
-          }
-        }
+      const incomingPayment = await createIncomingPayment(
+        receiverWalletAddress,
+        amountValueToSend,
+        incomingPaymentGrant.access_token.value
       )
-      expect(finishResponse.status).toBe(202)
-
-      const { access_token, uri } = outgoingPaymentGrant.continue
-      const grantContinue_ = await poll(
-        async () =>
-          c9.opClient.grant.continue({
-            accessToken: access_token.value,
-            url: uri
-          }),
-        (responseData) => 'access_token' in responseData,
-        20,
-        5
+      const quoteGrant = await grantRequestQuote(senderWalletAddress)
+      const quote = await createQuote(
+        senderWalletAddress,
+        quoteGrant.access_token.value,
+        incomingPayment
       )
-
-      assert(isFinalizedGrant(grantContinue_))
-      grantContinue = grantContinue_
-    })
-
-    test('Create Outgoing Payment', async (): Promise<void> => {
-      const handleWebhookEventSpy = jest.spyOn(
-        c9.integrationServer.webhookEventHandler,
-        'handleWebhookEvent'
+      const outgoingPaymentGrant = await grantRequestOutgoingPayment(
+        senderWalletAddress,
+        quote
       )
-
-      outgoingPayment = await c9.opClient.outgoingPayment.create(
-        {
-          url: senderWalletAddress.resourceServer,
-          accessToken: grantContinue.access_token.value
-        },
-        {
-          walletAddress: senderWalletAddressUrl.replace('http', 'https'),
-          metadata: {},
-          quoteId: quote.id
-        }
+      await consentInteraction(outgoingPaymentGrant, senderWalletAddress)
+      const grantContinue = await pollGrantContinue(outgoingPaymentGrant)
+      const outgoingPayment = await createOutgoingPayment(
+        senderWalletAddress,
+        grantContinue,
+        quote
       )
-
-      await pollCondition(
-        () => {
-          return (
-            handleWebhookEventSpy.mock.calls.some(
-              (call) =>
-                call[0]?.type === WebhookEventType.OutgoingPaymentCreated
-            ) &&
-            handleWebhookEventSpy.mock.calls.some(
-              (call) =>
-                call[0]?.type === WebhookEventType.OutgoingPaymentCompleted
-            )
-          )
-        },
-        5,
-        0.5
+      await getOutgoingPayment(
+        outgoingPayment.id,
+        grantContinue,
+        amountValueToSend
       )
+      await getPublicIncomingPayment(incomingPayment.id, amountValueToSend)
 
-      expect(handleWebhookEventSpy).toHaveBeenCalledWith(
-        expect.objectContaining({
-          type: WebhookEventType.OutgoingPaymentCreated,
-          data: expect.any(Object)
-        })
-      )
-      expect(handleWebhookEventSpy).toHaveBeenCalledWith(
-        expect.objectContaining({
-          type: WebhookEventType.OutgoingPaymentCompleted,
-          data: expect.any(Object)
-        })
-      )
-    })
-
-    test('Get Outgoing Payment', async (): Promise<void> => {
-      const id = outgoingPayment.id.split('/').pop()
-      assert(id)
-      expect(isUuid(id)).toBe(true)
-
-      const outgoingPayment_ = await c9.opClient.outgoingPayment.get({
-        url: `${senderWalletAddress.resourceServer}/outgoing-payments/${id}`,
-        accessToken: grantContinue.access_token.value
-      })
-
-      expect(outgoingPayment_.id).toBe(outgoingPayment.id)
-      expect(outgoingPayment_.receiveAmount.value).toBe(amountValueToSend)
-      expect(outgoingPayment_.sentAmount.value).toBe(amountValueToSend)
-    })
-
-    test('Get Incoming Payment', async (): Promise<void> => {
       const incomingPayment_ = await hlb.opClient.incomingPayment.getPublic({
-        url: `${incomingPayment.id}`
+        url: incomingPayment.id
       })
       assert(incomingPayment_.receivedAmount)
       expect(incomingPayment_.receivedAmount.value).toBe(amountValueToSend)
     })
-  })
+    test('Open Payments with Continuation via finish method', async (): Promise<void> => {
+      const {
+        grantRequestIncomingPayment,
+        createIncomingPayment,
+        grantRequestQuote,
+        createQuote,
+        grantRequestOutgoingPayment,
+        grantContinue,
+        createOutgoingPayment,
+        getOutgoingPayment,
+        getPublicIncomingPayment
+      } = testActions.openPayments
+      const { consentInteractionWithInteractRef } = testActions
 
-  describe('Peer to Peer Flow', (): void => {
-    const receiverWalletAddressUrl =
-      'https://happy-life-bank-test-backend:4100/accounts/pfry'
-    const amountValueToSend = '500'
+      const receiverWalletAddressUrl =
+        'https://happy-life-bank-test-backend:4100/accounts/pfry'
+      const senderWalletAddressUrl =
+        'https://cloud-nine-wallet-test-backend:3100/accounts/gfranklin'
+      const amountValueToSend = '100'
 
-    let gfranklinWalletAddressId: string
-    let receiver: ReceiverGql
-    let quote: QuoteGql
-    let outgoingPayment: OutgoingPaymentGql
+      const receiverWalletAddress = await c9.opClient.walletAddress.get({
+        url: receiverWalletAddressUrl
+      })
+      expect(receiverWalletAddress.id).toBe(receiverWalletAddressUrl)
 
-    beforeAll(async () => {
-      const gfranklinWalletAddress = await c9.accounts.getByWalletAddressUrl(
+      const senderWalletAddress = await c9.opClient.walletAddress.get({
+        url: senderWalletAddressUrl
+      })
+      expect(senderWalletAddress.id).toBe(senderWalletAddressUrl)
+
+      const incomingPaymentGrant = await grantRequestIncomingPayment(
+        receiverWalletAddress
+      )
+      const incomingPayment = await createIncomingPayment(
+        receiverWalletAddress,
+        amountValueToSend,
+        incomingPaymentGrant.access_token.value
+      )
+      const quoteGrant = await grantRequestQuote(senderWalletAddress)
+      const quote = await createQuote(
+        senderWalletAddress,
+        quoteGrant.access_token.value,
+        incomingPayment
+      )
+      const outgoingPaymentGrant = await grantRequestOutgoingPayment(
+        senderWalletAddress,
+        quote,
+        {
+          method: 'redirect',
+          uri: 'https://example.com',
+          nonce: '456'
+        }
+      )
+      const interactRef = await consentInteractionWithInteractRef(
+        outgoingPaymentGrant,
+        senderWalletAddress
+      )
+      const finalizedGrant = await grantContinue(
+        outgoingPaymentGrant,
+        interactRef
+      )
+      const outgoingPayment = await createOutgoingPayment(
+        senderWalletAddress,
+        finalizedGrant,
+        quote
+      )
+      await getOutgoingPayment(
+        outgoingPayment.id,
+        finalizedGrant,
+        amountValueToSend
+      )
+      await getPublicIncomingPayment(incomingPayment.id, amountValueToSend)
+    })
+    test('Peer to Peer', async (): Promise<void> => {
+      const {
+        createReceiver,
+        createQuote,
+        createOutgoingPayment,
+        getOutgoingPayment
+      } = testActions.admin
+
+      const senderWalletAddress = await c9.accounts.getByWalletAddressUrl(
         'https://cloud-nine-wallet-test-backend:3100/accounts/gfranklin'
       )
-      assert(gfranklinWalletAddress?.walletAddressID)
-      gfranklinWalletAddressId = gfranklinWalletAddress.walletAddressID
-    })
-
-    test('Create Receiver (remote Incoming Payment)', async (): Promise<void> => {
-      const handleWebhookEventSpy = jest.spyOn(
-        hlb.integrationServer.webhookEventHandler,
-        'handleWebhookEvent'
-      )
-      const response = await c9.adminClient.createReceiver({
+      assert(senderWalletAddress?.walletAddressID)
+      const senderWalletAddressId = senderWalletAddress.walletAddressID
+      const value = '500'
+      const createReceiverInput = {
         metadata: {
           description: 'For lunch!'
         },
         incomingAmount: {
           assetCode: 'USD',
           assetScale: 2,
-          value: amountValueToSend as unknown as bigint
+          value: value as unknown as bigint
         },
-        walletAddressUrl: receiverWalletAddressUrl
-      })
+        walletAddressUrl:
+          'https://happy-life-bank-test-backend:4100/accounts/pfry'
+      }
 
-      expect(response.code).toBe('200')
-      assert(response.receiver)
+      const receiver = await createReceiver(createReceiverInput)
+      const quote = await createQuote(senderWalletAddressId, receiver)
+      const outgoingPayment = await createOutgoingPayment(
+        senderWalletAddressId,
+        quote
+      )
+      const outgoingPayment_ = await getOutgoingPayment(
+        outgoingPayment.id,
+        value
+      )
+      expect(outgoingPayment_.sentAmount.value).toBe(BigInt(value))
+    })
+    test('Peer to Peer - Cross Currency', async (): Promise<void> => {
+      const {
+        createReceiver,
+        createQuote,
+        createOutgoingPayment,
+        getOutgoingPayment
+      } = testActions.admin
 
-      receiver = response.receiver
-
-      await pollCondition(
-        () => {
-          return handleWebhookEventSpy.mock.calls.some(
-            (call) => call[0]?.type === WebhookEventType.IncomingPaymentCreated
-          )
+      const senderWalletAddress = await c9.accounts.getByWalletAddressUrl(
+        'https://cloud-nine-wallet-test-backend:3100/accounts/gfranklin'
+      )
+      assert(senderWalletAddress)
+      const senderAssetCode = senderWalletAddress.assetCode
+      const senderWalletAddressId = senderWalletAddress.walletAddressID
+      const value = '500'
+      const createReceiverInput = {
+        metadata: {
+          description: 'cross-currency'
         },
-        5,
-        0.5
-      )
-
-      expect(handleWebhookEventSpy).toHaveBeenCalledWith(
-        expect.objectContaining({
-          type: WebhookEventType.IncomingPaymentCreated,
-          data: expect.any(Object)
-        })
-      )
-    })
-    test('Create Quote', async (): Promise<void> => {
-      const response = await c9.adminClient.createQuote({
-        walletAddressId: gfranklinWalletAddressId,
-        receiver: receiver.id
-      })
-
-      expect(response.code).toBe('200')
-      assert(response.quote)
-
-      quote = response.quote
-    })
-    test('Create Outgoing Payment', async (): Promise<void> => {
-      const handleWebhookEventSpy = jest.spyOn(
-        c9.integrationServer.webhookEventHandler,
-        'handleWebhookEvent'
-      )
-
-      const response = await c9.adminClient.createOutgoingPayment({
-        walletAddressId: gfranklinWalletAddressId,
-        quoteId: quote.id
-      })
-
-      expect(response.code).toBe('200')
-      assert(response.payment)
-
-      outgoingPayment = response.payment
-
-      await pollCondition(
-        () => {
-          return (
-            handleWebhookEventSpy.mock.calls.some(
-              (call) =>
-                call[0]?.type === WebhookEventType.OutgoingPaymentCreated
-            ) &&
-            handleWebhookEventSpy.mock.calls.some(
-              (call) =>
-                call[0]?.type === WebhookEventType.OutgoingPaymentCompleted
-            )
-          )
+        incomingAmount: {
+          assetCode: 'EUR',
+          assetScale: 2,
+          value: value as unknown as bigint
         },
-        5,
-        0.5
-      )
+        walletAddressUrl:
+          'https://happy-life-bank-test-backend:4100/accounts/lars'
+      }
 
-      expect(handleWebhookEventSpy).toHaveBeenCalledWith(
-        expect.objectContaining({
-          type: WebhookEventType.OutgoingPaymentCreated,
-          data: expect.any(Object)
-        })
+      const receiver = await createReceiver(createReceiverInput)
+      assert(receiver.incomingAmount)
+
+      const quote = await createQuote(senderWalletAddressId, receiver)
+      const outgoingPayment = await createOutgoingPayment(
+        senderWalletAddressId,
+        quote
       )
-      expect(handleWebhookEventSpy).toHaveBeenCalledWith(
-        expect.objectContaining({
-          type: WebhookEventType.OutgoingPaymentCompleted,
-          data: expect.any(Object)
-        })
+      const payment = await getOutgoingPayment(outgoingPayment.id, value)
+
+      const receiverAssetCode = receiver.incomingAmount.assetCode
+      const exchangeRate =
+        hlb.config.seed.rates[senderAssetCode][receiverAssetCode]
+      const fee = c9.config.seed.fees.find((fee: Fee) => fee.asset === 'USD')
+
+      // Expected amounts depend on the configuration of asset codes, scale, exchange rate, and fees.
+      assert(receiverAssetCode === 'EUR')
+      assert(senderAssetCode === 'USD')
+      assert(
+        receiver.incomingAmount.assetScale === senderWalletAddress.assetScale
       )
-    })
-    test('Get Outgoing Payment', async (): Promise<void> => {
-      const payment = await c9.adminClient.getOutgoingPayment(
-        outgoingPayment.id
-      )
-      expect(payment.state).toBe(OutgoingPaymentState.Completed)
-      expect(payment.receiveAmount.value).toBe(amountValueToSend)
-      expect(payment.sentAmount.value).toBe(amountValueToSend)
+      assert(senderWalletAddress.assetScale === 2)
+      assert(exchangeRate === 0.91)
+      assert(fee.fixed === 100)
+      assert(fee.basisPoints === 200)
+      assert(fee.asset === 'USD')
+      assert(fee.scale === 2)
+      expect(payment.receiveAmount).toMatchObject({
+        assetCode: 'EUR',
+        assetScale: 2,
+        value: 500n
+      })
+      expect(payment.debitAmount).toMatchObject({
+        assetCode: 'USD',
+        assetScale: 2,
+        value: 668n
+      })
+      expect(payment.sentAmount).toMatchObject({
+        assetCode: 'USD',
+        assetScale: 2,
+        value: 550n
+      })
     })
   })
 })

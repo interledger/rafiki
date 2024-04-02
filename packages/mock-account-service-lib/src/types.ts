@@ -25,14 +25,14 @@ export interface Account {
   skipWalletAddressCreation?: boolean
 }
 
-interface Fee {
+export interface Fee {
   fixed: number
   basisPoints: number
   asset: string
   scale: number
 }
 
-interface SeedInstance {
+export interface SeedInstance {
   assets: Array<Asset>
   peeringAsset: string
   peers: Array<Peering>
