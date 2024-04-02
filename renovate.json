@@ -2,7 +2,6 @@
   "enabled": true,
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": ["config:base"],
-  "ignorePresets": [":ignorePaths"],
   "prConcurrentLimit": 10,
   "branchConcurrentLimit": 0,
   "branchPrefix": "renovate-",
@@ -20,13 +19,5 @@
       "allowedVersions": "<17.0.0"
     }
   ],
-  "ignorePaths": [
-    "**/node_modules/**",
-    "**/bower_components/**",
-    "**/vendor/**",
-    "**/examples/**",
-    "**/__tests__/**",
-    "**/tests/**",
-    "**/__fixtures__/**"
-  ]
+  "ignorePaths": ["!test/**"]
 }
