@@ -65,7 +65,7 @@ export async function createOutgoingPayment(
     quoteId: quote.id
   })
   if (isOutgoingPaymentError(outgoingPaymentOrError)) {
-    throw new Error()
+    throw new Error(outgoingPaymentOrError)
   }
 
   const accountingService = await deps.use('accountingService')

@@ -10,7 +10,7 @@ export function toTigerbeetleId(id: AccountId): bigint {
     return id
   }
   if (!validateId(id)) {
-    throw new Error()
+    throw new Error('wrong format of id')
   }
 
   return uuidToBigInt(id)
