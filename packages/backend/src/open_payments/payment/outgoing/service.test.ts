@@ -9,7 +9,11 @@ import {
   OutgoingPaymentError,
   isOutgoingPaymentError
 } from './errors'
-import { CreateOutgoingPaymentOptions, OutgoingPaymentService } from './service'
+import {
+  CreateFromIncomingPayment,
+  CreateFromQuote,
+  OutgoingPaymentService
+} from './service'
 import { createTestApp, TestContainer } from '../../../tests/app'
 import { Config } from '../../../config/app'
 import { Grant } from '../../auth/middleware'
@@ -650,7 +654,9 @@ describe('OutgoingPaymentService', (): void => {
 
         describe('validateGrant', (): void => {
           let quote: Quote
-          let options: Omit<CreateOutgoingPaymentOptions, 'grant'>
+          let options:
+            | Omit<CreateFromQuote, 'grant'>
+            | Omit<CreateFromIncomingPayment, 'grant'>
           let interval: string
           beforeEach(async (): Promise<void> => {
             quote = await createQuote(deps, {

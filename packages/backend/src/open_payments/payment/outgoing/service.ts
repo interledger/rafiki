@@ -36,6 +36,7 @@ import { knex } from 'knex'
 import { AccountAlreadyExistsError } from '../../../accounting/errors'
 import { PaymentMethodHandlerService } from '../../../payment-method/handler/service'
 import { TelemetryService } from '../../../telemetry/service'
+import { Amount } from '../../amount'
 
 export interface OutgoingPaymentService
   extends WalletAddressSubresourceService<OutgoingPayment> {
@@ -88,9 +89,8 @@ async function getOutgoingPayment(
   }
 }
 
-export interface CreateOutgoingPaymentOptions {
+interface CreateBase {
   walletAddressId: string
-  quoteId: string
   client?: string
   grant?: Grant
   metadata?: Record<string, unknown>
@@ -98,10 +98,39 @@ export interface CreateOutgoingPaymentOptions {
   grantLockTimeoutMs?: number
 }
 
+export interface CreateFromQuote extends CreateBase {
+  quoteId: string
+}
+
+export interface CreateFromIncomingPayment extends CreateBase {
+  incomingPaymentId: string
+  debitAmount: Amount
+}
+
+export type CreateOutgoingPaymentOptions =
+  | CreateFromQuote
+  | CreateFromIncomingPayment
+
+function isCreateFromQuote(
+  options: CreateOutgoingPaymentOptions
+): options is CreateFromQuote {
+  return 'quoteId' in options
+}
+
+function isCreateFromIncomingPayment(
+  options: CreateOutgoingPaymentOptions
+): options is CreateFromIncomingPayment {
+  return 'incomingPaymentId' in options && 'debitAmount' in options
+}
+
 async function createOutgoingPayment(
   deps: ServiceDependencies,
-  options: CreateOutgoingPaymentOptions
+  options: CreateFromQuote | CreateFromIncomingPayment
 ): Promise<OutgoingPayment | OutgoingPaymentError> {
+  if (isCreateFromIncomingPayment(options)) {
+    throw new Error('Create from Incoming Payment not implemented')
+  }
+
   const grantId = options.grant?.id
   const walletAddressId = options.walletAddressId
   try {

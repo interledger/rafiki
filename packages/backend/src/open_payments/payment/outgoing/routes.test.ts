@@ -16,10 +16,14 @@ import {
 import { truncateTables } from '../../../tests/tableManager'
 import { createAsset } from '../../../tests/asset'
 import { errorToCode, errorToMessage, OutgoingPaymentError } from './errors'
-import { CreateOutgoingPaymentOptions, OutgoingPaymentService } from './service'
+import {
+  CreateFromIncomingPayment,
+  CreateFromQuote,
+  OutgoingPaymentService
+} from './service'
 import { OutgoingPayment, OutgoingPaymentState } from './model'
 import { OutgoingPaymentRoutes, CreateBody } from './routes'
-import { serializeAmount } from '../../amount'
+import { Amount, serializeAmount } from '../../amount'
 import { Grant } from '../../auth/middleware'
 import { WalletAddress } from '../../wallet_address/model'
 import {
@@ -28,6 +32,7 @@ import {
 } from '../../wallet_address/model.test'
 import { createOutgoingPayment } from '../../../tests/outgoingPayment'
 import { createWalletAddress } from '../../../tests/walletAddress'
+import { createIncomingPayment } from '../../../tests/incomingPayment'
 
 describe('Outgoing Payment Routes', (): void => {
   let deps: IocContract<AppServices>
@@ -41,7 +46,7 @@ describe('Outgoing Payment Routes', (): void => {
 
   const receivingWalletAddress = `https://wallet.example/${uuid()}`
 
-  const createPayment = async (options: {
+  const createPayment = async (options?: {
     client?: string
     grant?: Grant
     metadata?: Record<string, unknown>
@@ -163,7 +168,9 @@ describe('Outgoing Payment Routes', (): void => {
 
   describe('create', (): void => {
     const setup = (
-      options: Omit<CreateOutgoingPaymentOptions, 'walletAddressId'>
+      options:
+        | Omit<CreateFromQuote, 'walletAddressId'>
+        | Omit<CreateFromIncomingPayment, 'walletAddressId'>
     ): CreateContext<CreateBody> =>
       setupContext<CreateContext<CreateBody>>({
         reqOpts: {
@@ -184,7 +191,7 @@ describe('Outgoing Payment Routes', (): void => {
       grant             | client                                        | description
       ${{ id: uuid() }} | ${faker.internet.url({ appendSlash: false })} | ${'grant'}
       ${undefined}      | ${undefined}                                  | ${'no grant'}
-    `('create ($description)', ({ grant, client }): void => {
+    `('create from quote ($description)', ({ grant, client }): void => {
       test('returns the outgoing payment on success (metadata)', async (): Promise<void> => {
         const metadata = {
           description: 'rent',
@@ -243,6 +250,50 @@ describe('Outgoing Payment Routes', (): void => {
           updatedAt: expect.any(String)
         })
       })
+    })
+
+    test('create from incoming payment', async (): Promise<void> => {
+      const asset = await createAsset(deps)
+      const receiverWalletAddress = await createWalletAddress(deps, {
+        assetId: asset.id
+      })
+      const debitAmount: Amount = {
+        value: BigInt(56),
+        assetCode: walletAddress.asset.code,
+        assetScale: walletAddress.asset.scale
+      }
+      const incomingPayment = await createIncomingPayment(deps, {
+        walletAddressId: receiverWalletAddress.id,
+        incomingAmount: {
+          value: BigInt(56),
+          assetCode: asset.code,
+          assetScale: asset.scale
+        }
+      })
+      console.log({ incomingPayment })
+      const ctx = setup({
+        incomingPaymentId: incomingPayment.id,
+        debitAmount
+      })
+      // Was created to test the create interface (via ctx setup above and (maybe) create(ctx) below).
+      // TODO: remove this or fully implement it
+      throw new Error('TODO: implement fully or remove this test')
+      // TODO: remove this comment. createSpy can break other tests. ran it without underlying creat
+      // method ever being called. this caused future tests to use the mock (i think) and fail
+      // const createSpy = jest
+      //   .spyOn(outgoingPaymentService, 'create')
+      //   .mockResolvedValueOnce({} as OutgoingPayment)
+      // TODO: spy on quoteService.create
+      // TODO: assert quoteService create called with correct args
+      await expect(outgoingPaymentRoutes.create(ctx)).resolves.toBeUndefined()
+      // TODO: assert create outgoing payment spy called with correct args
+      // expect(createSpy).toHaveBeenCalledWith({
+      //   walletAddressId: walletAddress.id,
+      //   quoteId: payment.quote.id,
+      //   metadata,
+      //   client,
+      //   grant
+      // })
     })
 
     test.each(Object.values(OutgoingPaymentError).map((err) => [err]))(
