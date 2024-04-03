@@ -26,6 +26,7 @@ import {
   ZeroCopyIlpPrepare,
   createIlpPacketMiddleware
 } from './middleware/ilp-packet'
+import { TelemetryService } from '../../../../telemetry/service'
 
 // Model classes that represent an Interledger sender, receiver, or
 // connector SHOULD implement this ConnectorAccount interface.
@@ -71,6 +72,7 @@ export interface AccountingService {
 export interface RafikiServices {
   //router: Router
   accounting: AccountingService
+  telemetry?: TelemetryService
   walletAddresses: WalletAddressService
   logger: Logger
   incomingPayments: IncomingPaymentService
@@ -158,6 +160,9 @@ export class Rafiki<T = any> {
       },
       get walletAddresses(): WalletAddressService {
         return config.walletAddresses
+      },
+      get telemetry(): TelemetryService | undefined {
+        return config.telemetry
       },
 
       logger
