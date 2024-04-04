@@ -83,32 +83,6 @@ describe('Balance Middleware', function () {
   })
 
   test.each`
-    streamDestination | description
-    ${true}           | ${'single phase transfer'}
-    ${false}          | ${'two phase transfer'}
-  `(
-    'creates $description if state.streamDestination $streamDestination',
-    async ({ streamDestination }): Promise<void> => {
-      const prepare = IlpPrepareFactory.build({ amount: '100' })
-      const fulfill = IlpFulfillFactory.build()
-      ctx.request.prepare = new ZeroCopyIlpPrepare(prepare)
-      ctx.state.streamDestination = streamDestination ? 'here' : undefined
-      const spy = jest.spyOn(accounting, 'createTransfer')
-      const next = jest.fn().mockImplementation(() => {
-        ctx.response.fulfill = fulfill
-      })
-      await expect(middleware(ctx, next)).resolves.toBeUndefined()
-      expect(spy).toHaveBeenCalledWith({
-        destinationAccount: expect.anything(),
-        destinationAmount: expect.anything(),
-        sourceAccount: expect.anything(),
-        sourceAmount: expect.anything(),
-        timeout: streamDestination ? 0 : 5
-      })
-    }
-  )
-
-  test.each`
     amount   | state                            | error                         | createTransfer | description
     ${'100'} | ${{}}                            | ${undefined}                  | ${true}        | ${'reject response does not adjust the account balances'}
     ${'0'}   | ${{}}                            | ${undefined}                  | ${false}       | ${'ignores 0 amount packets'}
