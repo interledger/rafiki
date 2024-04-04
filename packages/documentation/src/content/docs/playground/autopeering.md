@@ -23,6 +23,8 @@ To use the [Bruno API examples](/playground/overview/#bruno--open-payments-apis)
 3. copy the url of one of the wallet addresses
 4. set the url as `senderWalletAddress` variable in the Bruno `Autopeering` environment
 
+Note that you have to go through an additional "login" step by providing you IPv4 address as tunnel password before being able to visit the consent screen for the outgoing payment grant request. You can find out your current IPv4 address by e.g. visiting https://www.whatismyip.com/.
+
 To shut down the connection and to clear the environment, run
 
 ```

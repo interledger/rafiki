@@ -126,6 +126,8 @@ To use the Bruno collection examples follow the steps:
 3. copy the url of one of the wallet addresses
 4. set the url as `senderWalletAddress` variable in the Bruno `Autopeering` environment
 
+Note that you have to go through an additional "login" step by providing you IPv4 address as tunnel password before being able to visit the consent screen for the outgoing payment grant request. You can find out your current IPv4 address by e.g. visiting https://www.whatismyip.com/.
+
 After stopping the script it is necessary to clear the environment using the command described in [Shutting down](#Shutting-down). This is necessary as on a new run of the scripts (with autopeering or not) the wallet address url will differ.
 
 ### Shutting down
