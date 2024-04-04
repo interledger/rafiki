@@ -385,7 +385,7 @@ export const depositEventLiquidity: MutationResolvers<ApolloContext>['depositEve
         return responses[LiquidityError.InvalidId]
       }
       if (!event.data.debitAmount) {
-        throw new Error()
+        throw new Error('missing debit amount')
       }
       const outgoingPaymentService = await ctx.container.use(
         'outgoingPaymentService'
@@ -434,7 +434,7 @@ export const withdrawEventLiquidity: MutationResolvers<ApolloContext>['withdrawE
       const assetService = await ctx.container.use('assetService')
       const asset = await assetService.get(event.withdrawal.assetId)
       if (!asset) {
-        throw new Error()
+        throw new Error('asset id does not map to asset')
       }
       const accountingService = await ctx.container.use('accountingService')
       const error = await accountingService.createWithdrawal({

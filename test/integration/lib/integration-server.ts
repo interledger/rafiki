@@ -1,7 +1,7 @@
+import crypto from 'crypto'
 import Koa from 'koa'
 import bodyParser from '@koa/bodyparser'
 import http from 'http'
-import { v4 as uuid } from 'uuid'
 import {
   AccountProvider,
   WebhookEventType,
@@ -98,6 +98,8 @@ export class WebhookEventHandler {
         break
       case WebhookEventType.IncomingPaymentCreated:
         break
+      case WebhookEventType.IncomingPaymentCompleted:
+        break
       case WebhookEventType.OutgoingPaymentCreated:
         await this.handleOutgoingPaymentCreated(webhookEvent)
         break
@@ -169,7 +171,7 @@ export class WebhookEventHandler {
 
     const response = await this.adminClient.depositOutgoingPaymentLiquidity({
       outgoingPaymentId: payment.id,
-      idempotencyKey: uuid()
+      idempotencyKey: crypto.randomUUID()
     })
 
     if (response.code !== '200') {

@@ -16,7 +16,8 @@
   "packageRules": [
     {
       "matchPackageNames": ["@types/node", "node"],
-      "allowedVersions": "<17.0.0"
+      "allowedVersions": "<21.0.0"
     }
-  ]
+  ],
+  "ignorePaths": ["!test/**"]
 }
