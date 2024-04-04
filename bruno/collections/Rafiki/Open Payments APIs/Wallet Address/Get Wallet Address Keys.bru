@@ -11,7 +11,13 @@ get {
 }
 
 script:pre-request {
-  // if(pm.environment.get('preRequestHost')){
-  //     eval(pm.environment.get('preRequestHost'))
-  // }
+  const scripts = require('./scripts');
+  
+  scripts.addHostHeader("senderOpenPaymentsHost");
+}
+
+tests {
+  test("Status code is 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
 }

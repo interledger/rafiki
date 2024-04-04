@@ -15,15 +15,15 @@ headers {
 }
 
 script:pre-request {
-  // if(pm.environment.get('preRequestHost')){
-  //     eval(pm.environment.get('preRequestHost'))
-  // }
-  // eval(pm.environment.get('preRequestSignatures'))
+  const scripts = require('./scripts');
+  
+  scripts.addHostHeader();
+  
+  await scripts.addSignatureHeaders();
 }
 
 tests {
-  // pm.test("Status code is 200", function () {
-  //     pm.response.to.have.status(200);
-  // });
-  // 
+  test("Status code is 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
 }
