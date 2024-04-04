@@ -8,6 +8,7 @@ import { Quote } from './model'
 import { AmountJSON, parseAmount } from '../amount'
 import { Quote as OpenPaymentsQuote } from '@interledger/open-payments'
 import { WalletAddress } from '../wallet_address/model'
+import { OpenPaymentsServerRouteError } from '../errors'
 
 interface ServiceDependencies {
   config: IAppConfig
@@ -39,7 +40,17 @@ async function getQuote(
     id: ctx.params.id,
     client: ctx.accessAction === AccessAction.Read ? ctx.client : undefined
   })
-  if (!quote || !quote.walletAddress) return ctx.throw(404)
+
+  if (!quote) {
+    throw new OpenPaymentsServerRouteError(404, 'Quote does not exist', {
+      id: ctx.params.id
+    })
+  }
+
+  if (!quote.walletAddress) {
+    handleMissingWalletAddress(deps, quote)
+  }
+
   ctx.body = quoteToBody(quote.walletAddress, quote)
 }
 
@@ -72,25 +83,34 @@ async function createQuote(
     client: ctx.client,
     method: body.method
   }
-  if (body.debitAmount) options.debitAmount = parseAmount(body.debitAmount)
-  if (body.receiveAmount)
-    options.receiveAmount = parseAmount(body.receiveAmount)
+
   try {
-    const quoteOrErr = await deps.quoteService.create(options)
-
-    if (isQuoteError(quoteOrErr)) {
-      throw quoteOrErr
-    }
-
-    ctx.status = 201
-    ctx.body = quoteToBody(ctx.walletAddress, quoteOrErr)
+    if (body.debitAmount) options.debitAmount = parseAmount(body.debitAmount)
+    if (body.receiveAmount)
+      options.receiveAmount = parseAmount(body.receiveAmount)
   } catch (err) {
-    if (isQuoteError(err)) {
-      return ctx.throw(errorToCode[err], errorToMessage[err])
-    }
-    deps.logger.debug({ error: err instanceof Error && err.message })
-    ctx.throw(500, 'Error trying to create quote')
+    throw new OpenPaymentsServerRouteError(
+      400,
+      'Could not parse amounts when creating quote',
+      { requestBody: body }
+    )
   }
+
+  const quoteOrErr = await deps.quoteService.create(options)
+
+  if (isQuoteError(quoteOrErr)) {
+    throw new OpenPaymentsServerRouteError(
+      errorToCode[quoteOrErr],
+      errorToMessage[quoteOrErr]
+    )
+  }
+
+  if (!quoteOrErr.walletAddress) {
+    handleMissingWalletAddress(deps, quoteOrErr)
+  }
+
+  ctx.status = 201
+  ctx.body = quoteToBody(quoteOrErr.walletAddress, quoteOrErr)
 }
 
 function quoteToBody(
@@ -98,4 +118,14 @@ function quoteToBody(
   quote: Quote
 ): OpenPaymentsQuote {
   return quote.toOpenPaymentsType(walletAddress)
+}
+
+function handleMissingWalletAddress(
+  deps: ServiceDependencies,
+  quote: Quote
+): never {
+  const errorMessage =
+    'Quote does not have wallet address. This should not be possible.'
+  deps.logger.error({ quoteId: quote.id }, errorMessage)
+  throw new Error(errorMessage)
 }

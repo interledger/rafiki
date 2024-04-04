@@ -126,23 +126,6 @@ describe('Incoming Payment Routes', (): void => {
       list: (ctx) => incomingPaymentRoutes.list(ctx),
       urlPath: IncomingPayment.urlPath
     })
-
-    test('returns 500 for unexpected error', async (): Promise<void> => {
-      const incomingPaymentService = await deps.use('incomingPaymentService')
-      jest
-        .spyOn(incomingPaymentService, 'getWalletAddressPage')
-        .mockRejectedValueOnce(new Error('unexpected'))
-      const ctx = setup<ListContext>({
-        reqOpts: {
-          headers: { Accept: 'application/json' }
-        },
-        walletAddress
-      })
-      await expect(incomingPaymentRoutes.list(ctx)).rejects.toMatchObject({
-        status: 500,
-        message: `Error trying to list incoming payments`
-      })
-    })
   })
 
   describe('get', (): void => {

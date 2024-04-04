@@ -6,6 +6,7 @@ import {
   getPageInfo,
   parsePaginationQueryParameters
 } from '../../shared/pagination'
+import { OpenPaymentsServerRouteError } from '../errors'
 
 interface ServiceDependencies {
   authServer: string
@@ -30,7 +31,13 @@ export async function getWalletAddress(
   ctx: WalletAddressContext
 ): Promise<void> {
   if (!ctx.walletAddress) {
-    return ctx.throw(404)
+    throw new OpenPaymentsServerRouteError(
+      404,
+      'Wallet address does not exist',
+      {
+        walletAddressUrl: ctx.walletAddressUrl
+      }
+    )
   }
 
   ctx.body = ctx.walletAddress.toOpenPaymentsType({
@@ -52,9 +59,15 @@ export const listSubresource = async <M extends WalletAddressSubresource>({
 }: ListSubresourceOptions<M>) => {
   if (ctx.request.query.last) {
     if (ctx.request.query.first) {
-      ctx.throw(400, 'first and last are mutually exclusive')
+      throw new OpenPaymentsServerRouteError(
+        400,
+        'first and last are mutually exclusive',
+        { queryParams: ctx.request.query }
+      )
     } else if (!ctx.request.query.cursor) {
-      ctx.throw(400, 'last requires cursor')
+      throw new OpenPaymentsServerRouteError(400, 'last requires cursor', {
+        queryParams: ctx.request.query
+      })
     }
   }
   const pagination = parsePaginationQueryParameters(ctx.request.query)

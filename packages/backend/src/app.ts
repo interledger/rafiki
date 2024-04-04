@@ -86,6 +86,7 @@ import { PaymentMethodHandlerService } from './payment-method/handler/service'
 import { IlpPaymentService } from './payment-method/ilp/service'
 import { TelemetryService } from './telemetry/service'
 import { ApolloArmor } from '@escape.tech/graphql-armor'
+import { openPaymentServerErrorMiddleware } from './open_payments/errors'
 export interface AppContextData {
   logger: Logger
   container: AppContainer
@@ -384,10 +385,12 @@ export class App {
     const koa = await this.createKoaServer()
 
     const router = new Router<DefaultState, AppContext>()
+
     router.use(bodyParser())
     router.get('/healthz', (ctx: AppContext): void => {
       ctx.status = 200
     })
+    router.use(openPaymentServerErrorMiddleware)
 
     const walletAddressKeyRoutes = await this.container.use(
       'walletAddressKeyRoutes'

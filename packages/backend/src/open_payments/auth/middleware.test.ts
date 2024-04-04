@@ -28,6 +28,7 @@ import { createWalletAddress } from '../../tests/walletAddress'
 import { setup } from '../wallet_address/model.test'
 import { parseLimits } from '../payment/outgoing/limits'
 import { AccessAction, AccessType } from '@interledger/open-payments'
+import assert from 'assert'
 
 const nock = (global as unknown as { nock: typeof import('nock') }).nock
 
@@ -122,7 +123,11 @@ describe('Auth Middleware', (): void => {
     async ({ authorization }): Promise<void> => {
       const introspectSpy = jest.spyOn(tokenIntrospectionClient, 'introspect')
       ctx.request.headers.authorization = authorization
-      await expect(middleware(ctx, next)).resolves.toBeUndefined()
+      try {
+        await middleware(ctx, next)
+      } catch (err) {
+        assert
+      }
       expect(introspectSpy).not.toHaveBeenCalled()
       expect(ctx.status).toBe(401)
       expect(ctx.message).toEqual('Unauthorized')

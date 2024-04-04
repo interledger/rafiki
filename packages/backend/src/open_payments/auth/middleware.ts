@@ -14,6 +14,7 @@ import { AccessAction, AccessType, JWKS } from '@interledger/open-payments'
 import { TokenInfo } from 'token-introspection'
 import { isActiveTokenInfo } from 'token-introspection'
 import { Config } from '../../config/app'
+import { OpenPaymentsServerRouteError } from '../errors'
 
 export type RequestAction = Exclude<AccessAction, 'read-all' | 'list-all'>
 export const RequestAction: Record<string, RequestAction> = Object.freeze({
@@ -64,7 +65,7 @@ export function createTokenIntrospectionMiddleware({
     try {
       const parts = ctx.request.headers.authorization?.split(' ')
       if (parts?.length !== 2 || parts[0] !== 'GNAP') {
-        ctx.throw(401, 'Unauthorized')
+        throw new OpenPaymentsServerRouteError(401, 'Unauthorized')
       }
       const token = parts[1]
       const tokenIntrospectionClient = await ctx.container.use(
@@ -76,10 +77,10 @@ export function createTokenIntrospectionMiddleware({
           access_token: token
         })
       } catch (err) {
-        ctx.throw(401, 'Invalid Token')
+        throw new OpenPaymentsServerRouteError(401, 'Invalid Token')
       }
       if (!isActiveTokenInfo(tokenInfo)) {
-        ctx.throw(403, 'Inactive Token')
+        throw new OpenPaymentsServerRouteError(403, 'Inactive Token')
       }
 
       // TODO
@@ -115,7 +116,7 @@ export function createTokenIntrospectionMiddleware({
       })
 
       if (!access) {
-        ctx.throw(403, 'Insufficient Grant')
+        throw new OpenPaymentsServerRouteError(403, 'Insufficient Grant')
       }
       ctx.client = tokenInfo.client
       if (
@@ -132,18 +133,15 @@ export function createTokenIntrospectionMiddleware({
       }
       await next()
     } catch (err) {
-      if (bypassError && err instanceof HttpError) {
+      if (err instanceof OpenPaymentsServerRouteError) {
         ctx.set('WWW-Authenticate', `GNAP as_uri=${config.authServerGrantUrl}`)
-        return await next()
+
+        if (bypassError) {
+          return await next()
+        }
       }
 
-      if (err instanceof HttpError && err.status === 401) {
-        ctx.status = 401
-        ctx.message = err.message
-        ctx.set('WWW-Authenticate', `GNAP as_uri=${config.authServerGrantUrl}`)
-      } else {
-        throw err
-      }
+      throw err
     }
   }
 }
@@ -157,7 +155,7 @@ export const authenticatedStatusMiddleware = async (
     await throwIfSignatureInvalid(ctx)
     ctx.authenticated = true
   } catch (err) {
-    if (err instanceof Koa.HttpError && err.status !== 401) {
+    if (!(err instanceof OpenPaymentsServerRouteError)) {
       throw err
     }
   }
@@ -165,9 +163,15 @@ export const authenticatedStatusMiddleware = async (
 }
 
 export const throwIfSignatureInvalid = async (ctx: HttpSigContext) => {
-  const keyId = getKeyId(ctx.request.headers['signature-input'])
+  const keyId =
+    ctx.request.headers['signature-input'] &&
+    getKeyId(ctx.request.headers['signature-input'])
+
   if (!keyId) {
-    ctx.throw(401, 'Invalid signature input')
+    throw new OpenPaymentsServerRouteError(
+      401,
+      'Invalid signature input: missing keyId'
+    )
   }
   // TODO
   // cache client key(s)
@@ -184,29 +188,19 @@ export const throwIfSignatureInvalid = async (ctx: HttpSigContext) => {
         error,
         client: ctx.client
       },
-      'retrieving client key'
+      'Could not retrieve client key when validating signature'
     )
   }
   const key = jwks?.keys.find((key) => key.kid === keyId)
   if (!key) {
-    ctx.throw(401, 'Invalid signature input')
-  }
-  try {
-    if (!(await validateSignature(key, contextToRequestLike(ctx)))) {
-      ctx.throw(401, 'Invalid signature')
-    }
-  } catch (err) {
-    if (err instanceof Koa.HttpError) {
-      throw err
-    }
-    const logger = await ctx.container.use('logger')
-    logger.warn(
-      {
-        err
-      },
-      'httpsig error'
+    throw new OpenPaymentsServerRouteError(
+      401,
+      'Invalid signature input: keyId mismatch'
     )
-    ctx.throw(401, `Invalid signature`)
+  }
+
+  if (!(await validateSignature(key, contextToRequestLike(ctx)))) {
+    throw new OpenPaymentsServerRouteError(401, 'Invalid signature')
   }
 }
 

@@ -31,6 +31,7 @@ import { IocContract } from '@adonisjs/fold'
 import assert from 'assert'
 import { ReadContextWithAuthenticatedStatus } from '../payment/incoming/routes'
 import { Knex } from 'knex'
+import { OpenPaymentsServerRouteError } from '../errors'
 
 export interface SetupOptions {
   reqOpts: httpMocks.RequestOptions
@@ -264,10 +265,13 @@ export const getRouteTests = <M extends WalletAddressSubresource>({
         expect(ctx.response).toSatisfyApiSpec()
         expect(ctx.body).toEqual(getBody(expectedMatch))
       } else {
-        await expect(get(ctx)).rejects.toMatchObject({
-          status: 404,
-          message: 'Not Found'
-        })
+        expect.assertions(1)
+        try {
+          await get(ctx)
+        } catch (err) {
+          assert(err instanceof OpenPaymentsServerRouteError)
+          expect(err.status).toBe(404)
+        }
       }
     },
     // tests walletAddressId / client filtering
