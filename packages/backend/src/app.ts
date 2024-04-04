@@ -371,10 +371,6 @@ export class App {
     )
 
     koa.use(async (ctx, next: Koa.Next): Promise<void> => {
-      this.logger.info(
-        { requestBody: ctx.request.body, headers: ctx.request.headers },
-        'body to be hashed, headers'
-      )
       if (!verifyApiSignature(ctx, this.config) && this.config.apiSecret) {
         ctx.throw(401, 'Unauthorized')
       }
