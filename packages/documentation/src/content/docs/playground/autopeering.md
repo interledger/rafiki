@@ -13,7 +13,7 @@ pnpm localenv:compose:psql:autopeer
 ```
 
 Your local Rafiki instance will be automatically peered with the remote [Rafiki.money](https://rafiki.money) instance.
-The required services will be exposed externally using the [tunnelmole](https://www.npmjs.com/package/tunnelmole) package.
+The required services will be exposed externally using the [localtunnel](https://www.npmjs.com/package/localtunnel) package.
 The exposed ports are 3000(open-payments), 3006(auth server), 3002(ILP connector).
 
 To use the [Bruno API examples](/playground/overview/#bruno--open-payments-apis), follow these steps:

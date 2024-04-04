@@ -116,7 +116,7 @@ pnpm localenv:compose:psql:autopeer
 ```
 
 Your local cloud nine rafiki instance will be peered automatically in this case with https://rafiki.money instance.
-The required services will be exposed externally using [tunnelmole](https://www.npmjs.com/package/tunnelmole) package.
+The required services will be exposed externally using [localtunnel](https://www.npmjs.com/package/localtunnel) package.
 The exposed ports are 3000(open-payments), 3006(auth server), 3002(ilp connector).
 
 To use the Bruno collection examples follow the steps:
