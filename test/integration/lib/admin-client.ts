@@ -8,6 +8,7 @@ import {
   CreateWalletAddressInput,
   CreateWalletAddressMutationResponse,
   DepositOutgoingPaymentLiquidityInput,
+  IncomingPayment,
   LiquidityMutationResponse,
   OutgoingPayment,
   OutgoingPaymentResponse,
@@ -143,6 +144,38 @@ export class AdminClient {
       })
       .then(({ data }): OutgoingPaymentResponse => {
         return data.createOutgoingPayment
+      })
+  }
+
+  async getIncomingPayment(id: string): Promise<IncomingPayment> {
+    return await this.apolloClient
+      .query({
+        query: gql`
+          query GetIncomingPayment($id: String!) {
+            incomingPayment(id: $id) {
+              id
+              walletAddressId
+              state
+              expiresAt
+              incomingAmount {
+                value
+                assetCode
+                assetScale
+              }
+              receivedAmount {
+                value
+                assetCode
+                assetScale
+              }
+              metadata
+              createdAt
+            }
+          }
+        `,
+        variables: { id }
+      })
+      .then((response): IncomingPayment => {
+        return response.data.incomingPayment
       })
   }
 

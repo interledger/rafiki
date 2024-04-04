@@ -4,6 +4,7 @@ import { MockASE } from './lib/mock-ase'
 import { Fee, WebhookEventType } from 'mock-account-service-lib'
 import { poll } from './lib/utils'
 import { TestActions, createTestActions } from './lib/test-actions'
+import { IncomingPaymentState } from './lib/generated/graphql'
 
 jest.setTimeout(20_000)
 
@@ -215,7 +216,8 @@ describe('Integration tests', (): void => {
         createReceiver,
         createQuote,
         createOutgoingPayment,
-        getOutgoingPayment
+        getOutgoingPayment,
+        getIncomingPayment
       } = testActions.admin
 
       const senderWalletAddress = await c9.accounts.getByWalletAddressUrl(
@@ -248,13 +250,19 @@ describe('Integration tests', (): void => {
         value
       )
       expect(outgoingPayment_.sentAmount.value).toBe(BigInt(value))
+
+      const incomingPaymentId = receiver.id.split('/').slice(-1)[0]
+      const incomingPayment = await getIncomingPayment(incomingPaymentId)
+      expect(incomingPayment.receivedAmount.value).toBe(BigInt(value))
+      expect(incomingPayment.state).toBe(IncomingPaymentState.Completed)
     })
     test('Peer to Peer - Cross Currency', async (): Promise<void> => {
       const {
         createReceiver,
         createQuote,
         createOutgoingPayment,
-        getOutgoingPayment
+        getOutgoingPayment,
+        getIncomingPayment
       } = testActions.admin
 
       const senderWalletAddress = await c9.accounts.getByWalletAddressUrl(
@@ -285,7 +293,10 @@ describe('Integration tests', (): void => {
         senderWalletAddressId,
         quote
       )
-      const payment = await getOutgoingPayment(outgoingPayment.id, value)
+      const completedOutgoingPayment = await getOutgoingPayment(
+        outgoingPayment.id,
+        value
+      )
 
       const receiverAssetCode = receiver.incomingAmount.assetCode
       const exchangeRate =
@@ -305,21 +316,30 @@ describe('Integration tests', (): void => {
       assert(fee.basisPoints === 200)
       assert(fee.asset === 'USD')
       assert(fee.scale === 2)
-      expect(payment.receiveAmount).toMatchObject({
+      expect(completedOutgoingPayment.receiveAmount).toMatchObject({
         assetCode: 'EUR',
         assetScale: 2,
         value: 500n
       })
-      expect(payment.debitAmount).toMatchObject({
+      expect(completedOutgoingPayment.debitAmount).toMatchObject({
         assetCode: 'USD',
         assetScale: 2,
         value: 668n
       })
-      expect(payment.sentAmount).toMatchObject({
+      expect(completedOutgoingPayment.sentAmount).toMatchObject({
         assetCode: 'USD',
         assetScale: 2,
         value: 550n
       })
+
+      const incomingPaymentId = receiver.id.split('/').slice(-1)[0]
+      const incomingPayment = await getIncomingPayment(incomingPaymentId)
+      expect(incomingPayment.receivedAmount).toMatchObject({
+        assetCode: 'EUR',
+        assetScale: 2,
+        value: 501n
+      })
+      expect(incomingPayment.state).toBe(IncomingPaymentState.Completed)
     })
   })
 })
