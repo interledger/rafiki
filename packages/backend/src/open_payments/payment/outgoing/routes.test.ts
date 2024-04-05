@@ -16,11 +16,7 @@ import {
 import { truncateTables } from '../../../tests/tableManager'
 import { createAsset } from '../../../tests/asset'
 import { errorToCode, errorToMessage, OutgoingPaymentError } from './errors'
-import {
-  CreateFromIncomingPayment,
-  CreateFromQuote,
-  OutgoingPaymentService
-} from './service'
+import { CreateOutgoingPaymentOptions, OutgoingPaymentService } from './service'
 import { OutgoingPayment, OutgoingPaymentState } from './model'
 import { OutgoingPaymentRoutes, CreateBody } from './routes'
 import { Amount, serializeAmount } from '../../amount'
@@ -168,9 +164,7 @@ describe('Outgoing Payment Routes', (): void => {
 
   describe('create', (): void => {
     const setup = (
-      options:
-        | Omit<CreateFromQuote, 'walletAddressId'>
-        | Omit<CreateFromIncomingPayment, 'walletAddressId'>
+      options: Omit<CreateOutgoingPaymentOptions, 'walletAddressId'>
     ): CreateContext<CreateBody> =>
       setupContext<CreateContext<CreateBody>>({
         reqOpts: {

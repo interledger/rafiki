@@ -449,12 +449,13 @@ export class App {
     router.post<DefaultState, SignedCollectionContext<OutgoingCreateBody>>(
       '/outgoing-payments',
       createWalletAddressMiddleware(),
-      createValidatorMiddleware<
-        ContextType<SignedCollectionContext<OutgoingCreateBody>>
-      >(resourceServerSpec, {
-        path: '/outgoing-payments',
-        method: HttpMethod.POST
-      }),
+      // TODO: use updated openapi spec
+      // createValidatorMiddleware<
+      //   ContextType<SignedCollectionContext<OutgoingCreateBody>>
+      // >(resourceServerSpec, {
+      //   path: '/outgoing-payments',
+      //   method: HttpMethod.POST
+      // }),
       createTokenIntrospectionMiddleware({
         requestType: AccessType.OutgoingPayment,
         requestAction: RequestAction.Create

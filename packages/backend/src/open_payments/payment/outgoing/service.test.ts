@@ -9,15 +9,11 @@ import {
   OutgoingPaymentError,
   isOutgoingPaymentError
 } from './errors'
-import {
-  CreateFromIncomingPayment,
-  CreateFromQuote,
-  OutgoingPaymentService
-} from './service'
+import { CreateOutgoingPaymentOptions, OutgoingPaymentService } from './service'
 import { createTestApp, TestContainer } from '../../../tests/app'
 import { Config } from '../../../config/app'
 import { Grant } from '../../auth/middleware'
-import { CreateQuoteOptions } from '../../quote/service'
+import { CreateQuoteOptions, QuoteService } from '../../quote/service'
 import { createAsset } from '../../../tests/asset'
 import { createIncomingPayment } from '../../../tests/incomingPayment'
 import { createOutgoingPayment } from '../../../tests/outgoingPayment'
@@ -58,6 +54,7 @@ describe('OutgoingPaymentService', (): void => {
   let outgoingPaymentService: OutgoingPaymentService
   let accountingService: AccountingService
   let paymentMethodHandlerService: PaymentMethodHandlerService
+  let quoteService: QuoteService
   let knex: Knex
   let walletAddressId: string
   let incomingPayment: IncomingPayment
@@ -240,6 +237,7 @@ describe('OutgoingPaymentService', (): void => {
     outgoingPaymentService = await deps.use('outgoingPaymentService')
     accountingService = await deps.use('accountingService')
     paymentMethodHandlerService = await deps.use('paymentMethodHandlerService')
+    quoteService = await deps.use('quoteService')
     knex = appContainer.knex
   })
 
@@ -654,9 +652,7 @@ describe('OutgoingPaymentService', (): void => {
 
         describe('validateGrant', (): void => {
           let quote: Quote
-          let options:
-            | Omit<CreateFromQuote, 'grant'>
-            | Omit<CreateFromIncomingPayment, 'grant'>
+          let options: Omit<CreateOutgoingPaymentOptions, 'grant'>
           let interval: string
           beforeEach(async (): Promise<void> => {
             quote = await createQuote(deps, {

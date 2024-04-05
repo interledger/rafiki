@@ -36,7 +36,6 @@ import { knex } from 'knex'
 import { AccountAlreadyExistsError } from '../../../accounting/errors'
 import { PaymentMethodHandlerService } from '../../../payment-method/handler/service'
 import { TelemetryService } from '../../../telemetry/service'
-import { Amount } from '../../amount'
 
 export interface OutgoingPaymentService
   extends WalletAddressSubresourceService<OutgoingPayment> {
@@ -68,8 +67,7 @@ export async function createOutgoingPaymentService(
   }
   return {
     get: (options) => getOutgoingPayment(deps, options),
-    create: (options: CreateOutgoingPaymentOptions) =>
-      createOutgoingPayment(deps, options),
+    create: (options) => createOutgoingPayment(deps, options),
     fund: (options) => fundPayment(deps, options),
     processNext: () => worker.processPendingPayment(deps),
     getWalletAddressPage: (options) => getWalletAddressPage(deps, options)
@@ -89,8 +87,9 @@ async function getOutgoingPayment(
   }
 }
 
-interface CreateBase {
+export interface CreateOutgoingPaymentOptions {
   walletAddressId: string
+  quoteId: string
   client?: string
   grant?: Grant
   metadata?: Record<string, unknown>
@@ -98,39 +97,10 @@ interface CreateBase {
   grantLockTimeoutMs?: number
 }
 
-export interface CreateFromQuote extends CreateBase {
-  quoteId: string
-}
-
-export interface CreateFromIncomingPayment extends CreateBase {
-  incomingPaymentId: string
-  debitAmount: Amount
-}
-
-export type CreateOutgoingPaymentOptions =
-  | CreateFromQuote
-  | CreateFromIncomingPayment
-
-function isCreateFromQuote(
-  options: CreateOutgoingPaymentOptions
-): options is CreateFromQuote {
-  return 'quoteId' in options
-}
-
-function isCreateFromIncomingPayment(
-  options: CreateOutgoingPaymentOptions
-): options is CreateFromIncomingPayment {
-  return 'incomingPaymentId' in options && 'debitAmount' in options
-}
-
 async function createOutgoingPayment(
   deps: ServiceDependencies,
-  options: CreateFromQuote | CreateFromIncomingPayment
+  options: CreateOutgoingPaymentOptions
 ): Promise<OutgoingPayment | OutgoingPaymentError> {
-  if (isCreateFromIncomingPayment(options)) {
-    throw new Error('Create from Incoming Payment not implemented')
-  }
-
   const grantId = options.grant?.id
   const walletAddressId = options.walletAddressId
   try {

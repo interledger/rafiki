@@ -16,11 +16,15 @@ import {
   OutgoingPayment as OpenPaymentsOutgoingPayment
 } from '@interledger/open-payments'
 import { WalletAddress } from '../../wallet_address/model'
+import { QuoteService } from '../../quote/service'
+import { isQuoteError } from '../../quote/errors'
+import { Amount } from '../../amount'
 
 interface ServiceDependencies {
   config: IAppConfig
   logger: Logger
   outgoingPaymentService: OutgoingPaymentService
+  quoteService: QuoteService
 }
 
 export interface OutgoingPaymentRoutes {
@@ -69,27 +73,59 @@ async function getOutgoingPayment(
   )
 }
 
-export type CreateBody = {
+type CreateBodyBase = {
   walletAddress: string
-  quoteId: string
   metadata?: Record<string, unknown>
 }
+
+type CreateBodyFromQuote = CreateBodyBase & {
+  quoteId: string
+}
+
+type CreateBodyFromIncomingPayment = CreateBodyBase & {
+  incomingPaymentId: string
+  debitAmount: Amount
+}
+
+function isCreateFromIncomingPayment(
+  body: CreateBody
+): body is CreateBodyFromIncomingPayment {
+  return 'incomingPaymentId' in body && 'debitAmount' in body
+}
+
+export type CreateBody = CreateBodyFromQuote | CreateBodyFromIncomingPayment
 
 async function createOutgoingPayment(
   deps: ServiceDependencies,
   ctx: CreateContext<CreateBody>
 ): Promise<void> {
   const { body } = ctx.request
-
-  const quoteUrlParts = body.quoteId.split('/')
-  const quoteId = quoteUrlParts.pop() || quoteUrlParts.pop() // handle trailing slash
-  if (!quoteId) {
-    return ctx.throw(400, 'invalid quoteId')
-  }
-
+  let quoteUrl: string
   let outgoingPaymentOrError: OutgoingPayment | OutgoingPaymentError
 
   try {
+    if (isCreateFromIncomingPayment(body)) {
+      const { debitAmount, incomingPaymentId } = body
+
+      const quoteOrError = await deps.quoteService.create({
+        receiver: incomingPaymentId,
+        debitAmount,
+        method: 'ilp',
+        walletAddressId: ctx.walletAddress.id
+      })
+      if (isQuoteError(quoteOrError)) {
+        return ctx.throw(400, 'failed to create quote from incoming payment')
+      }
+      quoteUrl = quoteOrError.id
+    } else {
+      quoteUrl = body.quoteId
+    }
+
+    const quoteUrlParts = quoteUrl.split('/')
+    const quoteId = quoteUrlParts.pop() || quoteUrlParts.pop() // handle trailing slash
+    if (!quoteId) {
+      return ctx.throw(400, 'invalid quoteId')
+    }
     outgoingPaymentOrError = await deps.outgoingPaymentService.create({
       walletAddressId: ctx.walletAddress.id,
       quoteId,
@@ -101,7 +137,17 @@ async function createOutgoingPayment(
     const errorMessage =
       'Unhandled error when trying to create outgoing payment'
     deps.logger.error(
-      { err, quoteId, walletAddressId: ctx.walletAddress.id },
+      {
+        err,
+        quoteId: !isCreateFromIncomingPayment(body) ? body.quoteId : undefined,
+        incomingPaymentId: isCreateFromIncomingPayment(body)
+          ? body.incomingPaymentId
+          : undefined,
+        debitAmount: isCreateFromIncomingPayment(body)
+          ? body.debitAmount
+          : undefined,
+        walletAddressId: ctx.walletAddress.id
+      },
       errorMessage
     )
     return ctx.throw(500, errorMessage)

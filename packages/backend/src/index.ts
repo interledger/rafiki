@@ -483,7 +483,8 @@ export function initIocContainer(
     return createOutgoingPaymentRoutes({
       config: await deps.use('config'),
       logger: await deps.use('logger'),
-      outgoingPaymentService: await deps.use('outgoingPaymentService')
+      outgoingPaymentService: await deps.use('outgoingPaymentService'),
+      quoteService: await deps.use('quoteService')
     })
   })
 
