@@ -4,10 +4,46 @@ import {
   WalletAddressKey as SchemaWalletAddressKey,
   Alg,
   Kty,
-  Crv
+  Crv,
+  WalletAddressResolvers
 } from '../generated/graphql'
 import { ApolloContext } from '../../app'
 import { WalletAddressKey } from '../../open_payments/wallet_address/key/model'
+import { Pagination } from '../../shared/baseModel'
+import { getPageInfo } from '../../shared/pagination'
+
+export const getWalletAddressKeys: WalletAddressResolvers<ApolloContext>['walletAddressKeys'] =
+  async (
+    parent,
+    args,
+    ctx
+  ): Promise<ResolversTypes['WalletAddressKeyConnection']> => {
+    const walletAddressKeyService = await ctx.container.use(
+      'walletAddressKeyService'
+    )
+
+    const getPageFn = (pagination_: Pagination) => {
+      if (!parent.id) throw new Error('missing wallet address id')
+      return walletAddressKeyService.getPage(parent.id, pagination_)
+    }
+
+    const { ...pagination } = args
+
+    const walletAddressKeys = await getPageFn(pagination)
+    ctx.logger.info({ walletAddressKeys }, 'got walletAddressKeys')
+    const pageInfo = await getPageInfo({
+      getPage: (pagination_: Pagination) => getPageFn(pagination_),
+      page: walletAddressKeys
+    })
+
+    return {
+      pageInfo,
+      edges: walletAddressKeys.map((walletAddressKey: WalletAddressKey) => ({
+        cursor: walletAddressKey.id,
+        node: walletAddressKeyToGraphql(walletAddressKey)
+      }))
+    }
+  }
 
 export const revokeWalletAddressKey: MutationResolvers<ApolloContext>['revokeWalletAddressKey'] =
   async (

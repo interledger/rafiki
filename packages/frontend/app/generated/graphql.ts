@@ -1223,6 +1223,7 @@ export type WalletAddress = Model & {
   status: WalletAddressStatus;
   /** Wallet Address URL */
   url: Scalars['String']['output'];
+  walletAddressKeys?: Maybe<WalletAddressKeyConnection>;
 };
 
 
@@ -1252,6 +1253,15 @@ export type WalletAddressQuotesArgs = {
   sortOrder?: InputMaybe<SortOrder>;
 };
 
+
+export type WalletAddressWalletAddressKeysArgs = {
+  after?: InputMaybe<Scalars['String']['input']>;
+  before?: InputMaybe<Scalars['String']['input']>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+  sortOrder?: InputMaybe<SortOrder>;
+};
+
 export type WalletAddressEdge = {
   __typename?: 'WalletAddressEdge';
   cursor: Scalars['String']['output'];
@@ -1270,6 +1280,18 @@ export type WalletAddressKey = Model & {
   revoked: Scalars['Boolean']['output'];
   /** Id of the wallet address to which this key belongs to */
   walletAddressId: Scalars['ID']['output'];
+};
+
+export type WalletAddressKeyConnection = {
+  __typename?: 'WalletAddressKeyConnection';
+  edges: Array<WalletAddressKeyEdge>;
+  pageInfo: PageInfo;
+};
+
+export type WalletAddressKeyEdge = {
+  __typename?: 'WalletAddressKeyEdge';
+  cursor: Scalars['String']['output'];
+  node: WalletAddressKey;
 };
 
 export enum WalletAddressStatus {
@@ -1532,6 +1554,8 @@ export type ResolversTypes = {
   WalletAddress: ResolverTypeWrapper<Partial<WalletAddress>>;
   WalletAddressEdge: ResolverTypeWrapper<Partial<WalletAddressEdge>>;
   WalletAddressKey: ResolverTypeWrapper<Partial<WalletAddressKey>>;
+  WalletAddressKeyConnection: ResolverTypeWrapper<Partial<WalletAddressKeyConnection>>;
+  WalletAddressKeyEdge: ResolverTypeWrapper<Partial<WalletAddressKeyEdge>>;
   WalletAddressStatus: ResolverTypeWrapper<Partial<WalletAddressStatus>>;
   WalletAddressWithdrawal: ResolverTypeWrapper<Partial<WalletAddressWithdrawal>>;
   WalletAddressWithdrawalMutationResponse: ResolverTypeWrapper<Partial<WalletAddressWithdrawalMutationResponse>>;
@@ -1640,6 +1664,8 @@ export type ResolversParentTypes = {
   WalletAddress: Partial<WalletAddress>;
   WalletAddressEdge: Partial<WalletAddressEdge>;
   WalletAddressKey: Partial<WalletAddressKey>;
+  WalletAddressKeyConnection: Partial<WalletAddressKeyConnection>;
+  WalletAddressKeyEdge: Partial<WalletAddressKeyEdge>;
   WalletAddressWithdrawal: Partial<WalletAddressWithdrawal>;
   WalletAddressWithdrawalMutationResponse: Partial<WalletAddressWithdrawalMutationResponse>;
   WalletAddressesConnection: Partial<WalletAddressesConnection>;
@@ -2101,6 +2127,7 @@ export type WalletAddressResolvers<ContextType = any, ParentType extends Resolve
   quotes?: Resolver<Maybe<ResolversTypes['QuoteConnection']>, ParentType, ContextType, Partial<WalletAddressQuotesArgs>>;
   status?: Resolver<ResolversTypes['WalletAddressStatus'], ParentType, ContextType>;
   url?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  walletAddressKeys?: Resolver<Maybe<ResolversTypes['WalletAddressKeyConnection']>, ParentType, ContextType, Partial<WalletAddressWalletAddressKeysArgs>>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -2116,6 +2143,18 @@ export type WalletAddressKeyResolvers<ContextType = any, ParentType extends Reso
   jwk?: Resolver<ResolversTypes['Jwk'], ParentType, ContextType>;
   revoked?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   walletAddressId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type WalletAddressKeyConnectionResolvers<ContextType = any, ParentType extends ResolversParentTypes['WalletAddressKeyConnection'] = ResolversParentTypes['WalletAddressKeyConnection']> = {
+  edges?: Resolver<Array<ResolversTypes['WalletAddressKeyEdge']>, ParentType, ContextType>;
+  pageInfo?: Resolver<ResolversTypes['PageInfo'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type WalletAddressKeyEdgeResolvers<ContextType = any, ParentType extends ResolversParentTypes['WalletAddressKeyEdge'] = ResolversParentTypes['WalletAddressKeyEdge']> = {
+  cursor?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  node?: Resolver<ResolversTypes['WalletAddressKey'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -2217,6 +2256,8 @@ export type Resolvers<ContextType = any> = {
   WalletAddress?: WalletAddressResolvers<ContextType>;
   WalletAddressEdge?: WalletAddressEdgeResolvers<ContextType>;
   WalletAddressKey?: WalletAddressKeyResolvers<ContextType>;
+  WalletAddressKeyConnection?: WalletAddressKeyConnectionResolvers<ContextType>;
+  WalletAddressKeyEdge?: WalletAddressKeyEdgeResolvers<ContextType>;
   WalletAddressWithdrawal?: WalletAddressWithdrawalResolvers<ContextType>;
   WalletAddressWithdrawalMutationResponse?: WalletAddressWithdrawalMutationResponseResolvers<ContextType>;
   WalletAddressesConnection?: WalletAddressesConnectionResolvers<ContextType>;
