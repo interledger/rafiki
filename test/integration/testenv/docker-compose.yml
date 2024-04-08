@@ -18,7 +18,7 @@ services:
       volumes:
         - ../dbinit.sql:/docker-entrypoint-initdb.d/init.sql
       ports:
-        - '5432:5432'
+        - '5433:5432'
       environment:
         POSTGRES_PASSWORD: password
         POSTGRES_USER: postgres

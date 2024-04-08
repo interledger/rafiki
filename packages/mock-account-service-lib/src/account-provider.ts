@@ -60,7 +60,7 @@ export class AccountProvider implements AccountsServer {
     const acc = this.accounts.get(id)
 
     if (!acc) {
-      throw new Error()
+      throw new Error('account not found')
     }
 
     acc.walletAddress = walletAddress
@@ -139,7 +139,7 @@ export class AccountProvider implements AccountsServer {
     const acc = this.accounts.get(id)
 
     if (!acc) {
-      throw new Error()
+      throw new Error('account not found')
     }
 
     if (clearPending && acc.creditsPending - amount < 0) {
@@ -167,7 +167,7 @@ export class AccountProvider implements AccountsServer {
     const acc = this.accounts.get(id)
 
     if (!acc) {
-      throw new Error()
+      throw new Error('account not found')
     }
 
     if (
@@ -200,7 +200,7 @@ export class AccountProvider implements AccountsServer {
     const acc = this.accounts.get(id)
 
     if (!acc) {
-      throw new Error()
+      throw new Error('account not found')
     }
 
     acc.creditsPending += amount
@@ -217,7 +217,7 @@ export class AccountProvider implements AccountsServer {
     const acc = this.accounts.get(id)
 
     if (!acc) {
-      throw new Error()
+      throw new Error('account not found')
     }
 
     if (acc.creditsPosted < acc.debitsPosted + acc.debitsPending + amount) {
@@ -238,7 +238,7 @@ export class AccountProvider implements AccountsServer {
     const acc = this.accounts.get(id)
 
     if (!acc) {
-      throw new Error()
+      throw new Error('account not found')
     }
 
     if (acc.debitsPending - amount < 0) {
@@ -259,7 +259,7 @@ export class AccountProvider implements AccountsServer {
     const acc = this.accounts.get(id)
 
     if (!acc) {
-      throw new Error()
+      throw new Error('account not found')
     }
 
     if (acc.debitsPending - amount < 0) {

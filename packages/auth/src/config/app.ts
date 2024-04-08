@@ -28,6 +28,7 @@ export const Config = {
   introspectionPort: envInt('INTROSPECTION_PORT', 3007),
   env: envString('NODE_ENV', 'development'),
   trustProxy: envBool('TRUST_PROXY', false),
+  enableManualMigrations: envBool('ENABLE_MANUAL_MIGRATIONS', false),
   databaseUrl:
     process.env.NODE_ENV === 'test'
       ? `${process.env.AUTH_DATABASE_URL}_${process.env.JEST_WORKER_ID}`

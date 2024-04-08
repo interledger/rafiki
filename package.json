@@ -4,8 +4,8 @@
   "license": "Apache-2.0",
   "repository": "https://github.com/interledger/rafiki",
   "engines": {
-    "pnpm": "^8.15.5",
-    "node": "18"
+    "pnpm": "^8.15.4",
+    "node": "20"
   },
   "packageManager": "pnpm@8.15.5",
   "scripts": {
@@ -33,8 +33,8 @@
     "@jest/types": "^29.6.3",
     "@swc/jest": "^0.2.36",
     "@types/jest": "^29.5.12",
-    "@typescript-eslint/eslint-plugin": "^7.2.0",
-    "@typescript-eslint/parser": "^7.2.0",
+    "@typescript-eslint/eslint-plugin": "^7.3.1",
+    "@typescript-eslint/parser": "^7.3.1",
     "dotenv": "^16.4.5",
     "eslint": "^8.57.0",
     "eslint-config-prettier": "^9.1.0",
@@ -42,7 +42,7 @@
     "npm-run-all2": "^6.1.2",
     "prettier": "^3.2.5",
     "tunnelmole": "^2.2.14",
-    "typescript": "^5.4.2",
+    "typescript": "^5.4.3",
     "uuid": "^9.0.1"
   },
   "dependenciesMeta": {
