@@ -1,0 +1,39 @@
+meta {
+  name: Continuation Request
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{receiverOpenPaymentsAuthHost}}/continue/{{continueId}}
+  body: json
+  auth: none
+}
+
+headers {
+  Authorization: GNAP {{continueToken}}
+}
+
+body:json {
+  {
+       "interact_ref": "fdfa9202-3e68-4c2a-8049-25135704a1cb"
+  }
+}
+
+script:pre-request {
+  const scripts = require('./scripts');
+  
+  await scripts.addSignatureHeaders();
+}
+
+script:post-response {
+  const scripts = require('./scripts');
+  
+  scripts.storeTokenDetails();
+}
+
+tests {
+  // const body = pm.response.json();
+  // pm.environment.set("accessToken", body.access_token.value);
+  // pm.environment.set("tokenId", body.access_token.manage.split('/').pop())
+}

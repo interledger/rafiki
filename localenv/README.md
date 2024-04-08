@@ -17,7 +17,7 @@ These packages depend on the following databases:
 
 We provide containerized versions of our packages together with two pre-configured docker-compose files ([peer1](./cloud-nine-wallet/docker-compose.yml) and [peer2](./happy-life-bank/docker-compose.yml)) to start two Mock Account Servicing Entities with their respective Rafiki backend and auth servers. They automatically peer and 2 to 3 user accounts are created on both of them.
 
-This environment will set up an playground where you can use the Rafiki Admin APIs and the Open Payments APIs.
+This environment will set up a playground where you can use the Rafiki Admin APIs and the Open Payments APIs.
 
 ## Environment overview
 
@@ -124,7 +124,7 @@ To use the Bruno collection examples follow the steps:
 1. run `docker logs rafiki-cloud-nine-mock-ase-1`
 2. find the list of created wallet addresses
 3. copy the url of one of the wallet addresses
-4. set the url as `senderWalletAddress` variable in the Bruno `Remote` environment
+4. set the url as `senderWalletAddress` variable in the Bruno `Autopeering` environment
 
 After stopping the script it is necessary to clear the environment using the command described in [Shutting down](#Shutting-down). This is necessary as on a new run of the scripts (with autopeering or not) the wallet address url will differ.
 
@@ -159,14 +159,13 @@ pnpm localenv:compose down --volumes
 
 #### Bruno & Open Payments APIs
 
-The Open Payments APIs can be interacted with using the [Bruno collection](https://github.com/interledger/rafiki/tree/main/bruno/collections/Interledger) ([resource server endpoints](https://github.com/interledger/rafiki/tree/main/bruno/collections/Interledger/Open%20Payments%20APIs) and [auth server endpoints](https://github.com/interledger/rafiki/tree/main/bruno/collections/Interledger/Open%20Payments%20Auth%20APIs)). It requires you to
+The Open Payments APIs can be interacted with using the [Bruno collection](https://github.com/interledger/rafiki/tree/main/bruno/collections/Rafiki) ([resource server endpoints](https://github.com/interledger/rafiki/tree/main/bruno/collections/Rafiki/Open%20Payments%20APIs) and [auth server endpoints](https://github.com/interledger/rafiki/tree/main/bruno/collections/Rafiki/Open%20Payments%20Auth%20APIs)). It requires you to
 
 1. load the collection into Bruno by clicking "Open Collection"
-2. navigating to `/rafiki/tree/main/bruno/collections/Interledger` on your machine and
-3. clicking "Open"
-   Furthermore, you need to either load the [Local Environment](https://github.com/interledger/rafiki/tree/main/bruno/collections/Interledger/environments/Local%20Playground.bru) or the [Remote Environment](https://github.com/interledger/rafiki/tree/main/bruno/collections/Interledger/environments/Remote.bru).
+2. navigating to `/rafiki/bruno/collections/Rafiki` on your machine and clicking "Open"
+3. Furthermore, you need to either load the [Local Environment](https://github.com/interledger/rafiki/tree/main/bruno/collections/Rafiki/environments/Local%20Playground.bru) or the [Remote Environment](https://github.com/interledger/rafiki/tree/main/bruno/collections/Rafiki/environments/Remote.bru).
 
-The Examples folder in the Bruno collection includes an [Open Payments](https://github.com/interledger/rafiki/tree/main/bruno/collections/Interledger/Examples/Open%20Payments) example that can be executed one by one. It
+The Examples folder in the Bruno collection includes an [Open Payments](https://github.com/interledger/rafiki/tree/main/bruno/collections/Rafiki/Examples/Open%20Payments) example that can be executed one by one. It
 
 1. requests the sender's wallet address
 2. requests the receiver's wallet address
@@ -175,11 +174,12 @@ The Examples folder in the Bruno collection includes an [Open Payments](https://
 5. requests a grant to create (and read) a quote on the sender's account
 6. creates a quote on the sender's account
 7. requests a grant to create (and read) an outgoing payment on the sender's account
-8. continues the grant request (via the interaction flow)
+
+Note that you have to go through an interaction flow by clicking on the `redirect` link in the grant request response.
+
+8. continues the grant request
 9. creates an outgoing payment on the sender's account
 10. fetches the outgoing payment on the sender's account
-
-Note that one has to go through the interaction flow after requesting a grant for a outgoing payment. More information about the interaction flow can be found [here](../docs/grant-interaction.md).
 
 #### Admin UI
 
@@ -187,7 +187,7 @@ In order to manage, and view information about the Rafiki instance(s) using a UI
 
 #### Admin APIs
 
-In addition to the using the Admin UI for interacting with the Admin APIs, you can also use the Apollo explorer (on [`localhost:3001/graphql`](http://localhost:3001/graphql) and [`localhost:4001/graphql`](http://localhost:4001/graphql), respectively), and also via the [Bruno collection](https://github.com/interledger/rafiki/tree/main/bruno/collections/Interledger/Rafiki%20Admin%20APIs). The Bruno collection is configured to use the default endpoints of the local environment.
+In addition to the using the Admin UI for interacting with the Admin APIs, you can also use the Apollo explorer (on [`localhost:3001/graphql`](http://localhost:3001/graphql) and [`localhost:4001/graphql`](http://localhost:4001/graphql), respectively), and also via the [Bruno collection](https://github.com/interledger/rafiki/tree/main/bruno/collections/Rafiki/Rafiki%20Admin%20APIs). The Bruno collection is configured to use the default endpoints of the local environment.
 
 #### SPSP
 
@@ -210,3 +210,20 @@ Keep-Alive: timeout=5
 }
 
 ```
+
+### Known Issues
+
+#### No data in Mock Account Servicing Entity (MASE)
+
+It is possible that upon (re)starting the local playground, you may run into an issue where there are no accounts/wallet addresses visible in the mock account servicing entities' pages (http://localhost:3030, http://localhost:3031). This is because seeding of the intial account data only works against an empty database. To correct this, clear the volumes, and restart the container via:
+
+```
+pnpm localenv:compose down --volumes
+pnpm localenv:compose up -d
+```
+
+#### TigerBeetle container exits with code 137
+
+This is a known [issue](https://docs.tigerbeetle.com/quick-start/with-docker-compose/#exited-with-code-137) when running TigerBeetle in Docker: the container exits without logs and simply shows error code 137. To fix this, increase the Docker memory limit.
+
+If you are running the local playground in Docker on a Windows machine using WSL, you can increase the memory limit by [configuring](https://learn.microsoft.com/en-us/windows/wsl/wsl-config#example-wslconfig-file) your `.wslconfig` file.

@@ -1,0 +1,27 @@
+meta {
+  name: Rotate Access Token
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{receiverOpenPaymentsAuthHost}}/token/{{tokenId}}
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: GNAP {{accessToken}}
+}
+
+script:pre-request {
+  const scripts = require('./scripts');
+  
+  await scripts.addSignatureHeaders();
+}
+
+script:post-response {
+  const scripts = require('./scripts');
+  
+  scripts.storeTokenDetails();
+}

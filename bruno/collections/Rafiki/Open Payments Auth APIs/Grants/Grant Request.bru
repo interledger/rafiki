@@ -1,0 +1,69 @@
+meta {
+  name: Grant Request
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{receiverOpenPaymentsAuthHost}}/
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+      "access_token": {
+          "access": [
+              {
+                  "type": "quote",
+                  "actions": [
+                      "create", "read"
+                  ]
+              },
+              {
+                  "type": "outgoing-payment",
+                  "actions": [
+                      "create", "read", "list"
+                  ],
+                  "identifier": "{{senderWalletAddress}}",
+                  "limits": {
+                      "debitAmount": {
+                          "value": "8000",
+                          "assetCode": "USD",
+                          "assetScale": 2
+                      },
+                      "receiveAmount": {
+                          "value": "8000",
+                          "assetCode": "USD",
+                          "assetScale": 2
+                      }
+                  }
+              }
+          ]
+      },
+      "client": "{{clientWalletAddress}}",
+      "interact": {
+          "start": [
+              "redirect"
+          ],
+          "finish": {
+              "method": "redirect",
+              "uri": "http://localhost:3030/mock-idp/fake-client",
+              "nonce": "123"
+          }
+      }
+  }
+  
+}
+
+script:pre-request {
+  const scripts = require('./scripts');
+  
+  await scripts.addSignatureHeaders();
+}
+
+script:post-response {
+  const scripts = require('./scripts');
+  
+  scripts.storeTokenDetails();
+}

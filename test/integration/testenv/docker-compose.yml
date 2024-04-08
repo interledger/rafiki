@@ -1,0 +1,29 @@
+# To be merged with the two rafiki instances' docker-compose.*-test.yml
+name: 'rafiki-test'
+
+networks:
+  rafiki-test:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 10.7.0.0/24
+          gateway: 10.7.0.1
+
+services:
+  shared-database:
+      image: 'postgres:16'
+      restart: unless-stopped
+      networks:
+        - rafiki-test
+      volumes:
+        - ../dbinit.sql:/docker-entrypoint-initdb.d/init.sql
+      ports:
+        - '5433:5432'
+      environment:
+        POSTGRES_PASSWORD: password
+        POSTGRES_USER: postgres
+  shared-redis:
+    image: 'redis:7'
+    restart: unless-stopped
+    networks:
+      - rafiki-test

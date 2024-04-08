@@ -2,13 +2,15 @@ import { Ioc, IocContract } from '@adonisjs/fold'
 import { Redis } from 'ioredis'
 import { knex } from 'knex'
 import { Model } from 'objection'
-import path from 'path'
 import createLogger from 'pino'
 import { createClient } from 'tigerbeetle-node'
 import { createClient as createIntrospectionClient } from 'token-introspection'
 
-import { createAuthenticatedClient as createOpenPaymentsClient } from '@interledger/open-payments'
-import { createOpenAPI } from '@interledger/openapi'
+import {
+  createAuthenticatedClient as createOpenPaymentsClient,
+  getResourceServerOpenAPI,
+  getWalletAddressServerOpenAPI
+} from '@interledger/open-payments'
 import { StreamServer } from '@interledger/stream-receiver'
 import axios from 'axios'
 import { createAccountingService as createPsqlAccountingService } from './accounting/psql/service'
@@ -153,12 +155,9 @@ export function initIocContainer(
   }
 
   container.singleton('openApi', async () => {
-    const resourceServerSpec = await createOpenAPI(
-      path.resolve(__dirname, './openapi/resource-server.yaml')
-    )
-    const walletAddressServerSpec = await createOpenAPI(
-      path.resolve(__dirname, './openapi/wallet-address-server.yaml')
-    )
+    const resourceServerSpec = await getResourceServerOpenAPI()
+    const walletAddressServerSpec = await getWalletAddressServerOpenAPI()
+
     return {
       resourceServerSpec,
       walletAddressServerSpec
@@ -209,11 +208,6 @@ export function initIocContainer(
     const knex = await deps.use('knex')
     const config = await deps.use('config')
 
-    let telemetry: TelemetryService | undefined
-    if (config.enableTelemetry && config.openTelemetryCollectors.length > 0) {
-      telemetry = await deps.use('telemetry')
-    }
-
     if (config.useTigerbeetle) {
       container.singleton('tigerbeetle', async (deps) => {
         const config = await deps.use('config')
@@ -227,7 +221,6 @@ export function initIocContainer(
 
       return createTigerbeetleAccountingService({
         logger,
-        telemetry,
         knex,
         tigerbeetle,
         withdrawalThrottleDelay: config.withdrawalThrottleDelay
@@ -236,7 +229,6 @@ export function initIocContainer(
 
     return createPsqlAccountingService({
       logger,
-      telemetry,
       knex,
       withdrawalThrottleDelay: config.withdrawalThrottleDelay
     })
@@ -363,6 +355,10 @@ export function initIocContainer(
 
   container.singleton('connectorApp', async (deps) => {
     const config = await deps.use('config')
+    let telemetry: TelemetryService | undefined
+    if (config.enableTelemetry) {
+      telemetry = await deps.use('telemetry')
+    }
     return await createConnectorService({
       logger: await deps.use('logger'),
       redis: await deps.use('redis'),
@@ -372,7 +368,8 @@ export function initIocContainer(
       peerService: await deps.use('peerService'),
       ratesService: await deps.use('ratesService'),
       streamServer: await deps.use('streamServer'),
-      ilpAddress: config.ilpAddress
+      ilpAddress: config.ilpAddress,
+      telemetry
     })
   })
 
@@ -572,18 +569,22 @@ export const start = async (
     }
   })
 
+  const config = await container.use('config')
+
   // Do migrations
   const knex = await container.use('knex')
-  // Needs a wrapped inline function
-  await callWithRetry(async () => {
-    await knex.migrate.latest({
-      directory: __dirname + '/../migrations'
+
+  if (!config.enableManualMigrations) {
+    // Needs a wrapped inline function
+    await callWithRetry(async () => {
+      await knex.migrate.latest({
+        directory: __dirname + '/../migrations'
+      })
     })
-  })
+  }
 
   Model.knex(knex)
 
-  const config = await container.use('config')
   await app.boot()
   await app.startAdminServer(config.adminPort)
   logger.info(`Admin listening on ${app.getAdminPort()}`)

@@ -41,8 +41,10 @@ export const Config = {
   livenet: envBool('LIVENET', false),
   openTelemetryCollectors: envStringArray(
     'OPEN_TELEMETRY_COLLECTOR_URLS',
-    process.env.LIVENET
-      ? []
+    envBool('LIVENET', false)
+      ? [
+          'http://livenet-otel-collector-NLB-f7992547e797f23d.elb.eu-west-2.amazonaws.com:4317'
+        ]
       : [
           'http://otel-collector-NLB-e3172ff9d2f4bc8a.elb.eu-west-2.amazonaws.com:4317'
         ]
@@ -62,6 +64,7 @@ export const Config = {
   connectorPort: envInt('CONNECTOR_PORT', 3002),
   autoPeeringServerPort: envInt('AUTO_PEERING_SERVER_PORT', 3005),
   enableAutoPeering: envBool('ENABLE_AUTO_PEERING', false),
+  enableManualMigrations: envBool('ENABLE_MANUAL_MIGRATIONS', false),
   databaseUrl:
     process.env.NODE_ENV === 'test'
       ? `${process.env.DATABASE_URL}_${process.env.JEST_WORKER_ID}`
@@ -125,6 +128,7 @@ export const Config = {
   webhookWorkerIdle: envInt('WEBHOOK_WORKER_IDLE', 200), // milliseconds
   webhookUrl: envString('WEBHOOK_URL', 'http://127.0.0.1:4001/webhook'),
   webhookTimeout: envInt('WEBHOOK_TIMEOUT', 2000), // milliseconds
+  webhookMaxRetry: envInt('WEBHOOK_MAX_RETRY', 10),
 
   withdrawalThrottleDelay:
     process.env.WITHDRAWAL_THROTTLE_DELAY == null
@@ -157,7 +161,8 @@ export const Config = {
   incomingPaymentExpiryMaxMs: envInt(
     'INCOMING_PAYMENT_EXPIRY_MAX_MS',
     2592000000
-  ) // 30 days
+  ), // 30 days
+  spspEnabled: envBool('ENABLE_SPSP', true)
 }
 
 function parseRedisTlsConfig(

@@ -1,18 +1,16 @@
 {
   "name": "@interledger/rafiki",
-  "version": "1.0.0-alpha.5",
   "private": true,
   "license": "Apache-2.0",
   "repository": "https://github.com/interledger/rafiki",
   "engines": {
     "pnpm": "^8.15.4",
-    "node": "18"
+    "node": "20"
   },
-  "packageManager": "pnpm@8.15.4",
+  "packageManager": "pnpm@8.15.5",
   "scripts": {
     "preinstall": "npx only-allow pnpm",
     "lint": "eslint --max-warnings=0 --fix .",
-    "fetch-schemas": "./scripts/fetch-schemas.sh",
     "format": "prettier --write . && pnpm lint",
     "format:docs": "prettier --write ./docs/**/*.md",
     "checks": "pnpm check:prettier && pnpm check:lint",
@@ -20,8 +18,8 @@
     "check:prettier": "prettier --check .",
     "clean": "find . -name 'node_modules' -type d -prune -exec rm -rf '{}' +",
     "build": "tsc --build",
-    "localenv:compose:psql": "docker compose -f ./localenv/cloud-nine-wallet/docker-compose.yml -f ./localenv/happy-life-bank/docker-compose.yml ${BEFORE_MERGED:-} -f ./localenv/merged/docker-compose.yml",
-    "localenv:compose": "BEFORE_MERGED='-f ./localenv/tigerbeetle/docker-compose.yml --env-file ./localenv/tigerbeetle/.env.tigerbeetle' pnpm localenv:compose:psql",
+    "localenv:compose:psql": "docker compose -f ./localenv/cloud-nine-wallet/docker-compose.yml -f ./localenv/happy-life-bank/docker-compose.yml -f ./localenv/merged/docker-compose.yml",
+    "localenv:compose": "docker compose -f ./localenv/cloud-nine-wallet/docker-compose.yml -f ./localenv/happy-life-bank/docker-compose.yml -f ./localenv/merged/docker-compose.yml -f ./localenv/tigerbeetle/docker-compose.yml --env-file ./localenv/tigerbeetle/.env.tigerbeetle",
     "localenv:seed:auth": "pnpm -C ./packages/auth knex seed:run --env=development && pnpm -C ./packages/auth knex seed:run --env=peerdevelopment",
     "sanity": "pnpm -r build && pnpm -r test",
     "localenv:compose:autopeer": "run-p tunnel:start wait-tunnel:localenv:compose",
@@ -35,16 +33,16 @@
     "@jest/types": "^29.6.3",
     "@swc/jest": "^0.2.36",
     "@types/jest": "^29.5.12",
-    "@typescript-eslint/eslint-plugin": "^6.21.0",
-    "@typescript-eslint/parser": "^6.21.0",
+    "@typescript-eslint/eslint-plugin": "^7.3.1",
+    "@typescript-eslint/parser": "^7.3.1",
     "dotenv": "^16.4.5",
     "eslint": "^8.57.0",
     "eslint-config-prettier": "^9.1.0",
     "jest": "^29.7.0",
-    "npm-run-all2": "^5.0.2",
+    "npm-run-all2": "^6.1.2",
     "prettier": "^3.2.5",
     "tunnelmole": "^2.2.14",
-    "typescript": "^5.3.3",
+    "typescript": "^5.4.3",
     "uuid": "^9.0.1"
   },
   "dependenciesMeta": {

@@ -15,6 +15,7 @@ services:
       SEED_FILE_LOCATION: /workspace/seed.yml
       KEY_FILE: /workspace/private-key.pem
       OPEN_PAYMENTS_URL: ${HAPPY_LIFE_BANK_OPEN_PAYMENTS_URL:-https://happy-life-bank-backend}
+      GRAPHQL_URL: http://happy-life-bank-backend:3001/graphql
     volumes:
       - ../happy-life-bank/seed.yml:/workspace/seed.yml
       - ../happy-life-bank/private-key.pem:/workspace/private-key.pem

@@ -46,6 +46,8 @@ function handleBotRequest(
           const stream = createReadableStreamFromReadable(body)
 
           responseHeaders.set('Content-Type', 'text/html')
+          // Set X-Frame-Options Header
+          responseHeaders.set('X-Frame-Options', 'SAMEORIGIN')
 
           resolve(
             new Response(stream, {
@@ -93,6 +95,8 @@ function handleBrowserRequest(
           const stream = createReadableStreamFromReadable(body)
 
           responseHeaders.set('Content-Type', 'text/html')
+          // Set X-Frame-Options Header
+          responseHeaders.set('X-Frame-Options', 'SAMEORIGIN')
 
           resolve(
             new Response(stream, {

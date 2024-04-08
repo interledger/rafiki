@@ -10,6 +10,7 @@ import { AccessToken, toOpenPaymentsAccessToken } from './model'
 import { AccessService } from '../access/service'
 import { TransactionOrKnex } from 'objection'
 import { GrantService } from '../grant/service'
+import { GNAPErrorCode, throwGNAPError } from '../shared/gnapErrors'
 
 export type TokenHttpSigContext = AppContext & {
   accessToken: AccessToken & {
@@ -119,7 +120,7 @@ async function rotateToken(
     newToken = await deps.accessTokenService.rotate(ctx.accessToken.id, trx)
 
     if (!newToken) {
-      ctx.throw()
+      throw new Error('invalid access token')
     }
 
     accessItems = await deps.accessService.getByGrant(newToken.grantId, trx)
@@ -127,12 +128,13 @@ async function rotateToken(
     await trx.commit()
   } catch (error) {
     await trx.rollback()
-    const errorMessage = 'Could not rotate token'
+    const errorMessage =
+      error instanceof Error ? error.message : 'Could not rotate token'
     deps.logger.error(
       { err: error instanceof Error && error.message },
       errorMessage
     )
-    ctx.throw(400, { message: errorMessage })
+    throwGNAPError(ctx, 400, GNAPErrorCode.InvalidRotation, errorMessage)
   }
 
   ctx.status = 200

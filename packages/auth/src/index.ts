@@ -14,8 +14,12 @@ import { createAccessTokenRoutes } from './accessToken/routes'
 import { createGrantRoutes } from './grant/routes'
 import { createInteractionRoutes } from './interaction/routes'
 import { createOpenAPI } from '@interledger/openapi'
-import { createUnauthenticatedClient as createOpenPaymentsClient } from '@interledger/open-payments'
+import {
+  createUnauthenticatedClient as createOpenPaymentsClient,
+  getAuthServerOpenAPI
+} from '@interledger/open-payments'
 import { createInteractionService } from './interaction/service'
+import { getTokenIntrospectionOpenAPI } from 'token-introspection'
 
 const container = initIocContainer(Config)
 const app = new App(container)
@@ -152,15 +156,12 @@ export function initIocContainer(
   )
 
   container.singleton('openApi', async () => {
-    const authServerSpec = await createOpenAPI(
-      path.resolve(__dirname, './openapi/auth-server.yaml')
-    )
+    const authServerSpec = await getAuthServerOpenAPI()
     const idpSpec = await createOpenAPI(
-      path.resolve(__dirname, './openapi/id-provider.yaml')
+      path.resolve(__dirname, './openapi/specs/id-provider.yaml')
     )
-    const tokenIntrospectionSpec = await createOpenAPI(
-      path.resolve(__dirname, './openapi/token-introspection.yaml')
-    )
+    const tokenIntrospectionSpec = await getTokenIntrospectionOpenAPI()
+
     return {
       authServerSpec,
       idpSpec,
@@ -262,18 +263,22 @@ export const start = async (
     }
   })
 
+  const config = await container.use('config')
+
   // Do migrations
   const knex = await container.use('knex')
-  // Needs a wrapped inline function
-  await callWithRetry(async () => {
-    await knex.migrate.latest({
-      directory: __dirname + '/../migrations'
+
+  if (!config.enableManualMigrations) {
+    // Needs a wrapped inline function
+    await callWithRetry(async () => {
+      await knex.migrate.latest({
+        directory: __dirname + '/../migrations'
+      })
     })
-  })
+  }
 
   Model.knex(knex)
 
-  const config = await container.use('config')
   await app.boot()
 
   await app.startAdminServer(config.adminPort)

@@ -1,4 +1,4 @@
-FROM node:18-alpine3.18 AS base
+FROM node:20-alpine3.18 AS base
 
 WORKDIR /home/rafiki
 
@@ -7,10 +7,6 @@ ENV PATH="$PNPM_HOME:$PATH"
 
 RUN corepack enable
 RUN corepack prepare pnpm@8.7.4 --activate
-RUN apk add --no-cache \
-    python3 \
-    make \
-    g++
 
 COPY pnpm-lock.yaml ./
 
@@ -44,7 +40,7 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
     --frozen-lockfile
 RUN pnpm --filter frontend build
 
-FROM node:18-alpine3.18 AS runner
+FROM node:20-alpine3.18 AS runner
 
 WORKDIR /home/rafiki
 

@@ -63,6 +63,7 @@ describe('Webhook Service', (): void => {
 
   beforeAll(async (): Promise<void> => {
     Config.signatureSecret = WEBHOOK_SECRET
+    Config.webhookMaxRetry = 10
     deps = await initIocContainer(Config)
     appContainer = await createTestApp(deps)
     knex = appContainer.knex
@@ -297,7 +298,19 @@ describe('Webhook Service', (): void => {
     })
   })
 
-  describe.skip('processNext', (): void => {
+  describe('processNext', (): void => {
+    beforeEach(async (): Promise<void> => {
+      event = await WebhookEvent.query(knex).insertAndFetch({
+        id: uuid(),
+        type: WalletAddressEventType.WalletAddressNotFound,
+        data: {
+          account: {
+            id: uuid()
+          }
+        }
+      })
+    })
+
     function mockWebhookServer(status = 200): Scope {
       return nock(webhookUrl.origin)
         .post(webhookUrl.pathname, function (this: Definition, body) {
@@ -374,6 +387,21 @@ describe('Webhook Service', (): void => {
       expect(updatedEvent.processAt.getTime()).toBeGreaterThanOrEqual(
         event.createdAt.getTime() + RETRY_BACKOFF_MS
       )
+    })
+
+    test('Does not send event if webhookMaxAttempts is reached', async (): Promise<void> => {
+      let requests = 0
+      nock(webhookUrl.origin)
+        .post('/')
+        .reply(200, () => {
+          requests++
+        })
+      await event.$query(knex).patch({
+        attempts: Config.webhookMaxRetry
+      })
+      await expect(webhookService.getEvent(event.id)).resolves.toEqual(event)
+      await expect(webhookService.processNext()).resolves.toBeUndefined()
+      expect(requests).toBe(0)
     })
   })
 })

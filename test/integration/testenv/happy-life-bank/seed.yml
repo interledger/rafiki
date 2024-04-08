@@ -1,0 +1,87 @@
+assets:
+  - code: USD
+    scale: 2
+    liquidity: 1000000
+    liquidityThreshold: 100000
+  - code: EUR
+    scale: 2
+    liquidity: 1000000
+    liquidityThreshold: 100000
+  - code: MXN
+    scale: 2
+    liquidity: 1000000
+    liquidityThreshold: 100000
+  - code: JPY
+    scale: 0
+    liquidity: 10000
+    liquidityThreshold: 1000
+peeringAsset: 'USD'
+peers:
+  - initialLiquidity: '1000000000000'
+    peerUrl: http://cloud-nine-wallet-test-backend:3102
+    peerIlpAddress: test.cloud-nine-wallet-test
+    liquidityThreshold: 100000
+accounts:
+  - name: 'Philip Fry'
+    path: accounts/pfry
+    id: 97a3a431-8ee1-48fc-ac85-70e2f5eba8e5
+    initialBalance: 50000
+    postmanEnvVar: pfryWalletAddress
+    assetCode: USD
+  - name: 'PlanEx Corp'
+    id: a455cc54-b583-455b-836a-e5275c5c05b7
+    initialBalance: 2000
+    path: accounts/planex
+    postmanEnvVar: planexWalletAddress
+    assetCode: USD
+  - name: 'Alice Smith'
+    path: accounts/asmith
+    id: f47ac10b-58cc-4372-a567-0e02b2c3d479
+    initialBalance: 500
+    postmanEnvVar: asmithWalletAddress
+    skipWalletAddressCreation: true
+    assetCode: USD
+  - name: 'Lars'
+    path: accounts/lars
+    id: fd4ecbc9-205d-4ecd-a030-507d6ce2bde6
+    initialBalance: 50000
+    assetCode: EUR
+  - name: 'David'
+    path: accounts/david
+    id: 60257507-3191-4507-9d77-9071fd6b3c30
+    initialBalance: 150000
+    assetCode: MXN
+rates:
+  EUR:
+    MXN: 18.78
+    USD: 1.10
+    JPY: 157.83
+  USD:
+    MXN: 17.07
+    EUR: 0.91
+    JPY: 147.71
+  MXN:
+    USD: 0.059
+    EUR: 0.054
+    JPY: 8.65
+  JPY:
+    USD: 0.007
+    EUR: 0.006
+    MXN: 0.12
+fees:
+  - fixed: 100
+    basisPoints: 200
+    asset: USD
+    scale: 2
+  - fixed: 100
+    basisPoints: 200
+    asset: EUR
+    scale: 2
+  - fixed: 100
+    basisPoints: 200
+    asset: MXN
+    scale: 2
+  - fixed: 1
+    basisPoints: 200
+    asset: JPY
+    scale: 0

@@ -49,6 +49,7 @@ import {
 import { AccessService } from './access/service'
 import { AccessTokenService } from './accessToken/service'
 import { InteractionRoutes } from './interaction/routes'
+import { ApolloArmor } from '@escape.tech/graphql-armor'
 
 export interface AppContextData extends DefaultContext {
   logger: Logger
@@ -153,10 +154,36 @@ export class App {
       resolvers
     })
 
+    // Setup Armor
+    const armor = new ApolloArmor({
+      blockFieldSuggestion: {
+        enabled: true
+      },
+      maxDepth: {
+        enabled: true,
+        n: 10,
+        ignoreIntrospection: false
+      },
+      costLimit: {
+        enabled: true,
+        maxCost: 5000,
+        objectCost: 2,
+        scalarCost: 1,
+        depthCostFactor: 1.5,
+        ignoreIntrospection: true
+      }
+    })
+    const protection = armor.protect()
+
     // Setup Apollo
     const apolloServer = new ApolloServer({
       schema: schemaWithResolvers,
-      plugins: [ApolloServerPluginDrainHttpServer({ httpServer })]
+      ...protection,
+      plugins: [
+        ...protection.plugins,
+        ApolloServerPluginDrainHttpServer({ httpServer })
+      ],
+      introspection: this.config.env !== 'production'
     })
 
     await apolloServer.start()
@@ -322,9 +349,7 @@ export class App {
           maxAge: 60 * 1000,
           signed: true
         },
-        // Only accepts Middleware<DefaultState, DefaultContext> for some reason, this.koa is Middleware<DefaultState, AppContext>
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        koa as any
+        koa
       )
     )
 

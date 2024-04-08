@@ -1,0 +1,64 @@
+name: cloud-nine-wallet-test
+services:
+  cloud-nine-wallet-test-backend:
+    hostname: cloud-nine-wallet-test-backend
+    image: rafiki-backend
+    build:
+      context: ../../../..
+      dockerfile: ./packages/backend/Dockerfile
+    restart: always
+    privileged: true
+    ports:
+      - '3100:3100'
+      - '3101:3101'
+      - '3102:3102'
+    networks:
+      - rafiki-test
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'  
+    environment:
+      LOG_LEVEL: debug
+      NODE_ENV: development
+      CONNECTOR_PORT: 3102
+      ADMIN_PORT: 3101
+      OPEN_PAYMENTS_PORT: 3100
+      DATABASE_URL: postgresql://cloud_nine_wallet_test_backend:cloud_nine_wallet_test_backend@shared-database/cloud_nine_wallet_test_backend
+      OPEN_PAYMENTS_URL: https://cloud-nine-wallet-test-backend:3100
+      WALLET_ADDRESS_URL: https://cloud-nine-wallet-test-backend:3100/.well-known/pay
+      # matches pfry key id
+      KEY_ID: keyid-97a3a431-8ee1-48fc-ac85-70e2f5eba8e5
+      PRIVATE_KEY_FILE: /workspace/private-key.pem
+      AUTH_SERVER_INTROSPECTION_URL: http://cloud-nine-wallet-test-auth:3107
+      AUTH_SERVER_GRANT_URL: http://cloud-nine-wallet-test-auth:3106
+      ILP_ADDRESS: test.cloud-nine-wallet-test
+      STREAM_SECRET: BjPXtnd00G2mRQwP/8ZpwyZASOch5sUXT5o0iR5b5wU=
+      WEBHOOK_URL: http://host.docker.internal:8888/webhooks
+      EXCHANGE_RATES_URL: http://host.docker.internal:8888/rates
+      REDIS_URL: redis://shared-redis:6379/0
+    volumes:
+      - ../private-key.pem:/workspace/private-key.pem
+    depends_on:
+      - shared-database
+      - shared-redis
+  cloud-nine-wallet-test-auth:
+    hostname: cloud-nine-wallet-test-auth
+    image: rafiki-auth
+    build:
+      context: ../../../..
+      dockerfile: ./packages/auth/Dockerfile
+    restart: always
+    networks:
+      - rafiki-test
+    ports:
+      - '3103:3103'
+      - '3106:3106'
+      - '3107:3107'
+    environment:
+      NODE_ENV: ${NODE_ENV:-development}
+      AUTH_SERVER_DOMAIN: http://cloud-nine-wallet-test-auth:3106
+      AUTH_DATABASE_URL: postgresql://cloud_nine_wallet_test_auth:cloud_nine_wallet_test_auth@shared-database/cloud_nine_wallet_test_auth
+      INTROSPECTION_PORT: 3107
+      AUTH_PORT: 3106
+      ADMIN_PORT: 3103
+    depends_on:
+      - shared-database
