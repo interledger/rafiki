@@ -18,12 +18,12 @@
     "@interledger/http-signature-utils": "2.0.2",
     "@interledger/open-payments": "^6.8.2",
     "@koa/bodyparser": "^5.1.0",
-    "@types/koa": "2.14.0",
+    "@types/koa": "2.15.0",
     "@types/koa-bodyparser": "^4.3.12",
     "@types/node": "^20.12.5",
     "dotenv": "^16.4.5",
     "hostile": "^1.4.0",
-    "koa": "^2.15.0",
+    "koa": "^2.15.2",
     "mock-account-service-lib": "workspace:*",
     "yaml": "^2.3.4"
   }
