@@ -48,15 +48,15 @@ export function createBalanceMiddleware(): ILPMiddleware {
     }
 
     // Update balances on prepare
-    const createTransfer = async (
-      timeout?: number
-    ): Promise<Transaction | undefined> => {
+    const createPendingTransfer = async (): Promise<
+      Transaction | undefined
+    > => {
       const trxOrError = await services.accounting.createTransfer({
         sourceAccount: accounts.incoming,
         destinationAccount: accounts.outgoing,
         sourceAmount,
         destinationAmount: destinationAmountOrError,
-        timeout: timeout || 0
+        timeout: 5
       })
 
       if (isTransferError(trxOrError)) {
@@ -75,11 +75,15 @@ export function createBalanceMiddleware(): ILPMiddleware {
 
     if (state.streamDestination) {
       await next()
-      if (response.fulfill) await createTransfer()
-    } else {
-      const trx = await createTransfer(5)
+    }
 
-      await next()
+    if (!state.streamDestination || response.fulfill) {
+      // TODO: make this single-phase if streamDestination === true
+      const trx = await createPendingTransfer()
+
+      if (!state.streamDestination) {
+        await next()
+      }
 
       if (trx) {
         if (response.fulfill) {

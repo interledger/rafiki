@@ -4,7 +4,8 @@ import {
   Quote,
   OutgoingPayment,
   OutgoingPaymentState,
-  CreateReceiverInput
+  CreateReceiverInput,
+  IncomingPayment
 } from '../generated/graphql'
 import { MockASE } from '../mock-ase'
 import { pollCondition } from '../utils'
@@ -22,6 +23,7 @@ export interface AdminActions {
     senderWalletAddressId: string,
     quote: Quote
   ): Promise<OutgoingPayment>
+  getIncomingPayment(incomingPaymentId: string): Promise<IncomingPayment>
   getOutgoingPayment(
     outgoingPaymentId: string,
     amountValueToSend: string
@@ -36,6 +38,8 @@ export function createAdminActions(deps: AdminActionsDeps): AdminActions {
       createQuote(deps, senderWalletAddressId, receiver),
     createOutgoingPayment: (senderWalletAddressId, quote) =>
       createOutgoingPayment(deps, senderWalletAddressId, quote),
+    getIncomingPayment: (incomingPaymentId) =>
+      getIncomingPayment(deps, incomingPaymentId),
     getOutgoingPayment: (outgoingPaymentId, amountValueToSend) =>
       getOutgoingPayment(deps, outgoingPaymentId, amountValueToSend)
   }
@@ -153,5 +157,20 @@ async function getOutgoingPayment(
   payment.debitAmount.value = BigInt(payment.debitAmount.value)
   expect(payment.state).toBe(OutgoingPaymentState.Completed)
   expect(payment.receiveAmount.value).toBe(BigInt(amountValueToSend))
+  return payment
+}
+async function getIncomingPayment(
+  deps: AdminActionsDeps,
+  incomingPaymentId: string
+): Promise<IncomingPayment> {
+  const { receivingASE } = deps
+  const payment =
+    await receivingASE.adminClient.getIncomingPayment(incomingPaymentId)
+
+  if (payment.incomingAmount?.value) {
+    payment.incomingAmount.value = BigInt(payment.incomingAmount.value)
+  }
+  payment.receivedAmount.value = BigInt(payment.receivedAmount.value)
+
   return payment
 }
