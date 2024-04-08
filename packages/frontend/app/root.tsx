@@ -51,7 +51,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
         withCredentials: true
       }
     )
-    //TODO: In the scenario where a user is logged in but we hgave an issue retrieving the logoutUrl is it okay to simply not have a logoutUrl and not display the button? Given that the session will expire? Not sure how else to handle the error.
+    //TODO: In the scenario where a user is logged in but we have an issue retrieving the logoutUrl is it okay to simply not have a logoutUrl and not display the button? Given that the session will expire? Not sure how else to handle the error.
     logoutUrl = response.data.logout_url
   }
   const session = await messageStorage.getSession(cookies)
@@ -128,7 +128,6 @@ export default function App() {
 export function ErrorBoundary() {
   const error = useRouteError()
 
-  // TODO: is there a better approach for handling the logout Url on the ErrorPage given that the user may / may not eb logged in, and we don'tr have access to a loader.
   const ErrorPage = ({ children }: { children: ReactNode }) => {
     return (
       <html
@@ -141,8 +140,7 @@ export function ErrorBoundary() {
         </head>
         <body className='h-full text-tealish'>
           <div className='min-h-full'>
-            <Sidebar logoutUrl='' />
-            <div className='flex pt-20 md:pt-0 md:pl-60 flex-1 flex-col'>
+            <div className='flex pt-20 md:pt-0 flex-1 flex-col'>
               <main className='grid min-h-screen place-items-center'>
                 {children}
               </main>
