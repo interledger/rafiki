@@ -17,7 +17,7 @@ export class OpenPaymentsServerRouteError extends Error {
   }
 }
 
-export async function openPaymentServerErrorMiddleware(
+export async function openPaymentsServerErrorMiddleware(
   ctx: AppContext,
   next: () => Promise<unknown>
 ) {

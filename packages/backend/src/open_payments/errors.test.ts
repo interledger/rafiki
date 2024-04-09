@@ -2,7 +2,7 @@ import { AppContext, AppServices } from '../app'
 import { createContext } from '../tests/context'
 import {
   OpenPaymentsServerRouteError,
-  openPaymentServerErrorMiddleware
+  openPaymentsServerErrorMiddleware
 } from './errors'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '..'
@@ -39,7 +39,7 @@ describe('openPaymentServerErrorMiddleware', (): void => {
     const ctxThrowSpy = jest.spyOn(ctx, 'throw')
 
     await expect(
-      openPaymentServerErrorMiddleware(ctx, next)
+      openPaymentsServerErrorMiddleware(ctx, next)
     ).rejects.toMatchObject({
       status: error.status,
       message: error.message
@@ -58,7 +58,7 @@ describe('openPaymentServerErrorMiddleware', (): void => {
     const ctxThrowSpy = jest.spyOn(ctx, 'throw')
 
     await expect(
-      openPaymentServerErrorMiddleware(ctx, next)
+      openPaymentsServerErrorMiddleware(ctx, next)
     ).rejects.toMatchObject({
       status: error.status,
       message: error.message
@@ -77,7 +77,7 @@ describe('openPaymentServerErrorMiddleware', (): void => {
     const ctxThrowSpy = jest.spyOn(ctx, 'throw')
 
     await expect(
-      openPaymentServerErrorMiddleware(ctx, next)
+      openPaymentsServerErrorMiddleware(ctx, next)
     ).rejects.toMatchObject({
       status: 500,
       message: 'Internal Server Error'
