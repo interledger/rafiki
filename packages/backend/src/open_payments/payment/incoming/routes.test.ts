@@ -8,12 +8,7 @@ import { createTestApp, TestContainer } from '../../../tests/app'
 import { Config, IAppConfig } from '../../../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../../..'
-import {
-  AppServices,
-  CreateContext,
-  CompleteContext,
-  ListContext
-} from '../../../app'
+import { AppServices, CreateContext, CompleteContext } from '../../../app'
 import { truncateTables } from '../../../tests/tableManager'
 import { IncomingPayment, IncomingPaymentState } from './model'
 import {
