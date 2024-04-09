@@ -87,5 +87,5 @@ session:
   lifespan: 1h
   cookie:
     persistent: false
-    same_site: Lax
+    same_site: Strict
     path: /

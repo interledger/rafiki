@@ -51,8 +51,10 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
         withCredentials: true
       }
     )
-    //TODO: In the scenario where a user is logged in but we have an issue retrieving the logoutUrl is it okay to simply not have a logoutUrl and not display the button? Given that the session will expire? Not sure how else to handle the error.
     logoutUrl = response.data.logout_url
+    if (!logoutUrl) {
+      logoutUrl = '/auth/manual-logout'
+    }
   }
   const session = await messageStorage.getSession(cookies)
   const message = session.get('message') as Message
