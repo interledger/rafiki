@@ -76,9 +76,12 @@ services:
     hostname: happy-life-bank-admin
     image: rafiki-frontend
     pull_policy: never
+    volumes:
+      - ../../packages/frontend/:/home/rafiki/packages/frontend
     restart: always
     networks:
       - rafiki
+    command: sh -c "pnpm install && pnpm dev"
     ports:
       - '4010:4010'
     environment:

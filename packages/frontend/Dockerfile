@@ -8,48 +8,16 @@ ENV PATH="$PNPM_HOME:$PATH"
 RUN corepack enable
 RUN corepack prepare pnpm@8.7.4 --activate
 
-COPY pnpm-lock.yaml ./
+COPY pnpm-lock.yaml package.json pnpm-workspace.yaml .npmrc tsconfig.json tsconfig.build.json ./
 
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
     pnpm fetch \
     | grep -v "cross-device link not permitted\|Falling back to copying packages from store"
-
-FROM base AS prod-deps
-
-COPY package.json pnpm-workspace.yaml .npmrc ./
-COPY packages/frontend/package.json ./packages/frontend/package.json
-
-RUN pnpm clean
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
-    pnpm install \
-    --recursive \
-    --prefer-offline \
-    --frozen-lockfile \
-    --prod \
-    | grep -v "cross-device link not permitted\|Falling back to copying packages from store"
-
-FROM base AS builder   
-
-COPY package.json pnpm-workspace.yaml .npmrc tsconfig.json tsconfig.build.json ./
-COPY packages/frontend ./packages/frontend
 
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
     pnpm install \
     --recursive \
     --offline \
     --frozen-lockfile
-RUN pnpm --filter frontend build
-
-FROM node:20-alpine3.18 AS runner
-
-WORKDIR /home/rafiki
-
-COPY --from=prod-deps /home/rafiki/node_modules ./node_modules
-COPY --from=prod-deps /home/rafiki/packages/frontend/node_modules ./packages/frontend/node_modules
-COPY --from=prod-deps /home/rafiki/packages/frontend/package.json ./packages/frontend/package.json
-
-COPY --from=builder /home/rafiki/packages/frontend/build ./packages/frontend/build
-COPY --from=builder /home/rafiki/packages/frontend/public ./packages/frontend/public
 
 WORKDIR /home/rafiki/packages/frontend
-CMD ["sh", "./node_modules/.bin/remix-serve", "./build/index.js"]

@@ -6,7 +6,7 @@
     "delete-user": "node ./build/deleteUser.js",
     "invite-user": "node ./build/userInvitation.js",
     "build": "remix build && tsc ./kratos/scripts/*.ts --esModuleInterop --outDir ./build/",
-    "dev": "PORT=3005 remix dev",
+    "dev": "remix dev",
     "lint:fix": "eslint --fix app/",
     "lint:check": "eslint app/",
     "start": "ENABLE_INSECURE_MESSAGE_COOKIE=true remix-serve ./build/index.js",

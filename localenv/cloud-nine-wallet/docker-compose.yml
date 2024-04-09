@@ -108,9 +108,12 @@ services:
     build:
       context: ../..
       dockerfile: ./packages/frontend/Dockerfile
+    volumes:
+      - ../../packages/frontend/:/home/rafiki/packages/frontend
     restart: always
     networks:
       - rafiki
+    command: sh -c "pnpm install && pnpm dev"
     ports:
       - '3010:3010'
     environment:
