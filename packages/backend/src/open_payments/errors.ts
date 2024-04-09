@@ -24,13 +24,15 @@ export async function openPaymentServerErrorMiddleware(
   try {
     await next()
   } catch (err) {
+    const logger = await ctx.container.use('logger')
+
     const baseLog = {
       method: ctx.req.method,
       path: ctx.path
     }
 
     if (err instanceof OpenPaymentsServerRouteError) {
-      ctx.logger.info(
+      logger.info(
         {
           ...baseLog,
           message: err.message,
@@ -43,7 +45,7 @@ export async function openPaymentServerErrorMiddleware(
     } else if (err instanceof OpenAPIValidatorMiddlewareError) {
       const finalStatus = err.status || 400
 
-      ctx.logger.info(
+      logger.info(
         {
           ...baseLog,
           message: err.message,
@@ -54,7 +56,7 @@ export async function openPaymentServerErrorMiddleware(
       ctx.throw(finalStatus, err.message)
     }
 
-    ctx.logger.error(
+    logger.error(
       { ...baseLog, err },
       'Received unhandled error in Open Payments request'
     )
