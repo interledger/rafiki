@@ -2,7 +2,9 @@
 
 ## Development
 
-This project assumes that you have a local Rafiki backend instance up and running. Typically, both `backend` and this project would be used within the local Rafiki playground. See the [local environment setup](../../localenv) for more information on how to set it up.
+This project assumes that you have a local Rafiki backend instance up and running as well as a Kratos identity service and Mailslurper. Typically, all of these services, along with this project, would be used within the local Rafiki playground. See the [local environment setup](../../localenv) for more information on how to set it up.
+
+The Admin UI runs in development mode in the local playground, so when you have it running, you can see live code changes by simply refreshing your page.
 
 To add a new typed apollo request, you will need to add an untyped request and regenerate the graphql types. This will generate new types tailored to the specific request being made. The generated type will reflect the request's query or mutation name, variables used, and requested fields.
 
@@ -43,4 +45,4 @@ To add a new typed apollo request, you will need to add an untyped request and r
 
 We have secured access to the Admin UI using [Ory Kratos](https://www.ory.sh/docs/kratos/ory-kratos-intro), a secure and fully open-source identity and user management solution. Check it out on [GitHub](https://github.com/ory/kratos). Since access to the UI is on an invitation-only basis the registration flow is not publicly available. As such, in order to access the UI you'll need to add a new user with the invite-user script. Run `docker exec -it <admin-container-name> npm run invite-user -- example@mail.com` and it will output recovery link to the terminal. The recovery link doubles as the invitation method. Copy and paste this link in your browser and you will automatically be logged in and directed to the account settings page. The next step is changing your password. We're using a simple email and password authentication method. We've also included a script to remove users: `docker exec -it <admin-container-name> npm run delete-user -- example@mail.com`.
 
-Note: Ory Kratos and the Rafiki Admin UI must be on the hosted on same top level domain.
+Note: Ory Kratos and the Rafiki Admin UI must be hosted on same top level domain.
