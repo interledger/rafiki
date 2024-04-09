@@ -51,6 +51,7 @@ import { createStreamCredentialsService } from './payment-method/ilp/stream-cred
 import { createRatesService } from './rates/service'
 import { TelemetryService, createTelemetryService } from './telemetry/service'
 import { createWebhookService } from './webhook/service'
+import { createOutgoingPaymentCreatorService } from './open_payments/payment/outgoing-creator/service'
 
 BigInt.prototype.toJSON = function () {
   return this.toString()
@@ -476,6 +477,14 @@ export function initIocContainer(
       telemetry: config.enableTelemetry
         ? await deps.use('telemetry')
         : undefined
+    })
+  })
+
+  container.singleton('outgoingPaymentCreatorService', async (deps) => {
+    return await createOutgoingPaymentCreatorService({
+      logger: await deps.use('logger'),
+      outgoingPaymentService: await deps.use('outgoingPaymentService'),
+      quoteService: await deps.use('quoteService')
     })
   })
 
