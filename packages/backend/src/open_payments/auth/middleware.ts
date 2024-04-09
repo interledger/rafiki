@@ -3,14 +3,18 @@ import {
   RequestLike,
   validateSignature
 } from '@interledger/http-signature-utils'
-import Koa, { HttpError } from 'koa'
 import { Limits, parseLimits } from '../payment/outgoing/limits'
 import {
   HttpSigContext,
   HttpSigWithAuthenticatedStatusContext,
   WalletAddressContext
 } from '../../app'
-import { AccessAction, AccessType, JWKS } from '@interledger/open-payments'
+import {
+  AccessAction,
+  AccessType,
+  JWKS,
+  OpenPaymentsClientError
+} from '@interledger/open-payments'
 import { TokenInfo } from 'token-introspection'
 import { isActiveTokenInfo } from 'token-introspection'
 import { Config } from '../../config/app'
@@ -65,7 +69,10 @@ export function createTokenIntrospectionMiddleware({
     try {
       const parts = ctx.request.headers.authorization?.split(' ')
       if (parts?.length !== 2 || parts[0] !== 'GNAP') {
-        throw new OpenPaymentsServerRouteError(401, 'Unauthorized')
+        throw new OpenPaymentsServerRouteError(
+          401,
+          'Missing or invalid authorization header value'
+        )
       }
       const token = parts[1]
       const tokenIntrospectionClient = await ctx.container.use(
@@ -131,18 +138,19 @@ export function createTokenIntrospectionMiddleware({
               : undefined
         }
       }
-      await next()
     } catch (err) {
-      if (err instanceof OpenPaymentsServerRouteError) {
-        ctx.set('WWW-Authenticate', `GNAP as_uri=${config.authServerGrantUrl}`)
-
-        if (bypassError) {
-          return await next()
-        }
+      if (!(err instanceof OpenPaymentsServerRouteError)) {
+        throw err
       }
 
-      throw err
+      ctx.set('WWW-Authenticate', `GNAP as_uri=${config.authServerGrantUrl}`)
+
+      if (!bypassError) {
+        throw err
+      }
     }
+
+    await next()
   }
 }
 
@@ -170,37 +178,70 @@ export const throwIfSignatureInvalid = async (ctx: HttpSigContext) => {
   if (!keyId) {
     throw new OpenPaymentsServerRouteError(
       401,
-      'Invalid signature input: missing keyId'
+      'Signature validation error: missing keyId in signature input',
+      { client: ctx.client }
     )
   }
   // TODO
   // cache client key(s)
-  let jwks: JWKS | undefined
+  let jwks: JWKS
   try {
     const openPaymentsClient = await ctx.container.use('openPaymentsClient')
     jwks = await openPaymentsClient.walletAddress.getKeys({
       url: ctx.client
     })
-  } catch (error) {
-    const logger = await ctx.container.use('logger')
-    logger.debug(
+  } catch (err) {
+    throw new OpenPaymentsServerRouteError(
+      401,
+      'Signature validation error: could not retrieve client keys',
       {
-        error,
-        client: ctx.client
-      },
-      'Could not retrieve client key when validating signature'
+        client: ctx.client,
+        keyIdInSignature: keyId,
+        requestedRoute: `${ctx.client}/jwks.json`,
+        validationErrorsInRequest:
+          err instanceof OpenPaymentsClientError
+            ? err.validationErrors
+            : undefined
+      }
     )
   }
-  const key = jwks?.keys.find((key) => key.kid === keyId)
+  const key = jwks.keys.find((key) => key.kid === keyId)
   if (!key) {
     throw new OpenPaymentsServerRouteError(
       401,
-      'Invalid signature input: keyId mismatch'
+      'Signature validation error: could not find key in list of client keys',
+      {
+        client: ctx.client,
+        keyIdInSignature: keyId,
+        clientKeys: jwks.keys
+      }
     )
   }
 
-  if (!(await validateSignature(key, contextToRequestLike(ctx)))) {
-    throw new OpenPaymentsServerRouteError(401, 'Invalid signature')
+  const logger = await ctx.container.use('logger')
+
+  let isValidSignature = false
+  let requestLike: RequestLike | undefined
+
+  try {
+    requestLike = contextToRequestLike(ctx)
+    isValidSignature = await validateSignature(key, requestLike)
+  } catch (err) {
+    logger.error(
+      { err, requestLike },
+      'Received unhandled eror when trying to validate signature'
+    )
+  }
+
+  if (!isValidSignature) {
+    throw new OpenPaymentsServerRouteError(
+      401,
+      'Signature validation error: provided signature is invalid',
+      {
+        keyIdInSignature: keyId,
+        client: ctx.client
+      }
+    )
   }
 }
 
