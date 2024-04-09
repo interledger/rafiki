@@ -10,7 +10,10 @@ export default function Logout() {
           <h3 className='text-2xl pt-16'>Log out of Rafiki Admin</h3>
           <div className='space-y-8'>
             <p>Failed to retrieve the logout URL from Kratos</p>
-            <p>Logout needs to be performed manually either by clicking the button below, or closing your browser.</p>
+            <p>
+              Logout needs to be performed manually either by clicking the
+              button below, or closing your browser.
+            </p>
             <Form method='post'>
               <Button
                 aria-label='manual-logout'
