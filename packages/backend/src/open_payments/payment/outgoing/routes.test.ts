@@ -16,10 +16,10 @@ import {
 import { truncateTables } from '../../../tests/tableManager'
 import { createAsset } from '../../../tests/asset'
 import { errorToCode, errorToMessage, OutgoingPaymentError } from './errors'
-import { CreateOutgoingPaymentOptions, OutgoingPaymentService } from './service'
+import { OutgoingPaymentService } from './service'
 import { OutgoingPayment, OutgoingPaymentState } from './model'
 import { OutgoingPaymentRoutes, CreateBody } from './routes'
-import { Amount, serializeAmount } from '../../amount'
+import { serializeAmount } from '../../amount'
 import { Grant } from '../../auth/middleware'
 import { WalletAddress } from '../../wallet_address/model'
 import {
@@ -28,7 +28,13 @@ import {
 } from '../../wallet_address/model.test'
 import { createOutgoingPayment } from '../../../tests/outgoingPayment'
 import { createWalletAddress } from '../../../tests/walletAddress'
-import { createIncomingPayment } from '../../../tests/incomingPayment'
+import {
+  CreateFromIncomingPayment,
+  CreateFromQuote,
+  BaseOptions as CreateOutgoingPaymentBaseOptions,
+  OutgoingPaymentCreatorService
+} from '../outgoing-creator/service'
+import assert from 'assert'
 
 describe('Outgoing Payment Routes', (): void => {
   let deps: IocContract<AppServices>
@@ -37,6 +43,7 @@ describe('Outgoing Payment Routes', (): void => {
   let config: IAppConfig
   let outgoingPaymentRoutes: OutgoingPaymentRoutes
   let outgoingPaymentService: OutgoingPaymentService
+  let outgoingPaymentCreatorService: OutgoingPaymentCreatorService
   let walletAddress: WalletAddress
   let baseUrl: string
 
@@ -69,6 +76,9 @@ describe('Outgoing Payment Routes', (): void => {
     config = await deps.use('config')
     outgoingPaymentRoutes = await deps.use('outgoingPaymentRoutes')
     outgoingPaymentService = await deps.use('outgoingPaymentService')
+    outgoingPaymentCreatorService = await deps.use(
+      'outgoingPaymentCreatorService'
+    )
     const { resourceServerSpec } = await deps.use('openApi')
     jestOpenAPI(resourceServerSpec)
   })
@@ -162,10 +172,12 @@ describe('Outgoing Payment Routes', (): void => {
     })
   })
 
+  type SetupContextOptions =
+    | Omit<CreateFromIncomingPayment, 'walletAddressId'>
+    | Omit<CreateFromQuote, 'walletAddressId'>
+
   describe('create', (): void => {
-    const setup = (
-      options: Omit<CreateOutgoingPaymentOptions, 'walletAddressId'>
-    ): CreateContext<CreateBody> =>
+    const setup = (options: SetupContextOptions): CreateContext<CreateBody> =>
       setupContext<CreateContext<CreateBody>>({
         reqOpts: {
           headers: {
@@ -181,114 +193,116 @@ describe('Outgoing Payment Routes', (): void => {
         grant: options.grant
       })
 
-    describe.each`
-      grant             | client                                        | description
-      ${{ id: uuid() }} | ${faker.internet.url({ appendSlash: false })} | ${'grant'}
-      ${undefined}      | ${undefined}                                  | ${'no grant'}
-    `('create from quote ($description)', ({ grant, client }): void => {
-      test('returns the outgoing payment on success (metadata)', async (): Promise<void> => {
-        const metadata = {
-          description: 'rent',
-          externalRef: '202201'
-        }
-        const payment = await createPayment({
-          client,
-          grant,
-          metadata
-        })
-        const options = {
-          quoteId: `${baseUrl}/quotes/${payment.quote.id}`,
-          client,
-          grant,
-          metadata
-        }
-        const ctx = setup(options)
-        const createSpy = jest
-          .spyOn(outgoingPaymentService, 'create')
-          .mockResolvedValueOnce(payment)
-        await expect(outgoingPaymentRoutes.create(ctx)).resolves.toBeUndefined()
-        expect(createSpy).toHaveBeenCalledWith({
-          walletAddressId: walletAddress.id,
-          quoteId: payment.quote.id,
-          metadata,
-          client,
-          grant
-        })
-        expect(ctx.response).toSatisfyApiSpec()
-        const outgoingPaymentId = (
-          (ctx.response.body as Record<string, unknown>)['id'] as string
-        )
-          .split('/')
-          .pop()
-        expect(ctx.response.body).toEqual({
-          id: `${baseUrl}/outgoing-payments/${outgoingPaymentId}`,
-          walletAddress: walletAddress.url,
-          receiver: payment.receiver,
-          quoteId: options.quoteId,
-          debitAmount: {
-            ...payment.debitAmount,
-            value: payment.debitAmount.value.toString()
-          },
-          receiveAmount: {
-            ...payment.receiveAmount,
-            value: payment.receiveAmount.value.toString()
-          },
-          metadata: options.metadata,
-          sentAmount: {
-            value: '0',
-            assetCode: walletAddress.asset.code,
-            assetScale: walletAddress.asset.scale
-          },
-          failed: false,
-          createdAt: expect.any(String),
-          updatedAt: expect.any(String)
-        })
-      })
-    })
+    enum CreateFrom {
+      Quote = 'quote',
+      IncomingPayment = 'incomingPayment'
+    }
 
-    test('create from incoming payment', async (): Promise<void> => {
-      const asset = await createAsset(deps)
-      const receiverWalletAddress = await createWalletAddress(deps, {
-        assetId: asset.id
-      })
-      const debitAmount: Amount = {
-        value: BigInt(56),
-        assetCode: walletAddress.asset.code,
-        assetScale: walletAddress.asset.scale
+    describe.each`
+      createFrom                    | grant             | client                                        | description
+      ${CreateFrom.Quote}           | ${{ id: uuid() }} | ${faker.internet.url({ appendSlash: false })} | ${'grant'}
+      ${CreateFrom.IncomingPayment} | ${undefined}      | ${undefined}                                  | ${'no grant'}
+    `(
+      'create from quote ($description)',
+      ({ grant, client, createFrom }): void => {
+        test('returns the outgoing payment on success (metadata)', async (): Promise<void> => {
+          const metadata = {
+            description: 'rent',
+            externalRef: '202201'
+          }
+          const payment = await createPayment({
+            client,
+            grant,
+            metadata
+          })
+          let options: Omit<
+            CreateOutgoingPaymentBaseOptions,
+            'walletAddressId'
+          > = {
+            client,
+            grant,
+            metadata
+          }
+          if (createFrom === CreateFrom.Quote) {
+            options = {
+              ...options,
+              quoteId: `${baseUrl}/quotes/${payment.quote.id}`
+            } as CreateFromQuote
+          } else {
+            assert(createFrom === CreateFrom.IncomingPayment)
+            options = {
+              ...options,
+              incomingPaymentId: uuid(),
+              debitAmount: {
+                value: BigInt(56),
+                assetCode: walletAddress.asset.code,
+                assetScale: walletAddress.asset.scale
+              }
+            } as CreateFromIncomingPayment
+          }
+          const ctx = setup(options as SetupContextOptions)
+          const createSpy = jest
+            .spyOn(outgoingPaymentCreatorService, 'create')
+            .mockResolvedValueOnce(payment)
+          await expect(
+            outgoingPaymentRoutes.create(ctx)
+          ).resolves.toBeUndefined()
+
+          let expectedCreateOptions: CreateOutgoingPaymentBaseOptions = {
+            walletAddressId: walletAddress.id,
+            metadata,
+            client,
+            grant
+          }
+          if (createFrom === CreateFrom.Quote) {
+            expectedCreateOptions = {
+              ...expectedCreateOptions,
+              quoteId: payment.quote.id
+            } as CreateFromQuote
+          } else {
+            assert(createFrom === CreateFrom.IncomingPayment)
+            expectedCreateOptions = {
+              ...expectedCreateOptions,
+              incomingPaymentId: (options as CreateFromIncomingPayment)
+                .incomingPaymentId,
+              debitAmount: (options as CreateFromIncomingPayment).debitAmount
+            } as CreateFromIncomingPayment
+          }
+
+          expect(createSpy).toHaveBeenCalledWith(expectedCreateOptions)
+          expect(ctx.response).toSatisfyApiSpec()
+          const outgoingPaymentId = (
+            (ctx.response.body as Record<string, unknown>)['id'] as string
+          )
+            .split('/')
+            .pop()
+          expect(ctx.response.body).toEqual({
+            id: `${baseUrl}/outgoing-payments/${outgoingPaymentId}`,
+            walletAddress: walletAddress.url,
+            receiver: payment.receiver,
+            quoteId:
+              'quoteId' in options ? options.quoteId : expect.any(String),
+            debitAmount: {
+              ...payment.debitAmount,
+              value: payment.debitAmount.value.toString()
+            },
+            receiveAmount: {
+              ...payment.receiveAmount,
+              value: payment.receiveAmount.value.toString()
+            },
+            metadata: options.metadata,
+            sentAmount: {
+              value: '0',
+              assetCode: walletAddress.asset.code,
+              assetScale: walletAddress.asset.scale
+            },
+            failed: false,
+            createdAt: expect.any(String),
+            updatedAt: expect.any(String)
+          })
+        })
       }
-      const incomingPayment = await createIncomingPayment(deps, {
-        walletAddressId: receiverWalletAddress.id,
-        incomingAmount: {
-          value: BigInt(56),
-          assetCode: asset.code,
-          assetScale: asset.scale
-        }
-      })
-      console.log({ incomingPayment })
-      const ctx = setup({
-        incomingPaymentId: incomingPayment.id,
-        debitAmount
-      })
-      // Was created to test the create interface (via ctx setup above and (maybe) create(ctx) below).
-      // TODO: remove this or fully implement it
-      throw new Error('TODO: implement fully or remove this test')
-      // TODO: remove this comment. createSpy can break other tests. ran it without underlying creat
-      // method ever being called. this caused future tests to use the mock (i think) and fail
-      // const createSpy = jest
-      //   .spyOn(outgoingPaymentService, 'create')
-      //   .mockResolvedValueOnce({} as OutgoingPayment)
-      // TODO: spy on quoteService.create
-      // TODO: assert quoteService create called with correct args
-      await expect(outgoingPaymentRoutes.create(ctx)).resolves.toBeUndefined()
-      // TODO: assert create outgoing payment spy called with correct args
-      // expect(createSpy).toHaveBeenCalledWith({
-      //   walletAddressId: walletAddress.id,
-      //   quoteId: payment.quote.id,
-      //   metadata,
-      //   client,
-      //   grant
-      // })
-    })
+    )
 
     test.each(Object.values(OutgoingPaymentError).map((err) => [err]))(
       'returns error on %s',
@@ -298,7 +312,7 @@ describe('Outgoing Payment Routes', (): void => {
           quoteId: `${baseUrl}/quotes/${quoteId}`
         })
         const createSpy = jest
-          .spyOn(outgoingPaymentService, 'create')
+          .spyOn(outgoingPaymentCreatorService, 'create')
           .mockResolvedValueOnce(error)
         await expect(outgoingPaymentRoutes.create(ctx)).rejects.toMatchObject({
           message: errorToMessage[error],
@@ -317,7 +331,7 @@ describe('Outgoing Payment Routes', (): void => {
         quoteId: `${baseUrl}/quotes/${quoteId}`
       })
       const createSpy = jest
-        .spyOn(outgoingPaymentService, 'create')
+        .spyOn(outgoingPaymentCreatorService, 'create')
         .mockRejectedValueOnce(new Error('Some error'))
 
       await expect(outgoingPaymentRoutes.create(ctx)).rejects.toMatchObject({

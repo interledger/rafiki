@@ -2,7 +2,7 @@ import Koa from 'koa'
 import { Logger } from 'pino'
 import { ReadContext, CreateContext, ListContext } from '../../../app'
 import { IAppConfig } from '../../../config/app'
-import { OutgoingPaymentService } from './service'
+import { CreateOutgoingPaymentOptions, OutgoingPaymentService } from './service'
 import {
   isOutgoingPaymentError,
   errorToCode,
@@ -16,15 +16,19 @@ import {
   OutgoingPayment as OpenPaymentsOutgoingPayment
 } from '@interledger/open-payments'
 import { WalletAddress } from '../../wallet_address/model'
-import { QuoteService } from '../../quote/service'
-import { isQuoteError } from '../../quote/errors'
 import { Amount } from '../../amount'
+import {
+  CreateFromIncomingPayment,
+  CreateFromQuote,
+  BaseOptions as OutgoingPaymentCreateBaseOptions,
+  OutgoingPaymentCreatorService
+} from '../outgoing-creator/service'
 
 interface ServiceDependencies {
   config: IAppConfig
   logger: Logger
   outgoingPaymentService: OutgoingPaymentService
-  quoteService: QuoteService
+  outgoingPaymentCreatorService: OutgoingPaymentCreatorService
 }
 
 export interface OutgoingPaymentRoutes {
@@ -100,56 +104,64 @@ async function createOutgoingPayment(
   ctx: CreateContext<CreateBody>
 ): Promise<void> {
   const { body } = ctx.request
-  let quoteUrl: string
-  let outgoingPaymentOrError: OutgoingPayment | OutgoingPaymentError
+  let quoteId
 
-  try {
-    if (isCreateFromIncomingPayment(body)) {
-      const { debitAmount, incomingPaymentId } = body
-
-      const quoteOrError = await deps.quoteService.create({
-        receiver: incomingPaymentId,
-        debitAmount,
-        method: 'ilp',
-        walletAddressId: ctx.walletAddress.id
-      })
-      if (isQuoteError(quoteOrError)) {
-        return ctx.throw(400, 'failed to create quote from incoming payment')
-      }
-      quoteUrl = quoteOrError.id
-    } else {
-      quoteUrl = body.quoteId
-    }
-
-    const quoteUrlParts = quoteUrl.split('/')
-    const quoteId = quoteUrlParts.pop() || quoteUrlParts.pop() // handle trailing slash
+  if (!isCreateFromIncomingPayment(body)) {
+    const quoteUrlParts = body.quoteId.split('/')
+    quoteId = quoteUrlParts.pop() || quoteUrlParts.pop() // handle trailing slash
     if (!quoteId) {
       return ctx.throw(400, 'invalid quoteId')
     }
-    outgoingPaymentOrError = await deps.outgoingPaymentService.create({
+  }
+
+  let outgoingPaymentOrError: OutgoingPayment | OutgoingPaymentError
+
+  try {
+    let options: OutgoingPaymentCreateBaseOptions = {
       walletAddressId: ctx.walletAddress.id,
-      quoteId,
       metadata: body.metadata,
       client: ctx.client,
       grant: ctx.grant
-    })
+    }
+    if (isCreateFromIncomingPayment(body)) {
+      options = {
+        ...options,
+        incomingPaymentId: body.incomingPaymentId,
+        debitAmount: body.debitAmount
+      } as CreateFromIncomingPayment
+    } else {
+      options = {
+        ...options,
+        quoteId
+      } as CreateFromQuote
+    }
+
+    outgoingPaymentOrError = await deps.outgoingPaymentCreatorService.create(
+      options as CreateOutgoingPaymentOptions
+    )
   } catch (err) {
     const errorMessage =
       'Unhandled error when trying to create outgoing payment'
-    deps.logger.error(
-      {
-        err,
-        quoteId: !isCreateFromIncomingPayment(body) ? body.quoteId : undefined,
-        incomingPaymentId: isCreateFromIncomingPayment(body)
-          ? body.incomingPaymentId
-          : undefined,
-        debitAmount: isCreateFromIncomingPayment(body)
-          ? body.debitAmount
-          : undefined,
-        walletAddressId: ctx.walletAddress.id
-      },
-      errorMessage
-    )
+    if (isCreateFromIncomingPayment(body)) {
+      deps.logger.error(
+        {
+          err,
+          incomingPaymentId: body.incomingPaymentId,
+          debitAmount: body.debitAmount,
+          walletAddressId: ctx.walletAddress.id
+        },
+        errorMessage
+      )
+    } else {
+      deps.logger.error(
+        {
+          err,
+          quoteId,
+          walletAddressId: ctx.walletAddress.id
+        },
+        errorMessage
+      )
+    }
     return ctx.throw(500, errorMessage)
   }
 

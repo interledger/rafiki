@@ -1,6 +1,6 @@
 import { BaseService } from '../../../shared/baseService'
 import { Amount } from '../../amount'
-import { Grant } from '../../grant/model'
+import { Grant } from '../../auth/middleware'
 import { isQuoteError } from '../../quote/errors'
 import { QuoteService } from '../../quote/service'
 import { OutgoingPaymentError } from '../outgoing/errors'
@@ -31,7 +31,7 @@ export async function createOutgoingPaymentCreatorService(
   }
 }
 
-interface BaseOptions {
+export interface BaseOptions {
   walletAddressId: string
   client?: string
   grant?: Grant
@@ -39,15 +39,15 @@ interface BaseOptions {
   callback?: (f: unknown) => NodeJS.Timeout
   grantLockTimeoutMs?: number
 }
-interface CreateFromQuote extends BaseOptions {
+export interface CreateFromQuote extends BaseOptions {
   quoteId: string
 }
-interface CreateFromIncomingPayment extends BaseOptions {
+export interface CreateFromIncomingPayment extends BaseOptions {
   incomingPaymentId: string
   debitAmount: Amount
 }
 
-function isCreateFromIncomingPayment(
+export function isCreateFromIncomingPayment(
   options: CreateOutgoingPaymentOptions
 ): options is CreateFromIncomingPayment {
   return 'incomingPaymentId' in options && 'debitAmount' in options

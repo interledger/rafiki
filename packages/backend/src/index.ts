@@ -493,7 +493,9 @@ export function initIocContainer(
       config: await deps.use('config'),
       logger: await deps.use('logger'),
       outgoingPaymentService: await deps.use('outgoingPaymentService'),
-      quoteService: await deps.use('quoteService')
+      outgoingPaymentCreatorService: await deps.use(
+        'outgoingPaymentCreatorService'
+      )
     })
   })
 
