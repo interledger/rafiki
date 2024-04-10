@@ -489,7 +489,9 @@ describe('throwIfMissingWalletAddress', (): void => {
 
     expect(() =>
       throwIfMissingWalletAddress({ logger }, incomingPayment)
-    ).toThrow('IncomingPayment is missing a wallet address.')
+    ).toThrow(
+      'IncomingPayment does not have wallet address. This should be investigated.'
+    )
   })
 
   test('does not throw if existing wallet address on subresource', async () => {
