@@ -639,7 +639,7 @@ importers:
         specifier: ^6.8.2
         version: 6.8.2
       '@koa/bodyparser':
-        specifier: ^5.1.0
+        specifier: ^5.1.1
         version: 5.1.1(koa@2.15.2)
       '@types/koa':
         specifier: 2.15.0
