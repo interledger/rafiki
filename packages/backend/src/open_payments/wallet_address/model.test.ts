@@ -351,10 +351,15 @@ export const getRouteTests = <M extends WalletAddressSubresource>({
             walletAddress: await getWalletAddress(),
             accessAction: AccessAction.ListAll
           })
-          await expect(list(ctx)).rejects.toMatchObject({
-            status: 400,
-            message
-          })
+
+          expect.assertions(2)
+          try {
+            await list(ctx)
+          } catch (error) {
+            assert(error instanceof OpenPaymentsServerRouteError)
+            expect(error.status).toBe(400)
+            expect(error.message).toBe(message)
+          }
         }
       )
     })
