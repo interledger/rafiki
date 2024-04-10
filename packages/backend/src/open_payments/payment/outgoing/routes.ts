@@ -10,7 +10,7 @@ import {
   OutgoingPayment as OpenPaymentsOutgoingPayment
 } from '@interledger/open-payments'
 import { WalletAddress } from '../../wallet_address/model'
-import { OpenPaymentsServerRouteError } from '../../errors'
+import { OpenPaymentsServerRouteError } from '../../route-errors'
 
 interface ServiceDependencies {
   config: IAppConfig

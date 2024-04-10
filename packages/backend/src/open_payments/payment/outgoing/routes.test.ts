@@ -23,7 +23,7 @@ import {
 } from '../../wallet_address/model.test'
 import { createOutgoingPayment } from '../../../tests/outgoingPayment'
 import { createWalletAddress } from '../../../tests/walletAddress'
-import { OpenPaymentsServerRouteError } from '../../errors'
+import { OpenPaymentsServerRouteError } from '../../route-errors'
 
 describe('Outgoing Payment Routes', (): void => {
   let deps: IocContract<AppServices>

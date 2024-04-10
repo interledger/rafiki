@@ -6,7 +6,7 @@ import {
   getPageInfo,
   parsePaginationQueryParameters
 } from '../../shared/pagination'
-import { OpenPaymentsServerRouteError } from '../errors'
+import { OpenPaymentsServerRouteError } from '../route-errors'
 
 interface ServiceDependencies {
   authServer: string

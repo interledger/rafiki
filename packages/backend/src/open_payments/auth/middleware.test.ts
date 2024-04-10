@@ -28,7 +28,7 @@ import { createWalletAddress } from '../../tests/walletAddress'
 import { setup } from '../wallet_address/model.test'
 import { parseLimits } from '../payment/outgoing/limits'
 import { AccessAction, AccessType } from '@interledger/open-payments'
-import { OpenPaymentsServerRouteError } from '../errors'
+import { OpenPaymentsServerRouteError } from '../route-errors'
 import assert from 'assert'
 
 const nock = (global as unknown as { nock: typeof import('nock') }).nock

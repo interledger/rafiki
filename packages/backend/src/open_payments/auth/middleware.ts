@@ -18,7 +18,7 @@ import {
 import { TokenInfo } from 'token-introspection'
 import { isActiveTokenInfo } from 'token-introspection'
 import { Config } from '../../config/app'
-import { OpenPaymentsServerRouteError } from '../errors'
+import { OpenPaymentsServerRouteError } from '../route-errors'
 
 export type RequestAction = Exclude<AccessAction, 'read-all' | 'list-all'>
 export const RequestAction: Record<string, RequestAction> = Object.freeze({

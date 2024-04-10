@@ -1,5 +1,7 @@
+import { Logger } from 'pino'
 import { AppContext } from '../app'
 import { OpenAPIValidatorMiddlewareError } from '@interledger/openapi'
+import { WalletAddressSubresource } from './wallet_address/model'
 
 export class OpenPaymentsServerRouteError extends Error {
   public status: number
@@ -61,5 +63,17 @@ export async function openPaymentsServerErrorMiddleware(
       'Received unhandled error in Open Payments request'
     )
     ctx.throw(500)
+  }
+}
+
+export function throwIfMissingWalletAddress(
+  deps: { logger: Logger },
+  resource: WalletAddressSubresource
+): asserts resource is WalletAddressSubresource &
+  Required<Pick<WalletAddressSubresource, 'walletAddress'>> {
+  if (!resource.walletAddress) {
+    const errorMessage = `${resource.$modelClass.name} does not have wallet address. This should not be possible.`
+    deps.logger.error({ id: resource.id }, errorMessage)
+    throw new Error(errorMessage)
   }
 }

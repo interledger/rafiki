@@ -3,7 +3,7 @@ import { createContext } from '../tests/context'
 import {
   OpenPaymentsServerRouteError,
   openPaymentsServerErrorMiddleware
-} from './errors'
+} from './route-errors'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '..'
 import { Config } from '../config/app'

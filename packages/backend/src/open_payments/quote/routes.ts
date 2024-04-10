@@ -8,7 +8,7 @@ import { Quote } from './model'
 import { AmountJSON, parseAmount } from '../amount'
 import { Quote as OpenPaymentsQuote } from '@interledger/open-payments'
 import { WalletAddress } from '../wallet_address/model'
-import { OpenPaymentsServerRouteError } from '../errors'
+import { OpenPaymentsServerRouteError } from '../route-errors'
 
 interface ServiceDependencies {
   config: IAppConfig
