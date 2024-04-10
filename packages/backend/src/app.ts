@@ -322,7 +322,7 @@ export class App {
       maxDepth: {
         enabled: true,
         n: 10,
-        ignoreIntrospection: false
+        ignoreIntrospection: true
       },
       costLimit: {
         enabled: true,
