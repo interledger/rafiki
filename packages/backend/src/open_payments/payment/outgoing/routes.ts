@@ -9,7 +9,10 @@ import {
   AccessAction,
   OutgoingPayment as OpenPaymentsOutgoingPayment
 } from '@interledger/open-payments'
-import { WalletAddress } from '../../wallet_address/model'
+import {
+  WalletAddress,
+  throwIfMissingWalletAddress
+} from '../../wallet_address/model'
 import { OpenPaymentsServerRouteError } from '../../route-errors'
 
 interface ServiceDependencies {
@@ -58,9 +61,7 @@ async function getOutgoingPayment(
     )
   }
 
-  if (!outgoingPayment.walletAddress) {
-    handleMissingWalletAddress(deps, outgoingPayment)
-  }
+  throwIfMissingWalletAddress(deps, outgoingPayment)
 
   ctx.body = outgoingPaymentToBody(
     outgoingPayment.walletAddress,
@@ -105,9 +106,7 @@ async function createOutgoingPayment(
     )
   }
 
-  if (!outgoingPaymentOrError.walletAddress) {
-    handleMissingWalletAddress(deps, outgoingPaymentOrError)
-  }
+  throwIfMissingWalletAddress(deps, outgoingPaymentOrError)
 
   ctx.status = 201
   ctx.body = outgoingPaymentToBody(
@@ -132,14 +131,4 @@ function outgoingPaymentToBody(
   outgoingPayment: OutgoingPayment
 ): OpenPaymentsOutgoingPayment {
   return outgoingPayment.toOpenPaymentsType(walletAddress)
-}
-
-function handleMissingWalletAddress(
-  deps: ServiceDependencies,
-  outgoingPayment: OutgoingPayment
-): never {
-  const errorMessage =
-    'Outgoing payment does not have wallet address. This should not be possible.'
-  deps.logger.error({ outgoingPaymentId: outgoingPayment.id }, errorMessage)
-  throw new Error(errorMessage)
 }

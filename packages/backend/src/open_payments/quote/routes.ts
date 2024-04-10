@@ -7,7 +7,10 @@ import { isQuoteError, errorToCode, errorToMessage } from './errors'
 import { Quote } from './model'
 import { AmountJSON, parseAmount } from '../amount'
 import { Quote as OpenPaymentsQuote } from '@interledger/open-payments'
-import { WalletAddress } from '../wallet_address/model'
+import {
+  WalletAddress,
+  throwIfMissingWalletAddress
+} from '../wallet_address/model'
 import { OpenPaymentsServerRouteError } from '../route-errors'
 
 interface ServiceDependencies {
@@ -47,9 +50,7 @@ async function getQuote(
     })
   }
 
-  if (!quote.walletAddress) {
-    handleMissingWalletAddress(deps, quote)
-  }
+  throwIfMissingWalletAddress(deps, quote)
 
   ctx.body = quoteToBody(quote.walletAddress, quote)
 }
@@ -105,9 +106,7 @@ async function createQuote(
     )
   }
 
-  if (!quoteOrErr.walletAddress) {
-    handleMissingWalletAddress(deps, quoteOrErr)
-  }
+  throwIfMissingWalletAddress(deps, quoteOrErr)
 
   ctx.status = 201
   ctx.body = quoteToBody(quoteOrErr.walletAddress, quoteOrErr)
@@ -118,14 +117,4 @@ function quoteToBody(
   quote: Quote
 ): OpenPaymentsQuote {
   return quote.toOpenPaymentsType(walletAddress)
-}
-
-function handleMissingWalletAddress(
-  deps: ServiceDependencies,
-  quote: Quote
-): never {
-  const errorMessage =
-    'Quote does not have wallet address. This should not be possible.'
-  deps.logger.error({ quoteId: quote.id }, errorMessage)
-  throw new Error(errorMessage)
 }

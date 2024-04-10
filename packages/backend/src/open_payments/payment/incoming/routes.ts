@@ -8,13 +8,13 @@ import {
 } from '../../../app'
 import { IAppConfig } from '../../../config/app'
 import { IncomingPaymentService } from './service'
-import { IncomingPayment } from './model'
 import { errorToCode, errorToMessage, isIncomingPaymentError } from './errors'
 import { AmountJSON, parseAmount } from '../../amount'
 import { listSubresource } from '../../wallet_address/routes'
 import { StreamCredentialsService } from '../../../payment-method/ilp/stream-credentials/service'
 import { AccessAction } from '@interledger/open-payments'
-import { OpenPaymentsServerRouteError } from '../../errors'
+import { OpenPaymentsServerRouteError } from '../../route-errors'
+import { throwIfMissingWalletAddress } from '../../wallet_address/model'
 
 interface ServiceDependencies {
   config: IAppConfig
@@ -104,9 +104,7 @@ async function getIncomingPaymentPrivate(
     )
   }
 
-  if (!incomingPayment.walletAddress) {
-    handleMissingWalletAddress(deps, incomingPayment)
-  }
+  throwIfMissingWalletAddress(deps, incomingPayment)
 
   const streamCredentials = deps.streamCredentialsService.get(incomingPayment)
 
@@ -149,9 +147,7 @@ async function createIncomingPayment(
     )
   }
 
-  if (!incomingPaymentOrError.walletAddress) {
-    handleMissingWalletAddress(deps, incomingPaymentOrError)
-  }
+  throwIfMissingWalletAddress(deps, incomingPaymentOrError)
 
   ctx.status = 201
   const streamCredentials = deps.streamCredentialsService.get(
@@ -178,9 +174,7 @@ async function completeIncomingPayment(
     )
   }
 
-  if (!incomingPaymentOrError.walletAddress) {
-    handleMissingWalletAddress(deps, incomingPaymentOrError)
-  }
+  throwIfMissingWalletAddress(deps, incomingPaymentOrError)
 
   ctx.body = incomingPaymentOrError.toOpenPaymentsType(
     incomingPaymentOrError.walletAddress
@@ -196,14 +190,4 @@ async function listIncomingPayments(
     getWalletAddressPage: deps.incomingPaymentService.getWalletAddressPage,
     toBody: (payment) => payment.toOpenPaymentsType(ctx.walletAddress)
   })
-}
-
-function handleMissingWalletAddress(
-  deps: ServiceDependencies,
-  incomingPayment: IncomingPayment
-): never {
-  const errorMessage =
-    'Incoming payment does not have wallet address. This should not be possible.'
-  deps.logger.error({ incomingPaymentId: incomingPayment.id }, errorMessage)
-  throw new Error(errorMessage)
 }
