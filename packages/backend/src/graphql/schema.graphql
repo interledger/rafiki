@@ -666,6 +666,7 @@ interface BasePayment {
   walletAddressId: ID!
   metadata: JSONObject
   createdAt: String!
+  client: String
 }
 
 type IncomingPayment implements BasePayment & Model {
@@ -798,6 +799,8 @@ type Payment implements BasePayment & Model {
   type: PaymentType!
   "Id of the wallet address under which this payment was created"
   walletAddressId: ID!
+  "Information about the client resource for the payment."
+  client: String
   "Either the IncomingPaymentState or OutgoingPaymentState according to type"
   state: String!
   "Available liquidity"
