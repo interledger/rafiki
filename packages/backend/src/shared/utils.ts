@@ -91,3 +91,15 @@ export async function poll<T>(args: PollArgs<T>): Promise<T> {
     // eslint-disable-next-line no-constant-condition
   } while (true)
 }
+
+/**
+ * Omit distrubuted to all types in a union.
+ * @example
+ * type WithoutA = UnionOmit<{ a: number; c: number } | { b: number }, 'a'> // { c: number }
+ * const withoutAOK: WithoutA = { c: 1 } // OK
+ * const withoutAOK2: WithoutA = { b: 1 } // OK
+ * const withoutAError: WithoutA = { a: 1, c: 1 } // Error
+ */
+export type UnionOmit<T, K extends keyof any> = T extends any
+  ? Omit<T, K>
+  : never

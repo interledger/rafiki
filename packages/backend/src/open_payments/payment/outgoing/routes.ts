@@ -2,7 +2,13 @@ import Koa from 'koa'
 import { Logger } from 'pino'
 import { ReadContext, CreateContext, ListContext } from '../../../app'
 import { IAppConfig } from '../../../config/app'
-import { CreateOutgoingPaymentOptions, OutgoingPaymentService } from './service'
+import {
+  CreateFromIncomingPayment,
+  CreateFromQuote,
+  CreateOutgoingPaymentOptions,
+  OutgoingPaymentService,
+  BaseOptions as OutgoingPaymentCreateBaseOptions
+} from './service'
 import {
   isOutgoingPaymentError,
   errorToCode,
@@ -17,18 +23,11 @@ import {
 } from '@interledger/open-payments'
 import { WalletAddress } from '../../wallet_address/model'
 import { Amount } from '../../amount'
-import {
-  CreateFromIncomingPayment,
-  CreateFromQuote,
-  BaseOptions as OutgoingPaymentCreateBaseOptions,
-  OutgoingPaymentCreatorService
-} from '../outgoing-creator/service'
 
 interface ServiceDependencies {
   config: IAppConfig
   logger: Logger
   outgoingPaymentService: OutgoingPaymentService
-  outgoingPaymentCreatorService: OutgoingPaymentCreatorService
 }
 
 export interface OutgoingPaymentRoutes {
@@ -136,7 +135,7 @@ async function createOutgoingPayment(
       } as CreateFromQuote
     }
 
-    outgoingPaymentOrError = await deps.outgoingPaymentCreatorService.create(
+    outgoingPaymentOrError = await deps.outgoingPaymentService.create(
       options as CreateOutgoingPaymentOptions
     )
   } catch (err) {

@@ -16,7 +16,13 @@ import {
 import { truncateTables } from '../../../tests/tableManager'
 import { createAsset } from '../../../tests/asset'
 import { errorToCode, errorToMessage, OutgoingPaymentError } from './errors'
-import { OutgoingPaymentService } from './service'
+import {
+  CreateFromIncomingPayment,
+  CreateFromQuote,
+  CreateOutgoingPaymentOptions,
+  OutgoingPaymentService,
+  BaseOptions as CreateOutgoingPaymentBaseOptions
+} from './service'
 import { OutgoingPayment, OutgoingPaymentState } from './model'
 import { OutgoingPaymentRoutes, CreateBody } from './routes'
 import { serializeAmount } from '../../amount'
@@ -28,13 +34,8 @@ import {
 } from '../../wallet_address/model.test'
 import { createOutgoingPayment } from '../../../tests/outgoingPayment'
 import { createWalletAddress } from '../../../tests/walletAddress'
-import {
-  CreateFromIncomingPayment,
-  CreateFromQuote,
-  BaseOptions as CreateOutgoingPaymentBaseOptions,
-  OutgoingPaymentCreatorService
-} from '../outgoing-creator/service'
 import assert from 'assert'
+import { UnionOmit } from '../../../shared/utils'
 
 describe('Outgoing Payment Routes', (): void => {
   let deps: IocContract<AppServices>
@@ -43,7 +44,6 @@ describe('Outgoing Payment Routes', (): void => {
   let config: IAppConfig
   let outgoingPaymentRoutes: OutgoingPaymentRoutes
   let outgoingPaymentService: OutgoingPaymentService
-  let outgoingPaymentCreatorService: OutgoingPaymentCreatorService
   let walletAddress: WalletAddress
   let baseUrl: string
 
@@ -76,9 +76,6 @@ describe('Outgoing Payment Routes', (): void => {
     config = await deps.use('config')
     outgoingPaymentRoutes = await deps.use('outgoingPaymentRoutes')
     outgoingPaymentService = await deps.use('outgoingPaymentService')
-    outgoingPaymentCreatorService = await deps.use(
-      'outgoingPaymentCreatorService'
-    )
     const { resourceServerSpec } = await deps.use('openApi')
     jestOpenAPI(resourceServerSpec)
   })
@@ -172,9 +169,10 @@ describe('Outgoing Payment Routes', (): void => {
     })
   })
 
-  type SetupContextOptions =
-    | Omit<CreateFromIncomingPayment, 'walletAddressId'>
-    | Omit<CreateFromQuote, 'walletAddressId'>
+  type SetupContextOptions = UnionOmit<
+    CreateOutgoingPaymentOptions,
+    'walletAddressId'
+  >
 
   describe('create', (): void => {
     const setup = (options: SetupContextOptions): CreateContext<CreateBody> =>
@@ -242,7 +240,7 @@ describe('Outgoing Payment Routes', (): void => {
           }
           const ctx = setup(options as SetupContextOptions)
           const createSpy = jest
-            .spyOn(outgoingPaymentCreatorService, 'create')
+            .spyOn(outgoingPaymentService, 'create')
             .mockResolvedValueOnce(payment)
           await expect(
             outgoingPaymentRoutes.create(ctx)
@@ -312,7 +310,7 @@ describe('Outgoing Payment Routes', (): void => {
           quoteId: `${baseUrl}/quotes/${quoteId}`
         })
         const createSpy = jest
-          .spyOn(outgoingPaymentCreatorService, 'create')
+          .spyOn(outgoingPaymentService, 'create')
           .mockResolvedValueOnce(error)
         await expect(outgoingPaymentRoutes.create(ctx)).rejects.toMatchObject({
           message: errorToMessage[error],
@@ -331,7 +329,7 @@ describe('Outgoing Payment Routes', (): void => {
         quoteId: `${baseUrl}/quotes/${quoteId}`
       })
       const createSpy = jest
-        .spyOn(outgoingPaymentCreatorService, 'create')
+        .spyOn(outgoingPaymentService, 'create')
         .mockRejectedValueOnce(new Error('Some error'))
 
       await expect(outgoingPaymentRoutes.create(ctx)).rejects.toMatchObject({

@@ -47,6 +47,7 @@ import { WalletAddress } from '../../wallet_address/model'
 import { PaymentMethodHandlerService } from '../../../payment-method/handler/service'
 import { PaymentMethodHandlerError } from '../../../payment-method/handler/errors'
 import { mockRatesApi } from '../../../tests/rates'
+import { UnionOmit } from '../../../shared/utils'
 
 describe('OutgoingPaymentService', (): void => {
   let deps: IocContract<AppServices>
@@ -652,7 +653,7 @@ describe('OutgoingPaymentService', (): void => {
 
         describe('validateGrant', (): void => {
           let quote: Quote
-          let options: Omit<CreateOutgoingPaymentOptions, 'grant'>
+          let options: UnionOmit<CreateOutgoingPaymentOptions, 'grant'>
           let interval: string
           beforeEach(async (): Promise<void> => {
             quote = await createQuote(deps, {

@@ -86,7 +86,6 @@ import { PaymentMethodHandlerService } from './payment-method/handler/service'
 import { IlpPaymentService } from './payment-method/ilp/service'
 import { TelemetryService } from './telemetry/service'
 import { ApolloArmor } from '@escape.tech/graphql-armor'
-import { OutgoingPaymentCreatorService } from './open_payments/payment/outgoing-creator/service'
 export interface AppContextData {
   logger: Logger
   container: AppContainer
@@ -230,7 +229,6 @@ export interface AppServices {
   webhookService: Promise<WebhookService>
   quoteService: Promise<QuoteService>
   outgoingPaymentService: Promise<OutgoingPaymentService>
-  outgoingPaymentCreateManagerService: Promise<OutgoingPaymentCreatorService>
   makeIlpPlugin: Promise<(options: IlpPluginOptions) => IlpPlugin>
   ratesService: Promise<RatesService>
   walletAddressKeyService: Promise<WalletAddressKeyService>
