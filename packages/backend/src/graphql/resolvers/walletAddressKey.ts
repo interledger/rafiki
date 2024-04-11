@@ -30,7 +30,6 @@ export const getWalletAddressKeys: WalletAddressResolvers<ApolloContext>['wallet
     const { ...pagination } = args
 
     const walletAddressKeys = await getPageFn(pagination)
-    ctx.logger.info({ walletAddressKeys }, 'got walletAddressKeys')
     const pageInfo = await getPageInfo({
       getPage: (pagination_: Pagination) => getPageFn(pagination_),
       page: walletAddressKeys
