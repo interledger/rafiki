@@ -380,8 +380,8 @@ importers:
         specifier: ^2.5.2
         version: 2.5.2
       tigerbeetle-node:
-        specifier: ^0.14.176
-        version: 0.14.176
+        specifier: ^0.15.3
+        version: 0.15.3
       token-introspection:
         specifier: workspace:*
         version: link:../token-introspection
@@ -15986,8 +15986,8 @@ packages:
     resolution: {integrity: sha512-w89qg7PI8wAdvX60bMDP+bFoD5Dvhm9oLheFp5O4a2QF0cSBGsBX4qZmadPMvVqlLJBBci+WqGGOAPvcDeNSVg==}
     dev: true
 
-  /tigerbeetle-node@0.14.176:
-    resolution: {integrity: sha512-BoxBofixOjKZyIANwZ6P1zAUllPJYR3AVzl+TJPucgQyYJuFhzAPlmztHI5t3VYAUElBLV5e8LrQ3VhwO/0Csw==}
+  /tigerbeetle-node@0.15.3:
+    resolution: {integrity: sha512-ag/oiBclTedgCZTa/dkiNdvecPRMFcqGbEynQgR5DVbyANdC9xOw9WAiTzGBJJoIVB6K/TTtbu+e2sAlkhi1tw==}
     engines: {node: '>=14.0.0'}
     dev: false
 

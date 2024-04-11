@@ -1,6 +1,6 @@
 services:
   tigerbeetle:
-    image: ghcr.io/tigerbeetle/tigerbeetle:0.14.176
+    image: ghcr.io/tigerbeetle/tigerbeetle:0.15.3
     privileged: true
     volumes:
       - tigerbeetle-data:/var/lib/tigerbeetle
