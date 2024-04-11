@@ -18,20 +18,18 @@ export const getWalletAddressKeys: WalletAddressResolvers<ApolloContext>['wallet
     args,
     ctx
   ): Promise<ResolversTypes['WalletAddressKeyConnection']> => {
+    if (!parent.id) {
+      throw new Error('missing wallet address id')
+    }
+    
+    const { ...pagination } = args
     const walletAddressKeyService = await ctx.container.use(
       'walletAddressKeyService'
     )
 
-    const getPageFn = (pagination_: Pagination) => {
-      if (!parent.id) throw new Error('missing wallet address id')
-      return walletAddressKeyService.getPage(parent.id, pagination_)
-    }
-
-    const { ...pagination } = args
-
-    const walletAddressKeys = await getPageFn(pagination)
+    const walletAddressKeys = await walletAddressKeyService.getPage(parent.id, pagination)
     const pageInfo = await getPageInfo({
-      getPage: (pagination_: Pagination) => getPageFn(pagination_),
+      getPage: (pagination_: Pagination) => walletAddressKeyService.getPage(parent.id!, pagination_),
       page: walletAddressKeys
     })
 
