@@ -95,7 +95,7 @@ export async function poll<T>(args: PollArgs<T>): Promise<T> {
 /**
  * Omit distrubuted to all types in a union.
  * @example
- * type WithoutA = UnionOmit<{ a: number; c: number } | { b: number }, 'a'> // { c: number }
+ * type WithoutA = UnionOmit<{ a: number; c: number } | { b: number }, 'a'> // { c: number } | { b: number }
  * const withoutAOK: WithoutA = { c: 1 } // OK
  * const withoutAOK2: WithoutA = { b: 1 } // OK
  * const withoutAError: WithoutA = { a: 1, c: 1 } // Error
