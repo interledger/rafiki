@@ -382,6 +382,34 @@ describe('OutgoingPaymentService', (): void => {
       None = 'no'
     }
 
+    test('create from incoming payment', async () => {
+      const walletAddressId = receiverWalletAddress.id
+      const incomingPaymentId = incomingPayment.toOpenPaymentsTypeWithMethods(
+        receiverWalletAddress
+      ).id
+      const debitAmount = {
+        value: BigInt(123),
+        assetCode: receiverWalletAddress.asset.code,
+        assetScale: receiverWalletAddress.asset.scale
+      }
+
+      const quoteSpy = jest.spyOn(quoteService, 'create')
+
+      const payment = await outgoingPaymentService.create({
+        walletAddressId,
+        debitAmount,
+        incomingPaymentId
+      })
+
+      expect(!isOutgoingPaymentError(payment)).toBeTruthy()
+      expect(quoteSpy).toHaveBeenCalledWith({
+        walletAddressId,
+        receiver: incomingPaymentId,
+        debitAmount,
+        method: 'ilp'
+      })
+    })
+
     describe.each`
       grantOption
       ${GrantOption.Existing}
