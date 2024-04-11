@@ -21,33 +21,15 @@ headers {
 }
 
 script:pre-request {
-  // request.url = request.url
-  //     .replace(/{{(senderWalletAddress)}}/g, (_, key) => pm.environment.get(key))
-  //     .replace(/http:\/\/localhost:([3,4])000/g, (_, key) =>
-  //           key === '3'
-  //             ? 'https://' + pm.environment.get('host3000')
-  //             : 'https://' + pm.environment.get('host4000')
-  //     )
-  // console.log(request.url)
-  // 
-  // if(pm.environment.get('preRequestHost')){
-  //     eval(pm.environment.get('preRequestHost'))
-  // }
-  // eval(pm.environment.get('preRequestSignatures'))
-  // 
-  // pm.request.url.query.idx(2).value = pm.request.url.query.idx(2).value
-  //     .replace(/{{([A-Za-z]\w+)}}/g, (_, key) => pm.environment.get(key))
-  //     .replace(/http:\/\/localhost:([3,4])000/g, (_, key) =>
-  //           key === '3'
-  //             ? 'https://' + pm.environment.get('host3000')
-  //             : 'https://' + pm.environment.get('host4000')
-  //     )
-  // 
+  const scripts = require('./scripts');
+  
+  scripts.addHostHeader();
+  
+  await scripts.addSignatureHeaders();
 }
 
 tests {
-  // pm.test("Status code is 200", function () {
-  //     pm.response.to.have.status(200);
-  // });
-  // 
+  test("Status code is 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
 }
