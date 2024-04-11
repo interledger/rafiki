@@ -39,6 +39,32 @@ body:graphql:vars {
   }
 }
 
+script:pre-request {
+  const { createHmac } = require('crypto');
+  const { canonicalize } = require('json-canonicalize');
+  const { print } = require('graphql/language/printer')
+  
+  const body = req.getBody();
+  const { query, variables, operationName } = body;
+  
+  //console.log(body);
+  
+  const formattedBody = {
+    variables,
+    query: print(query),
+    operationName
+  };
+  
+  const timestamp = Math.round(new Date().getTime() / 1000);
+  const version = bru.getEnvVar('apiSignatureVersion');
+  const payload = `${timestamp}.${canonicalize(formattedBody)}`;
+  const hmac = createHmac('sha256', bru.getEnvVar('apiSignatureSecret'));
+  hmac.update(payload)
+  const digest = hmac.digest('hex')
+  
+  req.setHeader('signature', `t=${timestamp}, v${version}=${digest}`)
+}
+
 script:post-response {
   const body = res.getBody();
   

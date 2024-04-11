@@ -54,6 +54,15 @@ importers:
       tigerbeetle-node:
         built: true
 
+  bruno/collections/Rafiki:
+    dependencies:
+      graphql:
+        specifier: ^16.8.1
+        version: 16.8.1
+      json-canonicalize:
+        specifier: ^1.0.6
+        version: 1.0.6
+
   localenv/mock-account-servicing-entity:
     dependencies:
       '@apollo/client':

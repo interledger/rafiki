@@ -10,6 +10,10 @@ post {
   auth: none
 }
 
+headers {
+  Authorization: Bearer {{AdminApiToken}}
+}
+
 body:graphql {
   mutation CreateReceiver($input: CreateReceiverInput!) {
     createReceiver(input: $input) {
@@ -53,6 +57,30 @@ body:graphql:vars {
       "walletAddressUrl": "https://happy-life-bank-backend/accounts/lars"
     }
   }
+}
+
+vars:pre-request {
+  signatureVersion: {{apiSignatureVersion}}
+  signatureSecret: {{apiSignatureSecret}}
+}
+
+script:pre-request {
+  const { createHmac } = require('crypto');
+  const { canonicalize } = require('json-canonicalize');
+  
+  const body = req.getBody();
+  
+  console.log(body);
+  
+  const timestamp = Math.round(new Date().getTime() / 1000);
+  const version = bru.getEnvVar('apiSignatureVersion');
+  const payload = `${timestamp}.${canonicalize(body)}`;
+  const hmac = createHmac('sha256', bru.getEnvVar('apiSignatureSecret'));
+  hmac.update(payload)
+  const digest = hmac.digest('hex')
+  
+  req.setHeader('signature', `t=${timestamp}, v${version}=${digest}`)
+  
 }
 
 script:post-response {
