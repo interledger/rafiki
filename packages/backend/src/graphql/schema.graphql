@@ -674,7 +674,7 @@ type IncomingPayment implements BasePayment & Model {
   id: ID!
   "Id of the wallet address under which this incoming payment was created."
   walletAddressId: ID!
-  "Information about the client resource requesting the incoming payment."
+  "Information about the wallet address of the Open Payments client that created the incoming payment."
   client: String
   "Available liquidity"
   liquidity: UInt64
@@ -747,7 +747,7 @@ type OutgoingPayment implements BasePayment & Model {
   id: ID!
   "Id of the wallet address under which this outgoing payment was created"
   walletAddressId: ID!
-  "Information about the client resource requesting the outgoing payment."
+  "Information about the wallet address of the Open Payments client that created the outgoing payment."
   client: String
   "Available liquidity"
   liquidity: UInt64
@@ -799,7 +799,7 @@ type Payment implements BasePayment & Model {
   type: PaymentType!
   "Id of the wallet address under which this payment was created"
   walletAddressId: ID!
-  "Information about the client resource for the payment."
+  "Information about the wallet address of the Open Payments client that created the payment."
   client: String
   "Either the IncomingPaymentState or OutgoingPaymentState according to type"
   state: String!
