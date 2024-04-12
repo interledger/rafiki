@@ -5,7 +5,6 @@ import variables from './envConfig.server'
 export async function isLoggedIn(
   cookieHeader?: string | null
 ): Promise<boolean> {
-  let isLoggedIn = false
 
   try {
     const session = await axios.get(
@@ -18,7 +17,7 @@ export async function isLoggedIn(
       }
     )
 
-    isLoggedIn = session.status === 200 && session.data?.active
+    const isLoggedIn = session.status === 200 && session.data?.active
 
     return isLoggedIn
   } catch {
