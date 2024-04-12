@@ -1,5 +1,8 @@
 import { gql } from '@apollo/client'
-import type { LiquidityMutationResponse } from 'generated/graphql'
+import type { 
+  LiquidityMutationResponse, 
+  WalletAddressWithdrawalMutationResponse 
+} from 'generated/graphql'
 import type { Amount } from './transactions.server'
 import { mockAccounts } from './accounts.server'
 import { apolloClient } from './apolloClient'
@@ -155,6 +158,69 @@ export async function handleIncomingPaymentCompletedExpired(wh: Webhook) {
     })
 
   return
+}
+
+export async function  handleWalletAddressWebMonetization(wh: Webhook) {
+  const walletAddressUrl = wh.data['walletAddressUrl'] as string | undefined
+
+  if (!walletAddressUrl) {
+    throw new Error('No walletAddressUrl found')
+  }
+
+  const accountPath = new URL(walletAddressUrl).pathname.substring(1)
+  const account = await mockAccounts.getByPath(accountPath)
+  const withdrawal = wh.data
+  const wa = withdrawal['walletAddressId'] as string
+  const withdrawalId = withdrawal['id'] as string
+
+  if (!account) {
+    throw new Error('No account found for wallet address')
+  }
+
+  await apolloClient
+    .mutate({
+      mutation: gql`
+        mutation CreateWalletAddressWithdrawal($input: CreateWalletAddressWithdrawalInput!) {
+          createWalletAddressWithdrawal(input: $input) {
+            code
+            error
+            message
+            success
+            withdrawal {
+              amount
+              id
+              walletAddress {
+                id
+                url
+                asset {
+                  id
+                  code
+                  scale
+                  withdrawalThreshold
+                }
+              }
+            }
+          }
+        }
+      `,
+      variables: {
+        input: {
+          id: withdrawalId,
+          walletAddressId: wa,
+          idempotencyKey: uuid()
+        }
+      }
+    })
+    .then((query): WalletAddressWithdrawalMutationResponse => {
+      if (query.data) {
+        return query.data.withdrawal
+      } else {
+        throw new Error('Data was empty')
+      }
+    })
+
+  return
+  
 }
 
 export async function handleWalletAddressNotFound(wh: Webhook) {
