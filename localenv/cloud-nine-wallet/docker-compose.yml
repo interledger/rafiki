@@ -116,7 +116,7 @@ services:
     restart: always
     networks:
       - rafiki
-    command: sh -c "pnpm install && pnpm dev"
+    command: sh -c "pnpm dev"
     ports:
       - '3010:3010'
     environment:
