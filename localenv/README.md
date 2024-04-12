@@ -35,7 +35,7 @@ This environment will set up a playground where you can use the Rafiki Admin API
 
 (d) Admin UI - accessible at http://localhost:3010
 
-(e) Mail server - accessible at http://127.0.0.1:4436
+(e) Mail server - accessible at http://localhost:4436
 
 (f) Auth Admin API - accessible at http://localhost:3003/graphql
 
@@ -51,7 +51,7 @@ This environment will set up a playground where you can use the Rafiki Admin API
 
 (k) Admin UI - accessible at http://localhost:4010
 
-(l) Mail server - accessible at http://127.0.0.1:4436
+(l) Mail server - accessible at http://localhost:4436
 
 (m) Auth Admin API - accessible at http://localhost:4003/graphql
 

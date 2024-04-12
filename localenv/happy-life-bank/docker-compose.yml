@@ -94,7 +94,7 @@ services:
       OPEN_PAYMENTS_URL: https://happy-life-bank-backend/
       ENABLE_INSECURE_MESSAGE_COOKIE: true
       KRATOS_CONTAINER_PULIC_URL: 'http://happy-life-kratos:4433'
-      KRATOS_BROWSER_PUBLIC_URL: 'http://127.0.0.1:4432'
+      KRATOS_BROWSER_PUBLIC_URL: 'http://localhost:4432'
       KRATOS_ADMIN_URL: 'http://happy-life-kratos:4434/admin'
     depends_on:
       - cloud-nine-admin

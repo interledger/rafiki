@@ -126,7 +126,7 @@ services:
       OPEN_PAYMENTS_URL: https://cloud-nine-wallet-backend/
       ENABLE_INSECURE_MESSAGE_COOKIE: true
       KRATOS_CONTAINER_PULIC_URL: 'http://cloud-nine-kratos:4433'
-      KRATOS_BROWSER_PUBLIC_URL: 'http://127.0.0.1:4433'
+      KRATOS_BROWSER_PUBLIC_URL: 'http://localhost:4433'
       KRATOS_ADMIN_URL: 'http://cloud-nine-kratos:4434/admin'
     depends_on:
       - cloud-nine-backend
