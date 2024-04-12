@@ -36,6 +36,7 @@ To add a new typed apollo request, you will need to add an untyped request and r
   - `routes`: outer layer of the application
   - `shared`: utilility functions or types
   - `styles`: CSS files
+  - `utils`: serverside utilities
 - `kratos`: Dockerfile and setup files
   - `config`: contains the Kratos identity schema
   - `scripts`: scripts to start Kratos, as well as to add and delete users

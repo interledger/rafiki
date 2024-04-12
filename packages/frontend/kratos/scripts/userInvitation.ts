@@ -22,14 +22,11 @@ const getIdentityId = async () => {
     )
     if (response.data.length > 0 && response.data[0].id) {
       logger.info(
-        'User with email ',
-        USER_EMAIL,
-        'exists on the system with the ID: ',
-        response.data[0].id
+        `User with email ${USER_EMAIL} exists on the system with the ID: ${response.data[0].id}`
       )
       return response.data[0].id
     }
-    logger.info('No user with email ', USER_EMAIL, 'exists on the system')
+    logger.info(`No user with email ${USER_EMAIL} exists on the system`)
     return null
   } catch (error) {
     if (axios.isAxiosError(error)) {
@@ -61,7 +58,7 @@ const createIdentity = async () => {
         }
       }
     )
-    logger.info('Successfully created user with ID ', response.data.id)
+    logger.info(`Successfully created user with ID ${response.data.id}`)
     return response.data.id
   } catch (error) {
     if (axios.isAxiosError(error)) {
@@ -112,7 +109,7 @@ const run = async () => {
     identityId = await createIdentity()
   }
   const recoveryLink = await createRecoveryLink(identityId)
-  logger.info('Recovery link:', recoveryLink)
+  logger.info(`Recovery link: ${recoveryLink}`)
 }
 
 run()

@@ -5,7 +5,6 @@ import variables from './envConfig.server'
 export async function isLoggedIn(
   cookieHeader?: string | null
 ): Promise<boolean> {
-
   try {
     const session = await axios.get(
       `${variables.kratosContainerPublicUrl}/sessions/whoami`,

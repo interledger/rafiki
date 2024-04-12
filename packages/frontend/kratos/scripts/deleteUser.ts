@@ -22,14 +22,11 @@ const getIdentityId = async () => {
     )
     if (response.data.length > 0 && response.data[0].id) {
       logger.info(
-        'User with email ',
-        USER_EMAIL,
-        'exists on the system with the ID: ',
-        response.data[0].id
+        `User with email ${USER_EMAIL} exists on the system with the ID: ${response.data[0].id}`
       )
       return response.data[0].id
     }
-    logger.info('No user with email ', USER_EMAIL, 'exists on the system')
+    logger.info(`No user with email ${USER_EMAIL} exists on the system`)
     return null
   } catch (error) {
     if (axios.isAxiosError(error)) {
@@ -51,7 +48,7 @@ const deleteIdentity = async (identityId: string) => {
       `${KRATOS_INSTANCE}/identities/${identityId}`
     )
     if (response.status === 204)
-      logger.info('Successfully deleted user with ID ', identityId)
+      logger.info(`Successfully deleted user with ID ${identityId}`)
     return
   } catch (error) {
     if (axios.isAxiosError(error)) {
