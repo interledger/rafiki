@@ -9,6 +9,7 @@ RUN corepack enable
 RUN corepack prepare pnpm@8.7.4 --activate
 
 COPY pnpm-lock.yaml package.json pnpm-workspace.yaml .npmrc tsconfig.json tsconfig.build.json ./
+COPY packages/frontend ./packages/frontend
 
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
     pnpm fetch \

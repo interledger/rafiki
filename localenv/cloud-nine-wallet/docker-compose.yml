@@ -109,7 +109,10 @@ services:
       context: ../..
       dockerfile: ./packages/frontend/Dockerfile
     volumes:
-      - ../../packages/frontend/:/home/rafiki/packages/frontend
+      - type: bind
+        source: ../../packages/frontend/app
+        target: /home/rafiki/packages/frontend/app
+        read_only: true
     restart: always
     networks:
       - rafiki
