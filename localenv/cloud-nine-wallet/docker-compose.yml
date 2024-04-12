@@ -107,7 +107,7 @@ services:
     image: rafiki-frontend
     build:
       context: ../..
-      dockerfile: ./packages/frontend/Dockerfile
+      dockerfile: ./packages/frontend/devDockerfile
     volumes:
       - type: bind
         source: ../../packages/frontend/app
