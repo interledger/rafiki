@@ -424,7 +424,7 @@ export type HttpOutgoingInput = {
 
 export type IncomingPayment = BasePayment & Model & {
   __typename?: 'IncomingPayment';
-  /** Information about the client resource requesting the incoming payment. */
+  /** Information about the wallet address of the Open Payments client that created the incoming payment. */
   client?: Maybe<Scalars['String']['output']>;
   /** Date-time of creation */
   createdAt: Scalars['String']['output'];
@@ -750,7 +750,7 @@ export type MutationResponse = {
 
 export type OutgoingPayment = BasePayment & Model & {
   __typename?: 'OutgoingPayment';
-  /** Information about the client resource requesting the outgoing payment. */
+  /** Information about the wallet address of the Open Payments client that created the outgoing payment. */
   client?: Maybe<Scalars['String']['output']>;
   /** Date-time of creation */
   createdAt: Scalars['String']['output'];
@@ -823,7 +823,7 @@ export type PageInfo = {
 
 export type Payment = BasePayment & Model & {
   __typename?: 'Payment';
-  /** Information about the client resource for the payment. */
+  /** Information about the wallet address of the Open Payments client that created the payment. */
   client?: Maybe<Scalars['String']['output']>;
   /** Date-time of creation */
   createdAt: Scalars['String']['output'];

@@ -2819,7 +2819,7 @@
         "fields": [
           {
             "name": "client",
-            "description": "Information about the client resource requesting the incoming payment.",
+            "description": "Information about the wallet address of the Open Payments client that created the incoming payment.",
             "args": [],
             "type": {
               "kind": "SCALAR",
@@ -4658,7 +4658,7 @@
         "fields": [
           {
             "name": "client",
-            "description": "Information about the client resource requesting the outgoing payment.",
+            "description": "Information about the wallet address of the Open Payments client that created the outgoing payment.",
             "args": [],
             "type": {
               "kind": "SCALAR",
@@ -5147,7 +5147,7 @@
         "fields": [
           {
             "name": "client",
-            "description": "Information about the client resource for the payment.",
+            "description": "Information about the wallet address of the Open Payments client that created the payment.",
             "args": [],
             "type": {
               "kind": "SCALAR",

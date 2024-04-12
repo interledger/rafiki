@@ -86,7 +86,6 @@ describe('Incoming Payment Service', (): void => {
       options.client = client
       const incomingPayment = await incomingPaymentService.create({
         walletAddressId,
-        client,
         ...options,
         incomingAmount: options.incomingAmount ? amount : undefined
       })

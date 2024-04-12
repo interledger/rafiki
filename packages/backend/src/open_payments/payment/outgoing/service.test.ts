@@ -266,8 +266,7 @@ describe('OutgoingPaymentService', (): void => {
     ).resolves.toBeUndefined()
 
     incomingPayment = await createIncomingPayment(deps, {
-      walletAddressId: receiverWalletAddress.id,
-      client: client
+      walletAddressId: receiverWalletAddress.id
     })
     receiver = incomingPayment.getUrl(receiverWalletAddress)
 
@@ -963,7 +962,26 @@ describe('OutgoingPaymentService', (): void => {
           assetScale: receiverWalletAddress.asset.scale
         }
       })
+      assert.ok(incomingPayment.id)
+      assert.ok(incomingPayment.createdAt)
+      assert.ok(incomingPayment.updatedAt)
+      assert.ok(incomingPayment.expiresAt)
+      assert.ok(incomingPayment.processAt)
+      assert.ok(incomingPayment.assetId)
+      assert.ok(incomingPayment.asset)
+      assert.ok(incomingPayment.asset.code)
+      assert.ok(incomingPayment.asset.scale)
+      assert.ok(incomingPayment.asset.createdAt)
+      assert.ok(incomingPayment.walletAddressId)
       assert.ok(incomingPayment.walletAddress)
+      expect(incomingPayment.state).toEqual('PENDING')
+      expect(incomingPayment.incomingAmount?.value).toBeGreaterThan(0n)
+      assert.ok(incomingPayment.incomingAmount?.assetCode)
+      assert.ok(incomingPayment.incomingAmount?.assetScale)
+      expect(incomingPayment.receivedAmount.value).toEqual(0n)
+      assert.ok(incomingPayment.receivedAmount?.assetCode)
+      assert.ok(incomingPayment.receivedAmount?.assetScale)
+
       const createdPayment = await setup({
         receiver: incomingPayment.getUrl(incomingPayment.walletAddress),
         receiveAmount,
