@@ -28,6 +28,7 @@ import {
 } from './lib/kratos_checks.server'
 import variables from './lib/envConfig.server'
 import axios from 'axios'
+import { logger } from './utils/logger.server'
 
 export const meta: MetaFunction = () => [
   { title: 'Rafiki Admin' },
@@ -54,6 +55,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     logoutUrl = response.data.logout_url
     if (!logoutUrl) {
       logoutUrl = '/auth/manual-logout'
+      logger.error('Unable to retrieve the logout URL from Kratos')
     }
   }
   const session = await messageStorage.getSession(cookies)

@@ -89,6 +89,7 @@ services:
       - '4010:4010'
     environment:
       PORT: 4010
+      LOG_LEVEL: debug
       GRAPHQL_URL: http://happy-life-bank-backend:3001/graphql
       OPEN_PAYMENTS_URL: https://happy-life-bank-backend/
       ENABLE_INSECURE_MESSAGE_COOKIE: true

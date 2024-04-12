@@ -121,6 +121,7 @@ services:
       - '3010:3010'
     environment:
       PORT: 3010
+      LOG_LEVEL: debug
       GRAPHQL_URL: http://cloud-nine-wallet-backend:3001/graphql
       OPEN_PAYMENTS_URL: https://cloud-nine-wallet-backend/
       ENABLE_INSECURE_MESSAGE_COOKIE: true
