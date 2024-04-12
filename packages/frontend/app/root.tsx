@@ -40,7 +40,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   const cookies = request.headers.get('cookie')
   await redirectIfUnauthorizedAccess(request.url, cookies)
 
-  let logoutUrl = ''
+  let logoutUrl
   const loggedIn = await isLoggedIn(cookies)
   if (loggedIn) {
     const response = await axios.get(

@@ -38,7 +38,7 @@ To add a new typed apollo request, you will need to add an untyped request and r
   - `styles`: CSS files
 - `kratos`: Dockerfile and setup files
   - `config`: contains the Kratos identity schema
-  - `scripts`: scripts to start Kratos, as well as, add and delete users
+  - `scripts`: scripts to start Kratos, as well as to add and delete users
 - `public`: static files and assets that are served to the browser
 
 ## Login
