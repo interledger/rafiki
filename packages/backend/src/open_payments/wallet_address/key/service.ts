@@ -34,8 +34,11 @@ export async function createWalletAddressKeyService({
   return {
     create: (options) => create(deps, options),
     revoke: (id) => revoke(deps, id),
-    getPage: (walletAddressId: string, pagination?: Pagination, sortOrder?: SortOrder) =>
-      getWalletAddressKeyPage(deps, walletAddressId, pagination, sortOrder),
+    getPage: (
+      walletAddressId: string,
+      pagination?: Pagination,
+      sortOrder?: SortOrder
+    ) => getWalletAddressKeyPage(deps, walletAddressId, pagination, sortOrder),
     getKeysByWalletAddressId: (walletAddressId) =>
       getKeysByWalletAddressId(deps, walletAddressId)
   }
@@ -99,5 +102,5 @@ async function getWalletAddressKeyPage(
 ): Promise<WalletAddressKey[]> {
   return WalletAddressKey.query(deps.knex)
     .where({ walletAddressId })
-    .getPage(pagination, sortOrder);
+    .getPage(pagination, sortOrder)
 }

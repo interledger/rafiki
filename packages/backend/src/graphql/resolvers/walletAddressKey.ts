@@ -26,13 +26,18 @@ export const getWalletAddressKeys: WalletAddressResolvers<ApolloContext>['wallet
     const walletAddressKeyService = await ctx.container.use(
       'walletAddressKeyService'
     )
-    
-    const { sortOrder, ...pagination } = args
-    const order = sortOrder === 'ASC' ? SortOrder.Asc : SortOrder.Desc;
 
-    const walletAddressKeys = await walletAddressKeyService.getPage(parent.id, pagination, order)
+    const { sortOrder, ...pagination } = args
+    const order = sortOrder === 'ASC' ? SortOrder.Asc : SortOrder.Desc
+
+    const walletAddressKeys = await walletAddressKeyService.getPage(
+      parent.id,
+      pagination,
+      order
+    )
     const pageInfo = await getPageInfo({
-      getPage: (pagination_?: Pagination, sortOrder_?: SortOrder) => walletAddressKeyService.getPage(parent.id!, pagination_, sortOrder),
+      getPage: (pagination_?: Pagination, sortOrder_?: SortOrder) =>
+        walletAddressKeyService.getPage(parent.id!, pagination_, sortOrder_),
       page: walletAddressKeys
     })
 

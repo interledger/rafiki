@@ -19,7 +19,7 @@ const TEST_KEY = generateJwk({ keyId: uuid() })
 describe('Wallet Address Key Service', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
-  let walletAddress: WalletAddress;
+  let walletAddress: WalletAddress
   let walletAddressKeyService: WalletAddressKeyService
 
   beforeAll(async (): Promise<void> => {
@@ -89,7 +89,12 @@ describe('Wallet Address Key Service', (): void => {
     describe('Wallet Address Keys pagination', (): void => {
       getPageTests({
         createModel: () => createWalletAddressKey(deps, walletAddress.id),
-        getPage: (pagination?: Pagination, sortOrder?: SortOrder) => walletAddressKeyService.getPage(walletAddress.id, pagination, sortOrder)
+        getPage: (pagination?: Pagination, sortOrder?: SortOrder) =>
+          walletAddressKeyService.getPage(
+            walletAddress.id,
+            pagination,
+            sortOrder
+          )
       })
     })
   })
