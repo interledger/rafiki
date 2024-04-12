@@ -3,14 +3,15 @@ import { TransactionOrKnex } from 'objection'
 import { WalletAddressKey } from './model'
 import { BaseService } from '../../../shared/baseService'
 import { JWK } from '@interledger/http-signature-utils'
-import { Pagination } from '../../../shared/baseModel'
+import { Pagination, SortOrder } from '../../../shared/baseModel'
 
 export interface WalletAddressKeyService {
   create(options: CreateOptions): Promise<WalletAddressKey>
   revoke(id: string): Promise<WalletAddressKey | undefined>
   getPage(
     walletAddressId: string,
-    pagination: Pagination
+    pagination?: Pagination,
+    sortOrder?: SortOrder
   ): Promise<WalletAddressKey[]>
   getKeysByWalletAddressId(walletAddressId: string): Promise<WalletAddressKey[]>
 }
@@ -33,8 +34,8 @@ export async function createWalletAddressKeyService({
   return {
     create: (options) => create(deps, options),
     revoke: (id) => revoke(deps, id),
-    getPage: (walletAddressId: string, pagination: Pagination) =>
-      getWalletAddressKeyPage(deps, walletAddressId, pagination),
+    getPage: (walletAddressId: string, pagination?: Pagination, sortOrder?: SortOrder) =>
+      getWalletAddressKeyPage(deps, walletAddressId, pagination, sortOrder),
     getKeysByWalletAddressId: (walletAddressId) =>
       getKeysByWalletAddressId(deps, walletAddressId)
   }
@@ -93,9 +94,10 @@ async function getKeysByWalletAddressId(
 async function getWalletAddressKeyPage(
   deps: ServiceDependencies,
   walletAddressId: string,
-  pagination: Pagination
+  pagination?: Pagination,
+  sortOrder?: SortOrder
 ): Promise<WalletAddressKey[]> {
   return WalletAddressKey.query(deps.knex)
     .where({ walletAddressId })
-    .getPage(pagination)
+    .getPage(pagination, sortOrder);
 }
