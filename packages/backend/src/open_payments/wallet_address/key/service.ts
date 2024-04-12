@@ -40,7 +40,7 @@ export async function createWalletAddressKeyService({
   }
 }
 
-interface CreateOptions {
+export interface CreateOptions {
   walletAddressId: string
   jwk: JWK
 }
