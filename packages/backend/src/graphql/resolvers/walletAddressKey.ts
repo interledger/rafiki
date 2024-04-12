@@ -5,7 +5,8 @@ import {
   Alg,
   Kty,
   Crv,
-  WalletAddressResolvers
+  WalletAddressResolvers,
+  SortOrder
 } from '../generated/graphql'
 import { ApolloContext } from '../../app'
 import { WalletAddressKey } from '../../open_payments/wallet_address/key/model'
@@ -21,15 +22,17 @@ export const getWalletAddressKeys: WalletAddressResolvers<ApolloContext>['wallet
     if (!parent.id) {
       throw new Error('missing wallet address id')
     }
-    
-    const { ...pagination } = args
+
     const walletAddressKeyService = await ctx.container.use(
       'walletAddressKeyService'
     )
+    
+    const { sortOrder, ...pagination } = args
+    const order = sortOrder === 'ASC' ? SortOrder.Asc : SortOrder.Desc;
 
-    const walletAddressKeys = await walletAddressKeyService.getPage(parent.id, pagination)
+    const walletAddressKeys = await walletAddressKeyService.getPage(parent.id, pagination, order)
     const pageInfo = await getPageInfo({
-      getPage: (pagination_: Pagination) => walletAddressKeyService.getPage(parent.id!, pagination_),
+      getPage: (pagination_?: Pagination, sortOrder_?: SortOrder) => walletAddressKeyService.getPage(parent.id!, pagination_, sortOrder),
       page: walletAddressKeys
     })
 
