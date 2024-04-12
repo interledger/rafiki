@@ -1,7 +1,7 @@
 import { gql } from '@apollo/client'
-import type { 
-  LiquidityMutationResponse, 
-  WalletAddressWithdrawalMutationResponse 
+import type {
+  LiquidityMutationResponse,
+  WalletAddressWithdrawalMutationResponse
 } from 'generated/graphql'
 import type { Amount } from './transactions.server'
 import { mockAccounts } from './accounts.server'
@@ -160,7 +160,7 @@ export async function handleIncomingPaymentCompletedExpired(wh: Webhook) {
   return
 }
 
-export async function  handleWalletAddressWebMonetization(wh: Webhook) {
+export async function handleWalletAddressWebMonetization(wh: Webhook) {
   const walletAddressUrl = wh.data['walletAddressUrl'] as string | undefined
 
   if (!walletAddressUrl) {
@@ -180,7 +180,9 @@ export async function  handleWalletAddressWebMonetization(wh: Webhook) {
   await apolloClient
     .mutate({
       mutation: gql`
-        mutation CreateWalletAddressWithdrawal($input: CreateWalletAddressWithdrawalInput!) {
+        mutation CreateWalletAddressWithdrawal(
+          $input: CreateWalletAddressWithdrawalInput!
+        ) {
           createWalletAddressWithdrawal(input: $input) {
             code
             error
@@ -220,7 +222,6 @@ export async function  handleWalletAddressWebMonetization(wh: Webhook) {
     })
 
   return
-  
 }
 
 export async function handleWalletAddressNotFound(wh: Webhook) {
