@@ -2,6 +2,8 @@ name: Node Build
 
 on:
   workflow_dispatch:
+  schedule:
+    - cron:  '0 21 * * *'
   pull_request:
     branches:
       - '**'
