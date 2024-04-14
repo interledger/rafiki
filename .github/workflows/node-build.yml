@@ -173,6 +173,8 @@ jobs:
     outputs:
       version: ${{ steps.version-generator.outputs.NEW_VERSION }}
       tagPushed: ${{ steps.version-generator.outputs.SHOULD_PUSH_TAG }}
+      dockerPush: ${{ steps.version-generator.outputs.PUSH_DOCKER_IMAGE }}
+      generateRelease: ${{ steps.version-generator.outputs.GENERATE_RELEASE }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -187,12 +189,17 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           SHOULD_PUSH_TAG=false
+          PUSH_DOCKER_IMAGE=false
+          GENERATE_RELEASE=false
           if [ "${{ github.event_name == 'schedule' }}" = true ]; then
+            PUSH_DOCKER_IMAGE=true
             NEW_VERSION="nightly"
           elif [ "${{ github.event_name == 'workflow_dispatch' }}" = true ]; then
             NEW_VERSION="manual"
           elif [ "${{ startsWith(github.ref_name, 'release/v')}}" = true ]; then
+            PUSH_DOCKER_IMAGE=true
             SHOULD_PUSH_TAG=true
+            GENERATE_RELEASE=true
             VERSION_PREFIX=$(echo "${{ github.ref_name }}" | sed 's|release/||')
             read major minor patch pre_release <<< $(echo "$VERSION_PREFIX" | awk -F'[.v-]' '{print $2, $3, $4, $5}')
             version_search="v$major.$minor.*"
@@ -221,6 +228,12 @@ jobs:
 
           echo "SHOULD_PUSH_TAG=$SHOULD_PUSH_TAG" >> $GITHUB_OUTPUT
           echo "Will tag be pushed? $SHOULD_PUSH_TAG"
+
+          echo "PUSH_DOCKER_IMAGE=$PUSH_DOCKER_IMAGE" >> $GITHUB_OUTPUT
+          echo "Will docker image be pushed? $PUSH_DOCKER_IMAGE"
+
+          echo "GENERATE_RELEASE=$GENERATE_RELEASE" >> $GITHUB_OUTPUT
+          echo "Will generate release noted? $GENERATE_RELEASE"
 
           if [ "$SHOULD_PUSH_TAG" = true ]; then
             git tag -fa $NEW_VERSION -m "$NEW_VERSION"
@@ -331,6 +344,7 @@ jobs:
     name: Push to registry
     needs: [version-generator, docker-grype, docker-trivy, version-generator, node-build]
     runs-on: ubuntu-latest
+    if: needs.version-generator.outputs.dockerPush == 'true'
     strategy:
       matrix:
         platform:
@@ -371,7 +385,7 @@ jobs:
   generate-release:
     runs-on: ubuntu-latest
     needs: [push, version-generator]
-    if: needs.version-generator.outputs.tagPushed == 'true'
+    if: needs.version-generator.outputs.generateRelease == 'true'
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
