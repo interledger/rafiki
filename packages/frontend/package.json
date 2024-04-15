@@ -3,10 +3,10 @@
   "private": true,
   "sideEffects": false,
   "scripts": {
-    "delete-user": "node ./build/deleteUser.js",
-    "invite-user": "node ./build/userInvitation.js",
-    "build": "remix build && tsc ./kratos/scripts/*.ts --esModuleInterop --outDir ./build/",
-    "dev": "tsc ./kratos/scripts/*.ts --esModuleInterop --outDir ./build/ && remix dev",
+    "delete-user": "node ./build/kratos/scripts/deleteUser.js",
+    "invite-user": "node ./build/kratos/scripts/userInvitation.js",
+    "build": "remix build && tsc ./kratos/scripts/*.ts --esModuleInterop --outDir ./build",
+    "dev": "tsc ./kratos/scripts/*.ts --esModuleInterop --outDir ./build && node ./build/kratos/scripts/userInvitation.js example@mail.com && remix dev",
     "lint:fix": "eslint --fix app/",
     "lint:check": "eslint app/",
     "start": "ENABLE_INSECURE_MESSAGE_COOKIE=true remix-serve ./build/index.js",
@@ -46,6 +46,7 @@
     "eslint": "^8.57.0",
     "eslint-plugin-jsx-a11y": "^6.8.0",
     "eslint-plugin-react": "^7.34.1",
+    "pino-pretty": "^11.0.0",
     "postcss": "^8.4.38",
     "tailwindcss": "^3.4.1"
   },

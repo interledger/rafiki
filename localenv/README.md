@@ -35,27 +35,31 @@ This environment will set up a playground where you can use the Rafiki Admin API
 
 (d) Admin UI - accessible at http://localhost:3010
 
-(e) Mail server - accessible at http://localhost:4436
+(e) Kratos service - accessible at http://localhost:4433
 
-(f) Auth Admin API - accessible at http://localhost:3003/graphql
+(f) Mail server - accessible at http://localhost:4436
 
-(g) Open Payments Auth API - accessible at http://localhost:3006
+(g) Auth Admin API - accessible at http://localhost:3003/graphql
+
+(h) Open Payments Auth API - accessible at http://localhost:3006
 
 #### Happy Life Bank
 
-(h) User Interface - accessible at http://localhost:3031
+(i) User Interface - accessible at http://localhost:3031
 
-(i) Admin API - accessible at http://localhost:4001/graphql
+(j) Admin API - accessible at http://localhost:4001/graphql
 
-(j) Open Payments API - accessible at http://localhost:4000
+(k) Open Payments API - accessible at http://localhost:4000
 
-(k) Admin UI - accessible at http://localhost:4010
+(l) Admin UI - accessible at http://localhost:4010
 
-(l) Mail server - accessible at http://localhost:4436
+(m) Kratos service - accessible at http://localhost:4432
 
-(m) Auth Admin API - accessible at http://localhost:4003/graphql
+(n) Mail server - accessible at http://localhost:4436
 
-(n) Open Payments Auth API - accessible at http://localhost:4006
+(o) Auth Admin API - accessible at http://localhost:4003/graphql
+
+(p) Open Payments Auth API - accessible at http://localhost:4006
 
 #### Database
 
@@ -191,7 +195,13 @@ Note that you have to go through an interaction flow by clicking on the `redirec
 
 In order to manage, and view information about the Rafiki instance(s) using a UI, you can navigate to [`localhost:3010`](http://localhost:3010) (Cloud Nine Wallet) or [`localhost:4010`](http://localhost:4010) (Happy Life Bank). This is the `frontend` project which runs a Remix app for querying info and executing mutations against the Rafiki [Admin APIs](#admin-apis).
 
-The Admin UI is secured using Ory Kratos. See the `frontend` [README](../packages/frontend/README.md) for more information about how to register a user and log in.
+We have secured access to the Admin UI using [Ory Kratos](https://www.ory.sh/docs/kratos/ory-kratos-intro), a secure and fully open-source identity and user management solution. Check it out on [GitHub](https://github.com/ory/kratos). Since access to the UI is on an invitation-only basis the registration flow is not publicly available. As such, in order to access the Admin UI you can click the registration link provided in the logs during `localenv` startup or you can manually add a new user with the invite-user script. Run `docker exec -it <admin-container-name> npm run invite-user -- example@mail.com` and it will output recovery link to the terminal. The recovery link doubles as the invitation method. Copy and paste this link in your browser and you will automatically be logged in and directed to the account settings page. The next step is changing your password. We're using a simple email and password authentication method.
+
+There is a password recovery flow. On the login page if you clkick the `forgot password` link and enter an email for a registered user then you can open [Mail Slurper](http://localhost:4436) to access the recovery link for your account.
+
+We've also included a script to remove users: `docker exec -it <admin-container-name> npm run delete-user -- example@mail.com`.
+
+See the `frontend` [README](../packages/frontend/README.md) for more information.
 
 #### Admin APIs
 

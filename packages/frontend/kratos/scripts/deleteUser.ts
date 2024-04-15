@@ -21,7 +21,7 @@ const getIdentityId = async () => {
       `${KRATOS_INSTANCE}/identities?credentials_identifier=${USER_EMAIL}`
     )
     if (response.data.length > 0 && response.data[0].id) {
-      logger.info(
+      logger.debug(
         `User with email ${USER_EMAIL} exists on the system with the ID: ${response.data[0].id}`
       )
       return response.data[0].id
@@ -31,12 +31,15 @@ const getIdentityId = async () => {
   } catch (error) {
     if (axios.isAxiosError(error)) {
       logger.error(
-        'Error retrieving identity:',
+        `Error retrieving identity for ${USER_EMAIL}:`,
         error.response?.status,
         error.response?.data
       )
     } else {
-      logger.error('An unexpected error occurred:', error)
+      logger.error(
+        `An unexpected error occurred while trying to retrieve the identity for ${USER_EMAIL}:`,
+        error
+      )
     }
     process.exit(1)
   }
@@ -48,17 +51,22 @@ const deleteIdentity = async (identityId: string) => {
       `${KRATOS_INSTANCE}/identities/${identityId}`
     )
     if (response.status === 204)
-      logger.info(`Successfully deleted user with ID ${identityId}`)
+      logger.info(
+        `Successfully deleted user ${USER_EMAIL} with ID ${identityId}`
+      )
     return
   } catch (error) {
     if (axios.isAxiosError(error)) {
       logger.error(
-        'Error creating identity:',
+        `Error deleting identity for ${USER_EMAIL}:`,
         error.response?.status,
         error.response?.data
       )
     } else {
-      logger.error('An unexpected error occurred:', error)
+      logger.error(
+        `An unexpected error occurred while trying to delete an account for ${USER_EMAIL}:`,
+        error
+      )
     }
     process.exit(1)
   }

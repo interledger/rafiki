@@ -21,22 +21,25 @@ const getIdentityId = async () => {
       `${KRATOS_INSTANCE}/identities?credentials_identifier=${USER_EMAIL}`
     )
     if (response.data.length > 0 && response.data[0].id) {
-      logger.info(
+      logger.debug(
         `User with email ${USER_EMAIL} exists on the system with the ID: ${response.data[0].id}`
       )
       return response.data[0].id
     }
-    logger.info(`No user with email ${USER_EMAIL} exists on the system`)
+    logger.debug(`No user with email ${USER_EMAIL} exists on the system`)
     return null
   } catch (error) {
     if (axios.isAxiosError(error)) {
       logger.error(
-        'Error retrieving identity:',
+        `Error retrieving identity ${USER_EMAIL}:`,
         error.response?.status,
         error.response?.data
       )
     } else {
-      logger.error('An unexpected error occurred:', error)
+      logger.error(
+        `An unexpected error occurred while trying to retrieve the identity for ${USER_EMAIL}:`,
+        error
+      )
     }
     process.exit(1)
   }
@@ -58,17 +61,22 @@ const createIdentity = async () => {
         }
       }
     )
-    logger.info(`Successfully created user with ID ${response.data.id}`)
+    logger.debug(
+      `Successfully created user ${USER_EMAIL} with ID ${response.data.id}`
+    )
     return response.data.id
   } catch (error) {
     if (axios.isAxiosError(error)) {
       logger.error(
-        'Error creating identity:',
+        `Error creating identity for ${USER_EMAIL}:`,
         error.response?.status,
         error.response?.data
       )
     } else {
-      logger.error('An unexpected error occurred:', error)
+      logger.error(
+        `An unexpected error occurred while trying to create an identity for ${USER_EMAIL}:`,
+        error
+      )
     }
     process.exit(1)
   }
@@ -92,12 +100,15 @@ const createRecoveryLink = async (identityId: string) => {
   } catch (error) {
     if (axios.isAxiosError(error)) {
       logger.error(
-        'Error creating recovery link:',
+        `Error creating recovery link for user ${USER_EMAIL}:`,
         error.response?.status,
         error.response?.data
       )
     } else {
-      logger.error('An unexpected error occurred:', error)
+      logger.error(
+        `An unexpected error occurred while trying to create an account recovery link for ${USER_EMAIL}:`,
+        error
+      )
     }
     process.exit(1)
   }
@@ -105,11 +116,12 @@ const createRecoveryLink = async (identityId: string) => {
 
 const run = async () => {
   let identityId = await getIdentityId()
-  if (identityId === null) {
+  const event = identityId === null ? 'Registration' : 'Recovery'
+  if (event === 'Registration') {
     identityId = await createIdentity()
   }
   const recoveryLink = await createRecoveryLink(identityId)
-  logger.info(`Recovery link: ${recoveryLink}`)
+  logger.info(`${event} Link for ${USER_EMAIL}: ${recoveryLink}`)
 }
 
 run()
