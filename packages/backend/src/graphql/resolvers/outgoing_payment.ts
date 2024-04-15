@@ -102,6 +102,7 @@ export function paymentToGraphql(
   return {
     id: payment.id,
     walletAddressId: payment.walletAddressId,
+    client: payment.client,
     state: payment.state,
     error: payment.error,
     stateAttempts: payment.stateAttempts,
