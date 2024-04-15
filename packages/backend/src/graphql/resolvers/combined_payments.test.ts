@@ -72,7 +72,7 @@ describe('Payment', (): void => {
     })
     const incomingPayment = await createIncomingPayment(deps, {
       walletAddressId: inWalletAddressId,
-      client: client,
+      client: client
     })
 
     const query = await appContainer.apolloClient
