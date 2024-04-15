@@ -53,8 +53,10 @@ describe('Payment', (): void => {
       assetId: asset.id
     })
 
+    const client = 'client-test'
     const outgoingPayment = await createOutgoingPayment(deps, {
       walletAddressId: outWalletAddressId,
+      client: client,
       method: 'ilp',
       receiver: `${Config.openPaymentsUrl}/${uuid()}`,
       debitAmount: {
@@ -69,7 +71,8 @@ describe('Payment', (): void => {
       assetId: asset.id
     })
     const incomingPayment = await createIncomingPayment(deps, {
-      walletAddressId: inWalletAddressId
+      walletAddressId: inWalletAddressId,
+      client: client,
     })
 
     const query = await appContainer.apolloClient
@@ -82,6 +85,7 @@ describe('Payment', (): void => {
                   id
                   type
                   walletAddressId
+                  client
                   liquidity
                   state
                   metadata
@@ -118,6 +122,7 @@ describe('Payment', (): void => {
       type: combinedOutgoingPayment.type,
       metadata: combinedOutgoingPayment.metadata,
       walletAddressId: combinedOutgoingPayment.walletAddressId,
+      client: combinedOutgoingPayment.client,
       state: combinedOutgoingPayment.state,
       createdAt: combinedOutgoingPayment.createdAt.toISOString(),
       liquidity: '0'
@@ -132,6 +137,7 @@ describe('Payment', (): void => {
       type: combinedIncomingPayment.type,
       metadata: combinedIncomingPayment.metadata,
       walletAddressId: combinedIncomingPayment.walletAddressId,
+      client: combinedIncomingPayment.client,
       state: combinedIncomingPayment.state,
       createdAt: combinedIncomingPayment.createdAt.toISOString(),
       liquidity: '0'
@@ -153,8 +159,10 @@ describe('Payment', (): void => {
       validDestination: false
     }
 
+    const client = 'client-test-type-wallet-address'
     const outgoingPayment = await createOutgoingPayment(deps, {
       walletAddressId: outWalletAddressId,
+      client: client,
       method: 'ilp',
       ...baseOutgoingPayment
     })
@@ -164,6 +172,7 @@ describe('Payment', (): void => {
     })
     await createOutgoingPayment(deps, {
       walletAddressId: outWalletAddressId2,
+      client: client,
       method: 'ilp',
       ...baseOutgoingPayment
     })
@@ -178,6 +187,7 @@ describe('Payment', (): void => {
                   id
                   type
                   walletAddressId
+                  client
                   state
                   metadata
                   createdAt
@@ -217,6 +227,7 @@ describe('Payment', (): void => {
       type: combinedOutgoingPayment.type,
       metadata: combinedOutgoingPayment.metadata,
       walletAddressId: combinedOutgoingPayment.walletAddressId,
+      client: combinedOutgoingPayment.client,
       state: combinedOutgoingPayment.state,
       createdAt: combinedOutgoingPayment.createdAt.toISOString()
     })
