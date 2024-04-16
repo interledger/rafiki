@@ -432,6 +432,7 @@ describe('OutgoingPaymentService', (): void => {
             })
             const options = {
               walletAddressId,
+              client,
               quoteId: quote.id,
               metadata: {
                 description: 'rent',
@@ -465,7 +466,8 @@ describe('OutgoingPaymentService', (): void => {
             ).resolves.toEqual(payment)
 
             const expectedPaymentData: Partial<PaymentData> = {
-              id: payment.id
+              id: payment.id,
+              client: payment.client
             }
             if (outgoingPeer) {
               expectedPaymentData.peerId = peer.id

@@ -126,9 +126,9 @@ async function createOutgoingPayment(
         .insertAndFetch({
           id: options.quoteId,
           walletAddressId: walletAddressId,
+          client: options.client,
           metadata: options.metadata,
           state: OutgoingPaymentState.Funding,
-          client: options.client,
           grantId
         })
         .withGraphFetched('[quote.asset, walletAddress]')
