@@ -69,7 +69,7 @@ export class ApiClient {
     const acceptanceSubPath = acceptanceDecision ? 'accept' : 'reject'
 
     const response = await axios.post(
-      `http://localhost:3006/grant/${interactId}/${nonce}/${acceptanceSubPath}`,
+      `http://localhost:3009/grant/${interactId}/${nonce}/${acceptanceSubPath}`,
       {},
       {
         headers: {
