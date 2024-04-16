@@ -57,8 +57,6 @@ This environment will set up a playground where you can use the Rafiki Admin API
 
 (n) Kratos API - accessible at http://localhost:4432
 
-
-
 #### Mail Slurper
 
 (o) Mail UI - accessible at http://localhost:4436
