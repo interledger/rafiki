@@ -449,6 +449,7 @@ describe('Incoming Payment Service', (): void => {
         beforeEach(async (): Promise<void> => {
           incomingPayment = await createIncomingPayment(deps, {
             walletAddressId,
+            client,
             incomingAmount: {
               value: BigInt(123),
               assetCode: asset.code,
@@ -487,7 +488,8 @@ describe('Incoming Payment Service', (): void => {
               eventType === IncomingPaymentEventType.IncomingPaymentExpired
                 ? IncomingPaymentState.Expired
                 : IncomingPaymentState.Completed,
-            processAt: expect.any(Date)
+            processAt: expect.any(Date),
+            client: client
           })
           await expect(
             accountingService.getTotalReceived(incomingPayment.id)
@@ -522,7 +524,8 @@ describe('Incoming Payment Service', (): void => {
               id: incomingPayment.id
             })
           ).resolves.toMatchObject({
-            processAt: null
+            processAt: null,
+            client: client
           })
         })
       }
