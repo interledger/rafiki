@@ -67,3 +67,9 @@ body:graphql:vars {
       "id": "{{outgoingPaymentId}}"
   }
 }
+
+script:pre-request {
+  const scripts = require('./scripts');
+  
+  scripts.addApiSignatureHeader();
+}

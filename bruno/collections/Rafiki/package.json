@@ -1,8 +1,7 @@
 {
-  "name": "Rafiki Bruno Collection",
+  "name": "rafiki-bruno-collection",
   "version": "1.0.0",
   "dependencies": {
-    "graphql": "^16.8.1",
     "json-canonicalize": "^1.0.6"
   }
 }
