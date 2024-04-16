@@ -33,33 +33,35 @@ This environment will set up a playground where you can use the Rafiki Admin API
 
 (c) Open Payments API - accessible at http://localhost:3000
 
-(d) Admin UI - accessible at http://localhost:3010
+(d) Auth Admin API - accessible at http://localhost:3003/graphql
 
-(e) Kratos service - accessible at http://localhost:4433
+(e) Open Payments Auth API - accessible at http://localhost:3006
 
-(f) Mail server - accessible at http://localhost:4436
+(f) Admin UI - accessible at http://localhost:3010
 
-(g) Auth Admin API - accessible at http://localhost:3003/graphql
-
-(h) Open Payments Auth API - accessible at http://localhost:3006
+(g) Kratos API - accessible at http://localhost:4433
 
 #### Happy Life Bank
 
-(i) User Interface - accessible at http://localhost:3031
+(h) User Interface - accessible at http://localhost:3031
 
-(j) Admin API - accessible at http://localhost:4001/graphql
+(i) Admin API - accessible at http://localhost:4001/graphql
 
-(k) Open Payments API - accessible at http://localhost:4000
+(j) Open Payments API - accessible at http://localhost:4000
 
-(l) Admin UI - accessible at http://localhost:4010
+(k) Auth Admin API - accessible at http://localhost:4003/graphql
 
-(m) Kratos service - accessible at http://localhost:4432
+(l) Open Payments Auth API - accessible at http://localhost:4006
 
-(n) Mail server - accessible at http://localhost:4436
+(m) Admin UI - accessible at http://localhost:4010
 
-(o) Auth Admin API - accessible at http://localhost:4003/graphql
+(n) Kratos API - accessible at http://localhost:4432
 
-(p) Open Payments Auth API - accessible at http://localhost:4006
+
+
+#### Mail Slurper
+
+(o) Mail UI - accessible at http://localhost:4436
 
 #### Database
 

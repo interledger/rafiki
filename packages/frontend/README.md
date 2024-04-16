@@ -2,7 +2,7 @@
 
 ## Development
 
-This project assumes that you have a local Rafiki backend instance up and running as well as a Kratos identity service and Mailslurper. Typically, all of these services, along with this project, would be used within the local Rafiki playground. See the [local environment setup](../../localenv) for more information on how to set it up.
+This project assumes that you have a local Rafiki backend instance up and running as well as a Kratos identity service and Mailslurper. Typically, all of these services, along with this project, would be used within the local Rafiki playground. See the [local environment setup](../../localenv/README) for more information on how to set it up.
 
 The Admin UI runs in development mode in the local playground, so when you have it running, you can see live code changes by simply refreshing your page.
 
