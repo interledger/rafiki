@@ -30,6 +30,7 @@ export const Config = {
   logLevel: envString('LOG_LEVEL', 'info'),
   adminPort: envInt('ADMIN_PORT', 3003),
   authPort: envInt('AUTH_PORT', 3006),
+  authChoiceServer: envInt('AUTH_CHOICE_SERVER', 3009),
   introspectionPort: envInt('INTROSPECTION_PORT', 3007),
   env: envString('NODE_ENV', 'development'),
   trustProxy: envBool('TRUST_PROXY', false),

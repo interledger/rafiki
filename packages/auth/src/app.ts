@@ -107,6 +107,7 @@ export type AppContainer = IocContract<AppServices>
 
 export class App {
   private authServer!: Server
+  private authChoiceServer!: Server
   private introspectionServer!: Server
   private adminServer!: Server
   private logger!: Logger
@@ -338,16 +339,6 @@ export class App {
       interactionRoutes.details
     )
 
-    // Grant accept/reject
-    router.post<DefaultState, ChooseContext>(
-      '/grant/:id/:nonce/:choice',
-      createValidatorMiddleware<ChooseContext>(openApi.idpSpec, {
-        path: '/grant/{id}/{nonce}/{choice}',
-        method: HttpMethod.POST
-      }),
-      interactionRoutes.acceptOrReject
-    )
-
     koa.use(cors())
     koa.keys = [this.config.cookieKey]
 
@@ -418,6 +409,44 @@ export class App {
     this.introspectionServer = koa.listen(port)
   }
 
+  public async startAuthChoiceServer(port: number | string): Promise<void> {
+    const koa = await this.createKoaServer()
+
+    const router = new Router<DefaultState, AppContext>()
+    router.use(bodyParser())
+
+    const openApi = await this.container.use('openApi')
+    const interactionRoutes = await this.container.use('interactionRoutes')
+
+    // Grant accept/reject
+    router.post<DefaultState, ChooseContext>(
+      '/grant/:id/:nonce/:choice',
+      createValidatorMiddleware<ChooseContext>(openApi.idpSpec, {
+        path: '/grant/{id}/{nonce}/{choice}',
+        method: HttpMethod.POST
+      }),
+      interactionRoutes.acceptOrReject
+    )
+
+    koa.use(cors())
+    koa.keys = [this.config.cookieKey]
+    koa.use(
+      session(
+        {
+          key: 'sessionId',
+          maxAge: 60 * 1000,
+          signed: true
+        },
+        koa
+      )
+    )
+
+    koa.use(router.middleware())
+    koa.use(router.routes())
+
+    this.authChoiceServer = koa.listen(port)
+  }
+
   private async createKoaServer(): Promise<Koa<Koa.DefaultState, AppContext>> {
     const koa = new Koa<DefaultState, AppContext>({
       proxy: this.config.trustProxy
@@ -454,6 +483,9 @@ export class App {
     if (this.authServer) {
       await this.stopServer(this.authServer)
     }
+    if (this.authChoiceServer) {
+      await this.stopServer(this.authChoiceServer)
+    }
     if (this.adminServer) {
       await this.stopServer(this.adminServer)
     }
@@ -480,6 +512,10 @@ export class App {
 
   public getAuthPort(): number {
     return this.getPort(this.authServer)
+  }
+
+  public getAuthChoicePort(): number {
+    return this.getPort(this.authChoiceServer)
   }
 
   public getIntrospectionPort(): number {
