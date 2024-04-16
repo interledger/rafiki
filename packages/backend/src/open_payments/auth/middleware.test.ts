@@ -1,6 +1,6 @@
 import { generateKeyPairSync } from 'crypto'
 import { faker } from '@faker-js/faker'
-import { Client, ActiveTokenInfo } from 'token-introspection'
+import { Client, ActiveTokenInfo, TokenInfo } from 'token-introspection'
 import { v4 as uuid } from 'uuid'
 import {
   generateJwk,
@@ -28,6 +28,8 @@ import { createWalletAddress } from '../../tests/walletAddress'
 import { setup } from '../wallet_address/model.test'
 import { parseLimits } from '../payment/outgoing/limits'
 import { AccessAction, AccessType } from '@interledger/open-payments'
+import { OpenPaymentsServerRouteError } from '../route-errors'
+import assert from 'assert'
 
 const nock = (global as unknown as { nock: typeof import('nock') }).nock
 
@@ -85,28 +87,37 @@ describe('Auth Middleware', (): void => {
       })
       ctx.request.headers.authorization = ''
 
-      const throwSpy = jest.spyOn(ctx, 'throw')
       await expect(middleware(ctx, next)).resolves.toBeUndefined()
-      expect(throwSpy).toHaveBeenCalledWith(401, 'Unauthorized')
       expect(ctx.response.get('WWW-Authenticate')).toBe(
         `GNAP as_uri=${Config.authServerGrantUrl}`
       )
       expect(next).toHaveBeenCalled()
     })
 
-    test('throws error for unkonwn errors', async (): Promise<void> => {
+    test('throws error for unknown errors', async (): Promise<void> => {
       const middleware = createTokenIntrospectionMiddleware({
         requestType: type,
         requestAction: action,
         bypassError: true
       })
-      ctx.request.headers.authorization = ''
-      const error = new Error('Unknown')
-      ctx.throw = jest.fn().mockImplementation(() => {
-        throw error
-      }) as never
 
-      await expect(middleware(ctx, next)).rejects.toBe(error)
+      jest
+        .spyOn(tokenIntrospectionClient, 'introspect')
+        .mockResolvedValueOnce({ active: true, access: {} } as TokenInfo) // causes an error other than OpenPaymentsServerRouteError
+
+      expect.assertions(3)
+
+      try {
+        await middleware(ctx, next)
+      } catch (err) {
+        assert(err instanceof Error)
+        assert(!(err instanceof OpenPaymentsServerRouteError))
+        expect(err.message).toBe('tokenInfo.access.find is not a function')
+      }
+
+      expect(ctx.response.get('WWW-Authenticate')).not.toBe(
+        `GNAP as_uri=${Config.authServerGrantUrl}`
+      )
       expect(next).not.toHaveBeenCalled()
     })
   })
@@ -114,18 +125,26 @@ describe('Auth Middleware', (): void => {
   test.each`
     authorization             | description
     ${undefined}              | ${'missing'}
-    ${'Bearer NOT-GNAP'}      | ${'invalid'}
-    ${'GNAP'}                 | ${'missing'}
+    ${'Bearer NOT-GNAP'}      | ${'non-GNAP'}
+    ${'GNAP'}                 | ${'missing token'}
     ${'GNAP multiple tokens'} | ${'invalid'}
   `(
-    'returns 401 for $description access token',
+    'returns 401 for $description authorization header value',
     async ({ authorization }): Promise<void> => {
       const introspectSpy = jest.spyOn(tokenIntrospectionClient, 'introspect')
       ctx.request.headers.authorization = authorization
-      await expect(middleware(ctx, next)).resolves.toBeUndefined()
+
+      expect.assertions(5)
+      try {
+        await middleware(ctx, next)
+      } catch (err) {
+        assert(err instanceof OpenPaymentsServerRouteError)
+        expect(err.status).toBe(401)
+        expect(err.message).toEqual(
+          'Missing or invalid authorization header value'
+        )
+      }
       expect(introspectSpy).not.toHaveBeenCalled()
-      expect(ctx.status).toBe(401)
-      expect(ctx.message).toEqual('Unauthorized')
       expect(ctx.response.get('WWW-Authenticate')).toBe(
         `GNAP as_uri=${Config.authServerGrantUrl}`
       )
@@ -139,12 +158,19 @@ describe('Auth Middleware', (): void => {
       .mockImplementation(() => {
         throw new Error('test error')
       })
-    await expect(middleware(ctx, next)).resolves.toBeUndefined()
+
+    expect.assertions(5)
+    try {
+      await middleware(ctx, next)
+    } catch (err) {
+      assert(err instanceof OpenPaymentsServerRouteError)
+      expect(err.status).toBe(401)
+      expect(err.message).toEqual('Invalid Token')
+    }
+
     expect(introspectSpy).toHaveBeenCalledWith({
       access_token: token
     })
-    expect(ctx.status).toBe(401)
-    expect(ctx.message).toEqual('Invalid Token')
     expect(ctx.response.get('WWW-Authenticate')).toBe(
       `GNAP as_uri=${Config.authServerGrantUrl}`
     )
@@ -533,18 +559,33 @@ describe('HTTP Signature Middleware', (): void => {
 
     test('returns 401 for missing keyid', async (): Promise<void> => {
       ctx.request.headers['signature-input'] = 'aaaaaaaaaa'
-      await expect(httpsigMiddleware(ctx, next)).rejects.toMatchObject({
-        status: 401,
-        message: 'Invalid signature input'
-      })
+      expect.assertions(3)
+
+      try {
+        await httpsigMiddleware(ctx, next)
+      } catch (err) {
+        assert(err instanceof OpenPaymentsServerRouteError)
+        expect(err.message).toBe(
+          'Signature validation error: missing keyId in signature input'
+        )
+        expect(err.status).toBe(401)
+      }
+
       expect(next).not.toHaveBeenCalled()
     })
 
     test('returns 401 for failed client key request', async (): Promise<void> => {
-      await expect(httpsigMiddleware(ctx, next)).rejects.toMatchObject({
-        status: 401,
-        message: 'Invalid signature input'
-      })
+      expect.assertions(3)
+
+      try {
+        await httpsigMiddleware(ctx, next)
+      } catch (err) {
+        assert(err instanceof OpenPaymentsServerRouteError)
+        expect(err.message).toBe(
+          'Signature validation error: could not retrieve client keys'
+        )
+        expect(err.status).toBe(401)
+      }
       expect(next).not.toHaveBeenCalled()
     })
 
@@ -555,10 +596,19 @@ describe('HTTP Signature Middleware', (): void => {
           keys: [key]
         })
       ctx.request.headers['signature'] = 'aaaaaaaaaa='
-      await expect(httpsigMiddleware(ctx, next)).rejects.toMatchObject({
-        status: 401,
-        message: 'Invalid signature'
-      })
+
+      expect.assertions(3)
+
+      try {
+        await httpsigMiddleware(ctx, next)
+      } catch (err) {
+        assert(err instanceof OpenPaymentsServerRouteError)
+        expect(err.message).toBe(
+          'Signature validation error: provided signature is invalid'
+        )
+        expect(err.status).toBe(401)
+      }
+
       expect(next).not.toHaveBeenCalled()
       scope.done()
     })
@@ -570,11 +620,20 @@ describe('HTTP Signature Middleware', (): void => {
         .reply(200, {
           keys: [key]
         })
-      await expect(httpsigMiddleware(ctx, next)).rejects.toMatchObject({
-        status: 401,
-        message: 'Invalid signature input'
-      })
+
+      expect.assertions(3)
+
+      try {
+        await httpsigMiddleware(ctx, next)
+      } catch (err) {
+        assert(err instanceof OpenPaymentsServerRouteError)
+        expect(err.message).toBe(
+          'Signature validation error: could not retrieve client keys'
+        )
+        expect(err.status).toBe(401)
+      }
       expect(next).not.toHaveBeenCalled()
+
       scope.done()
     })
 
@@ -586,11 +645,20 @@ describe('HTTP Signature Middleware', (): void => {
             keys: [key]
           })
         ctx.request.headers['content-digest'] = 'aaaaaaaaaa='
-        await expect(httpsigMiddleware(ctx, next)).rejects.toMatchObject({
-          status: 401,
-          message: 'Invalid signature'
-        })
+
+        expect.assertions(3)
+
+        try {
+          await httpsigMiddleware(ctx, next)
+        } catch (err) {
+          assert(err instanceof OpenPaymentsServerRouteError)
+          expect(err.message).toBe(
+            'Signature validation error: provided signature is invalid'
+          )
+          expect(err.status).toBe(401)
+        }
         expect(next).not.toHaveBeenCalled()
+
         scope.done()
       })
     }
