@@ -22,3 +22,4 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
     --frozen-lockfile
 
 WORKDIR /home/rafiki/packages/frontend
+CMD ["pnpm", "dev"]

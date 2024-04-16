@@ -84,7 +84,6 @@ services:
     restart: always
     networks:
       - rafiki
-    command: sh -c "pnpm dev"
     ports:
       - '4010:4010'
     environment:
