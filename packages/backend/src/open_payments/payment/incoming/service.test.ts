@@ -489,7 +489,7 @@ describe('Incoming Payment Service', (): void => {
                 ? IncomingPaymentState.Expired
                 : IncomingPaymentState.Completed,
             processAt: expect.any(Date),
-            client: client
+            client
           })
           await expect(
             accountingService.getTotalReceived(incomingPayment.id)
@@ -525,7 +525,7 @@ describe('Incoming Payment Service', (): void => {
             })
           ).resolves.toMatchObject({
             processAt: null,
-            client: client
+            client
           })
         })
       }

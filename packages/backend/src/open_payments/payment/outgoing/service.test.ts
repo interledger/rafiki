@@ -311,14 +311,14 @@ describe('OutgoingPaymentService', (): void => {
       const payment = await outgoingPaymentService.create({
         walletAddressId,
         quoteId: quote.id,
-        client: client
+        client
       })
       assert.ok(!isOutgoingPaymentError(payment))
 
       await expect(
         outgoingPaymentService.get({
           id: payment.id,
-          client: client
+          client
         })
       ).resolves.toEqual(payment)
       await expect(
@@ -334,7 +334,7 @@ describe('OutgoingPaymentService', (): void => {
       await expect(
         outgoingPaymentService.get({
           id: payment.id,
-          client: client
+          client
         })
       ).rejects.toThrow(
         'Could not get amount sent for payment. There was a problem getting the associated liquidity account.'
@@ -353,15 +353,15 @@ describe('OutgoingPaymentService', (): void => {
 
       const payment = await outgoingPaymentService.create({
         walletAddressId,
-        quoteId: quote.id,
-        client: client
+        client,
+        quoteId: quote.id
       })
       assert.ok(!isOutgoingPaymentError(payment))
 
       await expect(
         outgoingPaymentService.get({
           id: payment.id,
-          client: client
+          client
         })
       ).resolves.toEqual(payment)
       await expect(
@@ -1269,12 +1269,12 @@ describe('OutgoingPaymentService', (): void => {
         debitAmount,
         validDestination: false,
         method: 'ilp',
-        client: client
+        client
       })
       quoteAmount = payment.debitAmount.value
       await expectOutcome(payment, {
         accountBalance: BigInt(0),
-        client: client
+        client
       })
     }, 10_000)
 
