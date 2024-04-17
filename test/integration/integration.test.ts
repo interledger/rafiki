@@ -285,6 +285,7 @@ describe('Integration tests', (): void => {
           incomingPaymentId: incomingPayment.id,
           debitAmount
           // TODO: dont do 'any', use new op client
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } as any
       )
 

@@ -8,12 +8,7 @@ import {
   OutgoingPaymentService,
   BaseOptions as OutgoingPaymentCreateBaseOptions
 } from './service'
-import {
-  isOutgoingPaymentError,
-  errorToCode,
-  errorToMessage,
-  OutgoingPaymentError
-} from './errors'
+import { isOutgoingPaymentError, errorToCode, errorToMessage } from './errors'
 import { OutgoingPayment } from './model'
 import { listSubresource } from '../../wallet_address/routes'
 import {

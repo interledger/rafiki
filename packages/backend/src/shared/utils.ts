@@ -100,6 +100,7 @@ export async function poll<T>(args: PollArgs<T>): Promise<T> {
  * const withoutAOK2: WithoutA = { b: 1 } // OK
  * const withoutAError: WithoutA = { a: 1, c: 1 } // Error
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type UnionOmit<T, K extends keyof any> = T extends any
   ? Omit<T, K>
   : never
