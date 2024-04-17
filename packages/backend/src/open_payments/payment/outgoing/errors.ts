@@ -1,4 +1,5 @@
 import { TransferError } from '../../../accounting/errors'
+import { GraphQLErrorCode } from '../../../graphql/errors'
 import { PaymentMethodHandlerError } from '../../../payment-method/handler/errors'
 
 export enum OutgoingPaymentError {
@@ -15,7 +16,7 @@ export enum OutgoingPaymentError {
 export const isOutgoingPaymentError = (o: any): o is OutgoingPaymentError =>
   Object.values(OutgoingPaymentError).includes(o)
 
-export const errorToCode: {
+export const errorToHTTPCode: {
   [key in OutgoingPaymentError]: number
 } = {
   [OutgoingPaymentError.UnknownWalletAddress]: 404,
@@ -25,6 +26,18 @@ export const errorToCode: {
   [OutgoingPaymentError.InvalidQuote]: 400,
   [OutgoingPaymentError.InsufficientGrant]: 403,
   [OutgoingPaymentError.InactiveWalletAddress]: 400
+}
+
+export const errorToCode: {
+  [key in OutgoingPaymentError]: string
+} = {
+  [OutgoingPaymentError.UnknownWalletAddress]: GraphQLErrorCode.NotFound,
+  [OutgoingPaymentError.UnknownPayment]: GraphQLErrorCode.NotFound,
+  [OutgoingPaymentError.UnknownQuote]: GraphQLErrorCode.NotFound,
+  [OutgoingPaymentError.WrongState]: GraphQLErrorCode.BadUserInput,
+  [OutgoingPaymentError.InvalidQuote]: GraphQLErrorCode.BadUserInput,
+  [OutgoingPaymentError.InsufficientGrant]: GraphQLErrorCode.Forbidden,
+  [OutgoingPaymentError.InactiveWalletAddress]: GraphQLErrorCode.Inactive
 }
 
 export const errorToMessage: {

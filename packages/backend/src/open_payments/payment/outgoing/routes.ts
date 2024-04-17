@@ -2,7 +2,11 @@ import { Logger } from 'pino'
 import { ReadContext, CreateContext, ListContext } from '../../../app'
 import { IAppConfig } from '../../../config/app'
 import { OutgoingPaymentService } from './service'
-import { isOutgoingPaymentError, errorToCode, errorToMessage } from './errors'
+import {
+  isOutgoingPaymentError,
+  errorToHTTPCode,
+  errorToMessage
+} from './errors'
 import { OutgoingPayment } from './model'
 import { listSubresource } from '../../wallet_address/routes'
 import {
@@ -101,7 +105,7 @@ async function createOutgoingPayment(
 
   if (isOutgoingPaymentError(outgoingPaymentOrError)) {
     throw new OpenPaymentsServerRouteError(
-      errorToCode[outgoingPaymentOrError],
+      errorToHTTPCode[outgoingPaymentOrError],
       errorToMessage[outgoingPaymentOrError]
     )
   }
