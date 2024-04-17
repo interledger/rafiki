@@ -1,6 +1,6 @@
 import {
   errorToMessage as incomingPaymentErrorToMessage,
-  errorToCode as incomingPaymentErrorToCode,
+  errorToHTTPCode as incomingPaymentErrorToCode,
   isIncomingPaymentError,
   IncomingPaymentError
 } from '../payment/incoming/errors'

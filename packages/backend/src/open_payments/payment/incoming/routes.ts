@@ -8,7 +8,11 @@ import {
 } from '../../../app'
 import { IAppConfig } from '../../../config/app'
 import { IncomingPaymentService } from './service'
-import { errorToCode, errorToMessage, isIncomingPaymentError } from './errors'
+import {
+  errorToHTTPCode,
+  errorToMessage,
+  isIncomingPaymentError
+} from './errors'
 import { AmountJSON, parseAmount } from '../../amount'
 import { listSubresource } from '../../wallet_address/routes'
 import { StreamCredentialsService } from '../../../payment-method/ilp/stream-credentials/service'
@@ -139,7 +143,7 @@ async function createIncomingPayment(
 
   if (isIncomingPaymentError(incomingPaymentOrError)) {
     throw new OpenPaymentsServerRouteError(
-      errorToCode[incomingPaymentOrError],
+      errorToHTTPCode[incomingPaymentOrError],
       errorToMessage[incomingPaymentOrError]
     )
   }
@@ -164,7 +168,7 @@ async function completeIncomingPayment(
 
   if (isIncomingPaymentError(incomingPaymentOrError)) {
     throw new OpenPaymentsServerRouteError(
-      errorToCode[incomingPaymentOrError],
+      errorToHTTPCode[incomingPaymentOrError],
       errorToMessage[incomingPaymentOrError]
     )
   }
