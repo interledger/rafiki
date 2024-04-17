@@ -244,10 +244,6 @@ async function grantRequestOutgoingPayment(
             actions: ['create', 'read', 'list'],
             identifier: senderWalletAddress.id,
             limits
-            // limits: {
-            //   debitAmount: quote.debitAmount,
-            //   receiveAmount: quote.receiveAmount
-            // }
           }
         ]
       },
