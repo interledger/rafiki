@@ -12,6 +12,8 @@ import { getPageInfo } from '../../shared/pagination'
 import { Pagination, SortOrder } from '../../shared/baseModel'
 import { feeToGraphql } from './fee'
 import { Fee, FeeType } from '../../fee/model'
+import { GraphQLError } from 'graphql'
+import { GraphQLErrorCode } from '../errors'
 
 export const getAssets: QueryResolvers<ApolloContext>['assets'] = async (
   parent,
@@ -45,7 +47,11 @@ export const getAsset: QueryResolvers<ApolloContext>['asset'] = async (
   const assetService = await ctx.container.use('assetService')
   const asset = await assetService.get(args.id)
   if (!asset) {
-    throw new Error('No asset')
+    throw new GraphQLError('Asset not found', {
+      extensions: {
+        code: 'NOT_FOUND'
+      }
+    })
   }
   return assetToGraphql(asset)
 }
@@ -56,40 +62,27 @@ export const createAsset: MutationResolvers<ApolloContext>['createAsset'] =
     args,
     ctx
   ): Promise<ResolversTypes['AssetMutationResponse']> => {
-    try {
-      const assetService = await ctx.container.use('assetService')
-      const assetOrError = await assetService.create(args.input)
-      if (isAssetError(assetOrError)) {
-        switch (assetOrError) {
-          case AssetError.DuplicateAsset:
-            return {
-              code: '409',
-              message: 'Asset already exists',
-              success: false
+    const assetService = await ctx.container.use('assetService')
+    const assetOrError = await assetService.create(args.input)
+    if (isAssetError(assetOrError)) {
+      switch (assetOrError) {
+        case AssetError.DuplicateAsset:
+          throw new GraphQLError('Asset already exists', {
+            extensions: {
+              code: GraphQLErrorCode.Duplicate
             }
-          default:
-            throw new Error(`AssetError: ${assetOrError}`)
-        }
+          })
+        default:
+          throw new GraphQLError('Internal Server Error', {
+            extensions: {
+              code: GraphQLErrorCode.InternalServerError,
+              error: assetOrError
+            }
+          })
       }
-      return {
-        code: '200',
-        success: true,
-        message: 'Created Asset',
-        asset: assetToGraphql(assetOrError)
-      }
-    } catch (err) {
-      ctx.logger.error(
-        {
-          options: args.input,
-          err
-        },
-        'error creating asset'
-      )
-      return {
-        code: '500',
-        message: 'Error trying to create asset',
-        success: false
-      }
+    }
+    return {
+      asset: assetToGraphql(assetOrError)
     }
   }
 
@@ -99,44 +92,31 @@ export const updateAsset: MutationResolvers<ApolloContext>['updateAsset'] =
     args,
     ctx
   ): Promise<ResolversTypes['AssetMutationResponse']> => {
-    try {
-      const assetService = await ctx.container.use('assetService')
-      const assetOrError = await assetService.update({
-        id: args.input.id,
-        withdrawalThreshold: args.input.withdrawalThreshold ?? null,
-        liquidityThreshold: args.input.liquidityThreshold ?? null
-      })
-      if (isAssetError(assetOrError)) {
-        switch (assetOrError) {
-          case AssetError.UnknownAsset:
-            return {
-              code: '404',
-              message: 'Unknown asset',
-              success: false
+    const assetService = await ctx.container.use('assetService')
+    const assetOrError = await assetService.update({
+      id: args.input.id,
+      withdrawalThreshold: args.input.withdrawalThreshold ?? null,
+      liquidityThreshold: args.input.liquidityThreshold ?? null
+    })
+    if (isAssetError(assetOrError)) {
+      switch (assetOrError) {
+        case AssetError.UnknownAsset:
+          throw new GraphQLError('Asset not found', {
+            extensions: {
+              code: GraphQLErrorCode.NotFound
             }
-          default:
-            throw new Error(`AssetError: ${assetOrError}`)
-        }
+          })
+        default:
+          throw new GraphQLError('Internal Server Error', {
+            extensions: {
+              code: GraphQLErrorCode.InternalServerError,
+              error: assetOrError
+            }
+          })
       }
-      return {
-        code: '200',
-        success: true,
-        message: 'Updated Asset',
-        asset: assetToGraphql(assetOrError)
-      }
-    } catch (err) {
-      ctx.logger.error(
-        {
-          options: args.input,
-          err
-        },
-        'error updating asset'
-      )
-      return {
-        code: '400',
-        message: 'Error trying to update asset',
-        success: false
-      }
+    }
+    return {
+      asset: assetToGraphql(assetOrError)
     }
   }
 

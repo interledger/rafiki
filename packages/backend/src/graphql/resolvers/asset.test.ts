@@ -81,9 +81,6 @@ describe('Asset Resolvers', (): void => {
             mutation: gql`
               mutation CreateAsset($input: CreateAssetInput!) {
                 createAsset(input: $input) {
-                  code
-                  success
-                  message
                   asset {
                     id
                     code
@@ -107,8 +104,6 @@ describe('Asset Resolvers', (): void => {
             }
           })
 
-        expect(response.success).toBe(true)
-        expect(response.code).toEqual('200')
         assert.ok(response.asset)
         expect(response.asset).toEqual({
           __typename: 'Asset',
@@ -132,14 +127,11 @@ describe('Asset Resolvers', (): void => {
     test('Returns error for duplicate asset', async (): Promise<void> => {
       const input = randomAsset()
       await expect(assetService.create(input)).resolves.toMatchObject(input)
-      const response = await appContainer.apolloClient
+      const gqlQuery = appContainer.apolloClient
         .mutate({
           mutation: gql`
             mutation CreateAsset($input: CreateAssetInput!) {
               createAsset(input: $input) {
-                code
-                success
-                message
                 asset {
                   id
                 }
@@ -158,9 +150,8 @@ describe('Asset Resolvers', (): void => {
           }
         })
 
-      expect(response.success).toBe(false)
-      expect(response.code).toEqual('409')
-      expect(response.message).toEqual('Asset already exists')
+      await expect(gqlQuery).rejects.toThrow(ApolloError)
+      await expect(gqlQuery).rejects.toThrow('Asset already exists')
     })
 
     test('500', async (): Promise<void> => {
@@ -168,14 +159,11 @@ describe('Asset Resolvers', (): void => {
         .spyOn(assetService, 'create')
         .mockRejectedValueOnce(new Error('unexpected'))
 
-      const response = await appContainer.apolloClient
+      const gqlQuery = appContainer.apolloClient
         .mutate({
           mutation: gql`
             mutation CreateAsset($input: CreateAssetInput!) {
               createAsset(input: $input) {
-                code
-                success
-                message
                 asset {
                   id
                 }
@@ -193,9 +181,7 @@ describe('Asset Resolvers', (): void => {
             throw new Error('Data was empty')
           }
         })
-      expect(response.code).toBe('500')
-      expect(response.success).toBe(false)
-      expect(response.message).toBe('Error trying to create asset')
+      await expect(gqlQuery).rejects.toThrow(ApolloError)
     })
   })
 
@@ -553,9 +539,6 @@ describe('Asset Resolvers', (): void => {
                 mutation: gql`
                   mutation updateAsset($input: UpdateAssetInput!) {
                     updateAsset(input: $input) {
-                      code
-                      success
-                      message
                       asset {
                         id
                         code
@@ -582,8 +565,6 @@ describe('Asset Resolvers', (): void => {
                 }
               })
 
-            expect(response.success).toBe(true)
-            expect(response.code).toEqual('200')
             expect(response.asset).toEqual({
               __typename: 'Asset',
               id: asset.id,
@@ -608,14 +589,11 @@ describe('Asset Resolvers', (): void => {
     )
 
     test('Returns error for unknown asset', async (): Promise<void> => {
-      const response = await appContainer.apolloClient
+      const gqlQuery = appContainer.apolloClient
         .mutate({
           mutation: gql`
             mutation updateAsset($input: UpdateAssetInput!) {
               updateAsset(input: $input) {
-                code
-                success
-                message
                 asset {
                   id
                 }
@@ -638,9 +616,8 @@ describe('Asset Resolvers', (): void => {
           }
         })
 
-      expect(response.success).toBe(false)
-      expect(response.code).toEqual('404')
-      expect(response.message).toEqual('Unknown asset')
+      await expect(gqlQuery).rejects.toThrow(ApolloError)
+      await expect(gqlQuery).rejects.toThrow('Asset not found')
     })
   })
 })
