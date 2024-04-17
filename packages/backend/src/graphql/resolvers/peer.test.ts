@@ -12,11 +12,7 @@ import { Asset } from '../../asset/model'
 import { initIocContainer } from '../..'
 import { Config } from '../../config/app'
 import { truncateTables } from '../../tests/tableManager'
-import {
-  errorToCode,
-  errorToMessage,
-  PeerError
-} from '../../payment-method/ilp/peer/errors'
+import { errorToMessage, PeerError } from '../../payment-method/ilp/peer/errors'
 import { Peer as PeerModel } from '../../payment-method/ilp/peer/model'
 import { PeerService } from '../../payment-method/ilp/peer/service'
 import { createAsset } from '../../tests/asset'
@@ -83,9 +79,6 @@ describe('Peer Resolvers', (): void => {
           mutation: gql`
             mutation CreatePeer($input: CreatePeerInput!) {
               createPeer(input: $input) {
-                code
-                success
-                message
                 peer {
                   id
                   asset {
@@ -119,8 +112,6 @@ describe('Peer Resolvers', (): void => {
           }
         })
 
-      expect(response.success).toBe(true)
-      expect(response.code).toEqual('200')
       assert.ok(response.peer)
       expect(response.peer).toEqual({
         __typename: 'Peer',
@@ -161,17 +152,14 @@ describe('Peer Resolvers', (): void => {
       ${PeerError.UnknownAsset}
       ${PeerError.DuplicatePeer}
       ${PeerError.InvalidInitialLiquidity}
-    `('4XX - $error', async ({ error }): Promise<void> => {
+    `('Error - $error', async ({ error }): Promise<void> => {
       jest.spyOn(peerService, 'create').mockResolvedValueOnce(error)
       const peer = randomPeer()
-      const response = await appContainer.apolloClient
+      const gqlQuery = appContainer.apolloClient
         .mutate({
           mutation: gql`
             mutation CreatePeer($input: CreatePeerInput!) {
               createPeer(input: $input) {
-                code
-                success
-                message
                 peer {
                   id
                 }
@@ -190,9 +178,8 @@ describe('Peer Resolvers', (): void => {
           }
         })
 
-      expect(response.success).toBe(false)
-      expect(response.code).toEqual(errorToCode[error as PeerError].toString())
-      expect(response.message).toEqual(errorToMessage[error as PeerError])
+      await expect(gqlQuery).rejects.toThrow(ApolloError)
+      await expect(gqlQuery).rejects.toThrow(errorToMessage[error as PeerError])
     })
 
     test('500', async (): Promise<void> => {
@@ -202,14 +189,11 @@ describe('Peer Resolvers', (): void => {
           throw new Error('unexpected')
         })
 
-      const response = await appContainer.apolloClient
+      const gqlQuery = appContainer.apolloClient
         .mutate({
           mutation: gql`
             mutation CreatePeer($input: CreatePeerInput!) {
               createPeer(input: $input) {
-                code
-                success
-                message
                 peer {
                   id
                 }
@@ -227,9 +211,7 @@ describe('Peer Resolvers', (): void => {
             throw new Error('Data was empty')
           }
         })
-      expect(response.code).toBe('500')
-      expect(response.success).toBe(false)
-      expect(response.message).toBe('Error trying to create peer')
+      await expect(gqlQuery).rejects.toThrow(ApolloError)
     })
   })
 
@@ -351,6 +333,7 @@ describe('Peer Resolvers', (): void => {
         })
 
       await expect(gqlQuery).rejects.toThrow(ApolloError)
+      await expect(gqlQuery).rejects.toThrow('Peer not found')
     })
   })
 
@@ -462,9 +445,6 @@ describe('Peer Resolvers', (): void => {
           mutation: gql`
             mutation UpdatePeer($input: UpdatePeerInput!) {
               updatePeer(input: $input) {
-                code
-                success
-                message
                 peer {
                   id
                   maxPacketAmount
@@ -493,8 +473,6 @@ describe('Peer Resolvers', (): void => {
           }
         })
 
-      expect(response.success).toBe(true)
-      expect(response.code).toEqual('200')
       expect(response.peer).toEqual({
         __typename: 'Peer',
         ...updateOptions,
@@ -527,16 +505,13 @@ describe('Peer Resolvers', (): void => {
       ${PeerError.InvalidStaticIlpAddress}
       ${PeerError.InvalidHTTPEndpoint}
       ${PeerError.UnknownPeer}
-    `('4XX - $error', async ({ error }): Promise<void> => {
+    `('Error - $error', async ({ error }): Promise<void> => {
       jest.spyOn(peerService, 'update').mockResolvedValueOnce(error)
-      const response = await appContainer.apolloClient
+      const gqlQuery = appContainer.apolloClient
         .mutate({
           mutation: gql`
             mutation UpdatePeer($input: UpdatePeerInput!) {
               updatePeer(input: $input) {
-                code
-                success
-                message
                 peer {
                   id
                 }
@@ -558,9 +533,8 @@ describe('Peer Resolvers', (): void => {
           }
         })
 
-      expect(response.success).toBe(false)
-      expect(response.code).toEqual(errorToCode[error as PeerError].toString())
-      expect(response.message).toEqual(errorToMessage[error as PeerError])
+      await expect(gqlQuery).rejects.toThrow(ApolloError)
+      await expect(gqlQuery).rejects.toThrow(errorToMessage[error as PeerError])
     })
 
     test('Returns error if unexpected error', async (): Promise<void> => {
@@ -568,14 +542,11 @@ describe('Peer Resolvers', (): void => {
         throw new Error('unexpected')
       })
 
-      const response = await appContainer.apolloClient
+      const gqlQuery = appContainer.apolloClient
         .mutate({
           mutation: gql`
             mutation UpdatePeer($input: UpdatePeerInput!) {
               updatePeer(input: $input) {
-                code
-                success
-                message
                 peer {
                   id
                   maxPacketAmount
@@ -606,9 +577,7 @@ describe('Peer Resolvers', (): void => {
           }
         })
 
-      expect(response.success).toBe(false)
-      expect(response.code).toEqual('500')
-      expect(response.message).toEqual('Error trying to update peer')
+      await expect(gqlQuery).rejects.toThrow(ApolloError)
     })
   })
 
@@ -625,9 +594,7 @@ describe('Peer Resolvers', (): void => {
           mutation: gql`
             mutation DeletePeer($input: DeletePeerInput!) {
               deletePeer(input: $input) {
-                code
                 success
-                message
               }
             }
           `,
@@ -646,20 +613,16 @@ describe('Peer Resolvers', (): void => {
         })
 
       expect(response.success).toBe(true)
-      expect(response.code).toEqual('200')
-      expect(response.message).toEqual('Deleted ILP Peer')
       await expect(peerService.get(peer.id)).resolves.toBeUndefined()
     })
 
     test('Returns error for unknown peer', async (): Promise<void> => {
-      const response = await appContainer.apolloClient
+      const gqlQuery = appContainer.apolloClient
         .mutate({
           mutation: gql`
             mutation DeletePeer($input: DeletePeerInput!) {
               deletePeer(input: $input) {
-                code
                 success
-                message
               }
             }
           `,
@@ -677,11 +640,8 @@ describe('Peer Resolvers', (): void => {
           }
         })
 
-      expect(response.success).toBe(false)
-      expect(response.code).toEqual(
-        errorToCode[PeerError.UnknownPeer].toString()
-      )
-      expect(response.message).toEqual(errorToMessage[PeerError.UnknownPeer])
+      await expect(gqlQuery).rejects.toThrow(ApolloError)
+      await expect(gqlQuery).rejects.toThrow('unknown peer')
     })
 
     test('Returns error if unexpected error', async (): Promise<void> => {
@@ -689,14 +649,12 @@ describe('Peer Resolvers', (): void => {
         throw new Error('unexpected')
       })
 
-      const response = await appContainer.apolloClient
+      const gqlQuery = appContainer.apolloClient
         .mutate({
           mutation: gql`
             mutation DeletePeer($input: DeletePeerInput!) {
               deletePeer(input: $input) {
-                code
                 success
-                message
               }
             }
           `,
@@ -714,9 +672,7 @@ describe('Peer Resolvers', (): void => {
           }
         })
 
-      expect(response.success).toBe(false)
-      expect(response.code).toEqual('500')
-      expect(response.message).toEqual('Error trying to delete peer')
+      await expect(gqlQuery).rejects.toThrow(ApolloError)
     })
   })
 })

@@ -7,14 +7,16 @@ import {
 } from '../generated/graphql'
 import { Peer } from '../../payment-method/ilp/peer/model'
 import {
-  PeerError,
   isPeerError,
   errorToCode,
-  errorToMessage
+  errorToMessage,
+  PeerError
 } from '../../payment-method/ilp/peer/errors'
 import { ApolloContext } from '../../app'
 import { getPageInfo } from '../../shared/pagination'
 import { Pagination, SortOrder } from '../../shared/baseModel'
+import { GraphQLError } from 'graphql'
+import { GraphQLErrorCode } from '../errors'
 
 export const getPeers: QueryResolvers<ApolloContext>['peers'] = async (
   parent,
@@ -48,7 +50,11 @@ export const getPeer: QueryResolvers<ApolloContext>['peer'] = async (
   const peerService = await ctx.container.use('peerService')
   const peer = await peerService.get(args.id)
   if (!peer) {
-    throw new Error('No peer')
+    throw new GraphQLError('Peer not found', {
+      extensions: {
+        code: GraphQLErrorCode.NotFound
+      }
+    })
   }
   return peerToGraphql(peer)
 }
@@ -60,36 +66,17 @@ export const createPeer: MutationResolvers<ApolloContext>['createPeer'] =
     ctx
   ): Promise<ResolversTypes['CreatePeerMutationResponse']> => {
     const peerService = await ctx.container.use('peerService')
-    return peerService
-      .create(args.input)
-      .then((peerOrError: Peer | PeerError) =>
-        isPeerError(peerOrError)
-          ? {
-              code: errorToCode[peerOrError].toString(),
-              success: false,
-              message: errorToMessage[peerOrError]
-            }
-          : {
-              code: '200',
-              success: true,
-              message: 'Created ILP Peer',
-              peer: peerToGraphql(peerOrError)
-            }
-      )
-      .catch((err) => {
-        ctx.logger.error(
-          {
-            options: args.input,
-            err
-          },
-          'error creating peer'
-        )
-        return {
-          code: '500',
-          success: false,
-          message: 'Error trying to create peer'
+    const peerOrError = await peerService.create(args.input)
+    if (isPeerError(peerOrError)) {
+      throw new GraphQLError(errorToMessage[peerOrError], {
+        extensions: {
+          code: errorToCode[peerOrError]
         }
       })
+    }
+    return {
+      peer: peerToGraphql(peerOrError)
+    }
   }
 
 export const updatePeer: MutationResolvers<ApolloContext>['updatePeer'] =
@@ -99,36 +86,17 @@ export const updatePeer: MutationResolvers<ApolloContext>['updatePeer'] =
     ctx
   ): Promise<ResolversTypes['UpdatePeerMutationResponse']> => {
     const peerService = await ctx.container.use('peerService')
-    return peerService
-      .update(args.input)
-      .then((peerOrError: Peer | PeerError) =>
-        isPeerError(peerOrError)
-          ? {
-              code: errorToCode[peerOrError].toString(),
-              success: false,
-              message: errorToMessage[peerOrError]
-            }
-          : {
-              code: '200',
-              success: true,
-              message: 'Updated ILP Peer',
-              peer: peerToGraphql(peerOrError)
-            }
-      )
-      .catch((err) => {
-        ctx.logger.error(
-          {
-            options: args.input,
-            err
-          },
-          'error updating peer'
-        )
-        return {
-          code: '500',
-          message: 'Error trying to update peer',
-          success: false
+    const peerOrError = await peerService.update(args.input)
+    if (isPeerError(peerOrError)) {
+      throw new GraphQLError(errorToMessage[peerOrError], {
+        extensions: {
+          code: errorToCode[peerOrError]
         }
       })
+    }
+    return {
+      peer: peerToGraphql(peerOrError)
+    }
   }
 
 export const deletePeer: MutationResolvers<ApolloContext>['deletePeer'] =
@@ -138,35 +106,17 @@ export const deletePeer: MutationResolvers<ApolloContext>['deletePeer'] =
     ctx
   ): Promise<ResolversTypes['DeletePeerMutationResponse']> => {
     const peerService = await ctx.container.use('peerService')
-    return peerService
-      .delete(args.input.id)
-      .then((peer: Peer | undefined) =>
-        peer
-          ? {
-              code: '200',
-              success: true,
-              message: 'Deleted ILP Peer'
-            }
-          : {
-              code: errorToCode[PeerError.UnknownPeer].toString(),
-              success: false,
-              message: errorToMessage[PeerError.UnknownPeer]
-            }
-      )
-      .catch((err) => {
-        ctx.logger.error(
-          {
-            id: args.input.id,
-            err
-          },
-          'error deleting peer'
-        )
-        return {
-          code: '500',
-          message: 'Error trying to delete peer',
-          success: false
+    const peer = await peerService.delete(args.input.id)
+    if (!peer) {
+      throw new GraphQLError(errorToMessage[PeerError.UnknownPeer], {
+        extensions: {
+          code: errorToCode[PeerError.UnknownPeer]
         }
       })
+    }
+    return {
+      success: true
+    }
   }
 
 export const peerToGraphql = (peer: Peer): SchemaPeer => ({
