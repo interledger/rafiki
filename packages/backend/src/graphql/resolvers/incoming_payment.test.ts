@@ -185,7 +185,7 @@ describe('Incoming Payment Resolver', (): void => {
       }
     )
 
-    test('400', async (): Promise<void> => {
+    test('Errors when unknown wallet address', async (): Promise<void> => {
       const createSpy = jest
         .spyOn(incomingPaymentService, 'create')
         .mockResolvedValueOnce(IncomingPaymentError.UnknownWalletAddress)
@@ -218,7 +218,7 @@ describe('Incoming Payment Resolver', (): void => {
       await expect(createSpy).toHaveBeenCalledWith(input)
     })
 
-    test('500', async (): Promise<void> => {
+    test('Internal server error', async (): Promise<void> => {
       const createSpy = jest
         .spyOn(incomingPaymentService, 'create')
         .mockRejectedValueOnce(new Error('unexpected'))
