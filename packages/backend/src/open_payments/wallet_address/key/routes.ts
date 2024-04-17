@@ -4,11 +4,13 @@ import { WalletAddressKeysContext } from '../../../app'
 import { IAppConfig } from '../../../config/app'
 import { WalletAddressService } from '../service'
 import { WalletAddressKeyService } from './service'
+import { Logger } from 'pino'
 
 interface ServiceDependencies {
   walletAddressKeyService: WalletAddressKeyService
   walletAddressService: WalletAddressService
   config: IAppConfig
+  logger: Logger
   jwk: JWK
 }
 
@@ -50,6 +52,16 @@ export async function getKeysByWalletAddressId(
       keys: [deps.jwk]
     }
   } else {
-    return ctx.throw(404)
+    const errorMessage =
+      'Could not get wallet address keys. It is possible there is a wallet address configuration error for this Rafiki instance.'
+    deps.logger.error(
+      {
+        requestedWalletAddress: ctx.walletAddressUrl,
+        configuredWalletAddressUrl: deps.config.walletAddressUrl
+      },
+      errorMessage
+    )
+
+    throw new Error(errorMessage)
   }
 }

@@ -86,6 +86,7 @@ import { PaymentMethodHandlerService } from './payment-method/handler/service'
 import { IlpPaymentService } from './payment-method/ilp/service'
 import { TelemetryService } from './telemetry/service'
 import { ApolloArmor } from '@escape.tech/graphql-armor'
+import { openPaymentsServerErrorMiddleware } from './open_payments/route-errors'
 export interface AppContextData {
   logger: Logger
   container: AppContainer
@@ -388,6 +389,7 @@ export class App {
     router.get('/healthz', (ctx: AppContext): void => {
       ctx.status = 200
     })
+    router.use(openPaymentsServerErrorMiddleware)
 
     const walletAddressKeyRoutes = await this.container.use(
       'walletAddressKeyRoutes'
@@ -403,6 +405,11 @@ export class App {
     const { resourceServerSpec, walletAddressServerSpec } =
       await this.container.use('openApi')
 
+    const validatorMiddlewareOptions = {
+      validateRequest: true,
+      validateResponse: process.env.NODE_ENV !== 'production'
+    }
+
     // POST /incoming-payments
     // Create incoming payment
     router.post<DefaultState, SignedCollectionContext<IncomingCreateBody>>(
@@ -410,10 +417,14 @@ export class App {
       createWalletAddressMiddleware(),
       createValidatorMiddleware<
         ContextType<SignedCollectionContext<IncomingCreateBody>>
-      >(resourceServerSpec, {
-        path: '/incoming-payments',
-        method: HttpMethod.POST
-      }),
+      >(
+        resourceServerSpec,
+        {
+          path: '/incoming-payments',
+          method: HttpMethod.POST
+        },
+        validatorMiddlewareOptions
+      ),
       createTokenIntrospectionMiddleware({
         requestType: AccessType.IncomingPayment,
         requestAction: RequestAction.Create
@@ -432,10 +443,14 @@ export class App {
       createWalletAddressMiddleware(),
       createValidatorMiddleware<
         ContextType<SignedCollectionContext<never, GetCollectionQuery>>
-      >(resourceServerSpec, {
-        path: '/incoming-payments',
-        method: HttpMethod.GET
-      }),
+      >(
+        resourceServerSpec,
+        {
+          path: '/incoming-payments',
+          method: HttpMethod.GET
+        },
+        validatorMiddlewareOptions
+      ),
       createTokenIntrospectionMiddleware({
         requestType: AccessType.IncomingPayment,
         requestAction: RequestAction.List
@@ -449,13 +464,16 @@ export class App {
     router.post<DefaultState, SignedCollectionContext<OutgoingCreateBody>>(
       '/outgoing-payments',
       createWalletAddressMiddleware(),
-      // TODO: use updated openapi spec
-      // createValidatorMiddleware<
-      //   ContextType<SignedCollectionContext<OutgoingCreateBody>>
-      // >(resourceServerSpec, {
-      //   path: '/outgoing-payments',
-      //   method: HttpMethod.POST
-      // }),
+      createValidatorMiddleware<
+        ContextType<SignedCollectionContext<OutgoingCreateBody>>
+      >(
+        resourceServerSpec,
+        {
+          path: '/outgoing-payments',
+          method: HttpMethod.POST
+        },
+        validatorMiddlewareOptions
+      ),
       createTokenIntrospectionMiddleware({
         requestType: AccessType.OutgoingPayment,
         requestAction: RequestAction.Create
@@ -474,10 +492,14 @@ export class App {
       createWalletAddressMiddleware(),
       createValidatorMiddleware<
         ContextType<SignedCollectionContext<never, GetCollectionQuery>>
-      >(resourceServerSpec, {
-        path: '/outgoing-payments',
-        method: HttpMethod.GET
-      }),
+      >(
+        resourceServerSpec,
+        {
+          path: '/outgoing-payments',
+          method: HttpMethod.GET
+        },
+        validatorMiddlewareOptions
+      ),
       createTokenIntrospectionMiddleware({
         requestType: AccessType.OutgoingPayment,
         requestAction: RequestAction.List
@@ -493,10 +515,14 @@ export class App {
       createWalletAddressMiddleware(),
       createValidatorMiddleware<
         ContextType<SignedCollectionContext<QuoteCreateBody>>
-      >(resourceServerSpec, {
-        path: '/quotes',
-        method: HttpMethod.POST
-      }),
+      >(
+        resourceServerSpec,
+        {
+          path: '/quotes',
+          method: HttpMethod.POST
+        },
+        validatorMiddlewareOptions
+      ),
       createTokenIntrospectionMiddleware({
         requestType: AccessType.Quote,
         requestAction: RequestAction.Create
@@ -512,10 +538,14 @@ export class App {
       createWalletAddressMiddleware(),
       createValidatorMiddleware<
         ContextType<SubresourceContextWithAuthenticatedStatus>
-      >(resourceServerSpec, {
-        path: '/incoming-payments/{id}',
-        method: HttpMethod.GET
-      }),
+      >(
+        resourceServerSpec,
+        {
+          path: '/incoming-payments/{id}',
+          method: HttpMethod.GET
+        },
+        validatorMiddlewareOptions
+      ),
       createTokenIntrospectionMiddleware({
         requestType: AccessType.IncomingPayment,
         requestAction: RequestAction.Read,
@@ -535,7 +565,8 @@ export class App {
         {
           path: '/incoming-payments/{id}/complete',
           method: HttpMethod.POST
-        }
+        },
+        validatorMiddlewareOptions
       ),
       createTokenIntrospectionMiddleware({
         requestType: AccessType.IncomingPayment,
@@ -555,7 +586,8 @@ export class App {
         {
           path: '/outgoing-payments/{id}',
           method: HttpMethod.GET
-        }
+        },
+        validatorMiddlewareOptions
       ),
       createTokenIntrospectionMiddleware({
         requestType: AccessType.OutgoingPayment,
@@ -575,7 +607,8 @@ export class App {
         {
           path: '/quotes/{id}',
           method: HttpMethod.GET
-        }
+        },
+        validatorMiddlewareOptions
       ),
       createTokenIntrospectionMiddleware({
         requestType: AccessType.Quote,
@@ -593,7 +626,8 @@ export class App {
         {
           path: '/jwks.json',
           method: HttpMethod.GET
-        }
+        },
+        validatorMiddlewareOptions
       ),
       async (ctx: WalletAddressKeysContext): Promise<void> =>
         await walletAddressKeyRoutes.getKeysByWalletAddressId(ctx)
@@ -605,10 +639,14 @@ export class App {
       WALLET_ADDRESS_PATH,
       createWalletAddressMiddleware(),
       createSpspMiddleware(this.config.spspEnabled),
-      createValidatorMiddleware<WalletAddressContext>(walletAddressServerSpec, {
-        path: '/',
-        method: HttpMethod.GET
-      }),
+      createValidatorMiddleware<WalletAddressContext>(
+        walletAddressServerSpec,
+        {
+          path: '/',
+          method: HttpMethod.GET
+        },
+        validatorMiddlewareOptions
+      ),
       walletAddressRoutes.get
     )
 

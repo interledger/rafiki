@@ -2,17 +2,12 @@ import { faker } from '@faker-js/faker'
 import jestOpenAPI from 'jest-openapi'
 import { Knex } from 'knex'
 import { v4 as uuid } from 'uuid'
-
+import assert from 'assert'
 import { createTestApp, TestContainer } from '../../../tests/app'
 import { Config, IAppConfig } from '../../../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../../..'
-import {
-  AppServices,
-  CreateContext,
-  ListContext,
-  ReadContext
-} from '../../../app'
+import { AppServices, CreateContext } from '../../../app'
 import { truncateTables } from '../../../tests/tableManager'
 import { createAsset } from '../../../tests/asset'
 import { errorToCode, errorToMessage, OutgoingPaymentError } from './errors'
@@ -34,8 +29,8 @@ import {
 } from '../../wallet_address/model.test'
 import { createOutgoingPayment } from '../../../tests/outgoingPayment'
 import { createWalletAddress } from '../../../tests/walletAddress'
-import assert from 'assert'
 import { UnionOmit } from '../../../shared/utils'
+import { OpenPaymentsServerRouteError } from '../../route-errors'
 
 describe('Outgoing Payment Routes', (): void => {
   let deps: IocContract<AppServices>
@@ -134,38 +129,6 @@ describe('Outgoing Payment Routes', (): void => {
       },
       list: (ctx) => outgoingPaymentRoutes.list(ctx),
       urlPath: OutgoingPayment.urlPath
-    })
-  })
-
-  describe('get', () => {
-    test('returns 500 for unexpected error', async (): Promise<void> => {
-      jest
-        .spyOn(outgoingPaymentService, 'get')
-        .mockRejectedValueOnce(new Error('unexpected'))
-      const ctx = setupContext<ReadContext>({
-        reqOpts: {},
-        walletAddress
-      })
-      await expect(outgoingPaymentRoutes.get(ctx)).rejects.toMatchObject({
-        status: 500,
-        message: 'Unhandled error when trying to get outgoing payment'
-      })
-    })
-  })
-
-  describe('list', () => {
-    test('returns 500 for unexpected error', async (): Promise<void> => {
-      jest
-        .spyOn(outgoingPaymentService, 'getWalletAddressPage')
-        .mockRejectedValueOnce(new Error('unexpected'))
-      const ctx = setupContext<ListContext>({
-        reqOpts: {},
-        walletAddress
-      })
-      await expect(outgoingPaymentRoutes.list(ctx)).rejects.toMatchObject({
-        status: 500,
-        message: 'Unhandled error when trying to list outgoing payments'
-      })
     })
   })
 
@@ -312,34 +275,22 @@ describe('Outgoing Payment Routes', (): void => {
         const createSpy = jest
           .spyOn(outgoingPaymentService, 'create')
           .mockResolvedValueOnce(error)
-        await expect(outgoingPaymentRoutes.create(ctx)).rejects.toMatchObject({
-          message: errorToMessage[error],
-          status: errorToCode[error]
-        })
+
+        expect.assertions(3)
+
+        try {
+          await outgoingPaymentRoutes.create(ctx)
+        } catch (err) {
+          assert(err instanceof OpenPaymentsServerRouteError)
+          expect(err.message).toBe(errorToMessage[error])
+          expect(err.status).toBe(errorToCode[error])
+        }
+
         expect(createSpy).toHaveBeenCalledWith({
           walletAddressId: walletAddress.id,
           quoteId
         })
       }
     )
-
-    test('returns 500 on unhandled error', async (): Promise<void> => {
-      const quoteId = uuid()
-      const ctx = setup({
-        quoteId: `${baseUrl}/quotes/${quoteId}`
-      })
-      const createSpy = jest
-        .spyOn(outgoingPaymentService, 'create')
-        .mockRejectedValueOnce(new Error('Some error'))
-
-      await expect(outgoingPaymentRoutes.create(ctx)).rejects.toMatchObject({
-        message: 'Unhandled error when trying to create outgoing payment',
-        status: 500
-      })
-      expect(createSpy).toHaveBeenCalledWith({
-        walletAddressId: walletAddress.id,
-        quoteId
-      })
-    })
   })
 })

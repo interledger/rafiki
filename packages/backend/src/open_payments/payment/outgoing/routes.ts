@@ -1,4 +1,3 @@
-import Koa from 'koa'
 import { Logger } from 'pino'
 import { ReadContext, CreateContext, ListContext } from '../../../app'
 import { IAppConfig } from '../../../config/app'
@@ -21,7 +20,11 @@ import {
   AccessAction,
   OutgoingPayment as OpenPaymentsOutgoingPayment
 } from '@interledger/open-payments'
-import { WalletAddress } from '../../wallet_address/model'
+import {
+  WalletAddress,
+  throwIfMissingWalletAddress
+} from '../../wallet_address/model'
+import { OpenPaymentsServerRouteError } from '../../route-errors'
 import { Amount } from '../../amount'
 
 interface ServiceDependencies {
@@ -55,21 +58,23 @@ async function getOutgoingPayment(
   deps: ServiceDependencies,
   ctx: ReadContext
 ): Promise<void> {
-  let outgoingPayment: OutgoingPayment | undefined
-  try {
-    outgoingPayment = await deps.outgoingPaymentService.get({
-      id: ctx.params.id,
-      client: ctx.accessAction === AccessAction.Read ? ctx.client : undefined
-    })
-  } catch (err) {
-    const errorMessage = 'Unhandled error when trying to get outgoing payment'
-    deps.logger.error(
-      { err, id: ctx.params.id, walletAddressId: ctx.walletAddress.id },
-      errorMessage
+  const outgoingPayment = await deps.outgoingPaymentService.get({
+    id: ctx.params.id,
+    client: ctx.accessAction === AccessAction.Read ? ctx.client : undefined
+  })
+
+  if (!outgoingPayment) {
+    throw new OpenPaymentsServerRouteError(
+      404,
+      'Outgoing payment does not exist',
+      {
+        id: ctx.params.id
+      }
     )
-    return ctx.throw(500, errorMessage)
   }
-  if (!outgoingPayment || !outgoingPayment.walletAddress) return ctx.throw(404)
+
+  throwIfMissingWalletAddress(deps, outgoingPayment)
+
   ctx.body = outgoingPaymentToBody(
     outgoingPayment.walletAddress,
     outgoingPayment
@@ -109,97 +114,62 @@ async function createOutgoingPayment(
     const quoteUrlParts = body.quoteId.split('/')
     quoteId = quoteUrlParts.pop() || quoteUrlParts.pop() // handle trailing slash
     if (!quoteId) {
-      return ctx.throw(400, 'invalid quoteId')
+      throw new OpenPaymentsServerRouteError(
+        400,
+        'Invalid quote id trying to create outgoing payment',
+        { requestBody: body }
+      )
     }
   }
 
-  let outgoingPaymentOrError: OutgoingPayment | OutgoingPaymentError
-
-  try {
-    let options: OutgoingPaymentCreateBaseOptions = {
-      walletAddressId: ctx.walletAddress.id,
-      metadata: body.metadata,
-      client: ctx.client,
-      grant: ctx.grant
-    }
-    if (isCreateFromIncomingPayment(body)) {
-      options = {
-        ...options,
-        incomingPaymentId: body.incomingPaymentId,
-        debitAmount: body.debitAmount
-      } as CreateFromIncomingPayment
-    } else {
-      options = {
-        ...options,
-        quoteId
-      } as CreateFromQuote
-    }
-
-    outgoingPaymentOrError = await deps.outgoingPaymentService.create(
-      options as CreateOutgoingPaymentOptions
-    )
-  } catch (err) {
-    const errorMessage =
-      'Unhandled error when trying to create outgoing payment'
-    if (isCreateFromIncomingPayment(body)) {
-      deps.logger.error(
-        {
-          err,
-          incomingPaymentId: body.incomingPaymentId,
-          debitAmount: body.debitAmount,
-          walletAddressId: ctx.walletAddress.id
-        },
-        errorMessage
-      )
-    } else {
-      deps.logger.error(
-        {
-          err,
-          quoteId,
-          walletAddressId: ctx.walletAddress.id
-        },
-        errorMessage
-      )
-    }
-    return ctx.throw(500, errorMessage)
+  let options: OutgoingPaymentCreateBaseOptions = {
+    walletAddressId: ctx.walletAddress.id,
+    metadata: body.metadata,
+    client: ctx.client,
+    grant: ctx.grant
   }
+  if (isCreateFromIncomingPayment(body)) {
+    options = {
+      ...options,
+      incomingPaymentId: body.incomingPaymentId,
+      debitAmount: body.debitAmount
+    } as CreateFromIncomingPayment
+  } else {
+    options = {
+      ...options,
+      quoteId
+    } as CreateFromQuote
+  }
+
+  const outgoingPaymentOrError = await deps.outgoingPaymentService.create(
+    options as CreateOutgoingPaymentOptions
+  )
 
   if (isOutgoingPaymentError(outgoingPaymentOrError)) {
-    return ctx.throw(
+    throw new OpenPaymentsServerRouteError(
       errorToCode[outgoingPaymentOrError],
       errorToMessage[outgoingPaymentOrError]
     )
   }
+
+  throwIfMissingWalletAddress(deps, outgoingPaymentOrError)
+
   ctx.status = 201
-  ctx.body = outgoingPaymentToBody(ctx.walletAddress, outgoingPaymentOrError)
+  ctx.body = outgoingPaymentToBody(
+    outgoingPaymentOrError.walletAddress,
+    outgoingPaymentOrError
+  )
 }
 
 async function listOutgoingPayments(
   deps: ServiceDependencies,
   ctx: ListContext
 ): Promise<void> {
-  try {
-    await listSubresource({
-      ctx,
-      getWalletAddressPage: deps.outgoingPaymentService.getWalletAddressPage,
-      toBody: (payment) => outgoingPaymentToBody(ctx.walletAddress, payment)
-    })
-  } catch (err) {
-    if (err instanceof Koa.HttpError) {
-      throw err
-    }
-
-    const errorMessage = 'Unhandled error when trying to list outgoing payments'
-    deps.logger.error(
-      {
-        err,
-        request: ctx.request.query,
-        walletAddressId: ctx.walletAddress.id
-      },
-      errorMessage
-    )
-    return ctx.throw(500, errorMessage)
-  }
+  await listSubresource({
+    ctx,
+    getWalletAddressPage: deps.outgoingPaymentService.getWalletAddressPage,
+    toBody: (payment) => outgoingPaymentToBody(ctx.walletAddress, payment)
+  })
 }
 
 function outgoingPaymentToBody(
