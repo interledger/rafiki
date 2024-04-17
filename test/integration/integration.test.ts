@@ -35,7 +35,6 @@ describe('Integration tests', (): void => {
   // Individual requests
   describe('Requests', (): void => {
     test('Can Get Non-Existing Wallet Address', async (): Promise<void> => {
-      throw new Error('fail fast')
       const notFoundWalletAddress =
         'https://happy-life-bank-test-backend:4100/accounts/asmith'
 
@@ -70,7 +69,7 @@ describe('Integration tests', (): void => {
   })
 
   // Series of requests depending on eachother
-  describe.skip('Flows', () => {
+  describe('Flows', () => {
     test('Open Payments with Continuation via Polling', async (): Promise<void> => {
       const {
         grantRequestIncomingPayment,
