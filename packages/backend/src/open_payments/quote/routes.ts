@@ -3,7 +3,7 @@ import { Logger } from 'pino'
 import { ReadContext, CreateContext } from '../../app'
 import { IAppConfig } from '../../config/app'
 import { CreateQuoteOptions, QuoteService } from './service'
-import { isQuoteError, errorToCode, errorToMessage } from './errors'
+import { isQuoteError, errorToHTTPCode, errorToMessage } from './errors'
 import { Quote } from './model'
 import { AmountJSON, parseAmount } from '../amount'
 import { Quote as OpenPaymentsQuote } from '@interledger/open-payments'
@@ -101,7 +101,7 @@ async function createQuote(
 
   if (isQuoteError(quoteOrErr)) {
     throw new OpenPaymentsServerRouteError(
-      errorToCode[quoteOrErr],
+      errorToHTTPCode[quoteOrErr],
       errorToMessage[quoteOrErr]
     )
   }

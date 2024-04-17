@@ -1,4 +1,4 @@
-import { gql } from '@apollo/client'
+import { ApolloError, gql } from '@apollo/client'
 import { v4 as uuid } from 'uuid'
 
 import { getPageTests } from './page.test'
@@ -129,7 +129,7 @@ describe('Quote Resolvers', (): void => {
       })
     })
 
-    test('404', async (): Promise<void> => {
+    test('Not found', async (): Promise<void> => {
       jest.spyOn(quoteService, 'get').mockImplementation(async () => undefined)
 
       await expect(
@@ -206,8 +206,6 @@ describe('Quote Resolvers', (): void => {
           query: gql`
             mutation CreateQuote($input: CreateQuoteInput!) {
               createQuote(input: $input) {
-                code
-                success
                 quote {
                   id
                 }
@@ -219,20 +217,15 @@ describe('Quote Resolvers', (): void => {
         .then((query): QuoteResponse => query.data?.createQuote)
 
       expect(createSpy).toHaveBeenCalledWith({ ...input, method: 'ilp' })
-      expect(query.code).toBe('200')
-      expect(query.success).toBe(true)
       expect(query.quote?.id).toBe(quote?.id)
     })
 
-    test('400', async (): Promise<void> => {
-      const query = await appContainer.apolloClient
+    test('unknown walletAddress', async (): Promise<void> => {
+      const gqlQuery = appContainer.apolloClient
         .query({
           query: gql`
             mutation CreateQuote($input: CreateQuoteInput!) {
               createQuote(input: $input) {
-                code
-                success
-                message
                 quote {
                   id
                 }
@@ -242,12 +235,11 @@ describe('Quote Resolvers', (): void => {
           variables: { input }
         })
         .then((query): QuoteResponse => query.data?.createQuote)
-      expect(query.code).toBe('404')
-      expect(query.success).toBe(false)
-      expect(query.message).toBe(
+
+      await expect(gqlQuery).rejects.toThrow(ApolloError)
+      await expect(gqlQuery).rejects.toThrow(
         errorToMessage[QuoteError.UnknownWalletAddress]
       )
-      expect(query.quote).toBeNull()
     })
 
     test('500', async (): Promise<void> => {
@@ -255,7 +247,7 @@ describe('Quote Resolvers', (): void => {
         .spyOn(quoteService, 'create')
         .mockRejectedValueOnce(new Error('unexpected'))
 
-      const query = await appContainer.apolloClient
+      const gqlQuery = appContainer.apolloClient
         .query({
           query: gql`
             mutation CreateQuote($input: CreateQuoteInput!) {
@@ -272,11 +264,8 @@ describe('Quote Resolvers', (): void => {
           variables: { input }
         })
         .then((query): QuoteResponse => query.data?.createQuote)
+      await expect(gqlQuery).rejects.toThrow(ApolloError)
       expect(createSpy).toHaveBeenCalledWith({ ...input, method: 'ilp' })
-      expect(query.code).toBe('500')
-      expect(query.success).toBe(false)
-      expect(query.message).toBe('Error trying to create quote')
-      expect(query.quote).toBeNull()
     })
   })
 
