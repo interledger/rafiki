@@ -4,7 +4,7 @@ import { initIocContainer } from '../..'
 import { Config } from '../../config/app'
 import { createTestApp, TestContainer } from '../../tests/app'
 import { truncateTables } from '../../tests/tableManager'
-import { gql } from '@apollo/client'
+import { ApolloError, gql } from '@apollo/client'
 import { SetFeeResponse } from '../generated/graphql'
 import { Asset } from '../../asset/model'
 import { createAsset } from '../../tests/asset'
@@ -52,9 +52,6 @@ describe('Fee Resolvers', () => {
           mutation: gql`
             mutation SetFee($input: SetFeeInput!) {
               setFee(input: $input) {
-                code
-                success
-                message
                 fee {
                   id
                   assetId
@@ -76,9 +73,6 @@ describe('Fee Resolvers', () => {
           }
         })
 
-      expect(response.success).toBe(true)
-      expect(response.code).toEqual('200')
-      expect(response.message).toEqual('Fee set')
       expect(response.fee).toMatchObject({
         __typename: 'Fee',
         assetId: input.assetId,
@@ -97,14 +91,11 @@ describe('Fee Resolvers', () => {
           basisPoints: 100
         }
       }
-      const response = await appContainer.apolloClient
+      const gqlQuery = appContainer.apolloClient
         .mutate({
           mutation: gql`
             mutation SetFee($input: SetFeeInput!) {
               setFee(input: $input) {
-                code
-                success
-                message
                 fee {
                   id
                   assetId
@@ -126,10 +117,8 @@ describe('Fee Resolvers', () => {
           }
         })
 
-      expect(response.success).toBe(false)
-      expect(response.code).toEqual('404')
-      expect(response.message).toEqual('unknown asset')
-      expect(response.fee).toBeNull()
+      await expect(gqlQuery).rejects.toThrow(ApolloError)
+      await expect(gqlQuery).rejects.toThrow('Unknown asset')
     })
 
     test('Returns error for invalid percent fee', async (): Promise<void> => {
@@ -141,14 +130,11 @@ describe('Fee Resolvers', () => {
           basisPoints: -10_000
         }
       }
-      const response = await appContainer.apolloClient
+      const gqlQuery = appContainer.apolloClient
         .mutate({
           mutation: gql`
             mutation SetFee($input: SetFeeInput!) {
               setFee(input: $input) {
-                code
-                success
-                message
                 fee {
                   id
                   assetId
@@ -170,12 +156,10 @@ describe('Fee Resolvers', () => {
           }
         })
 
-      expect(response.success).toBe(false)
-      expect(response.code).toEqual('400')
-      expect(response.message).toEqual(
+      await expect(gqlQuery).rejects.toThrow(ApolloError)
+      await expect(gqlQuery).rejects.toThrow(
         'Basis point fee must be between 0 and 10000'
       )
-      expect(response.fee).toBeNull()
     })
 
     test('Returns 500 error for unhandled errors', async (): Promise<void> => {
@@ -190,14 +174,11 @@ describe('Fee Resolvers', () => {
           basisPoints: -10_000
         }
       }
-      const response = await appContainer.apolloClient
+      const gqlQuery = appContainer.apolloClient
         .mutate({
           mutation: gql`
             mutation setFee($input: SetFeeInput!) {
               setFee(input: $input) {
-                code
-                success
-                message
                 fee {
                   id
                   assetId
@@ -219,10 +200,7 @@ describe('Fee Resolvers', () => {
           }
         })
 
-      expect(response.success).toBe(false)
-      expect(response.code).toEqual('500')
-      expect(response.message).toEqual('Error trying to update fee')
-      expect(response.fee).toBeNull()
+      await expect(gqlQuery).rejects.toThrow(ApolloError)
     })
   })
 })
