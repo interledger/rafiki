@@ -45,9 +45,6 @@ describe('Auto Peering Resolvers', (): void => {
             $input: CreateOrUpdatePeerByUrlInput!
           ) {
             createOrUpdatePeerByUrl(input: $input) {
-              code
-              success
-              message
               peer {
                 id
                 asset {
@@ -167,8 +164,6 @@ describe('Auto Peering Resolvers', (): void => {
 
       const response = await callCreateOrUpdatePeerByUrl(input)
 
-      expect(response.success).toBe(true)
-      expect(response.code).toEqual('200')
       assert.ok(response.peer)
       expect(response.peer).toEqual({
         __typename: 'Peer',
@@ -201,8 +196,6 @@ describe('Auto Peering Resolvers', (): void => {
 
       const secondResponse = await callCreateOrUpdatePeerByUrl(secondInput)
 
-      expect(secondResponse.success).toBe(true)
-      expect(secondResponse.code).toEqual('200')
       assert.ok(secondResponse.peer)
       expect(secondResponse.peer).toEqual({
         __typename: 'Peer',
@@ -252,9 +245,6 @@ describe('Auto Peering Resolvers', (): void => {
               $input: CreateOrUpdatePeerByUrlInput!
             ) {
               createOrUpdatePeerByUrl(input: $input) {
-                code
-                success
-                message
                 peer {
                   id
                 }
@@ -291,9 +281,6 @@ describe('Auto Peering Resolvers', (): void => {
               $input: CreateOrUpdatePeerByUrlInput!
             ) {
               createOrUpdatePeerByUrl(input: $input) {
-                code
-                success
-                message
                 peer {
                   id
                 }
