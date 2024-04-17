@@ -20,7 +20,7 @@ import { createAsset } from '../../../tests/asset'
 import { createIncomingPayment } from '../../../tests/incomingPayment'
 import { createWalletAddress } from '../../../tests/walletAddress'
 import { Asset } from '../../../asset/model'
-import { IncomingPaymentError, errorToCode, errorToMessage } from './errors'
+import { IncomingPaymentError, errorToHTTPCode, errorToMessage } from './errors'
 import { IncomingPaymentService } from './service'
 import { IncomingPaymentWithPaymentMethods as OpenPaymentsIncomingPaymentWithPaymentMethods } from '@interledger/open-payments'
 
@@ -176,7 +176,7 @@ describe('Incoming Payment Routes', (): void => {
           .mockResolvedValueOnce(error)
         await expect(incomingPaymentRoutes.create(ctx)).rejects.toMatchObject({
           message: errorToMessage[error],
-          status: errorToCode[error]
+          status: errorToHTTPCode[error]
         })
         expect(createSpy).toHaveBeenCalledWith({
           walletAddressId: walletAddress.id

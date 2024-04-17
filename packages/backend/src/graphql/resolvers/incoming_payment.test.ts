@@ -1,4 +1,4 @@
-import { gql } from '@apollo/client'
+import { ApolloError, gql } from '@apollo/client'
 import { getPageTests } from './page.test'
 import { createTestApp, TestContainer } from '../../tests/app'
 import { IocContract } from '@adonisjs/fold'
@@ -22,10 +22,7 @@ import {
   IncomingPaymentResponse,
   IncomingPaymentState as SchemaPaymentState
 } from '../generated/graphql'
-import {
-  IncomingPaymentError,
-  errorToMessage
-} from '../../open_payments/payment/incoming/errors'
+import { IncomingPaymentError } from '../../open_payments/payment/incoming/errors'
 import { Amount, serializeAmount } from '../../open_payments/amount'
 
 describe('Incoming Payment Resolver', (): void => {
@@ -97,7 +94,7 @@ describe('Incoming Payment Resolver', (): void => {
       ${undefined}                                      | ${new Date(Date.now() + 30_000)} | ${false}   | ${'expiresAt'}
       ${undefined}                                      | ${undefined}                     | ${true}    | ${'incomingAmount'}
     `(
-      '200 ($desc)',
+      'Successfully creates an incoming payment with $desc',
       async ({ metadata, expiresAt, withAmount }): Promise<void> => {
         const incomingAmount = withAmount ? amount : undefined
         const { id: walletAddressId } = await createWalletAddress(deps, {
@@ -128,9 +125,6 @@ describe('Incoming Payment Resolver', (): void => {
                 $input: CreateIncomingPaymentInput!
               ) {
                 createIncomingPayment(input: $input) {
-                  code
-                  success
-                  message
                   payment {
                     id
                     walletAddressId
@@ -162,9 +156,6 @@ describe('Incoming Payment Resolver', (): void => {
         expect(createSpy).toHaveBeenCalledWith(input)
         expect(query).toEqual({
           __typename: 'IncomingPaymentResponse',
-          code: '200',
-          success: true,
-          message: null,
           payment: {
             __typename: 'IncomingPayment',
             id: payment.id,
@@ -199,16 +190,13 @@ describe('Incoming Payment Resolver', (): void => {
         walletAddressId: uuid()
       }
 
-      const query = await appContainer.apolloClient
+      const gqlQuery = appContainer.apolloClient
         .query({
           query: gql`
             mutation CreateIncomingPayment(
               $input: CreateIncomingPaymentInput!
             ) {
               createIncomingPayment(input: $input) {
-                code
-                success
-                message
                 payment {
                   id
                   state
@@ -221,13 +209,9 @@ describe('Incoming Payment Resolver', (): void => {
         .then(
           (query): IncomingPaymentResponse => query.data?.createIncomingPayment
         )
-      expect(query.code).toBe('404')
-      expect(query.success).toBe(false)
-      expect(query.message).toBe(
-        errorToMessage[IncomingPaymentError.UnknownWalletAddress]
-      )
-      expect(query.payment).toBeNull()
-      expect(createSpy).toHaveBeenCalledWith(input)
+      await expect(gqlQuery).rejects.toThrow(ApolloError)
+      await expect(gqlQuery).rejects.toThrow('unknown wallet address')
+      await expect(createSpy).toHaveBeenCalledWith(input)
     })
 
     test('500', async (): Promise<void> => {
@@ -239,16 +223,13 @@ describe('Incoming Payment Resolver', (): void => {
         walletAddressId: uuid()
       }
 
-      const query = await appContainer.apolloClient
+      const gqlQuery = appContainer.apolloClient
         .query({
           query: gql`
             mutation CreateIncomingPayment(
               $input: CreateIncomingPaymentInput!
             ) {
               createIncomingPayment(input: $input) {
-                code
-                success
-                message
                 payment {
                   id
                   state
@@ -261,11 +242,8 @@ describe('Incoming Payment Resolver', (): void => {
         .then(
           (query): IncomingPaymentResponse => query.data?.createIncomingPayment
         )
-      expect(createSpy).toHaveBeenCalledWith(input)
-      expect(query.code).toBe('500')
-      expect(query.success).toBe(false)
-      expect(query.message).toBe('Error trying to create incoming payment')
-      expect(query.payment).toBeNull()
+      await expect(gqlQuery).rejects.toThrow(ApolloError)
+      await expect(createSpy).toHaveBeenCalledWith(input)
     })
   })
 
