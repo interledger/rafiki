@@ -142,7 +142,6 @@ services:
       - mailslurper
     environment:
       DEV_MODE: true
-      DSN: postgres://cloud_nine_kratos:kratos_password@shared-database:5432/cloud_nine_kratos?sslmode=disable&max_conns=20&max_idle_conns=4
     ports:
       - "4433:4433"
     networks:

@@ -111,7 +111,6 @@ services:
       - mailslurper
     environment:
       DEV_MODE: true
-      DSN: postgres://happy_life_kratos:kratos_password@shared-database:5432/happy_life_kratos?sslmode=disable&max_conns=20&max_idle_conns=4
     ports:
       - "4432:4433"
     networks:
