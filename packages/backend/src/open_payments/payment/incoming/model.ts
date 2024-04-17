@@ -38,6 +38,7 @@ export enum IncomingPaymentState {
 export interface IncomingPaymentResponse {
   id: string
   walletAddressId: string
+  client?: string
   createdAt: string
   updatedAt: string
   expiresAt: string
@@ -184,6 +185,7 @@ export class IncomingPayment
     const data: IncomingPaymentData = {
       id: this.id,
       walletAddressId: this.walletAddressId,
+      client: this.client,
       createdAt: new Date(+this.createdAt).toISOString(),
       expiresAt: this.expiresAt.toISOString(),
       receivedAmount: {

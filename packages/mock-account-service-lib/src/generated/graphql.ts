@@ -94,6 +94,7 @@ export type AssetsConnection = {
 };
 
 export type BasePayment = {
+  client?: Maybe<Scalars['String']['output']>;
   createdAt: Scalars['String']['output'];
   id: Scalars['ID']['output'];
   metadata?: Maybe<Scalars['JSONObject']['output']>;
@@ -423,6 +424,8 @@ export type HttpOutgoingInput = {
 
 export type IncomingPayment = BasePayment & Model & {
   __typename?: 'IncomingPayment';
+  /** Information about the wallet address of the Open Payments client that created the incoming payment. */
+  client?: Maybe<Scalars['String']['output']>;
   /** Date-time of creation */
   createdAt: Scalars['String']['output'];
   /** Date-time of expiry. After this time, the incoming payment will not accept further payments made to it. */
@@ -439,7 +442,7 @@ export type IncomingPayment = BasePayment & Model & {
   receivedAmount: Amount;
   /** Incoming payment state */
   state: IncomingPaymentState;
-  /** Id of the wallet address under which this incoming payment was created */
+  /** Id of the wallet address under which this incoming payment was created. */
   walletAddressId: Scalars['ID']['output'];
 };
 
@@ -747,6 +750,8 @@ export type MutationResponse = {
 
 export type OutgoingPayment = BasePayment & Model & {
   __typename?: 'OutgoingPayment';
+  /** Information about the wallet address of the Open Payments client that created the outgoing payment. */
+  client?: Maybe<Scalars['String']['output']>;
   /** Date-time of creation */
   createdAt: Scalars['String']['output'];
   /** Amount to send (fixed send) */
@@ -818,6 +823,8 @@ export type PageInfo = {
 
 export type Payment = BasePayment & Model & {
   __typename?: 'Payment';
+  /** Information about the wallet address of the Open Payments client that created the payment. */
+  client?: Maybe<Scalars['String']['output']>;
   /** Date-time of creation */
   createdAt: Scalars['String']['output'];
   /** Payment id */
@@ -1695,6 +1702,7 @@ export type AssetsConnectionResolvers<ContextType = any, ParentType extends Reso
 
 export type BasePaymentResolvers<ContextType = any, ParentType extends ResolversParentTypes['BasePayment'] = ResolversParentTypes['BasePayment']> = {
   __resolveType: TypeResolveFn<'IncomingPayment' | 'OutgoingPayment' | 'Payment', ParentType, ContextType>;
+  client?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   metadata?: Resolver<Maybe<ResolversTypes['JSONObject']>, ParentType, ContextType>;
@@ -1782,6 +1790,7 @@ export type HttpOutgoingResolvers<ContextType = any, ParentType extends Resolver
 };
 
 export type IncomingPaymentResolvers<ContextType = any, ParentType extends ResolversParentTypes['IncomingPayment'] = ResolversParentTypes['IncomingPayment']> = {
+  client?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   expiresAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
@@ -1880,6 +1889,7 @@ export type MutationResponseResolvers<ContextType = any, ParentType extends Reso
 };
 
 export type OutgoingPaymentResolvers<ContextType = any, ParentType extends ResolversParentTypes['OutgoingPayment'] = ResolversParentTypes['OutgoingPayment']> = {
+  client?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   debitAmount?: Resolver<ResolversTypes['Amount'], ParentType, ContextType>;
   error?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
@@ -1925,6 +1935,7 @@ export type PageInfoResolvers<ContextType = any, ParentType extends ResolversPar
 };
 
 export type PaymentResolvers<ContextType = any, ParentType extends ResolversParentTypes['Payment'] = ResolversParentTypes['Payment']> = {
+  client?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   liquidity?: Resolver<Maybe<ResolversTypes['UInt64']>, ParentType, ContextType>;

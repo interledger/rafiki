@@ -311,7 +311,10 @@ describe('Webhook Service', (): void => {
       })
     })
 
-    function mockWebhookServer(status = 200): Scope {
+    function mockWebhookServer(
+      status = 200,
+      expectedEvent: WebhookEvent = event
+    ): Scope {
       return nock(webhookUrl.origin)
         .post(webhookUrl.pathname, function (this: Definition, body) {
           assert.ok(this.headers)
@@ -325,9 +328,9 @@ describe('Webhook Service', (): void => {
             )
           ).toEqual(signature)
           expect(body).toMatchObject({
-            id: event.id,
-            type: event.type,
-            data: event.data
+            id: expectedEvent.id,
+            type: expectedEvent.type,
+            data: expectedEvent.data
           })
           return true
         })
@@ -402,6 +405,38 @@ describe('Webhook Service', (): void => {
       await expect(webhookService.getEvent(event.id)).resolves.toEqual(event)
       await expect(webhookService.processNext()).resolves.toBeUndefined()
       expect(requests).toBe(0)
+    })
+
+    test('Skips the event if webhookMaxAttempts is reached (processes the next one)', async (): Promise<void> => {
+      await event.$query(knex).patch({
+        attempts: Config.webhookMaxRetry
+      })
+
+      const nextEvent = await WebhookEvent.query(knex).insertAndFetch({
+        id: uuid(),
+        type: WalletAddressEventType.WalletAddressNotFound,
+        data: {
+          account: {
+            id: uuid()
+          }
+        }
+      })
+      const scope = mockWebhookServer(200, nextEvent)
+
+      await expect(webhookService.getEvent(event.id)).resolves.toEqual(event)
+      await expect(webhookService.getEvent(nextEvent.id)).resolves.toEqual(
+        nextEvent
+      )
+
+      await expect(webhookService.processNext()).resolves.toBe(nextEvent.id)
+      scope.done()
+      await expect(
+        webhookService.getEvent(nextEvent.id)
+      ).resolves.toMatchObject({
+        attempts: 1,
+        statusCode: 200,
+        processAt: null
+      })
     })
   })
 })

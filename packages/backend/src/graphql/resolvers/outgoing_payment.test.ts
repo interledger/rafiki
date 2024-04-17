@@ -123,6 +123,7 @@ describe('OutgoingPayment Resolvers', (): void => {
                   outgoingPayment(id: $paymentId) {
                     id
                     walletAddressId
+                    client
                     state
                     error
                     stateAttempts
@@ -166,6 +167,7 @@ describe('OutgoingPayment Resolvers', (): void => {
           expect(query).toEqual({
             id: payment.id,
             walletAddressId: payment.walletAddressId,
+            client: payment.client,
             state,
             error,
             stateAttempts: 0,
