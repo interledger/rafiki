@@ -119,7 +119,7 @@ describe('Wallet Address Keys Routes', (): void => {
 
       await expect(
         walletAddressKeyRoutes.getKeysByWalletAddressId(ctx)
-      ).rejects.toHaveProperty('status', 404)
+      ).rejects.toThrow(/Could not get wallet address keys./)
     })
   })
 })

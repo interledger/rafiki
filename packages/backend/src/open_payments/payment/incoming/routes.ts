@@ -1,4 +1,3 @@
-import Koa from 'koa'
 import { Logger } from 'pino'
 import {
   ReadContext,
@@ -9,17 +8,13 @@ import {
 } from '../../../app'
 import { IAppConfig } from '../../../config/app'
 import { IncomingPaymentService } from './service'
-import { IncomingPayment } from './model'
-import {
-  errorToCode,
-  errorToMessage,
-  IncomingPaymentError,
-  isIncomingPaymentError
-} from './errors'
+import { errorToCode, errorToMessage, isIncomingPaymentError } from './errors'
 import { AmountJSON, parseAmount } from '../../amount'
 import { listSubresource } from '../../wallet_address/routes'
 import { StreamCredentialsService } from '../../../payment-method/ilp/stream-credentials/service'
 import { AccessAction } from '@interledger/open-payments'
+import { OpenPaymentsServerRouteError } from '../../route-errors'
+import { throwIfMissingWalletAddress } from '../../wallet_address/model'
 
 interface ServiceDependencies {
   config: IAppConfig
@@ -70,35 +65,46 @@ async function getIncomingPaymentPublic(
   deps: ServiceDependencies,
   ctx: ReadContextWithAuthenticatedStatus
 ) {
-  try {
-    const incomingPayment = await deps.incomingPaymentService.get({
-      id: ctx.params.id,
-      client: ctx.accessAction === AccessAction.Read ? ctx.client : undefined
-    })
-    ctx.body = incomingPayment?.toPublicOpenPaymentsType(
-      deps.config.authServerGrantUrl
+  const incomingPayment = await deps.incomingPaymentService.get({
+    id: ctx.params.id,
+    client: ctx.accessAction === AccessAction.Read ? ctx.client : undefined
+  })
+
+  if (!incomingPayment) {
+    throw new OpenPaymentsServerRouteError(
+      404,
+      'Incoming payment does not exist',
+      {
+        id: ctx.params.id
+      }
     )
-  } catch (err) {
-    const msg = 'Error trying to get incoming payment'
-    deps.logger.error({ err }, msg)
-    ctx.throw(500, msg)
   }
+
+  ctx.body = incomingPayment.toPublicOpenPaymentsType(
+    deps.config.authServerGrantUrl
+  )
 }
 
 async function getIncomingPaymentPrivate(
   deps: ServiceDependencies,
   ctx: ReadContextWithAuthenticatedStatus
 ): Promise<void> {
-  let incomingPayment: IncomingPayment | undefined
-  try {
-    incomingPayment = await deps.incomingPaymentService.get({
-      id: ctx.params.id,
-      client: ctx.accessAction === AccessAction.Read ? ctx.client : undefined
-    })
-  } catch (err) {
-    ctx.throw(500, 'Error trying to get incoming payment')
+  const incomingPayment = await deps.incomingPaymentService.get({
+    id: ctx.params.id,
+    client: ctx.accessAction === AccessAction.Read ? ctx.client : undefined
+  })
+
+  if (!incomingPayment) {
+    throw new OpenPaymentsServerRouteError(
+      404,
+      'Incoming payment does not exist',
+      {
+        id: ctx.params.id
+      }
+    )
   }
-  if (!incomingPayment || !incomingPayment.walletAddress) return ctx.throw(404)
+
+  throwIfMissingWalletAddress(deps, incomingPayment)
 
   const streamCredentials = deps.streamCredentialsService.get(incomingPayment)
 
@@ -135,15 +141,13 @@ async function createIncomingPayment(
   })
 
   if (isIncomingPaymentError(incomingPaymentOrError)) {
-    return ctx.throw(
+    throw new OpenPaymentsServerRouteError(
       errorToCode[incomingPaymentOrError],
       errorToMessage[incomingPaymentOrError]
     )
   }
 
-  if (!incomingPaymentOrError.walletAddress) {
-    ctx.throw(404)
-  }
+  throwIfMissingWalletAddress(deps, incomingPaymentOrError)
 
   ctx.status = 201
   const streamCredentials = deps.streamCredentialsService.get(
@@ -159,25 +163,18 @@ async function completeIncomingPayment(
   deps: ServiceDependencies,
   ctx: CompleteContext
 ): Promise<void> {
-  let incomingPaymentOrError: IncomingPayment | IncomingPaymentError
-  try {
-    incomingPaymentOrError = await deps.incomingPaymentService.complete(
-      ctx.params.id
-    )
-  } catch (err) {
-    ctx.throw(500, 'Error trying to complete incoming payment')
-  }
+  const incomingPaymentOrError = await deps.incomingPaymentService.complete(
+    ctx.params.id
+  )
 
   if (isIncomingPaymentError(incomingPaymentOrError)) {
-    return ctx.throw(
+    throw new OpenPaymentsServerRouteError(
       errorToCode[incomingPaymentOrError],
       errorToMessage[incomingPaymentOrError]
     )
   }
 
-  if (!incomingPaymentOrError.walletAddress) {
-    ctx.throw(404)
-  }
+  throwIfMissingWalletAddress(deps, incomingPaymentOrError)
 
   ctx.body = incomingPaymentOrError.toOpenPaymentsType(
     incomingPaymentOrError.walletAddress
@@ -188,16 +185,9 @@ async function listIncomingPayments(
   deps: ServiceDependencies,
   ctx: ListContext
 ): Promise<void> {
-  try {
-    await listSubresource({
-      ctx,
-      getWalletAddressPage: deps.incomingPaymentService.getWalletAddressPage,
-      toBody: (payment) => payment.toOpenPaymentsType(ctx.walletAddress)
-    })
-  } catch (err) {
-    if (err instanceof Koa.HttpError) {
-      throw err
-    }
-    ctx.throw(500, 'Error trying to list incoming payments')
-  }
+  await listSubresource({
+    ctx,
+    getWalletAddressPage: deps.incomingPaymentService.getWalletAddressPage,
+    toBody: (payment) => payment.toOpenPaymentsType(ctx.walletAddress)
+  })
 }
