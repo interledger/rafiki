@@ -6,7 +6,7 @@ import {
   AssetResolvers
 } from '../generated/graphql'
 import { Asset } from '../../asset/model'
-import { AssetError, isAssetError } from '../../asset/errors'
+import { errorToCode, errorToMessage, isAssetError } from '../../asset/errors'
 import { ApolloContext } from '../../app'
 import { getPageInfo } from '../../shared/pagination'
 import { Pagination, SortOrder } from '../../shared/baseModel'
@@ -49,7 +49,7 @@ export const getAsset: QueryResolvers<ApolloContext>['asset'] = async (
   if (!asset) {
     throw new GraphQLError('Asset not found', {
       extensions: {
-        code: 'NOT_FOUND'
+        code: GraphQLErrorCode.NotFound
       }
     })
   }
@@ -65,21 +65,11 @@ export const createAsset: MutationResolvers<ApolloContext>['createAsset'] =
     const assetService = await ctx.container.use('assetService')
     const assetOrError = await assetService.create(args.input)
     if (isAssetError(assetOrError)) {
-      switch (assetOrError) {
-        case AssetError.DuplicateAsset:
-          throw new GraphQLError('Asset already exists', {
-            extensions: {
-              code: GraphQLErrorCode.Duplicate
-            }
-          })
-        default:
-          throw new GraphQLError('Internal Server Error', {
-            extensions: {
-              code: GraphQLErrorCode.InternalServerError,
-              error: assetOrError
-            }
-          })
-      }
+      throw new GraphQLError(errorToMessage[assetOrError], {
+        extensions: {
+          code: errorToCode[assetOrError]
+        }
+      })
     }
     return {
       asset: assetToGraphql(assetOrError)
@@ -99,21 +89,11 @@ export const updateAsset: MutationResolvers<ApolloContext>['updateAsset'] =
       liquidityThreshold: args.input.liquidityThreshold ?? null
     })
     if (isAssetError(assetOrError)) {
-      switch (assetOrError) {
-        case AssetError.UnknownAsset:
-          throw new GraphQLError('Asset not found', {
-            extensions: {
-              code: GraphQLErrorCode.NotFound
-            }
-          })
-        default:
-          throw new GraphQLError('Internal Server Error', {
-            extensions: {
-              code: GraphQLErrorCode.InternalServerError,
-              error: assetOrError
-            }
-          })
-      }
+      throw new GraphQLError(errorToMessage[assetOrError], {
+        extensions: {
+          code: errorToCode[assetOrError]
+        }
+      })
     }
     return {
       asset: assetToGraphql(assetOrError)
