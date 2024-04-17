@@ -15,6 +15,7 @@ import { ApolloContext } from '../../app'
 import { getPageInfo } from '../../shared/pagination'
 import { Pagination, SortOrder } from '../../shared/baseModel'
 import { GraphQLError } from 'graphql'
+import { GraphQLErrorCode } from '../errors'
 
 export const getIncomingPayment: QueryResolvers<ApolloContext>['incomingPayment'] =
   async (parent, args, ctx): Promise<ResolversTypes['IncomingPayment']> => {
@@ -24,7 +25,13 @@ export const getIncomingPayment: QueryResolvers<ApolloContext>['incomingPayment'
     const payment = await incomingPaymentService.get({
       id: args.id
     })
-    if (!payment) throw new Error('payment does not exist')
+    if (!payment) {
+      throw new GraphQLError('payment does not exist', {
+        extensions: {
+          code: GraphQLErrorCode.NotFound
+        }
+      })
+    }
     return paymentToGraphql(payment)
   }
 
@@ -34,7 +41,13 @@ export const getWalletAddressIncomingPayments: WalletAddressResolvers<ApolloCont
     args,
     ctx
   ): Promise<ResolversTypes['IncomingPaymentConnection']> => {
-    if (!parent.id) throw new Error('missing wallet address id')
+    if (!parent.id) {
+      throw new GraphQLError('missing wallet address id', {
+        extensions: {
+          code: GraphQLErrorCode.BadUserInput
+        }
+      })
+    }
     const incomingPaymentService = await ctx.container.use(
       'incomingPaymentService'
     )
