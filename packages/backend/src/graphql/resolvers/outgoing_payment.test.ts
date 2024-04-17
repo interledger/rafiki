@@ -1,4 +1,4 @@
-import { gql } from '@apollo/client'
+import { ApolloError, gql } from '@apollo/client'
 import { PaymentError } from '@interledger/pay'
 import { v4 as uuid } from 'uuid'
 import * as Pay from '@interledger/pay'
@@ -13,10 +13,7 @@ import { createAsset } from '../../tests/asset'
 import { createOutgoingPayment } from '../../tests/outgoingPayment'
 import { createWalletAddress } from '../../tests/walletAddress'
 import { truncateTables } from '../../tests/tableManager'
-import {
-  OutgoingPaymentError,
-  errorToMessage
-} from '../../open_payments/payment/outgoing/errors'
+import { OutgoingPaymentError } from '../../open_payments/payment/outgoing/errors'
 import { OutgoingPaymentService } from '../../open_payments/payment/outgoing/service'
 import {
   OutgoingPayment as OutgoingPaymentModel,
@@ -290,8 +287,6 @@ describe('OutgoingPayment Resolvers', (): void => {
               $input: CreateOutgoingPaymentInput!
             ) {
               createOutgoingPayment(input: $input) {
-                code
-                success
                 payment {
                   id
                   state
@@ -306,13 +301,16 @@ describe('OutgoingPayment Resolvers', (): void => {
         )
 
       expect(createSpy).toHaveBeenCalledWith(input)
+<<<<<<< HEAD
       expect(query.code).toBe('201')
       expect(query.success).toBe(true)
+=======
+>>>>>>> d55fecd7 (feat: update outgoing payment resolvers)
       expect(query.payment?.id).toBe(payment.id)
       expect(query.payment?.state).toBe(SchemaPaymentState.Funding)
     })
 
-    test('400', async (): Promise<void> => {
+    test('Fails if walletAddress unknown', async (): Promise<void> => {
       const createSpy = jest
         .spyOn(outgoingPaymentService, 'create')
         .mockResolvedValueOnce(OutgoingPaymentError.UnknownWalletAddress)
@@ -322,16 +320,13 @@ describe('OutgoingPayment Resolvers', (): void => {
         quoteId: uuid()
       }
 
-      const query = await appContainer.apolloClient
+      const query = appContainer.apolloClient
         .query({
           query: gql`
             mutation CreateOutgoingPayment(
               $input: CreateOutgoingPaymentInput!
             ) {
               createOutgoingPayment(input: $input) {
-                code
-                success
-                message
                 payment {
                   id
                   state
@@ -344,13 +339,9 @@ describe('OutgoingPayment Resolvers', (): void => {
         .then(
           (query): OutgoingPaymentResponse => query.data?.createOutgoingPayment
         )
-      expect(query.code).toBe('404')
-      expect(query.success).toBe(false)
-      expect(query.message).toBe(
-        errorToMessage[OutgoingPaymentError.UnknownWalletAddress]
-      )
-      expect(query.payment).toBeNull()
-      expect(createSpy).toHaveBeenCalledWith(input)
+      await expect(query).rejects.toThrow(ApolloError)
+      await expect(query).rejects.toThrow('unknown wallet address')
+      await expect(createSpy).toHaveBeenCalledWith(input)
     })
 
     test('500', async (): Promise<void> => {
@@ -363,16 +354,13 @@ describe('OutgoingPayment Resolvers', (): void => {
         quoteId: uuid()
       }
 
-      const query = await appContainer.apolloClient
+      const query = appContainer.apolloClient
         .query({
           query: gql`
             mutation CreateOutgoingPayment(
               $input: CreateOutgoingPaymentInput!
             ) {
               createOutgoingPayment(input: $input) {
-                code
-                success
-                message
                 payment {
                   id
                   state
@@ -385,11 +373,9 @@ describe('OutgoingPayment Resolvers', (): void => {
         .then(
           (query): OutgoingPaymentResponse => query.data?.createOutgoingPayment
         )
+
+      await expect(query).rejects.toThrow(ApolloError)
       expect(createSpy).toHaveBeenCalledWith(input)
-      expect(query.code).toBe('500')
-      expect(query.success).toBe(false)
-      expect(query.message).toBe('Error trying to create outgoing payment')
-      expect(query.payment).toBeNull()
     })
   })
 
