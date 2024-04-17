@@ -1,5 +1,5 @@
 import { faker } from '@faker-js/faker'
-import { gql } from '@apollo/client'
+import { ApolloError, gql } from '@apollo/client'
 import assert from 'assert'
 
 import { createTestApp, TestContainer } from '../../tests/app'
@@ -10,7 +10,6 @@ import { initIocContainer } from '../..'
 import { Config } from '../../config/app'
 import { truncateTables } from '../../tests/tableManager'
 import {
-  errorToCode,
   errorToMessage,
   AutoPeeringError
 } from '../../payment-method/ilp/auto-peering/errors'
@@ -18,8 +17,7 @@ import { createAsset } from '../../tests/asset'
 import { CreateOrUpdatePeerByUrlInput } from '../generated/graphql'
 import { AutoPeeringService } from '../../payment-method/ilp/auto-peering/service'
 import { v4 as uuid } from 'uuid'
-
-const nock = (global as unknown as { nock: typeof import('nock') }).nock
+import nock from 'nock'
 
 describe('Auto Peering Resolvers', (): void => {
   let deps: IocContract<AppServices>
@@ -121,8 +119,6 @@ describe('Auto Peering Resolvers', (): void => {
 
       const response = await callCreateOrUpdatePeerByUrl(input)
 
-      expect(response.success).toBe(true)
-      expect(response.code).toEqual('200')
       assert.ok(response.peer)
       expect(response.peer).toEqual({
         __typename: 'Peer',
@@ -244,12 +240,12 @@ describe('Auto Peering Resolvers', (): void => {
       ${AutoPeeringError.InvalidPeerUrl}
       ${AutoPeeringError.InvalidPeeringRequest}
       ${AutoPeeringError.LiquidityError}
-    `('4XX - $error', async ({ error }): Promise<void> => {
+    `('Errors with $error', async ({ error }): Promise<void> => {
       jest
         .spyOn(autoPeeringService, 'initiatePeeringRequest')
         .mockResolvedValueOnce(error)
       const input = createOrUpdatePeerByUrlInput()
-      const response = await appContainer.apolloClient
+      const gqlQuery = appContainer.apolloClient
         .mutate({
           mutation: gql`
             mutation CreateOrUpdatePeerByUrl(
@@ -277,23 +273,18 @@ describe('Auto Peering Resolvers', (): void => {
           }
         })
 
-      expect(response.success).toBe(false)
-      expect(response.code).toEqual(
-        errorToCode[error as AutoPeeringError].toString()
-      )
-      expect(response.message).toEqual(
+      await expect(gqlQuery).rejects.toThrow(ApolloError)
+      await expect(gqlQuery).rejects.toThrow(
         errorToMessage[error as AutoPeeringError]
       )
     })
 
-    test('500', async (): Promise<void> => {
+    test('Internal server error', async (): Promise<void> => {
       jest
         .spyOn(autoPeeringService, 'initiatePeeringRequest')
-        .mockImplementationOnce(async (_args) => {
-          throw new Error('unexpected')
-        })
+        .mockRejectedValueOnce(new Error('unexpected'))
 
-      const response = await appContainer.apolloClient
+      const gqlQuery = appContainer.apolloClient
         .mutate({
           mutation: gql`
             mutation CreateOrUpdatePeerByUrl(
@@ -320,9 +311,7 @@ describe('Auto Peering Resolvers', (): void => {
             throw new Error('Data was empty')
           }
         })
-      expect(response.code).toBe('500')
-      expect(response.success).toBe(false)
-      expect(response.message).toBe('Error trying to create peer')
+      await expect(gqlQuery).rejects.toThrow(ApolloError)
     })
   })
 })
