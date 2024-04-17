@@ -86,6 +86,7 @@ import { PaymentMethodHandlerService } from './payment-method/handler/service'
 import { IlpPaymentService } from './payment-method/ilp/service'
 import { TelemetryService } from './telemetry/service'
 import { ApolloArmor } from '@escape.tech/graphql-armor'
+import { LoggingPlugin } from './graphql/plugin'
 export interface AppContextData {
   logger: Logger
   container: AppContainer
@@ -335,12 +336,15 @@ export class App {
     })
     const protection = armor.protect()
 
+    const loggingPlugin = new LoggingPlugin(this.logger)
+
     // Setup Apollo
     this.apolloServer = new ApolloServer({
       schema: schemaWithMiddleware,
       ...protection,
       plugins: [
         ...protection.plugins,
+        loggingPlugin,
         ApolloServerPluginDrainHttpServer({ httpServer })
       ],
       introspection: this.config.env !== 'production'
