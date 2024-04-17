@@ -8,6 +8,7 @@ import {
   isAutoPeeringError
 } from '../../payment-method/ilp/auto-peering/errors'
 import { peerToGraphql } from './peer'
+import { GraphQLError } from 'graphql'
 
 export const createOrUpdatePeerByUrl: MutationResolvers<ApolloContext>['createOrUpdatePeerByUrl'] =
   async (
@@ -16,34 +17,17 @@ export const createOrUpdatePeerByUrl: MutationResolvers<ApolloContext>['createOr
     ctx
   ): Promise<ResolversTypes['CreateOrUpdatePeerByUrlMutationResponse']> => {
     const autoPeeringService = await ctx.container.use('autoPeeringService')
-    return autoPeeringService
-      .initiatePeeringRequest(args.input)
-      .then((peerOrError: Peer | AutoPeeringError) =>
-        isAutoPeeringError(peerOrError)
-          ? {
-              code: errorToCode[peerOrError].toString(),
-              success: false,
-              message: errorToMessage[peerOrError]
-            }
-          : {
-              code: '200',
-              success: true,
-              message: 'ILP peer created or updated',
-              peer: peerToGraphql(peerOrError)
-            }
-      )
-      .catch((err) => {
-        ctx.logger.error(
-          {
-            options: args.input,
-            err
-          },
-          'error creating peer'
-        )
-        return {
-          code: '500',
-          success: false,
-          message: 'Error trying to create peer'
+    const peerOrError: Peer | AutoPeeringError =
+      await autoPeeringService.initiatePeeringRequest(args.input)
+    if (isAutoPeeringError(peerOrError)) {
+      throw new GraphQLError(errorToMessage[peerOrError], {
+        extensions: {
+          code: errorToCode[peerOrError]
         }
       })
+    } else {
+      return {
+        peer: peerToGraphql(peerOrError)
+      }
+    }
   }
