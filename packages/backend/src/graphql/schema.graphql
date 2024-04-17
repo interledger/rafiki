@@ -1206,114 +1206,62 @@ interface Model {
   createdAt: String!
 }
 
-type CreateWalletAddressMutationResponse implements MutationResponse {
-  code: String!
-  success: Boolean!
-  message: String!
+type CreateWalletAddressMutationResponse {
   walletAddress: WalletAddress
 }
 
-type UpdateWalletAddressMutationResponse implements MutationResponse {
-  code: String!
-  success: Boolean!
-  message: String!
+type UpdateWalletAddressMutationResponse {
   walletAddress: WalletAddress
 }
 
-type TriggerWalletAddressEventsMutationResponse implements MutationResponse {
-  code: String!
-  success: Boolean!
-  message: String!
+type TriggerWalletAddressEventsMutationResponse {
   "Number of events triggered"
   count: Int
 }
 
-type AssetMutationResponse implements MutationResponse {
-  code: String!
-  success: Boolean!
-  message: String!
+type AssetMutationResponse {
   asset: Asset
 }
 
-type DeleteAssetMutationResponse implements MutationResponse {
-  code: String!
-  success: Boolean!
-  message: String!
+type DeleteAssetMutationResponse {
+  asset: Asset
 }
 
-type CreatePeerMutationResponse implements MutationResponse {
-  code: String!
-  success: Boolean!
-  message: String!
+type CreatePeerMutationResponse {
   peer: Peer
 }
 
-type CreateOrUpdatePeerByUrlMutationResponse implements MutationResponse {
-  code: String!
-  success: Boolean!
-  message: String!
+type CreateOrUpdatePeerByUrlMutationResponse {
   peer: Peer
 }
 
-type UpdatePeerMutationResponse implements MutationResponse {
-  code: String!
-  success: Boolean!
-  message: String!
+type UpdatePeerMutationResponse {
   peer: Peer
 }
 
-type DeletePeerMutationResponse implements MutationResponse {
-  code: String!
+type DeletePeerMutationResponse {
   success: Boolean!
-  message: String!
 }
 
-type TransferMutationResponse implements MutationResponse {
-  code: String!
-  success: Boolean!
-  message: String!
+type LiquidityMutationResponse {
+  id: ID!
+  liquidity: UInt64
 }
 
-type LiquidityMutationResponse implements MutationResponse {
-  code: String!
-  success: Boolean!
-  message: String!
-  error: LiquidityError
-}
-
-type WalletAddressWithdrawalMutationResponse implements MutationResponse {
-  code: String!
-  success: Boolean!
-  message: String!
-  error: LiquidityError
+type WalletAddressWithdrawalMutationResponse {
   withdrawal: WalletAddressWithdrawal
 }
 
-type CreateWalletAddressKeyMutationResponse implements MutationResponse {
-  code: String!
-  success: Boolean!
-  message: String!
+type CreateWalletAddressKeyMutationResponse {
   walletAddressKey: WalletAddressKey
 }
 
-type RevokeWalletAddressKeyMutationResponse implements MutationResponse {
-  code: String!
-  success: Boolean!
-  message: String!
+type RevokeWalletAddressKeyMutationResponse {
   walletAddressKey: WalletAddressKey
 }
 
-type SetFeeResponse implements MutationResponse {
-  code: String!
-  success: Boolean!
-  message: String!
+type SetFeeResponse {
   fee: Fee
-}
-
-interface MutationResponse {
-  code: String!
-  success: Boolean!
-  message: String!
 }
 
 scalar UInt8
