@@ -132,7 +132,7 @@ async function createIncomingPayment(
   await IncomingPaymentEvent.query(trx || deps.knex).insert({
     incomingPaymentId: incomingPayment.id,
     type: IncomingPaymentEventType.IncomingPaymentCreated,
-    data: incomingPayment.toData(BigInt(0))
+    data: incomingPayment.toData(0n)
   })
 
   return await addReceivedAmount(deps, incomingPayment, BigInt(0))

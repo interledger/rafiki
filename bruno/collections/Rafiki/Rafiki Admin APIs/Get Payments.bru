@@ -12,19 +12,20 @@ post {
 
 body:graphql {
   query Payments($filter: PaymentFilter) {
-      payments(filter: $filter) {
-          edges {
-          node {
-              id
-              type
-              walletAddressId
-              state
-              metadata
-              createdAt
-          }
-          cursor
-          }
+    payments(filter: $filter) {
+      edges {
+        node {
+          id
+          type
+          walletAddressId
+          client
+          state
+          metadata
+          createdAt
+        }
+        cursor
       }
+    }
   }
 }
 

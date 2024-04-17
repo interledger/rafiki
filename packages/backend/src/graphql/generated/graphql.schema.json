@@ -534,6 +534,18 @@
         "description": null,
         "fields": [
           {
+            "name": "client",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "createdAt",
             "description": null,
             "args": [],
@@ -2806,6 +2818,18 @@
         "description": null,
         "fields": [
           {
+            "name": "client",
+            "description": "Information about the wallet address of the Open Payments client that created the incoming payment.",
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "createdAt",
             "description": "Date-time of creation",
             "args": [],
@@ -2923,7 +2947,7 @@
           },
           {
             "name": "walletAddressId",
-            "description": "Id of the wallet address under which this incoming payment was created",
+            "description": "Id of the wallet address under which this incoming payment was created.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -4633,6 +4657,18 @@
         "description": null,
         "fields": [
           {
+            "name": "client",
+            "description": "Information about the wallet address of the Open Payments client that created the outgoing payment.",
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "createdAt",
             "description": "Date-time of creation",
             "args": [],
@@ -5109,6 +5145,18 @@
         "name": "Payment",
         "description": null,
         "fields": [
+          {
+            "name": "client",
+            "description": "Information about the wallet address of the Open Payments client that created the payment.",
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
           {
             "name": "createdAt",
             "description": "Date-time of creation",
