@@ -1,3 +1,5 @@
+import { GraphQLErrorCode } from '../graphql/errors'
+
 export enum FeeError {
   UnknownAsset = 'UnknownAsset',
   InvalidBasisPointFee = 'InvalidBasisPointFee',
@@ -9,17 +11,17 @@ export const isFeeError = (o: any): o is FeeError =>
   Object.values(FeeError).includes(o)
 
 export const errorToCode: {
-  [key in FeeError]: number
+  [key in FeeError]: string
 } = {
-  [FeeError.UnknownAsset]: 404,
-  [FeeError.InvalidBasisPointFee]: 400,
-  [FeeError.InvalidFixedFee]: 400
+  [FeeError.UnknownAsset]: GraphQLErrorCode.NotFound,
+  [FeeError.InvalidBasisPointFee]: GraphQLErrorCode.BadUserInput,
+  [FeeError.InvalidFixedFee]: GraphQLErrorCode.BadUserInput
 }
 
 export const errorToMessage: {
   [key in FeeError]: string
 } = {
-  [FeeError.UnknownAsset]: 'unknown asset',
+  [FeeError.UnknownAsset]: 'Unknown asset',
   [FeeError.InvalidBasisPointFee]:
     'Basis point fee must be between 0 and 10000',
   [FeeError.InvalidFixedFee]: 'Fixed fee must be greater than or equal to 0'
