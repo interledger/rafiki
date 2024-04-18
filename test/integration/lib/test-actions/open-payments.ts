@@ -12,7 +12,7 @@ import {
   isPendingGrant
 } from '@interledger/open-payments'
 import { MockASE } from '../mock-ase'
-import { poll, pollCondition, wait } from '../utils'
+import { UnionOmit, poll, pollCondition, wait } from '../utils'
 import { WebhookEventType } from 'mock-account-service-lib'
 import {
   CreateOutgoingPaymentArgs,
@@ -52,7 +52,7 @@ export interface OpenPaymentsActions {
   createOutgoingPayment(
     senderWalletAddress: WalletAddress,
     grant: Grant,
-    createArgs: Omit<CreateOutgoingPaymentArgs, 'walletAddress'>
+    createArgs: UnionOmit<CreateOutgoingPaymentArgs, 'walletAddress'>
   ): Promise<OutgoingPayment>
   getOutgoingPayment(
     url: string,
@@ -308,7 +308,7 @@ async function createOutgoingPayment(
   deps: OpenPaymentsActionsDeps,
   senderWalletAddress: WalletAddress,
   grantContinue: Grant,
-  createArgs: Omit<CreateOutgoingPaymentArgs, 'walletAddress'>
+  createArgs: UnionOmit<CreateOutgoingPaymentArgs, 'walletAddress'>
 ): Promise<OutgoingPayment> {
   const { sendingASE } = deps
   const handleWebhookEventSpy = jest.spyOn(
@@ -321,7 +321,10 @@ async function createOutgoingPayment(
       url: senderWalletAddress.resourceServer,
       accessToken: grantContinue.access_token.value
     },
-    { walletAddress: senderWalletAddress.id, ...createArgs }
+    {
+      walletAddress: senderWalletAddress.id,
+      ...createArgs
+    }
   )
 
   await pollCondition(

@@ -282,11 +282,9 @@ describe('Integration tests', (): void => {
         senderWalletAddress,
         grantContinue,
         {
-          incomingPaymentId: incomingPayment.id,
+          incomingPayment: incomingPayment.id,
           debitAmount
-          // TODO: dont do 'any', use new op client
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        } as any
+        }
       )
 
       const outgoingPayment_ = await getOutgoingPayment(

@@ -162,9 +162,11 @@ describe('Outgoing Payment Routes', (): void => {
     describe.each`
       createFrom                    | grant             | client                                        | description
       ${CreateFrom.Quote}           | ${{ id: uuid() }} | ${faker.internet.url({ appendSlash: false })} | ${'grant'}
+      ${CreateFrom.Quote}           | ${undefined}      | ${undefined}                                  | ${'no grant'}
+      ${CreateFrom.IncomingPayment} | ${{ id: uuid() }} | ${faker.internet.url({ appendSlash: false })} | ${'grant'}
       ${CreateFrom.IncomingPayment} | ${undefined}      | ${undefined}                                  | ${'no grant'}
     `(
-      'create from quote ($description)',
+      'create from $createFrom with $description',
       ({ grant, client, createFrom }): void => {
         test('returns the outgoing payment on success (metadata)', async (): Promise<void> => {
           const metadata = {
@@ -193,7 +195,7 @@ describe('Outgoing Payment Routes', (): void => {
             assert(createFrom === CreateFrom.IncomingPayment)
             options = {
               ...options,
-              incomingPaymentId: uuid(),
+              incomingPayment: faker.internet.url(),
               debitAmount: {
                 value: BigInt(56),
                 assetCode: walletAddress.asset.code,
@@ -224,8 +226,8 @@ describe('Outgoing Payment Routes', (): void => {
             assert(createFrom === CreateFrom.IncomingPayment)
             expectedCreateOptions = {
               ...expectedCreateOptions,
-              incomingPaymentId: (options as CreateFromIncomingPayment)
-                .incomingPaymentId,
+              incomingPayment: (options as CreateFromIncomingPayment)
+                .incomingPayment,
               debitAmount: (options as CreateFromIncomingPayment).debitAmount
             } as CreateFromIncomingPayment
           }

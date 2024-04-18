@@ -396,7 +396,7 @@ describe('OutgoingPaymentService', (): void => {
 
     test('create from incoming payment', async () => {
       const walletAddressId = receiverWalletAddress.id
-      const incomingPaymentId = incomingPayment.toOpenPaymentsTypeWithMethods(
+      const incomingPaymentUrl = incomingPayment.toOpenPaymentsTypeWithMethods(
         receiverWalletAddress
       ).id
       const debitAmount = {
@@ -410,13 +410,13 @@ describe('OutgoingPaymentService', (): void => {
       const payment = await outgoingPaymentService.create({
         walletAddressId,
         debitAmount,
-        incomingPaymentId
+        incomingPayment: incomingPaymentUrl
       })
 
       expect(!isOutgoingPaymentError(payment)).toBeTruthy()
       expect(quoteSpy).toHaveBeenCalledWith({
         walletAddressId,
-        receiver: incomingPaymentId,
+        receiver: incomingPaymentUrl,
         debitAmount,
         method: 'ilp'
       })

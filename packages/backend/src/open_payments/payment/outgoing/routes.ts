@@ -86,14 +86,14 @@ type CreateBodyFromQuote = CreateBodyBase & {
 }
 
 type CreateBodyFromIncomingPayment = CreateBodyBase & {
-  incomingPaymentId: string
+  incomingPayment: string
   debitAmount: Amount
 }
 
 function isCreateFromIncomingPayment(
   body: CreateBody
 ): body is CreateBodyFromIncomingPayment {
-  return 'incomingPaymentId' in body && 'debitAmount' in body
+  return 'incomingPayment' in body && 'debitAmount' in body
 }
 
 export type CreateBody = CreateBodyFromQuote | CreateBodyFromIncomingPayment
@@ -126,7 +126,7 @@ async function createOutgoingPayment(
   if (isCreateFromIncomingPayment(body)) {
     options = {
       ...options,
-      incomingPaymentId: body.incomingPaymentId,
+      incomingPayment: body.incomingPayment,
       debitAmount: body.debitAmount
     } as CreateFromIncomingPayment
   } else {
