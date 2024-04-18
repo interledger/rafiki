@@ -636,8 +636,8 @@ importers:
         specifier: 2.0.2
         version: 2.0.2
       '@interledger/open-payments':
-        specifier: ^6.8.2
-        version: 6.8.2
+        specifier: ^6.9.0
+        version: 6.9.0
       '@koa/bodyparser':
         specifier: ^5.1.1
         version: 5.1.1(koa@2.15.3)
@@ -3835,8 +3835,8 @@ packages:
       - supports-color
     dev: false
 
-  /@interledger/open-payments@6.8.2:
-    resolution: {integrity: sha512-cmStkekYm1aSLQAMl38CqOUTpkP0ydXUFrXfH7MQtZvIu1bdHzLjpqzYSiuBei1C2rf5MKIflQmTxR/mlaAEpA==}
+  /@interledger/open-payments@6.9.0:
+    resolution: {integrity: sha512-Tf4TFTbPirYRxYg8aTyBR8lEczWFR1cyDbb+BN3783I/+YxpDRk59cM4SunmScsUgoSMEokXEgGXwhx4Gpdzcg==}
     dependencies:
       '@interledger/http-signature-utils': 2.0.2
       '@interledger/openapi': 2.0.1
