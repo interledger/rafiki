@@ -61,23 +61,9 @@ vars:pre-request {
 }
 
 script:pre-request {
-  const { createHmac } = require('crypto');
-  const { canonicalize } = require('json-canonicalize');
+  const scripts = require('./scripts');
   
-  const body = req.getBody();
-  
-  //console.log(body);
-  
-  const timestamp = Math.round(new Date().getTime() / 1000);
-  const version = bru.getEnvVar('apiSignatureVersion');
-  const payload = `${timestamp}.${canonicalize(body)}`;
-  const secret = bru.getEnvVar('apiSignatureSecret')
-  const hmac = createHmac('sha256', secret)
-  hmac.update(payload)
-  const digest = hmac.digest('hex')
-  
-  req.setHeader('signature', `t=${timestamp}, v${version}=${digest}`)
-  
+  scripts.addApiSignatureHeader();
 }
 
 script:post-response {

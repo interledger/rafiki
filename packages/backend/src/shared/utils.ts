@@ -105,7 +105,13 @@ export function verifyApiSignature(ctx: Context, config: IAppConfig): boolean {
 
   const signatureParts = (signature as string)?.split(', ')
   const timestamp = signatureParts[0].split('=')[1]
-  const signatureDigest = signatureParts[1].split('=')[1]
+  const signatureVersionAndDigest = signatureParts[1].split('=')
+  const signatureVersion = signatureVersionAndDigest[0].replace('v', '')
+  const signatureDigest = signatureVersionAndDigest[1]
+
+  if (Number(signatureVersion) !== config.apiSignatureVersion) {
+    return false
+  }
 
   const payload = `${timestamp}.${canonicalize(body)}`
   const hmac = createHmac('sha256', config.apiSecret as string)

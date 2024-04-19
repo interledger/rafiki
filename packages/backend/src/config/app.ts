@@ -139,6 +139,7 @@ export const Config = {
   signatureVersion: envInt('SIGNATURE_VERSION', 1),
 
   apiSecret: process.env.API_SECRET, // optional
+  apiSignatureVersion: envInt('API_SIGNATURE_VERSION', 1),
 
   keyId: envString('KEY_ID', 'rafiki'),
   privateKey: loadOrGenerateKey(envString('PRIVATE_KEY_FILE', '')),
