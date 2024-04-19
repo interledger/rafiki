@@ -121,8 +121,7 @@ async function createOutgoingPayment(
     if (!quoteId) {
       throw new OpenPaymentsServerRouteError(
         400,
-        'Invalid quote id trying to create outgoing payment',
-        { requestBody: body }
+        'Invalid quote id trying to create outgoing payment'
       )
     }
     options = {
