@@ -103,20 +103,6 @@ async function createOutgoingPayment(
   ctx: CreateContext<CreateBody>
 ): Promise<void> {
   const { body } = ctx.request
-  let quoteId
-
-  if (!isCreateFromIncomingPayment(body)) {
-    const quoteUrlParts = body.quoteId.split('/')
-    quoteId = quoteUrlParts.pop() || quoteUrlParts.pop() // handle trailing slash
-    if (!quoteId) {
-      throw new OpenPaymentsServerRouteError(
-        400,
-        'Invalid quote id trying to create outgoing payment',
-        { requestBody: body }
-      )
-    }
-  }
-
   let options: OutgoingPaymentCreateBaseOptions = {
     walletAddressId: ctx.walletAddress.id,
     metadata: body.metadata,
@@ -130,6 +116,15 @@ async function createOutgoingPayment(
       debitAmount: body.debitAmount
     } as CreateFromIncomingPayment
   } else {
+    const quoteUrlParts = body.quoteId.split('/')
+    const quoteId = quoteUrlParts.pop() || quoteUrlParts.pop() // handle trailing slash
+    if (!quoteId) {
+      throw new OpenPaymentsServerRouteError(
+        400,
+        'Invalid quote id trying to create outgoing payment',
+        { requestBody: body }
+      )
+    }
     options = {
       ...options,
       quoteId
