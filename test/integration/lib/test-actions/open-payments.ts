@@ -322,8 +322,8 @@ async function createOutgoingPayment(
       accessToken: grantContinue.access_token.value
     },
     {
-      walletAddress: senderWalletAddress.id,
-      ...createArgs
+      ...createArgs,
+      walletAddress: senderWalletAddress.id
     }
   )
 
