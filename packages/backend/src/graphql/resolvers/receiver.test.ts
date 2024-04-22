@@ -1,4 +1,4 @@
-import { gql } from '@apollo/client'
+import { ApolloError, gql } from '@apollo/client'
 import { v4 as uuid } from 'uuid'
 import { createTestApp, TestContainer } from '../../tests/app'
 import { IocContract } from '@adonisjs/fold'
@@ -74,9 +74,6 @@ describe('Receiver Resolver', (): void => {
             query: gql`
               mutation CreateReceiver($input: CreateReceiverInput!) {
                 createReceiver(input: $input) {
-                  code
-                  success
-                  message
                   receiver {
                     id
                     walletAddressUrl
@@ -106,9 +103,6 @@ describe('Receiver Resolver', (): void => {
         expect(createSpy).toHaveBeenCalledWith(input)
         expect(query).toEqual({
           __typename: 'CreateReceiverResponse',
-          code: '200',
-          success: true,
-          message: null,
           receiver: {
             __typename: 'Receiver',
             id: receiver.incomingPayment?.id,
@@ -144,14 +138,11 @@ describe('Receiver Resolver', (): void => {
         walletAddressUrl: walletAddress.id
       }
 
-      const query = await appContainer.apolloClient
+      const query = appContainer.apolloClient
         .query({
           query: gql`
             mutation CreateReceiver($input: CreateReceiverInput!) {
               createReceiver(input: $input) {
-                code
-                success
-                message
                 receiver {
                   id
                   walletAddressUrl
@@ -178,14 +169,9 @@ describe('Receiver Resolver', (): void => {
         })
         .then((query): CreateReceiverResponse => query.data?.createReceiver)
 
+      await expect(query).rejects.toThrow(ApolloError)
+      await expect(query).rejects.toThrow('unknown wallet address')
       expect(createSpy).toHaveBeenCalledWith(input)
-      expect(query).toEqual({
-        __typename: 'CreateReceiverResponse',
-        code: '404',
-        success: false,
-        message: 'unknown wallet address',
-        receiver: null
-      })
     })
 
     test('returns error if error thrown when creating receiver', async (): Promise<void> => {
@@ -199,14 +185,11 @@ describe('Receiver Resolver', (): void => {
         walletAddressUrl: walletAddress.id
       }
 
-      const query = await appContainer.apolloClient
+      const query = appContainer.apolloClient
         .query({
           query: gql`
             mutation CreateReceiver($input: CreateReceiverInput!) {
               createReceiver(input: $input) {
-                code
-                success
-                message
                 receiver {
                   id
                   walletAddressUrl
@@ -233,14 +216,9 @@ describe('Receiver Resolver', (): void => {
         })
         .then((query): CreateReceiverResponse => query.data?.createReceiver)
 
+      await expect(query).rejects.toThrow(ApolloError)
+      await expect(query).rejects.toThrow('Cannot create receiver')
       expect(createSpy).toHaveBeenCalledWith(input)
-      expect(query).toEqual({
-        __typename: 'CreateReceiverResponse',
-        code: '500',
-        success: false,
-        message: 'Error trying to create receiver',
-        receiver: null
-      })
     })
   })
 
