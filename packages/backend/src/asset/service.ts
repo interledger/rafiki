@@ -28,6 +28,7 @@ export interface AssetService {
   get(id: string): Promise<void | Asset>
   getPage(pagination?: Pagination, sortOrder?: SortOrder): Promise<Asset[]>
   getAll(): Promise<Asset[]>
+  delete(id: string): Promise<Asset | undefined>
 }
 
 interface ServiceDependencies extends BaseService {
@@ -53,7 +54,8 @@ export async function createAssetService({
     get: (id) => getAsset(deps, id),
     getPage: (pagination?, sortOrder?) =>
       getAssetsPage(deps, pagination, sortOrder),
-    getAll: () => getAll(deps)
+    getAll: () => getAll(deps),
+    delete: (id) => deleteAsset(deps, id)
   }
 }
 
@@ -128,4 +130,14 @@ async function getAssetsPage(
 
 async function getAll(deps: ServiceDependencies): Promise<Asset[]> {
   return await Asset.query(deps.knex)
+}
+
+async function deleteAsset(
+  deps: ServiceDependencies,
+  id: string
+): Promise<Asset | undefined> {
+  return await Asset.query(deps.knex)
+    .deleteById(id)
+    .returning('*')
+    .first()
 }

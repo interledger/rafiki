@@ -6,7 +6,12 @@ import {
   AssetResolvers
 } from '../generated/graphql'
 import { Asset } from '../../asset/model'
-import { AssetError, isAssetError } from '../../asset/errors'
+import {
+  AssetError,
+  isAssetError,
+  errorToCode,
+  errorToMessage
+} from '../../asset/errors'
 import { ApolloContext } from '../../app'
 import { getPageInfo } from '../../shared/pagination'
 import { Pagination, SortOrder } from '../../shared/baseModel'
@@ -191,6 +196,69 @@ export const getFees: AssetResolvers<ApolloContext>['fees'] = async (
     }))
   }
 }
+
+export const deleteAsset: MutationResolvers<ApolloContext>['deleteAsset'] =
+  async (
+    _,
+    args,
+    ctx
+  ): Promise<ResolversTypes['DeleteAssetMutationResponse']> => {
+    // check if asset is in use | in peer and wallet address
+    const peerService = await ctx.container.use('peerService')
+    const peerByAsset = await peerService.getByAsset(args.input.id)
+    if (peerByAsset) {
+      // in case we have a peer using the asset don't allow delete
+      return {
+        code: '500',
+        message: 'Error trying to delete asset. Asset in use',
+        success: false
+      }
+    }
+
+    const walletAddressService = await ctx.container.use('walletAddressService')
+    const walletAddressByAsset = await walletAddressService.getByAsset(
+      args.input.id
+    )
+    if (walletAddressByAsset) {
+      // in case we have a wallet address using the asset don't allow delete
+      return {
+        code: '500',
+        message: 'Error trying to delete asset. Asset in use',
+        success: false
+      }
+    }
+
+    const assetService = await ctx.container.use('assetService')
+    return assetService
+      .delete(args.input.id)
+      .then((asset: Asset | undefined) =>
+        asset
+          ? {
+              code: '200',
+              success: true,
+              message: 'Deleted Asset'
+            }
+          : {
+              code: errorToCode[AssetError.UnknownAsset].toString(),
+              success: false,
+              message: errorToMessage[AssetError.UnknownAsset]
+            }
+      )
+      .catch((err) => {
+        ctx.logger.error(
+          {
+            id: args.input.id,
+            err
+          },
+          'error deleting asset'
+        )
+        return {
+          code: '500',
+          message: 'Error trying to delete asset',
+          success: false
+        }
+      })
+  }
 
 export const assetToGraphql = (asset: Asset): SchemaAsset => ({
   id: asset.id,

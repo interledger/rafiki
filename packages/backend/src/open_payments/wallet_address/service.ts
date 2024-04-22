@@ -46,6 +46,7 @@ export interface WalletAddressService {
   update(options: UpdateOptions): Promise<WalletAddress | WalletAddressError>
   get(id: string): Promise<WalletAddress | undefined>
   getByUrl(url: string): Promise<WalletAddress | undefined>
+  getByAsset(assetId: string): Promise<WalletAddress | undefined>
   getOrPollByUrl(url: string): Promise<WalletAddress | undefined>
   getPage(
     pagination?: Pagination,
@@ -84,6 +85,7 @@ export async function createWalletAddressService({
     update: (options) => updateWalletAddress(deps, options),
     get: (id) => getWalletAddress(deps, id),
     getByUrl: (url) => getWalletAddressByUrl(deps, url),
+    getByAsset: (assetId) => getWalletAddressByAsset(deps, assetId),
     getOrPollByUrl: (url) => getOrPollByUrl(deps, url),
     getPage: (pagination?, sortOrder?) =>
       getWalletAddressPage(deps, pagination, sortOrder),
@@ -213,6 +215,18 @@ async function getOrPollByUrl(
 
     return undefined
   }
+}
+
+async function getWalletAddressByAsset(
+  deps: ServiceDependencies,
+  assetId: string
+): Promise<WalletAddress | undefined> {
+  const walletAddress = await WalletAddress.query(deps.knex)
+    .withGraphJoined('asset')
+    .where('assetId', assetId)
+    .first()
+
+  return walletAddress || undefined
 }
 
 async function getWalletAddressByUrl(
