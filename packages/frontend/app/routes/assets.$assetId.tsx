@@ -9,16 +9,30 @@ import {
   useActionData,
   useFormAction,
   useLoaderData,
-  useNavigation
+  useNavigation,
+  useSubmit
 } from '@remix-run/react'
-import { useState } from 'react'
+import { type FormEvent, useState, useRef } from 'react'
 import { z } from 'zod'
-import { PageHeader } from '~/components'
+import { DangerZone, PageHeader } from '~/components'
 import { Button, ErrorPanel, Input } from '~/components/ui'
+import {
+  ConfirmationDialog,
+  type ConfirmationDialogRef
+} from '~/components/ConfirmationDialog'
 import { FeeType } from '~/generated/graphql'
-import { getAssetInfo, updateAsset, setFee } from '~/lib/api/asset.server'
+import {
+  getAssetInfo,
+  updateAsset,
+  setFee,
+  deleteAsset
+} from '~/lib/api/asset.server'
 import { messageStorage, setMessageAndRedirect } from '~/lib/message.server'
-import { updateAssetSchema, setAssetFeeSchema } from '~/lib/validate.server'
+import {
+  updateAssetSchema,
+  setAssetFeeSchema,
+  uuidSchema
+} from '~/lib/validate.server'
 import type { ZodFieldErrors } from '~/shared/types'
 import { formatAmount } from '~/shared/utils'
 
@@ -44,13 +58,28 @@ export default function ViewAssetPage() {
   const response = useActionData<typeof action>()
   const navigation = useNavigation()
   const formAction = useFormAction()
+  const submit = useSubmit()
+  const dialogRef = useRef<ConfirmationDialogRef>(null)
 
   const isSubmitting = navigation.state === 'submitting'
   const currentPageAction = isSubmitting && navigation.formAction === formAction
 
+  const [formData, setFormData] = useState<FormData>()
   const [basisPointsInput, setBasisPointsInput] = useState(
     asset.sendingFee?.basisPoints ?? undefined
   )
+
+  const submitHandler = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    setFormData(new FormData(event.currentTarget))
+    dialogRef.current?.display()
+  }
+
+  const onConfirm = () => {
+    if (formData) {
+      submit(formData, { method: 'post' })
+    }
+  }
 
   return (
     <div className='pt-4 flex flex-col space-y-4'>
@@ -198,7 +227,25 @@ export default function ViewAssetPage() {
           </div>
         </div>
         {/* Asset Fee Info - END */}
+
+        {/* DELETE ASSET - Danger zone */}
+        <DangerZone title='Delete Asset'>
+          <Form method='post' onSubmit={submitHandler}>
+            <Input type='hidden' name='id' value={asset.id} />
+            <Input type='hidden' name='intent' value='delete' />
+            <Button type='submit' intent='danger' aria-label='delete asset'>
+              Delete asset
+            </Button>
+          </Form>
+        </DangerZone>
       </div>
+      <ConfirmationDialog
+        ref={dialogRef}
+        onConfirm={onConfirm}
+        title={`Delete Asset ${asset.code}`}
+        keyword={'delete asset'}
+        confirmButtonText='Delete this asset'
+      />
       <Outlet />
     </div>
   )
@@ -229,6 +276,7 @@ export async function action({ request }: ActionFunctionArgs) {
     }
   }
 
+  const session = await messageStorage.getSession(request.headers.get('cookie'))
   const formData = await request.formData()
   const intent = formData.get('intent')
   formData.delete('intent')
@@ -285,11 +333,43 @@ export async function action({ request }: ActionFunctionArgs) {
 
       break
     }
+    case 'delete': {
+      const result = uuidSchema.safeParse(Object.fromEntries(formData))
+      if (!result.success) {
+        return setMessageAndRedirect({
+          session,
+          message: {
+            content: 'Invalid asset ID.',
+            type: 'error'
+          },
+          location: '.'
+        })
+      }
+
+      const response = await deleteAsset({ id: result.data.id })
+      if (!response?.success) {
+        return setMessageAndRedirect({
+          session,
+          message: {
+            content: 'Could not delete asset.',
+            type: 'error'
+          },
+          location: '.'
+        })
+      }
+
+      return setMessageAndRedirect({
+        session,
+        message: {
+          content: 'Asset was deleted.',
+          type: 'success'
+        },
+        location: '/assets'
+      })
+    }
     default:
       throw json(null, { status: 400, statusText: 'Invalid intent.' })
   }
-
-  const session = await messageStorage.getSession(request.headers.get('cookie'))
 
   return setMessageAndRedirect({
     session,
