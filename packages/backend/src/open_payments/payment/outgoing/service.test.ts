@@ -48,6 +48,7 @@ import { PaymentMethodHandlerService } from '../../../payment-method/handler/ser
 import { PaymentMethodHandlerError } from '../../../payment-method/handler/errors'
 import { mockRatesApi } from '../../../tests/rates'
 import { UnionOmit } from '../../../shared/utils'
+import { QuoteError } from '../../quote/errors'
 
 describe('OutgoingPaymentService', (): void => {
   let deps: IocContract<AppServices>
@@ -414,6 +415,38 @@ describe('OutgoingPaymentService', (): void => {
       })
 
       expect(!isOutgoingPaymentError(payment)).toBeTruthy()
+      expect(quoteSpy).toHaveBeenCalledWith({
+        walletAddressId,
+        receiver: incomingPaymentUrl,
+        debitAmount,
+        method: 'ilp'
+      })
+    })
+
+    test('fails to create quote from incoming payment', async () => {
+      const walletAddressId = receiverWalletAddress.id
+      const incomingPaymentUrl = incomingPayment.toOpenPaymentsTypeWithMethods(
+        receiverWalletAddress
+      ).id
+      const debitAmount = {
+        value: BigInt(123),
+        assetCode: receiverWalletAddress.asset.code,
+        assetScale: receiverWalletAddress.asset.scale
+      }
+
+      const quoteCreateResponse = QuoteError.InvalidAmount
+      const quoteSpy = jest
+        .spyOn(quoteService, 'create')
+        .mockImplementationOnce(async () => quoteCreateResponse)
+
+      const payment = await outgoingPaymentService.create({
+        walletAddressId,
+        debitAmount,
+        incomingPayment: incomingPaymentUrl
+      })
+
+      expect(isOutgoingPaymentError(payment)).toBeTruthy()
+      expect(payment).toBe(quoteCreateResponse)
       expect(quoteSpy).toHaveBeenCalledWith({
         walletAddressId,
         receiver: incomingPaymentUrl,

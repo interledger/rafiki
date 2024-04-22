@@ -8,7 +8,8 @@ import { BaseService } from '../../../shared/baseService'
 import {
   FundingError,
   isOutgoingPaymentError,
-  OutgoingPaymentError
+  OutgoingPaymentError,
+  quoteErrorToOutgoingPaymentError
 } from './errors'
 import { Limits, getInterval } from './limits'
 import {
@@ -134,7 +135,7 @@ async function createOutgoingPayment(
     })
 
     if (isQuoteError(quoteOrError)) {
-      throw quoteOrError
+      return quoteErrorToOutgoingPaymentError[quoteOrError]
     }
     quoteId = quoteOrError.id
   } else {
