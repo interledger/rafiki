@@ -1,5 +1,5 @@
 import assert from 'assert'
-import { gql } from '@apollo/client'
+import { ApolloError, gql } from '@apollo/client'
 import { generateJwk } from '@interledger/http-signature-utils'
 import { v4 as uuid } from 'uuid'
 
@@ -56,9 +56,6 @@ describe('Wallet Address Key Resolvers', (): void => {
               $input: CreateWalletAddressKeyInput!
             ) {
               createWalletAddressKey(input: $input) {
-                code
-                success
-                message
                 walletAddressKey {
                   id
                   walletAddressId
@@ -87,8 +84,6 @@ describe('Wallet Address Key Resolvers', (): void => {
           }
         })
 
-      expect(response.success).toBe(true)
-      expect(response.code).toEqual('200')
       assert.ok(response.walletAddressKey)
       expect(response.walletAddressKey).toMatchObject({
         __typename: 'WalletAddressKey',
@@ -115,16 +110,13 @@ describe('Wallet Address Key Resolvers', (): void => {
         jwk: TEST_KEY
       }
 
-      const response = await appContainer.apolloClient
+      const gqlQuery = appContainer.apolloClient
         .mutate({
           mutation: gql`
             mutation CreateWalletAddressKey(
               $input: CreateWalletAddressKeyInput!
             ) {
               createWalletAddressKey(input: $input) {
-                code
-                success
-                message
                 walletAddressKey {
                   id
                   walletAddressId
@@ -151,9 +143,8 @@ describe('Wallet Address Key Resolvers', (): void => {
             throw new Error('Data was empty')
           }
         })
-      expect(response.code).toBe('500')
-      expect(response.success).toBe(false)
-      expect(response.message).toBe('Error trying to create wallet address key')
+      await expect(gqlQuery).rejects.toThrow(ApolloError)
+      await expect(gqlQuery).rejects.toThrow('unexpected')
     })
   })
 
@@ -173,9 +164,6 @@ describe('Wallet Address Key Resolvers', (): void => {
               $input: RevokeWalletAddressKeyInput!
             ) {
               revokeWalletAddressKey(input: $input) {
-                code
-                success
-                message
                 walletAddressKey {
                   id
                   walletAddressId
@@ -205,8 +193,6 @@ describe('Wallet Address Key Resolvers', (): void => {
           }
         })
 
-      expect(response.success).toBe(true)
-      expect(response.code).toBe('200')
       assert.ok(response.walletAddressKey)
       expect(response.walletAddressKey).toMatchObject({
         __typename: 'WalletAddressKey',
@@ -220,17 +206,14 @@ describe('Wallet Address Key Resolvers', (): void => {
       })
     })
 
-    test('Returns 404 if key does not exist', async (): Promise<void> => {
-      const response = await appContainer.apolloClient
+    test('Returns not found if key does not exist', async (): Promise<void> => {
+      const gqlQuery = appContainer.apolloClient
         .mutate({
           mutation: gql`
             mutation revokeWalletAddressKey(
               $input: RevokeWalletAddressKeyInput!
             ) {
               revokeWalletAddressKey(input: $input) {
-                code
-                success
-                message
                 walletAddressKey {
                   id
                   walletAddressId
@@ -252,10 +235,8 @@ describe('Wallet Address Key Resolvers', (): void => {
           }
         })
 
-      expect(response.success).toBe(false)
-      expect(response.code).toBe('404')
-      expect(response.message).toBe('Wallet address key not found')
-      expect(response.walletAddressKey).toBeNull()
+      await expect(gqlQuery).rejects.toThrow(ApolloError)
+      await expect(gqlQuery).rejects.toThrow('Wallet address key not found')
     })
   })
 })
