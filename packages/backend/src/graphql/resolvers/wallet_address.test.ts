@@ -13,7 +13,6 @@ import { Config } from '../../config/app'
 import { truncateTables } from '../../tests/tableManager'
 import {
   WalletAddressError,
-  errorToCode,
   errorToMessage
 } from '../../open_payments/wallet_address/errors'
 import {
@@ -83,9 +82,6 @@ describe('Wallet Address Resolvers', (): void => {
             mutation: gql`
               mutation CreateWalletAddress($input: CreateWalletAddressInput!) {
                 createWalletAddress(input: $input) {
-                  code
-                  success
-                  message
                   walletAddress {
                     id
                     asset {
@@ -110,8 +106,6 @@ describe('Wallet Address Resolvers', (): void => {
             }
           })
 
-        expect(response.success).toBe(true)
-        expect(response.code).toEqual('200')
         assert.ok(response.walletAddress)
         expect(response.walletAddress).toEqual({
           __typename: 'WalletAddress',
@@ -220,16 +214,13 @@ describe('Wallet Address Resolvers', (): void => {
       error
       ${WalletAddressError.InvalidUrl}
       ${WalletAddressError.UnknownAsset}
-    `('4XX - $error', async ({ error }): Promise<void> => {
+    `('Error - $error', async ({ error }): Promise<void> => {
       jest.spyOn(walletAddressService, 'create').mockResolvedValueOnce(error)
-      const response = await appContainer.apolloClient
+      const gqlQuery = appContainer.apolloClient
         .mutate({
           mutation: gql`
             mutation CreateWalletAddress($input: CreateWalletAddressInput!) {
               createWalletAddress(input: $input) {
-                code
-                success
-                message
                 walletAddress {
                   id
                   asset {
@@ -252,11 +243,8 @@ describe('Wallet Address Resolvers', (): void => {
           }
         })
 
-      expect(response.success).toBe(false)
-      expect(response.code).toEqual(
-        errorToCode[error as WalletAddressError].toString()
-      )
-      expect(response.message).toEqual(
+      await expect(gqlQuery).rejects.toThrow(ApolloError)
+      await expect(gqlQuery).rejects.toThrow(
         errorToMessage[error as WalletAddressError]
       )
     })
@@ -267,14 +255,11 @@ describe('Wallet Address Resolvers', (): void => {
         .mockImplementationOnce(async (_args) => {
           throw new Error('unexpected')
         })
-      const response = await appContainer.apolloClient
+      const gqlQuery = appContainer.apolloClient
         .mutate({
           mutation: gql`
             mutation CreateWalletAddress($input: CreateWalletAddressInput!) {
               createWalletAddress(input: $input) {
-                code
-                success
-                message
                 walletAddress {
                   id
                   asset {
@@ -296,9 +281,8 @@ describe('Wallet Address Resolvers', (): void => {
             throw new Error('Data was empty')
           }
         })
-      expect(response.code).toBe('500')
-      expect(response.success).toBe(false)
-      expect(response.message).toBe('Error trying to create wallet address')
+      await expect(gqlQuery).rejects.toThrow(ApolloError)
+      await expect(gqlQuery).rejects.toThrow('unexpected')
     })
   })
 
@@ -320,9 +304,6 @@ describe('Wallet Address Resolvers', (): void => {
           mutation: gql`
             mutation UpdateWalletAddress($input: UpdateWalletAddressInput!) {
               updateWalletAddress(input: $input) {
-                code
-                success
-                message
                 walletAddress {
                   id
                   status
@@ -348,8 +329,6 @@ describe('Wallet Address Resolvers', (): void => {
           }
         })
 
-      expect(response.success).toBe(true)
-      expect(response.code).toEqual('200')
       expect(response.walletAddress).toEqual({
         __typename: 'WalletAddress',
         ...updateOptions,
@@ -559,14 +538,11 @@ describe('Wallet Address Resolvers', (): void => {
       ${WalletAddressError.UnknownWalletAddress}
     `('4XX - $error', async ({ error }): Promise<void> => {
       jest.spyOn(walletAddressService, 'update').mockResolvedValueOnce(error)
-      const response = await appContainer.apolloClient
+      const gqlQuery = appContainer.apolloClient
         .mutate({
           mutation: gql`
             mutation UpdateWalletAddress($input: UpdateWalletAddressInput!) {
               updateWalletAddress(input: $input) {
-                code
-                success
-                message
                 walletAddress {
                   id
                 }
@@ -588,11 +564,8 @@ describe('Wallet Address Resolvers', (): void => {
           }
         })
 
-      expect(response.success).toBe(false)
-      expect(response.code).toEqual(
-        errorToCode[error as WalletAddressError].toString()
-      )
-      expect(response.message).toEqual(
+      await expect(gqlQuery).rejects.toThrow(ApolloError)
+      await expect(gqlQuery).rejects.toThrow(
         errorToMessage[error as WalletAddressError]
       )
     })
@@ -603,14 +576,11 @@ describe('Wallet Address Resolvers', (): void => {
         .mockImplementationOnce(async () => {
           throw new Error('unexpected')
         })
-      const response = await appContainer.apolloClient
+      const gqlQuery = appContainer.apolloClient
         .mutate({
           mutation: gql`
             mutation UpdateWalletAddress($input: UpdateWalletAddressInput!) {
               updateWalletAddress(input: $input) {
-                code
-                success
-                message
                 walletAddress {
                   id
                 }
@@ -632,9 +602,8 @@ describe('Wallet Address Resolvers', (): void => {
           }
         })
 
-      expect(response.success).toBe(false)
-      expect(response.code).toEqual('500')
-      expect(response.message).toEqual('Error trying to update wallet address')
+      await expect(gqlQuery).rejects.toThrow(ApolloError)
+      await expect(gqlQuery).rejects.toThrow('unexpected')
     })
   })
 
@@ -844,9 +813,6 @@ describe('Wallet Address Resolvers', (): void => {
                 $input: TriggerWalletAddressEventsInput!
               ) {
                 triggerWalletAddressEvents(input: $input) {
-                  code
-                  success
-                  message
                   count
                 }
               }
@@ -866,8 +832,6 @@ describe('Wallet Address Resolvers', (): void => {
             }
           })
 
-        expect(response.success).toBe(true)
-        expect(response.code).toEqual('200')
         expect(response.count).toEqual(count)
         await expect(
           WalletAddressEvent.query(knex).where({
@@ -889,16 +853,13 @@ describe('Wallet Address Resolvers', (): void => {
       jest
         .spyOn(walletAddressService, 'triggerEvents')
         .mockRejectedValueOnce(new Error('unexpected'))
-      const response = await appContainer.apolloClient
+      const gqlQuery = appContainer.apolloClient
         .mutate({
           mutation: gql`
             mutation TriggerWalletAddressEvents(
               $input: TriggerWalletAddressEventsInput!
             ) {
               triggerWalletAddressEvents(input: $input) {
-                code
-                success
-                message
                 count
               }
             }
@@ -916,12 +877,8 @@ describe('Wallet Address Resolvers', (): void => {
             throw new Error('Data was empty')
           }
         })
-      expect(response.code).toBe('500')
-      expect(response.success).toBe(false)
-      expect(response.message).toBe(
-        'Error trying to trigger wallet address events'
-      )
-      expect(response.count).toBeNull()
+      await expect(gqlQuery).rejects.toThrow(ApolloError)
+      await expect(gqlQuery).rejects.toThrow('unexpected')
     })
   })
 })
