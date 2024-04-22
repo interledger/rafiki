@@ -193,17 +193,17 @@ type Mutation {
     input: WithdrawEventLiquidityInput!
   ): LiquidityMutationResponse
     @deprecated(
-      reason: "Use `withdrawOutgoingPaymentLiquidity, withdrawIncomingPaymentLiquidity, or createWalletAddressWithdrawal`"
+      reason: "Use `createOutgoingPaymentWithdrawal, createIncomingPaymentWithdrawal, or createWalletAddressWithdrawal`"
     )
 
   "Withdraw incoming payment liquidity"
-  withdrawIncomingPaymentLiquidity(
-    input: WithdrawIncomingPaymentLiquidityInput!
+  createIncomingPaymentWithdrawal(
+    input: CreateIncomingPaymentWithdrawalInput!
   ): LiquidityMutationResponse
 
   "Withdraw outgoing payment liquidity"
-  withdrawOutgoingPaymentLiquidity(
-    input: WithdrawOutgoingPaymentLiquidityInput!
+  createOutgoingPaymentWithdrawal(
+    input: CreateOutgoingPaymentWithdrawalInput!
   ): LiquidityMutationResponse
 
   "Deposit outgoing payment liquidity"
@@ -417,14 +417,14 @@ input DepositOutgoingPaymentLiquidityInput {
   idempotencyKey: String!
 }
 
-input WithdrawIncomingPaymentLiquidityInput {
+input CreateIncomingPaymentWithdrawalInput {
   "The id of the incoming payment to withdraw from."
   incomingPaymentId: String!
   "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)"
   idempotencyKey: String!
 }
 
-input WithdrawOutgoingPaymentLiquidityInput {
+input CreateOutgoingPaymentWithdrawalInput {
   "The id of the outgoing payment to withdraw from."
   outgoingPaymentId: String!
   "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)"

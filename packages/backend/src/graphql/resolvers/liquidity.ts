@@ -522,7 +522,7 @@ export const depositOutgoingPaymentLiquidity: MutationResolvers<ApolloContext>['
     }
   }
 
-export const withdrawIncomingPaymentLiquidity: MutationResolvers<ApolloContext>['withdrawIncomingPaymentLiquidity'] =
+export const createIncomingPaymentWithdrawal: MutationResolvers<ApolloContext>['createIncomingPaymentWithdrawal'] =
   async (
     parent,
     args,
@@ -555,7 +555,8 @@ export const withdrawIncomingPaymentLiquidity: MutationResolvers<ApolloContext>[
           id: incomingPaymentId,
           asset: incomingPayment.asset
         },
-        amount: incomingPayment.receivedAmount.value
+        amount: incomingPayment.receivedAmount.value,
+        timeout: 60
       })
 
       if (error) {
@@ -582,7 +583,7 @@ export const withdrawIncomingPaymentLiquidity: MutationResolvers<ApolloContext>[
     }
   }
 
-export const withdrawOutgoingPaymentLiquidity: MutationResolvers<ApolloContext>['withdrawOutgoingPaymentLiquidity'] =
+export const createOutgoingPaymentWithdrawal: MutationResolvers<ApolloContext>['createOutgoingPaymentWithdrawal'] =
   async (
     parent,
     args,
@@ -620,7 +621,8 @@ export const withdrawOutgoingPaymentLiquidity: MutationResolvers<ApolloContext>[
           id: outgoingPaymentId,
           asset: outgoingPayment.asset
         },
-        amount: balance
+        amount: balance,
+        timeout: 60
       })
 
       if (error) {

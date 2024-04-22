@@ -2,7 +2,7 @@ import { type ActionFunctionArgs } from '@remix-run/node'
 import { useNavigate, useOutletContext } from '@remix-run/react'
 import { v4 } from 'uuid'
 import { LiquidityConfirmDialog } from '~/components/LiquidityConfirmDialog'
-import { withdrawIncomingPaymentLiquidity } from '~/lib/api/payments.server'
+import { createIncomingPaymentWithdrawal } from '~/lib/api/payments.server'
 import { messageStorage, setMessageAndRedirect } from '~/lib/message.server'
 
 export default function IncomingPaymentWithdrawLiquidity() {
@@ -35,7 +35,7 @@ export async function action({ request, params }: ActionFunctionArgs) {
     })
   }
 
-  const response = await withdrawIncomingPaymentLiquidity({
+  const response = await createIncomingPaymentWithdrawal({
     incomingPaymentId,
     idempotencyKey: v4()
   })
