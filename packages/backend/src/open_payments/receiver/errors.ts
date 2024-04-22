@@ -1,6 +1,6 @@
 import {
   errorToMessage as incomingPaymentErrorToMessage,
-  errorToHTTPCode as incomingPaymentErrorToCode,
+  errorToCode as incomingPaymentErrorToCode,
   isIncomingPaymentError,
   IncomingPaymentError
 } from '../payment/incoming/errors'
@@ -20,7 +20,7 @@ export const ReceiverError = {
 export const isReceiverError = (o: any): o is ReceiverError =>
   Object.values(ReceiverError).includes(o)
 
-export const errorToCode = (error: ReceiverError): number =>
+export const errorToCode = (error: ReceiverError): string =>
   isIncomingPaymentError(error)
     ? incomingPaymentErrorToCode[error]
     : remoteIncomingPaymentErrorToCode[error]
