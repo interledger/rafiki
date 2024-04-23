@@ -182,10 +182,10 @@ where
 and
 
 ```graphql
-mutation WithdrawOutgoingPaymentLiquidity(
-  $input: WithdrawOutgoingPaymentLiquidityInput!
+mutation CreateOutgoingPaymentWithdrawal(
+  $input: CreateOutgoingPaymentWithdrawalInput!
 ) {
-  withdrawOutgoingPaymentLiquidity(input: $input) {
+  createOutgoingPaymentWithdrawal(input: $input) {
     code
     error
     message
@@ -210,10 +210,10 @@ where
 Withdraw incoming payment liquidity via the Admin API only:
 
 ```graphql
-mutation WithdrawIncomingPaymentLiquidity(
-  $input: WithdrawIncomingPaymentLiquidityInput!
+mutation CreateIncomingPaymentWithdrawal(
+  $input: CreateIncomingPaymentWithdrawalInput!
 ) {
-  withdrawIncomingPaymentLiquidity(input: $input) {
+  createIncomingPaymentWithdrawal(input: $input) {
     code
     error
     message

@@ -33,7 +33,7 @@ Example: An incoming payment was completed and received $10.
     participant R as Rafiki
 
     R->>ASE: webhook event: incoming payment completed,<br>receivedAmount: $10
-    ASE->>R: admin API call: WithdrawIncomingPaymentLiquidity
+    ASE->>R: admin API call: CreateIncomingPaymentWithdrawal
     ASE->>ASE: credit receiver's account with $10
 
 `}
@@ -51,7 +51,7 @@ Example: An incoming payment has expired and received $2.55.
     participant R as Rafiki
 
     R->>ASE: webhook event: incoming payment expired,<br>receivedAmount: $2.55
-    ASE->>R: admin API call: WithdrawIncomingPaymentLiquidity
+    ASE->>R: admin API call: CreateIncomingPaymentWithdrawal
     ASE->>ASE: credit receiver's account with $2.55
 
 `}
@@ -87,7 +87,7 @@ Example: An outgoing payment for $12 has been completed. $11.50 were sent. The A
     participant R as Rafiki
 
     R->>ASE: webhook event: outgoing completed,<br>debitAmount: $12, sentAmount:$11.50
-    ASE->>R: admin API call: WithdrawOutgoingPaymentLiquidity
+    ASE->>R: admin API call: CreateOutgoingPaymentWithdrawal
     ASE->>ASE: remove the hold and deduct $12 from the sender's account,<br>credit ASE's account with $0.50
 
 `}
@@ -105,7 +105,7 @@ Example: An outgoing payment for $12 has failed. $8 were sent.
     participant R as Rafiki
 
     R->>ASE: webhook event: outgoing failed,<br>debitAmount: $12, sentAmount:$8
-    ASE->>R: admin API call: WithdrawOutgoingPaymentLiquidity
+    ASE->>R: admin API call: CreateOutgoingPaymentWithdrawal
     ASE->>ASE: remove the hold and deduct $8 from the sender's account
 
 `}

@@ -2007,7 +2007,7 @@ describe('Liquidity Resolvers', (): void => {
       ).resolves.toEqual(BigInt(0))
     })
 
-    describe('withdrawIncomingPaymentLiquidity', (): void => {
+    describe('createIncomingPaymentWithdrawal', (): void => {
       const amount = BigInt(10)
 
       beforeEach(async (): Promise<void> => {
@@ -2046,10 +2046,10 @@ describe('Liquidity Resolvers', (): void => {
           const response = await appContainer.apolloClient
             .mutate({
               mutation: gql`
-                mutation WithdrawIncomingPaymentLiquidity(
-                  $input: WithdrawIncomingPaymentLiquidityInput!
+                mutation CreateIncomingPaymentWithdrawal(
+                  $input: CreateIncomingPaymentWithdrawalInput!
                 ) {
-                  withdrawIncomingPaymentLiquidity(input: $input) {
+                  createIncomingPaymentWithdrawal(input: $input) {
                     code
                     success
                     message
@@ -2066,7 +2066,7 @@ describe('Liquidity Resolvers', (): void => {
             })
             .then((query): LiquidityMutationResponse => {
               if (query.data) {
-                return query.data.withdrawIncomingPaymentLiquidity
+                return query.data.createIncomingPaymentWithdrawal
               } else {
                 throw new Error('Data was empty')
               }
@@ -2097,10 +2097,10 @@ describe('Liquidity Resolvers', (): void => {
           const response = await appContainer.apolloClient
             .mutate({
               mutation: gql`
-                mutation WithdrawIncomingPaymentLiquidity(
-                  $input: WithdrawIncomingPaymentLiquidityInput!
+                mutation CreateIncomingPaymentWithdrawal(
+                  $input: CreateIncomingPaymentWithdrawalInput!
                 ) {
-                  withdrawIncomingPaymentLiquidity(input: $input) {
+                  createIncomingPaymentWithdrawal(input: $input) {
                     code
                     success
                     message
@@ -2117,7 +2117,7 @@ describe('Liquidity Resolvers', (): void => {
             })
             .then((query): LiquidityMutationResponse => {
               if (query.data) {
-                return query.data.withdrawIncomingPaymentLiquidity
+                return query.data.createIncomingPaymentWithdrawal
               } else {
                 throw new Error('Data was empty')
               }
@@ -2133,10 +2133,10 @@ describe('Liquidity Resolvers', (): void => {
           const response = await appContainer.apolloClient
             .mutate({
               mutation: gql`
-                mutation WithdrawIncomingPaymentLiquidity(
-                  $input: WithdrawIncomingPaymentLiquidityInput!
+                mutation CreateIncomingPaymentWithdrawal(
+                  $input: CreateIncomingPaymentWithdrawalInput!
                 ) {
-                  withdrawIncomingPaymentLiquidity(input: $input) {
+                  createIncomingPaymentWithdrawal(input: $input) {
                     code
                     success
                     message
@@ -2153,7 +2153,7 @@ describe('Liquidity Resolvers', (): void => {
             })
             .then((query): LiquidityMutationResponse => {
               if (query.data) {
-                return query.data.withdrawIncomingPaymentLiquidity
+                return query.data.createIncomingPaymentWithdrawal
               } else {
                 throw new Error('Data was empty')
               }
@@ -2188,10 +2188,10 @@ describe('Liquidity Resolvers', (): void => {
           const response = await appContainer.apolloClient
             .mutate({
               mutation: gql`
-                mutation WithdrawIncomingPaymentLiquidity(
-                  $input: WithdrawIncomingPaymentLiquidityInput!
+                mutation CreateIncomingPaymentWithdrawal(
+                  $input: CreateIncomingPaymentWithdrawalInput!
                 ) {
-                  withdrawIncomingPaymentLiquidity(input: $input) {
+                  createIncomingPaymentWithdrawal(input: $input) {
                     code
                     success
                     message
@@ -2208,7 +2208,7 @@ describe('Liquidity Resolvers', (): void => {
             })
             .then((query): LiquidityMutationResponse => {
               if (query.data) {
-                return query.data.withdrawIncomingPaymentLiquidity
+                return query.data.createIncomingPaymentWithdrawal
               } else {
                 throw new Error('Data was empty')
               }
@@ -2222,7 +2222,7 @@ describe('Liquidity Resolvers', (): void => {
       })
     })
 
-    describe('withdrawOutgoingPaymentLiquidity', (): void => {
+    describe('createOutgoingPaymentWithdrawal', (): void => {
       const amount = BigInt(10)
 
       beforeEach(async (): Promise<void> => {
@@ -2261,10 +2261,10 @@ describe('Liquidity Resolvers', (): void => {
           const response = await appContainer.apolloClient
             .mutate({
               mutation: gql`
-                mutation WithdrawOutgoingPaymentLiquidity(
-                  $input: WithdrawOutgoingPaymentLiquidityInput!
+                mutation CreateOutgoingPaymentWithdrawal(
+                  $input: CreateOutgoingPaymentWithdrawalInput!
                 ) {
-                  withdrawOutgoingPaymentLiquidity(input: $input) {
+                  createOutgoingPaymentWithdrawal(input: $input) {
                     code
                     success
                     message
@@ -2281,7 +2281,7 @@ describe('Liquidity Resolvers', (): void => {
             })
             .then((query): LiquidityMutationResponse => {
               if (query.data) {
-                return query.data.withdrawOutgoingPaymentLiquidity
+                return query.data.createOutgoingPaymentWithdrawal
               } else {
                 throw new Error('Data was empty')
               }
@@ -2301,10 +2301,10 @@ describe('Liquidity Resolvers', (): void => {
           const response = await appContainer.apolloClient
             .mutate({
               mutation: gql`
-                mutation WithdrawOutgoingPaymentLiquidity(
-                  $input: WithdrawOutgoingPaymentLiquidityInput!
+                mutation CreateOutgoingPaymentWithdrawal(
+                  $input: CreateOutgoingPaymentWithdrawalInput!
                 ) {
-                  withdrawOutgoingPaymentLiquidity(input: $input) {
+                  createOutgoingPaymentWithdrawal(input: $input) {
                     code
                     success
                     message
@@ -2321,7 +2321,7 @@ describe('Liquidity Resolvers', (): void => {
             })
             .then((query): LiquidityMutationResponse => {
               if (query.data) {
-                return query.data.withdrawOutgoingPaymentLiquidity
+                return query.data.createOutgoingPaymentWithdrawal
               } else {
                 throw new Error('Data was empty')
               }
@@ -2343,10 +2343,10 @@ describe('Liquidity Resolvers', (): void => {
           const response = await appContainer.apolloClient
             .mutate({
               mutation: gql`
-                mutation withdrawOutgoingPaymentLiquidity(
-                  $input: WithdrawOutgoingPaymentLiquidityInput!
+                mutation CreateIncomingPaymentWithdrawal(
+                  $input: CreateOutgoingPaymentWithdrawalInput!
                 ) {
-                  withdrawOutgoingPaymentLiquidity(input: $input) {
+                  createOutgoingPaymentWithdrawal(input: $input) {
                     code
                     success
                     message
@@ -2363,7 +2363,7 @@ describe('Liquidity Resolvers', (): void => {
             })
             .then((query): LiquidityMutationResponse => {
               if (query.data) {
-                return query.data.withdrawOutgoingPaymentLiquidity
+                return query.data.createOutgoingPaymentWithdrawal
               } else {
                 throw new Error('Data was empty')
               }
@@ -2396,10 +2396,10 @@ describe('Liquidity Resolvers', (): void => {
           const response = await appContainer.apolloClient
             .mutate({
               mutation: gql`
-                mutation withdrawOutgoingPaymentLiquidity(
-                  $input: WithdrawOutgoingPaymentLiquidityInput!
+                mutation CreateOutgoingPaymentWithdrawal(
+                  $input: CreateOutgoingPaymentWithdrawalInput!
                 ) {
-                  withdrawOutgoingPaymentLiquidity(input: $input) {
+                  createOutgoingPaymentWithdrawal(input: $input) {
                     code
                     success
                     message
@@ -2416,7 +2416,7 @@ describe('Liquidity Resolvers', (): void => {
             })
             .then((query): LiquidityMutationResponse => {
               if (query.data) {
-                return query.data.withdrawOutgoingPaymentLiquidity
+                return query.data.createOutgoingPaymentWithdrawal
               } else {
                 throw new Error('Data was empty')
               }
