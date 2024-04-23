@@ -4,8 +4,12 @@ import { getAssetWithFees } from '~/lib/api/asset.server'
 import { useLoaderData, useNavigate } from '@remix-run/react'
 import { PageHeader } from '~/components'
 import { Button, Table } from '~/components/ui'
+import { redirectIfUnauthorizedAccess } from '../lib/kratos_checks.server'
 
 export const loader = async ({ request, params }: LoaderFunctionArgs) => {
+  const cookies = request.headers.get('cookie')
+  await redirectIfUnauthorizedAccess(request.url, cookies)
+
   const assetId = params.assetId
   if (!assetId) {
     throw json(null, { status: 404, statusText: 'Asset not found.' })
