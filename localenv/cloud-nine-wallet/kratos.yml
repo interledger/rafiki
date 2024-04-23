@@ -1,0 +1,91 @@
+version: v0.13.0
+
+dsn: postgres://cloud_nine_kratos:kratos_password@shared-database:5432/cloud_nine_kratos?sslmode=disable&max_conns=20&max_idle_conns=4
+
+serve:
+  public:
+    base_url: http://localhost:4433/
+    cors:
+      enabled: true
+  admin:
+    base_url: http://cloud-nine-kratos:4434/
+
+selfservice:
+  default_browser_return_url: http://localhost:3010/
+  allowed_return_urls:
+    - http://localhost:3010
+
+  methods:
+    link:
+      config:
+        lifespan: 1h
+        base_url: http://localhost:4433
+      enabled: true
+    password:
+      enabled: true
+
+  flows:
+    error:
+      ui_url: http://localhost:3010/error
+
+    settings:
+      ui_url: http://localhost:3010/settings
+      privileged_session_max_age: 15m
+      required_aal: highest_available
+
+    recovery:
+      enabled: true
+      ui_url: http://localhost:3010/auth/recovery
+      use: link
+      after:
+        hooks:
+        - hook: revoke_active_sessions
+
+    verification:
+      enabled: false
+
+    logout:
+      after:
+        default_browser_return_url: http://localhost:3010/auth
+
+    login:
+      ui_url: http://localhost:3010/auth/login
+      lifespan: 10m
+
+    registration:
+      enabled: false
+
+log:
+  level: debug
+  format: json
+  leak_sensitive_values: true
+
+secrets:
+  cookie:
+    - PLEASE-CHANGE-ME-I-AM-VERY-INSECURE
+  cipher:
+    - 32-LONG-SECRET-NOT-SECURE-AT-ALL
+
+ciphers:
+  algorithm: xchacha20-poly1305
+
+hashers:
+  algorithm: bcrypt
+  bcrypt:
+    cost: 8
+
+identity:
+  schemas:
+    - id: default
+      url: file:///etc/config/kratos/identity.schema.json
+
+courier:
+  smtp:
+    connection_uri: smtps://test:test@mailslurper:1025/?skip_ssl_verify=true
+
+session:
+  lifespan: 1h
+  cookie:
+    persistent: false
+    same_site: Strict
+    path: /

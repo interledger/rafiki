@@ -1,13 +1,17 @@
-import { redirectIfUnauthorizedAccess } from '../lib/kratos_checks.server'
+import { Button } from '../components/ui'
+import variables from '../lib/envConfig.server'
+import { redirectIfAlreadyAuthorized } from '../lib/kratos_checks.server'
 import { type LoaderFunctionArgs } from '@remix-run/node'
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const cookies = request.headers.get('cookie')
-  await redirectIfUnauthorizedAccess(request.url, cookies)
+  await redirectIfAlreadyAuthorized(request.url, cookies)
+
   return null
 }
 
-export default function Index() {
+export default function Auth() {
+  const loginUrl = `${variables.kratosBrowserPublicUrl}/self-service/login/browser`
   return (
     <div className='pt-4 flex flex-col'>
       <div className='flex flex-col rounded-md bg-offwhite px-6 text-center min-h-[calc(100vh-7rem)] md:min-h-[calc(100vh-3rem)]'>
@@ -28,6 +32,11 @@ export default function Index() {
               https://rafiki.dev
             </a>
           </p>
+          <div>
+            <Button aria-label='logout' href={loginUrl} className='mr-2'>
+              Login
+            </Button>
+          </div>
         </div>
       </div>
     </div>
