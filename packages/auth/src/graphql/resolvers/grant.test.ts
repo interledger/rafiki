@@ -484,7 +484,7 @@ describe('Grant Resolvers', (): void => {
       const gqlQuery = appContainer.apolloClient
         .mutate({
           mutation: gql`
-            query GetGrant($id: String!) {
+            query GetGrant($id: ID!) {
               grant(id: $id) {
                 id
                 client
@@ -513,6 +513,7 @@ describe('Grant Resolvers', (): void => {
         })
 
       await expect(gqlQuery).rejects.toThrow(ApolloError)
+      await expect(gqlQuery).rejects.toThrow('No grant')
     })
   })
 
@@ -532,9 +533,7 @@ describe('Grant Resolvers', (): void => {
           mutation: gql`
             mutation revokeGrant($input: RevokeGrantInput!) {
               revokeGrant(input: $input) {
-                code
-                success
-                message
+                id
               }
             }
           `,
@@ -550,8 +549,7 @@ describe('Grant Resolvers', (): void => {
           }
         })
 
-      expect(response.success).toBe(true)
-      expect(response.code).toBe('200')
+      expect(response.id).toEqual(grant.id)
     })
 
     test('Returns 401 if grant id is not provided', async (): Promise<void> => {
@@ -559,14 +557,12 @@ describe('Grant Resolvers', (): void => {
         grantId: ''
       }
 
-      const response = await appContainer.apolloClient
+      const gqlQuery = appContainer.apolloClient
         .mutate({
           mutation: gql`
             mutation revokeGrant($input: RevokeGrantInput!) {
               revokeGrant(input: $input) {
-                code
-                success
-                message
+                id
               }
             }
           `,
@@ -582,9 +578,8 @@ describe('Grant Resolvers', (): void => {
           }
         })
 
-      expect(response.success).toBe(false)
-      expect(response.code).toBe('401')
-      expect(response.message).toBe('Grant Id is not provided')
+      expect(gqlQuery).rejects.toThrow(ApolloError)
+      expect(gqlQuery).rejects.toThrow('Grant id is not provided')
     })
 
     test('Returns 404 if id does not exist', async (): Promise<void> => {
@@ -592,14 +587,12 @@ describe('Grant Resolvers', (): void => {
         grantId: uuid()
       }
 
-      const response = await appContainer.apolloClient
+      const gqlQuery = appContainer.apolloClient
         .mutate({
           mutation: gql`
             mutation revokeGrant($input: RevokeGrantInput!) {
               revokeGrant(input: $input) {
-                code
-                success
-                message
+                id
               }
             }
           `,
@@ -615,9 +608,8 @@ describe('Grant Resolvers', (): void => {
           }
         })
 
-      expect(response.success).toBe(false)
-      expect(response.code).toBe('404')
-      expect(response.message).toBe('Revoke grant was not successful')
+      expect(gqlQuery).rejects.toThrow(ApolloError)
+      expect(gqlQuery).rejects.toThrow('Revoke grant was not successful')
     })
 
     test('Returns 500 if grant id is in invaild format', async (): Promise<void> => {
@@ -625,14 +617,12 @@ describe('Grant Resolvers', (): void => {
         grantId: '123'
       }
 
-      const response = await appContainer.apolloClient
+      const gqlQuery = appContainer.apolloClient
         .mutate({
           mutation: gql`
             mutation revokeGrant($input: RevokeGrantInput!) {
               revokeGrant(input: $input) {
-                code
-                success
-                message
+                id
               }
             }
           `,
@@ -648,9 +638,7 @@ describe('Grant Resolvers', (): void => {
           }
         })
 
-      expect(response.success).toBe(false)
-      expect(response.code).toBe('500')
-      expect(response.message).toBe('Error trying to revoke grant')
+      expect(gqlQuery).rejects.toThrow(ApolloError)
     })
   })
 })
