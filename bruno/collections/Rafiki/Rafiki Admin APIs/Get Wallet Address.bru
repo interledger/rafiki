@@ -75,3 +75,9 @@ body:graphql:vars {
       "id": "{{walletAddressId}}"
   }
 }
+
+script:pre-request {
+  const scripts = require('./scripts');
+  
+  scripts.addApiSignatureHeader();
+}
