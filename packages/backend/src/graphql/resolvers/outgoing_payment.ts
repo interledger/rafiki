@@ -60,6 +60,38 @@ export const createOutgoingPayment: MutationResolvers<ApolloContext>['createOutg
       }))
   }
 
+export const createOutgoingPaymentFromIncomingPayment: MutationResolvers<ApolloContext>['createOutgoingPaymentFromIncomingPayment'] =
+  async (
+    parent,
+    args,
+    ctx
+  ): Promise<ResolversTypes['OutgoingPaymentResponse']> => {
+    const outgoingPaymentService = await ctx.container.use(
+      'outgoingPaymentService'
+    )
+    return outgoingPaymentService
+      .create(args.input)
+      .then((paymentOrErr: OutgoingPayment | OutgoingPaymentError) => {
+        console.log('paymentOrErr', { input: args.input, paymentOrErr })
+        return isOutgoingPaymentError(paymentOrErr)
+          ? {
+              code: errorToCode[paymentOrErr].toString(),
+              success: false,
+              message: errorToMessage[paymentOrErr]
+            }
+          : {
+              code: '200',
+              success: true,
+              payment: paymentToGraphql(paymentOrErr)
+            }
+      })
+      .catch(() => ({
+        code: '500',
+        success: false,
+        message: 'Error trying to create outgoing payment'
+      }))
+  }
+
 export const getWalletAddressOutgoingPayments: WalletAddressResolvers<ApolloContext>['outgoingPayments'] =
   async (
     parent,
