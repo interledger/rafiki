@@ -1,5 +1,9 @@
 import { validate, version } from 'uuid'
 import { URL, type URL as URLType } from 'url'
+import { Context } from 'koa'
+import { createHmac } from 'crypto'
+import { canonicalize } from 'json-canonicalize'
+import { IAppConfig } from '../config/app'
 
 export function validateId(id: string): boolean {
   return validate(id) && version(id) === 4
@@ -104,3 +108,28 @@ export async function poll<T>(args: PollArgs<T>): Promise<T> {
 export type UnionOmit<T, K extends keyof any> = T extends any
   ? Omit<T, K>
   : never
+
+export function verifyApiSignature(ctx: Context, config: IAppConfig): boolean {
+  const { headers, body } = ctx.request
+  const signature = headers['signature']
+  if (!signature) {
+    return false
+  }
+
+  const signatureParts = (signature as string)?.split(', ')
+  const timestamp = signatureParts[0].split('=')[1]
+  const signatureVersionAndDigest = signatureParts[1].split('=')
+  const signatureVersion = signatureVersionAndDigest[0].replace('v', '')
+  const signatureDigest = signatureVersionAndDigest[1]
+
+  if (Number(signatureVersion) !== config.apiSignatureVersion) {
+    return false
+  }
+
+  const payload = `${timestamp}.${canonicalize(body)}`
+  const hmac = createHmac('sha256', config.apiSecret as string)
+  hmac.update(payload)
+  const digest = hmac.digest('hex')
+
+  return digest === signatureDigest
+}

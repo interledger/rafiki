@@ -39,3 +39,9 @@ body:graphql:vars {
       "last": null
   }
 }
+
+script:pre-request {
+  const scripts = require('./scripts');
+  
+  scripts.addApiSignatureHeader();
+}

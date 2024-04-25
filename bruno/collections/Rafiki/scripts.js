@@ -1,3 +1,5 @@
+const { createHmac } = require('crypto')
+const { canonicalize } = require('json-canonicalize')
 const fetch = require('node-fetch')
 const url = require('url')
 
@@ -5,7 +7,10 @@ const scripts = {
   sanitizeUrl: function () {
     return req
       .getUrl()
-      .replace(/{{([A-Za-z]\w+)}}/g, (_, key) => bru.getEnvVar(key))
+      .replace(
+        /{{([A-Za-z]\w+)}}/g,
+        (_, key) => bru.getVar(key) || bru.getEnvVar(key)
+      )
       .replace(/localhost:([3,4])000/g, (_, key) =>
         key === '3' ? bru.getEnvVar('host3000') : bru.getEnvVar('host4000')
       )
@@ -19,7 +24,10 @@ const scripts = {
     }
     return JSON.parse(
       requestBody
-        .replace(/{{([A-Za-z]\w+)}}/g, (_, key) => bru.getEnvVar(key))
+        .replace(
+          /{{([A-Za-z]\w+)}}/g,
+          (_, key) => bru.getVar(key) || bru.getEnvVar(key)
+        )
         .replace(/http:\/\/localhost:([3,4])000/g, (_, key) =>
           key === '3'
             ? 'https://' + bru.getEnvVar('host3000')
@@ -72,6 +80,25 @@ const scripts = {
       body
     )
     this.setHeaders(signatureHeaders)
+  },
+
+  addApiSignatureHeader: function () {
+    const body = this.sanitizeBody()
+    const { variables } = body
+    const formattedBody = {
+      ...body,
+      variables: JSON.parse(variables)
+    }
+
+    const timestamp = Math.round(new Date().getTime() / 1000)
+    const version = bru.getEnvVar('apiSignatureVersion')
+    const secret = bru.getEnvVar('apiSignatureSecret')
+    const payload = `${timestamp}.${canonicalize(formattedBody)}`
+    const hmac = createHmac('sha256', secret)
+    hmac.update(payload)
+    const digest = hmac.digest('hex')
+
+    req.setHeader('signature', `t=${timestamp}, v${version}=${digest}`)
   },
 
   addHostHeader: function (hostVarName) {
