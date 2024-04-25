@@ -2,8 +2,6 @@ import { Logger } from 'pino'
 import { ReadContext, CreateContext, ListContext } from '../../../app'
 import { IAppConfig } from '../../../config/app'
 import {
-  CreateFromIncomingPayment,
-  CreateFromQuote,
   CreateOutgoingPaymentOptions,
   OutgoingPaymentService,
   BaseOptions as OutgoingPaymentCreateBaseOptions
@@ -103,18 +101,20 @@ async function createOutgoingPayment(
   ctx: CreateContext<CreateBody>
 ): Promise<void> {
   const { body } = ctx.request
-  let options: OutgoingPaymentCreateBaseOptions = {
+  const baseOptions: OutgoingPaymentCreateBaseOptions = {
     walletAddressId: ctx.walletAddress.id,
     metadata: body.metadata,
     client: ctx.client,
     grant: ctx.grant
   }
+  let options: CreateOutgoingPaymentOptions
+
   if (isCreateFromIncomingPayment(body)) {
     options = {
-      ...options,
+      ...baseOptions,
       incomingPayment: body.incomingPayment,
       debitAmount: body.debitAmount
-    } as CreateFromIncomingPayment
+    }
   } else {
     const quoteUrlParts = body.quoteId.split('/')
     const quoteId = quoteUrlParts.pop() || quoteUrlParts.pop() // handle trailing slash
@@ -125,14 +125,13 @@ async function createOutgoingPayment(
       )
     }
     options = {
-      ...options,
+      ...baseOptions,
       quoteId
-    } as CreateFromQuote
+    }
   }
 
-  const outgoingPaymentOrError = await deps.outgoingPaymentService.create(
-    options as CreateOutgoingPaymentOptions
-  )
+  const outgoingPaymentOrError =
+    await deps.outgoingPaymentService.create(options)
 
   if (isOutgoingPaymentError(outgoingPaymentOrError)) {
     throw new OpenPaymentsServerRouteError(
