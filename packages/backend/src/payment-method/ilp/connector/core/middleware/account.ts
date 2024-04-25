@@ -32,6 +32,7 @@ export function createAccountMiddleware(serverAddress: string): ILPMiddleware {
         if (err instanceof AccountAlreadyExistsError) {
           // Do nothing.
         } else {
+          // TODO 2578: log context?
           throw err
         }
       }
