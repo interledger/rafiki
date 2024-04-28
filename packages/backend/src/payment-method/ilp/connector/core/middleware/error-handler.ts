@@ -23,8 +23,6 @@ export function createIncomingErrorHandlerMiddleware(
       if (!err || typeof err !== 'object') {
         err = new Error('Non-object thrown: ' + e)
       }
-      // TODO 2578: update this error message? wont this be for more than incoming pipeline? Verify. And check if maybe this was
-      // added ONLY for incoming pipeline initially.
       ctx.services.logger.info({ err }, 'Error thrown in incoming pipeline')
       if (ctx.revertTotalReceived) {
         await ctx.revertTotalReceived()
@@ -32,7 +30,6 @@ export function createIncomingErrorHandlerMiddleware(
       if (isIlpError(err)) {
         ctx.response.reject = errorToIlpReject(serverAddress, err)
       } else {
-        // TODO 2578: what does this log look like when its triggered? if its an httperror it prints the message? if not?
         ctx.services.logger.error(err instanceof HttpError && err.message)
         ctx.response.reject = errorToIlpReject(serverAddress, {
           message: 'unexpected internal error',

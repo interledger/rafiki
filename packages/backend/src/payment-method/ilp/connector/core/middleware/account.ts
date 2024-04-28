@@ -29,10 +29,11 @@ export function createAccountMiddleware(serverAddress: string): ILPMiddleware {
         )
       } catch (err) {
         // Don't complain if liquidity account already exists.
-        if (err instanceof AccountAlreadyExistsError) {
-          // Do nothing.
-        } else {
-          // TODO 2578: log context?
+        if (!(err instanceof AccountAlreadyExistsError)) {
+          ctx.services.logger.error(
+            { account, accountType, err },
+            'Failed to create liquidity account'
+          )
           throw err
         }
       }
@@ -57,7 +58,15 @@ export function createAccountMiddleware(serverAddress: string): ILPMiddleware {
               IncomingPaymentState.Expired
             ].includes(incomingPayment.state)
           ) {
-            throw new Errors.UnreachableError('destination account is disabled')
+            const errorMessage = 'destination account is disabled'
+            ctx.services.logger.error(
+              {
+                incomingPayment,
+                streamDestination: ctx.state.streamDestination
+              },
+              errorMessage
+            )
+            throw new Errors.UnreachableError(errorMessage)
           }
 
           // Create the tigerbeetle account if not exists.
@@ -68,6 +77,7 @@ export function createAccountMiddleware(serverAddress: string): ILPMiddleware {
               LiquidityAccountType.INCOMING
             )
           }
+          ctx.services.logger.trace('got account from incoming payment')
           return incomingPayment
         }
         // Open Payments SPSP fallback account
@@ -81,12 +91,14 @@ export function createAccountMiddleware(serverAddress: string): ILPMiddleware {
               LiquidityAccountType.WEB_MONETIZATION
             )
           }
+          ctx.services.logger.trace('got account from wallet address')
           return walletAddress
         }
       }
       const address = ctx.request.prepare.destination
       const peer = await peers.getByDestinationAddress(address)
       if (peer) {
+        ctx.services.logger.trace('got account from peer')
         return peer
       }
       if (
@@ -107,7 +119,15 @@ export function createAccountMiddleware(serverAddress: string): ILPMiddleware {
 
     const outgoingAccount = await getAccountByDestinationAddress()
     if (!outgoingAccount) {
-      throw new Errors.UnreachableError('unknown destination account')
+      const errorMessage = 'unknown destination account'
+      ctx.services.logger.error(
+        {
+          streamDestination: ctx.state.streamDestination,
+          destinationAddress: ctx.request.prepare.destination
+        },
+        errorMessage
+      )
+      throw new Errors.UnreachableError(errorMessage)
     }
     ctx.accounts = {
       get incoming(): IncomingAccount {

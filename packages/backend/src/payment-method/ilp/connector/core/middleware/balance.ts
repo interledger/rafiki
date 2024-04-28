@@ -1,5 +1,5 @@
 import { Errors } from 'ilp-packet'
-import { ILPContext, ILPMiddleware } from '../rafiki'
+import { ILPContext, ILPMiddleware, TransferOptions } from '../rafiki'
 import {
   isTransferError,
   TransferError
@@ -35,6 +35,15 @@ export function createBalanceMiddleware(): ILPMiddleware {
     })
     if (typeof destinationAmountOrError !== 'bigint') {
       // ConvertError
+      services.logger.error(
+        {
+          amount,
+          destinationAmountOrError,
+          sourceAsset: accounts.incoming.asset,
+          destinationAsset: accounts.outgoing.asset
+        },
+        'Could not get rates'
+      )
       throw new CannotReceiveError(
         `Exchange rate error: ${destinationAmountOrError}`
       )
@@ -51,20 +60,35 @@ export function createBalanceMiddleware(): ILPMiddleware {
     const createPendingTransfer = async (): Promise<
       Transaction | undefined
     > => {
-      const trxOrError = await services.accounting.createTransfer({
+      const transferOptions = {
         sourceAccount: accounts.incoming,
         destinationAccount: accounts.outgoing,
         sourceAmount,
         destinationAmount: destinationAmountOrError,
         timeout: 5
-      })
+      }
+      const trxOrError =
+        await services.accounting.createTransfer(transferOptions)
 
       if (isTransferError(trxOrError)) {
+        const safeLogTransferError = (transferOptions: TransferOptions) => {
+          if (transferOptions.destinationAccount?.http?.outgoing.authToken) {
+            // @ts-ignore
+            delete transferOptions.destinationAccount.http.outgoing.authToken
+          }
+          services.logger.error(
+            { transferOptions },
+            'Could not create transfer'
+          )
+        }
+
         switch (trxOrError) {
           case TransferError.InsufficientBalance:
           case TransferError.InsufficientLiquidity:
+            safeLogTransferError(transferOptions)
             throw new InsufficientLiquidityError(trxOrError)
           default:
+            safeLogTransferError(transferOptions)
             // TODO: map transfer errors to ILP errors
             ctxThrow(500, destinationAmountOrError.toString())
         }

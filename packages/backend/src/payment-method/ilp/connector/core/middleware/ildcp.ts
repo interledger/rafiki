@@ -22,7 +22,7 @@ export function createIldcpMiddleware(serverAddress: string): ILPMiddleware {
 
     const clientAddress = incoming.staticIlpAddress
     if (!clientAddress) {
-      logger.warn(
+      logger.error(
         {
           peerId: incoming.id
         },
