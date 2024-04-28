@@ -73,7 +73,7 @@ export function createBalanceMiddleware(): ILPMiddleware {
       if (isTransferError(trxOrError)) {
         const safeLogTransferError = (transferOptions: TransferOptions) => {
           if (transferOptions.destinationAccount?.http?.outgoing.authToken) {
-            // @ts-ignore
+            // @ts-expect-error - "The operand of a 'delete' operator must be optional"
             delete transferOptions.destinationAccount.http.outgoing.authToken
           }
           services.logger.error(
