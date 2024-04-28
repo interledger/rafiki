@@ -17,7 +17,6 @@ export async function createAccount(
 ): Promise<LedgerAccount> {
   try {
     const { accountRef, ledger, type } = args
-    // throw new Error('something went wrong')
     return await LedgerAccount.query(trx || deps.knex).insertAndFetch({
       ledger,
       accountRef,
