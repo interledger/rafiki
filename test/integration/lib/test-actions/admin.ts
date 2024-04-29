@@ -111,7 +111,7 @@ async function createOutgoingPayment(
     quoteId: quote.id
   })
 
-  expect(response.code).toBe('200')
+  expect(response.code).toBe('201')
   assert(response.payment)
 
   await pollCondition(
