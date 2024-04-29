@@ -21,8 +21,8 @@ body:json {
                   ],
                   "identifier": "{{senderWalletAddress}}",
                   "limits": {
-                      "debitAmount": {{quoteDebitAmount}},
-                      "receiveAmount": {{quoteReceiveAmount}}
+                      "debitAmount": {{debitAmount}},
+                      "receiveAmount": {{receiveAmount}}
                   }
               }
           ]
@@ -45,8 +45,7 @@ script:pre-request {
 
 script:post-response {
   const scripts = require('./scripts');
-  const body = res.getBody()
-  console.log({body})
+  
   scripts.storeTokenDetails();
 }
 

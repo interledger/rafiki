@@ -39,19 +39,17 @@ script:post-response {
   bru.setEnvVar("incomingPaymentId", body.id.split("/").pop());
   bru.setEnvVar("incomingPaymentUrl", body.id);
   
-  // TESTING 
-  bru.setEnvVar("quoteDebitAmount", JSON.stringify({
+  bru.setEnvVar("debitAmount", JSON.stringify({
       "value": "500",
       "assetCode": "USD",
       "assetScale": 2
     }))
   
-  bru.setEnvVar("quoteReceiveAmount", JSON.stringify({
+  bru.setEnvVar("receiveAmount", JSON.stringify({
       "value": "500",
       "assetCode": "USD",
       "assetScale": 2
     }))
-  
 }
 
 tests {
