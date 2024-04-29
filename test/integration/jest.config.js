@@ -4,6 +4,8 @@ const baseConfig = require('../../jest.config.base.js')
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const packageName = require('./package.json').name
 
+const esModules = ['ky']
+
 module.exports = {
   ...baseConfig,
   clearMocks: true,
@@ -11,5 +13,6 @@ module.exports = {
   moduleDirectories: [`node_modules`, `test/${packageName}/node_modules`],
   id: packageName,
   displayName: packageName,
-  rootDir: '../..'
+  rootDir: '../..',
+  transformIgnorePatterns: [`node_modules/(?!.pnpm|${esModules.join('|')})`]
 }
