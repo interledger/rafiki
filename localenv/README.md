@@ -97,6 +97,9 @@ pnpm localenv:compose up
 
 // tear down and remove volumes
 pnpm localenv:compose down --volumes
+
+// tear down, delete database volumes and remove images
+pnpm localenv:compose down --volumes --rmi all
 ```
 
 If you want to use Postgres as the accounting database instead of TigerBeetle, you can use the `psql` variant of the `localenv:compose` commands:
@@ -147,6 +150,9 @@ pnpm localenv:compose down
 
 // tear down and delete database volumes
 pnpm localenv:compose down --volumes
+
+// tear down, delete database volumes and remove images
+pnpm localenv:compose down --volumes --rmi all
 ```
 
 ### Commands
