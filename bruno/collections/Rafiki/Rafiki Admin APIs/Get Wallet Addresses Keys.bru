@@ -1,0 +1,43 @@
+meta {
+  name: Get Wallet Addresses Keys
+  type: graphql
+  seq: 41
+}
+
+post {
+  url: {{RafikiGraphqlHost}}/graphql
+  body: graphql
+  auth: none
+}
+
+body:graphql {
+  query GetWalletAddressesKeys {
+      walletAddresses {
+          edges {
+              cursor
+              node {
+                  id
+                  publicName
+                  url
+                  walletAddressKeys {
+                    edges {
+                      cursor
+                      node {
+                        id
+                        revoked
+                        createdAt
+                        jwk {
+                          kid
+                          x
+                          alg
+                          kty
+                          crv
+                        }
+                      }
+                    }
+                  }
+              }
+          }
+      }
+  }
+}

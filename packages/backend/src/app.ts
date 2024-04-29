@@ -87,6 +87,8 @@ import { IlpPaymentService } from './payment-method/ilp/service'
 import { TelemetryService } from './telemetry/service'
 import { ApolloArmor } from '@escape.tech/graphql-armor'
 import { openPaymentsServerErrorMiddleware } from './open_payments/route-errors'
+import { verifyApiSignature } from './shared/utils'
+
 export interface AppContextData {
   logger: Logger
   container: AppContainer
@@ -349,6 +351,7 @@ export class App {
 
     await this.apolloServer.start()
 
+    koa.use(cors())
     koa.use(bodyParser())
 
     koa.use(
@@ -366,6 +369,15 @@ export class App {
         }
       }
     )
+
+    if (this.config.apiSecret) {
+      koa.use(async (ctx, next: Koa.Next): Promise<void> => {
+        if (!verifyApiSignature(ctx, this.config)) {
+          ctx.throw(401, 'Unauthorized')
+        }
+        return next()
+      })
+    }
 
     koa.use(
       koaMiddleware(this.apolloServer, {

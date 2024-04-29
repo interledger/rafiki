@@ -17,6 +17,8 @@ import {
 } from '../generated/graphql'
 import { WalletAddressKeyService } from '../../open_payments/wallet_address/key/service'
 import { createWalletAddress } from '../../tests/walletAddress'
+import { getPageTests } from './page.test'
+import { createWalletAddressKey } from '../../tests/walletAddressKey'
 
 const TEST_KEY = generateJwk({ keyId: uuid() })
 
@@ -26,7 +28,7 @@ describe('Wallet Address Key Resolvers', (): void => {
   let walletAddressKeyService: WalletAddressKeyService
 
   beforeAll(async (): Promise<void> => {
-    deps = await initIocContainer(Config)
+    deps = initIocContainer(Config)
     appContainer = await createTestApp(deps)
     walletAddressKeyService = await deps.use('walletAddressKeyService')
   })
@@ -36,7 +38,7 @@ describe('Wallet Address Key Resolvers', (): void => {
   })
 
   afterAll(async (): Promise<void> => {
-    await appContainer.apolloClient.stop()
+    appContainer.apolloClient.stop()
     await appContainer.shutdown()
   })
 
@@ -256,6 +258,22 @@ describe('Wallet Address Key Resolvers', (): void => {
       expect(response.code).toBe('404')
       expect(response.message).toBe('Wallet address key not found')
       expect(response.walletAddressKey).toBeNull()
+    })
+  })
+
+  describe('List Wallet Address Keys', (): void => {
+    let walletAddressId: string
+    beforeEach(async (): Promise<void> => {
+      walletAddressId = (await createWalletAddress(deps)).id
+    })
+    getPageTests({
+      getClient: () => appContainer.apolloClient,
+      createModel: () => createWalletAddressKey(deps, walletAddressId),
+      pagedQuery: 'walletAddressKeys',
+      parent: {
+        query: 'walletAddress',
+        getId: () => walletAddressId
+      }
     })
   })
 })
