@@ -72,7 +72,7 @@ export const createOutgoingPaymentFromIncomingPayment: MutationResolvers<ApolloC
     return outgoingPaymentService
       .create(args.input)
       .then((paymentOrErr: OutgoingPayment | OutgoingPaymentError) => {
-        console.log('paymentOrErr', { input: args.input, paymentOrErr })
+   
         return isOutgoingPaymentError(paymentOrErr)
           ? {
               code: errorToCode[paymentOrErr].toString(),
