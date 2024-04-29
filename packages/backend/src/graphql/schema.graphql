@@ -935,14 +935,6 @@ input CreateOutgoingPaymentFromIncomingPaymentInput {
   idempotencyKey: String
 }
 
-input AmountInput {
-  value: UInt64!
-  "[ISO 4217 currency code](https://en.wikipedia.org/wiki/ISO_4217), e.g. `USD`"
-  assetCode: String!
-  "Difference in orders of magnitude between the standard unit of an asset and a corresponding fractional unit"
-  assetScale: UInt8!
-}
-
 input CreateIncomingPaymentInput {
   "Id of the wallet address under which the incoming payment will be created"
   walletAddressId: String!
