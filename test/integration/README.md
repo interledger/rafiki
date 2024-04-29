@@ -22,4 +22,4 @@ This command calls the `./scripts/run-tests.sh` script. In addition to launching
 
 Jest logs to standard output and the container logs are available at `./tmp/rafiki_integration_logs.txt`. To speed up the development loop, docker image and internal dependency building can be skipped when running tests by using the `--no-build` or `-nb` arguments:
 
-    pnpm --filter run-tests -nb
+    pnpm --filter integration run-tests -nb
