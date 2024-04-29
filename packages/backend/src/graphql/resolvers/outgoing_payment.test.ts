@@ -268,7 +268,7 @@ describe('OutgoingPayment Resolvers', (): void => {
       externalRef: '202201'
     }
 
-    test('200 (metadata)', async (): Promise<void> => {
+    test('201 (metadata)', async (): Promise<void> => {
       const { id: walletAddressId } = await createWalletAddress(deps, {
         assetId: asset.id
       })
@@ -306,7 +306,7 @@ describe('OutgoingPayment Resolvers', (): void => {
         )
 
       expect(createSpy).toHaveBeenCalledWith(input)
-      expect(query.code).toBe('200')
+      expect(query.code).toBe('201')
       expect(query.success).toBe(true)
       expect(query.payment?.id).toBe(payment.id)
       expect(query.payment?.state).toBe(SchemaPaymentState.Funding)
@@ -396,7 +396,7 @@ describe('OutgoingPayment Resolvers', (): void => {
   describe('Mutation.createOutgoingPaymentFromIncomingPayment', (): void => {
     const mockIncomingPaymentUrl = `https://${faker.internet.domainName()}/incoming-payments/${uuid()}`
 
-    test('200', async (): Promise<void> => {
+    test('201', async (): Promise<void> => {
       const walletAddress = await createWalletAddress(deps, {
         assetId: asset.id
       })
@@ -440,7 +440,7 @@ describe('OutgoingPayment Resolvers', (): void => {
         )
 
       expect(createSpy).toHaveBeenCalledWith(input)
-      expect(query.code).toBe('200')
+      expect(query.code).toBe('201')
       expect(query.success).toBe(true)
       expect(query.payment?.id).toBe(payment.id)
       expect(query.payment?.state).toBe(SchemaPaymentState.Funding)

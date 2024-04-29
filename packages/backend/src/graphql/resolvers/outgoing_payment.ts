@@ -48,7 +48,7 @@ export const createOutgoingPayment: MutationResolvers<ApolloContext>['createOutg
               message: errorToMessage[paymentOrErr]
             }
           : {
-              code: '200',
+              code: '201',
               success: true,
               payment: paymentToGraphql(paymentOrErr)
             }
@@ -71,20 +71,19 @@ export const createOutgoingPaymentFromIncomingPayment: MutationResolvers<ApolloC
     )
     return outgoingPaymentService
       .create(args.input)
-      .then((paymentOrErr: OutgoingPayment | OutgoingPaymentError) => {
-   
-        return isOutgoingPaymentError(paymentOrErr)
+      .then((paymentOrErr: OutgoingPayment | OutgoingPaymentError) =>
+        isOutgoingPaymentError(paymentOrErr)
           ? {
               code: errorToCode[paymentOrErr].toString(),
               success: false,
               message: errorToMessage[paymentOrErr]
             }
           : {
-              code: '200',
+              code: '201',
               success: true,
               payment: paymentToGraphql(paymentOrErr)
             }
-      })
+      )
       .catch(() => ({
         code: '500',
         success: false,
