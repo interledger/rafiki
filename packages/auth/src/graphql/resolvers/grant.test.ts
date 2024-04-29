@@ -18,6 +18,7 @@ import {
 import { Grant, Grant as GrantModel } from '../../grant/model'
 import { getPageTests } from './page.test'
 import { createGrant } from '../../tests/grant'
+import { GraphQLErrorCode } from '../errors'
 
 const responseHandler = (query: ApolloQueryResult<Query>): GrantsConnection => {
   if (query.data) {
@@ -481,39 +482,46 @@ describe('Grant Resolvers', (): void => {
     })
 
     test('Returns error for unknown grant', async (): Promise<void> => {
-      const gqlQuery = appContainer.apolloClient
-        .mutate({
-          mutation: gql`
-            query GetGrant($id: ID!) {
-              grant(id: $id) {
-                id
-                client
-                state
-                access {
+      try {
+        const gqlQuery = appContainer.apolloClient
+          .mutate({
+            mutation: gql`
+              query GetGrant($id: ID!) {
+                grant(id: $id) {
                   id
-                  identifier
+                  client
+                  state
+                  access {
+                    id
+                    identifier
+                    createdAt
+                    actions
+                    type
+                  }
                   createdAt
-                  actions
-                  type
                 }
-                createdAt
               }
+            `,
+            variables: {
+              id: uuid()
             }
-          `,
-          variables: {
-            id: uuid()
-          }
-        })
-        .then((query): Grant => {
-          if (query.data) {
-            return query.data.grant
-          } else {
-            throw new Error('Data was empty')
-          }
-        })
+          })
+          .then((query): Grant => {
+            if (query.data) {
+              return query.data.grant
+            } else {
+              throw new Error('Data was empty')
+            }
+          })
 
-      await expect(gqlQuery).rejects.toThrow(ApolloError)
-      await expect(gqlQuery).rejects.toThrow('No grant')
+        await expect(gqlQuery).rejects.toThrow(ApolloError)
+        await expect(gqlQuery).rejects.toThrow('No grant')
+        await gqlQuery // throw error to inspect error object
+      } catch (err) {
+        expect((err as ApolloError).graphQLErrors[0].extensions.code).toEqual(
+          GraphQLErrorCode.NotFound
+        )
+      }
     })
   })
 
@@ -552,93 +560,114 @@ describe('Grant Resolvers', (): void => {
       expect(response.id).toEqual(grant.id)
     })
 
-    test('Returns 401 if grant id is not provided', async (): Promise<void> => {
-      const input: RevokeGrantInput = {
-        grantId: ''
-      }
+    test('Returns error if grant id is not provided', async (): Promise<void> => {
+      try {
+        const input: RevokeGrantInput = {
+          grantId: ''
+        }
 
-      const gqlQuery = appContainer.apolloClient
-        .mutate({
-          mutation: gql`
-            mutation revokeGrant($input: RevokeGrantInput!) {
-              revokeGrant(input: $input) {
-                id
+        const gqlQuery = appContainer.apolloClient
+          .mutate({
+            mutation: gql`
+              mutation revokeGrant($input: RevokeGrantInput!) {
+                revokeGrant(input: $input) {
+                  id
+                }
               }
+            `,
+            variables: {
+              input
             }
-          `,
-          variables: {
-            input
-          }
-        })
-        .then((query): RevokeGrantMutationResponse => {
-          if (query.data) {
-            return query.data.revokeGrant
-          } else {
-            throw new Error('Data was empty')
-          }
-        })
+          })
+          .then((query): RevokeGrantMutationResponse => {
+            if (query.data) {
+              return query.data.revokeGrant
+            } else {
+              throw new Error('Data was empty')
+            }
+          })
 
-      expect(gqlQuery).rejects.toThrow(ApolloError)
-      expect(gqlQuery).rejects.toThrow('Grant id is not provided')
+        expect(gqlQuery).rejects.toThrow(ApolloError)
+        expect(gqlQuery).rejects.toThrow('Grant id is not provided')
+        await gqlQuery // throw error to inspect error object
+      } catch (err) {
+        expect((err as ApolloError).graphQLErrors[0].extensions.code).toEqual(
+          GraphQLErrorCode.Forbidden
+        )
+      }
     })
 
-    test('Returns 404 if id does not exist', async (): Promise<void> => {
-      const input: RevokeGrantInput = {
-        grantId: uuid()
-      }
+    test('Returns error if id does not exist', async (): Promise<void> => {
+      try {
+        const input: RevokeGrantInput = {
+          grantId: uuid()
+        }
 
-      const gqlQuery = appContainer.apolloClient
-        .mutate({
-          mutation: gql`
-            mutation revokeGrant($input: RevokeGrantInput!) {
-              revokeGrant(input: $input) {
-                id
+        const gqlQuery = appContainer.apolloClient
+          .mutate({
+            mutation: gql`
+              mutation revokeGrant($input: RevokeGrantInput!) {
+                revokeGrant(input: $input) {
+                  id
+                }
               }
+            `,
+            variables: {
+              input
             }
-          `,
-          variables: {
-            input
-          }
-        })
-        .then((query): RevokeGrantMutationResponse => {
-          if (query.data) {
-            return query.data.revokeGrant
-          } else {
-            throw new Error('Data was empty')
-          }
-        })
+          })
+          .then((query): RevokeGrantMutationResponse => {
+            if (query.data) {
+              return query.data.revokeGrant
+            } else {
+              throw new Error('Data was empty')
+            }
+          })
 
-      expect(gqlQuery).rejects.toThrow(ApolloError)
-      expect(gqlQuery).rejects.toThrow('Revoke grant was not successful')
+        expect(gqlQuery).rejects.toThrow(ApolloError)
+        expect(gqlQuery).rejects.toThrow('Revoke grant was not successful')
+        await gqlQuery // throw error to inspect error object
+      } catch (err) {
+        expect((err as ApolloError).graphQLErrors[0].extensions.code).toEqual(
+          GraphQLErrorCode.NotFound
+        )
+      }
     })
 
-    test('Returns 500 if grant id is in invaild format', async (): Promise<void> => {
-      const input: RevokeGrantInput = {
-        grantId: '123'
-      }
+    test('Returns error if grant id is in invalid format', async (): Promise<void> => {
+      try {
+        const input: RevokeGrantInput = {
+          grantId: '123'
+        }
 
-      const gqlQuery = appContainer.apolloClient
-        .mutate({
-          mutation: gql`
-            mutation revokeGrant($input: RevokeGrantInput!) {
-              revokeGrant(input: $input) {
-                id
+        const gqlQuery = appContainer.apolloClient
+          .mutate({
+            mutation: gql`
+              mutation revokeGrant($input: RevokeGrantInput!) {
+                revokeGrant(input: $input) {
+                  id
+                }
               }
+            `,
+            variables: {
+              input
             }
-          `,
-          variables: {
-            input
-          }
-        })
-        .then((query): RevokeGrantMutationResponse => {
-          if (query.data) {
-            return query.data.revokeGrant
-          } else {
-            throw new Error('Data was empty')
-          }
-        })
+          })
+          .then((query): RevokeGrantMutationResponse => {
+            if (query.data) {
+              return query.data.revokeGrant
+            } else {
+              throw new Error('Data was empty')
+            }
+          })
 
-      expect(gqlQuery).rejects.toThrow(ApolloError)
+        expect(gqlQuery).rejects.toThrow(ApolloError)
+        await gqlQuery // throw error to inspect error object
+      } catch (err) {
+        expect((err as ApolloError).graphQLErrors[0].extensions.code).toEqual(
+          GraphQLErrorCode.InternalServerError
+        )
+      }
     })
   })
 })
