@@ -48,7 +48,38 @@ export const createOutgoingPayment: MutationResolvers<ApolloContext>['createOutg
               message: errorToMessage[paymentOrErr]
             }
           : {
-              code: '200',
+              code: '201',
+              success: true,
+              payment: paymentToGraphql(paymentOrErr)
+            }
+      )
+      .catch(() => ({
+        code: '500',
+        success: false,
+        message: 'Error trying to create outgoing payment'
+      }))
+  }
+
+export const createOutgoingPaymentFromIncomingPayment: MutationResolvers<ApolloContext>['createOutgoingPaymentFromIncomingPayment'] =
+  async (
+    parent,
+    args,
+    ctx
+  ): Promise<ResolversTypes['OutgoingPaymentResponse']> => {
+    const outgoingPaymentService = await ctx.container.use(
+      'outgoingPaymentService'
+    )
+    return outgoingPaymentService
+      .create(args.input)
+      .then((paymentOrErr: OutgoingPayment | OutgoingPaymentError) =>
+        isOutgoingPaymentError(paymentOrErr)
+          ? {
+              code: errorToCode[paymentOrErr].toString(),
+              success: false,
+              message: errorToMessage[paymentOrErr]
+            }
+          : {
+              code: '201',
               success: true,
               payment: paymentToGraphql(paymentOrErr)
             }

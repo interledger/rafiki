@@ -145,8 +145,8 @@ importers:
         specifier: 2.0.2
         version: 2.0.2
       '@interledger/open-payments':
-        specifier: 6.8.0
-        version: 6.8.0
+        specifier: 6.9.0
+        version: 6.9.0
       '@interledger/openapi':
         specifier: 1.2.1
         version: 1.2.1
@@ -287,8 +287,8 @@ importers:
         specifier: 2.0.2
         version: 2.0.2
       '@interledger/open-payments':
-        specifier: 6.8.0
-        version: 6.8.0
+        specifier: 6.9.0
+        version: 6.9.0
       '@interledger/openapi':
         specifier: 2.0.1
         version: 2.0.1
@@ -644,8 +644,8 @@ importers:
   packages/token-introspection:
     dependencies:
       '@interledger/open-payments':
-        specifier: 6.8.0
-        version: 6.8.0
+        specifier: 6.9.0
+        version: 6.9.0
       '@interledger/openapi':
         specifier: 2.0.1
         version: 2.0.1
@@ -4096,21 +4096,6 @@ packages:
       jose: 4.13.1
       uuid: 9.0.1
 
-  /@interledger/open-payments@6.8.0:
-    resolution: {integrity: sha512-vv3Ar79j+o+9jrqpRX/AIfVfkVb9LdtGB3ygsogN4VCMXvNhjJshUXNikyoM2/Mq1hINt49Z4pCnLLjyWaZZXQ==}
-    dependencies:
-      '@interledger/http-signature-utils': 2.0.2
-      '@interledger/openapi': 1.2.1
-      axios: 1.6.8
-      base64url: 3.0.1
-      http-message-signatures: 0.1.2
-      pino: 8.19.0
-      uuid: 9.0.1
-    transitivePeerDependencies:
-      - debug
-      - supports-color
-    dev: false
-
   /@interledger/open-payments@6.9.0:
     resolution: {integrity: sha512-Tf4TFTbPirYRxYg8aTyBR8lEczWFR1cyDbb+BN3783I/+YxpDRk59cM4SunmScsUgoSMEokXEgGXwhx4Gpdzcg==}
     dependencies:
@@ -4124,7 +4109,6 @@ packages:
     transitivePeerDependencies:
       - debug
       - supports-color
-    dev: true
 
   /@interledger/openapi@1.2.1:
     resolution: {integrity: sha512-CVEMjLH94svT5ikaojplgZ3YlZAe7ml6G6bt0ZCbqkbwHszUwY1E6RexZZejiGju5QvwS/6Jl/Op5ymv/ECaLg==}
@@ -4148,7 +4132,7 @@ packages:
       '@apidevtools/json-schema-ref-parser': 10.1.0
       ajv: 8.12.0
       ajv-formats: 2.1.1(ajv@8.12.0)
-      koa: 2.15.2
+      koa: 2.15.3
       openapi-default-setter: 12.1.3
       openapi-request-coercer: 12.1.3
       openapi-request-validator: 12.1.3
@@ -12628,6 +12612,7 @@ packages:
       vary: 1.1.2
     transitivePeerDependencies:
       - supports-color
+    dev: false
 
   /koa@2.15.3:
     resolution: {integrity: sha512-j/8tY9j5t+GVMLeioLaxweJiKUayFhlGqNTzf2ZGwL0ZCQijd2RLHK0SLW5Tsko8YyyqCZC2cojIb0/s62qTAg==}
@@ -12658,7 +12643,6 @@ packages:
       vary: 1.1.2
     transitivePeerDependencies:
       - supports-color
-    dev: true
 
   /language-subtag-registry@0.3.22:
     resolution: {integrity: sha512-tN0MCzyWnoz/4nHS6uxdlFWoUZT7ABptwKPQ52Ea7URk6vll88bWBVhodtnlfEuCcKWNGoc+uGbw1cwa9IKh/w==}
