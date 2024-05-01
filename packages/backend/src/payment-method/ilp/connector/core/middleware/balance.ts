@@ -20,6 +20,12 @@ export function createBalanceMiddleware(): ILPMiddleware {
     next: () => Promise<void>
   ): Promise<void> => {
     const { amount } = request.prepare
+    const logger = services.logger.child(
+      { module: 'balance-middleware' },
+      {
+        redact: ['transferOptions.destinationAccount.http.outgoing.authToken']
+      }
+    )
 
     // Ignore zero amount packets
     if (amount === '0') {
@@ -35,7 +41,7 @@ export function createBalanceMiddleware(): ILPMiddleware {
     })
     if (typeof destinationAmountOrError !== 'bigint') {
       // ConvertError
-      services.logger.error(
+      logger.error(
         {
           amount,
           destinationAmountOrError,
@@ -69,26 +75,16 @@ export function createBalanceMiddleware(): ILPMiddleware {
       }
       const trxOrError =
         await services.accounting.createTransfer(transferOptions)
-
       if (isTransferError(trxOrError)) {
-        const safeLogTransferError = (transferOptions: TransferOptions) => {
-          if (transferOptions.destinationAccount?.http?.outgoing.authToken) {
-            // @ts-expect-error - "The operand of a 'delete' operator must be optional"
-            delete transferOptions.destinationAccount.http.outgoing.authToken
-          }
-          services.logger.error(
-            { transferOptions },
-            'Could not create transfer'
-          )
-        }
-
+        logger.error(
+          { transferOptions, transferError: trxOrError },
+          'Could not create transfer'
+        )
         switch (trxOrError) {
           case TransferError.InsufficientBalance:
           case TransferError.InsufficientLiquidity:
-            safeLogTransferError(transferOptions)
             throw new InsufficientLiquidityError(trxOrError)
           default:
-            safeLogTransferError(transferOptions)
             // TODO: map transfer errors to ILP errors
             ctxThrow(500, destinationAmountOrError.toString())
         }

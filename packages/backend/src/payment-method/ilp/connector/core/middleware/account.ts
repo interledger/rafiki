@@ -41,7 +41,13 @@ export function createAccountMiddleware(serverAddress: string): ILPMiddleware {
 
     const { walletAddresses, incomingPayments, peers } = ctx.services
     const incomingAccount = ctx.state.incomingAccount
-    if (!incomingAccount) ctx.throw(401, 'unauthorized')
+    if (!incomingAccount) {
+      ctx.services.logger.error(
+        { state: ctx.state },
+        'Unauthorized: No incoming account'
+      )
+      ctx.throw(401, 'unauthorized')
+    }
 
     const getAccountByDestinationAddress = async (): Promise<
       OutgoingAccount | undefined
@@ -58,7 +64,7 @@ export function createAccountMiddleware(serverAddress: string): ILPMiddleware {
               IncomingPaymentState.Expired
             ].includes(incomingPayment.state)
           ) {
-            const errorMessage = 'destination account is disabled'
+            const errorMessage = 'destination account is in an incorrect state'
             ctx.services.logger.error(
               {
                 incomingPayment,
@@ -77,7 +83,10 @@ export function createAccountMiddleware(serverAddress: string): ILPMiddleware {
               LiquidityAccountType.INCOMING
             )
           }
-          ctx.services.logger.trace('got account from incoming payment')
+          ctx.services.logger.debug(
+            { incomingPaymentId: incomingPayment.id },
+            'destination account is incoming payment'
+          )
           return incomingPayment
         }
         // Open Payments SPSP fallback account
@@ -91,14 +100,20 @@ export function createAccountMiddleware(serverAddress: string): ILPMiddleware {
               LiquidityAccountType.WEB_MONETIZATION
             )
           }
-          ctx.services.logger.trace('got account from wallet address')
+          ctx.services.logger.debug(
+            { walletAddressId: walletAddress.id },
+            'destination account is wallet address'
+          )
           return walletAddress
         }
       }
       const address = ctx.request.prepare.destination
       const peer = await peers.getByDestinationAddress(address)
       if (peer) {
-        ctx.services.logger.trace('got account from peer')
+        ctx.services.logger.debug(
+          { peerId: peer.id },
+          'destination account is peer'
+        )
         return peer
       }
       if (
