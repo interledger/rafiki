@@ -53,6 +53,8 @@ script:pre-request {
   const scripts = require('./scripts');
   
   await scripts.getWalletAddressId('RafikiGraphqlHost', 'Grace Franklin', 'gfranklinWalletAddressId');
+  
+  scripts.addApiSignatureHeader();
 }
 
 script:post-response {

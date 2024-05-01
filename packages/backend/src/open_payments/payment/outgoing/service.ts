@@ -8,7 +8,8 @@ import { BaseService } from '../../../shared/baseService'
 import {
   FundingError,
   isOutgoingPaymentError,
-  OutgoingPaymentError
+  OutgoingPaymentError,
+  quoteErrorToOutgoingPaymentError
 } from './errors'
 import { Limits, getInterval } from './limits'
 import {
@@ -36,6 +37,9 @@ import { knex } from 'knex'
 import { AccountAlreadyExistsError } from '../../../accounting/errors'
 import { PaymentMethodHandlerService } from '../../../payment-method/handler/service'
 import { TelemetryService } from '../../../telemetry/service'
+import { Amount } from '../../amount'
+import { QuoteService } from '../../quote/service'
+import { isQuoteError } from '../../quote/errors'
 
 export interface OutgoingPaymentService
   extends WalletAddressSubresourceService<OutgoingPayment> {
@@ -55,6 +59,7 @@ export interface ServiceDependencies extends BaseService {
   peerService: PeerService
   paymentMethodHandlerService: PaymentMethodHandlerService
   walletAddressService: WalletAddressService
+  quoteService: QuoteService
   telemetry?: TelemetryService
 }
 
@@ -67,8 +72,7 @@ export async function createOutgoingPaymentService(
   }
   return {
     get: (options) => getOutgoingPayment(deps, options),
-    create: (options: CreateOutgoingPaymentOptions) =>
-      createOutgoingPayment(deps, options),
+    create: (options) => createOutgoingPayment(deps, options),
     fund: (options) => fundPayment(deps, options),
     processNext: () => worker.processPendingPayment(deps),
     getWalletAddressPage: (options) => getWalletAddressPage(deps, options)
@@ -88,22 +92,57 @@ async function getOutgoingPayment(
   }
 }
 
-export interface CreateOutgoingPaymentOptions {
+export interface BaseOptions {
   walletAddressId: string
-  quoteId: string
   client?: string
   grant?: Grant
   metadata?: Record<string, unknown>
   callback?: (f: unknown) => NodeJS.Timeout
   grantLockTimeoutMs?: number
 }
+export interface CreateFromQuote extends BaseOptions {
+  quoteId: string
+}
+export interface CreateFromIncomingPayment extends BaseOptions {
+  incomingPayment: string
+  debitAmount: Amount
+}
+
+export type CreateOutgoingPaymentOptions =
+  | CreateFromQuote
+  | CreateFromIncomingPayment
+
+export function isCreateFromIncomingPayment(
+  options: CreateOutgoingPaymentOptions
+): options is CreateFromIncomingPayment {
+  return 'incomingPayment' in options && 'debitAmount' in options
+}
 
 async function createOutgoingPayment(
   deps: ServiceDependencies,
   options: CreateOutgoingPaymentOptions
 ): Promise<OutgoingPayment | OutgoingPaymentError> {
+  const { walletAddressId } = options
+  let quoteId: string
+
+  if (isCreateFromIncomingPayment(options)) {
+    const { debitAmount, incomingPayment } = options
+    const quoteOrError = await deps.quoteService.create({
+      receiver: incomingPayment,
+      debitAmount,
+      method: 'ilp',
+      walletAddressId
+    })
+
+    if (isQuoteError(quoteOrError)) {
+      return quoteErrorToOutgoingPaymentError[quoteOrError]
+    }
+    quoteId = quoteOrError.id
+  } else {
+    quoteId = options.quoteId
+  }
+
   const grantId = options.grant?.id
-  const walletAddressId = options.walletAddressId
   try {
     return await OutgoingPayment.transaction(deps.knex, async (trx) => {
       const walletAddress = await deps.walletAddressService.get(walletAddressId)
@@ -124,7 +163,7 @@ async function createOutgoingPayment(
       }
       const payment = await OutgoingPayment.query(trx)
         .insertAndFetch({
-          id: options.quoteId,
+          id: quoteId,
           walletAddressId: walletAddressId,
           client: options.client,
           metadata: options.metadata,

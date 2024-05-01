@@ -163,6 +163,19 @@ export type CreateOrUpdatePeerByUrlMutationResponse = MutationResponse & {
   success: Scalars['Boolean']['output'];
 };
 
+export type CreateOutgoingPaymentFromIncomingPaymentInput = {
+  /** Amount to send (fixed send) */
+  debitAmount: AmountInput;
+  /** Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence) */
+  idempotencyKey?: InputMaybe<Scalars['String']['input']>;
+  /** Incoming payment url to create the outgoing payment from */
+  incomingPayment: Scalars['String']['input'];
+  /** Additional metadata associated with the outgoing payment. */
+  metadata?: InputMaybe<Scalars['JSONObject']['input']>;
+  /** Id of the wallet address under which the outgoing payment will be created */
+  walletAddressId: Scalars['String']['input'];
+};
+
 export type CreateOutgoingPaymentInput = {
   /** Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence) */
   idempotencyKey?: InputMaybe<Scalars['String']['input']>;
@@ -548,6 +561,8 @@ export type Mutation = {
   createOrUpdatePeerByUrl: CreateOrUpdatePeerByUrlMutationResponse;
   /** Create an Open Payments Outgoing Payment */
   createOutgoingPayment: OutgoingPaymentResponse;
+  /** Create an Open Payments Outgoing Payment from an incoming payment */
+  createOutgoingPaymentFromIncomingPayment: OutgoingPaymentResponse;
   /** Create a peer */
   createPeer: CreatePeerMutationResponse;
   /** Withdraw peer liquidity */
@@ -625,6 +640,11 @@ export type MutationCreateOrUpdatePeerByUrlArgs = {
 
 export type MutationCreateOutgoingPaymentArgs = {
   input: CreateOutgoingPaymentInput;
+};
+
+
+export type MutationCreateOutgoingPaymentFromIncomingPaymentArgs = {
+  input: CreateOutgoingPaymentFromIncomingPaymentInput;
 };
 
 
@@ -1473,6 +1493,7 @@ export type ResolversTypes = {
   CreateIncomingPaymentInput: ResolverTypeWrapper<Partial<CreateIncomingPaymentInput>>;
   CreateOrUpdatePeerByUrlInput: ResolverTypeWrapper<Partial<CreateOrUpdatePeerByUrlInput>>;
   CreateOrUpdatePeerByUrlMutationResponse: ResolverTypeWrapper<Partial<CreateOrUpdatePeerByUrlMutationResponse>>;
+  CreateOutgoingPaymentFromIncomingPaymentInput: ResolverTypeWrapper<Partial<CreateOutgoingPaymentFromIncomingPaymentInput>>;
   CreateOutgoingPaymentInput: ResolverTypeWrapper<Partial<CreateOutgoingPaymentInput>>;
   CreatePeerInput: ResolverTypeWrapper<Partial<CreatePeerInput>>;
   CreatePeerLiquidityWithdrawalInput: ResolverTypeWrapper<Partial<CreatePeerLiquidityWithdrawalInput>>;
@@ -1591,6 +1612,7 @@ export type ResolversParentTypes = {
   CreateIncomingPaymentInput: Partial<CreateIncomingPaymentInput>;
   CreateOrUpdatePeerByUrlInput: Partial<CreateOrUpdatePeerByUrlInput>;
   CreateOrUpdatePeerByUrlMutationResponse: Partial<CreateOrUpdatePeerByUrlMutationResponse>;
+  CreateOutgoingPaymentFromIncomingPaymentInput: Partial<CreateOutgoingPaymentFromIncomingPaymentInput>;
   CreateOutgoingPaymentInput: Partial<CreateOutgoingPaymentInput>;
   CreatePeerInput: Partial<CreatePeerInput>;
   CreatePeerLiquidityWithdrawalInput: Partial<CreatePeerLiquidityWithdrawalInput>;
@@ -1882,6 +1904,7 @@ export type MutationResolvers<ContextType = any, ParentType extends ResolversPar
   createIncomingPayment?: Resolver<ResolversTypes['IncomingPaymentResponse'], ParentType, ContextType, RequireFields<MutationCreateIncomingPaymentArgs, 'input'>>;
   createOrUpdatePeerByUrl?: Resolver<ResolversTypes['CreateOrUpdatePeerByUrlMutationResponse'], ParentType, ContextType, RequireFields<MutationCreateOrUpdatePeerByUrlArgs, 'input'>>;
   createOutgoingPayment?: Resolver<ResolversTypes['OutgoingPaymentResponse'], ParentType, ContextType, RequireFields<MutationCreateOutgoingPaymentArgs, 'input'>>;
+  createOutgoingPaymentFromIncomingPayment?: Resolver<ResolversTypes['OutgoingPaymentResponse'], ParentType, ContextType, RequireFields<MutationCreateOutgoingPaymentFromIncomingPaymentArgs, 'input'>>;
   createPeer?: Resolver<ResolversTypes['CreatePeerMutationResponse'], ParentType, ContextType, RequireFields<MutationCreatePeerArgs, 'input'>>;
   createPeerLiquidityWithdrawal?: Resolver<Maybe<ResolversTypes['LiquidityMutationResponse']>, ParentType, ContextType, RequireFields<MutationCreatePeerLiquidityWithdrawalArgs, 'input'>>;
   createQuote?: Resolver<ResolversTypes['QuoteResponse'], ParentType, ContextType, RequireFields<MutationCreateQuoteArgs, 'input'>>;

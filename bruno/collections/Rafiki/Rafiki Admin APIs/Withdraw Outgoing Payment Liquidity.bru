@@ -1,7 +1,7 @@
 meta {
   name: Withdraw Outgoing Payment Liquidity
   type: graphql
-  seq: 36
+  seq: 37
 }
 
 post {
@@ -32,6 +32,9 @@ body:graphql:vars {
 
 script:pre-request {
   const { v4: uuidv4 } = require('uuid');
+  const scripts = require('./scripts');
   
   bru.setVar("idempotencyKey",uuidv4());
+  
+  scripts.addApiSignatureHeader();
 }

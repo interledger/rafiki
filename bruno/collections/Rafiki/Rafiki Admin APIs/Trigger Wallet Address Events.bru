@@ -1,7 +1,7 @@
 meta {
   name: Trigger Wallet Address Events
   type: graphql
-  seq: 39
+  seq: 40
 }
 
 post {
@@ -27,4 +27,10 @@ body:graphql:vars {
           "limit": 5
       }
   }
+}
+
+script:pre-request {
+  const scripts = require('./scripts');
+  
+  scripts.addApiSignatureHeader();
 }

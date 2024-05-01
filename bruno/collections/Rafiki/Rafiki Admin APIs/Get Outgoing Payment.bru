@@ -1,7 +1,7 @@
 meta {
   name: Get Outgoing Payment
   type: graphql
-  seq: 32
+  seq: 33
 }
 
 post {
@@ -66,4 +66,10 @@ body:graphql:vars {
   {
       "id": "{{outgoingPaymentId}}"
   }
+}
+
+script:pre-request {
+  const scripts = require('./scripts');
+  
+  scripts.addApiSignatureHeader();
 }

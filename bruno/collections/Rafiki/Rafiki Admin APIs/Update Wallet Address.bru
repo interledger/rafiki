@@ -43,3 +43,9 @@ body:graphql:vars {
     }
   }
 }
+
+script:pre-request {
+  const scripts = require('./scripts');
+  
+  scripts.addApiSignatureHeader();
+}

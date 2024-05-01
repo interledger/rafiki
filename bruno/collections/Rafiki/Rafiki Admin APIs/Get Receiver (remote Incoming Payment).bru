@@ -39,3 +39,9 @@ body:graphql:vars {
       "id": "{{receiverId}}"
   }
 }
+
+script:pre-request {
+  const scripts = require('./scripts');
+  
+  scripts.addApiSignatureHeader();
+}
