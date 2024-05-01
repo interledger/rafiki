@@ -1,5 +1,6 @@
 import { TransferError } from '../../../accounting/errors'
 import { PaymentMethodHandlerError } from '../../../payment-method/handler/errors'
+import { QuoteError } from '../../quote/errors'
 
 export enum OutgoingPaymentError {
   UnknownWalletAddress = 'UnknownWalletAddress',
@@ -8,7 +9,22 @@ export enum OutgoingPaymentError {
   WrongState = 'WrongState',
   InvalidQuote = 'InvalidQuote',
   InsufficientGrant = 'InsufficientGrant',
-  InactiveWalletAddress = 'InactiveWalletAddress'
+  InactiveWalletAddress = 'InactiveWalletAddress',
+  InvalidAmount = 'InvalidAmount',
+  NegativeReceiveAmount = 'NegativeReceiveAmount',
+  InvalidReceiver = 'InvalidReceiver'
+}
+
+export const quoteErrorToOutgoingPaymentError: Record<
+  QuoteError,
+  OutgoingPaymentError
+> = {
+  [QuoteError.UnknownWalletAddress]: OutgoingPaymentError.UnknownWalletAddress,
+  [QuoteError.InvalidAmount]: OutgoingPaymentError.InvalidAmount,
+  [QuoteError.InvalidReceiver]: OutgoingPaymentError.InvalidReceiver,
+  [QuoteError.InactiveWalletAddress]:
+    OutgoingPaymentError.InactiveWalletAddress,
+  [QuoteError.NegativeReceiveAmount]: OutgoingPaymentError.NegativeReceiveAmount
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
@@ -24,7 +40,10 @@ export const errorToCode: {
   [OutgoingPaymentError.WrongState]: 409,
   [OutgoingPaymentError.InvalidQuote]: 400,
   [OutgoingPaymentError.InsufficientGrant]: 403,
-  [OutgoingPaymentError.InactiveWalletAddress]: 400
+  [OutgoingPaymentError.InactiveWalletAddress]: 400,
+  [OutgoingPaymentError.InvalidAmount]: 400,
+  [OutgoingPaymentError.NegativeReceiveAmount]: 400,
+  [OutgoingPaymentError.InvalidReceiver]: 400
 }
 
 export const errorToMessage: {
@@ -36,7 +55,10 @@ export const errorToMessage: {
   [OutgoingPaymentError.WrongState]: 'wrong state',
   [OutgoingPaymentError.InvalidQuote]: 'invalid quote',
   [OutgoingPaymentError.InsufficientGrant]: 'unauthorized',
-  [OutgoingPaymentError.InactiveWalletAddress]: 'inactive wallet address'
+  [OutgoingPaymentError.InactiveWalletAddress]: 'inactive wallet address',
+  [OutgoingPaymentError.InvalidAmount]: 'invalid amount',
+  [OutgoingPaymentError.NegativeReceiveAmount]: 'negative receive amount',
+  [OutgoingPaymentError.InvalidReceiver]: 'invalid receiver'
 }
 
 export const FundingError = { ...OutgoingPaymentError, ...TransferError }

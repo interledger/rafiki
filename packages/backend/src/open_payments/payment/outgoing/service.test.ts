@@ -13,7 +13,7 @@ import { CreateOutgoingPaymentOptions, OutgoingPaymentService } from './service'
 import { createTestApp, TestContainer } from '../../../tests/app'
 import { Config } from '../../../config/app'
 import { Grant } from '../../auth/middleware'
-import { CreateQuoteOptions } from '../../quote/service'
+import { CreateQuoteOptions, QuoteService } from '../../quote/service'
 import { createAsset } from '../../../tests/asset'
 import { createIncomingPayment } from '../../../tests/incomingPayment'
 import { createOutgoingPayment } from '../../../tests/outgoingPayment'
@@ -47,6 +47,8 @@ import { WalletAddress } from '../../wallet_address/model'
 import { PaymentMethodHandlerService } from '../../../payment-method/handler/service'
 import { PaymentMethodHandlerError } from '../../../payment-method/handler/errors'
 import { mockRatesApi } from '../../../tests/rates'
+import { UnionOmit } from '../../../shared/utils'
+import { QuoteError } from '../../quote/errors'
 
 describe('OutgoingPaymentService', (): void => {
   let deps: IocContract<AppServices>
@@ -54,6 +56,7 @@ describe('OutgoingPaymentService', (): void => {
   let outgoingPaymentService: OutgoingPaymentService
   let accountingService: AccountingService
   let paymentMethodHandlerService: PaymentMethodHandlerService
+  let quoteService: QuoteService
   let knex: Knex
   let walletAddressId: string
   let incomingPayment: IncomingPayment
@@ -242,6 +245,7 @@ describe('OutgoingPaymentService', (): void => {
     outgoingPaymentService = await deps.use('outgoingPaymentService')
     accountingService = await deps.use('accountingService')
     paymentMethodHandlerService = await deps.use('paymentMethodHandlerService')
+    quoteService = await deps.use('quoteService')
     knex = appContainer.knex
   })
 
@@ -390,6 +394,66 @@ describe('OutgoingPaymentService', (): void => {
       New = 'new',
       None = 'no'
     }
+
+    test('create from incoming payment', async () => {
+      const walletAddressId = receiverWalletAddress.id
+      const incomingPaymentUrl = incomingPayment.toOpenPaymentsTypeWithMethods(
+        receiverWalletAddress
+      ).id
+      const debitAmount = {
+        value: BigInt(123),
+        assetCode: receiverWalletAddress.asset.code,
+        assetScale: receiverWalletAddress.asset.scale
+      }
+
+      const quoteSpy = jest.spyOn(quoteService, 'create')
+
+      const payment = await outgoingPaymentService.create({
+        walletAddressId,
+        debitAmount,
+        incomingPayment: incomingPaymentUrl
+      })
+
+      expect(!isOutgoingPaymentError(payment)).toBeTruthy()
+      expect(quoteSpy).toHaveBeenCalledWith({
+        walletAddressId,
+        receiver: incomingPaymentUrl,
+        debitAmount,
+        method: 'ilp'
+      })
+    })
+
+    test('fails to create quote from incoming payment', async () => {
+      const walletAddressId = receiverWalletAddress.id
+      const incomingPaymentUrl = incomingPayment.toOpenPaymentsTypeWithMethods(
+        receiverWalletAddress
+      ).id
+      const debitAmount = {
+        value: BigInt(123),
+        assetCode: receiverWalletAddress.asset.code,
+        assetScale: receiverWalletAddress.asset.scale
+      }
+
+      const quoteCreateResponse = QuoteError.InvalidAmount
+      const quoteSpy = jest
+        .spyOn(quoteService, 'create')
+        .mockImplementationOnce(async () => quoteCreateResponse)
+
+      const payment = await outgoingPaymentService.create({
+        walletAddressId,
+        debitAmount,
+        incomingPayment: incomingPaymentUrl
+      })
+
+      expect(isOutgoingPaymentError(payment)).toBeTruthy()
+      expect(payment).toBe(quoteCreateResponse)
+      expect(quoteSpy).toHaveBeenCalledWith({
+        walletAddressId,
+        receiver: incomingPaymentUrl,
+        debitAmount,
+        method: 'ilp'
+      })
+    })
 
     describe.each`
       grantOption
@@ -667,7 +731,7 @@ describe('OutgoingPaymentService', (): void => {
 
         describe('validateGrant', (): void => {
           let quote: Quote
-          let options: Omit<CreateOutgoingPaymentOptions, 'grant'>
+          let options: UnionOmit<CreateOutgoingPaymentOptions, 'grant'>
           let interval: string
           beforeEach(async (): Promise<void> => {
             quote = await createQuote(deps, {

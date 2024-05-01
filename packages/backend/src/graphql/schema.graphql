@@ -182,6 +182,11 @@ type Mutation {
     input: CreateOutgoingPaymentInput!
   ): OutgoingPaymentResponse!
 
+  "Create an Open Payments Outgoing Payment from an incoming payment"
+  createOutgoingPaymentFromIncomingPayment(
+    input: CreateOutgoingPaymentFromIncomingPaymentInput!
+  ): OutgoingPaymentResponse!
+
   "Deposit webhook event liquidity"
   depositEventLiquidity(
     input: DepositEventLiquidityInput!
@@ -911,6 +916,19 @@ input CreateOutgoingPaymentInput {
   walletAddressId: String!
   "Id of the corresponding quote for that outgoing payment"
   quoteId: String!
+  "Additional metadata associated with the outgoing payment."
+  metadata: JSONObject
+  "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)"
+  idempotencyKey: String
+}
+
+input CreateOutgoingPaymentFromIncomingPaymentInput {
+  "Id of the wallet address under which the outgoing payment will be created"
+  walletAddressId: String!
+  "Incoming payment url to create the outgoing payment from"
+  incomingPayment: String!
+  "Amount to send (fixed send)"
+  debitAmount: AmountInput!
   "Additional metadata associated with the outgoing payment."
   metadata: JSONObject
   "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)"

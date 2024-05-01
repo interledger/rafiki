@@ -868,49 +868,6 @@
       },
       {
         "kind": "INPUT_OBJECT",
-        "name": "CreateIncomingPaymentWithdrawalInput",
-        "description": null,
-        "fields": null,
-        "inputFields": [
-          {
-            "name": "idempotencyKey",
-            "description": "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)",
-            "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "SCALAR",
-                "name": "String",
-                "ofType": null
-              }
-            },
-            "defaultValue": null,
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
-            "name": "incomingPaymentId",
-            "description": "The id of the incoming payment to withdraw from.",
-            "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "SCALAR",
-                "name": "String",
-                "ofType": null
-              }
-            },
-            "defaultValue": null,
-            "isDeprecated": false,
-            "deprecationReason": null
-          }
-        ],
-        "interfaces": null,
-        "enumValues": null,
-        "possibleTypes": null
-      },
-      {
-        "kind": "INPUT_OBJECT",
         "name": "CreateOrUpdatePeerByUrlInput",
         "description": null,
         "fields": null,
@@ -1091,6 +1048,89 @@
       },
       {
         "kind": "INPUT_OBJECT",
+        "name": "CreateOutgoingPaymentFromIncomingPaymentInput",
+        "description": null,
+        "fields": null,
+        "inputFields": [
+          {
+            "name": "debitAmount",
+            "description": "Amount to send (fixed send)",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "INPUT_OBJECT",
+                "name": "AmountInput",
+                "ofType": null
+              }
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "idempotencyKey",
+            "description": "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)",
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "incomingPayment",
+            "description": "Incoming payment url to create the outgoing payment from",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "metadata",
+            "description": "Additional metadata associated with the outgoing payment.",
+            "type": {
+              "kind": "SCALAR",
+              "name": "JSONObject",
+              "ofType": null
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "walletAddressId",
+            "description": "Id of the wallet address under which the outgoing payment will be created",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
+        "interfaces": null,
+        "enumValues": null,
+        "possibleTypes": null
+      },
+      {
+        "kind": "INPUT_OBJECT",
         "name": "CreateOutgoingPaymentInput",
         "description": null,
         "fields": null,
@@ -1138,49 +1178,6 @@
           {
             "name": "walletAddressId",
             "description": "Id of the wallet address under which the outgoing payment will be created",
-            "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "SCALAR",
-                "name": "String",
-                "ofType": null
-              }
-            },
-            "defaultValue": null,
-            "isDeprecated": false,
-            "deprecationReason": null
-          }
-        ],
-        "interfaces": null,
-        "enumValues": null,
-        "possibleTypes": null
-      },
-      {
-        "kind": "INPUT_OBJECT",
-        "name": "CreateOutgoingPaymentWithdrawalInput",
-        "description": null,
-        "fields": null,
-        "inputFields": [
-          {
-            "name": "idempotencyKey",
-            "description": "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)",
-            "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "SCALAR",
-                "name": "String",
-                "ofType": null
-              }
-            },
-            "defaultValue": null,
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
-            "name": "outgoingPaymentId",
-            "description": "The id of the outgoing payment to withdraw from.",
             "type": {
               "kind": "NON_NULL",
               "name": null,
@@ -3829,35 +3826,6 @@
             "deprecationReason": null
           },
           {
-            "name": "createIncomingPaymentWithdrawal",
-            "description": "Withdraw incoming payment liquidity",
-            "args": [
-              {
-                "name": "input",
-                "description": null,
-                "type": {
-                  "kind": "NON_NULL",
-                  "name": null,
-                  "ofType": {
-                    "kind": "INPUT_OBJECT",
-                    "name": "CreateIncomingPaymentWithdrawalInput",
-                    "ofType": null
-                  }
-                },
-                "defaultValue": null,
-                "isDeprecated": false,
-                "deprecationReason": null
-              }
-            ],
-            "type": {
-              "kind": "OBJECT",
-              "name": "LiquidityMutationResponse",
-              "ofType": null
-            },
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
             "name": "createOrUpdatePeerByUrl",
             "description": "Create a peer using a URL",
             "args": [
@@ -3924,8 +3892,8 @@
             "deprecationReason": null
           },
           {
-            "name": "createOutgoingPaymentWithdrawal",
-            "description": "Withdraw outgoing payment liquidity",
+            "name": "createOutgoingPaymentFromIncomingPayment",
+            "description": "Create an Open Payments Outgoing Payment from an incoming payment",
             "args": [
               {
                 "name": "input",
@@ -3935,7 +3903,7 @@
                   "name": null,
                   "ofType": {
                     "kind": "INPUT_OBJECT",
-                    "name": "CreateOutgoingPaymentWithdrawalInput",
+                    "name": "CreateOutgoingPaymentFromIncomingPaymentInput",
                     "ofType": null
                   }
                 },
@@ -3945,9 +3913,13 @@
               }
             ],
             "type": {
-              "kind": "OBJECT",
-              "name": "LiquidityMutationResponse",
-              "ofType": null
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "OutgoingPaymentResponse",
+                "ofType": null
+              }
             },
             "isDeprecated": false,
             "deprecationReason": null
@@ -4599,7 +4571,65 @@
               "ofType": null
             },
             "isDeprecated": true,
-            "deprecationReason": "Use `createOutgoingPaymentWithdrawal, createIncomingPaymentWithdrawal, or createWalletAddressWithdrawal`"
+            "deprecationReason": "Use `withdrawOutgoingPaymentLiquidity, withdrawIncomingPaymentLiquidity, or createWalletAddressWithdrawal`"
+          },
+          {
+            "name": "withdrawIncomingPaymentLiquidity",
+            "description": "Withdraw incoming payment liquidity",
+            "args": [
+              {
+                "name": "input",
+                "description": null,
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "INPUT_OBJECT",
+                    "name": "WithdrawIncomingPaymentLiquidityInput",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              }
+            ],
+            "type": {
+              "kind": "OBJECT",
+              "name": "LiquidityMutationResponse",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "withdrawOutgoingPaymentLiquidity",
+            "description": "Withdraw outgoing payment liquidity",
+            "args": [
+              {
+                "name": "input",
+                "description": null,
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "INPUT_OBJECT",
+                    "name": "WithdrawOutgoingPaymentLiquidityInput",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              }
+            ],
+            "type": {
+              "kind": "OBJECT",
+              "name": "LiquidityMutationResponse",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
           }
         ],
         "inputFields": null,
@@ -8924,6 +8954,92 @@
           {
             "name": "idempotencyKey",
             "description": "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
+        "interfaces": null,
+        "enumValues": null,
+        "possibleTypes": null
+      },
+      {
+        "kind": "INPUT_OBJECT",
+        "name": "WithdrawIncomingPaymentLiquidityInput",
+        "description": null,
+        "fields": null,
+        "inputFields": [
+          {
+            "name": "idempotencyKey",
+            "description": "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "incomingPaymentId",
+            "description": "The id of the incoming payment to withdraw from.",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
+        "interfaces": null,
+        "enumValues": null,
+        "possibleTypes": null
+      },
+      {
+        "kind": "INPUT_OBJECT",
+        "name": "WithdrawOutgoingPaymentLiquidityInput",
+        "description": null,
+        "fields": null,
+        "inputFields": [
+          {
+            "name": "idempotencyKey",
+            "description": "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "outgoingPaymentId",
+            "description": "The id of the outgoing payment to withdraw from.",
             "type": {
               "kind": "NON_NULL",
               "name": null,
