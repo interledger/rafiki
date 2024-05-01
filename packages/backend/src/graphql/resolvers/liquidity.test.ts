@@ -500,7 +500,8 @@ describe('Liquidity Resolvers', (): void => {
               id: uuid(),
               peerId: peer.id,
               amount: startingBalance.toString(),
-              idempotencyKey: uuid()
+              idempotencyKey: uuid(),
+              timeout
             }
           }
         })
@@ -537,7 +538,8 @@ describe('Liquidity Resolvers', (): void => {
               id: uuid(),
               peerId: uuid(),
               amount: '100',
-              idempotencyKey: uuid()
+              idempotencyKey: uuid(),
+              timeout
             }
           }
         })
@@ -575,7 +577,8 @@ describe('Liquidity Resolvers', (): void => {
               id: 'not a uuid',
               peerId: peer.id,
               amount: startingBalance.toString(),
-              idempotencyKey: uuid()
+              idempotencyKey: uuid(),
+              timeout
             }
           }
         })
@@ -621,7 +624,8 @@ describe('Liquidity Resolvers', (): void => {
               id,
               peerId: peer.id,
               amount: startingBalance.toString(),
-              idempotencyKey: uuid()
+              idempotencyKey: uuid(),
+              timeout
             }
           }
         })
@@ -664,7 +668,8 @@ describe('Liquidity Resolvers', (): void => {
                 id: uuid(),
                 peerId: peer.id,
                 amount: amount.toString(),
-                idempotencyKey: uuid()
+                idempotencyKey: uuid(),
+                timeout
               }
             }
           })
@@ -719,7 +724,8 @@ describe('Liquidity Resolvers', (): void => {
               id: uuid(),
               assetId: asset.id,
               amount: startingBalance.toString(),
-              idempotencyKey: uuid()
+              idempotencyKey: uuid(),
+              timeout
             }
           }
         })
@@ -756,7 +762,8 @@ describe('Liquidity Resolvers', (): void => {
               id: uuid(),
               assetId: uuid(),
               amount: '100',
-              idempotencyKey: uuid()
+              idempotencyKey: uuid(),
+              timeout
             }
           }
         })
@@ -794,7 +801,8 @@ describe('Liquidity Resolvers', (): void => {
               id: 'not a uuid',
               assetId: asset.id,
               amount: startingBalance.toString(),
-              idempotencyKey: uuid()
+              idempotencyKey: uuid(),
+              timeout
             }
           }
         })
@@ -840,7 +848,8 @@ describe('Liquidity Resolvers', (): void => {
               id,
               assetId: asset.id,
               amount: startingBalance.toString(),
-              idempotencyKey: uuid()
+              idempotencyKey: uuid(),
+              timeout
             }
           }
         })
@@ -883,7 +892,8 @@ describe('Liquidity Resolvers', (): void => {
                 id: uuid(),
                 assetId: asset.id,
                 amount: amount.toString(),
-                idempotencyKey: uuid()
+                idempotencyKey: uuid(),
+                timeout
               }
             }
           })
@@ -948,7 +958,8 @@ describe('Liquidity Resolvers', (): void => {
             input: {
               id,
               walletAddressId: walletAddress.id,
-              idempotencyKey: uuid()
+              idempotencyKey: uuid(),
+              timeout
             }
           }
         })
@@ -994,7 +1005,8 @@ describe('Liquidity Resolvers', (): void => {
             input: {
               id: uuid(),
               walletAddressId: uuid(),
-              idempotencyKey: uuid()
+              idempotencyKey: uuid(),
+              timeout
             }
           }
         })
@@ -1035,7 +1047,8 @@ describe('Liquidity Resolvers', (): void => {
             input: {
               id: 'not a uuid',
               walletAddressId: walletAddress.id,
-              idempotencyKey: uuid()
+              idempotencyKey: uuid(),
+              timeout
             }
           }
         })
@@ -1084,7 +1097,8 @@ describe('Liquidity Resolvers', (): void => {
             input: {
               id,
               walletAddressId: walletAddress.id,
-              idempotencyKey: uuid()
+              idempotencyKey: uuid(),
+              timeout
             }
           }
         })
@@ -1132,7 +1146,8 @@ describe('Liquidity Resolvers', (): void => {
             input: {
               id: uuid(),
               walletAddressId: walletAddress.id,
-              idempotencyKey: uuid()
+              idempotencyKey: uuid(),
+              timeout
             }
           }
         })
@@ -2060,7 +2075,8 @@ describe('Liquidity Resolvers', (): void => {
               variables: {
                 input: {
                   incomingPaymentId: incomingPayment.id,
-                  idempotencyKey: uuid()
+                  idempotencyKey: uuid(),
+                  timeout
                 }
               }
             })
@@ -2111,7 +2127,8 @@ describe('Liquidity Resolvers', (): void => {
               variables: {
                 input: {
                   incomingPaymentId: uuid(),
-                  idempotencyKey: uuid()
+                  idempotencyKey: uuid(),
+                  timeout
                 }
               }
             })
@@ -2147,7 +2164,8 @@ describe('Liquidity Resolvers', (): void => {
               variables: {
                 input: {
                   incomingPaymentId: incomingPayment.id,
-                  idempotencyKey: uuid()
+                  idempotencyKey: uuid(),
+                  timeout
                 }
               }
             })
@@ -2202,7 +2220,8 @@ describe('Liquidity Resolvers', (): void => {
               variables: {
                 input: {
                   incomingPaymentId: incomingPayment.id,
-                  idempotencyKey: uuid()
+                  idempotencyKey: uuid(),
+                  timeout
                 }
               }
             })
@@ -2275,7 +2294,8 @@ describe('Liquidity Resolvers', (): void => {
               variables: {
                 input: {
                   outgoingPaymentId: outgoingPayment.id,
-                  idempotencyKey: uuid()
+                  idempotencyKey: uuid(),
+                  timeout
                 }
               }
             })
@@ -2315,7 +2335,8 @@ describe('Liquidity Resolvers', (): void => {
               variables: {
                 input: {
                   outgoingPaymentId: uuid(),
-                  idempotencyKey: uuid()
+                  idempotencyKey: uuid(),
+                  timeout
                 }
               }
             })
@@ -2357,7 +2378,8 @@ describe('Liquidity Resolvers', (): void => {
               variables: {
                 input: {
                   outgoingPaymentId: outgoingPayment.id,
-                  idempotencyKey: uuid()
+                  idempotencyKey: uuid(),
+                  timeout
                 }
               }
             })
@@ -2410,7 +2432,8 @@ describe('Liquidity Resolvers', (): void => {
               variables: {
                 input: {
                   outgoingPaymentId: outgoingPayment.id,
-                  idempotencyKey: uuid()
+                  idempotencyKey: uuid(),
+                  timeout
                 }
               }
             })
