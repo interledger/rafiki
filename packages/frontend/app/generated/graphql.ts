@@ -101,6 +101,13 @@ export type BasePayment = {
   walletAddressId: Scalars['ID']['output'];
 };
 
+export type CancelOutgoingPaymentInput = {
+  /** Outgoing payment id */
+  id: Scalars['ID']['input'];
+  /** Reason why this Outgoing Payment has been cancelled */
+  reason: Scalars['String']['input'];
+};
+
 export type CreateAssetInput = {
   /** [ISO 4217 currency code](https://en.wikipedia.org/wiki/ISO_4217), e.g. `USD` */
   code: Scalars['String']['input'];
@@ -551,6 +558,8 @@ export type Model = {
 
 export type Mutation = {
   __typename?: 'Mutation';
+  /** Cancel Outgoing Payment */
+  cancelOutgoingPayment: OutgoingPaymentResponse;
   /** Create an asset */
   createAsset: AssetMutationResponse;
   /** Withdraw asset liquidity */
@@ -615,6 +624,11 @@ export type Mutation = {
   withdrawIncomingPaymentLiquidity?: Maybe<LiquidityMutationResponse>;
   /** Withdraw outgoing payment liquidity */
   withdrawOutgoingPaymentLiquidity?: Maybe<LiquidityMutationResponse>;
+};
+
+
+export type MutationCancelOutgoingPaymentArgs = {
+  input: CancelOutgoingPaymentInput;
 };
 
 
@@ -819,6 +833,8 @@ export type OutgoingPaymentResponse = {
 };
 
 export enum OutgoingPaymentState {
+  /** Payment cancelled */
+  Cancelled = 'CANCELLED',
   /** Successful completion */
   Completed = 'COMPLETED',
   /** Payment failed */
@@ -1488,6 +1504,7 @@ export type ResolversTypes = {
   AssetsConnection: ResolverTypeWrapper<Partial<AssetsConnection>>;
   BasePayment: ResolverTypeWrapper<ResolversInterfaceTypes<ResolversTypes>['BasePayment']>;
   Boolean: ResolverTypeWrapper<Partial<Scalars['Boolean']['output']>>;
+  CancelOutgoingPaymentInput: ResolverTypeWrapper<Partial<CancelOutgoingPaymentInput>>;
   CreateAssetInput: ResolverTypeWrapper<Partial<CreateAssetInput>>;
   CreateAssetLiquidityWithdrawalInput: ResolverTypeWrapper<Partial<CreateAssetLiquidityWithdrawalInput>>;
   CreateIncomingPaymentInput: ResolverTypeWrapper<Partial<CreateIncomingPaymentInput>>;
@@ -1607,6 +1624,7 @@ export type ResolversParentTypes = {
   AssetsConnection: Partial<AssetsConnection>;
   BasePayment: ResolversInterfaceTypes<ResolversParentTypes>['BasePayment'];
   Boolean: Partial<Scalars['Boolean']['output']>;
+  CancelOutgoingPaymentInput: Partial<CancelOutgoingPaymentInput>;
   CreateAssetInput: Partial<CreateAssetInput>;
   CreateAssetLiquidityWithdrawalInput: Partial<CreateAssetLiquidityWithdrawalInput>;
   CreateIncomingPaymentInput: Partial<CreateIncomingPaymentInput>;
@@ -1899,6 +1917,7 @@ export type ModelResolvers<ContextType = any, ParentType extends ResolversParent
 };
 
 export type MutationResolvers<ContextType = any, ParentType extends ResolversParentTypes['Mutation'] = ResolversParentTypes['Mutation']> = {
+  cancelOutgoingPayment?: Resolver<ResolversTypes['OutgoingPaymentResponse'], ParentType, ContextType, RequireFields<MutationCancelOutgoingPaymentArgs, 'input'>>;
   createAsset?: Resolver<ResolversTypes['AssetMutationResponse'], ParentType, ContextType, RequireFields<MutationCreateAssetArgs, 'input'>>;
   createAssetLiquidityWithdrawal?: Resolver<Maybe<ResolversTypes['LiquidityMutationResponse']>, ParentType, ContextType, RequireFields<MutationCreateAssetLiquidityWithdrawalArgs, 'input'>>;
   createIncomingPayment?: Resolver<ResolversTypes['IncomingPaymentResponse'], ParentType, ContextType, RequireFields<MutationCreateIncomingPaymentArgs, 'input'>>;

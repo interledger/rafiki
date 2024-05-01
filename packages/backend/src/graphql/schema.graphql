@@ -182,6 +182,11 @@ type Mutation {
     input: CreateOutgoingPaymentInput!
   ): OutgoingPaymentResponse!
 
+  "Cancel Outgoing Payment"
+  cancelOutgoingPayment(
+    input: CancelOutgoingPaymentInput!
+  ): OutgoingPaymentResponse!
+
   "Create an Open Payments Outgoing Payment from an incoming payment"
   createOutgoingPaymentFromIncomingPayment(
     input: CreateOutgoingPaymentFromIncomingPaymentInput!
@@ -807,6 +812,8 @@ enum OutgoingPaymentState {
   COMPLETED
   "Payment failed"
   FAILED
+  "Payment cancelled"
+  CANCELLED
 }
 
 type PaymentConnection {
@@ -920,6 +927,13 @@ input CreateOutgoingPaymentInput {
   metadata: JSONObject
   "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)"
   idempotencyKey: String
+}
+
+input CancelOutgoingPaymentInput {
+  "Outgoing payment id"
+  id: ID!
+  "Reason why this Outgoing Payment has been cancelled"
+  reason: String!
 }
 
 input CreateOutgoingPaymentFromIncomingPaymentInput {
