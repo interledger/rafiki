@@ -53,5 +53,6 @@ export const Config = {
   accessTokenDeletionDays: envInt('ACCESS_TOKEN_DELETION_DAYS', 30),
   incomingPaymentInteraction: envBool('INCOMING_PAYMENT_INTERACTION', false),
   quoteInteraction: envBool('QUOTE_INTERACTION', false),
-  listAllInteraction: envBool('LIST_ALL_ACCESS_INTERACTION', true)
+  listAllInteraction: envBool('LIST_ALL_ACCESS_INTERACTION', true),
+  redisUrl: envString('REDIS_URL', 'redis://127.0.0.1:6379')
 }

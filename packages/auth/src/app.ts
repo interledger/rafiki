@@ -50,6 +50,7 @@ import { AccessService } from './access/service'
 import { AccessTokenService } from './accessToken/service'
 import { InteractionRoutes } from './interaction/routes'
 import { ApolloArmor } from '@escape.tech/graphql-armor'
+import { Redis } from 'ioredis'
 
 export interface AppContextData extends DefaultContext {
   logger: Logger
@@ -97,6 +98,7 @@ export interface AppServices {
   accessTokenService: Promise<AccessTokenService>
   grantRoutes: Promise<GrantRoutes>
   interactionRoutes: Promise<InteractionRoutes>
+  redis: Promise<Redis>
 }
 
 export type AppContainer = IocContract<AppServices>
@@ -342,12 +344,26 @@ export class App {
 
     koa.use(cors())
     koa.keys = [this.config.cookieKey]
+
+    const redis = await this.container.use('redis')
     koa.use(
       session(
         {
           key: 'sessionId',
           maxAge: 60 * 1000,
-          signed: true
+          signed: true,
+          store: {
+            async get(key) {
+              const data = await redis.get(key)
+              return data ? JSON.parse(data) : null
+            },
+            async set(key, session) {
+              await redis.set(key, JSON.stringify(session))
+            },
+            async destroy(key) {
+              await redis.del(key)
+            }
+          }
         },
         koa
       )

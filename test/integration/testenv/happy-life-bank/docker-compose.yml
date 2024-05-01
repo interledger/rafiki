@@ -60,5 +60,6 @@ services:
       INTROSPECTION_PORT: 4107
       ADMIN_PORT: 4103
       AUTH_PORT: 4106
+      REDIS_URL: redis://shared-redis:6379/1
     depends_on:
       - cloud-nine-wallet-test-auth
