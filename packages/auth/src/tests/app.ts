@@ -33,6 +33,7 @@ export const createTestApp = async (
   config.authPort = 0
   config.introspectionPort = 0
   config.adminPort = 0
+  config.authChoicePort = 0
 
   const logger = createLogger({
     transport: {
