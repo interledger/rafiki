@@ -1,5 +1,7 @@
 import * as crypto from 'crypto'
 import dotenv from 'dotenv'
+import * as fs from 'fs'
+import { ConnectionOptions } from 'tls'
 
 function envString(name: string, value: string): string {
   const envValue = process.env[name]
@@ -54,5 +56,34 @@ export const Config = {
   incomingPaymentInteraction: envBool('INCOMING_PAYMENT_INTERACTION', false),
   quoteInteraction: envBool('QUOTE_INTERACTION', false),
   listAllInteraction: envBool('LIST_ALL_ACCESS_INTERACTION', true),
-  redisUrl: envString('REDIS_URL', 'redis://127.0.0.1:6379')
+  redisUrl: envString('REDIS_URL', 'redis://127.0.0.1:6379'),
+  redisTls: parseRedisTlsConfig(
+    envString('REDIS_TLS_CA_FILE_PATH', ''),
+    envString('REDIS_TLS_KEY_FILE_PATH', ''),
+    envString('REDIS_TLS_CERT_FILE_PATH', '')
+  )
+}
+
+function parseRedisTlsConfig(
+  caFile: string,
+  keyFile: string,
+  certFile: string
+): ConnectionOptions | undefined {
+  const options: ConnectionOptions = {}
+
+  // self-signed certs.
+  if (caFile !== '') {
+    options.ca = fs.readFileSync(caFile)
+    options.rejectUnauthorized = false
+  }
+
+  if (certFile !== '') {
+    options.cert = fs.readFileSync(certFile)
+  }
+
+  if (keyFile !== '') {
+    options.key = fs.readFileSync(keyFile)
+  }
+
+  return Object.keys(options).length > 0 ? options : undefined
 }

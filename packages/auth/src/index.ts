@@ -200,7 +200,7 @@ export function initIocContainer(
 
   container.singleton('redis', async (deps): Promise<Redis> => {
     const config = await deps.use('config')
-    return new Redis(config.redisUrl)
+    return new Redis(config.redisUrl, { tls: config.redisTls })
   })
 
   return container
