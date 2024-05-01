@@ -54,6 +54,7 @@ services:
       - '3103:3103'
       - '3106:3106'
       - '3107:3107'
+      - '3109:3109'
     environment:
       NODE_ENV: ${NODE_ENV:-development}
       AUTH_SERVER_URL: http://cloud-nine-wallet-test-auth:3106
@@ -65,6 +66,7 @@ services:
       IDENTITY_SERVER_URL: http://localhost:3030/mock-idp/
       IDENTITY_SERVER_SECRET: 2pEcn2kkCclbOHQiGNEwhJ0rucATZhrA807HTm2rNXE=
       COOKIE_KEY: 42397d1f371dd4b8b7d0308a689a57c882effd4ea909d792302542af47e2cd37
+      AUTH_CHOICE_PORT: 3109
     depends_on:
       - shared-database
       - shared-redis
