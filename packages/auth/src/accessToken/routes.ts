@@ -11,6 +11,7 @@ import { AccessService } from '../access/service'
 import { TransactionOrKnex } from 'objection'
 import { GrantService } from '../grant/service'
 import { GNAPErrorCode, throwGNAPError } from '../shared/gnapErrors'
+import { generateRouteLogs } from '../shared/utils'
 
 export type TokenHttpSigContext = AppContext & {
   accessToken: AccessToken & {
@@ -76,10 +77,21 @@ async function introspectToken(
   ctx: IntrospectContext
 ): Promise<void> {
   const { body } = ctx.request
+  const accessToken = body['access_token']
   const grant = await deps.accessTokenService.introspect(
     // body.access_token exists since it is checked for by the request validation
-    body['access_token']
+    accessToken
   )
+
+  deps.logger.debug(
+    {
+      ...generateRouteLogs(ctx),
+      grant: grant ?? 'n/a', // grant is undefined if access token is invalid
+      accessToken
+    },
+    'introspected access token'
+  )
+
   ctx.body = grantToTokenInfo(grant)
 }
 
@@ -101,7 +113,15 @@ async function revokeToken(
   deps: ServiceDependencies,
   ctx: RevokeContext
 ): Promise<void> {
-  await deps.accessTokenService.revoke(ctx.accessToken.id)
+  const accessToken = await deps.accessTokenService.revoke(ctx.accessToken.id)
+
+  deps.logger.debug(
+    {
+      ...generateRouteLogs(ctx),
+      accessToken
+    },
+    'revoked access token'
+  )
 
   ctx.status = 204
 }
@@ -131,11 +151,23 @@ async function rotateToken(
     const errorMessage =
       error instanceof Error ? error.message : 'Could not rotate token'
     deps.logger.error(
-      { err: error instanceof Error && error.message },
+      {
+        ...generateRouteLogs(ctx),
+        err: error instanceof Error && error.message
+      },
       errorMessage
     )
     throwGNAPError(ctx, 400, GNAPErrorCode.InvalidRotation, errorMessage)
   }
+
+  deps.logger.debug(
+    {
+      ...generateRouteLogs(ctx),
+      oldAccessToken: ctx.accessToken,
+      newAccessToken: newToken
+    },
+    'rotated access token'
+  )
 
   ctx.status = 200
   ctx.body = {

@@ -21,6 +21,7 @@ import { AccessToken } from '../accessToken/model'
 import { InteractionService } from '../interaction/service'
 import { canSkipInteraction } from './utils'
 import { GNAPErrorCode, throwGNAPError } from '../shared/gnapErrors'
+import { generateRouteLogs } from '../shared/utils'
 
 interface ServiceDependencies extends BaseService {
   grantService: GrantService
@@ -102,6 +103,7 @@ async function createGrant(
   try {
     noInteractionRequired = canSkipInteraction(deps.config, ctx.request.body)
   } catch (err) {
+    deps.logger.error(generateRouteLogs(ctx), 'grant access identifier missing')
     throwGNAPError(
       ctx,
       400,
@@ -121,7 +123,7 @@ async function createApprovedGrant(
   ctx: CreateContext
 ): Promise<void> {
   const { body } = ctx.request
-  const { grantService, config } = deps
+  const { grantService, config, logger } = deps
   const trx = await Grant.startTransaction()
   let grant: Grant
   let accessToken: AccessToken
@@ -131,6 +133,7 @@ async function createApprovedGrant(
     await trx.commit()
   } catch (err) {
     await trx.rollback()
+    logger.error(generateRouteLogs(ctx), 'failed to create grant')
     throwGNAPError(
       ctx,
       500,
@@ -140,6 +143,15 @@ async function createApprovedGrant(
   }
   const access = await deps.accessService.getByGrant(grant.id)
   ctx.status = 200
+
+  logger.debug(
+    {
+      ...generateRouteLogs(ctx),
+      grant
+    },
+    'created non-interactive grant'
+  )
+
   ctx.body = toOpenPaymentsGrant(
     grant,
     { authServerUrl: config.authServerDomain },
@@ -153,8 +165,9 @@ async function createPendingGrant(
   ctx: CreateContext
 ): Promise<void> {
   const { body } = ctx.request
-  const { grantService, interactionService, config } = deps
+  const { grantService, interactionService, config, logger } = deps
   if (!body.interact) {
+    logger.error(generateRouteLogs(ctx), 'grant request missing interact field')
     throwGNAPError(
       ctx,
       400,
@@ -165,6 +178,7 @@ async function createPendingGrant(
 
   const client = await deps.clientService.get(body.client)
   if (!client) {
+    logger.error(generateRouteLogs(ctx), 'grant request missing client field')
     throwGNAPError(
       ctx,
       400,
@@ -186,8 +200,17 @@ async function createPendingGrant(
       authServerUrl: config.authServerDomain,
       waitTimeSeconds: config.waitTimeSeconds
     })
+
+    logger.debug(
+      {
+        ...generateRouteLogs(ctx),
+        grant
+      },
+      'created grant'
+    )
   } catch (err) {
     await trx.rollback()
+    logger.error(generateRouteLogs(ctx), 'failed to create grant')
     throwGNAPError(
       ctx,
       500,
@@ -225,14 +248,23 @@ async function pollGrantContinuation(
   continueId: string,
   continueToken: string
 ): Promise<void> {
-  const { config, grantService, accessService, accessTokenService } = deps
+  const { config, grantService, accessService, accessTokenService, logger } =
+    deps
 
   const grant = await grantService.getByContinue(continueId, continueToken)
   if (!grant) {
+    logger.error(generateRouteLogs(ctx), 'grant not found')
     throwGNAPError(ctx, 404, GNAPErrorCode.InvalidRequest, 'grant not found')
   }
 
   if (isGrantStillWaiting(grant, config.waitTimeSeconds)) {
+    logger.warn(
+      {
+        ...generateRouteLogs(ctx),
+        grant
+      },
+      'grant polled faster than wait period'
+    )
     throwGNAPError(
       ctx,
       400,
@@ -246,6 +278,15 @@ async function pollGrantContinuation(
     "When the client instance does not include a finish parameter, the client instance will often need to poll the AS until the RO has authorized the request."
   */
   if (grant.finishMethod) {
+    logger.error(
+      {
+        ...generateRouteLogs(ctx),
+        continueId,
+        continueToken,
+        grant
+      },
+      'polled grant that cannot be polled'
+    )
     throwGNAPError(
       ctx,
       401,
@@ -262,11 +303,30 @@ async function pollGrantContinuation(
       authServerUrl: config.authServerDomain,
       waitTimeSeconds: config.waitTimeSeconds
     })
+
+    logger.debug(
+      {
+        ...generateRouteLogs(ctx),
+        continueId,
+        continueToken,
+        grant
+      },
+      'polled grant with incomplete interaction'
+    )
     return
   } else if (
     grant.state !== GrantState.Approved ||
     !isContinuableGrant(grant)
   ) {
+    logger.error(
+      {
+        ...generateRouteLogs(ctx),
+        continueId,
+        continueToken,
+        grant
+      },
+      'polled grant that cannot be continued'
+    )
     throwGNAPError(
       ctx,
       401,
@@ -286,6 +346,16 @@ async function pollGrantContinuation(
       accessToken,
       access
     )
+
+    logger.debug(
+      {
+        ...generateRouteLogs(ctx),
+        continueId,
+        continueToken,
+        grant
+      },
+      'polled grant with completed interaction'
+    )
     return
   }
 }
@@ -299,12 +369,33 @@ async function continueGrant(
   deps: ServiceDependencies,
   ctx: ContinueContext
 ): Promise<void> {
-  const { id: continueId } = ctx.params
-  const continueToken = (ctx.headers['authorization'] as string)?.split(
-    'GNAP '
-  )[1]
+  const {
+    config,
+    accessTokenService,
+    grantService,
+    accessService,
+    interactionService,
+    logger
+  } = deps
+
+  const {
+    request: { body: requestBody },
+    params,
+    headers
+  } = ctx
+  const { id: continueId } = params
+  const continueToken = (headers['authorization'] as string)?.split('GNAP ')[1]
 
   if (!continueId || !continueToken) {
+    logger.error(
+      {
+        ...generateRouteLogs(ctx),
+        headers,
+        params,
+        requestBody
+      },
+      'missing continuation information'
+    )
     throwGNAPError(
       ctx,
       401,
@@ -313,21 +404,17 @@ async function continueGrant(
     )
   }
 
-  const {
-    config,
-    accessTokenService,
-    grantService,
-    accessService,
-    interactionService
-  } = deps
-
-  if (!ctx.request.body || Object.keys(ctx.request.body).length === 0) {
+  if (!requestBody || Object.keys(requestBody).length === 0) {
     await pollGrantContinuation(deps, ctx, continueId, continueToken)
     return
   }
 
-  const { interact_ref: interactRef } = ctx.request.body
+  const { interact_ref: interactRef } = requestBody
   if (!interactRef) {
+    logger.error(
+      generateRouteLogs(ctx),
+      'continued grant without ineraction reference'
+    )
     throwGNAPError(
       ctx,
       401,
@@ -344,6 +431,7 @@ async function continueGrant(
     !isContinuableGrant(interaction.grant) ||
     !isMatchingContinueRequest(continueId, continueToken, interaction.grant)
   ) {
+    logger.error(generateRouteLogs(ctx), 'grant not found')
     throwGNAPError(
       ctx,
       404,
@@ -351,6 +439,7 @@ async function continueGrant(
       'grant not found'
     )
   } else if (isGrantStillWaiting(interaction.grant, config.waitTimeSeconds)) {
+    logger.warn(generateRouteLogs(ctx), 'continued grant too quickly')
     throwGNAPError(
       ctx,
       400,
@@ -360,6 +449,10 @@ async function continueGrant(
   } else {
     const { grant } = interaction
     if (grant.state !== GrantState.Approved) {
+      logger.error(
+        generateRouteLogs(ctx),
+        'continued grant whose interaction was not approved'
+      )
       throwGNAPError(
         ctx,
         401,
@@ -379,6 +472,14 @@ async function continueGrant(
       accessToken,
       access
     )
+
+    logger.debug(
+      {
+        ...generateRouteLogs(ctx),
+        interaction
+      },
+      'continued grant'
+    )
   }
 }
 
@@ -387,10 +488,15 @@ async function revokeGrant(
   ctx: RevokeContext
 ): Promise<void> {
   const { id: continueId } = ctx.params
+  const { grantService, logger } = deps
   const continueToken = (ctx.headers['authorization'] as string)?.split(
     'GNAP '
   )[1]
   if (!continueId || !continueToken) {
+    logger.error(
+      generateRouteLogs(ctx),
+      'tried to revoke grant with invalid continuation information'
+    )
     throwGNAPError(
       ctx,
       401,
@@ -398,14 +504,26 @@ async function revokeGrant(
       'invalid continuation information'
     )
   }
-  const grant = await deps.grantService.getByContinue(continueId, continueToken)
+  const grant = await grantService.getByContinue(continueId, continueToken)
   if (!grant) {
+    logger.error(generateRouteLogs(ctx), 'tried to revoke unknown grant')
     throwGNAPError(ctx, 404, GNAPErrorCode.InvalidRequest, 'unknown grant')
   }
 
-  const revoked = await deps.grantService.revokeGrant(grant.id)
+  const revoked = await grantService.revokeGrant(grant.id)
   if (!revoked) {
+    logger.error(
+      generateRouteLogs(ctx),
+      'tried to revoke already revoked grant'
+    )
     throwGNAPError(ctx, 404, GNAPErrorCode.InvalidRequest, 'invalid grant')
   }
   ctx.status = 204
+  logger.debug(
+    {
+      ...generateRouteLogs(ctx),
+      grant: revoked
+    },
+    'revoked grant'
+  )
 }
