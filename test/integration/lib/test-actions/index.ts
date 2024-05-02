@@ -119,8 +119,11 @@ async function _startAndAcceptInteraction(
   assert(interactId)
 
   // Accept
+  const url = new URL(senderWalletAddress.authServer);
+  url.port = "3109"
+
   const acceptResponse = await fetch(
-    `${senderWalletAddress.authServer}/grant/${interactId}/${nonce}/accept`,
+    `${url.toString()}grant/${interactId}/${nonce}/accept`,
     {
       method: 'POST',
       headers: {

@@ -15,6 +15,7 @@ export type TestConfig = Config & {
 type EnvConfig = {
   OPEN_PAYMENTS_URL: string
   AUTH_SERVER_DOMAIN: string
+  AUTH_CHOICE_SERVER: string
   INTEGRATION_SERVER_PORT: string
   WALLET_ADDRESS_URL: string
   GRAPHQL_URL: string
@@ -23,6 +24,7 @@ type EnvConfig = {
 const REQUIRED_KEYS: (keyof EnvConfig)[] = [
   'OPEN_PAYMENTS_URL',
   'AUTH_SERVER_DOMAIN',
+  'AUTH_CHOICE_SERVER',
   'INTEGRATION_SERVER_PORT',
   'WALLET_ADDRESS_URL',
   'GRAPHQL_URL',
@@ -59,6 +61,7 @@ const createConfig = (name: string): TestConfig => {
     publicHost: env.OPEN_PAYMENTS_URL,
     testnetAutoPeerUrl: '',
     authServerDomain: env.AUTH_SERVER_DOMAIN,
+    authChoiceServer: env.AUTH_CHOICE_SERVER,
     integrationServerPort: parseInt(env.INTEGRATION_SERVER_PORT),
     walletAddressUrl: env.WALLET_ADDRESS_URL,
     graphqlUrl: env.GRAPHQL_URL,
