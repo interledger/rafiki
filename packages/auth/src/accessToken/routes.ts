@@ -86,7 +86,7 @@ async function introspectToken(
   deps.logger.debug(
     {
       ...generateRouteLogs(ctx),
-      grant: grant ?? 'n/a', // grant is undefined if access token is invalid
+      grant,
       accessToken
     },
     'introspected access token'
