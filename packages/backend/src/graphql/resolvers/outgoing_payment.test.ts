@@ -549,11 +549,22 @@ describe('OutgoingPayment Resolvers', (): void => {
       payment = await createPayment({ walletAddressId })
     })
 
-    const states: [string, OutgoingPaymentError | null][] =
-        Object.values(OutgoingPaymentState).flatMap((state) => [
-          ["Not enough balance", state == OutgoingPaymentState.Funding ? null : OutgoingPaymentError.WrongState],
-          ["Missing KYC", state == OutgoingPaymentState.Funding ? null : OutgoingPaymentError.WrongState],
-        ])
+    const states: [string, OutgoingPaymentError | null][] = Object.values(
+      OutgoingPaymentState
+    ).flatMap((state) => [
+      [
+        'Not enough balance',
+        state == OutgoingPaymentState.Funding
+          ? null
+          : OutgoingPaymentError.WrongState
+      ],
+      [
+        'Missing KYC',
+        state == OutgoingPaymentState.Funding
+          ? null
+          : OutgoingPaymentError.WrongState
+      ]
+    ])
     test.each(states)(
       '200 - %s, error: %s',
       async (reason, error): Promise<void> => {
@@ -576,7 +587,9 @@ describe('OutgoingPayment Resolvers', (): void => {
         const response = await appContainer.apolloClient
           .mutate({
             mutation: gql`
-              mutation cancelOutgoingPayment($input: CancelOutgoingPaymentInput!) {
+              mutation cancelOutgoingPayment(
+                $input: CancelOutgoingPaymentInput!
+              ) {
                 cancelOutgoingPayment(input: $input) {
                   code
                   success
@@ -602,13 +615,12 @@ describe('OutgoingPayment Resolvers', (): void => {
             throw new Error('Data was empty')
           })
 
-
         expect(response.success).toBe(!error)
         expect(response.code).toEqual(error ? '409' : '200')
 
         if (!error) {
           expect(response.payment).toEqual({
-            __typename: "OutgoingPayment",
+            __typename: 'OutgoingPayment',
             id: payment.id,
             walletAddressId: payment.walletAddressId,
             state: OutgoingPaymentState.Cancelled,
@@ -618,7 +630,7 @@ describe('OutgoingPayment Resolvers', (): void => {
           })
         } else {
           expect(response.message).toEqual('wrong state')
-          expect(response.payment).toBeNull();
+          expect(response.payment).toBeNull()
         }
       }
     )

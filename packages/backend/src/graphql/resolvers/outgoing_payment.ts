@@ -30,24 +30,31 @@ export const getOutgoingPayment: QueryResolvers<ApolloContext>['outgoingPayment'
   }
 
 export const cancelOutgoingPayment: MutationResolvers<ApolloContext>['cancelOutgoingPayment'] =
-  async (parent, args, ctx): Promise<ResolversTypes['OutgoingPaymentResponse']> => {
-    const outgoingPaymentService = await ctx.container.use('outgoingPaymentService')
+  async (
+    parent,
+    args,
+    ctx
+  ): Promise<ResolversTypes['OutgoingPaymentResponse']> => {
+    const outgoingPaymentService = await ctx.container.use(
+      'outgoingPaymentService'
+    )
 
     return outgoingPaymentService
       .cancel(args.input)
       .then((paymentOrError: OutgoingPayment | OutgoingPaymentError) =>
         isOutgoingPaymentError(paymentOrError)
           ? {
-            code: errorToCode[paymentOrError].toString(),
-            success: false,
-            message: errorToMessage[paymentOrError]
-          }
+              code: errorToCode[paymentOrError].toString(),
+              success: false,
+              message: errorToMessage[paymentOrError]
+            }
           : {
-            code: '200',
-            success: true,
-            payment: paymentToGraphql(paymentOrError)
-          }
-      ).catch(() => ({
+              code: '200',
+              success: true,
+              payment: paymentToGraphql(paymentOrError)
+            }
+      )
+      .catch(() => ({
         code: '500',
         success: false,
         message: 'Error trying to cancel outgoing payment'

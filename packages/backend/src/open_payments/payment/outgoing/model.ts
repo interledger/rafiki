@@ -81,7 +81,10 @@ export class OutgoingPayment
   }
 
   public get failed(): boolean {
-    return [OutgoingPaymentState.Cancelled, OutgoingPaymentState.Failed].includes(this.state)
+    return [
+      OutgoingPaymentState.Cancelled,
+      OutgoingPaymentState.Failed
+    ].includes(this.state)
   }
 
   // Outgoing peer
@@ -186,7 +189,7 @@ export enum OutgoingPaymentState {
   // Successful completion.
   Completed = 'COMPLETED',
   // Transaction has been cancelled by ASE
-  Cancelled = "CANCELLED"
+  Cancelled = 'CANCELLED'
 }
 
 export enum OutgoingPaymentDepositType {

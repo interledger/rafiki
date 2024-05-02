@@ -113,8 +113,8 @@ export interface CreateFromIncomingPayment extends BaseOptions {
 }
 
 export type CancelOutgoingPaymentOptions = {
-  id: string;
-  reason: string;
+  id: string
+  reason: string
 }
 
 export type CreateOutgoingPaymentOptions =
@@ -134,22 +134,23 @@ async function cancelOutgoingPayment(
   const { id } = options
 
   return deps.knex.transaction(async (trx) => {
-    let payment = await OutgoingPayment.query(trx)
-      .findById(id)
-      .forUpdate()
+    let payment = await OutgoingPayment.query(trx).findById(id).forUpdate()
 
     if (!payment) return OutgoingPaymentError.UnknownPayment
     if (payment.state !== OutgoingPaymentState.Funding) {
       return OutgoingPaymentError.WrongState
     }
 
-    payment = await payment.$query(trx).patchAndFetch({
-      state: OutgoingPaymentState.Cancelled,
-      metadata: {
-        ...payment.metadata,
-        cancellationReason: options.reason
-      }
-    }).withGraphFetched('[quote.asset, walletAddress]')
+    payment = await payment
+      .$query(trx)
+      .patchAndFetch({
+        state: OutgoingPaymentState.Cancelled,
+        metadata: {
+          ...payment.metadata,
+          cancellationReason: options.reason
+        }
+      })
+      .withGraphFetched('[quote.asset, walletAddress]')
 
     return addSentAmount(deps, payment)
   })
