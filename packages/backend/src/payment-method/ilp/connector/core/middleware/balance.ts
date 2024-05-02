@@ -1,5 +1,5 @@
 import { Errors } from 'ilp-packet'
-import { ILPContext, ILPMiddleware, TransferOptions } from '../rafiki'
+import { ILPContext, ILPMiddleware } from '../rafiki'
 import {
   isTransferError,
   TransferError
