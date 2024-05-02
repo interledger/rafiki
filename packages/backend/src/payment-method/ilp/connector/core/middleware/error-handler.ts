@@ -1,5 +1,4 @@
 import { errorToIlpReject, isIlpError, IlpErrorCode } from 'ilp-packet'
-import { HttpError } from 'koa'
 import { ILPContext, ILPMiddleware } from '../rafiki'
 
 /**
