@@ -149,7 +149,7 @@ async function cancelOutgoingPayment(
         ...payment.metadata,
         cancellationReason: options.reason
       }
-    })
+    }).withGraphFetched('[quote.asset, walletAddress]')
 
     return addSentAmount(deps, payment)
   })
