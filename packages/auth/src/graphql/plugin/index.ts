@@ -37,7 +37,7 @@ export class LoggingPlugin implements ApolloServerPlugin {
         if (context.errors) {
           context.errors.forEach((error) => {
             if (
-              error.extensions.code === GraphQLErrorCode.InternalServerError
+              Object.keys(error.extensions).length === 0 || error.extensions.code === GraphQLErrorCode.InternalServerError
             ) {
               logger.error({
                 requestId,
