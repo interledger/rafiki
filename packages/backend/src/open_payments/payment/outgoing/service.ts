@@ -519,7 +519,11 @@ function validateSentAmount(
     return sentAmount
   }
 
-  if ([OutgoingPaymentState.Funding, OutgoingPaymentState.Cancelled].includes(payment.state)) {
+  if (
+    [OutgoingPaymentState.Funding, OutgoingPaymentState.Cancelled].includes(
+      payment.state
+    )
+  ) {
     return BigInt(0)
   }
 
