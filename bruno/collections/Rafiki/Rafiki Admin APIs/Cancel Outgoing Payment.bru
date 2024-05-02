@@ -1,0 +1,30 @@
+meta {
+  name: Cancel Outgoing Payment
+  type: graphql
+  seq: 43
+}
+
+post {
+  url: {{RafikiGraphqlHost}}/graphql
+  body: graphql
+  auth: none
+}
+
+body:graphql {
+  mutation CancelOutgoingPayment($input: CancelOutgoingPaymentInput!) {
+    cancelOutgoingPayment(input: $input) {
+      code
+      message
+      success
+    }
+  }
+}
+
+body:graphql:vars {
+  {
+    "input": {
+      "id": "{{outgoingPaymentId}}",
+      "reason": "Not enough balance"
+    }
+  }
+}
