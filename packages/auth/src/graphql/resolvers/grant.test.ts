@@ -482,8 +482,9 @@ describe('Grant Resolvers', (): void => {
     })
 
     test('Returns error for unknown grant', async (): Promise<void> => {
+      let gqlQuery
       try {
-        const gqlQuery = appContainer.apolloClient
+        gqlQuery = appContainer.apolloClient
           .mutate({
             mutation: gql`
               query GetGrant($id: ID!) {
@@ -514,10 +515,10 @@ describe('Grant Resolvers', (): void => {
             }
           })
 
-        await expect(gqlQuery).rejects.toThrow(ApolloError)
-        await expect(gqlQuery).rejects.toThrow('No grant')
         await gqlQuery // throw error to inspect error object
       } catch (err) {
+        await expect(gqlQuery).rejects.toThrow(ApolloError)
+        await expect(gqlQuery).rejects.toThrow('No grant')
         expect((err as ApolloError).graphQLErrors[0].extensions.code).toEqual(
           GraphQLErrorCode.NotFound
         )
@@ -561,12 +562,13 @@ describe('Grant Resolvers', (): void => {
     })
 
     test('Returns error if grant id is not provided', async (): Promise<void> => {
+      let gqlQuery
       try {
         const input: RevokeGrantInput = {
           grantId: ''
         }
 
-        const gqlQuery = appContainer.apolloClient
+        gqlQuery = appContainer.apolloClient
           .mutate({
             mutation: gql`
               mutation revokeGrant($input: RevokeGrantInput!) {
@@ -587,10 +589,10 @@ describe('Grant Resolvers', (): void => {
             }
           })
 
-        expect(gqlQuery).rejects.toThrow(ApolloError)
-        expect(gqlQuery).rejects.toThrow('Grant id is not provided')
         await gqlQuery // throw error to inspect error object
       } catch (err) {
+        expect(gqlQuery).rejects.toThrow(ApolloError)
+        expect(gqlQuery).rejects.toThrow('Grant id is not provided')
         expect((err as ApolloError).graphQLErrors[0].extensions.code).toEqual(
           GraphQLErrorCode.Forbidden
         )
@@ -598,12 +600,13 @@ describe('Grant Resolvers', (): void => {
     })
 
     test('Returns error if id does not exist', async (): Promise<void> => {
+      let gqlQuery
       try {
         const input: RevokeGrantInput = {
           grantId: uuid()
         }
 
-        const gqlQuery = appContainer.apolloClient
+        gqlQuery = appContainer.apolloClient
           .mutate({
             mutation: gql`
               mutation revokeGrant($input: RevokeGrantInput!) {
@@ -624,10 +627,10 @@ describe('Grant Resolvers', (): void => {
             }
           })
 
-        expect(gqlQuery).rejects.toThrow(ApolloError)
-        expect(gqlQuery).rejects.toThrow('Revoke grant was not successful')
         await gqlQuery // throw error to inspect error object
       } catch (err) {
+        expect(gqlQuery).rejects.toThrow(ApolloError)
+        expect(gqlQuery).rejects.toThrow('Revoke grant was not successful')
         expect((err as ApolloError).graphQLErrors[0].extensions.code).toEqual(
           GraphQLErrorCode.NotFound
         )
@@ -635,12 +638,13 @@ describe('Grant Resolvers', (): void => {
     })
 
     test('Returns error if grant id is in invalid format', async (): Promise<void> => {
+      let gqlQuery
       try {
         const input: RevokeGrantInput = {
           grantId: '123'
         }
 
-        const gqlQuery = appContainer.apolloClient
+        gqlQuery = appContainer.apolloClient
           .mutate({
             mutation: gql`
               mutation revokeGrant($input: RevokeGrantInput!) {
@@ -661,9 +665,9 @@ describe('Grant Resolvers', (): void => {
             }
           })
 
-        expect(gqlQuery).rejects.toThrow(ApolloError)
         await gqlQuery // throw error to inspect error object
       } catch (err) {
+        expect(gqlQuery).rejects.toThrow(ApolloError)
         expect((err as ApolloError).graphQLErrors[0].extensions.code).toEqual(
           GraphQLErrorCode.InternalServerError
         )
