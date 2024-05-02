@@ -6,6 +6,7 @@ import { createIncomingPaymentWithdrawal } from '~/lib/api/payments.server'
 import { messageStorage, setMessageAndRedirect } from '~/lib/message.server'
 import { redirectIfUnauthorizedAccess } from '../lib/kratos_checks.server'
 import { type LoaderFunctionArgs } from '@remix-run/node'
+import { timeoutTwoPhase } from './settings'
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const cookies = request.headers.get('cookie')
@@ -45,7 +46,8 @@ export async function action({ request, params }: ActionFunctionArgs) {
 
   const response = await createIncomingPaymentWithdrawal({
     incomingPaymentId,
-    idempotencyKey: v4()
+    idempotencyKey: v4(),
+    timeout: timeoutTwoPhase
   })
 
   if (!response?.success) {
