@@ -11,8 +11,12 @@ import {
   formatAmount,
   prettify
 } from '~/shared/utils'
+import { redirectIfUnauthorizedAccess } from '../lib/kratos_checks.server'
 
-export async function loader({ params }: LoaderFunctionArgs) {
+export async function loader({ request, params }: LoaderFunctionArgs) {
+  const cookies = request.headers.get('cookie')
+  await redirectIfUnauthorizedAccess(request.url, cookies)
+
   const incomingPaymentId = params.incomingPaymentId
 
   const result = z.string().uuid().safeParse(incomingPaymentId)

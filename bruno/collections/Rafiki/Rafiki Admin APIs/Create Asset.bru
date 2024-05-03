@@ -31,12 +31,18 @@ body:graphql {
 body:graphql:vars {
   {
     "input": {
-      "code": "USD",
+      "code": "JPY",
       "scale": 6,
       "withdrawalThreshold": null,
       "liquidityThreshold": "100000000"
     }
   }
+}
+
+script:pre-request {
+  const scripts = require('./scripts');
+  
+  scripts.addApiSignatureHeader();
 }
 
 script:post-response {

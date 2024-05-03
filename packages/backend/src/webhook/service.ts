@@ -129,10 +129,11 @@ async function processNextWebhookEvent(
       .forUpdate()
       // If a webhook event is locked, don't wait — just come back for it later.
       .skipLocked()
+      .where('attempts', '<', deps_.config.webhookMaxRetry)
       .where('processAt', '<=', new Date(now).toISOString())
 
     const event = events[0]
-    if (!event || event.attempts >= deps_.config.webhookMaxRetry) return
+    if (!event) return
 
     const deps = {
       ...deps_,

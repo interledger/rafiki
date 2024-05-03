@@ -32,6 +32,7 @@ describe('Incoming Payment Service', (): void => {
   let incomingPaymentService: IncomingPaymentService
   let knex: Knex
   let walletAddressId: string
+  let client: string
   let accountingService: AccountingService
   let asset: Asset
   let config: IAppConfig
@@ -47,8 +48,9 @@ describe('Incoming Payment Service', (): void => {
 
   beforeEach(async (): Promise<void> => {
     asset = await createAsset(deps)
-    walletAddressId = (await createWalletAddress(deps, { assetId: asset.id }))
-      .id
+    const address = await createWalletAddress(deps, { assetId: asset.id })
+    walletAddressId = address.id
+    client = address.url
   })
 
   afterEach(async (): Promise<void> => {
@@ -81,6 +83,7 @@ describe('Incoming Payment Service', (): void => {
           type: IncomingPaymentEventType.IncomingPaymentCreated
         })
       ).resolves.toHaveLength(0)
+      options.client = client
       const incomingPayment = await incomingPaymentService.create({
         walletAddressId,
         ...options,
@@ -89,6 +92,7 @@ describe('Incoming Payment Service', (): void => {
       assert.ok(!isIncomingPaymentError(incomingPayment))
       expect(incomingPayment).toMatchObject({
         id: incomingPayment.id,
+        client,
         asset,
         processAt: new Date(incomingPayment.expiresAt.getTime()),
         metadata: options.metadata ?? null
@@ -445,6 +449,7 @@ describe('Incoming Payment Service', (): void => {
         beforeEach(async (): Promise<void> => {
           incomingPayment = await createIncomingPayment(deps, {
             walletAddressId,
+            client,
             incomingAmount: {
               value: BigInt(123),
               assetCode: asset.code,
@@ -483,7 +488,8 @@ describe('Incoming Payment Service', (): void => {
               eventType === IncomingPaymentEventType.IncomingPaymentExpired
                 ? IncomingPaymentState.Expired
                 : IncomingPaymentState.Completed,
-            processAt: expect.any(Date)
+            processAt: expect.any(Date),
+            client
           })
           await expect(
             accountingService.getTotalReceived(incomingPayment.id)
@@ -518,7 +524,8 @@ describe('Incoming Payment Service', (): void => {
               id: incomingPayment.id
             })
           ).resolves.toMatchObject({
-            processAt: null
+            processAt: null,
+            client
           })
         })
       }

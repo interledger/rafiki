@@ -8,12 +8,7 @@ import { createTestApp, TestContainer } from '../../../tests/app'
 import { Config, IAppConfig } from '../../../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../../..'
-import {
-  AppServices,
-  CreateContext,
-  CompleteContext,
-  ListContext
-} from '../../../app'
+import { AppServices, CreateContext, CompleteContext } from '../../../app'
 import { truncateTables } from '../../../tests/tableManager'
 import { IncomingPayment, IncomingPaymentState } from './model'
 import {
@@ -125,23 +120,6 @@ describe('Incoming Payment Routes', (): void => {
       },
       list: (ctx) => incomingPaymentRoutes.list(ctx),
       urlPath: IncomingPayment.urlPath
-    })
-
-    test('returns 500 for unexpected error', async (): Promise<void> => {
-      const incomingPaymentService = await deps.use('incomingPaymentService')
-      jest
-        .spyOn(incomingPaymentService, 'getWalletAddressPage')
-        .mockRejectedValueOnce(new Error('unexpected'))
-      const ctx = setup<ListContext>({
-        reqOpts: {
-          headers: { Accept: 'application/json' }
-        },
-        walletAddress
-      })
-      await expect(incomingPaymentRoutes.list(ctx)).rejects.toMatchObject({
-        status: 500,
-        message: `Error trying to list incoming payments`
-      })
     })
   })
 

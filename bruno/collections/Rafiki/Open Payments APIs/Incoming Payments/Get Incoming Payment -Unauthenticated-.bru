@@ -12,16 +12,10 @@ get {
 
 headers {
   Host: happy-life-bank-backend
-  ~Authorization: GNAP {{accessToken}}
-}
-
-script:pre-request {
-  // 
 }
 
 tests {
-  // pm.test("Status code is 200", function () {
-  //     pm.response.to.have.status(200);
-  // });
-  // 
+  test("Status code is 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
 }

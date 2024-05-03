@@ -2,6 +2,8 @@ name: Node Build
 
 on:
   workflow_dispatch:
+  schedule:
+    - cron:  '0 21 * * *'
   pull_request:
     branches:
       - '**'
@@ -168,9 +170,11 @@ jobs:
 
   version-generator:
     runs-on: ubuntu-latest
-    if: startsWith(github.ref_name, 'release/v') 
     outputs:
       version: ${{ steps.version-generator.outputs.NEW_VERSION }}
+      tagPushed: ${{ steps.version-generator.outputs.SHOULD_PUSH_TAG }}
+      dockerPush: ${{ steps.version-generator.outputs.PUSH_DOCKER_IMAGE }}
+      generateRelease: ${{ steps.version-generator.outputs.GENERATE_RELEASE }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -184,104 +188,122 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          VERSION_PREFIX=$(echo "${{ github.ref_name }}" | sed 's|release/||')
-          read major minor patch pre_release <<< $(echo "$VERSION_PREFIX" | awk -F'[.v-]' '{print $2, $3, $4, $5}')
-
-          version_search="v$major.$minor.*"
-
-          if [ -n "$pre_release" ]; then
-              version_search="$version_search-$pre_release"
-          fi
-          echo "VERSION_SEARCH: $version_search"
-          VERSION_PREFIX=$(git tag -l $version_search --sort=-taggerdate | head -n 1)
-
-          if [ -n "$VERSION_PREFIX" ]; then
+          SHOULD_PUSH_TAG=false
+          PUSH_DOCKER_IMAGE=false
+          GENERATE_RELEASE=false
+          if [ "${{ github.event_name == 'schedule' }}" = true ]; then
+            PUSH_DOCKER_IMAGE=true
+            NEW_VERSION="nightly"
+          elif [ "${{ github.event_name == 'workflow_dispatch' }}" = true ]; then
+            NEW_VERSION="manual"
+          elif [ "${{ startsWith(github.ref_name, 'release/v')}}" = true ]; then
+            PUSH_DOCKER_IMAGE=true
+            SHOULD_PUSH_TAG=true
+            GENERATE_RELEASE=true
+            VERSION_PREFIX=$(echo "${{ github.ref_name }}" | sed 's|release/||')
             read major minor patch pre_release <<< $(echo "$VERSION_PREFIX" | awk -F'[.v-]' '{print $2, $3, $4, $5}')
-            patch=$((patch + 1))
+            version_search="v$major.$minor.*"
+            if [ -n "$pre_release" ]; then
+                version_search="$version_search-$pre_release"
+            fi
+            echo "VERSION_SEARCH: $version_search"
+            VERSION_PREFIX=$(git tag -l $version_search --sort=-taggerdate | head -n 1)
+            if [ -n "$VERSION_PREFIX" ]; then
+              read major minor patch pre_release <<< $(echo "$VERSION_PREFIX" | awk -F'[.v-]' '{print $2, $3, $4, $5}')
+              patch=$((patch + 1))
+            fi
+            NEW_VERSION="v${major}.${minor}.${patch}"
+            if [ -n "$pre_release" ]; then
+              NEW_VERSION="$NEW_VERSION-${pre_release}"
+            fi
+          else
+            NEW_VERSION=$(echo "${{ github.ref_name }}" | sed 's/[^a-zA-Z0-9_.-]/_/g')
+
+            if [[ ! "$NEW_VERSION" =~ ^[a-zA-Z0-9] ]]; then
+                NEW_VERSION="tag_$NEW_VERSION"
+            fi
           fi
-
-          NEW_VERSION="v${major}.${minor}.${patch}"
-
-          if [ -n "$pre_release" ]; then
-            NEW_VERSION="$NEW_VERSION-${pre_release}"
-          fi
-
           echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_OUTPUT
           echo "New version will be: $NEW_VERSION"
 
-          git tag -a $NEW_VERSION -m "$NEW_VERSION"
-          git push origin $NEW_VERSION
-  
-  docker-build-branch:
-    runs-on: ubuntu-latest
-    needs: prerequisite
-    if: ${{ !startsWith(github.ref_name, 'release/v') }}
-    timeout-minutes: 5
-    strategy:
-      matrix:
-        package: [auth, backend, frontend]
-    steps:
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-      - name: Build linux/amd64
-        uses: docker/build-push-action@v5
-        with:
-          push: false
-          platforms: linux/amd64
-          file: packages/${{ matrix.package }}/Dockerfile
-          tags: ghcr.io/${{ github.repository_owner }}/rafiki-${{ matrix.package }}:${{ github.workflow_sha }}
+          echo "SHOULD_PUSH_TAG=$SHOULD_PUSH_TAG" >> $GITHUB_OUTPUT
+          echo "Will tag be pushed? $SHOULD_PUSH_TAG"
+
+          echo "PUSH_DOCKER_IMAGE=$PUSH_DOCKER_IMAGE" >> $GITHUB_OUTPUT
+          echo "Will docker image be pushed? $PUSH_DOCKER_IMAGE"
+
+          echo "GENERATE_RELEASE=$GENERATE_RELEASE" >> $GITHUB_OUTPUT
+          echo "Will generate release noted? $GENERATE_RELEASE"
+
+          if [ "$SHOULD_PUSH_TAG" = true ]; then
+            git tag -fa $NEW_VERSION -m "$NEW_VERSION"
+            git push -f origin $NEW_VERSION
+          fi
 
   docker-build:
     runs-on: ubuntu-latest
     needs: version-generator
-    timeout-minutes: 5
+    timeout-minutes: 10
+    env:
+      GH_TOKEN: ${{ github.token }}
     strategy:
       matrix:
-        package: [auth, backend, frontend]
+        platform:
+          - arch: linux/amd64
+            name: amd64
+          - arch: linux/arm64
+            name: arm64
+        package:
+          - auth
+          - backend
+          - frontend
     steps:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
-      - name: Build linux/amd64
-        if: ${{ !startsWith(github.ref_name, 'release/v') }}
+      - name: Build
         uses: docker/build-push-action@v5
         with:
           push: false
-          platforms: linux/amd64
+          platforms: ${{ matrix.platform.arch }}
           file: packages/${{ matrix.package }}/Dockerfile
           tags: ghcr.io/${{ github.repository_owner }}/rafiki-${{ matrix.package }}:${{ needs.version-generator.outputs.version }}
-          outputs: type=docker,dest=/tmp/${{ matrix.package }}.tar
-      - name: Build linux/amd64 & linux/arm64
-        uses: docker/build-push-action@v5
-        with:
-          push: false
-          platforms: linux/amd64,linux/arm64
-          file: packages/${{ matrix.package }}/Dockerfile
-          tags: ghcr.io/${{ github.repository_owner }}/rafiki-${{ matrix.package }}:${{ needs.version-generator.outputs.version }}
-          outputs: type=docker,dest=/tmp/${{ matrix.package }}.tar
+          outputs: type=docker,dest=/tmp/${{ github.sha }}-${{ matrix.package }}-${{ matrix.platform.name }}-${{ needs.version-generator.outputs.version }}.tar
       - name: Save docker image to cache
         uses: actions/cache@v4
         with:
-          path: /tmp/${{ matrix.package }}.tar
-          key: ${{ github.sha }}
+          path: /tmp/${{ github.sha }}-${{ matrix.package }}-${{ matrix.platform.name }}-${{ needs.version-generator.outputs.version }}.tar
+          key: ${{ github.sha }}-${{ matrix.package }}-${{ matrix.platform.name }}-${{ needs.version-generator.outputs.version }}
   
   docker-grype:
     name: Docker Grype Scan
-    needs: docker-build
+    needs: [version-generator, docker-build]
     runs-on: ubuntu-latest
     timeout-minutes: 5
     strategy:
       matrix:
-        package: [auth, backend, frontend]
+        platform:
+          - arch: linux/amd64
+            name: amd64
+          - arch: linux/arm64
+            name: arm64
+        package:
+          - auth
+          - backend
+          - frontend
     steps:
       - name: Fetch docker image from cache
         uses: actions/cache/restore@v4
         with:
-          path: /tmp/${{ matrix.package }}.tar
-          key: ${{ github.sha }}
+          path: /tmp/${{ github.sha }}-${{ matrix.package }}-${{ matrix.platform.name }}-${{ needs.version-generator.outputs.version }}.tar
+          key: ${{ github.sha }}-${{ matrix.package }}-${{ matrix.platform.name }}-${{ needs.version-generator.outputs.version }}
+          fail-on-cache-miss: true
+      - name: Docker list
+        run: |
+          docker images
       - name: Scan docker image
         uses: anchore/scan-action@v3
         with:
-          image: /tmp/${{ matrix.package }}.tar
+          image: /tmp/${{ github.sha }}-${{ matrix.package }}-${{ matrix.platform.name }}-${{ needs.version-generator.outputs.version }}.tar
           fail-build: true
           only-fixed: true
           severity-cutoff: high
@@ -289,40 +311,58 @@ jobs:
 
   docker-trivy:
     name: Docker Trivy Scan
-    needs: [docker-build]
+    needs: [version-generator, docker-build]
     runs-on: ubuntu-latest
     timeout-minutes: 5
     strategy:
       matrix:
-        package: [auth, backend, frontend]
+        platform:
+          - arch: linux/amd64
+            name: amd64
+          - arch: linux/arm64
+            name: arm64
+        package:
+          - auth
+          - backend
+          - frontend
     steps:
       - name: Fetch docker image from cache
         uses: actions/cache/restore@v4
         with:
-          path: /tmp/${{ matrix.package }}.tar
-          key: ${{ github.sha }}
+          path: /tmp/${{ github.sha }}-${{ matrix.package }}-${{ matrix.platform.name }}-${{ needs.version-generator.outputs.version }}.tar
+          key: ${{ github.sha }}-${{ matrix.package }}-${{ matrix.platform.name }}-${{ needs.version-generator.outputs.version }}
+          fail-on-cache-miss: true
       - name: Download Trivy
         run: |
           curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /tmp
       - name: Scan docker image
         run: |
-          /tmp/trivy image --ignore-unfixed --format table --vuln-type os,library --exit-code 1 --severity HIGH --input /tmp/${{ matrix.package }}.tar
+          docker images
+          /tmp/trivy image --ignore-unfixed --format table --vuln-type os,library --exit-code 1 --severity HIGH --input /tmp/${{ github.sha }}-${{ matrix.package }}-${{ matrix.platform.name }}-${{ needs.version-generator.outputs.version }}.tar
   
   push:
     name: Push to registry
-    needs: [docker-grype, docker-trivy, version-generator, node-build]
+    needs: [version-generator, docker-grype, docker-trivy, version-generator, node-build]
     runs-on: ubuntu-latest
-
+    if: needs.version-generator.outputs.dockerPush == 'true'
     strategy:
       matrix:
-        package: [auth, backend, frontend]
-
+        platform:
+          - arch: linux/amd64
+            name: amd64
+          - arch: linux/arm64
+            name: arm64
+        package:
+          - auth
+          - backend
+          - frontend
     steps:
       - name: Fetch docker image from cache
         uses: actions/cache/restore@v4
         with:
-          path: /tmp/${{ matrix.package }}.tar
-          key: ${{ github.sha }}
+          path: /tmp/${{ github.sha }}-${{ matrix.package }}-${{ matrix.platform.name }}-${{ needs.version-generator.outputs.version }}.tar
+          key: ${{ github.sha }}-${{ matrix.package }}-${{ matrix.platform.name }}-${{ needs.version-generator.outputs.version }}
+          fail-on-cache-miss: true
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
       - name: Set up Docker Buildx
@@ -335,7 +375,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Load image into Docker
         run: |
-          docker load --input /tmp/${{ matrix.package }}.tar
+          docker load --input /tmp/${{ github.sha }}-${{ matrix.package }}-${{ matrix.platform.name }}-${{ needs.version-generator.outputs.version }}.tar
       - name: List docker images
         run: docker images
       - name: Push to registry
@@ -345,6 +385,7 @@ jobs:
   generate-release:
     runs-on: ubuntu-latest
     needs: [push, version-generator]
+    if: needs.version-generator.outputs.generateRelease == 'true'
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4

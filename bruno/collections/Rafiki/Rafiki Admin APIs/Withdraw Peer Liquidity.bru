@@ -35,7 +35,10 @@ body:graphql:vars {
 
 script:pre-request {
   const { v4: uuidv4 } = require('uuid');
+  const scripts = require('./scripts');
   
   bru.setEnvVar("withdrawalId",uuidv4());
   bru.setVar("idempotencyKey",uuidv4());
+  
+  scripts.addApiSignatureHeader();
 }
