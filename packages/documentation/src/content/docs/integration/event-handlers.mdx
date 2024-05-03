@@ -69,23 +69,16 @@ Example: An outgoing payment for $12 has been created.
   graph={`sequenceDiagram
     participant ASE as Account Servicing Entity
     participant R as Rafiki
-
     R->>ASE: webhook event: outgoing payment created,<br>debitAmount: $12
+    ASE->>ASE: check if account has enough balance
+    alt Account has enough balance
     ASE->>ASE: put hold of $12 on sender's account
     ASE->>R: admin API call: DepositOutgoingPaymentLiquidity
-
-`}
-/>
-
-Example: Cancel outgoing payment due to low funds
-
-<Mermaid
-  graph={`sequenceDiagram
-    participant ASE as Account Servicing Entity
-    participant R as Rafiki
-    R->>ASE: webhook event: outgoing payment created,<br>debit amount: $12
-    ASE->>ASE: check if account has enough balance
+    end
+    alt Account does not have enough balance
     ASE->>R: admin API call: CancelOutgoingPayment<br>reason: Not enough balance
+    end
+
 `}
 />
 
