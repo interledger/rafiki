@@ -91,7 +91,7 @@ describe('OutgoingPaymentService', (): void => {
     [OutgoingPaymentState.Sending]: undefined,
     [OutgoingPaymentState.Failed]: OutgoingPaymentEventType.PaymentFailed,
     [OutgoingPaymentState.Completed]: OutgoingPaymentEventType.PaymentCompleted,
-    [OutgoingPaymentState.Cancelled]: OutgoingPaymentEventType.PaymentFailed
+    [OutgoingPaymentState.Cancelled]: undefined
   }
 
   async function processNext(
