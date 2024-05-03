@@ -82,6 +82,18 @@ const scripts = {
     this.setHeaders(signatureHeaders)
   },
 
+  generateApiSignature: function (body) {
+    const timestamp = Math.round(new Date().getTime() / 1000)
+    const version = bru.getEnvVar('apiSignatureVersion')
+    const secret = bru.getEnvVar('apiSignatureSecret')
+    const payload = `${timestamp}.${canonicalize(body)}`
+    const hmac = createHmac('sha256', secret)
+    hmac.update(payload)
+    const digest = hmac.digest('hex')
+
+    return `t=${timestamp}, v${version}=${digest}`
+  },
+
   addApiSignatureHeader: function () {
     const body = this.sanitizeBody()
     const { variables } = body
@@ -90,15 +102,7 @@ const scripts = {
       variables: JSON.parse(variables)
     }
 
-    const timestamp = Math.round(new Date().getTime() / 1000)
-    const version = bru.getEnvVar('apiSignatureVersion')
-    const secret = bru.getEnvVar('apiSignatureSecret')
-    const payload = `${timestamp}.${canonicalize(formattedBody)}`
-    const hmac = createHmac('sha256', secret)
-    hmac.update(payload)
-    const digest = hmac.digest('hex')
-
-    req.setHeader('signature', `t=${timestamp}, v${version}=${digest}`)
+    req.setHeader('signature', this.generateApiSignature(formattedBody))
   },
 
   addHostHeader: function (hostVarName) {
