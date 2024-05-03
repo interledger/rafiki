@@ -105,7 +105,7 @@ export type CancelOutgoingPaymentInput = {
   /** Outgoing payment id */
   id: Scalars['ID']['input'];
   /** Reason why this Outgoing Payment has been cancelled */
-  reason: Scalars['String']['input'];
+  reason?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type CreateAssetInput = {

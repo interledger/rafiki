@@ -114,7 +114,7 @@ export interface CreateFromIncomingPayment extends BaseOptions {
 
 export type CancelOutgoingPaymentOptions = {
   id: string
-  reason: string
+  reason?: string
 }
 
 export type CreateOutgoingPaymentOptions =

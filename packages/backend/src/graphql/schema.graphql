@@ -933,7 +933,7 @@ input CancelOutgoingPaymentInput {
   "Outgoing payment id"
   id: ID!
   "Reason why this Outgoing Payment has been cancelled"
-  reason: String!
+  reason: String
 }
 
 input CreateOutgoingPaymentFromIncomingPaymentInput {
