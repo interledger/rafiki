@@ -346,11 +346,12 @@ export class App {
     koa.keys = [this.config.cookieKey]
 
     const redis = await this.container.use('redis')
+    const maxAgeMs = 60 * 1000
     koa.use(
       session(
         {
           key: 'sessionId',
-          maxAge: 60 * 1000,
+          maxAge: maxAgeMs,
           signed: true,
           store: {
             async get(key) {
@@ -358,7 +359,9 @@ export class App {
               return data ? JSON.parse(data) : null
             },
             async set(key, session) {
-              await redis.set(key, JSON.stringify(session))
+              // Add a delay to cookie age to ensure redis record expires after cookie
+              const expireInMs = maxAgeMs + 10 * 1000
+              await redis.psetex(key, expireInMs, JSON.stringify(session))
             },
             async destroy(key) {
               await redis.del(key)
