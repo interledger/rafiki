@@ -1,6 +1,7 @@
 export enum AssetError {
   DuplicateAsset = 'DuplicateAsset',
-  UnknownAsset = 'UnknownAsset'
+  UnknownAsset = 'UnknownAsset',
+  InuseAsset = 'InuseAsset'
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
@@ -11,12 +12,14 @@ export const errorToCode: {
   [key in AssetError]: number
 } = {
   [AssetError.UnknownAsset]: 404,
-  [AssetError.DuplicateAsset]: 400
+  [AssetError.DuplicateAsset]: 400,
+  [AssetError.InuseAsset]: 400,
 }
 
 export const errorToMessage: {
   [key in AssetError]: string
 } = {
   [AssetError.UnknownAsset]: 'unknown asset',
-  [AssetError.DuplicateAsset]: 'Asset already exists'
+  [AssetError.DuplicateAsset]: 'Asset already exists',
+  [AssetError.InuseAsset]: 'Asset in use'
 }

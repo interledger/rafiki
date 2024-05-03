@@ -21,14 +21,18 @@ export interface UpdateOptions {
   withdrawalThreshold: bigint | null
   liquidityThreshold: bigint | null
 }
+export interface DeleteOptions {
+  id: string
+  deletedAt: string
+}
 
 export interface AssetService {
   create(options: CreateOptions): Promise<Asset | AssetError>
   update(options: UpdateOptions): Promise<Asset | AssetError>
+  delete(options: DeleteOptions): Promise<Asset | AssetError>
   get(id: string): Promise<void | Asset>
   getPage(pagination?: Pagination, sortOrder?: SortOrder): Promise<Asset[]>
   getAll(): Promise<Asset[]>
-  delete(id: string): Promise<Asset | undefined>
 }
 
 interface ServiceDependencies extends BaseService {
@@ -51,11 +55,11 @@ export async function createAssetService({
   return {
     create: (options) => createAsset(deps, options),
     update: (options) => updateAsset(deps, options),
+    delete: (options) => deleteAsset(deps, options),
     get: (id) => getAsset(deps, id),
     getPage: (pagination?, sortOrder?) =>
       getAssetsPage(deps, pagination, sortOrder),
-    getAll: () => getAll(deps),
-    delete: (id) => deleteAsset(deps, id)
+    getAll: () => getAll(deps)
   }
 }
 
@@ -113,11 +117,31 @@ async function updateAsset(
   }
 }
 
+// soft delete
+async function deleteAsset(
+  deps: ServiceDependencies,
+  { id, deletedAt }: DeleteOptions
+): Promise<Asset | AssetError> {
+  if (!deps.knex) {
+    throw new Error('Knex undefined')
+  }
+  try {
+    return await Asset.query(deps.knex)
+      .patchAndFetchById(id, { deletedAt })
+      .throwIfNotFound()
+  } catch (err) {
+    if (err instanceof NotFoundError) {
+      return AssetError.UnknownAsset
+    }
+    throw err
+  }
+}
+
 async function getAsset(
   deps: ServiceDependencies,
   id: string
 ): Promise<void | Asset> {
-  return await Asset.query(deps.knex).findById(id)
+  return await Asset.query(deps.knex).whereNull('deletedAt').findById(id)
 }
 
 async function getAssetsPage(
@@ -125,19 +149,9 @@ async function getAssetsPage(
   pagination?: Pagination,
   sortOrder?: SortOrder
 ): Promise<Asset[]> {
-  return await Asset.query(deps.knex).getPage(pagination, sortOrder)
+  return await Asset.query(deps.knex).whereNull('deletedAt').getPage(pagination, sortOrder)
 }
 
 async function getAll(deps: ServiceDependencies): Promise<Asset[]> {
-  return await Asset.query(deps.knex)
-}
-
-async function deleteAsset(
-  deps: ServiceDependencies,
-  id: string
-): Promise<Asset | undefined> {
-  return await Asset.query(deps.knex)
-    .deleteById(id)
-    .returning('*')
-    .first()
+  return await Asset.query(deps.knex).whereNull('deletedAt')
 }

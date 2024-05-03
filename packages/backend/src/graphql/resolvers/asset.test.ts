@@ -676,7 +676,6 @@ describe('Asset Resolvers', (): void => {
         })
         .then((query): AssetMutationResponse => {
           if (query.data) {
-            console.log(query.data)
             return query.data.deleteAsset
           } else {
             throw new Error('Data was empty')
@@ -685,7 +684,7 @@ describe('Asset Resolvers', (): void => {
 
       expect(response.success).toBe(true)
       expect(response.code).toEqual('200')
-      expect(response.message).toEqual('Deleted Asset')
+      expect(response.message).toEqual('Asset deleted')
       await expect(assetService.get(asset.id)).resolves.toBeUndefined()
     })
 

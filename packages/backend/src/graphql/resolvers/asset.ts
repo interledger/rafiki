@@ -203,61 +203,70 @@ export const deleteAsset: MutationResolvers<ApolloContext>['deleteAsset'] =
     args,
     ctx
   ): Promise<ResolversTypes['DeleteAssetMutationResponse']> => {
-    // check if asset is in use | in peer and wallet address
-    const peerService = await ctx.container.use('peerService')
-    const peerByAsset = await peerService.getByAsset(args.input.id)
-    if (peerByAsset) {
-      // in case we have a peer using the asset don't allow delete
-      return {
-        code: '500',
-        message: 'Error trying to delete asset. Asset in use',
-        success: false
-      }
-    }
-
-    const walletAddressService = await ctx.container.use('walletAddressService')
-    const walletAddressByAsset = await walletAddressService.getByAsset(
-      args.input.id
-    )
-    if (walletAddressByAsset) {
-      // in case we have a wallet address using the asset don't allow delete
-      return {
-        code: '500',
-        message: 'Error trying to delete asset. Asset in use',
-        success: false
-      }
-    }
-
-    const assetService = await ctx.container.use('assetService')
-    return assetService
-      .delete(args.input.id)
-      .then((asset: Asset | undefined) =>
-        asset
-          ? {
-              code: '200',
-              success: true,
-              message: 'Deleted Asset'
-            }
-          : {
-              code: errorToCode[AssetError.UnknownAsset].toString(),
-              success: false,
-              message: errorToMessage[AssetError.UnknownAsset]
-            }
-      )
-      .catch((err) => {
-        ctx.logger.error(
-          {
-            id: args.input.id,
-            err
-          },
-          'error deleting asset'
-        )
+    try {
+      // check if asset is in use | in peer and wallet address
+      const peerService = await ctx.container.use('peerService')
+      const peerByAsset = await peerService.getByAsset(args.input.id)
+      if (peerByAsset) {
+        // in case we have a peer using the asset don't allow delete
         return {
-          code: '500',
-          message: 'Error trying to delete asset',
+          code: errorToCode[AssetError.InuseAsset].toString(),
+          message: errorToMessage[AssetError.InuseAsset],
           success: false
         }
+      }
+
+      const walletAddressService = await ctx.container.use(
+        'walletAddressService'
+      )
+      const walletAddressByAsset = await walletAddressService.getByAsset(
+        args.input.id
+      )
+      if (walletAddressByAsset) {
+        // in case we have a wallet address using the asset don't allow delete
+        return {
+          code: errorToCode[AssetError.InuseAsset].toString(),
+          message: errorToMessage[AssetError.InuseAsset],
+          success: false
+        }
+      }
+
+      const assetService = await ctx.container.use('assetService')
+      const assetOrError = await assetService.delete({
+        id: args.input.id,
+        deletedAt: new Date().toISOString()
       })
+      if (isAssetError(assetOrError)) {
+        switch (assetOrError) {
+          case AssetError.UnknownAsset:
+            return {
+              code: errorToCode[AssetError.UnknownAsset].toString(),
+              message: errorToMessage[AssetError.UnknownAsset],
+              success: false
+            }
+          default:
+            throw new Error(`AssetError: ${assetOrError}`)
+        }
+      }
+      return {
+        code: '200',
+        success: true,
+        message: 'Asset deleted'
+      }
+    } catch (err) {
+      ctx.logger.error(
+        {
+          id: args.input.id,
+          err
+        },
+        'error deleting asset'
+      )
+      return {
+        code: '500',
+        message: 'Error trying to delete asset',
+        success: false
+      }
+    }
   }
 
 export const assetToGraphql = (asset: Asset): SchemaAsset => ({
