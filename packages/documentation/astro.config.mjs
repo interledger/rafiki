@@ -71,20 +71,81 @@ export default defineConfig({
               collapsed: true,
               items: [
                 {
-                  label: 'Getting started',
-                  link: 'integration/getting-started'
+                  label: 'Get started',
+                  link: 'integration/get-started'
                 },
                 {
-                  label: 'Integrator checklist',
-                  link: 'integration/checklist'
-                },
-                {
-                  label: 'Deploy',
-                  link: 'integration/deployment'
+                  label: 'Deploy to Production',
+                  collapsed: true,
+                  items: [
+                    {
+                      label: 'Endpoints',
+                      collapsed: true,
+                      items: [
+                        {
+                          label: 'Webhook events',
+                          link: 'integration/webhooks'
+                        },
+                        {
+                          label: 'Exchange rates',
+                          link: 'integration/exchange-rates'
+                        },
+                        {
+                          label: 'IDP',
+                          link: 'integration/idp'
+                        }
+                      ]
+                    },
+                    {
+                      label: 'Environment variables',
+                      link: 'integration/variables'
+                    },
+                    {
+                      label: 'Deploying to cloud environment options',
+                      collapsed: true,
+                      items: [
+                        {
+                          label: 'nginx',
+                          link: 'integration/nginx'
+                        },
+                        {
+                          label: 'Helm and K8s',
+                          link: 'integration/helm-k8s'
+                        }
+                      ]
+
+                    },
+                    {
+                      label: 'Running your instance',
+                      collapsed: true,
+                      items: [
+                        {
+                          label: 'Adding asset',
+                          link: 'integration/adding-asset'
+                        },
+                        {
+                          label: 'Adding peer',
+                          link: 'integration/adding-peer'
+                        },
+                        {
+                          label: 'Creating wallet addresses (strategies for identity lookup)',
+                          link: 'integration/creating-wallet-addresses'
+                        },
+                        {
+                          label: 'Adding liquidity',
+                          link: 'integration/adding-liquidity'
+                        }
+                      ]
+                    }
+                  ],
                 },
                 {
                   label: 'Admin API',
                   link: 'integration/admin-api'
+                },
+                {
+                  label: 'Integrator checklist',
+                  link: 'integration/checklist'
                 }
               ]
             },
