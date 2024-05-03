@@ -13,7 +13,7 @@ export const errorToCode: {
 } = {
   [AssetError.UnknownAsset]: 404,
   [AssetError.DuplicateAsset]: 400,
-  [AssetError.InuseAsset]: 400,
+  [AssetError.InuseAsset]: 400
 }
 
 export const errorToMessage: {

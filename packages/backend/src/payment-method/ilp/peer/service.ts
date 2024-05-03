@@ -64,9 +64,7 @@ export interface PeerService {
     address: string,
     assetId?: string
   ): Promise<Peer | undefined>
-  getByAsset(
-    assetId: string
-  ): Promise<Peer | undefined>
+  getByAsset(assetId: string): Promise<Peer | undefined>
   getByIncomingToken(token: string): Promise<Peer | undefined>
   getPage(pagination?: Pagination, sortOrder?: SortOrder): Promise<Peer[]>
   depositLiquidity(
@@ -105,8 +103,7 @@ export async function createPeerService({
     update: (options) => updatePeer(deps, options),
     getByDestinationAddress: (destinationAddress, assetId) =>
       getPeerByDestinationAddress(deps, destinationAddress, assetId),
-    getByAsset: (assetId) =>
-      getPeerByAsset(deps, assetId),
+    getByAsset: (assetId) => getPeerByAsset(deps, assetId),
     getByIncomingToken: (token) => getPeerByIncomingToken(deps, token),
     getPage: (pagination?, sortOrder?) =>
       getPeersPage(deps, pagination, sortOrder),

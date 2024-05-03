@@ -149,7 +149,9 @@ async function getAssetsPage(
   pagination?: Pagination,
   sortOrder?: SortOrder
 ): Promise<Asset[]> {
-  return await Asset.query(deps.knex).whereNull('deletedAt').getPage(pagination, sortOrder)
+  return await Asset.query(deps.knex)
+    .whereNull('deletedAt')
+    .getPage(pagination, sortOrder)
 }
 
 async function getAll(deps: ServiceDependencies): Promise<Asset[]> {
