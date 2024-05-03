@@ -4,16 +4,21 @@ const fetch = require('node-fetch')
 const url = require('url')
 
 const scripts = {
+  resolveTemplateVariables: function (string) {
+    const VARIABLE_NAME_REGEX = /{{([A-Za-z]\w+)}}/g
+
+    return string.replace(
+      VARIABLE_NAME_REGEX,
+      (_, key) => bru.getVar(key) || bru.getEnvVar(key)
+    )
+  },
+
   sanitizeUrl: function () {
-    return req
-      .getUrl()
-      .replace(
-        /{{([A-Za-z]\w+)}}/g,
-        (_, key) => bru.getVar(key) || bru.getEnvVar(key)
-      )
-      .replace(/localhost:([3,4])000/g, (_, key) =>
+    return this.resolveTemplateVariables(req.getUrl()).replace(
+      /localhost:([3,4])000/g,
+      (_, key) =>
         key === '3' ? bru.getEnvVar('host3000') : bru.getEnvVar('host4000')
-      )
+    )
   },
 
   sanitizeBody: function () {
@@ -23,24 +28,19 @@ const scripts = {
       requestBody = JSON.stringify(requestBody)
     }
     return JSON.parse(
-      requestBody
-        .replace(
-          /{{([A-Za-z]\w+)}}/g,
-          (_, key) => bru.getVar(key) || bru.getEnvVar(key)
-        )
-        .replace(/http:\/\/localhost:([3,4])000/g, (_, key) =>
+      this.resolveTemplateVariables(requestBody).replace(
+        /http:\/\/localhost:([3,4])000/g,
+        (_, key) =>
           key === '3'
             ? 'https://' + bru.getEnvVar('host3000')
             : 'https://' + bru.getEnvVar('host4000')
-        )
+      )
     )
   },
 
   sanitizeHeaders: function () {
     return JSON.parse(
-      JSON.stringify(req.getHeaders()).replace(/{{([A-Za-z]\w+)}}/g, (_, key) =>
-        bru.getEnvVar(key)
-      )
+      this.resolveTemplateVariables(JSON.stringify(req.getHeaders()))
     )
   },
 
@@ -102,9 +102,7 @@ const scripts = {
   },
 
   addHostHeader: function (hostVarName) {
-    const requestUrl = url.parse(
-      req.getUrl().replace(/{{([A-Za-z]\w+)}}/g, (_, key) => bru.getEnvVar(key))
-    )
+    const requestUrl = url.parse(this.resolveTemplateVariables(req.getUrl()))
 
     if (hostVarName) {
       bru.setEnvVar(hostVarName, requestUrl.protocol + '//' + requestUrl.host)
