@@ -1,5 +1,6 @@
 import { ApolloError, ApolloQueryResult, gql } from '@apollo/client'
 import { v4 as uuid } from 'uuid'
+import assert from 'assert'
 
 import { createTestApp, TestContainer } from '../../tests/app'
 import { IocContract } from '@adonisjs/fold'
@@ -516,10 +517,10 @@ describe('Grant Resolvers', (): void => {
           })
 
         await gqlQuery // throw error to inspect error object
-      } catch (err) {
-        await expect(gqlQuery).rejects.toThrow(ApolloError)
-        await expect(gqlQuery).rejects.toThrow('No grant')
-        expect((err as ApolloError).graphQLErrors[0].extensions.code).toEqual(
+      } catch (error) {
+        assert.ok(error instanceof ApolloError)
+        expect(error.message).toBe('No grant')
+        expect(error.graphQLErrors[0].extensions.code).toEqual(
           GraphQLErrorCode.NotFound
         )
       }
@@ -590,10 +591,10 @@ describe('Grant Resolvers', (): void => {
           })
 
         await gqlQuery // throw error to inspect error object
-      } catch (err) {
-        expect(gqlQuery).rejects.toThrow(ApolloError)
-        expect(gqlQuery).rejects.toThrow('Grant id is not provided')
-        expect((err as ApolloError).graphQLErrors[0].extensions.code).toEqual(
+      } catch (error) {
+        assert.ok(error instanceof ApolloError)
+        expect(error.message).toBe('Grant id is not provided')
+        expect(error.graphQLErrors[0].extensions.code).toEqual(
           GraphQLErrorCode.Forbidden
         )
       }
@@ -628,10 +629,10 @@ describe('Grant Resolvers', (): void => {
           })
 
         await gqlQuery // throw error to inspect error object
-      } catch (err) {
-        expect(gqlQuery).rejects.toThrow(ApolloError)
-        expect(gqlQuery).rejects.toThrow('Revoke grant was not successful')
-        expect((err as ApolloError).graphQLErrors[0].extensions.code).toEqual(
+      } catch (error) {
+        assert.ok(error instanceof ApolloError)
+        expect(error.message).toBe('Revoke grant was not successful')
+        expect(error.graphQLErrors[0].extensions.code).toEqual(
           GraphQLErrorCode.NotFound
         )
       }
@@ -666,9 +667,9 @@ describe('Grant Resolvers', (): void => {
           })
 
         await gqlQuery // throw error to inspect error object
-      } catch (err) {
-        expect(gqlQuery).rejects.toThrow(ApolloError)
-        expect((err as ApolloError).graphQLErrors[0].extensions.code).toEqual(
+      } catch (error) {
+        assert.ok(error instanceof ApolloError)
+        expect(error.graphQLErrors[0].extensions.code).toEqual(
           GraphQLErrorCode.InternalServerError
         )
       }
