@@ -58,7 +58,7 @@ services:
     environment:
       NODE_ENV: ${NODE_ENV:-development}
       AUTH_SERVER_DOMAIN: http://cloud-nine-wallet-test-auth:3106
-      AUTH_CHOICE_SERVER: http://cloud-nine-wallet-test-auth:3109
+      INTERACTION_SERVER: http://cloud-nine-wallet-test-auth:3109
       AUTH_DATABASE_URL: postgresql://cloud_nine_wallet_test_auth:cloud_nine_wallet_test_auth@shared-database/cloud_nine_wallet_test_auth
       INTROSPECTION_PORT: 3107
       AUTH_PORT: 3106

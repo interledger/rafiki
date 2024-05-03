@@ -299,8 +299,8 @@ export const start = async (
   await app.startAuthServer(config.authPort)
   logger.info(`Auth server listening on ${app.getAuthPort()}`)
 
-  await app.startAuthChoiceServer(config.authChoicePort)
-  logger.info(`Auth choice server listening on ${app.getAuthChoicePort()}`)
+  await app.startInteractionServer(config.interactionPort)
+  logger.info(`Auth choice server listening on ${app.getInteractionPort()}`)
 
   await app.startIntrospectionServer(config.introspectionPort)
   logger.info(`Introspection server listening on ${app.getIntrospectionPort()}`)

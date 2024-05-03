@@ -58,7 +58,7 @@ services:
       NODE_ENV: development
       AUTH_DATABASE_URL: postgresql://happy_life_bank_test_auth:happy_life_bank_test_auth@shared-database/happy_life_bank_test_auth
       AUTH_SERVER_DOMAIN: http://happy-life-bank-test-auth:4106
-      AUTH_CHOICE_SERVER: http://happy-life-bank-test-auth:4109
+      INTERACTION_SERVER: http://happy-life-bank-test-auth:4109
       INTROSPECTION_PORT: 4107
       ADMIN_PORT: 4103
       AUTH_PORT: 4106

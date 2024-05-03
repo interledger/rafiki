@@ -107,7 +107,7 @@ export type AppContainer = IocContract<AppServices>
 
 export class App {
   private authServer!: Server
-  private authChoiceServer!: Server
+  private interactionServer!: Server
   private introspectionServer!: Server
   private adminServer!: Server
   private logger!: Logger
@@ -409,7 +409,7 @@ export class App {
     this.introspectionServer = koa.listen(port)
   }
 
-  public async startAuthChoiceServer(port: number | string): Promise<void> {
+  public async startInteractionServer(port: number | string): Promise<void> {
     const koa = await this.createKoaServer()
 
     const router = new Router<DefaultState, AppContext>()
@@ -444,7 +444,7 @@ export class App {
     koa.use(router.middleware())
     koa.use(router.routes())
 
-    this.authChoiceServer = koa.listen(port)
+    this.interactionServer = koa.listen(port)
   }
 
   private async createKoaServer(): Promise<Koa<Koa.DefaultState, AppContext>> {
@@ -483,8 +483,8 @@ export class App {
     if (this.authServer) {
       await this.stopServer(this.authServer)
     }
-    if (this.authChoiceServer) {
-      await this.stopServer(this.authChoiceServer)
+    if (this.interactionServer) {
+      await this.stopServer(this.interactionServer)
     }
     if (this.adminServer) {
       await this.stopServer(this.adminServer)
@@ -514,8 +514,8 @@ export class App {
     return this.getPort(this.authServer)
   }
 
-  public getAuthChoicePort(): number {
-    return this.getPort(this.authChoiceServer)
+  public getInteractionPort(): number {
+    return this.getPort(this.interactionServer)
   }
 
   public getIntrospectionPort(): number {
