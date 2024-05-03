@@ -129,7 +129,9 @@ const scripts = {
     bru.setEnvVar('tokenId', body?.access_token?.manage.split('/').pop())
   },
 
-  getWalletAddressId: async function (host, publicName, varName) {
+  loadWalletAddressIdsIntoVariables: async function () {
+    const requestUrl = this.resolveTemplateVariables(req.url)
+
     const getWalletAddressesQuery = `
     query GetWalletAddresses {
         walletAddresses {
@@ -138,24 +140,44 @@ const scripts = {
                 node {
                     id
                     publicName
-                    url
                 }
             }
         }
     }`
 
+    const postBody = { query: getWalletAddressesQuery }
+
     const postRequest = {
       method: 'post',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ query: getWalletAddressesQuery })
+      headers: {
+        signature: this.generateApiSignature(postBody),
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(postBody)
     }
 
-    const response = await fetch(`${bru.getEnvVar(host)}/graphql`, postRequest)
+    const response = await fetch(requestUrl, postRequest)
     const body = await response.json()
-    const walletAddressId = body.data.walletAddresses.edges
+
+    // Default accounts defined in localenv/(cloud-nine-wallet | happy-life-bank)/seed.yml files
+    const mapFromPublicNameToVariableName = {
+      "World's Best Donut Co": 'wbdcWalletAddressId',
+      'Bert Hamchest': 'bhamchestWalletAddressId',
+      'Grace Franklin': 'gfranklinWalletAddressId',
+      'Philip Fry': 'pfryWalletAddressId',
+      'PlanEx Corp': 'planexWalletAddressId',
+      Lars: 'larsWalletAddressId',
+      David: 'davidWalletAddressId'
+    }
+
+    body.data.walletAddresses.edges
       .map((e) => e.node)
-      .find((node) => node.publicName === publicName)?.id
-    bru.setEnvVar(varName, walletAddressId)
+      .forEach((wa) => {
+        const varName = mapFromPublicNameToVariableName[wa.publicName]
+        if (varName) {
+          bru.setEnvVar(varName, wa.id)
+        }
+      })
   }
 }
 
