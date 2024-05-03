@@ -12,8 +12,12 @@ import {
   isPendingGrant
 } from '@interledger/open-payments'
 import { MockASE } from '../mock-ase'
-import { poll, pollCondition, wait } from '../utils'
+import { UnionOmit, poll, pollCondition, wait } from '../utils'
 import { WebhookEventType } from 'mock-account-service-lib'
+import {
+  CreateOutgoingPaymentArgs,
+  CreateIncomingPaymentArgs
+} from '@interledger/open-payments/dist/types'
 
 export interface OpenPaymentsActionsDeps {
   sendingASE: MockASE
@@ -26,8 +30,8 @@ export interface OpenPaymentsActions {
   ): Promise<Grant>
   createIncomingPayment(
     receiverWalletAddress: WalletAddress,
-    amountValueToSend: string,
-    accessToken: string
+    accessToken: string,
+    opts?: CreateIncomingPaymentOpts
   ): Promise<IncomingPayment>
   grantRequestQuote(senderWalletAddress: WalletAddress): Promise<Grant>
   createQuote(
@@ -37,7 +41,7 @@ export interface OpenPaymentsActions {
   ): Promise<Quote>
   grantRequestOutgoingPayment(
     senderWalletAddress: WalletAddress,
-    quote: Quote,
+    limits: GrantRequestPaymentLimits,
     finish?: InteractFinish
   ): Promise<PendingGrant>
   pollGrantContinue(outgoingPaymentGrant: PendingGrant): Promise<Grant>
@@ -48,12 +52,11 @@ export interface OpenPaymentsActions {
   createOutgoingPayment(
     senderWalletAddress: WalletAddress,
     grant: Grant,
-    quote: Quote
+    createArgs: UnionOmit<CreateOutgoingPaymentArgs, 'walletAddress'>
   ): Promise<OutgoingPayment>
   getOutgoingPayment(
     url: string,
-    grantContinue: Grant,
-    amountValueToSend: string
+    grantContinue: Grant
   ): Promise<OutgoingPayment>
   getPublicIncomingPayment(
     url: string,
@@ -67,31 +70,22 @@ export function createOpenPaymentsActions(
   return {
     grantRequestIncomingPayment: (receiverWalletAddress) =>
       grantRequestIncomingPayment(deps, receiverWalletAddress),
-    createIncomingPayment: (
-      receiverWalletAddress,
-      amountValueToSend,
-      accessToken
-    ) =>
-      createIncomingPayment(
-        deps,
-        receiverWalletAddress,
-        amountValueToSend,
-        accessToken
-      ),
+    createIncomingPayment: (receiverWalletAddress, accessToken, opts) =>
+      createIncomingPayment(deps, receiverWalletAddress, accessToken, opts),
     grantRequestQuote: (senderWalletAddress) =>
       grantRequestQuote(deps, senderWalletAddress),
     createQuote: (senderWalletAddress, accessToken, incomingPayment) =>
       createQuote(deps, senderWalletAddress, accessToken, incomingPayment),
-    grantRequestOutgoingPayment: (senderWalletAddress, quote, finish) =>
-      grantRequestOutgoingPayment(deps, senderWalletAddress, quote, finish),
+    grantRequestOutgoingPayment: (senderWalletAddress, limits, finish) =>
+      grantRequestOutgoingPayment(deps, senderWalletAddress, limits, finish),
     pollGrantContinue: (outgoingPaymentGrant) =>
       pollGrantContinue(deps, outgoingPaymentGrant),
     grantContinue: (outgoingPaymentGrant, interact_ref) =>
       grantContinue(deps, outgoingPaymentGrant, interact_ref),
-    createOutgoingPayment: (senderWalletAddress, grant, quote) =>
-      createOutgoingPayment(deps, senderWalletAddress, grant, quote),
-    getOutgoingPayment: (url, grantContinue, amountValueToSend) =>
-      getOutgoingPayment(deps, url, grantContinue, amountValueToSend),
+    createOutgoingPayment: (senderWalletAddress, grant, createArgs) =>
+      createOutgoingPayment(deps, senderWalletAddress, grant, createArgs),
+    getOutgoingPayment: (url, grantContinue) =>
+      getOutgoingPayment(deps, url, grantContinue),
     getPublicIncomingPayment: (url, amountValueToSend) =>
       getPublicIncomingPayment(deps, url, amountValueToSend)
   }
@@ -120,13 +114,18 @@ async function grantRequestIncomingPayment(
   return grant
 }
 
+type CreateIncomingPaymentOpts = {
+  amountValueToSend?: string
+}
+
 async function createIncomingPayment(
   deps: OpenPaymentsActionsDeps,
   receiverWalletAddress: WalletAddress,
-  amountValueToSend: string,
-  accessToken: string
+  accessToken: string,
+  opts?: CreateIncomingPaymentOpts
 ) {
   const { sendingASE, receivingASE } = deps
+  const { amountValueToSend } = opts ?? {}
   const now = new Date()
   const tomorrow = new Date(now)
   tomorrow.setDate(now.getDate() + 1)
@@ -136,21 +135,26 @@ async function createIncomingPayment(
     'handleWebhookEvent'
   )
 
+  const createInput: CreateIncomingPaymentArgs = {
+    walletAddress: receiverWalletAddress.id,
+    metadata: { description: 'Free Money!' },
+    expiresAt: tomorrow.toISOString()
+  }
+
+  if (amountValueToSend) {
+    createInput.incomingAmount = {
+      value: amountValueToSend,
+      assetCode: receiverWalletAddress.assetCode,
+      assetScale: receiverWalletAddress.assetScale
+    }
+  }
+
   const incomingPayment = await sendingASE.opClient.incomingPayment.create(
     {
       url: receiverWalletAddress.resourceServer,
       accessToken
     },
-    {
-      walletAddress: receiverWalletAddress.id,
-      incomingAmount: {
-        value: amountValueToSend,
-        assetCode: receiverWalletAddress.assetCode,
-        assetScale: receiverWalletAddress.assetScale
-      },
-      metadata: { description: 'Free Money!' },
-      expiresAt: tomorrow.toISOString()
-    }
+    createInput
   )
 
   await pollCondition(
@@ -218,11 +222,13 @@ async function createQuote(
 }
 
 type InteractFinish = NonNullable<GrantRequest['interact']>['finish']
+type Amount = { value: string; assetCode: string; assetScale: number }
+type GrantRequestPaymentLimits = { debitAmount: Amount; receiveAmount: Amount }
 
 async function grantRequestOutgoingPayment(
   deps: OpenPaymentsActionsDeps,
   senderWalletAddress: WalletAddress,
-  quote: Quote,
+  limits: GrantRequestPaymentLimits,
   finish?: InteractFinish
 ): Promise<PendingGrant> {
   const { receivingASE } = deps
@@ -237,10 +243,7 @@ async function grantRequestOutgoingPayment(
             type: 'outgoing-payment',
             actions: ['create', 'read', 'list'],
             identifier: senderWalletAddress.id,
-            limits: {
-              debitAmount: quote.debitAmount,
-              receiveAmount: quote.receiveAmount
-            }
+            limits
           }
         ]
       },
@@ -305,7 +308,7 @@ async function createOutgoingPayment(
   deps: OpenPaymentsActionsDeps,
   senderWalletAddress: WalletAddress,
   grantContinue: Grant,
-  quote: Quote
+  createArgs: UnionOmit<CreateOutgoingPaymentArgs, 'walletAddress'>
 ): Promise<OutgoingPayment> {
   const { sendingASE } = deps
   const handleWebhookEventSpy = jest.spyOn(
@@ -319,9 +322,8 @@ async function createOutgoingPayment(
       accessToken: grantContinue.access_token.value
     },
     {
-      walletAddress: senderWalletAddress.id,
-      metadata: {},
-      quoteId: quote.id
+      ...createArgs,
+      walletAddress: senderWalletAddress.id
     }
   )
 
@@ -359,8 +361,7 @@ async function createOutgoingPayment(
 async function getOutgoingPayment(
   deps: OpenPaymentsActionsDeps,
   url: string,
-  grantContinue: Grant,
-  amountValueToSend: string
+  grantContinue: Grant
 ): Promise<OutgoingPayment> {
   const { sendingASE } = deps
   const outgoingPayment = await sendingASE.opClient.outgoingPayment.get({
@@ -369,8 +370,6 @@ async function getOutgoingPayment(
   })
 
   expect(outgoingPayment.id).toBe(outgoingPayment.id)
-  expect(outgoingPayment.receiveAmount.value).toBe(amountValueToSend)
-  expect(outgoingPayment.sentAmount.value).toBe(amountValueToSend)
 
   return outgoingPayment
 }

@@ -120,6 +120,7 @@ export class OutgoingPayment
     const data: PaymentData = {
       id: this.id,
       walletAddressId: this.walletAddressId,
+      client: this.client,
       state: this.state,
       receiver: this.receiver,
       debitAmount: {
@@ -205,6 +206,7 @@ export type OutgoingPaymentEventType =
 export interface OutgoingPaymentResponse {
   id: string
   walletAddressId: string
+  client?: string
   createdAt: string
   receiver: string
   debitAmount: AmountJSON

@@ -55,6 +55,17 @@ body:graphql:vars {
   }
 }
 
+vars:pre-request {
+  signatureVersion: {{apiSignatureVersion}}
+  signatureSecret: {{apiSignatureSecret}}
+}
+
+script:pre-request {
+  const scripts = require('./scripts');
+  
+  scripts.addApiSignatureHeader();
+}
+
 script:post-response {
   const body = res.getBody();
   

@@ -1,0 +1,103 @@
+meta {
+  name: Create Outgoing Payment From Incoming Payment
+  type: graphql
+  seq: 32
+}
+
+post {
+  url: {{RafikiGraphqlHost}}/graphql
+  body: graphql
+  auth: none
+}
+
+body:graphql {
+  mutation CreateOutgoingPaymentFromIncomingPayment($input: CreateOutgoingPaymentFromIncomingPaymentInput!) {
+    createOutgoingPaymentFromIncomingPayment(input: $input) {
+      code
+      message
+      payment {
+        createdAt
+        error
+        metadata
+        id
+        walletAddressId
+        quote {
+          createdAt
+          expiresAt
+          highEstimatedExchangeRate
+          id
+          lowEstimatedExchangeRate
+          maxPacketAmount
+          minExchangeRate
+          walletAddressId
+          receiveAmount {
+            assetCode
+            assetScale
+            value
+          }
+          receiver
+          debitAmount {
+            assetCode
+            assetScale
+            value
+          }
+        }
+        receiveAmount {
+          assetCode
+          assetScale
+          value
+        }
+        receiver
+        debitAmount {
+          assetCode
+          assetScale
+          value
+        }
+        sentAmount {
+          assetCode
+          assetScale
+          value
+        }
+        state
+        stateAttempts
+      }
+      success
+    }
+  }
+}
+
+body:graphql:vars {
+  {
+    "input": {
+      "metadata": {
+          "description": null,
+          "externalRef": null
+      },
+      "walletAddressId": "{{secondWalletAddressId}}",
+      "incomingPayment": "{{incomingPaymentId}}",
+      "debitAmount": {
+        "value": "500",
+        "assetCode": "USD",
+        "assetScale": 2
+      }
+    }
+  }
+}
+
+script:pre-request {
+  const scripts = require('./scripts');
+  
+  scripts.addApiSignatureHeader();
+}
+
+script:post-response {
+  const body = res.getBody();
+  
+  bru.setEnvVar("outgoingPaymentId", body.data.createOutgoingPaymentFromIncomingPayment.payment.id);
+}
+
+tests {
+  test("Outgoing Payment id is string", function() {
+    expect(bru.getEnvVar("outgoingPaymentId")).to.be.a("string");
+  })
+}

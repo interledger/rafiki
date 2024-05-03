@@ -1,3 +1,12 @@
+import { redirectIfUnauthorizedAccess } from '../lib/kratos_checks.server'
+import { type LoaderFunctionArgs } from '@remix-run/node'
+
+export const loader = async ({ request }: LoaderFunctionArgs) => {
+  const cookies = request.headers.get('cookie')
+  await redirectIfUnauthorizedAccess(request.url, cookies)
+  return null
+}
+
 export default function Index() {
   return (
     <div className='pt-4 flex flex-col'>

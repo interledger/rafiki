@@ -1,28 +1,26 @@
 # Rafiki Admin
 
+## Setup
+
+This project assumes that you have a local Rafiki backend instance up and running, as well as a Kratos identity service and Mailslurper. Typically, all of these services, along with this project, would be used within the local Rafiki playground. See the local environment [README](../../localenv/README) for more information on how to set it up. TLDR: to get the whole environment up, run the command `pnpm localenv:compose up` from the root of the project. Once all the Docker containers are up, you can interact with the Admin UI either through the local Cloud Nine Wallet instance at http://localhost:3010, or through the Happy Life Bank instance at http://localhost:4010.
+
+In order to log in to the Admin UI, you can either follow the registration link, which can be found in the Docker container logs on startup, or you can manually generate a registration link by running the `invite-user` script. Run `docker exec -it <admin-container-name> npm run invite-user -- example@mail.com` and it will output a link to the terminal. Copy and paste this link in your browser and you will automatically be logged in and directed to the account settings page. The next step is saving a new password.
+
 ## Development
 
-This project assumes that you have a local Rafiki backend instance up and running. Typically, both `backend` and this project would be used within the local Rafiki playground. See the [local environment setup](../../localenv) for more information on how to set it up.
+The Admin UI runs in development mode in the local playground, so when you have it running, you can see live code changes by simply refreshing your page.
 
-To start the project in development mode, we first need to generate the GraphQL types for our queries and mutations.
+To add a new typed Apollo request, you will need to add an untyped request and regenerate the GraphQL types. This will generate new types tailored to the specific request being made. The generated type will reflect the request's query or mutation name, variables used, and requested fields.
 
-To generate the GraphQL types file run:
+## Ory Kratos
 
-```sh
-pnpm --filter backend generate
-```
+We have secured access to the Admin UI using [Ory Kratos](https://www.ory.sh/docs/kratos/ory-kratos-intro), a secure and fully open-source identity and user management solution. Check it out on [GitHub](https://github.com/ory/kratos). We're using a simple email and password authentication method. Since access to the UI is on an invitation-only basis, the registration flow is not publicly available. Kratos allows administrators to generate a recovery link for an account, whether that account already exists in the system or not. As such, for new users, the recovery link doubles as the invitation method. To create an account on the system, you'll need to add a new user with the `invite-user` script, which must be run inside the admin Docker container (running on the same network as the Kratos container) since the Kratos admin port is not exposed: `docker exec -it <admin-container-name> npm run invite-user -- example@mail.com`.
 
-To start the application run:
+We've also included a script to remove users: `docker exec -it <admin-container-name> npm run delete-user -- example@mail.com`.
 
-```sh
-pnpm --filter frontend dev
-```
+Kratos allows you to render all of the UIs for idenenty management so that they are fully integrated into the look and feel of your environment. To get the UI elements for any particular page you make an API call to Kratos, which returns the UI elements needed for that flow. It's then up to you to group them, place them, and style them as you see fit. Kratos uses the identity schema that was defined during setup to determine which fields are needed for each flow and all the particulars.
 
-Now you can access the application on [http://localhost:3005](http://localhost:3005).
-
-> NOTE: When running Rafiki Admin in the development environment, it will connect to Cloud Nine Wallet Admin GraphQL - [http://localhost:3001/graphql](http://localhost:3001/graphql).
-
-To add a new typed apollo request, you will need to add an untyped request and regenerate the graphql types. This will generate new types tailored to the specific request being made. The generated type will reflect the request's query or mutation name, variables used, and requested fields.
+Note: Ory Kratos and the Rafiki Admin UI must be hosted on the same top-level domain.
 
 ## Structure
 
@@ -37,6 +35,9 @@ To add a new typed apollo request, you will need to add an untyped request and r
  ┃ ┣ 📂routes
  ┃ ┣ 📂shared
  ┃ ┣ 📂styles
+ ┣ 📂kratos
+ ┃ ┣ 📂config
+ ┃ ┣ 📂scripts
  ┣ 📂public
 ```
 
@@ -49,4 +50,8 @@ To add a new typed apollo request, you will need to add an untyped request and r
   - `routes`: outer layer of the application
   - `shared`: utilility functions or types
   - `styles`: CSS files
+  - `utils`: serverside utilities
+- `kratos`: Dockerfile and setup files
+  - `config`: contains the Kratos identity schema
+  - `scripts`: scripts to start Kratos, as well as to add and delete users
 - `public`: static files and assets that are served to the browser

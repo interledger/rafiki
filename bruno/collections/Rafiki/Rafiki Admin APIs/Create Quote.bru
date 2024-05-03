@@ -58,7 +58,8 @@ body:graphql:vars {
 script:pre-request {
   // Create an additional wallet address to represent the account that will be sending money
   
-  const fetch = require('node-fetch')
+  const fetch = require('node-fetch');
+  const scripts = require('./scripts');
   
   const randomInt = Math.floor(Math.random() * (1001));
   
@@ -82,6 +83,8 @@ script:pre-request {
   const response = await fetch(`${initialRequest.url}`, postRequest);
   const body = await response.json();
   bru.setEnvVar("secondWalletAddressId", body.data.createWalletAddress.walletAddress.id);
+  
+  scripts.addApiSignatureHeader();
 }
 
 script:post-response {

@@ -13,7 +13,7 @@ import { CreateOutgoingPaymentOptions, OutgoingPaymentService } from './service'
 import { createTestApp, TestContainer } from '../../../tests/app'
 import { Config } from '../../../config/app'
 import { Grant } from '../../auth/middleware'
-import { CreateQuoteOptions } from '../../quote/service'
+import { CreateQuoteOptions, QuoteService } from '../../quote/service'
 import { createAsset } from '../../../tests/asset'
 import { createIncomingPayment } from '../../../tests/incomingPayment'
 import { createOutgoingPayment } from '../../../tests/outgoingPayment'
@@ -47,6 +47,8 @@ import { WalletAddress } from '../../wallet_address/model'
 import { PaymentMethodHandlerService } from '../../../payment-method/handler/service'
 import { PaymentMethodHandlerError } from '../../../payment-method/handler/errors'
 import { mockRatesApi } from '../../../tests/rates'
+import { UnionOmit } from '../../../shared/utils'
+import { QuoteError } from '../../quote/errors'
 
 describe('OutgoingPaymentService', (): void => {
   let deps: IocContract<AppServices>
@@ -54,11 +56,13 @@ describe('OutgoingPaymentService', (): void => {
   let outgoingPaymentService: OutgoingPaymentService
   let accountingService: AccountingService
   let paymentMethodHandlerService: PaymentMethodHandlerService
+  let quoteService: QuoteService
   let knex: Knex
   let walletAddressId: string
   let incomingPayment: IncomingPayment
   let receiverWalletAddress: MockWalletAddress
   let receiver: string
+  let client: string
   let amtDelivered: bigint
   let trx: Knex.Transaction
 
@@ -185,13 +189,15 @@ describe('OutgoingPaymentService', (): void => {
       amountDelivered,
       accountBalance,
       incomingPaymentReceived,
-      withdrawAmount
+      withdrawAmount,
+      client
     }: {
       amountSent?: bigint
       amountDelivered?: bigint
       accountBalance?: bigint
       incomingPaymentReceived?: bigint
       withdrawAmount?: bigint
+      client?: string
     }
   ) {
     if (amountSent !== undefined) {
@@ -222,6 +228,9 @@ describe('OutgoingPaymentService', (): void => {
         })
       ).resolves.toHaveLength(1)
     }
+    if (client !== undefined) {
+      expect(payment.client).toEqual(client)
+    }
   }
 
   beforeAll(async (): Promise<void> => {
@@ -236,6 +245,7 @@ describe('OutgoingPaymentService', (): void => {
     outgoingPaymentService = await deps.use('outgoingPaymentService')
     accountingService = await deps.use('accountingService')
     paymentMethodHandlerService = await deps.use('paymentMethodHandlerService')
+    quoteService = await deps.use('quoteService')
     knex = appContainer.knex
   })
 
@@ -245,6 +255,7 @@ describe('OutgoingPaymentService', (): void => {
       assetId: sendAssetId
     })
     walletAddressId = walletAddress.id
+    client = walletAddress.url
     const { id: destinationAssetId } = await createAsset(deps, destinationAsset)
     receiverWalletAddress = await createWalletAddress(deps, {
       assetId: destinationAssetId,
@@ -303,13 +314,15 @@ describe('OutgoingPaymentService', (): void => {
 
       const payment = await outgoingPaymentService.create({
         walletAddressId,
-        quoteId: quote.id
+        quoteId: quote.id,
+        client
       })
       assert.ok(!isOutgoingPaymentError(payment))
 
       await expect(
         outgoingPaymentService.get({
-          id: payment.id
+          id: payment.id,
+          client
         })
       ).resolves.toEqual(payment)
       await expect(
@@ -324,7 +337,8 @@ describe('OutgoingPaymentService', (): void => {
         .mockResolvedValueOnce(undefined)
       await expect(
         outgoingPaymentService.get({
-          id: payment.id
+          id: payment.id,
+          client
         })
       ).rejects.toThrow(
         'Could not get amount sent for payment. There was a problem getting the associated liquidity account.'
@@ -343,13 +357,15 @@ describe('OutgoingPaymentService', (): void => {
 
       const payment = await outgoingPaymentService.create({
         walletAddressId,
+        client,
         quoteId: quote.id
       })
       assert.ok(!isOutgoingPaymentError(payment))
 
       await expect(
         outgoingPaymentService.get({
-          id: payment.id
+          id: payment.id,
+          client
         })
       ).resolves.toEqual(payment)
       await expect(
@@ -378,6 +394,66 @@ describe('OutgoingPaymentService', (): void => {
       New = 'new',
       None = 'no'
     }
+
+    test('create from incoming payment', async () => {
+      const walletAddressId = receiverWalletAddress.id
+      const incomingPaymentUrl = incomingPayment.toOpenPaymentsTypeWithMethods(
+        receiverWalletAddress
+      ).id
+      const debitAmount = {
+        value: BigInt(123),
+        assetCode: receiverWalletAddress.asset.code,
+        assetScale: receiverWalletAddress.asset.scale
+      }
+
+      const quoteSpy = jest.spyOn(quoteService, 'create')
+
+      const payment = await outgoingPaymentService.create({
+        walletAddressId,
+        debitAmount,
+        incomingPayment: incomingPaymentUrl
+      })
+
+      expect(!isOutgoingPaymentError(payment)).toBeTruthy()
+      expect(quoteSpy).toHaveBeenCalledWith({
+        walletAddressId,
+        receiver: incomingPaymentUrl,
+        debitAmount,
+        method: 'ilp'
+      })
+    })
+
+    test('fails to create quote from incoming payment', async () => {
+      const walletAddressId = receiverWalletAddress.id
+      const incomingPaymentUrl = incomingPayment.toOpenPaymentsTypeWithMethods(
+        receiverWalletAddress
+      ).id
+      const debitAmount = {
+        value: BigInt(123),
+        assetCode: receiverWalletAddress.asset.code,
+        assetScale: receiverWalletAddress.asset.scale
+      }
+
+      const quoteCreateResponse = QuoteError.InvalidAmount
+      const quoteSpy = jest
+        .spyOn(quoteService, 'create')
+        .mockImplementationOnce(async () => quoteCreateResponse)
+
+      const payment = await outgoingPaymentService.create({
+        walletAddressId,
+        debitAmount,
+        incomingPayment: incomingPaymentUrl
+      })
+
+      expect(isOutgoingPaymentError(payment)).toBeTruthy()
+      expect(payment).toBe(quoteCreateResponse)
+      expect(quoteSpy).toHaveBeenCalledWith({
+        walletAddressId,
+        receiver: incomingPaymentUrl,
+        debitAmount,
+        method: 'ilp'
+      })
+    })
 
     describe.each`
       grantOption
@@ -420,6 +496,7 @@ describe('OutgoingPaymentService', (): void => {
             })
             const options = {
               walletAddressId,
+              client,
               quoteId: quote.id,
               metadata: {
                 description: 'rent',
@@ -453,7 +530,8 @@ describe('OutgoingPaymentService', (): void => {
             ).resolves.toEqual(payment)
 
             const expectedPaymentData: Partial<PaymentData> = {
-              id: payment.id
+              id: payment.id,
+              client: payment.client
             }
             if (outgoingPeer) {
               expectedPaymentData.peerId = peer.id
@@ -500,6 +578,7 @@ describe('OutgoingPaymentService', (): void => {
       it('fails to create on "consumed" quote', async () => {
         const { quote } = await createOutgoingPayment(deps, {
           walletAddressId,
+          client,
           receiver,
           validDestination: false,
           method: 'ilp'
@@ -507,6 +586,7 @@ describe('OutgoingPaymentService', (): void => {
         await expect(
           outgoingPaymentService.create({
             walletAddressId,
+            client,
             quoteId: quote.id
           })
         ).resolves.toEqual(OutgoingPaymentError.InvalidQuote)
@@ -614,6 +694,7 @@ describe('OutgoingPaymentService', (): void => {
           const options = quotes.map((quote) => {
             return {
               walletAddressId,
+              client,
               quoteId: quote.id,
               metadata: {
                 description: 'rent',
@@ -650,7 +731,7 @@ describe('OutgoingPaymentService', (): void => {
 
         describe('validateGrant', (): void => {
           let quote: Quote
-          let options: Omit<CreateOutgoingPaymentOptions, 'grant'>
+          let options: UnionOmit<CreateOutgoingPaymentOptions, 'grant'>
           let interval: string
           beforeEach(async (): Promise<void> => {
             quote = await createQuote(deps, {
@@ -759,6 +840,7 @@ describe('OutgoingPaymentService', (): void => {
               }
               const firstPayment = await createOutgoingPayment(deps, {
                 walletAddressId,
+                client,
                 receiver: `${
                   Config.openPaymentsUrl
                 }/incoming-payments/${uuid()}`,
@@ -845,12 +927,12 @@ describe('OutgoingPaymentService', (): void => {
                 }
                 const firstPayment = await createOutgoingPayment(deps, {
                   walletAddressId,
+                  client,
                   receiver: `${
                     Config.openPaymentsUrl
                   }/incoming-payments/${uuid()}`,
                   debitAmount: debitAmount ? paymentAmount : undefined,
                   receiveAmount: debitAmount ? undefined : paymentAmount,
-                  client,
                   grant,
                   validDestination: false,
                   method: 'ilp'
@@ -893,6 +975,7 @@ describe('OutgoingPaymentService', (): void => {
       }
       const payment = await createOutgoingPayment(deps, {
         walletAddressId,
+        client,
         ...opts
       })
 
@@ -945,7 +1028,26 @@ describe('OutgoingPaymentService', (): void => {
           assetScale: receiverWalletAddress.asset.scale
         }
       })
+      assert.ok(incomingPayment.id)
+      assert.ok(incomingPayment.createdAt)
+      assert.ok(incomingPayment.updatedAt)
+      assert.ok(incomingPayment.expiresAt)
+      assert.ok(incomingPayment.processAt)
+      assert.ok(incomingPayment.assetId)
+      assert.ok(incomingPayment.asset)
+      assert.ok(incomingPayment.asset.code)
+      assert.ok(incomingPayment.asset.scale)
+      assert.ok(incomingPayment.asset.createdAt)
+      assert.ok(incomingPayment.walletAddressId)
       assert.ok(incomingPayment.walletAddress)
+      expect(incomingPayment.state).toEqual('PENDING')
+      expect(incomingPayment.incomingAmount?.value).toBeGreaterThan(0n)
+      assert.ok(incomingPayment.incomingAmount?.assetCode)
+      assert.ok(incomingPayment.incomingAmount?.assetScale)
+      expect(incomingPayment.receivedAmount.value).toEqual(0n)
+      assert.ok(incomingPayment.receivedAmount?.assetCode)
+      assert.ok(incomingPayment.receivedAmount?.assetScale)
+
       const createdPayment = await setup({
         receiver: incomingPayment.getUrl(incomingPayment.walletAddress),
         receiveAmount,
@@ -1230,10 +1332,14 @@ describe('OutgoingPaymentService', (): void => {
         receiver,
         debitAmount,
         validDestination: false,
-        method: 'ilp'
+        method: 'ilp',
+        client
       })
       quoteAmount = payment.debitAmount.value
-      await expectOutcome(payment, { accountBalance: BigInt(0) })
+      await expectOutcome(payment, {
+        accountBalance: BigInt(0),
+        client
+      })
     }, 10_000)
 
     it('fails when no payment exists', async (): Promise<void> => {

@@ -474,6 +474,7 @@ export function initIocContainer(
       ),
       peerService: await deps.use('peerService'),
       walletAddressService: await deps.use('walletAddressService'),
+      quoteService: await deps.use('quoteService'),
       telemetry: config.enableTelemetry
         ? await deps.use('telemetry')
         : undefined

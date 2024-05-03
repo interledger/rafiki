@@ -35,8 +35,12 @@ import {
 } from '~/lib/validate.server'
 import type { ZodFieldErrors } from '~/shared/types'
 import { formatAmount } from '~/shared/utils'
+import { redirectIfUnauthorizedAccess } from '../lib/kratos_checks.server'
 
-export async function loader({ params }: LoaderFunctionArgs) {
+export async function loader({ request, params }: LoaderFunctionArgs) {
+  const cookies = request.headers.get('cookie')
+  await redirectIfUnauthorizedAccess(request.url, cookies)
+
   const assetId = params.assetId
 
   const result = z.string().uuid().safeParse(assetId)

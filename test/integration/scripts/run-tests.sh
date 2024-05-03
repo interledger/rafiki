@@ -59,4 +59,7 @@ fi
 mkdir -p ./tmp
 pnpm --filter integration testenv:compose logs -f > "$log_file" 2>&1 &
 pnpm --filter integration test
+exit_code=$?
 pnpm --filter integration testenv:compose down --volumes
+
+exit $exit_code
