@@ -1,7 +1,11 @@
 import { Logger } from 'pino'
 import { ReadContext, CreateContext, ListContext } from '../../../app'
 import { IAppConfig } from '../../../config/app'
-import { OutgoingPaymentService } from './service'
+import {
+  CreateOutgoingPaymentOptions,
+  OutgoingPaymentService,
+  BaseOptions as OutgoingPaymentCreateBaseOptions
+} from './service'
 import {
   isOutgoingPaymentError,
   errorToHTTPCode,
@@ -18,6 +22,7 @@ import {
   throwIfMissingWalletAddress
 } from '../../wallet_address/model'
 import { OpenPaymentsServerRouteError } from '../../route-errors'
+import { Amount } from '../../amount'
 
 interface ServiceDependencies {
   config: IAppConfig
@@ -73,35 +78,64 @@ async function getOutgoingPayment(
   )
 }
 
-export type CreateBody = {
+type CreateBodyBase = {
   walletAddress: string
-  quoteId: string
   metadata?: Record<string, unknown>
 }
+
+type CreateBodyFromQuote = CreateBodyBase & {
+  quoteId: string
+}
+
+type CreateBodyFromIncomingPayment = CreateBodyBase & {
+  incomingPayment: string
+  debitAmount: Amount
+}
+
+function isCreateFromIncomingPayment(
+  body: CreateBody
+): body is CreateBodyFromIncomingPayment {
+  return 'incomingPayment' in body && 'debitAmount' in body
+}
+
+export type CreateBody = CreateBodyFromQuote | CreateBodyFromIncomingPayment
 
 async function createOutgoingPayment(
   deps: ServiceDependencies,
   ctx: CreateContext<CreateBody>
 ): Promise<void> {
   const { body } = ctx.request
-
-  const quoteUrlParts = body.quoteId.split('/')
-  const quoteId = quoteUrlParts.pop() || quoteUrlParts.pop() // handle trailing slash
-  if (!quoteId) {
-    throw new OpenPaymentsServerRouteError(
-      400,
-      'Invalid quote id trying to create outgoing payment',
-      { requestBody: body }
-    )
-  }
-
-  const outgoingPaymentOrError = await deps.outgoingPaymentService.create({
+  const baseOptions: OutgoingPaymentCreateBaseOptions = {
     walletAddressId: ctx.walletAddress.id,
-    quoteId,
     metadata: body.metadata,
     client: ctx.client,
     grant: ctx.grant
-  })
+  }
+  let options: CreateOutgoingPaymentOptions
+
+  if (isCreateFromIncomingPayment(body)) {
+    options = {
+      ...baseOptions,
+      incomingPayment: body.incomingPayment,
+      debitAmount: body.debitAmount
+    }
+  } else {
+    const quoteUrlParts = body.quoteId.split('/')
+    const quoteId = quoteUrlParts.pop() || quoteUrlParts.pop() // handle trailing slash
+    if (!quoteId) {
+      throw new OpenPaymentsServerRouteError(
+        400,
+        'Invalid quote id trying to create outgoing payment'
+      )
+    }
+    options = {
+      ...baseOptions,
+      quoteId
+    }
+  }
+
+  const outgoingPaymentOrError =
+    await deps.outgoingPaymentService.create(options)
 
   if (isOutgoingPaymentError(outgoingPaymentOrError)) {
     throw new OpenPaymentsServerRouteError(

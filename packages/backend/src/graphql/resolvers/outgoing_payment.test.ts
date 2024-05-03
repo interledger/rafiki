@@ -26,6 +26,7 @@ import {
   OutgoingPaymentResponse,
   OutgoingPaymentState as SchemaPaymentState
 } from '../generated/graphql'
+import { faker } from '@faker-js/faker'
 
 describe('OutgoingPayment Resolvers', (): void => {
   let deps: IocContract<AppServices>
@@ -120,6 +121,7 @@ describe('OutgoingPayment Resolvers', (): void => {
                   outgoingPayment(id: $paymentId) {
                     id
                     walletAddressId
+                    client
                     state
                     error
                     stateAttempts
@@ -163,6 +165,7 @@ describe('OutgoingPayment Resolvers', (): void => {
           expect(query).toEqual({
             id: payment.id,
             walletAddressId: payment.walletAddressId,
+            client: payment.client,
             state,
             error,
             stateAttempts: 0,
@@ -262,7 +265,7 @@ describe('OutgoingPayment Resolvers', (): void => {
       externalRef: '202201'
     }
 
-    test('200 (metadata)', async (): Promise<void> => {
+    test('201 (metadata)', async (): Promise<void> => {
       const { id: walletAddressId } = await createWalletAddress(deps, {
         assetId: asset.id
       })
@@ -366,6 +369,135 @@ describe('OutgoingPayment Resolvers', (): void => {
           (query): OutgoingPaymentResponse => query.data?.createOutgoingPayment
         )
 
+      await expect(query).rejects.toThrow(ApolloError)
+      expect(createSpy).toHaveBeenCalledWith(input)
+    })
+  })
+
+  describe('Mutation.createOutgoingPaymentFromIncomingPayment', (): void => {
+    const mockIncomingPaymentUrl = `https://${faker.internet.domainName()}/incoming-payments/${uuid()}`
+
+    test('201', async (): Promise<void> => {
+      const walletAddress = await createWalletAddress(deps, {
+        assetId: asset.id
+      })
+      const payment = await createPayment({ walletAddressId: walletAddress.id })
+
+      const createSpy = jest
+        .spyOn(outgoingPaymentService, 'create')
+        .mockResolvedValueOnce(payment)
+
+      const input = {
+        walletAddressId: payment.walletAddressId,
+        incomingPayment: mockIncomingPaymentUrl,
+        debitAmount: {
+          value: BigInt(56),
+          assetCode: asset.code,
+          assetScale: asset.scale
+        }
+      }
+
+      const query = await appContainer.apolloClient
+        .query({
+          query: gql`
+            mutation CreateOutgoingPaymentFromIncomingPayment(
+              $input: CreateOutgoingPaymentFromIncomingPaymentInput!
+            ) {
+              createOutgoingPaymentFromIncomingPayment(input: $input) {
+                payment {
+                  id
+                  state
+                }
+              }
+            }
+          `,
+          variables: { input }
+        })
+        .then(
+          (query): OutgoingPaymentResponse =>
+            query.data?.createOutgoingPaymentFromIncomingPayment
+        )
+
+      expect(createSpy).toHaveBeenCalledWith(input)
+      expect(query.payment?.id).toBe(payment.id)
+      expect(query.payment?.state).toBe(SchemaPaymentState.Funding)
+    })
+
+    test('400', async (): Promise<void> => {
+      const createSpy = jest
+        .spyOn(outgoingPaymentService, 'create')
+        .mockResolvedValueOnce(OutgoingPaymentError.UnknownWalletAddress)
+
+      const input = {
+        walletAddressId: uuid(),
+        incomingPayment: mockIncomingPaymentUrl,
+        debitAmount: {
+          value: BigInt(56),
+          assetCode: asset.code,
+          assetScale: asset.scale
+        }
+      }
+
+      const query = appContainer.apolloClient
+        .query({
+          query: gql`
+            mutation CreateOutgoingPaymentFromIncomingPayment(
+              $input: CreateOutgoingPaymentFromIncomingPaymentInput!
+            ) {
+              createOutgoingPaymentFromIncomingPayment(input: $input) {
+                payment {
+                  id
+                  state
+                }
+              }
+            }
+          `,
+          variables: { input }
+        })
+        .then(
+          (query): OutgoingPaymentResponse =>
+            query.data?.createOutgoingPaymentFromIncomingPayment
+        )
+      await expect(query).rejects.toThrow(ApolloError)
+      await expect(query).rejects.toThrow('unknown wallet address')
+      expect(createSpy).toHaveBeenCalledWith(input)
+    })
+
+    test('500', async (): Promise<void> => {
+      const createSpy = jest
+        .spyOn(outgoingPaymentService, 'create')
+        .mockRejectedValueOnce(new Error('unexpected'))
+
+      const input = {
+        walletAddressId: uuid(),
+        incomingPayment: mockIncomingPaymentUrl,
+        debitAmount: {
+          value: BigInt(56),
+          assetCode: asset.code,
+          assetScale: asset.scale
+        }
+      }
+
+      const query = appContainer.apolloClient
+        .query({
+          query: gql`
+            mutation CreateOutgoingPaymentFromIncomingPayment(
+              $input: CreateOutgoingPaymentFromIncomingPaymentInput!
+            ) {
+              createOutgoingPaymentFromIncomingPayment(input: $input) {
+                payment {
+                  id
+                  state
+                }
+              }
+            }
+          `,
+          variables: { input }
+        })
+        .then(
+          (query): OutgoingPaymentResponse =>
+            query.data?.createOutgoingPaymentFromIncomingPayment
+        )
       await expect(query).rejects.toThrow(ApolloError)
       expect(createSpy).toHaveBeenCalledWith(input)
     })

@@ -29,6 +29,7 @@ describe('Incoming Payment Resolver', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let walletAddressId: string
+  let client: string
   let incomingPaymentService: IncomingPaymentService
   let accountingService: AccountingService
   let asset: Asset
@@ -58,6 +59,7 @@ describe('Incoming Payment Resolver', (): void => {
       createModel: () =>
         createIncomingPayment(deps, {
           walletAddressId,
+          client,
           incomingAmount: {
             value: BigInt(123),
             assetCode: asset.code,
@@ -86,6 +88,7 @@ describe('Incoming Payment Resolver', (): void => {
         assetCode: asset.code,
         assetScale: asset.scale
       }
+      client = 'incoming-payment-client-create'
     })
 
     test.each`
@@ -102,6 +105,7 @@ describe('Incoming Payment Resolver', (): void => {
         })
         const payment = await createIncomingPayment(deps, {
           walletAddressId,
+          client,
           metadata,
           expiresAt,
           incomingAmount

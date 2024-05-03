@@ -114,6 +114,7 @@ export function paymentToGraphql(
   return {
     id: payment.id,
     walletAddressId: payment.walletAddressId,
+    client: payment.client,
     state: payment.state,
     expiresAt: payment.expiresAt.toISOString(),
     incomingAmount: payment.incomingAmount,

@@ -60,6 +60,30 @@ export const createOutgoingPayment: MutationResolvers<ApolloContext>['createOutg
       }
   }
 
+export const createOutgoingPaymentFromIncomingPayment: MutationResolvers<ApolloContext>['createOutgoingPaymentFromIncomingPayment'] =
+  async (
+    parent,
+    args,
+    ctx
+  ): Promise<ResolversTypes['OutgoingPaymentResponse']> => {
+    const outgoingPaymentService = await ctx.container.use(
+      'outgoingPaymentService'
+    )
+    const outgoingPaymentOrError = await outgoingPaymentService.create(
+      args.input
+    )
+    if (isOutgoingPaymentError(outgoingPaymentOrError)) {
+      throw new GraphQLError(errorToMessage[outgoingPaymentOrError], {
+        extensions: {
+          code: errorToCode[outgoingPaymentOrError]
+        }
+      })
+    } else
+      return {
+        payment: paymentToGraphql(outgoingPaymentOrError)
+      }
+  }
+
 export const getWalletAddressOutgoingPayments: WalletAddressResolvers<ApolloContext>['outgoingPayments'] =
   async (
     parent,
@@ -108,6 +132,7 @@ export function paymentToGraphql(
   return {
     id: payment.id,
     walletAddressId: payment.walletAddressId,
+    client: payment.client,
     state: payment.state,
     error: payment.error,
     stateAttempts: payment.stateAttempts,

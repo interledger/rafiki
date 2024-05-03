@@ -24,7 +24,8 @@ import { getQuote, createQuote, getWalletAddressQuotes } from './quote'
 import {
   getOutgoingPayment,
   createOutgoingPayment,
-  getWalletAddressOutgoingPayments
+  getWalletAddressOutgoingPayments,
+  createOutgoingPaymentFromIncomingPayment
 } from './outgoing_payment'
 import { getPeer, getPeers, createPeer, updatePeer, deletePeer } from './peer'
 import {
@@ -50,6 +51,7 @@ import {
 import { GraphQLBigInt, GraphQLUInt8 } from '../scalars'
 import {
   createWalletAddressKey,
+  getWalletAddressKeys,
   revokeWalletAddressKey
 } from './walletAddressKey'
 import { createReceiver, getReceiver } from './receiver'
@@ -90,7 +92,8 @@ export const resolvers: Resolvers = {
     liquidity: getWalletAddressLiquidity,
     incomingPayments: getWalletAddressIncomingPayments,
     outgoingPayments: getWalletAddressOutgoingPayments,
-    quotes: getWalletAddressQuotes
+    quotes: getWalletAddressQuotes,
+    walletAddressKeys: getWalletAddressKeys
   },
   IncomingPayment: {
     liquidity: getIncomingPaymentLiquidity
@@ -111,6 +114,7 @@ export const resolvers: Resolvers = {
     updateAsset: updateAsset,
     createQuote,
     createOutgoingPayment,
+    createOutgoingPaymentFromIncomingPayment,
     createIncomingPayment,
     createReceiver,
     createPeer: createPeer,

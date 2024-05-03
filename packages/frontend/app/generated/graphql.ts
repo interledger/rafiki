@@ -94,6 +94,7 @@ export type AssetsConnection = {
 };
 
 export type BasePayment = {
+  client?: Maybe<Scalars['String']['output']>;
   createdAt: Scalars['String']['output'];
   id: Scalars['ID']['output'];
   metadata?: Maybe<Scalars['JSONObject']['output']>;
@@ -160,6 +161,19 @@ export type CreateOrUpdatePeerByUrlMutationResponse = MutationResponse & {
   message: Scalars['String']['output'];
   peer?: Maybe<Peer>;
   success: Scalars['Boolean']['output'];
+};
+
+export type CreateOutgoingPaymentFromIncomingPaymentInput = {
+  /** Amount to send (fixed send) */
+  debitAmount: AmountInput;
+  /** Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence) */
+  idempotencyKey?: InputMaybe<Scalars['String']['input']>;
+  /** Incoming payment url to create the outgoing payment from */
+  incomingPayment: Scalars['String']['input'];
+  /** Additional metadata associated with the outgoing payment. */
+  metadata?: InputMaybe<Scalars['JSONObject']['input']>;
+  /** Id of the wallet address under which the outgoing payment will be created */
+  walletAddressId: Scalars['String']['input'];
 };
 
 export type CreateOutgoingPaymentInput = {
@@ -423,6 +437,8 @@ export type HttpOutgoingInput = {
 
 export type IncomingPayment = BasePayment & Model & {
   __typename?: 'IncomingPayment';
+  /** Information about the wallet address of the Open Payments client that created the incoming payment. */
+  client?: Maybe<Scalars['String']['output']>;
   /** Date-time of creation */
   createdAt: Scalars['String']['output'];
   /** Date-time of expiry. After this time, the incoming payment will not accept further payments made to it. */
@@ -439,7 +455,7 @@ export type IncomingPayment = BasePayment & Model & {
   receivedAmount: Amount;
   /** Incoming payment state */
   state: IncomingPaymentState;
-  /** Id of the wallet address under which this incoming payment was created */
+  /** Id of the wallet address under which this incoming payment was created. */
   walletAddressId: Scalars['ID']['output'];
 };
 
@@ -545,6 +561,8 @@ export type Mutation = {
   createOrUpdatePeerByUrl: CreateOrUpdatePeerByUrlMutationResponse;
   /** Create an Open Payments Outgoing Payment */
   createOutgoingPayment: OutgoingPaymentResponse;
+  /** Create an Open Payments Outgoing Payment from an incoming payment */
+  createOutgoingPaymentFromIncomingPayment: OutgoingPaymentResponse;
   /** Create a peer */
   createPeer: CreatePeerMutationResponse;
   /** Withdraw peer liquidity */
@@ -622,6 +640,11 @@ export type MutationCreateOrUpdatePeerByUrlArgs = {
 
 export type MutationCreateOutgoingPaymentArgs = {
   input: CreateOutgoingPaymentInput;
+};
+
+
+export type MutationCreateOutgoingPaymentFromIncomingPaymentArgs = {
+  input: CreateOutgoingPaymentFromIncomingPaymentInput;
 };
 
 
@@ -747,6 +770,8 @@ export type MutationResponse = {
 
 export type OutgoingPayment = BasePayment & Model & {
   __typename?: 'OutgoingPayment';
+  /** Information about the wallet address of the Open Payments client that created the outgoing payment. */
+  client?: Maybe<Scalars['String']['output']>;
   /** Date-time of creation */
   createdAt: Scalars['String']['output'];
   /** Amount to send (fixed send) */
@@ -818,6 +843,8 @@ export type PageInfo = {
 
 export type Payment = BasePayment & Model & {
   __typename?: 'Payment';
+  /** Information about the wallet address of the Open Payments client that created the payment. */
+  client?: Maybe<Scalars['String']['output']>;
   /** Date-time of creation */
   createdAt: Scalars['String']['output'];
   /** Payment id */
@@ -1223,6 +1250,7 @@ export type WalletAddress = Model & {
   status: WalletAddressStatus;
   /** Wallet Address URL */
   url: Scalars['String']['output'];
+  walletAddressKeys?: Maybe<WalletAddressKeyConnection>;
 };
 
 
@@ -1252,6 +1280,15 @@ export type WalletAddressQuotesArgs = {
   sortOrder?: InputMaybe<SortOrder>;
 };
 
+
+export type WalletAddressWalletAddressKeysArgs = {
+  after?: InputMaybe<Scalars['String']['input']>;
+  before?: InputMaybe<Scalars['String']['input']>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+  sortOrder?: InputMaybe<SortOrder>;
+};
+
 export type WalletAddressEdge = {
   __typename?: 'WalletAddressEdge';
   cursor: Scalars['String']['output'];
@@ -1270,6 +1307,18 @@ export type WalletAddressKey = Model & {
   revoked: Scalars['Boolean']['output'];
   /** Id of the wallet address to which this key belongs to */
   walletAddressId: Scalars['ID']['output'];
+};
+
+export type WalletAddressKeyConnection = {
+  __typename?: 'WalletAddressKeyConnection';
+  edges: Array<WalletAddressKeyEdge>;
+  pageInfo: PageInfo;
+};
+
+export type WalletAddressKeyEdge = {
+  __typename?: 'WalletAddressKeyEdge';
+  cursor: Scalars['String']['output'];
+  node: WalletAddressKey;
 };
 
 export enum WalletAddressStatus {
@@ -1444,6 +1493,7 @@ export type ResolversTypes = {
   CreateIncomingPaymentInput: ResolverTypeWrapper<Partial<CreateIncomingPaymentInput>>;
   CreateOrUpdatePeerByUrlInput: ResolverTypeWrapper<Partial<CreateOrUpdatePeerByUrlInput>>;
   CreateOrUpdatePeerByUrlMutationResponse: ResolverTypeWrapper<Partial<CreateOrUpdatePeerByUrlMutationResponse>>;
+  CreateOutgoingPaymentFromIncomingPaymentInput: ResolverTypeWrapper<Partial<CreateOutgoingPaymentFromIncomingPaymentInput>>;
   CreateOutgoingPaymentInput: ResolverTypeWrapper<Partial<CreateOutgoingPaymentInput>>;
   CreatePeerInput: ResolverTypeWrapper<Partial<CreatePeerInput>>;
   CreatePeerLiquidityWithdrawalInput: ResolverTypeWrapper<Partial<CreatePeerLiquidityWithdrawalInput>>;
@@ -1532,6 +1582,8 @@ export type ResolversTypes = {
   WalletAddress: ResolverTypeWrapper<Partial<WalletAddress>>;
   WalletAddressEdge: ResolverTypeWrapper<Partial<WalletAddressEdge>>;
   WalletAddressKey: ResolverTypeWrapper<Partial<WalletAddressKey>>;
+  WalletAddressKeyConnection: ResolverTypeWrapper<Partial<WalletAddressKeyConnection>>;
+  WalletAddressKeyEdge: ResolverTypeWrapper<Partial<WalletAddressKeyEdge>>;
   WalletAddressStatus: ResolverTypeWrapper<Partial<WalletAddressStatus>>;
   WalletAddressWithdrawal: ResolverTypeWrapper<Partial<WalletAddressWithdrawal>>;
   WalletAddressWithdrawalMutationResponse: ResolverTypeWrapper<Partial<WalletAddressWithdrawalMutationResponse>>;
@@ -1560,6 +1612,7 @@ export type ResolversParentTypes = {
   CreateIncomingPaymentInput: Partial<CreateIncomingPaymentInput>;
   CreateOrUpdatePeerByUrlInput: Partial<CreateOrUpdatePeerByUrlInput>;
   CreateOrUpdatePeerByUrlMutationResponse: Partial<CreateOrUpdatePeerByUrlMutationResponse>;
+  CreateOutgoingPaymentFromIncomingPaymentInput: Partial<CreateOutgoingPaymentFromIncomingPaymentInput>;
   CreateOutgoingPaymentInput: Partial<CreateOutgoingPaymentInput>;
   CreatePeerInput: Partial<CreatePeerInput>;
   CreatePeerLiquidityWithdrawalInput: Partial<CreatePeerLiquidityWithdrawalInput>;
@@ -1640,6 +1693,8 @@ export type ResolversParentTypes = {
   WalletAddress: Partial<WalletAddress>;
   WalletAddressEdge: Partial<WalletAddressEdge>;
   WalletAddressKey: Partial<WalletAddressKey>;
+  WalletAddressKeyConnection: Partial<WalletAddressKeyConnection>;
+  WalletAddressKeyEdge: Partial<WalletAddressKeyEdge>;
   WalletAddressWithdrawal: Partial<WalletAddressWithdrawal>;
   WalletAddressWithdrawalMutationResponse: Partial<WalletAddressWithdrawalMutationResponse>;
   WalletAddressesConnection: Partial<WalletAddressesConnection>;
@@ -1695,6 +1750,7 @@ export type AssetsConnectionResolvers<ContextType = any, ParentType extends Reso
 
 export type BasePaymentResolvers<ContextType = any, ParentType extends ResolversParentTypes['BasePayment'] = ResolversParentTypes['BasePayment']> = {
   __resolveType: TypeResolveFn<'IncomingPayment' | 'OutgoingPayment' | 'Payment', ParentType, ContextType>;
+  client?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   metadata?: Resolver<Maybe<ResolversTypes['JSONObject']>, ParentType, ContextType>;
@@ -1782,6 +1838,7 @@ export type HttpOutgoingResolvers<ContextType = any, ParentType extends Resolver
 };
 
 export type IncomingPaymentResolvers<ContextType = any, ParentType extends ResolversParentTypes['IncomingPayment'] = ResolversParentTypes['IncomingPayment']> = {
+  client?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   expiresAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
@@ -1847,6 +1904,7 @@ export type MutationResolvers<ContextType = any, ParentType extends ResolversPar
   createIncomingPayment?: Resolver<ResolversTypes['IncomingPaymentResponse'], ParentType, ContextType, RequireFields<MutationCreateIncomingPaymentArgs, 'input'>>;
   createOrUpdatePeerByUrl?: Resolver<ResolversTypes['CreateOrUpdatePeerByUrlMutationResponse'], ParentType, ContextType, RequireFields<MutationCreateOrUpdatePeerByUrlArgs, 'input'>>;
   createOutgoingPayment?: Resolver<ResolversTypes['OutgoingPaymentResponse'], ParentType, ContextType, RequireFields<MutationCreateOutgoingPaymentArgs, 'input'>>;
+  createOutgoingPaymentFromIncomingPayment?: Resolver<ResolversTypes['OutgoingPaymentResponse'], ParentType, ContextType, RequireFields<MutationCreateOutgoingPaymentFromIncomingPaymentArgs, 'input'>>;
   createPeer?: Resolver<ResolversTypes['CreatePeerMutationResponse'], ParentType, ContextType, RequireFields<MutationCreatePeerArgs, 'input'>>;
   createPeerLiquidityWithdrawal?: Resolver<Maybe<ResolversTypes['LiquidityMutationResponse']>, ParentType, ContextType, RequireFields<MutationCreatePeerLiquidityWithdrawalArgs, 'input'>>;
   createQuote?: Resolver<ResolversTypes['QuoteResponse'], ParentType, ContextType, RequireFields<MutationCreateQuoteArgs, 'input'>>;
@@ -1880,6 +1938,7 @@ export type MutationResponseResolvers<ContextType = any, ParentType extends Reso
 };
 
 export type OutgoingPaymentResolvers<ContextType = any, ParentType extends ResolversParentTypes['OutgoingPayment'] = ResolversParentTypes['OutgoingPayment']> = {
+  client?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   debitAmount?: Resolver<ResolversTypes['Amount'], ParentType, ContextType>;
   error?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
@@ -1925,6 +1984,7 @@ export type PageInfoResolvers<ContextType = any, ParentType extends ResolversPar
 };
 
 export type PaymentResolvers<ContextType = any, ParentType extends ResolversParentTypes['Payment'] = ResolversParentTypes['Payment']> = {
+  client?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   liquidity?: Resolver<Maybe<ResolversTypes['UInt64']>, ParentType, ContextType>;
@@ -2101,6 +2161,7 @@ export type WalletAddressResolvers<ContextType = any, ParentType extends Resolve
   quotes?: Resolver<Maybe<ResolversTypes['QuoteConnection']>, ParentType, ContextType, Partial<WalletAddressQuotesArgs>>;
   status?: Resolver<ResolversTypes['WalletAddressStatus'], ParentType, ContextType>;
   url?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  walletAddressKeys?: Resolver<Maybe<ResolversTypes['WalletAddressKeyConnection']>, ParentType, ContextType, Partial<WalletAddressWalletAddressKeysArgs>>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -2116,6 +2177,18 @@ export type WalletAddressKeyResolvers<ContextType = any, ParentType extends Reso
   jwk?: Resolver<ResolversTypes['Jwk'], ParentType, ContextType>;
   revoked?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   walletAddressId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type WalletAddressKeyConnectionResolvers<ContextType = any, ParentType extends ResolversParentTypes['WalletAddressKeyConnection'] = ResolversParentTypes['WalletAddressKeyConnection']> = {
+  edges?: Resolver<Array<ResolversTypes['WalletAddressKeyEdge']>, ParentType, ContextType>;
+  pageInfo?: Resolver<ResolversTypes['PageInfo'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type WalletAddressKeyEdgeResolvers<ContextType = any, ParentType extends ResolversParentTypes['WalletAddressKeyEdge'] = ResolversParentTypes['WalletAddressKeyEdge']> = {
+  cursor?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  node?: Resolver<ResolversTypes['WalletAddressKey'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -2217,6 +2290,8 @@ export type Resolvers<ContextType = any> = {
   WalletAddress?: WalletAddressResolvers<ContextType>;
   WalletAddressEdge?: WalletAddressEdgeResolvers<ContextType>;
   WalletAddressKey?: WalletAddressKeyResolvers<ContextType>;
+  WalletAddressKeyConnection?: WalletAddressKeyConnectionResolvers<ContextType>;
+  WalletAddressKeyEdge?: WalletAddressKeyEdgeResolvers<ContextType>;
   WalletAddressWithdrawal?: WalletAddressWithdrawalResolvers<ContextType>;
   WalletAddressWithdrawalMutationResponse?: WalletAddressWithdrawalMutationResponseResolvers<ContextType>;
   WalletAddressesConnection?: WalletAddressesConnectionResolvers<ContextType>;
