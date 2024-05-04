@@ -545,32 +545,34 @@ describe('OutgoingPayment Resolvers', (): void => {
       const walletAddress = await createWalletAddress(deps, {
         assetId: asset.id
       })
-      
+
       payment = await createPayment({ walletAddressId: walletAddress.id })
     })
 
-    const reasons: (string | undefined)[] = [undefined, "Not enough balance"]
+    const reasons: (string | undefined)[] = [undefined, 'Not enough balance']
     test.each(reasons)(
       'should cancel outgoing payment with reason %s',
-      async(reason): Promise<void> => {
+      async (reason): Promise<void> => {
         const input = {
           id: payment.id,
           reason
         }
-  
+
         payment.state = OutgoingPaymentState.Cancelled
         payment.metadata = {
           cancellationReason: input.reason
         }
-  
+
         const cancelSpy = jest
           .spyOn(outgoingPaymentService, 'cancel')
           .mockResolvedValue(payment)
-  
+
         const mutationResponse = await appContainer.apolloClient
           .mutate({
             mutation: gql`
-              mutation CancelOutgoingPayment($input: CancelOutgoingPaymentInput!) {
+              mutation CancelOutgoingPayment(
+                $input: CancelOutgoingPaymentInput!
+              ) {
                 cancelOutgoingPayment(input: $input) {
                   code
                   success
@@ -588,38 +590,40 @@ describe('OutgoingPayment Resolvers', (): void => {
             (query): OutgoingPaymentResponse =>
               query.data?.cancelOutgoingPayment
           )
-  
-          expect(cancelSpy).toHaveBeenCalledWith(input)
-          expect(mutationResponse.code).toBe('200')
-          expect(mutationResponse.success).toBe(true)
-          expect(mutationResponse.payment).toEqual({
-            __typename: "OutgoingPayment",
-            id: input.id,
-            state: OutgoingPaymentState.Cancelled,
-            metadata: {
-              cancellationReason: input.reason
-            }
-          })
+
+        expect(cancelSpy).toHaveBeenCalledWith(input)
+        expect(mutationResponse.code).toBe('200')
+        expect(mutationResponse.success).toBe(true)
+        expect(mutationResponse.payment).toEqual({
+          __typename: 'OutgoingPayment',
+          id: input.id,
+          state: OutgoingPaymentState.Cancelled,
+          metadata: {
+            cancellationReason: input.reason
+          }
+        })
       }
     )
 
     const errors: [string, OutgoingPaymentError][] = [
-      [ '409', OutgoingPaymentError.WrongState ],
-      [ '404', OutgoingPaymentError.UnknownPayment ]
+      ['409', OutgoingPaymentError.WrongState],
+      ['404', OutgoingPaymentError.UnknownPayment]
     ]
     test.each(errors)(
       '%s - outgoing payment error',
-      async(statusCode, paymentError): Promise<void> => {
+      async (statusCode, paymentError): Promise<void> => {
         const cancelSpy = jest
-        .spyOn(outgoingPaymentService, 'cancel')
-        .mockResolvedValueOnce(paymentError)
+          .spyOn(outgoingPaymentService, 'cancel')
+          .mockResolvedValueOnce(paymentError)
 
         const input = { id: uuid() }
 
         const mutationResponse = await appContainer.apolloClient
           .mutate({
             mutation: gql`
-              mutation CancelOutgoingPayment($input: CancelOutgoingPaymentInput!) {
+              mutation CancelOutgoingPayment(
+                $input: CancelOutgoingPaymentInput!
+              ) {
                 cancelOutgoingPayment(input: $input) {
                   code
                   message
@@ -638,7 +642,7 @@ describe('OutgoingPayment Resolvers', (): void => {
             (query): OutgoingPaymentResponse =>
               query.data?.cancelOutgoingPayment
           )
-    
+
         expect(cancelSpy).toHaveBeenCalledWith(input)
         expect(mutationResponse).toEqual({
           __typename: 'OutgoingPaymentResponse',
@@ -647,7 +651,8 @@ describe('OutgoingPayment Resolvers', (): void => {
           success: false,
           payment: null
         })
-    })
+      }
+    )
   })
 
   describe('Wallet address outgoingPayments', (): void => {

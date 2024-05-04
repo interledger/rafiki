@@ -389,6 +389,73 @@ describe('OutgoingPaymentService', (): void => {
     })
   })
 
+  describe('cancel', (): void => {
+    const states: [
+      string,
+      OutgoingPaymentState,
+      OutgoingPaymentError | null,
+      string | undefined
+    ][] = Object.values(OutgoingPaymentState).flatMap((state) => [
+      [
+        `should ${state == OutgoingPaymentState.Funding ? 'cancel' : 'not cancel'} outgoing payment in ${state} state with reason`,
+        state,
+        state == OutgoingPaymentState.Funding
+          ? null
+          : OutgoingPaymentError.WrongState,
+        'Not enough balance'
+      ],
+      [
+        `should ${state == OutgoingPaymentState.Funding ? 'cancel' : 'not cancel'} outgoing payment in ${state} state without reason`,
+        state,
+        state == OutgoingPaymentState.Funding
+          ? null
+          : OutgoingPaymentError.WrongState,
+        undefined
+      ]
+    ])
+    it.each(states)(
+      '%s',
+      async (_, state, outgoingPaymentError, reason): Promise<void> => {
+        /**
+         * 1. Create outgoing payment
+         * 2. Update the state of outgoing payment
+         * 3. Cancel outgoing payment
+         * 4. Based on state, check the result
+         */
+        const outgoingPayment = await createOutgoingPayment(deps, {
+          walletAddressId,
+          client,
+          receiver,
+          debitAmount: {
+            assetCode: asset.code,
+            assetScale: asset.scale,
+            value: BigInt(10)
+          },
+          validDestination: true,
+          method: 'ilp'
+        })
+
+        await outgoingPayment.$query(knex).patch({ state })
+
+        const response = await outgoingPaymentService.cancel({
+          id: outgoingPayment.id,
+          reason
+        })
+
+        if (!outgoingPaymentError) {
+          const dataCheck = response as OutgoingPayment
+          expect(dataCheck.id).toBe(outgoingPayment.id)
+          expect(dataCheck.state).toBe(OutgoingPaymentState.Cancelled)
+          expect(dataCheck.metadata).toEqual({
+            cancellationReason: reason
+          })
+        } else {
+          expect(response as OutgoingPaymentError).toBe(outgoingPaymentError)
+        }
+      }
+    )
+  })
+
   describe('create', (): void => {
     enum GrantOption {
       Existing = 'existing',
