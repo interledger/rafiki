@@ -1,9 +1,14 @@
-import * as crypto from 'crypto'
 import dotenv from 'dotenv'
 
-function envString(name: string, value: string): string {
+function envString(name: string, value?: string): string {
   const envValue = process.env[name]
-  return envValue == null ? value : envValue
+  if (envValue) return envValue
+
+  if (typeof(value) === 'undefined') {
+    throw new Error(`Missing required key value (${name})`)
+  }
+
+  return value
 }
 
 function envInt(name: string, value: number): number {
@@ -36,17 +41,11 @@ export const Config = {
           'AUTH_DATABASE_URL',
           'postgresql://postgres:password@localhost:5432/auth_development'
         ),
-  identityServerDomain: envString(
-    'IDENTITY_SERVER_DOMAIN',
-    'http://localhost:3030/mock-idp/'
-  ),
-  identityServerSecret: envString('IDENTITY_SERVER_SECRET', 'replace-me'),
-  authServerDomain: envString(
-    'AUTH_SERVER_DOMAIN',
-    `http://localhost:${envInt('AUTH_PORT', 3006)}`
-  ),
+  identityServerDomain: envString('IDENTITY_SERVER_URL'),
+  identityServerSecret: envString('IDENTITY_SERVER_SECRET'),
+  authServerDomain: envString('AUTH_SERVER_URL'),
   waitTimeSeconds: envInt('WAIT_SECONDS', 5),
-  cookieKey: envString('COOKIE_KEY', crypto.randomBytes(32).toString('hex')),
+  cookieKey: envString('COOKIE_KEY'),
   interactionExpirySeconds: envInt('INTERACTION_EXPIRY_SECONDS', 10 * 60), // Default 10 minutes
   accessTokenExpirySeconds: envInt('ACCESS_TOKEN_EXPIRY_SECONDS', 10 * 60), // Default 10 minutes
   databaseCleanupWorkers: envInt('DATABASE_CLEANUP_WORKERS', 1),
