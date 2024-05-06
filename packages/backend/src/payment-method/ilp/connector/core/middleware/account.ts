@@ -27,6 +27,10 @@ export function createAccountMiddleware(serverAddress: string): ILPMiddleware {
           account,
           accountType
         )
+        ctx.services.logger.debug(
+          { account, accountType },
+          'Created liquidity account'
+        )
       } catch (err) {
         // Don't complain if liquidity account already exists.
         if (!(err instanceof AccountAlreadyExistsError)) {
