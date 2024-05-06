@@ -42,6 +42,13 @@ STREAM is a multiplexed Interledger Transport Protocol that provides for sending
 
 TigerBeetle is a distributed financial accounting database designed for mission critical safety and performance. For more information, see the [official website](https://tigerbeetle.com/).
 
+## Two-Phase Transfers
+
+A two-phase transfer moves funds in stages:
+- Reserve funds (`pending`)
+- Resolve funds (`post`, `void`, or `expire`)
+The name "two-phase transfer" is a reference to the [two-phase commit protocol for distributed transactions](https://en.wikipedia.org/wiki/Two-phase_commit_protocol).
+
 ## Web Monetization
 
 Web Monetization is a JavaScript browser API that allows the creation of a payment stream from the user agent to the website. For more details, see the [Web Monetization Website](https://webmonetization.org/).

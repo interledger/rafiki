@@ -89,10 +89,12 @@ where
     "id": "b97fd85a-126e-42ef-b40d-1a50a70ffa6f",
     "assetId": "7b8b0f65-896d-4403-b7ba-2e24bf20eb35",
     "amount": "100",
-    "idempotencyKey": "b97fd85a-126e-42ef-b40d-1a50a70ffa6f"
+    "idempotencyKey": "b97fd85a-126e-42ef-b40d-1a50a70ffa6f",
+    "timeout": 0
   }
 }
 ```
+See `PostLiquidityWithdrawal` and `VoidLiquidityWithdrawal` at the [below](#postliquiditywithdrawal-or-voidliquiditywithdrawal) section. 
 
 ### Peer Liquidity
 
@@ -117,7 +119,8 @@ where
     "id": "a09b730d-8610-4fda-98fa-ec7acb19c775",
     "peerId": "73158598-2e0c-4973-895e-aebd115af260",
     "amount": "1000000",
-    "idempotencyKey": "a09b730d-8610-4fda-98fa-ec7acb19c775"
+    "idempotencyKey": "a09b730d-8610-4fda-98fa-ec7acb19c775",
+    "timeout": 0
   }
 }
 ```
@@ -144,10 +147,12 @@ where
   "input": {
     "id": "421fae87-9a59-4217-9ff8-faf55ffab9c6",
     "peerId": "73158598-2e0c-4973-895e-aebd115af260",
-    "amount": "100"
+    "amount": "100",
+    "timeout": 0
   }
 }
 ```
+See `PostLiquidityWithdrawal` and `VoidLiquidityWithdrawal` at the [below](#postliquiditywithdrawal-or-voidliquiditywithdrawal) section.
 
 ### Payment Liquidity
 
@@ -200,10 +205,12 @@ where
 {
   "input": {
     "outgoingPaymentId": "b4f85d5c-652d-472d-873c-4ba2a5e39052",
-    "idempotencyKey": "a09b730d-8610-4fda-98fa-ec7acb19c775"
+    "idempotencyKey": "a09b730d-8610-4fda-98fa-ec7acb19c775",
+    "timeout": 0
   }
 }
 ```
+See `PostLiquidityWithdrawal` and `VoidLiquidityWithdrawal` at the [below](#postliquiditywithdrawal-or-voidliquiditywithdrawal) section.
 
 #### Incoming payment
 
@@ -228,7 +235,75 @@ where
 {
   "input": {
     "incomingPaymentId": "b4f85d5c-652d-472d-873c-4ba2a5e39052",
-    "idempotencyKey": "a09b730d-8610-4fda-98fa-ec7acb19c775"
+    "idempotencyKey": "a09b730d-8610-4fda-98fa-ec7acb19c775",
+    "timeout": 0
+  }
+}
+```
+See `PostLiquidityWithdrawal` and `VoidLiquidityWithdrawal` at the [below](#postliquiditywithdrawal-or-voidliquiditywithdrawal) section.
+
+## `PostLiquidityWithdrawal` or `VoidLiquidityWithdrawal`
+
+`PostLiquidityWithdrawal` and `PostLiquidityWithdrawal` are only applicable for two-phase withdrawals. 
+
+- `PostLiquidityWithdrawal` - Post liquidity withdrawal. Withdrawals with `> 0` timeouts are two-phase commits and are committed via this mutation.
+- `VoidLiquidityWithdrawal` - Void liquidity withdrawal. Withdrawals with `> 0` timeouts are two-phase commits and are rolled back via this mutation.
+
+When a withdrawal liquidity transaction is requested with a non-zero `timeout` value _(Zero denotes absence of timeout)_, 
+the transfer will be created as a two-phase transfer [see more](https://en.wikipedia.org/wiki/Two-phase_commit_protocol)   
+
+If the timeout interval passes before the transfer is either posted or voided, the transfer expires and the full amount is returned to the original account.
+Note that timeouts are given as intervals, specified in seconds, rather than as absolute timestamps.
+
+The following withdrawal payments support two-phase transfers:
+- Asset Liquidity Withdrawal
+- Wallet Address Withdrawal
+- Peer Liquidity Withdrawal
+- Incoming Payment Withdrawal
+- Outgoing Payment Withdrawal
+
+### PostLiquidityWithdrawal
+```graphql
+mutation PostLiquidityWithdrawal($input: PostLiquidityWithdrawalInput!) {
+  postLiquidityWithdrawal(input: $input) {
+    code
+    error
+    message
+    success
+  }
+}
+```
+
+where
+
+```json
+{
+  "input": {
+    "withdrawalId": "b4f85d5c-652d-472d-873c-4ba2a5e39052",
+    "idempotencyKey":"a09b730d-8610-4fda-98fa-ec7acb19c775"
+  }
+}
+```
+
+### VoidLiquidityWithdrawal
+```graphql
+mutation VoidLiquidityWithdrawal($input: VoidLiquidityWithdrawalInput!) {
+  voidLiquidityWithdrawal(input: $input) {
+    code
+    error
+    message
+    success
+  }
+}
+```
+
+where
+
+```json
+{
+  "input": {
+    "withdrawalId": "b4f85d5c-652d-472d-873c-4ba2a5e39052",
+    "idempotencyKey":"a09b730d-8610-4fda-98fa-ec7acb19c775"
   }
 }
 ```
