@@ -2,6 +2,7 @@ import { BaseService } from '../../../shared/baseService'
 import { SPSPContext } from '../../../app'
 import base64url from 'base64url'
 import { StreamServer } from '@interledger/stream-receiver'
+import { SPSPRouteError } from './middleware'
 
 const CONTENT_TYPE_V4 = 'application/spsp4+json'
 
@@ -34,14 +35,19 @@ async function getSPSP(
   deps: ServiceDependencies,
   ctx: SPSPContext
 ): Promise<void> {
-  ctx.assert(ctx.accepts(CONTENT_TYPE_V4), 406)
+  if (!ctx.accepts(CONTENT_TYPE_V4)) {
+    throw new SPSPRouteError(406, `Request does not support ${CONTENT_TYPE_V4}`)
+  }
+
   const nonce = ctx.request.headers['receipt-nonce']
   const secret = ctx.request.headers['receipt-secret']
-  ctx.assert(
-    !nonce === !secret,
-    400,
-    'Failed to generate credentials: receipt nonce and secret must accompany each other'
-  )
+
+  if (!!nonce !== !!secret) {
+    throw new SPSPRouteError(
+      400,
+      'Failed to generate credentials: receipt nonce and secret must accompany each other'
+    )
+  }
 
   try {
     const { ilpAddress, sharedSecret } = deps.streamServer.generateCredentials({
@@ -63,6 +69,10 @@ async function getSPSP(
       receipts_enabled: !!(nonce && secret)
     })
   } catch (err) {
-    ctx.throw(400, err instanceof Error && err.message)
+    const errorMessage =
+      err instanceof Error ? err.message : 'Could not generate SPSP credentials'
+    throw new SPSPRouteError(400, errorMessage, {
+      paymentTag: ctx.paymentTag
+    })
   }
 }
