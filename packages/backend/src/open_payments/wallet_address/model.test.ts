@@ -59,7 +59,7 @@ export const setup = <
     },
     options.params
   )
-  ctx.walletAddress = options.walletAddress
+  ctx.walletAddressUrl = options.walletAddress.url
   ctx.grant = options.grant
   ctx.client = options.client
   ctx.accessAction = options.accessAction

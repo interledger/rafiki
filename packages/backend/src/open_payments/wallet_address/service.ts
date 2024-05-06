@@ -29,6 +29,10 @@ interface Options {
   publicName?: string
 }
 
+interface GetOrPollByUrlOptions {
+  mustBeActive?: boolean
+}
+
 export interface CreateOptions extends Options {
   url: string
   assetId: string
@@ -46,7 +50,10 @@ export interface WalletAddressService {
   update(options: UpdateOptions): Promise<WalletAddress | WalletAddressError>
   get(id: string): Promise<WalletAddress | undefined>
   getByUrl(url: string): Promise<WalletAddress | undefined>
-  getOrPollByUrl(url: string): Promise<WalletAddress | undefined>
+  getOrPollByUrl(
+    url: string,
+    options?: GetOrPollByUrlOptions
+  ): Promise<WalletAddress | undefined>
   getPage(
     pagination?: Pagination,
     sortOrder?: SortOrder
@@ -84,7 +91,7 @@ export async function createWalletAddressService({
     update: (options) => updateWalletAddress(deps, options),
     get: (id) => getWalletAddress(deps, id),
     getByUrl: (url) => getWalletAddressByUrl(deps, url),
-    getOrPollByUrl: (url) => getOrPollByUrl(deps, url),
+    getOrPollByUrl: (url, options) => getOrPollByUrl(deps, url, options),
     getPage: (pagination?, sortOrder?) =>
       getWalletAddressPage(deps, pagination, sortOrder),
     processNext: () => processNextWalletAddress(deps),
@@ -181,12 +188,13 @@ async function getWalletAddress(
 
 async function getOrPollByUrl(
   deps: ServiceDependencies,
-  url: string
+  url: string,
+  options: GetOrPollByUrlOptions = { mustBeActive: true }
 ): Promise<WalletAddress | undefined> {
   const existingWalletAddress = await getWalletAddressByUrl(deps, url)
 
   if (existingWalletAddress) {
-    return existingWalletAddress
+    return checkActiveWalletAddress(existingWalletAddress, options)
   }
 
   await WalletAddressEvent.query(deps.knex).insert({
@@ -203,7 +211,7 @@ async function getOrPollByUrl(
       timeoutMs: deps.config.walletAddressLookupTimeoutMs
     })
 
-    return walletAddress
+    return checkActiveWalletAddress(walletAddress, options)
   } catch (error) {
     const errorMessage = 'Could not get wallet address'
     deps.logger.error(
@@ -213,6 +221,21 @@ async function getOrPollByUrl(
 
     return undefined
   }
+}
+
+function checkActiveWalletAddress(
+  walletAddress?: WalletAddress,
+  options?: GetOrPollByUrlOptions
+) {
+  if (!walletAddress) {
+    return undefined
+  }
+
+  if (options?.mustBeActive && !walletAddress.isActive) {
+    return undefined
+  }
+
+  return walletAddress
 }
 
 async function getWalletAddressByUrl(

@@ -1,6 +1,9 @@
 import { AccessAction } from '@interledger/open-payments'
-import { WalletAddressSubresource } from './model'
-import { WalletAddressSubresourceService } from './service'
+import { WalletAddress, WalletAddressSubresource } from './model'
+import {
+  WalletAddressService,
+  WalletAddressSubresourceService
+} from './service'
 import { WalletAddressContext, ListContext } from '../../app'
 import {
   getPageInfo,
@@ -11,6 +14,7 @@ import { OpenPaymentsServerRouteError } from '../route-errors'
 interface ServiceDependencies {
   authServer: string
   resourceServer: string
+  walletAddressService: WalletAddressService
 }
 
 export interface WalletAddressRoutes {
@@ -25,12 +29,15 @@ export function createWalletAddressRoutes(
   }
 }
 
-// Spec: https://docs.openpayments.guide/reference/get-public-account
 export async function getWalletAddress(
   deps: ServiceDependencies,
   ctx: WalletAddressContext
 ): Promise<void> {
-  if (!ctx.walletAddress) {
+  const walletAddress = await deps.walletAddressService.getOrPollByUrl(
+    ctx.walletAddressUrl
+  )
+
+  if (!walletAddress) {
     throw new OpenPaymentsServerRouteError(
       404,
       'Wallet address does not exist',
@@ -40,7 +47,7 @@ export async function getWalletAddress(
     )
   }
 
-  ctx.body = ctx.walletAddress.toOpenPaymentsType({
+  ctx.body = walletAddress.toOpenPaymentsType({
     authServer: deps.authServer,
     resourceServer: deps.resourceServer
   })
@@ -48,12 +55,14 @@ export async function getWalletAddress(
 
 interface ListSubresourceOptions<M extends WalletAddressSubresource> {
   ctx: ListContext
+  walletAddress: WalletAddress
   getWalletAddressPage: WalletAddressSubresourceService<M>['getWalletAddressPage']
   toBody: (model: M) => Record<string, unknown>
 }
 
 export const listSubresource = async <M extends WalletAddressSubresource>({
   ctx,
+  walletAddress,
   getWalletAddressPage,
   toBody
 }: ListSubresourceOptions<M>) => {
@@ -73,19 +82,19 @@ export const listSubresource = async <M extends WalletAddressSubresource>({
   const pagination = parsePaginationQueryParameters(ctx.request.query)
   const client = ctx.accessAction === AccessAction.List ? ctx.client : undefined
   const page = await getWalletAddressPage({
-    walletAddressId: ctx.walletAddress.id,
+    walletAddressId: walletAddress.id,
     pagination,
     client
   })
   const pageInfo = await getPageInfo({
     getPage: (pagination) =>
       getWalletAddressPage({
-        walletAddressId: ctx.walletAddress.id,
+        walletAddressId: walletAddress.id,
         pagination,
         client
       }),
     page,
-    walletAddress: ctx.request.query['wallet-address']
+    walletAddress: walletAddress.url
   })
   const result = {
     pagination: pageInfo,

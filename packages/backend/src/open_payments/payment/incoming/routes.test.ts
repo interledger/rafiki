@@ -1,5 +1,6 @@
 import { faker } from '@faker-js/faker'
 import jestOpenAPI from 'jest-openapi'
+import assert from 'assert'
 
 import { Amount, AmountJSON, parseAmount, serializeAmount } from '../../amount'
 import { WalletAddress } from '../../wallet_address/model'
@@ -8,7 +9,12 @@ import { createTestApp, TestContainer } from '../../../tests/app'
 import { Config, IAppConfig } from '../../../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../../..'
-import { AppServices, CreateContext, CompleteContext } from '../../../app'
+import {
+  AppServices,
+  CreateContext,
+  CompleteContext,
+  ListContext
+} from '../../../app'
 import { truncateTables } from '../../../tests/tableManager'
 import { IncomingPayment, IncomingPaymentState } from './model'
 import {
@@ -23,6 +29,8 @@ import { Asset } from '../../../asset/model'
 import { IncomingPaymentError, errorToCode, errorToMessage } from './errors'
 import { IncomingPaymentService } from './service'
 import { IncomingPaymentWithPaymentMethods as OpenPaymentsIncomingPaymentWithPaymentMethods } from '@interledger/open-payments'
+import { WalletAddressService } from '../../wallet_address/service'
+import { OpenPaymentsServerRouteError } from '../../route-errors'
 
 describe('Incoming Payment Routes', (): void => {
   let deps: IocContract<AppServices>
@@ -30,6 +38,7 @@ describe('Incoming Payment Routes', (): void => {
   let config: IAppConfig
   let incomingPaymentRoutes: IncomingPaymentRoutes
   let incomingPaymentService: IncomingPaymentService
+  let walletAddressService: WalletAddressService
 
   beforeAll(async (): Promise<void> => {
     config = Config
@@ -50,6 +59,7 @@ describe('Incoming Payment Routes', (): void => {
     config = await deps.use('config')
     incomingPaymentRoutes = await deps.use('incomingPaymentRoutes')
     incomingPaymentService = await deps.use('incomingPaymentService')
+    walletAddressService = await deps.use('walletAddressService')
 
     expiresAt = new Date(Date.now() + 30_000)
     asset = await createAsset(deps)
@@ -153,6 +163,28 @@ describe('Incoming Payment Routes', (): void => {
     )
   })
 
+  describe('list', (): void => {
+    test('throws if cannot get wallet address', async (): Promise<void> => {
+      const ctx = setup<ListContext>({
+        reqOpts: { body: {} },
+        walletAddress
+      })
+
+      jest
+        .spyOn(walletAddressService, 'getOrPollByUrl')
+        .mockResolvedValueOnce(undefined)
+
+      expect.assertions(2)
+      try {
+        await incomingPaymentRoutes.list(ctx)
+      } catch (err) {
+        assert(err instanceof OpenPaymentsServerRouteError)
+        expect(err.message).toBe('Could not get wallet address')
+        expect(err.status).toBe(400)
+      }
+    })
+  })
+
   describe('create', (): void => {
     let amount: AmountJSON
 
@@ -252,6 +284,29 @@ describe('Incoming Payment Routes', (): void => {
         })
       }
     )
+
+    test('throws if cannot get wallet address', async () => {
+      const ctx = setup<CreateContext<CreateBody>>({
+        reqOpts: { body: {} },
+        walletAddress
+      })
+
+      jest
+        .spyOn(walletAddressService, 'getOrPollByUrl')
+        .mockResolvedValueOnce(undefined)
+
+      expect.assertions(3)
+      try {
+        await incomingPaymentRoutes.create(ctx)
+      } catch (err) {
+        assert(err instanceof OpenPaymentsServerRouteError)
+        expect(err.message).toBe('Could not get wallet address')
+        expect(err.status).toBe(400)
+      }
+
+      const createSpy = jest.spyOn(incomingPaymentService, 'create')
+      expect(createSpy).not.toHaveBeenCalled()
+    })
   })
 
   describe('complete', (): void => {
@@ -276,7 +331,6 @@ describe('Incoming Payment Routes', (): void => {
         },
         walletAddress
       })
-      ctx.walletAddress = walletAddress
       await expect(incomingPaymentRoutes.complete(ctx)).resolves.toBeUndefined()
       expect(ctx.response).toSatisfyApiSpec()
       expect(ctx.body).toEqual({

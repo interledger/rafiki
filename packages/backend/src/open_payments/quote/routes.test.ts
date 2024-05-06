@@ -21,11 +21,14 @@ import {
 import { createAsset, randomAsset } from '../../tests/asset'
 import { createWalletAddress } from '../../tests/walletAddress'
 import { createQuote } from '../../tests/quote'
+import { WalletAddressService } from '../wallet_address/service'
+import { OpenPaymentsServerRouteError } from '../route-errors'
 
 describe('Quote Routes', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let quoteService: QuoteService
+  let walletAddressService: WalletAddressService
   let config: IAppConfig
   let quoteRoutes: QuoteRoutes
   let walletAddress: WalletAddress
@@ -67,6 +70,7 @@ describe('Quote Routes', (): void => {
     config = await deps.use('config')
     quoteRoutes = await deps.use('quoteRoutes')
     quoteService = await deps.use('quoteService')
+    walletAddressService = await deps.use('walletAddressService')
     const { resourceServerSpec } = await deps.use('openApi')
     jestOpenAPI(resourceServerSpec)
   })
@@ -282,6 +286,26 @@ describe('Quote Routes', (): void => {
           method: 'ilp'
         })
       })
+    })
+
+    test('throws if cannot get wallet address', async () => {
+      const ctx = setup({})
+
+      jest
+        .spyOn(walletAddressService, 'getOrPollByUrl')
+        .mockResolvedValueOnce(undefined)
+
+      expect.assertions(3)
+      try {
+        await quoteRoutes.create(ctx)
+      } catch (err) {
+        assert(err instanceof OpenPaymentsServerRouteError)
+        expect(err.message).toBe('Could not get wallet address')
+        expect(err.status).toBe(400)
+      }
+
+      const createSpy = jest.spyOn(quoteService, 'create')
+      expect(createSpy).not.toHaveBeenCalled()
     })
   })
 })

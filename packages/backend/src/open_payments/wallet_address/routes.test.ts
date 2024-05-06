@@ -58,7 +58,7 @@ describe('Wallet Address Routes', (): void => {
         headers: { Accept: 'application/json' },
         url: '/'
       })
-      ctx.walletAddress = walletAddress
+      ctx.walletAddressUrl = walletAddress.url
       await expect(walletAddressRoutes.get(ctx)).resolves.toBeUndefined()
       expect(ctx.response).toSatisfyApiSpec()
       expect(ctx.body).toEqual({

@@ -1,17 +1,20 @@
 import jestOpenAPI from 'jest-openapi'
 import { generateJwk } from '@interledger/http-signature-utils'
 import { v4 as uuid } from 'uuid'
+import assert from 'assert'
 
 import { createContext } from '../../../tests/context'
 import { createTestApp, TestContainer } from '../../../tests/app'
 import { Config } from '../../../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../../..'
-import { AppServices, WalletAddressKeysContext } from '../../../app'
+import { AppServices, WalletAddressContext } from '../../../app'
 import { truncateTables } from '../../../tests/tableManager'
 import { WalletAddressKeyRoutes } from './routes'
 import { WalletAddressKeyService } from './service'
 import { createWalletAddress } from '../../../tests/walletAddress'
+import { WalletAddressService } from '../service'
+import { OpenPaymentsServerRouteError } from '../../route-errors'
 
 const TEST_KEY = generateJwk({ keyId: uuid() })
 
@@ -20,6 +23,7 @@ describe('Wallet Address Keys Routes', (): void => {
   let appContainer: TestContainer
   let walletAddressKeyService: WalletAddressKeyService
   let walletAddressKeyRoutes: WalletAddressKeyRoutes
+  let walletAddressService: WalletAddressService
   const mockMessageProducer = {
     send: jest.fn()
   }
@@ -31,6 +35,7 @@ describe('Wallet Address Keys Routes', (): void => {
     const { walletAddressServerSpec } = await deps.use('openApi')
     jestOpenAPI(walletAddressServerSpec)
     walletAddressKeyService = await deps.use('walletAddressKeyService')
+    walletAddressService = await deps.use('walletAddressService')
   })
 
   beforeEach(async (): Promise<void> => {
@@ -55,11 +60,10 @@ describe('Wallet Address Keys Routes', (): void => {
       }
       const key = await walletAddressKeyService.create(keyOption)
 
-      const ctx = createContext<WalletAddressKeysContext>({
+      const ctx = createContext<WalletAddressContext>({
         headers: { Accept: 'application/json' },
         url: `/jwks.json`
       })
-      ctx.walletAddress = walletAddress
       ctx.walletAddressUrl = walletAddress.url
 
       await expect(
@@ -74,11 +78,10 @@ describe('Wallet Address Keys Routes', (): void => {
     test('returns 200 with empty array if no keys for a wallet address', async (): Promise<void> => {
       const walletAddress = await createWalletAddress(deps)
 
-      const ctx = createContext<WalletAddressKeysContext>({
+      const ctx = createContext<WalletAddressContext>({
         headers: { Accept: 'application/json' },
         url: `/jwks.json`
       })
-      ctx.walletAddress = walletAddress
       ctx.walletAddressUrl = walletAddress.url
 
       await expect(
@@ -96,7 +99,7 @@ describe('Wallet Address Keys Routes', (): void => {
         keyId: config.keyId
       })
 
-      const ctx = createContext<WalletAddressKeysContext>({
+      const ctx = createContext<WalletAddressContext>({
         headers: { Accept: 'application/json' },
         url: '/jwks.json'
       })
@@ -111,15 +114,23 @@ describe('Wallet Address Keys Routes', (): void => {
     })
 
     test('returns 404 if wallet address does not exist', async (): Promise<void> => {
-      const ctx = createContext<WalletAddressKeysContext>({
+      const ctx = createContext<WalletAddressContext>({
         headers: { Accept: 'application/json' },
         url: `/jwks.json`
       })
-      ctx.walletAddress = undefined
 
-      await expect(
-        walletAddressKeyRoutes.getKeysByWalletAddressId(ctx)
-      ).rejects.toThrow(/Could not get wallet address keys./)
+      jest
+        .spyOn(walletAddressService, 'getOrPollByUrl')
+        .mockResolvedValueOnce(undefined)
+
+      expect.assertions(2)
+      try {
+        await walletAddressKeyRoutes.getKeysByWalletAddressId(ctx)
+      } catch (err) {
+        assert.ok(err instanceof OpenPaymentsServerRouteError)
+        expect(err.message).toBe('Could not get wallet address')
+        expect(err.status).toBe(404)
+      }
     })
   })
 })

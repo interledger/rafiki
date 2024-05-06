@@ -19,11 +19,13 @@ import {
 } from '../../wallet_address/model'
 import { OpenPaymentsServerRouteError } from '../../route-errors'
 import { Amount } from '../../amount'
+import { WalletAddressService } from '../../wallet_address/service'
 
 interface ServiceDependencies {
   config: IAppConfig
   logger: Logger
   outgoingPaymentService: OutgoingPaymentService
+  walletAddressService: WalletAddressService
 }
 
 export interface OutgoingPaymentRoutes {
@@ -100,9 +102,18 @@ async function createOutgoingPayment(
   deps: ServiceDependencies,
   ctx: CreateContext<CreateBody>
 ): Promise<void> {
+  const walletAddress = await deps.walletAddressService.getOrPollByUrl(
+    ctx.walletAddressUrl
+  )
+
+  if (!walletAddress) {
+    throw new OpenPaymentsServerRouteError(400, 'Could not get wallet address')
+  }
+
   const { body } = ctx.request
+
   const baseOptions: OutgoingPaymentCreateBaseOptions = {
-    walletAddressId: ctx.walletAddress.id,
+    walletAddressId: walletAddress.id,
     metadata: body.metadata,
     client: ctx.client,
     grant: ctx.grant
@@ -153,10 +164,19 @@ async function listOutgoingPayments(
   deps: ServiceDependencies,
   ctx: ListContext
 ): Promise<void> {
+  const walletAddress = await deps.walletAddressService.getOrPollByUrl(
+    ctx.walletAddressUrl
+  )
+
+  if (!walletAddress) {
+    throw new OpenPaymentsServerRouteError(400, 'Could not get wallet address')
+  }
+
   await listSubresource({
     ctx,
+    walletAddress,
     getWalletAddressPage: deps.outgoingPaymentService.getWalletAddressPage,
-    toBody: (payment) => outgoingPaymentToBody(ctx.walletAddress, payment)
+    toBody: (payment) => outgoingPaymentToBody(walletAddress, payment)
   })
 }
 

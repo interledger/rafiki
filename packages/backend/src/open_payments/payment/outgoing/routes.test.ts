@@ -7,7 +7,7 @@ import { createTestApp, TestContainer } from '../../../tests/app'
 import { Config, IAppConfig } from '../../../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../../..'
-import { AppServices, CreateContext } from '../../../app'
+import { AppServices, CreateContext, ListContext } from '../../../app'
 import { truncateTables } from '../../../tests/tableManager'
 import { createAsset } from '../../../tests/asset'
 import { errorToCode, errorToMessage, OutgoingPaymentError } from './errors'
@@ -31,6 +31,7 @@ import { createOutgoingPayment } from '../../../tests/outgoingPayment'
 import { createWalletAddress } from '../../../tests/walletAddress'
 import { UnionOmit } from '../../../shared/utils'
 import { OpenPaymentsServerRouteError } from '../../route-errors'
+import { WalletAddressService } from '../../wallet_address/service'
 
 describe('Outgoing Payment Routes', (): void => {
   let deps: IocContract<AppServices>
@@ -39,6 +40,7 @@ describe('Outgoing Payment Routes', (): void => {
   let config: IAppConfig
   let outgoingPaymentRoutes: OutgoingPaymentRoutes
   let outgoingPaymentService: OutgoingPaymentService
+  let walletAddressService: WalletAddressService
   let walletAddress: WalletAddress
   let baseUrl: string
 
@@ -71,6 +73,7 @@ describe('Outgoing Payment Routes', (): void => {
     config = await deps.use('config')
     outgoingPaymentRoutes = await deps.use('outgoingPaymentRoutes')
     outgoingPaymentService = await deps.use('outgoingPaymentService')
+    walletAddressService = await deps.use('walletAddressService')
     const { resourceServerSpec } = await deps.use('openApi')
     jestOpenAPI(resourceServerSpec)
   })
@@ -129,6 +132,31 @@ describe('Outgoing Payment Routes', (): void => {
       },
       list: (ctx) => outgoingPaymentRoutes.list(ctx),
       urlPath: OutgoingPayment.urlPath
+    })
+  })
+
+  describe('list', (): void => {
+    test('throws if cannot get wallet address', async () => {
+      const ctx = setupContext<ListContext>({
+        reqOpts: {
+          headers: { Accept: 'application/json' },
+          method: 'GET'
+        },
+        walletAddress
+      })
+
+      jest
+        .spyOn(walletAddressService, 'getOrPollByUrl')
+        .mockResolvedValueOnce(undefined)
+
+      expect.assertions(2)
+      try {
+        await outgoingPaymentRoutes.list(ctx)
+      } catch (err) {
+        assert(err instanceof OpenPaymentsServerRouteError)
+        expect(err.message).toBe('Could not get wallet address')
+        expect(err.status).toBe(400)
+      }
     })
   })
 
@@ -294,5 +322,28 @@ describe('Outgoing Payment Routes', (): void => {
         })
       }
     )
+
+    test('throws if cannot get wallet address', async () => {
+      const quoteId = uuid()
+      const ctx = setup({
+        quoteId: `${baseUrl}/quotes/${quoteId}`
+      })
+
+      jest
+        .spyOn(walletAddressService, 'getOrPollByUrl')
+        .mockResolvedValueOnce(undefined)
+
+      expect.assertions(3)
+      try {
+        await outgoingPaymentRoutes.create(ctx)
+      } catch (err) {
+        assert(err instanceof OpenPaymentsServerRouteError)
+        expect(err.message).toBe('Could not get wallet address')
+        expect(err.status).toBe(400)
+      }
+
+      const createSpy = jest.spyOn(outgoingPaymentService, 'create')
+      expect(createSpy).not.toHaveBeenCalled()
+    })
   })
 })

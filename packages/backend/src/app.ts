@@ -24,8 +24,6 @@ import { HttpTokenService } from './payment-method/ilp/peer-http-token/service'
 import { AssetService, AssetOptions } from './asset/service'
 import { AccountingService } from './accounting/service'
 import { PeerService } from './payment-method/ilp/peer/service'
-import { createWalletAddressMiddleware } from './open_payments/wallet_address/middleware'
-import { WalletAddress } from './open_payments/wallet_address/model'
 import { WalletAddressService } from './open_payments/wallet_address/service'
 import {
   createTokenIntrospectionMiddleware,
@@ -86,7 +84,10 @@ import { PaymentMethodHandlerService } from './payment-method/handler/service'
 import { IlpPaymentService } from './payment-method/ilp/service'
 import { TelemetryService } from './telemetry/service'
 import { ApolloArmor } from '@escape.tech/graphql-armor'
-import { openPaymentsServerErrorMiddleware } from './open_payments/route-errors'
+import {
+  OpenPaymentsServerRouteError,
+  openPaymentsServerErrorMiddleware
+} from './open_payments/route-errors'
 import { verifyApiSignature } from './shared/utils'
 
 export interface AppContextData {
@@ -94,8 +95,6 @@ export interface AppContextData {
   container: AppContainer
   // Set by @koa/router.
   params: { [key: string]: string }
-  walletAddress?: WalletAddress
-  walletAddressUrl?: string
 }
 
 export interface ApolloContext {
@@ -112,17 +111,10 @@ export type AppRequest<ParamsT extends string = string> = Omit<
 }
 
 export interface WalletAddressContext extends AppContext {
-  walletAddress: WalletAddress
+  walletAddressUrl: string
   grant?: Grant
   client?: string
   accessAction?: AccessAction
-}
-
-export type WalletAddressKeysContext = Omit<
-  WalletAddressContext,
-  'walletAddress'
-> & {
-  walletAddress?: WalletAddress
 }
 
 type HttpSigHeaders = Record<'signature' | 'signature-input', string>
@@ -141,7 +133,7 @@ export type HttpSigWithAuthenticatedStatusContext = HttpSigContext &
   AuthenticatedStatusContext
 
 // Wallet address subresources
-interface GetCollectionQuery {
+type GetCollectionQuery = {
   'wallet-address': string
 }
 
@@ -426,7 +418,10 @@ export class App {
     // Create incoming payment
     router.post<DefaultState, SignedCollectionContext<IncomingCreateBody>>(
       '/incoming-payments',
-      createWalletAddressMiddleware(),
+      async (ctx, next) => {
+        ctx.walletAddressUrl = ctx.request.body.walletAddress
+        await next()
+      },
       createValidatorMiddleware<
         ContextType<SignedCollectionContext<IncomingCreateBody>>
       >(
@@ -452,7 +447,10 @@ export class App {
       SignedCollectionContext<never, GetCollectionQuery>
     >(
       '/incoming-payments',
-      createWalletAddressMiddleware(),
+      async (ctx, next) => {
+        ctx.walletAddressUrl = ctx.query['wallet-address'] as string
+        await next()
+      },
       createValidatorMiddleware<
         ContextType<SignedCollectionContext<never, GetCollectionQuery>>
       >(
@@ -475,7 +473,10 @@ export class App {
     // Create outgoing payment
     router.post<DefaultState, SignedCollectionContext<OutgoingCreateBody>>(
       '/outgoing-payments',
-      createWalletAddressMiddleware(),
+      async (ctx, next) => {
+        ctx.walletAddressUrl = ctx.request.body.walletAddress
+        await next()
+      },
       createValidatorMiddleware<
         ContextType<SignedCollectionContext<OutgoingCreateBody>>
       >(
@@ -501,7 +502,10 @@ export class App {
       SignedCollectionContext<never, GetCollectionQuery>
     >(
       '/outgoing-payments',
-      createWalletAddressMiddleware(),
+      async (ctx, next) => {
+        ctx.walletAddressUrl = ctx.query['wallet-address'] as string
+        await next()
+      },
       createValidatorMiddleware<
         ContextType<SignedCollectionContext<never, GetCollectionQuery>>
       >(
@@ -524,7 +528,10 @@ export class App {
     // Create quote
     router.post<DefaultState, SignedCollectionContext<QuoteCreateBody>>(
       '/quotes',
-      createWalletAddressMiddleware(),
+      async (ctx, next) => {
+        ctx.walletAddressUrl = ctx.request.body.walletAddress
+        await next()
+      },
       createValidatorMiddleware<
         ContextType<SignedCollectionContext<QuoteCreateBody>>
       >(
@@ -547,7 +554,24 @@ export class App {
     // Read incoming payment
     router.get<DefaultState, SubresourceContextWithAuthenticatedStatus>(
       '/incoming-payments/:id',
-      createWalletAddressMiddleware(),
+      async (ctx, next) => {
+        const incomingPaymentService = await ctx.container.use(
+          'incomingPaymentService'
+        )
+        const incomingPayment = await incomingPaymentService.get({
+          id: ctx.params.id
+        })
+
+        if (!incomingPayment?.walletAddress) {
+          throw new OpenPaymentsServerRouteError(401, 'Unauthorized', {
+            description: 'Failed to get wallet address from incomig payment',
+            id: ctx.params.id
+          })
+        }
+
+        ctx.walletAddressUrl = incomingPayment.walletAddress.url
+        await next()
+      },
       createValidatorMiddleware<
         ContextType<SubresourceContextWithAuthenticatedStatus>
       >(
@@ -571,7 +595,24 @@ export class App {
     // Complete incoming payment
     router.post<DefaultState, SignedSubresourceContext>(
       '/incoming-payments/:id/complete',
-      createWalletAddressMiddleware(),
+      async (ctx, next) => {
+        const incomingPaymentService = await ctx.container.use(
+          'incomingPaymentService'
+        )
+        const incomingPayment = await incomingPaymentService.get({
+          id: ctx.params.id
+        })
+
+        if (!incomingPayment?.walletAddress) {
+          throw new OpenPaymentsServerRouteError(401, 'Unauthorized', {
+            description: 'Failed to get wallet address from incoming payment',
+            id: ctx.params.id
+          })
+        }
+
+        ctx.walletAddressUrl = incomingPayment.walletAddress.url
+        await next()
+      },
       createValidatorMiddleware<ContextType<SignedSubresourceContext>>(
         resourceServerSpec,
         {
@@ -592,7 +633,24 @@ export class App {
     // Read outgoing payment
     router.get<DefaultState, SignedSubresourceContext>(
       '/outgoing-payments/:id',
-      createWalletAddressMiddleware(),
+      async (ctx, next) => {
+        const outgoingPaymentService = await ctx.container.use(
+          'outgoingPaymentService'
+        )
+        const outgoingPayment = await outgoingPaymentService.get({
+          id: ctx.params.id
+        })
+
+        if (!outgoingPayment?.walletAddress) {
+          throw new OpenPaymentsServerRouteError(401, 'Unauthorized', {
+            description: 'Failed to get wallet address from outgoing payment',
+            id: ctx.params.id
+          })
+        }
+
+        ctx.walletAddressUrl = outgoingPayment.walletAddress.url
+        await next()
+      },
       createValidatorMiddleware<ContextType<SignedSubresourceContext>>(
         resourceServerSpec,
         {
@@ -613,7 +671,22 @@ export class App {
     // Read quote
     router.get<DefaultState, SignedSubresourceContext>(
       '/quotes/:id',
-      createWalletAddressMiddleware(),
+      async (ctx, next) => {
+        const quoteService = await ctx.container.use('quoteService')
+        const quote = await quoteService.get({
+          id: ctx.params.id
+        })
+
+        if (!quote?.walletAddress) {
+          throw new OpenPaymentsServerRouteError(401, 'Unauthorized', {
+            description: 'Failed to get wallet address from quote',
+            id: ctx.params.id
+          })
+        }
+
+        ctx.walletAddressUrl = quote.walletAddress.url
+        await next()
+      },
       createValidatorMiddleware<ContextType<SignedSubresourceContext>>(
         resourceServerSpec,
         {
@@ -632,8 +705,11 @@ export class App {
 
     router.get(
       WALLET_ADDRESS_PATH + '/jwks.json',
-      createWalletAddressMiddleware(),
-      createValidatorMiddleware<WalletAddressKeysContext>(
+      async (ctx, next) => {
+        ctx.walletAddressUrl = `https://${ctx.request.host}/${ctx.params.walletAddressPath}`
+        await next()
+      },
+      createValidatorMiddleware<WalletAddressContext>(
         walletAddressServerSpec,
         {
           path: '/jwks.json',
@@ -641,15 +717,17 @@ export class App {
         },
         validatorMiddlewareOptions
       ),
-      async (ctx: WalletAddressKeysContext): Promise<void> =>
-        await walletAddressKeyRoutes.getKeysByWalletAddressId(ctx)
+      walletAddressKeyRoutes.getKeysByWalletAddressId
     )
 
     // Add the wallet address query route last.
     // Otherwise it will be matched instead of other Open Payments endpoints.
     router.get(
       WALLET_ADDRESS_PATH,
-      createWalletAddressMiddleware(),
+      async (ctx, next) => {
+        ctx.walletAddressUrl = `https://${ctx.request.host}/${ctx.params.walletAddressPath}`
+        await next()
+      },
       createSpspMiddleware(this.config.spspEnabled),
       createValidatorMiddleware<WalletAddressContext>(
         walletAddressServerSpec,

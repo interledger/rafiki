@@ -12,11 +12,13 @@ import {
   throwIfMissingWalletAddress
 } from '../wallet_address/model'
 import { OpenPaymentsServerRouteError } from '../route-errors'
+import { WalletAddressService } from '../wallet_address/service'
 
 interface ServiceDependencies {
   config: IAppConfig
   logger: Logger
   quoteService: QuoteService
+  walletAddressService: WalletAddressService
 }
 
 export interface QuoteRoutes {
@@ -78,8 +80,17 @@ async function createQuote(
   ctx: CreateContext<CreateBody>
 ): Promise<void> {
   const { body } = ctx.request
+
+  const walletAddress = await deps.walletAddressService.getOrPollByUrl(
+    ctx.walletAddressUrl
+  )
+
+  if (!walletAddress) {
+    throw new OpenPaymentsServerRouteError(400, 'Could not get wallet address')
+  }
+
   const options: CreateQuoteOptions = {
-    walletAddressId: ctx.walletAddress.id,
+    walletAddressId: walletAddress.id,
     receiver: body.receiver,
     client: ctx.client,
     method: body.method
@@ -106,10 +117,8 @@ async function createQuote(
     )
   }
 
-  throwIfMissingWalletAddress(deps, quoteOrErr)
-
   ctx.status = 201
-  ctx.body = quoteToBody(quoteOrErr.walletAddress, quoteOrErr)
+  ctx.body = quoteToBody(walletAddress, quoteOrErr)
 }
 
 function quoteToBody(

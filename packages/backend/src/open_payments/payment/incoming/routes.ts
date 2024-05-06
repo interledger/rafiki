@@ -15,12 +15,14 @@ import { StreamCredentialsService } from '../../../payment-method/ilp/stream-cre
 import { AccessAction } from '@interledger/open-payments'
 import { OpenPaymentsServerRouteError } from '../../route-errors'
 import { throwIfMissingWalletAddress } from '../../wallet_address/model'
+import { WalletAddressService } from '../../wallet_address/service'
 
 interface ServiceDependencies {
   config: IAppConfig
   logger: Logger
   incomingPaymentService: IncomingPaymentService
   streamCredentialsService: StreamCredentialsService
+  walletAddressService: WalletAddressService
 }
 
 export type ReadContextWithAuthenticatedStatus = ReadContext &
@@ -127,13 +129,21 @@ async function createIncomingPayment(
 ): Promise<void> {
   const { body } = ctx.request
 
+  const walletAddress = await deps.walletAddressService.getOrPollByUrl(
+    ctx.walletAddressUrl
+  )
+
+  if (!walletAddress) {
+    throw new OpenPaymentsServerRouteError(400, 'Could not get wallet address')
+  }
+
   let expiresAt: Date | undefined
   if (body.expiresAt !== undefined) {
     expiresAt = new Date(body.expiresAt)
   }
 
   const incomingPaymentOrError = await deps.incomingPaymentService.create({
-    walletAddressId: ctx.walletAddress.id,
+    walletAddressId: walletAddress.id,
     client: ctx.client,
     metadata: body.metadata,
     expiresAt,
@@ -147,14 +157,12 @@ async function createIncomingPayment(
     )
   }
 
-  throwIfMissingWalletAddress(deps, incomingPaymentOrError)
-
   ctx.status = 201
   const streamCredentials = deps.streamCredentialsService.get(
     incomingPaymentOrError
   )
   ctx.body = incomingPaymentOrError.toOpenPaymentsTypeWithMethods(
-    incomingPaymentOrError.walletAddress,
+    walletAddress,
     streamCredentials
   )
 }
@@ -185,9 +193,18 @@ async function listIncomingPayments(
   deps: ServiceDependencies,
   ctx: ListContext
 ): Promise<void> {
+  const walletAddress = await deps.walletAddressService.getOrPollByUrl(
+    ctx.walletAddressUrl
+  )
+
+  if (!walletAddress) {
+    throw new OpenPaymentsServerRouteError(400, 'Could not get wallet address')
+  }
+
   await listSubresource({
     ctx,
+    walletAddress,
     getWalletAddressPage: deps.incomingPaymentService.getWalletAddressPage,
-    toBody: (payment) => payment.toOpenPaymentsType(ctx.walletAddress)
+    toBody: (payment) => payment.toOpenPaymentsType(walletAddress)
   })
 }

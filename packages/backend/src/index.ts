@@ -304,14 +304,16 @@ export function initIocContainer(
       config: await deps.use('config'),
       logger: await deps.use('logger'),
       incomingPaymentService: await deps.use('incomingPaymentService'),
-      streamCredentialsService: await deps.use('streamCredentialsService')
+      streamCredentialsService: await deps.use('streamCredentialsService'),
+      walletAddressService: await deps.use('walletAddressService')
     })
   })
   container.singleton('walletAddressRoutes', async (deps) => {
     const config = await deps.use('config')
     return createWalletAddressRoutes({
       authServer: config.authServerGrantUrl,
-      resourceServer: config.openPaymentsUrl
+      resourceServer: config.openPaymentsUrl,
+      walletAddressService: await deps.use('walletAddressService')
     })
   })
   container.singleton('walletAddressKeyRoutes', async (deps) => {
@@ -458,7 +460,8 @@ export function initIocContainer(
     return createQuoteRoutes({
       config: await deps.use('config'),
       logger: await deps.use('logger'),
-      quoteService: await deps.use('quoteService')
+      quoteService: await deps.use('quoteService'),
+      walletAddressService: await deps.use('walletAddressService')
     })
   })
 
@@ -485,7 +488,8 @@ export function initIocContainer(
     return createOutgoingPaymentRoutes({
       config: await deps.use('config'),
       logger: await deps.use('logger'),
-      outgoingPaymentService: await deps.use('outgoingPaymentService')
+      outgoingPaymentService: await deps.use('outgoingPaymentService'),
+      walletAddressService: await deps.use('walletAddressService')
     })
   })
 

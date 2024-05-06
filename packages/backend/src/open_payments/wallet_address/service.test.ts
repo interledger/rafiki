@@ -310,12 +310,36 @@ describe('Open Payments Wallet Address Service', (): void => {
     )
   })
 
-  describe('Get Or Poll Wallet Addres By Url', (): void => {
+  describe('Get Or Poll Wallet Address By Url', (): void => {
     describe('existing wallet address', (): void => {
       test('can retrieve wallet address by url', async (): Promise<void> => {
         const walletAddress = await createWalletAddress(deps)
         await expect(
           walletAddressService.getOrPollByUrl(walletAddress.url)
+        ).resolves.toEqual(walletAddress)
+      })
+
+      test('returns undefined if inactive wallet address', async (): Promise<void> => {
+        const walletAddress = await createWalletAddress(deps)
+        await walletAddress.$query(knex).patch({
+          deactivatedAt: new Date()
+        })
+
+        await expect(
+          walletAddressService.getOrPollByUrl(walletAddress.url)
+        ).resolves.toEqual(undefined)
+      })
+
+      test('returns inactive wallet address if mustBeActive=false', async (): Promise<void> => {
+        const walletAddress = await createWalletAddress(deps)
+        await walletAddress.$query(knex).patch({
+          deactivatedAt: new Date()
+        })
+
+        await expect(
+          walletAddressService.getOrPollByUrl(walletAddress.url, {
+            mustBeActive: false
+          })
         ).resolves.toEqual(walletAddress)
       })
     })
