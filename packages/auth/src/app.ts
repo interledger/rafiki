@@ -355,16 +355,18 @@ export class App {
           signed: true,
           store: {
             async get(key) {
-              const data = await redis.get(key)
-              return data ? JSON.parse(data) : null
+              return await redis.hgetall(key)
             },
             async set(key, session) {
               // Add a delay to cookie age to ensure redis record expires after cookie
               const expireInMs = maxAgeMs + 10 * 1000
-              await redis.psetex(key, expireInMs, JSON.stringify(session))
+              const op = redis.multi()
+              op.hset(key, session)
+              op.expire(key, expireInMs)
+              await op.exec()
             },
             async destroy(key) {
-              await redis.del(key)
+              await redis.hdel(key)
             }
           }
         },
