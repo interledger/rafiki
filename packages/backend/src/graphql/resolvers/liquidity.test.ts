@@ -50,7 +50,8 @@ describe('Liquidity Resolvers', (): void => {
   let appContainer: TestContainer
   let accountingService: AccountingService
   let knex: Knex
-  const timeout = 10
+  const timeoutOnePhase = 0
+  const timeoutTwoPhase = 10
 
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer(Config)
@@ -501,7 +502,7 @@ describe('Liquidity Resolvers', (): void => {
               peerId: peer.id,
               amount: startingBalance.toString(),
               idempotencyKey: uuid(),
-              timeout
+              timeout: timeoutOnePhase
             }
           }
         })
@@ -539,7 +540,7 @@ describe('Liquidity Resolvers', (): void => {
               peerId: uuid(),
               amount: '100',
               idempotencyKey: uuid(),
-              timeout
+              timeout: timeoutOnePhase
             }
           }
         })
@@ -578,7 +579,7 @@ describe('Liquidity Resolvers', (): void => {
               peerId: peer.id,
               amount: startingBalance.toString(),
               idempotencyKey: uuid(),
-              timeout
+              timeout: timeoutOnePhase
             }
           }
         })
@@ -625,7 +626,7 @@ describe('Liquidity Resolvers', (): void => {
               peerId: peer.id,
               amount: startingBalance.toString(),
               idempotencyKey: uuid(),
-              timeout
+              timeout: timeoutOnePhase
             }
           }
         })
@@ -669,7 +670,7 @@ describe('Liquidity Resolvers', (): void => {
                 peerId: peer.id,
                 amount: amount.toString(),
                 idempotencyKey: uuid(),
-                timeout
+                timeout: timeoutOnePhase
               }
             }
           })
@@ -725,7 +726,7 @@ describe('Liquidity Resolvers', (): void => {
               assetId: asset.id,
               amount: startingBalance.toString(),
               idempotencyKey: uuid(),
-              timeout
+              timeout: timeoutOnePhase
             }
           }
         })
@@ -763,7 +764,7 @@ describe('Liquidity Resolvers', (): void => {
               assetId: uuid(),
               amount: '100',
               idempotencyKey: uuid(),
-              timeout
+              timeout: timeoutOnePhase
             }
           }
         })
@@ -802,7 +803,7 @@ describe('Liquidity Resolvers', (): void => {
               assetId: asset.id,
               amount: startingBalance.toString(),
               idempotencyKey: uuid(),
-              timeout
+              timeout: timeoutOnePhase
             }
           }
         })
@@ -849,7 +850,7 @@ describe('Liquidity Resolvers', (): void => {
               assetId: asset.id,
               amount: startingBalance.toString(),
               idempotencyKey: uuid(),
-              timeout
+              timeout: timeoutOnePhase
             }
           }
         })
@@ -893,7 +894,7 @@ describe('Liquidity Resolvers', (): void => {
                 assetId: asset.id,
                 amount: amount.toString(),
                 idempotencyKey: uuid(),
-                timeout
+                timeout: timeoutOnePhase
               }
             }
           })
@@ -959,7 +960,7 @@ describe('Liquidity Resolvers', (): void => {
               id,
               walletAddressId: walletAddress.id,
               idempotencyKey: uuid(),
-              timeout
+              timeout: timeoutOnePhase
             }
           }
         })
@@ -1006,7 +1007,7 @@ describe('Liquidity Resolvers', (): void => {
               id: uuid(),
               walletAddressId: uuid(),
               idempotencyKey: uuid(),
-              timeout
+              timeout: timeoutOnePhase
             }
           }
         })
@@ -1048,7 +1049,7 @@ describe('Liquidity Resolvers', (): void => {
               id: 'not a uuid',
               walletAddressId: walletAddress.id,
               idempotencyKey: uuid(),
-              timeout
+              timeout: timeoutOnePhase
             }
           }
         })
@@ -1098,7 +1099,7 @@ describe('Liquidity Resolvers', (): void => {
               id,
               walletAddressId: walletAddress.id,
               idempotencyKey: uuid(),
-              timeout
+              timeout: timeoutOnePhase
             }
           }
         })
@@ -1122,7 +1123,7 @@ describe('Liquidity Resolvers', (): void => {
           id: uuid(),
           account: walletAddress,
           amount,
-          timeout
+          timeout: timeoutOnePhase
         })
       ).resolves.toBeUndefined()
       const response = await appContainer.apolloClient
@@ -1147,7 +1148,7 @@ describe('Liquidity Resolvers', (): void => {
               id: uuid(),
               walletAddressId: walletAddress.id,
               idempotencyKey: uuid(),
-              timeout
+              timeout: timeoutOnePhase
             }
           }
         })
@@ -1187,7 +1188,7 @@ describe('Liquidity Resolvers', (): void => {
             ...deposit,
             id: withdrawalId,
             amount: BigInt(10),
-            timeout
+            timeout: timeoutTwoPhase
           })
         ).resolves.toBeUndefined()
       })
@@ -1400,7 +1401,7 @@ describe('Liquidity Resolvers', (): void => {
             ...deposit,
             id: withdrawalId,
             amount: BigInt(10),
-            timeout
+            timeout: timeoutTwoPhase
           })
         ).resolves.toBeUndefined()
       })
@@ -2076,7 +2077,7 @@ describe('Liquidity Resolvers', (): void => {
                 input: {
                   incomingPaymentId: incomingPayment.id,
                   idempotencyKey: uuid(),
-                  timeout
+                  timeout: timeoutOnePhase
                 }
               }
             })
@@ -2128,7 +2129,7 @@ describe('Liquidity Resolvers', (): void => {
                 input: {
                   incomingPaymentId: uuid(),
                   idempotencyKey: uuid(),
-                  timeout
+                  timeout: timeoutOnePhase
                 }
               }
             })
@@ -2165,7 +2166,7 @@ describe('Liquidity Resolvers', (): void => {
                 input: {
                   incomingPaymentId: incomingPayment.id,
                   idempotencyKey: uuid(),
-                  timeout
+                  timeout: timeoutOnePhase
                 }
               }
             })
@@ -2221,7 +2222,7 @@ describe('Liquidity Resolvers', (): void => {
                 input: {
                   incomingPaymentId: incomingPayment.id,
                   idempotencyKey: uuid(),
-                  timeout
+                  timeout: timeoutOnePhase
                 }
               }
             })
@@ -2295,7 +2296,7 @@ describe('Liquidity Resolvers', (): void => {
                 input: {
                   outgoingPaymentId: outgoingPayment.id,
                   idempotencyKey: uuid(),
-                  timeout
+                  timeout: timeoutOnePhase
                 }
               }
             })
@@ -2336,7 +2337,7 @@ describe('Liquidity Resolvers', (): void => {
                 input: {
                   outgoingPaymentId: uuid(),
                   idempotencyKey: uuid(),
-                  timeout
+                  timeout: timeoutOnePhase
                 }
               }
             })
@@ -2379,7 +2380,7 @@ describe('Liquidity Resolvers', (): void => {
                 input: {
                   outgoingPaymentId: outgoingPayment.id,
                   idempotencyKey: uuid(),
-                  timeout
+                  timeout: timeoutOnePhase
                 }
               }
             })
@@ -2433,7 +2434,7 @@ describe('Liquidity Resolvers', (): void => {
                 input: {
                   outgoingPaymentId: outgoingPayment.id,
                   idempotencyKey: uuid(),
-                  timeout
+                  timeout: timeoutOnePhase
                 }
               }
             })
