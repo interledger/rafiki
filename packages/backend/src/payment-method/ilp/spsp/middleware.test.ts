@@ -8,6 +8,7 @@ import { createTestApp, TestContainer } from '../../../tests/app'
 import { createAsset } from '../../../tests/asset'
 import { createWalletAddress } from '../../../tests/walletAddress'
 import { truncateTables } from '../../../tests/tableManager'
+import { WalletAddress } from '../../../open_payments/wallet_address/model'
 
 describe('SPSP Middleware', (): void => {
   let deps: IocContract<AppServices>
@@ -33,10 +34,11 @@ describe('SPSP Middleware', (): void => {
 
   describe('Wallet Address', (): void => {
     let ctx: SPSPWalletAddressContext
+    let walletAddress: WalletAddress
 
     beforeEach(async (): Promise<void> => {
       const asset = await createAsset(deps)
-      const walletAddress = await createWalletAddress(deps, {
+      walletAddress = await createWalletAddress(deps, {
         assetId: asset.id
       })
       ctx = setup<SPSPWalletAddressContext>({
@@ -68,10 +70,10 @@ describe('SPSP Middleware', (): void => {
         } else {
           expect(spspSpy).toHaveBeenCalledTimes(1)
           expect(next).not.toHaveBeenCalled()
-          expect(ctx.paymentTag).toEqual(ctx.walletAddress.id)
+          expect(ctx.paymentTag).toEqual(walletAddress.id)
           expect(ctx.asset).toEqual({
-            code: ctx.walletAddress.asset.code,
-            scale: ctx.walletAddress.asset.scale
+            code: walletAddress.asset.code,
+            scale: walletAddress.asset.scale
           })
         }
       }

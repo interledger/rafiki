@@ -1,9 +1,22 @@
 import { WalletAddressContext, SPSPContext } from '../../../app'
 
-export type SPSPWalletAddressContext = WalletAddressContext &
-  SPSPContext & {
-    incomingPayment?: never
+export type SPSPWalletAddressContext = WalletAddressContext & SPSPContext
+
+export class SPSPRouteError extends Error {
+  public status: number
+  public details?: Record<string, unknown>
+
+  constructor(
+    status: number,
+    message: string,
+    details?: Record<string, unknown>
+  ) {
+    super(message)
+    this.name = 'SPSPRouteError'
+    this.status = status
+    this.details = details
   }
+}
 
 export function createSpspMiddleware(spspEnabled: boolean) {
   if (spspEnabled) {
@@ -24,11 +37,20 @@ const spspMiddleware = async (
 ): Promise<void> => {
   // Fall back to legacy protocols if client doesn't support Open Payments.
   if (ctx.accepts('application/spsp4+json')) {
-    const receiver = ctx.walletAddress ?? ctx.incomingPayment
-    ctx.paymentTag = receiver.id
+    const walletAddressService = await ctx.container.use('walletAddressService')
+
+    const walletAddress = await walletAddressService.getByUrl(
+      ctx.walletAddressUrl
+    )
+
+    if (!walletAddress) {
+      throw new SPSPRouteError(404, 'Could not get wallet address')
+    }
+
+    ctx.paymentTag = walletAddress.id
     ctx.asset = {
-      code: receiver.asset.code,
-      scale: receiver.asset.scale
+      code: walletAddress.asset.code,
+      scale: walletAddress.asset.scale
     }
     const spspRoutes = await ctx.container.use('spspRoutes')
     await spspRoutes.get(ctx)
