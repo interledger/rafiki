@@ -389,10 +389,7 @@ async function continueGrant(
   if (!continueId || !continueToken) {
     logger.error(
       {
-        ...generateRouteLogs(ctx),
-        headers,
-        params,
-        requestBody
+        ...generateRouteLogs(ctx)
       },
       'missing continuation information'
     )

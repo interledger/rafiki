@@ -86,8 +86,7 @@ async function introspectToken(
   deps.logger.debug(
     {
       ...generateRouteLogs(ctx),
-      grant,
-      accessToken
+      grant
     },
     'introspected access token'
   )
@@ -117,8 +116,7 @@ async function revokeToken(
 
   deps.logger.debug(
     {
-      ...generateRouteLogs(ctx),
-      accessToken
+      ...generateRouteLogs(ctx)
     },
     'revoked access token'
   )
@@ -162,9 +160,7 @@ async function rotateToken(
 
   deps.logger.debug(
     {
-      ...generateRouteLogs(ctx),
-      oldAccessToken: ctx.accessToken,
-      newAccessToken: newToken
+      ...generateRouteLogs(ctx)
     },
     'rotated access token'
   )
