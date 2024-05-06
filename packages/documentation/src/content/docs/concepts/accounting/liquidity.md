@@ -94,7 +94,8 @@ where
   }
 }
 ```
-See `PostLiquidityWithdrawal` and `VoidLiquidityWithdrawal` at the [below](#postliquiditywithdrawal-or-voidliquiditywithdrawal) section. 
+
+See `PostLiquidityWithdrawal` and `VoidLiquidityWithdrawal` at the [below](#postliquiditywithdrawal-or-voidliquiditywithdrawal) section.
 
 ### Peer Liquidity
 
@@ -152,6 +153,7 @@ where
   }
 }
 ```
+
 See `PostLiquidityWithdrawal` and `VoidLiquidityWithdrawal` at the [below](#postliquiditywithdrawal-or-voidliquiditywithdrawal) section.
 
 ### Payment Liquidity
@@ -210,6 +212,7 @@ where
   }
 }
 ```
+
 See `PostLiquidityWithdrawal` and `VoidLiquidityWithdrawal` at the [below](#postliquiditywithdrawal-or-voidliquiditywithdrawal) section.
 
 #### Incoming payment
@@ -240,22 +243,24 @@ where
   }
 }
 ```
+
 See `PostLiquidityWithdrawal` and `VoidLiquidityWithdrawal` at the [below](#postliquiditywithdrawal-or-voidliquiditywithdrawal) section.
 
 ## `PostLiquidityWithdrawal` or `VoidLiquidityWithdrawal`
 
-`PostLiquidityWithdrawal` and `PostLiquidityWithdrawal` are only applicable for two-phase withdrawals. 
+`PostLiquidityWithdrawal` and `PostLiquidityWithdrawal` are only applicable for two-phase withdrawals.
 
 - `PostLiquidityWithdrawal` - Post liquidity withdrawal. Withdrawals with `> 0` timeouts are two-phase commits and are committed via this mutation.
 - `VoidLiquidityWithdrawal` - Void liquidity withdrawal. Withdrawals with `> 0` timeouts are two-phase commits and are rolled back via this mutation.
 
-When a withdrawal liquidity transaction is requested with a non-zero `timeout` value _(Zero denotes absence of timeout)_, 
-the transfer will be created as a two-phase transfer [see more](https://en.wikipedia.org/wiki/Two-phase_commit_protocol)   
+When a withdrawal liquidity transaction is requested with a non-zero `timeout` value _(Zero denotes absence of timeout)_,
+the transfer will be created as a two-phase transfer [see more](https://en.wikipedia.org/wiki/Two-phase_commit_protocol)
 
 If the timeout interval passes before the transfer is either posted or voided, the transfer expires and the full amount is returned to the original account.
 Note that timeouts are given as intervals, specified in seconds, rather than as absolute timestamps.
 
 The following withdrawal payments support two-phase transfers:
+
 - Asset Liquidity Withdrawal
 - Wallet Address Withdrawal
 - Peer Liquidity Withdrawal
@@ -263,6 +268,7 @@ The following withdrawal payments support two-phase transfers:
 - Outgoing Payment Withdrawal
 
 ### PostLiquidityWithdrawal
+
 ```graphql
 mutation PostLiquidityWithdrawal($input: PostLiquidityWithdrawalInput!) {
   postLiquidityWithdrawal(input: $input) {
@@ -280,12 +286,13 @@ where
 {
   "input": {
     "withdrawalId": "b4f85d5c-652d-472d-873c-4ba2a5e39052",
-    "idempotencyKey":"a09b730d-8610-4fda-98fa-ec7acb19c775"
+    "idempotencyKey": "a09b730d-8610-4fda-98fa-ec7acb19c775"
   }
 }
 ```
 
 ### VoidLiquidityWithdrawal
+
 ```graphql
 mutation VoidLiquidityWithdrawal($input: VoidLiquidityWithdrawalInput!) {
   voidLiquidityWithdrawal(input: $input) {
@@ -303,7 +310,7 @@ where
 {
   "input": {
     "withdrawalId": "b4f85d5c-652d-472d-873c-4ba2a5e39052",
-    "idempotencyKey":"a09b730d-8610-4fda-98fa-ec7acb19c775"
+    "idempotencyKey": "a09b730d-8610-4fda-98fa-ec7acb19c775"
   }
 }
 ```
