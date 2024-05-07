@@ -147,7 +147,7 @@ async function cancelOutgoingPayment(
         state: OutgoingPaymentState.Cancelled,
         metadata: {
           ...payment.metadata,
-          cancellationReason: options.reason
+          ...(options.reason ? { cancellationReason: options.reason } : {})
         }
       })
       .withGraphFetched('[quote.asset, walletAddress]')
