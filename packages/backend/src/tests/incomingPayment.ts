@@ -21,6 +21,5 @@ export async function createIncomingPayment(
     incomingPaymentOrError,
     LiquidityAccountType.INCOMING
   )
-
   return incomingPaymentOrError
 }

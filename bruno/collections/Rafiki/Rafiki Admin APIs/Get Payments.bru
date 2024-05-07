@@ -1,7 +1,7 @@
 meta {
   name: Get Payments
   type: graphql
-  seq: 33
+  seq: 34
 }
 
 post {
@@ -12,19 +12,20 @@ post {
 
 body:graphql {
   query Payments($filter: PaymentFilter) {
-      payments(filter: $filter) {
-          edges {
-          node {
-              id
-              type
-              walletAddressId
-              state
-              metadata
-              createdAt
-          }
-          cursor
-          }
+    payments(filter: $filter) {
+      edges {
+        node {
+          id
+          type
+          walletAddressId
+          client
+          state
+          metadata
+          createdAt
+        }
+        cursor
       }
+    }
   }
 }
 
@@ -39,4 +40,10 @@ body:graphql:vars {
           }
       }
   }
+}
+
+script:pre-request {
+  const scripts = require('./scripts');
+  
+  scripts.addApiSignatureHeader();
 }

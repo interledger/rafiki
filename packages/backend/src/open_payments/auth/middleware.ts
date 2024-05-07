@@ -3,17 +3,22 @@ import {
   RequestLike,
   validateSignature
 } from '@interledger/http-signature-utils'
-import Koa, { HttpError } from 'koa'
 import { Limits, parseLimits } from '../payment/outgoing/limits'
 import {
   HttpSigContext,
   HttpSigWithAuthenticatedStatusContext,
   WalletAddressContext
 } from '../../app'
-import { AccessAction, AccessType, JWKS } from '@interledger/open-payments'
+import {
+  AccessAction,
+  AccessType,
+  JWKS,
+  OpenPaymentsClientError
+} from '@interledger/open-payments'
 import { TokenInfo } from 'token-introspection'
 import { isActiveTokenInfo } from 'token-introspection'
 import { Config } from '../../config/app'
+import { OpenPaymentsServerRouteError } from '../route-errors'
 
 export type RequestAction = Exclude<AccessAction, 'read-all' | 'list-all'>
 export const RequestAction: Record<string, RequestAction> = Object.freeze({
@@ -64,7 +69,10 @@ export function createTokenIntrospectionMiddleware({
     try {
       const parts = ctx.request.headers.authorization?.split(' ')
       if (parts?.length !== 2 || parts[0] !== 'GNAP') {
-        ctx.throw(401, 'Unauthorized')
+        throw new OpenPaymentsServerRouteError(
+          401,
+          'Missing or invalid authorization header value'
+        )
       }
       const token = parts[1]
       const tokenIntrospectionClient = await ctx.container.use(
@@ -76,10 +84,10 @@ export function createTokenIntrospectionMiddleware({
           access_token: token
         })
       } catch (err) {
-        ctx.throw(401, 'Invalid Token')
+        throw new OpenPaymentsServerRouteError(401, 'Invalid Token')
       }
       if (!isActiveTokenInfo(tokenInfo)) {
-        ctx.throw(403, 'Inactive Token')
+        throw new OpenPaymentsServerRouteError(403, 'Inactive Token')
       }
 
       // TODO
@@ -115,7 +123,7 @@ export function createTokenIntrospectionMiddleware({
       })
 
       if (!access) {
-        ctx.throw(403, 'Insufficient Grant')
+        throw new OpenPaymentsServerRouteError(403, 'Insufficient Grant')
       }
       ctx.client = tokenInfo.client
       if (
@@ -130,21 +138,19 @@ export function createTokenIntrospectionMiddleware({
               : undefined
         }
       }
-      await next()
     } catch (err) {
-      if (bypassError && err instanceof HttpError) {
-        ctx.set('WWW-Authenticate', `GNAP as_uri=${config.authServerGrantUrl}`)
-        return await next()
+      if (!(err instanceof OpenPaymentsServerRouteError)) {
+        throw err
       }
 
-      if (err instanceof HttpError && err.status === 401) {
-        ctx.status = 401
-        ctx.message = err.message
-        ctx.set('WWW-Authenticate', `GNAP as_uri=${config.authServerGrantUrl}`)
-      } else {
+      ctx.set('WWW-Authenticate', `GNAP as_uri=${config.authServerGrantUrl}`)
+
+      if (!bypassError) {
         throw err
       }
     }
+
+    await next()
   }
 }
 
@@ -157,7 +163,7 @@ export const authenticatedStatusMiddleware = async (
     await throwIfSignatureInvalid(ctx)
     ctx.authenticated = true
   } catch (err) {
-    if (err instanceof Koa.HttpError && err.status !== 401) {
+    if (!(err instanceof OpenPaymentsServerRouteError)) {
       throw err
     }
   }
@@ -165,48 +171,77 @@ export const authenticatedStatusMiddleware = async (
 }
 
 export const throwIfSignatureInvalid = async (ctx: HttpSigContext) => {
-  const keyId = getKeyId(ctx.request.headers['signature-input'])
+  const keyId =
+    ctx.request.headers['signature-input'] &&
+    getKeyId(ctx.request.headers['signature-input'])
+
   if (!keyId) {
-    ctx.throw(401, 'Invalid signature input')
+    throw new OpenPaymentsServerRouteError(
+      401,
+      'Signature validation error: missing keyId in signature input',
+      { client: ctx.client }
+    )
   }
   // TODO
   // cache client key(s)
-  let jwks: JWKS | undefined
+  let jwks: JWKS
   try {
     const openPaymentsClient = await ctx.container.use('openPaymentsClient')
     jwks = await openPaymentsClient.walletAddress.getKeys({
       url: ctx.client
     })
-  } catch (error) {
-    const logger = await ctx.container.use('logger')
-    logger.debug(
-      {
-        error,
-        client: ctx.client
-      },
-      'retrieving client key'
-    )
-  }
-  const key = jwks?.keys.find((key) => key.kid === keyId)
-  if (!key) {
-    ctx.throw(401, 'Invalid signature input')
-  }
-  try {
-    if (!(await validateSignature(key, contextToRequestLike(ctx)))) {
-      ctx.throw(401, 'Invalid signature')
-    }
   } catch (err) {
-    if (err instanceof Koa.HttpError) {
-      throw err
-    }
-    const logger = await ctx.container.use('logger')
-    logger.warn(
+    throw new OpenPaymentsServerRouteError(
+      401,
+      'Signature validation error: could not retrieve client keys',
       {
-        err
-      },
-      'httpsig error'
+        client: ctx.client,
+        keyIdInSignature: keyId,
+        requestedRoute: `${ctx.client}/jwks.json`,
+        validationErrorsInRequest:
+          err instanceof OpenPaymentsClientError
+            ? err.validationErrors
+            : undefined
+      }
     )
-    ctx.throw(401, `Invalid signature`)
+  }
+  const key = jwks.keys.find((key) => key.kid === keyId)
+  if (!key) {
+    throw new OpenPaymentsServerRouteError(
+      401,
+      'Signature validation error: could not find key in list of client keys',
+      {
+        client: ctx.client,
+        keyIdInSignature: keyId,
+        clientKeys: jwks.keys
+      }
+    )
+  }
+
+  const logger = await ctx.container.use('logger')
+
+  let isValidSignature = false
+  let requestLike: RequestLike | undefined
+
+  try {
+    requestLike = contextToRequestLike(ctx)
+    isValidSignature = await validateSignature(key, requestLike)
+  } catch (err) {
+    logger.error(
+      { err, requestLike },
+      'Received unhandled eror when trying to validate signature'
+    )
+  }
+
+  if (!isValidSignature) {
+    throw new OpenPaymentsServerRouteError(
+      401,
+      'Signature validation error: provided signature is invalid',
+      {
+        keyIdInSignature: keyId,
+        client: ctx.client
+      }
+    )
   }
 }
 

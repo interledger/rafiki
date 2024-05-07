@@ -24,8 +24,8 @@
     "sanity": "pnpm -r build && pnpm -r test",
     "localenv:compose:autopeer": "run-p tunnel:start wait-tunnel:localenv:compose",
     "localenv:compose:psql:autopeer": "run-p tunnel:start wait-tunnel:localenv:compose:psql",
-    "wait-tunnel:localenv:compose": "pnpm wait-on:env && pnpm localenv:compose up -d",
-    "wait-tunnel:localenv:compose:psql": "pnpm wait-on:env && pnpm localenv:compose:psql up -d",
+    "wait-tunnel:localenv:compose": "pnpm wait-on:env && pnpm localenv:compose --env-file ./localenv/cloud-nine-wallet/.env up -d",
+    "wait-tunnel:localenv:compose:psql": "pnpm wait-on:env && pnpm localenv:compose:psql --env-file ./localenv/cloud-nine-wallet/.env up -d",
     "wait-on:env": "npx wait-on -d 1000 ./localenv/cloud-nine-wallet/.env",
     "tunnel:start": "node ./scripts/localenv-tunnel-setup.js"
   },
@@ -39,9 +39,9 @@
     "eslint": "^8.57.0",
     "eslint-config-prettier": "^9.1.0",
     "jest": "^29.7.0",
+    "localtunnel": "^2.0.2",
     "npm-run-all2": "^6.1.2",
     "prettier": "^3.2.5",
-    "tunnelmole": "^2.2.14",
     "typescript": "^5.4.3",
     "uuid": "^9.0.1"
   },

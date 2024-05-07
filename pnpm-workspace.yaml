@@ -2,3 +2,4 @@ packages:
   - 'packages/*'
   - 'localenv/mock-account-servicing-entity'
   - 'test/integration'
+  - 'bruno/collections/Rafiki'

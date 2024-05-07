@@ -59,9 +59,9 @@ More phone numbers: https://tel.meet/sms-fwny-ezc?pin=5321780226087
 ### Environment Setup
 
 ```sh
-# install node 18
-nvm install lts/hydrogen
-nvm use lts/hydrogen
+# install node from `./.nvmrc`
+nvm install
+nvm use
 
 # install pnpm
 corepack enable

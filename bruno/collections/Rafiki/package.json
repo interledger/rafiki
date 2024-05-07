@@ -1,0 +1,7 @@
+{
+  "name": "rafiki-bruno-collection",
+  "version": "1.0.0",
+  "dependencies": {
+    "json-canonicalize": "^1.0.6"
+  }
+}

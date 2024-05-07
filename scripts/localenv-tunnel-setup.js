@@ -1,8 +1,8 @@
 const fs = require('fs')
 const dotenv = require('dotenv')
 const { v4 } = require('uuid')
+const localtunnel = require('localtunnel')
 
-let tunnelmole
 let envs
 
 const envFile = './localenv/cloud-nine-wallet/.env'
@@ -42,19 +42,16 @@ async function writeEnvs(envs) {
 }
 
 async function createTunnel(port) {
-  const tunnel = await tunnelmole({ port })
+  const tunnel = await localtunnel({ port })
 
-  console.log(`Created tunnel for port ${port}: ${tunnel}`)
-  return tunnel
+  console.log(`Created tunnel for port ${port}: ${tunnel.url}`)
+  return tunnel.url
 }
 
 async function connect() {
   console.log('Starting the tunnels and preparing .env file...')
 
   checkExistingEnvFile()
-
-  // import es module
-  tunnelmole = (await import('tunnelmole')).tunnelmole
 
   const openPaymentsUrl = await createTunnel(3000)
   const authUrl = await createTunnel(3006)

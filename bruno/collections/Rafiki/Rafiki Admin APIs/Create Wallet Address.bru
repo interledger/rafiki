@@ -46,8 +46,11 @@ body:graphql:vars {
 
 script:pre-request {
   const { nanoid } = require("nanoid");
+  const scripts = require('./scripts');
   
   bru.setVar('randomId', nanoid());
+  
+  scripts.addApiSignatureHeader();
 }
 
 script:post-response {

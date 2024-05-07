@@ -12,12 +12,18 @@ post {
 
 headers {
   Authorization: GNAP {{accessToken}}
-  ~Host: happy-life-bank-backend
 }
 
 script:pre-request {
-  // if(pm.environment.get('preRequestHost')){
-  //     eval(pm.environment.get('preRequestHost'))
-  // }
-  // eval(pm.environment.get('preRequestSignatures'))
+  const scripts = require('./scripts');
+  
+  scripts.addHostHeader();
+  
+  await scripts.addSignatureHeaders();
+}
+
+tests {
+  test("Status code is 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
 }

@@ -151,17 +151,6 @@ describe('Quote Routes', (): void => {
       })
     })
 
-    test('returns 500 on error', async (): Promise<void> => {
-      jest
-        .spyOn(quoteService, 'create')
-        .mockRejectedValueOnce(new Error('unexpected'))
-      const ctx = setup({})
-      await expect(quoteRoutes.create(ctx)).rejects.toMatchObject({
-        message: 'Error trying to create quote',
-        status: 500
-      })
-    })
-
     describe.each`
       client                                        | description
       ${faker.internet.url({ appendSlash: false })} | ${'client'}
