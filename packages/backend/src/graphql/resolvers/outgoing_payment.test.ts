@@ -539,7 +539,7 @@ describe('OutgoingPayment Resolvers', (): void => {
     })
   })
 
-  describe.only('Mutation.cancelOutgoingPayment', (): void => {
+  describe('Mutation.cancelOutgoingPayment', (): void => {
     let payment: OutgoingPaymentModel
     beforeEach(async () => {
       const walletAddress = await createWalletAddress(deps, {
