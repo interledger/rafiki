@@ -33,6 +33,11 @@ services:
     build:
       context: ../..
       dockerfile: ./packages/backend/Dockerfile.dev
+    volumes:
+      - type: bind
+        source: ../../packages/backend/src
+        target: /home/rafiki/packages/backend/src
+        read_only: true
     restart: always
     privileged: true
     ports:
@@ -74,6 +79,11 @@ services:
     build:
       context: ../..
       dockerfile: ./packages/auth/Dockerfile.dev
+    volumes:
+      - type: bind
+        source: ../../packages/auth/src
+        target: /home/rafiki/packages/auth/src
+        read_only: true
     restart: always
     networks:
       - rafiki

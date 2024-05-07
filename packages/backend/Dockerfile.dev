@@ -13,8 +13,6 @@ COPY . ./
 
 RUN pnpm install --recursive --frozen-lockfile --offline
 
-RUN pnpm --filter backend build
-
 EXPOSE 9229
 
-CMD ["pnpm", "--filter", "backend", "nodemon", "--inspect=0.0.0.0:9229", "/home/rafiki/packages/backend/dist/index.js"]
+CMD pnpm --filter backend dev

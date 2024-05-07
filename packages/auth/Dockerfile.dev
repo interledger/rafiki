@@ -13,8 +13,6 @@ COPY . ./
 
 RUN pnpm install --recursive --frozen-lockfile --offline
 
-RUN pnpm --filter auth build
-
 EXPOSE 9229
 
-CMD ["pnpm", "--filter", "auth", "nodemon", "--inspect=0.0.0.0:9229", "/home/rafiki/packages/auth/dist/index.js"]
+CMD pnpm --filter auth dev
