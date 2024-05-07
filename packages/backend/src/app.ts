@@ -133,7 +133,7 @@ export type HttpSigWithAuthenticatedStatusContext = HttpSigContext &
   AuthenticatedStatusContext
 
 // Wallet address subresources
-type GetCollectionQuery = {
+interface GetCollectionQuery {
   'wallet-address': string
 }
 
@@ -448,7 +448,7 @@ export class App {
     >(
       '/incoming-payments',
       async (ctx, next) => {
-        ctx.walletAddressUrl = ctx.query['wallet-address'] as string
+        ctx.walletAddressUrl = ctx.request.query['wallet-address']
         await next()
       },
       createValidatorMiddleware<
@@ -503,7 +503,7 @@ export class App {
     >(
       '/outgoing-payments',
       async (ctx, next) => {
-        ctx.walletAddressUrl = ctx.query['wallet-address'] as string
+        ctx.walletAddressUrl = ctx.request.query['wallet-address']
         await next()
       },
       createValidatorMiddleware<
@@ -564,7 +564,7 @@ export class App {
 
         if (!incomingPayment?.walletAddress) {
           throw new OpenPaymentsServerRouteError(401, 'Unauthorized', {
-            description: 'Failed to get wallet address from incomig payment',
+            description: 'Failed to get wallet address from incoming payment',
             id: ctx.params.id
           })
         }
