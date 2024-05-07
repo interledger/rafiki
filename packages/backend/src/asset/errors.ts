@@ -21,5 +21,5 @@ export const errorToMessage: {
 } = {
   [AssetError.UnknownAsset]: 'unknown asset',
   [AssetError.DuplicateAsset]: 'Asset already exists',
-  [AssetError.InuseAsset]: 'Asset in use'
+  [AssetError.InuseAsset]: 'Cannot delete! Asset in use.'
 }
