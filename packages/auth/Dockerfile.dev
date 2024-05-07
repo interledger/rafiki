@@ -1,0 +1,20 @@
+FROM node:20-alpine3.18
+
+WORKDIR /home/rafiki
+
+RUN corepack enable
+RUN corepack prepare pnpm@8.7.4 --activate
+
+COPY pnpm-lock.yaml package.json pnpm-workspace.yaml .npmrc tsconfig.json tsconfig.build.json ./
+
+RUN pnpm fetch
+
+COPY . ./
+
+RUN pnpm install --recursive --frozen-lockfile --offline
+
+RUN pnpm --filter auth build
+
+EXPOSE 9229
+
+CMD ["node", "--inspect=0.0.0.0:9229", "/home/rafiki/packages/auth/dist/index.js"]
