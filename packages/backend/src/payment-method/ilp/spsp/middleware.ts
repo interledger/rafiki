@@ -38,11 +38,11 @@ const spspMiddleware = async (
   if (ctx.accepts('application/spsp4+json')) {
     const walletAddressService = await ctx.container.use('walletAddressService')
 
-    const walletAddress = await walletAddressService.getByUrl(
+    const walletAddress = await walletAddressService.getOrPollByUrl(
       ctx.walletAddressUrl
     )
 
-    if (!walletAddress?.isActive) {
+    if (!walletAddress) {
       throw new SPSPRouteError(404, 'Could not get wallet address')
     }
 
