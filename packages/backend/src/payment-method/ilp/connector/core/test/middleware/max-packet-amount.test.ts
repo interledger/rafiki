@@ -51,7 +51,7 @@ describe('Max Packet Amount Middleware', function () {
     expect(next).toHaveBeenCalled()
   })
 
-  test('throws AmounTooLargeError and logs warning if prepare amount exceeds maximum balance for the peer', async () => {
+  test('throws AmounTooLargeError and logs error if prepare amount exceeds maximum balance for the peer', async () => {
     const prepareOverMaxAmount = IlpPrepareFactory.build({ amount: '51' })
     ctx.request.prepare = new ZeroCopyIlpPrepare(prepareOverMaxAmount)
     const next = jest.fn()
@@ -61,7 +61,7 @@ describe('Max Packet Amount Middleware', function () {
     )
 
     expect(next).toHaveBeenCalledTimes(0)
-    expect(ctx.services.logger.warn).toHaveBeenCalledWith(
+    expect(ctx.services.logger.error).toHaveBeenCalledWith(
       {
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         maxPacketAmount: alice.maxPacketAmount!.toString(),
