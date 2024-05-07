@@ -197,6 +197,11 @@ async function getOrPollByUrl(
     return checkActiveWalletAddress(existingWalletAddress, options)
   }
 
+  deps.logger.debug(
+    { walletAddressUrl: url },
+    'Wallet address not found, polling to see if ASE creates wallet address'
+  )
+
   await WalletAddressEvent.query(deps.knex).insert({
     type: WalletAddressEventType.WalletAddressNotFound,
     data: {
@@ -213,12 +218,6 @@ async function getOrPollByUrl(
 
     return checkActiveWalletAddress(walletAddress, options)
   } catch (error) {
-    const errorMessage = 'Could not get wallet address after polling'
-    deps.logger.info(
-      { errorMessage: error instanceof Error && error.message },
-      errorMessage
-    )
-
     return undefined
   }
 }
