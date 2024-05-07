@@ -123,16 +123,8 @@ type PaymentAmount {
   assetScale: UInt8!
 }
 
-type RevokeGrantMutationResponse implements MutationResponse {
-  code: String!
-  success: Boolean!
-  message: String!
-}
-
-interface MutationResponse {
-  code: String!
-  success: Boolean!
-  message: String!
+type RevokeGrantMutationResponse {
+  id: ID!
 }
 
 enum GrantState {

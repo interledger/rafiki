@@ -50,6 +50,7 @@ import { AccessService } from './access/service'
 import { AccessTokenService } from './accessToken/service'
 import { InteractionRoutes } from './interaction/routes'
 import { ApolloArmor } from '@escape.tech/graphql-armor'
+import { LoggingPlugin } from './graphql/plugin'
 
 export interface AppContextData extends DefaultContext {
   logger: Logger
@@ -175,12 +176,15 @@ export class App {
     })
     const protection = armor.protect()
 
+    const loggingPlugin = new LoggingPlugin(this.logger)
+
     // Setup Apollo
     const apolloServer = new ApolloServer({
       schema: schemaWithResolvers,
       ...protection,
       plugins: [
         ...protection.plugins,
+        loggingPlugin,
         ApolloServerPluginDrainHttpServer({ httpServer })
       ],
       introspection: this.config.env !== 'production'
