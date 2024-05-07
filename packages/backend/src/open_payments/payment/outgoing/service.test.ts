@@ -443,7 +443,7 @@ describe('OutgoingPaymentService', (): void => {
         })
 
         if (!outgoingPaymentError) {
-          const dataCheck = response as OutgoingPayment
+          assert.ok(response instanceof OutgoingPayment)
           expect(dataCheck.id).toBe(outgoingPayment.id)
           expect(dataCheck.state).toBe(OutgoingPaymentState.Cancelled)
           expect(dataCheck.metadata).toEqual({
