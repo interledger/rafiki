@@ -53,6 +53,7 @@ import { ApolloArmor } from '@escape.tech/graphql-armor'
 import { Redis } from 'ioredis'
 import { LoggingPlugin } from './graphql/plugin'
 import { gnapServerErrorMiddleware } from './shared/gnapErrors'
+import { verifyApiSignature } from './shared/utils'
 
 export interface AppContextData extends DefaultContext {
   logger: Logger
@@ -212,6 +213,16 @@ export class App {
         }
       }
     )
+
+    if (this.config.apiSecret) {
+      koa.use(async (ctx, next: Koa.Next): Promise<void> => {
+        if (!verifyApiSignature(ctx, this.config)) {
+          ctx.throw(401, 'Unauthorized')
+        }
+
+        return next()
+      })
+    }
 
     koa.use(
       koaMiddleware(apolloServer, {

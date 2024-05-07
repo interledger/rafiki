@@ -82,10 +82,8 @@ const scripts = {
     this.setHeaders(signatureHeaders)
   },
 
-  generateApiSignature: function (body) {
+  generateApiSignature: function (body, version, secret) {
     const timestamp = Math.round(new Date().getTime() / 1000)
-    const version = bru.getEnvVar('apiSignatureVersion')
-    const secret = bru.getEnvVar('apiSignatureSecret')
     const payload = `${timestamp}.${canonicalize(body)}`
     const hmac = createHmac('sha256', secret)
     hmac.update(payload)
@@ -94,7 +92,7 @@ const scripts = {
     return `t=${timestamp}, v${version}=${digest}`
   },
 
-  addApiSignatureHeader: function () {
+  addApiSignatureHeader: function (packageName) {
     const body = this.sanitizeBody()
     const { variables } = body
     const formattedBody = {
@@ -102,7 +100,27 @@ const scripts = {
       variables: JSON.parse(variables)
     }
 
-    req.setHeader('signature', this.generateApiSignature(formattedBody))
+    const timestamp = Math.round(new Date().getTime() / 1000)
+    let version
+    let secret
+    // Default to backend api secret
+    switch (packageName) {
+      case 'backend':
+        version = bru.getEnvVar('backendApiSignatureVersion')
+        secret = bru.getEnvVar('backendApiSignatureSecret')
+        break
+      case 'auth':
+        version = bru.getEnvVar('authApiSignatureVersion')
+        secret = bru.getEnvVar('authApiSignatureSecret')
+        break
+      default:
+        version = bru.getEnvVar('backendApiSignatureVersion')
+        secret = bru.getEnvVar('backendApiSignatureSecret')
+    }
+    req.setHeader(
+      'signature',
+      this.generateApiSignature(formattedBody, version, secret)
+    )
   },
 
   addHostHeader: function (hostVarName) {

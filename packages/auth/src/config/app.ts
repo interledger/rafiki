@@ -44,6 +44,8 @@ export const Config = {
   identityServerUrl: envString('IDENTITY_SERVER_URL'),
   identityServerSecret: envString('IDENTITY_SERVER_SECRET'),
   authServerUrl: envString('AUTH_SERVER_URL'),
+  apiSecret: process.env.API_SECRET, // optional
+  apiSignatureVersion: envInt('API_SIGNATURE_VERSION', 1),
   waitTimeSeconds: envInt('WAIT_SECONDS', 5),
   cookieKey: envString('COOKIE_KEY'),
   interactionExpirySeconds: envInt('INTERACTION_EXPIRY_SECONDS', 10 * 60), // Default 10 minutes
