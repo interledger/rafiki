@@ -204,44 +204,24 @@ export const deleteAsset: MutationResolvers<ApolloContext>['deleteAsset'] =
     ctx
   ): Promise<ResolversTypes['DeleteAssetMutationResponse']> => {
     try {
-      // check if asset is in use | in peer and wallet address
-      const peerService = await ctx.container.use('peerService')
-      const peerByAsset = await peerService.getByAsset(args.input.id)
-      if (peerByAsset) {
-        // in case we have a peer using the asset don't allow delete
-        return {
-          code: errorToCode[AssetError.InuseAsset].toString(),
-          message: errorToMessage[AssetError.InuseAsset],
-          success: false
-        }
-      }
-
-      const walletAddressService = await ctx.container.use(
-        'walletAddressService'
-      )
-      const walletAddressByAsset = await walletAddressService.getByAsset(
-        args.input.id
-      )
-      if (walletAddressByAsset) {
-        // in case we have a wallet address using the asset don't allow delete
-        return {
-          code: errorToCode[AssetError.InuseAsset].toString(),
-          message: errorToMessage[AssetError.InuseAsset],
-          success: false
-        }
-      }
-
       const assetService = await ctx.container.use('assetService')
       const assetOrError = await assetService.delete({
         id: args.input.id,
         deletedAt: new Date().toISOString()
       })
+
       if (isAssetError(assetOrError)) {
         switch (assetOrError) {
           case AssetError.UnknownAsset:
             return {
               code: errorToCode[AssetError.UnknownAsset].toString(),
               message: errorToMessage[AssetError.UnknownAsset],
+              success: false
+            }
+          case AssetError.InuseAsset:
+            return {
+              code: errorToCode[AssetError.InuseAsset].toString(),
+              message: errorToMessage[AssetError.InuseAsset],
               success: false
             }
           default:

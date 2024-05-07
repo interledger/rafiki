@@ -5,6 +5,8 @@ import { Asset } from './model'
 import { Pagination, SortOrder } from '../shared/baseModel'
 import { BaseService } from '../shared/baseService'
 import { AccountingService, LiquidityAccountType } from '../accounting/service'
+import { WalletAddress } from '../open_payments/wallet_address/model'
+import { Peer } from '../payment-method/ilp/peer/model'
 
 export interface AssetOptions {
   code: string
@@ -126,6 +128,23 @@ async function deleteAsset(
     throw new Error('Knex undefined')
   }
   try {
+    // return error in case there is a peer or wallet address using the asset
+    const peer = await Peer.query(deps.knex)
+      .withGraphJoined('asset')
+      .where('assetId', id)
+      .first()
+    if (peer) {
+      return AssetError.InuseAsset
+    }
+
+    const walletAddress = await WalletAddress.query(deps.knex)
+      .withGraphJoined('asset')
+      .where('assetId', id)
+      .first()
+    if (walletAddress) {
+      return AssetError.InuseAsset
+    }
+
     return await Asset.query(deps.knex)
       .patchAndFetchById(id, { deletedAt })
       .throwIfNotFound()
