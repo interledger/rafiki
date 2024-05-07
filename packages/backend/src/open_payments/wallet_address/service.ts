@@ -213,8 +213,8 @@ async function getOrPollByUrl(
 
     return checkActiveWalletAddress(walletAddress, options)
   } catch (error) {
-    const errorMessage = 'Could not get wallet address'
-    deps.logger.error(
+    const errorMessage = 'Could not get wallet address after polling'
+    deps.logger.info(
       { errorMessage: error instanceof Error && error.message },
       errorMessage
     )
