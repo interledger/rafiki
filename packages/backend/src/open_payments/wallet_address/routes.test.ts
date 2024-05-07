@@ -9,12 +9,16 @@ import { createContext } from '../../tests/context'
 import { createWalletAddress } from '../../tests/walletAddress'
 import { truncateTables } from '../../tests/tableManager'
 import { WalletAddressRoutes } from './routes'
+import { WalletAddressService } from './service'
+import assert from 'assert'
+import { OpenPaymentsServerRouteError } from '../route-errors'
 
 describe('Wallet Address Routes', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let config: IAppConfig
   let walletAddressRoutes: WalletAddressRoutes
+  let walletAddressService: WalletAddressService
 
   beforeAll(async (): Promise<void> => {
     config = Config
@@ -22,6 +26,7 @@ describe('Wallet Address Routes', (): void => {
     deps = await initIocContainer(config)
     appContainer = await createTestApp(deps)
     const { walletAddressServerSpec } = await deps.use('openApi')
+    walletAddressService = await deps.use('walletAddressService')
     jestOpenAPI(walletAddressServerSpec)
   })
 
@@ -43,10 +48,19 @@ describe('Wallet Address Routes', (): void => {
       const ctx = createContext<WalletAddressContext>({
         headers: { Accept: 'application/json' }
       })
-      await expect(walletAddressRoutes.get(ctx)).rejects.toHaveProperty(
-        'status',
-        404
-      )
+      jest
+        .spyOn(walletAddressService, 'getOrPollByUrl')
+        .mockResolvedValueOnce(undefined)
+
+      expect.assertions(2)
+
+      try {
+        await walletAddressRoutes.get(ctx)
+      } catch (err) {
+        assert.ok(err instanceof OpenPaymentsServerRouteError)
+        expect(err.status).toBe(404)
+        expect(err.message).toBe('Could not get wallet address')
+      }
     })
 
     test('returns 200 with an open payments wallet address', async (): Promise<void> => {

@@ -40,7 +40,7 @@ export async function getWalletAddress(
   if (!walletAddress) {
     throw new OpenPaymentsServerRouteError(
       404,
-      'Wallet address does not exist',
+      'Could not get wallet address',
       {
         walletAddressUrl: ctx.walletAddressUrl
       }
