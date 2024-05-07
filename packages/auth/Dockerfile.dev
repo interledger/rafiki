@@ -17,4 +17,4 @@ RUN pnpm --filter auth build
 
 EXPOSE 9229
 
-CMD ["node", "--inspect=0.0.0.0:9229", "/home/rafiki/packages/auth/dist/index.js"]
+CMD ["pnpm", "--filter", "auth", "nodemon", "--inspect=0.0.0.0:9229", "/home/rafiki/packages/auth/dist/index.js"]

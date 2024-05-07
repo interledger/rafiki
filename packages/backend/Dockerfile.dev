@@ -17,4 +17,4 @@ RUN pnpm --filter backend build
 
 EXPOSE 9229
 
-CMD ["node", "--inspect=0.0.0.0:9229", "/home/rafiki/packages/backend/dist/index.js"]
+CMD ["pnpm", "--filter", "backend", "nodemon", "--inspect=0.0.0.0:9229", "/home/rafiki/packages/backend/dist/index.js"]
