@@ -70,6 +70,19 @@ async function createAsset(
   { code, scale, withdrawalThreshold, liquidityThreshold }: CreateOptions
 ): Promise<Asset | AssetError> {
   try {
+    // check if exists but deleted
+    const deletedAsset = await Asset.query(deps.knex)
+      .whereNotNull('deletedAt')
+      .where('code', code)
+      .first()
+
+    if (deletedAsset) {
+      // if found, enable and update scale
+      return await Asset.query(deps.knex)
+        .patchAndFetchById(deletedAsset.id, { scale, deletedAt: null })
+        .throwIfNotFound()
+    }
+
     // Asset rows include a smallserial 'ledger' column that would have sequence gaps
     // if a transaction is rolled back.
     // https://www.postgresql.org/docs/current/datatype-numeric.html#DATATYPE-SERIAL
