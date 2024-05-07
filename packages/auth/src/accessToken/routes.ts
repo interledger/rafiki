@@ -61,9 +61,19 @@ export interface AccessTokenRoutes {
 export function createAccessTokenRoutes(
   deps_: ServiceDependencies
 ): AccessTokenRoutes {
-  const logger = deps_.logger.child({
-    service: 'AccessTokenRoutes'
-  })
+  const logger = deps_.logger.child(
+    {
+      service: 'AccessTokenRoutes'
+    },
+    {
+      redact: [
+        'requestBody.access_token',
+        'accessToken.value',
+        'headers.authorization',
+        'grant.continueToken'
+      ]
+    }
+  )
   const deps = { ...deps_, logger }
   return {
     introspect: (ctx: IntrospectContext) => introspectToken(deps, ctx),
@@ -116,7 +126,8 @@ async function revokeToken(
 
   deps.logger.debug(
     {
-      ...generateRouteLogs(ctx)
+      ...generateRouteLogs(ctx),
+      accessToken
     },
     'revoked access token'
   )

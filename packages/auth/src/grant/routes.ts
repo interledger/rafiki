@@ -75,9 +75,18 @@ export function createGrantRoutes({
   logger,
   config
 }: ServiceDependencies): GrantRoutes {
-  const log = logger.child({
-    service: 'GrantRoutes'
-  })
+  const log = logger.child(
+    {
+      service: 'GrantRoutes'
+    },
+    {
+      redact: [
+        'grant.continueToken',
+        'headers.authorization',
+        'accessToken.value'
+      ]
+    }
+  )
 
   const deps = {
     grantService,
@@ -282,7 +291,6 @@ async function pollGrantContinuation(
       {
         ...generateRouteLogs(ctx),
         continueId,
-        continueToken,
         grant
       },
       'polled grant that cannot be polled'
@@ -308,7 +316,6 @@ async function pollGrantContinuation(
       {
         ...generateRouteLogs(ctx),
         continueId,
-        continueToken,
         grant
       },
       'polled grant with incomplete interaction'
@@ -322,7 +329,6 @@ async function pollGrantContinuation(
       {
         ...generateRouteLogs(ctx),
         continueId,
-        continueToken,
         grant
       },
       'polled grant that cannot be continued'
@@ -351,7 +357,6 @@ async function pollGrantContinuation(
       {
         ...generateRouteLogs(ctx),
         continueId,
-        continueToken,
         grant
       },
       'polled grant with completed interaction'
@@ -518,8 +523,7 @@ async function revokeGrant(
   ctx.status = 204
   logger.debug(
     {
-      ...generateRouteLogs(ctx),
-      grant: revoked
+      ...generateRouteLogs(ctx)
     },
     'revoked grant'
   )
