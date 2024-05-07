@@ -35,7 +35,6 @@ const spspMiddleware = async (
   ctx: SPSPWalletAddressContext,
   next: () => Promise<unknown>
 ): Promise<void> => {
-  // Fall back to legacy protocols if client doesn't support Open Payments.
   if (ctx.accepts('application/spsp4+json')) {
     const walletAddressService = await ctx.container.use('walletAddressService')
 
@@ -43,7 +42,7 @@ const spspMiddleware = async (
       ctx.walletAddressUrl
     )
 
-    if (!walletAddress) {
+    if (!walletAddress?.isActive) {
       throw new SPSPRouteError(404, 'Could not get wallet address')
     }
 
