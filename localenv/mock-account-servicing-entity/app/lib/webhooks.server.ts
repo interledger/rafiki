@@ -17,6 +17,12 @@ export interface AmountJSON {
   assetScale: number
 }
 
+export interface WalletAddressObject {
+  id: string
+  createdAt: string
+  receivedAmount: AmountJSON
+}
+
 export function parseAmount(amount: AmountJSON): Amount {
   return {
     value: BigInt(amount['value']),
@@ -158,22 +164,20 @@ export async function handleIncomingPaymentCompletedExpired(wh: Webhook) {
 }
 
 export async function handleWalletAddressWebMonetization(wh: Webhook) {
-  const walletAddressUrl = wh.data['walletAddressUrl'] as string | undefined
+  const walletAddressObj = wh.data.walletAddress as WalletAddressObject
+  const walletAddressId = walletAddressObj.id
 
-  if (!walletAddressUrl) {
-    throw new Error('No walletAddressUrl found')
+  if (!walletAddressId) {
+    throw new Error('No walletAddressId found')
   }
 
-  const accountPath = new URL(walletAddressUrl).pathname.substring(1)
-  const account = await mockAccounts.getByPath(accountPath)
-
+  const account = await mockAccounts.getByWalletAddressId(walletAddressId)
   if (!account) {
     throw new Error('No account found for wallet address')
   }
 
-  const withdrawal = wh.data
-  const wa = withdrawal['walletAddressId'] as string
-  const withdrawalId = withdrawal['id'] as string
+  // generate an ID, we do not have an id in wh.data
+  const withdrawalId = uuid()
 
   try {
     await apolloClient.mutate({
@@ -206,13 +210,13 @@ export async function handleWalletAddressWebMonetization(wh: Webhook) {
       variables: {
         input: {
           id: withdrawalId,
-          walletAddressId: wa,
+          walletAddressId,
           idempotencyKey: uuid()
         }
       }
     })
 
-    const amount = parseAmount(withdrawal['receivedAmount'] as AmountJSON)
+    const amount = parseAmount(walletAddressObj.receivedAmount as AmountJSON)
     await mockAccounts.credit(account.id, amount.value, true)
 
     return await apolloClient.mutate({
