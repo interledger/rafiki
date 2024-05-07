@@ -113,7 +113,6 @@ export default defineConfig({
                           link: 'integration/helm-k8s'
                         }
                       ]
-
                     },
                     {
                       label: 'Running your instance',
@@ -128,7 +127,8 @@ export default defineConfig({
                           link: 'integration/adding-peer'
                         },
                         {
-                          label: 'Creating wallet addresses (strategies for identity lookup)',
+                          label:
+                            'Creating wallet addresses (strategies for identity lookup)',
                           link: 'integration/creating-wallet-addresses'
                         },
                         {
@@ -137,7 +137,7 @@ export default defineConfig({
                         }
                       ]
                     }
-                  ],
+                  ]
                 },
                 {
                   label: 'Admin API',
