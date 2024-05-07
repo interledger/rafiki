@@ -24,7 +24,7 @@ function getDestinationExpiry(
   const sourceExpiryTime = request.expiresAt.getTime()
 
   if (sourceExpiryTime < Date.now()) {
-    log.trace('incoming packet has already expired', { request })
+    log.debug({ request }, 'incoming packet has already expired')
     throw new InsufficientTimeoutError(
       'source transfer has already expired.' +
         ' sourceExpiry=' +
@@ -42,9 +42,15 @@ function getDestinationExpiry(
   )
 
   if (destinationExpiryTime < Date.now() + minExpirationWindow) {
-    log.trace('incoming packet expires too soon to complete payment', {
-      request
-    })
+    log.debug(
+      {
+        expectedDestinationExpiryTime,
+        maxHoldTime,
+        request,
+        minExpirationWindow
+      },
+      'incoming packet expires too soon to complete payment'
+    )
     throw new InsufficientTimeoutError(
       'source transfer expires too soon to complete payment.' +
         ' actualSourceExpiry=' +
