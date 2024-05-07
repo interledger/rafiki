@@ -86,9 +86,7 @@ describe('SPSP Middleware', (): void => {
   )
 
   test('throws error if could not find wallet address', async () => {
-    const spspGetRouteSpy = jest
-      .spyOn(spspRoutes, 'get')
-      .mockResolvedValueOnce('dogs' as unknown as void)
+    const spspGetRouteSpy = jest.spyOn(spspRoutes, 'get')
 
     jest
       .spyOn(walletAddressService, 'getByUrl')
