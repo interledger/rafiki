@@ -35,9 +35,9 @@ Never heard of Interledger before? Or would you like to learn more? Here are som
 
 Please read the [contribution guidelines](.github/contributing.md) before submitting contributions. All contributions must adhere to our [code of conduct](.github/code_of_conduct.md).
 
-## Planning Calls
+## Community Calls
 
-Our planning calls are open to our community. We have them every Tuesday at 14:30 GMT, via Google Meet.
+Our Rafiki community calls are open to our community members. We have them every Tuesday at 14:30 GMT, via Google Meet.
 
 **Google Meet joining info**
 
@@ -59,9 +59,9 @@ More phone numbers: https://tel.meet/sms-fwny-ezc?pin=5321780226087
 ### Environment Setup
 
 ```sh
-# install node 18
-nvm install lts/hydrogen
-nvm use lts/hydrogen
+# install node from `./.nvmrc`
+nvm install
+nvm use
 
 # install pnpm
 corepack enable

@@ -33,25 +33,33 @@ This environment will set up a playground where you can use the Rafiki Admin API
 
 (c) Open Payments API - accessible at http://localhost:3000
 
-(d) Admin UI - accessible at http://localhost:3010
+(d) Auth Admin API - accessible at http://localhost:3003/graphql
 
-(e) Auth Admin API - accessible at http://localhost:3003/graphql
+(e) Open Payments Auth API - accessible at http://localhost:3006
 
-(f) Open Payments Auth API - accessible at http://localhost:3006
+(f) Admin UI - accessible at http://localhost:3010
+
+(g) Kratos API - accessible at http://localhost:4433
 
 #### Happy Life Bank
 
-(g) User Interface - accessible at http://localhost:3031
+(h) User Interface - accessible at http://localhost:3031
 
-(h) Admin API - accessible at http://localhost:4001/graphql
+(i) Admin API - accessible at http://localhost:4001/graphql
 
-(i) Open Payments API - accessible at http://localhost:4000
-
-(j) Admin UI - accessible at http://localhost:4010
+(j) Open Payments API - accessible at http://localhost:4000
 
 (k) Auth Admin API - accessible at http://localhost:4003/graphql
 
 (l) Open Payments Auth API - accessible at http://localhost:4006
+
+(m) Admin UI - accessible at http://localhost:4010
+
+(n) Kratos API - accessible at http://localhost:4432
+
+#### Mail Slurper
+
+(o) Mail UI - accessible at http://localhost:4436
 
 #### Database
 
@@ -163,6 +171,12 @@ Note that you have to go through an interaction flow by clicking on the `redirec
 
 In order to manage, and view information about the Rafiki instance(s) using a UI, you can navigate to [`localhost:3010`](http://localhost:3010) (Cloud Nine Wallet) or [`localhost:4010`](http://localhost:4010) (Happy Life Bank). This is the `frontend` project which runs a Remix app for querying info and executing mutations against the Rafiki [Admin APIs](#admin-apis).
 
+We have secured access to the Admin UI using [Ory Kratos](https://www.ory.sh/docs/kratos/ory-kratos-intro), a secure and fully open-source identity and user management solution. Check it out on [GitHub](https://github.com/ory/kratos). Since access to the UI is on an invitation-only basis the registration flow is not publicly available. As such, in order to access the Admin UI you can click the registration link provided in the logs during `localenv` startup or you can manually add a new user with the invite-user script. Run `docker exec -it <admin-container-name> npm run invite-user -- example@mail.com` and it will output recovery link to the terminal. The recovery link doubles as the invitation method. Copy and paste this link in your browser and you will automatically be logged in and directed to the account settings page. The next step is changing your password. We're using a simple email and password authentication method.
+
+There is a password recovery flow. On the login page if you clkick the `forgot password` link and enter an email for a registered user then you can open [Mail Slurper](http://localhost:4436) to access the recovery link for your account.
+
+We've also included a script to remove users: `docker exec -it <admin-container-name> npm run delete-user -- example@mail.com`.
+
 #### Admin APIs
 
 In addition to the using the Admin UI for interacting with the Admin APIs, you can also use the Apollo explorer (on [`localhost:3001/graphql`](http://localhost:3001/graphql) and [`localhost:4001/graphql`](http://localhost:4001/graphql), respectively), and also via the [Bruno collection](https://github.com/interledger/rafiki/tree/main/bruno/collections/Rafiki/Rafiki%20Admin%20APIs). The Bruno collection is configured to use the default endpoints of the local environment.
@@ -202,6 +216,6 @@ pnpm localenv:compose up -d
 
 #### TigerBeetle container exits with code 137
 
-This is a known [issue](https://docs.tigerbeetle.com/quick-start/with-docker-compose/#exited-with-code-137) when running TigerBeetle in Docker: the container exits without logs and simply shows error code 137. To fix this, increase the Docker memory limit.
+This is a known [issue](https://docs.tigerbeetle.com/getting-started/with-docker-compose/#exited-with-code-137) when running TigerBeetle in Docker: the container exits without logs and simply shows error code 137. To fix this, increase the Docker memory limit.
 
 If you are running the local playground in Docker on a Windows machine using WSL, you can increase the memory limit by [configuring](https://learn.microsoft.com/en-us/windows/wsl/wsl-config#example-wslconfig-file) your `.wslconfig` file.

@@ -132,7 +132,7 @@ async function createIncomingPayment(
   await IncomingPaymentEvent.query(trx || deps.knex).insert({
     incomingPaymentId: incomingPayment.id,
     type: IncomingPaymentEventType.IncomingPaymentCreated,
-    data: incomingPayment.toData(BigInt(0))
+    data: incomingPayment.toData(0n)
   })
 
   return await addReceivedAmount(deps, incomingPayment, BigInt(0))
@@ -207,7 +207,7 @@ async function handleDeactivated(
   incomingPayment: IncomingPayment
 ): Promise<void> {
   if (!incomingPayment.processAt) {
-    throw new Error()
+    throw new Error('processAt field is not defined')
   }
   try {
     const amountReceived = await deps.accountingService.getTotalReceived(

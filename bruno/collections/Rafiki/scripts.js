@@ -1,14 +1,24 @@
+const { createHmac } = require('crypto')
+const { canonicalize } = require('json-canonicalize')
 const fetch = require('node-fetch')
 const url = require('url')
 
 const scripts = {
+  resolveTemplateVariables: function (string) {
+    const VARIABLE_NAME_REGEX = /{{([A-Za-z]\w+)}}/g
+
+    return string.replace(
+      VARIABLE_NAME_REGEX,
+      (_, key) => bru.getVar(key) || bru.getEnvVar(key)
+    )
+  },
+
   sanitizeUrl: function () {
-    return req
-      .getUrl()
-      .replace(/{{([A-Za-z]\w+)}}/g, (_, key) => bru.getEnvVar(key))
-      .replace(/localhost:([3,4])000/g, (_, key) =>
+    return this.resolveTemplateVariables(req.getUrl()).replace(
+      /localhost:([3,4])000/g,
+      (_, key) =>
         key === '3' ? bru.getEnvVar('host3000') : bru.getEnvVar('host4000')
-      )
+    )
   },
 
   sanitizeBody: function () {
@@ -18,21 +28,19 @@ const scripts = {
       requestBody = JSON.stringify(requestBody)
     }
     return JSON.parse(
-      requestBody
-        .replace(/{{([A-Za-z]\w+)}}/g, (_, key) => bru.getEnvVar(key))
-        .replace(/http:\/\/localhost:([3,4])000/g, (_, key) =>
+      this.resolveTemplateVariables(requestBody).replace(
+        /http:\/\/localhost:([3,4])000/g,
+        (_, key) =>
           key === '3'
             ? 'https://' + bru.getEnvVar('host3000')
             : 'https://' + bru.getEnvVar('host4000')
-        )
+      )
     )
   },
 
   sanitizeHeaders: function () {
     return JSON.parse(
-      JSON.stringify(req.getHeaders()).replace(/{{([A-Za-z]\w+)}}/g, (_, key) =>
-        bru.getEnvVar(key)
-      )
+      this.resolveTemplateVariables(JSON.stringify(req.getHeaders()))
     )
   },
 
@@ -74,10 +82,31 @@ const scripts = {
     this.setHeaders(signatureHeaders)
   },
 
+  generateApiSignature: function (body) {
+    const timestamp = Math.round(new Date().getTime() / 1000)
+    const version = bru.getEnvVar('apiSignatureVersion')
+    const secret = bru.getEnvVar('apiSignatureSecret')
+    const payload = `${timestamp}.${canonicalize(body)}`
+    const hmac = createHmac('sha256', secret)
+    hmac.update(payload)
+    const digest = hmac.digest('hex')
+
+    return `t=${timestamp}, v${version}=${digest}`
+  },
+
+  addApiSignatureHeader: function () {
+    const body = this.sanitizeBody()
+    const { variables } = body
+    const formattedBody = {
+      ...body,
+      variables: JSON.parse(variables)
+    }
+
+    req.setHeader('signature', this.generateApiSignature(formattedBody))
+  },
+
   addHostHeader: function (hostVarName) {
-    const requestUrl = url.parse(
-      req.getUrl().replace(/{{([A-Za-z]\w+)}}/g, (_, key) => bru.getEnvVar(key))
-    )
+    const requestUrl = url.parse(this.resolveTemplateVariables(req.getUrl()))
 
     if (hostVarName) {
       bru.setEnvVar(hostVarName, requestUrl.protocol + '//' + requestUrl.host)
@@ -100,7 +129,9 @@ const scripts = {
     bru.setEnvVar('tokenId', body?.access_token?.manage.split('/').pop())
   },
 
-  getWalletAddressId: async function (host, publicName, varName) {
+  loadWalletAddressIdsIntoVariables: async function () {
+    const requestUrl = this.resolveTemplateVariables(req.url)
+
     const getWalletAddressesQuery = `
     query GetWalletAddresses {
         walletAddresses {
@@ -109,24 +140,44 @@ const scripts = {
                 node {
                     id
                     publicName
-                    url
                 }
             }
         }
     }`
 
+    const postBody = { query: getWalletAddressesQuery }
+
     const postRequest = {
       method: 'post',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ query: getWalletAddressesQuery })
+      headers: {
+        signature: this.generateApiSignature(postBody),
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(postBody)
     }
 
-    const response = await fetch(`${bru.getEnvVar(host)}/graphql`, postRequest)
+    const response = await fetch(requestUrl, postRequest)
     const body = await response.json()
-    const walletAddressId = body.data.walletAddresses.edges
+
+    // Default accounts defined in localenv/(cloud-nine-wallet | happy-life-bank)/seed.yml files
+    const mapFromPublicNameToVariableName = {
+      "World's Best Donut Co": 'wbdcWalletAddressId',
+      'Bert Hamchest': 'bhamchestWalletAddressId',
+      'Grace Franklin': 'gfranklinWalletAddressId',
+      'Philip Fry': 'pfryWalletAddressId',
+      'PlanEx Corp': 'planexWalletAddressId',
+      Lars: 'larsWalletAddressId',
+      David: 'davidWalletAddressId'
+    }
+
+    body.data.walletAddresses.edges
       .map((e) => e.node)
-      .find((node) => node.publicName === publicName)?.id
-    bru.setEnvVar(varName, walletAddressId)
+      .forEach((wa) => {
+        const varName = mapFromPublicNameToVariableName[wa.publicName]
+        if (varName) {
+          bru.setEnvVar(varName, wa.id)
+        }
+      })
   }
 }
 

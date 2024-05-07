@@ -49,14 +49,14 @@ body:graphql:vars {
   }
 }
 
+script:pre-request {
+  const scripts = require('./scripts');
+  
+  scripts.addApiSignatureHeader();
+}
+
 script:post-response {
   const body = res.getBody();
   
   bru.setEnvVar("peerId", body.data.createPeer.peer.id);
-}
-
-tests {
-  // const body = pm.response.json();
-  // 
-  // pm.environment.set("peerId", body.data.createPeer.peer.id);
 }

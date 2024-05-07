@@ -10,7 +10,8 @@ import {
   ListOptions,
   WalletAddressEventError,
   WalletAddressEventType,
-  WalletAddressEvent
+  WalletAddressEvent,
+  throwIfMissingWalletAddress
 } from './model'
 import { Grant } from '../auth/middleware'
 import {
@@ -31,6 +32,8 @@ import { IocContract } from '@adonisjs/fold'
 import assert from 'assert'
 import { ReadContextWithAuthenticatedStatus } from '../payment/incoming/routes'
 import { Knex } from 'knex'
+import { OpenPaymentsServerRouteError } from '../route-errors'
+import { createIncomingPayment } from '../../tests/incomingPayment'
 
 export interface SetupOptions {
   reqOpts: httpMocks.RequestOptions
@@ -264,10 +267,13 @@ export const getRouteTests = <M extends WalletAddressSubresource>({
         expect(ctx.response).toSatisfyApiSpec()
         expect(ctx.body).toEqual(getBody(expectedMatch))
       } else {
-        await expect(get(ctx)).rejects.toMatchObject({
-          status: 404,
-          message: 'Not Found'
-        })
+        expect.assertions(1)
+        try {
+          await get(ctx)
+        } catch (err) {
+          assert(err instanceof OpenPaymentsServerRouteError)
+          expect(err.status).toBe(404)
+        }
       }
     },
     // tests walletAddressId / client filtering
@@ -345,10 +351,15 @@ export const getRouteTests = <M extends WalletAddressSubresource>({
             walletAddress: await getWalletAddress(),
             accessAction: AccessAction.ListAll
           })
-          await expect(list(ctx)).rejects.toMatchObject({
-            status: 400,
-            message
-          })
+
+          expect.assertions(2)
+          try {
+            await list(ctx)
+          } catch (error) {
+            assert(error instanceof OpenPaymentsServerRouteError)
+            expect(error.status).toBe(400)
+            expect(error.message).toBe(message)
+          }
         }
       )
     })
@@ -451,5 +462,53 @@ describe('Models', (): void => {
         }
       )
     })
+  })
+})
+
+describe('throwIfMissingWalletAddress', (): void => {
+  let deps: IocContract<AppServices>
+  let appContainer: TestContainer
+
+  beforeAll(async (): Promise<void> => {
+    deps = initIocContainer(Config)
+    appContainer = await createTestApp(deps)
+  })
+
+  afterEach(async (): Promise<void> => {
+    await truncateTables(appContainer.knex)
+  })
+
+  afterAll(async (): Promise<void> => {
+    await appContainer.shutdown()
+  })
+
+  test('throws if missing wallet address on subresource', async () => {
+    const logger = await deps.use('logger')
+
+    const walletAddress = await createWalletAddress(deps)
+    const incomingPayment = await createIncomingPayment(deps, {
+      walletAddressId: walletAddress.id
+    })
+
+    delete incomingPayment.walletAddress
+
+    expect(() =>
+      throwIfMissingWalletAddress({ logger }, incomingPayment)
+    ).toThrow(
+      'IncomingPayment does not have wallet address. This should be investigated.'
+    )
+  })
+
+  test('does not throw if existing wallet address on subresource', async () => {
+    const logger = await deps.use('logger')
+
+    const walletAddress = await createWalletAddress(deps)
+    const incomingPayment = await createIncomingPayment(deps, {
+      walletAddressId: walletAddress.id
+    })
+
+    expect(() =>
+      throwIfMissingWalletAddress({ logger }, incomingPayment)
+    ).not.toThrow()
   })
 })

@@ -18,13 +18,17 @@
   - changed-files:
     - any-glob-to-any-file: 'packages/documentation/**/*'
 
+'pkg: mock-account-service-lib':
+  - changed-files:
+    - any-glob-to-any-file: 'packages/mock-account-service-lib/**/*'
+
 'type: ci':
   - changed-files:
     - any-glob-to-any-file: '.github/**/*'
 
 'type: documentation':
   - changed-files:
-    - any-glob-to-any-file: '**/*.md'
+    - any-glob-to-any-file: 'packages/documentation/**/*.md*'
 
 'type: source':
   - changed-files:
@@ -32,7 +36,7 @@
 
 'type: tests':
   - changed-files:
-    - any-glob-to-any-file: 'packages/**/*.test.ts'
+    - any-glob-to-any-file: ['packages/**/*.test.ts', 'test/**/*']
 
 'type: localenv':
   - changed-files:

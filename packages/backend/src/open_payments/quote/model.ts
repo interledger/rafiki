@@ -144,7 +144,7 @@ export class Quote extends WalletAddressSubresource {
       Pay.Int.from(this.highEstimatedExchangeRateDenominator) as Pay.PositiveInt
     )
     if (!highEstimatedExchangeRate.isPositive()) {
-      throw new Error()
+      throw new Error('high estimated exchange rate is not positive')
     }
     return highEstimatedExchangeRate
   }

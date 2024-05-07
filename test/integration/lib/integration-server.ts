@@ -1,7 +1,7 @@
+import crypto from 'crypto'
 import Koa from 'koa'
 import bodyParser from '@koa/bodyparser'
 import http from 'http'
-import { v4 as uuid } from 'uuid'
 import {
   AccountProvider,
   WebhookEventType,
@@ -54,9 +54,7 @@ export class IntegrationServer {
       }
     })
 
-    this.server = this.app.listen(port, () => {
-      console.log(`Integration server listening on port ${port}`)
-    })
+    this.server = this.app.listen(port)
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -99,6 +97,8 @@ export class WebhookEventHandler {
         await this.handleWalletAddressNotFound(webhookEvent)
         break
       case WebhookEventType.IncomingPaymentCreated:
+        break
+      case WebhookEventType.IncomingPaymentCompleted:
         break
       case WebhookEventType.OutgoingPaymentCreated:
         await this.handleOutgoingPaymentCreated(webhookEvent)
@@ -171,7 +171,7 @@ export class WebhookEventHandler {
 
     const response = await this.adminClient.depositOutgoingPaymentLiquidity({
       outgoingPaymentId: payment.id,
-      idempotencyKey: uuid()
+      idempotencyKey: crypto.randomUUID()
     })
 
     if (response.code !== '200') {

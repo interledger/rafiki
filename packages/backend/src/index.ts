@@ -208,11 +208,6 @@ export function initIocContainer(
     const knex = await deps.use('knex')
     const config = await deps.use('config')
 
-    let telemetry: TelemetryService | undefined
-    if (config.enableTelemetry && config.openTelemetryCollectors.length > 0) {
-      telemetry = await deps.use('telemetry')
-    }
-
     if (config.useTigerbeetle) {
       container.singleton('tigerbeetle', async (deps) => {
         const config = await deps.use('config')
@@ -226,7 +221,6 @@ export function initIocContainer(
 
       return createTigerbeetleAccountingService({
         logger,
-        telemetry,
         knex,
         tigerbeetle,
         withdrawalThrottleDelay: config.withdrawalThrottleDelay
@@ -235,7 +229,6 @@ export function initIocContainer(
 
     return createPsqlAccountingService({
       logger,
-      telemetry,
       knex,
       withdrawalThrottleDelay: config.withdrawalThrottleDelay
     })
@@ -324,6 +317,7 @@ export function initIocContainer(
   container.singleton('walletAddressKeyRoutes', async (deps) => {
     return createWalletAddressKeyRoutes({
       config: await deps.use('config'),
+      logger: await deps.use('logger'),
       walletAddressKeyService: await deps.use('walletAddressKeyService'),
       walletAddressService: await deps.use('walletAddressService')
     })
@@ -362,6 +356,10 @@ export function initIocContainer(
 
   container.singleton('connectorApp', async (deps) => {
     const config = await deps.use('config')
+    let telemetry: TelemetryService | undefined
+    if (config.enableTelemetry) {
+      telemetry = await deps.use('telemetry')
+    }
     return await createConnectorService({
       logger: await deps.use('logger'),
       redis: await deps.use('redis'),
@@ -371,7 +369,8 @@ export function initIocContainer(
       peerService: await deps.use('peerService'),
       ratesService: await deps.use('ratesService'),
       streamServer: await deps.use('streamServer'),
-      ilpAddress: config.ilpAddress
+      ilpAddress: config.ilpAddress,
+      telemetry
     })
   })
 
@@ -475,6 +474,7 @@ export function initIocContainer(
       ),
       peerService: await deps.use('peerService'),
       walletAddressService: await deps.use('walletAddressService'),
+      quoteService: await deps.use('quoteService'),
       telemetry: config.enableTelemetry
         ? await deps.use('telemetry')
         : undefined
@@ -571,18 +571,22 @@ export const start = async (
     }
   })
 
+  const config = await container.use('config')
+
   // Do migrations
   const knex = await container.use('knex')
-  // Needs a wrapped inline function
-  await callWithRetry(async () => {
-    await knex.migrate.latest({
-      directory: __dirname + '/../migrations'
+
+  if (!config.enableManualMigrations) {
+    // Needs a wrapped inline function
+    await callWithRetry(async () => {
+      await knex.migrate.latest({
+        directory: __dirname + '/../migrations'
+      })
     })
-  })
+  }
 
   Model.knex(knex)
 
-  const config = await container.use('config')
   await app.boot()
   await app.startAdminServer(config.adminPort)
   logger.info(`Admin listening on ${app.getAdminPort()}`)

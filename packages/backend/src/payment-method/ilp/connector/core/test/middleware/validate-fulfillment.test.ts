@@ -39,7 +39,7 @@ describe('Validate Fulfillment Middleware', function () {
     await expect(middleware(ctx, next)).rejects.toBeInstanceOf(
       WrongConditionError
     )
-    expect(ctx.services.logger.warn).toHaveBeenCalled()
+    expect(ctx.services.logger.error).toHaveBeenCalled()
   })
 
   test('forwards fulfills with correct fullfillment', async () => {

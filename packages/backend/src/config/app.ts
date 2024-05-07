@@ -64,6 +64,7 @@ export const Config = {
   connectorPort: envInt('CONNECTOR_PORT', 3002),
   autoPeeringServerPort: envInt('AUTO_PEERING_SERVER_PORT', 3005),
   enableAutoPeering: envBool('ENABLE_AUTO_PEERING', false),
+  enableManualMigrations: envBool('ENABLE_MANUAL_MIGRATIONS', false),
   databaseUrl:
     process.env.NODE_ENV === 'test'
       ? `${process.env.DATABASE_URL}_${process.env.JEST_WORKER_ID}`
@@ -136,6 +137,9 @@ export const Config = {
 
   signatureSecret: process.env.SIGNATURE_SECRET, // optional
   signatureVersion: envInt('SIGNATURE_VERSION', 1),
+
+  apiSecret: process.env.API_SECRET, // optional
+  apiSignatureVersion: envInt('API_SIGNATURE_VERSION', 1),
 
   keyId: envString('KEY_ID', 'rafiki'),
   privateKey: loadOrGenerateKey(envString('PRIVATE_KEY_FILE', '')),

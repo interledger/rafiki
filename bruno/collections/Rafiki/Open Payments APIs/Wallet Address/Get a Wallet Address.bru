@@ -15,30 +15,13 @@ headers {
 }
 
 script:pre-request {
-  // if(pm.environment.get('preRequestHost')){
-  //     eval(pm.environment.get('preRequestHost'))
-  // }
+  const scripts = require('./scripts');
+  
+  scripts.addHostHeader("senderOpenPaymentsHost");
 }
 
 tests {
-  // pm.test("Status code is 200", function () {
-  //     pm.response.to.have.status(200);
-  // });
-  // 
-  // const body = pm.response.json();
-  // pm.environment.set("receiverAssetCode", body?.assetCode)
-  // pm.environment.set("receiverAssetScale", body?.assetScale)
-  // 
-  // const authUrl = url.parse(body?.authServer)
-  // if (
-  //     authUrl.hostname.includes('cloud-nine-wallet') || 
-  //     authUrl.hostname.includes('happy-life-bank')
-  // ){
-  //     const port = authUrl.hostname.includes('cloud-nine-wallet') 
-  //         ? authUrl.port
-  //         : Number(authUrl.port) + 1000
-  //     pm.environment.set("receiverOpenPaymentsAuthHost", authUrl.protocol + '//localhost:' + port );
-  // } else {
-  //     pm.environment.set("receiverOpenPaymentsAuthHost", body?.authServer);
-  // }
+  test("Status code is 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
 }

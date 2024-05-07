@@ -1,7 +1,5 @@
 import { TransactionOrKnex } from 'objection'
 import { BaseService } from '../shared/baseService'
-import { TelemetryService } from '../telemetry/service'
-import { collectTelemetryAmount } from '../telemetry/transaction-amount'
 import { TransferError, isTransferError } from './errors'
 
 export enum LiquidityAccountType {
@@ -93,7 +91,6 @@ export interface TransferToCreate {
 }
 
 export interface BaseAccountingServiceDependencies extends BaseService {
-  telemetry?: TelemetryService
   withdrawalThrottleDelay?: number
 }
 
@@ -121,7 +118,7 @@ export async function createAccountToAccountTransfer(
     transferArgs
   } = args
 
-  const { withdrawalThrottleDelay, telemetry, logger } = deps
+  const { withdrawalThrottleDelay } = deps
 
   const { sourceAccount, destinationAccount, sourceAmount, destinationAmount } =
     transferArgs
@@ -162,7 +159,7 @@ export async function createAccountToAccountTransfer(
       const balance = await getAccountBalance(account.id)
 
       if (balance === undefined) {
-        throw new Error()
+        throw new Error('undefined account balance')
       }
 
       await account.onDebit({
@@ -188,7 +185,7 @@ export async function createAccountToAccountTransfer(
         const totalReceived = await getAccountReceived(destinationAccount.id)
 
         if (totalReceived === undefined) {
-          throw new Error()
+          throw new Error('total received is undefined')
         }
 
         await destinationAccount.onCredit({
@@ -196,22 +193,8 @@ export async function createAccountToAccountTransfer(
           withdrawalThrottleDelay
         })
       }
-
-      if (
-        destinationAccount.onDebit &&
-        telemetry &&
-        sourceAccount.asset.code &&
-        sourceAccount.asset.scale
-      ) {
-        collectTelemetryAmount(telemetry, logger, {
-          amount: sourceAmount,
-          asset: {
-            code: sourceAccount.asset.code,
-            scale: sourceAccount.asset.scale
-          }
-        })
-      }
     },
+
     void: async (): Promise<void | TransferError> => {
       const error = await voidTransfers(pendingTransferIdsOrError)
 

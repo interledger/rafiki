@@ -1,5 +1,15 @@
-import { ApolloClient, InMemoryCache } from '@apollo/client'
+import { createHmac } from 'crypto'
+
+import {
+  ApolloClient,
+  ApolloLink,
+  InMemoryCache,
+  createHttpLink
+} from '@apollo/client'
 import type { NormalizedCacheObject } from '@apollo/client'
+import { setContext } from '@apollo/client/link/context'
+import { canonicalize } from 'json-canonicalize'
+import { print } from 'graphql/language/printer'
 
 /* eslint-disable no-var */
 declare global {
@@ -16,9 +26,40 @@ BigInt.prototype.toJSON = function (this: bigint) {
   return this.toString()
 }
 
+const authLink = setContext((request, { headers }) => {
+  if (!process.env.SIGNATURE_SECRET || !process.env.SIGNATURE_VERSION)
+    return { headers }
+  const timestamp = Math.round(new Date().getTime() / 1000)
+  const version = process.env.SIGNATURE_VERSION
+
+  const { query, variables, operationName } = request
+  const formattedRequest = {
+    variables,
+    operationName,
+    query: print(query)
+  }
+
+  const payload = `${timestamp}.${canonicalize(formattedRequest)}`
+  const hmac = createHmac('sha256', process.env.SIGNATURE_SECRET)
+  hmac.update(payload)
+  const digest = hmac.digest('hex')
+
+  return {
+    headers: {
+      ...headers,
+      signature: `t=${timestamp}, v${version}=${digest}`
+    }
+  }
+})
+
+const httpLink = createHttpLink({
+  uri: process.env.GRAPHQL_URL ?? 'http://localhost:3001/graphql'
+})
+
 if (!global.__apolloClient) {
   global.__apolloClient = new ApolloClient({
     cache: new InMemoryCache({}),
+    link: ApolloLink.from([authLink, httpLink]),
     defaultOptions: {
       query: {
         fetchPolicy: 'no-cache'
@@ -26,8 +67,7 @@ if (!global.__apolloClient) {
       mutate: {
         fetchPolicy: 'no-cache'
       }
-    },
-    uri: process.env.GRAPHQL_URL ?? 'http://localhost:3001/graphql'
+    }
   })
 }
 const apolloClient = global.__apolloClient

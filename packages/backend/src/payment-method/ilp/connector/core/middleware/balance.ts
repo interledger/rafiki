@@ -20,6 +20,12 @@ export function createBalanceMiddleware(): ILPMiddleware {
     next: () => Promise<void>
   ): Promise<void> => {
     const { amount } = request.prepare
+    const logger = services.logger.child(
+      { module: 'balance-middleware' },
+      {
+        redact: ['transferOptions.destinationAccount.http.outgoing.authToken']
+      }
+    )
 
     // Ignore zero amount packets
     if (amount === '0') {
@@ -35,6 +41,15 @@ export function createBalanceMiddleware(): ILPMiddleware {
     })
     if (typeof destinationAmountOrError !== 'bigint') {
       // ConvertError
+      logger.error(
+        {
+          amount,
+          destinationAmountOrError,
+          sourceAsset: accounts.incoming.asset,
+          destinationAsset: accounts.outgoing.asset
+        },
+        'Could not get rates'
+      )
       throw new CannotReceiveError(
         `Exchange rate error: ${destinationAmountOrError}`
       )
@@ -48,18 +63,23 @@ export function createBalanceMiddleware(): ILPMiddleware {
     }
 
     // Update balances on prepare
-    const createTransfer = async (
-      timeout?: number
-    ): Promise<Transaction | undefined> => {
-      const trxOrError = await services.accounting.createTransfer({
+    const createPendingTransfer = async (): Promise<
+      Transaction | undefined
+    > => {
+      const transferOptions = {
         sourceAccount: accounts.incoming,
         destinationAccount: accounts.outgoing,
         sourceAmount,
         destinationAmount: destinationAmountOrError,
-        timeout: timeout || 0
-      })
-
+        timeout: 5
+      }
+      const trxOrError =
+        await services.accounting.createTransfer(transferOptions)
       if (isTransferError(trxOrError)) {
+        logger.error(
+          { transferOptions, transferError: trxOrError },
+          'Could not create transfer'
+        )
         switch (trxOrError) {
           case TransferError.InsufficientBalance:
           case TransferError.InsufficientLiquidity:
@@ -75,11 +95,15 @@ export function createBalanceMiddleware(): ILPMiddleware {
 
     if (state.streamDestination) {
       await next()
-      if (response.fulfill) await createTransfer()
-    } else {
-      const trx = await createTransfer(5)
+    }
 
-      await next()
+    if (!state.streamDestination || response.fulfill) {
+      // TODO: make this single-phase if streamDestination === true
+      const trx = await createPendingTransfer()
+
+      if (!state.streamDestination) {
+        await next()
+      }
 
       if (trx) {
         if (response.fulfill) {
