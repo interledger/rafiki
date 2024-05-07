@@ -221,16 +221,22 @@ export async function handleWalletAddressWebMonetization(wh: Webhook) {
 
     return await apolloClient.mutate({
       mutation: gql`
-        mutation PostLiquidityWithdrawal ($withdrawalId: String!) {
-        postLiquidityWithdrawal($withdrawalId: String!) {
-          code
-          success
-          message
-          error
+        mutation PostLiquidityWithdrawal(
+          $input: PostLiquidityWithdrawalInput!
+        ) {
+          postLiquidityWithdrawal(input: $input) {
+            code
+            success
+            message
+            error
+          }
         }
-      }`,
+      `,
       variables: {
-        withdrawalId: withdrawalId
+        input: {
+          withdrawalId: withdrawalId,
+          idempotencyKey: uuid()
+        }
       }
     })
   } catch (err) {
