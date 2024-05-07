@@ -1,3 +1,3 @@
 ---
-title: Helm and Kubernetes
+title: Helm and K8s
 ---
