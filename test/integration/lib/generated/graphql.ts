@@ -104,7 +104,7 @@ export type BasePayment = {
 export type CancelOutgoingPaymentInput = {
   /** Outgoing payment id */
   id: Scalars['ID']['input'];
-  /** Reason why this Outgoing Payment has been cancelled */
+  /** Reason why this Outgoing Payment has been cancelled. This value will be publicly visible in the metadata field if this outgoing payment is requested through Open Payments. */
   reason?: InputMaybe<Scalars['String']['input']>;
 };
 
