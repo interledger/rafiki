@@ -444,9 +444,9 @@ describe('OutgoingPaymentService', (): void => {
 
         if (!outgoingPaymentError) {
           assert.ok(response instanceof OutgoingPayment)
-          expect(dataCheck.id).toBe(outgoingPayment.id)
-          expect(dataCheck.state).toBe(OutgoingPaymentState.Cancelled)
-          expect(dataCheck.metadata).toEqual({
+          expect(response.id).toBe(outgoingPayment.id)
+          expect(response.state).toBe(OutgoingPaymentState.Cancelled)
+          expect(response.metadata).toEqual({
             cancellationReason: reason
           })
         } else {
