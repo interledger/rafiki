@@ -14,7 +14,7 @@ export function createIncomingMaxPacketAmountMiddleware(): ILPMiddleware {
     if (maxPacketAmount) {
       const amount = request.prepare.intAmount
       if (amount > maxPacketAmount) {
-        logger.warn(
+        logger.error(
           { maxPacketAmount: maxPacketAmount.toString(), request },
           'rejected a packet due to amount exceeding maxPacketAmount'
         )
