@@ -53,11 +53,12 @@ export function createStreamController(): ILPMiddleware {
       } else {
         logger.warn(
           {
+            connectionKey,
             totalReceived,
             err,
             err2
           },
-          'error incrementing stream totalReceived'
+          'failed to increment stream totalReceived'
         )
       }
       response.reply = moneyOrReply.accept()

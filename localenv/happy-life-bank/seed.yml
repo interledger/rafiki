@@ -45,11 +45,13 @@ accounts:
     path: accounts/lars
     id: fd4ecbc9-205d-4ecd-a030-507d6ce2bde6
     initialBalance: 50000000
+    brunoEnvVar: larsWalletAddress
     assetCode: EUR
   - name: 'David'
     path: accounts/david
     id: 60257507-3191-4507-9d77-9071fd6b3c30
     initialBalance: 1500000000
+    brunoEnvVar: davidWalletAddress
     assetCode: MXN
 rates:
   EUR:
