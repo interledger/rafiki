@@ -675,8 +675,8 @@ importers:
         specifier: 2.0.2
         version: 2.0.2
       '@interledger/open-payments':
-        specifier: ^6.9.0
-        version: 6.9.0
+        specifier: ^6.10.0
+        version: 6.10.0
       '@koa/bodyparser':
         specifier: ^5.1.1
         version: 5.1.1(koa@2.15.3)
@@ -4294,6 +4294,20 @@ packages:
       jose: 4.13.1
       uuid: 9.0.1
 
+  /@interledger/open-payments@6.10.0:
+    resolution: {integrity: sha512-iqkx7LfFdtT2BiN4GlHmcLq14J8O/eqREprALwdHIYUoL5O/ie3HpiUvrJRnR5zaIwnOXk9YLbHI39FMplfJRA==}
+    dependencies:
+      '@interledger/http-signature-utils': 2.0.2
+      '@interledger/openapi': 2.0.1
+      base64url: 3.0.1
+      http-message-signatures: 0.1.2
+      ky: 1.2.4
+      pino: 8.19.0
+      uuid: 9.0.1
+    transitivePeerDependencies:
+      - supports-color
+    dev: true
+
   /@interledger/open-payments@6.9.0:
     resolution: {integrity: sha512-Tf4TFTbPirYRxYg8aTyBR8lEczWFR1cyDbb+BN3783I/+YxpDRk59cM4SunmScsUgoSMEokXEgGXwhx4Gpdzcg==}
     dependencies:
@@ -4307,6 +4321,7 @@ packages:
     transitivePeerDependencies:
       - debug
       - supports-color
+    dev: false
 
   /@interledger/openapi@1.2.1:
     resolution: {integrity: sha512-CVEMjLH94svT5ikaojplgZ3YlZAe7ml6G6bt0ZCbqkbwHszUwY1E6RexZZejiGju5QvwS/6Jl/Op5ymv/ECaLg==}
@@ -7485,6 +7500,7 @@ packages:
       proxy-from-env: 1.1.0
     transitivePeerDependencies:
       - debug
+    dev: false
 
   /axobject-query@3.2.1:
     resolution: {integrity: sha512-jsyHu61e6N4Vbz/v18DHwWYKK0bSWLqn47eeDSKPB7m8tqMHF9YJ+mhIk2lVteyZrY8tnSj/jHOv4YiTCuCJgg==}
@@ -10402,6 +10418,7 @@ packages:
       asynckit: 0.4.0
       combined-stream: 1.0.8
       mime-types: 2.1.35
+    dev: false
 
   /format@0.2.2:
     resolution: {integrity: sha512-wzsgA6WOq+09wrU1tsJ09udeR/YZRaeArL9e1wPbFg3GG2yDnC2ldKpxs4xunpFF9DgqCqOIra3bc1HWrJ37Ww==}
@@ -12780,6 +12797,11 @@ packages:
       vary: 1.1.2
     transitivePeerDependencies:
       - supports-color
+
+  /ky@1.2.4:
+    resolution: {integrity: sha512-CfSrf4a0yj1n6WgPT6kQNQOopIGLkQzqSAXo05oKByaH7G3SiqW4a8jGox0p9whMXqO49H7ljgigivrMyycAVA==}
+    engines: {node: '>=18'}
+    dev: true
 
   /language-subtag-registry@0.3.22:
     resolution: {integrity: sha512-tN0MCzyWnoz/4nHS6uxdlFWoUZT7ABptwKPQ52Ea7URk6vll88bWBVhodtnlfEuCcKWNGoc+uGbw1cwa9IKh/w==}
@@ -15587,6 +15609,7 @@ packages:
 
   /proxy-from-env@1.1.0:
     resolution: {integrity: sha512-D+zkORCbA9f1tdWRK0RaCR3GPv50cMxcrz4X8k5LTSUD1Dkw47mKJEZQNunItRTkWwgtaUSo1RVFRIG9ZXiFYg==}
+    dev: false
 
   /psl@1.9.0:
     resolution: {integrity: sha512-E/ZsdU4HLs/68gYzgGTkMicWTLPdAftJLfJFlLUAAKZGkStNU72sZjT66SnMDVOfOWY/YAoiD7Jxa9iHvngcag==}
