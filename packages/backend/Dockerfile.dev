@@ -7,11 +7,19 @@ RUN corepack prepare pnpm@8.7.4 --activate
 
 COPY pnpm-lock.yaml package.json pnpm-workspace.yaml .npmrc tsconfig.json tsconfig.build.json ./
 
-RUN pnpm fetch
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
+    pnpm fetch \
+    | grep -v "cross-device link not permitted\|Falling back to copying packages from store"
 
 COPY . ./
 
-RUN pnpm install --recursive --frozen-lockfile --offline
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
+    pnpm install \
+    --recursive \
+    --offline \
+    --frozen-lockfile
+
+RUN pnpm --filter backend build:deps
 
 EXPOSE 9229
 

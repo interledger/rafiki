@@ -15,7 +15,7 @@
     "copy-op-schemas": "cp ./node_modules/@interledger/open-payments/dist/openapi/specs/schemas.yaml ./src/openapi/specs/",
     "prepack": "pnpm build",
     "postinstall": "pnpm copy-op-schemas",
-    "dev": "nodemon --watch src --ext ts --exec \"pnpm build && node dist/index.js\""
+    "dev": "nodemon --watch src --ext ts --exec \"tsc && pnpm copy-files && node dist/index.js\""
   },
   "devDependencies": {
     "@apollo/client": "^3.9.9",
