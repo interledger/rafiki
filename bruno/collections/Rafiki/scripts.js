@@ -82,7 +82,21 @@ const scripts = {
     this.setHeaders(signatureHeaders)
   },
 
-  generateApiSignature: function (body, version, secret) {
+  generateAuthApiSignature: function (body) {
+    const version = bru.getEnvVar('authApiSignatureVersion')
+    const secret = bru.getEnvVar('authApiSignatureSecret')
+    const timestamp = Math.round(new Date().getTime() / 1000)
+    const payload = `${timestamp}.${canonicalize(body)}`
+    const hmac = createHmac('sha256', secret)
+    hmac.update(payload)
+    const digest = hmac.digest('hex')
+
+    return `t=${timestamp}, v${version}=${digest}`
+  },
+
+  generateBackendApiSignature: function (body) {
+    const version = bru.getEnvVar('backendApiSignatureVersion')
+    const secret = bru.getEnvVar('backendApiSignatureSecret')
     const timestamp = Math.round(new Date().getTime() / 1000)
     const payload = `${timestamp}.${canonicalize(body)}`
     const hmac = createHmac('sha256', secret)
@@ -100,26 +114,21 @@ const scripts = {
       variables: JSON.parse(variables)
     }
 
-    const timestamp = Math.round(new Date().getTime() / 1000)
-    let version
-    let secret
+    let signature
     // Default to backend api secret
     switch (packageName) {
       case 'backend':
-        version = bru.getEnvVar('backendApiSignatureVersion')
-        secret = bru.getEnvVar('backendApiSignatureSecret')
+        signature = this.generateBackendApiSignature(formattedBody)
         break
       case 'auth':
-        version = bru.getEnvVar('authApiSignatureVersion')
-        secret = bru.getEnvVar('authApiSignatureSecret')
+        signature = this.generateAuthApiSignature(formattedBody)
         break
       default:
-        version = bru.getEnvVar('backendApiSignatureVersion')
-        secret = bru.getEnvVar('backendApiSignatureSecret')
+        signature = this.generateBackendApiSignature(formattedBody)
     }
     req.setHeader(
       'signature',
-      this.generateApiSignature(formattedBody, version, secret)
+      signature
     )
   },
 
@@ -168,7 +177,7 @@ const scripts = {
     const postRequest = {
       method: 'post',
       headers: {
-        signature: this.generateApiSignature(postBody),
+        signature: this.generateBackendApiSignature(postBody),
         'Content-Type': 'application/json'
       },
       body: JSON.stringify(postBody)
