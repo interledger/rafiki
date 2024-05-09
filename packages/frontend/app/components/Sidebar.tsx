@@ -16,20 +16,20 @@ const navigation = [
     href: '/'
   },
   {
-    name: 'Peers',
-    href: '/peers'
-  },
-  {
     name: 'Assets',
     href: '/assets'
+  },
+  {
+    name: 'Peers',
+    href: '/peers'
   },
   {
     name: 'Wallet Addresses',
     href: '/wallet-addresses'
   },
   {
-    name: 'Webhooks',
-    href: '/webhooks'
+    name: 'Webhook Events',
+    href: '/webhook-events'
   },
   {
     name: 'Payments',
