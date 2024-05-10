@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-a.tooltip {
+a.default-link {
   color: revert;
   text-decoration: revert;
 }

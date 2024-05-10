@@ -125,7 +125,7 @@ export default function ViewPeerPage() {
                       <>
                         The name of the{' '}
                         <a
-                          className='tooltip'
+                          className='default-link'
                           href='https://rafiki.dev/concepts/interledger-protocol/peering/'
                         >
                           peer
@@ -147,7 +147,7 @@ export default function ViewPeerPage() {
                       <>
                         {"The peer's "}
                         <a
-                          className='tooltip'
+                          className='default-link'
                           href='https://interledger.org/developers/rfcs/ilp-addresses/'
                         >
                           address on the Interledger network.
@@ -168,7 +168,7 @@ export default function ViewPeerPage() {
                       <>
                         The maximum amount of value that can be sent in a single{' '}
                         <a
-                          className='tooltip'
+                          className='default-link'
                           href='https://interledger.org/developers/rfcs/stream-protocol/#35-packets-and-frames'
                         >
                           Interledger STREAM Packet
@@ -213,7 +213,7 @@ export default function ViewPeerPage() {
                       <>
                         List of valid tokens to accept when receiving{' '}
                         <a
-                          className='tooltip'
+                          className='default-link'
                           href='https://rafiki.dev/concepts/interledger-protocol/connector/#incoming-http'
                         >
                           incoming ILP packets from the peer.
@@ -232,7 +232,7 @@ export default function ViewPeerPage() {
                       <>
                         List of valid tokens to present when sending{' '}
                         <a
-                          className='tooltip'
+                          className='default-link'
                           href='https://rafiki.dev/concepts/interledger-protocol/connector/#outgoing-http'
                         >
                           outgoing ILP packets to the peer.
@@ -251,7 +251,7 @@ export default function ViewPeerPage() {
                       <>
                         Endpoint on the peer to which{' '}
                         <a
-                          className='tooltip'
+                          className='default-link'
                           href='https://rafiki.dev/concepts/interledger-protocol/connector/#outgoing-http'
                         >
                           outgoing ILP packets
