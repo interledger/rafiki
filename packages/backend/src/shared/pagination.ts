@@ -20,14 +20,12 @@ export function parsePaginationQueryParameters({
 type GetPageInfoArgs<T extends BaseModel> = {
   getPage: (pagination: Pagination, sortOrder?: SortOrder) => Promise<T[]>
   page: T[]
-  walletAddress?: string
   sortOrder?: SortOrder
 }
 
 export async function getPageInfo<T extends BaseModel>({
   getPage,
   page,
-  walletAddress,
   sortOrder
 }: GetPageInfoArgs<T>): Promise<PageInfo> {
   if (page.length == 0)
@@ -43,7 +41,6 @@ export async function getPageInfo<T extends BaseModel>({
   try {
     hasNextPage = await getPage(
       {
-        walletAddress,
         after: lastId,
         first: 1
       },
@@ -55,7 +52,6 @@ export async function getPageInfo<T extends BaseModel>({
   try {
     hasPreviousPage = await getPage(
       {
-        walletAddress,
         before: firstId,
         last: 1
       },

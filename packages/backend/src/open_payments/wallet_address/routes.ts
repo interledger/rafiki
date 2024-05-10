@@ -93,8 +93,7 @@ export const listSubresource = async <M extends WalletAddressSubresource>({
         pagination,
         client
       }),
-    page,
-    walletAddress: walletAddress.url
+    page
   })
   const result = {
     pagination: pageInfo,

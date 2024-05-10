@@ -137,8 +137,7 @@ describe('Pagination', (): void => {
                   walletAddressId: defaultWalletAddress.id,
                   pagination
                 }),
-              page,
-              walletAddress: defaultWalletAddress.url
+              page
             })
             expect(pageInfo).toEqual({
               startCursor: paymentIds[start],
@@ -194,8 +193,7 @@ describe('Pagination', (): void => {
                   walletAddressId: defaultWalletAddress.id,
                   pagination
                 }),
-              page,
-              walletAddress: defaultWalletAddress.url
+              page
             })
             expect(pageInfo).toEqual({
               startCursor: paymentIds[start],
@@ -251,8 +249,7 @@ describe('Pagination', (): void => {
                   walletAddressId: defaultWalletAddress.id,
                   pagination
                 }),
-              page,
-              walletAddress: defaultWalletAddress.url
+              page
             })
             expect(pageInfo).toEqual({
               startCursor: quoteIds[start],
