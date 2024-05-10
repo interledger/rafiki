@@ -21,6 +21,4 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
 
 RUN pnpm --filter backend build:deps
 
-EXPOSE 9229
-
 CMD pnpm --filter backend dev
