@@ -38,6 +38,7 @@ services:
     ports:
       - "4000:80"
       - "4001:3001"
+      - '9231:9229'
     networks:
       - rafiki
     environment:
@@ -79,6 +80,7 @@ services:
     ports:
       - '4003:3003'
       - '4006:3006'
+      - '9232:9229'
     environment:
       NODE_ENV: development
       AUTH_DATABASE_URL: postgresql://happy_life_bank_auth:happy_life_bank_auth@shared-database/happy_life_bank_auth

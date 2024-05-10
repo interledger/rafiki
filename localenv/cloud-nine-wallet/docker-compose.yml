@@ -44,6 +44,7 @@ services:
       - '3000:80'
       - '3001:3001'
       - '3002:3002'
+      - "9229:9229"
     networks:
       - rafiki
     environment:
@@ -90,6 +91,7 @@ services:
     ports:
       - '3003:3003'
       - '3006:3006'
+      - "9230:9229"
     environment:
       NODE_ENV: ${NODE_ENV:-development}
       TRUST_PROXY: ${TRUST_PROXY}

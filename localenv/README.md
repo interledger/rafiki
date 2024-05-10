@@ -139,6 +139,28 @@ Note that you have to go through an additional "login" step by providing you IPv
 
 After stopping the script it is necessary to clear the environment using the command described in [Shutting down](#Shutting-down). This is necessary as on a new run of the scripts (with autopeering or not) the wallet address url will differ.
 
+### Debugging
+
+Debuggers for the services are exposed on the following ports:
+
+| IP and Port    | Services                |
+| -------------- | ----------------------- |
+| 127.0.0.1:9229 | Cloud Nine Backend      |
+| 127.0.0.1:9230 | Cloud Nine Auth         |
+| 127.0.0.1:9231 | Happy Life Bank Backend |
+| 127.0.0.1:9232 | Happy Life Bank Auth    |
+
+To use these debuggers with a chromium browser:
+
+- go to `chrome://inspect` in chromium browser
+- Click "Configure" add the IP addresses and ports detailed above
+- start docker containers
+- click "inspect" on the service you want to debug to open the chromium debugger
+
+You can either trigger the debugger by adding `debugger` statements in code and restarting, or by adding breakpoints directly in the chromium debugger after starting the docker containers.
+
+For more ways to connect to these debuggers, see the Node docs for debugging: https://nodejs.org/en/learn/getting-started/debugging
+
 ### Shutting down
 
 ```
