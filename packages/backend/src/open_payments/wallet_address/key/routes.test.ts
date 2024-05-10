@@ -7,7 +7,7 @@ import { createTestApp, TestContainer } from '../../../tests/app'
 import { Config } from '../../../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../../..'
-import { AppServices, WalletAddressKeysContext } from '../../../app'
+import { AppServices, WalletAddressUrlContext } from '../../../app'
 import { truncateTables } from '../../../tests/tableManager'
 import { WalletAddressKeyRoutes } from './routes'
 import { WalletAddressKeyService } from './service'
@@ -55,7 +55,7 @@ describe('Wallet Address Keys Routes', (): void => {
       }
       const key = await walletAddressKeyService.create(keyOption)
 
-      const ctx = createContext<WalletAddressKeysContext>({
+      const ctx = createContext<WalletAddressUrlContext>({
         headers: { Accept: 'application/json' },
         url: `/jwks.json`
       })
@@ -74,7 +74,7 @@ describe('Wallet Address Keys Routes', (): void => {
     test('returns 200 with empty array if no keys for a wallet address', async (): Promise<void> => {
       const walletAddress = await createWalletAddress(deps)
 
-      const ctx = createContext<WalletAddressKeysContext>({
+      const ctx = createContext<WalletAddressUrlContext>({
         headers: { Accept: 'application/json' },
         url: `/jwks.json`
       })
@@ -96,7 +96,7 @@ describe('Wallet Address Keys Routes', (): void => {
         keyId: config.keyId
       })
 
-      const ctx = createContext<WalletAddressKeysContext>({
+      const ctx = createContext<WalletAddressUrlContext>({
         headers: { Accept: 'application/json' },
         url: '/jwks.json'
       })
@@ -111,7 +111,7 @@ describe('Wallet Address Keys Routes', (): void => {
     })
 
     test('returns 404 if wallet address does not exist', async (): Promise<void> => {
-      const ctx = createContext<WalletAddressKeysContext>({
+      const ctx = createContext<WalletAddressUrlContext>({
         headers: { Accept: 'application/json' },
         url: `/jwks.json`
       })

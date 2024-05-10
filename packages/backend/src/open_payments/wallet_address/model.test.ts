@@ -15,7 +15,7 @@ import {
 } from './model'
 import { Grant } from '../auth/middleware'
 import {
-  WalletAddressContext,
+  WalletAddressUrlContext,
   ReadContext,
   ListContext,
   AppServices,
@@ -45,7 +45,7 @@ export interface SetupOptions {
 }
 
 export const setup = <
-  T extends WalletAddressContext & Partial<AuthenticatedStatusContext>
+  T extends WalletAddressUrlContext & Partial<AuthenticatedStatusContext>
 >(
   options: SetupOptions
 ): T => {

@@ -111,15 +111,15 @@ export type AppRequest<ParamsT extends string = string> = Omit<
   params: Record<ParamsT, string>
 }
 
-export interface WalletAddressContext extends AppContext {
-  walletAddress: WalletAddress
+export interface WalletAddressUrlContext extends AppContext {
+  walletAddressUrl: string
   grant?: Grant
   client?: string
   accessAction?: AccessAction
 }
 
 export type WalletAddressKeysContext = Omit<
-  WalletAddressContext,
+  WalletAddressUrlContext,
   'walletAddress'
 > & {
   walletAddress?: WalletAddress
@@ -146,7 +146,7 @@ interface GetCollectionQuery {
 }
 
 type CollectionRequest<BodyT = never, QueryT = ParsedUrlQuery> = Omit<
-  WalletAddressContext['request'],
+  WalletAddressUrlContext['request'],
   'body'
 > & {
   body: BodyT
@@ -154,12 +154,12 @@ type CollectionRequest<BodyT = never, QueryT = ParsedUrlQuery> = Omit<
 }
 
 type CollectionContext<BodyT = never, QueryT = ParsedUrlQuery> = Omit<
-  WalletAddressContext,
+  WalletAddressUrlContext,
   'request' | 'client' | 'accessAction'
 > & {
   request: CollectionRequest<BodyT, QueryT>
-  client: NonNullable<WalletAddressContext['client']>
-  accessAction: NonNullable<WalletAddressContext['accessAction']>
+  client: NonNullable<WalletAddressUrlContext['client']>
+  accessAction: NonNullable<WalletAddressUrlContext['accessAction']>
 }
 
 type SignedCollectionContext<
@@ -172,12 +172,12 @@ type SubresourceRequest = Omit<AppContext['request'], 'params'> & {
 }
 
 type SubresourceContext = Omit<
-  WalletAddressContext,
+  WalletAddressUrlContext,
   'request' | 'grant' | 'client' | 'accessAction'
 > & {
   request: SubresourceRequest
-  client: NonNullable<WalletAddressContext['client']>
-  accessAction: NonNullable<WalletAddressContext['accessAction']>
+  client: NonNullable<WalletAddressUrlContext['client']>
+  accessAction: NonNullable<WalletAddressUrlContext['accessAction']>
 }
 
 export type AuthenticatedStatusContext = { authenticated: boolean }
@@ -632,8 +632,11 @@ export class App {
 
     router.get(
       WALLET_ADDRESS_PATH + '/jwks.json',
-      createWalletAddressMiddleware(),
-      createValidatorMiddleware<WalletAddressKeysContext>(
+      async (ctx, next) => {
+        ctx.walletAddressUrl = `https://${ctx.request.host}/${ctx.params.walletAddressPath}`
+        await next()
+      },
+      createValidatorMiddleware<WalletAddressUrlContext>(
         walletAddressServerSpec,
         {
           path: '/jwks.json',
@@ -651,7 +654,7 @@ export class App {
       WALLET_ADDRESS_PATH,
       createWalletAddressMiddleware(),
       createSpspMiddleware(this.config.spspEnabled),
-      createValidatorMiddleware<WalletAddressContext>(
+      createValidatorMiddleware<WalletAddressUrlContext>(
         walletAddressServerSpec,
         {
           path: '/',

@@ -1,6 +1,6 @@
 import { generateJwk, JWK } from '@interledger/http-signature-utils'
 
-import { WalletAddressKeysContext } from '../../../app'
+import { WalletAddressUrlContext } from '../../../app'
 import { IAppConfig } from '../../../config/app'
 import { WalletAddressService } from '../service'
 import { WalletAddressKeyService } from './service'
@@ -15,7 +15,7 @@ interface ServiceDependencies {
 }
 
 export interface WalletAddressKeyRoutes {
-  getKeysByWalletAddressId(ctx: WalletAddressKeysContext): Promise<void>
+  getKeysByWalletAddressId(ctx: WalletAddressUrlContext): Promise<void>
 }
 
 export function createWalletAddressKeyRoutes(
@@ -30,14 +30,14 @@ export function createWalletAddressKeyRoutes(
   }
 
   return {
-    getKeysByWalletAddressId: (ctx: WalletAddressKeysContext) =>
+    getKeysByWalletAddressId: (ctx: WalletAddressUrlContext) =>
       getKeysByWalletAddressId(deps, ctx)
   }
 }
 
 export async function getKeysByWalletAddressId(
   deps: ServiceDependencies,
-  ctx: WalletAddressKeysContext
+  ctx: WalletAddressUrlContext
 ): Promise<void> {
   if (ctx.walletAddress) {
     const keys = await deps.walletAddressKeyService.getKeysByWalletAddressId(

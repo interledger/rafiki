@@ -2,7 +2,7 @@ import jestOpenAPI from 'jest-openapi'
 import { IocContract } from '@adonisjs/fold'
 import { faker } from '@faker-js/faker'
 import { initIocContainer } from '../../'
-import { AppServices, WalletAddressContext } from '../../app'
+import { AppServices, WalletAddressUrlContext } from '../../app'
 import { Config, IAppConfig } from '../../config/app'
 import { createTestApp, TestContainer } from '../../tests/app'
 import { createContext } from '../../tests/context'
@@ -40,7 +40,7 @@ describe('Wallet Address Routes', (): void => {
 
   describe('get', (): void => {
     test('returns 404 for nonexistent wallet address', async (): Promise<void> => {
-      const ctx = createContext<WalletAddressContext>({
+      const ctx = createContext<WalletAddressUrlContext>({
         headers: { Accept: 'application/json' }
       })
       await expect(walletAddressRoutes.get(ctx)).rejects.toHaveProperty(
@@ -54,7 +54,7 @@ describe('Wallet Address Routes', (): void => {
         publicName: faker.person.firstName()
       })
 
-      const ctx = createContext<WalletAddressContext>({
+      const ctx = createContext<WalletAddressUrlContext>({
         headers: { Accept: 'application/json' },
         url: '/'
       })

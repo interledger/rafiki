@@ -1,9 +1,6 @@
-import { WalletAddressContext, SPSPContext } from '../../../app'
+import { WalletAddressUrlContext, SPSPContext } from '../../../app'
 
-export type SPSPWalletAddressContext = WalletAddressContext &
-  SPSPContext & {
-    walletAddressUrl: string
-  }
+export type SPSPWalletAddressContext = WalletAddressUrlContext & SPSPContext
 
 export class SPSPRouteError extends Error {
   public status: number
