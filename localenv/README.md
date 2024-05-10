@@ -152,8 +152,8 @@ Debuggers for the services are exposed on the following ports:
 
 To use these debuggers with a chromium browser:
 
-- go to `chrome://inspect` in chromium browser
-- Click "Configure" add the IP addresses and ports detailed above
+- go to `chrome://inspect`
+- Click "Configure" and add the IP addresses and ports detailed above
 - start docker containers
 - click "inspect" on the service you want to debug to open the chromium debugger
 
