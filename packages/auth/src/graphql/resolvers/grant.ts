@@ -1,3 +1,5 @@
+import { GraphQLError } from 'graphql'
+
 import {
   ResolversTypes,
   MutationResolvers,
@@ -10,6 +12,7 @@ import { Grant } from '../../grant/model'
 import { Pagination } from '../../shared/baseModel'
 import { getPageInfo } from '../../shared/pagination'
 import { Access } from '../../access/model'
+import { GraphQLErrorCode } from '../errors'
 
 export const getGrants: QueryResolvers<ApolloContext>['grants'] = async (
   _,
@@ -43,7 +46,11 @@ export const getGrantById: QueryResolvers<ApolloContext>['grant'] = async (
   const grant = await grantService.getByIdWithAccess(args.id)
 
   if (!grant) {
-    throw new Error('No grant')
+    throw new GraphQLError('No grant', {
+      extensions: {
+        code: GraphQLErrorCode.NotFound
+      }
+    })
   }
 
   return grantToGraphql(grant)
@@ -55,45 +62,27 @@ export const revokeGrant: MutationResolvers<ApolloContext>['revokeGrant'] =
     args,
     ctx
   ): Promise<ResolversTypes['RevokeGrantMutationResponse']> => {
-    try {
-      const { grantId } = args.input
-      if (!grantId) {
-        return {
-          code: '401',
-          success: false,
-          message: 'Grant Id is not provided'
+    const { grantId } = args.input
+    if (!grantId) {
+      throw new GraphQLError('Grant id is not provided', {
+        extensions: {
+          code: GraphQLErrorCode.Forbidden
         }
-      }
+      })
+    }
 
-      const grantService = await ctx.container.use('grantService')
-      const revoked = await grantService.revokeGrant(grantId)
-      if (!revoked) {
-        return {
-          code: '404',
-          success: false,
-          message: 'Revoke grant was not successful'
+    const grantService = await ctx.container.use('grantService')
+    const revoked = await grantService.revokeGrant(grantId)
+    if (!revoked) {
+      throw new GraphQLError('Revoke grant was not successful', {
+        extensions: {
+          code: GraphQLErrorCode.NotFound
         }
-      }
+      })
+    }
 
-      return {
-        code: '200',
-        success: true,
-        message: 'Grant revoked'
-      }
-    } catch (err) {
-      ctx.logger.error(
-        {
-          options: args.input.grantId,
-          err
-        },
-        'error revoking grant'
-      )
-
-      return {
-        code: '500',
-        message: 'Error trying to revoke grant',
-        success: false
-      }
+    return {
+      id: grantId
     }
   }
 

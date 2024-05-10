@@ -130,12 +130,6 @@ export type MutationRevokeGrantArgs = {
   input: RevokeGrantInput;
 };
 
-export type MutationResponse = {
-  code: Scalars['String']['output'];
-  message: Scalars['String']['output'];
-  success: Scalars['Boolean']['output'];
-};
-
 export type PageInfo = {
   __typename?: 'PageInfo';
   /** Paginating forwards: the cursor to continue. */
@@ -184,11 +178,9 @@ export type RevokeGrantInput = {
   grantId: Scalars['String']['input'];
 };
 
-export type RevokeGrantMutationResponse = MutationResponse & {
+export type RevokeGrantMutationResponse = {
   __typename?: 'RevokeGrantMutationResponse';
-  code: Scalars['String']['output'];
-  message: Scalars['String']['output'];
-  success: Scalars['Boolean']['output'];
+  id: Scalars['ID']['output'];
 };
 
 export enum SortOrder {
@@ -269,7 +261,6 @@ export type DirectiveResolverFn<TResult = {}, TParent = {}, TContext = {}, TArgs
 /** Mapping of interface types */
 export type ResolversInterfaceTypes<RefType extends Record<string, unknown>> = {
   Model: ( Partial<Access> ) | ( Partial<Grant> );
-  MutationResponse: ( Partial<RevokeGrantMutationResponse> );
 };
 
 /** Mapping between all available schema types and the resolvers types */
@@ -290,7 +281,6 @@ export type ResolversTypes = {
   LimitData: ResolverTypeWrapper<Partial<LimitData>>;
   Model: ResolverTypeWrapper<ResolversInterfaceTypes<ResolversTypes>['Model']>;
   Mutation: ResolverTypeWrapper<{}>;
-  MutationResponse: ResolverTypeWrapper<ResolversInterfaceTypes<ResolversTypes>['MutationResponse']>;
   PageInfo: ResolverTypeWrapper<Partial<PageInfo>>;
   PaymentAmount: ResolverTypeWrapper<Partial<PaymentAmount>>;
   Query: ResolverTypeWrapper<{}>;
@@ -318,7 +308,6 @@ export type ResolversParentTypes = {
   LimitData: Partial<LimitData>;
   Model: ResolversInterfaceTypes<ResolversParentTypes>['Model'];
   Mutation: {};
-  MutationResponse: ResolversInterfaceTypes<ResolversParentTypes>['MutationResponse'];
   PageInfo: Partial<PageInfo>;
   PaymentAmount: Partial<PaymentAmount>;
   Query: {};
@@ -379,13 +368,6 @@ export type MutationResolvers<ContextType = any, ParentType extends ResolversPar
   revokeGrant?: Resolver<ResolversTypes['RevokeGrantMutationResponse'], ParentType, ContextType, RequireFields<MutationRevokeGrantArgs, 'input'>>;
 };
 
-export type MutationResponseResolvers<ContextType = any, ParentType extends ResolversParentTypes['MutationResponse'] = ResolversParentTypes['MutationResponse']> = {
-  __resolveType: TypeResolveFn<'RevokeGrantMutationResponse', ParentType, ContextType>;
-  code?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  message?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  success?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
-};
-
 export type PageInfoResolvers<ContextType = any, ParentType extends ResolversParentTypes['PageInfo'] = ResolversParentTypes['PageInfo']> = {
   endCursor?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   hasNextPage?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
@@ -407,9 +389,7 @@ export type QueryResolvers<ContextType = any, ParentType extends ResolversParent
 };
 
 export type RevokeGrantMutationResponseResolvers<ContextType = any, ParentType extends ResolversParentTypes['RevokeGrantMutationResponse'] = ResolversParentTypes['RevokeGrantMutationResponse']> = {
-  code?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  message?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  success?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
+  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -429,7 +409,6 @@ export type Resolvers<ContextType = any> = {
   LimitData?: LimitDataResolvers<ContextType>;
   Model?: ModelResolvers<ContextType>;
   Mutation?: MutationResolvers<ContextType>;
-  MutationResponse?: MutationResponseResolvers<ContextType>;
   PageInfo?: PageInfoResolvers<ContextType>;
   PaymentAmount?: PaymentAmountResolvers<ContextType>;
   Query?: QueryResolvers<ContextType>;
