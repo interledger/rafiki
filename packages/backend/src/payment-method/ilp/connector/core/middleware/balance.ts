@@ -20,6 +20,12 @@ export function createBalanceMiddleware(): ILPMiddleware {
     next: () => Promise<void>
   ): Promise<void> => {
     const { amount } = request.prepare
+    const logger = services.logger.child(
+      { module: 'balance-middleware' },
+      {
+        redact: ['transferOptions.destinationAccount.http.outgoing.authToken']
+      }
+    )
 
     // Ignore zero amount packets
     if (amount === '0') {
@@ -35,6 +41,15 @@ export function createBalanceMiddleware(): ILPMiddleware {
     })
     if (typeof destinationAmountOrError !== 'bigint') {
       // ConvertError
+      logger.error(
+        {
+          amount,
+          destinationAmountOrError,
+          sourceAsset: accounts.incoming.asset,
+          destinationAsset: accounts.outgoing.asset
+        },
+        'Could not get rates'
+      )
       throw new CannotReceiveError(
         `Exchange rate error: ${destinationAmountOrError}`
       )
@@ -51,15 +66,20 @@ export function createBalanceMiddleware(): ILPMiddleware {
     const createPendingTransfer = async (): Promise<
       Transaction | undefined
     > => {
-      const trxOrError = await services.accounting.createTransfer({
+      const transferOptions = {
         sourceAccount: accounts.incoming,
         destinationAccount: accounts.outgoing,
         sourceAmount,
         destinationAmount: destinationAmountOrError,
         timeout: 5
-      })
-
+      }
+      const trxOrError =
+        await services.accounting.createTransfer(transferOptions)
       if (isTransferError(trxOrError)) {
+        logger.error(
+          { transferOptions, transferError: trxOrError },
+          'Could not create transfer'
+        )
         switch (trxOrError) {
           case TransferError.InsufficientBalance:
           case TransferError.InsufficientLiquidity:
