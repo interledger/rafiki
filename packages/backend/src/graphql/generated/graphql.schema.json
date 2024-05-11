@@ -787,8 +787,8 @@
             "deprecationReason": null
           },
           {
-            "name": "timeout",
-            "description": "This is the interval in seconds after a pending transfer's created at which it may be posted or voided. Zero denotes absence of timeout.",
+            "name": "timeoutSeconds",
+            "description": "This is the interval in seconds after a pending transfer's created at which it may be posted or voided. Zero denotes a no timeout single-phase posted transfer.",
             "type": {
               "kind": "NON_NULL",
               "name": null,
@@ -921,8 +921,8 @@
             "deprecationReason": null
           },
           {
-            "name": "timeout",
-            "description": "This is the interval in seconds after a pending transfer's created at which it may be posted or voided. Zero denotes absence of timeout.",
+            "name": "timeoutSeconds",
+            "description": "This is the interval in seconds after a pending transfer's created at which it may be posted or voided. Zero denotes a no timeout single-phase posted transfer.",
             "type": {
               "kind": "NON_NULL",
               "name": null,
@@ -1310,8 +1310,8 @@
             "deprecationReason": null
           },
           {
-            "name": "timeout",
-            "description": "This is the interval in seconds after a pending transfer's created at which it may be posted or voided. Zero denotes absence of timeout.",
+            "name": "timeoutSeconds",
+            "description": "This is the interval in seconds after a pending transfer's created at which it may be posted or voided. Zero denotes a no timeout single-phase posted transfer.",
             "type": {
               "kind": "NON_NULL",
               "name": null,
@@ -1520,8 +1520,8 @@
             "deprecationReason": null
           },
           {
-            "name": "timeout",
-            "description": "This is the interval in seconds after a pending transfer's created at which it may be posted or voided. Zero denotes absence of timeout.",
+            "name": "timeoutSeconds",
+            "description": "This is the interval in seconds after a pending transfer's created at which it may be posted or voided. Zero denotes a no timeout single-phase posted transfer.",
             "type": {
               "kind": "NON_NULL",
               "name": null,
@@ -2153,8 +2153,8 @@
             "deprecationReason": null
           },
           {
-            "name": "timeout",
-            "description": "This is the interval in seconds after a pending transfer's created at which it may be posted or voided. Zero denotes absence of timeout.",
+            "name": "timeoutSeconds",
+            "description": "This is the interval in seconds after a pending transfer's created at which it may be posted or voided. Zero denotes a no timeout single-phase posted transfer.",
             "type": {
               "kind": "NON_NULL",
               "name": null,

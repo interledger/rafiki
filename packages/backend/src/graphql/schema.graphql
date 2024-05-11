@@ -388,8 +388,8 @@ input CreatePeerLiquidityWithdrawalInput {
   id: String!
   "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)"
   idempotencyKey: String!
-  "This is the interval in seconds after a pending transfer's created at which it may be posted or voided. Zero denotes absence of timeout."
-  timeout: UInt64!
+  "This is the interval in seconds after a pending transfer's created at which it may be posted or voided. Zero denotes a no timeout single-phase posted transfer."
+  timeoutSeconds: UInt64!
 }
 
 input CreateAssetLiquidityWithdrawalInput {
@@ -401,8 +401,8 @@ input CreateAssetLiquidityWithdrawalInput {
   id: String!
   "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)"
   idempotencyKey: String!
-  "This is the interval in seconds after a pending transfer's created at which it may be posted or voided. Zero denotes absence of timeout."
-  timeout: UInt64!
+  "This is the interval in seconds after a pending transfer's created at which it may be posted or voided. Zero denotes a no timeout single-phase posted transfer."
+  timeoutSeconds: UInt64!
 }
 
 input PostLiquidityWithdrawalInput {
@@ -431,8 +431,8 @@ input CreateIncomingPaymentWithdrawalInput {
   incomingPaymentId: String!
   "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)"
   idempotencyKey: String!
-  "This is the interval in seconds after a pending transfer's created at which it may be posted or voided. Zero denotes absence of timeout."
-  timeout: UInt64!
+  "This is the interval in seconds after a pending transfer's created at which it may be posted or voided. Zero denotes a no timeout single-phase posted transfer."
+  timeoutSeconds: UInt64!
 }
 
 input CreateOutgoingPaymentWithdrawalInput {
@@ -440,8 +440,8 @@ input CreateOutgoingPaymentWithdrawalInput {
   outgoingPaymentId: String!
   "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)"
   idempotencyKey: String!
-  "This is the interval in seconds after a pending transfer's created at which it may be posted or voided. Zero denotes absence of timeout."
-  timeout: UInt64!
+  "This is the interval in seconds after a pending transfer's created at which it may be posted or voided. Zero denotes a no timeout single-phase posted transfer."
+  timeoutSeconds: UInt64!
 }
 
 input DepositEventLiquidityInput {
@@ -465,8 +465,8 @@ input CreateWalletAddressWithdrawalInput {
   id: String!
   "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)"
   idempotencyKey: String!
-  "This is the interval in seconds after a pending transfer's created at which it may be posted or voided. Zero denotes absence of timeout."
-  timeout: UInt64!
+  "This is the interval in seconds after a pending transfer's created at which it may be posted or voided. Zero denotes a no timeout single-phase posted transfer."
+  timeoutSeconds: UInt64!
 }
 
 input JwkInput {

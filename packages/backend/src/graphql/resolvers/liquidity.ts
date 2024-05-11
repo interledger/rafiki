@@ -170,7 +170,7 @@ export const createPeerLiquidityWithdrawal: MutationResolvers<ApolloContext>['cr
     ctx
   ): Promise<ResolversTypes['LiquidityMutationResponse']> => {
     try {
-      const { amount, id, timeout, peerId } = args.input
+      const { amount, id, timeoutSeconds, peerId } = args.input
       if (amount === BigInt(0)) {
         return responses[LiquidityError.AmountZero]
       }
@@ -184,7 +184,7 @@ export const createPeerLiquidityWithdrawal: MutationResolvers<ApolloContext>['cr
         id,
         account: peer,
         amount,
-        timeout: Number(timeout)
+        timeout: Number(timeoutSeconds)
       })
       if (error) {
         return errorToResponse(error)
@@ -217,7 +217,7 @@ export const createAssetLiquidityWithdrawal: MutationResolvers<ApolloContext>['c
     ctx
   ): Promise<ResolversTypes['LiquidityMutationResponse']> => {
     try {
-      const { amount, id, timeout, assetId } = args.input
+      const { amount, id, timeoutSeconds, assetId } = args.input
       if (amount === 0n) {
         return responses[LiquidityError.AmountZero]
       }
@@ -231,7 +231,7 @@ export const createAssetLiquidityWithdrawal: MutationResolvers<ApolloContext>['c
         id,
         account: asset,
         amount,
-        timeout: Number(timeout)
+        timeout: Number(timeoutSeconds)
       })
       if (error) {
         return errorToResponse(error)
@@ -264,7 +264,7 @@ export const createWalletAddressWithdrawal: MutationResolvers<ApolloContext>['cr
     ctx
   ): Promise<ResolversTypes['WalletAddressWithdrawalMutationResponse']> => {
     try {
-      const { id, walletAddressId, timeout } = args.input
+      const { id, walletAddressId, timeoutSeconds } = args.input
       const walletAddressService = await ctx.container.use(
         'walletAddressService'
       )
@@ -287,7 +287,7 @@ export const createWalletAddressWithdrawal: MutationResolvers<ApolloContext>['cr
         id,
         account: walletAddress,
         amount,
-        timeout: Number(timeout)
+        timeout: Number(timeoutSeconds)
       })
 
       if (error) {
@@ -528,7 +528,7 @@ export const createIncomingPaymentWithdrawal: MutationResolvers<ApolloContext>['
     args,
     ctx
   ): Promise<ResolversTypes['LiquidityMutationResponse']> => {
-    const { incomingPaymentId, timeout } = args.input
+    const { incomingPaymentId, timeoutSeconds } = args.input
     try {
       const incomingPaymentService = await ctx.container.use(
         'incomingPaymentService'
@@ -556,7 +556,7 @@ export const createIncomingPaymentWithdrawal: MutationResolvers<ApolloContext>['
           asset: incomingPayment.asset
         },
         amount: incomingPayment.receivedAmount.value,
-        timeout: Number(timeout)
+        timeout: Number(timeoutSeconds)
       })
 
       if (error) {
@@ -589,7 +589,7 @@ export const createOutgoingPaymentWithdrawal: MutationResolvers<ApolloContext>['
     args,
     ctx
   ): Promise<ResolversTypes['LiquidityMutationResponse']> => {
-    const { outgoingPaymentId, timeout } = args.input
+    const { outgoingPaymentId, timeoutSeconds } = args.input
     try {
       const outgoingPaymentService = await ctx.container.use(
         'outgoingPaymentService'
@@ -622,7 +622,7 @@ export const createOutgoingPaymentWithdrawal: MutationResolvers<ApolloContext>['
           asset: outgoingPayment.asset
         },
         amount: balance,
-        timeout: Number(timeout)
+        timeout: Number(timeoutSeconds)
       })
 
       if (error) {

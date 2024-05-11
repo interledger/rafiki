@@ -250,8 +250,8 @@ See `PostLiquidityWithdrawal` and `VoidLiquidityWithdrawal` at the [below](#post
 
 `PostLiquidityWithdrawal` and `PostLiquidityWithdrawal` are only applicable for two-phase withdrawals.
 
-- `PostLiquidityWithdrawal` - Post liquidity withdrawal. Withdrawals with `> 0` timeouts are two-phase commits and are committed via this mutation.
-- `VoidLiquidityWithdrawal` - Void liquidity withdrawal. Withdrawals with `> 0` timeouts are two-phase commits and are rolled back via this mutation.
+- `PostLiquidityWithdrawal` - Post liquidity withdrawal. Withdrawals with `> 0` timeouts are two-phase transfers and are committed via this mutation.
+- `VoidLiquidityWithdrawal` - Void liquidity withdrawal. Withdrawals with `> 0` timeouts are two-phase transfers and are rolled back via this mutation.
 
 When a withdrawal liquidity transaction is requested with a non-zero `timeout` value _(Zero denotes absence of timeout)_,
 the transfer will be created as a two-phase transfer [see more](https://en.wikipedia.org/wiki/Two-phase_commit_protocol)

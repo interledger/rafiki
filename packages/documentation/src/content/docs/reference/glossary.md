@@ -48,7 +48,8 @@ A two-phase transfer moves funds in stages:
 
 - Reserve funds (`pending`)
 - Resolve funds (`post`, `void`, or `expire`)
-  The name "two-phase transfer" is a reference to the [two-phase commit protocol for distributed transactions](https://en.wikipedia.org/wiki/Two-phase_commit_protocol).
+
+The name "two-phase transfer" is a reference to the [two-phase commit protocol for distributed transactions](https://en.wikipedia.org/wiki/Two-phase_commit_protocol).
 
 ## Web Monetization
 

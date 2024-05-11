@@ -123,8 +123,8 @@ export type CreateAssetLiquidityWithdrawalInput = {
   id: Scalars['String']['input'];
   /** Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence) */
   idempotencyKey: Scalars['String']['input'];
-  /** This is the interval in seconds after a pending transfer's created at which it may be posted or voided. Zero denotes absence of timeout. */
-  timeout: Scalars['UInt64']['input'];
+  /** This is the interval in seconds after a pending transfer's created at which it may be posted or voided. Zero denotes a no timeout single-phase posted transfer. */
+  timeoutSeconds: Scalars['UInt64']['input'];
 };
 
 export type CreateIncomingPaymentInput = {
@@ -145,8 +145,8 @@ export type CreateIncomingPaymentWithdrawalInput = {
   idempotencyKey: Scalars['String']['input'];
   /** The id of the incoming payment to withdraw from. */
   incomingPaymentId: Scalars['String']['input'];
-  /** This is the interval in seconds after a pending transfer's created at which it may be posted or voided. Zero denotes absence of timeout. */
-  timeout: Scalars['UInt64']['input'];
+  /** This is the interval in seconds after a pending transfer's created at which it may be posted or voided. Zero denotes a no timeout single-phase posted transfer. */
+  timeoutSeconds: Scalars['UInt64']['input'];
 };
 
 export type CreateOrUpdatePeerByUrlInput = {
@@ -203,8 +203,8 @@ export type CreateOutgoingPaymentWithdrawalInput = {
   idempotencyKey: Scalars['String']['input'];
   /** The id of the outgoing payment to withdraw from. */
   outgoingPaymentId: Scalars['String']['input'];
-  /** This is the interval in seconds after a pending transfer's created at which it may be posted or voided. Zero denotes absence of timeout. */
-  timeout: Scalars['UInt64']['input'];
+  /** This is the interval in seconds after a pending transfer's created at which it may be posted or voided. Zero denotes a no timeout single-phase posted transfer. */
+  timeoutSeconds: Scalars['UInt64']['input'];
 };
 
 export type CreatePeerInput = {
@@ -235,8 +235,8 @@ export type CreatePeerLiquidityWithdrawalInput = {
   idempotencyKey: Scalars['String']['input'];
   /** The id of the peer to create the withdrawal for. */
   peerId: Scalars['String']['input'];
-  /** This is the interval in seconds after a pending transfer's created at which it may be posted or voided. Zero denotes absence of timeout. */
-  timeout: Scalars['UInt64']['input'];
+  /** This is the interval in seconds after a pending transfer's created at which it may be posted or voided. Zero denotes a no timeout single-phase posted transfer. */
+  timeoutSeconds: Scalars['UInt64']['input'];
 };
 
 export type CreatePeerMutationResponse = MutationResponse & {
@@ -321,8 +321,8 @@ export type CreateWalletAddressWithdrawalInput = {
   id: Scalars['String']['input'];
   /** Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence) */
   idempotencyKey: Scalars['String']['input'];
-  /** This is the interval in seconds after a pending transfer's created at which it may be posted or voided. Zero denotes absence of timeout. */
-  timeout: Scalars['UInt64']['input'];
+  /** This is the interval in seconds after a pending transfer's created at which it may be posted or voided. Zero denotes a no timeout single-phase posted transfer. */
+  timeoutSeconds: Scalars['UInt64']['input'];
   /** The id of the Open Payments wallet address to create the withdrawal for. */
   walletAddressId: Scalars['String']['input'];
 };
