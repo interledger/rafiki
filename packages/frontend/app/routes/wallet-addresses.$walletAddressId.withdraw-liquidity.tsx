@@ -48,7 +48,7 @@ export async function action({ request, params }: ActionFunctionArgs) {
     id: v4(),
     walletAddressId,
     idempotencyKey: v4(),
-    timeout: timeoutTwoPhase
+    timeoutSeconds: timeoutTwoPhase
   })
 
   if (!response?.success) {

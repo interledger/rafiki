@@ -62,7 +62,7 @@ export async function action({ request, params }: ActionFunctionArgs) {
     amount: result.data,
     id: v4(),
     idempotencyKey: v4(),
-    timeout: timeoutTwoPhase
+    timeoutSeconds: timeoutTwoPhase
   })
 
   if (!response?.success) {

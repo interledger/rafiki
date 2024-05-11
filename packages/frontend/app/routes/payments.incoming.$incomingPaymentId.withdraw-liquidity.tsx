@@ -47,7 +47,7 @@ export async function action({ request, params }: ActionFunctionArgs) {
   const response = await createIncomingPaymentWithdrawal({
     incomingPaymentId,
     idempotencyKey: v4(),
-    timeout: timeoutTwoPhase
+    timeoutSeconds: timeoutTwoPhase
   })
 
   if (!response?.success) {
