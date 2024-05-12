@@ -30,7 +30,7 @@ describe('Pagination', (): void => {
   beforeAll(async (): Promise<void> => {
     config = Config
     config.openPaymentsUrl = 'https://wallet.example'
-    deps = await initIocContainer(config)
+    deps = initIocContainer()
     appContainer = await createTestApp(deps)
   })
 

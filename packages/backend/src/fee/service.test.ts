@@ -2,7 +2,6 @@ import { IocContract } from '@adonisjs/fold'
 import { AppServices } from '../app'
 import { TestContainer, createTestApp } from '../tests/app'
 import { initIocContainer } from '..'
-import { Config } from '../config/app'
 import { FeeService } from './service'
 import { Knex } from 'knex'
 import { truncateTables } from '../tests/tableManager'
@@ -23,7 +22,7 @@ describe('Fee Service', (): void => {
   let asset: Asset
 
   beforeAll(async (): Promise<void> => {
-    deps = await initIocContainer(Config)
+    deps = initIocContainer()
     appContainer = await createTestApp(deps)
     knex = appContainer.knex
     feeService = await deps.use('feeService')

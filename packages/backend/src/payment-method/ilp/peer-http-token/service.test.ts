@@ -5,7 +5,6 @@ import { HttpTokenError } from './errors'
 import { createTestApp, TestContainer } from '../../../tests/app'
 import { createPeer } from '../../../tests/peer'
 import { truncateTables } from '../../../tests/tableManager'
-import { Config } from '../../../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../../..'
 import { AppServices } from '../../../app'
@@ -18,7 +17,7 @@ describe('HTTP Token Service', (): void => {
   let peer: Peer
 
   beforeAll(async (): Promise<void> => {
-    deps = await initIocContainer(Config)
+    deps = initIocContainer()
     appContainer = await createTestApp(deps)
     httpTokenService = await deps.use('httpTokenService')
   })

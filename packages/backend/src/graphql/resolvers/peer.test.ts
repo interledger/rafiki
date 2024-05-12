@@ -10,7 +10,6 @@ import { IocContract } from '@adonisjs/fold'
 import { AppServices } from '../../app'
 import { Asset } from '../../asset/model'
 import { initIocContainer } from '../..'
-import { Config } from '../../config/app'
 import { truncateTables } from '../../tests/tableManager'
 import {
   errorToCode,
@@ -56,7 +55,7 @@ describe('Peer Resolvers', (): void => {
   })
 
   beforeAll(async (): Promise<void> => {
-    deps = initIocContainer(Config)
+    deps = initIocContainer()
     appContainer = await createTestApp(deps)
     peerService = await deps.use('peerService')
     accountingService = await deps.use('accountingService')

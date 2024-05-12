@@ -34,13 +34,11 @@ describe('TelemetryServiceImpl', () => {
   let internalRatesService: RatesService
 
   beforeAll(async (): Promise<void> => {
-    deps = initIocContainer({
-      ...Config,
-      enableTelemetry: true,
-      telemetryExchangeRatesUrl: 'http://example-rates.com',
-      telemetryExchangeRatesLifetime: 100,
-      openTelemetryCollectors: []
-    })
+    Config.enableTelemetry = true
+    Config.telemetryExchangeRatesUrl = 'http://example-rates.com'
+    Config.telemetryExchangeRatesLifetime = 100
+    Config.openTelemetryCollectors = []
+    deps = initIocContainer()
 
     appContainer = await createTestApp(deps)
     telemetryService = await deps.use('telemetry')!

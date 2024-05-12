@@ -6,7 +6,6 @@ import {
 } from './route-errors'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '..'
-import { Config } from '../config/app'
 import { OpenAPIValidatorMiddlewareError } from '@interledger/openapi'
 
 describe('openPaymentServerErrorMiddleware', (): void => {
@@ -14,7 +13,7 @@ describe('openPaymentServerErrorMiddleware', (): void => {
   let ctx: AppContext
 
   beforeAll(async (): Promise<void> => {
-    deps = initIocContainer(Config)
+    deps = initIocContainer()
   })
 
   beforeEach(async (): Promise<void> => {

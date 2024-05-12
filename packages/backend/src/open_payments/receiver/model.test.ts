@@ -1,6 +1,5 @@
 import { IocContract } from '@adonisjs/fold'
 import { createTestApp, TestContainer } from '../../tests/app'
-import { Config } from '../../config/app'
 import { initIocContainer } from '../..'
 import { AppServices } from '../../app'
 import { createIncomingPayment } from '../../tests/incomingPayment'
@@ -22,7 +21,7 @@ describe('Receiver Model', (): void => {
   let streamCredentialsService: StreamCredentialsService
 
   beforeAll(async (): Promise<void> => {
-    deps = initIocContainer(Config)
+    deps = initIocContainer()
     appContainer = await createTestApp(deps)
     streamCredentialsService = await deps.use('streamCredentialsService')
   })

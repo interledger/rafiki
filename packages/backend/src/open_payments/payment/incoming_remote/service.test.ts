@@ -1,7 +1,6 @@
 import { Knex } from 'knex'
 import { RemoteIncomingPaymentService } from './service'
 import { createTestApp, TestContainer } from '../../../tests/app'
-import { Config } from '../../../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../../..'
 import { AppServices } from '../../../app'
@@ -30,7 +29,7 @@ describe('Remote Incoming Payment Service', (): void => {
   let grantService: GrantService
 
   beforeAll(async (): Promise<void> => {
-    deps = initIocContainer(Config)
+    deps = initIocContainer()
     appContainer = await createTestApp(deps)
     openPaymentsClient = await deps.use('openPaymentsClient')
     grantService = await deps.use('grantService')

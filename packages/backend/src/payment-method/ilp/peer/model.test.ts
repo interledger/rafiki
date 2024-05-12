@@ -3,7 +3,6 @@ import { faker } from '@faker-js/faker'
 import { v4 as uuid } from 'uuid'
 
 import { PeerService } from './service'
-import { Config } from '../../../config/app'
 import { createTestApp, TestContainer } from '../../../tests/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../../..'
@@ -22,7 +21,7 @@ describe('Models', (): void => {
   let asset: Asset
 
   beforeAll(async (): Promise<void> => {
-    deps = initIocContainer(Config)
+    deps = initIocContainer()
     appContainer = await createTestApp(deps)
     peerService = await deps.use('peerService')
     knex = await deps.use('knex')

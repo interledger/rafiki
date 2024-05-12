@@ -4,7 +4,6 @@ import { v4 as uuid } from 'uuid'
 import { WalletAddressKeyService } from './service'
 import { createTestApp, TestContainer } from '../../../tests/app'
 import { truncateTables } from '../../../tests/tableManager'
-import { Config } from '../../../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../../..'
 import { AppServices } from '../../../app'
@@ -23,7 +22,7 @@ describe('Wallet Address Key Service', (): void => {
   let walletAddressKeyService: WalletAddressKeyService
 
   beforeAll(async (): Promise<void> => {
-    deps = initIocContainer(Config)
+    deps = initIocContainer()
     appContainer = await createTestApp(deps)
     walletAddressKeyService = await deps.use('walletAddressKeyService')
   })

@@ -25,7 +25,7 @@ describe('Payment', (): void => {
   let asset: Asset
 
   beforeAll(async (): Promise<void> => {
-    deps = initIocContainer(Config)
+    deps = initIocContainer()
     appContainer = await createTestApp(deps)
   })
 

@@ -1,6 +1,5 @@
 import { GenericContainer, StartedTestContainer, Wait } from 'testcontainers'
 import tmp from 'tmp'
-
 import { Config } from '../config/app'
 
 const TIGERBEETLE_PORT = 3004

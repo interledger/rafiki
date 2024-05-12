@@ -4,7 +4,6 @@ import { v4 as uuid } from 'uuid'
 
 import { createContext } from '../../../tests/context'
 import { createTestApp, TestContainer } from '../../../tests/app'
-import { Config } from '../../../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../../..'
 import { AppServices, WalletAddressKeysContext } from '../../../app'
@@ -25,7 +24,7 @@ describe('Wallet Address Keys Routes', (): void => {
   }
 
   beforeAll(async (): Promise<void> => {
-    deps = await initIocContainer(Config)
+    deps = initIocContainer()
     deps.bind('messageProducer', async () => mockMessageProducer)
     appContainer = await createTestApp(deps)
     const { walletAddressServerSpec } = await deps.use('openApi')

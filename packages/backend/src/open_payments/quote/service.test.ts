@@ -65,7 +65,7 @@ describe('QuoteService', (): void => {
   }
 
   beforeAll(async (): Promise<void> => {
-    deps = initIocContainer(Config)
+    deps = initIocContainer()
     appContainer = await createTestApp(deps)
 
     knex = appContainer.knex

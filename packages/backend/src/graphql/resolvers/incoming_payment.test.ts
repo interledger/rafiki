@@ -5,7 +5,6 @@ import { IocContract } from '@adonisjs/fold'
 import { AppServices } from '../../app'
 import { initIocContainer } from '../..'
 import { Asset } from '../../asset/model'
-import { Config } from '../../config/app'
 import { createAsset } from '../../tests/asset'
 import { createIncomingPayment } from '../../tests/incomingPayment'
 import { createWalletAddress } from '../../tests/walletAddress'
@@ -38,7 +37,7 @@ describe('Incoming Payment Resolver', (): void => {
   let asset: Asset
 
   beforeAll(async (): Promise<void> => {
-    deps = await initIocContainer(Config)
+    deps = initIocContainer()
     appContainer = await createTestApp(deps)
     incomingPaymentService = await deps.use('incomingPaymentService')
     accountingService = await deps.use('accountingService')

@@ -1,5 +1,4 @@
 import { Knex } from 'knex'
-import { Config } from '../../../config/app'
 import { createTestApp, TestContainer } from '../../../tests/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../../..'
@@ -17,7 +16,7 @@ describe('Outgoing Payment Event Model', (): void => {
   let knex: Knex
 
   beforeAll(async (): Promise<void> => {
-    deps = initIocContainer(Config)
+    deps = initIocContainer()
     appContainer = await createTestApp(deps)
     knex = await deps.use('knex')
   })

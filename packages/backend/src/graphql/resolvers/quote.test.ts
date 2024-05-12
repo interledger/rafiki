@@ -6,7 +6,6 @@ import { createTestApp, TestContainer } from '../../tests/app'
 import { IocContract } from '@adonisjs/fold'
 import { AppServices } from '../../app'
 import { initIocContainer } from '../..'
-import { Config } from '../../config/app'
 import { Asset } from '../../asset/model'
 import { createAsset } from '../../tests/asset'
 import { createWalletAddress } from '../../tests/walletAddress'
@@ -28,7 +27,7 @@ describe('Quote Resolvers', (): void => {
   const receiver = `${receivingWalletAddress}/incoming-payments/${uuid()}`
 
   beforeAll(async (): Promise<void> => {
-    deps = await initIocContainer(Config)
+    deps = initIocContainer()
     appContainer = await createTestApp(deps)
     quoteService = await deps.use('quoteService')
   })

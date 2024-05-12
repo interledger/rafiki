@@ -240,7 +240,8 @@ describe('OutgoingPaymentService', (): void => {
       XRP: exchangeRate
     }))
 
-    deps = await initIocContainer({ ...Config, exchangeRatesUrl })
+    Config.exchangeRatesUrl = exchangeRatesUrl
+    deps = initIocContainer()
     appContainer = await createTestApp(deps)
     outgoingPaymentService = await deps.use('outgoingPaymentService')
     accountingService = await deps.use('accountingService')

@@ -33,7 +33,7 @@ describe('Incoming Payment Routes', (): void => {
 
   beforeAll(async (): Promise<void> => {
     config = Config
-    deps = await initIocContainer(config)
+    deps = initIocContainer()
     appContainer = await createTestApp(deps)
     const { resourceServerSpec } = await deps.use('openApi')
     jestOpenAPI(resourceServerSpec)

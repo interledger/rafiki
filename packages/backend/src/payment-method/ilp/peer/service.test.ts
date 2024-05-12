@@ -5,7 +5,6 @@ import { v4 as uuid } from 'uuid'
 import { isPeerError, PeerError } from './errors'
 import { CreateOptions, PeerService, UpdateOptions } from './service'
 import { createTestApp, TestContainer } from '../../../tests/app'
-import { Config } from '../../../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../../..'
 import { AppServices } from '../../../app'
@@ -44,7 +43,7 @@ describe('Peer Service', (): void => {
   })
 
   beforeAll(async (): Promise<void> => {
-    deps = await initIocContainer(Config)
+    deps = initIocContainer()
     appContainer = await createTestApp(deps)
     peerService = await deps.use('peerService')
     accountingService = await deps.use('accountingService')

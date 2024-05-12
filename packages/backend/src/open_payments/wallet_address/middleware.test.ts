@@ -1,7 +1,5 @@
 import { URL } from 'url'
 import { createWalletAddressMiddleware } from './middleware'
-import { Config } from '../../config/app'
-import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../../'
 import { AppContext, AppServices } from '../../app'
 import { createTestApp, TestContainer } from '../../tests/app'
@@ -22,7 +20,7 @@ describe('Wallet Address Middleware', (): void => {
   let next: jest.MockedFunction<() => Promise<void>>
 
   beforeAll(async (): Promise<void> => {
-    deps = await initIocContainer(Config)
+    deps = initIocContainer()
     appContainer = await createTestApp(deps)
     middleware = createWalletAddressMiddleware()
   })

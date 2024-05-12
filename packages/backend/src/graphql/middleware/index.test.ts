@@ -6,7 +6,6 @@ import { createTestApp, TestContainer } from '../../tests/app'
 import { IocContract } from '@adonisjs/fold'
 import { AppServices } from '../../app'
 import { initIocContainer } from '../..'
-import { Config } from '../../config/app'
 import { truncateTables } from '../../tests/tableManager'
 import { AssetService } from '../../asset/service'
 import { randomAsset } from '../../tests/asset'
@@ -19,7 +18,7 @@ describe('GraphQL Middleware', (): void => {
   let assetService: AssetService
 
   beforeAll(async (): Promise<void> => {
-    deps = initIocContainer(Config)
+    deps = initIocContainer()
     appContainer = await createTestApp(deps)
     assetService = await deps.use('assetService')
   })

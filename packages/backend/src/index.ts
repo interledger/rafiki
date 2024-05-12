@@ -56,11 +56,9 @@ BigInt.prototype.toJSON = function () {
   return this.toString()
 }
 
-export function initIocContainer(
-  config: typeof Config
-): IocContract<AppServices> {
+export function initIocContainer(): IocContract<AppServices> {
   const container: IocContract<AppServices> = new Ioc()
-  container.singleton('config', async () => config)
+  container.singleton('config', async () => Config)
   container.singleton('axios', async () => axios.create())
   container.singleton('logger', async (deps: IocContract<AppServices>) => {
     const config = await deps.use('config')
@@ -130,12 +128,12 @@ export function initIocContainer(
     })
   })
 
-  if (config.enableTelemetry) {
+  if (Config.enableTelemetry) {
     container.singleton('internalRatesService', async (deps) => {
       return createRatesService({
         logger: await deps.use('logger'),
-        exchangeRatesUrl: config.telemetryExchangeRatesUrl,
-        exchangeRatesLifetime: config.telemetryExchangeRatesLifetime
+        exchangeRatesUrl: Config.telemetryExchangeRatesUrl,
+        exchangeRatesLifetime: Config.telemetryExchangeRatesLifetime
       })
     })
 
@@ -295,7 +293,7 @@ export function initIocContainer(
       logger: await deps.use('logger'),
       knex: await deps.use('knex'),
       grantService: await deps.use('grantService'),
-      openPaymentsUrl: config.openPaymentsUrl,
+      openPaymentsUrl: Config.openPaymentsUrl,
       openPaymentsClient: await deps.use('openPaymentsClient')
     })
   })
@@ -608,7 +606,7 @@ export const start = async (
 
 // If this script is run directly, start the server
 if (require.main === module) {
-  const container = initIocContainer(Config)
+  const container = initIocContainer()
   const app = new App(container)
 
   start(container, app).catch(async (e): Promise<void> => {

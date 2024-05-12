@@ -1,6 +1,5 @@
 import { createSpspMiddleware, SPSPWalletAddressContext } from './middleware'
 import { setup } from '../../../open_payments/wallet_address/model.test'
-import { Config } from '../../../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../../..'
 import { AppServices } from '../../../app'
@@ -15,7 +14,7 @@ describe('SPSP Middleware', (): void => {
   let next: jest.MockedFunction<() => Promise<void>>
 
   beforeAll(async (): Promise<void> => {
-    deps = await initIocContainer(Config)
+    deps = initIocContainer()
     appContainer = await createTestApp(deps)
   })
 

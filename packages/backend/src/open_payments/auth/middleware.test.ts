@@ -52,7 +52,7 @@ describe('Auth Middleware', (): void => {
   const action: AccessAction = 'create'
 
   beforeAll(async (): Promise<void> => {
-    deps = await initIocContainer(Config)
+    deps = initIocContainer()
     appContainer = await createTestApp(deps)
     middleware = createTokenIntrospectionMiddleware({
       requestType: type,
@@ -421,7 +421,7 @@ describe('authenticatedStatusMiddleware', (): void => {
   let appContainer: TestContainer
 
   beforeAll(async (): Promise<void> => {
-    deps = await initIocContainer(Config)
+    deps = initIocContainer()
     appContainer = await createTestApp(deps)
   })
 
@@ -495,7 +495,7 @@ describe('HTTP Signature Middleware', (): void => {
   let key: JWK
 
   beforeAll(async (): Promise<void> => {
-    deps = await initIocContainer(Config)
+    deps = initIocContainer()
     appContainer = await createTestApp(deps)
   })
 

@@ -4,7 +4,6 @@ import { createTestApp, TestContainer } from '../../tests/app'
 import { IocContract } from '@adonisjs/fold'
 import { AppServices } from '../../app'
 import { initIocContainer } from '../..'
-import { Config } from '../../config/app'
 import { Amount, serializeAmount } from '../../open_payments/amount'
 import {
   mockIncomingPaymentWithPaymentMethods,
@@ -21,7 +20,7 @@ describe('Receiver Resolver', (): void => {
   let receiverService: ReceiverService
 
   beforeAll(async (): Promise<void> => {
-    deps = initIocContainer(Config)
+    deps = initIocContainer()
     appContainer = await createTestApp(deps)
     receiverService = await deps.use('receiverService')
   })

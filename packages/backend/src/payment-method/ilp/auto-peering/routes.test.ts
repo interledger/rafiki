@@ -16,7 +16,8 @@ describe('Auto Peering Routes', (): void => {
   let config: IAppConfig
 
   beforeAll(async (): Promise<void> => {
-    deps = initIocContainer({ ...Config, enableAutoPeering: true })
+    Config.enableAutoPeering = true
+    deps = initIocContainer()
     appContainer = await createTestApp(deps)
     autoPeeringRoutes = await deps.use('autoPeeringRoutes')
     config = await deps.use('config')

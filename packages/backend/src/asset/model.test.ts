@@ -1,7 +1,6 @@
 import { Knex } from 'knex'
 
 import { AssetService } from './service'
-import { Config } from '../config/app'
 import { createTestApp, TestContainer } from '../tests/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../'
@@ -18,7 +17,7 @@ describe('Models', (): void => {
   let knex: Knex
 
   beforeAll(async (): Promise<void> => {
-    deps = initIocContainer(Config)
+    deps = initIocContainer()
     appContainer = await createTestApp(deps)
     assetService = await deps.use('assetService')
     knex = await deps.use('knex')

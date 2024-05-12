@@ -33,11 +33,9 @@ describe('Rates service', function () {
   }
 
   beforeAll(async (): Promise<void> => {
-    deps = initIocContainer({
-      ...Config,
-      exchangeRatesUrl,
-      exchangeRatesLifetime
-    })
+    Config.exchangeRatesUrl = exchangeRatesUrl
+    Config.exchangeRatesLifetime = exchangeRatesLifetime
+    deps = initIocContainer()
 
     appContainer = await createTestApp(deps)
     service = await deps.use('ratesService')

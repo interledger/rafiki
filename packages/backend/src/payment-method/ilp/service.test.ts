@@ -36,11 +36,9 @@ describe('IlpPaymentService', (): void => {
   const walletAddressMap: Record<string, WalletAddress> = {}
 
   beforeAll(async (): Promise<void> => {
-    deps = initIocContainer({
-      ...Config,
-      exchangeRatesUrl,
-      exchangeRatesLifetime: 0
-    })
+    Config.exchangeRatesUrl = exchangeRatesUrl
+    Config.exchangeRatesLifetime = 0
+    deps = initIocContainer()
     appContainer = await createTestApp(deps)
 
     config = await deps.use('config')

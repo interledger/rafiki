@@ -12,7 +12,7 @@ import {
   IncomingPaymentEventType,
   IncomingPaymentState
 } from './model'
-import { Config, IAppConfig } from '../../../config/app'
+import { IAppConfig } from '../../../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../../..'
 import { AppServices } from '../../../app'
@@ -38,7 +38,7 @@ describe('Incoming Payment Service', (): void => {
   let config: IAppConfig
 
   beforeAll(async (): Promise<void> => {
-    deps = await initIocContainer(Config)
+    deps = initIocContainer()
     appContainer = await createTestApp(deps)
     accountingService = await deps.use('accountingService')
     knex = appContainer.knex

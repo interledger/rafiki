@@ -2,7 +2,6 @@ import { Knex } from 'knex'
 import { createTestApp, TestContainer } from '../../../tests/app'
 import { StreamCredentialsService } from './service'
 import { IncomingPayment } from '../../../open_payments/payment/incoming/model'
-import { Config } from '../../../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../../..'
 import { AppServices } from '../../../app'
@@ -20,7 +19,7 @@ describe('Stream Credentials Service', (): void => {
   let incomingPayment: IncomingPayment
 
   beforeAll(async (): Promise<void> => {
-    deps = await initIocContainer(Config)
+    deps = initIocContainer()
     appContainer = await createTestApp(deps)
     streamCredentialsService = await deps.use('streamCredentialsService')
     knex = appContainer.knex

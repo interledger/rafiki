@@ -1,7 +1,6 @@
 import { IocContract } from '@adonisjs/fold'
 import { AppServices } from '../../app'
 import { initIocContainer } from '../..'
-import { Config } from '../../config/app'
 import { createTestApp, TestContainer } from '../../tests/app'
 import { truncateTables } from '../../tests/tableManager'
 import { gql } from '@apollo/client'
@@ -19,7 +18,7 @@ describe('Fee Resolvers', () => {
   let feeService: FeeService
 
   beforeAll(async () => {
-    deps = initIocContainer(Config)
+    deps = initIocContainer()
     appContainer = await createTestApp(deps)
     feeService = await deps.use('feeService')
   })

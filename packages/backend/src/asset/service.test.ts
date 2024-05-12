@@ -9,7 +9,6 @@ import { getPageTests } from '../shared/baseModel.test'
 import { createTestApp, TestContainer } from '../tests/app'
 import { createAsset, randomAsset } from '../tests/asset'
 import { truncateTables } from '../tests/tableManager'
-import { Config } from '../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../'
 import { AppServices } from '../app'
@@ -22,7 +21,7 @@ describe('Asset Service', (): void => {
   let assetService: AssetService
 
   beforeAll(async (): Promise<void> => {
-    deps = initIocContainer(Config)
+    deps = initIocContainer()
     appContainer = await createTestApp(deps)
     assetService = await deps.use('assetService')
   })

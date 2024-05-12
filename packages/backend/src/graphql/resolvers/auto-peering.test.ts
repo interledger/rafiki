@@ -7,7 +7,6 @@ import { IocContract } from '@adonisjs/fold'
 import { AppServices } from '../../app'
 import { Asset } from '../../asset/model'
 import { initIocContainer } from '../..'
-import { Config } from '../../config/app'
 import { truncateTables } from '../../tests/tableManager'
 import {
   errorToCode,
@@ -86,7 +85,7 @@ describe('Auto Peering Resolvers', (): void => {
   }
 
   beforeAll(async (): Promise<void> => {
-    deps = initIocContainer(Config)
+    deps = initIocContainer()
     appContainer = await createTestApp(deps)
     autoPeeringService = await deps.use('autoPeeringService')
   })

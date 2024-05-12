@@ -5,7 +5,6 @@ import {
 } from './service'
 import { initIocContainer } from '../../'
 import { createTestApp, TestContainer } from '../../tests/app'
-import { Config } from '../../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { AppServices } from '../../app'
 import { createAsset } from '../../tests/asset'
@@ -23,7 +22,7 @@ describe('PaymentMethodHandlerService', (): void => {
   let ilpPaymentService: IlpPaymentService
 
   beforeAll(async (): Promise<void> => {
-    deps = initIocContainer(Config)
+    deps = initIocContainer()
     appContainer = await createTestApp(deps)
 
     paymentMethodHandlerService = await deps.use('paymentMethodHandlerService')

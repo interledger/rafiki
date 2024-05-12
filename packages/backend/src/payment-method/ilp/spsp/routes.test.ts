@@ -6,7 +6,6 @@ import { SPSPRoutes } from './routes'
 import { createTestApp, TestContainer } from '../../../tests/app'
 import { initIocContainer } from '../../..'
 import { AssetOptions } from '../../../asset/service'
-import { Config } from '../../../config/app'
 
 import { IocContract } from '@adonisjs/fold'
 import { StreamServer } from '@interledger/stream-receiver'
@@ -29,7 +28,7 @@ describe('SPSP Routes', (): void => {
   const secret = crypto.randomBytes(32).toString('base64')
 
   beforeAll(async (): Promise<void> => {
-    deps = await initIocContainer(Config)
+    deps = initIocContainer()
     appContainer = await createTestApp(deps)
   })
 

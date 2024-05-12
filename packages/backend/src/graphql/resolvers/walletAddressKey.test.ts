@@ -7,7 +7,6 @@ import { createTestApp, TestContainer } from '../../tests/app'
 import { IocContract } from '@adonisjs/fold'
 import { AppServices } from '../../app'
 import { initIocContainer } from '../..'
-import { Config } from '../../config/app'
 import { truncateTables } from '../../tests/tableManager'
 import {
   CreateWalletAddressKeyInput,
@@ -28,7 +27,7 @@ describe('Wallet Address Key Resolvers', (): void => {
   let walletAddressKeyService: WalletAddressKeyService
 
   beforeAll(async (): Promise<void> => {
-    deps = initIocContainer(Config)
+    deps = initIocContainer()
     appContainer = await createTestApp(deps)
     walletAddressKeyService = await deps.use('walletAddressKeyService')
   })

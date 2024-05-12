@@ -39,7 +39,7 @@ describe('OutgoingPayment Resolvers', (): void => {
   let asset: Asset
 
   beforeAll(async (): Promise<void> => {
-    deps = await initIocContainer(Config)
+    deps = initIocContainer()
     appContainer = await createTestApp(deps)
     accountingService = await deps.use('accountingService')
     outgoingPaymentService = await deps.use('outgoingPaymentService')

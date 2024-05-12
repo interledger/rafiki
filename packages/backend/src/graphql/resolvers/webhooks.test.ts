@@ -4,7 +4,6 @@ import { createTestApp, TestContainer } from '../../tests/app'
 import { IocContract } from '@adonisjs/fold'
 import { AppServices } from '../../app'
 import { initIocContainer } from '../..'
-import { Config } from '../../config/app'
 import { truncateTables } from '../../tests/tableManager'
 import { WebhookEventsConnection } from '../generated/graphql'
 import { createWebhookEvent, webhookEventTypes } from '../../tests/webhook'
@@ -15,7 +14,7 @@ describe('Webhook Events Query', (): void => {
   let appContainer: TestContainer
 
   beforeAll(async (): Promise<void> => {
-    deps = initIocContainer(Config)
+    deps = initIocContainer()
     appContainer = await createTestApp(deps)
   })
 

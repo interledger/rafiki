@@ -27,7 +27,6 @@ import { createWalletAddress } from '../../tests/walletAddress'
 import { truncateTables } from '../../tests/tableManager'
 import { initIocContainer } from '../..'
 import { createTestApp, TestContainer } from '../../tests/app'
-import { Config } from '../../config/app'
 import { IocContract } from '@adonisjs/fold'
 import assert from 'assert'
 import { ReadContextWithAuthenticatedStatus } from '../payment/incoming/routes'
@@ -372,7 +371,7 @@ describe('Models', (): void => {
   let knex: Knex
 
   beforeAll(async (): Promise<void> => {
-    deps = initIocContainer(Config)
+    deps = initIocContainer()
     knex = await deps.use('knex')
     appContainer = await createTestApp(deps)
   })
@@ -470,7 +469,7 @@ describe('throwIfMissingWalletAddress', (): void => {
   let appContainer: TestContainer
 
   beforeAll(async (): Promise<void> => {
-    deps = initIocContainer(Config)
+    deps = initIocContainer()
     appContainer = await createTestApp(deps)
   })
 

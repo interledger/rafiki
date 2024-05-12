@@ -29,7 +29,8 @@ describe('Auto Peering Service', (): void => {
   let accountingService: AccountingService
 
   beforeAll(async (): Promise<void> => {
-    deps = initIocContainer({ ...Config, enableAutoPeering: true })
+    Config.enableAutoPeering = true
+    deps = initIocContainer()
     appContainer = await createTestApp(deps)
     config = await deps.use('config')
     autoPeeringService = await deps.use('autoPeeringService')

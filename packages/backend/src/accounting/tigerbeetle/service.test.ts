@@ -39,11 +39,9 @@ describe('Tigerbeetle Accounting Service', (): void => {
     const tigerbeetlePort = (global as unknown as { tigerbeetlePort: number })
       .tigerbeetlePort
 
-    deps = initIocContainer({
-      ...Config,
-      tigerbeetleReplicaAddresses: [tigerbeetlePort.toString()],
-      useTigerbeetle: true
-    })
+    Config.useTigerbeetle = true
+    Config.tigerbeetleReplicaAddresses = [tigerbeetlePort.toString()]
+    deps = initIocContainer()
     appContainer = await createTestApp(deps)
     accountingService = await deps.use('accountingService')
     accountFactory = new AccountFactory(accountingService, newLedger)

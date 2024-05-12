@@ -2,7 +2,6 @@ import { IocContract } from '@adonisjs/fold'
 import axios from 'axios'
 import { initIocContainer } from '../..'
 import { AppServices } from '../../app'
-import { Config } from '../../config/app'
 import { TestContainer, createTestApp } from '../../tests/app'
 
 describe('Rafiki Graphql', (): void => {
@@ -10,7 +9,7 @@ describe('Rafiki Graphql', (): void => {
   let appContainer: TestContainer
 
   beforeAll(async (): Promise<void> => {
-    deps = await initIocContainer(Config)
+    deps = initIocContainer()
     appContainer = await createTestApp(deps)
   })
 

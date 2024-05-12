@@ -14,7 +14,7 @@ import { createTestApp, TestContainer } from '../../tests/app'
 import { createAsset } from '../../tests/asset'
 import { createWalletAddress } from '../../tests/walletAddress'
 import { truncateTables } from '../../tests/tableManager'
-import { Config, IAppConfig } from '../../config/app'
+import { IAppConfig } from '../../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../../'
 import { AppServices } from '../../app'
@@ -34,7 +34,7 @@ describe('Open Payments Wallet Address Service', (): void => {
   let knex: Knex
 
   beforeAll(async (): Promise<void> => {
-    deps = initIocContainer(Config)
+    deps = initIocContainer()
     config = await deps.use('config')
     appContainer = await createTestApp(deps)
     knex = appContainer.knex

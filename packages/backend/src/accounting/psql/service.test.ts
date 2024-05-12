@@ -46,7 +46,8 @@ describe('Psql Accounting Service', (): void => {
   let asset: Asset
 
   beforeAll(async (): Promise<void> => {
-    deps = initIocContainer({ ...Config, useTigerbeetle: false })
+    Config.useTigerbeetle = false
+    const deps = initIocContainer()
     appContainer = await createTestApp(deps)
     knex = appContainer.knex
     accountingService = await deps.use('accountingService')

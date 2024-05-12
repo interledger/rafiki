@@ -2,7 +2,6 @@ import { IocContract } from '@adonisjs/fold'
 import { AppServices } from '../../../app'
 import { TestContainer, createTestApp } from '../../../tests/app'
 import { initIocContainer } from '../../..'
-import { Config } from '../../../config/app'
 import { CombinedPaymentService } from './service'
 import { Knex } from 'knex'
 import { truncateTables } from '../../../tests/tableManager'
@@ -33,7 +32,7 @@ describe('Combined Payment Service', (): void => {
   let receiveWalletAddress: MockWalletAddress
 
   beforeAll(async (): Promise<void> => {
-    deps = await initIocContainer(Config)
+    deps = initIocContainer()
     appContainer = await createTestApp(deps)
     knex = appContainer.knex
     combinedPaymentService = await deps.use('combinedPaymentService')

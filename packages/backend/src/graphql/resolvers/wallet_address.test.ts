@@ -9,7 +9,6 @@ import { IocContract } from '@adonisjs/fold'
 import { AppServices } from '../../app'
 import { Asset } from '../../asset/model'
 import { initIocContainer } from '../..'
-import { Config } from '../../config/app'
 import { truncateTables } from '../../tests/tableManager'
 import {
   WalletAddressError,
@@ -42,7 +41,7 @@ describe('Wallet Address Resolvers', (): void => {
   let walletAddressService: WalletAddressService
 
   beforeAll(async (): Promise<void> => {
-    deps = await initIocContainer(Config)
+    deps = initIocContainer()
     appContainer = await createTestApp(deps)
     knex = appContainer.knex
     walletAddressService = await deps.use('walletAddressService')

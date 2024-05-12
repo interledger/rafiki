@@ -4,7 +4,7 @@ import { Knex } from 'knex'
 import { v4 as uuid } from 'uuid'
 import assert from 'assert'
 import { createTestApp, TestContainer } from '../../../tests/app'
-import { Config, IAppConfig } from '../../../config/app'
+import { Config } from '../../../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../../..'
 import { AppServices, CreateContext } from '../../../app'
@@ -36,7 +36,6 @@ describe('Outgoing Payment Routes', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let knex: Knex
-  let config: IAppConfig
   let outgoingPaymentRoutes: OutgoingPaymentRoutes
   let outgoingPaymentService: OutgoingPaymentService
   let walletAddress: WalletAddress
@@ -65,7 +64,7 @@ describe('Outgoing Payment Routes', (): void => {
 
   beforeAll(async (): Promise<void> => {
     config = Config
-    deps = await initIocContainer(config)
+    deps = initIocContainer()
     appContainer = await createTestApp(deps)
     knex = appContainer.knex
     config = await deps.use('config')

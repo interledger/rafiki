@@ -7,7 +7,6 @@ import { CreateOptions, GrantService } from './service'
 import { AuthServer } from '../authServer/model'
 import { initIocContainer } from '../..'
 import { AppServices } from '../../app'
-import { Config } from '../../config/app'
 import { createTestApp, TestContainer } from '../../tests/app'
 import { truncateTables } from '../../tests/tableManager'
 import { AccessType, AccessAction } from '@interledger/open-payments'
@@ -20,7 +19,7 @@ describe('Grant Service', (): void => {
   let knex: Knex
 
   beforeAll(async (): Promise<void> => {
-    deps = await initIocContainer(Config)
+    deps = initIocContainer()
     appContainer = await createTestApp(deps)
     knex = appContainer.knex
   })

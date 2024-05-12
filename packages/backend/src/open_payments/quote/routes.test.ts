@@ -5,7 +5,7 @@ import { v4 as uuid } from 'uuid'
 import { IocContract } from '@adonisjs/fold'
 
 import { createTestApp, TestContainer } from '../../tests/app'
-import { Config, IAppConfig } from '../../config/app'
+import { Config } from '../../config/app'
 import { initIocContainer } from '../..'
 import { AppServices, CreateContext } from '../../app'
 import { truncateTables } from '../../tests/tableManager'
@@ -26,7 +26,6 @@ describe('Quote Routes', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let quoteService: QuoteService
-  let config: IAppConfig
   let quoteRoutes: QuoteRoutes
   let walletAddress: WalletAddress
   let baseUrl: string
@@ -62,7 +61,7 @@ describe('Quote Routes', (): void => {
 
   beforeAll(async (): Promise<void> => {
     config = Config
-    deps = await initIocContainer(config)
+    deps = initIocContainer()
     appContainer = await createTestApp(deps)
     config = await deps.use('config')
     quoteRoutes = await deps.use('quoteRoutes')

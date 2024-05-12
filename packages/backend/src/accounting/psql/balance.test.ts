@@ -20,7 +20,8 @@ describe('Balances', (): void => {
   let asset: Asset
 
   beforeAll(async (): Promise<void> => {
-    const deps = initIocContainer({ ...Config, useTigerbeetle: false })
+    Config.useTigerbeetle = false
+    const deps = initIocContainer()
     appContainer = await createTestApp(deps)
     serviceDeps = {
       logger: await deps.use('logger'),
