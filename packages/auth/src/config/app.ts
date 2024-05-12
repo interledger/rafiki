@@ -4,7 +4,7 @@ function envString(name: string, value?: string): string {
   const envValue = process.env[name]
   if (envValue) return envValue
 
-  if (typeof(value) === 'undefined') {
+  if (typeof value === 'undefined') {
     throw new Error(`Missing required key value (${name})`)
   }
 
