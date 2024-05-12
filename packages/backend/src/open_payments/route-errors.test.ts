@@ -7,6 +7,7 @@ import {
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '..'
 import { OpenAPIValidatorMiddlewareError } from '@interledger/openapi'
+import { SPSPRouteError } from '../payment-method/ilp/spsp/middleware'
 
 describe('openPaymentServerErrorMiddleware', (): void => {
   let deps: IocContract<AppServices>
@@ -50,6 +51,25 @@ describe('openPaymentServerErrorMiddleware', (): void => {
 
   test('handles OpenAPIValidatorMiddlewareError error', async (): Promise<void> => {
     const error = new OpenAPIValidatorMiddlewareError('Validation error', 400)
+    const next = jest.fn().mockImplementationOnce(() => {
+      throw error
+    })
+
+    const ctxThrowSpy = jest.spyOn(ctx, 'throw')
+
+    await expect(
+      openPaymentsServerErrorMiddleware(ctx, next)
+    ).rejects.toMatchObject({
+      status: error.status,
+      message: error.message
+    })
+
+    expect(ctxThrowSpy).toHaveBeenCalledWith(error.status, error.message)
+    expect(next).toHaveBeenCalledTimes(1)
+  })
+
+  test('handles SPSPRouteError error', async (): Promise<void> => {
+    const error = new SPSPRouteError(400, 'SPSP error')
     const next = jest.fn().mockImplementationOnce(() => {
       throw error
     })

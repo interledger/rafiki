@@ -1,5 +1,6 @@
 import { AppContext } from '../app'
 import { OpenAPIValidatorMiddlewareError } from '@interledger/openapi'
+import { SPSPRouteError } from '../payment-method/ilp/spsp/middleware'
 
 export class OpenPaymentsServerRouteError extends Error {
   public status: number
@@ -43,7 +44,9 @@ export async function openPaymentsServerErrorMiddleware(
         'Received error when handling Open Payments request'
       )
       ctx.throw(err.status, err.message)
-    } else if (err instanceof OpenAPIValidatorMiddlewareError) {
+    }
+
+    if (err instanceof OpenAPIValidatorMiddlewareError) {
       const finalStatus = err.status || 400
 
       logger.info(
@@ -55,6 +58,18 @@ export async function openPaymentsServerErrorMiddleware(
         'Received OpenAPI validation error when handling Open Payments request'
       )
       ctx.throw(finalStatus, err.message)
+    }
+
+    if (err instanceof SPSPRouteError) {
+      logger.info(
+        {
+          ...baseLog,
+          message: err.message,
+          details: err.details
+        },
+        'Received error when handling SPSP request'
+      )
+      ctx.throw(err.status, err.message)
     }
 
     logger.error(

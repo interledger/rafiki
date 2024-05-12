@@ -100,7 +100,7 @@ describe('Account Middleware', () => {
     expect(ctx.accounts.outgoing).toEqual(outgoingAccount)
   })
 
-  test('return an error when the destination account is disabled', async () => {
+  test('return an error when the destination account is in an incorrect state', async () => {
     const outgoingAccount = IncomingPaymentAccountFactory.build({
       id: 'deactivatedIncomingPayment',
       state: 'COMPLETED'
@@ -122,7 +122,7 @@ describe('Account Middleware', () => {
       }
     })
     await expect(middleware(ctx, next)).rejects.toThrow(
-      'destination account is disabled'
+      'destination account is in an incorrect state'
     )
   })
 
