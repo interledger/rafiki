@@ -85,8 +85,10 @@ services:
       TRUST_PROXY: ${TRUST_PROXY}
       AUTH_DATABASE_URL: postgresql://cloud_nine_wallet_auth:cloud_nine_wallet_auth@shared-database/cloud_nine_wallet_auth
       AUTH_SERVER_DOMAIN: ${CLOUD_NINE_AUTH_SERVER_DOMAIN:-http://localhost:3006}
+      REDIS_URL: redis://shared-redis:6379/1
     depends_on:
       - shared-database
+      - shared-redis
   shared-database:
     image: 'postgres:15' # use latest official postgres version
     restart: unless-stopped

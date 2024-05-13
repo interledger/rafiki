@@ -78,7 +78,8 @@ export const badgeColorByPaymentState: {
   PROCESSING: BadgeColor.Yellow,
   FAILED: BadgeColor.Red,
   FUNDING: BadgeColor.Yellow,
-  SENDING: BadgeColor.Yellow
+  SENDING: BadgeColor.Yellow,
+  CANCELLED: BadgeColor.Red
 }
 
 export const badgeColorByWalletAddressStatus: Record<
