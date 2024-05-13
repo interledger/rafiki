@@ -86,7 +86,7 @@ export default function ViewOutgoingPaymentPage() {
                 <p className='font-medium'>Wallet Address ID </p>
                 <Link
                   to={`/wallet-addresses/${outgoingPayment.walletAddressId}`}
-                  className='mt-1 underline text-blue-600 hover:text-blue-800 visited:text-purple-600'
+                  className='default-link'
                 >
                   {outgoingPayment.walletAddressId}
                 </Link>
@@ -99,10 +99,7 @@ export default function ViewOutgoingPaymentPage() {
               </div>
               <div>
                 <p className='font-medium'>Receiver</p>
-                <Link
-                  className='underline text-blue-600 hover:text-blue-800 visited:text-purple-600'
-                  to={outgoingPayment.receiver}
-                >
+                <Link className='default-link' to={outgoingPayment.receiver}>
                   {outgoingPayment.receiver}
                 </Link>
               </div>
