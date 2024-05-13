@@ -70,16 +70,17 @@ async function createAsset(
   { code, scale, withdrawalThreshold, liquidityThreshold }: CreateOptions
 ): Promise<Asset | AssetError> {
   try {
-    // check if exists but deleted
+    // check if exists but deleted | by code-scale
     const deletedAsset = await Asset.query(deps.knex)
       .whereNotNull('deletedAt')
       .where('code', code)
+      .andWhere('scale', scale)
       .first()
 
     if (deletedAsset) {
-      // if found, enable and update scale
+      // if found, enable
       return await Asset.query(deps.knex)
-        .patchAndFetchById(deletedAsset.id, { scale, deletedAt: null })
+        .patchAndFetchById(deletedAsset.id, { deletedAt: null })
         .throwIfNotFound()
     }
 
