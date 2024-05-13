@@ -7,7 +7,6 @@ import { BaseModel, Pagination, SortOrder } from '../../shared/baseModel'
 import { WebhookEvent } from '../../webhook/model'
 import { WalletAddressKey } from '../../open_payments/wallet_address/key/model'
 import { AmountJSON } from '../amount'
-import { Logger } from 'pino'
 
 export class WalletAddress
   extends BaseModel

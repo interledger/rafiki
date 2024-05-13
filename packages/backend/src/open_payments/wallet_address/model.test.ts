@@ -32,7 +32,6 @@ import assert from 'assert'
 import { ReadContextWithAuthenticatedStatus } from '../payment/incoming/routes'
 import { Knex } from 'knex'
 import { OpenPaymentsServerRouteError } from '../route-errors'
-import { createIncomingPayment } from '../../tests/incomingPayment'
 
 export interface SetupOptions {
   reqOpts: httpMocks.RequestOptions
