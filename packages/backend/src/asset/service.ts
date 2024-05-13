@@ -144,7 +144,6 @@ async function deleteAsset(
   try {
     // return error in case there is a peer or wallet address using the asset
     const peer = await Peer.query(deps.knex)
-      .withGraphJoined('asset')
       .where('assetId', id)
       .first()
     if (peer) {
@@ -152,7 +151,6 @@ async function deleteAsset(
     }
 
     const walletAddress = await WalletAddress.query(deps.knex)
-      .withGraphJoined('asset')
       .where('assetId', id)
       .first()
     if (walletAddress) {
