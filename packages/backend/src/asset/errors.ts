@@ -1,7 +1,7 @@
 export enum AssetError {
   DuplicateAsset = 'DuplicateAsset',
   UnknownAsset = 'UnknownAsset',
-  InuseAsset = 'InuseAsset'
+  CannotDeleteInUseAsset = 'CannotDeleteInUseAsset'
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
@@ -13,7 +13,7 @@ export const errorToCode: {
 } = {
   [AssetError.UnknownAsset]: 404,
   [AssetError.DuplicateAsset]: 400,
-  [AssetError.InuseAsset]: 400
+  [AssetError.CannotDeleteInUseAsset]: 400
 }
 
 export const errorToMessage: {
@@ -21,5 +21,5 @@ export const errorToMessage: {
 } = {
   [AssetError.UnknownAsset]: 'unknown asset',
   [AssetError.DuplicateAsset]: 'Asset already exists',
-  [AssetError.InuseAsset]: 'Cannot delete! Asset in use.'
+  [AssetError.CannotDeleteInUseAsset]: 'Cannot delete! Asset in use.'
 }

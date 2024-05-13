@@ -207,7 +207,7 @@ export const deleteAsset: MutationResolvers<ApolloContext>['deleteAsset'] =
       const assetService = await ctx.container.use('assetService')
       const assetOrError = await assetService.delete({
         id: args.input.id,
-        deletedAt: new Date().toISOString()
+        deletedAt: new Date()
       })
 
       if (isAssetError(assetOrError)) {
@@ -218,10 +218,10 @@ export const deleteAsset: MutationResolvers<ApolloContext>['deleteAsset'] =
               message: errorToMessage[AssetError.UnknownAsset],
               success: false
             }
-          case AssetError.InuseAsset:
+          case AssetError.CannotDeleteInUseAsset:
             return {
-              code: errorToCode[AssetError.InuseAsset].toString(),
-              message: errorToMessage[AssetError.InuseAsset],
+              code: errorToCode[AssetError.CannotDeleteInUseAsset].toString(),
+              message: errorToMessage[AssetError.CannotDeleteInUseAsset],
               success: false
             }
           default:

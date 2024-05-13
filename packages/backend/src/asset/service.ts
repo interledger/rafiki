@@ -25,7 +25,7 @@ export interface UpdateOptions {
 }
 export interface DeleteOptions {
   id: string
-  deletedAt: string
+  deletedAt: Date
 }
 
 export interface AssetService {
@@ -143,22 +143,20 @@ async function deleteAsset(
   }
   try {
     // return error in case there is a peer or wallet address using the asset
-    const peer = await Peer.query(deps.knex)
-      .where('assetId', id)
-      .first()
+    const peer = await Peer.query(deps.knex).where('assetId', id).first()
     if (peer) {
-      return AssetError.InuseAsset
+      return AssetError.CannotDeleteInUseAsset
     }
 
     const walletAddress = await WalletAddress.query(deps.knex)
       .where('assetId', id)
       .first()
     if (walletAddress) {
-      return AssetError.InuseAsset
+      return AssetError.CannotDeleteInUseAsset
     }
 
     return await Asset.query(deps.knex)
-      .patchAndFetchById(id, { deletedAt })
+      .patchAndFetchById(id, { deletedAt: deletedAt.toISOString() })
       .throwIfNotFound()
   } catch (err) {
     if (err instanceof NotFoundError) {
