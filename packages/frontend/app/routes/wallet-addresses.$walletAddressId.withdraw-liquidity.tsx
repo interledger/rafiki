@@ -53,7 +53,9 @@ export async function action({ request, params }: ActionFunctionArgs) {
   }
 
   const formData = await request.formData()
-  const result = withdrawLiquidityConfirmationSchema.safeParse(Object.fromEntries(formData))
+  const result = withdrawLiquidityConfirmationSchema.safeParse(
+    Object.fromEntries(formData)
+  )
   if (!result.success) {
     errors.fieldErrors = result.error.flatten().fieldErrors
     return json({ errors }, { status: 400 })
@@ -62,7 +64,10 @@ export async function action({ request, params }: ActionFunctionArgs) {
   let timeout = 0
   if (result.data.transferType === 'two-phase') {
     if (!result.data.timeout) {
-      throw json(null, { status: 400, statusText: 'Unable to extract timeout value.' })
+      throw json(null, {
+        status: 400,
+        statusText: 'Unable to extract timeout value.'
+      })
     }
     timeout = result.data.timeout
   }
