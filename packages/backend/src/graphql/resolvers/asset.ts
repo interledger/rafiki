@@ -211,21 +211,10 @@ export const deleteAsset: MutationResolvers<ApolloContext>['deleteAsset'] =
       })
 
       if (isAssetError(assetOrError)) {
-        switch (assetOrError) {
-          case AssetError.UnknownAsset:
-            return {
-              code: errorToCode[AssetError.UnknownAsset].toString(),
-              message: errorToMessage[AssetError.UnknownAsset],
-              success: false
-            }
-          case AssetError.CannotDeleteInUseAsset:
-            return {
-              code: errorToCode[AssetError.CannotDeleteInUseAsset].toString(),
-              message: errorToMessage[AssetError.CannotDeleteInUseAsset],
-              success: false
-            }
-          default:
-            throw new Error(`AssetError: ${assetOrError}`)
+        return {
+          code: errorToCode[assetOrError].toString(),
+          message: errorToMessage[assetOrError],
+          success: false
         }
       }
       return {
