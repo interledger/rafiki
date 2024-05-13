@@ -1,7 +1,7 @@
 import { type ActionFunctionArgs } from '@remix-run/node'
 import { useNavigate } from '@remix-run/react'
 import { v4 } from 'uuid'
-import { LiquidityDialog } from '~/components/LiquidityDialog'
+import { LiquidityDepositDialog } from '~/components/LiquidityDepositDialog'
 import { depositPeerLiquidity } from '~/lib/api/peer.server'
 import { messageStorage, setMessageAndRedirect } from '~/lib/message.server'
 import { amountSchema } from '~/lib/validate.server'
@@ -19,10 +19,9 @@ export default function PeerDepositLiquidity() {
   const dismissDialog = () => navigate('..', { preventScrollReset: true })
 
   return (
-    <LiquidityDialog
+    <LiquidityDepositDialog
       onClose={dismissDialog}
       title='Deposit peer liquidity'
-      type='Deposit'
     />
   )
 }

@@ -114,6 +114,42 @@ export const amountSchema = z.coerce
   })
   .positive()
 
+export const withdrawLiquiditySchema = z
+  .object({
+    amount: z.coerce
+      .bigint({
+        invalid_type_error: 'Amount is expected to be a number.'
+      })
+      .positive(),
+    transferType: z.enum(['single', 'two-phase'], {
+      required_error: 'Transfer type is required'
+    }),
+    timeout: z.coerce
+      .number({
+        invalid_type_error: 'Timeout amount is expected to be a number.'
+      })
+      .int()
+      .min(1, {
+        message:
+          'For a two-phase transfer the timeout must be greater than zero'
+      })
+      .optional()
+  })
+  .refine(
+    (data) => {
+      // If transferType is 'two-phase' then timeout is required
+      return (
+        data.transferType !== 'two-phase' ||
+        (data.timeout !== undefined && data.timeout > 0)
+      )
+    },
+    {
+      message:
+        "Timeout is required and must be greater than zero when transfer type is 'two-phase'",
+      path: ['timeout']
+    }
+  )
+
 export const createWalletAddressSchema = z.object({
   name: z.string().min(1),
   publicName: z.string().optional(),

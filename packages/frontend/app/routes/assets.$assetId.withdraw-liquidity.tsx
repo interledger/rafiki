@@ -1,13 +1,13 @@
-import { type ActionFunctionArgs } from '@remix-run/node'
-import { useNavigate } from '@remix-run/react'
+import { type ActionFunctionArgs, json } from '@remix-run/node'
+import { useNavigate, useActionData } from '@remix-run/react'
 import { v4 } from 'uuid'
-import { LiquidityDialog } from '~/components/LiquidityDialog'
+import { LiquidityWithdrawalDialog } from '~/components/LiquidityWithdrawalDialog'
 import { withdrawAssetLiquidity } from '~/lib/api/asset.server'
 import { messageStorage, setMessageAndRedirect } from '~/lib/message.server'
-import { amountSchema } from '~/lib/validate.server'
+import { withdrawLiquiditySchema } from '~/lib/validate.server'
 import { redirectIfUnauthorizedAccess } from '../lib/kratos_checks.server'
 import { type LoaderFunctionArgs } from '@remix-run/node'
-import { timeoutTwoPhase } from './settings'
+import type { ZodFieldErrors } from '~/shared/types'
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const cookies = request.headers.get('cookie')
@@ -16,19 +16,25 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 }
 
 export default function AssetWithdrawLiquidity() {
+  const response = useActionData<typeof action>()
   const navigate = useNavigate()
   const dismissDialog = () => navigate('..', { preventScrollReset: true })
 
   return (
-    <LiquidityDialog
+    <LiquidityWithdrawalDialog
       onClose={dismissDialog}
       title='Withdraw asset liquidity'
-      type='Withdraw'
+      errors={response?.errors}
     />
   )
 }
 
 export async function action({ request, params }: ActionFunctionArgs) {
+  const errors: {
+    fieldErrors: ZodFieldErrors<typeof withdrawLiquiditySchema>
+  } = {
+    fieldErrors: {}
+  }
   const session = await messageStorage.getSession(request.headers.get('cookie'))
   const assetId = params.assetId
 
@@ -44,25 +50,23 @@ export async function action({ request, params }: ActionFunctionArgs) {
   }
 
   const formData = await request.formData()
-  const result = amountSchema.safeParse(formData.get('amount'))
-
+  const result = withdrawLiquiditySchema.safeParse(Object.fromEntries(formData))
   if (!result.success) {
-    return setMessageAndRedirect({
-      session,
-      message: {
-        content: 'Amount is not valid. Please try again!',
-        type: 'error'
-      },
-      location: '.'
-    })
+    errors.fieldErrors = result.error.flatten().fieldErrors
+    return json({ errors }, { status: 400 })
+  }
+
+  let timeout = 0
+  if (result.data.transferType === 'two-phase') {
+    timeout = result.data.timeout! // TODO: consider better error handling?
   }
 
   const response = await withdrawAssetLiquidity({
     assetId,
-    amount: result.data,
+    amount: result.data.amount,
     id: v4(),
     idempotencyKey: v4(),
-    timeoutSeconds: timeoutTwoPhase
+    timeoutSeconds: BigInt(timeout)
   })
 
   if (!response?.success) {

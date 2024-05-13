@@ -1,18 +1,16 @@
 import { Dialog } from '@headlessui/react'
-import { Form } from '@remix-run/react'
 import { XIcon } from '~/components/icons'
-import { Button, Input } from '~/components/ui'
 
 type LiquidityDialogProps = {
   title: string
   onClose: () => void
-  type: 'Deposit' | 'Withdraw'
+  children: React.ReactNode
 }
 
-export const LiquidityDialog = ({
+export const LiquidityBaseDialog = ({
   title,
   onClose,
-  type
+  children
 }: LiquidityDialogProps) => {
   return (
     <Dialog as='div' className='relative z-10' onClose={onClose} open={true}>
@@ -37,22 +35,7 @@ export const LiquidityDialog = ({
               >
                 {title}
               </Dialog.Title>
-              <div className='mt-2'>
-                <Form method='post' replace preventScrollReset>
-                  <Input
-                    required
-                    min={1}
-                    type='number'
-                    name='amount'
-                    label='Amount'
-                  />
-                  <div className='flex justify-end py-3'>
-                    <Button aria-label={`${type} liquidity`} type='submit'>
-                      {type} liquidity
-                    </Button>
-                  </div>
-                </Form>
-              </div>
+              <div className='mt-2'>{children}</div>
             </div>
           </Dialog.Panel>
         </div>

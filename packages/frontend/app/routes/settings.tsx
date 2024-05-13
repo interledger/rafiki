@@ -10,7 +10,6 @@ import { PageHeader } from '~/components'
 import { Button, Input } from '../components/ui'
 import variables from '../lib/envConfig.server'
 import { redirectIfUnauthorizedAccess } from '../lib/kratos_checks.server'
-export const timeoutTwoPhase = BigInt(60)
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const cookies = request.headers.get('cookie')
