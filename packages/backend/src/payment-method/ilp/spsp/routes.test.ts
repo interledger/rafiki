@@ -1,5 +1,6 @@
 import * as crypto from 'crypto'
 import { v4 as uuid } from 'uuid'
+import assert from 'assert'
 
 import { AppServices, SPSPContext } from '../../../app'
 import { SPSPRoutes } from './routes'
@@ -13,6 +14,7 @@ import { StreamServer } from '@interledger/stream-receiver'
 import { randomAsset } from '../../../tests/asset'
 import { createContext } from '../../../tests/context'
 import { truncateTables } from '../../../tests/tableManager'
+import { SPSPRouteError } from './middleware'
 
 type SPSPHeader = {
   Accept: string
@@ -76,17 +78,46 @@ describe('SPSP Routes', (): void => {
       const ctx = createContext<SPSPContext>({
         headers: { Accept: 'application/json' }
       })
-      await expect(spspRoutes.get(ctx)).rejects.toHaveProperty('status', 406)
+
+      expect.assertions(2)
+      try {
+        await spspRoutes.get(ctx)
+      } catch (err) {
+        assert.ok(err instanceof SPSPRouteError)
+        expect(err.status).toBe(406)
+        expect(err.message).toBe(
+          'Request does not support application/spsp4+json'
+        )
+      }
     })
 
     test('nonce, no secret; returns 400', async () => {
       const ctx = setup({ nonce })
-      await expect(spspRoutes.get(ctx)).rejects.toHaveProperty('status', 400)
+
+      expect.assertions(2)
+      try {
+        await spspRoutes.get(ctx)
+      } catch (err) {
+        assert.ok(err instanceof SPSPRouteError)
+        expect(err.status).toBe(400)
+        expect(err.message).toBe(
+          'Failed to generate credentials: receipt nonce and secret must accompany each other'
+        )
+      }
     })
 
     test('secret; no nonce; returns 400', async () => {
       const ctx = setup({ secret })
-      await expect(spspRoutes.get(ctx)).rejects.toHaveProperty('status', 400)
+      expect.assertions(2)
+      try {
+        await spspRoutes.get(ctx)
+      } catch (err) {
+        assert.ok(err instanceof SPSPRouteError)
+        expect(err.status).toBe(400)
+        expect(err.message).toBe(
+          'Failed to generate credentials: receipt nonce and secret must accompany each other'
+        )
+      }
     })
 
     test('malformed nonce; returns 400', async () => {
@@ -94,7 +125,17 @@ describe('SPSP Routes', (): void => {
         nonce: Buffer.alloc(15).toString('base64'),
         secret
       })
-      await expect(spspRoutes.get(ctx)).rejects.toHaveProperty('status', 400)
+
+      expect.assertions(2)
+      try {
+        await spspRoutes.get(ctx)
+      } catch (err) {
+        assert.ok(err instanceof SPSPRouteError)
+        expect(err.status).toBe(400)
+        expect(err.message).toBe(
+          'Failed to generate credentials: receipt nonce must be 16 bytes'
+        )
+      }
     })
 
     const receiptSetup = {
@@ -138,6 +179,25 @@ describe('SPSP Routes', (): void => {
         })
       }
     )
+
+    test('handle error when generating credentials', async () => {
+      const ctx = setup()
+
+      jest
+        .spyOn(streamServer, 'generateCredentials')
+        .mockImplementationOnce(() => {
+          throw new Error('Could not generate credentials')
+        })
+
+      expect.assertions(2)
+      try {
+        await spspRoutes.get(ctx)
+      } catch (err) {
+        assert.ok(err instanceof SPSPRouteError)
+        expect(err.status).toBe(400)
+        expect(err.message).toBe('Could not generate credentials')
+      }
+    })
 
     /**
      * Utility functions

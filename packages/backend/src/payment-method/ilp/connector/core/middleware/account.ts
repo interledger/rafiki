@@ -27,11 +27,17 @@ export function createAccountMiddleware(serverAddress: string): ILPMiddleware {
           account,
           accountType
         )
+        ctx.services.logger.debug(
+          { account, accountType },
+          'Created liquidity account'
+        )
       } catch (err) {
         // Don't complain if liquidity account already exists.
-        if (err instanceof AccountAlreadyExistsError) {
-          // Do nothing.
-        } else {
+        if (!(err instanceof AccountAlreadyExistsError)) {
+          ctx.services.logger.error(
+            { account, accountType, err },
+            'Failed to create liquidity account'
+          )
           throw err
         }
       }
@@ -39,7 +45,13 @@ export function createAccountMiddleware(serverAddress: string): ILPMiddleware {
 
     const { walletAddresses, incomingPayments, peers } = ctx.services
     const incomingAccount = ctx.state.incomingAccount
-    if (!incomingAccount) ctx.throw(401, 'unauthorized')
+    if (!incomingAccount) {
+      ctx.services.logger.error(
+        { state: ctx.state },
+        'Unauthorized: No incoming account'
+      )
+      ctx.throw(401, 'unauthorized')
+    }
 
     const getAccountByDestinationAddress = async (): Promise<
       OutgoingAccount | undefined
@@ -56,7 +68,15 @@ export function createAccountMiddleware(serverAddress: string): ILPMiddleware {
               IncomingPaymentState.Expired
             ].includes(incomingPayment.state)
           ) {
-            throw new Errors.UnreachableError('destination account is disabled')
+            const errorMessage = 'destination account is in an incorrect state'
+            ctx.services.logger.error(
+              {
+                incomingPayment,
+                streamDestination: ctx.state.streamDestination
+              },
+              errorMessage
+            )
+            throw new Errors.UnreachableError(errorMessage)
           }
 
           // Create the tigerbeetle account if not exists.
@@ -67,6 +87,10 @@ export function createAccountMiddleware(serverAddress: string): ILPMiddleware {
               LiquidityAccountType.INCOMING
             )
           }
+          ctx.services.logger.debug(
+            { incomingPaymentId: incomingPayment.id },
+            'destination account is incoming payment'
+          )
           return incomingPayment
         }
         // Open Payments SPSP fallback account
@@ -80,12 +104,20 @@ export function createAccountMiddleware(serverAddress: string): ILPMiddleware {
               LiquidityAccountType.WEB_MONETIZATION
             )
           }
+          ctx.services.logger.debug(
+            { walletAddressId: walletAddress.id },
+            'destination account is wallet address'
+          )
           return walletAddress
         }
       }
       const address = ctx.request.prepare.destination
       const peer = await peers.getByDestinationAddress(address)
       if (peer) {
+        ctx.services.logger.debug(
+          { peerId: peer.id },
+          'destination account is peer'
+        )
         return peer
       }
       if (
@@ -106,7 +138,15 @@ export function createAccountMiddleware(serverAddress: string): ILPMiddleware {
 
     const outgoingAccount = await getAccountByDestinationAddress()
     if (!outgoingAccount) {
-      throw new Errors.UnreachableError('unknown destination account')
+      const errorMessage = 'unknown destination account'
+      ctx.services.logger.error(
+        {
+          streamDestination: ctx.state.streamDestination,
+          destinationAddress: ctx.request.prepare.destination
+        },
+        errorMessage
+      )
+      throw new Errors.UnreachableError(errorMessage)
     }
     ctx.accounts = {
       get incoming(): IncomingAccount {

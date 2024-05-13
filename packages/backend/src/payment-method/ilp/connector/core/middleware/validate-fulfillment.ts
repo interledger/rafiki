@@ -17,7 +17,10 @@ export function createOutgoingValidateFulfillmentMiddleware(): ILPMiddleware {
         .update(fulfillment)
         .digest()
       if (!calculatedCondition.equals(executionCondition)) {
-        logger.warn({ response }, 'invalid fulfillment')
+        logger.error(
+          { response, calculatedCondition, executionCondition },
+          'invalid fulfillment'
+        )
         throw new WrongConditionError(
           'fulfillment did not match expected value.'
         )
