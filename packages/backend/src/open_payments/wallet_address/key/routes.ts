@@ -1,19 +1,22 @@
 import { generateJwk, JWK } from '@interledger/http-signature-utils'
 
-import { WalletAddressContext } from '../../../app'
+import { WalletAddressUrlContext } from '../../../app'
 import { IAppConfig } from '../../../config/app'
 import { WalletAddressKeyService } from './service'
 import { Logger } from 'pino'
+import { WalletAddressService } from '../service'
+import { OpenPaymentsServerRouteError } from '../../route-errors'
 
 interface ServiceDependencies {
   walletAddressKeyService: WalletAddressKeyService
+  walletAddressService: WalletAddressService
   config: IAppConfig
   logger: Logger
   jwk: JWK
 }
 
 export interface WalletAddressKeyRoutes {
-  getKeysByWalletAddressId(ctx: WalletAddressContext): Promise<void>
+  get(ctx: WalletAddressUrlContext): Promise<void>
 }
 
 export function createWalletAddressKeyRoutes(
@@ -28,26 +31,40 @@ export function createWalletAddressKeyRoutes(
   }
 
   return {
-    getKeysByWalletAddressId: (ctx: WalletAddressContext) =>
-      getKeysByWalletAddressId(deps, ctx)
+    get: (ctx: WalletAddressUrlContext) => getWalletAddressKeys(deps, ctx)
   }
 }
 
-export async function getKeysByWalletAddressId(
+export async function getWalletAddressKeys(
   deps: ServiceDependencies,
-  ctx: WalletAddressContext
+  ctx: WalletAddressUrlContext
 ): Promise<void> {
   if (deps.config.walletAddressUrl === ctx.walletAddressUrl) {
     ctx.body = {
       keys: [deps.jwk]
     }
-  } else {
-    const keys = await deps.walletAddressKeyService.getKeysByWalletAddressId(
-      ctx.walletAddress.id
-    )
+    return
+  }
 
-    ctx.body = {
-      keys: keys.map((key) => key.jwk)
-    }
+  const walletAddress = await deps.walletAddressService.getOrPollByUrl(
+    ctx.walletAddressUrl
+  )
+
+  if (!walletAddress?.isActive) {
+    throw new OpenPaymentsServerRouteError(
+      404,
+      'Could not get wallet address',
+      {
+        walletAddressUrl: ctx.walletAddressUrl
+      }
+    )
+  }
+
+  const keys = await deps.walletAddressKeyService.getKeysByWalletAddressId(
+    walletAddress.id
+  )
+
+  ctx.body = {
+    keys: keys.map((key) => key.jwk)
   }
 }

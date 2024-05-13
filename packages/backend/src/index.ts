@@ -308,17 +308,17 @@ export function initIocContainer(
     })
   })
   container.singleton('walletAddressRoutes', async (deps) => {
-    const config = await deps.use('config')
     return createWalletAddressRoutes({
-      authServer: config.authServerGrantUrl,
-      resourceServer: config.openPaymentsUrl
+      config: await deps.use('config'),
+      walletAddressService: await deps.use('walletAddressService')
     })
   })
   container.singleton('walletAddressKeyRoutes', async (deps) => {
     return createWalletAddressKeyRoutes({
       config: await deps.use('config'),
       logger: await deps.use('logger'),
-      walletAddressKeyService: await deps.use('walletAddressKeyService')
+      walletAddressKeyService: await deps.use('walletAddressKeyService'),
+      walletAddressService: await deps.use('walletAddressService')
     })
   })
   container.singleton('streamCredentialsService', async (deps) => {
