@@ -1,7 +1,7 @@
 import { type ActionFunctionArgs } from '@remix-run/node'
 import { useNavigate, useOutletContext } from '@remix-run/react'
 import { v4 } from 'uuid'
-import { LiquidityConfirmDialog } from '~/components/LiquidityConfirmDialog'
+import { LiquidityDepositConfirmDialog } from '~/components/LiquidityDepositConfirmDialog'
 import { depositOutgoingPaymentLiquidity } from '~/lib/api/payments.server'
 import { messageStorage, setMessageAndRedirect } from '~/lib/message.server'
 import type { LiquidityActionOutletContext } from './payments.outgoing.$outgoingPaymentId'
@@ -21,10 +21,9 @@ export default function OutgoingPaymentDepositLiquidity() {
   const dismissDialog = () => navigate('..', { preventScrollReset: true })
 
   return (
-    <LiquidityConfirmDialog
+    <LiquidityDepositConfirmDialog
       onClose={dismissDialog}
       title='Deposit outgoing payment liquidity'
-      type='Deposit'
       displayAmount={depositLiquidityDisplayAmount}
     />
   )

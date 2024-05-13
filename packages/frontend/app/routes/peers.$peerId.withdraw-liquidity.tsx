@@ -58,7 +58,10 @@ export async function action({ request, params }: ActionFunctionArgs) {
 
   let timeout = 0
   if (result.data.transferType === 'two-phase') {
-    timeout = result.data.timeout! // TODO: consider better error handling?
+    if (!result.data.timeout) {
+      throw json(null, { status: 400, statusText: 'Unable to extract timeout value.' })
+    }
+    timeout = result.data.timeout
   }
 
   const response = await withdrawPeerLiquidity({

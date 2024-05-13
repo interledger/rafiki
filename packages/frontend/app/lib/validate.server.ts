@@ -114,6 +114,39 @@ export const amountSchema = z.coerce
   })
   .positive()
 
+const transferTypeEnum = z.enum(['single', 'two-phase'], {
+  required_error: 'Transfer type is required'
+})
+
+const timeoutValidation = z.coerce
+  .number({
+    invalid_type_error: 'Timeout amount is expected to be a number.'
+  })
+  .int()
+  .min(1, {
+    message: 'For a two-phase transfer the timeout must be greater than zero'
+  })
+  .optional()
+
+interface LiquidityData {
+  amount?: bigint
+  transferType: 'single' | 'two-phase'
+  timeout?: number
+}
+
+function enforceTwoPhaseTimeout(data: LiquidityData): boolean {
+  return (
+    data.transferType !== 'two-phase' ||
+    (data.timeout !== undefined && data.timeout > 0)
+  )
+}
+
+const twoPhaseTimeoutMessage = {
+  message:
+    "Timeout is required and must be greater than zero when transfer type is 'two-phase'",
+  path: ['timeout']
+}
+
 export const withdrawLiquiditySchema = z
   .object({
     amount: z.coerce
@@ -121,34 +154,17 @@ export const withdrawLiquiditySchema = z
         invalid_type_error: 'Amount is expected to be a number.'
       })
       .positive(),
-    transferType: z.enum(['single', 'two-phase'], {
-      required_error: 'Transfer type is required'
-    }),
-    timeout: z.coerce
-      .number({
-        invalid_type_error: 'Timeout amount is expected to be a number.'
-      })
-      .int()
-      .min(1, {
-        message:
-          'For a two-phase transfer the timeout must be greater than zero'
-      })
-      .optional()
+    transferType: transferTypeEnum,
+    timeout: timeoutValidation
   })
-  .refine(
-    (data) => {
-      // If transferType is 'two-phase' then timeout is required
-      return (
-        data.transferType !== 'two-phase' ||
-        (data.timeout !== undefined && data.timeout > 0)
-      )
-    },
-    {
-      message:
-        "Timeout is required and must be greater than zero when transfer type is 'two-phase'",
-      path: ['timeout']
-    }
-  )
+  .refine(enforceTwoPhaseTimeout, twoPhaseTimeoutMessage)
+
+export const withdrawLiquidityConfirmationSchema = z
+  .object({
+    transferType: transferTypeEnum,
+    timeout: timeoutValidation
+  })
+  .refine(enforceTwoPhaseTimeout, twoPhaseTimeoutMessage)
 
 export const createWalletAddressSchema = z.object({
   name: z.string().min(1),
