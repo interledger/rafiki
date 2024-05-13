@@ -196,6 +196,11 @@ async function getOrPollByUrl(
     }
   })
 
+  deps.logger.debug(
+    { walletAddressUrl: url },
+    'Wallet address not found, polling to see if ASE creates wallet address'
+  )
+
   try {
     const walletAddress = await poll({
       request: () => getWalletAddressByUrl(deps, url),
@@ -205,12 +210,6 @@ async function getOrPollByUrl(
 
     return walletAddress
   } catch (error) {
-    const errorMessage = 'Could not get wallet address'
-    deps.logger.error(
-      { errorMessage: error instanceof Error && error.message },
-      errorMessage
-    )
-
     return undefined
   }
 }
