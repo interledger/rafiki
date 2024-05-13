@@ -355,7 +355,7 @@ export async function action({ request }: ActionFunctionArgs) {
         return setMessageAndRedirect({
           session,
           message: {
-            content: response?.message || "Could not delete Asset.",
+            content: response?.message || 'Could not delete Asset.',
             type: 'error'
           },
           location: '.'
