@@ -60,5 +60,7 @@ services:
       INTROSPECTION_PORT: 3107
       AUTH_PORT: 3106
       ADMIN_PORT: 3103
+      REDIS_URL: redis://shared-redis:6379/1
     depends_on:
       - shared-database
+      - shared-redis

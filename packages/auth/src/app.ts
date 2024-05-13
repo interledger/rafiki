@@ -50,6 +50,7 @@ import { AccessService } from './access/service'
 import { AccessTokenService } from './accessToken/service'
 import { InteractionRoutes } from './interaction/routes'
 import { ApolloArmor } from '@escape.tech/graphql-armor'
+import { Redis } from 'ioredis'
 import { LoggingPlugin } from './graphql/plugin'
 
 export interface AppContextData extends DefaultContext {
@@ -98,6 +99,7 @@ export interface AppServices {
   accessTokenService: Promise<AccessTokenService>
   grantRoutes: Promise<GrantRoutes>
   interactionRoutes: Promise<InteractionRoutes>
+  redis: Promise<Redis>
 }
 
 export type AppContainer = IocContract<AppServices>
@@ -346,12 +348,31 @@ export class App {
 
     koa.use(cors())
     koa.keys = [this.config.cookieKey]
+
+    const redis = await this.container.use('redis')
+    const maxAgeMs = 60 * 1000
     koa.use(
       session(
         {
           key: 'sessionId',
-          maxAge: 60 * 1000,
-          signed: true
+          maxAge: maxAgeMs,
+          signed: true,
+          store: {
+            async get(key) {
+              return await redis.hgetall(key)
+            },
+            async set(key, session) {
+              // Add a delay to cookie age to ensure redis record expires after cookie
+              const expireInMs = maxAgeMs + 10 * 1000
+              const op = redis.multi()
+              op.hset(key, session)
+              op.expire(key, expireInMs)
+              await op.exec()
+            },
+            async destroy(key) {
+              await redis.hdel(key)
+            }
+          }
         },
         koa
       )
