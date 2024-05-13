@@ -70,7 +70,28 @@ export async function handleOutgoingPaymentCreated(wh: Webhook) {
 
   const amt = parseAmount(payment['debitAmount'] as AmountJSON)
 
-  await mockAccounts.pendingDebit(acc.id, amt.value)
+  try {
+    await mockAccounts.pendingDebit(acc.id, amt.value)
+  } catch (err) {
+    await apolloClient.mutate({
+      mutation: gql`
+        mutation CancelOutgoingPayment($input: CancelOutgoingPaymentInput!) {
+          cancelOutgoingPayment(input: $input) {
+            code
+            success
+            message
+          }
+        }
+      `,
+      variables: {
+        input: {
+          id: payment.id,
+          reason: 'Account does not have enough balance.'
+        }
+      }
+    })
+    return
+  }
 
   // notify rafiki
   await apolloClient

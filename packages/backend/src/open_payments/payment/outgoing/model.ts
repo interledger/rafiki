@@ -81,7 +81,10 @@ export class OutgoingPayment
   }
 
   public get failed(): boolean {
-    return this.state === OutgoingPaymentState.Failed
+    return [
+      OutgoingPaymentState.Cancelled,
+      OutgoingPaymentState.Failed
+    ].includes(this.state)
   }
 
   // Outgoing peer
@@ -176,6 +179,7 @@ export enum OutgoingPaymentState {
   // Awaiting money from the user's wallet account to be deposited to the payment account to reserve it for the payment.
   // On success, transition to `SENDING`.
   // On failure, transition to `FAILED`.
+  // Can also go to CANCELLED state if cancelOutgoingPayment mutation is called
   Funding = 'FUNDING',
   // Pay from the account to the destination.
   // On success, transition to `COMPLETED`.
@@ -183,7 +187,9 @@ export enum OutgoingPaymentState {
   // The payment failed. (Though some money may have been delivered).
   Failed = 'FAILED',
   // Successful completion.
-  Completed = 'COMPLETED'
+  Completed = 'COMPLETED',
+  // Transaction has been cancelled by ASE
+  Cancelled = 'CANCELLED'
 }
 
 export enum OutgoingPaymentDepositType {
