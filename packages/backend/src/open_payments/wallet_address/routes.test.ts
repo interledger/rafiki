@@ -1,5 +1,6 @@
 import jestOpenAPI from 'jest-openapi'
 import { IocContract } from '@adonisjs/fold'
+import { faker } from '@faker-js/faker'
 import { initIocContainer } from '../../'
 import { AppServices, WalletAddressUrlContext } from '../../app'
 import { Config, IAppConfig } from '../../config/app'
@@ -59,7 +60,9 @@ describe('Wallet Address Routes', (): void => {
     })
 
     test('throws 404 error for inactive wallet address', async (): Promise<void> => {
-      const walletAddress = await createWalletAddress(deps)
+      const walletAddress = await createWalletAddress(deps, {
+        publicName: faker.person.firstName()
+      })
 
       await walletAddress.$query().patch({ deactivatedAt: new Date() })
 
@@ -104,7 +107,9 @@ describe('Wallet Address Routes', (): void => {
     })
 
     test('returns wallet address', async (): Promise<void> => {
-      const walletAddress = await createWalletAddress(deps)
+      const walletAddress = await createWalletAddress(deps, {
+        publicName: faker.person.firstName()
+      })
 
       const ctx = createContext<WalletAddressUrlContext>({
         headers: { Accept: 'application/json' },
