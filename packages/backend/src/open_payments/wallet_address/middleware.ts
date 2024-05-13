@@ -99,29 +99,21 @@ export async function getWalletAddressUrlFromQuote(
   await next()
 }
 
-interface WalletAddressMiddlewareArgs {
-  errorCodeOnMissing?: number
-}
-
-export function createWalletAddressMiddleware(
-  args?: WalletAddressMiddlewareArgs
+export async function getWalletAddressForSubresource(
+  ctx: WalletAddressContext,
+  next: () => Promise<void>
 ) {
-  return async (ctx: WalletAddressContext, next: () => Promise<void>) => {
-    const walletAddressService = await ctx.container.use('walletAddressService')
+  const walletAddressService = await ctx.container.use('walletAddressService')
 
-    const walletAddress = await walletAddressService.getOrPollByUrl(
-      ctx.walletAddressUrl
-    )
+  const walletAddress = await walletAddressService.getOrPollByUrl(
+    ctx.walletAddressUrl
+  )
 
-    if (!walletAddress?.isActive) {
-      throw new OpenPaymentsServerRouteError(
-        args?.errorCodeOnMissing ?? 400,
-        'Could not get wallet address'
-      )
-    }
-
-    ctx.walletAddress = walletAddress
-
-    await next()
+  if (!walletAddress?.isActive) {
+    throw new OpenPaymentsServerRouteError(400, 'Could not get wallet address')
   }
+
+  ctx.walletAddress = walletAddress
+
+  await next()
 }

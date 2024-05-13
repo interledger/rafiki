@@ -93,7 +93,7 @@ import {
   getWalletAddressUrlFromQueryParams,
   getWalletAddressUrlFromQuote,
   getWalletAddressUrlFromRequestBody,
-  createWalletAddressMiddleware,
+  getWalletAddressForSubresource,
   getWalletAddressUrlFromPath
 } from './open_payments/wallet_address/middleware'
 
@@ -445,7 +445,7 @@ export class App {
         requestAction: RequestAction.Create
       }),
       httpsigMiddleware,
-      createWalletAddressMiddleware(),
+      getWalletAddressForSubresource,
       incomingPaymentRoutes.create
     )
 
@@ -472,7 +472,7 @@ export class App {
         requestAction: RequestAction.List
       }),
       httpsigMiddleware,
-      createWalletAddressMiddleware(),
+      getWalletAddressForSubresource,
       incomingPaymentRoutes.list
     )
 
@@ -496,7 +496,7 @@ export class App {
         requestAction: RequestAction.Create
       }),
       httpsigMiddleware,
-      createWalletAddressMiddleware(),
+      getWalletAddressForSubresource,
       outgoingPaymentRoutes.create
     )
 
@@ -523,7 +523,7 @@ export class App {
         requestAction: RequestAction.List
       }),
       httpsigMiddleware,
-      createWalletAddressMiddleware(),
+      getWalletAddressForSubresource,
       outgoingPaymentRoutes.list
     )
 
@@ -547,7 +547,7 @@ export class App {
         requestAction: RequestAction.Create
       }),
       httpsigMiddleware,
-      createWalletAddressMiddleware(),
+      getWalletAddressForSubresource,
       quoteRoutes.create
     )
 
@@ -572,7 +572,7 @@ export class App {
         bypassError: true
       }),
       authenticatedStatusMiddleware,
-      createWalletAddressMiddleware(),
+      getWalletAddressForSubresource,
       incomingPaymentRoutes.get
     )
 
@@ -594,7 +594,7 @@ export class App {
         requestAction: RequestAction.Complete
       }),
       httpsigMiddleware,
-      createWalletAddressMiddleware(),
+      getWalletAddressForSubresource,
       incomingPaymentRoutes.complete
     )
 
@@ -616,7 +616,7 @@ export class App {
         requestAction: RequestAction.Read
       }),
       httpsigMiddleware,
-      createWalletAddressMiddleware(),
+      getWalletAddressForSubresource,
       outgoingPaymentRoutes.get
     )
 
@@ -638,7 +638,7 @@ export class App {
         requestAction: RequestAction.Read
       }),
       httpsigMiddleware,
-      createWalletAddressMiddleware(),
+      getWalletAddressForSubresource,
       quoteRoutes.get
     )
 
@@ -653,8 +653,7 @@ export class App {
         validatorMiddlewareOptions
       ),
       getWalletAddressUrlFromPath,
-      createWalletAddressMiddleware(),
-      walletAddressKeyRoutes.getKeysByWalletAddressId
+      walletAddressKeyRoutes.get
     )
 
     // Add the wallet address query route last.
@@ -670,7 +669,6 @@ export class App {
         validatorMiddlewareOptions
       ),
       getWalletAddressUrlFromPath,
-      createWalletAddressMiddleware({ errorCodeOnMissing: 404 }),
       createSpspMiddleware(this.config.spspEnabled),
       walletAddressRoutes.get
     )

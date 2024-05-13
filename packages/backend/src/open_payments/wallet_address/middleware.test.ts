@@ -1,5 +1,5 @@
 import {
-  createWalletAddressMiddleware,
+  getWalletAddressForSubresource,
   getWalletAddressUrlFromRequestBody,
   getWalletAddressUrlFromQueryParams,
   getWalletAddressUrlFromIncomingPayment,
@@ -320,7 +320,7 @@ describe('Wallet Address Middleware', (): void => {
     })
   })
 
-  describe('createWalletAddressMiddleware', () => {
+  describe('getWalletAddressForSubresource', () => {
     let ctx: WalletAddressContext
     let next: jest.MockedFunction<() => Promise<void>>
 
@@ -345,29 +345,10 @@ describe('Wallet Address Middleware', (): void => {
 
       expect.assertions(3)
       try {
-        await createWalletAddressMiddleware()(ctx, next)
+        await getWalletAddressForSubresource(ctx, next)
       } catch (err) {
         assert(err instanceof OpenPaymentsServerRouteError)
         expect(err.status).toBe(400)
-        expect(err.message).toBe('Could not get wallet address')
-        expect(next).not.toHaveBeenCalled()
-      }
-    })
-
-    test('throws error with custom error code for unknown wallet address', async (): Promise<void> => {
-      jest
-        .spyOn(walletAddressService, 'getOrPollByUrl')
-        .mockResolvedValueOnce(undefined)
-
-      expect.assertions(3)
-      try {
-        await createWalletAddressMiddleware({ errorCodeOnMissing: 404 })(
-          ctx,
-          next
-        )
-      } catch (err) {
-        assert(err instanceof OpenPaymentsServerRouteError)
-        expect(err.status).toBe(404)
         expect(err.message).toBe('Could not get wallet address')
         expect(next).not.toHaveBeenCalled()
       }
@@ -381,7 +362,7 @@ describe('Wallet Address Middleware', (): void => {
 
       expect.assertions(3)
       try {
-        await createWalletAddressMiddleware()(ctx, next)
+        await getWalletAddressForSubresource(ctx, next)
       } catch (err) {
         assert(err instanceof OpenPaymentsServerRouteError)
         expect(err.status).toBe(400)
@@ -395,7 +376,7 @@ describe('Wallet Address Middleware', (): void => {
       ctx.walletAddressUrl = walletAddress.url
 
       await expect(
-        createWalletAddressMiddleware()(ctx, next)
+        getWalletAddressForSubresource(ctx, next)
       ).resolves.toBeUndefined()
       expect(next).toHaveBeenCalled()
       expect(ctx.walletAddress).toEqual(walletAddress)
