@@ -230,15 +230,3 @@ export abstract class WalletAddressSubresource extends BaseModel {
   QueryBuilderType!: SubresourceQueryBuilder<this>
   static QueryBuilder = SubresourceQueryBuilder
 }
-
-export function throwIfMissingWalletAddress(
-  deps: { logger: Logger },
-  resource: WalletAddressSubresource
-): asserts resource is WalletAddressSubresource &
-  Required<Pick<WalletAddressSubresource, 'walletAddress'>> {
-  if (!resource.walletAddress) {
-    const errorMessage = `${resource.$modelClass.name} does not have wallet address. This should be investigated.`
-    deps.logger.error({ id: resource.id }, errorMessage)
-    throw new Error(errorMessage)
-  }
-}

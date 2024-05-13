@@ -1,21 +1,19 @@
 import { generateJwk, JWK } from '@interledger/http-signature-utils'
 
-import { WalletAddressUrlContext } from '../../../app'
+import { WalletAddressContext } from '../../../app'
 import { IAppConfig } from '../../../config/app'
-import { WalletAddressService } from '../service'
 import { WalletAddressKeyService } from './service'
 import { Logger } from 'pino'
 
 interface ServiceDependencies {
   walletAddressKeyService: WalletAddressKeyService
-  walletAddressService: WalletAddressService
   config: IAppConfig
   logger: Logger
   jwk: JWK
 }
 
 export interface WalletAddressKeyRoutes {
-  getKeysByWalletAddressId(ctx: WalletAddressUrlContext): Promise<void>
+  getKeysByWalletAddressId(ctx: WalletAddressContext): Promise<void>
 }
 
 export function createWalletAddressKeyRoutes(
@@ -30,16 +28,20 @@ export function createWalletAddressKeyRoutes(
   }
 
   return {
-    getKeysByWalletAddressId: (ctx: WalletAddressUrlContext) =>
+    getKeysByWalletAddressId: (ctx: WalletAddressContext) =>
       getKeysByWalletAddressId(deps, ctx)
   }
 }
 
 export async function getKeysByWalletAddressId(
   deps: ServiceDependencies,
-  ctx: WalletAddressUrlContext
+  ctx: WalletAddressContext
 ): Promise<void> {
-  if (ctx.walletAddress) {
+  if (deps.config.walletAddressUrl === ctx.walletAddressUrl) {
+    ctx.body = {
+      keys: [deps.jwk]
+    }
+  } else {
     const keys = await deps.walletAddressKeyService.getKeysByWalletAddressId(
       ctx.walletAddress.id
     )
@@ -47,21 +49,5 @@ export async function getKeysByWalletAddressId(
     ctx.body = {
       keys: keys.map((key) => key.jwk)
     }
-  } else if (deps.config.walletAddressUrl === ctx.walletAddressUrl) {
-    ctx.body = {
-      keys: [deps.jwk]
-    }
-  } else {
-    const errorMessage =
-      'Could not get wallet address keys. It is possible there is a wallet address configuration error for this Rafiki instance.'
-    deps.logger.error(
-      {
-        requestedWalletAddress: ctx.walletAddressUrl,
-        configuredWalletAddressUrl: deps.config.walletAddressUrl
-      },
-      errorMessage
-    )
-
-    throw new Error(errorMessage)
   }
 }

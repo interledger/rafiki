@@ -1,6 +1,6 @@
-import { WalletAddressUrlContext, SPSPContext } from '../../../app'
+import { WalletAddressContext, SPSPContext } from '../../../app'
 
-export type SPSPWalletAddressContext = WalletAddressUrlContext & SPSPContext
+export type SPSPWalletAddressContext = WalletAddressContext & SPSPContext
 
 export class SPSPRouteError extends Error {
   public status: number
@@ -36,20 +36,10 @@ const spspMiddleware = async (
   next: () => Promise<unknown>
 ): Promise<void> => {
   if (ctx.accepts('application/spsp4+json')) {
-    const walletAddressService = await ctx.container.use('walletAddressService')
-
-    const walletAddress = await walletAddressService.getByUrl(
-      ctx.walletAddressUrl
-    )
-
-    if (!walletAddress?.isActive) {
-      throw new SPSPRouteError(404, 'Could not get wallet address')
-    }
-
-    ctx.paymentTag = walletAddress.id
+    ctx.paymentTag = ctx.walletAddress.id
     ctx.asset = {
-      code: walletAddress.asset.code,
-      scale: walletAddress.asset.scale
+      code: ctx.walletAddress.asset.code,
+      scale: ctx.walletAddress.asset.scale
     }
     const spspRoutes = await ctx.container.use('spspRoutes')
     await spspRoutes.get(ctx)

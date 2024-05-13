@@ -1,8 +1,4 @@
-import {
-  createSpspMiddleware,
-  SPSPRouteError,
-  SPSPWalletAddressContext
-} from './middleware'
+import { createSpspMiddleware, SPSPWalletAddressContext } from './middleware'
 import { setup } from '../../../open_payments/wallet_address/model.test'
 import { Config } from '../../../config/app'
 import { IocContract } from '@adonisjs/fold'
@@ -13,15 +9,12 @@ import { createAsset } from '../../../tests/asset'
 import { createWalletAddress } from '../../../tests/walletAddress'
 import { truncateTables } from '../../../tests/tableManager'
 import { WalletAddress } from '../../../open_payments/wallet_address/model'
-import assert from 'assert'
 import { SPSPRoutes } from './routes'
-import { WalletAddressService } from '../../../open_payments/wallet_address/service'
 
 describe('SPSP Middleware', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let spspRoutes: SPSPRoutes
-  let walletAddressService: WalletAddressService
   let next: jest.MockedFunction<() => Promise<void>>
 
   let ctx: SPSPWalletAddressContext
@@ -31,7 +24,6 @@ describe('SPSP Middleware', (): void => {
     deps = initIocContainer(Config)
     appContainer = await createTestApp(deps)
     spspRoutes = await deps.use('spspRoutes')
-    walletAddressService = await deps.use('walletAddressService')
   })
 
   beforeEach(async (): Promise<void> => {
@@ -84,50 +76,4 @@ describe('SPSP Middleware', (): void => {
       }
     }
   )
-
-  test('throws error if could not find wallet address', async () => {
-    const spspGetRouteSpy = jest.spyOn(spspRoutes, 'get')
-
-    jest
-      .spyOn(walletAddressService, 'getByUrl')
-      .mockResolvedValueOnce(undefined)
-
-    ctx.header['accept'] = 'application/spsp4+json'
-
-    const spspMiddleware = createSpspMiddleware(true)
-
-    expect.assertions(4)
-    try {
-      await spspMiddleware(ctx, next)
-    } catch (err) {
-      assert.ok(err instanceof SPSPRouteError)
-      expect(err.status).toBe(404)
-      expect(err.message).toBe('Could not get wallet address')
-      expect(next).not.toHaveBeenCalled()
-      expect(spspGetRouteSpy).not.toHaveBeenCalled()
-    }
-  })
-
-  test('throws error if inactive wallet address', async () => {
-    const spspGetRouteSpy = jest.spyOn(spspRoutes, 'get')
-
-    ctx.header['accept'] = 'application/spsp4+json'
-
-    await walletAddress
-      .$query(appContainer.knex)
-      .patch({ deactivatedAt: new Date() })
-
-    const spspMiddleware = createSpspMiddleware(true)
-
-    expect.assertions(4)
-    try {
-      await spspMiddleware(ctx, next)
-    } catch (err) {
-      assert.ok(err instanceof SPSPRouteError)
-      expect(err.status).toBe(404)
-      expect(err.message).toBe('Could not get wallet address')
-      expect(next).not.toHaveBeenCalled()
-      expect(spspGetRouteSpy).not.toHaveBeenCalled()
-    }
-  })
 })

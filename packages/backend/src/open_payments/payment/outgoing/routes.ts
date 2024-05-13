@@ -13,10 +13,7 @@ import {
   AccessAction,
   OutgoingPayment as OpenPaymentsOutgoingPayment
 } from '@interledger/open-payments'
-import {
-  WalletAddress,
-  throwIfMissingWalletAddress
-} from '../../wallet_address/model'
+import { WalletAddress } from '../../wallet_address/model'
 import { OpenPaymentsServerRouteError } from '../../route-errors'
 import { Amount } from '../../amount'
 
@@ -66,12 +63,7 @@ async function getOutgoingPayment(
     )
   }
 
-  throwIfMissingWalletAddress(deps, outgoingPayment)
-
-  ctx.body = outgoingPaymentToBody(
-    outgoingPayment.walletAddress,
-    outgoingPayment
-  )
+  ctx.body = outgoingPaymentToBody(ctx.walletAddress, outgoingPayment)
 }
 
 type CreateBodyBase = {
@@ -140,13 +132,8 @@ async function createOutgoingPayment(
     )
   }
 
-  throwIfMissingWalletAddress(deps, outgoingPaymentOrError)
-
   ctx.status = 201
-  ctx.body = outgoingPaymentToBody(
-    outgoingPaymentOrError.walletAddress,
-    outgoingPaymentOrError
-  )
+  ctx.body = outgoingPaymentToBody(ctx.walletAddress, outgoingPaymentOrError)
 }
 
 async function listOutgoingPayments(

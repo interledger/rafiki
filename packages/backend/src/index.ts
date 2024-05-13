@@ -318,8 +318,7 @@ export function initIocContainer(
     return createWalletAddressKeyRoutes({
       config: await deps.use('config'),
       logger: await deps.use('logger'),
-      walletAddressKeyService: await deps.use('walletAddressKeyService'),
-      walletAddressService: await deps.use('walletAddressService')
+      walletAddressKeyService: await deps.use('walletAddressKeyService')
     })
   })
   container.singleton('streamCredentialsService', async (deps) => {

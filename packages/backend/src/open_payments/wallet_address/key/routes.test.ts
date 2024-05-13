@@ -7,7 +7,7 @@ import { createTestApp, TestContainer } from '../../../tests/app'
 import { Config } from '../../../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../../..'
-import { AppServices, WalletAddressUrlContext } from '../../../app'
+import { AppServices, WalletAddressContext } from '../../../app'
 import { truncateTables } from '../../../tests/tableManager'
 import { WalletAddressKeyRoutes } from './routes'
 import { WalletAddressKeyService } from './service'
@@ -20,13 +20,9 @@ describe('Wallet Address Keys Routes', (): void => {
   let appContainer: TestContainer
   let walletAddressKeyService: WalletAddressKeyService
   let walletAddressKeyRoutes: WalletAddressKeyRoutes
-  const mockMessageProducer = {
-    send: jest.fn()
-  }
 
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer(Config)
-    deps.bind('messageProducer', async () => mockMessageProducer)
     appContainer = await createTestApp(deps)
     const { walletAddressServerSpec } = await deps.use('openApi')
     jestOpenAPI(walletAddressServerSpec)
@@ -55,7 +51,7 @@ describe('Wallet Address Keys Routes', (): void => {
       }
       const key = await walletAddressKeyService.create(keyOption)
 
-      const ctx = createContext<WalletAddressUrlContext>({
+      const ctx = createContext<WalletAddressContext>({
         headers: { Accept: 'application/json' },
         url: `/jwks.json`
       })
@@ -74,7 +70,7 @@ describe('Wallet Address Keys Routes', (): void => {
     test('returns 200 with empty array if no keys for a wallet address', async (): Promise<void> => {
       const walletAddress = await createWalletAddress(deps)
 
-      const ctx = createContext<WalletAddressUrlContext>({
+      const ctx = createContext<WalletAddressContext>({
         headers: { Accept: 'application/json' },
         url: `/jwks.json`
       })
@@ -96,7 +92,7 @@ describe('Wallet Address Keys Routes', (): void => {
         keyId: config.keyId
       })
 
-      const ctx = createContext<WalletAddressUrlContext>({
+      const ctx = createContext<WalletAddressContext>({
         headers: { Accept: 'application/json' },
         url: '/jwks.json'
       })
@@ -108,18 +104,6 @@ describe('Wallet Address Keys Routes', (): void => {
       expect(ctx.body).toEqual({
         keys: [jwk]
       })
-    })
-
-    test('returns 404 if wallet address does not exist', async (): Promise<void> => {
-      const ctx = createContext<WalletAddressUrlContext>({
-        headers: { Accept: 'application/json' },
-        url: `/jwks.json`
-      })
-      ctx.walletAddress = undefined
-
-      await expect(
-        walletAddressKeyRoutes.getKeysByWalletAddressId(ctx)
-      ).rejects.toThrow(/Could not get wallet address keys./)
     })
   })
 })

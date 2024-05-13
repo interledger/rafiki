@@ -1,10 +1,7 @@
 import { AccessAction } from '@interledger/open-payments'
-import { WalletAddress, WalletAddressSubresource } from './model'
-import {
-  WalletAddressService,
-  WalletAddressSubresourceService
-} from './service'
-import { WalletAddressUrlContext, ListContext } from '../../app'
+import { WalletAddressSubresource } from './model'
+import { WalletAddressSubresourceService } from './service'
+import { WalletAddressContext, ListContext } from '../../app'
 import {
   getPageInfo,
   parsePaginationQueryParameters
@@ -17,32 +14,22 @@ interface ServiceDependencies {
 }
 
 export interface WalletAddressRoutes {
-  get(ctx: WalletAddressUrlContext): Promise<void>
+  get(ctx: WalletAddressContext): Promise<void>
 }
 
 export function createWalletAddressRoutes(
   deps: ServiceDependencies
 ): WalletAddressRoutes {
   return {
-    get: (ctx: WalletAddressUrlContext) => getWalletAddress(deps, ctx)
+    get: (ctx: WalletAddressContext) => getWalletAddress(deps, ctx)
   }
 }
 
 // Spec: https://docs.openpayments.guide/reference/get-public-account
 export async function getWalletAddress(
   deps: ServiceDependencies,
-  ctx: WalletAddressUrlContext
+  ctx: WalletAddressContext
 ): Promise<void> {
-  if (!ctx.walletAddress) {
-    throw new OpenPaymentsServerRouteError(
-      404,
-      'Wallet address does not exist',
-      {
-        walletAddressUrl: ctx.walletAddressUrl
-      }
-    )
-  }
-
   ctx.body = ctx.walletAddress.toOpenPaymentsType({
     authServer: deps.authServer,
     resourceServer: deps.resourceServer
