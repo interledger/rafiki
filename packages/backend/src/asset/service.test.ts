@@ -247,16 +247,14 @@ describe('Asset Service', (): void => {
       ;({ code, scale } = asset)
     })
 
-    test('Can delete asset', async (): Promise<void> => {
+    test('Can delete and restore asset', async (): Promise<void> => {
       const deletedAsset = await assetService.delete({
         id: assetId,
         deletedAt: new Date()
       })
       assert.ok(!isAssetError(deletedAsset))
       expect(deletedAsset.deletedAt).not.toBeNull()
-    })
 
-    test('Can restore asset', async (): Promise<void> => {
       const restoredAsset = await assetService.create({ code, scale })
       assert.ok(!isAssetError(restoredAsset))
       expect(restoredAsset.id).toEqual(assetId)
