@@ -12,6 +12,7 @@ import {
 } from '../../../../accounting/errors'
 import {
   LiquidityAccount,
+  AccountingService,
   LiquidityAccountType,
   Transaction
 } from '../../../../accounting/service'
@@ -59,14 +60,6 @@ export interface TransferOptions {
   sourceAmount: bigint
   destinationAmount?: bigint
   timeout: number
-}
-
-export interface AccountingService {
-  createTransfer(options: TransferOptions): Promise<Transaction | TransferError>
-  createLiquidityAccount(
-    account: LiquidityAccount,
-    type: LiquidityAccountType
-  ): Promise<LiquidityAccount | CreateAccountError>
 }
 
 export interface RafikiServices {
