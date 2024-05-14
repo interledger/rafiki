@@ -37,7 +37,7 @@ export class ApiClient {
     // get grant --> GET /grant/:id/:nonce
     const { interactId, nonce } = params
     const response = await axios.get(
-      `http://localhost:3006/grant/${interactId}/${nonce}`,
+      `http://localhost:3009/grant/${interactId}/${nonce}`,
       {
         headers: {
           'x-idp-secret': 'replace-me'
