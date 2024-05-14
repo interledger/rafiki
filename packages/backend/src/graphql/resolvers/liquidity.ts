@@ -277,7 +277,9 @@ export const createWalletAddressWithdrawal: MutationResolvers<ApolloContext>['cr
       const accountingService = await ctx.container.use('accountingService')
       const amount = await accountingService.getBalance(walletAddress.id)
       if (amount === undefined)
-        throw new Error('missing incoming payment wallet address')
+        throw new Error(
+          `Could not get balance for wallet address liquidity account. It's likely the liquidity account does not exist.`
+        )
       else if (amount === 0n) {
         return responses[
           LiquidityError.AmountZero

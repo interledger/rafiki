@@ -90,7 +90,7 @@ where
     "assetId": "7b8b0f65-896d-4403-b7ba-2e24bf20eb35",
     "amount": "100",
     "idempotencyKey": "b97fd85a-126e-42ef-b40d-1a50a70ffa6f",
-    "timeout": 0
+    "timeoutSeconds": 0
   }
 }
 ```
@@ -121,7 +121,7 @@ where
     "peerId": "73158598-2e0c-4973-895e-aebd115af260",
     "amount": "1000000",
     "idempotencyKey": "a09b730d-8610-4fda-98fa-ec7acb19c775",
-    "timeout": 0
+    "timeoutSeconds": 0
   }
 }
 ```
@@ -149,7 +149,7 @@ where
     "id": "421fae87-9a59-4217-9ff8-faf55ffab9c6",
     "peerId": "73158598-2e0c-4973-895e-aebd115af260",
     "amount": "100",
-    "timeout": 0
+    "timeoutSeconds": 0
   }
 }
 ```
@@ -208,7 +208,7 @@ where
   "input": {
     "outgoingPaymentId": "b4f85d5c-652d-472d-873c-4ba2a5e39052",
     "idempotencyKey": "a09b730d-8610-4fda-98fa-ec7acb19c775",
-    "timeout": 0
+    "timeoutSeconds": 0
   }
 }
 ```
@@ -239,7 +239,7 @@ where
   "input": {
     "incomingPaymentId": "b4f85d5c-652d-472d-873c-4ba2a5e39052",
     "idempotencyKey": "a09b730d-8610-4fda-98fa-ec7acb19c775",
-    "timeout": 0
+    "timeoutSeconds": 0
   }
 }
 ```
@@ -248,7 +248,7 @@ See `PostLiquidityWithdrawal` and `VoidLiquidityWithdrawal` at the [below](#post
 
 ## `PostLiquidityWithdrawal` or `VoidLiquidityWithdrawal`
 
-`PostLiquidityWithdrawal` and `PostLiquidityWithdrawal` are only applicable for two-phase withdrawals.
+`PostLiquidityWithdrawal` and `VoidLiquidityWithdrawal` are only applicable for two-phase withdrawals.
 
 - `PostLiquidityWithdrawal` - Post liquidity withdrawal. Withdrawals with `> 0` timeouts are two-phase transfers and are committed via this mutation.
 - `VoidLiquidityWithdrawal` - Void liquidity withdrawal. Withdrawals with `> 0` timeouts are two-phase transfers and are rolled back via this mutation.

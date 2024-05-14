@@ -169,7 +169,8 @@ export async function handleIncomingPaymentCompletedExpired(wh: Webhook) {
       variables: {
         input: {
           incomingPaymentId: payment.id,
-          idempotencyKey: uuid()
+          idempotencyKey: uuid(),
+          timeoutSeconds: 0
         }
       }
     })
