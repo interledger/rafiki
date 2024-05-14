@@ -1,10 +1,12 @@
-import {
-  AccountingService,
-  IncomingAccount,
-  OutgoingAccount
-} from '../../rafiki'
+import { IncomingAccount, OutgoingAccount } from '../../rafiki'
 
-import { Transaction } from '../../../../../../accounting/service'
+import { TransactionOrKnex } from 'objection'
+import {
+  Transaction,
+  AccountingService,
+  Withdrawal,
+  Deposit
+} from '../../../../../../accounting/service'
 import {
   CreateAccountError,
   TransferError
@@ -132,5 +134,51 @@ export class MockAccountingService implements AccountingService {
       throw new CreateAccountError(CreateAccountErrorCode.exists)
     }
     return account
+  }
+
+  createDeposit(
+    deposit: Deposit,
+    trx?: TransactionOrKnex
+  ): Promise<void | TransferError> {
+    return Promise.resolve(undefined)
+  }
+
+  createSettlementAccount(
+    ledger: number,
+    trx?: TransactionOrKnex
+  ): Promise<void> {
+    return Promise.resolve(undefined)
+  }
+
+  createWithdrawal(withdrawal: Withdrawal): Promise<void | TransferError> {
+    return Promise.resolve(undefined)
+  }
+
+  getAccountsTotalReceived(ids: string[]): Promise<(bigint | undefined)[]> {
+    return Promise.resolve([])
+  }
+
+  getAccountsTotalSent(ids: string[]): Promise<(bigint | undefined)[]> {
+    return Promise.resolve([])
+  }
+
+  getSettlementBalance(ledger: number): Promise<bigint | undefined> {
+    return Promise.resolve(undefined)
+  }
+
+  getTotalReceived(id: string): Promise<bigint | undefined> {
+    return Promise.resolve(undefined)
+  }
+
+  getTotalSent(id: string): Promise<bigint | undefined> {
+    return Promise.resolve(undefined)
+  }
+
+  postWithdrawal(id: string): Promise<void | TransferError> {
+    return Promise.resolve(undefined)
+  }
+
+  voidWithdrawal(id: string): Promise<void | TransferError> {
+    return Promise.resolve(undefined)
   }
 }
