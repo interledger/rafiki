@@ -329,16 +329,6 @@ export class App {
       interactionRoutes.finish
     )
 
-    // Grant lookup
-    router.get<DefaultState, GetContext>(
-      '/grant/:id/:nonce',
-      createValidatorMiddleware<GetContext>(openApi.idpSpec, {
-        path: '/grant/{id}/{nonce}',
-        method: HttpMethod.GET
-      }),
-      interactionRoutes.details
-    )
-
     koa.use(cors())
     koa.keys = [this.config.cookieKey]
 
@@ -426,6 +416,16 @@ export class App {
         method: HttpMethod.POST
       }),
       interactionRoutes.acceptOrReject
+    )
+
+    // Grant lookup
+    router.get<DefaultState, GetContext>(
+      '/grant/:id/:nonce',
+      createValidatorMiddleware<GetContext>(openApi.idpSpec, {
+        path: '/grant/{id}/{nonce}',
+        method: HttpMethod.GET
+      }),
+      interactionRoutes.details
     )
 
     koa.use(cors())
