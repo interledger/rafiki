@@ -15,16 +15,20 @@ import { initIocContainer } from '../'
 import { AppServices } from '../app'
 import { LiquidityAccountType } from '../accounting/service'
 import { CheckViolationError } from 'objection'
+import { WalletAddressService } from '../open_payments/wallet_address/service'
+import { isWalletAddressError } from '../open_payments/wallet_address/errors'
 
 describe('Asset Service', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let assetService: AssetService
+  let walletAddressService: WalletAddressService
 
   beforeAll(async (): Promise<void> => {
     deps = initIocContainer(Config)
     appContainer = await createTestApp(deps)
     assetService = await deps.use('assetService')
+    walletAddressService = await deps.use('walletAddressService')
   })
 
   afterEach(async (): Promise<void> => {
@@ -228,6 +232,54 @@ describe('Asset Service', (): void => {
 
     test('returns empty array if no assets', async (): Promise<void> => {
       await expect(assetService.getAll()).resolves.toEqual([])
+    })
+  })
+
+  describe('delete', (): void => {
+    let asset: Asset | AssetError
+    let assetId: string
+    let code: string, scale: number
+
+    beforeAll(async () => {
+      asset = await assetService.create(randomAsset())
+      assert.ok(!isAssetError(asset))
+      assetId = asset.id
+      ;({ code, scale } = asset)
+    })
+
+    test('Can delete asset', async (): Promise<void> => {
+      const deletedAsset = await assetService.delete({
+        id: assetId,
+        deletedAt: new Date()
+      })
+      assert.ok(!isAssetError(deletedAsset))
+      expect(deletedAsset.deletedAt).not.toBeNull()
+    })
+
+    test('Can restore asset', async (): Promise<void> => {
+      const restoredAsset = await assetService.create({ code, scale })
+      assert.ok(!isAssetError(restoredAsset))
+      expect(restoredAsset.id).toEqual(assetId)
+      expect(restoredAsset.code).toEqual(code)
+      expect(restoredAsset.scale).toEqual(scale)
+      expect(restoredAsset.deletedAt).toBeNull()
+    })
+
+    test('Cannot delete in use asset', async (): Promise<void> => {
+      const newAsset = await assetService.create(randomAsset())
+      assert.ok(!isAssetError(newAsset))
+      const newAssetId = newAsset.id
+
+      // make sure there is at least 1 wallet address using asset
+      const walletAddress = walletAddressService.create({
+        url: 'https://alice.me/.well-known/pay',
+        assetId: newAssetId
+      })
+      assert.ok(!isWalletAddressError(walletAddress))
+
+      await expect(
+        assetService.delete({ id: newAssetId, deletedAt: new Date() })
+      ).resolves.toEqual(AssetError.CannotDeleteInUseAsset)
     })
   })
 })
