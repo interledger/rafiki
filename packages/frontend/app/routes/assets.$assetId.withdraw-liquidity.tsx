@@ -7,7 +7,6 @@ import { messageStorage, setMessageAndRedirect } from '~/lib/message.server'
 import { amountSchema } from '~/lib/validate.server'
 import { redirectIfUnauthorizedAccess } from '~/lib/kratos_checks.server'
 import { type LoaderFunctionArgs } from '@remix-run/node'
-import { timeoutTwoPhase } from '~/utils/config.server'
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const cookies = request.headers.get('cookie')
@@ -62,7 +61,7 @@ export async function action({ request, params }: ActionFunctionArgs) {
     amount: result.data,
     id: v4(),
     idempotencyKey: v4(),
-    timeoutSeconds: timeoutTwoPhase
+    timeoutSeconds: BigInt(0)
   })
 
   if (!response?.success) {
