@@ -83,7 +83,7 @@ export default function ViewIncomingPaymentPage() {
                 <p className='font-medium'>Wallet Address ID </p>
                 <Link
                   to={`/wallet-addresses/${incomingPayment.walletAddressId}`}
-                  className='mt-1 underline text-blue-600 hover:text-blue-800 visited:text-purple-600'
+                  className='default-link'
                 >
                   {incomingPayment.walletAddressId}
                 </Link>

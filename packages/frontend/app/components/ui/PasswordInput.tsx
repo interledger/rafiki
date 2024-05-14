@@ -1,4 +1,4 @@
-import type { ComponentPropsWithoutRef } from 'react'
+import type { ComponentPropsWithoutRef, ReactNode } from 'react'
 import { forwardRef, useId, useState } from 'react'
 import { Eye, EyeSlash } from '../icons'
 import { FieldError } from './FieldError'
@@ -10,10 +10,11 @@ type InputProps = Omit<
 > & {
   label?: string
   error?: string | string[]
+  description?: ReactNode
 }
 
 export const PasswordInput = forwardRef<HTMLInputElement, InputProps>(
-  ({ label, error, ...props }, ref) => {
+  ({ label, error, description, ...props }, ref) => {
     const id = useId()
     const [isVisible, setIsVisible] = useState(false)
 
@@ -45,6 +46,9 @@ export const PasswordInput = forwardRef<HTMLInputElement, InputProps>(
             )}
           </button>
         </div>
+        {description ? (
+          <div className='font-medium text-sm'>{description}</div>
+        ) : null}
         <FieldError error={error} />
       </div>
     )
