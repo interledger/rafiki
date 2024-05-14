@@ -90,7 +90,8 @@ describe('OutgoingPaymentService', (): void => {
     [OutgoingPaymentState.Funding]: OutgoingPaymentEventType.PaymentCreated,
     [OutgoingPaymentState.Sending]: undefined,
     [OutgoingPaymentState.Failed]: OutgoingPaymentEventType.PaymentFailed,
-    [OutgoingPaymentState.Completed]: OutgoingPaymentEventType.PaymentCompleted
+    [OutgoingPaymentState.Completed]: OutgoingPaymentEventType.PaymentCompleted,
+    [OutgoingPaymentState.Cancelled]: undefined
   }
 
   async function processNext(
@@ -386,6 +387,73 @@ describe('OutgoingPaymentService', (): void => {
         'Could not get amount sent for payment. There was a problem getting the associated liquidity account.'
       )
     })
+  })
+
+  describe('cancel', (): void => {
+    const states: [
+      string,
+      OutgoingPaymentState,
+      OutgoingPaymentError | null,
+      string | undefined
+    ][] = Object.values(OutgoingPaymentState).flatMap((state) => [
+      [
+        `should ${state == OutgoingPaymentState.Funding ? 'cancel' : 'not cancel'} outgoing payment in ${state} state with reason`,
+        state,
+        state == OutgoingPaymentState.Funding
+          ? null
+          : OutgoingPaymentError.WrongState,
+        'Not enough balance'
+      ],
+      [
+        `should ${state == OutgoingPaymentState.Funding ? 'cancel' : 'not cancel'} outgoing payment in ${state} state without reason`,
+        state,
+        state == OutgoingPaymentState.Funding
+          ? null
+          : OutgoingPaymentError.WrongState,
+        undefined
+      ]
+    ])
+    it.each(states)(
+      '%s',
+      async (_, state, outgoingPaymentError, reason): Promise<void> => {
+        /**
+         * 1. Create outgoing payment
+         * 2. Update the state of outgoing payment
+         * 3. Cancel outgoing payment
+         * 4. Based on state, check the result
+         */
+        const outgoingPayment = await createOutgoingPayment(deps, {
+          walletAddressId,
+          client,
+          receiver,
+          debitAmount: {
+            assetCode: asset.code,
+            assetScale: asset.scale,
+            value: BigInt(10)
+          },
+          validDestination: true,
+          method: 'ilp'
+        })
+
+        await outgoingPayment.$query(knex).patch({ state })
+
+        const response = await outgoingPaymentService.cancel({
+          id: outgoingPayment.id,
+          reason
+        })
+
+        if (!outgoingPaymentError) {
+          assert.ok(response instanceof OutgoingPayment)
+          expect(response.id).toBe(outgoingPayment.id)
+          expect(response.state).toBe(OutgoingPaymentState.Cancelled)
+          expect(response.metadata).toEqual({
+            cancellationReason: reason
+          })
+        } else {
+          expect(response as OutgoingPaymentError).toBe(outgoingPaymentError)
+        }
+      }
+    )
   })
 
   describe('create', (): void => {

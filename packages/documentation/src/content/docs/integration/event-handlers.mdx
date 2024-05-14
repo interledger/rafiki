@@ -59,7 +59,9 @@ Example: An incoming payment has expired and received $2.55.
 
 ## `outgoing_payment.created`
 
-The `outgoing_payment.created` event indicates that an outgoing payment has been created and is awaiting liquidity. The Account Servicing Entity should put a hold on the sender's account and deposit the funds into Rafiki.
+The `outgoing_payment.created` event indicates that an outgoing payment has been created and is awaiting liquidity. The Account Servicing Entity should verify the user account balance (and perform any other kinds of checks necessary) before funding or cancelling the outgoing payment.
+In case that outgoing payment should not be fullfilled, the Account Servicing Entity can cancel outgoing payment.
+Otherwise, the Account Servicing Entity should put a hold on the sender’s account and deposit the funds into Rafiki.
 
 Example: An outgoing payment for $12 has been created.
 
@@ -67,10 +69,15 @@ Example: An outgoing payment for $12 has been created.
   graph={`sequenceDiagram
     participant ASE as Account Servicing Entity
     participant R as Rafiki
-
     R->>ASE: webhook event: outgoing payment created,<br>debitAmount: $12
+    ASE->>ASE: check if account has enough balance
+    alt Account has enough balance
     ASE->>ASE: put hold of $12 on sender's account
     ASE->>R: admin API call: DepositOutgoingPaymentLiquidity
+    end
+    alt Account does not have enough balance
+    ASE->>R: admin API call: CancelOutgoingPayment<br>reason: Not enough balance
+    end
 
 `}
 />

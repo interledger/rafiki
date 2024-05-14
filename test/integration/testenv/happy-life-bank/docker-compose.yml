@@ -32,7 +32,7 @@ services:
       STREAM_SECRET: BjPXtnd00G2mRQwP/8ZpwyZASOch5sUXT5o0iR5b5wU=
       WEBHOOK_URL: http://host.docker.internal:8889/webhooks
       EXCHANGE_RATES_URL: http://host.docker.internal:8889/rates
-      REDIS_URL: redis://shared-redis:6379/1
+      REDIS_URL: redis://shared-redis:6379/2
     volumes:
       - ../private-key.pem:/workspace/private-key.pem
     depends_on:
@@ -60,5 +60,6 @@ services:
       INTROSPECTION_PORT: 4107
       ADMIN_PORT: 4103
       AUTH_PORT: 4106
+      REDIS_URL: redis://shared-redis:6379/3
     depends_on:
       - cloud-nine-wallet-test-auth

@@ -20,6 +20,7 @@ import {
 } from '@interledger/open-payments'
 import { createInteractionService } from './interaction/service'
 import { getTokenIntrospectionOpenAPI } from 'token-introspection'
+import { Redis } from 'ioredis'
 
 const container = initIocContainer(Config)
 const app = new App(container)
@@ -196,6 +197,11 @@ export function initIocContainer(
       })
     }
   )
+
+  container.singleton('redis', async (deps): Promise<Redis> => {
+    const config = await deps.use('config')
+    return new Redis(config.redisUrl, { tls: config.redisTls })
+  })
 
   return container
 }

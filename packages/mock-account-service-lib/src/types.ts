@@ -62,6 +62,7 @@ export enum WebhookEventType {
   OutgoingPaymentCreated = 'outgoing_payment.created',
   OutgoingPaymentCompleted = 'outgoing_payment.completed',
   OutgoingPaymentFailed = 'outgoing_payment.failed',
+  WalletAddressWebMonetization = 'wallet_address.web_monetization',
   WalletAddressNotFound = 'wallet_address.not_found',
   AssetLiquidityLow = 'asset.liquidity_low',
   PeerLiquidityLow = 'peer.liquidity_low'

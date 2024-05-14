@@ -54,7 +54,7 @@ services:
       WEBHOOK_URL: http://happy-life-bank/webhooks
       OPEN_PAYMENTS_URL: ${HAPPY_LIFE_BANK_OPEN_PAYMENTS_URL:-http://happy-life-bank-backend}
       EXCHANGE_RATES_URL: http://happy-life-bank/rates
-      REDIS_URL: redis://shared-redis:6379/1
+      REDIS_URL: redis://shared-redis:6379/2
       WALLET_ADDRESS_URL: ${HAPPY_LIFE_BANK_WALLET_ADDRESS_URL:-https://happy-life-bank-backend/.well-known/pay}
       ENABLE_TELEMETRY: false
     depends_on:
@@ -73,6 +73,7 @@ services:
       NODE_ENV: development
       AUTH_DATABASE_URL: postgresql://happy_life_bank_auth:happy_life_bank_auth@shared-database/happy_life_bank_auth
       AUTH_SERVER_DOMAIN: ${HAPPY_LIFE_BANK_AUTH_SERVER_DOMAIN:-http://localhost:4006}
+      REDIS_URL: redis://shared-redis:6379/3
     depends_on:
       - cloud-nine-auth
   happy-life-admin:

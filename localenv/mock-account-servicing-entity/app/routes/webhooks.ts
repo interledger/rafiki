@@ -2,7 +2,8 @@ import type { ActionFunctionArgs } from '@remix-run/node'
 import { json } from '@remix-run/node'
 import {
   handleLowLiquidity,
-  handleWalletAddressNotFound
+  handleWalletAddressNotFound,
+  handleWalletAddressWebMonetization
 } from '~/lib/webhooks.server'
 import {
   handleOutgoingPaymentCreated,
@@ -33,6 +34,9 @@ export async function action({ request }: ActionFunctionArgs) {
       case WebhookEventType.IncomingPaymentCompleted:
       case WebhookEventType.IncomingPaymentExpired:
         await handleIncomingPaymentCompletedExpired(wh)
+        break
+      case WebhookEventType.WalletAddressWebMonetization:
+        await handleWalletAddressWebMonetization(wh)
         break
       case WebhookEventType.WalletAddressNotFound:
         await handleWalletAddressNotFound(wh)

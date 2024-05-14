@@ -32,6 +32,12 @@ accounts:
     assetCode: USD
     scale: 2
     path: accounts/wbdc
+  - name: "Broke account"
+    id: 5a95366f-8cb4-4925-88d9-ae57dcb444bb
+    initialBalance: 0
+    assetCode: USD
+    scale: 2
+    path: accounts/broke
 fees:
   - fixed: 100
     basisPoints: 200
