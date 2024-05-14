@@ -17,7 +17,7 @@ import {
   isFinishableGrant
 } from '../grant/model'
 import { toOpenPaymentsAccess } from '../access/model'
-import { GNAPErrorCode, throwGNAPError } from '../shared/gnapErrors'
+import { GNAPErrorCode, GNAPServerRouteError } from '../shared/gnapErrors'
 import { generateRouteLogs } from '../shared/utils'
 
 interface ServiceDependencies extends BaseService {
@@ -111,7 +111,7 @@ async function getGrantDetails(
   ctx: GetContext
 ): Promise<void> {
   const secret = ctx.headers?.['x-idp-secret']
-  const { config, interactionService, accessService, logger } = deps
+  const { config, interactionService, accessService } = deps
   const { id: interactId, nonce } = ctx.params
   if (
     !secret ||
@@ -120,12 +120,7 @@ async function getGrantDetails(
       Buffer.from(config.identityServerSecret)
     )
   ) {
-    logger.error(
-      generateRouteLogs(ctx),
-      'tried to retrieve interaction with invalid x-idp-secret'
-    )
-    throwGNAPError(
-      ctx,
+    throw new GNAPServerRouteError(
       401,
       GNAPErrorCode.InvalidRequest,
       'invalid x-idp-secret'
@@ -133,15 +128,7 @@ async function getGrantDetails(
   }
   const interaction = await interactionService.getBySession(interactId, nonce)
   if (!interaction || isRevokedGrant(interaction.grant)) {
-    logger.error(
-      {
-        ...generateRouteLogs(ctx),
-        interaction
-      },
-      'tried to retrieve unknown interaction'
-    )
-    throwGNAPError(
-      ctx,
+    throw new GNAPServerRouteError(
       404,
       GNAPErrorCode.UnknownInteraction,
       'unknown interaction'
@@ -185,15 +172,7 @@ async function startInteraction(
     interaction.state !== InteractionState.Pending ||
     isRevokedGrant(interaction.grant)
   ) {
-    logger.error(
-      {
-        ...generateRouteLogs(ctx),
-        interaction
-      },
-      'tried to start unknown interaction'
-    )
-    throwGNAPError(
-      ctx,
+    throw new GNAPServerRouteError(
       401,
       GNAPErrorCode.UnknownInteraction,
       'unknown interaction'
@@ -225,15 +204,7 @@ async function startInteraction(
     ctx.redirect(interactionUrl.toString())
   } catch (err) {
     await trx.rollback()
-    logger.error(
-      {
-        ...generateRouteLogs(ctx),
-        interaction
-      },
-      'failed to start interaction'
-    )
-    throwGNAPError(
-      ctx,
+    throw new GNAPServerRouteError(
       500,
       GNAPErrorCode.RequestDenied,
       'internal server error'
@@ -258,9 +229,7 @@ async function handleInteractionChoice(
       Buffer.from(config.identityServerSecret)
     )
   ) {
-    logger.error(generateRouteLogs(ctx), 'invalid x-idp-secret')
-    throwGNAPError(
-      ctx,
+    throw new GNAPServerRouteError(
       401,
       GNAPErrorCode.InvalidInteraction,
       'invalid x-idp-secret'
@@ -269,9 +238,7 @@ async function handleInteractionChoice(
 
   const interaction = await interactionService.getBySession(interactId, nonce)
   if (!interaction) {
-    logger.error(generateRouteLogs(ctx), 'tried to handle unknown interaction')
-    throwGNAPError(
-      ctx,
+    throw new GNAPServerRouteError(
       404,
       GNAPErrorCode.UnknownInteraction,
       'unknown interaction'
@@ -283,15 +250,7 @@ async function handleInteractionChoice(
       grant.state === GrantState.Finalized &&
       grant.finalizationReason !== GrantFinalization.Issued
     ) {
-      logger.error(
-        {
-          ...generateRouteLogs(ctx),
-          interaction
-        },
-        'tried to handle invalid interaction for rejected/revoked grant'
-      )
-      throwGNAPError(
-        ctx,
+      throw new GNAPServerRouteError(
         401,
         GNAPErrorCode.UserDenied,
         'user denied interaction'
@@ -303,15 +262,7 @@ async function handleInteractionChoice(
       interaction.state !== InteractionState.Pending ||
       isInteractionExpired(interaction)
     ) {
-      logger.error(
-        {
-          ...generateRouteLogs(ctx),
-          interaction
-        },
-        'tried to handle non-pending interaction'
-      )
-      throwGNAPError(
-        ctx,
+      throw new GNAPServerRouteError(
         400,
         GNAPErrorCode.InvalidInteraction,
         'invalid interaction'
@@ -337,15 +288,7 @@ async function handleInteractionChoice(
       )
       await interactionService.deny(interactId)
     } else {
-      logger.error(
-        {
-          ...generateRouteLogs(ctx),
-          interaction
-        },
-        'invalid interaction choice'
-      )
-      throwGNAPError(
-        ctx,
+      throw new GNAPServerRouteError(
         400,
         GNAPErrorCode.InvalidRequest,
         'invalid interaction choice'
@@ -454,16 +397,7 @@ async function handleUnfinishableGrant(
     return
   } else {
     // Interaction is not in an accepted or rejected state
-    logger.error(
-      {
-        ...generateRouteLogs(ctx),
-        interaction,
-        grant
-      },
-      'tried to finalize unfinishable grant with incomplete/invalid interaction'
-    )
-    throwGNAPError(
-      ctx,
+    throw new GNAPServerRouteError(
       401,
       GNAPErrorCode.InvalidInteraction,
       'interaction is not active'
@@ -476,28 +410,23 @@ async function finishInteraction(
   ctx: FinishContext
 ): Promise<void> {
   const { id: interactId, nonce } = ctx.params
-  const { interactionService, logger } = deps
+  const { interactionService } = deps
   const sessionNonce = ctx.session.nonce
 
   // TODO: redirect with this error in query string
   if (sessionNonce !== nonce) {
-    logger.error(generateRouteLogs(ctx), 'invalid session nonce provided')
-    throwGNAPError(ctx, 401, GNAPErrorCode.InvalidRequest, 'invalid session')
+    throw new GNAPServerRouteError(
+      401,
+      GNAPErrorCode.InvalidRequest,
+      'invalid session'
+    )
   }
 
   const interaction = await interactionService.getBySession(interactId, nonce)
 
   // TODO: redirect with this error in query string
   if (!interaction || isRevokedGrant(interaction.grant)) {
-    logger.error(
-      {
-        ...generateRouteLogs(ctx),
-        interaction
-      },
-      'tried to finish unknown interaction'
-    )
-    throwGNAPError(
-      ctx,
+    throw new GNAPServerRouteError(
       404,
       GNAPErrorCode.UnknownInteraction,
       'unknown interaction'

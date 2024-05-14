@@ -24,7 +24,6 @@ import { Grant, GrantState, GrantFinalization } from '../grant/model'
 import { Access } from '../access/model'
 import { generateNonce } from '../shared/utils'
 import { GNAPErrorCode } from '../shared/gnapErrors'
-import { generateGNAPErrorResponse } from '../tests/errors'
 import { generateBaseGrant } from '../tests/grant'
 import { generateBaseInteraction } from '../tests/interaction'
 
@@ -93,10 +92,8 @@ describe('Interaction Routes', (): void => {
 
         await expect(interactionRoutes.start(ctx)).rejects.toMatchObject({
           status: 401,
-          ...generateGNAPErrorResponse(
-            GNAPErrorCode.UnknownInteraction,
-            'unknown interaction'
-          )
+          code: GNAPErrorCode.UnknownInteraction,
+          message: 'unknown interaction'
         })
       })
 
@@ -124,10 +121,8 @@ describe('Interaction Routes', (): void => {
 
         await expect(interactionRoutes.start(ctx)).rejects.toMatchObject({
           status: 401,
-          ...generateGNAPErrorResponse(
-            GNAPErrorCode.UnknownInteraction,
-            'unknown interaction'
-          )
+          code: GNAPErrorCode.UnknownInteraction,
+          message: 'unknown interaction'
         })
       })
 
@@ -193,10 +188,8 @@ describe('Interaction Routes', (): void => {
 
         await expect(interactionRoutes.finish(ctx)).rejects.toMatchObject({
           status: 404,
-          ...generateGNAPErrorResponse(
-            GNAPErrorCode.UnknownInteraction,
-            'unknown interaction'
-          )
+          code: GNAPErrorCode.UnknownInteraction,
+          message: 'unknown interaction'
         })
       })
 
@@ -215,10 +208,8 @@ describe('Interaction Routes', (): void => {
 
         await expect(interactionRoutes.finish(ctx)).rejects.toMatchObject({
           status: 401,
-          ...generateGNAPErrorResponse(
-            GNAPErrorCode.InvalidRequest,
-            'invalid session'
-          )
+          code: GNAPErrorCode.InvalidRequest,
+          message: 'invalid session'
         })
       })
 
@@ -237,10 +228,8 @@ describe('Interaction Routes', (): void => {
 
         await expect(interactionRoutes.finish(ctx)).rejects.toMatchObject({
           status: 404,
-          ...generateGNAPErrorResponse(
-            GNAPErrorCode.UnknownInteraction,
-            'unknown interaction'
-          )
+          code: GNAPErrorCode.UnknownInteraction,
+          message: 'unknown interaction'
         })
       })
 
@@ -269,10 +258,8 @@ describe('Interaction Routes', (): void => {
 
         await expect(interactionRoutes.finish(ctx)).rejects.toMatchObject({
           status: 404,
-          ...generateGNAPErrorResponse(
-            GNAPErrorCode.UnknownInteraction,
-            'unknown interaction'
-          )
+          code: GNAPErrorCode.UnknownInteraction,
+          message: 'unknown interaction'
         })
       })
 
@@ -532,10 +519,8 @@ describe('Interaction Routes', (): void => {
 
           await expect(interactionRoutes.finish(ctx)).rejects.toMatchObject({
             status: 401,
-            ...generateGNAPErrorResponse(
-              GNAPErrorCode.InvalidInteraction,
-              'interaction is not active'
-            )
+            code: GNAPErrorCode.InvalidInteraction,
+            message: 'interaction is not active'
           })
         })
       })
@@ -599,10 +584,8 @@ describe('Interaction Routes', (): void => {
         )
         await expect(interactionRoutes.details(ctx)).rejects.toMatchObject({
           status: 404,
-          ...generateGNAPErrorResponse(
-            GNAPErrorCode.UnknownInteraction,
-            'unknown interaction'
-          )
+          code: GNAPErrorCode.UnknownInteraction,
+          message: 'unknown interaction'
         })
       })
 
@@ -630,10 +613,8 @@ describe('Interaction Routes', (): void => {
         )
         await expect(interactionRoutes.details(ctx)).rejects.toMatchObject({
           status: 404,
-          ...generateGNAPErrorResponse(
-            GNAPErrorCode.UnknownInteraction,
-            'unknown interaction'
-          )
+          code: GNAPErrorCode.UnknownInteraction,
+          message: 'unknown interaction'
         })
       })
 
@@ -652,10 +633,8 @@ describe('Interaction Routes', (): void => {
 
         await expect(interactionRoutes.details(ctx)).rejects.toMatchObject({
           status: 401,
-          ...generateGNAPErrorResponse(
-            GNAPErrorCode.InvalidRequest,
-            'invalid x-idp-secret'
-          )
+          code: GNAPErrorCode.InvalidRequest,
+          message: 'invalid x-idp-secret'
         })
       })
 
@@ -674,10 +653,8 @@ describe('Interaction Routes', (): void => {
         )
         await expect(interactionRoutes.details(ctx)).rejects.toMatchObject({
           status: 404,
-          ...generateGNAPErrorResponse(
-            GNAPErrorCode.UnknownInteraction,
-            'unknown interaction'
-          )
+          code: GNAPErrorCode.UnknownInteraction,
+          message: 'unknown interaction'
         })
       })
     })
@@ -714,10 +691,8 @@ describe('Interaction Routes', (): void => {
           interactionRoutes.acceptOrReject(ctx)
         ).rejects.toMatchObject({
           status: 401,
-          ...generateGNAPErrorResponse(
-            GNAPErrorCode.InvalidInteraction,
-            'invalid x-idp-secret'
-          )
+          code: GNAPErrorCode.InvalidInteraction,
+          message: 'invalid x-idp-secret'
         })
       })
 
@@ -773,10 +748,8 @@ describe('Interaction Routes', (): void => {
           interactionRoutes.acceptOrReject(ctx)
         ).rejects.toMatchObject({
           status: 404,
-          ...generateGNAPErrorResponse(
-            GNAPErrorCode.UnknownInteraction,
-            'unknown interaction'
-          )
+          code: GNAPErrorCode.UnknownInteraction,
+          message: 'unknown interaction'
         })
       })
 
@@ -835,10 +808,8 @@ describe('Interaction Routes', (): void => {
           interactionRoutes.acceptOrReject(ctx)
         ).rejects.toMatchObject({
           status: 400,
-          ...generateGNAPErrorResponse(
-            GNAPErrorCode.InvalidRequest,
-            'invalid interaction choice'
-          )
+          code: GNAPErrorCode.InvalidRequest,
+          message: 'invalid interaction choice'
         })
 
         const issuedGrant = await Grant.query().findById(pendingGrant.id)

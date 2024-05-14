@@ -52,6 +52,7 @@ import { InteractionRoutes } from './interaction/routes'
 import { ApolloArmor } from '@escape.tech/graphql-armor'
 import { Redis } from 'ioredis'
 import { LoggingPlugin } from './graphql/plugin'
+import { gnapServerErrorMiddleware } from './shared/gnapErrors'
 
 export interface AppContextData extends DefaultContext {
   logger: Logger
@@ -234,6 +235,7 @@ export class App {
     router.get('/healthz', (ctx: AppContext): void => {
       ctx.status = 200
     })
+    router.use(gnapServerErrorMiddleware)
 
     router.get('/discovery', (ctx: AppContext): void => {
       ctx.body = {

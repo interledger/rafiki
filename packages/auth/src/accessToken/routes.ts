@@ -10,7 +10,7 @@ import { AccessToken, toOpenPaymentsAccessToken } from './model'
 import { AccessService } from '../access/service'
 import { TransactionOrKnex } from 'objection'
 import { GrantService } from '../grant/service'
-import { GNAPErrorCode, throwGNAPError } from '../shared/gnapErrors'
+import { GNAPErrorCode, GNAPServerRouteError } from '../shared/gnapErrors'
 import { generateRouteLogs } from '../shared/utils'
 
 export type TokenHttpSigContext = AppContext & {
@@ -159,14 +159,11 @@ async function rotateToken(
     await trx.rollback()
     const errorMessage =
       error instanceof Error ? error.message : 'Could not rotate token'
-    deps.logger.error(
-      {
-        ...generateRouteLogs(ctx),
-        err: error instanceof Error && error.message
-      },
+    throw new GNAPServerRouteError(
+      400,
+      GNAPErrorCode.InvalidRotation,
       errorMessage
     )
-    throwGNAPError(ctx, 400, GNAPErrorCode.InvalidRotation, errorMessage)
   }
 
   deps.logger.debug(
