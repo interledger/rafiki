@@ -40,6 +40,12 @@ accounts:
     path: accounts/wbdc
     brunoEnvVar: wbdcWalletAddress
     assetCode: USD
+  - name: "Broke Account"
+    id: 5a95366f-8cb4-4925-88d9-ae57dcb444bb
+    initialBalance: 50
+    path: accounts/broke
+    brunoEnvVar: brokeWalletAddress
+    assetCode: USD
 rates:
   EUR:
     MXN: 18.78
