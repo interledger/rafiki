@@ -8,10 +8,11 @@ type InputProps = Omit<ComponentPropsWithoutRef<'input'>, 'className'> & {
   label?: string
   error?: string | string[]
   addOn?: ReactNode
+  description?: ReactNode
 }
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(
-  ({ addOn, label, type, error, id, ...props }, ref) => {
+  ({ description, addOn, label, type, error, id, ...props }, ref) => {
     const internalId = id ?? useId()
 
     return (
@@ -38,6 +39,9 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             {...props}
           />
         </div>
+        {description ? (
+          <div className='font-medium text-sm'>{description}</div>
+        ) : null}
         <FieldError error={error} />
       </div>
     )

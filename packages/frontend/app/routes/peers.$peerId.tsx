@@ -121,6 +121,18 @@ export default function ViewPeerPage() {
                     defaultValue={peer.name ?? ''}
                     placeholder='Peer name'
                     error={response?.errors.general.fieldErrors.name}
+                    description={
+                      <>
+                        The name of the{' '}
+                        <a
+                          className='default-link'
+                          href='https://rafiki.dev/concepts/interledger-protocol/peering/'
+                        >
+                          peer
+                        </a>
+                        .
+                      </>
+                    }
                   />
                   <Input
                     name='staticIlpAddress'
@@ -130,6 +142,17 @@ export default function ViewPeerPage() {
                     required
                     error={
                       response?.errors.general.fieldErrors.staticIlpAddress
+                    }
+                    description={
+                      <>
+                        {"The peer's "}
+                        <a
+                          className='default-link'
+                          href='https://interledger.org/developers/rfcs/ilp-addresses/'
+                        >
+                          address on the Interledger network.
+                        </a>
+                      </>
                     }
                   />
                   <Input
@@ -141,6 +164,18 @@ export default function ViewPeerPage() {
                     label='Max Packet Amount'
                     placeholder='Max Packet Amount'
                     error={response?.errors.general.fieldErrors.maxPacketAmount}
+                    description={
+                      <>
+                        The maximum amount of value that can be sent in a single{' '}
+                        <a
+                          className='default-link'
+                          href='https://interledger.org/developers/rfcs/stream-protocol/#35-packets-and-frames'
+                        >
+                          Interledger STREAM Packet
+                        </a>
+                        .
+                      </>
+                    }
                   />
                 </div>
                 <div className='flex justify-end p-4'>
@@ -174,6 +209,17 @@ export default function ViewPeerPage() {
                     label='Incoming Auth Tokens'
                     placeholder='Accepts a comma separated list of tokens'
                     error={response?.errors.http.fieldErrors.incomingAuthTokens}
+                    description={
+                      <>
+                        List of valid tokens to accept when receiving{' '}
+                        <a
+                          className='default-link'
+                          href='https://rafiki.dev/concepts/interledger-protocol/connector/#incoming-http'
+                        >
+                          incoming ILP packets from the peer.
+                        </a>
+                      </>
+                    }
                   />
                   <PasswordInput
                     name='outgoingAuthToken'
@@ -182,6 +228,17 @@ export default function ViewPeerPage() {
                     required
                     defaultValue={peer.http.outgoing.authToken}
                     error={response?.errors.http.fieldErrors.outgoingAuthToken}
+                    description={
+                      <>
+                        List of valid tokens to present when sending{' '}
+                        <a
+                          className='default-link'
+                          href='https://rafiki.dev/concepts/interledger-protocol/connector/#outgoing-http'
+                        >
+                          outgoing ILP packets to the peer.
+                        </a>
+                      </>
+                    }
                   />
                   <Input
                     name='outgoingEndpoint'
@@ -190,6 +247,18 @@ export default function ViewPeerPage() {
                     required
                     defaultValue={peer.http.outgoing.endpoint}
                     error={response?.errors.http.fieldErrors.outgoingEndpoint}
+                    description={
+                      <>
+                        Endpoint on the peer to which{' '}
+                        <a
+                          className='default-link'
+                          href='https://rafiki.dev/concepts/interledger-protocol/connector/#outgoing-http'
+                        >
+                          outgoing ILP packets
+                        </a>{' '}
+                        will be sent.
+                      </>
+                    }
                   />
                 </div>
                 <div className='flex justify-end p-4'>
