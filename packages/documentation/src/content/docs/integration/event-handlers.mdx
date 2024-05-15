@@ -25,7 +25,7 @@ The `incoming_payment.created` event indicates that an incoming payment has been
 
 The `incoming_payment.completed` event indicates that an incoming payment has been completed, either automatically or manually, and that any funds that have been received into this incoming payment should be withdrawn and credited to the recipient's account with the Account Servicing Entity.
 
-In addition, the `CreateIncomingPaymentWithdrawal` supports two-phase transfers [see more](https://en.wikipedia.org/wiki/Two-phase_commit_protocol).
+In addition, the `CreateIncomingPaymentWithdrawal` supports two-phase transfers [see more](/reference/glossary#two-phase-transfers).
 
 Example: An incoming payment was completed and received **$10**.
 
@@ -104,7 +104,7 @@ Example: An outgoing payment for **$12** has been created.
 
 The `outgoing_payment.completed` event indicates that an outgoing payment has successfully sent as many funds as possible to the receiver. The Account Servicing Entity should withdraw any excess liquidity from that outgoing payment in Rafiki and use it as they see fit. One option would be to return it to the sender. Another option is that the excess liquidity is considered a fee and retained by the Account Servicing Entity. Furthermore, the Account Servicing Entity should remove the hold on the sender's account and debit it.
 
-In addition, the `CreateOutgoingPaymentWithdrawal` supports two-phase transfers [see more](https://en.wikipedia.org/wiki/Two-phase_commit_protocol).
+In addition, the `CreateOutgoingPaymentWithdrawal` supports two-phase transfers [see more](/reference/glossary#two-phase-transfers).
 
 Example: An outgoing payment amount for **&dollar;12** has been completed. **&dollar;11.50** were sent. The Account Servicing Entity keeps **$0.50** as fees.
 
