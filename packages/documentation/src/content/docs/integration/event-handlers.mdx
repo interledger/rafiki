@@ -140,7 +140,7 @@ Example: An outgoing payment supporting two-phase transfers for **$12** has been
 
 The `outgoing_payment.failed` event indicates that an outgoing payment has either partially or completely failed and a retry was also unsuccessful. The Account Servicing Entity should withdraw any remaining liquidity from that outgoing payment in Rafiki. If the payment failed completely (the `sentAmount` was 0), the Account Servicing Entity should remove the hold from the sender's account. If the payment failed partially, the Account Servicing Entity should remove the hold from the sender's account and debit it with the amount that has been sent, but they should refrain from taking a sending fee.
 
-Example: An outgoing payment for **$12** has failed. **$8** were sent.
+Example: An outgoing payment for **&dollar;12** has failed. **$8** were sent.
 
 <Mermaid
   graph={`sequenceDiagram
