@@ -19,7 +19,7 @@
     "postinstall": "pnpm copy-op-schemas",
     "copy-op-schemas": "cp ./node_modules/@interledger/open-payments/dist/openapi/specs/auth-server.yaml ./node_modules/@interledger/open-payments/dist/openapi/specs/schemas.yaml ./src/openapi/specs/",
     "copy-files": "cp src/graphql/schema.graphql dist/graphql/ && cp -r ./src/openapi ./dist/",
-    "dev": "nodemon --watch src --ext ts --exec \"tsc && pnpm copy-files && node --inspect=0.0.0.0:9229 dist/index.js\""
+    "dev": "ts-node-dev --inspect=0.0.0.0:9229 --respawn --transpile-only src/index.ts"
   },
   "dependencies": {
     "@adonisjs/fold": "^8.2.0",
@@ -48,6 +48,7 @@
     "pg": "^8.11.3",
     "pino": "^8.19.0",
     "token-introspection": "workspace:*",
+    "ts-node-dev": "^2.0.0",
     "uuid": "^9.0.1"
   },
   "devDependencies": {
