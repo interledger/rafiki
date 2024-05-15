@@ -34,7 +34,13 @@ export function initIocContainer(
   container.singleton('logger', async (deps: IocContract<AppServices>) => {
     const config = await deps.use('config')
     const logger = createLogger({
-      level: config.logLevel
+      level: config.logLevel,
+      redact: [
+        'grant.continueToken',
+        'headers.authorization',
+        'accessToken.value',
+        'requestBody.access_token'
+      ]
     })
     return logger
   })

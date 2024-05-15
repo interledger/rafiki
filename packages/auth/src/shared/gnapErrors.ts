@@ -1,5 +1,5 @@
 import { AppContext } from '../app'
-
+import { OpenAPIValidatorMiddlewareError } from '@interledger/openapi'
 export enum GNAPErrorCode {
   InvalidRequest = 'invalid_request',
   InvalidClient = 'invalid_client',
@@ -54,17 +54,30 @@ export async function gnapServerErrorMiddleware(
           message: err.message,
           requestBody: ctx.request.body
         },
-        'Received error when handling GNAP request'
+        'Received error when handling Open Payments GNAP request'
       )
 
       ctx.throw(err.status, err.code, {
         error: { code: err.code, description: err.message }
       })
+    } else if (err instanceof OpenAPIValidatorMiddlewareError) {
+      const finalStatus = err.status || 400
+
+      logger.info(
+        {
+          ...baseLog,
+          message: err.message,
+          status: finalStatus
+        },
+        'Received OpenAPI validation error when handling Open Payments GNAP request'
+      )
+
+      ctx.throw(finalStatus, err.message)
     }
 
     logger.error(
       { ...baseLog, err },
-      'Received unhandled error in GNAP request'
+      'Received unhandled error in Open Payments GNAP request'
     )
     ctx.throw(500)
   }
