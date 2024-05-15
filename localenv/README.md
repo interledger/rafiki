@@ -97,6 +97,9 @@ pnpm localenv:compose up
 
 // tear down and remove volumes
 pnpm localenv:compose down --volumes
+
+// tear down, delete database volumes and remove images
+pnpm localenv:compose down --volumes --rmi all
 ```
 
 If you want to use Postgres as the accounting database instead of TigerBeetle, you can use the `psql` variant of the `localenv:compose` commands:
@@ -113,6 +116,8 @@ as the required data stores tigerbeetle (if enabled), redis, and postgres, so it
 The secondary Happy Life Bank docker compose file (`./happy-life-bank/docker-compose.yml`) includes only the Rafiki services, not the data stores. It uses the
 data stores created by the primary Rafiki instance so it can't be run by itself.
 The `pnpm localenv:compose up` command starts both the primary instance and the secondary.
+
+See the `frontend` [README](../packages/frontend/README.md#ory-kratos) for more information regarding the Ory Kratos identity and user management system required for Admin UI.
 
 #### Autopeering
 
@@ -147,6 +152,9 @@ pnpm localenv:compose down
 
 // tear down and delete database volumes
 pnpm localenv:compose down --volumes
+
+// tear down, delete database volumes and remove images
+pnpm localenv:compose down --volumes --rmi all
 ```
 
 ### Commands

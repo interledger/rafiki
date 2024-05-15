@@ -50,7 +50,7 @@ describe('Liquidity Resolvers', (): void => {
   let appContainer: TestContainer
   let accountingService: AccountingService
   let knex: Knex
-  const timeout = 10
+  const timeoutTwoPhase = 10
 
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer(Config)
@@ -500,7 +500,8 @@ describe('Liquidity Resolvers', (): void => {
               id: uuid(),
               peerId: peer.id,
               amount: startingBalance.toString(),
-              idempotencyKey: uuid()
+              idempotencyKey: uuid(),
+              timeoutSeconds: 0
             }
           }
         })
@@ -537,7 +538,8 @@ describe('Liquidity Resolvers', (): void => {
               id: uuid(),
               peerId: uuid(),
               amount: '100',
-              idempotencyKey: uuid()
+              idempotencyKey: uuid(),
+              timeoutSeconds: 0
             }
           }
         })
@@ -575,7 +577,8 @@ describe('Liquidity Resolvers', (): void => {
               id: 'not a uuid',
               peerId: peer.id,
               amount: startingBalance.toString(),
-              idempotencyKey: uuid()
+              idempotencyKey: uuid(),
+              timeoutSeconds: 0
             }
           }
         })
@@ -621,7 +624,8 @@ describe('Liquidity Resolvers', (): void => {
               id,
               peerId: peer.id,
               amount: startingBalance.toString(),
-              idempotencyKey: uuid()
+              idempotencyKey: uuid(),
+              timeoutSeconds: 0
             }
           }
         })
@@ -664,7 +668,8 @@ describe('Liquidity Resolvers', (): void => {
                 id: uuid(),
                 peerId: peer.id,
                 amount: amount.toString(),
-                idempotencyKey: uuid()
+                idempotencyKey: uuid(),
+                timeoutSeconds: 0
               }
             }
           })
@@ -719,7 +724,8 @@ describe('Liquidity Resolvers', (): void => {
               id: uuid(),
               assetId: asset.id,
               amount: startingBalance.toString(),
-              idempotencyKey: uuid()
+              idempotencyKey: uuid(),
+              timeoutSeconds: 0
             }
           }
         })
@@ -756,7 +762,8 @@ describe('Liquidity Resolvers', (): void => {
               id: uuid(),
               assetId: uuid(),
               amount: '100',
-              idempotencyKey: uuid()
+              idempotencyKey: uuid(),
+              timeoutSeconds: 0
             }
           }
         })
@@ -794,7 +801,8 @@ describe('Liquidity Resolvers', (): void => {
               id: 'not a uuid',
               assetId: asset.id,
               amount: startingBalance.toString(),
-              idempotencyKey: uuid()
+              idempotencyKey: uuid(),
+              timeoutSeconds: 0
             }
           }
         })
@@ -840,7 +848,8 @@ describe('Liquidity Resolvers', (): void => {
               id,
               assetId: asset.id,
               amount: startingBalance.toString(),
-              idempotencyKey: uuid()
+              idempotencyKey: uuid(),
+              timeoutSeconds: 0
             }
           }
         })
@@ -883,7 +892,8 @@ describe('Liquidity Resolvers', (): void => {
                 id: uuid(),
                 assetId: asset.id,
                 amount: amount.toString(),
-                idempotencyKey: uuid()
+                idempotencyKey: uuid(),
+                timeoutSeconds: 0
               }
             }
           })
@@ -948,7 +958,8 @@ describe('Liquidity Resolvers', (): void => {
             input: {
               id,
               walletAddressId: walletAddress.id,
-              idempotencyKey: uuid()
+              idempotencyKey: uuid(),
+              timeoutSeconds: 0
             }
           }
         })
@@ -994,7 +1005,8 @@ describe('Liquidity Resolvers', (): void => {
             input: {
               id: uuid(),
               walletAddressId: uuid(),
-              idempotencyKey: uuid()
+              idempotencyKey: uuid(),
+              timeoutSeconds: 0
             }
           }
         })
@@ -1035,7 +1047,8 @@ describe('Liquidity Resolvers', (): void => {
             input: {
               id: 'not a uuid',
               walletAddressId: walletAddress.id,
-              idempotencyKey: uuid()
+              idempotencyKey: uuid(),
+              timeoutSeconds: 0
             }
           }
         })
@@ -1084,7 +1097,8 @@ describe('Liquidity Resolvers', (): void => {
             input: {
               id,
               walletAddressId: walletAddress.id,
-              idempotencyKey: uuid()
+              idempotencyKey: uuid(),
+              timeoutSeconds: 0
             }
           }
         })
@@ -1108,7 +1122,7 @@ describe('Liquidity Resolvers', (): void => {
           id: uuid(),
           account: walletAddress,
           amount,
-          timeout
+          timeout: 0
         })
       ).resolves.toBeUndefined()
       const response = await appContainer.apolloClient
@@ -1132,7 +1146,8 @@ describe('Liquidity Resolvers', (): void => {
             input: {
               id: uuid(),
               walletAddressId: walletAddress.id,
-              idempotencyKey: uuid()
+              idempotencyKey: uuid(),
+              timeoutSeconds: 0
             }
           }
         })
@@ -1172,7 +1187,7 @@ describe('Liquidity Resolvers', (): void => {
             ...deposit,
             id: withdrawalId,
             amount: BigInt(10),
-            timeout
+            timeout: timeoutTwoPhase
           })
         ).resolves.toBeUndefined()
       })
@@ -1385,7 +1400,7 @@ describe('Liquidity Resolvers', (): void => {
             ...deposit,
             id: withdrawalId,
             amount: BigInt(10),
-            timeout
+            timeout: timeoutTwoPhase
           })
         ).resolves.toBeUndefined()
       })
@@ -2007,7 +2022,7 @@ describe('Liquidity Resolvers', (): void => {
       ).resolves.toEqual(BigInt(0))
     })
 
-    describe('withdrawIncomingPaymentLiquidity', (): void => {
+    describe('createIncomingPaymentWithdrawal', (): void => {
       const amount = BigInt(10)
 
       beforeEach(async (): Promise<void> => {
@@ -2046,10 +2061,10 @@ describe('Liquidity Resolvers', (): void => {
           const response = await appContainer.apolloClient
             .mutate({
               mutation: gql`
-                mutation WithdrawIncomingPaymentLiquidity(
-                  $input: WithdrawIncomingPaymentLiquidityInput!
+                mutation CreateIncomingPaymentWithdrawal(
+                  $input: CreateIncomingPaymentWithdrawalInput!
                 ) {
-                  withdrawIncomingPaymentLiquidity(input: $input) {
+                  createIncomingPaymentWithdrawal(input: $input) {
                     code
                     success
                     message
@@ -2060,13 +2075,14 @@ describe('Liquidity Resolvers', (): void => {
               variables: {
                 input: {
                   incomingPaymentId: incomingPayment.id,
-                  idempotencyKey: uuid()
+                  idempotencyKey: uuid(),
+                  timeoutSeconds: 0
                 }
               }
             })
             .then((query): LiquidityMutationResponse => {
               if (query.data) {
-                return query.data.withdrawIncomingPaymentLiquidity
+                return query.data.createIncomingPaymentWithdrawal
               } else {
                 throw new Error('Data was empty')
               }
@@ -2097,10 +2113,10 @@ describe('Liquidity Resolvers', (): void => {
           const response = await appContainer.apolloClient
             .mutate({
               mutation: gql`
-                mutation WithdrawIncomingPaymentLiquidity(
-                  $input: WithdrawIncomingPaymentLiquidityInput!
+                mutation CreateIncomingPaymentWithdrawal(
+                  $input: CreateIncomingPaymentWithdrawalInput!
                 ) {
-                  withdrawIncomingPaymentLiquidity(input: $input) {
+                  createIncomingPaymentWithdrawal(input: $input) {
                     code
                     success
                     message
@@ -2111,13 +2127,14 @@ describe('Liquidity Resolvers', (): void => {
               variables: {
                 input: {
                   incomingPaymentId: uuid(),
-                  idempotencyKey: uuid()
+                  idempotencyKey: uuid(),
+                  timeoutSeconds: 0
                 }
               }
             })
             .then((query): LiquidityMutationResponse => {
               if (query.data) {
-                return query.data.withdrawIncomingPaymentLiquidity
+                return query.data.createIncomingPaymentWithdrawal
               } else {
                 throw new Error('Data was empty')
               }
@@ -2133,10 +2150,10 @@ describe('Liquidity Resolvers', (): void => {
           const response = await appContainer.apolloClient
             .mutate({
               mutation: gql`
-                mutation WithdrawIncomingPaymentLiquidity(
-                  $input: WithdrawIncomingPaymentLiquidityInput!
+                mutation CreateIncomingPaymentWithdrawal(
+                  $input: CreateIncomingPaymentWithdrawalInput!
                 ) {
-                  withdrawIncomingPaymentLiquidity(input: $input) {
+                  createIncomingPaymentWithdrawal(input: $input) {
                     code
                     success
                     message
@@ -2147,13 +2164,14 @@ describe('Liquidity Resolvers', (): void => {
               variables: {
                 input: {
                   incomingPaymentId: incomingPayment.id,
-                  idempotencyKey: uuid()
+                  idempotencyKey: uuid(),
+                  timeoutSeconds: 0
                 }
               }
             })
             .then((query): LiquidityMutationResponse => {
               if (query.data) {
-                return query.data.withdrawIncomingPaymentLiquidity
+                return query.data.createIncomingPaymentWithdrawal
               } else {
                 throw new Error('Data was empty')
               }
@@ -2188,10 +2206,10 @@ describe('Liquidity Resolvers', (): void => {
           const response = await appContainer.apolloClient
             .mutate({
               mutation: gql`
-                mutation WithdrawIncomingPaymentLiquidity(
-                  $input: WithdrawIncomingPaymentLiquidityInput!
+                mutation CreateIncomingPaymentWithdrawal(
+                  $input: CreateIncomingPaymentWithdrawalInput!
                 ) {
-                  withdrawIncomingPaymentLiquidity(input: $input) {
+                  createIncomingPaymentWithdrawal(input: $input) {
                     code
                     success
                     message
@@ -2202,13 +2220,14 @@ describe('Liquidity Resolvers', (): void => {
               variables: {
                 input: {
                   incomingPaymentId: incomingPayment.id,
-                  idempotencyKey: uuid()
+                  idempotencyKey: uuid(),
+                  timeoutSeconds: 0
                 }
               }
             })
             .then((query): LiquidityMutationResponse => {
               if (query.data) {
-                return query.data.withdrawIncomingPaymentLiquidity
+                return query.data.createIncomingPaymentWithdrawal
               } else {
                 throw new Error('Data was empty')
               }
@@ -2222,7 +2241,7 @@ describe('Liquidity Resolvers', (): void => {
       })
     })
 
-    describe('withdrawOutgoingPaymentLiquidity', (): void => {
+    describe('createOutgoingPaymentWithdrawal', (): void => {
       const amount = BigInt(10)
 
       beforeEach(async (): Promise<void> => {
@@ -2261,10 +2280,10 @@ describe('Liquidity Resolvers', (): void => {
           const response = await appContainer.apolloClient
             .mutate({
               mutation: gql`
-                mutation WithdrawOutgoingPaymentLiquidity(
-                  $input: WithdrawOutgoingPaymentLiquidityInput!
+                mutation CreateOutgoingPaymentWithdrawal(
+                  $input: CreateOutgoingPaymentWithdrawalInput!
                 ) {
-                  withdrawOutgoingPaymentLiquidity(input: $input) {
+                  createOutgoingPaymentWithdrawal(input: $input) {
                     code
                     success
                     message
@@ -2275,13 +2294,14 @@ describe('Liquidity Resolvers', (): void => {
               variables: {
                 input: {
                   outgoingPaymentId: outgoingPayment.id,
-                  idempotencyKey: uuid()
+                  idempotencyKey: uuid(),
+                  timeoutSeconds: 0
                 }
               }
             })
             .then((query): LiquidityMutationResponse => {
               if (query.data) {
-                return query.data.withdrawOutgoingPaymentLiquidity
+                return query.data.createOutgoingPaymentWithdrawal
               } else {
                 throw new Error('Data was empty')
               }
@@ -2301,10 +2321,10 @@ describe('Liquidity Resolvers', (): void => {
           const response = await appContainer.apolloClient
             .mutate({
               mutation: gql`
-                mutation WithdrawOutgoingPaymentLiquidity(
-                  $input: WithdrawOutgoingPaymentLiquidityInput!
+                mutation CreateOutgoingPaymentWithdrawal(
+                  $input: CreateOutgoingPaymentWithdrawalInput!
                 ) {
-                  withdrawOutgoingPaymentLiquidity(input: $input) {
+                  createOutgoingPaymentWithdrawal(input: $input) {
                     code
                     success
                     message
@@ -2315,13 +2335,14 @@ describe('Liquidity Resolvers', (): void => {
               variables: {
                 input: {
                   outgoingPaymentId: uuid(),
-                  idempotencyKey: uuid()
+                  idempotencyKey: uuid(),
+                  timeoutSeconds: 0
                 }
               }
             })
             .then((query): LiquidityMutationResponse => {
               if (query.data) {
-                return query.data.withdrawOutgoingPaymentLiquidity
+                return query.data.createOutgoingPaymentWithdrawal
               } else {
                 throw new Error('Data was empty')
               }
@@ -2343,10 +2364,10 @@ describe('Liquidity Resolvers', (): void => {
           const response = await appContainer.apolloClient
             .mutate({
               mutation: gql`
-                mutation withdrawOutgoingPaymentLiquidity(
-                  $input: WithdrawOutgoingPaymentLiquidityInput!
+                mutation CreateIncomingPaymentWithdrawal(
+                  $input: CreateOutgoingPaymentWithdrawalInput!
                 ) {
-                  withdrawOutgoingPaymentLiquidity(input: $input) {
+                  createOutgoingPaymentWithdrawal(input: $input) {
                     code
                     success
                     message
@@ -2357,13 +2378,14 @@ describe('Liquidity Resolvers', (): void => {
               variables: {
                 input: {
                   outgoingPaymentId: outgoingPayment.id,
-                  idempotencyKey: uuid()
+                  idempotencyKey: uuid(),
+                  timeoutSeconds: 0
                 }
               }
             })
             .then((query): LiquidityMutationResponse => {
               if (query.data) {
-                return query.data.withdrawOutgoingPaymentLiquidity
+                return query.data.createOutgoingPaymentWithdrawal
               } else {
                 throw new Error('Data was empty')
               }
@@ -2396,10 +2418,10 @@ describe('Liquidity Resolvers', (): void => {
           const response = await appContainer.apolloClient
             .mutate({
               mutation: gql`
-                mutation withdrawOutgoingPaymentLiquidity(
-                  $input: WithdrawOutgoingPaymentLiquidityInput!
+                mutation CreateOutgoingPaymentWithdrawal(
+                  $input: CreateOutgoingPaymentWithdrawalInput!
                 ) {
-                  withdrawOutgoingPaymentLiquidity(input: $input) {
+                  createOutgoingPaymentWithdrawal(input: $input) {
                     code
                     success
                     message
@@ -2410,13 +2432,14 @@ describe('Liquidity Resolvers', (): void => {
               variables: {
                 input: {
                   outgoingPaymentId: outgoingPayment.id,
-                  idempotencyKey: uuid()
+                  idempotencyKey: uuid(),
+                  timeoutSeconds: 0
                 }
               }
             })
             .then((query): LiquidityMutationResponse => {
               if (query.data) {
-                return query.data.withdrawOutgoingPaymentLiquidity
+                return query.data.createOutgoingPaymentWithdrawal
               } else {
                 throw new Error('Data was empty')
               }

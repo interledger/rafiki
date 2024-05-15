@@ -25,7 +25,9 @@ The `incoming_payment.created` event indicates that an incoming payment has been
 
 The `incoming_payment.completed` event indicates that an incoming payment has been completed, either automatically or manually, and that any funds that have been received into this incoming payment should be withdrawn and credited to the recipient's account with the Account Servicing Entity.
 
-Example: An incoming payment was completed and received $10.
+In addition, the `CreateIncomingPaymentWithdrawal` supports two-phase transfers [see more](/reference/glossary#two-phase-transfers).
+
+Example: An incoming payment was completed and received **$10**.
 
 <Mermaid
   graph={`sequenceDiagram
@@ -33,8 +35,24 @@ Example: An incoming payment was completed and received $10.
     participant R as Rafiki
 
     R->>ASE: webhook event: incoming payment completed,<br>receivedAmount: $10
-    ASE->>R: admin API call: WithdrawIncomingPaymentLiquidity
+    ASE->>R: admin API call: CreateIncomingPaymentWithdrawal
     ASE->>ASE: credit receiver's account with $10
+
+`}
+/>
+
+Example: An incoming payment supporting two-phase transfers was completed and recieved **$10**.
+
+<Mermaid
+  graph={`sequenceDiagram
+    participant ASE as Account Servicing Entity
+    participant R as Rafiki
+
+      R->>ASE: webhook event: incoming payment completed,<br>receivedAmount: $10
+      ASE->>R: admin API call: CreateIncomingPaymentWithdrawal
+      ASE->>ASE: credit receiver's account with $10
+      ASE->>R: admin API call: PostLiquidityWithdrawal
+      R->>R: 2-phase transfer completed
 
 `}
 />
@@ -43,7 +61,7 @@ Example: An incoming payment was completed and received $10.
 
 The `incoming_payment.expired` event indicates that an incoming payment has expired, and that any funds that have been received into this incoming payment should be withdrawn and credited to the recipient's account with the Account Servicing Entity. Note that this event is not fired if there were no funds received by the incoming payment since there is no action required by the Account Servicing Entity.
 
-Example: An incoming payment has expired and received $2.55.
+Example: An incoming payment has expired and received **$2.55**.
 
 <Mermaid
   graph={`sequenceDiagram
@@ -51,7 +69,7 @@ Example: An incoming payment has expired and received $2.55.
     participant R as Rafiki
 
     R->>ASE: webhook event: incoming payment expired,<br>receivedAmount: $2.55
-    ASE->>R: admin API call: WithdrawIncomingPaymentLiquidity
+    ASE->>R: admin API call: CreateIncomingPaymentWithdrawal
     ASE->>ASE: credit receiver's account with $2.55
 
 `}
@@ -63,7 +81,7 @@ The `outgoing_payment.created` event indicates that an outgoing payment has been
 In case that outgoing payment should not be fullfilled, the Account Servicing Entity can cancel outgoing payment.
 Otherwise, the Account Servicing Entity should put a hold on the sender’s account and deposit the funds into Rafiki.
 
-Example: An outgoing payment for $12 has been created.
+Example: An outgoing payment for **&dollar;12** has been created.
 
 <Mermaid
   graph={`sequenceDiagram
@@ -86,7 +104,9 @@ Example: An outgoing payment for $12 has been created.
 
 The `outgoing_payment.completed` event indicates that an outgoing payment has successfully sent as many funds as possible to the receiver. The Account Servicing Entity should withdraw any excess liquidity from that outgoing payment in Rafiki and use it as they see fit. One option would be to return it to the sender. Another option is that the excess liquidity is considered a fee and retained by the Account Servicing Entity. Furthermore, the Account Servicing Entity should remove the hold on the sender's account and debit it.
 
-Example: An outgoing payment for $12 has been completed. $11.50 were sent. The Account Servicing Entity keeps $0.50 as fees.
+In addition, the `CreateOutgoingPaymentWithdrawal` supports two-phase transfers [see more](/reference/glossary#two-phase-transfers).
+
+Example: An outgoing payment amount for **&dollar;12** has been completed. **&dollar;11.50** were sent. The Account Servicing Entity keeps **$0.50** as fees.
 
 <Mermaid
   graph={`sequenceDiagram
@@ -94,8 +114,24 @@ Example: An outgoing payment for $12 has been completed. $11.50 were sent. The A
     participant R as Rafiki
 
     R->>ASE: webhook event: outgoing completed,<br>debitAmount: $12, sentAmount:$11.50
-    ASE->>R: admin API call: WithdrawOutgoingPaymentLiquidity
+    ASE->>R: admin API call: CreateOutgoingPaymentWithdrawal
     ASE->>ASE: remove the hold and deduct $12 from the sender's account,<br>credit ASE's account with $0.50
+
+`}
+/>
+
+Example: An outgoing payment supporting two-phase transfers for **&dollar;12** has been completed. **&dollar;11.50** were sent. The Account Servicing Entity keeps **$0.50** as fees.
+
+<Mermaid
+  graph={`sequenceDiagram
+    participant ASE as Account Servicing Entity
+    participant R as Rafiki
+
+        R->>ASE: webhook event: outgoing completed,<br>debitAmount: $12, sentAmount:$11.50
+        ASE->>R: admin API call: CreateOutgoingPaymentWithdrawal
+        ASE->>ASE: remove the hold and deduct $12 from the sender's account,<br>credit ASE's account with $0.50
+        ASE->>R: admin API call: PostLiquidityWithdrawal
+        R->>R: 2-phase transfer completed
 
 `}
 />
@@ -104,7 +140,7 @@ Example: An outgoing payment for $12 has been completed. $11.50 were sent. The A
 
 The `outgoing_payment.failed` event indicates that an outgoing payment has either partially or completely failed and a retry was also unsuccessful. The Account Servicing Entity should withdraw any remaining liquidity from that outgoing payment in Rafiki. If the payment failed completely (the `sentAmount` was 0), the Account Servicing Entity should remove the hold from the sender's account. If the payment failed partially, the Account Servicing Entity should remove the hold from the sender's account and debit it with the amount that has been sent, but they should refrain from taking a sending fee.
 
-Example: An outgoing payment for $12 has failed. $8 were sent.
+Example: An outgoing payment for **&dollar;12** has failed. **$8** were sent.
 
 <Mermaid
   graph={`sequenceDiagram
@@ -112,7 +148,7 @@ Example: An outgoing payment for $12 has failed. $8 were sent.
     participant R as Rafiki
 
     R->>ASE: webhook event: outgoing failed,<br>debitAmount: $12, sentAmount:$8
-    ASE->>R: admin API call: WithdrawOutgoingPaymentLiquidity
+    ASE->>R: admin API call: CreateOutgoingPaymentWithdrawal
     ASE->>ASE: remove the hold and deduct $8 from the sender's account
 
 `}
@@ -122,7 +158,7 @@ Example: An outgoing payment for $12 has failed. $8 were sent.
 
 The `wallet_address.web_monetization` event indicates that a wallet address has received web monetization payments via STREAM (raw ILP access). The Account Servicing Entity should withdraw that liquidity from the wallet address and credit the receiver's account.
 
-Example: A wallet address received $0.33
+Example: A wallet address received **$0.33**
 
 <Mermaid
   graph={`sequenceDiagram

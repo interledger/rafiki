@@ -203,17 +203,17 @@ type Mutation {
     input: WithdrawEventLiquidityInput!
   ): LiquidityMutationResponse
     @deprecated(
-      reason: "Use `withdrawOutgoingPaymentLiquidity, withdrawIncomingPaymentLiquidity, or createWalletAddressWithdrawal`"
+      reason: "Use `createOutgoingPaymentWithdrawal, createIncomingPaymentWithdrawal, or createWalletAddressWithdrawal`"
     )
 
   "Withdraw incoming payment liquidity"
-  withdrawIncomingPaymentLiquidity(
-    input: WithdrawIncomingPaymentLiquidityInput!
+  createIncomingPaymentWithdrawal(
+    input: CreateIncomingPaymentWithdrawalInput!
   ): LiquidityMutationResponse
 
   "Withdraw outgoing payment liquidity"
-  withdrawOutgoingPaymentLiquidity(
-    input: WithdrawOutgoingPaymentLiquidityInput!
+  createOutgoingPaymentWithdrawal(
+    input: CreateOutgoingPaymentWithdrawalInput!
   ): LiquidityMutationResponse
 
   "Deposit outgoing payment liquidity"
@@ -393,6 +393,8 @@ input CreatePeerLiquidityWithdrawalInput {
   id: String!
   "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)"
   idempotencyKey: String!
+  "This is the interval in seconds after a pending transfer's created at which it may be posted or voided. Zero denotes a no timeout single-phase posted transfer."
+  timeoutSeconds: UInt64!
 }
 
 input CreateAssetLiquidityWithdrawalInput {
@@ -404,6 +406,8 @@ input CreateAssetLiquidityWithdrawalInput {
   id: String!
   "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)"
   idempotencyKey: String!
+  "This is the interval in seconds after a pending transfer's created at which it may be posted or voided. Zero denotes a no timeout single-phase posted transfer."
+  timeoutSeconds: UInt64!
 }
 
 input PostLiquidityWithdrawalInput {
@@ -427,18 +431,22 @@ input DepositOutgoingPaymentLiquidityInput {
   idempotencyKey: String!
 }
 
-input WithdrawIncomingPaymentLiquidityInput {
+input CreateIncomingPaymentWithdrawalInput {
   "The id of the incoming payment to withdraw from."
   incomingPaymentId: String!
   "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)"
   idempotencyKey: String!
+  "This is the interval in seconds after a pending transfer's created at which it may be posted or voided. Zero denotes a no timeout single-phase posted transfer."
+  timeoutSeconds: UInt64!
 }
 
-input WithdrawOutgoingPaymentLiquidityInput {
+input CreateOutgoingPaymentWithdrawalInput {
   "The id of the outgoing payment to withdraw from."
   outgoingPaymentId: String!
   "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)"
   idempotencyKey: String!
+  "This is the interval in seconds after a pending transfer's created at which it may be posted or voided. Zero denotes a no timeout single-phase posted transfer."
+  timeoutSeconds: UInt64!
 }
 
 input DepositEventLiquidityInput {
@@ -462,6 +470,8 @@ input CreateWalletAddressWithdrawalInput {
   id: String!
   "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)"
   idempotencyKey: String!
+  "This is the interval in seconds after a pending transfer's created at which it may be posted or voided. Zero denotes a no timeout single-phase posted transfer."
+  timeoutSeconds: UInt64!
 }
 
 input JwkInput {

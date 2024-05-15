@@ -14,7 +14,7 @@ This website is built with [Starlight](https://starlight.astro.build/), a docume
 $ pnpm i
 ```
 
-- Run the dev server from the /packages/documentation folder:
+- Run the dev server from the `/packages/documentation` folder:
 
 ```sh
 $ pnpm start
@@ -22,7 +22,7 @@ $ pnpm start
 
 This command starts a local development server and opens up a browser window. Most changes are reflected live without having to restart the server.
 
-- Build the site, again, this must be run from the /packages/documentation folder:
+- Build the site, again, this must be run from the `/packages/documentation` folder:
 
 ```sh
 $ pnpm build:docs

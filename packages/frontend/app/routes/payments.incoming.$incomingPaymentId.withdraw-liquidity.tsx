@@ -2,7 +2,7 @@ import { type ActionFunctionArgs } from '@remix-run/node'
 import { useNavigate, useOutletContext } from '@remix-run/react'
 import { v4 } from 'uuid'
 import { LiquidityConfirmDialog } from '~/components/LiquidityConfirmDialog'
-import { withdrawIncomingPaymentLiquidity } from '~/lib/api/payments.server'
+import { createIncomingPaymentWithdrawal } from '~/lib/api/payments.server'
 import { messageStorage, setMessageAndRedirect } from '~/lib/message.server'
 import { redirectIfUnauthorizedAccess } from '../lib/kratos_checks.server'
 import { type LoaderFunctionArgs } from '@remix-run/node'
@@ -43,9 +43,10 @@ export async function action({ request, params }: ActionFunctionArgs) {
     })
   }
 
-  const response = await withdrawIncomingPaymentLiquidity({
+  const response = await createIncomingPaymentWithdrawal({
     incomingPaymentId,
-    idempotencyKey: v4()
+    idempotencyKey: v4(),
+    timeoutSeconds: BigInt(0)
   })
 
   if (!response?.success) {
