@@ -126,10 +126,7 @@ const scripts = {
       default:
         signature = this.generateBackendApiSignature(formattedBody)
     }
-    req.setHeader(
-      'signature',
-      signature
-    )
+    req.setHeader('signature', signature)
   },
 
   addHostHeader: function (hostVarName) {
