@@ -128,7 +128,7 @@ The `backend` package requires an environment variable called `WEBHOOK_URL` whic
 
 ## Identity Provider
 
-The Rafiki `backend` exposes the [Open Payments](/reference/glossary#open-payments) APIs. They are auth-protected using an opinionated version of the [Grant Negotiation Authorization Protocol](/reference/glossary#gnap) (GNAP). Rafiki comes with a reference implementation of an Open Payments Auth Server--the `auth` package.
+The Rafiki `backend` exposes the [Open Payments](/reference/glossary#open-payments) APIs. They are auth-protected using an opinionated version of the [Grant Negotiation Authorization Protocol](/reference/glossary#grant-negotiation-authorization-protocol) (GNAP). Rafiki comes with a reference implementation of an Open Payments Auth Server--the `auth` package.
 
 The Open Payments Auth Server requires integration with an Identity Provider to handle user authentication and consent. For more information on how to integrate an Identity Provider with the reference implementation of the Open Payments Auth Server, see the docs in the `auth` package.
 
