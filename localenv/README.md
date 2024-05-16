@@ -150,7 +150,7 @@ Debuggers for the services are exposed on the following ports:
 | 127.0.0.1:9231 | Happy Life Bank Backend |
 | 127.0.0.1:9232 | Happy Life Bank Auth    |
 
-To use these debuggers with a chromium browser:
+#### With a chromium browser:
 
 - go to `chrome://inspect`
 - Click "Configure" and add the IP addresses and ports detailed above
@@ -159,7 +159,25 @@ To use these debuggers with a chromium browser:
 
 You can either trigger the debugger by adding `debugger` statements in code and restarting, or by adding breakpoints directly in the chromium debugger after starting the docker containers.
 
-For more ways to connect to these debuggers, see the Node docs for debugging: https://nodejs.org/en/learn/getting-started/debugging
+#### With Vscode:
+For debugging with Vscode, you can add this configuration to your `.vscode/launch.json`):
+
+```json
+{
+    "name": "Attach to docker (cloud-nine-backend)",
+    "type": "node",
+    "request": "attach",
+    "port": 9229,
+    "address": "localhost",
+    "localRoot": "${workspaceFolder}",
+    "remoteRoot": "/home/rafiki/",
+    "restart": true
+},
+```
+
+`localRoot` will vary depending on the location of `launch.json` relative to rafiki's root directory.
+
+For more ways to connect debuggers, see the Node docs for debugging: https://nodejs.org/en/learn/getting-started/debugging
 
 ### Shutting down
 
