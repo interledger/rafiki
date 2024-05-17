@@ -46,10 +46,7 @@ export const Config = {
     'http://localhost:3030/mock-idp/'
   ),
   identityServerSecret: envString('IDENTITY_SERVER_SECRET'),
-  authServerDomain: envString(
-    'AUTH_SERVER_DOMAIN',
-    `http://localhost:${envInt('AUTH_PORT', 3006)}`
-  ),
+  authServerUrl: envString('AUTH_SERVER_URL'),
   waitTimeSeconds: envInt('WAIT_SECONDS', 5),
   cookieKey: envString('COOKIE_KEY'),
   interactionExpirySeconds: envInt('INTERACTION_EXPIRY_SECONDS', 10 * 60), // Default 10 minutes

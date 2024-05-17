@@ -289,7 +289,7 @@ async function handleFinishableGrant(
 
     const { clientNonce } = grant
     const { nonce: interactNonce, ref: interactRef } = interaction
-    const grantRequestUrl = config.authServerDomain + `/`
+    const grantRequestUrl = config.authServerUrl + `/`
 
     // https://datatracker.ietf.org/doc/html/draft-ietf-gnap-core-protocol#section-4.2.3
     const data = `${clientNonce}\n${interactNonce}\n${interactRef}\n${grantRequestUrl}`

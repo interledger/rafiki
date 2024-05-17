@@ -140,7 +140,7 @@ async function rotateToken(
   ctx.status = 200
   ctx.body = {
     access_token: toOpenPaymentsAccessToken(newToken, accessItems, {
-      authServerUrl: deps.config.authServerDomain
+      authServerUrl: deps.config.authServerUrl
     })
   }
 }

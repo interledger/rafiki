@@ -242,7 +242,7 @@ describe('Grant Routes', (): void => {
             publicName: TEST_CLIENT_DISPLAY.name,
             assetCode: 'USD',
             assetScale: 2,
-            authServer: Config.authServerDomain,
+            authServer: Config.authServerUrl,
             resourceServer: faker.internet.url({ appendSlash: false })
           })
 
@@ -358,7 +358,7 @@ describe('Grant Routes', (): void => {
             publicName: TEST_CLIENT_DISPLAY.name,
             assetCode: 'USD',
             assetScale: 2,
-            authServer: Config.authServerDomain,
+            authServer: Config.authServerUrl,
             resourceServer: faker.internet.url({ appendSlash: false })
           })
 
@@ -511,8 +511,7 @@ describe('Grant Routes', (): void => {
         expect(ctx.body).toEqual({
           access_token: {
             value: accessToken.value,
-            manage:
-              Config.authServerDomain + `/token/${accessToken.managementId}`,
+            manage: Config.authServerUrl + `/token/${accessToken.managementId}`,
             access: expect.arrayContaining([
               {
                 actions: expect.arrayContaining(['create', 'read', 'list']),
@@ -850,8 +849,7 @@ describe('Grant Routes', (): void => {
               access_token: {
                 value: accessToken.value,
                 manage:
-                  Config.authServerDomain +
-                  `/token/${accessToken.managementId}`,
+                  Config.authServerUrl + `/token/${accessToken.managementId}`,
                 access: expect.arrayContaining([
                   {
                     actions: expect.arrayContaining(['create', 'read', 'list']),
