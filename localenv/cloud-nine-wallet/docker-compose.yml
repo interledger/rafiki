@@ -84,8 +84,10 @@ services:
       NODE_ENV: ${NODE_ENV:-development}
       TRUST_PROXY: ${TRUST_PROXY}
       AUTH_DATABASE_URL: postgresql://cloud_nine_wallet_auth:cloud_nine_wallet_auth@shared-database/cloud_nine_wallet_auth
-      AUTH_SERVER_DOMAIN: ${CLOUD_NINE_AUTH_SERVER_DOMAIN:-http://localhost:3006}
+      AUTH_SERVER_URL: ${CLOUD_NINE_AUTH_SERVER_DOMAIN:-http://localhost:3006}
       REDIS_URL: redis://shared-redis:6379/1
+      IDENTITY_SERVER_SECRET: 2pEcn2kkCclbOHQiGNEwhJ0rucATZhrA807HTm2rNXE=
+      COOKIE_KEY: 42397d1f371dd4b8b7d0308a689a57c882effd4ea909d792302542af47e2cd37
     depends_on:
       - shared-database
       - shared-redis
