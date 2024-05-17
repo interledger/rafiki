@@ -1,11 +1,14 @@
-import * as crypto from 'crypto'
 import dotenv from 'dotenv'
 import * as fs from 'fs'
 import { ConnectionOptions } from 'tls'
 
-function envString(name: string, value: string): string {
+function envString(name: string, defaultValue?: string): string {
   const envValue = process.env[name]
-  return envValue == null ? value : envValue
+
+  if (envValue) return envValue
+  if (defaultValue) return defaultValue
+
+  throw new Error(`Environment variable ${name} must be set.`)
 }
 
 function envInt(name: string, value: number): number {
@@ -42,13 +45,13 @@ export const Config = {
     'IDENTITY_SERVER_DOMAIN',
     'http://localhost:3030/mock-idp/'
   ),
-  identityServerSecret: envString('IDENTITY_SERVER_SECRET', 'replace-me'),
+  identityServerSecret: envString('IDENTITY_SERVER_SECRET'),
   authServerDomain: envString(
     'AUTH_SERVER_DOMAIN',
     `http://localhost:${envInt('AUTH_PORT', 3006)}`
   ),
   waitTimeSeconds: envInt('WAIT_SECONDS', 5),
-  cookieKey: envString('COOKIE_KEY', crypto.randomBytes(32).toString('hex')),
+  cookieKey: envString('COOKIE_KEY'),
   interactionExpirySeconds: envInt('INTERACTION_EXPIRY_SECONDS', 10 * 60), // Default 10 minutes
   accessTokenExpirySeconds: envInt('ACCESS_TOKEN_EXPIRY_SECONDS', 10 * 60), // Default 10 minutes
   databaseCleanupWorkers: envInt('DATABASE_CLEANUP_WORKERS', 1),
@@ -58,30 +61,30 @@ export const Config = {
   listAllInteraction: envBool('LIST_ALL_ACCESS_INTERACTION', true),
   redisUrl: envString('REDIS_URL', 'redis://127.0.0.1:6379'),
   redisTls: parseRedisTlsConfig(
-    envString('REDIS_TLS_CA_FILE_PATH', ''),
-    envString('REDIS_TLS_KEY_FILE_PATH', ''),
-    envString('REDIS_TLS_CERT_FILE_PATH', '')
+    process.env.REDIS_TLS_CA_FILE_PATH,
+    process.env.REDIS_TLS_KEY_FILE_PATH,
+    process.env.REDIS_TLS_CERT_FILE_PATH
   )
 }
 
 function parseRedisTlsConfig(
-  caFile: string,
-  keyFile: string,
-  certFile: string
+  caFile?: string,
+  keyFile?: string,
+  certFile?: string
 ): ConnectionOptions | undefined {
   const options: ConnectionOptions = {}
 
   // self-signed certs.
-  if (caFile !== '') {
+  if (caFile) {
     options.ca = fs.readFileSync(caFile)
     options.rejectUnauthorized = false
   }
 
-  if (certFile !== '') {
+  if (certFile) {
     options.cert = fs.readFileSync(certFile)
   }
 
-  if (keyFile !== '') {
+  if (keyFile) {
     options.key = fs.readFileSync(keyFile)
   }
 
