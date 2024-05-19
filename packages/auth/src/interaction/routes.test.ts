@@ -149,7 +149,7 @@ describe('Interaction Routes', (): void => {
 
         assert.ok(interaction.id)
 
-        const redirectUrl = new URL(config.identityServerDomain)
+        const redirectUrl = new URL(config.identityServerUrl)
         redirectUrl.searchParams.set('interactId', interaction.id)
         const redirectSpy = jest.spyOn(ctx, 'redirect')
 

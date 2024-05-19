@@ -181,7 +181,7 @@ async function startInteraction(
 
     ctx.session.nonce = interaction.nonce
 
-    const interactionUrl = new URL(config.identityServerDomain)
+    const interactionUrl = new URL(config.identityServerUrl)
     interactionUrl.searchParams.set('interactId', interaction.id)
     interactionUrl.searchParams.set('nonce', interaction.nonce)
     interactionUrl.searchParams.set('clientName', clientName as string)

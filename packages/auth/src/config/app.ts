@@ -41,10 +41,7 @@ export const Config = {
           'AUTH_DATABASE_URL',
           'postgresql://postgres:password@localhost:5432/auth_development'
         ),
-  identityServerDomain: envString(
-    'IDENTITY_SERVER_DOMAIN',
-    'http://localhost:3030/mock-idp/'
-  ),
+  identityServerUrl: envString('IDENTITY_SERVER_URL'),
   identityServerSecret: envString('IDENTITY_SERVER_SECRET'),
   authServerUrl: envString('AUTH_SERVER_URL'),
   waitTimeSeconds: envInt('WAIT_SECONDS', 5),
