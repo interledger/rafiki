@@ -143,12 +143,12 @@ After stopping the script it is necessary to clear the environment using the com
 
 Debuggers for the services are exposed on the following ports:
 
-| IP and Port    | Services                |
-| -------------- | ----------------------- |
-| 127.0.0.1:9229 | Cloud Nine Wallet Backend      |
-| 127.0.0.1:9230 | Cloud Nine Auth         |
-| 127.0.0.1:9231 | Happy Life Bank Backend |
-| 127.0.0.1:9232 | Happy Life Bank Auth    |
+| IP and Port    | Services                  |
+| -------------- | ------------------------- |
+| 127.0.0.1:9229 | Cloud Nine Wallet Backend |
+| 127.0.0.1:9230 | Cloud Nine Auth           |
+| 127.0.0.1:9231 | Happy Life Bank Backend   |
+| 127.0.0.1:9232 | Happy Life Bank Auth      |
 
 #### With a chromium browser:
 
