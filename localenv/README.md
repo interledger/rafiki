@@ -159,9 +159,9 @@ Debuggers for the services are exposed on the following ports:
 
 You can either trigger the debugger by adding `debugger` statements in code and restarting, or by adding breakpoints directly in the chromium debugger after starting the docker containers.
 
-#### With Vscode:
+#### With VS Code:
 
-For debugging with Vscode, you can add this configuration to your `.vscode/launch.json`):
+For debugging with VS Code, you can add this configuration to your `.vscode/launch.json`):
 
 ```json
 {
