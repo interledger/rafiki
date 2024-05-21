@@ -29,7 +29,7 @@ export function generateRouteLogs(ctx: AppContext): {
 
 }
 
-export function getSignatureParts(signature: string) {
+function getSignatureParts(signature: string) {
   const signatureParts = signature?.split(', ')
   const timestamp = signatureParts[0].split('=')[1]
   const signatureVersionAndDigest = signatureParts[1].split('=')
@@ -43,7 +43,7 @@ export function getSignatureParts(signature: string) {
   }
 }
 
-export function verifyApiSignatureDigest(
+function verifyApiSignatureDigest(
   signature: string,
   request: Context['request'],
   config: IAppConfig
@@ -67,7 +67,7 @@ export function verifyApiSignatureDigest(
   return digest === signatureDigest
 }
 
-export async function canApiSignatureBeProcessed(
+async function canApiSignatureBeProcessed(
   signature: string,
   ctx: Context,
   config: IAppConfig

@@ -7,4 +7,7 @@ module.exports = async () => {
   if (global.__AUTH_POSTGRES__) {
     await global.__AUTH_POSTGRES__.stop()
   }
+  if (global.__AUTH_REDIS__) {
+    await global.__AUTH_REDIS__.stop()
+  }
 }
