@@ -80,11 +80,8 @@ services:
     ports:
       - '4003:3003'
       - '4006:3006'
-<<<<<<< HEAD
       - '9232:9229'
-=======
       - '4009:3009'
->>>>>>> d79989e4 (feat(localenv): expose auth interaction port for happy life bank)
     environment:
       NODE_ENV: development
       AUTH_DATABASE_URL: postgresql://happy_life_bank_auth:happy_life_bank_auth@shared-database/happy_life_bank_auth

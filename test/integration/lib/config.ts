@@ -8,6 +8,7 @@ import { resolve } from 'path'
 
 export type TestConfig = Config & {
   integrationServerPort: number
+  interactionServer: string
   walletAddressUrl: string
   keyId: string
 }

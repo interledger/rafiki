@@ -47,8 +47,8 @@ async function consentInteraction(
   senderWalletAddress: WalletAddress
 ) {
   const { interactId, nonce, cookie } = await _startAndAcceptInteraction(
-    outgoingPaymentGrant,
-    senderWalletAddress
+    deps,
+    outgoingPaymentGrant
   )
 
   // Finish interacton
@@ -71,8 +71,8 @@ async function consentInteractionWithInteractRef(
   senderWalletAddress: WalletAddress
 ): Promise<string> {
   const { interactId, nonce, cookie } = await _startAndAcceptInteraction(
-    outgoingPaymentGrant,
-    senderWalletAddress
+    deps,
+    outgoingPaymentGrant
   )
 
   // Finish interacton
@@ -100,8 +100,8 @@ async function consentInteractionWithInteractRef(
 }
 
 async function _startAndAcceptInteraction(
-  outgoingPaymentGrant: PendingGrant,
-  senderWalletAddress: WalletAddress
+  deps: TestActionsDeps,
+  outgoingPaymentGrant: PendingGrant
 ): Promise<{ nonce: string; interactId: string; cookie: string }> {
   const { redirect: startInteractionUrl } = outgoingPaymentGrant.interact
 
@@ -119,11 +119,8 @@ async function _startAndAcceptInteraction(
   assert(interactId)
 
   // Accept
-  const url = new URL(senderWalletAddress.authServer)
-  url.port = '3109'
-
   const acceptResponse = await fetch(
-    `${url.toString()}grant/${interactId}/${nonce}/accept`,
+    `${deps.sendingASE.config.interactionServer}/grant/${interactId}/${nonce}/accept`,
     {
       method: 'POST',
       headers: {
