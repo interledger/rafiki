@@ -57,7 +57,7 @@ async function consentInteraction(
     {
       method: 'GET',
       headers: {
-        'x-idp-secret': 'replace-me',
+        'x-idp-secret': '2pEcn2kkCclbOHQiGNEwhJ0rucATZhrA807HTm2rNXE=',
         cookie
       }
     }
@@ -81,7 +81,7 @@ async function consentInteractionWithInteractRef(
     {
       method: 'GET',
       headers: {
-        'x-idp-secret': 'replace-me',
+        'x-idp-secret': '2pEcn2kkCclbOHQiGNEwhJ0rucATZhrA807HTm2rNXE=',
         cookie
       },
       redirect: 'manual' // dont follow redirects
@@ -124,7 +124,7 @@ async function _startAndAcceptInteraction(
     {
       method: 'POST',
       headers: {
-        'x-idp-secret': 'replace-me',
+        'x-idp-secret': '2pEcn2kkCclbOHQiGNEwhJ0rucATZhrA807HTm2rNXE=',
         cookie
       }
     }

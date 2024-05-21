@@ -159,7 +159,7 @@ async function createApprovedGrant(
 
   ctx.body = toOpenPaymentsGrant(
     grant,
-    { authServerUrl: config.authServerDomain },
+    { authServerUrl: config.authServerUrl },
     accessToken,
     access
   )
@@ -198,7 +198,7 @@ async function createPendingGrant(
     ctx.status = 200
     ctx.body = toOpenPaymentPendingGrant(grant, interaction, {
       client,
-      authServerUrl: config.authServerDomain,
+      authServerUrl: config.authServerUrl,
       waitTimeSeconds: config.waitTimeSeconds
     })
 
@@ -284,7 +284,7 @@ async function pollGrantContinuation(
     await grantService.updateLastContinuedAt(grant.id)
     ctx.status = 200
     ctx.body = toOpenPaymentsGrantContinuation(grant, {
-      authServerUrl: config.authServerDomain,
+      authServerUrl: config.authServerUrl,
       waitTimeSeconds: config.waitTimeSeconds
     })
 
@@ -314,7 +314,7 @@ async function pollGrantContinuation(
     ctx.body = toOpenPaymentsGrant(
       grant,
       {
-        authServerUrl: config.authServerDomain
+        authServerUrl: config.authServerUrl
       },
       accessToken,
       access
@@ -416,7 +416,7 @@ async function continueGrant(
     // TODO: add "continue" to response if additional grant request steps are added
     ctx.body = toOpenPaymentsGrant(
       interaction.grant,
-      { authServerUrl: config.authServerDomain },
+      { authServerUrl: config.authServerUrl },
       accessToken,
       access
     )
