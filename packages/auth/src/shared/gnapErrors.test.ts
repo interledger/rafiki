@@ -9,6 +9,7 @@ import {
   GNAPServerRouteError,
   gnapServerErrorMiddleware
 } from './gnapErrors'
+import { OpenAPIValidatorMiddlewareError } from '@interledger/openapi'
 
 describe('gnapServerErrorMiddleware', (): void => {
   let deps: IocContract<AppServices>
@@ -29,6 +30,23 @@ describe('gnapServerErrorMiddleware', (): void => {
     )
 
     ctx.container = deps
+  })
+
+  test('handles OpenAPIValidatorMiddlewareError', async (): Promise<void> => {
+    const error = new OpenAPIValidatorMiddlewareError('Validation error', 400)
+    const next = jest.fn().mockImplementationOnce(() => {
+      throw error
+    })
+
+    const ctxThrowSpy = jest.spyOn(ctx, 'throw')
+
+    await expect(gnapServerErrorMiddleware(ctx, next)).rejects.toMatchObject({
+      status: error.status,
+      message: error.message
+    })
+
+    expect(ctxThrowSpy).toHaveBeenCalledWith(error.status, error.message)
+    expect(next).toHaveBeenCalledTimes(1)
   })
 
   test('handles GNAPServerRouteError error', async (): Promise<void> => {
