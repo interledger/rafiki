@@ -10,7 +10,8 @@ import { AccessToken, toOpenPaymentsAccessToken } from './model'
 import { AccessService } from '../access/service'
 import { TransactionOrKnex } from 'objection'
 import { GrantService } from '../grant/service'
-import { GNAPErrorCode, throwGNAPError } from '../shared/gnapErrors'
+import { GNAPErrorCode, GNAPServerRouteError } from '../shared/gnapErrors'
+import { generateRouteLogs } from '../shared/utils'
 
 export type TokenHttpSigContext = AppContext & {
   accessToken: AccessToken & {
@@ -60,9 +61,19 @@ export interface AccessTokenRoutes {
 export function createAccessTokenRoutes(
   deps_: ServiceDependencies
 ): AccessTokenRoutes {
-  const logger = deps_.logger.child({
-    service: 'AccessTokenRoutes'
-  })
+  const logger = deps_.logger.child(
+    {
+      service: 'AccessTokenRoutes'
+    },
+    {
+      redact: [
+        'requestBody.access_token',
+        'accessToken.value',
+        'headers.authorization',
+        'grant.continueToken'
+      ]
+    }
+  )
   const deps = { ...deps_, logger }
   return {
     introspect: (ctx: IntrospectContext) => introspectToken(deps, ctx),
@@ -76,10 +87,20 @@ async function introspectToken(
   ctx: IntrospectContext
 ): Promise<void> {
   const { body } = ctx.request
+  const accessToken = body['access_token']
   const grant = await deps.accessTokenService.introspect(
     // body.access_token exists since it is checked for by the request validation
-    body['access_token']
+    accessToken
   )
+
+  deps.logger.debug(
+    {
+      ...generateRouteLogs(ctx),
+      grant
+    },
+    'introspected access token'
+  )
+
   ctx.body = grantToTokenInfo(grant)
 }
 
@@ -101,7 +122,15 @@ async function revokeToken(
   deps: ServiceDependencies,
   ctx: RevokeContext
 ): Promise<void> {
-  await deps.accessTokenService.revoke(ctx.accessToken.id)
+  const accessToken = await deps.accessTokenService.revoke(ctx.accessToken.id)
+
+  deps.logger.debug(
+    {
+      ...generateRouteLogs(ctx),
+      accessToken
+    },
+    'revoked access token'
+  )
 
   ctx.status = 204
 }
@@ -130,12 +159,19 @@ async function rotateToken(
     await trx.rollback()
     const errorMessage =
       error instanceof Error ? error.message : 'Could not rotate token'
-    deps.logger.error(
-      { err: error instanceof Error && error.message },
+    throw new GNAPServerRouteError(
+      400,
+      GNAPErrorCode.InvalidRotation,
       errorMessage
     )
-    throwGNAPError(ctx, 400, GNAPErrorCode.InvalidRotation, errorMessage)
   }
+
+  deps.logger.debug(
+    {
+      ...generateRouteLogs(ctx)
+    },
+    'rotated access token'
+  )
 
   ctx.status = 200
   ctx.body = {

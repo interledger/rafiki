@@ -148,8 +148,8 @@ importers:
         specifier: 6.9.0
         version: 6.9.0
       '@interledger/openapi':
-        specifier: 1.2.1
-        version: 1.2.1
+        specifier: 2.0.1
+        version: 2.0.1
       '@koa/cors':
         specifier: ^5.0.0
         version: 5.0.0

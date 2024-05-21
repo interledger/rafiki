@@ -17,7 +17,8 @@ import {
   isFinishableGrant
 } from '../grant/model'
 import { toOpenPaymentsAccess } from '../access/model'
-import { GNAPErrorCode, throwGNAPError } from '../shared/gnapErrors'
+import { GNAPErrorCode, GNAPServerRouteError } from '../shared/gnapErrors'
+import { generateRouteLogs } from '../shared/utils'
 
 interface ServiceDependencies extends BaseService {
   grantService: GrantService
@@ -111,25 +112,23 @@ async function getGrantDetails(
 ): Promise<void> {
   const secret = ctx.headers?.['x-idp-secret']
   const { config, interactionService, accessService } = deps
+  const { id: interactId, nonce } = ctx.params
   if (
-    !ctx.headers['x-idp-secret'] ||
+    !secret ||
     !crypto.timingSafeEqual(
       Buffer.from(secret as string),
       Buffer.from(config.identityServerSecret)
     )
   ) {
-    throwGNAPError(
-      ctx,
+    throw new GNAPServerRouteError(
       401,
       GNAPErrorCode.InvalidRequest,
       'invalid x-idp-secret'
     )
   }
-  const { id: interactId, nonce } = ctx.params
   const interaction = await interactionService.getBySession(interactId, nonce)
   if (!interaction || isRevokedGrant(interaction.grant)) {
-    throwGNAPError(
-      ctx,
+    throw new GNAPServerRouteError(
       404,
       GNAPErrorCode.UnknownInteraction,
       'unknown interaction'
@@ -137,6 +136,14 @@ async function getGrantDetails(
   }
 
   const access = await accessService.getByGrant(interaction.grantId)
+
+  deps.logger.debug(
+    {
+      ...generateRouteLogs(ctx),
+      interaction
+    },
+    'retrieved interaction details'
+  )
 
   ctx.body = {
     access: access.map(toOpenPaymentsAccess),
@@ -148,7 +155,7 @@ async function startInteraction(
   deps: ServiceDependencies,
   ctx: StartContext
 ): Promise<void> {
-  deps.logger.info(
+  deps.logger.debug(
     {
       params: ctx.params,
       query: ctx.query
@@ -157,7 +164,7 @@ async function startInteraction(
   )
   const { id: interactId, nonce } = ctx.params
   const { clientName, clientUri } = ctx.query
-  const { config, interactionService, grantService } = deps
+  const { config, interactionService, grantService, logger } = deps
   const interaction = await interactionService.getBySession(interactId, nonce)
 
   if (
@@ -165,8 +172,7 @@ async function startInteraction(
     interaction.state !== InteractionState.Pending ||
     isRevokedGrant(interaction.grant)
   ) {
-    throwGNAPError(
-      ctx,
+    throw new GNAPServerRouteError(
       401,
       GNAPErrorCode.UnknownInteraction,
       'unknown interaction'
@@ -187,11 +193,18 @@ async function startInteraction(
     interactionUrl.searchParams.set('clientName', clientName as string)
     interactionUrl.searchParams.set('clientUri', clientUri as string)
 
+    logger.debug(
+      {
+        ...generateRouteLogs(ctx),
+        interaction
+      },
+      'started interaction'
+    )
+
     ctx.redirect(interactionUrl.toString())
   } catch (err) {
     await trx.rollback()
-    throwGNAPError(
-      ctx,
+    throw new GNAPServerRouteError(
       500,
       GNAPErrorCode.RequestDenied,
       'internal server error'
@@ -206,17 +219,17 @@ async function handleInteractionChoice(
   ctx: ChooseContext
 ): Promise<void> {
   const { id: interactId, nonce, choice } = ctx.params
-  const { config, interactionService } = deps
+  const { config, interactionService, logger } = deps
+  const secret = ctx.headers['x-idp-secret']
 
   if (
-    !ctx.headers['x-idp-secret'] ||
+    !secret ||
     !crypto.timingSafeEqual(
-      Buffer.from(ctx.headers['x-idp-secret'] as string),
+      Buffer.from(secret as string),
       Buffer.from(config.identityServerSecret)
     )
   ) {
-    throwGNAPError(
-      ctx,
+    throw new GNAPServerRouteError(
       401,
       GNAPErrorCode.InvalidInteraction,
       'invalid x-idp-secret'
@@ -225,8 +238,7 @@ async function handleInteractionChoice(
 
   const interaction = await interactionService.getBySession(interactId, nonce)
   if (!interaction) {
-    throwGNAPError(
-      ctx,
+    throw new GNAPServerRouteError(
       404,
       GNAPErrorCode.UnknownInteraction,
       'unknown interaction'
@@ -238,8 +250,7 @@ async function handleInteractionChoice(
       grant.state === GrantState.Finalized &&
       grant.finalizationReason !== GrantFinalization.Issued
     ) {
-      throwGNAPError(
-        ctx,
+      throw new GNAPServerRouteError(
         401,
         GNAPErrorCode.UserDenied,
         'user denied interaction'
@@ -251,8 +262,7 @@ async function handleInteractionChoice(
       interaction.state !== InteractionState.Pending ||
       isInteractionExpired(interaction)
     ) {
-      throwGNAPError(
-        ctx,
+      throw new GNAPServerRouteError(
         400,
         GNAPErrorCode.InvalidInteraction,
         'invalid interaction'
@@ -260,12 +270,25 @@ async function handleInteractionChoice(
     }
 
     if (choice === InteractionChoices.Accept) {
+      logger.debug(
+        {
+          ...generateRouteLogs(ctx),
+          interaction
+        },
+        'interaction approved'
+      )
       await interactionService.approve(interactId)
     } else if (choice === InteractionChoices.Reject) {
+      logger.debug(
+        {
+          ...generateRouteLogs(ctx),
+          interaction
+        },
+        'interaction rejected'
+      )
       await interactionService.deny(interactId)
     } else {
-      throwGNAPError(
-        ctx,
+      throw new GNAPServerRouteError(
         400,
         GNAPErrorCode.InvalidRequest,
         'invalid interaction choice'
@@ -282,7 +305,7 @@ async function handleFinishableGrant(
   interaction: Interaction,
   grant: FinishableGrant
 ): Promise<void> {
-  const { grantService, config } = deps
+  const { grantService, config, logger } = deps
   const clientRedirectUri = new URL(grant.finishUri as string)
   if (interaction.state === InteractionState.Approved) {
     await grantService.approve(interaction.grantId)
@@ -297,14 +320,44 @@ async function handleFinishableGrant(
     const hash = crypto.createHash('sha-256').update(data).digest('base64')
     clientRedirectUri.searchParams.set('hash', hash)
     clientRedirectUri.searchParams.set('interact_ref', interactRef)
+
+    logger.debug(
+      {
+        ...generateRouteLogs(ctx),
+        grant,
+        interaction
+      },
+      'approved finishable grant'
+    )
+
     ctx.redirect(clientRedirectUri.toString())
   } else if (interaction.state === InteractionState.Denied) {
     await grantService.finalize(grant.id, GrantFinalization.Rejected)
     clientRedirectUri.searchParams.set('result', 'grant_rejected')
+
+    logger.debug(
+      {
+        ...generateRouteLogs(ctx),
+        grant,
+        interaction
+      },
+      'rejected finishable grant'
+    )
+
     ctx.redirect(clientRedirectUri.toString())
   } else {
     // Interaction is not in an accepted or rejected state
     clientRedirectUri.searchParams.set('result', 'grant_invalid')
+
+    logger.debug(
+      {
+        ...generateRouteLogs(ctx),
+        grant,
+        interaction
+      },
+      'tried to finalize finishable grant with incomplete/invalid interaction'
+    )
+
     ctx.redirect(clientRedirectUri.toString())
   }
 }
@@ -315,19 +368,36 @@ async function handleUnfinishableGrant(
   interaction: Interaction,
   grant: Grant
 ): Promise<void> {
-  const { grantService } = deps
+  const { grantService, logger } = deps
   if (interaction.state === InteractionState.Approved) {
     await grantService.approve(grant.id)
+
+    logger.debug(
+      {
+        ...generateRouteLogs(ctx),
+        interaction,
+        grant
+      },
+      'approved unfinishable grant'
+    )
     ctx.status = 202
     return
   } else if (interaction.state === InteractionState.Denied) {
     await grantService.finalize(grant.id, GrantFinalization.Rejected)
+
+    logger.debug(
+      {
+        ...generateRouteLogs(ctx),
+        interaction,
+        grant
+      },
+      'rejected unfinishable grant'
+    )
     ctx.status = 202
     return
   } else {
     // Interaction is not in an accepted or rejected state
-    throwGNAPError(
-      ctx,
+    throw new GNAPServerRouteError(
       401,
       GNAPErrorCode.InvalidInteraction,
       'interaction is not active'
@@ -340,20 +410,23 @@ async function finishInteraction(
   ctx: FinishContext
 ): Promise<void> {
   const { id: interactId, nonce } = ctx.params
+  const { interactionService } = deps
   const sessionNonce = ctx.session.nonce
 
   // TODO: redirect with this error in query string
   if (sessionNonce !== nonce) {
-    throwGNAPError(ctx, 401, GNAPErrorCode.InvalidRequest, 'invalid session')
+    throw new GNAPServerRouteError(
+      401,
+      GNAPErrorCode.InvalidRequest,
+      'invalid session'
+    )
   }
 
-  const { interactionService } = deps
   const interaction = await interactionService.getBySession(interactId, nonce)
 
   // TODO: redirect with this error in query string
   if (!interaction || isRevokedGrant(interaction.grant)) {
-    throwGNAPError(
-      ctx,
+    throw new GNAPServerRouteError(
       404,
       GNAPErrorCode.UnknownInteraction,
       'unknown interaction'

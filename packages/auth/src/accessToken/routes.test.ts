@@ -20,7 +20,6 @@ import { AccessType, AccessAction } from '@interledger/open-payments'
 import { GrantService } from '../grant/service'
 import { AccessTokenService } from './service'
 import { GNAPErrorCode } from '../shared/gnapErrors'
-import { generateGNAPErrorResponse } from '../tests/errors'
 
 describe('Access Token Routes', (): void => {
   let deps: IocContract<AppServices>
@@ -330,10 +329,8 @@ describe('Access Token Routes', (): void => {
 
       await expect(accessTokenRoutes.rotate(ctx)).rejects.toMatchObject({
         status: 400,
-        ...generateGNAPErrorResponse(
-          GNAPErrorCode.InvalidRotation,
-          'invalid access token'
-        )
+        code: GNAPErrorCode.InvalidRotation,
+        message: 'invalid access token'
       })
     })
   })

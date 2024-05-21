@@ -1,5 +1,5 @@
-import { ExtendableContext } from 'koa'
-
+import { AppContext } from '../app'
+import { OpenAPIValidatorMiddlewareError } from '@interledger/openapi'
 export enum GNAPErrorCode {
   InvalidRequest = 'invalid_request',
   InvalidClient = 'invalid_client',
@@ -19,11 +19,66 @@ export interface GNAPErrorResponse {
   }
 }
 
-export function throwGNAPError(
-  ctx: ExtendableContext,
-  httpCode: number,
-  gnapCode: GNAPErrorCode,
-  description?: string
-): never {
-  ctx.throw(httpCode, gnapCode, { error: { code: gnapCode, description } })
+export class GNAPServerRouteError extends Error {
+  public status: number
+  public code: GNAPErrorCode
+
+  constructor(status: number, code: GNAPErrorCode, message?: string) {
+    super(message)
+    this.status = status
+    this.code = code
+  }
+}
+
+export async function gnapServerErrorMiddleware(
+  ctx: AppContext,
+  next: () => Promise<unknown>
+) {
+  try {
+    await next()
+  } catch (err) {
+    const logger = await ctx.container.use('logger')
+
+    const baseLog = {
+      method: ctx.method,
+      route: ctx.path,
+      headers: ctx.headers,
+      params: ctx.params,
+      requestBody: ctx.request.body
+    }
+
+    if (err instanceof GNAPServerRouteError) {
+      logger.info(
+        {
+          ...baseLog,
+          message: err.message,
+          requestBody: ctx.request.body
+        },
+        'Received error when handling Open Payments GNAP request'
+      )
+
+      ctx.throw(err.status, err.code, {
+        error: { code: err.code, description: err.message }
+      })
+    } else if (err instanceof OpenAPIValidatorMiddlewareError) {
+      const finalStatus = err.status || 400
+
+      logger.info(
+        {
+          ...baseLog,
+          message: err.message,
+          status: finalStatus
+        },
+        'Received OpenAPI validation error when handling Open Payments GNAP request'
+      )
+
+      ctx.throw(finalStatus, err.message)
+    }
+
+    logger.error(
+      { ...baseLog, err },
+      'Received unhandled error in Open Payments GNAP request'
+    )
+    ctx.throw(500)
+  }
 }
