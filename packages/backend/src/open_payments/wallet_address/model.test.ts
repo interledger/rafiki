@@ -10,8 +10,7 @@ import {
   ListOptions,
   WalletAddressEventError,
   WalletAddressEventType,
-  WalletAddressEvent,
-  throwIfMissingWalletAddress
+  WalletAddressEvent
 } from './model'
 import { Grant } from '../auth/middleware'
 import {
@@ -33,7 +32,6 @@ import assert from 'assert'
 import { ReadContextWithAuthenticatedStatus } from '../payment/incoming/routes'
 import { Knex } from 'knex'
 import { OpenPaymentsServerRouteError } from '../route-errors'
-import { createIncomingPayment } from '../../tests/incomingPayment'
 
 export interface SetupOptions {
   reqOpts: httpMocks.RequestOptions
@@ -463,53 +461,5 @@ describe('Models', (): void => {
         }
       )
     })
-  })
-})
-
-describe('throwIfMissingWalletAddress', (): void => {
-  let deps: IocContract<AppServices>
-  let appContainer: TestContainer
-
-  beforeAll(async (): Promise<void> => {
-    deps = initIocContainer(Config)
-    appContainer = await createTestApp(deps)
-  })
-
-  afterEach(async (): Promise<void> => {
-    await truncateTables(appContainer.knex)
-  })
-
-  afterAll(async (): Promise<void> => {
-    await appContainer.shutdown()
-  })
-
-  test('throws if missing wallet address on subresource', async () => {
-    const logger = await deps.use('logger')
-
-    const walletAddress = await createWalletAddress(deps)
-    const incomingPayment = await createIncomingPayment(deps, {
-      walletAddressId: walletAddress.id
-    })
-
-    delete incomingPayment.walletAddress
-
-    expect(() =>
-      throwIfMissingWalletAddress({ logger }, incomingPayment)
-    ).toThrow(
-      'IncomingPayment does not have wallet address. This should be investigated.'
-    )
-  })
-
-  test('does not throw if existing wallet address on subresource', async () => {
-    const logger = await deps.use('logger')
-
-    const walletAddress = await createWalletAddress(deps)
-    const incomingPayment = await createIncomingPayment(deps, {
-      walletAddressId: walletAddress.id
-    })
-
-    expect(() =>
-      throwIfMissingWalletAddress({ logger }, incomingPayment)
-    ).not.toThrow()
   })
 })

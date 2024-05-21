@@ -1,10 +1,11 @@
 import { generateJwk, JWK } from '@interledger/http-signature-utils'
 
-import { WalletAddressKeysContext } from '../../../app'
+import { WalletAddressUrlContext } from '../../../app'
 import { IAppConfig } from '../../../config/app'
-import { WalletAddressService } from '../service'
 import { WalletAddressKeyService } from './service'
 import { Logger } from 'pino'
+import { WalletAddressService } from '../service'
+import { OpenPaymentsServerRouteError } from '../../route-errors'
 
 interface ServiceDependencies {
   walletAddressKeyService: WalletAddressKeyService
@@ -15,7 +16,7 @@ interface ServiceDependencies {
 }
 
 export interface WalletAddressKeyRoutes {
-  getKeysByWalletAddressId(ctx: WalletAddressKeysContext): Promise<void>
+  get(ctx: WalletAddressUrlContext): Promise<void>
 }
 
 export function createWalletAddressKeyRoutes(
@@ -30,38 +31,40 @@ export function createWalletAddressKeyRoutes(
   }
 
   return {
-    getKeysByWalletAddressId: (ctx: WalletAddressKeysContext) =>
-      getKeysByWalletAddressId(deps, ctx)
+    get: (ctx: WalletAddressUrlContext) => getWalletAddressKeys(deps, ctx)
   }
 }
 
-export async function getKeysByWalletAddressId(
+export async function getWalletAddressKeys(
   deps: ServiceDependencies,
-  ctx: WalletAddressKeysContext
+  ctx: WalletAddressUrlContext
 ): Promise<void> {
-  if (ctx.walletAddress) {
-    const keys = await deps.walletAddressKeyService.getKeysByWalletAddressId(
-      ctx.walletAddress.id
-    )
-
-    ctx.body = {
-      keys: keys.map((key) => key.jwk)
-    }
-  } else if (deps.config.walletAddressUrl === ctx.walletAddressUrl) {
+  if (deps.config.walletAddressUrl === ctx.walletAddressUrl) {
     ctx.body = {
       keys: [deps.jwk]
     }
-  } else {
-    const errorMessage =
-      'Could not get wallet address keys. It is possible there is a wallet address configuration error for this Rafiki instance.'
-    deps.logger.error(
-      {
-        requestedWalletAddress: ctx.walletAddressUrl,
-        configuredWalletAddressUrl: deps.config.walletAddressUrl
-      },
-      errorMessage
-    )
+    return
+  }
 
-    throw new Error(errorMessage)
+  const walletAddress = await deps.walletAddressService.getOrPollByUrl(
+    ctx.walletAddressUrl
+  )
+
+  if (!walletAddress?.isActive) {
+    throw new OpenPaymentsServerRouteError(
+      404,
+      'Could not get wallet address',
+      {
+        walletAddressUrl: ctx.walletAddressUrl
+      }
+    )
+  }
+
+  const keys = await deps.walletAddressKeyService.getKeysByWalletAddressId(
+    walletAddress.id
+  )
+
+  ctx.body = {
+    keys: keys.map((key) => key.jwk)
   }
 }
