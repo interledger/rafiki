@@ -74,22 +74,29 @@ describe('SPSP Routes', (): void => {
       return ctx
     }
 
-    test('wrong Accept; returns 406', async () => {
-      const ctx = createContext<SPSPContext>({
-        headers: { Accept: 'application/json' }
-      })
+    test.each`
+      acceptHeader
+      ${'application/json'}
+      ${'*/*'}
+    `(
+      'Request with incorrect header ($acceptHeader) returns 406',
+      async ({ acceptHeader }) => {
+        const ctx = createContext<SPSPContext>({
+          headers: { Accept: acceptHeader }
+        })
 
-      expect.assertions(2)
-      try {
-        await spspRoutes.get(ctx)
-      } catch (err) {
-        assert.ok(err instanceof SPSPRouteError)
-        expect(err.status).toBe(406)
-        expect(err.message).toBe(
-          'Request does not support application/spsp4+json'
-        )
+        expect.assertions(2)
+        try {
+          await spspRoutes.get(ctx)
+        } catch (err) {
+          assert.ok(err instanceof SPSPRouteError)
+          expect(err.status).toBe(406)
+          expect(err.message).toBe(
+            'Request does not support application/spsp4+json'
+          )
+        }
       }
-    })
+    )
 
     test('nonce, no secret; returns 400', async () => {
       const ctx = setup({ nonce })

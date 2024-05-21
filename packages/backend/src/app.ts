@@ -660,6 +660,8 @@ export class App {
     // Otherwise it will be matched instead of other Open Payments endpoints.
     router.get(
       WALLET_ADDRESS_PATH,
+      getWalletAddressUrlFromPath,
+      createSpspMiddleware(this.config.spspEnabled),
       createValidatorMiddleware(
         walletAddressServerSpec,
         {
@@ -668,8 +670,6 @@ export class App {
         },
         validatorMiddlewareOptions
       ),
-      getWalletAddressUrlFromPath,
-      createSpspMiddleware(this.config.spspEnabled),
       walletAddressRoutes.get
     )
 
