@@ -25,6 +25,7 @@ module.exports = {
     `<rootDir>/packages/${packageName}/src/`,
     `<rootDir>/node_modules`
   ],
+  setupFiles: [`<rootDir>/packages/${packageName}/jest.env.js`],
   id: packageName,
   displayName: packageName,
   rootDir: '../..'
