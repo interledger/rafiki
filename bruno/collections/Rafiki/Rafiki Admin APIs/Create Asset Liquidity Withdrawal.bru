@@ -1,7 +1,7 @@
 meta {
-  name: Withdraw Peer Liquidity
+  name: Withdraw Asset Liquidity
   type: graphql
-  seq: 15
+  seq: 6
 }
 
 post {
@@ -11,8 +11,8 @@ post {
 }
 
 body:graphql {
-  mutation CreatePeerLiquidityWithdrawal ($input: CreatePeerLiquidityWithdrawalInput!) {
-    createPeerLiquidityWithdrawal(input: $input) {
+  mutation CreateAssetLiquidityWithdrawal ($input: CreateAssetLiquidityWithdrawalInput!) {
+    createAssetLiquidityWithdrawal(input: $input) {
       code
       success
       message
@@ -24,10 +24,11 @@ body:graphql {
 body:graphql:vars {
   {
     "input": {
-      "id": "{{withdrawalId}}",
-      "peerId": "{{peerId}}",
+      "id": "{{transferId}}",
+      "assetId": "{{assetId}}",
       "amount": "100",
-      "idempotencyKey":"{{idempotencyKey}}"
+      "idempotencyKey":"{{idempotencyKey}}",
+      "timeoutSeconds": {{withdrawalTimeout}}
     }
   }
   
@@ -37,7 +38,7 @@ script:pre-request {
   const { v4: uuidv4 } = require('uuid');
   const scripts = require('./scripts');
   
-  bru.setEnvVar("withdrawalId",uuidv4());
+  bru.setVar("transferId",uuidv4());
   bru.setVar("idempotencyKey",uuidv4());
   
   scripts.addApiSignatureHeader();

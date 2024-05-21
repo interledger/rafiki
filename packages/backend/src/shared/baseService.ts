@@ -1,8 +1,6 @@
 import { TransactionOrKnex } from 'objection'
 
-import { Logger as PinoLogger } from '../logger/service'
-
-type Logger = typeof PinoLogger
+import { Logger } from 'pino'
 
 export interface BaseService {
   logger: Logger

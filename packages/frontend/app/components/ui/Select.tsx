@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { Fragment, useId, useState } from 'react'
 import { Combobox, Transition } from '@headlessui/react'
 import { Input } from './Input'
@@ -19,6 +20,7 @@ type SelectProps = {
   required?: boolean
   error?: string | string[]
   defaultValue?: SelectOption
+  description?: ReactNode
 }
 
 export const Select = ({
@@ -32,7 +34,8 @@ export const Select = ({
   defaultValue = {
     label: '',
     value: ''
-  }
+  },
+  description
 }: SelectProps) => {
   const id = useId()
   const [internalValue, setInternalValue] = useState<SelectOption>(defaultValue)
@@ -82,6 +85,9 @@ export const Select = ({
             )}
           </Combobox.Button>
         </div>
+        {description ? (
+          <div className='font-medium text-sm'>{description}</div>
+        ) : null}
         {error ? <FieldError error={error} /> : null}
         <Transition
           as={Fragment}

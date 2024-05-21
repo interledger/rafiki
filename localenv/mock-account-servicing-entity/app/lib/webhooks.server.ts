@@ -17,6 +17,12 @@ export interface AmountJSON {
   assetScale: number
 }
 
+export interface WalletAddressObject {
+  id: string
+  createdAt: string
+  receivedAmount: AmountJSON
+}
+
 export function parseAmount(amount: AmountJSON): Amount {
   return {
     value: BigInt(amount['value']),
@@ -149,10 +155,10 @@ export async function handleIncomingPaymentCompletedExpired(wh: Webhook) {
   await apolloClient
     .mutate({
       mutation: gql`
-        mutation WithdrawIncomingPaymentLiquidity(
-          $input: WithdrawIncomingPaymentLiquidityInput!
+        mutation CreateIncomingPaymentWithdrawal(
+          $input: CreateIncomingPaymentWithdrawalInput!
         ) {
-          withdrawIncomingPaymentLiquidity(input: $input) {
+          createIncomingPaymentWithdrawal(input: $input) {
             code
             success
             message
@@ -163,19 +169,101 @@ export async function handleIncomingPaymentCompletedExpired(wh: Webhook) {
       variables: {
         input: {
           incomingPaymentId: payment.id,
-          idempotencyKey: uuid()
+          idempotencyKey: uuid(),
+          timeoutSeconds: 0
         }
       }
     })
     .then((query): LiquidityMutationResponse => {
       if (query.data) {
-        return query.data.withdrawIncomingPaymentLiquidity
+        return query.data.createIncomingPaymentWithdrawal
       } else {
         throw new Error('Data was empty')
       }
     })
 
   return
+}
+
+export async function handleWalletAddressWebMonetization(wh: Webhook) {
+  const walletAddressObj = wh.data.walletAddress as WalletAddressObject
+  const walletAddressId = walletAddressObj.id
+
+  if (!walletAddressId) {
+    throw new Error('No walletAddressId found')
+  }
+
+  const account = await mockAccounts.getByWalletAddressId(walletAddressId)
+  if (!account) {
+    throw new Error('No account found for wallet address')
+  }
+
+  // generate an ID, we do not have an id in wh.data
+  const withdrawalId = uuid()
+
+  try {
+    await apolloClient.mutate({
+      mutation: gql`
+        mutation CreateWalletAddressWithdrawal(
+          $input: CreateWalletAddressWithdrawalInput!
+        ) {
+          createWalletAddressWithdrawal(input: $input) {
+            code
+            error
+            message
+            success
+            withdrawal {
+              amount
+              id
+              walletAddress {
+                id
+                url
+                asset {
+                  id
+                  code
+                  scale
+                  withdrawalThreshold
+                }
+              }
+            }
+          }
+        }
+      `,
+      variables: {
+        input: {
+          id: withdrawalId,
+          walletAddressId,
+          idempotencyKey: uuid()
+        }
+      }
+    })
+
+    const amount = parseAmount(walletAddressObj.receivedAmount as AmountJSON)
+    await mockAccounts.credit(account.id, amount.value, true)
+
+    return await apolloClient.mutate({
+      mutation: gql`
+        mutation PostLiquidityWithdrawal(
+          $input: PostLiquidityWithdrawalInput!
+        ) {
+          postLiquidityWithdrawal(input: $input) {
+            code
+            success
+            message
+            error
+          }
+        }
+      `,
+      variables: {
+        input: {
+          withdrawalId: withdrawalId,
+          idempotencyKey: uuid()
+        }
+      }
+    })
+  } catch (err) {
+    throw new Error('Data was empty')
+  }
 }
 
 export async function handleWalletAddressNotFound(wh: Webhook) {

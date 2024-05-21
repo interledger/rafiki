@@ -60,7 +60,8 @@ export async function action({ request, params }: ActionFunctionArgs) {
     peerId,
     amount: result.data,
     id: v4(),
-    idempotencyKey: v4()
+    idempotencyKey: v4(),
+    timeoutSeconds: BigInt(0)
   })
 
   if (!response?.success) {

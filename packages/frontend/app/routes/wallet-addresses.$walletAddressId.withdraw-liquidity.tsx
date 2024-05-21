@@ -46,7 +46,8 @@ export async function action({ request, params }: ActionFunctionArgs) {
   const response = await createWalletAddressWithdrawal({
     id: v4(),
     walletAddressId,
-    idempotencyKey: v4()
+    idempotencyKey: v4(),
+    timeoutSeconds: BigInt(0)
   })
 
   if (!response?.success) {

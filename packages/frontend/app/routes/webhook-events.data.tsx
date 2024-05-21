@@ -18,7 +18,7 @@ export default function WebhookEventData() {
   const [searchParams] = useSearchParams()
   const state = location.state as { data: string }
   const dismiss = () =>
-    navigate(`/webhooks${searchParams ? `?${searchParams}` : null}`, {
+    navigate(`/webhook-events${searchParams ? `?${searchParams}` : null}`, {
       preventScrollReset: true
     })
 
