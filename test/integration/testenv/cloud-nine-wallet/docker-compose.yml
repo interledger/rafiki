@@ -5,13 +5,14 @@ services:
     image: rafiki-backend
     build:
       context: ../../../..
-      dockerfile: ./packages/backend/Dockerfile
+      dockerfile: ./packages/backend/Dockerfile.prod
     restart: always
     privileged: true
     ports:
       - '3100:3100'
       - '3101:3101'
       - '3102:3102'
+      - '9229:9229'
     networks:
       - rafiki-test
     extra_hosts:
@@ -45,7 +46,7 @@ services:
     image: rafiki-auth
     build:
       context: ../../../..
-      dockerfile: ./packages/auth/Dockerfile
+      dockerfile: ./packages/auth/Dockerfile.prod
     restart: always
     networks:
       - rafiki-test

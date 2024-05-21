@@ -28,11 +28,17 @@ services:
     hostname: happy-life-bank-backend
     image: rafiki-backend
     pull_policy: never
+    volumes:
+      - type: bind
+        source: ../../packages/backend/src
+        target: /home/rafiki/packages/backend/src
+        read_only: true
     restart: always
     privileged: true
     ports:
       - "4000:80"
       - "4001:3001"
+      - '9231:9229'
     networks:
       - rafiki
     environment:
@@ -64,11 +70,17 @@ services:
     image: rafiki-auth
     pull_policy: never
     restart: always
+    volumes:
+      - type: bind
+        source: ../../packages/auth/src
+        target: /home/rafiki/packages/auth/src
+        read_only: true
     networks:
       - rafiki
     ports:
       - '4003:3003'
       - '4006:3006'
+      - '9232:9229'
     environment:
       NODE_ENV: development
       AUTH_DATABASE_URL: postgresql://happy_life_bank_auth:happy_life_bank_auth@shared-database/happy_life_bank_auth

@@ -114,6 +114,47 @@ The secondary Happy Life Bank docker compose file (`./happy-life-bank/docker-com
 data stores created by the primary Rafiki instance so it can't be run by itself.
 The `pnpm localenv:compose up` command starts both the primary instance and the secondary.
 
+### Debugging
+
+Debuggers for the services are exposed on the following ports:
+
+| IP and Port    | Services                |
+| -------------- | ----------------------- |
+| 127.0.0.1:9229 | Cloud Nine Backend      |
+| 127.0.0.1:9230 | Cloud Nine Auth         |
+| 127.0.0.1:9231 | Happy Life Bank Backend |
+| 127.0.0.1:9232 | Happy Life Bank Auth    |
+
+#### With a chromium browser:
+
+- go to `chrome://inspect`
+- Click "Configure" and add the IP addresses and ports detailed above
+- start docker containers
+- click "inspect" on the service you want to debug to open the chromium debugger
+
+You can either trigger the debugger by adding `debugger` statements in code and restarting, or by adding breakpoints directly in the chromium debugger after starting the docker containers.
+
+#### With Vscode:
+
+For debugging with Vscode, you can add this configuration to your `.vscode/launch.json`):
+
+```json
+{
+    "name": "Attach to docker (cloud-nine-backend)",
+    "type": "node",
+    "request": "attach",
+    "port": 9229,
+    "address": "localhost",
+    "localRoot": "${workspaceFolder}",
+    "remoteRoot": "/home/rafiki/",
+    "restart": true
+},
+```
+
+`localRoot` will vary depending on the location of `launch.json` relative to rafiki's root directory.
+
+For more ways to connect debuggers, see the Node docs for debugging: https://nodejs.org/en/learn/getting-started/debugging
+
 ### Shutting down
 
 ```

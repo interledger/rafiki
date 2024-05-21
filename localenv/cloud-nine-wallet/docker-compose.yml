@@ -32,13 +32,19 @@ services:
     image: rafiki-backend
     build:
       context: ../..
-      dockerfile: ./packages/backend/Dockerfile
+      dockerfile: ./packages/backend/Dockerfile.dev
+    volumes:
+      - type: bind
+        source: ../../packages/backend/src
+        target: /home/rafiki/packages/backend/src
+        read_only: true
     restart: always
     privileged: true
     ports:
       - '3000:80'
       - '3001:3001'
       - '3002:3002'
+      - "9229:9229"
     networks:
       - rafiki
     environment:
@@ -73,13 +79,19 @@ services:
     image: rafiki-auth
     build:
       context: ../..
-      dockerfile: ./packages/auth/Dockerfile
+      dockerfile: ./packages/auth/Dockerfile.dev
+    volumes:
+      - type: bind
+        source: ../../packages/auth/src
+        target: /home/rafiki/packages/auth/src
+        read_only: true
     restart: always
     networks:
       - rafiki
     ports:
       - '3003:3003'
       - '3006:3006'
+      - "9230:9229"
     environment:
       NODE_ENV: ${NODE_ENV:-development}
       TRUST_PROXY: ${TRUST_PROXY}
@@ -112,7 +124,7 @@ services:
     image: rafiki-frontend
     build:
       context: ../..
-      dockerfile: ./packages/frontend/devDockerfile
+      dockerfile: ./packages/frontend/Dockerfile.dev
     volumes:
       - type: bind
         source: ../../packages/frontend/app
