@@ -56,10 +56,13 @@ services:
     environment:
       NODE_ENV: development
       AUTH_DATABASE_URL: postgresql://happy_life_bank_test_auth:happy_life_bank_test_auth@shared-database/happy_life_bank_test_auth
-      AUTH_SERVER_DOMAIN: http://happy-life-bank-test-auth:4106
+      AUTH_SERVER_URL: http://happy-life-bank-test-auth:4106
       INTROSPECTION_PORT: 4107
       ADMIN_PORT: 4103
       AUTH_PORT: 4106
       REDIS_URL: redis://shared-redis:6379/3
+      IDENTITY_SERVER_URL: http://localhost:3030/mock-idp/
+      IDENTITY_SERVER_SECRET: 2pEcn2kkCclbOHQiGNEwhJ0rucATZhrA807HTm2rNXE=
+      COOKIE_KEY: 42397d1f371dd4b8b7d0308a689a57c882effd4ea909d792302542af47e2cd37
     depends_on:
       - cloud-nine-wallet-test-auth

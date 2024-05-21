@@ -187,7 +187,7 @@ async function startInteraction(
 
     ctx.session.nonce = interaction.nonce
 
-    const interactionUrl = new URL(config.identityServerDomain)
+    const interactionUrl = new URL(config.identityServerUrl)
     interactionUrl.searchParams.set('interactId', interaction.id)
     interactionUrl.searchParams.set('nonce', interaction.nonce)
     interactionUrl.searchParams.set('clientName', clientName as string)
@@ -312,7 +312,7 @@ async function handleFinishableGrant(
 
     const { clientNonce } = grant
     const { nonce: interactNonce, ref: interactRef } = interaction
-    const grantRequestUrl = config.authServerDomain + `/`
+    const grantRequestUrl = config.authServerUrl + `/`
 
     // https://datatracker.ietf.org/doc/html/draft-ietf-gnap-core-protocol#section-4.2.3
     const data = `${clientNonce}\n${interactNonce}\n${interactRef}\n${grantRequestUrl}`

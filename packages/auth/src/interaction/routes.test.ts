@@ -144,7 +144,7 @@ describe('Interaction Routes', (): void => {
 
         assert.ok(interaction.id)
 
-        const redirectUrl = new URL(config.identityServerDomain)
+        const redirectUrl = new URL(config.identityServerUrl)
         redirectUrl.searchParams.set('interactId', interaction.id)
         const redirectSpy = jest.spyOn(ctx, 'redirect')
 
@@ -300,7 +300,7 @@ describe('Interaction Routes', (): void => {
           const { clientNonce } = grant
           const { nonce: interactNonce, ref: interactRef } = interaction
 
-          const grantRequestUrl = config.authServerDomain + `/`
+          const grantRequestUrl = config.authServerUrl + `/`
 
           const data = `${clientNonce}\n${interactNonce}\n${interactRef}\n${grantRequestUrl}`
           const hash = crypto

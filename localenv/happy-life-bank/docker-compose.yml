@@ -84,8 +84,11 @@ services:
     environment:
       NODE_ENV: development
       AUTH_DATABASE_URL: postgresql://happy_life_bank_auth:happy_life_bank_auth@shared-database/happy_life_bank_auth
-      AUTH_SERVER_DOMAIN: ${HAPPY_LIFE_BANK_AUTH_SERVER_DOMAIN:-http://localhost:4006}
+      AUTH_SERVER_URL: ${HAPPY_LIFE_BANK_AUTH_SERVER_DOMAIN:-http://localhost:4006}
       REDIS_URL: redis://shared-redis:6379/3
+      IDENTITY_SERVER_URL: http://localhost:3031/mock-idp/
+      IDENTITY_SERVER_SECRET: 2pEcn2kkCclbOHQiGNEwhJ0rucATZhrA807HTm2rNXE=
+      COOKIE_KEY: 42397d1f371dd4b8b7d0308a689a57c882effd4ea909d792302542af47e2cd37
     depends_on:
       - cloud-nine-auth
   happy-life-admin:
