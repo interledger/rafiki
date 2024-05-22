@@ -26,7 +26,6 @@ export function generateRouteLogs(ctx: AppContext): {
     params: ctx.params,
     requestBody: ctx.request.body
   }
-
 }
 
 function getSignatureParts(signature: string) {
