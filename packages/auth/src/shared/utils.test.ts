@@ -28,56 +28,84 @@ describe('utils', (): void => {
       await redis.quit()
       await appContainer.shutdown()
     })
-    
+
     test('Can verify a signature', async (): Promise<void> => {
       const requestBody = { test: 'value' }
-      const signature = generateApiSignature('test-secret', Config.adminApiSignatureVersion, requestBody)
-      const ctx = createContext<AppContext>({
-        headers: { 
-          Accept: 'application/json',
-          signature
+      const signature = generateApiSignature(
+        'test-secret',
+        Config.adminApiSignatureVersion,
+        requestBody
+      )
+      const ctx = createContext<AppContext>(
+        {
+          headers: {
+            Accept: 'application/json',
+            signature
+          },
+          url: '/graphql'
         },
-        url: '/graphql',
-      }, {}, appContainer.container)
+        {},
+        appContainer.container
+      )
       ctx.request.body = requestBody
 
-      const verified = await verifyApiSignature(ctx, { ...Config, adminApiSecret: 'test-secret' })
+      const verified = await verifyApiSignature(ctx, {
+        ...Config,
+        adminApiSecret: 'test-secret'
+      })
       expect(verified).toBe(true)
-
     })
 
     test('verification fails if header is not present', async (): Promise<void> => {
       const requestBody = { test: 'value' }
-      const ctx = createContext<AppContext>({
-        headers: { 
-          Accept: 'application/json'
+      const ctx = createContext<AppContext>(
+        {
+          headers: {
+            Accept: 'application/json'
+          },
+          url: '/graphql'
         },
-        url: '/graphql',
-      }, {}, appContainer.container)
+        {},
+        appContainer.container
+      )
       ctx.request.body = requestBody
 
-      const verified = await verifyApiSignature(ctx, { ...Config, adminApiSecret: 'test-secret' })
+      const verified = await verifyApiSignature(ctx, {
+        ...Config,
+        adminApiSecret: 'test-secret'
+      })
       expect(verified).toBe(false)
     })
 
     test('Cannot verify signature that has already been processed', async (): Promise<void> => {
       const requestBody = { test: 'value' }
-      const signature = generateApiSignature('test-secret', Config.adminApiSignatureVersion, requestBody)
+      const signature = generateApiSignature(
+        'test-secret',
+        Config.adminApiSignatureVersion,
+        requestBody
+      )
       const key = `signature:${signature}`
       const op = redis.multi()
       op.set(key, signature)
       op.expire(key, signature)
       await op.exec()
-      const ctx = createContext<AppContext>({
-        headers: { 
-          Accept: 'application/json',
-          signature
+      const ctx = createContext<AppContext>(
+        {
+          headers: {
+            Accept: 'application/json',
+            signature
+          },
+          url: '/graphql'
         },
-        url: '/graphql',
-      }, {}, appContainer.container)
+        {},
+        appContainer.container
+      )
       ctx.request.body = requestBody
 
-      const verified = await verifyApiSignature(ctx, { ...Config, adminApiSecret: 'test-secret' })
+      const verified = await verifyApiSignature(ctx, {
+        ...Config,
+        adminApiSecret: 'test-secret'
+      })
       expect(verified).toBe(false)
     })
   })
