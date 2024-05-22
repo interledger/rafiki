@@ -73,6 +73,6 @@ module.exports = async (globalConfig) => {
       .start()
 
     global.__AUTH_REDIS__ = redisContainer
-    process.env.REDIS_URL = `redis://localhost${redisContainer.getMappedPort(REDIS_PORT)}`
+    process.env.REDIS_URL = `redis://localhost:${redisContainer.getMappedPort(REDIS_PORT)}`
   }
 }
