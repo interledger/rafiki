@@ -53,8 +53,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 }
 
 export default function App() {
-  const { message, publicEnv } =
-    useLoaderData<typeof loader>()
+  const { message, publicEnv } = useLoaderData<typeof loader>()
   const [snackbarOpen, setSnackbarOpen] = useState(false)
 
   useEffect(() => {

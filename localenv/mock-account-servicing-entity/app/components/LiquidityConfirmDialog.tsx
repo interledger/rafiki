@@ -2,20 +2,21 @@ import { Dialog } from '@headlessui/react'
 import { Form } from '@remix-run/react'
 import { XIcon } from '~/components/icons'
 import { Button } from '~/components'
+import { AccountWithBalance } from '~/lib/accounts.server'
 
 type LiquidityConfirmDialogProps = {
   title: string
   isOpen: boolean
   onClose: () => void
   displayAmount: string
-  accountId: string
+  account: AccountWithBalance
 }
 
 export const LiquidityConfirmDialog = ({
   title,
   isOpen,
   onClose,
-  accountId,
+  account,
   displayAmount
 }: LiquidityConfirmDialogProps) => {
   return (
@@ -43,10 +44,11 @@ export const LiquidityConfirmDialog = ({
               </Dialog.Title>
               <div className='mt-2'>
                 <p className='m-6 text-center'>
-                  Are you sure you want to add {displayAmount}?
+                  Are you sure you want to add {displayAmount}{' '}
+                  {account.assetCode}?
                 </p>
                 <Form method='post' replace preventScrollReset>
-                  <input type='hidden' name='id' value={accountId} />
+                  <input type='hidden' name='id' value={account.id} />
                   <input type='hidden' name='amount' value={displayAmount} />
                   <div className='flex justify-end space-x-4'>
                     <Button

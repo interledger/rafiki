@@ -81,3 +81,21 @@ export async function getAccountWithBalance(
     return
   }
 }
+
+export async function addLiquidity({
+  id,
+  amount
+}: {
+  id: string
+  amount: bigint
+}): Promise<string | undefined> {
+  try {
+    const bigAmount = BigInt(amount) * BigInt(100)
+    await mockAccounts.credit(id, bigAmount, false)
+
+    return id
+  } catch (err) {
+    console.log(err)
+    return
+  }
+}

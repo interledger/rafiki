@@ -7,9 +7,10 @@ import {
   Form,
   useLoaderData,
   useActionData,
-  useNavigation
+  useNavigation,
+  useLocation
 } from '@remix-run/react'
-import { ChangeEvent, useState } from 'react'
+import { ChangeEvent, useEffect, useState } from 'react'
 import {
   PageHeader,
   Table,
@@ -25,7 +26,11 @@ import { loadAssets } from '~/lib/asset.server'
 import { updateAccountSchema, addLiquiditySchema } from '~/lib/validate.server'
 import { getOpenPaymentsUrl } from '~/lib/utils'
 import { ZodFieldErrors } from '~/lib/types'
-import { getAccountWithBalance, updateAccount } from '~/lib/accounts.server'
+import {
+  getAccountWithBalance,
+  updateAccount,
+  addLiquidity
+} from '~/lib/accounts.server'
 import { LiquidityConfirmDialog } from '~/components/LiquidityConfirmDialog'
 
 export const loader = async ({ request, params }: LoaderFunctionArgs) => {
@@ -62,16 +67,22 @@ export default function EditAccount() {
   const { account, assets, transactions } = useLoaderData<typeof loader>()
   const response = useActionData<typeof action>()
   const { state } = useNavigation()
+  const { key } = useLocation()
 
   const [liquidityModalOpen, setLiquidityModalOpen] = useState(false)
   const [amountToAdd, setAmountToAdd] = useState(0)
 
   const isSubmitting = state === 'submitting'
 
-  const onAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const onAmountChange = (e: ChangeEvent<HTMLInputElement>) => {
     setAmountToAdd(Number(e?.target?.value || 0))
   }
-console.log(response);
+
+  useEffect(() => {
+    setAmountToAdd(0)
+    setLiquidityModalOpen(false)
+  }, [key])
+
   return (
     <>
       <div className='pt-4 flex flex-col space-y-8'>
@@ -137,7 +148,7 @@ console.log(response);
             </fieldset>
           </Form>
           {/* Update Account form - END */}
-          <fieldset disabled={isSubmitting}>
+          <fieldset key={`liquidity_${key}`} disabled={isSubmitting}>
             <div className='grid grid-cols-1 px-0 py-3 gap-6 md:grid-cols-3 border-b border-pearl'>
               <div className='col-span-1 pt-3'>
                 <h3 className='text-lg font-medium'>Balance</h3>
@@ -214,7 +225,7 @@ console.log(response);
         title='Confirm adding liquidity'
         isOpen={liquidityModalOpen}
         onClose={() => setLiquidityModalOpen(false)}
-        accountId={account.id}
+        account={account}
         displayAmount={amountToAdd.toString()}
       />
     </>
@@ -291,7 +302,17 @@ export async function action({ request }: ActionFunctionArgs) {
         return json({ ...actionResponse }, { status: 400 })
       }
 
-      const accountId = ''
+      const accountId = await addLiquidity({
+        ...result.data
+      })
+
+      if (!accountId) {
+        actionResponse.errors.general.message = [
+          'Could not add liquidity. Please try again!'
+        ]
+        return json({ ...actionResponse }, { status: 400 })
+      }
+
       return setMessageAndRedirect({
         session,
         message: {
