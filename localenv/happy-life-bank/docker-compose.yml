@@ -41,6 +41,7 @@ services:
     ports:
       - "4000:80"
       - "4001:3001"
+      - "4002:3002"
       - '9231:9229'
     networks:
       - rafiki
@@ -58,6 +59,7 @@ services:
       AUTH_SERVER_GRANT_URL: ${HAPPY_LIFE_BANK_AUTH_SERVER_DOMAIN:-http://happy-life-bank-auth:3006}
       AUTH_SERVER_INTROSPECTION_URL: http://happy-life-bank-auth:3007
       ILP_ADDRESS: test.happy-life-bank
+      ILP_CONNECTOR_ADDRESS: http://127.0.0.1:4002
       STREAM_SECRET: BjPXtnd00G2mRQwP/8ZpwyZASOch5sUXT5o0iR5b5wU=
       API_SECRET: iyIgCprjb9uL8wFckR+pLEkJWMB7FJhgkvqhTQR/964=
       WEBHOOK_URL: http://happy-life-bank/webhooks
@@ -66,6 +68,7 @@ services:
       REDIS_URL: redis://shared-redis:6379/2
       WALLET_ADDRESS_URL: ${HAPPY_LIFE_BANK_WALLET_ADDRESS_URL:-https://happy-life-bank-backend/.well-known/pay}
       ENABLE_TELEMETRY: false
+      KEY_ID: rafiki
     depends_on:
       - cloud-nine-backend
   happy-life-auth:
