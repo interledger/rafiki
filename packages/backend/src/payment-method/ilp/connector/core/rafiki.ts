@@ -5,16 +5,9 @@ import { Errors } from 'ilp-packet'
 import { Redis } from 'ioredis'
 import Koa, { Middleware } from 'koa'
 import { Logger } from 'pino'
-//import { Router } from './services/router'
-import {
-  CreateAccountError,
-  TransferError
-} from '../../../../accounting/errors'
 import {
   LiquidityAccount,
-  AccountingService,
-  LiquidityAccountType,
-  Transaction
+  BasicAccountingService
 } from '../../../../accounting/service'
 import { AssetOptions } from '../../../../asset/service'
 import { IncomingPaymentService } from '../../../../open_payments/payment/incoming/service'
@@ -64,7 +57,7 @@ export interface TransferOptions {
 
 export interface RafikiServices {
   //router: Router
-  accounting: AccountingService
+  accounting: BasicAccountingService
   telemetry?: TelemetryService
   walletAddresses: WalletAddressService
   logger: Logger
@@ -148,7 +141,7 @@ export class Rafiki<T = any> {
       get streamServer(): StreamServer {
         return streamServer
       },
-      get accounting(): AccountingService {
+      get accounting(): BasicAccountingService {
         return config.accounting
       },
       get walletAddresses(): WalletAddressService {

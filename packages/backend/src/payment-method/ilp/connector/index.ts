@@ -2,7 +2,7 @@ import { StreamServer } from '@interledger/stream-receiver'
 import { Redis } from 'ioredis'
 
 //TODO @jason, make use of the accounting service from src/accounting
-import { AccountingService } from '../../../accounting/service'
+import { BasicAccountingService } from '../../../accounting/service'
 import { IncomingPaymentService } from '../../../open_payments/payment/incoming/service'
 import { WalletAddressService } from '../../../open_payments/wallet_address/service'
 import { RatesService } from '../../../rates/service'
@@ -35,7 +35,7 @@ import { createTelemetryMiddleware } from './core/middleware/telemetry'
 interface ServiceDependencies extends BaseService {
   redis: Redis
   ratesService: RatesService
-  accountingService: AccountingService
+  accountingService: BasicAccountingService
   telemetry?: TelemetryService
   walletAddressService: WalletAddressService
   incomingPaymentService: IncomingPaymentService
