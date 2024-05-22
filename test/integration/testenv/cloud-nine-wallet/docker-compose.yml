@@ -33,11 +33,16 @@ services:
       AUTH_SERVER_INTROSPECTION_URL: http://cloud-nine-wallet-test-auth:3107
       AUTH_SERVER_GRANT_URL: http://cloud-nine-wallet-test-auth:3106
       ILP_ADDRESS: test.cloud-nine-wallet-test
+<<<<<<< HEAD
       ILP_CONNECTOR_ADDRESS: http://127.0.0.1:3102
+=======
+      ILP_CONNECTOR_ADDRESS: http://host.docker.internal:3102
+>>>>>>> 3c721905 (test(integration): update backend env variables)
       STREAM_SECRET: BjPXtnd00G2mRQwP/8ZpwyZASOch5sUXT5o0iR5b5wU=
       WEBHOOK_URL: http://host.docker.internal:8888/webhooks
       EXCHANGE_RATES_URL: http://host.docker.internal:8888/rates
       REDIS_URL: redis://shared-redis:6379/0
+      USE_TIGERBEETLE: false
     volumes:
       - ../private-key.pem:/workspace/private-key.pem
     depends_on:

@@ -35,6 +35,7 @@ services:
       WEBHOOK_URL: http://host.docker.internal:8889/webhooks
       EXCHANGE_RATES_URL: http://host.docker.internal:8889/rates
       REDIS_URL: redis://shared-redis:6379/2
+      USE_TIGERBEETLE: false
     volumes:
       - ../private-key.pem:/workspace/private-key.pem
     depends_on:
