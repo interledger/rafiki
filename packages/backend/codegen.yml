@@ -17,7 +17,6 @@ generates:
     plugins:
       - 'typescript'
       - 'typescript-resolvers'
-      - 'typescript-operations'
     config:
       omitOperationSuffix: true
       defaultMapper: Partial<{T}>
@@ -46,7 +45,6 @@ generates:
     plugins:
       - 'typescript'
       - 'typescript-resolvers'
-      - 'typescript-operations'
     config:
       omitOperationSuffix: true
       defaultMapper: Partial<{T}>

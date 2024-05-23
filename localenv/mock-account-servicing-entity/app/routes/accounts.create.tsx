@@ -5,8 +5,6 @@ import {
   useActionData,
   useNavigation
 } from '@remix-run/react'
-
-import { ListAssetsQuery } from 'generated/graphql'
 import { PageHeader, Button, ErrorPanel, Input, Select } from '~/components'
 import { loadAssets } from '~/lib/asset.server'
 import { createAccount } from '~/lib/accounts.server'
@@ -17,7 +15,7 @@ import type { ZodFieldErrors } from '~/lib/types'
 import { getOpenPaymentsUrl } from '~/lib/utils'
 
 export async function loader() {
-  const assets: ListAssetsQuery['assets']['edges'] = await loadAssets()
+  const assets = await loadAssets()
 
   return json({ assets })
 }
@@ -65,10 +63,14 @@ export default function CreateAccountPage() {
                     error={response?.errors?.fieldErrors.path}
                   />
                   <Select
-                    options={assets.map((asset) => ({
-                      value: asset.node.id,
-                      label: `${asset.node.code} (Scale: ${asset.node.scale})`
-                    }))}
+                    options={assets.map(
+                      (asset: {
+                        node: { id: string; code: string; scale: number }
+                      }) => ({
+                        value: asset.node.id,
+                        label: `${asset.node.code} (Scale: ${asset.node.scale})`
+                      })
+                    )}
                     error={response?.errors.fieldErrors.assetId}
                     name='assetId'
                     placeholder='Select asset...'
@@ -110,9 +112,9 @@ export async function action({ request }: ActionFunctionArgs) {
     return json({ errors }, { status: 400 })
   }
 
-  const assets: ListAssetsQuery['assets']['edges'] = await loadAssets()
+  const assets = await loadAssets()
   const assetDetail = assets.find(
-    (asset) => asset.node.id == result.data.assetId
+    (asset: { node: { id: string } }) => asset.node.id == result.data.assetId
   )
 
   const accountId = await createAccount({

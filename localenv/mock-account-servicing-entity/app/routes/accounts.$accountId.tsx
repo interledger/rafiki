@@ -19,7 +19,6 @@ import {
   Input,
   Select
 } from '../components'
-import { ListAssetsQuery } from 'generated/graphql'
 import { messageStorage, setMessageAndRedirect } from '~/lib/message.server'
 import { getAccountTransactions } from '../lib/transactions.server'
 import { loadAssets } from '~/lib/asset.server'
@@ -54,7 +53,7 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
   }
 
   const transactions = await getAccountTransactions(accountId)
-  const assets: ListAssetsQuery['assets']['edges'] = await loadAssets()
+  const assets = await loadAssets()
 
   return json({
     account,
@@ -122,10 +121,14 @@ export default function EditAccount() {
                       value={`${getOpenPaymentsUrl()}/${account?.path}`}
                     />
                     <Select
-                      options={assets.map((asset) => ({
-                        value: asset.node.id,
-                        label: `${asset.node.code} (Scale: ${asset.node.scale})`
-                      }))}
+                      options={assets.map(
+                        (asset: {
+                          node: { id: string; code: string; scale: number }
+                        }) => ({
+                          value: asset.node.id,
+                          label: `${asset.node.code} (Scale: ${asset.node.scale})`
+                        })
+                      )}
                       name='assetId'
                       placeholder='Select asset...'
                       label='Asset'

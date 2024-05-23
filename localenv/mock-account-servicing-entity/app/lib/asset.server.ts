@@ -1,16 +1,9 @@
 import { gql } from '@apollo/client'
 import { apolloClient } from './apolloClient'
-import type {
-  ListAssetsQuery,
-  ListAssetsQueryVariables,
-  QueryAssetsArgs
-} from 'generated/graphql'
+import type { QueryAssetsArgs } from 'generated/graphql'
 
 export const listAssets = async (args: QueryAssetsArgs) => {
-  const response = await apolloClient.query<
-    ListAssetsQuery,
-    ListAssetsQueryVariables
-  >({
+  const response = await apolloClient.query({
     query: gql`
       query ListAssetsQuery(
         $after: String
@@ -44,7 +37,15 @@ export const listAssets = async (args: QueryAssetsArgs) => {
 }
 
 export const loadAssets = async () => {
-  let assets: ListAssetsQuery['assets']['edges'] = []
+  let assets: {
+    node: {
+      code: string
+      id: string
+      scale: number
+      withdrawalThreshold?: bigint | null
+      createdAt: string
+    }
+  }[] = []
   let hasNextPage = true
   let after: string | undefined
 
