@@ -2,7 +2,7 @@ import { IncomingAccount, OutgoingAccount } from '../../rafiki'
 
 import {
   Transaction,
-  BasicAccountingService,
+  BasicAccountingService
 } from '../../../../../../accounting/service'
 import {
   CreateAccountError,
