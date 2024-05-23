@@ -137,48 +137,76 @@ export class MockAccountingService implements AccountingService {
   }
 
   createDeposit(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     deposit: Deposit,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     trx?: TransactionOrKnex
   ): Promise<void | TransferError> {
     return Promise.resolve(undefined)
   }
 
   createSettlementAccount(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     ledger: number,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     trx?: TransactionOrKnex
   ): Promise<void> {
     return Promise.resolve(undefined)
   }
 
-  createWithdrawal(withdrawal: Withdrawal): Promise<void | TransferError> {
+  createWithdrawal(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    withdrawal: Withdrawal
+  ): Promise<void | TransferError> {
     return Promise.resolve(undefined)
   }
 
-  getAccountsTotalReceived(ids: string[]): Promise<(bigint | undefined)[]> {
+  getAccountsTotalReceived(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    ids: string[]
+  ): Promise<(bigint | undefined)[]> {
     return Promise.resolve([])
   }
 
-  getAccountsTotalSent(ids: string[]): Promise<(bigint | undefined)[]> {
+  getAccountsTotalSent(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    ids: string[]
+  ): Promise<(bigint | undefined)[]> {
     return Promise.resolve([])
   }
 
-  getSettlementBalance(ledger: number): Promise<bigint | undefined> {
+  getSettlementBalance(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    ledger: number
+  ): Promise<bigint | undefined> {
     return Promise.resolve(undefined)
   }
 
-  getTotalReceived(id: string): Promise<bigint | undefined> {
+  getTotalReceived(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    id: string
+  ): Promise<bigint | undefined> {
     return Promise.resolve(undefined)
   }
 
-  getTotalSent(id: string): Promise<bigint | undefined> {
+  getTotalSent(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    id: string
+  ): Promise<bigint | undefined> {
     return Promise.resolve(undefined)
   }
 
-  postWithdrawal(id: string): Promise<void | TransferError> {
+  postWithdrawal(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    id: string
+  ): Promise<void | TransferError> {
     return Promise.resolve(undefined)
   }
 
-  voidWithdrawal(id: string): Promise<void | TransferError> {
+  voidWithdrawal(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    id: string
+  ): Promise<void | TransferError> {
     return Promise.resolve(undefined)
   }
 }
