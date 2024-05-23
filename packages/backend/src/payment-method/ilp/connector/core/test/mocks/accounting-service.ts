@@ -2,13 +2,16 @@ import { IncomingAccount, OutgoingAccount } from '../../rafiki'
 
 import {
   Transaction,
-  BasicAccountingService
+  AccountingService,
+  Deposit,
+  Withdrawal
 } from '../../../../../../accounting/service'
 import {
   CreateAccountError,
   TransferError
 } from '../../../../../../accounting/errors'
 import { CreateAccountError as CreateAccountErrorCode } from 'tigerbeetle-node'
+import { TransactionOrKnex } from 'objection'
 
 interface MockAccount {
   id: string
@@ -36,7 +39,7 @@ type MockIlpAccount = MockIncomingAccount | MockOutgoingAccount
 // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
 const isIncomingPeer = (o: any): o is MockIncomingAccount => o.http?.incoming
 
-export class MockAccountingService implements BasicAccountingService {
+export class MockAccountingService implements AccountingService {
   private accounts: Map<string, MockIlpAccount> = new Map()
 
   async _getIncomingPayment(
@@ -131,5 +134,51 @@ export class MockAccountingService implements BasicAccountingService {
       throw new CreateAccountError(CreateAccountErrorCode.exists)
     }
     return account
+  }
+
+  createDeposit(
+    deposit: Deposit,
+    trx?: TransactionOrKnex
+  ): Promise<void | TransferError> {
+    return Promise.resolve(undefined)
+  }
+
+  createSettlementAccount(
+    ledger: number,
+    trx?: TransactionOrKnex
+  ): Promise<void> {
+    return Promise.resolve(undefined)
+  }
+
+  createWithdrawal(withdrawal: Withdrawal): Promise<void | TransferError> {
+    return Promise.resolve(undefined)
+  }
+
+  getAccountsTotalReceived(ids: string[]): Promise<(bigint | undefined)[]> {
+    return Promise.resolve([])
+  }
+
+  getAccountsTotalSent(ids: string[]): Promise<(bigint | undefined)[]> {
+    return Promise.resolve([])
+  }
+
+  getSettlementBalance(ledger: number): Promise<bigint | undefined> {
+    return Promise.resolve(undefined)
+  }
+
+  getTotalReceived(id: string): Promise<bigint | undefined> {
+    return Promise.resolve(undefined)
+  }
+
+  getTotalSent(id: string): Promise<bigint | undefined> {
+    return Promise.resolve(undefined)
+  }
+
+  postWithdrawal(id: string): Promise<void | TransferError> {
+    return Promise.resolve(undefined)
+  }
+
+  voidWithdrawal(id: string): Promise<void | TransferError> {
+    return Promise.resolve(undefined)
   }
 }

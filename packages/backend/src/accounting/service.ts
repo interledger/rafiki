@@ -57,16 +57,12 @@ export interface Transaction {
   void: () => Promise<void | TransferError>
 }
 
-export interface BasicAccountingService {
-  createTransfer(options: TransferOptions): Promise<Transaction | TransferError>
+export interface AccountingService {
   createLiquidityAccount(
     account: LiquidityAccount,
     accountType: LiquidityAccountType,
     trx?: TransactionOrKnex
   ): Promise<LiquidityAccount>
-}
-
-export interface AccountingService extends BasicAccountingService {
   createSettlementAccount(
     ledger: number,
     trx?: TransactionOrKnex
@@ -77,6 +73,7 @@ export interface AccountingService extends BasicAccountingService {
   getTotalReceived(id: string): Promise<bigint | undefined>
   getAccountsTotalReceived(ids: string[]): Promise<(bigint | undefined)[]>
   getSettlementBalance(ledger: number): Promise<bigint | undefined>
+  createTransfer(options: TransferOptions): Promise<Transaction | TransferError>
   createDeposit(
     deposit: Deposit,
     trx?: TransactionOrKnex

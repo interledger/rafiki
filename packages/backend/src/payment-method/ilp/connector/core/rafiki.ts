@@ -7,7 +7,7 @@ import Koa, { Middleware } from 'koa'
 import { Logger } from 'pino'
 import {
   LiquidityAccount,
-  BasicAccountingService
+  AccountingService
 } from '../../../../accounting/service'
 import { AssetOptions } from '../../../../asset/service'
 import { IncomingPaymentService } from '../../../../open_payments/payment/incoming/service'
@@ -57,7 +57,7 @@ export interface TransferOptions {
 
 export interface RafikiServices {
   //router: Router
-  accounting: BasicAccountingService
+  accounting: AccountingService
   telemetry?: TelemetryService
   walletAddresses: WalletAddressService
   logger: Logger
@@ -133,7 +133,7 @@ export class Rafiki<T = any> {
       get streamServer(): StreamServer {
         return streamServer
       },
-      get accounting(): BasicAccountingService {
+      get accounting(): AccountingService {
         return config.accounting
       },
       get walletAddresses(): WalletAddressService {
