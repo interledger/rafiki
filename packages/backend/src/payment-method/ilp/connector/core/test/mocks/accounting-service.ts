@@ -142,7 +142,7 @@ export class MockAccountingService implements AccountingService {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     trx?: TransactionOrKnex
   ): Promise<void | TransferError> {
-    return Promise.resolve(undefined)
+    throw new Error('Not implemented!')
   }
 
   createSettlementAccount(
@@ -151,62 +151,62 @@ export class MockAccountingService implements AccountingService {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     trx?: TransactionOrKnex
   ): Promise<void> {
-    return Promise.resolve(undefined)
+    throw new Error('Not implemented!')
   }
 
   createWithdrawal(
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     withdrawal: Withdrawal
   ): Promise<void | TransferError> {
-    return Promise.resolve(undefined)
+    throw new Error('Not implemented!')
   }
 
   getAccountsTotalReceived(
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     ids: string[]
   ): Promise<(bigint | undefined)[]> {
-    return Promise.resolve([])
+    throw new Error('Not implemented!')
   }
 
   getAccountsTotalSent(
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     ids: string[]
   ): Promise<(bigint | undefined)[]> {
-    return Promise.resolve([])
+    throw new Error('Not implemented!')
   }
 
   getSettlementBalance(
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     ledger: number
   ): Promise<bigint | undefined> {
-    return Promise.resolve(undefined)
+    throw new Error('Not implemented!')
   }
 
   getTotalReceived(
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     id: string
   ): Promise<bigint | undefined> {
-    return Promise.resolve(undefined)
+    throw new Error('Not implemented!')
   }
 
   getTotalSent(
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     id: string
   ): Promise<bigint | undefined> {
-    return Promise.resolve(undefined)
+    throw new Error('Not implemented!')
   }
 
   postWithdrawal(
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     id: string
   ): Promise<void | TransferError> {
-    return Promise.resolve(undefined)
+    throw new Error('Not implemented!')
   }
 
   voidWithdrawal(
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     id: string
   ): Promise<void | TransferError> {
-    return Promise.resolve(undefined)
+    throw new Error('Not implemented!')
   }
 }

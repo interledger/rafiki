@@ -110,7 +110,6 @@ export class Rafiki<T = any> {
     private config: RafikiServices,
     private routes: ILPMiddleware<any>
   ) {
-    //this._router = config && config.router ? config.router : undefined
     this.redis = config.redis
     const logger = config.logger
 
