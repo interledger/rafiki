@@ -12,7 +12,6 @@ services:
       - '3100:3100'
       - '3101:3101'
       - '3102:3102'
-      - '9229:9229'
     networks:
       - rafiki-test
     extra_hosts:
