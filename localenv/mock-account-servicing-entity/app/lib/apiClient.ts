@@ -8,6 +8,8 @@ export const StepNames = {
   endInteraction: 3
 }
 
+const IDP_SECRET = '2pEcn2kkCclbOHQiGNEwhJ0rucATZhrA807HTm2rNXE='
+
 /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
 export type ApiResponse<T = any> = (
   | {
@@ -40,7 +42,7 @@ export class ApiClient {
       `http://localhost:3006/grant/${interactId}/${nonce}`,
       {
         headers: {
-          'x-idp-secret': 'replace-me'
+          'x-idp-secret': IDP_SECRET
         }
       }
     )
@@ -73,7 +75,7 @@ export class ApiClient {
       {},
       {
         headers: {
-          'x-idp-secret': 'replace-me'
+          'x-idp-secret': IDP_SECRET
         }
       }
     )
