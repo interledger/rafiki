@@ -10,9 +10,11 @@ import {
   Outlet,
   Scripts,
   useLoaderData,
-  ScrollRestoration
+  ScrollRestoration,
+  useLocation
 } from '@remix-run/react'
 import { useEffect, useState } from 'react'
+import { cx } from 'class-variance-authority'
 import { PublicEnv, type PublicEnvironment } from './PublicEnv'
 import { getOpenPaymentsUrl } from './lib/utils'
 import { messageStorage, type Message } from './lib/message.server'
@@ -55,6 +57,10 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 export default function App() {
   const { message, publicEnv } = useLoaderData<typeof loader>()
   const [snackbarOpen, setSnackbarOpen] = useState(false)
+  const location = useLocation()
+
+  const showSidebar =
+    location?.pathname?.indexOf('mock-idp') === -1 ? true : false
 
   useEffect(() => {
     if (!message) {
@@ -71,8 +77,13 @@ export default function App() {
       </head>
       <body className='h-full text-tealish bg-blue-100'>
         <div className='min-h-full'>
-          <Sidebar />
-          <div className={`pt-20 md:pt-0 md:pl-60 flex flex-1 flex-col`}>
+          {showSidebar && <Sidebar />}
+          <div
+            className={cx(
+              `pt-20 md:pt-0 flex flex-1 flex-col`,
+              showSidebar && 'md:pl-60'
+            )}
+          >
             <main className='pb-8 px-4'>
               <Outlet />
             </main>
