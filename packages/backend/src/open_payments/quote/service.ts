@@ -131,20 +131,17 @@ async function createQuote(
           receiver: options.receiver,
           debitAmount: quote.debitAmount,
           receiveAmount: quote.receiveAmount,
-          // Cap at MAX_INT64 because of postgres type limits.
           maxPacketAmount:
-            MAX_INT64 < maxPacketAmount ? MAX_INT64 : maxPacketAmount,
+            MAX_INT64 < maxPacketAmount ? MAX_INT64 : maxPacketAmount, // Cap at MAX_INT64 because of postgres type limits.
           minExchangeRate: quote.additionalFields.minExchangeRate as Pay.Ratio,
           lowEstimatedExchangeRate: quote.additionalFields
             .lowEstimatedExchangeRate as Pay.Ratio,
           highEstimatedExchangeRate: quote.additionalFields
             .highEstimatedExchangeRate as Pay.PositiveRatio,
-          // Patch using createdAt below
-          expiresAt: new Date(0),
+          expiresAt: new Date(0), // expiresAt is patched in finalizeQuote
           client: options.client,
           feeId: sendingFee?.id,
-          estimatedExchangeRate: quote.estimatedExchangeRate,
-          additionalFields: quote.additionalFields
+          estimatedExchangeRate: quote.estimatedExchangeRate
         })
         .withGraphFetched('[asset, fee, walletAddress]')
 
@@ -195,55 +192,87 @@ export async function resolveReceiver(
   return receiver
 }
 
-interface CalculateQuoteAmountsAfterFeesResult {
+interface CalculateQuoteAmountsWithFeesResult {
   receiveAmountValue: bigint
   debitAmountValue: bigint
 }
 
-function calculateQuoteAmountsAfterFees(
+/**
+ * Calculate fixed-send quote amounts: debitAmount is locked,
+ * subtract fees (considering the exchange rate) from the receiveAmount.
+ */
+function calculateFixedSendQuoteAmounts(
   deps: ServiceDependencies,
   quote: Quote,
-  maxReceiveAmountValue?: bigint
-): CalculateQuoteAmountsAfterFeesResult {
-  let debitAmountValue = quote.debitAmount.value
-  let receiveAmountValue = quote.receiveAmount.value
+  maxReceiveAmountValue: bigint
+): CalculateQuoteAmountsWithFeesResult {
+  const fees = quote.fee?.calculate(quote.receiveAmount.value) ?? BigInt(0)
 
-  if (!maxReceiveAmountValue) {
-    // FixedDelivery
-    const fees = quote.fee?.calculate(debitAmountValue) ?? 0n
-    debitAmountValue = BigInt(debitAmountValue) + fees
-    if (
-      debitAmountValue < quote.debitAmount.value ||
-      debitAmountValue <= BigInt(0)
-    ) {
-      throw QuoteError.InvalidAmount
-    }
-  } else {
-    // FixedSend
-    const fees = quote.fee?.calculate(receiveAmountValue) ?? 0n
-    const estimatedExchangeRate =
-      quote.estimatedExchangeRate || quote.lowEstimatedExchangeRate.valueOf()
+  const estimatedExchangeRate =
+    quote.estimatedExchangeRate || quote.lowEstimatedExchangeRate.valueOf()
 
-    const exchangeAdjustedFees = BigInt(
-      Math.ceil(Number(fees) * estimatedExchangeRate)
+  const exchangeAdjustedFees = BigInt(
+    Math.ceil(Number(fees) * estimatedExchangeRate)
+  )
+  const receiveAmountValue =
+    BigInt(quote.receiveAmount.value) - exchangeAdjustedFees
+
+  if (receiveAmountValue <= BigInt(0)) {
+    deps.logger.info(
+      { fees, exchangeAdjustedFees, estimatedExchangeRate, receiveAmountValue },
+      'Negative receive amount when calculating quote amount'
     )
-    receiveAmountValue -= exchangeAdjustedFees
-
-    if (receiveAmountValue <= exchangeAdjustedFees) {
-      throw QuoteError.NegativeReceiveAmount
-    }
-
-    if (
-      receiveAmountValue > maxReceiveAmountValue ||
-      receiveAmountValue <= BigInt(0)
-    ) {
-      throw QuoteError.InvalidAmount
-    }
+    throw QuoteError.NegativeReceiveAmount
   }
 
+  if (receiveAmountValue > maxReceiveAmountValue) {
+    throw QuoteError.InvalidAmount
+  }
+
+  deps.logger.debug(
+    {
+      debitAmountValue: quote.debitAmount.value,
+      receiveAmountValue,
+      fees,
+      exchangeAdjustedFees
+    },
+    'Calculated fixed send quote amount with fees'
+  )
+
   return {
-    receiveAmountValue,
-    debitAmountValue
+    debitAmountValue: quote.debitAmount.value,
+    receiveAmountValue
+  }
+}
+
+/**
+ * Calculate fixed-delivery quote amounts: receiveAmount is locked,
+ * add fees to the the debitAmount.
+ */
+function calculateFixedDeliveryQuoteAmounts(
+  deps: ServiceDependencies,
+  quote: Quote
+): CalculateQuoteAmountsWithFeesResult {
+  const fees = quote.fee?.calculate(quote.debitAmount.value) ?? BigInt(0)
+
+  const debitAmountValue = BigInt(quote.debitAmount.value) + fees
+
+  if (debitAmountValue <= BigInt(0)) {
+    deps.logger.info(
+      { fees, debitAmountValue },
+      'Received negative debitAmount receive amount when calculating quote amount'
+    )
+    throw QuoteError.InvalidAmount
+  }
+
+  deps.logger.debug(
+    { debitAmountValue, receiveAmountValue: quote.receiveAmount.value, fees },
+    `Calculated fixed delivery quote amount with fees`
+  )
+
+  return {
+    debitAmountValue,
+    receiveAmountValue: quote.receiveAmount.value
   }
 }
 
@@ -265,7 +294,7 @@ function calculateExpiry(
     : quoteExpiry
 }
 
-export async function finalizeQuote(
+async function finalizeQuote(
   deps: ServiceDependencies,
   options: CreateQuoteOptions,
   quote: Quote,
@@ -284,8 +313,18 @@ export async function finalizeQuote(
         : quote.receiveAmount.value
   }
 
-  const { debitAmountValue, receiveAmountValue } =
-    calculateQuoteAmountsAfterFees(deps, quote, maxReceiveAmountValue)
+  deps.logger.debug(
+    {
+      debitAmountValue: quote.debitAmount.value,
+      receiveAmountValue: quote.receiveAmount.value,
+      maxReceiveAmountValue
+    },
+    `Calculating ${maxReceiveAmountValue ? 'fixed-send' : 'fixed-delivery'} quote amount with fees`
+  )
+
+  const { debitAmountValue, receiveAmountValue } = maxReceiveAmountValue
+    ? calculateFixedSendQuoteAmounts(deps, quote, maxReceiveAmountValue)
+    : calculateFixedDeliveryQuoteAmounts(deps, quote)
 
   const patchOptions = {
     debitAmountValue,

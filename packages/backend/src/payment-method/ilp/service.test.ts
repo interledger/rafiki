@@ -111,8 +111,9 @@ describe('IlpPaymentService', (): void => {
         .spyOn(ratesService, 'rates')
         .mockImplementation(() => Promise.reject(new Error('fail')))
 
-      await expect(
-        ilpPaymentService.getQuote({
+      expect.assertions(4)
+      try {
+        await ilpPaymentService.getQuote({
           walletAddress: walletAddressMap['USD'],
           receiver: await createReceiver(deps, walletAddressMap['USD']),
           debitAmount: {
@@ -121,7 +122,16 @@ describe('IlpPaymentService', (): void => {
             value: 100n
           }
         })
-      ).rejects.toThrow('missing rates')
+      } catch (err) {
+        expect(err).toBeInstanceOf(PaymentMethodHandlerError)
+        expect((err as PaymentMethodHandlerError).message).toBe(
+          'Received error during ILP quoting'
+        )
+        expect((err as PaymentMethodHandlerError).description).toBe(
+          'Could not get rates from service'
+        )
+        expect((err as PaymentMethodHandlerError).retryable).toBe(false)
+      }
     })
 
     test('returns all fields correctly', async (): Promise<void> => {
@@ -202,6 +212,7 @@ describe('IlpPaymentService', (): void => {
         async () => {
           mockRatesApi(exchangeRatesUrl, () => ({}))
 
+          expect.assertions(4)
           try {
             await ilpPaymentService.getQuote({
               walletAddress: walletAddressMap['USD'],
@@ -237,6 +248,7 @@ describe('IlpPaymentService', (): void => {
         maxSourceAmount: -1n
       } as Pay.Quote)
 
+      expect.assertions(4)
       try {
         await ilpPaymentService.getQuote(options)
       } catch (error) {
@@ -272,6 +284,7 @@ describe('IlpPaymentService', (): void => {
         minDeliveryAmount: -1n
       } as Pay.Quote)
 
+      expect.assertions(4)
       try {
         await ilpPaymentService.getQuote(options)
       } catch (error) {
@@ -543,6 +556,7 @@ describe('IlpPaymentService', (): void => {
           }
         })
 
+      expect.assertions(6)
       try {
         await ilpPaymentService.pay({
           receiver,
@@ -582,6 +596,7 @@ describe('IlpPaymentService', (): void => {
           }
         })
 
+      expect.assertions(6)
       try {
         await ilpPaymentService.pay({
           receiver,
@@ -663,6 +678,7 @@ describe('IlpPaymentService', (): void => {
 
       mockIlpPay({}, nonRetryableIlpError)
 
+      expect.assertions(4)
       try {
         await ilpPaymentService.pay({
           receiver,
@@ -677,42 +693,6 @@ describe('IlpPaymentService', (): void => {
         )
         expect((error as PaymentMethodHandlerError).description).toBe(
           nonRetryableIlpError
-        )
-        expect((error as PaymentMethodHandlerError).retryable).toBe(false)
-      }
-    })
-
-    test('throws if invalid quote data', async (): Promise<void> => {
-      const { receiver, outgoingPayment } =
-        await createOutgoingPaymentWithReceiver(deps, {
-          sendingWalletAddress: walletAddressMap['USD'],
-          receivingWalletAddress: walletAddressMap['USD'],
-          method: 'ilp',
-          quoteOptions: {
-            debitAmount: {
-              value: 100n,
-              assetScale: walletAddressMap['USD'].asset.scale,
-              assetCode: walletAddressMap['USD'].asset.code
-            }
-          }
-        })
-
-      outgoingPayment.quote.additionalFields.lowEstimatedExchangeRate = ''
-
-      try {
-        await ilpPaymentService.pay({
-          receiver,
-          outgoingPayment,
-          finalDebitAmount: 50n,
-          finalReceiveAmount: 50n
-        })
-      } catch (error) {
-        expect(error).toBeInstanceOf(PaymentMethodHandlerError)
-        expect((error as PaymentMethodHandlerError).message).toBe(
-          'Error parsing ILP quote'
-        )
-        expect((error as PaymentMethodHandlerError).description).toBe(
-          'Invalid ratio value'
         )
         expect((error as PaymentMethodHandlerError).retryable).toBe(false)
       }
