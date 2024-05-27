@@ -4,12 +4,12 @@
  */
 exports.up = function (knex) {
   return knex.schema.alterTable('quotes', (table) => {
-    table.string('minExchangeRateNumerator').alter()
-    table.string('minExchangeRateDenominator').alter()
-    table.string('lowEstimatedExchangeRateNumerator').alter()
-    table.string('lowEstimatedExchangeRateDenominator').alter()
-    table.string('highEstimatedExchangeRateNumerator').alter()
-    table.string('highEstimatedExchangeRateDenominator').alter()
+    table.decimal('minExchangeRateNumerator', 64, 0).alter()
+    table.decimal('minExchangeRateDenominator', 64, 0).alter()
+    table.decimal('lowEstimatedExchangeRateNumerator', 64, 0).alter()
+    table.decimal('lowEstimatedExchangeRateDenominator', 64, 0).alter()
+    table.decimal('highEstimatedExchangeRateNumerator', 64, 0).alter()
+    table.decimal('highEstimatedExchangeRateDenominator', 64, 0).alter()
 
     table.dropColumn('additionalFields')
   })

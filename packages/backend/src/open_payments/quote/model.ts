@@ -97,12 +97,12 @@ export class Quote extends WalletAddressSubresource {
   }
 
   public maxPacketAmount!: bigint
-  private minExchangeRateNumerator!: string
-  private minExchangeRateDenominator!: string
-  private lowEstimatedExchangeRateNumerator!: string
-  private lowEstimatedExchangeRateDenominator!: string
-  private highEstimatedExchangeRateNumerator!: string
-  private highEstimatedExchangeRateDenominator!: string
+  private minExchangeRateNumerator!: bigint
+  private minExchangeRateDenominator!: bigint
+  private lowEstimatedExchangeRateNumerator!: bigint
+  private lowEstimatedExchangeRateDenominator!: bigint
+  private highEstimatedExchangeRateNumerator!: bigint
+  private highEstimatedExchangeRateDenominator!: bigint
 
   public get maxSourceAmount(): bigint {
     return this.debitAmountValue
@@ -120,8 +120,8 @@ export class Quote extends WalletAddressSubresource {
   }
 
   public set minExchangeRate(value: Pay.Ratio) {
-    this.minExchangeRateNumerator = value.a.value.toString()
-    this.minExchangeRateDenominator = value.b.value.toString()
+    this.minExchangeRateNumerator = value.a.value
+    this.minExchangeRateDenominator = value.b.value
   }
 
   public get lowEstimatedExchangeRate(): Pay.Ratio {
@@ -132,8 +132,8 @@ export class Quote extends WalletAddressSubresource {
   }
 
   public set lowEstimatedExchangeRate(value: Pay.Ratio) {
-    this.lowEstimatedExchangeRateNumerator = value.a.value.toString()
-    this.lowEstimatedExchangeRateDenominator = value.b.value.toString()
+    this.lowEstimatedExchangeRateNumerator = value.a.value
+    this.lowEstimatedExchangeRateDenominator = value.b.value
   }
 
   // Note that the upper exchange rate bound is *exclusive*.
@@ -149,8 +149,8 @@ export class Quote extends WalletAddressSubresource {
   }
 
   public set highEstimatedExchangeRate(value: Pay.PositiveRatio) {
-    this.highEstimatedExchangeRateNumerator = value.a.value.toString()
-    this.highEstimatedExchangeRateDenominator = value.b.value.toString()
+    this.highEstimatedExchangeRateNumerator = value.a.value
+    this.highEstimatedExchangeRateDenominator = value.b.value
   }
 
   public get method(): 'ilp' {
