@@ -5,15 +5,9 @@ import { Errors } from 'ilp-packet'
 import { Redis } from 'ioredis'
 import Koa, { Middleware } from 'koa'
 import { Logger } from 'pino'
-//import { Router } from './services/router'
-import {
-  CreateAccountError,
-  TransferError
-} from '../../../../accounting/errors'
 import {
   LiquidityAccount,
-  LiquidityAccountType,
-  Transaction
+  AccountingService
 } from '../../../../accounting/service'
 import { AssetOptions } from '../../../../asset/service'
 import { IncomingPaymentService } from '../../../../open_payments/payment/incoming/service'
@@ -59,14 +53,6 @@ export interface TransferOptions {
   sourceAmount: bigint
   destinationAmount?: bigint
   timeout: number
-}
-
-export interface AccountingService {
-  createTransfer(options: TransferOptions): Promise<Transaction | TransferError>
-  createLiquidityAccount(
-    account: LiquidityAccount,
-    type: LiquidityAccountType
-  ): Promise<LiquidityAccount | CreateAccountError>
 }
 
 export interface RafikiServices {
@@ -115,7 +101,6 @@ export type ILPContext<T = any> = {
 }
 
 export class Rafiki<T = any> {
-  //private _router?: Router
   private streamServer: StreamServer
   private redis: Redis
 
@@ -125,21 +110,13 @@ export class Rafiki<T = any> {
     private config: RafikiServices,
     private routes: ILPMiddleware<any>
   ) {
-    //this._router = config && config.router ? config.router : undefined
     this.redis = config.redis
     const logger = config.logger
-    //const routerOrThrow = (): Router => {
-    //  if (this._router) return this._router
-    //  throw new Error('No router service provided to the app')
-    //}
 
     this.streamServer = config.streamServer
     const { redis, streamServer } = this
     // Set global context that exposes services
     this.publicServer.context.services = {
-      //get router(): Router {
-      //  return routerOrThrow()
-      //},
       get incomingPayments(): IncomingPaymentService {
         return config.incomingPayments
       },
@@ -164,7 +141,6 @@ export class Rafiki<T = any> {
       get telemetry(): TelemetryService | undefined {
         return config.telemetry
       },
-
       logger
     }
 
@@ -209,14 +185,6 @@ export class Rafiki<T = any> {
     if (!response.rawReply) throw new Error('error generating reply')
     return response.rawReply
   }
-
-  //public get router(): Router | undefined {
-  //  return this._router
-  //}
-
-  //public set router(router: Router | undefined) {
-  //  this._router = router
-  //}
 
   public get logger(): Logger {
     return this.publicServer.context.services.logger

@@ -1,15 +1,17 @@
-import {
-  AccountingService,
-  IncomingAccount,
-  OutgoingAccount
-} from '../../rafiki'
+import { IncomingAccount, OutgoingAccount } from '../../rafiki'
 
-import { Transaction } from '../../../../../../accounting/service'
+import {
+  Transaction,
+  AccountingService,
+  Deposit,
+  Withdrawal
+} from '../../../../../../accounting/service'
 import {
   CreateAccountError,
   TransferError
 } from '../../../../../../accounting/errors'
 import { CreateAccountError as CreateAccountErrorCode } from 'tigerbeetle-node'
+import { TransactionOrKnex } from 'objection'
 
 interface MockAccount {
   id: string
@@ -132,5 +134,79 @@ export class MockAccountingService implements AccountingService {
       throw new CreateAccountError(CreateAccountErrorCode.exists)
     }
     return account
+  }
+
+  createDeposit(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    deposit: Deposit,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    trx?: TransactionOrKnex
+  ): Promise<void | TransferError> {
+    throw new Error('Not implemented!')
+  }
+
+  createSettlementAccount(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    ledger: number,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    trx?: TransactionOrKnex
+  ): Promise<void> {
+    throw new Error('Not implemented!')
+  }
+
+  createWithdrawal(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    withdrawal: Withdrawal
+  ): Promise<void | TransferError> {
+    throw new Error('Not implemented!')
+  }
+
+  getAccountsTotalReceived(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    ids: string[]
+  ): Promise<(bigint | undefined)[]> {
+    throw new Error('Not implemented!')
+  }
+
+  getAccountsTotalSent(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    ids: string[]
+  ): Promise<(bigint | undefined)[]> {
+    throw new Error('Not implemented!')
+  }
+
+  getSettlementBalance(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    ledger: number
+  ): Promise<bigint | undefined> {
+    throw new Error('Not implemented!')
+  }
+
+  getTotalReceived(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    id: string
+  ): Promise<bigint | undefined> {
+    throw new Error('Not implemented!')
+  }
+
+  getTotalSent(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    id: string
+  ): Promise<bigint | undefined> {
+    throw new Error('Not implemented!')
+  }
+
+  postWithdrawal(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    id: string
+  ): Promise<void | TransferError> {
+    throw new Error('Not implemented!')
+  }
+
+  voidWithdrawal(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    id: string
+  ): Promise<void | TransferError> {
+    throw new Error('Not implemented!')
   }
 }
