@@ -257,7 +257,7 @@ describe('IlpPaymentService', (): void => {
           'Received error during ILP quoting'
         )
         expect((error as PaymentMethodHandlerError).description).toBe(
-          'Invalid maxSourceAmount'
+          'Maximum source amount of ILP quote is non-positive'
         )
         expect((error as PaymentMethodHandlerError).retryable).toBe(false)
       }
@@ -293,7 +293,7 @@ describe('IlpPaymentService', (): void => {
           'Received error during ILP quoting'
         )
         expect((error as PaymentMethodHandlerError).description).toBe(
-          'Invalid minDeliveryAmount'
+          'Minimum delivery amount of ILP quote is non-positive'
         )
         expect((error as PaymentMethodHandlerError).retryable).toBe(false)
       }

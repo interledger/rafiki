@@ -92,14 +92,14 @@ async function getQuote(
     // zero or negative.
     if (ilpQuote.maxSourceAmount <= BigInt(0)) {
       throw new PaymentMethodHandlerError('Received error during ILP quoting', {
-        description: 'Invalid maxSourceAmount',
+        description: 'Maximum source amount of ILP quote is non-positive',
         retryable: false
       })
     }
 
     if (ilpQuote.minDeliveryAmount <= BigInt(0)) {
       throw new PaymentMethodHandlerError('Received error during ILP quoting', {
-        description: 'Invalid minDeliveryAmount',
+        description: 'Minimum delivery amount of ILP quote is non-positive',
         retryable: false
       })
     }
