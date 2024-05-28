@@ -57,12 +57,12 @@ describe('SPSP Middleware', (): void => {
 
   test.each`
     header                      | enableInterledgerPaymentPointers | description
-    ${'application/json'}       | ${true}     | ${'calls next'}
-    ${'application/json'}       | ${false}    | ${'calls next'}
-    ${'application/spsp4+json'} | ${true}     | ${'calls SPSP route'}
-    ${'application/spsp4+json'} | ${false}    | ${'calls next'}
-    ${'*/*'}                    | ${true}     | ${'calls next'}
-    ${'*/*'}                    | ${false}    | ${'calls next'}
+    ${'application/json'}       | ${true}                          | ${'calls next'}
+    ${'application/json'}       | ${false}                         | ${'calls next'}
+    ${'application/spsp4+json'} | ${true}                          | ${'calls SPSP route'}
+    ${'application/spsp4+json'} | ${false}                         | ${'calls next'}
+    ${'*/*'}                    | ${true}                          | ${'calls next'}
+    ${'*/*'}                    | ${false}                         | ${'calls next'}
   `(
     '$description for accept header: $header and enableInterledgerPaymentPointers: $enableInterledgerPaymentPointers',
     async ({ header, enableInterledgerPaymentPointers }): Promise<void> => {
@@ -70,10 +70,15 @@ describe('SPSP Middleware', (): void => {
         .spyOn(spspRoutes, 'get')
         .mockResolvedValueOnce(undefined)
       ctx.headers['accept'] = header
-      const spspMiddleware = createSpspMiddleware(enableInterledgerPaymentPointers)
+      const spspMiddleware = createSpspMiddleware(
+        enableInterledgerPaymentPointers
+      )
       await expect(spspMiddleware(ctx, next)).resolves.toBeUndefined()
 
-      if (enableInterledgerPaymentPointers && header == 'application/spsp4+json') {
+      if (
+        enableInterledgerPaymentPointers &&
+        header == 'application/spsp4+json'
+      ) {
         expect(spspSpy).toHaveBeenCalledTimes(1)
         expect(next).not.toHaveBeenCalled()
         expect(ctx.paymentTag).toEqual(walletAddress.id)
