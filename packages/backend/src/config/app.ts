@@ -166,7 +166,7 @@ export const Config = {
     'INCOMING_PAYMENT_EXPIRY_MAX_MS',
     2592000000
   ), // 30 days
-  spspEnabled: envBool('ENABLE_SPSP', true)
+  enableInterledgerPaymentPointers: envBool('ENABLE_INTERLEDGER_PAYMENT_POINTERS', true)
 }
 
 function parseRedisTlsConfig(
