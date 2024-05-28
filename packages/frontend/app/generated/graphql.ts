@@ -19,6 +19,12 @@ export type Scalars = {
   UInt64: { input: bigint; output: bigint; }
 };
 
+export type AdditionalProperty = {
+  key: Scalars['String']['input'];
+  value: Scalars['String']['input'];
+  visibleInOpenPayments: Scalars['Boolean']['input'];
+};
+
 export enum Alg {
   EdDsa = 'EdDSA'
 }
@@ -289,6 +295,8 @@ export type CreateReceiverResponse = {
 };
 
 export type CreateWalletAddressInput = {
+  /** Additional properties associated with the [walletAddress]. */
+  additionalProperties: Array<AdditionalProperty>;
   /** Asset of the wallet address */
   assetId: Scalars['String']['input'];
   /** Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence) */
@@ -1505,6 +1513,7 @@ export type ResolversInterfaceTypes<RefType extends Record<string, unknown>> = {
 
 /** Mapping between all available schema types and the resolvers types */
 export type ResolversTypes = {
+  AdditionalProperty: ResolverTypeWrapper<Partial<AdditionalProperty>>;
   Alg: ResolverTypeWrapper<Partial<Alg>>;
   Amount: ResolverTypeWrapper<Partial<Amount>>;
   AmountInput: ResolverTypeWrapper<Partial<AmountInput>>;
@@ -1626,6 +1635,7 @@ export type ResolversTypes = {
 
 /** Mapping between all available schema types and the resolvers parents */
 export type ResolversParentTypes = {
+  AdditionalProperty: Partial<AdditionalProperty>;
   Amount: Partial<Amount>;
   AmountInput: Partial<AmountInput>;
   Asset: Partial<Asset>;

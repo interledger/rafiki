@@ -65,7 +65,8 @@ describe('Wallet Address Resolvers', (): void => {
       asset = await createAsset(deps)
       input = {
         assetId: asset.id,
-        url: 'https://alice.me/.well-known/pay'
+        url: 'https://alice.me/.well-known/pay',
+        additionalProperties: []
       }
     })
 
