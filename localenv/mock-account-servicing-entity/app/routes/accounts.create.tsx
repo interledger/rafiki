@@ -28,7 +28,7 @@ export default function CreateAccountPage() {
 
   return (
     <div className='pt-4 flex flex-col space-y-4'>
-      <div className='flex flex-col rounded-md bg-offwhite px-6'>
+      <div className='flex flex-col rounded-md bg-[#FFF] px-6'>
         <PageHeader>
           <h3 className='text-xl'>Create Account</h3>
           <Button aria-label='go back to accounts page' to='/'>

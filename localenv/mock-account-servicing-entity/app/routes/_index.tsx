@@ -2,6 +2,7 @@ import { json } from '@remix-run/node'
 import { useLoaderData, useNavigate } from '@remix-run/react'
 import { PageHeader, Button, Table } from '../components'
 import { getAccountsWithBalance } from '../lib/balances.server'
+import background from '../public/background.png'
 
 export const loader = async () => {
   const accountsWithBalance = await getAccountsWithBalance()
@@ -15,7 +16,7 @@ export default function Accounts() {
 
   return (
     <div className='pt-4 flex flex-col space-y-8'>
-      <div className='flex flex-col rounded-md bg-offwhite px-6'>
+      <div className='flex flex-col rounded-md bg-[#FFF] mt-[75px] px-6'>
         <PageHeader>
           <div className='flex-1'>
             <h3 className='text-2xl'>Accounts</h3>

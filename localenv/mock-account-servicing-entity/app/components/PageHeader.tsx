@@ -11,7 +11,7 @@ export const PageHeader = ({ children, className }: PageHeaderProps) => {
     <div
       className={cx(
         className,
-        'flex py-4 bg-offwhite rounded-md items-center justify-between space-x-5'
+        'flex py-4 bg-[#FFF] rounded-md items-center justify-between space-x-5'
       )}
     >
       {children}

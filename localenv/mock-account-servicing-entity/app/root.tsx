@@ -18,10 +18,11 @@ import { cx } from 'class-variance-authority'
 import { PublicEnv, type PublicEnvironment } from './PublicEnv'
 import { getOpenPaymentsUrl } from './lib/utils'
 import { messageStorage, type Message } from './lib/message.server'
-import { Sidebar } from './components/Sidebar'
+import { TopMenu } from './components/TopMenu'
 import { Snackbar } from './components/Snackbar'
 import tailwind from './styles/tailwind.css'
 import logo from '../public/logo.svg'
+import background from '../public/background.png' // Ensure this path is correct
 
 export const meta: MetaFunction = () => [
   { charset: 'utf-8' },
@@ -59,7 +60,7 @@ export default function App() {
   const [snackbarOpen, setSnackbarOpen] = useState(false)
   const location = useLocation()
 
-  const showSidebar =
+  const showTopMenu =
     location?.pathname?.indexOf('mock-idp') === -1 ? true : false
 
   useEffect(() => {
@@ -75,13 +76,16 @@ export default function App() {
         <Meta />
         <Links />
       </head>
-      <body className='h-full text-tealish bg-blue-100'>
+      <body
+        className='h-full text-tealish bg-cover bg-no-repeat bg-center bg-fixed'
+        style={{ backgroundImage: `url(${background})` }}
+      >
         <div className='min-h-full'>
-          {showSidebar && <Sidebar />}
+          {showTopMenu && <TopMenu />}
           <div
             className={cx(
               `pt-20 md:pt-0 flex flex-1 flex-col`,
-              showSidebar && 'md:pl-60'
+              showTopMenu && 'pt-16'
             )}
           >
             <main className='pb-8 px-4'>

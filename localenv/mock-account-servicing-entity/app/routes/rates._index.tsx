@@ -23,7 +23,7 @@ export default function Rates() {
 
   return (
     <div className='pt-4 flex flex-col space-y-8'>
-      <div className='flex flex-col rounded-md bg-offwhite px-6'>
+      <div className='flex flex-col rounded-md bg-[#FFF] px-6'>
         <PageHeader>
           <div className='flex-1'>
             <h3 className='text-2xl'>Rates</h3>
