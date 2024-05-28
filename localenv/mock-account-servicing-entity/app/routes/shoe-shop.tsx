@@ -1,10 +1,13 @@
-import { useLoaderData, useLocation } from '@remix-run/react'
+import { useLoaderData, useLocation, json } from '@remix-run/react'
 import { useEffect, useState } from 'react'
 import { ApiClient } from '~/lib/apiClient'
 import { CONFIG as config } from '~/lib/parse_config.server'
 
 export function loader() {
-  return config.authServerDomain
+  return json({
+    authServerDomain: config.authServerDomain,
+    idpSecret: config.idpSecret
+  })
 }
 
 function AuthorizedView({
@@ -12,15 +15,16 @@ function AuthorizedView({
   currencyDisplayCode,
   amount,
   interactId,
-  nonce
+  nonce,
+  authServerDomain
 }: {
   thirdPartyName: string
   currencyDisplayCode: string
   amount: number
   interactId: string
   nonce: string
+  authServerDomain: string
 }) {
-  const authServerDomain = useLoaderData<typeof loader>()
   return (
     <>
       <div className='row'>
@@ -53,13 +57,14 @@ function AuthorizedView({
 function RejectedView({
   thirdPartyName,
   interactId,
-  nonce
+  nonce,
+  authServerDomain
 }: {
   thirdPartyName: string
   interactId: string
   nonce: string
+  authServerDomain: string
 }) {
-  const authServerDomain = useLoaderData<typeof loader>()
   return (
     <>
       <div className='row'>
@@ -87,6 +92,7 @@ function RejectedView({
 }
 
 export default function ShoeShop() {
+  const { idpSecret, authServerDomain } = useLoaderData<typeof loader>()
   const location = useLocation()
   const queryParams = new URLSearchParams(location.search)
   const [ctx, setCtx] = useState({
@@ -112,7 +118,12 @@ export default function ShoeShop() {
       if (interactId && nonce) {
         const acceptanceDecision =
           !!decision && decision.toLowerCase() === 'accept'
-        ApiClient.chooseConsent(interactId, nonce, acceptanceDecision)
+        ApiClient.chooseConsent(
+          interactId,
+          nonce,
+          acceptanceDecision,
+          idpSecret
+        )
           .then((_consentResponse) => {
             setCtx({
               ...ctx,
@@ -180,12 +191,14 @@ export default function ShoeShop() {
                   amount={ctx.amount}
                   interactId={ctx.interactId}
                   nonce={ctx.nonce}
+                  authServerDomain={authServerDomain}
                 />
               ) : (
                 <RejectedView
                   thirdPartyName={ctx.thirdPartyName || ''}
                   interactId={ctx.interactId}
                   nonce={ctx.nonce}
+                  authServerDomain={authServerDomain}
                 />
               )}
             </div>

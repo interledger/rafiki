@@ -21,6 +21,7 @@ type EnvConfig = {
   WALLET_ADDRESS_URL: string
   GRAPHQL_URL: string
   KEY_ID: string
+  IDP_SECRET: string
 }
 const REQUIRED_KEYS: (keyof EnvConfig)[] = [
   'OPEN_PAYMENTS_URL',
@@ -29,7 +30,8 @@ const REQUIRED_KEYS: (keyof EnvConfig)[] = [
   'INTEGRATION_SERVER_PORT',
   'WALLET_ADDRESS_URL',
   'GRAPHQL_URL',
-  'KEY_ID'
+  'KEY_ID',
+  'IDP_SECRET'
 ]
 
 const loadEnv = (filePath: string): EnvConfig => {
@@ -66,7 +68,8 @@ const createConfig = (name: string): TestConfig => {
     integrationServerPort: parseInt(env.INTEGRATION_SERVER_PORT),
     walletAddressUrl: env.WALLET_ADDRESS_URL,
     graphqlUrl: env.GRAPHQL_URL,
-    keyId: env.KEY_ID
+    keyId: env.KEY_ID,
+    idpSecret: env.IDP_SECRET
   }
 }
 

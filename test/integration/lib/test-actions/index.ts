@@ -46,9 +46,12 @@ async function consentInteraction(
   outgoingPaymentGrant: PendingGrant,
   senderWalletAddress: WalletAddress
 ) {
+  const { idpSecret } = deps.sendingASE.config
   const { interactId, nonce, cookie } = await _startAndAcceptInteraction(
     deps,
-    outgoingPaymentGrant
+    outgoingPaymentGrant,
+    senderWalletAddress,
+    idpSecret
   )
 
   // Finish interacton
@@ -57,7 +60,7 @@ async function consentInteraction(
     {
       method: 'GET',
       headers: {
-        'x-idp-secret': '2pEcn2kkCclbOHQiGNEwhJ0rucATZhrA807HTm2rNXE=',
+        'x-idp-secret': idpSecret,
         cookie
       }
     }
@@ -70,9 +73,12 @@ async function consentInteractionWithInteractRef(
   outgoingPaymentGrant: PendingGrant,
   senderWalletAddress: WalletAddress
 ): Promise<string> {
+  const { idpSecret } = deps.sendingASE.config
   const { interactId, nonce, cookie } = await _startAndAcceptInteraction(
     deps,
-    outgoingPaymentGrant
+    outgoingPaymentGrant,
+    senderWalletAddress,
+    idpSecret
   )
 
   // Finish interacton
@@ -81,7 +87,7 @@ async function consentInteractionWithInteractRef(
     {
       method: 'GET',
       headers: {
-        'x-idp-secret': '2pEcn2kkCclbOHQiGNEwhJ0rucATZhrA807HTm2rNXE=',
+        'x-idp-secret': idpSecret,
         cookie
       },
       redirect: 'manual' // dont follow redirects
@@ -101,7 +107,9 @@ async function consentInteractionWithInteractRef(
 
 async function _startAndAcceptInteraction(
   deps: TestActionsDeps,
-  outgoingPaymentGrant: PendingGrant
+  outgoingPaymentGrant: PendingGrant,
+  senderWalletAddress: WalletAddress,
+  idpSecret: string
 ): Promise<{ nonce: string; interactId: string; cookie: string }> {
   const { redirect: startInteractionUrl } = outgoingPaymentGrant.interact
 
@@ -124,7 +132,7 @@ async function _startAndAcceptInteraction(
     {
       method: 'POST',
       headers: {
-        'x-idp-secret': '2pEcn2kkCclbOHQiGNEwhJ0rucATZhrA807HTm2rNXE=',
+        'x-idp-secret': idpSecret,
         cookie
       }
     }

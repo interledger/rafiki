@@ -32,7 +32,8 @@ export class ApiClient {
    */
 
   public static async getGrant(
-    params: Record<string, string>
+    params: Record<string, string>,
+    idpSecret: string
   ): Promise<ApiResponse> {
     // get grant --> GET /grant/:id/:nonce
     const { interactId, nonce } = params
@@ -40,7 +41,7 @@ export class ApiClient {
       `http://localhost:3009/grant/${interactId}/${nonce}`,
       {
         headers: {
-          'x-idp-secret': 'replace-me'
+          'x-idp-secret': idpSecret
         }
       }
     )
@@ -63,7 +64,8 @@ export class ApiClient {
   public static async chooseConsent(
     interactId: string,
     nonce: string,
-    acceptanceDecision: boolean
+    acceptanceDecision: boolean,
+    idpSecret: string
   ): Promise<ApiResponse<Array<Access>>> {
     // make choice --> POST /grant/:id/:nonce/accept or /grant/:id/:nonce/reject
     const acceptanceSubPath = acceptanceDecision ? 'accept' : 'reject'
@@ -73,7 +75,7 @@ export class ApiClient {
       {},
       {
         headers: {
-          'x-idp-secret': 'replace-me'
+          'x-idp-secret': idpSecret
         }
       }
     )

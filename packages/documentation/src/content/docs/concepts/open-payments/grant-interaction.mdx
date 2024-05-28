@@ -10,7 +10,7 @@ import { LargeImg } from '@interledger/docs-design-system'
 
 ## Endpoints
 
-If the AS deems interaction necessary to issue a grant, there are five main endpoints that are used once a pending grant has been created. The endpoints, in order of their calling, are as follows:
+If the AS deems interaction necessary to issue a grant, there are five main endpoints that are used once a pending grant has been created. In each endpoint, the specific interaction is identified with an interaction id and an interaction nonce. Both of these are provided in the query parameters of the URL when the authorization server redirects to the Identity Provider. The endpoints, in order of their calling, are as follows:
 
 - `GET /interact/:id/:nonce` (made by the client to the AS, establishes an interaction session, redirects browser session to IDP consent screen)
 - `GET /grant/:id/:nonce` (made by the IDP to the AS, secured with `x-idp-secret` header, returns grant info for the consent screen to enumerate )
