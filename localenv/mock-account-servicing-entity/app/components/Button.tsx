@@ -3,7 +3,7 @@ import { forwardRef } from 'react'
 import { ButtonOrLink, type ButtonOrLinkProps } from './ButtonOrLink'
 
 const buttonStyles = cva(
-  'inline-flex items-center justify-center focus:outline-none disabled:cursor-not-allowed',
+  'inline-flex items-center justify-center focus:outline-none disabled:cursor-not-allowed rounded-md font-medium',
   {
     variants: {
       intent: {
@@ -13,8 +13,8 @@ const buttonStyles = cva(
           'disabled:bg-red-200 bg-red-500 hover:bg-red-600 shadow-md text-white'
       },
       size: {
-        sm: 'px-2 py-1 rounded-md font-medium',
-        md: 'px-3 py-2 rounded-md font-medium'
+        sm: 'px-2 py-1',
+        md: 'px-3 py-2'
       }
     },
     defaultVariants: {
