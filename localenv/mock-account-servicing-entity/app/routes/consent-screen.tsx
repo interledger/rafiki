@@ -217,6 +217,7 @@ type ConsentScreenProps = {
   idpSecret: string
 }
 
+// In production, ensure that secrets are handled securely and are not exposed to the client-side code.
 export default function ConsentScreen({ idpSecret }: ConsentScreenProps) {
   const [ctx, setCtx] = useState({
     ready: false,

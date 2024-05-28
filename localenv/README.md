@@ -21,6 +21,10 @@ We provide containerized versions of our packages together with two pre-configur
 
 This environment will set up a playground where you can use the Rafiki Admin APIs and the Open Payments APIs.
 
+## Disclaimer
+
+>**The Mock ASE provided in this repository is intended solely for internal use and demonstration purposes. It is not designed to serve as a reference architecture. If you are looking for a reference implementation of an ASE, please refer to the [Test Wallet](TODO: add link).**
+
 ## Environment overview
 
 ![Docker compose environment](../packages/documentation/public/img/localenv-architecture.png)

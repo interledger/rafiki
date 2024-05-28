@@ -23,6 +23,7 @@ export type ApiResponse<T = any> = (
   readonly contextUpdates?: { [key: string]: any }
 }
 
+// In production, ensure that secrets are handled securely and are not exposed to the client-side code.
 export class ApiClient {
   /*
    * flow overview:
