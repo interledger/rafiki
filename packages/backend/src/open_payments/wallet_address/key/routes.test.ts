@@ -7,11 +7,14 @@ import { createTestApp, TestContainer } from '../../../tests/app'
 import { Config } from '../../../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../../..'
-import { AppServices, WalletAddressKeysContext } from '../../../app'
+import { AppServices, WalletAddressUrlContext } from '../../../app'
 import { truncateTables } from '../../../tests/tableManager'
 import { WalletAddressKeyRoutes } from './routes'
 import { WalletAddressKeyService } from './service'
 import { createWalletAddress } from '../../../tests/walletAddress'
+import { WalletAddressService } from '../service'
+import { OpenPaymentsServerRouteError } from '../../route-errors'
+import assert from 'assert'
 
 const TEST_KEY = generateJwk({ keyId: uuid() })
 
@@ -20,21 +23,16 @@ describe('Wallet Address Keys Routes', (): void => {
   let appContainer: TestContainer
   let walletAddressKeyService: WalletAddressKeyService
   let walletAddressKeyRoutes: WalletAddressKeyRoutes
-  const mockMessageProducer = {
-    send: jest.fn()
-  }
+  let walletAddressService: WalletAddressService
 
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer(Config)
-    deps.bind('messageProducer', async () => mockMessageProducer)
     appContainer = await createTestApp(deps)
     const { walletAddressServerSpec } = await deps.use('openApi')
     jestOpenAPI(walletAddressServerSpec)
-    walletAddressKeyService = await deps.use('walletAddressKeyService')
-  })
-
-  beforeEach(async (): Promise<void> => {
     walletAddressKeyRoutes = await deps.use('walletAddressKeyRoutes')
+    walletAddressKeyService = await deps.use('walletAddressKeyService')
+    walletAddressService = await deps.use('walletAddressService')
   })
 
   afterEach(async (): Promise<void> => {
@@ -45,7 +43,7 @@ describe('Wallet Address Keys Routes', (): void => {
     await appContainer.shutdown()
   })
 
-  describe('getKeys', (): void => {
+  describe('get', (): void => {
     test('returns 200 with all keys for a wallet address', async (): Promise<void> => {
       const walletAddress = await createWalletAddress(deps)
 
@@ -55,16 +53,13 @@ describe('Wallet Address Keys Routes', (): void => {
       }
       const key = await walletAddressKeyService.create(keyOption)
 
-      const ctx = createContext<WalletAddressKeysContext>({
+      const ctx = createContext<WalletAddressUrlContext>({
         headers: { Accept: 'application/json' },
         url: `/jwks.json`
       })
-      ctx.walletAddress = walletAddress
       ctx.walletAddressUrl = walletAddress.url
 
-      await expect(
-        walletAddressKeyRoutes.getKeysByWalletAddressId(ctx)
-      ).resolves.toBeUndefined()
+      await expect(walletAddressKeyRoutes.get(ctx)).resolves.toBeUndefined()
       expect(ctx.response).toSatisfyApiSpec()
       expect(ctx.body).toEqual({
         keys: [key.jwk]
@@ -74,16 +69,13 @@ describe('Wallet Address Keys Routes', (): void => {
     test('returns 200 with empty array if no keys for a wallet address', async (): Promise<void> => {
       const walletAddress = await createWalletAddress(deps)
 
-      const ctx = createContext<WalletAddressKeysContext>({
+      const ctx = createContext<WalletAddressUrlContext>({
         headers: { Accept: 'application/json' },
         url: `/jwks.json`
       })
-      ctx.walletAddress = walletAddress
       ctx.walletAddressUrl = walletAddress.url
 
-      await expect(
-        walletAddressKeyRoutes.getKeysByWalletAddressId(ctx)
-      ).resolves.toBeUndefined()
+      await expect(walletAddressKeyRoutes.get(ctx)).resolves.toBeUndefined()
       expect(ctx.body).toEqual({
         keys: []
       })
@@ -96,30 +88,62 @@ describe('Wallet Address Keys Routes', (): void => {
         keyId: config.keyId
       })
 
-      const ctx = createContext<WalletAddressKeysContext>({
+      const ctx = createContext<WalletAddressUrlContext>({
         headers: { Accept: 'application/json' },
         url: '/jwks.json'
       })
       ctx.walletAddressUrl = config.walletAddressUrl
 
-      await expect(
-        walletAddressKeyRoutes.getKeysByWalletAddressId(ctx)
-      ).resolves.toBeUndefined()
+      await expect(walletAddressKeyRoutes.get(ctx)).resolves.toBeUndefined()
       expect(ctx.body).toEqual({
         keys: [jwk]
       })
     })
 
-    test('returns 404 if wallet address does not exist', async (): Promise<void> => {
-      const ctx = createContext<WalletAddressKeysContext>({
-        headers: { Accept: 'application/json' },
-        url: `/jwks.json`
+    test('throws 404 error for nonexistent wallet address', async (): Promise<void> => {
+      const ctx = createContext<WalletAddressUrlContext>({
+        headers: { Accept: 'application/json' }
       })
-      ctx.walletAddress = undefined
+      jest
+        .spyOn(walletAddressService, 'getOrPollByUrl')
+        .mockResolvedValueOnce(undefined)
 
-      await expect(
-        walletAddressKeyRoutes.getKeysByWalletAddressId(ctx)
-      ).rejects.toThrow(/Could not get wallet address keys./)
+      expect.assertions(2)
+      try {
+        await walletAddressKeyRoutes.get(ctx)
+      } catch (err) {
+        assert(err instanceof OpenPaymentsServerRouteError)
+        expect(err.status).toBe(404)
+        expect(err.message).toBe('Could not get wallet address')
+      }
+    })
+
+    test('throws 404 error for inactive wallet address', async (): Promise<void> => {
+      const walletAddress = await createWalletAddress(deps)
+
+      await walletAddress.$query().patch({ deactivatedAt: new Date() })
+
+      const ctx = createContext<WalletAddressUrlContext>({
+        headers: { Accept: 'application/json' }
+      })
+      ctx.walletAddressUrl = walletAddress.url
+
+      const getOrPollByUrlSpy = jest.spyOn(
+        walletAddressService,
+        'getOrPollByUrl'
+      )
+
+      expect.assertions(3)
+      try {
+        await walletAddressKeyRoutes.get(ctx)
+      } catch (err) {
+        assert(err instanceof OpenPaymentsServerRouteError)
+        expect(err.status).toBe(404)
+        expect(err.message).toBe('Could not get wallet address')
+        await expect(getOrPollByUrlSpy.mock.results[0].value).resolves.toEqual(
+          walletAddress
+        )
+      }
     })
   })
 })

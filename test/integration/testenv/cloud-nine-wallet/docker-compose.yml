@@ -5,13 +5,14 @@ services:
     image: rafiki-backend
     build:
       context: ../../../..
-      dockerfile: ./packages/backend/Dockerfile
+      dockerfile: ./packages/backend/Dockerfile.prod
     restart: always
     privileged: true
     ports:
       - '3100:3100'
       - '3101:3101'
       - '3102:3102'
+      - '9229:9229'
     networks:
       - rafiki-test
     extra_hosts:
@@ -45,7 +46,7 @@ services:
     image: rafiki-auth
     build:
       context: ../../../..
-      dockerfile: ./packages/auth/Dockerfile
+      dockerfile: ./packages/auth/Dockerfile.prod
     restart: always
     networks:
       - rafiki-test
@@ -55,12 +56,15 @@ services:
       - '3107:3107'
     environment:
       NODE_ENV: ${NODE_ENV:-development}
-      AUTH_SERVER_DOMAIN: http://cloud-nine-wallet-test-auth:3106
+      AUTH_SERVER_URL: http://cloud-nine-wallet-test-auth:3106
       AUTH_DATABASE_URL: postgresql://cloud_nine_wallet_test_auth:cloud_nine_wallet_test_auth@shared-database/cloud_nine_wallet_test_auth
       INTROSPECTION_PORT: 3107
       AUTH_PORT: 3106
       ADMIN_PORT: 3103
       REDIS_URL: redis://shared-redis:6379/1
+      IDENTITY_SERVER_URL: http://localhost:3030/mock-idp/
+      IDENTITY_SERVER_SECRET: 2pEcn2kkCclbOHQiGNEwhJ0rucATZhrA807HTm2rNXE=
+      COOKIE_KEY: 42397d1f371dd4b8b7d0308a689a57c882effd4ea909d792302542af47e2cd37
     depends_on:
       - shared-database
       - shared-redis

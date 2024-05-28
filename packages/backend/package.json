@@ -14,7 +14,8 @@
     "copy-files": "cp src/graphql/schema.graphql dist/graphql/ && cp -r ./src/openapi ./dist/",
     "copy-op-schemas": "cp ./node_modules/@interledger/open-payments/dist/openapi/specs/schemas.yaml ./src/openapi/specs/",
     "prepack": "pnpm build",
-    "postinstall": "pnpm copy-op-schemas"
+    "postinstall": "pnpm copy-op-schemas",
+    "dev": "ts-node-dev --inspect=0.0.0.0:9229 --respawn --transpile-only src/index.ts"
   },
   "devDependencies": {
     "@apollo/client": "^3.9.9",
@@ -42,7 +43,8 @@
     "react": "~18.2.0",
     "rosie": "^2.1.1",
     "testcontainers": "^10.7.2",
-    "tmp": "^0.2.3"
+    "tmp": "^0.2.3",
+    "ts-node-dev": "^2.0.0"
   },
   "dependencies": {
     "@adonisjs/fold": "^8.2.0",

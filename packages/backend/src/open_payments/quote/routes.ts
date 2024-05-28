@@ -7,10 +7,7 @@ import { isQuoteError, errorToCode, errorToMessage } from './errors'
 import { Quote } from './model'
 import { AmountJSON, parseAmount } from '../amount'
 import { Quote as OpenPaymentsQuote } from '@interledger/open-payments'
-import {
-  WalletAddress,
-  throwIfMissingWalletAddress
-} from '../wallet_address/model'
+import { WalletAddress } from '../wallet_address/model'
 import { OpenPaymentsServerRouteError } from '../route-errors'
 
 interface ServiceDependencies {
@@ -50,9 +47,7 @@ async function getQuote(
     })
   }
 
-  throwIfMissingWalletAddress(deps, quote)
-
-  ctx.body = quoteToBody(quote.walletAddress, quote)
+  ctx.body = quoteToBody(ctx.walletAddress, quote)
 }
 
 interface CreateBodyBase {
@@ -106,10 +101,8 @@ async function createQuote(
     )
   }
 
-  throwIfMissingWalletAddress(deps, quoteOrErr)
-
   ctx.status = 201
-  ctx.body = quoteToBody(quoteOrErr.walletAddress, quoteOrErr)
+  ctx.body = quoteToBody(ctx.walletAddress, quoteOrErr)
 }
 
 function quoteToBody(

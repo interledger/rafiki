@@ -7,7 +7,7 @@ import { Limits, parseLimits } from '../payment/outgoing/limits'
 import {
   HttpSigContext,
   HttpSigWithAuthenticatedStatusContext,
-  WalletAddressContext
+  WalletAddressUrlContext
 } from '../../app'
 import {
   AccessAction,
@@ -62,7 +62,7 @@ export function createTokenIntrospectionMiddleware({
   bypassError?: boolean
 }) {
   return async (
-    ctx: WalletAddressContext,
+    ctx: WalletAddressUrlContext,
     next: () => Promise<void>
   ): Promise<void> => {
     const config = await ctx.container.use('config')
@@ -95,7 +95,7 @@ export function createTokenIntrospectionMiddleware({
       const access = tokenInfo.access.find((access: Access) => {
         if (
           access.type !== requestType ||
-          (access.identifier && access.identifier !== ctx.walletAddress.url)
+          (access.identifier && access.identifier !== ctx.walletAddressUrl)
         ) {
           return false
         }

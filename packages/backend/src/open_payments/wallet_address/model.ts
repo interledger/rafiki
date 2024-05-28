@@ -7,7 +7,6 @@ import { BaseModel, Pagination, SortOrder } from '../../shared/baseModel'
 import { WebhookEvent } from '../../webhook/model'
 import { WalletAddressKey } from '../../open_payments/wallet_address/key/model'
 import { AmountJSON } from '../amount'
-import { Logger } from 'pino'
 
 export class WalletAddress
   extends BaseModel
@@ -229,16 +228,4 @@ export abstract class WalletAddressSubresource extends BaseModel {
 
   QueryBuilderType!: SubresourceQueryBuilder<this>
   static QueryBuilder = SubresourceQueryBuilder
-}
-
-export function throwIfMissingWalletAddress(
-  deps: { logger: Logger },
-  resource: WalletAddressSubresource
-): asserts resource is WalletAddressSubresource &
-  Required<Pick<WalletAddressSubresource, 'walletAddress'>> {
-  if (!resource.walletAddress) {
-    const errorMessage = `${resource.$modelClass.name} does not have wallet address. This should be investigated.`
-    deps.logger.error({ id: resource.id }, errorMessage)
-    throw new Error(errorMessage)
-  }
 }

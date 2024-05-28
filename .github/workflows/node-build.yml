@@ -265,7 +265,7 @@ jobs:
         with:
           push: false
           platforms: ${{ matrix.platform.arch }}
-          file: packages/${{ matrix.package }}/Dockerfile
+          file: packages/${{ matrix.package }}/Dockerfile.prod
           tags: ghcr.io/${{ github.repository_owner }}/rafiki-${{ matrix.package }}:${{ needs.version-generator.outputs.version }}
           outputs: type=docker,dest=/tmp/${{ github.sha }}-${{ matrix.package }}-${{ matrix.platform.name }}-${{ needs.version-generator.outputs.version }}.tar
       - name: Save docker image to cache

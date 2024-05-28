@@ -61,6 +61,8 @@ describe('SPSP Middleware', (): void => {
     ${'application/json'}       | ${false}    | ${'calls next'}
     ${'application/spsp4+json'} | ${true}     | ${'calls SPSP route'}
     ${'application/spsp4+json'} | ${false}    | ${'calls next'}
+    ${'*/*'}                    | ${true}     | ${'calls next'}
+    ${'*/*'}                    | ${false}    | ${'calls next'}
   `(
     '$description for accept header: $header and spspEnabled: $spspEnabled',
     async ({ header, spspEnabled }): Promise<void> => {
@@ -70,10 +72,8 @@ describe('SPSP Middleware', (): void => {
       ctx.headers['accept'] = header
       const spspMiddleware = createSpspMiddleware(spspEnabled)
       await expect(spspMiddleware(ctx, next)).resolves.toBeUndefined()
-      if (!spspEnabled || header == 'application/json') {
-        expect(spspSpy).not.toHaveBeenCalled()
-        expect(next).toHaveBeenCalled()
-      } else {
+
+      if (spspEnabled && header == 'application/spsp4+json') {
         expect(spspSpy).toHaveBeenCalledTimes(1)
         expect(next).not.toHaveBeenCalled()
         expect(ctx.paymentTag).toEqual(walletAddress.id)
@@ -81,6 +81,9 @@ describe('SPSP Middleware', (): void => {
           code: walletAddress.asset.code,
           scale: walletAddress.asset.scale
         })
+      } else {
+        expect(spspSpy).not.toHaveBeenCalled()
+        expect(next).toHaveBeenCalled()
       }
     }
   )

@@ -4,7 +4,7 @@ import base64url from 'base64url'
 import { StreamServer } from '@interledger/stream-receiver'
 import { SPSPRouteError } from './middleware'
 
-const CONTENT_TYPE_V4 = 'application/spsp4+json'
+export const SPSP_CONTENT_TYPE_V4 = 'application/spsp4+json'
 
 export interface SPSPRoutes {
   get(ctx: SPSPContext): Promise<void>
@@ -35,8 +35,11 @@ async function getSPSP(
   deps: ServiceDependencies,
   ctx: SPSPContext
 ): Promise<void> {
-  if (!ctx.accepts(CONTENT_TYPE_V4)) {
-    throw new SPSPRouteError(406, `Request does not support ${CONTENT_TYPE_V4}`)
+  if (!ctx.request.headers.accept?.includes(SPSP_CONTENT_TYPE_V4)) {
+    throw new SPSPRouteError(
+      406,
+      `Request does not support ${SPSP_CONTENT_TYPE_V4}`
+    )
   }
 
   const nonce = ctx.request.headers['receipt-nonce']
@@ -62,7 +65,7 @@ async function getSPSP(
       asset: ctx.asset
     })
 
-    ctx.set('Content-Type', CONTENT_TYPE_V4)
+    ctx.set('Content-Type', SPSP_CONTENT_TYPE_V4)
     ctx.body = JSON.stringify({
       destination_account: ilpAddress,
       shared_secret: base64url(sharedSecret),

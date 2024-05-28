@@ -128,9 +128,9 @@ The `backend` package requires an environment variable called `WEBHOOK_URL` whic
 
 ## Identity Provider
 
-The Rafiki `backend` exposes the [Open Payments](/reference/glossary#open-payments) APIs. They are auth-protected using an opinionated version of the [Grant Negotiation Authorization Protocol](/reference/glossary#grant-negotiation-authorization-protocol) (GNAP). Rafiki comes with a reference implementation of an Open Payments Auth Server--the `auth` package.
+An Identity Provider is a service that verifies the identity of a user. In order to allow the authorization of payments by third parties, Rafiki must be integrated with an Identity Provider to handle authentication and consent. This information is collected in order to authorize grants made through the [Open Payments Standard](/reference/glossary#open-payments). The Rafiki `backend` exposes the APIs for Open Payments, and requests to them are authorized by an opinionated version of the [Grant Negotiation Authorization Protocol (GNAP)](/reference/glossary/#grant-negotiation-authorization-protocol). A reference implementation of a Open Payments Authorization Server is include with Rafiki in the `auth` package.
 
-The Open Payments Auth Server requires integration with an Identity Provider to handle user authentication and consent. For more information on how to integrate an Identity Provider with the reference implementation of the Open Payments Auth Server, see the docs in the `auth` package.
+The Authorization Server in the `auth` package extends an [API](/concepts/open-payments/grant-interaction/) for integrating Identity Providers to use to begin & finish an interaction to collect authorization, acquire information on a particular grant, and communicate that a user has authorized a grant. An OpenAPI specification of those endpoints can be found [here](https://github.com/interledger/rafiki/blob/main/packages/auth/src/openapi/specs/id-provider.yaml).
 
 ## Issuing Wallet Addresses
 
