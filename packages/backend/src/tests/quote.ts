@@ -183,7 +183,6 @@ export async function createQuote(
       estimatedExchangeRate: exchangeRate,
       expiresAt: new Date(Date.now() + config.quoteLifespan),
       client,
-      additionalFields: ilpData,
       ...ilpData
     })
     .withGraphFetched(withGraphFetchedExpression)
