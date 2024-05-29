@@ -6,7 +6,12 @@ import {
   AssetResolvers
 } from '../generated/graphql'
 import { Asset } from '../../asset/model'
-import { AssetError, isAssetError } from '../../asset/errors'
+import {
+  AssetError,
+  isAssetError,
+  errorToCode,
+  errorToMessage
+} from '../../asset/errors'
 import { ApolloContext } from '../../app'
 import { getPageInfo } from '../../shared/pagination'
 import { Pagination, SortOrder } from '../../shared/baseModel'
@@ -191,6 +196,47 @@ export const getFees: AssetResolvers<ApolloContext>['fees'] = async (
     }))
   }
 }
+
+export const deleteAsset: MutationResolvers<ApolloContext>['deleteAsset'] =
+  async (
+    _,
+    args,
+    ctx
+  ): Promise<ResolversTypes['DeleteAssetMutationResponse']> => {
+    try {
+      const assetService = await ctx.container.use('assetService')
+      const assetOrError = await assetService.delete({
+        id: args.input.id,
+        deletedAt: new Date()
+      })
+
+      if (isAssetError(assetOrError)) {
+        return {
+          code: errorToCode[assetOrError].toString(),
+          message: errorToMessage[assetOrError],
+          success: false
+        }
+      }
+      return {
+        code: '200',
+        success: true,
+        message: 'Asset deleted'
+      }
+    } catch (err) {
+      ctx.logger.error(
+        {
+          id: args.input.id,
+          err
+        },
+        'error deleting asset'
+      )
+      return {
+        code: '500',
+        message: 'Error trying to delete asset',
+        success: false
+      }
+    }
+  }
 
 export const assetToGraphql = (asset: Asset): SchemaAsset => ({
   id: asset.id,

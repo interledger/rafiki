@@ -11,6 +11,7 @@ import {
   getAssets,
   createAsset,
   updateAsset,
+  deleteAsset,
   getAssetReceivingFee,
   getAssetSendingFee,
   getFees
@@ -113,6 +114,7 @@ export const resolvers: Resolvers = {
     triggerWalletAddressEvents,
     createAsset,
     updateAsset: updateAsset,
+    deleteAsset,
     createQuote,
     createOutgoingPayment,
     createOutgoingPaymentFromIncomingPayment,

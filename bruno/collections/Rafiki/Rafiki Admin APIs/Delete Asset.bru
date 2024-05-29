@@ -1,0 +1,36 @@
+meta {
+  name: Delete Asset
+  type: graphql
+  seq: 43
+}
+
+post {
+  url: {{RafikiGraphqlHost}}/graphql
+  body: graphql
+  auth: none
+}
+
+body:graphql {
+  mutation DeleteAsset($input: DeleteAssetInput!) {
+    deleteAsset(input: $input) {
+      code
+      message
+      success
+    }
+  }
+  
+}
+
+body:graphql:vars {
+  {
+    "input": {
+        "id": "{{assetId}}"
+    }
+  }
+}
+
+script:pre-request {
+  const scripts = require('./scripts');
+  
+  scripts.addApiSignatureHeader();
+}
