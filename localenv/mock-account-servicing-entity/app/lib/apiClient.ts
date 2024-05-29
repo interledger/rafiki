@@ -38,7 +38,7 @@ export class ApiClient {
     // get grant --> GET /grant/:id/:nonce
     const { interactId, nonce } = params
     const response = await axios.get(
-      `http://localhost:3006/grant/${interactId}/${nonce}`,
+      `http://localhost:3009/grant/${interactId}/${nonce}`,
       {
         headers: {
           'x-idp-secret': idpSecret
@@ -71,7 +71,7 @@ export class ApiClient {
     const acceptanceSubPath = acceptanceDecision ? 'accept' : 'reject'
 
     const response = await axios.post(
-      `http://localhost:3006/grant/${interactId}/${nonce}/${acceptanceSubPath}`,
+      `http://localhost:3009/grant/${interactId}/${nonce}/${acceptanceSubPath}`,
       {},
       {
         headers: {

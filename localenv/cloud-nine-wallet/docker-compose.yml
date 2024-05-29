@@ -93,6 +93,7 @@ services:
       - '3003:3003'
       - '3006:3006'
       - "9230:9229"
+      - '3009:3009'
     environment:
       NODE_ENV: ${NODE_ENV:-development}
       TRUST_PROXY: ${TRUST_PROXY}

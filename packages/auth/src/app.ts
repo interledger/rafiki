@@ -107,6 +107,7 @@ export type AppContainer = IocContract<AppServices>
 
 export class App {
   private authServer!: Server
+  private interactionServer!: Server
   private introspectionServer!: Server
   private adminServer!: Server
   private logger!: Logger
@@ -328,26 +329,6 @@ export class App {
       interactionRoutes.finish
     )
 
-    // Grant lookup
-    router.get<DefaultState, GetContext>(
-      '/grant/:id/:nonce',
-      createValidatorMiddleware<GetContext>(openApi.idpSpec, {
-        path: '/grant/{id}/{nonce}',
-        method: HttpMethod.GET
-      }),
-      interactionRoutes.details
-    )
-
-    // Grant accept/reject
-    router.post<DefaultState, ChooseContext>(
-      '/grant/:id/:nonce/:choice',
-      createValidatorMiddleware<ChooseContext>(openApi.idpSpec, {
-        path: '/grant/{id}/{nonce}/{choice}',
-        method: HttpMethod.POST
-      }),
-      interactionRoutes.acceptOrReject
-    )
-
     koa.use(cors())
     koa.keys = [this.config.cookieKey]
 
@@ -418,6 +399,54 @@ export class App {
     this.introspectionServer = koa.listen(port)
   }
 
+  public async startInteractionServer(port: number | string): Promise<void> {
+    const koa = await this.createKoaServer()
+
+    const router = new Router<DefaultState, AppContext>()
+    router.use(bodyParser())
+
+    const openApi = await this.container.use('openApi')
+    const interactionRoutes = await this.container.use('interactionRoutes')
+
+    // Grant accept/reject
+    router.post<DefaultState, ChooseContext>(
+      '/grant/:id/:nonce/:choice',
+      createValidatorMiddleware<ChooseContext>(openApi.idpSpec, {
+        path: '/grant/{id}/{nonce}/{choice}',
+        method: HttpMethod.POST
+      }),
+      interactionRoutes.acceptOrReject
+    )
+
+    // Grant lookup
+    router.get<DefaultState, GetContext>(
+      '/grant/:id/:nonce',
+      createValidatorMiddleware<GetContext>(openApi.idpSpec, {
+        path: '/grant/{id}/{nonce}',
+        method: HttpMethod.GET
+      }),
+      interactionRoutes.details
+    )
+
+    koa.use(cors())
+    koa.keys = [this.config.cookieKey]
+    koa.use(
+      session(
+        {
+          key: 'sessionId',
+          maxAge: 60 * 1000,
+          signed: true
+        },
+        koa
+      )
+    )
+
+    koa.use(router.middleware())
+    koa.use(router.routes())
+
+    this.interactionServer = koa.listen(port)
+  }
+
   private async createKoaServer(): Promise<Koa<Koa.DefaultState, AppContext>> {
     const koa = new Koa<DefaultState, AppContext>({
       proxy: this.config.trustProxy
@@ -454,6 +483,9 @@ export class App {
     if (this.authServer) {
       await this.stopServer(this.authServer)
     }
+    if (this.interactionServer) {
+      await this.stopServer(this.interactionServer)
+    }
     if (this.adminServer) {
       await this.stopServer(this.adminServer)
     }
@@ -480,6 +512,10 @@ export class App {
 
   public getAuthPort(): number {
     return this.getPort(this.authServer)
+  }
+
+  public getInteractionPort(): number {
+    return this.getPort(this.interactionServer)
   }
 
   public getIntrospectionPort(): number {

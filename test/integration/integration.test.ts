@@ -100,9 +100,16 @@ describe('Integration tests', (): void => {
       })
       expect(senderWalletAddress.id).toBe(senderWalletAddressUrl)
 
-      const incomingPaymentGrant = await grantRequestIncomingPayment(
-        receiverWalletAddress
-      )
+      let incomingPaymentGrant
+      try {
+        incomingPaymentGrant = await grantRequestIncomingPayment(
+          receiverWalletAddress
+        )
+      } catch (err) {
+        console.log('ERROR: ', err)
+        throw err
+      }
+
       const incomingPayment = await createIncomingPayment(
         receiverWalletAddress,
         incomingPaymentGrant.access_token.value,
