@@ -236,7 +236,7 @@ function calculateFixedSendQuoteAmounts(
       fees,
       exchangeAdjustedFees
     },
-    'Calculated fixed send quote amount with fees'
+    'Calculated fixed-send quote amount with fees'
   )
 
   return {
@@ -267,7 +267,7 @@ function calculateFixedDeliveryQuoteAmounts(
 
   deps.logger.debug(
     { debitAmountValue, receiveAmountValue: quote.receiveAmount.value, fees },
-    `Calculated fixed delivery quote amount with fees`
+    `Calculated fixed-delivery quote amount with fees`
   )
 
   return {
