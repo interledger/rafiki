@@ -252,7 +252,7 @@ async function createOutgoingPayment(
         trx
       )
 
-      let paymentWithAmounts = await addSentAmount(deps, payment, BigInt(0))
+      const paymentWithAmounts = await addSentAmount(deps, payment, BigInt(0))
       if (grantSpentAmounts) {
         paymentWithAmounts.grantSpentDebitAmount = grantSpentAmounts.sent
         paymentWithAmounts.grantSpentReceiveAmount = grantSpentAmounts.received
