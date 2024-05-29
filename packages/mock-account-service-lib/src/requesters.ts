@@ -347,7 +347,8 @@ export async function createWalletAddress(
   const createWalletAddressInput: CreateWalletAddressInput = {
     assetId,
     url: accountUrl,
-    publicName: accountName
+    publicName: accountName,
+    additionalProperties: []
   }
 
   return apolloClient

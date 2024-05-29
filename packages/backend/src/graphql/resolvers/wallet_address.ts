@@ -16,6 +16,8 @@ import {
 import { WalletAddress } from '../../open_payments/wallet_address/model'
 import { getPageInfo } from '../../shared/pagination'
 import { Pagination, SortOrder } from '../../shared/baseModel'
+import { WalletAddressAdditionalProperty } from '../../open_payments/wallet_address/additional_property/model'
+import { CreateOptions } from '../../open_payments/wallet_address/service'
 
 export const getWalletAddresses: QueryResolvers<ApolloContext>['walletAddresses'] =
   async (
@@ -62,8 +64,23 @@ export const createWalletAddress: MutationResolvers<ApolloContext>['createWallet
     ctx
   ): Promise<ResolversTypes['CreateWalletAddressMutationResponse']> => {
     const walletAddressService = await ctx.container.use('walletAddressService')
+    const addProps: WalletAddressAdditionalProperty[] = []
+    for (const inputAddProp of args.input.additionalProperties) {
+      const toAdd: WalletAddressAdditionalProperty =
+        new WalletAddressAdditionalProperty()
+      toAdd.key = inputAddProp.key
+      toAdd.value = inputAddProp.value
+      toAdd.visibleInOpenPayments = inputAddProp.visibleInOpenPayments
+      addProps.push(toAdd)
+    }
+    const options: CreateOptions = {
+      assetId: args.input.assetId,
+      additionalProperties: addProps,
+      publicName: args.input.publicName,
+      url: args.input.url
+    }
     return walletAddressService
-      .create(args.input)
+      .create(options)
       .then((walletAddressOrError: WalletAddress | WalletAddressError) =>
         isWalletAddressError(walletAddressOrError)
           ? {

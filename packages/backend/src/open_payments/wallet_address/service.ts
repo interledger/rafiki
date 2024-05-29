@@ -132,24 +132,33 @@ async function createWalletAddress(
         assetId: options.assetId
       })
       .withGraphFetched('asset')
-    let addProperties = options.additionalProperties;
+    let addProperties = options.additionalProperties
     if (addProperties) {
-      addProperties = addProperties.filter(itm => {
-        return !((itm.key == undefined || itm.key.trim().length == 0) ||
-          (itm.value == undefined || itm.value.trim().length == 0))
+      // remove blank key/value pairs:
+      addProperties = addProperties.filter((itm) => {
+        return !(
+          itm.key == undefined ||
+          itm.key.trim().length == 0 ||
+          itm.value == undefined ||
+          itm.value.trim().length == 0
+        )
       })
-      const now = new Date();
+      // set defaults:
+      const now = new Date()
       for (const prop of addProperties) {
         prop.walletAddressId = wallet.id
-        prop.createdAt = now;
-        prop.updatedAt = now;
-        if (prop.visibleInOpenPayments == undefined) prop.visibleInOpenPayments = false
+        prop.createdAt = now
+        prop.updatedAt = now
+        if (prop.visibleInOpenPayments == undefined)
+          prop.visibleInOpenPayments = false
       }
       if (addProperties.length) {
-        await WalletAddressAdditionalProperty.query(deps.knex).insert(addProperties);
+        await WalletAddressAdditionalProperty.query(deps.knex).insert(
+          addProperties
+        )
       }
     }
-    return wallet;
+    return wallet
   } catch (err) {
     if (err instanceof ForeignKeyViolationError) {
       if (err.constraint === 'walletaddresses_assetid_foreign') {
