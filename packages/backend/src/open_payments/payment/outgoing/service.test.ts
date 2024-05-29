@@ -11,7 +11,7 @@ import {
 } from './errors'
 import { CreateOutgoingPaymentOptions, OutgoingPaymentService } from './service'
 import { createTestApp, TestContainer } from '../../../tests/app'
-import { Config } from '../../../config/app'
+import { Config, IAppConfig } from '../../../config/app'
 import { Grant } from '../../auth/middleware'
 import { CreateQuoteOptions, QuoteService } from '../../quote/service'
 import { createAsset } from '../../../tests/asset'
@@ -49,6 +49,7 @@ import { PaymentMethodHandlerError } from '../../../payment-method/handler/error
 import { mockRatesApi } from '../../../tests/rates'
 import { UnionOmit } from '../../../shared/utils'
 import { QuoteError } from '../../quote/errors'
+import { withConfigOverride } from '../../../tests/helpers'
 
 describe('OutgoingPaymentService', (): void => {
   let deps: IocContract<AppServices>
@@ -65,6 +66,7 @@ describe('OutgoingPaymentService', (): void => {
   let client: string
   let amtDelivered: bigint
   let trx: Knex.Transaction
+  let config: IAppConfig
 
   const asset: AssetOptions = {
     scale: 9,
@@ -247,6 +249,7 @@ describe('OutgoingPaymentService', (): void => {
     accountingService = await deps.use('accountingService')
     paymentMethodHandlerService = await deps.use('paymentMethodHandlerService')
     quoteService = await deps.use('quoteService')
+    config = await deps.use('config')
     knex = appContainer.knex
   })
 
@@ -490,6 +493,60 @@ describe('OutgoingPaymentService', (): void => {
         method: 'ilp'
       })
     })
+
+    test(
+      'create many outgoing payments against one grant',
+      withConfigOverride(
+        () => config,
+        { slippage: 0 },
+        async (): Promise<void> => {
+          const debitAmount = {
+            value: BigInt(10),
+            assetCode: receiverWalletAddress.asset.code,
+            assetScale: receiverWalletAddress.asset.scale
+          }
+          const grant: Grant = {
+            id: uuid(),
+            limits: {
+              debitAmount: {
+                value: BigInt(Number.MAX_SAFE_INTEGER),
+                assetCode: receiverWalletAddress.asset.code,
+                assetScale: receiverWalletAddress.asset.scale
+              },
+              receiveAmount: {
+                value: BigInt(Number.MAX_SAFE_INTEGER),
+                assetCode: receiverWalletAddress.asset.code,
+                assetScale: receiverWalletAddress.asset.scale
+              }
+            }
+          }
+          await OutgoingPaymentGrant.query(knex).insertAndFetch({
+            id: grant.id
+          })
+
+          const options: CreateOutgoingPaymentOptions = {
+            walletAddressId: receiverWalletAddress.id,
+            debitAmount,
+            incomingPayment: incomingPayment.toOpenPaymentsTypeWithMethods(
+              receiverWalletAddress
+            ).id,
+            grant
+          }
+
+          for (let i = 0; i < 3; i++) {
+            const payment = await outgoingPaymentService.create(options)
+            assert.ok(!isOutgoingPaymentError(payment))
+            expect(payment.grantSpentDebitAmount.value).toBe(
+              BigInt(debitAmount.value * BigInt(i))
+            )
+            expect(payment.grantSpentReceiveAmount.value).toBe(
+              // Must account for interledger/pay off-by-one issue (even with 0 slippage/fees)
+              BigInt((debitAmount.value - BigInt(1)) * BigInt(i))
+            )
+          }
+        }
+      )
+    )
 
     test('fails to create quote from incoming payment', async () => {
       const walletAddressId = receiverWalletAddress.id
