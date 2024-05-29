@@ -18,7 +18,12 @@ body:json {
   {
       "walletAddress": "{{senderWalletAddress}}",
       "receiver": "{{receiverOpenPaymentsHost}}/incoming-payments/{{incomingPaymentId}}",
-      "method": "ilp"
+      "method": "ilp",
+      "debitAmount": {
+        "value": "300",
+        "assetCode": "USD",
+        "assetScale": 2
+      }
   }
 }
 
@@ -33,13 +38,16 @@ script:pre-request {
 script:post-response {
   const body = res.getBody();
   bru.setEnvVar("quoteId", body.id.split("/").pop());
-  console.log({
-      debitAmount: body.debitAmount,
-    receiveAmount: body.receiveAmount
-  })
-  bru.setEnvVar("quoteDebitAmount", JSON.stringify(body.debitAmount))
-  bru.setEnvVar("quoteReceiveAmount", JSON.stringify(body.receiveAmount))
-  
+  bru.setEnvVar("quoteDebitAmount", JSON.stringify({
+          value: "99999999999999",
+          assetCode: "USD",
+          assetScale: 2
+      }))
+  bru.setEnvVar("quoteReceiveAmount", JSON.stringify({
+          value: "99999999999999",
+          assetCode: "USD",
+          assetScale: 2
+      }))
 }
 
 tests {
