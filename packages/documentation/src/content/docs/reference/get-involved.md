@@ -5,7 +5,7 @@ title: Get involved
 ## Participation
 
 - Begin a [new discussion or contribute to existing discussions](https://github.com/interledger/rafiki/discussions) in the Rafiki GitHub repo.
-- Join the [interledger.slack.com](interledger.slack.com) workspace and ask any questions you have in the #rafiki channel.
+- Join the [interledger.slack.com](https://interledger.slack.com) workspace and ask any questions you have in the #rafiki channel.
 - Try [running the system locally](https://rafiki.dev/playground/overview/) and ask any questions you have in the #rafiki Slack channel.
 - For more details about spec contributions and development, visit [contributing.md](https://github.com/interledger/rafiki/blob/main/.github/contributing.md).
 
