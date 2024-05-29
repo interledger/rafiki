@@ -24,6 +24,7 @@ import { IAppConfig } from '../../config/app'
 import { Pagination, SortOrder } from '../../shared/baseModel'
 import { WebhookService } from '../../webhook/service'
 import { poll } from '../../shared/utils'
+import { WalletAddressAdditionalProperty } from './additional_property/model'
 
 interface Options {
   publicName?: string
@@ -32,6 +33,7 @@ interface Options {
 export interface CreateOptions extends Options {
   url: string
   assetId: string
+  additionalProperties?: WalletAddressAdditionalProperty[]
 }
 
 export interface UpdateOptions extends Options {
@@ -123,13 +125,31 @@ async function createWalletAddress(
     return WalletAddressError.InvalidUrl
   }
   try {
-    return await WalletAddress.query(deps.knex)
+    const wallet = await WalletAddress.query(deps.knex)
       .insertAndFetch({
         url: options.url,
         publicName: options.publicName,
         assetId: options.assetId
       })
       .withGraphFetched('asset')
+    let addProperties = options.additionalProperties;
+    if (addProperties) {
+      addProperties = addProperties.filter(itm => {
+        return !((itm.key == undefined || itm.key.trim().length == 0) ||
+          (itm.value == undefined || itm.value.trim().length == 0))
+      })
+      const now = new Date();
+      for (const prop of addProperties) {
+        prop.walletAddressId = wallet.id
+        prop.createdAt = now;
+        prop.updatedAt = now;
+        if (prop.visibleInOpenPayments == undefined) prop.visibleInOpenPayments = false
+      }
+      if (addProperties.length) {
+        await WalletAddressAdditionalProperty.query(deps.knex).insert(addProperties);
+      }
+    }
+    return wallet;
   } catch (err) {
     if (err instanceof ForeignKeyViolationError) {
       if (err.constraint === 'walletaddresses_assetid_foreign') {

@@ -7,6 +7,7 @@ import { BaseModel, Pagination, SortOrder } from '../../shared/baseModel'
 import { WebhookEvent } from '../../webhook/model'
 import { WalletAddressKey } from '../../open_payments/wallet_address/key/model'
 import { AmountJSON } from '../amount'
+import { WalletAddressAdditionalProperty } from './additional_property/model'
 
 export class WalletAddress
   extends BaseModel
@@ -36,6 +37,7 @@ export class WalletAddress
   })
 
   public keys?: WalletAddressKey[]
+  public additionalProperties?: WalletAddressAdditionalProperty[]
 
   public url!: string
   public publicName?: string
