@@ -22,6 +22,7 @@ services:
       GRAPHQL_URL: http://cloud-nine-wallet-backend:3001/graphql
       SIGNATURE_VERSION: 1
       SIGNATURE_SECRET: iyIgCprjb9uL8wFckR+pLEkJWMB7FJhgkvqhTQR/964=
+      IDP_SECRET: 2pEcn2kkCclbOHQiGNEwhJ0rucATZhrA807HTm2rNXE=
     volumes:
       - ../cloud-nine-wallet/seed.yml:/workspace/seed.yml
       - ../cloud-nine-wallet/private-key.pem:/workspace/private-key.pem
@@ -92,6 +93,7 @@ services:
       - '3003:3003'
       - '3006:3006'
       - "9230:9229"
+      - '3009:3009'
     environment:
       NODE_ENV: ${NODE_ENV:-development}
       TRUST_PROXY: ${TRUST_PROXY}

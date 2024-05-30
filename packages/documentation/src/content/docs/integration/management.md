@@ -2,7 +2,7 @@
 title: Management
 ---
 
-After Rafiki has been deployed, [Account Servicing Entities](/reference/glossary#account-servicing-entity) can manage their Rafiki instance via two GraphQL Admin APIs, the [`backend` Admin API](/apis/backend/schema) and the [`auth` Admin API](/apis/auth/schema).
+After Rafiki has been deployed, [Account Servicing Entities](/reference/glossary#account-servicing-entity) can manage their Rafiki instance via two GraphQL Admin APIs, the [`backend` Admin API](/apis/backend/mutations) and the [`auth` Admin API](/apis/auth/mutations).
 
 The `backend` Admin API allows Account Servicing Entities to manage:
 

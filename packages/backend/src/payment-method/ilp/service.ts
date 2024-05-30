@@ -41,7 +41,10 @@ async function getQuote(
   const rates = await deps.ratesService
     .rates(options.walletAddress.asset.code)
     .catch((_err: Error) => {
-      throw new Error('missing rates')
+      throw new PaymentMethodHandlerError('Received error during ILP quoting', {
+        description: 'Could not get rates from service',
+        retryable: false
+      })
     })
 
   const plugin = deps.makeIlpPlugin({
@@ -89,14 +92,14 @@ async function getQuote(
     // zero or negative.
     if (ilpQuote.maxSourceAmount <= BigInt(0)) {
       throw new PaymentMethodHandlerError('Received error during ILP quoting', {
-        description: 'Invalid maxSourceAmount',
+        description: 'Maximum source amount of ILP quote is non-positive',
         retryable: false
       })
     }
 
     if (ilpQuote.minDeliveryAmount <= BigInt(0)) {
       throw new PaymentMethodHandlerError('Received error during ILP quoting', {
-        description: 'Invalid minDeliveryAmount',
+        description: 'Minimum delivery amount of ILP quote is non-positive',
         retryable: false
       })
     }
@@ -172,18 +175,16 @@ async function pay(
     highEstimatedExchangeRate,
     minExchangeRate,
     maxPacketAmount
-  } = outgoingPayment.quote.additionalFields
+  } = outgoingPayment.quote
 
   const quote: Pay.Quote = {
-    maxPacketAmount: BigInt(maxPacketAmount as bigint),
+    maxPacketAmount,
     paymentType: Pay.PaymentType.FixedDelivery,
     maxSourceAmount: finalDebitAmount,
     minDeliveryAmount: finalReceiveAmount,
-    lowEstimatedExchangeRate: fromJSONtoRatio(lowEstimatedExchangeRate),
-    highEstimatedExchangeRate: fromJSONtoRatio(
-      highEstimatedExchangeRate
-    ) as Pay.PositiveRatio,
-    minExchangeRate: fromJSONtoRatio(minExchangeRate)
+    lowEstimatedExchangeRate,
+    highEstimatedExchangeRate,
+    minExchangeRate
   }
 
   const plugin = deps.makeIlpPlugin({
@@ -194,6 +195,10 @@ async function pay(
 
   try {
     const receipt = await Pay.pay({ plugin, destination, quote })
+
+    if (receipt.error) {
+      throw receipt.error
+    }
 
     deps.logger.debug(
       {
@@ -206,10 +211,6 @@ async function pay(
       },
       'ILP payment completed'
     )
-
-    if (receipt.error) {
-      throw receipt.error
-    }
   } catch (err) {
     const errorMessage = 'Received error during ILP pay'
     deps.logger.error(
@@ -243,20 +244,6 @@ async function pay(
       )
     }
   }
-}
-
-function fromJSONtoRatio(ratio: unknown): Pay.Ratio {
-  if (Array.isArray(ratio) && ratio.length === 2) {
-    const numerator = Pay.Int.from(ratio[0])
-    const denominator = Pay.Int.from(ratio[1])
-
-    return Pay.Ratio.of(numerator, denominator)
-  }
-
-  throw new PaymentMethodHandlerError('Error parsing ILP quote', {
-    description: 'Invalid ratio value',
-    retryable: false
-  })
 }
 
 export function canRetryError(err: Error | Pay.PaymentError): boolean {

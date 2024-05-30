@@ -48,6 +48,7 @@ export interface Config {
   testnetAutoPeerUrl: string
   authServerDomain: string
   graphqlUrl: string
+  idpSecret: string
 }
 export interface Webhook {
   id: string

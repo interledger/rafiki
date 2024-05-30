@@ -95,6 +95,7 @@ async function grantRequestIncomingPayment(
   receiverWalletAddress: WalletAddress
 ): Promise<Grant> {
   const { sendingASE } = deps
+
   const grant = await sendingASE.opClient.grant.request(
     {
       url: receiverWalletAddress.authServer

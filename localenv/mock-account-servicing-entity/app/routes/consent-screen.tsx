@@ -213,7 +213,12 @@ function PreConsentScreen({
   )
 }
 
-export default function ConsentScreen() {
+type ConsentScreenProps = {
+  idpSecret: string
+}
+
+// In production, ensure that secrets are handled securely and are not exposed to the client-side code.
+export default function ConsentScreen({ idpSecret }: ConsentScreenProps) {
   const [ctx, setCtx] = useState({
     ready: false,
     thirdPartyName: '',
@@ -261,10 +266,13 @@ export default function ConsentScreen() {
     if (ctx.errors.length === 0 && ctx.ready && !ctx.accesses) {
       const { interactId, nonce } = ctx
 
-      ApiClient.getGrant({
-        interactId,
-        nonce
-      })
+      ApiClient.getGrant(
+        {
+          interactId,
+          nonce
+        },
+        idpSecret
+      )
         .then((response) => {
           if (response.isFailure) {
             setCtx({

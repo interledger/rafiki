@@ -5,6 +5,8 @@ import { Asset } from './model'
 import { Pagination, SortOrder } from '../shared/baseModel'
 import { BaseService } from '../shared/baseService'
 import { AccountingService, LiquidityAccountType } from '../accounting/service'
+import { WalletAddress } from '../open_payments/wallet_address/model'
+import { Peer } from '../payment-method/ilp/peer/model'
 
 export interface AssetOptions {
   code: string
@@ -21,10 +23,15 @@ export interface UpdateOptions {
   withdrawalThreshold: bigint | null
   liquidityThreshold: bigint | null
 }
+export interface DeleteOptions {
+  id: string
+  deletedAt: Date
+}
 
 export interface AssetService {
   create(options: CreateOptions): Promise<Asset | AssetError>
   update(options: UpdateOptions): Promise<Asset | AssetError>
+  delete(options: DeleteOptions): Promise<Asset | AssetError>
   get(id: string): Promise<void | Asset>
   getPage(pagination?: Pagination, sortOrder?: SortOrder): Promise<Asset[]>
   getAll(): Promise<Asset[]>
@@ -50,6 +57,7 @@ export async function createAssetService({
   return {
     create: (options) => createAsset(deps, options),
     update: (options) => updateAsset(deps, options),
+    delete: (options) => deleteAsset(deps, options),
     get: (id) => getAsset(deps, id),
     getPage: (pagination?, sortOrder?) =>
       getAssetsPage(deps, pagination, sortOrder),
@@ -62,6 +70,20 @@ async function createAsset(
   { code, scale, withdrawalThreshold, liquidityThreshold }: CreateOptions
 ): Promise<Asset | AssetError> {
   try {
+    // check if exists but deleted | by code-scale
+    const deletedAsset = await Asset.query(deps.knex)
+      .whereNotNull('deletedAt')
+      .where('code', code)
+      .andWhere('scale', scale)
+      .first()
+
+    if (deletedAsset) {
+      // if found, enable
+      return await Asset.query(deps.knex)
+        .patchAndFetchById(deletedAsset.id, { deletedAt: null })
+        .throwIfNotFound()
+    }
+
     // Asset rows include a smallserial 'ledger' column that would have sequence gaps
     // if a transaction is rolled back.
     // https://www.postgresql.org/docs/current/datatype-numeric.html#DATATYPE-SERIAL
@@ -111,11 +133,44 @@ async function updateAsset(
   }
 }
 
+// soft delete
+async function deleteAsset(
+  deps: ServiceDependencies,
+  { id, deletedAt }: DeleteOptions
+): Promise<Asset | AssetError> {
+  if (!deps.knex) {
+    throw new Error('Knex undefined')
+  }
+  try {
+    // return error in case there is a peer or wallet address using the asset
+    const peer = await Peer.query(deps.knex).where('assetId', id).first()
+    if (peer) {
+      return AssetError.CannotDeleteInUseAsset
+    }
+
+    const walletAddress = await WalletAddress.query(deps.knex)
+      .where('assetId', id)
+      .first()
+    if (walletAddress) {
+      return AssetError.CannotDeleteInUseAsset
+    }
+
+    return await Asset.query(deps.knex)
+      .patchAndFetchById(id, { deletedAt: deletedAt.toISOString() })
+      .throwIfNotFound()
+  } catch (err) {
+    if (err instanceof NotFoundError) {
+      return AssetError.UnknownAsset
+    }
+    throw err
+  }
+}
+
 async function getAsset(
   deps: ServiceDependencies,
   id: string
 ): Promise<void | Asset> {
-  return await Asset.query(deps.knex).findById(id)
+  return await Asset.query(deps.knex).whereNull('deletedAt').findById(id)
 }
 
 async function getAssetsPage(
@@ -123,9 +178,11 @@ async function getAssetsPage(
   pagination?: Pagination,
   sortOrder?: SortOrder
 ): Promise<Asset[]> {
-  return await Asset.query(deps.knex).getPage(pagination, sortOrder)
+  return await Asset.query(deps.knex)
+    .whereNull('deletedAt')
+    .getPage(pagination, sortOrder)
 }
 
 async function getAll(deps: ServiceDependencies): Promise<Asset[]> {
-  return await Asset.query(deps.knex)
+  return await Asset.query(deps.knex).whereNull('deletedAt')
 }

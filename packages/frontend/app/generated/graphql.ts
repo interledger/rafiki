@@ -346,6 +346,20 @@ export enum Crv {
   Ed25519 = 'Ed25519'
 }
 
+export type DeleteAssetInput = {
+  /** Asset id */
+  id: Scalars['ID']['input'];
+  /** Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence) */
+  idempotencyKey?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type DeleteAssetMutationResponse = MutationResponse & {
+  __typename?: 'DeleteAssetMutationResponse';
+  code: Scalars['String']['output'];
+  message: Scalars['String']['output'];
+  success: Scalars['Boolean']['output'];
+};
+
 export type DeletePeerInput = {
   id: Scalars['ID']['input'];
   /** Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence) */
@@ -622,6 +636,8 @@ export type Mutation = {
   createWalletAddressKey?: Maybe<CreateWalletAddressKeyMutationResponse>;
   /** Withdraw liquidity from a wallet address received via Web Monetization. */
   createWalletAddressWithdrawal?: Maybe<WalletAddressWithdrawalMutationResponse>;
+  /** Delete an asset */
+  deleteAsset: DeleteAssetMutationResponse;
   /** Delete a peer */
   deletePeer: DeletePeerMutationResponse;
   /** Deposit asset liquidity */
@@ -736,6 +752,11 @@ export type MutationCreateWalletAddressKeyArgs = {
 
 export type MutationCreateWalletAddressWithdrawalArgs = {
   input: CreateWalletAddressWithdrawalInput;
+};
+
+
+export type MutationDeleteAssetArgs = {
+  input: DeleteAssetInput;
 };
 
 
@@ -1508,7 +1529,7 @@ export type DirectiveResolverFn<TResult = {}, TParent = {}, TContext = {}, TArgs
 export type ResolversInterfaceTypes<RefType extends Record<string, unknown>> = {
   BasePayment: ( Partial<IncomingPayment> ) | ( Partial<OutgoingPayment> ) | ( Partial<Payment> );
   Model: ( Partial<Asset> ) | ( Partial<Fee> ) | ( Partial<IncomingPayment> ) | ( Partial<OutgoingPayment> ) | ( Partial<Payment> ) | ( Partial<Peer> ) | ( Partial<WalletAddress> ) | ( Partial<WalletAddressKey> ) | ( Partial<WebhookEvent> );
-  MutationResponse: ( Partial<AssetMutationResponse> ) | ( Partial<CreateOrUpdatePeerByUrlMutationResponse> ) | ( Partial<CreatePeerMutationResponse> ) | ( Partial<CreateWalletAddressKeyMutationResponse> ) | ( Partial<CreateWalletAddressMutationResponse> ) | ( Partial<DeletePeerMutationResponse> ) | ( Partial<LiquidityMutationResponse> ) | ( Partial<RevokeWalletAddressKeyMutationResponse> ) | ( Partial<SetFeeResponse> ) | ( Partial<TransferMutationResponse> ) | ( Partial<TriggerWalletAddressEventsMutationResponse> ) | ( Partial<UpdatePeerMutationResponse> ) | ( Partial<UpdateWalletAddressMutationResponse> ) | ( Partial<WalletAddressWithdrawalMutationResponse> );
+  MutationResponse: ( Partial<AssetMutationResponse> ) | ( Partial<CreateOrUpdatePeerByUrlMutationResponse> ) | ( Partial<CreatePeerMutationResponse> ) | ( Partial<CreateWalletAddressKeyMutationResponse> ) | ( Partial<CreateWalletAddressMutationResponse> ) | ( Partial<DeleteAssetMutationResponse> ) | ( Partial<DeletePeerMutationResponse> ) | ( Partial<LiquidityMutationResponse> ) | ( Partial<RevokeWalletAddressKeyMutationResponse> ) | ( Partial<SetFeeResponse> ) | ( Partial<TransferMutationResponse> ) | ( Partial<TriggerWalletAddressEventsMutationResponse> ) | ( Partial<UpdatePeerMutationResponse> ) | ( Partial<UpdateWalletAddressMutationResponse> ) | ( Partial<WalletAddressWithdrawalMutationResponse> );
 };
 
 /** Mapping between all available schema types and the resolvers types */
@@ -1545,6 +1566,8 @@ export type ResolversTypes = {
   CreateWalletAddressMutationResponse: ResolverTypeWrapper<Partial<CreateWalletAddressMutationResponse>>;
   CreateWalletAddressWithdrawalInput: ResolverTypeWrapper<Partial<CreateWalletAddressWithdrawalInput>>;
   Crv: ResolverTypeWrapper<Partial<Crv>>;
+  DeleteAssetInput: ResolverTypeWrapper<Partial<DeleteAssetInput>>;
+  DeleteAssetMutationResponse: ResolverTypeWrapper<Partial<DeleteAssetMutationResponse>>;
   DeletePeerInput: ResolverTypeWrapper<Partial<DeletePeerInput>>;
   DeletePeerMutationResponse: ResolverTypeWrapper<Partial<DeletePeerMutationResponse>>;
   DepositAssetLiquidityInput: ResolverTypeWrapper<Partial<DepositAssetLiquidityInput>>;
@@ -1665,6 +1688,8 @@ export type ResolversParentTypes = {
   CreateWalletAddressKeyMutationResponse: Partial<CreateWalletAddressKeyMutationResponse>;
   CreateWalletAddressMutationResponse: Partial<CreateWalletAddressMutationResponse>;
   CreateWalletAddressWithdrawalInput: Partial<CreateWalletAddressWithdrawalInput>;
+  DeleteAssetInput: Partial<DeleteAssetInput>;
+  DeleteAssetMutationResponse: Partial<DeleteAssetMutationResponse>;
   DeletePeerInput: Partial<DeletePeerInput>;
   DeletePeerMutationResponse: Partial<DeletePeerMutationResponse>;
   DepositAssetLiquidityInput: Partial<DepositAssetLiquidityInput>;
@@ -1835,6 +1860,13 @@ export type CreateWalletAddressMutationResponseResolvers<ContextType = any, Pare
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
+export type DeleteAssetMutationResponseResolvers<ContextType = any, ParentType extends ResolversParentTypes['DeleteAssetMutationResponse'] = ResolversParentTypes['DeleteAssetMutationResponse']> = {
+  code?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  message?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  success?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
 export type DeletePeerMutationResponseResolvers<ContextType = any, ParentType extends ResolversParentTypes['DeletePeerMutationResponse'] = ResolversParentTypes['DeletePeerMutationResponse']> = {
   code?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   message?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
@@ -1953,6 +1985,7 @@ export type MutationResolvers<ContextType = any, ParentType extends ResolversPar
   createWalletAddress?: Resolver<ResolversTypes['CreateWalletAddressMutationResponse'], ParentType, ContextType, RequireFields<MutationCreateWalletAddressArgs, 'input'>>;
   createWalletAddressKey?: Resolver<Maybe<ResolversTypes['CreateWalletAddressKeyMutationResponse']>, ParentType, ContextType, RequireFields<MutationCreateWalletAddressKeyArgs, 'input'>>;
   createWalletAddressWithdrawal?: Resolver<Maybe<ResolversTypes['WalletAddressWithdrawalMutationResponse']>, ParentType, ContextType, RequireFields<MutationCreateWalletAddressWithdrawalArgs, 'input'>>;
+  deleteAsset?: Resolver<ResolversTypes['DeleteAssetMutationResponse'], ParentType, ContextType, RequireFields<MutationDeleteAssetArgs, 'input'>>;
   deletePeer?: Resolver<ResolversTypes['DeletePeerMutationResponse'], ParentType, ContextType, RequireFields<MutationDeletePeerArgs, 'input'>>;
   depositAssetLiquidity?: Resolver<Maybe<ResolversTypes['LiquidityMutationResponse']>, ParentType, ContextType, RequireFields<MutationDepositAssetLiquidityArgs, 'input'>>;
   depositEventLiquidity?: Resolver<Maybe<ResolversTypes['LiquidityMutationResponse']>, ParentType, ContextType, RequireFields<MutationDepositEventLiquidityArgs, 'input'>>;
@@ -1970,7 +2003,7 @@ export type MutationResolvers<ContextType = any, ParentType extends ResolversPar
 };
 
 export type MutationResponseResolvers<ContextType = any, ParentType extends ResolversParentTypes['MutationResponse'] = ResolversParentTypes['MutationResponse']> = {
-  __resolveType: TypeResolveFn<'AssetMutationResponse' | 'CreateOrUpdatePeerByUrlMutationResponse' | 'CreatePeerMutationResponse' | 'CreateWalletAddressKeyMutationResponse' | 'CreateWalletAddressMutationResponse' | 'DeletePeerMutationResponse' | 'LiquidityMutationResponse' | 'RevokeWalletAddressKeyMutationResponse' | 'SetFeeResponse' | 'TransferMutationResponse' | 'TriggerWalletAddressEventsMutationResponse' | 'UpdatePeerMutationResponse' | 'UpdateWalletAddressMutationResponse' | 'WalletAddressWithdrawalMutationResponse', ParentType, ContextType>;
+  __resolveType: TypeResolveFn<'AssetMutationResponse' | 'CreateOrUpdatePeerByUrlMutationResponse' | 'CreatePeerMutationResponse' | 'CreateWalletAddressKeyMutationResponse' | 'CreateWalletAddressMutationResponse' | 'DeleteAssetMutationResponse' | 'DeletePeerMutationResponse' | 'LiquidityMutationResponse' | 'RevokeWalletAddressKeyMutationResponse' | 'SetFeeResponse' | 'TransferMutationResponse' | 'TriggerWalletAddressEventsMutationResponse' | 'UpdatePeerMutationResponse' | 'UpdateWalletAddressMutationResponse' | 'WalletAddressWithdrawalMutationResponse', ParentType, ContextType>;
   code?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   message?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   success?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
@@ -2285,6 +2318,7 @@ export type Resolvers<ContextType = any> = {
   CreateReceiverResponse?: CreateReceiverResponseResolvers<ContextType>;
   CreateWalletAddressKeyMutationResponse?: CreateWalletAddressKeyMutationResponseResolvers<ContextType>;
   CreateWalletAddressMutationResponse?: CreateWalletAddressMutationResponseResolvers<ContextType>;
+  DeleteAssetMutationResponse?: DeleteAssetMutationResponseResolvers<ContextType>;
   DeletePeerMutationResponse?: DeletePeerMutationResponseResolvers<ContextType>;
   Fee?: FeeResolvers<ContextType>;
   FeeEdge?: FeeEdgeResolvers<ContextType>;
@@ -2402,6 +2436,13 @@ export type WithdrawAssetLiquidityVariables = Exact<{
 
 
 export type WithdrawAssetLiquidity = { __typename?: 'Mutation', createAssetLiquidityWithdrawal?: { __typename?: 'LiquidityMutationResponse', code: string, success: boolean, message: string, error?: LiquidityError | null } | null };
+
+export type DeleteAssetMutationVariables = Exact<{
+  input: DeleteAssetInput;
+}>;
+
+
+export type DeleteAssetMutation = { __typename?: 'Mutation', deleteAsset: { __typename?: 'DeleteAssetMutationResponse', code: string, success: boolean, message: string } };
 
 export type GetIncomingPaymentVariables = Exact<{
   id: Scalars['String']['input'];
