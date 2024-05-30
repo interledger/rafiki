@@ -6,7 +6,7 @@ import { CONFIG as config } from '~/lib/parse_config.server'
 export function loader() {
   return json({
     authServerDomain: config.authServerDomain,
-    idpSecret: config.idpSecret
+    idpSecret: config.idpSecret // In production, ensure that secrets are handled securely and are not exposed to the client-side code.
   })
 }
 
