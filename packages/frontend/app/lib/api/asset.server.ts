@@ -142,11 +142,18 @@ export const createAsset = async (args: CreateAssetInput) => {
     mutation: gql`
       mutation CreateAssetMutation($input: CreateAssetInput!) {
         createAsset(input: $input) {
-          code
-          success
-          message
           asset {
             id
+            code
+            scale
+            withdrawalThreshold
+            liquidity
+            sendingFee {
+              basisPoints
+              fixed
+              createdAt
+            }
+            createdAt
           }
         }
       }
@@ -167,9 +174,19 @@ export const updateAsset = async (args: UpdateAssetInput) => {
     mutation: gql`
       mutation UpdateAssetMutation($input: UpdateAssetInput!) {
         updateAsset(input: $input) {
-          code
-          success
-          message
+          asset {
+            id
+            code
+            scale
+            withdrawalThreshold
+            liquidity
+            sendingFee {
+              basisPoints
+              fixed
+              createdAt
+            }
+            createdAt
+          }
         }
       }
     `,
@@ -189,7 +206,6 @@ export const setFee = async (args: SetFeeInput) => {
     mutation: gql`
       mutation SetFeeMutation($input: SetFeeInput!) {
         setFee(input: $input) {
-          code
           fee {
             assetId
             basisPoints
@@ -198,8 +214,6 @@ export const setFee = async (args: SetFeeInput) => {
             id
             type
           }
-          message
-          success
         }
       }
     `,
@@ -223,10 +237,8 @@ export const depositAssetLiquidity = async (
         $input: DepositAssetLiquidityInput!
       ) {
         depositAssetLiquidity(input: $input) {
-          code
-          success
-          message
-          error
+          id
+          liquidity
         }
       }
     `,
@@ -250,10 +262,8 @@ export const withdrawAssetLiquidity = async (
         $input: CreateAssetLiquidityWithdrawalInput!
       ) {
         createAssetLiquidityWithdrawal(input: $input) {
-          code
-          success
-          message
-          error
+          id
+          liquidity
         }
       }
     `,
@@ -292,9 +302,19 @@ export const deleteAsset = async (args: DeleteAssetInput) => {
     mutation: gql`
       mutation DeleteAssetMutation($input: DeleteAssetInput!) {
         deleteAsset(input: $input) {
-          code
-          success
-          message
+          asset {
+            id
+            code
+            scale
+            withdrawalThreshold
+            liquidity
+            sendingFee {
+              basisPoints
+              fixed
+              createdAt
+            }
+            createdAt
+          }
         }
       }
     `,

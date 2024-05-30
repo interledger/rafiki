@@ -111,9 +111,6 @@ export const createPeer = async (args: CreatePeerInput) => {
     mutation: gql`
       mutation CreatePeerMutation($input: CreatePeerInput!) {
         createPeer(input: $input) {
-          code
-          success
-          message
           peer {
             id
           }
@@ -136,9 +133,9 @@ export const updatePeer = async (args: UpdatePeerInput) => {
     mutation: gql`
       mutation UpdatePeerMutation($input: UpdatePeerInput!) {
         updatePeer(input: $input) {
-          code
-          success
-          message
+          peer {
+            id
+          }
         }
       }
     `,
@@ -158,9 +155,7 @@ export const deletePeer = async (args: MutationDeletePeerArgs) => {
     mutation: gql`
       mutation DeletePeerMutation($input: DeletePeerInput!) {
         deletePeer(input: $input) {
-          code
           success
-          message
         }
       }
     `,
@@ -180,10 +175,8 @@ export const depositPeerLiquidity = async (args: DepositPeerLiquidityInput) => {
         $input: DepositPeerLiquidityInput!
       ) {
         depositPeerLiquidity(input: $input) {
-          code
-          success
-          message
-          error
+          id
+          liquidity
         }
       }
     `,
@@ -207,10 +200,8 @@ export const withdrawPeerLiquidity = async (
         $input: CreatePeerLiquidityWithdrawalInput!
       ) {
         createPeerLiquidityWithdrawal(input: $input) {
-          code
-          success
-          message
-          error
+          id
+          liquidity
         }
       }
     `,

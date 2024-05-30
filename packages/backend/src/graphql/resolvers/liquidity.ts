@@ -1,10 +1,10 @@
+import { GraphQLError } from 'graphql'
+import { GraphQLErrorCode } from '../errors'
 import { walletAddressToGraphql } from './wallet_address'
 import {
   ResolversTypes,
   MutationResolvers,
   LiquidityError,
-  LiquidityMutationResponse,
-  WalletAddressWithdrawalMutationResponse,
   AssetResolvers,
   PeerResolvers,
   WalletAddressResolvers,
@@ -14,15 +14,24 @@ import {
 } from '../generated/graphql'
 import { ApolloContext } from '../../app'
 import {
-  FundingError,
+  fundingErrorToMessage,
+  fundingErrorToCode,
   isFundingError
 } from '../../open_payments/payment/outgoing/errors'
+import {
+  errorToCode as transferErrorToCode,
+  errorToMessage as transferErrorToMessage
+} from '../../accounting/errors'
 import {
   isOutgoingPaymentEvent,
   OutgoingPaymentDepositType,
   OutgoingPaymentEventType
 } from '../../open_payments/payment/outgoing/model'
-import { PeerError } from '../../payment-method/ilp/peer/errors'
+import {
+  PeerError,
+  errorToMessage as peerErrorToMessage,
+  errorToCode as peerErrorToCode
+} from '../../payment-method/ilp/peer/errors'
 import { IncomingPaymentEventType } from '../../open_payments/payment/incoming/model'
 
 export const getAssetLiquidity: AssetResolvers<ApolloContext>['liquidity'] =
@@ -80,41 +89,37 @@ export const depositPeerLiquidity: MutationResolvers<ApolloContext>['depositPeer
     args,
     ctx
   ): Promise<ResolversTypes['LiquidityMutationResponse']> => {
-    try {
-      if (args.input.amount === BigInt(0)) {
-        return responses[LiquidityError.AmountZero]
-      }
-      const peerService = await ctx.container.use('peerService')
-      const peerOrError = await peerService.depositLiquidity({
-        transferId: args.input.id,
-        peerId: args.input.peerId,
-        amount: args.input.amount
+    if (args.input.amount === BigInt(0)) {
+      throw new GraphQLError(errorToMessage[LiquidityError.AmountZero], {
+        extensions: {
+          code: errorToCode[LiquidityError.AmountZero]
+        }
       })
+    }
+    const peerService = await ctx.container.use('peerService')
+    const peerOrError = await peerService.depositLiquidity({
+      transferId: args.input.id,
+      peerId: args.input.peerId,
+      amount: args.input.amount
+    })
 
-      if (peerOrError === PeerError.UnknownPeer) {
-        return responses[LiquidityError.UnknownPeer]
-      } else if (isLiquidityError(peerOrError)) {
-        return errorToResponse(peerOrError)
-      }
+    if (peerOrError === PeerError.UnknownPeer) {
+      throw new GraphQLError(peerErrorToMessage[peerOrError], {
+        extensions: {
+          code: peerErrorToCode[peerOrError]
+        }
+      })
+    } else if (isLiquidityError(peerOrError)) {
+      throw new GraphQLError(errorToMessage[peerOrError], {
+        extensions: {
+          code: errorToCode[peerOrError]
+        }
+      })
+    }
 
-      return {
-        code: '200',
-        success: true,
-        message: 'Added peer liquidity'
-      }
-    } catch (err) {
-      ctx.logger.error(
-        {
-          input: args.input,
-          err
-        },
-        'error adding peer liquidity'
-      )
-      return {
-        code: '400',
-        message: 'Error trying to deposit peer liquidity',
-        success: false
-      }
+    return {
+      id: args.input.id,
+      liquidity: args.input.amount
     }
   }
 
@@ -124,42 +129,38 @@ export const depositAssetLiquidity: MutationResolvers<ApolloContext>['depositAss
     args,
     ctx
   ): Promise<ResolversTypes['LiquidityMutationResponse']> => {
-    try {
-      if (args.input.amount === BigInt(0)) {
-        return responses[LiquidityError.AmountZero]
-      }
-      const assetService = await ctx.container.use('assetService')
-      const asset = await assetService.get(args.input.assetId)
-      if (!asset) {
-        return responses[LiquidityError.UnknownAsset]
-      }
-      const accountingService = await ctx.container.use('accountingService')
-      const error = await accountingService.createDeposit({
-        id: args.input.id,
-        account: asset,
-        amount: args.input.amount
+    if (args.input.amount === BigInt(0)) {
+      throw new GraphQLError(errorToMessage[LiquidityError.AmountZero], {
+        extensions: {
+          code: errorToCode[LiquidityError.AmountZero]
+        }
       })
-      if (error) {
-        return errorToResponse(error)
-      }
-      return {
-        code: '200',
-        success: true,
-        message: 'Added asset liquidity'
-      }
-    } catch (err) {
-      ctx.logger.error(
-        {
-          input: args.input,
-          err
-        },
-        'error adding asset liquidity'
-      )
-      return {
-        code: '400',
-        message: 'Error trying to deposit asset liquidity',
-        success: false
-      }
+    }
+    const assetService = await ctx.container.use('assetService')
+    const asset = await assetService.get(args.input.assetId)
+    if (!asset) {
+      throw new GraphQLError(errorToMessage[LiquidityError.UnknownAsset], {
+        extensions: {
+          code: errorToCode[LiquidityError.UnknownAsset]
+        }
+      })
+    }
+    const accountingService = await ctx.container.use('accountingService')
+    const error = await accountingService.createDeposit({
+      id: args.input.id,
+      account: asset,
+      amount: args.input.amount
+    })
+    if (error) {
+      throw new GraphQLError(transferErrorToMessage[error], {
+        extensions: {
+          code: transferErrorToCode[error]
+        }
+      })
+    }
+    return {
+      id: args.input.id,
+      liquidity: args.input.amount
     }
   }
 
@@ -169,6 +170,7 @@ export const createPeerLiquidityWithdrawal: MutationResolvers<ApolloContext>['cr
     args,
     ctx
   ): Promise<ResolversTypes['LiquidityMutationResponse']> => {
+<<<<<<< HEAD
     try {
       const { amount, id, timeoutSeconds, peerId } = args.input
       if (amount === BigInt(0)) {
@@ -185,28 +187,41 @@ export const createPeerLiquidityWithdrawal: MutationResolvers<ApolloContext>['cr
         account: peer,
         amount,
         timeout: Number(timeoutSeconds)
+=======
+    if (args.input.amount === BigInt(0)) {
+      throw new GraphQLError(errorToMessage[LiquidityError.AmountZero], {
+        extensions: {
+          code: errorToCode[LiquidityError.AmountZero]
+        }
+>>>>>>> c702654c (feat(wip): backend graphql logs)
       })
-      if (error) {
-        return errorToResponse(error)
-      }
-      return {
-        code: '200',
-        success: true,
-        message: 'Created peer liquidity withdrawal'
-      }
-    } catch (err) {
-      ctx.logger.error(
-        {
-          input: args.input,
-          err
-        },
-        'error creating peer liquidity withdrawal'
-      )
-      return {
-        code: '400',
-        message: 'Error trying to create peer liquidity withdrawal',
-        success: false
-      }
+    }
+    const peerService = await ctx.container.use('peerService')
+    const peer = await peerService.get(args.input.peerId)
+    if (!peer) {
+      throw new GraphQLError(errorToMessage[LiquidityError.UnknownPeer], {
+        extensions: {
+          code: errorToCode[LiquidityError.UnknownPeer]
+        }
+      })
+    }
+    const accountingService = await ctx.container.use('accountingService')
+    const error = await accountingService.createWithdrawal({
+      id: args.input.id,
+      account: peer,
+      amount: args.input.amount,
+      timeout: 60
+    })
+    if (error) {
+      throw new GraphQLError(transferErrorToMessage[error], {
+        extensions: {
+          code: transferErrorToCode[error]
+        }
+      })
+    }
+    return {
+      id: args.input.id,
+      liquidity: args.input.amount
     }
   }
 
@@ -216,6 +231,7 @@ export const createAssetLiquidityWithdrawal: MutationResolvers<ApolloContext>['c
     args,
     ctx
   ): Promise<ResolversTypes['LiquidityMutationResponse']> => {
+<<<<<<< HEAD
     try {
       const { amount, id, timeoutSeconds, assetId } = args.input
       if (amount === 0n) {
@@ -232,28 +248,41 @@ export const createAssetLiquidityWithdrawal: MutationResolvers<ApolloContext>['c
         account: asset,
         amount,
         timeout: Number(timeoutSeconds)
+=======
+    if (args.input.amount === BigInt(0)) {
+      throw new GraphQLError(errorToMessage[LiquidityError.AmountZero], {
+        extensions: {
+          code: errorToCode[LiquidityError.AmountZero]
+        }
+>>>>>>> c702654c (feat(wip): backend graphql logs)
       })
-      if (error) {
-        return errorToResponse(error)
-      }
-      return {
-        code: '200',
-        success: true,
-        message: 'Created asset liquidity withdrawal'
-      }
-    } catch (err) {
-      ctx.logger.error(
-        {
-          input: args.input,
-          err
-        },
-        'error creating asset liquidity withdrawal'
-      )
-      return {
-        code: '400',
-        message: 'Error trying to create asset liquidity withdrawal',
-        success: false
-      }
+    }
+    const assetService = await ctx.container.use('assetService')
+    const asset = await assetService.get(args.input.assetId)
+    if (!asset) {
+      throw new GraphQLError(errorToMessage[LiquidityError.UnknownAsset], {
+        extensions: {
+          code: errorToCode[LiquidityError.UnknownAsset]
+        }
+      })
+    }
+    const accountingService = await ctx.container.use('accountingService')
+    const error = await accountingService.createWithdrawal({
+      id: args.input.id,
+      account: asset,
+      amount: args.input.amount,
+      timeout: 60
+    })
+    if (error) {
+      throw new GraphQLError(transferErrorToMessage[error], {
+        extensions: {
+          code: transferErrorToCode[error]
+        }
+      })
+    }
+    return {
+      id: args.input.id,
+      liquidity: args.input.amount
     }
   }
 
@@ -263,6 +292,7 @@ export const createWalletAddressWithdrawal: MutationResolvers<ApolloContext>['cr
     args,
     ctx
   ): Promise<ResolversTypes['WalletAddressWithdrawalMutationResponse']> => {
+<<<<<<< HEAD
     try {
       const { id, walletAddressId, timeoutSeconds } = args.input
       const walletAddressService = await ctx.container.use(
@@ -309,16 +339,53 @@ export const createWalletAddressWithdrawal: MutationResolvers<ApolloContext>['cr
       }
     } catch (err) {
       ctx.logger.error(
+=======
+    const walletAddressService = await ctx.container.use('walletAddressService')
+    const walletAddress = await walletAddressService.get(
+      args.input.walletAddressId
+    )
+    if (!walletAddress) {
+      throw new GraphQLError(
+        errorToMessage[LiquidityError.UnknownWalletAddress],
+>>>>>>> c702654c (feat(wip): backend graphql logs)
         {
-          input: args.input,
-          err
-        },
-        'error creating wallet address withdrawal'
+          extensions: {
+            code: errorToCode[LiquidityError.UnknownWalletAddress]
+          }
+        }
       )
-      return {
-        code: '500',
-        message: 'Error trying to create wallet address withdrawal',
-        success: false
+    }
+    const id = args.input.id
+    const accountingService = await ctx.container.use('accountingService')
+    const amount = await accountingService.getBalance(walletAddress.id)
+    if (amount === undefined)
+      throw new Error('missing incoming payment wallet address')
+    if (amount === BigInt(0)) {
+      throw new GraphQLError(errorToMessage[LiquidityError.AmountZero], {
+        extensions: {
+          code: errorToCode[LiquidityError.AmountZero]
+        }
+      })
+    }
+    const error = await accountingService.createWithdrawal({
+      id,
+      account: walletAddress,
+      amount,
+      timeout: 60
+    })
+
+    if (error) {
+      throw new GraphQLError(transferErrorToMessage[error], {
+        extensions: {
+          code: transferErrorToCode[error]
+        }
+      })
+    }
+    return {
+      withdrawal: {
+        id,
+        amount,
+        walletAddress: walletAddressToGraphql(walletAddress)
       }
     }
   }
@@ -334,12 +401,14 @@ export const postLiquidityWithdrawal: MutationResolvers<ApolloContext>['postLiqu
       args.input.withdrawalId
     )
     if (error) {
-      return errorToResponse(error)
+      throw new GraphQLError(transferErrorToMessage[error], {
+        extensions: {
+          code: transferErrorToCode[error]
+        }
+      })
     }
     return {
-      code: '200',
-      success: true,
-      message: 'Posted Withdrawal'
+      id: args.input.withdrawalId
     }
   }
 
@@ -354,12 +423,14 @@ export const voidLiquidityWithdrawal: MutationResolvers<ApolloContext>['voidLiqu
       args.input.withdrawalId
     )
     if (error) {
-      return errorToResponse(error)
+      throw new GraphQLError(transferErrorToMessage[error], {
+        extensions: {
+          code: transferErrorToCode[error]
+        }
+      })
     }
     return {
-      code: '200',
-      success: true,
-      message: 'Voided Withdrawal'
+      id: args.input.withdrawalId
     }
   }
 
@@ -376,48 +447,40 @@ export const depositEventLiquidity: MutationResolvers<ApolloContext>['depositEve
     args,
     ctx
   ): Promise<ResolversTypes['LiquidityMutationResponse']> => {
-    try {
-      const webhookService = await ctx.container.use('webhookService')
-      const event = await webhookService.getEvent(args.input.eventId)
-      if (
-        !event ||
-        !isOutgoingPaymentEvent(event) ||
-        !isDepositEventType(event.type)
-      ) {
-        return responses[LiquidityError.InvalidId]
-      }
-      if (!event.data.debitAmount) {
-        throw new Error('missing debit amount')
-      }
-      const outgoingPaymentService = await ctx.container.use(
-        'outgoingPaymentService'
-      )
-      const paymentOrErr = await outgoingPaymentService.fund({
-        id: event.data.id,
-        amount: BigInt(event.data.debitAmount.value),
-        transferId: event.id
+    const webhookService = await ctx.container.use('webhookService')
+    const event = await webhookService.getEvent(args.input.eventId)
+    if (
+      !event ||
+      !isOutgoingPaymentEvent(event) ||
+      !isDepositEventType(event.type)
+    ) {
+      throw new GraphQLError(errorToMessage[LiquidityError.InvalidId], {
+        extensions: {
+          code: errorToCode[LiquidityError.InvalidId]
+        }
       })
-      if (isFundingError(paymentOrErr)) {
-        return errorToResponse(paymentOrErr)
-      }
-      return {
-        code: '200',
-        success: true,
-        message: 'Deposited liquidity'
-      }
-    } catch (err) {
-      ctx.logger.error(
-        {
-          eventId: args.input.eventId,
-          err
-        },
-        'error depositing liquidity'
-      )
-      return {
-        code: '400',
-        message: 'Error trying to deposit liquidity',
-        success: false
-      }
+    }
+    if (!event.data.debitAmount) {
+      throw new Error('missing debit amount')
+    }
+    const outgoingPaymentService = await ctx.container.use(
+      'outgoingPaymentService'
+    )
+    const paymentOrErr = await outgoingPaymentService.fund({
+      id: event.data.id,
+      amount: BigInt(event.data.debitAmount.value),
+      transferId: event.id
+    })
+    if (isFundingError(paymentOrErr)) {
+      throw new GraphQLError(fundingErrorToMessage[paymentOrErr], {
+        extensions: {
+          code: fundingErrorToCode[paymentOrErr]
+        }
+      })
+    }
+    return {
+      id: event.data.id,
+      liquidity: BigInt(event.data.debitAmount.value)
     }
   }
 
@@ -427,48 +490,40 @@ export const withdrawEventLiquidity: MutationResolvers<ApolloContext>['withdrawE
     args,
     ctx
   ): Promise<ResolversTypes['LiquidityMutationResponse']> => {
-    try {
-      const webhookService = await ctx.container.use('webhookService')
-      const event = await webhookService.getEvent(args.input.eventId)
-      if (!event || !event.withdrawal) {
-        return responses[LiquidityError.InvalidId]
-      }
-      const assetService = await ctx.container.use('assetService')
-      const asset = await assetService.get(event.withdrawal.assetId)
-      if (!asset) {
-        throw new Error('asset id does not map to asset')
-      }
-      const accountingService = await ctx.container.use('accountingService')
-      const error = await accountingService.createWithdrawal({
-        id: event.id,
-        account: {
-          id: event.withdrawal.accountId,
-          asset
-        },
-        amount: event.withdrawal.amount
+    const webhookService = await ctx.container.use('webhookService')
+    const event = await webhookService.getEvent(args.input.eventId)
+    if (!event || !event.withdrawal) {
+      throw new GraphQLError(errorToMessage[LiquidityError.InvalidId], {
+        extensions: {
+          code: errorToCode[LiquidityError.InvalidId]
+        }
       })
-      if (error) {
-        return errorToResponse(error)
-      }
-      // TODO: check for and handle leftover incoming payment or payment balance
-      return {
-        code: '200',
-        success: true,
-        message: 'Withdrew liquidity'
-      }
-    } catch (err) {
-      ctx.logger.error(
-        {
-          eventId: args.input.eventId,
-          err
-        },
-        'error withdrawing liquidity'
-      )
-      return {
-        code: '400',
-        message: 'Error trying to withdraw liquidity',
-        success: false
-      }
+    }
+    const assetService = await ctx.container.use('assetService')
+    const asset = await assetService.get(event.withdrawal.assetId)
+    if (!asset) {
+      throw new Error('asset id does not map to asset')
+    }
+    const accountingService = await ctx.container.use('accountingService')
+    const error = await accountingService.createWithdrawal({
+      id: event.id,
+      account: {
+        id: event.withdrawal.accountId,
+        asset
+      },
+      amount: event.withdrawal.amount
+    })
+    if (error) {
+      throw new GraphQLError(transferErrorToMessage[error], {
+        extensions: {
+          code: transferErrorToCode[error]
+        }
+      })
+    }
+    // TODO: check for and handle leftover incoming payment or payment balance
+    return {
+      id: event.id,
+      liquidity: event.withdrawal.amount
     }
   }
 
@@ -478,49 +533,41 @@ export const depositOutgoingPaymentLiquidity: MutationResolvers<ApolloContext>['
     args,
     ctx
   ): Promise<ResolversTypes['LiquidityMutationResponse']> => {
-    try {
-      const { outgoingPaymentId } = args.input
-      const webhookService = await ctx.container.use('webhookService')
-      const event = await webhookService.getLatestByResourceId({
-        outgoingPaymentId,
-        types: [OutgoingPaymentDepositType.PaymentCreated]
+    const { outgoingPaymentId } = args.input
+    const webhookService = await ctx.container.use('webhookService')
+    const event = await webhookService.getLatestByResourceId({
+      outgoingPaymentId,
+      types: [OutgoingPaymentDepositType.PaymentCreated]
+    })
+    if (!event || !isOutgoingPaymentEvent(event)) {
+      throw new GraphQLError(errorToMessage[LiquidityError.InvalidId], {
+        extensions: {
+          code: errorToCode[LiquidityError.InvalidId]
+        }
       })
-      if (!event || !isOutgoingPaymentEvent(event)) {
-        return responses[LiquidityError.InvalidId]
-      }
+    }
 
-      if (!event.data.debitAmount) {
-        throw new Error('No debit amount')
-      }
-      const outgoingPaymentService = await ctx.container.use(
-        'outgoingPaymentService'
-      )
-      const paymentOrErr = await outgoingPaymentService.fund({
-        id: outgoingPaymentId,
-        amount: BigInt(event.data.debitAmount.value),
-        transferId: event.id
+    if (!event.data.debitAmount) {
+      throw new Error('No debit amount')
+    }
+    const outgoingPaymentService = await ctx.container.use(
+      'outgoingPaymentService'
+    )
+    const paymentOrErr = await outgoingPaymentService.fund({
+      id: outgoingPaymentId,
+      amount: BigInt(event.data.debitAmount.value),
+      transferId: event.id
+    })
+    if (isFundingError(paymentOrErr)) {
+      throw new GraphQLError(fundingErrorToMessage[paymentOrErr], {
+        extensions: {
+          code: fundingErrorToCode[paymentOrErr]
+        }
       })
-      if (isFundingError(paymentOrErr)) {
-        return errorToResponse(paymentOrErr)
-      }
-      return {
-        code: '200',
-        success: true,
-        message: 'Deposited liquidity'
-      }
-    } catch (err) {
-      ctx.logger.error(
-        {
-          outgoingPaymentId: args.input.outgoingPaymentId,
-          err
-        },
-        'error depositing liquidity'
-      )
-      return {
-        code: '400',
-        message: 'Error trying to deposit liquidity',
-        success: false
-      }
+    }
+    return {
+      id: outgoingPaymentId,
+      liquidity: BigInt(event.data.debitAmount.value)
     }
   }
 
@@ -530,6 +577,7 @@ export const createIncomingPaymentWithdrawal: MutationResolvers<ApolloContext>['
     args,
     ctx
   ): Promise<ResolversTypes['LiquidityMutationResponse']> => {
+<<<<<<< HEAD
     const { incomingPaymentId, timeoutSeconds } = args.input
     try {
       const incomingPaymentService = await ctx.container.use(
@@ -537,19 +585,32 @@ export const createIncomingPaymentWithdrawal: MutationResolvers<ApolloContext>['
       )
       const incomingPayment = await incomingPaymentService.get({
         id: incomingPaymentId
+=======
+    const { incomingPaymentId } = args.input
+    const incomingPaymentService = await ctx.container.use(
+      'incomingPaymentService'
+    )
+    const incomingPayment = await incomingPaymentService.get({
+      id: incomingPaymentId
+    })
+    const webhookService = await ctx.container.use('webhookService')
+    const event = await webhookService.getLatestByResourceId({
+      incomingPaymentId,
+      types: [
+        IncomingPaymentEventType.IncomingPaymentCompleted,
+        IncomingPaymentEventType.IncomingPaymentExpired
+      ]
+    })
+    if (!incomingPayment || !incomingPayment.receivedAmount || !event?.id) {
+      throw new GraphQLError(errorToMessage[LiquidityError.InvalidId], {
+        extensions: {
+          code: errorToCode[LiquidityError.InvalidId]
+        }
+>>>>>>> c702654c (feat(wip): backend graphql logs)
       })
-      const webhookService = await ctx.container.use('webhookService')
-      const event = await webhookService.getLatestByResourceId({
-        incomingPaymentId,
-        types: [
-          IncomingPaymentEventType.IncomingPaymentCompleted,
-          IncomingPaymentEventType.IncomingPaymentExpired
-        ]
-      })
-      if (!incomingPayment || !incomingPayment.receivedAmount || !event?.id) {
-        return responses[LiquidityError.InvalidId]
-      }
+    }
 
+<<<<<<< HEAD
       const accountingService = await ctx.container.use('accountingService')
       const error = await accountingService.createWithdrawal({
         id: event.id,
@@ -560,28 +621,28 @@ export const createIncomingPaymentWithdrawal: MutationResolvers<ApolloContext>['
         amount: incomingPayment.receivedAmount.value,
         timeout: Number(timeoutSeconds)
       })
+=======
+    const accountingService = await ctx.container.use('accountingService')
+    const error = await accountingService.createWithdrawal({
+      id: event.id,
+      account: {
+        id: incomingPaymentId,
+        asset: incomingPayment.asset
+      },
+      amount: incomingPayment.receivedAmount.value
+    })
+>>>>>>> c702654c (feat(wip): backend graphql logs)
 
-      if (error) {
-        return errorToResponse(error)
-      }
-      return {
-        code: '200',
-        success: true,
-        message: 'Withdrew liquidity'
-      }
-    } catch (error) {
-      ctx.logger.error(
-        {
-          incomingPaymentId,
-          error
-        },
-        'error withdrawing liquidity'
-      )
-      return {
-        code: '400',
-        message: 'Error trying to withdraw liquidity',
-        success: false
-      }
+    if (error) {
+      throw new GraphQLError(fundingErrorToMessage[error], {
+        extensions: {
+          code: fundingErrorToCode[error]
+        }
+      })
+    }
+    return {
+      id: event.id,
+      liquidity: incomingPayment.receivedAmount.value
     }
   }
 
@@ -591,6 +652,7 @@ export const createOutgoingPaymentWithdrawal: MutationResolvers<ApolloContext>['
     args,
     ctx
   ): Promise<ResolversTypes['LiquidityMutationResponse']> => {
+<<<<<<< HEAD
     const { outgoingPaymentId, timeoutSeconds } = args.input
     try {
       const outgoingPaymentService = await ctx.container.use(
@@ -598,19 +660,32 @@ export const createOutgoingPaymentWithdrawal: MutationResolvers<ApolloContext>['
       )
       const outgoingPayment = await outgoingPaymentService.get({
         id: outgoingPaymentId
+=======
+    const { outgoingPaymentId } = args.input
+    const outgoingPaymentService = await ctx.container.use(
+      'outgoingPaymentService'
+    )
+    const outgoingPayment = await outgoingPaymentService.get({
+      id: outgoingPaymentId
+    })
+    const webhookService = await ctx.container.use('webhookService')
+    const event = await webhookService.getLatestByResourceId({
+      outgoingPaymentId,
+      types: [
+        OutgoingPaymentEventType.PaymentCompleted,
+        OutgoingPaymentEventType.PaymentFailed
+      ]
+    })
+    if (!outgoingPayment || !event?.id) {
+      throw new GraphQLError(errorToMessage[LiquidityError.InvalidId], {
+        extensions: {
+          code: errorToCode[LiquidityError.InvalidId]
+        }
+>>>>>>> c702654c (feat(wip): backend graphql logs)
       })
-      const webhookService = await ctx.container.use('webhookService')
-      const event = await webhookService.getLatestByResourceId({
-        outgoingPaymentId,
-        types: [
-          OutgoingPaymentEventType.PaymentCompleted,
-          OutgoingPaymentEventType.PaymentFailed
-        ]
-      })
-      if (!outgoingPayment || !event?.id) {
-        return responses[LiquidityError.InvalidId]
-      }
+    }
 
+<<<<<<< HEAD
       const accountingService = await ctx.container.use('accountingService')
       const balance = await accountingService.getBalance(outgoingPayment.id)
       if (!balance) {
@@ -637,17 +712,40 @@ export const createOutgoingPaymentWithdrawal: MutationResolvers<ApolloContext>['
       }
     } catch (error) {
       ctx.logger.error(
+=======
+    const accountingService = await ctx.container.use('accountingService')
+    const balance = await accountingService.getBalance(outgoingPayment.id)
+    if (!balance) {
+      throw new GraphQLError(
+        errorToMessage[LiquidityError.InsufficientBalance],
+>>>>>>> c702654c (feat(wip): backend graphql logs)
         {
-          outgoingPaymentId,
-          error
-        },
-        'error withdrawing liquidity'
+          extensions: {
+            code: errorToCode[LiquidityError.InsufficientBalance]
+          }
+        }
       )
-      return {
-        code: '400',
-        message: 'Error trying to withdraw liquidity',
-        success: false
-      }
+    }
+
+    const error = await accountingService.createWithdrawal({
+      id: event.id,
+      account: {
+        id: outgoingPaymentId,
+        asset: outgoingPayment.asset
+      },
+      amount: balance
+    })
+
+    if (error) {
+      throw new GraphQLError(transferErrorToMessage[error], {
+        extensions: {
+          code: transferErrorToCode[error]
+        }
+      })
+    }
+    return {
+      id: event.id,
+      liquidity: balance
     }
   }
 
@@ -655,86 +753,36 @@ export const createOutgoingPaymentWithdrawal: MutationResolvers<ApolloContext>['
 const isLiquidityError = (o: any): o is LiquidityError =>
   Object.values(LiquidityError).includes(o)
 
-const errorToResponse = (error: FundingError): LiquidityMutationResponse => {
-  if (!isLiquidityError(error)) {
-    throw new Error(error)
-  }
-  return responses[error]
+const errorToCode: {
+  [key in LiquidityError]: string
+} = {
+  [LiquidityError.AlreadyPosted]: GraphQLErrorCode.Conflict,
+  [LiquidityError.AlreadyVoided]: GraphQLErrorCode.Conflict,
+  [LiquidityError.AmountZero]: GraphQLErrorCode.Forbidden,
+  [LiquidityError.InsufficientBalance]: GraphQLErrorCode.Forbidden,
+  [LiquidityError.InvalidId]: GraphQLErrorCode.BadUserInput,
+  [LiquidityError.TransferExists]: GraphQLErrorCode.Duplicate,
+  [LiquidityError.UnknownAsset]: GraphQLErrorCode.NotFound,
+  [LiquidityError.UnknownIncomingPayment]: GraphQLErrorCode.NotFound,
+  [LiquidityError.UnknownPayment]: GraphQLErrorCode.NotFound,
+  [LiquidityError.UnknownWalletAddress]: GraphQLErrorCode.NotFound,
+  [LiquidityError.UnknownPeer]: GraphQLErrorCode.NotFound,
+  [LiquidityError.UnknownTransfer]: GraphQLErrorCode.NotFound
 }
 
-const responses: {
-  [key in LiquidityError]: LiquidityMutationResponse
+const errorToMessage: {
+  [key in LiquidityError]: string
 } = {
-  [LiquidityError.AlreadyPosted]: {
-    code: '409',
-    message: 'Withdrawal already posted',
-    success: false,
-    error: LiquidityError.AlreadyPosted
-  },
-  [LiquidityError.AlreadyVoided]: {
-    code: '409',
-    message: 'Withdrawal already voided',
-    success: false,
-    error: LiquidityError.AlreadyVoided
-  },
-  [LiquidityError.AmountZero]: {
-    code: '400',
-    message: 'Amount is zero',
-    success: false,
-    error: LiquidityError.AmountZero
-  },
-  [LiquidityError.InsufficientBalance]: {
-    code: '403',
-    message: 'Insufficient balance',
-    success: false,
-    error: LiquidityError.InsufficientBalance
-  },
-  [LiquidityError.InvalidId]: {
-    code: '400',
-    message: 'Invalid id',
-    success: false,
-    error: LiquidityError.InvalidId
-  },
-  [LiquidityError.TransferExists]: {
-    code: '409',
-    message: 'Transfer exists',
-    success: false,
-    error: LiquidityError.TransferExists
-  },
-  [LiquidityError.UnknownWalletAddress]: {
-    code: '404',
-    message: 'Unknown wallet address',
-    success: false,
-    error: LiquidityError.UnknownWalletAddress
-  },
-  [LiquidityError.UnknownAsset]: {
-    code: '404',
-    message: 'Unknown asset',
-    success: false,
-    error: LiquidityError.UnknownAsset
-  },
-  [LiquidityError.UnknownIncomingPayment]: {
-    code: '404',
-    message: 'Unknown incoming payment',
-    success: false,
-    error: LiquidityError.UnknownIncomingPayment
-  },
-  [LiquidityError.UnknownPayment]: {
-    code: '404',
-    message: 'Unknown outgoing payment',
-    success: false,
-    error: LiquidityError.UnknownPayment
-  },
-  [LiquidityError.UnknownPeer]: {
-    code: '404',
-    message: 'Unknown peer',
-    success: false,
-    error: LiquidityError.UnknownPeer
-  },
-  [LiquidityError.UnknownTransfer]: {
-    code: '404',
-    message: 'Unknown withdrawal',
-    success: false,
-    error: LiquidityError.UnknownTransfer
-  }
+  [LiquidityError.AlreadyPosted]: 'Transfer already posted',
+  [LiquidityError.AlreadyVoided]: 'Transfer already voided',
+  [LiquidityError.AmountZero]: 'Transfer amount is zero',
+  [LiquidityError.InsufficientBalance]: 'Insufficient transfer balance',
+  [LiquidityError.InvalidId]: 'Invalid transfer id',
+  [LiquidityError.TransferExists]: 'Transfer already exists',
+  [LiquidityError.UnknownAsset]: 'Unknown asset',
+  [LiquidityError.UnknownIncomingPayment]: 'Unknown incoming payment',
+  [LiquidityError.UnknownPayment]: 'Unknown transfer payment',
+  [LiquidityError.UnknownWalletAddress]: 'Unknown wallet address',
+  [LiquidityError.UnknownPeer]: 'Unknown peer',
+  [LiquidityError.UnknownTransfer]: 'Unknown transfer'
 }

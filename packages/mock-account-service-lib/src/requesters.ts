@@ -117,9 +117,6 @@ export async function createAsset(
   const createAssetMutation = gql`
     mutation CreateAsset($input: CreateAssetInput!) {
       createAsset(input: $input) {
-        code
-        success
-        message
         asset {
           id
           code
@@ -142,7 +139,7 @@ export async function createAsset(
       variables: createAssetInput
     })
     .then(({ data }): AssetMutationResponse => {
-      if (!data.createAsset.success) {
+      if (!data.createAsset.asset) {
         throw new Error('Data was empty')
       }
       return data.createAsset
@@ -162,9 +159,6 @@ export async function createPeer(
   const createPeerMutation = gql`
     mutation CreatePeer($input: CreatePeerInput!) {
       createPeer(input: $input) {
-        code
-        success
-        message
         peer {
           id
         }
@@ -190,7 +184,7 @@ export async function createPeer(
     })
     .then(({ data }): CreatePeerMutationResponse => {
       logger.debug(data)
-      if (!data.createPeer.success) {
+      if (!data.createPeer.peer) {
         throw new Error('Data was empty')
       }
       return data.createPeer
@@ -206,9 +200,6 @@ export async function createAutoPeer(
   const createAutoPeerMutation = gql`
     mutation CreateOrUpdatePeerByUrl($input: CreateOrUpdatePeerByUrlInput!) {
       createOrUpdatePeerByUrl(input: $input) {
-        code
-        success
-        message
         peer {
           id
           name
@@ -237,7 +228,7 @@ export async function createAutoPeer(
       variables: createPeerInput
     })
     .then(({ data }): CreateOrUpdatePeerByUrlMutationResponse => {
-      if (!data.createOrUpdatePeerByUrl.success) {
+      if (!data.createOrUpdatePeerByUrl.peer) {
         logger.debug(data.createOrUpdatePeerByUrl)
         throw new Error(`Data was empty for assetId: ${assetId}`)
       }
@@ -255,10 +246,8 @@ export async function depositPeerLiquidity(
   const depositPeerLiquidityMutation = gql`
     mutation DepositPeerLiquidity($input: DepositPeerLiquidityInput!) {
       depositPeerLiquidity(input: $input) {
-        code
-        success
-        message
-        error
+        id
+        liquidity
       }
     }
   `
@@ -277,7 +266,7 @@ export async function depositPeerLiquidity(
     })
     .then(({ data }): LiquidityMutationResponse => {
       logger.debug(data)
-      if (!data.depositPeerLiquidity.success) {
+      if (!data.depositPeerLiquidity) {
         throw new Error('Data was empty')
       }
       return data.depositPeerLiquidity
@@ -294,10 +283,8 @@ export async function depositAssetLiquidity(
   const depositAssetLiquidityMutation = gql`
     mutation DepositAssetLiquidity($input: DepositAssetLiquidityInput!) {
       depositAssetLiquidity(input: $input) {
-        code
-        success
-        message
-        error
+        id
+        liquidity
       }
     }
   `
@@ -316,7 +303,7 @@ export async function depositAssetLiquidity(
     })
     .then(({ data }): LiquidityMutationResponse => {
       logger.debug(data)
-      if (!data.depositAssetLiquidity.success) {
+      if (!data.depositAssetLiquidity) {
         throw new Error('Data was empty')
       }
       return data.depositAssetLiquidity
@@ -333,9 +320,6 @@ export async function createWalletAddress(
   const createWalletAddressMutation = gql`
     mutation CreateWalletAddress($input: CreateWalletAddressInput!) {
       createWalletAddress(input: $input) {
-        code
-        success
-        message
         walletAddress {
           id
           url
@@ -361,10 +345,7 @@ export async function createWalletAddress(
     .then(({ data }) => {
       logger.debug(data)
 
-      if (
-        !data.createWalletAddress.success ||
-        !data.createWalletAddress.walletAddress
-      ) {
+      if (!data.createWalletAddress.walletAddress) {
         throw new Error('Data was empty')
       }
 
@@ -386,9 +367,9 @@ export async function createWalletAddressKey(
   const createWalletAddressKeyMutation = gql`
     mutation CreateWalletAddressKey($input: CreateWalletAddressKeyInput!) {
       createWalletAddressKey(input: $input) {
-        code
-        success
-        message
+        walletAddressKey {
+          id
+        }
       }
     }
   `
@@ -406,7 +387,7 @@ export async function createWalletAddressKey(
     })
     .then(({ data }): CreateWalletAddressKeyMutationResponse => {
       logger.debug(data)
-      if (!data.createWalletAddressKey.success) {
+      if (!data.createWalletAddressKey.walletAddressKey) {
         throw new Error('Data was empty')
       }
       return data.createWalletAddressKey
@@ -424,9 +405,6 @@ export async function setFee(
   const setFeeMutation = gql`
     mutation SetFee($input: SetFeeInput!) {
       setFee(input: $input) {
-        code
-        success
-        message
         fee {
           id
           assetId

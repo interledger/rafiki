@@ -4,5 +4,6 @@ export enum GraphQLErrorCode {
   Forbidden = 'FORBIDDEN',
   Inactive = 'INACTIVE',
   InternalServerError = 'INTERNAL_SERVER_ERROR',
-  NotFound = 'NOT_FOUND'
+  NotFound = 'NOT_FOUND',
+  Conflict = 'CONFLICT'
 }

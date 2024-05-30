@@ -40,3 +40,15 @@ export const errorToMessage: {
   [AutoPeeringError.InvalidPeeringRequest]: 'Invalid peering request',
   [AutoPeeringError.LiquidityError]: 'Could not deposit liquidity to peer'
 }
+
+export const errorToHttpCode: {
+  [key in AutoPeeringError]: number
+} = {
+  [AutoPeeringError.InvalidIlpConfiguration]: 400,
+  [AutoPeeringError.InvalidPeerIlpConfiguration]: 400,
+  [AutoPeeringError.UnknownAsset]: 404,
+  [AutoPeeringError.PeerUnsupportedAsset]: 400,
+  [AutoPeeringError.InvalidPeerUrl]: 400,
+  [AutoPeeringError.InvalidPeeringRequest]: 400,
+  [AutoPeeringError.LiquidityError]: 400
+}

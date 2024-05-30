@@ -18,10 +18,8 @@ export async function depositPeerLiquidity(
   const depositPeerLiquidityMutation = gql`
     mutation DepositPeerLiquidity($input: DepositPeerLiquidityInput!) {
       depositPeerLiquidity(input: $input) {
-        code
-        success
-        message
-        error
+        id
+        liquidity
       }
     }
   `
@@ -40,7 +38,7 @@ export async function depositPeerLiquidity(
     })
     .then(({ data }): LiquidityMutationResponse => {
       console.log(data)
-      if (!data.depositPeerLiquidity.success) {
+      if (!data.depositPeerLiquidity) {
         throw new Error('Data was empty')
       }
       return data.depositPeerLiquidity
@@ -55,10 +53,8 @@ export async function depositAssetLiquidity(
   const depositAssetLiquidityMutation = gql`
     mutation DepositAssetLiquidity($input: DepositAssetLiquidityInput!) {
       depositAssetLiquidity(input: $input) {
-        code
-        success
-        message
-        error
+        id
+        liquidity
       }
     }
   `
@@ -77,7 +73,7 @@ export async function depositAssetLiquidity(
     })
     .then(({ data }): LiquidityMutationResponse => {
       console.log(data)
-      if (!data.depositAssetLiquidity.success) {
+      if (!data.depositAssetLiquidity) {
         throw new Error('Data was empty')
       }
       return data.depositAssetLiquidity
@@ -92,9 +88,6 @@ export async function createWalletAddress(
   const createWalletAddressMutation = gql`
     mutation CreateWalletAddress($input: CreateWalletAddressInput!) {
       createWalletAddress(input: $input) {
-        code
-        success
-        message
         walletAddress {
           id
           url
@@ -120,10 +113,7 @@ export async function createWalletAddress(
     .then(({ data }) => {
       console.log(data)
 
-      if (
-        !data.createWalletAddress.success ||
-        !data.createWalletAddress.walletAddress
-      ) {
+      if (!data.createWalletAddress.walletAddress) {
         throw new Error('Data was empty')
       }
 

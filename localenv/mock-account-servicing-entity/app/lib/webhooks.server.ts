@@ -107,10 +107,8 @@ export async function handleOutgoingPaymentCreated(wh: Webhook) {
           $input: DepositOutgoingPaymentLiquidityInput!
         ) {
           depositOutgoingPaymentLiquidity(input: $input) {
-            code
-            success
-            message
-            error
+            id
+            liquidity
           }
         }
       `,
@@ -159,10 +157,8 @@ export async function handleIncomingPaymentCompletedExpired(wh: Webhook) {
           $input: CreateIncomingPaymentWithdrawalInput!
         ) {
           createIncomingPaymentWithdrawal(input: $input) {
-            code
-            success
-            message
-            error
+            id
+            liquidity
           }
         }
       `,

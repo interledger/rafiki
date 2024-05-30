@@ -1,4 +1,8 @@
-import { TransferError } from '../../../accounting/errors'
+import {
+  TransferError,
+  errorToMessage as transferErrorToMessage,
+  errorToCode as transferErrorToCode
+} from '../../../accounting/errors'
 import { GraphQLErrorCode } from '../../../graphql/errors'
 import { PaymentMethodHandlerError } from '../../../payment-method/handler/errors'
 import { QuoteError } from '../../quote/errors'
@@ -56,7 +60,10 @@ export const errorToCode: {
   [OutgoingPaymentError.WrongState]: GraphQLErrorCode.BadUserInput,
   [OutgoingPaymentError.InvalidQuote]: GraphQLErrorCode.BadUserInput,
   [OutgoingPaymentError.InsufficientGrant]: GraphQLErrorCode.Forbidden,
-  [OutgoingPaymentError.InactiveWalletAddress]: GraphQLErrorCode.Inactive
+  [OutgoingPaymentError.InactiveWalletAddress]: GraphQLErrorCode.Inactive,
+  [OutgoingPaymentError.InvalidAmount]: GraphQLErrorCode.BadUserInput,
+  [OutgoingPaymentError.NegativeReceiveAmount]: GraphQLErrorCode.BadUserInput,
+  [OutgoingPaymentError.InvalidReceiver]: GraphQLErrorCode.BadUserInput
 }
 
 export const errorToMessage: {
@@ -76,6 +83,11 @@ export const errorToMessage: {
 
 export const FundingError = { ...OutgoingPaymentError, ...TransferError }
 export type FundingError = OutgoingPaymentError | TransferError
+export const fundingErrorToMessage = {
+  ...errorToMessage,
+  ...transferErrorToMessage
+}
+export const fundingErrorToCode = { ...errorToCode, ...transferErrorToCode }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
 export const isFundingError = (o: any): o is FundingError =>
