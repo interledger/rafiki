@@ -115,6 +115,16 @@ export default function App() {
               <Outlet />
             </main>
           </div>
+          <div className='fixed bottom-0 w-full text-center text-white bg-secondary_blue p-5'>
+            This is an example application for an{' '}
+            <Link
+              className='cursor-pointer font-bold'
+              to='https://rafiki.dev/concepts/account-servicing-entity/'
+            >
+              [Account Servicing Entity]
+            </Link>
+            , used for demonstration & internal development purposes only.
+          </div>
         </div>
         <Snackbar
           id='snackbar'
