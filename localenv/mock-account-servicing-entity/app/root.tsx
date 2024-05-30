@@ -11,27 +11,34 @@ import {
   Scripts,
   useLoaderData,
   ScrollRestoration,
-  useLocation
+  useLocation,
+  Link
 } from '@remix-run/react'
 import { useEffect, useState } from 'react'
 import { cx } from 'class-variance-authority'
 import { PublicEnv, type PublicEnvironment } from './PublicEnv'
 import { getOpenPaymentsUrl } from './lib/utils'
 import { messageStorage, type Message } from './lib/message.server'
-import { Sidebar } from './components/Sidebar'
+import { TopMenu } from './components/TopMenu'
 import { Snackbar } from './components/Snackbar'
 import tailwind from './styles/tailwind.css'
-import logo from '../public/logo.svg'
-
-export const meta: MetaFunction = () => [
-  { charset: 'utf-8' },
-  { title: 'Mock Account Servicing Entity' },
-  { name: 'viewport', content: 'width=device-width,initial-scale=1' }
-]
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const publicEnv: PublicEnvironment = {
     OPEN_PAYMENTS_URL: getOpenPaymentsUrl()
+  }
+
+  const instanceConfig = {
+    name:
+      process?.env?.HOSTNAME == 'cloud-nine-wallet'
+        ? 'Cloud Nine Wallet'
+        : 'Happy Life Bank',
+    logo:
+      process?.env?.HOSTNAME == 'cloud-nine-wallet'
+        ? 'wallet-icon.svg'
+        : 'bank-icon.svg',
+    background:
+      process?.env?.HOSTNAME == 'cloud-nine-wallet' ? 'bg-wallet' : 'bg-bank'
   }
 
   const cookies = request.headers.get('cookie')
@@ -39,11 +46,11 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   const message = session.get('message') as Message
 
   if (!message) {
-    return json({ message: null, publicEnv })
+    return json({ message: null, publicEnv, instanceConfig })
   }
 
   return json(
-    { message, publicEnv },
+    { message, publicEnv, instanceConfig },
     {
       headers: {
         'Set-Cookie': await messageStorage.destroySession(session, {
@@ -54,12 +61,25 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   )
 }
 
+export const meta: MetaFunction<typeof loader> = ({ data }) => {
+  return [
+    { charset: 'utf-8' },
+    { title: `${data?.instanceConfig.name} - Mock Account Servicing Entity` },
+    { name: 'viewport', content: 'width=device-width,initial-scale=1' },
+    {
+      tagName: 'link',
+      rel: 'icon',
+      href: `/white-${data?.instanceConfig.logo}`
+    }
+  ]
+}
+
 export default function App() {
-  const { message, publicEnv } = useLoaderData<typeof loader>()
+  const { message, publicEnv, instanceConfig } = useLoaderData<typeof loader>()
   const [snackbarOpen, setSnackbarOpen] = useState(false)
   const location = useLocation()
 
-  const showSidebar =
+  const showTopmenu =
     location?.pathname?.indexOf('mock-idp') === -1 ? true : false
 
   useEffect(() => {
@@ -70,18 +90,25 @@ export default function App() {
   }, [message])
 
   return (
-    <html lang='en' className='h-full'>
+    <html lang='en'>
       <head>
         <Meta />
         <Links />
       </head>
-      <body className='h-full text-tealish bg-blue-100'>
+      <body
+        className={cx(
+          'h-full text-tealish bg-blue-100 bg-cover bg-no-repeat bg-center bg-fixed',
+          instanceConfig.background
+        )}
+      >
         <div className='min-h-full'>
-          {showSidebar && <Sidebar />}
+          {showTopmenu && (
+            <TopMenu name={instanceConfig.name} logo={instanceConfig.logo} />
+          )}
           <div
             className={cx(
               `pt-20 md:pt-0 flex flex-1 flex-col`,
-              showSidebar && 'md:pl-60'
+              showTopmenu && 'md:mt-16'
             )}
           >
             <main className='pb-8 px-4'>
@@ -106,8 +133,5 @@ export default function App() {
 }
 
 export function links() {
-  return [
-    { rel: 'stylesheet', href: tailwind },
-    { rel: 'icon', href: logo }
-  ]
+  return [{ rel: 'stylesheet', href: tailwind }]
 }

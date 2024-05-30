@@ -1,5 +1,5 @@
 export * from './PageHeader'
-export * from './Sidebar'
+export * from './TopMenu'
 export * from './Snackbar'
 export * from './Table'
 export * from './Button'
