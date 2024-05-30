@@ -163,12 +163,14 @@ export default function Consent() {
           amount={ctx.amount}
           interactId={ctx.interactId}
           nonce={ctx.nonce}
+          authServerDomain={authServerDomain}
         />
       ) : (
         <RejectedView
           thirdPartyName={ctx.thirdPartyName || ''}
           interactId={ctx.interactId}
           nonce={ctx.nonce}
+          authServerDomain={authServerDomain}
         />
       )}
       {/* <div className='row mt-3'>
