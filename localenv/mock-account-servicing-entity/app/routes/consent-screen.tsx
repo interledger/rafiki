@@ -9,5 +9,5 @@ export function loader() {
 
 export default function Index() {
   const { idpSecret } = useLoaderData<typeof loader>()
-  return <ConsentScreen idpSecret={idpSecret} /> // In production, ensure that secrets are handled securely and are not exposed to the client-side code.
+  return <ConsentScreen idpSecretParam={idpSecret} /> // In production, ensure that secrets are handled securely and are not exposed to the client-side code.
 }

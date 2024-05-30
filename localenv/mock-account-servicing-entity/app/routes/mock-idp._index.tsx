@@ -1,9 +1,15 @@
-import { useLocation, useOutletContext } from '@remix-run/react'
+import {
+  json,
+  useLoaderData,
+  useLocation,
+  useOutletContext
+} from '@remix-run/react'
 import type { Dispatch, SetStateAction } from 'react'
 import { useEffect, useState } from 'react'
 import { Button } from '~/components'
 import { ApiClient } from '~/lib/apiClient'
 import type { Access, InstanceConfig } from '~/lib/types'
+import { CONFIG } from '~/lib/parse_config.server'
 
 interface ConsentScreenContext {
   ready: boolean
@@ -22,6 +28,10 @@ interface ConsentScreenContext {
 interface GrantAmount {
   amount: number
   currencyDisplayCode: string
+}
+
+export function loader() {
+  return json({ defaultIdpSecret: CONFIG.idpSecret })
 }
 
 function ConsentScreenBody({
@@ -192,11 +202,11 @@ function PreConsentScreen({
 }
 
 type ConsentScreenProps = {
-  idpSecret: string
+  idpSecretParam: string
 }
 
 // In production, ensure that secrets are handled securely and are not exposed to the client-side code.
-export default function ConsentScreen({ idpSecret }: ConsentScreenProps) {
+export default function ConsentScreen({ idpSecretParam }: ConsentScreenProps) {
   const [ctx, setCtx] = useState({
     ready: false,
     thirdPartyName: '',
@@ -214,6 +224,9 @@ export default function ConsentScreen({ idpSecret }: ConsentScreenProps) {
   const location = useLocation()
   const queryParams = new URLSearchParams(location.search)
   const instanceConfig: InstanceConfig = useOutletContext()
+
+  const { defaultIdpSecret } = useLoaderData<typeof loader>()
+  const idpSecret = idpSecretParam ? idpSecretParam : defaultIdpSecret
 
   useEffect(() => {
     if (
