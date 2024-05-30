@@ -85,7 +85,7 @@ export default function EditAccount() {
   return (
     <>
       <div className='pt-4 flex flex-col space-y-8'>
-        <div className='flex flex-col rounded-md bg-offwhite px-6'>
+        <div className='flex flex-col rounded-md bg-white px-6'>
           <PageHeader>
             <h3 className='text-xl'>Account</h3>
             <Button aria-label='go back to accounts page' to='/'>
