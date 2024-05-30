@@ -23,7 +23,7 @@ This environment will set up a playground where you can use the Rafiki Admin API
 
 ## Disclaimer
 
->**The Mock ASE provided in this repository is intended solely for internal use and demonstration purposes. It is not designed to serve as a reference architecture. If you are looking for a reference implementation of an ASE, please refer to the [Test Wallet](TODO: add link).**
+>**The Mock ASE provided in this repository is intended solely for internal use and demonstration purposes. It is not designed to serve as a reference architecture. If you are looking for a reference implementation of an ASE, please refer to the [Test Wallet](https://github.com/interledger/testnet).**
 
 ## Environment overview
 
