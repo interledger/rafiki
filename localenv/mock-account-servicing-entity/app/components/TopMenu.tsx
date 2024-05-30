@@ -88,7 +88,7 @@ export const TopMenu = ({ name, logo }: { name: string; logo: string }) => {
           <div className='flex items-center h-16'>
             <div className='flex items-center flex-shrink-0 space-x-2'>
               <img className='w-8' src={`/white-${logo}`} alt='Logo' />
-              <p className=' px-3 py-2 text-lg font-medium'>{name}</p>
+              <p className='px-3 py-2 text-lg font-medium'>{name}</p>
             </div>
 
             {/* Desktop Navigation */}

@@ -1,4 +1,4 @@
-import ConsentScreen from '~/routes/mock-idp.consent'
+import ConsentScreen from '~/routes/mock-idp._index'
 import { json } from '@remix-run/node'
 import { useLoaderData } from '@remix-run/react'
 import { CONFIG } from '~/lib/parse_config.server'

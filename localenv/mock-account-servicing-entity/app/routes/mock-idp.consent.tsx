@@ -1,9 +1,10 @@
-import { useLoaderData, useLocation, json } from '@remix-run/react'
+import { useLoaderData, useLocation, json, useOutletContext } from '@remix-run/react'
 import { useEffect, useState } from 'react'
 import { ApiClient } from '~/lib/apiClient'
 import { CONFIG as config } from '~/lib/parse_config.server'
 import { Button } from '~/components'
 import { CheckCircleSolid, XCircle } from '~/components/icons'
+import { InstanceConfig } from '~/lib/types'
 
 export function loader() {
   return json({
@@ -96,6 +97,7 @@ function RejectedView({
 export default function Consent() {
   const { idpSecret, authServerDomain } = useLoaderData<typeof loader>()
   const location = useLocation()
+  const instanceConfig: InstanceConfig = useOutletContext()
   const queryParams = new URLSearchParams(location.search)
   const [ctx, setCtx] = useState({
     done: false,
@@ -150,11 +152,8 @@ export default function Consent() {
   return (
     <div className='row flex flex-col items-center md:mt-16'>
       <div className='flex items-center flex-shrink-0 space-x-2 mb-12'>
-        <img className='w-8' src='/logo.svg' alt='Logo' />
-        <span className='flex flex-col items-center font-medium text-3xl'>
-          <span className='text-base leading-3'>MOCK</span>
-          <span>ASE</span>
-        </span>
+        <img className='w-8' src={`/${instanceConfig?.logo}`} alt='Logo' />
+        <p className='px-3 py-2 text-lg font-medium'>{instanceConfig?.name}</p>
       </div>
       {ctx.authorized ? (
         <AuthorizedView

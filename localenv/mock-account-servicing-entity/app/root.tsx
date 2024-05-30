@@ -18,6 +18,7 @@ import { useEffect, useState } from 'react'
 import { cx } from 'class-variance-authority'
 import { PublicEnv, type PublicEnvironment } from './PublicEnv'
 import { getOpenPaymentsUrl } from './lib/utils'
+import { InstanceConfig } from './lib/types'
 import { messageStorage, type Message } from './lib/message.server'
 import { TopMenu } from './components/TopMenu'
 import { Snackbar } from './components/Snackbar'
@@ -28,7 +29,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     OPEN_PAYMENTS_URL: getOpenPaymentsUrl()
   }
 
-  const instanceConfig = {
+  const instanceConfig: InstanceConfig = {
     name:
       process?.env?.HOSTNAME == 'cloud-nine-wallet'
         ? 'Cloud Nine Wallet'
@@ -112,7 +113,7 @@ export default function App() {
             )}
           >
             <main className='pb-8 px-4'>
-              <Outlet />
+              <Outlet context={instanceConfig} />
             </main>
           </div>
           <div className='fixed bottom-0 w-full text-center text-white bg-secondary_blue p-5'>

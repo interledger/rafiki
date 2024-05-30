@@ -1,9 +1,9 @@
-import { useLocation } from '@remix-run/react'
+import { useLocation, useOutletContext } from '@remix-run/react'
 import type { Dispatch, SetStateAction } from 'react'
 import { useEffect, useState } from 'react'
 import { Button } from '~/components'
 import { ApiClient } from '~/lib/apiClient'
-import type { Access } from '~/lib/types'
+import type { Access, InstanceConfig } from '~/lib/types'
 
 interface ConsentScreenContext {
   ready: boolean
@@ -191,7 +191,12 @@ function PreConsentScreen({
   )
 }
 
-export default function ConsentScreen() {
+type ConsentScreenProps = {
+  idpSecret: string
+}
+
+// In production, ensure that secrets are handled securely and are not exposed to the client-side code.
+export default function ConsentScreen({ idpSecret }: ConsentScreenProps) {
   const [ctx, setCtx] = useState({
     ready: false,
     thirdPartyName: '',
@@ -208,6 +213,7 @@ export default function ConsentScreen() {
   } as ConsentScreenContext)
   const location = useLocation()
   const queryParams = new URLSearchParams(location.search)
+  const instanceConfig: InstanceConfig = useOutletContext()
 
   useEffect(() => {
     if (
@@ -239,10 +245,13 @@ export default function ConsentScreen() {
     if (ctx.errors.length === 0 && ctx.ready && !ctx.accesses) {
       const { interactId, nonce } = ctx
 
-      ApiClient.getGrant({
-        interactId,
-        nonce
-      })
+      ApiClient.getGrant(
+        {
+          interactId,
+          nonce
+        },
+        idpSecret
+      )
         .then((response) => {
           if (response.isFailure) {
             setCtx({
@@ -350,11 +359,14 @@ export default function ConsentScreen() {
     <>
       <div className='row flex flex-col items-center md:pt-16'>
         <div className='flex items-center flex-shrink-0 space-x-2 mb-12'>
-          <img className='w-8' src='/logo.svg' alt='Logo' />
-          <span className='flex flex-col items-center font-medium text-3xl'>
-            <span className='text-base leading-3'>MOCK</span>
-            <span>ASE</span>
-          </span>
+          <img
+            className='w-8'
+            src={`/${instanceConfig?.logo}`}
+            alt='Logo'
+          />
+          <p className='px-3 py-2 text-lg font-medium'>
+            {instanceConfig?.name}
+          </p>
         </div>
         {ctx.ready ? (
           <>

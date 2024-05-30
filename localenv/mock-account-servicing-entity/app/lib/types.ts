@@ -27,6 +27,12 @@ export interface Access {
   limits?: AccessLimit
 }
 
+export type InstanceConfig = {
+  name: string
+  logo: string
+  background: string
+}
+
 export type JSONError<T extends z.ZodTypeAny> = {
   errors: z.typeToFlattenedError<z.infer<T>>
 }
