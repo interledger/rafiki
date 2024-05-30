@@ -1,4 +1,9 @@
-import { useLoaderData, useLocation, json, useOutletContext } from '@remix-run/react'
+import {
+  useLoaderData,
+  useLocation,
+  json,
+  useOutletContext
+} from '@remix-run/react'
 import { useEffect, useState } from 'react'
 import { ApiClient } from '~/lib/apiClient'
 import { CONFIG as config } from '~/lib/parse_config.server'

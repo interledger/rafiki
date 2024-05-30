@@ -359,11 +359,7 @@ export default function ConsentScreen({ idpSecret }: ConsentScreenProps) {
     <>
       <div className='row flex flex-col items-center md:pt-16'>
         <div className='flex items-center flex-shrink-0 space-x-2 mb-12'>
-          <img
-            className='w-8'
-            src={`/${instanceConfig?.logo}`}
-            alt='Logo'
-          />
+          <img className='w-8' src={`/${instanceConfig?.logo}`} alt='Logo' />
           <p className='px-3 py-2 text-lg font-medium'>
             {instanceConfig?.name}
           </p>
