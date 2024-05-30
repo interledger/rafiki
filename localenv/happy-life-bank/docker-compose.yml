@@ -18,6 +18,7 @@ services:
       GRAPHQL_URL: http://happy-life-bank-backend:3001/graphql
       SIGNATURE_VERSION: 1
       SIGNATURE_SECRET: iyIgCprjb9uL8wFckR+pLEkJWMB7FJhgkvqhTQR/964=
+      IDP_SECRET: 2pEcn2kkCclbOHQiGNEwhJ0rucATZhrA807HTm2rNXE=
     volumes:
       - ../happy-life-bank/seed.yml:/workspace/seed.yml
       - ../happy-life-bank/private-key.pem:/workspace/private-key.pem
@@ -28,11 +29,17 @@ services:
     hostname: happy-life-bank-backend
     image: rafiki-backend
     pull_policy: never
+    volumes:
+      - type: bind
+        source: ../../packages/backend/src
+        target: /home/rafiki/packages/backend/src
+        read_only: true
     restart: always
     privileged: true
     ports:
       - "4000:80"
       - "4001:3001"
+      - '9231:9229'
     networks:
       - rafiki
     environment:
@@ -64,16 +71,26 @@ services:
     image: rafiki-auth
     pull_policy: never
     restart: always
+    volumes:
+      - type: bind
+        source: ../../packages/auth/src
+        target: /home/rafiki/packages/auth/src
+        read_only: true
     networks:
       - rafiki
     ports:
       - '4003:3003'
       - '4006:3006'
+      - '9232:9229'
+      - '4009:3009'
     environment:
       NODE_ENV: development
       AUTH_DATABASE_URL: postgresql://happy_life_bank_auth:happy_life_bank_auth@shared-database/happy_life_bank_auth
-      AUTH_SERVER_DOMAIN: ${HAPPY_LIFE_BANK_AUTH_SERVER_DOMAIN:-http://localhost:4006}
+      AUTH_SERVER_URL: ${HAPPY_LIFE_BANK_AUTH_SERVER_DOMAIN:-http://localhost:4006}
       REDIS_URL: redis://shared-redis:6379/3
+      IDENTITY_SERVER_URL: http://localhost:3031/mock-idp/
+      IDENTITY_SERVER_SECRET: 2pEcn2kkCclbOHQiGNEwhJ0rucATZhrA807HTm2rNXE=
+      COOKIE_KEY: 42397d1f371dd4b8b7d0308a689a57c882effd4ea909d792302542af47e2cd37
     depends_on:
       - cloud-nine-auth
   happy-life-admin:

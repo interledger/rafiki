@@ -2,12 +2,12 @@ import { gql } from '@apollo/client'
 import type {
   ListPaymentsQuery,
   ListPaymentsQueryVariables,
-  WithdrawIncomingPaymentLiquidity,
-  WithdrawIncomingPaymentLiquidityVariables,
-  WithdrawIncomingPaymentLiquidityInput,
-  WithdrawOutgoingPaymentLiquidity,
-  WithdrawOutgoingPaymentLiquidityVariables,
-  WithdrawOutgoingPaymentLiquidityInput,
+  CreateIncomingPaymentWithdrawal,
+  CreateIncomingPaymentWithdrawalVariables,
+  CreateIncomingPaymentWithdrawalInput,
+  CreateOutgoingPaymentWithdrawal,
+  CreateOutgoingPaymentWithdrawalVariables,
+  CreateOutgoingPaymentWithdrawalInput,
   DepositOutgoingPaymentLiquidityInput,
   DepositOutgoingPaymentLiquidity,
   DepositOutgoingPaymentLiquidityVariables
@@ -164,18 +164,18 @@ export const depositOutgoingPaymentLiquidity = async (
   return response.data?.depositOutgoingPaymentLiquidity
 }
 
-export const withdrawOutgoingPaymentLiquidity = async (
-  args: WithdrawOutgoingPaymentLiquidityInput
+export const createOutgoingPaymentWithdrawal = async (
+  args: CreateOutgoingPaymentWithdrawalInput
 ) => {
   const response = await apolloClient.mutate<
-    WithdrawOutgoingPaymentLiquidity,
-    WithdrawOutgoingPaymentLiquidityVariables
+    CreateOutgoingPaymentWithdrawal,
+    CreateOutgoingPaymentWithdrawalVariables
   >({
     mutation: gql`
-      mutation WithdrawOutgoingPaymentLiquidity(
-        $input: WithdrawOutgoingPaymentLiquidityInput!
+      mutation CreateOutgoingPaymentWithdrawal(
+        $input: CreateOutgoingPaymentWithdrawalInput!
       ) {
-        withdrawOutgoingPaymentLiquidity(input: $input) {
+        createOutgoingPaymentWithdrawal(input: $input) {
           success
           message
         }
@@ -186,21 +186,21 @@ export const withdrawOutgoingPaymentLiquidity = async (
     }
   })
 
-  return response.data?.withdrawOutgoingPaymentLiquidity
+  return response.data?.createOutgoingPaymentWithdrawal
 }
 
-export const withdrawIncomingPaymentLiquidity = async (
-  args: WithdrawIncomingPaymentLiquidityInput
+export const createIncomingPaymentWithdrawal = async (
+  args: CreateIncomingPaymentWithdrawalInput
 ) => {
   const response = await apolloClient.mutate<
-    WithdrawIncomingPaymentLiquidity,
-    WithdrawIncomingPaymentLiquidityVariables
+    CreateIncomingPaymentWithdrawal,
+    CreateIncomingPaymentWithdrawalVariables
   >({
     mutation: gql`
-      mutation WithdrawIncomingPaymentLiquidity(
-        $input: WithdrawIncomingPaymentLiquidityInput!
+      mutation CreateIncomingPaymentWithdrawal(
+        $input: CreateIncomingPaymentWithdrawalInput!
       ) {
-        withdrawIncomingPaymentLiquidity(input: $input) {
+        createIncomingPaymentWithdrawal(input: $input) {
           success
           message
         }
@@ -211,5 +211,5 @@ export const withdrawIncomingPaymentLiquidity = async (
     }
   })
 
-  return response.data?.withdrawIncomingPaymentLiquidity
+  return response.data?.createIncomingPaymentWithdrawal
 }

@@ -48,6 +48,12 @@ rafiki-backend:
     keyLock: 2000
 
 rafiki-auth:
+  redis:
+    host: "rafiki-redis-master"
+    port: 6379
+    tlsCaFile: ''
+    tlsCertFile: ''
+    tlsKeyFile: ''
   postgresql:
     host: "rafiki-postgresql"
     port: 5432

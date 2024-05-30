@@ -28,7 +28,6 @@ export class Quote extends WalletAddressSubresource {
   // Asset id of the sender
   public assetId!: string
   public asset!: Asset
-  public additionalFields!: Record<string, unknown>
 
   public estimatedExchangeRate?: number
   public feeId?: string

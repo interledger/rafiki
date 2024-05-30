@@ -1,48 +1,60 @@
 import { AccessAction } from '@interledger/open-payments'
 import { WalletAddressSubresource } from './model'
-import { WalletAddressSubresourceService } from './service'
-import { WalletAddressContext, ListContext } from '../../app'
+import {
+  WalletAddressService,
+  WalletAddressSubresourceService
+} from './service'
+import { WalletAddressUrlContext, ListContext } from '../../app'
 import {
   getPageInfo,
   parsePaginationQueryParameters
 } from '../../shared/pagination'
 import { OpenPaymentsServerRouteError } from '../route-errors'
+import { IAppConfig } from '../../config/app'
 
 interface ServiceDependencies {
-  authServer: string
-  resourceServer: string
+  config: IAppConfig
+  walletAddressService: WalletAddressService
 }
 
 export interface WalletAddressRoutes {
-  get(ctx: WalletAddressContext): Promise<void>
+  get(ctx: WalletAddressUrlContext): Promise<void>
 }
 
 export function createWalletAddressRoutes(
   deps: ServiceDependencies
 ): WalletAddressRoutes {
   return {
-    get: (ctx: WalletAddressContext) => getWalletAddress(deps, ctx)
+    get: (ctx: WalletAddressUrlContext) => getWalletAddress(deps, ctx)
   }
 }
 
-// Spec: https://docs.openpayments.guide/reference/get-public-account
 export async function getWalletAddress(
   deps: ServiceDependencies,
-  ctx: WalletAddressContext
+  ctx: WalletAddressUrlContext
 ): Promise<void> {
-  if (!ctx.walletAddress) {
+  // The instance's wallet address is only relevant for the /jwks.json route, so "hide" it when directly requested
+  if (ctx.walletAddressUrl === deps.config.walletAddressUrl) {
+    throw new OpenPaymentsServerRouteError(404, 'Could not get wallet address')
+  }
+
+  const walletAddress = await deps.walletAddressService.getOrPollByUrl(
+    ctx.walletAddressUrl
+  )
+
+  if (!walletAddress?.isActive) {
     throw new OpenPaymentsServerRouteError(
       404,
-      'Wallet address does not exist',
+      'Could not get wallet address',
       {
         walletAddressUrl: ctx.walletAddressUrl
       }
     )
   }
 
-  ctx.body = ctx.walletAddress.toOpenPaymentsType({
-    authServer: deps.authServer,
-    resourceServer: deps.resourceServer
+  ctx.body = walletAddress.toOpenPaymentsType({
+    authServer: deps.config.authServerGrantUrl,
+    resourceServer: deps.config.openPaymentsUrl
   })
 }
 

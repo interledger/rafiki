@@ -42,14 +42,14 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     const previousPageSearchParams = new URLSearchParams()
     previousPageSearchParams.set('before', webhooks.pageInfo.startCursor)
     if (type.length > 0) previousPageSearchParams.set('type', type.join(','))
-    previousPageUrl = `/webhooks?${previousPageSearchParams.toString()}`
+    previousPageUrl = `/webhook-events?${previousPageSearchParams.toString()}`
   }
 
   if (webhooks.pageInfo.hasNextPage && webhooks.pageInfo.endCursor) {
     const nextPageSearchParams = new URLSearchParams()
     nextPageSearchParams.set('after', webhooks.pageInfo.endCursor)
     if (type.length > 0) nextPageSearchParams.set('type', type.join(','))
-    nextPageUrl = `/webhooks?${nextPageSearchParams.toString()}`
+    nextPageUrl = `/webhook-events?${nextPageSearchParams.toString()}`
   }
 
   return json({ webhooks, previousPageUrl, nextPageUrl, type })
@@ -133,7 +133,7 @@ export default function WebhookEventsPage() {
                       <Button
                         aria-label='view webhook data'
                         state={{ data: webhook.node.data }}
-                        to={`/webhooks/data${
+                        to={`/webhook-events/data${
                           searchParams ? `?${searchParams}` : null
                         }`}
                       >

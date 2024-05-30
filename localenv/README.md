@@ -21,6 +21,10 @@ We provide containerized versions of our packages together with two pre-configur
 
 This environment will set up a playground where you can use the Rafiki Admin APIs and the Open Payments APIs.
 
+## Disclaimer
+
+> **The Mock ASE provided in this repository is intended solely for internal use and demonstration purposes. It is not designed to serve as a reference architecture. If you are looking for a reference implementation of an ASE, please refer to the [Test Wallet](https://github.com/interledger/testnet).**
+
 ## Environment overview
 
 ![Docker compose environment](../packages/documentation/public/img/localenv-architecture.png)
@@ -97,6 +101,9 @@ pnpm localenv:compose up
 
 // tear down and remove volumes
 pnpm localenv:compose down --volumes
+
+// tear down, delete database volumes and remove images
+pnpm localenv:compose down --volumes --rmi all
 ```
 
 If you want to use Postgres as the accounting database instead of TigerBeetle, you can use the `psql` variant of the `localenv:compose` commands:
@@ -113,6 +120,8 @@ as the required data stores tigerbeetle (if enabled), redis, and postgres, so it
 The secondary Happy Life Bank docker compose file (`./happy-life-bank/docker-compose.yml`) includes only the Rafiki services, not the data stores. It uses the
 data stores created by the primary Rafiki instance so it can't be run by itself.
 The `pnpm localenv:compose up` command starts both the primary instance and the secondary.
+
+See the `frontend` [README](../packages/frontend/README.md#ory-kratos) for more information regarding the Ory Kratos identity and user management system required for Admin UI.
 
 #### Autopeering
 
@@ -139,6 +148,47 @@ Note that you have to go through an additional "login" step by providing you IPv
 
 After stopping the script it is necessary to clear the environment using the command described in [Shutting down](#Shutting-down). This is necessary as on a new run of the scripts (with autopeering or not) the wallet address url will differ.
 
+### Debugging
+
+Debuggers for the services are exposed on the following ports:
+
+| IP and Port    | Services                  |
+| -------------- | ------------------------- |
+| 127.0.0.1:9229 | Cloud Nine Wallet Backend |
+| 127.0.0.1:9230 | Cloud Nine Auth           |
+| 127.0.0.1:9231 | Happy Life Bank Backend   |
+| 127.0.0.1:9232 | Happy Life Bank Auth      |
+
+#### With a chromium browser:
+
+- go to `chrome://inspect`
+- Click "Configure" and add the IP addresses and ports detailed above
+- start docker containers
+- click "inspect" on the service you want to debug to open the chromium debugger
+
+You can either trigger the debugger by adding `debugger` statements in code and restarting, or by adding breakpoints directly in the chromium debugger after starting the docker containers.
+
+#### With VS Code:
+
+For debugging with VS Code, you can add this configuration to your `.vscode/launch.json`):
+
+```json
+{
+    "name": "Attach to docker (cloud-nine-backend)",
+    "type": "node",
+    "request": "attach",
+    "port": 9229,
+    "address": "localhost",
+    "localRoot": "${workspaceFolder}",
+    "remoteRoot": "/home/rafiki/",
+    "restart": true
+},
+```
+
+`localRoot` will vary depending on the location of `launch.json` relative to rafiki's root directory.
+
+For more ways to connect debuggers, see the Node docs for debugging: https://nodejs.org/en/learn/getting-started/debugging
+
 ### Shutting down
 
 ```
@@ -147,6 +197,9 @@ pnpm localenv:compose down
 
 // tear down and delete database volumes
 pnpm localenv:compose down --volumes
+
+// tear down, delete database volumes and remove images
+pnpm localenv:compose down --volumes --rmi all
 ```
 
 ### Commands

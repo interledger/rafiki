@@ -11,6 +11,7 @@ import {
   getAssets,
   createAsset,
   updateAsset,
+  deleteAsset,
   getAssetReceivingFee,
   getAssetSendingFee,
   getFees
@@ -46,8 +47,8 @@ import {
   depositEventLiquidity,
   withdrawEventLiquidity,
   depositOutgoingPaymentLiquidity,
-  withdrawIncomingPaymentLiquidity,
-  withdrawOutgoingPaymentLiquidity
+  createIncomingPaymentWithdrawal,
+  createOutgoingPaymentWithdrawal
 } from './liquidity'
 import { GraphQLBigInt, GraphQLUInt8 } from '../scalars'
 import {
@@ -113,6 +114,7 @@ export const resolvers: Resolvers = {
     triggerWalletAddressEvents,
     createAsset,
     updateAsset: updateAsset,
+    deleteAsset,
     createQuote,
     createOutgoingPayment,
     createOutgoingPaymentFromIncomingPayment,
@@ -133,8 +135,8 @@ export const resolvers: Resolvers = {
     depositEventLiquidity,
     withdrawEventLiquidity,
     depositOutgoingPaymentLiquidity,
-    withdrawIncomingPaymentLiquidity,
-    withdrawOutgoingPaymentLiquidity,
+    createIncomingPaymentWithdrawal,
+    createOutgoingPaymentWithdrawal,
     setFee
   }
 }

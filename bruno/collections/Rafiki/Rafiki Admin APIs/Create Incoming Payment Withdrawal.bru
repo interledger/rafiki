@@ -1,7 +1,7 @@
 meta {
-  name: Withdraw Outgoing Payment Liquidity
+  name: Withdraw Incoming Payment Liquidity
   type: graphql
-  seq: 37
+  seq: 26
 }
 
 post {
@@ -11,8 +11,8 @@ post {
 }
 
 body:graphql {
-  mutation WithdrawOutgoingPaymentLiquidity($input: WithdrawOutgoingPaymentLiquidityInput!) {  
-      withdrawOutgoingPaymentLiquidity(input: $input) {
+  mutation CreateIncomingPaymentWithdrawal($input: CreateIncomingPaymentWithdrawalInput!) {  
+      createIncomingPaymentWithdrawal(input: $input) {    
           code    
           error    
           message    
@@ -24,8 +24,9 @@ body:graphql {
 body:graphql:vars {
   {
       "input": {
-          "outgoingPaymentId": "{{outgoingPaymentId}}",
-          "idempotencyKey":"{{idempotencyKey}}"
+          "incomingPaymentId": "{{incomingPaymentId}}",
+          "idempotencyKey": "{{idempotencyKey}}",
+          "timeoutSeconds": {{withdrawalTimeout}}
       }
   }
 }

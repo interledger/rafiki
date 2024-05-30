@@ -2,19 +2,23 @@ import jestOpenAPI from 'jest-openapi'
 import { IocContract } from '@adonisjs/fold'
 import { faker } from '@faker-js/faker'
 import { initIocContainer } from '../../'
-import { AppServices, WalletAddressContext } from '../../app'
+import { AppServices, WalletAddressUrlContext } from '../../app'
 import { Config, IAppConfig } from '../../config/app'
 import { createTestApp, TestContainer } from '../../tests/app'
 import { createContext } from '../../tests/context'
 import { createWalletAddress } from '../../tests/walletAddress'
 import { truncateTables } from '../../tests/tableManager'
 import { WalletAddressRoutes } from './routes'
+import assert from 'assert'
+import { OpenPaymentsServerRouteError } from '../route-errors'
+import { WalletAddressService } from './service'
 
 describe('Wallet Address Routes', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let config: IAppConfig
   let walletAddressRoutes: WalletAddressRoutes
+  let walletAddressService: WalletAddressService
 
   beforeAll(async (): Promise<void> => {
     config = Config
@@ -23,11 +27,9 @@ describe('Wallet Address Routes', (): void => {
     appContainer = await createTestApp(deps)
     const { walletAddressServerSpec } = await deps.use('openApi')
     jestOpenAPI(walletAddressServerSpec)
-  })
-
-  beforeEach(async (): Promise<void> => {
     config = await deps.use('config')
     walletAddressRoutes = await deps.use('walletAddressRoutes')
+    walletAddressService = await deps.use('walletAddressService')
   })
 
   afterEach(async (): Promise<void> => {
@@ -39,26 +41,81 @@ describe('Wallet Address Routes', (): void => {
   })
 
   describe('get', (): void => {
-    test('returns 404 for nonexistent wallet address', async (): Promise<void> => {
-      const ctx = createContext<WalletAddressContext>({
+    test('throws 404 error for nonexistent wallet address', async (): Promise<void> => {
+      const ctx = createContext<WalletAddressUrlContext>({
         headers: { Accept: 'application/json' }
       })
-      await expect(walletAddressRoutes.get(ctx)).rejects.toHaveProperty(
-        'status',
-        404
-      )
+      jest
+        .spyOn(walletAddressService, 'getOrPollByUrl')
+        .mockResolvedValueOnce(undefined)
+
+      expect.assertions(2)
+      try {
+        await walletAddressRoutes.get(ctx)
+      } catch (err) {
+        assert(err instanceof OpenPaymentsServerRouteError)
+        expect(err.status).toBe(404)
+        expect(err.message).toBe('Could not get wallet address')
+      }
     })
 
-    test('returns 200 with an open payments wallet address', async (): Promise<void> => {
+    test('throws 404 error for inactive wallet address', async (): Promise<void> => {
       const walletAddress = await createWalletAddress(deps, {
         publicName: faker.person.firstName()
       })
 
-      const ctx = createContext<WalletAddressContext>({
+      await walletAddress.$query().patch({ deactivatedAt: new Date() })
+
+      const ctx = createContext<WalletAddressUrlContext>({
+        headers: { Accept: 'application/json' }
+      })
+      ctx.walletAddressUrl = walletAddress.url
+
+      const getOrPollByUrlSpy = jest.spyOn(
+        walletAddressService,
+        'getOrPollByUrl'
+      )
+
+      expect.assertions(3)
+      try {
+        await walletAddressRoutes.get(ctx)
+      } catch (err) {
+        assert(err instanceof OpenPaymentsServerRouteError)
+        expect(err.status).toBe(404)
+        expect(err.message).toBe('Could not get wallet address')
+        await expect(getOrPollByUrlSpy.mock.results[0].value).resolves.toEqual(
+          walletAddress
+        )
+      }
+    })
+
+    test('returns 404 when fetching wallet address of instance itself', async (): Promise<void> => {
+      const ctx = createContext<WalletAddressUrlContext>({
+        headers: { Accept: 'application/json' }
+      })
+
+      ctx.walletAddressUrl = config.walletAddressUrl
+
+      expect.assertions(2)
+      try {
+        await walletAddressRoutes.get(ctx)
+      } catch (err) {
+        assert(err instanceof OpenPaymentsServerRouteError)
+        expect(err.status).toBe(404)
+        expect(err.message).toBe('Could not get wallet address')
+      }
+    })
+
+    test('returns wallet address', async (): Promise<void> => {
+      const walletAddress = await createWalletAddress(deps, {
+        publicName: faker.person.firstName()
+      })
+
+      const ctx = createContext<WalletAddressUrlContext>({
         headers: { Accept: 'application/json' },
         url: '/'
       })
-      ctx.walletAddress = walletAddress
+      ctx.walletAddressUrl = walletAddress.url
       await expect(walletAddressRoutes.get(ctx)).resolves.toBeUndefined()
       expect(ctx.response).toSatisfyApiSpec()
       expect(ctx.body).toEqual({
@@ -66,8 +123,8 @@ describe('Wallet Address Routes', (): void => {
         publicName: walletAddress.publicName,
         assetCode: walletAddress.asset.code,
         assetScale: walletAddress.asset.scale,
-        authServer: 'https://auth.wallet.example/authorize',
-        resourceServer: 'https://op.example'
+        authServer: config.authServerGrantUrl,
+        resourceServer: config.openPaymentsUrl
       })
     })
   })

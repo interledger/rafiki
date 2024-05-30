@@ -20,7 +20,7 @@ import {
   AppServices,
   HttpSigContext,
   HttpSigWithAuthenticatedStatusContext,
-  WalletAddressContext
+  WalletAddressUrlContext
 } from '../../app'
 import { createTestApp, TestContainer } from '../../tests/app'
 import { createContext } from '../../tests/context'
@@ -34,7 +34,7 @@ import assert from 'assert'
 const nock = (global as unknown as { nock: typeof import('nock') }).nock
 
 type AppMiddleware = (
-  ctx: WalletAddressContext,
+  ctx: WalletAddressUrlContext,
   next: () => Promise<void>
 ) => Promise<void>
 
@@ -45,7 +45,7 @@ describe('Auth Middleware', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let middleware: AppMiddleware
-  let ctx: WalletAddressContext
+  let ctx: WalletAddressUrlContext
   let tokenIntrospectionClient: Client
 
   const type = AccessType.IncomingPayment
@@ -210,7 +210,7 @@ describe('Auth Middleware', (): void => {
 
       beforeEach(async (): Promise<void> => {
         if (identifierOption === IdentifierOption.Matching) {
-          identifier = ctx.walletAddress.url
+          identifier = ctx.walletAddressUrl
         } else if (identifierOption === IdentifierOption.Conflicting) {
           identifier = faker.internet.url({ appendSlash: false })
         }

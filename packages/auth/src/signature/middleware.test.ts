@@ -35,7 +35,6 @@ import { AccessType, AccessAction } from '@interledger/open-payments'
 import { ContinueContext, CreateContext } from '../grant/routes'
 import { Interaction, InteractionState } from '../interaction/model'
 import { generateNonce } from '../shared/utils'
-import { generateGNAPErrorResponse } from '../tests/errors'
 import { GNAPErrorCode } from '../shared/gnapErrors'
 
 describe('Signature Service', (): void => {
@@ -268,10 +267,8 @@ describe('Signature Service', (): void => {
 
       await expect(tokenHttpsigMiddleware(ctx, next)).rejects.toMatchObject({
         status: 500,
-        ...generateGNAPErrorResponse(
-          GNAPErrorCode.RequestDenied,
-          'internal server error'
-        )
+        code: GNAPErrorCode.RequestDenied,
+        message: 'internal server error'
       })
       expect(tokenSpy).toHaveBeenCalledWith(managementId)
       expect(next).not.toHaveBeenCalled()
@@ -299,10 +296,8 @@ describe('Signature Service', (): void => {
       }
       await expect(tokenHttpsigMiddleware(ctx, next)).rejects.toMatchObject({
         status: 401,
-        ...generateGNAPErrorResponse(
-          GNAPErrorCode.InvalidClient,
-          'invalid signature headers'
-        )
+        code: GNAPErrorCode.InvalidClient,
+        message: 'invalid signature headers'
       })
     })
 
@@ -335,10 +330,8 @@ describe('Signature Service', (): void => {
         grantContinueHttpsigMiddleware(ctx, next)
       ).rejects.toMatchObject({
         status: 401,
-        ...generateGNAPErrorResponse(
-          GNAPErrorCode.InvalidClient,
-          'invalid signature'
-        )
+        code: GNAPErrorCode.InvalidClient,
+        message: 'invalid signature'
       })
 
       scope.done()
@@ -372,10 +365,8 @@ describe('Signature Service', (): void => {
         grantContinueHttpsigMiddleware(ctx, next)
       ).rejects.toMatchObject({
         status: 401,
-        ...generateGNAPErrorResponse(
-          GNAPErrorCode.InvalidContinuation,
-          'invalid grant'
-        )
+        code: GNAPErrorCode.InvalidContinuation,
+        message: 'invalid grant'
       })
     })
 
@@ -401,10 +392,8 @@ describe('Signature Service', (): void => {
         grantInitiationHttpsigMiddleware(ctx, next)
       ).rejects.toMatchObject({
         status: 400,
-        ...generateGNAPErrorResponse(
-          GNAPErrorCode.InvalidClient,
-          'could not determine client'
-        )
+        code: GNAPErrorCode.InvalidClient,
+        message: 'could not determine client'
       })
     })
 
@@ -433,10 +422,8 @@ describe('Signature Service', (): void => {
         grantInitiationHttpsigMiddleware(ctx, next)
       ).rejects.toMatchObject({
         status: 401,
-        ...generateGNAPErrorResponse(
-          GNAPErrorCode.InvalidClient,
-          'invalid signature headers'
-        )
+        code: GNAPErrorCode.InvalidClient,
+        message: 'invalid signature headers'
       })
     })
   })

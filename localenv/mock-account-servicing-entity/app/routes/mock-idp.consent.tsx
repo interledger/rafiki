@@ -1,4 +1,4 @@
-import { useLoaderData, useLocation } from '@remix-run/react'
+import { useLoaderData, useLocation, json } from '@remix-run/react'
 import { useEffect, useState } from 'react'
 import { ApiClient } from '~/lib/apiClient'
 import { CONFIG as config } from '~/lib/parse_config.server'
@@ -6,7 +6,10 @@ import { Button } from '~/components'
 import { CheckCircleSolid, XCircle } from '~/components/icons'
 
 export function loader() {
-  return config.authServerDomain
+  return json({
+    authServerDomain: config.authServerDomain,
+    idpSecret: config.idpSecret // In production, ensure that secrets are handled securely and are not exposed to the client-side code.
+  })
 }
 
 function AuthorizedView({
@@ -14,15 +17,16 @@ function AuthorizedView({
   currencyDisplayCode,
   amount,
   interactId,
-  nonce
+  nonce,
+  authServerDomain
 }: {
   thirdPartyName: string
   currencyDisplayCode: string
   amount: number
   interactId: string
   nonce: string
+  authServerDomain: string
 }) {
-  const authServerDomain = useLoaderData<typeof loader>()
   return (
     <div className='bg-white rounded-md p-8 px-16'>
       <div className='row mt-2 flex flex-row items-center justify-around'>
@@ -55,13 +59,14 @@ function AuthorizedView({
 function RejectedView({
   thirdPartyName,
   interactId,
-  nonce
+  nonce,
+  authServerDomain
 }: {
   thirdPartyName: string
   interactId: string
   nonce: string
+  authServerDomain: string
 }) {
-  const authServerDomain = useLoaderData<typeof loader>()
   return (
     <div className='bg-white rounded-md p-8 px-16'>
       <div className='row mt-2 flex flex-row items-center justify-around'>
@@ -89,6 +94,7 @@ function RejectedView({
 }
 
 export default function Consent() {
+  const { idpSecret, authServerDomain } = useLoaderData<typeof loader>()
   const location = useLocation()
   const queryParams = new URLSearchParams(location.search)
   const [ctx, setCtx] = useState({
@@ -114,7 +120,12 @@ export default function Consent() {
       if (interactId && nonce) {
         const acceptanceDecision =
           !!decision && decision.toLowerCase() === 'accept'
-        ApiClient.chooseConsent(interactId, nonce, acceptanceDecision)
+        ApiClient.chooseConsent(
+          interactId,
+          nonce,
+          acceptanceDecision,
+          idpSecret
+        )
           .then((_consentResponse) => {
             setCtx({
               ...ctx,

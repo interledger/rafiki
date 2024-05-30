@@ -1,4 +1,5 @@
 import { WalletAddressContext, SPSPContext } from '../../../app'
+import { SPSP_CONTENT_TYPE_V4 } from './routes'
 
 export type SPSPWalletAddressContext = WalletAddressContext &
   SPSPContext & {
@@ -38,7 +39,7 @@ const spspMiddleware = async (
   ctx: SPSPWalletAddressContext,
   next: () => Promise<unknown>
 ): Promise<void> => {
-  if (ctx.accepts('application/spsp4+json')) {
+  if (ctx.request.header.accept?.includes(SPSP_CONTENT_TYPE_V4)) {
     const walletAddressService = await ctx.container.use('walletAddressService')
 
     const walletAddress = await walletAddressService.getByUrl(

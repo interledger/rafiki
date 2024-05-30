@@ -30,6 +30,7 @@ import { Asset } from '../../asset/model'
 import { PaymentMethodHandlerService } from '../../payment-method/handler/service'
 import { ReceiverService } from '../receiver/service'
 import { createReceiver } from '../../tests/receiver'
+import * as Pay from '@interledger/pay'
 
 describe('QuoteService', (): void => {
   let deps: IocContract<AppServices>
@@ -381,6 +382,52 @@ describe('QuoteService', (): void => {
       }
     )
 
+    test('creates a quote with large exchange rate amounts', async (): Promise<void> => {
+      const receiveAmountValue = 100n
+      const receiver = await createReceiver(deps, receivingWalletAddress, {
+        incomingAmount: {
+          assetCode: receivingWalletAddress.asset.code,
+          assetScale: receivingWalletAddress.asset.scale,
+          value: receiveAmountValue
+        }
+      })
+
+      const mockedQuote = mockQuote(
+        {
+          receiver,
+          walletAddress: sendingWalletAddress,
+          receiveAmountValue
+        },
+        {
+          additionalFields: {
+            maxPacketAmount: Pay.Int.MAX_U64,
+            lowEstimatedExchangeRate: Pay.Ratio.from(10 ** 20),
+            highEstimatedExchangeRate: Pay.Ratio.from(10 ** 20),
+            minExchangeRate: Pay.Ratio.from(10 ** 20)
+          }
+        }
+      )
+
+      jest
+        .spyOn(paymentMethodHandlerService, 'getQuote')
+        .mockResolvedValueOnce(mockedQuote)
+
+      await expect(
+        quoteService.create({
+          walletAddressId: sendingWalletAddress.id,
+          receiver: receiver.incomingPayment!.id,
+          method: 'ilp'
+        })
+      ).resolves.toMatchObject({
+        debitAmount: mockedQuote.debitAmount,
+        receiveAmount: receiver.incomingAmount,
+        maxPacketAmount: BigInt('9223372036854775807'),
+        lowEstimatedExchangeRate: Pay.Ratio.from(10 ** 20),
+        highEstimatedExchangeRate: Pay.Ratio.from(10 ** 20),
+        minExchangeRate: Pay.Ratio.from(10 ** 20)
+      })
+    })
+
     test('fails on unknown wallet address', async (): Promise<void> => {
       await expect(
         quoteService.create({
@@ -518,6 +565,36 @@ describe('QuoteService', (): void => {
           })
         }
       )
+
+      test('fails on invalid debit amount', async () => {
+        const incomingAmountValue = 100n
+        const receiver = await createReceiver(deps, receivingWalletAddress, {
+          incomingAmount: {
+            assetCode: asset.code,
+            assetScale: asset.scale,
+            value: incomingAmountValue
+          }
+        })
+
+        const mockedQuote = mockQuote({
+          receiver: receiver!,
+          walletAddress: sendingWalletAddress,
+          receiveAmountValue: incomingAmountValue,
+          debitAmountValue: -10n
+        })
+
+        jest
+          .spyOn(paymentMethodHandlerService, 'getQuote')
+          .mockResolvedValueOnce(mockedQuote)
+
+        await expect(
+          quoteService.create({
+            walletAddressId: sendingWalletAddress.id,
+            receiver: receiver.incomingPayment!.id,
+            method: 'ilp'
+          })
+        ).resolves.toEqual(QuoteError.InvalidAmount)
+      })
     })
 
     describe('fees - fixed send with cross-currency', (): void => {
@@ -546,7 +623,9 @@ describe('QuoteService', (): void => {
       test.each`
         debitAmountValue | fixedFee | basisPointFee | exchangeRate | expectedReceiveAmountValue | description
         ${200n}          | ${0}     | ${0}          | ${0.5}       | ${100n}                    | ${'no fees'}
+        ${200n}          | ${0}     | ${0}          | ${1.0}       | ${200n}                    | ${'no fees, equal exchange rate'}
         ${200n}          | ${20}    | ${0}          | ${0.5}       | ${90n}                     | ${'fixed fee'}
+        ${200n}          | ${101n}  | ${0}          | ${1.0}       | ${99n}                     | ${'fixed fee larger than receiveAmount, equal exchange rate'}
         ${200n}          | ${0}     | ${200}        | ${0.5}       | ${99n}                     | ${'basis point fee'}
         ${200n}          | ${20}    | ${200}        | ${0.5}       | ${89n}                     | ${'fixed and basis point fee'}
         ${200n}          | ${20}    | ${200}        | ${0.455}     | ${80n}                     | ${'fixed and basis point fee with floating exchange rate'}
@@ -598,6 +677,42 @@ describe('QuoteService', (): void => {
           })
         }
       )
+
+      test('fails on negative receive amount', async () => {
+        const receiver = await createReceiver(deps, receivingWalletAddress)
+        const debitAmountValue = 100n
+
+        await Fee.query().insertAndFetch({
+          assetId: sendAsset.id,
+          type: FeeType.Sending,
+          fixedFee: debitAmountValue + 1n,
+          basisPointFee: 0
+        })
+
+        const mockedQuote = mockQuote({
+          receiver,
+          walletAddress: sendingWalletAddress,
+          debitAmountValue: debitAmountValue,
+          exchangeRate: 1.0
+        })
+
+        jest
+          .spyOn(paymentMethodHandlerService, 'getQuote')
+          .mockResolvedValueOnce(mockedQuote)
+
+        await expect(
+          quoteService.create({
+            walletAddressId: sendingWalletAddress.id,
+            receiver: receiver.incomingPayment!.id,
+            debitAmount: {
+              value: debitAmountValue,
+              assetCode: sendAsset.code,
+              assetScale: sendAsset.scale
+            },
+            method: 'ilp'
+          })
+        ).resolves.toEqual(QuoteError.NegativeReceiveAmount)
+      })
     })
   })
 })

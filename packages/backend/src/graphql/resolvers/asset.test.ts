@@ -10,7 +10,12 @@ import { AppServices } from '../../app'
 import { initIocContainer } from '../..'
 import { Config } from '../../config/app'
 import { truncateTables } from '../../tests/tableManager'
-import { isAssetError } from '../../asset/errors'
+import {
+  isAssetError,
+  AssetError,
+  errorToCode,
+  errorToMessage
+} from '../../asset/errors'
 import { Asset as AssetModel } from '../../asset/model'
 import { AssetService } from '../../asset/service'
 import { randomAsset } from '../../tests/asset'
@@ -641,6 +646,114 @@ describe('Asset Resolvers', (): void => {
       expect(response.success).toBe(false)
       expect(response.code).toEqual('404')
       expect(response.message).toEqual('Unknown asset')
+    })
+  })
+
+  describe('Delete Asset', (): void => {
+    let asset: AssetModel
+
+    beforeEach(async (): Promise<void> => {
+      asset = await createAsset(deps)
+    })
+
+    test('Can delete an asset', async (): Promise<void> => {
+      const response = await appContainer.apolloClient
+        .mutate({
+          mutation: gql`
+            mutation DeleteAsset($input: DeleteAssetInput!) {
+              deleteAsset(input: $input) {
+                code
+                success
+                message
+              }
+            }
+          `,
+          variables: {
+            input: {
+              id: asset.id
+            }
+          }
+        })
+        .then((query): AssetMutationResponse => {
+          if (query.data) {
+            return query.data.deleteAsset
+          } else {
+            throw new Error('Data was empty')
+          }
+        })
+
+      expect(response.success).toBe(true)
+      expect(response.code).toEqual('200')
+      expect(response.message).toEqual('Asset deleted')
+      await expect(assetService.get(asset.id)).resolves.toBeUndefined()
+    })
+
+    test('Returns error for unknown asset', async (): Promise<void> => {
+      const response = await appContainer.apolloClient
+        .mutate({
+          mutation: gql`
+            mutation DeleteAsset($input: DeleteAssetInput!) {
+              deleteAsset(input: $input) {
+                code
+                success
+                message
+              }
+            }
+          `,
+          variables: {
+            input: {
+              id: uuid()
+            }
+          }
+        })
+        .then((query): AssetMutationResponse => {
+          if (query.data) {
+            return query.data.deleteAsset
+          } else {
+            throw new Error('Data was empty')
+          }
+        })
+
+      expect(response.success).toBe(false)
+      expect(response.code).toEqual(
+        errorToCode[AssetError.UnknownAsset].toString()
+      )
+      expect(response.message).toEqual(errorToMessage[AssetError.UnknownAsset])
+    })
+
+    test('Returns error if unexpected error', async (): Promise<void> => {
+      jest.spyOn(assetService, 'delete').mockImplementationOnce(async () => {
+        throw new Error('unexpected')
+      })
+
+      const response = await appContainer.apolloClient
+        .mutate({
+          mutation: gql`
+            mutation DeleteAsset($input: DeleteAssetInput!) {
+              deleteAsset(input: $input) {
+                code
+                success
+                message
+              }
+            }
+          `,
+          variables: {
+            input: {
+              id: asset.id
+            }
+          }
+        })
+        .then((query): AssetMutationResponse => {
+          if (query.data) {
+            return query.data.deleteAsset
+          } else {
+            throw new Error('Data was empty')
+          }
+        })
+
+      expect(response.success).toBe(false)
+      expect(response.code).toEqual('500')
+      expect(response.message).toEqual('Error trying to delete asset')
     })
   })
 })

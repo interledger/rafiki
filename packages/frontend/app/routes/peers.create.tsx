@@ -59,6 +59,18 @@ export default function CreatePeerPage() {
                     label='Name'
                     placeholder='Peer name'
                     error={response?.errors?.fieldErrors.name}
+                    description={
+                      <>
+                        The name of the{' '}
+                        <a
+                          className='default-link'
+                          href='https://rafiki.dev/concepts/interledger-protocol/peering/'
+                        >
+                          peer
+                        </a>{' '}
+                        to be added.
+                      </>
+                    }
                   />
                   <Input
                     name='staticIlpAddress'
@@ -66,12 +78,35 @@ export default function CreatePeerPage() {
                     placeholder='ILP Address'
                     required
                     error={response?.errors?.fieldErrors?.staticIlpAddress}
+                    description={
+                      <>
+                        {"The peer's "}
+                        <a
+                          className='default-link'
+                          href='https://interledger.org/developers/rfcs/ilp-addresses/'
+                        >
+                          address on the Interledger network.
+                        </a>
+                      </>
+                    }
                   />
                   <Input
                     name='maxPacketAmount'
                     label='Max Packet Amount'
                     placeholder='Max Packet Amount'
                     error={response?.errors?.fieldErrors?.maxPacketAmount}
+                    description={
+                      <>
+                        The maximum amount of value that can be sent in a single{' '}
+                        <a
+                          className='default-link'
+                          href='https://interledger.org/developers/rfcs/stream-protocol/#35-packets-and-frames'
+                        >
+                          Interledger STREAM Packet
+                        </a>
+                        .
+                      </>
+                    }
                   />
                 </div>
               </div>
@@ -89,6 +124,17 @@ export default function CreatePeerPage() {
                     label='Incoming Auth Tokens'
                     placeholder='Accepts a comma separated list of tokens'
                     error={response?.errors?.fieldErrors?.incomingAuthTokens}
+                    description={
+                      <>
+                        List of valid tokens to accept when receiving{' '}
+                        <a
+                          className='default-link'
+                          href='https://rafiki.dev/concepts/interledger-protocol/connector/#incoming-http'
+                        >
+                          incoming ILP packets from the peer.
+                        </a>
+                      </>
+                    }
                   />
                   <Input
                     name='outgoingAuthToken'
@@ -96,6 +142,17 @@ export default function CreatePeerPage() {
                     placeholder='Outgoing HTTP Auth Token'
                     required
                     error={response?.errors?.fieldErrors?.outgoingAuthToken}
+                    description={
+                      <>
+                        List of valid tokens to present when sending{' '}
+                        <a
+                          className='default-link'
+                          href='https://rafiki.dev/concepts/interledger-protocol/connector/#outgoing-http'
+                        >
+                          outgoing ILP packets to the peer.
+                        </a>
+                      </>
+                    }
                   />
                   <Input
                     name='outgoingEndpoint'
@@ -103,6 +160,18 @@ export default function CreatePeerPage() {
                     placeholder='Outgoing HTTP Endpoint'
                     required
                     error={response?.errors?.fieldErrors?.outgoingEndpoint}
+                    description={
+                      <>
+                        Endpoint on the peer to which{' '}
+                        <a
+                          className='default-link'
+                          href='https://rafiki.dev/concepts/interledger-protocol/connector/#outgoing-http'
+                        >
+                          outgoing ILP packets
+                        </a>{' '}
+                        will be sent.
+                      </>
+                    }
                   />
                 </div>
               </div>
@@ -124,6 +193,18 @@ export default function CreatePeerPage() {
                     name='asset'
                     placeholder='Select asset...'
                     label='Asset'
+                    description={
+                      <>
+                        The type of{' '}
+                        <a
+                          className='default-link'
+                          href='https://rafiki.dev/concepts/asset/'
+                        >
+                          asset
+                        </a>{' '}
+                        that is sent to & received from the peer.
+                      </>
+                    }
                     required
                   />
                 </div>

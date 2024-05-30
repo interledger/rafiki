@@ -14,7 +14,6 @@ import { listSubresource } from '../../wallet_address/routes'
 import { StreamCredentialsService } from '../../../payment-method/ilp/stream-credentials/service'
 import { AccessAction } from '@interledger/open-payments'
 import { OpenPaymentsServerRouteError } from '../../route-errors'
-import { throwIfMissingWalletAddress } from '../../wallet_address/model'
 
 interface ServiceDependencies {
   config: IAppConfig
@@ -104,12 +103,10 @@ async function getIncomingPaymentPrivate(
     )
   }
 
-  throwIfMissingWalletAddress(deps, incomingPayment)
-
   const streamCredentials = deps.streamCredentialsService.get(incomingPayment)
 
   ctx.body = incomingPayment.toOpenPaymentsTypeWithMethods(
-    incomingPayment.walletAddress,
+    ctx.walletAddress,
     streamCredentials
   )
 }
@@ -147,14 +144,12 @@ async function createIncomingPayment(
     )
   }
 
-  throwIfMissingWalletAddress(deps, incomingPaymentOrError)
-
   ctx.status = 201
   const streamCredentials = deps.streamCredentialsService.get(
     incomingPaymentOrError
   )
   ctx.body = incomingPaymentOrError.toOpenPaymentsTypeWithMethods(
-    incomingPaymentOrError.walletAddress,
+    ctx.walletAddress,
     streamCredentials
   )
 }
@@ -174,11 +169,7 @@ async function completeIncomingPayment(
     )
   }
 
-  throwIfMissingWalletAddress(deps, incomingPaymentOrError)
-
-  ctx.body = incomingPaymentOrError.toOpenPaymentsType(
-    incomingPaymentOrError.walletAddress
-  )
+  ctx.body = incomingPaymentOrError.toOpenPaymentsType(ctx.walletAddress)
 }
 
 async function listIncomingPayments(

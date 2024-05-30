@@ -23,6 +23,7 @@ export type ApiResponse<T = any> = (
   readonly contextUpdates?: { [key: string]: any }
 }
 
+// In production, ensure that secrets are handled securely and are not exposed to the client-side code.
 export class ApiClient {
   /*
    * flow overview:
@@ -32,15 +33,16 @@ export class ApiClient {
    */
 
   public static async getGrant(
-    params: Record<string, string>
+    params: Record<string, string>,
+    idpSecret: string
   ): Promise<ApiResponse> {
     // get grant --> GET /grant/:id/:nonce
     const { interactId, nonce } = params
     const response = await axios.get(
-      `http://localhost:3006/grant/${interactId}/${nonce}`,
+      `http://localhost:3009/grant/${interactId}/${nonce}`,
       {
         headers: {
-          'x-idp-secret': 'replace-me'
+          'x-idp-secret': idpSecret
         }
       }
     )
@@ -63,17 +65,18 @@ export class ApiClient {
   public static async chooseConsent(
     interactId: string,
     nonce: string,
-    acceptanceDecision: boolean
+    acceptanceDecision: boolean,
+    idpSecret: string
   ): Promise<ApiResponse<Array<Access>>> {
     // make choice --> POST /grant/:id/:nonce/accept or /grant/:id/:nonce/reject
     const acceptanceSubPath = acceptanceDecision ? 'accept' : 'reject'
 
     const response = await axios.post(
-      `http://localhost:3006/grant/${interactId}/${nonce}/${acceptanceSubPath}`,
+      `http://localhost:3009/grant/${interactId}/${nonce}/${acceptanceSubPath}`,
       {},
       {
         headers: {
-          'x-idp-secret': 'replace-me'
+          'x-idp-secret': idpSecret
         }
       }
     )
