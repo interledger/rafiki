@@ -46,6 +46,10 @@ type UpdateInput = Omit<UpdateOptions, 'id'> & { deactivatedAt?: Date | null }
 export interface WalletAddressService {
   create(options: CreateOptions): Promise<WalletAddress | WalletAddressError>
   update(options: UpdateOptions): Promise<WalletAddress | WalletAddressError>
+  getWithAdditionalProperties(
+    id: string,
+    includeVisibleOnlyAddProps: boolean
+  ): Promise<WalletAddress | undefined>
   get(id: string): Promise<WalletAddress | undefined>
   getByUrl(url: string): Promise<WalletAddress | undefined>
   getOrPollByUrl(url: string): Promise<WalletAddress | undefined>
@@ -84,6 +88,12 @@ export async function createWalletAddressService({
   return {
     create: (options) => createWalletAddress(deps, options),
     update: (options) => updateWalletAddress(deps, options),
+    getWithAdditionalProperties: (id, includeVisibleOnlyAddProps) =>
+      getWalletAddressWithAdditionalProperties(
+        deps,
+        id,
+        includeVisibleOnlyAddProps
+      ),
     get: (id) => getWalletAddress(deps, id),
     getByUrl: (url) => getWalletAddressByUrl(deps, url),
     getOrPollByUrl: (url) => getOrPollByUrl(deps, url),
@@ -137,10 +147,7 @@ async function createWalletAddress(
       // remove blank key/value pairs:
       addProperties = addProperties.filter((itm) => {
         return !(
-          itm.key == undefined ||
-          itm.key.trim().length == 0 ||
-          itm.value == undefined ||
-          itm.value.trim().length == 0
+          itm.fieldKey.trim().length == 0 || itm.fieldValue.trim().length == 0
         )
       })
       // set defaults:
@@ -149,8 +156,6 @@ async function createWalletAddress(
         prop.walletAddressId = wallet.id
         prop.createdAt = now
         prop.updatedAt = now
-        if (prop.visibleInOpenPayments == undefined)
-          prop.visibleInOpenPayments = false
       }
       if (addProperties.length) {
         await WalletAddressAdditionalProperty.query(deps.knex).insert(
@@ -199,13 +204,46 @@ async function updateWalletAddress(
   }
 }
 
+async function getWalletAddressWithAdditionalProperties(
+  deps: ServiceDependencies,
+  id: string,
+  includeVisibleOnlyAddProps: boolean
+): Promise<WalletAddress | undefined> {
+  return getWalletAddressBy(deps, id, true, includeVisibleOnlyAddProps)
+}
+
 async function getWalletAddress(
   deps: ServiceDependencies,
   id: string
 ): Promise<WalletAddress | undefined> {
-  return await WalletAddress.query(deps.knex)
+  return getWalletAddressBy(deps, id, false, false)
+}
+
+async function getWalletAddressBy(
+  deps: ServiceDependencies,
+  id: string,
+  includeAddProps: boolean,
+  includeVisibleOnlyAddProps: boolean
+): Promise<WalletAddress | undefined> {
+  const returnVal = await WalletAddress.query(deps.knex)
     .findById(id)
     .withGraphFetched('asset')
+
+  if (includeAddProps && returnVal) {
+    if (includeVisibleOnlyAddProps) {
+      returnVal.additionalProperties =
+        await WalletAddressAdditionalProperty.query(deps.knex).where({
+          walletAddressId: returnVal.id,
+          visibleInOpenPayments: true
+        })
+    } else {
+      returnVal.additionalProperties =
+        await WalletAddressAdditionalProperty.query(deps.knex).where({
+          walletAddressId: returnVal.id
+        })
+    }
+  }
+  return returnVal
 }
 
 async function getOrPollByUrl(

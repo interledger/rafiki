@@ -7,7 +7,7 @@ export class WalletAddressAdditionalProperty extends BaseModel {
 
   public id!: string
   public walletAddressId!: string
-  public key!: string
-  public value!: string
+  public fieldKey!: string
+  public fieldValue!: string
   public visibleInOpenPayments!: boolean
 }

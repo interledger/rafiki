@@ -9,8 +9,102 @@
     "subscriptionType": null,
     "types": [
       {
-        "kind": "INPUT_OBJECT",
+        "kind": "OBJECT",
         "name": "AdditionalProperty",
+        "description": null,
+        "fields": [
+          {
+            "name": "key",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "value",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "visibleInOpenPayments",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Boolean",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
+        "inputFields": null,
+        "interfaces": [],
+        "enumValues": null,
+        "possibleTypes": null
+      },
+      {
+        "kind": "OBJECT",
+        "name": "AdditionalPropertyConnection",
+        "description": null,
+        "fields": [
+          {
+            "name": "properties",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "LIST",
+                "name": null,
+                "ofType": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "OBJECT",
+                    "name": "AdditionalProperty",
+                    "ofType": null
+                  }
+                }
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
+        "inputFields": null,
+        "interfaces": [],
+        "enumValues": null,
+        "possibleTypes": null
+      },
+      {
+        "kind": "INPUT_OBJECT",
+        "name": "AdditionalPropertyInput",
         "description": null,
         "fields": null,
         "inputFields": [
@@ -1956,7 +2050,7 @@
                   "name": null,
                   "ofType": {
                     "kind": "INPUT_OBJECT",
-                    "name": "AdditionalProperty",
+                    "name": "AdditionalPropertyInput",
                     "ofType": null
                   }
                 }
@@ -6721,7 +6815,7 @@
           },
           {
             "name": "walletAddress",
-            "description": "Fetch a wallet address",
+            "description": "Fetch a wallet address, and optionally additional properties.",
             "args": [
               {
                 "name": "id",
@@ -6734,6 +6828,18 @@
                     "name": "String",
                     "ofType": null
                   }
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "includeAdditionalProperties",
+                "description": null,
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "Boolean",
+                  "ofType": null
                 },
                 "defaultValue": null,
                 "isDeprecated": false,
@@ -8337,6 +8443,18 @@
         "description": null,
         "fields": [
           {
+            "name": "additionalProperties",
+            "description": "List of additional properties associated with this wallet address",
+            "args": [],
+            "type": {
+              "kind": "OBJECT",
+              "name": "AdditionalPropertyConnection",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "asset",
             "description": "Asset of the wallet address",
             "args": [],
@@ -8661,7 +8779,7 @@
           },
           {
             "name": "walletAddressKeys",
-            "description": null,
+            "description": "List of keys associated with this wallet address",
             "args": [
               {
                 "name": "after",

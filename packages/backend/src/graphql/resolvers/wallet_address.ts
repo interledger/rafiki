@@ -4,7 +4,9 @@ import {
   ResolversTypes,
   WalletAddress as SchemaWalletAddress,
   MutationResolvers,
-  WalletAddressStatus
+  WalletAddressStatus,
+  AdditionalPropertyConnection,
+  AdditionalProperty
 } from '../generated/graphql'
 import { ApolloContext } from '../../app'
 import {
@@ -50,7 +52,16 @@ export const getWalletAddresses: QueryResolvers<ApolloContext>['walletAddresses'
 export const getWalletAddress: QueryResolvers<ApolloContext>['walletAddress'] =
   async (parent, args, ctx): Promise<ResolversTypes['WalletAddress']> => {
     const walletAddressService = await ctx.container.use('walletAddressService')
-    const walletAddress = await walletAddressService.get(args.id)
+
+    let walletAddress
+    if (!args.includeAdditionalProperties) {
+      walletAddress = await walletAddressService.get(args.id)
+    } else {
+      walletAddress = await walletAddressService.getWithAdditionalProperties(
+        args.id,
+        false
+      )
+    }
     if (!walletAddress) {
       throw new Error('No wallet address')
     }
@@ -68,8 +79,8 @@ export const createWalletAddress: MutationResolvers<ApolloContext>['createWallet
     for (const inputAddProp of args.input.additionalProperties) {
       const toAdd: WalletAddressAdditionalProperty =
         new WalletAddressAdditionalProperty()
-      toAdd.key = inputAddProp.key
-      toAdd.value = inputAddProp.value
+      toAdd.fieldKey = inputAddProp.key
+      toAdd.fieldValue = inputAddProp.value
       toAdd.visibleInOpenPayments = inputAddProp.visibleInOpenPayments
       addProps.push(toAdd)
     }
@@ -174,5 +185,25 @@ export const walletAddressToGraphql = (
   createdAt: new Date(+walletAddress.createdAt).toISOString(),
   status: walletAddress.isActive
     ? WalletAddressStatus.Active
-    : WalletAddressStatus.Inactive
+    : WalletAddressStatus.Inactive,
+  additionalProperties: additionalPropertiesToGraphql(
+    walletAddress.additionalProperties
+  )
+})
+
+export const additionalPropertiesToGraphql = (
+  addProperties: WalletAddressAdditionalProperty[] | undefined
+): AdditionalPropertyConnection => {
+  if (addProperties === undefined) return { properties: [] }
+  return {
+    properties: addProperties.map((itm) => additionalPropertyToGraphql(itm))
+  }
+}
+
+export const additionalPropertyToGraphql = (
+  addProp: WalletAddressAdditionalProperty
+): AdditionalProperty => ({
+  key: addProp.fieldKey,
+  value: addProp.fieldValue,
+  visibleInOpenPayments: addProp.visibleInOpenPayments
 })
