@@ -39,7 +39,10 @@ export async function getWalletAddress(
   }
 
   const walletAddress = await deps.walletAddressService.getOrPollByUrl(
-    ctx.walletAddressUrl
+    ctx.walletAddressUrl,
+    ctx.fetchAdditionalProperties == undefined
+      ? false
+      : ctx.fetchAdditionalProperties
   )
 
   if (!walletAddress?.isActive) {

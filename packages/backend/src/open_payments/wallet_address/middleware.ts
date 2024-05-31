@@ -106,7 +106,8 @@ export async function getWalletAddressForSubresource(
   const walletAddressService = await ctx.container.use('walletAddressService')
 
   const walletAddress = await walletAddressService.getOrPollByUrl(
-    ctx.walletAddressUrl
+    ctx.walletAddressUrl,
+    false
   )
 
   if (!walletAddress?.isActive) {

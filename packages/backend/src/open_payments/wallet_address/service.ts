@@ -52,7 +52,10 @@ export interface WalletAddressService {
   ): Promise<WalletAddress | undefined>
   get(id: string): Promise<WalletAddress | undefined>
   getByUrl(url: string): Promise<WalletAddress | undefined>
-  getOrPollByUrl(url: string): Promise<WalletAddress | undefined>
+  getOrPollByUrl(
+    url: string,
+    fetchAdditionalProperties: boolean
+  ): Promise<WalletAddress | undefined>
   getPage(
     pagination?: Pagination,
     sortOrder?: SortOrder
@@ -96,7 +99,8 @@ export async function createWalletAddressService({
       ),
     get: (id) => getWalletAddress(deps, id),
     getByUrl: (url) => getWalletAddressByUrl(deps, url),
-    getOrPollByUrl: (url) => getOrPollByUrl(deps, url),
+    getOrPollByUrl: (url, fetchAdditionalProperties) =>
+      getOrPollByUrl(deps, url, fetchAdditionalProperties),
     getPage: (pagination?, sortOrder?) =>
       getWalletAddressPage(deps, pagination, sortOrder),
     processNext: () => processNextWalletAddress(deps),
@@ -230,29 +234,49 @@ async function getWalletAddressBy(
     .withGraphFetched('asset')
 
   if (includeAddProps && returnVal) {
-    if (includeVisibleOnlyAddProps) {
-      returnVal.additionalProperties =
-        await WalletAddressAdditionalProperty.query(deps.knex).where({
-          walletAddressId: returnVal.id,
-          visibleInOpenPayments: true
-        })
-    } else {
-      returnVal.additionalProperties =
-        await WalletAddressAdditionalProperty.query(deps.knex).where({
-          walletAddressId: returnVal.id
-        })
-    }
+    returnVal.additionalProperties = await getWalletAdditionalProperties(
+      deps,
+      returnVal.id,
+      includeVisibleOnlyAddProps
+    )
   }
   return returnVal
 }
 
+async function getWalletAdditionalProperties(
+  deps: ServiceDependencies,
+  walletAddressId: string,
+  includeVisibleOnlyAddProps: boolean
+): Promise<WalletAddressAdditionalProperty[] | undefined> {
+  if (includeVisibleOnlyAddProps) {
+    return await WalletAddressAdditionalProperty.query(deps.knex).where({
+      walletAddressId,
+      visibleInOpenPayments: true
+    })
+  } else {
+    return await WalletAddressAdditionalProperty.query(deps.knex).where({
+      walletAddressId
+    })
+  }
+}
+
 async function getOrPollByUrl(
   deps: ServiceDependencies,
-  url: string
+  url: string,
+  fetchAdditionalProperties: boolean,
+  includeVisibleOnlyAddProps: boolean = true
 ): Promise<WalletAddress | undefined> {
   const existingWalletAddress = await getWalletAddressByUrl(deps, url)
 
   if (existingWalletAddress) {
+    if (fetchAdditionalProperties) {
+      existingWalletAddress.additionalProperties =
+        await getWalletAdditionalProperties(
+          deps,
+          existingWalletAddress.id,
+          includeVisibleOnlyAddProps
+        )
+    }
     return existingWalletAddress
   }
 
