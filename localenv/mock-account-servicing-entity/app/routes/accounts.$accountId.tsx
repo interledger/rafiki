@@ -136,17 +136,17 @@ export default function EditAccount() {
                       disabled
                     />
                   </div>
+                  <div className='flex justify-end py-3 px-4'>
+                    <Button
+                      aria-label='update account'
+                      name='intent'
+                      value='general'
+                      type='submit'
+                    >
+                      {isSubmitting ? 'Updating account ...' : 'Update'}
+                    </Button>
+                  </div>
                 </div>
-              </div>
-              <div className='flex justify-end py-3'>
-                <Button
-                  aria-label='update account'
-                  name='intent'
-                  value='general'
-                  type='submit'
-                >
-                  {isSubmitting ? 'Updating account ...' : 'Update'}
-                </Button>
               </div>
             </fieldset>
           </Form>
