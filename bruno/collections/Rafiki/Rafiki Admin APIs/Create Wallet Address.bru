@@ -39,7 +39,11 @@ body:graphql:vars {
     "input": {
       "assetId": "{{assetId}}",
       "url": "https://{{senderOpenPaymentsHost}}/timon/{{randomId}}",
-      "publicName": "Timon"
+      "publicName": "Timon",
+      "additionalProperties": [
+        {"key" :  "iban", "value":  "NL93 8601 1117 947", "visibleInOpenPayments":  true},
+        {"key" :  "mobile", "value":  "+31121212", "visibleInOpenPayments":  false}
+      ]
     }
   }
 }

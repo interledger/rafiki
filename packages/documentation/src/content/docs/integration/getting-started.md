@@ -212,12 +212,22 @@ mutation CreateWalletAddress($input: CreateWalletAddressInput!) {
 
 Query Variables:
 
+\*Note `additionalProperties` are optional.
+
 ```json
 {
   "input": {
     "assetId": "0ddc0b7d-1822-4213-948e-915dda58850b",
     "publicName": "Sarah Marshall",
-    "url": "https://example.wallet.com/sarah"
+    "url": "https://example.wallet.com/sarah",
+    "additionalProperties": [
+      {
+        "key": "iban",
+        "value": "NL93 8601 1117 947",
+        "visibleInOpenPayments": false
+      },
+      { "key": "nickname", "value": "S Mar", "visibleInOpenPayments": true }
+    ]
   }
 }
 ```
