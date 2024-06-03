@@ -87,7 +87,7 @@ export async function addLiquidity({
   amount
 }: {
   id: string
-  amount: string
+  amount: number
 }): Promise<string | undefined> {
   try {
     const bigAmount = BigInt((Number(amount) * 100).toFixed(0))
