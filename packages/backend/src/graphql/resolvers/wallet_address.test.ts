@@ -523,6 +523,14 @@ describe('Wallet Address Resolvers', (): void => {
                   }
                   url
                   publicName
+                  status
+                  additionalProperties {
+                    properties {
+                      key
+                      value
+                      visibleInOpenPayments
+                    }
+                  }
                 }
               }
             `,
@@ -548,7 +556,19 @@ describe('Wallet Address Resolvers', (): void => {
             scale: walletAddress.asset.scale
           },
           url: walletAddress.url,
-          publicName: publicName ?? null
+          publicName: publicName ?? null,
+          status: WalletAddressStatus.Active,
+          additionalProperties: {
+            __typename: 'AdditionalPropertyConnection',
+            properties: [
+              {
+                __typename: 'AdditionalProperty',
+                key: walletProp.fieldKey,
+                value: walletProp.fieldValue,
+                visibleInOpenPayments: walletProp.visibleInOpenPayments
+              }
+            ]
+          }
         })
       }
     )
