@@ -87,10 +87,10 @@ export async function addLiquidity({
   amount
 }: {
   id: string
-  amount: bigint
+  amount: string
 }): Promise<string | undefined> {
   try {
-    const bigAmount = BigInt(amount) * BigInt(100)
+    const bigAmount = BigInt((Number(amount) * 100).toFixed(0))
     await mockAccounts.credit(id, bigAmount, false)
 
     return id

@@ -18,10 +18,6 @@ export const updateAccountSchema = z
 
 export const addLiquiditySchema = z
   .object({
-    amount: z.coerce
-      .bigint({
-        invalid_type_error: 'Amount is expected to be a number.'
-      })
-      .positive()
+    amount: z.coerce.number().positive()
   })
   .merge(uuidSchema)
