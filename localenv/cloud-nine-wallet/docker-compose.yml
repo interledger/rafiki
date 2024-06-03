@@ -23,6 +23,8 @@ services:
       SIGNATURE_VERSION: 1
       SIGNATURE_SECRET: iyIgCprjb9uL8wFckR+pLEkJWMB7FJhgkvqhTQR/964=
       IDP_SECRET: 2pEcn2kkCclbOHQiGNEwhJ0rucATZhrA807HTm2rNXE=
+      DISPLAY_NAME: Cloud Nine Wallet
+      DISPLAY_ICON: wallet-icon.svg
     volumes:
       - ../cloud-nine-wallet/seed.yml:/workspace/seed.yml
       - ../cloud-nine-wallet/private-key.pem:/workspace/private-key.pem

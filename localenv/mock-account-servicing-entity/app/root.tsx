@@ -30,14 +30,8 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   }
 
   const instanceConfig: InstanceConfig = {
-    name:
-      process?.env?.HOSTNAME == 'cloud-nine-wallet'
-        ? 'Cloud Nine Wallet'
-        : 'Happy Life Bank',
-    logo:
-      process?.env?.HOSTNAME == 'cloud-nine-wallet'
-        ? 'wallet-icon.svg'
-        : 'bank-icon.svg',
+    name: process?.env?.DISPLAY_NAME ?? '',
+    logo: process?.env?.DISPLAY_ICON ?? 'logo.svg',
     background:
       process?.env?.HOSTNAME == 'cloud-nine-wallet' ? 'bg-wallet' : 'bg-bank'
   }
