@@ -11,7 +11,7 @@ const navigation = [
   },
   {
     name: 'Rates',
-    href: '/rates'
+    href: '/rates/view'
   }
 ]
 
