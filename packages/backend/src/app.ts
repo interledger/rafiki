@@ -422,7 +422,7 @@ export class App {
 
     const validatorMiddlewareOptions = {
       validateRequest: true,
-      validateResponse: false //process.env.NODE_ENV !== 'production'
+      validateResponse: process.env.NODE_ENV !== 'production'
     }
 
     // POST /incoming-payments

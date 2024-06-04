@@ -11,7 +11,10 @@ import {
 import { Quote } from '../../quote/model'
 import { Amount, AmountJSON, serializeAmount } from '../../amount'
 import { WebhookEvent } from '../../../webhook/model'
-import { OutgoingPayment as OpenPaymentsOutgoingPayment } from '@interledger/open-payments'
+import {
+  OutgoingPayment as OpenPaymentsOutgoingPayment,
+  OutgoingPaymentWithSpentAmounts
+} from '@interledger/open-payments'
 
 export class OutgoingPaymentGrant extends DbErrors(Model) {
   public static get modelPaths(): string[] {
@@ -199,8 +202,7 @@ export class OutgoingPayment
 
   public toOpenPaymentsWithSpentAmountsType(
     walletAddress: WalletAddress
-    // TODO: use real type after open payments changes merged in
-  ): OpenPaymentsOutgoingPayment & any {
+  ): OutgoingPaymentWithSpentAmounts {
     return {
       ...this.toOpenPaymentsType(walletAddress),
       grantSpentDebitAmount: serializeAmount(this.grantSpentDebitAmount),
