@@ -1,8 +1,8 @@
 {
   "name": "backend",
   "scripts": {
-    "test": "jest --passWithNoTests --maxWorkers=50%",
-    "test:ci": "jest --passWithNoTests --maxWorkers=2",
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest --passWithNoTests --maxWorkers=50%",
+    "test:ci": "NODE_OPTIONS=--experimental-vm-modules jest --passWithNoTests --maxWorkers=2",
     "test:cov": "pnpm test -- --coverage",
     "test:sincemain": "pnpm test -- --changedSince=main",
     "test:sincemain:cov": "pnpm test:sincemain --coverage",
