@@ -48,6 +48,7 @@ async function consentInteraction(
 ) {
   const { idpSecret } = deps.sendingASE.config
   const { interactId, nonce, cookie } = await _startAndAcceptInteraction(
+    deps,
     outgoingPaymentGrant,
     senderWalletAddress,
     idpSecret
@@ -74,6 +75,7 @@ async function consentInteractionWithInteractRef(
 ): Promise<string> {
   const { idpSecret } = deps.sendingASE.config
   const { interactId, nonce, cookie } = await _startAndAcceptInteraction(
+    deps,
     outgoingPaymentGrant,
     senderWalletAddress,
     idpSecret
@@ -104,6 +106,7 @@ async function consentInteractionWithInteractRef(
 }
 
 async function _startAndAcceptInteraction(
+  deps: TestActionsDeps,
   outgoingPaymentGrant: PendingGrant,
   senderWalletAddress: WalletAddress,
   idpSecret: string
@@ -125,7 +128,7 @@ async function _startAndAcceptInteraction(
 
   // Accept
   const acceptResponse = await fetch(
-    `${senderWalletAddress.authServer}/grant/${interactId}/${nonce}/accept`,
+    `${deps.sendingASE.config.interactionServer}/grant/${interactId}/${nonce}/accept`,
     {
       method: 'POST',
       headers: {

@@ -7,6 +7,9 @@ import type {
   CreateAssetLiquidityWithdrawalInput,
   CreateAssetMutation,
   CreateAssetMutationVariables,
+  DeleteAssetInput,
+  DeleteAssetMutation,
+  DeleteAssetMutationVariables,
   GetAssetQuery,
   GetAssetQueryVariables,
   GetAssetWithFeesQuery,
@@ -279,4 +282,26 @@ export const loadAssets = async () => {
   }
 
   return assets
+}
+
+export const deleteAsset = async (args: DeleteAssetInput) => {
+  const response = await apolloClient.mutate<
+    DeleteAssetMutation,
+    DeleteAssetMutationVariables
+  >({
+    mutation: gql`
+      mutation DeleteAssetMutation($input: DeleteAssetInput!) {
+        deleteAsset(input: $input) {
+          code
+          success
+          message
+        }
+      }
+    `,
+    variables: {
+      input: args
+    }
+  })
+
+  return response.data?.deleteAsset
 }

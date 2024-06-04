@@ -4,6 +4,7 @@ import starlight from '@astrojs/starlight'
 import remarkMath from 'remark-math'
 import rehypeMathjax from 'rehype-mathjax'
 import GraphQL from 'astro-graphql-plugin'
+import starlightLinksValidator from 'starlight-links-validator'
 
 // https://astro.build/config
 export default defineConfig({
@@ -201,7 +202,8 @@ export default defineConfig({
             }
           ]
         }
-      ]
+      ],
+      plugins: [starlightLinksValidator()]
     }),
     GraphQL({
       schema: '../backend/src/graphql/schema.graphql',

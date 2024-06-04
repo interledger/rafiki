@@ -102,6 +102,9 @@ type Mutation {
   "Update an asset"
   updateAsset(input: UpdateAssetInput!): AssetMutationResponse!
 
+  "Delete an asset"
+  deleteAsset(input: DeleteAssetInput!): DeleteAssetMutationResponse!
+
   "Deposit asset liquidity"
   depositAssetLiquidity(
     input: DepositAssetLiquidityInput!
@@ -276,6 +279,13 @@ input UpdateAssetInput {
   withdrawalThreshold: UInt64
   "Account Servicing Entity will be notified via a webhook event if liquidity falls below this new value"
   liquidityThreshold: UInt64
+  "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)"
+  idempotencyKey: String
+}
+
+input DeleteAssetInput {
+  "Asset id"
+  id: ID!
   "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)"
   idempotencyKey: String
 }
@@ -1193,6 +1203,12 @@ type AssetMutationResponse implements MutationResponse {
   success: Boolean!
   message: String!
   asset: Asset
+}
+
+type DeleteAssetMutationResponse implements MutationResponse {
+  code: String!
+  success: Boolean!
+  message: String!
 }
 
 type CreatePeerMutationResponse implements MutationResponse {
