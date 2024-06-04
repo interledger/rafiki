@@ -47,8 +47,7 @@ export async function getWalletAddressKeys(
   }
 
   const walletAddress = await deps.walletAddressService.getOrPollByUrl(
-    ctx.walletAddressUrl,
-    false
+    ctx.walletAddressUrl
   )
 
   if (!walletAddress?.isActive) {

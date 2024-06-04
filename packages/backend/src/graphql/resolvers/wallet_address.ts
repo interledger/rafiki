@@ -52,18 +52,15 @@ export const getWalletAddresses: QueryResolvers<ApolloContext>['walletAddresses'
 export const getWalletAddress: QueryResolvers<ApolloContext>['walletAddress'] =
   async (parent, args, ctx): Promise<ResolversTypes['WalletAddress']> => {
     const walletAddressService = await ctx.container.use('walletAddressService')
-
-    let walletAddress
-    if (!args.includeAdditionalProperties) {
-      walletAddress = await walletAddressService.get(args.id)
-    } else {
-      walletAddress = await walletAddressService.getWithAdditionalProperties(
-        args.id,
-        false
-      )
-    }
+    const walletAddress = await walletAddressService.get(args.id)
     if (!walletAddress) {
       throw new Error('No wallet address')
+    } else if (args.includeAdditionalProperties) {
+      walletAddress.additionalProperties =
+        await walletAddressService.getAdditionalProperties(
+          walletAddress.id,
+          false
+        )
     }
     return walletAddressToGraphql(walletAddress)
   }

@@ -46,16 +46,13 @@ type UpdateInput = Omit<UpdateOptions, 'id'> & { deactivatedAt?: Date | null }
 export interface WalletAddressService {
   create(options: CreateOptions): Promise<WalletAddress | WalletAddressError>
   update(options: UpdateOptions): Promise<WalletAddress | WalletAddressError>
-  getWithAdditionalProperties(
+  getAdditionalProperties(
     id: string,
     includeVisibleOnlyAddProps: boolean
-  ): Promise<WalletAddress | undefined>
+  ): Promise<WalletAddressAdditionalProperty[] | undefined>
   get(id: string): Promise<WalletAddress | undefined>
   getByUrl(url: string): Promise<WalletAddress | undefined>
-  getOrPollByUrl(
-    url: string,
-    fetchAdditionalProperties: boolean
-  ): Promise<WalletAddress | undefined>
+  getOrPollByUrl(url: string): Promise<WalletAddress | undefined>
   getPage(
     pagination?: Pagination,
     sortOrder?: SortOrder
@@ -91,16 +88,15 @@ export async function createWalletAddressService({
   return {
     create: (options) => createWalletAddress(deps, options),
     update: (options) => updateWalletAddress(deps, options),
-    getWithAdditionalProperties: (id, includeVisibleOnlyAddProps) =>
-      getWalletAddressWithAdditionalProperties(
+    getAdditionalProperties: (walletAddressId, includeVisibleOnlyAddProps) =>
+      getWalletAdditionalProperties(
         deps,
-        id,
+        walletAddressId,
         includeVisibleOnlyAddProps
       ),
     get: (id) => getWalletAddress(deps, id),
     getByUrl: (url) => getWalletAddressByUrl(deps, url),
-    getOrPollByUrl: (url, fetchAdditionalProperties) =>
-      getOrPollByUrl(deps, url, fetchAdditionalProperties),
+    getOrPollByUrl: (url) => getOrPollByUrl(deps, url),
     getPage: (pagination?, sortOrder?) =>
       getWalletAddressPage(deps, pagination, sortOrder),
     processNext: () => processNextWalletAddress(deps),
@@ -208,39 +204,13 @@ async function updateWalletAddress(
   }
 }
 
-async function getWalletAddressWithAdditionalProperties(
-  deps: ServiceDependencies,
-  id: string,
-  includeVisibleOnlyAddProps: boolean
-): Promise<WalletAddress | undefined> {
-  return getWalletAddressBy(deps, id, true, includeVisibleOnlyAddProps)
-}
-
 async function getWalletAddress(
   deps: ServiceDependencies,
   id: string
 ): Promise<WalletAddress | undefined> {
-  return getWalletAddressBy(deps, id, false, false)
-}
-
-async function getWalletAddressBy(
-  deps: ServiceDependencies,
-  id: string,
-  includeAddProps: boolean,
-  includeVisibleOnlyAddProps: boolean
-): Promise<WalletAddress | undefined> {
-  const returnVal = await WalletAddress.query(deps.knex)
+  return await WalletAddress.query(deps.knex)
     .findById(id)
     .withGraphFetched('asset')
-
-  if (includeAddProps && returnVal) {
-    returnVal.additionalProperties = await getWalletAdditionalProperties(
-      deps,
-      returnVal.id,
-      includeVisibleOnlyAddProps
-    )
-  }
-  return returnVal
 }
 
 async function getWalletAdditionalProperties(
@@ -262,23 +232,10 @@ async function getWalletAdditionalProperties(
 
 async function getOrPollByUrl(
   deps: ServiceDependencies,
-  url: string,
-  fetchAdditionalProperties: boolean,
-  includeVisibleOnlyAddProps: boolean = true
+  url: string
 ): Promise<WalletAddress | undefined> {
   const existingWalletAddress = await getWalletAddressByUrl(deps, url)
-
-  if (existingWalletAddress) {
-    if (fetchAdditionalProperties) {
-      existingWalletAddress.additionalProperties =
-        await getWalletAdditionalProperties(
-          deps,
-          existingWalletAddress.id,
-          includeVisibleOnlyAddProps
-        )
-    }
-    return existingWalletAddress
-  }
+  if (existingWalletAddress) return existingWalletAddress
 
   await WalletAddressEvent.query(deps.knex).insert({
     type: WalletAddressEventType.WalletAddressNotFound,
@@ -293,13 +250,11 @@ async function getOrPollByUrl(
   )
 
   try {
-    const walletAddress = await poll({
+    return await poll({
       request: () => getWalletAddressByUrl(deps, url),
       pollingFrequencyMs: deps.config.walletAddressPollingFrequencyMs,
       timeoutMs: deps.config.walletAddressLookupTimeoutMs
     })
-
-    return walletAddress
   } catch (error) {
     return undefined
   }

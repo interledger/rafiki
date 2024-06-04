@@ -39,11 +39,15 @@ export async function getWalletAddress(
   }
 
   const walletAddress = await deps.walletAddressService.getOrPollByUrl(
-    ctx.walletAddressUrl,
-    ctx.fetchAdditionalProperties == undefined
-      ? false
-      : ctx.fetchAdditionalProperties
+    ctx.walletAddressUrl
   )
+  if (walletAddress && ctx.fetchAdditionalProperties) {
+    walletAddress.additionalProperties =
+      await deps.walletAddressService.getAdditionalProperties(
+        walletAddress.id,
+        true
+      )
+  }
 
   if (!walletAddress?.isActive) {
     throw new OpenPaymentsServerRouteError(

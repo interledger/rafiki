@@ -315,7 +315,7 @@ describe('Open Payments Wallet Address Service', (): void => {
       test('can retrieve wallet address by url', async (): Promise<void> => {
         const walletAddress = await createWalletAddress(deps)
         await expect(
-          walletAddressService.getOrPollByUrl(walletAddress.url, false)
+          walletAddressService.getOrPollByUrl(walletAddress.url)
         ).resolves.toEqual(walletAddress)
       })
     })
@@ -329,7 +329,7 @@ describe('Open Payments Wallet Address Service', (): void => {
           async (): Promise<void> => {
             const walletAddressUrl = `https://${faker.internet.domainName()}/.well-known/pay`
             await expect(
-              walletAddressService.getOrPollByUrl(walletAddressUrl, false)
+              walletAddressService.getOrPollByUrl(walletAddressUrl)
             ).resolves.toBeUndefined()
 
             const walletAddressNotFoundEvents = await WalletAddressEvent.query(
@@ -355,7 +355,7 @@ describe('Open Payments Wallet Address Service', (): void => {
 
             const [getOrPollByUrlWalletAddress, createdWalletAddress] =
               await Promise.all([
-                walletAddressService.getOrPollByUrl(walletAddressUrl, false),
+                walletAddressService.getOrPollByUrl(walletAddressUrl),
                 (async () => {
                   await sleep(5)
                   return createWalletAddress(deps, {
