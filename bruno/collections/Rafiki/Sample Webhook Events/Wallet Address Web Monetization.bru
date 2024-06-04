@@ -1,0 +1,34 @@
+meta {
+  name: Wallet Address Web Monetization
+  type: http
+  seq: 10
+}
+
+post {
+  url: {{cloudNineWalletWebhookUrl}}
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "id": "{{uuid}}",
+    "type": "wallet_address.web_monetization",
+    "data": {
+        "walletAddress": {
+          "id": "{{gfranklinWalletAddressId}}",
+          "createdAt": "{{now}}",
+          "receivedAmount": {
+            "value": "100",
+            "assetCode": "USD",
+            "assetScale": 2
+        }
+      }
+    }
+  }
+}
+
+script:pre-request {
+  bru.setVar('uuid', require("uuid").v4());
+  bru.setVar("now", new Date().toISOString())
+}

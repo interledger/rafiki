@@ -1,0 +1,40 @@
+meta {
+  name: Incoming Payment Expired
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{cloudNineWalletWebhookUrl}}
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "id": "{{uuid}}",
+    "type": "incoming_payment.expired",
+    "data": {
+      "id": "0141ee62-1c0f-4a57-9231-9e515a7cdffb",
+      "walletAddressId": "{{gfranklinWalletAddressId}}",
+      "createdAt": "{{now}}",
+      "expiresAt": "{{tomorrow}}",
+      "receivedAmount": {
+        "value": "1000",
+        "assetCode": "USD",
+        "assetScale": 2
+      },
+      "completed": false,
+      "updatedAt": "{{now}}",
+      "metadata": {
+        "description": "Free Money!"
+      }
+    }
+  }
+}
+
+script:pre-request {
+  bru.setVar('uuid', require("uuid").v4());
+  bru.setVar("now", new Date().toISOString())
+  bru.setVar("tomorrow", (new Date(new Date().setDate(new Date().getDate() + 1))).toISOString());
+}
