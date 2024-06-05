@@ -11,9 +11,6 @@ importers:
       '@jest/types':
         specifier: ^29.6.3
         version: 29.6.3
-      '@swc/core':
-        specifier: ^1.5.0
-        version: 1.5.24
       '@swc/jest':
         specifier: ^0.2.36
         version: 0.2.36(@swc/core@1.5.24)
