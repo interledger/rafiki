@@ -142,10 +142,12 @@ async function createWalletAddress(
         assetId: options.assetId
       })
       .withGraphFetched('asset')
-    let addProperties = options.additionalProperties
-    if (addProperties) {
+    if (
+      options.additionalProperties &&
+      options.additionalProperties.length > 0
+    ) {
       // remove blank key/value pairs:
-      addProperties = addProperties.filter((itm) => {
+      const addProperties = options.additionalProperties.filter((itm) => {
         return !(
           itm.fieldKey.trim().length == 0 || itm.fieldValue.trim().length == 0
         )
