@@ -1007,6 +1007,8 @@ export type PostLiquidityWithdrawalInput = {
 
 export type Query = {
   __typename?: 'Query';
+  /** Get the list of of additional properties associated with [walletAddressId] wallet address. */
+  additionalProperties?: Maybe<AdditionalPropertyConnection>;
   /** Fetch an asset */
   asset?: Maybe<Asset>;
   /** Fetch a page of assets. */
@@ -1025,12 +1027,17 @@ export type Query = {
   quote?: Maybe<Quote>;
   /** Get an local or remote Open Payments Incoming Payment. The receiver has a wallet address on either this or another Open Payments resource server. */
   receiver?: Maybe<Receiver>;
-  /** Fetch a wallet address, and optionally additional properties. */
+  /** Fetch a wallet address. */
   walletAddress?: Maybe<WalletAddress>;
   /** Fetch a page of wallet addresses. */
   walletAddresses: WalletAddressesConnection;
   /** Fetch a page of webhook events */
   webhookEvents: WebhookEventsConnection;
+};
+
+
+export type QueryAdditionalPropertiesArgs = {
+  walletAddressId: Scalars['String']['input'];
 };
 
 
@@ -1094,7 +1101,6 @@ export type QueryReceiverArgs = {
 
 export type QueryWalletAddressArgs = {
   id: Scalars['String']['input'];
-  includeAdditionalProperties?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
 
@@ -1312,8 +1318,6 @@ export type VoidLiquidityWithdrawalInput = {
 
 export type WalletAddress = Model & {
   __typename?: 'WalletAddress';
-  /** List of additional properties associated with this wallet address */
-  additionalProperties?: Maybe<AdditionalPropertyConnection>;
   /** Asset of the wallet address */
   asset: Asset;
   /** Date-time of creation */
@@ -2137,6 +2141,7 @@ export type PeersConnectionResolvers<ContextType = any, ParentType extends Resol
 };
 
 export type QueryResolvers<ContextType = any, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> = {
+  additionalProperties?: Resolver<Maybe<ResolversTypes['AdditionalPropertyConnection']>, ParentType, ContextType, RequireFields<QueryAdditionalPropertiesArgs, 'walletAddressId'>>;
   asset?: Resolver<Maybe<ResolversTypes['Asset']>, ParentType, ContextType, RequireFields<QueryAssetArgs, 'id'>>;
   assets?: Resolver<ResolversTypes['AssetsConnection'], ParentType, ContextType, Partial<QueryAssetsArgs>>;
   incomingPayment?: Resolver<Maybe<ResolversTypes['IncomingPayment']>, ParentType, ContextType, RequireFields<QueryIncomingPaymentArgs, 'id'>>;
@@ -2255,7 +2260,6 @@ export type UpdateWalletAddressMutationResponseResolvers<ContextType = any, Pare
 };
 
 export type WalletAddressResolvers<ContextType = any, ParentType extends ResolversParentTypes['WalletAddress'] = ResolversParentTypes['WalletAddress']> = {
-  additionalProperties?: Resolver<Maybe<ResolversTypes['AdditionalPropertyConnection']>, ParentType, ContextType>;
   asset?: Resolver<ResolversTypes['Asset'], ParentType, ContextType>;
   createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;

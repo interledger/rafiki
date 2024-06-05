@@ -56,6 +56,7 @@ import {
   getWalletAddressKeys,
   revokeWalletAddressKey
 } from './walletAddressKey'
+import { getWalletAddressAdditionalProperties } from './walletAddressAdditionalProperties'
 import { createReceiver, getReceiver } from './receiver'
 import { getWebhookEvents } from './webhooks'
 import { setFee } from './fee'
@@ -88,7 +89,8 @@ export const resolvers: Resolvers = {
     quote: getQuote,
     webhookEvents: getWebhookEvents,
     payments: getCombinedPayments,
-    receiver: getReceiver
+    receiver: getReceiver,
+    additionalProperties: getWalletAddressAdditionalProperties
   },
   WalletAddress: {
     liquidity: getWalletAddressLiquidity,

@@ -33,11 +33,8 @@ type Query {
     sortOrder: SortOrder
   ): PeersConnection!
 
-  "Fetch a wallet address, and optionally additional properties."
-  walletAddress(
-    id: String!
-    includeAdditionalProperties: Boolean
-  ): WalletAddress
+  "Fetch a wallet address."
+  walletAddress(id: String!): WalletAddress
 
   "Fetch a page of wallet addresses."
   walletAddresses(
@@ -96,6 +93,9 @@ type Query {
 
   "Get an local or remote Open Payments Incoming Payment. The receiver has a wallet address on either this or another Open Payments resource server."
   receiver(id: String!): Receiver
+
+  "Get the list of of additional properties associated with [walletAddressId] wallet address."
+  additionalProperties(walletAddressId: String!): AdditionalPropertyConnection
 }
 
 type Mutation {
@@ -624,14 +624,19 @@ type WalletAddressEdge {
 type WalletAddress implements Model {
   "Wallet address id"
   id: ID!
+
   "Asset of the wallet address"
   asset: Asset!
+
   "Available liquidity"
   liquidity: UInt64
+
   "Wallet Address URL"
   url: String!
+
   "Public name associated with the wallet address"
   publicName: String
+
   "List of incoming payments received by this wallet address"
   incomingPayments(
     "Paginating forwards: the cursor before the the requested page."
@@ -645,6 +650,7 @@ type WalletAddress implements Model {
     "Ascending or descending order of creation."
     sortOrder: SortOrder
   ): IncomingPaymentConnection
+
   "List of quotes created at this wallet address"
   quotes(
     "Paginating forwards: the cursor before the the requested page."
@@ -658,6 +664,7 @@ type WalletAddress implements Model {
     "Ascending or descending order of creation."
     sortOrder: SortOrder
   ): QuoteConnection
+
   "List of outgoing payments sent from this wallet address"
   outgoingPayments(
     "Paginating forwards: the cursor before the the requested page."
@@ -671,10 +678,13 @@ type WalletAddress implements Model {
     "Ascending or descending order of creation."
     sortOrder: SortOrder
   ): OutgoingPaymentConnection
+
   "Date-time of creation"
   createdAt: String!
+
   "Status of the wallet address"
   status: WalletAddressStatus!
+
   "List of keys associated with this wallet address"
   walletAddressKeys(
     "Paginating forwards: the cursor before the the requested page."
@@ -688,8 +698,6 @@ type WalletAddress implements Model {
     "Ascending or descending order of creation."
     sortOrder: SortOrder
   ): WalletAddressKeyConnection
-  "List of additional properties associated with this wallet address"
-  additionalProperties: AdditionalPropertyConnection
 }
 
 type AdditionalPropertyConnection {

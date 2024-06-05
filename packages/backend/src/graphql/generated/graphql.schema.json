@@ -6397,6 +6397,35 @@
         "description": null,
         "fields": [
           {
+            "name": "additionalProperties",
+            "description": "Get the list of of additional properties associated with [walletAddressId] wallet address.",
+            "args": [
+              {
+                "name": "walletAddressId",
+                "description": null,
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "String",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              }
+            ],
+            "type": {
+              "kind": "OBJECT",
+              "name": "AdditionalPropertyConnection",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "asset",
             "description": "Fetch an asset",
             "args": [
@@ -6815,7 +6844,7 @@
           },
           {
             "name": "walletAddress",
-            "description": "Fetch a wallet address, and optionally additional properties.",
+            "description": "Fetch a wallet address.",
             "args": [
               {
                 "name": "id",
@@ -6828,18 +6857,6 @@
                     "name": "String",
                     "ofType": null
                   }
-                },
-                "defaultValue": null,
-                "isDeprecated": false,
-                "deprecationReason": null
-              },
-              {
-                "name": "includeAdditionalProperties",
-                "description": null,
-                "type": {
-                  "kind": "SCALAR",
-                  "name": "Boolean",
-                  "ofType": null
                 },
                 "defaultValue": null,
                 "isDeprecated": false,
@@ -8442,18 +8459,6 @@
         "name": "WalletAddress",
         "description": null,
         "fields": [
-          {
-            "name": "additionalProperties",
-            "description": "List of additional properties associated with this wallet address",
-            "args": [],
-            "type": {
-              "kind": "OBJECT",
-              "name": "AdditionalPropertyConnection",
-              "ofType": null
-            },
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
           {
             "name": "asset",
             "description": "Asset of the wallet address",

@@ -4,9 +4,7 @@ import {
   ResolversTypes,
   WalletAddress as SchemaWalletAddress,
   MutationResolvers,
-  WalletAddressStatus,
-  AdditionalPropertyConnection,
-  AdditionalProperty
+  WalletAddressStatus
 } from '../generated/graphql'
 import { ApolloContext } from '../../app'
 import {
@@ -55,12 +53,6 @@ export const getWalletAddress: QueryResolvers<ApolloContext>['walletAddress'] =
     const walletAddress = await walletAddressService.get(args.id)
     if (!walletAddress) {
       throw new Error('No wallet address')
-    } else if (args.includeAdditionalProperties) {
-      walletAddress.additionalProperties =
-        await walletAddressService.getAdditionalProperties(
-          walletAddress.id,
-          false
-        )
     }
     return walletAddressToGraphql(walletAddress)
   }
@@ -181,25 +173,5 @@ export const walletAddressToGraphql = (
   createdAt: new Date(+walletAddress.createdAt).toISOString(),
   status: walletAddress.isActive
     ? WalletAddressStatus.Active
-    : WalletAddressStatus.Inactive,
-  additionalProperties: additionalPropertiesToGraphql(
-    walletAddress.additionalProperties
-  )
-})
-
-export const additionalPropertiesToGraphql = (
-  addProperties: WalletAddressAdditionalProperty[] | undefined
-): AdditionalPropertyConnection => {
-  if (addProperties === undefined) return { properties: [] }
-  return {
-    properties: addProperties.map((itm) => additionalPropertyToGraphql(itm))
-  }
-}
-
-export const additionalPropertyToGraphql = (
-  addProp: WalletAddressAdditionalProperty
-): AdditionalProperty => ({
-  key: addProp.fieldKey,
-  value: addProp.fieldValue,
-  visibleInOpenPayments: addProp.visibleInOpenPayments
+    : WalletAddressStatus.Inactive
 })

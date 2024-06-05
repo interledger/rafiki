@@ -31,7 +31,8 @@ import {
   WalletAddress,
   WalletAddressStatus,
   UpdateWalletAddressMutationResponse,
-  WalletAddressesConnection
+  WalletAddressesConnection,
+  AdditionalPropertyConnection
 } from '../generated/graphql'
 import { getPageTests } from './page.test'
 import { WalletAddressAdditionalProperty } from '../../open_payments/wallet_address/additional_property/model'
@@ -510,26 +511,12 @@ describe('Wallet Address Resolvers', (): void => {
         const queryAddProps = await appContainer.apolloClient
           .query({
             query: gql`
-              query WalletAddress($walletAddressId: String!) {
-                walletAddress(
-                  id: $walletAddressId
-                  includeAdditionalProperties: true
-                ) {
-                  id
-                  liquidity
-                  asset {
-                    code
-                    scale
-                  }
-                  url
-                  publicName
-                  status
-                  additionalProperties {
-                    properties {
-                      key
-                      value
-                      visibleInOpenPayments
-                    }
+              query Query($walletAddressId: String!) {
+                additionalProperties(walletAddressId: $walletAddressId) {
+                  properties {
+                    key
+                    value
+                    visibleInOpenPayments
                   }
                 }
               }
@@ -538,26 +525,15 @@ describe('Wallet Address Resolvers', (): void => {
               walletAddressId: walletAddress.id
             }
           })
-          .then((query): WalletAddress => {
+          .then((query): AdditionalPropertyConnection => {
             if (query.data) {
-              return query.data.walletAddress
+              return query.data
             } else {
               throw new Error('Data was empty')
             }
           })
 
         expect(queryAddProps).toEqual({
-          __typename: 'WalletAddress',
-          id: walletAddress.id,
-          liquidity: '0',
-          asset: {
-            __typename: 'Asset',
-            code: walletAddress.asset.code,
-            scale: walletAddress.asset.scale
-          },
-          url: walletAddress.url,
-          publicName: publicName ?? null,
-          status: WalletAddressStatus.Active,
           additionalProperties: {
             __typename: 'AdditionalPropertyConnection',
             properties: [
