@@ -170,34 +170,36 @@ export default function PaymentsPage() {
                 }
               }}
             >
-              <input
-                name='walletAddressId'
-                placeholder='Wallet address ID'
-                className='relative w-[400px] cursor-default rounded-md bg-white py-1.5 pl-3 pr-10 mr-3 text-left text-gray-900 shadow-sm ring-1 ring-inset ring-pearl focus:outline-none focus:ring-2 focus:ring-[#F37F64] sm:text-sm sm:leading-6'
-                value={walletId}
-                onChange={(e) => setWalletId(e.target.value)}
-              />
-              <input
-                name='type'
-                type='hidden'
-                value={searchParams.get('type') ?? ''}
-              />
-              <Button aria-label='filter on wallet address ID' type='submit'>
-                <svg
-                  xmlns='http://www.w3.org/2000/svg'
-                  className='h-6 w-6'
-                  fill='none'
-                  viewBox='0 0 24 24'
-                  stroke='currentColor'
-                  strokeWidth={2}
-                >
-                  <path
-                    strokeLinecap='round'
-                    strokeLinejoin='round'
-                    d='M21 21l-4.35-4.35M17.25 10.5a6.75 6.75 0 11-13.5 0 6.75 6.75 0 0113.5 0z'
-                  />
-                </svg>
-              </Button>
+              <div className='flex items-center space-x-3'>
+                <input
+                  name='walletAddressId'
+                  placeholder='Wallet address ID'
+                  className='relative w-[400px] cursor-default rounded-md bg-white py-1.5 pl-3 pr-10 text-left text-gray-900 shadow-sm ring-1 ring-inset ring-pearl focus:outline-none focus:ring-2 focus:ring-[#F37F64] sm:text-sm sm:leading-6'
+                  value={walletId}
+                  onChange={(e) => setWalletId(e.target.value)}
+                />
+                <input
+                  name='type'
+                  type='hidden'
+                  value={searchParams.get('type') ?? ''}
+                />
+                <Button aria-label='filter on wallet address ID' type='submit'>
+                  <svg
+                    xmlns='http://www.w3.org/2000/svg'
+                    className='h-6 w-6'
+                    fill='none'
+                    viewBox='0 0 24 24'
+                    stroke='currentColor'
+                    strokeWidth={2}
+                  >
+                    <path
+                      strokeLinecap='round'
+                      strokeLinejoin='round'
+                      d='M21 21l-4.35-4.35M17.25 10.5a6.75 6.75 0 11-13.5 0 6.75 6.75 0 0113.5 0z'
+                    />
+                  </svg>
+                </Button>
+              </div>
               <FieldError
                 error={response?.errors?.fieldErrors.walletAddressId}
               />
