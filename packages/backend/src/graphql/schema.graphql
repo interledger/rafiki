@@ -93,9 +93,6 @@ type Query {
 
   "Get an local or remote Open Payments Incoming Payment. The receiver has a wallet address on either this or another Open Payments resource server."
   receiver(id: String!): Receiver
-
-  "Get the list of of additional properties associated with [walletAddressId] wallet address."
-  additionalProperties(walletAddressId: String!): AdditionalPropertyConnection
 }
 
 type Mutation {
@@ -698,10 +695,9 @@ type WalletAddress implements Model {
     "Ascending or descending order of creation."
     sortOrder: SortOrder
   ): WalletAddressKeyConnection
-}
 
-type AdditionalPropertyConnection {
-  properties: [AdditionalProperty!]!
+  "List additional properties associated with this wallet address."
+  additionalProperties: [AdditionalProperty]!
 }
 
 type AdditionalProperty {

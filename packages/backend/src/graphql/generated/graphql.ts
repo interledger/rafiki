@@ -26,11 +26,6 @@ export type AdditionalProperty = {
   visibleInOpenPayments: Scalars['Boolean']['output'];
 };
 
-export type AdditionalPropertyConnection = {
-  __typename?: 'AdditionalPropertyConnection';
-  properties: Array<AdditionalProperty>;
-};
-
 export type AdditionalPropertyInput = {
   key: Scalars['String']['input'];
   value: Scalars['String']['input'];
@@ -1007,8 +1002,6 @@ export type PostLiquidityWithdrawalInput = {
 
 export type Query = {
   __typename?: 'Query';
-  /** Get the list of of additional properties associated with [walletAddressId] wallet address. */
-  additionalProperties?: Maybe<AdditionalPropertyConnection>;
   /** Fetch an asset */
   asset?: Maybe<Asset>;
   /** Fetch a page of assets. */
@@ -1033,11 +1026,6 @@ export type Query = {
   walletAddresses: WalletAddressesConnection;
   /** Fetch a page of webhook events */
   webhookEvents: WebhookEventsConnection;
-};
-
-
-export type QueryAdditionalPropertiesArgs = {
-  walletAddressId: Scalars['String']['input'];
 };
 
 
@@ -1318,6 +1306,8 @@ export type VoidLiquidityWithdrawalInput = {
 
 export type WalletAddress = Model & {
   __typename?: 'WalletAddress';
+  /** List additional properties associated with the wallet address. */
+  additionalProperties: Array<Maybe<AdditionalProperty>>;
   /** Asset of the wallet address */
   asset: Asset;
   /** Date-time of creation */
@@ -1555,7 +1545,6 @@ export type ResolversInterfaceTypes<RefType extends Record<string, unknown>> = {
 /** Mapping between all available schema types and the resolvers types */
 export type ResolversTypes = {
   AdditionalProperty: ResolverTypeWrapper<Partial<AdditionalProperty>>;
-  AdditionalPropertyConnection: ResolverTypeWrapper<Partial<AdditionalPropertyConnection>>;
   AdditionalPropertyInput: ResolverTypeWrapper<Partial<AdditionalPropertyInput>>;
   Alg: ResolverTypeWrapper<Partial<Alg>>;
   Amount: ResolverTypeWrapper<Partial<Amount>>;
@@ -1681,7 +1670,6 @@ export type ResolversTypes = {
 /** Mapping between all available schema types and the resolvers parents */
 export type ResolversParentTypes = {
   AdditionalProperty: Partial<AdditionalProperty>;
-  AdditionalPropertyConnection: Partial<AdditionalPropertyConnection>;
   AdditionalPropertyInput: Partial<AdditionalPropertyInput>;
   Amount: Partial<Amount>;
   AmountInput: Partial<AmountInput>;
@@ -1798,11 +1786,6 @@ export type AdditionalPropertyResolvers<ContextType = any, ParentType extends Re
   key?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   value?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   visibleInOpenPayments?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type AdditionalPropertyConnectionResolvers<ContextType = any, ParentType extends ResolversParentTypes['AdditionalPropertyConnection'] = ResolversParentTypes['AdditionalPropertyConnection']> = {
-  properties?: Resolver<Array<ResolversTypes['AdditionalProperty']>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -2141,7 +2124,6 @@ export type PeersConnectionResolvers<ContextType = any, ParentType extends Resol
 };
 
 export type QueryResolvers<ContextType = any, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> = {
-  additionalProperties?: Resolver<Maybe<ResolversTypes['AdditionalPropertyConnection']>, ParentType, ContextType, RequireFields<QueryAdditionalPropertiesArgs, 'walletAddressId'>>;
   asset?: Resolver<Maybe<ResolversTypes['Asset']>, ParentType, ContextType, RequireFields<QueryAssetArgs, 'id'>>;
   assets?: Resolver<ResolversTypes['AssetsConnection'], ParentType, ContextType, Partial<QueryAssetsArgs>>;
   incomingPayment?: Resolver<Maybe<ResolversTypes['IncomingPayment']>, ParentType, ContextType, RequireFields<QueryIncomingPaymentArgs, 'id'>>;
@@ -2260,6 +2242,7 @@ export type UpdateWalletAddressMutationResponseResolvers<ContextType = any, Pare
 };
 
 export type WalletAddressResolvers<ContextType = any, ParentType extends ResolversParentTypes['WalletAddress'] = ResolversParentTypes['WalletAddress']> = {
+  additionalProperties?: Resolver<Array<Maybe<ResolversTypes['AdditionalProperty']>>, ParentType, ContextType>;
   asset?: Resolver<ResolversTypes['Asset'], ParentType, ContextType>;
   createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
@@ -2345,7 +2328,6 @@ export type WebhookEventsEdgeResolvers<ContextType = any, ParentType extends Res
 
 export type Resolvers<ContextType = any> = {
   AdditionalProperty?: AdditionalPropertyResolvers<ContextType>;
-  AdditionalPropertyConnection?: AdditionalPropertyConnectionResolvers<ContextType>;
   Amount?: AmountResolvers<ContextType>;
   Asset?: AssetResolvers<ContextType>;
   AssetEdge?: AssetEdgeResolvers<ContextType>;
