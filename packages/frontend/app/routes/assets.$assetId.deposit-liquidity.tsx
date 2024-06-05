@@ -63,12 +63,11 @@ export async function action({ request, params }: ActionFunctionArgs) {
     idempotencyKey: v4()
   })
 
-  if (!response?.success) {
+  if (!response?.id) {
     return setMessageAndRedirect({
       session,
       message: {
         content:
-          response?.message ??
           'Could not deposit asset liquidity. Please try again!',
         type: 'error'
       },
@@ -79,7 +78,7 @@ export async function action({ request, params }: ActionFunctionArgs) {
   return setMessageAndRedirect({
     session,
     message: {
-      content: response.message,
+      content: 'Deposited asset liquidity.',
       type: 'success'
     },
     location: '..'

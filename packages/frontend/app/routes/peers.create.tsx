@@ -264,9 +264,9 @@ export async function action({ request }: ActionFunctionArgs) {
       : { maxPacketAmount: undefined })
   })
 
-  if (!response?.success) {
+  if (!response?.peer) {
     errors.message = [
-      response?.message ?? 'Could not create peer. Please try again!'
+      'Could not create peer. Please try again!'
     ]
     return json({ errors }, { status: 400 })
   }
