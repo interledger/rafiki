@@ -74,8 +74,7 @@ export const createWalletAddress: MutationResolvers<ApolloContext>['createWallet
     const walletAddressService = await ctx.container.use('walletAddressService')
     const addProps: WalletAddressAdditionalProperty[] = []
     for (const inputAddProp of args.input.additionalProperties) {
-      const toAdd: WalletAddressAdditionalProperty =
-        new WalletAddressAdditionalProperty()
+      const toAdd = new WalletAddressAdditionalProperty()
       toAdd.fieldKey = inputAddProp.key
       toAdd.fieldValue = inputAddProp.value
       toAdd.visibleInOpenPayments = inputAddProp.visibleInOpenPayments

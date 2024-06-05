@@ -219,12 +219,12 @@ async function getWalletAdditionalProperties(
   includeVisibleOnlyAddProps: boolean
 ): Promise<WalletAddressAdditionalProperty[] | undefined> {
   if (includeVisibleOnlyAddProps) {
-    return await WalletAddressAdditionalProperty.query(deps.knex).where({
+    return WalletAddressAdditionalProperty.query(deps.knex).where({
       walletAddressId,
       visibleInOpenPayments: true
     })
   } else {
-    return await WalletAddressAdditionalProperty.query(deps.knex).where({
+    return WalletAddressAdditionalProperty.query(deps.knex).where({
       walletAddressId
     })
   }
