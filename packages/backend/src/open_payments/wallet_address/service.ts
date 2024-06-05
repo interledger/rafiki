@@ -150,13 +150,7 @@ async function createWalletAddress(
           itm.fieldKey.trim().length == 0 || itm.fieldValue.trim().length == 0
         )
       })
-      // set defaults:
-      const now = new Date()
-      for (const prop of addProperties) {
-        prop.walletAddressId = wallet.id
-        prop.createdAt = now
-        prop.updatedAt = now
-      }
+      addProperties.forEach((itm) => (itm.walletAddressId = wallet.id))
       if (addProperties.length) {
         await WalletAddressAdditionalProperty.query(deps.knex).insert(
           addProperties
