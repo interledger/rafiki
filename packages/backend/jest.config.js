@@ -6,6 +6,8 @@ const packageName = require('./package.json').name
 
 process.env.LOG_LEVEL = 'silent'
 
+const esModules = ['ky']
+
 module.exports = {
   ...baseConfig,
   clearMocks: true,
@@ -27,5 +29,13 @@ module.exports = {
   ],
   id: packageName,
   displayName: packageName,
-  rootDir: '../..'
+  rootDir: '../..',
+  transformIgnorePatterns: [
+    `<rootDir>/node_modules/(?!.pnpm|${esModules.join('|')})`,
+    // Resolves TypeError: jest: failed to cache transform results in ... Failure message: onExit is not a function
+    // https://github.com/jestjs/jest/issues/9503#issuecomment-708507112
+    '<rootDir>/node_modules/@babel',
+    '<rootDir>/node_modules/@jest',
+    'signal-exit'
+  ]
 }
