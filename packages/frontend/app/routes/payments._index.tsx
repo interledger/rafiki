@@ -293,7 +293,6 @@ export default function PaymentsPage() {
   )
 }
 
-// TODO: fix - when you sdubmit waletAQddressId and no payment type filters you get URL http://localhost:3010/payments?index
 export async function action({ request }: ActionFunctionArgs) {
   const errors: {
     fieldErrors: ZodFieldErrors<typeof paymentsSearchParams>
