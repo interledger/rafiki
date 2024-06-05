@@ -24,7 +24,8 @@ export const webhooksSearchParams = paginationSchema.merge(
 
 export const paymentsSearchParams = paginationSchema.merge(
   z.object({
-    type: z.array(z.nativeEnum(PaymentType)).default([])
+    type: z.array(z.nativeEnum(PaymentType)).default([]),
+    walletAddressId: z.string().optional()
   })
 )
 
