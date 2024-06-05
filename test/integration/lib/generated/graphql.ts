@@ -1306,7 +1306,7 @@ export type VoidLiquidityWithdrawalInput = {
 
 export type WalletAddress = Model & {
   __typename?: 'WalletAddress';
-  /** List additional properties associated with the wallet address. */
+  /** List additional properties associated with this wallet address. */
   additionalProperties: Array<Maybe<AdditionalProperty>>;
   /** Asset of the wallet address */
   asset: Asset;
