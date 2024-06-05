@@ -103,7 +103,7 @@ export async function action({ request }: ActionFunctionArgs) {
   }
 
   const formData = Object.fromEntries(await request.formData())
-  formData.path = `${getOpenPaymentsUrl()}/accounts/${formData.path}`
+  formData.path = `accounts/${formData.path}`
 
   const result = createAccountSchema.safeParse(formData)
 
