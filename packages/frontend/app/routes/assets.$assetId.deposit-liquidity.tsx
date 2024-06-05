@@ -67,8 +67,7 @@ export async function action({ request, params }: ActionFunctionArgs) {
     return setMessageAndRedirect({
       session,
       message: {
-        content:
-          'Could not deposit asset liquidity. Please try again!',
+        content: 'Could not deposit asset liquidity. Please try again!',
         type: 'error'
       },
       location: '.'

@@ -265,9 +265,7 @@ export async function action({ request }: ActionFunctionArgs) {
   })
 
   if (!response?.peer) {
-    errors.message = [
-      'Could not create peer. Please try again!'
-    ]
+    errors.message = ['Could not create peer. Please try again!']
     return json({ errors }, { status: 400 })
   }
 

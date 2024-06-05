@@ -105,9 +105,7 @@ export async function action({ request }: ActionFunctionArgs) {
   })
 
   if (!response?.asset) {
-    errors.message = [
-      'Could not create asset. Please try again!'
-    ]
+    errors.message = ['Could not create asset. Please try again!']
     return json({ errors }, { status: 400 })
   }
 

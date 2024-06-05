@@ -329,7 +329,7 @@ export async function action({ request }: ActionFunctionArgs) {
 
       if (!response?.fee) {
         actionResponse.errors.sendingFee.message = [
-            'Could not update asset sending fee. Please try again!'
+          'Could not update asset sending fee. Please try again!'
         ]
         return json({ ...actionResponse }, { status: 400 })
       }

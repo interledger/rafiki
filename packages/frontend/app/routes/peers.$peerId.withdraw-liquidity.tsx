@@ -68,8 +68,7 @@ export async function action({ request, params }: ActionFunctionArgs) {
     return setMessageAndRedirect({
       session,
       message: {
-        content:
-          'Could not withdraw peer liquidity. Please try again!',
+        content: 'Could not withdraw peer liquidity. Please try again!',
         type: 'error'
       },
       location: '.'
