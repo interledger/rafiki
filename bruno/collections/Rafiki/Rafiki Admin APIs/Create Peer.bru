@@ -13,9 +13,6 @@ post {
 body:graphql {
   mutation CreatePeer ($input: CreatePeerInput!) {
       createPeer (input: $input) {
-          code
-          message
-          success
           peer {
               id
               name

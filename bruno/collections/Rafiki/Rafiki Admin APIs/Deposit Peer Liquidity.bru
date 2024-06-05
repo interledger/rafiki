@@ -13,10 +13,8 @@ post {
 body:graphql {
   mutation DepositPeerLiquidity ($input: DepositPeerLiquidityInput!) {
     depositPeerLiquidity(input: $input) {
-      code
-      success
-      message
-      error
+    	id
+      liquidity
     }
   }
 }

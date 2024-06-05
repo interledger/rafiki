@@ -22,7 +22,8 @@ import {
   CreatePeerInput,
   CreatePeerMutationResponse,
   PeersConnection,
-  UpdatePeerMutationResponse
+  UpdatePeerMutationResponse,
+  DeletePeerMutationResponse
 } from '../generated/graphql'
 import { AccountingService } from '../../accounting/service'
 
@@ -604,7 +605,7 @@ describe('Peer Resolvers', (): void => {
             }
           }
         })
-        .then((query): UpdatePeerMutationResponse => {
+        .then((query): DeletePeerMutationResponse => {
           if (query.data) {
             return query.data.deletePeer
           } else {
@@ -632,7 +633,7 @@ describe('Peer Resolvers', (): void => {
             }
           }
         })
-        .then((query): UpdatePeerMutationResponse => {
+        .then((query): DeletePeerMutationResponse => {
           if (query.data) {
             return query.data.deletePeer
           } else {
@@ -664,7 +665,7 @@ describe('Peer Resolvers', (): void => {
             }
           }
         })
-        .then((query): UpdatePeerMutationResponse => {
+        .then((query): DeletePeerMutationResponse => {
           if (query.data) {
             return query.data.deletePeer
           } else {

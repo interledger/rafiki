@@ -21,7 +21,7 @@ export const errorToCode: {
 export const errorToMessage: {
   [key in AssetError]: string
 } = {
-  [AssetError.UnknownAsset]: 'unknown asset',
+  [AssetError.UnknownAsset]: 'Asset not found',
   [AssetError.DuplicateAsset]: 'Asset already exists',
   [AssetError.CannotDeleteInUseAsset]: 'Cannot delete! Asset in use.'
 }

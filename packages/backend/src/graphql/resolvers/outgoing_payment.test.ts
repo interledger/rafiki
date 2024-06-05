@@ -13,7 +13,11 @@ import { createAsset } from '../../tests/asset'
 import { createOutgoingPayment } from '../../tests/outgoingPayment'
 import { createWalletAddress } from '../../tests/walletAddress'
 import { truncateTables } from '../../tests/tableManager'
-import { OutgoingPaymentError } from '../../open_payments/payment/outgoing/errors'
+import {
+  OutgoingPaymentError,
+  errorToMessage,
+  errorToCode
+} from '../../open_payments/payment/outgoing/errors'
 import { OutgoingPaymentService } from '../../open_payments/payment/outgoing/service'
 import {
   OutgoingPayment as OutgoingPaymentModel,
@@ -27,6 +31,7 @@ import {
   OutgoingPaymentState as SchemaPaymentState
 } from '../generated/graphql'
 import { faker } from '@faker-js/faker'
+import { GraphQLError } from 'graphql'
 
 describe('OutgoingPayment Resolvers', (): void => {
   let deps: IocContract<AppServices>
@@ -301,11 +306,6 @@ describe('OutgoingPayment Resolvers', (): void => {
         )
 
       expect(createSpy).toHaveBeenCalledWith(input)
-<<<<<<< HEAD
-      expect(query.code).toBe('201')
-      expect(query.success).toBe(true)
-=======
->>>>>>> d55fecd7 (feat: update outgoing payment resolvers)
       expect(query.payment?.id).toBe(payment.id)
       expect(query.payment?.state).toBe(SchemaPaymentState.Funding)
     })
@@ -382,7 +382,7 @@ describe('OutgoingPayment Resolvers', (): void => {
   describe('Mutation.createOutgoingPaymentFromIncomingPayment', (): void => {
     const mockIncomingPaymentUrl = `https://${faker.internet.domainName()}/incoming-payments/${uuid()}`
 
-    test('201', async (): Promise<void> => {
+    test('create', async (): Promise<void> => {
       const walletAddress = await createWalletAddress(deps, {
         assetId: asset.id
       })
@@ -409,8 +409,6 @@ describe('OutgoingPayment Resolvers', (): void => {
               $input: CreateOutgoingPaymentFromIncomingPaymentInput!
             ) {
               createOutgoingPaymentFromIncomingPayment(input: $input) {
-                code
-                success
                 payment {
                   id
                   state
@@ -426,13 +424,11 @@ describe('OutgoingPayment Resolvers', (): void => {
         )
 
       expect(createSpy).toHaveBeenCalledWith(input)
-      expect(query.code).toBe('201')
-      expect(query.success).toBe(true)
       expect(query.payment?.id).toBe(payment.id)
       expect(query.payment?.state).toBe(SchemaPaymentState.Funding)
     })
 
-    test('400', async (): Promise<void> => {
+    test('unknown wallet address', async (): Promise<void> => {
       const createSpy = jest
         .spyOn(outgoingPaymentService, 'create')
         .mockResolvedValueOnce(OutgoingPaymentError.UnknownWalletAddress)
@@ -447,16 +443,13 @@ describe('OutgoingPayment Resolvers', (): void => {
         }
       }
 
-      const query = await appContainer.apolloClient
+      const gqlQuery = appContainer.apolloClient
         .query({
           query: gql`
             mutation CreateOutgoingPaymentFromIncomingPayment(
               $input: CreateOutgoingPaymentFromIncomingPaymentInput!
             ) {
               createOutgoingPaymentFromIncomingPayment(input: $input) {
-                code
-                success
-                message
                 payment {
                   id
                   state
@@ -470,16 +463,20 @@ describe('OutgoingPayment Resolvers', (): void => {
           (query): OutgoingPaymentResponse =>
             query.data?.createOutgoingPaymentFromIncomingPayment
         )
-      expect(createSpy).toHaveBeenCalledWith(input)
-      expect(query.code).toBe('404')
-      expect(query.success).toBe(false)
-      expect(query.message).toBe(
-        errorToMessage[OutgoingPaymentError.UnknownWalletAddress]
+      await expect(gqlQuery).rejects.toThrow(
+        new GraphQLError(
+          errorToMessage[OutgoingPaymentError.UnknownWalletAddress],
+          {
+            extensions: {
+              code: errorToCode[OutgoingPaymentError.UnknownWalletAddress]
+            }
+          }
+        )
       )
-      expect(query.payment).toBeNull()
+      expect(createSpy).toHaveBeenCalledWith(input)
     })
 
-    test('500', async (): Promise<void> => {
+    test('unknown error', async (): Promise<void> => {
       const createSpy = jest
         .spyOn(outgoingPaymentService, 'create')
         .mockRejectedValueOnce(new Error('unexpected'))
@@ -494,16 +491,13 @@ describe('OutgoingPayment Resolvers', (): void => {
         }
       }
 
-      const query = await appContainer.apolloClient
+      const gqlQuery = appContainer.apolloClient
         .query({
           query: gql`
             mutation CreateOutgoingPaymentFromIncomingPayment(
               $input: CreateOutgoingPaymentFromIncomingPaymentInput!
             ) {
               createOutgoingPaymentFromIncomingPayment(input: $input) {
-                code
-                success
-                message
                 payment {
                   id
                   state
@@ -517,11 +511,8 @@ describe('OutgoingPayment Resolvers', (): void => {
           (query): OutgoingPaymentResponse =>
             query.data?.createOutgoingPaymentFromIncomingPayment
         )
+      await expect(gqlQuery).rejects.toThrow(ApolloError)
       expect(createSpy).toHaveBeenCalledWith(input)
-      expect(query.code).toBe('500')
-      expect(query.success).toBe(false)
-      expect(query.message).toBe('Error trying to create outgoing payment')
-      expect(query.payment).toBeNull()
     })
   })
 
@@ -560,8 +551,6 @@ describe('OutgoingPayment Resolvers', (): void => {
                 $input: CancelOutgoingPaymentInput!
               ) {
                 cancelOutgoingPayment(input: $input) {
-                  code
-                  success
                   payment {
                     id
                     state
@@ -578,8 +567,6 @@ describe('OutgoingPayment Resolvers', (): void => {
           )
 
         expect(cancelSpy).toHaveBeenCalledWith(input)
-        expect(mutationResponse.code).toBe('200')
-        expect(mutationResponse.success).toBe(true)
         expect(mutationResponse.payment).toEqual({
           __typename: 'OutgoingPayment',
           id: input.id,
@@ -591,29 +578,26 @@ describe('OutgoingPayment Resolvers', (): void => {
       }
     )
 
-    const errors: [string, OutgoingPaymentError][] = [
-      ['409', OutgoingPaymentError.WrongState],
-      ['404', OutgoingPaymentError.UnknownPayment]
+    const errors: [OutgoingPaymentError][] = [
+      [OutgoingPaymentError.WrongState],
+      [OutgoingPaymentError.UnknownPayment]
     ]
     test.each(errors)(
       '%s - outgoing payment error',
-      async (statusCode, paymentError): Promise<void> => {
+      async (paymentError): Promise<void> => {
         const cancelSpy = jest
           .spyOn(outgoingPaymentService, 'cancel')
           .mockResolvedValueOnce(paymentError)
 
         const input = { id: uuid() }
 
-        const mutationResponse = await appContainer.apolloClient
+        const gqlQuery = appContainer.apolloClient
           .mutate({
             mutation: gql`
               mutation CancelOutgoingPayment(
                 $input: CancelOutgoingPaymentInput!
               ) {
                 cancelOutgoingPayment(input: $input) {
-                  code
-                  message
-                  success
                   payment {
                     id
                     state
@@ -629,14 +613,14 @@ describe('OutgoingPayment Resolvers', (): void => {
               query.data?.cancelOutgoingPayment
           )
 
+        await expect(gqlQuery).rejects.toThrow(
+          new GraphQLError(errorToMessage[paymentError], {
+            extensions: {
+              code: errorToCode[paymentError]
+            }
+          })
+        )
         expect(cancelSpy).toHaveBeenCalledWith(input)
-        expect(mutationResponse).toEqual({
-          __typename: 'OutgoingPaymentResponse',
-          code: statusCode,
-          message: errorToMessage[paymentError],
-          success: false,
-          payment: null
-        })
       }
     )
   })

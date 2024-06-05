@@ -13,10 +13,6 @@ post {
 body:graphql {
   mutation CreateWalletAddressWithdrawal($input: CreateWalletAddressWithdrawalInput!) {
     createWalletAddressWithdrawal(input: $input) {
-      code
-      error
-      message
-      success
       withdrawal {
         amount
         id

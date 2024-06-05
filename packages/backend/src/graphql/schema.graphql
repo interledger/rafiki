@@ -952,9 +952,6 @@ input CreateQuoteInput {
 }
 
 type QuoteResponse {
-  code: String!
-  success: Boolean!
-  message: String
   quote: Quote
 }
 
@@ -1016,23 +1013,14 @@ input CreateReceiverInput {
 }
 
 type OutgoingPaymentResponse {
-  code: String!
-  success: Boolean!
-  message: String
   payment: OutgoingPayment
 }
 
 type IncomingPaymentResponse {
-  code: String!
-  success: Boolean!
-  message: String
   payment: IncomingPayment
 }
 
 type CreateReceiverResponse {
-  code: String!
-  success: Boolean!
-  message: String
   receiver: Receiver
 }
 

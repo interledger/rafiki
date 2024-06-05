@@ -286,10 +286,7 @@ export type CreateReceiverInput = {
 
 export type CreateReceiverResponse = {
   __typename?: 'CreateReceiverResponse';
-  code: Scalars['String']['output'];
-  message?: Maybe<Scalars['String']['output']>;
   receiver?: Maybe<Receiver>;
-  success: Scalars['Boolean']['output'];
 };
 
 export type CreateWalletAddressInput = {
@@ -514,10 +511,7 @@ export type IncomingPaymentEdge = {
 
 export type IncomingPaymentResponse = {
   __typename?: 'IncomingPaymentResponse';
-  code: Scalars['String']['output'];
-  message?: Maybe<Scalars['String']['output']>;
   payment?: Maybe<IncomingPayment>;
-  success: Scalars['Boolean']['output'];
 };
 
 export enum IncomingPaymentState {
@@ -859,10 +853,7 @@ export type OutgoingPaymentEdge = {
 
 export type OutgoingPaymentResponse = {
   __typename?: 'OutgoingPaymentResponse';
-  code: Scalars['String']['output'];
-  message?: Maybe<Scalars['String']['output']>;
   payment?: Maybe<OutgoingPayment>;
-  success: Scalars['Boolean']['output'];
 };
 
 export enum OutgoingPaymentState {
@@ -1123,10 +1114,7 @@ export type QuoteEdge = {
 
 export type QuoteResponse = {
   __typename?: 'QuoteResponse';
-  code: Scalars['String']['output'];
-  message?: Maybe<Scalars['String']['output']>;
   quote?: Maybe<Quote>;
-  success: Scalars['Boolean']['output'];
 };
 
 export type Receiver = {
@@ -1791,10 +1779,7 @@ export type CreatePeerMutationResponseResolvers<ContextType = any, ParentType ex
 };
 
 export type CreateReceiverResponseResolvers<ContextType = any, ParentType extends ResolversParentTypes['CreateReceiverResponse'] = ResolversParentTypes['CreateReceiverResponse']> = {
-  code?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  message?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   receiver?: Resolver<Maybe<ResolversTypes['Receiver']>, ParentType, ContextType>;
-  success?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -1878,10 +1863,7 @@ export type IncomingPaymentEdgeResolvers<ContextType = any, ParentType extends R
 };
 
 export type IncomingPaymentResponseResolvers<ContextType = any, ParentType extends ResolversParentTypes['IncomingPaymentResponse'] = ResolversParentTypes['IncomingPaymentResponse']> = {
-  code?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  message?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   payment?: Resolver<Maybe<ResolversTypes['IncomingPayment']>, ParentType, ContextType>;
-  success?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -1975,10 +1957,7 @@ export type OutgoingPaymentEdgeResolvers<ContextType = any, ParentType extends R
 };
 
 export type OutgoingPaymentResponseResolvers<ContextType = any, ParentType extends ResolversParentTypes['OutgoingPaymentResponse'] = ResolversParentTypes['OutgoingPaymentResponse']> = {
-  code?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  message?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   payment?: Resolver<Maybe<ResolversTypes['OutgoingPayment']>, ParentType, ContextType>;
-  success?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -2082,10 +2061,7 @@ export type QuoteEdgeResolvers<ContextType = any, ParentType extends ResolversPa
 };
 
 export type QuoteResponseResolvers<ContextType = any, ParentType extends ResolversParentTypes['QuoteResponse'] = ResolversParentTypes['QuoteResponse']> = {
-  code?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  message?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   quote?: Resolver<Maybe<ResolversTypes['Quote']>, ParentType, ContextType>;
-  success?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 

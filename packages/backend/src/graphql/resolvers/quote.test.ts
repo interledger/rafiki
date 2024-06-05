@@ -1,5 +1,6 @@
 import { ApolloError, gql } from '@apollo/client'
 import { v4 as uuid } from 'uuid'
+import { GraphQLError } from 'graphql'
 
 import { getPageTests } from './page.test'
 import { createTestApp, TestContainer } from '../../tests/app'
@@ -12,7 +13,11 @@ import { createAsset } from '../../tests/asset'
 import { createWalletAddress } from '../../tests/walletAddress'
 import { createQuote } from '../../tests/quote'
 import { truncateTables } from '../../tests/tableManager'
-import { QuoteError, errorToMessage } from '../../open_payments/quote/errors'
+import {
+  QuoteError,
+  errorToMessage,
+  errorToCode
+} from '../../open_payments/quote/errors'
 import { QuoteService } from '../../open_payments/quote/service'
 import { Quote as QuoteModel } from '../../open_payments/quote/model'
 import { Amount } from '../../open_payments/amount'
@@ -236,13 +241,16 @@ describe('Quote Resolvers', (): void => {
         })
         .then((query): QuoteResponse => query.data?.createQuote)
 
-      await expect(gqlQuery).rejects.toThrow(ApolloError)
       await expect(gqlQuery).rejects.toThrow(
-        errorToMessage[QuoteError.UnknownWalletAddress]
+        new GraphQLError(errorToMessage[QuoteError.UnknownWalletAddress], {
+          extensions: {
+            code: errorToCode[QuoteError.UnknownWalletAddress]
+          }
+        })
       )
     })
 
-    test('500', async (): Promise<void> => {
+    test('unknown error', async (): Promise<void> => {
       const createSpy = jest
         .spyOn(quoteService, 'create')
         .mockRejectedValueOnce(new Error('unexpected'))
@@ -252,9 +260,6 @@ describe('Quote Resolvers', (): void => {
           query: gql`
             mutation CreateQuote($input: CreateQuoteInput!) {
               createQuote(input: $input) {
-                code
-                success
-                message
                 quote {
                   id
                 }

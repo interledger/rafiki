@@ -32,6 +32,7 @@ import { Fee, FeeType } from '../../fee/model'
 import { isFeeError } from '../../fee/errors'
 import { createFee } from '../../tests/fee'
 import { createAsset } from '../../tests/asset'
+import { GraphQLError } from 'graphql'
 
 describe('Asset Resolvers', (): void => {
   let deps: IocContract<AppServices>
@@ -621,8 +622,13 @@ describe('Asset Resolvers', (): void => {
           }
         })
 
-      await expect(gqlQuery).rejects.toThrow(ApolloError)
-      await expect(gqlQuery).rejects.toThrow('Asset not found')
+      await expect(gqlQuery).rejects.toThrow(
+        new GraphQLError(errorToMessage[AssetError.UnknownAsset], {
+          extensions: {
+            code: errorToCode[AssetError.UnknownAsset]
+          }
+        })
+      )
     })
   })
 
@@ -639,9 +645,9 @@ describe('Asset Resolvers', (): void => {
           mutation: gql`
             mutation DeleteAsset($input: DeleteAssetInput!) {
               deleteAsset(input: $input) {
-                code
-                success
-                message
+                asset {
+                  id
+                }
               }
             }
           `,
@@ -659,21 +665,19 @@ describe('Asset Resolvers', (): void => {
           }
         })
 
-      expect(response.success).toBe(true)
-      expect(response.code).toEqual('200')
-      expect(response.message).toEqual('Asset deleted')
+      expect(response.asset?.id).toEqual(asset.id)
       await expect(assetService.get(asset.id)).resolves.toBeUndefined()
     })
 
     test('Returns error for unknown asset', async (): Promise<void> => {
-      const response = await appContainer.apolloClient
+      const gqlQuery = appContainer.apolloClient
         .mutate({
           mutation: gql`
             mutation DeleteAsset($input: DeleteAssetInput!) {
               deleteAsset(input: $input) {
-                code
-                success
-                message
+                asset {
+                  id
+                }
               }
             }
           `,
@@ -691,11 +695,13 @@ describe('Asset Resolvers', (): void => {
           }
         })
 
-      expect(response.success).toBe(false)
-      expect(response.code).toEqual(
-        errorToCode[AssetError.UnknownAsset].toString()
+      await expect(gqlQuery).rejects.toThrow(
+        new GraphQLError(errorToMessage[AssetError.UnknownAsset], {
+          extensions: {
+            code: errorToCode[AssetError.UnknownAsset]
+          }
+        })
       )
-      expect(response.message).toEqual(errorToMessage[AssetError.UnknownAsset])
     })
 
     test('Returns error if unexpected error', async (): Promise<void> => {
@@ -703,14 +709,14 @@ describe('Asset Resolvers', (): void => {
         throw new Error('unexpected')
       })
 
-      const response = await appContainer.apolloClient
+      const gqlQuery = appContainer.apolloClient
         .mutate({
           mutation: gql`
             mutation DeleteAsset($input: DeleteAssetInput!) {
               deleteAsset(input: $input) {
-                code
-                success
-                message
+                asset {
+                  id
+                }
               }
             }
           `,
@@ -728,9 +734,7 @@ describe('Asset Resolvers', (): void => {
           }
         })
 
-      expect(response.success).toBe(false)
-      expect(response.code).toEqual('500')
-      expect(response.message).toEqual('Error trying to delete asset')
+      await expect(gqlQuery).rejects.toThrow(ApolloError)
     })
   })
 })

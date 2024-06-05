@@ -10,7 +10,11 @@ import { Config } from '../../config/app'
 import { truncateTables } from '../../tests/tableManager'
 import { AssetService } from '../../asset/service'
 import { randomAsset } from '../../tests/asset'
-import { AssetMutationResponse, CreateAssetInput } from '../generated/graphql'
+import {
+  AssetMutationResponse,
+  CreateAssetInput,
+  UpdateAssetInput
+} from '../generated/graphql'
 import { GraphQLError } from 'graphql'
 
 describe('GraphQL Middleware', (): void => {
@@ -39,9 +43,6 @@ describe('GraphQL Middleware', (): void => {
         mutation: gql`
           mutation CreateAsset($input: CreateAssetInput!) {
             createAsset(input: $input) {
-              code
-              success
-              message
               asset {
                 id
                 code
@@ -64,59 +65,96 @@ describe('GraphQL Middleware', (): void => {
       })
   }
 
+  const callUpdateAssetMutation = async (input: UpdateAssetInput) => {
+    return appContainer.apolloClient
+      .mutate({
+        mutation: gql`
+          mutation UpdateAsset($input: UpdateAssetInput!) {
+            updateAsset(input: $input) {
+              asset {
+                id
+                code
+                scale
+                withdrawalThreshold
+              }
+            }
+          }
+        `,
+        variables: {
+          input
+        }
+      })
+      .then((query): AssetMutationResponse => {
+        if (query.data) {
+          return query.data.updateAsset
+        } else {
+          throw new Error('Data was empty')
+        }
+      })
+  }
+
   describe('idempotencyGraphQLMiddleware', (): void => {
+    let createInput: CreateAssetInput
+    let createResponse: AssetMutationResponse
+
+    beforeEach(async (): Promise<void> => {
+      createInput = {
+        ...randomAsset(),
+        idempotencyKey: uuid()
+      }
+
+      createResponse = await callCreateAssetMutation(createInput)
+      assert.ok(createResponse.asset)
+    })
+
     test('returns original response on repeat call with same idempotency key', async (): Promise<void> => {
       const idempotencyKey = uuid()
-      const input: CreateAssetInput = {
-        ...randomAsset(),
+      assert.ok(createResponse.asset)
+      const input: UpdateAssetInput = {
+        id: createResponse.asset.id,
+        withdrawalThreshold: BigInt(10),
         idempotencyKey
       }
 
-      const createAssetSpy = jest.spyOn(assetService, 'create')
+      const updateAssetSpy = jest.spyOn(assetService, 'update')
 
-      const initialResponse = await callCreateAssetMutation(input)
+      const initialResponse = await callUpdateAssetMutation(input)
 
-      expect(createAssetSpy).toHaveBeenCalledTimes(1)
+      expect(updateAssetSpy).toHaveBeenCalledTimes(1)
       assert.ok(initialResponse.asset)
       expect(initialResponse).toEqual({
         __typename: 'AssetMutationResponse',
-        message: 'Created Asset',
-        success: true,
-        code: '200',
         asset: {
           __typename: 'Asset',
           id: initialResponse.asset.id,
-          code: input.code,
-          scale: input.scale,
-          withdrawalThreshold: null
+          code: createInput.code,
+          scale: createInput.scale,
+          withdrawalThreshold: '10'
         }
       })
       await expect(
         assetService.get(initialResponse.asset.id)
       ).resolves.toMatchObject({
         id: initialResponse.asset.id,
-        code: input.code,
-        scale: input.scale,
-        withdrawalThreshold: null
+        code: createInput.code,
+        scale: createInput.scale,
+        withdrawalThreshold: BigInt(10)
       })
 
-      createAssetSpy.mockClear()
+      updateAssetSpy.mockClear()
 
-      const repeatResponse = await callCreateAssetMutation(input)
+      const repeatResponse = await callUpdateAssetMutation(input)
 
-      expect(createAssetSpy).not.toHaveBeenCalled()
+      expect(updateAssetSpy).not.toHaveBeenCalled()
       assert.ok(repeatResponse.asset)
       expect(repeatResponse).toEqual({
         __typename: 'AssetMutationResponse',
-        message: 'Created Asset',
-        success: true,
-        code: '200',
         asset: {
           __typename: 'Asset',
           id: initialResponse.asset.id,
           code: initialResponse.asset.code,
           scale: initialResponse.asset.scale,
-          withdrawalThreshold: null
+          withdrawalThreshold: '10'
         }
       })
       await expect(
@@ -125,50 +163,7 @@ describe('GraphQL Middleware', (): void => {
         id: initialResponse.asset.id,
         code: initialResponse.asset.code,
         scale: initialResponse.asset.scale,
-        withdrawalThreshold: null
-      })
-    })
-
-    test('does not return original response on repeat call with different idempotency key', async (): Promise<void> => {
-      const input: CreateAssetInput = {
-        ...randomAsset(),
-        idempotencyKey: uuid()
-      }
-
-      const createAssetSpy = jest.spyOn(assetService, 'create')
-
-      const initialResponse = await callCreateAssetMutation(input)
-
-      expect(createAssetSpy).toHaveBeenCalledTimes(1)
-      assert.ok(initialResponse.asset)
-      expect(initialResponse).toEqual({
-        __typename: 'AssetMutationResponse',
-        message: 'Created Asset',
-        success: true,
-        code: '200',
-        asset: {
-          __typename: 'Asset',
-          id: initialResponse.asset.id,
-          code: input.code,
-          scale: input.scale,
-          withdrawalThreshold: null
-        }
-      })
-
-      createAssetSpy.mockClear()
-
-      const repeatResponse = await callCreateAssetMutation({
-        ...input,
-        idempotencyKey: uuid()
-      })
-
-      expect(createAssetSpy).toHaveBeenCalledTimes(1)
-      expect(repeatResponse).toEqual({
-        __typename: 'AssetMutationResponse',
-        message: 'Asset already exists',
-        success: false,
-        code: '409',
-        asset: null
+        withdrawalThreshold: BigInt(10)
       })
     })
 
@@ -184,9 +179,6 @@ describe('GraphQL Middleware', (): void => {
       assert.ok(initialResponse.asset)
       expect(initialResponse).toEqual({
         __typename: 'AssetMutationResponse',
-        message: 'Created Asset',
-        success: true,
-        code: '200',
         asset: {
           __typename: 'Asset',
           id: initialResponse.asset.id,
@@ -198,8 +190,8 @@ describe('GraphQL Middleware', (): void => {
 
       await expect(
         callCreateAssetMutation({
-          ...input,
-          scale: (input.scale + 1) % 256
+          ...randomAsset(),
+          idempotencyKey
         })
       ).rejects.toThrow(
         `Incoming arguments are different than the original request for idempotencyKey: ${idempotencyKey}`
@@ -229,9 +221,6 @@ describe('GraphQL Middleware', (): void => {
         status: 'fulfilled',
         value: {
           __typename: 'AssetMutationResponse',
-          message: 'Created Asset',
-          success: true,
-          code: '200',
           asset: {
             __typename: 'Asset',
             id: firstRequest.value?.asset?.id,

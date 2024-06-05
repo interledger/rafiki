@@ -158,38 +158,21 @@ export const deleteAsset: MutationResolvers<ApolloContext>['deleteAsset'] =
     args,
     ctx
   ): Promise<ResolversTypes['DeleteAssetMutationResponse']> => {
-    try {
-      const assetService = await ctx.container.use('assetService')
-      const assetOrError = await assetService.delete({
-        id: args.input.id,
-        deletedAt: new Date()
-      })
+    const assetService = await ctx.container.use('assetService')
+    const assetOrError = await assetService.delete({
+      id: args.input.id,
+      deletedAt: new Date()
+    })
 
-      if (isAssetError(assetOrError)) {
-        return {
-          code: errorToCode[assetOrError].toString(),
-          message: errorToMessage[assetOrError],
-          success: false
+    if (isAssetError(assetOrError)) {
+      throw new GraphQLError(errorToMessage[assetOrError], {
+        extensions: {
+          code: errorToCode[assetOrError]
         }
-      }
-      return {
-        code: '200',
-        success: true,
-        message: 'Asset deleted'
-      }
-    } catch (err) {
-      ctx.logger.error(
-        {
-          id: args.input.id,
-          err
-        },
-        'error deleting asset'
-      )
-      return {
-        code: '500',
-        message: 'Error trying to delete asset',
-        success: false
-      }
+      })
+    }
+    return {
+      asset: assetToGraphql(assetOrError)
     }
   }
 
