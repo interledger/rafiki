@@ -174,7 +174,7 @@ export default function PaymentsPage() {
                 <input
                   name='walletAddressId'
                   placeholder='Wallet address ID'
-                  className='relative w-[400px] cursor-default rounded-md bg-white py-1.5 pl-3 pr-10 text-left text-gray-900 shadow-sm ring-1 ring-inset ring-pearl focus:outline-none focus:ring-2 focus:ring-[#F37F64] sm:text-sm sm:leading-6'
+                  className='border-none relative w-[400px] cursor-default rounded-md bg-white py-1.5 pl-3 pr-10 text-left text-gray-900 shadow-sm ring-1 ring-inset ring-pearl focus:outline-none focus:ring-2 focus:ring-[#F37F64] sm:text-sm sm:leading-6'
                   value={walletId}
                   onChange={(e) => setWalletId(e.target.value)}
                 />
