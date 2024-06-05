@@ -1307,7 +1307,7 @@ export type VoidLiquidityWithdrawalInput = {
 export type WalletAddress = Model & {
   __typename?: 'WalletAddress';
   /** List additional properties associated with this wallet address. */
-  additionalProperties: Array<Maybe<AdditionalProperty>>;
+  additionalProperties?: Maybe<Array<Maybe<AdditionalProperty>>>;
   /** Asset of the wallet address */
   asset: Asset;
   /** Date-time of creation */
@@ -2242,7 +2242,7 @@ export type UpdateWalletAddressMutationResponseResolvers<ContextType = any, Pare
 };
 
 export type WalletAddressResolvers<ContextType = any, ParentType extends ResolversParentTypes['WalletAddress'] = ResolversParentTypes['WalletAddress']> = {
-  additionalProperties?: Resolver<Array<Maybe<ResolversTypes['AdditionalProperty']>>, ParentType, ContextType>;
+  additionalProperties?: Resolver<Maybe<Array<Maybe<ResolversTypes['AdditionalProperty']>>>, ParentType, ContextType>;
   asset?: Resolver<ResolversTypes['Asset'], ParentType, ContextType>;
   createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;

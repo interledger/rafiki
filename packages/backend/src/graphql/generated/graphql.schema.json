@@ -8400,16 +8400,12 @@
             "description": "List additional properties associated with this wallet address.",
             "args": [],
             "type": {
-              "kind": "NON_NULL",
+              "kind": "LIST",
               "name": null,
               "ofType": {
-                "kind": "LIST",
-                "name": null,
-                "ofType": {
-                  "kind": "OBJECT",
-                  "name": "AdditionalProperty",
-                  "ofType": null
-                }
+                "kind": "OBJECT",
+                "name": "AdditionalProperty",
+                "ofType": null
               }
             },
             "isDeprecated": false,

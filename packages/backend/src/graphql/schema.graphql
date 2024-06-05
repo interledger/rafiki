@@ -697,7 +697,7 @@ type WalletAddress implements Model {
   ): WalletAddressKeyConnection
 
   "List additional properties associated with this wallet address."
-  additionalProperties: [AdditionalProperty]!
+  additionalProperties: [AdditionalProperty]
 }
 
 type AdditionalProperty {
