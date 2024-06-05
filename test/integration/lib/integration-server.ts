@@ -134,7 +134,7 @@ export class WebhookEventHandler {
     })
     const { walletAddress } = response
 
-    if (!response.success) {
+    if (!response.walletAddress) {
       throw new Error('Failed to create wallet address')
     }
     if (!walletAddress) {
@@ -175,7 +175,7 @@ export class WebhookEventHandler {
       idempotencyKey: crypto.randomUUID()
     })
 
-    if (response.code !== '200') {
+    if (!response.id) {
       const msg = 'Deposit outgoing payment liquidity failed'
       throw new Error(msg)
     }
