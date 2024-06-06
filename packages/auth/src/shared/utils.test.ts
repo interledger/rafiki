@@ -24,6 +24,11 @@ describe('utils', (): void => {
       redis = await deps.use('redis')
     })
 
+    afterEach(async (): Promise<void> => {
+      jest.useRealTimers()
+      await redis.flushall()
+    })
+
     afterAll(async (): Promise<void> => {
       await redis.quit()
       await appContainer.shutdown()
@@ -77,6 +82,37 @@ describe('utils', (): void => {
       expect(verified).toBe(false)
     })
 
+    test('Cannot verify signature that is too old', async (): Promise<void> => {
+      const requestBody = { test: 'value' }
+      const signature = generateApiSignature(
+        'test-secret',
+        Config.adminApiSignatureVersion,
+        requestBody
+      )
+
+      const timestamp = signature.split(', ')[0].split('=')[1]
+      const now = new Date((Number(timestamp) + 60) * 1000)
+      jest.useFakeTimers({ now })
+      const ctx = createContext<AppContext>(
+        {
+          headers: {
+            Accept: 'application/json',
+            signature
+          },
+          url: '/graphql'
+        },
+        {},
+        appContainer.container
+      )
+      ctx.request.body = requestBody
+
+      const verified = await verifyApiSignature(ctx, {
+        ...Config,
+        adminApiSecret: 'test-secret'
+      })
+      expect(verified).toBe(false)
+    })
+
     test('Cannot verify signature that has already been processed', async (): Promise<void> => {
       const requestBody = { test: 'value' }
       const signature = generateApiSignature(
@@ -87,7 +123,7 @@ describe('utils', (): void => {
       const key = `signature:${signature}`
       const op = redis.multi()
       op.set(key, signature)
-      op.expire(key, signature)
+      op.expire(key, Config.adminApiSignatureTtl * 1000)
       await op.exec()
       const ctx = createContext<AppContext>(
         {

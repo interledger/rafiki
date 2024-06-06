@@ -1,6 +1,5 @@
 import * as crypto from 'crypto'
 import { AppContext } from '../app'
-import { Context } from 'koa'
 import { canonicalize } from 'json-canonicalize'
 import { IAppConfig } from '../config/app'
 
@@ -44,7 +43,7 @@ function getSignatureParts(signature: string) {
 
 function verifyApiSignatureDigest(
   signature: string,
-  request: Context['request'],
+  request: AppContext['request'],
   config: IAppConfig
 ): boolean {
   const { body } = request
@@ -68,7 +67,7 @@ function verifyApiSignatureDigest(
 
 async function canApiSignatureBeProcessed(
   signature: string,
-  ctx: Context,
+  ctx: AppContext,
   config: IAppConfig
 ): Promise<boolean> {
   const logger = await ctx.container.use('logger')
@@ -100,7 +99,7 @@ async function canApiSignatureBeProcessed(
 }
 
 export async function verifyApiSignature(
-  ctx: Context,
+  ctx: AppContext,
   config: IAppConfig
 ): Promise<boolean> {
   const { headers } = ctx.request
