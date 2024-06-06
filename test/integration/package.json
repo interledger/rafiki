@@ -6,7 +6,7 @@
   "scripts": {
     "build:deps": "pnpm --filter mock-account-service-lib build",
     "testenv:compose": "docker compose -f ./testenv/cloud-nine-wallet/docker-compose.yml -f ./testenv/happy-life-bank/docker-compose.yml -f ./testenv/docker-compose.yml",
-    "test": "jest",
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest",
     "run-tests": "./scripts/run-tests.sh",
     "hostile": "hostile"
   },
@@ -16,7 +16,7 @@
   "devDependencies": {
     "@apollo/client": "^3.10.4",
     "@interledger/http-signature-utils": "2.0.2",
-    "@interledger/open-payments": "^6.9.0",
+    "@interledger/open-payments": "^6.11.1",
     "@koa/bodyparser": "^5.1.1",
     "@types/koa": "2.15.0",
     "@types/koa-bodyparser": "^4.3.12",
