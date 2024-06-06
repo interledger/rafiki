@@ -139,8 +139,8 @@ export default defineConfig({
                   link: 'integration/management'
                 },
                 {
-                  label: 'Event Handlers',
-                  link: 'integration/event-handlers'
+                  label: 'Webhook Events',
+                  link: 'integration/webhook-events'
                 }
               ]
             },

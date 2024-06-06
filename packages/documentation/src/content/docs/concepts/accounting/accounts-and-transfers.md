@@ -20,7 +20,7 @@ There is one liquidity account for each of the following resource:
 
 Asset and Peer liquidity accounts are created when calling `createAsset` and `createPeer` [GraphQL Admin API mutations](/apis/backend/mutations) respectively, while liquidity accounts for wallet addresses, incoming and outgoing payments are created on-the-fly during payment processing or web monetization events.
 
-Any liquidity management is done by the [Account Servicing Entity](/reference/glossary#account-servicing-entity) through the GraphQL Admin API. See [integration](/integration/event-handlers) and [liquidity documentation](/concepts/accounting/liquidity) for more information.
+Any liquidity management is done by the [Account Servicing Entity](/reference/glossary#account-servicing-entity) through the GraphQL Admin API. See [webhook events](/integration/webhook-events) and [liquidity documentation](/concepts/accounting/liquidity) for more information.
 
 ### Settlement account
 
