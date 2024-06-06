@@ -156,9 +156,7 @@ async function createWalletAddress(
       })
       addProperties.forEach((itm) => (itm.walletAddressId = wallet.id))
       if (addProperties.length) {
-        await WalletAddressAdditionalProperty.query(trx).insert(
-          addProperties
-        )
+        await WalletAddressAdditionalProperty.query(trx).insert(addProperties)
       }
     }
     await trx.commit()
