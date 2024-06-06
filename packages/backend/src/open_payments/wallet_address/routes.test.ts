@@ -94,6 +94,7 @@ describe('Wallet Address Routes', (): void => {
       const addProp = new WalletAddressAdditionalProperty()
       addProp.fieldKey = 'field-key-open-pay'
       addProp.fieldValue = 'field-val-open-pay'
+      addProp.visibleInOpenPayments = true
       const walletAddress = await createWalletAddress(deps, {
         publicName: faker.person.firstName(),
         additionalProperties: [addProp]

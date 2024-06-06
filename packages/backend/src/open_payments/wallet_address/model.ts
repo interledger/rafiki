@@ -112,7 +112,7 @@ export class WalletAddress
     authServer: string
     resourceServer: string
   }): OpenPaymentsWalletAddress {
-    return {
+    const returnVal: OpenPaymentsWalletAddress = {
       id: this.url,
       publicName: this.publicName,
       assetCode: this.asset.code,
@@ -120,6 +120,9 @@ export class WalletAddress
       authServer,
       resourceServer
     }
+    if (this.additionalProperties)
+      returnVal.additionalProperties = this.additionalProperties
+    return returnVal
   }
 }
 
