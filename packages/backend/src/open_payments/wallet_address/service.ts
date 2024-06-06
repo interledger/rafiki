@@ -135,34 +135,25 @@ async function createWalletAddress(
     return WalletAddressError.InvalidUrl
   }
 
-  const trx = await deps.knex.transaction()
   try {
-    const wallet = await WalletAddress.query(trx)
-      .insertAndFetch({
+    // Remove blank key/value pairs:
+    const additionalProperties = options.additionalProperties
+      ? options.additionalProperties.filter((itm) => {
+          return !(
+            itm.fieldKey.trim().length == 0 || itm.fieldValue.trim().length == 0
+          )
+        })
+      : undefined
+
+    return await WalletAddress.query(deps.knex)
+      .insertGraphAndFetch({
         url: options.url,
         publicName: options.publicName,
-        assetId: options.assetId
+        assetId: options.assetId,
+        additionalProperties: additionalProperties
       })
       .withGraphFetched('asset')
-    if (
-      options.additionalProperties &&
-      options.additionalProperties.length > 0
-    ) {
-      // remove blank key/value pairs:
-      const addProperties = options.additionalProperties.filter((itm) => {
-        return !(
-          itm.fieldKey.trim().length == 0 || itm.fieldValue.trim().length == 0
-        )
-      })
-      addProperties.forEach((itm) => (itm.walletAddressId = wallet.id))
-      if (addProperties.length) {
-        await WalletAddressAdditionalProperty.query(trx).insert(addProperties)
-      }
-    }
-    await trx.commit()
-    return wallet
   } catch (err) {
-    await trx.rollback()
     if (err instanceof ForeignKeyViolationError) {
       if (err.constraint === 'walletaddresses_assetid_foreign') {
         return WalletAddressError.UnknownAsset

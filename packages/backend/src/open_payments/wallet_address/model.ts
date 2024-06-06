@@ -33,6 +33,14 @@ export class WalletAddress
         from: 'walletAddresses.id',
         to: 'walletAddressKeys.walletAddressId'
       }
+    },
+    additionalProperties: {
+      relation: Model.HasManyRelation,
+      modelClass: WalletAddressAdditionalProperty,
+      join: {
+        from: 'walletAddresses.id',
+        to: 'walletAddressAdditionalProperties.walletAddressId'
+      }
     }
   })
 
