@@ -31,8 +31,7 @@ import {
   WalletAddress,
   WalletAddressStatus,
   UpdateWalletAddressMutationResponse,
-  WalletAddressesConnection,
-  AdditionalPropertyConnection
+  WalletAddressesConnection
 } from '../generated/graphql'
 import { getPageTests } from './page.test'
 import { WalletAddressAdditionalProperty } from '../../open_payments/wallet_address/additional_property/model'
@@ -479,6 +478,11 @@ describe('Wallet Address Resolvers', (): void => {
                   }
                   url
                   publicName
+                  additionalProperties {
+                    key
+                    value
+                    visibleInOpenPayments
+                  }
                 }
               }
             `,
@@ -504,47 +508,15 @@ describe('Wallet Address Resolvers', (): void => {
             scale: walletAddress.asset.scale
           },
           url: walletAddress.url,
-          publicName: publicName ?? null
-        })
-
-        // Now fetch with additional properties:
-        const queryAddProps = await appContainer.apolloClient
-          .query({
-            query: gql`
-              query Query($walletAddressId: String!) {
-                additionalProperties(walletAddressId: $walletAddressId) {
-                  properties {
-                    key
-                    value
-                    visibleInOpenPayments
-                  }
-                }
-              }
-            `,
-            variables: {
-              walletAddressId: walletAddress.id
+          publicName: publicName ?? null,
+          additionalProperties: [
+            {
+              __typename: 'AdditionalProperty',
+              key: walletProp.fieldKey,
+              value: walletProp.fieldValue,
+              visibleInOpenPayments: walletProp.visibleInOpenPayments
             }
-          })
-          .then((query): AdditionalPropertyConnection => {
-            if (query.data) {
-              return query.data
-            } else {
-              throw new Error('Data was empty')
-            }
-          })
-
-        expect(queryAddProps).toEqual({
-          additionalProperties: {
-            __typename: 'AdditionalPropertyConnection',
-            properties: [
-              {
-                __typename: 'AdditionalProperty',
-                key: walletProp.fieldKey,
-                value: walletProp.fieldValue,
-                visibleInOpenPayments: walletProp.visibleInOpenPayments
-              }
-            ]
-          }
+          ]
         })
       }
     )

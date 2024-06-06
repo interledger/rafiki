@@ -89,15 +89,15 @@ export const resolvers: Resolvers = {
     quote: getQuote,
     webhookEvents: getWebhookEvents,
     payments: getCombinedPayments,
-    receiver: getReceiver,
-    additionalProperties: getWalletAddressAdditionalProperties
+    receiver: getReceiver
   },
   WalletAddress: {
     liquidity: getWalletAddressLiquidity,
     incomingPayments: getWalletAddressIncomingPayments,
     outgoingPayments: getWalletAddressOutgoingPayments,
     quotes: getWalletAddressQuotes,
-    walletAddressKeys: getWalletAddressKeys
+    walletAddressKeys: getWalletAddressKeys,
+    additionalProperties: getWalletAddressAdditionalProperties
   },
   IncomingPayment: {
     liquidity: getIncomingPaymentLiquidity

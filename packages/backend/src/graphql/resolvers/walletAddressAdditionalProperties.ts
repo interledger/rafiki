@@ -1,33 +1,31 @@
 import {
   ResolversTypes,
   AdditionalProperty,
-  QueryResolvers
+  WalletAddressResolvers
 } from '../generated/graphql'
 import { ApolloContext } from '../../app'
 import { WalletAddressAdditionalProperty } from '../../open_payments/wallet_address/additional_property/model'
 
-export const getWalletAddressAdditionalProperties: QueryResolvers<ApolloContext>['additionalProperties'] =
+export const getWalletAddressAdditionalProperties: WalletAddressResolvers<ApolloContext>['additionalProperties'] =
   async (
     parent,
     args,
     ctx
-  ): Promise<ResolversTypes['AdditionalPropertyConnection']> => {
-    if (!args.walletAddressId) {
+  ): Promise<Array<ResolversTypes['AdditionalProperty']>> => {
+    const { id: walletAddressId } = parent
+
+    if (!walletAddressId) {
       throw new Error('missing wallet address id')
     }
     const walletAddressService = await ctx.container.use('walletAddressService')
     const additionalProperties =
       await walletAddressService.getAdditionalProperties(
-        args.walletAddressId,
+        walletAddressId,
         false // Include all Additional Properties
       )
-    if (!additionalProperties) return { properties: [] }
+    if (!additionalProperties) return []
 
-    return {
-      properties: additionalProperties.map((itm) =>
-        additionalPropertyToGraphql(itm)
-      )
-    }
+    return additionalProperties.map((itm) => additionalPropertyToGraphql(itm))
   }
 
 export const additionalPropertyToGraphql = (
