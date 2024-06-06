@@ -24,6 +24,7 @@ import { IAppConfig } from '../../config/app'
 import { Pagination, SortOrder } from '../../shared/baseModel'
 import { WebhookService } from '../../webhook/service'
 import { poll } from '../../shared/utils'
+import { WalletAddressAdditionalProperty } from './additional_property/model'
 
 interface Options {
   publicName?: string
@@ -32,6 +33,7 @@ interface Options {
 export interface CreateOptions extends Options {
   url: string
   assetId: string
+  additionalProperties?: WalletAddressAdditionalProperty[]
 }
 
 export interface UpdateOptions extends Options {
@@ -44,6 +46,10 @@ type UpdateInput = Omit<UpdateOptions, 'id'> & { deactivatedAt?: Date | null }
 export interface WalletAddressService {
   create(options: CreateOptions): Promise<WalletAddress | WalletAddressError>
   update(options: UpdateOptions): Promise<WalletAddress | WalletAddressError>
+  getAdditionalProperties(
+    id: string,
+    includeVisibleOnlyAddProps: boolean
+  ): Promise<WalletAddressAdditionalProperty[] | undefined>
   get(id: string): Promise<WalletAddress | undefined>
   getByUrl(url: string): Promise<WalletAddress | undefined>
   getOrPollByUrl(url: string): Promise<WalletAddress | undefined>
@@ -82,6 +88,12 @@ export async function createWalletAddressService({
   return {
     create: (options) => createWalletAddress(deps, options),
     update: (options) => updateWalletAddress(deps, options),
+    getAdditionalProperties: (walletAddressId, includeVisibleOnlyAddProps) =>
+      getWalletAdditionalProperties(
+        deps,
+        walletAddressId,
+        includeVisibleOnlyAddProps
+      ),
     get: (id) => getWalletAddress(deps, id),
     getByUrl: (url) => getWalletAddressByUrl(deps, url),
     getOrPollByUrl: (url) => getOrPollByUrl(deps, url),
@@ -122,12 +134,23 @@ async function createWalletAddress(
   if (!isValidWalletAddressUrl(options.url)) {
     return WalletAddressError.InvalidUrl
   }
+
   try {
+    // Remove blank key/value pairs:
+    const additionalProperties = options.additionalProperties
+      ? options.additionalProperties.filter((itm) => {
+          return !(
+            itm.fieldKey.trim().length == 0 || itm.fieldValue.trim().length == 0
+          )
+        })
+      : undefined
+
     return await WalletAddress.query(deps.knex)
-      .insertAndFetch({
+      .insertGraphAndFetch({
         url: options.url,
         publicName: options.publicName,
-        assetId: options.assetId
+        assetId: options.assetId,
+        additionalProperties: additionalProperties
       })
       .withGraphFetched('asset')
   } catch (err) {
@@ -179,15 +202,29 @@ async function getWalletAddress(
     .withGraphFetched('asset')
 }
 
+async function getWalletAdditionalProperties(
+  deps: ServiceDependencies,
+  walletAddressId: string,
+  includeVisibleOnlyAddProps: boolean
+): Promise<WalletAddressAdditionalProperty[] | undefined> {
+  if (includeVisibleOnlyAddProps) {
+    return WalletAddressAdditionalProperty.query(deps.knex).where({
+      walletAddressId,
+      visibleInOpenPayments: true
+    })
+  } else {
+    return WalletAddressAdditionalProperty.query(deps.knex).where({
+      walletAddressId
+    })
+  }
+}
+
 async function getOrPollByUrl(
   deps: ServiceDependencies,
   url: string
 ): Promise<WalletAddress | undefined> {
   const existingWalletAddress = await getWalletAddressByUrl(deps, url)
-
-  if (existingWalletAddress) {
-    return existingWalletAddress
-  }
+  if (existingWalletAddress) return existingWalletAddress
 
   await WalletAddressEvent.query(deps.knex).insert({
     type: WalletAddressEventType.WalletAddressNotFound,
@@ -202,13 +239,11 @@ async function getOrPollByUrl(
   )
 
   try {
-    const walletAddress = await poll({
+    return await poll({
       request: () => getWalletAddressByUrl(deps, url),
       pollingFrequencyMs: deps.config.walletAddressPollingFrequencyMs,
       timeoutMs: deps.config.walletAddressLookupTimeoutMs
     })
-
-    return walletAddress
   } catch (error) {
     return undefined
   }

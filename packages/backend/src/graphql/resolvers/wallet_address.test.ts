@@ -34,6 +34,7 @@ import {
   WalletAddressesConnection
 } from '../generated/graphql'
 import { getPageTests } from './page.test'
+import { WalletAddressAdditionalProperty } from '../../open_payments/wallet_address/additional_property/model'
 
 describe('Wallet Address Resolvers', (): void => {
   let deps: IocContract<AppServices>
@@ -65,7 +66,8 @@ describe('Wallet Address Resolvers', (): void => {
       asset = await createAsset(deps)
       input = {
         assetId: asset.id,
-        url: 'https://alice.me/.well-known/pay'
+        url: 'https://alice.me/.well-known/pay',
+        additionalProperties: []
       }
     })
 
@@ -77,6 +79,76 @@ describe('Wallet Address Resolvers', (): void => {
       'Can create a wallet address (publicName: $publicName)',
       async ({ publicName }): Promise<void> => {
         input.publicName = publicName
+        const response = await appContainer.apolloClient
+          .mutate({
+            mutation: gql`
+              mutation CreateWalletAddress($input: CreateWalletAddressInput!) {
+                createWalletAddress(input: $input) {
+                  code
+                  success
+                  message
+                  walletAddress {
+                    id
+                    asset {
+                      code
+                      scale
+                    }
+                    url
+                    publicName
+                  }
+                }
+              }
+            `,
+            variables: {
+              input
+            }
+          })
+          .then((query): CreateWalletAddressMutationResponse => {
+            if (query.data) {
+              return query.data.createWalletAddress
+            } else {
+              throw new Error('Data was empty')
+            }
+          })
+
+        expect(response.success).toBe(true)
+        expect(response.code).toEqual('200')
+        assert.ok(response.walletAddress)
+        expect(response.walletAddress).toEqual({
+          __typename: 'WalletAddress',
+          id: response.walletAddress.id,
+          url: input.url,
+          asset: {
+            __typename: 'Asset',
+            code: asset.code,
+            scale: asset.scale
+          },
+          publicName: publicName ?? null
+        })
+        await expect(
+          walletAddressService.get(response.walletAddress.id)
+        ).resolves.toMatchObject({
+          id: response.walletAddress.id,
+          asset
+        })
+      }
+    )
+
+    test.each`
+      publicName
+      ${'Bob'}
+      ${undefined}
+    `(
+      'Can create a wallet address with additional properties (publicName: $publicName)',
+      async ({ publicName }): Promise<void> => {
+        input.publicName = publicName
+        input.additionalProperties = [
+          { key: '', value: '', visibleInOpenPayments: false },
+          { key: 'key', value: '', visibleInOpenPayments: false },
+          { key: '', value: 'val', visibleInOpenPayments: false },
+          { key: 'key', value: 'val', visibleInOpenPayments: false },
+          { key: 'key-public', value: 'val', visibleInOpenPayments: true }
+        ]
         const response = await appContainer.apolloClient
           .mutate({
             mutation: gql`
@@ -382,9 +454,20 @@ describe('Wallet Address Resolvers', (): void => {
     `(
       'Can get a wallet address (publicName: $publicName)',
       async ({ publicName }): Promise<void> => {
+        const walletProp01 = new WalletAddressAdditionalProperty()
+        walletProp01.fieldKey = 'key-test-query-one'
+        walletProp01.fieldValue = 'value-test-query'
+        walletProp01.visibleInOpenPayments = true
+        const walletProp02 = new WalletAddressAdditionalProperty()
+        walletProp02.fieldKey = 'key-test-query-two'
+        walletProp02.fieldValue = 'value-test-query'
+        walletProp02.visibleInOpenPayments = false
+        const additionalProperties = [walletProp01, walletProp02]
+
         const walletAddress = await createWalletAddress(deps, {
           publicName,
-          createLiquidityAccount: true
+          createLiquidityAccount: true,
+          additionalProperties
         })
         const query = await appContainer.apolloClient
           .query({
@@ -399,6 +482,11 @@ describe('Wallet Address Resolvers', (): void => {
                   }
                   url
                   publicName
+                  additionalProperties {
+                    key
+                    value
+                    visibleInOpenPayments
+                  }
                 }
               }
             `,
@@ -424,7 +512,21 @@ describe('Wallet Address Resolvers', (): void => {
             scale: walletAddress.asset.scale
           },
           url: walletAddress.url,
-          publicName: publicName ?? null
+          publicName: publicName ?? null,
+          additionalProperties: [
+            {
+              __typename: 'AdditionalProperty',
+              key: walletProp01.fieldKey,
+              value: walletProp01.fieldValue,
+              visibleInOpenPayments: walletProp01.visibleInOpenPayments
+            },
+            {
+              __typename: 'AdditionalProperty',
+              key: walletProp02.fieldKey,
+              value: walletProp02.fieldValue,
+              visibleInOpenPayments: walletProp02.visibleInOpenPayments
+            }
+          ]
         })
       }
     )

@@ -1,0 +1,29 @@
+meta {
+  name: Get Wallet Address Additional Properties
+  type: graphql
+  seq: 21
+}
+
+post {
+  url: {{RafikiGraphqlHost}}/graphql
+  body: graphql
+  auth: none
+}
+
+body:graphql {
+  query GetWalletAddressAdditionalProperties {
+    additionalProperties {
+      properties {
+        key
+        value
+        visibleInOpenPayments
+      }
+    }
+  }
+}
+
+script:pre-request {
+  const scripts = require('./scripts');
+  
+  scripts.addApiSignatureHeader();
+}

@@ -19,6 +19,19 @@ export type Scalars = {
   UInt64: { input: bigint; output: bigint; }
 };
 
+export type AdditionalProperty = {
+  __typename?: 'AdditionalProperty';
+  key: Scalars['String']['output'];
+  value: Scalars['String']['output'];
+  visibleInOpenPayments: Scalars['Boolean']['output'];
+};
+
+export type AdditionalPropertyInput = {
+  key: Scalars['String']['input'];
+  value: Scalars['String']['input'];
+  visibleInOpenPayments: Scalars['Boolean']['input'];
+};
+
 export enum Alg {
   EdDsa = 'EdDSA'
 }
@@ -289,6 +302,8 @@ export type CreateReceiverResponse = {
 };
 
 export type CreateWalletAddressInput = {
+  /** Additional properties associated with the [walletAddress]. */
+  additionalProperties?: InputMaybe<Array<AdditionalPropertyInput>>;
   /** Asset of the wallet address */
   assetId: Scalars['String']['input'];
   /** Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence) */
@@ -1005,7 +1020,7 @@ export type Query = {
   quote?: Maybe<Quote>;
   /** Get an local or remote Open Payments Incoming Payment. The receiver has a wallet address on either this or another Open Payments resource server. */
   receiver?: Maybe<Receiver>;
-  /** Fetch a wallet address */
+  /** Fetch a wallet address. */
   walletAddress?: Maybe<WalletAddress>;
   /** Fetch a page of wallet addresses. */
   walletAddresses: WalletAddressesConnection;
@@ -1291,6 +1306,8 @@ export type VoidLiquidityWithdrawalInput = {
 
 export type WalletAddress = Model & {
   __typename?: 'WalletAddress';
+  /** List additional properties associated with this wallet address. */
+  additionalProperties?: Maybe<Array<Maybe<AdditionalProperty>>>;
   /** Asset of the wallet address */
   asset: Asset;
   /** Date-time of creation */
@@ -1311,6 +1328,7 @@ export type WalletAddress = Model & {
   status: WalletAddressStatus;
   /** Wallet Address URL */
   url: Scalars['String']['output'];
+  /** List of keys associated with this wallet address */
   walletAddressKeys?: Maybe<WalletAddressKeyConnection>;
 };
 
@@ -1526,6 +1544,8 @@ export type ResolversInterfaceTypes<RefType extends Record<string, unknown>> = {
 
 /** Mapping between all available schema types and the resolvers types */
 export type ResolversTypes = {
+  AdditionalProperty: ResolverTypeWrapper<Partial<AdditionalProperty>>;
+  AdditionalPropertyInput: ResolverTypeWrapper<Partial<AdditionalPropertyInput>>;
   Alg: ResolverTypeWrapper<Partial<Alg>>;
   Amount: ResolverTypeWrapper<Partial<Amount>>;
   AmountInput: ResolverTypeWrapper<Partial<AmountInput>>;
@@ -1649,6 +1669,8 @@ export type ResolversTypes = {
 
 /** Mapping between all available schema types and the resolvers parents */
 export type ResolversParentTypes = {
+  AdditionalProperty: Partial<AdditionalProperty>;
+  AdditionalPropertyInput: Partial<AdditionalPropertyInput>;
   Amount: Partial<Amount>;
   AmountInput: Partial<AmountInput>;
   Asset: Partial<Asset>;
@@ -1758,6 +1780,13 @@ export type ResolversParentTypes = {
   WebhookEventsConnection: Partial<WebhookEventsConnection>;
   WebhookEventsEdge: Partial<WebhookEventsEdge>;
   WithdrawEventLiquidityInput: Partial<WithdrawEventLiquidityInput>;
+};
+
+export type AdditionalPropertyResolvers<ContextType = any, ParentType extends ResolversParentTypes['AdditionalProperty'] = ResolversParentTypes['AdditionalProperty']> = {
+  key?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  value?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  visibleInOpenPayments?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
 export type AmountResolvers<ContextType = any, ParentType extends ResolversParentTypes['Amount'] = ResolversParentTypes['Amount']> = {
@@ -2213,6 +2242,7 @@ export type UpdateWalletAddressMutationResponseResolvers<ContextType = any, Pare
 };
 
 export type WalletAddressResolvers<ContextType = any, ParentType extends ResolversParentTypes['WalletAddress'] = ResolversParentTypes['WalletAddress']> = {
+  additionalProperties?: Resolver<Maybe<Array<Maybe<ResolversTypes['AdditionalProperty']>>>, ParentType, ContextType>;
   asset?: Resolver<ResolversTypes['Asset'], ParentType, ContextType>;
   createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
@@ -2297,6 +2327,7 @@ export type WebhookEventsEdgeResolvers<ContextType = any, ParentType extends Res
 };
 
 export type Resolvers<ContextType = any> = {
+  AdditionalProperty?: AdditionalPropertyResolvers<ContextType>;
   Amount?: AmountResolvers<ContextType>;
   Asset?: AssetResolvers<ContextType>;
   AssetEdge?: AssetEdgeResolvers<ContextType>;
