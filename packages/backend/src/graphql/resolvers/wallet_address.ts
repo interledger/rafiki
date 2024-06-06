@@ -65,13 +65,14 @@ export const createWalletAddress: MutationResolvers<ApolloContext>['createWallet
   ): Promise<ResolversTypes['CreateWalletAddressMutationResponse']> => {
     const walletAddressService = await ctx.container.use('walletAddressService')
     const addProps: WalletAddressAdditionalProperty[] = []
-    for (const inputAddProp of args.input.additionalProperties) {
-      const toAdd = new WalletAddressAdditionalProperty()
-      toAdd.fieldKey = inputAddProp.key
-      toAdd.fieldValue = inputAddProp.value
-      toAdd.visibleInOpenPayments = inputAddProp.visibleInOpenPayments
-      addProps.push(toAdd)
-    }
+    if (args.input.additionalProperties) args.input.additionalProperties.forEach(inputAddProp => {
+        const toAdd = new WalletAddressAdditionalProperty()
+        toAdd.fieldKey = inputAddProp.key
+        toAdd.fieldValue = inputAddProp.value
+        toAdd.visibleInOpenPayments = inputAddProp.visibleInOpenPayments
+        addProps.push(toAdd)
+      })
+
     const options: CreateOptions = {
       assetId: args.input.assetId,
       additionalProperties: addProps,

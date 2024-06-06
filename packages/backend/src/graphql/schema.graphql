@@ -1046,7 +1046,7 @@ input CreateWalletAddressInput {
   "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)"
   idempotencyKey: String
   "Additional properties associated with the [walletAddress]."
-  additionalProperties: [AdditionalPropertyInput!]!
+  additionalProperties: [AdditionalPropertyInput!]
 }
 
 input AdditionalPropertyInput {

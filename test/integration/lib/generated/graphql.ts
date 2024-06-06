@@ -303,7 +303,7 @@ export type CreateReceiverResponse = {
 
 export type CreateWalletAddressInput = {
   /** Additional properties associated with the [walletAddress]. */
-  additionalProperties: Array<AdditionalPropertyInput>;
+  additionalProperties?: InputMaybe<Array<AdditionalPropertyInput>>;
   /** Asset of the wallet address */
   assetId: Scalars['String']['input'];
   /** Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence) */
