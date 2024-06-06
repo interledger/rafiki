@@ -122,7 +122,6 @@ export interface WalletAddressUrlContext extends AppContext {
   grant?: Grant
   client?: string
   accessAction?: AccessAction
-  fetchAdditionalProperties?: boolean
 }
 
 export interface WalletAddressContext extends WalletAddressUrlContext {

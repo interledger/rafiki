@@ -41,13 +41,6 @@ export async function getWalletAddress(
   const walletAddress = await deps.walletAddressService.getOrPollByUrl(
     ctx.walletAddressUrl
   )
-  if (walletAddress && ctx.fetchAdditionalProperties) {
-    walletAddress.additionalProperties =
-      await deps.walletAddressService.getAdditionalProperties(
-        walletAddress.id,
-        true
-      )
-  }
 
   if (!walletAddress?.isActive) {
     throw new OpenPaymentsServerRouteError(
@@ -58,6 +51,13 @@ export async function getWalletAddress(
       }
     )
   }
+
+  // We always fetch the additional properties, but not the properties that are not exposed to open-payments:
+  walletAddress.additionalProperties =
+    await deps.walletAddressService.getAdditionalProperties(
+      walletAddress.id,
+      true
+    )
 
   ctx.body = walletAddress.toOpenPaymentsType({
     authServer: deps.config.authServerGrantUrl,
