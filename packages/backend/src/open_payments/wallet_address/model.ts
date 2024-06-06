@@ -120,8 +120,9 @@ export class WalletAddress
       authServer,
       resourceServer
     }
-    if (this.additionalProperties)
+    if (this.additionalProperties && this.additionalProperties.length) {
       returnVal.additionalProperties = this.additionalProperties
+    }
     return returnVal
   }
 }
