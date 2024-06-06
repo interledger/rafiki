@@ -148,9 +148,6 @@ describe('Wallet Address Resolvers', (): void => {
           mutation: gql`
             mutation CreateWalletAddress($input: CreateWalletAddressInput!) {
               createWalletAddress(input: $input) {
-                code
-                success
-                message
                 walletAddress {
                   id
                   asset {
@@ -180,26 +177,25 @@ describe('Wallet Address Resolvers', (): void => {
           }
         })
 
-      expect(response.success).toBe(true)
-      expect(response.code).toEqual('200')
-      assert.ok(response.walletAddress)
-      expect(response.walletAddress).toEqual({
-        __typename: 'WalletAddress',
-        id: response.walletAddress.id,
-        url: input.url,
-        asset: {
-          __typename: 'Asset',
-          code: asset.code,
-          scale: asset.scale
-        },
-        publicName: input.publicName,
-        additionalProperties: validAdditionalProperties.map((property) => {
-          return {
-            __typename: 'AdditionalProperty',
-            key: property.key,
-            value: property.value,
-            visibleInOpenPayments: property.visibleInOpenPayments
-          }
+
+        assert.ok(response.walletAddress)
+        expect(response.walletAddress).toEqual({
+          __typename: 'WalletAddress',
+          id: response.walletAddress.id,
+          url: input.url,
+          asset: {
+            __typename: 'Asset',
+            code: asset.code,
+            scale: asset.scale
+          },
+          publicName: input.publicName,
+          additionalProperties: validAdditionalProperties.map((property) => {
+            return {
+              __typename: 'AdditionalProperty',
+              key: property.key,
+              value: property.value,
+              visibleInOpenPayments: property.visibleInOpenPayments
+            }
         })
       })
       await expect(
@@ -370,9 +366,6 @@ describe('Wallet Address Resolvers', (): void => {
             mutation: gql`
               mutation UpdateWalletAddress($input: UpdateWalletAddressInput!) {
                 updateWalletAddress(input: $input) {
-                  code
-                  success
-                  message
                   walletAddress {
                     id
                     additionalProperties {
@@ -396,8 +389,6 @@ describe('Wallet Address Resolvers', (): void => {
             }
           })
 
-        expect(response.success).toBe(true)
-        expect(response.code).toEqual('200')
         expect(response.walletAddress?.additionalProperties).toEqual(
           updateOptions.additionalProperties.map((property) => {
             return {
@@ -440,9 +431,6 @@ describe('Wallet Address Resolvers', (): void => {
             mutation: gql`
               mutation UpdateWalletAddress($input: UpdateWalletAddressInput!) {
                 updateWalletAddress(input: $input) {
-                  code
-                  success
-                  message
                   walletAddress {
                     id
                     additionalProperties {
@@ -466,8 +454,6 @@ describe('Wallet Address Resolvers', (): void => {
             }
           })
 
-        expect(response.success).toBe(true)
-        expect(response.code).toEqual('200')
         // Does not include additional properties from create that were not also in the update
         expect(response.walletAddress?.additionalProperties).toEqual(
           updateOptions.additionalProperties.map((property) => {
@@ -499,9 +485,6 @@ describe('Wallet Address Resolvers', (): void => {
             mutation: gql`
               mutation UpdateWalletAddress($input: UpdateWalletAddressInput!) {
                 updateWalletAddress(input: $input) {
-                  code
-                  success
-                  message
                   walletAddress {
                     id
                     additionalProperties {
@@ -525,8 +508,6 @@ describe('Wallet Address Resolvers', (): void => {
             }
           })
 
-        expect(response.success).toBe(true)
-        expect(response.code).toEqual('200')
         expect(response.walletAddress?.additionalProperties).toEqual([])
       })
     })
