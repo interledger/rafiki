@@ -70,20 +70,11 @@ async function canApiSignatureBeProcessed(
   ctx: AppContext,
   config: IAppConfig
 ): Promise<boolean> {
-  const logger = await ctx.container.use('logger')
   const { timestamp } = getSignatureParts(signature)
   const signatureTime = Number(timestamp) * 1000
   const currentTime = Date.now()
   const ttlMilliseconds = config.adminApiSignatureTtl * 1000
-  logger.info(
-    {
-      currentTime,
-      signatureTime,
-      diff: currentTime - signatureTime,
-      ttlMilliseconds
-    },
-    'time differential'
-  )
+
   if (currentTime - signatureTime > ttlMilliseconds) return false
 
   const redis = await ctx.container.use('redis')
