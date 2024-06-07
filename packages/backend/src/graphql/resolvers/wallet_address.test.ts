@@ -307,6 +307,11 @@ describe('Wallet Address Resolvers', (): void => {
                   id
                   status
                   publicName
+                  additionalProperties {
+                    key
+                    value
+                    visibleInOpenPayments
+                  }
                 }
               }
             }
@@ -327,7 +332,8 @@ describe('Wallet Address Resolvers', (): void => {
       expect(response.code).toEqual('200')
       expect(response.walletAddress).toEqual({
         __typename: 'WalletAddress',
-        ...updateOptions
+        ...updateOptions,
+        additionalProperties: []
       })
 
       const updatedWalletAddress = await walletAddressService.get(
