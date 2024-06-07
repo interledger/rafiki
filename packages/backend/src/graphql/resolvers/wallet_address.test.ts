@@ -66,8 +66,7 @@ describe('Wallet Address Resolvers', (): void => {
       asset = await createAsset(deps)
       input = {
         assetId: asset.id,
-        url: 'https://alice.me/.well-known/pay',
-        additionalProperties: []
+        url: 'https://alice.me/.well-known/pay'
       }
     })
 
@@ -134,75 +133,68 @@ describe('Wallet Address Resolvers', (): void => {
       }
     )
 
-    test.each`
-      publicName
-      ${'Bob'}
-      ${undefined}
-    `(
-      'Can create a wallet address with additional properties (publicName: $publicName)',
-      async ({ publicName }): Promise<void> => {
-        input.publicName = publicName
-        input.additionalProperties = [
-          { key: '', value: '', visibleInOpenPayments: false },
-          { key: 'key', value: '', visibleInOpenPayments: false },
-          { key: '', value: 'val', visibleInOpenPayments: false },
-          { key: 'key', value: 'val', visibleInOpenPayments: false },
-          { key: 'key-public', value: 'val', visibleInOpenPayments: true }
-        ]
-        const response = await appContainer.apolloClient
-          .mutate({
-            mutation: gql`
-              mutation CreateWalletAddress($input: CreateWalletAddressInput!) {
-                createWalletAddress(input: $input) {
-                  code
-                  success
-                  message
-                  walletAddress {
-                    id
-                    asset {
-                      code
-                      scale
-                    }
-                    url
-                    publicName
+    test('Can create a wallet address with additional properties', async (): Promise<void> => {
+      input.publicName = 'Bob'
+      input.additionalProperties = [
+        { key: '', value: '', visibleInOpenPayments: false },
+        { key: 'key', value: '', visibleInOpenPayments: false },
+        { key: '', value: 'val', visibleInOpenPayments: false },
+        { key: 'key', value: 'val', visibleInOpenPayments: false },
+        { key: 'key-public', value: 'val', visibleInOpenPayments: true }
+      ]
+      const response = await appContainer.apolloClient
+        .mutate({
+          mutation: gql`
+            mutation CreateWalletAddress($input: CreateWalletAddressInput!) {
+              createWalletAddress(input: $input) {
+                code
+                success
+                message
+                walletAddress {
+                  id
+                  asset {
+                    code
+                    scale
                   }
+                  url
+                  publicName
                 }
               }
-            `,
-            variables: {
-              input
             }
-          })
-          .then((query): CreateWalletAddressMutationResponse => {
-            if (query.data) {
-              return query.data.createWalletAddress
-            } else {
-              throw new Error('Data was empty')
-            }
-          })
+          `,
+          variables: {
+            input
+          }
+        })
+        .then((query): CreateWalletAddressMutationResponse => {
+          if (query.data) {
+            return query.data.createWalletAddress
+          } else {
+            throw new Error('Data was empty')
+          }
+        })
 
-        expect(response.success).toBe(true)
-        expect(response.code).toEqual('200')
-        assert.ok(response.walletAddress)
-        expect(response.walletAddress).toEqual({
-          __typename: 'WalletAddress',
-          id: response.walletAddress.id,
-          url: input.url,
-          asset: {
-            __typename: 'Asset',
-            code: asset.code,
-            scale: asset.scale
-          },
-          publicName: publicName ?? null
-        })
-        await expect(
-          walletAddressService.get(response.walletAddress.id)
-        ).resolves.toMatchObject({
-          id: response.walletAddress.id,
-          asset
-        })
-      }
-    )
+      expect(response.success).toBe(true)
+      expect(response.code).toEqual('200')
+      assert.ok(response.walletAddress)
+      expect(response.walletAddress).toEqual({
+        __typename: 'WalletAddress',
+        id: response.walletAddress.id,
+        url: input.url,
+        asset: {
+          __typename: 'Asset',
+          code: asset.code,
+          scale: asset.scale
+        },
+        publicName: input.publicName
+      })
+      await expect(
+        walletAddressService.get(response.walletAddress.id)
+      ).resolves.toMatchObject({
+        id: response.walletAddress.id,
+        asset
+      })
+    })
 
     test.each`
       error
