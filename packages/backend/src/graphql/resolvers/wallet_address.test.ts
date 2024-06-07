@@ -480,7 +480,6 @@ describe('Wallet Address Resolvers', (): void => {
         )
       })
       test('Empty additional properties is a no-op', async (): Promise<void> => {
-        // Initially create the wallet address with some properties
         const createOptions = {
           additionalProperties: [
             {
