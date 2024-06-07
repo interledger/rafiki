@@ -159,7 +159,6 @@ export default function PaymentsPage() {
               className='relative mt-2'
               onSubmit={(e) => {
                 if (!walletId) {
-                  
                   e.preventDefault()
                   updateParams({
                     walletAddressId: null,
