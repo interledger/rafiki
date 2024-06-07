@@ -30,18 +30,29 @@ interface Options {
   publicName?: string
 }
 
+export type WalletAddressAdditionalPropertyInput = Pick<
+  WalletAddressAdditionalProperty,
+  'fieldKey' | 'fieldValue' | 'visibleInOpenPayments'
+>
+
 export interface CreateOptions extends Options {
   url: string
   assetId: string
-  additionalProperties?: WalletAddressAdditionalProperty[]
+  additionalProperties?: WalletAddressAdditionalPropertyInput[]
 }
+
+type Status = 'ACTIVE' | 'INACTIVE'
 
 export interface UpdateOptions extends Options {
   id: string
-  status?: 'ACTIVE' | 'INACTIVE'
+  status?: Status
+  additionalProperties?: WalletAddressAdditionalPropertyInput[]
 }
 
-type UpdateInput = Omit<UpdateOptions, 'id'> & { deactivatedAt?: Date | null }
+type UpdateInput = Options & {
+  deactivatedAt?: Date | null
+  status?: Status
+}
 
 export interface WalletAddressService {
   create(options: CreateOptions): Promise<WalletAddress | WalletAddressError>
@@ -165,8 +176,9 @@ async function createWalletAddress(
 
 async function updateWalletAddress(
   deps: ServiceDependencies,
-  { id, status, publicName }: UpdateOptions
+  { id, status, publicName, additionalProperties }: UpdateOptions
 ): Promise<WalletAddress | WalletAddressError> {
+  const trx = await WalletAddress.startTransaction()
   try {
     const update: UpdateInput = { publicName }
     const walletAddress = await WalletAddress.query(deps.knex)
@@ -180,12 +192,29 @@ async function updateWalletAddress(
       update.deactivatedAt = null
     }
 
-    return await walletAddress
-      .$query(deps.knex)
+    const updatedWalletAddress = await walletAddress
+      .$query(trx)
       .patchAndFetch(update)
       .withGraphFetched('asset')
       .throwIfNotFound()
+
+    // Override all existing additional properties if new ones are provided
+    if (additionalProperties && additionalProperties.length) {
+      await WalletAddressAdditionalProperty.query(trx)
+        .where('walletAddressId', id)
+        .delete()
+      await WalletAddressAdditionalProperty.query(trx).insert(
+        additionalProperties.map((prop) => ({
+          walletAddressId: id,
+          ...prop
+        }))
+      )
+    }
+    await trx.commit()
+
+    return updatedWalletAddress
   } catch (err) {
+    await trx.rollback()
     if (err instanceof NotFoundError) {
       return WalletAddressError.UnknownWalletAddress
     }
