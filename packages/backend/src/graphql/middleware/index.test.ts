@@ -16,6 +16,7 @@ import {
   UpdateAssetInput
 } from '../generated/graphql'
 import { GraphQLError } from 'graphql'
+import { AssetError, errorToMessage, errorToCode } from '../../asset/errors'
 
 describe('GraphQL Middleware', (): void => {
   let deps: IocContract<AppServices>
@@ -165,6 +166,46 @@ describe('GraphQL Middleware', (): void => {
         scale: initialResponse.asset.scale,
         withdrawalThreshold: BigInt(10)
       })
+    })
+
+    test('does not return original response on repeat call with different idempotency key', async (): Promise<void> => {
+      const input: CreateAssetInput = {
+        ...randomAsset(),
+        idempotencyKey: uuid()
+      }
+
+      const createAssetSpy = jest.spyOn(assetService, 'create')
+
+      const initialResponse = await callCreateAssetMutation(input)
+
+      expect(createAssetSpy).toHaveBeenCalledTimes(1)
+      assert.ok(initialResponse.asset)
+      expect(initialResponse).toEqual({
+        __typename: 'AssetMutationResponse',
+        asset: {
+          __typename: 'Asset',
+          id: initialResponse.asset.id,
+          code: input.code,
+          scale: input.scale,
+          withdrawalThreshold: null
+        }
+      })
+
+      createAssetSpy.mockClear()
+
+      const repeatResponse = callCreateAssetMutation({
+        ...input,
+        idempotencyKey: uuid()
+      })
+
+      await expect(repeatResponse).rejects.toThrow(
+        new GraphQLError(errorToMessage[AssetError.DuplicateAsset], {
+          extensions: {
+            code: errorToCode[AssetError.DuplicateAsset]
+          }
+        })
+      )
+      expect(createAssetSpy).toHaveBeenCalledTimes(1)
     })
 
     test('throws if different input parameters for same idempotency key', async (): Promise<void> => {
