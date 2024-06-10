@@ -57,7 +57,7 @@ export const errorToCode: {
   [OutgoingPaymentError.UnknownWalletAddress]: GraphQLErrorCode.NotFound,
   [OutgoingPaymentError.UnknownPayment]: GraphQLErrorCode.NotFound,
   [OutgoingPaymentError.UnknownQuote]: GraphQLErrorCode.NotFound,
-  [OutgoingPaymentError.WrongState]: GraphQLErrorCode.BadUserInput,
+  [OutgoingPaymentError.WrongState]: GraphQLErrorCode.Conflict,
   [OutgoingPaymentError.InvalidQuote]: GraphQLErrorCode.BadUserInput,
   [OutgoingPaymentError.InsufficientGrant]: GraphQLErrorCode.Forbidden,
   [OutgoingPaymentError.InactiveWalletAddress]: GraphQLErrorCode.Inactive,

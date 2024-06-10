@@ -34,7 +34,7 @@ export const errorToCode: {
   [IncomingPaymentError.UnknownPayment]: GraphQLErrorCode.NotFound,
   [IncomingPaymentError.InvalidState]: GraphQLErrorCode.BadUserInput,
   [IncomingPaymentError.InvalidExpiry]: GraphQLErrorCode.BadUserInput,
-  [IncomingPaymentError.WrongState]: GraphQLErrorCode.BadUserInput,
+  [IncomingPaymentError.WrongState]: GraphQLErrorCode.Conflict,
   [IncomingPaymentError.InactiveWalletAddress]: GraphQLErrorCode.Inactive
 }
 
