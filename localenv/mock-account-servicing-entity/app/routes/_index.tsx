@@ -1,48 +1,65 @@
 import { json } from '@remix-run/node'
-import { Link, useLoaderData } from '@remix-run/react'
+import { useLoaderData, useNavigate } from '@remix-run/react'
+import { PageHeader, Button, Table } from '../components'
 import { getAccountsWithBalance } from '../lib/balances.server'
-import tableStyle from '../styles/table.css'
-
-type LoaderData = {
-  accountsWithBalance: Awaited<ReturnType<typeof getAccountsWithBalance>>
-}
 
 export const loader = async () => {
-  return json<LoaderData>({
-    accountsWithBalance: await getAccountsWithBalance()
-  })
+  const accountsWithBalance = await getAccountsWithBalance()
+
+  return json({ accountsWithBalance })
 }
 
 export default function Accounts() {
-  const { accountsWithBalance } = useLoaderData() as LoaderData
-  return (
-    <main>
-      <h1>Accounts</h1>
-      <table>
-        <tr>
-          <th>#</th>
-          <th>Account Name</th>
-          <th>Wallet Address</th>
-          <th>Balance</th>
-        </tr>
-        {accountsWithBalance.map((acc, i) => (
-          <tr key={acc.id}>
-            <td>{i + 1}</td>
-            <td>
-              <Link to={`/accounts/${acc.id}`}>{acc.name}</Link>
-            </td>
-            <td>{acc.walletAddress}</td>
-            <td>
-              {(Number(acc.balance) / 100).toFixed(acc.assetScale)}{' '}
-              {acc.assetCode}
-            </td>
-          </tr>
-        ))}
-      </table>
-    </main>
-  )
-}
+  const { accountsWithBalance } = useLoaderData<typeof loader>()
+  const navigate = useNavigate()
 
-export function links() {
-  return [{ rel: 'stylesheet', href: tableStyle }]
+  return (
+    <div className='pt-4 flex flex-col space-y-8'>
+      <div className='flex flex-col rounded-md bg-white px-6'>
+        <PageHeader>
+          <div className='flex-1'>
+            <h3 className='text-2xl'>Accounts</h3>
+          </div>
+          <div className='ml-auto'>
+            <Button aria-label='add new account' to='/accounts/create'>
+              Add account
+            </Button>
+          </div>
+        </PageHeader>
+        <Table>
+          <Table.Head
+            columns={['ID', 'Account', 'Wallet Address', 'Balance']}
+          />
+          <Table.Body>
+            {accountsWithBalance.length ? (
+              accountsWithBalance.map((account) => (
+                <Table.Row
+                  key={account.id}
+                  className='cursor-pointer'
+                  onClick={() => navigate(`/accounts/${account.id}`)}
+                >
+                  <Table.Cell>{account.id}</Table.Cell>
+                  <Table.Cell>{account.name}</Table.Cell>
+                  <Table.Cell>{account.walletAddress}</Table.Cell>
+                  <Table.Cell>
+                    {(Number(account.balance) / 100).toFixed(
+                      account.assetScale
+                    )}{' '}
+                    {account.assetCode}
+                  </Table.Cell>
+                </Table.Row>
+              ))
+            ) : (
+              <Table.Row>
+                <Table.Cell colSpan={4} className='text-center'>
+                  No accounts found.
+                </Table.Cell>
+              </Table.Row>
+            )}
+          </Table.Body>
+        </Table>
+        <div className='flex items-center justify-between p-5'>&nbsp;</div>
+      </div>
+    </div>
+  )
 }

@@ -30,6 +30,7 @@ interface AccountsServer {
   ): Promise<void>
   listAll(): Promise<Account[]>
   get(id: string): Promise<Account | undefined>
+  set(id: string, name: string): Promise<Account | undefined>
   getByWalletAddressId(walletAddressId: string): Promise<Account | undefined>
   getByPath(path: string): Promise<Account | undefined>
   getByWalletAddressUrl(walletAddressUrl: string): Promise<Account | undefined>
@@ -99,6 +100,15 @@ export class AccountProvider implements AccountsServer {
   }
 
   async get(id: string): Promise<Account | undefined> {
+    return this.accounts.get(id)
+  }
+
+  async set(id: string, name: string): Promise<Account | undefined> {
+    const account = this.accounts.get(id)
+    if (!account) {
+      throw new Error('account does not exists')
+    }
+    this.accounts.set(id, { ...account, name })
     return this.accounts.get(id)
   }
 

@@ -19,6 +19,8 @@ services:
       SIGNATURE_VERSION: 1
       SIGNATURE_SECRET: iyIgCprjb9uL8wFckR+pLEkJWMB7FJhgkvqhTQR/964=
       IDP_SECRET: 2pEcn2kkCclbOHQiGNEwhJ0rucATZhrA807HTm2rNXE=
+      DISPLAY_NAME: Happy Life Bank
+      DISPLAY_ICON: bank-icon.svg
     volumes:
       - ../happy-life-bank/seed.yml:/workspace/seed.yml
       - ../happy-life-bank/private-key.pem:/workspace/private-key.pem
