@@ -4,6 +4,7 @@ const { knex } = require('knex')
 const { GenericContainer, Wait } = require('testcontainers')
 
 const POSTGRES_PORT = 5432
+const REDIS_PORT = 6379
 
 module.exports = async (globalConfig) => {
   const workers = globalConfig.maxWorkers
@@ -66,4 +67,12 @@ module.exports = async (globalConfig) => {
   }
 
   global.__AUTH_KNEX__ = db
+  if (!process.env.REDIS_URL) {
+    const redisContainer = await new GenericContainer('redis:7')
+      .withExposedPorts(REDIS_PORT)
+      .start()
+
+    global.__AUTH_REDIS__ = redisContainer
+    process.env.REDIS_URL = `redis://localhost:${redisContainer.getMappedPort(REDIS_PORT)}`
+  }
 }

@@ -82,10 +82,10 @@ const scripts = {
     this.setHeaders(signatureHeaders)
   },
 
-  generateApiSignature: function (body) {
+  generateAuthApiSignature: function (body) {
+    const version = bru.getEnvVar('authApiSignatureVersion')
+    const secret = bru.getEnvVar('authApiSignatureSecret')
     const timestamp = Math.round(new Date().getTime() / 1000)
-    const version = bru.getEnvVar('apiSignatureVersion')
-    const secret = bru.getEnvVar('apiSignatureSecret')
     const payload = `${timestamp}.${canonicalize(body)}`
     const hmac = createHmac('sha256', secret)
     hmac.update(payload)
@@ -94,7 +94,19 @@ const scripts = {
     return `t=${timestamp}, v${version}=${digest}`
   },
 
-  addApiSignatureHeader: function () {
+  generateBackendApiSignature: function (body) {
+    const version = bru.getEnvVar('backendApiSignatureVersion')
+    const secret = bru.getEnvVar('backendApiSignatureSecret')
+    const timestamp = Math.round(new Date().getTime() / 1000)
+    const payload = `${timestamp}.${canonicalize(body)}`
+    const hmac = createHmac('sha256', secret)
+    hmac.update(payload)
+    const digest = hmac.digest('hex')
+
+    return `t=${timestamp}, v${version}=${digest}`
+  },
+
+  addApiSignatureHeader: function (packageName) {
     const body = this.sanitizeBody()
     const { variables } = body
     const formattedBody = {
@@ -102,7 +114,19 @@ const scripts = {
       variables: JSON.parse(variables)
     }
 
-    req.setHeader('signature', this.generateApiSignature(formattedBody))
+    let signature
+    // Default to backend api secret
+    switch (packageName) {
+      case 'backend':
+        signature = this.generateBackendApiSignature(formattedBody)
+        break
+      case 'auth':
+        signature = this.generateAuthApiSignature(formattedBody)
+        break
+      default:
+        signature = this.generateBackendApiSignature(formattedBody)
+    }
+    req.setHeader('signature', signature)
   },
 
   addHostHeader: function (hostVarName) {
@@ -150,7 +174,7 @@ const scripts = {
     const postRequest = {
       method: 'post',
       headers: {
-        signature: this.generateApiSignature(postBody),
+        signature: this.generateBackendApiSignature(postBody),
         'Content-Type': 'application/json'
       },
       body: JSON.stringify(postBody)

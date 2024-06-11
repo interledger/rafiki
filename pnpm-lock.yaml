@@ -192,6 +192,9 @@ importers:
       ioredis:
         specifier: ^5.3.2
         version: 5.3.2
+      json-canonicalize:
+        specifier: ^1.0.6
+        version: 1.0.6
       knex:
         specifier: ^3.1.0
         version: 3.1.0(pg@8.11.3)
