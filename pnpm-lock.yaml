@@ -738,8 +738,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/mock-account-service-lib
       yaml:
-        specifier: ^2.4.2
-        version: 2.4.2
+        specifier: ^2.4.5
+        version: 2.4.5
 
 packages:
 
@@ -9118,7 +9118,7 @@ packages:
     resolution: {integrity: sha512-VidlUyNzXMaVsuM79sjSvwC4nfojkP2VneL+Zfs538M2XFnffZDhx6veqnz/evCNIYGyz5O+1fgL6+g0NLWTBA==}
     engines: {node: '>= 6.0.0'}
     dependencies:
-      yaml: 2.4.2
+      yaml: 2.4.5
     dev: true
 
   /docker-modem@3.0.6:
@@ -15348,7 +15348,7 @@ packages:
     dependencies:
       lilconfig: 2.1.0
       postcss: 8.4.38
-      yaml: 2.4.2
+      yaml: 2.4.5
     dev: true
 
   /postcss-modules-extract-imports@3.0.0(postcss@8.4.38):
@@ -18628,8 +18628,8 @@ packages:
     engines: {node: '>= 14'}
     hasBin: true
 
-  /yaml@2.4.2:
-    resolution: {integrity: sha512-B3VqDZ+JAg1nZpaEmWtTXUlBneoGx6CPM9b0TENK6aoSu5t73dItudwdgmi6tHlIZZId4dZ9skcAQ2UbcyAeVA==}
+  /yaml@2.4.5:
+    resolution: {integrity: sha512-aBx2bnqDzVOyNKfsysjA2ms5ZlnjSAW2eG3/L5G/CSujfjLJTJsEw1bGw8kCf04KodQWk1pxlGnZ56CRxiawmg==}
     engines: {node: '>= 14'}
     hasBin: true
     dev: true
