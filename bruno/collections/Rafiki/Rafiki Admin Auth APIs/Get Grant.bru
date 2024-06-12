@@ -47,3 +47,9 @@ body:graphql:vars {
       "id": "97de60d6-cafa-4c8c-a847-f63ca04eb3bf"
   }
 }
+
+script:pre-request {
+  const scripts = require('./scripts');
+  
+  scripts.addApiSignatureHeader('auth');
+}

@@ -1,8 +1,11 @@
 import { gql } from '@apollo/client'
 import type {
+  JwkInput,
   LiquidityMutationResponse,
   WalletAddress,
-  CreateWalletAddressInput
+  CreateWalletAddressInput,
+  CreateWalletAddressKeyMutationResponse,
+  CreateWalletAddressKeyInput
 } from 'generated/graphql'
 import { apolloClient } from './apolloClient'
 import { v4 as uuid } from 'uuid'
@@ -125,6 +128,42 @@ export async function createWalletAddress(
       }
 
       return data.createWalletAddress.walletAddress
+    })
+}
+
+export async function createWalletAddressKey({
+  walletAddressId,
+  jwk
+}: {
+  walletAddressId: string
+  jwk: string
+}): Promise<CreateWalletAddressKeyMutationResponse> {
+  const createWalletAddressKeyMutation = gql`
+    mutation CreateWalletAddressKey($input: CreateWalletAddressKeyInput!) {
+      createWalletAddressKey(input: $input) {
+        code
+        success
+        message
+      }
+    }
+  `
+  const createWalletAddressKeyInput: CreateWalletAddressKeyInput = {
+    walletAddressId,
+    jwk: jwk as unknown as JwkInput
+  }
+
+  return apolloClient
+    .mutate({
+      mutation: createWalletAddressKeyMutation,
+      variables: {
+        input: createWalletAddressKeyInput
+      }
+    })
+    .then(({ data }): CreateWalletAddressKeyMutationResponse => {
+      if (!data.createWalletAddressKey.success) {
+        throw new Error('Data was empty')
+      }
+      return data.createWalletAddressKey
     })
 }
 

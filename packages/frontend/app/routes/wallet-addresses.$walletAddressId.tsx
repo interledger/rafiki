@@ -188,6 +188,25 @@ export default function ViewAssetPage() {
             </div>
           </div>
         </div>
+        <div className='grid grid-cols-1 py-3 gap-6 md:grid-cols-3 border-b border-pearl'>
+          <div className='col-span-1 pt-3'>
+            <h3 className='text-lg font-medium'>Payments</h3>
+            <p className='text-sm'>
+              View the payments involving this wallet address on the payments
+              page
+            </p>
+          </div>
+          <div className='md:col-span-2'>
+            <div className='flex justify-end p-4'>
+              <Button
+                aria-label='go to payments page'
+                to={`/payments?walletAddressId=${walletAddress.id}`}
+              >
+                Go to payments page
+              </Button>
+            </div>
+          </div>
+        </div>
       </div>
       <Outlet context={displayLiquidityAmount} />
     </div>

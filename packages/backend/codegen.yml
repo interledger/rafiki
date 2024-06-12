@@ -18,6 +18,7 @@ generates:
       - 'typescript'
       - 'typescript-resolvers'
     config:
+      omitOperationSuffix: true
       defaultMapper: Partial<{T}>
       # By default it is T | null. But the service code uses typescript's optional types (`foo?: T`) which are `T | undefined`. This saves the trouble of converting them explicitly.
       inputMaybeValue: T | undefined
@@ -45,6 +46,7 @@ generates:
       - 'typescript'
       - 'typescript-resolvers'
     config:
+      omitOperationSuffix: true
       defaultMapper: Partial<{T}>
       # By default it is T | null. But the service code uses typescript's optional types (`foo?: T`) which are `T | undefined`. This saves the trouble of converting them explicitly.
       inputMaybeValue: T | undefined
