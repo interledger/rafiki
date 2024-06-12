@@ -5,17 +5,18 @@ import { Config } from '../config/app'
 
 const TIGERBEETLE_PORT = 3004
 const TIGERBEETLE_DIR = '/var/lib/tigerbeetle'
-const TIGERBEETLE_CONTAINER_LOG =
-  process.env.TIGERBEETLE_CONTAINER_LOG === 'true'
+const TIGERBEETLE_CONTAINER_LOG = true //process.env.TIGERBEETLE_CONTAINER_LOG === 'true'
 
 export async function startTigerbeetleContainer(clusterId?: number): Promise<{
   container: StartedTestContainer
   port: number
 }> {
+  console.log({ clusterId }, 'startTigerbeetleContainer')
   const tigerbeetleClusterId = clusterId || Config.tigerbeetleClusterId
   const { name: tigerbeetleDir } = tmp.dirSync({ unsafeCleanup: true })
   const tigerbeetleFile = `cluster_${tigerbeetleClusterId}_replica_0_test.tigerbeetle`
   const tigerbeetleContainerVersion = 'ghcr.io/tigerbeetle/tigerbeetle:0.15.3'
+  console.log({ tigerbeetleDir })
 
   const tbContFormat = await new GenericContainer(tigerbeetleContainerVersion)
     .withExposedPorts(TIGERBEETLE_PORT)
