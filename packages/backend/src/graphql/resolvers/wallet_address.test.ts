@@ -479,7 +479,7 @@ describe('Wallet Address Resolvers', (): void => {
           })
         )
       })
-      test('Empty additional properties is a no-op', async (): Promise<void> => {
+      test('Updating with empty additional properties deletes existing', async (): Promise<void> => {
         const createOptions = {
           additionalProperties: [
             {
@@ -528,17 +528,7 @@ describe('Wallet Address Resolvers', (): void => {
 
         expect(response.success).toBe(true)
         expect(response.code).toEqual('200')
-        // Has original additional properties - updating with [] did nothing
-        expect(response.walletAddress?.additionalProperties).toEqual(
-          createOptions.additionalProperties.map((property) => {
-            return {
-              key: property.fieldKey,
-              value: property.fieldValue,
-              visibleInOpenPayments: property.visibleInOpenPayments,
-              __typename: 'AdditionalProperty'
-            }
-          })
-        )
+        expect(response.walletAddress?.additionalProperties).toEqual([])
       })
     })
 

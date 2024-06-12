@@ -199,10 +199,12 @@ async function updateWalletAddress(
       .throwIfNotFound()
 
     // Override all existing additional properties if new ones are provided
-    if (additionalProperties && additionalProperties.length) {
+    if (additionalProperties) {
       await WalletAddressAdditionalProperty.query(trx)
         .where('walletAddressId', id)
         .delete()
+    }
+    if (additionalProperties?.length) {
       await WalletAddressAdditionalProperty.query(trx).insert(
         additionalProperties.map((prop) => ({
           walletAddressId: id,
