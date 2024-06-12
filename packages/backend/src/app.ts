@@ -293,6 +293,7 @@ export class App {
   }
 
   public async startAdminServer(port: number): Promise<void> {
+    console.log('this is an arbitrary change for testing purposes')
     const koa = await this.createKoaServer()
     const httpServer = http.createServer(koa.callback())
 
