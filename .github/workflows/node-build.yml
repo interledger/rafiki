@@ -28,10 +28,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/workflows/rafiki/env-setup
-      - name: Get Docker Version
-        run: docker --version
       - run: pnpm --filter backend build:deps
-      - run: DEBUG=testcontainers:containers NODE_OPTIONS=--max-old-space-size=4096 pnpm --filter backend test:ci
+      - run: NODE_OPTIONS=--max-old-space-size=4096 pnpm --filter backend test:ci
       - name: AsyncAPI extension
         run: |
           echo "{\"extends\":[\"spectral:oas\",\"spectral:asyncapi\"]}" >> .spectral.json
