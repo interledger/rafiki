@@ -170,7 +170,10 @@ export async function resolveReceiver(
 ): Promise<Receiver> {
   const receiver = await deps.receiverService.get(options.receiver)
   if (!receiver) {
-    deps.logger.info({ receiver: options.receiver }, 'Receiver not found')
+    deps.logger.info(
+      { receiver: options.receiver },
+      'Could not create quote. Receiver not found'
+    )
     throw QuoteError.InvalidReceiver
   }
   if (options.receiveAmount) {
