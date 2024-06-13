@@ -128,7 +128,7 @@ export const depositAssetLiquidity: MutationResolvers<ApolloContext>['depositAss
     args,
     ctx
   ): Promise<ResolversTypes['LiquidityMutationResponse']> => {
-    if (args.input.amount === BigInt(0)) {
+    if (args.input.amount === 0n) {
       throw new GraphQLError(errorToMessage[LiquidityError.AmountZero], {
         extensions: {
           code: errorToCode[LiquidityError.AmountZero]
@@ -211,7 +211,7 @@ export const createAssetLiquidityWithdrawal: MutationResolvers<ApolloContext>['c
     ctx
   ): Promise<ResolversTypes['LiquidityMutationResponse']> => {
     const { amount, id, timeoutSeconds, assetId } = args.input
-    if (amount === BigInt(0)) {
+    if (amount === 0n) {
       throw new GraphQLError(errorToMessage[LiquidityError.AmountZero], {
         extensions: {
           code: errorToCode[LiquidityError.AmountZero]
@@ -269,7 +269,7 @@ export const createWalletAddressWithdrawal: MutationResolvers<ApolloContext>['cr
     const amount = await accountingService.getBalance(walletAddress.id)
     if (amount === undefined)
       throw new Error('missing incoming payment wallet address')
-    if (amount === BigInt(0)) {
+    if (amount === 0n) {
       throw new GraphQLError(errorToMessage[LiquidityError.AmountZero], {
         extensions: {
           code: errorToCode[LiquidityError.AmountZero]

@@ -223,8 +223,7 @@ export class AdminClient {
             $input: DepositOutgoingPaymentLiquidityInput!
           ) {
             depositOutgoingPaymentLiquidity(input: $input) {
-              id
-              liquidity
+              success
             }
           }
         `,
