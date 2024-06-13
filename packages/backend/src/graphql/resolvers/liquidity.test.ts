@@ -80,8 +80,7 @@ describe('Liquidity Resolvers', (): void => {
           mutation: gql`
             mutation DepositPeerLiquidity($input: DepositPeerLiquidityInput!) {
               depositPeerLiquidity(input: $input) {
-                id
-                liquidity
+                success
               }
             }
           `,
@@ -102,8 +101,7 @@ describe('Liquidity Resolvers', (): void => {
           }
         })
 
-      expect(response.id).toEqual(id)
-      expect(response.liquidity).toEqual('100')
+      expect(response.success).toBe(true)
     })
 
     test('Returns an error for invalid id', async (): Promise<void> => {
@@ -112,8 +110,7 @@ describe('Liquidity Resolvers', (): void => {
           mutation: gql`
             mutation DepositPeerLiquidity($input: DepositPeerLiquidityInput!) {
               depositPeerLiquidity(input: $input) {
-                id
-                liquidity
+                success
               }
             }
           `,
@@ -149,8 +146,7 @@ describe('Liquidity Resolvers', (): void => {
           mutation: gql`
             mutation DepositPeerLiquidity($input: DepositPeerLiquidityInput!) {
               depositPeerLiquidity(input: $input) {
-                id
-                liquidity
+                success
               }
             }
           `,
@@ -194,8 +190,7 @@ describe('Liquidity Resolvers', (): void => {
           mutation: gql`
             mutation DepositPeerLiquidity($input: DepositPeerLiquidityInput!) {
               depositPeerLiquidity(input: $input) {
-                id
-                liquidity
+                success
               }
             }
           `,
@@ -231,8 +226,7 @@ describe('Liquidity Resolvers', (): void => {
           mutation: gql`
             mutation DepositPeerLiquidity($input: DepositPeerLiquidityInput!) {
               depositPeerLiquidity(input: $input) {
-                id
-                liquidity
+                success
               }
             }
           `,
@@ -279,8 +273,7 @@ describe('Liquidity Resolvers', (): void => {
               $input: DepositAssetLiquidityInput!
             ) {
               depositAssetLiquidity(input: $input) {
-                id
-                liquidity
+                success
               }
             }
           `,
@@ -301,8 +294,7 @@ describe('Liquidity Resolvers', (): void => {
           }
         })
 
-      expect(response.id).toEqual(id)
-      expect(response.liquidity).toEqual('100')
+      expect(response.success).toBe(true)
     })
 
     test('Returns an error for invalid id', async (): Promise<void> => {
@@ -313,8 +305,7 @@ describe('Liquidity Resolvers', (): void => {
               $input: DepositAssetLiquidityInput!
             ) {
               depositAssetLiquidity(input: $input) {
-                id
-                liquidity
+                success
               }
             }
           `,
@@ -352,8 +343,7 @@ describe('Liquidity Resolvers', (): void => {
               $input: DepositAssetLiquidityInput!
             ) {
               depositAssetLiquidity(input: $input) {
-                id
-                liquidity
+                success
               }
             }
           `,
@@ -399,8 +389,7 @@ describe('Liquidity Resolvers', (): void => {
               $input: DepositAssetLiquidityInput!
             ) {
               depositAssetLiquidity(input: $input) {
-                id
-                liquidity
+                success
               }
             }
           `,
@@ -438,8 +427,7 @@ describe('Liquidity Resolvers', (): void => {
               $input: DepositAssetLiquidityInput!
             ) {
               depositAssetLiquidity(input: $input) {
-                id
-                liquidity
+                success
               }
             }
           `,
@@ -494,8 +482,7 @@ describe('Liquidity Resolvers', (): void => {
               $input: CreatePeerLiquidityWithdrawalInput!
             ) {
               createPeerLiquidityWithdrawal(input: $input) {
-                id
-                liquidity
+                success
               }
             }
           `,
@@ -517,8 +504,7 @@ describe('Liquidity Resolvers', (): void => {
           }
         })
 
-      expect(response.id).toEqual(id)
-      expect(response.liquidity).toEqual(startingBalance.toString())
+      expect(response.success).toBe(true)
     })
 
     test('Returns an error for unknown peer', async (): Promise<void> => {
@@ -529,8 +515,7 @@ describe('Liquidity Resolvers', (): void => {
               $input: CreatePeerLiquidityWithdrawalInput!
             ) {
               createPeerLiquidityWithdrawal(input: $input) {
-                id
-                liquidity
+                success
               }
             }
           `,
@@ -569,8 +554,7 @@ describe('Liquidity Resolvers', (): void => {
               $input: CreatePeerLiquidityWithdrawalInput!
             ) {
               createPeerLiquidityWithdrawal(input: $input) {
-                id
-                liquidity
+                success
               }
             }
           `,
@@ -617,8 +601,7 @@ describe('Liquidity Resolvers', (): void => {
               $input: CreatePeerLiquidityWithdrawalInput!
             ) {
               createPeerLiquidityWithdrawal(input: $input) {
-                id
-                liquidity
+                success
               }
             }
           `,
@@ -662,8 +645,7 @@ describe('Liquidity Resolvers', (): void => {
                 $input: CreatePeerLiquidityWithdrawalInput!
               ) {
                 createPeerLiquidityWithdrawal(input: $input) {
-                  id
-                  liquidity
+                  success
                 }
               }
             `,
@@ -720,8 +702,7 @@ describe('Liquidity Resolvers', (): void => {
               $input: CreateAssetLiquidityWithdrawalInput!
             ) {
               createAssetLiquidityWithdrawal(input: $input) {
-                id
-                liquidity
+                success
               }
             }
           `,
@@ -743,8 +724,7 @@ describe('Liquidity Resolvers', (): void => {
           }
         })
 
-      expect(response.id).toEqual(id)
-      expect(response.liquidity).toEqual(startingBalance.toString())
+      expect(response.success).toBe(true)
     })
 
     test('Returns an error for unknown asset', async (): Promise<void> => {
@@ -755,8 +735,7 @@ describe('Liquidity Resolvers', (): void => {
               $input: CreateAssetLiquidityWithdrawalInput!
             ) {
               createAssetLiquidityWithdrawal(input: $input) {
-                id
-                liquidity
+                success
               }
             }
           `,
@@ -795,8 +774,7 @@ describe('Liquidity Resolvers', (): void => {
               $input: CreateAssetLiquidityWithdrawalInput!
             ) {
               createAssetLiquidityWithdrawal(input: $input) {
-                id
-                liquidity
+                success
               }
             }
           `,
@@ -843,8 +821,7 @@ describe('Liquidity Resolvers', (): void => {
               $input: CreateAssetLiquidityWithdrawalInput!
             ) {
               createAssetLiquidityWithdrawal(input: $input) {
-                id
-                liquidity
+                success
               }
             }
           `,
@@ -889,8 +866,7 @@ describe('Liquidity Resolvers', (): void => {
                 $input: CreateAssetLiquidityWithdrawalInput!
               ) {
                 createAssetLiquidityWithdrawal(input: $input) {
-                  id
-                  liquidity
+                  success
                 }
               }
             `,
@@ -1197,7 +1173,7 @@ describe('Liquidity Resolvers', (): void => {
                 $input: PostLiquidityWithdrawalInput!
               ) {
                 postLiquidityWithdrawal(input: $input) {
-                  id
+                  success
                 }
               }
             `,
@@ -1216,7 +1192,7 @@ describe('Liquidity Resolvers', (): void => {
             }
           })
 
-        expect(response.id).toEqual(withdrawalId)
+        expect(response.success).toBe(true)
       })
 
       test("Can't post non-existent withdrawal", async (): Promise<void> => {
@@ -1227,8 +1203,7 @@ describe('Liquidity Resolvers', (): void => {
                 $input: PostLiquidityWithdrawalInput!
               ) {
                 postLiquidityWithdrawal(input: $input) {
-                  id
-                  liquidity
+                  success
                 }
               }
             `,
@@ -1264,8 +1239,7 @@ describe('Liquidity Resolvers', (): void => {
                 $input: PostLiquidityWithdrawalInput!
               ) {
                 postLiquidityWithdrawal(input: $input) {
-                  id
-                  liquidity
+                  success
                 }
               }
             `,
@@ -1304,8 +1278,7 @@ describe('Liquidity Resolvers', (): void => {
                 $input: PostLiquidityWithdrawalInput!
               ) {
                 postLiquidityWithdrawal(input: $input) {
-                  id
-                  liquidity
+                  success
                 }
               }
             `,
@@ -1344,8 +1317,7 @@ describe('Liquidity Resolvers', (): void => {
                 $input: PostLiquidityWithdrawalInput!
               ) {
                 postLiquidityWithdrawal(input: $input) {
-                  id
-                  liquidity
+                  success
                 }
               }
             `,
@@ -1409,7 +1381,7 @@ describe('Liquidity Resolvers', (): void => {
                 $input: VoidLiquidityWithdrawalInput!
               ) {
                 voidLiquidityWithdrawal(input: $input) {
-                  id
+                  success
                 }
               }
             `,
@@ -1428,7 +1400,7 @@ describe('Liquidity Resolvers', (): void => {
             }
           })
 
-        expect(response.id).toEqual(withdrawalId)
+        expect(response.success).toBe(true)
       })
 
       test("Can't void non-existent withdrawal", async (): Promise<void> => {
@@ -1439,7 +1411,7 @@ describe('Liquidity Resolvers', (): void => {
                 $input: VoidLiquidityWithdrawalInput!
               ) {
                 voidLiquidityWithdrawal(input: $input) {
-                  id
+                  success
                 }
               }
             `,
@@ -1475,7 +1447,7 @@ describe('Liquidity Resolvers', (): void => {
                 $input: VoidLiquidityWithdrawalInput!
               ) {
                 voidLiquidityWithdrawal(input: $input) {
-                  id
+                  success
                 }
               }
             `,
@@ -1514,7 +1486,7 @@ describe('Liquidity Resolvers', (): void => {
                 $input: VoidLiquidityWithdrawalInput!
               ) {
                 voidLiquidityWithdrawal(input: $input) {
-                  id
+                  success
                 }
               }
             `,
@@ -1553,7 +1525,7 @@ describe('Liquidity Resolvers', (): void => {
                 $input: VoidLiquidityWithdrawalInput!
               ) {
                 voidLiquidityWithdrawal(input: $input) {
-                  id
+                  success
                 }
               }
             `,
@@ -1644,8 +1616,7 @@ describe('Liquidity Resolvers', (): void => {
                     $input: DepositEventLiquidityInput!
                   ) {
                     depositEventLiquidity(input: $input) {
-                      id
-                      liquidity
+                      success
                     }
                   }
                 `,
@@ -1664,7 +1635,7 @@ describe('Liquidity Resolvers', (): void => {
                 }
               })
 
-            assert.ok(response.id)
+            expect(response.success).toBe(true)
             assert.ok(payment.debitAmount)
             await expect(depositSpy).toHaveBeenCalledWith({
               id: eventId,
@@ -1684,8 +1655,7 @@ describe('Liquidity Resolvers', (): void => {
                     $input: DepositEventLiquidityInput!
                   ) {
                     depositEventLiquidity(input: $input) {
-                      id
-                      liquidity
+                      success
                     }
                   }
                 `,
@@ -1728,8 +1698,7 @@ describe('Liquidity Resolvers', (): void => {
                     $input: DepositEventLiquidityInput!
                   ) {
                     depositEventLiquidity(input: $input) {
-                      id
-                      liquidity
+                      success
                     }
                   }
                 `,
@@ -1870,8 +1839,7 @@ describe('Liquidity Resolvers', (): void => {
                     $input: WithdrawEventLiquidityInput!
                   ) {
                     withdrawEventLiquidity(input: $input) {
-                      id
-                      liquidity
+                      success
                     }
                   }
                 `,
@@ -1890,8 +1858,7 @@ describe('Liquidity Resolvers', (): void => {
                 }
               })
 
-            expect(response.id).toEqual(eventId)
-            expect(response.liquidity).toEqual('10')
+            expect(response.success).toBe(true)
           })
 
           test('Returns error for non-existent webhook event id', async (): Promise<void> => {
@@ -1902,8 +1869,7 @@ describe('Liquidity Resolvers', (): void => {
                     $input: WithdrawEventLiquidityInput!
                   ) {
                     withdrawEventLiquidity(input: $input) {
-                      id
-                      liquidity
+                      success
                     }
                   }
                 `,
@@ -1942,8 +1908,7 @@ describe('Liquidity Resolvers', (): void => {
                     $input: WithdrawEventLiquidityInput!
                   ) {
                     withdrawEventLiquidity(input: $input) {
-                      id
-                      liquidity
+                      success
                     }
                   }
                 `,
@@ -2053,8 +2018,7 @@ describe('Liquidity Resolvers', (): void => {
                   $input: CreateIncomingPaymentWithdrawalInput!
                 ) {
                   createIncomingPaymentWithdrawal(input: $input) {
-                    id
-                    liquidity
+                    success
                   }
                 }
               `,
@@ -2074,7 +2038,7 @@ describe('Liquidity Resolvers', (): void => {
               }
             })
 
-          assert.ok(response.id)
+          expect(response.success).toBe(true)
           expect(
             accountingService.getBalance(incomingPayment.id)
           ).resolves.toEqual(balance - amount)
@@ -2101,8 +2065,7 @@ describe('Liquidity Resolvers', (): void => {
                   $input: CreateIncomingPaymentWithdrawalInput!
                 ) {
                   createIncomingPaymentWithdrawal(input: $input) {
-                    id
-                    liquidity
+                    success
                   }
                 }
               `,
@@ -2139,8 +2102,7 @@ describe('Liquidity Resolvers', (): void => {
                   $input: CreateIncomingPaymentWithdrawalInput!
                 ) {
                   createIncomingPaymentWithdrawal(input: $input) {
-                    id
-                    liquidity
+                    success
                   }
                 }
               `,
@@ -2196,8 +2158,7 @@ describe('Liquidity Resolvers', (): void => {
                   $input: CreateIncomingPaymentWithdrawalInput!
                 ) {
                   createIncomingPaymentWithdrawal(input: $input) {
-                    id
-                    liquidity
+                    success
                   }
                 }
               `,
@@ -2271,8 +2232,7 @@ describe('Liquidity Resolvers', (): void => {
                   $input: CreateOutgoingPaymentWithdrawalInput!
                 ) {
                   createOutgoingPaymentWithdrawal(input: $input) {
-                    id
-                    liquidity
+                    success
                   }
                 }
               `,
@@ -2292,7 +2252,7 @@ describe('Liquidity Resolvers', (): void => {
               }
             })
 
-          assert.ok(response.id)
+          expect(response.success).toBe(true)
           expect(
             accountingService.getBalance(outgoingPayment.id)
           ).resolves.toEqual(balance - amount)
@@ -2308,8 +2268,7 @@ describe('Liquidity Resolvers', (): void => {
                   $input: CreateOutgoingPaymentWithdrawalInput!
                 ) {
                   createOutgoingPaymentWithdrawal(input: $input) {
-                    id
-                    liquidity
+                    success
                   }
                 }
               `,
@@ -2352,8 +2311,7 @@ describe('Liquidity Resolvers', (): void => {
                   $input: CreateOutgoingPaymentWithdrawalInput!
                 ) {
                   createOutgoingPaymentWithdrawal(input: $input) {
-                    id
-                    liquidity
+                    success
                   }
                 }
               `,
@@ -2408,8 +2366,7 @@ describe('Liquidity Resolvers', (): void => {
                   $input: CreateOutgoingPaymentWithdrawalInput!
                 ) {
                   createOutgoingPaymentWithdrawal(input: $input) {
-                    id
-                    liquidity
+                    success
                   }
                 }
               `,
@@ -2467,8 +2424,7 @@ describe('Liquidity Resolvers', (): void => {
                     $input: DepositOutgoingPaymentLiquidityInput!
                   ) {
                     depositOutgoingPaymentLiquidity(input: $input) {
-                      id
-                      liquidity
+                      success
                     }
                   }
                 `,
@@ -2487,7 +2443,7 @@ describe('Liquidity Resolvers', (): void => {
                 }
               })
 
-            assert.ok(response.id)
+            expect(response.success).toBe(true)
             assert.ok(outgoingPayment.debitAmount)
             await expect(depositSpy).toHaveBeenCalledWith({
               id: eventId,
@@ -2507,8 +2463,7 @@ describe('Liquidity Resolvers', (): void => {
                     $input: DepositOutgoingPaymentLiquidityInput!
                   ) {
                     depositOutgoingPaymentLiquidity(input: $input) {
-                      id
-                      liquidity
+                      success
                     }
                   }
                 `,
@@ -2551,8 +2506,7 @@ describe('Liquidity Resolvers', (): void => {
                     $input: DepositOutgoingPaymentLiquidityInput!
                   ) {
                     depositOutgoingPaymentLiquidity(input: $input) {
-                      id
-                      liquidity
+                      success
                     }
                   }
                 `,

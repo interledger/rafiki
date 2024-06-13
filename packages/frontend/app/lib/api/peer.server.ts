@@ -175,8 +175,7 @@ export const depositPeerLiquidity = async (args: DepositPeerLiquidityInput) => {
         $input: DepositPeerLiquidityInput!
       ) {
         depositPeerLiquidity(input: $input) {
-          id
-          liquidity
+          success
         }
       }
     `,
@@ -200,8 +199,7 @@ export const withdrawPeerLiquidity = async (
         $input: CreatePeerLiquidityWithdrawalInput!
       ) {
         createPeerLiquidityWithdrawal(input: $input) {
-          id
-          liquidity
+          success
         }
       }
     `,

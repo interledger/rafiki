@@ -237,8 +237,7 @@ export const depositAssetLiquidity = async (
         $input: DepositAssetLiquidityInput!
       ) {
         depositAssetLiquidity(input: $input) {
-          id
-          liquidity
+          success
         }
       }
     `,
@@ -262,8 +261,7 @@ export const withdrawAssetLiquidity = async (
         $input: CreateAssetLiquidityWithdrawalInput!
       ) {
         createAssetLiquidityWithdrawal(input: $input) {
-          id
-          liquidity
+          success
         }
       }
     `,

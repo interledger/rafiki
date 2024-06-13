@@ -1232,8 +1232,7 @@ type DeletePeerMutationResponse {
 }
 
 type LiquidityMutationResponse {
-  id: ID!
-  liquidity: UInt64
+  success: Boolean!
 }
 
 type WalletAddressWithdrawalMutationResponse {

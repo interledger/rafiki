@@ -573,8 +573,7 @@ export enum LiquidityError {
 
 export type LiquidityMutationResponse = {
   __typename?: 'LiquidityMutationResponse';
-  id: Scalars['ID']['output'];
-  liquidity?: Maybe<Scalars['UInt64']['output']>;
+  success: Scalars['Boolean']['output'];
 };
 
 export type Model = {
@@ -1881,8 +1880,7 @@ export type JwkResolvers<ContextType = any, ParentType extends ResolversParentTy
 };
 
 export type LiquidityMutationResponseResolvers<ContextType = any, ParentType extends ResolversParentTypes['LiquidityMutationResponse'] = ResolversParentTypes['LiquidityMutationResponse']> = {
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  liquidity?: Resolver<Maybe<ResolversTypes['UInt64']>, ParentType, ContextType>;
+  success?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 

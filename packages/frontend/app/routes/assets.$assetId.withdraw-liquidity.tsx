@@ -64,7 +64,7 @@ export async function action({ request, params }: ActionFunctionArgs) {
     timeoutSeconds: BigInt(0)
   })
 
-  if (!response?.id) {
+  if (!response?.success) {
     return setMessageAndRedirect({
       session,
       message: {

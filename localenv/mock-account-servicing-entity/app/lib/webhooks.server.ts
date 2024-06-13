@@ -83,9 +83,9 @@ export async function handleOutgoingPaymentCreated(wh: Webhook) {
       mutation: gql`
         mutation CancelOutgoingPayment($input: CancelOutgoingPaymentInput!) {
           cancelOutgoingPayment(input: $input) {
-            code
-            success
-            message
+            payment {
+              id
+            }
           }
         }
       `,
@@ -107,8 +107,7 @@ export async function handleOutgoingPaymentCreated(wh: Webhook) {
           $input: DepositOutgoingPaymentLiquidityInput!
         ) {
           depositOutgoingPaymentLiquidity(input: $input) {
-            id
-            liquidity
+            success
           }
         }
       `,
@@ -157,8 +156,7 @@ export async function handleIncomingPaymentCompletedExpired(wh: Webhook) {
           $input: CreateIncomingPaymentWithdrawalInput!
         ) {
           createIncomingPaymentWithdrawal(input: $input) {
-            id
-            liquidity
+            success
           }
         }
       `,
@@ -204,10 +202,6 @@ export async function handleWalletAddressWebMonetization(wh: Webhook) {
           $input: CreateWalletAddressWithdrawalInput!
         ) {
           createWalletAddressWithdrawal(input: $input) {
-            code
-            error
-            message
-            success
             withdrawal {
               amount
               id
@@ -243,10 +237,7 @@ export async function handleWalletAddressWebMonetization(wh: Webhook) {
           $input: PostLiquidityWithdrawalInput!
         ) {
           postLiquidityWithdrawal(input: $input) {
-            code
             success
-            message
-            error
           }
         }
       `,

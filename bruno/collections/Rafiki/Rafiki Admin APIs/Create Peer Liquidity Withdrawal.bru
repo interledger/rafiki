@@ -13,8 +13,7 @@ post {
 body:graphql {
   mutation CreatePeerLiquidityWithdrawal ($input: CreatePeerLiquidityWithdrawalInput!) {
     createPeerLiquidityWithdrawal(input: $input) {
-      id
-      liquidity
+      success
     }
   }
 }

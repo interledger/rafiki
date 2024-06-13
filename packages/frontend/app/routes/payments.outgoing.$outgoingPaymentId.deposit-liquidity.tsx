@@ -50,7 +50,7 @@ export async function action({ request, params }: ActionFunctionArgs) {
     idempotencyKey: v4()
   })
 
-  if (!response?.id) {
+  if (!response?.success) {
     return setMessageAndRedirect({
       session,
       message: {

@@ -118,8 +118,7 @@ export const depositPeerLiquidity: MutationResolvers<ApolloContext>['depositPeer
     }
 
     return {
-      id: args.input.id,
-      liquidity: args.input.amount
+      success: true
     }
   }
 
@@ -159,8 +158,7 @@ export const depositAssetLiquidity: MutationResolvers<ApolloContext>['depositAss
       })
     }
     return {
-      id: args.input.id,
-      liquidity: args.input.amount
+      success: true
     }
   }
 
@@ -202,8 +200,7 @@ export const createPeerLiquidityWithdrawal: MutationResolvers<ApolloContext>['cr
       })
     }
     return {
-      id,
-      liquidity: amount
+      success: true
     }
   }
 
@@ -245,8 +242,7 @@ export const createAssetLiquidityWithdrawal: MutationResolvers<ApolloContext>['c
       })
     }
     return {
-      id,
-      liquidity: amount
+      success: true
     }
   }
 
@@ -321,7 +317,7 @@ export const postLiquidityWithdrawal: MutationResolvers<ApolloContext>['postLiqu
       })
     }
     return {
-      id: args.input.withdrawalId
+      success: true
     }
   }
 
@@ -343,7 +339,7 @@ export const voidLiquidityWithdrawal: MutationResolvers<ApolloContext>['voidLiqu
       })
     }
     return {
-      id: args.input.withdrawalId
+      success: true
     }
   }
 
@@ -392,8 +388,7 @@ export const depositEventLiquidity: MutationResolvers<ApolloContext>['depositEve
       })
     }
     return {
-      id: event.data.id,
-      liquidity: BigInt(event.data.debitAmount.value)
+      success: true
     }
   }
 
@@ -435,8 +430,7 @@ export const withdrawEventLiquidity: MutationResolvers<ApolloContext>['withdrawE
     }
     // TODO: check for and handle leftover incoming payment or payment balance
     return {
-      id: event.id,
-      liquidity: event.withdrawal.amount
+      success: true
     }
   }
 
@@ -479,8 +473,7 @@ export const depositOutgoingPaymentLiquidity: MutationResolvers<ApolloContext>['
       })
     }
     return {
-      id: outgoingPaymentId,
-      liquidity: BigInt(event.data.debitAmount.value)
+      success: true
     }
   }
 
@@ -532,8 +525,7 @@ export const createIncomingPaymentWithdrawal: MutationResolvers<ApolloContext>['
       })
     }
     return {
-      id: event.id,
-      liquidity: incomingPayment.receivedAmount.value
+      success: true
     }
   }
 
@@ -597,8 +589,7 @@ export const createOutgoingPaymentWithdrawal: MutationResolvers<ApolloContext>['
       })
     }
     return {
-      id: event.id,
-      liquidity: balance
+      success: true
     }
   }
 
