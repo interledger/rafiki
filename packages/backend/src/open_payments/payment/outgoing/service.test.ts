@@ -495,7 +495,7 @@ describe('OutgoingPaymentService', (): void => {
     })
 
     test(
-      'create many outgoing payments against one grant',
+      'create many outgoing payments against one grant with debit amount limit',
       withConfigOverride(
         () => config,
         { slippage: 0 },
@@ -509,11 +509,6 @@ describe('OutgoingPaymentService', (): void => {
             id: uuid(),
             limits: {
               debitAmount: {
-                value: BigInt(Number.MAX_SAFE_INTEGER),
-                assetCode: receiverWalletAddress.asset.code,
-                assetScale: receiverWalletAddress.asset.scale
-              },
-              receiveAmount: {
                 value: BigInt(Number.MAX_SAFE_INTEGER),
                 assetCode: receiverWalletAddress.asset.code,
                 assetScale: receiverWalletAddress.asset.scale
@@ -539,6 +534,48 @@ describe('OutgoingPaymentService', (): void => {
             expect(payment.grantSpentDebitAmount.value).toBe(
               BigInt(debitAmount.value * BigInt(i))
             )
+          }
+        }
+      )
+    )
+
+    test(
+      'create many outgoing payments against one grant with receive amount limit',
+      withConfigOverride(
+        () => config,
+        { slippage: 0 },
+        async (): Promise<void> => {
+          const debitAmount = {
+            value: BigInt(10),
+            assetCode: receiverWalletAddress.asset.code,
+            assetScale: receiverWalletAddress.asset.scale
+          }
+          const grant: Grant = {
+            id: uuid(),
+            limits: {
+              receiveAmount: {
+                value: BigInt(Number.MAX_SAFE_INTEGER),
+                assetCode: receiverWalletAddress.asset.code,
+                assetScale: receiverWalletAddress.asset.scale
+              }
+            }
+          }
+          await OutgoingPaymentGrant.query(knex).insertAndFetch({
+            id: grant.id
+          })
+
+          const options: CreateOutgoingPaymentOptions = {
+            walletAddressId: receiverWalletAddress.id,
+            debitAmount,
+            incomingPayment: incomingPayment.toOpenPaymentsTypeWithMethods(
+              receiverWalletAddress
+            ).id,
+            grant
+          }
+
+          for (let i = 0; i < 3; i++) {
+            const payment = await outgoingPaymentService.create(options)
+            assert.ok(!isOutgoingPaymentError(payment))
             expect(payment.grantSpentReceiveAmount.value).toBe(
               // Must account for interledger/pay off-by-one issue (even with 0 slippage/fees)
               BigInt((debitAmount.value - BigInt(1)) * BigInt(i))
