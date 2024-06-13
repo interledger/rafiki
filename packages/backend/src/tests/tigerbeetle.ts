@@ -42,6 +42,8 @@ export async function startTigerbeetleContainer(clusterId?: number): Promise<{
     )
     .start()
 
+  // Not logged on failure to start container.
+  // Use DEBUG=testcontainers:containers in that case
   const streamTbFormat = await tbContFormat.logs()
   if (TIGERBEETLE_CONTAINER_LOG) {
     streamTbFormat
@@ -72,6 +74,8 @@ export async function startTigerbeetleContainer(clusterId?: number): Promise<{
     )
     .start()
 
+  // Not logged on failure to start container.
+  // Use DEBUG=testcontainers:containers in that case
   const streamTbStart = await tbContStart.logs()
   if (TIGERBEETLE_CONTAINER_LOG) {
     streamTbStart
