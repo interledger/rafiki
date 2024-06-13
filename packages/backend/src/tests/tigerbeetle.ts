@@ -34,6 +34,7 @@ export async function startTigerbeetleContainer(clusterId?: number): Promise<{
       '--replica-count=1',
       `${TIGERBEETLE_DIR}/${tigerbeetleFile}`
     ])
+    .withPrivilegedMode()
     .withWaitStrategy(
       Wait.forLogMessage(
         `info(main): 0: formatted: cluster=${tigerbeetleClusterId} replica_count=1`
@@ -63,6 +64,7 @@ export async function startTigerbeetleContainer(clusterId?: number): Promise<{
       '--addresses=0.0.0.0:' + TIGERBEETLE_PORT,
       `${TIGERBEETLE_DIR}/${tigerbeetleFile}`
     ])
+    .withPrivilegedMode()
     .withWaitStrategy(
       Wait.forLogMessage(
         `info(main): 0: cluster=${tigerbeetleClusterId}: listening on 0.0.0.0:${TIGERBEETLE_PORT}`
