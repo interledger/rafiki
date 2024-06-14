@@ -7,6 +7,7 @@ import { BaseModel, Pagination, SortOrder } from '../../shared/baseModel'
 import { WebhookEvent } from '../../webhook/model'
 import { WalletAddressKey } from '../../open_payments/wallet_address/key/model'
 import { AmountJSON } from '../amount'
+import { WalletAddressAdditionalProperty } from './additional_property/model'
 
 export class WalletAddress
   extends BaseModel
@@ -32,10 +33,19 @@ export class WalletAddress
         from: 'walletAddresses.id',
         to: 'walletAddressKeys.walletAddressId'
       }
+    },
+    additionalProperties: {
+      relation: Model.HasManyRelation,
+      modelClass: WalletAddressAdditionalProperty,
+      join: {
+        from: 'walletAddresses.id',
+        to: 'walletAddressAdditionalProperties.walletAddressId'
+      }
     }
   })
 
   public keys?: WalletAddressKey[]
+  public additionalProperties?: WalletAddressAdditionalProperty[]
 
   public url!: string
   public publicName?: string
@@ -102,7 +112,7 @@ export class WalletAddress
     authServer: string
     resourceServer: string
   }): OpenPaymentsWalletAddress {
-    return {
+    const returnVal: OpenPaymentsWalletAddress = {
       id: this.url,
       publicName: this.publicName,
       assetCode: this.asset.code,
@@ -110,6 +120,10 @@ export class WalletAddress
       authServer,
       resourceServer
     }
+    if (this.additionalProperties && this.additionalProperties.length) {
+      returnVal.additionalProperties = this.additionalProperties
+    }
+    return returnVal
   }
 }
 

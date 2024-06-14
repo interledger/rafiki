@@ -1,0 +1,26 @@
+meta {
+  name: Wallet Address Not Found
+  type: http
+  seq: 7
+}
+
+post {
+  url: {{cloudNineWalletWebhookUrl}}
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "id": "{{uuid}}",
+    "type":"wallet_address.not_found",
+    "data": {
+        "walletAddressUrl": "https://cloud-nine-wallet-backend/accounts/ya"
+    }
+  
+  }
+}
+
+script:pre-request {
+  bru.setVar('uuid', require("uuid").v4());
+}

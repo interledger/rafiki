@@ -1,8 +1,20 @@
-import { json, type LoaderFunctionArgs } from '@remix-run/node'
-import { useLoaderData, useNavigate, useSearchParams } from '@remix-run/react'
+import { useState } from 'react'
+import {
+  json,
+  type LoaderFunctionArgs,
+  type ActionFunctionArgs,
+  redirect
+} from '@remix-run/node'
+import {
+  useLoaderData,
+  useNavigate,
+  useSearchParams,
+  Form,
+  useActionData
+} from '@remix-run/react'
 import { Badge, PageHeader } from '~/components'
 import { PopoverFilter } from '~/components/Filters'
-import { Button, Table } from '~/components/ui'
+import { Button, Table, ErrorPanel, FieldError } from '~/components/ui'
 import { listPayments } from '~/lib/api/payments.server'
 import { paymentsSearchParams } from '~/lib/validate.server'
 import { PaymentType } from '~/generated/graphql'
@@ -12,7 +24,15 @@ import {
   badgeColorByPaymentState,
   paymentSubpathByType
 } from '~/shared/utils'
-import { redirectIfUnauthorizedAccess } from '../lib/kratos_checks.server'
+import { redirectIfUnauthorizedAccess } from '~/lib/kratos_checks.server'
+import type { ZodFieldErrors } from '~/shared/types'
+
+interface PaymentSearchParams {
+  type: string | null
+  walletAddressId: string | null
+  before: string | null
+  after: string | null
+}
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const cookies = request.headers.get('cookie')
@@ -20,7 +40,6 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 
   const url = new URL(request.url)
   const searchParams = Object.fromEntries(url.searchParams.entries())
-
   const result = paymentsSearchParams.safeParse(
     searchParams.type
       ? { ...searchParams, type: searchParams.type.split(',') }
@@ -31,57 +50,71 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     throw json(null, { status: 400, statusText: 'Invalid result.' })
   }
 
-  const { type, ...pagination } = result.data
+  const { type, walletAddressId, ...pagination } = result.data
 
   const payments = await listPayments({
     ...pagination,
-    ...(type ? { filter: { type: { in: type } } } : {})
+    ...(type || walletAddressId
+      ? {
+          filter: {
+            ...(type ? { type: { in: type } } : {}),
+            ...(walletAddressId
+              ? { walletAddressId: { in: [walletAddressId] } }
+              : {})
+          }
+        }
+      : {})
   })
-
-  let previousPageUrl = '',
-    nextPageUrl = ''
-
-  if (payments.pageInfo.hasPreviousPage) {
-    previousPageUrl = `/payments?before=${payments.pageInfo.startCursor}`
-  }
-
-  if (payments.pageInfo.hasNextPage) {
-    nextPageUrl = `/payments?after=${payments.pageInfo.endCursor}`
-  }
 
   return json({
     payments,
-    previousPageUrl,
-    nextPageUrl,
-    type
+    type,
+    walletAddressId: walletAddressId ?? null
   })
 }
 
 export default function PaymentsPage() {
-  const { payments, previousPageUrl, nextPageUrl, type } =
-    useLoaderData<typeof loader>()
-  const setSearchParams = useSearchParams()[1]
-
+  const { payments, type, walletAddressId } = useLoaderData<typeof loader>()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const [walletId, setWalletId] = useState(walletAddressId || '')
   const navigate = useNavigate()
+  const response = useActionData<typeof action>()
+
+  function updateSearchParams(
+    searchParams: URLSearchParams,
+    newParams: PaymentSearchParams
+  ) {
+    ;(Object.keys(newParams) as (keyof PaymentSearchParams)[]).forEach(
+      (key) => {
+        const value = newParams[key]
+        value === undefined || value === null
+          ? searchParams.delete(key)
+          : searchParams.set(key, value)
+      }
+    )
+    return searchParams
+  }
+
+  function updateParams(newParams: PaymentSearchParams) {
+    const newSearchParams = updateSearchParams(
+      new URLSearchParams(searchParams),
+      newParams
+    )
+    setSearchParams(newSearchParams)
+    navigate(`/payments?${newSearchParams.toString()}`)
+  }
 
   function setTypeFilterParams(selectedType: PaymentType): void {
-    const selected = type
+    const selectedTypes = type
+    const newTypes = selectedTypes.includes(selectedType)
+      ? selectedTypes.filter((t) => t !== selectedType)
+      : [...selectedTypes, selectedType]
 
-    if (!selected.includes(selectedType)) {
-      selected.push(selectedType)
-      setSearchParams(new URLSearchParams({ type: selected.join(',') }))
-      return
-    }
-
-    setSearchParams(() => {
-      const newParams = selected.filter((t) => t !== selectedType).join(',')
-      if (newParams.length === 0) {
-        return ''
-      }
-
-      return new URLSearchParams({
-        type: newParams
-      })
+    updateParams({
+      type: newTypes.length > 0 ? newTypes.join(',') : null,
+      before: null,
+      after: null,
+      walletAddressId
     })
   }
 
@@ -95,7 +128,10 @@ export default function PaymentsPage() {
         </PageHeader>
         <div className='p-1'>
           <h3 className='text-lg font-bold'>Filters</h3>
-          <div className='flex items-center'>
+          <div className='pt-5'>
+            <ErrorPanel errors={response?.errors.message} />
+          </div>
+          <div className='flex flex-col'>
             <PopoverFilter
               label='Payment type'
               values={type.length > 0 ? type : ['all']}
@@ -103,19 +139,82 @@ export default function PaymentsPage() {
                 {
                   name: 'All',
                   value: 'all',
-                  action: () => {
-                    navigate(``)
-                  }
+                  action: () =>
+                    updateParams({
+                      type: null,
+                      before: null,
+                      after: null,
+                      walletAddressId
+                    })
                 },
                 ...Object.values(PaymentType).map((value) => ({
                   name: capitalize(value),
                   value: value,
-                  action: () => {
-                    setTypeFilterParams(value)
-                  }
+                  action: () => setTypeFilterParams(value)
                 }))
               ]}
             />
+            <Form
+              method='post'
+              className='relative mt-2'
+              onSubmit={(e) => {
+                if (!walletId) {
+                  e.preventDefault()
+                  updateParams({
+                    walletAddressId: null,
+                    type: searchParams.get('type'),
+                    before: null,
+                    after: null
+                  })
+                }
+              }}
+            >
+              <div className='flex items-center space-x-3'>
+                <input
+                  name='walletAddressId'
+                  placeholder='Wallet address ID'
+                  className='border-none relative w-[400px] cursor-default rounded-md bg-white py-1.5 pl-3 pr-10 text-left text-gray-900 shadow-sm ring-1 ring-inset ring-pearl focus:outline-none focus:ring-2 focus:ring-[#F37F64] sm:text-sm sm:leading-6'
+                  value={walletId}
+                  onChange={(e) => setWalletId(e.target.value)}
+                />
+                <input
+                  name='type'
+                  type='hidden'
+                  value={searchParams.get('type') ?? ''}
+                />
+                <Button aria-label='filter on wallet address ID' type='submit'>
+                  <svg
+                    xmlns='http://www.w3.org/2000/svg'
+                    className='h-6 w-6'
+                    fill='none'
+                    viewBox='0 0 24 24'
+                    stroke='currentColor'
+                    strokeWidth={2}
+                  >
+                    <path
+                      strokeLinecap='round'
+                      strokeLinejoin='round'
+                      d='M21 21l-4.35-4.35M17.25 10.5a6.75 6.75 0 11-13.5 0 6.75 6.75 0 0113.5 0z'
+                    />
+                  </svg>
+                </Button>
+              </div>
+              <FieldError
+                error={response?.errors?.fieldErrors.walletAddressId}
+              />
+            </Form>
+          </div>
+          <div className='flex justify-between mt-4'>
+            <Button
+              aria-label='reset filters'
+              onClick={() => {
+                navigate('/payments')
+                setWalletId('')
+                setSearchParams(new URLSearchParams())
+              }}
+            >
+              Reset Filters
+            </Button>
           </div>
         </div>
         <Table>
@@ -134,17 +233,15 @@ export default function PaymentsPage() {
                   <Table.Cell>{payment.node.id}</Table.Cell>
                   <Table.Cell>{capitalize(payment.node.type)}</Table.Cell>
                   <Table.Cell>
-                    {
-                      <Badge
-                        color={
-                          badgeColorByPaymentState[
-                            payment.node.state as CombinedPaymentState
-                          ]
-                        }
-                      >
-                        {payment.node.state}
-                      </Badge>
-                    }
+                    <Badge
+                      color={
+                        badgeColorByPaymentState[
+                          payment.node.state as CombinedPaymentState
+                        ]
+                      }
+                    >
+                      {payment.node.state}
+                    </Badge>
                   </Table.Cell>
                   <Table.Cell>
                     {new Date(payment.node.createdAt).toLocaleString()}
@@ -164,18 +261,28 @@ export default function PaymentsPage() {
           <Button
             aria-label='go to previous page'
             disabled={!payments.pageInfo.hasPreviousPage}
-            onClick={() => {
-              navigate(previousPageUrl)
-            }}
+            onClick={() =>
+              updateParams({
+                before: payments.pageInfo.startCursor ?? null,
+                after: null,
+                walletAddressId,
+                type: searchParams.get('type')
+              })
+            }
           >
             Previous
           </Button>
           <Button
             aria-label='go to next page'
             disabled={!payments.pageInfo.hasNextPage}
-            onClick={() => {
-              navigate(nextPageUrl)
-            }}
+            onClick={() =>
+              updateParams({
+                before: null,
+                after: payments.pageInfo.endCursor ?? null,
+                walletAddressId,
+                type: searchParams.get('type')
+              })
+            }
           >
             Next
           </Button>
@@ -183,4 +290,39 @@ export default function PaymentsPage() {
       </div>
     </div>
   )
+}
+
+export async function action({ request }: ActionFunctionArgs) {
+  const errors: {
+    fieldErrors: ZodFieldErrors<typeof paymentsSearchParams>
+    message: string[]
+  } = {
+    fieldErrors: {},
+    message: []
+  }
+
+  const formData = Object.fromEntries(await request.formData())
+
+  const result = paymentsSearchParams.safeParse(
+    formData.type
+      ? { ...formData, type: formData.type.toString().split(',') }
+      : { ...formData, type: [] }
+  )
+
+  if (!result.success) {
+    errors.fieldErrors = result.error.flatten().fieldErrors
+    return json({ errors }, { status: 400 })
+  }
+
+  const searchParams = new URLSearchParams()
+
+  if (result.data.walletAddressId) {
+    searchParams.append('walletAddressId', result.data.walletAddressId)
+  }
+
+  if (result.data.type.length > 0) {
+    searchParams.append('type', result.data.type.join(','))
+  }
+
+  return redirect(`/payments?${searchParams.toString()}`)
 }

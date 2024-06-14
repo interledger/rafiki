@@ -1,0 +1,32 @@
+meta {
+  name: Asset Liquidity Low
+  type: http
+  seq: 8
+}
+
+post {
+  url: {{cloudNineWalletWebhookUrl}}
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "id": "{{uuid}}",
+    "type": "asset.liquidity_low",
+    "data": {
+      "id": "{{assetId}}",
+      "asset": {
+        "id": "{{assetId}}",
+        "code": "EUR",
+        "scale": 2
+      },
+      "liquidityThreshold": "10000",
+      "balance": "9980"
+    }
+  }
+}
+
+script:pre-request {
+  bru.setVar('uuid', require("uuid").v4());
+}

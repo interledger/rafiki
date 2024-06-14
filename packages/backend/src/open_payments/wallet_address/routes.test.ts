@@ -12,6 +12,7 @@ import { WalletAddressRoutes } from './routes'
 import assert from 'assert'
 import { OpenPaymentsServerRouteError } from '../route-errors'
 import { WalletAddressService } from './service'
+import { WalletAddressAdditionalProperty } from './additional_property/model'
 
 describe('Wallet Address Routes', (): void => {
   let deps: IocContract<AppServices>
@@ -87,6 +88,34 @@ describe('Wallet Address Routes', (): void => {
           walletAddress
         )
       }
+    })
+
+    test('store and fetch additional properties for a wallet', async (): Promise<void> => {
+      const addProp = new WalletAddressAdditionalProperty()
+      addProp.fieldKey = 'field-key-open-pay'
+      addProp.fieldValue = 'field-val-open-pay'
+      addProp.visibleInOpenPayments = true
+      const walletAddress = await createWalletAddress(deps, {
+        publicName: faker.person.firstName(),
+        additionalProperties: [addProp]
+      })
+
+      const ctx = createContext<WalletAddressUrlContext>({
+        headers: { Accept: 'application/json' },
+        url: '/'
+      })
+      ctx.walletAddressUrl = walletAddress.url
+      await expect(walletAddressRoutes.get(ctx)).resolves.toBeUndefined()
+      expect(ctx.response).toSatisfyApiSpec()
+      expect(ctx.body).toEqual({
+        id: walletAddress.url,
+        publicName: walletAddress.publicName,
+        assetCode: walletAddress.asset.code,
+        assetScale: walletAddress.asset.scale,
+        authServer: config.authServerGrantUrl,
+        resourceServer: config.openPaymentsUrl,
+        additionalProperties: walletAddress.additionalProperties
+      })
     })
 
     test('returns 404 when fetching wallet address of instance itself', async (): Promise<void> => {

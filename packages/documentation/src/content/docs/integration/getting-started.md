@@ -9,7 +9,7 @@ Rafiki is intended to be run by [Account Servicing Entities](/reference/glossary
 Account Servicing Entities provide and maintain payment accounts. In order to make these accounts Interledger-enabled via Rafiki, they need to provide the following endpoints and services:
 
 - [exchange rates](#exchange-rates)
-- [webhook events listener](#webhook-events-listener)
+- [webhook event listener](#webhook-event-listener)
 - [Identity Provider](#identity-provider)
 
 Furthermore, each payment account managed by the Account Servicing Entity needs to be issued at least one [wallet address](#issuing-wallet-addresses) in order to be serviced by Rafiki and send or receive Interledger payments.
@@ -30,7 +30,7 @@ The response status code for a successful request is a `200`. The `mock-account-
 
 The `backend` package requires an environment variable called `EXCHANGE_RATES_URL` which MUST specify the URL of this endpoint. An OpenAPI specification of that endpoint can be found [here](https://github.com/interledger/rafiki/blob/main/packages/backend/src/openapi/specs/exchange-rates.yaml).
 
-### Rate Probe Quotes and Fees
+## Fees
 
 The Account Servicing Entity may charge fees on top of the estimated network fee for facilitating the transfer. They can specify fixed and variable fees per asset using the Admin API or UI. How they structure those fees is completely up to the Account Servicing Entity.
 
@@ -93,38 +93,11 @@ Example Successful Response
 }
 ```
 
-## Webhook Events Listener
+## Webhook Event Listener
 
-Rafiki itself does not hold any balances but needs to be funded for outgoing transfers and money needs to be withdrawn for incoming transfers. In order to notify the Account Servicing Entity about those transfer events, they need to expose a webhook endpoint that listens for these events and reacts accordingly.
+Rafiki itself does not hold any user account balances, but instead, keeps track of [liquidity](/concepts/accounting/liquidity) within asset, peer, and payment accounts. This liquidity needs to be managed primarily as a response to certain events that happen in Rafiki. In order for Rafiki to notify the Account Servicing Entity about those events, the Account Servicing Entity need to expose a webhook endpoint that listens for these events and reacts accordingly.
 
-The endpoint accepts a `POST` request with
-
-#### Request Body
-
-| Variable Name | Type                          | Description         |
-| ------------- | ----------------------------- | ------------------- |
-| `id`          | String                        | event id            |
-| `type`        | Enum: [EventType](#eventtype) |                     |
-| `data`        | Object                        | any additional data |
-
-#### EventType
-
-| Value                             | Description                                                                 |
-| --------------------------------- | --------------------------------------------------------------------------- |
-| `incoming_payment.created`        | Incoming payment has been created.                                          |
-| `incoming_payment.completed`      | Incoming payment is complete and doesn't accept any incoming funds anymore. |
-| `incoming_payment.expired`        | Incoming payment is expired and doesn't accept any incoming funds anymore.  |
-| `outgoing_payment.created`        | Outgoing payment was created.                                               |
-| `outgoing_payment.completed`      | Outgoing payment is complete.                                               |
-| `outgoing_payment.failed`         | Outgoing payment failed.                                                    |
-| `wallet_address.not_found`        | A requested wallet address was not found                                    |
-| `wallet_address.web_monetization` | Web Monetization payments received via STREAM.                              |
-| `asset.liquidity_low`             | Asset liquidity has dropped below defined threshold.                        |
-| `peer.liquidity_low`              | Peer liquidity has dropped below defined threshold.                         |
-
-The Account Servicing Entity's expected behavior when observing these webhook events is detailed in the [Event Handlers](/integration/event-handlers) documentation.
-
-The `backend` package requires an environment variable called `WEBHOOK_URL` which MUST specify this endpoint. An OpenAPI specification of that endpoint can be found [here](https://github.com/interledger/rafiki/blob/main/packages/backend/src/openapi/specs/webhooks.yaml).
+The Account Servicing Entity's expected behavior when observing these webhook events is detailed in the [Webhook Events](/integration/webhook-events) documentation.
 
 ## Identity Provider
 
@@ -212,12 +185,22 @@ mutation CreateWalletAddress($input: CreateWalletAddressInput!) {
 
 Query Variables:
 
+\*Note `additionalProperties` are optional.
+
 ```json
 {
   "input": {
     "assetId": "0ddc0b7d-1822-4213-948e-915dda58850b",
     "publicName": "Sarah Marshall",
-    "url": "https://example.wallet.com/sarah"
+    "url": "https://example.wallet.com/sarah",
+    "additionalProperties": [
+      {
+        "key": "iban",
+        "value": "NL93 8601 1117 947",
+        "visibleInOpenPayments": false
+      },
+      { "key": "nickname", "value": "S Mar", "visibleInOpenPayments": true }
+    ]
   }
 }
 ```

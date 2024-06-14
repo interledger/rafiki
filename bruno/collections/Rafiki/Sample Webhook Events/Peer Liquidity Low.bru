@@ -1,0 +1,32 @@
+meta {
+  name: Peer Liquidity Low
+  type: http
+  seq: 9
+}
+
+post {
+  url: {{cloudNineWalletWebhookUrl}}
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "id": "{{uuid}}",
+    "type": "peer.liquidity_low",
+    "data": {
+      "id": "{{peerId}}",
+      "asset": {
+        "id": "{{assetId}}",
+        "code": "USD",
+        "scale": 2
+      },
+      "liquidityThreshold": "10000",
+      "balance": "9850"
+    }
+  }
+}
+
+script:pre-request {
+  bru.setVar('uuid', require("uuid").v4());
+}

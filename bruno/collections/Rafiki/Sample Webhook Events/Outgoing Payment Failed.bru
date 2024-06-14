@@ -1,0 +1,53 @@
+meta {
+  name: Outgoing Payment Failed
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{cloudNineWalletWebhookUrl}}
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "id": "{{uuid}}",
+    "type": "outgoing_payment.failed",
+    "data": {
+      "id": "2de34961-9bb8-404e-866a-288307114c74",
+      "walletAddressId": "{{gfranklinWalletAddressId}}",
+      "client": "https://happy-life-bank-backend/accounts/pfry",
+      "state": "FAILED",
+      "receiver": "https://happy-life-bank-backend/incoming-payments/b3b4cad4-cfe6-42bb-9c0a-b60b6da17835",
+      "debitAmount": {
+        "value": "102",
+        "assetCode": "USD",
+        "assetScale": 2
+      },
+      "receiveAmount": {
+        "value": "100",
+        "assetCode": "USD",
+        "assetScale": 2
+      },
+      "sentAmount": {
+        "value": "50",
+        "assetCode": "USD",
+        "assetScale": 2
+      },
+      "stateAttempts": 0,
+      "createdAt": "{{now}}",
+      "updatedAt": "{{now}}",
+      "balance": "52",
+      "metadata": {
+        "description": "Free Money!"
+      },
+      "peerId": "f4b35b6f-7125-485f-8a28-48367ad42557"
+    }
+  }
+}
+
+script:pre-request {
+  bru.setVar('uuid', require("uuid").v4());
+  bru.setVar("now", new Date().toISOString())
+}

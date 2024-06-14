@@ -45,27 +45,32 @@ body:graphql {
           }
           walletAddressKeys {
             edges {
-                node {
-                    id
-                    jwk {
-                        kid
-                        x
-                        alg
-                        kty
-                        crv
-                    }
-                    revoked
-                    createdAt
+              node {
+                id
+                jwk {
+                  kid
+                  x
+                  alg
+                  kty
+                  crv
                 }
+                revoked
+                createdAt
+              }
             }
             pageInfo {
-                endCursor
-                hasNextPage
-                hasPreviousPage
-                startCursor
+              endCursor
+              hasNextPage
+              hasPreviousPage
+              startCursor
             }
           }
           status
+          additionalProperties {
+            key
+            value
+            visibleInOpenPayments
+          }
       }
   }
 }

@@ -33,7 +33,7 @@ type Query {
     sortOrder: SortOrder
   ): PeersConnection!
 
-  "Fetch a wallet address"
+  "Fetch a wallet address."
   walletAddress(id: String!): WalletAddress
 
   "Fetch a page of wallet addresses."
@@ -621,14 +621,19 @@ type WalletAddressEdge {
 type WalletAddress implements Model {
   "Wallet address id"
   id: ID!
+
   "Asset of the wallet address"
   asset: Asset!
+
   "Available liquidity"
   liquidity: UInt64
+
   "Wallet Address URL"
   url: String!
+
   "Public name associated with the wallet address"
   publicName: String
+
   "List of incoming payments received by this wallet address"
   incomingPayments(
     "Paginating forwards: the cursor before the the requested page."
@@ -642,6 +647,7 @@ type WalletAddress implements Model {
     "Ascending or descending order of creation."
     sortOrder: SortOrder
   ): IncomingPaymentConnection
+
   "List of quotes created at this wallet address"
   quotes(
     "Paginating forwards: the cursor before the the requested page."
@@ -655,6 +661,7 @@ type WalletAddress implements Model {
     "Ascending or descending order of creation."
     sortOrder: SortOrder
   ): QuoteConnection
+
   "List of outgoing payments sent from this wallet address"
   outgoingPayments(
     "Paginating forwards: the cursor before the the requested page."
@@ -668,10 +675,14 @@ type WalletAddress implements Model {
     "Ascending or descending order of creation."
     sortOrder: SortOrder
   ): OutgoingPaymentConnection
+
   "Date-time of creation"
   createdAt: String!
+
   "Status of the wallet address"
   status: WalletAddressStatus!
+
+  "List of keys associated with this wallet address"
   walletAddressKeys(
     "Paginating forwards: the cursor before the the requested page."
     after: String
@@ -684,6 +695,15 @@ type WalletAddress implements Model {
     "Ascending or descending order of creation."
     sortOrder: SortOrder
   ): WalletAddressKeyConnection
+
+  "List additional properties associated with this wallet address."
+  additionalProperties: [AdditionalProperty]
+}
+
+type AdditionalProperty {
+  key: String!
+  value: String!
+  visibleInOpenPayments: Boolean!
 }
 
 type WalletAddressKeyConnection {
@@ -1025,6 +1045,14 @@ input CreateWalletAddressInput {
   publicName: String
   "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)"
   idempotencyKey: String
+  "Additional properties associated with the [walletAddress]."
+  additionalProperties: [AdditionalPropertyInput!]
+}
+
+input AdditionalPropertyInput {
+  key: String!
+  value: String!
+  visibleInOpenPayments: Boolean!
 }
 
 input UpdateWalletAddressInput {
