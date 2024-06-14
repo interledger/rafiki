@@ -246,8 +246,7 @@ export async function depositPeerLiquidity(
   const depositPeerLiquidityMutation = gql`
     mutation DepositPeerLiquidity($input: DepositPeerLiquidityInput!) {
       depositPeerLiquidity(input: $input) {
-        id
-        liquidity
+        success
       }
     }
   `
@@ -283,8 +282,7 @@ export async function depositAssetLiquidity(
   const depositAssetLiquidityMutation = gql`
     mutation DepositAssetLiquidity($input: DepositAssetLiquidityInput!) {
       depositAssetLiquidity(input: $input) {
-        id
-        liquidity
+        success
       }
     }
   `

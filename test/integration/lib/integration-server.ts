@@ -175,7 +175,7 @@ export class WebhookEventHandler {
       idempotencyKey: crypto.randomUUID()
     })
 
-    if (!response.id) {
+    if (!response.success) {
       const msg = 'Deposit outgoing payment liquidity failed'
       throw new Error(msg)
     }
