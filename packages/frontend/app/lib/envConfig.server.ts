@@ -1,5 +1,5 @@
 const variables = {
-  kratosContainerPublicUrl: process.env.KRATOS_CONTAINER_PULIC_URL,
+  kratosContainerPublicUrl: process.env.KRATOS_CONTAINER_PUBLIC_URL,
   kratosBrowserPublicUrl: process.env.KRATOS_BROWSER_PUBLIC_URL
 }
 
