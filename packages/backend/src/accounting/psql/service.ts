@@ -51,6 +51,19 @@ export function createAccountingService(
       createLiquidityAccount(deps, options, accTypeCode, trx),
     createSettlementAccount: (ledger, trx) =>
       createSettlementAccount(deps, ledger, trx),
+    createLiquidityAndLinkedSettlementAccount: (
+      options,
+      accTypeCode,
+      ledger,
+      trx
+    ) =>
+      createLiquidityAndLinkedSettlementAccount(
+        deps,
+        options,
+        accTypeCode,
+        ledger,
+        trx
+      ),
     getBalance: (accountRef) => getLiquidityAccountBalance(deps, accountRef),
     getTotalSent: (accountRef) => getAccountTotalSent(deps, accountRef),
     getAccountsTotalSent: (accountRefs) =>
@@ -82,7 +95,6 @@ export async function createLiquidityAccount(
     },
     trx
   )
-
   return account
 }
 
@@ -105,6 +117,18 @@ export async function createSettlementAccount(
     },
     trx
   )
+}
+
+export async function createLiquidityAndLinkedSettlementAccount(
+  deps: ServiceDependencies,
+  account: LiquidityAccount,
+  accountType: LiquidityAccountType,
+  ledger: number,
+  trx?: TransactionOrKnex
+): Promise<LiquidityAccount> {
+  await createLiquidityAccount(deps, account, accountType, trx)
+  await createSettlementAccount(deps, ledger, trx)
+  return account
 }
 
 export async function getLiquidityAccountBalance(

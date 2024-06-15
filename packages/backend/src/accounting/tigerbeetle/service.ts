@@ -27,7 +27,7 @@ import {
 import { NewTransferOptions, createTransfers } from './transfers'
 import { toTigerbeetleId } from './utils'
 
-export enum TigerbeetleAccountCode {
+export enum TigerBeetleAccountCode {
   LIQUIDITY_WEB_MONETIZATION = 1,
   LIQUIDITY_ASSET = 2,
   LIQUIDITY_PEER = 3,
@@ -36,15 +36,15 @@ export enum TigerbeetleAccountCode {
   SETTLEMENT = 101
 }
 
-export const convertToTigerbeetleAccountCode: {
-  [key in LiquidityAccountType]: TigerbeetleAccountCode
+export const convertToTigerBeetleAccountCode: {
+  [key in LiquidityAccountType]: TigerBeetleAccountCode
 } = {
   [LiquidityAccountType.WEB_MONETIZATION]:
-    TigerbeetleAccountCode.LIQUIDITY_WEB_MONETIZATION,
-  [LiquidityAccountType.ASSET]: TigerbeetleAccountCode.LIQUIDITY_ASSET,
-  [LiquidityAccountType.PEER]: TigerbeetleAccountCode.LIQUIDITY_PEER,
-  [LiquidityAccountType.INCOMING]: TigerbeetleAccountCode.LIQUIDITY_INCOMING,
-  [LiquidityAccountType.OUTGOING]: TigerbeetleAccountCode.LIQUIDITY_OUTGOING
+    TigerBeetleAccountCode.LIQUIDITY_WEB_MONETIZATION,
+  [LiquidityAccountType.ASSET]: TigerBeetleAccountCode.LIQUIDITY_ASSET,
+  [LiquidityAccountType.PEER]: TigerBeetleAccountCode.LIQUIDITY_PEER,
+  [LiquidityAccountType.INCOMING]: TigerBeetleAccountCode.LIQUIDITY_INCOMING,
+  [LiquidityAccountType.OUTGOING]: TigerBeetleAccountCode.LIQUIDITY_OUTGOING
 }
 
 export interface ServiceDependencies extends BaseService {
@@ -75,6 +75,13 @@ export function createAccountingService(
     createLiquidityAccount: (options, accountType) =>
       createLiquidityAccount(deps, options, accountType),
     createSettlementAccount: (ledger) => createSettlementAccount(deps, ledger),
+    createLiquidityAndLinkedSettlementAccount: (options, accTypeCode, ledger) =>
+      createLiquidityAndLinkedSettlementAccount(
+        deps,
+        options,
+        accTypeCode,
+        ledger
+      ),
     getBalance: (id) => getAccountBalance(deps, id),
     getTotalSent: (id) => getAccountTotalSent(deps, id),
     getAccountsTotalSent: (ids) => getAccountsTotalSent(deps, ids),
@@ -102,7 +109,8 @@ export async function createLiquidityAccount(
       {
         id: account.id,
         ledger: account.asset.ledger,
-        code: convertToTigerbeetleAccountCode[accountType]
+        code: convertToTigerBeetleAccountCode[accountType],
+        linked: false
       }
     ])
     return account
@@ -126,7 +134,8 @@ export async function createSettlementAccount(
       {
         id: ledger,
         ledger,
-        code: TigerbeetleAccountCode.SETTLEMENT
+        code: TigerBeetleAccountCode.SETTLEMENT,
+        linked: false
       }
     ])
   } catch (err) {
@@ -140,6 +149,17 @@ export async function createSettlementAccount(
     }
     throw err
   }
+}
+
+export async function createLiquidityAndLinkedSettlementAccount(
+  deps: ServiceDependencies,
+  account: LiquidityAccount,
+  accountType: LiquidityAccountType,
+  ledger: number
+): Promise<LiquidityAccount> {
+  await createLiquidityAccount(deps, account, accountType)
+  await createSettlementAccount(deps, ledger)
+  return account
 }
 
 export async function getAccountBalance(

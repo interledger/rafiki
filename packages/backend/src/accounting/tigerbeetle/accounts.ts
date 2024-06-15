@@ -4,14 +4,15 @@ import {
   CreateAccountError as CreateAccountErrorCode
 } from 'tigerbeetle-node'
 
-import { ServiceDependencies, TigerbeetleAccountCode } from './service'
+import { ServiceDependencies, TigerBeetleAccountCode } from './service'
 import { TigerbeetleCreateAccountError } from './errors'
 import { AccountId, toTigerbeetleId } from './utils'
 
 export interface CreateAccountOptions {
   id: AccountId
   ledger: number
-  code: TigerbeetleAccountCode
+  code: TigerBeetleAccountCode
+  linked: boolean
 }
 
 export async function createAccounts(
@@ -33,7 +34,7 @@ export async function createAccounts(
       // - the source account's debits increase
       // - the destination account's credits increase
       flags:
-        account.code === TigerbeetleAccountCode.SETTLEMENT
+        account.code === TigerBeetleAccountCode.SETTLEMENT
           ? AccountFlags.credits_must_not_exceed_debits
           : AccountFlags.debits_must_not_exceed_credits,
       debits_pending: 0n,

@@ -154,6 +154,14 @@ export class MockAccountingService implements AccountingService {
     throw new Error('Not implemented!')
   }
 
+  async createLiquidityAndLinkedSettlementAccount(
+    account: MockIlpAccount
+  ): Promise<MockIlpAccount> {
+    const retVal = await this.createLiquidityAccount(account)
+    await this.createSettlementAccount(1)
+    return retVal
+  }
+
   createWithdrawal(
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     withdrawal: Withdrawal

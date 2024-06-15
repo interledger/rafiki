@@ -67,6 +67,12 @@ export interface AccountingService {
     ledger: number,
     trx?: TransactionOrKnex
   ): Promise<void>
+  createLiquidityAndLinkedSettlementAccount(
+    account: LiquidityAccount,
+    accountType: LiquidityAccountType,
+    ledger: number,
+    trx?: TransactionOrKnex
+  ): Promise<LiquidityAccount>
   getBalance(id: string): Promise<bigint | undefined>
   getTotalSent(id: string): Promise<bigint | undefined>
   getAccountsTotalSent(ids: string[]): Promise<(bigint | undefined)[]>
