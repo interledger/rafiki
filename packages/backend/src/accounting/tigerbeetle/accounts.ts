@@ -33,10 +33,7 @@ export async function createAccounts(
       // In Rafiki transfers:
       // - the source account's debits increase
       // - the destination account's credits increase
-      flags:
-        account.code === TigerBeetleAccountCode.SETTLEMENT
-          ? AccountFlags.credits_must_not_exceed_debits
-          : AccountFlags.debits_must_not_exceed_credits,
+      flags: flagsBasedOnAccountOptions(account),
       debits_pending: 0n,
       debits_posted: 0n,
       credits_pending: 0n,
@@ -49,6 +46,16 @@ export async function createAccounts(
       throw new TigerbeetleCreateAccountError(result)
     }
   }
+}
+
+export function flagsBasedOnAccountOptions(
+  options: CreateAccountOptions
+): AccountFlags {
+  let returnVal = options.code === TigerBeetleAccountCode.SETTLEMENT
+    ? AccountFlags.credits_must_not_exceed_debits
+    : AccountFlags.debits_must_not_exceed_credits
+  if (options.linked) returnVal = returnVal | AccountFlags.linked
+  return returnVal
 }
 
 export async function getAccounts(
