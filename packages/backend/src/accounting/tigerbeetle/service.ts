@@ -157,9 +157,35 @@ export async function createLiquidityAndLinkedSettlementAccount(
   accountType: LiquidityAccountType,
   ledger: number
 ): Promise<LiquidityAccount> {
-  await createLiquidityAccount(deps, account, accountType)
-  await createSettlementAccount(deps, ledger)
-  return account
+  if (!validateId(account.id)) {
+    throw new Error('unable to create account, invalid id')
+  }
+  try {
+    // Create the liquidity and settlement as linked:
+    await createAccounts(deps, [
+      {
+        id: account.id,
+        ledger: account.asset.ledger,
+        code: convertToTigerBeetleAccountCode[accountType],
+        linked: true
+      },
+      {
+        id: ledger,
+        ledger,
+        code: TigerBeetleAccountCode.SETTLEMENT,
+        linked: false
+      }
+    ])
+    return account
+  } catch (err) {
+    if (
+      err instanceof TigerbeetleCreateAccountError &&
+      areAllAccountExistsErrors([err.code])
+    ) {
+      throw new AccountAlreadyExistsError(`TigerBeetle error code: ${err.code}`)
+    }
+    throw err
+  }
 }
 
 export async function getAccountBalance(
