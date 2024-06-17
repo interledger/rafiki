@@ -20,7 +20,7 @@ We've also included a script to remove users: `docker exec -it <admin-container-
 
 Kratos allows you to render all of the UIs for idenenty management so that they are fully integrated into the look and feel of your environment. To get the UI elements for any particular page you make an API call to Kratos, which returns the UI elements needed for that flow. It's then up to you to group them, place them, and style them as you see fit. Kratos uses the identity schema that was defined during setup to determine which fields are needed for each flow and all the particulars.
 
-Note: Ory Kratos and the Rafiki Admin UI must be hosted on the same top-level domain.
+> **Note: Ory Kratos and the Rafiki Admin UI must be hosted on the same top-level domain.**
 
 ## Structure
 

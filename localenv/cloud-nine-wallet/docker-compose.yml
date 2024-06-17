@@ -150,7 +150,7 @@ services:
       GRAPHQL_URL: http://cloud-nine-wallet-backend:3001/graphql
       OPEN_PAYMENTS_URL: https://cloud-nine-wallet-backend/
       ENABLE_INSECURE_MESSAGE_COOKIE: true
-      KRATOS_CONTAINER_PULIC_URL: 'http://cloud-nine-kratos:4433'
+      KRATOS_CONTAINER_PUBLIC_URL: 'http://cloud-nine-kratos:4433'
       KRATOS_BROWSER_PUBLIC_URL: 'http://localhost:4433'
       KRATOS_ADMIN_URL: 'http://cloud-nine-kratos:4434/admin'
       SIGNATURE_VERSION: 1
