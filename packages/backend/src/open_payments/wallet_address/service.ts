@@ -189,13 +189,13 @@ async function updateWalletAddress(
   const trx = await WalletAddress.startTransaction()
   try {
     const update: UpdateInput = { publicName }
-    const walletAddress = await WalletAddress.query(deps.knex)
+    const walletAddress = await WalletAddress.query(trx)
       .findById(id)
       .throwIfNotFound()
 
     if (status === 'INACTIVE' && walletAddress.isActive) {
       update.deactivatedAt = new Date()
-      await deactivateOpenIncomingPaymentsByWalletAddress(deps, id)
+      await deactivateOpenIncomingPaymentsByWalletAddress(deps, id, trx)
     } else if (status === 'ACTIVE' && !walletAddress.isActive) {
       update.deactivatedAt = null
     }
@@ -409,12 +409,13 @@ async function createWithdrawalEvent(
 
 async function deactivateOpenIncomingPaymentsByWalletAddress(
   deps: ServiceDependencies,
-  walletAddressId: string
+  walletAddressId: string,
+  trx: TransactionOrKnex
 ) {
   const expiresAt = new Date(
     Date.now() + deps.config.walletAddressDeactivationPaymentGracePeriodMs
   )
-  await IncomingPayment.query(deps.knex)
+  await IncomingPayment.query(trx)
     .patch({ expiresAt })
     .where('walletAddressId', walletAddressId)
     .whereIn('state', [
