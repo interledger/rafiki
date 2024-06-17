@@ -113,7 +113,7 @@ describe('Psql Accounting Service', (): void => {
       const createAccountSpy = jest.spyOn(ledgerAccountFns, 'createAccount')
 
       await expect(
-        accountingService.createSettlementAccount(asset.ledger)
+        accountingService.createSettlementAccount(asset.ledger, asset.id)
       ).resolves.toBeUndefined()
       expect(createAccountSpy.mock.results[0].value).resolves.toMatchObject({
         accountRef: asset.id,
@@ -124,7 +124,7 @@ describe('Psql Accounting Service', (): void => {
 
     test('throws if cannot find asset', async (): Promise<void> => {
       await expect(
-        accountingService.createSettlementAccount(-1)
+        accountingService.createSettlementAccount(-1, asset.id)
       ).rejects.toThrowError(/Could not find asset/)
     })
 
@@ -134,7 +134,7 @@ describe('Psql Accounting Service', (): void => {
         .mockRejectedValueOnce(new Error('could not create account'))
 
       await expect(
-        accountingService.createSettlementAccount(asset.ledger)
+        accountingService.createSettlementAccount(asset.ledger, asset.id)
       ).rejects.toThrowError('could not create account')
     })
   })

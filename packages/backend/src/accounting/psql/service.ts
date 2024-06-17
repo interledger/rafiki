@@ -33,6 +33,7 @@ import {
   voidTransfers
 } from './ledger-transfer'
 import { LedgerTransfer, LedgerTransferType } from './ledger-transfer/model'
+import { AccountId } from '../tigerbeetle/utils'
 
 export interface ServiceDependencies extends BaseService {
   knex: TransactionOrKnex
@@ -49,8 +50,8 @@ export function createAccountingService(
   return {
     createLiquidityAccount: (options, accTypeCode, trx) =>
       createLiquidityAccount(deps, options, accTypeCode, trx),
-    createSettlementAccount: (ledger, trx) =>
-      createSettlementAccount(deps, ledger, trx),
+    createSettlementAccount: (ledger, accountId, trx) =>
+      createSettlementAccount(deps, ledger, accountId, trx),
     createLiquidityAndLinkedSettlementAccount: (
       options,
       accTypeCode,
@@ -101,6 +102,7 @@ export async function createLiquidityAccount(
 export async function createSettlementAccount(
   deps: ServiceDependencies,
   ledger: number,
+  accountId: AccountId,
   trx?: TransactionOrKnex
 ): Promise<void> {
   const asset = await Asset.query(trx || deps.knex).findOne({ ledger })
@@ -127,7 +129,7 @@ export async function createLiquidityAndLinkedSettlementAccount(
   trx?: TransactionOrKnex
 ): Promise<LiquidityAccount> {
   await createLiquidityAccount(deps, account, accountType, trx)
-  await createSettlementAccount(deps, ledger, trx)
+  await createSettlementAccount(deps, ledger, account.id, trx)
   return account
 }
 

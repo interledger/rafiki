@@ -12,6 +12,7 @@ import {
 } from '../../../../../../accounting/errors'
 import { CreateAccountError as CreateAccountErrorCode } from 'tigerbeetle-node'
 import { TransactionOrKnex } from 'objection'
+import { AccountId } from '../../../../../../accounting/tigerbeetle/utils'
 
 interface MockAccount {
   id: string
@@ -149,6 +150,8 @@ export class MockAccountingService implements AccountingService {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     ledger: number,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    accountId: AccountId,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     trx?: TransactionOrKnex
   ): Promise<void> {
     throw new Error('Not implemented!')
@@ -158,7 +161,7 @@ export class MockAccountingService implements AccountingService {
     account: MockIlpAccount
   ): Promise<MockIlpAccount> {
     const retVal = await this.createLiquidityAccount(account)
-    await this.createSettlementAccount(1)
+    await this.createSettlementAccount(1, account.id)
     return retVal
   }
 

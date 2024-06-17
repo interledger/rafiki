@@ -6,13 +6,14 @@ import {
 
 import { ServiceDependencies, TigerBeetleAccountCode } from './service'
 import { TigerbeetleCreateAccountError } from './errors'
-import { AccountId, toTigerbeetleId } from './utils'
+import { AccountId, toTigerbeetleId, UserData128 } from './utils'
 
 export interface CreateAccountOptions {
   id: AccountId
   ledger: number
   code: TigerBeetleAccountCode
   linked: boolean
+  userData128: UserData128
 }
 
 export async function createAccounts(
@@ -51,9 +52,10 @@ export async function createAccounts(
 export function flagsBasedOnAccountOptions(
   options: CreateAccountOptions
 ): AccountFlags {
-  let returnVal = options.code === TigerBeetleAccountCode.SETTLEMENT
-    ? AccountFlags.credits_must_not_exceed_debits
-    : AccountFlags.debits_must_not_exceed_credits
+  let returnVal =
+    options.code === TigerBeetleAccountCode.SETTLEMENT
+      ? AccountFlags.credits_must_not_exceed_debits
+      : AccountFlags.debits_must_not_exceed_credits
   if (options.linked) returnVal = returnVal | AccountFlags.linked
   return returnVal
 }

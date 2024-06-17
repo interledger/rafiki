@@ -25,7 +25,7 @@ import {
   areAllAccountExistsErrors
 } from './errors'
 import { NewTransferOptions, createTransfers } from './transfers'
-import { toTigerbeetleId } from './utils'
+import { AccountId, toTigerbeetleId } from './utils'
 
 export enum TigerBeetleAccountCode {
   LIQUIDITY_WEB_MONETIZATION = 1,
@@ -74,7 +74,8 @@ export function createAccountingService(
     // Their account id is the corresponding asset's ledger value.
     createLiquidityAccount: (options, accountType) =>
       createLiquidityAccount(deps, options, accountType),
-    createSettlementAccount: (ledger) => createSettlementAccount(deps, ledger),
+    createSettlementAccount: (ledger, accountId) =>
+      createSettlementAccount(deps, ledger, accountId),
     createLiquidityAndLinkedSettlementAccount: (options, accTypeCode, ledger) =>
       createLiquidityAndLinkedSettlementAccount(
         deps,
@@ -110,7 +111,8 @@ export async function createLiquidityAccount(
         id: account.id,
         ledger: account.asset.ledger,
         code: convertToTigerBeetleAccountCode[accountType],
-        linked: false
+        linked: false,
+        userData128: account.asset.id
       }
     ])
     return account
@@ -127,7 +129,8 @@ export async function createLiquidityAccount(
 
 export async function createSettlementAccount(
   deps: ServiceDependencies,
-  ledger: number
+  ledger: number,
+  accountId: AccountId
 ): Promise<void> {
   try {
     await createAccounts(deps, [
@@ -135,7 +138,8 @@ export async function createSettlementAccount(
         id: ledger,
         ledger,
         code: TigerBeetleAccountCode.SETTLEMENT,
-        linked: false
+        linked: false,
+        userData128: toTigerbeetleId(accountId)
       }
     ])
   } catch (err) {
@@ -167,13 +171,15 @@ export async function createLiquidityAndLinkedSettlementAccount(
         id: account.id,
         ledger: account.asset.ledger,
         code: convertToTigerBeetleAccountCode[accountType],
-        linked: true
+        linked: true,
+        userData128: account.id
       },
       {
         id: ledger,
         ledger,
         code: TigerBeetleAccountCode.SETTLEMENT,
-        linked: false
+        linked: false,
+        userData128: account.asset.id
       }
     ])
     return account
