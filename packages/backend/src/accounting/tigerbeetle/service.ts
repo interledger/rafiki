@@ -172,7 +172,7 @@ export async function createLiquidityAndLinkedSettlementAccount(
         ledger: account.asset.ledger,
         code: convertToTigerBeetleAccountCode[accountType],
         linked: true,
-        userData128: account.id
+        userData128: account.asset.id
       },
       {
         id: ledger,
