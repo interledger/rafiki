@@ -27,7 +27,7 @@ export function compareRequestAndGrantAccessItems(
   requestAccessItem: AccessItem,
   grantAccessItem: AccessItem
 ): boolean {
-  const { actions: requestAccessItemActions, ...restOfrequestAccessItem } =
+  const { actions: requestAccessItemActions, ...restOfRequestAccessItem } =
     requestAccessItem
   const { actions: grantAccessItemActions, ...restOfgrantAccessItem } =
     grantAccessItem
@@ -41,5 +41,24 @@ export function compareRequestAndGrantAccessItems(
       return false
   }
 
-  return isDeepStrictEqual(restOfrequestAccessItem, restOfgrantAccessItem)
+  Object.keys(restOfRequestAccessItem).forEach((key) => {
+    const requestAccessItemValue =
+      restOfRequestAccessItem[key as keyof typeof restOfRequestAccessItem]
+    if (
+      typeof requestAccessItemValue === 'object' &&
+      !isDeepStrictEqual(
+        requestAccessItemValue,
+        restOfgrantAccessItem[key as keyof typeof restOfgrantAccessItem]
+      )
+    ) {
+      return false
+    } else if (
+      restOfRequestAccessItem[key as keyof typeof restOfRequestAccessItem] !==
+      restOfgrantAccessItem[key as keyof typeof restOfgrantAccessItem]
+    ) {
+      return false
+    }
+  })
+
+  return true
 }
