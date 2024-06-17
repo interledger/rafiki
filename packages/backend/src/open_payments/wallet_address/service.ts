@@ -138,6 +138,18 @@ function isValidWalletAddressUrl(walletAddressUrl: string): boolean {
   }
 }
 
+function cleanAdditionalProperties(
+  additionalProperties: WalletAddressAdditionalPropertyInput[]
+): WalletAddressAdditionalPropertyInput[] {
+  return additionalProperties
+    .map((prop) => ({
+      ...prop,
+      fieldKey: prop.fieldKey.trim(),
+      fieldValue: prop.fieldValue.trim()
+    }))
+    .filter((prop) => prop.fieldKey.length > 0 && prop.fieldValue.length > 0)
+}
+
 async function createWalletAddress(
   deps: ServiceDependencies,
   options: CreateOptions
@@ -149,11 +161,7 @@ async function createWalletAddress(
   try {
     // Remove blank key/value pairs:
     const additionalProperties = options.additionalProperties
-      ? options.additionalProperties.filter((itm) => {
-          return !(
-            itm.fieldKey.trim().length == 0 || itm.fieldValue.trim().length == 0
-          )
-        })
+      ? cleanAdditionalProperties(options.additionalProperties)
       : undefined
 
     return await WalletAddress.query(deps.knex)
@@ -200,17 +208,20 @@ async function updateWalletAddress(
 
     // Override all existing additional properties if new ones are provided
     if (additionalProperties) {
+      const cleanedProperties = cleanAdditionalProperties(additionalProperties)
+
       await WalletAddressAdditionalProperty.query(trx)
         .where('walletAddressId', id)
         .delete()
-    }
-    if (additionalProperties?.length) {
-      await WalletAddressAdditionalProperty.query(trx).insert(
-        additionalProperties.map((prop) => ({
-          walletAddressId: id,
-          ...prop
-        }))
-      )
+
+      if (cleanedProperties.length > 0) {
+        await WalletAddressAdditionalProperty.query(trx).insert(
+          cleanedProperties.map((prop) => ({
+            walletAddressId: id,
+            ...prop
+          }))
+        )
+      }
     }
     await trx.commit()
 
