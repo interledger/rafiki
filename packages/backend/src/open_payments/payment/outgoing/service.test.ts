@@ -531,7 +531,7 @@ describe('OutgoingPaymentService', (): void => {
           for (let i = 0; i < 3; i++) {
             const payment = await outgoingPaymentService.create(options)
             assert.ok(!isOutgoingPaymentError(payment))
-            expect(payment.grantSpentDebitAmount?.value ?? 0).toBe(
+            expect(payment.grantSpentDebitAmount?.value ?? 0n).toBe(
               BigInt(debitAmount.value * BigInt(i))
             )
           }
@@ -576,7 +576,7 @@ describe('OutgoingPaymentService', (): void => {
           for (let i = 0; i < 3; i++) {
             const payment = await outgoingPaymentService.create(options)
             assert.ok(!isOutgoingPaymentError(payment))
-            expect(payment.grantSpentReceiveAmount?.value ?? 0).toBe(
+            expect(payment.grantSpentReceiveAmount?.value ?? 0n).toBe(
               // Must account for interledger/pay off-by-one issue (even with 0 slippage/fees)
               BigInt((debitAmount.value - BigInt(1)) * BigInt(i))
             )
