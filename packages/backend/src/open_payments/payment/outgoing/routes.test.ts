@@ -259,16 +259,6 @@ describe('Outgoing Payment Routes', (): void => {
               assetCode: walletAddress.asset.code,
               assetScale: walletAddress.asset.scale
             },
-            grantSpentDebitAmount: {
-              value: '0',
-              assetCode: walletAddress.asset.code,
-              assetScale: walletAddress.asset.scale
-            },
-            grantSpentReceiveAmount: {
-              value: '0',
-              assetCode: walletAddress.asset.code,
-              assetScale: walletAddress.asset.scale
-            },
             failed: false,
             createdAt: expect.any(String),
             updatedAt: expect.any(String)

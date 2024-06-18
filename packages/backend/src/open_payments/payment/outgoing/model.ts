@@ -66,29 +66,9 @@ export class OutgoingPayment
     return this.quote.receiveAmount
   }
 
-  private grantSpentDebitAmountValue?: bigint
-  public get grantSpentDebitAmount(): Amount {
-    return {
-      value: this.grantSpentDebitAmountValue || BigInt(0),
-      assetCode: this.asset.code,
-      assetScale: this.asset.scale
-    }
-  }
-  public set grantSpentDebitAmount(amount: Amount) {
-    this.grantSpentDebitAmountValue = amount.value
-  }
+  public grantSpentDebitAmount?: Amount
 
-  private grantSpentReceiveAmountValue?: bigint
-  public get grantSpentReceiveAmount(): Amount {
-    return {
-      value: this.grantSpentReceiveAmountValue || BigInt(0),
-      assetCode: this.asset.code,
-      assetScale: this.asset.scale
-    }
-  }
-  public set grantSpentReceiveAmount(amount: Amount) {
-    this.grantSpentReceiveAmountValue = amount.value
-  }
+  public grantSpentReceiveAmount?: Amount
 
   public metadata?: Record<string, unknown>
 
@@ -203,11 +183,20 @@ export class OutgoingPayment
   public toOpenPaymentsWithSpentAmountsType(
     walletAddress: WalletAddress
   ): OutgoingPaymentWithSpentAmounts {
-    return {
-      ...this.toOpenPaymentsType(walletAddress),
-      grantSpentDebitAmount: serializeAmount(this.grantSpentDebitAmount),
-      grantSpentReceiveAmount: serializeAmount(this.grantSpentReceiveAmount)
+    const outgoingPaymentWithSpentAmounts: OutgoingPaymentWithSpentAmounts = {
+      ...this.toOpenPaymentsType(walletAddress)
     }
+    if (this.grantSpentReceiveAmount) {
+      outgoingPaymentWithSpentAmounts.grantSpentReceiveAmount = serializeAmount(
+        this.grantSpentReceiveAmount
+      )
+    }
+    if (this.grantSpentDebitAmount) {
+      outgoingPaymentWithSpentAmounts.grantSpentDebitAmount = serializeAmount(
+        this.grantSpentDebitAmount
+      )
+    }
+    return outgoingPaymentWithSpentAmounts
   }
 }
 
