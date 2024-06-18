@@ -239,8 +239,6 @@ export async function action({ request }: ActionFunctionArgs) {
     ...result.data
   })
 
-  console.log('response=', response)
-
   if (!response?.walletAddress) {
     actionResponse.errors.message = [
       'Could not update the wallet address. Please try again!'

@@ -156,11 +156,13 @@ describe('Asset Resolvers', (): void => {
           }
         })
 
-      await expect(gqlQuery).rejects.toThrow(new GraphQLError(errorToMessage[AssetError.DuplicateAsset], {
-        extensions: {
-          code: errorToCode[AssetError.DuplicateAsset]
-        }
-      }))
+      await expect(gqlQuery).rejects.toThrow(
+        new GraphQLError(errorToMessage[AssetError.DuplicateAsset], {
+          extensions: {
+            code: errorToCode[AssetError.DuplicateAsset]
+          }
+        })
+      )
     })
 
     test('handles unexpected error', async (): Promise<void> => {
@@ -190,11 +192,13 @@ describe('Asset Resolvers', (): void => {
             throw new Error('Data was empty')
           }
         })
-      await expect(gqlQuery).rejects.toThrow(new GraphQLError('unexpected', {
-        extensions: {
-          code: GraphQLErrorCode.InternalServerError
-        }
-      }))
+      await expect(gqlQuery).rejects.toThrow(
+        new GraphQLError('unexpected', {
+          extensions: {
+            code: GraphQLErrorCode.InternalServerError
+          }
+        })
+      )
     })
   })
 
@@ -368,11 +372,13 @@ describe('Asset Resolvers', (): void => {
           }
         })
 
-      await expect(gqlQuery).rejects.toThrow(new GraphQLError(errorToMessage[AssetError.UnknownAsset], {
-        extensions: {
-          code: errorToCode[AssetError.UnknownAsset]
-        }
-      }))
+      await expect(gqlQuery).rejects.toThrow(
+        new GraphQLError(errorToMessage[AssetError.UnknownAsset], {
+          extensions: {
+            code: errorToCode[AssetError.UnknownAsset]
+          }
+        })
+      )
     })
   })
 
@@ -745,11 +751,13 @@ describe('Asset Resolvers', (): void => {
           }
         })
 
-      await expect(gqlQuery).rejects.toThrow(new GraphQLError('unexpected', {
-        extensions: {
-          code: GraphQLErrorCode.InternalServerError
-        }
-      }))
+      await expect(gqlQuery).rejects.toThrow(
+        new GraphQLError('unexpected', {
+          extensions: {
+            code: GraphQLErrorCode.InternalServerError
+          }
+        })
+      )
     })
   })
 })

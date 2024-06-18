@@ -134,9 +134,6 @@ export class WebhookEventHandler {
     })
     const { walletAddress } = response
 
-    if (!response.walletAddress) {
-      throw new Error('Failed to create wallet address')
-    }
     if (!walletAddress) {
       throw new Error('Could not get wallet address')
     }
