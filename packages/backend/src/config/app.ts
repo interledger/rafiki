@@ -94,9 +94,9 @@ export const Config = {
     ? Buffer.from(process.env.STREAM_SECRET, 'base64')
     : crypto.randomBytes(32),
 
-  useTigerbeetle: envBool('USE_TIGERBEETLE', false),
-  tigerbeetleClusterId: envInt('TIGERBEETLE_CLUSTER_ID', 0),
-  tigerbeetleReplicaAddresses: process.env.TIGERBEETLE_REPLICA_ADDRESSES
+  useTigerBeetle: envBool('USE_TIGERBEETLE', false),
+  tigerBeetleClusterId: envInt('TIGERBEETLE_CLUSTER_ID', 0),
+  tigerBeetleReplicaAddresses: process.env.TIGERBEETLE_REPLICA_ADDRESSES
     ? process.env.TIGERBEETLE_REPLICA_ADDRESSES.split(',')
     : ['3004'],
 

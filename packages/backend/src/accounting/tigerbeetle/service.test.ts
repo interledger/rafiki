@@ -36,13 +36,13 @@ describe('TigerBeetle Accounting Service', (): void => {
   }
 
   beforeAll(async (): Promise<void> => {
-    const tigerbeetlePort = (global as unknown as { tigerbeetlePort: number })
-      .tigerbeetlePort
+    const tigerBeetlePort = (global as unknown as { tigerBeetlePort: number })
+      .tigerBeetlePort
 
     deps = initIocContainer({
       ...Config,
-      tigerbeetleReplicaAddresses: [tigerbeetlePort.toString()],
-      useTigerbeetle: true
+      tigerBeetleReplicaAddresses: [tigerBeetlePort.toString()],
+      useTigerBeetle: true
     })
     appContainer = await createTestApp(deps)
     accountingService = await deps.use('accountingService')

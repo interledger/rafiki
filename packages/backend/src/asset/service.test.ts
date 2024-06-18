@@ -85,7 +85,6 @@ describe('Asset Service', (): void => {
       expect(liquidityAndSettlementSpy).toHaveBeenCalledWith(
         asset,
         LiquidityAccountType.ASSET,
-        asset.ledger,
         expect.any(Function)
       )
 
