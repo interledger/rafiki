@@ -338,16 +338,6 @@ function validateAmountAssets(
 interface PaymentLimits extends Limits {
   paymentInterval?: Interval
 }
-function hasDebitAmount(
-  limits: PaymentLimits
-): limits is PaymentLimits & { debitAmount: Amount } {
-  return limits.debitAmount !== undefined
-}
-function hasReceiveAmount(
-  limits: PaymentLimits
-): limits is PaymentLimits & { receiveAmount: Amount } {
-  return limits.receiveAmount !== undefined
-}
 
 interface GrantValidationResult {
   isValid: boolean
@@ -374,12 +364,12 @@ async function validateGrant(
     return { isValid: false }
   }
 
-  let paymentLimitAmount: Amount
+  let amountForReceivedAmount: Amount
 
-  if (hasDebitAmount(paymentLimits)) {
-    paymentLimitAmount = paymentLimits.debitAmount
-  } else if (hasReceiveAmount(paymentLimits)) {
-    paymentLimitAmount = paymentLimits.receiveAmount
+  if (paymentLimits.debitAmount) {
+    amountForReceivedAmount = paymentLimits.debitAmount
+  } else if (paymentLimits.receiveAmount) {
+    amountForReceivedAmount = paymentLimits.receiveAmount
   } else {
     return { isValid: true }
   }
@@ -420,8 +410,8 @@ async function validateGrant(
       value: BigInt(0)
     },
     received: {
-      assetCode: paymentLimitAmount.assetCode,
-      assetScale: paymentLimitAmount.assetScale,
+      assetCode: amountForReceivedAmount.assetCode,
+      assetScale: amountForReceivedAmount.assetScale,
       value: BigInt(0)
     }
   }
