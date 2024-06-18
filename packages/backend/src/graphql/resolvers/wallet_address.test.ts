@@ -134,14 +134,21 @@ describe('Wallet Address Resolvers', (): void => {
     )
 
     test('Can create a wallet address with additional properties', async (): Promise<void> => {
-      input.publicName = 'Bob'
-      input.additionalProperties = [
-        { key: '', value: '', visibleInOpenPayments: false },
-        { key: 'key', value: '', visibleInOpenPayments: false },
-        { key: '', value: 'val', visibleInOpenPayments: false },
+      const validAdditionalProperties = [
         { key: 'key', value: 'val', visibleInOpenPayments: false },
         { key: 'key-public', value: 'val', visibleInOpenPayments: true }
       ]
+      const invalidAdditionalProperties = [
+        { key: '', value: '', visibleInOpenPayments: false },
+        { key: 'key', value: '', visibleInOpenPayments: false },
+        { key: '', value: 'val', visibleInOpenPayments: false }
+      ]
+      input.additionalProperties = [
+        ...validAdditionalProperties,
+        ...invalidAdditionalProperties
+      ]
+      input.publicName = 'Bob'
+
       const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
@@ -158,6 +165,11 @@ describe('Wallet Address Resolvers', (): void => {
                   }
                   url
                   publicName
+                  additionalProperties {
+                    key
+                    value
+                    visibleInOpenPayments
+                  }
                 }
               }
             }
@@ -186,7 +198,15 @@ describe('Wallet Address Resolvers', (): void => {
           code: asset.code,
           scale: asset.scale
         },
-        publicName: input.publicName
+        publicName: input.publicName,
+        additionalProperties: validAdditionalProperties.map((property) => {
+          return {
+            __typename: 'AdditionalProperty',
+            key: property.key,
+            value: property.value,
+            visibleInOpenPayments: property.visibleInOpenPayments
+          }
+        })
       })
       await expect(
         walletAddressService.get(response.walletAddress.id)
