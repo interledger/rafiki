@@ -1,7 +1,6 @@
 import { gql } from '@apollo/client'
 import assert from 'assert'
 import { v4 as uuid } from 'uuid'
-import { ApolloError } from '@apollo/client'
 
 import { getPageTests } from './page.test'
 import { createTestApp, TestContainer } from '../../tests/app'
@@ -33,6 +32,7 @@ import { isFeeError } from '../../fee/errors'
 import { createFee } from '../../tests/fee'
 import { createAsset } from '../../tests/asset'
 import { GraphQLError } from 'graphql'
+import { GraphQLErrorCode } from '../errors'
 
 describe('Asset Resolvers', (): void => {
   let deps: IocContract<AppServices>
@@ -156,11 +156,14 @@ describe('Asset Resolvers', (): void => {
           }
         })
 
-      await expect(gqlQuery).rejects.toThrow(ApolloError)
-      await expect(gqlQuery).rejects.toThrow('Asset already exists')
+      await expect(gqlQuery).rejects.toThrow(new GraphQLError(errorToMessage[AssetError.DuplicateAsset], {
+        extensions: {
+          code: errorToCode[AssetError.DuplicateAsset]
+        }
+      }))
     })
 
-    test('500', async (): Promise<void> => {
+    test('handles unexpected error', async (): Promise<void> => {
       jest
         .spyOn(assetService, 'create')
         .mockRejectedValueOnce(new Error('unexpected'))
@@ -187,7 +190,11 @@ describe('Asset Resolvers', (): void => {
             throw new Error('Data was empty')
           }
         })
-      await expect(gqlQuery).rejects.toThrow(ApolloError)
+      await expect(gqlQuery).rejects.toThrow(new GraphQLError('unexpected', {
+        extensions: {
+          code: GraphQLErrorCode.InternalServerError
+        }
+      }))
     })
   })
 
@@ -361,7 +368,11 @@ describe('Asset Resolvers', (): void => {
           }
         })
 
-      await expect(gqlQuery).rejects.toThrow(ApolloError)
+      await expect(gqlQuery).rejects.toThrow(new GraphQLError(errorToMessage[AssetError.UnknownAsset], {
+        extensions: {
+          code: errorToCode[AssetError.UnknownAsset]
+        }
+      }))
     })
   })
 
@@ -734,7 +745,11 @@ describe('Asset Resolvers', (): void => {
           }
         })
 
-      await expect(gqlQuery).rejects.toThrow(ApolloError)
+      await expect(gqlQuery).rejects.toThrow(new GraphQLError('unexpected', {
+        extensions: {
+          code: GraphQLErrorCode.InternalServerError
+        }
+      }))
     })
   })
 })

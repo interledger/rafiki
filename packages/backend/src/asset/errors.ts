@@ -11,7 +11,7 @@ export const isAssetError = (o: any): o is AssetError =>
   Object.values(AssetError).includes(o)
 
 export const errorToCode: {
-  [key in AssetError]: string
+  [key in AssetError]: GraphQLErrorCode
 } = {
   [AssetError.UnknownAsset]: GraphQLErrorCode.NotFound,
   [AssetError.DuplicateAsset]: GraphQLErrorCode.Duplicate,

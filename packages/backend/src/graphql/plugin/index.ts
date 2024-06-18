@@ -6,6 +6,7 @@ import {
 } from '@apollo/server'
 import { Logger } from 'pino'
 import { v4 as uuid } from 'uuid'
+import { GraphQLErrorCode } from '../errors'
 
 export class LoggingPlugin implements ApolloServerPlugin {
   private logger
@@ -34,7 +35,7 @@ export class LoggingPlugin implements ApolloServerPlugin {
       ): Promise<void> {
         if (context.errors) {
           context.errors.forEach((error) => {
-            if (error.extensions.code === 'INTERNAL_SERVER_ERROR') {
+            if (error.extensions.code === GraphQLErrorCode.InternalServerError) {
               logger.error({
                 requestId,
                 variables: context.request.variables,
