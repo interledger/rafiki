@@ -25,7 +25,7 @@ import {
   areAllAccountExistsErrors
 } from './errors'
 import { NewTransferOptions, createTransfers } from './transfers'
-import { AccountId, toTigerbeetleId } from './utils'
+import { AccountUserData128, toTigerbeetleId } from './utils'
 
 export enum TigerBeetleAccountCode {
   LIQUIDITY_WEB_MONETIZATION = 1,
@@ -76,13 +76,8 @@ export function createAccountingService(
       createLiquidityAccount(deps, options, accountType),
     createSettlementAccount: (ledger, accountId) =>
       createSettlementAccount(deps, ledger, accountId),
-    createLiquidityAndLinkedSettlementAccount: (options, accTypeCode, ledger) =>
-      createLiquidityAndLinkedSettlementAccount(
-        deps,
-        options,
-        accTypeCode,
-        ledger
-      ),
+    createLiquidityAndLinkedSettlementAccount: (options, accTypeCode) =>
+      createLiquidityAndLinkedSettlementAccount(deps, options, accTypeCode),
     getBalance: (id) => getAccountBalance(deps, id),
     getTotalSent: (id) => getAccountTotalSent(deps, id),
     getAccountsTotalSent: (ids) => getAccountsTotalSent(deps, ids),
@@ -130,7 +125,7 @@ export async function createLiquidityAccount(
 export async function createSettlementAccount(
   deps: ServiceDependencies,
   ledger: number,
-  accountId: AccountId
+  accountId: AccountUserData128
 ): Promise<void> {
   try {
     await createAccounts(deps, [
@@ -158,8 +153,7 @@ export async function createSettlementAccount(
 export async function createLiquidityAndLinkedSettlementAccount(
   deps: ServiceDependencies,
   account: LiquidityAccount,
-  accountType: LiquidityAccountType,
-  ledger: number
+  accountType: LiquidityAccountType
 ): Promise<LiquidityAccount> {
   if (!validateId(account.id)) {
     throw new Error('unable to create account, invalid id')
@@ -175,8 +169,8 @@ export async function createLiquidityAndLinkedSettlementAccount(
         userData128: account.asset.id
       },
       {
-        id: ledger,
-        ledger,
+        id: account.asset.ledger,
+        ledger: account.asset.ledger,
         code: TigerBeetleAccountCode.SETTLEMENT,
         linked: false,
         userData128: account.asset.id

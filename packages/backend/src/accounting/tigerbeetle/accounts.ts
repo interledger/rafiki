@@ -6,14 +6,14 @@ import {
 
 import { ServiceDependencies, TigerBeetleAccountCode } from './service'
 import { TigerbeetleCreateAccountError } from './errors'
-import { AccountId, toTigerbeetleId, UserData128 } from './utils'
+import { AccountId, toTigerbeetleId, AccountUserData128 } from './utils'
 
 export interface CreateAccountOptions {
   id: AccountId
   ledger: number
   code: TigerBeetleAccountCode
   linked: boolean
-  userData128: UserData128
+  userData128: AccountUserData128
 }
 
 export async function createAccounts(

@@ -100,7 +100,6 @@ async function createAsset(
       await deps.accountingService.createLiquidityAndLinkedSettlementAccount(
         asset,
         LiquidityAccountType.ASSET,
-        asset.ledger,
         trx
       )
       return asset

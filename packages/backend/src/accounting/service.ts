@@ -1,7 +1,7 @@
 import { TransactionOrKnex } from 'objection'
 import { BaseService } from '../shared/baseService'
 import { TransferError, isTransferError } from './errors'
-import { AccountId } from './tigerbeetle/utils'
+import { AccountUserData128 } from './tigerbeetle/utils'
 
 export enum LiquidityAccountType {
   ASSET = 'ASSET',
@@ -66,13 +66,12 @@ export interface AccountingService {
   ): Promise<LiquidityAccount>
   createSettlementAccount(
     ledger: number,
-    accountId: AccountId,
+    accountId: AccountUserData128,
     trx?: TransactionOrKnex
   ): Promise<void>
   createLiquidityAndLinkedSettlementAccount(
     account: LiquidityAccount,
     accountType: LiquidityAccountType,
-    ledger: number,
     trx?: TransactionOrKnex
   ): Promise<LiquidityAccount>
   getBalance(id: string): Promise<bigint | undefined>

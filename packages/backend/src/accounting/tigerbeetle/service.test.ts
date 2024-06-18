@@ -120,6 +120,30 @@ describe('TigerBeetle Accounting Service', (): void => {
     })
   })
 
+  describe('Create Liquidity and Settlement Account - Linked', (): void => {
+    test('Can create a liquidity and settlement account', async (): Promise<void> => {
+      const account: LiquidityAccount = {
+        id: uuid(),
+        asset: {
+          id: uuid(),
+          ledger: newLedger()
+        }
+      }
+      await expect(
+        accountingService.createLiquidityAndLinkedSettlementAccount(
+          account,
+          LiquidityAccountType.ASSET
+        )
+      ).resolves.toEqual(account)
+      await expect(accountingService.getBalance(account.id)).resolves.toEqual(
+        BigInt(0)
+      )
+      await expect(
+        accountingService.getSettlementBalance(account.asset.ledger)
+      ).resolves.toEqual(BigInt(0))
+    })
+  })
+
   describe('Get Account Balance', (): void => {
     test("Can retrieve an account's balance", async (): Promise<void> => {
       const { id } = await accountFactory.build()

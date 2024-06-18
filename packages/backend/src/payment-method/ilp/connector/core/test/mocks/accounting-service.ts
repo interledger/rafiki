@@ -12,7 +12,7 @@ import {
 } from '../../../../../../accounting/errors'
 import { CreateAccountError as CreateAccountErrorCode } from 'tigerbeetle-node'
 import { TransactionOrKnex } from 'objection'
-import { AccountId } from '../../../../../../accounting/tigerbeetle/utils'
+import { AccountUserData128 } from '../../../../../../accounting/tigerbeetle/utils'
 
 interface MockAccount {
   id: string
@@ -150,7 +150,7 @@ export class MockAccountingService implements AccountingService {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     ledger: number,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    accountId: AccountId,
+    accountId: AccountUserData128,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     trx?: TransactionOrKnex
   ): Promise<void> {
