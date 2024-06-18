@@ -1,4 +1,4 @@
-import { Counter, MetricOptions, metrics } from '@opentelemetry/api'
+import { Counter, Histogram, MetricOptions, metrics } from '@opentelemetry/api'
 import { OTLPMetricExporter } from '@opentelemetry/exporter-metrics-otlp-grpc'
 import { Resource } from '@opentelemetry/resources'
 import {
@@ -13,6 +13,7 @@ import { BaseService } from '../shared/baseService'
 export interface TelemetryService {
   shutdown(): void
   getOrCreateMetric(name: string, options?: MetricOptions): Counter
+  getOrCreateHistogramMetric(name: string, options?: MetricOptions): Histogram
   getInstanceName(): string | undefined
   getBaseAssetCode(): string
   getBaseScale(): number
@@ -47,6 +48,7 @@ class TelemetryServiceImpl implements TelemetryService {
   private aseRatesService: RatesService
 
   private counters = new Map()
+  private histograms = new Map()
   constructor(private deps: TelemetryServiceDependencies) {
     // debug logger:
     // diag.setLogger(new DiagConsoleLogger(), DiagLogLevel.DEBUG)
@@ -79,10 +81,36 @@ class TelemetryServiceImpl implements TelemetryService {
     })
 
     metrics.setGlobalMeterProvider(this.meterProvider)
+
+    // TODO: follow the pattern for amounts more. ie createHistogram metric? and seperate file for this stuff?
+    // this.histograms.set(
+    //   'transaction_time',
+    //   metrics.getMeter(METER_NAME).createHistogram('transaction_time', {
+    //     description: 'Time taken to process a payment transaction'
+    //   })
+    // )
   }
 
   public async shutdown(): Promise<void> {
     await this.meterProvider?.shutdown()
+  }
+
+  private createHistogram(name: string, options: MetricOptions | undefined) {
+    const histogram = metrics
+      .getMeter(METER_NAME)
+      .createHistogram(name, options)
+    this.histograms.set(name, histogram)
+    return histogram
+  }
+  public getOrCreateHistogramMetric(
+    name: string,
+    options?: MetricOptions
+  ): Histogram {
+    const existing = this.counters.get(name)
+    if (existing) {
+      return existing
+    }
+    return this.createHistogram(name, options)
   }
 
   private createCounter(
@@ -94,6 +122,7 @@ class TelemetryServiceImpl implements TelemetryService {
     return counter
   }
 
+  // TODO: rename? previously metric == counter but not anymore w/ histogram
   public getOrCreateMetric(name: string, options?: MetricOptions): Counter {
     const existing = this.counters.get(name)
     if (existing) {

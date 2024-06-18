@@ -81,13 +81,25 @@ export async function handleSending(
     finalDebitAmount: maxDebitAmount,
     finalReceiveAmount: maxReceiveAmount
   })
-  deps.telemetry
-    ?.getOrCreateMetric('transactions_total', {
-      description: 'Count of funded transactions'
-    })
-    .add(1, {
-      source: deps.telemetry.getInstanceName()
-    })
+
+  if (deps.telemetry) {
+    deps.telemetry
+      .getOrCreateMetric('transactions_total', {
+        description: 'Count of funded transactions'
+      })
+      .add(1, {
+        source: deps.telemetry.getInstanceName()
+      })
+
+    deps.telemetry
+      .getOrCreateHistogramMetric('outgoing_payment_completion_time_ms', {
+        description: 'Time to complete a payment'
+        // valueType: ValueType.INT
+      })
+      .record(Date.now() - payment.createdAt.getTime(), {
+        source: deps.telemetry.getInstanceName()
+      })
+  }
 
   await handleCompleted(deps, payment)
 }
