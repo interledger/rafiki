@@ -18,14 +18,13 @@ import { Config, IAppConfig } from '../../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../../'
 import { AppServices } from '../../app'
-import { faker, fi } from '@faker-js/faker'
+import { faker } from '@faker-js/faker'
 import { createIncomingPayment } from '../../tests/incomingPayment'
 import { getPageTests } from '../../shared/baseModel.test'
 import { Pagination, SortOrder } from '../../shared/baseModel'
 import { sleep } from '../../shared/utils'
 import { withConfigOverride } from '../../tests/helpers'
 import { WalletAddressAdditionalProperty } from './additional_property/model'
-import { property } from 'lodash'
 
 describe('Open Payments Wallet Address Service', (): void => {
   let deps: IocContract<AppServices>
