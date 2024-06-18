@@ -254,7 +254,7 @@ describe('TigerBeetle Accounting Service', (): void => {
         accountingService.getSettlementBalance(ledger)
       ).resolves.toBeUndefined()
 
-      await accountingService.createSettlementAccount(ledger, `${ledger}`)
+      await accountingService.createSettlementAccount(ledger, ledger)
 
       await expect(
         accountingService.getSettlementBalance(ledger)
@@ -265,7 +265,7 @@ describe('TigerBeetle Accounting Service', (): void => {
   describe('Get Settlement Balance', (): void => {
     test("Can retrieve an asset's settlement account balance", async (): Promise<void> => {
       const ledger = newLedger()
-      await accountingService.createSettlementAccount(ledger, `${ledger}`)
+      await accountingService.createSettlementAccount(ledger, ledger)
       await expect(
         accountingService.getSettlementBalance(ledger)
       ).resolves.toEqual(BigInt(0))
