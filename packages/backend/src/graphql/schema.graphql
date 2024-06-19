@@ -1064,6 +1064,8 @@ input UpdateWalletAddressInput {
   status: WalletAddressStatus
   "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)"
   idempotencyKey: String
+  "List additional properties associated with this wallet address."
+  additionalProperties: [AdditionalPropertyInput!]
 }
 
 enum Alg {

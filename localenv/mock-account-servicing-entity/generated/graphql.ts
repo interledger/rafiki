@@ -1279,6 +1279,8 @@ export type UpdatePeerMutationResponse = MutationResponse & {
 };
 
 export type UpdateWalletAddressInput = {
+  /** List additional properties associated with this wallet address. */
+  additionalProperties?: InputMaybe<Array<AdditionalPropertyInput>>;
   /** ID of wallet address to update */
   id: Scalars['ID']['input'];
   /** Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence) */

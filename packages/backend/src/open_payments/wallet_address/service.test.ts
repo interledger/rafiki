@@ -24,6 +24,7 @@ import { getPageTests } from '../../shared/baseModel.test'
 import { Pagination, SortOrder } from '../../shared/baseModel'
 import { sleep } from '../../shared/utils'
 import { withConfigOverride } from '../../tests/helpers'
+import { WalletAddressAdditionalProperty } from './additional_property/model'
 
 describe('Open Payments Wallet Address Service', (): void => {
   let deps: IocContract<AppServices>
@@ -267,6 +268,118 @@ describe('Open Payments Wallet Address Service', (): void => {
           }
         )
       )
+    })
+
+    describe('additionalProperties', (): void => {
+      test('should do nothing if additionalProperties is undefined', async (): Promise<void> => {
+        const walletAddress = await createWalletAddress(deps, {
+          publicName: 'Initial Name',
+          additionalProperties: [
+            {
+              fieldKey: 'key',
+              fieldValue: 'value',
+              visibleInOpenPayments: true
+            }
+          ]
+        })
+
+        const updatedWalletAddress = await walletAddressService.update({
+          id: walletAddress.id,
+          status: walletAddress.isActive ? 'ACTIVE' : 'INACTIVE',
+          publicName: 'Updated Name',
+          additionalProperties: undefined
+        })
+
+        assert.ok(!isWalletAddressError(updatedWalletAddress))
+        expect(updatedWalletAddress.publicName).toEqual('Updated Name')
+
+        const properties = await WalletAddressAdditionalProperty.query().where(
+          'walletAddressId',
+          walletAddress.id
+        )
+        expect(properties).toHaveLength(1)
+      })
+
+      test('should update to [] (deleting all) when additionalProperties is []', async (): Promise<void> => {
+        const walletAddress = await createWalletAddress(deps, {
+          additionalProperties: [
+            {
+              fieldKey: 'key1',
+              fieldValue: 'value2',
+              visibleInOpenPayments: true
+            },
+            {
+              fieldKey: 'key2',
+              fieldValue: 'value2',
+              visibleInOpenPayments: true
+            }
+          ]
+        })
+
+        const publicName = 'Updated Name'
+        const updatedWalletAddress = await walletAddressService.update({
+          id: walletAddress.id,
+          publicName,
+          additionalProperties: []
+        })
+
+        assert.ok(!isWalletAddressError(updatedWalletAddress))
+        expect(updatedWalletAddress.publicName).toEqual(publicName)
+
+        const properties = await WalletAddressAdditionalProperty.query().where(
+          'walletAddressId',
+          walletAddress.id
+        )
+        expect(properties).toHaveLength(0)
+      })
+      test('should replace existing additionalProperties', async (): Promise<void> => {
+        const walletAddress = await createWalletAddress(deps, {
+          additionalProperties: [
+            {
+              fieldKey: 'key1',
+              fieldValue: 'value1',
+              visibleInOpenPayments: true
+            },
+            {
+              fieldKey: 'key2',
+              fieldValue: 'value2',
+              visibleInOpenPayments: true
+            }
+          ]
+        })
+
+        const newProperties = [
+          {
+            fieldKey: 'key1',
+            fieldValue: 'newValue1',
+            visibleInOpenPayments: false
+          },
+          {
+            fieldKey: 'key3',
+            fieldValue: 'value3',
+            visibleInOpenPayments: true
+          }
+        ]
+
+        const updatedWalletAddress = await walletAddressService.update({
+          id: walletAddress.id,
+          additionalProperties: newProperties
+        })
+
+        assert.ok(!isWalletAddressError(updatedWalletAddress))
+
+        const properties = await WalletAddressAdditionalProperty.query()
+          .where('walletAddressId', walletAddress.id)
+          .select('fieldKey', 'fieldValue', 'visibleInOpenPayments')
+
+        const sortedExpectedProperties = newProperties.sort((a, b) =>
+          a.fieldKey.localeCompare(b.fieldKey)
+        )
+        const sortedActualProperties = properties.sort((a, b) =>
+          a.fieldKey.localeCompare(b.fieldKey)
+        )
+        expect(sortedActualProperties).toEqual(sortedExpectedProperties)
+      })
     })
 
     test('Cannot update unknown wallet address', async (): Promise<void> => {
