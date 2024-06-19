@@ -217,10 +217,8 @@ async function createOutgoingPayment(
         throw OutgoingPaymentError.InvalidQuote
       }
 
-      let grantSpentAmounts: GrantValidationResult['amounts']
-
       if (options.grant) {
-        const { isValid, amounts } = await validateGrant(
+        const isValid = await validateGrantAndAddSpentAmountsToPayment(
           deps,
           payment,
           options.grant,
@@ -228,8 +226,6 @@ async function createOutgoingPayment(
           options.callback,
           options.grantLockTimeoutMs
         )
-        grantSpentAmounts = amounts
-
         if (!isValid) {
           throw OutgoingPaymentError.InsufficientGrant
         }
@@ -252,12 +248,7 @@ async function createOutgoingPayment(
         trx
       )
 
-      const paymentWithAmounts = await addSentAmount(deps, payment, BigInt(0))
-      if (grantSpentAmounts) {
-        paymentWithAmounts.grantSpentDebitAmount = grantSpentAmounts.sent
-        paymentWithAmounts.grantSpentReceiveAmount = grantSpentAmounts.received
-      }
-      return paymentWithAmounts
+      return await addSentAmount(deps, payment, BigInt(0))
     })
   } catch (err) {
     if (err instanceof UniqueViolationError) {
@@ -339,40 +330,26 @@ interface PaymentLimits extends Limits {
   paymentInterval?: Interval
 }
 
-interface GrantValidationResult {
-  isValid: boolean
-  amounts?: {
-    sent: Amount
-    received: Amount
-  }
-}
-
 // "payment" is locked by the "deps.knex" transaction.
-async function validateGrant(
+async function validateGrantAndAddSpentAmountsToPayment(
   deps: ServiceDependencies,
   payment: OutgoingPayment,
   grant: Grant,
   trx: TransactionOrKnex,
   callback?: (f: unknown) => NodeJS.Timeout,
   grantLockTimeoutMs: number = 5000
-): Promise<GrantValidationResult> {
+): Promise<Boolean> {
   if (!grant.limits) {
-    return { isValid: true }
+    return true
   }
   const paymentLimits = validateAccessLimits(payment, grant.limits)
   if (!paymentLimits) {
-    return { isValid: false }
+    return false
+  }
+  if (!paymentLimits.debitAmount && !paymentLimits.receiveAmount) {
+    return true
   }
 
-  let amountForReceivedAmount: Amount
-
-  if (paymentLimits.debitAmount) {
-    amountForReceivedAmount = paymentLimits.debitAmount
-  } else if (paymentLimits.receiveAmount) {
-    amountForReceivedAmount = paymentLimits.receiveAmount
-  } else {
-    return { isValid: true }
-  }
   if (
     (paymentLimits.debitAmount &&
       paymentLimits.debitAmount.value < payment.debitAmount.value) ||
@@ -380,7 +357,7 @@ async function validateGrant(
       paymentLimits.receiveAmount.value < payment.receiveAmount.value)
   ) {
     // Payment amount single-handedly exceeds amount limit
-    return { isValid: false }
+    return false
   }
 
   await OutgoingPaymentGrant.query(trx || deps.knex)
@@ -400,7 +377,7 @@ async function validateGrant(
     .withGraphFetched('[quote.asset]')
 
   if (grantPayments.length === 0) {
-    return { isValid: true }
+    return true
   }
 
   const amounts = {
@@ -410,8 +387,8 @@ async function validateGrant(
       value: BigInt(0)
     },
     received: {
-      assetCode: amountForReceivedAmount.assetCode,
-      assetScale: amountForReceivedAmount.assetScale,
+      assetCode: payment.receiveAmount.assetCode,
+      assetScale: payment.receiveAmount.assetScale,
       value: BigInt(0)
     }
   }
@@ -451,9 +428,13 @@ async function validateGrant(
       paymentLimits.receiveAmount.value - amounts.received.value <
         payment.receiveAmount.value)
   ) {
-    return { isValid: false, amounts }
+    payment.grantSpentDebitAmount = amounts.sent
+    payment.grantSpentReceiveAmount = amounts.received
+    return false
   }
-  return { isValid: true, amounts }
+  payment.grantSpentDebitAmount = amounts.sent
+  payment.grantSpentReceiveAmount = amounts.received
+  return true
 }
 
 export interface FundOutgoingPaymentOptions {

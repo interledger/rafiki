@@ -32,7 +32,15 @@ export class OutgoingPayment
   public static readonly urlPath = '/outgoing-payments'
 
   static get virtualAttributes(): string[] {
-    return ['debitAmount', 'receiveAmount', 'quote', 'sentAmount', 'receiver']
+    return [
+      'debitAmount',
+      'receiveAmount',
+      'quote',
+      'sentAmount',
+      'receiver',
+      'grantSpentDebitAmount',
+      'grantSpentReceiveAmount'
+    ]
   }
 
   public state!: OutgoingPaymentState
@@ -66,9 +74,29 @@ export class OutgoingPayment
     return this.quote.receiveAmount
   }
 
-  public grantSpentDebitAmount?: Amount
+  private grantSpentReceiveAmountValue?: bigint
+  public get grantSpentReceiveAmount(): Amount {
+    return {
+      value: this.grantSpentReceiveAmountValue || BigInt(0),
+      assetCode: this.receiveAmount.assetCode,
+      assetScale: this.receiveAmount.assetScale
+    }
+  }
+  public set grantSpentReceiveAmount(amount: Amount) {
+    this.grantSpentReceiveAmountValue = amount.value
+  }
 
-  public grantSpentReceiveAmount?: Amount
+  private grantSpentDebitAmountValue?: bigint
+  public get grantSpentDebitAmount(): Amount {
+    return {
+      value: this.grantSpentDebitAmountValue || BigInt(0),
+      assetCode: this.debitAmount.assetCode,
+      assetScale: this.debitAmount.assetScale
+    }
+  }
+  public set grantSpentDebitAmount(amount: Amount) {
+    this.grantSpentDebitAmountValue = amount.value
+  }
 
   public metadata?: Record<string, unknown>
 
@@ -183,20 +211,11 @@ export class OutgoingPayment
   public toOpenPaymentsWithSpentAmountsType(
     walletAddress: WalletAddress
   ): OutgoingPaymentWithSpentAmounts {
-    const outgoingPaymentWithSpentAmounts: OutgoingPaymentWithSpentAmounts = {
-      ...this.toOpenPaymentsType(walletAddress)
+    return {
+      ...this.toOpenPaymentsType(walletAddress),
+      grantSpentReceiveAmount: serializeAmount(this.grantSpentReceiveAmount),
+      grantSpentDebitAmount: serializeAmount(this.grantSpentDebitAmount)
     }
-    if (this.grantSpentReceiveAmount) {
-      outgoingPaymentWithSpentAmounts.grantSpentReceiveAmount = serializeAmount(
-        this.grantSpentReceiveAmount
-      )
-    }
-    if (this.grantSpentDebitAmount) {
-      outgoingPaymentWithSpentAmounts.grantSpentDebitAmount = serializeAmount(
-        this.grantSpentDebitAmount
-      )
-    }
-    return outgoingPaymentWithSpentAmounts
   }
 }
 
