@@ -210,13 +210,13 @@ export function initIocContainer(
     const knex = await deps.use('knex')
     const config = await deps.use('config')
 
-    if (config.useTigerbeetle) {
+    if (config.useTigerBeetle) {
       container.singleton('tigerbeetle', async (deps) => {
         const config = await deps.use('config')
         return createClient({
-          cluster_id: BigInt(config.tigerbeetleClusterId),
+          cluster_id: BigInt(config.tigerBeetleClusterId),
           replica_addresses: await parseAndLookupAddresses(
-            config.tigerbeetleReplicaAddresses
+            config.tigerBeetleReplicaAddresses
           )
         })
       })
@@ -535,7 +535,7 @@ export const gracefulShutdown = async (
   await knex.destroy()
 
   const config = await container.use('config')
-  if (config.useTigerbeetle) {
+  if (config.useTigerBeetle) {
     const tigerbeetle = await container.use('tigerbeetle')
     tigerbeetle?.destroy()
   }
