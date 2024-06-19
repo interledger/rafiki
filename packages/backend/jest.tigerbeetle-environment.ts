@@ -11,7 +11,7 @@ export default class TigerbeetleEnvironment extends CustomTestEnvironment {
     const tbContainer = await startTigerbeetleContainer()
 
     this.tbContainer = tbContainer.container
-    this.global.tigerbeetlePort = tbContainer.port
+    this.global.tigerBeetlePort = tbContainer.port
   }
 
   public async teardown(): Promise<void> {

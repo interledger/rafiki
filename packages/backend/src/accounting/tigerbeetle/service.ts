@@ -48,7 +48,7 @@ export const convertToTigerBeetleAccountCode: {
 }
 
 export interface ServiceDependencies extends BaseService {
-  tigerbeetle: Client
+  tigerBeetle: Client
   withdrawalThrottleDelay?: number
 }
 

@@ -103,7 +103,7 @@ export async function createTransfers(
     }
     tbTransfers.push(tbTransfer)
   }
-  const res = await deps.tigerbeetle.createTransfers(tbTransfers)
+  const res = await deps.tigerBeetle.createTransfers(tbTransfers)
   for (const { index, result } of res) {
     switch (result) {
       case CreateTransferErrorCode.linked_event_failed:

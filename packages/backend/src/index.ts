@@ -211,7 +211,7 @@ export function initIocContainer(
     const config = await deps.use('config')
 
     if (config.useTigerBeetle) {
-      container.singleton('tigerbeetle', async (deps) => {
+      container.singleton('tigerBeetle', async (deps) => {
         const config = await deps.use('config')
         return createClient({
           cluster_id: BigInt(config.tigerBeetleClusterId),
@@ -220,11 +220,11 @@ export function initIocContainer(
           )
         })
       })
-      const tigerbeetle = await deps.use('tigerbeetle')!
+      const tigerBeetle = await deps.use('tigerBeetle')!
       return createTigerbeetleAccountingService({
         logger,
         knex,
-        tigerbeetle,
+        tigerBeetle,
         withdrawalThrottleDelay: config.withdrawalThrottleDelay
       })
     }
@@ -536,8 +536,8 @@ export const gracefulShutdown = async (
 
   const config = await container.use('config')
   if (config.useTigerBeetle) {
-    const tigerbeetle = await container.use('tigerbeetle')
-    tigerbeetle?.destroy()
+    const tigerBeetle = await container.use('tigerBeetle')
+    tigerBeetle?.destroy()
   }
 
   const redis = await container.use('redis')

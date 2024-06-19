@@ -93,8 +93,8 @@ describe('TigerBeetle Accounting Service', (): void => {
     })
 
     test('Create throws on error', async (): Promise<void> => {
-      const tigerbeetle = await deps.use('tigerbeetle')!
-      jest.spyOn(tigerbeetle, 'createAccounts').mockResolvedValueOnce([
+      const tigerBeetle = await deps.use('tigerBeetle')!
+      jest.spyOn(tigerBeetle, 'createAccounts').mockResolvedValueOnce([
         {
           index: 0,
           result: CreateTbAccountError.exists_with_different_ledger

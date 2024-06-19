@@ -20,7 +20,7 @@ export async function createAccounts(
   deps: ServiceDependencies,
   accounts: CreateAccountOptions[]
 ): Promise<void> {
-  const errors = await deps.tigerbeetle.createAccounts(
+  const errors = await deps.tigerBeetle.createAccounts(
     accounts.map((account) => ({
       id: toTigerbeetleId(account.id),
       user_data_32: 0,
@@ -64,7 +64,7 @@ export async function getAccounts(
   deps: ServiceDependencies,
   accountIds: AccountId[]
 ): Promise<Account[]> {
-  return await deps.tigerbeetle.lookupAccounts(
+  return await deps.tigerBeetle.lookupAccounts(
     accountIds.map((id) => toTigerbeetleId(id))
   )
 }
