@@ -164,10 +164,7 @@ export async function createAccountToAccountTransfer(
   ) => {
     if (account.onDebit) {
       const balance = await getAccountBalance(account.id)
-
-      if (balance === undefined) {
-        throw new Error('undefined account balance')
-      }
+      if (balance === undefined) throw new Error('undefined account balance')
 
       await account.onDebit({
         balance
@@ -178,10 +175,7 @@ export async function createAccountToAccountTransfer(
   return {
     post: async (): Promise<void | TransferError> => {
       const error = await postTransfers(pendingTransferIdsOrError)
-
-      if (error) {
-        return error
-      }
+      if (error) return error
 
       await Promise.all([
         onDebit(sourceAccount),
@@ -204,10 +198,7 @@ export async function createAccountToAccountTransfer(
 
     void: async (): Promise<void | TransferError> => {
       const error = await voidTransfers(pendingTransferIdsOrError)
-
-      if (error) {
-        return error
-      }
+      if (error) return error
     }
   }
 }

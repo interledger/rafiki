@@ -80,13 +80,16 @@ export async function createTransfers(
       timestamp: 0n
     }
     if (isNewTransferOptions(transfer)) {
-      if (transfer.amount <= 0n) return { index: i, error: TransferError.InvalidAmount }
+      if (transfer.amount <= 0n)
+        return { index: i, error: TransferError.InvalidAmount }
 
       tbTransfer.id = toTigerBeetleId(transfer.id)
       tbTransfer.amount = transfer.amount
       tbTransfer.ledger = transfer.ledger
       tbTransfer.debit_account_id = toTigerBeetleId(transfer.sourceAccountId)
-      tbTransfer.credit_account_id = toTigerBeetleId(transfer.destinationAccountId)
+      tbTransfer.credit_account_id = toTigerBeetleId(
+        transfer.destinationAccountId
+      )
       if (transfer.timeout) {
         tbTransfer.flags |= TransferFlags.pending
         tbTransfer.timeout = transfer.timeout
@@ -102,7 +105,8 @@ export async function createTransfers(
       }
     }
 
-    if (transfer.userData128) tbTransfer.user_data_128 = toTigerBeetleId(transfer.userData128)
+    if (transfer.userData128)
+      tbTransfer.user_data_128 = toTigerBeetleId(transfer.userData128)
 
     if (i < transfers.length - 1) tbTransfer.flags |= TransferFlags.linked
     tbTransfers.push(tbTransfer)

@@ -12,7 +12,12 @@ export interface CreateAccountOptions {
   id: AccountId
   ledger: number
   code: TigerBeetleAccountCode
-  linked: boolean
+  // This flag links the result of this account creation to the result of the next one in the request,
+  // such that they will either succeed or fail together.
+  // The last account in a chain of linked accounts does not have this flag set.
+  linked?: boolean
+  // When set, the account will retain the history of balances at each transfer.
+  history?: boolean
   userData128: AccountUserData128
 }
 
@@ -57,6 +62,7 @@ export function flagsBasedOnAccountOptions(
       ? AccountFlags.credits_must_not_exceed_debits
       : AccountFlags.debits_must_not_exceed_credits
   if (options.linked) returnVal |= AccountFlags.linked
+  if (options.history) returnVal |= AccountFlags.history
   return returnVal
 }
 

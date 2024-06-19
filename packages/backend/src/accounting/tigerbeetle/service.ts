@@ -1,5 +1,6 @@
 import { Client } from 'tigerbeetle-node'
 import { v4 as uuid } from 'uuid'
+import { createHash } from 'crypto'
 
 import { BaseService } from '../../shared/baseService'
 import { validateId } from '../../shared/utils'
@@ -106,7 +107,6 @@ export async function createLiquidityAccount(
         id: account.id,
         ledger: account.asset.ledger,
         code: convertToTigerBeetleAccountCode[accountType],
-        linked: false,
         userData128: account.asset.id
       }
     ])
@@ -133,7 +133,6 @@ export async function createSettlementAccount(
         id: ledger,
         ledger,
         code: TigerBeetleAccountCode.SETTLEMENT,
-        linked: false,
         userData128: toTigerBeetleId(accountId)
       }
     ])
@@ -166,13 +165,15 @@ export async function createLiquidityAndLinkedSettlementAccount(
         ledger: account.asset.ledger,
         code: convertToTigerBeetleAccountCode[accountType],
         linked: true,
+        history: true,
         userData128: account.asset.id
       },
       {
         id: account.asset.ledger,
         ledger: account.asset.ledger,
         code: TigerBeetleAccountCode.SETTLEMENT,
-        linked: false,
+        linked: false, // Last account in the chain.
+        history: true,
         userData128: account.asset.id
       }
     ])
@@ -270,10 +271,7 @@ export async function createTransfer(
           voidId: transferId
         }))
       )
-
-      if (error) {
-        return error.error
-      }
+      if (error) return error.error
     },
     postTransfers: async (transferIds) => {
       const error = await createTransfers(
@@ -282,10 +280,7 @@ export async function createTransfer(
           postId: transferId
         }))
       )
-
-      if (error) {
-        return error.error
-      }
+      if (error) return error.error
     },
     getAccountReceived: async (accountRef) =>
       getAccountTotalReceived(deps, accountRef),
@@ -299,12 +294,14 @@ export async function createTransfer(
           sourceAccountId: transfer.sourceAccountId,
           destinationAccountId: transfer.destinationAccountId,
           amount: transfer.amount,
-          timeout: args.timeout
+          timeout: args.timeout,
+          userData128: bilateralIdentification(
+            transfer.sourceAccountId,
+            transfer.destinationAccountId
+          )
         })
       )
-
       const error = await createTransfers(deps, tbTransfers)
-
       if (error) {
         switch (error.error) {
           case TransferError.UnknownSourceAccount:
@@ -330,6 +327,12 @@ export async function createTransfer(
       return tbTransfers.map((transfer) => transfer.id.toString())
     }
   })
+}
+
+function bilateralIdentification(source: string, destination: string): bigint {
+  const arr = [source, destination].sort()
+  const md5Hex = createHash('md5').update(`${arr[0]}${arr[1]}`).digest('hex')
+  return BigInt(`0x${md5Hex}`)
 }
 
 async function createAccountDeposit(
