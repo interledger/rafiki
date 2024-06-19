@@ -338,7 +338,7 @@ async function validateGrantAndAddSpentAmountsToPayment(
   trx: TransactionOrKnex,
   callback?: (f: unknown) => NodeJS.Timeout,
   grantLockTimeoutMs: number = 5000
-): Promise<Boolean> {
+): Promise<boolean> {
   if (!grant.limits) {
     return true
   }
