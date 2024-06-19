@@ -270,9 +270,8 @@ export async function createTransfer(
         )
       )
 
-      if (isTransferError(pendingTransfersOrError)) {
+      if (isTransferError(pendingTransfersOrError))
         return pendingTransfersOrError
-      }
 
       return pendingTransfersOrError.map(
         (pendingTransfer) => pendingTransfer.transferRef

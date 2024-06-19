@@ -17,7 +17,8 @@ import {
   Transaction,
   TransferOptions,
   Withdrawal,
-  createAccountToAccountTransfer
+  createAccountToAccountTransfer,
+  TransferType
 } from '../service'
 import { calculateBalance, createAccounts, getAccounts } from './accounts'
 import {
@@ -37,6 +38,12 @@ export enum TigerBeetleAccountCode {
   SETTLEMENT = 101
 }
 
+export enum TigerBeetleTransferCode {
+  TRANSFER = 1,
+  DEPOSIT = 2,
+  WITHDRAWAL = 3
+}
+
 export const convertToTigerBeetleAccountCode: {
   [key in LiquidityAccountType]: TigerBeetleAccountCode
 } = {
@@ -46,6 +53,14 @@ export const convertToTigerBeetleAccountCode: {
   [LiquidityAccountType.PEER]: TigerBeetleAccountCode.LIQUIDITY_PEER,
   [LiquidityAccountType.INCOMING]: TigerBeetleAccountCode.LIQUIDITY_INCOMING,
   [LiquidityAccountType.OUTGOING]: TigerBeetleAccountCode.LIQUIDITY_OUTGOING
+}
+
+export const convertToTigerBeetleTransferCode: {
+  [key in TransferType]: TigerBeetleTransferCode
+} = {
+  [TransferType.TRANSFER]: TigerBeetleTransferCode.TRANSFER,
+  [TransferType.DEPOSIT]: TigerBeetleTransferCode.DEPOSIT,
+  [TransferType.WITHDRAWAL]: TigerBeetleTransferCode.WITHDRAWAL
 }
 
 export interface ServiceDependencies extends BaseService {

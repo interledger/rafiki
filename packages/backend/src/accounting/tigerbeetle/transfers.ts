@@ -7,10 +7,8 @@ import { v4 as uuid } from 'uuid'
 import { TransferError } from '../errors'
 
 import { TigerbeetleCreateTransferError } from './errors'
-import { ServiceDependencies } from './service'
+import { ServiceDependencies, TigerBeetleTransferCode } from './service'
 import { AccountId, toTigerBeetleId } from './utils'
-
-const ACCOUNT_TYPE = 1
 
 type TransfersError = {
   index: number
@@ -21,6 +19,7 @@ export type TransferUserData128 = string | number | bigint
 
 interface TransferOptions {
   userData128?: TransferUserData128
+  code?: TigerBeetleTransferCode
 }
 
 export interface NewTransferOptions extends TransferOptions {
@@ -74,7 +73,7 @@ export async function createTransfers(
       pending_id: 0n,
       timeout: 0,
       ledger: 0,
-      code: ACCOUNT_TYPE,
+      code: 0,
       flags: 0,
       amount: 0n,
       timestamp: 0n
@@ -94,7 +93,9 @@ export async function createTransfers(
         tbTransfer.flags |= TransferFlags.pending
         tbTransfer.timeout = transfer.timeout
       }
+      if (transfer.code) tbTransfer.code = transfer.code
     } else {
+      tbTransfer.code = 0
       tbTransfer.id = toTigerBeetleId(uuid())
       if (transfer.postId) {
         tbTransfer.flags |= TransferFlags.post_pending_transfer
