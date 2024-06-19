@@ -25,7 +25,7 @@ import {
   areAllAccountExistsErrors
 } from './errors'
 import { NewTransferOptions, createTransfers } from './transfers'
-import { AccountUserData128, toTigerbeetleId } from './utils'
+import { AccountUserData128, toTigerBeetleId } from './utils'
 
 export enum TigerBeetleAccountCode {
   LIQUIDITY_WEB_MONETIZATION = 1,
@@ -134,7 +134,7 @@ export async function createSettlementAccount(
         ledger,
         code: TigerBeetleAccountCode.SETTLEMENT,
         linked: false,
-        userData128: toTigerbeetleId(accountId)
+        userData128: toTigerBeetleId(accountId)
       }
     ])
   } catch (err) {
@@ -216,7 +216,7 @@ export async function getAccountsTotalSent(
     const accounts = await getAccounts(deps, ids)
     return ids.map(
       (id) =>
-        accounts.find((account) => account.id === toTigerbeetleId(id))
+        accounts.find((account) => account.id === toTigerBeetleId(id))
           ?.debits_posted
     )
   } else return []
@@ -240,7 +240,7 @@ export async function getAccountsTotalReceived(
     const accounts = await getAccounts(deps, ids)
     return ids.map(
       (id) =>
-        accounts.find((account) => account.id === toTigerbeetleId(id))
+        accounts.find((account) => account.id === toTigerBeetleId(id))
           ?.credits_posted
     )
   } else return []

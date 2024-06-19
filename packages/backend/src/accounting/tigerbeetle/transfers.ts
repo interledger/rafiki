@@ -8,7 +8,7 @@ import { TransferError } from '../errors'
 
 import { TigerbeetleCreateTransferError } from './errors'
 import { ServiceDependencies } from './service'
-import { AccountId, toTigerbeetleId } from './utils'
+import { AccountId, toTigerBeetleId } from './utils'
 
 const ACCOUNT_TYPE = 1
 
@@ -17,7 +17,13 @@ type TransfersError = {
   error: TransferError
 }
 
-export interface NewTransferOptions {
+export type TransferUserData128 = string | number | bigint
+
+interface TransferOptions {
+  userData128?: TransferUserData128
+}
+
+export interface NewTransferOptions extends TransferOptions {
   id: string | bigint
   sourceAccountId: AccountId
   destinationAccountId: AccountId
@@ -28,13 +34,13 @@ export interface NewTransferOptions {
   voidId?: never
 }
 
-export interface PostTransferOptions {
+export interface PostTransferOptions extends TransferOptions {
   id?: never
   postId: string | bigint
   voidId?: never
 }
 
-export interface VoidTransferOptions {
+export interface VoidTransferOptions extends TransferOptions {
   id?: never
   postId?: never
   voidId: string | bigint
@@ -74,33 +80,31 @@ export async function createTransfers(
       timestamp: 0n
     }
     if (isNewTransferOptions(transfer)) {
-      if (transfer.amount <= BigInt(0)) {
-        return { index: i, error: TransferError.InvalidAmount }
-      }
-      tbTransfer.id = toTigerbeetleId(transfer.id)
+      if (transfer.amount <= 0n) return { index: i, error: TransferError.InvalidAmount }
+
+      tbTransfer.id = toTigerBeetleId(transfer.id)
       tbTransfer.amount = transfer.amount
       tbTransfer.ledger = transfer.ledger
-      tbTransfer.debit_account_id = toTigerbeetleId(transfer.sourceAccountId)
-      tbTransfer.credit_account_id = toTigerbeetleId(
-        transfer.destinationAccountId
-      )
+      tbTransfer.debit_account_id = toTigerBeetleId(transfer.sourceAccountId)
+      tbTransfer.credit_account_id = toTigerBeetleId(transfer.destinationAccountId)
       if (transfer.timeout) {
         tbTransfer.flags |= TransferFlags.pending
         tbTransfer.timeout = transfer.timeout
       }
     } else {
-      tbTransfer.id = toTigerbeetleId(uuid())
+      tbTransfer.id = toTigerBeetleId(uuid())
       if (transfer.postId) {
         tbTransfer.flags |= TransferFlags.post_pending_transfer
-        tbTransfer.pending_id = toTigerbeetleId(transfer.postId)
+        tbTransfer.pending_id = toTigerBeetleId(transfer.postId)
       } else if (transfer.voidId) {
         tbTransfer.flags |= TransferFlags.void_pending_transfer
-        tbTransfer.pending_id = toTigerbeetleId(transfer.voidId)
+        tbTransfer.pending_id = toTigerBeetleId(transfer.voidId)
       }
     }
-    if (i < transfers.length - 1) {
-      tbTransfer.flags |= TransferFlags.linked
-    }
+
+    if (transfer.userData128) tbTransfer.user_data_128 = toTigerBeetleId(transfer.userData128)
+
+    if (i < transfers.length - 1) tbTransfer.flags |= TransferFlags.linked
     tbTransfers.push(tbTransfer)
   }
   const res = await deps.tigerBeetle.createTransfers(tbTransfers)

@@ -6,7 +6,7 @@ import {
 
 import { ServiceDependencies, TigerBeetleAccountCode } from './service'
 import { TigerbeetleCreateAccountError } from './errors'
-import { AccountId, toTigerbeetleId, AccountUserData128 } from './utils'
+import { AccountId, toTigerBeetleId, AccountUserData128 } from './utils'
 
 export interface CreateAccountOptions {
   id: AccountId
@@ -22,7 +22,7 @@ export async function createAccounts(
 ): Promise<void> {
   const errors = await deps.tigerBeetle.createAccounts(
     accounts.map((account) => ({
-      id: toTigerbeetleId(account.id),
+      id: toTigerBeetleId(account.id),
       user_data_32: 0,
       user_data_64: 0n,
       user_data_128: 0n,
@@ -56,7 +56,7 @@ export function flagsBasedOnAccountOptions(
     options.code === TigerBeetleAccountCode.SETTLEMENT
       ? AccountFlags.credits_must_not_exceed_debits
       : AccountFlags.debits_must_not_exceed_credits
-  if (options.linked) returnVal = returnVal | AccountFlags.linked
+  if (options.linked) returnVal |= AccountFlags.linked
   return returnVal
 }
 
@@ -65,7 +65,7 @@ export async function getAccounts(
   accountIds: AccountId[]
 ): Promise<Account[]> {
   return await deps.tigerBeetle.lookupAccounts(
-    accountIds.map((id) => toTigerbeetleId(id))
+    accountIds.map((id) => toTigerBeetleId(id))
   )
 }
 

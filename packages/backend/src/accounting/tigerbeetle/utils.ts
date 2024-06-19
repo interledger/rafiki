@@ -3,7 +3,7 @@ import { validateId } from '../../shared/utils'
 export type AccountId = string | number | bigint
 export type AccountUserData128 = AccountId
 
-export function toTigerbeetleId(id: AccountId): bigint {
+export function toTigerBeetleId(id: AccountId): bigint {
   if (typeof id === 'number') {
     return BigInt(id)
   }
