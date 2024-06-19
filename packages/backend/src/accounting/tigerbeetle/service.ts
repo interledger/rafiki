@@ -26,7 +26,7 @@ import {
   areAllAccountExistsErrors
 } from './errors'
 import { NewTransferOptions, createTransfers } from './transfers'
-import { AccountUserData128, toTigerBeetleId } from './utils'
+import { AccountUserData128, toTigerBeetleId, hexTextToBigInt } from './utils'
 
 export enum TigerBeetleAccountCode {
   LIQUIDITY_WEB_MONETIZATION = 1,
@@ -194,9 +194,7 @@ export async function getAccountBalance(
   id: string
 ): Promise<bigint | undefined> {
   const account = (await getAccounts(deps, [id]))[0]
-  if (account) {
-    return calculateBalance(account)
-  }
+  if (account) return calculateBalance(account)
 }
 
 export async function getAccountTotalSent(
@@ -253,9 +251,7 @@ export async function getSettlementBalance(
 ): Promise<bigint | undefined> {
   const assetAccount = (await getAccounts(deps, [ledger]))[0]
 
-  if (assetAccount) {
-    return calculateBalance(assetAccount)
-  }
+  if (assetAccount) return calculateBalance(assetAccount)
 }
 
 export async function createTransfer(
@@ -332,7 +328,7 @@ export async function createTransfer(
 function bilateralIdentification(source: string, destination: string): bigint {
   const arr = [source, destination].sort()
   const md5Hex = createHash('md5').update(`${arr[0]}${arr[1]}`).digest('hex')
-  return BigInt(`0x${md5Hex}`)
+  return hexTextToBigInt(md5Hex)
 }
 
 async function createAccountDeposit(
