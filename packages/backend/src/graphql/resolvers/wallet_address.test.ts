@@ -179,25 +179,24 @@ describe('Wallet Address Resolvers', (): void => {
           }
         })
 
-
-        assert.ok(response.walletAddress)
-        expect(response.walletAddress).toEqual({
-          __typename: 'WalletAddress',
-          id: response.walletAddress.id,
-          url: input.url,
-          asset: {
-            __typename: 'Asset',
-            code: asset.code,
-            scale: asset.scale
-          },
-          publicName: input.publicName,
-          additionalProperties: validAdditionalProperties.map((property) => {
-            return {
-              __typename: 'AdditionalProperty',
-              key: property.key,
-              value: property.value,
-              visibleInOpenPayments: property.visibleInOpenPayments
-            }
+      assert.ok(response.walletAddress)
+      expect(response.walletAddress).toEqual({
+        __typename: 'WalletAddress',
+        id: response.walletAddress.id,
+        url: input.url,
+        asset: {
+          __typename: 'Asset',
+          code: asset.code,
+          scale: asset.scale
+        },
+        publicName: input.publicName,
+        additionalProperties: validAdditionalProperties.map((property) => {
+          return {
+            __typename: 'AdditionalProperty',
+            key: property.key,
+            value: property.value,
+            visibleInOpenPayments: property.visibleInOpenPayments
+          }
         })
       })
       await expect(

@@ -23,7 +23,6 @@ import {
   CreateOptions,
   UpdateOptions
 } from '../../open_payments/wallet_address/service'
-import { GraphQLErrorCode } from '../errors'
 
 export const getWalletAddresses: QueryResolvers<ApolloContext>['walletAddresses'] =
   async (
@@ -129,7 +128,8 @@ export const updateWalletAddress: MutationResolvers<ApolloContext>['updateWallet
         }
       )
     }
-    const walletAddressOrError = await walletAddressService.update(updateOptions)
+    const walletAddressOrError =
+      await walletAddressService.update(updateOptions)
     if (isWalletAddressError(walletAddressOrError)) {
       throw new GraphQLError(errorToMessage[walletAddressOrError], {
         extensions: {
