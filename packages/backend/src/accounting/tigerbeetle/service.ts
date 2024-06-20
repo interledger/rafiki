@@ -39,9 +39,10 @@ export enum TigerBeetleAccountCode {
 }
 
 export enum TigerBeetleTransferCode {
-  TRANSFER = 1,
-  DEPOSIT = 2,
-  WITHDRAWAL = 3
+  DEFAULT = 1,
+  TRANSFER = 2,
+  DEPOSIT = 3,
+  WITHDRAWAL = 4
 }
 
 export const convertToTigerBeetleAccountCode: {
@@ -309,7 +310,8 @@ export async function createTransfer(
           userData128: bilateralIdentification(
             transfer.sourceAccountId,
             transfer.destinationAccountId
-          )
+          ),
+          code: transferCodeFromType(transfer.transferType)
         })
       )
       const error = await createTransfers(deps, tbTransfers)
@@ -346,6 +348,11 @@ function bilateralIdentification(source: string, destination: string): bigint {
   return hexTextToBigInt(md5Hex)
 }
 
+function transferCodeFromType(type?: TransferType): number {
+  if (type) return convertToTigerBeetleTransferCode[type]
+  return 0
+}
+
 async function createAccountDeposit(
   deps: ServiceDependencies,
   { id, account, amount }: Deposit
@@ -362,9 +369,7 @@ async function createAccountDeposit(
       ledger: account.asset.ledger
     }
   ])
-  if (error) {
-    return error.error
-  }
+  if (error) return error.error
 }
 
 async function createAccountWithdrawal(

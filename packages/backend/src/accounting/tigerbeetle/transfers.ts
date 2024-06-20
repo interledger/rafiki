@@ -73,7 +73,7 @@ export async function createTransfers(
       pending_id: 0n,
       timeout: 0,
       ledger: 0,
-      code: 0,
+      code: TigerBeetleTransferCode.DEFAULT,
       flags: 0,
       amount: 0n,
       timestamp: 0n
@@ -95,7 +95,7 @@ export async function createTransfers(
       }
       if (transfer.code) tbTransfer.code = transfer.code
     } else {
-      tbTransfer.code = 0
+      tbTransfer.code = 0 //use the same code as the new transfer.
       tbTransfer.id = toTigerBeetleId(uuid())
       if (transfer.postId) {
         tbTransfer.flags |= TransferFlags.post_pending_transfer

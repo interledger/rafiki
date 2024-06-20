@@ -2,7 +2,6 @@ import { TransactionOrKnex } from 'objection'
 import { BaseService } from '../shared/baseService'
 import { TransferError, isTransferError } from './errors'
 import { AccountUserData128 } from './tigerbeetle/utils'
-import { convertToTigerBeetleTransferCode } from './tigerbeetle/service'
 
 export enum LiquidityAccountType {
   ASSET = 'ASSET',
@@ -106,7 +105,7 @@ export interface TransferToCreate {
   destinationAccountId: string
   amount: bigint
   ledger: number
-  transferCode: number
+  transferType?: TransferType
 }
 
 export interface BaseAccountingServiceDependencies extends BaseService {
@@ -230,10 +229,6 @@ export function buildCrossAssetTransfers(
     return TransferError.InvalidDestinationAmount
   }
 
-  let transferCode = 0
-  if (transferType)
-    transferCode = convertToTigerBeetleTransferCode[transferType]
-
   const transfers: TransferToCreate[] = []
   // Send to source liquidity account
   transfers.push({
@@ -241,7 +236,7 @@ export function buildCrossAssetTransfers(
     destinationAccountId: sourceAccount.asset.id,
     amount: sourceAmount,
     ledger: sourceAccount.asset.ledger,
-    transferCode
+    transferType
   })
 
   // Deliver from destination liquidity account
@@ -250,7 +245,7 @@ export function buildCrossAssetTransfers(
     destinationAccountId: destinationAccount.id,
     amount: destinationAmount,
     ledger: destinationAccount.asset.ledger,
-    transferCode
+    transferType
   })
 
   return transfers
@@ -268,10 +263,6 @@ export function buildSameAssetTransfers(
   } = args
   const transfers: TransferToCreate[] = []
 
-  let transferCode = 0
-  if (transferType)
-    transferCode = convertToTigerBeetleTransferCode[transferType]
-
   transfers.push({
     sourceAccountId: sourceAccount.id,
     destinationAccountId: destinationAccount.id,
@@ -280,7 +271,7 @@ export function buildSameAssetTransfers(
         ? destinationAmount
         : sourceAmount,
     ledger: sourceAccount.asset.ledger,
-    transferCode
+    transferType
   })
 
   if (destinationAmount && sourceAmount !== destinationAmount) {
@@ -291,7 +282,7 @@ export function buildSameAssetTransfers(
         destinationAccountId: sourceAccount.asset.id,
         amount: sourceAmount - destinationAmount,
         ledger: sourceAccount.asset.ledger,
-        transferCode
+        transferType
       })
     } else {
       // Deliver excess destination amount from liquidity account
@@ -300,7 +291,7 @@ export function buildSameAssetTransfers(
         destinationAccountId: destinationAccount.id,
         amount: destinationAmount - sourceAmount,
         ledger: sourceAccount.asset.ledger,
-        transferCode
+        transferType
       })
     }
   }
