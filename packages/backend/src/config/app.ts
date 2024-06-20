@@ -99,6 +99,7 @@ export const Config = {
   tigerBeetleReplicaAddresses: process.env.TIGERBEETLE_REPLICA_ADDRESSES
     ? process.env.TIGERBEETLE_REPLICA_ADDRESSES.split(',')
     : ['3004'],
+  tigerBeetleTwoPhaseTimeout: envInt('TIGERBEETLE_TWO_PHASE_TIMEOUT', 5),
 
   exchangeRatesUrl: process.env.EXCHANGE_RATES_URL, // optional
   exchangeRatesLifetime: +(process.env.EXCHANGE_RATES_LIFETIME || 15_000),

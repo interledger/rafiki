@@ -366,7 +366,8 @@ async function createAccountDeposit(
       sourceAccountId: account.asset.ledger,
       destinationAccountId: account.id,
       amount,
-      ledger: account.asset.ledger
+      ledger: account.asset.ledger,
+      code: TigerBeetleTransferCode.DEPOSIT
     }
   ])
   if (error) return error.error
@@ -386,7 +387,8 @@ async function createAccountWithdrawal(
       destinationAccountId: account.asset.ledger,
       amount,
       timeout,
-      ledger: account.asset.ledger
+      ledger: account.asset.ledger,
+      code: TigerBeetleTransferCode.WITHDRAWAL
     }
   ])
   if (error) {
