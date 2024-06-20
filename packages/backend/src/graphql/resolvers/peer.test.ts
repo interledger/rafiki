@@ -2,7 +2,7 @@ import { faker } from '@faker-js/faker'
 import { gql } from '@apollo/client'
 import assert from 'assert'
 import { v4 as uuid } from 'uuid'
-import { ApolloError } from '@apollo/client'
+import { GraphQLError } from 'graphql'
 
 import { getPageTests } from './page.test'
 import { createTestApp, TestContainer } from '../../tests/app'
@@ -12,7 +12,11 @@ import { Asset } from '../../asset/model'
 import { initIocContainer } from '../..'
 import { Config } from '../../config/app'
 import { truncateTables } from '../../tests/tableManager'
-import { errorToMessage, PeerError } from '../../payment-method/ilp/peer/errors'
+import {
+  errorToMessage,
+  errorToCode,
+  PeerError
+} from '../../payment-method/ilp/peer/errors'
 import { Peer as PeerModel } from '../../payment-method/ilp/peer/model'
 import { PeerService } from '../../payment-method/ilp/peer/service'
 import { createAsset } from '../../tests/asset'
@@ -26,6 +30,7 @@ import {
   DeletePeerMutationResponse
 } from '../generated/graphql'
 import { AccountingService } from '../../accounting/service'
+import { GraphQLErrorCode } from '../errors'
 
 describe('Peer Resolvers', (): void => {
   let deps: IocContract<AppServices>
@@ -179,11 +184,16 @@ describe('Peer Resolvers', (): void => {
           }
         })
 
-      await expect(gqlQuery).rejects.toThrow(ApolloError)
-      await expect(gqlQuery).rejects.toThrow(errorToMessage[error as PeerError])
+      await expect(gqlQuery).rejects.toThrow(
+        new GraphQLError(errorToMessage[error as PeerError], {
+          extensions: {
+            code: errorToCode[error as PeerError]
+          }
+        })
+      )
     })
 
-    test('500', async (): Promise<void> => {
+    test('internal server error', async (): Promise<void> => {
       jest
         .spyOn(peerService, 'create')
         .mockImplementationOnce(async (_args) => {
@@ -212,7 +222,13 @@ describe('Peer Resolvers', (): void => {
             throw new Error('Data was empty')
           }
         })
-      await expect(gqlQuery).rejects.toThrow(ApolloError)
+      await expect(gqlQuery).rejects.toThrow(
+        new GraphQLError('unexpected', {
+          extensions: {
+            code: GraphQLErrorCode.InternalServerError
+          }
+        })
+      )
     })
   })
 
@@ -333,8 +349,13 @@ describe('Peer Resolvers', (): void => {
           }
         })
 
-      await expect(gqlQuery).rejects.toThrow(ApolloError)
-      await expect(gqlQuery).rejects.toThrow('Peer not found')
+      await expect(gqlQuery).rejects.toThrow(
+        new GraphQLError(errorToMessage[PeerError.UnknownPeer], {
+          extensions: {
+            code: errorToCode[PeerError.UnknownPeer]
+          }
+        })
+      )
     })
   })
 
@@ -534,8 +555,13 @@ describe('Peer Resolvers', (): void => {
           }
         })
 
-      await expect(gqlQuery).rejects.toThrow(ApolloError)
-      await expect(gqlQuery).rejects.toThrow(errorToMessage[error as PeerError])
+      await expect(gqlQuery).rejects.toThrow(
+        new GraphQLError(errorToMessage[error as PeerError], {
+          extensions: {
+            code: errorToCode[error as PeerError]
+          }
+        })
+      )
     })
 
     test('Returns error if unexpected error', async (): Promise<void> => {
@@ -578,7 +604,13 @@ describe('Peer Resolvers', (): void => {
           }
         })
 
-      await expect(gqlQuery).rejects.toThrow(ApolloError)
+      await expect(gqlQuery).rejects.toThrow(
+        new GraphQLError('unexpected', {
+          extensions: {
+            code: GraphQLErrorCode.InternalServerError
+          }
+        })
+      )
     })
   })
 
@@ -641,8 +673,13 @@ describe('Peer Resolvers', (): void => {
           }
         })
 
-      await expect(gqlQuery).rejects.toThrow(ApolloError)
-      await expect(gqlQuery).rejects.toThrow('unknown peer')
+      await expect(gqlQuery).rejects.toThrow(
+        new GraphQLError(errorToMessage[PeerError.UnknownPeer], {
+          extensions: {
+            code: errorToCode[PeerError.UnknownPeer]
+          }
+        })
+      )
     })
 
     test('Returns error if unexpected error', async (): Promise<void> => {
@@ -673,7 +710,13 @@ describe('Peer Resolvers', (): void => {
           }
         })
 
-      await expect(gqlQuery).rejects.toThrow(ApolloError)
+      await expect(gqlQuery).rejects.toThrow(
+        new GraphQLError('unexpected', {
+          extensions: {
+            code: GraphQLErrorCode.InternalServerError
+          }
+        })
+      )
     })
   })
 })

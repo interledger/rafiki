@@ -52,7 +52,7 @@ export const errorToHTTPCode: {
 }
 
 export const errorToCode: {
-  [key in OutgoingPaymentError]: string
+  [key in OutgoingPaymentError]: GraphQLErrorCode
 } = {
   [OutgoingPaymentError.UnknownWalletAddress]: GraphQLErrorCode.NotFound,
   [OutgoingPaymentError.UnknownPayment]: GraphQLErrorCode.NotFound,

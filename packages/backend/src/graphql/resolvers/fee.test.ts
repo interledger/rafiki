@@ -4,13 +4,16 @@ import { initIocContainer } from '../..'
 import { Config } from '../../config/app'
 import { createTestApp, TestContainer } from '../../tests/app'
 import { truncateTables } from '../../tests/tableManager'
-import { ApolloError, gql } from '@apollo/client'
+import { gql } from '@apollo/client'
 import { SetFeeResponse } from '../generated/graphql'
 import { Asset } from '../../asset/model'
 import { createAsset } from '../../tests/asset'
 import { FeeType } from '../../fee/model'
 import { FeeService } from '../../fee/service'
 import { v4 } from 'uuid'
+import { GraphQLError } from 'graphql'
+import { FeeError, errorToMessage, errorToCode } from '../../fee/errors'
+import { GraphQLErrorCode } from '../errors'
 
 describe('Fee Resolvers', () => {
   let deps: IocContract<AppServices>
@@ -117,8 +120,13 @@ describe('Fee Resolvers', () => {
           }
         })
 
-      await expect(gqlQuery).rejects.toThrow(ApolloError)
-      await expect(gqlQuery).rejects.toThrow('Unknown asset')
+      await expect(gqlQuery).rejects.toThrow(
+        new GraphQLError(errorToMessage[FeeError.UnknownAsset], {
+          extensions: {
+            code: errorToCode[FeeError.UnknownAsset]
+          }
+        })
+      )
     })
 
     test('Returns error for invalid percent fee', async (): Promise<void> => {
@@ -156,9 +164,12 @@ describe('Fee Resolvers', () => {
           }
         })
 
-      await expect(gqlQuery).rejects.toThrow(ApolloError)
       await expect(gqlQuery).rejects.toThrow(
-        'Basis point fee must be between 0 and 10000'
+        new GraphQLError(errorToMessage[FeeError.InvalidBasisPointFee], {
+          extensions: {
+            code: errorToCode[FeeError.InvalidBasisPointFee]
+          }
+        })
       )
     })
 
@@ -200,7 +211,13 @@ describe('Fee Resolvers', () => {
           }
         })
 
-      await expect(gqlQuery).rejects.toThrow(ApolloError)
+      await expect(gqlQuery).rejects.toThrow(
+        new GraphQLError('Unknown error', {
+          extensions: {
+            code: GraphQLErrorCode.InternalServerError
+          }
+        })
+      )
     })
   })
 })

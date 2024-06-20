@@ -10,6 +10,7 @@ import {
 } from '../generated/graphql'
 import { ApolloContext } from '../../app'
 import {
+  WalletAddressError,
   isWalletAddressError,
   errorToCode,
   errorToMessage
@@ -57,11 +58,14 @@ export const getWalletAddress: QueryResolvers<ApolloContext>['walletAddress'] =
     const walletAddressService = await ctx.container.use('walletAddressService')
     const walletAddress = await walletAddressService.get(args.id)
     if (!walletAddress) {
-      throw new GraphQLError('Wallet address not found', {
-        extensions: {
-          code: GraphQLErrorCode.NotFound
+      throw new GraphQLError(
+        errorToMessage[WalletAddressError.UnknownWalletAddress],
+        {
+          extensions: {
+            code: errorToCode[WalletAddressError.UnknownWalletAddress]
+          }
         }
-      })
+      )
     }
     return walletAddressToGraphql(walletAddress)
   }

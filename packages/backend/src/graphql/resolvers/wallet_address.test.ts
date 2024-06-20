@@ -2,7 +2,6 @@ import assert from 'assert'
 import { gql } from '@apollo/client'
 import { Knex } from 'knex'
 import { v4 as uuid } from 'uuid'
-import { ApolloError } from '@apollo/client'
 
 import { createTestApp, TestContainer } from '../../tests/app'
 import { IocContract } from '@adonisjs/fold'
@@ -13,7 +12,8 @@ import { Config } from '../../config/app'
 import { truncateTables } from '../../tests/tableManager'
 import {
   WalletAddressError,
-  errorToMessage
+  errorToMessage,
+  errorToCode
 } from '../../open_payments/wallet_address/errors'
 import {
   WalletAddress as WalletAddressModel,
@@ -34,6 +34,8 @@ import {
 } from '../generated/graphql'
 import { getPageTests } from './page.test'
 import { WalletAddressAdditionalProperty } from '../../open_payments/wallet_address/additional_property/model'
+import { GraphQLError } from 'graphql'
+import { GraphQLErrorCode } from '../errors'
 
 describe('Wallet Address Resolvers', (): void => {
   let deps: IocContract<AppServices>
@@ -239,13 +241,16 @@ describe('Wallet Address Resolvers', (): void => {
           }
         })
 
-      await expect(gqlQuery).rejects.toThrow(ApolloError)
       await expect(gqlQuery).rejects.toThrow(
-        errorToMessage[error as WalletAddressError]
+        new GraphQLError(errorToMessage[error as WalletAddressError], {
+          extensions: {
+            code: errorToCode[error as WalletAddressError]
+          }
+        })
       )
     })
 
-    test('500', async (): Promise<void> => {
+    test('internal server error', async (): Promise<void> => {
       jest
         .spyOn(walletAddressService, 'create')
         .mockImplementationOnce(async (_args) => {
@@ -277,8 +282,13 @@ describe('Wallet Address Resolvers', (): void => {
             throw new Error('Data was empty')
           }
         })
-      await expect(gqlQuery).rejects.toThrow(ApolloError)
-      await expect(gqlQuery).rejects.toThrow('unexpected')
+      await expect(gqlQuery).rejects.toThrow(
+        new GraphQLError('unexpected', {
+          extensions: {
+            code: GraphQLErrorCode.InternalServerError
+          }
+        })
+      )
     })
   })
 
@@ -545,9 +555,12 @@ describe('Wallet Address Resolvers', (): void => {
           }
         })
 
-      await expect(gqlQuery).rejects.toThrow(ApolloError)
       await expect(gqlQuery).rejects.toThrow(
-        errorToMessage[error as WalletAddressError]
+        new GraphQLError(errorToMessage[error as WalletAddressError], {
+          extensions: {
+            code: errorToCode[error as WalletAddressError]
+          }
+        })
       )
     })
 
@@ -583,8 +596,13 @@ describe('Wallet Address Resolvers', (): void => {
           }
         })
 
-      await expect(gqlQuery).rejects.toThrow(ApolloError)
-      await expect(gqlQuery).rejects.toThrow('unexpected')
+      await expect(gqlQuery).rejects.toThrow(
+        new GraphQLError('unexpected', {
+          extensions: {
+            code: GraphQLErrorCode.InternalServerError
+          }
+        })
+      )
     })
   })
 
@@ -695,7 +713,16 @@ describe('Wallet Address Resolvers', (): void => {
           }
         })
 
-      await expect(gqlQuery).rejects.toThrow(ApolloError)
+      await expect(gqlQuery).rejects.toThrow(
+        new GraphQLError(
+          errorToMessage[WalletAddressError.UnknownWalletAddress],
+          {
+            extensions: {
+              code: errorToCode[WalletAddressError.UnknownWalletAddress]
+            }
+          }
+        )
+      )
     })
 
     getPageTests({
@@ -858,8 +885,13 @@ describe('Wallet Address Resolvers', (): void => {
             throw new Error('Data was empty')
           }
         })
-      await expect(gqlQuery).rejects.toThrow(ApolloError)
-      await expect(gqlQuery).rejects.toThrow('unexpected')
+      await expect(gqlQuery).rejects.toThrow(
+        new GraphQLError('unexpected', {
+          extensions: {
+            code: GraphQLErrorCode.InternalServerError
+          }
+        })
+      )
     })
   })
 })

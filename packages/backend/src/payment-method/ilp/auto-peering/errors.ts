@@ -15,7 +15,7 @@ export const isAutoPeeringError = (o: any): o is AutoPeeringError =>
   Object.values(AutoPeeringError).includes(o)
 
 export const errorToCode: {
-  [key in AutoPeeringError]: string
+  [key in AutoPeeringError]: GraphQLErrorCode
 } = {
   [AutoPeeringError.InvalidIlpConfiguration]: GraphQLErrorCode.BadUserInput,
   [AutoPeeringError.InvalidPeerIlpConfiguration]:

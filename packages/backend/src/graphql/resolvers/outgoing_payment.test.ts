@@ -1,4 +1,4 @@
-import { ApolloError, gql } from '@apollo/client'
+import { gql } from '@apollo/client'
 import { PaymentError } from '@interledger/pay'
 import { v4 as uuid } from 'uuid'
 import * as Pay from '@interledger/pay'
@@ -32,6 +32,7 @@ import {
 } from '../generated/graphql'
 import { faker } from '@faker-js/faker'
 import { GraphQLError } from 'graphql'
+import { GraphQLErrorCode } from '../errors'
 
 describe('OutgoingPayment Resolvers', (): void => {
   let deps: IocContract<AppServices>
@@ -339,8 +340,16 @@ describe('OutgoingPayment Resolvers', (): void => {
         .then(
           (query): OutgoingPaymentResponse => query.data?.createOutgoingPayment
         )
-      await expect(query).rejects.toThrow(ApolloError)
-      await expect(query).rejects.toThrow('unknown wallet address')
+      await expect(query).rejects.toThrow(
+        new GraphQLError(
+          errorToMessage[OutgoingPaymentError.UnknownWalletAddress],
+          {
+            extensions: {
+              code: errorToCode[OutgoingPaymentError.UnknownWalletAddress]
+            }
+          }
+        )
+      )
       await expect(createSpy).toHaveBeenCalledWith(input)
     })
 
@@ -374,7 +383,13 @@ describe('OutgoingPayment Resolvers', (): void => {
           (query): OutgoingPaymentResponse => query.data?.createOutgoingPayment
         )
 
-      await expect(query).rejects.toThrow(ApolloError)
+      await expect(query).rejects.toThrow(
+        new GraphQLError('unexpected', {
+          extensions: {
+            code: GraphQLErrorCode.InternalServerError
+          }
+        })
+      )
       expect(createSpy).toHaveBeenCalledWith(input)
     })
   })
@@ -511,7 +526,13 @@ describe('OutgoingPayment Resolvers', (): void => {
           (query): OutgoingPaymentResponse =>
             query.data?.createOutgoingPaymentFromIncomingPayment
         )
-      await expect(gqlQuery).rejects.toThrow(ApolloError)
+      await expect(gqlQuery).rejects.toThrow(
+        new GraphQLError('unexpected', {
+          extensions: {
+            code: GraphQLErrorCode.InternalServerError
+          }
+        })
+      )
       expect(createSpy).toHaveBeenCalledWith(input)
     })
   })

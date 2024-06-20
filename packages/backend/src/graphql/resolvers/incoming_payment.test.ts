@@ -1,4 +1,4 @@
-import { ApolloError, gql } from '@apollo/client'
+import { gql } from '@apollo/client'
 import { getPageTests } from './page.test'
 import { createTestApp, TestContainer } from '../../tests/app'
 import { IocContract } from '@adonisjs/fold'
@@ -22,8 +22,14 @@ import {
   IncomingPaymentResponse,
   IncomingPaymentState as SchemaPaymentState
 } from '../generated/graphql'
-import { IncomingPaymentError } from '../../open_payments/payment/incoming/errors'
+import {
+  IncomingPaymentError,
+  errorToMessage,
+  errorToCode
+} from '../../open_payments/payment/incoming/errors'
 import { Amount, serializeAmount } from '../../open_payments/amount'
+import { GraphQLError } from 'graphql'
+import { GraphQLErrorCode } from '../errors'
 
 describe('Incoming Payment Resolver', (): void => {
   let deps: IocContract<AppServices>
@@ -213,8 +219,16 @@ describe('Incoming Payment Resolver', (): void => {
         .then(
           (query): IncomingPaymentResponse => query.data?.createIncomingPayment
         )
-      await expect(gqlQuery).rejects.toThrow(ApolloError)
-      await expect(gqlQuery).rejects.toThrow('unknown wallet address')
+      await expect(gqlQuery).rejects.toThrow(
+        new GraphQLError(
+          errorToMessage[IncomingPaymentError.UnknownWalletAddress],
+          {
+            extensions: {
+              code: errorToCode[IncomingPaymentError.UnknownWalletAddress]
+            }
+          }
+        )
+      )
       await expect(createSpy).toHaveBeenCalledWith(input)
     })
 
@@ -246,7 +260,13 @@ describe('Incoming Payment Resolver', (): void => {
         .then(
           (query): IncomingPaymentResponse => query.data?.createIncomingPayment
         )
-      await expect(gqlQuery).rejects.toThrow(ApolloError)
+      await expect(gqlQuery).rejects.toThrow(
+        new GraphQLError('unexpected', {
+          extensions: {
+            code: GraphQLErrorCode.InternalServerError
+          }
+        })
+      )
       await expect(createSpy).toHaveBeenCalledWith(input)
     })
   })

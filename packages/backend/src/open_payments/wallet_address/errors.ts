@@ -11,7 +11,7 @@ export const isWalletAddressError = (o: any): o is WalletAddressError =>
   Object.values(WalletAddressError).includes(o)
 
 export const errorToCode: {
-  [key in WalletAddressError]: string
+  [key in WalletAddressError]: GraphQLErrorCode
 } = {
   [WalletAddressError.InvalidUrl]: GraphQLErrorCode.BadUserInput,
   [WalletAddressError.UnknownAsset]: GraphQLErrorCode.BadUserInput,

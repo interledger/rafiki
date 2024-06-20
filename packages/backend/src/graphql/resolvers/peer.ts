@@ -16,7 +16,6 @@ import { ApolloContext } from '../../app'
 import { getPageInfo } from '../../shared/pagination'
 import { Pagination, SortOrder } from '../../shared/baseModel'
 import { GraphQLError } from 'graphql'
-import { GraphQLErrorCode } from '../errors'
 
 export const getPeers: QueryResolvers<ApolloContext>['peers'] = async (
   parent,
@@ -50,9 +49,9 @@ export const getPeer: QueryResolvers<ApolloContext>['peer'] = async (
   const peerService = await ctx.container.use('peerService')
   const peer = await peerService.get(args.id)
   if (!peer) {
-    throw new GraphQLError('Peer not found', {
+    throw new GraphQLError(errorToMessage[PeerError.UnknownPeer], {
       extensions: {
-        code: GraphQLErrorCode.NotFound
+        code: errorToCode[PeerError.UnknownPeer]
       }
     })
   }

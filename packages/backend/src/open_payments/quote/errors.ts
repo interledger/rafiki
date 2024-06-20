@@ -23,7 +23,7 @@ export const errorToHTTPCode: {
 }
 
 export const errorToCode: {
-  [key in QuoteError]: string
+  [key in QuoteError]: GraphQLErrorCode
 } = {
   [QuoteError.UnknownWalletAddress]: GraphQLErrorCode.NotFound,
   [QuoteError.InvalidAmount]: GraphQLErrorCode.BadUserInput,

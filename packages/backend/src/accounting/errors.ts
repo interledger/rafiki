@@ -36,7 +36,7 @@ export enum TransferError {
 }
 
 export const errorToCode: {
-  [key in TransferError]: string
+  [key in TransferError]: GraphQLErrorCode
 } = {
   [TransferError.AlreadyPosted]: GraphQLErrorCode.Conflict,
   [TransferError.AlreadyVoided]: GraphQLErrorCode.Conflict,

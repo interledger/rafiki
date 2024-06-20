@@ -21,7 +21,7 @@ export const errorToHTTPCode: {
 }
 
 export const errorToCode: {
-  [key in RemoteIncomingPaymentError]: string
+  [key in RemoteIncomingPaymentError]: GraphQLErrorCode
 } = {
   [RemoteIncomingPaymentError.UnknownWalletAddress]: GraphQLErrorCode.NotFound,
   [RemoteIncomingPaymentError.InvalidRequest]: GraphQLErrorCode.BadUserInput,

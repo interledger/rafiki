@@ -1,5 +1,5 @@
 import assert from 'assert'
-import { ApolloError, gql } from '@apollo/client'
+import { gql } from '@apollo/client'
 import { generateJwk } from '@interledger/http-signature-utils'
 import { v4 as uuid } from 'uuid'
 
@@ -19,6 +19,8 @@ import { WalletAddressKeyService } from '../../open_payments/wallet_address/key/
 import { createWalletAddress } from '../../tests/walletAddress'
 import { getPageTests } from './page.test'
 import { createWalletAddressKey } from '../../tests/walletAddressKey'
+import { GraphQLError } from 'graphql'
+import { GraphQLErrorCode } from '../errors'
 
 const TEST_KEY = generateJwk({ keyId: uuid() })
 
@@ -145,8 +147,13 @@ describe('Wallet Address Key Resolvers', (): void => {
             throw new Error('Data was empty')
           }
         })
-      await expect(gqlQuery).rejects.toThrow(ApolloError)
-      await expect(gqlQuery).rejects.toThrow('unexpected')
+      await expect(gqlQuery).rejects.toThrow(
+        new GraphQLError('unexpected', {
+          extensions: {
+            code: GraphQLErrorCode.InternalServerError
+          }
+        })
+      )
     })
   })
 
@@ -237,8 +244,13 @@ describe('Wallet Address Key Resolvers', (): void => {
           }
         })
 
-      await expect(gqlQuery).rejects.toThrow(ApolloError)
-      await expect(gqlQuery).rejects.toThrow('Wallet address key not found')
+      await expect(gqlQuery).rejects.toThrow(
+        new GraphQLError('Wallet address key not found', {
+          extensions: {
+            code: GraphQLErrorCode.NotFound
+          }
+        })
+      )
     })
   })
 

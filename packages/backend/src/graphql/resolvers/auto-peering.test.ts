@@ -1,6 +1,7 @@
 import { faker } from '@faker-js/faker'
-import { ApolloError, gql } from '@apollo/client'
+import { gql } from '@apollo/client'
 import assert from 'assert'
+import { GraphQLError } from 'graphql'
 
 import { createTestApp, TestContainer } from '../../tests/app'
 import { IocContract } from '@adonisjs/fold'
@@ -11,6 +12,7 @@ import { Config } from '../../config/app'
 import { truncateTables } from '../../tests/tableManager'
 import {
   errorToMessage,
+  errorToCode,
   AutoPeeringError
 } from '../../payment-method/ilp/auto-peering/errors'
 import { createAsset } from '../../tests/asset'
@@ -18,6 +20,7 @@ import { CreateOrUpdatePeerByUrlInput } from '../generated/graphql'
 import { AutoPeeringService } from '../../payment-method/ilp/auto-peering/service'
 import { v4 as uuid } from 'uuid'
 import nock from 'nock'
+import { GraphQLErrorCode } from '../errors'
 
 describe('Auto Peering Resolvers', (): void => {
   let deps: IocContract<AppServices>
@@ -263,9 +266,12 @@ describe('Auto Peering Resolvers', (): void => {
           }
         })
 
-      await expect(gqlQuery).rejects.toThrow(ApolloError)
       await expect(gqlQuery).rejects.toThrow(
-        errorToMessage[error as AutoPeeringError]
+        new GraphQLError(errorToMessage[error as AutoPeeringError], {
+          extensions: {
+            code: errorToCode[error as AutoPeeringError]
+          }
+        })
       )
     })
 
@@ -298,7 +304,13 @@ describe('Auto Peering Resolvers', (): void => {
             throw new Error('Data was empty')
           }
         })
-      await expect(gqlQuery).rejects.toThrow(ApolloError)
+      await expect(gqlQuery).rejects.toThrow(
+        new GraphQLError('unexpected', {
+          extensions: {
+            code: GraphQLErrorCode.InternalServerError
+          }
+        })
+      )
     })
   })
 })

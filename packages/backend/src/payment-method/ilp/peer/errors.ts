@@ -15,7 +15,7 @@ export const isPeerError = (o: any): o is PeerError =>
   Object.values(PeerError).includes(o)
 
 export const errorToCode: {
-  [key in PeerError]: string
+  [key in PeerError]: GraphQLErrorCode
 } = {
   [PeerError.DuplicateIncomingToken]: GraphQLErrorCode.Duplicate,
   [PeerError.DuplicatePeer]: GraphQLErrorCode.Duplicate,

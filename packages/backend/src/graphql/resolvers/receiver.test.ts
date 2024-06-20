@@ -1,4 +1,4 @@
-import { ApolloError, gql } from '@apollo/client'
+import { gql } from '@apollo/client'
 import { v4 as uuid } from 'uuid'
 import { createTestApp, TestContainer } from '../../tests/app'
 import { IocContract } from '@adonisjs/fold'
@@ -13,7 +13,13 @@ import {
 import { CreateReceiverResponse } from '../generated/graphql'
 import { ReceiverService } from '../../open_payments/receiver/service'
 import { Receiver } from '../../open_payments/receiver/model'
-import { ReceiverError } from '../../open_payments/receiver/errors'
+import {
+  ReceiverError,
+  errorToMessage,
+  errorToCode
+} from '../../open_payments/receiver/errors'
+import { GraphQLError } from 'graphql'
+import { GraphQLErrorCode } from '../errors'
 
 describe('Receiver Resolver', (): void => {
   let deps: IocContract<AppServices>
@@ -169,8 +175,13 @@ describe('Receiver Resolver', (): void => {
         })
         .then((query): CreateReceiverResponse => query.data?.createReceiver)
 
-      await expect(query).rejects.toThrow(ApolloError)
-      await expect(query).rejects.toThrow('unknown wallet address')
+      await expect(query).rejects.toThrow(
+        new GraphQLError(errorToMessage(ReceiverError.UnknownWalletAddress), {
+          extensions: {
+            code: errorToCode(ReceiverError.UnknownWalletAddress)
+          }
+        })
+      )
       expect(createSpy).toHaveBeenCalledWith(input)
     })
 
@@ -216,8 +227,13 @@ describe('Receiver Resolver', (): void => {
         })
         .then((query): CreateReceiverResponse => query.data?.createReceiver)
 
-      await expect(query).rejects.toThrow(ApolloError)
-      await expect(query).rejects.toThrow('Cannot create receiver')
+      await expect(query).rejects.toThrow(
+        new GraphQLError('Cannot create receiver', {
+          extensions: {
+            code: GraphQLErrorCode.InternalServerError
+          }
+        })
+      )
       expect(createSpy).toHaveBeenCalledWith(input)
     })
   })

@@ -11,7 +11,7 @@ export const isFeeError = (o: any): o is FeeError =>
   Object.values(FeeError).includes(o)
 
 export const errorToCode: {
-  [key in FeeError]: string
+  [key in FeeError]: GraphQLErrorCode
 } = {
   [FeeError.UnknownAsset]: GraphQLErrorCode.NotFound,
   [FeeError.InvalidBasisPointFee]: GraphQLErrorCode.BadUserInput,

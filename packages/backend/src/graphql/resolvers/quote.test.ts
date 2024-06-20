@@ -1,4 +1,4 @@
-import { ApolloError, gql } from '@apollo/client'
+import { gql } from '@apollo/client'
 import { v4 as uuid } from 'uuid'
 import { GraphQLError } from 'graphql'
 
@@ -22,6 +22,7 @@ import { QuoteService } from '../../open_payments/quote/service'
 import { Quote as QuoteModel } from '../../open_payments/quote/model'
 import { Amount } from '../../open_payments/amount'
 import { CreateQuoteInput, Quote, QuoteResponse } from '../generated/graphql'
+import { GraphQLErrorCode } from '../errors'
 
 describe('Quote Resolvers', (): void => {
   let deps: IocContract<AppServices>
@@ -269,7 +270,13 @@ describe('Quote Resolvers', (): void => {
           variables: { input }
         })
         .then((query): QuoteResponse => query.data?.createQuote)
-      await expect(gqlQuery).rejects.toThrow(ApolloError)
+      await expect(gqlQuery).rejects.toThrow(
+        new GraphQLError('unexpected', {
+          extensions: {
+            code: GraphQLErrorCode.InternalServerError
+          }
+        })
+      )
       expect(createSpy).toHaveBeenCalledWith({ ...input, method: 'ilp' })
     })
   })
