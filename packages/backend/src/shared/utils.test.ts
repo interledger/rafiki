@@ -1,4 +1,13 @@
+import { IocContract } from '@adonisjs/fold'
+import { Redis } from 'ioredis'
 import { isValidHttpUrl, poll, requestWithTimeout, sleep } from './utils'
+import { AppServices, AppContext } from '../app'
+import { TestContainer, createTestApp } from '../tests/app'
+import { initIocContainer } from '..'
+import { verifyApiSignature } from './utils'
+import { generateApiSignature } from '../tests/apiSignature'
+import { Config } from '../config/app'
+import { createContext } from '../tests/context'
 
 describe('utils', (): void => {
   describe('isValidHttpUrl', (): void => {
@@ -112,6 +121,141 @@ describe('utils', (): void => {
 
       await expect(pollingPromise).resolves.toBe('ok')
       expect(mockRequest.mock.calls.length).toBe(3)
+    })
+  })
+
+  describe('admin api signatures', (): void => {
+    let deps: IocContract<AppServices>
+    let appContainer: TestContainer
+    let redis: Redis
+
+    beforeAll(async (): Promise<void> => {
+      deps = initIocContainer({
+        ...Config,
+        adminApiSecret: 'test-secret'
+      })
+      appContainer = await createTestApp(deps)
+      redis = await deps.use('redis')
+    })
+
+    afterEach(async (): Promise<void> => {
+      jest.useRealTimers()
+      await redis.flushall()
+    })
+
+    afterAll(async (): Promise<void> => {
+      await appContainer.shutdown()
+    })
+
+    test('Can verify a signature', async (): Promise<void> => {
+      const requestBody = { test: 'value' }
+      const signature = generateApiSignature(
+        'test-secret',
+        Config.adminApiSignatureVersion,
+        requestBody
+      )
+      const ctx = createContext<AppContext>(
+        {
+          headers: {
+            Accept: 'application/json',
+            signature
+          },
+          url: '/graphql'
+        },
+        {},
+        appContainer.container
+      )
+      ctx.request.body = requestBody
+
+      const verified = await verifyApiSignature(ctx, {
+        ...Config,
+        adminApiSecret: 'test-secret'
+      })
+      expect(verified).toBe(true)
+    })
+
+    test('verification fails if header is not present', async (): Promise<void> => {
+      const requestBody = { test: 'value' }
+      const ctx = createContext<AppContext>(
+        {
+          headers: {
+            Accept: 'application/json'
+          },
+          url: '/graphql'
+        },
+        {},
+        appContainer.container
+      )
+      ctx.request.body = requestBody
+
+      const verified = await verifyApiSignature(ctx, {
+        ...Config,
+        adminApiSecret: 'test-secret'
+      })
+      expect(verified).toBe(false)
+    })
+
+    test('Cannot verify signature that is too old', async (): Promise<void> => {
+      const requestBody = { test: 'value' }
+      const signature = generateApiSignature(
+        'test-secret',
+        Config.adminApiSignatureVersion,
+        requestBody
+      )
+
+      const timestamp = signature.split(', ')[0].split('=')[1]
+      const now = new Date((Number(timestamp) + 60) * 1000)
+      jest.useFakeTimers({ now })
+      const ctx = createContext<AppContext>(
+        {
+          headers: {
+            Accept: 'application/json',
+            signature
+          },
+          url: '/graphql'
+        },
+        {},
+        appContainer.container
+      )
+      ctx.request.body = requestBody
+
+      const verified = await verifyApiSignature(ctx, {
+        ...Config,
+        adminApiSecret: 'test-secret'
+      })
+      expect(verified).toBe(false)
+    })
+
+    test('Cannot verify signature that has already been processed', async (): Promise<void> => {
+      const requestBody = { test: 'value' }
+      const signature = generateApiSignature(
+        'test-secret',
+        Config.adminApiSignatureVersion,
+        requestBody
+      )
+      const key = `signature:${signature}`
+      const op = redis.multi()
+      op.set(key, signature)
+      op.expire(key, Config.adminApiSignatureTtl * 1000)
+      await op.exec()
+      const ctx = createContext<AppContext>(
+        {
+          headers: {
+            Accept: 'application/json',
+            signature
+          },
+          url: '/graphql'
+        },
+        {},
+        appContainer.container
+      )
+      ctx.request.body = requestBody
+
+      const verified = await verifyApiSignature(ctx, {
+        ...Config,
+        adminApiSecret: 'test-secret'
+      })
+      expect(verified).toBe(false)
     })
   })
 })
