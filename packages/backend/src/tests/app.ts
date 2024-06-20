@@ -25,6 +25,7 @@ export interface TestContainer {
   apolloClient: ApolloClient<NormalizedCacheObject>
   connectionUrl: string
   shutdown: () => Promise<void>
+  container: IocContract<AppServices>
 }
 
 export const createTestApp = async (
@@ -116,6 +117,7 @@ export const createTestApp = async (
 
       client.stop()
       await gracefulShutdown(container, app)
-    }
+    },
+    container
   }
 }

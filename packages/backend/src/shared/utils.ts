@@ -1,9 +1,9 @@
 import { validate, version } from 'uuid'
 import { URL, type URL as URLType } from 'url'
-import { Context } from 'koa'
 import { createHmac } from 'crypto'
 import { canonicalize } from 'json-canonicalize'
 import { IAppConfig } from '../config/app'
+import { AppContext } from '../app'
 
 export function validateId(id: string): boolean {
   return validate(id) && version(id) === 4
@@ -109,27 +109,80 @@ export type UnionOmit<T, K extends keyof any> = T extends any
   ? Omit<T, K>
   : never
 
-export function verifyApiSignature(ctx: Context, config: IAppConfig): boolean {
-  const { headers, body } = ctx.request
-  const signature = headers['signature']
-  if (!signature) {
-    return false
-  }
-
-  const signatureParts = (signature as string)?.split(', ')
+function getSignatureParts(signature: string) {
+  const signatureParts = signature.split(', ')
   const timestamp = signatureParts[0].split('=')[1]
   const signatureVersionAndDigest = signatureParts[1].split('=')
   const signatureVersion = signatureVersionAndDigest[0].replace('v', '')
   const signatureDigest = signatureVersionAndDigest[1]
 
-  if (Number(signatureVersion) !== config.apiSignatureVersion) {
+  return {
+    timestamp,
+    version: signatureVersion,
+    digest: signatureDigest
+  }
+}
+
+function verifyApiSignatureDigest(
+  signature: string,
+  request: AppContext['request'],
+  config: IAppConfig
+): boolean {
+  const { body } = request
+  const {
+    version: signatureVersion,
+    digest: signatureDigest,
+    timestamp
+  } = getSignatureParts(signature as string)
+
+  if (Number(signatureVersion) !== config.adminApiSignatureVersion) {
     return false
   }
 
   const payload = `${timestamp}.${canonicalize(body)}`
-  const hmac = createHmac('sha256', config.apiSecret as string)
+  const hmac = createHmac('sha256', config.adminApiSecret as string)
   hmac.update(payload)
   const digest = hmac.digest('hex')
 
   return digest === signatureDigest
+}
+
+async function canApiSignatureBeProcessed(
+  signature: string,
+  ctx: AppContext,
+  config: IAppConfig
+): Promise<boolean> {
+  const { timestamp } = getSignatureParts(signature)
+  const signatureTime = Number(timestamp) * 1000
+  const currentTime = Date.now()
+  const ttlMilliseconds = config.adminApiSignatureTtl * 1000
+
+  if (currentTime - signatureTime > ttlMilliseconds) return false
+
+  const redis = await ctx.container.use('redis')
+  const key = `signature:${signature}`
+  if (await redis.get(key)) return false
+
+  const op = redis.multi()
+  op.set(key, signature)
+  op.expire(key, ttlMilliseconds)
+  await op.exec()
+
+  return true
+}
+
+export async function verifyApiSignature(
+  ctx: AppContext,
+  config: IAppConfig
+): Promise<boolean> {
+  const { headers } = ctx.request
+  const signature = headers['signature']
+  if (!signature) {
+    return false
+  }
+
+  if (!(await canApiSignatureBeProcessed(signature as string, ctx, config)))
+    return false
+
+  return verifyApiSignatureDigest(signature as string, ctx.request, config)
 }

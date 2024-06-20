@@ -170,6 +170,10 @@ export async function resolveReceiver(
 ): Promise<Receiver> {
   const receiver = await deps.receiverService.get(options.receiver)
   if (!receiver) {
+    deps.logger.info(
+      { receiver: options.receiver },
+      'Could not create quote. Receiver not found'
+    )
     throw QuoteError.InvalidReceiver
   }
   if (options.receiveAmount) {
@@ -187,6 +191,13 @@ export async function resolveReceiver(
       }
     }
   } else if (!options.debitAmount && !receiver.incomingAmount) {
+    deps.logger.info(
+      {
+        debitAmount: options.debitAmount,
+        incomingAmount: receiver.incomingAmount
+      },
+      'Could not create quote. debitAmount or incomingAmount required.'
+    )
     throw QuoteError.InvalidReceiver
   }
   return receiver

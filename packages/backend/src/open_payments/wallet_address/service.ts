@@ -30,18 +30,29 @@ interface Options {
   publicName?: string
 }
 
+export type WalletAddressAdditionalPropertyInput = Pick<
+  WalletAddressAdditionalProperty,
+  'fieldKey' | 'fieldValue' | 'visibleInOpenPayments'
+>
+
 export interface CreateOptions extends Options {
   url: string
   assetId: string
-  additionalProperties?: WalletAddressAdditionalProperty[]
+  additionalProperties?: WalletAddressAdditionalPropertyInput[]
 }
+
+type Status = 'ACTIVE' | 'INACTIVE'
 
 export interface UpdateOptions extends Options {
   id: string
-  status?: 'ACTIVE' | 'INACTIVE'
+  status?: Status
+  additionalProperties?: WalletAddressAdditionalPropertyInput[]
 }
 
-type UpdateInput = Omit<UpdateOptions, 'id'> & { deactivatedAt?: Date | null }
+type UpdateInput = Options & {
+  deactivatedAt?: Date | null
+  status?: Status
+}
 
 export interface WalletAddressService {
   create(options: CreateOptions): Promise<WalletAddress | WalletAddressError>
@@ -127,6 +138,18 @@ function isValidWalletAddressUrl(walletAddressUrl: string): boolean {
   }
 }
 
+function cleanAdditionalProperties(
+  additionalProperties: WalletAddressAdditionalPropertyInput[]
+): WalletAddressAdditionalPropertyInput[] {
+  return additionalProperties
+    .map((prop) => ({
+      ...prop,
+      fieldKey: prop.fieldKey.trim(),
+      fieldValue: prop.fieldValue.trim()
+    }))
+    .filter((prop) => prop.fieldKey.length > 0 && prop.fieldValue.length > 0)
+}
+
 async function createWalletAddress(
   deps: ServiceDependencies,
   options: CreateOptions
@@ -138,11 +161,7 @@ async function createWalletAddress(
   try {
     // Remove blank key/value pairs:
     const additionalProperties = options.additionalProperties
-      ? options.additionalProperties.filter((itm) => {
-          return !(
-            itm.fieldKey.trim().length == 0 || itm.fieldValue.trim().length == 0
-          )
-        })
+      ? cleanAdditionalProperties(options.additionalProperties)
       : undefined
 
     return await WalletAddress.query(deps.knex)
@@ -165,27 +184,50 @@ async function createWalletAddress(
 
 async function updateWalletAddress(
   deps: ServiceDependencies,
-  { id, status, publicName }: UpdateOptions
+  { id, status, publicName, additionalProperties }: UpdateOptions
 ): Promise<WalletAddress | WalletAddressError> {
+  const trx = await WalletAddress.startTransaction()
   try {
     const update: UpdateInput = { publicName }
-    const walletAddress = await WalletAddress.query(deps.knex)
+    const walletAddress = await WalletAddress.query(trx)
       .findById(id)
       .throwIfNotFound()
 
     if (status === 'INACTIVE' && walletAddress.isActive) {
       update.deactivatedAt = new Date()
-      await deactivateOpenIncomingPaymentsByWalletAddress(deps, id)
+      await deactivateOpenIncomingPaymentsByWalletAddress(deps, id, trx)
     } else if (status === 'ACTIVE' && !walletAddress.isActive) {
       update.deactivatedAt = null
     }
 
-    return await walletAddress
-      .$query(deps.knex)
+    const updatedWalletAddress = await walletAddress
+      .$query(trx)
       .patchAndFetch(update)
       .withGraphFetched('asset')
       .throwIfNotFound()
+
+    // Override all existing additional properties if new ones are provided
+    if (additionalProperties) {
+      const cleanedProperties = cleanAdditionalProperties(additionalProperties)
+
+      await WalletAddressAdditionalProperty.query(trx)
+        .where('walletAddressId', id)
+        .delete()
+
+      if (cleanedProperties.length > 0) {
+        await WalletAddressAdditionalProperty.query(trx).insert(
+          cleanedProperties.map((prop) => ({
+            walletAddressId: id,
+            ...prop
+          }))
+        )
+      }
+    }
+    await trx.commit()
+
+    return updatedWalletAddress
   } catch (err) {
+    await trx.rollback()
     if (err instanceof NotFoundError) {
       return WalletAddressError.UnknownWalletAddress
     }
@@ -367,12 +409,13 @@ async function createWithdrawalEvent(
 
 async function deactivateOpenIncomingPaymentsByWalletAddress(
   deps: ServiceDependencies,
-  walletAddressId: string
+  walletAddressId: string,
+  trx: TransactionOrKnex
 ) {
   const expiresAt = new Date(
     Date.now() + deps.config.walletAddressDeactivationPaymentGracePeriodMs
   )
-  await IncomingPayment.query(deps.knex)
+  await IncomingPayment.query(trx)
     .patch({ expiresAt })
     .where('walletAddressId', walletAddressId)
     .whereIn('state', [

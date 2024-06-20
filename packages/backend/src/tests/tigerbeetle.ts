@@ -33,6 +33,7 @@ export async function startTigerbeetleContainer(clusterId?: number): Promise<{
       '--replica-count=1',
       `${TIGERBEETLE_DIR}/${tigerBeetleFile}`
     ])
+    .withPrivilegedMode()
     .withWaitStrategy(
       Wait.forLogMessage(
         `info(main): 0: formatted: cluster=${tigerBeetleClusterId} replica_count=1`
@@ -40,6 +41,8 @@ export async function startTigerbeetleContainer(clusterId?: number): Promise<{
     )
     .start()
 
+  // Not logged on failure to start container.
+  // Use DEBUG=testcontainers:containers in that case
   const streamTbFormat = await tbContFormat.logs()
   if (TIGERBEETLE_CONTAINER_LOG) {
     streamTbFormat
@@ -62,6 +65,7 @@ export async function startTigerbeetleContainer(clusterId?: number): Promise<{
       '--addresses=0.0.0.0:' + TIGERBEETLE_PORT,
       `${TIGERBEETLE_DIR}/${tigerBeetleFile}`
     ])
+    .withPrivilegedMode()
     .withWaitStrategy(
       Wait.forLogMessage(
         `info(main): 0: cluster=${tigerBeetleClusterId}: listening on 0.0.0.0:${TIGERBEETLE_PORT}`
@@ -69,6 +73,8 @@ export async function startTigerbeetleContainer(clusterId?: number): Promise<{
     )
     .start()
 
+  // Not logged on failure to start container.
+  // Use DEBUG=testcontainers:containers in that case
   const streamTbStart = await tbContStart.logs()
   if (TIGERBEETLE_CONTAINER_LOG) {
     streamTbStart

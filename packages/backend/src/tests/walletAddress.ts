@@ -11,7 +11,6 @@ import { isWalletAddressError } from '../open_payments/wallet_address/errors'
 import { WalletAddress } from '../open_payments/wallet_address/model'
 import { CreateOptions as BaseCreateOptions } from '../open_payments/wallet_address/service'
 import { LiquidityAccountType } from '../accounting/service'
-import { WalletAddressAdditionalProperty } from '../open_payments/wallet_address/additional_property/model'
 
 const nock = (global as unknown as { nock: typeof import('nock') }).nock
 
@@ -19,7 +18,6 @@ interface CreateOptions extends Partial<BaseCreateOptions> {
   mockServerPort?: number
   createLiquidityAccount?: boolean
   deactivatedAt?: Date
-  additionalProperties?: WalletAddressAdditionalProperty[]
 }
 
 export type MockWalletAddress = WalletAddress & {

@@ -11,7 +11,10 @@ import {
 import { Quote } from '../../quote/model'
 import { Amount, AmountJSON, serializeAmount } from '../../amount'
 import { WebhookEvent } from '../../../webhook/model'
-import { OutgoingPayment as OpenPaymentsOutgoingPayment } from '@interledger/open-payments'
+import {
+  OutgoingPayment as OpenPaymentsOutgoingPayment,
+  OutgoingPaymentWithSpentAmounts
+} from '@interledger/open-payments'
 
 export class OutgoingPaymentGrant extends DbErrors(Model) {
   public static get modelPaths(): string[] {
@@ -29,7 +32,15 @@ export class OutgoingPayment
   public static readonly urlPath = '/outgoing-payments'
 
   static get virtualAttributes(): string[] {
-    return ['debitAmount', 'receiveAmount', 'quote', 'sentAmount', 'receiver']
+    return [
+      'debitAmount',
+      'receiveAmount',
+      'quote',
+      'sentAmount',
+      'receiver',
+      'grantSpentDebitAmount',
+      'grantSpentReceiveAmount'
+    ]
   }
 
   public state!: OutgoingPaymentState
@@ -61,6 +72,30 @@ export class OutgoingPayment
   }
   public get receiveAmount(): Amount {
     return this.quote.receiveAmount
+  }
+
+  private grantSpentReceiveAmountValue?: bigint
+  public get grantSpentReceiveAmount(): Amount {
+    return {
+      value: this.grantSpentReceiveAmountValue || BigInt(0),
+      assetCode: this.receiveAmount.assetCode,
+      assetScale: this.receiveAmount.assetScale
+    }
+  }
+  public set grantSpentReceiveAmount(amount: Amount) {
+    this.grantSpentReceiveAmountValue = amount.value
+  }
+
+  private grantSpentDebitAmountValue?: bigint
+  public get grantSpentDebitAmount(): Amount {
+    return {
+      value: this.grantSpentDebitAmountValue || BigInt(0),
+      assetCode: this.debitAmount.assetCode,
+      assetScale: this.debitAmount.assetScale
+    }
+  }
+  public set grantSpentDebitAmount(amount: Amount) {
+    this.grantSpentDebitAmountValue = amount.value
   }
 
   public metadata?: Record<string, unknown>
@@ -170,6 +205,16 @@ export class OutgoingPayment
       metadata: this.metadata ?? undefined,
       createdAt: this.createdAt.toISOString(),
       updatedAt: this.updatedAt.toISOString()
+    }
+  }
+
+  public toOpenPaymentsWithSpentAmountsType(
+    walletAddress: WalletAddress
+  ): OutgoingPaymentWithSpentAmounts {
+    return {
+      ...this.toOpenPaymentsType(walletAddress),
+      grantSpentReceiveAmount: serializeAmount(this.grantSpentReceiveAmount),
+      grantSpentDebitAmount: serializeAmount(this.grantSpentDebitAmount)
     }
   }
 }
