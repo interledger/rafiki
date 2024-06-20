@@ -730,7 +730,7 @@ importers:
         specifier: 2.0.2
         version: 2.0.2
       '@interledger/open-payments':
-        specifier: ^6.11.1
+        specifier: 6.11.1
         version: 6.11.1
       '@koa/bodyparser':
         specifier: ^5.1.1

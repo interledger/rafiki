@@ -133,7 +133,9 @@ async function createOutgoingPayment(
   }
 
   ctx.status = 201
-  ctx.body = outgoingPaymentToBody(ctx.walletAddress, outgoingPaymentOrError)
+  ctx.body = outgoingPaymentOrError.toOpenPaymentsWithSpentAmountsType(
+    ctx.walletAddress
+  )
 }
 
 async function listOutgoingPayments(
