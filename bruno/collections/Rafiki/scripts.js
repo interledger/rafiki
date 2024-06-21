@@ -147,10 +147,16 @@ const scripts = {
 
   storeTokenDetails: function () {
     const body = res.getBody()
-    bru.setEnvVar('accessToken', body?.access_token?.value)
-    bru.setEnvVar('continueToken', body.continue.access_token.value)
-    bru.setEnvVar('continueId', body.continue.uri.split('/').pop())
-    bru.setEnvVar('tokenId', body?.access_token?.manage.split('/').pop())
+
+    if (body?.access_token) {
+      bru.setEnvVar('accessToken', body.access_token.value)
+      bru.setEnvVar('tokenId', body.access_token.manage.split('/').pop())
+    }
+
+    if (body?.continue) {
+      bru.setEnvVar('continueToken', body.continue.access_token.value)
+      bru.setEnvVar('continueId', body.continue.uri.split('/').pop())
+    }
   },
 
   loadWalletAddressIdsIntoVariables: async function () {

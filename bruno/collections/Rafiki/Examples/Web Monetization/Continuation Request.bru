@@ -21,9 +21,9 @@ script:pre-request {
 }
 
 script:post-response {
-  const body = res.getBody();
-  bru.setEnvVar("accessToken", body.access_token.value);
-  bru.setEnvVar("tokenId", body.access_token.manage.split('/').pop())
+  const scripts = require('./scripts');
+  
+  scripts.storeTokenDetails();
 }
 
 tests {
