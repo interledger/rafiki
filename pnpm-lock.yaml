@@ -724,8 +724,8 @@ importers:
   test/integration:
     devDependencies:
       '@apollo/client':
-        specifier: ^3.10.5
-        version: 3.10.5(graphql@16.8.1)
+        specifier: ^3.10.6
+        version: 3.10.6(graphql@16.8.1)
       '@interledger/http-signature-utils':
         specifier: 2.0.2
         version: 2.0.2
@@ -811,8 +811,8 @@ packages:
       graphql: 16.8.1
     dev: false
 
-  /@apollo/client@3.10.5(graphql@16.8.1):
-    resolution: {integrity: sha512-bZh5wLAT8b4KdEmqnqiQeDUttnR+NJ+gDYSN8T+U0uFGN++5LO5PTwySih6kIU5ErGGGw4NHI94YdSET3uLuBA==}
+  /@apollo/client@3.10.6(graphql@16.8.1):
+    resolution: {integrity: sha512-3lLFGJtzC1/mEnK11BRf+Bf8536kBQUSB1G9yMtcRsxmY+tCKdTPzsP3fMUKy10BPIE0sDUY1pux3iMPIn2vow==}
     peerDependencies:
       graphql: ^15.0.0 || ^16.0.0
       graphql-ws: ^5.5.5
