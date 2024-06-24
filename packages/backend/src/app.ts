@@ -661,7 +661,7 @@ export class App {
     router.get(
       WALLET_ADDRESS_PATH,
       getWalletAddressUrlFromPath,
-      createSpspMiddleware(this.config.enableInterledgerPaymentPointers),
+      createSpspMiddleware(this.config.enableSpspPaymentPointers),
       createValidatorMiddleware(
         walletAddressServerSpec,
         {

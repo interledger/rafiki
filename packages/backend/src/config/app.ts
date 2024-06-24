@@ -100,7 +100,7 @@ export const Config = {
   ilpConnectorAddress: envString('ILP_CONNECTOR_ADDRESS'),
   instanceName: envString('INSTANCE_NAME'),
   streamSecret: Buffer.from(process.env.STREAM_SECRET || '', 'base64'),
-  useTigerbeetle: envBool('USE_TIGERBEETLE', false),
+  useTigerbeetle: envBool('USE_TIGERBEETLE', true),
   tigerbeetleClusterId: envInt('TIGERBEETLE_CLUSTER_ID', 0),
   tigerbeetleReplicaAddresses: process.env.TIGERBEETLE_REPLICA_ADDRESSES
     ? process.env.TIGERBEETLE_REPLICA_ADDRESSES.split(',')
@@ -166,8 +166,8 @@ export const Config = {
     'INCOMING_PAYMENT_EXPIRY_MAX_MS',
     2592000000
   ), // 30 days
-  enableInterledgerPaymentPointers: envBool(
-    'ENABLE_INTERLEDGER_PAYMENT_POINTERS',
+  enableSpspPaymentPointers: envBool(
+    'ENABLE_SPSP_PAYMENT_POINTERS',
     true
   )
 }

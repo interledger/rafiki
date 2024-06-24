@@ -56,7 +56,7 @@ describe('SPSP Middleware', (): void => {
   })
 
   test.each`
-    header                      | enableInterledgerPaymentPointers | description
+    header                      | enableSpspPaymentPointers | description
     ${'application/json'}       | ${true}                          | ${'calls next'}
     ${'application/json'}       | ${false}                         | ${'calls next'}
     ${'application/spsp4+json'} | ${true}                          | ${'calls SPSP route'}
@@ -64,19 +64,19 @@ describe('SPSP Middleware', (): void => {
     ${'*/*'}                    | ${true}                          | ${'calls next'}
     ${'*/*'}                    | ${false}                         | ${'calls next'}
   `(
-    '$description for accept header: $header and enableInterledgerPaymentPointers: $enableInterledgerPaymentPointers',
-    async ({ header, enableInterledgerPaymentPointers }): Promise<void> => {
+    '$description for accept header: $header and enableSpspPaymentPointers: $enableSpspPaymentPointers',
+    async ({ header, enableSpspPaymentPointers }): Promise<void> => {
       const spspSpy = jest
         .spyOn(spspRoutes, 'get')
         .mockResolvedValueOnce(undefined)
       ctx.headers['accept'] = header
       const spspMiddleware = createSpspMiddleware(
-        enableInterledgerPaymentPointers
+        enableSpspPaymentPointers
       )
       await expect(spspMiddleware(ctx, next)).resolves.toBeUndefined()
 
       if (
-        enableInterledgerPaymentPointers &&
+        enableSpspPaymentPointers &&
         header == 'application/spsp4+json'
       ) {
         expect(spspSpy).toHaveBeenCalledTimes(1)
