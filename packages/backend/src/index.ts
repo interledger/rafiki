@@ -511,9 +511,9 @@ export const gracefulShutdown = async (
   await redis.quit()
   redis.disconnect()
 
-  const telemetry = await container.use('telemetry')
-  if (telemetry) {
-    await telemetry.shutdown()
+  if (config.enableTelemetry) {
+    const telemetry = await container.use('telemetry')
+    telemetry?.shutdown()
   }
 }
 

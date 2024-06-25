@@ -32,9 +32,11 @@ script:pre-request {
 
 script:post-response {
   const body = res.getBody();
-  bru.setEnvVar("quoteId", body.id.split("/").pop());
-  bru.setEnvVar("quoteDebitAmount", JSON.stringify(body.debitAmount))
-  bru.setEnvVar("quoteReceiveAmount", JSON.stringify(body.receiveAmount))
+  if (body?.id) {
+    bru.setEnvVar("quoteId", body.id.split("/").pop());
+    bru.setEnvVar("quoteDebitAmount", JSON.stringify(body.debitAmount))
+    bru.setEnvVar("quoteReceiveAmount", JSON.stringify(body.receiveAmount))
+  }
   
 }
 

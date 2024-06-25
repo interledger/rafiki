@@ -1,12 +1,15 @@
 import { loadOrGenerateKey } from '@interledger/http-signature-utils'
-import * as crypto from 'crypto'
 import dotenv from 'dotenv'
 import * as fs from 'fs'
 import { ConnectionOptions } from 'tls'
 
-function envString(name: string, value: string): string {
+function envString(name: string, defaultValue?: string): string {
   const envValue = process.env[name]
-  return envValue == null ? value : envValue
+
+  if (envValue) return envValue
+  if (defaultValue) return defaultValue
+
+  throw new Error(`Environment variable ${name} must be set.`)
 }
 
 function envStringArray(name: string, value: string[]): string[] {
@@ -35,9 +38,18 @@ dotenv.config({
   path: process.env.ENV_FILE || '.env'
 })
 
+let privateKeyFileEnv
+try {
+  privateKeyFileEnv = envString('PRIVATE_KEY_FILE')
+} catch (err) {
+  /* empty */
+}
+
+const privateKeyFileValue = loadOrGenerateKey(privateKeyFileEnv)
+
 export const Config = {
   logLevel: envString('LOG_LEVEL', 'info'),
-  enableTelemetry: envBool('ENABLE_TELEMETRY', true),
+  enableTelemetry: envBool('ENABLE_TELEMETRY', false),
   livenet: envBool('LIVENET', false),
   openTelemetryCollectors: envStringArray(
     'OPEN_TELEMETRY_COLLECTOR_URLS',
@@ -59,7 +71,7 @@ export const Config = {
     86_400_000
   ),
   adminPort: envInt('ADMIN_PORT', 3001),
-  openPaymentsUrl: envString('OPEN_PAYMENTS_URL', 'http://127.0.0.1:3000'),
+  openPaymentsUrl: envString('OPEN_PAYMENTS_URL'),
   openPaymentsPort: envInt('OPEN_PAYMENTS_PORT', 3003),
   connectorPort: envInt('CONNECTOR_PORT', 3002),
   autoPeeringServerPort: envInt('AUTO_PEERING_SERVER_PORT', 3005),
@@ -80,21 +92,15 @@ export const Config = {
   trustProxy: envBool('TRUST_PROXY', false),
   redisUrl: envString('REDIS_URL', 'redis://127.0.0.1:6379'),
   redisTls: parseRedisTlsConfig(
-    envString('REDIS_TLS_CA_FILE_PATH', ''),
-    envString('REDIS_TLS_KEY_FILE_PATH', ''),
-    envString('REDIS_TLS_CERT_FILE_PATH', '')
+    process.env.REDIS_TLS_CA_FILE_PATH,
+    process.env.REDIS_TLS_KEY_FILE_PATH,
+    process.env.REDIS_TLS_CERT_FILE_PATH
   ),
-  ilpAddress: envString('ILP_ADDRESS', 'test.rafiki'),
-  ilpConnectorAddress: envString(
-    'ILP_CONNECTOR_ADDRESS',
-    'http://127.0.0.1:3002'
-  ),
-  instanceName: envString('INSTANCE_NAME', 'Rafiki'),
-  streamSecret: process.env.STREAM_SECRET
-    ? Buffer.from(process.env.STREAM_SECRET, 'base64')
-    : crypto.randomBytes(32),
-
-  useTigerbeetle: envBool('USE_TIGERBEETLE', false),
+  ilpAddress: envString('ILP_ADDRESS'),
+  ilpConnectorUrl: envString('ILP_CONNECTOR_URL'),
+  instanceName: envString('INSTANCE_NAME'),
+  streamSecret: Buffer.from(process.env.STREAM_SECRET || '', 'base64'),
+  useTigerbeetle: envBool('USE_TIGERBEETLE', true),
   tigerbeetleClusterId: envInt('TIGERBEETLE_CLUSTER_ID', 0),
   tigerbeetleReplicaAddresses: process.env.TIGERBEETLE_REPLICA_ADDRESSES
     ? process.env.TIGERBEETLE_REPLICA_ADDRESSES.split(',')
@@ -109,14 +115,8 @@ export const Config = {
   walletAddressWorkers: envInt('WALLET_ADDRESS_WORKERS', 1),
   walletAddressWorkerIdle: envInt('WALLET_ADDRESS_WORKER_IDLE', 200), // milliseconds
 
-  authServerGrantUrl: envString(
-    'AUTH_SERVER_GRANT_URL',
-    'http://127.0.0.1:3006'
-  ),
-  authServerIntrospectionUrl: envString(
-    'AUTH_SERVER_INTROSPECTION_URL',
-    'http://127.0.0.1:3007/'
-  ),
+  authServerGrantUrl: envString('AUTH_SERVER_GRANT_URL'),
+  authServerIntrospectionUrl: envString('AUTH_SERVER_INTROSPECTION_URL'),
 
   outgoingPaymentWorkers: envInt('OUTGOING_PAYMENT_WORKERS', 4),
   outgoingPaymentWorkerIdle: envInt('OUTGOING_PAYMENT_WORKER_IDLE', 200), // milliseconds
@@ -126,7 +126,7 @@ export const Config = {
 
   webhookWorkers: envInt('WEBHOOK_WORKERS', 1),
   webhookWorkerIdle: envInt('WEBHOOK_WORKER_IDLE', 200), // milliseconds
-  webhookUrl: envString('WEBHOOK_URL', 'http://127.0.0.1:4001/webhook'),
+  webhookUrl: envString('WEBHOOK_URL'),
   webhookTimeout: envInt('WEBHOOK_TIMEOUT', 2000), // milliseconds
   webhookMaxRetry: envInt('WEBHOOK_MAX_RETRY', 10),
 
@@ -142,8 +142,8 @@ export const Config = {
   adminApiSignatureVersion: envInt('API_SIGNATURE_VERSION', 1),
   adminApiSignatureTtl: envInt('ADMIN_API_SIGNATURE_TTL_SECONDS', 30),
 
-  keyId: envString('KEY_ID', 'rafiki'),
-  privateKey: loadOrGenerateKey(envString('PRIVATE_KEY_FILE', '')),
+  keyId: envString('KEY_ID'),
+  privateKey: privateKeyFileValue,
 
   graphQLIdempotencyKeyLockMs: envInt('GRAPHQL_IDEMPOTENCY_KEY_LOCK_MS', 2000),
   graphQLIdempotencyKeyTtlMs: envInt(
@@ -166,27 +166,27 @@ export const Config = {
     'INCOMING_PAYMENT_EXPIRY_MAX_MS',
     2592000000
   ), // 30 days
-  spspEnabled: envBool('ENABLE_SPSP', true)
+  enableSpspPaymentPointers: envBool('ENABLE_SPSP_PAYMENT_POINTERS', true)
 }
 
 function parseRedisTlsConfig(
-  caFile: string,
-  keyFile: string,
-  certFile: string
+  caFile?: string,
+  keyFile?: string,
+  certFile?: string
 ): ConnectionOptions | undefined {
   const options: ConnectionOptions = {}
 
   // self-signed certs.
-  if (caFile !== '') {
+  if (caFile) {
     options.ca = fs.readFileSync(caFile)
     options.rejectUnauthorized = false
   }
 
-  if (certFile !== '') {
+  if (certFile) {
     options.cert = fs.readFileSync(certFile)
   }
 
-  if (keyFile !== '') {
+  if (keyFile) {
     options.key = fs.readFileSync(keyFile)
   }
 

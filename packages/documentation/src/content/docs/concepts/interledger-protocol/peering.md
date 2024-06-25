@@ -362,14 +362,14 @@ with the input being:
 }
 ```
 
-Calling this mutation will exchange ILP peering information (`staticIlpAddress` `ilpConnectorAddress`, auth tokens) automatically. The instance being peered with will issue a default amount of liquidity, and you can begin sending payments to wallet addresses at the other Rafiki instance.
+Calling this mutation will exchange ILP peering information (`staticIlpAddress` `ilpConnectorUrl`, auth tokens) automatically. The instance being peered with will issue a default amount of liquidity, and you can begin sending payments to wallet addresses at the other Rafiki instance.
 
 ### Prerequisites
 
 Before making the `createOrUpdatePeerByUrl` request, a few `backend` environment variables about your Rafiki instance need to be configured:
 
 1. `ILP_ADDRESS`: The static ILP address of your Rafiki instance. This should already be defined in order to support ILP payments.
-2. `ILP_CONNECTOR_ADDRESS`: The full address of the ILP connector that will receive ILP packets. Locally and by default, it is on `0.0.0.0:3002`.
+2. `ILP_CONNECTOR_URL`: The full address of the ILP connector that will receive ILP packets. Locally and by default, it is on `0.0.0.0:3002`.
 3. `INSTANCE_NAME`: The name of your Rafiki instance. This is how your peer will identify you.
 
 ### How to enable auto-peering

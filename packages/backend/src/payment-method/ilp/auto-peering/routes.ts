@@ -5,7 +5,7 @@ import { AutoPeeringService } from './service'
 
 interface PeeringRequestArgs {
   staticIlpAddress: string
-  ilpConnectorAddress: string
+  ilpConnectorUrl: string
   asset: { code: string; scale: number }
   httpToken: string
   maxPacketAmount?: number

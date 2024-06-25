@@ -35,11 +35,10 @@ script:pre-request {
 
 script:post-response {
   const body = res.getBody();
-  console.log(res.status)
-  console.log(res.statusText)
-  console.log({body})
-  bru.setEnvVar("outgoingPaymentId", body.id.split("/").pop());
-  
+
+  if (body?.id) {
+    bru.setEnvVar("outgoingPaymentId", body.id.split("/").pop());
+  }
 }
 
 tests {
