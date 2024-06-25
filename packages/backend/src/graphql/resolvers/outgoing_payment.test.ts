@@ -249,6 +249,7 @@ describe('OutgoingPayment Resolvers', (): void => {
         .spyOn(outgoingPaymentService, 'get')
         .mockImplementation(async () => undefined)
 
+      expect.assertions(2)
       try {
         await appContainer.apolloClient.query({
           query: gql`
@@ -330,6 +331,7 @@ describe('OutgoingPayment Resolvers', (): void => {
         quoteId: uuid()
       }
 
+      expect.assertions(3)
       try {
         await appContainer.apolloClient
           .query({
@@ -362,7 +364,7 @@ describe('OutgoingPayment Resolvers', (): void => {
           })
         )
       }
-      await expect(createSpy).toHaveBeenCalledWith(input)
+      expect(createSpy).toHaveBeenCalledWith(input)
     })
 
     test('internal server error', async (): Promise<void> => {
@@ -375,6 +377,7 @@ describe('OutgoingPayment Resolvers', (): void => {
         quoteId: uuid()
       }
 
+      expect.assertions(3)
       try {
         await appContainer.apolloClient
           .query({
@@ -475,6 +478,7 @@ describe('OutgoingPayment Resolvers', (): void => {
         }
       }
 
+      expect.assertions(3)
       try {
         await appContainer.apolloClient
           .query({
@@ -525,6 +529,7 @@ describe('OutgoingPayment Resolvers', (): void => {
         }
       }
 
+      expect.assertions(3)
       try {
         await appContainer.apolloClient
           .query({
@@ -636,6 +641,7 @@ describe('OutgoingPayment Resolvers', (): void => {
 
         const input = { id: uuid() }
 
+        expect.assertions(3)
         try {
           await appContainer.apolloClient
             .mutate({

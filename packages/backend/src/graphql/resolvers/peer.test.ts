@@ -160,6 +160,8 @@ describe('Peer Resolvers', (): void => {
     `('Error - $error', async ({ error: testError }): Promise<void> => {
       jest.spyOn(peerService, 'create').mockResolvedValueOnce(testError)
       const peer = randomPeer()
+
+      expect.assertions(2)
       try {
         await appContainer.apolloClient
           .mutate({
@@ -203,6 +205,7 @@ describe('Peer Resolvers', (): void => {
           throw new Error('unexpected')
         })
 
+      expect.assertions(2)
       try {
         await appContainer.apolloClient
           .mutate({
@@ -332,6 +335,7 @@ describe('Peer Resolvers', (): void => {
     })
 
     test('Returns error for unknown peer', async (): Promise<void> => {
+      expect.assertions(2)
       try {
         await appContainer.apolloClient
           .query({
@@ -541,6 +545,7 @@ describe('Peer Resolvers', (): void => {
       ${PeerError.UnknownPeer}
     `('Error - $error', async ({ error: testError }): Promise<void> => {
       jest.spyOn(peerService, 'update').mockResolvedValueOnce(testError)
+      expect.assertions(2)
       try {
         await appContainer.apolloClient
           .mutate({
@@ -585,6 +590,7 @@ describe('Peer Resolvers', (): void => {
         throw new Error('unexpected')
       })
 
+      expect.assertions(2)
       try {
         await appContainer.apolloClient
           .mutate({
@@ -670,6 +676,7 @@ describe('Peer Resolvers', (): void => {
     })
 
     test('Returns error for unknown peer', async (): Promise<void> => {
+      expect.assertions(2)
       try {
         await appContainer.apolloClient
           .mutate({
@@ -710,6 +717,7 @@ describe('Peer Resolvers', (): void => {
       jest.spyOn(peerService, 'delete').mockImplementationOnce(async () => {
         throw new Error('unexpected')
       })
+      expect.assertions(2)
       try {
         await appContainer.apolloClient
           .mutate({

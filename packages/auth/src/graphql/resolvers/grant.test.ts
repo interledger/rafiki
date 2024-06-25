@@ -483,9 +483,9 @@ describe('Grant Resolvers', (): void => {
     })
 
     test('Returns error for unknown grant', async (): Promise<void> => {
-      let gqlQuery
+      expect.assertions(2)
       try {
-        gqlQuery = appContainer.apolloClient
+        await appContainer.apolloClient
           .mutate({
             mutation: gql`
               query GetGrant($id: ID!) {
@@ -515,8 +515,6 @@ describe('Grant Resolvers', (): void => {
               throw new Error('Data was empty')
             }
           })
-
-        await gqlQuery // throw error to inspect error object
       } catch (error) {
         assert.ok(error instanceof ApolloError)
         expect(error.message).toBe('No grant')
@@ -563,13 +561,13 @@ describe('Grant Resolvers', (): void => {
     })
 
     test('Returns error if grant id is not provided', async (): Promise<void> => {
-      let gqlQuery
+      expect.assertions(2)
       try {
         const input: RevokeGrantInput = {
           grantId: ''
         }
 
-        gqlQuery = appContainer.apolloClient
+        await appContainer.apolloClient
           .mutate({
             mutation: gql`
               mutation revokeGrant($input: RevokeGrantInput!) {
@@ -589,8 +587,6 @@ describe('Grant Resolvers', (): void => {
               throw new Error('Data was empty')
             }
           })
-
-        await gqlQuery // throw error to inspect error object
       } catch (error) {
         assert.ok(error instanceof ApolloError)
         expect(error.message).toBe('Grant id is not provided')
@@ -601,13 +597,13 @@ describe('Grant Resolvers', (): void => {
     })
 
     test('Returns error if id does not exist', async (): Promise<void> => {
-      let gqlQuery
+      expect.assertions(2)
       try {
         const input: RevokeGrantInput = {
           grantId: uuid()
         }
 
-        gqlQuery = appContainer.apolloClient
+        await appContainer.apolloClient
           .mutate({
             mutation: gql`
               mutation revokeGrant($input: RevokeGrantInput!) {
@@ -627,8 +623,6 @@ describe('Grant Resolvers', (): void => {
               throw new Error('Data was empty')
             }
           })
-
-        await gqlQuery // throw error to inspect error object
       } catch (error) {
         assert.ok(error instanceof ApolloError)
         expect(error.message).toBe('Revoke grant was not successful')
@@ -639,13 +633,14 @@ describe('Grant Resolvers', (): void => {
     })
 
     test('Returns error if grant id is in invalid format', async (): Promise<void> => {
-      let gqlQuery
+      expect.assertions(1)
+
       try {
         const input: RevokeGrantInput = {
           grantId: '123'
         }
 
-        gqlQuery = appContainer.apolloClient
+        await appContainer.apolloClient
           .mutate({
             mutation: gql`
               mutation revokeGrant($input: RevokeGrantInput!) {
@@ -665,8 +660,6 @@ describe('Grant Resolvers', (): void => {
               throw new Error('Data was empty')
             }
           })
-
-        await gqlQuery // throw error to inspect error object
       } catch (error) {
         assert.ok(error instanceof ApolloError)
         expect(error.graphQLErrors[0].extensions.code).toEqual(

@@ -104,6 +104,7 @@ describe('Liquidity Resolvers', (): void => {
     })
 
     test('Returns an error for invalid id', async (): Promise<void> => {
+      let error
       try {
         await appContainer.apolloClient
           .mutate({
@@ -132,20 +133,22 @@ describe('Liquidity Resolvers', (): void => {
               throw new Error('Data was empty')
             }
           })
-      } catch (error) {
-        expect(error).toBeInstanceOf(ApolloError)
-        expect((error as ApolloError).graphQLErrors).toContainEqual(
-          expect.objectContaining({
-            message: 'Invalid transfer id',
-            extensions: expect.objectContaining({
-              code: GraphQLErrorCode.BadUserInput
-            })
-          })
-        )
+      } catch (err) {
+        error = err
       }
+      expect(error).toBeInstanceOf(ApolloError)
+      expect((error as ApolloError).graphQLErrors).toContainEqual(
+        expect.objectContaining({
+          message: 'Invalid transfer id',
+          extensions: expect.objectContaining({
+            code: GraphQLErrorCode.BadUserInput
+          })
+        })
+      )
     })
 
     test('Returns an error for unknown peer', async (): Promise<void> => {
+      let error
       try {
         await appContainer.apolloClient
           .mutate({
@@ -174,17 +177,18 @@ describe('Liquidity Resolvers', (): void => {
               throw new Error('Data was empty')
             }
           })
-      } catch (error) {
-        expect(error).toBeInstanceOf(ApolloError)
-        expect((error as ApolloError).graphQLErrors).toContainEqual(
-          expect.objectContaining({
-            message: 'unknown peer',
-            extensions: expect.objectContaining({
-              code: GraphQLErrorCode.NotFound
-            })
-          })
-        )
+      } catch (err) {
+        error = err
       }
+      expect(error).toBeInstanceOf(ApolloError)
+      expect((error as ApolloError).graphQLErrors).toContainEqual(
+        expect.objectContaining({
+          message: 'unknown peer',
+          extensions: expect.objectContaining({
+            code: GraphQLErrorCode.NotFound
+          })
+        })
+      )
     })
 
     test('Returns an error for existing transfer', async (): Promise<void> => {
@@ -196,6 +200,8 @@ describe('Liquidity Resolvers', (): void => {
           amount: BigInt(100)
         })
       ).resolves.toBeUndefined()
+
+      let error
       try {
         await appContainer.apolloClient
           .mutate({
@@ -224,20 +230,23 @@ describe('Liquidity Resolvers', (): void => {
               throw new Error('Data was empty')
             }
           })
-      } catch (error) {
-        expect(error).toBeInstanceOf(ApolloError)
-        expect((error as ApolloError).graphQLErrors).toContainEqual(
-          expect.objectContaining({
-            message: 'Transfer already exists',
-            extensions: expect.objectContaining({
-              code: GraphQLErrorCode.Duplicate
-            })
-          })
-        )
+      } catch (err) {
+        error = err
       }
+
+      expect(error).toBeInstanceOf(ApolloError)
+      expect((error as ApolloError).graphQLErrors).toContainEqual(
+        expect.objectContaining({
+          message: 'Transfer already exists',
+          extensions: expect.objectContaining({
+            code: GraphQLErrorCode.Duplicate
+          })
+        })
+      )
     })
 
     test('Returns an error for zero amount', async (): Promise<void> => {
+      let error
       try {
         await appContainer.apolloClient
           .mutate({
@@ -266,17 +275,19 @@ describe('Liquidity Resolvers', (): void => {
               throw new Error('Data was empty')
             }
           })
-      } catch (error) {
-        expect(error).toBeInstanceOf(ApolloError)
-        expect((error as ApolloError).graphQLErrors).toContainEqual(
-          expect.objectContaining({
-            message: 'Transfer amount is zero',
-            extensions: expect.objectContaining({
-              code: GraphQLErrorCode.Forbidden
-            })
-          })
-        )
+      } catch (err) {
+        error = err
       }
+
+      expect(error).toBeInstanceOf(ApolloError)
+      expect((error as ApolloError).graphQLErrors).toContainEqual(
+        expect.objectContaining({
+          message: 'Transfer amount is zero',
+          extensions: expect.objectContaining({
+            code: GraphQLErrorCode.Forbidden
+          })
+        })
+      )
     })
   })
 
@@ -321,6 +332,7 @@ describe('Liquidity Resolvers', (): void => {
     })
 
     test('Returns an error for invalid id', async (): Promise<void> => {
+      let error
       try {
         await appContainer.apolloClient
           .mutate({
@@ -349,20 +361,22 @@ describe('Liquidity Resolvers', (): void => {
               throw new Error('Data was empty')
             }
           })
-      } catch (error) {
-        expect(error).toBeInstanceOf(ApolloError)
-        expect((error as ApolloError).graphQLErrors).toContainEqual(
-          expect.objectContaining({
-            message: 'Invalid transfer id',
-            extensions: expect.objectContaining({
-              code: GraphQLErrorCode.BadUserInput
-            })
-          })
-        )
+      } catch (err) {
+        error = err
       }
+      expect(error).toBeInstanceOf(ApolloError)
+      expect((error as ApolloError).graphQLErrors).toContainEqual(
+        expect.objectContaining({
+          message: 'Invalid transfer id',
+          extensions: expect.objectContaining({
+            code: GraphQLErrorCode.BadUserInput
+          })
+        })
+      )
     })
 
     test('Returns an error for unknown asset', async (): Promise<void> => {
+      let error
       try {
         await appContainer.apolloClient
           .mutate({
@@ -391,17 +405,18 @@ describe('Liquidity Resolvers', (): void => {
               throw new Error('Data was empty')
             }
           })
-      } catch (error) {
-        expect(error).toBeInstanceOf(ApolloError)
-        expect((error as ApolloError).graphQLErrors).toContainEqual(
-          expect.objectContaining({
-            message: 'Unknown asset',
-            extensions: expect.objectContaining({
-              code: GraphQLErrorCode.NotFound
-            })
-          })
-        )
+      } catch (err) {
+        error = err
       }
+      expect(error).toBeInstanceOf(ApolloError)
+      expect((error as ApolloError).graphQLErrors).toContainEqual(
+        expect.objectContaining({
+          message: 'Unknown asset',
+          extensions: expect.objectContaining({
+            code: GraphQLErrorCode.NotFound
+          })
+        })
+      )
     })
 
     test('Returns an error for existing transfer', async (): Promise<void> => {
@@ -413,6 +428,8 @@ describe('Liquidity Resolvers', (): void => {
           amount: BigInt(100)
         })
       ).resolves.toBeUndefined()
+
+      let error
       try {
         await appContainer.apolloClient
           .mutate({
@@ -441,20 +458,22 @@ describe('Liquidity Resolvers', (): void => {
               throw new Error('Data was empty')
             }
           })
-      } catch (error) {
-        expect(error).toBeInstanceOf(ApolloError)
-        expect((error as ApolloError).graphQLErrors).toContainEqual(
-          expect.objectContaining({
-            message: 'Transfer already exists',
-            extensions: expect.objectContaining({
-              code: GraphQLErrorCode.Duplicate
-            })
-          })
-        )
+      } catch (err) {
+        error = err
       }
+      expect(error).toBeInstanceOf(ApolloError)
+      expect((error as ApolloError).graphQLErrors).toContainEqual(
+        expect.objectContaining({
+          message: 'Transfer already exists',
+          extensions: expect.objectContaining({
+            code: GraphQLErrorCode.Duplicate
+          })
+        })
+      )
     })
 
     test('Returns an error for zero amount', async (): Promise<void> => {
+      let error
       try {
         await appContainer.apolloClient
           .mutate({
@@ -483,17 +502,18 @@ describe('Liquidity Resolvers', (): void => {
               throw new Error('Data was empty')
             }
           })
-      } catch (error) {
-        expect(error).toBeInstanceOf(ApolloError)
-        expect((error as ApolloError).graphQLErrors).toContainEqual(
-          expect.objectContaining({
-            message: 'Transfer amount is zero',
-            extensions: expect.objectContaining({
-              code: GraphQLErrorCode.Forbidden
-            })
-          })
-        )
+      } catch (err) {
+        error = err
       }
+      expect(error).toBeInstanceOf(ApolloError)
+      expect((error as ApolloError).graphQLErrors).toContainEqual(
+        expect.objectContaining({
+          message: 'Transfer amount is zero',
+          extensions: expect.objectContaining({
+            code: GraphQLErrorCode.Forbidden
+          })
+        })
+      )
     })
   })
 
@@ -547,6 +567,7 @@ describe('Liquidity Resolvers', (): void => {
     })
 
     test('Returns an error for unknown peer', async (): Promise<void> => {
+      let error
       try {
         await appContainer.apolloClient
           .mutate({
@@ -576,20 +597,22 @@ describe('Liquidity Resolvers', (): void => {
               throw new Error('Data was empty')
             }
           })
-      } catch (error) {
-        expect(error).toBeInstanceOf(ApolloError)
-        expect((error as ApolloError).graphQLErrors).toContainEqual(
-          expect.objectContaining({
-            message: 'Unknown peer',
-            extensions: expect.objectContaining({
-              code: GraphQLErrorCode.NotFound
-            })
-          })
-        )
+      } catch (err) {
+        error = err
       }
+      expect(error).toBeInstanceOf(ApolloError)
+      expect((error as ApolloError).graphQLErrors).toContainEqual(
+        expect.objectContaining({
+          message: 'Unknown peer',
+          extensions: expect.objectContaining({
+            code: GraphQLErrorCode.NotFound
+          })
+        })
+      )
     })
 
     test('Returns an error for invalid id', async (): Promise<void> => {
+      let error
       try {
         await appContainer.apolloClient
           .mutate({
@@ -619,17 +642,18 @@ describe('Liquidity Resolvers', (): void => {
               throw new Error('Data was empty')
             }
           })
-      } catch (error) {
-        expect(error).toBeInstanceOf(ApolloError)
-        expect((error as ApolloError).graphQLErrors).toContainEqual(
-          expect.objectContaining({
-            message: 'Invalid transfer id',
-            extensions: expect.objectContaining({
-              code: GraphQLErrorCode.BadUserInput
-            })
-          })
-        )
+      } catch (err) {
+        error = err
       }
+      expect(error).toBeInstanceOf(ApolloError)
+      expect((error as ApolloError).graphQLErrors).toContainEqual(
+        expect.objectContaining({
+          message: 'Invalid transfer id',
+          extensions: expect.objectContaining({
+            code: GraphQLErrorCode.BadUserInput
+          })
+        })
+      )
     })
 
     test('Returns an error for existing transfer', async (): Promise<void> => {
@@ -641,6 +665,8 @@ describe('Liquidity Resolvers', (): void => {
           amount: 10n
         })
       ).resolves.toBeUndefined()
+
+      let error
       try {
         await appContainer.apolloClient
           .mutate({
@@ -670,17 +696,18 @@ describe('Liquidity Resolvers', (): void => {
               throw new Error('Data was empty')
             }
           })
-      } catch (error) {
-        expect(error).toBeInstanceOf(ApolloError)
-        expect((error as ApolloError).graphQLErrors).toContainEqual(
-          expect.objectContaining({
-            message: 'Transfer already exists',
-            extensions: expect.objectContaining({
-              code: GraphQLErrorCode.Duplicate
-            })
-          })
-        )
+      } catch (err) {
+        error = err
       }
+      expect(error).toBeInstanceOf(ApolloError)
+      expect((error as ApolloError).graphQLErrors).toContainEqual(
+        expect.objectContaining({
+          message: 'Transfer already exists',
+          extensions: expect.objectContaining({
+            code: GraphQLErrorCode.Duplicate
+          })
+        })
+      )
     })
 
     test.each`
@@ -690,6 +717,7 @@ describe('Liquidity Resolvers', (): void => {
     `(
       'Returns error for $code',
       async ({ amount, message, code }): Promise<void> => {
+        let error
         try {
           await appContainer.apolloClient
             .mutate({
@@ -719,17 +747,18 @@ describe('Liquidity Resolvers', (): void => {
                 throw new Error('Data was empty')
               }
             })
-        } catch (error) {
-          expect(error).toBeInstanceOf(ApolloError)
-          expect((error as ApolloError).graphQLErrors).toContainEqual(
-            expect.objectContaining({
-              message,
-              extensions: expect.objectContaining({
-                code
-              })
-            })
-          )
+        } catch (err) {
+          error = err
         }
+        expect(error).toBeInstanceOf(ApolloError)
+        expect((error as ApolloError).graphQLErrors).toContainEqual(
+          expect.objectContaining({
+            message,
+            extensions: expect.objectContaining({
+              code
+            })
+          })
+        )
       }
     )
   })
@@ -784,6 +813,7 @@ describe('Liquidity Resolvers', (): void => {
     })
 
     test('Returns an error for unknown asset', async (): Promise<void> => {
+      let error
       try {
         await appContainer.apolloClient
           .mutate({
@@ -813,20 +843,22 @@ describe('Liquidity Resolvers', (): void => {
               throw new Error('Data was empty')
             }
           })
-      } catch (error) {
-        expect(error).toBeInstanceOf(ApolloError)
-        expect((error as ApolloError).graphQLErrors).toContainEqual(
-          expect.objectContaining({
-            message: 'Unknown asset',
-            extensions: expect.objectContaining({
-              code: GraphQLErrorCode.NotFound
-            })
-          })
-        )
+      } catch (err) {
+        error = err
       }
+      expect(error).toBeInstanceOf(ApolloError)
+      expect((error as ApolloError).graphQLErrors).toContainEqual(
+        expect.objectContaining({
+          message: 'Unknown asset',
+          extensions: expect.objectContaining({
+            code: GraphQLErrorCode.NotFound
+          })
+        })
+      )
     })
 
     test('Returns an error for invalid id', async (): Promise<void> => {
+      let error
       try {
         await appContainer.apolloClient
           .mutate({
@@ -856,17 +888,18 @@ describe('Liquidity Resolvers', (): void => {
               throw new Error('Data was empty')
             }
           })
-      } catch (error) {
-        expect(error).toBeInstanceOf(ApolloError)
-        expect((error as ApolloError).graphQLErrors).toContainEqual(
-          expect.objectContaining({
-            message: 'Invalid transfer id',
-            extensions: expect.objectContaining({
-              code: GraphQLErrorCode.BadUserInput
-            })
-          })
-        )
+      } catch (err) {
+        error = err
       }
+      expect(error).toBeInstanceOf(ApolloError)
+      expect((error as ApolloError).graphQLErrors).toContainEqual(
+        expect.objectContaining({
+          message: 'Invalid transfer id',
+          extensions: expect.objectContaining({
+            code: GraphQLErrorCode.BadUserInput
+          })
+        })
+      )
     })
 
     test('Returns an error for existing transfer', async (): Promise<void> => {
@@ -878,6 +911,8 @@ describe('Liquidity Resolvers', (): void => {
           amount: BigInt(10)
         })
       ).resolves.toBeUndefined()
+
+      let error
       try {
         await appContainer.apolloClient
           .mutate({
@@ -907,17 +942,18 @@ describe('Liquidity Resolvers', (): void => {
               throw new Error('Data was empty')
             }
           })
-      } catch (error) {
-        expect(error).toBeInstanceOf(ApolloError)
-        expect((error as ApolloError).graphQLErrors).toContainEqual(
-          expect.objectContaining({
-            message: 'Transfer already exists',
-            extensions: expect.objectContaining({
-              code: GraphQLErrorCode.Duplicate
-            })
-          })
-        )
+      } catch (err) {
+        error = err
       }
+      expect(error).toBeInstanceOf(ApolloError)
+      expect((error as ApolloError).graphQLErrors).toContainEqual(
+        expect.objectContaining({
+          message: 'Transfer already exists',
+          extensions: expect.objectContaining({
+            code: GraphQLErrorCode.Duplicate
+          })
+        })
+      )
     })
 
     test.each`
@@ -927,6 +963,7 @@ describe('Liquidity Resolvers', (): void => {
     `(
       'Returns error for $error',
       async ({ amount, code, message }): Promise<void> => {
+        let error
         try {
           await appContainer.apolloClient
             .mutate({
@@ -956,17 +993,18 @@ describe('Liquidity Resolvers', (): void => {
                 throw new Error('Data was empty')
               }
             })
-        } catch (error) {
-          expect(error).toBeInstanceOf(ApolloError)
-          expect((error as ApolloError).graphQLErrors).toContainEqual(
-            expect.objectContaining({
-              message,
-              extensions: expect.objectContaining({
-                code
-              })
-            })
-          )
+        } catch (err) {
+          error = err
         }
+        expect(error).toBeInstanceOf(ApolloError)
+        expect((error as ApolloError).graphQLErrors).toContainEqual(
+          expect.objectContaining({
+            message,
+            extensions: expect.objectContaining({
+              code
+            })
+          })
+        )
       }
     )
   })
@@ -1035,6 +1073,7 @@ describe('Liquidity Resolvers', (): void => {
     })
 
     test('Returns an error for unknown wallet address', async (): Promise<void> => {
+      let error
       try {
         await appContainer.apolloClient
           .mutate({
@@ -1065,20 +1104,22 @@ describe('Liquidity Resolvers', (): void => {
               throw new Error('Data was empty')
             }
           })
-      } catch (error) {
-        expect(error).toBeInstanceOf(ApolloError)
-        expect((error as ApolloError).graphQLErrors).toContainEqual(
-          expect.objectContaining({
-            message: 'Unknown wallet address',
-            extensions: expect.objectContaining({
-              code: GraphQLErrorCode.NotFound
-            })
-          })
-        )
+      } catch (err) {
+        error = err
       }
+      expect(error).toBeInstanceOf(ApolloError)
+      expect((error as ApolloError).graphQLErrors).toContainEqual(
+        expect.objectContaining({
+          message: 'Unknown wallet address',
+          extensions: expect.objectContaining({
+            code: GraphQLErrorCode.NotFound
+          })
+        })
+      )
     })
 
     test('Returns an error for invalid id', async (): Promise<void> => {
+      let error
       try {
         await appContainer.apolloClient
           .mutate({
@@ -1109,17 +1150,18 @@ describe('Liquidity Resolvers', (): void => {
               throw new Error('Data was empty')
             }
           })
-      } catch (error) {
-        expect(error).toBeInstanceOf(ApolloError)
-        expect((error as ApolloError).graphQLErrors).toContainEqual(
-          expect.objectContaining({
-            message: 'Invalid transfer id',
-            extensions: expect.objectContaining({
-              code: GraphQLErrorCode.BadUserInput
-            })
-          })
-        )
+      } catch (err) {
+        error = err
       }
+      expect(error).toBeInstanceOf(ApolloError)
+      expect((error as ApolloError).graphQLErrors).toContainEqual(
+        expect.objectContaining({
+          message: 'Invalid transfer id',
+          extensions: expect.objectContaining({
+            code: GraphQLErrorCode.BadUserInput
+          })
+        })
+      )
     })
 
     test('Returns an error for existing transfer', async (): Promise<void> => {
@@ -1131,6 +1173,8 @@ describe('Liquidity Resolvers', (): void => {
           amount: BigInt(10)
         })
       ).resolves.toBeUndefined()
+
+      let error
       try {
         await appContainer.apolloClient
           .mutate({
@@ -1161,17 +1205,18 @@ describe('Liquidity Resolvers', (): void => {
               throw new Error('Data was empty')
             }
           })
-      } catch (error) {
-        expect(error).toBeInstanceOf(ApolloError)
-        expect((error as ApolloError).graphQLErrors).toContainEqual(
-          expect.objectContaining({
-            message: 'Transfer already exists',
-            extensions: expect.objectContaining({
-              code: GraphQLErrorCode.Duplicate
-            })
-          })
-        )
+      } catch (err) {
+        error = err
       }
+      expect(error).toBeInstanceOf(ApolloError)
+      expect((error as ApolloError).graphQLErrors).toContainEqual(
+        expect.objectContaining({
+          message: 'Transfer already exists',
+          extensions: expect.objectContaining({
+            code: GraphQLErrorCode.Duplicate
+          })
+        })
+      )
     })
 
     test('Returns an error for empty balance', async (): Promise<void> => {
@@ -1183,6 +1228,8 @@ describe('Liquidity Resolvers', (): void => {
           timeout: 0
         })
       ).resolves.toBeUndefined()
+
+      let error
       try {
         await appContainer.apolloClient
           .mutate({
@@ -1213,17 +1260,18 @@ describe('Liquidity Resolvers', (): void => {
               throw new Error('Data was empty')
             }
           })
-      } catch (error) {
-        expect(error).toBeInstanceOf(ApolloError)
-        expect((error as ApolloError).graphQLErrors).toContainEqual(
-          expect.objectContaining({
-            message: 'Transfer amount is zero',
-            extensions: expect.objectContaining({
-              code: GraphQLErrorCode.Forbidden
-            })
-          })
-        )
+      } catch (err) {
+        error = err
       }
+      expect(error).toBeInstanceOf(ApolloError)
+      expect((error as ApolloError).graphQLErrors).toContainEqual(
+        expect.objectContaining({
+          message: 'Transfer amount is zero',
+          extensions: expect.objectContaining({
+            code: GraphQLErrorCode.Forbidden
+          })
+        })
+      )
     })
   })
 
@@ -1284,6 +1332,7 @@ describe('Liquidity Resolvers', (): void => {
       })
 
       test("Can't post non-existent withdrawal", async (): Promise<void> => {
+        let error
         try {
           await appContainer.apolloClient
             .mutate({
@@ -1310,20 +1359,22 @@ describe('Liquidity Resolvers', (): void => {
                 throw new Error('Data was empty')
               }
             })
-        } catch (error) {
-          expect(error).toBeInstanceOf(ApolloError)
-          expect((error as ApolloError).graphQLErrors).toContainEqual(
-            expect.objectContaining({
-              message: 'Unknown transfer',
-              extensions: expect.objectContaining({
-                code: GraphQLErrorCode.NotFound
-              })
-            })
-          )
+        } catch (err) {
+          error = err
         }
+        expect(error).toBeInstanceOf(ApolloError)
+        expect((error as ApolloError).graphQLErrors).toContainEqual(
+          expect.objectContaining({
+            message: 'Unknown transfer',
+            extensions: expect.objectContaining({
+              code: GraphQLErrorCode.NotFound
+            })
+          })
+        )
       })
 
       test("Can't post invalid withdrawal id", async (): Promise<void> => {
+        let error
         try {
           await appContainer.apolloClient
             .mutate({
@@ -1350,23 +1401,26 @@ describe('Liquidity Resolvers', (): void => {
                 throw new Error('Data was empty')
               }
             })
-        } catch (error) {
-          expect(error).toBeInstanceOf(ApolloError)
-          expect((error as ApolloError).graphQLErrors).toContainEqual(
-            expect.objectContaining({
-              message: 'Invalid transfer id',
-              extensions: expect.objectContaining({
-                code: GraphQLErrorCode.BadUserInput
-              })
-            })
-          )
+        } catch (err) {
+          error = err
         }
+        expect(error).toBeInstanceOf(ApolloError)
+        expect((error as ApolloError).graphQLErrors).toContainEqual(
+          expect.objectContaining({
+            message: 'Invalid transfer id',
+            extensions: expect.objectContaining({
+              code: GraphQLErrorCode.BadUserInput
+            })
+          })
+        )
       })
 
       test("Can't post posted withdrawal", async (): Promise<void> => {
         await expect(
           accountingService.postWithdrawal(withdrawalId)
         ).resolves.toBeUndefined()
+
+        let error
         try {
           await appContainer.apolloClient
             .mutate({
@@ -1393,23 +1447,26 @@ describe('Liquidity Resolvers', (): void => {
                 throw new Error('Data was empty')
               }
             })
-        } catch (error) {
-          expect(error).toBeInstanceOf(ApolloError)
-          expect((error as ApolloError).graphQLErrors).toContainEqual(
-            expect.objectContaining({
-              message: 'Transfer already posted',
-              extensions: expect.objectContaining({
-                code: GraphQLErrorCode.Conflict
-              })
-            })
-          )
+        } catch (err) {
+          error = err
         }
+        expect(error).toBeInstanceOf(ApolloError)
+        expect((error as ApolloError).graphQLErrors).toContainEqual(
+          expect.objectContaining({
+            message: 'Transfer already posted',
+            extensions: expect.objectContaining({
+              code: GraphQLErrorCode.Conflict
+            })
+          })
+        )
       })
 
       test("Can't post voided withdrawal", async (): Promise<void> => {
         await expect(
           accountingService.voidWithdrawal(withdrawalId)
         ).resolves.toBeUndefined()
+
+        let error
         try {
           await appContainer.apolloClient
             .mutate({
@@ -1436,17 +1493,18 @@ describe('Liquidity Resolvers', (): void => {
                 throw new Error('Data was empty')
               }
             })
-        } catch (error) {
-          expect(error).toBeInstanceOf(ApolloError)
-          expect((error as ApolloError).graphQLErrors).toContainEqual(
-            expect.objectContaining({
-              message: 'Transfer already voided',
-              extensions: expect.objectContaining({
-                code: GraphQLErrorCode.Conflict
-              })
-            })
-          )
+        } catch (err) {
+          error = err
         }
+        expect(error).toBeInstanceOf(ApolloError)
+        expect((error as ApolloError).graphQLErrors).toContainEqual(
+          expect.objectContaining({
+            message: 'Transfer already voided',
+            extensions: expect.objectContaining({
+              code: GraphQLErrorCode.Conflict
+            })
+          })
+        )
       })
     }
   )
@@ -1508,6 +1566,7 @@ describe('Liquidity Resolvers', (): void => {
       })
 
       test("Can't void non-existent withdrawal", async (): Promise<void> => {
+        let error
         try {
           await appContainer.apolloClient
             .mutate({
@@ -1534,20 +1593,22 @@ describe('Liquidity Resolvers', (): void => {
                 throw new Error('Data was empty')
               }
             })
-        } catch (error) {
-          expect(error).toBeInstanceOf(ApolloError)
-          expect((error as ApolloError).graphQLErrors).toContainEqual(
-            expect.objectContaining({
-              message: 'Unknown transfer',
-              extensions: expect.objectContaining({
-                code: GraphQLErrorCode.NotFound
-              })
-            })
-          )
+        } catch (err) {
+          error = err
         }
+        expect(error).toBeInstanceOf(ApolloError)
+        expect((error as ApolloError).graphQLErrors).toContainEqual(
+          expect.objectContaining({
+            message: 'Unknown transfer',
+            extensions: expect.objectContaining({
+              code: GraphQLErrorCode.NotFound
+            })
+          })
+        )
       })
 
       test("Can't void invalid withdrawal id", async (): Promise<void> => {
+        let error
         try {
           await appContainer.apolloClient
             .mutate({
@@ -1574,23 +1635,25 @@ describe('Liquidity Resolvers', (): void => {
                 throw new Error('Data was empty')
               }
             })
-        } catch (error) {
-          expect(error).toBeInstanceOf(ApolloError)
-          expect((error as ApolloError).graphQLErrors).toContainEqual(
-            expect.objectContaining({
-              message: 'Invalid transfer id',
-              extensions: expect.objectContaining({
-                code: GraphQLErrorCode.BadUserInput
-              })
-            })
-          )
+        } catch (err) {
+          error = err
         }
+        expect(error).toBeInstanceOf(ApolloError)
+        expect((error as ApolloError).graphQLErrors).toContainEqual(
+          expect.objectContaining({
+            message: 'Invalid transfer id',
+            extensions: expect.objectContaining({
+              code: GraphQLErrorCode.BadUserInput
+            })
+          })
+        )
       })
 
       test("Can't void posted withdrawal", async (): Promise<void> => {
         await expect(
           accountingService.postWithdrawal(withdrawalId)
         ).resolves.toBeUndefined()
+        let error
         try {
           await appContainer.apolloClient
             .mutate({
@@ -1617,23 +1680,25 @@ describe('Liquidity Resolvers', (): void => {
                 throw new Error('Data was empty')
               }
             })
-        } catch (error) {
-          expect(error).toBeInstanceOf(ApolloError)
-          expect((error as ApolloError).graphQLErrors).toContainEqual(
-            expect.objectContaining({
-              message: 'Transfer already posted',
-              extensions: expect.objectContaining({
-                code: GraphQLErrorCode.Conflict
-              })
-            })
-          )
+        } catch (err) {
+          error = err
         }
+        expect(error).toBeInstanceOf(ApolloError)
+        expect((error as ApolloError).graphQLErrors).toContainEqual(
+          expect.objectContaining({
+            message: 'Transfer already posted',
+            extensions: expect.objectContaining({
+              code: GraphQLErrorCode.Conflict
+            })
+          })
+        )
       })
 
       test("Can't void voided withdrawal", async (): Promise<void> => {
         await expect(
           accountingService.voidWithdrawal(withdrawalId)
         ).resolves.toBeUndefined()
+        let error
         try {
           await appContainer.apolloClient
             .mutate({
@@ -1660,17 +1725,18 @@ describe('Liquidity Resolvers', (): void => {
                 throw new Error('Data was empty')
               }
             })
-        } catch (error) {
-          expect(error).toBeInstanceOf(ApolloError)
-          expect((error as ApolloError).graphQLErrors).toContainEqual(
-            expect.objectContaining({
-              message: 'Transfer already voided',
-              extensions: expect.objectContaining({
-                code: GraphQLErrorCode.Conflict
-              })
-            })
-          )
+        } catch (err) {
+          error = err
         }
+        expect(error).toBeInstanceOf(ApolloError)
+        expect((error as ApolloError).graphQLErrors).toContainEqual(
+          expect.objectContaining({
+            message: 'Transfer already voided',
+            extensions: expect.objectContaining({
+              code: GraphQLErrorCode.Conflict
+            })
+          })
+        )
       })
     }
   )
@@ -1768,6 +1834,7 @@ describe('Liquidity Resolvers', (): void => {
           })
 
           test("Can't deposit for non-existent webhook event id", async (): Promise<void> => {
+            let error
             try {
               await appContainer.apolloClient
                 .mutate({
@@ -1794,17 +1861,18 @@ describe('Liquidity Resolvers', (): void => {
                     throw new Error('Data was empty')
                   }
                 })
-            } catch (error) {
-              expect(error).toBeInstanceOf(ApolloError)
-              expect((error as ApolloError).graphQLErrors).toContainEqual(
-                expect.objectContaining({
-                  message: 'Invalid transfer id',
-                  extensions: expect.objectContaining({
-                    code: GraphQLErrorCode.BadUserInput
-                  })
-                })
-              )
+            } catch (err) {
+              error = err
             }
+            expect(error).toBeInstanceOf(ApolloError)
+            expect((error as ApolloError).graphQLErrors).toContainEqual(
+              expect.objectContaining({
+                message: 'Invalid transfer id',
+                extensions: expect.objectContaining({
+                  code: GraphQLErrorCode.BadUserInput
+                })
+              })
+            )
           })
 
           test('Returns an error for existing transfer', async (): Promise<void> => {
@@ -1815,6 +1883,7 @@ describe('Liquidity Resolvers', (): void => {
                 amount: BigInt(100)
               })
             ).resolves.toBeUndefined()
+            let error
             try {
               await appContainer.apolloClient
                 .mutate({
@@ -1841,17 +1910,18 @@ describe('Liquidity Resolvers', (): void => {
                     throw new Error('Data was empty')
                   }
                 })
-            } catch (error) {
-              expect(error).toBeInstanceOf(ApolloError)
-              expect((error as ApolloError).graphQLErrors).toContainEqual(
-                expect.objectContaining({
-                  message: 'Transfer already exists',
-                  extensions: expect.objectContaining({
-                    code: GraphQLErrorCode.Duplicate
-                  })
-                })
-              )
+            } catch (err) {
+              error = err
             }
+            expect(error).toBeInstanceOf(ApolloError)
+            expect((error as ApolloError).graphQLErrors).toContainEqual(
+              expect.objectContaining({
+                message: 'Transfer already exists',
+                extensions: expect.objectContaining({
+                  code: GraphQLErrorCode.Duplicate
+                })
+              })
+            )
           })
         }
       )
@@ -1990,6 +2060,7 @@ describe('Liquidity Resolvers', (): void => {
           })
 
           test('Returns error for non-existent webhook event id', async (): Promise<void> => {
+            let error
             try {
               await appContainer.apolloClient
                 .mutate({
@@ -2016,23 +2087,26 @@ describe('Liquidity Resolvers', (): void => {
                     throw new Error('Data was empty')
                   }
                 })
-            } catch (error) {
-              expect(error).toBeInstanceOf(ApolloError)
-              expect((error as ApolloError).graphQLErrors).toContainEqual(
-                expect.objectContaining({
-                  message: 'Invalid transfer id',
-                  extensions: expect.objectContaining({
-                    code: GraphQLErrorCode.BadUserInput
-                  })
-                })
-              )
+            } catch (err) {
+              error = err
             }
+            expect(error).toBeInstanceOf(ApolloError)
+            expect((error as ApolloError).graphQLErrors).toContainEqual(
+              expect.objectContaining({
+                message: 'Invalid transfer id',
+                extensions: expect.objectContaining({
+                  code: GraphQLErrorCode.BadUserInput
+                })
+              })
+            )
           })
 
           test('Returns error for already completed withdrawal', async (): Promise<void> => {
             await expect(
               accountingService.createWithdrawal(withdrawal)
             ).resolves.toBeUndefined()
+
+            let error
             try {
               await appContainer.apolloClient
                 .mutate({
@@ -2059,17 +2133,18 @@ describe('Liquidity Resolvers', (): void => {
                     throw new Error('Data was empty')
                   }
                 })
-            } catch (error) {
-              expect(error).toBeInstanceOf(ApolloError)
-              expect((error as ApolloError).graphQLErrors).toContainEqual(
-                expect.objectContaining({
-                  message: 'Transfer already exists',
-                  extensions: expect.objectContaining({
-                    code: GraphQLErrorCode.Duplicate
-                  })
-                })
-              )
+            } catch (err) {
+              error = err
             }
+            expect(error).toBeInstanceOf(ApolloError)
+            expect((error as ApolloError).graphQLErrors).toContainEqual(
+              expect.objectContaining({
+                message: 'Transfer already exists',
+                extensions: expect.objectContaining({
+                  code: GraphQLErrorCode.Duplicate
+                })
+              })
+            )
           })
         }
       )
@@ -2194,6 +2269,7 @@ describe('Liquidity Resolvers', (): void => {
               amount
             }
           })
+          let error
           try {
             await appContainer.apolloClient
               .mutate({
@@ -2221,20 +2297,22 @@ describe('Liquidity Resolvers', (): void => {
                   throw new Error('Data was empty')
                 }
               })
-          } catch (error) {
-            expect(error).toBeInstanceOf(ApolloError)
-            expect((error as ApolloError).graphQLErrors).toContainEqual(
-              expect.objectContaining({
-                message: 'Invalid transfer id',
-                extensions: expect.objectContaining({
-                  code: GraphQLErrorCode.BadUserInput
-                })
-              })
-            )
+          } catch (err) {
+            error = err
           }
+          expect(error).toBeInstanceOf(ApolloError)
+          expect((error as ApolloError).graphQLErrors).toContainEqual(
+            expect.objectContaining({
+              message: 'Invalid transfer id',
+              extensions: expect.objectContaining({
+                code: GraphQLErrorCode.BadUserInput
+              })
+            })
+          )
         })
 
         test('Returns error when related webhook not found', async (): Promise<void> => {
+          let error
           try {
             await appContainer.apolloClient
               .mutate({
@@ -2262,17 +2340,18 @@ describe('Liquidity Resolvers', (): void => {
                   throw new Error('Data was empty')
                 }
               })
-          } catch (error) {
-            expect(error).toBeInstanceOf(ApolloError)
-            expect((error as ApolloError).graphQLErrors).toContainEqual(
-              expect.objectContaining({
-                message: 'Invalid transfer id',
-                extensions: expect.objectContaining({
-                  code: GraphQLErrorCode.BadUserInput
-                })
-              })
-            )
+          } catch (err) {
+            error = err
           }
+          expect(error).toBeInstanceOf(ApolloError)
+          expect((error as ApolloError).graphQLErrors).toContainEqual(
+            expect.objectContaining({
+              message: 'Invalid transfer id',
+              extensions: expect.objectContaining({
+                code: GraphQLErrorCode.BadUserInput
+              })
+            })
+          )
         })
 
         test('Returns error for already completed withdrawal', async (): Promise<void> => {
@@ -2295,6 +2374,8 @@ describe('Liquidity Resolvers', (): void => {
               amount: amount
             })
           ).resolves.toBeUndefined()
+
+          let error
           try {
             await appContainer.apolloClient
               .mutate({
@@ -2322,17 +2403,18 @@ describe('Liquidity Resolvers', (): void => {
                   throw new Error('Data was empty')
                 }
               })
-          } catch (error) {
-            expect(error).toBeInstanceOf(ApolloError)
-            expect((error as ApolloError).graphQLErrors).toContainEqual(
-              expect.objectContaining({
-                message: 'Transfer already exists',
-                extensions: expect.objectContaining({
-                  code: GraphQLErrorCode.Duplicate
-                })
-              })
-            )
+          } catch (err) {
+            error = err
           }
+          expect(error).toBeInstanceOf(ApolloError)
+          expect((error as ApolloError).graphQLErrors).toContainEqual(
+            expect.objectContaining({
+              message: 'Transfer already exists',
+              extensions: expect.objectContaining({
+                code: GraphQLErrorCode.Duplicate
+              })
+            })
+          )
         })
       })
     })
@@ -2409,6 +2491,7 @@ describe('Liquidity Resolvers', (): void => {
 
       describe('Cannot withdraw liquidity', () => {
         test('Returns error for non-existent outgoing payment id', async (): Promise<void> => {
+          let error
           try {
             await appContainer.apolloClient
               .mutate({
@@ -2436,17 +2519,18 @@ describe('Liquidity Resolvers', (): void => {
                   throw new Error('Data was empty')
                 }
               })
-          } catch (error) {
-            expect(error).toBeInstanceOf(ApolloError)
-            expect((error as ApolloError).graphQLErrors).toContainEqual(
-              expect.objectContaining({
-                message: 'Invalid transfer id',
-                extensions: expect.objectContaining({
-                  code: GraphQLErrorCode.BadUserInput
-                })
-              })
-            )
+          } catch (err) {
+            error = err
           }
+          expect(error).toBeInstanceOf(ApolloError)
+          expect((error as ApolloError).graphQLErrors).toContainEqual(
+            expect.objectContaining({
+              message: 'Invalid transfer id',
+              extensions: expect.objectContaining({
+                code: GraphQLErrorCode.BadUserInput
+              })
+            })
+          )
         })
 
         test('Returns error when related webhook not found', async (): Promise<void> => {
@@ -2457,6 +2541,7 @@ describe('Liquidity Resolvers', (): void => {
               amount: amount
             })
           ).resolves.toBeUndefined()
+          let error
           try {
             await appContainer.apolloClient
               .mutate({
@@ -2484,17 +2569,18 @@ describe('Liquidity Resolvers', (): void => {
                   throw new Error('Data was empty')
                 }
               })
-          } catch (error) {
-            expect(error).toBeInstanceOf(ApolloError)
-            expect((error as ApolloError).graphQLErrors).toContainEqual(
-              expect.objectContaining({
-                message: 'Invalid transfer id',
-                extensions: expect.objectContaining({
-                  code: GraphQLErrorCode.BadUserInput
-                })
-              })
-            )
+          } catch (err) {
+            error = err
           }
+          expect(error).toBeInstanceOf(ApolloError)
+          expect((error as ApolloError).graphQLErrors).toContainEqual(
+            expect.objectContaining({
+              message: 'Invalid transfer id',
+              extensions: expect.objectContaining({
+                code: GraphQLErrorCode.BadUserInput
+              })
+            })
+          )
         })
 
         test('Returns error for already completed withdrawal', async (): Promise<void> => {
@@ -2516,6 +2602,8 @@ describe('Liquidity Resolvers', (): void => {
               amount: amount
             })
           ).resolves.toBeUndefined()
+
+          let error
           try {
             await appContainer.apolloClient
               .mutate({
@@ -2543,17 +2631,18 @@ describe('Liquidity Resolvers', (): void => {
                   throw new Error('Data was empty')
                 }
               })
-          } catch (error) {
-            expect(error).toBeInstanceOf(ApolloError)
-            expect((error as ApolloError).graphQLErrors).toContainEqual(
-              expect.objectContaining({
-                message: 'Insufficient transfer balance',
-                extensions: expect.objectContaining({
-                  code: GraphQLErrorCode.Forbidden
-                })
-              })
-            )
+          } catch (err) {
+            error = err
           }
+          expect(error).toBeInstanceOf(ApolloError)
+          expect((error as ApolloError).graphQLErrors).toContainEqual(
+            expect.objectContaining({
+              message: 'Insufficient transfer balance',
+              extensions: expect.objectContaining({
+                code: GraphQLErrorCode.Forbidden
+              })
+            })
+          )
         })
       })
     })
@@ -2618,6 +2707,7 @@ describe('Liquidity Resolvers', (): void => {
           })
 
           test("Can't deposit for non-existent outgoing payment id", async (): Promise<void> => {
+            let error
             try {
               await appContainer.apolloClient
                 .mutate({
@@ -2644,17 +2734,18 @@ describe('Liquidity Resolvers', (): void => {
                     throw new Error('Data was empty')
                   }
                 })
-            } catch (error) {
-              expect(error).toBeInstanceOf(ApolloError)
-              expect((error as ApolloError).graphQLErrors).toContainEqual(
-                expect.objectContaining({
-                  message: 'Invalid transfer id',
-                  extensions: expect.objectContaining({
-                    code: GraphQLErrorCode.BadUserInput
-                  })
-                })
-              )
+            } catch (err) {
+              error = err
             }
+            expect(error).toBeInstanceOf(ApolloError)
+            expect((error as ApolloError).graphQLErrors).toContainEqual(
+              expect.objectContaining({
+                message: 'Invalid transfer id',
+                extensions: expect.objectContaining({
+                  code: GraphQLErrorCode.BadUserInput
+                })
+              })
+            )
           })
 
           test('Returns an error for existing transfer', async (): Promise<void> => {
@@ -2665,6 +2756,7 @@ describe('Liquidity Resolvers', (): void => {
                 amount: BigInt(100)
               })
             ).resolves.toBeUndefined()
+            let error
             try {
               await appContainer.apolloClient
                 .mutate({
@@ -2691,17 +2783,18 @@ describe('Liquidity Resolvers', (): void => {
                     throw new Error('Data was empty')
                   }
                 })
-            } catch (error) {
-              expect(error).toBeInstanceOf(ApolloError)
-              expect((error as ApolloError).graphQLErrors).toContainEqual(
-                expect.objectContaining({
-                  message: 'Transfer already exists',
-                  extensions: expect.objectContaining({
-                    code: GraphQLErrorCode.Duplicate
-                  })
-                })
-              )
+            } catch (err) {
+              error = err
             }
+            expect(error).toBeInstanceOf(ApolloError)
+            expect((error as ApolloError).graphQLErrors).toContainEqual(
+              expect.objectContaining({
+                message: 'Transfer already exists',
+                extensions: expect.objectContaining({
+                  code: GraphQLErrorCode.Duplicate
+                })
+              })
+            )
           })
         }
       )

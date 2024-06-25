@@ -113,6 +113,7 @@ describe('Wallet Address Key Resolvers', (): void => {
         jwk: TEST_KEY
       }
 
+      expect.assertions(2)
       try {
         await appContainer.apolloClient
           .mutate({
@@ -220,6 +221,7 @@ describe('Wallet Address Key Resolvers', (): void => {
     })
 
     test('Returns not found if key does not exist', async (): Promise<void> => {
+      expect.assertions(2)
       try {
         await appContainer.apolloClient
           .mutate({

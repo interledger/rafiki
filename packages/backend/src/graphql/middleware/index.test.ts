@@ -1,4 +1,4 @@
-import { gql } from '@apollo/client'
+import { ApolloError, gql } from '@apollo/client'
 import assert from 'assert'
 import { v4 as uuid } from 'uuid'
 
@@ -193,16 +193,22 @@ describe('GraphQL Middleware', (): void => {
 
       createAssetSpy.mockClear()
 
-      const repeatResponse = callCreateAssetMutation({
-        ...input,
-        idempotencyKey: uuid()
-      })
-
-      await expect(repeatResponse).rejects.toThrow(
-        new GraphQLError(errorToMessage[AssetError.DuplicateAsset], {
-          extensions: {
+      let error
+      try {
+        await callCreateAssetMutation({
+          ...input,
+          idempotencyKey: uuid()
+        })
+      } catch (err) {
+        error = err
+      }
+      expect(error).toBeInstanceOf(ApolloError)
+      expect((error as ApolloError).graphQLErrors).toContainEqual(
+        expect.objectContaining({
+          message: errorToMessage[AssetError.DuplicateAsset],
+          extensions: expect.objectContaining({
             code: errorToCode[AssetError.DuplicateAsset]
-          }
+          })
         })
       )
       expect(createAssetSpy).toHaveBeenCalledTimes(1)

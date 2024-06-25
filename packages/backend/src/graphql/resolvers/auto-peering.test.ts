@@ -240,6 +240,7 @@ describe('Auto Peering Resolvers', (): void => {
         .spyOn(autoPeeringService, 'initiatePeeringRequest')
         .mockResolvedValueOnce(testError)
       const input = createOrUpdatePeerByUrlInput()
+      expect.assertions(2)
       try {
         await appContainer.apolloClient
           .mutate({
@@ -283,6 +284,7 @@ describe('Auto Peering Resolvers', (): void => {
         .spyOn(autoPeeringService, 'initiatePeeringRequest')
         .mockRejectedValueOnce(new Error('unexpected'))
 
+      expect.assertions(2)
       try {
         await appContainer.apolloClient
           .mutate({
