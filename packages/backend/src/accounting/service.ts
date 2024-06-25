@@ -1,7 +1,6 @@
 import { TransactionOrKnex } from 'objection'
 import { BaseService } from '../shared/baseService'
 import { TransferError, isTransferError } from './errors'
-import { AccountUserData128 } from './tigerbeetle/utils'
 
 export enum LiquidityAccountType {
   ASSET = 'ASSET',
@@ -68,6 +67,19 @@ export interface Transaction {
   void: () => Promise<void | TransferError>
 }
 
+export interface GetLedgerTransfersResult {
+  debits: LedgerTransfer[]
+  credits: LedgerTransfer[]
+}
+
+export interface LedgerTransfer extends BaseTransfer {
+  debitAccount: string
+  creditAccount: string
+  amount: bigint
+  timeout: number
+  timestamp: bigint
+}
+
 export interface AccountingService {
   createLiquidityAccount(
     account: LiquidityAccount,
@@ -76,7 +88,7 @@ export interface AccountingService {
   ): Promise<LiquidityAccount>
   createSettlementAccount(
     ledger: number,
-    accountId: AccountUserData128,
+    accountId: string | number,
     trx?: TransactionOrKnex
   ): Promise<void>
   createLiquidityAndLinkedSettlementAccount(
@@ -98,6 +110,10 @@ export interface AccountingService {
   createWithdrawal(withdrawal: Withdrawal): Promise<void | TransferError>
   postWithdrawal(id: string): Promise<void | TransferError>
   voidWithdrawal(id: string): Promise<void | TransferError>
+  getAccountTransfers(
+    id: string,
+    trx?: TransactionOrKnex
+  ): Promise<GetLedgerTransfersResult>
 }
 
 export interface TransferToCreate {

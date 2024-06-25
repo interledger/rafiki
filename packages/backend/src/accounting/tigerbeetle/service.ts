@@ -26,8 +26,12 @@ import {
   TigerbeetleUnknownAccountError,
   areAllAccountExistsErrors
 } from './errors'
-import { NewTransferOptions, createTransfers } from './transfers'
-import { AccountUserData128, toTigerBeetleId, hexTextToBigInt } from './utils'
+import {
+  NewTransferOptions,
+  createTransfers,
+  getAccountTransfers
+} from './transfers'
+import { toTigerBeetleId, hexTextToBigInt } from './utils'
 
 export enum TigerBeetleAccountCode {
   LIQUIDITY_WEB_MONETIZATION = 1,
@@ -105,7 +109,8 @@ export function createAccountingService(
     createDeposit: (transfer) => createAccountDeposit(deps, transfer),
     createWithdrawal: (transfer) => createAccountWithdrawal(deps, transfer),
     postWithdrawal: (options) => postAccountWithdrawal(deps, options),
-    voidWithdrawal: (options) => voidAccountWithdrawal(deps, options)
+    voidWithdrawal: (options) => voidAccountWithdrawal(deps, options),
+    getAccountTransfers: (id) => getAccountTransfers(deps, id)
   }
 }
 
@@ -141,7 +146,7 @@ export async function createLiquidityAccount(
 export async function createSettlementAccount(
   deps: ServiceDependencies,
   ledger: number,
-  accountId: AccountUserData128
+  accountId: string | number
 ): Promise<void> {
   try {
     await createAccounts(deps, [

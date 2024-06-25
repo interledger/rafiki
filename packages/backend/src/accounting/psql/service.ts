@@ -13,7 +13,8 @@ import {
   Transaction,
   TransferOptions,
   TransferToCreate,
-  Withdrawal
+  Withdrawal,
+  GetLedgerTransfersResult
 } from '../service'
 import { getAccountBalances } from './balance'
 import {
@@ -30,10 +31,10 @@ import {
   createTransfers,
   CreateTransfersResult,
   postTransfers,
-  voidTransfers
+  voidTransfers,
+  getAccountTransfers
 } from './ledger-transfer'
 import { LedgerTransfer, LedgerTransferType } from './ledger-transfer/model'
-import { AccountId, AccountUserData128 } from '../tigerbeetle/utils'
 
 export interface ServiceDependencies extends BaseService {
   knex: TransactionOrKnex
@@ -71,8 +72,26 @@ export function createAccountingService(
     createDeposit: (transfer, trx) => createAccountDeposit(deps, transfer, trx),
     createWithdrawal: (transfer) => createAccountWithdrawal(deps, transfer),
     postWithdrawal: (withdrawalRef) => postTransfers(deps, [withdrawalRef]),
-    voidWithdrawal: (withdrawalRef) => voidTransfers(deps, [withdrawalRef])
+    voidWithdrawal: (withdrawalRef) => voidTransfers(deps, [withdrawalRef]),
+    getAccountTransfers: (id, trx) => getAccountTransfersAndMap(deps, id, trx)
   }
+}
+
+async function getAccountTransfersAndMap(
+  deps: ServiceDependencies,
+  id: string,
+  trx?: TransactionOrKnex
+): Promise<GetLedgerTransfersResult> {
+  const accountTransfers = await getAccountTransfers(deps, id, trx)
+  const returnVal = { credits: [], debits: [] }
+  if (
+    !accountTransfers ||
+    (accountTransfers.credits.length === 0 &&
+      accountTransfers.debits.length === 0)
+  )
+    return returnVal
+
+  return returnVal
 }
 
 export async function createLiquidityAccount(
@@ -96,7 +115,7 @@ export async function createLiquidityAccount(
 export async function createSettlementAccount(
   deps: ServiceDependencies,
   ledger: number,
-  accountId: AccountUserData128,
+  accountId: string | number,
   trx?: TransactionOrKnex
 ): Promise<void> {
   const asset = await Asset.query(trx || deps.knex).findOne({ ledger })

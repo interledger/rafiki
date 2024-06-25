@@ -1,14 +1,17 @@
 import {
   CreateTransferError as CreateTransferErrorCode,
   Transfer as TbTransfer,
-  TransferFlags
+  TransferFlags,
+  AccountFilter,
+  AccountFilterFlags
 } from 'tigerbeetle-node'
 import { v4 as uuid } from 'uuid'
 import { TransferError } from '../errors'
 
 import { TigerbeetleCreateTransferError } from './errors'
 import { ServiceDependencies, TigerBeetleTransferCode } from './service'
-import { AccountId, toTigerBeetleId } from './utils'
+import { AccountId, toTigerBeetleId, tbTransferToLedgerTransfer } from './utils'
+import { GetLedgerTransfersResult } from '../service'
 
 type TransfersError = {
   index: number
@@ -162,4 +165,26 @@ export async function createTransfers(
         throw new TigerbeetleCreateTransferError(result)
     }
   }
+}
+
+export async function getAccountTransfers(
+  deps: ServiceDependencies,
+  id: string
+): Promise<GetLedgerTransfersResult> {
+  const tbAccId = toTigerBeetleId(id)
+  const filter: AccountFilter = {
+    account_id: tbAccId,
+    timestamp_min: 0n,
+    timestamp_max: 0n,
+    limit: 100_000,
+    flags: AccountFilterFlags.credits | AccountFilterFlags.debits
+  }
+  const tbAccountTransfers = await deps.tigerBeetle.getAccountTransfers(filter)
+  const returnVal = { credits: [], debits: [] } as GetLedgerTransfersResult
+  tbAccountTransfers.forEach((item) => {
+    const converted = tbTransferToLedgerTransfer(item)
+    if (item.debit_account_id === tbAccId) returnVal.debits.push(converted)
+    else returnVal.credits.push(converted)
+  })
+  return returnVal
 }

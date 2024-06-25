@@ -4,7 +4,8 @@ import {
   Transaction,
   AccountingService,
   Deposit,
-  Withdrawal
+  Withdrawal,
+  GetLedgerTransfersResult
 } from '../../../../../../accounting/service'
 import {
   CreateAccountError,
@@ -12,7 +13,6 @@ import {
 } from '../../../../../../accounting/errors'
 import { CreateAccountError as CreateAccountErrorCode } from 'tigerbeetle-node'
 import { TransactionOrKnex } from 'objection'
-import { AccountUserData128 } from '../../../../../../accounting/tigerbeetle/utils'
 
 interface MockAccount {
   id: string
@@ -150,7 +150,7 @@ export class MockAccountingService implements AccountingService {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     ledger: number,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    accountId: AccountUserData128,
+    accountId: string | number,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     trx?: TransactionOrKnex
   ): Promise<void> {
@@ -218,6 +218,13 @@ export class MockAccountingService implements AccountingService {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     id: string
   ): Promise<void | TransferError> {
+    throw new Error('Not implemented!')
+  }
+
+  getAccountTransfers(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    id: string
+  ): Promise<GetLedgerTransfersResult> {
     throw new Error('Not implemented!')
   }
 }
