@@ -38,14 +38,13 @@ describe('gnapServerErrorMiddleware', (): void => {
       throw error
     })
 
-    const ctxThrowSpy = jest.spyOn(ctx, 'throw')
-
-    await expect(gnapServerErrorMiddleware(ctx, next)).rejects.toMatchObject({
-      status: error.status,
-      message: error.message
+    await expect(gnapServerErrorMiddleware(ctx, next)).resolves.toBeUndefined()
+    expect(ctx.body).toEqual({
+      error: {
+        description: error.message
+      }
     })
-
-    expect(ctxThrowSpy).toHaveBeenCalledWith(error.status, error.message)
+    expect(ctx.status).toBe(error.status)
     expect(next).toHaveBeenCalledTimes(1)
   })
 
@@ -59,19 +58,27 @@ describe('gnapServerErrorMiddleware', (): void => {
       throw error
     })
 
-    const ctxThrowSpy = jest.spyOn(ctx, 'throw')
-
-    await expect(gnapServerErrorMiddleware(ctx, next)).rejects.toMatchObject({
-      status: error.status,
+    await expect(gnapServerErrorMiddleware(ctx, next)).resolves.toBeUndefined()
+    expect(ctx.body).toEqual({
       error: {
         code: error.code,
         description: error.message
       }
     })
+    expect(ctx.status).toBe(error.status)
+    expect(next).toHaveBeenCalledTimes(1)
+  })
 
-    expect(ctxThrowSpy).toHaveBeenCalledWith(error.status, error.code, {
-      error: { code: error.code, description: error.message }
+  test('handles unknown error', async (): Promise<void> => {
+    const error = new Error('unexpected')
+    const next = jest.fn().mockImplementationOnce(() => {
+      throw error
     })
+
+    const ctxThrowSpy = jest.spyOn(ctx, 'throw')
+
+    await expect(gnapServerErrorMiddleware(ctx, next)).rejects.toThrow()
+    expect(ctxThrowSpy).toHaveBeenCalledWith(500)
     expect(next).toHaveBeenCalledTimes(1)
   })
 })

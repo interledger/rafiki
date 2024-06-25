@@ -23,7 +23,11 @@ script:pre-request {
 script:post-response {
   const url = require('url')
   
-  const body = res.body
+  if (res.getStatus() !== 200) {
+    return
+  }
+  
+  const body = res.getBody()
   bru.setEnvVar("senderAssetCode", body?.assetCode)
   bru.setEnvVar("senderAssetScale", body?.assetScale)
   

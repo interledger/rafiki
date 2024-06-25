@@ -57,10 +57,19 @@ export async function gnapServerErrorMiddleware(
         'Received error when handling Open Payments GNAP request'
       )
 
-      ctx.throw(err.status, err.code, {
-        error: { code: err.code, description: err.message }
-      })
-    } else if (err instanceof OpenAPIValidatorMiddlewareError) {
+      const gnapErrorResponse: GNAPErrorResponse = {
+        error: {
+          code: err.code,
+          description: err.message
+        }
+      }
+
+      ctx.status = err.status
+      ctx.body = gnapErrorResponse
+      return
+    }
+
+    if (err instanceof OpenAPIValidatorMiddlewareError) {
       const finalStatus = err.status || 400
 
       logger.info(
@@ -72,7 +81,11 @@ export async function gnapServerErrorMiddleware(
         'Received OpenAPI validation error when handling Open Payments GNAP request'
       )
 
-      ctx.throw(finalStatus, err.message)
+      ctx.status = finalStatus
+      ctx.body = {
+        error: { description: err.message }
+      }
+      return
     }
 
     logger.error(
