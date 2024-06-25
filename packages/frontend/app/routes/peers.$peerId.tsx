@@ -418,9 +418,9 @@ export async function action({ request }: ActionFunctionArgs) {
           : { maxPacketAmount: undefined })
       })
 
-      if (!response?.success) {
+      if (!response?.peer) {
         actionResponse.errors.general.message = [
-          response?.message ?? 'Could not update peer. Please try again!'
+          'Could not update peer. Please try again!'
         ]
         return json({ ...actionResponse }, { status: 400 })
       }
@@ -455,9 +455,9 @@ export async function action({ request }: ActionFunctionArgs) {
         }
       })
 
-      if (!response?.success) {
+      if (!response?.peer) {
         actionResponse.errors.general.message = [
-          response?.message ?? 'Could not update peer. Please try again!'
+          'Could not update peer. Please try again!'
         ]
         return json({ ...actionResponse }, { status: 400 })
       }

@@ -239,10 +239,9 @@ export async function action({ request }: ActionFunctionArgs) {
     ...result.data
   })
 
-  if (!response?.success) {
+  if (!response?.walletAddress) {
     actionResponse.errors.message = [
-      response?.message ??
-        'Could not update the wallet address. Please try again!'
+      'Could not update the wallet address. Please try again!'
     ]
     return json({ ...actionResponse }, { status: 400 })
   }

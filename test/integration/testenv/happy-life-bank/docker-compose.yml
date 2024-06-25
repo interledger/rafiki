@@ -17,6 +17,7 @@ services:
     environment:
       NODE_ENV: development
       LOG_LEVEL: debug
+      INSTANCE_NAME: 'Happy Life Test'
       OPEN_PAYMENTS_URL: https://happy-life-bank-test-backend:4100
       WALLET_ADDRESS_URL: https://happy-life-bank-test-backend:4100/.well-known/pay
       ADMIN_PORT: 4101
@@ -29,10 +30,12 @@ services:
       KEY_ID: keyid-97a3a431-8ee1-48fc-ac85-70e2f5eba8e5
       PRIVATE_KEY_FILE: /workspace/private-key.pem
       ILP_ADDRESS: test.happy-life-bank-test
+      ILP_CONNECTOR_URL: http://127.0.0.1:4102
       STREAM_SECRET: BjPXtnd00G2mRQwP/8ZpwyZASOch5sUXT5o0iR5b5wU=
       WEBHOOK_URL: http://host.docker.internal:8889/webhooks
       EXCHANGE_RATES_URL: http://host.docker.internal:8889/rates
       REDIS_URL: redis://shared-redis:6379/2
+      USE_TIGERBEETLE: false
     volumes:
       - ../private-key.pem:/workspace/private-key.pem
     depends_on:

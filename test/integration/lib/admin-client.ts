@@ -30,8 +30,6 @@ export class AdminClient {
         mutation: gql`
           mutation CreateReceiver($input: CreateReceiverInput!) {
             createReceiver(input: $input) {
-              code
-              message
               receiver {
                 completed
                 createdAt
@@ -51,7 +49,6 @@ export class AdminClient {
                 }
                 updatedAt
               }
-              success
             }
           }
         `,
@@ -68,8 +65,6 @@ export class AdminClient {
         mutation: gql`
           mutation CreateQuote($input: CreateQuoteInput!) {
             createQuote(input: $input) {
-              code
-              message
               quote {
                 createdAt
                 expiresAt
@@ -109,8 +104,6 @@ export class AdminClient {
         mutation: gql`
           mutation CreateOutgoingPayment($input: CreateOutgoingPaymentInput!) {
             createOutgoingPayment(input: $input) {
-              code
-              message
               payment {
                 createdAt
                 error
@@ -136,7 +129,6 @@ export class AdminClient {
                 state
                 stateAttempts
               }
-              success
             }
           }
         `,
@@ -231,10 +223,7 @@ export class AdminClient {
             $input: DepositOutgoingPaymentLiquidityInput!
           ) {
             depositOutgoingPaymentLiquidity(input: $input) {
-              code
               success
-              message
-              error
             }
           }
         `,
@@ -253,7 +242,6 @@ export class AdminClient {
         mutation: gql`
           mutation CreateWalletAddress($input: CreateWalletAddressInput!) {
             createWalletAddress(input: $input) {
-              success
               walletAddress {
                 id
                 url

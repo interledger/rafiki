@@ -6,7 +6,7 @@ import { createTestApp, TestContainer } from '../../../tests/app'
 import { createAsset } from '../../../tests/asset'
 import { createContext } from '../../../tests/context'
 import { truncateTables } from '../../../tests/tableManager'
-import { AutoPeeringError, errorToCode, errorToMessage } from './errors'
+import { AutoPeeringError, errorToHttpCode, errorToMessage } from './errors'
 import { AutoPeeringRoutes, PeerRequestContext } from './routes'
 
 describe('Auto Peering Routes', (): void => {
@@ -39,7 +39,7 @@ describe('Auto Peering Routes', (): void => {
         url: `/`,
         body: {
           staticIlpAddress: 'test.rafiki-money',
-          ilpConnectorAddress: 'http://peer.rafiki.money',
+          ilpConnectorUrl: 'http://peer.rafiki.money',
           asset: { code: asset.code, scale: asset.scale },
           httpToken: 'someHttpToken',
           maxPacketAmount: 1000,
@@ -53,7 +53,7 @@ describe('Auto Peering Routes', (): void => {
       expect(ctx.status).toBe(200)
       expect(ctx.body).toEqual({
         staticIlpAddress: config.ilpAddress,
-        ilpConnectorAddress: config.ilpConnectorAddress,
+        ilpConnectorUrl: config.ilpConnectorUrl,
         httpToken: expect.any(String),
         name: config.instanceName
       })
@@ -65,7 +65,7 @@ describe('Auto Peering Routes', (): void => {
         url: `/`,
         body: {
           staticIlpAddress: 'test.rafiki-money',
-          ilpConnectorAddress: 'http://peer.rafiki.money',
+          ilpConnectorUrl: 'http://peer.rafiki.money',
           asset: { code: 'ABC', scale: 2 },
           httpToken: 'someHttpToken'
         }
@@ -74,10 +74,10 @@ describe('Auto Peering Routes', (): void => {
       await expect(
         autoPeeringRoutes.acceptPeerRequest(ctx)
       ).resolves.toBeUndefined()
-      expect(ctx.status).toBe(errorToCode[AutoPeeringError.UnknownAsset])
+      expect(ctx.status).toBe(errorToHttpCode[AutoPeeringError.UnknownAsset])
       expect(ctx.body).toEqual({
         error: {
-          code: errorToCode[AutoPeeringError.UnknownAsset],
+          code: errorToHttpCode[AutoPeeringError.UnknownAsset],
           message: errorToMessage[AutoPeeringError.UnknownAsset],
           type: AutoPeeringError.UnknownAsset
         }

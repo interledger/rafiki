@@ -1,4 +1,4 @@
-import { gql } from '@apollo/client'
+import { ApolloError, gql } from '@apollo/client'
 import { v4 as uuid } from 'uuid'
 import { createTestApp, TestContainer } from '../../tests/app'
 import { IocContract } from '@adonisjs/fold'
@@ -13,7 +13,12 @@ import {
 import { CreateReceiverResponse } from '../generated/graphql'
 import { ReceiverService } from '../../open_payments/receiver/service'
 import { Receiver } from '../../open_payments/receiver/model'
-import { ReceiverError } from '../../open_payments/receiver/errors'
+import {
+  ReceiverError,
+  errorToMessage,
+  errorToCode
+} from '../../open_payments/receiver/errors'
+import { GraphQLErrorCode } from '../errors'
 
 describe('Receiver Resolver', (): void => {
   let deps: IocContract<AppServices>
@@ -74,9 +79,6 @@ describe('Receiver Resolver', (): void => {
             query: gql`
               mutation CreateReceiver($input: CreateReceiverInput!) {
                 createReceiver(input: $input) {
-                  code
-                  success
-                  message
                   receiver {
                     id
                     walletAddressUrl
@@ -106,9 +108,6 @@ describe('Receiver Resolver', (): void => {
         expect(createSpy).toHaveBeenCalledWith(input)
         expect(query).toEqual({
           __typename: 'CreateReceiverResponse',
-          code: '200',
-          success: true,
-          message: null,
           receiver: {
             __typename: 'Receiver',
             id: receiver.incomingPayment?.id,
@@ -144,48 +143,49 @@ describe('Receiver Resolver', (): void => {
         walletAddressUrl: walletAddress.id
       }
 
-      const query = await appContainer.apolloClient
-        .query({
-          query: gql`
-            mutation CreateReceiver($input: CreateReceiverInput!) {
-              createReceiver(input: $input) {
-                code
-                success
-                message
-                receiver {
-                  id
-                  walletAddressUrl
-                  completed
-                  expiresAt
-                  incomingAmount {
-                    value
-                    assetCode
-                    assetScale
+      try {
+        await appContainer.apolloClient
+          .query({
+            query: gql`
+              mutation CreateReceiver($input: CreateReceiverInput!) {
+                createReceiver(input: $input) {
+                  receiver {
+                    id
+                    walletAddressUrl
+                    completed
+                    expiresAt
+                    incomingAmount {
+                      value
+                      assetCode
+                      assetScale
+                    }
+                    receivedAmount {
+                      value
+                      assetCode
+                      assetScale
+                    }
+                    metadata
+                    createdAt
+                    updatedAt
                   }
-                  receivedAmount {
-                    value
-                    assetCode
-                    assetScale
-                  }
-                  metadata
-                  createdAt
-                  updatedAt
                 }
               }
-            }
-          `,
-          variables: { input }
-        })
-        .then((query): CreateReceiverResponse => query.data?.createReceiver)
-
+            `,
+            variables: { input }
+          })
+          .then((query): CreateReceiverResponse => query.data?.createReceiver)
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApolloError)
+        expect((error as ApolloError).graphQLErrors).toContainEqual(
+          expect.objectContaining({
+            message: errorToMessage(ReceiverError.UnknownWalletAddress),
+            extensions: expect.objectContaining({
+              code: errorToCode(ReceiverError.UnknownWalletAddress)
+            })
+          })
+        )
+      }
       expect(createSpy).toHaveBeenCalledWith(input)
-      expect(query).toEqual({
-        __typename: 'CreateReceiverResponse',
-        code: '404',
-        success: false,
-        message: 'unknown wallet address',
-        receiver: null
-      })
     })
 
     test('returns error if error thrown when creating receiver', async (): Promise<void> => {
@@ -199,48 +199,49 @@ describe('Receiver Resolver', (): void => {
         walletAddressUrl: walletAddress.id
       }
 
-      const query = await appContainer.apolloClient
-        .query({
-          query: gql`
-            mutation CreateReceiver($input: CreateReceiverInput!) {
-              createReceiver(input: $input) {
-                code
-                success
-                message
-                receiver {
-                  id
-                  walletAddressUrl
-                  completed
-                  expiresAt
-                  incomingAmount {
-                    value
-                    assetCode
-                    assetScale
+      try {
+        await appContainer.apolloClient
+          .query({
+            query: gql`
+              mutation CreateReceiver($input: CreateReceiverInput!) {
+                createReceiver(input: $input) {
+                  receiver {
+                    id
+                    walletAddressUrl
+                    completed
+                    expiresAt
+                    incomingAmount {
+                      value
+                      assetCode
+                      assetScale
+                    }
+                    receivedAmount {
+                      value
+                      assetCode
+                      assetScale
+                    }
+                    metadata
+                    createdAt
+                    updatedAt
                   }
-                  receivedAmount {
-                    value
-                    assetCode
-                    assetScale
-                  }
-                  metadata
-                  createdAt
-                  updatedAt
                 }
               }
-            }
-          `,
-          variables: { input }
-        })
-        .then((query): CreateReceiverResponse => query.data?.createReceiver)
-
+            `,
+            variables: { input }
+          })
+          .then((query): CreateReceiverResponse => query.data?.createReceiver)
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApolloError)
+        expect((error as ApolloError).graphQLErrors).toContainEqual(
+          expect.objectContaining({
+            message: 'Cannot create receiver',
+            extensions: expect.objectContaining({
+              code: GraphQLErrorCode.InternalServerError
+            })
+          })
+        )
+      }
       expect(createSpy).toHaveBeenCalledWith(input)
-      expect(query).toEqual({
-        __typename: 'CreateReceiverResponse',
-        code: '500',
-        success: false,
-        message: 'Error trying to create receiver',
-        receiver: null
-      })
     })
   })
 
@@ -312,23 +313,35 @@ describe('Receiver Resolver', (): void => {
       })
     })
 
-    test('404', async (): Promise<void> => {
+    test('not found', async (): Promise<void> => {
       jest
         .spyOn(receiverService, 'get')
         .mockImplementation(async () => undefined)
 
-      await expect(
-        appContainer.apolloClient.query({
-          query: gql`
-            query GetReceiver($id: String!) {
-              receiver(id: $id) {
-                id
+      try {
+        await expect(
+          appContainer.apolloClient.query({
+            query: gql`
+              query GetReceiver($id: String!) {
+                receiver(id: $id) {
+                  id
+                }
               }
-            }
-          `,
-          variables: { id: uuid() }
-        })
-      ).rejects.toThrow('receiver does not exist')
+            `,
+            variables: { id: uuid() }
+          })
+        ).rejects.toThrow('receiver does not exist')
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApolloError)
+        expect((error as ApolloError).graphQLErrors).toContainEqual(
+          expect.objectContaining({
+            message: 'receiver does not exist',
+            extensions: expect.objectContaining({
+              code: GraphQLErrorCode.NotFound
+            })
+          })
+        )
+      }
     })
   })
 })

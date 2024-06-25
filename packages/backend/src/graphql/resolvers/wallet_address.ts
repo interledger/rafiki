@@ -1,3 +1,5 @@
+import { GraphQLError } from 'graphql'
+
 import { assetToGraphql } from './asset'
 import {
   QueryResolvers,
@@ -55,7 +57,14 @@ export const getWalletAddress: QueryResolvers<ApolloContext>['walletAddress'] =
     const walletAddressService = await ctx.container.use('walletAddressService')
     const walletAddress = await walletAddressService.get(args.id)
     if (!walletAddress) {
-      throw new Error('No wallet address')
+      throw new GraphQLError(
+        errorToMessage[WalletAddressError.UnknownWalletAddress],
+        {
+          extensions: {
+            code: errorToCode[WalletAddressError.UnknownWalletAddress]
+          }
+        }
+      )
     }
     return walletAddressToGraphql(walletAddress)
   }
@@ -83,28 +92,20 @@ export const createWalletAddress: MutationResolvers<ApolloContext>['createWallet
       publicName: args.input.publicName,
       url: args.input.url
     }
-    return walletAddressService
-      .create(options)
-      .then((walletAddressOrError: WalletAddress | WalletAddressError) =>
-        isWalletAddressError(walletAddressOrError)
-          ? {
-              code: errorToCode[walletAddressOrError].toString(),
-              success: false,
-              message: errorToMessage[walletAddressOrError]
-            }
-          : {
-              code: '200',
-              success: true,
-              message: 'Created wallet address',
-              walletAddress: walletAddressToGraphql(walletAddressOrError)
-            }
-      )
-      .catch(() => ({
-        code: '500',
-        success: false,
-        message: 'Error trying to create wallet address'
-      }))
+
+    const walletAddressOrError = await walletAddressService.create(options)
+    if (isWalletAddressError(walletAddressOrError)) {
+      throw new GraphQLError(errorToMessage[walletAddressOrError], {
+        extensions: {
+          code: errorToCode[walletAddressOrError]
+        }
+      })
+    }
+    return {
+      walletAddress: walletAddressToGraphql(walletAddressOrError)
+    }
   }
+
 export const updateWalletAddress: MutationResolvers<ApolloContext>['updateWalletAddress'] =
   async (
     parent,
@@ -127,27 +128,18 @@ export const updateWalletAddress: MutationResolvers<ApolloContext>['updateWallet
         }
       )
     }
-    return walletAddressService
-      .update(updateOptions)
-      .then((walletAddressOrError: WalletAddress | WalletAddressError) =>
-        isWalletAddressError(walletAddressOrError)
-          ? {
-              code: errorToCode[walletAddressOrError].toString(),
-              success: false,
-              message: errorToMessage[walletAddressOrError]
-            }
-          : {
-              code: '200',
-              success: true,
-              message: 'Updated wallet address',
-              walletAddress: walletAddressToGraphql(walletAddressOrError)
-            }
-      )
-      .catch(() => ({
-        code: '500',
-        success: false,
-        message: 'Error trying to update wallet address'
-      }))
+    const walletAddressOrError =
+      await walletAddressService.update(updateOptions)
+    if (isWalletAddressError(walletAddressOrError)) {
+      throw new GraphQLError(errorToMessage[walletAddressOrError], {
+        extensions: {
+          code: errorToCode[walletAddressOrError]
+        }
+      })
+    }
+    return {
+      walletAddress: walletAddressToGraphql(walletAddressOrError)
+    }
   }
 
 export const triggerWalletAddressEvents: MutationResolvers<ApolloContext>['triggerWalletAddressEvents'] =
@@ -156,30 +148,10 @@ export const triggerWalletAddressEvents: MutationResolvers<ApolloContext>['trigg
     args,
     ctx
   ): Promise<ResolversTypes['TriggerWalletAddressEventsMutationResponse']> => {
-    try {
-      const walletAddressService = await ctx.container.use(
-        'walletAddressService'
-      )
-      const count = await walletAddressService.triggerEvents(args.input.limit)
-      return {
-        code: '200',
-        success: true,
-        message: 'Triggered Wallet Address Events',
-        count
-      }
-    } catch (err) {
-      ctx.logger.error(
-        {
-          options: args.input.limit,
-          err
-        },
-        'error triggering wallet address events'
-      )
-      return {
-        code: '500',
-        message: 'Error trying to trigger wallet address events',
-        success: false
-      }
+    const walletAddressService = await ctx.container.use('walletAddressService')
+    const count = await walletAddressService.triggerEvents(args.input.limit)
+    return {
+      count
     }
   }
 

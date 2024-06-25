@@ -11,7 +11,7 @@ import { isTransferError } from '../../../accounting/errors'
 
 export interface PeeringDetails {
   staticIlpAddress: string
-  ilpConnectorAddress: string
+  ilpConnectorUrl: string
   httpToken: string
   name: string
 }
@@ -27,7 +27,7 @@ export interface InitiatePeeringRequestArgs {
 
 export interface PeeringRequestArgs {
   staticIlpAddress: string
-  ilpConnectorAddress: string
+  ilpConnectorUrl: string
   asset: { code: string; scale: number }
   httpToken: string
   maxPacketAmount?: number
@@ -36,7 +36,7 @@ export interface PeeringRequestArgs {
 
 interface UpdatePeerArgs {
   staticIlpAddress: string
-  ilpConnectorAddress: string
+  ilpConnectorUrl: string
   assetId: string
   incomingHttpToken: string
   outgoingHttpToken: string
@@ -96,7 +96,7 @@ async function initiatePeeringRequest(
   const outgoingHttpToken = uuid()
 
   const peeringDetailsOrError = await sendPeeringRequest(deps, peerUrl, {
-    ilpConnectorAddress: deps.config.ilpConnectorAddress,
+    ilpConnectorUrl: deps.config.ilpConnectorUrl,
     staticIlpAddress: deps.config.ilpAddress,
     asset: { code: asset.code, scale: asset.scale },
     httpToken: outgoingHttpToken,
@@ -120,7 +120,7 @@ async function initiatePeeringRequest(
       },
       outgoing: {
         authToken: outgoingHttpToken,
-        endpoint: peeringDetailsOrError.ilpConnectorAddress
+        endpoint: peeringDetailsOrError.ilpConnectorUrl
       }
     }
   })
@@ -139,7 +139,7 @@ async function initiatePeeringRequest(
         assetId: asset.id,
         outgoingHttpToken,
         incomingHttpToken: peeringDetailsOrError.httpToken,
-        ilpConnectorAddress: peeringDetailsOrError.ilpConnectorAddress
+        ilpConnectorUrl: peeringDetailsOrError.ilpConnectorUrl
       })
     : createdPeerOrError
 
@@ -243,7 +243,7 @@ async function acceptPeeringRequest(
         authTokens: [args.httpToken]
       },
       outgoing: {
-        endpoint: args.ilpConnectorAddress,
+        endpoint: args.ilpConnectorUrl,
         authToken: outgoingHttpToken
       }
     },
@@ -262,7 +262,7 @@ async function acceptPeeringRequest(
         assetId: asset.id,
         outgoingHttpToken,
         incomingHttpToken: args.httpToken,
-        ilpConnectorAddress: args.ilpConnectorAddress
+        ilpConnectorUrl: args.ilpConnectorUrl
       })
     : createdPeerOrError
 
@@ -275,7 +275,7 @@ async function acceptPeeringRequest(
   }
 
   return {
-    ilpConnectorAddress: deps.config.ilpConnectorAddress,
+    ilpConnectorUrl: deps.config.ilpConnectorUrl,
     staticIlpAddress: deps.config.ilpAddress,
     httpToken: peerOrError.http.outgoing.authToken,
     name: deps.config.instanceName
@@ -306,7 +306,7 @@ async function updatePeer(
       incoming: { authTokens: [args.incomingHttpToken] },
       outgoing: {
         authToken: args.outgoingHttpToken,
-        endpoint: args.ilpConnectorAddress
+        endpoint: args.ilpConnectorUrl
       }
     }
   })

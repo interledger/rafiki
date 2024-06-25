@@ -1,4 +1,4 @@
-import { gql } from '@apollo/client'
+import { gql, ApolloError } from '@apollo/client'
 import { v4 as uuid } from 'uuid'
 
 import { getPageTests } from './page.test'
@@ -12,11 +12,16 @@ import { createAsset } from '../../tests/asset'
 import { createWalletAddress } from '../../tests/walletAddress'
 import { createQuote } from '../../tests/quote'
 import { truncateTables } from '../../tests/tableManager'
-import { QuoteError, errorToMessage } from '../../open_payments/quote/errors'
+import {
+  QuoteError,
+  errorToMessage,
+  errorToCode
+} from '../../open_payments/quote/errors'
 import { QuoteService } from '../../open_payments/quote/service'
 import { Quote as QuoteModel } from '../../open_payments/quote/model'
 import { Amount } from '../../open_payments/amount'
 import { CreateQuoteInput, Quote, QuoteResponse } from '../generated/graphql'
+import { GraphQLErrorCode } from '../errors'
 
 describe('Quote Resolvers', (): void => {
   let deps: IocContract<AppServices>
@@ -64,7 +69,7 @@ describe('Quote Resolvers', (): void => {
   }
 
   describe('Query.quote', (): void => {
-    test('200', async (): Promise<void> => {
+    test('success', async (): Promise<void> => {
       const { id: walletAddressId } = await createWalletAddress(deps, {
         assetId: asset.id
       })
@@ -129,11 +134,11 @@ describe('Quote Resolvers', (): void => {
       })
     })
 
-    test('404', async (): Promise<void> => {
+    test('Not found', async (): Promise<void> => {
       jest.spyOn(quoteService, 'get').mockImplementation(async () => undefined)
 
-      await expect(
-        appContainer.apolloClient.query({
+      try {
+        await appContainer.apolloClient.query({
           query: gql`
             query Quote($quoteId: String!) {
               quote(id: $quoteId) {
@@ -143,7 +148,17 @@ describe('Quote Resolvers', (): void => {
           `,
           variables: { quoteId: uuid() }
         })
-      ).rejects.toThrow('quote does not exist')
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApolloError)
+        expect((error as ApolloError).graphQLErrors).toContainEqual(
+          expect.objectContaining({
+            message: 'quote does not exist',
+            extensions: expect.objectContaining({
+              code: GraphQLErrorCode.NotFound
+            })
+          })
+        )
+      }
     })
   })
 
@@ -178,7 +193,7 @@ describe('Quote Resolvers', (): void => {
       ${true}    | ${undefined}     | ${'fixed send to incoming payment'}
       ${false}   | ${receiveAmount} | ${'fixed receive to incoming payment'}
       ${false}   | ${undefined}     | ${'incoming payment'}
-    `('200 ($type)', async ({ withAmount, receiveAmount }): Promise<void> => {
+    `('$type', async ({ withAmount, receiveAmount }): Promise<void> => {
       const amount = withAmount ? debitAmount : undefined
       const { id: walletAddressId } = await createWalletAddress(deps, {
         assetId: asset.id
@@ -206,8 +221,6 @@ describe('Quote Resolvers', (): void => {
           query: gql`
             mutation CreateQuote($input: CreateQuoteInput!) {
               createQuote(input: $input) {
-                code
-                success
                 quote {
                   id
                 }
@@ -219,64 +232,70 @@ describe('Quote Resolvers', (): void => {
         .then((query): QuoteResponse => query.data?.createQuote)
 
       expect(createSpy).toHaveBeenCalledWith({ ...input, method: 'ilp' })
-      expect(query.code).toBe('200')
-      expect(query.success).toBe(true)
       expect(query.quote?.id).toBe(quote?.id)
     })
 
-    test('400', async (): Promise<void> => {
-      const query = await appContainer.apolloClient
-        .query({
-          query: gql`
-            mutation CreateQuote($input: CreateQuoteInput!) {
-              createQuote(input: $input) {
-                code
-                success
-                message
-                quote {
-                  id
+    test('unknown walletAddress', async (): Promise<void> => {
+      try {
+        await appContainer.apolloClient
+          .query({
+            query: gql`
+              mutation CreateQuote($input: CreateQuoteInput!) {
+                createQuote(input: $input) {
+                  quote {
+                    id
+                  }
                 }
               }
-            }
-          `,
-          variables: { input }
-        })
-        .then((query): QuoteResponse => query.data?.createQuote)
-      expect(query.code).toBe('404')
-      expect(query.success).toBe(false)
-      expect(query.message).toBe(
-        errorToMessage[QuoteError.UnknownWalletAddress]
-      )
-      expect(query.quote).toBeNull()
+            `,
+            variables: { input }
+          })
+          .then((query): QuoteResponse => query.data?.createQuote)
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApolloError)
+        expect((error as ApolloError).graphQLErrors).toContainEqual(
+          expect.objectContaining({
+            message: errorToMessage[QuoteError.UnknownWalletAddress],
+            extensions: expect.objectContaining({
+              code: errorToCode[QuoteError.UnknownWalletAddress]
+            })
+          })
+        )
+      }
     })
 
-    test('500', async (): Promise<void> => {
+    test('unknown error', async (): Promise<void> => {
       const createSpy = jest
         .spyOn(quoteService, 'create')
         .mockRejectedValueOnce(new Error('unexpected'))
 
-      const query = await appContainer.apolloClient
-        .query({
-          query: gql`
-            mutation CreateQuote($input: CreateQuoteInput!) {
-              createQuote(input: $input) {
-                code
-                success
-                message
-                quote {
-                  id
+      try {
+        await appContainer.apolloClient
+          .query({
+            query: gql`
+              mutation CreateQuote($input: CreateQuoteInput!) {
+                createQuote(input: $input) {
+                  quote {
+                    id
+                  }
                 }
               }
-            }
-          `,
-          variables: { input }
-        })
-        .then((query): QuoteResponse => query.data?.createQuote)
+            `,
+            variables: { input }
+          })
+          .then((query): QuoteResponse => query.data?.createQuote)
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApolloError)
+        expect((error as ApolloError).graphQLErrors).toContainEqual(
+          expect.objectContaining({
+            message: 'unexpected',
+            extensions: expect.objectContaining({
+              code: GraphQLErrorCode.InternalServerError
+            })
+          })
+        )
+      }
       expect(createSpy).toHaveBeenCalledWith({ ...input, method: 'ilp' })
-      expect(query.code).toBe('500')
-      expect(query.success).toBe(false)
-      expect(query.message).toBe('Error trying to create quote')
-      expect(query.quote).toBeNull()
     })
   })
 

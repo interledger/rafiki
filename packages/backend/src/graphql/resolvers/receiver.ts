@@ -11,6 +11,8 @@ import {
   errorToCode as receiverErrorToCode,
   errorToMessage as receiverErrorToMessage
 } from '../../open_payments/receiver/errors'
+import { GraphQLError } from 'graphql'
+import { GraphQLErrorCode } from '../errors'
 
 export const getReceiver: QueryResolvers<ApolloContext>['receiver'] = async (
   _,
@@ -21,7 +23,11 @@ export const getReceiver: QueryResolvers<ApolloContext>['receiver'] = async (
   const receiver = await receiverService.get(args.id)
   if (!receiver) {
     ctx.logger.error(`Receiver "${args.id}" was not found.`)
-    throw new Error('receiver does not exist')
+    throw new GraphQLError('receiver does not exist', {
+      extensions: {
+        code: GraphQLErrorCode.NotFound
+      }
+    })
   }
   return receiverToGraphql(receiver)
 }
@@ -30,38 +36,25 @@ export const createReceiver: MutationResolvers<ApolloContext>['createReceiver'] 
   async (_, args, ctx): Promise<ResolversTypes['CreateReceiverResponse']> => {
     const receiverService = await ctx.container.use('receiverService')
 
-    try {
-      const receiverOrError = await receiverService.create({
-        walletAddressUrl: args.input.walletAddressUrl,
-        expiresAt: args.input.expiresAt
-          ? new Date(args.input.expiresAt)
-          : undefined,
-        incomingAmount: args.input.incomingAmount,
-        metadata: args.input.metadata
-      })
+    const receiverOrError = await receiverService.create({
+      walletAddressUrl: args.input.walletAddressUrl,
+      expiresAt: args.input.expiresAt
+        ? new Date(args.input.expiresAt)
+        : undefined,
+      incomingAmount: args.input.incomingAmount,
+      metadata: args.input.metadata
+    })
 
-      if (isReceiverError(receiverOrError)) {
-        return {
-          code: receiverErrorToCode(receiverOrError).toString(),
-          success: false,
-          message: receiverErrorToMessage(receiverOrError)
+    if (isReceiverError(receiverOrError)) {
+      throw new GraphQLError(receiverErrorToMessage(receiverOrError), {
+        extensions: {
+          code: receiverErrorToCode(receiverOrError)
         }
-      }
+      })
+    }
 
-      return {
-        code: '200',
-        success: true,
-        receiver: receiverToGraphql(receiverOrError)
-      }
-    } catch (err) {
-      const errorMessage = 'Error trying to create receiver'
-      ctx.logger.error({ err, args }, errorMessage)
-
-      return {
-        code: '500',
-        success: false,
-        message: errorMessage
-      }
+    return {
+      receiver: receiverToGraphql(receiverOrError)
     }
   }
 

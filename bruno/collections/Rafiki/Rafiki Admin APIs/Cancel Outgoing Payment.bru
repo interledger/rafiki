@@ -13,9 +13,52 @@ post {
 body:graphql {
   mutation CancelOutgoingPayment($input: CancelOutgoingPaymentInput!) {
     cancelOutgoingPayment(input: $input) {
-      code
-      message
-      success
+      payment {
+        createdAt
+        error
+        metadata
+        id
+        walletAddressId
+        quote {
+          createdAt
+          expiresAt
+          highEstimatedExchangeRate
+          id
+          lowEstimatedExchangeRate
+          maxPacketAmount
+          minExchangeRate
+          walletAddressId
+          receiveAmount {
+            assetCode
+            assetScale
+            value
+          }
+          receiver
+          debitAmount {
+            assetCode
+            assetScale
+            value
+          }
+        }
+        receiveAmount {
+          assetCode
+          assetScale
+          value
+        }
+        receiver
+        debitAmount {
+          assetCode
+          assetScale
+          value
+        }
+        sentAmount {
+          assetCode
+          assetScale
+          value
+        }
+        state
+        stateAttempts
+      }
     }
   }
 }

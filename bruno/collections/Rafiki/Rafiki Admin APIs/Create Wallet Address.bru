@@ -13,9 +13,6 @@ post {
 body:graphql {
   mutation CreateWalletAddres($input: CreateWalletAddressInput!) {
     createWalletAddress(input: $input) {
-      code
-      success
-      message
       walletAddress {
         id
         createdAt
@@ -57,7 +54,7 @@ script:pre-request {
   const { nanoid } = require("nanoid");
   const scripts = require('./scripts');
   
-  bru.setVar('randomId', nanoid());
+  bru.setVar("randomId", nanoid());
   
   scripts.addApiSignatureHeader();
 }

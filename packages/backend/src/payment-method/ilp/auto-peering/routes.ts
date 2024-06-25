@@ -1,11 +1,11 @@
 import { AppContext } from '../../../app'
 import { BaseService } from '../../../shared/baseService'
-import { errorToCode, errorToMessage, isAutoPeeringError } from './errors'
+import { errorToHttpCode, errorToMessage, isAutoPeeringError } from './errors'
 import { AutoPeeringService } from './service'
 
 interface PeeringRequestArgs {
   staticIlpAddress: string
-  ilpConnectorAddress: string
+  ilpConnectorUrl: string
   asset: { code: string; scale: number }
   httpToken: string
   maxPacketAmount?: number
@@ -49,7 +49,7 @@ async function acceptPeerRequest(
     await deps.autoPeeringService.acceptPeeringRequest(ctx.request.body)
 
   if (isAutoPeeringError(peeringDetailsOrError)) {
-    const errorCode = errorToCode[peeringDetailsOrError]
+    const errorCode = errorToHttpCode[peeringDetailsOrError]
     ctx.status = errorCode
     ctx.body = {
       error: {

@@ -50,12 +50,11 @@ export async function action({ request, params }: ActionFunctionArgs) {
     timeoutSeconds: BigInt(0)
   })
 
-  if (!response?.success) {
+  if (!response?.withdrawal) {
     return setMessageAndRedirect({
       session,
       message: {
         content:
-          response?.message ??
           'Could not withdraw wallet address liquidity. Please try again!',
         type: 'error'
       },
@@ -66,7 +65,7 @@ export async function action({ request, params }: ActionFunctionArgs) {
   return setMessageAndRedirect({
     session,
     message: {
-      content: response.message,
+      content: 'Withdrew wallet address liquidity.',
       type: 'success'
     },
     location: '..'

@@ -13,9 +13,7 @@ post {
 body:graphql {
   mutation revokeGrant($input: RevokeGrantInput!) {
       revokeGrant(input: $input) {
-          code
-          message
-          success
+          id
       }
   }
 }

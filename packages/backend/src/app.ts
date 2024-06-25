@@ -97,6 +97,7 @@ import {
   getWalletAddressUrlFromPath
 } from './open_payments/wallet_address/middleware'
 
+import { LoggingPlugin } from './graphql/plugin'
 export interface AppContextData {
   logger: Logger
   container: AppContainer
@@ -341,12 +342,15 @@ export class App {
     })
     const protection = armor.protect()
 
+    const loggingPlugin = new LoggingPlugin(this.logger)
+
     // Setup Apollo
     this.apolloServer = new ApolloServer({
       schema: schemaWithMiddleware,
       ...protection,
       plugins: [
         ...protection.plugins,
+        loggingPlugin,
         ApolloServerPluginDrainHttpServer({ httpServer })
       ],
       introspection: this.config.env !== 'production'
@@ -661,7 +665,7 @@ export class App {
     router.get(
       WALLET_ADDRESS_PATH,
       getWalletAddressUrlFromPath,
-      createSpspMiddleware(this.config.spspEnabled),
+      createSpspMiddleware(this.config.enableSpspPaymentPointers),
       createValidatorMiddleware(
         walletAddressServerSpec,
         {
