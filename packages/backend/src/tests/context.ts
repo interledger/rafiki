@@ -1,10 +1,12 @@
+import { IocContract } from '@adonisjs/fold'
 import * as httpMocks from 'node-mocks-http'
 import Koa from 'koa'
 import { AppContext, AppContextData, AppRequest } from '../app'
 
 export function createContext<T extends AppContext>(
   reqOpts: httpMocks.RequestOptions,
-  params: Record<string, string> = {}
+  params: Record<string, string> = {},
+  container?: IocContract
 ): T {
   const req = httpMocks.createRequest(reqOpts)
   const res = httpMocks.createResponse({ req })
@@ -17,5 +19,6 @@ export function createContext<T extends AppContext>(
   if (reqOpts.body !== undefined) {
     ctx.request.body = reqOpts.body
   }
+  ctx.container = container
   return ctx as T
 }

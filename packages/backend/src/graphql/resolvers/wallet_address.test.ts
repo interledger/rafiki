@@ -66,8 +66,7 @@ describe('Wallet Address Resolvers', (): void => {
       asset = await createAsset(deps)
       input = {
         assetId: asset.id,
-        url: 'https://alice.me/.well-known/pay',
-        additionalProperties: []
+        url: 'https://alice.me/.well-known/pay'
       }
     })
 
@@ -134,75 +133,88 @@ describe('Wallet Address Resolvers', (): void => {
       }
     )
 
-    test.each`
-      publicName
-      ${'Bob'}
-      ${undefined}
-    `(
-      'Can create a wallet address with additional properties (publicName: $publicName)',
-      async ({ publicName }): Promise<void> => {
-        input.publicName = publicName
-        input.additionalProperties = [
-          { key: '', value: '', visibleInOpenPayments: false },
-          { key: 'key', value: '', visibleInOpenPayments: false },
-          { key: '', value: 'val', visibleInOpenPayments: false },
-          { key: 'key', value: 'val', visibleInOpenPayments: false },
-          { key: 'key-public', value: 'val', visibleInOpenPayments: true }
-        ]
-        const response = await appContainer.apolloClient
-          .mutate({
-            mutation: gql`
-              mutation CreateWalletAddress($input: CreateWalletAddressInput!) {
-                createWalletAddress(input: $input) {
-                  code
-                  success
-                  message
-                  walletAddress {
-                    id
-                    asset {
-                      code
-                      scale
-                    }
-                    url
-                    publicName
+    test('Can create a wallet address with additional properties', async (): Promise<void> => {
+      const validAdditionalProperties = [
+        { key: 'key', value: 'val', visibleInOpenPayments: false },
+        { key: 'key-public', value: 'val', visibleInOpenPayments: true }
+      ]
+      const invalidAdditionalProperties = [
+        { key: '', value: '', visibleInOpenPayments: false },
+        { key: 'key', value: '', visibleInOpenPayments: false },
+        { key: '', value: 'val', visibleInOpenPayments: false }
+      ]
+      input.additionalProperties = [
+        ...validAdditionalProperties,
+        ...invalidAdditionalProperties
+      ]
+      input.publicName = 'Bob'
+
+      const response = await appContainer.apolloClient
+        .mutate({
+          mutation: gql`
+            mutation CreateWalletAddress($input: CreateWalletAddressInput!) {
+              createWalletAddress(input: $input) {
+                code
+                success
+                message
+                walletAddress {
+                  id
+                  asset {
+                    code
+                    scale
+                  }
+                  url
+                  publicName
+                  additionalProperties {
+                    key
+                    value
+                    visibleInOpenPayments
                   }
                 }
               }
-            `,
-            variables: {
-              input
             }
-          })
-          .then((query): CreateWalletAddressMutationResponse => {
-            if (query.data) {
-              return query.data.createWalletAddress
-            } else {
-              throw new Error('Data was empty')
-            }
-          })
+          `,
+          variables: {
+            input
+          }
+        })
+        .then((query): CreateWalletAddressMutationResponse => {
+          if (query.data) {
+            return query.data.createWalletAddress
+          } else {
+            throw new Error('Data was empty')
+          }
+        })
 
-        expect(response.success).toBe(true)
-        expect(response.code).toEqual('200')
-        assert.ok(response.walletAddress)
-        expect(response.walletAddress).toEqual({
-          __typename: 'WalletAddress',
-          id: response.walletAddress.id,
-          url: input.url,
-          asset: {
-            __typename: 'Asset',
-            code: asset.code,
-            scale: asset.scale
-          },
-          publicName: publicName ?? null
+      expect(response.success).toBe(true)
+      expect(response.code).toEqual('200')
+      assert.ok(response.walletAddress)
+      expect(response.walletAddress).toEqual({
+        __typename: 'WalletAddress',
+        id: response.walletAddress.id,
+        url: input.url,
+        asset: {
+          __typename: 'Asset',
+          code: asset.code,
+          scale: asset.scale
+        },
+        publicName: input.publicName,
+        additionalProperties: validAdditionalProperties.map((property) => {
+          return {
+            __typename: 'AdditionalProperty',
+            key: property.key,
+            value: property.value,
+            visibleInOpenPayments: property.visibleInOpenPayments
+          }
         })
-        await expect(
-          walletAddressService.get(response.walletAddress.id)
-        ).resolves.toMatchObject({
-          id: response.walletAddress.id,
-          asset
-        })
-      }
-    )
+      })
+      await expect(
+        walletAddressService.get(response.walletAddress.id)
+      ).resolves.toMatchObject({
+        id: response.walletAddress.id,
+        asset
+      })
+    })
 
     test.each`
       error
@@ -315,6 +327,11 @@ describe('Wallet Address Resolvers', (): void => {
                   id
                   status
                   publicName
+                  additionalProperties {
+                    key
+                    value
+                    visibleInOpenPayments
+                  }
                 }
               }
             }
@@ -335,7 +352,8 @@ describe('Wallet Address Resolvers', (): void => {
       expect(response.code).toEqual('200')
       expect(response.walletAddress).toEqual({
         __typename: 'WalletAddress',
-        ...updateOptions
+        ...updateOptions,
+        additionalProperties: []
       })
 
       const updatedWalletAddress = await walletAddressService.get(
@@ -358,6 +376,180 @@ describe('Wallet Address Resolvers', (): void => {
       expect(updatedWalletAddress.updatedAt.getTime()).toBeGreaterThan(
         originalUpdatedAt.getTime()
       )
+    })
+
+    describe('Wallet Address Additional Properties', (): void => {
+      test('Can add new additional properties to existing wallet address with no additional properties', async (): Promise<void> => {
+        const updateOptions = {
+          id: walletAddress.id,
+          additionalProperties: [
+            { key: 'newKey', value: 'newValue', visibleInOpenPayments: true }
+          ]
+        }
+        const response = await appContainer.apolloClient
+          .mutate({
+            mutation: gql`
+              mutation UpdateWalletAddress($input: UpdateWalletAddressInput!) {
+                updateWalletAddress(input: $input) {
+                  code
+                  success
+                  message
+                  walletAddress {
+                    id
+                    additionalProperties {
+                      key
+                      value
+                      visibleInOpenPayments
+                    }
+                  }
+                }
+              }
+            `,
+            variables: {
+              input: updateOptions
+            }
+          })
+          .then((query): UpdateWalletAddressMutationResponse => {
+            if (query.data) {
+              return query.data.updateWalletAddress
+            } else {
+              throw new Error('Data was empty')
+            }
+          })
+
+        expect(response.success).toBe(true)
+        expect(response.code).toEqual('200')
+        expect(response.walletAddress?.additionalProperties).toEqual(
+          updateOptions.additionalProperties.map((property) => {
+            return {
+              ...property,
+              __typename: 'AdditionalProperty'
+            }
+          })
+        )
+      })
+      test('New additional properties override previous additional properties', async (): Promise<void> => {
+        const createOptions = {
+          additionalProperties: [
+            {
+              fieldKey: 'existingKey',
+              fieldValue: 'existingValue',
+              visibleInOpenPayments: false
+            },
+            {
+              fieldKey: 'existingKey2',
+              fieldValue: 'existingValue2',
+              visibleInOpenPayments: false
+            }
+          ]
+        }
+        walletAddress = await createWalletAddress(deps, createOptions)
+
+        const updateOptions = {
+          id: walletAddress.id,
+          additionalProperties: [
+            { key: 'newKey', value: 'newValue', visibleInOpenPayments: true },
+            {
+              key: 'existingKey2',
+              value: 'updatedExistingValue2',
+              visibleInOpenPayments: false
+            }
+          ]
+        }
+        const response = await appContainer.apolloClient
+          .mutate({
+            mutation: gql`
+              mutation UpdateWalletAddress($input: UpdateWalletAddressInput!) {
+                updateWalletAddress(input: $input) {
+                  code
+                  success
+                  message
+                  walletAddress {
+                    id
+                    additionalProperties {
+                      key
+                      value
+                      visibleInOpenPayments
+                    }
+                  }
+                }
+              }
+            `,
+            variables: {
+              input: updateOptions
+            }
+          })
+          .then((query): UpdateWalletAddressMutationResponse => {
+            if (query.data) {
+              return query.data.updateWalletAddress
+            } else {
+              throw new Error('Data was empty')
+            }
+          })
+
+        expect(response.success).toBe(true)
+        expect(response.code).toEqual('200')
+        // Does not include additional properties from create that were not also in the update
+        expect(response.walletAddress?.additionalProperties).toEqual(
+          updateOptions.additionalProperties.map((property) => {
+            return {
+              ...property,
+              __typename: 'AdditionalProperty'
+            }
+          })
+        )
+      })
+      test('Updating with empty additional properties deletes existing', async (): Promise<void> => {
+        const createOptions = {
+          additionalProperties: [
+            {
+              fieldKey: 'existingKey',
+              fieldValue: 'existingValue',
+              visibleInOpenPayments: false
+            }
+          ]
+        }
+        walletAddress = await createWalletAddress(deps, createOptions)
+
+        const updateOptions = {
+          id: walletAddress.id,
+          additionalProperties: []
+        }
+        const response = await appContainer.apolloClient
+          .mutate({
+            mutation: gql`
+              mutation UpdateWalletAddress($input: UpdateWalletAddressInput!) {
+                updateWalletAddress(input: $input) {
+                  code
+                  success
+                  message
+                  walletAddress {
+                    id
+                    additionalProperties {
+                      key
+                      value
+                      visibleInOpenPayments
+                    }
+                  }
+                }
+              }
+            `,
+            variables: {
+              input: updateOptions
+            }
+          })
+          .then((query): UpdateWalletAddressMutationResponse => {
+            if (query.data) {
+              return query.data.updateWalletAddress
+            } else {
+              throw new Error('Data was empty')
+            }
+          })
+
+        expect(response.success).toBe(true)
+        expect(response.code).toEqual('200')
+        expect(response.walletAddress?.additionalProperties).toEqual([])
+      })
     })
 
     test.each`

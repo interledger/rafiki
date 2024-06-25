@@ -1,7 +1,7 @@
 meta {
-  name: Create Outgoing Payment
+  name: Create Outgoing Payment 2
   type: http
-  seq: 9
+  seq: 10
 }
 
 post {
@@ -16,13 +16,18 @@ headers {
 
 body:json {
   {
-      "walletAddress": "{{senderWalletAddress}}",
-      "incomingPayment": "{{incomingPaymentUrl}}",
-      "debitAmount": {{debitAmount}},
-      "metadata": {
-          "description": "Free Money!"
-      }
+    "walletAddress": "{{senderWalletAddress}}",
+    "incomingPayment": "{{receiverOpenPaymentsHost}}/incoming-payments/{{incomingPaymentId}}",
+    "debitAmount": {
+      "value": "300",
+      "assetCode": "USD",
+      "assetScale": 2
+    },
+    "metadata": {
+      "description": "Free Money!"
+    }
   }
+  
 }
 
 script:pre-request {
@@ -35,7 +40,7 @@ script:pre-request {
 
 script:post-response {
   const body = res.getBody();
-
+  
   if (body?.id) {
     bru.setEnvVar("outgoingPaymentId", body.id.split("/").pop());
   }

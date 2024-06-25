@@ -1,11 +1,11 @@
 meta {
-  name: Get sender wallet address
+  name: Get receiver wallet address
   type: http
-  seq: 1
+  seq: 2
 }
 
 get {
-  url: {{senderWalletAddress}}
+  url: {{receiverWalletAddress}}
   body: none
   auth: none
 }
@@ -17,7 +17,7 @@ headers {
 script:pre-request {
   const scripts = require('./scripts');
   
-  scripts.addHostHeader("senderOpenPaymentsHost");
+  scripts.addHostHeader("receiverOpenPaymentsHost");
 }
 
 script:post-response {
@@ -29,8 +29,8 @@ script:post-response {
   
   const body = res.getBody()
 
-  bru.setEnvVar("senderAssetCode", body?.assetCode)
-  bru.setEnvVar("senderAssetScale", body?.assetScale)
+  bru.setEnvVar("receiverAssetCode", body?.assetCode)
+  bru.setEnvVar("receiverAssetScale", body?.assetScale)
   
   const authUrl = url.parse(body?.authServer)
   if (
@@ -38,9 +38,9 @@ script:post-response {
       authUrl.hostname.includes('happy-life-bank')
   ){
       const port = authUrl.hostname.includes('cloud-nine-wallet')? authUrl.port: Number(authUrl.port) + 1000
-      bru.setEnvVar("senderOpenPaymentsAuthHost", authUrl.protocol + '//localhost:' + port );
+      bru.setEnvVar("receiverOpenPaymentsAuthHost", authUrl.protocol + '//localhost:' + port );
   } else {
-      bru.setEnvVar("senderOpenPaymentsAuthHost", body?.authServer);
+      bru.setEnvVar("receiverOpenPaymentsAuthHost", body?.authServer);
   }
 }
 
