@@ -72,7 +72,7 @@ services:
       EXCHANGE_RATES_URL: http://cloud-nine-wallet/rates
       REDIS_URL: redis://shared-redis:6379/0
       WALLET_ADDRESS_URL: ${CLOUD_NINE_WALLET_ADDRESS_URL:-https://cloud-nine-wallet-backend/.well-known/pay}
-      ILP_CONNECTOR_URL: ${CLOUD_NINE_CONNECTOR_URL}
+      ILP_CONNECTOR_URL: ${CLOUD_NINE_CONNECTOR_URL:-http://127.0.0.1:3002}
       ENABLE_TELEMETRY: true
       KEY_ID: 7097F83B-CB84-469E-96C6-2141C72E22C0
     depends_on:
