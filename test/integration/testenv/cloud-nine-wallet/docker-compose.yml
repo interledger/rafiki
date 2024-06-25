@@ -32,7 +32,7 @@ services:
       AUTH_SERVER_INTROSPECTION_URL: http://cloud-nine-wallet-test-auth:3107
       AUTH_SERVER_GRANT_URL: http://cloud-nine-wallet-test-auth:3106
       ILP_ADDRESS: test.cloud-nine-wallet-test
-      ILP_CONNECTOR_ADDRESS: http://127.0.0.1:3102
+      ILP_CONNECTOR_URL: http://127.0.0.1:3102
       STREAM_SECRET: BjPXtnd00G2mRQwP/8ZpwyZASOch5sUXT5o0iR5b5wU=
       WEBHOOK_URL: http://host.docker.internal:8888/webhooks
       EXCHANGE_RATES_URL: http://host.docker.internal:8888/rates

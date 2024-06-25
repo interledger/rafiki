@@ -39,7 +39,7 @@ describe('Auto Peering Routes', (): void => {
         url: `/`,
         body: {
           staticIlpAddress: 'test.rafiki-money',
-          ilpConnectorAddress: 'http://peer.rafiki.money',
+          ilpConnectorUrl: 'http://peer.rafiki.money',
           asset: { code: asset.code, scale: asset.scale },
           httpToken: 'someHttpToken',
           maxPacketAmount: 1000,
@@ -53,7 +53,7 @@ describe('Auto Peering Routes', (): void => {
       expect(ctx.status).toBe(200)
       expect(ctx.body).toEqual({
         staticIlpAddress: config.ilpAddress,
-        ilpConnectorAddress: config.ilpConnectorAddress,
+        ilpConnectorUrl: config.ilpConnectorUrl,
         httpToken: expect.any(String),
         name: config.instanceName
       })
@@ -65,7 +65,7 @@ describe('Auto Peering Routes', (): void => {
         url: `/`,
         body: {
           staticIlpAddress: 'test.rafiki-money',
-          ilpConnectorAddress: 'http://peer.rafiki.money',
+          ilpConnectorUrl: 'http://peer.rafiki.money',
           asset: { code: 'ABC', scale: 2 },
           httpToken: 'someHttpToken'
         }

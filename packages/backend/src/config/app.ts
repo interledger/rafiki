@@ -97,7 +97,7 @@ export const Config = {
     process.env.REDIS_TLS_CERT_FILE_PATH
   ),
   ilpAddress: envString('ILP_ADDRESS'),
-  ilpConnectorAddress: envString('ILP_CONNECTOR_ADDRESS'),
+  ilpConnectorUrl: envString('ILP_CONNECTOR_URL'),
   instanceName: envString('INSTANCE_NAME'),
   streamSecret: Buffer.from(process.env.STREAM_SECRET || '', 'base64'),
   useTigerbeetle: envBool('USE_TIGERBEETLE', true),
