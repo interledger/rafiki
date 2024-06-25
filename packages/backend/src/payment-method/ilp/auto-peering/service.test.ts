@@ -51,7 +51,7 @@ describe('Auto Peering Service', (): void => {
 
       const args: PeeringRequestArgs = {
         staticIlpAddress: 'test.rafiki-money',
-        ilpConnectorAddress: 'http://peer.rafiki.money',
+        ilpConnectorUrl: 'http://peer.rafiki.money',
         asset: { code: asset.code, scale: asset.scale },
         httpToken: 'someHttpToken',
         name: 'Rafiki Money',
@@ -64,7 +64,7 @@ describe('Auto Peering Service', (): void => {
         autoPeeringService.acceptPeeringRequest(args)
       ).resolves.toEqual({
         staticIlpAddress: config.ilpAddress,
-        ilpConnectorAddress: config.ilpConnectorAddress,
+        ilpConnectorUrl: config.ilpConnectorUrl,
         httpToken: expect.any(String),
         name: config.instanceName
       })
@@ -78,7 +78,7 @@ describe('Auto Peering Service', (): void => {
           incoming: { authTokens: [args.httpToken] },
           outgoing: {
             authToken: expect.any(String),
-            endpoint: args.ilpConnectorAddress
+            endpoint: args.ilpConnectorUrl
           }
         }
       })
@@ -89,7 +89,7 @@ describe('Auto Peering Service', (): void => {
 
       const args: PeeringRequestArgs = {
         staticIlpAddress: 'test.rafiki-money',
-        ilpConnectorAddress: 'http://peer.rafiki.money',
+        ilpConnectorUrl: 'http://peer.rafiki.money',
         asset: { code: asset.code, scale: asset.scale },
         httpToken: 'someHttpToken',
         name: 'Rafiki Money'
@@ -101,7 +101,7 @@ describe('Auto Peering Service', (): void => {
         autoPeeringService.acceptPeeringRequest(args)
       ).resolves.toEqual({
         staticIlpAddress: config.ilpAddress,
-        ilpConnectorAddress: config.ilpConnectorAddress,
+        ilpConnectorUrl: config.ilpConnectorUrl,
         httpToken: expect.any(String),
         name: config.instanceName
       })
@@ -111,7 +111,7 @@ describe('Auto Peering Service', (): void => {
         autoPeeringService.acceptPeeringRequest(args)
       ).resolves.toEqual({
         staticIlpAddress: config.ilpAddress,
-        ilpConnectorAddress: config.ilpConnectorAddress,
+        ilpConnectorUrl: config.ilpConnectorUrl,
         httpToken: expect.any(String),
         name: config.instanceName
       })
@@ -122,7 +122,7 @@ describe('Auto Peering Service', (): void => {
           incoming: { authTokens: [args.httpToken] },
           outgoing: {
             authToken: expect.any(String),
-            endpoint: args.ilpConnectorAddress
+            endpoint: args.ilpConnectorUrl
           }
         }
       })
@@ -132,7 +132,7 @@ describe('Auto Peering Service', (): void => {
     test('returns error if unknown asset', async (): Promise<void> => {
       const args: PeeringRequestArgs = {
         staticIlpAddress: 'test.rafiki-money',
-        ilpConnectorAddress: 'http://peer.rafiki.money',
+        ilpConnectorUrl: 'http://peer.rafiki.money',
         asset: { code: 'USD', scale: 2 },
         httpToken: 'someHttpToken'
       }
@@ -147,7 +147,7 @@ describe('Auto Peering Service', (): void => {
 
       const args: PeeringRequestArgs = {
         staticIlpAddress: 'test.rafiki-money',
-        ilpConnectorAddress: 'invalid',
+        ilpConnectorUrl: 'invalid',
         asset: { code: asset.code, scale: asset.scale },
         httpToken: 'someHttpToken'
       }
@@ -162,7 +162,7 @@ describe('Auto Peering Service', (): void => {
 
       const args: PeeringRequestArgs = {
         staticIlpAddress: 'invalid',
-        ilpConnectorAddress: 'http://peer.rafiki.money',
+        ilpConnectorUrl: 'http://peer.rafiki.money',
         asset: { code: asset.code, scale: asset.scale },
         httpToken: 'someHttpToken'
       }
@@ -177,7 +177,7 @@ describe('Auto Peering Service', (): void => {
 
       const args: PeeringRequestArgs = {
         staticIlpAddress: 'test.rafiki-money',
-        ilpConnectorAddress: 'http://peer.rafiki.money',
+        ilpConnectorUrl: 'http://peer.rafiki.money',
         asset: { code: asset.code, scale: asset.scale },
         httpToken: 'someHttpToken'
       }
@@ -219,7 +219,7 @@ describe('Auto Peering Service', (): void => {
 
       const peerDetails: PeeringDetails = {
         staticIlpAddress: 'test.peer2',
-        ilpConnectorAddress: 'http://peer-two.com',
+        ilpConnectorUrl: 'http://peer-two.com',
         httpToken: 'peerHttpToken',
         name: 'Peer 2'
       }
@@ -232,7 +232,7 @@ describe('Auto Peering Service', (): void => {
               scale: asset.scale
             },
             httpToken: expect.any(String),
-            ilpConnectorAddress: config.ilpConnectorAddress,
+            ilpConnectorUrl: config.ilpConnectorUrl,
             maxPacketAmount: Number(args.maxPacketAmount),
             name: config.instanceName,
             staticIlpAddress: config.ilpAddress
@@ -255,7 +255,7 @@ describe('Auto Peering Service', (): void => {
             authTokens: [peerDetails.httpToken]
           },
           outgoing: {
-            endpoint: peerDetails.ilpConnectorAddress,
+            endpoint: peerDetails.ilpConnectorUrl,
             authToken: expect.any(String)
           }
         },
@@ -280,7 +280,7 @@ describe('Auto Peering Service', (): void => {
 
       const peerDetails: PeeringDetails = {
         staticIlpAddress: 'test.peer2',
-        ilpConnectorAddress: 'http://peer-two.com',
+        ilpConnectorUrl: 'http://peer-two.com',
         httpToken: 'peerHttpToken',
         name: 'Peer 2'
       }
@@ -293,7 +293,7 @@ describe('Auto Peering Service', (): void => {
               scale: asset.scale
             },
             httpToken: expect.any(String),
-            ilpConnectorAddress: config.ilpConnectorAddress,
+            ilpConnectorUrl: config.ilpConnectorUrl,
             maxPacketAmount: Number(args.maxPacketAmount),
             name: config.instanceName,
             staticIlpAddress: config.ilpAddress
@@ -326,7 +326,7 @@ describe('Auto Peering Service', (): void => {
 
       const peerDetails: PeeringDetails = {
         staticIlpAddress: 'test.peer2',
-        ilpConnectorAddress: 'http://peer-two.com',
+        ilpConnectorUrl: 'http://peer-two.com',
         httpToken: 'peerHttpToken',
         name: 'Peer 2'
       }
@@ -339,7 +339,7 @@ describe('Auto Peering Service', (): void => {
               scale: asset.scale
             },
             httpToken: expect.any(String),
-            ilpConnectorAddress: config.ilpConnectorAddress,
+            ilpConnectorUrl: config.ilpConnectorUrl,
             maxPacketAmount: Number(args.maxPacketAmount),
             name: config.instanceName,
             staticIlpAddress: config.ilpAddress
@@ -366,7 +366,7 @@ describe('Auto Peering Service', (): void => {
 
       const peerDetails: PeeringDetails = {
         staticIlpAddress: 'test.peer2',
-        ilpConnectorAddress: 'http://peer-two.com',
+        ilpConnectorUrl: 'http://peer-two.com',
         httpToken: 'peerHttpToken',
         name: 'Peer 2'
       }
@@ -387,7 +387,7 @@ describe('Auto Peering Service', (): void => {
             authTokens: [peerDetails.httpToken]
           },
           outgoing: {
-            endpoint: peerDetails.ilpConnectorAddress,
+            endpoint: peerDetails.ilpConnectorUrl,
             authToken: expect.any(String)
           }
         },
@@ -477,7 +477,7 @@ describe('Auto Peering Service', (): void => {
 
       const peerDetails: PeeringDetails = {
         staticIlpAddress: '',
-        ilpConnectorAddress: 'http://peer-two.com',
+        ilpConnectorUrl: 'http://peer-two.com',
         httpToken: 'peerHttpToken',
         name: 'Peer 2'
       }
@@ -500,7 +500,7 @@ describe('Auto Peering Service', (): void => {
 
       const peerDetails: PeeringDetails = {
         staticIlpAddress: 'test.peer2',
-        ilpConnectorAddress: '',
+        ilpConnectorUrl: '',
         httpToken: 'peerHttpToken',
         name: 'Peer 2'
       }
@@ -523,7 +523,7 @@ describe('Auto Peering Service', (): void => {
 
       const peerDetails: PeeringDetails = {
         staticIlpAddress: 'test.peer2',
-        ilpConnectorAddress: 'http://peer-two.com',
+        ilpConnectorUrl: 'http://peer-two.com',
         httpToken: uuid(),
         name: 'Peer 2'
       }
@@ -579,7 +579,7 @@ describe('Auto Peering Service', (): void => {
 
       const peerDetails: PeeringDetails = {
         staticIlpAddress: 'test.peer2',
-        ilpConnectorAddress: 'http://peer-two.com',
+        ilpConnectorUrl: 'http://peer-two.com',
         httpToken: uuid(),
         name: 'Peer 2'
       }
@@ -617,7 +617,7 @@ describe('Auto Peering Service', (): void => {
 
       const peerDetails: PeeringDetails = {
         staticIlpAddress: 'test.peer2',
-        ilpConnectorAddress: 'http://peer-two.com',
+        ilpConnectorUrl: 'http://peer-two.com',
         httpToken: uuid(),
         name: 'Peer 2'
       }
@@ -649,7 +649,7 @@ describe('Auto Peering Service', (): void => {
 
       const peerDetails: PeeringDetails = {
         staticIlpAddress: 'test.peer2',
-        ilpConnectorAddress: 'http://peer-two.com',
+        ilpConnectorUrl: 'http://peer-two.com',
         httpToken: 'peerHttpToken',
         name: 'Peer 2'
       }
