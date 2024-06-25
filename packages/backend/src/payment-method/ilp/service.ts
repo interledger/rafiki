@@ -10,7 +10,10 @@ import { IlpPlugin, IlpPluginOptions } from './ilp_plugin'
 import * as Pay from '@interledger/pay'
 import { convertRatesToIlpPrices } from './rates'
 import { IAppConfig } from '../../config/app'
-import { PaymentMethodHandlerError } from '../handler/errors'
+import {
+  PaymentMethodHandlerError,
+  PaymentMethodHandlerErrorCode
+} from '../handler/errors'
 
 export interface IlpPaymentService extends PaymentMethodService {}
 
@@ -100,7 +103,31 @@ async function getQuote(
     if (ilpQuote.minDeliveryAmount <= BigInt(0)) {
       throw new PaymentMethodHandlerError('Received error during ILP quoting', {
         description: 'Minimum delivery amount of ILP quote is non-positive',
-        retryable: false
+        retryable: false,
+        code: PaymentMethodHandlerErrorCode.QuoteNonPositiveReceiveAmount
+      })
+    }
+
+    // Because of how it does rounding, the Pay library allows getting a quote for a
+    // maxSourceAmount that won't be able to fulfill even a single unit of the receiving asset.
+    // e.g. if maxSourceAmount is 4 and the high estimated exchange rate is 0.2, 4 * 0.2 = 0.8
+    // where 0.8 < 1, meaning the payment for this quote won't be able to deliver a single unit of value,
+    // even with the most favourable exchange rate. We throw here since we don't want any payments
+    // to be created against this quote. This allows us to fail early.
+    const estimatedReceiveAmount =
+      Number(ilpQuote.maxSourceAmount) *
+      ilpQuote.highEstimatedExchangeRate.valueOf()
+
+    if (estimatedReceiveAmount < 1) {
+      deps.logger.debug({
+        minDeliveryAmount: ilpQuote.minDeliveryAmount,
+        maxSourceAmount: ilpQuote.maxSourceAmount,
+        estimatedReceiveAmount
+      })
+      throw new PaymentMethodHandlerError('Received error during ILP quoting', {
+        description: 'Estimated delivery amount of ILP quote is non-positive',
+        retryable: false,
+        code: PaymentMethodHandlerErrorCode.QuoteNonPositiveReceiveAmount
       })
     }
 
