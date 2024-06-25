@@ -7,7 +7,6 @@ import {
 } from '../generated/graphql'
 import { IncomingPayment } from '../../open_payments/payment/incoming/model'
 import {
-  IncomingPaymentError,
   isIncomingPaymentError,
   errorToCode,
   errorToMessage
@@ -15,6 +14,8 @@ import {
 import { ApolloContext } from '../../app'
 import { getPageInfo } from '../../shared/pagination'
 import { Pagination, SortOrder } from '../../shared/baseModel'
+import { GraphQLError } from 'graphql'
+import { GraphQLErrorCode } from '../errors'
 
 export const getIncomingPayment: QueryResolvers<ApolloContext>['incomingPayment'] =
   async (parent, args, ctx): Promise<ResolversTypes['IncomingPayment']> => {
@@ -24,7 +25,13 @@ export const getIncomingPayment: QueryResolvers<ApolloContext>['incomingPayment'
     const payment = await incomingPaymentService.get({
       id: args.id
     })
-    if (!payment) throw new Error('payment does not exist')
+    if (!payment) {
+      throw new GraphQLError('payment does not exist', {
+        extensions: {
+          code: GraphQLErrorCode.NotFound
+        }
+      })
+    }
     return paymentToGraphql(payment)
   }
 
@@ -34,7 +41,13 @@ export const getWalletAddressIncomingPayments: WalletAddressResolvers<ApolloCont
     args,
     ctx
   ): Promise<ResolversTypes['IncomingPaymentConnection']> => {
-    if (!parent.id) throw new Error('missing wallet address id')
+    if (!parent.id) {
+      throw new GraphQLError('missing wallet address id', {
+        extensions: {
+          code: GraphQLErrorCode.BadUserInput
+        }
+      })
+    }
     const incomingPaymentService = await ctx.container.use(
       'incomingPaymentService'
     )
@@ -75,33 +88,24 @@ export const createIncomingPayment: MutationResolvers<ApolloContext>['createInco
     const incomingPaymentService = await ctx.container.use(
       'incomingPaymentService'
     )
-    return incomingPaymentService
-      .create({
-        walletAddressId: args.input.walletAddressId,
-        expiresAt: !args.input.expiresAt
-          ? undefined
-          : new Date(args.input.expiresAt),
-        incomingAmount: args.input.incomingAmount,
-        metadata: args.input.metadata
+    const incomingPaymentOrError = await incomingPaymentService.create({
+      walletAddressId: args.input.walletAddressId,
+      expiresAt: !args.input.expiresAt
+        ? undefined
+        : new Date(args.input.expiresAt),
+      incomingAmount: args.input.incomingAmount,
+      metadata: args.input.metadata
+    })
+    if (isIncomingPaymentError(incomingPaymentOrError)) {
+      throw new GraphQLError(errorToMessage[incomingPaymentOrError], {
+        extensions: {
+          code: errorToCode[incomingPaymentOrError]
+        }
       })
-      .then((paymentOrErr: IncomingPayment | IncomingPaymentError) =>
-        isIncomingPaymentError(paymentOrErr)
-          ? {
-              code: errorToCode[paymentOrErr].toString(),
-              success: false,
-              message: errorToMessage[paymentOrErr]
-            }
-          : {
-              code: '200',
-              success: true,
-              payment: paymentToGraphql(paymentOrErr)
-            }
-      )
-      .catch(() => ({
-        code: '500',
-        success: false,
-        message: 'Error trying to create incoming payment'
-      }))
+    } else
+      return {
+        payment: paymentToGraphql(incomingPaymentOrError)
+      }
   }
 
 export function paymentToGraphql(

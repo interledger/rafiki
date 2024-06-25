@@ -1,5 +1,5 @@
 import { faker } from '@faker-js/faker'
-import { gql } from '@apollo/client'
+import { ApolloError, gql } from '@apollo/client'
 import assert from 'assert'
 
 import { createTestApp, TestContainer } from '../../tests/app'
@@ -10,16 +10,16 @@ import { initIocContainer } from '../..'
 import { Config } from '../../config/app'
 import { truncateTables } from '../../tests/tableManager'
 import {
-  errorToCode,
   errorToMessage,
+  errorToCode,
   AutoPeeringError
 } from '../../payment-method/ilp/auto-peering/errors'
 import { createAsset } from '../../tests/asset'
 import { CreateOrUpdatePeerByUrlInput } from '../generated/graphql'
 import { AutoPeeringService } from '../../payment-method/ilp/auto-peering/service'
 import { v4 as uuid } from 'uuid'
-
-const nock = (global as unknown as { nock: typeof import('nock') }).nock
+import nock from 'nock'
+import { GraphQLErrorCode } from '../errors'
 
 describe('Auto Peering Resolvers', (): void => {
   let deps: IocContract<AppServices>
@@ -47,9 +47,6 @@ describe('Auto Peering Resolvers', (): void => {
             $input: CreateOrUpdatePeerByUrlInput!
           ) {
             createOrUpdatePeerByUrl(input: $input) {
-              code
-              success
-              message
               peer {
                 id
                 asset {
@@ -121,8 +118,6 @@ describe('Auto Peering Resolvers', (): void => {
 
       const response = await callCreateOrUpdatePeerByUrl(input)
 
-      expect(response.success).toBe(true)
-      expect(response.code).toEqual('200')
       assert.ok(response.peer)
       expect(response.peer).toEqual({
         __typename: 'Peer',
@@ -171,8 +166,6 @@ describe('Auto Peering Resolvers', (): void => {
 
       const response = await callCreateOrUpdatePeerByUrl(input)
 
-      expect(response.success).toBe(true)
-      expect(response.code).toEqual('200')
       assert.ok(response.peer)
       expect(response.peer).toEqual({
         __typename: 'Peer',
@@ -205,8 +198,6 @@ describe('Auto Peering Resolvers', (): void => {
 
       const secondResponse = await callCreateOrUpdatePeerByUrl(secondInput)
 
-      expect(secondResponse.success).toBe(true)
-      expect(secondResponse.code).toEqual('200')
       assert.ok(secondResponse.peer)
       expect(secondResponse.peer).toEqual({
         __typename: 'Peer',
@@ -244,85 +235,90 @@ describe('Auto Peering Resolvers', (): void => {
       ${AutoPeeringError.InvalidPeerUrl}
       ${AutoPeeringError.InvalidPeeringRequest}
       ${AutoPeeringError.LiquidityError}
-    `('4XX - $error', async ({ error }): Promise<void> => {
+    `('Errors with $error', async ({ error: testError }): Promise<void> => {
       jest
         .spyOn(autoPeeringService, 'initiatePeeringRequest')
-        .mockResolvedValueOnce(error)
+        .mockResolvedValueOnce(testError)
       const input = createOrUpdatePeerByUrlInput()
-      const response = await appContainer.apolloClient
-        .mutate({
-          mutation: gql`
-            mutation CreateOrUpdatePeerByUrl(
-              $input: CreateOrUpdatePeerByUrlInput!
-            ) {
-              createOrUpdatePeerByUrl(input: $input) {
-                code
-                success
-                message
-                peer {
-                  id
+      try {
+        await appContainer.apolloClient
+          .mutate({
+            mutation: gql`
+              mutation CreateOrUpdatePeerByUrl(
+                $input: CreateOrUpdatePeerByUrlInput!
+              ) {
+                createOrUpdatePeerByUrl(input: $input) {
+                  peer {
+                    id
+                  }
                 }
               }
+            `,
+            variables: {
+              input
             }
-          `,
-          variables: {
-            input
-          }
-        })
-        .then((query) => {
-          if (query.data) {
-            return query.data.createOrUpdatePeerByUrl
-          } else {
-            throw new Error('Data was empty')
-          }
-        })
-
-      expect(response.success).toBe(false)
-      expect(response.code).toEqual(
-        errorToCode[error as AutoPeeringError].toString()
-      )
-      expect(response.message).toEqual(
-        errorToMessage[error as AutoPeeringError]
-      )
+          })
+          .then((query) => {
+            if (query.data) {
+              return query.data.createOrUpdatePeerByUrl
+            } else {
+              throw new Error('Data was empty')
+            }
+          })
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApolloError)
+        expect((error as ApolloError).graphQLErrors).toContainEqual(
+          expect.objectContaining({
+            message: errorToMessage[testError as AutoPeeringError],
+            extensions: expect.objectContaining({
+              code: errorToCode[testError as AutoPeeringError]
+            })
+          })
+        )
+      }
     })
 
-    test('500', async (): Promise<void> => {
+    test('Internal server error', async (): Promise<void> => {
       jest
         .spyOn(autoPeeringService, 'initiatePeeringRequest')
-        .mockImplementationOnce(async (_args) => {
-          throw new Error('unexpected')
-        })
+        .mockRejectedValueOnce(new Error('unexpected'))
 
-      const response = await appContainer.apolloClient
-        .mutate({
-          mutation: gql`
-            mutation CreateOrUpdatePeerByUrl(
-              $input: CreateOrUpdatePeerByUrlInput!
-            ) {
-              createOrUpdatePeerByUrl(input: $input) {
-                code
-                success
-                message
-                peer {
-                  id
+      try {
+        await appContainer.apolloClient
+          .mutate({
+            mutation: gql`
+              mutation CreateOrUpdatePeerByUrl(
+                $input: CreateOrUpdatePeerByUrlInput!
+              ) {
+                createOrUpdatePeerByUrl(input: $input) {
+                  peer {
+                    id
+                  }
                 }
               }
+            `,
+            variables: {
+              input: createOrUpdatePeerByUrlInput()
             }
-          `,
-          variables: {
-            input: createOrUpdatePeerByUrlInput()
-          }
-        })
-        .then((query) => {
-          if (query.data) {
-            return query.data.createOrUpdatePeerByUrl
-          } else {
-            throw new Error('Data was empty')
-          }
-        })
-      expect(response.code).toBe('500')
-      expect(response.success).toBe(false)
-      expect(response.message).toBe('Error trying to create peer')
+          })
+          .then((query) => {
+            if (query.data) {
+              return query.data.createOrUpdatePeerByUrl
+            } else {
+              throw new Error('Data was empty')
+            }
+          })
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApolloError)
+        expect((error as ApolloError).graphQLErrors).toContainEqual(
+          expect.objectContaining({
+            message: 'unexpected',
+            extensions: expect.objectContaining({
+              code: GraphQLErrorCode.InternalServerError
+            })
+          })
+        )
+      }
     })
   })
 })

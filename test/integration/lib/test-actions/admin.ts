@@ -57,7 +57,6 @@ async function createReceiver(
   const response =
     await sendingASE.adminClient.createReceiver(createReceiverInput)
 
-  expect(response.code).toBe('200')
   assert(response.receiver)
 
   await pollCondition(
@@ -90,7 +89,6 @@ async function createQuote(
     receiver: receiver.id
   })
 
-  expect(response.code).toBe('200')
   assert(response.quote)
 
   return response.quote
@@ -111,7 +109,6 @@ async function createOutgoingPayment(
     quoteId: quote.id
   })
 
-  expect(response.code).toBe('201')
   assert(response.payment)
 
   await pollCondition(

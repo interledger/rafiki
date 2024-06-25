@@ -6,17 +6,14 @@ import {
   AssetResolvers
 } from '../generated/graphql'
 import { Asset } from '../../asset/model'
-import {
-  AssetError,
-  isAssetError,
-  errorToCode,
-  errorToMessage
-} from '../../asset/errors'
+import { errorToCode, errorToMessage, isAssetError } from '../../asset/errors'
 import { ApolloContext } from '../../app'
 import { getPageInfo } from '../../shared/pagination'
 import { Pagination, SortOrder } from '../../shared/baseModel'
 import { feeToGraphql } from './fee'
 import { Fee, FeeType } from '../../fee/model'
+import { GraphQLError } from 'graphql'
+import { GraphQLErrorCode } from '../errors'
 
 export const getAssets: QueryResolvers<ApolloContext>['assets'] = async (
   parent,
@@ -50,7 +47,11 @@ export const getAsset: QueryResolvers<ApolloContext>['asset'] = async (
   const assetService = await ctx.container.use('assetService')
   const asset = await assetService.get(args.id)
   if (!asset) {
-    throw new Error('No asset')
+    throw new GraphQLError('Asset not found', {
+      extensions: {
+        code: GraphQLErrorCode.NotFound
+      }
+    })
   }
   return assetToGraphql(asset)
 }
@@ -61,40 +62,17 @@ export const createAsset: MutationResolvers<ApolloContext>['createAsset'] =
     args,
     ctx
   ): Promise<ResolversTypes['AssetMutationResponse']> => {
-    try {
-      const assetService = await ctx.container.use('assetService')
-      const assetOrError = await assetService.create(args.input)
-      if (isAssetError(assetOrError)) {
-        switch (assetOrError) {
-          case AssetError.DuplicateAsset:
-            return {
-              code: '409',
-              message: 'Asset already exists',
-              success: false
-            }
-          default:
-            throw new Error(`AssetError: ${assetOrError}`)
+    const assetService = await ctx.container.use('assetService')
+    const assetOrError = await assetService.create(args.input)
+    if (isAssetError(assetOrError)) {
+      throw new GraphQLError(errorToMessage[assetOrError], {
+        extensions: {
+          code: errorToCode[assetOrError]
         }
-      }
-      return {
-        code: '200',
-        success: true,
-        message: 'Created Asset',
-        asset: assetToGraphql(assetOrError)
-      }
-    } catch (err) {
-      ctx.logger.error(
-        {
-          options: args.input,
-          err
-        },
-        'error creating asset'
-      )
-      return {
-        code: '500',
-        message: 'Error trying to create asset',
-        success: false
-      }
+      })
+    }
+    return {
+      asset: assetToGraphql(assetOrError)
     }
   }
 
@@ -104,44 +82,21 @@ export const updateAsset: MutationResolvers<ApolloContext>['updateAsset'] =
     args,
     ctx
   ): Promise<ResolversTypes['AssetMutationResponse']> => {
-    try {
-      const assetService = await ctx.container.use('assetService')
-      const assetOrError = await assetService.update({
-        id: args.input.id,
-        withdrawalThreshold: args.input.withdrawalThreshold ?? null,
-        liquidityThreshold: args.input.liquidityThreshold ?? null
-      })
-      if (isAssetError(assetOrError)) {
-        switch (assetOrError) {
-          case AssetError.UnknownAsset:
-            return {
-              code: '404',
-              message: 'Unknown asset',
-              success: false
-            }
-          default:
-            throw new Error(`AssetError: ${assetOrError}`)
+    const assetService = await ctx.container.use('assetService')
+    const assetOrError = await assetService.update({
+      id: args.input.id,
+      withdrawalThreshold: args.input.withdrawalThreshold ?? null,
+      liquidityThreshold: args.input.liquidityThreshold ?? null
+    })
+    if (isAssetError(assetOrError)) {
+      throw new GraphQLError(errorToMessage[assetOrError], {
+        extensions: {
+          code: errorToCode[assetOrError]
         }
-      }
-      return {
-        code: '200',
-        success: true,
-        message: 'Updated Asset',
-        asset: assetToGraphql(assetOrError)
-      }
-    } catch (err) {
-      ctx.logger.error(
-        {
-          options: args.input,
-          err
-        },
-        'error updating asset'
-      )
-      return {
-        code: '400',
-        message: 'Error trying to update asset',
-        success: false
-      }
+      })
+    }
+    return {
+      asset: assetToGraphql(assetOrError)
     }
   }
 
@@ -203,38 +158,21 @@ export const deleteAsset: MutationResolvers<ApolloContext>['deleteAsset'] =
     args,
     ctx
   ): Promise<ResolversTypes['DeleteAssetMutationResponse']> => {
-    try {
-      const assetService = await ctx.container.use('assetService')
-      const assetOrError = await assetService.delete({
-        id: args.input.id,
-        deletedAt: new Date()
-      })
+    const assetService = await ctx.container.use('assetService')
+    const assetOrError = await assetService.delete({
+      id: args.input.id,
+      deletedAt: new Date()
+    })
 
-      if (isAssetError(assetOrError)) {
-        return {
-          code: errorToCode[assetOrError].toString(),
-          message: errorToMessage[assetOrError],
-          success: false
+    if (isAssetError(assetOrError)) {
+      throw new GraphQLError(errorToMessage[assetOrError], {
+        extensions: {
+          code: errorToCode[assetOrError]
         }
-      }
-      return {
-        code: '200',
-        success: true,
-        message: 'Asset deleted'
-      }
-    } catch (err) {
-      ctx.logger.error(
-        {
-          id: args.input.id,
-          err
-        },
-        'error deleting asset'
-      )
-      return {
-        code: '500',
-        message: 'Error trying to delete asset',
-        success: false
-      }
+      })
+    }
+    return {
+      asset: assetToGraphql(assetOrError)
     }
   }
 

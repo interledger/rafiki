@@ -13,9 +13,6 @@ post {
 body:graphql {
   mutation VoidLiquidityWithdrawal($input: VoidLiquidityWithdrawalInput!) {
     voidLiquidityWithdrawal(input: $input) {
-      code
-      error
-      message
       success
     }
   }

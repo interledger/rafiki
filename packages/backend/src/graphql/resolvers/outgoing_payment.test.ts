@@ -1,4 +1,4 @@
-import { gql } from '@apollo/client'
+import { ApolloError, gql } from '@apollo/client'
 import { PaymentError } from '@interledger/pay'
 import { v4 as uuid } from 'uuid'
 import * as Pay from '@interledger/pay'
@@ -15,7 +15,8 @@ import { createWalletAddress } from '../../tests/walletAddress'
 import { truncateTables } from '../../tests/tableManager'
 import {
   OutgoingPaymentError,
-  errorToMessage
+  errorToMessage,
+  errorToCode
 } from '../../open_payments/payment/outgoing/errors'
 import { OutgoingPaymentService } from '../../open_payments/payment/outgoing/service'
 import {
@@ -30,6 +31,7 @@ import {
   OutgoingPaymentState as SchemaPaymentState
 } from '../generated/graphql'
 import { faker } from '@faker-js/faker'
+import { GraphQLErrorCode } from '../errors'
 
 describe('OutgoingPayment Resolvers', (): void => {
   let deps: IocContract<AppServices>
@@ -99,7 +101,7 @@ describe('OutgoingPayment Resolvers', (): void => {
           [state, Pay.PaymentError.ReceiverProtocolViolation]
         ])
       test.each(states)(
-        '200 - %s, error: %s',
+        '%s, error: %s',
         async (state, error): Promise<void> => {
           const amountSent = BigInt(78)
           jest
@@ -211,7 +213,7 @@ describe('OutgoingPayment Resolvers', (): void => {
         }
       )
 
-      test('200 - with added liquidity', async (): Promise<void> => {
+      test('with added liquidity', async (): Promise<void> => {
         await accountingService.createDeposit({
           id: uuid(),
           account: payment,
@@ -242,13 +244,13 @@ describe('OutgoingPayment Resolvers', (): void => {
       })
     })
 
-    test('404', async (): Promise<void> => {
+    test('not found', async (): Promise<void> => {
       jest
         .spyOn(outgoingPaymentService, 'get')
         .mockImplementation(async () => undefined)
 
-      await expect(
-        appContainer.apolloClient.query({
+      try {
+        await appContainer.apolloClient.query({
           query: gql`
             query OutgoingPayment($paymentId: String!) {
               outgoingPayment(id: $paymentId) {
@@ -258,7 +260,17 @@ describe('OutgoingPayment Resolvers', (): void => {
           `,
           variables: { paymentId: uuid() }
         })
-      ).rejects.toThrow('payment does not exist')
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApolloError)
+        expect((error as ApolloError).graphQLErrors).toContainEqual(
+          expect.objectContaining({
+            message: 'payment does not exist',
+            extensions: expect.objectContaining({
+              code: GraphQLErrorCode.NotFound
+            })
+          })
+        )
+      }
     })
   })
 
@@ -268,7 +280,7 @@ describe('OutgoingPayment Resolvers', (): void => {
       externalRef: '202201'
     }
 
-    test('201 (metadata)', async (): Promise<void> => {
+    test('success (metadata)', async (): Promise<void> => {
       const { id: walletAddressId } = await createWalletAddress(deps, {
         assetId: asset.id
       })
@@ -290,8 +302,6 @@ describe('OutgoingPayment Resolvers', (): void => {
               $input: CreateOutgoingPaymentInput!
             ) {
               createOutgoingPayment(input: $input) {
-                code
-                success
                 payment {
                   id
                   state
@@ -306,13 +316,11 @@ describe('OutgoingPayment Resolvers', (): void => {
         )
 
       expect(createSpy).toHaveBeenCalledWith(input)
-      expect(query.code).toBe('201')
-      expect(query.success).toBe(true)
       expect(query.payment?.id).toBe(payment.id)
       expect(query.payment?.state).toBe(SchemaPaymentState.Funding)
     })
 
-    test('400', async (): Promise<void> => {
+    test('Fails if walletAddress unknown', async (): Promise<void> => {
       const createSpy = jest
         .spyOn(outgoingPaymentService, 'create')
         .mockResolvedValueOnce(OutgoingPaymentError.UnknownWalletAddress)
@@ -322,38 +330,42 @@ describe('OutgoingPayment Resolvers', (): void => {
         quoteId: uuid()
       }
 
-      const query = await appContainer.apolloClient
-        .query({
-          query: gql`
-            mutation CreateOutgoingPayment(
-              $input: CreateOutgoingPaymentInput!
-            ) {
-              createOutgoingPayment(input: $input) {
-                code
-                success
-                message
-                payment {
-                  id
-                  state
+      try {
+        await appContainer.apolloClient
+          .query({
+            query: gql`
+              mutation CreateOutgoingPayment(
+                $input: CreateOutgoingPaymentInput!
+              ) {
+                createOutgoingPayment(input: $input) {
+                  payment {
+                    id
+                    state
+                  }
                 }
               }
-            }
-          `,
-          variables: { input }
-        })
-        .then(
-          (query): OutgoingPaymentResponse => query.data?.createOutgoingPayment
+            `,
+            variables: { input }
+          })
+          .then(
+            (query): OutgoingPaymentResponse =>
+              query.data?.createOutgoingPayment
+          )
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApolloError)
+        expect((error as ApolloError).graphQLErrors).toContainEqual(
+          expect.objectContaining({
+            message: errorToMessage[OutgoingPaymentError.UnknownWalletAddress],
+            extensions: expect.objectContaining({
+              code: errorToCode[OutgoingPaymentError.UnknownWalletAddress]
+            })
+          })
         )
-      expect(query.code).toBe('404')
-      expect(query.success).toBe(false)
-      expect(query.message).toBe(
-        errorToMessage[OutgoingPaymentError.UnknownWalletAddress]
-      )
-      expect(query.payment).toBeNull()
-      expect(createSpy).toHaveBeenCalledWith(input)
+      }
+      await expect(createSpy).toHaveBeenCalledWith(input)
     })
 
-    test('500', async (): Promise<void> => {
+    test('internal server error', async (): Promise<void> => {
       const createSpy = jest
         .spyOn(outgoingPaymentService, 'create')
         .mockRejectedValueOnce(new Error('unexpected'))
@@ -363,40 +375,46 @@ describe('OutgoingPayment Resolvers', (): void => {
         quoteId: uuid()
       }
 
-      const query = await appContainer.apolloClient
-        .query({
-          query: gql`
-            mutation CreateOutgoingPayment(
-              $input: CreateOutgoingPaymentInput!
-            ) {
-              createOutgoingPayment(input: $input) {
-                code
-                success
-                message
-                payment {
-                  id
-                  state
+      try {
+        await appContainer.apolloClient
+          .query({
+            query: gql`
+              mutation CreateOutgoingPayment(
+                $input: CreateOutgoingPaymentInput!
+              ) {
+                createOutgoingPayment(input: $input) {
+                  payment {
+                    id
+                    state
+                  }
                 }
               }
-            }
-          `,
-          variables: { input }
-        })
-        .then(
-          (query): OutgoingPaymentResponse => query.data?.createOutgoingPayment
+            `,
+            variables: { input }
+          })
+          .then(
+            (query): OutgoingPaymentResponse =>
+              query.data?.createOutgoingPayment
+          )
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApolloError)
+        expect((error as ApolloError).graphQLErrors).toContainEqual(
+          expect.objectContaining({
+            message: 'unexpected',
+            extensions: expect.objectContaining({
+              code: GraphQLErrorCode.InternalServerError
+            })
+          })
         )
+      }
       expect(createSpy).toHaveBeenCalledWith(input)
-      expect(query.code).toBe('500')
-      expect(query.success).toBe(false)
-      expect(query.message).toBe('Error trying to create outgoing payment')
-      expect(query.payment).toBeNull()
     })
   })
 
   describe('Mutation.createOutgoingPaymentFromIncomingPayment', (): void => {
     const mockIncomingPaymentUrl = `https://${faker.internet.domainName()}/incoming-payments/${uuid()}`
 
-    test('201', async (): Promise<void> => {
+    test('create', async (): Promise<void> => {
       const walletAddress = await createWalletAddress(deps, {
         assetId: asset.id
       })
@@ -423,8 +441,6 @@ describe('OutgoingPayment Resolvers', (): void => {
               $input: CreateOutgoingPaymentFromIncomingPaymentInput!
             ) {
               createOutgoingPaymentFromIncomingPayment(input: $input) {
-                code
-                success
                 payment {
                   id
                   state
@@ -440,13 +456,11 @@ describe('OutgoingPayment Resolvers', (): void => {
         )
 
       expect(createSpy).toHaveBeenCalledWith(input)
-      expect(query.code).toBe('201')
-      expect(query.success).toBe(true)
       expect(query.payment?.id).toBe(payment.id)
       expect(query.payment?.state).toBe(SchemaPaymentState.Funding)
     })
 
-    test('400', async (): Promise<void> => {
+    test('unknown wallet address', async (): Promise<void> => {
       const createSpy = jest
         .spyOn(outgoingPaymentService, 'create')
         .mockResolvedValueOnce(OutgoingPaymentError.UnknownWalletAddress)
@@ -461,39 +475,42 @@ describe('OutgoingPayment Resolvers', (): void => {
         }
       }
 
-      const query = await appContainer.apolloClient
-        .query({
-          query: gql`
-            mutation CreateOutgoingPaymentFromIncomingPayment(
-              $input: CreateOutgoingPaymentFromIncomingPaymentInput!
-            ) {
-              createOutgoingPaymentFromIncomingPayment(input: $input) {
-                code
-                success
-                message
-                payment {
-                  id
-                  state
+      try {
+        await appContainer.apolloClient
+          .query({
+            query: gql`
+              mutation CreateOutgoingPaymentFromIncomingPayment(
+                $input: CreateOutgoingPaymentFromIncomingPaymentInput!
+              ) {
+                createOutgoingPaymentFromIncomingPayment(input: $input) {
+                  payment {
+                    id
+                    state
+                  }
                 }
               }
-            }
-          `,
-          variables: { input }
-        })
-        .then(
-          (query): OutgoingPaymentResponse =>
-            query.data?.createOutgoingPaymentFromIncomingPayment
+            `,
+            variables: { input }
+          })
+          .then(
+            (query): OutgoingPaymentResponse =>
+              query.data?.createOutgoingPaymentFromIncomingPayment
+          )
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApolloError)
+        expect((error as ApolloError).graphQLErrors).toContainEqual(
+          expect.objectContaining({
+            message: errorToMessage[OutgoingPaymentError.UnknownWalletAddress],
+            extensions: expect.objectContaining({
+              code: errorToCode[OutgoingPaymentError.UnknownWalletAddress]
+            })
+          })
         )
+      }
       expect(createSpy).toHaveBeenCalledWith(input)
-      expect(query.code).toBe('404')
-      expect(query.success).toBe(false)
-      expect(query.message).toBe(
-        errorToMessage[OutgoingPaymentError.UnknownWalletAddress]
-      )
-      expect(query.payment).toBeNull()
     })
 
-    test('500', async (): Promise<void> => {
+    test('unknown error', async (): Promise<void> => {
       const createSpy = jest
         .spyOn(outgoingPaymentService, 'create')
         .mockRejectedValueOnce(new Error('unexpected'))
@@ -508,34 +525,39 @@ describe('OutgoingPayment Resolvers', (): void => {
         }
       }
 
-      const query = await appContainer.apolloClient
-        .query({
-          query: gql`
-            mutation CreateOutgoingPaymentFromIncomingPayment(
-              $input: CreateOutgoingPaymentFromIncomingPaymentInput!
-            ) {
-              createOutgoingPaymentFromIncomingPayment(input: $input) {
-                code
-                success
-                message
-                payment {
-                  id
-                  state
+      try {
+        await appContainer.apolloClient
+          .query({
+            query: gql`
+              mutation CreateOutgoingPaymentFromIncomingPayment(
+                $input: CreateOutgoingPaymentFromIncomingPaymentInput!
+              ) {
+                createOutgoingPaymentFromIncomingPayment(input: $input) {
+                  payment {
+                    id
+                    state
+                  }
                 }
               }
-            }
-          `,
-          variables: { input }
-        })
-        .then(
-          (query): OutgoingPaymentResponse =>
-            query.data?.createOutgoingPaymentFromIncomingPayment
+            `,
+            variables: { input }
+          })
+          .then(
+            (query): OutgoingPaymentResponse =>
+              query.data?.createOutgoingPaymentFromIncomingPayment
+          )
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApolloError)
+        expect((error as ApolloError).graphQLErrors).toContainEqual(
+          expect.objectContaining({
+            message: 'unexpected',
+            extensions: expect.objectContaining({
+              code: GraphQLErrorCode.InternalServerError
+            })
+          })
         )
+      }
       expect(createSpy).toHaveBeenCalledWith(input)
-      expect(query.code).toBe('500')
-      expect(query.success).toBe(false)
-      expect(query.message).toBe('Error trying to create outgoing payment')
-      expect(query.payment).toBeNull()
     })
   })
 
@@ -574,8 +596,6 @@ describe('OutgoingPayment Resolvers', (): void => {
                 $input: CancelOutgoingPaymentInput!
               ) {
                 cancelOutgoingPayment(input: $input) {
-                  code
-                  success
                   payment {
                     id
                     state
@@ -592,8 +612,6 @@ describe('OutgoingPayment Resolvers', (): void => {
           )
 
         expect(cancelSpy).toHaveBeenCalledWith(input)
-        expect(mutationResponse.code).toBe('200')
-        expect(mutationResponse.success).toBe(true)
         expect(mutationResponse.payment).toEqual({
           __typename: 'OutgoingPayment',
           id: input.id,
@@ -605,52 +623,53 @@ describe('OutgoingPayment Resolvers', (): void => {
       }
     )
 
-    const errors: [string, OutgoingPaymentError][] = [
-      ['409', OutgoingPaymentError.WrongState],
-      ['404', OutgoingPaymentError.UnknownPayment]
+    const errors: [OutgoingPaymentError][] = [
+      [OutgoingPaymentError.WrongState],
+      [OutgoingPaymentError.UnknownPayment]
     ]
     test.each(errors)(
       '%s - outgoing payment error',
-      async (statusCode, paymentError): Promise<void> => {
+      async (paymentError): Promise<void> => {
         const cancelSpy = jest
           .spyOn(outgoingPaymentService, 'cancel')
           .mockResolvedValueOnce(paymentError)
 
         const input = { id: uuid() }
 
-        const mutationResponse = await appContainer.apolloClient
-          .mutate({
-            mutation: gql`
-              mutation CancelOutgoingPayment(
-                $input: CancelOutgoingPaymentInput!
-              ) {
-                cancelOutgoingPayment(input: $input) {
-                  code
-                  message
-                  success
-                  payment {
-                    id
-                    state
-                    metadata
+        try {
+          await appContainer.apolloClient
+            .mutate({
+              mutation: gql`
+                mutation CancelOutgoingPayment(
+                  $input: CancelOutgoingPaymentInput!
+                ) {
+                  cancelOutgoingPayment(input: $input) {
+                    payment {
+                      id
+                      state
+                      metadata
+                    }
                   }
                 }
-              }
-            `,
-            variables: { input }
-          })
-          .then(
-            (query): OutgoingPaymentResponse =>
-              query.data?.cancelOutgoingPayment
+              `,
+              variables: { input }
+            })
+            .then(
+              (query): OutgoingPaymentResponse =>
+                query.data?.cancelOutgoingPayment
+            )
+        } catch (error) {
+          expect(error).toBeInstanceOf(ApolloError)
+          expect((error as ApolloError).graphQLErrors).toContainEqual(
+            expect.objectContaining({
+              message: errorToMessage[paymentError],
+              extensions: expect.objectContaining({
+                code: errorToCode[paymentError]
+              })
+            })
           )
-
+        }
         expect(cancelSpy).toHaveBeenCalledWith(input)
-        expect(mutationResponse).toEqual({
-          __typename: 'OutgoingPaymentResponse',
-          code: statusCode,
-          message: errorToMessage[paymentError],
-          success: false,
-          payment: null
-        })
       }
     )
   })

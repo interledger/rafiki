@@ -6,7 +6,6 @@ import {
   ResolversTypes
 } from '../generated/graphql'
 import {
-  QuoteError,
   isQuoteError,
   errorToCode,
   errorToMessage
@@ -16,6 +15,8 @@ import { ApolloContext } from '../../app'
 import { getPageInfo } from '../../shared/pagination'
 import { Pagination, SortOrder } from '../../shared/baseModel'
 import { CreateQuoteOptions } from '../../open_payments/quote/service'
+import { GraphQLError } from 'graphql'
+import { GraphQLErrorCode } from '../errors'
 
 export const getQuote: QueryResolvers<ApolloContext>['quote'] = async (
   parent,
@@ -26,7 +27,13 @@ export const getQuote: QueryResolvers<ApolloContext>['quote'] = async (
   const quote = await quoteService.get({
     id: args.id
   })
-  if (!quote) throw new Error('quote does not exist')
+  if (!quote) {
+    throw new GraphQLError('quote does not exist', {
+      extensions: {
+        code: GraphQLErrorCode.NotFound
+      }
+    })
+  }
   return quoteToGraphql(quote)
 }
 
@@ -41,31 +48,28 @@ export const createQuote: MutationResolvers<ApolloContext>['createQuote'] =
     if (args.input.debitAmount) options.debitAmount = args.input.debitAmount
     if (args.input.receiveAmount)
       options.receiveAmount = args.input.receiveAmount
-    return quoteService
-      .create(options)
-      .then((quoteOrErr: Quote | QuoteError) =>
-        isQuoteError(quoteOrErr)
-          ? {
-              code: errorToCode[quoteOrErr].toString(),
-              success: false,
-              message: errorToMessage[quoteOrErr]
-            }
-          : {
-              code: '200',
-              success: true,
-              quote: quoteToGraphql(quoteOrErr)
-            }
-      )
-      .catch(() => ({
-        code: '500',
-        success: false,
-        message: 'Error trying to create quote'
-      }))
+    const quoteOrError = await quoteService.create(options)
+    if (isQuoteError(quoteOrError)) {
+      throw new GraphQLError(errorToMessage[quoteOrError], {
+        extensions: {
+          code: errorToCode[quoteOrError]
+        }
+      })
+    } else
+      return {
+        quote: quoteToGraphql(quoteOrError)
+      }
   }
 
 export const getWalletAddressQuotes: WalletAddressResolvers<ApolloContext>['quotes'] =
   async (parent, args, ctx): Promise<ResolversTypes['QuoteConnection']> => {
-    if (!parent.id) throw new Error('missing wallet address id')
+    if (!parent.id) {
+      throw new GraphQLError('missing wallet address id', {
+        extensions: {
+          code: GraphQLErrorCode.BadUserInput
+        }
+      })
+    }
     const quoteService = await ctx.container.use('quoteService')
     const { sortOrder, ...pagination } = args
     const order = sortOrder === 'ASC' ? SortOrder.Asc : SortOrder.Desc

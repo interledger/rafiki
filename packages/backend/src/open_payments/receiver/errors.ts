@@ -1,3 +1,4 @@
+import { GraphQLErrorCode } from '../../graphql/errors'
 import {
   errorToMessage as incomingPaymentErrorToMessage,
   errorToCode as incomingPaymentErrorToCode,
@@ -20,7 +21,7 @@ export const ReceiverError = {
 export const isReceiverError = (o: any): o is ReceiverError =>
   Object.values(ReceiverError).includes(o)
 
-export const errorToCode = (error: ReceiverError): number =>
+export const errorToCode = (error: ReceiverError): GraphQLErrorCode =>
   isIncomingPaymentError(error)
     ? incomingPaymentErrorToCode[error]
     : remoteIncomingPaymentErrorToCode[error]

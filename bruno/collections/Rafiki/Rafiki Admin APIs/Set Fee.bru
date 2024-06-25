@@ -13,9 +13,6 @@ post {
 body:graphql {
   mutation SetFee($input: SetFeeInput!) {
       setFee(input: $input) {
-          code
-          success
-          message
           fee {
               id
               assetId

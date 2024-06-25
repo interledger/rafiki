@@ -1,3 +1,5 @@
+import { GraphQLErrorCode } from '../../../graphql/errors'
+
 export enum PeerError {
   DuplicateIncomingToken = 'DuplicateIncomingToken',
   DuplicatePeer = 'DuplicatePeer',
@@ -13,15 +15,15 @@ export const isPeerError = (o: any): o is PeerError =>
   Object.values(PeerError).includes(o)
 
 export const errorToCode: {
-  [key in PeerError]: number
+  [key in PeerError]: GraphQLErrorCode
 } = {
-  [PeerError.DuplicateIncomingToken]: 409,
-  [PeerError.DuplicatePeer]: 409,
-  [PeerError.InvalidStaticIlpAddress]: 400,
-  [PeerError.InvalidHTTPEndpoint]: 400,
-  [PeerError.UnknownAsset]: 400,
-  [PeerError.UnknownPeer]: 404,
-  [PeerError.InvalidInitialLiquidity]: 400
+  [PeerError.DuplicateIncomingToken]: GraphQLErrorCode.Duplicate,
+  [PeerError.DuplicatePeer]: GraphQLErrorCode.Duplicate,
+  [PeerError.InvalidStaticIlpAddress]: GraphQLErrorCode.BadUserInput,
+  [PeerError.InvalidHTTPEndpoint]: GraphQLErrorCode.BadUserInput,
+  [PeerError.UnknownAsset]: GraphQLErrorCode.NotFound,
+  [PeerError.UnknownPeer]: GraphQLErrorCode.NotFound,
+  [PeerError.InvalidInitialLiquidity]: GraphQLErrorCode.BadUserInput
 }
 
 export const errorToMessage: {
