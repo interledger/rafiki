@@ -4,14 +4,13 @@ import { initIocContainer } from '../..'
 import { Config } from '../../config/app'
 import { createTestApp, TestContainer } from '../../tests/app'
 import { truncateTables } from '../../tests/tableManager'
-import { gql } from '@apollo/client'
+import { ApolloError, gql } from '@apollo/client'
 import { SetFeeResponse } from '../generated/graphql'
 import { Asset } from '../../asset/model'
 import { createAsset } from '../../tests/asset'
 import { FeeType } from '../../fee/model'
 import { FeeService } from '../../fee/service'
 import { v4 } from 'uuid'
-import { GraphQLError } from 'graphql'
 import { FeeError, errorToMessage, errorToCode } from '../../fee/errors'
 import { GraphQLErrorCode } from '../errors'
 
@@ -94,39 +93,43 @@ describe('Fee Resolvers', () => {
           basisPoints: 100
         }
       }
-      const gqlQuery = appContainer.apolloClient
-        .mutate({
-          mutation: gql`
-            mutation SetFee($input: SetFeeInput!) {
-              setFee(input: $input) {
-                fee {
-                  id
-                  assetId
-                  type
-                  fixed
-                  basisPoints
-                  createdAt
+      try {
+        await appContainer.apolloClient
+          .mutate({
+            mutation: gql`
+              mutation SetFee($input: SetFeeInput!) {
+                setFee(input: $input) {
+                  fee {
+                    id
+                    assetId
+                    type
+                    fixed
+                    basisPoints
+                    createdAt
+                  }
                 }
               }
+            `,
+            variables: { input }
+          })
+          .then((query): SetFeeResponse => {
+            if (query.data) {
+              return query.data.setFee
+            } else {
+              throw new Error('Data was empty')
             }
-          `,
-          variables: { input }
-        })
-        .then((query): SetFeeResponse => {
-          if (query.data) {
-            return query.data.setFee
-          } else {
-            throw new Error('Data was empty')
-          }
-        })
-
-      await expect(gqlQuery).rejects.toThrow(
-        new GraphQLError(errorToMessage[FeeError.UnknownAsset], {
-          extensions: {
-            code: errorToCode[FeeError.UnknownAsset]
-          }
-        })
-      )
+          })
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApolloError)
+        expect((error as ApolloError).graphQLErrors).toContainEqual(
+          expect.objectContaining({
+            message: errorToMessage[FeeError.UnknownAsset],
+            extensions: expect.objectContaining({
+              code: errorToCode[FeeError.UnknownAsset]
+            })
+          })
+        )
+      }
     })
 
     test('Returns error for invalid percent fee', async (): Promise<void> => {
@@ -138,42 +141,46 @@ describe('Fee Resolvers', () => {
           basisPoints: -10_000
         }
       }
-      const gqlQuery = appContainer.apolloClient
-        .mutate({
-          mutation: gql`
-            mutation SetFee($input: SetFeeInput!) {
-              setFee(input: $input) {
-                fee {
-                  id
-                  assetId
-                  type
-                  fixed
-                  basisPoints
-                  createdAt
+      try {
+        await appContainer.apolloClient
+          .mutate({
+            mutation: gql`
+              mutation SetFee($input: SetFeeInput!) {
+                setFee(input: $input) {
+                  fee {
+                    id
+                    assetId
+                    type
+                    fixed
+                    basisPoints
+                    createdAt
+                  }
                 }
               }
+            `,
+            variables: { input }
+          })
+          .then((query): SetFeeResponse => {
+            if (query.data) {
+              return query.data.setFee
+            } else {
+              throw new Error('Data was empty')
             }
-          `,
-          variables: { input }
-        })
-        .then((query): SetFeeResponse => {
-          if (query.data) {
-            return query.data.setFee
-          } else {
-            throw new Error('Data was empty')
-          }
-        })
-
-      await expect(gqlQuery).rejects.toThrow(
-        new GraphQLError(errorToMessage[FeeError.InvalidBasisPointFee], {
-          extensions: {
-            code: errorToCode[FeeError.InvalidBasisPointFee]
-          }
-        })
-      )
+          })
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApolloError)
+        expect((error as ApolloError).graphQLErrors).toContainEqual(
+          expect.objectContaining({
+            message: errorToMessage[FeeError.InvalidBasisPointFee],
+            extensions: expect.objectContaining({
+              code: errorToCode[FeeError.InvalidBasisPointFee]
+            })
+          })
+        )
+      }
     })
 
-    test('Returns 500 error for unhandled errors', async (): Promise<void> => {
+    test('Returns internal server error for unhandled errors', async (): Promise<void> => {
       jest.spyOn(feeService, 'create').mockImplementationOnce(async () => {
         throw new Error('Unknown error')
       })
@@ -185,39 +192,43 @@ describe('Fee Resolvers', () => {
           basisPoints: -10_000
         }
       }
-      const gqlQuery = appContainer.apolloClient
-        .mutate({
-          mutation: gql`
-            mutation setFee($input: SetFeeInput!) {
-              setFee(input: $input) {
-                fee {
-                  id
-                  assetId
-                  type
-                  fixed
-                  basisPoints
-                  createdAt
+      try {
+        await appContainer.apolloClient
+          .mutate({
+            mutation: gql`
+              mutation setFee($input: SetFeeInput!) {
+                setFee(input: $input) {
+                  fee {
+                    id
+                    assetId
+                    type
+                    fixed
+                    basisPoints
+                    createdAt
+                  }
                 }
               }
+            `,
+            variables: { input }
+          })
+          .then((query): SetFeeResponse => {
+            if (query.data) {
+              return query.data.setFee
+            } else {
+              throw new Error('Data was empty')
             }
-          `,
-          variables: { input }
-        })
-        .then((query): SetFeeResponse => {
-          if (query.data) {
-            return query.data.setFee
-          } else {
-            throw new Error('Data was empty')
-          }
-        })
-
-      await expect(gqlQuery).rejects.toThrow(
-        new GraphQLError('Unknown error', {
-          extensions: {
-            code: GraphQLErrorCode.InternalServerError
-          }
-        })
-      )
+          })
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApolloError)
+        expect((error as ApolloError).graphQLErrors).toContainEqual(
+          expect.objectContaining({
+            message: 'Unknown error',
+            extensions: expect.objectContaining({
+              code: GraphQLErrorCode.InternalServerError
+            })
+          })
+        )
+      }
     })
   })
 })

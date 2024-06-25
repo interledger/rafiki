@@ -1,5 +1,5 @@
 import assert from 'assert'
-import { gql } from '@apollo/client'
+import { ApolloError, gql } from '@apollo/client'
 import { generateJwk } from '@interledger/http-signature-utils'
 import { v4 as uuid } from 'uuid'
 
@@ -19,7 +19,6 @@ import { WalletAddressKeyService } from '../../open_payments/wallet_address/key/
 import { createWalletAddress } from '../../tests/walletAddress'
 import { getPageTests } from './page.test'
 import { createWalletAddressKey } from '../../tests/walletAddressKey'
-import { GraphQLError } from 'graphql'
 import { GraphQLErrorCode } from '../errors'
 
 const TEST_KEY = generateJwk({ keyId: uuid() })
@@ -100,7 +99,7 @@ describe('Wallet Address Key Resolvers', (): void => {
       })
     })
 
-    test('500', async (): Promise<void> => {
+    test('internal server error', async (): Promise<void> => {
       jest
         .spyOn(walletAddressKeyService, 'create')
         .mockImplementationOnce(async (_args) => {
@@ -114,46 +113,51 @@ describe('Wallet Address Key Resolvers', (): void => {
         jwk: TEST_KEY
       }
 
-      const gqlQuery = appContainer.apolloClient
-        .mutate({
-          mutation: gql`
-            mutation CreateWalletAddressKey(
-              $input: CreateWalletAddressKeyInput!
-            ) {
-              createWalletAddressKey(input: $input) {
-                walletAddressKey {
-                  id
-                  walletAddressId
-                  jwk {
-                    kid
-                    x
-                    alg
-                    kty
-                    crv
+      try {
+        await appContainer.apolloClient
+          .mutate({
+            mutation: gql`
+              mutation CreateWalletAddressKey(
+                $input: CreateWalletAddressKeyInput!
+              ) {
+                createWalletAddressKey(input: $input) {
+                  walletAddressKey {
+                    id
+                    walletAddressId
+                    jwk {
+                      kid
+                      x
+                      alg
+                      kty
+                      crv
+                    }
+                    createdAt
                   }
-                  createdAt
                 }
               }
+            `,
+            variables: {
+              input
             }
-          `,
-          variables: {
-            input
-          }
-        })
-        .then((query): CreateWalletAddressKeyMutationResponse => {
-          if (query.data) {
-            return query.data.createWalletAddressKey
-          } else {
-            throw new Error('Data was empty')
-          }
-        })
-      await expect(gqlQuery).rejects.toThrow(
-        new GraphQLError('unexpected', {
-          extensions: {
-            code: GraphQLErrorCode.InternalServerError
-          }
-        })
-      )
+          })
+          .then((query): CreateWalletAddressKeyMutationResponse => {
+            if (query.data) {
+              return query.data.createWalletAddressKey
+            } else {
+              throw new Error('Data was empty')
+            }
+          })
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApolloError)
+        expect((error as ApolloError).graphQLErrors).toContainEqual(
+          expect.objectContaining({
+            message: 'unexpected',
+            extensions: expect.objectContaining({
+              code: GraphQLErrorCode.InternalServerError
+            })
+          })
+        )
+      }
     })
   })
 
@@ -216,41 +220,45 @@ describe('Wallet Address Key Resolvers', (): void => {
     })
 
     test('Returns not found if key does not exist', async (): Promise<void> => {
-      const gqlQuery = appContainer.apolloClient
-        .mutate({
-          mutation: gql`
-            mutation revokeWalletAddressKey(
-              $input: RevokeWalletAddressKeyInput!
-            ) {
-              revokeWalletAddressKey(input: $input) {
-                walletAddressKey {
-                  id
-                  walletAddressId
+      try {
+        await appContainer.apolloClient
+          .mutate({
+            mutation: gql`
+              mutation revokeWalletAddressKey(
+                $input: RevokeWalletAddressKeyInput!
+              ) {
+                revokeWalletAddressKey(input: $input) {
+                  walletAddressKey {
+                    id
+                    walletAddressId
+                  }
                 }
               }
+            `,
+            variables: {
+              input: {
+                id: uuid()
+              }
             }
-          `,
-          variables: {
-            input: {
-              id: uuid()
+          })
+          .then((query): RevokeWalletAddressKeyMutationResponse => {
+            if (query.data) {
+              return query.data.revokeWalletAddressKey
+            } else {
+              throw new Error('Data was empty')
             }
-          }
-        })
-        .then((query): RevokeWalletAddressKeyMutationResponse => {
-          if (query.data) {
-            return query.data.revokeWalletAddressKey
-          } else {
-            throw new Error('Data was empty')
-          }
-        })
-
-      await expect(gqlQuery).rejects.toThrow(
-        new GraphQLError('Wallet address key not found', {
-          extensions: {
-            code: GraphQLErrorCode.NotFound
-          }
-        })
-      )
+          })
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApolloError)
+        expect((error as ApolloError).graphQLErrors).toContainEqual(
+          expect.objectContaining({
+            message: 'Wallet address key not found',
+            extensions: expect.objectContaining({
+              code: GraphQLErrorCode.NotFound
+            })
+          })
+        )
+      }
     })
   })
 

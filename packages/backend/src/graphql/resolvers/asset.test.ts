@@ -1,4 +1,4 @@
-import { gql } from '@apollo/client'
+import { ApolloError, gql } from '@apollo/client'
 import assert from 'assert'
 import { v4 as uuid } from 'uuid'
 
@@ -31,7 +31,6 @@ import { Fee, FeeType } from '../../fee/model'
 import { isFeeError } from '../../fee/errors'
 import { createFee } from '../../tests/fee'
 import { createAsset } from '../../tests/asset'
-import { GraphQLError } from 'graphql'
 import { GraphQLErrorCode } from '../errors'
 
 describe('Asset Resolvers', (): void => {
@@ -133,36 +132,40 @@ describe('Asset Resolvers', (): void => {
     test('Returns error for duplicate asset', async (): Promise<void> => {
       const input = randomAsset()
       await expect(assetService.create(input)).resolves.toMatchObject(input)
-      const gqlQuery = appContainer.apolloClient
-        .mutate({
-          mutation: gql`
-            mutation CreateAsset($input: CreateAssetInput!) {
-              createAsset(input: $input) {
-                asset {
-                  id
+      try {
+        await appContainer.apolloClient
+          .mutate({
+            mutation: gql`
+              mutation CreateAsset($input: CreateAssetInput!) {
+                createAsset(input: $input) {
+                  asset {
+                    id
+                  }
                 }
               }
+            `,
+            variables: {
+              input
             }
-          `,
-          variables: {
-            input
-          }
-        })
-        .then((query): AssetMutationResponse => {
-          if (query.data) {
-            return query.data.createAsset
-          } else {
-            throw new Error('Data was empty')
-          }
-        })
-
-      await expect(gqlQuery).rejects.toThrow(
-        new GraphQLError(errorToMessage[AssetError.DuplicateAsset], {
-          extensions: {
-            code: errorToCode[AssetError.DuplicateAsset]
-          }
-        })
-      )
+          })
+          .then((query): AssetMutationResponse => {
+            if (query.data) {
+              return query.data.createAsset
+            } else {
+              throw new Error('Data was empty')
+            }
+          })
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApolloError)
+        expect((error as ApolloError).graphQLErrors).toContainEqual(
+          expect.objectContaining({
+            message: errorToMessage[AssetError.DuplicateAsset],
+            extensions: expect.objectContaining({
+              code: errorToCode[AssetError.DuplicateAsset]
+            })
+          })
+        )
+      }
     })
 
     test('handles unexpected error', async (): Promise<void> => {
@@ -170,35 +173,40 @@ describe('Asset Resolvers', (): void => {
         .spyOn(assetService, 'create')
         .mockRejectedValueOnce(new Error('unexpected'))
 
-      const gqlQuery = appContainer.apolloClient
-        .mutate({
-          mutation: gql`
-            mutation CreateAsset($input: CreateAssetInput!) {
-              createAsset(input: $input) {
-                asset {
-                  id
+      try {
+        await appContainer.apolloClient
+          .mutate({
+            mutation: gql`
+              mutation CreateAsset($input: CreateAssetInput!) {
+                createAsset(input: $input) {
+                  asset {
+                    id
+                  }
                 }
               }
+            `,
+            variables: {
+              input: randomAsset()
             }
-          `,
-          variables: {
-            input: randomAsset()
-          }
-        })
-        .then((query): AssetMutationResponse => {
-          if (query.data) {
-            return query.data.createAsset
-          } else {
-            throw new Error('Data was empty')
-          }
-        })
-      await expect(gqlQuery).rejects.toThrow(
-        new GraphQLError('unexpected', {
-          extensions: {
-            code: GraphQLErrorCode.InternalServerError
-          }
-        })
-      )
+          })
+          .then((query): AssetMutationResponse => {
+            if (query.data) {
+              return query.data.createAsset
+            } else {
+              throw new Error('Data was empty')
+            }
+          })
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApolloError)
+        expect((error as ApolloError).graphQLErrors).toContainEqual(
+          expect.objectContaining({
+            message: 'unexpected',
+            extensions: expect.objectContaining({
+              code: GraphQLErrorCode.InternalServerError
+            })
+          })
+        )
+      }
     })
   })
 
@@ -351,34 +359,38 @@ describe('Asset Resolvers', (): void => {
     })
 
     test('Returns error for unknown asset', async (): Promise<void> => {
-      const gqlQuery = appContainer.apolloClient
-        .query({
-          query: gql`
-            query Asset($assetId: String!) {
-              asset(id: $assetId) {
-                id
+      try {
+        await appContainer.apolloClient
+          .query({
+            query: gql`
+              query Asset($assetId: String!) {
+                asset(id: $assetId) {
+                  id
+                }
               }
+            `,
+            variables: {
+              assetId: uuid()
             }
-          `,
-          variables: {
-            assetId: uuid()
-          }
-        })
-        .then((query): Asset => {
-          if (query.data) {
-            return query.data.asset
-          } else {
-            throw new Error('Data was empty')
-          }
-        })
-
-      await expect(gqlQuery).rejects.toThrow(
-        new GraphQLError(errorToMessage[AssetError.UnknownAsset], {
-          extensions: {
-            code: errorToCode[AssetError.UnknownAsset]
-          }
-        })
-      )
+          })
+          .then((query): Asset => {
+            if (query.data) {
+              return query.data.asset
+            } else {
+              throw new Error('Data was empty')
+            }
+          })
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApolloError)
+        expect((error as ApolloError).graphQLErrors).toContainEqual(
+          expect.objectContaining({
+            message: errorToMessage[AssetError.UnknownAsset],
+            extensions: expect.objectContaining({
+              code: errorToCode[AssetError.UnknownAsset]
+            })
+          })
+        )
+      }
     })
   })
 
@@ -612,40 +624,44 @@ describe('Asset Resolvers', (): void => {
     )
 
     test('Returns error for unknown asset', async (): Promise<void> => {
-      const gqlQuery = appContainer.apolloClient
-        .mutate({
-          mutation: gql`
-            mutation updateAsset($input: UpdateAssetInput!) {
-              updateAsset(input: $input) {
-                asset {
-                  id
+      try {
+        await appContainer.apolloClient
+          .mutate({
+            mutation: gql`
+              mutation updateAsset($input: UpdateAssetInput!) {
+                updateAsset(input: $input) {
+                  asset {
+                    id
+                  }
                 }
               }
+            `,
+            variables: {
+              input: {
+                id: uuid(),
+                withdrawalThreshold: BigInt(10),
+                liquidityThreshold: BigInt(100)
+              }
             }
-          `,
-          variables: {
-            input: {
-              id: uuid(),
-              withdrawalThreshold: BigInt(10),
-              liquidityThreshold: BigInt(100)
+          })
+          .then((query): AssetMutationResponse => {
+            if (query.data) {
+              return query.data.updateAsset
+            } else {
+              throw new Error('Data was empty')
             }
-          }
-        })
-        .then((query): AssetMutationResponse => {
-          if (query.data) {
-            return query.data.updateAsset
-          } else {
-            throw new Error('Data was empty')
-          }
-        })
-
-      await expect(gqlQuery).rejects.toThrow(
-        new GraphQLError(errorToMessage[AssetError.UnknownAsset], {
-          extensions: {
-            code: errorToCode[AssetError.UnknownAsset]
-          }
-        })
-      )
+          })
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApolloError)
+        expect((error as ApolloError).graphQLErrors).toContainEqual(
+          expect.objectContaining({
+            message: errorToMessage[AssetError.UnknownAsset],
+            extensions: expect.objectContaining({
+              code: errorToCode[AssetError.UnknownAsset]
+            })
+          })
+        )
+      }
     })
   })
 
@@ -687,38 +703,42 @@ describe('Asset Resolvers', (): void => {
     })
 
     test('Returns error for unknown asset', async (): Promise<void> => {
-      const gqlQuery = appContainer.apolloClient
-        .mutate({
-          mutation: gql`
-            mutation DeleteAsset($input: DeleteAssetInput!) {
-              deleteAsset(input: $input) {
-                asset {
-                  id
+      try {
+        await appContainer.apolloClient
+          .mutate({
+            mutation: gql`
+              mutation DeleteAsset($input: DeleteAssetInput!) {
+                deleteAsset(input: $input) {
+                  asset {
+                    id
+                  }
                 }
               }
+            `,
+            variables: {
+              input: {
+                id: uuid()
+              }
             }
-          `,
-          variables: {
-            input: {
-              id: uuid()
+          })
+          .then((query): AssetMutationResponse => {
+            if (query.data) {
+              return query.data.deleteAsset
+            } else {
+              throw new Error('Data was empty')
             }
-          }
-        })
-        .then((query): AssetMutationResponse => {
-          if (query.data) {
-            return query.data.deleteAsset
-          } else {
-            throw new Error('Data was empty')
-          }
-        })
-
-      await expect(gqlQuery).rejects.toThrow(
-        new GraphQLError(errorToMessage[AssetError.UnknownAsset], {
-          extensions: {
-            code: errorToCode[AssetError.UnknownAsset]
-          }
-        })
-      )
+          })
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApolloError)
+        expect((error as ApolloError).graphQLErrors).toContainEqual(
+          expect.objectContaining({
+            message: errorToMessage[AssetError.UnknownAsset],
+            extensions: expect.objectContaining({
+              code: errorToCode[AssetError.UnknownAsset]
+            })
+          })
+        )
+      }
     })
 
     test('Returns error if unexpected error', async (): Promise<void> => {
@@ -726,38 +746,42 @@ describe('Asset Resolvers', (): void => {
         throw new Error('unexpected')
       })
 
-      const gqlQuery = appContainer.apolloClient
-        .mutate({
-          mutation: gql`
-            mutation DeleteAsset($input: DeleteAssetInput!) {
-              deleteAsset(input: $input) {
-                asset {
-                  id
+      try {
+        await appContainer.apolloClient
+          .mutate({
+            mutation: gql`
+              mutation DeleteAsset($input: DeleteAssetInput!) {
+                deleteAsset(input: $input) {
+                  asset {
+                    id
+                  }
                 }
               }
+            `,
+            variables: {
+              input: {
+                id: asset.id
+              }
             }
-          `,
-          variables: {
-            input: {
-              id: asset.id
+          })
+          .then((query): AssetMutationResponse => {
+            if (query.data) {
+              return query.data.deleteAsset
+            } else {
+              throw new Error('Data was empty')
             }
-          }
-        })
-        .then((query): AssetMutationResponse => {
-          if (query.data) {
-            return query.data.deleteAsset
-          } else {
-            throw new Error('Data was empty')
-          }
-        })
-
-      await expect(gqlQuery).rejects.toThrow(
-        new GraphQLError('unexpected', {
-          extensions: {
-            code: GraphQLErrorCode.InternalServerError
-          }
-        })
-      )
+          })
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApolloError)
+        expect((error as ApolloError).graphQLErrors).toContainEqual(
+          expect.objectContaining({
+            message: 'unexpected',
+            extensions: expect.objectContaining({
+              code: GraphQLErrorCode.InternalServerError
+            })
+          })
+        )
+      }
     })
   })
 })

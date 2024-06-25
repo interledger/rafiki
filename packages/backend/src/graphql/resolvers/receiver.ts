@@ -12,6 +12,7 @@ import {
   errorToMessage as receiverErrorToMessage
 } from '../../open_payments/receiver/errors'
 import { GraphQLError } from 'graphql'
+import { GraphQLErrorCode } from '../errors'
 
 export const getReceiver: QueryResolvers<ApolloContext>['receiver'] = async (
   _,
@@ -22,7 +23,11 @@ export const getReceiver: QueryResolvers<ApolloContext>['receiver'] = async (
   const receiver = await receiverService.get(args.id)
   if (!receiver) {
     ctx.logger.error(`Receiver "${args.id}" was not found.`)
-    throw new Error('receiver does not exist')
+    throw new GraphQLError('receiver does not exist', {
+      extensions: {
+        code: GraphQLErrorCode.NotFound
+      }
+    })
   }
   return receiverToGraphql(receiver)
 }

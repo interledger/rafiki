@@ -1,8 +1,7 @@
 import { faker } from '@faker-js/faker'
-import { gql } from '@apollo/client'
+import { ApolloError, gql } from '@apollo/client'
 import assert from 'assert'
 import { v4 as uuid } from 'uuid'
-import { GraphQLError } from 'graphql'
 
 import { getPageTests } from './page.test'
 import { createTestApp, TestContainer } from '../../tests/app'
@@ -158,39 +157,43 @@ describe('Peer Resolvers', (): void => {
       ${PeerError.UnknownAsset}
       ${PeerError.DuplicatePeer}
       ${PeerError.InvalidInitialLiquidity}
-    `('Error - $error', async ({ error }): Promise<void> => {
-      jest.spyOn(peerService, 'create').mockResolvedValueOnce(error)
+    `('Error - $error', async ({ error: testError }): Promise<void> => {
+      jest.spyOn(peerService, 'create').mockResolvedValueOnce(testError)
       const peer = randomPeer()
-      const gqlQuery = appContainer.apolloClient
-        .mutate({
-          mutation: gql`
-            mutation CreatePeer($input: CreatePeerInput!) {
-              createPeer(input: $input) {
-                peer {
-                  id
+      try {
+        await appContainer.apolloClient
+          .mutate({
+            mutation: gql`
+              mutation CreatePeer($input: CreatePeerInput!) {
+                createPeer(input: $input) {
+                  peer {
+                    id
+                  }
                 }
               }
+            `,
+            variables: {
+              input: peer
             }
-          `,
-          variables: {
-            input: peer
-          }
-        })
-        .then((query): CreatePeerMutationResponse => {
-          if (query.data) {
-            return query.data.createPeer
-          } else {
-            throw new Error('Data was empty')
-          }
-        })
-
-      await expect(gqlQuery).rejects.toThrow(
-        new GraphQLError(errorToMessage[error as PeerError], {
-          extensions: {
-            code: errorToCode[error as PeerError]
-          }
-        })
-      )
+          })
+          .then((query): CreatePeerMutationResponse => {
+            if (query.data) {
+              return query.data.createPeer
+            } else {
+              throw new Error('Data was empty')
+            }
+          })
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApolloError)
+        expect((error as ApolloError).graphQLErrors).toContainEqual(
+          expect.objectContaining({
+            message: errorToMessage[testError as PeerError],
+            extensions: expect.objectContaining({
+              code: errorToCode[testError as PeerError]
+            })
+          })
+        )
+      }
     })
 
     test('internal server error', async (): Promise<void> => {
@@ -200,35 +203,40 @@ describe('Peer Resolvers', (): void => {
           throw new Error('unexpected')
         })
 
-      const gqlQuery = appContainer.apolloClient
-        .mutate({
-          mutation: gql`
-            mutation CreatePeer($input: CreatePeerInput!) {
-              createPeer(input: $input) {
-                peer {
-                  id
+      try {
+        await appContainer.apolloClient
+          .mutate({
+            mutation: gql`
+              mutation CreatePeer($input: CreatePeerInput!) {
+                createPeer(input: $input) {
+                  peer {
+                    id
+                  }
                 }
               }
+            `,
+            variables: {
+              input: randomPeer()
             }
-          `,
-          variables: {
-            input: randomPeer()
-          }
-        })
-        .then((query): CreatePeerMutationResponse => {
-          if (query.data) {
-            return query.data.createPeer
-          } else {
-            throw new Error('Data was empty')
-          }
-        })
-      await expect(gqlQuery).rejects.toThrow(
-        new GraphQLError('unexpected', {
-          extensions: {
-            code: GraphQLErrorCode.InternalServerError
-          }
-        })
-      )
+          })
+          .then((query): CreatePeerMutationResponse => {
+            if (query.data) {
+              return query.data.createPeer
+            } else {
+              throw new Error('Data was empty')
+            }
+          })
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApolloError)
+        expect((error as ApolloError).graphQLErrors).toContainEqual(
+          expect.objectContaining({
+            message: 'unexpected',
+            extensions: expect.objectContaining({
+              code: GraphQLErrorCode.InternalServerError
+            })
+          })
+        )
+      }
     })
   })
 
@@ -324,38 +332,42 @@ describe('Peer Resolvers', (): void => {
     })
 
     test('Returns error for unknown peer', async (): Promise<void> => {
-      const gqlQuery = appContainer.apolloClient
-        .query({
-          query: gql`
-            query Peer($peerId: String!) {
-              peer(id: $peerId) {
-                id
-                asset {
-                  code
-                  scale
+      try {
+        await appContainer.apolloClient
+          .query({
+            query: gql`
+              query Peer($peerId: String!) {
+                peer(id: $peerId) {
+                  id
+                  asset {
+                    code
+                    scale
+                  }
                 }
               }
+            `,
+            variables: {
+              peerId: uuid()
             }
-          `,
-          variables: {
-            peerId: uuid()
-          }
-        })
-        .then((query): GraphQLPeer => {
-          if (query.data) {
-            return query.data.peer
-          } else {
-            throw new Error('Data was empty')
-          }
-        })
-
-      await expect(gqlQuery).rejects.toThrow(
-        new GraphQLError(errorToMessage[PeerError.UnknownPeer], {
-          extensions: {
-            code: errorToCode[PeerError.UnknownPeer]
-          }
-        })
-      )
+          })
+          .then((query): GraphQLPeer => {
+            if (query.data) {
+              return query.data.peer
+            } else {
+              throw new Error('Data was empty')
+            }
+          })
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApolloError)
+        expect((error as ApolloError).graphQLErrors).toContainEqual(
+          expect.objectContaining({
+            message: errorToMessage[PeerError.UnknownPeer],
+            extensions: expect.objectContaining({
+              code: errorToCode[PeerError.UnknownPeer]
+            })
+          })
+        )
+      }
     })
   })
 
@@ -527,41 +539,45 @@ describe('Peer Resolvers', (): void => {
       ${PeerError.InvalidStaticIlpAddress}
       ${PeerError.InvalidHTTPEndpoint}
       ${PeerError.UnknownPeer}
-    `('Error - $error', async ({ error }): Promise<void> => {
-      jest.spyOn(peerService, 'update').mockResolvedValueOnce(error)
-      const gqlQuery = appContainer.apolloClient
-        .mutate({
-          mutation: gql`
-            mutation UpdatePeer($input: UpdatePeerInput!) {
-              updatePeer(input: $input) {
-                peer {
-                  id
+    `('Error - $error', async ({ error: testError }): Promise<void> => {
+      jest.spyOn(peerService, 'update').mockResolvedValueOnce(testError)
+      try {
+        await appContainer.apolloClient
+          .mutate({
+            mutation: gql`
+              mutation UpdatePeer($input: UpdatePeerInput!) {
+                updatePeer(input: $input) {
+                  peer {
+                    id
+                  }
                 }
               }
+            `,
+            variables: {
+              input: {
+                id: peer.id,
+                maxPacketAmount: '100'
+              }
             }
-          `,
-          variables: {
-            input: {
-              id: peer.id,
-              maxPacketAmount: '100'
+          })
+          .then((query): UpdatePeerMutationResponse => {
+            if (query.data) {
+              return query.data.updatePeer
+            } else {
+              throw new Error('Data was empty')
             }
-          }
-        })
-        .then((query): UpdatePeerMutationResponse => {
-          if (query.data) {
-            return query.data.updatePeer
-          } else {
-            throw new Error('Data was empty')
-          }
-        })
-
-      await expect(gqlQuery).rejects.toThrow(
-        new GraphQLError(errorToMessage[error as PeerError], {
-          extensions: {
-            code: errorToCode[error as PeerError]
-          }
-        })
-      )
+          })
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApolloError)
+        expect((error as ApolloError).graphQLErrors).toContainEqual(
+          expect.objectContaining({
+            message: errorToMessage[testError as PeerError],
+            extensions: expect.objectContaining({
+              code: errorToCode[testError as PeerError]
+            })
+          })
+        )
+      }
     })
 
     test('Returns error if unexpected error', async (): Promise<void> => {
@@ -569,48 +585,52 @@ describe('Peer Resolvers', (): void => {
         throw new Error('unexpected')
       })
 
-      const gqlQuery = appContainer.apolloClient
-        .mutate({
-          mutation: gql`
-            mutation UpdatePeer($input: UpdatePeerInput!) {
-              updatePeer(input: $input) {
-                peer {
-                  id
-                  maxPacketAmount
-                  http {
-                    outgoing {
-                      authToken
-                      endpoint
+      try {
+        await appContainer.apolloClient
+          .mutate({
+            mutation: gql`
+              mutation UpdatePeer($input: UpdatePeerInput!) {
+                updatePeer(input: $input) {
+                  peer {
+                    id
+                    maxPacketAmount
+                    http {
+                      outgoing {
+                        authToken
+                        endpoint
+                      }
                     }
+                    staticIlpAddress
+                    name
                   }
-                  staticIlpAddress
-                  name
                 }
               }
+            `,
+            variables: {
+              input: {
+                id: peer.id,
+                maxPacketAmount: '100'
+              }
             }
-          `,
-          variables: {
-            input: {
-              id: peer.id,
-              maxPacketAmount: '100'
+          })
+          .then((query): UpdatePeerMutationResponse => {
+            if (query.data) {
+              return query.data.updatePeer
+            } else {
+              throw new Error('Data was empty')
             }
-          }
-        })
-        .then((query): UpdatePeerMutationResponse => {
-          if (query.data) {
-            return query.data.updatePeer
-          } else {
-            throw new Error('Data was empty')
-          }
-        })
-
-      await expect(gqlQuery).rejects.toThrow(
-        new GraphQLError('unexpected', {
-          extensions: {
-            code: GraphQLErrorCode.InternalServerError
-          }
-        })
-      )
+          })
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApolloError)
+        expect((error as ApolloError).graphQLErrors).toContainEqual(
+          expect.objectContaining({
+            message: 'unexpected',
+            extensions: expect.objectContaining({
+              code: GraphQLErrorCode.InternalServerError
+            })
+          })
+        )
+      }
     })
   })
 
@@ -650,73 +670,80 @@ describe('Peer Resolvers', (): void => {
     })
 
     test('Returns error for unknown peer', async (): Promise<void> => {
-      const gqlQuery = appContainer.apolloClient
-        .mutate({
-          mutation: gql`
-            mutation DeletePeer($input: DeletePeerInput!) {
-              deletePeer(input: $input) {
-                success
+      try {
+        await appContainer.apolloClient
+          .mutate({
+            mutation: gql`
+              mutation DeletePeer($input: DeletePeerInput!) {
+                deletePeer(input: $input) {
+                  success
+                }
+              }
+            `,
+            variables: {
+              input: {
+                id: uuid()
               }
             }
-          `,
-          variables: {
-            input: {
-              id: uuid()
+          })
+          .then((query): DeletePeerMutationResponse => {
+            if (query.data) {
+              return query.data.deletePeer
+            } else {
+              throw new Error('Data was empty')
             }
-          }
-        })
-        .then((query): DeletePeerMutationResponse => {
-          if (query.data) {
-            return query.data.deletePeer
-          } else {
-            throw new Error('Data was empty')
-          }
-        })
-
-      await expect(gqlQuery).rejects.toThrow(
-        new GraphQLError(errorToMessage[PeerError.UnknownPeer], {
-          extensions: {
-            code: errorToCode[PeerError.UnknownPeer]
-          }
-        })
-      )
+          })
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApolloError)
+        expect((error as ApolloError).graphQLErrors).toContainEqual(
+          expect.objectContaining({
+            message: errorToMessage[PeerError.UnknownPeer],
+            extensions: expect.objectContaining({
+              code: errorToCode[PeerError.UnknownPeer]
+            })
+          })
+        )
+      }
     })
 
     test('Returns error if unexpected error', async (): Promise<void> => {
       jest.spyOn(peerService, 'delete').mockImplementationOnce(async () => {
         throw new Error('unexpected')
       })
-
-      const gqlQuery = appContainer.apolloClient
-        .mutate({
-          mutation: gql`
-            mutation DeletePeer($input: DeletePeerInput!) {
-              deletePeer(input: $input) {
-                success
+      try {
+        await appContainer.apolloClient
+          .mutate({
+            mutation: gql`
+              mutation DeletePeer($input: DeletePeerInput!) {
+                deletePeer(input: $input) {
+                  success
+                }
+              }
+            `,
+            variables: {
+              input: {
+                id: peer.id
               }
             }
-          `,
-          variables: {
-            input: {
-              id: peer.id
+          })
+          .then((query): DeletePeerMutationResponse => {
+            if (query.data) {
+              return query.data.deletePeer
+            } else {
+              throw new Error('Data was empty')
             }
-          }
-        })
-        .then((query): DeletePeerMutationResponse => {
-          if (query.data) {
-            return query.data.deletePeer
-          } else {
-            throw new Error('Data was empty')
-          }
-        })
-
-      await expect(gqlQuery).rejects.toThrow(
-        new GraphQLError('unexpected', {
-          extensions: {
-            code: GraphQLErrorCode.InternalServerError
-          }
-        })
-      )
+          })
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApolloError)
+        expect((error as ApolloError).graphQLErrors).toContainEqual(
+          expect.objectContaining({
+            message: 'unexpected',
+            extensions: expect.objectContaining({
+              code: GraphQLErrorCode.InternalServerError
+            })
+          })
+        )
+      }
     })
   })
 })

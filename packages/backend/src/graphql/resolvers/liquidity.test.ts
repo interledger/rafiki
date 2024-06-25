@@ -1,5 +1,5 @@
 import assert from 'assert'
-import { gql } from '@apollo/client'
+import { ApolloError, gql } from '@apollo/client'
 import { Knex } from 'knex'
 import { v4 as uuid } from 'uuid'
 
@@ -43,7 +43,6 @@ import {
   LiquidityMutationResponse,
   WalletAddressWithdrawalMutationResponse
 } from '../generated/graphql'
-import { GraphQLError } from 'graphql'
 import { GraphQLErrorCode } from '../errors'
 
 describe('Liquidity Resolvers', (): void => {
@@ -105,75 +104,87 @@ describe('Liquidity Resolvers', (): void => {
     })
 
     test('Returns an error for invalid id', async (): Promise<void> => {
-      const gqlQuery = appContainer.apolloClient
-        .mutate({
-          mutation: gql`
-            mutation DepositPeerLiquidity($input: DepositPeerLiquidityInput!) {
-              depositPeerLiquidity(input: $input) {
-                success
+      try {
+        await appContainer.apolloClient
+          .mutate({
+            mutation: gql`
+              mutation DepositPeerLiquidity(
+                $input: DepositPeerLiquidityInput!
+              ) {
+                depositPeerLiquidity(input: $input) {
+                  success
+                }
+              }
+            `,
+            variables: {
+              input: {
+                id: 'not a uuid v4',
+                peerId: peer.id,
+                amount: '100',
+                idempotencyKey: uuid()
               }
             }
-          `,
-          variables: {
-            input: {
-              id: 'not a uuid v4',
-              peerId: peer.id,
-              amount: '100',
-              idempotencyKey: uuid()
+          })
+          .then((query): LiquidityMutationResponse => {
+            if (query.data) {
+              return query.data.depositPeerLiquidity
+            } else {
+              throw new Error('Data was empty')
             }
-          }
-        })
-        .then((query): LiquidityMutationResponse => {
-          if (query.data) {
-            return query.data.depositPeerLiquidity
-          } else {
-            throw new Error('Data was empty')
-          }
-        })
-
-      await expect(gqlQuery).rejects.toThrow(
-        new GraphQLError('Invalid transfer id', {
-          extensions: {
-            code: GraphQLErrorCode.BadUserInput
-          }
-        })
-      )
+          })
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApolloError)
+        expect((error as ApolloError).graphQLErrors).toContainEqual(
+          expect.objectContaining({
+            message: 'Invalid transfer id',
+            extensions: expect.objectContaining({
+              code: GraphQLErrorCode.BadUserInput
+            })
+          })
+        )
+      }
     })
 
     test('Returns an error for unknown peer', async (): Promise<void> => {
-      const gqlQuery = appContainer.apolloClient
-        .mutate({
-          mutation: gql`
-            mutation DepositPeerLiquidity($input: DepositPeerLiquidityInput!) {
-              depositPeerLiquidity(input: $input) {
-                success
+      try {
+        await appContainer.apolloClient
+          .mutate({
+            mutation: gql`
+              mutation DepositPeerLiquidity(
+                $input: DepositPeerLiquidityInput!
+              ) {
+                depositPeerLiquidity(input: $input) {
+                  success
+                }
+              }
+            `,
+            variables: {
+              input: {
+                id: uuid(),
+                peerId: uuid(),
+                amount: '100',
+                idempotencyKey: uuid()
               }
             }
-          `,
-          variables: {
-            input: {
-              id: uuid(),
-              peerId: uuid(),
-              amount: '100',
-              idempotencyKey: uuid()
+          })
+          .then((query): LiquidityMutationResponse => {
+            if (query.data) {
+              return query.data.depositPeerLiquidity
+            } else {
+              throw new Error('Data was empty')
             }
-          }
-        })
-        .then((query): LiquidityMutationResponse => {
-          if (query.data) {
-            return query.data.depositPeerLiquidity
-          } else {
-            throw new Error('Data was empty')
-          }
-        })
-
-      await expect(gqlQuery).rejects.toThrow(
-        new GraphQLError('unknown peer', {
-          extensions: {
-            code: GraphQLErrorCode.NotFound
-          }
-        })
-      )
+          })
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApolloError)
+        expect((error as ApolloError).graphQLErrors).toContainEqual(
+          expect.objectContaining({
+            message: 'unknown peer',
+            extensions: expect.objectContaining({
+              code: GraphQLErrorCode.NotFound
+            })
+          })
+        )
+      }
     })
 
     test('Returns an error for existing transfer', async (): Promise<void> => {
@@ -185,75 +196,87 @@ describe('Liquidity Resolvers', (): void => {
           amount: BigInt(100)
         })
       ).resolves.toBeUndefined()
-      const gqlQuery = appContainer.apolloClient
-        .mutate({
-          mutation: gql`
-            mutation DepositPeerLiquidity($input: DepositPeerLiquidityInput!) {
-              depositPeerLiquidity(input: $input) {
-                success
+      try {
+        await appContainer.apolloClient
+          .mutate({
+            mutation: gql`
+              mutation DepositPeerLiquidity(
+                $input: DepositPeerLiquidityInput!
+              ) {
+                depositPeerLiquidity(input: $input) {
+                  success
+                }
+              }
+            `,
+            variables: {
+              input: {
+                id,
+                peerId: peer.id,
+                amount: '100',
+                idempotencyKey: uuid()
               }
             }
-          `,
-          variables: {
-            input: {
-              id,
-              peerId: peer.id,
-              amount: '100',
-              idempotencyKey: uuid()
+          })
+          .then((query): LiquidityMutationResponse => {
+            if (query.data) {
+              return query.data.depositPeerLiquidity
+            } else {
+              throw new Error('Data was empty')
             }
-          }
-        })
-        .then((query): LiquidityMutationResponse => {
-          if (query.data) {
-            return query.data.depositPeerLiquidity
-          } else {
-            throw new Error('Data was empty')
-          }
-        })
-
-      await expect(gqlQuery).rejects.toThrow(
-        new GraphQLError('Transfer already exists', {
-          extensions: {
-            code: GraphQLErrorCode.Duplicate
-          }
-        })
-      )
+          })
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApolloError)
+        expect((error as ApolloError).graphQLErrors).toContainEqual(
+          expect.objectContaining({
+            message: 'Transfer already exists',
+            extensions: expect.objectContaining({
+              code: GraphQLErrorCode.Duplicate
+            })
+          })
+        )
+      }
     })
 
     test('Returns an error for zero amount', async (): Promise<void> => {
-      const gqlQuery = appContainer.apolloClient
-        .mutate({
-          mutation: gql`
-            mutation DepositPeerLiquidity($input: DepositPeerLiquidityInput!) {
-              depositPeerLiquidity(input: $input) {
-                success
+      try {
+        await appContainer.apolloClient
+          .mutate({
+            mutation: gql`
+              mutation DepositPeerLiquidity(
+                $input: DepositPeerLiquidityInput!
+              ) {
+                depositPeerLiquidity(input: $input) {
+                  success
+                }
+              }
+            `,
+            variables: {
+              input: {
+                id: 'not a uuid v4',
+                peerId: peer.id,
+                amount: '0',
+                idempotencyKey: uuid()
               }
             }
-          `,
-          variables: {
-            input: {
-              id: 'not a uuid v4',
-              peerId: peer.id,
-              amount: '0',
-              idempotencyKey: uuid()
+          })
+          .then((query): LiquidityMutationResponse => {
+            if (query.data) {
+              return query.data.depositPeerLiquidity
+            } else {
+              throw new Error('Data was empty')
             }
-          }
-        })
-        .then((query): LiquidityMutationResponse => {
-          if (query.data) {
-            return query.data.depositPeerLiquidity
-          } else {
-            throw new Error('Data was empty')
-          }
-        })
-
-      await expect(gqlQuery).rejects.toThrow(
-        new GraphQLError('Transfer amount is zero', {
-          extensions: {
-            code: GraphQLErrorCode.Forbidden
-          }
-        })
-      )
+          })
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApolloError)
+        expect((error as ApolloError).graphQLErrors).toContainEqual(
+          expect.objectContaining({
+            message: 'Transfer amount is zero',
+            extensions: expect.objectContaining({
+              code: GraphQLErrorCode.Forbidden
+            })
+          })
+        )
+      }
     })
   })
 
@@ -298,79 +321,87 @@ describe('Liquidity Resolvers', (): void => {
     })
 
     test('Returns an error for invalid id', async (): Promise<void> => {
-      const gqlQuery = appContainer.apolloClient
-        .mutate({
-          mutation: gql`
-            mutation DepositAssetLiquidity(
-              $input: DepositAssetLiquidityInput!
-            ) {
-              depositAssetLiquidity(input: $input) {
-                success
+      try {
+        await appContainer.apolloClient
+          .mutate({
+            mutation: gql`
+              mutation DepositAssetLiquidity(
+                $input: DepositAssetLiquidityInput!
+              ) {
+                depositAssetLiquidity(input: $input) {
+                  success
+                }
+              }
+            `,
+            variables: {
+              input: {
+                id: 'not a uuid',
+                assetId: asset.id,
+                amount: '100',
+                idempotencyKey: uuid()
               }
             }
-          `,
-          variables: {
-            input: {
-              id: 'not a uuid',
-              assetId: asset.id,
-              amount: '100',
-              idempotencyKey: uuid()
+          })
+          .then((query): LiquidityMutationResponse => {
+            if (query.data) {
+              return query.data.depositAssetLiquidity
+            } else {
+              throw new Error('Data was empty')
             }
-          }
-        })
-        .then((query): LiquidityMutationResponse => {
-          if (query.data) {
-            return query.data.depositAssetLiquidity
-          } else {
-            throw new Error('Data was empty')
-          }
-        })
-
-      await expect(gqlQuery).rejects.toThrow(
-        new GraphQLError('Invalid transfer id', {
-          extensions: {
-            code: GraphQLErrorCode.BadUserInput
-          }
-        })
-      )
+          })
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApolloError)
+        expect((error as ApolloError).graphQLErrors).toContainEqual(
+          expect.objectContaining({
+            message: 'Invalid transfer id',
+            extensions: expect.objectContaining({
+              code: GraphQLErrorCode.BadUserInput
+            })
+          })
+        )
+      }
     })
 
     test('Returns an error for unknown asset', async (): Promise<void> => {
-      const gqlQuery = appContainer.apolloClient
-        .mutate({
-          mutation: gql`
-            mutation DepositAssetLiquidity(
-              $input: DepositAssetLiquidityInput!
-            ) {
-              depositAssetLiquidity(input: $input) {
-                success
+      try {
+        await appContainer.apolloClient
+          .mutate({
+            mutation: gql`
+              mutation DepositAssetLiquidity(
+                $input: DepositAssetLiquidityInput!
+              ) {
+                depositAssetLiquidity(input: $input) {
+                  success
+                }
+              }
+            `,
+            variables: {
+              input: {
+                id: uuid(),
+                assetId: uuid(),
+                amount: '100',
+                idempotencyKey: uuid()
               }
             }
-          `,
-          variables: {
-            input: {
-              id: uuid(),
-              assetId: uuid(),
-              amount: '100',
-              idempotencyKey: uuid()
+          })
+          .then((query): LiquidityMutationResponse => {
+            if (query.data) {
+              return query.data.depositAssetLiquidity
+            } else {
+              throw new Error('Data was empty')
             }
-          }
-        })
-        .then((query): LiquidityMutationResponse => {
-          if (query.data) {
-            return query.data.depositAssetLiquidity
-          } else {
-            throw new Error('Data was empty')
-          }
-        })
-
-      await expect(gqlQuery).rejects.toThrow(
-        new GraphQLError('Unknown asset', {
-          extensions: {
-            code: GraphQLErrorCode.NotFound
-          }
-        })
-      )
+          })
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApolloError)
+        expect((error as ApolloError).graphQLErrors).toContainEqual(
+          expect.objectContaining({
+            message: 'Unknown asset',
+            extensions: expect.objectContaining({
+              code: GraphQLErrorCode.NotFound
+            })
+          })
+        )
+      }
     })
 
     test('Returns an error for existing transfer', async (): Promise<void> => {
@@ -382,79 +413,87 @@ describe('Liquidity Resolvers', (): void => {
           amount: BigInt(100)
         })
       ).resolves.toBeUndefined()
-      const gqlQuery = appContainer.apolloClient
-        .mutate({
-          mutation: gql`
-            mutation DepositAssetLiquidity(
-              $input: DepositAssetLiquidityInput!
-            ) {
-              depositAssetLiquidity(input: $input) {
-                success
+      try {
+        await appContainer.apolloClient
+          .mutate({
+            mutation: gql`
+              mutation DepositAssetLiquidity(
+                $input: DepositAssetLiquidityInput!
+              ) {
+                depositAssetLiquidity(input: $input) {
+                  success
+                }
+              }
+            `,
+            variables: {
+              input: {
+                id,
+                assetId: asset.id,
+                amount: '100',
+                idempotencyKey: uuid()
               }
             }
-          `,
-          variables: {
-            input: {
-              id,
-              assetId: asset.id,
-              amount: '100',
-              idempotencyKey: uuid()
+          })
+          .then((query): LiquidityMutationResponse => {
+            if (query.data) {
+              return query.data.depositAssetLiquidity
+            } else {
+              throw new Error('Data was empty')
             }
-          }
-        })
-        .then((query): LiquidityMutationResponse => {
-          if (query.data) {
-            return query.data.depositAssetLiquidity
-          } else {
-            throw new Error('Data was empty')
-          }
-        })
-
-      await expect(gqlQuery).rejects.toThrow(
-        new GraphQLError('Transfer already exists', {
-          extensions: {
-            code: GraphQLErrorCode.Duplicate
-          }
-        })
-      )
+          })
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApolloError)
+        expect((error as ApolloError).graphQLErrors).toContainEqual(
+          expect.objectContaining({
+            message: 'Transfer already exists',
+            extensions: expect.objectContaining({
+              code: GraphQLErrorCode.Duplicate
+            })
+          })
+        )
+      }
     })
 
     test('Returns an error for zero amount', async (): Promise<void> => {
-      const gqlQuery = appContainer.apolloClient
-        .mutate({
-          mutation: gql`
-            mutation DepositAssetLiquidity(
-              $input: DepositAssetLiquidityInput!
-            ) {
-              depositAssetLiquidity(input: $input) {
-                success
+      try {
+        await appContainer.apolloClient
+          .mutate({
+            mutation: gql`
+              mutation DepositAssetLiquidity(
+                $input: DepositAssetLiquidityInput!
+              ) {
+                depositAssetLiquidity(input: $input) {
+                  success
+                }
+              }
+            `,
+            variables: {
+              input: {
+                id: uuid(),
+                assetId: asset.id,
+                amount: '0',
+                idempotencyKey: uuid()
               }
             }
-          `,
-          variables: {
-            input: {
-              id: uuid(),
-              assetId: asset.id,
-              amount: '0',
-              idempotencyKey: uuid()
+          })
+          .then((query): LiquidityMutationResponse => {
+            if (query.data) {
+              return query.data.depositAssetLiquidity
+            } else {
+              throw new Error('Data was empty')
             }
-          }
-        })
-        .then((query): LiquidityMutationResponse => {
-          if (query.data) {
-            return query.data.depositAssetLiquidity
-          } else {
-            throw new Error('Data was empty')
-          }
-        })
-
-      await expect(gqlQuery).rejects.toThrow(
-        new GraphQLError('Transfer amount is zero', {
-          extensions: {
-            code: GraphQLErrorCode.Forbidden
-          }
-        })
-      )
+          })
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApolloError)
+        expect((error as ApolloError).graphQLErrors).toContainEqual(
+          expect.objectContaining({
+            message: 'Transfer amount is zero',
+            extensions: expect.objectContaining({
+              code: GraphQLErrorCode.Forbidden
+            })
+          })
+        )
+      }
     })
   })
 
@@ -508,137 +547,8 @@ describe('Liquidity Resolvers', (): void => {
     })
 
     test('Returns an error for unknown peer', async (): Promise<void> => {
-      const gqlQuery = appContainer.apolloClient
-        .mutate({
-          mutation: gql`
-            mutation CreatePeerLiquidityWithdrawal(
-              $input: CreatePeerLiquidityWithdrawalInput!
-            ) {
-              createPeerLiquidityWithdrawal(input: $input) {
-                success
-              }
-            }
-          `,
-          variables: {
-            input: {
-              id: uuid(),
-              peerId: uuid(),
-              amount: '100',
-              idempotencyKey: uuid(),
-              timeoutSeconds: 0
-            }
-          }
-        })
-        .then((query): LiquidityMutationResponse => {
-          if (query.data) {
-            return query.data.createPeerLiquidityWithdrawal
-          } else {
-            throw new Error('Data was empty')
-          }
-        })
-
-      await expect(gqlQuery).rejects.toThrow(
-        new GraphQLError('Unknown peer', {
-          extensions: {
-            code: GraphQLErrorCode.NotFound
-          }
-        })
-      )
-    })
-
-    test('Returns an error for invalid id', async (): Promise<void> => {
-      const gqlQuery = appContainer.apolloClient
-        .mutate({
-          mutation: gql`
-            mutation CreatePeerLiquidityWithdrawal(
-              $input: CreatePeerLiquidityWithdrawalInput!
-            ) {
-              createPeerLiquidityWithdrawal(input: $input) {
-                success
-              }
-            }
-          `,
-          variables: {
-            input: {
-              id: 'not a uuid',
-              peerId: peer.id,
-              amount: startingBalance.toString(),
-              idempotencyKey: uuid(),
-              timeoutSeconds: 0
-            }
-          }
-        })
-        .then((query): LiquidityMutationResponse => {
-          if (query.data) {
-            return query.data.createPeerLiquidityWithdrawal
-          } else {
-            throw new Error('Data was empty')
-          }
-        })
-
-      await expect(gqlQuery).rejects.toThrow(
-        new GraphQLError('Invalid transfer id', {
-          extensions: {
-            code: GraphQLErrorCode.BadUserInput
-          }
-        })
-      )
-    })
-
-    test('Returns an error for existing transfer', async (): Promise<void> => {
-      const id = uuid()
-      await expect(
-        accountingService.createDeposit({
-          id,
-          account: peer,
-          amount: 10n
-        })
-      ).resolves.toBeUndefined()
-      const gqlQuery = appContainer.apolloClient
-        .mutate({
-          mutation: gql`
-            mutation CreatePeerLiquidityWithdrawal(
-              $input: CreatePeerLiquidityWithdrawalInput!
-            ) {
-              createPeerLiquidityWithdrawal(input: $input) {
-                success
-              }
-            }
-          `,
-          variables: {
-            input: {
-              id,
-              peerId: peer.id,
-              amount: startingBalance.toString(),
-              idempotencyKey: uuid(),
-              timeoutSeconds: 0
-            }
-          }
-        })
-        .then((query): LiquidityMutationResponse => {
-          if (query.data) {
-            return query.data.createPeerLiquidityWithdrawal
-          } else {
-            throw new Error('Data was empty')
-          }
-        })
-      await expect(gqlQuery).rejects.toThrow(
-        new GraphQLError('Transfer already exists', {
-          extensions: {
-            code: GraphQLErrorCode.Duplicate
-          }
-        })
-      )
-    })
-
-    test.each`
-      amount                         | message                            | code
-      ${startingBalance + BigInt(1)} | ${'Insufficient transfer balance'} | ${GraphQLErrorCode.Forbidden}
-      ${BigInt(0)}                   | ${'Transfer amount is zero'}       | ${GraphQLErrorCode.Forbidden}
-    `(
-      'Returns error for $code',
-      async ({ amount, message, code }): Promise<void> => {
-        const gqlQuery = appContainer.apolloClient
+      try {
+        await appContainer.apolloClient
           .mutate({
             mutation: gql`
               mutation CreatePeerLiquidityWithdrawal(
@@ -652,8 +562,8 @@ describe('Liquidity Resolvers', (): void => {
             variables: {
               input: {
                 id: uuid(),
-                peerId: peer.id,
-                amount: amount.toString(),
+                peerId: uuid(),
+                amount: '100',
                 idempotencyKey: uuid(),
                 timeoutSeconds: 0
               }
@@ -666,14 +576,160 @@ describe('Liquidity Resolvers', (): void => {
               throw new Error('Data was empty')
             }
           })
-
-        await expect(gqlQuery).rejects.toThrow(
-          new GraphQLError(message, {
-            extensions: {
-              code
-            }
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApolloError)
+        expect((error as ApolloError).graphQLErrors).toContainEqual(
+          expect.objectContaining({
+            message: 'Unknown peer',
+            extensions: expect.objectContaining({
+              code: GraphQLErrorCode.NotFound
+            })
           })
         )
+      }
+    })
+
+    test('Returns an error for invalid id', async (): Promise<void> => {
+      try {
+        await appContainer.apolloClient
+          .mutate({
+            mutation: gql`
+              mutation CreatePeerLiquidityWithdrawal(
+                $input: CreatePeerLiquidityWithdrawalInput!
+              ) {
+                createPeerLiquidityWithdrawal(input: $input) {
+                  success
+                }
+              }
+            `,
+            variables: {
+              input: {
+                id: 'not a uuid',
+                peerId: peer.id,
+                amount: startingBalance.toString(),
+                idempotencyKey: uuid(),
+                timeoutSeconds: 0
+              }
+            }
+          })
+          .then((query): LiquidityMutationResponse => {
+            if (query.data) {
+              return query.data.createPeerLiquidityWithdrawal
+            } else {
+              throw new Error('Data was empty')
+            }
+          })
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApolloError)
+        expect((error as ApolloError).graphQLErrors).toContainEqual(
+          expect.objectContaining({
+            message: 'Invalid transfer id',
+            extensions: expect.objectContaining({
+              code: GraphQLErrorCode.BadUserInput
+            })
+          })
+        )
+      }
+    })
+
+    test('Returns an error for existing transfer', async (): Promise<void> => {
+      const id = uuid()
+      await expect(
+        accountingService.createDeposit({
+          id,
+          account: peer,
+          amount: 10n
+        })
+      ).resolves.toBeUndefined()
+      try {
+        await appContainer.apolloClient
+          .mutate({
+            mutation: gql`
+              mutation CreatePeerLiquidityWithdrawal(
+                $input: CreatePeerLiquidityWithdrawalInput!
+              ) {
+                createPeerLiquidityWithdrawal(input: $input) {
+                  success
+                }
+              }
+            `,
+            variables: {
+              input: {
+                id,
+                peerId: peer.id,
+                amount: startingBalance.toString(),
+                idempotencyKey: uuid(),
+                timeoutSeconds: 0
+              }
+            }
+          })
+          .then((query): LiquidityMutationResponse => {
+            if (query.data) {
+              return query.data.createPeerLiquidityWithdrawal
+            } else {
+              throw new Error('Data was empty')
+            }
+          })
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApolloError)
+        expect((error as ApolloError).graphQLErrors).toContainEqual(
+          expect.objectContaining({
+            message: 'Transfer already exists',
+            extensions: expect.objectContaining({
+              code: GraphQLErrorCode.Duplicate
+            })
+          })
+        )
+      }
+    })
+
+    test.each`
+      amount                         | message                            | code
+      ${startingBalance + BigInt(1)} | ${'Insufficient transfer balance'} | ${GraphQLErrorCode.Forbidden}
+      ${BigInt(0)}                   | ${'Transfer amount is zero'}       | ${GraphQLErrorCode.Forbidden}
+    `(
+      'Returns error for $code',
+      async ({ amount, message, code }): Promise<void> => {
+        try {
+          await appContainer.apolloClient
+            .mutate({
+              mutation: gql`
+                mutation CreatePeerLiquidityWithdrawal(
+                  $input: CreatePeerLiquidityWithdrawalInput!
+                ) {
+                  createPeerLiquidityWithdrawal(input: $input) {
+                    success
+                  }
+                }
+              `,
+              variables: {
+                input: {
+                  id: uuid(),
+                  peerId: peer.id,
+                  amount: amount.toString(),
+                  idempotencyKey: uuid(),
+                  timeoutSeconds: 0
+                }
+              }
+            })
+            .then((query): LiquidityMutationResponse => {
+              if (query.data) {
+                return query.data.createPeerLiquidityWithdrawal
+              } else {
+                throw new Error('Data was empty')
+              }
+            })
+        } catch (error) {
+          expect(error).toBeInstanceOf(ApolloError)
+          expect((error as ApolloError).graphQLErrors).toContainEqual(
+            expect.objectContaining({
+              message,
+              extensions: expect.objectContaining({
+                code
+              })
+            })
+          )
+        }
       }
     )
   })
@@ -728,138 +784,8 @@ describe('Liquidity Resolvers', (): void => {
     })
 
     test('Returns an error for unknown asset', async (): Promise<void> => {
-      const gqlQuery = appContainer.apolloClient
-        .mutate({
-          mutation: gql`
-            mutation CreateAssetLiquidityWithdrawal(
-              $input: CreateAssetLiquidityWithdrawalInput!
-            ) {
-              createAssetLiquidityWithdrawal(input: $input) {
-                success
-              }
-            }
-          `,
-          variables: {
-            input: {
-              id: uuid(),
-              assetId: uuid(),
-              amount: '100',
-              idempotencyKey: uuid(),
-              timeoutSeconds: 0
-            }
-          }
-        })
-        .then((query): LiquidityMutationResponse => {
-          if (query.data) {
-            return query.data.createAssetLiquidityWithdrawal
-          } else {
-            throw new Error('Data was empty')
-          }
-        })
-
-      await expect(gqlQuery).rejects.toThrow(
-        new GraphQLError('Unknown asset', {
-          extensions: {
-            code: GraphQLErrorCode.NotFound
-          }
-        })
-      )
-    })
-
-    test('Returns an error for invalid id', async (): Promise<void> => {
-      const gqlQuery = appContainer.apolloClient
-        .mutate({
-          mutation: gql`
-            mutation CreateAssetLiquidityWithdrawal(
-              $input: CreateAssetLiquidityWithdrawalInput!
-            ) {
-              createAssetLiquidityWithdrawal(input: $input) {
-                success
-              }
-            }
-          `,
-          variables: {
-            input: {
-              id: 'not a uuid',
-              assetId: asset.id,
-              amount: startingBalance.toString(),
-              idempotencyKey: uuid(),
-              timeoutSeconds: 0
-            }
-          }
-        })
-        .then((query): LiquidityMutationResponse => {
-          if (query.data) {
-            return query.data.createAssetLiquidityWithdrawal
-          } else {
-            throw new Error('Data was empty')
-          }
-        })
-
-      await expect(gqlQuery).rejects.toThrow(
-        new GraphQLError('Invalid transfer id', {
-          extensions: {
-            code: GraphQLErrorCode.BadUserInput
-          }
-        })
-      )
-    })
-
-    test('Returns an error for existing transfer', async (): Promise<void> => {
-      const id = uuid()
-      await expect(
-        accountingService.createDeposit({
-          id,
-          account: asset,
-          amount: BigInt(10)
-        })
-      ).resolves.toBeUndefined()
-      const gqlQuery = appContainer.apolloClient
-        .mutate({
-          mutation: gql`
-            mutation CreateAssetLiquidityWithdrawal(
-              $input: CreateAssetLiquidityWithdrawalInput!
-            ) {
-              createAssetLiquidityWithdrawal(input: $input) {
-                success
-              }
-            }
-          `,
-          variables: {
-            input: {
-              id,
-              assetId: asset.id,
-              amount: startingBalance.toString(),
-              idempotencyKey: uuid(),
-              timeoutSeconds: 0
-            }
-          }
-        })
-        .then((query): LiquidityMutationResponse => {
-          if (query.data) {
-            return query.data.createAssetLiquidityWithdrawal
-          } else {
-            throw new Error('Data was empty')
-          }
-        })
-
-      await expect(gqlQuery).rejects.toThrow(
-        new GraphQLError('Transfer already exists', {
-          extensions: {
-            code: GraphQLErrorCode.Duplicate
-          }
-        })
-      )
-    })
-
-    test.each`
-      amount                         | message                            | code
-      ${startingBalance + BigInt(1)} | ${'Insufficient transfer balance'} | ${GraphQLErrorCode.Forbidden}
-      ${BigInt(0)}                   | ${'Transfer amount is zero'}       | ${GraphQLErrorCode.Forbidden}
-    `(
-      'Returns error for $error',
-      async ({ amount, code, message }): Promise<void> => {
-        const gqlQuery = appContainer.apolloClient
+      try {
+        await appContainer.apolloClient
           .mutate({
             mutation: gql`
               mutation CreateAssetLiquidityWithdrawal(
@@ -873,8 +799,8 @@ describe('Liquidity Resolvers', (): void => {
             variables: {
               input: {
                 id: uuid(),
-                assetId: asset.id,
-                amount: amount.toString(),
+                assetId: uuid(),
+                amount: '100',
                 idempotencyKey: uuid(),
                 timeoutSeconds: 0
               }
@@ -887,14 +813,160 @@ describe('Liquidity Resolvers', (): void => {
               throw new Error('Data was empty')
             }
           })
-
-        await expect(gqlQuery).rejects.toThrow(
-          new GraphQLError(message, {
-            extensions: {
-              code
-            }
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApolloError)
+        expect((error as ApolloError).graphQLErrors).toContainEqual(
+          expect.objectContaining({
+            message: 'Unknown asset',
+            extensions: expect.objectContaining({
+              code: GraphQLErrorCode.NotFound
+            })
           })
         )
+      }
+    })
+
+    test('Returns an error for invalid id', async (): Promise<void> => {
+      try {
+        await appContainer.apolloClient
+          .mutate({
+            mutation: gql`
+              mutation CreateAssetLiquidityWithdrawal(
+                $input: CreateAssetLiquidityWithdrawalInput!
+              ) {
+                createAssetLiquidityWithdrawal(input: $input) {
+                  success
+                }
+              }
+            `,
+            variables: {
+              input: {
+                id: 'not a uuid',
+                assetId: asset.id,
+                amount: startingBalance.toString(),
+                idempotencyKey: uuid(),
+                timeoutSeconds: 0
+              }
+            }
+          })
+          .then((query): LiquidityMutationResponse => {
+            if (query.data) {
+              return query.data.createAssetLiquidityWithdrawal
+            } else {
+              throw new Error('Data was empty')
+            }
+          })
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApolloError)
+        expect((error as ApolloError).graphQLErrors).toContainEqual(
+          expect.objectContaining({
+            message: 'Invalid transfer id',
+            extensions: expect.objectContaining({
+              code: GraphQLErrorCode.BadUserInput
+            })
+          })
+        )
+      }
+    })
+
+    test('Returns an error for existing transfer', async (): Promise<void> => {
+      const id = uuid()
+      await expect(
+        accountingService.createDeposit({
+          id,
+          account: asset,
+          amount: BigInt(10)
+        })
+      ).resolves.toBeUndefined()
+      try {
+        await appContainer.apolloClient
+          .mutate({
+            mutation: gql`
+              mutation CreateAssetLiquidityWithdrawal(
+                $input: CreateAssetLiquidityWithdrawalInput!
+              ) {
+                createAssetLiquidityWithdrawal(input: $input) {
+                  success
+                }
+              }
+            `,
+            variables: {
+              input: {
+                id,
+                assetId: asset.id,
+                amount: startingBalance.toString(),
+                idempotencyKey: uuid(),
+                timeoutSeconds: 0
+              }
+            }
+          })
+          .then((query): LiquidityMutationResponse => {
+            if (query.data) {
+              return query.data.createAssetLiquidityWithdrawal
+            } else {
+              throw new Error('Data was empty')
+            }
+          })
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApolloError)
+        expect((error as ApolloError).graphQLErrors).toContainEqual(
+          expect.objectContaining({
+            message: 'Transfer already exists',
+            extensions: expect.objectContaining({
+              code: GraphQLErrorCode.Duplicate
+            })
+          })
+        )
+      }
+    })
+
+    test.each`
+      amount                         | message                            | code
+      ${startingBalance + BigInt(1)} | ${'Insufficient transfer balance'} | ${GraphQLErrorCode.Forbidden}
+      ${BigInt(0)}                   | ${'Transfer amount is zero'}       | ${GraphQLErrorCode.Forbidden}
+    `(
+      'Returns error for $error',
+      async ({ amount, code, message }): Promise<void> => {
+        try {
+          await appContainer.apolloClient
+            .mutate({
+              mutation: gql`
+                mutation CreateAssetLiquidityWithdrawal(
+                  $input: CreateAssetLiquidityWithdrawalInput!
+                ) {
+                  createAssetLiquidityWithdrawal(input: $input) {
+                    success
+                  }
+                }
+              `,
+              variables: {
+                input: {
+                  id: uuid(),
+                  assetId: asset.id,
+                  amount: amount.toString(),
+                  idempotencyKey: uuid(),
+                  timeoutSeconds: 0
+                }
+              }
+            })
+            .then((query): LiquidityMutationResponse => {
+              if (query.data) {
+                return query.data.createAssetLiquidityWithdrawal
+              } else {
+                throw new Error('Data was empty')
+              }
+            })
+        } catch (error) {
+          expect(error).toBeInstanceOf(ApolloError)
+          expect((error as ApolloError).graphQLErrors).toContainEqual(
+            expect.objectContaining({
+              message,
+              extensions: expect.objectContaining({
+                code
+              })
+            })
+          )
+        }
       }
     )
   })
@@ -963,83 +1035,91 @@ describe('Liquidity Resolvers', (): void => {
     })
 
     test('Returns an error for unknown wallet address', async (): Promise<void> => {
-      const gqlQuery = appContainer.apolloClient
-        .mutate({
-          mutation: gql`
-            mutation CreateWalletAddressWithdrawal(
-              $input: CreateWalletAddressWithdrawalInput!
-            ) {
-              createWalletAddressWithdrawal(input: $input) {
-                withdrawal {
-                  id
+      try {
+        await appContainer.apolloClient
+          .mutate({
+            mutation: gql`
+              mutation CreateWalletAddressWithdrawal(
+                $input: CreateWalletAddressWithdrawalInput!
+              ) {
+                createWalletAddressWithdrawal(input: $input) {
+                  withdrawal {
+                    id
+                  }
                 }
               }
+            `,
+            variables: {
+              input: {
+                id: uuid(),
+                walletAddressId: uuid(),
+                idempotencyKey: uuid(),
+                timeoutSeconds: 0
+              }
             }
-          `,
-          variables: {
-            input: {
-              id: uuid(),
-              walletAddressId: uuid(),
-              idempotencyKey: uuid(),
-              timeoutSeconds: 0
+          })
+          .then((query): WalletAddressWithdrawalMutationResponse => {
+            if (query.data) {
+              return query.data.createWalletAddressWithdrawal
+            } else {
+              throw new Error('Data was empty')
             }
-          }
-        })
-        .then((query): WalletAddressWithdrawalMutationResponse => {
-          if (query.data) {
-            return query.data.createWalletAddressWithdrawal
-          } else {
-            throw new Error('Data was empty')
-          }
-        })
-
-      await expect(gqlQuery).rejects.toThrow(
-        new GraphQLError('Unknown wallet address', {
-          extensions: {
-            code: GraphQLErrorCode.NotFound
-          }
-        })
-      )
+          })
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApolloError)
+        expect((error as ApolloError).graphQLErrors).toContainEqual(
+          expect.objectContaining({
+            message: 'Unknown wallet address',
+            extensions: expect.objectContaining({
+              code: GraphQLErrorCode.NotFound
+            })
+          })
+        )
+      }
     })
 
     test('Returns an error for invalid id', async (): Promise<void> => {
-      const gqlQuery = appContainer.apolloClient
-        .mutate({
-          mutation: gql`
-            mutation CreateWalletAddressWithdrawal(
-              $input: CreateWalletAddressWithdrawalInput!
-            ) {
-              createWalletAddressWithdrawal(input: $input) {
-                withdrawal {
-                  id
+      try {
+        await appContainer.apolloClient
+          .mutate({
+            mutation: gql`
+              mutation CreateWalletAddressWithdrawal(
+                $input: CreateWalletAddressWithdrawalInput!
+              ) {
+                createWalletAddressWithdrawal(input: $input) {
+                  withdrawal {
+                    id
+                  }
                 }
               }
+            `,
+            variables: {
+              input: {
+                id: 'not a uuid',
+                walletAddressId: walletAddress.id,
+                idempotencyKey: uuid(),
+                timeoutSeconds: 0
+              }
             }
-          `,
-          variables: {
-            input: {
-              id: 'not a uuid',
-              walletAddressId: walletAddress.id,
-              idempotencyKey: uuid(),
-              timeoutSeconds: 0
+          })
+          .then((query): WalletAddressWithdrawalMutationResponse => {
+            if (query.data) {
+              return query.data.createWalletAddressWithdrawal
+            } else {
+              throw new Error('Data was empty')
             }
-          }
-        })
-        .then((query): WalletAddressWithdrawalMutationResponse => {
-          if (query.data) {
-            return query.data.createWalletAddressWithdrawal
-          } else {
-            throw new Error('Data was empty')
-          }
-        })
-
-      await expect(gqlQuery).rejects.toThrow(
-        new GraphQLError('Invalid transfer id', {
-          extensions: {
-            code: GraphQLErrorCode.BadUserInput
-          }
-        })
-      )
+          })
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApolloError)
+        expect((error as ApolloError).graphQLErrors).toContainEqual(
+          expect.objectContaining({
+            message: 'Invalid transfer id',
+            extensions: expect.objectContaining({
+              code: GraphQLErrorCode.BadUserInput
+            })
+          })
+        )
+      }
     })
 
     test('Returns an error for existing transfer', async (): Promise<void> => {
@@ -1051,43 +1131,47 @@ describe('Liquidity Resolvers', (): void => {
           amount: BigInt(10)
         })
       ).resolves.toBeUndefined()
-      const gqlQuery = appContainer.apolloClient
-        .mutate({
-          mutation: gql`
-            mutation CreateWalletAddressWithdrawal(
-              $input: CreateWalletAddressWithdrawalInput!
-            ) {
-              createWalletAddressWithdrawal(input: $input) {
-                withdrawal {
-                  id
+      try {
+        await appContainer.apolloClient
+          .mutate({
+            mutation: gql`
+              mutation CreateWalletAddressWithdrawal(
+                $input: CreateWalletAddressWithdrawalInput!
+              ) {
+                createWalletAddressWithdrawal(input: $input) {
+                  withdrawal {
+                    id
+                  }
                 }
               }
+            `,
+            variables: {
+              input: {
+                id,
+                walletAddressId: walletAddress.id,
+                idempotencyKey: uuid(),
+                timeoutSeconds: 0
+              }
             }
-          `,
-          variables: {
-            input: {
-              id,
-              walletAddressId: walletAddress.id,
-              idempotencyKey: uuid(),
-              timeoutSeconds: 0
+          })
+          .then((query): WalletAddressWithdrawalMutationResponse => {
+            if (query.data) {
+              return query.data.createWalletAddressWithdrawal
+            } else {
+              throw new Error('Data was empty')
             }
-          }
-        })
-        .then((query): WalletAddressWithdrawalMutationResponse => {
-          if (query.data) {
-            return query.data.createWalletAddressWithdrawal
-          } else {
-            throw new Error('Data was empty')
-          }
-        })
-
-      await expect(gqlQuery).rejects.toThrow(
-        new GraphQLError('Transfer already exists', {
-          extensions: {
-            code: GraphQLErrorCode.Duplicate
-          }
-        })
-      )
+          })
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApolloError)
+        expect((error as ApolloError).graphQLErrors).toContainEqual(
+          expect.objectContaining({
+            message: 'Transfer already exists',
+            extensions: expect.objectContaining({
+              code: GraphQLErrorCode.Duplicate
+            })
+          })
+        )
+      }
     })
 
     test('Returns an error for empty balance', async (): Promise<void> => {
@@ -1099,43 +1183,47 @@ describe('Liquidity Resolvers', (): void => {
           timeout: 0
         })
       ).resolves.toBeUndefined()
-      const gqlQuery = appContainer.apolloClient
-        .mutate({
-          mutation: gql`
-            mutation CreateWalletAddressWithdrawal(
-              $input: CreateWalletAddressWithdrawalInput!
-            ) {
-              createWalletAddressWithdrawal(input: $input) {
-                withdrawal {
-                  id
+      try {
+        await appContainer.apolloClient
+          .mutate({
+            mutation: gql`
+              mutation CreateWalletAddressWithdrawal(
+                $input: CreateWalletAddressWithdrawalInput!
+              ) {
+                createWalletAddressWithdrawal(input: $input) {
+                  withdrawal {
+                    id
+                  }
                 }
               }
+            `,
+            variables: {
+              input: {
+                id: uuid(),
+                walletAddressId: walletAddress.id,
+                idempotencyKey: uuid(),
+                timeoutSeconds: 0
+              }
             }
-          `,
-          variables: {
-            input: {
-              id: uuid(),
-              walletAddressId: walletAddress.id,
-              idempotencyKey: uuid(),
-              timeoutSeconds: 0
+          })
+          .then((query): WalletAddressWithdrawalMutationResponse => {
+            if (query.data) {
+              return query.data.createWalletAddressWithdrawal
+            } else {
+              throw new Error('Data was empty')
             }
-          }
-        })
-        .then((query): WalletAddressWithdrawalMutationResponse => {
-          if (query.data) {
-            return query.data.createWalletAddressWithdrawal
-          } else {
-            throw new Error('Data was empty')
-          }
-        })
-
-      await expect(gqlQuery).rejects.toThrow(
-        new GraphQLError('Transfer amount is zero', {
-          extensions: {
-            code: GraphQLErrorCode.Forbidden
-          }
-        })
-      )
+          })
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApolloError)
+        expect((error as ApolloError).graphQLErrors).toContainEqual(
+          expect.objectContaining({
+            message: 'Transfer amount is zero',
+            extensions: expect.objectContaining({
+              code: GraphQLErrorCode.Forbidden
+            })
+          })
+        )
+      }
     })
   })
 
@@ -1196,153 +1284,169 @@ describe('Liquidity Resolvers', (): void => {
       })
 
       test("Can't post non-existent withdrawal", async (): Promise<void> => {
-        const gqlQuery = appContainer.apolloClient
-          .mutate({
-            mutation: gql`
-              mutation PostLiquidityWithdrawal(
-                $input: PostLiquidityWithdrawalInput!
-              ) {
-                postLiquidityWithdrawal(input: $input) {
-                  success
+        try {
+          await appContainer.apolloClient
+            .mutate({
+              mutation: gql`
+                mutation PostLiquidityWithdrawal(
+                  $input: PostLiquidityWithdrawalInput!
+                ) {
+                  postLiquidityWithdrawal(input: $input) {
+                    success
+                  }
+                }
+              `,
+              variables: {
+                input: {
+                  withdrawalId: uuid(),
+                  idempotencyKey: uuid()
                 }
               }
-            `,
-            variables: {
-              input: {
-                withdrawalId: uuid(),
-                idempotencyKey: uuid()
+            })
+            .then((query): LiquidityMutationResponse => {
+              if (query.data) {
+                return query.data.postLiquidityWithdrawal
+              } else {
+                throw new Error('Data was empty')
               }
-            }
-          })
-          .then((query): LiquidityMutationResponse => {
-            if (query.data) {
-              return query.data.postLiquidityWithdrawal
-            } else {
-              throw new Error('Data was empty')
-            }
-          })
-
-        await expect(gqlQuery).rejects.toThrow(
-          new GraphQLError('Unknown transfer', {
-            extensions: {
-              code: GraphQLErrorCode.NotFound
-            }
-          })
-        )
+            })
+        } catch (error) {
+          expect(error).toBeInstanceOf(ApolloError)
+          expect((error as ApolloError).graphQLErrors).toContainEqual(
+            expect.objectContaining({
+              message: 'Unknown transfer',
+              extensions: expect.objectContaining({
+                code: GraphQLErrorCode.NotFound
+              })
+            })
+          )
+        }
       })
 
       test("Can't post invalid withdrawal id", async (): Promise<void> => {
-        const gqlQuery = appContainer.apolloClient
-          .mutate({
-            mutation: gql`
-              mutation PostLiquidityWithdrawal(
-                $input: PostLiquidityWithdrawalInput!
-              ) {
-                postLiquidityWithdrawal(input: $input) {
-                  success
+        try {
+          await appContainer.apolloClient
+            .mutate({
+              mutation: gql`
+                mutation PostLiquidityWithdrawal(
+                  $input: PostLiquidityWithdrawalInput!
+                ) {
+                  postLiquidityWithdrawal(input: $input) {
+                    success
+                  }
+                }
+              `,
+              variables: {
+                input: {
+                  withdrawalId: 'not a uuid',
+                  idempotencyKey: uuid()
                 }
               }
-            `,
-            variables: {
-              input: {
-                withdrawalId: 'not a uuid',
-                idempotencyKey: uuid()
+            })
+            .then((query): LiquidityMutationResponse => {
+              if (query.data) {
+                return query.data.postLiquidityWithdrawal
+              } else {
+                throw new Error('Data was empty')
               }
-            }
-          })
-          .then((query): LiquidityMutationResponse => {
-            if (query.data) {
-              return query.data.postLiquidityWithdrawal
-            } else {
-              throw new Error('Data was empty')
-            }
-          })
-
-        await expect(gqlQuery).rejects.toThrow(
-          new GraphQLError('Invalid transfer id', {
-            extensions: {
-              code: GraphQLErrorCode.BadUserInput
-            }
-          })
-        )
+            })
+        } catch (error) {
+          expect(error).toBeInstanceOf(ApolloError)
+          expect((error as ApolloError).graphQLErrors).toContainEqual(
+            expect.objectContaining({
+              message: 'Invalid transfer id',
+              extensions: expect.objectContaining({
+                code: GraphQLErrorCode.BadUserInput
+              })
+            })
+          )
+        }
       })
 
       test("Can't post posted withdrawal", async (): Promise<void> => {
         await expect(
           accountingService.postWithdrawal(withdrawalId)
         ).resolves.toBeUndefined()
-        const gqlQuery = appContainer.apolloClient
-          .mutate({
-            mutation: gql`
-              mutation PostLiquidityWithdrawal(
-                $input: PostLiquidityWithdrawalInput!
-              ) {
-                postLiquidityWithdrawal(input: $input) {
-                  success
+        try {
+          await appContainer.apolloClient
+            .mutate({
+              mutation: gql`
+                mutation PostLiquidityWithdrawal(
+                  $input: PostLiquidityWithdrawalInput!
+                ) {
+                  postLiquidityWithdrawal(input: $input) {
+                    success
+                  }
+                }
+              `,
+              variables: {
+                input: {
+                  withdrawalId,
+                  idempotencyKey: uuid()
                 }
               }
-            `,
-            variables: {
-              input: {
-                withdrawalId,
-                idempotencyKey: uuid()
+            })
+            .then((query): LiquidityMutationResponse => {
+              if (query.data) {
+                return query.data.postLiquidityWithdrawal
+              } else {
+                throw new Error('Data was empty')
               }
-            }
-          })
-          .then((query): LiquidityMutationResponse => {
-            if (query.data) {
-              return query.data.postLiquidityWithdrawal
-            } else {
-              throw new Error('Data was empty')
-            }
-          })
-
-        await expect(gqlQuery).rejects.toThrow(
-          new GraphQLError('Transfer already posted', {
-            extensions: {
-              code: GraphQLErrorCode.Conflict
-            }
-          })
-        )
+            })
+        } catch (error) {
+          expect(error).toBeInstanceOf(ApolloError)
+          expect((error as ApolloError).graphQLErrors).toContainEqual(
+            expect.objectContaining({
+              message: 'Transfer already posted',
+              extensions: expect.objectContaining({
+                code: GraphQLErrorCode.Conflict
+              })
+            })
+          )
+        }
       })
 
       test("Can't post voided withdrawal", async (): Promise<void> => {
         await expect(
           accountingService.voidWithdrawal(withdrawalId)
         ).resolves.toBeUndefined()
-        const gqlQuery = appContainer.apolloClient
-          .mutate({
-            mutation: gql`
-              mutation PostLiquidityWithdrawal(
-                $input: PostLiquidityWithdrawalInput!
-              ) {
-                postLiquidityWithdrawal(input: $input) {
-                  success
+        try {
+          await appContainer.apolloClient
+            .mutate({
+              mutation: gql`
+                mutation PostLiquidityWithdrawal(
+                  $input: PostLiquidityWithdrawalInput!
+                ) {
+                  postLiquidityWithdrawal(input: $input) {
+                    success
+                  }
+                }
+              `,
+              variables: {
+                input: {
+                  withdrawalId,
+                  idempotencyKey: uuid()
                 }
               }
-            `,
-            variables: {
-              input: {
-                withdrawalId,
-                idempotencyKey: uuid()
+            })
+            .then((query): LiquidityMutationResponse => {
+              if (query.data) {
+                return query.data.postLiquidityWithdrawal
+              } else {
+                throw new Error('Data was empty')
               }
-            }
-          })
-          .then((query): LiquidityMutationResponse => {
-            if (query.data) {
-              return query.data.postLiquidityWithdrawal
-            } else {
-              throw new Error('Data was empty')
-            }
-          })
-
-        await expect(gqlQuery).rejects.toThrow(
-          new GraphQLError('Transfer already voided', {
-            extensions: {
-              code: GraphQLErrorCode.Conflict
-            }
-          })
-        )
+            })
+        } catch (error) {
+          expect(error).toBeInstanceOf(ApolloError)
+          expect((error as ApolloError).graphQLErrors).toContainEqual(
+            expect.objectContaining({
+              message: 'Transfer already voided',
+              extensions: expect.objectContaining({
+                code: GraphQLErrorCode.Conflict
+              })
+            })
+          )
+        }
       })
     }
   )
@@ -1404,153 +1508,169 @@ describe('Liquidity Resolvers', (): void => {
       })
 
       test("Can't void non-existent withdrawal", async (): Promise<void> => {
-        const gqlQuery = appContainer.apolloClient
-          .mutate({
-            mutation: gql`
-              mutation VoidLiquidityWithdrawal(
-                $input: VoidLiquidityWithdrawalInput!
-              ) {
-                voidLiquidityWithdrawal(input: $input) {
-                  success
+        try {
+          await appContainer.apolloClient
+            .mutate({
+              mutation: gql`
+                mutation VoidLiquidityWithdrawal(
+                  $input: VoidLiquidityWithdrawalInput!
+                ) {
+                  voidLiquidityWithdrawal(input: $input) {
+                    success
+                  }
+                }
+              `,
+              variables: {
+                input: {
+                  withdrawalId: uuid(),
+                  idempotencyKey: uuid()
                 }
               }
-            `,
-            variables: {
-              input: {
-                withdrawalId: uuid(),
-                idempotencyKey: uuid()
+            })
+            .then((query): LiquidityMutationResponse => {
+              if (query.data) {
+                return query.data.voidLiquidityWithdrawal
+              } else {
+                throw new Error('Data was empty')
               }
-            }
-          })
-          .then((query): LiquidityMutationResponse => {
-            if (query.data) {
-              return query.data.voidLiquidityWithdrawal
-            } else {
-              throw new Error('Data was empty')
-            }
-          })
-
-        await expect(gqlQuery).rejects.toThrow(
-          new GraphQLError('Unknown transfer', {
-            extensions: {
-              code: GraphQLErrorCode.NotFound
-            }
-          })
-        )
+            })
+        } catch (error) {
+          expect(error).toBeInstanceOf(ApolloError)
+          expect((error as ApolloError).graphQLErrors).toContainEqual(
+            expect.objectContaining({
+              message: 'Unknown transfer',
+              extensions: expect.objectContaining({
+                code: GraphQLErrorCode.NotFound
+              })
+            })
+          )
+        }
       })
 
       test("Can't void invalid withdrawal id", async (): Promise<void> => {
-        const gqlQuery = appContainer.apolloClient
-          .mutate({
-            mutation: gql`
-              mutation VoidLiquidityWithdrawal(
-                $input: VoidLiquidityWithdrawalInput!
-              ) {
-                voidLiquidityWithdrawal(input: $input) {
-                  success
+        try {
+          await appContainer.apolloClient
+            .mutate({
+              mutation: gql`
+                mutation VoidLiquidityWithdrawal(
+                  $input: VoidLiquidityWithdrawalInput!
+                ) {
+                  voidLiquidityWithdrawal(input: $input) {
+                    success
+                  }
+                }
+              `,
+              variables: {
+                input: {
+                  withdrawalId: 'not a uuid',
+                  idempotencyKey: uuid()
                 }
               }
-            `,
-            variables: {
-              input: {
-                withdrawalId: 'not a uuid',
-                idempotencyKey: uuid()
+            })
+            .then((query): LiquidityMutationResponse => {
+              if (query.data) {
+                return query.data.voidLiquidityWithdrawal
+              } else {
+                throw new Error('Data was empty')
               }
-            }
-          })
-          .then((query): LiquidityMutationResponse => {
-            if (query.data) {
-              return query.data.voidLiquidityWithdrawal
-            } else {
-              throw new Error('Data was empty')
-            }
-          })
-
-        await expect(gqlQuery).rejects.toThrow(
-          new GraphQLError('Invalid transfer id', {
-            extensions: {
-              code: GraphQLErrorCode.BadUserInput
-            }
-          })
-        )
+            })
+        } catch (error) {
+          expect(error).toBeInstanceOf(ApolloError)
+          expect((error as ApolloError).graphQLErrors).toContainEqual(
+            expect.objectContaining({
+              message: 'Invalid transfer id',
+              extensions: expect.objectContaining({
+                code: GraphQLErrorCode.BadUserInput
+              })
+            })
+          )
+        }
       })
 
       test("Can't void posted withdrawal", async (): Promise<void> => {
         await expect(
           accountingService.postWithdrawal(withdrawalId)
         ).resolves.toBeUndefined()
-        const gqlQuery = appContainer.apolloClient
-          .mutate({
-            mutation: gql`
-              mutation VoidLiquidityWithdrawal(
-                $input: VoidLiquidityWithdrawalInput!
-              ) {
-                voidLiquidityWithdrawal(input: $input) {
-                  success
+        try {
+          await appContainer.apolloClient
+            .mutate({
+              mutation: gql`
+                mutation VoidLiquidityWithdrawal(
+                  $input: VoidLiquidityWithdrawalInput!
+                ) {
+                  voidLiquidityWithdrawal(input: $input) {
+                    success
+                  }
+                }
+              `,
+              variables: {
+                input: {
+                  withdrawalId,
+                  idempotencyKey: uuid()
                 }
               }
-            `,
-            variables: {
-              input: {
-                withdrawalId,
-                idempotencyKey: uuid()
+            })
+            .then((query): LiquidityMutationResponse => {
+              if (query.data) {
+                return query.data.voidLiquidityWithdrawal
+              } else {
+                throw new Error('Data was empty')
               }
-            }
-          })
-          .then((query): LiquidityMutationResponse => {
-            if (query.data) {
-              return query.data.voidLiquidityWithdrawal
-            } else {
-              throw new Error('Data was empty')
-            }
-          })
-
-        await expect(gqlQuery).rejects.toThrow(
-          new GraphQLError('Transfer already posted', {
-            extensions: {
-              code: GraphQLErrorCode.Conflict
-            }
-          })
-        )
+            })
+        } catch (error) {
+          expect(error).toBeInstanceOf(ApolloError)
+          expect((error as ApolloError).graphQLErrors).toContainEqual(
+            expect.objectContaining({
+              message: 'Transfer already posted',
+              extensions: expect.objectContaining({
+                code: GraphQLErrorCode.Conflict
+              })
+            })
+          )
+        }
       })
 
       test("Can't void voided withdrawal", async (): Promise<void> => {
         await expect(
           accountingService.voidWithdrawal(withdrawalId)
         ).resolves.toBeUndefined()
-        const gqlQuery = appContainer.apolloClient
-          .mutate({
-            mutation: gql`
-              mutation voidLiquidityWithdrawal(
-                $input: VoidLiquidityWithdrawalInput!
-              ) {
-                voidLiquidityWithdrawal(input: $input) {
-                  success
+        try {
+          await appContainer.apolloClient
+            .mutate({
+              mutation: gql`
+                mutation voidLiquidityWithdrawal(
+                  $input: VoidLiquidityWithdrawalInput!
+                ) {
+                  voidLiquidityWithdrawal(input: $input) {
+                    success
+                  }
+                }
+              `,
+              variables: {
+                input: {
+                  withdrawalId,
+                  idempotencyKey: uuid()
                 }
               }
-            `,
-            variables: {
-              input: {
-                withdrawalId,
-                idempotencyKey: uuid()
+            })
+            .then((query): LiquidityMutationResponse => {
+              if (query.data) {
+                return query.data.voidLiquidityWithdrawal
+              } else {
+                throw new Error('Data was empty')
               }
-            }
-          })
-          .then((query): LiquidityMutationResponse => {
-            if (query.data) {
-              return query.data.voidLiquidityWithdrawal
-            } else {
-              throw new Error('Data was empty')
-            }
-          })
-
-        await expect(gqlQuery).rejects.toThrow(
-          new GraphQLError('Transfer already voided', {
-            extensions: {
-              code: GraphQLErrorCode.Conflict
-            }
-          })
-        )
+            })
+        } catch (error) {
+          expect(error).toBeInstanceOf(ApolloError)
+          expect((error as ApolloError).graphQLErrors).toContainEqual(
+            expect.objectContaining({
+              message: 'Transfer already voided',
+              extensions: expect.objectContaining({
+                code: GraphQLErrorCode.Conflict
+              })
+            })
+          )
+        }
       })
     }
   )
@@ -1648,39 +1768,43 @@ describe('Liquidity Resolvers', (): void => {
           })
 
           test("Can't deposit for non-existent webhook event id", async (): Promise<void> => {
-            const gqlQuery = appContainer.apolloClient
-              .mutate({
-                mutation: gql`
-                  mutation DepositLiquidity(
-                    $input: DepositEventLiquidityInput!
-                  ) {
-                    depositEventLiquidity(input: $input) {
-                      success
+            try {
+              await appContainer.apolloClient
+                .mutate({
+                  mutation: gql`
+                    mutation DepositLiquidity(
+                      $input: DepositEventLiquidityInput!
+                    ) {
+                      depositEventLiquidity(input: $input) {
+                        success
+                      }
+                    }
+                  `,
+                  variables: {
+                    input: {
+                      eventId: uuid(),
+                      idempotencyKey: uuid()
                     }
                   }
-                `,
-                variables: {
-                  input: {
-                    eventId: uuid(),
-                    idempotencyKey: uuid()
+                })
+                .then((query): LiquidityMutationResponse => {
+                  if (query.data) {
+                    return query.data.depositEventLiquidity
+                  } else {
+                    throw new Error('Data was empty')
                   }
-                }
-              })
-              .then((query): LiquidityMutationResponse => {
-                if (query.data) {
-                  return query.data.depositEventLiquidity
-                } else {
-                  throw new Error('Data was empty')
-                }
-              })
-
-            await expect(gqlQuery).rejects.toThrow(
-              new GraphQLError('Invalid transfer id', {
-                extensions: {
-                  code: GraphQLErrorCode.BadUserInput
-                }
-              })
-            )
+                })
+            } catch (error) {
+              expect(error).toBeInstanceOf(ApolloError)
+              expect((error as ApolloError).graphQLErrors).toContainEqual(
+                expect.objectContaining({
+                  message: 'Invalid transfer id',
+                  extensions: expect.objectContaining({
+                    code: GraphQLErrorCode.BadUserInput
+                  })
+                })
+              )
+            }
           })
 
           test('Returns an error for existing transfer', async (): Promise<void> => {
@@ -1691,39 +1815,43 @@ describe('Liquidity Resolvers', (): void => {
                 amount: BigInt(100)
               })
             ).resolves.toBeUndefined()
-            const gqlQuery = appContainer.apolloClient
-              .mutate({
-                mutation: gql`
-                  mutation DepositLiquidity(
-                    $input: DepositEventLiquidityInput!
-                  ) {
-                    depositEventLiquidity(input: $input) {
-                      success
+            try {
+              await appContainer.apolloClient
+                .mutate({
+                  mutation: gql`
+                    mutation DepositLiquidity(
+                      $input: DepositEventLiquidityInput!
+                    ) {
+                      depositEventLiquidity(input: $input) {
+                        success
+                      }
+                    }
+                  `,
+                  variables: {
+                    input: {
+                      eventId,
+                      idempotencyKey: uuid()
                     }
                   }
-                `,
-                variables: {
-                  input: {
-                    eventId,
-                    idempotencyKey: uuid()
+                })
+                .then((query): LiquidityMutationResponse => {
+                  if (query.data) {
+                    return query.data.depositEventLiquidity
+                  } else {
+                    throw new Error('Data was empty')
                   }
-                }
-              })
-              .then((query): LiquidityMutationResponse => {
-                if (query.data) {
-                  return query.data.depositEventLiquidity
-                } else {
-                  throw new Error('Data was empty')
-                }
-              })
-
-            await expect(gqlQuery).rejects.toThrow(
-              new GraphQLError('Transfer already exists', {
-                extensions: {
-                  code: GraphQLErrorCode.Duplicate
-                }
-              })
-            )
+                })
+            } catch (error) {
+              expect(error).toBeInstanceOf(ApolloError)
+              expect((error as ApolloError).graphQLErrors).toContainEqual(
+                expect.objectContaining({
+                  message: 'Transfer already exists',
+                  extensions: expect.objectContaining({
+                    code: GraphQLErrorCode.Duplicate
+                  })
+                })
+              )
+            }
           })
         }
       )
@@ -1862,78 +1990,86 @@ describe('Liquidity Resolvers', (): void => {
           })
 
           test('Returns error for non-existent webhook event id', async (): Promise<void> => {
-            const gqlQuery = appContainer.apolloClient
-              .mutate({
-                mutation: gql`
-                  mutation WithdrawLiquidity(
-                    $input: WithdrawEventLiquidityInput!
-                  ) {
-                    withdrawEventLiquidity(input: $input) {
-                      success
+            try {
+              await appContainer.apolloClient
+                .mutate({
+                  mutation: gql`
+                    mutation WithdrawLiquidity(
+                      $input: WithdrawEventLiquidityInput!
+                    ) {
+                      withdrawEventLiquidity(input: $input) {
+                        success
+                      }
+                    }
+                  `,
+                  variables: {
+                    input: {
+                      eventId: uuid(),
+                      idempotencyKey: uuid()
                     }
                   }
-                `,
-                variables: {
-                  input: {
-                    eventId: uuid(),
-                    idempotencyKey: uuid()
+                })
+                .then((query): LiquidityMutationResponse => {
+                  if (query.data) {
+                    return query.data.withdrawEventLiquidity
+                  } else {
+                    throw new Error('Data was empty')
                   }
-                }
-              })
-              .then((query): LiquidityMutationResponse => {
-                if (query.data) {
-                  return query.data.withdrawEventLiquidity
-                } else {
-                  throw new Error('Data was empty')
-                }
-              })
-
-            await expect(gqlQuery).rejects.toThrow(
-              new GraphQLError('Invalid transfer id', {
-                extensions: {
-                  code: GraphQLErrorCode.BadUserInput
-                }
-              })
-            )
+                })
+            } catch (error) {
+              expect(error).toBeInstanceOf(ApolloError)
+              expect((error as ApolloError).graphQLErrors).toContainEqual(
+                expect.objectContaining({
+                  message: 'Invalid transfer id',
+                  extensions: expect.objectContaining({
+                    code: GraphQLErrorCode.BadUserInput
+                  })
+                })
+              )
+            }
           })
 
           test('Returns error for already completed withdrawal', async (): Promise<void> => {
             await expect(
               accountingService.createWithdrawal(withdrawal)
             ).resolves.toBeUndefined()
-            const gqlQuery = appContainer.apolloClient
-              .mutate({
-                mutation: gql`
-                  mutation WithdrawLiquidity(
-                    $input: WithdrawEventLiquidityInput!
-                  ) {
-                    withdrawEventLiquidity(input: $input) {
-                      success
+            try {
+              await appContainer.apolloClient
+                .mutate({
+                  mutation: gql`
+                    mutation WithdrawLiquidity(
+                      $input: WithdrawEventLiquidityInput!
+                    ) {
+                      withdrawEventLiquidity(input: $input) {
+                        success
+                      }
+                    }
+                  `,
+                  variables: {
+                    input: {
+                      eventId,
+                      idempotencyKey: uuid()
                     }
                   }
-                `,
-                variables: {
-                  input: {
-                    eventId,
-                    idempotencyKey: uuid()
+                })
+                .then((query): LiquidityMutationResponse => {
+                  if (query.data) {
+                    return query.data.withdrawEventLiquidity
+                  } else {
+                    throw new Error('Data was empty')
                   }
-                }
-              })
-              .then((query): LiquidityMutationResponse => {
-                if (query.data) {
-                  return query.data.withdrawEventLiquidity
-                } else {
-                  throw new Error('Data was empty')
-                }
-              })
-
-            await expect(gqlQuery).rejects.toThrow(
-              new GraphQLError('Transfer already exists', {
-                extensions: {
-                  code: GraphQLErrorCode.Duplicate
-                }
-              })
-            )
+                })
+            } catch (error) {
+              expect(error).toBeInstanceOf(ApolloError)
+              expect((error as ApolloError).graphQLErrors).toContainEqual(
+                expect.objectContaining({
+                  message: 'Transfer already exists',
+                  extensions: expect.objectContaining({
+                    code: GraphQLErrorCode.Duplicate
+                  })
+                })
+              )
+            }
           })
         }
       )
@@ -2058,77 +2194,85 @@ describe('Liquidity Resolvers', (): void => {
               amount
             }
           })
-          const gqlQuery = appContainer.apolloClient
-            .mutate({
-              mutation: gql`
-                mutation CreateIncomingPaymentWithdrawal(
-                  $input: CreateIncomingPaymentWithdrawalInput!
-                ) {
-                  createIncomingPaymentWithdrawal(input: $input) {
-                    success
+          try {
+            await appContainer.apolloClient
+              .mutate({
+                mutation: gql`
+                  mutation CreateIncomingPaymentWithdrawal(
+                    $input: CreateIncomingPaymentWithdrawalInput!
+                  ) {
+                    createIncomingPaymentWithdrawal(input: $input) {
+                      success
+                    }
+                  }
+                `,
+                variables: {
+                  input: {
+                    incomingPaymentId: uuid(),
+                    idempotencyKey: uuid(),
+                    timeoutSeconds: 0
                   }
                 }
-              `,
-              variables: {
-                input: {
-                  incomingPaymentId: uuid(),
-                  idempotencyKey: uuid(),
-                  timeoutSeconds: 0
+              })
+              .then((query): LiquidityMutationResponse => {
+                if (query.data) {
+                  return query.data.createIncomingPaymentWithdrawal
+                } else {
+                  throw new Error('Data was empty')
                 }
-              }
-            })
-            .then((query): LiquidityMutationResponse => {
-              if (query.data) {
-                return query.data.createIncomingPaymentWithdrawal
-              } else {
-                throw new Error('Data was empty')
-              }
-            })
-
-          await expect(gqlQuery).rejects.toThrow(
-            new GraphQLError('Invalid transfer id', {
-              extensions: {
-                code: GraphQLErrorCode.BadUserInput
-              }
-            })
-          )
+              })
+          } catch (error) {
+            expect(error).toBeInstanceOf(ApolloError)
+            expect((error as ApolloError).graphQLErrors).toContainEqual(
+              expect.objectContaining({
+                message: 'Invalid transfer id',
+                extensions: expect.objectContaining({
+                  code: GraphQLErrorCode.BadUserInput
+                })
+              })
+            )
+          }
         })
 
         test('Returns error when related webhook not found', async (): Promise<void> => {
-          const gqlQuery = appContainer.apolloClient
-            .mutate({
-              mutation: gql`
-                mutation CreateIncomingPaymentWithdrawal(
-                  $input: CreateIncomingPaymentWithdrawalInput!
-                ) {
-                  createIncomingPaymentWithdrawal(input: $input) {
-                    success
+          try {
+            await appContainer.apolloClient
+              .mutate({
+                mutation: gql`
+                  mutation CreateIncomingPaymentWithdrawal(
+                    $input: CreateIncomingPaymentWithdrawalInput!
+                  ) {
+                    createIncomingPaymentWithdrawal(input: $input) {
+                      success
+                    }
+                  }
+                `,
+                variables: {
+                  input: {
+                    incomingPaymentId: incomingPayment.id,
+                    idempotencyKey: uuid(),
+                    timeoutSeconds: 0
                   }
                 }
-              `,
-              variables: {
-                input: {
-                  incomingPaymentId: incomingPayment.id,
-                  idempotencyKey: uuid(),
-                  timeoutSeconds: 0
+              })
+              .then((query): LiquidityMutationResponse => {
+                if (query.data) {
+                  return query.data.createIncomingPaymentWithdrawal
+                } else {
+                  throw new Error('Data was empty')
                 }
-              }
-            })
-            .then((query): LiquidityMutationResponse => {
-              if (query.data) {
-                return query.data.createIncomingPaymentWithdrawal
-              } else {
-                throw new Error('Data was empty')
-              }
-            })
-
-          await expect(gqlQuery).rejects.toThrow(
-            new GraphQLError('Invalid transfer id', {
-              extensions: {
-                code: GraphQLErrorCode.BadUserInput
-              }
-            })
-          )
+              })
+          } catch (error) {
+            expect(error).toBeInstanceOf(ApolloError)
+            expect((error as ApolloError).graphQLErrors).toContainEqual(
+              expect.objectContaining({
+                message: 'Invalid transfer id',
+                extensions: expect.objectContaining({
+                  code: GraphQLErrorCode.BadUserInput
+                })
+              })
+            )
+          }
         })
 
         test('Returns error for already completed withdrawal', async (): Promise<void> => {
@@ -2151,40 +2295,44 @@ describe('Liquidity Resolvers', (): void => {
               amount: amount
             })
           ).resolves.toBeUndefined()
-          const gqlQuery = appContainer.apolloClient
-            .mutate({
-              mutation: gql`
-                mutation CreateIncomingPaymentWithdrawal(
-                  $input: CreateIncomingPaymentWithdrawalInput!
-                ) {
-                  createIncomingPaymentWithdrawal(input: $input) {
-                    success
+          try {
+            await appContainer.apolloClient
+              .mutate({
+                mutation: gql`
+                  mutation CreateIncomingPaymentWithdrawal(
+                    $input: CreateIncomingPaymentWithdrawalInput!
+                  ) {
+                    createIncomingPaymentWithdrawal(input: $input) {
+                      success
+                    }
+                  }
+                `,
+                variables: {
+                  input: {
+                    incomingPaymentId: incomingPayment.id,
+                    idempotencyKey: uuid(),
+                    timeoutSeconds: 0
                   }
                 }
-              `,
-              variables: {
-                input: {
-                  incomingPaymentId: incomingPayment.id,
-                  idempotencyKey: uuid(),
-                  timeoutSeconds: 0
+              })
+              .then((query): LiquidityMutationResponse => {
+                if (query.data) {
+                  return query.data.createIncomingPaymentWithdrawal
+                } else {
+                  throw new Error('Data was empty')
                 }
-              }
-            })
-            .then((query): LiquidityMutationResponse => {
-              if (query.data) {
-                return query.data.createIncomingPaymentWithdrawal
-              } else {
-                throw new Error('Data was empty')
-              }
-            })
-
-          await expect(gqlQuery).rejects.toThrow(
-            new GraphQLError('Transfer already exists', {
-              extensions: {
-                code: GraphQLErrorCode.Duplicate
-              }
-            })
-          )
+              })
+          } catch (error) {
+            expect(error).toBeInstanceOf(ApolloError)
+            expect((error as ApolloError).graphQLErrors).toContainEqual(
+              expect.objectContaining({
+                message: 'Transfer already exists',
+                extensions: expect.objectContaining({
+                  code: GraphQLErrorCode.Duplicate
+                })
+              })
+            )
+          }
         })
       })
     })
@@ -2261,39 +2409,44 @@ describe('Liquidity Resolvers', (): void => {
 
       describe('Cannot withdraw liquidity', () => {
         test('Returns error for non-existent outgoing payment id', async (): Promise<void> => {
-          const gqlQuery = appContainer.apolloClient
-            .mutate({
-              mutation: gql`
-                mutation CreateOutgoingPaymentWithdrawal(
-                  $input: CreateOutgoingPaymentWithdrawalInput!
-                ) {
-                  createOutgoingPaymentWithdrawal(input: $input) {
-                    success
+          try {
+            await appContainer.apolloClient
+              .mutate({
+                mutation: gql`
+                  mutation CreateOutgoingPaymentWithdrawal(
+                    $input: CreateOutgoingPaymentWithdrawalInput!
+                  ) {
+                    createOutgoingPaymentWithdrawal(input: $input) {
+                      success
+                    }
+                  }
+                `,
+                variables: {
+                  input: {
+                    outgoingPaymentId: uuid(),
+                    idempotencyKey: uuid(),
+                    timeoutSeconds: 0
                   }
                 }
-              `,
-              variables: {
-                input: {
-                  outgoingPaymentId: uuid(),
-                  idempotencyKey: uuid(),
-                  timeoutSeconds: 0
+              })
+              .then((query): LiquidityMutationResponse => {
+                if (query.data) {
+                  return query.data.createOutgoingPaymentWithdrawal
+                } else {
+                  throw new Error('Data was empty')
                 }
-              }
-            })
-            .then((query): LiquidityMutationResponse => {
-              if (query.data) {
-                return query.data.createOutgoingPaymentWithdrawal
-              } else {
-                throw new Error('Data was empty')
-              }
-            })
-          await expect(gqlQuery).rejects.toThrow(
-            new GraphQLError('Invalid transfer id', {
-              extensions: {
-                code: GraphQLErrorCode.BadUserInput
-              }
-            })
-          )
+              })
+          } catch (error) {
+            expect(error).toBeInstanceOf(ApolloError)
+            expect((error as ApolloError).graphQLErrors).toContainEqual(
+              expect.objectContaining({
+                message: 'Invalid transfer id',
+                extensions: expect.objectContaining({
+                  code: GraphQLErrorCode.BadUserInput
+                })
+              })
+            )
+          }
         })
 
         test('Returns error when related webhook not found', async (): Promise<void> => {
@@ -2304,40 +2457,44 @@ describe('Liquidity Resolvers', (): void => {
               amount: amount
             })
           ).resolves.toBeUndefined()
-          const gqlQuery = appContainer.apolloClient
-            .mutate({
-              mutation: gql`
-                mutation CreateIncomingPaymentWithdrawal(
-                  $input: CreateOutgoingPaymentWithdrawalInput!
-                ) {
-                  createOutgoingPaymentWithdrawal(input: $input) {
-                    success
+          try {
+            await appContainer.apolloClient
+              .mutate({
+                mutation: gql`
+                  mutation CreateIncomingPaymentWithdrawal(
+                    $input: CreateOutgoingPaymentWithdrawalInput!
+                  ) {
+                    createOutgoingPaymentWithdrawal(input: $input) {
+                      success
+                    }
+                  }
+                `,
+                variables: {
+                  input: {
+                    outgoingPaymentId: outgoingPayment.id,
+                    idempotencyKey: uuid(),
+                    timeoutSeconds: 0
                   }
                 }
-              `,
-              variables: {
-                input: {
-                  outgoingPaymentId: outgoingPayment.id,
-                  idempotencyKey: uuid(),
-                  timeoutSeconds: 0
+              })
+              .then((query): LiquidityMutationResponse => {
+                if (query.data) {
+                  return query.data.createOutgoingPaymentWithdrawal
+                } else {
+                  throw new Error('Data was empty')
                 }
-              }
-            })
-            .then((query): LiquidityMutationResponse => {
-              if (query.data) {
-                return query.data.createOutgoingPaymentWithdrawal
-              } else {
-                throw new Error('Data was empty')
-              }
-            })
-
-          await expect(gqlQuery).rejects.toThrow(
-            new GraphQLError('Invalid transfer id', {
-              extensions: {
-                code: GraphQLErrorCode.BadUserInput
-              }
-            })
-          )
+              })
+          } catch (error) {
+            expect(error).toBeInstanceOf(ApolloError)
+            expect((error as ApolloError).graphQLErrors).toContainEqual(
+              expect.objectContaining({
+                message: 'Invalid transfer id',
+                extensions: expect.objectContaining({
+                  code: GraphQLErrorCode.BadUserInput
+                })
+              })
+            )
+          }
         })
 
         test('Returns error for already completed withdrawal', async (): Promise<void> => {
@@ -2359,39 +2516,44 @@ describe('Liquidity Resolvers', (): void => {
               amount: amount
             })
           ).resolves.toBeUndefined()
-          const gqlQuery = appContainer.apolloClient
-            .mutate({
-              mutation: gql`
-                mutation CreateOutgoingPaymentWithdrawal(
-                  $input: CreateOutgoingPaymentWithdrawalInput!
-                ) {
-                  createOutgoingPaymentWithdrawal(input: $input) {
-                    success
+          try {
+            await appContainer.apolloClient
+              .mutate({
+                mutation: gql`
+                  mutation CreateOutgoingPaymentWithdrawal(
+                    $input: CreateOutgoingPaymentWithdrawalInput!
+                  ) {
+                    createOutgoingPaymentWithdrawal(input: $input) {
+                      success
+                    }
+                  }
+                `,
+                variables: {
+                  input: {
+                    outgoingPaymentId: outgoingPayment.id,
+                    idempotencyKey: uuid(),
+                    timeoutSeconds: 0
                   }
                 }
-              `,
-              variables: {
-                input: {
-                  outgoingPaymentId: outgoingPayment.id,
-                  idempotencyKey: uuid(),
-                  timeoutSeconds: 0
+              })
+              .then((query): LiquidityMutationResponse => {
+                if (query.data) {
+                  return query.data.createOutgoingPaymentWithdrawal
+                } else {
+                  throw new Error('Data was empty')
                 }
-              }
-            })
-            .then((query): LiquidityMutationResponse => {
-              if (query.data) {
-                return query.data.createOutgoingPaymentWithdrawal
-              } else {
-                throw new Error('Data was empty')
-              }
-            })
-          await expect(gqlQuery).rejects.toThrow(
-            new GraphQLError('Insufficient transfer balance', {
-              extensions: {
-                code: GraphQLErrorCode.Forbidden
-              }
-            })
-          )
+              })
+          } catch (error) {
+            expect(error).toBeInstanceOf(ApolloError)
+            expect((error as ApolloError).graphQLErrors).toContainEqual(
+              expect.objectContaining({
+                message: 'Insufficient transfer balance',
+                extensions: expect.objectContaining({
+                  code: GraphQLErrorCode.Forbidden
+                })
+              })
+            )
+          }
         })
       })
     })
@@ -2456,39 +2618,43 @@ describe('Liquidity Resolvers', (): void => {
           })
 
           test("Can't deposit for non-existent outgoing payment id", async (): Promise<void> => {
-            const gqlQuery = appContainer.apolloClient
-              .mutate({
-                mutation: gql`
-                  mutation DepositLiquidity(
-                    $input: DepositOutgoingPaymentLiquidityInput!
-                  ) {
-                    depositOutgoingPaymentLiquidity(input: $input) {
-                      success
+            try {
+              await appContainer.apolloClient
+                .mutate({
+                  mutation: gql`
+                    mutation DepositLiquidity(
+                      $input: DepositOutgoingPaymentLiquidityInput!
+                    ) {
+                      depositOutgoingPaymentLiquidity(input: $input) {
+                        success
+                      }
+                    }
+                  `,
+                  variables: {
+                    input: {
+                      outgoingPaymentId: uuid(),
+                      idempotencyKey: uuid()
                     }
                   }
-                `,
-                variables: {
-                  input: {
-                    outgoingPaymentId: uuid(),
-                    idempotencyKey: uuid()
+                })
+                .then((query): LiquidityMutationResponse => {
+                  if (query.data) {
+                    return query.data.depositOutgoingPaymentLiquidity
+                  } else {
+                    throw new Error('Data was empty')
                   }
-                }
-              })
-              .then((query): LiquidityMutationResponse => {
-                if (query.data) {
-                  return query.data.depositOutgoingPaymentLiquidity
-                } else {
-                  throw new Error('Data was empty')
-                }
-              })
-
-            await expect(gqlQuery).rejects.toThrow(
-              new GraphQLError('Invalid transfer id', {
-                extensions: {
-                  code: GraphQLErrorCode.BadUserInput
-                }
-              })
-            )
+                })
+            } catch (error) {
+              expect(error).toBeInstanceOf(ApolloError)
+              expect((error as ApolloError).graphQLErrors).toContainEqual(
+                expect.objectContaining({
+                  message: 'Invalid transfer id',
+                  extensions: expect.objectContaining({
+                    code: GraphQLErrorCode.BadUserInput
+                  })
+                })
+              )
+            }
           })
 
           test('Returns an error for existing transfer', async (): Promise<void> => {
@@ -2499,39 +2665,43 @@ describe('Liquidity Resolvers', (): void => {
                 amount: BigInt(100)
               })
             ).resolves.toBeUndefined()
-            const gqlQuery = appContainer.apolloClient
-              .mutate({
-                mutation: gql`
-                  mutation DepositLiquidity(
-                    $input: DepositOutgoingPaymentLiquidityInput!
-                  ) {
-                    depositOutgoingPaymentLiquidity(input: $input) {
-                      success
+            try {
+              await appContainer.apolloClient
+                .mutate({
+                  mutation: gql`
+                    mutation DepositLiquidity(
+                      $input: DepositOutgoingPaymentLiquidityInput!
+                    ) {
+                      depositOutgoingPaymentLiquidity(input: $input) {
+                        success
+                      }
+                    }
+                  `,
+                  variables: {
+                    input: {
+                      outgoingPaymentId: outgoingPayment.id,
+                      idempotencyKey: uuid()
                     }
                   }
-                `,
-                variables: {
-                  input: {
-                    outgoingPaymentId: outgoingPayment.id,
-                    idempotencyKey: uuid()
+                })
+                .then((query): LiquidityMutationResponse => {
+                  if (query.data) {
+                    return query.data.depositOutgoingPaymentLiquidity
+                  } else {
+                    throw new Error('Data was empty')
                   }
-                }
-              })
-              .then((query): LiquidityMutationResponse => {
-                if (query.data) {
-                  return query.data.depositOutgoingPaymentLiquidity
-                } else {
-                  throw new Error('Data was empty')
-                }
-              })
-
-            await expect(gqlQuery).rejects.toThrow(
-              new GraphQLError('Transfer already exists', {
-                extensions: {
-                  code: GraphQLErrorCode.Duplicate
-                }
-              })
-            )
+                })
+            } catch (error) {
+              expect(error).toBeInstanceOf(ApolloError)
+              expect((error as ApolloError).graphQLErrors).toContainEqual(
+                expect.objectContaining({
+                  message: 'Transfer already exists',
+                  extensions: expect.objectContaining({
+                    code: GraphQLErrorCode.Duplicate
+                  })
+                })
+              )
+            }
           })
         }
       )
