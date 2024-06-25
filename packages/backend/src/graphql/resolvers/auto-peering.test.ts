@@ -109,7 +109,7 @@ describe('Auto Peering Resolvers', (): void => {
 
       const peerDetails = {
         staticIlpAddress: 'test.peer2',
-        ilpConnectorAddress: 'http://peer-two.com',
+        ilpConnectorUrl: 'http://peer-two.com',
         name: 'Test Peer',
         httpToken: 'httpToken'
       }
@@ -132,7 +132,7 @@ describe('Auto Peering Resolvers', (): void => {
           outgoing: {
             __typename: 'HttpOutgoing',
             authToken: expect.any(String),
-            endpoint: peerDetails.ilpConnectorAddress
+            endpoint: peerDetails.ilpConnectorUrl
           }
         },
         maxPacketAmount: input.maxPacketAmount?.toString(),
@@ -148,7 +148,7 @@ describe('Auto Peering Resolvers', (): void => {
 
       const peerDetails = {
         staticIlpAddress: 'test.peer2',
-        ilpConnectorAddress: 'http://peer-two.com',
+        ilpConnectorUrl: 'http://peer-two.com',
         name: 'Test Peer',
         httpToken: 'httpToken'
       }
@@ -180,7 +180,7 @@ describe('Auto Peering Resolvers', (): void => {
           outgoing: {
             __typename: 'HttpOutgoing',
             authToken: expect.any(String),
-            endpoint: peerDetails.ilpConnectorAddress
+            endpoint: peerDetails.ilpConnectorUrl
           }
         },
         maxPacketAmount: input.maxPacketAmount?.toString(),
@@ -212,7 +212,7 @@ describe('Auto Peering Resolvers', (): void => {
           outgoing: {
             __typename: 'HttpOutgoing',
             authToken: expect.any(String),
-            endpoint: peerDetails.ilpConnectorAddress
+            endpoint: peerDetails.ilpConnectorUrl
           }
         },
         maxPacketAmount: secondInput.maxPacketAmount?.toString(),
