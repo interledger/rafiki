@@ -10,7 +10,6 @@ import { initIocContainer } from '../../..'
 import { AppServices, CreateContext } from '../../../app'
 import { truncateTables } from '../../../tests/tableManager'
 import { createAsset } from '../../../tests/asset'
-import { errorToCode, errorToMessage, OutgoingPaymentError } from './errors'
 import {
   CreateFromIncomingPayment,
   CreateFromQuote,
@@ -18,6 +17,7 @@ import {
   OutgoingPaymentService,
   BaseOptions as CreateOutgoingPaymentBaseOptions
 } from './service'
+import { errorToHTTPCode, errorToMessage, OutgoingPaymentError } from './errors'
 import { OutgoingPayment, OutgoingPaymentState } from './model'
 import { OutgoingPaymentRoutes, CreateBody } from './routes'
 import { serializeAmount } from '../../amount'
@@ -295,7 +295,7 @@ describe('Outgoing Payment Routes', (): void => {
         } catch (err) {
           assert(err instanceof OpenPaymentsServerRouteError)
           expect(err.message).toBe(errorToMessage[error])
-          expect(err.status).toBe(errorToCode[error])
+          expect(err.status).toBe(errorToHTTPCode[error])
         }
 
         expect(createSpy).toHaveBeenCalledWith({

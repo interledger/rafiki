@@ -1,3 +1,5 @@
+import { GraphQLErrorCode } from '../../../graphql/errors'
+
 export enum RemoteIncomingPaymentError {
   UnknownWalletAddress = 'UnknownWalletAddress',
   InvalidRequest = 'InvalidRequest',
@@ -10,7 +12,7 @@ export const isRemoteIncomingPaymentError = (
 ): o is RemoteIncomingPaymentError =>
   Object.values(RemoteIncomingPaymentError).includes(o)
 
-export const errorToCode: {
+export const errorToHTTPCode: {
   [key in RemoteIncomingPaymentError]: number
 } = {
   [RemoteIncomingPaymentError.UnknownWalletAddress]: 404,
@@ -18,6 +20,13 @@ export const errorToCode: {
   [RemoteIncomingPaymentError.InvalidGrant]: 500
 }
 
+export const errorToCode: {
+  [key in RemoteIncomingPaymentError]: GraphQLErrorCode
+} = {
+  [RemoteIncomingPaymentError.UnknownWalletAddress]: GraphQLErrorCode.NotFound,
+  [RemoteIncomingPaymentError.InvalidRequest]: GraphQLErrorCode.BadUserInput,
+  [RemoteIncomingPaymentError.InvalidGrant]: GraphQLErrorCode.Forbidden
+}
 export const errorToMessage: {
   [key in RemoteIncomingPaymentError]: string
 } = {

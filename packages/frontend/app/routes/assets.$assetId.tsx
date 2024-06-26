@@ -301,9 +301,9 @@ export async function action({ request }: ActionFunctionArgs) {
           : { withdrawalThreshold: undefined })
       })
 
-      if (!response?.success) {
+      if (!response?.asset) {
         actionResponse.errors.general.message = [
-          response?.message ?? 'Could not update asset. Please try again!'
+          'Could not update asset. Please try again!'
         ]
         return json({ ...actionResponse }, { status: 400 })
       }
@@ -327,10 +327,9 @@ export async function action({ request }: ActionFunctionArgs) {
         }
       })
 
-      if (!response?.success) {
+      if (!response?.fee) {
         actionResponse.errors.sendingFee.message = [
-          response?.message ??
-            'Could not update asset sending fee. Please try again!'
+          'Could not update asset sending fee. Please try again!'
         ]
         return json({ ...actionResponse }, { status: 400 })
       }
@@ -351,11 +350,11 @@ export async function action({ request }: ActionFunctionArgs) {
       }
 
       const response = await deleteAsset({ id: result.data.id })
-      if (!response?.success) {
+      if (!response?.asset) {
         return setMessageAndRedirect({
           session,
           message: {
-            content: response?.message || 'Could not delete Asset.',
+            content: 'Could not delete Asset.',
             type: 'error'
           },
           location: '.'

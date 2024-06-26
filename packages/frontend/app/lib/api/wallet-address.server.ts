@@ -92,9 +92,9 @@ export const updateWalletAddress = async (args: UpdateWalletAddressInput) => {
     mutation: gql`
       mutation UpdateWalletAddressMutation($input: UpdateWalletAddressInput!) {
         updateWalletAddress(input: $input) {
-          code
-          message
-          success
+          walletAddress {
+            id
+          }
         }
       }
     `,
@@ -114,9 +114,6 @@ export const createWalletAddress = async (args: CreateWalletAddressInput) => {
     mutation: gql`
       mutation CreateWalletAddressMutation($input: CreateWalletAddressInput!) {
         createWalletAddress(input: $input) {
-          code
-          success
-          message
           walletAddress {
             id
           }
@@ -143,8 +140,9 @@ export const createWalletAddressWithdrawal = async (
         $input: CreateWalletAddressWithdrawalInput!
       ) {
         createWalletAddressWithdrawal(input: $input) {
-          success
-          message
+          withdrawal {
+            id
+          }
         }
       }
     `,

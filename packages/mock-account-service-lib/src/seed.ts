@@ -48,14 +48,10 @@ export async function setupFromSeed(
       throw new Error('asset not defined')
     }
 
-    const initialLiquidity = await depositAssetLiquidity(
-      asset.id,
-      liquidity,
-      v4()
-    )
+    await depositAssetLiquidity(asset.id, liquidity, v4())
 
     assets[code] = asset
-    logger.debug({ asset, initialLiquidity })
+    logger.debug({ asset, liquidity })
 
     const { fees } = config.seed
     const fee = fees.find((fee) => fee.asset === code && fee.scale == scale)
@@ -80,12 +76,12 @@ export async function setupFromSeed(
         throw new Error('peer response not defined')
       }
       const transferUid = v4()
-      const liquidity = await depositPeerLiquidity(
+      await depositPeerLiquidity(
         peerResponse.id,
         peer.initialLiquidity,
         transferUid
       )
-      return [peerResponse, liquidity]
+      return [peerResponse, peer.initialLiquidity]
     })
   )
 

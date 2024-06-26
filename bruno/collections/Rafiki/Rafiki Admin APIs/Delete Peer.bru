@@ -13,8 +13,6 @@ post {
 body:graphql {
   mutation DeletePeer($input: DeletePeerInput!) {
     deletePeer(input: $input) {
-      code
-      message
       success
     }
   }

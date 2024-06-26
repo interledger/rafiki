@@ -1,3 +1,5 @@
+import { GraphQLErrorCode } from '../../graphql/errors'
+
 export enum QuoteError {
   UnknownWalletAddress = 'UnknownWalletAddress',
   InvalidAmount = 'InvalidAmount',
@@ -10,7 +12,7 @@ export enum QuoteError {
 export const isQuoteError = (o: any): o is QuoteError =>
   Object.values(QuoteError).includes(o)
 
-export const errorToCode: {
+export const errorToHTTPCode: {
   [key in QuoteError]: number
 } = {
   [QuoteError.UnknownWalletAddress]: 404,
@@ -18,6 +20,16 @@ export const errorToCode: {
   [QuoteError.InvalidReceiver]: 400,
   [QuoteError.InactiveWalletAddress]: 400,
   [QuoteError.NonPositiveReceiveAmount]: 400
+}
+
+export const errorToCode: {
+  [key in QuoteError]: GraphQLErrorCode
+} = {
+  [QuoteError.UnknownWalletAddress]: GraphQLErrorCode.NotFound,
+  [QuoteError.InvalidAmount]: GraphQLErrorCode.BadUserInput,
+  [QuoteError.InvalidReceiver]: GraphQLErrorCode.BadUserInput,
+  [QuoteError.InactiveWalletAddress]: GraphQLErrorCode.Inactive,
+  [QuoteError.NegativeReceiveAmount]: GraphQLErrorCode.BadUserInput
 }
 
 export const errorToMessage: {

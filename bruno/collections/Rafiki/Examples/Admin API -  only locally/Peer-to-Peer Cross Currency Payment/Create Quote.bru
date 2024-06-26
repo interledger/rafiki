@@ -13,8 +13,6 @@ post {
 body:graphql {
   mutation CreateQuote($input: CreateQuoteInput!) {
     createQuote(input: $input) {
-      code
-      message
       quote {
         createdAt
         expiresAt

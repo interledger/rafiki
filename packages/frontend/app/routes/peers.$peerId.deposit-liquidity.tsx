@@ -67,9 +67,7 @@ export async function action({ request, params }: ActionFunctionArgs) {
     return setMessageAndRedirect({
       session,
       message: {
-        content:
-          response?.message ??
-          'Could not deposit peer liquidity. Please try again!',
+        content: 'Could not deposit peer liquidity. Please try again!',
         type: 'error'
       },
       location: '.'
@@ -79,7 +77,7 @@ export async function action({ request, params }: ActionFunctionArgs) {
   return setMessageAndRedirect({
     session,
     message: {
-      content: response.message,
+      content: 'Deposited peer liquidity.',
       type: 'success'
     },
     location: '..'

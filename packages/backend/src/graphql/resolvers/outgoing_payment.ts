@@ -7,15 +7,16 @@ import {
   ResolversTypes
 } from '../generated/graphql'
 import {
-  OutgoingPaymentError,
   isOutgoingPaymentError,
-  errorToCode,
-  errorToMessage
+  errorToMessage,
+  errorToCode
 } from '../../open_payments/payment/outgoing/errors'
 import { OutgoingPayment } from '../../open_payments/payment/outgoing/model'
 import { ApolloContext } from '../../app'
 import { getPageInfo } from '../../shared/pagination'
 import { Pagination, SortOrder } from '../../shared/baseModel'
+import { GraphQLError } from 'graphql'
+import { GraphQLErrorCode } from '../errors'
 
 export const getOutgoingPayment: QueryResolvers<ApolloContext>['outgoingPayment'] =
   async (parent, args, ctx): Promise<ResolversTypes['OutgoingPayment']> => {
@@ -25,7 +26,13 @@ export const getOutgoingPayment: QueryResolvers<ApolloContext>['outgoingPayment'
     const payment = await outgoingPaymentService.get({
       id: args.id
     })
-    if (!payment) throw new Error('payment does not exist')
+    if (!payment) {
+      throw new GraphQLError('payment does not exist', {
+        extensions: {
+          code: GraphQLErrorCode.NotFound
+        }
+      })
+    }
     return paymentToGraphql(payment)
   }
 
@@ -39,26 +46,21 @@ export const cancelOutgoingPayment: MutationResolvers<ApolloContext>['cancelOutg
       'outgoingPaymentService'
     )
 
-    return outgoingPaymentService
-      .cancel(args.input)
-      .then((paymentOrError: OutgoingPayment | OutgoingPaymentError) =>
-        isOutgoingPaymentError(paymentOrError)
-          ? {
-              code: errorToCode[paymentOrError].toString(),
-              success: false,
-              message: errorToMessage[paymentOrError]
-            }
-          : {
-              code: '200',
-              success: true,
-              payment: paymentToGraphql(paymentOrError)
-            }
-      )
-      .catch(() => ({
-        code: '500',
-        success: false,
-        message: 'Error trying to cancel outgoing payment'
-      }))
+    const outgoingPaymentOrError = await outgoingPaymentService.cancel(
+      args.input
+    )
+
+    if (isOutgoingPaymentError(outgoingPaymentOrError)) {
+      throw new GraphQLError(errorToMessage[outgoingPaymentOrError], {
+        extensions: {
+          code: errorToCode[outgoingPaymentOrError]
+        }
+      })
+    } else {
+      return {
+        payment: paymentToGraphql(outgoingPaymentOrError)
+      }
+    }
   }
 
 export const createOutgoingPayment: MutationResolvers<ApolloContext>['createOutgoingPayment'] =
@@ -70,26 +72,19 @@ export const createOutgoingPayment: MutationResolvers<ApolloContext>['createOutg
     const outgoingPaymentService = await ctx.container.use(
       'outgoingPaymentService'
     )
-    return outgoingPaymentService
-      .create(args.input)
-      .then((paymentOrErr: OutgoingPayment | OutgoingPaymentError) =>
-        isOutgoingPaymentError(paymentOrErr)
-          ? {
-              code: errorToCode[paymentOrErr].toString(),
-              success: false,
-              message: errorToMessage[paymentOrErr]
-            }
-          : {
-              code: '201',
-              success: true,
-              payment: paymentToGraphql(paymentOrErr)
-            }
-      )
-      .catch(() => ({
-        code: '500',
-        success: false,
-        message: 'Error trying to create outgoing payment'
-      }))
+    const outgoingPaymentOrError = await outgoingPaymentService.create(
+      args.input
+    )
+    if (isOutgoingPaymentError(outgoingPaymentOrError)) {
+      throw new GraphQLError(errorToMessage[outgoingPaymentOrError], {
+        extensions: {
+          code: errorToCode[outgoingPaymentOrError]
+        }
+      })
+    } else
+      return {
+        payment: paymentToGraphql(outgoingPaymentOrError)
+      }
   }
 
 export const createOutgoingPaymentFromIncomingPayment: MutationResolvers<ApolloContext>['createOutgoingPaymentFromIncomingPayment'] =
@@ -101,26 +96,22 @@ export const createOutgoingPaymentFromIncomingPayment: MutationResolvers<ApolloC
     const outgoingPaymentService = await ctx.container.use(
       'outgoingPaymentService'
     )
-    return outgoingPaymentService
-      .create(args.input)
-      .then((paymentOrErr: OutgoingPayment | OutgoingPaymentError) =>
-        isOutgoingPaymentError(paymentOrErr)
-          ? {
-              code: errorToCode[paymentOrErr].toString(),
-              success: false,
-              message: errorToMessage[paymentOrErr]
-            }
-          : {
-              code: '201',
-              success: true,
-              payment: paymentToGraphql(paymentOrErr)
-            }
-      )
-      .catch(() => ({
-        code: '500',
-        success: false,
-        message: 'Error trying to create outgoing payment'
-      }))
+
+    const outgoingPaymentOrError = await outgoingPaymentService.create(
+      args.input
+    )
+
+    if (isOutgoingPaymentError(outgoingPaymentOrError)) {
+      throw new GraphQLError(errorToMessage[outgoingPaymentOrError], {
+        extensions: {
+          code: errorToCode[outgoingPaymentOrError]
+        }
+      })
+    } else {
+      return {
+        payment: paymentToGraphql(outgoingPaymentOrError)
+      }
+    }
   }
 
 export const getWalletAddressOutgoingPayments: WalletAddressResolvers<ApolloContext>['outgoingPayments'] =
@@ -129,7 +120,13 @@ export const getWalletAddressOutgoingPayments: WalletAddressResolvers<ApolloCont
     args,
     ctx
   ): Promise<ResolversTypes['OutgoingPaymentConnection']> => {
-    if (!parent.id) throw new Error('missing wallet address id')
+    if (!parent.id) {
+      throw new GraphQLError('missing wallet address id', {
+        extensions: {
+          code: GraphQLErrorCode.BadUserInput
+        }
+      })
+    }
     const outgoingPaymentService = await ctx.container.use(
       'outgoingPaymentService'
     )

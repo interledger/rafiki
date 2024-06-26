@@ -13,10 +13,7 @@ post {
 body:graphql {
   mutation TriggerWalletAddressEvents($input: TriggerWalletAddressEventsInput!) {
     triggerWalletAddressEvents(input: $input) {
-      code
       count
-      message
-      success
     }
   }
 }

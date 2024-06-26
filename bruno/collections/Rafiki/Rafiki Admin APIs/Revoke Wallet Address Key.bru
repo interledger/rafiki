@@ -13,9 +13,6 @@ post {
 body:graphql {
   mutation RevokeWalletAddressKey ($input: RevokeWalletAddressKeyInput!) {
       revokeWalletAddressKey (input: $input) {
-          code
-          message
-          success
           walletAddressKey {
               id
               revoked

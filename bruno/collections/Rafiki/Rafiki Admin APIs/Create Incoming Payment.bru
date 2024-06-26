@@ -13,8 +13,6 @@ post {
 body:graphql {
   mutation CreateIncomingPayment ($input: CreateIncomingPaymentInput!) {
       createIncomingPayment(input: $input) {
-      code
-      message
       payment {
         createdAt
         expiresAt
@@ -33,7 +31,6 @@ body:graphql {
         }
         state
       }
-      success
     }
   }
 }
