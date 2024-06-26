@@ -31,6 +31,10 @@ import { PaymentMethodHandlerService } from '../../payment-method/handler/servic
 import { ReceiverService } from '../receiver/service'
 import { createReceiver } from '../../tests/receiver'
 import * as Pay from '@interledger/pay'
+import {
+  PaymentMethodHandlerError,
+  PaymentMethodHandlerErrorCode
+} from '../../payment-method/handler/errors'
 
 describe('QuoteService', (): void => {
   let deps: IocContract<AppServices>
@@ -466,6 +470,32 @@ describe('QuoteService', (): void => {
       ).resolves.toEqual(QuoteError.InvalidReceiver)
     })
 
+    test('fails on non-positive receive amount from quote', async (): Promise<void> => {
+      const receiver = await createReceiver(deps, receivingWalletAddress)
+
+      jest
+        .spyOn(paymentMethodHandlerService, 'getQuote')
+        .mockImplementationOnce(() => {
+          throw new PaymentMethodHandlerError('Failed getting quote', {
+            code: PaymentMethodHandlerErrorCode.QuoteNonPositiveReceiveAmount,
+            description: 'Non positive receive amount for quote'
+          })
+        })
+
+      await expect(
+        quoteService.create({
+          walletAddressId: sendingWalletAddress.id,
+          receiver: receiver.incomingPayment!.id,
+          method: 'ilp',
+          debitAmount: {
+            value: 2n,
+            assetCode: sendingWalletAddress.asset.code,
+            assetScale: sendingWalletAddress.asset.scale
+          }
+        })
+      ).resolves.toBe(QuoteError.NonPositiveReceiveAmount)
+    })
+
     test.each`
       debitAmount                              | receiveAmount                              | description
       ${{ ...debitAmount, value: BigInt(0) }}  | ${undefined}                               | ${'with debitAmount of zero'}
@@ -678,7 +708,7 @@ describe('QuoteService', (): void => {
         }
       )
 
-      test('fails on negative receive amount', async () => {
+      test('fails on non-positive receive amount', async () => {
         const receiver = await createReceiver(deps, receivingWalletAddress)
         const debitAmountValue = 100n
 
@@ -711,7 +741,7 @@ describe('QuoteService', (): void => {
             },
             method: 'ilp'
           })
-        ).resolves.toEqual(QuoteError.NegativeReceiveAmount)
+        ).resolves.toEqual(QuoteError.NonPositiveReceiveAmount)
       })
     })
   })

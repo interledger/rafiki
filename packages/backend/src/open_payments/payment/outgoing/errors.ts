@@ -29,7 +29,8 @@ export const quoteErrorToOutgoingPaymentError: Record<
   [QuoteError.InvalidReceiver]: OutgoingPaymentError.InvalidReceiver,
   [QuoteError.InactiveWalletAddress]:
     OutgoingPaymentError.InactiveWalletAddress,
-  [QuoteError.NegativeReceiveAmount]: OutgoingPaymentError.NegativeReceiveAmount
+  [QuoteError.NonPositiveReceiveAmount]:
+    OutgoingPaymentError.NegativeReceiveAmount
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types

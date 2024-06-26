@@ -14,7 +14,10 @@ import * as Pay from '@interledger/pay'
 
 import { createReceiver } from '../../tests/receiver'
 import { mockRatesApi } from '../../tests/rates'
-import { PaymentMethodHandlerError } from '../handler/errors'
+import {
+  PaymentMethodHandlerError,
+  PaymentMethodHandlerErrorCode
+} from '../handler/errors'
 import { OutgoingPayment } from '../../open_payments/payment/outgoing/model'
 import { AccountingService } from '../../accounting/service'
 import { IncomingPayment } from '../../open_payments/payment/incoming/model'
@@ -284,7 +287,7 @@ describe('IlpPaymentService', (): void => {
         minDeliveryAmount: -1n
       } as Pay.Quote)
 
-      expect.assertions(4)
+      expect.assertions(5)
       try {
         await ilpPaymentService.getQuote(options)
       } catch (error) {
@@ -296,6 +299,42 @@ describe('IlpPaymentService', (): void => {
           'Minimum delivery amount of ILP quote is non-positive'
         )
         expect((error as PaymentMethodHandlerError).retryable).toBe(false)
+        expect((error as PaymentMethodHandlerError).code).toBe(
+          PaymentMethodHandlerErrorCode.QuoteNonPositiveReceiveAmount
+        )
+      }
+
+      ratesScope.done()
+    })
+
+    test('throws if quote returns with a non-positive estimated delivery amount', async (): Promise<void> => {
+      const ratesScope = mockRatesApi(exchangeRatesUrl, () => ({}))
+
+      const options: StartQuoteOptions = {
+        walletAddress: walletAddressMap['USD'],
+        receiver: await createReceiver(deps, walletAddressMap['USD'])
+      }
+
+      jest.spyOn(Pay, 'startQuote').mockResolvedValueOnce({
+        maxSourceAmount: 10n,
+        highEstimatedExchangeRate: Pay.Ratio.from(0.099)
+      } as Pay.Quote)
+
+      expect.assertions(5)
+      try {
+        await ilpPaymentService.getQuote(options)
+      } catch (error) {
+        expect(error).toBeInstanceOf(PaymentMethodHandlerError)
+        expect((error as PaymentMethodHandlerError).message).toBe(
+          'Received error during ILP quoting'
+        )
+        expect((error as PaymentMethodHandlerError).description).toBe(
+          'Estimated receive amount of ILP quote is non-positive'
+        )
+        expect((error as PaymentMethodHandlerError).retryable).toBe(false)
+        expect((error as PaymentMethodHandlerError).code).toBe(
+          PaymentMethodHandlerErrorCode.QuoteNonPositiveReceiveAmount
+        )
       }
 
       ratesScope.done()
