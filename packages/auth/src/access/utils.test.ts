@@ -117,6 +117,42 @@ describe('Access utilities', (): void => {
     ).toBe(true)
   })
 
+  test('Can compare an access item on a grant and an access item from a request with a subaction of the grant', async (): Promise<void> => {
+    const grantAccessItemSuperAction = await Access.query(trx).insertAndFetch({
+      grantId: grant.id,
+      type: AccessType.OutgoingPayment,
+      actions: [AccessAction.ReadAll
+      ],
+      identifier,
+      limits: {
+        receiver,
+        debitAmount: {
+          value: '400',
+          assetCode: 'USD',
+          assetScale: 2
+        }
+      }
+    })
+
+    const requestAccessItem: AccessItem = {
+      type: 'outgoing-payment',
+      actions: ['read'],
+      identifier,
+      limits: {
+        receiver,
+        debitAmount: {
+          value: '400',
+          assetCode: 'USD',
+          assetScale: 2
+        }
+      }
+    }
+
+    expect(
+      compareRequestAndGrantAccessItems(requestAccessItem, toOpenPaymentsAccess(grantAccessItemSuperAction))
+    )
+  })
+
   test('access comparison fails if grant action items are insufficient', async (): Promise<void> => {
     const identifier = `https://example.com/${v4()}`
     const receiver =
