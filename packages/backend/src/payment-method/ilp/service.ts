@@ -119,13 +119,18 @@ async function getQuote(
       ilpQuote.highEstimatedExchangeRate.valueOf()
 
     if (estimatedReceiveAmount < 1) {
-      deps.logger.debug({
-        minDeliveryAmount: ilpQuote.minDeliveryAmount,
-        maxSourceAmount: ilpQuote.maxSourceAmount,
-        estimatedReceiveAmount
-      })
+      const errorDescription =
+        'Estimated receive amount of ILP quote is non-positive'
+      deps.logger.debug(
+        {
+          minDeliveryAmount: ilpQuote.minDeliveryAmount,
+          maxSourceAmount: ilpQuote.maxSourceAmount,
+          estimatedReceiveAmount
+        },
+        errorDescription
+      )
       throw new PaymentMethodHandlerError('Received error during ILP quoting', {
-        description: 'Estimated delivery amount of ILP quote is non-positive',
+        description: errorDescription,
         retryable: false,
         code: PaymentMethodHandlerErrorCode.QuoteNonPositiveReceiveAmount
       })

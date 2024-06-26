@@ -329,7 +329,7 @@ describe('IlpPaymentService', (): void => {
           'Received error during ILP quoting'
         )
         expect((error as PaymentMethodHandlerError).description).toBe(
-          'Estimated delivery amount of ILP quote is non-positive'
+          'Estimated receive amount of ILP quote is non-positive'
         )
         expect((error as PaymentMethodHandlerError).retryable).toBe(false)
         expect((error as PaymentMethodHandlerError).code).toBe(

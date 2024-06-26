@@ -29,7 +29,7 @@ export const errorToCode: {
   [QuoteError.InvalidAmount]: GraphQLErrorCode.BadUserInput,
   [QuoteError.InvalidReceiver]: GraphQLErrorCode.BadUserInput,
   [QuoteError.InactiveWalletAddress]: GraphQLErrorCode.Inactive,
-  [QuoteError.NegativeReceiveAmount]: GraphQLErrorCode.BadUserInput
+  [QuoteError.NonPositiveReceiveAmount]: GraphQLErrorCode.BadUserInput
 }
 
 export const errorToMessage: {
