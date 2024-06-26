@@ -23,7 +23,7 @@ import {
   Withdrawal
 } from '../service'
 
-describe('Tigerbeetle Accounting Service', (): void => {
+describe('TigerBeetle Accounting Service', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let accountingService: AccountingService
@@ -36,13 +36,13 @@ describe('Tigerbeetle Accounting Service', (): void => {
   }
 
   beforeAll(async (): Promise<void> => {
-    const tigerbeetlePort = (global as unknown as { tigerbeetlePort: number })
-      .tigerbeetlePort
+    const tigerBeetlePort = (global as unknown as { tigerBeetlePort: number })
+      .tigerBeetlePort
 
     deps = initIocContainer({
       ...Config,
-      tigerbeetleReplicaAddresses: [tigerbeetlePort.toString()],
-      useTigerbeetle: true
+      tigerBeetleReplicaAddresses: [tigerBeetlePort.toString()],
+      useTigerBeetle: true
     })
     appContainer = await createTestApp(deps)
     accountingService = await deps.use('accountingService')
@@ -93,8 +93,8 @@ describe('Tigerbeetle Accounting Service', (): void => {
     })
 
     test('Create throws on error', async (): Promise<void> => {
-      const tigerbeetle = await deps.use('tigerbeetle')!
-      jest.spyOn(tigerbeetle, 'createAccounts').mockResolvedValueOnce([
+      const tigerBeetle = await deps.use('tigerBeetle')!
+      jest.spyOn(tigerBeetle, 'createAccounts').mockResolvedValueOnce([
         {
           index: 0,
           result: CreateTbAccountError.exists_with_different_ledger
@@ -117,6 +117,30 @@ describe('Tigerbeetle Accounting Service', (): void => {
           CreateTbAccountError.exists_with_different_ledger
         )
       )
+    })
+  })
+
+  describe('Create Liquidity and Settlement Account - Linked', (): void => {
+    test('Can create a liquidity and settlement account', async (): Promise<void> => {
+      const account: LiquidityAccount = {
+        id: uuid(),
+        asset: {
+          id: uuid(),
+          ledger: newLedger()
+        }
+      }
+      await expect(
+        accountingService.createLiquidityAndLinkedSettlementAccount(
+          account,
+          LiquidityAccountType.ASSET
+        )
+      ).resolves.toEqual(account)
+      await expect(accountingService.getBalance(account.id)).resolves.toEqual(
+        BigInt(0)
+      )
+      await expect(
+        accountingService.getSettlementBalance(account.asset.ledger)
+      ).resolves.toEqual(BigInt(0))
     })
   })
 
@@ -254,7 +278,7 @@ describe('Tigerbeetle Accounting Service', (): void => {
         accountingService.getSettlementBalance(ledger)
       ).resolves.toBeUndefined()
 
-      await accountingService.createSettlementAccount(ledger)
+      await accountingService.createSettlementAccount(ledger, ledger)
 
       await expect(
         accountingService.getSettlementBalance(ledger)
@@ -265,7 +289,7 @@ describe('Tigerbeetle Accounting Service', (): void => {
   describe('Get Settlement Balance', (): void => {
     test("Can retrieve an asset's settlement account balance", async (): Promise<void> => {
       const ledger = newLedger()
-      await accountingService.createSettlementAccount(ledger)
+      await accountingService.createSettlementAccount(ledger, ledger)
       await expect(
         accountingService.getSettlementBalance(ledger)
       ).resolves.toEqual(BigInt(0))

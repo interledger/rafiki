@@ -4,23 +4,30 @@ import {
   CreateAccountError as CreateAccountErrorCode
 } from 'tigerbeetle-node'
 
-import { ServiceDependencies, TigerbeetleAccountCode } from './service'
+import { ServiceDependencies, TigerBeetleAccountCode } from './service'
 import { TigerbeetleCreateAccountError } from './errors'
-import { AccountId, toTigerbeetleId } from './utils'
+import { AccountId, toTigerBeetleId, AccountUserData128 } from './utils'
 
 export interface CreateAccountOptions {
   id: AccountId
   ledger: number
-  code: TigerbeetleAccountCode
+  code: TigerBeetleAccountCode
+  // This flag links the result of this account creation to the result of the next one in the request,
+  // such that they will either succeed or fail together.
+  // The last account in a chain of linked accounts does not have this flag set.
+  linked?: boolean
+  // When set, the account will retain the history of balances at each transfer.
+  history?: boolean
+  userData128: AccountUserData128
 }
 
 export async function createAccounts(
   deps: ServiceDependencies,
   accounts: CreateAccountOptions[]
 ): Promise<void> {
-  const errors = await deps.tigerbeetle.createAccounts(
+  const errors = await deps.tigerBeetle.createAccounts(
     accounts.map((account) => ({
-      id: toTigerbeetleId(account.id),
+      id: toTigerBeetleId(account.id),
       user_data_32: 0,
       user_data_64: 0n,
       user_data_128: 0n,
@@ -32,10 +39,7 @@ export async function createAccounts(
       // In Rafiki transfers:
       // - the source account's debits increase
       // - the destination account's credits increase
-      flags:
-        account.code === TigerbeetleAccountCode.SETTLEMENT
-          ? AccountFlags.credits_must_not_exceed_debits
-          : AccountFlags.debits_must_not_exceed_credits,
+      flags: flagsBasedOnAccountOptions(account),
       debits_pending: 0n,
       debits_posted: 0n,
       credits_pending: 0n,
@@ -50,12 +54,24 @@ export async function createAccounts(
   }
 }
 
+export function flagsBasedOnAccountOptions(
+  options: CreateAccountOptions
+): AccountFlags {
+  let returnVal =
+    options.code === TigerBeetleAccountCode.SETTLEMENT
+      ? AccountFlags.credits_must_not_exceed_debits
+      : AccountFlags.debits_must_not_exceed_credits
+  if (options.linked) returnVal |= AccountFlags.linked
+  if (options.history) returnVal |= AccountFlags.history
+  return returnVal
+}
+
 export async function getAccounts(
   deps: ServiceDependencies,
   accountIds: AccountId[]
 ): Promise<Account[]> {
-  return await deps.tigerbeetle.lookupAccounts(
-    accountIds.map((id) => toTigerbeetleId(id))
+  return await deps.tigerBeetle.lookupAccounts(
+    accountIds.map((id) => toTigerBeetleId(id))
   )
 }
 

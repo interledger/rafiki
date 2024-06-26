@@ -33,7 +33,7 @@ describe('Ledger Transfer', (): void => {
   let asset: Asset
 
   beforeAll(async (): Promise<void> => {
-    const deps = initIocContainer({ ...Config, useTigerbeetle: false })
+    const deps = initIocContainer({ ...Config, useTigerBeetle: false })
     appContainer = await createTestApp(deps)
     serviceDeps = {
       logger: await deps.use('logger'),

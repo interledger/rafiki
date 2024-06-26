@@ -13,7 +13,8 @@ import {
   Transaction,
   TransferOptions,
   TransferToCreate,
-  Withdrawal
+  Withdrawal,
+  GetLedgerTransfersResult
 } from '../service'
 import { getAccountBalances } from './balance'
 import {
@@ -30,7 +31,8 @@ import {
   createTransfers,
   CreateTransfersResult,
   postTransfers,
-  voidTransfers
+  voidTransfers,
+  getAccountTransfers
 } from './ledger-transfer'
 import { LedgerTransfer, LedgerTransferType } from './ledger-transfer/model'
 
@@ -49,8 +51,15 @@ export function createAccountingService(
   return {
     createLiquidityAccount: (options, accTypeCode, trx) =>
       createLiquidityAccount(deps, options, accTypeCode, trx),
-    createSettlementAccount: (ledger, trx) =>
-      createSettlementAccount(deps, ledger, trx),
+    createSettlementAccount: (ledger, accountId, trx) =>
+      createSettlementAccount(deps, ledger, accountId, trx),
+    createLiquidityAndLinkedSettlementAccount: (options, accTypeCode, trx) =>
+      createLiquidityAndLinkedSettlementAccount(
+        deps,
+        options,
+        accTypeCode,
+        trx
+      ),
     getBalance: (accountRef) => getLiquidityAccountBalance(deps, accountRef),
     getTotalSent: (accountRef) => getAccountTotalSent(deps, accountRef),
     getAccountsTotalSent: (accountRefs) =>
@@ -63,8 +72,26 @@ export function createAccountingService(
     createDeposit: (transfer, trx) => createAccountDeposit(deps, transfer, trx),
     createWithdrawal: (transfer) => createAccountWithdrawal(deps, transfer),
     postWithdrawal: (withdrawalRef) => postTransfers(deps, [withdrawalRef]),
-    voidWithdrawal: (withdrawalRef) => voidTransfers(deps, [withdrawalRef])
+    voidWithdrawal: (withdrawalRef) => voidTransfers(deps, [withdrawalRef]),
+    getAccountTransfers: (id, trx) => getAccountTransfersAndMap(deps, id, trx)
   }
+}
+
+async function getAccountTransfersAndMap(
+  deps: ServiceDependencies,
+  id: string,
+  trx?: TransactionOrKnex
+): Promise<GetLedgerTransfersResult> {
+  const accountTransfers = await getAccountTransfers(deps, id, trx)
+  const returnVal = { credits: [], debits: [] }
+  if (
+    !accountTransfers ||
+    (accountTransfers.credits.length === 0 &&
+      accountTransfers.debits.length === 0)
+  )
+    return returnVal
+
+  return returnVal
 }
 
 export async function createLiquidityAccount(
@@ -82,13 +109,13 @@ export async function createLiquidityAccount(
     },
     trx
   )
-
   return account
 }
 
 export async function createSettlementAccount(
   deps: ServiceDependencies,
   ledger: number,
+  accountId: string | number,
   trx?: TransactionOrKnex
 ): Promise<void> {
   const asset = await Asset.query(trx || deps.knex).findOne({ ledger })
@@ -105,6 +132,17 @@ export async function createSettlementAccount(
     },
     trx
   )
+}
+
+export async function createLiquidityAndLinkedSettlementAccount(
+  deps: ServiceDependencies,
+  account: LiquidityAccount,
+  accountType: LiquidityAccountType,
+  trx?: TransactionOrKnex
+): Promise<LiquidityAccount> {
+  await createLiquidityAccount(deps, account, accountType, trx)
+  await createSettlementAccount(deps, account.asset.ledger, account.id, trx)
+  return account
 }
 
 export async function getLiquidityAccountBalance(
@@ -251,9 +289,8 @@ export async function createTransfer(
         )
       )
 
-      if (isTransferError(pendingTransfersOrError)) {
+      if (isTransferError(pendingTransfersOrError))
         return pendingTransfersOrError
-      }
 
       return pendingTransfersOrError.map(
         (pendingTransfer) => pendingTransfer.transferRef

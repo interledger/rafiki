@@ -1,23 +1,31 @@
 import {
   CreateTransferError as CreateTransferErrorCode,
   Transfer as TbTransfer,
-  TransferFlags
+  TransferFlags,
+  AccountFilter,
+  AccountFilterFlags
 } from 'tigerbeetle-node'
 import { v4 as uuid } from 'uuid'
 import { TransferError } from '../errors'
 
 import { TigerbeetleCreateTransferError } from './errors'
-import { ServiceDependencies } from './service'
-import { AccountId, toTigerbeetleId } from './utils'
-
-const ACCOUNT_TYPE = 1
+import { ServiceDependencies, TigerBeetleTransferCode } from './service'
+import { AccountId, toTigerBeetleId, tbTransferToLedgerTransfer } from './utils'
+import { GetLedgerTransfersResult } from '../service'
 
 type TransfersError = {
   index: number
   error: TransferError
 }
 
-export interface NewTransferOptions {
+export type TransferUserData128 = string | number | bigint
+
+interface TransferOptions {
+  userData128?: TransferUserData128
+  code?: TigerBeetleTransferCode
+}
+
+export interface NewTransferOptions extends TransferOptions {
   id: string | bigint
   sourceAccountId: AccountId
   destinationAccountId: AccountId
@@ -28,13 +36,13 @@ export interface NewTransferOptions {
   voidId?: never
 }
 
-export interface PostTransferOptions {
+export interface PostTransferOptions extends TransferOptions {
   id?: never
   postId: string | bigint
   voidId?: never
 }
 
-export interface VoidTransferOptions {
+export interface VoidTransferOptions extends TransferOptions {
   id?: never
   postId?: never
   voidId: string | bigint
@@ -68,42 +76,46 @@ export async function createTransfers(
       pending_id: 0n,
       timeout: 0,
       ledger: 0,
-      code: ACCOUNT_TYPE,
+      code: TigerBeetleTransferCode.DEFAULT,
       flags: 0,
       amount: 0n,
       timestamp: 0n
     }
     if (isNewTransferOptions(transfer)) {
-      if (transfer.amount <= BigInt(0)) {
+      if (transfer.amount <= 0n)
         return { index: i, error: TransferError.InvalidAmount }
-      }
-      tbTransfer.id = toTigerbeetleId(transfer.id)
+
+      tbTransfer.id = toTigerBeetleId(transfer.id)
       tbTransfer.amount = transfer.amount
       tbTransfer.ledger = transfer.ledger
-      tbTransfer.debit_account_id = toTigerbeetleId(transfer.sourceAccountId)
-      tbTransfer.credit_account_id = toTigerbeetleId(
+      tbTransfer.debit_account_id = toTigerBeetleId(transfer.sourceAccountId)
+      tbTransfer.credit_account_id = toTigerBeetleId(
         transfer.destinationAccountId
       )
       if (transfer.timeout) {
         tbTransfer.flags |= TransferFlags.pending
         tbTransfer.timeout = transfer.timeout
       }
+      if (transfer.code) tbTransfer.code = transfer.code
     } else {
-      tbTransfer.id = toTigerbeetleId(uuid())
+      tbTransfer.code = 0 //use the same code as the new transfer.
+      tbTransfer.id = toTigerBeetleId(uuid())
       if (transfer.postId) {
         tbTransfer.flags |= TransferFlags.post_pending_transfer
-        tbTransfer.pending_id = toTigerbeetleId(transfer.postId)
+        tbTransfer.pending_id = toTigerBeetleId(transfer.postId)
       } else if (transfer.voidId) {
         tbTransfer.flags |= TransferFlags.void_pending_transfer
-        tbTransfer.pending_id = toTigerbeetleId(transfer.voidId)
+        tbTransfer.pending_id = toTigerBeetleId(transfer.voidId)
       }
     }
-    if (i < transfers.length - 1) {
-      tbTransfer.flags |= TransferFlags.linked
-    }
+
+    if (transfer.userData128)
+      tbTransfer.user_data_128 = toTigerBeetleId(transfer.userData128)
+
+    if (i < transfers.length - 1) tbTransfer.flags |= TransferFlags.linked
     tbTransfers.push(tbTransfer)
   }
-  const res = await deps.tigerbeetle.createTransfers(tbTransfers)
+  const res = await deps.tigerBeetle.createTransfers(tbTransfers)
   for (const { index, result } of res) {
     switch (result) {
       case CreateTransferErrorCode.linked_event_failed:
@@ -153,4 +165,26 @@ export async function createTransfers(
         throw new TigerbeetleCreateTransferError(result)
     }
   }
+}
+
+export async function getAccountTransfers(
+  deps: ServiceDependencies,
+  id: string
+): Promise<GetLedgerTransfersResult> {
+  const tbAccId = toTigerBeetleId(id)
+  const filter: AccountFilter = {
+    account_id: tbAccId,
+    timestamp_min: 0n,
+    timestamp_max: 0n,
+    limit: 100_000,
+    flags: AccountFilterFlags.credits | AccountFilterFlags.debits
+  }
+  const tbAccountTransfers = await deps.tigerBeetle.getAccountTransfers(filter)
+  const returnVal = { credits: [], debits: [] } as GetLedgerTransfersResult
+  tbAccountTransfers.forEach((item) => {
+    const converted = tbTransferToLedgerTransfer(item)
+    if (item.debit_account_id === tbAccId) returnVal.debits.push(converted)
+    else returnVal.credits.push(converted)
+  })
+  return returnVal
 }
