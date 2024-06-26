@@ -12,7 +12,8 @@ jest.mock('@opentelemetry/api', () => ({
   metrics: {
     setGlobalMeterProvider: jest.fn(),
     getMeter: jest.fn().mockReturnValue({
-      createCounter: jest.fn().mockImplementation(() => mockCounter)
+      createCounter: jest.fn().mockImplementation(() => mockCounter),
+      createHistogram: jest.fn().mockImplementation(() => mockHistogram)
     })
   }
 }))
