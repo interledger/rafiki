@@ -10,6 +10,7 @@ import {
   WalletAddressUrlContext
 } from '../../app'
 import {
+  AccessItem,
   AccessAction,
   AccessType,
   JWKS,
@@ -52,6 +53,14 @@ function contextToRequestLike(ctx: HttpSigContext): RequestLike {
   }
 }
 
+function toOpenPaymentsAccess(type: AccessType, action: RequestAction): AccessItem {
+  return {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    type: type as any,
+    actions: [action]
+  }
+}
+
 export function createTokenIntrospectionMiddleware({
   requestType,
   requestAction,
@@ -81,7 +90,8 @@ export function createTokenIntrospectionMiddleware({
       let tokenInfo: TokenInfo
       try {
         tokenInfo = await tokenIntrospectionClient.introspect({
-          access_token: token
+          access_token: token,
+          access: [toOpenPaymentsAccess(requestType, requestAction)]
         })
       } catch (err) {
         throw new OpenPaymentsServerRouteError(401, 'Invalid Token')

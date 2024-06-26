@@ -169,7 +169,13 @@ describe('Auth Middleware', (): void => {
     }
 
     expect(introspectSpy).toHaveBeenCalledWith({
-      access_token: token
+      access_token: token,
+      access: [
+        {
+          type: type,
+          actions: [action]
+        }
+      ]
     })
     expect(ctx.response.get('WWW-Authenticate')).toBe(
       `GNAP as_uri=${Config.authServerGrantUrl}`
@@ -187,7 +193,13 @@ describe('Auth Middleware', (): void => {
       message: 'Inactive Token'
     })
     expect(introspectSpy).toHaveBeenCalledWith({
-      access_token: token
+      access_token: token,
+      access: [
+        {
+          type: type,
+          actions: [action]
+        }
+      ]
     })
     expect(next).not.toHaveBeenCalled()
   })
@@ -238,22 +250,25 @@ describe('Auth Middleware', (): void => {
       `(
         'returns 403 for unauthorized request (conflicting $description)',
         async ({ type, action }): Promise<void> => {
-          const tokenInfo = createTokenInfo([
-            {
-              type,
-              actions: [action],
-              identifier
-            }
-          ])
+          const middleware = createTokenIntrospectionMiddleware({
+            requestType: type,
+            requestAction: action
+          })
           const introspectSpy = jest
             .spyOn(tokenIntrospectionClient, 'introspect')
-            .mockResolvedValueOnce(tokenInfo)
+            .mockResolvedValueOnce({ active: false })
           await expect(middleware(ctx, next)).rejects.toMatchObject({
             status: 403,
-            message: 'Insufficient Grant'
+            message: 'Inactive Token'
           })
           expect(introspectSpy).toHaveBeenCalledWith({
-            access_token: token
+            access_token: token,
+            access: [
+              {
+                type,
+                actions: [action]
+              }
+            ]
           })
           expect(next).not.toHaveBeenCalled()
         }
@@ -268,7 +283,13 @@ describe('Auth Middleware', (): void => {
 
           await expect(middleware(ctx, next)).resolves.toBeUndefined()
           expect(introspectSpy).toHaveBeenCalledWith({
-            access_token: token
+            access_token: token,
+            access: [
+              {
+                type,
+                actions: [action]
+              }
+            ]
           })
           expect(next).toHaveBeenCalled()
           expect(ctx.client).toEqual(tokenInfo.client)
@@ -298,7 +319,13 @@ describe('Auth Middleware', (): void => {
 
             await expect(middleware(ctx, next)).resolves.toBeUndefined()
             expect(introspectSpy).toHaveBeenCalledWith({
-              access_token: token
+              access_token: token,
+              access: [
+                {
+                  type,
+                  actions: [subAction]
+                }
+              ]
             })
             expect(next).toHaveBeenCalled()
             expect(ctx.client).toEqual(tokenInfo.client)
@@ -320,13 +347,19 @@ describe('Auth Middleware', (): void => {
             ])
             const introspectSpy = jest
               .spyOn(tokenIntrospectionClient, 'introspect')
-              .mockResolvedValueOnce(tokenInfo)
+              .mockResolvedValueOnce({ active: false })
             await expect(middleware(ctx, next)).rejects.toMatchObject({
               status: 403,
-              message: 'Insufficient Grant'
+              message: 'Inactive Token'
             })
             expect(introspectSpy).toHaveBeenCalledWith({
-              access_token: token
+              access_token: token,
+              access: [
+                {
+                  type,
+                  actions: [superAction]
+                }
+              ]
             })
             expect(next).not.toHaveBeenCalled()
           })
@@ -380,7 +413,13 @@ describe('Auth Middleware', (): void => {
 
               await expect(middleware(ctx, next)).resolves.toBeUndefined()
               expect(introspectSpy).toHaveBeenCalledWith({
-                access_token: token
+                access_token: token,
+                access: [
+                  {
+                    type,
+                    actions: [action]
+                  }
+                ]
               })
               expect(next).toHaveBeenCalled()
               expect(ctx.client).toEqual(tokenInfo.client)
@@ -407,7 +446,13 @@ describe('Auth Middleware', (): void => {
             message: 'Insufficient Grant'
           })
           expect(introspectSpy).toHaveBeenCalledWith({
-            access_token: token
+            access_token: token,
+            access: [
+              {
+                type,
+                actions: [action]
+              }
+            ]
           })
           expect(next).not.toHaveBeenCalled()
         })
