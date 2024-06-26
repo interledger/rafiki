@@ -305,7 +305,7 @@ describe('Access Token Routes', (): void => {
           {
             ...BASE_ACCESS,
             type: 'incoming-payment',
-            actions: ['create']
+            actions: ['read-all']
           }
         ]
       }
