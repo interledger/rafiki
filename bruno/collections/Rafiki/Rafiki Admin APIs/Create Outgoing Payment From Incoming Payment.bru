@@ -13,8 +13,6 @@ post {
 body:graphql {
   mutation CreateOutgoingPaymentFromIncomingPayment($input: CreateOutgoingPaymentFromIncomingPaymentInput!) {
     createOutgoingPaymentFromIncomingPayment(input: $input) {
-      code
-      message
       payment {
         createdAt
         error
@@ -61,7 +59,6 @@ body:graphql {
         state
         stateAttempts
       }
-      success
     }
   }
 }

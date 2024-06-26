@@ -13,8 +13,6 @@ post {
 body:graphql {
   mutation UpdateWalletAddress($input: UpdateWalletAddressInput!) {
       updateWalletAddress(input: $input) {
-          code
-          message
           walletAddress {
               id
               asset {
@@ -29,7 +27,6 @@ body:graphql {
               createdAt
               status
           }
-          success
       }
   }
 }

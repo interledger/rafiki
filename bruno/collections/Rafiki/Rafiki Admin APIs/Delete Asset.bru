@@ -13,9 +13,14 @@ post {
 body:graphql {
   mutation DeleteAsset($input: DeleteAssetInput!) {
     deleteAsset(input: $input) {
-      code
-      message
-      success
+      asset {
+        code
+        createdAt
+        id
+        scale
+        withdrawalThreshold
+        liquidityThreshold
+      }
     }
   }
   

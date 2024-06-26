@@ -13,10 +13,7 @@ post {
 body:graphql {
   mutation CreateOutgoingPaymentWithdrawal($input: CreateOutgoingPaymentWithdrawalInput!) {  
       createOutgoingPaymentWithdrawal(input: $input) {
-          code    
-          error    
-          message    
-          success  
+      	success
       }
   }
 }

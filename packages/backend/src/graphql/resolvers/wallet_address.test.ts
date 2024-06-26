@@ -1,8 +1,7 @@
 import assert from 'assert'
-import { gql } from '@apollo/client'
+import { gql, ApolloError } from '@apollo/client'
 import { Knex } from 'knex'
 import { v4 as uuid } from 'uuid'
-import { ApolloError } from '@apollo/client'
 
 import { createTestApp, TestContainer } from '../../tests/app'
 import { IocContract } from '@adonisjs/fold'
@@ -13,8 +12,8 @@ import { Config } from '../../config/app'
 import { truncateTables } from '../../tests/tableManager'
 import {
   WalletAddressError,
-  errorToCode,
-  errorToMessage
+  errorToMessage,
+  errorToCode
 } from '../../open_payments/wallet_address/errors'
 import {
   WalletAddress as WalletAddressModel,
@@ -35,6 +34,7 @@ import {
 } from '../generated/graphql'
 import { getPageTests } from './page.test'
 import { WalletAddressAdditionalProperty } from '../../open_payments/wallet_address/additional_property/model'
+import { GraphQLErrorCode } from '../errors'
 
 describe('Wallet Address Resolvers', (): void => {
   let deps: IocContract<AppServices>
@@ -83,9 +83,6 @@ describe('Wallet Address Resolvers', (): void => {
             mutation: gql`
               mutation CreateWalletAddress($input: CreateWalletAddressInput!) {
                 createWalletAddress(input: $input) {
-                  code
-                  success
-                  message
                   walletAddress {
                     id
                     asset {
@@ -110,8 +107,6 @@ describe('Wallet Address Resolvers', (): void => {
             }
           })
 
-        expect(response.success).toBe(true)
-        expect(response.code).toEqual('200')
         assert.ok(response.walletAddress)
         expect(response.walletAddress).toEqual({
           __typename: 'WalletAddress',
@@ -154,9 +149,6 @@ describe('Wallet Address Resolvers', (): void => {
           mutation: gql`
             mutation CreateWalletAddress($input: CreateWalletAddressInput!) {
               createWalletAddress(input: $input) {
-                code
-                success
-                message
                 walletAddress {
                   id
                   asset {
@@ -186,8 +178,6 @@ describe('Wallet Address Resolvers', (): void => {
           }
         })
 
-      expect(response.success).toBe(true)
-      expect(response.code).toEqual('200')
       assert.ok(response.walletAddress)
       expect(response.walletAddress).toEqual({
         __typename: 'WalletAddress',
@@ -220,85 +210,94 @@ describe('Wallet Address Resolvers', (): void => {
       error
       ${WalletAddressError.InvalidUrl}
       ${WalletAddressError.UnknownAsset}
-    `('4XX - $error', async ({ error }): Promise<void> => {
-      jest.spyOn(walletAddressService, 'create').mockResolvedValueOnce(error)
-      const response = await appContainer.apolloClient
-        .mutate({
-          mutation: gql`
-            mutation CreateWalletAddress($input: CreateWalletAddressInput!) {
-              createWalletAddress(input: $input) {
-                code
-                success
-                message
-                walletAddress {
-                  id
-                  asset {
-                    code
-                    scale
+    `('Error - $error', async ({ error: testError }): Promise<void> => {
+      jest
+        .spyOn(walletAddressService, 'create')
+        .mockResolvedValueOnce(testError)
+      try {
+        await appContainer.apolloClient
+          .mutate({
+            mutation: gql`
+              mutation CreateWalletAddress($input: CreateWalletAddressInput!) {
+                createWalletAddress(input: $input) {
+                  walletAddress {
+                    id
+                    asset {
+                      code
+                      scale
+                    }
                   }
                 }
               }
+            `,
+            variables: {
+              input
             }
-          `,
-          variables: {
-            input
-          }
-        })
-        .then((query): CreateWalletAddressMutationResponse => {
-          if (query.data) {
-            return query.data.createWalletAddress
-          } else {
-            throw new Error('Data was empty')
-          }
-        })
-
-      expect(response.success).toBe(false)
-      expect(response.code).toEqual(
-        errorToCode[error as WalletAddressError].toString()
-      )
-      expect(response.message).toEqual(
-        errorToMessage[error as WalletAddressError]
-      )
+          })
+          .then((query): CreateWalletAddressMutationResponse => {
+            if (query.data) {
+              return query.data.createWalletAddress
+            } else {
+              throw new Error('Data was empty')
+            }
+          })
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApolloError)
+        expect((error as ApolloError).graphQLErrors).toContainEqual(
+          expect.objectContaining({
+            message: errorToMessage[testError as WalletAddressError],
+            extensions: expect.objectContaining({
+              code: errorToCode[testError as WalletAddressError]
+            })
+          })
+        )
+      }
     })
 
-    test('500', async (): Promise<void> => {
+    test('internal server error', async (): Promise<void> => {
       jest
         .spyOn(walletAddressService, 'create')
         .mockImplementationOnce(async (_args) => {
           throw new Error('unexpected')
         })
-      const response = await appContainer.apolloClient
-        .mutate({
-          mutation: gql`
-            mutation CreateWalletAddress($input: CreateWalletAddressInput!) {
-              createWalletAddress(input: $input) {
-                code
-                success
-                message
-                walletAddress {
-                  id
-                  asset {
-                    code
-                    scale
+      try {
+        await appContainer.apolloClient
+          .mutate({
+            mutation: gql`
+              mutation CreateWalletAddress($input: CreateWalletAddressInput!) {
+                createWalletAddress(input: $input) {
+                  walletAddress {
+                    id
+                    asset {
+                      code
+                      scale
+                    }
                   }
                 }
               }
+            `,
+            variables: {
+              input
             }
-          `,
-          variables: {
-            input
-          }
-        })
-        .then((query): CreateWalletAddressMutationResponse => {
-          if (query.data) {
-            return query.data.createWalletAddress
-          } else {
-            throw new Error('Data was empty')
-          }
-        })
-      expect(response.code).toBe('500')
-      expect(response.success).toBe(false)
-      expect(response.message).toBe('Error trying to create wallet address')
+          })
+          .then((query): CreateWalletAddressMutationResponse => {
+            if (query.data) {
+              return query.data.createWalletAddress
+            } else {
+              throw new Error('Data was empty')
+            }
+          })
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApolloError)
+        expect((error as ApolloError).graphQLErrors).toContainEqual(
+          expect.objectContaining({
+            message: 'unexpected',
+            extensions: expect.objectContaining({
+              code: GraphQLErrorCode.InternalServerError
+            })
+          })
+        )
+      }
     })
   })
 
@@ -320,9 +319,6 @@ describe('Wallet Address Resolvers', (): void => {
           mutation: gql`
             mutation UpdateWalletAddress($input: UpdateWalletAddressInput!) {
               updateWalletAddress(input: $input) {
-                code
-                success
-                message
                 walletAddress {
                   id
                   status
@@ -348,8 +344,6 @@ describe('Wallet Address Resolvers', (): void => {
           }
         })
 
-      expect(response.success).toBe(true)
-      expect(response.code).toEqual('200')
       expect(response.walletAddress).toEqual({
         __typename: 'WalletAddress',
         ...updateOptions,
@@ -391,9 +385,6 @@ describe('Wallet Address Resolvers', (): void => {
             mutation: gql`
               mutation UpdateWalletAddress($input: UpdateWalletAddressInput!) {
                 updateWalletAddress(input: $input) {
-                  code
-                  success
-                  message
                   walletAddress {
                     id
                     additionalProperties {
@@ -417,8 +408,6 @@ describe('Wallet Address Resolvers', (): void => {
             }
           })
 
-        expect(response.success).toBe(true)
-        expect(response.code).toEqual('200')
         expect(response.walletAddress?.additionalProperties).toEqual(
           updateOptions.additionalProperties.map((property) => {
             return {
@@ -461,9 +450,6 @@ describe('Wallet Address Resolvers', (): void => {
             mutation: gql`
               mutation UpdateWalletAddress($input: UpdateWalletAddressInput!) {
                 updateWalletAddress(input: $input) {
-                  code
-                  success
-                  message
                   walletAddress {
                     id
                     additionalProperties {
@@ -487,8 +473,6 @@ describe('Wallet Address Resolvers', (): void => {
             }
           })
 
-        expect(response.success).toBe(true)
-        expect(response.code).toEqual('200')
         // Does not include additional properties from create that were not also in the update
         expect(response.walletAddress?.additionalProperties).toEqual(
           updateOptions.additionalProperties.map((property) => {
@@ -520,9 +504,6 @@ describe('Wallet Address Resolvers', (): void => {
             mutation: gql`
               mutation UpdateWalletAddress($input: UpdateWalletAddressInput!) {
                 updateWalletAddress(input: $input) {
-                  code
-                  success
-                  message
                   walletAddress {
                     id
                     additionalProperties {
@@ -546,8 +527,6 @@ describe('Wallet Address Resolvers', (): void => {
             }
           })
 
-        expect(response.success).toBe(true)
-        expect(response.code).toEqual('200')
         expect(response.walletAddress?.additionalProperties).toEqual([])
       })
     })
@@ -557,44 +536,47 @@ describe('Wallet Address Resolvers', (): void => {
       ${WalletAddressError.InvalidUrl}
       ${WalletAddressError.UnknownAsset}
       ${WalletAddressError.UnknownWalletAddress}
-    `('4XX - $error', async ({ error }): Promise<void> => {
-      jest.spyOn(walletAddressService, 'update').mockResolvedValueOnce(error)
-      const response = await appContainer.apolloClient
-        .mutate({
-          mutation: gql`
-            mutation UpdateWalletAddress($input: UpdateWalletAddressInput!) {
-              updateWalletAddress(input: $input) {
-                code
-                success
-                message
-                walletAddress {
-                  id
+    `('$error', async ({ error: testError }): Promise<void> => {
+      jest
+        .spyOn(walletAddressService, 'update')
+        .mockResolvedValueOnce(testError)
+      try {
+        await appContainer.apolloClient
+          .mutate({
+            mutation: gql`
+              mutation UpdateWalletAddress($input: UpdateWalletAddressInput!) {
+                updateWalletAddress(input: $input) {
+                  walletAddress {
+                    id
+                  }
                 }
               }
+            `,
+            variables: {
+              input: {
+                id: walletAddress.id,
+                status: WalletAddressStatus.Inactive
+              }
             }
-          `,
-          variables: {
-            input: {
-              id: walletAddress.id,
-              status: WalletAddressStatus.Inactive
+          })
+          .then((query): UpdateWalletAddressMutationResponse => {
+            if (query.data) {
+              return query.data.updateWalletAddress
+            } else {
+              throw new Error('Data was empty')
             }
-          }
-        })
-        .then((query): UpdateWalletAddressMutationResponse => {
-          if (query.data) {
-            return query.data.updateWalletAddress
-          } else {
-            throw new Error('Data was empty')
-          }
-        })
-
-      expect(response.success).toBe(false)
-      expect(response.code).toEqual(
-        errorToCode[error as WalletAddressError].toString()
-      )
-      expect(response.message).toEqual(
-        errorToMessage[error as WalletAddressError]
-      )
+          })
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApolloError)
+        expect((error as ApolloError).graphQLErrors).toContainEqual(
+          expect.objectContaining({
+            message: errorToMessage[testError as WalletAddressError],
+            extensions: expect.objectContaining({
+              code: errorToCode[testError as WalletAddressError]
+            })
+          })
+        )
+      }
     })
 
     test('Returns error if unexpected error', async (): Promise<void> => {
@@ -603,38 +585,43 @@ describe('Wallet Address Resolvers', (): void => {
         .mockImplementationOnce(async () => {
           throw new Error('unexpected')
         })
-      const response = await appContainer.apolloClient
-        .mutate({
-          mutation: gql`
-            mutation UpdateWalletAddress($input: UpdateWalletAddressInput!) {
-              updateWalletAddress(input: $input) {
-                code
-                success
-                message
-                walletAddress {
-                  id
+      try {
+        await appContainer.apolloClient
+          .mutate({
+            mutation: gql`
+              mutation UpdateWalletAddress($input: UpdateWalletAddressInput!) {
+                updateWalletAddress(input: $input) {
+                  walletAddress {
+                    id
+                  }
                 }
               }
+            `,
+            variables: {
+              input: {
+                id: walletAddress.id,
+                status: WalletAddressStatus.Inactive
+              }
             }
-          `,
-          variables: {
-            input: {
-              id: walletAddress.id,
-              status: WalletAddressStatus.Inactive
+          })
+          .then((query): UpdateWalletAddressMutationResponse => {
+            if (query.data) {
+              return query.data.updateWalletAddress
+            } else {
+              throw new Error('Data was empty')
             }
-          }
-        })
-        .then((query): UpdateWalletAddressMutationResponse => {
-          if (query.data) {
-            return query.data.updateWalletAddress
-          } else {
-            throw new Error('Data was empty')
-          }
-        })
-
-      expect(response.success).toBe(false)
-      expect(response.code).toEqual('500')
-      expect(response.message).toEqual('Error trying to update wallet address')
+          })
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApolloError)
+        expect((error as ApolloError).graphQLErrors).toContainEqual(
+          expect.objectContaining({
+            message: 'unexpected',
+            extensions: expect.objectContaining({
+              code: GraphQLErrorCode.InternalServerError
+            })
+          })
+        )
+      }
     })
   })
 
@@ -724,28 +711,38 @@ describe('Wallet Address Resolvers', (): void => {
     )
 
     test('Returns error for unknown wallet address', async (): Promise<void> => {
-      const gqlQuery = appContainer.apolloClient
-        .query({
-          query: gql`
-            query WalletAddress($walletAddressId: String!) {
-              walletAddress(id: $walletAddressId) {
-                id
+      try {
+        await appContainer.apolloClient
+          .query({
+            query: gql`
+              query WalletAddress($walletAddressId: String!) {
+                walletAddress(id: $walletAddressId) {
+                  id
+                }
               }
+            `,
+            variables: {
+              walletAddressId: uuid()
             }
-          `,
-          variables: {
-            walletAddressId: uuid()
-          }
-        })
-        .then((query): WalletAddress => {
-          if (query.data) {
-            return query.data.walletAddress
-          } else {
-            throw new Error('Data was empty')
-          }
-        })
-
-      await expect(gqlQuery).rejects.toThrow(ApolloError)
+          })
+          .then((query): WalletAddress => {
+            if (query.data) {
+              return query.data.walletAddress
+            } else {
+              throw new Error('Data was empty')
+            }
+          })
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApolloError)
+        expect((error as ApolloError).graphQLErrors).toContainEqual(
+          expect.objectContaining({
+            message: errorToMessage[WalletAddressError.UnknownWalletAddress],
+            extensions: expect.objectContaining({
+              code: errorToCode[WalletAddressError.UnknownWalletAddress]
+            })
+          })
+        )
+      }
     })
 
     getPageTests({
@@ -844,9 +841,6 @@ describe('Wallet Address Resolvers', (): void => {
                 $input: TriggerWalletAddressEventsInput!
               ) {
                 triggerWalletAddressEvents(input: $input) {
-                  code
-                  success
-                  message
                   count
                 }
               }
@@ -866,8 +860,6 @@ describe('Wallet Address Resolvers', (): void => {
             }
           })
 
-        expect(response.success).toBe(true)
-        expect(response.code).toEqual('200')
         expect(response.count).toEqual(count)
         await expect(
           WalletAddressEvent.query(knex).where({
@@ -885,43 +877,46 @@ describe('Wallet Address Resolvers', (): void => {
       }
     )
 
-    test('500', async (): Promise<void> => {
+    test('internal server error', async (): Promise<void> => {
       jest
         .spyOn(walletAddressService, 'triggerEvents')
         .mockRejectedValueOnce(new Error('unexpected'))
-      const response = await appContainer.apolloClient
-        .mutate({
-          mutation: gql`
-            mutation TriggerWalletAddressEvents(
-              $input: TriggerWalletAddressEventsInput!
-            ) {
-              triggerWalletAddressEvents(input: $input) {
-                code
-                success
-                message
-                count
+      try {
+        await appContainer.apolloClient
+          .mutate({
+            mutation: gql`
+              mutation TriggerWalletAddressEvents(
+                $input: TriggerWalletAddressEventsInput!
+              ) {
+                triggerWalletAddressEvents(input: $input) {
+                  count
+                }
+              }
+            `,
+            variables: {
+              input: {
+                limit: 1
               }
             }
-          `,
-          variables: {
-            input: {
-              limit: 1
+          })
+          .then((query): TriggerWalletAddressEventsMutationResponse => {
+            if (query.data) {
+              return query.data.triggerWalletAddressEvents
+            } else {
+              throw new Error('Data was empty')
             }
-          }
-        })
-        .then((query): TriggerWalletAddressEventsMutationResponse => {
-          if (query.data) {
-            return query.data.triggerWalletAddressEvents
-          } else {
-            throw new Error('Data was empty')
-          }
-        })
-      expect(response.code).toBe('500')
-      expect(response.success).toBe(false)
-      expect(response.message).toBe(
-        'Error trying to trigger wallet address events'
-      )
-      expect(response.count).toBeNull()
+          })
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApolloError)
+        expect((error as ApolloError).graphQLErrors).toContainEqual(
+          expect.objectContaining({
+            message: 'unexpected',
+            extensions: expect.objectContaining({
+              code: GraphQLErrorCode.InternalServerError
+            })
+          })
+        )
+      }
     })
   })
 })

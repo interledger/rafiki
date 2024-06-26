@@ -13,9 +13,6 @@ post {
 body:graphql {
   mutation CreateOrUpdatePeerByUrl ($input: CreateOrUpdatePeerByUrlInput!) {
       createOrUpdatePeerByUrl (input: $input) {
-          code
-          message
-          success
           peer {
               id
               name

@@ -116,10 +116,8 @@ export async function action({ request }: ActionFunctionArgs) {
     additionalProperties: []
   })
 
-  if (!response?.success) {
-    errors.message = [
-      response?.message ?? 'Could not create wallet address. Please try again!'
-    ]
+  if (!response?.walletAddress) {
+    errors.message = ['Could not create wallet address. Please try again!']
     return json({ errors }, { status: 400 })
   }
 

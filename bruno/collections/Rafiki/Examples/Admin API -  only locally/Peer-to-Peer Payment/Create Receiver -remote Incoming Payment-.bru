@@ -13,8 +13,6 @@ post {
 body:graphql {
   mutation CreateReceiver($input: CreateReceiverInput!) {
     createReceiver(input: $input) {
-      code
-      message
       receiver {
         completed
         createdAt
@@ -34,7 +32,6 @@ body:graphql {
         }
         updatedAt
       }
-      success
     }
   }
 }

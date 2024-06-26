@@ -104,10 +104,8 @@ export async function action({ request }: ActionFunctionArgs) {
       : { withdrawalThreshold: undefined })
   })
 
-  if (!response?.success) {
-    errors.message = [
-      response?.message ?? 'Could not create asset. Please try again!'
-    ]
+  if (!response?.asset) {
+    errors.message = ['Could not create asset. Please try again!']
     return json({ errors }, { status: 400 })
   }
 

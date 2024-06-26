@@ -55,7 +55,6 @@ export async function action({ request, params }: ActionFunctionArgs) {
       session,
       message: {
         content:
-          response?.message ??
           'Could not deposit outgoing payment liquidity. Please try again!',
         type: 'error'
       },
@@ -66,7 +65,7 @@ export async function action({ request, params }: ActionFunctionArgs) {
   return setMessageAndRedirect({
     session,
     message: {
-      content: response.message,
+      content: 'Deposited outgoing payment liquidity.',
       type: 'success'
     },
     location: '..'
