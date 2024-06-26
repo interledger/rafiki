@@ -81,14 +81,6 @@ class TelemetryServiceImpl implements TelemetryService {
     })
 
     metrics.setGlobalMeterProvider(this.meterProvider)
-
-    // TODO: follow the pattern for amounts more. ie createHistogram metric? and seperate file for this stuff?
-    // this.histograms.set(
-    //   'transaction_time',
-    //   metrics.getMeter(METER_NAME).createHistogram('transaction_time', {
-    //     description: 'Time taken to process a payment transaction'
-    //   })
-    // )
   }
 
   public async shutdown(): Promise<void> {
@@ -106,7 +98,7 @@ class TelemetryServiceImpl implements TelemetryService {
     name: string,
     options?: MetricOptions
   ): Histogram {
-    const existing = this.counters.get(name)
+    const existing = this.histograms.get(name)
     if (existing) {
       return existing
     }
@@ -122,7 +114,6 @@ class TelemetryServiceImpl implements TelemetryService {
     return counter
   }
 
-  // TODO: rename? previously metric == counter but not anymore w/ histogram
   public getOrCreateMetric(name: string, options?: MetricOptions): Counter {
     const existing = this.counters.get(name)
     if (existing) {
