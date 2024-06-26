@@ -338,13 +338,6 @@ describe('Auth Middleware', (): void => {
               requestType: type,
               requestAction: superAction
             })
-            const tokenInfo = createTokenInfo([
-              {
-                type,
-                actions: [subAction],
-                identifier: identifier as string
-              }
-            ])
             const introspectSpy = jest
               .spyOn(tokenIntrospectionClient, 'introspect')
               .mockResolvedValueOnce({ active: false })

@@ -13,9 +13,10 @@ export function grantHasAccess(
   for (const actionItem of requestAccessItemActions) {
     if (
       !grantAccessItemActions.includes(actionItem) &&
-        !(actionItem === 'read' && grantAccessItemActions.includes('read-all')) &&
-        !(actionItem === 'list' && grantAccessItemActions.includes('list-all'))
-    ) return false
+      !(actionItem === 'read' && grantAccessItemActions.includes('read-all')) &&
+      !(actionItem === 'list' && grantAccessItemActions.includes('list-all'))
+    )
+      return false
   }
   for (const key of Object.keys(restOfRequestAccessItem)) {
     if (

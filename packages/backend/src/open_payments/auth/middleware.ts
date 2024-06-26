@@ -53,7 +53,10 @@ function contextToRequestLike(ctx: HttpSigContext): RequestLike {
   }
 }
 
-function toOpenPaymentsAccess(type: AccessType, action: RequestAction): AccessItem {
+function toOpenPaymentsAccess(
+  type: AccessType,
+  action: RequestAction
+): AccessItem {
   return {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     type: type as any,
