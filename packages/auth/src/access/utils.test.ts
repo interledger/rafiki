@@ -121,8 +121,7 @@ describe('Access utilities', (): void => {
     const grantAccessItemSuperAction = await Access.query(trx).insertAndFetch({
       grantId: grant.id,
       type: AccessType.OutgoingPayment,
-      actions: [AccessAction.ReadAll
-      ],
+      actions: [AccessAction.ReadAll],
       identifier,
       limits: {
         receiver,
@@ -149,7 +148,10 @@ describe('Access utilities', (): void => {
     }
 
     expect(
-      compareRequestAndGrantAccessItems(requestAccessItem, toOpenPaymentsAccess(grantAccessItemSuperAction))
+      compareRequestAndGrantAccessItems(
+        requestAccessItem,
+        toOpenPaymentsAccess(grantAccessItemSuperAction)
+      )
     )
   })
 
