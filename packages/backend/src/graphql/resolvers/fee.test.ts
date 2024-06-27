@@ -93,6 +93,8 @@ describe('Fee Resolvers', () => {
           basisPoints: 100
         }
       }
+
+      expect.assertions(2)
       try {
         await appContainer.apolloClient
           .mutate({
@@ -141,6 +143,8 @@ describe('Fee Resolvers', () => {
           basisPoints: -10_000
         }
       }
+
+      expect.assertions(2)
       try {
         await appContainer.apolloClient
           .mutate({
@@ -192,6 +196,8 @@ describe('Fee Resolvers', () => {
           basisPoints: -10_000
         }
       }
+
+      expect.assertions(2)
       try {
         await appContainer.apolloClient
           .mutate({

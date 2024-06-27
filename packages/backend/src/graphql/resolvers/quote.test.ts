@@ -137,6 +137,7 @@ describe('Quote Resolvers', (): void => {
     test('Not found', async (): Promise<void> => {
       jest.spyOn(quoteService, 'get').mockImplementation(async () => undefined)
 
+      expect.assertions(2)
       try {
         await appContainer.apolloClient.query({
           query: gql`
@@ -236,6 +237,7 @@ describe('Quote Resolvers', (): void => {
     })
 
     test('unknown walletAddress', async (): Promise<void> => {
+      expect.assertions(2)
       try {
         await appContainer.apolloClient
           .query({
@@ -269,6 +271,7 @@ describe('Quote Resolvers', (): void => {
         .spyOn(quoteService, 'create')
         .mockRejectedValueOnce(new Error('unexpected'))
 
+      expect.assertions(3)
       try {
         await appContainer.apolloClient
           .query({

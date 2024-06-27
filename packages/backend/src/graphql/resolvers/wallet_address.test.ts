@@ -214,6 +214,8 @@ describe('Wallet Address Resolvers', (): void => {
       jest
         .spyOn(walletAddressService, 'create')
         .mockResolvedValueOnce(testError)
+
+      expect.assertions(2)
       try {
         await appContainer.apolloClient
           .mutate({
@@ -260,6 +262,8 @@ describe('Wallet Address Resolvers', (): void => {
         .mockImplementationOnce(async (_args) => {
           throw new Error('unexpected')
         })
+
+      expect.assertions(2)
       try {
         await appContainer.apolloClient
           .mutate({
@@ -540,6 +544,8 @@ describe('Wallet Address Resolvers', (): void => {
       jest
         .spyOn(walletAddressService, 'update')
         .mockResolvedValueOnce(testError)
+
+      expect.assertions(2)
       try {
         await appContainer.apolloClient
           .mutate({
@@ -585,6 +591,8 @@ describe('Wallet Address Resolvers', (): void => {
         .mockImplementationOnce(async () => {
           throw new Error('unexpected')
         })
+
+      expect.assertions(2)
       try {
         await appContainer.apolloClient
           .mutate({
@@ -711,6 +719,7 @@ describe('Wallet Address Resolvers', (): void => {
     )
 
     test('Returns error for unknown wallet address', async (): Promise<void> => {
+      expect.assertions(2)
       try {
         await appContainer.apolloClient
           .query({
@@ -881,6 +890,8 @@ describe('Wallet Address Resolvers', (): void => {
       jest
         .spyOn(walletAddressService, 'triggerEvents')
         .mockRejectedValueOnce(new Error('unexpected'))
+
+      expect.assertions(2)
       try {
         await appContainer.apolloClient
           .mutate({

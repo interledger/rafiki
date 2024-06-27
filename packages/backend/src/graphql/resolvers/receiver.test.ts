@@ -143,6 +143,7 @@ describe('Receiver Resolver', (): void => {
         walletAddressUrl: walletAddress.id
       }
 
+      expect.assertions(3)
       try {
         await appContainer.apolloClient
           .query({
@@ -199,6 +200,7 @@ describe('Receiver Resolver', (): void => {
         walletAddressUrl: walletAddress.id
       }
 
+      expect.assertions(3)
       try {
         await appContainer.apolloClient
           .query({
@@ -318,19 +320,18 @@ describe('Receiver Resolver', (): void => {
         .spyOn(receiverService, 'get')
         .mockImplementation(async () => undefined)
 
+      expect.assertions(2)
       try {
-        await expect(
-          appContainer.apolloClient.query({
-            query: gql`
-              query GetReceiver($id: String!) {
-                receiver(id: $id) {
-                  id
-                }
+        await appContainer.apolloClient.query({
+          query: gql`
+            query GetReceiver($id: String!) {
+              receiver(id: $id) {
+                id
               }
-            `,
-            variables: { id: uuid() }
-          })
-        ).rejects.toThrow('receiver does not exist')
+            }
+          `,
+          variables: { id: uuid() }
+        })
       } catch (error) {
         expect(error).toBeInstanceOf(ApolloError)
         expect((error as ApolloError).graphQLErrors).toContainEqual(
