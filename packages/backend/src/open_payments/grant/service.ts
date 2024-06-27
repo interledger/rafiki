@@ -6,6 +6,7 @@ import { AccessAction, AccessType } from '@interledger/open-payments'
 export interface GrantService {
   create(options: CreateOptions): Promise<Grant>
   get(options: GrantOptions): Promise<Grant | undefined>
+  getByAccessToken(accessToken: string): Promise<Grant | undefined>
   update(grant: Grant, options: UpdateOptions): Promise<Grant>
 }
 
@@ -25,6 +26,7 @@ export async function createGrantService(
 
   return {
     get: (options) => getGrant(deps, options),
+    getByAccessToken: (accessToken) => getGrantByAccessToken(deps, accessToken),
     create: (options) => createGrant(deps, options),
     update: (grant, options) => updateGrant(deps, grant, options)
   }
@@ -70,6 +72,17 @@ async function getGrant(deps: ServiceDependencies, options: GrantOptions) {
     })
     .withGraphJoined('authServer')
     .where('authServer.url', options.authServer)
+}
+
+async function getGrantByAccessToken(
+  deps: ServiceDependencies,
+  accessToken: string
+) {
+  return Grant.query(deps.knex)
+    .findOne({
+      accessToken
+    })
+    .withGraphJoined('authServer')
 }
 
 async function updateGrant(
