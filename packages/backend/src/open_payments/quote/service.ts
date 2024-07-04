@@ -16,6 +16,10 @@ import { PaymentMethodHandlerService } from '../../payment-method/handler/servic
 import { IAppConfig } from '../../config/app'
 import { FeeService } from '../../fee/service'
 import { FeeType } from '../../fee/model'
+import {
+  PaymentMethodHandlerError,
+  PaymentMethodHandlerErrorCode
+} from '../../payment-method/handler/errors'
 
 const MAX_INT64 = BigInt('9223372036854775807')
 
@@ -159,6 +163,14 @@ async function createQuote(
     if (isQuoteError(err)) {
       return err
     }
+
+    if (
+      err instanceof PaymentMethodHandlerError &&
+      err.code === PaymentMethodHandlerErrorCode.QuoteNonPositiveReceiveAmount
+    ) {
+      return QuoteError.NonPositiveReceiveAmount
+    }
+
     deps.logger.error({ err }, 'error creating a quote')
     throw err
   }
@@ -233,7 +245,7 @@ function calculateFixedSendQuoteAmounts(
       { fees, exchangeAdjustedFees, estimatedExchangeRate, receiveAmountValue },
       'Negative receive amount when calculating quote amount'
     )
-    throw QuoteError.NegativeReceiveAmount
+    throw QuoteError.NonPositiveReceiveAmount
   }
 
   if (receiveAmountValue > maxReceiveAmountValue) {

@@ -199,6 +199,7 @@ describe('Incoming Payment Resolver', (): void => {
         walletAddressId: uuid()
       }
 
+      expect.assertions(3)
       try {
         await appContainer.apolloClient
           .query({
@@ -231,7 +232,7 @@ describe('Incoming Payment Resolver', (): void => {
           })
         )
       }
-      await expect(createSpy).toHaveBeenCalledWith(input)
+      expect(createSpy).toHaveBeenCalledWith(input)
     })
 
     test('Internal server error', async (): Promise<void> => {
@@ -243,6 +244,7 @@ describe('Incoming Payment Resolver', (): void => {
         walletAddressId: uuid()
       }
 
+      expect.assertions(3)
       try {
         await appContainer.apolloClient
           .query({
@@ -275,7 +277,7 @@ describe('Incoming Payment Resolver', (): void => {
           })
         )
       }
-      await expect(createSpy).toHaveBeenCalledWith(input)
+      expect(createSpy).toHaveBeenCalledWith(input)
     })
   })
 
@@ -412,6 +414,7 @@ describe('Incoming Payment Resolver', (): void => {
         .spyOn(incomingPaymentService, 'get')
         .mockImplementation(async () => undefined)
 
+      expect.assertions(2)
       try {
         await appContainer.apolloClient.query({
           query: gql`
