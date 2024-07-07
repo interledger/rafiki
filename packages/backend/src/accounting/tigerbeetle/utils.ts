@@ -1,6 +1,7 @@
 import { validateId } from '../../shared/utils'
 import { Transfer as TbTransfer } from 'tigerbeetle-node/dist/bindings'
-import { LedgerTransfer } from '../service'
+import { LedgerTransfer, TransferType } from '../service'
+import { TigerBeetleTransferCode } from './service'
 
 export type AccountId = string | number | bigint
 export type AccountUserData128 = AccountId
@@ -38,15 +39,31 @@ export function fromTigerBeetleId(bi: bigint): string {
   return str
 }
 
+function transferTypeFromCode(code: number): TransferType {
+  switch (code) {
+    case TigerBeetleTransferCode.TRANSFER:
+      return TransferType.TRANSFER
+    case TigerBeetleTransferCode.DEPOSIT:
+      return TransferType.DEPOSIT
+    case TigerBeetleTransferCode.WITHDRAWAL:
+      return TransferType.WITHDRAWAL
+    default:
+      return TransferType.DEFAULT
+  }
+}
+
 export function tbTransferToLedgerTransfer(
   tbTransfer: TbTransfer
 ): LedgerTransfer {
   return {
+    id: fromTigerBeetleId(tbTransfer.id),
     amount: tbTransfer.amount,
     creditAccount: fromTigerBeetleId(tbTransfer.credit_account_id),
     debitAccount: fromTigerBeetleId(tbTransfer.debit_account_id),
     timeout: tbTransfer.timeout,
-    timestamp: tbTransfer.timestamp
-    //TODO need to convert the rest...
+    timestamp: tbTransfer.timestamp,
+    userData128: tbTransfer.user_data_128,
+    transferType: transferTypeFromCode(tbTransfer.code),
+    ledger: tbTransfer.ledger
   }
 }

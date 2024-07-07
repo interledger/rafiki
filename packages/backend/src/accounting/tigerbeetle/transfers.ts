@@ -169,21 +169,22 @@ export async function createTransfers(
 
 export async function getAccountTransfers(
   deps: ServiceDependencies,
-  id: string
+  id: string,
+  limit: number = 100_000
 ): Promise<GetLedgerTransfersResult> {
-  const tbAccId = toTigerBeetleId(id)
+  const account_id = toTigerBeetleId(id)
   const filter: AccountFilter = {
-    account_id: tbAccId,
+    account_id,
     timestamp_min: 0n,
     timestamp_max: 0n,
-    limit: 100_000,
+    limit, //100_000
     flags: AccountFilterFlags.credits | AccountFilterFlags.debits
   }
   const tbAccountTransfers = await deps.tigerBeetle.getAccountTransfers(filter)
   const returnVal = { credits: [], debits: [] } as GetLedgerTransfersResult
   tbAccountTransfers.forEach((item) => {
     const converted = tbTransferToLedgerTransfer(item)
-    if (item.debit_account_id === tbAccId) returnVal.debits.push(converted)
+    if (item.debit_account_id === account_id) returnVal.debits.push(converted)
     else returnVal.credits.push(converted)
   })
   return returnVal

@@ -73,16 +73,18 @@ export function createAccountingService(
     createWithdrawal: (transfer) => createAccountWithdrawal(deps, transfer),
     postWithdrawal: (withdrawalRef) => postTransfers(deps, [withdrawalRef]),
     voidWithdrawal: (withdrawalRef) => voidTransfers(deps, [withdrawalRef]),
-    getAccountTransfers: (id, trx) => getAccountTransfersAndMap(deps, id, trx)
+    getAccountTransfers: (id, limit, trx) =>
+      getAccountTransfersAndMap(deps, id, limit, trx)
   }
 }
 
 async function getAccountTransfersAndMap(
   deps: ServiceDependencies,
   id: string,
+  limit: number = 100_000,
   trx?: TransactionOrKnex
 ): Promise<GetLedgerTransfersResult> {
-  const accountTransfers = await getAccountTransfers(deps, id, trx)
+  const accountTransfers = await getAccountTransfers(deps, id, limit, trx)
   const returnVal = { credits: [], debits: [] }
   if (
     !accountTransfers ||

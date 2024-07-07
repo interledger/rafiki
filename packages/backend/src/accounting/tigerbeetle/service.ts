@@ -63,6 +63,7 @@ export const convertToTigerBeetleAccountCode: {
 export const convertToTigerBeetleTransferCode: {
   [key in TransferType]: TigerBeetleTransferCode
 } = {
+  [TransferType.DEFAULT]: TigerBeetleTransferCode.DEFAULT,
   [TransferType.TRANSFER]: TigerBeetleTransferCode.TRANSFER,
   [TransferType.DEPOSIT]: TigerBeetleTransferCode.DEPOSIT,
   [TransferType.WITHDRAWAL]: TigerBeetleTransferCode.WITHDRAWAL
@@ -110,7 +111,7 @@ export function createAccountingService(
     createWithdrawal: (transfer) => createAccountWithdrawal(deps, transfer),
     postWithdrawal: (options) => postAccountWithdrawal(deps, options),
     voidWithdrawal: (options) => voidAccountWithdrawal(deps, options),
-    getAccountTransfers: (id) => getAccountTransfers(deps, id)
+    getAccountTransfers: (id, limit) => getAccountTransfers(deps, id, limit)
   }
 }
 

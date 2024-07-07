@@ -13,7 +13,8 @@ export enum LiquidityAccountType {
 export enum TransferType {
   DEPOSIT = 'DEPOSIT',
   WITHDRAWAL = 'WITHDRAWAL',
-  TRANSFER = 'TRANSFER'
+  TRANSFER = 'TRANSFER',
+  DEFAULT = 'DEFAULT'
 }
 
 export interface LiquidityAccountAsset {
@@ -73,11 +74,15 @@ export interface GetLedgerTransfersResult {
 }
 
 export interface LedgerTransfer extends BaseTransfer {
+  id: string
   debitAccount: string
   creditAccount: string
   amount: bigint
   timeout: number
   timestamp: bigint
+  userData128: bigint
+  transferType: TransferType
+  ledger: number
 }
 
 export interface AccountingService {
@@ -112,6 +117,7 @@ export interface AccountingService {
   voidWithdrawal(id: string): Promise<void | TransferError>
   getAccountTransfers(
     id: string,
+    limit: number,
     trx?: TransactionOrKnex
   ): Promise<GetLedgerTransfersResult>
 }

@@ -91,6 +91,14 @@ type Query {
     filter: PaymentFilter
   ): PaymentConnection!
 
+  "Fetch a page of accounting transfers"
+  accountingTransfers(
+    "Limit the number of results returned."
+    limit: Int!
+    "Filter accounting transfers based on specific criteria."
+    filter: AccountingTransferFilter!
+  ): AccountingTransferConnection!
+
   "Get an local or remote Open Payments Incoming Payment. The receiver has a wallet address on either this or another Open Payments resource server."
   receiver(id: String!): Receiver
 }
@@ -893,6 +901,47 @@ enum PaymentType {
 input PaymentFilter {
   type: FilterString
   walletAddressId: FilterString
+}
+
+input AccountingTransferFilter {
+  walletAddressId: String!
+}
+
+type AccountingTransferConnection {
+  edgeDebits: [AccountingTransferEdge!]!
+  edgeCredits: [AccountingTransferEdge!]!
+}
+
+type AccountingTransferEdge {
+  node: AccountingTransfer!
+}
+
+type AccountingTransfer implements Model {
+  "Payment id"
+  id: ID!
+  "Debit account id"
+  debitAccount: ID!
+  "Credit account id"
+  creditAccount: ID!
+  "Amount sent (fixed send)"
+  amount: UInt64!
+  "Type of accounting transfer"
+  transferType: TransferType!
+  "Identifier that partitions the sets of accounts that can transact with each other."
+  ledger: UInt8!
+  "Date-time of creation"
+  createdAt: String!
+}
+
+enum TransferType {
+  "Default transfer type."
+  DEFAULT
+  "Deposit transfer type."
+  DEPOSIT
+  "Withdrawal transfer type."
+  WITHDRAWAL
+  "Transfer type."
+  TRANSFER
 }
 
 type QuoteConnection {

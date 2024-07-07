@@ -16,7 +16,12 @@ export async function getAccountBalances(
   account: LedgerAccount,
   trx?: TransactionOrKnex
 ): Promise<AccountBalance> {
-  const { credits, debits } = await getAccountTransfers(deps, account.id, trx)
+  const { credits, debits } = await getAccountTransfers(
+    deps,
+    account.id,
+    100_000,
+    trx
+  )
 
   let creditsPosted = 0n
   let creditsPending = 0n

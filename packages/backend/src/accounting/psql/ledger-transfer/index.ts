@@ -38,6 +38,7 @@ export type CreateLedgerTransferArgs = Pick<
 export async function getAccountTransfers(
   deps: ServiceDependencies,
   accountId: string,
+  limit: number = 100_000,
   trx?: TransactionOrKnex
 ): Promise<GetTransfersResult> {
   const transfers = await LedgerTransfer.query(trx || deps.knex)
@@ -60,6 +61,7 @@ export async function getAccountTransfers(
             )
         )
     )
+    .limit(limit)
 
   return transfers.reduce(
     (results, transfer) => {

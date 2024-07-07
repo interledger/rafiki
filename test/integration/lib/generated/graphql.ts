@@ -19,6 +19,39 @@ export type Scalars = {
   UInt64: { input: bigint; output: bigint; }
 };
 
+export type AccountingTransfer = Model & {
+  __typename?: 'AccountingTransfer';
+  /** Amount sent (fixed send) */
+  amount: Scalars['UInt64']['output'];
+  /** Date-time of creation */
+  createdAt: Scalars['String']['output'];
+  /** Credit account id */
+  creditAccount: Scalars['ID']['output'];
+  /** Debit account id */
+  debitAccount: Scalars['ID']['output'];
+  /** Payment id */
+  id: Scalars['ID']['output'];
+  /** Identifier that partitions the sets of accounts that can transact with each other. */
+  ledger: Scalars['UInt8']['output'];
+  /** Type of accounting transfer */
+  transferType: TransferType;
+};
+
+export type AccountingTransferConnection = {
+  __typename?: 'AccountingTransferConnection';
+  edgeCredits: Array<AccountingTransferEdge>;
+  edgeDebits: Array<AccountingTransferEdge>;
+};
+
+export type AccountingTransferEdge = {
+  __typename?: 'AccountingTransferEdge';
+  node: AccountingTransfer;
+};
+
+export type AccountingTransferFilter = {
+  walletAddressId: Scalars['String']['input'];
+};
+
 export type AdditionalProperty = {
   __typename?: 'AdditionalProperty';
   key: Scalars['String']['output'];
@@ -965,6 +998,8 @@ export type PostLiquidityWithdrawalInput = {
 
 export type Query = {
   __typename?: 'Query';
+  /** Fetch a page of accounting transfers */
+  accountingTransfers: AccountingTransferConnection;
   /** Fetch an asset */
   asset?: Maybe<Asset>;
   /** Fetch a page of assets. */
@@ -989,6 +1024,12 @@ export type Query = {
   walletAddresses: WalletAddressesConnection;
   /** Fetch a page of webhook events */
   webhookEvents: WebhookEventsConnection;
+};
+
+
+export type QueryAccountingTransfersArgs = {
+  filter: AccountingTransferFilter;
+  limit: Scalars['Int']['input'];
 };
 
 
@@ -1171,6 +1212,17 @@ export enum SortOrder {
   Asc = 'ASC',
   /** Choose descending order for results. */
   Desc = 'DESC'
+}
+
+export enum TransferType {
+  /** Default transfer type. */
+  Default = 'DEFAULT',
+  /** Deposit transfer type. */
+  Deposit = 'DEPOSIT',
+  /** Transfer type. */
+  Transfer = 'TRANSFER',
+  /** Withdrawal transfer type. */
+  Withdrawal = 'WITHDRAWAL'
 }
 
 export type TriggerWalletAddressEventsInput = {
@@ -1474,11 +1526,15 @@ export type DirectiveResolverFn<TResult = {}, TParent = {}, TContext = {}, TArgs
 /** Mapping of interface types */
 export type ResolversInterfaceTypes<RefType extends Record<string, unknown>> = {
   BasePayment: ( Partial<IncomingPayment> ) | ( Partial<OutgoingPayment> ) | ( Partial<Payment> );
-  Model: ( Partial<Asset> ) | ( Partial<Fee> ) | ( Partial<IncomingPayment> ) | ( Partial<OutgoingPayment> ) | ( Partial<Payment> ) | ( Partial<Peer> ) | ( Partial<WalletAddress> ) | ( Partial<WalletAddressKey> ) | ( Partial<WebhookEvent> );
+  Model: ( Partial<AccountingTransfer> ) | ( Partial<Asset> ) | ( Partial<Fee> ) | ( Partial<IncomingPayment> ) | ( Partial<OutgoingPayment> ) | ( Partial<Payment> ) | ( Partial<Peer> ) | ( Partial<WalletAddress> ) | ( Partial<WalletAddressKey> ) | ( Partial<WebhookEvent> );
 };
 
 /** Mapping between all available schema types and the resolvers types */
 export type ResolversTypes = {
+  AccountingTransfer: ResolverTypeWrapper<Partial<AccountingTransfer>>;
+  AccountingTransferConnection: ResolverTypeWrapper<Partial<AccountingTransferConnection>>;
+  AccountingTransferEdge: ResolverTypeWrapper<Partial<AccountingTransferEdge>>;
+  AccountingTransferFilter: ResolverTypeWrapper<Partial<AccountingTransferFilter>>;
   AdditionalProperty: ResolverTypeWrapper<Partial<AdditionalProperty>>;
   AdditionalPropertyInput: ResolverTypeWrapper<Partial<AdditionalPropertyInput>>;
   Alg: ResolverTypeWrapper<Partial<Alg>>;
@@ -1574,6 +1630,7 @@ export type ResolversTypes = {
   SetFeeResponse: ResolverTypeWrapper<Partial<SetFeeResponse>>;
   SortOrder: ResolverTypeWrapper<Partial<SortOrder>>;
   String: ResolverTypeWrapper<Partial<Scalars['String']['output']>>;
+  TransferType: ResolverTypeWrapper<Partial<TransferType>>;
   TriggerWalletAddressEventsInput: ResolverTypeWrapper<Partial<TriggerWalletAddressEventsInput>>;
   TriggerWalletAddressEventsMutationResponse: ResolverTypeWrapper<Partial<TriggerWalletAddressEventsMutationResponse>>;
   UInt8: ResolverTypeWrapper<Partial<Scalars['UInt8']['output']>>;
@@ -1602,6 +1659,10 @@ export type ResolversTypes = {
 
 /** Mapping between all available schema types and the resolvers parents */
 export type ResolversParentTypes = {
+  AccountingTransfer: Partial<AccountingTransfer>;
+  AccountingTransferConnection: Partial<AccountingTransferConnection>;
+  AccountingTransferEdge: Partial<AccountingTransferEdge>;
+  AccountingTransferFilter: Partial<AccountingTransferFilter>;
   AdditionalProperty: Partial<AdditionalProperty>;
   AdditionalPropertyInput: Partial<AdditionalPropertyInput>;
   Amount: Partial<Amount>;
@@ -1711,6 +1772,28 @@ export type ResolversParentTypes = {
   WebhookEventsConnection: Partial<WebhookEventsConnection>;
   WebhookEventsEdge: Partial<WebhookEventsEdge>;
   WithdrawEventLiquidityInput: Partial<WithdrawEventLiquidityInput>;
+};
+
+export type AccountingTransferResolvers<ContextType = any, ParentType extends ResolversParentTypes['AccountingTransfer'] = ResolversParentTypes['AccountingTransfer']> = {
+  amount?: Resolver<ResolversTypes['UInt64'], ParentType, ContextType>;
+  createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  creditAccount?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  debitAccount?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  ledger?: Resolver<ResolversTypes['UInt8'], ParentType, ContextType>;
+  transferType?: Resolver<ResolversTypes['TransferType'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type AccountingTransferConnectionResolvers<ContextType = any, ParentType extends ResolversParentTypes['AccountingTransferConnection'] = ResolversParentTypes['AccountingTransferConnection']> = {
+  edgeCredits?: Resolver<Array<ResolversTypes['AccountingTransferEdge']>, ParentType, ContextType>;
+  edgeDebits?: Resolver<Array<ResolversTypes['AccountingTransferEdge']>, ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type AccountingTransferEdgeResolvers<ContextType = any, ParentType extends ResolversParentTypes['AccountingTransferEdge'] = ResolversParentTypes['AccountingTransferEdge']> = {
+  node?: Resolver<ResolversTypes['AccountingTransfer'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
 export type AdditionalPropertyResolvers<ContextType = any, ParentType extends ResolversParentTypes['AdditionalProperty'] = ResolversParentTypes['AdditionalProperty']> = {
@@ -1885,7 +1968,7 @@ export type LiquidityMutationResponseResolvers<ContextType = any, ParentType ext
 };
 
 export type ModelResolvers<ContextType = any, ParentType extends ResolversParentTypes['Model'] = ResolversParentTypes['Model']> = {
-  __resolveType: TypeResolveFn<'Asset' | 'Fee' | 'IncomingPayment' | 'OutgoingPayment' | 'Payment' | 'Peer' | 'WalletAddress' | 'WalletAddressKey' | 'WebhookEvent', ParentType, ContextType>;
+  __resolveType: TypeResolveFn<'AccountingTransfer' | 'Asset' | 'Fee' | 'IncomingPayment' | 'OutgoingPayment' | 'Payment' | 'Peer' | 'WalletAddress' | 'WalletAddressKey' | 'WebhookEvent', ParentType, ContextType>;
   createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
 };
@@ -2017,6 +2100,7 @@ export type PeersConnectionResolvers<ContextType = any, ParentType extends Resol
 };
 
 export type QueryResolvers<ContextType = any, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> = {
+  accountingTransfers?: Resolver<ResolversTypes['AccountingTransferConnection'], ParentType, ContextType, RequireFields<QueryAccountingTransfersArgs, 'filter' | 'limit'>>;
   asset?: Resolver<Maybe<ResolversTypes['Asset']>, ParentType, ContextType, RequireFields<QueryAssetArgs, 'id'>>;
   assets?: Resolver<ResolversTypes['AssetsConnection'], ParentType, ContextType, Partial<QueryAssetsArgs>>;
   incomingPayment?: Resolver<Maybe<ResolversTypes['IncomingPayment']>, ParentType, ContextType, RequireFields<QueryIncomingPaymentArgs, 'id'>>;
@@ -2191,6 +2275,9 @@ export type WebhookEventsEdgeResolvers<ContextType = any, ParentType extends Res
 };
 
 export type Resolvers<ContextType = any> = {
+  AccountingTransfer?: AccountingTransferResolvers<ContextType>;
+  AccountingTransferConnection?: AccountingTransferConnectionResolvers<ContextType>;
+  AccountingTransferEdge?: AccountingTransferEdgeResolvers<ContextType>;
   AdditionalProperty?: AdditionalPropertyResolvers<ContextType>;
   Amount?: AmountResolvers<ContextType>;
   Asset?: AssetResolvers<ContextType>;
