@@ -143,7 +143,7 @@
         "description": null,
         "fields": [
           {
-            "name": "edgeCredits",
+            "name": "credits",
             "description": null,
             "args": [],
             "type": {
@@ -157,7 +157,7 @@
                   "name": null,
                   "ofType": {
                     "kind": "OBJECT",
-                    "name": "AccountingTransferEdge",
+                    "name": "AccountingTransfer",
                     "ofType": null
                   }
                 }
@@ -167,7 +167,7 @@
             "deprecationReason": null
           },
           {
-            "name": "edgeDebits",
+            "name": "debits",
             "description": null,
             "args": [],
             "type": {
@@ -181,7 +181,7 @@
                   "name": null,
                   "ofType": {
                     "kind": "OBJECT",
-                    "name": "AccountingTransferEdge",
+                    "name": "AccountingTransfer",
                     "ofType": null
                   }
                 }
@@ -193,60 +193,6 @@
         ],
         "inputFields": null,
         "interfaces": [],
-        "enumValues": null,
-        "possibleTypes": null
-      },
-      {
-        "kind": "OBJECT",
-        "name": "AccountingTransferEdge",
-        "description": null,
-        "fields": [
-          {
-            "name": "node",
-            "description": null,
-            "args": [],
-            "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "OBJECT",
-                "name": "AccountingTransfer",
-                "ofType": null
-              }
-            },
-            "isDeprecated": false,
-            "deprecationReason": null
-          }
-        ],
-        "inputFields": null,
-        "interfaces": [],
-        "enumValues": null,
-        "possibleTypes": null
-      },
-      {
-        "kind": "INPUT_OBJECT",
-        "name": "AccountingTransferFilter",
-        "description": null,
-        "fields": null,
-        "inputFields": [
-          {
-            "name": "walletAddressId",
-            "description": null,
-            "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "SCALAR",
-                "name": "String",
-                "ofType": null
-              }
-            },
-            "defaultValue": null,
-            "isDeprecated": false,
-            "deprecationReason": null
-          }
-        ],
-        "interfaces": null,
         "enumValues": null,
         "possibleTypes": null
       },
@@ -5942,14 +5888,14 @@
             "description": "Fetch a page of accounting transfers",
             "args": [
               {
-                "name": "filter",
-                "description": "Filter accounting transfers based on specific criteria.",
+                "name": "id",
+                "description": "Account id.",
                 "type": {
                   "kind": "NON_NULL",
                   "name": null,
                   "ofType": {
-                    "kind": "INPUT_OBJECT",
-                    "name": "AccountingTransferFilter",
+                    "kind": "SCALAR",
+                    "name": "String",
                     "ofType": null
                   }
                 },

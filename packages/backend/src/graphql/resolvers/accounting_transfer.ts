@@ -1,7 +1,7 @@
 import {
   ResolversTypes,
   QueryResolvers,
-  AccountingTransferEdge,
+  AccountingTransfer,
   TransferType as SchemaTransferType
 } from '../generated/graphql'
 import { ApolloContext } from '../../app'
@@ -18,19 +18,14 @@ export const getAccountingTransfers: QueryResolvers<ApolloContext>['accountingTr
     ctx
   ): Promise<ResolversTypes['AccountingTransferConnection']> => {
     const accountingService = await ctx.container.use('accountingService')
-    const { filter, limit } = args
+    const { id, limit } = args
 
-    const accountTransfers: GetLedgerTransfersResult =
-      await accountingService.getAccountTransfers(
-        `${filter.walletAddressId}`,
-        limit
-      )
-
+    const accountTransfers = await accountingService.getAccountTransfers(id, limit)
     return {
-      edgeDebits: accountTransfers.debits.map((debit) =>
+      debits: accountTransfers.debits.map((debit) =>
         transferToGraphql(debit)
       ),
-      edgeCredits: accountTransfers.credits.map((credit) =>
+      credits: accountTransfers.credits.map((credit) =>
         transferToGraphql(credit)
       )
     }
@@ -38,17 +33,15 @@ export const getAccountingTransfers: QueryResolvers<ApolloContext>['accountingTr
 
 export function transferToGraphql(
   transfer: LedgerTransfer
-): AccountingTransferEdge {
+): AccountingTransfer {
   return {
-    node: {
-      id: transfer.id,
-      createdAt: new Date(Number(transfer.timestamp)).toISOString(),
-      debitAccount: transfer.debitAccount,
-      creditAccount: transfer.creditAccount,
-      amount: transfer.amount,
-      ledger: transfer.ledger,
-      transferType: transferTypeToGraphql(transfer.transferType)
-    }
+    id: transfer.id,
+    createdAt: new Date(Number(transfer.timestamp)).toISOString(),
+    debitAccount: transfer.debitAccount,
+    creditAccount: transfer.creditAccount,
+    amount: transfer.amount,
+    ledger: transfer.ledger,
+    transferType: transferTypeToGraphql(transfer.transferType)
   }
 }
 

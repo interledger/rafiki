@@ -93,10 +93,10 @@ type Query {
 
   "Fetch a page of accounting transfers"
   accountingTransfers(
+    "Account id."
+    id: String!
     "Limit the number of results returned."
     limit: Int!
-    "Filter accounting transfers based on specific criteria."
-    filter: AccountingTransferFilter!
   ): AccountingTransferConnection!
 
   "Get an local or remote Open Payments Incoming Payment. The receiver has a wallet address on either this or another Open Payments resource server."
@@ -903,17 +903,9 @@ input PaymentFilter {
   walletAddressId: FilterString
 }
 
-input AccountingTransferFilter {
-  walletAddressId: String!
-}
-
 type AccountingTransferConnection {
-  edgeDebits: [AccountingTransferEdge!]!
-  edgeCredits: [AccountingTransferEdge!]!
-}
-
-type AccountingTransferEdge {
-  node: AccountingTransfer!
+  debits: [AccountingTransfer!]!
+  credits: [AccountingTransfer!]!
 }
 
 type AccountingTransfer implements Model {

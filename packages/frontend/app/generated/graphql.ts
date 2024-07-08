@@ -39,17 +39,8 @@ export type AccountingTransfer = Model & {
 
 export type AccountingTransferConnection = {
   __typename?: 'AccountingTransferConnection';
-  edgeCredits: Array<AccountingTransferEdge>;
-  edgeDebits: Array<AccountingTransferEdge>;
-};
-
-export type AccountingTransferEdge = {
-  __typename?: 'AccountingTransferEdge';
-  node: AccountingTransfer;
-};
-
-export type AccountingTransferFilter = {
-  walletAddressId: Scalars['String']['input'];
+  credits: Array<AccountingTransfer>;
+  debits: Array<AccountingTransfer>;
 };
 
 export type AdditionalProperty = {
@@ -1028,7 +1019,7 @@ export type Query = {
 
 
 export type QueryAccountingTransfersArgs = {
-  filter: AccountingTransferFilter;
+  id: Scalars['String']['input'];
   limit: Scalars['Int']['input'];
 };
 
@@ -1533,8 +1524,6 @@ export type ResolversInterfaceTypes<RefType extends Record<string, unknown>> = {
 export type ResolversTypes = {
   AccountingTransfer: ResolverTypeWrapper<Partial<AccountingTransfer>>;
   AccountingTransferConnection: ResolverTypeWrapper<Partial<AccountingTransferConnection>>;
-  AccountingTransferEdge: ResolverTypeWrapper<Partial<AccountingTransferEdge>>;
-  AccountingTransferFilter: ResolverTypeWrapper<Partial<AccountingTransferFilter>>;
   AdditionalProperty: ResolverTypeWrapper<Partial<AdditionalProperty>>;
   AdditionalPropertyInput: ResolverTypeWrapper<Partial<AdditionalPropertyInput>>;
   Alg: ResolverTypeWrapper<Partial<Alg>>;
@@ -1661,8 +1650,6 @@ export type ResolversTypes = {
 export type ResolversParentTypes = {
   AccountingTransfer: Partial<AccountingTransfer>;
   AccountingTransferConnection: Partial<AccountingTransferConnection>;
-  AccountingTransferEdge: Partial<AccountingTransferEdge>;
-  AccountingTransferFilter: Partial<AccountingTransferFilter>;
   AdditionalProperty: Partial<AdditionalProperty>;
   AdditionalPropertyInput: Partial<AdditionalPropertyInput>;
   Amount: Partial<Amount>;
@@ -1786,13 +1773,8 @@ export type AccountingTransferResolvers<ContextType = any, ParentType extends Re
 };
 
 export type AccountingTransferConnectionResolvers<ContextType = any, ParentType extends ResolversParentTypes['AccountingTransferConnection'] = ResolversParentTypes['AccountingTransferConnection']> = {
-  edgeCredits?: Resolver<Array<ResolversTypes['AccountingTransferEdge']>, ParentType, ContextType>;
-  edgeDebits?: Resolver<Array<ResolversTypes['AccountingTransferEdge']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type AccountingTransferEdgeResolvers<ContextType = any, ParentType extends ResolversParentTypes['AccountingTransferEdge'] = ResolversParentTypes['AccountingTransferEdge']> = {
-  node?: Resolver<ResolversTypes['AccountingTransfer'], ParentType, ContextType>;
+  credits?: Resolver<Array<ResolversTypes['AccountingTransfer']>, ParentType, ContextType>;
+  debits?: Resolver<Array<ResolversTypes['AccountingTransfer']>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -2100,7 +2082,7 @@ export type PeersConnectionResolvers<ContextType = any, ParentType extends Resol
 };
 
 export type QueryResolvers<ContextType = any, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> = {
-  accountingTransfers?: Resolver<ResolversTypes['AccountingTransferConnection'], ParentType, ContextType, RequireFields<QueryAccountingTransfersArgs, 'filter' | 'limit'>>;
+  accountingTransfers?: Resolver<ResolversTypes['AccountingTransferConnection'], ParentType, ContextType, RequireFields<QueryAccountingTransfersArgs, 'id' | 'limit'>>;
   asset?: Resolver<Maybe<ResolversTypes['Asset']>, ParentType, ContextType, RequireFields<QueryAssetArgs, 'id'>>;
   assets?: Resolver<ResolversTypes['AssetsConnection'], ParentType, ContextType, Partial<QueryAssetsArgs>>;
   incomingPayment?: Resolver<Maybe<ResolversTypes['IncomingPayment']>, ParentType, ContextType, RequireFields<QueryIncomingPaymentArgs, 'id'>>;
@@ -2277,7 +2259,6 @@ export type WebhookEventsEdgeResolvers<ContextType = any, ParentType extends Res
 export type Resolvers<ContextType = any> = {
   AccountingTransfer?: AccountingTransferResolvers<ContextType>;
   AccountingTransferConnection?: AccountingTransferConnectionResolvers<ContextType>;
-  AccountingTransferEdge?: AccountingTransferEdgeResolvers<ContextType>;
   AdditionalProperty?: AdditionalPropertyResolvers<ContextType>;
   Amount?: AmountResolvers<ContextType>;
   Asset?: AssetResolvers<ContextType>;
