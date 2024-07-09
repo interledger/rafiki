@@ -131,7 +131,10 @@ describe('Asset Resolvers', (): void => {
 
     test('Returns error for duplicate asset', async (): Promise<void> => {
       const input = randomAsset()
-      await expect(assetService.create(input)).resolves.toMatchObject(input)
+
+      await assetService.create(input)
+
+      expect.assertions(2)
       try {
         await appContainer.apolloClient
           .mutate({
@@ -173,6 +176,7 @@ describe('Asset Resolvers', (): void => {
         .spyOn(assetService, 'create')
         .mockRejectedValueOnce(new Error('unexpected'))
 
+      expect.assertions(2)
       try {
         await appContainer.apolloClient
           .mutate({
@@ -359,6 +363,7 @@ describe('Asset Resolvers', (): void => {
     })
 
     test('Returns error for unknown asset', async (): Promise<void> => {
+      expect.assertions(2)
       try {
         await appContainer.apolloClient
           .query({
@@ -624,6 +629,7 @@ describe('Asset Resolvers', (): void => {
     )
 
     test('Returns error for unknown asset', async (): Promise<void> => {
+      expect.assertions(2)
       try {
         await appContainer.apolloClient
           .mutate({
@@ -703,6 +709,7 @@ describe('Asset Resolvers', (): void => {
     })
 
     test('Returns error for unknown asset', async (): Promise<void> => {
+      expect.assertions(2)
       try {
         await appContainer.apolloClient
           .mutate({
@@ -746,6 +753,7 @@ describe('Asset Resolvers', (): void => {
         throw new Error('unexpected')
       })
 
+      expect.assertions(2)
       try {
         await appContainer.apolloClient
           .mutate({

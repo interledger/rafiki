@@ -677,6 +677,7 @@ describe('IlpPaymentService', (): void => {
 
       mockIlpPay({}, Object.keys(retryableIlpErrors)[0] as Pay.PaymentError)
 
+      expect.assertions(4)
       try {
         await ilpPaymentService.pay({
           receiver,
