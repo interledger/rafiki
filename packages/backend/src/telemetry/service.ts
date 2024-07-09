@@ -47,8 +47,8 @@ class TelemetryServiceImpl implements TelemetryService {
   private internalRatesService: RatesService
   private aseRatesService: RatesService
 
-  private counters = new Map()
-  private histograms = new Map()
+  private counters: Map<string, Counter> = new Map()
+  private histograms: Map<string, Histogram> = new Map()
   constructor(private deps: TelemetryServiceDependencies) {
     // debug logger:
     // diag.setLogger(new DiagConsoleLogger(), DiagLogLevel.DEBUG)
