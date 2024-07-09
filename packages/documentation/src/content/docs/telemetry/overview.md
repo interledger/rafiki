@@ -60,7 +60,7 @@ If an ASE does not provide the necessary exchange rate for a transaction, the te
 
 ## Instrumentation
 
-Rafiki currently has two counter metrics. All data points (counter increases) are exported to collection endpoints at a configurable interval (default recommended to 15s).
+Rafiki currently has three counter metrics. All data points (counter increases and histogram records) are exported to collection endpoints at a configurable interval (default recommended to 15s).
 
 Currently collected metrics:
 
