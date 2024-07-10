@@ -1,20 +1,24 @@
 services:
   cloud-nine-backend:
     environment:
+      ENABLE_TELEMETRY: true
+      LIVENET: false
       OPEN_TELEMETRY_COLLECTOR_URLS: http://otel-collector:4317
 
   happy-life-backend:
     environment:
+      ENABLE_TELEMETRY: true
+      LIVENET: false
       OPEN_TELEMETRY_COLLECTOR_URLS: http://otel-collector:4317
 
   otel-collector:
     hostname: otel-collector
     image: otel/opentelemetry-collector:latest
+    command: "--config=/etc/otel-collector-config.yaml"
     networks:
       - rafiki
     volumes:
       - ../telemetry/otel-collector-config.yaml:/etc/otel-collector-config.yaml
-    command: ["--config", "/etc/otel-collector-config.yaml"]
 
   prometheus:
     image: prom/prometheus:latest
@@ -39,17 +43,5 @@ services:
       - GF_AUTH_ANONYMOUS_ENABLED=true
       - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
 
-  tempo:
-    image: grafana/tempo:latest
-    networks:
-    - rafiki
-    ports:
-      - "3200:3200"
-    volumes:
-      - ../telemetry/tempo.yaml:/etc/tempo.yaml
-      - tempo-data:/var/tempo
-    command: ["-config.file=/etc/tempo.yaml"]
-
 volumes:
   grafana_storage:
-  tempo-data:
