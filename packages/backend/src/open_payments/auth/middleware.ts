@@ -128,12 +128,12 @@ export function createTokenIntrospectionMiddleware({
 
       if (
         requestAction === AccessAction.Read &&
-        access.actions.includes(AccessAction.ReadAll)
+        (access as Access).actions.includes(AccessAction.ReadAll)
       ) {
         ctx.accessAction = AccessAction.ReadAll
       } else if (
         requestAction === AccessAction.List &&
-        access.actions.includes(AccessAction.ListAll)
+        (access as Access).actions.includes(AccessAction.ListAll)
       ) {
         ctx.accessAction = AccessAction.ListAll
       } else {
