@@ -10,8 +10,8 @@ import { LedgerAccount } from './ledger-account/model'
 import { createLedgerAccount } from '../../tests/ledgerAccount'
 import { getAccountBalances } from './balance'
 import { ServiceDependencies } from './service'
+import { LedgerTransferState } from '../service'
 import { createLedgerTransfer } from '../../tests/ledgerTransfer'
-import { LedgerTransferState } from './ledger-transfer/model'
 
 describe('Balances', (): void => {
   let serviceDeps: ServiceDependencies

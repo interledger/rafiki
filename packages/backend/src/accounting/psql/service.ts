@@ -35,6 +35,7 @@ import {
   getAccountTransfers
 } from './ledger-transfer'
 import { LedgerTransfer, LedgerTransferType } from './ledger-transfer/model'
+import { tbTransferToLedgerTransfer } from '../tigerbeetle/utils'
 
 export interface ServiceDependencies extends BaseService {
   knex: TransactionOrKnex
@@ -74,26 +75,8 @@ export function createAccountingService(
     postWithdrawal: (withdrawalRef) => postTransfers(deps, [withdrawalRef]),
     voidWithdrawal: (withdrawalRef) => voidTransfers(deps, [withdrawalRef]),
     getAccountTransfers: (id, limit, trx) =>
-      getAccountTransfersAndMap(deps, id, limit, trx)
+      getAccountTransfers(deps, id, limit, trx)
   }
-}
-
-async function getAccountTransfersAndMap(
-  deps: ServiceDependencies,
-  id: string,
-  limit: number = 100_000,
-  trx?: TransactionOrKnex
-): Promise<GetLedgerTransfersResult> {
-  const accountTransfers = await getAccountTransfers(deps, id, limit, trx)
-  const returnVal = { credits: [], debits: [] }
-  if (
-    !accountTransfers ||
-    (accountTransfers.credits.length === 0 &&
-      accountTransfers.debits.length === 0)
-  )
-    return returnVal
-
-  return returnVal
 }
 
 export async function createLiquidityAccount(

@@ -181,6 +181,11 @@ describe('Psql Accounting Service', (): void => {
       ])
 
       const amount = 10n
+      const accTransfersEmpty = await accountingService.getAccountTransfers(
+        settlementAccount.id
+      )
+      expect(accTransfersEmpty.debits.length).toEqual(0)
+      expect(accTransfersEmpty.credits.length).toEqual(0)
 
       await createLedgerTransfer(
         {

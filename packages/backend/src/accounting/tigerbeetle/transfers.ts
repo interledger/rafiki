@@ -169,7 +169,7 @@ export async function createTransfers(
 
 export async function getAccountTransfers(
   deps: ServiceDependencies,
-  id: string,
+  id: string | number,
   limit: number = 100_000
 ): Promise<GetLedgerTransfersResult> {
   const account_id = toTigerBeetleId(id)

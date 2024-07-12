@@ -3,12 +3,7 @@ import { Model, QueryContext } from 'objection'
 import { Asset } from '../../../asset/model'
 import { BaseModel } from '../../../shared/baseModel'
 import { LedgerAccount } from '../ledger-account/model'
-
-export enum LedgerTransferState {
-  PENDING = 'PENDING',
-  POSTED = 'POSTED',
-  VOIDED = 'VOIDED'
-}
+import { LedgerTransferState } from '../../service'
 
 export enum LedgerTransferType {
   WITHDRAWAL = 'WITHDRAWAL',

@@ -20,7 +20,9 @@ import {
   Deposit,
   LiquidityAccount,
   LiquidityAccountType,
-  Withdrawal
+  Withdrawal,
+  LedgerTransferState,
+  TransferType
 } from '../service'
 
 describe('TigerBeetle Accounting Service', (): void => {
@@ -172,13 +174,62 @@ describe('TigerBeetle Accounting Service', (): void => {
     })
   })
 
+  describe('Get Accounting Transfers', (): void => {
+    test('Returns empty for nonexistent account', async (): Promise<void> => {
+      await expect(
+        accountingService.getAccountTransfers(uuid())
+      ).resolves.toMatchObject({
+        credits: [],
+        debits: []
+      })
+    })
+  })
+
   describe('Get Account Total Received', (): void => {
-    test("Can retrieve an account's total amount received", async (): Promise<void> => {
+    test("Can retrieve an account's total amount received and accounting transfers", async (): Promise<void> => {
       const amount = BigInt(10)
       const { id } = await accountFactory.build({ balance: amount })
       await expect(accountingService.getTotalReceived(id)).resolves.toEqual(
         amount
       )
+      const debitAccount = '00000000-0000-0000-0000-000000000007'
+      const ledger = 7
+      const accTransfersCredit = await accountingService.getAccountTransfers(id)
+      expect(accTransfersCredit.debits.length).toEqual(0)
+      expect(accTransfersCredit.credits.length).toEqual(1)
+      const transferCredit = accTransfersCredit.credits[0]
+      expect(transferCredit).toMatchObject({
+        creditAccount: id,
+        debitAccount: debitAccount,
+        type: TransferType.DEPOSIT,
+        amount: amount,
+        state: LedgerTransferState.POSTED,
+        ledger: ledger,
+        timeout: 0,
+        userData128: 0n
+      })
+      expect(transferCredit.timestamp).toBeGreaterThan(0)
+      expect(transferCredit.transferRef).toBeUndefined()
+      expect(transferCredit.expiresAt).toBeUndefined()
+
+      const accTransfersDebit =
+        await accountingService.getAccountTransfers(ledger)
+      expect(accTransfersDebit.debits.length).toEqual(1)
+      expect(accTransfersDebit.credits.length).toEqual(0)
+      const transferDebit = accTransfersDebit.debits[0]
+      expect(transferDebit).toMatchObject({
+        creditAccount: id,
+        debitAccount: debitAccount,
+        type: TransferType.DEPOSIT,
+        amount: amount,
+        state: LedgerTransferState.POSTED,
+        ledger: ledger,
+        timeout: 0,
+        userData128: 0n
+      })
+      expect(transferDebit.timestamp).toBeGreaterThan(0)
+      expect(transferDebit.transferRef).toBeUndefined()
+      expect(transferDebit.expiresAt).toBeUndefined()
     })
 
     test('Returns undefined for nonexistent account', async (): Promise<void> => {

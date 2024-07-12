@@ -1,5 +1,5 @@
 import { LedgerAccount } from './ledger-account/model'
-import { LedgerTransferState } from './ledger-transfer/model'
+import { LedgerTransferState } from '../service'
 import { ServiceDependencies } from './service'
 import { getAccountTransfers } from './ledger-transfer'
 import { TransactionOrKnex } from 'objection'

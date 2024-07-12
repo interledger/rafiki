@@ -7,11 +7,8 @@ import { Asset } from '../../../asset/model'
 import { randomAsset } from '../../../tests/asset'
 import { truncateTables } from '../../../tests/tableManager'
 import { LedgerAccount, LedgerAccountType } from '../ledger-account/model'
-import {
-  LedgerTransfer,
-  LedgerTransferState,
-  LedgerTransferType
-} from './model'
+import { LedgerTransfer, LedgerTransferType } from './model'
+import { LedgerTransferState, TransferType } from '../../service'
 import { createLedgerAccount } from '../../../tests/ledgerAccount'
 import { createLedgerTransfer } from '../../../tests/ledgerTransfer'
 import {
@@ -405,16 +402,12 @@ describe('Ledger Transfer', (): void => {
           },
           knex
         )
-
-        await expect(
-          getAccountTransfers(
-            serviceDeps,
-            accountType === 'credit' ? creditAccount.id : debitAccount.id
-          )
-        ).resolves.toEqual(
-          accountType === 'credit'
-            ? { credits: [transfer], debits: [] }
-            : { credits: [], debits: [transfer] }
+        await testRetrieveTransfers(
+          serviceDeps,
+          accountType,
+          creditAccount,
+          debitAccount,
+          transfer
         )
       }
     )
@@ -436,16 +429,12 @@ describe('Ledger Transfer', (): void => {
           },
           knex
         )
-
-        await expect(
-          getAccountTransfers(
-            serviceDeps,
-            accountType === 'credit' ? creditAccount.id : debitAccount.id
-          )
-        ).resolves.toEqual(
-          accountType === 'credit'
-            ? { credits: [transfer], debits: [] }
-            : { credits: [], debits: [transfer] }
+        await testRetrieveTransfers(
+          serviceDeps,
+          accountType,
+          creditAccount,
+          debitAccount,
+          transfer
         )
       }
     )
@@ -467,16 +456,12 @@ describe('Ledger Transfer', (): void => {
           },
           knex
         )
-
-        await expect(
-          getAccountTransfers(
-            serviceDeps,
-            accountType === 'credit' ? creditAccount.id : debitAccount.id
-          )
-        ).resolves.toEqual(
-          accountType === 'credit'
-            ? { credits: [transfer], debits: [] }
-            : { credits: [], debits: [transfer] }
+        await testRetrieveTransfers(
+          serviceDeps,
+          accountType,
+          creditAccount,
+          debitAccount,
+          transfer
         )
       }
     )
@@ -759,3 +744,30 @@ describe('Ledger Transfer', (): void => {
     })
   })
 })
+
+async function testRetrieveTransfers(
+  serviceDeps: ServiceDependencies,
+  accountType: string,
+  creditAccount: LedgerAccount,
+  debitAccount: LedgerAccount,
+  ledgerTransfer: LedgerTransfer
+) {
+  const isCredit = accountType === 'credit'
+  const accTransfers = await getAccountTransfers(
+    serviceDeps,
+    isCredit ? creditAccount.id : debitAccount.id
+  )
+  const transfer = isCredit ? accTransfers.credits[0] : accTransfers.debits[0]
+  expect(transfer).toMatchObject({
+    id: ledgerTransfer.id,
+    amount: ledgerTransfer.amount,
+    timeout: 0,
+    timestamp: BigInt(ledgerTransfer.createdAt.getTime()),
+    userData128: 0n,
+    type: TransferType.DEPOSIT,
+    state: ledgerTransfer.state,
+    ledger: ledgerTransfer.ledger,
+    transferRef: ledgerTransfer.transferRef,
+    expiresAt: ledgerTransfer.expiresAt
+  })
+}

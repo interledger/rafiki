@@ -6,31 +6,32 @@ import { initIocContainer } from '../..'
 import { Config } from '../../config/app'
 import { truncateTables } from '../../tests/tableManager'
 import { AccountingTransferConnection } from '../generated/graphql'
-import { createWalletAddress } from '../../tests/walletAddress'
-import { createIncomingPayment } from '../../tests/incomingPayment'
-import { createOutgoingPayment } from '../../tests/outgoingPayment'
 import { createAsset } from '../../tests/asset'
 import { v4 as uuid } from 'uuid'
-import { Asset } from '../../asset/model'
 import {
-  createCombinedPayment,
-  toCombinedPayment
-} from '../../tests/combinedPayment'
-import { PaymentType } from '../../open_payments/payment/combined/model'
-import { getPageTests } from './page.test'
+  AccountingService,
+  LedgerTransferState,
+  LiquidityAccountType
+} from '../../accounting/service'
+import {
+  LedgerTransfer,
+  LedgerTransferType
+} from '../../accounting/psql/ledger-transfer/model'
+import { LedgerAccount } from '../../accounting/psql/ledger-account/model'
 
 describe('Accounting Transfer', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
-  let asset: Asset
+  let accountingService: AccountingService
 
   beforeAll(async (): Promise<void> => {
     deps = initIocContainer(Config)
     appContainer = await createTestApp(deps)
+    accountingService = await deps.use('accountingService')
   })
 
   beforeEach(async (): Promise<void> => {
-    asset = await createAsset(deps)
+    await createAsset(deps)
   })
 
   afterEach(async (): Promise<void> => {
@@ -42,45 +43,83 @@ describe('Accounting Transfer', (): void => {
     await appContainer.shutdown()
   })
 
-  getPageTests({
-    getClient: () => appContainer.apolloClient,
-    createModel: () => createCombinedPayment(deps),
-    pagedQuery: 'payments'
-  })
-
-  test('Can get payments', async (): Promise<void> => {
-    const { id: outWalletAddressId } = await createWalletAddress(deps, {
-      assetId: asset.id
-    })
-
-    const client = 'client-test'
-    const outgoingPayment = await createOutgoingPayment(deps, {
-      walletAddressId: outWalletAddressId,
-      client: client,
-      method: 'ilp',
-      receiver: `${Config.openPaymentsUrl}/${uuid()}`,
-      debitAmount: {
-        value: BigInt(56),
-        assetCode: asset.code,
-        assetScale: asset.scale
+  test('Can get ledger transfer', async (): Promise<void> => {
+    const accountDebit = await accountingService.createLiquidityAccount(
+      {
+        id: uuid(),
+        asset: {
+          id: uuid(),
+          ledger: 1
+        }
       },
-      validDestination: false
+      LiquidityAccountType.WEB_MONETIZATION
+    )
+    await accountingService.createLiquidityAccount(
+      {
+        id: accountDebit.asset.id,
+        asset: {
+          id: uuid(),
+          ledger: 1
+        }
+      },
+      LiquidityAccountType.WEB_MONETIZATION
+    )
+    const accountCredit = await accountingService.createLiquidityAccount(
+      {
+        id: uuid(),
+        asset: {
+          id: uuid(),
+          ledger: 1
+        }
+      },
+      LiquidityAccountType.WEB_MONETIZATION
+    )
+    await accountingService.createLiquidityAccount(
+      {
+        id: accountCredit.asset.id,
+        asset: {
+          id: uuid(),
+          ledger: 1
+        }
+      },
+      LiquidityAccountType.WEB_MONETIZATION
+    )
+
+    const accountDebitLedger = await LedgerAccount.query(
+      appContainer.knex
+    ).where({
+      accountRef: accountDebit.id
+    })
+    const accountCreditLedger = await LedgerAccount.query(
+      appContainer.knex
+    ).where({
+      accountRef: accountCredit.id
+    })
+    // Top up debit account first:
+    const insertedTransfer = await LedgerTransfer.query(
+      appContainer.knex
+    ).insert({
+      amount: 123n,
+      debitAccount: accountDebitLedger[0],
+      debitAccountId: accountDebitLedger[0].id,
+      creditAccount: accountCreditLedger[0],
+      creditAccountId: accountCreditLedger[0].id,
+      ledger: 1,
+      state: LedgerTransferState.POSTED,
+      transferRef: uuid(),
+      type: LedgerTransferType.DEPOSIT
     })
 
-    const { id: inWalletAddressId } = await createWalletAddress(deps, {
-      assetId: asset.id
-    })
-    const incomingPayment = await createIncomingPayment(deps, {
-      walletAddressId: inWalletAddressId,
-      client: client
-    })
+    /*const deposit = await accountingService.createDeposit({
+      account: accountDebit, amount: 20000n, id: uuid()
+    })*/
+    const accountDebitId = accountDebitLedger[0].id
 
     const input = {
-      inWalletAddressId,
+      accountDebitId,
       limit: 100_000
     }
-
-    const query = await appContainer.apolloClient
+    const response = await appContainer.apolloClient
       .query({
         query: gql`
           query AccountingTransfers($id: String!, $limit: Int!) {
@@ -107,44 +146,25 @@ describe('Accounting Transfer', (): void => {
           }
         `,
         variables: {
-          id: input.inWalletAddressId,
+          id: input.accountDebitId,
           limit: input.limit
         }
       })
       .then((query): AccountingTransferConnection => {
         if (query.data) {
-          return query.data
+          return query.data.accountingTransfers
         } else {
           throw new Error('Data was empty')
         }
       })
 
-    expect(query.debits).toHaveLength(1)
-    expect(query.credits).toHaveLength(1)
+    expect(response.debits).toBeDefined()
+    expect(response.credits).toBeDefined()
+    expect(response.debits).toHaveLength(1)
+    expect(response.credits).toHaveLength(0)
 
-    const combinedOutgoingPayment = toCombinedPayment(
-      PaymentType.Outgoing,
-      outgoingPayment
-    )
-    expect(query.debits[0]).toMatchObject({
-      id: combinedOutgoingPayment.id,
-      type: combinedOutgoingPayment.type,
-      metadata: combinedOutgoingPayment.metadata,
-      walletAddressId: combinedOutgoingPayment.walletAddressId,
-      client: combinedOutgoingPayment.client,
-      state: combinedOutgoingPayment.state,
-      createdAt: combinedOutgoingPayment.createdAt.toISOString(),
-      liquidity: '0'
-    })
-    expect(query.credits[0]).toMatchObject({
-      id: combinedOutgoingPayment.id,
-      type: combinedOutgoingPayment.type,
-      metadata: combinedOutgoingPayment.metadata,
-      walletAddressId: combinedOutgoingPayment.walletAddressId,
-      client: combinedOutgoingPayment.client,
-      state: combinedOutgoingPayment.state,
-      createdAt: combinedOutgoingPayment.createdAt.toISOString(),
-      liquidity: '0'
+    expect(response.debits[0]).toMatchObject({
+      id: insertedTransfer.id
     })
   })
 })

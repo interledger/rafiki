@@ -1,6 +1,6 @@
 import { validateId } from '../../shared/utils'
-import { Transfer as TbTransfer } from 'tigerbeetle-node/dist/bindings'
-import { LedgerTransfer, TransferType } from '../service'
+import { Transfer as TbTransfer, TransferFlags } from 'tigerbeetle-node'
+import { LedgerTransfer, LedgerTransferState, TransferType } from '../service'
 import { TigerBeetleTransferCode } from './service'
 
 export type AccountId = string | number | bigint
@@ -55,6 +55,13 @@ function transferTypeFromCode(code: number): TransferType {
 export function tbTransferToLedgerTransfer(
   tbTransfer: TbTransfer
 ): LedgerTransfer {
+  let state
+  const flags = tbTransfer.flags
+  if (TransferFlags.pending & flags) state = LedgerTransferState.PENDING
+  else if (TransferFlags.void_pending_transfer & flags)
+    state = LedgerTransferState.VOIDED
+  else state = LedgerTransferState.POSTED
+
   return {
     id: fromTigerBeetleId(tbTransfer.id),
     amount: tbTransfer.amount,
@@ -63,7 +70,8 @@ export function tbTransferToLedgerTransfer(
     timeout: tbTransfer.timeout,
     timestamp: tbTransfer.timestamp,
     userData128: tbTransfer.user_data_128,
-    transferType: transferTypeFromCode(tbTransfer.code),
+    type: transferTypeFromCode(tbTransfer.code),
+    state: state,
     ledger: tbTransfer.ledger
   }
 }

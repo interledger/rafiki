@@ -17,6 +17,12 @@ export enum TransferType {
   DEFAULT = 'DEFAULT'
 }
 
+export enum LedgerTransferState {
+  PENDING = 'PENDING',
+  POSTED = 'POSTED',
+  VOIDED = 'VOIDED'
+}
+
 export interface LiquidityAccountAsset {
   id: string
   code?: string
@@ -81,8 +87,11 @@ export interface LedgerTransfer extends BaseTransfer {
   timeout: number
   timestamp: bigint
   userData128: bigint
-  transferType: TransferType
+  type: TransferType
+  state: LedgerTransferState
   ledger: number
+  transferRef?: string
+  expiresAt?: Date
 }
 
 export interface AccountingService {
@@ -116,8 +125,8 @@ export interface AccountingService {
   postWithdrawal(id: string): Promise<void | TransferError>
   voidWithdrawal(id: string): Promise<void | TransferError>
   getAccountTransfers(
-    id: string,
-    limit: number,
+    id: string | number,
+    limit?: number,
     trx?: TransactionOrKnex
   ): Promise<GetLedgerTransfersResult>
 }

@@ -5,11 +5,7 @@ import {
   TransferType as SchemaTransferType
 } from '../generated/graphql'
 import { ApolloContext } from '../../app'
-import {
-  GetLedgerTransfersResult,
-  LedgerTransfer,
-  TransferType
-} from '../../accounting/service'
+import { LedgerTransfer, TransferType } from '../../accounting/service'
 
 export const getAccountingTransfers: QueryResolvers<ApolloContext>['accountingTransfers'] =
   async (
@@ -20,11 +16,12 @@ export const getAccountingTransfers: QueryResolvers<ApolloContext>['accountingTr
     const accountingService = await ctx.container.use('accountingService')
     const { id, limit } = args
 
-    const accountTransfers = await accountingService.getAccountTransfers(id, limit)
+    const accountTransfers = await accountingService.getAccountTransfers(
+      id,
+      limit
+    )
     return {
-      debits: accountTransfers.debits.map((debit) =>
-        transferToGraphql(debit)
-      ),
+      debits: accountTransfers.debits.map((debit) => transferToGraphql(debit)),
       credits: accountTransfers.credits.map((credit) =>
         transferToGraphql(credit)
       )
@@ -41,11 +38,14 @@ export function transferToGraphql(
     creditAccount: transfer.creditAccount,
     amount: transfer.amount,
     ledger: transfer.ledger,
-    transferType: transferTypeToGraphql(transfer.transferType)
+    transferType: transferTypeToGraphql(transfer.type)
   }
 }
 
-function transferTypeToGraphql(type: TransferType): SchemaTransferType {
+function transferTypeToGraphql(
+  type: TransferType
+): SchemaTransferType /* | undefined*/ {
+  //return (SchemaTransferType as any)[type.valueOf()] || undefined;
   switch (type) {
     case TransferType.TRANSFER:
       return SchemaTransferType.Transfer
