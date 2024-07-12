@@ -1,32 +1,5 @@
 import { isDeepStrictEqual } from 'util'
-import { AccessItem } from '@interledger/open-payments'
-import { Access } from './model'
-
-export function grantHasAccess(
-  requestAccessItem: AccessItem,
-  grantAccessItem: Access
-): boolean {
-  const { actions: requestAccessItemActions, ...restOfRequestAccessItem } =
-    requestAccessItem
-  const { actions: grantAccessItemActions } = grantAccessItem
-
-  for (const actionItem of requestAccessItemActions) {
-    if (
-      !grantAccessItemActions.includes(actionItem) &&
-      !(actionItem === 'read' && grantAccessItemActions.includes('read-all')) &&
-      !(actionItem === 'list' && grantAccessItemActions.includes('list-all'))
-    )
-      return false
-  }
-  for (const key of Object.keys(restOfRequestAccessItem)) {
-    if (
-      restOfRequestAccessItem[key as keyof typeof restOfRequestAccessItem] !==
-      grantAccessItem[key as keyof Access]
-    )
-      return false
-  }
-  return true
-}
+import { AccessItem, AccessAction } from '@interledger/open-payments'
 
 export function compareRequestAndGrantAccessItems(
   requestAccessItem: AccessItem,
@@ -40,7 +13,12 @@ export function compareRequestAndGrantAccessItems(
   for (const actionItem of requestAccessItemActions) {
     if (
       !grantAccessItemActions.find(
-        (grantAccessItem) => grantAccessItem === actionItem
+        (grantAccessAction) =>
+          grantAccessAction === actionItem ||
+          (actionItem === AccessAction.Read &&
+            grantAccessAction === AccessAction.ReadAll) ||
+          (actionItem === AccessAction.List &&
+            grantAccessAction === AccessAction.ListAll)
       )
     )
       return false

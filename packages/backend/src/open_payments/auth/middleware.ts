@@ -16,8 +16,11 @@ import {
   JWKS,
   OpenPaymentsClientError
 } from '@interledger/open-payments'
-import { TokenInfo } from 'token-introspection'
-import { isActiveTokenInfo } from 'token-introspection'
+import {
+  TokenInfo,
+  isActiveTokenInfo,
+  findAccessInToken
+} from 'token-introspection'
 import { Config } from '../../config/app'
 import { OpenPaymentsServerRouteError } from '../route-errors'
 
@@ -55,12 +58,14 @@ function contextToRequestLike(ctx: HttpSigContext): RequestLike {
 
 function toOpenPaymentsAccess(
   type: AccessType,
-  action: RequestAction
+  action: RequestAction,
+  identifier?: string
 ): AccessItem {
   return {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     type: type as any,
-    actions: [action]
+    actions: [action],
+    identifier: identifier ?? undefined
   }
 }
 
@@ -94,7 +99,13 @@ export function createTokenIntrospectionMiddleware({
       try {
         tokenInfo = await tokenIntrospectionClient.introspect({
           access_token: token,
-          access: [toOpenPaymentsAccess(requestType, requestAction)]
+          access: [
+            toOpenPaymentsAccess(
+              requestType,
+              requestAction,
+              ctx.walletAddressUrl
+            )
+          ]
         })
       } catch (err) {
         throw new OpenPaymentsServerRouteError(401, 'Invalid Token')
@@ -103,41 +114,32 @@ export function createTokenIntrospectionMiddleware({
         throw new OpenPaymentsServerRouteError(403, 'Inactive Token')
       }
 
-      // TODO
-      // https://github.com/interledger/rafiki/issues/835
-      const access = tokenInfo.access.find((access: Access) => {
-        if (
-          access.type !== requestType ||
-          (access.identifier && access.identifier !== ctx.walletAddressUrl)
-        ) {
-          return false
-        }
-        if (
-          requestAction === AccessAction.Read &&
-          access.actions.includes(AccessAction.ReadAll)
-        ) {
-          ctx.accessAction = AccessAction.ReadAll
-          return true
-        }
-        if (
-          requestAction === AccessAction.List &&
-          access.actions.includes(AccessAction.ListAll)
-        ) {
-          ctx.accessAction = AccessAction.ListAll
-          return true
-        }
-        return access.actions.find((tokenAction: AccessAction) => {
-          if (isActiveTokenInfo(tokenInfo) && tokenAction === requestAction) {
-            ctx.accessAction = requestAction
-            return true
-          }
-          return false
-        })
+      const access = findAccessInToken(tokenInfo, {
+        type: requestType,
+        action: requestAction,
+        identifier: ctx.walletAddressUrl
       })
-
       if (!access) {
-        throw new OpenPaymentsServerRouteError(403, 'Insufficient Grant')
+        throw new OpenPaymentsServerRouteError(
+          403,
+          'Token info access does not match request access'
+        )
       }
+
+      if (
+        requestAction === AccessAction.Read &&
+        access.actions.includes(AccessAction.ReadAll)
+      ) {
+        ctx.accessAction = AccessAction.ReadAll
+      } else if (
+        requestAction === AccessAction.List &&
+        access.actions.includes(AccessAction.ListAll)
+      ) {
+        ctx.accessAction = AccessAction.ListAll
+      } else {
+        ctx.accessAction = requestAction
+      }
+
       ctx.client = tokenInfo.client
       if (
         requestType === AccessType.OutgoingPayment &&
@@ -242,7 +244,7 @@ export const throwIfSignatureInvalid = async (ctx: HttpSigContext) => {
   } catch (err) {
     logger.error(
       { err, requestLike },
-      'Received unhandled eror when trying to validate signature'
+      'Received unhandled error when trying to validate signature'
     )
   }
 

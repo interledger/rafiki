@@ -112,7 +112,7 @@ describe('Auth Middleware', (): void => {
       } catch (err) {
         assert(err instanceof Error)
         assert(!(err instanceof OpenPaymentsServerRouteError))
-        expect(err.message).toBe('tokenInfo.access.find is not a function')
+        expect(err.message).toBe('tokenInfo.access?.find is not a function')
       }
 
       expect(ctx.response.get('WWW-Authenticate')).not.toBe(
@@ -173,7 +173,8 @@ describe('Auth Middleware', (): void => {
       access: [
         {
           type: type,
-          actions: [action]
+          actions: [action],
+          identifier: ctx.walletAddressUrl
         }
       ]
     })
@@ -197,7 +198,8 @@ describe('Auth Middleware', (): void => {
       access: [
         {
           type: type,
-          actions: [action]
+          actions: [action],
+          identifier: ctx.walletAddressUrl
         }
       ]
     })
@@ -266,7 +268,8 @@ describe('Auth Middleware', (): void => {
             access: [
               {
                 type,
-                actions: [action]
+                actions: [action],
+                identifier: ctx.walletAddressUrl
               }
             ]
           })
@@ -287,7 +290,8 @@ describe('Auth Middleware', (): void => {
             access: [
               {
                 type,
-                actions: [action]
+                actions: [action],
+                identifier: ctx.walletAddressUrl
               }
             ]
           })
@@ -323,7 +327,8 @@ describe('Auth Middleware', (): void => {
               access: [
                 {
                   type,
-                  actions: [subAction]
+                  actions: [subAction],
+                  identifier: ctx.walletAddressUrl
                 }
               ]
             })
@@ -350,7 +355,8 @@ describe('Auth Middleware', (): void => {
               access: [
                 {
                   type,
-                  actions: [superAction]
+                  actions: [superAction],
+                  identifier: ctx.walletAddressUrl
                 }
               ]
             })
@@ -410,7 +416,8 @@ describe('Auth Middleware', (): void => {
                 access: [
                   {
                     type,
-                    actions: [action]
+                    actions: [action],
+                    identifier: ctx.walletAddressUrl
                   }
                 ]
               })
@@ -436,14 +443,15 @@ describe('Auth Middleware', (): void => {
             .mockResolvedValueOnce(tokenInfo)
           await expect(middleware(ctx, next)).rejects.toMatchObject({
             status: 403,
-            message: 'Insufficient Grant'
+            message: 'Token info access does not match request access'
           })
           expect(introspectSpy).toHaveBeenCalledWith({
             access_token: token,
             access: [
               {
                 type,
-                actions: [action]
+                actions: [action],
+                identifier: ctx.walletAddressUrl
               }
             ]
           })

@@ -1,6 +1,7 @@
 import { HttpMethod, ResponseValidator } from '@interledger/openapi'
+import { AccessAction, AccessItem } from '@interledger/open-payments'
 import { BaseDeps, RouteDeps } from '.'
-import { IntrospectArgs, TokenInfo } from '../types'
+import { IntrospectArgs, TokenInfo, isActiveTokenInfo } from '../types'
 
 export interface IntrospectionRoutes {
   introspect(args: IntrospectArgs): Promise<TokenInfo>
@@ -58,7 +59,7 @@ export const introspectToken = async (
       throw new Error(errorMessage)
     }
 
-    return validateTokenInfo(data)
+    return data
   } catch (error) {
     const errorMessage = `Error when making introspection request: ${
       error instanceof Error && error.message ? error.message : 'Unknown error'
@@ -69,11 +70,46 @@ export const introspectToken = async (
   }
 }
 
-export const validateTokenInfo = (tokenInfo: TokenInfo): TokenInfo => {
-  // TODO: tokenInfo.access must include args.access
-  // https://github.com/interledger/rafiki/issues/835
-  // throw new Error(
-  //   'Token info access does not match request access'
-  // )
-  return tokenInfo
+interface Access {
+  type: string
+  actions: AccessAction[]
+  identifier?: string
+}
+
+interface RequestAccessItem {
+  type: string
+  action: AccessAction
+  identifier?: string
+}
+
+export const findAccessInToken = (
+  tokenInfo: TokenInfo,
+  access: RequestAccessItem
+): AccessItem | undefined => {
+  return tokenInfo.access?.find((tokenAccess: Access) => {
+    if (
+      tokenAccess.type !== access.type ||
+      (tokenAccess.identifier && tokenAccess.identifier !== access.identifier)
+    ) {
+      return false
+    }
+    if (
+      access.action === AccessAction.Read &&
+      tokenAccess.actions.includes(AccessAction.ReadAll)
+    ) {
+      return true
+    }
+    if (
+      access.action === AccessAction.List &&
+      tokenAccess.actions.includes(AccessAction.ListAll)
+    ) {
+      return true
+    }
+    return tokenAccess.actions.find((tokenAction: AccessAction) => {
+      if (isActiveTokenInfo(tokenInfo) && tokenAction === access.action) {
+        return true
+      }
+      return false
+    })
+  })
 }
