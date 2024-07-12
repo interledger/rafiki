@@ -19,7 +19,7 @@ import {
 import {
   TokenInfo,
   isActiveTokenInfo,
-  findAccessInToken
+  validateTokenAccess
 } from 'token-introspection'
 import { Config } from '../../config/app'
 import { OpenPaymentsServerRouteError } from '../route-errors'
@@ -114,7 +114,7 @@ export function createTokenIntrospectionMiddleware({
         throw new OpenPaymentsServerRouteError(403, 'Inactive Token')
       }
 
-      const access = findAccessInToken(tokenInfo, {
+      const access = validateTokenAccess(tokenInfo, {
         type: requestType,
         action: requestAction,
         identifier: ctx.walletAddressUrl

@@ -82,7 +82,7 @@ interface RequestAccessItem {
   identifier?: string
 }
 
-export const findAccessInToken = (
+export const validateTokenAccess = (
   tokenInfo: TokenInfo,
   access: RequestAccessItem
 ): AccessItem | undefined => {

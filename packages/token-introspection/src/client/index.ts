@@ -4,7 +4,7 @@ import createLogger, { Logger } from 'pino'
 import config from '../config'
 import { createIntrospectionRoutes, IntrospectionRoutes } from './introspection'
 import { getTokenIntrospectionOpenAPI } from '../openapi'
-export { findAccessInToken } from './introspection'
+export { validateTokenAccess } from './introspection'
 
 export interface BaseDeps {
   axiosInstance: AxiosInstance
