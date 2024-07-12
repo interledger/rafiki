@@ -86,6 +86,7 @@
         "y": 0
       },
       "id": 2,
+      "interval": "15s",
       "options": {
         "legend": {
           "calcs": [],
@@ -105,9 +106,10 @@
             "uid": "PBFA97CFB590B2093"
           },
           "editorMode": "code",
-          "expr": "sum by(source) (increase(transactions_amount_total[$__interval]) * 0.0001)",
+          "expr": "(increase(transactions_amount_total[30s]) * 0.5 * 0.0001)",
+          "hide": false,
           "instant": false,
-          "interval": "30s",
+          "interval": "",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
@@ -202,7 +204,8 @@
             "uid": "PBFA97CFB590B2093"
           },
           "editorMode": "code",
-          "expr": "sum by (source) (floor(increase(transactions_total[$__interval])))",
+          "expr": "sum by (source) (round(increase(transactions_total[30s]) * 0.5))",
+          "hide": false,
           "instant": false,
           "interval": "",
           "legendFormat": "__auto",
