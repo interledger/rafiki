@@ -74,18 +74,16 @@ class TelemetryServiceImpl implements TelemetryService {
       resource: new Resource({ 'service.name': SERVICE_NAME })
     })
 
-    deps.collectorUrls.forEach((url) => {
-      const metricExporter = new OTLPMetricExporter({
-        url: url
+    this.meterProvider = new MeterProvider({
+      resource: new Resource({ 'service.name': SERVICE_NAME }),
+      readers: deps.collectorUrls.map((url) => {
+        return new PeriodicExportingMetricReader({
+          exporter: new OTLPMetricExporter({
+            url
+          }),
+          exportIntervalMillis: deps.exportIntervalMillis ?? 15000
+        })
       })
-
-      const metricReader = new PeriodicExportingMetricReader({
-        exporter: metricExporter,
-        exportIntervalMillis: deps.exportIntervalMillis ?? 15000
-      })
-
-      // TODO: update deprecated method
-      this.meterProvider?.addMetricReader(metricReader)
     })
 
     metrics.setGlobalMeterProvider(this.meterProvider)
