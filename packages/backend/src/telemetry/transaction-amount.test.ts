@@ -19,13 +19,7 @@ describe('Telemetry Amount Collection', function () {
         Promise.resolve(ConvertError.InvalidDestinationPrice)
       )
 
-    const addSpy = jest.spyOn(
-      telemetryService.getOrCreateMetric('transactions_amount', {
-        description: 'Amount sent through the network',
-        valueType: ValueType.DOUBLE
-      }),
-      'add'
-    )
+    const incrementCounterSpy = jest.spyOn(telemetryService, 'incrementCounter')
 
     await collectTelemetryAmount(telemetryService, mockLogger, {
       amount: 100n,
@@ -33,7 +27,7 @@ describe('Telemetry Amount Collection', function () {
     })
 
     expect(convertSpy).toHaveBeenCalled()
-    expect(addSpy).not.toHaveBeenCalled()
+    expect(incrementCounterSpy).not.toHaveBeenCalled()
   })
   it('should handle invalid amount by not collecting telemetry', async () => {
     const convertSpy = jest
@@ -54,13 +48,7 @@ describe('Telemetry Amount Collection', function () {
     const convertSpy = jest
       .spyOn(telemetryService, 'convertAmount')
       .mockImplementation(() => Promise.resolve(10000n))
-    const addSpy = jest.spyOn(
-      telemetryService.getOrCreateMetric('transactions_amount', {
-        description: 'Amount sent through the network',
-        valueType: ValueType.DOUBLE
-      }),
-      'add'
-    )
+    const incrementCounterSpy = jest.spyOn(telemetryService, 'incrementCounter')
     jest.spyOn(privacy, 'applyPrivacy').mockReturnValue(12000)
 
     await collectTelemetryAmount(telemetryService, mockLogger, {
@@ -69,7 +57,11 @@ describe('Telemetry Amount Collection', function () {
     })
 
     expect(convertSpy).toHaveBeenCalled()
-    expect(addSpy).toHaveBeenCalledWith(12000)
+    expect(incrementCounterSpy).toHaveBeenCalledWith(
+      'transactions_amount',
+      12000,
+      { description: 'Amount sent through the network', valueType: 1 }
+    )
   })
 
   it('should apply privacy to the collected telemetry', async () => {
@@ -79,13 +71,7 @@ describe('Telemetry Amount Collection', function () {
     const privacySpy = jest
       .spyOn(privacy, 'applyPrivacy')
       .mockReturnValue(12000)
-    const addSpy = jest.spyOn(
-      telemetryService.getOrCreateMetric('transactions_amount', {
-        description: 'Amount sent through the network',
-        valueType: ValueType.DOUBLE
-      }),
-      'add'
-    )
+    const incrementCounterSpy = jest.spyOn(telemetryService, 'incrementCounter')
 
     await collectTelemetryAmount(telemetryService, mockLogger, {
       amount: 100n,
@@ -94,6 +80,10 @@ describe('Telemetry Amount Collection', function () {
 
     expect(convertSpy).toHaveBeenCalled()
     expect(privacySpy).toHaveBeenCalledWith(Number(10000n))
-    expect(addSpy).toHaveBeenCalledWith(12000)
+    expect(incrementCounterSpy).toHaveBeenCalledWith(
+      'transactions_amount',
+      12000,
+      { description: 'Amount sent through the network', valueType: 1 }
+    )
   })
 })

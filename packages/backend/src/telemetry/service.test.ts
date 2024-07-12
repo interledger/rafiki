@@ -6,6 +6,7 @@ import { ConvertError, RatesService } from '../rates/service'
 import { TestContainer, createTestApp } from '../tests/app'
 import { mockCounter, mockHistogram } from '../tests/telemetry'
 import { TelemetryService } from './service'
+import { Counter, Histogram } from '@opentelemetry/api'
 
 jest.mock('@opentelemetry/api', () => ({
   ...jest.requireActual('@opentelemetry/api'),
@@ -53,35 +54,71 @@ describe('TelemetryServiceImpl', () => {
     await appContainer.shutdown()
   })
 
-  it('should create a counter when getOrCreate is called for a new metric', () => {
-    const counter = telemetryService.getOrCreateMetric('testMetric')
-    expect(counter).toBe(mockCounter)
+  it('should create a counter with source attribute for a new metric', () => {
+    const name = 'test_counter'
+    const amount = 1
+    const attributes = { test: 'attribute' }
+
+    telemetryService.incrementCounter(name, amount, attributes)
+
+    expect(mockCounter.add).toHaveBeenCalledWith(
+      amount,
+      expect.objectContaining({
+        ...attributes,
+        source: expect.any(String)
+      })
+    )
   })
 
-  it('should return an existing counter when getOrCreate is called for an existing metric', () => {
-    const existingCounter = telemetryService.getOrCreateMetric('existingMetric')
-    const retrievedCounter =
-      telemetryService.getOrCreateMetric('existingMetric')
-    expect(retrievedCounter).toBe(existingCounter)
+  it('should create a histogram with source attribute for a new metric', () => {
+    const name = 'test_histogram'
+    const amount = 1
+    const attributes = { test: 'attribute' }
+
+    telemetryService.recordHistogram(name, amount, attributes)
+
+    expect(mockHistogram.record).toHaveBeenCalledWith(
+      amount,
+      expect.objectContaining({
+        ...attributes,
+        source: expect.any(String)
+      })
+    )
   })
 
-  it('should create a histogram when getOrCreateHistogramMetric is called for a new metric', () => {
-    const histogram = telemetryService.getOrCreateHistogramMetric('testMetric')
-    expect(histogram).toBe(mockHistogram)
+  it('should use existing counter when incrementCounter is called for an existing metric', () => {
+    const name = 'test_counter'
+
+    telemetryService.incrementCounter(name, 1)
+    telemetryService.incrementCounter(name, 1)
+
+    // Reflect to access private class variable
+    const counters: Map<string, any> = Reflect.get(telemetryService, 'counters')
+
+    expect(counters.size).toBe(1)
+    expect(counters.has(name)).toBe(true)
+
+    const counter: Counter = counters.get(name)
+    expect(counter.add).toHaveBeenCalledTimes(2)
   })
 
-  it('should return an existing histogram when getOrCreateHistogramMetric is called for an existing metric', () => {
-    const existingHistogram =
-      telemetryService.getOrCreateHistogramMetric('existingMetric')
-    const retrievedHistogram =
-      telemetryService.getOrCreateHistogramMetric('existingMetric')
-    expect(retrievedHistogram).toBe(existingHistogram)
-  })
+  it('should use existing histogram when recordHistogram is called for an existing metric', () => {
+    const name = 'test_histogram'
 
-  it('should return the instance name when calling getInstanceName', () => {
-    const serviceName = telemetryService.getInstanceName()
+    telemetryService.recordHistogram(name, 1)
+    telemetryService.recordHistogram(name, 1)
 
-    expect(serviceName).toBe('Rafiki')
+    // Reflect to access private class variable
+    const histograms: Map<string, any> = Reflect.get(
+      telemetryService,
+      'histograms'
+    )
+
+    expect(histograms.size).toBe(1)
+    expect(histograms.has(name)).toBe(true)
+
+    const histogram: Histogram = histograms.get(name)
+    expect(histogram.record).toHaveBeenCalledTimes(2)
   })
 
   describe('conversion', () => {

@@ -28,12 +28,14 @@ export async function collectTelemetryAmount(
       return
     }
 
-    telemetryService
-      .getOrCreateMetric('transactions_amount', {
+    telemetryService.incrementCounter(
+      'transactions_amount',
+      privacy.applyPrivacy(Number(converted)),
+      {
         description: 'Amount sent through the network',
         valueType: ValueType.DOUBLE
-      })
-      .add(privacy.applyPrivacy(Number(converted)))
+      }
+    )
   } catch (e) {
     logger.error(e, `Unable to collect telemetry`)
   }

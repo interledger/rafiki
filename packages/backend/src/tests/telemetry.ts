@@ -1,9 +1,4 @@
-import {
-  Attributes,
-  Counter,
-  Histogram,
-  MetricOptions
-} from '@opentelemetry/api'
+import { Counter, Histogram } from '@opentelemetry/api'
 import { TelemetryService } from '../telemetry/service'
 import { ConvertError, Rates, RatesService } from '../rates/service'
 import { ConvertOptions } from '../rates/util'
@@ -36,22 +31,21 @@ export class MockRatesService implements RatesService {
 export class MockTelemetryService implements TelemetryService {
   public aseRatesService = new MockRatesService()
   public internalRatesService = new MockRatesService()
-  public getOrCreateMetric(
-    _name: string,
-    _options?: MetricOptions | undefined
-  ): Counter<Attributes> {
-    return mockCounter
-  }
-  public getOrCreateHistogramMetric(
-    _name: string,
-    _options?: MetricOptions | undefined
-  ): Histogram<Attributes> {
-    return mockHistogram
-  }
+
+  incrementCounter(
+    name: string,
+    amount?: number,
+    attributes?: Record<string, unknown>
+  ): void {}
+  recordHistogram(
+    name: string,
+    value: number,
+    attributes?: Record<string, unknown>
+  ): void {}
   public getInstanceName(): string | undefined {
     return 'serviceName'
   }
-  public shutdown(): void {}
+  public async shutdown(): Promise<void> {}
 
   public async convertAmount(
     _convertOptions: Omit<ConvertOptions, 'exchangeRate'>

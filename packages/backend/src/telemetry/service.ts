@@ -11,10 +11,17 @@ import { ConvertOptions } from '../rates/util'
 import { BaseService } from '../shared/baseService'
 
 export interface TelemetryService {
-  shutdown(): void
-  getOrCreateMetric(name: string, options?: MetricOptions): Counter
-  getOrCreateHistogramMetric(name: string, options?: MetricOptions): Histogram
-  getInstanceName(): string | undefined
+  shutdown(): Promise<void>
+  incrementCounter(
+    name: string,
+    amount: number,
+    attributes?: Record<string, unknown>
+  ): void
+  recordHistogram(
+    name: string,
+    value: number,
+    attributes?: Record<string, unknown>
+  ): void
   getBaseAssetCode(): string
   getBaseScale(): number
   convertAmount(
@@ -77,6 +84,7 @@ class TelemetryServiceImpl implements TelemetryService {
         exportIntervalMillis: deps.exportIntervalMillis ?? 15000
       })
 
+      // TODO: update deprecated method
       this.meterProvider?.addMetricReader(metricReader)
     })
 
@@ -87,39 +95,49 @@ class TelemetryServiceImpl implements TelemetryService {
     await this.meterProvider?.shutdown()
   }
 
-  private createHistogram(name: string, options: MetricOptions | undefined) {
-    const histogram = metrics
-      .getMeter(METER_NAME)
-      .createHistogram(name, options)
-    this.histograms.set(name, histogram)
-    return histogram
-  }
-  public getOrCreateHistogramMetric(
-    name: string,
-    options?: MetricOptions
-  ): Histogram {
-    const existing = this.histograms.get(name)
-    if (existing) {
-      return existing
+  private getOrCreateCounter(name: string, options?: MetricOptions): Counter {
+    let counter = this.counters.get(name)
+    if (!counter) {
+      counter = metrics.getMeter(METER_NAME).createCounter(name, options)
+      this.counters.set(name, counter)
     }
-    return this.createHistogram(name, options)
-  }
-
-  private createCounter(
-    name: string,
-    options: MetricOptions | undefined
-  ): Counter {
-    const counter = metrics.getMeter(METER_NAME).createCounter(name, options)
-    this.counters.set(name, counter)
     return counter
   }
 
-  public getOrCreateMetric(name: string, options?: MetricOptions): Counter {
-    const existing = this.counters.get(name)
-    if (existing) {
-      return existing
+  private getOrCreateHistogram(
+    name: string,
+    options?: MetricOptions
+  ): Histogram {
+    let histogram = this.histograms.get(name)
+    if (!histogram) {
+      histogram = metrics.getMeter(METER_NAME).createHistogram(name, options)
+      this.histograms.set(name, histogram)
     }
-    return this.createCounter(name, options)
+    return histogram
+  }
+
+  public incrementCounter(
+    name: string,
+    amount: number,
+    attributes: Record<string, unknown> = {}
+  ): void {
+    const counter = this.getOrCreateCounter(name)
+    counter.add(amount, {
+      source: this.instanceName,
+      ...attributes
+    })
+  }
+
+  public recordHistogram(
+    name: string,
+    value: number,
+    attributes: Record<string, unknown> = {}
+  ): void {
+    const histogram = this.getOrCreateHistogram(name)
+    histogram.record(value, {
+      source: this.instanceName,
+      ...attributes
+    })
   }
 
   public async convertAmount(
@@ -149,10 +167,6 @@ class TelemetryServiceImpl implements TelemetryService {
       }
     }
     return converted
-  }
-
-  public getInstanceName(): string | undefined {
-    return this.instanceName
   }
 
   getBaseAssetCode(): string {
