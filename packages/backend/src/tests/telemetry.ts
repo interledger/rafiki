@@ -1,9 +1,15 @@
-import { Attributes, Counter, MetricOptions } from '@opentelemetry/api'
+import {
+  Attributes,
+  Counter,
+  Histogram,
+  MetricOptions
+} from '@opentelemetry/api'
 import { TelemetryService } from '../telemetry/service'
 import { ConvertError, Rates, RatesService } from '../rates/service'
 import { ConvertOptions } from '../rates/util'
 
 export const mockCounter = { add: jest.fn() } as Counter
+export const mockHistogram = { record: jest.fn() } as Histogram
 
 export class MockRatesService implements RatesService {
   async convert(): Promise<bigint | ConvertError> {
@@ -35,6 +41,12 @@ export class MockTelemetryService implements TelemetryService {
     _options?: MetricOptions | undefined
   ): Counter<Attributes> {
     return mockCounter
+  }
+  public getOrCreateHistogramMetric(
+    _name: string,
+    _options?: MetricOptions | undefined
+  ): Histogram<Attributes> {
+    return mockHistogram
   }
   public getInstanceName(): string | undefined {
     return 'serviceName'

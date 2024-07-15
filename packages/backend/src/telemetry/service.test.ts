@@ -4,7 +4,7 @@ import { AppServices } from '../app'
 import { Config } from '../config/app'
 import { ConvertError, RatesService } from '../rates/service'
 import { TestContainer, createTestApp } from '../tests/app'
-import { mockCounter } from '../tests/telemetry'
+import { mockCounter, mockHistogram } from '../tests/telemetry'
 import { TelemetryService } from './service'
 
 jest.mock('@opentelemetry/api', () => ({
@@ -12,7 +12,8 @@ jest.mock('@opentelemetry/api', () => ({
   metrics: {
     setGlobalMeterProvider: jest.fn(),
     getMeter: jest.fn().mockReturnValue({
-      createCounter: jest.fn().mockImplementation(() => mockCounter)
+      createCounter: jest.fn().mockImplementation(() => mockCounter),
+      createHistogram: jest.fn().mockImplementation(() => mockHistogram)
     })
   }
 }))
@@ -62,6 +63,19 @@ describe('TelemetryServiceImpl', () => {
     const retrievedCounter =
       telemetryService.getOrCreateMetric('existingMetric')
     expect(retrievedCounter).toBe(existingCounter)
+  })
+
+  it('should create a histogram when getOrCreateHistogramMetric is called for a new metric', () => {
+    const histogram = telemetryService.getOrCreateHistogramMetric('testMetric')
+    expect(histogram).toBe(mockHistogram)
+  })
+
+  it('should return an existing histogram when getOrCreateHistogramMetric is called for an existing metric', () => {
+    const existingHistogram =
+      telemetryService.getOrCreateHistogramMetric('existingMetric')
+    const retrievedHistogram =
+      telemetryService.getOrCreateHistogramMetric('existingMetric')
+    expect(retrievedHistogram).toBe(existingHistogram)
   })
 
   it('should return the instance name when calling getInstanceName', () => {

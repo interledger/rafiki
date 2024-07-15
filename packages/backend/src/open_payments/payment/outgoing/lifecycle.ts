@@ -75,19 +75,32 @@ export async function handleSending(
     throw LifecycleError.BadState
   }
 
+  const payStartTime = Date.now()
   await deps.paymentMethodHandlerService.pay('ILP', {
     receiver,
     outgoingPayment: payment,
     finalDebitAmount: maxDebitAmount,
     finalReceiveAmount: maxReceiveAmount
   })
-  deps.telemetry
-    ?.getOrCreateMetric('transactions_total', {
-      description: 'Count of funded transactions'
-    })
-    .add(1, {
-      source: deps.telemetry.getInstanceName()
-    })
+  const payEndTime = Date.now()
+
+  if (deps.telemetry) {
+    deps.telemetry
+      .getOrCreateMetric('transactions_total', {
+        description: 'Count of funded transactions'
+      })
+      .add(1, {
+        source: deps.telemetry.getInstanceName()
+      })
+    const payDuration = payEndTime - payStartTime
+    deps.telemetry
+      .getOrCreateHistogramMetric('ilp_pay_time_ms', {
+        description: 'Time to complete an ILP payment'
+      })
+      .record(payDuration, {
+        source: deps.telemetry.getInstanceName()
+      })
+  }
 
   await handleCompleted(deps, payment)
 }
