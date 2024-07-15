@@ -37,6 +37,11 @@ export class MockTelemetryService implements TelemetryService {
     amount?: number,
     attributes?: Record<string, unknown>
   ): void {}
+  async incrementCounterWithAmount(
+    name: string,
+    convertOptions: Pick<ConvertOptions, 'sourceAmount' | 'sourceAsset'>,
+    attributes?: Record<string, unknown>
+  ): Promise<void> {}
   recordHistogram(
     name: string,
     value: number,

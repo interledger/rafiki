@@ -1,4 +1,4 @@
-import { collectTelemetryAmount } from '../../../../../telemetry/transaction-amount'
+import { ValueType } from '@opentelemetry/api'
 import { ILPContext, ILPMiddleware } from '../rafiki'
 
 export function createTelemetryMiddleware(): ILPMiddleware {
@@ -7,16 +7,23 @@ export function createTelemetryMiddleware(): ILPMiddleware {
     next: () => Promise<void>
   ): Promise<void> => {
     await next()
-    if (
-      services.telemetry &&
-      Number(request.prepare.amount) &&
-      response.fulfill
-    ) {
+
+    const sourceAmount = BigInt(request.prepare.amount)
+
+    if (services.telemetry && sourceAmount && response.fulfill) {
       const { code, scale } = accounts.outgoing.asset
-      collectTelemetryAmount(services.telemetry, services.logger, {
-        amount: BigInt(request.prepare.amount),
-        asset: { code: code, scale: scale }
-      })
+
+      await services.telemetry.incrementCounterWithAmount(
+        'transactions_amount',
+        {
+          sourceAmount,
+          sourceAsset: { code: code, scale: scale }
+        },
+        {
+          description: 'Amount sent through the network',
+          valueType: ValueType.DOUBLE
+        }
+      )
     }
   }
 }

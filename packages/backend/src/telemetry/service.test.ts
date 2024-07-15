@@ -7,6 +7,7 @@ import { TestContainer, createTestApp } from '../tests/app'
 import { mockCounter, mockHistogram } from '../tests/telemetry'
 import { TelemetryService } from './service'
 import { Counter, Histogram } from '@opentelemetry/api'
+import { privacy } from './privacy'
 
 jest.mock('@opentelemetry/api', () => ({
   ...jest.requireActual('@opentelemetry/api'),
@@ -92,8 +93,7 @@ describe('TelemetryServiceImpl', () => {
     telemetryService.incrementCounter(name, 1)
     telemetryService.incrementCounter(name, 1)
 
-    // Reflect to access private class variable
-    const counters: Map<string, any> = Reflect.get(telemetryService, 'counters')
+    const counters: Map<string, any> = (telemetryService as any).counters
 
     expect(counters.size).toBe(1)
     expect(counters.has(name)).toBe(true)
@@ -121,43 +121,114 @@ describe('TelemetryServiceImpl', () => {
     expect(histogram.record).toHaveBeenCalledTimes(2)
   })
 
-  describe('conversion', () => {
+  describe('incrementCounterWithAmount', () => {
     it('should try to convert using aseRatesService and fallback to internalRatesService', async () => {
       const aseConvertSpy = jest
         .spyOn(aseRatesService, 'convert')
         .mockImplementation(() =>
           Promise.resolve(ConvertError.InvalidDestinationPrice)
         )
-
       const internalConvertSpy = jest
         .spyOn(internalRatesService, 'convert')
         .mockImplementation(() => Promise.resolve(10000n))
 
-      const converted = await telemetryService.convertAmount({
+      await telemetryService.incrementCounterWithAmount('test_counter', {
         sourceAmount: 100n,
         sourceAsset: { code: 'USD', scale: 2 }
       })
 
       expect(aseConvertSpy).toHaveBeenCalled()
       expect(internalConvertSpy).toHaveBeenCalled()
-      expect(converted).toBe(10000n)
     })
 
     it('should not call the fallback internalRatesService if aseRatesService call is successful', async () => {
       const aseConvertSpy = jest
         .spyOn(aseRatesService, 'convert')
         .mockImplementation(() => Promise.resolve(500n))
-
       const internalConvertSpy = jest.spyOn(internalRatesService, 'convert')
 
-      const converted = await telemetryService.convertAmount({
+      await telemetryService.incrementCounterWithAmount('test_counter', {
         sourceAmount: 100n,
         sourceAsset: { code: 'USD', scale: 2 }
       })
 
       expect(aseConvertSpy).toHaveBeenCalled()
       expect(internalConvertSpy).not.toHaveBeenCalled()
-      expect(converted).toBe(500n)
+    })
+
+    it('should apply privacy', async () => {
+      const convertedAmount = 500n
+
+      jest
+        .spyOn(telemetryService as any, 'convertAmount')
+        .mockImplementation(() => Promise.resolve(convertedAmount))
+      const applyPrivacySpy = jest
+        .spyOn(privacy, 'applyPrivacy')
+        .mockReturnValue(123)
+      const incrementCounterSpy = jest.spyOn(
+        telemetryService,
+        'incrementCounter'
+      )
+
+      const counterName = 'test_counter'
+      await telemetryService.incrementCounterWithAmount(counterName, {
+        sourceAmount: 100n,
+        sourceAsset: { code: 'USD', scale: 2 }
+      })
+
+      expect(applyPrivacySpy).toHaveBeenCalledWith(Number(convertedAmount))
+      expect(incrementCounterSpy).toHaveBeenCalledWith(
+        counterName,
+        123,
+        expect.any(Object)
+      )
+    })
+
+    it('should not collect telemetry when conversion returns InvalidDestinationPrice', async () => {
+      const convertSpy = jest
+        .spyOn(telemetryService as any, 'convertAmount')
+        .mockImplementation(() =>
+          Promise.resolve(ConvertError.InvalidDestinationPrice)
+        )
+
+      const incrementCounterSpy = jest.spyOn(
+        telemetryService,
+        'incrementCounter'
+      )
+
+      await telemetryService.incrementCounterWithAmount('test_counter', {
+        sourceAmount: 100n,
+        sourceAsset: { code: 'USD', scale: 2 }
+      })
+
+      expect(convertSpy).toHaveBeenCalled()
+      expect(incrementCounterSpy).not.toHaveBeenCalled()
+    })
+
+    it('should collect telemetry when conversion is successful', async () => {
+      const convertSpy = jest
+        .spyOn(telemetryService as any, 'convertAmount')
+        .mockImplementation(() => Promise.resolve(10000n))
+      const incrementCounterSpy = jest.spyOn(
+        telemetryService,
+        'incrementCounter'
+      )
+      const obfuscatedAmount = 12000
+      jest.spyOn(privacy, 'applyPrivacy').mockReturnValue(obfuscatedAmount)
+
+      const counterName = 'test_counter'
+
+      await telemetryService.incrementCounterWithAmount(counterName, {
+        sourceAmount: 100n,
+        sourceAsset: { code: 'USD', scale: 2 }
+      })
+
+      expect(convertSpy).toHaveBeenCalled()
+      expect(incrementCounterSpy).toHaveBeenCalledWith(
+        counterName,
+        obfuscatedAmount,
+        expect.any(Object)
+      )
     })
   })
 })

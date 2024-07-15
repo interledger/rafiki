@@ -6,9 +6,10 @@ import {
   PeriodicExportingMetricReader
 } from '@opentelemetry/sdk-metrics'
 
-import { ConvertError, RatesService, isConvertError } from '../rates/service'
+import { RatesService, isConvertError } from '../rates/service'
 import { ConvertOptions } from '../rates/util'
 import { BaseService } from '../shared/baseService'
+import { privacy } from './privacy'
 
 export interface TelemetryService {
   shutdown(): Promise<void>
@@ -17,6 +18,11 @@ export interface TelemetryService {
     amount: number,
     attributes?: Record<string, unknown>
   ): void
+  incrementCounterWithAmount(
+    name: string,
+    convertOptions: Pick<ConvertOptions, 'sourceAmount' | 'sourceAsset'>,
+    attributes?: Record<string, unknown>
+  ): Promise<void>
   recordHistogram(
     name: string,
     value: number,
@@ -24,9 +30,6 @@ export interface TelemetryService {
   ): void
   getBaseAssetCode(): string
   getBaseScale(): number
-  convertAmount(
-    convertOptions: Omit<ConvertOptions, 'exchangeRate' | 'destinationAsset'>
-  ): Promise<bigint | ConvertError>
 }
 
 interface TelemetryServiceDependencies extends BaseService {
@@ -126,6 +129,25 @@ class TelemetryServiceImpl implements TelemetryService {
     })
   }
 
+  public async incrementCounterWithAmount(
+    name: string,
+    amount: Pick<ConvertOptions, 'sourceAmount' | 'sourceAsset'>,
+    attributes: Record<string, unknown> = {}
+  ): Promise<void> {
+    try {
+      const converted = await this.convertAmount(amount)
+      if (isConvertError(converted)) {
+        this.deps.logger.error(`Unable to convert amount: ${converted}`)
+        return
+      }
+
+      const obfuscatedAmount = privacy.applyPrivacy(Number(converted))
+      this.incrementCounter(name, obfuscatedAmount, attributes)
+    } catch (e) {
+      this.deps.logger.error(e, `Unable to collect telemetry`)
+    }
+  }
+
   public recordHistogram(
     name: string,
     value: number,
@@ -138,8 +160,8 @@ class TelemetryServiceImpl implements TelemetryService {
     })
   }
 
-  public async convertAmount(
-    convertOptions: Omit<ConvertOptions, 'exchangeRate'>
+  private async convertAmount(
+    convertOptions: Pick<ConvertOptions, 'sourceAmount' | 'sourceAsset'>
   ) {
     const destinationAsset = {
       code: this.deps.baseAssetCode,
