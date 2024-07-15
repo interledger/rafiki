@@ -1,6 +1,5 @@
 import { Client } from 'tigerbeetle-node'
 import { v4 as uuid } from 'uuid'
-import { createHash } from 'crypto'
 
 import { BaseService } from '../../shared/baseService'
 import { validateId } from '../../shared/utils'
@@ -32,6 +31,10 @@ import {
   getAccountTransfers
 } from './transfers'
 import { toTigerBeetleId, hexTextToBigInt } from './utils'
+
+// eslint-disable-next-line
+const siphash = require('siphash')
+const siphashKey = siphash.string16_to_key('TigerBeetle SipH')
 
 export enum TigerBeetleAccountCode {
   LIQUIDITY_WEB_MONETIZATION = 1,
@@ -350,8 +353,8 @@ export async function createTransfer(
 
 function bilateralIdentification(source: string, destination: string): bigint {
   const arr = [source, destination].sort()
-  const md5Hex = createHash('md5').update(`${arr[0]}${arr[1]}`).digest('hex')
-  return hexTextToBigInt(md5Hex)
+  const hexOut = siphash.hash_hex(siphashKey, `${arr[0]}${arr[1]}`)
+  return hexTextToBigInt(hexOut)
 }
 
 function transferCodeFromType(type?: TransferType): number {

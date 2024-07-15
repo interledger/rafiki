@@ -437,6 +437,9 @@ importers:
       raw-body:
         specifier: ^2.5.2
         version: 2.5.2
+      siphash:
+        specifier: 1.1.0
+        version: 1.1.0
       tigerbeetle-node:
         specifier: 0.15.3
         version: 0.15.3
@@ -16782,6 +16785,10 @@ packages:
       is-arrayish: 0.3.2
     dev: false
     optional: true
+
+  /siphash@1.1.0:
+    resolution: {integrity: sha512-QXQOIeN7Lq1uAVfppZukylZ2tAGedZ49Xpu39Zfyb6JJqVFrP7GfbVc7kxTAyoHGi3/c0y7yIG6lmSwxapEKqA==}
+    dev: false
 
   /sisteransi@1.0.5:
     resolution: {integrity: sha512-bLGGlR1QxBcynn2d5YmDX4MGjlZvy2MRBDRNHLJ8VI6l6+9FUiyTFNJ0IveOSP0bcXgVDPRcfGqA0pjaqUpfVg==}

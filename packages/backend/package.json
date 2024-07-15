@@ -92,6 +92,7 @@
     "raw-body": "^2.5.2",
     "tigerbeetle-node": "0.15.3",
     "token-introspection": "workspace:*",
-    "uuid": "^9.0.1"
+    "uuid": "^9.0.1",
+    "siphash": "1.1.0"
   }
 }
