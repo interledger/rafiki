@@ -40,7 +40,7 @@ describe('Grant Service', (): void => {
     await appContainer.shutdown()
   })
 
-  describe('Create and Get Grant by options and access token', (): void => {
+  describe('Create and Get Grant by options', (): void => {
     describe.each`
       existingAuthServer | description
       ${false}           | ${'new auth server'}
@@ -108,9 +108,6 @@ describe('Grant Service', (): void => {
           })
           expect(grant.expired).toBe(false)
           await expect(grantService.get(options)).resolves.toEqual(grant)
-          await expect(
-            grantService.getByAccessToken(accessToken)
-          ).resolves.toEqual(grant)
         }
       )
     })
