@@ -28,8 +28,6 @@ export interface TelemetryService {
     value: number,
     attributes?: Record<string, unknown>
   ): void
-  getBaseAssetCode(): string
-  getBaseScale(): number
 }
 
 interface TelemetryServiceDependencies extends BaseService {
@@ -187,13 +185,5 @@ class TelemetryServiceImpl implements TelemetryService {
       }
     }
     return converted
-  }
-
-  getBaseAssetCode(): string {
-    return this.deps.baseAssetCode
-  }
-
-  getBaseScale(): number {
-    return this.deps.baseScale
   }
 }
