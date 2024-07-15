@@ -168,43 +168,43 @@ describe('Accounting Transfer', (): void => {
     // Credit:
     const accountCreditId = accountCreditLedger[0].id
     response = await appContainer.apolloClient
-    .query({
-      query: gql`
+      .query({
+        query: gql`
           query AccountingTransfers($id: String!, $limit: Int!) {
-              accountingTransfers(id: $id, limit: $limit) {
-                  debits {
-                      id
-                      debitAccount
-                      creditAccount
-                      amount
-                      transferType
-                      ledger
-                      createdAt
-                  }
-                  credits {
-                      id
-                      debitAccount
-                      creditAccount
-                      amount
-                      transferType
-                      ledger
-                      createdAt
-                  }
+            accountingTransfers(id: $id, limit: $limit) {
+              debits {
+                id
+                debitAccount
+                creditAccount
+                amount
+                transferType
+                ledger
+                createdAt
               }
+              credits {
+                id
+                debitAccount
+                creditAccount
+                amount
+                transferType
+                ledger
+                createdAt
+              }
+            }
           }
-      `,
-      variables: {
-        id: accountCreditId,
-        limit: queryLimit
-      }
-    })
-    .then((query): AccountingTransferConnection => {
-      if (query.data) {
-        return query.data.accountingTransfers
-      } else {
-        throw new Error('Data was empty')
-      }
-    })
+        `,
+        variables: {
+          id: accountCreditId,
+          limit: queryLimit
+        }
+      })
+      .then((query): AccountingTransferConnection => {
+        if (query.data) {
+          return query.data.accountingTransfers
+        } else {
+          throw new Error('Data was empty')
+        }
+      })
 
     expect(response.debits).toBeDefined()
     expect(response.credits).toBeDefined()

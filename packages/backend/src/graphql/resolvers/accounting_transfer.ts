@@ -42,9 +42,7 @@ export function transferToGraphql(
   }
 }
 
-function transferTypeToGraphql(
-  type: TransferType
-): SchemaTransferType {
+function transferTypeToGraphql(type: TransferType): SchemaTransferType {
   switch (type) {
     case TransferType.TRANSFER:
       return SchemaTransferType.Transfer
