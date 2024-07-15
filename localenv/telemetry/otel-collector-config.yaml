@@ -12,7 +12,7 @@ exporters:
     verbosity: detailed
   prometheus:
     endpoint: 0.0.0.0:8491
-  
+
 service:
   pipelines:
     metrics:
