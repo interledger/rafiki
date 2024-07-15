@@ -1,4 +1,8 @@
-import { json, type LoaderFunctionArgs, redirectDocument, } from '@remix-run/node'
+import {
+  json,
+  type LoaderFunctionArgs,
+  redirectDocument
+} from '@remix-run/node'
 import { uuidSchema } from '~/lib/validate.server'
 import { isUiNodeInputAttributes } from '@ory/integrations/ui'
 import type { UiContainer } from '@ory/client'
