@@ -96,30 +96,24 @@ describe('Accounting Transfer', (): void => {
       accountRef: accountCredit.id
     })
     // Top up debit account first:
+    const transferAmount = 123
+    const ledger = 1
+    const queryLimit = 100_000
     const insertedTransfer = await LedgerTransfer.query(
       appContainer.knex
     ).insert({
-      amount: 123n,
+      amount: BigInt(transferAmount),
       debitAccount: accountDebitLedger[0],
       debitAccountId: accountDebitLedger[0].id,
       creditAccount: accountCreditLedger[0],
       creditAccountId: accountCreditLedger[0].id,
-      ledger: 1,
+      ledger: ledger,
       state: LedgerTransferState.POSTED,
       transferRef: uuid(),
       type: LedgerTransferType.DEPOSIT
     })
-
-    /*const deposit = await accountingService.createDeposit({
-      account: accountDebit, amount: 20000n, id: uuid()
-    })*/
     const accountDebitId = accountDebitLedger[0].id
-
-    const input = {
-      accountDebitId,
-      limit: 100_000
-    }
-    const response = await appContainer.apolloClient
+    let response = await appContainer.apolloClient
       .query({
         query: gql`
           query AccountingTransfers($id: String!, $limit: Int!) {
@@ -146,8 +140,8 @@ describe('Accounting Transfer', (): void => {
           }
         `,
         variables: {
-          id: input.accountDebitId,
-          limit: input.limit
+          id: accountDebitId,
+          limit: queryLimit
         }
       })
       .then((query): AccountingTransferConnection => {
@@ -164,7 +158,65 @@ describe('Accounting Transfer', (): void => {
     expect(response.credits).toHaveLength(0)
 
     expect(response.debits[0]).toMatchObject({
-      id: insertedTransfer.id
+      id: insertedTransfer.id,
+      debitAccount: accountDebitId,
+      amount: `${transferAmount}`,
+      transferType: 'DEPOSIT',
+      ledger: ledger
+    })
+
+    // Credit:
+    const accountCreditId = accountCreditLedger[0].id
+    response = await appContainer.apolloClient
+    .query({
+      query: gql`
+          query AccountingTransfers($id: String!, $limit: Int!) {
+              accountingTransfers(id: $id, limit: $limit) {
+                  debits {
+                      id
+                      debitAccount
+                      creditAccount
+                      amount
+                      transferType
+                      ledger
+                      createdAt
+                  }
+                  credits {
+                      id
+                      debitAccount
+                      creditAccount
+                      amount
+                      transferType
+                      ledger
+                      createdAt
+                  }
+              }
+          }
+      `,
+      variables: {
+        id: accountCreditId,
+        limit: queryLimit
+      }
+    })
+    .then((query): AccountingTransferConnection => {
+      if (query.data) {
+        return query.data.accountingTransfers
+      } else {
+        throw new Error('Data was empty')
+      }
+    })
+
+    expect(response.debits).toBeDefined()
+    expect(response.credits).toBeDefined()
+    expect(response.debits).toHaveLength(0)
+    expect(response.credits).toHaveLength(1)
+
+    expect(response.credits[0]).toMatchObject({
+      id: insertedTransfer.id,
+      debitAccount: accountDebitId,
+      amount: `${transferAmount}`,
+      transferType: 'DEPOSIT',
+      ledger: ledger
     })
   })
 })
