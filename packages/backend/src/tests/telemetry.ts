@@ -32,21 +32,9 @@ export class MockTelemetryService implements TelemetryService {
   public aseRatesService = new MockRatesService()
   public internalRatesService = new MockRatesService()
 
-  incrementCounter(
-    name: string,
-    amount?: number,
-    attributes?: Record<string, unknown>
-  ): void {}
-  async incrementCounterWithAmount(
-    name: string,
-    convertOptions: Pick<ConvertOptions, 'sourceAmount' | 'sourceAsset'>,
-    attributes?: Record<string, unknown>
-  ): Promise<void> {}
-  recordHistogram(
-    name: string,
-    value: number,
-    attributes?: Record<string, unknown>
-  ): void {}
+  incrementCounter(): void {}
+  async incrementCounterWithAmount(): Promise<void> {}
+  recordHistogram(): void {}
   public getInstanceName(): string | undefined {
     return 'serviceName'
   }

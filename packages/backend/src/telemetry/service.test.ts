@@ -93,13 +93,15 @@ describe('TelemetryServiceImpl', () => {
     telemetryService.incrementCounter(name, 1)
     telemetryService.incrementCounter(name, 1)
 
-    const counters: Map<string, any> = (telemetryService as any).counters
+    //"any" to access private ts class member variable
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const counters: Map<string, Counter> = (telemetryService as any).counters
 
     expect(counters.size).toBe(1)
     expect(counters.has(name)).toBe(true)
 
-    const counter: Counter = counters.get(name)
-    expect(counter.add).toHaveBeenCalledTimes(2)
+    const counter = counters.get(name)
+    expect(counter?.add).toHaveBeenCalledTimes(2)
   })
 
   it('should use existing histogram when recordHistogram is called for an existing metric', () => {
@@ -108,17 +110,16 @@ describe('TelemetryServiceImpl', () => {
     telemetryService.recordHistogram(name, 1)
     telemetryService.recordHistogram(name, 1)
 
-    // Reflect to access private class variable
-    const histograms: Map<string, any> = Reflect.get(
-      telemetryService,
-      'histograms'
-    )
+    //"any" to access private ts class member variable
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const histograms: Map<string, Histogram> = (telemetryService as any)
+      .histograms
 
     expect(histograms.size).toBe(1)
     expect(histograms.has(name)).toBe(true)
 
-    const histogram: Histogram = histograms.get(name)
-    expect(histogram.record).toHaveBeenCalledTimes(2)
+    const histogram = histograms.get(name)
+    expect(histogram?.record).toHaveBeenCalledTimes(2)
   })
 
   describe('incrementCounterWithAmount', () => {
@@ -160,6 +161,8 @@ describe('TelemetryServiceImpl', () => {
       const convertedAmount = 500n
 
       jest
+        //"any" to access private ts class member variable
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .spyOn(telemetryService as any, 'convertAmount')
         .mockImplementation(() => Promise.resolve(convertedAmount))
       const applyPrivacySpy = jest
@@ -186,6 +189,8 @@ describe('TelemetryServiceImpl', () => {
 
     it('should not collect telemetry when conversion returns InvalidDestinationPrice', async () => {
       const convertSpy = jest
+        //"any" to access private ts class member variable
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .spyOn(telemetryService as any, 'convertAmount')
         .mockImplementation(() =>
           Promise.resolve(ConvertError.InvalidDestinationPrice)
@@ -207,6 +212,8 @@ describe('TelemetryServiceImpl', () => {
 
     it('should collect telemetry when conversion is successful', async () => {
       const convertSpy = jest
+        //"any" to access private ts class member variable
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .spyOn(telemetryService as any, 'convertAmount')
         .mockImplementation(() => Promise.resolve(10000n))
       const incrementCounterSpy = jest.spyOn(
