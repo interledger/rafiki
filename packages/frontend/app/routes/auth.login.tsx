@@ -1,4 +1,8 @@
-import { json, type LoaderFunctionArgs } from '@remix-run/node'
+import {
+  json,
+  type LoaderFunctionArgs,
+  redirectDocument
+} from '@remix-run/node'
 import { uuidSchema } from '~/lib/validate.server'
 import { isUiNodeInputAttributes } from '@ory/integrations/ui'
 import type { UiContainer } from '@ory/client'
@@ -34,10 +38,9 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     const recoveryUrl = `${variables.kratosBrowserPublicUrl}/self-service/recovery/browser`
     return { responseData, recoveryUrl }
   } else {
-    throw json(null, {
-      status: 400,
-      statusText: 'No Kratos login flow ID found.'
-    })
+    return redirectDocument(
+      `${variables.kratosBrowserPublicUrl}/self-service/login/browser`
+    )
   }
 }
 
