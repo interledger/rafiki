@@ -90,9 +90,9 @@
     "pg": "^8.11.3",
     "pino": "^8.19.0",
     "raw-body": "^2.5.2",
+    "siphash": "^1.1.0",
     "tigerbeetle-node": "0.15.3",
     "token-introspection": "workspace:*",
-    "uuid": "^9.0.1",
-    "siphash": "1.1.0"
+    "uuid": "^9.0.1"
   }
 }

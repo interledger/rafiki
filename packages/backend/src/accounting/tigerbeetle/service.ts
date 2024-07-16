@@ -1,3 +1,6 @@
+// eslint-disable-next-line
+const siphash = require('siphash')
+
 import { Client } from 'tigerbeetle-node'
 import { v4 as uuid } from 'uuid'
 
@@ -32,8 +35,6 @@ import {
 } from './transfers'
 import { toTigerBeetleId, hexTextToBigInt } from './utils'
 
-// eslint-disable-next-line
-const siphash = require('siphash')
 const siphashKey = siphash.string16_to_key('TigerBeetle SipH')
 
 export enum TigerBeetleAccountCode {
