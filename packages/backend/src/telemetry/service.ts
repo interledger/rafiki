@@ -20,7 +20,7 @@ export interface TelemetryService {
   ): void
   incrementCounterWithAmount(
     name: string,
-    convertOptions: Pick<ConvertOptions, 'sourceAmount' | 'sourceAsset'>,
+    amount: Pick<ConvertOptions, 'sourceAmount' | 'sourceAsset'>,
     attributes?: Record<string, unknown>
   ): Promise<void>
   recordHistogram(
