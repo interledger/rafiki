@@ -24,7 +24,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 if [ "$build_flag" == "--build" ]; then
-  pnpm --filter integration build:deps
+  pnpm --filter test build:deps
 fi
 
 # setup hosts
@@ -32,10 +32,10 @@ addHost() {
   local hostname="$1"
   
   # check first to avoid sudo prompt if host is already set
-  if pnpm --filter integration hostile list | grep -q "127.0.0.1 $hostname"; then
+  if pnpm --filter test hostile list | grep -q "127.0.0.1 $hostname"; then
     echo "$hostname already set"
   else
-    sudo pnpm --filter integration hostile set 127.0.0.1 "$hostname"
+    sudo pnpm --filter test hostile set 127.0.0.1 "$hostname"
     if [ $? -ne 0 ]; then
       echo "Error: Failed to write hosts to hostfile."
       exit 1
@@ -48,8 +48,8 @@ addHost "happy-life-bank-test-backend"
 addHost "happy-life-bank-test-auth"
 
 # idempotent start
-pnpm --filter integration testenv:compose down --volumes
-pnpm --filter integration testenv:compose up -d --wait $build_flag
+pnpm --filter test testenv:compose down --volumes
+pnpm --filter test testenv:compose up -d --wait $build_flag
 if [ $? -ne 0 ]; then
   echo "Error: Failed to start containers."
   exit 1
@@ -57,9 +57,9 @@ fi
 
 # run tests
 mkdir -p ./tmp
-pnpm --filter integration testenv:compose logs -f > "$log_file" 2>&1 &
-pnpm --filter integration test
+pnpm --filter test testenv:compose logs -f > "$log_file" 2>&1 &
+pnpm --filter test test
 exit_code=$?
-pnpm --filter integration testenv:compose down --volumes
+pnpm --filter test testenv:compose down --volumes
 
 exit $exit_code
