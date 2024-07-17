@@ -72,10 +72,6 @@ class TelemetryServiceImpl implements TelemetryService {
     }
 
     this.meterProvider = new MeterProvider({
-      resource: new Resource({ 'service.name': SERVICE_NAME })
-    })
-
-    this.meterProvider = new MeterProvider({
       resource: new Resource({ 'service.name': SERVICE_NAME }),
       readers: deps.collectorUrls.map((url) => {
         return new PeriodicExportingMetricReader({

@@ -49,12 +49,4 @@ export class MockTelemetryService implements TelemetryService {
     }
     return Promise.resolve(converted)
   }
-
-  public getBaseAssetCode(): string {
-    return 'USD'
-  }
-
-  public getBaseScale(): number {
-    return 4
-  }
 }
