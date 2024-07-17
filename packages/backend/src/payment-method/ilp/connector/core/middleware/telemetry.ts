@@ -8,16 +8,17 @@ export function createTelemetryMiddleware(): ILPMiddleware {
   ): Promise<void> => {
     await next()
 
-    const sourceAmount = BigInt(request.prepare.amount)
+    const value = BigInt(request.prepare.amount)
 
-    if (services.telemetry && sourceAmount && response.fulfill) {
-      const { code, scale } = accounts.outgoing.asset
+    if (services.telemetry && value && response.fulfill) {
+      const { code: assetCode, scale: assetScale } = accounts.outgoing.asset
 
-      await services.telemetry.incrementCounterWithAmount(
+      await services.telemetry.incrementCounterWithTransactionAmount(
         'transactions_amount',
         {
-          sourceAmount,
-          sourceAsset: { code: code, scale: scale }
+          value,
+          assetCode,
+          assetScale
         },
         {
           description: 'Amount sent through the network',

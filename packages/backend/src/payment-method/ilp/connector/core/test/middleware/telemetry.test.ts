@@ -44,8 +44,8 @@ beforeEach(async () => {
 
 describe('Telemetry Middleware', function () {
   it('should not gather telemetry if telemetry is not enabled (service is undefined)', async () => {
-    const incrementCounterWithAmountSpy = jest
-      .spyOn(services.telemetry, 'incrementCounterWithAmount')
+    const incrementCounterWithTransactionAmountSpy = jest
+      .spyOn(services.telemetry, 'incrementCounterWithTransactionAmount')
       .mockImplementation(() => Promise.resolve())
 
     await middleware(
@@ -53,13 +53,13 @@ describe('Telemetry Middleware', function () {
       next
     )
 
-    expect(incrementCounterWithAmountSpy).not.toHaveBeenCalled()
+    expect(incrementCounterWithTransactionAmountSpy).not.toHaveBeenCalled()
     expect(next).toHaveBeenCalled()
   })
 
   it('should not gather telemetry if response.fulfill undefined', async () => {
-    const incrementCounterWithAmountSpy = jest
-      .spyOn(services.telemetry, 'incrementCounterWithAmount')
+    const incrementCounterWithTransactionAmountSpy = jest
+      .spyOn(services.telemetry, 'incrementCounterWithTransactionAmount')
       .mockImplementation(() => Promise.resolve())
 
     await middleware(
@@ -67,13 +67,13 @@ describe('Telemetry Middleware', function () {
       next
     )
 
-    expect(incrementCounterWithAmountSpy).not.toHaveBeenCalled()
+    expect(incrementCounterWithTransactionAmountSpy).not.toHaveBeenCalled()
     expect(next).toHaveBeenCalled()
   })
 
   it('should not gather telemetry if request.prepare.amount is 0', async () => {
-    const incrementCounterWithAmountSpy = jest
-      .spyOn(services.telemetry, 'incrementCounterWithAmount')
+    const incrementCounterWithTransactionAmountSpy = jest
+      .spyOn(services.telemetry, 'incrementCounterWithTransactionAmount')
       .mockImplementation(() => Promise.resolve())
 
     await middleware(
@@ -87,7 +87,7 @@ describe('Telemetry Middleware', function () {
       next
     )
 
-    expect(incrementCounterWithAmountSpy).not.toHaveBeenCalled()
+    expect(incrementCounterWithTransactionAmountSpy).not.toHaveBeenCalled()
     expect(next).toHaveBeenCalled()
   })
 
@@ -98,8 +98,8 @@ describe('Telemetry Middleware', function () {
       return Promise.resolve()
     })
 
-    const incrementCounterWithAmountSpy = jest
-      .spyOn(services.telemetry, 'incrementCounterWithAmount')
+    const incrementCounterWithTransactionAmountSpy = jest
+      .spyOn(services.telemetry, 'incrementCounterWithTransactionAmount')
       .mockImplementation(() => {
         expect(nextCalled).toBe(true)
         return Promise.resolve()
@@ -107,7 +107,7 @@ describe('Telemetry Middleware', function () {
 
     await middleware(ctx, next)
 
-    expect(incrementCounterWithAmountSpy).toHaveBeenCalled()
+    expect(incrementCounterWithTransactionAmountSpy).toHaveBeenCalled()
     expect(next).toHaveBeenCalled()
   })
 })

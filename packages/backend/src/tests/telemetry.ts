@@ -33,7 +33,7 @@ export class MockTelemetryService implements TelemetryService {
   public internalRatesService = new MockRatesService()
 
   incrementCounter(): void {}
-  async incrementCounterWithAmount(): Promise<void> {}
+  async incrementCounterWithTransactionAmount(): Promise<void> {}
   recordHistogram(): void {}
   public getInstanceName(): string | undefined {
     return 'serviceName'

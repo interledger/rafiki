@@ -15,12 +15,12 @@ export interface TelemetryService {
   shutdown(): Promise<void>
   incrementCounter(
     name: string,
-    amount: number,
+    value: number,
     attributes?: Record<string, unknown>
   ): void
-  incrementCounterWithAmount(
+  incrementCounterWithTransactionAmount(
     name: string,
-    amount: Pick<ConvertOptions, 'sourceAmount' | 'sourceAsset'>,
+    amount: { value: bigint; assetCode: string; assetScale: number },
     attributes?: Record<string, unknown>
   ): Promise<void>
   recordHistogram(
@@ -127,13 +127,17 @@ class TelemetryServiceImpl implements TelemetryService {
     })
   }
 
-  public async incrementCounterWithAmount(
+  public async incrementCounterWithTransactionAmount(
     name: string,
-    amount: Pick<ConvertOptions, 'sourceAmount' | 'sourceAsset'>,
+    amount: { value: bigint; assetCode: string; assetScale: number },
     attributes: Record<string, unknown> = {}
   ): Promise<void> {
+    const { value, assetCode, assetScale } = amount
     try {
-      const converted = await this.convertAmount(amount)
+      const converted = await this.convertAmount({
+        sourceAmount: value,
+        sourceAsset: { code: assetCode, scale: assetScale }
+      })
       if (isConvertError(converted)) {
         this.deps.logger.error(`Unable to convert amount: ${converted}`)
         return

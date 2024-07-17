@@ -122,7 +122,7 @@ describe('TelemetryServiceImpl', () => {
     expect(histogram?.record).toHaveBeenCalledTimes(2)
   })
 
-  describe('incrementCounterWithAmount', () => {
+  describe('incrementCounterWithTransactionAmount', () => {
     it('should try to convert using aseRatesService and fallback to internalRatesService', async () => {
       const aseConvertSpy = jest
         .spyOn(aseRatesService, 'convert')
@@ -133,10 +133,14 @@ describe('TelemetryServiceImpl', () => {
         .spyOn(internalRatesService, 'convert')
         .mockImplementation(() => Promise.resolve(10000n))
 
-      await telemetryService.incrementCounterWithAmount('test_counter', {
-        sourceAmount: 100n,
-        sourceAsset: { code: 'USD', scale: 2 }
-      })
+      await telemetryService.incrementCounterWithTransactionAmount(
+        'test_counter',
+        {
+          value: 100n,
+          assetCode: 'USD',
+          assetScale: 2
+        }
+      )
 
       expect(aseConvertSpy).toHaveBeenCalled()
       expect(internalConvertSpy).toHaveBeenCalled()
@@ -148,10 +152,14 @@ describe('TelemetryServiceImpl', () => {
         .mockImplementation(() => Promise.resolve(500n))
       const internalConvertSpy = jest.spyOn(internalRatesService, 'convert')
 
-      await telemetryService.incrementCounterWithAmount('test_counter', {
-        sourceAmount: 100n,
-        sourceAsset: { code: 'USD', scale: 2 }
-      })
+      await telemetryService.incrementCounterWithTransactionAmount(
+        'test_counter',
+        {
+          value: 100n,
+          assetCode: 'USD',
+          assetScale: 2
+        }
+      )
 
       expect(aseConvertSpy).toHaveBeenCalled()
       expect(internalConvertSpy).not.toHaveBeenCalled()
@@ -174,10 +182,14 @@ describe('TelemetryServiceImpl', () => {
       )
 
       const counterName = 'test_counter'
-      await telemetryService.incrementCounterWithAmount(counterName, {
-        sourceAmount: 100n,
-        sourceAsset: { code: 'USD', scale: 2 }
-      })
+      await telemetryService.incrementCounterWithTransactionAmount(
+        counterName,
+        {
+          value: 100n,
+          assetCode: 'USD',
+          assetScale: 2
+        }
+      )
 
       expect(applyPrivacySpy).toHaveBeenCalledWith(Number(convertedAmount))
       expect(incrementCounterSpy).toHaveBeenCalledWith(
@@ -201,10 +213,14 @@ describe('TelemetryServiceImpl', () => {
         'incrementCounter'
       )
 
-      await telemetryService.incrementCounterWithAmount('test_counter', {
-        sourceAmount: 100n,
-        sourceAsset: { code: 'USD', scale: 2 }
-      })
+      await telemetryService.incrementCounterWithTransactionAmount(
+        'test_counter',
+        {
+          value: 100n,
+          assetCode: 'USD',
+          assetScale: 2
+        }
+      )
 
       expect(convertSpy).toHaveBeenCalled()
       expect(incrementCounterSpy).not.toHaveBeenCalled()
@@ -225,10 +241,14 @@ describe('TelemetryServiceImpl', () => {
 
       const counterName = 'test_counter'
 
-      await telemetryService.incrementCounterWithAmount(counterName, {
-        sourceAmount: 100n,
-        sourceAsset: { code: 'USD', scale: 2 }
-      })
+      await telemetryService.incrementCounterWithTransactionAmount(
+        counterName,
+        {
+          value: 100n,
+          assetCode: 'USD',
+          assetScale: 2
+        }
+      )
 
       expect(convertSpy).toHaveBeenCalled()
       expect(incrementCounterSpy).toHaveBeenCalledWith(
