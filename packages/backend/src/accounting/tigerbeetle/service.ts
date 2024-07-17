@@ -100,8 +100,8 @@ export function createAccountingService(
     // Their account id is the corresponding asset's ledger value.
     createLiquidityAccount: (options, accountType) =>
       createLiquidityAccount(deps, options, accountType),
-    createSettlementAccount: (ledger, accountId) =>
-      createSettlementAccount(deps, ledger, accountId),
+    createSettlementAccount: (ledger, relatedAccountId) =>
+      createSettlementAccount(deps, ledger, relatedAccountId),
     createLiquidityAndLinkedSettlementAccount: (options, accTypeCode) =>
       createLiquidityAndLinkedSettlementAccount(deps, options, accTypeCode),
     getBalance: (id) => getAccountBalance(deps, id),
@@ -151,7 +151,7 @@ export async function createLiquidityAccount(
 export async function createSettlementAccount(
   deps: ServiceDependencies,
   ledger: number,
-  accountId: string | number
+  relatedAccountId: string | number
 ): Promise<void> {
   try {
     await createAccounts(deps, [
@@ -159,7 +159,7 @@ export async function createSettlementAccount(
         id: ledger,
         ledger,
         code: TigerBeetleAccountCode.SETTLEMENT,
-        userData128: toTigerBeetleId(accountId)
+        userData128: toTigerBeetleId(relatedAccountId)
       }
     ])
   } catch (err) {

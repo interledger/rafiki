@@ -102,7 +102,7 @@ export interface AccountingService {
   ): Promise<LiquidityAccount>
   createSettlementAccount(
     ledger: number,
-    accountId: string | number,
+    relatedAccountId: string | number,
     trx?: TransactionOrKnex
   ): Promise<void>
   createLiquidityAndLinkedSettlementAccount(

@@ -150,7 +150,7 @@ export class MockAccountingService implements AccountingService {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     ledger: number,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    accountId: string | number,
+    relatedAccountId: string | number,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     trx?: TransactionOrKnex
   ): Promise<void> {

@@ -52,8 +52,8 @@ export function createAccountingService(
   return {
     createLiquidityAccount: (options, accTypeCode, trx) =>
       createLiquidityAccount(deps, options, accTypeCode, trx),
-    createSettlementAccount: (ledger, accountId, trx) =>
-      createSettlementAccount(deps, ledger, accountId, trx),
+    createSettlementAccount: (ledger, relatedAccountId, trx) =>
+      createSettlementAccount(deps, ledger, relatedAccountId, trx),
     createLiquidityAndLinkedSettlementAccount: (options, accTypeCode, trx) =>
       createLiquidityAndLinkedSettlementAccount(
         deps,
@@ -100,7 +100,7 @@ export async function createLiquidityAccount(
 export async function createSettlementAccount(
   deps: ServiceDependencies,
   ledger: number,
-  accountId: string | number,
+  relatedAccountId: string | number,
   trx?: TransactionOrKnex
 ): Promise<void> {
   const asset = await Asset.query(trx || deps.knex).findOne({ ledger })
