@@ -48,9 +48,8 @@ export async function createAccounts(
     }))
   )
   for (const { result } of errors) {
-    if (result !== CreateAccountErrorCode.linked_event_failed) {
+    if (result !== CreateAccountErrorCode.ok)
       throw new TigerbeetleCreateAccountError(result)
-    }
   }
 }
 
