@@ -1,6 +1,3 @@
-// eslint-disable-next-line
-const siphash = require('siphash')
-
 import { Client } from 'tigerbeetle-node'
 import { v4 as uuid } from 'uuid'
 
@@ -33,9 +30,7 @@ import {
   createTransfers,
   getAccountTransfers
 } from './transfers'
-import { toTigerBeetleId, hexTextToBigInt } from './utils'
-
-const siphashKey = siphash.string16_to_key('TigerBeetle SipH')
+import { toTigerBeetleId } from './utils'
 
 export enum TigerBeetleAccountCode {
   LIQUIDITY_WEB_MONETIZATION = 1,
@@ -317,10 +312,7 @@ export async function createTransfer(
           destinationAccountId: transfer.destinationAccountId,
           amount: transfer.amount,
           timeout: args.timeout,
-          userData128: bilateralIdentification(
-            transfer.sourceAccountId,
-            transfer.destinationAccountId
-          ),
+          userData128: uuid(), // transferRef in PSQL
           code: transferCodeFromType(transfer.transferType)
         })
       )
@@ -350,12 +342,6 @@ export async function createTransfer(
       return tbTransfers.map((transfer) => transfer.id.toString())
     }
   })
-}
-
-function bilateralIdentification(source: string, destination: string): bigint {
-  const arr = [source, destination].sort()
-  const hexOut = siphash.hash_hex(siphashKey, `${arr[0]}${arr[1]}`)
-  return hexTextToBigInt(hexOut)
 }
 
 function transferCodeFromType(type?: TransferType): number {
