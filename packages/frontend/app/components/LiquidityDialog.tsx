@@ -4,18 +4,25 @@ import { useState } from 'react'
 import { XIcon } from '~/components/icons'
 import { Button, Input } from '~/components/ui'
 
+type BasicAsset = {
+  code: string
+  scale: number
+}
+
 type LiquidityDialogProps = {
   title: string
   onClose: () => void
   type: 'Deposit' | 'Withdraw'
+  asset: BasicAsset
 }
 
 export const LiquidityDialog = ({
   title,
   onClose,
-  type
+  type,
+  asset
 }: LiquidityDialogProps) => {
-  const [amount, setAmount] = useState(0)
+  const [amount, setAmount] = useState<number>(0)
 
   return (
     <Dialog as='div' className='relative z-10' onClose={onClose} open={true}>
@@ -48,10 +55,11 @@ export const LiquidityDialog = ({
                     type='number'
                     name='amount'
                     label='Amount'
+                    onChange={e => setAmount(Number(e.target.value))}
                   />
                   <div className='mt-2'>
                     <p>Based on the asset:</p>
-                    <p>Amount {amount} = {amount / 100} USD </p>
+                    <p>Amount {amount} = {amount / Math.pow(10, asset.scale)} {asset.code} </p>
                   </div>
                   <div className='flex justify-end py-3'>
                     <Button aria-label={`${type} liquidity`} type='submit'>
