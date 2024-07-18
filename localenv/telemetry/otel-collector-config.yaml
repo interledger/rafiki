@@ -12,10 +12,18 @@ exporters:
     verbosity: detailed
   prometheus:
     endpoint: 0.0.0.0:8491
-  
+  otlp:
+    endpoint: http://tempo:8492
+    tls:
+      insecure: true
+
 service:
   pipelines:
     metrics:
       receivers: [otlp]
       processors: [batch]
       exporters: [prometheus, debug]
+    traces:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [otlp, debug]
