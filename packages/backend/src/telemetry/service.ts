@@ -1,11 +1,4 @@
-import {
-  Counter,
-  Histogram,
-  MetricOptions,
-  Tracer,
-  metrics,
-  trace
-} from '@opentelemetry/api'
+import { Counter, Histogram, MetricOptions, metrics } from '@opentelemetry/api'
 import { MeterProvider } from '@opentelemetry/sdk-metrics'
 
 import { ConvertError, RatesService, isConvertError } from '../rates/service'
@@ -15,6 +8,7 @@ import { BaseService } from '../shared/baseService'
 export interface TelemetryService {
   shutdown(): void
   getOrCreateMetric(name: string, options?: MetricOptions): Counter
+  getOrCreateHistogramMetric(name: string, options?: MetricOptions): Histogram
   getInstanceName(): string | undefined
   getBaseAssetCode(): string
   getBaseScale(): number
@@ -47,7 +41,8 @@ class TelemetryServiceImpl implements TelemetryService {
   private internalRatesService: RatesService
   private aseRatesService: RatesService
 
-  private counters = new Map()
+  private counters: Map<string, Counter> = new Map()
+  private histograms: Map<string, Histogram> = new Map()
   constructor(private deps: TelemetryServiceDependencies) {
     this.instanceName = deps.instanceName
     this.internalRatesService = deps.internalRatesService
@@ -56,6 +51,24 @@ class TelemetryServiceImpl implements TelemetryService {
 
   public async shutdown(): Promise<void> {
     await this.meterProvider?.shutdown()
+  }
+
+  private createHistogram(name: string, options: MetricOptions | undefined) {
+    const histogram = metrics
+      .getMeter(METER_NAME)
+      .createHistogram(name, options)
+    this.histograms.set(name, histogram)
+    return histogram
+  }
+  public getOrCreateHistogramMetric(
+    name: string,
+    options?: MetricOptions
+  ): Histogram {
+    const existing = this.histograms.get(name)
+    if (existing) {
+      return existing
+    }
+    return this.createHistogram(name, options)
   }
 
   private createCounter(

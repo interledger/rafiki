@@ -60,7 +60,7 @@ If an ASE does not provide the necessary exchange rate for a transaction, the te
 
 ## Instrumentation
 
-Rafiki currently has two counter metrics. All data points (counter increases) are exported to collection endpoints at a configurable interval (default recommended to 15s).
+Rafiki currently has three counter metrics. All data points (counter increases and histogram records) are exported to collection endpoints at a configurable interval (default recommended to 15s).
 
 Currently collected metrics:
 
@@ -70,5 +70,8 @@ Currently collected metrics:
 - `transactions_amount` - Counter metric
   - Description: “Amount sent through the network”.
   - This amount metric increases by the amount sent in each ILP packet.
+- `ilp_pay_time_ms` - Histogram metric
+  - Description: “Time to complete an ILP payment”
+  - This histogram metric records the time taken to make an ILP payment.
 
 **Note**: The current implementation only collects metrics on the SENDING side of a transaction. Metrics for external open-payments transactions RECEIVED by a Rafiki instance in the network are not collected.
