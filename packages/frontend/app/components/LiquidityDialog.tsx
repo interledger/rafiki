@@ -1,5 +1,6 @@
 import { Dialog } from '@headlessui/react'
 import { Form } from '@remix-run/react'
+import { useState } from 'react'
 import { XIcon } from '~/components/icons'
 import { Button, Input } from '~/components/ui'
 
@@ -14,6 +15,8 @@ export const LiquidityDialog = ({
   onClose,
   type
 }: LiquidityDialogProps) => {
+  const [amount, setAmount] = useState(0)
+
   return (
     <Dialog as='div' className='relative z-10' onClose={onClose} open={true}>
       <div className='fixed inset-0 bg-tealish/30 bg-opacity-75 transition-opacity' />
@@ -46,6 +49,10 @@ export const LiquidityDialog = ({
                     name='amount'
                     label='Amount'
                   />
+                  <div className='mt-2'>
+                    <p>Based on the asset:</p>
+                    <p>Amount {amount} = {amount / 100} USD </p>
+                  </div>
                   <div className='flex justify-end py-3'>
                     <Button aria-label={`${type} liquidity`} type='submit'>
                       {type} liquidity
