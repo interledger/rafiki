@@ -15,7 +15,7 @@ export async function getWalletAddressUrlFromRequestBody(
   ctx: SignedCollectionContext<CreateBody>,
   next: () => Promise<void>
 ) {
-  ctx.walletAddressUrl = ctx.request.body.walletAddress
+  ctx.walletAddressUrl = ctx.request.body.walletAddress.toLowerCase()
   await next()
 }
 
@@ -23,7 +23,7 @@ export async function getWalletAddressUrlFromQueryParams(
   ctx: SignedCollectionContext<never, GetCollectionQuery>,
   next: () => Promise<void>
 ) {
-  ctx.walletAddressUrl = ctx.request.query['wallet-address']
+  ctx.walletAddressUrl = ctx.request.query['wallet-address'].toLowerCase()
   await next()
 }
 
@@ -31,7 +31,7 @@ export async function getWalletAddressUrlFromPath(
   ctx: WalletAddressUrlContext,
   next: () => Promise<void>
 ) {
-  ctx.walletAddressUrl = `https://${ctx.request.host}/${ctx.params.walletAddressPath}`
+  ctx.walletAddressUrl = `https://${ctx.request.host}/${ctx.params.walletAddressPath}`.toLowerCase()
   await next()
 }
 
@@ -53,7 +53,7 @@ export async function getWalletAddressUrlFromIncomingPayment(
     })
   }
 
-  ctx.walletAddressUrl = incomingPayment.walletAddress.url
+  ctx.walletAddressUrl = incomingPayment.walletAddress.url.toLowerCase()
   await next()
 }
 
@@ -75,7 +75,7 @@ export async function getWalletAddressUrlFromOutgoingPayment(
     })
   }
 
-  ctx.walletAddressUrl = outgoingPayment.walletAddress.url
+  ctx.walletAddressUrl = outgoingPayment.walletAddress.url.toLowerCase()
   await next()
 }
 
@@ -95,7 +95,7 @@ export async function getWalletAddressUrlFromQuote(
     })
   }
 
-  ctx.walletAddressUrl = quote.walletAddress.url
+  ctx.walletAddressUrl = quote.walletAddress.url.toLowerCase()
   await next()
 }
 
@@ -106,7 +106,7 @@ export async function getWalletAddressForSubresource(
   const walletAddressService = await ctx.container.use('walletAddressService')
 
   const walletAddress = await walletAddressService.getOrPollByUrl(
-    ctx.walletAddressUrl
+    ctx.walletAddressUrl.toLowerCase()
   )
 
   if (!walletAddress?.isActive) {
