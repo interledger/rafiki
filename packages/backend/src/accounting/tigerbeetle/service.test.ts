@@ -900,6 +900,7 @@ describe('TigerBeetle Accounting Service', (): void => {
     history:                                      8  [0000 1000]
     result of OR operation for TB bitfield flags: 12 [0000 1100]
      */
+    const credExcDebitAndHistory = 12
     expect(
       flagsBasedOnAccountOptions({
         id: uuid(),
@@ -908,7 +909,13 @@ describe('TigerBeetle Accounting Service', (): void => {
         userData128: 0n,
         history: true
       })
-    ).toEqual(12)
+    ).toEqual(credExcDebitAndHistory)
+
+    // Tests to see if correct flags are set.
+    expect(AccountFlags.credits_must_not_exceed_debits & credExcDebitAndHistory).toBeTruthy()
+    expect(AccountFlags.history & credExcDebitAndHistory).toBeTruthy()
+    expect(AccountFlags.debits_must_not_exceed_credits & credExcDebitAndHistory).toBeFalsy()
+    expect(AccountFlags.linked & credExcDebitAndHistory).toBeFalsy()
 
     /*
     credits_must_not_exceed_debits:               4  [0000 0100]
@@ -916,6 +923,7 @@ describe('TigerBeetle Accounting Service', (): void => {
     linked:                                       1  [0000 0001]
     result of OR operation for TB bitfield flags: 13 [0000 1101]
    */
+    const credExcDebitLinkedAndHistory = 13
     expect(
       flagsBasedOnAccountOptions({
         id: uuid(),
@@ -925,6 +933,12 @@ describe('TigerBeetle Accounting Service', (): void => {
         history: true,
         linked: true
       })
-    ).toEqual(13)
+    ).toEqual(credExcDebitLinkedAndHistory)
+
+    // Tests to see if correct flags are set.
+    expect(AccountFlags.credits_must_not_exceed_debits & credExcDebitLinkedAndHistory).toBeTruthy()
+    expect(AccountFlags.history & credExcDebitLinkedAndHistory).toBeTruthy()
+    expect(AccountFlags.linked & credExcDebitLinkedAndHistory).toBeTruthy()
+    expect(AccountFlags.debits_must_not_exceed_credits & credExcDebitLinkedAndHistory).toBeFalsy()
   })
 })
