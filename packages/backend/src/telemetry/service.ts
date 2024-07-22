@@ -6,20 +6,28 @@ import {
   PeriodicExportingMetricReader
 } from '@opentelemetry/sdk-metrics'
 
-import { ConvertError, RatesService, isConvertError } from '../rates/service'
+import { RatesService, isConvertError } from '../rates/service'
 import { ConvertOptions } from '../rates/util'
 import { BaseService } from '../shared/baseService'
+import { privacy } from './privacy'
 
 export interface TelemetryService {
-  shutdown(): void
-  getOrCreateMetric(name: string, options?: MetricOptions): Counter
-  getOrCreateHistogramMetric(name: string, options?: MetricOptions): Histogram
-  getInstanceName(): string | undefined
-  getBaseAssetCode(): string
-  getBaseScale(): number
-  convertAmount(
-    convertOptions: Omit<ConvertOptions, 'exchangeRate' | 'destinationAsset'>
-  ): Promise<bigint | ConvertError>
+  shutdown(): Promise<void>
+  incrementCounter(
+    name: string,
+    value: number,
+    attributes?: Record<string, unknown>
+  ): void
+  incrementCounterWithTransactionAmount(
+    name: string,
+    amount: { value: bigint; assetCode: string; assetScale: number },
+    attributes?: Record<string, unknown>
+  ): Promise<void>
+  recordHistogram(
+    name: string,
+    value: number,
+    attributes?: Record<string, unknown>
+  ): void
 }
 
 interface TelemetryServiceDependencies extends BaseService {
@@ -64,20 +72,15 @@ class TelemetryServiceImpl implements TelemetryService {
     }
 
     this.meterProvider = new MeterProvider({
-      resource: new Resource({ 'service.name': SERVICE_NAME })
-    })
-
-    deps.collectorUrls.forEach((url) => {
-      const metricExporter = new OTLPMetricExporter({
-        url: url
+      resource: new Resource({ 'service.name': SERVICE_NAME }),
+      readers: deps.collectorUrls.map((url) => {
+        return new PeriodicExportingMetricReader({
+          exporter: new OTLPMetricExporter({
+            url
+          }),
+          exportIntervalMillis: deps.exportIntervalMillis ?? 15000
+        })
       })
-
-      const metricReader = new PeriodicExportingMetricReader({
-        exporter: metricExporter,
-        exportIntervalMillis: deps.exportIntervalMillis ?? 15000
-      })
-
-      this.meterProvider?.addMetricReader(metricReader)
     })
 
     metrics.setGlobalMeterProvider(this.meterProvider)
@@ -87,43 +90,76 @@ class TelemetryServiceImpl implements TelemetryService {
     await this.meterProvider?.shutdown()
   }
 
-  private createHistogram(name: string, options: MetricOptions | undefined) {
-    const histogram = metrics
-      .getMeter(METER_NAME)
-      .createHistogram(name, options)
-    this.histograms.set(name, histogram)
-    return histogram
-  }
-  public getOrCreateHistogramMetric(
-    name: string,
-    options?: MetricOptions
-  ): Histogram {
-    const existing = this.histograms.get(name)
-    if (existing) {
-      return existing
+  private getOrCreateCounter(name: string, options?: MetricOptions): Counter {
+    let counter = this.counters.get(name)
+    if (!counter) {
+      counter = metrics.getMeter(METER_NAME).createCounter(name, options)
+      this.counters.set(name, counter)
     }
-    return this.createHistogram(name, options)
-  }
-
-  private createCounter(
-    name: string,
-    options: MetricOptions | undefined
-  ): Counter {
-    const counter = metrics.getMeter(METER_NAME).createCounter(name, options)
-    this.counters.set(name, counter)
     return counter
   }
 
-  public getOrCreateMetric(name: string, options?: MetricOptions): Counter {
-    const existing = this.counters.get(name)
-    if (existing) {
-      return existing
+  private getOrCreateHistogram(
+    name: string,
+    options?: MetricOptions
+  ): Histogram {
+    let histogram = this.histograms.get(name)
+    if (!histogram) {
+      histogram = metrics.getMeter(METER_NAME).createHistogram(name, options)
+      this.histograms.set(name, histogram)
     }
-    return this.createCounter(name, options)
+    return histogram
   }
 
-  public async convertAmount(
-    convertOptions: Omit<ConvertOptions, 'exchangeRate'>
+  public incrementCounter(
+    name: string,
+    amount: number,
+    attributes: Record<string, unknown> = {}
+  ): void {
+    const counter = this.getOrCreateCounter(name)
+    counter.add(amount, {
+      source: this.instanceName,
+      ...attributes
+    })
+  }
+
+  public async incrementCounterWithTransactionAmount(
+    name: string,
+    amount: { value: bigint; assetCode: string; assetScale: number },
+    attributes: Record<string, unknown> = {}
+  ): Promise<void> {
+    const { value, assetCode, assetScale } = amount
+    try {
+      const converted = await this.convertAmount({
+        sourceAmount: value,
+        sourceAsset: { code: assetCode, scale: assetScale }
+      })
+      if (isConvertError(converted)) {
+        this.deps.logger.error(`Unable to convert amount: ${converted}`)
+        return
+      }
+
+      const obfuscatedAmount = privacy.applyPrivacy(Number(converted))
+      this.incrementCounter(name, obfuscatedAmount, attributes)
+    } catch (e) {
+      this.deps.logger.error(e, `Unable to collect telemetry`)
+    }
+  }
+
+  public recordHistogram(
+    name: string,
+    value: number,
+    attributes: Record<string, unknown> = {}
+  ): void {
+    const histogram = this.getOrCreateHistogram(name)
+    histogram.record(value, {
+      source: this.instanceName,
+      ...attributes
+    })
+  }
+
+  private async convertAmount(
+    convertOptions: Pick<ConvertOptions, 'sourceAmount' | 'sourceAsset'>
   ) {
     const destinationAsset = {
       code: this.deps.baseAssetCode,
@@ -149,17 +185,5 @@ class TelemetryServiceImpl implements TelemetryService {
       }
     }
     return converted
-  }
-
-  public getInstanceName(): string | undefined {
-    return this.instanceName
-  }
-
-  getBaseAssetCode(): string {
-    return this.deps.baseAssetCode
-  }
-
-  getBaseScale(): number {
-    return this.deps.baseScale
   }
 }
