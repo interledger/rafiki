@@ -56,6 +56,8 @@ export async function createAccounts(
 export function flagsBasedOnAccountOptions(
   options: CreateAccountOptions
 ): AccountFlags {
+  // The TigerBeetle [flags] is a bitfield that toggles additional behavior.
+  // It is a 16-bit unsigned integer.
   let returnVal =
     options.code === TigerBeetleAccountCode.SETTLEMENT
       ? AccountFlags.credits_must_not_exceed_debits

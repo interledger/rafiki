@@ -3,7 +3,10 @@
  */
 
 import assert from 'assert'
-import { CreateAccountError as CreateTbAccountError } from 'tigerbeetle-node'
+import {
+  AccountFlags,
+  CreateAccountError as CreateTbAccountError
+} from 'tigerbeetle-node'
 import { v4 as uuid } from 'uuid'
 
 import { TigerbeetleCreateAccountError } from './errors'
@@ -24,6 +27,8 @@ import {
   LedgerTransferState,
   TransferType
 } from '../service'
+import { flagsBasedOnAccountOptions } from './accounts'
+import { TigerBeetleAccountCode } from './service'
 
 describe('TigerBeetle Accounting Service', (): void => {
   let deps: IocContract<AppServices>
@@ -867,5 +872,59 @@ describe('TigerBeetle Accounting Service', (): void => {
         ).resolves.toEqual(TransferError.TransferExpired)
       })
     })
+  })
+
+  test('Test TigerBeetle Account Flags', async (): Promise<void> => {
+    // credits_must_not_exceed_debits: 4 (1 << 2)
+    expect(
+      flagsBasedOnAccountOptions({
+        id: uuid(),
+        code: TigerBeetleAccountCode.SETTLEMENT,
+        ledger: 0,
+        userData128: 0n
+      })
+    ).toEqual(AccountFlags.credits_must_not_exceed_debits)
+
+    // debits_must_not_exceed_credits: 2 (1 << 1)
+    expect(
+      flagsBasedOnAccountOptions({
+        id: uuid(),
+        code: TigerBeetleAccountCode.LIQUIDITY_INCOMING,
+        ledger: 0,
+        userData128: 0n
+      })
+    ).toEqual(AccountFlags.debits_must_not_exceed_credits)
+
+    /*
+    credits_must_not_exceed_debits:               4  [0000 0100]
+    history:                                      8  [0000 1000]
+    result of OR operation for TB bitfield flags: 12 [0000 1100]
+     */
+    expect(
+      flagsBasedOnAccountOptions({
+        id: uuid(),
+        code: TigerBeetleAccountCode.SETTLEMENT,
+        ledger: 0,
+        userData128: 0n,
+        history: true
+      })
+    ).toEqual(12)
+
+    /*
+    credits_must_not_exceed_debits:               4  [0000 0100]
+    history:                                      8  [0000 1000]
+    linked:                                       1  [0000 0001]
+    result of OR operation for TB bitfield flags: 13 [0000 1101]
+   */
+    expect(
+      flagsBasedOnAccountOptions({
+        id: uuid(),
+        code: TigerBeetleAccountCode.SETTLEMENT,
+        ledger: 0,
+        userData128: 0n,
+        history: true,
+        linked: true
+      })
+    ).toEqual(13)
   })
 })
