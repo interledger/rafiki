@@ -912,9 +912,13 @@ describe('TigerBeetle Accounting Service', (): void => {
     ).toEqual(credExcDebitAndHistory)
 
     // Tests to see if correct flags are set.
-    expect(AccountFlags.credits_must_not_exceed_debits & credExcDebitAndHistory).toBeTruthy()
+    expect(
+      AccountFlags.credits_must_not_exceed_debits & credExcDebitAndHistory
+    ).toBeTruthy()
     expect(AccountFlags.history & credExcDebitAndHistory).toBeTruthy()
-    expect(AccountFlags.debits_must_not_exceed_credits & credExcDebitAndHistory).toBeFalsy()
+    expect(
+      AccountFlags.debits_must_not_exceed_credits & credExcDebitAndHistory
+    ).toBeFalsy()
     expect(AccountFlags.linked & credExcDebitAndHistory).toBeFalsy()
 
     /*
@@ -936,9 +940,13 @@ describe('TigerBeetle Accounting Service', (): void => {
     ).toEqual(credExcDebitLinkedAndHistory)
 
     // Tests to see if correct flags are set.
-    expect(AccountFlags.credits_must_not_exceed_debits & credExcDebitLinkedAndHistory).toBeTruthy()
+    expect(
+      AccountFlags.credits_must_not_exceed_debits & credExcDebitLinkedAndHistory
+    ).toBeTruthy()
     expect(AccountFlags.history & credExcDebitLinkedAndHistory).toBeTruthy()
     expect(AccountFlags.linked & credExcDebitLinkedAndHistory).toBeTruthy()
-    expect(AccountFlags.debits_must_not_exceed_credits & credExcDebitLinkedAndHistory).toBeFalsy()
+    expect(
+      AccountFlags.debits_must_not_exceed_credits & credExcDebitLinkedAndHistory
+    ).toBeFalsy()
   })
 })
