@@ -3,9 +3,7 @@ import { IlpResponse, OutgoingAccount, ZeroCopyIlpPrepare } from '../..'
 import { IncomingAccountFactory, RafikiServicesFactory } from '../../factories'
 import { createTelemetryMiddleware } from '../../middleware/telemetry'
 import { createILPContext } from '../../utils'
-
 import { IlpFulfill } from 'ilp-packet'
-import * as telemetry from '../../../../../../telemetry/transaction-amount'
 
 const incomingAccount = IncomingAccountFactory.build({ id: 'alice' })
 
@@ -35,7 +33,6 @@ const ctx = createILPContext({
   } as IlpResponse
 })
 
-jest.mock('../../../../../../telemetry/transaction-amount')
 const middleware = createTelemetryMiddleware()
 const next = jest.fn().mockImplementation(() => Promise.resolve())
 
@@ -46,33 +43,38 @@ beforeEach(async () => {
 })
 
 describe('Telemetry Middleware', function () {
-  it('does not gather telemetry if telemetry is not enabled (service is undefined)', async () => {
-    const collectAmountSpy = jest
-      .spyOn(telemetry, 'collectTelemetryAmount')
+  it('should not gather telemetry if telemetry is not enabled (service is undefined)', async () => {
+    const incrementCounterWithTransactionAmountSpy = jest
+      .spyOn(services.telemetry, 'incrementCounterWithTransactionAmount')
       .mockImplementation(() => Promise.resolve())
 
     await middleware(
       { ...ctx, services: { ...ctx.services, telemetry: undefined } },
       next
     )
-    expect(collectAmountSpy).not.toHaveBeenCalled()
+
+    expect(incrementCounterWithTransactionAmountSpy).not.toHaveBeenCalled()
     expect(next).toHaveBeenCalled()
   })
 
-  it('does not gather telemetry if response.fulfill undefined', async () => {
-    const collectAmountSpy = jest.spyOn(telemetry, 'collectTelemetryAmount')
+  it('should not gather telemetry if response.fulfill undefined', async () => {
+    const incrementCounterWithTransactionAmountSpy = jest
+      .spyOn(services.telemetry, 'incrementCounterWithTransactionAmount')
+      .mockImplementation(() => Promise.resolve())
 
     await middleware(
       { ...ctx, response: { fulfill: undefined } as IlpResponse },
       next
     )
 
-    expect(collectAmountSpy).not.toHaveBeenCalled()
+    expect(incrementCounterWithTransactionAmountSpy).not.toHaveBeenCalled()
     expect(next).toHaveBeenCalled()
   })
 
-  it('does not gather telemetry if amount is invalid', async () => {
-    const collectAmountSpy = jest.spyOn(telemetry, 'collectTelemetryAmount')
+  it('should not gather telemetry if request.prepare.amount is 0', async () => {
+    const incrementCounterWithTransactionAmountSpy = jest
+      .spyOn(services.telemetry, 'incrementCounterWithTransactionAmount')
+      .mockImplementation(() => Promise.resolve())
 
     await middleware(
       {
@@ -85,19 +87,19 @@ describe('Telemetry Middleware', function () {
       next
     )
 
-    expect(collectAmountSpy).not.toHaveBeenCalled()
+    expect(incrementCounterWithTransactionAmountSpy).not.toHaveBeenCalled()
     expect(next).toHaveBeenCalled()
   })
 
-  it('gathers telemetry without blocking middleware chain', async () => {
+  it('should gather telemetry without blocking middleware chain', async () => {
     let nextCalled = false
     const next = jest.fn().mockImplementation(() => {
       nextCalled = true
       return Promise.resolve()
     })
 
-    const collectAmountSpy = jest
-      .spyOn(telemetry, 'collectTelemetryAmount')
+    const incrementCounterWithTransactionAmountSpy = jest
+      .spyOn(services.telemetry, 'incrementCounterWithTransactionAmount')
       .mockImplementation(() => {
         expect(nextCalled).toBe(true)
         return Promise.resolve()
@@ -105,7 +107,7 @@ describe('Telemetry Middleware', function () {
 
     await middleware(ctx, next)
 
-    expect(collectAmountSpy).toHaveBeenCalled()
+    expect(incrementCounterWithTransactionAmountSpy).toHaveBeenCalled()
     expect(next).toHaveBeenCalled()
   })
 })
