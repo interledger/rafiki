@@ -28,9 +28,9 @@ const rafikiResource = new Resource({
   instance: Config.instanceName
 })
 
-const meterReaders = []
-
 if (Config.enableTelemetry) {
+  const meterReaders = []
+
   for (const url of Config.openTelemetryCollectors) {
     const metricExporter = new PeriodicExportingMetricReader({
       exporter: new OTLPMetricExporter({
@@ -41,20 +41,20 @@ if (Config.enableTelemetry) {
 
     meterReaders.push(metricExporter)
   }
+
+  const meterProvider = new MeterProvider({
+    resource: rafikiResource,
+    readers: meterReaders
+  })
+
+  api.metrics.setGlobalMeterProvider(meterProvider)
 }
 
-const meterProvider = new MeterProvider({
-  resource: rafikiResource,
-  readers: meterReaders
-})
-
-api.metrics.setGlobalMeterProvider(meterProvider)
-
-const tracerProvider = new NodeTracerProvider({
-  resource: rafikiResource
-})
-
 if (Config.enableTelemetryTraces) {
+  const tracerProvider = new NodeTracerProvider({
+    resource: rafikiResource
+  })
+
   for (const url of Config.openTelemetryTraceCollectorUrls) {
     const traceExporter = new OTLPTraceExporter({
       url
@@ -62,21 +62,19 @@ if (Config.enableTelemetryTraces) {
 
     tracerProvider.addSpanProcessor(new BatchSpanProcessor(traceExporter))
   }
+
+  tracerProvider.register()
+
+  registerInstrumentations({
+    instrumentations: [
+      new UndiciInstrumentation(),
+      new HttpInstrumentation(),
+      new PgInstrumentation(),
+      new GraphQLInstrumentation({
+        mergeItems: true,
+        ignoreTrivialResolveSpans: true,
+        ignoreResolveSpans: true
+      })
+    ]
+  })
 }
-
-tracerProvider.register()
-
-registerInstrumentations({
-  tracerProvider,
-  meterProvider,
-  instrumentations: [
-    new UndiciInstrumentation(),
-    new HttpInstrumentation(),
-    new PgInstrumentation(),
-    new GraphQLInstrumentation({
-      mergeItems: true,
-      ignoreTrivialResolveSpans: true,
-      ignoreResolveSpans: true
-    })
-  ]
-})
