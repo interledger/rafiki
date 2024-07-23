@@ -15,7 +15,7 @@ export interface AccessTokenService {
   introspect(
     tokenValue: string,
     access?: AccessItem[]
-  ): Promise<{ grant: Grant; access?: Access } | undefined>
+  ): Promise<{ grant: Grant; accessItem?: Access } | undefined>
   create(grantId: string, trx?: TransactionOrKnex): Promise<AccessToken>
   revoke(id: string, trx?: TransactionOrKnex): Promise<AccessToken | undefined>
   revokeByGrantId(grantId: string, trx?: TransactionOrKnex): Promise<number>

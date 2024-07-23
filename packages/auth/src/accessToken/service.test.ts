@@ -142,7 +142,7 @@ describe('Access Token Service', (): void => {
     test('Can introspect active token', async (): Promise<void> => {
       await expect(
         accessTokenService.introspect(accessToken.value)
-      ).resolves.toEqual(grant)
+      ).resolves.toEqual({ grant })
     })
 
     test('Can introspect expired token', async (): Promise<void> => {
@@ -171,7 +171,7 @@ describe('Access Token Service', (): void => {
         accessTokenService.introspect(accessToken.value, [
           outgoingPaymentAccess
         ])
-      ).resolves.toEqual(grant)
+      ).resolves.toEqual({ grant, accessItem: grant.access[0] })
     })
 
     test('Can introspect active token with partial access actions', async (): Promise<void> => {
@@ -181,7 +181,7 @@ describe('Access Token Service', (): void => {
       }
       await expect(
         accessTokenService.introspect(accessToken.value, [access])
-      ).resolves.toEqual(grant)
+      ).resolves.toEqual({ grant, accessItem: grant.access[0] })
     })
 
     test('Cannot introspect non-existing token', async (): Promise<void> => {

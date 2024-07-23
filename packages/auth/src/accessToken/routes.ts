@@ -105,7 +105,7 @@ async function introspectToken(
     'introspected access token'
   )
 
-  ctx.body = grantToTokenInfo(tokenInfo?.grant)
+  ctx.body = grantToTokenInfo(tokenInfo?.grant, tokenInfo?.accessItem)
 }
 
 function grantToTokenInfo(grant?: Grant, accessItem?: Access): TokenInfo {
