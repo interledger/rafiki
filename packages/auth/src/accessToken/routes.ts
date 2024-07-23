@@ -91,7 +91,7 @@ async function introspectToken(
   const { body } = ctx.request
   const accessToken = body['access_token']
   const access = body['access']
-  const grant = await deps.accessTokenService.introspect(
+  const tokenInfo = await deps.accessTokenService.introspect(
     // body.access_token exists since it is checked for by the request validation
     accessToken,
     access
@@ -100,15 +100,15 @@ async function introspectToken(
   deps.logger.debug(
     {
       ...generateRouteLogs(ctx),
-      grant
+      tokenInfo
     },
     'introspected access token'
   )
 
-  ctx.body = grantToTokenInfo(grant)
+  ctx.body = grantToTokenInfo(tokenInfo?.grant)
 }
 
-function grantToTokenInfo(grant?: Grant): TokenInfo {
+function grantToTokenInfo(grant?: Grant, accessItem?: Access): TokenInfo {
   if (!grant) {
     return {
       active: false
@@ -117,7 +117,9 @@ function grantToTokenInfo(grant?: Grant): TokenInfo {
   return {
     active: true,
     grant: grant.id,
-    access: grant.access.map(toOpenPaymentsAccess),
+    access: accessItem
+      ? [toOpenPaymentsAccess(accessItem)]
+      : grant.access.map(toOpenPaymentsAccess),
     client: grant.client
   }
 }

@@ -8,14 +8,14 @@ import { Grant, isRevokedGrant } from '../grant/model'
 import { ClientService } from '../client/service'
 import { AccessToken } from './model'
 import { compareRequestAndGrantAccessItems } from '../access/utils'
-import { toOpenPaymentsAccess } from '../access/model'
+import { Access, toOpenPaymentsAccess } from '../access/model'
 
 export interface AccessTokenService {
   getByManagementId(managementId: string): Promise<AccessToken | undefined>
   introspect(
     tokenValue: string,
     access?: AccessItem[]
-  ): Promise<Grant | undefined>
+  ): Promise<{ grant: Grant; access?: Access } | undefined>
   create(grantId: string, trx?: TransactionOrKnex): Promise<AccessToken>
   revoke(id: string, trx?: TransactionOrKnex): Promise<AccessToken | undefined>
   revokeByGrantId(grantId: string, trx?: TransactionOrKnex): Promise<number>
@@ -77,11 +77,12 @@ async function introspect(
   deps: ServiceDependencies,
   tokenValue: string,
   access?: AccessItem[]
-): Promise<Grant | undefined> {
+): Promise<{ grant: Grant; accessItem?: Access } | undefined> {
   const token = await AccessToken.query(deps.knex)
     .findOne({ value: tokenValue })
     .withGraphFetched('grant.access')
 
+  let foundAccessItem: Access | undefined
   if (!token) return
   if (isTokenExpired(token)) {
     return undefined
@@ -92,20 +93,21 @@ async function introspect(
     if (access) {
       for (const accessItem of access) {
         const { access: grantAccess } = token.grant
-        if (
-          !grantAccess.find((grantAccessItem) =>
-            compareRequestAndGrantAccessItems(
-              accessItem,
-              toOpenPaymentsAccess(grantAccessItem)
-            )
+        foundAccessItem = grantAccess.find((grantAccessItem) =>
+          compareRequestAndGrantAccessItems(
+            accessItem,
+            toOpenPaymentsAccess(grantAccessItem)
           )
-        ) {
+        )
+        if (!foundAccessItem) {
           return undefined
+        } else {
+          return { grant: token.grant, accessItem: foundAccessItem }
         }
       }
     }
 
-    return token.grant
+    return { grant: token.grant }
   }
 }
 

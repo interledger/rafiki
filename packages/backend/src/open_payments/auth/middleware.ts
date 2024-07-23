@@ -16,11 +16,7 @@ import {
   JWKS,
   OpenPaymentsClientError
 } from '@interledger/open-payments'
-import {
-  TokenInfo,
-  isActiveTokenInfo,
-  validateTokenAccess
-} from 'token-introspection'
+import { TokenInfo, isActiveTokenInfo } from 'token-introspection'
 import { Config } from '../../config/app'
 import { OpenPaymentsServerRouteError } from '../route-errors'
 
@@ -62,11 +58,10 @@ function toOpenPaymentsAccess(
   identifier?: string
 ): AccessItem {
   return {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    type: type as any,
+    type: type,
     actions: [action],
-    identifier: identifier ?? undefined
-  }
+    identifier
+  } as AccessItem
 }
 
 export function createTokenIntrospectionMiddleware({
@@ -114,17 +109,14 @@ export function createTokenIntrospectionMiddleware({
         throw new OpenPaymentsServerRouteError(403, 'Inactive Token')
       }
 
-      const access = validateTokenAccess(tokenInfo, {
-        type: requestType,
-        action: requestAction,
-        identifier: ctx.walletAddressUrl
-      })
-      if (!access) {
+      if (tokenInfo.access.length > 1) {
         throw new OpenPaymentsServerRouteError(
           403,
           'Token info access does not match request access'
         )
       }
+
+      const access = tokenInfo.access[0]
 
       if (
         requestAction === AccessAction.Read &&
