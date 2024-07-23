@@ -57,7 +57,7 @@ export const LiquidityDialog = ({
                     label='Amount'
                     onChange={e => setAmount(Number(e.target.value))}
                   />
-                  <div className='mt-2'>
+                  <div className='text-gray-500 text-sm mt-2'>
                     <p>Based on the asset:</p>
                     <p>Amount {amount} = {amount / Math.pow(10, asset.scale)} {asset.code} </p>
                   </div>
