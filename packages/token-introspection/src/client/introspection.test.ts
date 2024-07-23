@@ -1,10 +1,5 @@
-import {
-  createIntrospectionRoutes,
-  introspectToken,
-  validateTokenAccess
-} from './introspection'
+import { createIntrospectionRoutes, introspectToken } from './introspection'
 import { OpenAPI, HttpMethod } from '@interledger/openapi'
-import { AccessAction } from '@interledger/open-payments'
 import {
   defaultAxiosInstance,
   mockOpenApiResponseValidators,
@@ -96,18 +91,6 @@ describe('introspection', (): void => {
         )
       ).rejects.toThrowError()
       scope.done()
-    })
-  })
-
-  describe('validateTokenAccess', (): void => {
-    test('returns valid token access', async (): Promise<void> => {
-      const tokenInfo = mockTokenInfo()
-      expect(
-        validateTokenAccess(tokenInfo, {
-          type: tokenInfo.access?.[0].type as string,
-          action: tokenInfo.access?.[0].actions[0] as AccessAction
-        })
-      ).toEqual(tokenInfo.access?.[0])
     })
   })
 })
