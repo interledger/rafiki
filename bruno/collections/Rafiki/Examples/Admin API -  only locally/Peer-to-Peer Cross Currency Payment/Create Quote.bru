@@ -57,8 +57,10 @@ script:pre-request {
 
 script:post-response {
   const body = res.getBody();
-  
-  bru.setEnvVar("quoteId", body.data.createQuote.quote.id);
+
+  if (body?.data) {
+    bru.setEnvVar("quoteId", body.data.createQuote.quote.id);
+  }
 }
 
 tests {
