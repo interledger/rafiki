@@ -50,6 +50,11 @@ const privateKeyFileValue = loadOrGenerateKey(privateKeyFileEnv)
 export const Config = {
   logLevel: envString('LOG_LEVEL', 'info'),
   enableTelemetry: envBool('ENABLE_TELEMETRY', false),
+  enableTelemetryTraces: envBool('ENABLE_TELEMETRY_TRACES', false),
+  openTelemetryTraceCollectorUrls: envStringArray(
+    'OPEN_TELEMETRY_TRACE_COLLECTOR_URLS',
+    []
+  ),
   livenet: envBool('LIVENET', false),
   openTelemetryCollectors: envStringArray(
     'OPEN_TELEMETRY_COLLECTOR_URLS',

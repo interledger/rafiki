@@ -2,17 +2,20 @@ services:
   cloud-nine-backend:
     environment:
       ENABLE_TELEMETRY: true
+      ENABLE_TELEMETRY_TRACES: true
       LIVENET: false
       OPEN_TELEMETRY_COLLECTOR_URLS: http://otel-collector:4317
+      OPEN_TELEMETRY_TRACE_COLLECTOR_URLS: http://otel-collector:4317
 
   happy-life-backend:
     environment:
       ENABLE_TELEMETRY: true
+      ENABLE_TELEMETRY_TRACES: true
       LIVENET: false
       OPEN_TELEMETRY_COLLECTOR_URLS: http://otel-collector:4317
+      OPEN_TELEMETRY_TRACE_COLLECTOR_URLS: http://otel-collector:4317
 
   otel-collector:
-    hostname: otel-collector
     image: otel/opentelemetry-collector:latest
     command: "--config=/etc/otel-collector-config.yaml"
     networks:
@@ -30,6 +33,17 @@ services:
     ports:
       - "9090:9090"
 
+  tempo:
+    image: grafana/tempo:latest
+    command: "-config.file=/etc/tempo.yaml"
+    networks:
+    - rafiki
+    ports:
+      - "3200:3200"
+    volumes:
+      - ../telemetry/tempo.yaml:/etc/tempo.yaml
+      - tempo-data:/var/tempo
+
   grafana:
     image: grafana/grafana:latest
     networks:
@@ -45,3 +59,4 @@ services:
 
 volumes:
   grafana_storage:
+  tempo-data:

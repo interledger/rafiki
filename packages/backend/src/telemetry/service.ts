@@ -1,10 +1,5 @@
 import { Counter, Histogram, MetricOptions, metrics } from '@opentelemetry/api'
-import { OTLPMetricExporter } from '@opentelemetry/exporter-metrics-otlp-grpc'
-import { Resource } from '@opentelemetry/resources'
-import {
-  MeterProvider,
-  PeriodicExportingMetricReader
-} from '@opentelemetry/sdk-metrics'
+import { MeterProvider } from '@opentelemetry/sdk-metrics'
 
 import { RatesService, isConvertError } from '../rates/service'
 import { ConvertOptions } from '../rates/util'
@@ -41,7 +36,6 @@ interface TelemetryServiceDependencies extends BaseService {
 }
 
 const METER_NAME = 'Rafiki'
-const SERVICE_NAME = 'RAFIKI_NETWORK'
 
 export function createTelemetryService(
   deps: TelemetryServiceDependencies
@@ -58,32 +52,9 @@ class TelemetryServiceImpl implements TelemetryService {
   private counters: Map<string, Counter> = new Map()
   private histograms: Map<string, Histogram> = new Map()
   constructor(private deps: TelemetryServiceDependencies) {
-    // debug logger:
-    // diag.setLogger(new DiagConsoleLogger(), DiagLogLevel.DEBUG)
     this.instanceName = deps.instanceName
     this.internalRatesService = deps.internalRatesService
     this.aseRatesService = deps.aseRatesService
-
-    if (deps.collectorUrls.length === 0) {
-      deps.logger.info(
-        'No collector URLs specified, metrics will not be exported'
-      )
-      return
-    }
-
-    this.meterProvider = new MeterProvider({
-      resource: new Resource({ 'service.name': SERVICE_NAME }),
-      readers: deps.collectorUrls.map((url) => {
-        return new PeriodicExportingMetricReader({
-          exporter: new OTLPMetricExporter({
-            url
-          }),
-          exportIntervalMillis: deps.exportIntervalMillis ?? 15000
-        })
-      })
-    })
-
-    metrics.setGlobalMeterProvider(this.meterProvider)
   }
 
   public async shutdown(): Promise<void> {
