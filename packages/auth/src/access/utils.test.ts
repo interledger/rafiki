@@ -152,7 +152,7 @@ describe('Access utilities', (): void => {
         requestAccessItem,
         toOpenPaymentsAccess(grantAccessItemSuperAction)
       )
-    )
+    ).toBe(true)
   })
 
   test('access comparison fails if grant action items are insufficient', async (): Promise<void> => {
