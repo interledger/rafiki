@@ -52,8 +52,6 @@ export function createAccountingService(
   return {
     createLiquidityAccount: (options, accTypeCode, trx) =>
       createLiquidityAccount(deps, options, accTypeCode, trx),
-    createSettlementAccount: (ledger, relatedAccountId, trx) =>
-      createSettlementAccount(deps, ledger, relatedAccountId, trx),
     createLiquidityAndLinkedSettlementAccount: (options, accTypeCode, trx) =>
       createLiquidityAndLinkedSettlementAccount(
         deps,
@@ -100,7 +98,7 @@ export async function createLiquidityAccount(
 export async function createSettlementAccount(
   deps: ServiceDependencies,
   ledger: number,
-  relatedAccountId: string | number,
+  assetId: string | number,
   trx?: TransactionOrKnex
 ): Promise<void> {
   const asset = await Asset.query(trx || deps.knex).findOne({ ledger })
@@ -274,8 +272,9 @@ export async function createTransfer(
         )
       )
 
-      if (isTransferError(pendingTransfersOrError))
+      if (isTransferError(pendingTransfersOrError)) {
         return pendingTransfersOrError
+      }
 
       return pendingTransfersOrError.map(
         (pendingTransfer) => pendingTransfer.transferRef

@@ -146,23 +146,10 @@ export class MockAccountingService implements AccountingService {
     throw new Error('Not implemented!')
   }
 
-  createSettlementAccount(
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    ledger: number,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    relatedAccountId: string | number,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    trx?: TransactionOrKnex
-  ): Promise<void> {
-    throw new Error('Not implemented!')
-  }
-
   async createLiquidityAndLinkedSettlementAccount(
     account: MockIlpAccount
   ): Promise<MockIlpAccount> {
-    const retVal = await this.createLiquidityAccount(account)
-    await this.createSettlementAccount(1, account.id)
-    return retVal
+    return await this.createLiquidityAccount(account)
   }
 
   createWithdrawal(

@@ -1206,8 +1206,6 @@ export enum SortOrder {
 }
 
 export enum TransferType {
-  /** Default transfer type. */
-  Default = 'DEFAULT',
   /** Deposit transfer type. */
   Deposit = 'DEPOSIT',
   /** Transfer type. */

@@ -39,10 +39,10 @@ export type CreateLedgerTransferArgs = Pick<
 export async function getAccountTransfers(
   deps: ServiceDependencies,
   id: string | number,
-  limit: number = 100_000,
+  limit?: number,
   trx?: TransactionOrKnex
 ): Promise<GetLedgerTransfersResult> {
-  const transfers = await LedgerTransfer.query(trx || deps.knex)
+  const builder = LedgerTransfer.query(trx || deps.knex)
     .where((query) =>
       query.where({ debitAccountId: id }).orWhere({
         creditAccountId: id
@@ -62,9 +62,9 @@ export async function getAccountTransfers(
             )
         )
     )
-    .limit(limit)
+  if (limit) builder.limit(limit)
 
-  return transfers.reduce(
+  return (await builder).reduce(
     (results, transfer) => {
       if (transfer.debitAccountId === id) {
         results.debits.push(mapToGetLedgerTransfersResult(transfer))
@@ -82,8 +82,8 @@ function mapToGetLedgerTransfersResult(
 ): ServiceLedgerTransfer {
   return {
     amount: dbModel.amount,
-    creditAccount: dbModel.creditAccount ? dbModel.creditAccount.id : '',
-    debitAccount: dbModel.debitAccountId,
+    creditAccountId: dbModel.creditAccount ? dbModel.creditAccount.id : '',
+    debitAccountId: dbModel.debitAccountId,
     id: dbModel.id,
     ledger: dbModel.ledger,
     timestamp: BigInt(dbModel.createdAt.getTime()),
@@ -93,7 +93,6 @@ function mapToGetLedgerTransfersResult(
         : TransferType.DEPOSIT,
     state: dbModel.state,
     timeout: 0,
-    userData128: 0n,
     transferRef: dbModel.transferRef,
     expiresAt: dbModel.expiresAt
   }

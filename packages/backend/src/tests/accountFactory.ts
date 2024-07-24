@@ -41,8 +41,7 @@ export class AccountFactory {
       }
     }
     if (!options.asset) {
-      await this.accounts.createSettlementAccount(asset.ledger, asset.id)
-      await this.accounts.createLiquidityAccount(
+      await this.accounts.createLiquidityAndLinkedSettlementAccount(
         asset,
         LiquidityAccountType.ASSET
       )

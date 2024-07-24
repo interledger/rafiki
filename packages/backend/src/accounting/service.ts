@@ -13,8 +13,7 @@ export enum LiquidityAccountType {
 export enum TransferType {
   DEPOSIT = 'DEPOSIT',
   WITHDRAWAL = 'WITHDRAWAL',
-  TRANSFER = 'TRANSFER',
-  DEFAULT = 'DEFAULT'
+  TRANSFER = 'TRANSFER'
 }
 
 export enum LedgerTransferState {
@@ -81,12 +80,11 @@ export interface GetLedgerTransfersResult {
 
 export interface LedgerTransfer extends BaseTransfer {
   id: string
-  debitAccount: string
-  creditAccount: string
+  debitAccountId: string
+  creditAccountId: string
   amount: bigint
   timeout: number
   timestamp: bigint
-  userData128: bigint
   type: TransferType
   state: LedgerTransferState
   ledger: number
@@ -100,11 +98,6 @@ export interface AccountingService {
     accountType: LiquidityAccountType,
     trx?: TransactionOrKnex
   ): Promise<LiquidityAccount>
-  createSettlementAccount(
-    ledger: number,
-    relatedAccountId: string | number,
-    trx?: TransactionOrKnex
-  ): Promise<void>
   createLiquidityAndLinkedSettlementAccount(
     account: LiquidityAccount,
     accountType: LiquidityAccountType,

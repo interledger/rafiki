@@ -18,7 +18,7 @@ export interface CreateAccountOptions {
   linked?: boolean
   // When set, the account will retain the history of balances at each transfer.
   history?: boolean
-  userData128: AccountUserData128
+  assetId: AccountUserData128
 }
 
 export async function createAccounts(

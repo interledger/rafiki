@@ -21,7 +21,7 @@ type TransfersError = {
 export type TransferUserData128 = string | number | bigint
 
 interface TransferOptions {
-  userData128?: TransferUserData128
+  transferRef?: TransferUserData128
   code?: TigerBeetleTransferCode
 }
 
@@ -109,8 +109,8 @@ export async function createTransfers(
       }
     }
 
-    if (transfer.userData128)
-      tbTransfer.user_data_128 = toTigerBeetleId(transfer.userData128)
+    if (transfer.transferRef)
+      tbTransfer.user_data_128 = toTigerBeetleId(transfer.transferRef)
 
     if (i < transfers.length - 1) tbTransfer.flags |= TransferFlags.linked
     tbTransfers.push(tbTransfer)
@@ -177,11 +177,15 @@ export async function getAccountTransfers(
     account_id,
     timestamp_min: 0n,
     timestamp_max: 0n,
-    limit, //100_000
+    limit, //100_000 is the default limit for TB.
     flags: AccountFilterFlags.credits | AccountFilterFlags.debits
   }
-  const tbAccountTransfers = await deps.tigerBeetle.getAccountTransfers(filter)
-  const returnVal = { credits: [], debits: [] } as GetLedgerTransfersResult
+  const tbAccountTransfers: TbTransfer[] =
+    await deps.tigerBeetle.getAccountTransfers(filter)
+  const returnVal: GetLedgerTransfersResult = {
+    credits: [],
+    debits: []
+  }
   tbAccountTransfers.forEach((item) => {
     const converted = tbTransferToLedgerTransfer(item)
     if (item.debit_account_id === account_id) returnVal.debits.push(converted)

@@ -17,25 +17,13 @@ export function uuidToBigInt(id: string): bigint {
   return BigInt(`0x${id.replace(/-/g, '')}`)
 }
 
-export function hexTextToBigInt(hex: string): bigint {
-  return BigInt(`0x${hex}`)
-}
-
 export function fromTigerBeetleId(bi: bigint): string {
   let str = bi.toString(16)
   while (str.length < 32) str = '0' + str
 
-  if (str.length === 32)
-    str =
-      str.substring(0, 8) +
-      '-' +
-      str.substring(8, 12) +
-      '-' +
-      str.substring(12, 16) +
-      '-' +
-      str.substring(16, 20) +
-      '-' +
-      str.substring(20)
+  if (str.length === 32) {
+    str = `${str.substring(0, 8)}-${str.substring(8, 12)}-${str.substring(12, 16)}-${str.substring(16, 20)}-${str.substring(20)}`
+  }
   return str
 }
 
@@ -48,7 +36,7 @@ function transferTypeFromCode(code: number): TransferType {
     case TigerBeetleTransferCode.WITHDRAWAL:
       return TransferType.WITHDRAWAL
     default:
-      return TransferType.DEFAULT
+      throw new Error(`Transfer type code '${code}' is not mapped!`)
   }
 }
 
@@ -65,11 +53,11 @@ export function tbTransferToLedgerTransfer(
   return {
     id: fromTigerBeetleId(tbTransfer.id),
     amount: tbTransfer.amount,
-    creditAccount: fromTigerBeetleId(tbTransfer.credit_account_id),
-    debitAccount: fromTigerBeetleId(tbTransfer.debit_account_id),
+    creditAccountId: fromTigerBeetleId(tbTransfer.credit_account_id),
+    debitAccountId: fromTigerBeetleId(tbTransfer.debit_account_id),
     timeout: tbTransfer.timeout,
     timestamp: tbTransfer.timestamp,
-    userData128: tbTransfer.user_data_128,
+    transferRef: fromTigerBeetleId(tbTransfer.user_data_128),
     type: transferTypeFromCode(tbTransfer.code),
     state: state,
     ledger: tbTransfer.ledger

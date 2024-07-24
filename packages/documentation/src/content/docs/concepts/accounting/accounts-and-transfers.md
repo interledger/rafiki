@@ -764,7 +764,7 @@ Sender and receiver do not have wallet addresses at the same Rafiki instance.
 | -------------- | -------------- |
 | Peer Liquidity | Wallet Address |
 
-- Example: A wallet address receives `2 USD` from an outgoing payment at a peer's Rafiki instance.
+- Example: A wallet address receives `2 USD` from an ILP payment at a peer's Rafiki instance.
 
 <table class="accounting-table not-content">
   <tr class="header-row">

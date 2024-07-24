@@ -7195,12 +7195,6 @@
         "interfaces": null,
         "enumValues": [
           {
-            "name": "DEFAULT",
-            "description": "Default transfer type.",
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
             "name": "DEPOSIT",
             "description": "Deposit transfer type.",
             "isDeprecated": false,

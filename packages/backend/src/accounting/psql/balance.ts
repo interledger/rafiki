@@ -19,7 +19,7 @@ export async function getAccountBalances(
   const { credits, debits } = await getAccountTransfers(
     deps,
     account.id,
-    100_000,
+    undefined, // No limit for balances
     trx
   )
 

@@ -926,8 +926,6 @@ type AccountingTransfer implements Model {
 }
 
 enum TransferType {
-  "Default transfer type."
-  DEFAULT
   "Deposit transfer type."
   DEPOSIT
   "Withdrawal transfer type."

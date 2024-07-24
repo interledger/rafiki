@@ -62,7 +62,6 @@ export const convertToTigerBeetleAccountCode: {
 export const convertToTigerBeetleTransferCode: {
   [key in TransferType]: TigerBeetleTransferCode
 } = {
-  [TransferType.DEFAULT]: TigerBeetleTransferCode.DEFAULT,
   [TransferType.TRANSFER]: TigerBeetleTransferCode.TRANSFER,
   [TransferType.DEPOSIT]: TigerBeetleTransferCode.DEPOSIT,
   [TransferType.WITHDRAWAL]: TigerBeetleTransferCode.WITHDRAWAL
@@ -95,8 +94,6 @@ export function createAccountingService(
     // Their account id is the corresponding asset's ledger value.
     createLiquidityAccount: (options, accountType) =>
       createLiquidityAccount(deps, options, accountType),
-    createSettlementAccount: (ledger, relatedAccountId) =>
-      createSettlementAccount(deps, ledger, relatedAccountId),
     createLiquidityAndLinkedSettlementAccount: (options, accTypeCode) =>
       createLiquidityAndLinkedSettlementAccount(deps, options, accTypeCode),
     getBalance: (id) => getAccountBalance(deps, id),
@@ -128,7 +125,7 @@ export async function createLiquidityAccount(
         id: account.id,
         ledger: account.asset.ledger,
         code: convertToTigerBeetleAccountCode[accountType],
-        userData128: account.asset.id
+        assetId: account.asset.id
       }
     ])
     return account
@@ -146,7 +143,7 @@ export async function createLiquidityAccount(
 export async function createSettlementAccount(
   deps: ServiceDependencies,
   ledger: number,
-  relatedAccountId: string | number
+  assetId: string | number
 ): Promise<void> {
   try {
     await createAccounts(deps, [
@@ -154,7 +151,7 @@ export async function createSettlementAccount(
         id: ledger,
         ledger,
         code: TigerBeetleAccountCode.SETTLEMENT,
-        userData128: toTigerBeetleId(relatedAccountId)
+        assetId: toTigerBeetleId(assetId)
       }
     ])
   } catch (err) {
@@ -187,7 +184,7 @@ export async function createLiquidityAndLinkedSettlementAccount(
         code: convertToTigerBeetleAccountCode[accountType],
         linked: true,
         history: true,
-        userData128: account.asset.id
+        assetId: account.asset.id
       },
       {
         id: account.asset.ledger,
@@ -195,7 +192,7 @@ export async function createLiquidityAndLinkedSettlementAccount(
         code: TigerBeetleAccountCode.SETTLEMENT,
         linked: false, // Last account in the chain.
         history: true,
-        userData128: account.asset.id
+        assetId: account.asset.id
       }
     ])
     return account
@@ -312,7 +309,7 @@ export async function createTransfer(
           destinationAccountId: transfer.destinationAccountId,
           amount: transfer.amount,
           timeout: args.timeout,
-          userData128: uuid(), // transferRef in PSQL
+          transferRef: uuid(),
           code: transferCodeFromType(transfer.transferType)
         })
       )

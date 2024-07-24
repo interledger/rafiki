@@ -34,8 +34,8 @@ export function transferToGraphql(
   return {
     id: transfer.id,
     createdAt: new Date(Number(transfer.timestamp)).toISOString(),
-    debitAccount: transfer.debitAccount,
-    creditAccount: transfer.creditAccount,
+    debitAccount: transfer.debitAccountId,
+    creditAccount: transfer.creditAccountId,
     amount: transfer.amount,
     ledger: transfer.ledger,
     transferType: transferTypeToGraphql(transfer.type)
@@ -51,6 +51,6 @@ function transferTypeToGraphql(type: TransferType): SchemaTransferType {
     case TransferType.WITHDRAWAL:
       return SchemaTransferType.Withdrawal
     default:
-      return SchemaTransferType.Default
+      throw new Error(`Transfer type '${type}' is not mapped!`)
   }
 }

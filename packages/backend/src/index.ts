@@ -509,16 +509,15 @@ export const parseAndLookupAddresses = async (
     }
 
     if (net.isIP(parts[0]) === 0) {
-      await dns.promises
-        .lookup(parts[0], { family: 4 })
-        .then((resp) => {
+      try {
+        await dns.promises.lookup(parts[0], { family: 4 }).then((resp) => {
           parsed.push(`${resp.address}:${parts[1]}`)
         })
-        .catch((error: Error) => {
-          throw new Error(
-            `Lookup error while parsing replicaAddresses in 'accountingService' startup - cannot resolve: "${addr[0]}" of "${addr}". ${error}`
-          )
-        })
+      } catch (err) {
+        throw new Error(
+          `Lookup error while parsing replicaAddresses in 'accountingService' startup - cannot resolve: "${addr[0]}" of "${addr}". ${err}`
+        )
+      }
     } else parsed.push(addr)
   }
   return parsed
