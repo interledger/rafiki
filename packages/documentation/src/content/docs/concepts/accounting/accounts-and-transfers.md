@@ -349,13 +349,13 @@ Action of debiting the liquidity account, and crediting the settlement account.
 
 #### Payments (Same Asset)
 
-##### Simple Payments Setup Protocol (SPSP) / Web Monetization (WM)
+##### Simple Payment Setup Protocol (SPSP) / Web Monetization
 
 | Debit Account    | Credit Account |
 | ---------------- | -------------- |
 | Outgoing Payment | Wallet Address |
 
-- Example: Send a WM Payment of `2 USD` over SPSP to a wallet address. Sender and receiver have wallet addresses at the same Rafiki.
+- Example: Send a Web Monetization Payment of `2 USD` over SPSP to a wallet address. Sender and receiver have wallet addresses at the same Rafiki.
 
 <table class="accounting-table not-content">
   <tr class="header-row">
