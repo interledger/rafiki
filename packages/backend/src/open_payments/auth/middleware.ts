@@ -109,7 +109,7 @@ export function createTokenIntrospectionMiddleware({
         throw new OpenPaymentsServerRouteError(403, 'Inactive Token')
       }
 
-      if (tokenInfo.access.length > 1) {
+      if (tokenInfo.access.length !== 1) {
         throw new OpenPaymentsServerRouteError(
           403,
           'Token info access does not match request access'
