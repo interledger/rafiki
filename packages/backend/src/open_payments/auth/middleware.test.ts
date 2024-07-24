@@ -96,14 +96,25 @@ describe('Auth Middleware', (): void => {
 
     test('throws error for unknown errors', async (): Promise<void> => {
       const middleware = createTokenIntrospectionMiddleware({
-        requestType: type,
+        requestType: AccessType.OutgoingPayment,
         requestAction: action,
         bypassError: true
       })
 
-      jest
-        .spyOn(tokenIntrospectionClient, 'introspect')
-        .mockResolvedValueOnce({ active: true, access: {} } as TokenInfo) // causes an error other than OpenPaymentsServerRouteError
+      jest.spyOn(tokenIntrospectionClient, 'introspect').mockResolvedValueOnce({
+        active: true,
+        access: [
+          {
+            type: AccessType.OutgoingPayment,
+            actions: [action],
+            limits: {
+              debitAmount: {
+                value: 'invalid_value'
+              }
+            }
+          }
+        ]
+      } as TokenInfo) // causes an error other than OpenPaymentsServerRouteError
 
       expect.assertions(3)
 
@@ -112,7 +123,7 @@ describe('Auth Middleware', (): void => {
       } catch (err) {
         assert(err instanceof Error)
         assert(!(err instanceof OpenPaymentsServerRouteError))
-        expect(err.message).toBe('tokenInfo.access?.find is not a function')
+        expect(err.message).toBe('Cannot convert invalid_value to a BigInt')
       }
 
       expect(ctx.response.get('WWW-Authenticate')).not.toBe(
@@ -437,13 +448,12 @@ describe('Auth Middleware', (): void => {
         })
       } else {
         test('returns 403 for super-action request', async (): Promise<void> => {
-          const tokenInfo = createTokenInfo()
           const introspectSpy = jest
             .spyOn(tokenIntrospectionClient, 'introspect')
-            .mockResolvedValueOnce(tokenInfo)
+            .mockResolvedValueOnce({ active: false })
           await expect(middleware(ctx, next)).rejects.toMatchObject({
             status: 403,
-            message: 'Token info access does not match request access'
+            message: 'Inactive Token'
           })
           expect(introspectSpy).toHaveBeenCalledWith({
             access_token: token,
