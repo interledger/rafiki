@@ -15,7 +15,7 @@ export interface AccessTokenService {
   introspect(
     tokenValue: string,
     access?: AccessItem[]
-  ): Promise<{ grant: Grant; accessItem?: Access } | undefined>
+  ): Promise<{ grant: Grant; access: Access[] } | undefined>
   create(grantId: string, trx?: TransactionOrKnex): Promise<AccessToken>
   revoke(id: string, trx?: TransactionOrKnex): Promise<AccessToken | undefined>
   revokeByGrantId(grantId: string, trx?: TransactionOrKnex): Promise<number>
@@ -77,12 +77,13 @@ async function introspect(
   deps: ServiceDependencies,
   tokenValue: string,
   access?: AccessItem[]
-): Promise<{ grant: Grant; accessItem?: Access } | undefined> {
+): Promise<{ grant: Grant; access: Access[] } | undefined> {
   const token = await AccessToken.query(deps.knex)
     .findOne({ value: tokenValue })
     .withGraphFetched('grant.access')
 
   let foundAccessItem: Access | undefined
+  const foundAccess: Access[] = []
   if (!token) return
   if (isTokenExpired(token)) {
     return undefined
@@ -102,12 +103,12 @@ async function introspect(
         if (!foundAccessItem) {
           return undefined
         } else {
-          return { grant: token.grant, accessItem: foundAccessItem }
+          foundAccess.push(foundAccessItem)
         }
       }
     }
 
-    return { grant: token.grant }
+    return { grant: token.grant, access: foundAccess }
   }
 }
 

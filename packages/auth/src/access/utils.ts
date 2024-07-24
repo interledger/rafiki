@@ -36,7 +36,7 @@ export function compareRequestAndGrantAccessItems(
     ) {
       return false
     } else if (
-      restOfRequestAccessItem[key as keyof typeof restOfRequestAccessItem] !==
+      requestAccessItemValue !==
       restOfgrantAccessItem[key as keyof typeof restOfgrantAccessItem]
     ) {
       return false

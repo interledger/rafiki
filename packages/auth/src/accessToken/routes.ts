@@ -105,10 +105,10 @@ async function introspectToken(
     'introspected access token'
   )
 
-  ctx.body = grantToTokenInfo(tokenInfo?.grant, tokenInfo?.accessItem)
+  ctx.body = grantToTokenInfo(tokenInfo?.grant, tokenInfo?.access)
 }
 
-function grantToTokenInfo(grant?: Grant, accessItem?: Access): TokenInfo {
+function grantToTokenInfo(grant?: Grant, access?: Access[]): TokenInfo {
   if (!grant) {
     return {
       active: false
@@ -117,9 +117,7 @@ function grantToTokenInfo(grant?: Grant, accessItem?: Access): TokenInfo {
   return {
     active: true,
     grant: grant.id,
-    access: accessItem
-      ? [toOpenPaymentsAccess(accessItem)]
-      : grant.access.map(toOpenPaymentsAccess),
+    access: access?.map(toOpenPaymentsAccess) ?? [],
     client: grant.client
   }
 }
