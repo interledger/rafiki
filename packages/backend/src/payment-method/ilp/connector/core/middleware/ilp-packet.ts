@@ -247,8 +247,8 @@ export function createIlpPacketMiddleware(
           'transactions_amount',
           {
             value,
-            code,
-            scale
+            assetCode: code,
+            assetScale: scale
           },
           {
             description: 'Amount sent through the network',
