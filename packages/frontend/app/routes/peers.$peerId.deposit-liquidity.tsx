@@ -39,7 +39,7 @@ export default function PeerDepositLiquidity() {
       onClose={dismissDialog}
       title='Deposit peer liquidity'
       type='Deposit'
-      asset={asset}
+      asset={{ code: asset.code, scale: asset.scale }}
     />
   )
 }

@@ -39,7 +39,7 @@ export default function AssetWithdrawLiquidity() {
       onClose={dismissDialog}
       title='Withdraw asset liquidity'
       type='Withdraw'
-      asset={asset}
+      asset={{ code: asset.code, scale: asset.scale }}
     />
   )
 }

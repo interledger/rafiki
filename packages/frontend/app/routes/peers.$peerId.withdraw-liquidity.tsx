@@ -39,7 +39,7 @@ export default function PeerWithdrawLiquidity() {
       onClose={dismissDialog}
       title='Withdraw peer liquidity'
       type='Withdraw'
-      asset={asset}
+      asset={{ code: asset.code, scale: asset.scale }}
     />
   )
 }

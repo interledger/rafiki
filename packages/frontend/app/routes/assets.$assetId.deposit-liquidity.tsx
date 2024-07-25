@@ -39,7 +39,7 @@ export default function AssetDepositLiquidity() {
       onClose={dismissDialog}
       title='Deposit asset liquidity'
       type='Deposit'
-      asset={asset}
+      asset={{ code: asset.code, scale: asset.scale }}
     />
   )
 }
