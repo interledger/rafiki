@@ -1,6 +1,7 @@
 import { Dialog } from '@headlessui/react'
 import { Form } from '@remix-run/react'
-import { ChangeEvent, useState } from 'react'
+import type { ChangeEvent } from 'react'
+import { useState } from 'react'
 import { XIcon } from '~/components/icons'
 import { Button, Input } from '~/components/ui'
 
