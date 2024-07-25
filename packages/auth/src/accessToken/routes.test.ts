@@ -160,14 +160,7 @@ describe('Access Token Routes', (): void => {
       expect(ctx.body).toEqual({
         active: true,
         grant: grant.id,
-        access: [
-          {
-            type: access.type,
-            actions: access.actions,
-            limits: access.limits,
-            identifier: access.identifier
-          }
-        ],
+        access: [],
         client: CLIENT
       })
     })
@@ -281,6 +274,52 @@ describe('Access Token Routes', (): void => {
             actions: access.actions,
             limits: access.limits,
             identifier: access.identifier
+          }
+        ],
+        client: CLIENT
+      })
+    })
+
+    test('Only returns requested access during successful introspection', async (): Promise<void> => {
+      const secondAccess: AccessItem = {
+        type: 'quote',
+        actions: ['create', 'read']
+      }
+      await Access.query(trx).insertAndFetch({
+        grantId: grant.id,
+        ...secondAccess
+      })
+
+      const ctx = createContext<IntrospectContext>(
+        {
+          headers: {
+            Accept: 'application/json'
+          },
+          url: '/',
+          method: 'POST'
+        },
+        {}
+      )
+
+      ctx.request.body = {
+        access_token: token.value,
+        access: [secondAccess as AccessItem]
+      }
+
+      await expect(accessTokenRoutes.introspect(ctx)).resolves.toBeUndefined()
+      expect(ctx.response).toSatisfyApiSpec()
+      expect(ctx.status).toBe(200)
+      expect(ctx.response.get('Content-Type')).toBe(
+        'application/json; charset=utf-8'
+      )
+
+      expect(ctx.body).toEqual({
+        active: true,
+        grant: grant.id,
+        access: [
+          {
+            type: secondAccess.type,
+            actions: secondAccess.actions
           }
         ],
         client: CLIENT

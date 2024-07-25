@@ -82,7 +82,6 @@ async function introspect(
     .findOne({ value: tokenValue })
     .withGraphFetched('grant.access')
 
-  let foundAccessItem: Access | undefined
   const foundAccess: Access[] = []
   if (!token) return
   if (isTokenExpired(token)) {
@@ -94,7 +93,7 @@ async function introspect(
     if (access) {
       for (const accessItem of access) {
         const { access: grantAccess } = token.grant
-        foundAccessItem = grantAccess.find((grantAccessItem) =>
+        const foundAccessItem = grantAccess.find((grantAccessItem) =>
           compareRequestAndGrantAccessItems(
             accessItem,
             toOpenPaymentsAccess(grantAccessItem)

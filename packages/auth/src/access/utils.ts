@@ -1,15 +1,22 @@
 import { isDeepStrictEqual } from 'util'
 import { AccessItem, AccessAction } from '@interledger/open-payments'
 
+type OutgoingPaymentAccess = Extract<AccessItem, { type: 'outgoing-payment' }>
+type OutgoingPaymentOrIncomingPaymentAccess = Exclude<
+  AccessItem,
+  { type: 'quote' }
+>
+
 export function compareRequestAndGrantAccessItems(
   requestAccessItem: AccessItem,
   grantAccessItem: AccessItem
 ): boolean {
   const { actions: requestAccessItemActions, ...restOfRequestAccessItem } =
     requestAccessItem
-  const { actions: grantAccessItemActions, ...restOfgrantAccessItem } =
+  const { actions: grantAccessItemActions, ...restOfGrantAccessItem } =
     grantAccessItem
 
+  // Validate action arrays
   for (const actionItem of requestAccessItemActions) {
     if (
       !grantAccessItemActions.find(
@@ -24,24 +31,27 @@ export function compareRequestAndGrantAccessItems(
       return false
   }
 
-  Object.keys(restOfRequestAccessItem).forEach((key) => {
-    const requestAccessItemValue =
-      restOfRequestAccessItem[key as keyof typeof restOfRequestAccessItem]
-    if (
-      typeof requestAccessItemValue === 'object' &&
-      !isDeepStrictEqual(
-        requestAccessItemValue,
-        restOfgrantAccessItem[key as keyof typeof restOfgrantAccessItem]
-      )
-    ) {
-      return false
-    } else if (
-      requestAccessItemValue !==
-      restOfgrantAccessItem[key as keyof typeof restOfgrantAccessItem]
-    ) {
-      return false
-    }
-  })
+  // Validate limits object, if included
+  if (
+    (restOfRequestAccessItem as OutgoingPaymentAccess).limits &&
+    !isDeepStrictEqual(
+      (restOfRequestAccessItem as OutgoingPaymentAccess).limits,
+      (restOfGrantAccessItem as OutgoingPaymentAccess).limits
+    )
+  ) {
+    return false
+  }
+
+  // Validate remaining keys
+  if (
+    restOfRequestAccessItem.type !== restOfGrantAccessItem.type ||
+    (restOfRequestAccessItem as OutgoingPaymentOrIncomingPaymentAccess)
+      .identifier !==
+      (restOfGrantAccessItem as OutgoingPaymentOrIncomingPaymentAccess)
+        .identifier
+  ) {
+    return false
+  }
 
   return true
 }

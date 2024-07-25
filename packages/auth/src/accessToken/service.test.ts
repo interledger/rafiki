@@ -142,7 +142,7 @@ describe('Access Token Service', (): void => {
     test('Can introspect active token', async (): Promise<void> => {
       await expect(
         accessTokenService.introspect(accessToken.value)
-      ).resolves.toEqual({ grant })
+      ).resolves.toEqual({ grant, access: [] })
     })
 
     test('Can introspect expired token', async (): Promise<void> => {
@@ -171,7 +171,7 @@ describe('Access Token Service', (): void => {
         accessTokenService.introspect(accessToken.value, [
           outgoingPaymentAccess
         ])
-      ).resolves.toEqual({ grant, accessItem: grant.access[0] })
+      ).resolves.toEqual({ grant, access: [grant.access[0]] })
     })
 
     test('Can introspect active token with partial access actions', async (): Promise<void> => {
@@ -181,7 +181,45 @@ describe('Access Token Service', (): void => {
       }
       await expect(
         accessTokenService.introspect(accessToken.value, [access])
-      ).resolves.toEqual({ grant, accessItem: grant.access[0] })
+      ).resolves.toEqual({ grant, access: [grant.access[0]] })
+    })
+
+    test('Introspection only returns requested access', async (): Promise<void> => {
+      const grantWithTwoAccesses = await Grant.query(trx).insertAndFetch(
+        generateBaseGrant({ state: GrantState.Approved })
+      )
+      grantWithTwoAccesses.access = [
+        await Access.query(trx).insertAndFetch({
+          grantId: grantWithTwoAccesses.id,
+          ...BASE_ACCESS
+        })
+      ]
+      const secondAccessItem: AccessItem = {
+        type: 'quote',
+        actions: ['create', 'read']
+      }
+      const dbSecondAccess = await Access.query(trx).insertAndFetch({
+        grantId: grantWithTwoAccesses.id,
+        ...secondAccessItem
+      })
+
+      grantWithTwoAccesses.access.push(dbSecondAccess)
+
+      const accessTokenForTwoAccessGrant = await AccessToken.query(trx).insert({
+        value: 'test-access-token-two-access',
+        managementId: v4(),
+        grantId: grantWithTwoAccesses.id,
+        expiresIn: 1234
+      })
+
+      await expect(
+        accessTokenService.introspect(accessTokenForTwoAccessGrant.value, [
+          secondAccessItem
+        ])
+      ).resolves.toEqual({
+        grant: grantWithTwoAccesses,
+        access: [dbSecondAccess]
+      })
     })
 
     test('Cannot introspect non-existing token', async (): Promise<void> => {
