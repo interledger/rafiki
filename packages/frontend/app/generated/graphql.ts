@@ -26,9 +26,9 @@ export type AccountingTransfer = Model & {
   /** Date-time of creation */
   createdAt: Scalars['String']['output'];
   /** Credit account id */
-  creditAccount: Scalars['ID']['output'];
+  creditAccountId: Scalars['ID']['output'];
   /** Debit account id */
-  debitAccount: Scalars['ID']['output'];
+  debitAccountId: Scalars['ID']['output'];
   /** Payment id */
   id: Scalars['ID']['output'];
   /** Identifier that partitions the sets of accounts that can transact with each other. */
@@ -1020,7 +1020,7 @@ export type Query = {
 
 export type QueryAccountingTransfersArgs = {
   id: Scalars['String']['input'];
-  limit: Scalars['Int']['input'];
+  limit?: InputMaybe<Scalars['Int']['input']>;
 };
 
 
@@ -1762,8 +1762,8 @@ export type ResolversParentTypes = {
 export type AccountingTransferResolvers<ContextType = any, ParentType extends ResolversParentTypes['AccountingTransfer'] = ResolversParentTypes['AccountingTransfer']> = {
   amount?: Resolver<ResolversTypes['UInt64'], ParentType, ContextType>;
   createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  creditAccount?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  debitAccount?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  creditAccountId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  debitAccountId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   ledger?: Resolver<ResolversTypes['UInt8'], ParentType, ContextType>;
   transferType?: Resolver<ResolversTypes['TransferType'], ParentType, ContextType>;
@@ -2080,7 +2080,7 @@ export type PeersConnectionResolvers<ContextType = any, ParentType extends Resol
 };
 
 export type QueryResolvers<ContextType = any, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> = {
-  accountingTransfers?: Resolver<ResolversTypes['AccountingTransferConnection'], ParentType, ContextType, RequireFields<QueryAccountingTransfersArgs, 'id' | 'limit'>>;
+  accountingTransfers?: Resolver<ResolversTypes['AccountingTransferConnection'], ParentType, ContextType, RequireFields<QueryAccountingTransfersArgs, 'id'>>;
   asset?: Resolver<Maybe<ResolversTypes['Asset']>, ParentType, ContextType, RequireFields<QueryAssetArgs, 'id'>>;
   assets?: Resolver<ResolversTypes['AssetsConnection'], ParentType, ContextType, Partial<QueryAssetsArgs>>;
   incomingPayment?: Resolver<Maybe<ResolversTypes['IncomingPayment']>, ParentType, ContextType, RequireFields<QueryIncomingPaymentArgs, 'id'>>;

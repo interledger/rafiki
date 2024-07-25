@@ -42,10 +42,9 @@ export enum TigerBeetleAccountCode {
 }
 
 export enum TigerBeetleTransferCode {
-  DEFAULT = 1,
-  TRANSFER = 2,
-  DEPOSIT = 3,
-  WITHDRAWAL = 4
+  TRANSFER = 1,
+  DEPOSIT = 2,
+  WITHDRAWAL = 3
 }
 
 export const convertToTigerBeetleAccountCode: {
@@ -342,8 +341,7 @@ export async function createTransfer(
 }
 
 function transferCodeFromType(type?: TransferType): number {
-  if (type) return convertToTigerBeetleTransferCode[type]
-  return 0
+  return type ? convertToTigerBeetleTransferCode[type] : 0
 }
 
 async function createAccountDeposit(

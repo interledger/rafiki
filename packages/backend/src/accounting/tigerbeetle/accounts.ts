@@ -30,7 +30,7 @@ export async function createAccounts(
       id: toTigerBeetleId(account.id),
       user_data_32: 0,
       user_data_64: 0n,
-      user_data_128: 0n,
+      user_data_128: toTigerBeetleId(account.assetId),
       reserved: 0,
       ledger: account.ledger,
       code: account.code,

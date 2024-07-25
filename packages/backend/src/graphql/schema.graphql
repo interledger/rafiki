@@ -95,8 +95,8 @@ type Query {
   accountingTransfers(
     "Account id."
     id: String!
-    "Limit the number of results returned."
-    limit: Int!
+    "Limit the number of results returned. If no limit is provided, the default limit of 100_000 is set for TigerBeetle."
+    limit: Int
   ): AccountingTransferConnection!
 
   "Get an local or remote Open Payments Incoming Payment. The receiver has a wallet address on either this or another Open Payments resource server."
@@ -912,9 +912,9 @@ type AccountingTransfer implements Model {
   "Payment id"
   id: ID!
   "Debit account id"
-  debitAccount: ID!
+  debitAccountId: ID!
   "Credit account id"
-  creditAccount: ID!
+  creditAccountId: ID!
   "Amount sent (fixed send)"
   amount: UInt64!
   "Type of accounting transfer"

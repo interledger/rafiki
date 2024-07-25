@@ -11,12 +11,12 @@ post {
 }
 
 body:graphql {
-  query AccountingTransfers($id: String!, $limit: Int!) {
+  query AccountingTransfers($id: String!, $limit: Int) {
     accountingTransfers(id: $id, limit: $limit) {
       debits {
         id
-        debitAccount
-        creditAccount
+        debitAccountId
+        creditAccountId
         amount
         transferType
         ledger
@@ -24,8 +24,8 @@ body:graphql {
       }
       credits {
         id
-        debitAccount
-        creditAccount
+        debitAccountId
+        creditAccountId
         amount
         transferType
         ledger
@@ -38,7 +38,8 @@ body:graphql {
 
 body:graphql:vars {
   {
-      "id": "{{outgoingPaymentId}}"
+      // Provide a 'ledger account identifier' (id):
+      "id": "{{assetIdTigerBeetle}}"
   }
 }
 

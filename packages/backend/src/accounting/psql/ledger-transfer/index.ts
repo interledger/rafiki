@@ -1,5 +1,5 @@
 import { Transaction, TransactionOrKnex } from 'objection'
-import { LedgerTransfer, LedgerTransferType } from './model'
+import { LedgerTransfer } from './model'
 import { ServiceDependencies } from '../service'
 import {
   GetLedgerTransfersResult,
@@ -80,17 +80,17 @@ export async function getAccountTransfers(
 function mapToGetLedgerTransfersResult(
   dbModel: LedgerTransfer
 ): ServiceLedgerTransfer {
+  let transferType = TransferType.TRANSFER
+  if (dbModel.type) transferType = TransferType[dbModel.type]
+
   return {
     amount: dbModel.amount,
-    creditAccountId: dbModel.creditAccount ? dbModel.creditAccount.id : '',
+    creditAccountId: dbModel.creditAccountId,
     debitAccountId: dbModel.debitAccountId,
     id: dbModel.id,
     ledger: dbModel.ledger,
     timestamp: BigInt(dbModel.createdAt.getTime()),
-    type:
-      dbModel.type === LedgerTransferType.WITHDRAWAL
-        ? TransferType.WITHDRAWAL
-        : TransferType.DEPOSIT,
+    type: transferType,
     state: dbModel.state,
     timeout: 0,
     transferRef: dbModel.transferRef,

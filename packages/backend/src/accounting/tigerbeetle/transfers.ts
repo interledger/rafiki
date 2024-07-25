@@ -76,7 +76,7 @@ export async function createTransfers(
       pending_id: 0n,
       timeout: 0,
       ledger: 0,
-      code: TigerBeetleTransferCode.DEFAULT,
+      code: TigerBeetleTransferCode.TRANSFER,
       flags: 0,
       amount: 0n,
       timestamp: 0n

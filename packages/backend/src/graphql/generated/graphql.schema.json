@@ -46,7 +46,7 @@
             "deprecationReason": null
           },
           {
-            "name": "creditAccount",
+            "name": "creditAccountId",
             "description": "Credit account id",
             "args": [],
             "type": {
@@ -62,7 +62,7 @@
             "deprecationReason": null
           },
           {
-            "name": "debitAccount",
+            "name": "debitAccountId",
             "description": "Debit account id",
             "args": [],
             "type": {
@@ -5905,15 +5905,11 @@
               },
               {
                 "name": "limit",
-                "description": "Limit the number of results returned.",
+                "description": "Limit the number of results returned. If no limit is provided, the default limit of 100_000 is set for TigerBeetle.",
                 "type": {
-                  "kind": "NON_NULL",
-                  "name": null,
-                  "ofType": {
-                    "kind": "SCALAR",
-                    "name": "Int",
-                    "ofType": null
-                  }
+                  "kind": "SCALAR",
+                  "name": "Int",
+                  "ofType": null
                 },
                 "defaultValue": null,
                 "isDeprecated": false,

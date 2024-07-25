@@ -5,18 +5,19 @@ import { createTestApp, TestContainer } from '../../tests/app'
 import { initIocContainer } from '../..'
 import { Config } from '../../config/app'
 import { truncateTables } from '../../tests/tableManager'
-import { AccountingTransferConnection } from '../generated/graphql'
+import {
+  AccountingTransferConnection,
+  TransferType
+} from '../generated/graphql'
 import { createAsset } from '../../tests/asset'
+import { createLedgerTransfer } from '../../tests/ledgerTransfer'
 import { v4 as uuid } from 'uuid'
 import {
   AccountingService,
   LedgerTransferState,
   LiquidityAccountType
 } from '../../accounting/service'
-import {
-  LedgerTransfer,
-  LedgerTransferType
-} from '../../accounting/psql/ledger-transfer/model'
+import { LedgerTransferType } from '../../accounting/psql/ledger-transfer/model'
 import { LedgerAccount } from '../../accounting/psql/ledger-account/model'
 
 describe('Accounting Transfer', (): void => {
@@ -99,19 +100,19 @@ describe('Accounting Transfer', (): void => {
     const transferAmount = 123
     const ledger = 1
     const queryLimit = 100_000
-    const insertedTransfer = await LedgerTransfer.query(
+
+    const insertedTransfer = await createLedgerTransfer(
+      {
+        amount: BigInt(transferAmount),
+        debitAccountId: accountDebitLedger[0].id,
+        creditAccountId: accountCreditLedger[0].id,
+        ledger: ledger,
+        state: LedgerTransferState.POSTED,
+        transferRef: uuid(),
+        type: LedgerTransferType.DEPOSIT
+      },
       appContainer.knex
-    ).insert({
-      amount: BigInt(transferAmount),
-      debitAccount: accountDebitLedger[0],
-      debitAccountId: accountDebitLedger[0].id,
-      creditAccount: accountCreditLedger[0],
-      creditAccountId: accountCreditLedger[0].id,
-      ledger: ledger,
-      state: LedgerTransferState.POSTED,
-      transferRef: uuid(),
-      type: LedgerTransferType.DEPOSIT
-    })
+    )
     const accountDebitId = accountDebitLedger[0].id
     let response = await appContainer.apolloClient
       .query({
@@ -120,8 +121,8 @@ describe('Accounting Transfer', (): void => {
             accountingTransfers(id: $id, limit: $limit) {
               debits {
                 id
-                debitAccount
-                creditAccount
+                debitAccountId
+                creditAccountId
                 amount
                 transferType
                 ledger
@@ -129,8 +130,8 @@ describe('Accounting Transfer', (): void => {
               }
               credits {
                 id
-                debitAccount
-                creditAccount
+                debitAccountId
+                creditAccountId
                 amount
                 transferType
                 ledger
@@ -152,17 +153,15 @@ describe('Accounting Transfer', (): void => {
         }
       })
 
-    expect(response.debits).toBeDefined()
-    expect(response.credits).toBeDefined()
     expect(response.debits).toHaveLength(1)
     expect(response.credits).toHaveLength(0)
 
     expect(response.debits[0]).toMatchObject({
       id: insertedTransfer.id,
-      debitAccount: accountDebitId,
+      debitAccountId: accountDebitId,
       amount: `${transferAmount}`,
-      transferType: 'DEPOSIT',
-      ledger: ledger
+      transferType: TransferType.Deposit,
+      ledger
     })
 
     // Credit:
@@ -174,8 +173,8 @@ describe('Accounting Transfer', (): void => {
             accountingTransfers(id: $id, limit: $limit) {
               debits {
                 id
-                debitAccount
-                creditAccount
+                debitAccountId
+                creditAccountId
                 amount
                 transferType
                 ledger
@@ -183,8 +182,8 @@ describe('Accounting Transfer', (): void => {
               }
               credits {
                 id
-                debitAccount
-                creditAccount
+                debitAccountId
+                creditAccountId
                 amount
                 transferType
                 ledger
@@ -206,17 +205,16 @@ describe('Accounting Transfer', (): void => {
         }
       })
 
-    expect(response.debits).toBeDefined()
-    expect(response.credits).toBeDefined()
     expect(response.debits).toHaveLength(0)
     expect(response.credits).toHaveLength(1)
 
     expect(response.credits[0]).toMatchObject({
       id: insertedTransfer.id,
-      debitAccount: accountDebitId,
+      debitAccountId: accountDebitId,
+      creditAccountId: accountCreditId,
       amount: `${transferAmount}`,
-      transferType: 'DEPOSIT',
-      ledger: ledger
+      transferType: TransferType.Deposit,
+      ledger
     })
   })
 })

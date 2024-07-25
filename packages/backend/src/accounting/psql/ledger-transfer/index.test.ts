@@ -763,7 +763,7 @@ async function testRetrieveTransfers(
     amount: ledgerTransfer.amount,
     timeout: 0,
     timestamp: BigInt(ledgerTransfer.createdAt.getTime()),
-    type: TransferType.DEPOSIT,
+    type: TransferType.TRANSFER,
     state: ledgerTransfer.state,
     ledger: ledgerTransfer.ledger,
     transferRef: ledgerTransfer.transferRef,

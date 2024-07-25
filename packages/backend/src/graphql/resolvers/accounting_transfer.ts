@@ -15,9 +15,8 @@ export const getAccountingTransfers: QueryResolvers<ApolloContext>['accountingTr
   ): Promise<ResolversTypes['AccountingTransferConnection']> => {
     const accountingService = await ctx.container.use('accountingService')
     const { id, limit } = args
-
     const accountTransfers = await accountingService.getAccountTransfers(
-      id,
+      isNaN(Number(id)) ? id : Number(id),
       limit
     )
     return {
@@ -34,8 +33,8 @@ export function transferToGraphql(
   return {
     id: transfer.id,
     createdAt: new Date(Number(transfer.timestamp)).toISOString(),
-    debitAccount: transfer.debitAccountId,
-    creditAccount: transfer.creditAccountId,
+    debitAccountId: transfer.debitAccountId,
+    creditAccountId: transfer.creditAccountId,
     amount: transfer.amount,
     ledger: transfer.ledger,
     transferType: transferTypeToGraphql(transfer.type)

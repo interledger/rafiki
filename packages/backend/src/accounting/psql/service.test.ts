@@ -13,6 +13,7 @@ import { truncateTables } from '../../tests/tableManager'
 import {
   AccountingService,
   Deposit,
+  LedgerTransferState,
   LiquidityAccount,
   LiquidityAccountType,
   Withdrawal
@@ -123,6 +124,28 @@ describe('Psql Accounting Service', (): void => {
         type: LedgerAccountType.LIQUIDITY_ASSET,
         ledger: asset.ledger
       })
+
+      // Ensure that the Liquidity and Settlement accounts are created.
+      expect(
+        await LedgerAccount.query(knex).findOne({
+          accountRef: asset.id,
+          type: LedgerAccountType.SETTLEMENT
+        })
+      ).toMatchObject({
+        accountRef: asset.id,
+        type: LedgerAccountType.SETTLEMENT,
+        ledger: asset.ledger
+      })
+      expect(
+        await LedgerAccount.query(knex).findOne({
+          accountRef: asset.id,
+          type: LedgerAccountType.LIQUIDITY_ASSET
+        })
+      ).toMatchObject({
+        accountRef: asset.id,
+        type: LedgerAccountType.LIQUIDITY_ASSET,
+        ledger: asset.ledger
+      })
     })
 
     test('throws on error', async (): Promise<void> => {
@@ -181,12 +204,6 @@ describe('Psql Accounting Service', (): void => {
       ])
 
       const amount = 10n
-      const accTransfersEmpty = await accountingService.getAccountTransfers(
-        settlementAccount.id
-      )
-      expect(accTransfersEmpty.debits.length).toEqual(0)
-      expect(accTransfersEmpty.credits.length).toEqual(0)
-
       await createLedgerTransfer(
         {
           debitAccountId: settlementAccount.id,
@@ -201,6 +218,79 @@ describe('Psql Accounting Service', (): void => {
       await expect(
         accountingService.getTotalReceived(account.accountRef)
       ).resolves.toBe(amount)
+    })
+
+    test('returns undefined for non-existing account', async (): Promise<void> => {
+      await expect(
+        accountingService.getTotalReceived(uuid())
+      ).resolves.toBeUndefined()
+    })
+  })
+
+  describe('getAccountTransfers', (): void => {
+    test('gets account transfers created', async (): Promise<void> => {
+      const [settlementAccount, account] = await Promise.all([
+        createLedgerAccount(
+          {
+            accountRef: asset.id,
+            ledger: asset.ledger,
+            type: LedgerAccountType.SETTLEMENT
+          },
+          knex
+        ),
+        createLedgerAccount({ ledger: asset.ledger }, knex)
+      ])
+
+      const amount = 10n
+      const accTransfersSettleEmpty =
+        await accountingService.getAccountTransfers(settlementAccount.id)
+      expect(accTransfersSettleEmpty.debits.length).toEqual(0)
+      expect(accTransfersSettleEmpty.credits.length).toEqual(0)
+
+      const accTransfersEmpty = await accountingService.getAccountTransfers(
+        account.id
+      )
+      expect(accTransfersEmpty.debits.length).toEqual(0)
+      expect(accTransfersEmpty.credits.length).toEqual(0)
+
+      const ledgerTransfer = await createLedgerTransfer(
+        {
+          debitAccountId: settlementAccount.id,
+          creditAccountId: account.id,
+          transferRef: uuid(),
+          ledger: settlementAccount.ledger,
+          type: LedgerTransferType.DEPOSIT,
+          amount
+        },
+        knex
+      )
+
+      const accTransfersSettle = await accountingService.getAccountTransfers(
+        settlementAccount.id
+      )
+      expect(accTransfersSettle.debits.length).toEqual(1)
+      expect(accTransfersSettle.debits[0]).toMatchObject({
+        amount,
+        debitAccountId: settlementAccount.id,
+        creditAccountId: account.id,
+        type: LedgerTransferType.DEPOSIT,
+        state: LedgerTransferState.POSTED,
+        transferRef: ledgerTransfer.transferRef
+      })
+      expect(accTransfersSettle.credits.length).toEqual(0)
+      const accTransfers = await accountingService.getAccountTransfers(
+        account.id
+      )
+      expect(accTransfers.debits.length).toEqual(0)
+      expect(accTransfers.credits.length).toEqual(1)
+      expect(accTransfers.credits[0]).toMatchObject({
+        amount,
+        debitAccountId: settlementAccount.id,
+        creditAccountId: account.id,
+        type: LedgerTransferType.DEPOSIT,
+        state: LedgerTransferState.POSTED,
+        transferRef: ledgerTransfer.transferRef
+      })
     })
 
     test('returns undefined for non-existing account', async (): Promise<void> => {

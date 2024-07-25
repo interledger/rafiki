@@ -56,7 +56,7 @@ export function tbTransferToLedgerTransfer(
     creditAccountId: fromTigerBeetleId(tbTransfer.credit_account_id),
     debitAccountId: fromTigerBeetleId(tbTransfer.debit_account_id),
     timeout: tbTransfer.timeout,
-    timestamp: tbTransfer.timestamp,
+    timestamp: tbTransfer.timestamp / 1_000_000n, // Nanoseconds to Milliseconds
     transferRef: fromTigerBeetleId(tbTransfer.user_data_128),
     type: transferTypeFromCode(tbTransfer.code),
     state: state,
