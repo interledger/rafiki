@@ -1,6 +1,6 @@
 import { Dialog } from '@headlessui/react'
 import { Form } from '@remix-run/react'
-import { useState } from 'react'
+import { ChangeEvent, useState } from 'react'
 import { XIcon } from '~/components/icons'
 import { Button, Input } from '~/components/ui'
 
@@ -22,7 +22,21 @@ export const LiquidityDialog = ({
   type,
   asset
 }: LiquidityDialogProps) => {
-  const [amount, setAmount] = useState<number>(0)
+  const [actualAmount, setActualAmount] = useState<number>(0)
+  const [errorMessage, setErrorMessage] = useState<string>('')
+
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const userInput = e.target.value
+    const scaledInput = parseFloat(userInput) * Math.pow(10, asset.scale)
+    const integerScaledInput = Math.floor(scaledInput)
+    if (scaledInput !== integerScaledInput) {
+      const error = 'The asset scale cannot accomodate this value'
+      setErrorMessage(error)
+    } else {
+      setErrorMessage('')
+    }
+    setActualAmount(integerScaledInput)
+  }
 
   return (
     <Dialog as='div' className='relative z-10' onClose={onClose} open={true}>
@@ -51,16 +65,22 @@ export const LiquidityDialog = ({
                 <Form method='post' replace preventScrollReset>
                   <Input
                     required
-                    min={1}
                     type='number'
-                    name='amount'
+                    name='displayAmount'
                     label='Amount'
-                    onChange={e => setAmount(Number(e.target.value))}
+                    onChange={handleChange}
+                    addOn={asset.code}
+                    step='any'
+                    min={1 / Math.pow(10, asset.scale)}
+                    error={errorMessage}
                   />
-                  <div className='text-gray-500 text-sm mt-2'>
-                    <p>Based on the asset:</p>
-                    <p>Amount {amount} = {amount / Math.pow(10, asset.scale)} {asset.code} </p>
-                  </div>
+                  <Input
+                    required
+                    min={1}
+                    type='hidden'
+                    name='amount'
+                    value={actualAmount}
+                  />
                   <div className='flex justify-end py-3'>
                     <Button aria-label={`${type} liquidity`} type='submit'>
                       {type} liquidity
