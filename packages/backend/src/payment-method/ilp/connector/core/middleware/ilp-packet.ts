@@ -17,6 +17,7 @@ import {
 import { Readable } from 'stream'
 import { HttpContext, HttpMiddleware, ILPMiddleware } from '../rafiki'
 import getRawBody from 'raw-body'
+import { ValueType } from '@opentelemetry/api'
 
 export const CONTENT_TYPE = 'application/octet-stream'
 
@@ -234,5 +235,34 @@ export function createIlpPacketMiddleware(
     ctx.assert(!ctx.body, 500, 'response body already set')
     ctx.assert(response.rawReply, 500, 'ilp reply not set')
     ctx.body = response.rawReply
+
+    if (ctx.services.telemetry && Number(prepare.amount)) {
+      ctx.services.telemetry?.incrementCounter('packet_count_prepare', 1, {
+        description: 'Count of incoming prepare packets'
+      })
+      if (response.fulfill) {
+        const { code, scale } = ctx.state.incomingAccount.asset // Need to type these
+        const value = BigInt(prepare.amount)
+        await ctx.services.telemetry.incrementCounterWithTransactionAmount(
+          'transactions_amount',
+          {
+            value,
+            code,
+            scale
+          },
+          {
+            description: 'Amount sent through the network',
+            valueType: ValueType.DOUBLE
+          }
+        )
+        ctx.services.telemetry?.incrementCounter('packet_count_fulfill', 1, {
+          description: 'Count of outgoing fulfill packets'
+        })
+      } else if (response.reject) {
+        ctx.services.telemetry?.incrementCounter('packet_count_reject', 1, {
+          description: 'Count of outgoing reject packets'
+        })
+      }
+    }
   }
 }

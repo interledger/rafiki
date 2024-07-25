@@ -85,8 +85,8 @@ export async function handleSending(
   const payEndTime = Date.now()
 
   if (deps.telemetry) {
-    deps.telemetry.incrementCounter('transactions_total', 1, {
-      description: 'Count of funded transactions'
+    deps.telemetry.incrementCounter('transactions_count_outgoing', 1, {
+      description: 'Count of funded outgoing transactions'
     })
 
     const payDuration = payEndTime - payStartTime

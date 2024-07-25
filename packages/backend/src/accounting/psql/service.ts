@@ -200,8 +200,9 @@ export async function createTransfer(
   deps: ServiceDependencies,
   args: TransferOptions
 ): Promise<Transaction | TransferError> {
-  return createAccountToAccountTransfer(deps, {
+  return createAccountToAccountTransfer({
     transferArgs: args,
+    withdrawalThrottleDelay: deps.withdrawalThrottleDelay,
     voidTransfers: async (transferRefs) => voidTransfers(deps, transferRefs),
     postTransfers: async (transferRefs) => postTransfers(deps, transferRefs),
     getAccountReceived: async (accountRef) =>

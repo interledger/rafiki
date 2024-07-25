@@ -287,6 +287,9 @@ export function initIocContainer(
       knex: await deps.use('knex'),
       accountingService: await deps.use('accountingService'),
       walletAddressService: await deps.use('walletAddressService'),
+      telemetry: config.enableTelemetry
+        ? await deps.use('telemetry')
+        : undefined,
       config: await deps.use('config')
     })
   })

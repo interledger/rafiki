@@ -1,3 +1,4 @@
+// import assert from 'assert'
 import { Readable } from 'stream'
 import {
   serializeIlpPrepare,
@@ -11,20 +12,46 @@ import {
   createIlpPacketMiddleware,
   IlpResponse,
   ZeroCopyIlpPrepare
-} from '../../middleware/ilp-packet'
+  // OutgoingAccount
+} from '../../'
 import {
   IlpPrepareFactory,
   IlpFulfillFactory,
-  IlpRejectFactory
+  IlpRejectFactory,
+  // IncomingAccountFactory,
+  RafikiServicesFactory
 } from '../../factories'
 import { HttpContext } from '../../rafiki'
 
 describe('ILP Packet Middleware', () => {
   test('sets up request and response', async () => {
+    // const incomingAccount = IncomingAccountFactory.build({ id: 'alice' })
+    // assert.ok(incomingAccount.id)
+    const services = RafikiServicesFactory.build({})
+
     const options: MockIncomingMessageOptions = {
       headers: { 'content-type': 'application/octet-stream' }
     }
-    const ctx = createContext<unknown, HttpContext>({ req: options })
+
+    const ctx = createContext<unknown, HttpContext>({
+      req: options,
+      services: { ...services, telemetry: undefined }
+      // accounts: {
+      //   incoming: incomingAccount,
+      //   outgoing: { asset: { code: 'USD', scale: 2 } } as OutgoingAccount
+      // },
+      // state: {
+      //   unfulfillable: false,
+      //   incomingAccount: {
+      //     quote: 'exists',
+      //     asset: {
+      //       code: 'USD',
+      //       scale: 2
+      //     }
+      //   }
+      // }
+    })
+
     const prepare = IlpPrepareFactory.build()
     const getRawBody = async (_req: Readable) => serializeIlpPrepare(prepare)
     const rawReply = serializeIlpFulfill(IlpFulfillFactory.build())

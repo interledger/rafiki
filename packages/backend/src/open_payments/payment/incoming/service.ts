@@ -17,6 +17,7 @@ import {
 import { Amount } from '../../amount'
 import { IncomingPaymentError } from './errors'
 import { IAppConfig } from '../../../config/app'
+import { TelemetryService } from '../../../telemetry/service'
 
 export const POSITIVE_SLIPPAGE = BigInt(1)
 // First retry waits 10 seconds
@@ -47,6 +48,7 @@ export interface ServiceDependencies extends BaseService {
   accountingService: AccountingService
   walletAddressService: WalletAddressService
   config: IAppConfig
+  telemetry?: TelemetryService
 }
 
 export async function createIncomingPaymentService(
@@ -220,6 +222,11 @@ async function handleDeactivated(
       )
       await incomingPayment.$query(deps.knex).patch({ processAt: null })
       return
+    } else if (deps.telemetry) {
+      // TODO: tests
+      deps.telemetry.incrementCounter('transactions_count_incoming', 1, {
+        description: 'Count of funded incoming transactions'
+      })
     }
 
     const type =
