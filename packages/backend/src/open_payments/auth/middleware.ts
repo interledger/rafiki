@@ -95,11 +95,13 @@ export function createTokenIntrospectionMiddleware({
         tokenInfo = await tokenIntrospectionClient.introspect({
           access_token: token,
           access: [
-            toOpenPaymentsAccess(
-              requestType,
-              requestAction,
-              ctx.walletAddressUrl
-            )
+            requestType === AccessType.OutgoingPayment
+              ? toOpenPaymentsAccess(
+                  requestType,
+                  requestAction,
+                  ctx.walletAddressUrl
+                )
+              : toOpenPaymentsAccess(requestType, requestAction)
           ]
         })
       } catch (err) {

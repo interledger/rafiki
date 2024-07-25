@@ -41,6 +41,15 @@ type AppMiddleware = (
 const next: jest.MockedFunction<() => Promise<void>> = jest.fn()
 const token = 'OS9M2PMHKUR64TB8N6BW7OZB8CDFONP219RP1LT0'
 
+type IntrospectionCallObject = {
+  access_token: string
+  access: {
+    type: AccessType
+    actions: AccessAction[]
+    identifier?: string
+  }[]
+}
+
 describe('Auth Middleware', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
@@ -184,8 +193,7 @@ describe('Auth Middleware', (): void => {
       access: [
         {
           type: type,
-          actions: [action],
-          identifier: ctx.walletAddressUrl
+          actions: [action]
         }
       ]
     })
@@ -209,8 +217,7 @@ describe('Auth Middleware', (): void => {
       access: [
         {
           type: type,
-          actions: [action],
-          identifier: ctx.walletAddressUrl
+          actions: [action]
         }
       ]
     })
@@ -274,16 +281,21 @@ describe('Auth Middleware', (): void => {
             status: 403,
             message: 'Inactive Token'
           })
-          expect(introspectSpy).toHaveBeenCalledWith({
+          const expectedCallObject: IntrospectionCallObject = {
             access_token: token,
             access: [
               {
                 type,
-                actions: [action],
-                identifier: ctx.walletAddressUrl
+                actions: [action]
               }
             ]
-          })
+          }
+
+          if (type === AccessType.OutgoingPayment) {
+            expectedCallObject.access[0].identifier = ctx.walletAddressUrl
+          }
+
+          expect(introspectSpy).toHaveBeenCalledWith(expectedCallObject)
           expect(next).not.toHaveBeenCalled()
         }
       )
@@ -301,8 +313,7 @@ describe('Auth Middleware', (): void => {
             access: [
               {
                 type,
-                actions: [action],
-                identifier: ctx.walletAddressUrl
+                actions: [action]
               }
             ]
           })
@@ -338,8 +349,7 @@ describe('Auth Middleware', (): void => {
               access: [
                 {
                   type,
-                  actions: [subAction],
-                  identifier: ctx.walletAddressUrl
+                  actions: [subAction]
                 }
               ]
             })
@@ -366,8 +376,7 @@ describe('Auth Middleware', (): void => {
               access: [
                 {
                   type,
-                  actions: [superAction],
-                  identifier: ctx.walletAddressUrl
+                  actions: [superAction]
                 }
               ]
             })
@@ -422,16 +431,20 @@ describe('Auth Middleware', (): void => {
                 .mockResolvedValueOnce(tokenInfo)
 
               await expect(middleware(ctx, next)).resolves.toBeUndefined()
-              expect(introspectSpy).toHaveBeenCalledWith({
+              const expectedCallObject: IntrospectionCallObject = {
                 access_token: token,
                 access: [
                   {
                     type,
-                    actions: [action],
-                    identifier: ctx.walletAddressUrl
+                    actions: [action]
                   }
                 ]
-              })
+              }
+              if (type === AccessType.OutgoingPayment) {
+                expectedCallObject.access[0].identifier = ctx.walletAddressUrl
+              }
+
+              expect(introspectSpy).toHaveBeenCalledWith(expectedCallObject)
               expect(next).toHaveBeenCalled()
               expect(ctx.client).toEqual(tokenInfo.client)
               expect(ctx.accessAction).toBe(action)
@@ -460,8 +473,7 @@ describe('Auth Middleware', (): void => {
             access: [
               {
                 type,
-                actions: [action],
-                identifier: ctx.walletAddressUrl
+                actions: [action]
               }
             ]
           })
