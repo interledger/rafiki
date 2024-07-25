@@ -1,4 +1,4 @@
-// import assert from 'assert'
+import assert from 'assert'
 import { Readable } from 'stream'
 import {
   serializeIlpPrepare,
@@ -11,22 +11,20 @@ import { createContext, MockIncomingMessageOptions } from '../../utils'
 import {
   createIlpPacketMiddleware,
   IlpResponse,
-  ZeroCopyIlpPrepare
-  // OutgoingAccount
+  ZeroCopyIlpPrepare,
+  OutgoingAccount
 } from '../../'
 import {
   IlpPrepareFactory,
   IlpFulfillFactory,
   IlpRejectFactory,
-  // IncomingAccountFactory,
+  IncomingAccountFactory,
   RafikiServicesFactory
 } from '../../factories'
 import { HttpContext } from '../../rafiki'
 
 describe('ILP Packet Middleware', () => {
   test('sets up request and response', async () => {
-    // const incomingAccount = IncomingAccountFactory.build({ id: 'alice' })
-    // assert.ok(incomingAccount.id)
     const services = RafikiServicesFactory.build({})
 
     const options: MockIncomingMessageOptions = {
@@ -36,20 +34,6 @@ describe('ILP Packet Middleware', () => {
     const ctx = createContext<unknown, HttpContext>({
       req: options,
       services: { ...services, telemetry: undefined }
-      // accounts: {
-      //   incoming: incomingAccount,
-      //   outgoing: { asset: { code: 'USD', scale: 2 } } as OutgoingAccount
-      // },
-      // state: {
-      //   unfulfillable: false,
-      //   incomingAccount: {
-      //     quote: 'exists',
-      //     asset: {
-      //       code: 'USD',
-      //       scale: 2
-      //     }
-      //   }
-      // }
     })
 
     const prepare = IlpPrepareFactory.build()
@@ -200,5 +184,139 @@ describe('IlpResponse', () => {
     response.rawReply = undefined
     expect(response.fulfill).toBeUndefined()
     expect(response.rawFulfill).toBeUndefined()
+  })
+})
+
+describe('Telemetry Middleware', function () {
+  let ctx: HttpContext
+  let services: ReturnType<typeof RafikiServicesFactory.build>
+  let incomingAccount: ReturnType<typeof IncomingAccountFactory.build>
+
+  beforeEach(() => {
+    services = RafikiServicesFactory.build({})
+    incomingAccount = IncomingAccountFactory.build({ id: 'alice' })
+    assert.ok(incomingAccount.id)
+    const options: MockIncomingMessageOptions = {
+      headers: { 'content-type': 'application/octet-stream' }
+    }
+    ctx = createContext<unknown, HttpContext>({
+      req: options,
+      services,
+      accounts: {
+        incoming: incomingAccount,
+        outgoing: { asset: { code: 'USD', scale: 2 } } as OutgoingAccount
+      },
+      state: {
+        unfulfillable: false,
+        incomingAccount: {
+          asset: {
+            code: 'USD',
+            scale: 2
+          }
+        }
+      }
+    })
+  })
+
+  afterEach(() => {
+    jest.resetAllMocks()
+  })
+
+  it('should not gather telemetry if telemetry is not enabled (service is undefined)', async () => {
+    ctx.services= { ...services, telemetry: undefined }
+    const incrementCounterWithTransactionAmountSpy = jest
+      .spyOn(services.telemetry, 'incrementCounterWithTransactionAmount')
+      .mockImplementation(() => Promise.resolve())
+
+    const incrementCounterSpy = jest
+      .spyOn(services.telemetry, 'incrementCounter')
+      .mockImplementation(() => Promise.resolve())
+
+    const prepare = IlpPrepareFactory.build()
+    const getRawBody = async (_req: Readable) => serializeIlpPrepare(prepare)
+    const rawReply = serializeIlpFulfill(IlpFulfillFactory.build())
+    const ilpHandler = jest.fn().mockImplementation((ctx, next) => {
+      ctx.response.rawReply = rawReply
+      next()
+    })
+    const next = jest.fn()
+    const middleware = createIlpPacketMiddleware(ilpHandler, { getRawBody })
+
+    await expect(middleware(ctx, next)).resolves.toBeUndefined()
+    expect(incrementCounterWithTransactionAmountSpy).not.toHaveBeenCalled()
+    expect(incrementCounterSpy).not.toHaveBeenCalled()
+  })
+
+  it('should not gather telemetry if request.prepare.amount is 0', async () => {
+    const incrementCounterWithTransactionAmountSpy = jest
+      .spyOn(services.telemetry, 'incrementCounterWithTransactionAmount')
+      .mockImplementation(() => Promise.resolve())
+
+    const incrementCounterSpy = jest
+      .spyOn(services.telemetry, 'incrementCounter')
+      .mockImplementation(() => Promise.resolve())
+
+    const prepare = IlpPrepareFactory.build()
+    prepare.amount = '0'
+    const getRawBody = async (_req: Readable) => serializeIlpPrepare(prepare)
+    const rawReply = serializeIlpReject(IlpRejectFactory.build())
+    const ilpHandler = jest.fn().mockImplementation((ctx, next) => {
+      ctx.response.rawReply = rawReply
+      next()
+    })
+    const next = jest.fn()
+    const middleware = createIlpPacketMiddleware(ilpHandler, { getRawBody })
+
+    await expect(middleware(ctx, next)).resolves.toBeUndefined()
+    expect(incrementCounterWithTransactionAmountSpy).not.toHaveBeenCalled()
+    expect(incrementCounterSpy).not.toHaveBeenCalled()
+  })
+
+  it('should gather amount and packet count telemetry if response.fulfill is defined', async () => {
+    const incrementCounterWithTransactionAmountSpy = jest
+      .spyOn(services.telemetry, 'incrementCounterWithTransactionAmount')
+      .mockImplementation(() => Promise.resolve())
+
+    const incrementCounterSpy = jest
+      .spyOn(services.telemetry, 'incrementCounter')
+      .mockImplementation(() => Promise.resolve())
+
+    const prepare = IlpPrepareFactory.build()
+    const getRawBody = async (_req: Readable) => serializeIlpPrepare(prepare)
+    const rawReply = serializeIlpFulfill(IlpFulfillFactory.build())
+    const ilpHandler = jest.fn().mockImplementation((ctx, next) => {
+      ctx.response.rawReply = rawReply
+      next()
+    })
+    const next = jest.fn()
+    const middleware = createIlpPacketMiddleware(ilpHandler, { getRawBody })
+
+    await expect(middleware(ctx, next)).resolves.toBeUndefined()
+    expect(incrementCounterWithTransactionAmountSpy).toHaveBeenCalledTimes(1)
+    expect(incrementCounterSpy).toHaveBeenCalledTimes(2)
+  })
+
+  it('should only gather packet count telemetry if response.fulfill undefined', async () => {
+    const incrementCounterWithTransactionAmountSpy = jest
+      .spyOn(services.telemetry, 'incrementCounterWithTransactionAmount')
+      .mockImplementation(() => Promise.resolve())
+
+    const incrementCounterSpy = jest
+      .spyOn(services.telemetry, 'incrementCounter')
+      .mockImplementation(() => Promise.resolve())
+
+    const prepare = IlpPrepareFactory.build()
+    const getRawBody = async (_req: Readable) => serializeIlpPrepare(prepare)
+    const rawReply = serializeIlpReject(IlpRejectFactory.build())
+    const ilpHandler = jest.fn().mockImplementation((ctx, next) => {
+      ctx.response.rawReply = rawReply
+      next()
+    })
+    const next = jest.fn()
+    const middleware = createIlpPacketMiddleware(ilpHandler, { getRawBody })
+
+    await expect(middleware(ctx, next)).resolves.toBeUndefined()
+    expect(incrementCounterWithTransactionAmountSpy).not.toHaveBeenCalled()
+    expect(incrementCounterSpy).toHaveBeenCalledTimes(2)
   })
 })
