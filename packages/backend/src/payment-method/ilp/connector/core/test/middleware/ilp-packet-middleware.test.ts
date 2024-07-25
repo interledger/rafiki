@@ -223,7 +223,7 @@ describe('Telemetry Middleware', function () {
   })
 
   it('should not gather telemetry if telemetry is not enabled (service is undefined)', async () => {
-    ctx.services= { ...services, telemetry: undefined }
+    ctx.services = { ...services, telemetry: undefined }
     const incrementCounterWithTransactionAmountSpy = jest
       .spyOn(services.telemetry, 'incrementCounterWithTransactionAmount')
       .mockImplementation(() => Promise.resolve())
