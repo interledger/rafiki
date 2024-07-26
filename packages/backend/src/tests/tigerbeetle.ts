@@ -8,7 +8,7 @@ const TIGERBEETLE_DIR = '/var/lib/tigerbeetle'
 const TIGERBEETLE_CONTAINER_LOG =
   process.env.TIGERBEETLE_CONTAINER_LOG === 'true'
 
-export async function startTigerbeetleContainer(clusterId?: number): Promise<{
+export async function startTigerBeetleContainer(clusterId?: number): Promise<{
   container: StartedTestContainer
   port: number
 }> {
