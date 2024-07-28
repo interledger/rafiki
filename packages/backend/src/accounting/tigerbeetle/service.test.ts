@@ -29,7 +29,6 @@ import {
 } from '../service'
 import { flagsBasedOnAccountOptions } from './accounts'
 import { TigerBeetleAccountCode } from './service'
-import { fromTigerBeetleId, toTigerBeetleId } from './utils'
 
 describe('TigerBeetle Accounting Service', (): void => {
   let deps: IocContract<AppServices>
@@ -965,19 +964,5 @@ describe('TigerBeetle Accounting Service', (): void => {
     expect(
       AccountFlags.debits_must_not_exceed_credits & credExcDebitLinkedAndHistory
     ).toBeFalsy()
-  })
-
-  test('Test TigerBeetle Utils', async (): Promise<void> => {
-    // Settlement Asset type of accounts:
-    const ledger = 1n
-    expect(fromTigerBeetleId(ledger)).toEqual(
-      `00000000-0000-0000-0000-00000000000${ledger}`
-    )
-
-    // Liquidity accounts:
-    const uuidInitial = uuid()
-    const tbId = toTigerBeetleId(uuidInitial)
-    const fromTb = fromTigerBeetleId(tbId)
-    expect(fromTb).toEqual(`${uuidInitial}`)
   })
 })

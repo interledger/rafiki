@@ -80,9 +80,6 @@ export async function getAccountTransfers(
 function mapToGetLedgerTransfersResult(
   dbModel: LedgerTransfer
 ): ServiceLedgerTransfer {
-  let transferType = TransferType.TRANSFER
-  if (dbModel.type) transferType = TransferType[dbModel.type]
-
   return {
     amount: dbModel.amount,
     creditAccountId: dbModel.creditAccountId,
@@ -90,7 +87,7 @@ function mapToGetLedgerTransfersResult(
     id: dbModel.id,
     ledger: dbModel.ledger,
     timestamp: BigInt(dbModel.createdAt.getTime()),
-    type: transferType,
+    type: dbModel.type ? TransferType[dbModel.type] : TransferType.TRANSFER,
     state: dbModel.state,
     timeout: 0,
     transferRef: dbModel.transferRef,
