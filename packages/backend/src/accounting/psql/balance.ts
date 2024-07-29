@@ -1,5 +1,5 @@
 import { LedgerAccount } from './ledger-account/model'
-import { LedgerTransferState } from './ledger-transfer/model'
+import { LedgerTransferState } from '../service'
 import { ServiceDependencies } from './service'
 import { getAccountTransfers } from './ledger-transfer'
 import { TransactionOrKnex } from 'objection'
@@ -16,7 +16,12 @@ export async function getAccountBalances(
   account: LedgerAccount,
   trx?: TransactionOrKnex
 ): Promise<AccountBalance> {
-  const { credits, debits } = await getAccountTransfers(deps, account.id, trx)
+  const { credits, debits } = await getAccountTransfers(
+    deps,
+    account.id,
+    undefined, // No limit for balances
+    trx
+  )
 
   let creditsPosted = 0n
   let creditsPending = 0n

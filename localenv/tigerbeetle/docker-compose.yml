@@ -1,6 +1,6 @@
 services:
   tigerbeetle:
-    image: ghcr.io/tigerbeetle/tigerbeetle:0.15.3
+    image: ghcr.io/tigerbeetle/tigerbeetle:0.15.4
     privileged: true
     volumes:
       - tigerbeetle-data:/var/lib/tigerbeetle
@@ -23,6 +23,6 @@ services:
         fi
         hostname -i
         ls /var/lib/tigerbeetle
-        ./tigerbeetle start --addresses=0.0.0.0:4342 $$DATA_FILE
+        ./tigerbeetle start --addresses=0.0.0.0:4342 --development $$DATA_FILE
 volumes:
   tigerbeetle-data:

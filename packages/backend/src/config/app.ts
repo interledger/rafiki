@@ -105,11 +105,15 @@ export const Config = {
   ilpConnectorUrl: envString('ILP_CONNECTOR_URL'),
   instanceName: envString('INSTANCE_NAME'),
   streamSecret: Buffer.from(process.env.STREAM_SECRET || '', 'base64'),
-  useTigerbeetle: envBool('USE_TIGERBEETLE', true),
-  tigerbeetleClusterId: envInt('TIGERBEETLE_CLUSTER_ID', 0),
-  tigerbeetleReplicaAddresses: process.env.TIGERBEETLE_REPLICA_ADDRESSES
+  useTigerBeetle: envBool('USE_TIGERBEETLE', true),
+  tigerBeetleClusterId: envInt('TIGERBEETLE_CLUSTER_ID', 0),
+  tigerBeetleReplicaAddresses: process.env.TIGERBEETLE_REPLICA_ADDRESSES
     ? process.env.TIGERBEETLE_REPLICA_ADDRESSES.split(',')
     : ['3004'],
+  tigerBeetleTwoPhaseTimeout: envInt(
+    'TIGERBEETLE_TWO_PHASE_TIMEOUT_SECONDS',
+    5
+  ),
 
   exchangeRatesUrl: process.env.EXCHANGE_RATES_URL, // optional
   exchangeRatesLifetime: +(process.env.EXCHANGE_RATES_LIFETIME || 15_000),

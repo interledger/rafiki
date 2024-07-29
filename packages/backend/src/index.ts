@@ -5,6 +5,8 @@ import { Model } from 'objection'
 import createLogger from 'pino'
 import { createClient } from 'tigerbeetle-node'
 import { createClient as createIntrospectionClient } from 'token-introspection'
+import net from 'net'
+import dns from 'dns'
 
 import {
   createAuthenticatedClient as createOpenPaymentsClient,
@@ -211,21 +213,21 @@ export function initIocContainer(
     const knex = await deps.use('knex')
     const config = await deps.use('config')
 
-    if (config.useTigerbeetle) {
-      container.singleton('tigerbeetle', async (deps) => {
+    if (config.useTigerBeetle) {
+      container.singleton('tigerBeetle', async (deps) => {
         const config = await deps.use('config')
         return createClient({
-          cluster_id: BigInt(config.tigerbeetleClusterId),
-          replica_addresses: config.tigerbeetleReplicaAddresses
+          cluster_id: BigInt(config.tigerBeetleClusterId),
+          replica_addresses: await parseAndLookupAddresses(
+            config.tigerBeetleReplicaAddresses
+          )
         })
       })
-
-      const tigerbeetle = await deps.use('tigerbeetle')!
-
+      const tigerBeetle = await deps.use('tigerBeetle')!
       return createTigerbeetleAccountingService({
         logger,
         knex,
-        tigerbeetle,
+        tigerBeetle,
         withdrawalThrottleDelay: config.withdrawalThrottleDelay
       })
     }
@@ -500,6 +502,36 @@ export function initIocContainer(
   return container
 }
 
+export const parseAndLookupAddresses = async (
+  replicaAddresses: string[]
+): Promise<string[]> => {
+  const parsed = []
+  for (const addr of replicaAddresses) {
+    const parts = addr.split(':')
+    if (!parts)
+      throw new Error(
+        `Cannot parse replicaAddresses in 'accountingService' startup - value: "${addr}"`
+      )
+    if (parts.length === 1 && !isNaN(Number(parts[0]))) {
+      parsed.push(parts[0])
+      continue
+    }
+
+    if (net.isIP(parts[0]) === 0) {
+      try {
+        await dns.promises.lookup(parts[0], { family: 4 }).then((resp) => {
+          parsed.push(`${resp.address}:${parts[1]}`)
+        })
+      } catch (err) {
+        throw new Error(
+          `Lookup error while parsing replicaAddresses in 'accountingService' startup - cannot resolve: "${addr[0]}" of "${addr}". ${err}`
+        )
+      }
+    } else parsed.push(addr)
+  }
+  return parsed
+}
+
 export const gracefulShutdown = async (
   container: IocContract<AppServices>,
   app: App
@@ -511,9 +543,9 @@ export const gracefulShutdown = async (
   await knex.destroy()
 
   const config = await container.use('config')
-  if (config.useTigerbeetle) {
-    const tigerbeetle = await container.use('tigerbeetle')
-    tigerbeetle?.destroy()
+  if (config.useTigerBeetle) {
+    const tigerBeetle = await container.use('tigerBeetle')
+    tigerBeetle?.destroy()
   }
 
   const redis = await container.use('redis')
