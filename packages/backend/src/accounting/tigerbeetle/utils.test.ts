@@ -23,6 +23,7 @@ describe('TigerBeetle Utils Test', (): void => {
       // @ts-expect-error error message will always be present:
       expect(error.message).toEqual('wrong format of id')
     }
+    expect.assertions(3)
   })
 
   test('Test ', async (): Promise<void> => {
