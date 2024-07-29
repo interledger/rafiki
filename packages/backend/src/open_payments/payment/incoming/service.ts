@@ -223,7 +223,6 @@ async function handleDeactivated(
       await incomingPayment.$query(deps.knex).patch({ processAt: null })
       return
     } else if (deps.telemetry) {
-      // TODO: tests
       deps.telemetry.incrementCounter('transactions_count_incoming', 1, {
         description: 'Count of funded incoming transactions'
       })

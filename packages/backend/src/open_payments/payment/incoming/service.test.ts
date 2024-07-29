@@ -25,6 +25,7 @@ import { IncomingPaymentError, isIncomingPaymentError } from './errors'
 import { Amount } from '../../amount'
 import { getTests } from '../../wallet_address/model.test'
 import { WalletAddress } from '../../wallet_address/model'
+import { TelemetryService } from '../../../telemetry/service'
 
 describe('Incoming Payment Service', (): void => {
   let deps: IocContract<AppServices>
@@ -60,6 +61,7 @@ describe('Incoming Payment Service', (): void => {
 
   afterAll(async (): Promise<void> => {
     await appContainer.shutdown()
+    jest.resetAllMocks
   })
 
   describe('Create IncomingPayment', (): void => {
@@ -658,6 +660,139 @@ describe('Incoming Payment Service', (): void => {
       ).resolves.toMatchObject({
         state: IncomingPaymentState.Completed
       })
+    })
+  })
+})
+
+describe('Telemetry Collection In The Incoming Payment Service', (): void => {
+  let deps: IocContract<AppServices>
+  let appContainer: TestContainer
+  let incomingPaymentService: IncomingPaymentService
+  let knex: Knex
+  let walletAddressId: string
+  let client: string
+  let accountingService: AccountingService
+  let asset: Asset
+  let telemetry: TelemetryService | undefined
+
+  beforeAll(async (): Promise<void> => {
+    const config = {
+      ...Config,
+      enableTelemetry: true,
+      telemetryExchangeRatesUrl: 'http://example-rates.com',
+      telemetryExchangeRatesLifetime: 100,
+      openTelemetryCollectors: []
+    }
+    deps = await initIocContainer(config)
+    appContainer = await createTestApp(deps)
+    accountingService = await deps.use('accountingService')
+    knex = appContainer.knex
+    incomingPaymentService = await deps.use('incomingPaymentService')
+    telemetry = await deps.use('telemetry')
+  })
+
+  beforeEach(async (): Promise<void> => {
+    asset = await createAsset(deps)
+    const address = await createWalletAddress(deps, { assetId: asset.id })
+    walletAddressId = address.id
+    client = address.url
+  })
+
+  afterEach(async (): Promise<void> => {
+    jest.useRealTimers()
+    await truncateTables(knex)
+  })
+
+  afterAll(async (): Promise<void> => {
+    await appContainer.shutdown()
+    jest.resetAllMocks
+  })
+
+  describe('processNext', (): void => {
+    describe.each`
+      eventType                                            | expiresAt                        | amountReceived
+      ${IncomingPaymentEventType.IncomingPaymentExpired}   | ${new Date(Date.now() + 30_000)} | ${BigInt(1)}
+      ${IncomingPaymentEventType.IncomingPaymentCompleted} | ${undefined}                     | ${BigInt(123)}
+    `(
+      'handleDeactivated ($eventType)',
+      ({ eventType, expiresAt, amountReceived }): void => {
+        let incomingPayment: IncomingPayment
+
+        beforeEach(async (): Promise<void> => {
+          incomingPayment = await createIncomingPayment(deps, {
+            walletAddressId,
+            client,
+            incomingAmount: {
+              value: BigInt(123),
+              assetCode: asset.code,
+              assetScale: asset.scale
+            },
+            expiresAt,
+            metadata: {
+              description: 'Test incoming payment',
+              externalRef: '#123'
+            }
+          })
+          await accountingService.createDeposit({
+            id: uuid(),
+            account: incomingPayment,
+            amount: amountReceived
+          })
+          if (eventType === IncomingPaymentEventType.IncomingPaymentExpired) {
+            jest.useFakeTimers()
+            jest.setSystemTime(incomingPayment.expiresAt)
+            await expect(incomingPaymentService.processNext()).resolves.toBe(
+              incomingPayment.id
+            )
+          } else {
+            await incomingPayment.onCredit({
+              // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+              totalReceived: incomingPayment.incomingAmount!.value
+            })
+          }
+          incomingPayment = (await incomingPaymentService.get({
+            id: incomingPayment.id
+          })) as IncomingPayment
+        })
+
+        test('increments counter when funded incoming payment completes', async (): Promise<void> => {
+          const incrementCounterSpy = jest
+            .spyOn(telemetry!, 'incrementCounter')
+            .mockImplementation(() => Promise.resolve())
+          jest.useFakeTimers()
+          jest.setSystemTime(incomingPayment.processAt!)
+          await expect(incomingPaymentService.processNext()).resolves.toBe(
+            incomingPayment.id
+          )
+          expect(incrementCounterSpy).toHaveBeenCalledTimes(1)
+        })
+      }
+    )
+    test('does not increment counter when incoming payment expires with no funding', async (): Promise<void> => {
+      const incrementCounterSpy = jest
+        .spyOn(telemetry!, 'incrementCounter')
+        .mockImplementation(() => Promise.resolve())
+      const incomingPayment = await createIncomingPayment(deps, {
+        walletAddressId,
+        client,
+        incomingAmount: {
+          value: BigInt(123),
+          assetCode: asset.code,
+          assetScale: asset.scale
+        },
+        expiresAt: new Date(Date.now() + 30_000),
+        metadata: {
+          description: 'Test incoming payment',
+          externalRef: '#123'
+        }
+      })
+      jest.useFakeTimers()
+      jest.setSystemTime(incomingPayment.expiresAt)
+
+      await expect(incomingPaymentService.processNext()).resolves.toBe(
+        incomingPayment.id
+      )
+      expect(incrementCounterSpy).not.toHaveBeenCalled
     })
   })
 })
