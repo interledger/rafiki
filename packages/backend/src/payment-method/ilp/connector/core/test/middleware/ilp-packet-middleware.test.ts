@@ -187,7 +187,7 @@ describe('IlpResponse', () => {
   })
 })
 
-describe('Telemetry Middleware', function () {
+describe('Telemetry Collection In ILP Packet Middleware', function () {
   let ctx: HttpContext
   let services: ReturnType<typeof RafikiServicesFactory.build>
   let incomingAccount: ReturnType<typeof IncomingAccountFactory.build>
