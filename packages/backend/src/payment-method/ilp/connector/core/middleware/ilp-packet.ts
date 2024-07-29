@@ -241,7 +241,7 @@ export function createIlpPacketMiddleware(
         description: 'Count of incoming prepare packets'
       })
       if (response.fulfill) {
-        const { code, scale } = ctx.state.incomingAccount.asset // Need to type these
+        const { code, scale } = ctx.state.incomingAccount.asset
         const value = BigInt(prepare.amount)
         await ctx.services.telemetry.incrementCounterWithTransactionAmount(
           'transactions_amount',

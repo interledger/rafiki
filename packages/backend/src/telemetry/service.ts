@@ -94,7 +94,6 @@ class TelemetryServiceImpl implements TelemetryService {
     })
   }
 
-  // TODO: is this still including 'source'
   public async incrementCounterWithTransactionAmount(
     name: string,
     amount: { value: bigint; assetCode: string; assetScale: number },
