@@ -244,7 +244,7 @@ export function createIlpPacketMiddleware(
         const { code, scale } = ctx.state.incomingAccount.asset
         const value = BigInt(prepare.amount)
         await ctx.services.telemetry.incrementCounterWithTransactionAmount(
-          'transactions_amount',
+          'packet_amount_fulfill',
           {
             value,
             assetCode: code,
