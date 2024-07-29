@@ -47,7 +47,10 @@ import {
 } from './payment-method/ilp/ilp_plugin'
 import { createHttpTokenService } from './payment-method/ilp/peer-http-token/service'
 import { createPeerService } from './payment-method/ilp/peer/service'
-import { createIlpPaymentService } from './payment-method/ilp/service'
+import {
+  createIlpPaymentService,
+  ServiceDependencies as IlpPaymentServiceDependencies
+} from './payment-method/ilp/service'
 import { createSPSPRoutes } from './payment-method/ilp/spsp/routes'
 import { createStreamCredentialsService } from './payment-method/ilp/stream-credentials/service'
 import { createRatesService } from './rates/service'
@@ -426,13 +429,19 @@ export function initIocContainer(
   })
 
   container.singleton('ilpPaymentService', async (deps) => {
-    return createIlpPaymentService({
+    const serviceDependencies: IlpPaymentServiceDependencies = {
       logger: await deps.use('logger'),
       knex: await deps.use('knex'),
       config: await deps.use('config'),
       makeIlpPlugin: await deps.use('makeIlpPlugin'),
       ratesService: await deps.use('ratesService')
-    })
+    }
+
+    if (config.enableTelemetry) {
+      serviceDependencies.telemetry = await deps.use('telemetry')
+    }
+
+    return createIlpPaymentService(serviceDependencies)
   })
 
   container.singleton('paymentMethodHandlerService', async (deps) => {
