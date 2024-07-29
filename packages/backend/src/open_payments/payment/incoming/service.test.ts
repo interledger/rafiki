@@ -699,13 +699,13 @@ describe('Telemetry Collection In The Incoming Payment Service', (): void => {
   })
 
   afterEach(async (): Promise<void> => {
+    jest.resetAllMocks
     jest.useRealTimers()
     await truncateTables(knex)
   })
 
   afterAll(async (): Promise<void> => {
     await appContainer.shutdown()
-    jest.resetAllMocks
   })
 
   describe('processNext', (): void => {
