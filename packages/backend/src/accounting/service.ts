@@ -1,4 +1,5 @@
 import { TransactionOrKnex } from 'objection'
+import { BaseService } from '../shared/baseService'
 import { TransferError, isTransferError } from './errors'
 
 export enum LiquidityAccountType {
@@ -7,6 +8,18 @@ export enum LiquidityAccountType {
   INCOMING = 'INCOMING',
   OUTGOING = 'OUTGOING',
   WEB_MONETIZATION = 'WEB_MONETIZATION'
+}
+
+export enum TransferType {
+  DEPOSIT = 'DEPOSIT',
+  WITHDRAWAL = 'WITHDRAWAL',
+  TRANSFER = 'TRANSFER'
+}
+
+export enum LedgerTransferState {
+  PENDING = 'PENDING',
+  POSTED = 'POSTED',
+  VOIDED = 'VOIDED'
 }
 
 export interface LiquidityAccount {
@@ -85,6 +98,10 @@ export interface TransferToCreate {
   ledger: number
 }
 
+export interface BaseAccountingServiceDependencies extends BaseService {
+  withdrawalThrottleDelay?: number
+}
+
 interface CreateAccountToAccountTransferArgs {
   transferArgs: TransferOptions
   voidTransfers(transferIds: string[]): Promise<void | TransferError>
@@ -94,10 +111,10 @@ interface CreateAccountToAccountTransferArgs {
   createPendingTransfers(
     transfers: TransferToCreate[]
   ): Promise<string[] | TransferError>
-  withdrawalThrottleDelay?: number
 }
 
 export async function createAccountToAccountTransfer(
+  deps: BaseAccountingServiceDependencies,
   args: CreateAccountToAccountTransferArgs
 ): Promise<Transaction | TransferError> {
   const {
@@ -106,9 +123,10 @@ export async function createAccountToAccountTransfer(
     createPendingTransfers,
     getAccountReceived,
     getAccountBalance,
-    withdrawalThrottleDelay,
     transferArgs
   } = args
+
+  const { withdrawalThrottleDelay } = deps
 
   const { sourceAccount, destinationAccount, sourceAmount, destinationAmount } =
     transferArgs
