@@ -1,0 +1,11 @@
+{
+  "name": "performance",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "test": "k6 run ./scripts/script.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
