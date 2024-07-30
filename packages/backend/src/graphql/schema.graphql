@@ -244,6 +244,11 @@ type Mutation {
 
   "Set the fee on an asset"
   setFee(input: SetFeeInput!): SetFeeResponse!
+
+  "Approves the incoming payment if the incoming payment is in the PENDING state"
+  approveIncomingPayment(
+    input: ApproveIncomingPaymentInput!
+  ): ApproveIncomingPaymentResponse!
 }
 
 type PageInfo {
@@ -265,6 +270,11 @@ type AssetsConnection {
 type AssetEdge {
   node: Asset!
   cursor: String!
+}
+
+input ApproveIncomingPaymentInput {
+  "Unique identifier of the incoming payment to be approved. Note: Incoming Payment must be PENDING."
+  id: ID!
 }
 
 input CreateAssetInput {
@@ -1288,6 +1298,10 @@ type RevokeWalletAddressKeyMutationResponse {
 
 type SetFeeResponse {
   fee: Fee
+}
+
+type ApproveIncomingPaymentResponse {
+  payment: IncomingPayment
 }
 
 scalar UInt8

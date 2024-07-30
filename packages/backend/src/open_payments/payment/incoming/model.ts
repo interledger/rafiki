@@ -46,6 +46,7 @@ export interface IncomingPaymentResponse {
   receivedAmount: AmountJSON
   completed: boolean
   metadata?: Record<string, unknown>
+  approvedAt?: string
 }
 
 export type IncomingPaymentData = IncomingPaymentResponse &
@@ -100,6 +101,7 @@ export class IncomingPayment
   public metadata?: Record<string, unknown>
 
   public processAt!: Date | null
+  public approvedAt?: Date | null
 
   public readonly assetId!: string
   public asset!: Asset
@@ -205,6 +207,9 @@ export class IncomingPayment
     }
     if (this.metadata) {
       data.metadata = this.metadata
+    }
+    if (this.approvedAt) {
+      data.approvedAt = new Date(this.approvedAt).toISOString()
     }
 
     return data
