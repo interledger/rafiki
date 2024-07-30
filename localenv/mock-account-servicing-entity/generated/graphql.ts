@@ -77,6 +77,16 @@ export type AmountInput = {
   value: Scalars['UInt64']['input'];
 };
 
+export type ApproveIncomingPaymentInput = {
+  /** Unique identifier of the incoming payment to be approved. Note: Incoming Payment must be PENDING. */
+  id: Scalars['ID']['input'];
+};
+
+export type ApproveIncomingPaymentResponse = {
+  __typename?: 'ApproveIncomingPaymentResponse';
+  payment?: Maybe<IncomingPayment>;
+};
+
 export type Asset = Model & {
   __typename?: 'Asset';
   /** [ISO 4217 currency code](https://en.wikipedia.org/wiki/ISO_4217), e.g. `USD` */
@@ -607,6 +617,8 @@ export type Model = {
 
 export type Mutation = {
   __typename?: 'Mutation';
+  /** Approves the incoming payment if the incoming payment is in the PENDING state */
+  approveIncomingPayment: ApproveIncomingPaymentResponse;
   /** Cancel Outgoing Payment */
   cancelOutgoingPayment: OutgoingPaymentResponse;
   /** Create an asset */
@@ -675,6 +687,11 @@ export type Mutation = {
    * @deprecated Use `createOutgoingPaymentWithdrawal, createIncomingPaymentWithdrawal, or createWalletAddressWithdrawal`
    */
   withdrawEventLiquidity?: Maybe<LiquidityMutationResponse>;
+};
+
+
+export type MutationApproveIncomingPaymentArgs = {
+  input: ApproveIncomingPaymentInput;
 };
 
 
@@ -1527,6 +1544,8 @@ export type ResolversTypes = {
   Alg: ResolverTypeWrapper<Partial<Alg>>;
   Amount: ResolverTypeWrapper<Partial<Amount>>;
   AmountInput: ResolverTypeWrapper<Partial<AmountInput>>;
+  ApproveIncomingPaymentInput: ResolverTypeWrapper<Partial<ApproveIncomingPaymentInput>>;
+  ApproveIncomingPaymentResponse: ResolverTypeWrapper<Partial<ApproveIncomingPaymentResponse>>;
   Asset: ResolverTypeWrapper<Partial<Asset>>;
   AssetEdge: ResolverTypeWrapper<Partial<AssetEdge>>;
   AssetMutationResponse: ResolverTypeWrapper<Partial<AssetMutationResponse>>;
@@ -1652,6 +1671,8 @@ export type ResolversParentTypes = {
   AdditionalPropertyInput: Partial<AdditionalPropertyInput>;
   Amount: Partial<Amount>;
   AmountInput: Partial<AmountInput>;
+  ApproveIncomingPaymentInput: Partial<ApproveIncomingPaymentInput>;
+  ApproveIncomingPaymentResponse: Partial<ApproveIncomingPaymentResponse>;
   Asset: Partial<Asset>;
   AssetEdge: Partial<AssetEdge>;
   AssetMutationResponse: Partial<AssetMutationResponse>;
@@ -1787,6 +1808,11 @@ export type AmountResolvers<ContextType = any, ParentType extends ResolversParen
   assetCode?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   assetScale?: Resolver<ResolversTypes['UInt8'], ParentType, ContextType>;
   value?: Resolver<ResolversTypes['UInt64'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type ApproveIncomingPaymentResponseResolvers<ContextType = any, ParentType extends ResolversParentTypes['ApproveIncomingPaymentResponse'] = ResolversParentTypes['ApproveIncomingPaymentResponse']> = {
+  payment?: Resolver<Maybe<ResolversTypes['IncomingPayment']>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -1954,6 +1980,7 @@ export type ModelResolvers<ContextType = any, ParentType extends ResolversParent
 };
 
 export type MutationResolvers<ContextType = any, ParentType extends ResolversParentTypes['Mutation'] = ResolversParentTypes['Mutation']> = {
+  approveIncomingPayment?: Resolver<ResolversTypes['ApproveIncomingPaymentResponse'], ParentType, ContextType, RequireFields<MutationApproveIncomingPaymentArgs, 'input'>>;
   cancelOutgoingPayment?: Resolver<ResolversTypes['OutgoingPaymentResponse'], ParentType, ContextType, RequireFields<MutationCancelOutgoingPaymentArgs, 'input'>>;
   createAsset?: Resolver<ResolversTypes['AssetMutationResponse'], ParentType, ContextType, RequireFields<MutationCreateAssetArgs, 'input'>>;
   createAssetLiquidityWithdrawal?: Resolver<Maybe<ResolversTypes['LiquidityMutationResponse']>, ParentType, ContextType, RequireFields<MutationCreateAssetLiquidityWithdrawalArgs, 'input'>>;
@@ -2259,6 +2286,7 @@ export type Resolvers<ContextType = any> = {
   AccountingTransferConnection?: AccountingTransferConnectionResolvers<ContextType>;
   AdditionalProperty?: AdditionalPropertyResolvers<ContextType>;
   Amount?: AmountResolvers<ContextType>;
+  ApproveIncomingPaymentResponse?: ApproveIncomingPaymentResponseResolvers<ContextType>;
   Asset?: AssetResolvers<ContextType>;
   AssetEdge?: AssetEdgeResolvers<ContextType>;
   AssetMutationResponse?: AssetMutationResponseResolvers<ContextType>;
