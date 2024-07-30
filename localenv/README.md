@@ -15,9 +15,9 @@ These packages depend on the following databases:
 
 - TigerBeetle or Postgres (accounting)
 - Postgres (Open Payments resources, auth resources)
-- Redis (STREAM details)
+- Redis (STREAM details, auth sessions)
 
-We provide containerized versions of our packages together with two pre-configured docker-compose files ([peer1](./cloud-nine-wallet/docker-compose.yml) and [peer2](./happy-life-bank/docker-compose.yml)) to start two Mock Account Servicing Entities with their respective Rafiki backend and auth servers. They automatically peer and 2 to 3 user accounts are created on both of them.
+We provide containerized versions of our packages together with two pre-configured docker-compose files ([Cloud Nine Wallet](./cloud-nine-wallet/docker-compose.yml) and [Happy Life Bank](./happy-life-bank/docker-compose.yml)) to start two Mock Account Servicing Entities with their respective Rafiki backend and auth servers. They automatically peer and 2 to 3 user accounts are created on both of them.
 
 This environment will set up a playground where you can use the Rafiki Admin APIs and the Open Payments APIs.
 
@@ -204,20 +204,21 @@ pnpm localenv:compose down --volumes --rmi all
 
 ### Commands
 
-| Command                                     | Description                                 |
-| ------------------------------------------- | ------------------------------------------- |
-| `pnpm localenv:compose config`              | Show all merged config (with Tigerbeetle)   |
-| `pnpm localenv:compose up`                  | Start (with Tigerbeetle)                    |
-| `pnpm localenv:compose up -d`               | Start detached (with Tigerbeetle)           |
-| `pnpm localenv:compose down`                | Down (with Tigerbeetle)                     |
-| `pnpm localenv:compose down --volumes`      | Down and kill volumes (with Tigerbeetle)    |
-| `pnpm localenv:compose:psql config`         | Show all merged config (with Postgresql)    |
-| `pnpm localenv:compose build`               | Build all the containers (with Tigerbeetle) |
-| `pnpm localenv:compose:psql up`             | Start (with Postgresql)                     |
-| `pnpm localenv:compose:psql up -d`          | Start detached (with Postgresql)            |
-| `pnpm localenv:compose:psql down`           | Down (with Postgresql)                      |
-| `pnpm localenv:compose:psql down --volumes` | Down and kill volumes (with Postgresql)     |
-| `pnpm localenv:compose:psql build`          | Build all the containers (with Postgresql)  |
+| Command                                          | Description                                      |
+| ------------------------------------------------ | ------------------------------------------------ |
+| `pnpm localenv:compose config`                   | Show all merged config (with Tigerbeetle)        |
+| `pnpm localenv:compose up`                       | Start (with Tigerbeetle)                         |
+| `pnpm localenv:compose up -d`                    | Start (with Tigerbeetle) detached                |
+| `pnpm localenv:compose down`                     | Down (with Tigerbeetle)                          |
+| `pnpm localenv:compose down --volumes`           | Down and kill volumes (with Tigerbeetle)         |
+| `pnpm localenv:compose down --volumes --rmi all` | Down, kill volumes (with Tigerbeetle) and images |
+| `pnpm localenv:compose:psql config`              | Show all merged config (with Postgresql)         |
+| `pnpm localenv:compose build`                    | Build all the containers (with Tigerbeetle)      |
+| `pnpm localenv:compose:psql up`                  | Start (with Postgresql)                          |
+| `pnpm localenv:compose:psql up -d`               | Start (with Postgresql) detached                 |
+| `pnpm localenv:compose:psql down`                | Down (with Postgresql)                           |
+| `pnpm localenv:compose:psql down --volumes`      | Down (with Postgresql) and kill volumes          |
+| `pnpm localenv:compose:psql build`               | Build all the containers (with Postgresql)       |
 
 ### Usage
 
