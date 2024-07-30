@@ -16,7 +16,11 @@ import { AccessToken } from './model'
 import { Access } from '../access/model'
 import { AccessTokenRoutes, IntrospectContext } from './routes'
 import { generateNonce, generateToken } from '../shared/utils'
-import { AccessType, AccessAction } from '@interledger/open-payments'
+import {
+  AccessType,
+  AccessAction,
+  AccessItem
+} from '@interledger/open-payments'
 import { GrantService } from '../grant/service'
 import { AccessTokenService } from './service'
 import { GNAPErrorCode } from '../shared/gnapErrors'
@@ -156,14 +160,7 @@ describe('Access Token Routes', (): void => {
       expect(ctx.body).toEqual({
         active: true,
         grant: grant.id,
-        access: [
-          {
-            type: access.type,
-            actions: access.actions,
-            limits: access.limits,
-            identifier: access.identifier
-          }
-        ],
+        access: [],
         client: CLIENT
       })
     })
@@ -195,6 +192,170 @@ describe('Access Token Routes', (): void => {
       expect(ctx.response.get('Content-Type')).toBe(
         'application/json; charset=utf-8'
       )
+      expect(ctx.body).toEqual({
+        active: false
+      })
+    })
+
+    test('Successfully introspects token with correct access', async (): Promise<void> => {
+      const ctx = createContext<IntrospectContext>(
+        {
+          headers: {
+            Accept: 'application/json'
+          },
+          url: '/',
+          method: 'POST'
+        },
+        {}
+      )
+
+      ctx.request.body = {
+        access_token: token.value,
+        access: [BASE_ACCESS as AccessItem]
+      }
+
+      await expect(accessTokenRoutes.introspect(ctx)).resolves.toBeUndefined()
+      expect(ctx.response).toSatisfyApiSpec()
+      expect(ctx.status).toBe(200)
+      expect(ctx.response.get('Content-Type')).toBe(
+        'application/json; charset=utf-8'
+      )
+
+      expect(ctx.body).toEqual({
+        active: true,
+        grant: grant.id,
+        access: [
+          {
+            type: access.type,
+            actions: access.actions,
+            limits: access.limits,
+            identifier: access.identifier
+          }
+        ],
+        client: CLIENT
+      })
+    })
+
+    test('Successfully introspects token with partial access', async (): Promise<void> => {
+      const ctx = createContext<IntrospectContext>(
+        {
+          headers: {
+            Accept: 'application/json'
+          },
+          url: '/',
+          method: 'POST'
+        },
+        {}
+      )
+
+      ctx.request.body = {
+        access_token: token.value,
+        access: [
+          {
+            ...(BASE_ACCESS as AccessItem),
+            actions: ['read']
+          }
+        ]
+      }
+
+      await expect(accessTokenRoutes.introspect(ctx)).resolves.toBeUndefined()
+      expect(ctx.response).toSatisfyApiSpec()
+      expect(ctx.status).toBe(200)
+      expect(ctx.response.get('Content-Type')).toBe(
+        'application/json; charset=utf-8'
+      )
+
+      expect(ctx.body).toEqual({
+        active: true,
+        grant: grant.id,
+        access: [
+          {
+            type: access.type,
+            actions: access.actions,
+            limits: access.limits,
+            identifier: access.identifier
+          }
+        ],
+        client: CLIENT
+      })
+    })
+
+    test('Only returns requested access during successful introspection', async (): Promise<void> => {
+      const secondAccess: AccessItem = {
+        type: 'quote',
+        actions: ['create', 'read']
+      }
+      await Access.query(trx).insertAndFetch({
+        grantId: grant.id,
+        ...secondAccess
+      })
+
+      const ctx = createContext<IntrospectContext>(
+        {
+          headers: {
+            Accept: 'application/json'
+          },
+          url: '/',
+          method: 'POST'
+        },
+        {}
+      )
+
+      ctx.request.body = {
+        access_token: token.value,
+        access: [secondAccess as AccessItem]
+      }
+
+      await expect(accessTokenRoutes.introspect(ctx)).resolves.toBeUndefined()
+      expect(ctx.response).toSatisfyApiSpec()
+      expect(ctx.status).toBe(200)
+      expect(ctx.response.get('Content-Type')).toBe(
+        'application/json; charset=utf-8'
+      )
+
+      expect(ctx.body).toEqual({
+        active: true,
+        grant: grant.id,
+        access: [
+          {
+            type: secondAccess.type,
+            actions: secondAccess.actions
+          }
+        ],
+        client: CLIENT
+      })
+    })
+
+    test('Cannot introspect token with incorrect access', async (): Promise<void> => {
+      const ctx = createContext<IntrospectContext>(
+        {
+          headers: {
+            Accept: 'application/json'
+          },
+          url: '/',
+          method: 'POST'
+        },
+        {}
+      )
+
+      ctx.request.body = {
+        access_token: token.value,
+        access: [
+          {
+            ...BASE_ACCESS,
+            type: 'incoming-payment',
+            actions: ['read-all']
+          }
+        ]
+      }
+
+      await expect(accessTokenRoutes.introspect(ctx)).resolves.toBeUndefined()
+      expect(ctx.response).toSatisfyApiSpec()
+      expect(ctx.status).toBe(200)
+      expect(ctx.response.get('Content-Type')).toBe(
+        'application/json; charset=utf-8'
+      )
+
       expect(ctx.body).toEqual({
         active: false
       })

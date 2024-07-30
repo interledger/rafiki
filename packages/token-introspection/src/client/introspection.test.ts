@@ -1,8 +1,4 @@
-import {
-  createIntrospectionRoutes,
-  introspectToken,
-  validateTokenInfo
-} from './introspection'
+import { createIntrospectionRoutes, introspectToken } from './introspection'
 import { OpenAPI, HttpMethod } from '@interledger/openapi'
 import {
   defaultAxiosInstance,
@@ -95,20 +91,6 @@ describe('introspection', (): void => {
         )
       ).rejects.toThrowError()
       scope.done()
-    })
-  })
-
-  describe('validateTokenInfo', (): void => {
-    test('returns valid token info', async (): Promise<void> => {
-      const tokenInfo = mockTokenInfo()
-      expect(validateTokenInfo(tokenInfo)).toEqual(tokenInfo)
-    })
-
-    test.skip('throws if token info does not include specified access', async (): Promise<void> => {
-      const tokenInfo = mockTokenInfo()
-      expect(validateTokenInfo(tokenInfo)).toThrow(
-        'Token info does not include specified access'
-      )
     })
   })
 })
