@@ -30,7 +30,10 @@ export const LiquidityDialog = ({
     const userInput = e.target.value
     const scaledInput = parseFloat(userInput) * Math.pow(10, asset.scale)
     const integerScaledInput = Math.floor(scaledInput)
-    if (scaledInput !== integerScaledInput) {
+    if (scaledInput < 0) {
+      const error = 'The amount should be a positive value'
+      setErrorMessage(error)
+    } else if (scaledInput !== integerScaledInput) {
       const error = 'The asset scale cannot accomodate this value'
       setErrorMessage(error)
     } else {
@@ -63,18 +66,17 @@ export const LiquidityDialog = ({
                 {title}
               </Dialog.Title>
               <div className='mt-2'>
+                <Input
+                  required
+                  type='number'
+                  name='displayAmount'
+                  label='Amount'
+                  onChange={handleChange}
+                  addOn={asset.code}
+                  step='any'
+                  error={errorMessage}
+                />
                 <Form method='post' replace preventScrollReset>
-                  <Input
-                    required
-                    type='number'
-                    name='displayAmount'
-                    label='Amount'
-                    onChange={handleChange}
-                    addOn={asset.code}
-                    step='any'
-                    min={1 / Math.pow(10, asset.scale)}
-                    error={errorMessage}
-                  />
                   <Input
                     required
                     min={1}
