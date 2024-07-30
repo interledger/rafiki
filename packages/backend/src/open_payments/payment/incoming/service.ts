@@ -39,6 +39,7 @@ export interface IncomingPaymentService
     trx?: Knex.Transaction
   ): Promise<IncomingPayment | IncomingPaymentError>
   approve(id: string): Promise<IncomingPayment | IncomingPaymentError>
+  cancel(id: string): Promise<IncomingPayment | IncomingPaymentError>
   complete(id: string): Promise<IncomingPayment | IncomingPaymentError>
   processNext(): Promise<string | undefined>
 }
@@ -64,6 +65,7 @@ export async function createIncomingPaymentService(
     get: (options) => getIncomingPayment(deps, options),
     create: (options, trx) => createIncomingPayment(deps, options, trx),
     approve: (id) => approveIncomingPayment(deps, id),
+    cancel: (id) => cancelIncomingPayment(deps, id),
     complete: (id) => completeIncomingPayment(deps, id),
     getWalletAddressPage: (options) => getWalletAddressPage(deps, options),
     processNext: () => processNextIncomingPayment(deps)
@@ -281,6 +283,28 @@ async function getWalletAddressPage(
 }
 
 async function approveIncomingPayment(
+  deps: ServiceDependencies,
+  id: string
+): Promise<IncomingPayment | IncomingPaymentError> {
+  return deps.knex.transaction(async (trx) => {
+    const payment = await IncomingPayment.query(trx)
+      .findById(id)
+      .forUpdate()
+      .withGraphFetched('[asset, walletAddress]')
+
+    if (!payment) return IncomingPaymentError.UnknownPayment
+    if (payment.state !== IncomingPaymentState.Pending)
+      return IncomingPaymentError.WrongState
+
+    await payment.$query(trx).patch({
+      approvedAt: new Date(Date.now())
+    })
+
+    return await addReceivedAmount(deps, payment)
+  })
+}
+
+async function cancelIncomingPayment(
   deps: ServiceDependencies,
   id: string
 ): Promise<IncomingPayment | IncomingPaymentError> {

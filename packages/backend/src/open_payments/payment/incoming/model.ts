@@ -47,6 +47,7 @@ export interface IncomingPaymentResponse {
   completed: boolean
   metadata?: Record<string, unknown>
   approvedAt?: string
+  cancelledAt?: string
 }
 
 export type IncomingPaymentData = IncomingPaymentResponse &
@@ -102,6 +103,7 @@ export class IncomingPayment
 
   public processAt!: Date | null
   public approvedAt?: Date | null
+  public cancelledAt?: Date | null
 
   public readonly assetId!: string
   public asset!: Asset
@@ -210,6 +212,9 @@ export class IncomingPayment
     }
     if (this.approvedAt) {
       data.approvedAt = new Date(this.approvedAt).toISOString()
+    }
+    if (this.cancelledAt) {
+      data.cancelledAt = new Date(this.cancelledAt).toISOString()
     }
 
     return data

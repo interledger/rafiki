@@ -249,6 +249,11 @@ type Mutation {
   approveIncomingPayment(
     input: ApproveIncomingPaymentInput!
   ): ApproveIncomingPaymentResponse!
+
+  "Cancel the incoming payment if the incoming payment is in the PENDING state"
+  cancelIncomingPayment(
+    input: CancelIncomingPaymentInput!
+  ): CancelIncomingPaymentResponse!
 }
 
 type PageInfo {
@@ -274,6 +279,11 @@ type AssetEdge {
 
 input ApproveIncomingPaymentInput {
   "Unique identifier of the incoming payment to be approved. Note: Incoming Payment must be PENDING."
+  id: ID!
+}
+
+input CancelIncomingPaymentInput {
+  "Unique identifier of the incoming payment to be cancelled. Note: Incoming Payment must be PENDING."
   id: ID!
 }
 
@@ -1301,6 +1311,10 @@ type SetFeeResponse {
 }
 
 type ApproveIncomingPaymentResponse {
+  payment: IncomingPayment
+}
+
+type CancelIncomingPaymentResponse {
   payment: IncomingPayment
 }
 
