@@ -145,6 +145,16 @@ export type BasePayment = {
   walletAddressId: Scalars['ID']['output'];
 };
 
+export type CancelIncomingPaymentInput = {
+  /** Unique identifier of the incoming payment to be cancelled. Note: Incoming Payment must be PENDING. */
+  id: Scalars['ID']['input'];
+};
+
+export type CancelIncomingPaymentResponse = {
+  __typename?: 'CancelIncomingPaymentResponse';
+  payment?: Maybe<IncomingPayment>;
+};
+
 export type CancelOutgoingPaymentInput = {
   /** Outgoing payment id */
   id: Scalars['ID']['input'];
@@ -619,6 +629,8 @@ export type Mutation = {
   __typename?: 'Mutation';
   /** Approves the incoming payment if the incoming payment is in the PENDING state */
   approveIncomingPayment: ApproveIncomingPaymentResponse;
+  /** Cancel the incoming payment if the incoming payment is in the PENDING state */
+  cancelIncomingPayment: CancelIncomingPaymentResponse;
   /** Cancel Outgoing Payment */
   cancelOutgoingPayment: OutgoingPaymentResponse;
   /** Create an asset */
@@ -692,6 +704,11 @@ export type Mutation = {
 
 export type MutationApproveIncomingPaymentArgs = {
   input: ApproveIncomingPaymentInput;
+};
+
+
+export type MutationCancelIncomingPaymentArgs = {
+  input: CancelIncomingPaymentInput;
 };
 
 
@@ -1552,6 +1569,8 @@ export type ResolversTypes = {
   AssetsConnection: ResolverTypeWrapper<Partial<AssetsConnection>>;
   BasePayment: ResolverTypeWrapper<ResolversInterfaceTypes<ResolversTypes>['BasePayment']>;
   Boolean: ResolverTypeWrapper<Partial<Scalars['Boolean']['output']>>;
+  CancelIncomingPaymentInput: ResolverTypeWrapper<Partial<CancelIncomingPaymentInput>>;
+  CancelIncomingPaymentResponse: ResolverTypeWrapper<Partial<CancelIncomingPaymentResponse>>;
   CancelOutgoingPaymentInput: ResolverTypeWrapper<Partial<CancelOutgoingPaymentInput>>;
   CreateAssetInput: ResolverTypeWrapper<Partial<CreateAssetInput>>;
   CreateAssetLiquidityWithdrawalInput: ResolverTypeWrapper<Partial<CreateAssetLiquidityWithdrawalInput>>;
@@ -1679,6 +1698,8 @@ export type ResolversParentTypes = {
   AssetsConnection: Partial<AssetsConnection>;
   BasePayment: ResolversInterfaceTypes<ResolversParentTypes>['BasePayment'];
   Boolean: Partial<Scalars['Boolean']['output']>;
+  CancelIncomingPaymentInput: Partial<CancelIncomingPaymentInput>;
+  CancelIncomingPaymentResponse: Partial<CancelIncomingPaymentResponse>;
   CancelOutgoingPaymentInput: Partial<CancelOutgoingPaymentInput>;
   CreateAssetInput: Partial<CreateAssetInput>;
   CreateAssetLiquidityWithdrawalInput: Partial<CreateAssetLiquidityWithdrawalInput>;
@@ -1856,6 +1877,11 @@ export type BasePaymentResolvers<ContextType = any, ParentType extends Resolvers
   walletAddressId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
 };
 
+export type CancelIncomingPaymentResponseResolvers<ContextType = any, ParentType extends ResolversParentTypes['CancelIncomingPaymentResponse'] = ResolversParentTypes['CancelIncomingPaymentResponse']> = {
+  payment?: Resolver<Maybe<ResolversTypes['IncomingPayment']>, ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
 export type CreateOrUpdatePeerByUrlMutationResponseResolvers<ContextType = any, ParentType extends ResolversParentTypes['CreateOrUpdatePeerByUrlMutationResponse'] = ResolversParentTypes['CreateOrUpdatePeerByUrlMutationResponse']> = {
   peer?: Resolver<Maybe<ResolversTypes['Peer']>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
@@ -1981,6 +2007,7 @@ export type ModelResolvers<ContextType = any, ParentType extends ResolversParent
 
 export type MutationResolvers<ContextType = any, ParentType extends ResolversParentTypes['Mutation'] = ResolversParentTypes['Mutation']> = {
   approveIncomingPayment?: Resolver<ResolversTypes['ApproveIncomingPaymentResponse'], ParentType, ContextType, RequireFields<MutationApproveIncomingPaymentArgs, 'input'>>;
+  cancelIncomingPayment?: Resolver<ResolversTypes['CancelIncomingPaymentResponse'], ParentType, ContextType, RequireFields<MutationCancelIncomingPaymentArgs, 'input'>>;
   cancelOutgoingPayment?: Resolver<ResolversTypes['OutgoingPaymentResponse'], ParentType, ContextType, RequireFields<MutationCancelOutgoingPaymentArgs, 'input'>>;
   createAsset?: Resolver<ResolversTypes['AssetMutationResponse'], ParentType, ContextType, RequireFields<MutationCreateAssetArgs, 'input'>>;
   createAssetLiquidityWithdrawal?: Resolver<Maybe<ResolversTypes['LiquidityMutationResponse']>, ParentType, ContextType, RequireFields<MutationCreateAssetLiquidityWithdrawalArgs, 'input'>>;
@@ -2292,6 +2319,7 @@ export type Resolvers<ContextType = any> = {
   AssetMutationResponse?: AssetMutationResponseResolvers<ContextType>;
   AssetsConnection?: AssetsConnectionResolvers<ContextType>;
   BasePayment?: BasePaymentResolvers<ContextType>;
+  CancelIncomingPaymentResponse?: CancelIncomingPaymentResponseResolvers<ContextType>;
   CreateOrUpdatePeerByUrlMutationResponse?: CreateOrUpdatePeerByUrlMutationResponseResolvers<ContextType>;
   CreatePeerMutationResponse?: CreatePeerMutationResponseResolvers<ContextType>;
   CreateReceiverResponse?: CreateReceiverResponseResolvers<ContextType>;
