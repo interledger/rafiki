@@ -8,35 +8,35 @@ const TIGERBEETLE_DIR = '/var/lib/tigerbeetle'
 const TIGERBEETLE_CONTAINER_LOG =
   process.env.TIGERBEETLE_CONTAINER_LOG === 'true'
 
-export async function startTigerbeetleContainer(clusterId?: number): Promise<{
+export async function startTigerBeetleContainer(clusterId?: number): Promise<{
   container: StartedTestContainer
   port: number
 }> {
-  const tigerbeetleClusterId = clusterId || Config.tigerbeetleClusterId
-  const { name: tigerbeetleDir } = tmp.dirSync({ unsafeCleanup: true })
-  const tigerbeetleFile = `cluster_${tigerbeetleClusterId}_replica_0_test.tigerbeetle`
-  const tigerbeetleContainerVersion = 'ghcr.io/tigerbeetle/tigerbeetle:0.15.3'
+  const tigerBeetleClusterId = clusterId || Config.tigerBeetleClusterId
+  const { name: tigerBeetleDir } = tmp.dirSync({ unsafeCleanup: true })
+  const tigerBeetleFile = `cluster_${tigerBeetleClusterId}_replica_0_test.tigerbeetle`
+  const tigerBeetleContainerVersion = 'ghcr.io/tigerbeetle/tigerbeetle:0.15.4'
 
-  const tbContFormat = await new GenericContainer(tigerbeetleContainerVersion)
+  const tbContFormat = await new GenericContainer(tigerBeetleContainerVersion)
     .withExposedPorts(TIGERBEETLE_PORT)
     .withBindMounts([
       {
-        source: tigerbeetleDir,
+        source: tigerBeetleDir,
         target: TIGERBEETLE_DIR
       }
     ])
     .withAddedCapabilities('IPC_LOCK')
     .withCommand([
       'format',
-      '--cluster=' + tigerbeetleClusterId,
+      '--cluster=' + tigerBeetleClusterId,
       '--replica=0',
       '--replica-count=1',
-      `${TIGERBEETLE_DIR}/${tigerbeetleFile}`
+      `${TIGERBEETLE_DIR}/${tigerBeetleFile}`
     ])
     .withPrivilegedMode()
     .withWaitStrategy(
       Wait.forLogMessage(
-        `info(main): 0: formatted: cluster=${tigerbeetleClusterId} replica_count=1`
+        `info(main): 0: formatted: cluster=${tigerBeetleClusterId} replica_count=1`
       )
     )
     .start()
@@ -51,11 +51,11 @@ export async function startTigerbeetleContainer(clusterId?: number): Promise<{
       .on('end', () => console.log('Stream closed for [tb-format]'))
   }
 
-  const tbContStart = await new GenericContainer(tigerbeetleContainerVersion)
+  const tbContStart = await new GenericContainer(tigerBeetleContainerVersion)
     .withExposedPorts(TIGERBEETLE_PORT)
     .withBindMounts([
       {
-        source: tigerbeetleDir,
+        source: tigerBeetleDir,
         target: TIGERBEETLE_DIR
       }
     ])
@@ -63,12 +63,12 @@ export async function startTigerbeetleContainer(clusterId?: number): Promise<{
     .withCommand([
       'start',
       '--addresses=0.0.0.0:' + TIGERBEETLE_PORT,
-      `${TIGERBEETLE_DIR}/${tigerbeetleFile}`
+      `${TIGERBEETLE_DIR}/${tigerBeetleFile}`
     ])
     .withPrivilegedMode()
     .withWaitStrategy(
       Wait.forLogMessage(
-        `info(main): 0: cluster=${tigerbeetleClusterId}: listening on 0.0.0.0:${TIGERBEETLE_PORT}`
+        `info(main): 0: cluster=${tigerBeetleClusterId}: listening on 0.0.0.0:${TIGERBEETLE_PORT}`
       )
     )
     .start()

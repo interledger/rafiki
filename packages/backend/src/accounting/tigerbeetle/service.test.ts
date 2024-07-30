@@ -3,7 +3,10 @@
  */
 
 import assert from 'assert'
-import { CreateAccountError as CreateTbAccountError } from 'tigerbeetle-node'
+import {
+  AccountFlags,
+  CreateAccountError as CreateTbAccountError
+} from 'tigerbeetle-node'
 import { v4 as uuid } from 'uuid'
 
 import { TigerbeetleCreateAccountError } from './errors'
@@ -18,12 +21,16 @@ import { isTransferError, TransferError } from '../errors'
 import {
   AccountingService,
   Deposit,
+  LedgerTransferState,
   LiquidityAccount,
   LiquidityAccountType,
+  TransferType,
   Withdrawal
 } from '../service'
+import { flagsBasedOnAccountOptions } from './accounts'
+import { TigerBeetleAccountCode } from './service'
 
-describe('Tigerbeetle Accounting Service', (): void => {
+describe('TigerBeetle Accounting Service', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let accountingService: AccountingService
@@ -36,13 +43,13 @@ describe('Tigerbeetle Accounting Service', (): void => {
   }
 
   beforeAll(async (): Promise<void> => {
-    const tigerbeetlePort = (global as unknown as { tigerbeetlePort: number })
-      .tigerbeetlePort
+    const tigerBeetlePort = (global as unknown as { tigerBeetlePort: number })
+      .tigerBeetlePort
 
     deps = initIocContainer({
       ...Config,
-      tigerbeetleReplicaAddresses: [tigerbeetlePort.toString()],
-      useTigerbeetle: true
+      tigerBeetleReplicaAddresses: [tigerBeetlePort.toString()],
+      useTigerBeetle: true
     })
     appContainer = await createTestApp(deps)
     accountingService = await deps.use('accountingService')
@@ -93,8 +100,8 @@ describe('Tigerbeetle Accounting Service', (): void => {
     })
 
     test('Create throws on error', async (): Promise<void> => {
-      const tigerbeetle = await deps.use('tigerbeetle')!
-      jest.spyOn(tigerbeetle, 'createAccounts').mockResolvedValueOnce([
+      const tigerBeetle = await deps.use('tigerBeetle')!
+      jest.spyOn(tigerBeetle, 'createAccounts').mockResolvedValueOnce([
         {
           index: 0,
           result: CreateTbAccountError.exists_with_different_ledger
@@ -117,6 +124,30 @@ describe('Tigerbeetle Accounting Service', (): void => {
           CreateTbAccountError.exists_with_different_ledger
         )
       )
+    })
+  })
+
+  describe('Create Liquidity and Settlement Account - Linked', (): void => {
+    test('Can create a liquidity and settlement account', async (): Promise<void> => {
+      const account: LiquidityAccount = {
+        id: uuid(),
+        asset: {
+          id: uuid(),
+          ledger: newLedger()
+        }
+      }
+      await expect(
+        accountingService.createLiquidityAndLinkedSettlementAccount(
+          account,
+          LiquidityAccountType.ASSET
+        )
+      ).resolves.toEqual(account)
+      await expect(accountingService.getBalance(account.id)).resolves.toEqual(
+        BigInt(0)
+      )
+      await expect(
+        accountingService.getSettlementBalance(account.asset.ledger)
+      ).resolves.toEqual(BigInt(0))
     })
   })
 
@@ -148,13 +179,60 @@ describe('Tigerbeetle Accounting Service', (): void => {
     })
   })
 
+  describe('Get Accounting Transfers', (): void => {
+    test('Returns empty for nonexistent account', async (): Promise<void> => {
+      await expect(
+        accountingService.getAccountTransfers(uuid())
+      ).resolves.toMatchObject({
+        credits: [],
+        debits: []
+      })
+    })
+  })
+
   describe('Get Account Total Received', (): void => {
-    test("Can retrieve an account's total amount received", async (): Promise<void> => {
+    test("Can retrieve an account's total amount received and accounting transfers", async (): Promise<void> => {
       const amount = BigInt(10)
       const { id } = await accountFactory.build({ balance: amount })
       await expect(accountingService.getTotalReceived(id)).resolves.toEqual(
         amount
       )
+      const debitAccount = '00000000-0000-0000-0000-000000000007'
+      const ledger = 7
+      const accTransfersCredit = await accountingService.getAccountTransfers(id)
+      expect(accTransfersCredit.debits.length).toEqual(0)
+      expect(accTransfersCredit.credits.length).toEqual(1)
+      const transferCredit = accTransfersCredit.credits[0]
+      expect(transferCredit).toMatchObject({
+        creditAccountId: id,
+        debitAccountId: debitAccount,
+        type: TransferType.DEPOSIT,
+        amount: amount,
+        state: LedgerTransferState.POSTED,
+        ledger: ledger,
+        timeout: 0,
+        transferRef: '00000000-0000-0000-0000-000000000000'
+      })
+      expect(transferCredit.timestamp).toBeGreaterThan(0)
+      expect(transferCredit.expiresAt).toBeUndefined()
+
+      const accTransfersDebit =
+        await accountingService.getAccountTransfers(ledger)
+      expect(accTransfersDebit.debits.length).toEqual(1)
+      expect(accTransfersDebit.credits.length).toEqual(0)
+      const transferDebit = accTransfersDebit.debits[0]
+      expect(transferDebit).toMatchObject({
+        creditAccountId: id,
+        debitAccountId: debitAccount,
+        type: TransferType.DEPOSIT,
+        amount: amount,
+        state: LedgerTransferState.POSTED,
+        ledger: ledger,
+        timeout: 0,
+        transferRef: '00000000-0000-0000-0000-000000000000'
+      })
+      expect(transferDebit.timestamp).toBeGreaterThan(0)
+      expect(transferDebit.expiresAt).toBeUndefined()
     })
 
     test('Returns undefined for nonexistent account', async (): Promise<void> => {
@@ -254,7 +332,16 @@ describe('Tigerbeetle Accounting Service', (): void => {
         accountingService.getSettlementBalance(ledger)
       ).resolves.toBeUndefined()
 
-      await accountingService.createSettlementAccount(ledger)
+      await accountingService.createLiquidityAndLinkedSettlementAccount(
+        {
+          id: uuid(),
+          asset: {
+            id: uuid(),
+            ledger
+          }
+        },
+        LiquidityAccountType.ASSET
+      )
 
       await expect(
         accountingService.getSettlementBalance(ledger)
@@ -265,7 +352,16 @@ describe('Tigerbeetle Accounting Service', (): void => {
   describe('Get Settlement Balance', (): void => {
     test("Can retrieve an asset's settlement account balance", async (): Promise<void> => {
       const ledger = newLedger()
-      await accountingService.createSettlementAccount(ledger)
+      await accountingService.createLiquidityAndLinkedSettlementAccount(
+        {
+          id: uuid(),
+          asset: {
+            id: uuid(),
+            ledger
+          }
+        },
+        LiquidityAccountType.ASSET
+      )
       await expect(
         accountingService.getSettlementBalance(ledger)
       ).resolves.toEqual(BigInt(0))
@@ -792,5 +888,81 @@ describe('Tigerbeetle Accounting Service', (): void => {
         ).resolves.toEqual(TransferError.TransferExpired)
       })
     })
+  })
+
+  test('Test TigerBeetle Account Flags', async (): Promise<void> => {
+    // credits_must_not_exceed_debits: 4 (1 << 2)
+    expect(
+      flagsBasedOnAccountOptions({
+        id: uuid(),
+        code: TigerBeetleAccountCode.SETTLEMENT,
+        ledger: 0,
+        assetId: 0n
+      })
+    ).toEqual(AccountFlags.credits_must_not_exceed_debits)
+
+    // debits_must_not_exceed_credits: 2 (1 << 1)
+    expect(
+      flagsBasedOnAccountOptions({
+        id: uuid(),
+        code: TigerBeetleAccountCode.LIQUIDITY_INCOMING,
+        ledger: 0,
+        assetId: 0n
+      })
+    ).toEqual(AccountFlags.debits_must_not_exceed_credits)
+
+    /*
+    credits_must_not_exceed_debits:               4  [0000 0100]
+    history:                                      8  [0000 1000]
+    result of OR operation for TB bitfield flags: 12 [0000 1100]
+     */
+    const credExcDebitAndHistory = 12
+    expect(
+      flagsBasedOnAccountOptions({
+        id: uuid(),
+        code: TigerBeetleAccountCode.SETTLEMENT,
+        ledger: 0,
+        assetId: 0n,
+        history: true
+      })
+    ).toEqual(credExcDebitAndHistory)
+
+    // Tests to see if correct flags are set.
+    expect(
+      AccountFlags.credits_must_not_exceed_debits & credExcDebitAndHistory
+    ).toBeTruthy()
+    expect(AccountFlags.history & credExcDebitAndHistory).toBeTruthy()
+    expect(
+      AccountFlags.debits_must_not_exceed_credits & credExcDebitAndHistory
+    ).toBeFalsy()
+    expect(AccountFlags.linked & credExcDebitAndHistory).toBeFalsy()
+
+    /*
+    credits_must_not_exceed_debits:               4  [0000 0100]
+    history:                                      8  [0000 1000]
+    linked:                                       1  [0000 0001]
+    result of OR operation for TB bitfield flags: 13 [0000 1101]
+   */
+    const credExcDebitLinkedAndHistory = 13
+    expect(
+      flagsBasedOnAccountOptions({
+        id: uuid(),
+        code: TigerBeetleAccountCode.SETTLEMENT,
+        ledger: 0,
+        assetId: 0n,
+        history: true,
+        linked: true
+      })
+    ).toEqual(credExcDebitLinkedAndHistory)
+
+    // Tests to see if correct flags are set.
+    expect(
+      AccountFlags.credits_must_not_exceed_debits & credExcDebitLinkedAndHistory
+    ).toBeTruthy()
+    expect(AccountFlags.history & credExcDebitLinkedAndHistory).toBeTruthy()
+    expect(AccountFlags.linked & credExcDebitLinkedAndHistory).toBeTruthy()
+    expect(
+      AccountFlags.debits_must_not_exceed_credits & credExcDebitLinkedAndHistory
+    ).toBeFalsy()
   })
 })

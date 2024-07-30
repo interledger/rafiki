@@ -93,22 +93,22 @@ When clicking on the Account Name, a list of Transactions appears.
 
 The following should be run from the root of the project.
 
-```
-// If you have spun up the environment before, remember to first tear down and remove volumes!
+```sh
+# If you have spun up the environment before, remember to first tear down and remove volumes!
 
-// start the local environment
+# start the local environment
 pnpm localenv:compose up
 
-// tear down and remove volumes
+# tear down and remove volumes
 pnpm localenv:compose down --volumes
 
-// tear down, delete database volumes and remove images
+# tear down, delete database volumes and remove images
 pnpm localenv:compose down --volumes --rmi all
 ```
 
 If you want to use Postgres as the accounting database instead of TigerBeetle, you can use the `psql` variant of the `localenv:compose` commands:
 
-```
+```sh
 pnpm localenv:compose:psql up
 pnpm localenv:compose:psql down --volumes
 ```
@@ -191,14 +191,14 @@ For more ways to connect debuggers, see the Node docs for debugging: https://nod
 
 ### Shutting down
 
-```
-// tear down
+```sh
+# tear down
 pnpm localenv:compose down
 
-// tear down and delete database volumes
+# tear down and delete database volumes
 pnpm localenv:compose down --volumes
 
-// tear down, delete database volumes and remove images
+# tear down, delete database volumes and remove images
 pnpm localenv:compose down --volumes --rmi all
 ```
 

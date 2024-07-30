@@ -1,9 +1,9 @@
 import { TransactionOrKnex } from 'objection'
 import {
   LedgerTransfer,
-  LedgerTransferState,
   LedgerTransferType
 } from '../accounting/psql/ledger-transfer/model'
+import { LedgerTransferState } from '../accounting/service'
 
 interface CreateLedgerTransferArgs {
   transferRef?: string

@@ -10,8 +10,8 @@ import { LedgerAccount } from './ledger-account/model'
 import { createLedgerAccount } from '../../tests/ledgerAccount'
 import { getAccountBalances } from './balance'
 import { ServiceDependencies } from './service'
+import { LedgerTransferState } from '../service'
 import { createLedgerTransfer } from '../../tests/ledgerTransfer'
-import { LedgerTransferState } from './ledger-transfer/model'
 
 describe('Balances', (): void => {
   let serviceDeps: ServiceDependencies
@@ -20,7 +20,7 @@ describe('Balances', (): void => {
   let asset: Asset
 
   beforeAll(async (): Promise<void> => {
-    const deps = initIocContainer({ ...Config, useTigerbeetle: false })
+    const deps = initIocContainer({ ...Config, useTigerBeetle: false })
     appContainer = await createTestApp(deps)
     serviceDeps = {
       logger: await deps.use('logger'),

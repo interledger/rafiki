@@ -42,7 +42,11 @@ export interface OnDebitOptions {
   balance: bigint
 }
 
-export interface Deposit {
+export interface BaseTransfer {
+  transferType?: TransferType
+}
+
+export interface Deposit extends BaseTransfer {
   id: string
   account: LiquidityAccount
   amount: bigint
@@ -52,7 +56,7 @@ export interface Withdrawal extends Deposit {
   timeout?: number
 }
 
-export interface TransferOptions {
+export interface TransferOptions extends BaseTransfer {
   sourceAccount: LiquidityAccount
   destinationAccount: LiquidityAccount
   sourceAmount: bigint
@@ -65,16 +69,36 @@ export interface Transaction {
   void: () => Promise<void | TransferError>
 }
 
+export interface GetLedgerTransfersResult {
+  debits: LedgerTransfer[]
+  credits: LedgerTransfer[]
+}
+
+export interface LedgerTransfer extends BaseTransfer {
+  id: string
+  debitAccountId: string
+  creditAccountId: string
+  amount: bigint
+  timeout: number
+  timestamp: bigint
+  type: TransferType
+  state: LedgerTransferState
+  ledger: number
+  transferRef?: string
+  expiresAt?: Date
+}
+
 export interface AccountingService {
   createLiquidityAccount(
     account: LiquidityAccount,
     accountType: LiquidityAccountType,
     trx?: TransactionOrKnex
   ): Promise<LiquidityAccount>
-  createSettlementAccount(
-    ledger: number,
+  createLiquidityAndLinkedSettlementAccount(
+    account: LiquidityAccount,
+    accountType: LiquidityAccountType,
     trx?: TransactionOrKnex
-  ): Promise<void>
+  ): Promise<LiquidityAccount>
   getBalance(id: string): Promise<bigint | undefined>
   getTotalSent(id: string): Promise<bigint | undefined>
   getAccountsTotalSent(ids: string[]): Promise<(bigint | undefined)[]>
@@ -89,6 +113,11 @@ export interface AccountingService {
   createWithdrawal(withdrawal: Withdrawal): Promise<void | TransferError>
   postWithdrawal(id: string): Promise<void | TransferError>
   voidWithdrawal(id: string): Promise<void | TransferError>
+  getAccountTransfers(
+    id: string | number,
+    limit?: number,
+    trx?: TransactionOrKnex
+  ): Promise<GetLedgerTransfersResult>
 }
 
 export interface TransferToCreate {
@@ -96,6 +125,7 @@ export interface TransferToCreate {
   destinationAccountId: string
   amount: bigint
   ledger: number
+  transferType?: TransferType
 }
 
 export interface BaseAccountingServiceDependencies extends BaseService {
@@ -118,12 +148,12 @@ export async function createAccountToAccountTransfer(
   args: CreateAccountToAccountTransferArgs
 ): Promise<Transaction | TransferError> {
   const {
+    transferArgs,
     voidTransfers,
     postTransfers,
     createPendingTransfers,
     getAccountReceived,
-    getAccountBalance,
-    transferArgs
+    getAccountBalance
   } = args
 
   const { withdrawalThrottleDelay } = deps
@@ -165,10 +195,7 @@ export async function createAccountToAccountTransfer(
   ) => {
     if (account.onDebit) {
       const balance = await getAccountBalance(account.id)
-
-      if (balance === undefined) {
-        throw new Error('undefined account balance')
-      }
+      if (balance === undefined) throw new Error('undefined account balance')
 
       await account.onDebit({
         balance
@@ -179,10 +206,7 @@ export async function createAccountToAccountTransfer(
   return {
     post: async (): Promise<void | TransferError> => {
       const error = await postTransfers(pendingTransferIdsOrError)
-
-      if (error) {
-        return error
-      }
+      if (error) return error
 
       await Promise.all([
         onDebit(sourceAccount),
@@ -205,10 +229,7 @@ export async function createAccountToAccountTransfer(
 
     void: async (): Promise<void | TransferError> => {
       const error = await voidTransfers(pendingTransferIdsOrError)
-
-      if (error) {
-        return error
-      }
+      if (error) return error
     }
   }
 }
@@ -216,8 +237,13 @@ export async function createAccountToAccountTransfer(
 export function buildCrossAssetTransfers(
   args: TransferOptions
 ): TransferToCreate[] | TransferError {
-  const { sourceAccount, destinationAccount, sourceAmount, destinationAmount } =
-    args
+  const {
+    sourceAccount,
+    destinationAccount,
+    sourceAmount,
+    destinationAmount,
+    transferType
+  } = args
 
   if (!destinationAmount) {
     return TransferError.InvalidDestinationAmount
@@ -229,7 +255,8 @@ export function buildCrossAssetTransfers(
     sourceAccountId: sourceAccount.id,
     destinationAccountId: sourceAccount.asset.id,
     amount: sourceAmount,
-    ledger: sourceAccount.asset.ledger
+    ledger: sourceAccount.asset.ledger,
+    transferType
   })
 
   // Deliver from destination liquidity account
@@ -237,7 +264,8 @@ export function buildCrossAssetTransfers(
     sourceAccountId: destinationAccount.asset.id,
     destinationAccountId: destinationAccount.id,
     amount: destinationAmount,
-    ledger: destinationAccount.asset.ledger
+    ledger: destinationAccount.asset.ledger,
+    transferType
   })
 
   return transfers
@@ -246,8 +274,13 @@ export function buildCrossAssetTransfers(
 export function buildSameAssetTransfers(
   args: TransferOptions
 ): TransferToCreate[] {
-  const { sourceAccount, destinationAccount, sourceAmount, destinationAmount } =
-    args
+  const {
+    sourceAccount,
+    destinationAccount,
+    sourceAmount,
+    destinationAmount,
+    transferType
+  } = args
   const transfers: TransferToCreate[] = []
 
   transfers.push({
@@ -257,7 +290,8 @@ export function buildSameAssetTransfers(
       destinationAmount && destinationAmount < sourceAmount
         ? destinationAmount
         : sourceAmount,
-    ledger: sourceAccount.asset.ledger
+    ledger: sourceAccount.asset.ledger,
+    transferType
   })
 
   if (destinationAmount && sourceAmount !== destinationAmount) {
@@ -267,7 +301,8 @@ export function buildSameAssetTransfers(
         sourceAccountId: sourceAccount.id,
         destinationAccountId: sourceAccount.asset.id,
         amount: sourceAmount - destinationAmount,
-        ledger: sourceAccount.asset.ledger
+        ledger: sourceAccount.asset.ledger,
+        transferType
       })
     } else {
       // Deliver excess destination amount from liquidity account
@@ -275,7 +310,8 @@ export function buildSameAssetTransfers(
         sourceAccountId: destinationAccount.asset.id,
         destinationAccountId: destinationAccount.id,
         amount: destinationAmount - sourceAmount,
-        ledger: sourceAccount.asset.ledger
+        ledger: sourceAccount.asset.ledger,
+        transferType
       })
     }
   }

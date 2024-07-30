@@ -4,7 +4,8 @@ import {
   isTransferError,
   TransferError
 } from '../../../../../accounting/errors'
-import { Transaction } from '../../../../../accounting/service'
+import { Transaction, TransferType } from '../../../../../accounting/service'
+import { Config as AppConfig } from '../../../../../config/app'
 const { CannotReceiveError, InsufficientLiquidityError } = Errors
 
 export function createBalanceMiddleware(): ILPMiddleware {
@@ -62,7 +63,7 @@ export function createBalanceMiddleware(): ILPMiddleware {
       return
     }
 
-    // Update balances on prepare
+    // Update balances on prepare:
     const createPendingTransfer = async (): Promise<
       Transaction | undefined
     > => {
@@ -71,7 +72,8 @@ export function createBalanceMiddleware(): ILPMiddleware {
         destinationAccount: accounts.outgoing,
         sourceAmount,
         destinationAmount: destinationAmountOrError,
-        timeout: 5
+        transferType: TransferType.TRANSFER,
+        timeout: AppConfig.tigerBeetleTwoPhaseTimeout
       }
       const trxOrError =
         await services.accounting.createTransfer(transferOptions)
@@ -93,17 +95,13 @@ export function createBalanceMiddleware(): ILPMiddleware {
       }
     }
 
-    if (state.streamDestination) {
-      await next()
-    }
+    if (state.streamDestination) await next()
 
     if (!state.streamDestination || response.fulfill) {
       // TODO: make this single-phase if streamDestination === true
       const trx = await createPendingTransfer()
 
-      if (!state.streamDestination) {
-        await next()
-      }
+      if (!state.streamDestination) await next()
 
       if (trx) {
         if (response.fulfill) {
