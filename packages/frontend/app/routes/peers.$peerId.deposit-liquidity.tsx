@@ -1,28 +1,45 @@
-import { type ActionFunctionArgs } from '@remix-run/node'
-import { useNavigate } from '@remix-run/react'
+import { json, type ActionFunctionArgs } from '@remix-run/node'
+import { useLoaderData, useNavigate } from '@remix-run/react'
 import { v4 } from 'uuid'
 import { LiquidityDialog } from '~/components/LiquidityDialog'
-import { depositPeerLiquidity } from '~/lib/api/peer.server'
+import { depositPeerLiquidity, getPeer } from '~/lib/api/peer.server'
 import { messageStorage, setMessageAndRedirect } from '~/lib/message.server'
 import { amountSchema } from '~/lib/validate.server'
 import { redirectIfUnauthorizedAccess } from '../lib/kratos_checks.server'
 import { type LoaderFunctionArgs } from '@remix-run/node'
+import { z } from 'zod'
 
-export const loader = async ({ request }: LoaderFunctionArgs) => {
+export const loader = async ({ request, params }: LoaderFunctionArgs) => {
   const cookies = request.headers.get('cookie')
   await redirectIfUnauthorizedAccess(request.url, cookies)
-  return null
+
+  const peerId = params.peerId
+
+  const result = z.string().uuid().safeParse(peerId)
+  if (!result.success) {
+    throw json(null, { status: 400, statusText: 'Invalid peer ID.' })
+  }
+
+  const peer = await getPeer({ id: result.data })
+
+  if (!peer) {
+    throw json(null, { status: 400, statusText: 'Peer not found.' })
+  }
+
+  return json({ asset: peer.asset })
 }
 
 export default function PeerDepositLiquidity() {
   const navigate = useNavigate()
   const dismissDialog = () => navigate('..', { preventScrollReset: true })
+  const { asset } = useLoaderData<typeof loader>()
 
   return (
     <LiquidityDialog
       onClose={dismissDialog}
       title='Deposit peer liquidity'
       type='Deposit'
+      asset={{ code: asset.code, scale: asset.scale }}
     />
   )
 }
