@@ -50,6 +50,7 @@ import { mockRatesApi } from '../../../tests/rates'
 import { UnionOmit } from '../../../shared/utils'
 import { QuoteError } from '../../quote/errors'
 import { withConfigOverride } from '../../../tests/helpers'
+import { TelemetryService } from '../../../telemetry/service'
 
 describe('OutgoingPaymentService', (): void => {
   let deps: IocContract<AppServices>
@@ -58,6 +59,7 @@ describe('OutgoingPaymentService', (): void => {
   let accountingService: AccountingService
   let paymentMethodHandlerService: PaymentMethodHandlerService
   let quoteService: QuoteService
+  let telemetryService: TelemetryService | undefined
   let knex: Knex
   let walletAddressId: string
   let incomingPayment: IncomingPayment
@@ -238,17 +240,23 @@ describe('OutgoingPaymentService', (): void => {
 
   beforeAll(async (): Promise<void> => {
     const exchangeRatesUrl = 'https://test.rates'
+    const enableTelemetry = true
 
     mockRatesApi(exchangeRatesUrl, () => ({
       XRP: exchangeRate
     }))
 
-    deps = await initIocContainer({ ...Config, exchangeRatesUrl })
+    deps = await initIocContainer({
+      ...Config,
+      exchangeRatesUrl,
+      enableTelemetry
+    })
     appContainer = await createTestApp(deps)
     outgoingPaymentService = await deps.use('outgoingPaymentService')
     accountingService = await deps.use('accountingService')
     paymentMethodHandlerService = await deps.use('paymentMethodHandlerService')
     quoteService = await deps.use('quoteService')
+    telemetryService = await deps.use('telemetry')
     config = await deps.use('config')
     knex = appContainer.knex
   })

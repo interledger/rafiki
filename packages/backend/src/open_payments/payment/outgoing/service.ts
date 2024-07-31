@@ -40,6 +40,7 @@ import { TelemetryService } from '../../../telemetry/service'
 import { Amount } from '../../amount'
 import { QuoteService } from '../../quote/service'
 import { isQuoteError } from '../../quote/errors'
+import { ValueType } from '@opentelemetry/api'
 
 export interface OutgoingPaymentService
   extends WalletAddressSubresourceService<OutgoingPayment> {
@@ -237,9 +238,7 @@ async function createOutgoingPayment(
       const peer = await deps.peerService.getByDestinationAddress(
         receiver.ilpAddress
       )
-      if (peer) {
-        await payment.$query(trx).patch({ peerId: peer.id })
-      }
+      if (peer) await payment.$query(trx).patch({ peerId: peer.id })
 
       await sendWebhookEvent(
         deps,
@@ -247,8 +246,21 @@ async function createOutgoingPayment(
         OutgoingPaymentEventType.PaymentCreated,
         trx
       )
+      const payWithSent = await addSentAmount(deps, payment, BigInt(0))
 
-      return await addSentAmount(deps, payment, BigInt(0))
+      if (deps.telemetry && payWithSent.receiveAmount) {
+        await deps.telemetry.incrementCounterWithTransactionFeeAmount(
+          'transactions_fees',
+          payWithSent.sentAmount,
+          payWithSent.receiveAmount,
+          {
+            description: 'Amount sent through the network as fees',
+            valueType: ValueType.DOUBLE
+          },
+          false // do not preserve privacy
+        )
+      }
+      return payWithSent
     })
   } catch (err) {
     if (err instanceof UniqueViolationError) {
