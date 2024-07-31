@@ -237,7 +237,7 @@ export function createIlpPacketMiddleware(
     ctx.body = response.rawReply
 
     if (ctx.services.telemetry && Number(prepare.amount)) {
-      ctx.services.telemetry?.incrementCounter('packet_count_prepare', 1, {
+      ctx.services.telemetry.incrementCounter('packet_count_prepare', 1, {
         description: 'Count of incoming prepare packets'
       })
       if (response.fulfill) {
@@ -255,11 +255,11 @@ export function createIlpPacketMiddleware(
             valueType: ValueType.DOUBLE
           }
         )
-        ctx.services.telemetry?.incrementCounter('packet_count_fulfill', 1, {
+        ctx.services.telemetry.incrementCounter('packet_count_fulfill', 1, {
           description: 'Count of outgoing fulfill packets'
         })
       } else if (response.reject) {
-        ctx.services.telemetry?.incrementCounter('packet_count_reject', 1, {
+        ctx.services.telemetry.incrementCounter('packet_count_reject', 1, {
           description: 'Count of outgoing reject packets'
         })
       }
