@@ -61,7 +61,6 @@ describe('Incoming Payment Service', (): void => {
 
   afterAll(async (): Promise<void> => {
     await appContainer.shutdown()
-    jest.resetAllMocks
   })
 
   describe('Create IncomingPayment', (): void => {
@@ -699,7 +698,6 @@ describe('Telemetry Collection In The Incoming Payment Service', (): void => {
   })
 
   afterEach(async (): Promise<void> => {
-    jest.resetAllMocks
     jest.useRealTimers()
     await truncateTables(knex)
   })

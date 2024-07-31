@@ -218,10 +218,6 @@ describe('Telemetry Collection In ILP Packet Middleware', function () {
     })
   })
 
-  afterEach(() => {
-    jest.resetAllMocks()
-  })
-
   it('should not gather telemetry if telemetry is not enabled (service is undefined)', async () => {
     ctx.services = { ...services, telemetry: undefined }
     const incrementCounterWithTransactionAmountSpy = jest
