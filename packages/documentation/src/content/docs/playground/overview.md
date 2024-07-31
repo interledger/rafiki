@@ -263,7 +263,7 @@ Keep-Alive: timeout=5
 
 It is possible that upon (re)starting the local playground, you may run into an issue where there are no accounts/wallet addresses visible in the mock account servicing entities' pages (http://localhost:3030, http://localhost:3031). This is because seeding of the initial account data only works against an empty database. To correct this, clear the volumes, and restart the container via:
 
-```
+```sh
 pnpm localenv:compose down --volumes
 pnpm localenv:compose up -d
 ```

@@ -127,12 +127,11 @@ See the `frontend` [README](../packages/frontend/README.md#ory-kratos) for more 
 
 If you want to start one local instance of Rafiki and peer it automatically to [Rafiki.money](https://rafiki.money), you can run the following commands:
 
-// using Tigerbeetle DB
-
-```
+```sh
+# using Tigerbeetle DB
 pnpm localenv:compose:autopeer
 
-// OR using Postgres DB
+# OR using Postgres DB
 pnpm localenv:compose:psql:autopeer
 ```
 
@@ -150,7 +149,7 @@ Note that you have to go through an additional "login" step by providing you IPv
 
 To shut down the connection and to clear the environment, run
 
-```
+```sh
 pnpm localenv:compose down --volumes
 ```
 
@@ -298,7 +297,7 @@ Keep-Alive: timeout=5
 
 It is possible that upon (re)starting the local playground, you may run into an issue where there are no accounts/wallet addresses visible in the mock account servicing entities' pages (http://localhost:3030, http://localhost:3031). This is because seeding of the initial account data only works against an empty database. To correct this, clear the volumes, and restart the container via:
 
-```
+```sh
 pnpm localenv:compose down --volumes
 pnpm localenv:compose up -d
 ```
