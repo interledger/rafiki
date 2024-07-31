@@ -250,7 +250,7 @@ async function createOutgoingPayment(
 
       if (deps.telemetry && payWithSent.receiveAmount) {
         await deps.telemetry.incrementCounterWithTransactionFeeAmount(
-          'transactions_fees',
+          'payment_fees',
           payWithSent.sentAmount,
           payWithSent.receiveAmount,
           {
