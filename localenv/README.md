@@ -77,7 +77,7 @@ Navigate to [`localhost:3030`](http://localhost:3030) to view the accounts on on
 
 The accounts of the second instance (Happy Life Bank) can be found on [`localhost:3031`](http://localhost:3031).
 
-When clicking on the Account Name, a list of Transactions appears.
+When clicking on the Account Name, you can view the account information, the available balance, and see a list of transactions.
 
 ![Mock Account Servicing Entity Transactions](../packages/documentation/public/img/map-transactions.png)
 
