@@ -128,6 +128,7 @@ See the `frontend` [README](../packages/frontend/README.md#ory-kratos) for more 
 If you want to start one local instance of Rafiki and peer it automatically to [Rafiki.money](https://rafiki.money), you can run the following commands:
 
 // using Tigerbeetle DB
+
 ```
 pnpm localenv:compose:autopeer
 
