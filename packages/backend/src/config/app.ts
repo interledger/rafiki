@@ -132,7 +132,10 @@ export const Config = {
 
   incomingPaymentWorkers: envInt('INCOMING_PAYMENT_WORKERS', 1),
   incomingPaymentWorkerIdle: envInt('INCOMING_PAYMENT_WORKER_IDLE', 200), // milliseconds
-
+  poolIncomingPaymentCreatedWebhook: envBool('POLL_INCOMING_PAYMENT_CREATED_WEBHOOK', false),
+  incomingPaymentCreatedPoolTimeout: envInt('INCOMING_PAYMENT_CREATED_POLL_TIMEOUT_MS', 10000), // milliseconds
+  incomingPaymentCreatedPoolFrequence: envInt('INCOMING_PAYMENT_CREATED_POLL_FREQUENCY_MS', 1000), // milliseconds
+  
   webhookWorkers: envInt('WEBHOOK_WORKERS', 1),
   webhookWorkerIdle: envInt('WEBHOOK_WORKER_IDLE', 200), // milliseconds
   webhookUrl: envString('WEBHOOK_URL'),
