@@ -3,9 +3,15 @@
   "version": "1.0.0",
   "description": "",
   "scripts": {
-    "test": "k6 run ./scripts/script.js"
+    "test": "k6 run ./scripts/create-outgoing-payments.js",
+    "run-tests": "./scripts/run-tests.sh",
+    "docker-run-tests": "./scripts/run-docker-tests.sh",
+    "hostile": "hostile"
   },
   "keywords": [],
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "hostile": "^1.4.0"
+  }
 }
