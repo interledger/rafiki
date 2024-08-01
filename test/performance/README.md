@@ -23,5 +23,5 @@ The test makes a few checks to verify the local playground is running, then runs
 The test can also be run inside of a Docker container on the same Docker network as the Local Playground:
 
 ```
-pnpm --filter performance run-docker-tests
+pnpm --filter performance run-tests-docker
 ```
