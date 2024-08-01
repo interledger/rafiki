@@ -171,6 +171,20 @@ export default defineConfig({
               ]
             },
             {
+              label: 'Rafiki Admin',
+              collapsed: true,
+              items: [
+                {
+                  label: 'Overview',
+                  link: 'rafikiadmin/overview'
+                },
+                {
+                  label: 'Login with Ory Kratos',
+                  link: 'rafikiadmin/auth'
+                }
+              ]
+            },
+            {
               label: 'Reference',
               collapsed: true,
               autogenerate: {
