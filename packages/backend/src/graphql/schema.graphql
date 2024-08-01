@@ -91,6 +91,14 @@ type Query {
     filter: PaymentFilter
   ): PaymentConnection!
 
+  "Fetch a page of accounting transfers"
+  accountingTransfers(
+    "Account id."
+    id: String!
+    "Limit the number of results returned. If no limit is provided, the default limit of 100_000 is set for TigerBeetle."
+    limit: Int
+  ): AccountingTransferConnection!
+
   "Get an local or remote Open Payments Incoming Payment. The receiver has a wallet address on either this or another Open Payments resource server."
   receiver(id: String!): Receiver
 }
@@ -893,6 +901,37 @@ enum PaymentType {
 input PaymentFilter {
   type: FilterString
   walletAddressId: FilterString
+}
+
+type AccountingTransferConnection {
+  debits: [AccountingTransfer!]!
+  credits: [AccountingTransfer!]!
+}
+
+type AccountingTransfer implements Model {
+  "Payment id"
+  id: ID!
+  "Debit account id"
+  debitAccountId: ID!
+  "Credit account id"
+  creditAccountId: ID!
+  "Amount sent (fixed send)"
+  amount: UInt64!
+  "Type of accounting transfer"
+  transferType: TransferType!
+  "Identifier that partitions the sets of accounts that can transact with each other."
+  ledger: UInt8!
+  "Date-time of creation"
+  createdAt: String!
+}
+
+enum TransferType {
+  "Deposit transfer type."
+  DEPOSIT
+  "Withdrawal transfer type."
+  WITHDRAWAL
+  "Transfer type."
+  TRANSFER
 }
 
 type QuoteConnection {

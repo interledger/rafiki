@@ -61,12 +61,12 @@ script:pre-request {
 
 script:post-response {
   const body = res.getBody();
-  
-  bru.setEnvVar("walletAddressId", body.data.createWalletAddress.walletAddress.id);
-  
-  bru.setEnvVar("walletAddressUrl", body.data.createWalletAddress.walletAddress.url);
-  
-  bru.setEnvVar('initialWalletAddressRequest',req)
+
+  if (body?.data) {
+    bru.setEnvVar("walletAddressId", body.data.createWalletAddress.walletAddress.id);
+    bru.setEnvVar("walletAddressUrl", body.data.createWalletAddress.walletAddress.url);
+    bru.setEnvVar('initialWalletAddressRequest',req)
+  }
 }
 
 tests {

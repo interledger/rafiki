@@ -30,7 +30,8 @@ import {
   createTransfers,
   CreateTransfersResult,
   postTransfers,
-  voidTransfers
+  voidTransfers,
+  getAccountTransfers
 } from './ledger-transfer'
 import { LedgerTransfer, LedgerTransferType } from './ledger-transfer/model'
 
@@ -49,8 +50,13 @@ export function createAccountingService(
   return {
     createLiquidityAccount: (options, accTypeCode, trx) =>
       createLiquidityAccount(deps, options, accTypeCode, trx),
-    createSettlementAccount: (ledger, trx) =>
-      createSettlementAccount(deps, ledger, trx),
+    createLiquidityAndLinkedSettlementAccount: (options, accTypeCode, trx) =>
+      createLiquidityAndLinkedSettlementAccount(
+        deps,
+        options,
+        accTypeCode,
+        trx
+      ),
     getBalance: (accountRef) => getLiquidityAccountBalance(deps, accountRef),
     getTotalSent: (accountRef) => getAccountTotalSent(deps, accountRef),
     getAccountsTotalSent: (accountRefs) =>
@@ -63,7 +69,9 @@ export function createAccountingService(
     createDeposit: (transfer, trx) => createAccountDeposit(deps, transfer, trx),
     createWithdrawal: (transfer) => createAccountWithdrawal(deps, transfer),
     postWithdrawal: (withdrawalRef) => postTransfers(deps, [withdrawalRef]),
-    voidWithdrawal: (withdrawalRef) => voidTransfers(deps, [withdrawalRef])
+    voidWithdrawal: (withdrawalRef) => voidTransfers(deps, [withdrawalRef]),
+    getAccountTransfers: (id, limit, trx) =>
+      getAccountTransfers(deps, id, limit, trx)
   }
 }
 
@@ -82,7 +90,6 @@ export async function createLiquidityAccount(
     },
     trx
   )
-
   return account
 }
 
@@ -105,6 +112,17 @@ export async function createSettlementAccount(
     },
     trx
   )
+}
+
+export async function createLiquidityAndLinkedSettlementAccount(
+  deps: ServiceDependencies,
+  account: LiquidityAccount,
+  accountType: LiquidityAccountType,
+  trx?: TransactionOrKnex
+): Promise<LiquidityAccount> {
+  await createLiquidityAccount(deps, account, accountType, trx)
+  await createSettlementAccount(deps, account.asset.ledger, trx)
+  return account
 }
 
 export async function getLiquidityAccountBalance(

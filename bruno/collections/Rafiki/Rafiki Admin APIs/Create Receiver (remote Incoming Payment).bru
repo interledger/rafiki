@@ -62,6 +62,8 @@ script:pre-request {
 
 script:post-response {
   const body = res.getBody();
-  
-  bru.setEnvVar("receiverId", body.data.createReceiver.receiver.id);
+
+  if (body?.data) {
+    bru.setEnvVar("receiverId", body.data.createReceiver.receiver.id);
+  }
 }

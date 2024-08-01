@@ -89,8 +89,10 @@ script:pre-request {
 
 script:post-response {
   const body = res.getBody();
-  
-  bru.setEnvVar("outgoingPaymentId", body.data.createOutgoingPaymentFromIncomingPayment.payment.id);
+
+  if (body?.data) {
+    bru.setEnvVar("outgoingPaymentId", body.data.createOutgoingPaymentFromIncomingPayment.payment.id);  
+  }
 }
 
 tests {

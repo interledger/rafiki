@@ -41,6 +41,15 @@ type AppMiddleware = (
 const next: jest.MockedFunction<() => Promise<void>> = jest.fn()
 const token = 'OS9M2PMHKUR64TB8N6BW7OZB8CDFONP219RP1LT0'
 
+type IntrospectionCallObject = {
+  access_token: string
+  access: {
+    type: AccessType
+    actions: AccessAction[]
+    identifier?: string
+  }[]
+}
+
 describe('Auth Middleware', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
@@ -96,14 +105,25 @@ describe('Auth Middleware', (): void => {
 
     test('throws error for unknown errors', async (): Promise<void> => {
       const middleware = createTokenIntrospectionMiddleware({
-        requestType: type,
+        requestType: AccessType.OutgoingPayment,
         requestAction: action,
         bypassError: true
       })
 
-      jest
-        .spyOn(tokenIntrospectionClient, 'introspect')
-        .mockResolvedValueOnce({ active: true, access: {} } as TokenInfo) // causes an error other than OpenPaymentsServerRouteError
+      jest.spyOn(tokenIntrospectionClient, 'introspect').mockResolvedValueOnce({
+        active: true,
+        access: [
+          {
+            type: AccessType.OutgoingPayment,
+            actions: [action],
+            limits: {
+              debitAmount: {
+                value: 'invalid_value'
+              }
+            }
+          }
+        ]
+      } as TokenInfo) // causes an error other than OpenPaymentsServerRouteError
 
       expect.assertions(3)
 
@@ -112,7 +132,7 @@ describe('Auth Middleware', (): void => {
       } catch (err) {
         assert(err instanceof Error)
         assert(!(err instanceof OpenPaymentsServerRouteError))
-        expect(err.message).toBe('tokenInfo.access.find is not a function')
+        expect(err.message).toBe('Cannot convert invalid_value to a BigInt')
       }
 
       expect(ctx.response.get('WWW-Authenticate')).not.toBe(
@@ -169,7 +189,13 @@ describe('Auth Middleware', (): void => {
     }
 
     expect(introspectSpy).toHaveBeenCalledWith({
-      access_token: token
+      access_token: token,
+      access: [
+        {
+          type: type,
+          actions: [action]
+        }
+      ]
     })
     expect(ctx.response.get('WWW-Authenticate')).toBe(
       `GNAP as_uri=${Config.authServerGrantUrl}`
@@ -187,7 +213,13 @@ describe('Auth Middleware', (): void => {
       message: 'Inactive Token'
     })
     expect(introspectSpy).toHaveBeenCalledWith({
-      access_token: token
+      access_token: token,
+      access: [
+        {
+          type: type,
+          actions: [action]
+        }
+      ]
     })
     expect(next).not.toHaveBeenCalled()
   })
@@ -238,23 +270,32 @@ describe('Auth Middleware', (): void => {
       `(
         'returns 403 for unauthorized request (conflicting $description)',
         async ({ type, action }): Promise<void> => {
-          const tokenInfo = createTokenInfo([
-            {
-              type,
-              actions: [action],
-              identifier
-            }
-          ])
+          const middleware = createTokenIntrospectionMiddleware({
+            requestType: type,
+            requestAction: action
+          })
           const introspectSpy = jest
             .spyOn(tokenIntrospectionClient, 'introspect')
-            .mockResolvedValueOnce(tokenInfo)
+            .mockResolvedValueOnce({ active: false })
           await expect(middleware(ctx, next)).rejects.toMatchObject({
             status: 403,
-            message: 'Insufficient Grant'
+            message: 'Inactive Token'
           })
-          expect(introspectSpy).toHaveBeenCalledWith({
-            access_token: token
-          })
+          const expectedCallObject: IntrospectionCallObject = {
+            access_token: token,
+            access: [
+              {
+                type,
+                actions: [action]
+              }
+            ]
+          }
+
+          if (type === AccessType.OutgoingPayment) {
+            expectedCallObject.access[0].identifier = ctx.walletAddressUrl
+          }
+
+          expect(introspectSpy).toHaveBeenCalledWith(expectedCallObject)
           expect(next).not.toHaveBeenCalled()
         }
       )
@@ -268,7 +309,13 @@ describe('Auth Middleware', (): void => {
 
           await expect(middleware(ctx, next)).resolves.toBeUndefined()
           expect(introspectSpy).toHaveBeenCalledWith({
-            access_token: token
+            access_token: token,
+            access: [
+              {
+                type,
+                actions: [action]
+              }
+            ]
           })
           expect(next).toHaveBeenCalled()
           expect(ctx.client).toEqual(tokenInfo.client)
@@ -298,7 +345,13 @@ describe('Auth Middleware', (): void => {
 
             await expect(middleware(ctx, next)).resolves.toBeUndefined()
             expect(introspectSpy).toHaveBeenCalledWith({
-              access_token: token
+              access_token: token,
+              access: [
+                {
+                  type,
+                  actions: [subAction]
+                }
+              ]
             })
             expect(next).toHaveBeenCalled()
             expect(ctx.client).toEqual(tokenInfo.client)
@@ -311,22 +364,21 @@ describe('Auth Middleware', (): void => {
               requestType: type,
               requestAction: superAction
             })
-            const tokenInfo = createTokenInfo([
-              {
-                type,
-                actions: [subAction],
-                identifier: identifier as string
-              }
-            ])
             const introspectSpy = jest
               .spyOn(tokenIntrospectionClient, 'introspect')
-              .mockResolvedValueOnce(tokenInfo)
+              .mockResolvedValueOnce({ active: false })
             await expect(middleware(ctx, next)).rejects.toMatchObject({
               status: 403,
-              message: 'Insufficient Grant'
+              message: 'Inactive Token'
             })
             expect(introspectSpy).toHaveBeenCalledWith({
-              access_token: token
+              access_token: token,
+              access: [
+                {
+                  type,
+                  actions: [superAction]
+                }
+              ]
             })
             expect(next).not.toHaveBeenCalled()
           })
@@ -379,9 +431,20 @@ describe('Auth Middleware', (): void => {
                 .mockResolvedValueOnce(tokenInfo)
 
               await expect(middleware(ctx, next)).resolves.toBeUndefined()
-              expect(introspectSpy).toHaveBeenCalledWith({
-                access_token: token
-              })
+              const expectedCallObject: IntrospectionCallObject = {
+                access_token: token,
+                access: [
+                  {
+                    type,
+                    actions: [action]
+                  }
+                ]
+              }
+              if (type === AccessType.OutgoingPayment) {
+                expectedCallObject.access[0].identifier = ctx.walletAddressUrl
+              }
+
+              expect(introspectSpy).toHaveBeenCalledWith(expectedCallObject)
               expect(next).toHaveBeenCalled()
               expect(ctx.client).toEqual(tokenInfo.client)
               expect(ctx.accessAction).toBe(action)
@@ -398,16 +461,21 @@ describe('Auth Middleware', (): void => {
         })
       } else {
         test('returns 403 for super-action request', async (): Promise<void> => {
-          const tokenInfo = createTokenInfo()
           const introspectSpy = jest
             .spyOn(tokenIntrospectionClient, 'introspect')
-            .mockResolvedValueOnce(tokenInfo)
+            .mockResolvedValueOnce({ active: false })
           await expect(middleware(ctx, next)).rejects.toMatchObject({
             status: 403,
-            message: 'Insufficient Grant'
+            message: 'Inactive Token'
           })
           expect(introspectSpy).toHaveBeenCalledWith({
-            access_token: token
+            access_token: token,
+            access: [
+              {
+                type,
+                actions: [action]
+              }
+            ]
           })
           expect(next).not.toHaveBeenCalled()
         })

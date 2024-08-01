@@ -4,11 +4,11 @@ title: Auto-Peering
 
 If you want to start one local instance of Rafiki and peer it automatically to [Rafiki.money](https://rafiki.money), you can run the following commands:
 
-```
-// using Tigerbeetle DB
+```sh
+# using Tigerbeetle DB
 pnpm localenv:compose:autopeer
 
-// OR using Postgres DB
+# OR using Postgres DB
 pnpm localenv:compose:psql:autopeer
 ```
 
@@ -26,7 +26,7 @@ Note that you have to go through an additional "login" step by providing you IPv
 
 To shut down the connection and to clear the environment, run
 
-```
+```sh
 pnpm localenv:compose down --volumes
 ```
 

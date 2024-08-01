@@ -53,6 +53,8 @@ script:pre-request {
 
 script:post-response {
   const body = res.getBody();
-  
-  bru.setEnvVar("walletAddressKeyId", body.data.createWalletAddressKey.walletAddressKey.id);
+
+  if (body?.data) {
+    bru.setEnvVar("walletAddressKeyId", body.data.createWalletAddressKey.walletAddressKey.id);
+  }
 }

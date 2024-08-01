@@ -4,7 +4,8 @@ import {
   Transaction,
   AccountingService,
   Deposit,
-  Withdrawal
+  Withdrawal,
+  GetLedgerTransfersResult
 } from '../../../../../../accounting/service'
 import {
   CreateAccountError,
@@ -145,13 +146,10 @@ export class MockAccountingService implements AccountingService {
     throw new Error('Not implemented!')
   }
 
-  createSettlementAccount(
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    ledger: number,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    trx?: TransactionOrKnex
-  ): Promise<void> {
-    throw new Error('Not implemented!')
+  async createLiquidityAndLinkedSettlementAccount(
+    account: MockIlpAccount
+  ): Promise<MockIlpAccount> {
+    return await this.createLiquidityAccount(account)
   }
 
   createWithdrawal(
@@ -207,6 +205,13 @@ export class MockAccountingService implements AccountingService {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     id: string
   ): Promise<void | TransferError> {
+    throw new Error('Not implemented!')
+  }
+
+  getAccountTransfers(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    id: string
+  ): Promise<GetLedgerTransfersResult> {
     throw new Error('Not implemented!')
   }
 }
