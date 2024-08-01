@@ -53,11 +53,21 @@ async function create(
   deps: ServiceDependencies,
   options: CreateOptions
 ): Promise<WalletAddressKey> {
-  const key = await WalletAddressKey.query(deps.knex).insertAndFetch({
-    walletAddressId: options.walletAddressId,
-    jwk: options.jwk
-  })
-  return key
+  try {
+    const key = await WalletAddressKey.query(deps.knex).insertAndFetch({
+      walletAddressId: options.walletAddressId,
+      jwk: options.jwk
+    })
+    return key
+  } catch (err) {
+    deps.logger.error(
+      {
+        err
+      },
+      'error adding key'
+    )
+    throw err
+  }
 }
 
 async function revoke(

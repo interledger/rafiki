@@ -86,6 +86,13 @@ export const createWalletAddressKey: MutationResolvers<ApolloContext>['createWal
     )
 
     const key = await walletAddressKeyService.create(args.input)
+    if (!key) {
+      throw new GraphQLError('Wallet address key could not be added', {
+        extensions: {
+          code: GraphQLErrorCode.Duplicate
+        }
+      })
+    }
 
     return {
       walletAddressKey: walletAddressKeyToGraphql(key)
