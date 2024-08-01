@@ -4,14 +4,16 @@ This package contains a script that will determine the performance of Rafiki by 
 
 ## Prerequisites
 
-* [Grafana k6](https://grafana.com/docs/k6/latest/set-up/install-k6/)
-  * [Grafana k6](https://grafana.com/docs/k6/latest/) is used to run performance test scripts against Rafiki.
+- [Grafana k6](https://grafana.com/docs/k6/latest/set-up/install-k6/)
 
-* [Running local playground for Rafiki](../../localenv/README.md)
+  - [Grafana k6](https://grafana.com/docs/k6/latest/) is used to run performance test scripts against Rafiki.
+
+- [Running local playground for Rafiki](../../localenv/README.md)
 
 If the local environment isn't running it may be started
 
 ## Run tests
+
 To run the performance tests (of which there is currently only one):
 
 ```

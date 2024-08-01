@@ -56,7 +56,8 @@ export default function () {
     'Content-Type': 'application/json'
   }
 
-  const CLOUD_NINE_GQL_ENDPOINT = 'http://cloud-nine-wallet-backend:3001/graphql'
+  const CLOUD_NINE_GQL_ENDPOINT =
+    'http://cloud-nine-wallet-backend:3001/graphql'
   const CLOUD_NINE_WALLET_ADDRESS =
     'https://cloud-nine-wallet-backend/accounts/gfranklin'
   const HAPPY_LIFE_BANK_WALLET_ADDRESS =
