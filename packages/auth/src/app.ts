@@ -353,7 +353,13 @@ export class App {
           signed: true,
           store: {
             async get(key) {
-              return await redis.hgetall(key)
+              const s = await redis.hgetall(key)
+              const session = {
+                nonce: s.nonce,
+                _expire: Number(s._expire),
+                _maxAge: Number(s._maxAge)
+              }
+              return session
             },
             async set(key, session) {
               // Add a delay to cookie age to ensure redis record expires after cookie
