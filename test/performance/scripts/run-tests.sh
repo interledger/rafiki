@@ -49,5 +49,9 @@ addHost "happy-life-bank-backend"
 addHost "happy-life-bank-auth"
 
 # run tests
-pnpm --filter performance test
+if [[ $* == *--docker* ]]; then
+  pnpm --filter performance test-docker
+else 
+  pnpm --filter performance test
+fi
 exit $?
