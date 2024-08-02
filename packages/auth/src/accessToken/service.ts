@@ -70,6 +70,7 @@ async function getByManagementId(
 ): Promise<AccessToken | undefined> {
   return AccessToken.query()
     .findOne('managementId', managementId)
+    .whereNull('revokedAt')
     .withGraphFetched('grant')
 }
 
@@ -80,6 +81,7 @@ async function introspect(
 ): Promise<{ grant: Grant; access: Access[] } | undefined> {
   const token = await AccessToken.query(deps.knex)
     .findOne({ value: tokenValue })
+    .whereNull('revokedAt')
     .withGraphFetched('grant.access')
 
   const foundAccess: Access[] = []
@@ -117,7 +119,10 @@ async function revoke(
   trx?: TransactionOrKnex
 ): Promise<AccessToken | undefined> {
   return AccessToken.query(trx || deps.knex)
-    .deleteById(id)
+    .patchAndFetchById(id, {
+      revokedAt: new Date()
+    })
+    .whereNull('revokedAt')
     .returning('*')
     .first()
 }
@@ -128,7 +133,9 @@ async function revokeByGrantId(
   trx?: TransactionOrKnex
 ): Promise<number> {
   return await AccessToken.query(trx || deps.knex)
-    .delete()
+    .patch({
+      revokedAt: new Date()
+    })
     .where('grantId', grantId)
 }
 

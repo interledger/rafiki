@@ -102,6 +102,7 @@ describe('Access Token Service', (): void => {
         accessTokenService.getByManagementId(accessToken.managementId)
       ).resolves.toMatchObject({
         ...accessToken,
+        revokedAt: null,
         grant: retrievedGrant
       })
     })
@@ -267,21 +268,19 @@ describe('Access Token Service', (): void => {
     describe('Revoke by token id', (): void => {
       test('Can revoke un-expired token', async (): Promise<void> => {
         await token.$query(trx).patch({ expiresIn: 1000000 })
-        await expect(accessTokenService.revoke(token.id)).resolves.toEqual(
-          token
-        )
-        await expect(
-          AccessToken.query(trx).findById(token.id)
-        ).resolves.toBeUndefined()
+        await expect(accessTokenService.revoke(token.id)).resolves.toEqual({
+          ...token,
+          revokedAt: expect.any(Date),
+          updatedAt: expect.any(Date)
+        })
       })
       test('Can revoke even if token has already expired', async (): Promise<void> => {
         await token.$query(trx).patch({ expiresIn: -1 })
-        await expect(accessTokenService.revoke(token.id)).resolves.toEqual(
-          token
-        )
-        await expect(
-          AccessToken.query(trx).findById(token.id)
-        ).resolves.toBeUndefined()
+        await expect(accessTokenService.revoke(token.id)).resolves.toEqual({
+          ...token,
+          revokedAt: expect.any(Date),
+          updatedAt: expect.any(Date)
+        })
       })
       test('Can revoke even if token has already been revoked', async (): Promise<void> => {
         await token.$query(trx).delete()
@@ -309,7 +308,11 @@ describe('Access Token Service', (): void => {
         ).resolves.toEqual(1)
         await expect(
           AccessToken.query(trx).findById(token.id)
-        ).resolves.toBeUndefined()
+        ).resolves.toEqual({
+          ...token,
+          revokedAt: expect.any(Date),
+          updatedAt: expect.any(Date)
+        })
       })
       test('Can revoke even if token has already expired', async (): Promise<void> => {
         await token.$query(trx).patch({ expiresIn: -1 })
@@ -318,7 +321,11 @@ describe('Access Token Service', (): void => {
         ).resolves.toEqual(1)
         await expect(
           AccessToken.query(trx).findById(token.id)
-        ).resolves.toBeUndefined()
+        ).resolves.toEqual({
+          ...token,
+          revokedAt: expect.any(Date),
+          updatedAt: expect.any(Date)
+        })
       })
       test('Can revoke even if token has already been revoked', async (): Promise<void> => {
         await token.$query(trx).delete()
