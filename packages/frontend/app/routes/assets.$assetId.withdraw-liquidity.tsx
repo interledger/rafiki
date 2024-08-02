@@ -1,28 +1,45 @@
-import { type ActionFunctionArgs } from '@remix-run/node'
-import { useNavigate } from '@remix-run/react'
+import { json, type ActionFunctionArgs } from '@remix-run/node'
+import { useLoaderData, useNavigate } from '@remix-run/react'
 import { v4 } from 'uuid'
 import { LiquidityDialog } from '~/components/LiquidityDialog'
-import { withdrawAssetLiquidity } from '~/lib/api/asset.server'
+import { getAssetInfo, withdrawAssetLiquidity } from '~/lib/api/asset.server'
 import { messageStorage, setMessageAndRedirect } from '~/lib/message.server'
 import { amountSchema } from '~/lib/validate.server'
 import { redirectIfUnauthorizedAccess } from '~/lib/kratos_checks.server'
 import { type LoaderFunctionArgs } from '@remix-run/node'
+import { z } from 'zod'
 
-export const loader = async ({ request }: LoaderFunctionArgs) => {
+export const loader = async ({ request, params }: LoaderFunctionArgs) => {
   const cookies = request.headers.get('cookie')
   await redirectIfUnauthorizedAccess(request.url, cookies)
-  return null
+
+  const assetId = params.assetId
+
+  const result = z.string().uuid().safeParse(assetId)
+  if (!result.success) {
+    throw json(null, { status: 400, statusText: 'Invalid asset ID.' })
+  }
+
+  const asset = await getAssetInfo({ id: result.data })
+
+  if (!asset) {
+    throw json(null, { status: 404, statusText: 'Asset not found.' })
+  }
+
+  return json({ asset })
 }
 
 export default function AssetWithdrawLiquidity() {
   const navigate = useNavigate()
   const dismissDialog = () => navigate('..', { preventScrollReset: true })
+  const { asset } = useLoaderData<typeof loader>()
 
   return (
     <LiquidityDialog
       onClose={dismissDialog}
       title='Withdraw asset liquidity'
       type='Withdraw'
+      asset={{ code: asset.code, scale: asset.scale }}
     />
   )
 }

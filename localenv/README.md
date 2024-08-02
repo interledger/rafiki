@@ -15,9 +15,9 @@ These packages depend on the following databases:
 
 - TigerBeetle or Postgres (accounting)
 - Postgres (Open Payments resources, auth resources)
-- Redis (STREAM details)
+- Redis (STREAM details, auth sessions)
 
-We provide containerized versions of our packages together with two pre-configured docker-compose files ([peer1](./cloud-nine-wallet/docker-compose.yml) and [peer2](./happy-life-bank/docker-compose.yml)) to start two Mock Account Servicing Entities with their respective Rafiki backend and auth servers. They automatically peer and 2 to 3 user accounts are created on both of them.
+We provide containerized versions of our packages together with two pre-configured docker-compose files ([Cloud Nine Wallet](./cloud-nine-wallet/docker-compose.yml) and [Happy Life Bank](./happy-life-bank/docker-compose.yml)) to start two Mock Account Servicing Entities with their respective Rafiki backend and auth servers. They automatically peer and 2 to 3 user accounts are created on both of them.
 
 This environment will set up a playground where you can use the Rafiki Admin APIs and the Open Payments APIs.
 
@@ -77,7 +77,7 @@ Navigate to [`localhost:3030`](http://localhost:3030) to view the accounts on on
 
 The accounts of the second instance (Happy Life Bank) can be found on [`localhost:3031`](http://localhost:3031).
 
-When clicking on the Account Name, a list of Transactions appears.
+When clicking on the Account Name, you can view the account information, the available balance, and see a list of transactions.
 
 ![Mock Account Servicing Entity Transactions](../packages/documentation/public/img/map-transactions.png)
 
@@ -125,18 +125,19 @@ See the `frontend` [README](../packages/frontend/README.md#ory-kratos) for more 
 
 #### Autopeering
 
-If you want to start the local env and peer it automatically to rafiki.money, you can run the following commands:
+If you want to start one local instance of Rafiki and peer it automatically to [Rafiki.money](https://rafiki.money), you can run the following commands:
 
-```
+```sh
+# using Tigerbeetle DB
 pnpm localenv:compose:autopeer
 
-// OR to start with Postgres db
+# OR using Postgres DB
 pnpm localenv:compose:psql:autopeer
 ```
 
-Your local cloud nine rafiki instance will be peered automatically in this case with https://rafiki.money instance.
-The required services will be exposed externally using [localtunnel](https://www.npmjs.com/package/localtunnel) package.
-The exposed ports are 3000(open-payments), 3006(auth server), 3002(ilp connector).
+Your local Rafiki instance will be automatically peered with the remote [Rafiki.money](https://rafiki.money) instance.
+The required services will be exposed externally using the [localtunnel](https://www.npmjs.com/package/localtunnel) package.
+The exposed ports are 3000(open-payments), 3006(auth server), 3002(ILP connector).
 
 To use the Open Payments example in the Bruno collection examples, follow these steps:
 
@@ -146,7 +147,13 @@ To use the Open Payments example in the Bruno collection examples, follow these 
 
 Note that you have to go through an additional "login" step by providing you IPv4 address as tunnel password before being able to visit the consent screen for the outgoing payment grant request. You can find out your current IPv4 address by e.g. visiting https://loca.lt/mytunnelpassword (or https://www.whatismyip.com/).
 
-After stopping the script it is necessary to clear the environment using the command described in [Shutting down](#Shutting-down). This is necessary as on a new run of the scripts (with autopeering or not) the wallet address url will differ.
+To shut down the connection and to clear the environment, run
+
+```sh
+pnpm localenv:compose down --volumes
+```
+
+This is necessary since on a new run of the scripts (with autopeering or not), the wallet address urls will differ.
 
 ### Debugging
 
@@ -204,20 +211,21 @@ pnpm localenv:compose down --volumes --rmi all
 
 ### Commands
 
-| Command                                     | Description                                 |
-| ------------------------------------------- | ------------------------------------------- |
-| `pnpm localenv:compose config`              | Show all merged config (with Tigerbeetle)   |
-| `pnpm localenv:compose up`                  | Start (with Tigerbeetle)                    |
-| `pnpm localenv:compose up -d`               | Start detached (with Tigerbeetle)           |
-| `pnpm localenv:compose down`                | Down (with Tigerbeetle)                     |
-| `pnpm localenv:compose down --volumes`      | Down and kill volumes (with Tigerbeetle)    |
-| `pnpm localenv:compose:psql config`         | Show all merged config (with Postgresql)    |
-| `pnpm localenv:compose build`               | Build all the containers (with Tigerbeetle) |
-| `pnpm localenv:compose:psql up`             | Start (with Postgresql)                     |
-| `pnpm localenv:compose:psql up -d`          | Start detached (with Postgresql)            |
-| `pnpm localenv:compose:psql down`           | Down (with Postgresql)                      |
-| `pnpm localenv:compose:psql down --volumes` | Down and kill volumes (with Postgresql)     |
-| `pnpm localenv:compose:psql build`          | Build all the containers (with Postgresql)  |
+| Command                                          | Description                                      |
+| ------------------------------------------------ | ------------------------------------------------ |
+| `pnpm localenv:compose config`                   | Show all merged config (with Tigerbeetle)        |
+| `pnpm localenv:compose up`                       | Start (with Tigerbeetle)                         |
+| `pnpm localenv:compose up -d`                    | Start (with Tigerbeetle) detached                |
+| `pnpm localenv:compose down`                     | Down (with Tigerbeetle)                          |
+| `pnpm localenv:compose down --volumes`           | Down and kill volumes (with Tigerbeetle)         |
+| `pnpm localenv:compose down --volumes --rmi all` | Down, kill volumes (with Tigerbeetle) and images |
+| `pnpm localenv:compose:psql config`              | Show all merged config (with Postgresql)         |
+| `pnpm localenv:compose build`                    | Build all the containers (with Tigerbeetle)      |
+| `pnpm localenv:compose:psql up`                  | Start (with Postgresql)                          |
+| `pnpm localenv:compose:psql up -d`               | Start (with Postgresql) detached                 |
+| `pnpm localenv:compose:psql down`                | Down (with Postgresql)                           |
+| `pnpm localenv:compose:psql down --volumes`      | Down (with Postgresql) and kill volumes          |
+| `pnpm localenv:compose:psql build`               | Build all the containers (with Postgresql)       |
 
 ### Usage
 
@@ -289,7 +297,7 @@ Keep-Alive: timeout=5
 
 It is possible that upon (re)starting the local playground, you may run into an issue where there are no accounts/wallet addresses visible in the mock account servicing entities' pages (http://localhost:3030, http://localhost:3031). This is because seeding of the initial account data only works against an empty database. To correct this, clear the volumes, and restart the container via:
 
-```
+```sh
 pnpm localenv:compose down --volumes
 pnpm localenv:compose up -d
 ```
