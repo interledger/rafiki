@@ -1153,7 +1153,7 @@ type WebhookEvent implements Model {
   "Event id"
   id: ID!
   "Type of event"
-  type: String!
+  type: WebhookType!
   "Stringified JSON data"
   data: JSONObject!
   "Date-time of creation"
@@ -1168,6 +1168,19 @@ type WebhookEventsConnection {
 type WebhookEventsEdge {
   node: WebhookEvent!
   cursor: String!
+}
+
+enum WebhookType {
+  INCOMING_PAYMENT_CREATED
+  INCOMING_PAYMENT_COMPLETED
+  INCOMING_PAYMENT_EXPIRED
+  OUTGOING_PAYMENT_CREATED
+  OUTGOING_PAYMENT_COMPLETED
+  OUTGOING_PAYMENT_FAILED
+  WALLET_ADDRESS_NOT_FOUND
+  WALLET_ADDRESS_WEB_MONETIZATON
+  ASSET_LIQUIDITY_LOW
+  PEER_LIQUIDITY_LOW
 }
 
 enum FeeType {

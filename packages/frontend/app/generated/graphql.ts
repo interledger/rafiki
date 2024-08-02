@@ -1418,7 +1418,7 @@ export type WebhookEvent = Model & {
   /** Event id */
   id: Scalars['ID']['output'];
   /** Type of event */
-  type: Scalars['String']['output'];
+  type: WebhookType;
 };
 
 export type WebhookEventFilter = {
@@ -1436,6 +1436,19 @@ export type WebhookEventsEdge = {
   cursor: Scalars['String']['output'];
   node: WebhookEvent;
 };
+
+export enum WebhookType {
+  AssetLiquidityLow = 'ASSET_LIQUIDITY_LOW',
+  IncomingPaymentCompleted = 'INCOMING_PAYMENT_COMPLETED',
+  IncomingPaymentCreated = 'INCOMING_PAYMENT_CREATED',
+  IncomingPaymentExpired = 'INCOMING_PAYMENT_EXPIRED',
+  OutgoingPaymentCompleted = 'OUTGOING_PAYMENT_COMPLETED',
+  OutgoingPaymentCreated = 'OUTGOING_PAYMENT_CREATED',
+  OutgoingPaymentFailed = 'OUTGOING_PAYMENT_FAILED',
+  PeerLiquidityLow = 'PEER_LIQUIDITY_LOW',
+  WalletAddressNotFound = 'WALLET_ADDRESS_NOT_FOUND',
+  WalletAddressWebMonetizaton = 'WALLET_ADDRESS_WEB_MONETIZATON'
+}
 
 export type WithdrawEventLiquidityInput = {
   /** The id of the event to withdraw from. */
@@ -1641,6 +1654,7 @@ export type ResolversTypes = {
   WebhookEventFilter: ResolverTypeWrapper<Partial<WebhookEventFilter>>;
   WebhookEventsConnection: ResolverTypeWrapper<Partial<WebhookEventsConnection>>;
   WebhookEventsEdge: ResolverTypeWrapper<Partial<WebhookEventsEdge>>;
+  WebhookType: ResolverTypeWrapper<Partial<WebhookType>>;
   WithdrawEventLiquidityInput: ResolverTypeWrapper<Partial<WithdrawEventLiquidityInput>>;
 };
 
@@ -2238,7 +2252,7 @@ export type WebhookEventResolvers<ContextType = any, ParentType extends Resolver
   createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   data?: Resolver<ResolversTypes['JSONObject'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  type?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  type?: Resolver<ResolversTypes['WebhookType'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -2538,4 +2552,4 @@ export type ListWebhookEventsVariables = Exact<{
 }>;
 
 
-export type ListWebhookEvents = { __typename?: 'Query', webhookEvents: { __typename?: 'WebhookEventsConnection', edges: Array<{ __typename?: 'WebhookEventsEdge', cursor: string, node: { __typename?: 'WebhookEvent', id: string, data: any, type: string, createdAt: string } }>, pageInfo: { __typename?: 'PageInfo', startCursor?: string | null, endCursor?: string | null, hasNextPage: boolean, hasPreviousPage: boolean } } };
+export type ListWebhookEvents = { __typename?: 'Query', webhookEvents: { __typename?: 'WebhookEventsConnection', edges: Array<{ __typename?: 'WebhookEventsEdge', cursor: string, node: { __typename?: 'WebhookEvent', id: string, data: any, type: WebhookType, createdAt: string } }>, pageInfo: { __typename?: 'PageInfo', startCursor?: string | null, endCursor?: string | null, hasNextPage: boolean, hasPreviousPage: boolean } } };
