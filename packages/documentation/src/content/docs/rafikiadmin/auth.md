@@ -1,0 +1,9 @@
+# Ory Kratos
+
+We have secured access to the Admin UI using [Ory Kratos](https://www.ory.sh/docs/kratos/ory-kratos-intro), a secure and fully open-source identity and user management solution. Check it out on [GitHub](https://github.com/ory/kratos). We're using a simple email and password authentication method. Since access to the UI is on an invitation-only basis, the registration flow is not publicly available. Kratos allows administrators to generate a recovery link for an account, whether that account already exists in the system or not. As such, for new users, the recovery link doubles as the invitation method. To create an account on the system, you'll need to add a new user with the `invite-user` script, which must be run inside the admin Docker container (running on the same network as the Kratos container) since the Kratos admin port is not exposed: `docker exec -it <admin-container-name> npm run invite-user -- example@mail.com`.
+
+We've also included a script to remove users: `docker exec -it <admin-container-name> npm run delete-user -- example@mail.com`.
+
+Kratos allows you to render all of the UIs for idenenty management so that they are fully integrated into the look and feel of your environment. To get the UI elements for any particular page you make an API call to Kratos, which returns the UI elements needed for that flow. It's then up to you to group them, place them, and style them as you see fit. Kratos uses the identity schema that was defined during setup to determine which fields are needed for each flow and all the particulars.
+
+> **Note: Ory Kratos and the Rafiki Admin UI must be hosted on the same top-level domain.**
