@@ -83,7 +83,6 @@ export const LiquidityDialog = ({
                   addOn={asset.code}
                   step='any'
                   error={errorMessage}
-                  autoFocus
                 />
                 <Form method='post' replace preventScrollReset>
                   <Input
