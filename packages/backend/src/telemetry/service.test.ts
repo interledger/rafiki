@@ -266,11 +266,9 @@ describe('TelemetryServiceImpl', () => {
         .mockImplementation(() =>
           Promise.resolve(ConvertError.InvalidDestinationPrice)
         )
-      const internalConvertSpy = jest
-        .spyOn(internalRatesService, 'convert')
+      const internalConvertSpy = jest.spyOn(internalRatesService, 'convert')
 
-      const spyIncCounter = jest
-        .spyOn(telemetryService, 'incrementCounter')
+      const spyIncCounter = jest.spyOn(telemetryService, 'incrementCounter')
 
       await telemetryService.incrementCounterWithTransactionFeeAmount(
         'test_fee_counter',
@@ -292,10 +290,8 @@ describe('TelemetryServiceImpl', () => {
     })
 
     it('should not record fee negative fee value', async () => {
-      const spyConvert = jest
-        .spyOn(aseRatesService, 'convert')
-      const spyIncCounter = jest
-        .spyOn(telemetryService, 'incrementCounter')
+      const spyConvert = jest.spyOn(aseRatesService, 'convert')
+      const spyIncCounter = jest.spyOn(telemetryService, 'incrementCounter')
 
       await telemetryService.incrementCounterWithTransactionFeeAmount(
         'test_fee_counter',
@@ -316,10 +312,8 @@ describe('TelemetryServiceImpl', () => {
     })
 
     it('should not record zero amounts', async () => {
-      const spyConvert = jest
-        .spyOn(aseRatesService, 'convert')
-      const spyIncCounter = jest
-        .spyOn(telemetryService, 'incrementCounter')
+      const spyConvert = jest.spyOn(aseRatesService, 'convert')
+      const spyIncCounter = jest.spyOn(telemetryService, 'incrementCounter')
 
       await telemetryService.incrementCounterWithTransactionFeeAmount(
         'test_fee_counter',
@@ -340,10 +334,8 @@ describe('TelemetryServiceImpl', () => {
     })
 
     it('should record since it is a valid fee', async () => {
-      const spyConvert = jest
-        .spyOn(aseRatesService, 'convert')
-      const spyIncCounter = jest
-        .spyOn(telemetryService, 'incrementCounter')
+      const spyConvert = jest.spyOn(aseRatesService, 'convert')
+      const spyIncCounter = jest.spyOn(telemetryService, 'incrementCounter')
 
       await telemetryService.incrementCounterWithTransactionFeeAmount(
         'test_fee_counter',
