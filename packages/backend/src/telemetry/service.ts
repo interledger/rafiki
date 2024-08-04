@@ -109,6 +109,8 @@ class TelemetryServiceImpl implements TelemetryService {
     attributes: Record<string, unknown> = {},
     preservePrivacy = true
   ): Promise<void> {
+    if (!amountSource.value || !amountDestination.value) return
+
     const convertedSource = await this.convertAmount({
       sourceAmount: amountSource.value,
       sourceAsset: {
@@ -136,20 +138,20 @@ class TelemetryServiceImpl implements TelemetryService {
       return
     }
 
-    let fees = BigInt(convertedSource - convertedDestination)
+    const fees = BigInt(convertedSource - convertedDestination)
     if (fees === 0n) return
-    else if (fees < 0n) fees = fees * -1n // TODO would there still be fees here?
 
-    await this.incrementCounterWithTransactionAmount(
-      name,
-      {
-        assetCode: this.deps.baseAssetCode,
-        assetScale: this.deps.baseScale,
-        value: fees
-      },
-      attributes,
-      preservePrivacy
-    )
+    if (fees < 0n) {
+      this.deps.logger.error(
+        `Fees should not be negative!: ${fees}, source asset ${amountSource.assetCode} vs destination asset ${amountDestination.assetCode}.`
+      )
+      return
+    }
+
+    const obfuscatedAmount = preservePrivacy
+      ? privacy.applyPrivacy(Number(fees))
+      : Number(fees)
+    this.incrementCounter(name, obfuscatedAmount, attributes)
   }
 
   public async incrementCounterWithTransactionAmount(

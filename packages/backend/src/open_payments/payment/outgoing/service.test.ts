@@ -59,7 +59,7 @@ describe('OutgoingPaymentService', (): void => {
   let accountingService: AccountingService
   let paymentMethodHandlerService: PaymentMethodHandlerService
   let quoteService: QuoteService
-  let telemetryService: TelemetryService | undefined
+  let telemetryService: TelemetryService
   let knex: Knex
   let walletAddressId: string
   let incomingPayment: IncomingPayment
@@ -240,7 +240,6 @@ describe('OutgoingPaymentService', (): void => {
 
   beforeAll(async (): Promise<void> => {
     const exchangeRatesUrl = 'https://test.rates'
-    const enableTelemetry = true
 
     mockRatesApi(exchangeRatesUrl, () => ({
       XRP: exchangeRate
@@ -249,14 +248,14 @@ describe('OutgoingPaymentService', (): void => {
     deps = await initIocContainer({
       ...Config,
       exchangeRatesUrl,
-      enableTelemetry
+      enableTelemetry: true
     })
     appContainer = await createTestApp(deps)
     outgoingPaymentService = await deps.use('outgoingPaymentService')
     accountingService = await deps.use('accountingService')
     paymentMethodHandlerService = await deps.use('paymentMethodHandlerService')
     quoteService = await deps.use('quoteService')
-    telemetryService = await deps.use('telemetry')
+    telemetryService = (await deps.use('telemetry'))!
     config = await deps.use('config')
     knex = appContainer.knex
   })
@@ -1162,11 +1161,57 @@ describe('OutgoingPaymentService', (): void => {
       return payment
     }
 
+    test('COMPLETED with Telemetry Fee Counter (receiveAmount < incomingPayment.incomingAmount)', async (): Promise<void> => {
+      const spyTelFeeAmount = jest.spyOn(
+        telemetryService,
+        'incrementCounterWithTransactionFeeAmount'
+      )
+      const spyCounter = jest.spyOn(telemetryService, 'incrementCounter')
+
+      incomingPayment = await createIncomingPayment(deps, {
+        walletAddressId: receiverWalletAddress.id,
+        incomingAmount: {
+          value: receiveAmount.value * 2n,
+          assetCode: receiverWalletAddress.asset.code,
+          assetScale: receiverWalletAddress.asset.scale
+        }
+      })
+      assert.ok(incomingPayment.walletAddress)
+
+      const createdPayment = await setup({
+        receiver: incomingPayment.getUrl(incomingPayment.walletAddress),
+        receiveAmount,
+        method: 'ilp'
+      })
+
+      mockPaymentHandlerPay(createdPayment, incomingPayment)
+      const payment = await processNext(
+        createdPayment.id,
+        OutgoingPaymentState.Completed
+      )
+      await expectOutcome(payment, {
+        accountBalance: 0n,
+        amountSent: payment.debitAmount.value,
+        amountDelivered: payment.receiveAmount.value,
+        incomingPaymentReceived: payment.receiveAmount.value,
+        withdrawAmount: 0n
+      })
+      // [incrementCounterWithTransactionFeeAmount] called, but not [incrementCounter] due to amount
+      expect(spyTelFeeAmount).toHaveBeenCalledTimes(1)
+      expect(spyCounter).toHaveBeenCalledTimes(1)
+    })
+
     test.each`
       debitAmount    | receiveAmount
       ${debitAmount} | ${undefined}
       ${undefined}   | ${receiveAmount}
     `('COMPLETED', async ({ debitAmount, receiveAmount }): Promise<void> => {
+      const spyTelFeeAmount = jest.spyOn(
+        telemetryService,
+        'incrementCounterWithTransactionFeeAmount'
+      )
+      const spyCounter = jest.spyOn(telemetryService, 'incrementCounter')
+
       const createdPayment = await setup({
         receiver,
         debitAmount,
@@ -1187,6 +1232,8 @@ describe('OutgoingPaymentService', (): void => {
         incomingPaymentReceived: payment.receiveAmount.value,
         withdrawAmount: 0n
       })
+      expect(spyTelFeeAmount).toHaveBeenCalledTimes(1)
+      expect(spyCounter).toHaveBeenCalledTimes(1)
     })
 
     test('COMPLETED (receiveAmount < incomingPayment.incomingAmount)', async (): Promise<void> => {

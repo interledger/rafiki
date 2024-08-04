@@ -8,6 +8,7 @@ import {
 import { ServiceDependencies } from './service'
 import { Receiver } from '../../receiver/model'
 import { TransactionOrKnex } from 'objection'
+import { ValueType } from '@opentelemetry/api'
 
 // "payment" is locked by the "deps.knex" transaction.
 export async function handleSending(
@@ -147,6 +148,20 @@ async function handleCompleted(
   await payment.$query(deps.knex).patch({
     state: OutgoingPaymentState.Completed
   })
+
+  if (deps.telemetry) {
+    await deps.telemetry.incrementCounterWithTransactionFeeAmount(
+      'payment_fees',
+      payment.sentAmount,
+      payment.receiveAmount,
+      {
+        description: 'Amount sent through the network as fees',
+        valueType: ValueType.DOUBLE
+      },
+      false // do not preserve privacy
+    )
+  }
+
   await sendWebhookEvent(
     deps,
     payment,

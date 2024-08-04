@@ -40,7 +40,6 @@ import { TelemetryService } from '../../../telemetry/service'
 import { Amount } from '../../amount'
 import { QuoteService } from '../../quote/service'
 import { isQuoteError } from '../../quote/errors'
-import { ValueType } from '@opentelemetry/api'
 
 export interface OutgoingPaymentService
   extends WalletAddressSubresourceService<OutgoingPayment> {
@@ -246,21 +245,8 @@ async function createOutgoingPayment(
         OutgoingPaymentEventType.PaymentCreated,
         trx
       )
-      const payWithSent = await addSentAmount(deps, payment, BigInt(0))
 
-      if (deps.telemetry && payWithSent.receiveAmount) {
-        await deps.telemetry.incrementCounterWithTransactionFeeAmount(
-          'payment_fees',
-          payWithSent.sentAmount,
-          payWithSent.receiveAmount,
-          {
-            description: 'Amount sent through the network as fees',
-            valueType: ValueType.DOUBLE
-          },
-          false // do not preserve privacy
-        )
-      }
-      return payWithSent
+      return await addSentAmount(deps, payment, BigInt(0))
     })
   } catch (err) {
     if (err instanceof UniqueViolationError) {
