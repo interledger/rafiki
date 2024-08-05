@@ -529,7 +529,7 @@ describe('Interaction Routes', (): void => {
     describe('IDP - Grant details', (): void => {
       let grant: Grant
       let access: Access
-      let interaction: Interaction;
+      let interaction: Interaction
 
       beforeAll(async (): Promise<void> => {
         grant = await Grant.query().insert({
