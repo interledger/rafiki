@@ -841,6 +841,8 @@ export type OutgoingPayment = BasePayment & Model & {
   /** Amount to send (fixed send) */
   debitAmount: Amount;
   error?: Maybe<Scalars['String']['output']>;
+  /** Id of the Grant under which this outgoing payment was created */
+  grantId?: Maybe<Scalars['String']['output']>;
   /** Outgoing payment id */
   id: Scalars['ID']['output'];
   /** Available liquidity */
@@ -1992,6 +1994,7 @@ export type OutgoingPaymentResolvers<ContextType = any, ParentType extends Resol
   createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   debitAmount?: Resolver<ResolversTypes['Amount'], ParentType, ContextType>;
   error?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  grantId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   liquidity?: Resolver<Maybe<ResolversTypes['UInt64']>, ParentType, ContextType>;
   metadata?: Resolver<Maybe<ResolversTypes['JSONObject']>, ParentType, ContextType>;
