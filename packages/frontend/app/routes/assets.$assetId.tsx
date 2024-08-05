@@ -150,6 +150,7 @@ export default function ViewAssetPage() {
               <div className='flex space-x-4'>
                 <Button
                   aria-label='deposit asset liquidity page'
+                  preventScrollReset
                   type='button'
                   to={`/assets/${asset.id}/deposit-liquidity`}
                 >
@@ -157,6 +158,7 @@ export default function ViewAssetPage() {
                 </Button>
                 <Button
                   aria-label='withdraw asset liquidity page'
+                  preventScrollReset
                   type='button'
                   to={`/assets/${asset.id}/withdraw-liquidity`}
                 >
