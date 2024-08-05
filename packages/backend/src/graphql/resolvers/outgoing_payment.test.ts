@@ -10,7 +10,10 @@ import { AppServices } from '../../app'
 import { initIocContainer } from '../..'
 import { Config } from '../../config/app'
 import { createAsset } from '../../tests/asset'
-import { createOutgoingPayment } from '../../tests/outgoingPayment'
+import {
+  createOutgoingPayment,
+  CreateTestQuoteAndOutgoingPaymentOptions
+} from '../../tests/outgoingPayment'
 import { createWalletAddress } from '../../tests/walletAddress'
 import { truncateTables } from '../../tests/tableManager'
 import {
@@ -61,11 +64,14 @@ describe('OutgoingPayment Resolvers', (): void => {
     await appContainer.shutdown()
   })
 
-  const createPayment = async (options: {
-    walletAddressId: string
-    metadata?: Record<string, unknown>
-  }): Promise<OutgoingPaymentModel> => {
-    return await createOutgoingPayment(deps, {
+  const createPayment = async (
+    options: {
+      walletAddressId: string
+      metadata?: Record<string, unknown>
+    },
+    grantId?: string
+  ): Promise<OutgoingPaymentModel> => {
+    const obj: CreateTestQuoteAndOutgoingPaymentOptions = {
       ...options,
       method: 'ilp',
       receiver: `${Config.openPaymentsUrl}/${uuid()}`,
@@ -75,11 +81,53 @@ describe('OutgoingPayment Resolvers', (): void => {
         assetScale: asset.scale
       },
       validDestination: false
-    })
+    }
+
+    if (grantId) {
+      obj.grant = { id: grantId }
+    }
+
+    return await createOutgoingPayment(deps, obj)
   }
 
   describe('Query.outgoingPayment', (): void => {
     let payment: OutgoingPaymentModel
+
+    describe('grantId', (): void => {
+      it('should return grantId', async (): Promise<void> => {
+        const grantId = uuid()
+
+        const { id: walletAddressId } = await createWalletAddress(deps, {
+          assetId: asset.id
+        })
+
+        const payment = await createPayment({ walletAddressId }, grantId)
+
+        const query = await appContainer.apolloClient
+          .query({
+            query: gql`
+              query OutgoingPayment($paymentId: String!) {
+                outgoingPayment(id: $paymentId) {
+                  id
+                  grantId
+                  walletAddressId
+                }
+              }
+            `,
+            variables: {
+              paymentId: payment.id
+            }
+          })
+          .then((query): OutgoingPayment => query.data?.outgoingPayment)
+
+        expect(query).toEqual({
+          id: payment.id,
+          grantId: payment.grantId,
+          walletAddressId: payment.walletAddressId,
+          __typename: 'OutgoingPayment'
+        })
+      })
+    })
 
     describe('metadata', (): void => {
       const metadata = {
