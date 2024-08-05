@@ -12,7 +12,7 @@ and the databases
 
 - TigerBeetle or Postgres (accounting)
 - Postgres (Open Payments resources, auth resources)
-- Redis (STREAM details, auth sessions)
+- Redis (STREAM details)
 
 To integrate Rafiki with your own services, view the [integration documentation](/integration/getting-started).
 

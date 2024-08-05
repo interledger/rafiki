@@ -17,7 +17,7 @@ These packages depend on the following databases:
 
 - TigerBeetle or Postgres (accounting)
 - Postgres (Open Payments resources, auth resources)
-- Redis (STREAM details, auth sessions)
+- Redis (STREAM details)
 
 We provide containerized versions of our packages together with two pre-configured docker-compose files ([Cloud Nine Wallet](https://github.com/interledger/rafiki/blob/main/localenv/cloud-nine-wallet/docker-compose.yml) and [Happy Life Bank](https://github.com/interledger/rafiki/blob/main/localenv/happy-life-bank/docker-compose.yml)) to start two Mock Account Servicing Entities with their respective Rafiki backend and auth servers. They automatically peer and 2 to 3 user accounts are created on both of them.
 
