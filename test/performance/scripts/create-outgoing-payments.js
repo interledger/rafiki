@@ -1,9 +1,9 @@
 import http from 'k6/http'
 export const options = {
   // A number specifying the number of VUs to run concurrently.
-  vus: 10,
+  vus: 1,
   // A string specifying the total duration of the test run.
-  duration: '30s'
+  duration: '600s'
 
   // The following section contains configuration options for execution of this
   // test script in Grafana Cloud.
@@ -119,6 +119,7 @@ export default function () {
       headers
     }
   )
+
   const receiver = JSON.parse(createReceiverResponse.body).data.createReceiver
     .receiver
 
