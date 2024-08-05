@@ -122,6 +122,96 @@ describe('TelemetryServiceImpl', () => {
     expect(histogram?.record).toHaveBeenCalledTimes(2)
   })
 
+  describe('incrementCounterWithTransactionFeeAmount', () => {
+    it('should not record fee when there is no fee value', async () => {
+      const spyAseConvert = jest.spyOn(aseRatesService, 'convert')
+      const spyIncCounter = jest.spyOn(telemetryService, 'incrementCounter')
+
+      await telemetryService.incrementCounterWithTransactionFeeAmount(
+        'test_fee_counter',
+        {
+          value: 100n,
+          assetCode: 'USD',
+          assetScale: 2
+        },
+        {
+          value: 100n,
+          assetCode: 'USD',
+          assetScale: 2
+        }
+      )
+
+      expect(spyAseConvert).toHaveBeenCalled()
+      expect(spyIncCounter).not.toHaveBeenCalled()
+    })
+
+    it('should not record fee negative fee value', async () => {
+      const spyConvert = jest.spyOn(aseRatesService, 'convert')
+      const spyIncCounter = jest.spyOn(telemetryService, 'incrementCounter')
+
+      await telemetryService.incrementCounterWithTransactionFeeAmount(
+        'test_fee_counter',
+        {
+          value: 100n,
+          assetCode: 'USD',
+          assetScale: 2
+        },
+        {
+          value: 101n,
+          assetCode: 'USD',
+          assetScale: 2
+        }
+      )
+
+      expect(spyConvert).toHaveBeenCalled()
+      expect(spyIncCounter).not.toHaveBeenCalled()
+    })
+
+    it('should not record zero amounts', async () => {
+      const spyConvert = jest.spyOn(aseRatesService, 'convert')
+      const spyIncCounter = jest.spyOn(telemetryService, 'incrementCounter')
+
+      await telemetryService.incrementCounterWithTransactionFeeAmount(
+        'test_fee_counter',
+        {
+          value: 0n,
+          assetCode: 'USD',
+          assetScale: 2
+        },
+        {
+          value: 0n,
+          assetCode: 'USD',
+          assetScale: 2
+        }
+      )
+
+      expect(spyConvert).not.toHaveBeenCalled()
+      expect(spyIncCounter).not.toHaveBeenCalled()
+    })
+
+    it('should record since it is a valid fee', async () => {
+      const spyConvert = jest.spyOn(aseRatesService, 'convert')
+      const spyIncCounter = jest.spyOn(telemetryService, 'incrementCounter')
+
+      await telemetryService.incrementCounterWithTransactionFeeAmount(
+        'test_fee_counter',
+        {
+          value: 100n,
+          assetCode: 'USD',
+          assetScale: 2
+        },
+        {
+          value: 50n,
+          assetCode: 'USD',
+          assetScale: 2
+        }
+      )
+
+      expect(spyConvert).toHaveBeenCalled()
+      expect(spyIncCounter).toHaveBeenCalled()
+    })
+  })
+
   describe('incrementCounterWithTransactionAmount', () => {
     it('should try to convert using aseRatesService and fallback to internalRatesService', async () => {
       const aseConvertSpy = jest
@@ -256,103 +346,6 @@ describe('TelemetryServiceImpl', () => {
         obfuscatedAmount,
         expect.any(Object)
       )
-    })
-  })
-
-  describe('incrementCounterWithTransactionFeeAmount', () => {
-    it('should not record fee when there is no fee value', async () => {
-      const aseConvertSpy = jest
-        .spyOn(aseRatesService, 'convert')
-        .mockImplementation(() =>
-          Promise.resolve(ConvertError.InvalidDestinationPrice)
-        )
-      const internalConvertSpy = jest.spyOn(internalRatesService, 'convert')
-
-      const spyIncCounter = jest.spyOn(telemetryService, 'incrementCounter')
-
-      await telemetryService.incrementCounterWithTransactionFeeAmount(
-        'test_fee_counter',
-        {
-          value: 100n,
-          assetCode: 'USD',
-          assetScale: 2
-        },
-        {
-          value: 100n,
-          assetCode: 'USD',
-          assetScale: 2
-        }
-      )
-
-      expect(spyIncCounter).not.toHaveBeenCalled()
-      expect(aseConvertSpy).toHaveBeenCalled()
-      expect(internalConvertSpy).toHaveBeenCalled()
-    })
-
-    it('should not record fee negative fee value', async () => {
-      const spyConvert = jest.spyOn(aseRatesService, 'convert')
-      const spyIncCounter = jest.spyOn(telemetryService, 'incrementCounter')
-
-      await telemetryService.incrementCounterWithTransactionFeeAmount(
-        'test_fee_counter',
-        {
-          value: 100n,
-          assetCode: 'USD',
-          assetScale: 2
-        },
-        {
-          value: 101n,
-          assetCode: 'USD',
-          assetScale: 2
-        }
-      )
-
-      expect(spyConvert).toHaveBeenCalled()
-      expect(spyIncCounter).not.toHaveBeenCalled()
-    })
-
-    it('should not record zero amounts', async () => {
-      const spyConvert = jest.spyOn(aseRatesService, 'convert')
-      const spyIncCounter = jest.spyOn(telemetryService, 'incrementCounter')
-
-      await telemetryService.incrementCounterWithTransactionFeeAmount(
-        'test_fee_counter',
-        {
-          value: 0n,
-          assetCode: 'USD',
-          assetScale: 2
-        },
-        {
-          value: 0n,
-          assetCode: 'USD',
-          assetScale: 2
-        }
-      )
-
-      expect(spyConvert).not.toHaveBeenCalled()
-      expect(spyIncCounter).not.toHaveBeenCalled()
-    })
-
-    it('should record since it is a valid fee', async () => {
-      const spyConvert = jest.spyOn(aseRatesService, 'convert')
-      const spyIncCounter = jest.spyOn(telemetryService, 'incrementCounter')
-
-      await telemetryService.incrementCounterWithTransactionFeeAmount(
-        'test_fee_counter',
-        {
-          value: 100n,
-          assetCode: 'USD',
-          assetScale: 2
-        },
-        {
-          value: 50n,
-          assetCode: 'USD',
-          assetScale: 2
-        }
-      )
-
-      expect(spyConvert).toHaveBeenCalled()
-      expect(spyIncCounter).toHaveBeenCalled()
     })
   })
 })

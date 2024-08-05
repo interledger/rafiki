@@ -94,6 +94,17 @@ export async function handleSending(
     deps.telemetry.recordHistogram('ilp_pay_time_ms', payDuration, {
       description: 'Time to complete an ILP payment'
     })
+
+    await deps.telemetry.incrementCounterWithTransactionFeeAmount(
+      'payment_fees',
+      payment.sentAmount,
+      payment.receiveAmount,
+      {
+        description: 'Amount sent through the network as fees',
+        valueType: ValueType.DOUBLE
+      },
+      false // do not preserve privacy
+    )
   }
 
   await handleCompleted(deps, payment)
@@ -148,19 +159,6 @@ async function handleCompleted(
   await payment.$query(deps.knex).patch({
     state: OutgoingPaymentState.Completed
   })
-
-  if (deps.telemetry) {
-    await deps.telemetry.incrementCounterWithTransactionFeeAmount(
-      'payment_fees',
-      payment.sentAmount,
-      payment.receiveAmount,
-      {
-        description: 'Amount sent through the network as fees',
-        valueType: ValueType.DOUBLE
-      },
-      false // do not preserve privacy
-    )
-  }
 
   await sendWebhookEvent(
     deps,
