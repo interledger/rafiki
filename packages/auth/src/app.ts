@@ -54,6 +54,7 @@ import { Redis } from 'ioredis'
 import { LoggingPlugin } from './graphql/plugin'
 import { gnapServerErrorMiddleware } from './shared/gnapErrors'
 import { verifyApiSignature } from './shared/utils'
+import redisStore from 'koa-redis'
 
 export interface AppContextData extends DefaultContext {
   logger: Logger
@@ -345,38 +346,53 @@ export class App {
 
     const redis = await this.container.use('redis')
     const maxAgeMs = 60 * 1000
+
     koa.use(
       session(
         {
           key: 'sessionId',
           maxAge: maxAgeMs,
           signed: true,
-          store: {
-            async get(key) {
-              const s = await redis.hgetall(key)
-              const session = {
-                nonce: s.nonce,
-                _expire: Number(s._expire),
-                _maxAge: Number(s._maxAge)
-              }
-              return session
-            },
-            async set(key, session) {
-              // Add a delay to cookie age to ensure redis record expires after cookie
-              const expireInMs = maxAgeMs + 10 * 1000
-              const op = redis.multi()
-              op.hset(key, session)
-              op.expire(key, expireInMs)
-              await op.exec()
-            },
-            async destroy(key) {
-              await redis.hdel(key)
-            }
-          }
+          store: redisStore({
+            client: redis
+          })
         },
         koa
       )
     )
+
+    // koa.use(
+    //   session(
+    //     {
+    //       key: 'sessionId',
+    //       maxAge: maxAgeMs,
+    //       signed: true,
+    //       store: {
+    //         async get(key) {
+    //           const s = await redis.hgetall(key)
+    //           const session = {
+    //             nonce: s.nonce,
+    //             _expire: Number(s._expire),
+    //             _maxAge: Number(s._maxAge)
+    //           }
+    //           return session
+    //         },
+    //         async set(key, session) {
+    //           // Add a delay to cookie age to ensure redis record expires after cookie
+    //           const expireInMs = maxAgeMs + 10 * 1000
+    //           const op = redis.multi()
+    //           op.hset(key, session)
+    //           op.expire(key, expireInMs)
+    //           await op.exec()
+    //         },
+    //         async destroy(key) {
+    //           await redis.hdel(key)
+    //         }
+    //       }
+    //     },
+    //     koa
+    //   )
+    // )
 
     koa.use(router.middleware())
     koa.use(router.routes())
