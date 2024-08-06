@@ -361,10 +361,10 @@ export class App {
             },
             async set(key, session) {
               // Add a delay to cookie age to ensure redis record expires after cookie
-              const expireInMs = maxAgeMs + 10 * 1000
+              const expireInSec = maxAgeMs / 1000 + 10
               const op = redis.multi()
               op.set(key, JSON.stringify(session))
-              op.expire(key, expireInMs)
+              op.expire(key, expireInSec)
               await op.exec()
             },
             async destroy(key) {
