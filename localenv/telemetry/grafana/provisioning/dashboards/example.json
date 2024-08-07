@@ -361,9 +361,7 @@
         "footer": {
           "countRows": false,
           "fields": "",
-          "reducer": [
-            "sum"
-          ],
+          "reducer": ["sum"],
           "show": false
         },
         "showHeader": true,
@@ -392,9 +390,7 @@
               "operator": "=",
               "scope": "resource",
               "tag": "service.name",
-              "value": [
-                "RAFIKI_NETWORK"
-              ],
+              "value": ["RAFIKI_NETWORK"],
               "valueType": "string"
             },
             {
@@ -465,9 +461,7 @@
         "orientation": "auto",
         "percentChangeColorMode": "standard",
         "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
+          "calcs": ["lastNotNull"],
           "fields": "",
           "values": false
         },
@@ -562,9 +556,7 @@
         "orientation": "auto",
         "percentChangeColorMode": "standard",
         "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
+          "calcs": ["lastNotNull"],
           "fields": "",
           "values": false
         },
