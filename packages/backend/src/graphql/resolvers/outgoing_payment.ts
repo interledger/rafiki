@@ -172,6 +172,7 @@ export function paymentToGraphql(
     receiveAmount: payment.receiveAmount,
     metadata: payment.metadata,
     createdAt: new Date(+payment.createdAt).toISOString(),
-    quote: quoteToGraphql(payment.quote)
+    quote: quoteToGraphql(payment.quote),
+    grantId: payment.grantId
   }
 }
