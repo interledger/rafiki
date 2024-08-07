@@ -36,6 +36,6 @@ export function createClientController({
       expiresAt
     )
 
-    response.rawReply = await send(axios, outgoing, outgoingPrepare)
+    response.rawReply = await send(axios, outgoing, outgoingPrepare) // This is the sender's response from the receiver, but we don't collect here in case an error is thrown which will be caught by error handling middleware
   }
 }

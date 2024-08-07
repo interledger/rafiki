@@ -21,6 +21,7 @@ import {
   createIlpPacketMiddleware
 } from './middleware/ilp-packet'
 import { TelemetryService } from '../../../../telemetry/service'
+import { ValueType } from '@opentelemetry/api'
 
 // Model classes that represent an Interledger sender, receiver, or
 // connector SHOULD implement this ConnectorAccount interface.
@@ -145,9 +146,14 @@ export class Rafiki<T = any> {
     }
 
     this.publicServer.use(createTokenAuthMiddleware())
-    this.publicServer.use(createIlpPacketMiddleware(routes))
+    this.publicServer.use(createIlpPacketMiddleware(routes)) // seems to only be called when on receiver side
   }
 
+  // Why this feels like a good fit
+  // Called on sender side
+  // It calls the middleware routes so we can check a prepare before the middleware begins and a response after the fact
+  // Can skip unfulfillable packet counts
+  // Unless we want to count prepares where they are sent, but I can't find that and wonder if it's done in the '@interledger/pay' library
   async handleIlpData(
     sourceAccount: IncomingAccount,
     unfulfillable: boolean,
@@ -155,6 +161,13 @@ export class Rafiki<T = any> {
   ): Promise<Buffer> {
     const prepare = new ZeroCopyIlpPrepare(rawPrepare)
     const response = new IlpResponse()
+    const telemetry = this.publicServer.context.services.telemetry
+
+    if (telemetry && !unfulfillable && Number(prepare.amount)) {
+      telemetry.incrementCounter('packet_count_prepare', 1, {
+        description: 'Count of prepare packets that are sent'
+      })
+    }
 
     await this.routes(
       {
@@ -182,7 +195,33 @@ export class Rafiki<T = any> {
         // unreachable, this is the end of the middleware chain
       }
     )
-    if (!response.rawReply) throw new Error('error generating reply')
+    if (!response.rawReply) throw new Error('error generating reply') // packet loss? Sent a request but got no reply? Maybe we should log that?
+
+    if (telemetry && !unfulfillable && Number(prepare.amount)) {
+      if (response.fulfill) {
+        const { code, scale } = sourceAccount.asset
+        const value = BigInt(prepare.amount)
+        await telemetry.incrementCounterWithTransactionAmount(
+          'packet_amount_fulfill',
+          {
+            value,
+            assetCode: code,
+            assetScale: scale
+          },
+          {
+            description: 'Amount sent through the network',
+            valueType: ValueType.DOUBLE
+          }
+        )
+        telemetry.incrementCounter('packet_count_fulfill', 1, {
+          description: 'Count of fulfill packets'
+        })
+      } else if (response.reject) {
+        telemetry.incrementCounter('packet_count_reject', 1, {
+          description: 'Count of reject packets'
+        })
+      }
+    }
     return response.rawReply
   }
 

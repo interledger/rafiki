@@ -23,9 +23,9 @@ export function createStreamController(): ILPMiddleware {
       return
     }
 
-    const moneyOrReply = streamServer.createReply(request.prepare)
+    const moneyOrReply = streamServer.createReply(request.prepare) // Creates a reply
     if (isIlpReply(moneyOrReply)) {
-      response.reply = moneyOrReply
+      response.reply = moneyOrReply // The receiver sets their reply here
       return
     }
 
@@ -44,7 +44,7 @@ export function createStreamController(): ILPMiddleware {
     if (query) {
       const [[err, totalReceived], [err2]] = query
       if (typeof totalReceived === 'string' && !err && !err2) {
-        moneyOrReply.setTotalReceived(totalReceived)
+        moneyOrReply.setTotalReceived(totalReceived) // the amount received is incremented on the reciever
         ctx.revertTotalReceived = () =>
           redis.decrby(
             connectionKey,
@@ -61,7 +61,7 @@ export function createStreamController(): ILPMiddleware {
           'failed to increment stream totalReceived'
         )
       }
-      response.reply = moneyOrReply.accept()
+      response.reply = moneyOrReply.accept() // The receiver sets their reply here when they have incremeneted the total received, i.e. a fulfill response
     }
   }
 }

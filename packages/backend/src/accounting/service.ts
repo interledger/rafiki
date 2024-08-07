@@ -22,13 +22,17 @@ export enum LedgerTransferState {
   VOIDED = 'VOIDED'
 }
 
+export interface LiquidityAccountAsset {
+  id: string
+  code?: string
+  scale?: number
+  ledger: number
+  onDebit?: (options: OnDebitOptions) => Promise<LiquidityAccount>
+}
+
 export interface LiquidityAccount {
   id: string
-  asset: {
-    id: string
-    ledger: number
-    onDebit?: (options: OnDebitOptions) => Promise<LiquidityAccount>
-  }
+  asset: LiquidityAccountAsset
   onCredit?: (options: OnCreditOptions) => Promise<LiquidityAccount>
   onDebit?: (options: OnDebitOptions) => Promise<LiquidityAccount>
 }
