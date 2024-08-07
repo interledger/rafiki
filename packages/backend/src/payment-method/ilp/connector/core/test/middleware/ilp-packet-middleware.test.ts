@@ -11,20 +11,28 @@ import {
   createIlpPacketMiddleware,
   IlpResponse,
   ZeroCopyIlpPrepare
-} from '../../middleware/ilp-packet'
+} from '../../'
 import {
   IlpPrepareFactory,
   IlpFulfillFactory,
-  IlpRejectFactory
+  IlpRejectFactory,
+  RafikiServicesFactory
 } from '../../factories'
 import { HttpContext } from '../../rafiki'
 
 describe('ILP Packet Middleware', () => {
   test('sets up request and response', async () => {
+    const services = RafikiServicesFactory.build({})
+
     const options: MockIncomingMessageOptions = {
       headers: { 'content-type': 'application/octet-stream' }
     }
-    const ctx = createContext<unknown, HttpContext>({ req: options })
+
+    const ctx = createContext<unknown, HttpContext>({
+      req: options,
+      services: { ...services, telemetry: undefined }
+    })
+
     const prepare = IlpPrepareFactory.build()
     const getRawBody = async (_req: Readable) => serializeIlpPrepare(prepare)
     const rawReply = serializeIlpFulfill(IlpFulfillFactory.build())

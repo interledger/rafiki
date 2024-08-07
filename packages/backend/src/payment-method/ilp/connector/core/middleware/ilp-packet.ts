@@ -233,6 +233,6 @@ export function createIlpPacketMiddleware(
 
     ctx.assert(!ctx.body, 500, 'response body already set')
     ctx.assert(response.rawReply, 500, 'ilp reply not set')
-    ctx.body = response.rawReply
+    ctx.body = response.rawReply // Receiver sets their reply here
   }
 }

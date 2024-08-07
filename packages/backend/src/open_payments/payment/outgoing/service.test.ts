@@ -50,6 +50,7 @@ import { mockRatesApi } from '../../../tests/rates'
 import { UnionOmit } from '../../../shared/utils'
 import { QuoteError } from '../../quote/errors'
 import { withConfigOverride } from '../../../tests/helpers'
+import { TelemetryService } from '../../../telemetry/service'
 
 describe('OutgoingPaymentService', (): void => {
   let deps: IocContract<AppServices>
@@ -58,6 +59,7 @@ describe('OutgoingPaymentService', (): void => {
   let accountingService: AccountingService
   let paymentMethodHandlerService: PaymentMethodHandlerService
   let quoteService: QuoteService
+  let telemetryService: TelemetryService
   let knex: Knex
   let walletAddressId: string
   let incomingPayment: IncomingPayment
@@ -243,12 +245,17 @@ describe('OutgoingPaymentService', (): void => {
       XRP: exchangeRate
     }))
 
-    deps = await initIocContainer({ ...Config, exchangeRatesUrl })
+    deps = await initIocContainer({
+      ...Config,
+      exchangeRatesUrl,
+      enableTelemetry: true
+    })
     appContainer = await createTestApp(deps)
     outgoingPaymentService = await deps.use('outgoingPaymentService')
     accountingService = await deps.use('accountingService')
     paymentMethodHandlerService = await deps.use('paymentMethodHandlerService')
     quoteService = await deps.use('quoteService')
+    telemetryService = (await deps.use('telemetry'))!
     config = await deps.use('config')
     knex = appContainer.knex
   })
@@ -1153,6 +1160,116 @@ describe('OutgoingPaymentService', (): void => {
 
       return payment
     }
+
+    test('COMPLETED with Telemetry Transaction Counter (receiveAmount < incomingPayment.incomingAmount)', async (): Promise<void> => {
+      const incrementTrxCounterSpy = jest
+        .spyOn(telemetryService!, 'incrementCounter')
+        .mockImplementation(() => Promise.resolve())
+
+      incomingPayment = await createIncomingPayment(deps, {
+        walletAddressId: receiverWalletAddress.id,
+        incomingAmount: {
+          value: receiveAmount.value * 2n,
+          assetCode: receiverWalletAddress.asset.code,
+          assetScale: receiverWalletAddress.asset.scale
+        }
+      })
+      assert.ok(incomingPayment.walletAddress)
+
+      const createdPayment = await setup({
+        receiver: incomingPayment.getUrl(incomingPayment.walletAddress),
+        receiveAmount,
+        method: 'ilp'
+      })
+
+      mockPaymentHandlerPay(createdPayment, incomingPayment)
+      const payment = await processNext(
+        createdPayment.id,
+        OutgoingPaymentState.Completed
+      )
+      await expectOutcome(payment, {
+        accountBalance: 0n,
+        amountSent: payment.debitAmount.value,
+        amountDelivered: payment.receiveAmount.value,
+        incomingPaymentReceived: payment.receiveAmount.value,
+        withdrawAmount: 0n
+      })
+
+      expect(incrementTrxCounterSpy).toHaveBeenCalledTimes(1)
+    })
+
+    test('COMPLETED with Telemetry Transaction Counter (receiveAmount = incomingPayment.incomingAmount)', async (): Promise<void> => {
+      const incrementTrxCounterSpy = jest
+        .spyOn(telemetryService!, 'incrementCounter')
+        .mockImplementation(() => Promise.resolve())
+
+      incomingPayment = await createIncomingPayment(deps, {
+        walletAddressId: receiverWalletAddress.id,
+        incomingAmount: {
+          value: receiveAmount.value,
+          assetCode: receiverWalletAddress.asset.code,
+          assetScale: receiverWalletAddress.asset.scale
+        }
+      })
+      assert.ok(incomingPayment.walletAddress)
+
+      const createdPayment = await setup({
+        receiver: incomingPayment.getUrl(incomingPayment.walletAddress),
+        receiveAmount,
+        method: 'ilp'
+      })
+
+      mockPaymentHandlerPay(createdPayment, incomingPayment)
+      const payment = await processNext(
+        createdPayment.id,
+        OutgoingPaymentState.Completed
+      )
+      await expectOutcome(payment, {
+        accountBalance: 0n,
+        amountSent: payment.debitAmount.value,
+        amountDelivered: payment.receiveAmount.value,
+        incomingPaymentReceived: payment.receiveAmount.value,
+        withdrawAmount: 0n
+      })
+
+      expect(incrementTrxCounterSpy).toHaveBeenCalledTimes(1)
+    })
+
+    test('FAILED with Telemetry Transaction Counter (non-retryable error)', async (): Promise<void> => {
+      const incrementTrxCounterSpy = jest
+        .spyOn(telemetryService!, 'incrementCounter')
+        .mockImplementation(() => Promise.resolve())
+      const createdPayment = await setup({
+        receiver,
+        debitAmount,
+        method: 'ilp'
+      })
+
+      mockPaymentHandlerPay(
+        createdPayment,
+        incomingPayment,
+        new PaymentMethodHandlerError('Failed payment', {
+          description: '',
+          retryable: false
+        })
+      )
+
+      const payment = await processNext(
+        createdPayment.id,
+        OutgoingPaymentState.Failed,
+        'Failed payment'
+      )
+
+      await expectOutcome(payment, {
+        accountBalance: payment.debitAmount.value,
+        amountSent: 0n,
+        amountDelivered: 0n,
+        incomingPaymentReceived: incomingPayment.receivedAmount.value,
+        withdrawAmount: 0n
+      })
+
+      expect(incrementTrxCounterSpy).not.toHaveBeenCalled()
+    })
 
     test.each`
       debitAmount    | receiveAmount

@@ -79,6 +79,7 @@ async function getQuote(
     const rateProbeStartTime = Date.now()
     try {
       ilpQuote = await Pay.startQuote({
+        // gets ilp Quote here
         ...quoteOptions,
         slippage: deps.config.slippage,
         prices: convertRatesToIlpPrices(rates)
@@ -241,7 +242,7 @@ async function pay(
   const destination = receiver.toResolvedPayment()
 
   try {
-    const receipt = await Pay.pay({ plugin, destination, quote })
+    const receipt = await Pay.pay({ plugin, destination, quote }) // this is the line that makes an ILP payment
 
     if (receipt.error) {
       throw receipt.error
