@@ -90,7 +90,7 @@ export const createWalletAddress: MutationResolvers<ApolloContext>['createWallet
       assetId: args.input.assetId,
       additionalProperties: addProps,
       publicName: args.input.publicName,
-      url: args.input.url
+      url: args.input.url.toLowerCase()
     }
 
     const walletAddressOrError = await walletAddressService.create(options)
