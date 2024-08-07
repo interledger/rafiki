@@ -849,6 +849,8 @@ type OutgoingPayment implements BasePayment & Model {
   sentAmount: Amount!
   "Date-time of creation"
   createdAt: String!
+  "Id of the Grant under which this outgoing payment was created"
+  grantId: String
 }
 
 enum OutgoingPaymentState {

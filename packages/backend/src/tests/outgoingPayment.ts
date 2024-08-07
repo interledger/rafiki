@@ -14,7 +14,7 @@ import { IncomingPayment } from '../open_payments/payment/incoming/model'
 import { createIncomingPayment } from './incomingPayment'
 import assert from 'assert'
 
-type CreateTestQuoteAndOutgoingPaymentOptions = Omit<
+export type CreateTestQuoteAndOutgoingPaymentOptions = Omit<
   CreateOutgoingPaymentOptions & CreateTestQuoteOptions,
   'quoteId'
 >
