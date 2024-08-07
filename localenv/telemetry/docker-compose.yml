@@ -25,7 +25,10 @@ services:
 
   prometheus:
     image: prom/prometheus:latest
-    command: "--config.file=/etc/prometheus/prometheus.yaml --log.level=debug"
+    command: 
+      - --config.file=/etc/prometheus/prometheus.yaml
+      - --log.level=debug
+      - --web.enable-remote-write-receiver
     networks:
       - rafiki
     volumes:

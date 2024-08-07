@@ -15,3 +15,13 @@ storage:
       path: /var/tempo/blocks
     wal:
       path: /var/tempo/wal
+
+metrics_generator:
+  storage:
+    path: /tmp/tempo/wal
+    remote_write:
+      - url: http://prometheus:9090/api/v1/write
+        send_exemplars: true
+
+overrides:
+  metrics_generator_processors: [span-metrics]
