@@ -146,6 +146,7 @@ async function getGrantDetails(
   )
 
   ctx.body = {
+    grantId: interaction.grant.id,
     access: access.map(toOpenPaymentsAccess),
     state: interaction.state
   }
