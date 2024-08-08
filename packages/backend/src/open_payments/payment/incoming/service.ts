@@ -17,6 +17,7 @@ import {
 import { Amount } from '../../amount'
 import { IncomingPaymentError } from './errors'
 import { IAppConfig } from '../../../config/app'
+import { poll } from '../../../shared/utils'
 
 export const POSITIVE_SLIPPAGE = BigInt(1)
 // First retry waits 10 seconds
@@ -120,7 +121,8 @@ async function createIncomingPayment(
       return IncomingPaymentError.InvalidAmount
     }
   }
-  const incomingPayment = await IncomingPayment.query(trx || deps.knex)
+  
+  let incomingPayment = await IncomingPayment.query(trx || deps.knex)
     .insertAndFetch({
       walletAddressId: walletAddressId,
       client,
@@ -139,7 +141,34 @@ async function createIncomingPayment(
     data: incomingPayment.toData(0n)
   })
 
-  return await addReceivedAmount(deps, incomingPayment, BigInt(0))
+  incomingPayment = await addReceivedAmount(deps, incomingPayment, BigInt(0))
+  if (!deps.config.pollIncomingPaymentCreatedWebhook) {
+    return incomingPayment
+  }
+
+  try {
+    const response = await poll({
+      request: async () => getApprovedOrCanceledIncomingPayment(deps, { id: incomingPayment.id }),
+      pollingFrequencyMs: deps.config.incomingPaymentCreatedPollFrequency,
+      timeoutMs: deps.config.incomingPaymentCreatedPollTimeout
+    })
+
+    if (response) return response
+    return IncomingPaymentError.ActionNotPerformed
+  }catch(err) {
+    return IncomingPaymentError.ActionNotPerformed
+  }
+
+}
+
+async function getApprovedOrCanceledIncomingPayment(deps: ServiceDependencies, options: GetOptions) {
+  const incomingPayment = await getIncomingPayment(deps, { id: options.id })
+
+  if (incomingPayment?.approvedAt || incomingPayment?.cancelledAt) {
+    return incomingPayment
+  }
+
+  return undefined
 }
 
 // Fetch (and lock) an incoming payment for work.

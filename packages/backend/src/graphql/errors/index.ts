@@ -5,5 +5,6 @@ export enum GraphQLErrorCode {
   Inactive = 'INACTIVE',
   InternalServerError = 'INTERNAL_SERVER_ERROR',
   NotFound = 'NOT_FOUND',
-  Conflict = 'CONFLICT'
+  Conflict = 'CONFLICT',
+  Timeout = 'TIMEOUT'
 }
