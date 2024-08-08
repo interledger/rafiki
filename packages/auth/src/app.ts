@@ -344,7 +344,7 @@ export class App {
     koa.keys = [this.config.cookieKey]
 
     const redis = await this.container.use('redis')
-    const maxAgeMs = 60 * 1000
+    const maxAgeMs = this.config.interactionExpirySeconds * 1000
     koa.use(
       session(
         {
