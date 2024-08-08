@@ -56,6 +56,8 @@ describe('Grant Service', (): void => {
 
   describe('grant flow', (): void => {
     let grant: Grant
+    let access: Access
+    let accessToken: AccessToken
 
     const CLIENT = faker.internet.url({ appendSlash: false })
 
@@ -79,13 +81,13 @@ describe('Grant Service', (): void => {
         grantId: grant.id
       })
 
-      await Access.query().insert({
+      access = await Access.query().insert({
         ...BASE_GRANT_ACCESS,
         type: AccessType.IncomingPayment,
         grantId: grant.id
       })
 
-      await AccessToken.query().insert({
+      accessToken = await AccessToken.query().insert({
         value: generateToken(),
         managementId: v4(),
         expiresIn: 10_000_000,
@@ -351,10 +353,18 @@ describe('Grant Service', (): void => {
         expect(revokedGrant?.finalizationReason).toEqual(
           GrantFinalization.Revoked
         )
-        expect(Access.query().where({ grantId: grant.id })).resolves.toEqual([])
+        expect(Access.query().where({ grantId: grant.id })).resolves.toEqual([
+          { ...access, limits: null }
+        ])
         expect(
           AccessToken.query().where({ grantId: grant.id })
-        ).resolves.toEqual([])
+        ).resolves.toEqual([
+          {
+            ...accessToken,
+            revokedAt: expect.any(Date),
+            updatedAt: expect.any(Date)
+          }
+        ])
       })
 
       test('Can "revoke" unknown grant', async (): Promise<void> => {
