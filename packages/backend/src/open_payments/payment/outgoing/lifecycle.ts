@@ -8,6 +8,7 @@ import {
 import { ServiceDependencies } from './service'
 import { Receiver } from '../../receiver/model'
 import { TransactionOrKnex } from 'objection'
+import { ValueType } from '@opentelemetry/api'
 
 // "payment" is locked by the "deps.knex" transaction.
 export async function handleSending(
@@ -93,6 +94,17 @@ export async function handleSending(
     deps.telemetry.recordHistogram('ilp_pay_time_ms', payDuration, {
       description: 'Time to complete an ILP payment'
     })
+
+    await deps.telemetry.incrementCounterWithTransactionFeeAmount(
+      'payment_fees',
+      payment.sentAmount,
+      payment.receiveAmount,
+      {
+        description: 'Amount sent through the network as fees',
+        valueType: ValueType.DOUBLE
+      },
+      false // do not preserve privacy
+    )
   }
 
   await handleCompleted(deps, payment)
@@ -147,6 +159,7 @@ async function handleCompleted(
   await payment.$query(deps.knex).patch({
     state: OutgoingPaymentState.Completed
   })
+
   await sendWebhookEvent(
     deps,
     payment,

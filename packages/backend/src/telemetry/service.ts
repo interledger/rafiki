@@ -16,7 +16,15 @@ export interface TelemetryService {
   incrementCounterWithTransactionAmount(
     name: string,
     amount: { value: bigint; assetCode: string; assetScale: number },
-    attributes?: Record<string, unknown>
+    attributes?: Record<string, unknown>,
+    preservePrivacy?: boolean
+  ): Promise<void>
+  incrementCounterWithTransactionFeeAmount(
+    name: string,
+    amountSource: { value: bigint; assetCode: string; assetScale: number },
+    amountDestination: { value: bigint; assetCode: string; assetScale: number },
+    attributes?: Record<string, unknown>,
+    preservePrivacy?: boolean
   ): Promise<void>
   recordHistogram(
     name: string,
@@ -94,10 +102,63 @@ class TelemetryServiceImpl implements TelemetryService {
     })
   }
 
+  public async incrementCounterWithTransactionFeeAmount(
+    name: string,
+    amountSource: { value: bigint; assetCode: string; assetScale: number },
+    amountDestination: { value: bigint; assetCode: string; assetScale: number },
+    attributes: Record<string, unknown> = {},
+    preservePrivacy = true
+  ): Promise<void> {
+    if (!amountSource.value || !amountDestination.value) return
+
+    const convertedSource = await this.convertAmount({
+      sourceAmount: amountSource.value,
+      sourceAsset: {
+        code: amountSource.assetCode,
+        scale: amountSource.assetScale
+      }
+    })
+    if (isConvertError(convertedSource)) {
+      this.deps.logger.error(
+        `Unable to convert fee source amount: ${convertedSource}`
+      )
+      return
+    }
+    const convertedDestination = await this.convertAmount({
+      sourceAmount: amountDestination.value,
+      sourceAsset: {
+        code: amountDestination.assetCode,
+        scale: amountDestination.assetScale
+      }
+    })
+    if (isConvertError(convertedDestination)) {
+      this.deps.logger.error(
+        `Unable to convert fee destination amount: ${convertedSource}`
+      )
+      return
+    }
+
+    const fees = BigInt(convertedSource - convertedDestination)
+    if (fees === 0n) return
+
+    if (fees < 0n) {
+      this.deps.logger.error(
+        `Fees should not be negative!: ${fees}, source asset ${amountSource.assetCode} vs destination asset ${amountDestination.assetCode}.`
+      )
+      return
+    }
+
+    const obfuscatedAmount = preservePrivacy
+      ? privacy.applyPrivacy(Number(fees))
+      : Number(fees)
+    this.incrementCounter(name, obfuscatedAmount, attributes)
+  }
+
   public async incrementCounterWithTransactionAmount(
     name: string,
     amount: { value: bigint; assetCode: string; assetScale: number },
-    attributes: Record<string, unknown> = {}
+    attributes: Record<string, unknown> = {},
+    preservePrivacy = true
   ): Promise<void> {
     const { value, assetCode, assetScale } = amount
     try {
@@ -110,7 +171,9 @@ class TelemetryServiceImpl implements TelemetryService {
         return
       }
 
-      const obfuscatedAmount = privacy.applyPrivacy(Number(converted))
+      const obfuscatedAmount = preservePrivacy
+        ? privacy.applyPrivacy(Number(converted))
+        : Number(converted)
       this.incrementCounter(name, obfuscatedAmount, attributes)
     } catch (e) {
       this.deps.logger.error(e, `Unable to collect telemetry`)
