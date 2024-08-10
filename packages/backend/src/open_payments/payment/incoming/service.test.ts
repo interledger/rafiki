@@ -25,6 +25,8 @@ import { IncomingPaymentError, isIncomingPaymentError } from './errors'
 import { Amount } from '../../amount'
 import { getTests } from '../../wallet_address/model.test'
 import { WalletAddress } from '../../wallet_address/model'
+import { withConfigOverride } from '../../../tests/helpers'
+import { sleep } from '../../../shared/utils'
 
 describe('Incoming Payment Service', (): void => {
   let deps: IocContract<AppServices>
@@ -60,6 +62,160 @@ describe('Incoming Payment Service', (): void => {
 
   afterAll(async (): Promise<void> => {
     await appContainer.shutdown()
+  })
+
+  describe('Actionable IncomingPayment', (): void => {
+    function actionableIncomingPaymentConfigOverride() {
+      return {
+        pollIncomingPaymentCreatedWebhook: true,
+        incomingPaymentCreatedPollFrequency: 1,
+        incomingPaymentCreatedPollTimeout: 20
+      }
+    }
+    async function patchIncomingPaymentHelper(options: {
+      approvedAt?: Date
+      cancelledAt?: Date
+    }) {
+      await sleep(10)
+      const incomingPaymentEvent = await IncomingPaymentEvent.query(
+        knex
+      ).findOne({
+        type: IncomingPaymentEventType.IncomingPaymentCreated
+      })
+      assert.ok(!!incomingPaymentEvent)
+      await IncomingPayment.query(knex)
+        .findById(incomingPaymentEvent.incomingPaymentId as string)
+        .patch(options)
+
+      return incomingPaymentService.get({
+        id: incomingPaymentEvent.incomingPaymentId as string
+      })
+    }
+
+    function createIncomingPaymentHelper(): Promise<
+      IncomingPayment | IncomingPaymentError
+    > {
+      const options = {
+        client: faker.internet.url({ appendSlash: false }),
+        incomingAmount: true,
+        expiresAt: new Date(Date.now() + 30_000)
+      }
+
+      return incomingPaymentService.create({
+        walletAddressId,
+        ...options,
+        incomingAmount: undefined
+      })
+    }
+
+    test(
+      'should return cancelled incoming payment',
+      withConfigOverride(
+        () => config,
+        actionableIncomingPaymentConfigOverride(),
+        async (): Promise<void> => {
+          const options = { cancelledAt: new Date(Date.now() - 1) }
+          const [incomingPayment, canceledIncomingPayment] = await Promise.all([
+            createIncomingPaymentHelper(),
+            patchIncomingPaymentHelper(options)
+          ])
+
+          assert.ok(!isIncomingPaymentError(incomingPayment))
+          expect(incomingPayment.id).toEqual(canceledIncomingPayment?.id)
+          expect(incomingPayment.cancelledAt).toEqual(options.cancelledAt)
+          expect(!incomingPayment.approvedAt).toBeTruthy()
+        }
+      )
+    )
+
+    test(
+      'should return approved incoming payment',
+      withConfigOverride(
+        () => config,
+        actionableIncomingPaymentConfigOverride(),
+        async (): Promise<void> => {
+          const options = { approvedAt: new Date(Date.now() - 1) }
+          const [incomingPayment, approvedIncomingPayment] = await Promise.all([
+            createIncomingPaymentHelper(),
+            patchIncomingPaymentHelper(options)
+          ])
+
+          assert.ok(!isIncomingPaymentError(incomingPayment))
+          expect(incomingPayment.id).toEqual(approvedIncomingPayment?.id)
+          expect(incomingPayment.approvedAt).toEqual(options.approvedAt)
+          expect(!incomingPayment.cancelledAt).toBeTruthy()
+        }
+      )
+    )
+    test(
+      'should return ActionNotPerformed Error if no action taken',
+      withConfigOverride(
+        () => config,
+        actionableIncomingPaymentConfigOverride(),
+        async (): Promise<void> => {
+          await expect(
+            IncomingPaymentEvent.query(knex).where({
+              type: IncomingPaymentEventType.IncomingPaymentCreated
+            })
+          ).resolves.toHaveLength(0)
+
+          const incomingPayment = await createIncomingPaymentHelper()
+
+          assert.ok(isIncomingPaymentError(incomingPayment))
+          expect(incomingPayment).toBe(IncomingPaymentError.ActionNotPerformed)
+        }
+      )
+    )
+
+    describe('approveIncomingPayment', (): void => {
+      it('should return UnknownPayment error if payment does not exist', async (): Promise<void> => {
+        expect(incomingPaymentService.approve(uuid())).resolves.toBe(
+          IncomingPaymentError.UnknownPayment
+        )
+      })
+
+      it('should approve incoming payment', async (): Promise<void> => {
+        const incomingPayment = await createIncomingPaymentHelper()
+        assert.ok(!isIncomingPaymentError(incomingPayment))
+
+        await IncomingPayment.query(knex)
+          .findOne({ id: incomingPayment.id })
+          .patch({ state: IncomingPaymentState.Pending })
+
+        const approvedIncomingPayment = await incomingPaymentService.approve(
+          incomingPayment.id
+        )
+        assert.ok(!isIncomingPaymentError(approvedIncomingPayment))
+        expect(approvedIncomingPayment.id).toBe(incomingPayment.id)
+        expect(approvedIncomingPayment.approvedAt).toBeDefined()
+        expect(!approvedIncomingPayment.cancelledAt).toBeTruthy()
+      })
+    })
+
+    describe('cancelIncomingPayment', (): void => {
+      it('should return UnknownPayment error if payment does not exist', async (): Promise<void> => {
+        expect(incomingPaymentService.cancel(uuid())).resolves.toBe(
+          IncomingPaymentError.UnknownPayment
+        )
+      })
+
+      it('should cancel incoming payment', async (): Promise<void> => {
+        const incomingPayment = await createIncomingPaymentHelper()
+        assert.ok(!isIncomingPaymentError(incomingPayment))
+
+        await IncomingPayment.query(knex)
+          .findOne({ id: incomingPayment.id })
+          .patch({ state: IncomingPaymentState.Pending })
+
+        const canceledIncomingPayment = await incomingPaymentService.cancel(
+          incomingPayment.id
+        )
+        assert.ok(!isIncomingPaymentError(canceledIncomingPayment))
+        expect(canceledIncomingPayment.id).toBe(incomingPayment.id)
+        expect(canceledIncomingPayment.cancelledAt).toBeDefined()
+        expect(!canceledIncomingPayment.approvedAt).toBeTruthy()
+      })
+    })
   })
 
   describe('Create IncomingPayment', (): void => {
