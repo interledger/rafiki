@@ -25,7 +25,7 @@ export const errorToHTTPCode: {
   [IncomingPaymentError.InvalidExpiry]: 400,
   [IncomingPaymentError.WrongState]: 409,
   [IncomingPaymentError.InactiveWalletAddress]: 400,
-  [IncomingPaymentError.ActionNotPerformed]: 400
+  [IncomingPaymentError.ActionNotPerformed]: 403
 }
 
 export const errorToCode: {
@@ -38,7 +38,7 @@ export const errorToCode: {
   [IncomingPaymentError.InvalidExpiry]: GraphQLErrorCode.BadUserInput,
   [IncomingPaymentError.WrongState]: GraphQLErrorCode.Conflict,
   [IncomingPaymentError.InactiveWalletAddress]: GraphQLErrorCode.Inactive,
-  [IncomingPaymentError.ActionNotPerformed]: GraphQLErrorCode.Timeout,
+  [IncomingPaymentError.ActionNotPerformed]: GraphQLErrorCode.Timeout
 }
 
 export const errorToMessage: {

@@ -121,7 +121,7 @@ async function createIncomingPayment(
       return IncomingPaymentError.InvalidAmount
     }
   }
-  
+
   let incomingPayment = await IncomingPayment.query(trx || deps.knex)
     .insertAndFetch({
       walletAddressId: walletAddressId,
@@ -148,27 +148,28 @@ async function createIncomingPayment(
 
   try {
     const response = await poll({
-      request: async () => getApprovedOrCanceledIncomingPayment(deps, { id: incomingPayment.id }),
+      request: async () =>
+        getApprovedOrCanceledIncomingPayment(deps, { id: incomingPayment.id }),
       pollingFrequencyMs: deps.config.incomingPaymentCreatedPollFrequency,
       timeoutMs: deps.config.incomingPaymentCreatedPollTimeout
     })
 
     if (response) return response
     return IncomingPaymentError.ActionNotPerformed
-  }catch(err) {
+  } catch (err) {
     return IncomingPaymentError.ActionNotPerformed
   }
-
 }
 
-async function getApprovedOrCanceledIncomingPayment(deps: ServiceDependencies, options: GetOptions) {
-  const incomingPayment = await getIncomingPayment(deps, { id: options.id })
-
-  if (incomingPayment?.approvedAt || incomingPayment?.cancelledAt) {
-    return incomingPayment
-  }
-
-  return undefined
+async function getApprovedOrCanceledIncomingPayment(
+  deps: ServiceDependencies,
+  options: GetOptions
+) {
+  return IncomingPayment.query(deps.knex)
+    .get(options)
+    .withGraphFetched('[asset, walletAddress]')
+    .whereNotNull('approvedAt')
+    .orWhereNotNull('cancelledAt')
 }
 
 // Fetch (and lock) an incoming payment for work.
@@ -348,7 +349,7 @@ async function cancelIncomingPayment(
       return IncomingPaymentError.WrongState
 
     await payment.$query(trx).patch({
-      approvedAt: new Date(Date.now())
+      cancelledAt: new Date(Date.now())
     })
 
     return await addReceivedAmount(deps, payment)
