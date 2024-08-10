@@ -98,6 +98,7 @@ import {
 } from './open_payments/wallet_address/middleware'
 
 import { LoggingPlugin } from './graphql/plugin'
+import { GrantService } from './open_payments/grant/service'
 export interface AppContextData {
   logger: Logger
   container: AppContainer
@@ -232,6 +233,7 @@ export interface AppServices {
   incomingPaymentService: Promise<IncomingPaymentService>
   remoteIncomingPaymentService: Promise<RemoteIncomingPaymentService>
   receiverService: Promise<ReceiverService>
+  grantService: Promise<GrantService>
   streamServer: Promise<StreamServer>
   webhookService: Promise<WebhookService>
   quoteService: Promise<QuoteService>
