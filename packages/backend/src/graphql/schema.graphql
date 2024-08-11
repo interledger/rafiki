@@ -961,6 +961,8 @@ type Quote {
   createdAt: String!
   "Date-time of expiration"
   expiresAt: String!
+  "Estimated exchange rate"
+  estimatedExchangeRate: Float
 }
 
 input AmountInput {

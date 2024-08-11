@@ -105,6 +105,7 @@ export function quoteToGraphql(quote: Quote): SchemaQuote {
     debitAmount: quote.debitAmount,
     receiveAmount: quote.receiveAmount,
     createdAt: new Date(+quote.createdAt).toISOString(),
-    expiresAt: new Date(+quote.expiresAt).toISOString()
+    expiresAt: new Date(+quote.expiresAt).toISOString(),
+    estimatedExchangeRate: quote.estimatedExchangeRate?.valueOf()
   }
 }

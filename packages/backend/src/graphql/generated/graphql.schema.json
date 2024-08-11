@@ -2930,6 +2930,16 @@
         "possibleTypes": null
       },
       {
+        "kind": "SCALAR",
+        "name": "Float",
+        "description": "The `Float` scalar type represents signed double-precision fractional values as specified by [IEEE 754](https://en.wikipedia.org/wiki/IEEE_floating_point).",
+        "fields": null,
+        "inputFields": null,
+        "interfaces": null,
+        "enumValues": null,
+        "possibleTypes": null
+      },
+      {
         "kind": "OBJECT",
         "name": "Http",
         "description": null,
@@ -6581,6 +6591,18 @@
                 "name": "Amount",
                 "ofType": null
               }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "estimatedExchangeRate",
+            "description": "Estimated exchange rate",
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "Float",
+              "ofType": null
             },
             "isDeprecated": false,
             "deprecationReason": null

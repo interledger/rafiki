@@ -1113,6 +1113,8 @@ export type Quote = {
   createdAt: Scalars['String']['output'];
   /** Amount to send (fixed send) */
   debitAmount: Amount;
+  /** Estimated exchange rate */
+  estimatedExchangeRate?: Maybe<Scalars['Float']['output']>;
   /** Date-time of expiration */
   expiresAt: Scalars['String']['output'];
   /** Quote id */
@@ -1563,6 +1565,7 @@ export type ResolversTypes = {
   FeeType: ResolverTypeWrapper<Partial<FeeType>>;
   FeesConnection: ResolverTypeWrapper<Partial<FeesConnection>>;
   FilterString: ResolverTypeWrapper<Partial<FilterString>>;
+  Float: ResolverTypeWrapper<Partial<Scalars['Float']['output']>>;
   Http: ResolverTypeWrapper<Partial<Http>>;
   HttpIncomingInput: ResolverTypeWrapper<Partial<HttpIncomingInput>>;
   HttpInput: ResolverTypeWrapper<Partial<HttpInput>>;
@@ -1685,6 +1688,7 @@ export type ResolversParentTypes = {
   FeeEdge: Partial<FeeEdge>;
   FeesConnection: Partial<FeesConnection>;
   FilterString: Partial<FilterString>;
+  Float: Partial<Scalars['Float']['output']>;
   Http: Partial<Http>;
   HttpIncomingInput: Partial<HttpIncomingInput>;
   HttpInput: Partial<HttpInput>;
@@ -2091,6 +2095,7 @@ export type QueryResolvers<ContextType = any, ParentType extends ResolversParent
 export type QuoteResolvers<ContextType = any, ParentType extends ResolversParentTypes['Quote'] = ResolversParentTypes['Quote']> = {
   createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   debitAmount?: Resolver<ResolversTypes['Amount'], ParentType, ContextType>;
+  estimatedExchangeRate?: Resolver<Maybe<ResolversTypes['Float']>, ParentType, ContextType>;
   expiresAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   receiveAmount?: Resolver<ResolversTypes['Amount'], ParentType, ContextType>;
