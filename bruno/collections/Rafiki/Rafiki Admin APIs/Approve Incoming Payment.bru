@@ -1,0 +1,34 @@
+meta {
+  name: Approve Incoming Payment
+  type: graphql
+  seq: 47
+}
+
+post {
+  url: {{RafikiGraphqlHost}}/graphql
+  body: graphql
+  auth: none
+}
+
+body:graphql {
+  mutation ApproveIncomingPayment($input: ApproveIncomingPaymentInput!) {
+  	approveIncomingPayment(input:$input) {
+      id
+      approvedAt
+    }
+  }
+}
+
+body:graphql:vars {
+  {
+    "input": {
+      "id": "{{incomingPaymentId}}"
+    }
+  }
+}
+
+script:pre-request {
+  const scripts = require('./scripts');
+  
+  scripts.addApiSignatureHeader();
+}
