@@ -1115,16 +1115,8 @@ export type Quote = {
   debitAmount: Amount;
   /** Date-time of expiration */
   expiresAt: Scalars['String']['output'];
-  /** Upper bound of probed exchange rate */
-  highEstimatedExchangeRate: Scalars['Float']['output'];
   /** Quote id */
   id: Scalars['ID']['output'];
-  /** Lower bound of probed exchange rate */
-  lowEstimatedExchangeRate: Scalars['Float']['output'];
-  /** Maximum value per packet allowed on the possible routes */
-  maxPacketAmount: Scalars['UInt64']['output'];
-  /** Aggregate exchange rate the payment is guaranteed to meet */
-  minExchangeRate: Scalars['Float']['output'];
   /** Amount to receive (fixed receive) */
   receiveAmount: Amount;
   /** Wallet address URL of the receiver */
@@ -1571,7 +1563,6 @@ export type ResolversTypes = {
   FeeType: ResolverTypeWrapper<Partial<FeeType>>;
   FeesConnection: ResolverTypeWrapper<Partial<FeesConnection>>;
   FilterString: ResolverTypeWrapper<Partial<FilterString>>;
-  Float: ResolverTypeWrapper<Partial<Scalars['Float']['output']>>;
   Http: ResolverTypeWrapper<Partial<Http>>;
   HttpIncomingInput: ResolverTypeWrapper<Partial<HttpIncomingInput>>;
   HttpInput: ResolverTypeWrapper<Partial<HttpInput>>;
@@ -1694,7 +1685,6 @@ export type ResolversParentTypes = {
   FeeEdge: Partial<FeeEdge>;
   FeesConnection: Partial<FeesConnection>;
   FilterString: Partial<FilterString>;
-  Float: Partial<Scalars['Float']['output']>;
   Http: Partial<Http>;
   HttpIncomingInput: Partial<HttpIncomingInput>;
   HttpInput: Partial<HttpInput>;
@@ -2102,11 +2092,7 @@ export type QuoteResolvers<ContextType = any, ParentType extends ResolversParent
   createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   debitAmount?: Resolver<ResolversTypes['Amount'], ParentType, ContextType>;
   expiresAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  highEstimatedExchangeRate?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  lowEstimatedExchangeRate?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
-  maxPacketAmount?: Resolver<ResolversTypes['UInt64'], ParentType, ContextType>;
-  minExchangeRate?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
   receiveAmount?: Resolver<ResolversTypes['Amount'], ParentType, ContextType>;
   receiver?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   walletAddressId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;

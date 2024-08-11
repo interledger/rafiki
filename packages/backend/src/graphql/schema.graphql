@@ -957,14 +957,6 @@ type Quote {
   debitAmount: Amount!
   "Amount to receive (fixed receive)"
   receiveAmount: Amount!
-  "Maximum value per packet allowed on the possible routes"
-  maxPacketAmount: UInt64!
-  "Aggregate exchange rate the payment is guaranteed to meet"
-  minExchangeRate: Float!
-  "Lower bound of probed exchange rate"
-  lowEstimatedExchangeRate: Float!
-  "Upper bound of probed exchange rate"
-  highEstimatedExchangeRate: Float!
   "Date-time of creation"
   createdAt: String!
   "Date-time of expiration"
