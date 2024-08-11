@@ -198,10 +198,6 @@ describe('OutgoingPayment Resolvers', (): void => {
                     metadata
                     quote {
                       id
-                      maxPacketAmount
-                      minExchangeRate
-                      lowEstimatedExchangeRate
-                      highEstimatedExchangeRate
                       createdAt
                       expiresAt
                     }
@@ -245,12 +241,6 @@ describe('OutgoingPayment Resolvers', (): void => {
             metadata,
             quote: {
               id: payment.quote.id,
-              maxPacketAmount: payment.quote.maxPacketAmount.toString(),
-              minExchangeRate: payment.quote.minExchangeRate.valueOf(),
-              lowEstimatedExchangeRate:
-                payment.quote.lowEstimatedExchangeRate.valueOf(),
-              highEstimatedExchangeRate:
-                payment.quote.highEstimatedExchangeRate.valueOf(),
               createdAt: payment.quote.createdAt.toISOString(),
               expiresAt: payment.quote.expiresAt.toISOString(),
               __typename: 'Quote'
