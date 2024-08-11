@@ -14,12 +14,8 @@ body:graphql {
   query GetQuote($id: String!) {
       quote(id: $id) {
           createdAt
-          highEstimatedExchangeRate
           expiresAt
           id
-          lowEstimatedExchangeRate
-          maxPacketAmount
-          minExchangeRate
           walletAddressId
           receiveAmount {
               assetCode
