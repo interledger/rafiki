@@ -3,7 +3,7 @@ import * as Pay from '@interledger/pay'
 
 import { BaseService } from '../../shared/baseService'
 import { QuoteError, isQuoteError } from './errors'
-import { Quote } from './model'
+import { Quote, QuoteType } from './model'
 import { Amount } from '../amount'
 import { ReceiverService } from '../receiver/service'
 import { Receiver } from '../receiver/model'
@@ -56,7 +56,7 @@ async function getQuote(
 ): Promise<Quote | undefined> {
   return Quote.query(deps.knex)
     .get(options)
-    .withGraphFetched('[asset, fee, walletAddress]')
+    .withGraphFetched('[asset, fee, walletAddress, ilpQuoteDetails]')
 }
 
 interface QuoteOptionsBase {
@@ -129,25 +129,29 @@ async function createQuote(
 
     return await Quote.transaction(deps.knex, async (trx) => {
       const createdQuote = await Quote.query(trx)
-        .insertAndFetch({
+        .insertGraphAndFetch({
           walletAddressId: options.walletAddressId,
           assetId: walletAddress.assetId,
           receiver: options.receiver,
           debitAmount: quote.debitAmount,
           receiveAmount: quote.receiveAmount,
-          maxPacketAmount:
-            MAX_INT64 < maxPacketAmount ? MAX_INT64 : maxPacketAmount, // Cap at MAX_INT64 because of postgres type limits.
-          minExchangeRate: quote.additionalFields.minExchangeRate as Pay.Ratio,
-          lowEstimatedExchangeRate: quote.additionalFields
-            .lowEstimatedExchangeRate as Pay.Ratio,
-          highEstimatedExchangeRate: quote.additionalFields
-            .highEstimatedExchangeRate as Pay.PositiveRatio,
+          type: QuoteType.ILP,
+          ilpQuoteDetails: {
+            maxPacketAmount:
+              MAX_INT64 < maxPacketAmount ? MAX_INT64 : maxPacketAmount, // Cap at MAX_INT64 because of postgres type limits.
+            minExchangeRate: quote.additionalFields
+              .minExchangeRate as Pay.Ratio,
+            lowEstimatedExchangeRate: quote.additionalFields
+              .lowEstimatedExchangeRate as Pay.Ratio,
+            highEstimatedExchangeRate: quote.additionalFields
+              .highEstimatedExchangeRate as Pay.PositiveRatio
+          },
           expiresAt: new Date(0), // expiresAt is patched in finalizeQuote
           client: options.client,
           feeId: sendingFee?.id,
           estimatedExchangeRate: quote.estimatedExchangeRate
         })
-        .withGraphFetched('[asset, fee, walletAddress]')
+        .withGraphFetched('[asset, fee, walletAddress, ilpQuoteDetails]')
 
       return await finalizeQuote(
         {

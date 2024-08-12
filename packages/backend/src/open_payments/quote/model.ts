@@ -10,20 +10,19 @@ import { Asset } from '../../asset/model'
 import { Quote as OpenPaymentsQuote } from '@interledger/open-payments'
 import { Fee } from '../../fee/model'
 
-export class Quote extends WalletAddressSubresource {
+export enum QuoteType {
+  ILP = 'ILP',
+  LOCAL = 'LOCAL'
+}
+export class BaseQuote extends WalletAddressSubresource {
   public static readonly tableName = 'quotes'
   public static readonly urlPath = '/quotes'
 
   static get virtualAttributes(): string[] {
-    return [
-      'debitAmount',
-      'receiveAmount',
-      'minExchangeRate',
-      'lowEstimatedExchangeRate',
-      'highEstimatedExchangeRate',
-      'method'
-    ]
+    return ['debitAmount', 'receiveAmount', 'method']
   }
+
+  public type!: QuoteType
 
   // Asset id of the sender
   public assetId!: string
@@ -52,6 +51,15 @@ export class Quote extends WalletAddressSubresource {
           to: 'fees.id'
         }
       }
+      // TODO: use or lose
+      // ilpQuoteDetails: {
+      //   relation: Model.HasOneRelation,
+      //   modelClass: IlpQuoteDetails,
+      //   join: {
+      //     from: 'quotes.id',
+      //     to: 'ilp_quotes.quoteId'
+      //   }
+      // }
     }
   }
 
@@ -59,7 +67,7 @@ export class Quote extends WalletAddressSubresource {
 
   public receiver!: string
 
-  private debitAmountValue!: bigint
+  protected debitAmountValue!: bigint
 
   public getUrl(walletAddress: WalletAddress): string {
     const url = new URL(walletAddress.url)
@@ -78,7 +86,7 @@ export class Quote extends WalletAddressSubresource {
     this.debitAmountValue = amount.value
   }
 
-  private receiveAmountValue!: bigint
+  protected receiveAmountValue!: bigint
   private receiveAmountAssetCode!: string
   private receiveAmountAssetScale!: number
 
@@ -94,6 +102,74 @@ export class Quote extends WalletAddressSubresource {
     this.receiveAmountValue = amount.value
     this.receiveAmountAssetCode = amount.assetCode
     this.receiveAmountAssetScale = amount?.assetScale
+  }
+
+  public get method(): 'ilp' {
+    return 'ilp'
+  }
+
+  $formatJson(json: Pojo): Pojo {
+    json = super.$formatJson(json)
+    return {
+      id: json.id,
+      walletAddressId: json.walletAddressId,
+      receiver: json.receiver,
+      debitAmount: {
+        ...json.debitAmount,
+        value: json.debitAmount.value.toString()
+      },
+      receiveAmount: {
+        ...json.receiveAmount,
+        value: json.receiveAmount.value.toString()
+      },
+      createdAt: json.createdAt,
+      expiresAt: json.expiresAt.toISOString()
+    }
+  }
+
+  public toOpenPaymentsType(walletAddress: WalletAddress): OpenPaymentsQuote {
+    return {
+      id: this.getUrl(walletAddress),
+      walletAddress: walletAddress.url,
+      receiveAmount: serializeAmount(this.receiveAmount),
+      debitAmount: serializeAmount(this.debitAmount),
+      receiver: this.receiver,
+      expiresAt: this.expiresAt.toISOString(),
+      createdAt: this.createdAt.toISOString(),
+      method: this.method
+    }
+  }
+}
+
+export class LocalQuote extends BaseQuote {
+  $beforeInsert() {
+    this.type = QuoteType.LOCAL
+  }
+}
+
+// TODO: rename to ilp quote
+export class Quote extends BaseQuote {
+  static get virtualAttributes(): string[] {
+    return [
+      ...super.virtualAttributes,
+      'minExchangeRate',
+      'lowEstimatedExchangeRate',
+      'highEstimatedExchangeRate'
+    ]
+  }
+
+  static get relationMappings() {
+    return {
+      ...super.relationMappings,
+      ilpQuoteDetails: {
+        relation: Model.HasOneRelation,
+        modelClass: IlpQuoteDetails,
+        join: {
+          from: 'quotes.id',
+          to: 'ilp_quotes.quoteId'
+        }
+      }
+    }
   }
 
   public maxPacketAmount!: bigint
@@ -153,39 +229,37 @@ export class Quote extends WalletAddressSubresource {
     this.highEstimatedExchangeRateDenominator = value.b.value
   }
 
-  public get method(): 'ilp' {
-    return 'ilp'
+  $beforeInsert() {
+    this.type = QuoteType.ILP
+  }
+}
+
+class IlpQuoteDetails extends Model {
+  static get tableName() {
+    return 'ilpQuoteDetails'
   }
 
-  $formatJson(json: Pojo): Pojo {
-    json = super.$formatJson(json)
+  static get relationMappings() {
     return {
-      id: json.id,
-      walletAddressId: json.walletAddressId,
-      receiver: json.receiver,
-      debitAmount: {
-        ...json.debitAmount,
-        value: json.debitAmount.value.toString()
-      },
-      receiveAmount: {
-        ...json.receiveAmount,
-        value: json.receiveAmount.value.toString()
-      },
-      createdAt: json.createdAt,
-      expiresAt: json.expiresAt.toISOString()
+      quote: {
+        relation: Model.BelongsToOneRelation,
+        modelClass: Quote,
+        join: {
+          from: 'ilp_quote_details.quoteId',
+          to: 'quotes.id'
+        }
+      }
     }
   }
 
-  public toOpenPaymentsType(walletAddress: WalletAddress): OpenPaymentsQuote {
-    return {
-      id: this.getUrl(walletAddress),
-      walletAddress: walletAddress.url,
-      receiveAmount: serializeAmount(this.receiveAmount),
-      debitAmount: serializeAmount(this.debitAmount),
-      receiver: this.receiver,
-      expiresAt: this.expiresAt.toISOString(),
-      createdAt: this.createdAt.toISOString(),
-      method: this.method
-    }
-  }
+  public quoteId!: string
+  public maxPacketAmount!: bigint
+  public minExchangeRate!: Pay.Ratio
+  public lowEstimatedExchangeRate!: Pay.Ratio
+  public highEstimatedExchangeRate!: Pay.PositiveRatio
+
+  // TODO: use or lose
+  // static get idColumn() {
+  //   return 'quoteId';
+  // }
 }
