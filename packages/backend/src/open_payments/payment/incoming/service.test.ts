@@ -189,7 +189,7 @@ describe('Incoming Payment Service', (): void => {
         expect(approvedIncomingPayment.id).toBe(incomingPayment.id)
         expect(approvedIncomingPayment.approvedAt).toBeDefined()
         expect(!approvedIncomingPayment.cancelledAt).toBeTruthy()
-      })
+        expect(approvedIncomingPayment.cancelledAt).toBeFalsy()
     })
 
     describe('cancelIncomingPayment', (): void => {
