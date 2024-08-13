@@ -1,4 +1,5 @@
 import http from 'k6/http'
+import { fail } from 'k6'
 export const options = {
   // A number specifying the number of VUs to run concurrently.
   vus: 1,
@@ -46,23 +47,18 @@ export const options = {
   // }
 }
 
-// The function that defines VU logic.
-//
-// See https://grafana.com/docs/k6/latest/examples/get-started-with-k6/ to learn more
-// about authoring k6 scripts.
-//
-export default function () {
-  const headers = {
-    'Content-Type': 'application/json'
-  }
+const HEADERS = {
+  'Content-Type': 'application/json'
+}
 
-  const CLOUD_NINE_GQL_ENDPOINT =
-    'http://cloud-nine-wallet-backend:3001/graphql'
-  const CLOUD_NINE_WALLET_ADDRESS =
-    'https://cloud-nine-wallet-backend/accounts/gfranklin'
-  const HAPPY_LIFE_BANK_WALLET_ADDRESS =
-    'https://happy-life-bank-backend/accounts/pfry'
+const CLOUD_NINE_GQL_ENDPOINT =
+  'http://cloud-nine-wallet-backend:3001/graphql'
+const CLOUD_NINE_WALLET_ADDRESS =
+  'https://cloud-nine-wallet-backend/accounts/gfranklin'
+const HAPPY_LIFE_BANK_WALLET_ADDRESS =
+  'https://happy-life-bank-backend/accounts/pfry'
 
+export function setup() {
   const c9WalletAddressesRes = http.post(
     CLOUD_NINE_GQL_ENDPOINT,
     JSON.stringify({
@@ -79,13 +75,27 @@ export default function () {
     }
   `
     }),
-    { headers }
+    { headers: HEADERS }
   )
   const c9WalletAddresses = JSON.parse(c9WalletAddressesRes.body).data
     .walletAddresses.edges
   const c9WalletAddress = c9WalletAddresses.find(
     (edge) => edge.node.url === CLOUD_NINE_WALLET_ADDRESS
   ).node
+  if (!c9WalletAddress) {
+    fail(`could not retrieve wallet address: ${CLOUD_NINE_WALLET_ADDRESS}`)
+  }
+  
+  return { data: { c9WalletAddress }}
+}
+
+// The function that defines VU logic.
+//
+// See https://grafana.com/docs/k6/latest/examples/get-started-with-k6/ to learn more
+// about authoring k6 scripts.
+//
+export default function (data) {
+  const { data: { c9WalletAddress } } = data
 
   const createReceiverResponse = http.post(
     CLOUD_NINE_GQL_ENDPOINT,
@@ -116,7 +126,7 @@ export default function () {
       }
     }),
     {
-      headers
+      headers: HEADERS
     }
   )
 
@@ -149,7 +159,7 @@ export default function () {
       }
     }),
     {
-      headers
+      headers: HEADERS
     }
   )
 
@@ -178,6 +188,6 @@ export default function () {
         }
       }
     }),
-    { headers }
+    { headers: HEADERS }
   )
 }
