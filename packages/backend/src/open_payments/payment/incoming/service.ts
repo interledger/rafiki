@@ -154,9 +154,22 @@ async function createIncomingPayment(
       timeoutMs: deps.config.incomingPaymentCreatedPollTimeout
     })
 
-    if (response) return response
+    if (response?.cancelledAt) {
+      deps.logger.error(
+        { cancelledAt: response.cancelledAt.toISOString() },
+        'Incoming payment was cancelled'
+      )
+      return IncomingPaymentError.ActionNotPerformed
+    }
+
+    if (response?.approvedAt) return response
     return IncomingPaymentError.ActionNotPerformed
   } catch (err) {
+    const errorMessage = 'Got error / timeout while polling incoming payment'
+    deps.logger.error(
+      { errorMessage: err instanceof Error && err.message },
+      errorMessage
+    )
     return IncomingPaymentError.ActionNotPerformed
   }
 }

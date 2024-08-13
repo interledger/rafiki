@@ -69,14 +69,14 @@ describe('Incoming Payment Service', (): void => {
       return {
         pollIncomingPaymentCreatedWebhook: true,
         incomingPaymentCreatedPollFrequency: 1,
-        incomingPaymentCreatedPollTimeout: 20
+        incomingPaymentCreatedPollTimeout: 100
       }
     }
     async function patchIncomingPaymentHelper(options: {
       approvedAt?: Date
       cancelledAt?: Date
     }) {
-      await sleep(10)
+      await sleep(50)
       const incomingPaymentEvent = await IncomingPaymentEvent.query(
         knex
       ).findOne({
@@ -115,15 +115,14 @@ describe('Incoming Payment Service', (): void => {
         actionableIncomingPaymentConfigOverride(),
         async (): Promise<void> => {
           const options = { cancelledAt: new Date(Date.now() - 1) }
-          const [incomingPayment, canceledIncomingPayment] = await Promise.all([
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          const [incomingPayment, _] = await Promise.all([
             createIncomingPaymentHelper(),
             patchIncomingPaymentHelper(options)
           ])
 
-          assert.ok(!isIncomingPaymentError(incomingPayment))
-          expect(incomingPayment.id).toEqual(canceledIncomingPayment?.id)
-          expect(incomingPayment.cancelledAt).toEqual(options.cancelledAt)
-          expect(!incomingPayment.approvedAt).toBeTruthy()
+          assert.ok(isIncomingPaymentError(incomingPayment))
+          expect(incomingPayment).toBe(IncomingPaymentError.ActionNotPerformed)
         }
       )
     )
@@ -190,6 +189,7 @@ describe('Incoming Payment Service', (): void => {
         expect(approvedIncomingPayment.approvedAt).toBeDefined()
         expect(!approvedIncomingPayment.cancelledAt).toBeTruthy()
         expect(approvedIncomingPayment.cancelledAt).toBeFalsy()
+      })
     })
 
     describe('cancelIncomingPayment', (): void => {
