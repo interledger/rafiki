@@ -198,6 +198,7 @@ describe('OutgoingPayment Resolvers', (): void => {
                     metadata
                     quote {
                       id
+                      estimatedExchangeRate
                       createdAt
                       expiresAt
                     }
@@ -243,6 +244,9 @@ describe('OutgoingPayment Resolvers', (): void => {
               id: payment.quote.id,
               createdAt: payment.quote.createdAt.toISOString(),
               expiresAt: payment.quote.expiresAt.toISOString(),
+              estimatedExchangeRate: payment.quote.estimatedExchangeRate
+                ? parseFloat(payment.quote.estimatedExchangeRate?.toString())
+                : undefined,
               __typename: 'Quote'
             },
             createdAt: payment.createdAt.toISOString(),
