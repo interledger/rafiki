@@ -77,13 +77,17 @@ export function setup() {
     }),
     { headers: HEADERS }
   )
+
+  if (c9WalletAddressesRes.status !== 200) {
+    fail(`GraphQL Request failed to find ${CLOUD_NINE_WALLET_ADDRESS}`)
+  }
   const c9WalletAddresses = JSON.parse(c9WalletAddressesRes.body).data
     .walletAddresses.edges
   const c9WalletAddress = c9WalletAddresses.find(
     (edge) => edge.node.url === CLOUD_NINE_WALLET_ADDRESS
   ).node
   if (!c9WalletAddress) {
-    fail(`could not retrieve wallet address: ${CLOUD_NINE_WALLET_ADDRESS}`)
+    fail(`could not find wallet address: ${CLOUD_NINE_WALLET_ADDRESS}`)
   }
   
   return { data: { c9WalletAddress }}
