@@ -51,8 +51,7 @@ const HEADERS = {
   'Content-Type': 'application/json'
 }
 
-const CLOUD_NINE_GQL_ENDPOINT =
-  'http://cloud-nine-wallet-backend:3001/graphql'
+const CLOUD_NINE_GQL_ENDPOINT = 'http://cloud-nine-wallet-backend:3001/graphql'
 const CLOUD_NINE_WALLET_ADDRESS =
   'https://cloud-nine-wallet-backend/accounts/gfranklin'
 const HAPPY_LIFE_BANK_WALLET_ADDRESS =
@@ -89,8 +88,8 @@ export function setup() {
   if (!c9WalletAddress) {
     fail(`could not find wallet address: ${CLOUD_NINE_WALLET_ADDRESS}`)
   }
-  
-  return { data: { c9WalletAddress }}
+
+  return { data: { c9WalletAddress } }
 }
 
 // The function that defines VU logic.
@@ -99,7 +98,9 @@ export function setup() {
 // about authoring k6 scripts.
 //
 export default function (data) {
-  const { data: { c9WalletAddress } } = data
+  const {
+    data: { c9WalletAddress }
+  } = data
 
   const createReceiverResponse = http.post(
     CLOUD_NINE_GQL_ENDPOINT,
