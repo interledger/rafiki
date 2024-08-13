@@ -9,8 +9,9 @@ This package contains a script that will determine the performance of Rafiki by 
   - [Grafana k6](https://grafana.com/docs/k6/latest/) is used to run performance test scripts against Rafiki.
 
 - [Running local playground for Rafiki](../../localenv/README.md)
+  - It is recommended to start the local playground with Telemetry running in order to see the impact of a performance test.
 
-If the local environment isn't running it may be started
+If the local environment isn't running it may be started by using the command `pnpm localenv:compose:telemetry:up`.
 
 ## Run tests
 
