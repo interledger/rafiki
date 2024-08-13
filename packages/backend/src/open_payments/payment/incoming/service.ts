@@ -32,6 +32,11 @@ export interface CreateIncomingPaymentOptions {
   metadata?: Record<string, unknown>
 }
 
+interface UpdateOptions {
+  id: string
+  metadata: Record<string, unknown>
+}
+
 export interface IncomingPaymentService
   extends WalletAddressSubresourceService<IncomingPayment> {
   create(
@@ -40,6 +45,9 @@ export interface IncomingPaymentService
   ): Promise<IncomingPayment | IncomingPaymentError>
   complete(id: string): Promise<IncomingPayment | IncomingPaymentError>
   processNext(): Promise<string | undefined>
+  update(
+    options: UpdateOptions
+  ): Promise<IncomingPayment | IncomingPaymentError>
 }
 
 export interface ServiceDependencies extends BaseService {
@@ -64,7 +72,8 @@ export async function createIncomingPaymentService(
     create: (options, trx) => createIncomingPayment(deps, options, trx),
     complete: (id) => completeIncomingPayment(deps, id),
     getWalletAddressPage: (options) => getWalletAddressPage(deps, options),
-    processNext: () => processNextIncomingPayment(deps)
+    processNext: () => processNextIncomingPayment(deps),
+    update: (options) => updateIncomingPayment(deps, options)
   }
 }
 
@@ -77,6 +86,19 @@ async function getIncomingPayment(
     .withGraphFetched('[asset, walletAddress]')
   if (incomingPayment) return await addReceivedAmount(deps, incomingPayment)
   else return
+}
+
+async function updateIncomingPayment(
+  deps: ServiceDependencies,
+  options: UpdateOptions
+): Promise<IncomingPayment | IncomingPaymentError> {
+  const incomingPayment = await IncomingPayment.query(deps.knex)
+    .patchAndFetchById(options.id, { metadata: options.metadata })
+    .withGraphFetched('[asset, walletAddress]')
+
+  return incomingPayment
+    ? await addReceivedAmount(deps, incomingPayment)
+    : IncomingPaymentError.UnknownPayment
 }
 
 async function createIncomingPayment(

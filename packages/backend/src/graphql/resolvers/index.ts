@@ -19,7 +19,8 @@ import {
 import {
   getWalletAddressIncomingPayments,
   createIncomingPayment,
-  getIncomingPayment
+  getIncomingPayment,
+  updateIncomingPayment
 } from './incoming_payment'
 import { getQuote, createQuote, getWalletAddressQuotes } from './quote'
 import {
@@ -141,6 +142,7 @@ export const resolvers: Resolvers = {
     depositOutgoingPaymentLiquidity,
     createIncomingPaymentWithdrawal,
     createOutgoingPaymentWithdrawal,
-    setFee
+    setFee,
+    updateIncomingPayment
   }
 }
