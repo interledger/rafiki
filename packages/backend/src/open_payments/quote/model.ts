@@ -9,12 +9,15 @@ import {
 import { Asset } from '../../asset/model'
 import { Quote as OpenPaymentsQuote } from '@interledger/open-payments'
 import { Fee } from '../../fee/model'
+import { BaseModel } from '../../shared/baseModel'
 
-export enum QuoteType {
-  ILP = 'ILP',
-  LOCAL = 'LOCAL'
-}
-export class BaseQuote extends WalletAddressSubresource {
+// TODO: use or lose. could maybe be used as a typegaurd instead of checking that details
+// field(s) are present
+// export interface QuoteWithDetails extends Quote {
+//   ilpQuoteDetails: IlpQuoteDetails
+// }
+
+export class Quote extends WalletAddressSubresource {
   public static readonly tableName = 'quotes'
   public static readonly urlPath = '/quotes'
 
@@ -22,15 +25,15 @@ export class BaseQuote extends WalletAddressSubresource {
     return ['debitAmount', 'receiveAmount', 'method']
   }
 
-  public type!: QuoteType
-
   // Asset id of the sender
   public assetId!: string
   public asset!: Asset
 
-  public estimatedExchangeRate?: number
+  public estimatedExchangeRate!: number
   public feeId?: string
   public fee?: Fee
+
+  public ilpQuoteDetails?: IlpQuoteDetails
 
   static get relationMappings() {
     return {
@@ -50,16 +53,15 @@ export class BaseQuote extends WalletAddressSubresource {
           from: 'quotes.feeId',
           to: 'fees.id'
         }
+      },
+      ilpQuoteDetails: {
+        relation: Model.HasOneRelation,
+        modelClass: IlpQuoteDetails,
+        join: {
+          from: 'ilpQuoteDetails.quoteId',
+          to: 'quotes.id'
+        }
       }
-      // TODO: use or lose
-      // ilpQuoteDetails: {
-      //   relation: Model.HasOneRelation,
-      //   modelClass: IlpQuoteDetails,
-      //   join: {
-      //     from: 'quotes.id',
-      //     to: 'ilp_quotes.quoteId'
-      //   }
-      // }
     }
   }
 
@@ -67,7 +69,7 @@ export class BaseQuote extends WalletAddressSubresource {
 
   public receiver!: string
 
-  protected debitAmountValue!: bigint
+  private debitAmountValue!: bigint
 
   public getUrl(walletAddress: WalletAddress): string {
     const url = new URL(walletAddress.url)
@@ -86,7 +88,7 @@ export class BaseQuote extends WalletAddressSubresource {
     this.debitAmountValue = amount.value
   }
 
-  protected receiveAmountValue!: bigint
+  private receiveAmountValue!: bigint
   private receiveAmountAssetCode!: string
   private receiveAmountAssetScale!: number
 
@@ -102,6 +104,14 @@ export class BaseQuote extends WalletAddressSubresource {
     this.receiveAmountValue = amount.value
     this.receiveAmountAssetCode = amount.assetCode
     this.receiveAmountAssetScale = amount?.assetScale
+  }
+
+  public get maxSourceAmount(): bigint {
+    return this.debitAmountValue
+  }
+
+  public get minDeliveryAmount(): bigint {
+    return this.receiveAmountValue
   }
 
   public get method(): 'ilp' {
@@ -141,51 +151,39 @@ export class BaseQuote extends WalletAddressSubresource {
   }
 }
 
-export class LocalQuote extends BaseQuote {
-  $beforeInsert() {
-    this.type = QuoteType.LOCAL
-  }
-}
+export class IlpQuoteDetails extends BaseModel {
+  public static readonly tableName = 'ilpQuoteDetails'
 
-// TODO: rename to ilp quote
-export class Quote extends BaseQuote {
   static get virtualAttributes(): string[] {
     return [
-      ...super.virtualAttributes,
       'minExchangeRate',
       'lowEstimatedExchangeRate',
       'highEstimatedExchangeRate'
     ]
   }
 
+  public quoteId!: string
+  public quote?: Quote
+
+  public maxPacketAmount!: bigint
+  public minExchangeRateNumerator!: bigint
+  public minExchangeRateDenominator!: bigint
+  public lowEstimatedExchangeRateNumerator!: bigint
+  public lowEstimatedExchangeRateDenominator!: bigint
+  public highEstimatedExchangeRateNumerator!: bigint
+  public highEstimatedExchangeRateDenominator!: bigint
+
   static get relationMappings() {
     return {
-      ...super.relationMappings,
-      ilpQuoteDetails: {
-        relation: Model.HasOneRelation,
-        modelClass: IlpQuoteDetails,
+      quote: {
+        relation: Model.BelongsToOneRelation,
+        modelClass: Quote,
         join: {
-          from: 'quotes.id',
-          to: 'ilp_quotes.quoteId'
+          from: 'ilpQuoteDetails.quoteId',
+          to: 'quotes.id'
         }
       }
     }
-  }
-
-  public maxPacketAmount!: bigint
-  private minExchangeRateNumerator!: bigint
-  private minExchangeRateDenominator!: bigint
-  private lowEstimatedExchangeRateNumerator!: bigint
-  private lowEstimatedExchangeRateDenominator!: bigint
-  private highEstimatedExchangeRateNumerator!: bigint
-  private highEstimatedExchangeRateDenominator!: bigint
-
-  public get maxSourceAmount(): bigint {
-    return this.debitAmountValue
-  }
-
-  public get minDeliveryAmount(): bigint {
-    return this.receiveAmountValue
   }
 
   public get minExchangeRate(): Pay.Ratio {
@@ -228,38 +226,4 @@ export class Quote extends BaseQuote {
     this.highEstimatedExchangeRateNumerator = value.a.value
     this.highEstimatedExchangeRateDenominator = value.b.value
   }
-
-  $beforeInsert() {
-    this.type = QuoteType.ILP
-  }
-}
-
-class IlpQuoteDetails extends Model {
-  static get tableName() {
-    return 'ilpQuoteDetails'
-  }
-
-  static get relationMappings() {
-    return {
-      quote: {
-        relation: Model.BelongsToOneRelation,
-        modelClass: Quote,
-        join: {
-          from: 'ilp_quote_details.quoteId',
-          to: 'quotes.id'
-        }
-      }
-    }
-  }
-
-  public quoteId!: string
-  public maxPacketAmount!: bigint
-  public minExchangeRate!: Pay.Ratio
-  public lowEstimatedExchangeRate!: Pay.Ratio
-  public highEstimatedExchangeRate!: Pay.PositiveRatio
-
-  // TODO: use or lose
-  // static get idColumn() {
-  //   return 'quoteId';
-  // }
 }

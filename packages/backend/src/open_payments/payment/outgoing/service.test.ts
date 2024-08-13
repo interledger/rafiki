@@ -778,8 +778,10 @@ describe('OutgoingPaymentService', (): void => {
           validDestination: false,
           method: 'ilp'
         })
+        const pastDate = new Date()
+        pastDate.setMinutes(pastDate.getMinutes() - 5)
         await quote.$query(knex).patch({
-          expiresAt: new Date()
+          expiresAt: pastDate
         })
         await expect(
           outgoingPaymentService.create({

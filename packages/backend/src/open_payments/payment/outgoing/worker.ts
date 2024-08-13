@@ -55,7 +55,7 @@ async function getPendingPayment(
           [RETRY_BACKOFF_SECONDS, now]
         )
     })
-    .withGraphFetched('[walletAddress, quote.asset]')
+    .withGraphFetched('[walletAddress, quote.[asset, ilpQuoteDetails]]')
   return payments[0]
 }
 

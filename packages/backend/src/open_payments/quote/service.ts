@@ -3,7 +3,7 @@ import * as Pay from '@interledger/pay'
 
 import { BaseService } from '../../shared/baseService'
 import { QuoteError, isQuoteError } from './errors'
-import { Quote, QuoteType } from './model'
+import { Quote } from './model'
 import { Amount } from '../amount'
 import { ReceiverService } from '../receiver/service'
 import { Receiver } from '../receiver/model'
@@ -135,7 +135,6 @@ async function createQuote(
           receiver: options.receiver,
           debitAmount: quote.debitAmount,
           receiveAmount: quote.receiveAmount,
-          type: QuoteType.ILP,
           ilpQuoteDetails: {
             maxPacketAmount:
               MAX_INT64 < maxPacketAmount ? MAX_INT64 : maxPacketAmount, // Cap at MAX_INT64 because of postgres type limits.
@@ -235,8 +234,7 @@ function calculateFixedSendQuoteAmounts(
 ): CalculateQuoteAmountsWithFeesResult {
   const fees = quote.fee?.calculate(quote.receiveAmount.value) ?? BigInt(0)
 
-  const estimatedExchangeRate =
-    quote.estimatedExchangeRate || quote.lowEstimatedExchangeRate.valueOf()
+  const { estimatedExchangeRate } = quote
 
   const exchangeAdjustedFees = BigInt(
     Math.ceil(Number(fees) * estimatedExchangeRate)
@@ -370,5 +368,5 @@ async function getWalletAddressPage(
 ): Promise<Quote[]> {
   return await Quote.query(deps.knex)
     .list(options)
-    .withGraphFetched('[asset, fee, walletAddress]')
+    .withGraphFetched('[asset, fee, walletAddress, ilpQuoteDetails]')
 }

@@ -158,23 +158,14 @@ export async function createQuote(
     }
   }
 
-  const withGraphFetchedArray = ['asset', 'walletAddress']
+  const withGraphFetchedArray = ['asset', 'walletAddress', 'ilpQuoteDetails']
   if (withFee) {
     withGraphFetchedArray.push('fee')
   }
   const withGraphFetchedExpression = `[${withGraphFetchedArray.join(', ')}]`
 
-  const ilpData = {
-    lowEstimatedExchangeRate: Pay.Ratio.from(exchangeRate) as Pay.PositiveRatio,
-    highEstimatedExchangeRate: Pay.Ratio.from(
-      exchangeRate + 0.000000000001
-    ) as Pay.PositiveRatio,
-    minExchangeRate: Pay.Ratio.from(exchangeRate * 0.99) as Pay.PositiveRatio,
-    maxPacketAmount: BigInt('9223372036854775807')
-  }
-
   return await Quote.query()
-    .insertAndFetch({
+    .insertGraphAndFetch({
       walletAddressId,
       assetId: walletAddress.assetId,
       receiver: receiverUrl,
@@ -183,7 +174,14 @@ export async function createQuote(
       estimatedExchangeRate: exchangeRate,
       expiresAt: new Date(Date.now() + config.quoteLifespan),
       client,
-      ...ilpData
+      ilpQuoteDetails: {
+        lowEstimatedExchangeRate: Pay.Ratio.from(exchangeRate),
+        highEstimatedExchangeRate: Pay.Ratio.from(
+          exchangeRate + 0.000000000001
+        ) as unknown as Pay.PositiveRatio,
+        minExchangeRate: Pay.Ratio.from(exchangeRate * 0.99),
+        maxPacketAmount: BigInt('9223372036854775807')
+      }
     })
     .withGraphFetched(withGraphFetchedExpression)
 }

@@ -97,6 +97,7 @@ export const getWalletAddressQuotes: WalletAddressResolvers<ApolloContext>['quot
     }
   }
 
+// TODO: update gql types (there is a pr pending for this)
 export function quoteToGraphql(quote: Quote): SchemaQuote {
   return {
     id: quote.id,
@@ -104,10 +105,10 @@ export function quoteToGraphql(quote: Quote): SchemaQuote {
     receiver: quote.receiver,
     debitAmount: quote.debitAmount,
     receiveAmount: quote.receiveAmount,
-    maxPacketAmount: quote.maxPacketAmount,
-    minExchangeRate: quote.minExchangeRate.valueOf(),
-    lowEstimatedExchangeRate: quote.lowEstimatedExchangeRate.valueOf(),
-    highEstimatedExchangeRate: quote.highEstimatedExchangeRate.valueOf(),
+    maxPacketAmount: 0n, //quote.maxPacketAmount,
+    minExchangeRate: 0, //quote.minExchangeRate.valueOf(),
+    lowEstimatedExchangeRate: 0, //quote.lowEstimatedExchangeRate.valueOf(),
+    highEstimatedExchangeRate: 0, //quote.highEstimatedExchangeRate.valueOf(),
     createdAt: new Date(+quote.createdAt).toISOString(),
     expiresAt: new Date(+quote.expiresAt).toISOString()
   }

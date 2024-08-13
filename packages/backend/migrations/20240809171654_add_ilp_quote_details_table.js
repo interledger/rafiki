@@ -22,6 +22,9 @@ exports.up = function (knex) {
         table
           .decimal('highEstimatedExchangeRateDenominator', 64, 0)
           .notNullable()
+
+        table.timestamp('createdAt').defaultTo(knex.fn.now())
+        table.timestamp('updatedAt').defaultTo(knex.fn.now())
       })
       .then(() => {
         // Enable uuid_generate_v4
@@ -54,25 +57,19 @@ exports.up = function (knex) {
           FROM "quotes";
         `)
       })
-      // .then(() => {
-      //   return knex.schema.alterTable('quotes', function (table) {
-      //     table.enum('type', ['ILP', 'LOCAL'])
-      //   })
-      // })
       .then(() => {
-        // TODO: enum type. alteration to non-nullable complicated
-        // https://github.com/knex/knex/issues/1699
-        return knex.schema.alterTable('quotes', function (table) {
-          table.string('type')
-        })
-      })
-      .then(() => {
-        return knex('quotes').update({ type: 'ILP' })
-      })
-      .then(() => {
-        return knex.schema.alterTable('quotes', function (table) {
-          table.string('type').notNullable().alter()
-        })
+        // TODO: test this more thoroughly.
+        // Might need to seed in migration preceeding this?
+        // Cant simply withold htis migration. Application code will fail when trying
+        // to insert ...
+        return knex('quotes')
+          .whereNull('estimatedExchangeRate')
+          .update({
+            estimatedExchangeRate: knex.raw('?? / ??', [
+              'lowEstimatedExchangeRateNumerator',
+              'lowEstimatedExchangeRateDenominator'
+            ])
+          })
       })
       .then(() => {
         return knex.schema.alterTable('quotes', function (table) {
@@ -142,11 +139,6 @@ exports.down = function (knex) {
           .decimal('highEstimatedExchangeRateDenominator', 64, 0)
           .notNullable()
           .alter()
-      })
-    })
-    .then(() => {
-      return knex.schema.alterTable('quotes', function (table) {
-        table.dropColumn('type')
       })
     })
     .then(() => {

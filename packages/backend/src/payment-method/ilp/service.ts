@@ -217,12 +217,24 @@ async function pay(
     })
   }
 
+  // TODO: prevent ilpQuoteDetails with better type instead of having to check and error?
+  // Or make better error.
+  // Is there a way to ensure that right here, outgoingPayment.quote is QuoteWithDetails?
+  // I dont think so... this is where the ambiguousness of our DB types surfaces and we have
+  // to do some explicit check like this. Even if we had table inheritance we'd have this problem
+  // so long as an outgoing payment could have either type of quote on them. To truly make this
+  // typesafe you might need to have seperate outgoing payment tables for each type of quote (which
+  // goes way too far)
+  if (!outgoingPayment.quote.ilpQuoteDetails) {
+    throw new Error('Missing ILP quote details')
+  }
+
   const {
     lowEstimatedExchangeRate,
     highEstimatedExchangeRate,
     minExchangeRate,
     maxPacketAmount
-  } = outgoingPayment.quote
+  } = outgoingPayment.quote.ilpQuoteDetails
 
   const quote: Pay.Quote = {
     maxPacketAmount,

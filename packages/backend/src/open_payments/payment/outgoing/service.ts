@@ -89,7 +89,7 @@ async function getOutgoingPayment(
 ): Promise<OutgoingPayment | undefined> {
   const outgoingPayment = await OutgoingPayment.query(deps.knex)
     .get(options)
-    .withGraphFetched('[quote.asset, walletAddress]')
+    .withGraphFetched('[quote.[asset, ilpQuoteDetails], walletAddress]')
 
   if (outgoingPayment) {
     return addSentAmount(deps, outgoingPayment)
@@ -150,7 +150,7 @@ async function cancelOutgoingPayment(
           ...(options.reason ? { cancellationReason: options.reason } : {})
         }
       })
-      .withGraphFetched('[quote.asset, walletAddress]')
+      .withGraphFetched('[quote.[asset, ilpQuoteDetails], walletAddress]')
 
     return addSentAmount(deps, payment)
   })
@@ -208,7 +208,7 @@ async function createOutgoingPayment(
           state: OutgoingPaymentState.Funding,
           grantId
         })
-        .withGraphFetched('[quote.asset, walletAddress]')
+        .withGraphFetched('[quote.[asset, ilpQuoteDetails], walletAddress]')
 
       if (
         payment.walletAddressId !== payment.quote.walletAddressId ||
@@ -374,7 +374,7 @@ async function validateGrantAndAddSpentAmountsToPayment(
     .andWhereNot({
       id: payment.id
     })
-    .withGraphFetched('[quote.asset]')
+    .withGraphFetched('[quote.[asset, ilpQuoteDetails]]')
 
   if (grantPayments.length === 0) {
     return true
@@ -451,7 +451,7 @@ async function fundPayment(
     const payment = await OutgoingPayment.query(trx)
       .findById(id)
       .forUpdate()
-      .withGraphFetched('[quote.asset]')
+      .withGraphFetched('[quote.[asset, ilpQuoteDetails]]')
     if (!payment) return FundingError.UnknownPayment
     if (payment.state !== OutgoingPaymentState.Funding) {
       return FundingError.WrongState
@@ -495,7 +495,7 @@ async function getWalletAddressPage(
 ): Promise<OutgoingPayment[]> {
   const page = await OutgoingPayment.query(deps.knex)
     .list(options)
-    .withGraphFetched('[quote.asset, walletAddress]')
+    .withGraphFetched('[quote.[asset, ilpQuoteDetails], walletAddress]')
   const amounts = await deps.accountingService.getAccountsTotalSent(
     page.map((payment: OutgoingPayment) => payment.id)
   )

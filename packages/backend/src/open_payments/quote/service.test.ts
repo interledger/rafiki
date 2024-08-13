@@ -206,7 +206,9 @@ describe('QuoteService', (): void => {
                   receiver: options.receiver,
                   debitAmount: debitAmount || mockedQuote.debitAmount,
                   receiveAmount: receiveAmount || mockedQuote.receiveAmount,
-                  maxPacketAmount: BigInt('9223372036854775807'),
+                  ilpQuoteDetails: {
+                    maxPacketAmount: BigInt('9223372036854775807')
+                  },
                   createdAt: expect.any(Date),
                   updatedAt: expect.any(Date),
                   expiresAt: new Date(
@@ -291,7 +293,9 @@ describe('QuoteService', (): void => {
 
                 expect(quote).toMatchObject({
                   ...options,
-                  maxPacketAmount: BigInt('9223372036854775807'),
+                  ilpQuoteDetails: {
+                    maxPacketAmount: BigInt('9223372036854775807')
+                  },
                   debitAmount: mockedQuote.debitAmount,
                   receiveAmount: incomingAmount,
                   createdAt: expect.any(Date),
@@ -425,10 +429,12 @@ describe('QuoteService', (): void => {
       ).resolves.toMatchObject({
         debitAmount: mockedQuote.debitAmount,
         receiveAmount: receiver.incomingAmount,
-        maxPacketAmount: BigInt('9223372036854775807'),
-        lowEstimatedExchangeRate: Pay.Ratio.from(10 ** 20),
-        highEstimatedExchangeRate: Pay.Ratio.from(10 ** 20),
-        minExchangeRate: Pay.Ratio.from(10 ** 20)
+        ilpQuoteDetails: {
+          maxPacketAmount: BigInt('9223372036854775807'),
+          lowEstimatedExchangeRate: Pay.Ratio.from(10 ** 20),
+          highEstimatedExchangeRate: Pay.Ratio.from(10 ** 20),
+          minExchangeRate: Pay.Ratio.from(10 ** 20)
+        }
       })
     })
 
