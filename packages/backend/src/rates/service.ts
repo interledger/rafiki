@@ -63,6 +63,11 @@ class RatesServiceImpl implements RatesService {
 
     const destinationExchangeRate = rates[opts.destinationAsset.code]
     if (!destinationExchangeRate || !isValidPrice(destinationExchangeRate)) {
+      console.log({
+        destinationExchangeRate,
+        rates,
+        'opts.destinationAsset.code': opts.destinationAsset.code
+      })
       return ConvertError.InvalidDestinationPrice
     }
 

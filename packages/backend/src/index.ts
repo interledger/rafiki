@@ -51,6 +51,10 @@ import {
   createIlpPaymentService,
   ServiceDependencies as IlpPaymentServiceDependencies
 } from './payment-method/ilp/service'
+import {
+  createLocalPaymentService,
+  ServiceDependencies as LocalPaymentServiceDependencies
+} from './payment-method/local/service'
 import { createSPSPRoutes } from './payment-method/ilp/spsp/routes'
 import { createStreamCredentialsService } from './payment-method/ilp/stream-credentials/service'
 import { createRatesService } from './rates/service'
@@ -442,6 +446,17 @@ export function initIocContainer(
     }
 
     return createIlpPaymentService(serviceDependencies)
+  })
+
+  container.singleton('localPaymentService', async (deps) => {
+    const serviceDependencies: LocalPaymentServiceDependencies = {
+      logger: await deps.use('logger'),
+      knex: await deps.use('knex'),
+      config: await deps.use('config'),
+      ratesService: await deps.use('ratesService')
+    }
+
+    return createLocalPaymentService(serviceDependencies)
   })
 
   container.singleton('paymentMethodHandlerService', async (deps) => {
