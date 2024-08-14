@@ -106,8 +106,7 @@ class TelemetryServiceImpl implements TelemetryService {
     name: string,
     amountSource: { value: bigint; assetCode: string; assetScale: number },
     amountDestination: { value: bigint; assetCode: string; assetScale: number },
-    attributes: Record<string, unknown> = {},
-    preservePrivacy = true
+    attributes: Record<string, unknown> = {}
   ): Promise<void> {
     if (!amountSource.value || !amountDestination.value) return
 
@@ -147,11 +146,7 @@ class TelemetryServiceImpl implements TelemetryService {
       )
       return
     }
-
-    const obfuscatedAmount = preservePrivacy
-      ? privacy.applyPrivacy(Number(fees))
-      : Number(fees)
-    this.incrementCounter(name, obfuscatedAmount, attributes)
+    this.incrementCounter(name, Number(fees), attributes)
   }
 
   public async incrementCounterWithTransactionAmount(

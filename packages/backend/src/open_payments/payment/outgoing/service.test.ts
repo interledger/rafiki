@@ -1196,7 +1196,7 @@ describe('OutgoingPaymentService', (): void => {
         incomingPaymentReceived: payment.receiveAmount.value,
         withdrawAmount: 0n
       })
-      // [incrementCounterWithTransactionFeeAmount] called, but not [incrementCounter] due to amount
+      // [incrementCounterWithTransactionFeeAmount] called and [incrementCounter] only once due to [Count of funded transactions]
       expect(spyTelFeeAmount).toHaveBeenCalledTimes(1)
       expect(spyCounter).toHaveBeenCalledTimes(1)
     })

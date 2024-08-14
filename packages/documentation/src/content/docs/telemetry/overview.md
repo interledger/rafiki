@@ -72,7 +72,7 @@ Currently collected metrics:
   - This amount metric increases by the amount sent in each ILP packet.
 - `payment_fees` - Counter metric
   - Description: “Fee amount sent through the network”.
-  - This fee amount metric increases by the (amount sent minus receive amount) for an outgoing payment.
+  - This fee amount metric increases by the (amount sent minus amount received) for an outgoing payment.
 - `ilp_pay_time_ms` - Histogram metric
   - Description: “Time to complete an ILP payment”
   - This histogram metric records the time taken to make an ILP payment.
