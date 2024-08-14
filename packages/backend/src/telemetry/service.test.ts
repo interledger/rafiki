@@ -8,6 +8,7 @@ import { mockCounter, mockHistogram } from '../tests/telemetry'
 import { TelemetryService } from './service'
 import { Counter, Histogram } from '@opentelemetry/api'
 import { privacy } from './privacy'
+import { mockRatesApi } from '../tests/rates'
 
 jest.mock('@opentelemetry/api', () => ({
   ...jest.requireActual('@opentelemetry/api'),
@@ -36,6 +37,18 @@ describe('TelemetryServiceImpl', () => {
   let aseRatesService: RatesService
   let internalRatesService: RatesService
 
+  let apiRequestCount = 0
+  const exchangeRatesUrl = 'http://example-rates.com'
+
+  const exampleRates = {
+    USD: {
+      EUR: 2
+    },
+    EUR: {
+      USD: 1.12
+    }
+  }
+
   beforeAll(async (): Promise<void> => {
     deps = initIocContainer({
       ...Config,
@@ -49,6 +62,11 @@ describe('TelemetryServiceImpl', () => {
     telemetryService = await deps.use('telemetry')!
     aseRatesService = await deps.use('ratesService')!
     internalRatesService = await deps.use('internalRatesService')!
+
+    mockRatesApi(exchangeRatesUrl, (base) => {
+      apiRequestCount++
+      return exampleRates[base as keyof typeof exampleRates]
+    })
   })
 
   afterAll(async (): Promise<void> => {
@@ -193,22 +211,85 @@ describe('TelemetryServiceImpl', () => {
       const spyConvert = jest.spyOn(aseRatesService, 'convert')
       const spyIncCounter = jest.spyOn(telemetryService, 'incrementCounter')
 
+      const source = {
+        value: 100n,
+        assetCode: 'USD',
+        assetScale: 2
+      }
+      const destination = {
+        value: 50n,
+        assetCode: 'USD',
+        assetScale: 2
+      }
+
       await telemetryService.incrementCounterWithTransactionAmountDifference(
         'test_amount_diff_counter',
-        {
-          value: 100n,
-          assetCode: 'USD',
-          assetScale: 2
-        },
-        {
-          value: 50n,
-          assetCode: 'USD',
-          assetScale: 2
-        }
+        source,
+        destination
       )
 
-      expect(spyConvert).toHaveBeenCalled()
+      expect(spyConvert).toHaveBeenCalledTimes(2)
+      expect(spyConvert).toHaveBeenNthCalledWith(
+        1,
+        expect.objectContaining({
+          sourceAmount: source.value,
+          sourceAsset: { code: source.assetCode, scale: source.assetScale }
+        })
+      )
+      expect(spyConvert).toHaveBeenNthCalledWith(
+        2,
+        expect.objectContaining({
+          sourceAmount: destination.value,
+          sourceAsset: {
+            code: destination.assetCode,
+            scale: destination.assetScale
+          }
+        })
+      )
       expect(spyIncCounter).toHaveBeenCalled()
+    })
+
+    it('should record since it is a valid fee for different assets', async () => {
+      const spyConvert = jest.spyOn(aseRatesService, 'convert')
+      const spyIncCounter = jest.spyOn(telemetryService, 'incrementCounter')
+
+      const source = {
+        value: 100n,
+        assetCode: 'USD',
+        assetScale: 2
+      }
+      const destination = {
+        value: 50n,
+        assetCode: 'EUR',
+        assetScale: 2
+      }
+
+      await telemetryService.incrementCounterWithTransactionAmountDifference(
+        'test_amount_diff_counter',
+        source,
+        destination
+      )
+
+      expect(spyConvert).toHaveBeenCalledTimes(2)
+      expect(spyConvert).toHaveBeenNthCalledWith(
+        1,
+        expect.objectContaining({
+          sourceAmount: source.value,
+          sourceAsset: { code: source.assetCode, scale: source.assetScale }
+        })
+      )
+      expect(spyConvert).toHaveBeenNthCalledWith(
+        2,
+        expect.objectContaining({
+          sourceAmount: destination.value,
+          sourceAsset: {
+            code: destination.assetCode,
+            scale: destination.assetScale
+          }
+        })
+      )
+      expect(spyIncCounter).toHaveBeenCalled()
+      expect(apiRequestCount).toBe(1)
     })
   })
 

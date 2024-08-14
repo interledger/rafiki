@@ -119,7 +119,7 @@ class TelemetryServiceImpl implements TelemetryService {
     })
     if (isConvertError(convertedSource)) {
       this.deps.logger.error(
-        `Unable to convert fee source amount: ${convertedSource}`
+        `Unable to convert source amount: ${convertedSource}`
       )
       return
     }
@@ -132,21 +132,21 @@ class TelemetryServiceImpl implements TelemetryService {
     })
     if (isConvertError(convertedDestination)) {
       this.deps.logger.error(
-        `Unable to convert fee destination amount: ${convertedSource}`
+        `Unable to convert destination amount: ${convertedSource}`
       )
       return
     }
 
-    const fees = BigInt(convertedSource - convertedDestination)
-    if (fees === 0n) return
+    const diff = BigInt(convertedSource - convertedDestination)
+    if (diff === 0n) return
 
-    if (fees < 0n) {
+    if (diff < 0n) {
       this.deps.logger.error(
-        `Fees should not be negative!: ${fees}, source asset ${amountSource.assetCode} vs destination asset ${amountDestination.assetCode}.`
+        `Difference should not be negative!: ${diff}, source asset ${amountSource.assetCode} vs destination asset ${amountDestination.assetCode}.`
       )
       return
     }
-    this.incrementCounter(name, Number(fees), attributes)
+    this.incrementCounter(name, Number(diff), attributes)
   }
 
   public async incrementCounterWithTransactionAmount(

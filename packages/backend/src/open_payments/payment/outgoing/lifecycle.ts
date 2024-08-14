@@ -95,7 +95,7 @@ export async function handleSending(
         description: 'Time to complete an ILP payment'
       }),
       deps.telemetry.incrementCounterWithTransactionAmountDifference(
-        'payment_amount_difference',
+        'transaction_fee_amounts',
         payment.sentAmount,
         payment.receiveAmount,
         {
