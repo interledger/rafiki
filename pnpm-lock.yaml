@@ -107,7 +107,7 @@ importers:
         version: 9.0.8
       axios:
         specifier: ^1.6.8
-        version: 1.6.8(debug@4.3.2)
+        version: 1.6.8
       class-variance-authority:
         specifier: ^0.7.0
         version: 0.7.0
@@ -200,8 +200,8 @@ importers:
         specifier: ^8.12.0
         version: 8.12.0
       axios:
-        specifier: ^1.6.8
-        version: 1.6.8(debug@4.3.2)
+        specifier: ^1.7.4
+        version: 1.7.4(debug@4.3.2)
       dotenv:
         specifier: ^16.4.5
         version: 16.4.5
@@ -393,8 +393,8 @@ importers:
         specifier: ^8.12.0
         version: 8.12.0
       axios:
-        specifier: 1.6.8
-        version: 1.6.8(debug@4.3.2)
+        specifier: 1.7.4
+        version: 1.7.4(debug@4.3.2)
       base64url:
         specifier: ^3.0.1
         version: 3.0.1
@@ -607,8 +607,8 @@ importers:
         specifier: ^2.6.0
         version: 2.6.0(typescript@5.4.3)
       axios:
-        specifier: ^1.6.5
-        version: 1.6.8(debug@4.3.2)
+        specifier: ^1.7.4
+        version: 1.7.4(debug@4.3.2)
       class-variance-authority:
         specifier: ^0.7.0
         version: 0.7.0
@@ -729,8 +729,8 @@ importers:
         specifier: 2.0.1
         version: 2.0.1
       axios:
-        specifier: ^1.6.8
-        version: 1.6.8(debug@4.3.2)
+        specifier: ^1.7.4
+        version: 1.7.4(debug@4.3.2)
       pino:
         specifier: ^8.19.0
         version: 8.19.0
@@ -5608,7 +5608,7 @@ packages:
   /@ory/client@1.9.0:
     resolution: {integrity: sha512-O4a1ijgJtMNIA+ZmWUmCodxX13ID72hOaCB0b9FQGQBzuFgF2x/Yq5D43nrMYZaDtvDvja8J1XIXhUkjz1TDOw==}
     dependencies:
-      axios: 1.6.8(debug@4.3.2)
+      axios: 1.7.4(debug@4.3.2)
     transitivePeerDependencies:
       - debug
     dev: false
@@ -8018,8 +8018,18 @@ packages:
     engines: {node: '>=4'}
     dev: true
 
-  /axios@1.6.8(debug@4.3.2):
+  /axios@1.6.8:
     resolution: {integrity: sha512-v/ZHtJDU39mDpyBoFVkETcd/uNdxrWRrg3bKpOKzXFA6Bvqopts6ALSMU3y6ijYxbw2B+wPrIv46egTzJXCLGQ==}
+    dependencies:
+      follow-redirects: 1.15.6(debug@4.3.2)
+      form-data: 4.0.0
+      proxy-from-env: 1.1.0
+    transitivePeerDependencies:
+      - debug
+    dev: false
+
+  /axios@1.7.4(debug@4.3.2):
+    resolution: {integrity: sha512-DukmaFRnY6AzAALSH4J2M3k6PkaC+MfaAGdEERRWcC9q3/TWQwLpHR8ZRLKTdQ3aBDL64EdluRDjJqKw+BPZEw==}
     dependencies:
       follow-redirects: 1.15.6(debug@4.3.2)
       form-data: 4.0.0
@@ -13377,7 +13387,7 @@ packages:
     engines: {node: '>=8.3.0'}
     hasBin: true
     dependencies:
-      axios: 1.6.8(debug@4.3.2)
+      axios: 1.7.4(debug@4.3.2)
       debug: 4.3.2
       openurl: 1.1.1
       yargs: 17.1.1
@@ -15306,7 +15316,7 @@ packages:
     dependencies:
       '@types/request': 2.48.8
       '@types/superagent': 4.1.15
-      axios: 1.6.8(debug@4.3.2)
+      axios: 1.7.4(debug@4.3.2)
       combos: 0.2.0
       fs-extra: 9.1.0
       js-yaml: 4.1.0
