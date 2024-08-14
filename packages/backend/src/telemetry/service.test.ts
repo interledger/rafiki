@@ -222,8 +222,9 @@ describe('TelemetryServiceImpl', () => {
         assetScale: 2
       }
 
+      const name = 'test_amount_diff_counter'
       await telemetryService.incrementCounterWithTransactionAmountDifference(
-        'test_amount_diff_counter',
+        name,
         source,
         destination
       )
@@ -246,7 +247,8 @@ describe('TelemetryServiceImpl', () => {
           }
         })
       )
-      expect(spyIncCounter).toHaveBeenCalled()
+      // Ensure the [incrementCounter] was called with the correct calculated value:
+      expect(spyIncCounter).toHaveBeenCalledWith(name, 5000, {})
     })
 
     it('should record since it is a valid fee for different assets', async () => {
@@ -264,8 +266,9 @@ describe('TelemetryServiceImpl', () => {
         assetScale: 2
       }
 
+      const name = 'test_amount_diff_counter'
       await telemetryService.incrementCounterWithTransactionAmountDifference(
-        'test_amount_diff_counter',
+        name,
         source,
         destination
       )
@@ -288,7 +291,7 @@ describe('TelemetryServiceImpl', () => {
           }
         })
       )
-      expect(spyIncCounter).toHaveBeenCalled()
+      expect(spyIncCounter).toHaveBeenCalledWith(name, 4400, {})
       expect(apiRequestCount).toBe(1)
     })
   })

@@ -12,7 +12,7 @@ export interface TelemetryService {
     name: string,
     value: number,
     attributes?: Record<string, unknown>
-  ): Promise<void>
+  ): void
   incrementCounterWithTransactionAmount(
     name: string,
     amount: { value: bigint; assetCode: string; assetScale: number },
@@ -29,7 +29,7 @@ export interface TelemetryService {
     name: string,
     value: number,
     attributes?: Record<string, unknown>
-  ): Promise<void>
+  ): void
 }
 
 interface TelemetryServiceDependencies extends BaseService {
@@ -93,13 +93,12 @@ class TelemetryServiceImpl implements TelemetryService {
     name: string,
     amount: number,
     attributes: Record<string, unknown> = {}
-  ): Promise<void> {
+  ): void {
     const counter = this.getOrCreateCounter(name)
     counter.add(amount, {
       source: this.instanceName,
       ...attributes
     })
-    return Promise.resolve()
   }
 
   public async incrementCounterWithTransactionAmountDifference(
@@ -180,13 +179,12 @@ class TelemetryServiceImpl implements TelemetryService {
     name: string,
     value: number,
     attributes: Record<string, unknown> = {}
-  ): Promise<void> {
+  ): void {
     const histogram = this.getOrCreateHistogram(name)
     histogram.record(value, {
       source: this.instanceName,
       ...attributes
     })
-    return Promise.resolve()
   }
 
   private async convertAmount(

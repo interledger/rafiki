@@ -32,7 +32,7 @@ export class MockTelemetryService implements TelemetryService {
   public aseRatesService = new MockRatesService()
   public internalRatesService = new MockRatesService()
 
-  async incrementCounter(): Promise<void> {}
+  incrementCounter(): void {}
   async incrementCounterWithTransactionAmount(): Promise<void> {}
   async incrementCounterWithTransactionAmountDifference(): Promise<void> {}
   async recordHistogram(): Promise<void> {}
