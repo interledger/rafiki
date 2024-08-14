@@ -247,7 +247,7 @@ describe('TelemetryServiceImpl', () => {
           }
         })
       )
-      // Ensure the [incrementCounter] was called with the correct calculated value:
+      // Ensure the [incrementCounter] was called with the correct calculated value. Expected 5000 due to scale = 4.
       expect(spyIncCounter).toHaveBeenCalledWith(name, 5000, {})
     })
 
