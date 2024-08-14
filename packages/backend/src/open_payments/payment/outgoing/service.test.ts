@@ -1164,7 +1164,7 @@ describe('OutgoingPaymentService', (): void => {
     test('COMPLETED with Telemetry Fee Counter (receiveAmount < incomingPayment.incomingAmount)', async (): Promise<void> => {
       const spyTelFeeAmount = jest.spyOn(
         telemetryService,
-        'incrementCounterWithTransactionFeeAmount'
+        'incrementCounterWithTransactionAmountDifference'
       )
       const spyCounter = jest.spyOn(telemetryService, 'incrementCounter')
 
@@ -1196,7 +1196,7 @@ describe('OutgoingPaymentService', (): void => {
         incomingPaymentReceived: payment.receiveAmount.value,
         withdrawAmount: 0n
       })
-      // [incrementCounterWithTransactionFeeAmount] called and [incrementCounter] only once due to [Count of funded transactions]
+      // [incrementCounterWithTransactionAmountDifference] called and [incrementCounter] only once due to [Count of funded transactions]
       expect(spyTelFeeAmount).toHaveBeenCalledTimes(1)
       expect(spyCounter).toHaveBeenCalledTimes(1)
     })
@@ -1208,7 +1208,7 @@ describe('OutgoingPaymentService', (): void => {
     `('COMPLETED', async ({ debitAmount, receiveAmount }): Promise<void> => {
       const spyTelFeeAmount = jest.spyOn(
         telemetryService,
-        'incrementCounterWithTransactionFeeAmount'
+        'incrementCounterWithTransactionAmountDifference'
       )
       const spyCounter = jest.spyOn(telemetryService, 'incrementCounter')
 

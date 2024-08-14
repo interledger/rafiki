@@ -122,13 +122,13 @@ describe('TelemetryServiceImpl', () => {
     expect(histogram?.record).toHaveBeenCalledTimes(2)
   })
 
-  describe('incrementCounterWithTransactionFeeAmount', () => {
+  describe('incrementCounterWithTransactionAmountDifference', () => {
     it('should not record fee when there is no fee value', async () => {
       const spyAseConvert = jest.spyOn(aseRatesService, 'convert')
       const spyIncCounter = jest.spyOn(telemetryService, 'incrementCounter')
 
-      await telemetryService.incrementCounterWithTransactionFeeAmount(
-        'test_fee_counter',
+      await telemetryService.incrementCounterWithTransactionAmountDifference(
+        'test_amount_diff_counter',
         {
           value: 100n,
           assetCode: 'USD',
@@ -149,8 +149,8 @@ describe('TelemetryServiceImpl', () => {
       const spyConvert = jest.spyOn(aseRatesService, 'convert')
       const spyIncCounter = jest.spyOn(telemetryService, 'incrementCounter')
 
-      await telemetryService.incrementCounterWithTransactionFeeAmount(
-        'test_fee_counter',
+      await telemetryService.incrementCounterWithTransactionAmountDifference(
+        'test_amount_diff_counter',
         {
           value: 100n,
           assetCode: 'USD',
@@ -171,8 +171,8 @@ describe('TelemetryServiceImpl', () => {
       const spyConvert = jest.spyOn(aseRatesService, 'convert')
       const spyIncCounter = jest.spyOn(telemetryService, 'incrementCounter')
 
-      await telemetryService.incrementCounterWithTransactionFeeAmount(
-        'test_fee_counter',
+      await telemetryService.incrementCounterWithTransactionAmountDifference(
+        'test_amount_diff_counter',
         {
           value: 0n,
           assetCode: 'USD',
@@ -193,8 +193,8 @@ describe('TelemetryServiceImpl', () => {
       const spyConvert = jest.spyOn(aseRatesService, 'convert')
       const spyIncCounter = jest.spyOn(telemetryService, 'incrementCounter')
 
-      await telemetryService.incrementCounterWithTransactionFeeAmount(
-        'test_fee_counter',
+      await telemetryService.incrementCounterWithTransactionAmountDifference(
+        'test_amount_diff_counter',
         {
           value: 100n,
           assetCode: 'USD',

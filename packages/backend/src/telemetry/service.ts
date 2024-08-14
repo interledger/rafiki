@@ -12,25 +12,24 @@ export interface TelemetryService {
     name: string,
     value: number,
     attributes?: Record<string, unknown>
-  ): void
+  ): Promise<void>
   incrementCounterWithTransactionAmount(
     name: string,
     amount: { value: bigint; assetCode: string; assetScale: number },
     attributes?: Record<string, unknown>,
     preservePrivacy?: boolean
   ): Promise<void>
-  incrementCounterWithTransactionFeeAmount(
+  incrementCounterWithTransactionAmountDifference(
     name: string,
     amountSource: { value: bigint; assetCode: string; assetScale: number },
     amountDestination: { value: bigint; assetCode: string; assetScale: number },
-    attributes?: Record<string, unknown>,
-    preservePrivacy?: boolean
+    attributes?: Record<string, unknown>
   ): Promise<void>
   recordHistogram(
     name: string,
     value: number,
     attributes?: Record<string, unknown>
-  ): void
+  ): Promise<void>
 }
 
 interface TelemetryServiceDependencies extends BaseService {
@@ -94,15 +93,16 @@ class TelemetryServiceImpl implements TelemetryService {
     name: string,
     amount: number,
     attributes: Record<string, unknown> = {}
-  ): void {
+  ): Promise<void> {
     const counter = this.getOrCreateCounter(name)
     counter.add(amount, {
       source: this.instanceName,
       ...attributes
     })
+    return Promise.resolve()
   }
 
-  public async incrementCounterWithTransactionFeeAmount(
+  public async incrementCounterWithTransactionAmountDifference(
     name: string,
     amountSource: { value: bigint; assetCode: string; assetScale: number },
     amountDestination: { value: bigint; assetCode: string; assetScale: number },
@@ -173,18 +173,20 @@ class TelemetryServiceImpl implements TelemetryService {
     } catch (e) {
       this.deps.logger.error(e, `Unable to collect telemetry`)
     }
+    return Promise.resolve()
   }
 
   public recordHistogram(
     name: string,
     value: number,
     attributes: Record<string, unknown> = {}
-  ): void {
+  ): Promise<void> {
     const histogram = this.getOrCreateHistogram(name)
     histogram.record(value, {
       source: this.instanceName,
       ...attributes
     })
+    return Promise.resolve()
   }
 
   private async convertAmount(
