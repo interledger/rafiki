@@ -87,3 +87,5 @@ Currently collected metrics:
 - `ilp_pay_time_ms` - Histogram metric
   - Description: “Time to complete an outgoing ILP payment”
   - This histogram metric records the time taken to make an ILP payment.
+
+**Note**: The current implementation only collects metrics on the SENDING side of a transaction. Metrics for external open-payments transactions RECEIVED by a Rafiki instance in the network are not collected.
