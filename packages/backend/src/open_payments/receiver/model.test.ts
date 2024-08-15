@@ -50,7 +50,8 @@ describe('Receiver Model', (): void => {
         incomingPayment.toOpenPaymentsTypeWithMethods(
           walletAddress,
           streamCredentials
-        )
+        ),
+        false
       )
 
       expect(receiver).toEqual({
@@ -96,7 +97,7 @@ describe('Receiver Model', (): void => {
           streamCredentials
         )
 
-      expect(() => new Receiver(openPaymentsIncomingPayment)).toThrow(
+      expect(() => new Receiver(openPaymentsIncomingPayment, false)).toThrow(
         'Cannot create receiver from completed incoming payment'
       )
     })
@@ -116,7 +117,7 @@ describe('Receiver Model', (): void => {
           streamCredentials
         )
 
-      expect(() => new Receiver(openPaymentsIncomingPayment)).toThrow(
+      expect(() => new Receiver(openPaymentsIncomingPayment, false)).toThrow(
         'Cannot create receiver from expired incoming payment'
       )
     })
@@ -137,7 +138,7 @@ describe('Receiver Model', (): void => {
           streamCredentials
         )
 
-      expect(() => new Receiver(openPaymentsIncomingPayment)).toThrow(
+      expect(() => new Receiver(openPaymentsIncomingPayment, false)).toThrow(
         'Invalid ILP address on ilp payment method'
       )
     })

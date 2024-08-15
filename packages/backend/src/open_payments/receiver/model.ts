@@ -29,8 +29,15 @@ export class Receiver {
   public readonly assetCode: string
   public readonly assetScale: number
   public readonly incomingPayment: ReceiverIncomingPayment
+  public readonly isLocal: boolean
 
-  constructor(incomingPayment: OpenPaymentsIncomingPaymentWithPaymentMethod) {
+  constructor(
+    incomingPayment: OpenPaymentsIncomingPaymentWithPaymentMethod,
+    // TODO: lookup incomingPayment where isLocal is used instead of tracking isLocal here?
+    // not sure how simple the check can be. url matches resource server?
+    // exists in local db? exists in local db AND has stream creds (how its checked in receiverService.getReceiver)?
+    isLocal: boolean
+  ) {
     if (incomingPayment.completed) {
       throw new Error('Cannot create receiver from completed incoming payment')
     }
@@ -76,6 +83,7 @@ export class Receiver {
       createdAt: new Date(incomingPayment.createdAt),
       updatedAt: new Date(incomingPayment.updatedAt)
     }
+    this.isLocal = isLocal
   }
 
   public get asset(): AssetOptions {
