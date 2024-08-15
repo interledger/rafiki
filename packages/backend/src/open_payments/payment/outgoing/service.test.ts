@@ -50,6 +50,7 @@ import { mockRatesApi } from '../../../tests/rates'
 import { UnionOmit } from '../../../shared/utils'
 import { QuoteError } from '../../quote/errors'
 import { withConfigOverride } from '../../../tests/helpers'
+import { TelemetryService } from '../../../telemetry/service'
 
 describe('OutgoingPaymentService', (): void => {
   let deps: IocContract<AppServices>
@@ -58,6 +59,7 @@ describe('OutgoingPaymentService', (): void => {
   let accountingService: AccountingService
   let paymentMethodHandlerService: PaymentMethodHandlerService
   let quoteService: QuoteService
+  let telemetryService: TelemetryService
   let knex: Knex
   let walletAddressId: string
   let incomingPayment: IncomingPayment
@@ -243,12 +245,17 @@ describe('OutgoingPaymentService', (): void => {
       XRP: exchangeRate
     }))
 
-    deps = await initIocContainer({ ...Config, exchangeRatesUrl })
+    deps = await initIocContainer({
+      ...Config,
+      exchangeRatesUrl,
+      enableTelemetry: true
+    })
     appContainer = await createTestApp(deps)
     outgoingPaymentService = await deps.use('outgoingPaymentService')
     accountingService = await deps.use('accountingService')
     paymentMethodHandlerService = await deps.use('paymentMethodHandlerService')
     quoteService = await deps.use('quoteService')
+    telemetryService = (await deps.use('telemetry'))!
     config = await deps.use('config')
     knex = appContainer.knex
   })
@@ -1156,11 +1163,58 @@ describe('OutgoingPaymentService', (): void => {
       return payment
     }
 
+    test('COMPLETED with Telemetry Fee Counter (receiveAmount < incomingPayment.incomingAmount)', async (): Promise<void> => {
+      const spyTelFeeAmount = jest.spyOn(
+        telemetryService,
+        'incrementCounterWithTransactionAmountDifference'
+      )
+      const spyCounter = jest.spyOn(telemetryService, 'incrementCounter')
+
+      incomingPayment = await createIncomingPayment(deps, {
+        walletAddressId: receiverWalletAddress.id,
+        incomingAmount: {
+          value: receiveAmount.value * 2n,
+          assetCode: receiverWalletAddress.asset.code,
+          assetScale: receiverWalletAddress.asset.scale
+        }
+      })
+      assert.ok(incomingPayment.walletAddress)
+
+      const createdPayment = await setup({
+        receiver: incomingPayment.getUrl(incomingPayment.walletAddress),
+        receiveAmount,
+        method: 'ilp'
+      })
+
+      mockPaymentHandlerPay(createdPayment, incomingPayment)
+      const payment = await processNext(
+        createdPayment.id,
+        OutgoingPaymentState.Completed
+      )
+      await expectOutcome(payment, {
+        accountBalance: 0n,
+        amountSent: payment.debitAmount.value,
+        amountDelivered: payment.receiveAmount.value,
+        incomingPaymentReceived: payment.receiveAmount.value,
+        withdrawAmount: 0n
+      })
+      // [incrementCounterWithTransactionAmountDifference] called and [incrementCounter] only once due to [Count of funded transactions]
+      expect(spyTelFeeAmount).toHaveBeenCalledTimes(1)
+      expect(spyCounter).toHaveBeenCalledTimes(1)
+      expect(spyCounter).toHaveBeenCalledTimes(1)
+    })
+
     test.each`
       debitAmount    | receiveAmount
       ${debitAmount} | ${undefined}
       ${undefined}   | ${receiveAmount}
     `('COMPLETED', async ({ debitAmount, receiveAmount }): Promise<void> => {
+      const spyTelFeeAmount = jest.spyOn(
+        telemetryService,
+        'incrementCounterWithTransactionAmountDifference'
+      )
+      const spyCounter = jest.spyOn(telemetryService, 'incrementCounter')
+
       const createdPayment = await setup({
         receiver,
         debitAmount,
@@ -1181,6 +1235,8 @@ describe('OutgoingPaymentService', (): void => {
         incomingPaymentReceived: payment.receiveAmount.value,
         withdrawAmount: 0n
       })
+      expect(spyTelFeeAmount).toHaveBeenCalledTimes(1)
+      expect(spyCounter).toHaveBeenCalledTimes(1)
     })
 
     test('COMPLETED (receiveAmount < incomingPayment.incomingAmount)', async (): Promise<void> => {
