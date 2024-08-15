@@ -7,8 +7,10 @@ title: Overview
 The objective of the telemetry feature is to gather metrics and establish an infrastructure for visualizing valuable network insights. The metrics we at the Interledger Foundation collect include:
 
 - The total amount of money transferred via packet data within a specified time frame (daily, weekly, monthly).
-- The number of transactions from outgoing payments that have been at least partially successful.
+- The number of transactions that have been at least partially successful.
+- The number of ILP packets flowing through the network.
 - The average amount of money held within the network per transaction.
+- The avergae time it takes for an outgoing payment to complete.
 
 We aim to track the growth of the network in terms of transaction sizes and the number of transactions processed. Our goal is to use these data for our own insights and to enable [Account Servicing Entities](/reference/glossary#account-servicing-entity) (ASEs) to gain their own insights.
 
@@ -60,21 +62,28 @@ If an ASE does not provide the necessary exchange rate for a transaction, the te
 
 ## Instrumentation
 
-Rafiki currently has three counter metrics. All data points (counter increases and histogram records) are exported to collection endpoints at a configurable interval (default recommended to 15s).
+Data points for all metrics (e.g. counter increases) are exported to collection endpoints at a configurable interval (default recommended to 15s).
 
 Currently collected metrics:
 
 - `transactions_total` - Counter metric
-  - Description: “Count of funded transactions”
-  - This counter metric increases by 1 for each successfully sent transaction.
-- `transactions_amount` - Counter metric
-  - Description: “Amount sent through the network”.
+  - Description: “Count of funded outgoing transactions”
+  - This counter metric increases by 1 for each successfully funded outgoing payment resource.
+- `packet_count_prepare` - Counter metric
+  - Description: “Count of prepare packets that are sent”
+  - This counter metric increases by 1 for each prepare packet that is sent.
+- `packet_count_fulfill` - Counter metric
+  - Description: “Count of fulfill packets”
+  - This counter metric increases by 1 for each fulfill packet that is received.
+- `packet_count_reject` - Counter metric
+  - Description: “Count of reject packets”
+  - This counter metric increases by 1 for each reject packet that is received.
+- `packet_amount_fulfill` - Counter metric
+  - Description: “Amount sent through the network”
   - This amount metric increases by the amount sent in each ILP packet.
 - `transaction_fee_amounts` - Counter metric
   - Description: “Fee amount sent through the network”.
   - This fee amount metric increases by the (amount sent minus amount received) for an outgoing payment.
 - `ilp_pay_time_ms` - Histogram metric
-  - Description: “Time to complete an ILP payment”
+  - Description: “Time to complete an outgoing ILP payment”
   - This histogram metric records the time taken to make an ILP payment.
-
-**Note**: The current implementation only collects metrics on the SENDING side of a transaction. Metrics for external open-payments transactions RECEIVED by a Rafiki instance in the network are not collected.
