@@ -42,6 +42,7 @@ describe('Receiver Model', (): void => {
       const incomingPayment = await createIncomingPayment(deps, {
         walletAddressId: walletAddress.id
       })
+      const isLocal = false
 
       const streamCredentials = streamCredentialsService.get(incomingPayment)
       assert(streamCredentials)
@@ -51,7 +52,7 @@ describe('Receiver Model', (): void => {
           walletAddress,
           streamCredentials
         ),
-        false
+        isLocal
       )
 
       expect(receiver).toEqual({
@@ -75,7 +76,8 @@ describe('Receiver Model', (): void => {
               sharedSecret: base64url(streamCredentials.sharedSecret)
             }
           ]
-        }
+        },
+        isLocal
       })
     })
 
