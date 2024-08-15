@@ -54,14 +54,19 @@ class RatesServiceImpl implements RatesService {
   async convert(
     opts: Omit<ConvertOptions, 'exchangeRate'>
   ): Promise<bigint | ConvertError> {
+    console.log('convert called with', { opts })
     const sameCode = opts.sourceAsset.code === opts.destinationAsset.code
     const sameScale = opts.sourceAsset.scale === opts.destinationAsset.scale
     if (sameCode && sameScale) return opts.sourceAmount
     if (sameCode) return convert({ exchangeRate: 1.0, ...opts })
 
     const { rates } = await this.getRates(opts.sourceAsset.code)
+    console.log('convert got rates', { rates })
 
     const destinationExchangeRate = rates[opts.destinationAsset.code]
+    console.log('convert got destinationExchangeRate', {
+      destinationExchangeRate
+    })
     if (!destinationExchangeRate || !isValidPrice(destinationExchangeRate)) {
       return ConvertError.InvalidDestinationPrice
     }
