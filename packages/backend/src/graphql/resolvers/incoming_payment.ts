@@ -174,6 +174,8 @@ export function paymentToGraphql(
     incomingAmount: payment.incomingAmount,
     receivedAmount: payment.receivedAmount,
     metadata: payment.metadata,
-    createdAt: new Date(+payment.createdAt).toISOString()
+    createdAt: new Date(+payment.createdAt).toISOString(),
+    approvedAt: payment.approvedAt?.toISOString(),
+    cancelledAt: payment.cancelledAt?.toISOString()
   }
 }

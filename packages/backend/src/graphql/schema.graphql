@@ -790,6 +790,10 @@ type IncomingPayment implements BasePayment & Model {
   metadata: JSONObject
   "Date-time of creation"
   createdAt: String!
+  "Date-time of approval"
+  approvedAt: String
+  "Date-time of cancelation"
+  cancelledAt: String
 }
 
 type Receiver {

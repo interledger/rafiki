@@ -519,6 +519,10 @@ export type HttpOutgoingInput = {
 
 export type IncomingPayment = BasePayment & Model & {
   __typename?: 'IncomingPayment';
+  /** Date-time of approval */
+  approvedAt?: Maybe<Scalars['String']['output']>;
+  /** Date-time of cancelation */
+  cancelledAt?: Maybe<Scalars['String']['output']>;
   /** Information about the wallet address of the Open Payments client that created the incoming payment. */
   client?: Maybe<Scalars['String']['output']>;
   /** Date-time of creation */
@@ -1951,6 +1955,8 @@ export type HttpOutgoingResolvers<ContextType = any, ParentType extends Resolver
 };
 
 export type IncomingPaymentResolvers<ContextType = any, ParentType extends ResolversParentTypes['IncomingPayment'] = ResolversParentTypes['IncomingPayment']> = {
+  approvedAt?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  cancelledAt?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   client?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   expiresAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;

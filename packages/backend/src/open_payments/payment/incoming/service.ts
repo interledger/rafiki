@@ -344,7 +344,7 @@ async function approveIncomingPayment(
       return IncomingPaymentError.WrongState
 
     await payment.$query(trx).patch({
-      approvedAt: new Date(Date.now())
+      approvedAt: new Date()
     })
 
     return await addReceivedAmount(deps, payment)
@@ -366,7 +366,7 @@ async function cancelIncomingPayment(
       return IncomingPaymentError.WrongState
 
     await payment.$query(trx).patch({
-      cancelledAt: new Date(Date.now())
+      cancelledAt: new Date()
     })
 
     return await addReceivedAmount(deps, payment)

@@ -5,7 +5,7 @@ meta {
 }
 
 post {
-  url: 
+  url: {{PeerGraphqlHost}}/graphql
   body: graphql
   auth: none
 }
@@ -15,6 +15,7 @@ body:graphql {
     cancelIncomingPayment(input: $input) {
       payment {
         id
+        cancelledAt
       }
     }
   }

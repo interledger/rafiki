@@ -3242,6 +3242,30 @@
         "description": null,
         "fields": [
           {
+            "name": "approvedAt",
+            "description": "Date-time of approval",
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "cancelledAt",
+            "description": "Date-time of cancelation",
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "client",
             "description": "Information about the wallet address of the Open Payments client that created the incoming payment.",
             "args": [],
