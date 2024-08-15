@@ -1,7 +1,10 @@
 import { LocalPaymentService } from './service'
 import { initIocContainer } from '../../'
 import { createTestApp, TestContainer } from '../../tests/app'
-import { IAppConfig, Config } from '../../config/app'
+import {
+  // IAppConfig,
+  Config
+} from '../../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { AppServices } from '../../app'
 import { createAsset } from '../../tests/asset'
@@ -9,11 +12,11 @@ import { createWalletAddress } from '../../tests/walletAddress'
 import { Asset } from '../../asset/model'
 import { StartQuoteOptions } from '../handler/service'
 import { WalletAddress } from '../../open_payments/wallet_address/model'
-import * as Pay from '@interledger/pay'
+// import * as Pay from '@interledger/pay'
 
 import { createReceiver } from '../../tests/receiver'
 import { mockRatesApi } from '../../tests/rates'
-import { AccountingService } from '../../accounting/service'
+// import { AccountingService } from '../../accounting/service'
 import { truncateTables } from '../../tests/tableManager'
 
 const nock = (global as unknown as { nock: typeof import('nock') }).nock
@@ -22,8 +25,8 @@ describe('IlpPaymentService', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let localPaymentService: LocalPaymentService
-  let accountingService: AccountingService
-  let config: IAppConfig
+  // let accountingService: AccountingService
+  // let config: IAppConfig
 
   const exchangeRatesUrl = 'https://example-rates.com'
 

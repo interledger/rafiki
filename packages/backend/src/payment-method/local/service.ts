@@ -8,11 +8,11 @@ import {
 import { isConvertError, RatesService } from '../../rates/service'
 import { IAppConfig } from '../../config/app'
 import {
-  PaymentMethodHandlerError,
-  PaymentMethodHandlerErrorCode
+  PaymentMethodHandlerError
+  // PaymentMethodHandlerErrorCode
 } from '../handler/errors'
 import { TelemetryService } from '../../telemetry/service'
-import { Asset } from '../../rates/util'
+// import { Asset } from '../../rates/util'
 
 export interface LocalPaymentService extends PaymentMethodService {}
 
@@ -150,8 +150,8 @@ async function getQuote(
 }
 
 async function pay(
-  deps: ServiceDependencies,
-  options: PayOptions
+  _deps: ServiceDependencies,
+  _options: PayOptions
 ): Promise<void> {
   throw new Error('local pay not implemented')
 }
