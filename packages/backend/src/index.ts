@@ -463,7 +463,8 @@ export function initIocContainer(
     return createPaymentMethodHandlerService({
       logger: await deps.use('logger'),
       knex: await deps.use('knex'),
-      ilpPaymentService: await deps.use('ilpPaymentService')
+      ilpPaymentService: await deps.use('ilpPaymentService'),
+      localPaymentService: await deps.use('localPaymentService')
     })
   })
 

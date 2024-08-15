@@ -4,6 +4,7 @@ import { WalletAddress } from '../../open_payments/wallet_address/model'
 import { Receiver } from '../../open_payments/receiver/model'
 import { BaseService } from '../../shared/baseService'
 import { IlpPaymentService } from '../ilp/service'
+import { LocalPaymentService } from '../local/service'
 
 export interface StartQuoteOptions {
   walletAddress: WalletAddress
@@ -33,7 +34,7 @@ export interface PaymentMethodService {
   pay(payOptions: PayOptions): Promise<void>
 }
 
-export type PaymentMethod = 'ILP'
+export type PaymentMethod = 'ILP' | 'LOCAL'
 
 export interface PaymentMethodHandlerService {
   getQuote(
@@ -45,12 +46,14 @@ export interface PaymentMethodHandlerService {
 
 interface ServiceDependencies extends BaseService {
   ilpPaymentService: IlpPaymentService
+  localPaymentService: LocalPaymentService
 }
 
 export async function createPaymentMethodHandlerService({
   logger,
   knex,
-  ilpPaymentService
+  ilpPaymentService,
+  localPaymentService
 }: ServiceDependencies): Promise<PaymentMethodHandlerService> {
   const log = logger.child({
     service: 'PaymentMethodHandlerService'
@@ -58,11 +61,13 @@ export async function createPaymentMethodHandlerService({
   const deps: ServiceDependencies = {
     logger: log,
     knex,
-    ilpPaymentService
+    ilpPaymentService,
+    localPaymentService
   }
 
   const paymentMethods: { [key in PaymentMethod]: PaymentMethodService } = {
-    ILP: deps.ilpPaymentService
+    ILP: deps.ilpPaymentService,
+    LOCAL: deps.localPaymentService
   }
 
   return {
