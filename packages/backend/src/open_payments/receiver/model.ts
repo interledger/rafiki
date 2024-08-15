@@ -33,9 +33,6 @@ export class Receiver {
 
   constructor(
     incomingPayment: OpenPaymentsIncomingPaymentWithPaymentMethod,
-    // TODO: lookup incomingPayment where isLocal is used instead of tracking isLocal here?
-    // not sure how simple the check can be. url matches resource server?
-    // exists in local db? exists in local db AND has stream creds (how its checked in receiverService.getReceiver)?
     isLocal: boolean
   ) {
     if (incomingPayment.completed) {
