@@ -696,7 +696,7 @@ importers:
     dependencies:
       '@apollo/client':
         specifier: ^3.9.9
-        version: 3.11.4(graphql@16.8.1)
+        version: 3.9.9(@types/react@18.2.73)(graphql@16.8.1)(react-dom@18.2.0)(react@18.2.0)
       '@interledger/http-signature-utils':
         specifier: 2.0.2
         version: 2.0.2
