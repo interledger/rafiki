@@ -42,7 +42,7 @@ describe('Receiver Model', (): void => {
       const incomingPayment = await createIncomingPayment(deps, {
         walletAddressId: walletAddress.id
       })
-      const isLocal = false
+      const isLocal = true
 
       const streamCredentials = streamCredentialsService.get(incomingPayment)
       assert(streamCredentials)
