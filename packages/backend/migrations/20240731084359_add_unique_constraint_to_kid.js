@@ -2,14 +2,14 @@
  * @param { import("knex").Knex } knex
  * @returns { Promise<void> }
  */
-exports.up = function (knex) {
+exports.up = async function (knex) {
   // delete any existing duplicates per wallet address
-  knex.raw(`
-  DELETE FROM walletAddressKeys
+  await knex.raw(`
+  DELETE FROM "walletAddressKeys"
     WHERE ctid NOT IN (
       SELECT MIN(ctid)
-      FROM walletAddressKeys
-      GROUP BY walletAddressId, kid, x
+      FROM "walletAddressKeys"
+      GROUP BY "walletAddressId", kid, x
     );
   `)
 
