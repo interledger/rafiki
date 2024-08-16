@@ -173,6 +173,38 @@ describe('Incoming Payment Service', (): void => {
         )
       })
 
+      it('should not approve already cancelled incoming payment', async (): Promise<void> => {
+        const incomingPayment = await createIncomingPaymentHelper()
+        assert.ok(!isIncomingPaymentError(incomingPayment))
+
+        await IncomingPayment.query(knex)
+          .findOne({ id: incomingPayment.id })
+          .patch({ cancelledAt: new Date() })
+
+        expect(
+          incomingPaymentService.approve(incomingPayment.id)
+        ).rejects.toThrow('Cannot approve already cancelled incoming payment.')
+      })
+
+      it('should not update approvedAt field of already approved incoming payment', async (): Promise<void> => {
+        const approvedAt = new Date()
+        const incomingPayment = await createIncomingPaymentHelper()
+        assert.ok(!isIncomingPaymentError(incomingPayment))
+
+        await IncomingPayment.query(knex)
+          .findOne({ id: incomingPayment.id })
+          .patch({ approvedAt })
+
+        const approvedPayment = await incomingPaymentService.approve(
+          incomingPayment.id
+        )
+        assert.ok(!isIncomingPaymentError(approvedPayment))
+
+        expect(approvedPayment.approvedAt?.toISOString()).toBe(
+          approvedAt.toISOString()
+        )
+      })
+
       it('should approve incoming payment', async (): Promise<void> => {
         const incomingPayment = await createIncomingPaymentHelper()
         assert.ok(!isIncomingPaymentError(incomingPayment))
@@ -196,6 +228,38 @@ describe('Incoming Payment Service', (): void => {
       it('should return UnknownPayment error if payment does not exist', async (): Promise<void> => {
         expect(incomingPaymentService.cancel(uuid())).resolves.toBe(
           IncomingPaymentError.UnknownPayment
+        )
+      })
+
+      it('should not cancel already approved incoming payment', async (): Promise<void> => {
+        const incomingPayment = await createIncomingPaymentHelper()
+        assert.ok(!isIncomingPaymentError(incomingPayment))
+
+        await IncomingPayment.query(knex)
+          .findOne({ id: incomingPayment.id })
+          .patch({ approvedAt: new Date() })
+
+        expect(
+          incomingPaymentService.cancel(incomingPayment.id)
+        ).rejects.toThrow('Cannot cancel already approved incoming payment.')
+      })
+
+      it('should not update cancelledAt field of already cancelled incoming payment', async (): Promise<void> => {
+        const cancelledAt = new Date()
+        const incomingPayment = await createIncomingPaymentHelper()
+        assert.ok(!isIncomingPaymentError(incomingPayment))
+
+        await IncomingPayment.query(knex)
+          .findOne({ id: incomingPayment.id })
+          .patch({ cancelledAt })
+
+        const cancelledPayment = await incomingPaymentService.cancel(
+          incomingPayment.id
+        )
+        assert.ok(!isIncomingPaymentError(cancelledPayment))
+
+        expect(cancelledPayment.cancelledAt?.toISOString()).toBe(
+          cancelledAt.toISOString()
         )
       })
 
