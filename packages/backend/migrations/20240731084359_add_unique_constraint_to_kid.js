@@ -13,7 +13,7 @@ exports.up = async function (knex) {
         GROUP BY "walletAddressId", kid, x
       ) subquery
     );
-  `);
+  `)
 
   return knex.schema.alterTable('walletAddressKeys', (table) => {
     table.unique(['walletAddressId', 'kid', 'x'])
