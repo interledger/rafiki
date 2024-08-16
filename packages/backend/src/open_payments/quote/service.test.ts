@@ -30,6 +30,7 @@ import { Asset } from '../../asset/model'
 import { PaymentMethodHandlerService } from '../../payment-method/handler/service'
 import { ReceiverService } from '../receiver/service'
 import { createReceiver } from '../../tests/receiver'
+import * as Pay from '@interledger/pay'
 import {
   PaymentMethodHandlerError,
   PaymentMethodHandlerErrorCode
@@ -205,6 +206,7 @@ describe('QuoteService', (): void => {
                   receiver: options.receiver,
                   debitAmount: debitAmount || mockedQuote.debitAmount,
                   receiveAmount: receiveAmount || mockedQuote.receiveAmount,
+                  maxPacketAmount: BigInt('9223372036854775807'),
                   createdAt: expect.any(Date),
                   updatedAt: expect.any(Date),
                   expiresAt: new Date(
@@ -394,11 +396,21 @@ describe('QuoteService', (): void => {
         }
       })
 
-      const mockedQuote = mockQuote({
-        receiver,
-        walletAddress: sendingWalletAddress,
-        receiveAmountValue
-      })
+      const mockedQuote = mockQuote(
+        {
+          receiver,
+          walletAddress: sendingWalletAddress,
+          receiveAmountValue
+        },
+        {
+          additionalFields: {
+            maxPacketAmount: Pay.Int.MAX_U64,
+            lowEstimatedExchangeRate: Pay.Ratio.from(10 ** 20),
+            highEstimatedExchangeRate: Pay.Ratio.from(10 ** 20),
+            minExchangeRate: Pay.Ratio.from(10 ** 20)
+          }
+        }
+      )
 
       jest
         .spyOn(paymentMethodHandlerService, 'getQuote')
@@ -412,7 +424,11 @@ describe('QuoteService', (): void => {
         })
       ).resolves.toMatchObject({
         debitAmount: mockedQuote.debitAmount,
-        receiveAmount: receiver.incomingAmount
+        receiveAmount: receiver.incomingAmount,
+        maxPacketAmount: BigInt('9223372036854775807'),
+        lowEstimatedExchangeRate: Pay.Ratio.from(10 ** 20),
+        highEstimatedExchangeRate: Pay.Ratio.from(10 ** 20),
+        minExchangeRate: Pay.Ratio.from(10 ** 20)
       })
     })
 
