@@ -3,15 +3,17 @@
  * @returns { Promise<void> }
  */
 exports.up = async function (knex) {
-  // delete any existing duplicates per wallet address
+  // delete any existing duplicates per wallet address, keep latest version
   await knex.raw(`
-  DELETE FROM "walletAddressKeys"
+    DELETE FROM "walletAddressKeys"
     WHERE ctid NOT IN (
-      SELECT MIN(ctid)
-      FROM "walletAddressKeys"
-      GROUP BY "walletAddressId", kid, x
+      SELECT ctid FROM (
+        SELECT "walletAddressId", kid, x, MAX("createdAt") AS latest_added, MAX(ctid) AS ctid
+        FROM "walletAddressKeys"
+        GROUP BY "walletAddressId", kid, x
+      ) subquery
     );
-  `)
+  `);
 
   return knex.schema.alterTable('walletAddressKeys', (table) => {
     table.unique(['walletAddressId', 'kid', 'x'])
