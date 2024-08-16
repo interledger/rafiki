@@ -191,7 +191,7 @@ describe('QuoteService', (): void => {
                       })
                 })
 
-                jest
+                const getQuoteSpy = jest
                   .spyOn(paymentMethodHandlerService, 'getQuote')
                   .mockResolvedValueOnce(mockedQuote)
 
@@ -200,6 +200,17 @@ describe('QuoteService', (): void => {
                   client
                 })
                 assert.ok(!isQuoteError(quote))
+
+                expect(getQuoteSpy).toHaveBeenCalledTimes(1)
+                expect(getQuoteSpy).toHaveBeenCalledWith(
+                  'ILP',
+                  expect.objectContaining({
+                    walletAddress: sendingWalletAddress,
+                    receiver: expect.anything(),
+                    receiveAmount: options.receiveAmount,
+                    debitAmount: options.debitAmount
+                  })
+                )
 
                 expect(quote).toMatchObject({
                   walletAddressId: sendingWalletAddress.id,
@@ -748,6 +759,64 @@ describe('QuoteService', (): void => {
             method: 'ilp'
           })
         ).resolves.toEqual(QuoteError.NonPositiveReceiveAmount)
+      })
+    })
+
+    describe('Local Receiver', (): void => {
+      test('Local receiver uses local payment method', async () => {
+        const incomingPayment = await createIncomingPayment(deps, {
+          walletAddressId: receivingWalletAddress.id,
+          incomingAmount
+        })
+
+        const options: CreateQuoteOptions = {
+          walletAddressId: sendingWalletAddress.id,
+          receiver: incomingPayment.getUrl(receivingWalletAddress),
+          method: 'ilp'
+        }
+
+        const mockedQuote = mockQuote({
+          receiver: (await receiverService.get(
+            incomingPayment.getUrl(receivingWalletAddress)
+          ))!,
+          walletAddress: sendingWalletAddress,
+          exchangeRate: 0.5,
+          debitAmountValue: debitAmount.value
+        })
+
+        const getQuoteSpy = jest
+          .spyOn(paymentMethodHandlerService, 'getQuote')
+          .mockResolvedValueOnce(mockedQuote)
+
+        const quote = await quoteService.create(options)
+        assert.ok(!isQuoteError(quote))
+
+        expect(getQuoteSpy).toHaveBeenCalledTimes(1)
+        expect(getQuoteSpy).toHaveBeenCalledWith(
+          'LOCAL',
+          expect.objectContaining({
+            walletAddress: sendingWalletAddress,
+            receiver: expect.anything(),
+            receiveAmount: options.receiveAmount,
+            debitAmount: options.debitAmount
+          })
+        )
+
+        expect(quote).toMatchObject({
+          walletAddressId: sendingWalletAddress.id,
+          receiver: options.receiver,
+          debitAmount: mockedQuote.debitAmount,
+          receiveAmount: mockedQuote.receiveAmount,
+          createdAt: expect.any(Date),
+          updatedAt: expect.any(Date),
+          expiresAt: new Date(quote.createdAt.getTime() + config.quoteLifespan)
+        })
+
+        await expect(
+          quoteService.get({
+            id: quote.id
+          })
+        ).resolves.toEqual(quote)
       })
     })
   })

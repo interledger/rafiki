@@ -1,4 +1,4 @@
-import { TransactionOrKnex } from 'objection'
+import { PartialModelGraph, TransactionOrKnex } from 'objection'
 import * as Pay from '@interledger/pay'
 
 import { BaseService } from '../../shared/baseService'
@@ -113,43 +113,50 @@ async function createQuote(
 
   try {
     const receiver = await resolveReceiver(deps, options)
-    const quote = await deps.paymentMethodHandlerService.getQuote('ILP', {
-      walletAddress,
-      receiver,
-      receiveAmount: options.receiveAmount,
-      debitAmount: options.debitAmount
-    })
-
-    const maxPacketAmount = quote.additionalFields.maxPacketAmount as bigint
+    const isLocal = false
+    const quote = await deps.paymentMethodHandlerService.getQuote(
+      isLocal ? 'LOCAL' : 'ILP',
+      {
+        walletAddress,
+        receiver,
+        receiveAmount: options.receiveAmount,
+        debitAmount: options.debitAmount
+      }
+    )
 
     const sendingFee = await deps.feeService.getLatestFee(
       walletAddress.assetId,
       FeeType.Sending
     )
 
+    const graph: PartialModelGraph<Quote> = {
+      walletAddressId: options.walletAddressId,
+      assetId: walletAddress.assetId,
+      receiver: options.receiver,
+      debitAmount: quote.debitAmount,
+      receiveAmount: quote.receiveAmount,
+      expiresAt: new Date(0), // expiresAt is patched in finalizeQuote
+      client: options.client,
+      feeId: sendingFee?.id,
+      estimatedExchangeRate: quote.estimatedExchangeRate
+    }
+
+    if (!isLocal) {
+      const maxPacketAmount = quote.additionalFields.maxPacketAmount as bigint
+      graph.ilpQuoteDetails = {
+        maxPacketAmount:
+          MAX_INT64 < maxPacketAmount ? MAX_INT64 : maxPacketAmount, // Cap at MAX_INT64 because of postgres type limits.
+        minExchangeRate: quote.additionalFields.minExchangeRate as Pay.Ratio,
+        lowEstimatedExchangeRate: quote.additionalFields
+          .lowEstimatedExchangeRate as Pay.Ratio,
+        highEstimatedExchangeRate: quote.additionalFields
+          .highEstimatedExchangeRate as Pay.PositiveRatio
+      }
+    }
+
     return await Quote.transaction(deps.knex, async (trx) => {
       const createdQuote = await Quote.query(trx)
-        .insertGraphAndFetch({
-          walletAddressId: options.walletAddressId,
-          assetId: walletAddress.assetId,
-          receiver: options.receiver,
-          debitAmount: quote.debitAmount,
-          receiveAmount: quote.receiveAmount,
-          ilpQuoteDetails: {
-            maxPacketAmount:
-              MAX_INT64 < maxPacketAmount ? MAX_INT64 : maxPacketAmount, // Cap at MAX_INT64 because of postgres type limits.
-            minExchangeRate: quote.additionalFields
-              .minExchangeRate as Pay.Ratio,
-            lowEstimatedExchangeRate: quote.additionalFields
-              .lowEstimatedExchangeRate as Pay.Ratio,
-            highEstimatedExchangeRate: quote.additionalFields
-              .highEstimatedExchangeRate as Pay.PositiveRatio
-          },
-          expiresAt: new Date(0), // expiresAt is patched in finalizeQuote
-          client: options.client,
-          feeId: sendingFee?.id,
-          estimatedExchangeRate: quote.estimatedExchangeRate
-        })
+        .insertGraphAndFetch(graph)
         .withGraphFetched('[asset, fee, walletAddress, ilpQuoteDetails]')
 
       return await finalizeQuote(

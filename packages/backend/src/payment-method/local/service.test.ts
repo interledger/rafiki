@@ -41,9 +41,9 @@ describe('IlpPaymentService', (): void => {
     })
     appContainer = await createTestApp(deps)
 
-    config = await deps.use('config')
+    // config = await deps.use('config')
     localPaymentService = await deps.use('localPaymentService')
-    accountingService = await deps.use('accountingService')
+    // accountingService = await deps.use('accountingService')
   })
 
   beforeEach(async (): Promise<void> => {
