@@ -343,9 +343,15 @@ async function approveIncomingPayment(
     if (payment.state !== IncomingPaymentState.Pending)
       return IncomingPaymentError.WrongState
 
-    await payment.$query(trx).patch({
-      approvedAt: new Date(Date.now())
-    })
+    if (payment.cancelledAt) {
+      throw new Error('Cannot approve already cancelled incoming payment.')
+    }
+
+    if (!payment.approvedAt) {
+      await payment.$query(trx).patch({
+        approvedAt: new Date(Date.now())
+      })
+    }
 
     return await addReceivedAmount(deps, payment)
   })
@@ -365,9 +371,15 @@ async function cancelIncomingPayment(
     if (payment.state !== IncomingPaymentState.Pending)
       return IncomingPaymentError.WrongState
 
-    await payment.$query(trx).patch({
-      cancelledAt: new Date(Date.now())
-    })
+    if (payment.approvedAt) {
+      throw new Error('Cannot cancel already approved incoming payment.')
+    }
+
+    if (!payment.cancelledAt) {
+      await payment.$query(trx).patch({
+        cancelledAt: new Date(Date.now())
+      })
+    }
 
     return await addReceivedAmount(deps, payment)
   })
