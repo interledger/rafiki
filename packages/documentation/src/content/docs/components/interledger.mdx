@@ -1,14 +1,69 @@
 ---
-title: Peering
+title: Interledger
 ---
 
-## What is a peer / a peering relationship?
+Interledger is a protocol for sending packets of money across different payment networks or ledgers. For more details, see the [documentation](https://interledger.org/developers/get-started/) and the [specification](https://interledger.org/developers/rfcs/interledger-protocol/).
+
+## Connector
+
+The [`backend`](/introduction/architecture#backend) includes an [Interledger](/reference/glossary#interledger-protocol) connector for sending and receiving [STREAM](/reference/glossary#stream) packets.
+
+The amounts of these packets are used to update account balances in [TigerBeetle](/reference/glossary#tigerbeetle). (See [Accounts and Transfers](/concepts/accounting/accounts-and-transfers))
+
+Amounts are adjusted based on the destination/outgoing account's asset and Rafiki's configured exchange [rates service](/integration/getting-started#exchange-rates).
+
+### Packet Origination
+
+The connector receives incoming ILP packets via:
+
+- HTTP
+- direct calls from within the `backend`
+
+#### Incoming HTTP
+
+The `backend` includes an HTTP server listening on the configured [`CONNECTOR_PORT`](/integration/deployment#backend).
+
+An incoming ILP packet over HTTP is only accepted if it is from a configured [peer](/concepts/interledger-protocol/peering) and accompanied by the peer's incoming HTTP `authToken`.
+
+#### Backend
+
+The `backend` includes services for managing [Open Payments](/reference/glossary#open-payments) [quotes](https://docs.openpayments.guide/reference/create-quote) and [outgoing payments](https://docs.openpayments.guide/reference/create-outgoing-payment). Each of these calls the connector in order to send ILP packets. Quoting sends unfulfillable rate probe packets. Outgoing payments send packets as a part of executing the payment.
+
+These calls to the connector are actually made by calling `makeIlpPlugin` and passing the plugin to the [`@interledger/pay`](https://github.com/interledgerjs/interledgerjs/tree/master/packages/pay) library.
+
+### Packet Destination
+
+An ILP packet may either terminate at the local Rafiki's STREAM server or continue on to a peer via HTTP.
+
+#### Local STREAM Server
+
+The connector attempts to extract and decode the payment tag from a received ILP packet's destination address. If it is successfully able to match the tag with a locally managed [Open Payments](/reference/glossary#open-payments) [wallet address](/reference/glossary#wallet-address) or [incoming payment](https://docs.openpayments.guide/reference/create-incoming-payment), it will not forward the packet. The connector will credit the corresponding balance as well as track the total amount received for the STREAM connection in [Redis](/introduction/architecture) in order to support [STREAM receipts](https://interledger.org/rfcs/0039-stream-receipts/).
+
+Packets addressed to a wallet address happen via [SPSP](/reference/glossary#wallet-address).
+
+#### Outgoing HTTP
+
+If the ILP packet's destination address corresponds to a configured [peer](/concepts/interledger-protocol/peering), the connector will forward the packet to the peer over HTTP along with the peer's configured HTTP `authToken`.
+
+### Packet Rejection
+
+The connector may reject a packet with a corresponding [ILP error code](https://interledger.org/rfcs/0027-interledger-protocol-4/#error-codes) due to a number of reasons:
+
+- invalid packet
+- insufficient liquidity
+- rate limit exceeded
+- amount exceeding `maxPacketAmount`
+- expired packet
+
+## Peering
+
+### What is a peer / a peering relationship?
 
 A peer is a counterparty that a given party transacts with. Within the Interledger Protocol, connectors maintain peers, or counterparty connectors whom they transact with. The Interledger network is a graph of nodes (connectors) that have peered with one another by establishing a means of exchanging ILP packets and a means of paying one another for the successful forwarding and delivery of the packets. A connector may extend a given peer a limited line of credit, or none at all, depending upon their trustworthiness.
 
 Rafiki includes an implementation of such a connector.
 
-## What are the requirements for peering?
+### What are the requirements for peering?
 
 Both counterparties need to
 
@@ -23,13 +78,13 @@ Additionally, the two counterparties need to agree on a settlement mechanism. Ho
 
 Note that two counterparties could have multiple peering relationships that differ in e.g. the underlying asset.
 
-## How to peer two Rafiki instances?
+### How to peer two Rafiki instances?
 
-### Using the Admin Dashboard
+#### Using the Admin Dashboard
 
 Once the [`frontend`](https://github.com/interledger/rafiki/blob/main/packages/frontend) project is running (typically as part of the [local environment](https://github.com/interledger/rafiki/blob/main/localenv)), you can navgiate to the Peers page, and then press the Create Peer button. You will be prompted to enter the peer information such as the peer's static ILP address, as well as the corresponding HTTP info.
 
-### Using the Admin API
+#### Using the Admin API
 
 This section describes the process for setting up peering between two Rafiki instances using the [Admin API](/integration/management). The examples are given for one instance, the other instance would have to run the corresponding API calls.
 
@@ -41,7 +96,7 @@ Assume the following peering relationship
 
 Note that each GraphQL request has two parts: a _query_ and an object containing _query variables_.
 
-### Create Asset
+#### Create Asset
 
 Query:
 
@@ -90,7 +145,7 @@ Example Successful Response
 }
 ```
 
-### Create Peer
+#### Create Peer
 
 Query:
 
@@ -159,7 +214,7 @@ Example Successful Response
 }
 ```
 
-### Deposit Peer Liquidity
+#### Deposit Peer Liquidity
 
 Query:
 
@@ -203,11 +258,11 @@ Example successful response:
 }
 ```
 
-### Withdraw Peer Liquidity
+#### Withdraw Peer Liquidity
 
 This is a two-phase transaction, so the withdrawal needs to be created first and then posted (i.e. the Account Servicing Entity commits to the withdrawal). This way, the Account Servicing Entity can safely perform withdrawals in their internal system before posting in Rafiki. If the internal withdrawal failed or an error was made when creating the withdrawal in Rafiki, it can be voided rather than posted.
 
-#### Create Withdrawal
+##### Create Withdrawal
 
 Query:
 
@@ -251,7 +306,7 @@ Example successful response:
 }
 ```
 
-#### Post Withdrawal
+##### Post Withdrawal
 
 Query:
 
@@ -289,7 +344,7 @@ Example successful response:
 }
 ```
 
-#### Void Withdrawal
+##### Void Withdrawal
 
 Query:
 
@@ -327,7 +382,7 @@ Example successful response:
 }
 ```
 
-## Auto-peering
+### Auto-peering
 
 Additionally, certain peers will have _auto-peering_ available. This feature is only for sandbox environments, and should not be used in production environments. Auto-peering enables easier peering integration between Rafiki instances. In order to use this feature, it requires the peer you want to peer with to publish an "auto-peering" URL. Once this `peerUrl` is provided, instead of using `createPeer` mutation to create a peer, you can call `createOrUpdatePeerByUrl`:
 
@@ -364,7 +419,7 @@ with the input being:
 
 Calling this mutation will exchange ILP peering information (`staticIlpAddress` `ilpConnectorUrl`, auth tokens) automatically. The instance being peered with will issue a default amount of liquidity, and you can begin sending payments to wallet addresses at the other Rafiki instance.
 
-### Prerequisites
+#### Prerequisites
 
 Before making the `createOrUpdatePeerByUrl` request, a few `backend` environment variables about your Rafiki instance need to be configured:
 
@@ -372,7 +427,7 @@ Before making the `createOrUpdatePeerByUrl` request, a few `backend` environment
 2. `ILP_CONNECTOR_URL`: The full address of the ILP connector that will receive ILP packets. Locally and by default, it is on `0.0.0.0:3002`.
 3. `INSTANCE_NAME`: The name of your Rafiki instance. This is how your peer will identify you.
 
-### How to enable auto-peering
+#### How to enable auto-peering
 
 :::caution
 Auto-peering should _not_ be enabled in production environments. Only enable this feature in sandbox environments.

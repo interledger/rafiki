@@ -54,71 +54,16 @@ export default defineConfig({
           label: 'Docs',
           items: [
             {
-              label: 'Introduction',
+              label: 'Intro to Rafiki',
               collapsed: true,
               items: [
                 {
                   label: 'Overview',
-                  link: 'introduction/overview'
+                  link: 'intro-to-rafiki/overview'
                 },
                 {
-                  label: 'Architecture',
-                  link: 'introduction/architecture'
-                }
-              ]
-            },
-            {
-              label: 'Concepts',
-              collapsed: true,
-              items: [
-                {
-                  label: 'Interledger Protocol',
-                  items: [
-                    {
-                      label: 'Overview',
-                      link: 'concepts/interledger-protocol/overview'
-                    },
-                    {
-                      label: 'Connector',
-                      link: 'concepts/interledger-protocol/connector'
-                    },
-                    {
-                      label: 'Peering',
-                      link: 'concepts/interledger-protocol/peering'
-                    }
-                  ]
-                },
-                {
-                  label: 'Open Payments',
-                  items: [
-                    {
-                      label: 'Overview',
-                      link: 'concepts/open-payments/overview'
-                    },
-                    {
-                      label: 'Key Registry',
-                      link: 'concepts/open-payments/key-registry'
-                    },
-                    {
-                      label: 'Grant Interaction Flow',
-                      link: 'concepts/open-payments/grant-interaction'
-                    }
-                  ]
-                },
-                {
-                  label: 'Accounting',
-                  collapsed: true,
-                  autogenerate: {
-                    directory: 'concepts/accounting'
-                  }
-                },
-                {
-                  label: 'Account Servicing Entity',
-                  link: 'concepts/account-servicing-entity'
-                },
-                {
-                  label: 'Asset',
-                  link: 'concepts/asset'
+                  label: 'Account servicing entities',
+                  link: 'intro-to-rafiki/account-servicing-entities'
                 }
               ]
             },
@@ -127,32 +72,68 @@ export default defineConfig({
               collapsed: true,
               items: [
                 {
-                  label: 'Getting Started',
-                  link: 'integration/getting-started'
+                  label: 'Get started',
+                  link: 'integration/get-started'
                 },
                 {
-                  label: 'Deployment',
-                  link: 'integration/deployment'
+                  label: 'Deploy to production',
+                  link: 'integration/deploy-to-production'
                 },
                 {
-                  label: 'Management',
-                  link: 'integration/management'
+                  label: 'Admin APIs',
+                  link: 'integration/admin-apis'
                 },
                 {
-                  label: 'Webhook Events',
-                  link: 'integration/webhook-events'
+                  label: 'Integrator checklist',
+                  link: 'integration/integrator-checklist'
                 }
               ]
             },
             {
-              label: 'Telemetry',
+              label: 'Components',
               collapsed: true,
               items: [
-                { label: 'Overview', link: 'telemetry/overview' },
-                { label: 'Privacy', link: 'telemetry/privacy' },
                 {
-                  label: 'Deploying Custom Telemetry',
-                  link: 'telemetry/integrating'
+                  label: 'Accounts, transfers, and liquidity',
+                  link: 'components/accounts-transfers-liquidity'
+                },
+                {
+                  label: 'Telemetry',
+                  link: 'components/telemetry'
+                },
+                {
+                  label: 'Interledger',
+                  link: 'components/interledger'
+                },
+                {
+                  label: 'Open Payments',
+                  link: 'components/open-payments'
+                },
+                {
+                  label: 'Architecture',
+                  link: 'components/architecture'
+                }
+              ]
+            },
+            {
+              label: 'Services and Auxiliary Packages',
+              collapsed: true,
+              items: [
+                {
+                  label: 'Backend service',
+                  link: 'services-and-aux-packages/backend-service'
+                },
+                {
+                  label: 'Auth service',
+                  link: 'services-and-aux-packages/auth-service'
+                },
+                {
+                  label: 'Frontend service',
+                  link: 'services-and-aux-packages/frontend-service'
+                },
+                {
+                  label: 'Token introspection',
+                  link: 'services-and-aux-packages/token-introspection'
                 }
               ]
             },
@@ -167,6 +148,44 @@ export default defineConfig({
                 {
                   label: 'Auto-Peering',
                   link: 'playground/autopeering'
+                },
+                {
+                  label: 'Testnet',
+                  link: 'playground/testnet'
+                }
+              ]
+            },
+            {
+              label: 'Admin APIs',
+              collapsed: true,
+              items: [
+                {
+                  label: 'GraphQL APIs',
+                  collapsed: true,
+                  items: [
+                    {
+                      label: 'Idempotency',
+                      link: 'apis/graphql/idempotency'
+                    },
+                    {
+                      label: 'Backend Admin API',
+                      collapsed: true,
+                      autogenerate: {
+                        directory: 'apis/graphql/backend'
+                      }
+                    },
+                    {
+                      label: 'Auth Admin API',
+                      collapsed: true,
+                      autogenerate: {
+                        directory: 'apis/graphql/auth'
+                      }
+                    }
+                  ]
+                },
+                {
+                  label: 'OpenAPIs',
+                  link: 'apis/openapis'
                 }
               ]
             },
@@ -178,41 +197,18 @@ export default defineConfig({
               }
             }
           ]
-        },
-        {
-          label: 'Admin APIs',
-          items: [
-            {
-              label: 'Idempotency',
-              link: 'apis/idempotency'
-            },
-            {
-              label: 'Backend Admin API',
-              collapsed: true,
-              autogenerate: {
-                directory: 'apis/backend'
-              }
-            },
-            {
-              label: 'Auth Admin API',
-              collapsed: true,
-              autogenerate: {
-                directory: 'apis/auth'
-              }
-            }
-          ]
         }
       ],
       plugins: [starlightLinksValidator()]
     }),
     GraphQL({
       schema: '../backend/src/graphql/schema.graphql',
-      output: './src/content/docs/apis/backend/',
+      output: './src/content/docs/apis/graphql/backend/',
       linkPrefix: '/apis/backend/'
     }),
     GraphQL({
       schema: '../auth/src/graphql/schema.graphql',
-      output: './src/content/docs/apis/auth/',
+      output: './src/content/docs/apis/graphql/auth/',
       linkPrefix: '/apis/auth/'
     })
   ],
