@@ -41,21 +41,19 @@ export async function incrementAmount(
   scale: number,
   telemetry: TelemetryService
 ): Promise<void> {
-  if (!unfulfillable && Number(prepareAmount)) {
-    if (response.fulfill) {
-      const value = BigInt(prepareAmount)
-      await telemetry.incrementCounterWithTransactionAmount(
-        'packet_amount_fulfill',
-        {
-          value,
-          assetCode: code,
-          assetScale: scale
-        },
-        {
-          description: 'Amount sent through the network',
-          valueType: ValueType.DOUBLE
-        }
-      )
-    }
+  if (!unfulfillable && Number(prepareAmount) && response.fulfill) {
+    const value = BigInt(prepareAmount)
+    await telemetry.incrementCounterWithTransactionAmount(
+      'packet_amount_fulfill',
+      {
+        value,
+        assetCode: code,
+        assetScale: scale
+      },
+      {
+        description: 'Amount sent through the network',
+        valueType: ValueType.DOUBLE
+      }
+    )
   }
 }
