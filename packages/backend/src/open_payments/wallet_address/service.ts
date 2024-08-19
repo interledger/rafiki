@@ -166,7 +166,7 @@ async function createWalletAddress(
 
     return await WalletAddress.query(deps.knex)
       .insertGraphAndFetch({
-        url: options.url,
+        url: options.url.toLowerCase(),
         publicName: options.publicName,
         assetId: options.assetId,
         additionalProperties: additionalProperties
@@ -295,10 +295,14 @@ async function getWalletAddressByUrl(
   deps: ServiceDependencies,
   url: string
 ): Promise<WalletAddress | undefined> {
+  url = url.toLowerCase()
+  console.log('This is what we are looking for: ', url)
   const walletAddress = await WalletAddress.query(deps.knex)
-    .findOne({ url })
+  .where('url', 'ilike', `%${url}%`)  // Usamos 'where' con 'ilike' para hacer la consulta
+    .limit(1)
     .withGraphFetched('asset')
-  return walletAddress || undefined
+    console.log("Wawawaw ", walletAddress)
+  return walletAddress[0] || undefined
 }
 
 async function getWalletAddressPage(
