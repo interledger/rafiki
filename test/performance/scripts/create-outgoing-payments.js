@@ -144,10 +144,6 @@ export default function (data) {
       `,
       variables: {
         input: {
-          metadata: {
-            description: null,
-            externalRef: null
-          },
           walletAddressId: c9WalletAddress.id,
           quoteId: quote.id
         }
