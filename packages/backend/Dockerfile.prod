@@ -59,4 +59,4 @@ COPY --from=builder /home/rafiki/packages/backend/dist ./packages/backend/dist
 COPY --from=builder /home/rafiki/packages/token-introspection/dist ./packages/token-introspection/dist
 COPY --from=builder /home/rafiki/packages/backend/knexfile.js ./packages/backend/knexfile.js
 
-CMD ["node", "/home/rafiki/packages/backend/dist/index.js"]
+CMD ["node", "-r", "/home/rafiki/packages/backend/dist/telemetry/index.js", "/home/rafiki/packages/backend/dist/index.js"]

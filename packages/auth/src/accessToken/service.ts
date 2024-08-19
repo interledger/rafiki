@@ -1,15 +1,21 @@
 import { v4 } from 'uuid'
 import { TransactionOrKnex } from 'objection'
+import { AccessItem } from '@interledger/open-payments'
 
 import { BaseService } from '../shared/baseService'
 import { generateToken } from '../shared/utils'
 import { Grant, isRevokedGrant } from '../grant/model'
 import { ClientService } from '../client/service'
 import { AccessToken } from './model'
+import { compareRequestAndGrantAccessItems } from '../access/utils'
+import { Access, toOpenPaymentsAccess } from '../access/model'
 
 export interface AccessTokenService {
   getByManagementId(managementId: string): Promise<AccessToken | undefined>
-  introspect(tokenValue: string): Promise<Grant | undefined>
+  introspect(
+    tokenValue: string,
+    access?: AccessItem[]
+  ): Promise<{ grant: Grant; access: Access[] } | undefined>
   create(grantId: string, trx?: TransactionOrKnex): Promise<AccessToken>
   revoke(id: string, trx?: TransactionOrKnex): Promise<AccessToken | undefined>
   revokeByGrantId(grantId: string, trx?: TransactionOrKnex): Promise<number>
@@ -42,7 +48,8 @@ export async function createAccessTokenService({
   return {
     getByManagementId: (managementId: string) =>
       getByManagementId(managementId),
-    introspect: (tokenValue: string) => introspect(deps, tokenValue),
+    introspect: (tokenValue: string, access?: AccessItem[]) =>
+      introspect(deps, tokenValue, access),
     revoke: (id: string, trx?: TransactionOrKnex) => revoke(deps, id, trx),
     revokeByGrantId: (grantId: string, trx?: TransactionOrKnex) =>
       revokeByGrantId(deps, grantId, trx),
@@ -68,12 +75,14 @@ async function getByManagementId(
 
 async function introspect(
   deps: ServiceDependencies,
-  tokenValue: string
-): Promise<Grant | undefined> {
+  tokenValue: string,
+  access?: AccessItem[]
+): Promise<{ grant: Grant; access: Access[] } | undefined> {
   const token = await AccessToken.query(deps.knex)
     .findOne({ value: tokenValue })
     .withGraphFetched('grant.access')
 
+  const foundAccess: Access[] = []
   if (!token) return
   if (isTokenExpired(token)) {
     return undefined
@@ -81,8 +90,24 @@ async function introspect(
     if (!token.grant || isRevokedGrant(token.grant)) {
       return undefined
     }
+    if (access) {
+      for (const accessItem of access) {
+        const { access: grantAccess } = token.grant
+        const foundAccessItem = grantAccess.find((grantAccessItem) =>
+          compareRequestAndGrantAccessItems(
+            accessItem,
+            toOpenPaymentsAccess(grantAccessItem)
+          )
+        )
+        if (!foundAccessItem) {
+          return undefined
+        } else {
+          foundAccess.push(foundAccessItem)
+        }
+      }
+    }
 
-    return token.grant
+    return { grant: token.grant, access: foundAccess }
   }
 }
 

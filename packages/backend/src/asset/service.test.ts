@@ -74,25 +74,17 @@ describe('Asset Service', (): void => {
 
     test('Asset accounts are created', async (): Promise<void> => {
       const accountingService = await deps.use('accountingService')
-      const liquiditySpy = jest.spyOn(
+      const liquidityAndSettlementSpy = jest.spyOn(
         accountingService,
-        'createLiquidityAccount'
-      )
-      const settlementSpy = jest.spyOn(
-        accountingService,
-        'createSettlementAccount'
+        'createLiquidityAndLinkedSettlementAccount'
       )
 
       const asset = await assetService.create(randomAsset())
       assert.ok(!isAssetError(asset))
 
-      expect(liquiditySpy).toHaveBeenCalledWith(
+      expect(liquidityAndSettlementSpy).toHaveBeenCalledWith(
         asset,
         LiquidityAccountType.ASSET,
-        expect.any(Function)
-      )
-      expect(settlementSpy).toHaveBeenCalledWith(
-        asset.ledger,
         expect.any(Function)
       )
 

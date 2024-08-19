@@ -16,7 +16,8 @@ import {
   Transaction,
   TransferOptions,
   Withdrawal,
-  createAccountToAccountTransfer
+  createAccountToAccountTransfer,
+  TransferType
 } from '../service'
 import { calculateBalance, createAccounts, getAccounts } from './accounts'
 import {
@@ -24,10 +25,14 @@ import {
   TigerbeetleUnknownAccountError,
   areAllAccountExistsErrors
 } from './errors'
-import { NewTransferOptions, createTransfers } from './transfers'
-import { toTigerbeetleId } from './utils'
+import {
+  NewTransferOptions,
+  createTransfers,
+  getAccountTransfers
+} from './transfers'
+import { toTigerBeetleId } from './utils'
 
-export enum TigerbeetleAccountCode {
+export enum TigerBeetleAccountCode {
   LIQUIDITY_WEB_MONETIZATION = 1,
   LIQUIDITY_ASSET = 2,
   LIQUIDITY_PEER = 3,
@@ -36,19 +41,33 @@ export enum TigerbeetleAccountCode {
   SETTLEMENT = 101
 }
 
-export const convertToTigerbeetleAccountCode: {
-  [key in LiquidityAccountType]: TigerbeetleAccountCode
+export enum TigerBeetleTransferCode {
+  TRANSFER = 1,
+  DEPOSIT = 2,
+  WITHDRAWAL = 3
+}
+
+export const convertToTigerBeetleAccountCode: {
+  [key in LiquidityAccountType]: TigerBeetleAccountCode
 } = {
   [LiquidityAccountType.WEB_MONETIZATION]:
-    TigerbeetleAccountCode.LIQUIDITY_WEB_MONETIZATION,
-  [LiquidityAccountType.ASSET]: TigerbeetleAccountCode.LIQUIDITY_ASSET,
-  [LiquidityAccountType.PEER]: TigerbeetleAccountCode.LIQUIDITY_PEER,
-  [LiquidityAccountType.INCOMING]: TigerbeetleAccountCode.LIQUIDITY_INCOMING,
-  [LiquidityAccountType.OUTGOING]: TigerbeetleAccountCode.LIQUIDITY_OUTGOING
+    TigerBeetleAccountCode.LIQUIDITY_WEB_MONETIZATION,
+  [LiquidityAccountType.ASSET]: TigerBeetleAccountCode.LIQUIDITY_ASSET,
+  [LiquidityAccountType.PEER]: TigerBeetleAccountCode.LIQUIDITY_PEER,
+  [LiquidityAccountType.INCOMING]: TigerBeetleAccountCode.LIQUIDITY_INCOMING,
+  [LiquidityAccountType.OUTGOING]: TigerBeetleAccountCode.LIQUIDITY_OUTGOING
+}
+
+export const convertToTigerBeetleTransferCode: {
+  [key in TransferType]: TigerBeetleTransferCode
+} = {
+  [TransferType.TRANSFER]: TigerBeetleTransferCode.TRANSFER,
+  [TransferType.DEPOSIT]: TigerBeetleTransferCode.DEPOSIT,
+  [TransferType.WITHDRAWAL]: TigerBeetleTransferCode.WITHDRAWAL
 }
 
 export interface ServiceDependencies extends BaseService {
-  tigerbeetle: Client
+  tigerBeetle: Client
   withdrawalThrottleDelay?: number
 }
 
@@ -74,7 +93,8 @@ export function createAccountingService(
     // Their account id is the corresponding asset's ledger value.
     createLiquidityAccount: (options, accountType) =>
       createLiquidityAccount(deps, options, accountType),
-    createSettlementAccount: (ledger) => createSettlementAccount(deps, ledger),
+    createLiquidityAndLinkedSettlementAccount: (options, accTypeCode) =>
+      createLiquidityAndLinkedSettlementAccount(deps, options, accTypeCode),
     getBalance: (id) => getAccountBalance(deps, id),
     getTotalSent: (id) => getAccountTotalSent(deps, id),
     getAccountsTotalSent: (ids) => getAccountsTotalSent(deps, ids),
@@ -85,7 +105,8 @@ export function createAccountingService(
     createDeposit: (transfer) => createAccountDeposit(deps, transfer),
     createWithdrawal: (transfer) => createAccountWithdrawal(deps, transfer),
     postWithdrawal: (options) => postAccountWithdrawal(deps, options),
-    voidWithdrawal: (options) => voidAccountWithdrawal(deps, options)
+    voidWithdrawal: (options) => voidAccountWithdrawal(deps, options),
+    getAccountTransfers: (id, limit) => getAccountTransfers(deps, id, limit)
   }
 }
 
@@ -102,7 +123,8 @@ export async function createLiquidityAccount(
       {
         id: account.id,
         ledger: account.asset.ledger,
-        code: convertToTigerbeetleAccountCode[accountType]
+        code: convertToTigerBeetleAccountCode[accountType],
+        assetId: account.asset.id
       }
     ])
     return account
@@ -119,14 +141,16 @@ export async function createLiquidityAccount(
 
 export async function createSettlementAccount(
   deps: ServiceDependencies,
-  ledger: number
+  ledger: number,
+  assetId: string | number
 ): Promise<void> {
   try {
     await createAccounts(deps, [
       {
         id: ledger,
         ledger,
-        code: TigerbeetleAccountCode.SETTLEMENT
+        code: TigerBeetleAccountCode.SETTLEMENT,
+        assetId: toTigerBeetleId(assetId)
       }
     ])
   } catch (err) {
@@ -142,14 +166,52 @@ export async function createSettlementAccount(
   }
 }
 
+export async function createLiquidityAndLinkedSettlementAccount(
+  deps: ServiceDependencies,
+  account: LiquidityAccount,
+  accountType: LiquidityAccountType
+): Promise<LiquidityAccount> {
+  if (!validateId(account.id)) {
+    throw new Error('unable to create account, invalid id')
+  }
+  try {
+    // Create the liquidity and settlement as linked:
+    await createAccounts(deps, [
+      {
+        id: account.id,
+        ledger: account.asset.ledger,
+        code: convertToTigerBeetleAccountCode[accountType],
+        linked: true,
+        history: true,
+        assetId: account.asset.id
+      },
+      {
+        id: account.asset.ledger,
+        ledger: account.asset.ledger,
+        code: TigerBeetleAccountCode.SETTLEMENT,
+        linked: false, // Last account in the chain.
+        history: true,
+        assetId: account.asset.id
+      }
+    ])
+    return account
+  } catch (err) {
+    if (
+      err instanceof TigerbeetleCreateAccountError &&
+      areAllAccountExistsErrors([err.code])
+    ) {
+      throw new AccountAlreadyExistsError(`TigerBeetle error code: ${err.code}`)
+    }
+    throw err
+  }
+}
+
 export async function getAccountBalance(
   deps: ServiceDependencies,
   id: string
 ): Promise<bigint | undefined> {
   const account = (await getAccounts(deps, [id]))[0]
-  if (account) {
-    return calculateBalance(account)
-  }
+  if (account) return calculateBalance(account)
 }
 
 export async function getAccountTotalSent(
@@ -170,7 +232,7 @@ export async function getAccountsTotalSent(
     const accounts = await getAccounts(deps, ids)
     return ids.map(
       (id) =>
-        accounts.find((account) => account.id === toTigerbeetleId(id))
+        accounts.find((account) => account.id === toTigerBeetleId(id))
           ?.debits_posted
     )
   } else return []
@@ -194,7 +256,7 @@ export async function getAccountsTotalReceived(
     const accounts = await getAccounts(deps, ids)
     return ids.map(
       (id) =>
-        accounts.find((account) => account.id === toTigerbeetleId(id))
+        accounts.find((account) => account.id === toTigerBeetleId(id))
           ?.credits_posted
     )
   } else return []
@@ -206,9 +268,7 @@ export async function getSettlementBalance(
 ): Promise<bigint | undefined> {
   const assetAccount = (await getAccounts(deps, [ledger]))[0]
 
-  if (assetAccount) {
-    return calculateBalance(assetAccount)
-  }
+  if (assetAccount) return calculateBalance(assetAccount)
 }
 
 export async function createTransfer(
@@ -224,10 +284,7 @@ export async function createTransfer(
           voidId: transferId
         }))
       )
-
-      if (error) {
-        return error.error
-      }
+      if (error) return error.error
     },
     postTransfers: async (transferIds) => {
       const error = await createTransfers(
@@ -236,10 +293,7 @@ export async function createTransfer(
           postId: transferId
         }))
       )
-
-      if (error) {
-        return error.error
-      }
+      if (error) return error.error
     },
     getAccountReceived: async (accountRef) =>
       getAccountTotalReceived(deps, accountRef),
@@ -253,12 +307,12 @@ export async function createTransfer(
           sourceAccountId: transfer.sourceAccountId,
           destinationAccountId: transfer.destinationAccountId,
           amount: transfer.amount,
-          timeout: args.timeout
+          timeout: args.timeout,
+          transferRef: uuid(),
+          code: transferCodeFromType(transfer.transferType)
         })
       )
-
       const error = await createTransfers(deps, tbTransfers)
-
       if (error) {
         switch (error.error) {
           case TransferError.UnknownSourceAccount:
@@ -286,6 +340,10 @@ export async function createTransfer(
   })
 }
 
+function transferCodeFromType(type?: TransferType): number {
+  return type ? convertToTigerBeetleTransferCode[type] : 0
+}
+
 async function createAccountDeposit(
   deps: ServiceDependencies,
   { id, account, amount }: Deposit
@@ -299,12 +357,11 @@ async function createAccountDeposit(
       sourceAccountId: account.asset.ledger,
       destinationAccountId: account.id,
       amount,
-      ledger: account.asset.ledger
+      ledger: account.asset.ledger,
+      code: TigerBeetleTransferCode.DEPOSIT
     }
   ])
-  if (error) {
-    return error.error
-  }
+  if (error) return error.error
 }
 
 async function createAccountWithdrawal(
@@ -321,7 +378,8 @@ async function createAccountWithdrawal(
       destinationAccountId: account.asset.ledger,
       amount,
       timeout,
-      ledger: account.asset.ledger
+      ledger: account.asset.ledger,
+      code: TigerBeetleTransferCode.WITHDRAWAL
     }
   ])
   if (error) {

@@ -15,7 +15,7 @@ Rafiki uses a combination of liquidity and settlement accounts to perform double
 pnpm --filter backend up tigerbeetle-node --latest
 
 # specific version
-pnpm --filter backend up tigerbeetle-node@0.15.3
+pnpm --filter backend up tigerbeetle-node@0.15.4
 ```
 
 ### Production Environment - Helm charts

@@ -129,9 +129,10 @@ export async function createWalletAddressKey({
   const createWalletAddressKeyMutation = gql`
     mutation CreateWalletAddressKey($input: CreateWalletAddressKeyInput!) {
       createWalletAddressKey(input: $input) {
-        code
-        success
-        message
+        walletAddressKey {
+          id
+          walletAddressId
+        }
       }
     }
   `
@@ -148,7 +149,7 @@ export async function createWalletAddressKey({
       }
     })
     .then(({ data }): CreateWalletAddressKeyMutationResponse => {
-      if (!data.createWalletAddressKey.success) {
+      if (!data.createWalletAddressKey.walletAddressKey) {
         throw new Error('Data was empty')
       }
       return data.createWalletAddressKey

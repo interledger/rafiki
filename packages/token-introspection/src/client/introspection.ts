@@ -58,7 +58,7 @@ export const introspectToken = async (
       throw new Error(errorMessage)
     }
 
-    return validateTokenInfo(data)
+    return data
   } catch (error) {
     const errorMessage = `Error when making introspection request: ${
       error instanceof Error && error.message ? error.message : 'Unknown error'
@@ -67,13 +67,4 @@ export const introspectToken = async (
 
     throw new Error(errorMessage)
   }
-}
-
-export const validateTokenInfo = (tokenInfo: TokenInfo): TokenInfo => {
-  // TODO: tokenInfo.access must include args.access
-  // https://github.com/interledger/rafiki/issues/835
-  // throw new Error(
-  //   'Token info access does not match request access'
-  // )
-  return tokenInfo
 }

@@ -1,15 +1,16 @@
 import { Transaction, TransactionOrKnex } from 'objection'
-import { LedgerTransfer, LedgerTransferState } from './model'
+import { LedgerTransfer } from './model'
 import { ServiceDependencies } from '../service'
+import {
+  GetLedgerTransfersResult,
+  LedgerTransfer as ServiceLedgerTransfer,
+  TransferType,
+  LedgerTransferState
+} from '../../service'
 import { LedgerAccount } from '../ledger-account/model'
 import { TransferError } from '../../errors'
 import { AccountBalance, getAccountBalances } from '../balance'
 import { validateId as isValidUuid } from '../../../shared/utils'
-
-interface GetTransfersResult {
-  credits: LedgerTransfer[]
-  debits: LedgerTransfer[]
-}
 
 interface CreateTransferError {
   index: number
@@ -37,13 +38,14 @@ export type CreateLedgerTransferArgs = Pick<
 
 export async function getAccountTransfers(
   deps: ServiceDependencies,
-  accountId: string,
+  id: string | number,
+  limit?: number,
   trx?: TransactionOrKnex
-): Promise<GetTransfersResult> {
-  const transfers = await LedgerTransfer.query(trx || deps.knex)
+): Promise<GetLedgerTransfersResult> {
+  const builder = LedgerTransfer.query(trx || deps.knex)
     .where((query) =>
-      query.where({ debitAccountId: accountId }).orWhere({
-        creditAccountId: accountId
+      query.where({ debitAccountId: id }).orWhere({
+        creditAccountId: id
       })
     )
     // Get transfers for POSTED or non-expired PENDING transfers. VOIDED transfers are ignored.
@@ -60,19 +62,37 @@ export async function getAccountTransfers(
             )
         )
     )
+  if (limit) builder.limit(limit)
 
-  return transfers.reduce(
+  return (await builder).reduce(
     (results, transfer) => {
-      if (transfer.debitAccountId === accountId) {
-        results.debits.push(transfer)
+      if (transfer.debitAccountId === id) {
+        results.debits.push(mapToGetLedgerTransfersResult(transfer))
       } else {
-        results.credits.push(transfer)
+        results.credits.push(mapToGetLedgerTransfersResult(transfer))
       }
-
       return results
     },
-    { credits: [], debits: [] } as GetTransfersResult
+    { credits: [], debits: [] } as GetLedgerTransfersResult
   )
+}
+
+function mapToGetLedgerTransfersResult(
+  dbModel: LedgerTransfer
+): ServiceLedgerTransfer {
+  return {
+    amount: dbModel.amount,
+    creditAccountId: dbModel.creditAccountId,
+    debitAccountId: dbModel.debitAccountId,
+    id: dbModel.id,
+    ledger: dbModel.ledger,
+    timestamp: BigInt(dbModel.createdAt.getTime()),
+    type: dbModel.type ? TransferType[dbModel.type] : TransferType.TRANSFER,
+    state: dbModel.state,
+    timeout: 0,
+    transferRef: dbModel.transferRef,
+    expiresAt: dbModel.expiresAt
+  }
 }
 
 export async function voidTransfers(

@@ -85,21 +85,14 @@ export async function handleSending(
   const payEndTime = Date.now()
 
   if (deps.telemetry) {
-    deps.telemetry
-      .getOrCreateMetric('transactions_total', {
-        description: 'Count of funded transactions'
-      })
-      .add(1, {
-        source: deps.telemetry.getInstanceName()
-      })
+    deps.telemetry.incrementCounter('transactions_total', 1, {
+      description: 'Count of funded transactions'
+    })
+
     const payDuration = payEndTime - payStartTime
-    deps.telemetry
-      .getOrCreateHistogramMetric('ilp_pay_time_ms', {
-        description: 'Time to complete an ILP payment'
-      })
-      .record(payDuration, {
-        source: deps.telemetry.getInstanceName()
-      })
+    deps.telemetry.recordHistogram('ilp_pay_time_ms', payDuration, {
+      description: 'Time to complete an ILP payment'
+    })
   }
 
   await handleCompleted(deps, payment)
