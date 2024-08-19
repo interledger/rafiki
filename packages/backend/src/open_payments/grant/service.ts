@@ -104,12 +104,12 @@ async function getOrCreate(
 ): Promise<Grant | GrantError> {
   const existingGrant = await Grant.query(deps.knex)
     .findOne({
-      accessType: options.accessType,
-      accessActions: options.accessActions // where options.accessActions subset of accessActions
+      accessType: options.accessType
     })
-    .withGraphJoined('authServer')
     .where('authServer.url', options.authServer)
     .andWhere('expiresAt', '>', new Date())
+    .andWhere('accessActions', '@>', options.accessActions) // all options.accessActions are found in the saved grant
+    .withGraphJoined('authServer')
 
   if (existingGrant) {
     return existingGrant
