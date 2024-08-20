@@ -1,7 +1,6 @@
 import {
   AuthenticatedClient,
   IncomingPaymentWithPaymentMethods as OpenPaymentsIncomingPaymentWithPaymentMethods,
-  isPendingGrant,
   AccessAction,
   WalletAddress as OpenPaymentsWalletAddress
 } from '@interledger/open-payments'
@@ -13,6 +12,7 @@ import {
   isRemoteIncomingPaymentError,
   RemoteIncomingPaymentError
 } from './errors'
+import { isGrantError } from '../../grant/errors'
 
 interface CreateRemoteIncomingPaymentArgs {
   walletAddressUrl: string
@@ -113,58 +113,11 @@ async function getGrant(
     accessActions
   }
 
-  const existingGrant = await deps.grantService.get(grantOptions)
+  const grant = await deps.grantService.getOrCreate(grantOptions)
 
-  if (existingGrant) {
-    if (existingGrant.expired) {
-      if (!existingGrant.authServer) {
-        throw new Error('unknown auth server')
-      }
-      try {
-        const rotatedToken = await deps.openPaymentsClient.token.rotate({
-          url: existingGrant.getManagementUrl(existingGrant.authServer.url),
-          accessToken: existingGrant.accessToken
-        })
-        return deps.grantService.update(existingGrant, {
-          accessToken: rotatedToken.access_token.value,
-          managementUrl: rotatedToken.access_token.manage,
-          expiresIn: rotatedToken.access_token.expires_in
-        })
-      } catch (err) {
-        deps.logger.error({ err, grantOptions }, 'Grant token rotation failed.')
-        throw err
-      }
-    }
-    return existingGrant
+  if (isGrantError(grant)) {
+    return RemoteIncomingPaymentError.InvalidGrant
   }
 
-  const grant = await deps.openPaymentsClient.grant.request(
-    { url: walletAddress.authServer },
-    {
-      access_token: {
-        access: [
-          {
-            type: grantOptions.accessType,
-            actions: grantOptions.accessActions
-          }
-        ]
-      },
-      interact: {
-        start: ['redirect']
-      }
-    }
-  )
-
-  if (!isPendingGrant(grant)) {
-    return deps.grantService.create({
-      ...grantOptions,
-      accessToken: grant.access_token.value,
-      managementUrl: grant.access_token.manage,
-      expiresIn: grant.access_token.expires_in
-    })
-  }
-
-  const errorMessage = 'Grant is pending/requires interaction'
-  deps.logger.warn({ grantOptions }, errorMessage)
-  return RemoteIncomingPaymentError.InvalidGrant
+  return grant
 }
