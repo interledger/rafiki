@@ -5,7 +5,8 @@ import {
   WalletAddress as OpenPaymentsWalletAddress,
   AccessType,
   PublicIncomingPayment,
-  OpenPaymentsClientError
+  OpenPaymentsClientError,
+  WalletAddress
 } from '@interledger/open-payments'
 import { GrantService } from '../../grant/service'
 import { BaseService } from '../../../shared/baseService'
@@ -77,6 +78,20 @@ async function create(
     return RemoteIncomingPaymentError.UnknownWalletAddress
   }
 
+  return createIncomingPaymentWithRetry(deps, args, walletAddress)
+}
+
+async function createIncomingPaymentWithRetry(
+  deps: ServiceDependencies,
+  args: CreateRemoteIncomingPaymentArgs,
+  walletAddress: WalletAddress,
+  retries = 1
+): Promise<
+  OpenPaymentsIncomingPaymentWithPaymentMethods | RemoteIncomingPaymentError
+> {
+  const resourceServerUrl =
+    walletAddress.resourceServer ?? new URL(walletAddress.id).origin
+
   const grantOptions = {
     authServer: walletAddress.authServer,
     accessType: 'incoming-payment' as const,
@@ -92,7 +107,7 @@ async function create(
   try {
     return await deps.openPaymentsClient.incomingPayment.create(
       {
-        url: walletAddress.resourceServer ?? new URL(walletAddress.id).origin,
+        url: resourceServerUrl,
         accessToken: grant.accessToken
       },
       {
@@ -106,7 +121,42 @@ async function create(
     )
   } catch (err) {
     const errorMessage = 'Error creating remote incoming payment'
-    deps.logger.error({ err, walletAddressUrl: walletAddress.id }, errorMessage)
+    if (err instanceof OpenPaymentsClientError) {
+      deps.logger.error(
+        {
+          errStatus: err.status,
+          errDescription: err.description,
+          errMessage: err.message,
+          errValidation: err.validationErrors,
+          walletAddressUrl: walletAddress.id,
+          resourceServerUrl
+        },
+        errorMessage
+      )
+
+      // TODO: check for token-specific error code when resource server is updated to return proper error objects
+      if ((err.status === 401 || err.status === 403) && retries > 0) {
+        deps.logger.warn(
+          { resourceServerUrl, errStatus: err.status },
+          `Retrying request after receiving ${err.status} code. Retries left: ${retries}`
+        )
+
+        retries--
+        await deps.grantService.delete(grant.id)
+
+        return await createIncomingPaymentWithRetry(
+          deps,
+          args,
+          walletAddress,
+          retries
+        )
+      }
+    } else {
+      deps.logger.error(
+        { err, walletAddressUrl: walletAddress.id },
+        errorMessage
+      )
+    }
     return RemoteIncomingPaymentError.InvalidRequest
   }
 }
