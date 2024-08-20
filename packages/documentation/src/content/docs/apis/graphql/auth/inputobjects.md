@@ -16,7 +16,7 @@ title: Input objects
 <tr>
 <td>
 in<br />
-<a href="/apis/auth/enums#grantfinalization"><code>[GrantFinalization!]</code></a>
+<a href="/apis/graphql/auth/enums#grantfinalization"><code>[GrantFinalization!]</code></a>
 </td>
 <td>
 
@@ -25,7 +25,7 @@ in<br />
 <tr>
 <td>
 notIn<br />
-<a href="/apis/auth/enums#grantfinalization"><code>[GrantFinalization!]</code></a>
+<a href="/apis/graphql/auth/enums#grantfinalization"><code>[GrantFinalization!]</code></a>
 </td>
 <td>
 
@@ -46,7 +46,7 @@ notIn<br />
 <tr>
 <td>
 in<br />
-<a href="/apis/auth/enums#grantstate"><code>[GrantState!]</code></a>
+<a href="/apis/graphql/auth/enums#grantstate"><code>[GrantState!]</code></a>
 </td>
 <td>
 
@@ -55,7 +55,7 @@ in<br />
 <tr>
 <td>
 notIn<br />
-<a href="/apis/auth/enums#grantstate"><code>[GrantState!]</code></a>
+<a href="/apis/graphql/auth/enums#grantstate"><code>[GrantState!]</code></a>
 </td>
 <td>
 
@@ -76,7 +76,7 @@ notIn<br />
 <tr>
 <td>
 in<br />
-<a href="/apis/auth/scalars#string"><code>[String!]</code></a>
+<a href="/apis/graphql/auth/scalars#string"><code>[String!]</code></a>
 </td>
 <td>
 
@@ -97,7 +97,7 @@ in<br />
 <tr>
 <td>
 identifier<br />
-<a href="/apis/auth/inputobjects#filterstring"><code>FilterString</code></a>
+<a href="/apis/graphql/auth/inputobjects#filterstring"><code>FilterString</code></a>
 </td>
 <td>
 
@@ -106,7 +106,7 @@ identifier<br />
 <tr>
 <td>
 state<br />
-<a href="/apis/auth/inputobjects#filtergrantstate"><code>FilterGrantState</code></a>
+<a href="/apis/graphql/auth/inputobjects#filtergrantstate"><code>FilterGrantState</code></a>
 </td>
 <td>
 
@@ -115,7 +115,7 @@ state<br />
 <tr>
 <td>
 finalizationReason<br />
-<a href="/apis/auth/inputobjects#filterfinalizationreason"><code>FilterFinalizationReason</code></a>
+<a href="/apis/graphql/auth/inputobjects#filterfinalizationreason"><code>FilterFinalizationReason</code></a>
 </td>
 <td>
 
@@ -136,7 +136,7 @@ finalizationReason<br />
 <tr>
 <td>
 grantId<br />
-<a href="/apis/auth/scalars#string"><code>String!</code></a>
+<a href="/apis/graphql/auth/scalars#string"><code>String!</code></a>
 </td>
 <td>
 

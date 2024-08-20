@@ -10,7 +10,7 @@ title: Objects
 
 <p style={{ marginBottom: "0.4em" }}><strong>Implements</strong></p>
 
-- [Model](/apis/auth/interfaces#model)
+- [Model](/apis/graphql/auth/interfaces#model)
 
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
@@ -20,7 +20,7 @@ title: Objects
 <tr>
 <td>
 id<br />
-<a href="/apis/auth/scalars#id"><code>ID!</code></a>
+<a href="/apis/graphql/auth/scalars#id"><code>ID!</code></a>
 </td>
 <td>
 <p>Access id</p>
@@ -29,7 +29,7 @@ id<br />
 <tr>
 <td>
 identifier<br />
-<a href="/apis/auth/scalars#string"><code>String</code></a>
+<a href="/apis/graphql/auth/scalars#string"><code>String</code></a>
 </td>
 <td>
 <p>Wallet address of a sub-resource (incoming payment, outgoing payment, or quote)</p>
@@ -38,7 +38,7 @@ identifier<br />
 <tr>
 <td>
 type<br />
-<a href="/apis/auth/scalars#string"><code>String!</code></a>
+<a href="/apis/graphql/auth/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Access type (incoming payment, outgoing payment, or quote)</p>
@@ -47,7 +47,7 @@ type<br />
 <tr>
 <td>
 actions<br />
-<a href="/apis/auth/scalars#string"><code>[String]!</code></a>
+<a href="/apis/graphql/auth/scalars#string"><code>[String]!</code></a>
 </td>
 <td>
 <p>Access action (create, read, list or complete)</p>
@@ -56,7 +56,7 @@ actions<br />
 <tr>
 <td>
 limits<br />
-<a href="/apis/auth/objects#limitdata"><code>LimitData</code></a>
+<a href="/apis/graphql/auth/objects#limitdata"><code>LimitData</code></a>
 </td>
 <td>
 <p>Payment limits</p>
@@ -65,7 +65,7 @@ limits<br />
 <tr>
 <td>
 createdAt<br />
-<a href="/apis/auth/scalars#string"><code>String!</code></a>
+<a href="/apis/graphql/auth/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Date-time of creation</p>
@@ -80,7 +80,7 @@ createdAt<br />
 
 <p style={{ marginBottom: "0.4em" }}><strong>Implements</strong></p>
 
-- [Model](/apis/auth/interfaces#model)
+- [Model](/apis/graphql/auth/interfaces#model)
 
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
@@ -90,7 +90,7 @@ createdAt<br />
 <tr>
 <td>
 id<br />
-<a href="/apis/auth/scalars#id"><code>ID!</code></a>
+<a href="/apis/graphql/auth/scalars#id"><code>ID!</code></a>
 </td>
 <td>
 <p>Grant id</p>
@@ -99,7 +99,7 @@ id<br />
 <tr>
 <td>
 client<br />
-<a href="/apis/auth/scalars#string"><code>String!</code></a>
+<a href="/apis/graphql/auth/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Wallet address of the grantee&#39;s account</p>
@@ -108,7 +108,7 @@ client<br />
 <tr>
 <td>
 access<br />
-<a href="/apis/auth/objects#access"><code>[Access!]!</code></a>
+<a href="/apis/graphql/auth/objects#access"><code>[Access!]!</code></a>
 </td>
 <td>
 <p>Access details</p>
@@ -117,7 +117,7 @@ access<br />
 <tr>
 <td>
 state<br />
-<a href="/apis/auth/enums#grantstate"><code>GrantState!</code></a>
+<a href="/apis/graphql/auth/enums#grantstate"><code>GrantState!</code></a>
 </td>
 <td>
 <p>State of the grant</p>
@@ -126,7 +126,7 @@ state<br />
 <tr>
 <td>
 finalizationReason<br />
-<a href="/apis/auth/enums#grantfinalization"><code>GrantFinalization</code></a>
+<a href="/apis/graphql/auth/enums#grantfinalization"><code>GrantFinalization</code></a>
 </td>
 <td>
 <p>Reason a grant was finalized</p>
@@ -135,7 +135,7 @@ finalizationReason<br />
 <tr>
 <td>
 createdAt<br />
-<a href="/apis/auth/scalars#string"><code>String!</code></a>
+<a href="/apis/graphql/auth/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Date-time of creation</p>
@@ -156,7 +156,7 @@ createdAt<br />
 <tr>
 <td>
 node<br />
-<a href="/apis/auth/objects#grant"><code>Grant!</code></a>
+<a href="/apis/graphql/auth/objects#grant"><code>Grant!</code></a>
 </td>
 <td>
 
@@ -165,7 +165,7 @@ node<br />
 <tr>
 <td>
 cursor<br />
-<a href="/apis/auth/scalars#string"><code>String!</code></a>
+<a href="/apis/graphql/auth/scalars#string"><code>String!</code></a>
 </td>
 <td>
 
@@ -186,7 +186,7 @@ cursor<br />
 <tr>
 <td>
 pageInfo<br />
-<a href="/apis/auth/objects#pageinfo"><code>PageInfo!</code></a>
+<a href="/apis/graphql/auth/objects#pageinfo"><code>PageInfo!</code></a>
 </td>
 <td>
 
@@ -195,7 +195,7 @@ pageInfo<br />
 <tr>
 <td>
 edges<br />
-<a href="/apis/auth/objects#grantedge"><code>[GrantEdge!]!</code></a>
+<a href="/apis/graphql/auth/objects#grantedge"><code>[GrantEdge!]!</code></a>
 </td>
 <td>
 
@@ -216,7 +216,7 @@ edges<br />
 <tr>
 <td>
 receiver<br />
-<a href="/apis/auth/scalars#string"><code>String</code></a>
+<a href="/apis/graphql/auth/scalars#string"><code>String</code></a>
 </td>
 <td>
 <p>Wallet address URL of the receiver</p>
@@ -225,7 +225,7 @@ receiver<br />
 <tr>
 <td>
 debitAmount<br />
-<a href="/apis/auth/objects#paymentamount"><code>PaymentAmount</code></a>
+<a href="/apis/graphql/auth/objects#paymentamount"><code>PaymentAmount</code></a>
 </td>
 <td>
 <p>Amount to debit</p>
@@ -234,7 +234,7 @@ debitAmount<br />
 <tr>
 <td>
 receiveAmount<br />
-<a href="/apis/auth/objects#paymentamount"><code>PaymentAmount</code></a>
+<a href="/apis/graphql/auth/objects#paymentamount"><code>PaymentAmount</code></a>
 </td>
 <td>
 <p>Amount to receive</p>
@@ -243,7 +243,7 @@ receiveAmount<br />
 <tr>
 <td>
 interval<br />
-<a href="/apis/auth/scalars#string"><code>String</code></a>
+<a href="/apis/graphql/auth/scalars#string"><code>String</code></a>
 </td>
 <td>
 <p>Interval between payments</p>
@@ -264,7 +264,7 @@ interval<br />
 <tr>
 <td>
 endCursor<br />
-<a href="/apis/auth/scalars#string"><code>String</code></a>
+<a href="/apis/graphql/auth/scalars#string"><code>String</code></a>
 </td>
 <td>
 <p>Paginating forwards: the cursor to continue.</p>
@@ -273,7 +273,7 @@ endCursor<br />
 <tr>
 <td>
 hasNextPage<br />
-<a href="/apis/auth/scalars#boolean"><code>Boolean!</code></a>
+<a href="/apis/graphql/auth/scalars#boolean"><code>Boolean!</code></a>
 </td>
 <td>
 <p>Paginating forwards: Are there more pages?</p>
@@ -282,7 +282,7 @@ hasNextPage<br />
 <tr>
 <td>
 hasPreviousPage<br />
-<a href="/apis/auth/scalars#boolean"><code>Boolean!</code></a>
+<a href="/apis/graphql/auth/scalars#boolean"><code>Boolean!</code></a>
 </td>
 <td>
 <p>Paginating backwards: Are there more pages?</p>
@@ -291,7 +291,7 @@ hasPreviousPage<br />
 <tr>
 <td>
 startCursor<br />
-<a href="/apis/auth/scalars#string"><code>String</code></a>
+<a href="/apis/graphql/auth/scalars#string"><code>String</code></a>
 </td>
 <td>
 <p>Paginating backwards: the cursor to continue.</p>
@@ -312,7 +312,7 @@ startCursor<br />
 <tr>
 <td>
 value<br />
-<a href="/apis/auth/scalars#uint64"><code>UInt64!</code></a>
+<a href="/apis/graphql/auth/scalars#uint64"><code>UInt64!</code></a>
 </td>
 <td>
 
@@ -321,7 +321,7 @@ value<br />
 <tr>
 <td>
 assetCode<br />
-<a href="/apis/auth/scalars#string"><code>String!</code></a>
+<a href="/apis/graphql/auth/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p><a href="https://en.wikipedia.org/wiki/ISO_4217">ISO 4217 currency code</a>, e.g. <code>USD</code></p>
@@ -330,7 +330,7 @@ assetCode<br />
 <tr>
 <td>
 assetScale<br />
-<a href="/apis/auth/scalars#uint8"><code>UInt8!</code></a>
+<a href="/apis/graphql/auth/scalars#uint8"><code>UInt8!</code></a>
 </td>
 <td>
 <p>Difference in orders of magnitude between the standard unit of an asset and a corresponding fractional unit</p>
@@ -351,7 +351,7 @@ assetScale<br />
 <tr>
 <td>
 id<br />
-<a href="/apis/auth/scalars#id"><code>ID!</code></a>
+<a href="/apis/graphql/auth/scalars#id"><code>ID!</code></a>
 </td>
 <td>
 

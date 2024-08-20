@@ -10,7 +10,7 @@ title: Objects
 
 <p style={{ marginBottom: "0.4em" }}><strong>Implements</strong></p>
 
-- [Model](/apis/backend/interfaces#model)
+- [Model](/apis/graphql/backend/interfaces#model)
 
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
@@ -20,7 +20,7 @@ title: Objects
 <tr>
 <td>
 id<br />
-<a href="/apis/backend/scalars#id"><code>ID!</code></a>
+<a href="/apis/graphql/backend/scalars#id"><code>ID!</code></a>
 </td>
 <td>
 <p>Payment id</p>
@@ -29,7 +29,7 @@ id<br />
 <tr>
 <td>
 debitAccountId<br />
-<a href="/apis/backend/scalars#id"><code>ID!</code></a>
+<a href="/apis/graphql/backend/scalars#id"><code>ID!</code></a>
 </td>
 <td>
 <p>Debit account id</p>
@@ -38,7 +38,7 @@ debitAccountId<br />
 <tr>
 <td>
 creditAccountId<br />
-<a href="/apis/backend/scalars#id"><code>ID!</code></a>
+<a href="/apis/graphql/backend/scalars#id"><code>ID!</code></a>
 </td>
 <td>
 <p>Credit account id</p>
@@ -47,7 +47,7 @@ creditAccountId<br />
 <tr>
 <td>
 amount<br />
-<a href="/apis/backend/scalars#uint64"><code>UInt64!</code></a>
+<a href="/apis/graphql/backend/scalars#uint64"><code>UInt64!</code></a>
 </td>
 <td>
 <p>Amount sent (fixed send)</p>
@@ -56,7 +56,7 @@ amount<br />
 <tr>
 <td>
 transferType<br />
-<a href="/apis/backend/enums#transfertype"><code>TransferType!</code></a>
+<a href="/apis/graphql/backend/enums#transfertype"><code>TransferType!</code></a>
 </td>
 <td>
 <p>Type of accounting transfer</p>
@@ -65,7 +65,7 @@ transferType<br />
 <tr>
 <td>
 ledger<br />
-<a href="/apis/backend/scalars#uint8"><code>UInt8!</code></a>
+<a href="/apis/graphql/backend/scalars#uint8"><code>UInt8!</code></a>
 </td>
 <td>
 <p>Identifier that partitions the sets of accounts that can transact with each other.</p>
@@ -74,7 +74,7 @@ ledger<br />
 <tr>
 <td>
 createdAt<br />
-<a href="/apis/backend/scalars#string"><code>String!</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Date-time of creation</p>
@@ -95,7 +95,7 @@ createdAt<br />
 <tr>
 <td>
 debits<br />
-<a href="/apis/backend/objects#accountingtransfer"><code>[AccountingTransfer!]!</code></a>
+<a href="/apis/graphql/backend/objects#accountingtransfer"><code>[AccountingTransfer!]!</code></a>
 </td>
 <td>
 
@@ -104,7 +104,7 @@ debits<br />
 <tr>
 <td>
 credits<br />
-<a href="/apis/backend/objects#accountingtransfer"><code>[AccountingTransfer!]!</code></a>
+<a href="/apis/graphql/backend/objects#accountingtransfer"><code>[AccountingTransfer!]!</code></a>
 </td>
 <td>
 
@@ -125,7 +125,7 @@ credits<br />
 <tr>
 <td>
 key<br />
-<a href="/apis/backend/scalars#string"><code>String!</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 
@@ -134,7 +134,7 @@ key<br />
 <tr>
 <td>
 value<br />
-<a href="/apis/backend/scalars#string"><code>String!</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 
@@ -143,7 +143,7 @@ value<br />
 <tr>
 <td>
 visibleInOpenPayments<br />
-<a href="/apis/backend/scalars#boolean"><code>Boolean!</code></a>
+<a href="/apis/graphql/backend/scalars#boolean"><code>Boolean!</code></a>
 </td>
 <td>
 
@@ -164,7 +164,7 @@ visibleInOpenPayments<br />
 <tr>
 <td>
 value<br />
-<a href="/apis/backend/scalars#uint64"><code>UInt64!</code></a>
+<a href="/apis/graphql/backend/scalars#uint64"><code>UInt64!</code></a>
 </td>
 <td>
 
@@ -173,7 +173,7 @@ value<br />
 <tr>
 <td>
 assetCode<br />
-<a href="/apis/backend/scalars#string"><code>String!</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p><a href="https://en.wikipedia.org/wiki/ISO_4217">ISO 4217 currency code</a>, e.g. <code>USD</code></p>
@@ -182,7 +182,7 @@ assetCode<br />
 <tr>
 <td>
 assetScale<br />
-<a href="/apis/backend/scalars#uint8"><code>UInt8!</code></a>
+<a href="/apis/graphql/backend/scalars#uint8"><code>UInt8!</code></a>
 </td>
 <td>
 <p>Difference in orders of magnitude between the standard unit of an asset and a corresponding fractional unit</p>
@@ -197,7 +197,7 @@ assetScale<br />
 
 <p style={{ marginBottom: "0.4em" }}><strong>Implements</strong></p>
 
-- [Model](/apis/backend/interfaces#model)
+- [Model](/apis/graphql/backend/interfaces#model)
 
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
@@ -207,7 +207,7 @@ assetScale<br />
 <tr>
 <td>
 id<br />
-<a href="/apis/backend/scalars#id"><code>ID!</code></a>
+<a href="/apis/graphql/backend/scalars#id"><code>ID!</code></a>
 </td>
 <td>
 <p>Asset id</p>
@@ -216,7 +216,7 @@ id<br />
 <tr>
 <td>
 code<br />
-<a href="/apis/backend/scalars#string"><code>String!</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p><a href="https://en.wikipedia.org/wiki/ISO_4217">ISO 4217 currency code</a>, e.g. <code>USD</code></p>
@@ -225,7 +225,7 @@ code<br />
 <tr>
 <td>
 scale<br />
-<a href="/apis/backend/scalars#uint8"><code>UInt8!</code></a>
+<a href="/apis/graphql/backend/scalars#uint8"><code>UInt8!</code></a>
 </td>
 <td>
 <p>Difference in orders of magnitude between the standard unit of an asset and a corresponding fractional unit</p>
@@ -234,7 +234,7 @@ scale<br />
 <tr>
 <td>
 liquidity<br />
-<a href="/apis/backend/scalars#uint64"><code>UInt64</code></a>
+<a href="/apis/graphql/backend/scalars#uint64"><code>UInt64</code></a>
 </td>
 <td>
 <p>Available liquidity</p>
@@ -243,7 +243,7 @@ liquidity<br />
 <tr>
 <td>
 withdrawalThreshold<br />
-<a href="/apis/backend/scalars#uint64"><code>UInt64</code></a>
+<a href="/apis/graphql/backend/scalars#uint64"><code>UInt64</code></a>
 </td>
 <td>
 <p>Minimum amount of liquidity that can be withdrawn from the asset</p>
@@ -252,7 +252,7 @@ withdrawalThreshold<br />
 <tr>
 <td>
 liquidityThreshold<br />
-<a href="/apis/backend/scalars#uint64"><code>UInt64</code></a>
+<a href="/apis/graphql/backend/scalars#uint64"><code>UInt64</code></a>
 </td>
 <td>
 <p>Account Servicing Entity will be notified via a webhook event if liquidity falls below this value</p>
@@ -261,7 +261,7 @@ liquidityThreshold<br />
 <tr>
 <td>
 receivingFee<br />
-<a href="/apis/backend/objects#fee"><code>Fee</code></a>
+<a href="/apis/graphql/backend/objects#fee"><code>Fee</code></a>
 </td>
 <td>
 <p>The receiving fee structure for the asset</p>
@@ -270,7 +270,7 @@ receivingFee<br />
 <tr>
 <td>
 sendingFee<br />
-<a href="/apis/backend/objects#fee"><code>Fee</code></a>
+<a href="/apis/graphql/backend/objects#fee"><code>Fee</code></a>
 </td>
 <td>
 <p>The sending fee structure for the asset</p>
@@ -279,7 +279,7 @@ sendingFee<br />
 <tr>
 <td>
 fees<br />
-<a href="/apis/backend/objects#feesconnection"><code>FeesConnection</code></a>
+<a href="/apis/graphql/backend/objects#feesconnection"><code>FeesConnection</code></a>
 </td>
 <td>
 <p>Fetch a page of asset fees</p>
@@ -292,7 +292,7 @@ fees<br />
 <tr>
 <td>
 after<br />
-<a href="/apis/backend/scalars#string"><code>String</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String</code></a>
 </td>
 <td>
 <p>Paginating forwards: the cursor before the the requested page.</p>
@@ -301,7 +301,7 @@ after<br />
 <tr>
 <td>
 before<br />
-<a href="/apis/backend/scalars#string"><code>String</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String</code></a>
 </td>
 <td>
 <p>Paginating backwards: the cursor after the the requested page.</p>
@@ -310,7 +310,7 @@ before<br />
 <tr>
 <td>
 first<br />
-<a href="/apis/backend/scalars#int"><code>Int</code></a>
+<a href="/apis/graphql/backend/scalars#int"><code>Int</code></a>
 </td>
 <td>
 <p>Paginating forwards: The first <strong>n</strong> elements from the page.</p>
@@ -319,7 +319,7 @@ first<br />
 <tr>
 <td>
 last<br />
-<a href="/apis/backend/scalars#int"><code>Int</code></a>
+<a href="/apis/graphql/backend/scalars#int"><code>Int</code></a>
 </td>
 <td>
 <p>Paginating backwards: The last <strong>n</strong> elements from the page.</p>
@@ -328,7 +328,7 @@ last<br />
 <tr>
 <td>
 sortOrder<br />
-<a href="/apis/backend/enums#sortorder"><code>SortOrder</code></a>
+<a href="/apis/graphql/backend/enums#sortorder"><code>SortOrder</code></a>
 </td>
 <td>
 <p>Ascending or descending order of creation.</p>
@@ -342,7 +342,7 @@ sortOrder<br />
 <tr>
 <td>
 createdAt<br />
-<a href="/apis/backend/scalars#string"><code>String!</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Date-time of creation</p>
@@ -363,7 +363,7 @@ createdAt<br />
 <tr>
 <td>
 node<br />
-<a href="/apis/backend/objects#asset"><code>Asset!</code></a>
+<a href="/apis/graphql/backend/objects#asset"><code>Asset!</code></a>
 </td>
 <td>
 
@@ -372,7 +372,7 @@ node<br />
 <tr>
 <td>
 cursor<br />
-<a href="/apis/backend/scalars#string"><code>String!</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 
@@ -393,7 +393,7 @@ cursor<br />
 <tr>
 <td>
 asset<br />
-<a href="/apis/backend/objects#asset"><code>Asset</code></a>
+<a href="/apis/graphql/backend/objects#asset"><code>Asset</code></a>
 </td>
 <td>
 
@@ -414,7 +414,7 @@ asset<br />
 <tr>
 <td>
 pageInfo<br />
-<a href="/apis/backend/objects#pageinfo"><code>PageInfo!</code></a>
+<a href="/apis/graphql/backend/objects#pageinfo"><code>PageInfo!</code></a>
 </td>
 <td>
 
@@ -423,7 +423,7 @@ pageInfo<br />
 <tr>
 <td>
 edges<br />
-<a href="/apis/backend/objects#assetedge"><code>[AssetEdge!]!</code></a>
+<a href="/apis/graphql/backend/objects#assetedge"><code>[AssetEdge!]!</code></a>
 </td>
 <td>
 
@@ -444,7 +444,7 @@ edges<br />
 <tr>
 <td>
 peer<br />
-<a href="/apis/backend/objects#peer"><code>Peer</code></a>
+<a href="/apis/graphql/backend/objects#peer"><code>Peer</code></a>
 </td>
 <td>
 
@@ -465,7 +465,7 @@ peer<br />
 <tr>
 <td>
 peer<br />
-<a href="/apis/backend/objects#peer"><code>Peer</code></a>
+<a href="/apis/graphql/backend/objects#peer"><code>Peer</code></a>
 </td>
 <td>
 
@@ -486,7 +486,7 @@ peer<br />
 <tr>
 <td>
 receiver<br />
-<a href="/apis/backend/objects#receiver"><code>Receiver</code></a>
+<a href="/apis/graphql/backend/objects#receiver"><code>Receiver</code></a>
 </td>
 <td>
 
@@ -507,7 +507,7 @@ receiver<br />
 <tr>
 <td>
 walletAddressKey<br />
-<a href="/apis/backend/objects#walletaddresskey"><code>WalletAddressKey</code></a>
+<a href="/apis/graphql/backend/objects#walletaddresskey"><code>WalletAddressKey</code></a>
 </td>
 <td>
 
@@ -528,7 +528,7 @@ walletAddressKey<br />
 <tr>
 <td>
 walletAddress<br />
-<a href="/apis/backend/objects#walletaddress"><code>WalletAddress</code></a>
+<a href="/apis/graphql/backend/objects#walletaddress"><code>WalletAddress</code></a>
 </td>
 <td>
 
@@ -549,7 +549,7 @@ walletAddress<br />
 <tr>
 <td>
 asset<br />
-<a href="/apis/backend/objects#asset"><code>Asset</code></a>
+<a href="/apis/graphql/backend/objects#asset"><code>Asset</code></a>
 </td>
 <td>
 
@@ -570,7 +570,7 @@ asset<br />
 <tr>
 <td>
 success<br />
-<a href="/apis/backend/scalars#boolean"><code>Boolean!</code></a>
+<a href="/apis/graphql/backend/scalars#boolean"><code>Boolean!</code></a>
 </td>
 <td>
 
@@ -585,7 +585,7 @@ success<br />
 
 <p style={{ marginBottom: "0.4em" }}><strong>Implements</strong></p>
 
-- [Model](/apis/backend/interfaces#model)
+- [Model](/apis/graphql/backend/interfaces#model)
 
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
@@ -595,7 +595,7 @@ success<br />
 <tr>
 <td>
 id<br />
-<a href="/apis/backend/scalars#id"><code>ID!</code></a>
+<a href="/apis/graphql/backend/scalars#id"><code>ID!</code></a>
 </td>
 <td>
 <p>Fee id</p>
@@ -604,7 +604,7 @@ id<br />
 <tr>
 <td>
 assetId<br />
-<a href="/apis/backend/scalars#id"><code>ID!</code></a>
+<a href="/apis/graphql/backend/scalars#id"><code>ID!</code></a>
 </td>
 <td>
 <p>Asset id associated with the fee</p>
@@ -613,7 +613,7 @@ assetId<br />
 <tr>
 <td>
 type<br />
-<a href="/apis/backend/enums#feetype"><code>FeeType!</code></a>
+<a href="/apis/graphql/backend/enums#feetype"><code>FeeType!</code></a>
 </td>
 <td>
 <p>Type of fee (sending or receiving)</p>
@@ -622,7 +622,7 @@ type<br />
 <tr>
 <td>
 fixed<br />
-<a href="/apis/backend/scalars#uint64"><code>UInt64!</code></a>
+<a href="/apis/graphql/backend/scalars#uint64"><code>UInt64!</code></a>
 </td>
 <td>
 <p>Fixed fee</p>
@@ -631,7 +631,7 @@ fixed<br />
 <tr>
 <td>
 basisPoints<br />
-<a href="/apis/backend/scalars#int"><code>Int!</code></a>
+<a href="/apis/graphql/backend/scalars#int"><code>Int!</code></a>
 </td>
 <td>
 <p>Basis points fee. 1 basis point = 0.01%, 100 basis points = 1%, 10000 basis points = 100%</p>
@@ -640,7 +640,7 @@ basisPoints<br />
 <tr>
 <td>
 createdAt<br />
-<a href="/apis/backend/scalars#string"><code>String!</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Date-time of creation</p>
@@ -661,7 +661,7 @@ createdAt<br />
 <tr>
 <td>
 node<br />
-<a href="/apis/backend/objects#fee"><code>Fee!</code></a>
+<a href="/apis/graphql/backend/objects#fee"><code>Fee!</code></a>
 </td>
 <td>
 
@@ -670,7 +670,7 @@ node<br />
 <tr>
 <td>
 cursor<br />
-<a href="/apis/backend/scalars#string"><code>String!</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 
@@ -691,7 +691,7 @@ cursor<br />
 <tr>
 <td>
 pageInfo<br />
-<a href="/apis/backend/objects#pageinfo"><code>PageInfo!</code></a>
+<a href="/apis/graphql/backend/objects#pageinfo"><code>PageInfo!</code></a>
 </td>
 <td>
 
@@ -700,7 +700,7 @@ pageInfo<br />
 <tr>
 <td>
 edges<br />
-<a href="/apis/backend/objects#feeedge"><code>[FeeEdge!]!</code></a>
+<a href="/apis/graphql/backend/objects#feeedge"><code>[FeeEdge!]!</code></a>
 </td>
 <td>
 
@@ -721,7 +721,7 @@ edges<br />
 <tr>
 <td>
 outgoing<br />
-<a href="/apis/backend/objects#httpoutgoing"><code>HttpOutgoing!</code></a>
+<a href="/apis/graphql/backend/objects#httpoutgoing"><code>HttpOutgoing!</code></a>
 </td>
 <td>
 <p>Outgoing connection details</p>
@@ -742,7 +742,7 @@ outgoing<br />
 <tr>
 <td>
 authToken<br />
-<a href="/apis/backend/scalars#string"><code>String!</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Auth token to present at the peering Rafiki instance</p>
@@ -751,7 +751,7 @@ authToken<br />
 <tr>
 <td>
 endpoint<br />
-<a href="/apis/backend/scalars#string"><code>String!</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Peer&#39;s connection endpoint</p>
@@ -766,8 +766,8 @@ endpoint<br />
 
 <p style={{ marginBottom: "0.4em" }}><strong>Implements</strong></p>
 
-- [BasePayment](/apis/backend/interfaces#basepayment)
-- [Model](/apis/backend/interfaces#model)
+- [BasePayment](/apis/graphql/backend/interfaces#basepayment)
+- [Model](/apis/graphql/backend/interfaces#model)
 
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
@@ -777,7 +777,7 @@ endpoint<br />
 <tr>
 <td>
 id<br />
-<a href="/apis/backend/scalars#id"><code>ID!</code></a>
+<a href="/apis/graphql/backend/scalars#id"><code>ID!</code></a>
 </td>
 <td>
 <p>Incoming Payment id</p>
@@ -786,7 +786,7 @@ id<br />
 <tr>
 <td>
 walletAddressId<br />
-<a href="/apis/backend/scalars#id"><code>ID!</code></a>
+<a href="/apis/graphql/backend/scalars#id"><code>ID!</code></a>
 </td>
 <td>
 <p>Id of the wallet address under which this incoming payment was created.</p>
@@ -795,7 +795,7 @@ walletAddressId<br />
 <tr>
 <td>
 client<br />
-<a href="/apis/backend/scalars#string"><code>String</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String</code></a>
 </td>
 <td>
 <p>Information about the wallet address of the Open Payments client that created the incoming payment.</p>
@@ -804,7 +804,7 @@ client<br />
 <tr>
 <td>
 liquidity<br />
-<a href="/apis/backend/scalars#uint64"><code>UInt64</code></a>
+<a href="/apis/graphql/backend/scalars#uint64"><code>UInt64</code></a>
 </td>
 <td>
 <p>Available liquidity</p>
@@ -813,7 +813,7 @@ liquidity<br />
 <tr>
 <td>
 state<br />
-<a href="/apis/backend/enums#incomingpaymentstate"><code>IncomingPaymentState!</code></a>
+<a href="/apis/graphql/backend/enums#incomingpaymentstate"><code>IncomingPaymentState!</code></a>
 </td>
 <td>
 <p>Incoming payment state</p>
@@ -822,7 +822,7 @@ state<br />
 <tr>
 <td>
 expiresAt<br />
-<a href="/apis/backend/scalars#string"><code>String!</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Date-time of expiry. After this time, the incoming payment will not accept further payments made to it.</p>
@@ -831,7 +831,7 @@ expiresAt<br />
 <tr>
 <td>
 incomingAmount<br />
-<a href="/apis/backend/objects#amount"><code>Amount</code></a>
+<a href="/apis/graphql/backend/objects#amount"><code>Amount</code></a>
 </td>
 <td>
 <p>The maximum amount that should be paid into the wallet address under this incoming payment.</p>
@@ -840,7 +840,7 @@ incomingAmount<br />
 <tr>
 <td>
 receivedAmount<br />
-<a href="/apis/backend/objects#amount"><code>Amount!</code></a>
+<a href="/apis/graphql/backend/objects#amount"><code>Amount!</code></a>
 </td>
 <td>
 <p>The total amount that has been paid into the wallet address under this incoming payment.</p>
@@ -849,7 +849,7 @@ receivedAmount<br />
 <tr>
 <td>
 metadata<br />
-<a href="/apis/backend/scalars#jsonobject"><code>JSONObject</code></a>
+<a href="/apis/graphql/backend/scalars#jsonobject"><code>JSONObject</code></a>
 </td>
 <td>
 <p>Additional metadata associated with the incoming payment.</p>
@@ -858,7 +858,7 @@ metadata<br />
 <tr>
 <td>
 createdAt<br />
-<a href="/apis/backend/scalars#string"><code>String!</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Date-time of creation</p>
@@ -879,7 +879,7 @@ createdAt<br />
 <tr>
 <td>
 pageInfo<br />
-<a href="/apis/backend/objects#pageinfo"><code>PageInfo!</code></a>
+<a href="/apis/graphql/backend/objects#pageinfo"><code>PageInfo!</code></a>
 </td>
 <td>
 
@@ -888,7 +888,7 @@ pageInfo<br />
 <tr>
 <td>
 edges<br />
-<a href="/apis/backend/objects#incomingpaymentedge"><code>[IncomingPaymentEdge!]!</code></a>
+<a href="/apis/graphql/backend/objects#incomingpaymentedge"><code>[IncomingPaymentEdge!]!</code></a>
 </td>
 <td>
 
@@ -909,7 +909,7 @@ edges<br />
 <tr>
 <td>
 node<br />
-<a href="/apis/backend/objects#incomingpayment"><code>IncomingPayment!</code></a>
+<a href="/apis/graphql/backend/objects#incomingpayment"><code>IncomingPayment!</code></a>
 </td>
 <td>
 
@@ -918,7 +918,7 @@ node<br />
 <tr>
 <td>
 cursor<br />
-<a href="/apis/backend/scalars#string"><code>String!</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 
@@ -939,7 +939,7 @@ cursor<br />
 <tr>
 <td>
 payment<br />
-<a href="/apis/backend/objects#incomingpayment"><code>IncomingPayment</code></a>
+<a href="/apis/graphql/backend/objects#incomingpayment"><code>IncomingPayment</code></a>
 </td>
 <td>
 
@@ -960,7 +960,7 @@ payment<br />
 <tr>
 <td>
 kid<br />
-<a href="/apis/backend/scalars#string"><code>String!</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Key id</p>
@@ -969,7 +969,7 @@ kid<br />
 <tr>
 <td>
 x<br />
-<a href="/apis/backend/scalars#string"><code>String!</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Base64 url-encoded public key.</p>
@@ -978,7 +978,7 @@ x<br />
 <tr>
 <td>
 alg<br />
-<a href="/apis/backend/enums#alg"><code>Alg!</code></a>
+<a href="/apis/graphql/backend/enums#alg"><code>Alg!</code></a>
 </td>
 <td>
 <p>Cryptographic algorithm family used with the key. The only allowed value is <code>EdDSA</code>.</p>
@@ -987,7 +987,7 @@ alg<br />
 <tr>
 <td>
 kty<br />
-<a href="/apis/backend/enums#kty"><code>Kty!</code></a>
+<a href="/apis/graphql/backend/enums#kty"><code>Kty!</code></a>
 </td>
 <td>
 <p>Key type. The only allowed value is <code>OKP</code>.</p>
@@ -996,7 +996,7 @@ kty<br />
 <tr>
 <td>
 crv<br />
-<a href="/apis/backend/enums#crv"><code>Crv!</code></a>
+<a href="/apis/graphql/backend/enums#crv"><code>Crv!</code></a>
 </td>
 <td>
 <p>Curve that the key pair is derived from. The only allowed value is <code>Ed25519</code>.</p>
@@ -1017,7 +1017,7 @@ crv<br />
 <tr>
 <td>
 success<br />
-<a href="/apis/backend/scalars#boolean"><code>Boolean!</code></a>
+<a href="/apis/graphql/backend/scalars#boolean"><code>Boolean!</code></a>
 </td>
 <td>
 
@@ -1032,8 +1032,8 @@ success<br />
 
 <p style={{ marginBottom: "0.4em" }}><strong>Implements</strong></p>
 
-- [BasePayment](/apis/backend/interfaces#basepayment)
-- [Model](/apis/backend/interfaces#model)
+- [BasePayment](/apis/graphql/backend/interfaces#basepayment)
+- [Model](/apis/graphql/backend/interfaces#model)
 
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
@@ -1043,7 +1043,7 @@ success<br />
 <tr>
 <td>
 id<br />
-<a href="/apis/backend/scalars#id"><code>ID!</code></a>
+<a href="/apis/graphql/backend/scalars#id"><code>ID!</code></a>
 </td>
 <td>
 <p>Outgoing payment id</p>
@@ -1052,7 +1052,7 @@ id<br />
 <tr>
 <td>
 walletAddressId<br />
-<a href="/apis/backend/scalars#id"><code>ID!</code></a>
+<a href="/apis/graphql/backend/scalars#id"><code>ID!</code></a>
 </td>
 <td>
 <p>Id of the wallet address under which this outgoing payment was created</p>
@@ -1061,7 +1061,7 @@ walletAddressId<br />
 <tr>
 <td>
 client<br />
-<a href="/apis/backend/scalars#string"><code>String</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String</code></a>
 </td>
 <td>
 <p>Information about the wallet address of the Open Payments client that created the outgoing payment.</p>
@@ -1070,7 +1070,7 @@ client<br />
 <tr>
 <td>
 liquidity<br />
-<a href="/apis/backend/scalars#uint64"><code>UInt64</code></a>
+<a href="/apis/graphql/backend/scalars#uint64"><code>UInt64</code></a>
 </td>
 <td>
 <p>Available liquidity</p>
@@ -1079,7 +1079,7 @@ liquidity<br />
 <tr>
 <td>
 state<br />
-<a href="/apis/backend/enums#outgoingpaymentstate"><code>OutgoingPaymentState!</code></a>
+<a href="/apis/graphql/backend/enums#outgoingpaymentstate"><code>OutgoingPaymentState!</code></a>
 </td>
 <td>
 <p>Outgoing payment state</p>
@@ -1088,7 +1088,7 @@ state<br />
 <tr>
 <td>
 error<br />
-<a href="/apis/backend/scalars#string"><code>String</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String</code></a>
 </td>
 <td>
 
@@ -1097,7 +1097,7 @@ error<br />
 <tr>
 <td>
 stateAttempts<br />
-<a href="/apis/backend/scalars#int"><code>Int!</code></a>
+<a href="/apis/graphql/backend/scalars#int"><code>Int!</code></a>
 </td>
 <td>
 
@@ -1106,7 +1106,7 @@ stateAttempts<br />
 <tr>
 <td>
 debitAmount<br />
-<a href="/apis/backend/objects#amount"><code>Amount!</code></a>
+<a href="/apis/graphql/backend/objects#amount"><code>Amount!</code></a>
 </td>
 <td>
 <p>Amount to send (fixed send)</p>
@@ -1115,7 +1115,7 @@ debitAmount<br />
 <tr>
 <td>
 receiveAmount<br />
-<a href="/apis/backend/objects#amount"><code>Amount!</code></a>
+<a href="/apis/graphql/backend/objects#amount"><code>Amount!</code></a>
 </td>
 <td>
 <p>Amount to receive (fixed receive)</p>
@@ -1124,7 +1124,7 @@ receiveAmount<br />
 <tr>
 <td>
 receiver<br />
-<a href="/apis/backend/scalars#string"><code>String!</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Wallet address URL of the receiver</p>
@@ -1133,7 +1133,7 @@ receiver<br />
 <tr>
 <td>
 metadata<br />
-<a href="/apis/backend/scalars#jsonobject"><code>JSONObject</code></a>
+<a href="/apis/graphql/backend/scalars#jsonobject"><code>JSONObject</code></a>
 </td>
 <td>
 <p>Additional metadata associated with the outgoing payment.</p>
@@ -1142,7 +1142,7 @@ metadata<br />
 <tr>
 <td>
 quote<br />
-<a href="/apis/backend/objects#quote"><code>Quote</code></a>
+<a href="/apis/graphql/backend/objects#quote"><code>Quote</code></a>
 </td>
 <td>
 <p>Quote for this outgoing payment</p>
@@ -1151,7 +1151,7 @@ quote<br />
 <tr>
 <td>
 sentAmount<br />
-<a href="/apis/backend/objects#amount"><code>Amount!</code></a>
+<a href="/apis/graphql/backend/objects#amount"><code>Amount!</code></a>
 </td>
 <td>
 <p>Amount already sent</p>
@@ -1160,7 +1160,7 @@ sentAmount<br />
 <tr>
 <td>
 createdAt<br />
-<a href="/apis/backend/scalars#string"><code>String!</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Date-time of creation</p>
@@ -1169,7 +1169,7 @@ createdAt<br />
 <tr>
 <td>
 grantId<br />
-<a href="/apis/backend/scalars#string"><code>String</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String</code></a>
 </td>
 <td>
 <p>Id of the Grant under which this outgoing payment was created</p>
@@ -1190,7 +1190,7 @@ grantId<br />
 <tr>
 <td>
 pageInfo<br />
-<a href="/apis/backend/objects#pageinfo"><code>PageInfo!</code></a>
+<a href="/apis/graphql/backend/objects#pageinfo"><code>PageInfo!</code></a>
 </td>
 <td>
 
@@ -1199,7 +1199,7 @@ pageInfo<br />
 <tr>
 <td>
 edges<br />
-<a href="/apis/backend/objects#outgoingpaymentedge"><code>[OutgoingPaymentEdge!]!</code></a>
+<a href="/apis/graphql/backend/objects#outgoingpaymentedge"><code>[OutgoingPaymentEdge!]!</code></a>
 </td>
 <td>
 
@@ -1220,7 +1220,7 @@ edges<br />
 <tr>
 <td>
 node<br />
-<a href="/apis/backend/objects#outgoingpayment"><code>OutgoingPayment!</code></a>
+<a href="/apis/graphql/backend/objects#outgoingpayment"><code>OutgoingPayment!</code></a>
 </td>
 <td>
 
@@ -1229,7 +1229,7 @@ node<br />
 <tr>
 <td>
 cursor<br />
-<a href="/apis/backend/scalars#string"><code>String!</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 
@@ -1250,7 +1250,7 @@ cursor<br />
 <tr>
 <td>
 payment<br />
-<a href="/apis/backend/objects#outgoingpayment"><code>OutgoingPayment</code></a>
+<a href="/apis/graphql/backend/objects#outgoingpayment"><code>OutgoingPayment</code></a>
 </td>
 <td>
 
@@ -1271,7 +1271,7 @@ payment<br />
 <tr>
 <td>
 endCursor<br />
-<a href="/apis/backend/scalars#string"><code>String</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String</code></a>
 </td>
 <td>
 <p>Paginating forwards: the cursor to continue.</p>
@@ -1280,7 +1280,7 @@ endCursor<br />
 <tr>
 <td>
 hasNextPage<br />
-<a href="/apis/backend/scalars#boolean"><code>Boolean!</code></a>
+<a href="/apis/graphql/backend/scalars#boolean"><code>Boolean!</code></a>
 </td>
 <td>
 <p>Paginating forwards: Are there more pages?</p>
@@ -1289,7 +1289,7 @@ hasNextPage<br />
 <tr>
 <td>
 hasPreviousPage<br />
-<a href="/apis/backend/scalars#boolean"><code>Boolean!</code></a>
+<a href="/apis/graphql/backend/scalars#boolean"><code>Boolean!</code></a>
 </td>
 <td>
 <p>Paginating backwards: Are there more pages?</p>
@@ -1298,7 +1298,7 @@ hasPreviousPage<br />
 <tr>
 <td>
 startCursor<br />
-<a href="/apis/backend/scalars#string"><code>String</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String</code></a>
 </td>
 <td>
 <p>Paginating backwards: the cursor to continue.</p>
@@ -1313,8 +1313,8 @@ startCursor<br />
 
 <p style={{ marginBottom: "0.4em" }}><strong>Implements</strong></p>
 
-- [BasePayment](/apis/backend/interfaces#basepayment)
-- [Model](/apis/backend/interfaces#model)
+- [BasePayment](/apis/graphql/backend/interfaces#basepayment)
+- [Model](/apis/graphql/backend/interfaces#model)
 
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
@@ -1324,7 +1324,7 @@ startCursor<br />
 <tr>
 <td>
 id<br />
-<a href="/apis/backend/scalars#id"><code>ID!</code></a>
+<a href="/apis/graphql/backend/scalars#id"><code>ID!</code></a>
 </td>
 <td>
 <p>Payment id</p>
@@ -1333,7 +1333,7 @@ id<br />
 <tr>
 <td>
 type<br />
-<a href="/apis/backend/enums#paymenttype"><code>PaymentType!</code></a>
+<a href="/apis/graphql/backend/enums#paymenttype"><code>PaymentType!</code></a>
 </td>
 <td>
 <p>Type of payment</p>
@@ -1342,7 +1342,7 @@ type<br />
 <tr>
 <td>
 walletAddressId<br />
-<a href="/apis/backend/scalars#id"><code>ID!</code></a>
+<a href="/apis/graphql/backend/scalars#id"><code>ID!</code></a>
 </td>
 <td>
 <p>Id of the wallet address under which this payment was created</p>
@@ -1351,7 +1351,7 @@ walletAddressId<br />
 <tr>
 <td>
 client<br />
-<a href="/apis/backend/scalars#string"><code>String</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String</code></a>
 </td>
 <td>
 <p>Information about the wallet address of the Open Payments client that created the payment.</p>
@@ -1360,7 +1360,7 @@ client<br />
 <tr>
 <td>
 state<br />
-<a href="/apis/backend/scalars#string"><code>String!</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Either the IncomingPaymentState or OutgoingPaymentState according to type</p>
@@ -1369,7 +1369,7 @@ state<br />
 <tr>
 <td>
 liquidity<br />
-<a href="/apis/backend/scalars#uint64"><code>UInt64</code></a>
+<a href="/apis/graphql/backend/scalars#uint64"><code>UInt64</code></a>
 </td>
 <td>
 <p>Available liquidity</p>
@@ -1378,7 +1378,7 @@ liquidity<br />
 <tr>
 <td>
 metadata<br />
-<a href="/apis/backend/scalars#jsonobject"><code>JSONObject</code></a>
+<a href="/apis/graphql/backend/scalars#jsonobject"><code>JSONObject</code></a>
 </td>
 <td>
 <p>Additional metadata associated with the payment.</p>
@@ -1387,7 +1387,7 @@ metadata<br />
 <tr>
 <td>
 createdAt<br />
-<a href="/apis/backend/scalars#string"><code>String!</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Date-time of creation</p>
@@ -1408,7 +1408,7 @@ createdAt<br />
 <tr>
 <td>
 pageInfo<br />
-<a href="/apis/backend/objects#pageinfo"><code>PageInfo!</code></a>
+<a href="/apis/graphql/backend/objects#pageinfo"><code>PageInfo!</code></a>
 </td>
 <td>
 
@@ -1417,7 +1417,7 @@ pageInfo<br />
 <tr>
 <td>
 edges<br />
-<a href="/apis/backend/objects#paymentedge"><code>[PaymentEdge!]!</code></a>
+<a href="/apis/graphql/backend/objects#paymentedge"><code>[PaymentEdge!]!</code></a>
 </td>
 <td>
 
@@ -1438,7 +1438,7 @@ edges<br />
 <tr>
 <td>
 node<br />
-<a href="/apis/backend/objects#payment"><code>Payment!</code></a>
+<a href="/apis/graphql/backend/objects#payment"><code>Payment!</code></a>
 </td>
 <td>
 
@@ -1447,7 +1447,7 @@ node<br />
 <tr>
 <td>
 cursor<br />
-<a href="/apis/backend/scalars#string"><code>String!</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 
@@ -1462,7 +1462,7 @@ cursor<br />
 
 <p style={{ marginBottom: "0.4em" }}><strong>Implements</strong></p>
 
-- [Model](/apis/backend/interfaces#model)
+- [Model](/apis/graphql/backend/interfaces#model)
 
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
@@ -1472,7 +1472,7 @@ cursor<br />
 <tr>
 <td>
 id<br />
-<a href="/apis/backend/scalars#id"><code>ID!</code></a>
+<a href="/apis/graphql/backend/scalars#id"><code>ID!</code></a>
 </td>
 <td>
 <p>Peer id</p>
@@ -1481,7 +1481,7 @@ id<br />
 <tr>
 <td>
 maxPacketAmount<br />
-<a href="/apis/backend/scalars#uint64"><code>UInt64</code></a>
+<a href="/apis/graphql/backend/scalars#uint64"><code>UInt64</code></a>
 </td>
 <td>
 <p>Maximum packet amount that the peer accepts</p>
@@ -1490,7 +1490,7 @@ maxPacketAmount<br />
 <tr>
 <td>
 http<br />
-<a href="/apis/backend/objects#http"><code>Http!</code></a>
+<a href="/apis/graphql/backend/objects#http"><code>Http!</code></a>
 </td>
 <td>
 <p>Peering connection details</p>
@@ -1499,7 +1499,7 @@ http<br />
 <tr>
 <td>
 asset<br />
-<a href="/apis/backend/objects#asset"><code>Asset!</code></a>
+<a href="/apis/graphql/backend/objects#asset"><code>Asset!</code></a>
 </td>
 <td>
 <p>Asset of peering relationship</p>
@@ -1508,7 +1508,7 @@ asset<br />
 <tr>
 <td>
 staticIlpAddress<br />
-<a href="/apis/backend/scalars#string"><code>String!</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Peer&#39;s ILP address</p>
@@ -1517,7 +1517,7 @@ staticIlpAddress<br />
 <tr>
 <td>
 name<br />
-<a href="/apis/backend/scalars#string"><code>String</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String</code></a>
 </td>
 <td>
 <p>Peer&#39;s public name</p>
@@ -1526,7 +1526,7 @@ name<br />
 <tr>
 <td>
 liquidityThreshold<br />
-<a href="/apis/backend/scalars#uint64"><code>UInt64</code></a>
+<a href="/apis/graphql/backend/scalars#uint64"><code>UInt64</code></a>
 </td>
 <td>
 <p>Account Servicing Entity will be notified via a webhook event if peer liquidity falls below this value</p>
@@ -1535,7 +1535,7 @@ liquidityThreshold<br />
 <tr>
 <td>
 liquidity<br />
-<a href="/apis/backend/scalars#uint64"><code>UInt64</code></a>
+<a href="/apis/graphql/backend/scalars#uint64"><code>UInt64</code></a>
 </td>
 <td>
 <p>Available liquidity</p>
@@ -1544,7 +1544,7 @@ liquidity<br />
 <tr>
 <td>
 createdAt<br />
-<a href="/apis/backend/scalars#string"><code>String!</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Date-time of creation</p>
@@ -1565,7 +1565,7 @@ createdAt<br />
 <tr>
 <td>
 node<br />
-<a href="/apis/backend/objects#peer"><code>Peer!</code></a>
+<a href="/apis/graphql/backend/objects#peer"><code>Peer!</code></a>
 </td>
 <td>
 
@@ -1574,7 +1574,7 @@ node<br />
 <tr>
 <td>
 cursor<br />
-<a href="/apis/backend/scalars#string"><code>String!</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 
@@ -1595,7 +1595,7 @@ cursor<br />
 <tr>
 <td>
 pageInfo<br />
-<a href="/apis/backend/objects#pageinfo"><code>PageInfo!</code></a>
+<a href="/apis/graphql/backend/objects#pageinfo"><code>PageInfo!</code></a>
 </td>
 <td>
 
@@ -1604,7 +1604,7 @@ pageInfo<br />
 <tr>
 <td>
 edges<br />
-<a href="/apis/backend/objects#peeredge"><code>[PeerEdge!]!</code></a>
+<a href="/apis/graphql/backend/objects#peeredge"><code>[PeerEdge!]!</code></a>
 </td>
 <td>
 
@@ -1625,7 +1625,7 @@ edges<br />
 <tr>
 <td>
 id<br />
-<a href="/apis/backend/scalars#id"><code>ID!</code></a>
+<a href="/apis/graphql/backend/scalars#id"><code>ID!</code></a>
 </td>
 <td>
 <p>Quote id</p>
@@ -1634,7 +1634,7 @@ id<br />
 <tr>
 <td>
 walletAddressId<br />
-<a href="/apis/backend/scalars#id"><code>ID!</code></a>
+<a href="/apis/graphql/backend/scalars#id"><code>ID!</code></a>
 </td>
 <td>
 <p>Id of the wallet address under which this quote was created</p>
@@ -1643,7 +1643,7 @@ walletAddressId<br />
 <tr>
 <td>
 receiver<br />
-<a href="/apis/backend/scalars#string"><code>String!</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Wallet address URL of the receiver</p>
@@ -1652,7 +1652,7 @@ receiver<br />
 <tr>
 <td>
 debitAmount<br />
-<a href="/apis/backend/objects#amount"><code>Amount!</code></a>
+<a href="/apis/graphql/backend/objects#amount"><code>Amount!</code></a>
 </td>
 <td>
 <p>Amount to send (fixed send)</p>
@@ -1661,7 +1661,7 @@ debitAmount<br />
 <tr>
 <td>
 receiveAmount<br />
-<a href="/apis/backend/objects#amount"><code>Amount!</code></a>
+<a href="/apis/graphql/backend/objects#amount"><code>Amount!</code></a>
 </td>
 <td>
 <p>Amount to receive (fixed receive)</p>
@@ -1670,7 +1670,7 @@ receiveAmount<br />
 <tr>
 <td>
 maxPacketAmount<br />
-<a href="/apis/backend/scalars#uint64"><code>UInt64!</code></a>
+<a href="/apis/graphql/backend/scalars#uint64"><code>UInt64!</code></a>
 </td>
 <td>
 <p>Maximum value per packet allowed on the possible routes</p>
@@ -1679,7 +1679,7 @@ maxPacketAmount<br />
 <tr>
 <td>
 minExchangeRate<br />
-<a href="/apis/backend/scalars#float"><code>Float!</code></a>
+<a href="/apis/graphql/backend/scalars#float"><code>Float!</code></a>
 </td>
 <td>
 <p>Aggregate exchange rate the payment is guaranteed to meet</p>
@@ -1688,7 +1688,7 @@ minExchangeRate<br />
 <tr>
 <td>
 lowEstimatedExchangeRate<br />
-<a href="/apis/backend/scalars#float"><code>Float!</code></a>
+<a href="/apis/graphql/backend/scalars#float"><code>Float!</code></a>
 </td>
 <td>
 <p>Lower bound of probed exchange rate</p>
@@ -1697,7 +1697,7 @@ lowEstimatedExchangeRate<br />
 <tr>
 <td>
 highEstimatedExchangeRate<br />
-<a href="/apis/backend/scalars#float"><code>Float!</code></a>
+<a href="/apis/graphql/backend/scalars#float"><code>Float!</code></a>
 </td>
 <td>
 <p>Upper bound of probed exchange rate</p>
@@ -1706,7 +1706,7 @@ highEstimatedExchangeRate<br />
 <tr>
 <td>
 createdAt<br />
-<a href="/apis/backend/scalars#string"><code>String!</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Date-time of creation</p>
@@ -1715,7 +1715,7 @@ createdAt<br />
 <tr>
 <td>
 expiresAt<br />
-<a href="/apis/backend/scalars#string"><code>String!</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Date-time of expiration</p>
@@ -1736,7 +1736,7 @@ expiresAt<br />
 <tr>
 <td>
 pageInfo<br />
-<a href="/apis/backend/objects#pageinfo"><code>PageInfo!</code></a>
+<a href="/apis/graphql/backend/objects#pageinfo"><code>PageInfo!</code></a>
 </td>
 <td>
 
@@ -1745,7 +1745,7 @@ pageInfo<br />
 <tr>
 <td>
 edges<br />
-<a href="/apis/backend/objects#quoteedge"><code>[QuoteEdge!]!</code></a>
+<a href="/apis/graphql/backend/objects#quoteedge"><code>[QuoteEdge!]!</code></a>
 </td>
 <td>
 
@@ -1766,7 +1766,7 @@ edges<br />
 <tr>
 <td>
 node<br />
-<a href="/apis/backend/objects#quote"><code>Quote!</code></a>
+<a href="/apis/graphql/backend/objects#quote"><code>Quote!</code></a>
 </td>
 <td>
 
@@ -1775,7 +1775,7 @@ node<br />
 <tr>
 <td>
 cursor<br />
-<a href="/apis/backend/scalars#string"><code>String!</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 
@@ -1796,7 +1796,7 @@ cursor<br />
 <tr>
 <td>
 quote<br />
-<a href="/apis/backend/objects#quote"><code>Quote</code></a>
+<a href="/apis/graphql/backend/objects#quote"><code>Quote</code></a>
 </td>
 <td>
 
@@ -1817,7 +1817,7 @@ quote<br />
 <tr>
 <td>
 id<br />
-<a href="/apis/backend/scalars#string"><code>String!</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Incoming payment URL</p>
@@ -1826,7 +1826,7 @@ id<br />
 <tr>
 <td>
 walletAddressUrl<br />
-<a href="/apis/backend/scalars#string"><code>String!</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Wallet address URL under which the incoming payment was created</p>
@@ -1835,7 +1835,7 @@ walletAddressUrl<br />
 <tr>
 <td>
 completed<br />
-<a href="/apis/backend/scalars#boolean"><code>Boolean!</code></a>
+<a href="/apis/graphql/backend/scalars#boolean"><code>Boolean!</code></a>
 </td>
 <td>
 <p>Describes whether the incoming payment has completed receiving funds.</p>
@@ -1844,7 +1844,7 @@ completed<br />
 <tr>
 <td>
 incomingAmount<br />
-<a href="/apis/backend/objects#amount"><code>Amount</code></a>
+<a href="/apis/graphql/backend/objects#amount"><code>Amount</code></a>
 </td>
 <td>
 <p>The maximum amount that should be paid into the wallet address under this incoming payment.</p>
@@ -1853,7 +1853,7 @@ incomingAmount<br />
 <tr>
 <td>
 receivedAmount<br />
-<a href="/apis/backend/objects#amount"><code>Amount!</code></a>
+<a href="/apis/graphql/backend/objects#amount"><code>Amount!</code></a>
 </td>
 <td>
 <p>The total amount that has been paid into the wallet address under this incoming payment.</p>
@@ -1862,7 +1862,7 @@ receivedAmount<br />
 <tr>
 <td>
 expiresAt<br />
-<a href="/apis/backend/scalars#string"><code>String</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String</code></a>
 </td>
 <td>
 <p>Date-time of expiry. After this time, the incoming payment will accept further payments made to it.</p>
@@ -1871,7 +1871,7 @@ expiresAt<br />
 <tr>
 <td>
 metadata<br />
-<a href="/apis/backend/scalars#jsonobject"><code>JSONObject</code></a>
+<a href="/apis/graphql/backend/scalars#jsonobject"><code>JSONObject</code></a>
 </td>
 <td>
 <p>Additional metadata associated with the incoming payment.</p>
@@ -1880,7 +1880,7 @@ metadata<br />
 <tr>
 <td>
 createdAt<br />
-<a href="/apis/backend/scalars#string"><code>String!</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Date-time of creation</p>
@@ -1889,7 +1889,7 @@ createdAt<br />
 <tr>
 <td>
 updatedAt<br />
-<a href="/apis/backend/scalars#string"><code>String!</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Date-time of last update</p>
@@ -1910,7 +1910,7 @@ updatedAt<br />
 <tr>
 <td>
 walletAddressKey<br />
-<a href="/apis/backend/objects#walletaddresskey"><code>WalletAddressKey</code></a>
+<a href="/apis/graphql/backend/objects#walletaddresskey"><code>WalletAddressKey</code></a>
 </td>
 <td>
 
@@ -1931,7 +1931,7 @@ walletAddressKey<br />
 <tr>
 <td>
 fee<br />
-<a href="/apis/backend/objects#fee"><code>Fee</code></a>
+<a href="/apis/graphql/backend/objects#fee"><code>Fee</code></a>
 </td>
 <td>
 
@@ -1952,7 +1952,7 @@ fee<br />
 <tr>
 <td>
 count<br />
-<a href="/apis/backend/scalars#int"><code>Int</code></a>
+<a href="/apis/graphql/backend/scalars#int"><code>Int</code></a>
 </td>
 <td>
 <p>Number of events triggered</p>
@@ -1973,7 +1973,7 @@ count<br />
 <tr>
 <td>
 peer<br />
-<a href="/apis/backend/objects#peer"><code>Peer</code></a>
+<a href="/apis/graphql/backend/objects#peer"><code>Peer</code></a>
 </td>
 <td>
 
@@ -1994,7 +1994,7 @@ peer<br />
 <tr>
 <td>
 walletAddress<br />
-<a href="/apis/backend/objects#walletaddress"><code>WalletAddress</code></a>
+<a href="/apis/graphql/backend/objects#walletaddress"><code>WalletAddress</code></a>
 </td>
 <td>
 
@@ -2009,7 +2009,7 @@ walletAddress<br />
 
 <p style={{ marginBottom: "0.4em" }}><strong>Implements</strong></p>
 
-- [Model](/apis/backend/interfaces#model)
+- [Model](/apis/graphql/backend/interfaces#model)
 
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
@@ -2019,7 +2019,7 @@ walletAddress<br />
 <tr>
 <td>
 id<br />
-<a href="/apis/backend/scalars#id"><code>ID!</code></a>
+<a href="/apis/graphql/backend/scalars#id"><code>ID!</code></a>
 </td>
 <td>
 <p>Wallet address id</p>
@@ -2028,7 +2028,7 @@ id<br />
 <tr>
 <td>
 asset<br />
-<a href="/apis/backend/objects#asset"><code>Asset!</code></a>
+<a href="/apis/graphql/backend/objects#asset"><code>Asset!</code></a>
 </td>
 <td>
 <p>Asset of the wallet address</p>
@@ -2037,7 +2037,7 @@ asset<br />
 <tr>
 <td>
 liquidity<br />
-<a href="/apis/backend/scalars#uint64"><code>UInt64</code></a>
+<a href="/apis/graphql/backend/scalars#uint64"><code>UInt64</code></a>
 </td>
 <td>
 <p>Available liquidity</p>
@@ -2046,7 +2046,7 @@ liquidity<br />
 <tr>
 <td>
 url<br />
-<a href="/apis/backend/scalars#string"><code>String!</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Wallet Address URL</p>
@@ -2055,7 +2055,7 @@ url<br />
 <tr>
 <td>
 publicName<br />
-<a href="/apis/backend/scalars#string"><code>String</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String</code></a>
 </td>
 <td>
 <p>Public name associated with the wallet address</p>
@@ -2064,7 +2064,7 @@ publicName<br />
 <tr>
 <td>
 incomingPayments<br />
-<a href="/apis/backend/objects#incomingpaymentconnection"><code>IncomingPaymentConnection</code></a>
+<a href="/apis/graphql/backend/objects#incomingpaymentconnection"><code>IncomingPaymentConnection</code></a>
 </td>
 <td>
 <p>List of incoming payments received by this wallet address</p>
@@ -2077,7 +2077,7 @@ incomingPayments<br />
 <tr>
 <td>
 after<br />
-<a href="/apis/backend/scalars#string"><code>String</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String</code></a>
 </td>
 <td>
 <p>Paginating forwards: the cursor before the the requested page.</p>
@@ -2086,7 +2086,7 @@ after<br />
 <tr>
 <td>
 before<br />
-<a href="/apis/backend/scalars#string"><code>String</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String</code></a>
 </td>
 <td>
 <p>Paginating backwards: the cursor after the the requested page.</p>
@@ -2095,7 +2095,7 @@ before<br />
 <tr>
 <td>
 first<br />
-<a href="/apis/backend/scalars#int"><code>Int</code></a>
+<a href="/apis/graphql/backend/scalars#int"><code>Int</code></a>
 </td>
 <td>
 <p>Paginating forwards: The first <strong>n</strong> elements from the page.</p>
@@ -2104,7 +2104,7 @@ first<br />
 <tr>
 <td>
 last<br />
-<a href="/apis/backend/scalars#int"><code>Int</code></a>
+<a href="/apis/graphql/backend/scalars#int"><code>Int</code></a>
 </td>
 <td>
 <p>Paginating backwards: The last <strong>n</strong> elements from the page.</p>
@@ -2113,7 +2113,7 @@ last<br />
 <tr>
 <td>
 sortOrder<br />
-<a href="/apis/backend/enums#sortorder"><code>SortOrder</code></a>
+<a href="/apis/graphql/backend/enums#sortorder"><code>SortOrder</code></a>
 </td>
 <td>
 <p>Ascending or descending order of creation.</p>
@@ -2127,7 +2127,7 @@ sortOrder<br />
 <tr>
 <td>
 quotes<br />
-<a href="/apis/backend/objects#quoteconnection"><code>QuoteConnection</code></a>
+<a href="/apis/graphql/backend/objects#quoteconnection"><code>QuoteConnection</code></a>
 </td>
 <td>
 <p>List of quotes created at this wallet address</p>
@@ -2140,7 +2140,7 @@ quotes<br />
 <tr>
 <td>
 after<br />
-<a href="/apis/backend/scalars#string"><code>String</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String</code></a>
 </td>
 <td>
 <p>Paginating forwards: the cursor before the the requested page.</p>
@@ -2149,7 +2149,7 @@ after<br />
 <tr>
 <td>
 before<br />
-<a href="/apis/backend/scalars#string"><code>String</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String</code></a>
 </td>
 <td>
 <p>Paginating backwards: the cursor after the the requested page.</p>
@@ -2158,7 +2158,7 @@ before<br />
 <tr>
 <td>
 first<br />
-<a href="/apis/backend/scalars#int"><code>Int</code></a>
+<a href="/apis/graphql/backend/scalars#int"><code>Int</code></a>
 </td>
 <td>
 <p>Paginating forwards: The first <strong>n</strong> elements from the page.</p>
@@ -2167,7 +2167,7 @@ first<br />
 <tr>
 <td>
 last<br />
-<a href="/apis/backend/scalars#int"><code>Int</code></a>
+<a href="/apis/graphql/backend/scalars#int"><code>Int</code></a>
 </td>
 <td>
 <p>Paginating backwards: The last <strong>n</strong> elements from the page.</p>
@@ -2176,7 +2176,7 @@ last<br />
 <tr>
 <td>
 sortOrder<br />
-<a href="/apis/backend/enums#sortorder"><code>SortOrder</code></a>
+<a href="/apis/graphql/backend/enums#sortorder"><code>SortOrder</code></a>
 </td>
 <td>
 <p>Ascending or descending order of creation.</p>
@@ -2190,7 +2190,7 @@ sortOrder<br />
 <tr>
 <td>
 outgoingPayments<br />
-<a href="/apis/backend/objects#outgoingpaymentconnection"><code>OutgoingPaymentConnection</code></a>
+<a href="/apis/graphql/backend/objects#outgoingpaymentconnection"><code>OutgoingPaymentConnection</code></a>
 </td>
 <td>
 <p>List of outgoing payments sent from this wallet address</p>
@@ -2203,7 +2203,7 @@ outgoingPayments<br />
 <tr>
 <td>
 after<br />
-<a href="/apis/backend/scalars#string"><code>String</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String</code></a>
 </td>
 <td>
 <p>Paginating forwards: the cursor before the the requested page.</p>
@@ -2212,7 +2212,7 @@ after<br />
 <tr>
 <td>
 before<br />
-<a href="/apis/backend/scalars#string"><code>String</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String</code></a>
 </td>
 <td>
 <p>Paginating backwards: the cursor after the the requested page.</p>
@@ -2221,7 +2221,7 @@ before<br />
 <tr>
 <td>
 first<br />
-<a href="/apis/backend/scalars#int"><code>Int</code></a>
+<a href="/apis/graphql/backend/scalars#int"><code>Int</code></a>
 </td>
 <td>
 <p>Paginating forwards: The first <strong>n</strong> elements from the page.</p>
@@ -2230,7 +2230,7 @@ first<br />
 <tr>
 <td>
 last<br />
-<a href="/apis/backend/scalars#int"><code>Int</code></a>
+<a href="/apis/graphql/backend/scalars#int"><code>Int</code></a>
 </td>
 <td>
 <p>Paginating backwards: The last <strong>n</strong> elements from the page.</p>
@@ -2239,7 +2239,7 @@ last<br />
 <tr>
 <td>
 sortOrder<br />
-<a href="/apis/backend/enums#sortorder"><code>SortOrder</code></a>
+<a href="/apis/graphql/backend/enums#sortorder"><code>SortOrder</code></a>
 </td>
 <td>
 <p>Ascending or descending order of creation.</p>
@@ -2253,7 +2253,7 @@ sortOrder<br />
 <tr>
 <td>
 createdAt<br />
-<a href="/apis/backend/scalars#string"><code>String!</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Date-time of creation</p>
@@ -2262,7 +2262,7 @@ createdAt<br />
 <tr>
 <td>
 status<br />
-<a href="/apis/backend/enums#walletaddressstatus"><code>WalletAddressStatus!</code></a>
+<a href="/apis/graphql/backend/enums#walletaddressstatus"><code>WalletAddressStatus!</code></a>
 </td>
 <td>
 <p>Status of the wallet address</p>
@@ -2271,7 +2271,7 @@ status<br />
 <tr>
 <td>
 walletAddressKeys<br />
-<a href="/apis/backend/objects#walletaddresskeyconnection"><code>WalletAddressKeyConnection</code></a>
+<a href="/apis/graphql/backend/objects#walletaddresskeyconnection"><code>WalletAddressKeyConnection</code></a>
 </td>
 <td>
 <p>List of keys associated with this wallet address</p>
@@ -2284,7 +2284,7 @@ walletAddressKeys<br />
 <tr>
 <td>
 after<br />
-<a href="/apis/backend/scalars#string"><code>String</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String</code></a>
 </td>
 <td>
 <p>Paginating forwards: the cursor before the the requested page.</p>
@@ -2293,7 +2293,7 @@ after<br />
 <tr>
 <td>
 before<br />
-<a href="/apis/backend/scalars#string"><code>String</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String</code></a>
 </td>
 <td>
 <p>Paginating backwards: the cursor after the the requested page.</p>
@@ -2302,7 +2302,7 @@ before<br />
 <tr>
 <td>
 first<br />
-<a href="/apis/backend/scalars#int"><code>Int</code></a>
+<a href="/apis/graphql/backend/scalars#int"><code>Int</code></a>
 </td>
 <td>
 <p>Paginating forwards: The first <strong>n</strong> elements from the page.</p>
@@ -2311,7 +2311,7 @@ first<br />
 <tr>
 <td>
 last<br />
-<a href="/apis/backend/scalars#int"><code>Int</code></a>
+<a href="/apis/graphql/backend/scalars#int"><code>Int</code></a>
 </td>
 <td>
 <p>Paginating backwards: The last <strong>n</strong> elements from the page.</p>
@@ -2320,7 +2320,7 @@ last<br />
 <tr>
 <td>
 sortOrder<br />
-<a href="/apis/backend/enums#sortorder"><code>SortOrder</code></a>
+<a href="/apis/graphql/backend/enums#sortorder"><code>SortOrder</code></a>
 </td>
 <td>
 <p>Ascending or descending order of creation.</p>
@@ -2334,7 +2334,7 @@ sortOrder<br />
 <tr>
 <td>
 additionalProperties<br />
-<a href="/apis/backend/objects#additionalproperty"><code>[AdditionalProperty]</code></a>
+<a href="/apis/graphql/backend/objects#additionalproperty"><code>[AdditionalProperty]</code></a>
 </td>
 <td>
 <p>List additional properties associated with this wallet address.</p>
@@ -2355,7 +2355,7 @@ additionalProperties<br />
 <tr>
 <td>
 node<br />
-<a href="/apis/backend/objects#walletaddress"><code>WalletAddress!</code></a>
+<a href="/apis/graphql/backend/objects#walletaddress"><code>WalletAddress!</code></a>
 </td>
 <td>
 
@@ -2364,7 +2364,7 @@ node<br />
 <tr>
 <td>
 cursor<br />
-<a href="/apis/backend/scalars#string"><code>String!</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 
@@ -2385,7 +2385,7 @@ cursor<br />
 <tr>
 <td>
 pageInfo<br />
-<a href="/apis/backend/objects#pageinfo"><code>PageInfo!</code></a>
+<a href="/apis/graphql/backend/objects#pageinfo"><code>PageInfo!</code></a>
 </td>
 <td>
 
@@ -2394,7 +2394,7 @@ pageInfo<br />
 <tr>
 <td>
 edges<br />
-<a href="/apis/backend/objects#walletaddressedge"><code>[WalletAddressEdge!]!</code></a>
+<a href="/apis/graphql/backend/objects#walletaddressedge"><code>[WalletAddressEdge!]!</code></a>
 </td>
 <td>
 
@@ -2409,7 +2409,7 @@ edges<br />
 
 <p style={{ marginBottom: "0.4em" }}><strong>Implements</strong></p>
 
-- [Model](/apis/backend/interfaces#model)
+- [Model](/apis/graphql/backend/interfaces#model)
 
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
@@ -2419,7 +2419,7 @@ edges<br />
 <tr>
 <td>
 id<br />
-<a href="/apis/backend/scalars#id"><code>ID!</code></a>
+<a href="/apis/graphql/backend/scalars#id"><code>ID!</code></a>
 </td>
 <td>
 <p>Internal id of key</p>
@@ -2428,7 +2428,7 @@ id<br />
 <tr>
 <td>
 walletAddressId<br />
-<a href="/apis/backend/scalars#id"><code>ID!</code></a>
+<a href="/apis/graphql/backend/scalars#id"><code>ID!</code></a>
 </td>
 <td>
 <p>Id of the wallet address to which this key belongs to</p>
@@ -2437,7 +2437,7 @@ walletAddressId<br />
 <tr>
 <td>
 jwk<br />
-<a href="/apis/backend/objects#jwk"><code>Jwk!</code></a>
+<a href="/apis/graphql/backend/objects#jwk"><code>Jwk!</code></a>
 </td>
 <td>
 <p>Public key</p>
@@ -2446,7 +2446,7 @@ jwk<br />
 <tr>
 <td>
 revoked<br />
-<a href="/apis/backend/scalars#boolean"><code>Boolean!</code></a>
+<a href="/apis/graphql/backend/scalars#boolean"><code>Boolean!</code></a>
 </td>
 <td>
 <p>Indicator whether the key has been revoked</p>
@@ -2455,7 +2455,7 @@ revoked<br />
 <tr>
 <td>
 createdAt<br />
-<a href="/apis/backend/scalars#string"><code>String!</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Date-time of creation</p>
@@ -2476,7 +2476,7 @@ createdAt<br />
 <tr>
 <td>
 pageInfo<br />
-<a href="/apis/backend/objects#pageinfo"><code>PageInfo!</code></a>
+<a href="/apis/graphql/backend/objects#pageinfo"><code>PageInfo!</code></a>
 </td>
 <td>
 
@@ -2485,7 +2485,7 @@ pageInfo<br />
 <tr>
 <td>
 edges<br />
-<a href="/apis/backend/objects#walletaddresskeyedge"><code>[WalletAddressKeyEdge!]!</code></a>
+<a href="/apis/graphql/backend/objects#walletaddresskeyedge"><code>[WalletAddressKeyEdge!]!</code></a>
 </td>
 <td>
 
@@ -2506,7 +2506,7 @@ edges<br />
 <tr>
 <td>
 node<br />
-<a href="/apis/backend/objects#walletaddresskey"><code>WalletAddressKey!</code></a>
+<a href="/apis/graphql/backend/objects#walletaddresskey"><code>WalletAddressKey!</code></a>
 </td>
 <td>
 
@@ -2515,7 +2515,7 @@ node<br />
 <tr>
 <td>
 cursor<br />
-<a href="/apis/backend/scalars#string"><code>String!</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 
@@ -2536,7 +2536,7 @@ cursor<br />
 <tr>
 <td>
 id<br />
-<a href="/apis/backend/scalars#id"><code>ID!</code></a>
+<a href="/apis/graphql/backend/scalars#id"><code>ID!</code></a>
 </td>
 <td>
 <p>Withdrawal Id</p>
@@ -2545,7 +2545,7 @@ id<br />
 <tr>
 <td>
 amount<br />
-<a href="/apis/backend/scalars#uint64"><code>UInt64!</code></a>
+<a href="/apis/graphql/backend/scalars#uint64"><code>UInt64!</code></a>
 </td>
 <td>
 <p>Amount to withdraw</p>
@@ -2554,7 +2554,7 @@ amount<br />
 <tr>
 <td>
 walletAddress<br />
-<a href="/apis/backend/objects#walletaddress"><code>WalletAddress!</code></a>
+<a href="/apis/graphql/backend/objects#walletaddress"><code>WalletAddress!</code></a>
 </td>
 <td>
 <p>Wallet address details</p>
@@ -2575,7 +2575,7 @@ walletAddress<br />
 <tr>
 <td>
 withdrawal<br />
-<a href="/apis/backend/objects#walletaddresswithdrawal"><code>WalletAddressWithdrawal</code></a>
+<a href="/apis/graphql/backend/objects#walletaddresswithdrawal"><code>WalletAddressWithdrawal</code></a>
 </td>
 <td>
 
@@ -2590,7 +2590,7 @@ withdrawal<br />
 
 <p style={{ marginBottom: "0.4em" }}><strong>Implements</strong></p>
 
-- [Model](/apis/backend/interfaces#model)
+- [Model](/apis/graphql/backend/interfaces#model)
 
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
@@ -2600,7 +2600,7 @@ withdrawal<br />
 <tr>
 <td>
 id<br />
-<a href="/apis/backend/scalars#id"><code>ID!</code></a>
+<a href="/apis/graphql/backend/scalars#id"><code>ID!</code></a>
 </td>
 <td>
 <p>Event id</p>
@@ -2609,7 +2609,7 @@ id<br />
 <tr>
 <td>
 type<br />
-<a href="/apis/backend/scalars#string"><code>String!</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Type of event</p>
@@ -2618,7 +2618,7 @@ type<br />
 <tr>
 <td>
 data<br />
-<a href="/apis/backend/scalars#jsonobject"><code>JSONObject!</code></a>
+<a href="/apis/graphql/backend/scalars#jsonobject"><code>JSONObject!</code></a>
 </td>
 <td>
 <p>Stringified JSON data</p>
@@ -2627,7 +2627,7 @@ data<br />
 <tr>
 <td>
 createdAt<br />
-<a href="/apis/backend/scalars#string"><code>String!</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Date-time of creation</p>
@@ -2648,7 +2648,7 @@ createdAt<br />
 <tr>
 <td>
 pageInfo<br />
-<a href="/apis/backend/objects#pageinfo"><code>PageInfo!</code></a>
+<a href="/apis/graphql/backend/objects#pageinfo"><code>PageInfo!</code></a>
 </td>
 <td>
 
@@ -2657,7 +2657,7 @@ pageInfo<br />
 <tr>
 <td>
 edges<br />
-<a href="/apis/backend/objects#webhookeventsedge"><code>[WebhookEventsEdge!]!</code></a>
+<a href="/apis/graphql/backend/objects#webhookeventsedge"><code>[WebhookEventsEdge!]!</code></a>
 </td>
 <td>
 
@@ -2678,7 +2678,7 @@ edges<br />
 <tr>
 <td>
 node<br />
-<a href="/apis/backend/objects#webhookevent"><code>WebhookEvent!</code></a>
+<a href="/apis/graphql/backend/objects#webhookevent"><code>WebhookEvent!</code></a>
 </td>
 <td>
 
@@ -2687,7 +2687,7 @@ node<br />
 <tr>
 <td>
 cursor<br />
-<a href="/apis/backend/scalars#string"><code>String!</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 

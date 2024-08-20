@@ -6,7 +6,7 @@ title: Mutations
 
 ## cancelOutgoingPayment
 
-**Type:** [OutgoingPaymentResponse!](/apis/backend/objects#outgoingpaymentresponse)
+**Type:** [OutgoingPaymentResponse!](/apis/graphql/backend/objects#outgoingpaymentresponse)
 
 Cancel Outgoing Payment
 
@@ -18,7 +18,7 @@ Cancel Outgoing Payment
 <tr>
 <td>
 input<br />
-<a href="/apis/backend/inputobjects#canceloutgoingpaymentinput"><code>CancelOutgoingPaymentInput!</code></a>
+<a href="/apis/graphql/backend/inputobjects#canceloutgoingpaymentinput"><code>CancelOutgoingPaymentInput!</code></a>
 </td>
 <td>
 
@@ -29,7 +29,7 @@ input<br />
 
 ## createAsset
 
-**Type:** [AssetMutationResponse!](/apis/backend/objects#assetmutationresponse)
+**Type:** [AssetMutationResponse!](/apis/graphql/backend/objects#assetmutationresponse)
 
 Create an asset
 
@@ -41,7 +41,7 @@ Create an asset
 <tr>
 <td>
 input<br />
-<a href="/apis/backend/inputobjects#createassetinput"><code>CreateAssetInput!</code></a>
+<a href="/apis/graphql/backend/inputobjects#createassetinput"><code>CreateAssetInput!</code></a>
 </td>
 <td>
 
@@ -52,7 +52,7 @@ input<br />
 
 ## createAssetLiquidityWithdrawal
 
-**Type:** [LiquidityMutationResponse](/apis/backend/objects#liquiditymutationresponse)
+**Type:** [LiquidityMutationResponse](/apis/graphql/backend/objects#liquiditymutationresponse)
 
 Withdraw asset liquidity
 
@@ -64,7 +64,7 @@ Withdraw asset liquidity
 <tr>
 <td>
 input<br />
-<a href="/apis/backend/inputobjects#createassetliquiditywithdrawalinput"><code>CreateAssetLiquidityWithdrawalInput!</code></a>
+<a href="/apis/graphql/backend/inputobjects#createassetliquiditywithdrawalinput"><code>CreateAssetLiquidityWithdrawalInput!</code></a>
 </td>
 <td>
 
@@ -75,7 +75,7 @@ input<br />
 
 ## createIncomingPayment
 
-**Type:** [IncomingPaymentResponse!](/apis/backend/objects#incomingpaymentresponse)
+**Type:** [IncomingPaymentResponse!](/apis/graphql/backend/objects#incomingpaymentresponse)
 
 Create an internal Open Payments Incoming Payment. The receiver has a wallet address on this Rafiki instance.
 
@@ -87,7 +87,7 @@ Create an internal Open Payments Incoming Payment. The receiver has a wallet add
 <tr>
 <td>
 input<br />
-<a href="/apis/backend/inputobjects#createincomingpaymentinput"><code>CreateIncomingPaymentInput!</code></a>
+<a href="/apis/graphql/backend/inputobjects#createincomingpaymentinput"><code>CreateIncomingPaymentInput!</code></a>
 </td>
 <td>
 
@@ -98,7 +98,7 @@ input<br />
 
 ## createIncomingPaymentWithdrawal
 
-**Type:** [LiquidityMutationResponse](/apis/backend/objects#liquiditymutationresponse)
+**Type:** [LiquidityMutationResponse](/apis/graphql/backend/objects#liquiditymutationresponse)
 
 Withdraw incoming payment liquidity
 
@@ -110,7 +110,7 @@ Withdraw incoming payment liquidity
 <tr>
 <td>
 input<br />
-<a href="/apis/backend/inputobjects#createincomingpaymentwithdrawalinput"><code>CreateIncomingPaymentWithdrawalInput!</code></a>
+<a href="/apis/graphql/backend/inputobjects#createincomingpaymentwithdrawalinput"><code>CreateIncomingPaymentWithdrawalInput!</code></a>
 </td>
 <td>
 
@@ -121,7 +121,7 @@ input<br />
 
 ## createOrUpdatePeerByUrl
 
-**Type:** [CreateOrUpdatePeerByUrlMutationResponse!](/apis/backend/objects#createorupdatepeerbyurlmutationresponse)
+**Type:** [CreateOrUpdatePeerByUrlMutationResponse!](/apis/graphql/backend/objects#createorupdatepeerbyurlmutationresponse)
 
 Create a peer using a URL
 
@@ -133,7 +133,7 @@ Create a peer using a URL
 <tr>
 <td>
 input<br />
-<a href="/apis/backend/inputobjects#createorupdatepeerbyurlinput"><code>CreateOrUpdatePeerByUrlInput!</code></a>
+<a href="/apis/graphql/backend/inputobjects#createorupdatepeerbyurlinput"><code>CreateOrUpdatePeerByUrlInput!</code></a>
 </td>
 <td>
 
@@ -144,7 +144,7 @@ input<br />
 
 ## createOutgoingPayment
 
-**Type:** [OutgoingPaymentResponse!](/apis/backend/objects#outgoingpaymentresponse)
+**Type:** [OutgoingPaymentResponse!](/apis/graphql/backend/objects#outgoingpaymentresponse)
 
 Create an Open Payments Outgoing Payment
 
@@ -156,7 +156,7 @@ Create an Open Payments Outgoing Payment
 <tr>
 <td>
 input<br />
-<a href="/apis/backend/inputobjects#createoutgoingpaymentinput"><code>CreateOutgoingPaymentInput!</code></a>
+<a href="/apis/graphql/backend/inputobjects#createoutgoingpaymentinput"><code>CreateOutgoingPaymentInput!</code></a>
 </td>
 <td>
 
@@ -167,7 +167,7 @@ input<br />
 
 ## createOutgoingPaymentFromIncomingPayment
 
-**Type:** [OutgoingPaymentResponse!](/apis/backend/objects#outgoingpaymentresponse)
+**Type:** [OutgoingPaymentResponse!](/apis/graphql/backend/objects#outgoingpaymentresponse)
 
 Create an Open Payments Outgoing Payment from an incoming payment
 
@@ -179,7 +179,7 @@ Create an Open Payments Outgoing Payment from an incoming payment
 <tr>
 <td>
 input<br />
-<a href="/apis/backend/inputobjects#createoutgoingpaymentfromincomingpaymentinput"><code>CreateOutgoingPaymentFromIncomingPaymentInput!</code></a>
+<a href="/apis/graphql/backend/inputobjects#createoutgoingpaymentfromincomingpaymentinput"><code>CreateOutgoingPaymentFromIncomingPaymentInput!</code></a>
 </td>
 <td>
 
@@ -190,7 +190,7 @@ input<br />
 
 ## createOutgoingPaymentWithdrawal
 
-**Type:** [LiquidityMutationResponse](/apis/backend/objects#liquiditymutationresponse)
+**Type:** [LiquidityMutationResponse](/apis/graphql/backend/objects#liquiditymutationresponse)
 
 Withdraw outgoing payment liquidity
 
@@ -202,7 +202,7 @@ Withdraw outgoing payment liquidity
 <tr>
 <td>
 input<br />
-<a href="/apis/backend/inputobjects#createoutgoingpaymentwithdrawalinput"><code>CreateOutgoingPaymentWithdrawalInput!</code></a>
+<a href="/apis/graphql/backend/inputobjects#createoutgoingpaymentwithdrawalinput"><code>CreateOutgoingPaymentWithdrawalInput!</code></a>
 </td>
 <td>
 
@@ -213,7 +213,7 @@ input<br />
 
 ## createPeer
 
-**Type:** [CreatePeerMutationResponse!](/apis/backend/objects#createpeermutationresponse)
+**Type:** [CreatePeerMutationResponse!](/apis/graphql/backend/objects#createpeermutationresponse)
 
 Create a peer
 
@@ -225,7 +225,7 @@ Create a peer
 <tr>
 <td>
 input<br />
-<a href="/apis/backend/inputobjects#createpeerinput"><code>CreatePeerInput!</code></a>
+<a href="/apis/graphql/backend/inputobjects#createpeerinput"><code>CreatePeerInput!</code></a>
 </td>
 <td>
 
@@ -236,7 +236,7 @@ input<br />
 
 ## createPeerLiquidityWithdrawal
 
-**Type:** [LiquidityMutationResponse](/apis/backend/objects#liquiditymutationresponse)
+**Type:** [LiquidityMutationResponse](/apis/graphql/backend/objects#liquiditymutationresponse)
 
 Withdraw peer liquidity
 
@@ -248,7 +248,7 @@ Withdraw peer liquidity
 <tr>
 <td>
 input<br />
-<a href="/apis/backend/inputobjects#createpeerliquiditywithdrawalinput"><code>CreatePeerLiquidityWithdrawalInput!</code></a>
+<a href="/apis/graphql/backend/inputobjects#createpeerliquiditywithdrawalinput"><code>CreatePeerLiquidityWithdrawalInput!</code></a>
 </td>
 <td>
 
@@ -259,7 +259,7 @@ input<br />
 
 ## createQuote
 
-**Type:** [QuoteResponse!](/apis/backend/objects#quoteresponse)
+**Type:** [QuoteResponse!](/apis/graphql/backend/objects#quoteresponse)
 
 Create an Open Payments Quote
 
@@ -271,7 +271,7 @@ Create an Open Payments Quote
 <tr>
 <td>
 input<br />
-<a href="/apis/backend/inputobjects#createquoteinput"><code>CreateQuoteInput!</code></a>
+<a href="/apis/graphql/backend/inputobjects#createquoteinput"><code>CreateQuoteInput!</code></a>
 </td>
 <td>
 
@@ -282,7 +282,7 @@ input<br />
 
 ## createReceiver
 
-**Type:** [CreateReceiverResponse!](/apis/backend/objects#createreceiverresponse)
+**Type:** [CreateReceiverResponse!](/apis/graphql/backend/objects#createreceiverresponse)
 
 Create an internal or external Open Payments Incoming Payment. The receiver has a wallet address on either this or another Open Payments resource server.
 
@@ -294,7 +294,7 @@ Create an internal or external Open Payments Incoming Payment. The receiver has 
 <tr>
 <td>
 input<br />
-<a href="/apis/backend/inputobjects#createreceiverinput"><code>CreateReceiverInput!</code></a>
+<a href="/apis/graphql/backend/inputobjects#createreceiverinput"><code>CreateReceiverInput!</code></a>
 </td>
 <td>
 
@@ -305,7 +305,7 @@ input<br />
 
 ## createWalletAddress
 
-**Type:** [CreateWalletAddressMutationResponse!](/apis/backend/objects#createwalletaddressmutationresponse)
+**Type:** [CreateWalletAddressMutationResponse!](/apis/graphql/backend/objects#createwalletaddressmutationresponse)
 
 Create a wallet address
 
@@ -317,7 +317,7 @@ Create a wallet address
 <tr>
 <td>
 input<br />
-<a href="/apis/backend/inputobjects#createwalletaddressinput"><code>CreateWalletAddressInput!</code></a>
+<a href="/apis/graphql/backend/inputobjects#createwalletaddressinput"><code>CreateWalletAddressInput!</code></a>
 </td>
 <td>
 
@@ -328,7 +328,7 @@ input<br />
 
 ## createWalletAddressKey
 
-**Type:** [CreateWalletAddressKeyMutationResponse](/apis/backend/objects#createwalletaddresskeymutationresponse)
+**Type:** [CreateWalletAddressKeyMutationResponse](/apis/graphql/backend/objects#createwalletaddresskeymutationresponse)
 
 Add a public key to a wallet address that is used to verify Open Payments requests.
 
@@ -340,7 +340,7 @@ Add a public key to a wallet address that is used to verify Open Payments reques
 <tr>
 <td>
 input<br />
-<a href="/apis/backend/inputobjects#createwalletaddresskeyinput"><code>CreateWalletAddressKeyInput!</code></a>
+<a href="/apis/graphql/backend/inputobjects#createwalletaddresskeyinput"><code>CreateWalletAddressKeyInput!</code></a>
 </td>
 <td>
 
@@ -351,7 +351,7 @@ input<br />
 
 ## createWalletAddressWithdrawal
 
-**Type:** [WalletAddressWithdrawalMutationResponse](/apis/backend/objects#walletaddresswithdrawalmutationresponse)
+**Type:** [WalletAddressWithdrawalMutationResponse](/apis/graphql/backend/objects#walletaddresswithdrawalmutationresponse)
 
 Withdraw liquidity from a wallet address received via Web Monetization.
 
@@ -363,7 +363,7 @@ Withdraw liquidity from a wallet address received via Web Monetization.
 <tr>
 <td>
 input<br />
-<a href="/apis/backend/inputobjects#createwalletaddresswithdrawalinput"><code>CreateWalletAddressWithdrawalInput!</code></a>
+<a href="/apis/graphql/backend/inputobjects#createwalletaddresswithdrawalinput"><code>CreateWalletAddressWithdrawalInput!</code></a>
 </td>
 <td>
 
@@ -374,7 +374,7 @@ input<br />
 
 ## deleteAsset
 
-**Type:** [DeleteAssetMutationResponse!](/apis/backend/objects#deleteassetmutationresponse)
+**Type:** [DeleteAssetMutationResponse!](/apis/graphql/backend/objects#deleteassetmutationresponse)
 
 Delete an asset
 
@@ -386,7 +386,7 @@ Delete an asset
 <tr>
 <td>
 input<br />
-<a href="/apis/backend/inputobjects#deleteassetinput"><code>DeleteAssetInput!</code></a>
+<a href="/apis/graphql/backend/inputobjects#deleteassetinput"><code>DeleteAssetInput!</code></a>
 </td>
 <td>
 
@@ -397,7 +397,7 @@ input<br />
 
 ## deletePeer
 
-**Type:** [DeletePeerMutationResponse!](/apis/backend/objects#deletepeermutationresponse)
+**Type:** [DeletePeerMutationResponse!](/apis/graphql/backend/objects#deletepeermutationresponse)
 
 Delete a peer
 
@@ -409,7 +409,7 @@ Delete a peer
 <tr>
 <td>
 input<br />
-<a href="/apis/backend/inputobjects#deletepeerinput"><code>DeletePeerInput!</code></a>
+<a href="/apis/graphql/backend/inputobjects#deletepeerinput"><code>DeletePeerInput!</code></a>
 </td>
 <td>
 
@@ -420,7 +420,7 @@ input<br />
 
 ## depositAssetLiquidity
 
-**Type:** [LiquidityMutationResponse](/apis/backend/objects#liquiditymutationresponse)
+**Type:** [LiquidityMutationResponse](/apis/graphql/backend/objects#liquiditymutationresponse)
 
 Deposit asset liquidity
 
@@ -432,7 +432,7 @@ Deposit asset liquidity
 <tr>
 <td>
 input<br />
-<a href="/apis/backend/inputobjects#depositassetliquidityinput"><code>DepositAssetLiquidityInput!</code></a>
+<a href="/apis/graphql/backend/inputobjects#depositassetliquidityinput"><code>DepositAssetLiquidityInput!</code></a>
 </td>
 <td>
 
@@ -443,7 +443,7 @@ input<br />
 
 ## depositEventLiquidity
 
-**Type:** [LiquidityMutationResponse](/apis/backend/objects#liquiditymutationresponse)
+**Type:** [LiquidityMutationResponse](/apis/graphql/backend/objects#liquiditymutationresponse)
 
 > Deprecated: Use `depositOutgoingPaymentLiquidity`
 
@@ -457,7 +457,7 @@ Deposit webhook event liquidity
 <tr>
 <td>
 input<br />
-<a href="/apis/backend/inputobjects#depositeventliquidityinput"><code>DepositEventLiquidityInput!</code></a>
+<a href="/apis/graphql/backend/inputobjects#depositeventliquidityinput"><code>DepositEventLiquidityInput!</code></a>
 </td>
 <td>
 
@@ -468,7 +468,7 @@ input<br />
 
 ## depositOutgoingPaymentLiquidity
 
-**Type:** [LiquidityMutationResponse](/apis/backend/objects#liquiditymutationresponse)
+**Type:** [LiquidityMutationResponse](/apis/graphql/backend/objects#liquiditymutationresponse)
 
 Deposit outgoing payment liquidity
 
@@ -480,7 +480,7 @@ Deposit outgoing payment liquidity
 <tr>
 <td>
 input<br />
-<a href="/apis/backend/inputobjects#depositoutgoingpaymentliquidityinput"><code>DepositOutgoingPaymentLiquidityInput!</code></a>
+<a href="/apis/graphql/backend/inputobjects#depositoutgoingpaymentliquidityinput"><code>DepositOutgoingPaymentLiquidityInput!</code></a>
 </td>
 <td>
 
@@ -491,7 +491,7 @@ input<br />
 
 ## depositPeerLiquidity
 
-**Type:** [LiquidityMutationResponse](/apis/backend/objects#liquiditymutationresponse)
+**Type:** [LiquidityMutationResponse](/apis/graphql/backend/objects#liquiditymutationresponse)
 
 Deposit peer liquidity
 
@@ -503,7 +503,7 @@ Deposit peer liquidity
 <tr>
 <td>
 input<br />
-<a href="/apis/backend/inputobjects#depositpeerliquidityinput"><code>DepositPeerLiquidityInput!</code></a>
+<a href="/apis/graphql/backend/inputobjects#depositpeerliquidityinput"><code>DepositPeerLiquidityInput!</code></a>
 </td>
 <td>
 
@@ -514,7 +514,7 @@ input<br />
 
 ## postLiquidityWithdrawal
 
-**Type:** [LiquidityMutationResponse](/apis/backend/objects#liquiditymutationresponse)
+**Type:** [LiquidityMutationResponse](/apis/graphql/backend/objects#liquiditymutationresponse)
 
 Post liquidity withdrawal. Withdrawals are two-phase commits and are committed via this mutation.
 
@@ -526,7 +526,7 @@ Post liquidity withdrawal. Withdrawals are two-phase commits and are committed v
 <tr>
 <td>
 input<br />
-<a href="/apis/backend/inputobjects#postliquiditywithdrawalinput"><code>PostLiquidityWithdrawalInput!</code></a>
+<a href="/apis/graphql/backend/inputobjects#postliquiditywithdrawalinput"><code>PostLiquidityWithdrawalInput!</code></a>
 </td>
 <td>
 
@@ -537,7 +537,7 @@ input<br />
 
 ## revokeWalletAddressKey
 
-**Type:** [RevokeWalletAddressKeyMutationResponse](/apis/backend/objects#revokewalletaddresskeymutationresponse)
+**Type:** [RevokeWalletAddressKeyMutationResponse](/apis/graphql/backend/objects#revokewalletaddresskeymutationresponse)
 
 Revoke a public key associated with a wallet address. Open Payment requests using this key for request signatures will be denied going forward.
 
@@ -549,7 +549,7 @@ Revoke a public key associated with a wallet address. Open Payment requests usin
 <tr>
 <td>
 input<br />
-<a href="/apis/backend/inputobjects#revokewalletaddresskeyinput"><code>RevokeWalletAddressKeyInput!</code></a>
+<a href="/apis/graphql/backend/inputobjects#revokewalletaddresskeyinput"><code>RevokeWalletAddressKeyInput!</code></a>
 </td>
 <td>
 
@@ -560,7 +560,7 @@ input<br />
 
 ## setFee
 
-**Type:** [SetFeeResponse!](/apis/backend/objects#setfeeresponse)
+**Type:** [SetFeeResponse!](/apis/graphql/backend/objects#setfeeresponse)
 
 Set the fee on an asset
 
@@ -572,7 +572,7 @@ Set the fee on an asset
 <tr>
 <td>
 input<br />
-<a href="/apis/backend/inputobjects#setfeeinput"><code>SetFeeInput!</code></a>
+<a href="/apis/graphql/backend/inputobjects#setfeeinput"><code>SetFeeInput!</code></a>
 </td>
 <td>
 
@@ -583,7 +583,7 @@ input<br />
 
 ## triggerWalletAddressEvents
 
-**Type:** [TriggerWalletAddressEventsMutationResponse!](/apis/backend/objects#triggerwalletaddresseventsmutationresponse)
+**Type:** [TriggerWalletAddressEventsMutationResponse!](/apis/graphql/backend/objects#triggerwalletaddresseventsmutationresponse)
 
 If automatic withdrawal of funds received via Web Monetization by the wallet address are disabled, this mutation can be used to trigger up to n withdrawal events.
 
@@ -595,7 +595,7 @@ If automatic withdrawal of funds received via Web Monetization by the wallet add
 <tr>
 <td>
 input<br />
-<a href="/apis/backend/inputobjects#triggerwalletaddresseventsinput"><code>TriggerWalletAddressEventsInput!</code></a>
+<a href="/apis/graphql/backend/inputobjects#triggerwalletaddresseventsinput"><code>TriggerWalletAddressEventsInput!</code></a>
 </td>
 <td>
 
@@ -606,7 +606,7 @@ input<br />
 
 ## updateAsset
 
-**Type:** [AssetMutationResponse!](/apis/backend/objects#assetmutationresponse)
+**Type:** [AssetMutationResponse!](/apis/graphql/backend/objects#assetmutationresponse)
 
 Update an asset
 
@@ -618,7 +618,7 @@ Update an asset
 <tr>
 <td>
 input<br />
-<a href="/apis/backend/inputobjects#updateassetinput"><code>UpdateAssetInput!</code></a>
+<a href="/apis/graphql/backend/inputobjects#updateassetinput"><code>UpdateAssetInput!</code></a>
 </td>
 <td>
 
@@ -629,7 +629,7 @@ input<br />
 
 ## updatePeer
 
-**Type:** [UpdatePeerMutationResponse!](/apis/backend/objects#updatepeermutationresponse)
+**Type:** [UpdatePeerMutationResponse!](/apis/graphql/backend/objects#updatepeermutationresponse)
 
 Update a peer
 
@@ -641,7 +641,7 @@ Update a peer
 <tr>
 <td>
 input<br />
-<a href="/apis/backend/inputobjects#updatepeerinput"><code>UpdatePeerInput!</code></a>
+<a href="/apis/graphql/backend/inputobjects#updatepeerinput"><code>UpdatePeerInput!</code></a>
 </td>
 <td>
 
@@ -652,7 +652,7 @@ input<br />
 
 ## updateWalletAddress
 
-**Type:** [UpdateWalletAddressMutationResponse!](/apis/backend/objects#updatewalletaddressmutationresponse)
+**Type:** [UpdateWalletAddressMutationResponse!](/apis/graphql/backend/objects#updatewalletaddressmutationresponse)
 
 Update a wallet address
 
@@ -664,7 +664,7 @@ Update a wallet address
 <tr>
 <td>
 input<br />
-<a href="/apis/backend/inputobjects#updatewalletaddressinput"><code>UpdateWalletAddressInput!</code></a>
+<a href="/apis/graphql/backend/inputobjects#updatewalletaddressinput"><code>UpdateWalletAddressInput!</code></a>
 </td>
 <td>
 
@@ -675,7 +675,7 @@ input<br />
 
 ## voidLiquidityWithdrawal
 
-**Type:** [LiquidityMutationResponse](/apis/backend/objects#liquiditymutationresponse)
+**Type:** [LiquidityMutationResponse](/apis/graphql/backend/objects#liquiditymutationresponse)
 
 Void liquidity withdrawal. Withdrawals are two-phase commits and are rolled back via this mutation.
 
@@ -687,7 +687,7 @@ Void liquidity withdrawal. Withdrawals are two-phase commits and are rolled back
 <tr>
 <td>
 input<br />
-<a href="/apis/backend/inputobjects#voidliquiditywithdrawalinput"><code>VoidLiquidityWithdrawalInput!</code></a>
+<a href="/apis/graphql/backend/inputobjects#voidliquiditywithdrawalinput"><code>VoidLiquidityWithdrawalInput!</code></a>
 </td>
 <td>
 
@@ -698,7 +698,7 @@ input<br />
 
 ## withdrawEventLiquidity
 
-**Type:** [LiquidityMutationResponse](/apis/backend/objects#liquiditymutationresponse)
+**Type:** [LiquidityMutationResponse](/apis/graphql/backend/objects#liquiditymutationresponse)
 
 > Deprecated: Use `createOutgoingPaymentWithdrawal, createIncomingPaymentWithdrawal, or createWalletAddressWithdrawal`
 
@@ -712,7 +712,7 @@ Withdraw webhook event liquidity
 <tr>
 <td>
 input<br />
-<a href="/apis/backend/inputobjects#withdraweventliquidityinput"><code>WithdrawEventLiquidityInput!</code></a>
+<a href="/apis/graphql/backend/inputobjects#withdraweventliquidityinput"><code>WithdrawEventLiquidityInput!</code></a>
 </td>
 <td>
 

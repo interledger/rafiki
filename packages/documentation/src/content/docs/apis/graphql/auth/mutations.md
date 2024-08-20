@@ -6,7 +6,7 @@ title: Mutations
 
 ## revokeGrant
 
-**Type:** [RevokeGrantMutationResponse!](/apis/auth/objects#revokegrantmutationresponse)
+**Type:** [RevokeGrantMutationResponse!](/apis/graphql/auth/objects#revokegrantmutationresponse)
 
 Revoke Grant
 
@@ -18,7 +18,7 @@ Revoke Grant
 <tr>
 <td>
 input<br />
-<a href="/apis/auth/inputobjects#revokegrantinput"><code>RevokeGrantInput!</code></a>
+<a href="/apis/graphql/auth/inputobjects#revokegrantinput"><code>RevokeGrantInput!</code></a>
 </td>
 <td>
 

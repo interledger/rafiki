@@ -77,7 +77,76 @@ export default defineConfig({
                 },
                 {
                   label: 'Deploy to production',
-                  link: 'integration/deploy-to-production'
+                  collapsed: true,
+                  items: [
+                    {
+                      label: 'Endpoints',
+                      collapsed: true,
+                      items: [
+                        {
+                          label: 'Webhook events',
+                          link: 'integration/deploy-to-prod/endpoints/webhook-events'
+                        },
+                        {
+                          label: 'Exchange Rates',
+                          link: 'integration/deploy-to-prod/endpoints/exchange-rates'
+                        },
+                        {
+                          label: 'IDP',
+                          link: 'integration/deploy-to-prod/endpoints/idp'
+                        }
+                      ]
+                    },
+                    {
+                      label: 'Environment variables',
+                      link: 'integration/deploy-to-prod/environment-variables'
+                    },
+                    {
+                      label: 'Deploying to cloud environment options',
+                      collapsed: true,
+                      items: [
+                        {
+                          label: 'nginx',
+                          link: 'integration/deploy-to-prod/deploy-to-cloud/nginx'
+                        },
+                        {
+                          label: 'Helm & K8s',
+                          link: 'integration/deploy-to-prod/deploy-to-cloud/helm-k8s'
+                        }
+                      ]
+                    },
+                    {
+                      label: 'Running your instance',
+                      collapsed: true,
+                      items: [
+                        {
+                          label: 'Adding asset',
+                          link: 'integration/deploy-to-prod/running-your-instance/adding-asset'
+                        },
+                        {
+                          label: 'Adding peer',
+                          link: 'integration/deploy-to-prod/running-your-instance/adding-peer'
+                        },
+                        {
+                          label:
+                            'Creating wallet address',
+                          link: 'integration/deploy-to-prod/running-your-instance/creating-wallet-address'
+                        },
+                        {
+                          label: 'Managing liquidity',
+                          link: 'integration/deploy-to-prod/running-your-instance/managing-liquidity'
+                        },
+                        {
+                          label: 'Keys management',
+                          link: 'integration/deploy-to-prod/running-your-instance/keys-management'
+                        },
+                        {
+                          label: 'Grants management',
+                          link: 'integration/deploy-to-prod/running-your-instance/grants-management'
+                        }
+                      ]
+                    }
+                  ]
                 },
                 {
                   label: 'Admin APIs',
