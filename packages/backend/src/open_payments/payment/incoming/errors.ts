@@ -27,7 +27,7 @@ export const errorToHTTPCode: {
   [IncomingPaymentError.WrongState]: 409,
   [IncomingPaymentError.InactiveWalletAddress]: 400,
   [IncomingPaymentError.ActionNotPerformed]: 403,
-  [IncomingPaymentError.AlreadyActioned]: 403,
+  [IncomingPaymentError.AlreadyActioned]: 403
 }
 
 export const errorToCode: {

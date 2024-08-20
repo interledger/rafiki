@@ -181,7 +181,9 @@ describe('Incoming Payment Service', (): void => {
           .findOne({ id: incomingPayment.id })
           .patch({ cancelledAt: new Date() })
 
-        const response = await incomingPaymentService.approve(incomingPayment.id)
+        const response = await incomingPaymentService.approve(
+          incomingPayment.id
+        )
         expect(response).toBe(IncomingPaymentError.AlreadyActioned)
       })
 
