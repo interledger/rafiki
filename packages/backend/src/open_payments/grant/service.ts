@@ -3,6 +3,7 @@ import { AuthServerService } from '../authServer/service'
 import { BaseService } from '../../shared/baseService'
 import {
   AccessAction,
+  AccessToken,
   AccessType,
   AuthenticatedClient,
   isPendingGrant
@@ -14,6 +15,7 @@ export interface GrantService {
   get(options: GrantOptions): Promise<Grant | undefined>
   update(grant: Grant, options: UpdateOptions): Promise<Grant>
   getOrCreate(options: GrantOptions): Promise<Grant | GrantError>
+  delete(id: string): Promise<Grant | GrantError>
 }
 
 export interface ServiceDependencies extends BaseService {
@@ -35,7 +37,8 @@ export async function createGrantService(
     get: (options) => getGrant(deps, options),
     create: (options) => createGrant(deps, options),
     update: (grant, options) => updateGrant(deps, grant, options),
-    getOrCreate: (options) => getOrCreate(deps, options)
+    getOrCreate: (options) => getOrCreateGrant(deps, options),
+    delete: (id) => deleteGrant(deps, id)
   }
 }
 
@@ -98,7 +101,7 @@ async function updateGrant(
     .withGraphFetched('authServer')
 }
 
-async function getOrCreate(
+async function getOrCreateGrant(
   deps: ServiceDependencies,
   options: GrantOptions
 ): Promise<Grant | GrantError> {
@@ -106,12 +109,17 @@ async function getOrCreate(
     .findOne({
       accessType: options.accessType
     })
-    .where('authServer.url', options.authServer)
-    .andWhere('expiresAt', '>', new Date())
-    .andWhere('accessActions', '@>', options.accessActions) // all options.accessActions are found in the saved grant
+    .whereNull('deletedAt')
+    .andWhere('authServer.url', options.authServer)
+    .andWhere('accessActions', '@>', options.accessActions) // all options.accessActions are a subset of saved accessActions
     .withGraphJoined('authServer')
 
-  if (existingGrant) {
+  if (existingGrant?.expired) {
+    const updatedGrant = await rotateGrantToken(deps, existingGrant)
+    if (updatedGrant) {
+      return updatedGrant
+    }
+  } else if (existingGrant) {
     return existingGrant
   }
 
@@ -165,6 +173,50 @@ async function getOrCreate(
         : undefined
     })
     .withGraphFetched('authServer')
+}
+
+async function rotateGrantToken(
+  deps: ServiceDependencies,
+  grant: Grant
+): Promise<Grant | undefined> {
+  if (!grant.authServer) {
+    deps.logger.error(
+      { grantId: grant.id },
+      'Could not get auth server from grant during token rotation'
+    )
+    return undefined
+  }
+
+  let rotatedToken: AccessToken
+
+  try {
+    rotatedToken = await deps.openPaymentsClient.token.rotate({
+      url: grant.getManagementUrl(grant.authServer.url),
+      accessToken: grant.accessToken
+    })
+  } catch (err) {
+    deps.logger.warn(
+      { err, authServerUrl: grant.authServer.url },
+      'Grant token rotation failed'
+    )
+    await deleteGrant(deps, grant.id)
+    return undefined
+  }
+
+  return updateGrant(deps, grant, {
+    accessToken: rotatedToken.access_token.value,
+    managementUrl: rotatedToken.access_token.manage,
+    expiresIn: rotatedToken.access_token.expires_in
+  })
+}
+
+async function deleteGrant(
+  deps: ServiceDependencies,
+  grantId: string
+): Promise<Grant> {
+  return Grant.query(deps.knex).updateAndFetchById(grantId, {
+    deletedAt: new Date()
+  })
 }
 
 function retrieveManagementId(managementUrl: string): string {
