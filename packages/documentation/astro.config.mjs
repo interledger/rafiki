@@ -85,21 +85,21 @@ export default defineConfig({
                       items: [
                         {
                           label: 'Webhook events',
-                          link: 'integration/deploy-to-prod/webhook-events'
+                          link: 'integration/deploy-to-prod/endpoints/webhook-events'
                         },
                         {
                           label: 'Exchange Rates',
-                          link: 'integration/deploy-to-prod/exchange-rates'
+                          link: 'integration/deploy-to-prod/endpoints/exchange-rates'
                         },
                         {
                           label: 'IDP',
-                          link: 'integration/deploy-to-prod/idp'
+                          link: 'integration/deploy-to-prod/endpoints/idp'
                         }
                       ]
                     },
                     {
                       label: 'Environment variables',
-                      link: 'integration/environment-variables'
+                      link: 'integration/deploy-to-prod/environment-variables'
                     },
                     {
                       label: 'Deploying to cloud environment options',
@@ -107,11 +107,11 @@ export default defineConfig({
                       items: [
                         {
                           label: 'nginx',
-                          link: 'integration/deploy-to-cloud/nginx'
+                          link: 'integration/deploy-to-prod/deploy-to-cloud/nginx'
                         },
                         {
                           label: 'Helm & K8s',
-                          link: 'integration/deploy-to-cloud/helm-k8s'
+                          link: 'integration/deploy-to-prod/deploy-to-cloud/helm-k8s'
                         }
                       ]
                     },
@@ -121,28 +121,28 @@ export default defineConfig({
                       items: [
                         {
                           label: 'Adding asset',
-                          link: 'integration/running-your-instance/adding-asset'
+                          link: 'integration/deploy-to-prod/running-your-instance/adding-asset'
                         },
                         {
                           label: 'Adding peer',
-                          link: 'integration/running-your-instance/adding-peer'
+                          link: 'integration/deploy-to-prod/running-your-instance/adding-peer'
                         },
                         {
                           label:
                             'Creating wallet address (strategies for identity lookup)',
-                          link: 'integration/running-your-instance/creating-wallet-address'
+                          link: 'integration/deploy-to-prod/running-your-instance/creating-wallet-address'
                         },
                         {
                           label: 'Managing liquidity',
-                          link: 'integration/running-your-instance/managing-liquidity'
+                          link: 'integration/deploy-to-prod/running-your-instance/managing-liquidity'
                         },
                         {
                           label: 'Keys management',
-                          link: 'integration/running-your-instance/keys-management'
+                          link: 'integration/deploy-to-prod/running-your-instance/keys-management'
                         },
                         {
                           label: 'Grants management',
-                          link: 'integration/running-your-instance/grants-management'
+                          link: 'integration/deploy-to-prod/running-your-instance/grants-management'
                         }
                       ]
                     }
