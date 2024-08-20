@@ -273,12 +273,12 @@ export default defineConfig({
     GraphQL({
       schema: '../backend/src/graphql/schema.graphql',
       output: './src/content/docs/apis/graphql/backend/',
-      linkPrefix: '/apis/backend/'
+      linkPrefix: '/apis/graphql/backend/'
     }),
     GraphQL({
       schema: '../auth/src/graphql/schema.graphql',
       output: './src/content/docs/apis/graphql/auth/',
-      linkPrefix: '/apis/auth/'
+      linkPrefix: '/apis/graphql/auth/'
     })
   ],
   server: {

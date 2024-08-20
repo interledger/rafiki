@@ -6,11 +6,13 @@ title: Interfaces
 
 ## BasePayment
 
+
+
 <p style={{ marginBottom: "0.4em" }}><strong>Implemented by</strong></p>
 
-- [IncomingPayment](/apis/backend/objects#incomingpayment)
-- [OutgoingPayment](/apis/backend/objects#outgoingpayment)
-- [Payment](/apis/backend/objects#payment)
+- [IncomingPayment](/apis/graphql/backend/objects#incomingpayment)
+- [OutgoingPayment](/apis/graphql/backend/objects#outgoingpayment)
+- [Payment](/apis/graphql/backend/objects#payment)
 
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
@@ -20,7 +22,7 @@ title: Interfaces
 <tr>
 <td>
 id<br />
-<a href="/apis/backend/scalars#id"><code>ID!</code></a>
+<a href="/apis/graphql/backend/scalars#id"><code>ID!</code></a>
 </td>
 <td>
 
@@ -29,7 +31,7 @@ id<br />
 <tr>
 <td>
 walletAddressId<br />
-<a href="/apis/backend/scalars#id"><code>ID!</code></a>
+<a href="/apis/graphql/backend/scalars#id"><code>ID!</code></a>
 </td>
 <td>
 
@@ -38,7 +40,7 @@ walletAddressId<br />
 <tr>
 <td>
 metadata<br />
-<a href="/apis/backend/scalars#jsonobject"><code>JSONObject</code></a>
+<a href="/apis/graphql/backend/scalars#jsonobject"><code>JSONObject</code></a>
 </td>
 <td>
 
@@ -47,7 +49,7 @@ metadata<br />
 <tr>
 <td>
 createdAt<br />
-<a href="/apis/backend/scalars#string"><code>String!</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 
@@ -56,7 +58,7 @@ createdAt<br />
 <tr>
 <td>
 client<br />
-<a href="/apis/backend/scalars#string"><code>String</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String</code></a>
 </td>
 <td>
 
@@ -67,18 +69,20 @@ client<br />
 
 ## Model
 
+
+
 <p style={{ marginBottom: "0.4em" }}><strong>Implemented by</strong></p>
 
-- [Asset](/apis/backend/objects#asset)
-- [Peer](/apis/backend/objects#peer)
-- [WalletAddress](/apis/backend/objects#walletaddress)
-- [IncomingPayment](/apis/backend/objects#incomingpayment)
-- [OutgoingPayment](/apis/backend/objects#outgoingpayment)
-- [Payment](/apis/backend/objects#payment)
-- [AccountingTransfer](/apis/backend/objects#accountingtransfer)
-- [WalletAddressKey](/apis/backend/objects#walletaddresskey)
-- [WebhookEvent](/apis/backend/objects#webhookevent)
-- [Fee](/apis/backend/objects#fee)
+- [Asset](/apis/graphql/backend/objects#asset)
+- [Peer](/apis/graphql/backend/objects#peer)
+- [WalletAddress](/apis/graphql/backend/objects#walletaddress)
+- [IncomingPayment](/apis/graphql/backend/objects#incomingpayment)
+- [OutgoingPayment](/apis/graphql/backend/objects#outgoingpayment)
+- [Payment](/apis/graphql/backend/objects#payment)
+- [AccountingTransfer](/apis/graphql/backend/objects#accountingtransfer)
+- [WalletAddressKey](/apis/graphql/backend/objects#walletaddresskey)
+- [WebhookEvent](/apis/graphql/backend/objects#webhookevent)
+- [Fee](/apis/graphql/backend/objects#fee)
 
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
@@ -88,7 +92,7 @@ client<br />
 <tr>
 <td>
 id<br />
-<a href="/apis/backend/scalars#id"><code>ID!</code></a>
+<a href="/apis/graphql/backend/scalars#id"><code>ID!</code></a>
 </td>
 <td>
 
@@ -97,7 +101,7 @@ id<br />
 <tr>
 <td>
 createdAt<br />
-<a href="/apis/backend/scalars#string"><code>String!</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 
@@ -105,3 +109,4 @@ createdAt<br />
 </tr>
 </tbody>
 </table>
+

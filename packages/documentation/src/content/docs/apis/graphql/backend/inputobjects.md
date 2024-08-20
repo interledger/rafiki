@@ -6,6 +6,8 @@ title: Input objects
 
 ## AdditionalPropertyInput
 
+
+
 <p style={{ marginBottom: "0.4em" }}><strong>Arguments</strong></p>
 
 <table>
@@ -14,7 +16,7 @@ title: Input objects
 <tr>
 <td>
 key<br />
-<a href="/apis/backend/scalars#string"><code>String!</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 
@@ -23,7 +25,7 @@ key<br />
 <tr>
 <td>
 value<br />
-<a href="/apis/backend/scalars#string"><code>String!</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 
@@ -32,7 +34,7 @@ value<br />
 <tr>
 <td>
 visibleInOpenPayments<br />
-<a href="/apis/backend/scalars#boolean"><code>Boolean!</code></a>
+<a href="/apis/graphql/backend/scalars#boolean"><code>Boolean!</code></a>
 </td>
 <td>
 
@@ -43,6 +45,8 @@ visibleInOpenPayments<br />
 
 ## AmountInput
 
+
+
 <p style={{ marginBottom: "0.4em" }}><strong>Arguments</strong></p>
 
 <table>
@@ -51,7 +55,7 @@ visibleInOpenPayments<br />
 <tr>
 <td>
 value<br />
-<a href="/apis/backend/scalars#uint64"><code>UInt64!</code></a>
+<a href="/apis/graphql/backend/scalars#uint64"><code>UInt64!</code></a>
 </td>
 <td>
 
@@ -60,7 +64,7 @@ value<br />
 <tr>
 <td>
 assetCode<br />
-<a href="/apis/backend/scalars#string"><code>String!</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p><a href="https://en.wikipedia.org/wiki/ISO_4217">ISO 4217 currency code</a>, e.g. <code>USD</code></p>
@@ -69,7 +73,7 @@ assetCode<br />
 <tr>
 <td>
 assetScale<br />
-<a href="/apis/backend/scalars#uint8"><code>UInt8!</code></a>
+<a href="/apis/graphql/backend/scalars#uint8"><code>UInt8!</code></a>
 </td>
 <td>
 <p>Difference in orders of magnitude between the standard unit of an asset and a corresponding fractional unit</p>
@@ -80,6 +84,8 @@ assetScale<br />
 
 ## CancelOutgoingPaymentInput
 
+
+
 <p style={{ marginBottom: "0.4em" }}><strong>Arguments</strong></p>
 
 <table>
@@ -88,7 +94,7 @@ assetScale<br />
 <tr>
 <td>
 id<br />
-<a href="/apis/backend/scalars#id"><code>ID!</code></a>
+<a href="/apis/graphql/backend/scalars#id"><code>ID!</code></a>
 </td>
 <td>
 <p>Outgoing payment id</p>
@@ -97,7 +103,7 @@ id<br />
 <tr>
 <td>
 reason<br />
-<a href="/apis/backend/scalars#string"><code>String</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String</code></a>
 </td>
 <td>
 <p>Reason why this Outgoing Payment has been cancelled. This value will be publicly visible in the metadata field if this outgoing payment is requested through Open Payments.</p>
@@ -108,6 +114,8 @@ reason<br />
 
 ## CreateAssetInput
 
+
+
 <p style={{ marginBottom: "0.4em" }}><strong>Arguments</strong></p>
 
 <table>
@@ -116,7 +124,7 @@ reason<br />
 <tr>
 <td>
 code<br />
-<a href="/apis/backend/scalars#string"><code>String!</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p><a href="https://en.wikipedia.org/wiki/ISO_4217">ISO 4217 currency code</a>, e.g. <code>USD</code></p>
@@ -125,7 +133,7 @@ code<br />
 <tr>
 <td>
 scale<br />
-<a href="/apis/backend/scalars#uint8"><code>UInt8!</code></a>
+<a href="/apis/graphql/backend/scalars#uint8"><code>UInt8!</code></a>
 </td>
 <td>
 <p>Difference in orders of magnitude between the standard unit of an asset and a corresponding fractional unit</p>
@@ -134,7 +142,7 @@ scale<br />
 <tr>
 <td>
 withdrawalThreshold<br />
-<a href="/apis/backend/scalars#uint64"><code>UInt64</code></a>
+<a href="/apis/graphql/backend/scalars#uint64"><code>UInt64</code></a>
 </td>
 <td>
 <p>Minimum amount of liquidity that can be withdrawn from the asset</p>
@@ -143,7 +151,7 @@ withdrawalThreshold<br />
 <tr>
 <td>
 liquidityThreshold<br />
-<a href="/apis/backend/scalars#uint64"><code>UInt64</code></a>
+<a href="/apis/graphql/backend/scalars#uint64"><code>UInt64</code></a>
 </td>
 <td>
 <p>Account Servicing Entity will be notified via a webhook event if liquidity falls below this value</p>
@@ -152,7 +160,7 @@ liquidityThreshold<br />
 <tr>
 <td>
 idempotencyKey<br />
-<a href="/apis/backend/scalars#string"><code>String</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String</code></a>
 </td>
 <td>
 <p>Unique key to ensure duplicate or retried requests are processed only once. See <a href="https://en.wikipedia.org/wiki/Idempotence">idempotence</a></p>
@@ -163,6 +171,8 @@ idempotencyKey<br />
 
 ## CreateAssetLiquidityWithdrawalInput
 
+
+
 <p style={{ marginBottom: "0.4em" }}><strong>Arguments</strong></p>
 
 <table>
@@ -171,7 +181,7 @@ idempotencyKey<br />
 <tr>
 <td>
 assetId<br />
-<a href="/apis/backend/scalars#string"><code>String!</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>The id of the asset to create the withdrawal for.</p>
@@ -180,7 +190,7 @@ assetId<br />
 <tr>
 <td>
 amount<br />
-<a href="/apis/backend/scalars#uint64"><code>UInt64!</code></a>
+<a href="/apis/graphql/backend/scalars#uint64"><code>UInt64!</code></a>
 </td>
 <td>
 <p>Amount of withdrawal.</p>
@@ -189,7 +199,7 @@ amount<br />
 <tr>
 <td>
 id<br />
-<a href="/apis/backend/scalars#string"><code>String!</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>The id of the withdrawal.</p>
@@ -198,7 +208,7 @@ id<br />
 <tr>
 <td>
 idempotencyKey<br />
-<a href="/apis/backend/scalars#string"><code>String!</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Unique key to ensure duplicate or retried requests are processed only once. See <a href="https://en.wikipedia.org/wiki/Idempotence">idempotence</a></p>
@@ -207,7 +217,7 @@ idempotencyKey<br />
 <tr>
 <td>
 timeoutSeconds<br />
-<a href="/apis/backend/scalars#uint64"><code>UInt64!</code></a>
+<a href="/apis/graphql/backend/scalars#uint64"><code>UInt64!</code></a>
 </td>
 <td>
 <p>This is the interval in seconds after a pending transfer&#39;s created at which it may be posted or voided. Zero denotes a no timeout single-phase posted transfer.</p>
@@ -218,6 +228,8 @@ timeoutSeconds<br />
 
 ## CreateIncomingPaymentInput
 
+
+
 <p style={{ marginBottom: "0.4em" }}><strong>Arguments</strong></p>
 
 <table>
@@ -226,7 +238,7 @@ timeoutSeconds<br />
 <tr>
 <td>
 walletAddressId<br />
-<a href="/apis/backend/scalars#string"><code>String!</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Id of the wallet address under which the incoming payment will be created</p>
@@ -235,7 +247,7 @@ walletAddressId<br />
 <tr>
 <td>
 expiresAt<br />
-<a href="/apis/backend/scalars#string"><code>String</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String</code></a>
 </td>
 <td>
 <p>Expiration date-time</p>
@@ -244,7 +256,7 @@ expiresAt<br />
 <tr>
 <td>
 metadata<br />
-<a href="/apis/backend/scalars#jsonobject"><code>JSONObject</code></a>
+<a href="/apis/graphql/backend/scalars#jsonobject"><code>JSONObject</code></a>
 </td>
 <td>
 <p>Additional metadata associated with the incoming payment.</p>
@@ -253,7 +265,7 @@ metadata<br />
 <tr>
 <td>
 incomingAmount<br />
-<a href="/apis/backend/inputobjects#amountinput"><code>AmountInput</code></a>
+<a href="/apis/graphql/backend/inputobjects#amountinput"><code>AmountInput</code></a>
 </td>
 <td>
 <p>Maximum amount to be received</p>
@@ -262,7 +274,7 @@ incomingAmount<br />
 <tr>
 <td>
 idempotencyKey<br />
-<a href="/apis/backend/scalars#string"><code>String</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String</code></a>
 </td>
 <td>
 <p>Unique key to ensure duplicate or retried requests are processed only once. See <a href="https://en.wikipedia.org/wiki/Idempotence">idempotence</a></p>
@@ -273,6 +285,8 @@ idempotencyKey<br />
 
 ## CreateIncomingPaymentWithdrawalInput
 
+
+
 <p style={{ marginBottom: "0.4em" }}><strong>Arguments</strong></p>
 
 <table>
@@ -281,7 +295,7 @@ idempotencyKey<br />
 <tr>
 <td>
 incomingPaymentId<br />
-<a href="/apis/backend/scalars#string"><code>String!</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>The id of the incoming payment to withdraw from.</p>
@@ -290,7 +304,7 @@ incomingPaymentId<br />
 <tr>
 <td>
 idempotencyKey<br />
-<a href="/apis/backend/scalars#string"><code>String!</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Unique key to ensure duplicate or retried requests are processed only once. See <a href="https://en.wikipedia.org/wiki/Idempotence">idempotence</a></p>
@@ -299,7 +313,7 @@ idempotencyKey<br />
 <tr>
 <td>
 timeoutSeconds<br />
-<a href="/apis/backend/scalars#uint64"><code>UInt64!</code></a>
+<a href="/apis/graphql/backend/scalars#uint64"><code>UInt64!</code></a>
 </td>
 <td>
 <p>This is the interval in seconds after a pending transfer&#39;s created at which it may be posted or voided. Zero denotes a no timeout single-phase posted transfer.</p>
@@ -310,6 +324,8 @@ timeoutSeconds<br />
 
 ## CreateOrUpdatePeerByUrlInput
 
+
+
 <p style={{ marginBottom: "0.4em" }}><strong>Arguments</strong></p>
 
 <table>
@@ -318,7 +334,7 @@ timeoutSeconds<br />
 <tr>
 <td>
 maxPacketAmount<br />
-<a href="/apis/backend/scalars#uint64"><code>UInt64</code></a>
+<a href="/apis/graphql/backend/scalars#uint64"><code>UInt64</code></a>
 </td>
 <td>
 <p>Maximum packet amount that the peer accepts</p>
@@ -327,7 +343,7 @@ maxPacketAmount<br />
 <tr>
 <td>
 assetId<br />
-<a href="/apis/backend/scalars#string"><code>String!</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Asset id of peering relationship</p>
@@ -336,7 +352,7 @@ assetId<br />
 <tr>
 <td>
 peerUrl<br />
-<a href="/apis/backend/scalars#string"><code>String!</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Peer&#39;s URL address at which the peer accepts auto-peering requests</p>
@@ -345,7 +361,7 @@ peerUrl<br />
 <tr>
 <td>
 name<br />
-<a href="/apis/backend/scalars#string"><code>String</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String</code></a>
 </td>
 <td>
 <p>Peer&#39;s internal name for overriding auto-peer&#39;s default naming</p>
@@ -354,7 +370,7 @@ name<br />
 <tr>
 <td>
 liquidityThreshold<br />
-<a href="/apis/backend/scalars#uint64"><code>UInt64</code></a>
+<a href="/apis/graphql/backend/scalars#uint64"><code>UInt64</code></a>
 </td>
 <td>
 <p>Account Servicing Entity will be notified via a webhook event if peer liquidity falls below this value</p>
@@ -363,7 +379,7 @@ liquidityThreshold<br />
 <tr>
 <td>
 liquidityToDeposit<br />
-<a href="/apis/backend/scalars#uint64"><code>UInt64</code></a>
+<a href="/apis/graphql/backend/scalars#uint64"><code>UInt64</code></a>
 </td>
 <td>
 <p>Amount of liquidity to deposit for peer</p>
@@ -372,7 +388,7 @@ liquidityToDeposit<br />
 <tr>
 <td>
 idempotencyKey<br />
-<a href="/apis/backend/scalars#string"><code>String</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String</code></a>
 </td>
 <td>
 <p>Unique key to ensure duplicate or retried requests are processed only once. See <a href="https://en.wikipedia.org/wiki/Idempotence">idempotence</a></p>
@@ -383,6 +399,8 @@ idempotencyKey<br />
 
 ## CreateOutgoingPaymentFromIncomingPaymentInput
 
+
+
 <p style={{ marginBottom: "0.4em" }}><strong>Arguments</strong></p>
 
 <table>
@@ -391,7 +409,7 @@ idempotencyKey<br />
 <tr>
 <td>
 walletAddressId<br />
-<a href="/apis/backend/scalars#string"><code>String!</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Id of the wallet address under which the outgoing payment will be created</p>
@@ -400,7 +418,7 @@ walletAddressId<br />
 <tr>
 <td>
 incomingPayment<br />
-<a href="/apis/backend/scalars#string"><code>String!</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Incoming payment url to create the outgoing payment from</p>
@@ -409,7 +427,7 @@ incomingPayment<br />
 <tr>
 <td>
 debitAmount<br />
-<a href="/apis/backend/inputobjects#amountinput"><code>AmountInput!</code></a>
+<a href="/apis/graphql/backend/inputobjects#amountinput"><code>AmountInput!</code></a>
 </td>
 <td>
 <p>Amount to send (fixed send)</p>
@@ -418,7 +436,7 @@ debitAmount<br />
 <tr>
 <td>
 metadata<br />
-<a href="/apis/backend/scalars#jsonobject"><code>JSONObject</code></a>
+<a href="/apis/graphql/backend/scalars#jsonobject"><code>JSONObject</code></a>
 </td>
 <td>
 <p>Additional metadata associated with the outgoing payment.</p>
@@ -427,7 +445,7 @@ metadata<br />
 <tr>
 <td>
 idempotencyKey<br />
-<a href="/apis/backend/scalars#string"><code>String</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String</code></a>
 </td>
 <td>
 <p>Unique key to ensure duplicate or retried requests are processed only once. See <a href="https://en.wikipedia.org/wiki/Idempotence">idempotence</a></p>
@@ -438,6 +456,8 @@ idempotencyKey<br />
 
 ## CreateOutgoingPaymentInput
 
+
+
 <p style={{ marginBottom: "0.4em" }}><strong>Arguments</strong></p>
 
 <table>
@@ -446,7 +466,7 @@ idempotencyKey<br />
 <tr>
 <td>
 walletAddressId<br />
-<a href="/apis/backend/scalars#string"><code>String!</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Id of the wallet address under which the outgoing payment will be created</p>
@@ -455,7 +475,7 @@ walletAddressId<br />
 <tr>
 <td>
 quoteId<br />
-<a href="/apis/backend/scalars#string"><code>String!</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Id of the corresponding quote for that outgoing payment</p>
@@ -464,7 +484,7 @@ quoteId<br />
 <tr>
 <td>
 metadata<br />
-<a href="/apis/backend/scalars#jsonobject"><code>JSONObject</code></a>
+<a href="/apis/graphql/backend/scalars#jsonobject"><code>JSONObject</code></a>
 </td>
 <td>
 <p>Additional metadata associated with the outgoing payment.</p>
@@ -473,7 +493,7 @@ metadata<br />
 <tr>
 <td>
 idempotencyKey<br />
-<a href="/apis/backend/scalars#string"><code>String</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String</code></a>
 </td>
 <td>
 <p>Unique key to ensure duplicate or retried requests are processed only once. See <a href="https://en.wikipedia.org/wiki/Idempotence">idempotence</a></p>
@@ -484,6 +504,8 @@ idempotencyKey<br />
 
 ## CreateOutgoingPaymentWithdrawalInput
 
+
+
 <p style={{ marginBottom: "0.4em" }}><strong>Arguments</strong></p>
 
 <table>
@@ -492,7 +514,7 @@ idempotencyKey<br />
 <tr>
 <td>
 outgoingPaymentId<br />
-<a href="/apis/backend/scalars#string"><code>String!</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>The id of the outgoing payment to withdraw from.</p>
@@ -501,7 +523,7 @@ outgoingPaymentId<br />
 <tr>
 <td>
 idempotencyKey<br />
-<a href="/apis/backend/scalars#string"><code>String!</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Unique key to ensure duplicate or retried requests are processed only once. See <a href="https://en.wikipedia.org/wiki/Idempotence">idempotence</a></p>
@@ -510,7 +532,7 @@ idempotencyKey<br />
 <tr>
 <td>
 timeoutSeconds<br />
-<a href="/apis/backend/scalars#uint64"><code>UInt64!</code></a>
+<a href="/apis/graphql/backend/scalars#uint64"><code>UInt64!</code></a>
 </td>
 <td>
 <p>This is the interval in seconds after a pending transfer&#39;s created at which it may be posted or voided. Zero denotes a no timeout single-phase posted transfer.</p>
@@ -521,6 +543,8 @@ timeoutSeconds<br />
 
 ## CreatePeerInput
 
+
+
 <p style={{ marginBottom: "0.4em" }}><strong>Arguments</strong></p>
 
 <table>
@@ -529,7 +553,7 @@ timeoutSeconds<br />
 <tr>
 <td>
 maxPacketAmount<br />
-<a href="/apis/backend/scalars#uint64"><code>UInt64</code></a>
+<a href="/apis/graphql/backend/scalars#uint64"><code>UInt64</code></a>
 </td>
 <td>
 <p>Maximum packet amount that the peer accepts</p>
@@ -538,7 +562,7 @@ maxPacketAmount<br />
 <tr>
 <td>
 http<br />
-<a href="/apis/backend/inputobjects#httpinput"><code>HttpInput!</code></a>
+<a href="/apis/graphql/backend/inputobjects#httpinput"><code>HttpInput!</code></a>
 </td>
 <td>
 <p>Peering connection details</p>
@@ -547,7 +571,7 @@ http<br />
 <tr>
 <td>
 assetId<br />
-<a href="/apis/backend/scalars#string"><code>String!</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Asset id of peering relationship</p>
@@ -556,7 +580,7 @@ assetId<br />
 <tr>
 <td>
 staticIlpAddress<br />
-<a href="/apis/backend/scalars#string"><code>String!</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Peer&#39;s ILP address</p>
@@ -565,7 +589,7 @@ staticIlpAddress<br />
 <tr>
 <td>
 name<br />
-<a href="/apis/backend/scalars#string"><code>String</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String</code></a>
 </td>
 <td>
 <p>Peer&#39;s internal name</p>
@@ -574,7 +598,7 @@ name<br />
 <tr>
 <td>
 liquidityThreshold<br />
-<a href="/apis/backend/scalars#uint64"><code>UInt64</code></a>
+<a href="/apis/graphql/backend/scalars#uint64"><code>UInt64</code></a>
 </td>
 <td>
 <p>Account Servicing Entity will be notified via a webhook event if peer liquidity falls below this value</p>
@@ -583,7 +607,7 @@ liquidityThreshold<br />
 <tr>
 <td>
 initialLiquidity<br />
-<a href="/apis/backend/scalars#uint64"><code>UInt64</code></a>
+<a href="/apis/graphql/backend/scalars#uint64"><code>UInt64</code></a>
 </td>
 <td>
 <p>Initial amount of liquidity to deposit for peer</p>
@@ -592,7 +616,7 @@ initialLiquidity<br />
 <tr>
 <td>
 idempotencyKey<br />
-<a href="/apis/backend/scalars#string"><code>String</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String</code></a>
 </td>
 <td>
 <p>Unique key to ensure duplicate or retried requests are processed only once. See <a href="https://en.wikipedia.org/wiki/Idempotence">idempotence</a></p>
@@ -603,6 +627,8 @@ idempotencyKey<br />
 
 ## CreatePeerLiquidityWithdrawalInput
 
+
+
 <p style={{ marginBottom: "0.4em" }}><strong>Arguments</strong></p>
 
 <table>
@@ -611,7 +637,7 @@ idempotencyKey<br />
 <tr>
 <td>
 peerId<br />
-<a href="/apis/backend/scalars#string"><code>String!</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>The id of the peer to create the withdrawal for.</p>
@@ -620,7 +646,7 @@ peerId<br />
 <tr>
 <td>
 amount<br />
-<a href="/apis/backend/scalars#uint64"><code>UInt64!</code></a>
+<a href="/apis/graphql/backend/scalars#uint64"><code>UInt64!</code></a>
 </td>
 <td>
 <p>Amount of withdrawal.</p>
@@ -629,7 +655,7 @@ amount<br />
 <tr>
 <td>
 id<br />
-<a href="/apis/backend/scalars#string"><code>String!</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>The id of the withdrawal.</p>
@@ -638,7 +664,7 @@ id<br />
 <tr>
 <td>
 idempotencyKey<br />
-<a href="/apis/backend/scalars#string"><code>String!</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Unique key to ensure duplicate or retried requests are processed only once. See <a href="https://en.wikipedia.org/wiki/Idempotence">idempotence</a></p>
@@ -647,7 +673,7 @@ idempotencyKey<br />
 <tr>
 <td>
 timeoutSeconds<br />
-<a href="/apis/backend/scalars#uint64"><code>UInt64!</code></a>
+<a href="/apis/graphql/backend/scalars#uint64"><code>UInt64!</code></a>
 </td>
 <td>
 <p>This is the interval in seconds after a pending transfer&#39;s created at which it may be posted or voided. Zero denotes a no timeout single-phase posted transfer.</p>
@@ -658,6 +684,8 @@ timeoutSeconds<br />
 
 ## CreateQuoteInput
 
+
+
 <p style={{ marginBottom: "0.4em" }}><strong>Arguments</strong></p>
 
 <table>
@@ -666,7 +694,7 @@ timeoutSeconds<br />
 <tr>
 <td>
 walletAddressId<br />
-<a href="/apis/backend/scalars#string"><code>String!</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Id of the wallet address under which the quote will be created</p>
@@ -675,7 +703,7 @@ walletAddressId<br />
 <tr>
 <td>
 debitAmount<br />
-<a href="/apis/backend/inputobjects#amountinput"><code>AmountInput</code></a>
+<a href="/apis/graphql/backend/inputobjects#amountinput"><code>AmountInput</code></a>
 </td>
 <td>
 <p>Amount to send (fixed send)</p>
@@ -684,7 +712,7 @@ debitAmount<br />
 <tr>
 <td>
 receiveAmount<br />
-<a href="/apis/backend/inputobjects#amountinput"><code>AmountInput</code></a>
+<a href="/apis/graphql/backend/inputobjects#amountinput"><code>AmountInput</code></a>
 </td>
 <td>
 <p>Amount to receive (fixed receive)</p>
@@ -693,7 +721,7 @@ receiveAmount<br />
 <tr>
 <td>
 receiver<br />
-<a href="/apis/backend/scalars#string"><code>String!</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Wallet address URL of the receiver</p>
@@ -702,7 +730,7 @@ receiver<br />
 <tr>
 <td>
 idempotencyKey<br />
-<a href="/apis/backend/scalars#string"><code>String</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String</code></a>
 </td>
 <td>
 <p>Unique key to ensure duplicate or retried requests are processed only once. See <a href="https://en.wikipedia.org/wiki/Idempotence">idempotence</a></p>
@@ -713,6 +741,8 @@ idempotencyKey<br />
 
 ## CreateReceiverInput
 
+
+
 <p style={{ marginBottom: "0.4em" }}><strong>Arguments</strong></p>
 
 <table>
@@ -721,7 +751,7 @@ idempotencyKey<br />
 <tr>
 <td>
 walletAddressUrl<br />
-<a href="/apis/backend/scalars#string"><code>String!</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Receiving wallet address URL</p>
@@ -730,7 +760,7 @@ walletAddressUrl<br />
 <tr>
 <td>
 expiresAt<br />
-<a href="/apis/backend/scalars#string"><code>String</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String</code></a>
 </td>
 <td>
 <p>Expiration date-time</p>
@@ -739,7 +769,7 @@ expiresAt<br />
 <tr>
 <td>
 incomingAmount<br />
-<a href="/apis/backend/inputobjects#amountinput"><code>AmountInput</code></a>
+<a href="/apis/graphql/backend/inputobjects#amountinput"><code>AmountInput</code></a>
 </td>
 <td>
 <p>Maximum amount to be received</p>
@@ -748,7 +778,7 @@ incomingAmount<br />
 <tr>
 <td>
 metadata<br />
-<a href="/apis/backend/scalars#jsonobject"><code>JSONObject</code></a>
+<a href="/apis/graphql/backend/scalars#jsonobject"><code>JSONObject</code></a>
 </td>
 <td>
 <p>Additional metadata associated with the incoming payment.</p>
@@ -757,7 +787,7 @@ metadata<br />
 <tr>
 <td>
 idempotencyKey<br />
-<a href="/apis/backend/scalars#string"><code>String</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String</code></a>
 </td>
 <td>
 <p>Unique key to ensure duplicate or retried requests are processed only once. See <a href="https://en.wikipedia.org/wiki/Idempotence">idempotence</a></p>
@@ -768,6 +798,8 @@ idempotencyKey<br />
 
 ## CreateWalletAddressInput
 
+
+
 <p style={{ marginBottom: "0.4em" }}><strong>Arguments</strong></p>
 
 <table>
@@ -776,7 +808,7 @@ idempotencyKey<br />
 <tr>
 <td>
 assetId<br />
-<a href="/apis/backend/scalars#string"><code>String!</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Asset of the wallet address</p>
@@ -785,7 +817,7 @@ assetId<br />
 <tr>
 <td>
 url<br />
-<a href="/apis/backend/scalars#string"><code>String!</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Wallet Address URL</p>
@@ -794,7 +826,7 @@ url<br />
 <tr>
 <td>
 publicName<br />
-<a href="/apis/backend/scalars#string"><code>String</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String</code></a>
 </td>
 <td>
 <p>Public name associated with the wallet address</p>
@@ -803,7 +835,7 @@ publicName<br />
 <tr>
 <td>
 idempotencyKey<br />
-<a href="/apis/backend/scalars#string"><code>String</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String</code></a>
 </td>
 <td>
 <p>Unique key to ensure duplicate or retried requests are processed only once. See <a href="https://en.wikipedia.org/wiki/Idempotence">idempotence</a></p>
@@ -812,7 +844,7 @@ idempotencyKey<br />
 <tr>
 <td>
 additionalProperties<br />
-<a href="/apis/backend/inputobjects#additionalpropertyinput"><code>[AdditionalPropertyInput!]</code></a>
+<a href="/apis/graphql/backend/inputobjects#additionalpropertyinput"><code>[AdditionalPropertyInput!]</code></a>
 </td>
 <td>
 <p>Additional properties associated with the [walletAddress].</p>
@@ -823,6 +855,8 @@ additionalProperties<br />
 
 ## CreateWalletAddressKeyInput
 
+
+
 <p style={{ marginBottom: "0.4em" }}><strong>Arguments</strong></p>
 
 <table>
@@ -831,7 +865,7 @@ additionalProperties<br />
 <tr>
 <td>
 walletAddressId<br />
-<a href="/apis/backend/scalars#string"><code>String!</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 
@@ -840,7 +874,7 @@ walletAddressId<br />
 <tr>
 <td>
 jwk<br />
-<a href="/apis/backend/inputobjects#jwkinput"><code>JwkInput!</code></a>
+<a href="/apis/graphql/backend/inputobjects#jwkinput"><code>JwkInput!</code></a>
 </td>
 <td>
 <p>Public key</p>
@@ -849,7 +883,7 @@ jwk<br />
 <tr>
 <td>
 idempotencyKey<br />
-<a href="/apis/backend/scalars#string"><code>String</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String</code></a>
 </td>
 <td>
 <p>Unique key to ensure duplicate or retried requests are processed only once. See <a href="https://en.wikipedia.org/wiki/Idempotence">idempotence</a></p>
@@ -860,6 +894,8 @@ idempotencyKey<br />
 
 ## CreateWalletAddressWithdrawalInput
 
+
+
 <p style={{ marginBottom: "0.4em" }}><strong>Arguments</strong></p>
 
 <table>
@@ -868,7 +904,7 @@ idempotencyKey<br />
 <tr>
 <td>
 walletAddressId<br />
-<a href="/apis/backend/scalars#string"><code>String!</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>The id of the Open Payments wallet address to create the withdrawal for.</p>
@@ -877,7 +913,7 @@ walletAddressId<br />
 <tr>
 <td>
 id<br />
-<a href="/apis/backend/scalars#string"><code>String!</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>The id of the withdrawal.</p>
@@ -886,7 +922,7 @@ id<br />
 <tr>
 <td>
 idempotencyKey<br />
-<a href="/apis/backend/scalars#string"><code>String!</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Unique key to ensure duplicate or retried requests are processed only once. See <a href="https://en.wikipedia.org/wiki/Idempotence">idempotence</a></p>
@@ -895,7 +931,7 @@ idempotencyKey<br />
 <tr>
 <td>
 timeoutSeconds<br />
-<a href="/apis/backend/scalars#uint64"><code>UInt64!</code></a>
+<a href="/apis/graphql/backend/scalars#uint64"><code>UInt64!</code></a>
 </td>
 <td>
 <p>This is the interval in seconds after a pending transfer&#39;s created at which it may be posted or voided. Zero denotes a no timeout single-phase posted transfer.</p>
@@ -906,6 +942,8 @@ timeoutSeconds<br />
 
 ## DeleteAssetInput
 
+
+
 <p style={{ marginBottom: "0.4em" }}><strong>Arguments</strong></p>
 
 <table>
@@ -914,7 +952,7 @@ timeoutSeconds<br />
 <tr>
 <td>
 id<br />
-<a href="/apis/backend/scalars#id"><code>ID!</code></a>
+<a href="/apis/graphql/backend/scalars#id"><code>ID!</code></a>
 </td>
 <td>
 <p>Asset id</p>
@@ -923,7 +961,7 @@ id<br />
 <tr>
 <td>
 idempotencyKey<br />
-<a href="/apis/backend/scalars#string"><code>String</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String</code></a>
 </td>
 <td>
 <p>Unique key to ensure duplicate or retried requests are processed only once. See <a href="https://en.wikipedia.org/wiki/Idempotence">idempotence</a></p>
@@ -934,6 +972,8 @@ idempotencyKey<br />
 
 ## DeletePeerInput
 
+
+
 <p style={{ marginBottom: "0.4em" }}><strong>Arguments</strong></p>
 
 <table>
@@ -942,7 +982,7 @@ idempotencyKey<br />
 <tr>
 <td>
 id<br />
-<a href="/apis/backend/scalars#id"><code>ID!</code></a>
+<a href="/apis/graphql/backend/scalars#id"><code>ID!</code></a>
 </td>
 <td>
 
@@ -951,7 +991,7 @@ id<br />
 <tr>
 <td>
 idempotencyKey<br />
-<a href="/apis/backend/scalars#string"><code>String</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String</code></a>
 </td>
 <td>
 <p>Unique key to ensure duplicate or retried requests are processed only once. See <a href="https://en.wikipedia.org/wiki/Idempotence">idempotence</a></p>
@@ -962,6 +1002,8 @@ idempotencyKey<br />
 
 ## DepositAssetLiquidityInput
 
+
+
 <p style={{ marginBottom: "0.4em" }}><strong>Arguments</strong></p>
 
 <table>
@@ -970,7 +1012,7 @@ idempotencyKey<br />
 <tr>
 <td>
 assetId<br />
-<a href="/apis/backend/scalars#string"><code>String!</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>The id of the asset to deposit liquidity.</p>
@@ -979,7 +1021,7 @@ assetId<br />
 <tr>
 <td>
 amount<br />
-<a href="/apis/backend/scalars#uint64"><code>UInt64!</code></a>
+<a href="/apis/graphql/backend/scalars#uint64"><code>UInt64!</code></a>
 </td>
 <td>
 <p>Amount of liquidity to deposit.</p>
@@ -988,7 +1030,7 @@ amount<br />
 <tr>
 <td>
 id<br />
-<a href="/apis/backend/scalars#string"><code>String!</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>The id of the transfer.</p>
@@ -997,7 +1039,7 @@ id<br />
 <tr>
 <td>
 idempotencyKey<br />
-<a href="/apis/backend/scalars#string"><code>String!</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Unique key to ensure duplicate or retried requests are processed only once. See <a href="https://en.wikipedia.org/wiki/Idempotence">idempotence</a></p>
@@ -1008,6 +1050,8 @@ idempotencyKey<br />
 
 ## DepositEventLiquidityInput
 
+
+
 <p style={{ marginBottom: "0.4em" }}><strong>Arguments</strong></p>
 
 <table>
@@ -1016,7 +1060,7 @@ idempotencyKey<br />
 <tr>
 <td>
 eventId<br />
-<a href="/apis/backend/scalars#string"><code>String!</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>The id of the event to deposit into.</p>
@@ -1025,7 +1069,7 @@ eventId<br />
 <tr>
 <td>
 idempotencyKey<br />
-<a href="/apis/backend/scalars#string"><code>String!</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Unique key to ensure duplicate or retried requests are processed only once. See <a href="https://en.wikipedia.org/wiki/Idempotence">idempotence</a></p>
@@ -1036,6 +1080,8 @@ idempotencyKey<br />
 
 ## DepositOutgoingPaymentLiquidityInput
 
+
+
 <p style={{ marginBottom: "0.4em" }}><strong>Arguments</strong></p>
 
 <table>
@@ -1044,7 +1090,7 @@ idempotencyKey<br />
 <tr>
 <td>
 outgoingPaymentId<br />
-<a href="/apis/backend/scalars#string"><code>String!</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>The id of the outgoing payment to deposit into.</p>
@@ -1053,7 +1099,7 @@ outgoingPaymentId<br />
 <tr>
 <td>
 idempotencyKey<br />
-<a href="/apis/backend/scalars#string"><code>String!</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Unique key to ensure duplicate or retried requests are processed only once. See <a href="https://en.wikipedia.org/wiki/Idempotence">idempotence</a></p>
@@ -1064,6 +1110,8 @@ idempotencyKey<br />
 
 ## DepositPeerLiquidityInput
 
+
+
 <p style={{ marginBottom: "0.4em" }}><strong>Arguments</strong></p>
 
 <table>
@@ -1072,7 +1120,7 @@ idempotencyKey<br />
 <tr>
 <td>
 peerId<br />
-<a href="/apis/backend/scalars#string"><code>String!</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>The id of the peer to deposit liquidity.</p>
@@ -1081,7 +1129,7 @@ peerId<br />
 <tr>
 <td>
 amount<br />
-<a href="/apis/backend/scalars#uint64"><code>UInt64!</code></a>
+<a href="/apis/graphql/backend/scalars#uint64"><code>UInt64!</code></a>
 </td>
 <td>
 <p>Amount of liquidity to deposit.</p>
@@ -1090,7 +1138,7 @@ amount<br />
 <tr>
 <td>
 id<br />
-<a href="/apis/backend/scalars#string"><code>String!</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>The id of the transfer.</p>
@@ -1099,7 +1147,7 @@ id<br />
 <tr>
 <td>
 idempotencyKey<br />
-<a href="/apis/backend/scalars#string"><code>String!</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Unique key to ensure duplicate or retried requests are processed only once. See <a href="https://en.wikipedia.org/wiki/Idempotence">idempotence</a></p>
@@ -1110,6 +1158,8 @@ idempotencyKey<br />
 
 ## FeeDetails
 
+
+
 <p style={{ marginBottom: "0.4em" }}><strong>Arguments</strong></p>
 
 <table>
@@ -1118,7 +1168,7 @@ idempotencyKey<br />
 <tr>
 <td>
 fixed<br />
-<a href="/apis/backend/scalars#uint64"><code>UInt64!</code></a>
+<a href="/apis/graphql/backend/scalars#uint64"><code>UInt64!</code></a>
 </td>
 <td>
 <p>A flat fee</p>
@@ -1127,7 +1177,7 @@ fixed<br />
 <tr>
 <td>
 basisPoints<br />
-<a href="/apis/backend/scalars#int"><code>Int!</code></a>
+<a href="/apis/graphql/backend/scalars#int"><code>Int!</code></a>
 </td>
 <td>
 <p>Basis points fee. Should be between 0 and 10000 (inclusive). 1 basis point = 0.01%, 100 basis points = 1%, 10000 basis points = 100%</p>
@@ -1138,6 +1188,8 @@ basisPoints<br />
 
 ## FilterString
 
+
+
 <p style={{ marginBottom: "0.4em" }}><strong>Arguments</strong></p>
 
 <table>
@@ -1146,7 +1198,7 @@ basisPoints<br />
 <tr>
 <td>
 in<br />
-<a href="/apis/backend/scalars#string"><code>[String!]!</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>[String!]!</code></a>
 </td>
 <td>
 
@@ -1157,6 +1209,8 @@ in<br />
 
 ## HttpIncomingInput
 
+
+
 <p style={{ marginBottom: "0.4em" }}><strong>Arguments</strong></p>
 
 <table>
@@ -1165,7 +1219,7 @@ in<br />
 <tr>
 <td>
 authTokens<br />
-<a href="/apis/backend/scalars#string"><code>[String!]!</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>[String!]!</code></a>
 </td>
 <td>
 <p>Array of auth tokens accepted by this Rafiki instance</p>
@@ -1176,6 +1230,8 @@ authTokens<br />
 
 ## HttpInput
 
+
+
 <p style={{ marginBottom: "0.4em" }}><strong>Arguments</strong></p>
 
 <table>
@@ -1184,7 +1240,7 @@ authTokens<br />
 <tr>
 <td>
 incoming<br />
-<a href="/apis/backend/inputobjects#httpincominginput"><code>HttpIncomingInput</code></a>
+<a href="/apis/graphql/backend/inputobjects#httpincominginput"><code>HttpIncomingInput</code></a>
 </td>
 <td>
 <p>Incoming connection details</p>
@@ -1193,7 +1249,7 @@ incoming<br />
 <tr>
 <td>
 outgoing<br />
-<a href="/apis/backend/inputobjects#httpoutgoinginput"><code>HttpOutgoingInput!</code></a>
+<a href="/apis/graphql/backend/inputobjects#httpoutgoinginput"><code>HttpOutgoingInput!</code></a>
 </td>
 <td>
 <p>Outgoing connection details</p>
@@ -1204,6 +1260,8 @@ outgoing<br />
 
 ## HttpOutgoingInput
 
+
+
 <p style={{ marginBottom: "0.4em" }}><strong>Arguments</strong></p>
 
 <table>
@@ -1212,7 +1270,7 @@ outgoing<br />
 <tr>
 <td>
 authToken<br />
-<a href="/apis/backend/scalars#string"><code>String!</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Auth token to present at the peering Rafiki instance</p>
@@ -1221,7 +1279,7 @@ authToken<br />
 <tr>
 <td>
 endpoint<br />
-<a href="/apis/backend/scalars#string"><code>String!</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Peer&#39;s connection endpoint</p>
@@ -1232,6 +1290,8 @@ endpoint<br />
 
 ## JwkInput
 
+
+
 <p style={{ marginBottom: "0.4em" }}><strong>Arguments</strong></p>
 
 <table>
@@ -1240,7 +1300,7 @@ endpoint<br />
 <tr>
 <td>
 kid<br />
-<a href="/apis/backend/scalars#string"><code>String!</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Key id</p>
@@ -1249,7 +1309,7 @@ kid<br />
 <tr>
 <td>
 x<br />
-<a href="/apis/backend/scalars#string"><code>String!</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Base64 url-encoded public key.</p>
@@ -1258,7 +1318,7 @@ x<br />
 <tr>
 <td>
 alg<br />
-<a href="/apis/backend/enums#alg"><code>Alg!</code></a>
+<a href="/apis/graphql/backend/enums#alg"><code>Alg!</code></a>
 </td>
 <td>
 <p>Cryptographic algorithm family used with the key. The only allowed value is <code>EdDSA</code>.</p>
@@ -1267,7 +1327,7 @@ alg<br />
 <tr>
 <td>
 kty<br />
-<a href="/apis/backend/enums#kty"><code>Kty!</code></a>
+<a href="/apis/graphql/backend/enums#kty"><code>Kty!</code></a>
 </td>
 <td>
 <p>Key type. The only allowed value is <code>OKP</code>.</p>
@@ -1276,7 +1336,7 @@ kty<br />
 <tr>
 <td>
 crv<br />
-<a href="/apis/backend/enums#crv"><code>Crv!</code></a>
+<a href="/apis/graphql/backend/enums#crv"><code>Crv!</code></a>
 </td>
 <td>
 <p>Curve that the key pair is derived from. The only allowed value is <code>Ed25519</code>.</p>
@@ -1287,6 +1347,8 @@ crv<br />
 
 ## PaymentFilter
 
+
+
 <p style={{ marginBottom: "0.4em" }}><strong>Arguments</strong></p>
 
 <table>
@@ -1295,7 +1357,7 @@ crv<br />
 <tr>
 <td>
 type<br />
-<a href="/apis/backend/inputobjects#filterstring"><code>FilterString</code></a>
+<a href="/apis/graphql/backend/inputobjects#filterstring"><code>FilterString</code></a>
 </td>
 <td>
 
@@ -1304,7 +1366,7 @@ type<br />
 <tr>
 <td>
 walletAddressId<br />
-<a href="/apis/backend/inputobjects#filterstring"><code>FilterString</code></a>
+<a href="/apis/graphql/backend/inputobjects#filterstring"><code>FilterString</code></a>
 </td>
 <td>
 
@@ -1315,6 +1377,8 @@ walletAddressId<br />
 
 ## PostLiquidityWithdrawalInput
 
+
+
 <p style={{ marginBottom: "0.4em" }}><strong>Arguments</strong></p>
 
 <table>
@@ -1323,7 +1387,7 @@ walletAddressId<br />
 <tr>
 <td>
 withdrawalId<br />
-<a href="/apis/backend/scalars#string"><code>String!</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>The id of the liquidity withdrawal to post.</p>
@@ -1332,7 +1396,7 @@ withdrawalId<br />
 <tr>
 <td>
 idempotencyKey<br />
-<a href="/apis/backend/scalars#string"><code>String!</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Unique key to ensure duplicate or retried requests are processed only once. See <a href="https://en.wikipedia.org/wiki/Idempotence">idempotence</a></p>
@@ -1343,6 +1407,8 @@ idempotencyKey<br />
 
 ## RevokeWalletAddressKeyInput
 
+
+
 <p style={{ marginBottom: "0.4em" }}><strong>Arguments</strong></p>
 
 <table>
@@ -1351,7 +1417,7 @@ idempotencyKey<br />
 <tr>
 <td>
 id<br />
-<a href="/apis/backend/scalars#string"><code>String!</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Internal id of key</p>
@@ -1360,7 +1426,7 @@ id<br />
 <tr>
 <td>
 idempotencyKey<br />
-<a href="/apis/backend/scalars#string"><code>String</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String</code></a>
 </td>
 <td>
 <p>Unique key to ensure duplicate or retried requests are processed only once. See <a href="https://en.wikipedia.org/wiki/Idempotence">idempotence</a></p>
@@ -1371,6 +1437,8 @@ idempotencyKey<br />
 
 ## SetFeeInput
 
+
+
 <p style={{ marginBottom: "0.4em" }}><strong>Arguments</strong></p>
 
 <table>
@@ -1379,7 +1447,7 @@ idempotencyKey<br />
 <tr>
 <td>
 assetId<br />
-<a href="/apis/backend/scalars#id"><code>ID!</code></a>
+<a href="/apis/graphql/backend/scalars#id"><code>ID!</code></a>
 </td>
 <td>
 <p>Asset id to add the fee to</p>
@@ -1388,7 +1456,7 @@ assetId<br />
 <tr>
 <td>
 type<br />
-<a href="/apis/backend/enums#feetype"><code>FeeType!</code></a>
+<a href="/apis/graphql/backend/enums#feetype"><code>FeeType!</code></a>
 </td>
 <td>
 <p>Type of fee (sending or receiving)</p>
@@ -1397,7 +1465,7 @@ type<br />
 <tr>
 <td>
 fee<br />
-<a href="/apis/backend/inputobjects#feedetails"><code>FeeDetails!</code></a>
+<a href="/apis/graphql/backend/inputobjects#feedetails"><code>FeeDetails!</code></a>
 </td>
 <td>
 <p>Fee values</p>
@@ -1406,7 +1474,7 @@ fee<br />
 <tr>
 <td>
 idempotencyKey<br />
-<a href="/apis/backend/scalars#string"><code>String</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String</code></a>
 </td>
 <td>
 <p>Unique key to ensure duplicate or retried requests are processed only once. See <a href="https://en.wikipedia.org/wiki/Idempotence">idempotence</a></p>
@@ -1417,6 +1485,8 @@ idempotencyKey<br />
 
 ## TriggerWalletAddressEventsInput
 
+
+
 <p style={{ marginBottom: "0.4em" }}><strong>Arguments</strong></p>
 
 <table>
@@ -1425,7 +1495,7 @@ idempotencyKey<br />
 <tr>
 <td>
 limit<br />
-<a href="/apis/backend/scalars#int"><code>Int!</code></a>
+<a href="/apis/graphql/backend/scalars#int"><code>Int!</code></a>
 </td>
 <td>
 <p>Maximum number of events being triggered (n).</p>
@@ -1434,7 +1504,7 @@ limit<br />
 <tr>
 <td>
 idempotencyKey<br />
-<a href="/apis/backend/scalars#string"><code>String</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String</code></a>
 </td>
 <td>
 <p>Unique key to ensure duplicate or retried requests are processed only once. See <a href="https://en.wikipedia.org/wiki/Idempotence">idempotence</a></p>
@@ -1445,6 +1515,8 @@ idempotencyKey<br />
 
 ## UpdateAssetInput
 
+
+
 <p style={{ marginBottom: "0.4em" }}><strong>Arguments</strong></p>
 
 <table>
@@ -1453,7 +1525,7 @@ idempotencyKey<br />
 <tr>
 <td>
 id<br />
-<a href="/apis/backend/scalars#string"><code>String!</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Asset id</p>
@@ -1462,7 +1534,7 @@ id<br />
 <tr>
 <td>
 withdrawalThreshold<br />
-<a href="/apis/backend/scalars#uint64"><code>UInt64</code></a>
+<a href="/apis/graphql/backend/scalars#uint64"><code>UInt64</code></a>
 </td>
 <td>
 <p>New minimum amount of liquidity that can be withdrawn from the asset</p>
@@ -1471,7 +1543,7 @@ withdrawalThreshold<br />
 <tr>
 <td>
 liquidityThreshold<br />
-<a href="/apis/backend/scalars#uint64"><code>UInt64</code></a>
+<a href="/apis/graphql/backend/scalars#uint64"><code>UInt64</code></a>
 </td>
 <td>
 <p>Account Servicing Entity will be notified via a webhook event if liquidity falls below this new value</p>
@@ -1480,7 +1552,7 @@ liquidityThreshold<br />
 <tr>
 <td>
 idempotencyKey<br />
-<a href="/apis/backend/scalars#string"><code>String</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String</code></a>
 </td>
 <td>
 <p>Unique key to ensure duplicate or retried requests are processed only once. See <a href="https://en.wikipedia.org/wiki/Idempotence">idempotence</a></p>
@@ -1491,6 +1563,8 @@ idempotencyKey<br />
 
 ## UpdatePeerInput
 
+
+
 <p style={{ marginBottom: "0.4em" }}><strong>Arguments</strong></p>
 
 <table>
@@ -1499,7 +1573,7 @@ idempotencyKey<br />
 <tr>
 <td>
 id<br />
-<a href="/apis/backend/scalars#string"><code>String!</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Peer id</p>
@@ -1508,7 +1582,7 @@ id<br />
 <tr>
 <td>
 maxPacketAmount<br />
-<a href="/apis/backend/scalars#uint64"><code>UInt64</code></a>
+<a href="/apis/graphql/backend/scalars#uint64"><code>UInt64</code></a>
 </td>
 <td>
 <p>New maximum packet amount that the peer accepts</p>
@@ -1517,7 +1591,7 @@ maxPacketAmount<br />
 <tr>
 <td>
 http<br />
-<a href="/apis/backend/inputobjects#httpinput"><code>HttpInput</code></a>
+<a href="/apis/graphql/backend/inputobjects#httpinput"><code>HttpInput</code></a>
 </td>
 <td>
 <p>New peering connection details</p>
@@ -1526,7 +1600,7 @@ http<br />
 <tr>
 <td>
 staticIlpAddress<br />
-<a href="/apis/backend/scalars#string"><code>String</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String</code></a>
 </td>
 <td>
 <p>Peer&#39;s new ILP address</p>
@@ -1535,7 +1609,7 @@ staticIlpAddress<br />
 <tr>
 <td>
 name<br />
-<a href="/apis/backend/scalars#string"><code>String</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String</code></a>
 </td>
 <td>
 <p>Peer&#39;s new public name</p>
@@ -1544,7 +1618,7 @@ name<br />
 <tr>
 <td>
 liquidityThreshold<br />
-<a href="/apis/backend/scalars#uint64"><code>UInt64</code></a>
+<a href="/apis/graphql/backend/scalars#uint64"><code>UInt64</code></a>
 </td>
 <td>
 <p>Account Servicing Entity will be notified via a webhook event if peer liquidity falls below this new value</p>
@@ -1553,7 +1627,7 @@ liquidityThreshold<br />
 <tr>
 <td>
 idempotencyKey<br />
-<a href="/apis/backend/scalars#string"><code>String</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String</code></a>
 </td>
 <td>
 <p>Unique key to ensure duplicate or retried requests are processed only once. See <a href="https://en.wikipedia.org/wiki/Idempotence">idempotence</a></p>
@@ -1564,6 +1638,8 @@ idempotencyKey<br />
 
 ## UpdateWalletAddressInput
 
+
+
 <p style={{ marginBottom: "0.4em" }}><strong>Arguments</strong></p>
 
 <table>
@@ -1572,7 +1648,7 @@ idempotencyKey<br />
 <tr>
 <td>
 id<br />
-<a href="/apis/backend/scalars#id"><code>ID!</code></a>
+<a href="/apis/graphql/backend/scalars#id"><code>ID!</code></a>
 </td>
 <td>
 <p>ID of wallet address to update</p>
@@ -1581,7 +1657,7 @@ id<br />
 <tr>
 <td>
 publicName<br />
-<a href="/apis/backend/scalars#string"><code>String</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String</code></a>
 </td>
 <td>
 <p>New public name for wallet address</p>
@@ -1590,7 +1666,7 @@ publicName<br />
 <tr>
 <td>
 status<br />
-<a href="/apis/backend/enums#walletaddressstatus"><code>WalletAddressStatus</code></a>
+<a href="/apis/graphql/backend/enums#walletaddressstatus"><code>WalletAddressStatus</code></a>
 </td>
 <td>
 <p>New status to set the wallet address to</p>
@@ -1599,7 +1675,7 @@ status<br />
 <tr>
 <td>
 idempotencyKey<br />
-<a href="/apis/backend/scalars#string"><code>String</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String</code></a>
 </td>
 <td>
 <p>Unique key to ensure duplicate or retried requests are processed only once. See <a href="https://en.wikipedia.org/wiki/Idempotence">idempotence</a></p>
@@ -1608,7 +1684,7 @@ idempotencyKey<br />
 <tr>
 <td>
 additionalProperties<br />
-<a href="/apis/backend/inputobjects#additionalpropertyinput"><code>[AdditionalPropertyInput!]</code></a>
+<a href="/apis/graphql/backend/inputobjects#additionalpropertyinput"><code>[AdditionalPropertyInput!]</code></a>
 </td>
 <td>
 <p>List additional properties associated with this wallet address.</p>
@@ -1619,6 +1695,8 @@ additionalProperties<br />
 
 ## VoidLiquidityWithdrawalInput
 
+
+
 <p style={{ marginBottom: "0.4em" }}><strong>Arguments</strong></p>
 
 <table>
@@ -1627,7 +1705,7 @@ additionalProperties<br />
 <tr>
 <td>
 withdrawalId<br />
-<a href="/apis/backend/scalars#string"><code>String!</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>The id of the liquidity withdrawal to void.</p>
@@ -1636,7 +1714,7 @@ withdrawalId<br />
 <tr>
 <td>
 idempotencyKey<br />
-<a href="/apis/backend/scalars#string"><code>String!</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Unique key to ensure duplicate or retried requests are processed only once. See <a href="https://en.wikipedia.org/wiki/Idempotence">idempotence</a></p>
@@ -1647,6 +1725,8 @@ idempotencyKey<br />
 
 ## WebhookEventFilter
 
+
+
 <p style={{ marginBottom: "0.4em" }}><strong>Arguments</strong></p>
 
 <table>
@@ -1655,7 +1735,7 @@ idempotencyKey<br />
 <tr>
 <td>
 type<br />
-<a href="/apis/backend/inputobjects#filterstring"><code>FilterString</code></a>
+<a href="/apis/graphql/backend/inputobjects#filterstring"><code>FilterString</code></a>
 </td>
 <td>
 
@@ -1666,6 +1746,8 @@ type<br />
 
 ## WithdrawEventLiquidityInput
 
+
+
 <p style={{ marginBottom: "0.4em" }}><strong>Arguments</strong></p>
 
 <table>
@@ -1674,7 +1756,7 @@ type<br />
 <tr>
 <td>
 eventId<br />
-<a href="/apis/backend/scalars#string"><code>String!</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>The id of the event to withdraw from.</p>
@@ -1683,7 +1765,7 @@ eventId<br />
 <tr>
 <td>
 idempotencyKey<br />
-<a href="/apis/backend/scalars#string"><code>String!</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Unique key to ensure duplicate or retried requests are processed only once. See <a href="https://en.wikipedia.org/wiki/Idempotence">idempotence</a></p>
@@ -1691,3 +1773,4 @@ idempotencyKey<br />
 </tr>
 </tbody>
 </table>
+

@@ -6,7 +6,7 @@ title: Queries
 
 ## accountingTransfers
 
-**Type:** [AccountingTransferConnection!](/apis/backend/objects#accountingtransferconnection)
+**Type:** [AccountingTransferConnection!](/apis/graphql/backend/objects#accountingtransferconnection)
 
 Fetch a page of accounting transfers
 
@@ -18,7 +18,7 @@ Fetch a page of accounting transfers
 <tr>
 <td>
 id<br />
-<a href="/apis/backend/scalars#string"><code>String!</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Account id.</p>
@@ -27,7 +27,7 @@ id<br />
 <tr>
 <td>
 limit<br />
-<a href="/apis/backend/scalars#int"><code>Int</code></a>
+<a href="/apis/graphql/backend/scalars#int"><code>Int</code></a>
 </td>
 <td>
 <p>Limit the number of results returned. If no limit is provided, the default limit of 100_000 is set for TigerBeetle.</p>
@@ -38,7 +38,7 @@ limit<br />
 
 ## asset
 
-**Type:** [Asset](/apis/backend/objects#asset)
+**Type:** [Asset](/apis/graphql/backend/objects#asset)
 
 Fetch an asset
 
@@ -50,7 +50,7 @@ Fetch an asset
 <tr>
 <td>
 id<br />
-<a href="/apis/backend/scalars#string"><code>String!</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 
@@ -61,7 +61,7 @@ id<br />
 
 ## assets
 
-**Type:** [AssetsConnection!](/apis/backend/objects#assetsconnection)
+**Type:** [AssetsConnection!](/apis/graphql/backend/objects#assetsconnection)
 
 Fetch a page of assets.
 
@@ -73,7 +73,7 @@ Fetch a page of assets.
 <tr>
 <td>
 after<br />
-<a href="/apis/backend/scalars#string"><code>String</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String</code></a>
 </td>
 <td>
 <p>Paginating forwards: the cursor before the the requested page.</p>
@@ -82,7 +82,7 @@ after<br />
 <tr>
 <td>
 before<br />
-<a href="/apis/backend/scalars#string"><code>String</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String</code></a>
 </td>
 <td>
 <p>Paginating backwards: the cursor after the the requested page.</p>
@@ -91,7 +91,7 @@ before<br />
 <tr>
 <td>
 first<br />
-<a href="/apis/backend/scalars#int"><code>Int</code></a>
+<a href="/apis/graphql/backend/scalars#int"><code>Int</code></a>
 </td>
 <td>
 <p>Paginating forwards: The first <strong>n</strong> elements from the page.</p>
@@ -100,7 +100,7 @@ first<br />
 <tr>
 <td>
 last<br />
-<a href="/apis/backend/scalars#int"><code>Int</code></a>
+<a href="/apis/graphql/backend/scalars#int"><code>Int</code></a>
 </td>
 <td>
 <p>Paginating backwards: The last <strong>n</strong> elements from the page.</p>
@@ -109,7 +109,7 @@ last<br />
 <tr>
 <td>
 sortOrder<br />
-<a href="/apis/backend/enums#sortorder"><code>SortOrder</code></a>
+<a href="/apis/graphql/backend/enums#sortorder"><code>SortOrder</code></a>
 </td>
 <td>
 <p>Ascending or descending order of creation.</p>
@@ -120,7 +120,7 @@ sortOrder<br />
 
 ## incomingPayment
 
-**Type:** [IncomingPayment](/apis/backend/objects#incomingpayment)
+**Type:** [IncomingPayment](/apis/graphql/backend/objects#incomingpayment)
 
 Fetch an Open Payments incoming payment
 
@@ -132,7 +132,7 @@ Fetch an Open Payments incoming payment
 <tr>
 <td>
 id<br />
-<a href="/apis/backend/scalars#string"><code>String!</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 
@@ -143,7 +143,7 @@ id<br />
 
 ## outgoingPayment
 
-**Type:** [OutgoingPayment](/apis/backend/objects#outgoingpayment)
+**Type:** [OutgoingPayment](/apis/graphql/backend/objects#outgoingpayment)
 
 Fetch an Open Payments outgoing payment
 
@@ -155,7 +155,7 @@ Fetch an Open Payments outgoing payment
 <tr>
 <td>
 id<br />
-<a href="/apis/backend/scalars#string"><code>String!</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 
@@ -166,7 +166,7 @@ id<br />
 
 ## payments
 
-**Type:** [PaymentConnection!](/apis/backend/objects#paymentconnection)
+**Type:** [PaymentConnection!](/apis/graphql/backend/objects#paymentconnection)
 
 Fetch a page of combined payments
 
@@ -178,7 +178,7 @@ Fetch a page of combined payments
 <tr>
 <td>
 after<br />
-<a href="/apis/backend/scalars#string"><code>String</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String</code></a>
 </td>
 <td>
 <p>Paginating forwards: the cursor before the the requested page.</p>
@@ -187,7 +187,7 @@ after<br />
 <tr>
 <td>
 before<br />
-<a href="/apis/backend/scalars#string"><code>String</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String</code></a>
 </td>
 <td>
 <p>Paginating backwards: the cursor after the the requested page.</p>
@@ -196,7 +196,7 @@ before<br />
 <tr>
 <td>
 first<br />
-<a href="/apis/backend/scalars#int"><code>Int</code></a>
+<a href="/apis/graphql/backend/scalars#int"><code>Int</code></a>
 </td>
 <td>
 <p>Paginating forwards: The first <strong>n</strong> elements from the page.</p>
@@ -205,7 +205,7 @@ first<br />
 <tr>
 <td>
 last<br />
-<a href="/apis/backend/scalars#int"><code>Int</code></a>
+<a href="/apis/graphql/backend/scalars#int"><code>Int</code></a>
 </td>
 <td>
 <p>Paginating backwards: The last <strong>n</strong> elements from the page.</p>
@@ -214,7 +214,7 @@ last<br />
 <tr>
 <td>
 sortOrder<br />
-<a href="/apis/backend/enums#sortorder"><code>SortOrder</code></a>
+<a href="/apis/graphql/backend/enums#sortorder"><code>SortOrder</code></a>
 </td>
 <td>
 <p>Ascending or descending order of creation.</p>
@@ -223,7 +223,7 @@ sortOrder<br />
 <tr>
 <td>
 filter<br />
-<a href="/apis/backend/inputobjects#paymentfilter"><code>PaymentFilter</code></a>
+<a href="/apis/graphql/backend/inputobjects#paymentfilter"><code>PaymentFilter</code></a>
 </td>
 <td>
 <p>Filter payment events based on specific criteria.</p>
@@ -234,7 +234,7 @@ filter<br />
 
 ## peer
 
-**Type:** [Peer](/apis/backend/objects#peer)
+**Type:** [Peer](/apis/graphql/backend/objects#peer)
 
 Fetch a peer
 
@@ -246,7 +246,7 @@ Fetch a peer
 <tr>
 <td>
 id<br />
-<a href="/apis/backend/scalars#string"><code>String!</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 
@@ -257,7 +257,7 @@ id<br />
 
 ## peers
 
-**Type:** [PeersConnection!](/apis/backend/objects#peersconnection)
+**Type:** [PeersConnection!](/apis/graphql/backend/objects#peersconnection)
 
 Fetch a page of peers.
 
@@ -269,7 +269,7 @@ Fetch a page of peers.
 <tr>
 <td>
 after<br />
-<a href="/apis/backend/scalars#string"><code>String</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String</code></a>
 </td>
 <td>
 <p>Paginating forwards: the cursor before the the requested page.</p>
@@ -278,7 +278,7 @@ after<br />
 <tr>
 <td>
 before<br />
-<a href="/apis/backend/scalars#string"><code>String</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String</code></a>
 </td>
 <td>
 <p>Paginating backwards: the cursor after the the requested page.</p>
@@ -287,7 +287,7 @@ before<br />
 <tr>
 <td>
 first<br />
-<a href="/apis/backend/scalars#int"><code>Int</code></a>
+<a href="/apis/graphql/backend/scalars#int"><code>Int</code></a>
 </td>
 <td>
 <p>Paginating forwards: The first <strong>n</strong> elements from the page.</p>
@@ -296,7 +296,7 @@ first<br />
 <tr>
 <td>
 last<br />
-<a href="/apis/backend/scalars#int"><code>Int</code></a>
+<a href="/apis/graphql/backend/scalars#int"><code>Int</code></a>
 </td>
 <td>
 <p>Paginating backwards: The last <strong>n</strong> elements from the page.</p>
@@ -305,7 +305,7 @@ last<br />
 <tr>
 <td>
 sortOrder<br />
-<a href="/apis/backend/enums#sortorder"><code>SortOrder</code></a>
+<a href="/apis/graphql/backend/enums#sortorder"><code>SortOrder</code></a>
 </td>
 <td>
 <p>Ascending or descending order of creation.</p>
@@ -316,7 +316,7 @@ sortOrder<br />
 
 ## quote
 
-**Type:** [Quote](/apis/backend/objects#quote)
+**Type:** [Quote](/apis/graphql/backend/objects#quote)
 
 Fetch an Open Payments quote
 
@@ -328,7 +328,7 @@ Fetch an Open Payments quote
 <tr>
 <td>
 id<br />
-<a href="/apis/backend/scalars#string"><code>String!</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 
@@ -339,7 +339,7 @@ id<br />
 
 ## receiver
 
-**Type:** [Receiver](/apis/backend/objects#receiver)
+**Type:** [Receiver](/apis/graphql/backend/objects#receiver)
 
 Get an local or remote Open Payments Incoming Payment. The receiver has a wallet address on either this or another Open Payments resource server.
 
@@ -351,7 +351,7 @@ Get an local or remote Open Payments Incoming Payment. The receiver has a wallet
 <tr>
 <td>
 id<br />
-<a href="/apis/backend/scalars#string"><code>String!</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 
@@ -362,7 +362,7 @@ id<br />
 
 ## walletAddress
 
-**Type:** [WalletAddress](/apis/backend/objects#walletaddress)
+**Type:** [WalletAddress](/apis/graphql/backend/objects#walletaddress)
 
 Fetch a wallet address.
 
@@ -374,7 +374,7 @@ Fetch a wallet address.
 <tr>
 <td>
 id<br />
-<a href="/apis/backend/scalars#string"><code>String!</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 
@@ -385,7 +385,7 @@ id<br />
 
 ## walletAddresses
 
-**Type:** [WalletAddressesConnection!](/apis/backend/objects#walletaddressesconnection)
+**Type:** [WalletAddressesConnection!](/apis/graphql/backend/objects#walletaddressesconnection)
 
 Fetch a page of wallet addresses.
 
@@ -397,7 +397,7 @@ Fetch a page of wallet addresses.
 <tr>
 <td>
 after<br />
-<a href="/apis/backend/scalars#string"><code>String</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String</code></a>
 </td>
 <td>
 <p>Paginating forwards: the cursor before the the requested page.</p>
@@ -406,7 +406,7 @@ after<br />
 <tr>
 <td>
 before<br />
-<a href="/apis/backend/scalars#string"><code>String</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String</code></a>
 </td>
 <td>
 <p>Paginating backwards: the cursor after the the requested page.</p>
@@ -415,7 +415,7 @@ before<br />
 <tr>
 <td>
 first<br />
-<a href="/apis/backend/scalars#int"><code>Int</code></a>
+<a href="/apis/graphql/backend/scalars#int"><code>Int</code></a>
 </td>
 <td>
 <p>Paginating forwards: The first <strong>n</strong> elements from the page.</p>
@@ -424,7 +424,7 @@ first<br />
 <tr>
 <td>
 last<br />
-<a href="/apis/backend/scalars#int"><code>Int</code></a>
+<a href="/apis/graphql/backend/scalars#int"><code>Int</code></a>
 </td>
 <td>
 <p>Paginating backwards: The last <strong>n</strong> elements from the page.</p>
@@ -433,7 +433,7 @@ last<br />
 <tr>
 <td>
 sortOrder<br />
-<a href="/apis/backend/enums#sortorder"><code>SortOrder</code></a>
+<a href="/apis/graphql/backend/enums#sortorder"><code>SortOrder</code></a>
 </td>
 <td>
 <p>Ascending or descending order of creation.</p>
@@ -444,7 +444,7 @@ sortOrder<br />
 
 ## webhookEvents
 
-**Type:** [WebhookEventsConnection!](/apis/backend/objects#webhookeventsconnection)
+**Type:** [WebhookEventsConnection!](/apis/graphql/backend/objects#webhookeventsconnection)
 
 Fetch a page of webhook events
 
@@ -456,7 +456,7 @@ Fetch a page of webhook events
 <tr>
 <td>
 after<br />
-<a href="/apis/backend/scalars#string"><code>String</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String</code></a>
 </td>
 <td>
 <p>Paginating forwards: the cursor before the the requested page.</p>
@@ -465,7 +465,7 @@ after<br />
 <tr>
 <td>
 before<br />
-<a href="/apis/backend/scalars#string"><code>String</code></a>
+<a href="/apis/graphql/backend/scalars#string"><code>String</code></a>
 </td>
 <td>
 <p>Paginating backwards: the cursor after the the requested page.</p>
@@ -474,7 +474,7 @@ before<br />
 <tr>
 <td>
 first<br />
-<a href="/apis/backend/scalars#int"><code>Int</code></a>
+<a href="/apis/graphql/backend/scalars#int"><code>Int</code></a>
 </td>
 <td>
 <p>Paginating forwards: The first <strong>n</strong> elements from the page.</p>
@@ -483,7 +483,7 @@ first<br />
 <tr>
 <td>
 last<br />
-<a href="/apis/backend/scalars#int"><code>Int</code></a>
+<a href="/apis/graphql/backend/scalars#int"><code>Int</code></a>
 </td>
 <td>
 <p>Paginating backwards: The last <strong>n</strong> elements from the page.</p>
@@ -492,7 +492,7 @@ last<br />
 <tr>
 <td>
 sortOrder<br />
-<a href="/apis/backend/enums#sortorder"><code>SortOrder</code></a>
+<a href="/apis/graphql/backend/enums#sortorder"><code>SortOrder</code></a>
 </td>
 <td>
 <p>Ascending or descending order of creation.</p>
@@ -501,7 +501,7 @@ sortOrder<br />
 <tr>
 <td>
 filter<br />
-<a href="/apis/backend/inputobjects#webhookeventfilter"><code>WebhookEventFilter</code></a>
+<a href="/apis/graphql/backend/inputobjects#webhookeventfilter"><code>WebhookEventFilter</code></a>
 </td>
 <td>
 <p>Filter webhook events based on specific criteria.</p>
@@ -509,3 +509,4 @@ filter<br />
 </tr>
 </tbody>
 </table>
+

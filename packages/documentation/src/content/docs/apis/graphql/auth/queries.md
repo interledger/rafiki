@@ -6,7 +6,7 @@ title: Queries
 
 ## grant
 
-**Type:** [Grant!](/apis/auth/objects#grant)
+**Type:** [Grant!](/apis/graphql/auth/objects#grant)
 
 Fetch a grant
 
@@ -18,7 +18,7 @@ Fetch a grant
 <tr>
 <td>
 id<br />
-<a href="/apis/auth/scalars#id"><code>ID!</code></a>
+<a href="/apis/graphql/auth/scalars#id"><code>ID!</code></a>
 </td>
 <td>
 
@@ -29,7 +29,7 @@ id<br />
 
 ## grants
 
-**Type:** [GrantsConnection!](/apis/auth/objects#grantsconnection)
+**Type:** [GrantsConnection!](/apis/graphql/auth/objects#grantsconnection)
 
 Fetch a page of grants.
 
@@ -41,7 +41,7 @@ Fetch a page of grants.
 <tr>
 <td>
 after<br />
-<a href="/apis/auth/scalars#string"><code>String</code></a>
+<a href="/apis/graphql/auth/scalars#string"><code>String</code></a>
 </td>
 <td>
 <p>Paginating forwards: the cursor before the the requested page.</p>
@@ -50,7 +50,7 @@ after<br />
 <tr>
 <td>
 before<br />
-<a href="/apis/auth/scalars#string"><code>String</code></a>
+<a href="/apis/graphql/auth/scalars#string"><code>String</code></a>
 </td>
 <td>
 <p>Paginating backwards: the cursor after the the requested page.</p>
@@ -59,7 +59,7 @@ before<br />
 <tr>
 <td>
 first<br />
-<a href="/apis/auth/scalars#int"><code>Int</code></a>
+<a href="/apis/graphql/auth/scalars#int"><code>Int</code></a>
 </td>
 <td>
 <p>Paginating forwards: The first <strong>n</strong> elements from the page.</p>
@@ -68,7 +68,7 @@ first<br />
 <tr>
 <td>
 last<br />
-<a href="/apis/auth/scalars#int"><code>Int</code></a>
+<a href="/apis/graphql/auth/scalars#int"><code>Int</code></a>
 </td>
 <td>
 <p>Paginating backwards: The last <strong>n</strong> elements from the page.</p>
@@ -77,7 +77,7 @@ last<br />
 <tr>
 <td>
 filter<br />
-<a href="/apis/auth/inputobjects#grantfilter"><code>GrantFilter</code></a>
+<a href="/apis/graphql/auth/inputobjects#grantfilter"><code>GrantFilter</code></a>
 </td>
 <td>
 <p>Filter grants based on specific criteria.</p>
@@ -86,7 +86,7 @@ filter<br />
 <tr>
 <td>
 sortOrder<br />
-<a href="/apis/auth/enums#sortorder"><code>SortOrder</code></a>
+<a href="/apis/graphql/auth/enums#sortorder"><code>SortOrder</code></a>
 </td>
 <td>
 <p>Ascending or descending order of creation.</p>
@@ -94,3 +94,4 @@ sortOrder<br />
 </tr>
 </tbody>
 </table>
+

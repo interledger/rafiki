@@ -6,6 +6,8 @@ title: Enums
 
 ## GrantFinalization
 
+
+
 <p style={{ marginBottom: "0.4em" }}><strong>Values</strong></p>
 
 <table>
@@ -33,6 +35,8 @@ title: Enums
 </table>
 
 ## GrantState
+
+
 
 <p style={{ marginBottom: "0.4em" }}><strong>Values</strong></p>
 
@@ -68,6 +72,8 @@ title: Enums
 
 ## SortOrder
 
+
+
 <p style={{ marginBottom: "0.4em" }}><strong>Values</strong></p>
 
 <table>
@@ -87,3 +93,4 @@ title: Enums
 </tr>
 </tbody>
 </table>
+

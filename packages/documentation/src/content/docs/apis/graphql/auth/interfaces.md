@@ -6,10 +6,12 @@ title: Interfaces
 
 ## Model
 
+
+
 <p style={{ marginBottom: "0.4em" }}><strong>Implemented by</strong></p>
 
-- [Grant](/apis/auth/objects#grant)
-- [Access](/apis/auth/objects#access)
+- [Grant](/apis/graphql/auth/objects#grant)
+- [Access](/apis/graphql/auth/objects#access)
 
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
@@ -19,7 +21,7 @@ title: Interfaces
 <tr>
 <td>
 id<br />
-<a href="/apis/auth/scalars#id"><code>ID!</code></a>
+<a href="/apis/graphql/auth/scalars#id"><code>ID!</code></a>
 </td>
 <td>
 
@@ -28,7 +30,7 @@ id<br />
 <tr>
 <td>
 createdAt<br />
-<a href="/apis/auth/scalars#string"><code>String!</code></a>
+<a href="/apis/graphql/auth/scalars#string"><code>String!</code></a>
 </td>
 <td>
 
@@ -36,3 +38,4 @@ createdAt<br />
 </tr>
 </tbody>
 </table>
+
