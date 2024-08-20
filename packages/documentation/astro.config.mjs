@@ -128,8 +128,7 @@ export default defineConfig({
                           link: 'integration/deploy-to-prod/running-your-instance/adding-peer'
                         },
                         {
-                          label:
-                            'Creating wallet address',
+                          label: 'Creating wallet address',
                           link: 'integration/deploy-to-prod/running-your-instance/creating-wallet-address'
                         },
                         {
