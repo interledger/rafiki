@@ -7,19 +7,28 @@ import {
 } from '../handler/service'
 import { isConvertError, RatesService } from '../../rates/service'
 import { IAppConfig } from '../../config/app'
+import { PaymentMethodHandlerError } from '../handler/errors'
 import {
-  PaymentMethodHandlerError
-  // PaymentMethodHandlerErrorCode
-} from '../handler/errors'
-import { TelemetryService } from '../../telemetry/service'
-// import { Asset } from '../../rates/util'
+  AccountingService,
+  LiquidityAccountType,
+  TransferOptions,
+  TransferType
+} from '../../accounting/service'
+import {
+  AccountAlreadyExistsError,
+  isTransferError,
+  TransferError
+} from '../../accounting/errors'
+import { InsufficientLiquidityError } from 'ilp-packet/dist/errors'
+import { IncomingPaymentService } from '../../open_payments/payment/incoming/service'
 
 export interface LocalPaymentService extends PaymentMethodService {}
 
 export interface ServiceDependencies extends BaseService {
   config: IAppConfig
   ratesService: RatesService
-  telemetry?: TelemetryService
+  accountingService: AccountingService
+  incomingPaymentService: IncomingPaymentService
 }
 
 export async function createLocalPaymentService(
@@ -42,14 +51,11 @@ async function getQuote(
 ): Promise<PaymentQuote> {
   const { receiver, debitAmount, receiveAmount } = options
 
-  console.log('getting quote from', { receiver, debitAmount, receiveAmount })
-
   let debitAmountValue: bigint
   let receiveAmountValue: bigint
   // let estimatedExchangeRate: number
 
   if (debitAmount) {
-    console.log('getting receiveAmount from debitAmount via convert')
     debitAmountValue = debitAmount.value
     const converted = await deps.ratesService.convert({
       sourceAmount: debitAmountValue,
@@ -69,9 +75,7 @@ async function getQuote(
       )
     }
     receiveAmountValue = converted
-    // estimatedExchangeRate = Number(debitAmountValue / receiveAmountValue)
   } else if (receiveAmount) {
-    console.log('getting debitAmount from receiveAmount via convert')
     receiveAmountValue = receiveAmount.value
     const converted = await deps.ratesService.convert({
       sourceAmount: receiveAmountValue,
@@ -94,10 +98,7 @@ async function getQuote(
       )
     }
     debitAmountValue = converted
-    // estimatedExchangeRate = Number(receiveAmountValue / debitAmountValue)
-    // estimatedExchangeRate = Number(debitAmountValue / receiveAmountValue)
   } else if (receiver.incomingAmount) {
-    console.log('getting debitAmount from receiver.incomingAmount via convert')
     receiveAmountValue = receiver.incomingAmount.value
     const converted = await deps.ratesService.convert({
       sourceAmount: receiveAmountValue,
@@ -121,8 +122,6 @@ async function getQuote(
       )
     }
     debitAmountValue = converted
-    // estimatedExchangeRate = Number(receiveAmountValue / debitAmountValue)
-    // estimatedExchangeRate = Number(debitAmountValue / receiveAmountValue)
   } else {
     throw new PaymentMethodHandlerError('Received error during local quoting', {
       description: 'No value provided to get quote from',
@@ -133,8 +132,7 @@ async function getQuote(
   return {
     receiver: options.receiver,
     walletAddress: options.walletAddress,
-    // TODO: is this correct for both fixed send/receive? or needs to be flipped?
-    estimatedExchangeRate: Number(debitAmountValue / receiveAmountValue),
+    estimatedExchangeRate: Number(receiveAmountValue / debitAmountValue),
     debitAmount: {
       value: debitAmountValue,
       assetCode: options.walletAddress.asset.code,
@@ -150,8 +148,74 @@ async function getQuote(
 }
 
 async function pay(
-  _deps: ServiceDependencies,
-  _options: PayOptions
+  deps: ServiceDependencies,
+  options: PayOptions
 ): Promise<void> {
-  throw new Error('local pay not implemented')
+  const { outgoingPayment, receiver, finalDebitAmount, finalReceiveAmount } =
+    options
+
+  // Cannot directly use receiver/receiver.incomingAccount for destinationAccount.
+  // createTransfer Expects LiquidityAccount (gets Peer in ilp).
+  const incomingPaymentId = receiver.incomingPayment.id.split('/').pop()
+  if (!incomingPaymentId) {
+    throw new PaymentMethodHandlerError('Received error during local payment', {
+      description: 'Incoming payment not found from receiver',
+      retryable: false
+    })
+  }
+  const incomingPayment = await deps.incomingPaymentService.get({
+    id: incomingPaymentId
+  })
+  if (!incomingPayment) {
+    throw new PaymentMethodHandlerError('Received error during local payment', {
+      description: 'Incoming payment not found from receiver',
+      retryable: false
+    })
+  }
+
+  // TODO: refine this. hastily copied from rafiki/packages/backend/src/payment-method/ilp/connector/core/middleware/account.ts
+  // Necessary to avoid `UnknownDestinationAccount` error
+  try {
+    await deps.accountingService.createLiquidityAccount(
+      incomingPayment,
+      LiquidityAccountType.INCOMING
+    )
+    deps.logger.debug(
+      { incomingPayment },
+      'Created liquidity account for local incoming payment'
+    )
+  } catch (err) {
+    if (!(err instanceof AccountAlreadyExistsError)) {
+      deps.logger.error(
+        { incomingPayment, err },
+        'Failed to create liquidity account for local incoming payment'
+      )
+      throw err
+    }
+  }
+
+  const transferOptions: TransferOptions = {
+    sourceAccount: outgoingPayment,
+    destinationAccount: incomingPayment,
+    sourceAmount: finalDebitAmount,
+    destinationAmount: finalReceiveAmount,
+    transferType: TransferType.TRANSFER
+  }
+
+  const trxOrError =
+    await deps.accountingService.createTransfer(transferOptions)
+
+  if (isTransferError(trxOrError)) {
+    deps.logger.error(
+      { transferOptions, transferError: trxOrError },
+      'Could not create transfer'
+    )
+    switch (trxOrError) {
+      case TransferError.InsufficientBalance:
+      case TransferError.InsufficientLiquidity:
+        throw new InsufficientLiquidityError(trxOrError)
+      default:
+        throw new Error('Unknown error while trying to create transfer')
+    }
+  }
 }

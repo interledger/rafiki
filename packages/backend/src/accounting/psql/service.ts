@@ -264,7 +264,7 @@ export async function createTransfer(
             debitAccount: accountMap[transfer.sourceAccountId],
             creditAccount: accountMap[transfer.destinationAccountId],
             amount: transfer.amount,
-            timeoutMs: BigInt(args.timeout * 1000)
+            timeoutMs: args.timeout ? BigInt(args.timeout * 1000) : undefined
           }))
         )
       )

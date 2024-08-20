@@ -77,7 +77,10 @@ export async function handleSending(
   }
 
   const payStartTime = Date.now()
-  await deps.paymentMethodHandlerService.pay('ILP', {
+  // TODO: use receiver.isLocal
+  const isLocal = false
+  // const isLocal = true
+  await deps.paymentMethodHandlerService.pay(isLocal ? 'LOCAL' : 'ILP', {
     receiver,
     outgoingPayment: payment,
     finalDebitAmount: maxDebitAmount,
@@ -91,6 +94,7 @@ export async function handleSending(
       deps.telemetry.incrementCounter('transactions_total', 1, {
         description: 'Count of funded transactions'
       }),
+      // TODO: exclude local payments from ilp pay time?
       deps.telemetry.recordHistogram('ilp_pay_time_ms', payDuration, {
         description: 'Time to complete an ILP payment'
       }),

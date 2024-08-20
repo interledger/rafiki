@@ -453,7 +453,9 @@ export function initIocContainer(
       logger: await deps.use('logger'),
       knex: await deps.use('knex'),
       config: await deps.use('config'),
-      ratesService: await deps.use('ratesService')
+      ratesService: await deps.use('ratesService'),
+      accountingService: await deps.use('accountingService'),
+      incomingPaymentService: await deps.use('incomingPaymentService')
     }
 
     return createLocalPaymentService(serviceDependencies)
