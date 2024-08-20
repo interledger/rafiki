@@ -24,6 +24,7 @@ import {
 import { getQuote, createQuote, getWalletAddressQuotes } from './quote'
 import {
   getOutgoingPayment,
+  getOutgoingPayments,
   createOutgoingPayment,
   getWalletAddressOutgoingPayments,
   createOutgoingPaymentFromIncomingPayment,
@@ -84,6 +85,7 @@ export const resolvers: Resolvers = {
     asset: getAsset,
     assets: getAssets,
     outgoingPayment: getOutgoingPayment,
+    outgoingPayments: getOutgoingPayments,
     incomingPayment: getIncomingPayment,
     peer: getPeer,
     peers: getPeers,
