@@ -2,16 +2,15 @@ import {
   AuthenticatedClient,
   IncomingPaymentWithPaymentMethods as OpenPaymentsIncomingPaymentWithPaymentMethods,
   AccessAction,
-  WalletAddress as OpenPaymentsWalletAddress
+  WalletAddress as OpenPaymentsWalletAddress,
+  AccessType,
+  PublicIncomingPayment,
+  OpenPaymentsClientError
 } from '@interledger/open-payments'
-import { Grant } from '../../grant/model'
 import { GrantService } from '../../grant/service'
 import { BaseService } from '../../../shared/baseService'
 import { Amount, serializeAmount } from '../../amount'
-import {
-  isRemoteIncomingPaymentError,
-  RemoteIncomingPaymentError
-} from './errors'
+import { RemoteIncomingPaymentError } from './errors'
 import { isGrantError } from '../../grant/errors'
 
 interface CreateRemoteIncomingPaymentArgs {
@@ -22,6 +21,11 @@ interface CreateRemoteIncomingPaymentArgs {
 }
 
 export interface RemoteIncomingPaymentService {
+  get(
+    url: string
+  ): Promise<
+    OpenPaymentsIncomingPaymentWithPaymentMethods | RemoteIncomingPaymentError
+  >
   create(
     args: CreateRemoteIncomingPaymentArgs
   ): Promise<
@@ -47,6 +51,7 @@ export async function createRemoteIncomingPaymentService(
   }
 
   return {
+    get: (url) => get(deps, url),
     create: (args) => create(deps, args)
   }
 }
@@ -57,25 +62,41 @@ async function create(
 ): Promise<
   OpenPaymentsIncomingPaymentWithPaymentMethods | RemoteIncomingPaymentError
 > {
-  const { walletAddressUrl } = args
-  const grantOrError = await getGrant(deps, walletAddressUrl, [
-    AccessAction.Create,
-    AccessAction.ReadAll
-  ])
+  let walletAddress: OpenPaymentsWalletAddress
 
-  if (isRemoteIncomingPaymentError(grantOrError)) {
-    return grantOrError
+  try {
+    walletAddress = await deps.openPaymentsClient.walletAddress.get({
+      url: args.walletAddressUrl
+    })
+  } catch (err) {
+    const errorMessage = 'Could not get wallet address'
+    deps.logger.error(
+      { err, walletAddressUrl: args.walletAddressUrl },
+      errorMessage
+    )
+    return RemoteIncomingPaymentError.UnknownWalletAddress
+  }
+
+  const grantOptions = {
+    authServer: walletAddress.authServer,
+    accessType: 'incoming-payment' as const,
+    accessActions: [AccessAction.Create, AccessAction.ReadAll]
+  }
+
+  const grant = await deps.grantService.getOrCreate(grantOptions)
+
+  if (isGrantError(grant)) {
+    return RemoteIncomingPaymentError.InvalidGrant
   }
 
   try {
-    const url = new URL(walletAddressUrl)
     return await deps.openPaymentsClient.incomingPayment.create(
       {
-        url: url.origin,
-        accessToken: grantOrError.accessToken
+        url: walletAddress.resourceServer ?? new URL(walletAddress.id).origin,
+        accessToken: grant.accessToken
       },
       {
-        walletAddress: walletAddressUrl,
+        walletAddress: walletAddress.id,
         incomingAmount: args.incomingAmount
           ? serializeAmount(args.incomingAmount)
           : undefined,
@@ -85,32 +106,38 @@ async function create(
     )
   } catch (err) {
     const errorMessage = 'Error creating remote incoming payment'
-    deps.logger.error({ err, walletAddressUrl }, errorMessage)
+    deps.logger.error({ err, walletAddressUrl: walletAddress.id }, errorMessage)
     return RemoteIncomingPaymentError.InvalidRequest
   }
 }
 
-async function getGrant(
+async function get(
   deps: ServiceDependencies,
-  walletAddressUrl: string,
-  accessActions: AccessAction[]
-): Promise<Grant | RemoteIncomingPaymentError> {
-  let walletAddress: OpenPaymentsWalletAddress
-
+  url: string
+): Promise<
+  OpenPaymentsIncomingPaymentWithPaymentMethods | RemoteIncomingPaymentError
+> {
+  let publicIncomingPayment: PublicIncomingPayment
   try {
-    walletAddress = await deps.openPaymentsClient.walletAddress.get({
-      url: walletAddressUrl
-    })
+    publicIncomingPayment =
+      await deps.openPaymentsClient.incomingPayment.getPublic({
+        url
+      })
   } catch (err) {
-    const errorMessage = 'Could not get wallet address'
-    deps.logger.error({ err, walletAddressUrl }, errorMessage)
-    return RemoteIncomingPaymentError.UnknownWalletAddress
+    if (err instanceof OpenPaymentsClientError) {
+      if (err.status === 404) {
+        return RemoteIncomingPaymentError.NotFound
+      }
+    }
+
+    deps.logger.warn({ url, err }, 'Could not get public incoming payment')
+    return RemoteIncomingPaymentError.InvalidRequest
   }
 
   const grantOptions = {
-    authServer: walletAddress.authServer,
-    accessType: 'incoming-payment' as const,
-    accessActions
+    authServer: publicIncomingPayment.authServer,
+    accessType: AccessType.IncomingPayment,
+    accessActions: [AccessAction.ReadAll]
   }
 
   const grant = await deps.grantService.getOrCreate(grantOptions)
@@ -119,5 +146,19 @@ async function getGrant(
     return RemoteIncomingPaymentError.InvalidGrant
   }
 
-  return grant
+  try {
+    return await deps.openPaymentsClient.incomingPayment.get({
+      url,
+      accessToken: grant.accessToken
+    })
+  } catch (err) {
+    if (err instanceof OpenPaymentsClientError) {
+      if (err.status === 404) {
+        return RemoteIncomingPaymentError.NotFound
+      }
+    }
+
+    deps.logger.warn({ url, err }, 'Could not get incoming payment')
+    return RemoteIncomingPaymentError.InvalidRequest
+  }
 }
