@@ -6,8 +6,6 @@ title: Objects
 
 ## AccountingTransfer
 
-
-
 <p style={{ marginBottom: "0.4em" }}><strong>Implements</strong></p>
 
 - [Model](/apis/backend/interfaces#model)
@@ -85,8 +83,6 @@ createdAt<br />
 
 ## AccountingTransferConnection
 
-
-
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
 <table>
@@ -114,8 +110,6 @@ credits<br />
 </table>
 
 ## AdditionalProperty
-
-
 
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
@@ -154,8 +148,6 @@ visibleInOpenPayments<br />
 
 ## Amount
 
-
-
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
 <table>
@@ -192,8 +184,6 @@ assetScale<br />
 </table>
 
 ## Asset
-
-
 
 <p style={{ marginBottom: "0.4em" }}><strong>Implements</strong></p>
 
@@ -353,8 +343,6 @@ createdAt<br />
 
 ## AssetEdge
 
-
-
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
 <table>
@@ -383,8 +371,6 @@ cursor<br />
 
 ## AssetMutationResponse
 
-
-
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
 <table>
@@ -403,8 +389,6 @@ asset<br />
 </table>
 
 ## AssetsConnection
-
-
 
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
@@ -434,8 +418,6 @@ edges<br />
 
 ## CreateOrUpdatePeerByUrlMutationResponse
 
-
-
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
 <table>
@@ -454,8 +436,6 @@ peer<br />
 </table>
 
 ## CreatePeerMutationResponse
-
-
 
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
@@ -476,8 +456,6 @@ peer<br />
 
 ## CreateReceiverResponse
 
-
-
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
 <table>
@@ -496,8 +474,6 @@ receiver<br />
 </table>
 
 ## CreateWalletAddressKeyMutationResponse
-
-
 
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
@@ -518,8 +494,6 @@ walletAddressKey<br />
 
 ## CreateWalletAddressMutationResponse
 
-
-
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
 <table>
@@ -538,8 +512,6 @@ walletAddress<br />
 </table>
 
 ## DeleteAssetMutationResponse
-
-
 
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
@@ -560,8 +532,6 @@ asset<br />
 
 ## DeletePeerMutationResponse
 
-
-
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
 <table>
@@ -580,8 +550,6 @@ success<br />
 </table>
 
 ## Fee
-
-
 
 <p style={{ marginBottom: "0.4em" }}><strong>Implements</strong></p>
 
@@ -651,8 +619,6 @@ createdAt<br />
 
 ## FeeEdge
 
-
-
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
 <table>
@@ -680,8 +646,6 @@ cursor<br />
 </table>
 
 ## FeesConnection
-
-
 
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
@@ -711,8 +675,6 @@ edges<br />
 
 ## Http
 
-
-
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
 <table>
@@ -731,8 +693,6 @@ outgoing<br />
 </table>
 
 ## HttpOutgoing
-
-
 
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
@@ -761,8 +721,6 @@ endpoint<br />
 </table>
 
 ## IncomingPayment
-
-
 
 <p style={{ marginBottom: "0.4em" }}><strong>Implements</strong></p>
 
@@ -869,8 +827,6 @@ createdAt<br />
 
 ## IncomingPaymentConnection
 
-
-
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
 <table>
@@ -898,8 +854,6 @@ edges<br />
 </table>
 
 ## IncomingPaymentEdge
-
-
 
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
@@ -929,8 +883,6 @@ cursor<br />
 
 ## IncomingPaymentResponse
 
-
-
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
 <table>
@@ -949,8 +901,6 @@ payment<br />
 </table>
 
 ## Jwk
-
-
 
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
@@ -1007,8 +957,6 @@ crv<br />
 
 ## LiquidityMutationResponse
 
-
-
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
 <table>
@@ -1027,8 +975,6 @@ success<br />
 </table>
 
 ## OutgoingPayment
-
-
 
 <p style={{ marginBottom: "0.4em" }}><strong>Implements</strong></p>
 
@@ -1180,8 +1126,6 @@ grantId<br />
 
 ## OutgoingPaymentConnection
 
-
-
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
 <table>
@@ -1209,8 +1153,6 @@ edges<br />
 </table>
 
 ## OutgoingPaymentEdge
-
-
 
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
@@ -1240,8 +1182,6 @@ cursor<br />
 
 ## OutgoingPaymentResponse
 
-
-
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
 <table>
@@ -1260,8 +1200,6 @@ payment<br />
 </table>
 
 ## PageInfo
-
-
 
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
@@ -1308,8 +1246,6 @@ startCursor<br />
 </table>
 
 ## Payment
-
-
 
 <p style={{ marginBottom: "0.4em" }}><strong>Implements</strong></p>
 
@@ -1398,8 +1334,6 @@ createdAt<br />
 
 ## PaymentConnection
 
-
-
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
 <table>
@@ -1428,8 +1362,6 @@ edges<br />
 
 ## PaymentEdge
 
-
-
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
 <table>
@@ -1457,8 +1389,6 @@ cursor<br />
 </table>
 
 ## Peer
-
-
 
 <p style={{ marginBottom: "0.4em" }}><strong>Implements</strong></p>
 
@@ -1555,8 +1485,6 @@ createdAt<br />
 
 ## PeerEdge
 
-
-
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
 <table>
@@ -1585,8 +1513,6 @@ cursor<br />
 
 ## PeersConnection
 
-
-
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
 <table>
@@ -1614,8 +1540,6 @@ edges<br />
 </table>
 
 ## Quote
-
-
 
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
@@ -1726,8 +1650,6 @@ expiresAt<br />
 
 ## QuoteConnection
 
-
-
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
 <table>
@@ -1755,8 +1677,6 @@ edges<br />
 </table>
 
 ## QuoteEdge
-
-
 
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
@@ -1786,8 +1706,6 @@ cursor<br />
 
 ## QuoteResponse
 
-
-
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
 <table>
@@ -1806,8 +1724,6 @@ quote<br />
 </table>
 
 ## Receiver
-
-
 
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
@@ -1900,8 +1816,6 @@ updatedAt<br />
 
 ## RevokeWalletAddressKeyMutationResponse
 
-
-
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
 <table>
@@ -1920,8 +1834,6 @@ walletAddressKey<br />
 </table>
 
 ## SetFeeResponse
-
-
 
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
@@ -1942,8 +1854,6 @@ fee<br />
 
 ## TriggerWalletAddressEventsMutationResponse
 
-
-
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
 <table>
@@ -1962,8 +1872,6 @@ count<br />
 </table>
 
 ## UpdatePeerMutationResponse
-
-
 
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
@@ -1984,8 +1892,6 @@ peer<br />
 
 ## UpdateWalletAddressMutationResponse
 
-
-
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
 <table>
@@ -2004,8 +1910,6 @@ walletAddress<br />
 </table>
 
 ## WalletAddress
-
-
 
 <p style={{ marginBottom: "0.4em" }}><strong>Implements</strong></p>
 
@@ -2345,8 +2249,6 @@ additionalProperties<br />
 
 ## WalletAddressEdge
 
-
-
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
 <table>
@@ -2375,8 +2277,6 @@ cursor<br />
 
 ## WalletAddressesConnection
 
-
-
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
 <table>
@@ -2404,8 +2304,6 @@ edges<br />
 </table>
 
 ## WalletAddressKey
-
-
 
 <p style={{ marginBottom: "0.4em" }}><strong>Implements</strong></p>
 
@@ -2466,8 +2364,6 @@ createdAt<br />
 
 ## WalletAddressKeyConnection
 
-
-
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
 <table>
@@ -2496,8 +2392,6 @@ edges<br />
 
 ## WalletAddressKeyEdge
 
-
-
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
 <table>
@@ -2525,8 +2419,6 @@ cursor<br />
 </table>
 
 ## WalletAddressWithdrawal
-
-
 
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
@@ -2565,8 +2457,6 @@ walletAddress<br />
 
 ## WalletAddressWithdrawalMutationResponse
 
-
-
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
 <table>
@@ -2585,8 +2475,6 @@ withdrawal<br />
 </table>
 
 ## WebhookEvent
-
-
 
 <p style={{ marginBottom: "0.4em" }}><strong>Implements</strong></p>
 
@@ -2638,8 +2526,6 @@ createdAt<br />
 
 ## WebhookEventsConnection
 
-
-
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
 <table>
@@ -2668,8 +2554,6 @@ edges<br />
 
 ## WebhookEventsEdge
 
-
-
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
 <table>
@@ -2695,4 +2579,3 @@ cursor<br />
 </tr>
 </tbody>
 </table>
-

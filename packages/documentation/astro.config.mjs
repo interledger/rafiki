@@ -77,8 +77,77 @@ export default defineConfig({
                 },
                 {
                   label: 'Deploy to production',
-                  link: 'integration/deploy-to-production'
-                },
+                  collapsed: true,
+                  items: [
+                    {
+                      label: 'Endpoints',
+                      collapsed: true,
+                      items: [
+                        {
+                          label: 'Webhook events',
+                          link: 'integration/webhook-events'
+                        },
+                        {
+                          label: 'Exchange Rates',
+                          link: 'integration/exchange-rates'
+                        },
+                        {
+                          label: 'IDP',
+                          link: 'integration/idp'
+                        }
+                      ]
+                    },
+                    {
+                      label: 'Environment variables',
+                      link: 'integration/environment-variables'
+                    },
+                    {
+                      label: 'Deploying to cloud environment options',
+                      collapsed: true,
+                      items: [
+                        {
+                          label: 'nginx',
+                          link: 'integration/nginx'
+                        },
+                        {
+                          label: 'Helm & K8s',
+                          link: 'integration/helm-k8s'
+                        }
+                      ]
+                    },
+                    {
+                      label: 'Running your instance',
+                      collapsed: true,
+                      items: [
+                        {
+                          label: 'Adding asset',
+                          link: 'integration/adding-asset'
+                        },
+                        {
+                          label: 'Adding peer',
+                          link: 'integration/adding-peer'
+                        },
+                        {
+                          label:
+                            'Creating wallet address (strategies for identity lookup)',
+                          link: 'integration/creating-wallet-address'
+                        },
+                        {
+                          label: 'Managing liquidity',
+                          link: 'integration/managing-liquidity'
+                        },
+                        {
+                          label: 'Keys management',
+                          link: 'integration/keys-management'
+                        },
+                        {
+                          label: 'Grants management',
+                          link: 'integration/grants-management'
+                        }
+                      ]
+                    }
+                  ] //items
+                }, //Deploy to Production
                 {
                   label: 'Admin APIs',
                   link: 'integration/admin-apis'
@@ -87,8 +156,8 @@ export default defineConfig({
                   label: 'Integrator checklist',
                   link: 'integration/integrator-checklist'
                 }
-              ]
-            },
+              ] //Items
+            }, //Integration
             {
               label: 'Components',
               collapsed: true,
@@ -196,9 +265,9 @@ export default defineConfig({
                 directory: 'reference'
               }
             }
-          ]
+          ] //Docs
         }
-      ],
+      ], //Sidebar
       plugins: [starlightLinksValidator()]
     }),
     GraphQL({

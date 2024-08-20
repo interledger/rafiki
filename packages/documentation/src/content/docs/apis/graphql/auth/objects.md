@@ -6,8 +6,6 @@ title: Objects
 
 ## Access
 
-
-
 <p style={{ marginBottom: "0.4em" }}><strong>Implements</strong></p>
 
 - [Model](/apis/auth/interfaces#model)
@@ -75,8 +73,6 @@ createdAt<br />
 </table>
 
 ## Grant
-
-
 
 <p style={{ marginBottom: "0.4em" }}><strong>Implements</strong></p>
 
@@ -146,8 +142,6 @@ createdAt<br />
 
 ## GrantEdge
 
-
-
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
 <table>
@@ -176,8 +170,6 @@ cursor<br />
 
 ## GrantsConnection
 
-
-
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
 <table>
@@ -205,8 +197,6 @@ edges<br />
 </table>
 
 ## LimitData
-
-
 
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
@@ -254,8 +244,6 @@ interval<br />
 
 ## PageInfo
 
-
-
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
 <table>
@@ -302,8 +290,6 @@ startCursor<br />
 
 ## PaymentAmount
 
-
-
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
 <table>
@@ -341,8 +327,6 @@ assetScale<br />
 
 ## RevokeGrantMutationResponse
 
-
-
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
 <table>
@@ -359,4 +343,3 @@ id<br />
 </tr>
 </tbody>
 </table>
-

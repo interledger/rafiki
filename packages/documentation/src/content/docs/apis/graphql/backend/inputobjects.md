@@ -6,8 +6,6 @@ title: Input objects
 
 ## AdditionalPropertyInput
 
-
-
 <p style={{ marginBottom: "0.4em" }}><strong>Arguments</strong></p>
 
 <table>
@@ -44,8 +42,6 @@ visibleInOpenPayments<br />
 </table>
 
 ## AmountInput
-
-
 
 <p style={{ marginBottom: "0.4em" }}><strong>Arguments</strong></p>
 
@@ -84,8 +80,6 @@ assetScale<br />
 
 ## CancelOutgoingPaymentInput
 
-
-
 <p style={{ marginBottom: "0.4em" }}><strong>Arguments</strong></p>
 
 <table>
@@ -113,8 +107,6 @@ reason<br />
 </table>
 
 ## CreateAssetInput
-
-
 
 <p style={{ marginBottom: "0.4em" }}><strong>Arguments</strong></p>
 
@@ -171,8 +163,6 @@ idempotencyKey<br />
 
 ## CreateAssetLiquidityWithdrawalInput
 
-
-
 <p style={{ marginBottom: "0.4em" }}><strong>Arguments</strong></p>
 
 <table>
@@ -227,8 +217,6 @@ timeoutSeconds<br />
 </table>
 
 ## CreateIncomingPaymentInput
-
-
 
 <p style={{ marginBottom: "0.4em" }}><strong>Arguments</strong></p>
 
@@ -285,8 +273,6 @@ idempotencyKey<br />
 
 ## CreateIncomingPaymentWithdrawalInput
 
-
-
 <p style={{ marginBottom: "0.4em" }}><strong>Arguments</strong></p>
 
 <table>
@@ -323,8 +309,6 @@ timeoutSeconds<br />
 </table>
 
 ## CreateOrUpdatePeerByUrlInput
-
-
 
 <p style={{ marginBottom: "0.4em" }}><strong>Arguments</strong></p>
 
@@ -399,8 +383,6 @@ idempotencyKey<br />
 
 ## CreateOutgoingPaymentFromIncomingPaymentInput
 
-
-
 <p style={{ marginBottom: "0.4em" }}><strong>Arguments</strong></p>
 
 <table>
@@ -456,8 +438,6 @@ idempotencyKey<br />
 
 ## CreateOutgoingPaymentInput
 
-
-
 <p style={{ marginBottom: "0.4em" }}><strong>Arguments</strong></p>
 
 <table>
@@ -504,8 +484,6 @@ idempotencyKey<br />
 
 ## CreateOutgoingPaymentWithdrawalInput
 
-
-
 <p style={{ marginBottom: "0.4em" }}><strong>Arguments</strong></p>
 
 <table>
@@ -542,8 +520,6 @@ timeoutSeconds<br />
 </table>
 
 ## CreatePeerInput
-
-
 
 <p style={{ marginBottom: "0.4em" }}><strong>Arguments</strong></p>
 
@@ -627,8 +603,6 @@ idempotencyKey<br />
 
 ## CreatePeerLiquidityWithdrawalInput
 
-
-
 <p style={{ marginBottom: "0.4em" }}><strong>Arguments</strong></p>
 
 <table>
@@ -683,8 +657,6 @@ timeoutSeconds<br />
 </table>
 
 ## CreateQuoteInput
-
-
 
 <p style={{ marginBottom: "0.4em" }}><strong>Arguments</strong></p>
 
@@ -741,8 +713,6 @@ idempotencyKey<br />
 
 ## CreateReceiverInput
 
-
-
 <p style={{ marginBottom: "0.4em" }}><strong>Arguments</strong></p>
 
 <table>
@@ -797,8 +767,6 @@ idempotencyKey<br />
 </table>
 
 ## CreateWalletAddressInput
-
-
 
 <p style={{ marginBottom: "0.4em" }}><strong>Arguments</strong></p>
 
@@ -855,8 +823,6 @@ additionalProperties<br />
 
 ## CreateWalletAddressKeyInput
 
-
-
 <p style={{ marginBottom: "0.4em" }}><strong>Arguments</strong></p>
 
 <table>
@@ -893,8 +859,6 @@ idempotencyKey<br />
 </table>
 
 ## CreateWalletAddressWithdrawalInput
-
-
 
 <p style={{ marginBottom: "0.4em" }}><strong>Arguments</strong></p>
 
@@ -942,8 +906,6 @@ timeoutSeconds<br />
 
 ## DeleteAssetInput
 
-
-
 <p style={{ marginBottom: "0.4em" }}><strong>Arguments</strong></p>
 
 <table>
@@ -972,8 +934,6 @@ idempotencyKey<br />
 
 ## DeletePeerInput
 
-
-
 <p style={{ marginBottom: "0.4em" }}><strong>Arguments</strong></p>
 
 <table>
@@ -1001,8 +961,6 @@ idempotencyKey<br />
 </table>
 
 ## DepositAssetLiquidityInput
-
-
 
 <p style={{ marginBottom: "0.4em" }}><strong>Arguments</strong></p>
 
@@ -1050,8 +1008,6 @@ idempotencyKey<br />
 
 ## DepositEventLiquidityInput
 
-
-
 <p style={{ marginBottom: "0.4em" }}><strong>Arguments</strong></p>
 
 <table>
@@ -1080,8 +1036,6 @@ idempotencyKey<br />
 
 ## DepositOutgoingPaymentLiquidityInput
 
-
-
 <p style={{ marginBottom: "0.4em" }}><strong>Arguments</strong></p>
 
 <table>
@@ -1109,8 +1063,6 @@ idempotencyKey<br />
 </table>
 
 ## DepositPeerLiquidityInput
-
-
 
 <p style={{ marginBottom: "0.4em" }}><strong>Arguments</strong></p>
 
@@ -1158,8 +1110,6 @@ idempotencyKey<br />
 
 ## FeeDetails
 
-
-
 <p style={{ marginBottom: "0.4em" }}><strong>Arguments</strong></p>
 
 <table>
@@ -1188,8 +1138,6 @@ basisPoints<br />
 
 ## FilterString
 
-
-
 <p style={{ marginBottom: "0.4em" }}><strong>Arguments</strong></p>
 
 <table>
@@ -1209,8 +1157,6 @@ in<br />
 
 ## HttpIncomingInput
 
-
-
 <p style={{ marginBottom: "0.4em" }}><strong>Arguments</strong></p>
 
 <table>
@@ -1229,8 +1175,6 @@ authTokens<br />
 </table>
 
 ## HttpInput
-
-
 
 <p style={{ marginBottom: "0.4em" }}><strong>Arguments</strong></p>
 
@@ -1260,8 +1204,6 @@ outgoing<br />
 
 ## HttpOutgoingInput
 
-
-
 <p style={{ marginBottom: "0.4em" }}><strong>Arguments</strong></p>
 
 <table>
@@ -1289,8 +1231,6 @@ endpoint<br />
 </table>
 
 ## JwkInput
-
-
 
 <p style={{ marginBottom: "0.4em" }}><strong>Arguments</strong></p>
 
@@ -1347,8 +1287,6 @@ crv<br />
 
 ## PaymentFilter
 
-
-
 <p style={{ marginBottom: "0.4em" }}><strong>Arguments</strong></p>
 
 <table>
@@ -1376,8 +1314,6 @@ walletAddressId<br />
 </table>
 
 ## PostLiquidityWithdrawalInput
-
-
 
 <p style={{ marginBottom: "0.4em" }}><strong>Arguments</strong></p>
 
@@ -1407,8 +1343,6 @@ idempotencyKey<br />
 
 ## RevokeWalletAddressKeyInput
 
-
-
 <p style={{ marginBottom: "0.4em" }}><strong>Arguments</strong></p>
 
 <table>
@@ -1436,8 +1370,6 @@ idempotencyKey<br />
 </table>
 
 ## SetFeeInput
-
-
 
 <p style={{ marginBottom: "0.4em" }}><strong>Arguments</strong></p>
 
@@ -1485,8 +1417,6 @@ idempotencyKey<br />
 
 ## TriggerWalletAddressEventsInput
 
-
-
 <p style={{ marginBottom: "0.4em" }}><strong>Arguments</strong></p>
 
 <table>
@@ -1514,8 +1444,6 @@ idempotencyKey<br />
 </table>
 
 ## UpdateAssetInput
-
-
 
 <p style={{ marginBottom: "0.4em" }}><strong>Arguments</strong></p>
 
@@ -1562,8 +1490,6 @@ idempotencyKey<br />
 </table>
 
 ## UpdatePeerInput
-
-
 
 <p style={{ marginBottom: "0.4em" }}><strong>Arguments</strong></p>
 
@@ -1638,8 +1564,6 @@ idempotencyKey<br />
 
 ## UpdateWalletAddressInput
 
-
-
 <p style={{ marginBottom: "0.4em" }}><strong>Arguments</strong></p>
 
 <table>
@@ -1695,8 +1619,6 @@ additionalProperties<br />
 
 ## VoidLiquidityWithdrawalInput
 
-
-
 <p style={{ marginBottom: "0.4em" }}><strong>Arguments</strong></p>
 
 <table>
@@ -1725,8 +1647,6 @@ idempotencyKey<br />
 
 ## WebhookEventFilter
 
-
-
 <p style={{ marginBottom: "0.4em" }}><strong>Arguments</strong></p>
 
 <table>
@@ -1745,8 +1665,6 @@ type<br />
 </table>
 
 ## WithdrawEventLiquidityInput
-
-
 
 <p style={{ marginBottom: "0.4em" }}><strong>Arguments</strong></p>
 
@@ -1773,4 +1691,3 @@ idempotencyKey<br />
 </tr>
 </tbody>
 </table>
-

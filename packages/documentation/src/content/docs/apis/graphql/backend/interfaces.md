@@ -6,8 +6,6 @@ title: Interfaces
 
 ## BasePayment
 
-
-
 <p style={{ marginBottom: "0.4em" }}><strong>Implemented by</strong></p>
 
 - [IncomingPayment](/apis/backend/objects#incomingpayment)
@@ -69,8 +67,6 @@ client<br />
 
 ## Model
 
-
-
 <p style={{ marginBottom: "0.4em" }}><strong>Implemented by</strong></p>
 
 - [Asset](/apis/backend/objects#asset)
@@ -109,4 +105,3 @@ createdAt<br />
 </tr>
 </tbody>
 </table>
-

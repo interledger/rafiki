@@ -6,8 +6,6 @@ title: Interfaces
 
 ## Model
 
-
-
 <p style={{ marginBottom: "0.4em" }}><strong>Implemented by</strong></p>
 
 - [Grant](/apis/auth/objects#grant)
@@ -38,4 +36,3 @@ createdAt<br />
 </tr>
 </tbody>
 </table>
-

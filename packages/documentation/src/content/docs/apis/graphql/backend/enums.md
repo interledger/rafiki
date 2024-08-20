@@ -6,8 +6,6 @@ title: Enums
 
 ## Alg
 
-
-
 <p style={{ marginBottom: "0.4em" }}><strong>Values</strong></p>
 
 <table>
@@ -24,8 +22,6 @@ title: Enums
 
 ## Crv
 
-
-
 <p style={{ marginBottom: "0.4em" }}><strong>Values</strong></p>
 
 <table>
@@ -41,8 +37,6 @@ title: Enums
 </table>
 
 ## FeeType
-
-
 
 <p style={{ marginBottom: "0.4em" }}><strong>Values</strong></p>
 
@@ -65,8 +59,6 @@ title: Enums
 </table>
 
 ## IncomingPaymentState
-
-
 
 <p style={{ marginBottom: "0.4em" }}><strong>Values</strong></p>
 
@@ -102,8 +94,6 @@ title: Enums
 
 ## Kty
 
-
-
 <p style={{ marginBottom: "0.4em" }}><strong>Values</strong></p>
 
 <table>
@@ -119,8 +109,6 @@ title: Enums
 </table>
 
 ## LiquidityError
-
-
 
 <p style={{ marginBottom: "0.4em" }}><strong>Values</strong></p>
 
@@ -204,8 +192,6 @@ title: Enums
 
 ## OutgoingPaymentState
 
-
-
 <p style={{ marginBottom: "0.4em" }}><strong>Values</strong></p>
 
 <table>
@@ -246,8 +232,6 @@ title: Enums
 
 ## PaymentType
 
-
-
 <p style={{ marginBottom: "0.4em" }}><strong>Values</strong></p>
 
 <table>
@@ -270,8 +254,6 @@ title: Enums
 
 ## SortOrder
 
-
-
 <p style={{ marginBottom: "0.4em" }}><strong>Values</strong></p>
 
 <table>
@@ -293,8 +275,6 @@ title: Enums
 </table>
 
 ## TransferType
-
-
 
 <p style={{ marginBottom: "0.4em" }}><strong>Values</strong></p>
 
@@ -324,8 +304,6 @@ title: Enums
 
 ## WalletAddressStatus
 
-
-
 <p style={{ marginBottom: "0.4em" }}><strong>Values</strong></p>
 
 <table>
@@ -345,4 +323,3 @@ title: Enums
 </tr>
 </tbody>
 </table>
-
