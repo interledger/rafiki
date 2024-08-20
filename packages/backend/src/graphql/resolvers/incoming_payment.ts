@@ -141,12 +141,21 @@ export const cancelIncomingPayment: MutationResolvers<ApolloContext>['cancelInco
     args,
     ctx
   ): Promise<ResolversTypes['CancelIncomingPaymentResponse']> => {
+    console.log('CANCEL INCOMING PAYMENT')
     const incomingPaymentService = await ctx.container.use(
       'incomingPaymentService'
     )
 
+    ctx.logger.info(
+      { message: 'CANCEL INCOMING PAYMENT' }
+    )
+
     const incomingPaymentOrError = await incomingPaymentService.cancel(
       args.input.id
+    )
+
+    ctx.logger.info(
+      { message: 'OK GOT SOMETHING', data: incomingPaymentOrError }
     )
 
     if (isIncomingPaymentError(incomingPaymentOrError)) {
@@ -156,6 +165,10 @@ export const cancelIncomingPayment: MutationResolvers<ApolloContext>['cancelInco
         }
       })
     }
+
+    ctx.logger.info(
+      { message: 'LLETS RETURN DATA', data: incomingPaymentOrError }
+    )
 
     return {
       payment: paymentToGraphql(incomingPaymentOrError)

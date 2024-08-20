@@ -8,7 +8,8 @@ export enum IncomingPaymentError {
   InvalidExpiry = 'InvalidExpiry',
   WrongState = 'WrongState',
   InactiveWalletAddress = 'InactiveWalletAddress',
-  ActionNotPerformed = 'ActionNotPerformed'
+  ActionNotPerformed = 'ActionNotPerformed',
+  AlreadyActioned = 'AlreadyActioned'
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
@@ -25,7 +26,8 @@ export const errorToHTTPCode: {
   [IncomingPaymentError.InvalidExpiry]: 400,
   [IncomingPaymentError.WrongState]: 409,
   [IncomingPaymentError.InactiveWalletAddress]: 400,
-  [IncomingPaymentError.ActionNotPerformed]: 403
+  [IncomingPaymentError.ActionNotPerformed]: 403,
+  [IncomingPaymentError.AlreadyActioned]: 403,
 }
 
 export const errorToCode: {
@@ -38,7 +40,8 @@ export const errorToCode: {
   [IncomingPaymentError.InvalidExpiry]: GraphQLErrorCode.BadUserInput,
   [IncomingPaymentError.WrongState]: GraphQLErrorCode.Conflict,
   [IncomingPaymentError.InactiveWalletAddress]: GraphQLErrorCode.Inactive,
-  [IncomingPaymentError.ActionNotPerformed]: GraphQLErrorCode.Timeout
+  [IncomingPaymentError.ActionNotPerformed]: GraphQLErrorCode.Timeout,
+  [IncomingPaymentError.AlreadyActioned]: GraphQLErrorCode.Forbidden
 }
 
 export const errorToMessage: {
@@ -51,5 +54,6 @@ export const errorToMessage: {
   [IncomingPaymentError.InvalidExpiry]: 'invalid expiresAt',
   [IncomingPaymentError.WrongState]: 'wrong state',
   [IncomingPaymentError.InactiveWalletAddress]: 'inactive wallet address',
-  [IncomingPaymentError.ActionNotPerformed]: 'action not performed'
+  [IncomingPaymentError.ActionNotPerformed]: 'action not performed',
+  [IncomingPaymentError.AlreadyActioned]: 'action already performed'
 }

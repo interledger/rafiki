@@ -155,8 +155,8 @@ async function createIncomingPayment(
     })
 
     if (response?.cancelledAt) {
-      deps.logger.error(
-        { cancelledAt: response.cancelledAt.toISOString() },
+      deps.logger.info(
+        { cancelledAt: response.cancelledAt.toISOString(), paymentId: incomingPayment.id },
         'Incoming payment was cancelled'
       )
       return IncomingPaymentError.ActionNotPerformed
@@ -344,7 +344,10 @@ async function approveIncomingPayment(
       return IncomingPaymentError.WrongState
 
     if (payment.cancelledAt) {
-      throw new Error('Cannot approve already cancelled incoming payment.')
+      deps.logger.info(
+        { errorMessage: 'Cannot approve already cancelled incoming payment', paymentId: payment.id }
+      )
+      return IncomingPaymentError.AlreadyActioned
     }
 
     if (!payment.approvedAt) {
@@ -372,7 +375,10 @@ async function cancelIncomingPayment(
       return IncomingPaymentError.WrongState
 
     if (payment.approvedAt) {
-      throw new Error('Cannot cancel already approved incoming payment.')
+      deps.logger.info(
+        { errorMessage: 'Cannot cancel already approved incoming payment', paymentId: payment.id }
+      )
+      return IncomingPaymentError.AlreadyActioned
     }
 
     if (!payment.cancelledAt) {

@@ -181,9 +181,8 @@ describe('Incoming Payment Service', (): void => {
           .findOne({ id: incomingPayment.id })
           .patch({ cancelledAt: new Date() })
 
-        expect(
-          incomingPaymentService.approve(incomingPayment.id)
-        ).rejects.toThrow('Cannot approve already cancelled incoming payment.')
+        const response = await incomingPaymentService.approve(incomingPayment.id)
+        expect(response).toBe(IncomingPaymentError.AlreadyActioned)
       })
 
       it('should not update approvedAt field of already approved incoming payment', async (): Promise<void> => {
@@ -239,9 +238,8 @@ describe('Incoming Payment Service', (): void => {
           .findOne({ id: incomingPayment.id })
           .patch({ approvedAt: new Date() })
 
-        expect(
-          incomingPaymentService.cancel(incomingPayment.id)
-        ).rejects.toThrow('Cannot cancel already approved incoming payment.')
+        const response = await incomingPaymentService.cancel(incomingPayment.id)
+        expect(response).toBe(IncomingPaymentError.AlreadyActioned)
       })
 
       it('should not update cancelledAt field of already cancelled incoming payment', async (): Promise<void> => {
