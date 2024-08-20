@@ -146,8 +146,8 @@ export default defineConfig({
                         }
                       ]
                     }
-                  ] //items
-                }, //Deploy to Production
+                  ]
+                },
                 {
                   label: 'Admin APIs',
                   link: 'integration/admin-apis'
@@ -156,8 +156,8 @@ export default defineConfig({
                   label: 'Integrator checklist',
                   link: 'integration/integrator-checklist'
                 }
-              ] //Items
-            }, //Integration
+              ]
+            },
             {
               label: 'Components',
               collapsed: true,
@@ -265,9 +265,9 @@ export default defineConfig({
                 directory: 'reference'
               }
             }
-          ] //Docs
+          ]
         }
-      ], //Sidebar
+      ],
       plugins: [starlightLinksValidator()]
     }),
     GraphQL({
