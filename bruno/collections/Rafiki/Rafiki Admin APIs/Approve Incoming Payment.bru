@@ -5,7 +5,7 @@ meta {
 }
 
 post {
-  url: {{RafikiGraphqlHost}}/graphql
+  url: {{PeerGraphqlHost}}/graphql
   body: graphql
   auth: none
 }
@@ -13,8 +13,9 @@ post {
 body:graphql {
   mutation ApproveIncomingPayment($input: ApproveIncomingPaymentInput!) {
   	approveIncomingPayment(input:$input) {
-      id
-      approvedAt
+      payment {
+        id
+      }
     }
   }
 }
