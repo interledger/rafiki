@@ -33,6 +33,7 @@ export class Grant extends BaseModel {
   public accessType!: AccessType
   public accessActions!: AccessAction[]
   public expiresAt?: Date | null
+  public deletedAt?: Date
 
   public get expired(): boolean {
     return !!this.expiresAt && this.expiresAt <= new Date()
