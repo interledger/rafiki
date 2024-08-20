@@ -97,7 +97,6 @@ export const getWalletAddressQuotes: WalletAddressResolvers<ApolloContext>['quot
     }
   }
 
-// TODO: update gql types (there is a pr pending for this)
 export function quoteToGraphql(quote: Quote): SchemaQuote {
   return {
     id: quote.id,
