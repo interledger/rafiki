@@ -85,15 +85,15 @@ export default defineConfig({
                       items: [
                         {
                           label: 'Webhook events',
-                          link: 'integration/webhook-events'
+                          link: 'integration/deploy-to-prod/webhook-events'
                         },
                         {
                           label: 'Exchange Rates',
-                          link: 'integration/exchange-rates'
+                          link: 'integration/deploy-to-prod/exchange-rates'
                         },
                         {
                           label: 'IDP',
-                          link: 'integration/idp'
+                          link: 'integration/deploy-to-prod/idp'
                         }
                       ]
                     },
@@ -107,11 +107,11 @@ export default defineConfig({
                       items: [
                         {
                           label: 'nginx',
-                          link: 'integration/nginx'
+                          link: 'integration/deploy-to-cloud/nginx'
                         },
                         {
                           label: 'Helm & K8s',
-                          link: 'integration/helm-k8s'
+                          link: 'integration/deploy-to-cloud/helm-k8s'
                         }
                       ]
                     },
@@ -121,28 +121,28 @@ export default defineConfig({
                       items: [
                         {
                           label: 'Adding asset',
-                          link: 'integration/adding-asset'
+                          link: 'integration/running-your-instance/adding-asset'
                         },
                         {
                           label: 'Adding peer',
-                          link: 'integration/adding-peer'
+                          link: 'integration/running-your-instance/adding-peer'
                         },
                         {
                           label:
                             'Creating wallet address (strategies for identity lookup)',
-                          link: 'integration/creating-wallet-address'
+                          link: 'integration/running-your-instance/creating-wallet-address'
                         },
                         {
                           label: 'Managing liquidity',
-                          link: 'integration/managing-liquidity'
+                          link: 'integration/running-your-instance/managing-liquidity'
                         },
                         {
                           label: 'Keys management',
-                          link: 'integration/keys-management'
+                          link: 'integration/running-your-instance/keys-management'
                         },
                         {
                           label: 'Grants management',
-                          link: 'integration/grants-management'
+                          link: 'integration/running-your-instance/grants-management'
                         }
                       ]
                     }
