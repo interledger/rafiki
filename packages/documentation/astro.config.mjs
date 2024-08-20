@@ -129,7 +129,7 @@ export default defineConfig({
                         },
                         {
                           label:
-                            'Creating wallet address (strategies for identity lookup)',
+                            'Creating wallet address',
                           link: 'integration/deploy-to-prod/running-your-instance/creating-wallet-address'
                         },
                         {
