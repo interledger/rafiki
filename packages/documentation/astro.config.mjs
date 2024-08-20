@@ -171,6 +171,20 @@ export default defineConfig({
               ]
             },
             {
+              label: 'Rafiki Admin',
+              collapsed: true,
+              items: [
+                {
+                  label: 'Overview',
+                  link: 'rafikiadmin/overview'
+                },
+                {
+                  label: 'Rafiki Admin Auth',
+                  link: 'rafikiadmin/auth'
+                }
+              ]
+            },
+            {
               label: 'Reference',
               collapsed: true,
               autogenerate: {

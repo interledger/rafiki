@@ -11,7 +11,7 @@ These packages include:
 - `mock-account-servicing-entity` (mocks an [Account Servicing Entity](/reference/glossary#account-servicing-entity))
 - `frontend` (Remix app to expose a UI for Rafiki Admin management via interaction with the `backend` Admin APIs)
 - `kratos` (An identity and user management solution for the `frontend`)
-- `mailslurper` (A SMTP mail server to catch account recovery emails)
+- `mailslurper` (A SMTP mail server to catch account recovery emails for the `frontend`)
 
 These packages depend on the following databases:
 
@@ -223,13 +223,11 @@ Note that you have to go through an interaction flow by clicking on the `redirec
 
 #### Admin UI
 
-In order to manage, and view information about the Rafiki instance(s) using a UI, you can navigate to [`localhost:3010`](http://localhost:3010) (Cloud Nine Wallet) or [`localhost:4010`](http://localhost:4010) (Happy Life Bank). This is the `frontend` project which runs a Remix app for querying info and executing mutations against the Rafiki [Admin APIs](#admin-apis).
+In order to manage, and view information about the Rafiki instance(s) you can use the [Rafiki Admin](/rafikiadmin/overview) UI. We have secured access to Rafiki Admin using [Ory Kratos](https://www.ory.sh/docs/kratos/ory-kratos-intro). Since access to the UI is on an invitation-only basis the registration flow is not publicly available. As such, in order to access Rafiki Admin you can click the registration link provided in the logs during `localenv` startup or you can manually add a new user with the invite-user script. Run `docker exec -it <admin-container-name> npm run invite-user -- example@mail.com` and it will output a link to the terminal. Copy and paste this link in your browser and you will automatically be logged in and directed to the account settings page. The next step is changing your password. We're using a simple email and password authentication method.
 
-We have secured access to the Admin UI using [Ory Kratos](https://www.ory.sh/docs/kratos/ory-kratos-intro), a secure and fully open-source identity and user management solution. Check it out on [GitHub](https://github.com/ory/kratos). Since access to the UI is on an invitation-only basis the registration flow is not publicly available. As such, in order to access the Admin UI you can click the registration link provided in the logs during `localenv` startup or you can manually add a new user with the invite-user script. Run `docker exec -it <admin-container-name> npm run invite-user -- example@mail.com` and it will output recovery link to the terminal. The recovery link doubles as the invitation method. Copy and paste this link in your browser and you will automatically be logged in and directed to the account settings page. The next step is changing your password. We're using a simple email and password authentication method.
+Note that a separate registration is required for Cloud Nine Wallet's Rafiki Admin and Happy Life Bank's Rafiki Admin, since they are each designed to run as separate mock account servicing entities. Once you've registered, you can always come back to your Rafiki Admin account by navigating to [`localhost:3010`](http://localhost:3010) (Cloud Nine Wallet) or [`localhost:4010`](http://localhost:4010) (Happy Life Bank) and logging in.
 
-There is a password recovery flow. On the login page if you clkick the `forgot password` link and enter an email for a registered user then you can open [Mail Slurper](http://localhost:4436) to access the recovery link for your account.
-
-We've also included a script to remove users: `docker exec -it <admin-container-name> npm run delete-user -- example@mail.com`.
+You can test the account recovery flow by clicking "Forgot pasword?" on the login page and by navigating to [`localhost:4436`](http://localhost:4436) (Mailslurper interface).
 
 #### Admin APIs
 
