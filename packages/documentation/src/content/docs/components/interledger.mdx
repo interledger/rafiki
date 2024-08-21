@@ -46,9 +46,7 @@ Every payment pointer serves as a Simple Payment Setup Protocol (SPSP) endpoint 
 
 ## Simple Payment Setup Protocol (SPSP)
 
-<LinkOut href='https://interledger.org/developers/rfcs/simple-payment-setup-protocol/'>
-  SPSP
-</LinkOut> is an application layer protocol that uses HTTPS to exchange payment information.
+The <LinkOut href='https://interledger.org/developers/rfcs/simple-payment-setup-protocol/'>Simple Payment Setup Protocol (SPSP)</LinkOut> is an application layer protocol that uses HTTPS to exchange payment information.
 Every payment pointer issued by Rafiki serves as an SPSP endpoint by default (`ENABLE_SPSP_PAYMENT_POINTERS`).
 
 When a `GET` request is made to a payment pointer, the response contains the ILP address of the destination account and a shared secret. These details are needed to set up a STREAM connection between two counterparties to facilitate direct payments over Interledger.
