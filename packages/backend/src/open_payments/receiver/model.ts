@@ -29,8 +29,12 @@ export class Receiver {
   public readonly assetCode: string
   public readonly assetScale: number
   public readonly incomingPayment: ReceiverIncomingPayment
+  public readonly isLocal: boolean
 
-  constructor(incomingPayment: OpenPaymentsIncomingPaymentWithPaymentMethod) {
+  constructor(
+    incomingPayment: OpenPaymentsIncomingPaymentWithPaymentMethod,
+    isLocal: boolean
+  ) {
     if (incomingPayment.completed) {
       throw new Error('Cannot create receiver from completed incoming payment')
     }
@@ -76,6 +80,7 @@ export class Receiver {
       createdAt: new Date(incomingPayment.createdAt),
       updatedAt: new Date(incomingPayment.updatedAt)
     }
+    this.isLocal = isLocal
   }
 
   public get asset(): AssetOptions {
