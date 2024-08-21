@@ -206,7 +206,11 @@ async function pay(
     destinationAccount: incomingPayment,
     // finalDebitAmount: 610n
     // finalReceiveAmount: 500n
-    // ^ consistent with ilp payment method
+    // ^ consistent with amounts passed into ilpPaymentMethodService.pay and Pay.pay
+    // ^ inconsisten with transfer passed into createTrasnfer in balance middleware
+    //   - that is sourceAmount: 500, destinationAmount: 500
+    //   - this transfer gets 500 from the request.prepare (formed from Pay.pay?). request.prepare
+    //     is the sourceAmount then the destinationAmount is derived from it with rates.convert
     sourceAmount: finalDebitAmount,
     destinationAmount: finalReceiveAmount,
     transferType: TransferType.TRANSFER
