@@ -121,14 +121,13 @@ export class WalletAddress
       resourceServer
     }
     if (this.additionalProperties && this.additionalProperties.length) {
-      returnVal.additionalProperties = this.additionalProperties.reduce(
-        (acc, property) => {
+      returnVal.additionalProperties = this.additionalProperties
+        .filter((property) => property.visibleInOpenPayments)
+        .reduce((acc, property) => {
           //@ts-expect-error Element implicitly has an 'any' type because expression of type 'string' can't be used to index type '{}'.
           acc[property.fieldKey] = property.fieldValue
           return acc
-        },
-        {}
-      )
+        }, {})
     }
     return returnVal
   }
