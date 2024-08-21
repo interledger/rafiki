@@ -10,7 +10,7 @@ The objective of the telemetry feature is to gather metrics and establish an inf
 - The number of transactions that have been at least partially successful.
 - The number of ILP packets flowing through the network.
 - The average amount of money held within the network per transaction.
-- The avergae time it takes for an outgoing payment to complete.
+- The average time it takes for an outgoing payment to complete
 
 We aim to track the growth of the network in terms of transaction sizes and the number of transactions processed. Our goal is to use these data for our own insights and to enable [Account Servicing Entities](/reference/glossary#account-servicing-entity) (ASEs) to gain their own insights.
 

@@ -12,7 +12,7 @@ The first decision in collecting this data was whether to do so on the sender's 
 
 We also considered collecting metrics on both the sending and receiving sides, capturing metrics when prepare packets were received by the receiver and when fulfill or reject responses were received by the sender. However, this could lead to unreliable metrics, as telemetry is optional and might not be enabled on all nodes.
 
-### Why We Chose to collect metrics before and after the sendering node's middlware routes
+### Why We Chose to collect metrics before and after the sending node's middleware routes
 
 Given these considerations, we decided to place our packet count and amount metrics within the Rafiki Connector Core. The core plays a crucial role in processing ILP packets, handling both outgoing payments and quotes.
 
@@ -33,7 +33,7 @@ In a scenario where a sender (node A) wants to send money to the receiver (node 
 
 sender (node A) --> connector (node B) --> receiver (node C)
 
-With the cuirrent metric collection location, we only collect packet count and amount infomation from the sender (at node A) and we miss the packets and amounts forwarded by the connecting node (node B). Ideally we'd like to collect information from the sender and the connector nodes once multihop routing has been implemented.
+With the current metric collection location, we only collect packet count and amount infomation from the sender (at node A) and we miss the packets and amounts forwarded by the connecting node (node B). Ideally we'd like to collect information from the sender and the connector nodes once multihop routing has been implemented.
 
 ### Other Considered Locations for Metrics Collection
 
