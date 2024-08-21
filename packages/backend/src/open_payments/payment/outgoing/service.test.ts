@@ -1195,7 +1195,13 @@ describe('OutgoingPaymentService', (): void => {
         withdrawAmount: 0n
       })
 
-      expect(incrementTrxCounterSpy).toHaveBeenCalledTimes(1)
+      expect(incrementTrxCounterSpy).toHaveBeenCalledWith(
+        'transactions_total',
+        1,
+        {
+          description: 'Count of funded transactions'
+        }
+      )
     })
 
     test('Telemetry Transaction Counter does not increments for FAILED transactions', async (): Promise<void> => {
