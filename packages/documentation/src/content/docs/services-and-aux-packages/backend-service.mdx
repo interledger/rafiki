@@ -2,4 +2,72 @@
 title: Backend service
 ---
 
-## Placeholder
+import { LinkOut } from '@interledger/docs-design-system'
+
+<p>
+  <mark>
+    link to /integration/deploy-to-prod/environment-variables BACKEND when
+    available
+  </mark>
+</p>
+
+Rafiki’s <LinkOut href="https://github.com/interledger/rafiki/tree/main/packages/backend">`backend`</LinkOut> service is the software’s main service for handling business logic and external communication. The service is responsible for:
+
+- Exposing the endpoints of the [Open Payments APIs](#open-payments) for public clients to perform account management tasks. This is the external communication piece.
+- Exposing an [Interledger connector](#interledger-connector) to send and receive STREAM packets with peers.
+- Enabling you to manage accounts and track balances.
+- Exposing an internal [GraphQL Backend Admin API](#graphql-backend-admin-api) for service operators to manage accounts and application settings, like peering relationships.
+
+## Requirements
+
+The following are required when using the `backend` service.
+
+- A Redis database as a cache to share STREAM connection details across processes
+- A Postgres database, separate from the `auth` service’s database, for Open Payments resources
+- TigerBeetle or a separate Postgres database for accounting balances at the ILP layer
+  :::note
+  You can use the same database instance of Postgres for the `backend` service, `auth` service, and accounting balances (if not using TigerBeetle). However, separate database schemas are required within the Rafiki instance to maintain boundaries between the objects being managed.
+  :::
+
+## Open Payments
+
+The `backend` service exposes the Open Payments APIs, which are auth-protected using an opinionated version of the Grant Negotiation and Authorization Protocol (GNAP). Review the [`auth`](/services-and-aux-packages/auth-service) service page for more details about grant authorization and authentication.
+
+The `backend` service allows you to manage Open Payments <LinkOut href="https://openpayments.dev/introduction/op-concepts/#incoming-payment">incoming payments</LinkOut>, <LinkOut href="https://openpayments.dev/introduction/op-concepts/#quote">quotes</LinkOut>, and
+
+<LinkOut href='https://openpayments.dev/introduction/op-concepts/#outgoing-payment'>
+  outgoing payments
+</LinkOut>
+. Quotes and outgoing payments call the ILP connector, described in the next
+section, to send ILP packets. Quoting sends unfulfillable probe packets, for
+example to determine a transaction’s cost before executing the payment. Outgoing
+payments send packets as part of executing the payment.
+
+:::note
+The calls to the ILP connector are made by calling the `makeIlpPlugin`, which is an implementation detail of an ILP connector that Rafiki will abstract. After calling the plugin, it will be passed to the <LinkOut href="https://github.com/interledgerjs/interledgerjs/tree/master/packages/pay">`@interledger/pay`</LinkOut> library to facilitate sending payments over Interledger using STREAM.
+:::
+
+## Interledger connector
+
+The `backend` service exposes an ILP connector to send and receive STREAM packets between peers.
+
+The roles of the connector include:
+
+- Accepting packets via ILP over HTTP and authenticating the packets against ILP account credentials. An incoming packet is only accepted if it's from a configured peer and accompanied by the peer’s incoming HTTP `authToken`.
+- Converting currencies.
+- Routing packets to the appropriate peers if you are not the intended recipient. Otherwise the packets will terminate at your local Rafiki’s STREAM server.
+- Fulfilling packets with an internal STREAM server.
+
+The connector receives incoming packets via HTTP and/or direct calls from within the `backend`. The `backend` includes an HTTP server listening on the configured `CONNECTOR_PORT`.
+
+The amounts within ILP packets are used to update account balances in your accounting database (TigerBeetle or Postgres). Amounts are adjusted based on Rafiki’s configured [exchange rates](/integration/deploy-to-prod/endpoints/exchange-rates) service and the asset used by the sending (outgoing) and receiving (destination) accounts. The total amount received for the STREAM connection is tracked in Redis in order to support <LinkOut href="https://interledger.org/developers/rfcs/stream-receipts/">STREAM receipts</LinkOut>.
+
+## GraphQL Backend Admin API
+
+The `backend` service exposes a GraphQL [Backend Admin API](/apis/graphql/admin-api-overview#backend-admin-api) to manage:
+
+- Assets
+- Peers
+- Wallet addresses
+- Open Payments resources
+- Several types of liquidity

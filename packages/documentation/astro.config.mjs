@@ -148,10 +148,6 @@ export default defineConfig({
                   ]
                 },
                 {
-                  label: 'Admin APIs',
-                  link: 'integration/admin-apis'
-                },
-                {
                   label: 'Integrator checklist',
                   link: 'integration/integrator-checklist'
                 }
@@ -224,7 +220,7 @@ export default defineConfig({
               ]
             },
             {
-              label: 'Admin APIs',
+              label: 'APIs',
               collapsed: true,
               items: [
                 {
@@ -232,8 +228,8 @@ export default defineConfig({
                   collapsed: true,
                   items: [
                     {
-                      label: 'Idempotency',
-                      link: 'apis/graphql/idempotency'
+                      label: 'Overview',
+                      link: 'apis/graphql/admin-api-overview'
                     },
                     {
                       label: 'Backend Admin API',
@@ -258,10 +254,10 @@ export default defineConfig({
               ]
             },
             {
-              label: 'Reference',
+              label: 'Resources',
               collapsed: true,
               autogenerate: {
-                directory: 'reference'
+                directory: 'resources'
               }
             }
           ]

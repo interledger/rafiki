@@ -2,4 +2,26 @@
 title: Architecture
 ---
 
-## Placeholder
+import { LinkOut } from '@interledger/docs-design-system'
+
+<p>
+  <mark>Needs updated diagram(s)</mark>
+</p>
+
+Rafiki is a collection of three services that run together. Each one can be scaled horizontally.
+
+- [backend](/services-and-aux-packages/backend-service) - The main service, responsible for handling business logic and external communication
+- [auth](/services-and-aux-packages/auth-service) - A reference implementation of an Open Payments authorization server, used for grant authorization and authentication
+- [frontend](/services-and-aux-packages/frontend-service) - An optional internal admin UI for you to manage your Rafiki instance
+
+These services rely on four databases.
+
+- A Postgres database used by the `backend` service for Open Payments resources
+- A separate Postgres database used by the `auth` service for storing auth-related resources (grants, access tokens, and interactions)
+- <LinkOut href='https://github.com/tigerbeetle/tigerbeetle'>
+    TigerBeetle
+  </LinkOut>
+  , used by the `backend` service for accounting balances at the ILP layer
+- Redis, used by the `backend` service as a cache to share STREAM connection details across processes and by the `auth` service to store session data
+
+An additional package for [token introspection](/services-and-aux-packages/token-introspection) is also included with Rafiki. This is an internal package that requires no action on your part if you’re using Rafiki’s `auth` service.
