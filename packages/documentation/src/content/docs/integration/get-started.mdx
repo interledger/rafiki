@@ -2,4 +2,36 @@
 title: Get started
 ---
 
-## Placeholder
+import { LinkOut } from '@interledger/docs-design-system'
+
+:::caution
+Rafiki is intended for use by Account Servicing Entities only and should not be used in production by non-regulated entities.
+:::
+
+As an account servicing entity, you provide and maintain payment accounts for your customers via your ledger. By integrating Rafiki with your backend environment, you bring Interledger functionality to those accounts, enabling them to transact with other accounts on different ledgers connected by the Interledger network.
+
+## Prerequisites
+
+To deploy, integrate, and operate Rafiki with your backend production environment, you will need the following components running in your infrastructure:
+
+- <LinkOut href='https://docs.docker.com/get-started/get-docker/'>
+    Docker
+  </LinkOut>
+- <LinkOut href='https://nodejs.org/en/download/package-manager/current'>
+    Node JS version 20 (LTS)
+  </LinkOut>
+
+If you will be deploying to the cloud, then you will need the following additional components in your environment:
+
+- [nginx](/integration/deploy-to-prod/deploy-to-cloud/nginx) (if deploying all containers to a single node)
+- [Helm and Kubernetes](/integration/deploy-to-prod/deploy-to-cloud/helm-k8s) (if deploying containers across a distributed environment)
+
+## Configuration
+
+To make your customers’ accounts Interledger-enabled, you must configure your Rafiki instance with these endpoints and services:
+
+- [Exchange Rates](/integration/deploy-to-prod/endpoints/exchange-rates)
+- [Webhook Events](/integration/deploy-to-prod/endpoints/webhook-events)
+- [Identity Provider](/integration/deploy-to-prod/endpoints/idp)
+
+In addition, each account you manage on your ledger must be issued at least one [wallet address](/integration/deploy-to-prod/running-your-instance/creating-wallet-address) to send and receive payments across the Interledger network.

@@ -2,4 +2,90 @@
 title: IDP
 ---
 
-## Placeholder
+import { LinkOut } from '@interledger/docs-design-system'
+
+import { CodeBlock } from '@interledger/docs-design-system'
+
+An identity provider (IdP) is a system or service that manages user authentication, identity information, and consent. When you use your Google account credentials to “Sign in with Google” on an app or website, for example, Google is acting as your identity provider.
+
+To facilitate payments initiated by third party applications (clients) via the [Open Payments APIs](/components/open-payments) on your users' accounts, you must integrate your Rafiki instance with your IdP to handle user authentication and consent. This authentication and consent facilitates the authorization of grants to resources provided by Open Payments. The Rafiki `backend` package exposes the APIs for Open Payments, and the Rafiki `auth` package provides an Authorization Server (AS), which serves as a reference implementation of an opinionated version of the <LinkOut href="https://datatracker.ietf.org/doc/html/draft-ietf-gnap-core-protocol">Grant Negotiation Authorization Protocol (GNAP)</LinkOut> that authorizes requests to those APIs.
+
+The AS in the auth package extends its own API for integrating an IdP with Rafiki. This Auth Admin API, different from the Backend Admin API, facilitates interactions to obtain user consent, authorize a grant, fetch information about a particular grant, and communicate that a user has authorized a grant. An OpenAPI specification of these API endpoints can be found <LinkOut href="https://github.com/interledger/rafiki/blob/main/packages/auth/src/openapi/specs/id-provider.yaml">here</LinkOut>.
+
+## Integrate IdP with Rafiki
+
+### Prerequisites
+
+To integrate your IdP with your Rafiki instance, you must define the following [environment variables](/integration/deploy-to-prod/environment-variables):
+
+`IDENTITY_SERVER_DOMAIN` : the URL the AS will redirect the user to complete an interaction and authorize a grant.
+
+`IDENTITY_SERVER_SECRET` : a shared secret between the AS and IdP that the AS will use to secure its IDP-related endpoints. The IdP must provide this secret when it sends requests to the AS.
+
+### Endpoints
+
+There are five main endpoints that facilitate the communication between the IdP and the AS after a pending grant request has been created. Each specific interaction of an endpoint is identified by an interaction `id` and an interaction `nonce`. Both the `id` and the `nonce` are provided as query parameters when the authorization server redirects to the IdP.
+
+The endpoints are called in the following sequence:
+
+#### Establish interaction session
+
+Called by the client and establishes an interactive session with the AS, which redirects the browser session to the IdP consent screen.
+
+| Method | URL                  |
+| ------ | -------------------- |
+| `GET`  | /interact/:id/:nonce |
+
+#### Fetch grant information
+
+Called by the IdP and requests the AS for grant information to list out all of the access rights requested by the client. The access rights requested will be presented to the user on the consent screen. The response is served on the `INTERACTION_PORT`, which is 3009 by default.
+
+| Method | URL               |
+| ------ | ----------------- |
+| `GET`  | /grant/:id/:nonce |
+
+| Header         | Description                                                                                                                           | Required |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| `x-idp-secret` | Used to secure communication between IdP and AS using the shared secret defined in the `IDENTITY_SERVER_SECRET` environment variable. | Y        |
+
+#### Accept or reject grant
+
+IdP communicates the user’s acceptance or rejection on the consent screen to the AS and then redirects to `GET /interact/:id/:nonce/finish`. The response is served on `INTERACTION_PORT`, which is 3009 by default.
+
+| Method | URL               |
+| ------ | ----------------- |
+| `GET`  | /grant/:id/:nonce |
+
+| Header         | Description                                                                                                                           | Required |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| `x-idp-secret` | Used to secure communication between IdP and AS using the shared secret defined in the `IDENTITY_SERVER_SECRET` environment variable. | Y        |
+
+#### Finish interaction
+
+IdP ends the interaction initiated by `GET /interact/:id/:nonce` and redirects the browser session to the URI of the <LinkOut href="https://openpayments.dev/apis/auth-server/operations/post-request/">grant initialization request</LinkOut>. A query parameter will indicate a failure, or on success, a SHA-256 hash parameter that the client can use to verify the successful interaction.
+
+| Method | URL                         |
+| ------ | --------------------------- |
+| `GET`  | /interact/:id/:nonce/finish |
+
+| Query Parameters | Description                                                                                                                                                                                                                                   | Required |
+| ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| `id`             | Interaction ID                                                                                                                                                                                                                                | Y        |
+| `nonce`          | Interaction nonce                                                                                                                                                                                                                             | Y        |
+| `result`         | Success or failure grant authorization. In case of success, the SHA-256 hash of the interaction is sent in the response along with `interact_ref` that identifies the interaction on the AS, and the URI of the grant initialization request. | Y        |
+
+The following tables list examples of the different possible response types on this endpoint.
+
+| Response | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            | Example                                                                                                                          |
+| -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| Rejected | The interaction was rejected by the user.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              | `?result=grant_rejected`                                                                                                         |
+| Invalid  | The grant was not in a state where it could be accepted or rejected (e.g., grant was already approved)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 | `?result=grant_invalid`                                                                                                          |
+| Success  | The grant was successful with the following returned in the response: <ul><li>A hash representing the SHA-256 hash of values provided by the client in the <LinkOut href="https://openpayments.dev/apis/auth-server/operations/post-request/">grant initialization request</LinkOut> (`interact.finish.nonce`), and the values in the response returned from the AS (`interact.finish`).</li> <li>The `interact_ref` that identifies the interaction on the AS alongside the hash</li> <li>The URI of the grant initialization request (e.g., `https://www.auth-server.com`)</li></ul> | `hash=p28jsq0Y2KK3WS__a42tavNC64ldGTBroywsWxT4md_jZQ1R\HZT8BOWYHcLmObM7XHPAdJzTZMtKBsaraJ64A &interact_ref=4IFWWIKYBC2PQ6U56NL1` |
+
+#### Continue grant
+
+The client requests a grant from the AS for an accepted interaction. The AS responds with an <LinkOut href="https://openpayments.dev/apis/auth-server/operations/post-continue/">access token</LinkOut>.
+
+| Method | URL                  |
+| ------ | -------------------- |
+| `POST` | /interact/:id/:nonce |
