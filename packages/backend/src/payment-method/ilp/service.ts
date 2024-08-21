@@ -251,8 +251,6 @@ async function pay(
   }
 
   const plugin = deps.makeIlpPlugin({
-    // TODO: what is the outgoingPayment.quote.receiveAmountValue in local pay??
-    // is it 500n or 610n? maybe outgoing payment quote is wrong?
     // outgoingPayment.quote.receiveAmountValue:  500n
     // outgoingPayment.quote.debitAmountValue:  617n
     sourceAccount: outgoingPayment
