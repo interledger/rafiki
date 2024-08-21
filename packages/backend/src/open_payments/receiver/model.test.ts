@@ -42,6 +42,7 @@ describe('Receiver Model', (): void => {
       const incomingPayment = await createIncomingPayment(deps, {
         walletAddressId: walletAddress.id
       })
+      const isLocal = true
 
       const streamCredentials = streamCredentialsService.get(incomingPayment)
       assert(streamCredentials)
@@ -50,7 +51,8 @@ describe('Receiver Model', (): void => {
         incomingPayment.toOpenPaymentsTypeWithMethods(
           walletAddress,
           streamCredentials
-        )
+        ),
+        isLocal
       )
 
       expect(receiver).toEqual({
@@ -74,7 +76,8 @@ describe('Receiver Model', (): void => {
               sharedSecret: base64url(streamCredentials.sharedSecret)
             }
           ]
-        }
+        },
+        isLocal
       })
     })
 
@@ -96,7 +99,7 @@ describe('Receiver Model', (): void => {
           streamCredentials
         )
 
-      expect(() => new Receiver(openPaymentsIncomingPayment)).toThrow(
+      expect(() => new Receiver(openPaymentsIncomingPayment, false)).toThrow(
         'Cannot create receiver from completed incoming payment'
       )
     })
@@ -116,7 +119,7 @@ describe('Receiver Model', (): void => {
           streamCredentials
         )
 
-      expect(() => new Receiver(openPaymentsIncomingPayment)).toThrow(
+      expect(() => new Receiver(openPaymentsIncomingPayment, false)).toThrow(
         'Cannot create receiver from expired incoming payment'
       )
     })
@@ -137,7 +140,7 @@ describe('Receiver Model', (): void => {
           streamCredentials
         )
 
-      expect(() => new Receiver(openPaymentsIncomingPayment)).toThrow(
+      expect(() => new Receiver(openPaymentsIncomingPayment, false)).toThrow(
         'Invalid ILP address on ilp payment method'
       )
     })

@@ -56,7 +56,8 @@ export async function createOutgoingPayment(
           incomingPayment.toOpenPaymentsTypeWithMethods(
             walletAddress,
             streamCredentials
-          )
+          ),
+          false
         )
       )
   }
@@ -124,7 +125,8 @@ export async function createOutgoingPaymentWithReceiver(
     incomingPayment.toOpenPaymentsTypeWithMethods(
       args.receivingWalletAddress,
       streamCredentials
-    )
+    ),
+    false
   )
 
   const outgoingPayment = await createOutgoingPayment(deps, {
