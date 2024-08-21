@@ -477,6 +477,7 @@ async function fundPayment(
     const error = await deps.accountingService.createDeposit({
       id: transferId,
       account: payment,
+      // ilp - 617n (not final sentAmount)
       amount
     })
     if (error) {

@@ -238,7 +238,11 @@ async function pay(
 
   const quote: Pay.Quote = {
     maxPacketAmount,
+    // TODO: is paymentType controlling something in Pay.pay that we should be replicating in
+    // local payment method?
     paymentType: Pay.PaymentType.FixedDelivery,
+    // finalDebitAmount: 617n
+    // finalReceiveAmount: 500n
     maxSourceAmount: finalDebitAmount,
     minDeliveryAmount: finalReceiveAmount,
     lowEstimatedExchangeRate,
@@ -247,12 +251,18 @@ async function pay(
   }
 
   const plugin = deps.makeIlpPlugin({
+    // TODO: what is the outgoingPayment.quote.receiveAmountValue in local pay??
+    // is it 500n or 610n? maybe outgoing payment quote is wrong?
+    // outgoingPayment.quote.receiveAmountValue:  500n
+    // outgoingPayment.quote.debitAmountValue:  617n
     sourceAccount: outgoingPayment
   })
 
   const destination = receiver.toResolvedPayment()
 
   try {
+    // receipt.amountDelivered: 500n
+    // receipt.amountSent: 500n
     const receipt = await Pay.pay({ plugin, destination, quote })
 
     if (receipt.error) {

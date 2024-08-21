@@ -78,8 +78,8 @@ export async function handleSending(
 
   const payStartTime = Date.now()
   // TODO: use receiver.isLocal
-  const isLocal = false
-  // const isLocal = true
+  // const isLocal = false
+  const isLocal = true
   await deps.paymentMethodHandlerService.pay(isLocal ? 'LOCAL' : 'ILP', {
     receiver,
     outgoingPayment: payment,

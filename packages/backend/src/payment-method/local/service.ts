@@ -21,6 +21,7 @@ import {
 } from '../../accounting/errors'
 import { InsufficientLiquidityError } from 'ilp-packet/dist/errors'
 import { IncomingPaymentService } from '../../open_payments/payment/incoming/service'
+import { IncomingPaymentState } from '../../open_payments/payment/incoming/model'
 
 export interface LocalPaymentService extends PaymentMethodService {}
 
@@ -173,35 +174,49 @@ async function pay(
     })
   }
 
-  // TODO: refine this. hastily copied from rafiki/packages/backend/src/payment-method/ilp/connector/core/middleware/account.ts
+  // TODO: anything more needed from balance middleware?
   // Necessary to avoid `UnknownDestinationAccount` error
-  try {
-    await deps.accountingService.createLiquidityAccount(
-      incomingPayment,
-      LiquidityAccountType.INCOMING
-    )
-    deps.logger.debug(
-      { incomingPayment },
-      'Created liquidity account for local incoming payment'
-    )
-  } catch (err) {
-    if (!(err instanceof AccountAlreadyExistsError)) {
-      deps.logger.error(
-        { incomingPayment, err },
-        'Failed to create liquidity account for local incoming payment'
+  // TODO: remove incoming state check? perhaps only applies ilp account middleware where its checking many different things
+  if (incomingPayment.state === IncomingPaymentState.Pending) {
+    try {
+      await deps.accountingService.createLiquidityAccount(
+        incomingPayment,
+        LiquidityAccountType.INCOMING
       )
-      throw err
+      deps.logger.debug(
+        { incomingPayment },
+        'Created liquidity account for local incoming payment'
+      )
+    } catch (err) {
+      if (!(err instanceof AccountAlreadyExistsError)) {
+        deps.logger.error(
+          { incomingPayment, err },
+          'Failed to create liquidity account for local incoming payment'
+        )
+        throw err
+      }
     }
   }
 
   const transferOptions: TransferOptions = {
+    // outgoingPayment.quote.debitAmount = 610n
+    // outgoingPayment.quote.receiveAmount = 500n
+    // ^ consistent with ilp payment method
     sourceAccount: outgoingPayment,
     destinationAccount: incomingPayment,
+    // finalDebitAmount: 610n
+    // finalReceiveAmount: 500n
+    // ^ consistent with ilp payment method
     sourceAmount: finalDebitAmount,
     destinationAmount: finalReceiveAmount,
     transferType: TransferType.TRANSFER
   }
 
+  // Here, createTransfer gets debitAmount = 610 and receiveAmount =  500n
+  // however, in ilp balance middleware its 500/500. In ilpPaymentService.pay,
+  // Pay.pay is called with the same sort of quote as here. debitAmount = 617 (higher due to slippage?)
+  // and receiveAmount =  500. There is some adjustment happening between Pay.pay (in Pay.pay?)
+  // (in ilpPaymentMethodService.pay) and createTransfer in the connector balance middleware
   const trxOrError =
     await deps.accountingService.createTransfer(transferOptions)
 
@@ -218,4 +233,5 @@ async function pay(
         throw new Error('Unknown error while trying to create transfer')
     }
   }
+  await trxOrError.post()
 }

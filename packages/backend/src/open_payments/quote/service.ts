@@ -114,8 +114,8 @@ async function createQuote(
   try {
     const receiver = await resolveReceiver(deps, options)
     // TODO: use reciver.isLocal
-    const isLocal = false
-    // const isLocal = true
+    // const isLocal = false
+    const isLocal = true
     const quote = await deps.paymentMethodHandlerService.getQuote(
       isLocal ? 'LOCAL' : 'ILP',
       {

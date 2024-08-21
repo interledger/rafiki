@@ -153,6 +153,7 @@ export class Rafiki<T = any> {
     unfulfillable: boolean,
     rawPrepare: Buffer
   ): Promise<Buffer> {
+    // prepare amount = 500
     const prepare = new ZeroCopyIlpPrepare(rawPrepare)
     const response = new IlpResponse()
 
