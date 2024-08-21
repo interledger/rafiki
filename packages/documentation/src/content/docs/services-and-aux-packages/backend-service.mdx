@@ -33,15 +33,7 @@ The following are required when using the `backend` service.
 
 The `backend` service exposes the Open Payments APIs, which are auth-protected using an opinionated version of the Grant Negotiation and Authorization Protocol (GNAP). Review the [`auth`](/services-and-aux-packages/auth-service) service page for more details about grant authorization and authentication.
 
-The `backend` service allows you to manage Open Payments <LinkOut href="https://openpayments.dev/introduction/op-concepts/#incoming-payment">incoming payments</LinkOut>, <LinkOut href="https://openpayments.dev/introduction/op-concepts/#quote">quotes</LinkOut>, and
-
-<LinkOut href='https://openpayments.dev/introduction/op-concepts/#outgoing-payment'>
-  outgoing payments
-</LinkOut>
-. Quotes and outgoing payments call the ILP connector, described in the next section,
-to send ILP packets. Quoting sends unfulfillable probe packets, for example to determine
-a transaction’s cost before executing the payment. Outgoing payments send packets
-as part of executing the payment.
+The `backend` service allows you to manage Open Payments <LinkOut href="https://openpayments.dev/introduction/op-concepts/#incoming-payment">incoming payments</LinkOut>, <LinkOut href="https://openpayments.dev/introduction/op-concepts/#quote">quotes</LinkOut>, and <LinkOut href='https://openpayments.dev/introduction/op-concepts/#outgoing-payment'>outgoing payments</LinkOut>. Quotes and outgoing payments call the ILP connector, described in the next section, to send ILP packets. Quoting sends unfulfillable probe packets, for example to determine a transaction’s cost before executing the payment. Outgoing payments send packets as part of executing the payment.
 
 :::note
 The calls to the ILP connector are made by calling the `makeIlpPlugin`, which is an implementation detail of an ILP connector that Rafiki will abstract. After calling the plugin, it will be passed to the <LinkOut href="https://github.com/interledgerjs/interledgerjs/tree/master/packages/pay">`@interledger/pay`</LinkOut> library to facilitate sending payments over Interledger using STREAM.
