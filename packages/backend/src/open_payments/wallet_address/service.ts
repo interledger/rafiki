@@ -296,12 +296,10 @@ async function getWalletAddressByUrl(
   url: string
 ): Promise<WalletAddress | undefined> {
   url = url.toLowerCase()
-  console.log('This is what we are looking for: ', url)
   const walletAddress = await WalletAddress.query(deps.knex)
   .where('url', 'ilike', `%${url}%`)  // Usamos 'where' con 'ilike' para hacer la consulta
     .limit(1)
     .withGraphFetched('asset')
-    console.log("Wawawaw ", walletAddress)
   return walletAddress[0] || undefined
 }
 
