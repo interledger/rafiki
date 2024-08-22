@@ -48,6 +48,26 @@ describe('Connector Core Telemetry', () => {
     expect(incrementCounterSpy).toHaveBeenCalledWith(name, amount, attributes)
   })
 
+  it('incrementPreparePacketCount should not increment when the prepare is unfulfillable', () => {
+    const incrementCounterSpy = jest
+      .spyOn(telemetryService!, 'incrementCounter')
+      .mockImplementation(() => Promise.resolve())
+
+    incrementPreparePacketCount(true, prepareAmount, telemetryService)
+
+    expect(incrementCounterSpy).not.toHaveBeenCalled()
+  })
+
+  it('incrementPreparePacketCount should not increment when the prepare if the prepareAmount is not truthy', () => {
+    const incrementCounterSpy = jest
+      .spyOn(telemetryService!, 'incrementCounter')
+      .mockImplementation(() => Promise.resolve())
+
+    incrementPreparePacketCount(unfulfillable, '0', telemetryService)
+
+    expect(incrementCounterSpy).not.toHaveBeenCalled()
+  })
+
   it('incrementFulfillOrRejectPacketCount should create a packet_count_fulfill counter and increment it by one when there is a fulfill response', () => {
     const incrementCounterSpy = jest
       .spyOn(telemetryService!, 'incrementCounter')
@@ -94,6 +114,42 @@ describe('Connector Core Telemetry', () => {
     expect(incrementCounterSpy).toHaveBeenCalledWith(name, amount, attributes)
   })
 
+  it('incrementFulfillOrRejectPacketCount should not increment when the prepare is unfulfillable', () => {
+    const incrementCounterSpy = jest
+      .spyOn(telemetryService!, 'incrementCounter')
+      .mockImplementation(() => Promise.resolve())
+
+    const response = new IlpResponse()
+    response.reject = IlpRejectFactory.build()
+
+    incrementFulfillOrRejectPacketCount(
+      true,
+      prepareAmount,
+      response,
+      telemetryService
+    )
+
+    expect(incrementCounterSpy).not.toHaveBeenCalled()
+  })
+
+  it('incrementFulfillOrRejectPacketCount should not increment when the prepare if the prepareAmount is not truthy', () => {
+    const incrementCounterSpy = jest
+      .spyOn(telemetryService!, 'incrementCounter')
+      .mockImplementation(() => Promise.resolve())
+
+    const response = new IlpResponse()
+    response.reject = IlpRejectFactory.build()
+
+    incrementFulfillOrRejectPacketCount(
+      unfulfillable,
+      '0',
+      response,
+      telemetryService
+    )
+
+    expect(incrementCounterSpy).not.toHaveBeenCalled()
+  })
+
   it('incrementAmount should create a packet_amount_fulfill counter and increment it by one', () => {
     const incrementCounterSpy = jest
       .spyOn(telemetryService!, 'incrementCounterWithTransactionAmount')
@@ -121,5 +177,71 @@ describe('Connector Core Telemetry', () => {
     )
 
     expect(incrementCounterSpy).toHaveBeenCalledWith(name, amount, attributes)
+  })
+
+  it('incrementAmount should not increment when the prepare is unfulfillable', () => {
+    const incrementCounterSpy = jest
+    .spyOn(telemetryService!, 'incrementCounterWithTransactionAmount')
+    .mockImplementation(() => Promise.resolve())
+
+    const code = 'USD'
+    const scale = 2
+    const response = new IlpResponse()
+    response.fulfill = IlpFulfillFactory.build()
+
+    incrementAmount(
+      true,
+      prepareAmount,
+      response,
+      code,
+      scale,
+      telemetryService
+    )
+
+    expect(incrementCounterSpy).not.toHaveBeenCalled()
+  })
+
+  it('incrementAmount should not increment when the prepare if the prepareAmount is not truthy', () => {
+    const incrementCounterSpy = jest
+      .spyOn(telemetryService!, 'incrementCounterWithTransactionAmount')
+      .mockImplementation(() => Promise.resolve())
+
+    const code = 'USD'
+    const scale = 2
+    const response = new IlpResponse()
+    response.fulfill = IlpFulfillFactory.build()
+
+    incrementAmount(
+      unfulfillable,
+      '0',
+      response,
+      code,
+      scale,
+      telemetryService
+    )
+
+    expect(incrementCounterSpy).not.toHaveBeenCalled()
+  })
+
+  it('incrementAmount should not increment when the prepare if response is a reject', () => {
+    const incrementCounterSpy = jest
+      .spyOn(telemetryService!, 'incrementCounterWithTransactionAmount')
+      .mockImplementation(() => Promise.resolve())
+
+    const code = 'USD'
+    const scale = 2
+    const response = new IlpResponse()
+    response.reject = IlpRejectFactory.build()
+
+    incrementAmount(
+      unfulfillable,
+      prepareAmount,
+      response,
+      code,
+      scale,
+      telemetryService
+    )
+
+    expect(incrementCounterSpy).not.toHaveBeenCalled()
   })
 })
