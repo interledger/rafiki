@@ -65,7 +65,13 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   }
 
   if (!message) {
-    return json({ message: null, publicEnv, logoutUrl, displaySidebar, authEnabled })
+    return json({
+      message: null,
+      publicEnv,
+      logoutUrl,
+      displaySidebar,
+      authEnabled
+    })
   }
 
   return json(
@@ -103,7 +109,9 @@ export default function App() {
       </head>
       <body className='h-full text-tealish'>
         <div className='min-h-full'>
-          {displaySidebar && <Sidebar logoutUrl={logoutUrl} authEnabled={authEnabled} />}
+          {displaySidebar && (
+            <Sidebar logoutUrl={logoutUrl} authEnabled={authEnabled} />
+          )}
           <div
             className={`pt-20 md:pt-0 flex ${displaySidebar ? 'md:pl-60' : ''} flex-1 flex-col`}
           >

@@ -7,7 +7,7 @@ import { Bars, XIcon } from './icons'
 import { Button } from '~/components/ui'
 
 interface SidebarProps {
-  logoutUrl: string,
+  logoutUrl: string
   authEnabled: boolean
 }
 
