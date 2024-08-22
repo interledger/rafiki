@@ -40,7 +40,10 @@ export async function checkAuthAndRedirect(
       throw redirect('/')
     } else {
       const loggedIn = await isLoggedIn(cookieHeader)
-      if (loggedIn && !isLogoutPage) {
+      if (loggedIn) {
+        if(isLogoutPage) {
+          return
+        }
         throw redirect('/')
       }
       return
