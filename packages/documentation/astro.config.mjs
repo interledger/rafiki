@@ -5,6 +5,8 @@ import remarkMath from 'remark-math'
 import rehypeMathjax from 'rehype-mathjax'
 import GraphQL from 'astro-graphql-plugin'
 import starlightLinksValidator from 'starlight-links-validator'
+import { rehypeHeadingIds } from '@astrojs/markdown-remark'
+import rehypeAutolinkHeadings from 'rehype-autolink-headings'
 
 // https://astro.build/config
 export default defineConfig({
@@ -12,7 +14,16 @@ export default defineConfig({
   outDir: './build',
   markdown: {
     remarkPlugins: [remarkMath],
-    rehypePlugins: [rehypeMathjax]
+    rehypePlugins: [
+      rehypeMathjax,
+      rehypeHeadingIds,
+      [
+        rehypeAutolinkHeadings,
+        {
+          behavior: 'wrap'
+        }
+      ]
+    ]
   },
   integrations: [
     starlight({
