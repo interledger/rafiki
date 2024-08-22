@@ -1,6 +1,12 @@
-import { redirect } from '@remix-run/node'
+import { redirect, type LoaderFunctionArgs } from '@remix-run/node'
 import { Form } from '@remix-run/react'
 import { Button } from '../components/ui'
+import { checkAuthAndRedirect } from '../lib/kratos_checks.server'
+
+export const loader = async ({ request }: LoaderFunctionArgs) => {
+  const cookies = request.headers.get('cookie')
+  await checkAuthAndRedirect(request.url, cookies)
+}
 
 export default function Logout() {
   return (

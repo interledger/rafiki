@@ -5,6 +5,9 @@ import variables from './envConfig.server'
 export async function isLoggedIn(
   cookieHeader?: string | null
 ): Promise<boolean> {
+  if (!variables.authEnabled) {
+    return false
+  }
   try {
     const session = await axios.get(
       `${variables.kratosContainerPublicUrl}/sessions/whoami`,
@@ -24,33 +27,35 @@ export async function isLoggedIn(
   }
 }
 
-export async function redirectIfUnauthorizedAccess(
+export async function checkAuthAndRedirect(
   url: string,
   cookieHeader?: string | null
 ) {
   const isAuthPath = new URL(url).pathname.startsWith('/auth')
-
-  if (!isAuthPath) {
-    const loggedIn = await isLoggedIn(cookieHeader)
-    if (!loggedIn) {
-      throw redirect('/auth')
-    }
-  }
-  return
-}
-
-export async function redirectIfAlreadyAuthorized(
-  url: string,
-  cookieHeader: string | null,
-  redirectPath: string = '/'
-) {
-  const isAuthPath = new URL(url).pathname.startsWith('/auth')
+  const isSettingsPage = new URL(url).pathname.includes('/settings')
 
   if (isAuthPath) {
-    const loggedIn = await isLoggedIn(cookieHeader)
-    if (loggedIn) {
-      throw redirect(redirectPath)
+    if (!variables.authEnabled) {
+      throw redirect('/')
+    } else {
+      const loggedIn = await isLoggedIn(cookieHeader)
+      if (loggedIn) {
+        throw redirect('/')
+      }
+      return
+    }
+  } else {
+    if (!variables.authEnabled) {
+      if (isSettingsPage) {
+        throw redirect('/')
+      }
+      return
+    } else {
+      const loggedIn = await isLoggedIn(cookieHeader)
+      if (!loggedIn) {
+        throw redirect('/auth')
+      }
+      return
     }
   }
-  return
 }
