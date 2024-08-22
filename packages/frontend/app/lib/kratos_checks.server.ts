@@ -31,35 +31,34 @@ export async function checkAuthAndRedirect(
   url: string,
   cookieHeader?: string | null
 ) {
-  const isAuthPath = new URL(url).pathname.startsWith('/auth')
-  const isSettingsPage = new URL(url).pathname.includes('/settings')
-  const isLogoutPage = new URL(url).pathname.includes('/logout')
+  const { pathname } = new URL(url)
+  const isAuthPath = pathname.startsWith('/auth')
+  const isSettingsPage = pathname.includes('/settings')
+  const isLogoutPage = pathname.includes('/logout')
 
-  if (isAuthPath) {
-    if (!variables.authEnabled) {
+  if (!variables.authEnabled) {
+    // If auth is disabled users shouldn't accesses the auth path or Kratos settings pages
+    if (isAuthPath || isSettingsPage) {
       throw redirect('/')
     } else {
-      const loggedIn = await isLoggedIn(cookieHeader)
-      if (loggedIn) {
-        if(isLogoutPage) {
-          return
-        }
-        throw redirect('/')
-      }
       return
     }
+  }
+
+  // auth is enabled
+  const loggedIn = await isLoggedIn(cookieHeader)
+
+  // Logged-in users can access all pages except auth pages, with the exception of the manual logout page
+  if (loggedIn) {
+    if (isAuthPath && !isLogoutPage) {
+      throw redirect('/')
+    }
+    return
   } else {
-    if (!variables.authEnabled) {
-      if (isSettingsPage) {
-        throw redirect('/')
-      }
-      return
-    } else {
-      const loggedIn = await isLoggedIn(cookieHeader)
-      if (!loggedIn) {
-        throw redirect('/auth')
-      }
-      return
+    // Unauthenticated users can only access auth path pages
+    if (!isAuthPath) {
+      throw redirect('/auth')
     }
+    return
   }
 }

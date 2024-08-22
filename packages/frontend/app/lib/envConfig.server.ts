@@ -9,7 +9,6 @@ const variables = {
 }
 
 if (variables.authEnabled) {
-  // Iterate over the other variables to ensure they have values
   Object.entries(variables).forEach(([key, value]) => {
     if (!value) {
       throw new Error(`Environment variable ${key} is missing`)
