@@ -12,7 +12,7 @@ Your endpoint must accept `GET` requests and respond in the following format:
 
 | Variable Name        | Type   | Description                                                                                                                  | Required |
 | -------------------- | ------ | ---------------------------------------------------------------------------------------------------------------------------- | -------- |
-| `base`               | String | Asset code represented as <LinkOut href="https://en.wikipedia.org/wiki/ISO_4217">ISO 4127 currency code</LinkOut> e.g. `USD` | Y        |
+| `base`               | String | Asset code represented as <LinkOut href="https://en.wikipedia.org/wiki/ISO_4217">ISO 4217 currency code</LinkOut> e.g. `USD` | Y        |
 | `rates`              | Object | Object containing `<asset_code : exchange_rate>` pairs, e.g. `{EUR:0.8930}`                                                  | Y        |
 | `rates.<asset_code>` | Number | Exchange rate given `base` and `<asset_code>`                                                                                | Y        |
 
@@ -108,8 +108,4 @@ These variables are used in the following request example:
 
 ### Rafiki Admin application
 
-You may also add fees via the Rafiki Admin application.
-
-<p>
-  <mark>Needs link to Rafiki Admin User Guide</mark>
-</p>
+You may also add fees via the Rafiki Admin application. See the [Rafiki Admin application user guide](/resources/admin-user-guide/#assets) for more information on configuring asset fees.
