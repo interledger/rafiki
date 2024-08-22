@@ -15,7 +15,7 @@ export interface GrantService {
   get(options: GrantOptions): Promise<Grant | undefined>
   update(grant: Grant, options: UpdateOptions): Promise<Grant>
   getOrCreate(options: GrantOptions): Promise<Grant | GrantError>
-  delete(id: string): Promise<Grant | GrantError>
+  delete(id: string): Promise<Grant>
 }
 
 export interface ServiceDependencies extends BaseService {
@@ -105,7 +105,27 @@ async function getOrCreateGrant(
   deps: ServiceDependencies,
   options: GrantOptions
 ): Promise<Grant | GrantError> {
-  const existingGrant = await Grant.query(deps.knex)
+  const existingGrant = await getExistingGrant(deps, options)
+
+  if (!existingGrant) {
+    return requestNewGrant(deps, options)
+  }
+
+  if (existingGrant.expired) {
+    return (
+      (await rotateTokenAndUpdateGrant(deps, existingGrant)) ??
+      (await requestNewGrant(deps, options))
+    )
+  }
+
+  return existingGrant
+}
+
+export async function getExistingGrant(
+  deps: ServiceDependencies,
+  options: GrantOptions
+): Promise<Grant | undefined> {
+  return await Grant.query(deps.knex)
     .findOne({
       accessType: options.accessType
     })
@@ -113,16 +133,12 @@ async function getOrCreateGrant(
     .andWhere('authServer.url', options.authServer)
     .andWhere('accessActions', '@>', options.accessActions) // all options.accessActions are a subset of saved accessActions
     .withGraphJoined('authServer')
+}
 
-  if (existingGrant?.expired) {
-    const updatedGrant = await rotateGrantToken(deps, existingGrant)
-    if (updatedGrant) {
-      return updatedGrant
-    }
-  } else if (existingGrant) {
-    return existingGrant
-  }
-
+async function requestNewGrant(
+  deps: ServiceDependencies,
+  options: GrantOptions
+): Promise<Grant | GrantError> {
   let openPaymentsGrant
   try {
     openPaymentsGrant = await deps.openPaymentsClient.grant.request(
@@ -175,7 +191,7 @@ async function getOrCreateGrant(
     .withGraphFetched('authServer')
 }
 
-async function rotateGrantToken(
+async function rotateTokenAndUpdateGrant(
   deps: ServiceDependencies,
   grant: Grant
 ): Promise<Grant | undefined> {
