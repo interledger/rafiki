@@ -249,7 +249,7 @@ export interface AppServices {
   autoPeeringService: Promise<AutoPeeringService>
   autoPeeringRoutes: Promise<AutoPeeringRoutes>
   connectorApp: Promise<ConnectorApp>
-  tigerbeetle?: Promise<TigerbeetleClient>
+  tigerBeetle?: Promise<TigerbeetleClient>
   paymentMethodHandlerService: Promise<PaymentMethodHandlerService>
   ilpPaymentService: Promise<IlpPaymentService>
 }

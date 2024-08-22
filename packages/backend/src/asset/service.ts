@@ -97,13 +97,11 @@ async function createAsset(
         withdrawalThreshold,
         liquidityThreshold
       })
-      await deps.accountingService.createLiquidityAccount(
+      await deps.accountingService.createLiquidityAndLinkedSettlementAccount(
         asset,
         LiquidityAccountType.ASSET,
         trx
       )
-      await deps.accountingService.createSettlementAccount(asset.ledger, trx)
-
       return asset
     })
   } catch (err) {

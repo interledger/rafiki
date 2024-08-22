@@ -9,15 +9,15 @@ These packages include:
 - `mock-account-servicing-entity` (mocks an [Account Servicing Entity](https://rafiki.dev/concepts/account-servicing-entity/)
 - `frontend` (Remix app to expose a UI for Rafiki Admin management via interaction with the `backend` Admin APIs)
 - `kratos` (An identity and user management solution for the `frontend`)
-- `mailslurper` (A SMTP mail server to catch account recovery emails)
+- `mailslurper` (A SMTP mail server to catch account recovery emails for the `frontend`)
 
 These packages depend on the following databases:
 
 - TigerBeetle or Postgres (accounting)
 - Postgres (Open Payments resources, auth resources)
-- Redis (STREAM details)
+- Redis (STREAM details, auth sessions)
 
-We provide containerized versions of our packages together with two pre-configured docker-compose files ([peer1](./cloud-nine-wallet/docker-compose.yml) and [peer2](./happy-life-bank/docker-compose.yml)) to start two Mock Account Servicing Entities with their respective Rafiki backend and auth servers. They automatically peer and 2 to 3 user accounts are created on both of them.
+We provide containerized versions of our packages together with two pre-configured docker-compose files ([Cloud Nine Wallet](./cloud-nine-wallet/docker-compose.yml) and [Happy Life Bank](./happy-life-bank/docker-compose.yml)) to start two Mock Account Servicing Entities with their respective Rafiki backend and auth servers. They automatically peer and 2 to 3 user accounts are created on both of them.
 
 This environment will set up a playground where you can use the Rafiki Admin APIs and the Open Payments APIs.
 
@@ -77,7 +77,7 @@ Navigate to [`localhost:3030`](http://localhost:3030) to view the accounts on on
 
 The accounts of the second instance (Happy Life Bank) can be found on [`localhost:3031`](http://localhost:3031).
 
-When clicking on the Account Name, a list of Transactions appears.
+When clicking on the Account Name, you can view the account information, the available balance, and see a list of transactions.
 
 ![Mock Account Servicing Entity Transactions](../packages/documentation/public/img/map-transactions.png)
 
@@ -93,22 +93,22 @@ When clicking on the Account Name, a list of Transactions appears.
 
 The following should be run from the root of the project.
 
-```
-// If you have spun up the environment before, remember to first tear down and remove volumes!
+```sh
+# If you have spun up the environment before, remember to first tear down and remove volumes!
 
-// start the local environment
+# start the local environment
 pnpm localenv:compose up
 
-// tear down and remove volumes
+# tear down and remove volumes
 pnpm localenv:compose down --volumes
 
-// tear down, delete database volumes and remove images
+# tear down, delete database volumes and remove images
 pnpm localenv:compose down --volumes --rmi all
 ```
 
 If you want to use Postgres as the accounting database instead of TigerBeetle, you can use the `psql` variant of the `localenv:compose` commands:
 
-```
+```sh
 pnpm localenv:compose:psql up
 pnpm localenv:compose:psql down --volumes
 ```
@@ -125,18 +125,19 @@ See the `frontend` [README](../packages/frontend/README.md#ory-kratos) for more 
 
 #### Autopeering
 
-If you want to start the local env and peer it automatically to rafiki.money, you can run the following commands:
+If you want to start one local instance of Rafiki and peer it automatically to [Rafiki.money](https://rafiki.money), you can run the following commands:
 
-```
+```sh
+# using Tigerbeetle DB
 pnpm localenv:compose:autopeer
 
-// OR to start with Postgres db
+# OR using Postgres DB
 pnpm localenv:compose:psql:autopeer
 ```
 
-Your local cloud nine rafiki instance will be peered automatically in this case with https://rafiki.money instance.
-The required services will be exposed externally using [localtunnel](https://www.npmjs.com/package/localtunnel) package.
-The exposed ports are 3000(open-payments), 3006(auth server), 3002(ilp connector).
+Your local Rafiki instance will be automatically peered with the remote [Rafiki.money](https://rafiki.money) instance.
+The required services will be exposed externally using the [localtunnel](https://www.npmjs.com/package/localtunnel) package.
+The exposed ports are 3000(open-payments), 3006(auth server), 3002(ILP connector).
 
 To use the Open Payments example in the Bruno collection examples, follow these steps:
 
@@ -146,7 +147,13 @@ To use the Open Payments example in the Bruno collection examples, follow these 
 
 Note that you have to go through an additional "login" step by providing you IPv4 address as tunnel password before being able to visit the consent screen for the outgoing payment grant request. You can find out your current IPv4 address by e.g. visiting https://loca.lt/mytunnelpassword (or https://www.whatismyip.com/).
 
-After stopping the script it is necessary to clear the environment using the command described in [Shutting down](#Shutting-down). This is necessary as on a new run of the scripts (with autopeering or not) the wallet address url will differ.
+To shut down the connection and to clear the environment, run
+
+```sh
+pnpm localenv:compose down --volumes
+```
+
+This is necessary since on a new run of the scripts (with autopeering or not), the wallet address urls will differ.
 
 ### Debugging
 
@@ -191,33 +198,34 @@ For more ways to connect debuggers, see the Node docs for debugging: https://nod
 
 ### Shutting down
 
-```
-// tear down
+```sh
+# tear down
 pnpm localenv:compose down
 
-// tear down and delete database volumes
+# tear down and delete database volumes
 pnpm localenv:compose down --volumes
 
-// tear down, delete database volumes and remove images
+# tear down, delete database volumes and remove images
 pnpm localenv:compose down --volumes --rmi all
 ```
 
 ### Commands
 
-| Command                                     | Description                                 |
-| ------------------------------------------- | ------------------------------------------- |
-| `pnpm localenv:compose config`              | Show all merged config (with Tigerbeetle)   |
-| `pnpm localenv:compose up`                  | Start (with Tigerbeetle)                    |
-| `pnpm localenv:compose up -d`               | Start detached (with Tigerbeetle)           |
-| `pnpm localenv:compose down`                | Down (with Tigerbeetle)                     |
-| `pnpm localenv:compose down --volumes`      | Down and kill volumes (with Tigerbeetle)    |
-| `pnpm localenv:compose:psql config`         | Show all merged config (with Postgresql)    |
-| `pnpm localenv:compose build`               | Build all the containers (with Tigerbeetle) |
-| `pnpm localenv:compose:psql up`             | Start (with Postgresql)                     |
-| `pnpm localenv:compose:psql up -d`          | Start detached (with Postgresql)            |
-| `pnpm localenv:compose:psql down`           | Down (with Postgresql)                      |
-| `pnpm localenv:compose:psql down --volumes` | Down and kill volumes (with Postgresql)     |
-| `pnpm localenv:compose:psql build`          | Build all the containers (with Postgresql)  |
+| Command                                          | Description                                      |
+| ------------------------------------------------ | ------------------------------------------------ |
+| `pnpm localenv:compose config`                   | Show all merged config (with Tigerbeetle)        |
+| `pnpm localenv:compose up`                       | Start (with Tigerbeetle)                         |
+| `pnpm localenv:compose up -d`                    | Start (with Tigerbeetle) detached                |
+| `pnpm localenv:compose down`                     | Down (with Tigerbeetle)                          |
+| `pnpm localenv:compose down --volumes`           | Down and kill volumes (with Tigerbeetle)         |
+| `pnpm localenv:compose down --volumes --rmi all` | Down, kill volumes (with Tigerbeetle) and images |
+| `pnpm localenv:compose:psql config`              | Show all merged config (with Postgresql)         |
+| `pnpm localenv:compose build`                    | Build all the containers (with Tigerbeetle)      |
+| `pnpm localenv:compose:psql up`                  | Start (with Postgresql)                          |
+| `pnpm localenv:compose:psql up -d`               | Start (with Postgresql) detached                 |
+| `pnpm localenv:compose:psql down`                | Down (with Postgresql)                           |
+| `pnpm localenv:compose:psql down --volumes`      | Down (with Postgresql) and kill volumes          |
+| `pnpm localenv:compose:psql build`               | Build all the containers (with Postgresql)       |
 
 ### Usage
 
@@ -247,15 +255,11 @@ Note that you have to go through an interaction flow by clicking on the `redirec
 
 #### Admin UI
 
-In order to manage, and view information about the Rafiki instance(s) using a UI, you can navigate to [`localhost:3010`](http://localhost:3010) (Cloud Nine Wallet) or [`localhost:4010`](http://localhost:4010) (Happy Life Bank). This is the `frontend` project which runs a Remix app for querying info and executing mutations against the Rafiki [Admin APIs](#admin-apis).
+In order to manage, and view information about the Rafiki instance(s) you can use the [Rafiki Admin](../packages/frontend/README.md) UI. We have secured access to Rafiki Admin using [Ory Kratos](https://www.ory.sh/docs/kratos/ory-kratos-intro). Since access to the UI is on an invitation-only basis the registration flow is not publicly available. As such, in order to access Rafiki Admin you can click the registration link provided in the logs during `localenv` startup or you can manually add a new user with the invite-user script. Run `docker exec -it <admin-container-name> npm run invite-user -- example@mail.com` and it will output a link to the terminal. Copy and paste this link in your browser and you will automatically be logged in and directed to the account settings page. The next step is changing your password. We're using a simple email and password authentication method.
 
-We have secured access to the Admin UI using [Ory Kratos](https://www.ory.sh/docs/kratos/ory-kratos-intro), a secure and fully open-source identity and user management solution. Check it out on [GitHub](https://github.com/ory/kratos). Since access to the UI is on an invitation-only basis the registration flow is not publicly available. As such, in order to access the Admin UI you can click the registration link provided in the logs during `localenv` startup or you can manually add a new user with the invite-user script. Run `docker exec -it <admin-container-name> npm run invite-user -- example@mail.com` and it will output recovery link to the terminal. The recovery link doubles as the invitation method. Copy and paste this link in your browser and you will automatically be logged in and directed to the account settings page. The next step is changing your password. We're using a simple email and password authentication method.
+Note that a separate registration is required for Cloud Nine Wallet's Rafiki Admin and Happy Life Bank's Rafiki Admin, since they are each designed to run as separate mock account servicing entities. Once you've registered, you can always come back to your Rafiki Admin account by navigating to [`localhost:3010`](http://localhost:3010) (Cloud Nine Wallet) or [`localhost:4010`](http://localhost:4010) (Happy Life Bank) and logging in.
 
-There is a password recovery flow. On the login page if you clkick the `forgot password` link and enter an email for a registered user then you can open [Mail Slurper](http://localhost:4436) to access the recovery link for your account.
-
-We've also included a script to remove users: `docker exec -it <admin-container-name> npm run delete-user -- example@mail.com`.
-
-See the `frontend` [README](../packages/frontend/README.md) for more information.
+You can test the account recovery flow by clicking "Forgot pasword?" on the login page and by navigating to [`localhost:4436`](http://localhost:4436) (Mailslurper interface).
 
 #### Admin APIs
 
@@ -289,7 +293,7 @@ Keep-Alive: timeout=5
 
 It is possible that upon (re)starting the local playground, you may run into an issue where there are no accounts/wallet addresses visible in the mock account servicing entities' pages (http://localhost:3030, http://localhost:3031). This is because seeding of the initial account data only works against an empty database. To correct this, clear the volumes, and restart the container via:
 
-```
+```sh
 pnpm localenv:compose down --volumes
 pnpm localenv:compose up -d
 ```

@@ -14,7 +14,11 @@ import { AccessToken } from './model'
 import { AccessTokenService } from './service'
 import { Access } from '../access/model'
 import { generateToken } from '../shared/utils'
-import { AccessType, AccessAction } from '@interledger/open-payments'
+import {
+  AccessType,
+  AccessAction,
+  AccessItem
+} from '@interledger/open-payments'
 import { generateBaseGrant } from '../tests/grant'
 
 describe('Access Token Service', (): void => {
@@ -98,6 +102,7 @@ describe('Access Token Service', (): void => {
         accessTokenService.getByManagementId(accessToken.managementId)
       ).resolves.toMatchObject({
         ...accessToken,
+        revokedAt: null,
         grant: retrievedGrant
       })
     })
@@ -119,6 +124,13 @@ describe('Access Token Service', (): void => {
 
   describe('Introspect', (): void => {
     let accessToken: AccessToken
+    const outgoingPaymentAccess: AccessItem = {
+      type: 'outgoing-payment',
+      actions: ['create', 'read'],
+      identifier: BASE_ACCESS.identifier,
+      limits: BASE_ACCESS.limits
+    }
+
     beforeEach(async (): Promise<void> => {
       accessToken = await AccessToken.query(trx).insert({
         value: 'test-access-token',
@@ -131,7 +143,7 @@ describe('Access Token Service', (): void => {
     test('Can introspect active token', async (): Promise<void> => {
       await expect(
         accessTokenService.introspect(accessToken.value)
-      ).resolves.toEqual(grant)
+      ).resolves.toEqual({ grant, access: [] })
     })
 
     test('Can introspect expired token', async (): Promise<void> => {
@@ -155,6 +167,62 @@ describe('Access Token Service', (): void => {
       ).resolves.toBeUndefined()
     })
 
+    test('Can introspect active token with correct access', async (): Promise<void> => {
+      await expect(
+        accessTokenService.introspect(accessToken.value, [
+          outgoingPaymentAccess
+        ])
+      ).resolves.toEqual({ grant, access: [grant.access[0]] })
+    })
+
+    test('Can introspect active token with partial access actions', async (): Promise<void> => {
+      const access: AccessItem = {
+        ...outgoingPaymentAccess,
+        actions: [outgoingPaymentAccess.actions[0]]
+      }
+      await expect(
+        accessTokenService.introspect(accessToken.value, [access])
+      ).resolves.toEqual({ grant, access: [grant.access[0]] })
+    })
+
+    test('Introspection only returns requested access', async (): Promise<void> => {
+      const grantWithTwoAccesses = await Grant.query(trx).insertAndFetch(
+        generateBaseGrant({ state: GrantState.Approved })
+      )
+      grantWithTwoAccesses.access = [
+        await Access.query(trx).insertAndFetch({
+          grantId: grantWithTwoAccesses.id,
+          ...BASE_ACCESS
+        })
+      ]
+      const secondAccessItem: AccessItem = {
+        type: 'quote',
+        actions: ['create', 'read']
+      }
+      const dbSecondAccess = await Access.query(trx).insertAndFetch({
+        grantId: grantWithTwoAccesses.id,
+        ...secondAccessItem
+      })
+
+      grantWithTwoAccesses.access.push(dbSecondAccess)
+
+      const accessTokenForTwoAccessGrant = await AccessToken.query(trx).insert({
+        value: 'test-access-token-two-access',
+        managementId: v4(),
+        grantId: grantWithTwoAccesses.id,
+        expiresIn: 1234
+      })
+
+      await expect(
+        accessTokenService.introspect(accessTokenForTwoAccessGrant.value, [
+          secondAccessItem
+        ])
+      ).resolves.toEqual({
+        grant: grantWithTwoAccesses,
+        access: [dbSecondAccess]
+      })
+    })
+
     test('Cannot introspect non-existing token', async (): Promise<void> => {
       expect(accessTokenService.introspect(v4())).resolves.toBeUndefined()
     })
@@ -164,6 +232,16 @@ describe('Access Token Service', (): void => {
 
       await expect(
         accessTokenService.introspect(accessToken.value)
+      ).resolves.toBeUndefined()
+    })
+
+    test('Cannot introspect token with incorrect access', async (): Promise<void> => {
+      const access: AccessItem = {
+        ...outgoingPaymentAccess,
+        actions: ['list']
+      }
+      await expect(
+        accessTokenService.introspect(accessToken.value, [access])
       ).resolves.toBeUndefined()
     })
   })
@@ -190,21 +268,19 @@ describe('Access Token Service', (): void => {
     describe('Revoke by token id', (): void => {
       test('Can revoke un-expired token', async (): Promise<void> => {
         await token.$query(trx).patch({ expiresIn: 1000000 })
-        await expect(accessTokenService.revoke(token.id)).resolves.toEqual(
-          token
-        )
-        await expect(
-          AccessToken.query(trx).findById(token.id)
-        ).resolves.toBeUndefined()
+        await expect(accessTokenService.revoke(token.id)).resolves.toEqual({
+          ...token,
+          revokedAt: expect.any(Date),
+          updatedAt: expect.any(Date)
+        })
       })
       test('Can revoke even if token has already expired', async (): Promise<void> => {
         await token.$query(trx).patch({ expiresIn: -1 })
-        await expect(accessTokenService.revoke(token.id)).resolves.toEqual(
-          token
-        )
-        await expect(
-          AccessToken.query(trx).findById(token.id)
-        ).resolves.toBeUndefined()
+        await expect(accessTokenService.revoke(token.id)).resolves.toEqual({
+          ...token,
+          revokedAt: expect.any(Date),
+          updatedAt: expect.any(Date)
+        })
       })
       test('Can revoke even if token has already been revoked', async (): Promise<void> => {
         await token.$query(trx).delete()
@@ -232,7 +308,11 @@ describe('Access Token Service', (): void => {
         ).resolves.toEqual(1)
         await expect(
           AccessToken.query(trx).findById(token.id)
-        ).resolves.toBeUndefined()
+        ).resolves.toEqual({
+          ...token,
+          revokedAt: expect.any(Date),
+          updatedAt: expect.any(Date)
+        })
       })
       test('Can revoke even if token has already expired', async (): Promise<void> => {
         await token.$query(trx).patch({ expiresIn: -1 })
@@ -241,7 +321,11 @@ describe('Access Token Service', (): void => {
         ).resolves.toEqual(1)
         await expect(
           AccessToken.query(trx).findById(token.id)
-        ).resolves.toBeUndefined()
+        ).resolves.toEqual({
+          ...token,
+          revokedAt: expect.any(Date),
+          updatedAt: expect.any(Date)
+        })
       })
       test('Can revoke even if token has already been revoked', async (): Promise<void> => {
         await token.$query(trx).delete()

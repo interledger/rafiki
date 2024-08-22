@@ -50,6 +50,11 @@ const privateKeyFileValue = loadOrGenerateKey(privateKeyFileEnv)
 export const Config = {
   logLevel: envString('LOG_LEVEL', 'info'),
   enableTelemetry: envBool('ENABLE_TELEMETRY', false),
+  enableTelemetryTraces: envBool('ENABLE_TELEMETRY_TRACES', false),
+  openTelemetryTraceCollectorUrls: envStringArray(
+    'OPEN_TELEMETRY_TRACE_COLLECTOR_URLS',
+    []
+  ),
   livenet: envBool('LIVENET', false),
   openTelemetryCollectors: envStringArray(
     'OPEN_TELEMETRY_COLLECTOR_URLS',
@@ -100,11 +105,15 @@ export const Config = {
   ilpConnectorUrl: envString('ILP_CONNECTOR_URL'),
   instanceName: envString('INSTANCE_NAME'),
   streamSecret: Buffer.from(process.env.STREAM_SECRET || '', 'base64'),
-  useTigerbeetle: envBool('USE_TIGERBEETLE', true),
-  tigerbeetleClusterId: envInt('TIGERBEETLE_CLUSTER_ID', 0),
-  tigerbeetleReplicaAddresses: process.env.TIGERBEETLE_REPLICA_ADDRESSES
+  useTigerBeetle: envBool('USE_TIGERBEETLE', true),
+  tigerBeetleClusterId: envInt('TIGERBEETLE_CLUSTER_ID', 0),
+  tigerBeetleReplicaAddresses: process.env.TIGERBEETLE_REPLICA_ADDRESSES
     ? process.env.TIGERBEETLE_REPLICA_ADDRESSES.split(',')
     : ['3004'],
+  tigerBeetleTwoPhaseTimeout: envInt(
+    'TIGERBEETLE_TWO_PHASE_TIMEOUT_SECONDS',
+    5
+  ),
 
   exchangeRatesUrl: process.env.EXCHANGE_RATES_URL, // optional
   exchangeRatesLifetime: +(process.env.EXCHANGE_RATES_LIFETIME || 15_000),
@@ -123,6 +132,18 @@ export const Config = {
 
   incomingPaymentWorkers: envInt('INCOMING_PAYMENT_WORKERS', 1),
   incomingPaymentWorkerIdle: envInt('INCOMING_PAYMENT_WORKER_IDLE', 200), // milliseconds
+  pollIncomingPaymentCreatedWebhook: envBool(
+    'POLL_INCOMING_PAYMENT_CREATED_WEBHOOK',
+    false
+  ),
+  incomingPaymentCreatedPollTimeout: envInt(
+    'INCOMING_PAYMENT_CREATED_POLL_TIMEOUT_MS',
+    10000
+  ), // milliseconds
+  incomingPaymentCreatedPollFrequency: envInt(
+    'INCOMING_PAYMENT_CREATED_POLL_FREQUENCY_MS',
+    1000
+  ), // milliseconds
 
   webhookWorkers: envInt('WEBHOOK_WORKERS', 1),
   webhookWorkerIdle: envInt('WEBHOOK_WORKER_IDLE', 200), // milliseconds

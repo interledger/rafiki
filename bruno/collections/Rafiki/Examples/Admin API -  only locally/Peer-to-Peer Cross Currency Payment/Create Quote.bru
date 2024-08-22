@@ -16,11 +16,7 @@ body:graphql {
       quote {
         createdAt
         expiresAt
-        highEstimatedExchangeRate
         id
-        lowEstimatedExchangeRate
-        maxPacketAmount
-        minExchangeRate
         walletAddressId
         receiveAmount {
           assetCode
@@ -57,8 +53,10 @@ script:pre-request {
 
 script:post-response {
   const body = res.getBody();
-  
-  bru.setEnvVar("quoteId", body.data.createQuote.quote.id);
+
+  if (body?.data) {
+    bru.setEnvVar("quoteId", body.data.createQuote.quote.id);
+  }
 }
 
 tests {

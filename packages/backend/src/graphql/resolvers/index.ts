@@ -19,7 +19,9 @@ import {
 import {
   getWalletAddressIncomingPayments,
   createIncomingPayment,
-  getIncomingPayment
+  getIncomingPayment,
+  approveIncomingPayment,
+  cancelIncomingPayment
 } from './incoming_payment'
 import { getQuote, createQuote, getWalletAddressQuotes } from './quote'
 import {
@@ -63,6 +65,7 @@ import { setFee } from './fee'
 import { GraphQLJSONObject } from 'graphql-scalars'
 import { getCombinedPayments } from './combined_payments'
 import { createOrUpdatePeerByUrl } from './auto-peering'
+import { getAccountingTransfers } from './accounting_transfer'
 
 export const resolvers: Resolvers = {
   UInt8: GraphQLUInt8,
@@ -89,6 +92,7 @@ export const resolvers: Resolvers = {
     quote: getQuote,
     webhookEvents: getWebhookEvents,
     payments: getCombinedPayments,
+    accountingTransfers: getAccountingTransfers,
     receiver: getReceiver
   },
   WalletAddress: {
@@ -122,6 +126,8 @@ export const resolvers: Resolvers = {
     createOutgoingPaymentFromIncomingPayment,
     cancelOutgoingPayment,
     createIncomingPayment,
+    approveIncomingPayment,
+    cancelIncomingPayment,
     createReceiver,
     createPeer: createPeer,
     createOrUpdatePeerByUrl: createOrUpdatePeerByUrl,

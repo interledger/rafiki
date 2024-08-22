@@ -12,8 +12,8 @@ A liquidity account may only hold a positive balance. Rafiki enforces that its t
 
 There is one liquidity account for each of the following resource:
 
-- Asset
-- Peer
+- [Asset](/reference/glossary#asset)
+- [Peer](/reference/glossary#peer)
 - Wallet Address (for [SPSP](/reference/glossary#simple-payments-setup-protocol-spsp) / [Web Monetization](/reference/glossary#web-monetization) receiving)
 - Incoming Payment
 - Outgoing Payment
@@ -34,7 +34,18 @@ Rafiki transfers perform double-entry accounting. Every transfer increases both 
 
 ### Intra-Rafiki
 
+Consider the following accounts referenced throughout the below documentation:
+
+- **USD Settlement Acc.** - USD asset settlement account (always zero or negative balance)
+- **USD (Asset) Liquidity Acc.** - USD settlement account (always zero or positive balance)
+- **Peer Liquidity Acc.** - USD asset counterparty liquidity account (always zero or positive balance)
+- **Wallet Address Liquidity Acc.** - USD wallet address liquidity account (always zero or positive balance)
+- **Incoming Payment Liquidity Acc.** - USD incoming payment liquidity account (always zero or positive balance)
+- **Outgoing Payment Liquidity Acc.** - USD outgoing payment liquidity account (always zero or positive balance)
+
 #### Deposits
+
+Action of debiting the settlement account, and crediting the liquidity account.
 
 ##### Depositing Asset Liquidity
 
@@ -42,12 +53,12 @@ Rafiki transfers perform double-entry accounting. Every transfer increases both 
 | ------------- | --------------- |
 | Settlement    | Asset Liquidity |
 
-- Example: depositing 100 USD
+- Example: depositing `100 USD`
 
 <table class="accounting-table not-content">
   <tr class="header-row">
-    <th>USD Settlement Acc. </th>
-    <th>USD (Asset) Liquidity Acc.</th>
+    <th style='text-align: left'>USD Settlement Acc. </th>
+    <th style='text-align: left'>USD (Asset) Liquidity Acc.</th>
   </tr>
   <tr>
     <td>
@@ -79,12 +90,12 @@ Rafiki transfers perform double-entry accounting. Every transfer increases both 
 | ------------- | -------------- |
 | Settlement    | Peer Liquidity |
 
-- Example: peering relationship in USD, depositing 100 USD
+- Example: peering relationship in USD, depositing `100 USD`
 
 <table class="accounting-table not-content">
   <tr class="header-row">
-    <th>USD Settlement Acc. </th>
-    <th>Peer Liquidity Acc.</th>
+    <th style='text-align: left'>USD Settlement Acc. </th>
+    <th style='text-align: left'>Peer Liquidity Acc.</th>
   </tr>
   <tr>
     <td>
@@ -116,12 +127,12 @@ Rafiki transfers perform double-entry accounting. Every transfer increases both 
 | ------------- | ---------------- |
 | Settlement    | Outgoing Payment |
 
-- Example: depositing 35 USD
+- Example: depositing `35 USD`
 
 <table class="accounting-table not-content">
   <tr class="header-row">
-    <th>USD Settlement Acc. </th>
-    <th>Outgoing Payment Liquidity Acc.</th>
+    <th style='text-align: left'>USD Settlement Acc. </th>
+    <th style='text-align: left'>Outgoing Payment Liquidity Acc.</th>
   </tr>
   <tr>
     <td>
@@ -149,18 +160,20 @@ Rafiki transfers perform double-entry accounting. Every transfer increases both 
 
 #### Withdrawals
 
+Action of debiting the liquidity account, and crediting the settlement account.
+
 ##### Withdrawing Asset Liquidity
 
 | Debit Account   | Credit Account |
 | --------------- | -------------- |
 | Asset Liquidity | Settlement     |
 
-- Example: withdrawing 50 USD
+- Example: withdrawing `50 USD`
 
 <table class="accounting-table not-content">
   <tr class="header-row">
-    <th>USD Settlement Acc. </th>
-    <th>USD (Asset) Liquidity Acc.</th>
+    <th style='text-align: left'>USD (Asset) Liquidity Acc.</th>
+    <th style='text-align: left'>USD Settlement Acc. </th>
   </tr> 
   <tr>
     <td>
@@ -169,7 +182,7 @@ Rafiki transfers perform double-entry accounting. Every transfer increases both 
           <th>Debit</th><th>Credit</th>
         </tr>
         <tr>
-          <td></td><td>50</td>
+          <td>50</td><td></td>
         </tr>
       </table>
     </td>
@@ -179,7 +192,7 @@ Rafiki transfers perform double-entry accounting. Every transfer increases both 
           <th>Debit</th><th>Credit</th>
         </tr>
         <tr>
-          <td>50</td><td></td>
+          <td></td><td>50</td>
         </tr>
       </table>
     </td>
@@ -192,12 +205,12 @@ Rafiki transfers perform double-entry accounting. Every transfer increases both 
 | -------------- | -------------- |
 | Peer Liquidity | Settlement     |
 
-- Example: peering relationship in USD, withdrawing 50 USD
+- Example: peering relationship in USD, withdrawing `50 USD`
 
 <table class="accounting-table not-content">
   <tr class="header-row">
-    <th>USD Settlement Acc. </th>
-    <th>Peer Liquidity Acc.</th>
+    <th style='text-align: left'>Peer Liquidity Acc.</th>
+    <th style='text-align: left'>USD Settlement Acc. </th>
   </tr>
   <tr>
     <td>
@@ -206,7 +219,7 @@ Rafiki transfers perform double-entry accounting. Every transfer increases both 
           <th>Debit</th><th>Credit</th>
         </tr>
         <tr>
-          <td></td><td>50</td>
+          <td>50</td><td></td>
         </tr>
       </table>
     </td>
@@ -216,7 +229,7 @@ Rafiki transfers perform double-entry accounting. Every transfer increases both 
           <th>Debit</th><th>Credit</th>
         </tr>
         <tr>
-          <td>50</td><td></td>
+          <td></td><td>50</td>
         </tr>
       </table>
     </td>
@@ -229,12 +242,12 @@ Rafiki transfers perform double-entry accounting. Every transfer increases both 
 | -------------- | -------------- |
 | Wallet Address | Settlement     |
 
-- Example: withdrawing 2 USD
+- Example: withdrawing `2 USD`
 
 <table class="accounting-table not-content">
   <tr class="header-row">
-    <th>USD Settlement Acc. </th>
-    <th>Wallet Address Liquidity Acc.</th>
+    <th style='text-align: left'>Wallet Address Liquidity Acc.</th>
+    <th style='text-align: left'>USD Settlement Acc. </th>
   </tr>
   <tr>
     <td>
@@ -243,7 +256,7 @@ Rafiki transfers perform double-entry accounting. Every transfer increases both 
           <th>Debit</th><th>Credit</th>
         </tr>
         <tr>
-          <td></td><td>2</td>
+          <td>2</td><td></td>
         </tr>
       </table>
     </td>
@@ -253,7 +266,7 @@ Rafiki transfers perform double-entry accounting. Every transfer increases both 
           <th>Debit</th><th>Credit</th>
         </tr>
         <tr>
-          <td>2</td><td></td>
+          <td></td><td>2</td>
         </tr>
       </table>
     </td>
@@ -266,12 +279,12 @@ Rafiki transfers perform double-entry accounting. Every transfer increases both 
 | ---------------- | -------------- |
 | Incoming Payment | Settlement     |
 
-- Example: withdrawing 25 USD
+- Example: withdrawing `25 USD`
 
 <table class="accounting-table not-content">
   <tr class="header-row">
-    <th>USD Settlement Acc. </th>
-    <th>Incoming Payment Liquidity Acc.</th>
+    <th style='text-align: left'>Incoming Payment Liquidity Acc.</th>
+    <th style='text-align: left'>USD Settlement Acc. </th>
   </tr>
   <tr>
     <td>
@@ -280,7 +293,7 @@ Rafiki transfers perform double-entry accounting. Every transfer increases both 
           <th>Debit</th><th>Credit</th>
         </tr>
         <tr>
-          <td></td><td>25</td>
+          <td>25</td><td></td>
         </tr>
       </table>
     </td>
@@ -290,7 +303,7 @@ Rafiki transfers perform double-entry accounting. Every transfer increases both 
           <th>Debit</th><th>Credit</th>
         </tr>
         <tr>
-          <td>25</td><td></td>
+          <td></td><td>25</td>
         </tr>
       </table>
     </td>
@@ -303,24 +316,14 @@ Rafiki transfers perform double-entry accounting. Every transfer increases both 
 | ---------------- | -------------- |
 | Outgoing Payment | Settlement     |
 
-- Example: withdrawing 1 USD
+- Example: withdrawing `1 USD`
 
 <table class="accounting-table not-content">
   <tr class="header-row">
-    <th>USD Settlement Acc. </th>
-    <th>Outgoing Payment Liquidity Acc.</th>
+    <th style='text-align: left'>Outgoing Payment Liquidity Acc.</th>
+    <th style='text-align: left'>USD Settlement Acc. </th>
   </tr>
   <tr>
-    <td>
-      <table>
-        <tr>
-          <th>Debit</th><th>Credit</th>
-        </tr>
-        <tr>
-          <td></td><td>1</td>
-        </tr>
-      </table>
-    </td>
     <td>
       <table>
         <tr>
@@ -331,23 +334,33 @@ Rafiki transfers perform double-entry accounting. Every transfer increases both 
         </tr>
       </table>
     </td>
+    <td>
+      <table>
+        <tr>
+          <th>Debit</th><th>Credit</th>
+        </tr>
+        <tr>
+          <td></td><td>1</td>
+        </tr>
+      </table>
+    </td>
   </tr>
 </table>
 
 #### Payments (Same Asset)
 
-##### SPSP / Web Monetization
+##### Simple Payment Setup Protocol (SPSP) / Web Monetization
 
 | Debit Account    | Credit Account |
 | ---------------- | -------------- |
 | Outgoing Payment | Wallet Address |
 
-- Example: Send a WM Payment of 2 USD over SPSP to a wallet address. Sender and receiver have wallet addresses at the same Rafiki.
+- Example: Send a Web Monetization Payment of `2 USD` over SPSP to a wallet address. Sender and receiver have wallet addresses at the same Rafiki.
 
 <table class="accounting-table not-content">
   <tr class="header-row">
-    <th>Outgoing Payment Liquidity Acc.</th>
-    <th>Wallet Address Liquidity Acc.</th>
+    <th style='text-align: left'>Outgoing Payment Liquidity Acc.</th>
+    <th style='text-align: left'>Wallet Address Liquidity Acc.</th>
   </tr>
   <tr>
     <td>
@@ -380,13 +393,13 @@ Rafiki transfers perform double-entry accounting. Every transfer increases both 
 | Outgoing Payment | Incoming Payment |
 | Asset Liquidity  | Incoming Payment |
 
-- Example: Sender consented to a payment of 14 USD but quote promised to deliver 15 USD.
+- Example: Sender consented to a payment of `14 USD` but quote promised to deliver `15 USD`.
 
 <table class="accounting-table not-content">
   <tr class="header-row">
-    <th>Outgoing Payment Liquidity Acc.</th>
-    <th>USD (Asset) Liquidity Acc.</th>
-    <th>Incoming Payment Liquidity Acc. </th>
+    <th style='text-align: left'>Outgoing Payment Liquidity Acc.</th>
+    <th style='text-align: left'>USD (Asset) Liquidity Acc.</th>
+    <th style='text-align: left'>Incoming Payment Liquidity Acc. </th>
   </tr>
   <tr>
     <td>
@@ -429,13 +442,13 @@ Rafiki transfers perform double-entry accounting. Every transfer increases both 
 | Outgoing Payment | Incoming Payment |
 | Outgoing Payment | Asset Liquidity  |
 
-- Example: Sender consented to a payment of 15 USD but quote promised to deliver 14 USD.
+- Example: Sender consented to a payment of `15 USD` but quote promised to deliver `14 USD`.
 
 <table class="accounting-table not-content">
   <tr class="header-row">
-    <th>Outgoing Payment Liquidity Acc.</th>
-    <th>USD (Asset) Liquidity Acc.</th>
-    <th>Incoming Payment Liquidity Acc. </th>
+    <th style='text-align: left'>Outgoing Payment Liquidity Acc.</th>
+    <th style='text-align: left'>USD (Asset) Liquidity Acc.</th>
+    <th style='text-align: left'>Incoming Payment Liquidity Acc. </th>
   </tr>
   <tr>
     <td>
@@ -475,15 +488,15 @@ Rafiki transfers perform double-entry accounting. Every transfer increases both 
 
 | Debit Account    | Credit Account   | Asset |
 | ---------------- | ---------------- | ----- |
-| Outgoing Payment | Asset Liquidity  | ABC   |
-| Asset Liquidity  | Incoming Payment | XYZ   |
+| Outgoing Payment | Asset Liquidity  | `ABC` |
+| Asset Liquidity  | Incoming Payment | `XYZ` |
 
-- Example: Outgoing payment for 10 USD, incoming payment receives 9 EUR.
+- Example: Outgoing payment for `10 USD`, incoming payment receives `9 EUR`.
 
 <table class="accounting-table not-content">
   <tr class="header-row">
-    <th>Outgoing Payment Liquidity Acc.</th>
-    <th>USD (Asset) Liquidity Acc.</th>
+    <th style='text-align: left'>Outgoing Payment Liquidity Acc.</th>
+    <th style='text-align: left'>USD (Asset) Liquidity Acc.</th>
   </tr>
   <tr>
     <td>
@@ -508,8 +521,8 @@ Rafiki transfers perform double-entry accounting. Every transfer increases both 
     </td>
   </tr>
   <tr class="header-row">
-    <th>EUR (Asset) Liquidity Acc.</th>
-    <th>Incoming Payment Liquidity Acc.</th>
+    <th style='text-align: left'>EUR (Asset) Liquidity Acc.</th>
+    <th style='text-align: left'>Incoming Payment Liquidity Acc.</th>
   </tr>
   <tr>
     <td>
@@ -539,15 +552,15 @@ Rafiki transfers perform double-entry accounting. Every transfer increases both 
 
 | Debit Account    | Credit Account  | Asset |
 | ---------------- | --------------- | ----- |
-| Outgoing Payment | Asset Liquidity | ABC   |
-| Asset Liquidity  | Wallet Address  | XYZ   |
+| Outgoing Payment | Asset Liquidity | `ABC` |
+| Asset Liquidity  | Wallet Address  | `XYZ` |
 
-- Example: Outgoing payment for 2 USD, wallet address receives 1 EUR.
+- Example: Outgoing payment for `2 USD`, wallet address receives `1 EUR`.
 
 <table class="accounting-table not-content">
   <tr class="header-row">
-    <th>Outgoing Payment Liquidity Acc.</th>
-    <th>USD (Asset) Liquidity Acc.</th>
+    <th style='text-align: left'>Outgoing Payment Liquidity Acc.</th>
+    <th style='text-align: left'>USD (Asset) Liquidity Acc.</th>
   </tr>
   <tr>
     <td>
@@ -572,8 +585,8 @@ Rafiki transfers perform double-entry accounting. Every transfer increases both 
     </td>
   </tr>
   <tr class="header-row">
-    <th>EUR (Asset) Liquidity Acc.</th>
-    <th>Wallet Address Liquidity Acc.</th>
+    <th style='text-align: left'>EUR (Asset) Liquidity Acc.</th>
+    <th style='text-align: left'>Wallet Address Liquidity Acc.</th>
   </tr>
   <tr>
     <td>
@@ -611,12 +624,12 @@ Sender and receiver do not have wallet addresses at the same Rafiki instance.
 | ---------------- | -------------- |
 | Outgoing Payment | Peer Liquidity |
 
-- Example: Sender creates an outgoing payment for 100 USD to an incoming payment at a peer's Rafiki instance. The peering relationship is in USD.
+- Example: Sender creates an outgoing payment for `100 USD` to an incoming payment at a peer's Rafiki instance. The peering relationship is in USD.
 
 <table class="accounting-table not-content">
   <tr class="header-row">
-    <th>Outgoing Payment Liquidity Acc.</th>
-    <th>Peer Liquidity Acc.</th>
+    <th style='text-align: left'>Outgoing Payment Liquidity Acc.</th>
+    <th style='text-align: left'>Peer Liquidity Acc.</th>
   </tr>
   <tr>
     <td>
@@ -653,8 +666,8 @@ Sender and receiver do not have wallet addresses at the same Rafiki instance.
 
 <table class="accounting-table not-content">
   <tr class="header-row">
-    <th>Outgoing Payment Liquidity Acc.</th>
-    <th>USD (Asset) Liquidity Acc.</th>
+    <th style='text-align: left'>Outgoing Payment Liquidity Acc.</th>
+    <th style='text-align: left'>USD (Asset) Liquidity Acc.</th>
   </tr>
   <tr>
     <td>
@@ -679,8 +692,8 @@ Sender and receiver do not have wallet addresses at the same Rafiki instance.
     </td>
   </tr>
   <tr class="header-row">
-    <th>EUR (Asset) Liquidity Acc.</th>
-    <th>Peer Liquidity Acc.</th>
+    <th style='text-align: left'>EUR (Asset) Liquidity Acc.</th>
+    <th style='text-align: left'>Peer Liquidity Acc.</th>
   </tr>
   <tr>
     <td>
@@ -714,12 +727,12 @@ Sender and receiver do not have wallet addresses at the same Rafiki instance.
 | -------------- | ---------------- |
 | Peer Liquidity | Incoming Payment |
 
-- Example: An incoming payment receives 100 USD from an outgoing payment at a peer's Rafiki instance.
+- Example: An incoming payment receives `100 USD` from an outgoing payment at a peer's Rafiki instance.
 
 <table class="accounting-table not-content">
   <tr class="header-row">
-    <th>Peer Liquidity Acc.</th>
-    <th>Incoming Payment Liquidity Acc.</th>
+    <th style='text-align: left'>Peer Liquidity Acc.</th>
+    <th style='text-align: left'>Incoming Payment Liquidity Acc.</th>
   </tr>
   <tr>
     <td>
@@ -751,12 +764,12 @@ Sender and receiver do not have wallet addresses at the same Rafiki instance.
 | -------------- | -------------- |
 | Peer Liquidity | Wallet Address |
 
-- Example: A wallet address receives 2 USD from an outgoing payment at a peer's Rafiki instance.
+- Example: A wallet address receives `2 USD` from an ILP payment at a peer's Rafiki instance.
 
 <table class="accounting-table not-content">
   <tr class="header-row">
-    <th>Peer Liquidity Acc.</th>
-    <th>Wallet Address Liquidity Acc.</th>
+    <th style='text-align: left'>Peer Liquidity Acc.</th>
+    <th style='text-align: left'>Wallet Address Liquidity Acc.</th>
   </tr>
   <tr>
     <td>
@@ -786,15 +799,15 @@ Sender and receiver do not have wallet addresses at the same Rafiki instance.
 
 | Debit Account   | Credit Account   | Asset |
 | --------------- | ---------------- | ----- |
-| Peer Liquidity  | Asset Liquidity  | ABC   |
-| Asset Liquidity | Incoming Payment | XYZ   |
+| Peer Liquidity  | Asset Liquidity  | `ABC` |
+| Asset Liquidity | Incoming Payment | `XYZ` |
 
-- Example: A Rafiki instance receives 10 USD from a peer (peering relationship in USD) to be deposited in an incoming payment liquidity account denominated in EUR. The payment is converted to EUR and deposited.
+- Example: A Rafiki instance receives `10 USD` from a peer (peering relationship in USD) to be deposited in an incoming payment liquidity account denominated in EUR. The payment is converted to EUR and deposited.
 
 <table class="accounting-table not-content">
   <tr class="header-row">
-    <th>Peer Liquidity Acc.</th>
-    <th>USD (Asset) Liquidity Acc.</th>
+    <th style='text-align: left'>Peer Liquidity Acc.</th>
+    <th style='text-align: left'>USD (Asset) Liquidity Acc.</th>
   </tr>
   <tr>
     <td>
@@ -819,8 +832,8 @@ Sender and receiver do not have wallet addresses at the same Rafiki instance.
     </td>
   </tr>
   <tr class="header-row">
-    <th>EUR (Asset) Liquidity Acc.</th>
-    <th>Incoming Payment Liquidity Acc.</th>
+    <th style='text-align: left'>EUR (Asset) Liquidity Acc.</th>
+    <th style='text-align: left'>Incoming Payment Liquidity Acc.</th>
   </tr>
   <tr>
     <td>
@@ -850,15 +863,15 @@ Sender and receiver do not have wallet addresses at the same Rafiki instance.
 
 | Debit Account   | Credit Account  | Asset |
 | --------------- | --------------- | ----- |
-| Peer Liquidity  | Asset Liquidity | ABC   |
-| Asset Liquidity | Wallet Address  | XYZ   |
+| Peer Liquidity  | Asset Liquidity | `ABC` |
+| Asset Liquidity | Wallet Address  | `XYZ` |
 
-- Example: A Rafiki instance receives 10 USD from a peer (peering relationship in USD) to be deposited in a wallet address liquidity account denominated in EUR. The payment is converted to EUR and deposited.
+- Example: A Rafiki instance receives `10 USD` from a peer (peering relationship in USD) to be deposited in a wallet address liquidity account denominated in EUR. The payment is converted to EUR and deposited.
 
 <table class="accounting-table not-content">
   <tr class="header-row">
-    <th>Peer Liquidity Acc.</th>
-    <th>USD (Asset) Liquidity Acc.</th>
+    <th style='text-align: left'>Peer Liquidity Acc.</th>
+    <th style='text-align: left'>USD (Asset) Liquidity Acc.</th>
   </tr>
   <tr>
     <td>
@@ -883,8 +896,8 @@ Sender and receiver do not have wallet addresses at the same Rafiki instance.
     </td>
   </tr>
   <tr class="header-row">
-    <th>EUR (Asset) Liquidity Acc.</th>
-    <th>Wallet Address Liquidity Acc.</th>
+    <th style='text-align: left'>EUR (Asset) Liquidity Acc.</th>
+    <th style='text-align: left'>Wallet Address Liquidity Acc.</th>
   </tr>
   <tr>
     <td>
@@ -918,12 +931,12 @@ Sender and receiver do not have wallet addresses at the same Rafiki instance.
 | -------------- | -------------- |
 | Peer Liquidity | Peer Liquidity |
 
-- Example: Rafiki forwards 10 USD from peer A to peer B.
+- Example: Rafiki forwards `10 USD` from peer A to peer B.
 
 <table class="accounting-table not-content">
   <tr class="header-row">
-    <th>Peer A Liquidity Acc.</th>
-    <th>Peer B Liquidity Acc.</th>
+    <th style='text-align: left'>Peer A Liquidity Acc.</th>
+    <th style='text-align: left'>Peer B Liquidity Acc.</th>
   </tr>
   <tr>
     <td>
@@ -953,15 +966,15 @@ Sender and receiver do not have wallet addresses at the same Rafiki instance.
 
 | Debit Account   | Credit Account  | Asset |
 | --------------- | --------------- | ----- |
-| Peer Liquidity  | Asset Liquidity | ABC   |
-| Asset Liquidity | Peer Liquidity  | XYZ   |
+| Peer Liquidity  | Asset Liquidity | `ABC` |
+| Asset Liquidity | Peer Liquidity  | `XYZ` |
 
-- Example: Rafiki receives 100 USD from peer A and forwards 90 EUR to peer B.
+- Example: Rafiki receives `100 USD` from peer A and forwards 90 EUR to peer B.
 
 <table class="accounting-table not-content">
   <tr class="header-row">
-    <th>Peer A Liquidity Acc.</th>
-    <th>USD (Asset) Liquidity Acc.</th>
+    <th style='text-align: left'>Peer A Liquidity Acc.</th>
+    <th style='text-align: left'>USD (Asset) Liquidity Acc.</th>
   </tr>
   <tr>
     <td>
@@ -986,8 +999,8 @@ Sender and receiver do not have wallet addresses at the same Rafiki instance.
     </td>
   </tr>
   <tr class="header-row">
-    <th>EUR (Asset) Liquidity Acc.</th>
-    <th>Peer B Liquidity Acc.</th>
+    <th style='text-align: left'>EUR (Asset) Liquidity Acc.</th>
+    <th style='text-align: left'>Peer B Liquidity Acc.</th>
   </tr>
   <tr>
     <td>

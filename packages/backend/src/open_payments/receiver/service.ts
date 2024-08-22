@@ -71,8 +71,9 @@ async function createReceiver(
   const localWalletAddress = await deps.walletAddressService.getByUrl(
     args.walletAddressUrl
   )
+  const isLocal = !!localWalletAddress
 
-  const incomingPaymentOrError = localWalletAddress
+  const incomingPaymentOrError = isLocal
     ? await createLocalIncomingPayment(deps, args, localWalletAddress)
     : await deps.remoteIncomingPaymentService.create(args)
 
@@ -81,7 +82,7 @@ async function createReceiver(
   }
 
   try {
-    return new Receiver(incomingPaymentOrError)
+    return new Receiver(incomingPaymentOrError, isLocal)
   } catch (error) {
     const errorMessage = 'Could not create receiver from incoming payment'
     deps.logger.error(
@@ -144,25 +145,22 @@ async function getReceiver(
   deps: ServiceDependencies,
   url: string
 ): Promise<Receiver | undefined> {
-  const urlParseResult = parseIncomingPaymentUrl(url)
-  if (!urlParseResult) {
-    deps.logger.error({ url }, 'Could not parse incoming payment url')
-    return undefined
-  }
-
-  const incomingPayment =
-    (await getLocalIncomingPayment(deps, urlParseResult.id)) ??
-    (await getRemoteIncomingPayment(deps, url))
-
-  if (incomingPayment) {
-    try {
-      return new Receiver(incomingPayment)
-    } catch (err) {
-      const errorMessage = 'Could not create receiver from incoming payment'
-
-      deps.logger.error({ incomingPayment, err }, errorMessage)
-      throw new Error(errorMessage, { cause: err })
+  try {
+    const localIncomingPayment = await getLocalIncomingPayment(deps, url)
+    if (localIncomingPayment) {
+      return new Receiver(localIncomingPayment, true)
     }
+
+    const remoteIncomingPayment = await getRemoteIncomingPayment(deps, url)
+    if (remoteIncomingPayment) {
+      return new Receiver(remoteIncomingPayment, false)
+    }
+  } catch (err) {
+    deps.logger.error(
+      { errorMessage: err instanceof Error && err.message },
+      'Could not get incoming payment'
+    )
+    throw new Error('Could not get incoming payment', { cause: err })
   }
 }
 
@@ -182,10 +180,16 @@ function parseIncomingPaymentUrl(
 
 async function getLocalIncomingPayment(
   deps: ServiceDependencies,
-  id: string
+  url: string
 ): Promise<OpenPaymentsIncomingPaymentWithPaymentMethods | undefined> {
+  const urlParseResult = parseIncomingPaymentUrl(url)
+  if (!urlParseResult) {
+    deps.logger.error({ url }, 'Could not parse incoming payment url')
+    return undefined
+  }
+
   const incomingPayment = await deps.incomingPaymentService.get({
-    id
+    id: urlParseResult.id
   })
 
   if (!incomingPayment) {

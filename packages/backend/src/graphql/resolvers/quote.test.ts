@@ -93,10 +93,6 @@ describe('Quote Resolvers', (): void => {
                   assetCode
                   assetScale
                 }
-                maxPacketAmount
-                minExchangeRate
-                lowEstimatedExchangeRate
-                highEstimatedExchangeRate
                 createdAt
                 expiresAt
               }
@@ -124,10 +120,6 @@ describe('Quote Resolvers', (): void => {
           assetScale: quote.receiveAmount.assetScale,
           __typename: 'Amount'
         },
-        maxPacketAmount: quote.maxPacketAmount.toString(),
-        minExchangeRate: quote.minExchangeRate.valueOf(),
-        lowEstimatedExchangeRate: quote.lowEstimatedExchangeRate.valueOf(),
-        highEstimatedExchangeRate: quote.highEstimatedExchangeRate.valueOf(),
         createdAt: quote.createdAt.toISOString(),
         expiresAt: quote.expiresAt.toISOString(),
         __typename: 'Quote'

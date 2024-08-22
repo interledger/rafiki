@@ -114,7 +114,8 @@ describe('Receiver Service', (): void => {
                 sharedSecret: expect.any(String)
               }
             ]
-          }
+          },
+          isLocal: true
         })
       })
 
@@ -260,7 +261,8 @@ describe('Receiver Service', (): void => {
                   sharedSecret: expect.any(String)
                 }
               ]
-            }
+            },
+            isLocal: false
           })
           if (!existingGrant) {
             expect(clientRequestGrantSpy).toHaveBeenCalledWith(
@@ -480,7 +482,8 @@ describe('Receiver Service', (): void => {
                   sharedSecret: expect.any(String)
                 }
               ]
-            }
+            },
+            isLocal: false
           })
 
           expect(remoteIncomingPaymentServiceSpy).toHaveBeenCalledWith({
@@ -573,7 +576,8 @@ describe('Receiver Service', (): void => {
                   sharedSecret: expect.any(String)
                 }
               ]
-            }
+            },
+            isLocal: true
           })
 
           expect(incomingPaymentCreateSpy).toHaveBeenCalledWith({

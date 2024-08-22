@@ -14,13 +14,15 @@ import {
   PaymentMethodHandlerError,
   PaymentMethodHandlerErrorCode
 } from '../handler/errors'
+import { TelemetryService } from '../../telemetry/service'
 
 export interface IlpPaymentService extends PaymentMethodService {}
 
-interface ServiceDependencies extends BaseService {
+export interface ServiceDependencies extends BaseService {
   config: IAppConfig
   ratesService: RatesService
   makeIlpPlugin: (options: IlpPluginOptions) => IlpPlugin
+  telemetry?: TelemetryService
 }
 
 export async function createIlpPaymentService(
@@ -74,6 +76,7 @@ async function getQuote(
     }
 
     let ilpQuote: Pay.Quote | undefined
+    const rateProbeStartTime = Date.now()
     try {
       ilpQuote = await Pay.startQuote({
         ...quoteOptions,
@@ -88,6 +91,18 @@ async function getQuote(
         description: Pay.isPaymentError(err) ? err : 'Unknown error',
         retryable: canRetryError(err as Error | Pay.PaymentError)
       })
+    }
+    const payEndTime = Date.now()
+
+    if (deps.telemetry) {
+      const rateProbeDuraiton = payEndTime - rateProbeStartTime
+      deps.telemetry.recordHistogram(
+        'ilp_rate_probe_time_ms',
+        rateProbeDuraiton,
+        {
+          description: 'Time to get an ILP quote'
+        }
+      )
     }
     // Pay.startQuote should return PaymentError.InvalidSourceAmount or
     // PaymentError.InvalidDestinationAmount for non-positive amounts.

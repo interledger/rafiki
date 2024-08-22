@@ -1,0 +1,18 @@
+{
+  "name": "performance",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "test": "k6 run ./scripts/create-outgoing-payments.js",
+    "test-docker": "docker run --rm --network=rafiki_rafiki -v ./scripts:/scripts -i grafana/k6 run /scripts/create-outgoing-payments.js",
+    "run-tests": "./scripts/run-tests.sh",
+    "run-tests-docker": "./scripts/run-tests.sh --docker",
+    "hostile": "hostile"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "hostile": "^1.4.0"
+  }
+}

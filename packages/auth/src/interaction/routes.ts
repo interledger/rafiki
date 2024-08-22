@@ -146,6 +146,7 @@ async function getGrantDetails(
   )
 
   ctx.body = {
+    grantId: interaction.grant.id,
     access: access.map(toOpenPaymentsAccess),
     state: interaction.state
   }
@@ -181,7 +182,6 @@ async function startInteraction(
 
   const trx = await Interaction.startTransaction()
   try {
-    // TODO: also establish session in redis with short expiry
     await grantService.markPending(interaction.id, trx)
     await trx.commit()
 

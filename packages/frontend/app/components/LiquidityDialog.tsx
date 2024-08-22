@@ -1,19 +1,54 @@
 import { Dialog } from '@headlessui/react'
 import { Form } from '@remix-run/react'
+import type { ChangeEvent } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { XIcon } from '~/components/icons'
 import { Button, Input } from '~/components/ui'
+
+type BasicAsset = {
+  code: string
+  scale: number
+}
 
 type LiquidityDialogProps = {
   title: string
   onClose: () => void
   type: 'Deposit' | 'Withdraw'
+  asset: BasicAsset
 }
 
 export const LiquidityDialog = ({
   title,
   onClose,
-  type
+  type,
+  asset
 }: LiquidityDialogProps) => {
+  const [actualAmount, setActualAmount] = useState<number>(0)
+  const [errorMessage, setErrorMessage] = useState<string>('')
+
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const userInput = e.target.value
+    const scaledInput = parseFloat(userInput) * Math.pow(10, asset.scale)
+    const integerScaledInput = Math.floor(scaledInput)
+    if (scaledInput < 0) {
+      const error = 'The amount should be a positive value'
+      setErrorMessage(error)
+    } else if (scaledInput !== integerScaledInput) {
+      const error = 'The asset scale cannot accomodate this value'
+      setErrorMessage(error)
+    } else {
+      setErrorMessage('')
+    }
+    setActualAmount(integerScaledInput)
+  }
+
+  const inputRef = useRef<HTMLInputElement>(null)
+  useEffect(() => {
+    if (inputRef.current) {
+      inputRef.current.focus()
+    }
+  }, [])
+
   return (
     <Dialog as='div' className='relative z-10' onClose={onClose} open={true}>
       <div className='fixed inset-0 bg-tealish/30 bg-opacity-75 transition-opacity' />
@@ -38,13 +73,24 @@ export const LiquidityDialog = ({
                 {title}
               </Dialog.Title>
               <div className='mt-2'>
+                <Input
+                  ref={inputRef}
+                  required
+                  type='number'
+                  name='displayAmount'
+                  label='Amount'
+                  onChange={handleChange}
+                  addOn={asset.code}
+                  step='any'
+                  error={errorMessage}
+                />
                 <Form method='post' replace preventScrollReset>
                   <Input
                     required
                     min={1}
-                    type='number'
+                    type='hidden'
                     name='amount'
-                    label='Amount'
+                    value={actualAmount}
                   />
                   <div className='flex justify-end py-3'>
                     <Button aria-label={`${type} liquidity`} type='submit'>

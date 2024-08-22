@@ -40,7 +40,7 @@ describe('Grant Service', (): void => {
     await appContainer.shutdown()
   })
 
-  describe('Create and Get Grant', (): void => {
+  describe('Create and Get Grant by options', (): void => {
     describe.each`
       existingAuthServer | description
       ${false}           | ${'new auth server'}
@@ -85,8 +85,9 @@ describe('Grant Service', (): void => {
       `(
         'Grant can be created and fetched ($description)',
         async ({ expiresIn }): Promise<void> => {
+          const accessToken = uuid()
           const options: CreateOptions = {
-            accessToken: uuid(),
+            accessToken,
             managementUrl: `${faker.internet.url({
               appendSlash: false
             })}/${uuid()}`,

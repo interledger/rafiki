@@ -14,7 +14,7 @@ import { IncomingPayment } from '../open_payments/payment/incoming/model'
 import { createIncomingPayment } from './incomingPayment'
 import assert from 'assert'
 
-type CreateTestQuoteAndOutgoingPaymentOptions = Omit<
+export type CreateTestQuoteAndOutgoingPaymentOptions = Omit<
   CreateOutgoingPaymentOptions & CreateTestQuoteOptions,
   'quoteId'
 >
@@ -56,7 +56,8 @@ export async function createOutgoingPayment(
           incomingPayment.toOpenPaymentsTypeWithMethods(
             walletAddress,
             streamCredentials
-          )
+          ),
+          false
         )
       )
   }
@@ -124,7 +125,8 @@ export async function createOutgoingPaymentWithReceiver(
     incomingPayment.toOpenPaymentsTypeWithMethods(
       args.receivingWalletAddress,
       streamCredentials
-    )
+    ),
+    false
   )
 
   const outgoingPayment = await createOutgoingPayment(deps, {

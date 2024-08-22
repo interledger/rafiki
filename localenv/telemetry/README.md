@@ -8,7 +8,8 @@ The telemetry components include:
 
 - **OpenTelemetry Collector**: Collects and processes telemetry data from `cloud-nine-backend` and `happy-life-backend` services.
 - **Prometheus**: Scrapes metrics from the OpenTelemetry collector, and stores them.
-- **Grafana**: Visualizes metrics from Prometheus.
+- **Tempo**: Ingests traces from the OpenTelemetry collector, and stores them.
+- **Grafana**: Visualizes metrics from Prometheus and traces from Tempo.
 
 ## Usage
 

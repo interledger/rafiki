@@ -1,10 +1,5 @@
 import { Counter, Histogram, MetricOptions, metrics } from '@opentelemetry/api'
-import { OTLPMetricExporter } from '@opentelemetry/exporter-metrics-otlp-grpc'
-import { Resource } from '@opentelemetry/resources'
-import {
-  MeterProvider,
-  PeriodicExportingMetricReader
-} from '@opentelemetry/sdk-metrics'
+import { MeterProvider } from '@opentelemetry/sdk-metrics'
 
 import { RatesService, isConvertError } from '../rates/service'
 import { ConvertOptions } from '../rates/util'
@@ -21,6 +16,13 @@ export interface TelemetryService {
   incrementCounterWithTransactionAmount(
     name: string,
     amount: { value: bigint; assetCode: string; assetScale: number },
+    attributes?: Record<string, unknown>,
+    preservePrivacy?: boolean
+  ): Promise<void>
+  incrementCounterWithTransactionAmountDifference(
+    name: string,
+    amountSource: { value: bigint; assetCode: string; assetScale: number },
+    amountDestination: { value: bigint; assetCode: string; assetScale: number },
     attributes?: Record<string, unknown>
   ): Promise<void>
   recordHistogram(
@@ -41,7 +43,6 @@ interface TelemetryServiceDependencies extends BaseService {
 }
 
 const METER_NAME = 'Rafiki'
-const SERVICE_NAME = 'RAFIKI_NETWORK'
 
 export function createTelemetryService(
   deps: TelemetryServiceDependencies
@@ -58,32 +59,9 @@ class TelemetryServiceImpl implements TelemetryService {
   private counters: Map<string, Counter> = new Map()
   private histograms: Map<string, Histogram> = new Map()
   constructor(private deps: TelemetryServiceDependencies) {
-    // debug logger:
-    // diag.setLogger(new DiagConsoleLogger(), DiagLogLevel.DEBUG)
     this.instanceName = deps.instanceName
     this.internalRatesService = deps.internalRatesService
     this.aseRatesService = deps.aseRatesService
-
-    if (deps.collectorUrls.length === 0) {
-      deps.logger.info(
-        'No collector URLs specified, metrics will not be exported'
-      )
-      return
-    }
-
-    this.meterProvider = new MeterProvider({
-      resource: new Resource({ 'service.name': SERVICE_NAME }),
-      readers: deps.collectorUrls.map((url) => {
-        return new PeriodicExportingMetricReader({
-          exporter: new OTLPMetricExporter({
-            url
-          }),
-          exportIntervalMillis: deps.exportIntervalMillis ?? 15000
-        })
-      })
-    })
-
-    metrics.setGlobalMeterProvider(this.meterProvider)
   }
 
   public async shutdown(): Promise<void> {
@@ -123,10 +101,58 @@ class TelemetryServiceImpl implements TelemetryService {
     })
   }
 
+  public async incrementCounterWithTransactionAmountDifference(
+    name: string,
+    amountSource: { value: bigint; assetCode: string; assetScale: number },
+    amountDestination: { value: bigint; assetCode: string; assetScale: number },
+    attributes: Record<string, unknown> = {}
+  ): Promise<void> {
+    if (!amountSource.value || !amountDestination.value) return
+
+    const convertedSource = await this.convertAmount({
+      sourceAmount: amountSource.value,
+      sourceAsset: {
+        code: amountSource.assetCode,
+        scale: amountSource.assetScale
+      }
+    })
+    if (isConvertError(convertedSource)) {
+      this.deps.logger.error(
+        `Unable to convert source amount: ${convertedSource}`
+      )
+      return
+    }
+    const convertedDestination = await this.convertAmount({
+      sourceAmount: amountDestination.value,
+      sourceAsset: {
+        code: amountDestination.assetCode,
+        scale: amountDestination.assetScale
+      }
+    })
+    if (isConvertError(convertedDestination)) {
+      this.deps.logger.error(
+        `Unable to convert destination amount: ${convertedSource}`
+      )
+      return
+    }
+
+    const diff = BigInt(convertedSource - convertedDestination)
+    if (diff === 0n) return
+
+    if (diff < 0n) {
+      this.deps.logger.error(
+        `Difference should not be negative!: ${diff}, source asset ${amountSource.assetCode} vs destination asset ${amountDestination.assetCode}.`
+      )
+      return
+    }
+    this.incrementCounter(name, Number(diff), attributes)
+  }
+
   public async incrementCounterWithTransactionAmount(
     name: string,
     amount: { value: bigint; assetCode: string; assetScale: number },
-    attributes: Record<string, unknown> = {}
+    attributes: Record<string, unknown> = {},
+    preservePrivacy = true
   ): Promise<void> {
     const { value, assetCode, assetScale } = amount
     try {
@@ -139,11 +165,14 @@ class TelemetryServiceImpl implements TelemetryService {
         return
       }
 
-      const obfuscatedAmount = privacy.applyPrivacy(Number(converted))
+      const obfuscatedAmount = preservePrivacy
+        ? privacy.applyPrivacy(Number(converted))
+        : Number(converted)
       this.incrementCounter(name, obfuscatedAmount, attributes)
     } catch (e) {
       this.deps.logger.error(e, `Unable to collect telemetry`)
     }
+    return Promise.resolve()
   }
 
   public recordHistogram(

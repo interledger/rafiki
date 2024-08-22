@@ -237,9 +237,7 @@ async function createOutgoingPayment(
       const peer = await deps.peerService.getByDestinationAddress(
         receiver.ilpAddress
       )
-      if (peer) {
-        await payment.$query(trx).patch({ peerId: peer.id })
-      }
+      if (peer) await payment.$query(trx).patch({ peerId: peer.id })
 
       await sendWebhookEvent(
         deps,

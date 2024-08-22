@@ -10,6 +10,8 @@ These packages include:
 - `auth` (GNAP auth server)
 - `mock-account-servicing-entity` (mocks an [Account Servicing Entity](/reference/glossary#account-servicing-entity))
 - `frontend` (Remix app to expose a UI for Rafiki Admin management via interaction with the `backend` Admin APIs)
+- `kratos` (An identity and user management solution for the `frontend`)
+- `mailslurper` (A SMTP mail server to catch account recovery emails for the `frontend`)
 
 These packages depend on the following databases:
 
@@ -20,6 +22,10 @@ These packages depend on the following databases:
 We provide containerized versions of our packages together with two pre-configured docker-compose files ([Cloud Nine Wallet](https://github.com/interledger/rafiki/blob/main/localenv/cloud-nine-wallet/docker-compose.yml) and [Happy Life Bank](https://github.com/interledger/rafiki/blob/main/localenv/happy-life-bank/docker-compose.yml)) to start two Mock Account Servicing Entities with their respective Rafiki backend and auth servers. They automatically peer and 2 to 3 user accounts are created on both of them.
 
 This environment will set up a playground where you can use the Rafiki Admin APIs and the Open Payments APIs.
+
+## Disclaimer
+
+> **The Mock ASE provided in this repository is intended solely for internal use and demonstration purposes. It is not designed to serve as a reference architecture. If you are looking for a reference implementation of an ASE, please refer to the [Test Wallet](https://github.com/interledger/testnet).**
 
 ## Environment overview
 
@@ -73,7 +79,7 @@ Navigate to [`localhost:3030`](http://localhost:3030) to view the accounts on on
 
 The accounts of the second instance (Happy Life Bank) can be found on [`localhost:3031`](http://localhost:3031).
 
-When clicking on the Account Name, a list of Transactions appears.
+When clicking on the Account Name, you can view the account information, the available balance, and see a list of transactions.
 
 ![Mock Account Servicing Entity Transactions](/img/map-transactions.png)
 
@@ -89,19 +95,22 @@ When clicking on the Account Name, a list of Transactions appears.
 
 The following should be run from the root of the project.
 
-```
-// If you have spun up the environment before, remember to first tear down and remove volumes!
+```sh
+# If you have spun up the environment before, remember to first tear down and remove volumes!
 
-// start the local environment
+# start the local environment
 pnpm localenv:compose up
 
-// tear down and remove volumes
+# tear down and remove volumes
 pnpm localenv:compose down --volumes
+
+# tear down, delete database volumes and remove images
+pnpm localenv:compose down --volumes --rmi all
 ```
 
 If you want to use Postgres as the accounting database instead of TigerBeetle, you can use the `psql` variant of the `localenv:compose` commands:
 
-```
+```sh
 pnpm localenv:compose:psql up
 pnpm localenv:compose:psql down --volumes
 ```
@@ -118,12 +127,12 @@ The `pnpm localenv:compose up` command starts both the primary instance and the 
 
 Debuggers for the services are exposed on the following ports:
 
-| IP and Port    | Services                |
-| -------------- | ----------------------- |
-| 127.0.0.1:9229 | Cloud Nine Backend      |
-| 127.0.0.1:9230 | Cloud Nine Auth         |
-| 127.0.0.1:9231 | Happy Life Bank Backend |
-| 127.0.0.1:9232 | Happy Life Bank Auth    |
+| IP and Port    | Services                  |
+| -------------- | ------------------------- |
+| 127.0.0.1:9229 | Cloud Nine Wallet Backend |
+| 127.0.0.1:9230 | Cloud Nine Auth           |
+| 127.0.0.1:9231 | Happy Life Bank Backend   |
+| 127.0.0.1:9232 | Happy Life Bank Auth      |
 
 #### With a chromium browser:
 
@@ -134,9 +143,9 @@ Debuggers for the services are exposed on the following ports:
 
 You can either trigger the debugger by adding `debugger` statements in code and restarting, or by adding breakpoints directly in the chromium debugger after starting the docker containers.
 
-#### With Vscode:
+#### With VS Code:
 
-For debugging with Vscode, you can add this configuration to your `.vscode/launch.json`):
+For debugging with VS Code, you can add this configuration to your `.vscode/launch.json`):
 
 ```json
 {
@@ -157,12 +166,15 @@ For more ways to connect debuggers, see the Node docs for debugging: https://nod
 
 ### Shutting down
 
-```
-// tear down
+```sh
+# tear down
 pnpm localenv:compose down
 
-// tear down and delete database volumes
+# tear down and delete database volumes
 pnpm localenv:compose down --volumes
+
+# tear down, delete database volumes and remove images
+pnpm localenv:compose down --volumes --rmi all
 ```
 
 ### Commands
@@ -211,13 +223,11 @@ Note that you have to go through an interaction flow by clicking on the `redirec
 
 #### Admin UI
 
-In order to manage, and view information about the Rafiki instance(s) using a UI, you can navigate to [`localhost:3010`](http://localhost:3010) (Cloud Nine Wallet) or [`localhost:4010`](http://localhost:4010) (Happy Life Bank). This is the `frontend` project which runs a Remix app for querying info and executing mutations against the Rafiki [Admin APIs](#admin-apis).
+In order to manage, and view information about the Rafiki instance(s) you can use the [Rafiki Admin](/rafikiadmin/overview) UI. We have secured access to Rafiki Admin using [Ory Kratos](https://www.ory.sh/docs/kratos/ory-kratos-intro). Since access to the UI is on an invitation-only basis the registration flow is not publicly available. As such, in order to access Rafiki Admin you can click the registration link provided in the logs during `localenv` startup or you can manually add a new user with the invite-user script. Run `docker exec -it <admin-container-name> npm run invite-user -- example@mail.com` and it will output a link to the terminal. Copy and paste this link in your browser and you will automatically be logged in and directed to the account settings page. The next step is changing your password. We're using a simple email and password authentication method.
 
-We have secured access to the Admin UI using [Ory Kratos](https://www.ory.sh/docs/kratos/ory-kratos-intro), a secure and fully open-source identity and user management solution. Check it out on [GitHub](https://github.com/ory/kratos). Since access to the UI is on an invitation-only basis the registration flow is not publicly available. As such, in order to access the Admin UI you can click the registration link provided in the logs during `localenv` startup or you can manually add a new user with the invite-user script. Run `docker exec -it <admin-container-name> npm run invite-user -- example@mail.com` and it will output recovery link to the terminal. The recovery link doubles as the invitation method. Copy and paste this link in your browser and you will automatically be logged in and directed to the account settings page. The next step is changing your password. We're using a simple email and password authentication method.
+Note that a separate registration is required for Cloud Nine Wallet's Rafiki Admin and Happy Life Bank's Rafiki Admin, since they are each designed to run as separate mock account servicing entities. Once you've registered, you can always come back to your Rafiki Admin account by navigating to [`localhost:3010`](http://localhost:3010) (Cloud Nine Wallet) or [`localhost:4010`](http://localhost:4010) (Happy Life Bank) and logging in.
 
-There is a password recovery flow. On the login page if you clkick the `forgot password` link and enter an email for a registered user then you can open [Mail Slurper](http://localhost:4436) to access the recovery link for your account.
-
-We've also included a script to remove users: `docker exec -it <admin-container-name> npm run delete-user -- example@mail.com`.
+You can test the account recovery flow by clicking "Forgot pasword?" on the login page and by navigating to [`localhost:4436`](http://localhost:4436) (Mailslurper interface).
 
 #### Admin APIs
 
@@ -249,9 +259,9 @@ Keep-Alive: timeout=5
 
 #### No data in Mock Account Servicing Entity (MASE)
 
-It is possible that upon (re)starting the local playground, you may run into an issue where there are no accounts/wallet addresses visible in the mock account servicing entities' pages (http://localhost:3030, http://localhost:3031). This is because seeding of the intial account data only works against an empty database. To correct this, clear the volumes, and restart the container via:
+It is possible that upon (re)starting the local playground, you may run into an issue where there are no accounts/wallet addresses visible in the mock account servicing entities' pages (http://localhost:3030, http://localhost:3031). This is because seeding of the initial account data only works against an empty database. To correct this, clear the volumes, and restart the container via:
 
-```
+```sh
 pnpm localenv:compose down --volumes
 pnpm localenv:compose up -d
 ```

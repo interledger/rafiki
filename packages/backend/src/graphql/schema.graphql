@@ -91,6 +91,14 @@ type Query {
     filter: PaymentFilter
   ): PaymentConnection!
 
+  "Fetch a page of accounting transfers"
+  accountingTransfers(
+    "Account id."
+    id: String!
+    "Limit the number of results returned. If no limit is provided, the default limit of 100_000 is set for TigerBeetle."
+    limit: Int
+  ): AccountingTransferConnection!
+
   "Get an local or remote Open Payments Incoming Payment. The receiver has a wallet address on either this or another Open Payments resource server."
   receiver(id: String!): Receiver
 }
@@ -236,6 +244,16 @@ type Mutation {
 
   "Set the fee on an asset"
   setFee(input: SetFeeInput!): SetFeeResponse!
+
+  "Approves the incoming payment if the incoming payment is in the PENDING state"
+  approveIncomingPayment(
+    input: ApproveIncomingPaymentInput!
+  ): ApproveIncomingPaymentResponse!
+
+  "Cancel the incoming payment if the incoming payment is in the PENDING state"
+  cancelIncomingPayment(
+    input: CancelIncomingPaymentInput!
+  ): CancelIncomingPaymentResponse!
 }
 
 type PageInfo {
@@ -257,6 +275,16 @@ type AssetsConnection {
 type AssetEdge {
   node: Asset!
   cursor: String!
+}
+
+input ApproveIncomingPaymentInput {
+  "Unique identifier of the incoming payment to be approved. Note: Incoming Payment must be PENDING."
+  id: ID!
+}
+
+input CancelIncomingPaymentInput {
+  "Unique identifier of the incoming payment to be cancelled. Note: Incoming Payment must be PENDING."
+  id: ID!
 }
 
 input CreateAssetInput {
@@ -841,6 +869,8 @@ type OutgoingPayment implements BasePayment & Model {
   sentAmount: Amount!
   "Date-time of creation"
   createdAt: String!
+  "Id of the Grant under which this outgoing payment was created"
+  grantId: String
 }
 
 enum OutgoingPaymentState {
@@ -895,6 +925,37 @@ input PaymentFilter {
   walletAddressId: FilterString
 }
 
+type AccountingTransferConnection {
+  debits: [AccountingTransfer!]!
+  credits: [AccountingTransfer!]!
+}
+
+type AccountingTransfer implements Model {
+  "Payment id"
+  id: ID!
+  "Debit account id"
+  debitAccountId: ID!
+  "Credit account id"
+  creditAccountId: ID!
+  "Amount sent (fixed send)"
+  amount: UInt64!
+  "Type of accounting transfer"
+  transferType: TransferType!
+  "Identifier that partitions the sets of accounts that can transact with each other."
+  ledger: UInt8!
+  "Date-time of creation"
+  createdAt: String!
+}
+
+enum TransferType {
+  "Deposit transfer type."
+  DEPOSIT
+  "Withdrawal transfer type."
+  WITHDRAWAL
+  "Transfer type."
+  TRANSFER
+}
+
 type QuoteConnection {
   pageInfo: PageInfo!
   edges: [QuoteEdge!]!
@@ -916,18 +977,12 @@ type Quote {
   debitAmount: Amount!
   "Amount to receive (fixed receive)"
   receiveAmount: Amount!
-  "Maximum value per packet allowed on the possible routes"
-  maxPacketAmount: UInt64!
-  "Aggregate exchange rate the payment is guaranteed to meet"
-  minExchangeRate: Float!
-  "Lower bound of probed exchange rate"
-  lowEstimatedExchangeRate: Float!
-  "Upper bound of probed exchange rate"
-  highEstimatedExchangeRate: Float!
   "Date-time of creation"
   createdAt: String!
   "Date-time of expiration"
   expiresAt: String!
+  "Estimated exchange rate"
+  estimatedExchangeRate: Float
 }
 
 input AmountInput {
@@ -1249,6 +1304,14 @@ type RevokeWalletAddressKeyMutationResponse {
 
 type SetFeeResponse {
   fee: Fee
+}
+
+type ApproveIncomingPaymentResponse {
+  payment: IncomingPayment
+}
+
+type CancelIncomingPaymentResponse {
+  payment: IncomingPayment
 }
 
 scalar UInt8
