@@ -202,7 +202,7 @@ export class Rafiki<T = any> {
         response,
         telemetry
       )
-      incrementAmount(
+      await incrementAmount(
         unfulfillable,
         prepare.amount,
         response,
