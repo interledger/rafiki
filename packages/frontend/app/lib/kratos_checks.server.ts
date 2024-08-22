@@ -34,7 +34,7 @@ export async function checkAuthAndRedirect(
   const { pathname } = new URL(url)
   const isAuthPath = pathname.startsWith('/auth')
   const isSettingsPage = pathname.includes('/settings')
-  const isLogoutPage = pathname.includes('/logout')
+  const isLogoutPage = pathname.includes('logout')
 
   if (!variables.authEnabled) {
     // If auth is disabled users shouldn't accesses the auth path or Kratos settings pages
@@ -45,7 +45,6 @@ export async function checkAuthAndRedirect(
     }
   }
 
-  // auth is enabled
   const loggedIn = await isLoggedIn(cookieHeader)
 
   // Logged-in users can access all pages except auth pages, with the exception of the manual logout page
@@ -55,8 +54,8 @@ export async function checkAuthAndRedirect(
     }
     return
   } else {
-    // Unauthenticated users can only access auth path pages
-    if (!isAuthPath) {
+    // Users who are not logged in can only access auth path pages and cannot logout
+    if (!isAuthPath || isLogoutPage) {
       throw redirect('/auth')
     }
     return

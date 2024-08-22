@@ -6,6 +6,7 @@ import { checkAuthAndRedirect } from '../lib/kratos_checks.server'
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const cookies = request.headers.get('cookie')
   await checkAuthAndRedirect(request.url, cookies)
+  return null
 }
 
 export default function Logout() {
