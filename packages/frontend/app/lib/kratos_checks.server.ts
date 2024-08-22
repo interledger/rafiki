@@ -33,13 +33,14 @@ export async function checkAuthAndRedirect(
 ) {
   const isAuthPath = new URL(url).pathname.startsWith('/auth')
   const isSettingsPage = new URL(url).pathname.includes('/settings')
+  const isLogoutPage = new URL(url).pathname.includes('/logout')
 
   if (isAuthPath) {
     if (!variables.authEnabled) {
       throw redirect('/')
     } else {
       const loggedIn = await isLoggedIn(cookieHeader)
-      if (loggedIn) {
+      if (loggedIn && !isLogoutPage) {
         throw redirect('/')
       }
       return
