@@ -5,6 +5,7 @@ import { OutgoingPayment, OutgoingPaymentState } from './model'
 import { LifecycleError, PaymentError } from './errors'
 import * as lifecycle from './lifecycle'
 import { PaymentMethodHandlerError } from '../../../payment-method/handler/errors'
+import { trace, Span } from '@opentelemetry/api'
 
 // First retry waits 10 seconds, second retry waits 20 (more) seconds, etc.
 export const RETRY_BACKOFF_SECONDS = 10
@@ -63,16 +64,24 @@ async function handlePaymentLifecycle(
   deps: ServiceDependencies,
   payment: OutgoingPayment
 ): Promise<void> {
-  if (payment.state !== OutgoingPaymentState.Sending) {
-    deps.logger.warn('unexpected payment in lifecycle')
-    return
-  }
+  const tracer = trace.getTracer('outgoing_payment_worker')
+  await tracer.startActiveSpan(
+    'outgoingPaymentLifecycle',
+    async (span: Span) => {
+      if (payment.state !== OutgoingPaymentState.Sending) {
+        deps.logger.warn('unexpected payment in lifecycle')
+        span.end()
+        return
+      }
 
-  try {
-    await lifecycle.handleSending(deps, payment)
-  } catch (error) {
-    await onLifecycleError(deps, payment, error as Error | PaymentError)
-  }
+      try {
+        await lifecycle.handleSending(deps, payment)
+      } catch (error) {
+        await onLifecycleError(deps, payment, error as Error | PaymentError)
+      }
+      span.end()
+    }
+  )
 }
 
 async function onLifecycleError(
