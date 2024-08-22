@@ -78,14 +78,23 @@ async function create(
     return RemoteIncomingPaymentError.UnknownWalletAddress
   }
 
-  return createIncomingPaymentWithRetry(deps, args, walletAddress)
+  return createIncomingPayment(deps, {
+    createArgs: args,
+    walletAddress
+  })
 }
 
-async function createIncomingPaymentWithRetry(
+async function createIncomingPayment(
   deps: ServiceDependencies,
-  args: CreateRemoteIncomingPaymentArgs,
-  walletAddress: WalletAddress,
-  retries = 1
+  {
+    createArgs,
+    walletAddress,
+    retryOnTokenError = true
+  }: {
+    createArgs: CreateRemoteIncomingPaymentArgs
+    walletAddress: WalletAddress
+    retryOnTokenError?: boolean
+  }
 ): Promise<
   OpenPaymentsIncomingPaymentWithPaymentMethods | RemoteIncomingPaymentError
 > {
@@ -94,7 +103,7 @@ async function createIncomingPaymentWithRetry(
 
   const grantOptions = {
     authServer: walletAddress.authServer,
-    accessType: 'incoming-payment' as const,
+    accessType: AccessType.IncomingPayment,
     accessActions: [AccessAction.Create, AccessAction.ReadAll]
   }
 
@@ -112,16 +121,27 @@ async function createIncomingPaymentWithRetry(
       },
       {
         walletAddress: walletAddress.id,
-        incomingAmount: args.incomingAmount
-          ? serializeAmount(args.incomingAmount)
+        incomingAmount: createArgs.incomingAmount
+          ? serializeAmount(createArgs.incomingAmount)
           : undefined,
-        expiresAt: args.expiresAt?.toISOString(),
-        metadata: args.metadata ?? undefined
+        expiresAt: createArgs.expiresAt?.toISOString(),
+        metadata: createArgs.metadata ?? undefined
       }
     )
   } catch (err) {
     const errorMessage = 'Error creating remote incoming payment'
+
     if (err instanceof OpenPaymentsClientError) {
+      if ((err.status === 401 || err.status === 403) && retryOnTokenError) {
+        await deps.grantService.delete(grant.id) // force new grant creation
+
+        return createIncomingPayment(deps, {
+          createArgs,
+          walletAddress,
+          retryOnTokenError: false
+        })
+      }
+
       deps.logger.error(
         {
           errStatus: err.status,
@@ -133,27 +153,9 @@ async function createIncomingPaymentWithRetry(
         },
         errorMessage
       )
-
-      // TODO: check for token-specific error codes when resource server is updated to return proper error objects
-      if ((err.status === 401 || err.status === 403) && retries > 0) {
-        deps.logger.warn(
-          { resourceServerUrl, errStatus: err.status },
-          `Retrying request after receiving ${err.status} code. Retries left: ${retries}`
-        )
-
-        retries--
-        await deps.grantService.delete(grant.id) // force new grant creation
-
-        return await createIncomingPaymentWithRetry(
-          deps,
-          args,
-          walletAddress,
-          retries
-        )
-      }
     } else {
       deps.logger.error(
-        { err, walletAddressUrl: walletAddress.id },
+        { err, resourceServerUrl, walletAddressUrl: walletAddress.id },
         errorMessage
       )
     }
@@ -184,8 +186,24 @@ async function get(
     return RemoteIncomingPaymentError.InvalidRequest
   }
 
+  return getIncomingPayment(deps, {
+    url,
+    authServerUrl: publicIncomingPayment.authServer
+  })
+}
+
+async function getIncomingPayment(
+  deps: ServiceDependencies,
+  {
+    url,
+    authServerUrl,
+    retryOnTokenError = true
+  }: { url: string; authServerUrl: string; retryOnTokenError?: boolean }
+): Promise<
+  OpenPaymentsIncomingPaymentWithPaymentMethods | RemoteIncomingPaymentError
+> {
   const grantOptions = {
-    authServer: publicIncomingPayment.authServer,
+    authServer: authServerUrl,
     accessType: AccessType.IncomingPayment,
     accessActions: [AccessAction.ReadAll]
   }
@@ -197,18 +215,56 @@ async function get(
   }
 
   try {
-    return await deps.openPaymentsClient.incomingPayment.get({
+    const incomingPayment = await deps.openPaymentsClient.incomingPayment.get({
       url,
       accessToken: grant.accessToken
     })
+
+    if (!incomingPayment.id) {
+      throw new OpenPaymentsClientError('Got invalid incoming payment', {
+        status: 401,
+        description: 'Received public incoming payment'
+      })
+    }
+
+    return incomingPayment
   } catch (err) {
+    const errorMessage = 'Could not get remote incoming payment'
+
     if (err instanceof OpenPaymentsClientError) {
       if (err.status === 404) {
         return RemoteIncomingPaymentError.NotFound
       }
+
+      if ((err.status === 403 || err.status === 401) && retryOnTokenError) {
+        deps.logger.warn(
+          { incomingPaymentUrl: url, errStatus: err.status },
+          `Retrying request after receiving ${err.status} error code when getting incoming payment`
+        )
+
+        await deps.grantService.delete(grant.id) // force new grant creation
+
+        return getIncomingPayment(deps, {
+          url,
+          authServerUrl,
+          retryOnTokenError: false
+        })
+      }
+
+      deps.logger.error(
+        {
+          errStatus: err.status,
+          errDescription: err.description,
+          errMessage: err.message,
+          errValidation: err.validationErrors,
+          incomingPaymentUrl: url
+        },
+        errorMessage
+      )
+    } else {
+      deps.logger.error({ err, incomingPaymentUrl: url }, errorMessage)
     }
 
-    deps.logger.warn({ url, err }, 'Could not get incoming payment')
     return RemoteIncomingPaymentError.InvalidRequest
   }
 }
