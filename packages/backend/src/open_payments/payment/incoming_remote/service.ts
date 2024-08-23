@@ -131,8 +131,23 @@ async function createIncomingPayment(
   } catch (err) {
     const errorMessage = 'Error creating remote incoming payment'
 
+    const baseErrorLog = {
+      walletAddressUrl: walletAddress.id,
+      resourceServerUrl,
+      grantId: grant.id
+    }
+
     if (err instanceof OpenPaymentsClientError) {
       if ((err.status === 401 || err.status === 403) && retryOnTokenError) {
+        deps.logger.warn(
+          {
+            ...baseErrorLog,
+            errStatus: err.status,
+            errDescription: err.description
+          },
+          `Retrying request after receiving ${err.status} error code when creating incoming payment`
+        )
+
         await deps.grantService.delete(grant.id) // force new grant creation
 
         return createIncomingPayment(deps, {
@@ -144,20 +159,16 @@ async function createIncomingPayment(
 
       deps.logger.error(
         {
+          ...baseErrorLog,
           errStatus: err.status,
           errDescription: err.description,
           errMessage: err.message,
-          errValidation: err.validationErrors,
-          walletAddressUrl: walletAddress.id,
-          resourceServerUrl
+          errValidation: err.validationErrors
         },
         errorMessage
       )
     } else {
-      deps.logger.error(
-        { err, resourceServerUrl, walletAddressUrl: walletAddress.id },
-        errorMessage
-      )
+      deps.logger.error({ ...baseErrorLog, err }, errorMessage)
     }
     return RemoteIncomingPaymentError.InvalidRequest
   }
@@ -232,6 +243,11 @@ async function getIncomingPayment(
   } catch (err) {
     const errorMessage = 'Could not get remote incoming payment'
 
+    const baseErrorLog = {
+      incomingPaymentUrl: url,
+      grantId: grant.id
+    }
+
     if (err instanceof OpenPaymentsClientError) {
       if (err.status === 404) {
         return RemoteIncomingPaymentError.NotFound
@@ -239,7 +255,11 @@ async function getIncomingPayment(
 
       if ((err.status === 403 || err.status === 401) && retryOnTokenError) {
         deps.logger.warn(
-          { incomingPaymentUrl: url, errStatus: err.status },
+          {
+            ...baseErrorLog,
+            errStatus: err.status,
+            errDescription: err.description
+          },
           `Retrying request after receiving ${err.status} error code when getting incoming payment`
         )
 
@@ -254,16 +274,16 @@ async function getIncomingPayment(
 
       deps.logger.error(
         {
+          ...baseErrorLog,
           errStatus: err.status,
           errDescription: err.description,
           errMessage: err.message,
-          errValidation: err.validationErrors,
-          incomingPaymentUrl: url
+          errValidation: err.validationErrors
         },
         errorMessage
       )
     } else {
-      deps.logger.error({ err, incomingPaymentUrl: url }, errorMessage)
+      deps.logger.error({ ...baseErrorLog, err }, errorMessage)
     }
 
     return RemoteIncomingPaymentError.InvalidRequest
