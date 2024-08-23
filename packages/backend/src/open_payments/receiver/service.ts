@@ -1,9 +1,5 @@
-import {
-  AuthenticatedClient,
-  IncomingPaymentWithPaymentMethods as OpenPaymentsIncomingPaymentWithPaymentMethods
-} from '@interledger/open-payments'
+import { IncomingPaymentWithPaymentMethods as OpenPaymentsIncomingPaymentWithPaymentMethods } from '@interledger/open-payments'
 import { StreamCredentialsService } from '../../payment-method/ilp/stream-credentials/service'
-import { GrantService } from '../grant/service'
 import { WalletAddressService } from '../wallet_address/service'
 import { BaseService } from '../../shared/baseService'
 import { IncomingPaymentService } from '../payment/incoming/service'
@@ -17,7 +13,6 @@ import {
   ReceiverError,
   errorToMessage as receiverErrorToMessage
 } from './errors'
-import { IAppConfig } from '../../config/app'
 import { isRemoteIncomingPaymentError } from '../payment/incoming_remote/errors'
 
 interface CreateReceiverArgs {
@@ -35,13 +30,9 @@ export interface ReceiverService {
 
 interface ServiceDependencies extends BaseService {
   streamCredentialsService: StreamCredentialsService
-  grantService: GrantService
   incomingPaymentService: IncomingPaymentService
-  openPaymentsUrl: string
   walletAddressService: WalletAddressService
-  openPaymentsClient: AuthenticatedClient
   remoteIncomingPaymentService: RemoteIncomingPaymentService
-  config: IAppConfig
 }
 
 const INCOMING_PAYMENT_URL_REGEX =
