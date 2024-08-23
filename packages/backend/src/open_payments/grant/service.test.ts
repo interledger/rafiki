@@ -195,6 +195,61 @@ describe('Grant Service', (): void => {
       expect(authServerServiceGetOrCreateSoy).toHaveBeenCalled()
     })
 
+    test('creates new grant with additional subset actions', async () => {
+      const newOpenPaymentsGrant = mockGrant()
+      const openPaymentsGrantRequestSpy = jest
+        .spyOn(openPaymentsClient.grant, 'request')
+        .mockResolvedValueOnce({
+          ...newOpenPaymentsGrant
+        })
+
+      const options = {
+        authServer: authServer.url,
+        accessType: AccessType.IncomingPayment,
+        accessActions: [
+          AccessAction.Create,
+          AccessAction.ReadAll,
+          AccessAction.ListAll
+        ]
+      }
+
+      const authServerServiceGetOrCreateSoy = jest.spyOn(
+        authServerService,
+        'getOrCreate'
+      )
+
+      const grant = await grantService.getOrCreate(options)
+
+      assert(!isGrantError(grant))
+      expect(grant.accessActions.sort()).toEqual(
+        [
+          AccessAction.Create,
+          AccessAction.ReadAll,
+          AccessAction.ListAll,
+          AccessAction.List,
+          AccessAction.Read
+        ].sort()
+      )
+      expect(openPaymentsGrantRequestSpy).toHaveBeenCalledWith(
+        { url: options.authServer },
+        {
+          access_token: {
+            access: [
+              {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                type: options.accessType as any,
+                actions: options.accessActions
+              }
+            ]
+          },
+          interact: {
+            start: ['redirect']
+          }
+        }
+      )
+      expect(authServerServiceGetOrCreateSoy).toHaveBeenCalled()
+    })
+
     test('creates new grant and deletes old one after being unable to rotate existing token', async () => {
       const existingGrant = await Grant.query(knex).insertAndFetch({
         authServerId: authServer.id,
