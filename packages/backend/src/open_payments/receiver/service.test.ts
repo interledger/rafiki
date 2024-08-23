@@ -250,7 +250,7 @@ describe('Receiver Service', (): void => {
         expect(remoteIncomingPaymentServiceGetSpy).toHaveBeenCalledTimes(1)
       })
 
-      test('throws if error getting receiver from remote incoming payment', async () => {
+      test('returns undefined if error getting receiver from remote incoming payment', async () => {
         const mockedIncomingPayment = mockIncomingPaymentWithPaymentMethods({
           completed: true // cannot get receiver with a completed incoming payment
         })
@@ -265,7 +265,7 @@ describe('Receiver Service', (): void => {
 
         await expect(
           receiverService.get(mockedIncomingPayment.id)
-        ).rejects.toThrow('Could not get incoming payment')
+        ).resolves.toBeUndefined()
         expect(localIncomingPaymentServiceGetSpy).toHaveBeenCalledTimes(1)
         expect(remoteIncomingPaymentServiceGetSpy).toHaveBeenCalledTimes(1)
       })

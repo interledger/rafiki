@@ -151,7 +151,6 @@ async function getReceiver(
       { errorMessage: err instanceof Error && err.message },
       'Could not get incoming payment'
     )
-    throw new Error('Could not get incoming payment', { cause: err })
   }
 }
 
