@@ -131,7 +131,9 @@ export async function getExistingGrant(
     })
     .whereNull('deletedAt')
     .andWhere('authServer.url', options.authServer)
-    .andWhere('accessActions', '@>', options.accessActions) // all options.accessActions are a subset of saved accessActions
+    // all options.accessActions are a subset of saved accessActions
+    // e.g. if [ReadAll, Create] is saved, requesting just [Create] would still match
+    .andWhere('accessActions', '@>', options.accessActions)
     .withGraphJoined('authServer')
 }
 
@@ -178,7 +180,7 @@ async function requestNewGrant(
   return Grant.query(deps.knex)
     .insertAndFetch({
       accessType: options.accessType,
-      accessActions: options.accessActions,
+      accessActions: addSubsetActions(options.accessActions),
       accessToken: openPaymentsGrant.access_token.value,
       managementId: retrieveManagementId(openPaymentsGrant.access_token.manage),
       authServerId,
@@ -233,6 +235,28 @@ async function deleteGrant(
   return Grant.query(deps.knex).updateAndFetchById(grantId, {
     deletedAt: new Date()
   })
+}
+
+function addSubsetActions(accessActions: AccessAction[]): AccessAction[] {
+  const newAccessActions = [...accessActions]
+
+  // Read is a subset action of ReadAll
+  if (
+    accessActions.includes(AccessAction.ReadAll) &&
+    !accessActions.includes(AccessAction.Read)
+  ) {
+    newAccessActions.push(AccessAction.Read)
+  }
+
+  // List is a subset action of ListAll
+  if (
+    accessActions.includes(AccessAction.ListAll) &&
+    !accessActions.includes(AccessAction.List)
+  ) {
+    newAccessActions.push(AccessAction.List)
+  }
+
+  return newAccessActions
 }
 
 function retrieveManagementId(managementUrl: string): string {
