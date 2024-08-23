@@ -22,6 +22,8 @@ The following are required when using the `backend` service.
   You can use the same database instance of Postgres for the `backend` service, `auth` service, and accounting balances (if not using TigerBeetle). However, separate database schemas are required within the Rafiki instance to maintain boundaries between the objects being managed.
   :::
 
+You must also set the [environment variables](/integration/deploy-to-prod/environment-variables#backend) for the `backend` service.
+
 ## Open Payments
 
 The `backend` service exposes the Open Payments APIs, which are auth-protected using an opinionated version of the Grant Negotiation and Authorization Protocol (GNAP). Review the [`auth`](/services-and-aux-packages/auth-service) service page for more details about grant authorization and authentication.
@@ -49,10 +51,4 @@ The amounts within ILP packets are used to update account balances in your accou
 
 ## GraphQL Backend Admin API
 
-The `backend` service exposes a GraphQL [Backend Admin API](/apis/graphql/admin-api-overview#backend-admin-api) to manage:
-
-- Assets
-- Peers
-- Wallet addresses
-- Open Payments resources
-- Several types of liquidity
+The `backend` service exposes a GraphQL [Backend Admin API](/apis/graphql/admin-api-overview#backend-admin-api) to manage assets, peers, wallet addresses, Open Payments resources, and several types of liquidity.
