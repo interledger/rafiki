@@ -49,35 +49,28 @@ To spin up the Local Playground install the following software on your machine:
 
 Run the following commands from the root of the project.
 
-<CodeBlock>
-
-```
-// If you have spun up the environment before, first tear down and remove volumes!
+```sh
+## If you have spun up the environment before, first tear down and remove volumes!
 
 pnpm localenv:compose down --volumes
 
-// Otherwise start the local environment
-// start the local environment
+## Otherwise start the local environment
+## start the local environment
 
 pnpm localenv:compose up
 ```
 
-</CodeBlock>
-
 If you want to use Postgres as the accounting database instead of TigerBeetle, you must use the `psql` variant of the `localenv:compose` commands as follows:
 
-<CodeBlock>
-
-```
-// If you have spun up the environment before, first tear down and remove volumes!  Otherwise start the local environment
+```sh
+## If you have spun up the environment before, first tear down and remove volumes!
+## Otherwise start the local environment
 pnpm localenv:compose:psql down --volumes
 
 
 // start the local environment
 pnpm localenv:compose:psql up
 ```
-
-</CodeBlock>
 
 The local environment consists of a primary and secondary Rafiki instance, each with its docker-compose file (<LinkOut href='https://github.com/interledger/rafiki/blob/main/localenv/cloud-nine-wallet/docker-compose.yml'>Cloud Nine Wallet</LinkOut>, <LinkOut href='https://github.com/interledger/rafiki/blob/main/localenv/cloud-nine-wallet/docker-compose.yml'>Happy Life Bank</LinkOut>). The primary Cloud Nine Wallet docker-compose file (`./cloud-nine-wallet/docker-compose.yml`) includes the primary Rafiki `backend` and `auth` services, as well as the required data stores, which include TigerBeetle (if enabled), Redis, and Postgres. The primary instance contains all of the necessary components so that it can run independently.
 
@@ -155,12 +148,9 @@ Debuggers for the services are exposed on the following ports:
 #### Debugging with a Chromium browser:
 
 1. Go to chrome://inspect
-
 2. Click **Configure** and add the IP addresses and ports detailed above
-
 3. Start the docker containers
-
-4. Click**\* \*\*\***Inspect**\*** \*\*\*on the service you want to debug to open the Chromium debugger.
+4. Click **Inspect** on the service you want to debug to open the Chromium debugger.
 
 You can either trigger the debugger by adding `debugger` statements in the code and restarting the Docker containers or by adding breakpoints directly to the Chromium debugger after starting the Docker containers.
 
@@ -168,13 +158,24 @@ You can either trigger the debugger by adding `debugger` statements in the code 
 
 To debug with VS Code, add this configuration to your `.vscode/launch.json`:
 
-The` localRoot` variable will depend on the location of the `launch.json` file relative to Rafiki’s root directory.
+The `localRoot` variable will depend on the location of the `launch.json` file relative to Rafiki’s root directory.
 
-For more ways to connect debuggers, refer to the Node JS docs for debugging: [https://nodejs.org/en/learn/getting-started/debugging](https://nodejs.org/en/learn/getting-started/debugging)
+For more ways to connect debuggers, refer to the <LinkOut href='https://nodejs.org/en/learn/getting-started/debugging'>Node JS docs</LinkOut> for debugging.
 
 ### Shutting down
 
 To shut down your local instance, run the following commands:
+
+```sh
+# tear down
+pnpm localenv:compose down
+
+# tear down and delete database volumes
+pnpm localenv:compose down --volumes
+
+# tear down, delete database volumes and remove images
+pnpm localenv:compose down --volumes --rmi all
+```
 
 ### Commands
 
@@ -195,6 +196,98 @@ The following are the most commonly used commands:
 | pnpm localenv:compose:psql down --volumes      | Down (with PostgreSQL) and kill volumes          |
 | pnpm localenv:compose:psql build               | Build all the containers (with PostgreSQL)       |
 
+### Interacting with the Local Playground
+
+#### Bruno & Open Payments APIs
+
+The Open Payments APIs can be interacted with using the [Bruno collection](https://github.com/interledger/rafiki/tree/main/bruno/collections/Rafiki) ([resource server endpoints](https://github.com/interledger/rafiki/tree/main/bruno/collections/Rafiki/Open%20Payments%20APIs) and [auth server endpoints](https://github.com/interledger/rafiki/tree/main/bruno/collections/Rafiki/Open%20Payments%20Auth%20APIs)).
+To interact with the Open Payments APIs using Bruno, you must:
+
+1. load the collection into Bruno by clicking "Open Collection"
+2. navigating to `/rafiki/bruno/collections/Rafiki` on your machine and clicking "Open"
+3. Furthermore, you need to either load the [Local Environment](https://github.com/interledger/rafiki/tree/main/bruno/collections/Rafiki/environments/Local%20Playground.bru) or the [Remote Test Network Environment](https://github.com/interledger/rafiki/tree/main/bruno/collections/Rafiki/environments/Remote.bru).
+
+The Examples folder in the Bruno collection includes an [Open Payments](https://github.com/interledger/rafiki/tree/main/bruno/collections/Rafiki/Examples/Open%20Payments) example that can be executed in the following sequence:
+
+1.  Requests the sender's wallet address
+2.  Requests the receiver's wallet address
+3.  Requests a grant to create an incoming payment on the receiver's account
+4.  Creates an incoming payment on receiver's account
+5.  Requests a grant to create and read a quote on the sender's account
+6.  Creates a quote on the sender's account
+7.  Requests a grant to create and read an outgoing payment on the sender's account
+
+:::note
+
+You have to go through an interaction flow by clicking on the `redirect` link in the grant request response. More information about the interaction flow can be found <LinkOut href ='https://openpayments.dev/introduction/grants/'>here</LinkOut>.
+:::
+
+8.  Continues the grant request
+9.  Creates an outgoing payment on the sender's account
+10. Fetches the outgoing payment on the sender's account
+
+#### Admin UI
+
+To manage and view information about the Rafiki instance(s) using the [Rafiki Admin application](/resources/admin-user-guide/), you can navigate to `localhost:3010` (Cloud Nine Wallet) or `localhost:4010` (Happy Life Bank). The Rafiki Admin application runs a Remix app for querying info and executing mutations against the Rafiki Backend [Admin ](https://rafiki.dev/playground/overview/#admin-apis)[API](https://rafiki.dev/playground/overview/#admin-apis).
+
+Access to the Rafiki Admin application is managed using <LinkOut href='https://www.ory.sh/docs/kratos/ory-kratos-intro'>Ory Kratos</LinkOut>, a secure and fully open-source identity and user management solution. Check it out on <LinkOut href='https://github.com/ory/kratos'>GitHub</LinkOut>. Since access to the UI is invitation-only, the registration flow is not publicly available. To access the Admin UI, click the registration link provided in the logs during the local environment startup or manually add a new user with the `invite-user` script.
+
+Run the following Docker command in a terminal window, and it will output a recovery link.
+
+```sh
+docker exec -it <admin-container-name> npm run invite-user -- example@mail.com`
+```
+
+The recovery link doubles as the invitation method. Copy and paste this link into your browser, and you will automatically be logged in and directed to the account settings page, where you can change the password for the account.
+
+:::note
+A separate registration is required for Cloud Nine Wallet's Rafiki Admin and Happy Life Bank's Rafiki Admin, since they are each designed to run as separate mock account servicing entities. Once you've registered, you can always come back to your Rafiki Admin account by navigating to [`localhost:3010`](http://localhost:3010) (Cloud Nine Wallet) or [`localhost:4010`](http://localhost:4010) (Happy Life Bank) and logging in.
+
+:::
+
+##### Password recovery
+
+Follow these steps to reset an account’s password.
+
+1. Click the forgot password link and enter an email for a registered user.
+2. Open [Mail Slurper](http://localhost:4436/) to access the recovery link for the account.
+
+##### Remove users
+
+Remove users by running the following script in a terminal window:
+
+```sh
+docker exec -it <admin-container-name> npm run delete-user -- example@mail.com.
+```
+
+#### Admin APIs
+
+In addition to using the Admin UI to interact with the Admin APIs, you can also use the Apollo Explorer on [localhost:3001/graphql](http://localhost:3001/graphql) and [localhost:4001/graphql](http://localhost:4001/graphql) for Cloud Nine Wallet and Happy Life Bank, respectively, and via the [Bruno collection](https://github.com/interledger/rafiki/tree/main/bruno/collections/Rafiki/Rafiki%20Admin%20APIs). The Bruno collection is configured to use the local environment's default endpoints.
+
+#### SPSP
+
+Every wallet address also serves as an SPSP endpoint. A `GET` request with an `Accept` header `application/spsp4+json` will return an SPSP response with STREAM connection details. The following example uses [http://localhost:3000/accounts/gfranklin](http://localhost:3000/accounts/gfranklin) as the SPSP endpoint.
+
+```sh
+http GET http://localhost:3000/accounts/gfranklin Host:backend Accept:application/spsp4+json
+
+
+HTTP/1.1 200 OK
+Connection:keep-alive
+Content-Length:220
+Content-Type:application/spsp4+json
+Date:Thu, 23 Feb 2023 13:07:24 GMT
+Keep-Alive:timeout=5
+
+
+{
+"destination_account":"
+test.rafiki.viXmy1OVHgvmQakNjX1C6kQMri92DzHeISEv-5VzTDuFhrpsrkDzsq5OO9Lfa9yed0L2RJGC9hA_IX-zztTtTZ87shCYvsQ",
+"receipts_enabled":false,
+"shared_secret":"Rz_vudcg13EPs8ehL2drvZFJS1LJ4Y3EltOI60-lQ78"
+}
+```
+
 ### Known issues
 
 #### No data in the mock account servicing entities
@@ -203,4 +296,4 @@ It is possible that upon starting or restarting the local playground, you may ru
 
 #### TigerBeetle container exists with code 137
 
-There is a known issue when running TigerBeetle in Docker. The container exits without logs and simply shows error code 137. To fix this, increase the Docker memory limit. If you run the local Docker playground on a Windows machine via the Windows Subsystem for Linux (WSL), you can increase the memory limit by configuring your `.wslconfig` file.
+There is a known <LinkOut href='https://docs.tigerbeetle.com/operating/docker/#exited-with-code-137'>issue</LinkOut> when running TigerBeetle in Docker. The container exits without logs and simply shows error code 137. To fix this, increase the Docker memory limit. If you run the local Docker playground on a Windows machine via the Windows Subsystem for Linux (WSL), you can increase the memory limit by <LinkOut href='https://learn.microsoft.com/en-us/windows/wsl/wsl-config#example-wslconfig-file'>configuring</LinkOut> your `.wslconfig` file.
