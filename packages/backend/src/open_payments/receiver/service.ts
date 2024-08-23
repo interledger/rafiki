@@ -28,7 +28,7 @@ export interface ReceiverService {
   create(args: CreateReceiverArgs): Promise<Receiver | ReceiverError>
 }
 
-interface ServiceDependencies extends BaseService {
+export interface ServiceDependencies extends BaseService {
   streamCredentialsService: StreamCredentialsService
   incomingPaymentService: IncomingPaymentService
   walletAddressService: WalletAddressService
@@ -169,7 +169,7 @@ function parseIncomingPaymentUrl(
   }
 }
 
-async function getLocalIncomingPayment(
+export async function getLocalIncomingPayment(
   deps: ServiceDependencies,
   url: string
 ): Promise<OpenPaymentsIncomingPaymentWithPaymentMethods | undefined> {
