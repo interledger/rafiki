@@ -220,10 +220,11 @@ async function getIncomingPayment(
       accessToken: grant.accessToken
     })
 
-    if (!incomingPayment.id) {
+    // TODO: remove after #2889 is completed
+    if (!incomingPayment.walletAddress) {
       throw new OpenPaymentsClientError('Got invalid incoming payment', {
         status: 401,
-        description: 'Received public incoming payment'
+        description: 'Received public incoming payment instead of private'
       })
     }
 
