@@ -154,7 +154,7 @@ describe('Grant Service', (): void => {
       const options = {
         authServer: authServer.url,
         accessType: AccessType.IncomingPayment,
-        accessActions: [AccessAction.Create, AccessAction.ReadAll]
+        accessActions: [AccessAction.Create, AccessAction.Read]
       }
 
       const authServerServiceGetOrCreateSoy = jest.spyOn(
@@ -257,7 +257,7 @@ describe('Grant Service', (): void => {
         managementId: uuid(),
         accessType: AccessType.IncomingPayment,
         accessActions: [
-          AccessAction.ReadAll,
+          AccessAction.Read,
           AccessAction.Create,
           AccessAction.Complete
         ],
@@ -280,7 +280,7 @@ describe('Grant Service', (): void => {
       const options = {
         authServer: authServer.url,
         accessType: AccessType.IncomingPayment,
-        accessActions: [AccessAction.Create, AccessAction.ReadAll]
+        accessActions: [AccessAction.Create, AccessAction.Read]
       }
 
       const grant = await grantService.getOrCreate(options)
