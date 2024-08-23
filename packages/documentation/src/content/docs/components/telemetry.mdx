@@ -4,18 +4,18 @@ title: Telemetry
 
 import { LinkOut } from '@interledger/docs-design-system'
 
-## Overview
-
 The objective of the telemetry feature is to gather metrics and establish an infrastructure for visualizing valuable network insights. Some of the metrics that we at the Interledger Foundation collect include:
 
 - The total amount of money transferred via packet data within a specified time frame (daily, weekly, monthly)
-- The number of transactions from outgoing payments that have been at least partially successful
+- The number of transactions that have been at least partially successful
+- The number of ILP packets flowing through the network
 - The average amount of money held within the network per transaction
+- The average time it takes for an outgoing payment to complete
 
 Our goals are to:
 
-- Track the growth of the network in terms of transaction sizes
-- Track the number of transactions processed
+- Track the growth of the network in terms of transaction sizes and the number of transactions processed
+- Use the data for our own insights
 - Enable you to gain your own insights
 
 ### Privacy and optionality
@@ -47,7 +47,7 @@ The OTEL SDK is integrated into Rafiki to create, collect, and export metrics. T
 The Interledger Foundation uses Amazon Managed Service for Prometheus (AMP) to collect data from the telemetry cluster.
 
 :::note
-AMP offers limited configuration options and cannot crawl data outside of AWS. This limitation led us to adopt a push model, using prometheusRemoteWrite, instead of a pull model. For future development, we may consider hosting our own Prometheus.
+AMP offers limited configuration options and cannot crawl data outside of AWS. This limitation led us to adopt a push model, using `prometheusRemoteWrite`, instead of a pull model. For future development, we may consider hosting our own Prometheus.
 :::
 
 ### Grafana - Grafana Cloud
@@ -55,7 +55,7 @@ AMP offers limited configuration options and cannot crawl data outside of AWS. T
 Grafana Cloud is used for data visualization dashboards and offers multiple tools that extend Prometheus Promql.
 
 :::note
-The Interledger Foundation initially used Amazon-hosted Grafana which did not meet our needs for embedding dashboards. Grafana Cloud offers a feature called public dashboards which allows us to share dashboards. However, embedding may still pose a challenge.
+The Interledger Foundation initially used Amazon-hosted Grafana which did not meet our needs for embedding dashboards. Grafana Cloud offers a feature called _public dashboards_ which allows us to share dashboards. However, embedding may still pose a challenge.
 :::
 
 ### Exchange rates
@@ -70,14 +70,17 @@ If an ASE does not provide the necessary exchange rate for a transaction, the te
 
 ### Instrumentation
 
-Rafiki has the following counter metrics. All data points (counter increases) are exported to collection endpoints at a configurable interval. The default interval is 15 seconds.
+Rafiki has the following metrics. All data points (counter increases) are exported to collection endpoints at a configurable interval. The default interval is 15 seconds.
 
-| Metric                    | Type      | Description                     | Behavior                                                                       |
-| ------------------------- | --------- | ------------------------------- | ------------------------------------------------------------------------------ |
-| `transactions_total`      | Counter   | Count of funded transactions    | Increases by 1 for each successfully sent transaction                          |
-| `transactions_amount`     | Amount    | Amount sent through network     | Increases by the amount sent in each ILP packet                                |
-| `transaction_fee_amounts` | Counter   | Fee amount sent through network | Increases by the amount sent minus the amount received for an outgoing payment |
-| `ilp_pay_time_ms`         | Histogram | Time to complete an ILP payment | Records the time taken to make an ILP payment                                  |
+| Metric                    | Type      | Description                                | Behavior                                                                       |
+| ------------------------- | --------- | ------------------------------------------ | ------------------------------------------------------------------------------ |
+| `transactions_total`      | Counter   | Count of funded outgoing transactions      | Increases by 1 for each successfully funded outgoing payment resource          |
+| `packet_count_prepare`    | Counter   | Count of ILP prepare packets that are sent | Increases by 1 for each prepare packet that's sent                             |
+| `packet_count_fulfill`    | Counter   | Count of ILP fulfill packets               | Increases by 1 for each fulfill packet that's received                         |
+| `packet_count_reject`     | Counter   | Count of ILP reject packets                | Increases by 1 for each reject packet that's received                          |
+| `packet_amount_fulfill`   | Counter   | Amount sent through the network            | Increases by the amount sent in each ILP packet                                |
+| `transaction_fee_amounts` | Counter   | Fee amount sent through network            | Increases by the amount sent minus the amount received for an outgoing payment |
+| `ilp_pay_time_ms`         | Histogram | Time to complete an ILP payment            | Records the time taken to make an ILP payment                                  |
 
 The current implementation only collects metrics on the SENDING side of a transaction. Metrics for external Open Payments transactions RECEIVED by a Rafiki instance in the network are not collected.
 
