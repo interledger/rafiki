@@ -1,13 +1,5 @@
-import {
-  AuthenticatedClient,
-  IncomingPaymentWithPaymentMethods as OpenPaymentsIncomingPaymentWithPaymentMethods,
-  isPendingGrant,
-  AccessType,
-  AccessAction
-} from '@interledger/open-payments'
+import { IncomingPaymentWithPaymentMethods as OpenPaymentsIncomingPaymentWithPaymentMethods } from '@interledger/open-payments'
 import { StreamCredentialsService } from '../../payment-method/ilp/stream-credentials/service'
-import { Grant } from '../grant/model'
-import { GrantService } from '../grant/service'
 import { WalletAddressService } from '../wallet_address/service'
 import { BaseService } from '../../shared/baseService'
 import { IncomingPaymentService } from '../payment/incoming/service'
@@ -21,7 +13,7 @@ import {
   ReceiverError,
   errorToMessage as receiverErrorToMessage
 } from './errors'
-import { IAppConfig } from '../../config/app'
+import { isRemoteIncomingPaymentError } from '../payment/incoming_remote/errors'
 
 interface CreateReceiverArgs {
   walletAddressUrl: string
@@ -36,15 +28,11 @@ export interface ReceiverService {
   create(args: CreateReceiverArgs): Promise<Receiver | ReceiverError>
 }
 
-interface ServiceDependencies extends BaseService {
+export interface ServiceDependencies extends BaseService {
   streamCredentialsService: StreamCredentialsService
-  grantService: GrantService
   incomingPaymentService: IncomingPaymentService
-  openPaymentsUrl: string
   walletAddressService: WalletAddressService
-  openPaymentsClient: AuthenticatedClient
   remoteIncomingPaymentService: RemoteIncomingPaymentService
-  config: IAppConfig
 }
 
 const INCOMING_PAYMENT_URL_REGEX =
@@ -149,10 +137,7 @@ async function getReceiver(
   url: string
 ): Promise<Receiver | undefined> {
   try {
-    const localIncomingPayment = await getLocalIncomingPayment({
-      deps,
-      url
-    })
+    const localIncomingPayment = await getLocalIncomingPayment(deps, url)
     if (localIncomingPayment) {
       return new Receiver(localIncomingPayment, true)
     }
@@ -161,14 +146,12 @@ async function getReceiver(
     if (remoteIncomingPayment) {
       return new Receiver(remoteIncomingPayment, false)
     }
-  } catch (error) {
+  } catch (err) {
     deps.logger.error(
-      { errorMessage: error instanceof Error && error.message },
+      { errorMessage: err instanceof Error && err.message },
       'Could not get incoming payment'
     )
   }
-
-  return undefined
 }
 
 function parseIncomingPaymentUrl(
@@ -185,45 +168,39 @@ function parseIncomingPaymentUrl(
   }
 }
 
-async function getRemoteIncomingPayment(
+export async function getLocalIncomingPayment(
   deps: ServiceDependencies,
   url: string
 ): Promise<OpenPaymentsIncomingPaymentWithPaymentMethods | undefined> {
-  const grant = await getIncomingPaymentGrant(deps, url)
-  if (!grant) {
-    throw new Error('Could not find grant')
-  } else {
-    return await deps.openPaymentsClient.incomingPayment.get({
-      url,
-      accessToken: grant.accessToken
-    })
-  }
-}
-
-async function getLocalIncomingPayment({
-  deps,
-  url
-}: {
-  deps: ServiceDependencies
-  url: string
-}): Promise<OpenPaymentsIncomingPaymentWithPaymentMethods | undefined> {
-  const { id } = parseIncomingPaymentUrl(url) ?? {}
-  if (!id) {
+  const urlParseResult = parseIncomingPaymentUrl(url)
+  if (!urlParseResult) {
+    deps.logger.error({ url }, 'Could not parse incoming payment url')
     return undefined
   }
 
   const incomingPayment = await deps.incomingPaymentService.get({
-    id
+    id: urlParseResult.id
   })
 
-  if (!incomingPayment || !incomingPayment.walletAddress) {
+  if (!incomingPayment) {
     return undefined
+  }
+
+  if (!incomingPayment.walletAddress) {
+    const errorMessage = 'Wallet address does not exist for incoming payment'
+    deps.logger.error({ incomingPaymentId: incomingPayment.id }, errorMessage)
+
+    throw new Error(errorMessage)
   }
 
   const streamCredentials = deps.streamCredentialsService.get(incomingPayment)
 
   if (!streamCredentials) {
-    return undefined
+    const errorMessage =
+      'Could not get stream credentials for local incoming payment'
+    deps.logger.error({ incomingPaymentId: incomingPayment.id }, errorMessage)
+
+    throw new Error(errorMessage)
   }
 
   return incomingPayment.toOpenPaymentsTypeWithMethods(
@@ -232,78 +209,16 @@ async function getLocalIncomingPayment({
   )
 }
 
-async function getIncomingPaymentGrant(
+async function getRemoteIncomingPayment(
   deps: ServiceDependencies,
-  incomingPaymentUrl: string
-): Promise<Grant | undefined> {
-  const publicIncomingPayment =
-    await deps.openPaymentsClient.incomingPayment.getPublic({
-      url: incomingPaymentUrl
-    })
-  if (!publicIncomingPayment || !publicIncomingPayment.authServer) {
+  url: string
+): Promise<OpenPaymentsIncomingPaymentWithPaymentMethods | undefined> {
+  const incomingPaymentOrError =
+    await deps.remoteIncomingPaymentService.get(url)
+
+  if (isRemoteIncomingPaymentError(incomingPaymentOrError)) {
     return undefined
   }
-  const grantOptions = {
-    authServer: publicIncomingPayment.authServer,
-    accessType: AccessType.IncomingPayment,
-    accessActions: [AccessAction.ReadAll]
-  }
 
-  const existingGrant = await deps.grantService.get(grantOptions)
-  if (existingGrant) {
-    if (existingGrant.expired) {
-      if (!existingGrant.authServer) {
-        deps.logger.warn('Unknown auth server.')
-        return undefined
-      }
-      try {
-        const rotatedToken = await deps.openPaymentsClient.token.rotate({
-          url: existingGrant.getManagementUrl(existingGrant.authServer.url),
-          accessToken: existingGrant.accessToken
-        })
-        return deps.grantService.update(existingGrant, {
-          accessToken: rotatedToken.access_token.value,
-          managementUrl: rotatedToken.access_token.manage,
-          expiresIn: rotatedToken.access_token.expires_in
-        })
-      } catch (err) {
-        deps.logger.warn({ err }, 'Grant token rotation failed.')
-        return undefined
-      }
-    }
-    return existingGrant
-  }
-
-  const grant = await deps.openPaymentsClient.grant.request(
-    { url: publicIncomingPayment.authServer },
-    {
-      access_token: {
-        access: [
-          {
-            type: grantOptions.accessType as 'incoming-payment',
-            actions: grantOptions.accessActions
-          }
-        ]
-      },
-      interact: {
-        start: ['redirect']
-      }
-    }
-  )
-
-  if (!isPendingGrant(grant)) {
-    try {
-      return await deps.grantService.create({
-        ...grantOptions,
-        accessToken: grant.access_token.value,
-        managementUrl: grant.access_token.manage,
-        expiresIn: grant.access_token.expires_in
-      })
-    } catch (err) {
-      deps.logger.warn({ grantOptions }, 'Grant has wrong format')
-      return undefined
-    }
-  }
-  deps.logger.warn({ grantOptions }, 'Grant is pending/requires interaction')
-  return undefined
+  return incomingPaymentOrError
 }
