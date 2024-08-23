@@ -181,8 +181,8 @@ describe('Connector Core Telemetry', () => {
 
   it('incrementAmount should not increment when the prepare is unfulfillable', () => {
     const incrementCounterSpy = jest
-    .spyOn(telemetryService!, 'incrementCounterWithTransactionAmount')
-    .mockImplementation(() => Promise.resolve())
+      .spyOn(telemetryService!, 'incrementCounterWithTransactionAmount')
+      .mockImplementation(() => Promise.resolve())
 
     const code = 'USD'
     const scale = 2
@@ -211,14 +211,7 @@ describe('Connector Core Telemetry', () => {
     const response = new IlpResponse()
     response.fulfill = IlpFulfillFactory.build()
 
-    incrementAmount(
-      unfulfillable,
-      '0',
-      response,
-      code,
-      scale,
-      telemetryService
-    )
+    incrementAmount(unfulfillable, '0', response, code, scale, telemetryService)
 
     expect(incrementCounterSpy).not.toHaveBeenCalled()
   })
