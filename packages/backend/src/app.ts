@@ -99,6 +99,8 @@ import {
 
 import { LoggingPlugin } from './graphql/plugin'
 import { LocalPaymentService } from './payment-method/local/service'
+import { GrantService } from './open_payments/grant/service'
+import { AuthServerService } from './open_payments/authServer/service'
 export interface AppContextData {
   logger: Logger
   container: AppContainer
@@ -233,6 +235,8 @@ export interface AppServices {
   incomingPaymentService: Promise<IncomingPaymentService>
   remoteIncomingPaymentService: Promise<RemoteIncomingPaymentService>
   receiverService: Promise<ReceiverService>
+  grantService: Promise<GrantService>
+  authServerService: Promise<AuthServerService>
   streamServer: Promise<StreamServer>
   webhookService: Promise<WebhookService>
   quoteService: Promise<QuoteService>
