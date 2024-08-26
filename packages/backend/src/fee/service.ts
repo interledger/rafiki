@@ -66,6 +66,7 @@ async function getLatestFee(
   type: FeeType
 ): Promise<Fee | undefined> {
   return await Fee.query(deps.knex)
+    // TODO: index on assetId/type
     .where({ assetId, type })
     .orderBy('createdAt', 'desc')
     .first()

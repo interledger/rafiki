@@ -20,6 +20,7 @@ import {
   PaymentMethodHandlerError,
   PaymentMethodHandlerErrorCode
 } from '../../payment-method/handler/errors'
+import { TelemetryService } from '../../telemetry/service'
 
 const MAX_INT64 = BigInt('9223372036854775807')
 
@@ -34,6 +35,7 @@ export interface ServiceDependencies extends BaseService {
   walletAddressService: WalletAddressService
   feeService: FeeService
   paymentMethodHandlerService: PaymentMethodHandlerService
+  telemetry?: TelemetryService
 }
 
 export async function createQuoteService(
@@ -84,6 +86,7 @@ async function createQuote(
   deps: ServiceDependencies,
   options: CreateQuoteOptions
 ): Promise<Quote | QuoteError> {
+  const start = Date.now()
   if (options.debitAmount && options.receiveAmount) {
     return QuoteError.InvalidAmount
   }
@@ -112,22 +115,61 @@ async function createQuote(
   }
 
   try {
+    const receiverStart = Date.now()
     const receiver = await resolveReceiver(deps, options)
+    const receiverEnd = Date.now()
+    const receiverDuration = receiverEnd - receiverStart
+
+    if (deps.telemetry) {
+      deps.telemetry.recordHistogram(
+        'quote_service_create_resolve_receiver_time_ms',
+        receiverDuration,
+        {
+          description: 'Time to resolve receiver'
+        }
+      )
+    }
+
+    const getQuoteStart = Date.now()
     const quote = await deps.paymentMethodHandlerService.getQuote('ILP', {
       walletAddress,
       receiver,
       receiveAmount: options.receiveAmount,
       debitAmount: options.debitAmount
     })
+    const getQuoteEnd = Date.now()
+    const getQuoteDuration = getQuoteEnd - getQuoteStart
+    if (deps.telemetry) {
+      deps.telemetry.recordHistogram(
+        'quote_service_create_get_quote_time_ms',
+        getQuoteDuration,
+        {
+          description: 'Time to getQuote'
+        }
+      )
+    }
 
     const maxPacketAmount = quote.additionalFields.maxPacketAmount as bigint
 
+    const getLatestFeeStart = Date.now()
     const sendingFee = await deps.feeService.getLatestFee(
       walletAddress.assetId,
       FeeType.Sending
     )
+    const getLatestFeeEnd = Date.now()
+    const getLatestFeeDuration = getLatestFeeEnd - getLatestFeeStart
+    if (deps.telemetry) {
+      deps.telemetry.recordHistogram(
+        'quote_service_create_get_latest_fee_time_ms',
+        getLatestFeeDuration,
+        {
+          description: 'Time to getLatestFee'
+        }
+      )
+    }
 
-    return await Quote.transaction(deps.knex, async (trx) => {
+    const q = await Quote.transaction(deps.knex, async (trx) => {
+      const createQuoteStart = Date.now()
       const createdQuote = await Quote.query(trx)
         .insertAndFetch({
           walletAddressId: options.walletAddressId,
@@ -148,8 +190,21 @@ async function createQuote(
           estimatedExchangeRate: quote.estimatedExchangeRate
         })
         .withGraphFetched('[asset, fee, walletAddress]')
+      const createQuoteEnd = Date.now()
+      const createQuoteDuration = createQuoteEnd - createQuoteStart
 
-      return await finalizeQuote(
+      if (deps.telemetry) {
+        deps.telemetry.recordHistogram(
+          'quote_service_create_insert_time_ms',
+          createQuoteDuration,
+          {
+            description: 'Time to insert quote'
+          }
+        )
+      }
+
+      const finalizeQuoteStart = Date.now()
+      const finalizedQuote = await finalizeQuote(
         {
           ...deps,
           knex: trx
@@ -158,7 +213,32 @@ async function createQuote(
         createdQuote,
         receiver
       )
+      const finalizeQuoteEnd = Date.now()
+      const finalizeQuoteDuration = finalizeQuoteEnd - finalizeQuoteStart
+
+      if (deps.telemetry) {
+        deps.telemetry.recordHistogram(
+          'quote_service_finalize_quote_ms',
+          finalizeQuoteDuration,
+          {
+            description: 'Time to finalize quote'
+          }
+        )
+      }
+
+      return finalizedQuote
     })
+
+    const end = Date.now()
+    const duration = end - start
+
+    if (deps.telemetry) {
+      deps.telemetry.recordHistogram('quote_service_create_time_ms', duration, {
+        description: 'Time to create a quote'
+      })
+    }
+
+    return q
   } catch (err) {
     if (isQuoteError(err)) {
       return err

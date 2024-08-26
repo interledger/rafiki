@@ -456,7 +456,12 @@ export function initIocContainer(
       receiverService: await deps.use('receiverService'),
       feeService: await deps.use('feeService'),
       walletAddressService: await deps.use('walletAddressService'),
-      paymentMethodHandlerService: await deps.use('paymentMethodHandlerService')
+      paymentMethodHandlerService: await deps.use(
+        'paymentMethodHandlerService'
+      ),
+      telemetry: config.enableTelemetry
+        ? await deps.use('telemetry')
+        : undefined
     })
   })
 
