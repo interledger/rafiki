@@ -23,7 +23,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
+        "uid": "${PrometheusDS}"
       },
       "fieldConfig": {
         "defaults": {
@@ -103,7 +103,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
+            "uid": "${PrometheusDS}"
           },
           "editorMode": "code",
           "expr": "(increase(packet_amount_fulfill_total[30s]) * 0.5 * 0.0001)",
@@ -121,7 +121,7 @@
     {
       "datasource": {
         "type": "tempo",
-        "uid": "P214B5B846CF3925F"
+        "uid": "${TempoDS}"
       },
       "fieldConfig": {
         "defaults": {
@@ -175,12 +175,12 @@
           }
         ]
       },
-      "pluginVersion": "11.1.3",
+      "pluginVersion": "11.1.4",
       "targets": [
         {
           "datasource": {
             "type": "tempo",
-            "uid": "P214B5B846CF3925F"
+            "uid": "${TempoDS}"
           },
           "filters": [
             {
@@ -224,7 +224,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
+        "uid": "${PrometheusDS}"
       },
       "fieldConfig": {
         "defaults": {
@@ -304,7 +304,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
+            "uid": "${PrometheusDS}"
           },
           "editorMode": "code",
           "expr": "sum by (source) (round(increase(transactions_total[30s]) * 0.5))",
@@ -322,7 +322,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
+        "uid": "${PrometheusDS}"
       },
       "description": "",
       "fieldConfig": {
@@ -372,12 +372,12 @@
         "sizing": "auto",
         "valueMode": "color"
       },
-      "pluginVersion": "11.1.3",
+      "pluginVersion": "11.1.4",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
+            "uid": "${PrometheusDS}"
           },
           "editorMode": "code",
           "expr": "histogram_quantile(0.95, sum(rate(traces_spanmetrics_latency_bucket{span_name=~\"^(mutation|query).*\"}[$__rate_interval])) by (le, span_name))",
@@ -393,7 +393,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
+        "uid": "${PrometheusDS}"
       },
       "description": "Maximum time it takes to complete the fastest 25%/50%/75% of ILP payments.",
       "fieldConfig": {
@@ -441,12 +441,12 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "11.1.3",
+      "pluginVersion": "11.1.4",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
+            "uid": "${PrometheusDS}"
           },
           "editorMode": "code",
           "expr": "histogram_quantile(0.25, ilp_pay_time_ms_bucket)",
@@ -458,7 +458,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
+            "uid": "${PrometheusDS}"
           },
           "editorMode": "code",
           "expr": "histogram_quantile(0.50, ilp_pay_time_ms_bucket)",
@@ -471,7 +471,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
+            "uid": "${PrometheusDS}"
           },
           "editorMode": "code",
           "expr": "histogram_quantile(0.75, ilp_pay_time_ms_bucket)",
@@ -488,7 +488,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
+        "uid": "${PrometheusDS}"
       },
       "description": "Maximum time it takes to complete the fastest 25%/50%/75% of ILP quotes.",
       "fieldConfig": {
@@ -536,12 +536,12 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "11.1.3",
+      "pluginVersion": "11.1.4",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
+            "uid": "${PrometheusDS}"
           },
           "editorMode": "code",
           "expr": "histogram_quantile(0.25, ilp_rate_probe_time_ms_bucket)",
@@ -553,7 +553,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
+            "uid": "${PrometheusDS}"
           },
           "editorMode": "code",
           "expr": "histogram_quantile(0.50, ilp_rate_probe_time_ms_bucket)",
@@ -566,7 +566,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
+            "uid": "${PrometheusDS}"
           },
           "editorMode": "code",
           "expr": "histogram_quantile(0.75, ilp_rate_probe_time_ms_bucket)",
@@ -585,7 +585,44 @@
   "schemaVersion": 39,
   "tags": [],
   "templating": {
-    "list": []
+    "list": [
+      {
+        "current": {
+          "selected": false,
+          "text": "Prometheus",
+          "value": "PBFA97CFB590B2093"
+        },
+        "description": "The Prometheus data-source.",
+        "hide": 0,
+        "includeAll": false,
+        "multi": false,
+        "name": "PrometheusDS",
+        "options": [],
+        "query": "prometheus",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "type": "datasource"
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "Tempo",
+          "value": "P214B5B846CF3925F"
+        },
+        "description": "The Tempo datasource uid.",
+        "hide": 0,
+        "includeAll": false,
+        "multi": false,
+        "name": "TempoDS",
+        "options": [],
+        "query": "tempo",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "type": "datasource"
+      }
+    ]
   },
   "time": {
     "from": "now-15m",
