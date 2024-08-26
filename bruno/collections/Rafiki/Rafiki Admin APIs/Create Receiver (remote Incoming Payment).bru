@@ -1,7 +1,7 @@
 meta {
   name: Create Receiver (remote Incoming Payment)
   type: graphql
-  seq: 27
+  seq: 29
 }
 
 post {
@@ -62,7 +62,7 @@ script:pre-request {
 
 script:post-response {
   const body = res.getBody();
-
+  
   if (body?.data) {
     bru.setEnvVar("receiverId", body.data.createReceiver.receiver.id);
   }

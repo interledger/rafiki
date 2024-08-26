@@ -36,6 +36,41 @@ export const getOutgoingPayment: QueryResolvers<ApolloContext>['outgoingPayment'
     return paymentToGraphql(payment)
   }
 
+export const getOutgoingPayments: QueryResolvers<ApolloContext>['outgoingPayments'] =
+  async (
+    parent,
+    args,
+    ctx
+  ): Promise<ResolversTypes['OutgoingPaymentConnection']> => {
+    const outgoingPaymentService = await ctx.container.use(
+      'outgoingPaymentService'
+    )
+    const { filter, sortOrder, ...pagination } = args
+    const order = sortOrder === 'ASC' ? SortOrder.Asc : SortOrder.Desc
+    const getPageFn = (pagination_: Pagination, sortOrder_?: SortOrder) =>
+      outgoingPaymentService.getPage({
+        pagination: pagination_,
+        filter,
+        sortOrder: sortOrder_
+      })
+
+    const outgoingPayments = await getPageFn(pagination, order)
+    const pageInfo = await getPageInfo({
+      getPage: (pagination_: Pagination, sortOrder_?: SortOrder) =>
+        getPageFn(pagination_, sortOrder_),
+      page: outgoingPayments,
+      sortOrder: order
+    })
+
+    return {
+      pageInfo,
+      edges: outgoingPayments.map((outgoingPayment: OutgoingPayment) => ({
+        cursor: outgoingPayment.id,
+        node: paymentToGraphql(outgoingPayment)
+      }))
+    }
+  }
+
 export const cancelOutgoingPayment: MutationResolvers<ApolloContext>['cancelOutgoingPayment'] =
   async (
     parent,

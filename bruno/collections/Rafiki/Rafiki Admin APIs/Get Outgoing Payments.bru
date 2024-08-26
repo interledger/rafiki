@@ -1,7 +1,7 @@
 meta {
-  name: Delete Peer
+  name: Get Outgoing Payments
   type: graphql
-  seq: 14
+  seq: 36
 }
 
 post {
@@ -11,19 +11,16 @@ post {
 }
 
 body:graphql {
-  mutation DeletePeer($input: DeletePeerInput!) {
-    deletePeer(input: $input) {
-      success
-    }
-  }
-  
-}
-
-body:graphql:vars {
-  {
-      "input": {
-          "id": "{{peerId}}"
+  query OutgoingPayments($filter: OutgoingPaymentFilter) {
+    outgoingPayments(filter: $filter) {
+      edges {
+        node {
+          id
+          client
+        }
+        cursor
       }
+    }
   }
 }
 

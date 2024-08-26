@@ -910,6 +910,12 @@ export type OutgoingPaymentEdge = {
   node: OutgoingPayment;
 };
 
+export type OutgoingPaymentFilter = {
+  receiver?: InputMaybe<FilterString>;
+  state?: InputMaybe<FilterString>;
+  walletAddressId?: InputMaybe<FilterString>;
+};
+
 export type OutgoingPaymentResponse = {
   __typename?: 'OutgoingPaymentResponse';
   payment?: Maybe<OutgoingPayment>;
@@ -1035,6 +1041,8 @@ export type Query = {
   incomingPayment?: Maybe<IncomingPayment>;
   /** Fetch an Open Payments outgoing payment */
   outgoingPayment?: Maybe<OutgoingPayment>;
+  /** Fetch a page of outgoing payments by receiver */
+  outgoingPayments: OutgoingPaymentConnection;
   /** Fetch a page of combined payments */
   payments: PaymentConnection;
   /** Fetch a peer */
@@ -1081,6 +1089,16 @@ export type QueryIncomingPaymentArgs = {
 
 export type QueryOutgoingPaymentArgs = {
   id: Scalars['String']['input'];
+};
+
+
+export type QueryOutgoingPaymentsArgs = {
+  after?: InputMaybe<Scalars['String']['input']>;
+  before?: InputMaybe<Scalars['String']['input']>;
+  filter?: InputMaybe<OutgoingPaymentFilter>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+  sortOrder?: InputMaybe<SortOrder>;
 };
 
 
@@ -1627,6 +1645,7 @@ export type ResolversTypes = {
   OutgoingPayment: ResolverTypeWrapper<Partial<OutgoingPayment>>;
   OutgoingPaymentConnection: ResolverTypeWrapper<Partial<OutgoingPaymentConnection>>;
   OutgoingPaymentEdge: ResolverTypeWrapper<Partial<OutgoingPaymentEdge>>;
+  OutgoingPaymentFilter: ResolverTypeWrapper<Partial<OutgoingPaymentFilter>>;
   OutgoingPaymentResponse: ResolverTypeWrapper<Partial<OutgoingPaymentResponse>>;
   OutgoingPaymentState: ResolverTypeWrapper<Partial<OutgoingPaymentState>>;
   PageInfo: ResolverTypeWrapper<Partial<PageInfo>>;
@@ -1751,6 +1770,7 @@ export type ResolversParentTypes = {
   OutgoingPayment: Partial<OutgoingPayment>;
   OutgoingPaymentConnection: Partial<OutgoingPaymentConnection>;
   OutgoingPaymentEdge: Partial<OutgoingPaymentEdge>;
+  OutgoingPaymentFilter: Partial<OutgoingPaymentFilter>;
   OutgoingPaymentResponse: Partial<OutgoingPaymentResponse>;
   PageInfo: Partial<PageInfo>;
   Payment: Partial<Payment>;
@@ -2136,6 +2156,7 @@ export type QueryResolvers<ContextType = any, ParentType extends ResolversParent
   assets?: Resolver<ResolversTypes['AssetsConnection'], ParentType, ContextType, Partial<QueryAssetsArgs>>;
   incomingPayment?: Resolver<Maybe<ResolversTypes['IncomingPayment']>, ParentType, ContextType, RequireFields<QueryIncomingPaymentArgs, 'id'>>;
   outgoingPayment?: Resolver<Maybe<ResolversTypes['OutgoingPayment']>, ParentType, ContextType, RequireFields<QueryOutgoingPaymentArgs, 'id'>>;
+  outgoingPayments?: Resolver<ResolversTypes['OutgoingPaymentConnection'], ParentType, ContextType, Partial<QueryOutgoingPaymentsArgs>>;
   payments?: Resolver<ResolversTypes['PaymentConnection'], ParentType, ContextType, Partial<QueryPaymentsArgs>>;
   peer?: Resolver<Maybe<ResolversTypes['Peer']>, ParentType, ContextType, RequireFields<QueryPeerArgs, 'id'>>;
   peers?: Resolver<ResolversTypes['PeersConnection'], ParentType, ContextType, Partial<QueryPeersArgs>>;
