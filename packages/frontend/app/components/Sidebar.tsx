@@ -8,6 +8,7 @@ import { Button } from '~/components/ui'
 
 interface SidebarProps {
   logoutUrl: string
+  authEnabled: boolean
 }
 
 const navigation = [
@@ -34,14 +35,10 @@ const navigation = [
   {
     name: 'Payments',
     href: '/payments'
-  },
-  {
-    name: 'Account Settings',
-    href: '/settings'
   }
 ]
 
-export const Sidebar: FC<SidebarProps> = ({ logoutUrl }) => {
+export const Sidebar: FC<SidebarProps> = ({ logoutUrl, authEnabled }) => {
   const [sidebarIsOpen, setSidebarIsOpen] = useState(false)
 
   return (
@@ -101,6 +98,22 @@ export const Sidebar: FC<SidebarProps> = ({ logoutUrl }) => {
                           {name}
                         </NavLink>
                       ))}
+                      {authEnabled && (
+                        <NavLink
+                          key='Account Settings'
+                          to='/settings'
+                          className={({ isActive }) =>
+                            cx(
+                              isActive
+                                ? 'bg-mercury'
+                                : 'text-tealish/70 hover:bg-mercury/70',
+                              'flex p-2 font-medium rounded-md'
+                            )
+                          }
+                        >
+                          Account Settings
+                        </NavLink>
+                      )}
                       {logoutUrl && (
                         <Button aria-label='logout' href={logoutUrl}>
                           Logout
@@ -143,6 +156,22 @@ export const Sidebar: FC<SidebarProps> = ({ logoutUrl }) => {
                   {name}
                 </NavLink>
               ))}
+              {authEnabled && (
+                <NavLink
+                  key='Account Settings'
+                  to='/settings'
+                  className={({ isActive }) =>
+                    cx(
+                      isActive
+                        ? 'bg-mercury'
+                        : 'text-tealish/70 hover:bg-mercury/70',
+                      'flex p-2 font-medium rounded-md'
+                    )
+                  }
+                >
+                  Account Settings
+                </NavLink>
+              )}
               {logoutUrl && (
                 <Button aria-label='logout' href={logoutUrl}>
                   Logout

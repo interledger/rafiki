@@ -1,0 +1,65 @@
+services:
+  cloud-nine-admin:
+    environment:
+      AUTH_ENABLED: true
+      KRATOS_CONTAINER_PUBLIC_URL: 'http://cloud-nine-kratos:4433'
+      KRATOS_BROWSER_PUBLIC_URL: 'http://localhost:4433'
+      KRATOS_ADMIN_URL: 'http://cloud-nine-kratos:4434/admin'
+    depends_on:
+      - cloud-nine-backend
+      - cloud-nine-kratos
+
+  happy-life-admin:
+    environment:
+      AUTH_ENABLED: true
+      KRATOS_CONTAINER_PUBLIC_URL: 'http://happy-life-kratos:4433'
+      KRATOS_BROWSER_PUBLIC_URL: 'http://localhost:4432'
+      KRATOS_ADMIN_URL: 'http://happy-life-kratos:4434/admin'
+    depends_on:
+      - cloud-nine-admin
+      - happy-life-backend
+      - happy-life-kratos
+
+  cloud-nine-kratos:
+    build:
+      context: ../..
+      dockerfile: ./packages/frontend/kratos/Dockerfile
+      args:
+        PATH_TO_KRATOS_CONFIG: ./localenv/admin-auth/cloud-nine-kratos.yml
+    depends_on:
+      - shared-database
+      - mailslurper
+    environment:
+      DEV_MODE: true
+    ports:
+      - "4433:4433"
+    networks:
+      - rafiki
+
+  happy-life-kratos:
+    build:
+      context: ../..
+      dockerfile: ./packages/frontend/kratos/Dockerfile
+      args:
+        PATH_TO_KRATOS_CONFIG: ./localenv/admin-auth/happy-life-kratos.yml
+    depends_on:
+      - shared-database
+      - mailslurper
+    environment:
+      DEV_MODE: true
+    ports:
+      - "4432:4433"
+    networks:
+      - rafiki
+
+  mailslurper:
+    image: oryd/mailslurper:latest-smtps
+    ports:
+      - "4436:4436"
+      - "4437:4437"
+    networks:
+      - rafiki
+
+  shared-database:
+    volumes:
+      - ../admin-auth/dbinit.sql:/docker-entrypoint-initdb.d/init.sql
