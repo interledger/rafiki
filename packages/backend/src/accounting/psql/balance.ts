@@ -1,7 +1,5 @@
 import { LedgerAccount } from './ledger-account/model'
-import { LedgerTransferState } from '../service'
 import { ServiceDependencies } from './service'
-import { getAccountTransfers } from './ledger-transfer'
 import { TransactionOrKnex } from 'objection'
 
 export interface AccountBalance {
@@ -16,38 +14,45 @@ export async function getAccountBalances(
   account: LedgerAccount,
   trx?: TransactionOrKnex
 ): Promise<AccountBalance> {
-  const { credits, debits } = await getAccountTransfers(
-    deps,
-    account.id,
-    undefined, // No limit for balances
-    trx
-  )
+  try {
+    const queryResult = await (trx ?? deps.knex).raw(
+      `
+    SELECT
+      COALESCE(SUM("amount") FILTER(WHERE "creditAccountId" = :accountId AND "state" = 'POSTED'), 0) AS "creditsPosted",
+      COALESCE(SUM("amount") FILTER(WHERE "creditAccountId" = :accountId AND "state" = 'PENDING'), 0) AS "creditsPending",
+      COALESCE(SUM("amount") FILTER(WHERE "debitAccountId" = :accountId AND "state" = 'POSTED'), 0) AS "debitsPosted",
+      COALESCE(SUM("amount") FILTER(WHERE "debitAccountId" = :accountId AND "state" = 'PENDING'), 0) AS "debitsPending"
+    FROM "ledgerTransfers"
+    WHERE ("creditAccountId" = :accountId OR "debitAccountId" = :accountId)
+      AND ("state" = 'POSTED' OR ("state" = 'PENDING' AND "expiresAt" > NOW()));
+    `,
+      { accountId: account.id }
+    )
 
-  let creditsPosted = 0n
-  let creditsPending = 0n
-  let debitsPosted = 0n
-  let debitsPending = 0n
-
-  for (const credit of credits) {
-    if (credit.state === LedgerTransferState.POSTED) {
-      creditsPosted += credit.amount
-    } else if (credit.state === LedgerTransferState.PENDING) {
-      creditsPending += credit.amount
+    if (queryResult?.rows < 1) {
+      throw new Error('No results when fetching balance for account')
     }
-  }
 
-  for (const debit of debits) {
-    if (debit.state === LedgerTransferState.POSTED) {
-      debitsPosted += debit.amount
-    } else if (debit.state === LedgerTransferState.PENDING) {
-      debitsPending += debit.amount
+    const creditsPosted = BigInt(queryResult.rows[0].creditsPosted)
+    const creditsPending = BigInt(queryResult.rows[0].creditsPending)
+    const debitsPosted = BigInt(queryResult.rows[0].debitsPosted)
+    const debitsPending = BigInt(queryResult.rows[0].debitsPending)
+
+    return {
+      creditsPosted,
+      creditsPending,
+      debitsPosted,
+      debitsPending
     }
-  }
+  } catch (err) {
+    deps.logger.error(
+      {
+        err,
+        accountId: account.id
+      },
+      'Could not fetch balances for account'
+    )
 
-  return {
-    creditsPosted,
-    creditsPending,
-    debitsPosted,
-    debitsPending
+    throw err
   }
 }
