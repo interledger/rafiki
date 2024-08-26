@@ -1161,6 +1161,85 @@ describe('OutgoingPaymentService', (): void => {
       return payment
     }
 
+    test('Telemetry Transaction Counter increments for COMPLETED transactions', async (): Promise<void> => {
+      const incrementTrxCounterSpy = jest
+        .spyOn(telemetryService!, 'incrementCounter')
+        .mockImplementation(() => Promise.resolve())
+
+      incomingPayment = await createIncomingPayment(deps, {
+        walletAddressId: receiverWalletAddress.id,
+        incomingAmount: {
+          value: receiveAmount.value,
+          assetCode: receiverWalletAddress.asset.code,
+          assetScale: receiverWalletAddress.asset.scale
+        }
+      })
+      assert.ok(incomingPayment.walletAddress)
+
+      const createdPayment = await setup({
+        receiver: incomingPayment.getUrl(incomingPayment.walletAddress),
+        receiveAmount,
+        method: 'ilp'
+      })
+
+      mockPaymentHandlerPay(createdPayment, incomingPayment)
+      const payment = await processNext(
+        createdPayment.id,
+        OutgoingPaymentState.Completed
+      )
+      await expectOutcome(payment, {
+        accountBalance: 0n,
+        amountSent: payment.debitAmount.value,
+        amountDelivered: payment.receiveAmount.value,
+        incomingPaymentReceived: payment.receiveAmount.value,
+        withdrawAmount: 0n
+      })
+
+      expect(incrementTrxCounterSpy).toHaveBeenCalledWith(
+        'transactions_total',
+        1,
+        {
+          description: 'Count of funded transactions'
+        }
+      )
+    })
+
+    test('Telemetry Transaction Counter does not increments for FAILED transactions', async (): Promise<void> => {
+      const incrementTrxCounterSpy = jest
+        .spyOn(telemetryService!, 'incrementCounter')
+        .mockImplementation(() => Promise.resolve())
+      const createdPayment = await setup({
+        receiver,
+        debitAmount,
+        method: 'ilp'
+      })
+
+      mockPaymentHandlerPay(
+        createdPayment,
+        incomingPayment,
+        new PaymentMethodHandlerError('Failed payment', {
+          description: '',
+          retryable: false
+        })
+      )
+
+      const payment = await processNext(
+        createdPayment.id,
+        OutgoingPaymentState.Failed,
+        'Failed payment'
+      )
+
+      await expectOutcome(payment, {
+        accountBalance: payment.debitAmount.value,
+        amountSent: 0n,
+        amountDelivered: 0n,
+        incomingPaymentReceived: incomingPayment.receivedAmount.value,
+        withdrawAmount: 0n
+      })
+
+      expect(incrementTrxCounterSpy).not.toHaveBeenCalled()
+    })
+
     test('COMPLETED with Telemetry Fee Counter (receiveAmount < incomingPayment.incomingAmount)', async (): Promise<void> => {
       const spyTelFeeAmount = jest.spyOn(
         telemetryService,
