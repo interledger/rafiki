@@ -36,7 +36,7 @@ export interface Grant {
 export interface Access {
   type: string
   actions: AccessAction[]
-  identifier?: string
+  identifier: string
 }
 
 function contextToRequestLike(ctx: HttpSigContext): RequestLike {
@@ -95,13 +95,11 @@ export function createTokenIntrospectionMiddleware({
         tokenInfo = await tokenIntrospectionClient.introspect({
           access_token: token,
           access: [
-            requestType === AccessType.OutgoingPayment
-              ? toOpenPaymentsAccess(
-                  requestType,
-                  requestAction,
-                  ctx.walletAddressUrl
-                )
-              : toOpenPaymentsAccess(requestType, requestAction)
+            toOpenPaymentsAccess(
+              requestType,
+              requestAction,
+              ctx.walletAddressUrl
+            )
           ]
         })
       } catch (err) {
