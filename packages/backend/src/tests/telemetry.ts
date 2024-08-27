@@ -39,6 +39,8 @@ export class MockTelemetryService implements TelemetryService {
   public getInstanceName(): string | undefined {
     return 'serviceName'
   }
+  public startTimer(name: string, attributes?: Record<string, unknown>): void {}
+  public stopTimer(name: string, attributes?: Record<string, unknown>): void {}
   public async shutdown(): Promise<void> {}
 
   public async convertAmount(
