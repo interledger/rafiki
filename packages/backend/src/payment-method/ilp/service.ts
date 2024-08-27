@@ -43,6 +43,7 @@ async function getQuote(
   deps: ServiceDependencies,
   options: StartQuoteOptions
 ): Promise<PaymentQuote> {
+  const rateStart = Date.now()
   const rates = await deps.ratesService
     .rates(options.walletAddress.asset.code)
     .catch((_err: Error) => {
@@ -51,15 +52,47 @@ async function getQuote(
         retryable: false
       })
     })
+  const rateEnd = Date.now()
+  const rateDuration = rateEnd - rateStart
 
+  if (deps.telemetry) {
+    deps.telemetry.recordHistogram('ilp_get_quote_rate_time_ms', rateDuration, {
+      description: 'Time to get rates'
+    })
+  }
+
+  const pluginStart = Date.now()
   const plugin = deps.makeIlpPlugin({
     sourceAccount: options.walletAddress,
     unfulfillable: true
   })
+  const pluginEnd = Date.now()
+  const pluginDuration = pluginEnd - pluginStart
+  if (deps.telemetry) {
+    deps.telemetry.recordHistogram(
+      'ilp_make_ilp_plugin_time_ms',
+      pluginDuration,
+      {
+        description: 'Time to make ilp plugin'
+      }
+    )
+  }
   const destination = options.receiver.toResolvedPayment()
 
   try {
+    const pluginConnectStart = Date.now()
     await plugin.connect()
+    const pluginConnectEnd = Date.now()
+    const pluginConnectDuration = pluginConnectEnd - pluginConnectStart
+    if (deps.telemetry) {
+      deps.telemetry.recordHistogram(
+        'ilp_make_ilp_plugin_connect_time_ms',
+        pluginConnectDuration,
+        {
+          description: 'Time to connect ilp plugin'
+        }
+      )
+    }
     const quoteOptions: Pay.QuoteOptions = {
       plugin,
       destination,
@@ -76,7 +109,7 @@ async function getQuote(
     }
 
     let ilpQuote: Pay.Quote | undefined
-    const rateProbeStartTime = Date.now()
+    const payStartTime = Date.now()
     try {
       ilpQuote = await Pay.startQuote({
         ...quoteOptions,
@@ -95,12 +128,12 @@ async function getQuote(
     const payEndTime = Date.now()
 
     if (deps.telemetry) {
-      const rateProbeDuraiton = payEndTime - rateProbeStartTime
+      const rateProbeDuraiton = payEndTime - payStartTime
       deps.telemetry.recordHistogram(
         'ilp_rate_probe_time_ms',
         rateProbeDuraiton,
         {
-          description: 'Time to get an ILP quote'
+          description: 'Time to get an ILP quote (Pay.startQuote)'
         }
       )
     }
@@ -174,7 +207,19 @@ async function getQuote(
     }
   } finally {
     try {
+      const pluginCloseStart = Date.now()
       await Pay.closeConnection(plugin, destination)
+      const pluginCloseEnd = Date.now()
+      const pluginCloseDuration = pluginCloseEnd - pluginCloseStart
+      if (deps.telemetry) {
+        deps.telemetry.recordHistogram(
+          'ilp_plugin_close_connect_time_ms',
+          pluginCloseDuration,
+          {
+            description: 'Time to close ilp plugin'
+          }
+        )
+      }
     } catch (error) {
       deps.logger.warn(
         {
@@ -186,7 +231,20 @@ async function getQuote(
     }
 
     try {
+      const pluginDisconnectStart = Date.now()
       await plugin.disconnect()
+      const pluginDisconnectEnd = Date.now()
+      const pluginDisconnectDuration =
+        pluginDisconnectEnd - pluginDisconnectStart
+      if (deps.telemetry) {
+        deps.telemetry.recordHistogram(
+          'ilp_plugin_disconnect_time_ms',
+          pluginDisconnectDuration,
+          {
+            description: 'Time to disconnect ilp plugin'
+          }
+        )
+      }
     } catch (error) {
       deps.logger.warn(
         { error: error instanceof Error && error.message },
