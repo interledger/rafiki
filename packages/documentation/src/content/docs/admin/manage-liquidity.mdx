@@ -2,4 +2,305 @@
 title: Manage liquidity
 ---
 
-`https://deploy-preview-2875--brilliant-pasca-3e80ec.netlify.app/integration/deploy-to-prod/running-your-instance/managing-liquidity/`
+import { LinkOut } from '@interledger/docs-design-system'
+
+As an implementation of the Interledger Protocol, Rafiki provides [accounting](/concepts/accounts-transfers-liquidity) between transacting parties but doesn’t handle settlement. You and the account servicing entities you decide to peer with must agree on the means and how often you will settle your accounts. Consequently, Rafiki can manage the liquidity used to fund payments made through the Interledger network.
+
+## Add liquidity via GraphQL
+
+Liquidity can be managed in Rafiki through the [`backend`](/integration/deployment/services/backend-service/) Admin API, which implements a GraphQL interface, or via the [Rafiki Admin application](/admin/admin-user-guide). Data insertions and modifications in GraphQL can be specified explicitly via a mutation query. Each GraphQL request has two parts: a query and an object containing query variables.
+
+As Rafiki supports several types of liquidity, we’ll cover the typical scenarios you’ll need to manage.
+
+:::note
+You must provide the `idempotencyKey` when calling mutations related to liquidity. This key allows the safe retrying of requests without multiple operations. It should be a unique key, typically a V4 UUID. For more information, refer to Rafiki’s idempotency.
+:::
+
+## Asset Liquidity
+
+Asset liquidity specifies the amount of value denominated in an asset you have previously added to your Rafiki instance, which Rafiki has at its disposal to send or forward Interledger packets. Asset liquidity increases if packets denominated in the asset are received and decreases if your Rafiki instance sends packets denominated in the asset. The amount is always non-negative.
+
+You should define and adjust the asset liquidity based on your risk tolerance.
+
+### Example
+
+You’ve configured your Rafiki instance with two assets, EUR and USD, with an asset scale of 0. The EUR liquidity is 10, and the USD liquidity is 50. With liquidity support for these two assets, your Rafiki instance can function as a connector node within the Interledger network and provide currency exchange between a sender sending a payment in EUR and a recipient receiving the payment in USD.
+
+In a cross-currency transaction, your Rafiki instance would receive packets totaling 10 EUR and send packets worth 11 USD. The EUR liquidity would be increased to 20 EUR, and the USD liquidity would be reduced to 39 USD.
+
+If your Rafiki instance were to receive 50 EUR, but needed to send 55 USD, the transaction would fail because your instance does not have enough USD liquidity.
+
+### Deposit Asset Liquidity
+
+You can deposit asset liquidity via the `DepositAssetLiquidity` mutation:
+
+```sh
+mutation
+DepositAssetLiquidity($input:DepositAssetLiquidityInput!) {
+  depositAssetLiquidity(input:$input) {
+    code
+    success
+    message
+    error
+ }
+}
+```
+
+The following are example `input` parameters for the `DepositAssetLiquidity` mutation query above.
+
+```sh
+{ "input": {
+    "id":"b97fd85a-126e-42ef-b40d-1a50a70ffa6f",
+    "assetId":"7b8b0f65-896d-4403-b7ba-2e24bf20eb35",
+    "amount":"100",
+    "idempotencyKey":"b97fd85a-126e-42ef-b40d-1a50a70ffa6f"
+    }
+}
+```
+
+### Withdraw Asset Liquidity
+
+You can withdraw asset liquidity via the `CreateAssetLiquidityWithdrawal` mutation:
+
+```sh
+mutation
+CreateAssetLiquidityWithdrawal(
+    $input:CreateAssetLiquidityWithdrawalInput!
+) {
+    createAssetLiquidityWithdrawal(input:$input) {
+     code
+     success
+     message
+     error
+   }
+}
+```
+
+The following are example `input` parameters for the `CreateAssetLiquidityWithdrawal` mutation query above.
+
+```sh
+{"input": {
+    "id":"b97fd85a-126e-42ef-b40d-1a50a70ffa6f",
+    "assetId":"7b8b0f65-896d-4403-b7ba-2e24bf20eb35",
+    "amount":"100",
+    "idempotencyKey":"b97fd85a-126e-42ef-b40d-1a50a70ffa6f",
+    "timeoutSeconds":0}
+}
+```
+
+## Peer Liquidity
+
+Peer liquidity is the line of credit denominated in the asset of the peering relationship in Rafiki that you extend to your respective peer. You must determine how much credit you will extend in your peering agreement, which depends on how much you trust the peer. If peer liquidity is insufficient, Rafiki cannot initiate payments to that peer. Once peer liquidity is used up, you should settle with your peer and reset their peer liquidity.
+
+:::note  
+You must decide whether to secure liquidity with your peers by extending credit or requiring them to pre-fund your accounts. Those agreements must be made before setting up peering relationships in Rafiki and are not managed through Interledger or Rafiki.
+:::
+
+### Example
+
+A configured peer, _Cloud Nine Wallet,_ has a peer liquidity of 100 USD. Your Rafiki instance can send packets up to 100 USD to wallet addresses issued by _Cloud Nine Wallet_. Once that liquidity is used up, you should settle with _Cloud Nine Wallet_ and reset their liquidity to 100 USD.
+
+### Deposit Peer Liquidity
+
+You can add liquidity for a particular peer via the `DepositPeerLiquidity` mutation.
+
+```sh
+mutation DepositPeerLiquidity($input:DepositPeerLiquidityInput!) {
+  depositPeerLiquidity(input:$input) {
+    code
+    success
+    message
+    error}
+}
+```
+
+The following are example `input` parameters for the `DepositPeerLiquidity` mutation query above.
+
+```sh
+{"input": {"id":"a09b730d-8610-4fda-98fa-ec7acb19c775",
+ "peerId":"73158598-2e0c-4973-895e-aebd115af260",
+ "amount":"1000000",
+ "idempotencyKey":"a09b730d-8610-4fda-98fa-ec7acb19c775",
+ "timeoutSeconds":0}
+}
+```
+
+### Withdraw Peer Liquidity
+
+In case you want to reduce your peer’s credit line, you can withdraw peer liquidity via the `CreatePeerLiquidityWithdrawal` mutation:
+
+```sh
+mutation CreatePeerLiquidityWithdrawal(
+  $input:CreatePeerLiquidityWithdrawalInput!
+) {
+  createPeerLiquidityWithdrawal(input:$input) {
+    code
+    success
+    message
+    error}
+}
+```
+
+The following are example `input` parameters for the `CreatePeerLiquidityWithdrawal` mutation query above.
+
+```sh
+{
+"input": {"id":"421fae87-9a59-4217-9ff8-faf55ffab9c6",
+"peerId":"73158598-2e0c-4973-895e-aebd115af260",
+"amount":"100",
+"timeoutSeconds":0
+}
+}
+```
+
+## Payment Liquidity
+
+When Open Payments incoming or outgoing payments are created, your Rafiki instance creates a liquidity account within the accounting database. Liquidity must be deposited into an outgoing payment before the payment can be processed. Rafiki will notify you to deposit liquidity via the `outgoing_payment.created` webhook event. Similarly, packets received for an incoming payment increase its liquidity account. Rafiki will notify you to withdraw that liquidity via the `incoming_payment.completed` webhook event.
+
+### Incoming payment
+
+You can withdraw incoming payment liquidity via the `CreateIncomingPaymentWithdrawal` mutation query:
+
+```sh
+mutation CreateIncomingPaymentWithdrawal(
+  $input:CreateIncomingPaymentWithdrawalInput!
+) {
+  createIncomingPaymentWithdrawal(input:$input) {
+    code
+    error
+    message
+    success
+  }
+}
+```
+
+The following are example `input` parameters for the `CreateIncomingPaymentWithdrawal` mutation query above.
+
+```sh
+{ "input": {"incomingPaymentId":"b4f85d5c-652d-472d-873c-4ba2a5e39052,   "idempotencyKey":"a09b730d-8610-4fda-98fa-ec7acb19c775",
+"timeoutSeconds":0
+  }
+}
+```
+
+### Outgoing payment
+
+You can deposit outgoing payment liquidity via the `DepositOutgoingPaymentLiquidity` mutation query:
+
+```sh
+mutation DepositOutgoingPaymentLiquidity(
+  $input:DepositOutgoingPaymentLiquidityInput!)
+{
+  depositOutgoingPaymentLiquidity(input:$input) {
+       code
+  	  error
+  	  message
+  	  success
+ }
+}
+```
+
+The following are example `input` parameters for the `DepositOutgoingPaymentLiquidity` mutation query above.
+
+```sh
+{
+ "input":{
+   "outgoingPaymentId":"b4f85d5c-652d-472d-873c-4ba2a5e39052",
+   "idempotencyKey":"a09b730d-8610-4fda-98fa-ec7acb19c775"
+  }
+}
+```
+
+You can withdraw outgoing payment liquidity via the `CreateOutgoingPaymentWithdrawal` mutation:
+
+```sh
+mutation
+CreateOutgoingPaymentWithdrawal
+(
+ $input:CreateOutgoingPaymentWithdrawalInput!) {
+ createOutgoingPaymentWithdrawal
+(input:$input) {
+  code
+  error
+  message
+  success
+}
+}
+```
+
+The following are example `input` parameters for the `CreateOutgoingPaymentWithdrawal` mutation query above.
+
+```sh
+{"input": {
+  "outgoingPaymentId":"b4f85d5c-652d-472d-873c-4ba2a5e39052",
+  "idempotencyKey":"a09b730d-8610-4fda-98fa-ec7acb19c775",
+  "timeoutSeconds":0
+ }
+}
+```
+
+## Two-phase withdrawals
+
+Rafiki supports <LinkOut href='https://en.wikipedia.org/wiki/Two-phase_commit_protocol'>two-phase</LinkOut> withdrawals via the `PostLiquidityWithdrawal` and `VoidLiquidityWithdrawal` mutations. When a withdrawal liquidity transaction is requested with a non-zero `timeout` value (zero denotes absence of a timeout), the transfer will be created as a two-phase transfer. If the timeout interval passes before the transfer is either posted or voided, the transfer expires and the full amount is returned to the original account.
+
+- `PostLiquidityWithdrawal`: Withdrawals with timeouts greater than 0 are processed as two-phase transfers and committed via this mutation.
+
+- `VoidLiquidityWithdrawal`: Withdrawals with timeouts greater than 0 are processed as two-phase transfers and are rolled back via this mutation.
+
+The following withdrawal transactions supports two-phase transfers:
+
+- Asset liquidity withdrawal
+- Wallet address withdrawal
+- Peer liquidity withdrawal
+- Incoming payment withdrawal
+- Outgoing payment withdrawal
+
+### Examples
+
+You can post a successful transfer via the `PostLiquidityWithdrawal` mutation query:
+
+```sh
+mutation
+PostLiquidityWithdrawal($input:PostLiquidityWithdrawalInput!) {postLiquidityWithdrawal
+(
+input:$input) {
+  code
+  error
+  message
+  success}
+}
+```
+
+The following are example `input` parameters for the `PostLiquidityWithdrawal` mutation query above.
+
+```sh
+{
+ "input": {
+  "withdrawalId":"b4f85d5c-652d-472d-873c-4ba2a5e39052",
+  "idempotencyKey":"a09b730d-8610-4fda-98fa-ec7acb19c775"}
+}
+```
+
+You can void an unsuccessful transfer via the `VoidLiquidityWithdrawal` mutation query:
+
+```sh
+mutation
+VoidLiquidityWithdrawal($input:VoidLiquidityWithdrawalInput!) {
+ voidLiquidityWithdrawal
+(input:$input) {
+  code
+  error
+  message
+  success}
+}
+```
+
+The following are example `input` parameters for the `VoidLiquidityWithdrawal` mutation query above.
+
+```sh
+{"input": {
+  "withdrawalId":"b4f85d5c-652d-472d-873c-4ba2a5e39052",
+"idempotencyKey":"a09b730d-8610-4fda-98fa-ec7acb19c775"
+ }
+}
+```

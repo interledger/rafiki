@@ -178,6 +178,10 @@ export default defineConfig({
                   link: '/admin/admin-user-guide'
                 },
                 {
+                  label: 'Manage assets',
+                  link: '/admin/manage-assets'
+                },
+                {
                   label: 'Manage liquidity',
                   link: '/admin/manage-liquidity'
                 },
@@ -192,6 +196,10 @@ export default defineConfig({
                 {
                   label: 'Manage grants',
                   link: '/admin/manage-grants'
+                },
+                {
+                  label: 'Manage wallet addresses',
+                  link: '/admin/manage-wallet-addresses'
                 }
               ]
             },
@@ -210,10 +218,6 @@ export default defineConfig({
                 {
                   label: 'Environment variables',
                   link: '/resources/environment-variables'
-                },
-                {
-                  label: 'Grants',
-                  link: '/resources/grants'
                 },
                 {
                   label: 'Get involved',

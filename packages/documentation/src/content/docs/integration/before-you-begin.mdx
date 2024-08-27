@@ -4,15 +4,16 @@ title: Before you begin
 
 import { LinkOut } from '@interledger/docs-design-system'
 
-import { Mermaid } from '@interledger/docs-design-system'
+import { Mermaid, CodeBlock } from '@interledger/docs-design-system'
 
-There are three key components that you need to set up prior to integrating Rafiki.
+As you begin setting up your production environment, there are a few integration details that should be approached first. Begin by configuring Rafiki to:
 
-1. A service to provide Rafiki with current [exchange rates](#exchange-rates)
-2. A trusted [identity provider](#identity-providers) to handle user authentication
-3. A mechanism for handling Rafiki [webhook events](#webhook-events)
+- Support cross-currency transactions by providing [exchange rate details](#provide-exchange-rate-details)
+- Charge [fees](#charge-fees-for-facilitating-transfers) for facilitating transfers
+- Integrate with your [identity provider](#integrate-with-your-identity-provider)
+- Establish a mechanism for managing liquidity via [webhook events]
 
-## Exchange Rates
+## Provide exchange rate details
 
 To support cross-currency transactions, you must provide Rafiki with an endpoint from where it can fetch current exchange rates.
 
@@ -28,7 +29,7 @@ Rafiki's default slippage is set to `0.01` (1%). This value can be changed to a 
 
 #### Slippage example
 
-Using the default slippage of `0.01` (1%), the rate probe's quote returns $1.00 USD. A payment of $1.01 USD will be successful. However, the payment will fail if the total, inclusive of exchange rate and network fees, amounts to $1.02 USD or more.
+Using the default slippage of `0.01` (1%), the rate probe's quote returns `$1.00` USD. A payment of `$1.01` USD will be successful. However, the payment will fail if the total, inclusive of exchange rate and network fees, amounts to `$1.02` USD or more.
 
 ### Requests to your exchange rates endpoint
 
@@ -72,15 +73,100 @@ The exchange rate environment variables are part of the `backend` service.
 
 The file that contains your variables varies depending on whether you are running Rafiki via Docker (`docker-compose.yaml`) or via Helm and Kubernetes (`values.yaml` for the Helm chart).
 
-| Environment variable      | Description                                                                                     |
-| ------------------------- | ----------------------------------------------------------------------------------------------- |
-| `EXCHANGE_RATES_URL`      | Your exchange rates endpoint                                                                    |
-| `EXCHANGE_RATES_LIFETIME` | The amount of time Rafiki caches exchange rates, in ms                                          |
-| `SLIPPAGE`                | The variance allowed between a quote and the actual amount required when a payment is initiated |
+| Environment variable      | Description                                                                                     | Required |
+| ------------------------- | ----------------------------------------------------------------------------------------------- | -------- |
+| `EXCHANGE_RATES_URL`      | Your exchange rates endpoint                                                                    | Y        |
+| `EXCHANGE_RATES_LIFETIME` | The amount of time Rafiki caches exchange rates, in ms                                          | Y        |
+| `SLIPPAGE`                | The variance allowed between a quote and the actual amount required when a payment is initiated | Y        |
 
-## Identity providers
+## Charge fees for facilitating transfers
 
-integration and also flows
+You can charge fees on top of estimated network fees to facilitate transfers. Each asset you support can have a different fee structure.
+
+You can define:
+
+- A fixed fee amount (optional)
+- A variable fee amount via basis points (optional)
+- Whether the fee is incurred by the sender or the receiver
+  :::note
+  The Backend Admin API allows you to set one or the other. The [Rafiki Admin app](/admin/admin-user-guide) only allows you to set the fee to be incurred by the sender.
+  :::
+
+### Example
+
+For this example, assume the asset scale is 2. You'll charge a fixed fee of 100 (`$1.00`) and a variable fee of 100 (`1%`).
+
+#### Backend Admin API `setFee` mutation
+
+<CodeBlock title="Example setFee mutation">
+```graphql
+mutation SetFee($input: SetFeeInput!) {
+  setFee(input: $input) {
+    code
+    success
+    message
+    fee {
+      id
+      assetId
+      type
+      fixed
+      basisPoints
+      createdAt
+    }
+  }
+}
+```
+</CodeBlock>
+
+#### JSON Request
+
+<CodeBlock title="Example Request">
+```json
+{
+  "input": {
+    "assetId": "14863f6f-4bda-42ef-8715-bf4762898af8",
+    "type": "SENDING",
+    "fee": {
+      "fixed": 100,
+      "basisPoints": 100
+    }
+  }
+}
+```
+</CodeBlock>
+
+| Variable      | Description                                                                                                                                                                                                                |
+| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `assetId`     | The unique ID assigned by Rafiki when the asset was created.                                                                                                                                                               |
+| `type`        | Indicates who incurs the fee: either the sender (`SENDING`) or receiver (`RECEIVING`).                                                                                                                                     |
+| `fixed`       | The amount of the flat, fixed fee to charge. Assuming USD with an asset scale of 2, a value of `100` equals `$1.00`.                                                                                                       |
+| `basisPoints` | The amount of the variable fee to charge based on the total amount. One basis point is equal to 0.01% of the total amount. 100 basis points equals 1%, and 10000 basis points equals 100%. In this example, the fee is 1%. |
+
+#### JSON Response
+
+<CodeBlock title="Example Successful Response">
+```json
+{
+  "data": {
+    "setFee": {
+      "code": "200",
+      "success": true,
+      "message": "Fee set",
+      "fee": {
+        "id": "140fd9c0-8f14-4850-9724-102f04d97e69",
+        "assetId": "14863f6f-4bda-42ef-8715-bf4762898af8",
+        "type": "SENDING",
+        "fixed": "100",
+        "basisPoints": 100,
+        "createdAt": "2023-09-13T14:59:53.435Z"
+      }
+    }
+  }
+}
+```
+</CodeBlock>
+
+## Integrate with your identity provider
 
 ## Webhook Events
 

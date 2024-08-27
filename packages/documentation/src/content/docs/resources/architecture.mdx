@@ -4,15 +4,11 @@ title: Architecture
 
 import { LinkOut } from '@interledger/docs-design-system'
 
-<p>
-  <mark>Needs updated diagram(s)</mark>
-</p>
-
 Rafiki is a collection of three services that run together. Each one can be scaled horizontally.
 
-- [backend](/integration/deployment/services/backend-service) - The main service, responsible for handling business logic and external communication
-- [auth](/integration/deployment/services/auth-service) - A reference implementation of an Open Payments authorization server, used for grant authorization and authentication
-- [frontend](/integration/deployment/services/frontend-service) - An optional internal user interface, called the [Rafiki Admin](/admin/admin-user-guide), for you to manage your Rafiki instance
+- [Backend](/integration/deployment/services/backend-service) - The main service, responsible for handling business logic and external communication
+- [Auth](/integration/deployment/services/auth-service) - A reference implementation of an Open Payments authorization server, used for grant authorization and authentication
+- [Frontend](/integration/deployment/services/frontend-service) - An optional internal user interface, called the [Rafiki Admin](/admin/admin-user-guide), for you to manage your Rafiki instance
 
 These services rely on four databases.
 
@@ -25,3 +21,5 @@ These services rely on four databases.
 - Redis, used by the `backend` service as a cache to share STREAM connection details across processes and by the `auth` service to store session data
 
 An additional package for [token introspection](/integration/deployment/services/token-introspection) is also included with Rafiki. This is an internal package that requires no action on your part if you’re using Rafiki’s `auth` service.
+
+<img src='/img/rafiki-architecture.png' alt='Rafiki architecture diagram' />

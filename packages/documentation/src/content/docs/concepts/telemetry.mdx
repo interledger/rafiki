@@ -22,11 +22,11 @@ Our goals are to:
 
 Privacy is a paramount concern for the Interleger Foundation. Rafiki’s telemetry feature is designed to provide valuable network insights without violating privacy or aiding malicious ASEs. Review the [Privacy](#privacy) section below for more information.
 
-The telemetry functionality is currently enabled by default on test (non-livenet) environments, i.e. any environment that is not dealing with real money. When active, the functionality transmits metrics to the testnet collector. In the future, operating in a production livenet environment (with real money) will allow you to opt-in to sharing your metrics with a livenet collector. Regardless of environment, you can also opt-out of telemetry completely.
+The telemetry functionality is currently enabled by default on test (non-livenet) environments, i.e. any environment that is not dealing with real money. When active, the functionality transmits metrics to the testnet collector. You can opt in to sharing your metrics with a livenet collector when operating in a production livenet environment (with real money). Regardless of environment, you can also opt-out of telemetry completely. Review the [telemetry environment variables](#telemetry-environment-variables) for more information.
 
 ### Architecture
 
-![Architecture diagram for Rafiki telemetry](/img/components-telemetry-architecture.png)
+![Architecture diagram for Rafiki telemetry](/img/concepts-telemetry-architecture.png)
 
 ### OpenTelemetry (OTEL)
 
@@ -151,7 +151,7 @@ Rafiki allows you to build your own telemetry solution based on the <LinkOut hre
 
 You must deploy your own OTEL Collector that acts as a sidecar container to Rafiki, then provide the OTEL Collector’s ingest endpoint so that Rafiki can begin sending metrics to the collector.
 
-### Rafiki telemetry environment variables
+### Telemetry environment variables
 
 | Variable name                    | Type    | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             | Required |
 | -------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
