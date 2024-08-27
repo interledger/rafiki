@@ -22,7 +22,7 @@ export async function processPendingPayment(
     'outgoingPaymentLifecycle',
     async (span: Span) => {
       const paymentId = await deps_.knex.transaction(async (trx) => {
-        const payment = await getPendingPayment(trx)
+        const payment = await getPendingPayment(trx, deps_)
         if (!payment) return
 
         await handlePaymentLifecycle(
@@ -47,8 +47,13 @@ export async function processPendingPayment(
 
 // Fetch (and lock) a payment for work.
 async function getPendingPayment(
-  trx: Knex.Transaction
+  trx: Knex.Transaction,
+  deps: ServiceDependencies
 ): Promise<OutgoingPayment | undefined> {
+  deps.telemetry &&
+    deps.telemetry.startTimer('getPendingPayment', {
+      callName: 'getPendingPayment'
+    })
   const now = new Date(Date.now()).toISOString()
   const payments = await OutgoingPayment.query(trx)
     .limit(1)
@@ -67,6 +72,7 @@ async function getPendingPayment(
         )
     })
     .withGraphFetched('[walletAddress, quote.asset]')
+  deps.telemetry && deps.telemetry.stopTimer('getPendingPayment')
   return payments[0]
 }
 
@@ -80,7 +86,12 @@ async function handlePaymentLifecycle(
   }
 
   try {
+    deps.telemetry &&
+      deps.telemetry.startTimer('handleSending', {
+        callName: 'handleSending'
+      })
     await lifecycle.handleSending(deps, payment)
+    deps.telemetry && deps.telemetry.stopTimer('handleSending')
   } catch (error) {
     await onLifecycleError(deps, payment, error as Error | PaymentError)
   }

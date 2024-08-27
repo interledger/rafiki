@@ -235,7 +235,10 @@ export function initIocContainer(
     return createPsqlAccountingService({
       logger,
       knex,
-      withdrawalThrottleDelay: config.withdrawalThrottleDelay
+      withdrawalThrottleDelay: config.withdrawalThrottleDelay,
+      telemetry: config.enableTelemetry
+        ? await deps.use('telemetry')
+        : undefined
     })
   })
   container.singleton('peerService', async (deps) => {
