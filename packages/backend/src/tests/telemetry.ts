@@ -39,7 +39,9 @@ export class MockTelemetryService implements TelemetryService {
   public getInstanceName(): string | undefined {
     return 'serviceName'
   }
+  /* eslint-disable @typescript-eslint/no-unused-vars */
   public startTimer(name: string, attributes?: Record<string, unknown>): void {}
+  /* eslint-disable @typescript-eslint/no-unused-vars */
   public stopTimer(name: string, attributes?: Record<string, unknown>): void {}
   public async shutdown(): Promise<void> {}
 
