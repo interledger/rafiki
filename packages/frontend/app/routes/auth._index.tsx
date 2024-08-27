@@ -1,11 +1,11 @@
 import { Button } from '../components/ui'
 import variables from '../lib/envConfig.server'
-import { redirectIfAlreadyAuthorized } from '../lib/kratos_checks.server'
+import { checkAuthAndRedirect } from '../lib/kratos_checks.server'
 import { type LoaderFunctionArgs } from '@remix-run/node'
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const cookies = request.headers.get('cookie')
-  await redirectIfAlreadyAuthorized(request.url, cookies)
+  await checkAuthAndRedirect(request.url, cookies)
 
   return null
 }

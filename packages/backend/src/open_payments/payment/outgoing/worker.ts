@@ -5,6 +5,7 @@ import { OutgoingPayment, OutgoingPaymentState } from './model'
 import { LifecycleError, PaymentError } from './errors'
 import * as lifecycle from './lifecycle'
 import { PaymentMethodHandlerError } from '../../../payment-method/handler/errors'
+import { trace, Span } from '@opentelemetry/api'
 
 // First retry waits 10 seconds, second retry waits 20 (more) seconds, etc.
 export const RETRY_BACKOFF_SECONDS = 10
@@ -15,23 +16,33 @@ const MAX_STATE_ATTEMPTS = 5
 export async function processPendingPayment(
   deps_: ServiceDependencies
 ): Promise<string | undefined> {
-  return deps_.knex.transaction(async (trx) => {
-    const payment = await getPendingPayment(trx)
-    if (!payment) return
+  const tracer = trace.getTracer('outgoing_payment_worker')
 
-    await handlePaymentLifecycle(
-      {
-        ...deps_,
-        knex: trx,
-        logger: deps_.logger.child({
-          payment: payment.id,
-          from_state: payment.state
-        })
-      },
-      payment
-    )
-    return payment.id
-  })
+  return tracer.startActiveSpan(
+    'outgoingPaymentLifecycle',
+    async (span: Span) => {
+      const paymentId = await deps_.knex.transaction(async (trx) => {
+        const payment = await getPendingPayment(trx)
+        if (!payment) return
+
+        await handlePaymentLifecycle(
+          {
+            ...deps_,
+            knex: trx,
+            logger: deps_.logger.child({
+              payment: payment.id,
+              from_state: payment.state
+            })
+          },
+          payment
+        )
+        return payment.id
+      })
+
+      span.end()
+      return paymentId
+    }
+  )
 }
 
 // Fetch (and lock) a payment for work.

@@ -9,11 +9,11 @@ import type { UiContainer } from '@ory/client'
 import { useLoaderData } from '@remix-run/react'
 import { Button, Input } from '../components/ui'
 import variables from '../lib/envConfig.server'
-import { redirectIfAlreadyAuthorized } from '../lib/kratos_checks.server'
+import { checkAuthAndRedirect } from '../lib/kratos_checks.server'
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const cookies = request.headers.get('cookie')
-  await redirectIfAlreadyAuthorized(request.url, cookies)
+  await checkAuthAndRedirect(request.url, cookies)
 
   const url = new URL(request.url)
   const flowResult = uuidSchema.safeParse({ id: url.searchParams.get('flow') })

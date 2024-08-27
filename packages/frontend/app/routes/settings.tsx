@@ -13,11 +13,11 @@ import { useLoaderData } from '@remix-run/react'
 import { PageHeader } from '~/components'
 import { Button, Input } from '../components/ui'
 import variables from '../lib/envConfig.server'
-import { redirectIfUnauthorizedAccess } from '../lib/kratos_checks.server'
+import { checkAuthAndRedirect } from '../lib/kratos_checks.server'
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const cookies = request.headers.get('cookie')
-  await redirectIfUnauthorizedAccess(request.url, cookies)
+  await checkAuthAndRedirect(request.url, cookies)
 
   const url = new URL(request.url)
 
