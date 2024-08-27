@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import { GraphQLError } from 'graphql'
 import { ApolloContext } from '../../app'
 import {
@@ -70,10 +71,17 @@ export const getTenant: QueryResolvers<ApolloContext>['tenant'] = async (
 
 export const createTenant: MutationResolvers<ApolloContext>['createTenant'] =
   async (
+=======
+import { ApolloContext } from "../../app";
+import { MutationResolvers, ResolversTypes } from "../generated/graphql";
+
+export const createTenant: MutationResolvers<ApolloContext>['createTenant'] = async (
+>>>>>>> 51ad9b99 (feat(tenant): basic tenant admin api schema and service)
     _,
     args,
     ctx
   ): Promise<ResolversTypes['CreateTenantMutationResponse']> => {
+<<<<<<< HEAD
     const tenantService = await ctx.container.use('tenantService')
 
     const tenantOrError = await tenantService.create({
@@ -112,3 +120,7 @@ export function tenantToGraphql(tenant: Tenant): SchemaTenant {
     updatedAt: tenant.updatedAt.toISOString()
   }
 }
+=======
+    return undefined;
+  }
+>>>>>>> 51ad9b99 (feat(tenant): basic tenant admin api schema and service)
