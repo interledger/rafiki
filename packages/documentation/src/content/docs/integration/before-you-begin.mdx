@@ -2,7 +2,75 @@
 title: Before you begin
 ---
 
+import { LinkOut } from '@interledger/docs-design-system'
+
+Needs an overview..............also need to figure out the best order for the sections below.
+
 ## Exchange Rates
+
+To support cross-currency transactions, you must provide Rafiki with an endpoint from where it can fetch current exchange rates. 
+
+Jump to [exchange rate environment variables](#exchange-rate-environment-variables).
+
+### Rate probes and slippage
+
+Every Interledger payment is preceded by a rate probe. A rate probe provides a quote that estimates the cost of transferring value over the network, including any fees connector nodes may charge. For the rate probe to be successful, Rafiki needs current exchange rates.
+
+As exchange rates and fees charged by connectors fluctuate, there will likely be a variance between the estimated amount provided in the quote and the actual amount required when the payment is initiated. This difference is called slippage. 
+
+Rafiki's default slippage is set to `0.01` (1%). This value can be changed to a value between 0 and 1 via the `SLIPPAGE` variable.
+
+#### Slippage example
+
+Using the default slippage of `0.01` (1%), the rate probe's quote returns $1.00 USD. A payment of $1.01 USD will be successful. However, the payment will fail if the total, inclusive of exchange rate and network fees, amounts to $1.02 USD or more.
+
+### Requests to your exchange rates endpoint
+
+When Rafiki issues a `GET` request to your endpoint, the endpoint must respond with the following.
+
+| Variable | Type | Description | Required |
+| -------- | ---- | ----------- | -------- |
+| `base` | String | The asset code represented as an <LinkOut href="https://en.wikipedia.org/wiki/ISO_4217">ISO 4217</LinkOut> currency code, e.g. USD | Y |
+| `rates` | Object | Object containing `<asset_code : exchange_rate>` pairs, e.g. `{EUR: 0.8930}` | Y |
+| `rates.<asset_code>`| Number | The exchange rate given `base` and `<asset_code>` | Y |
+
+We provide an <LinkOut href="https://github.com/interledger/rafiki/blob/main/packages/backend/src/openapi/specs/exchange-rates.yaml">OpenAPI specification</LinkOut> for the endpoint, if needed.
+
+Below is a minimalistic example of a successful (200) request, taken from our <LinkOut href="localenv/mock-account-servicing-entity/app/routes/rates.ts">mock account servicing entity</LinkOut>.
+
+```json {13}
+import type { LoaderFunctionArgs } from '@remix-run/node'
+import { json } from '@remix-run/node'
+import { CONFIG as config } from '~/lib/parse_config.server'
+
+export function loader({ request }: LoaderFunctionArgs) {
+  const base = new URL(request.url).searchParams.get('base') || 'USD'
+
+  return json(
+    {
+      base,
+      rates: config.seed.rates[base] || {}
+    },
+    { status: 200 }
+  )
+}
+```
+
+### Exchange rates lifetime
+
+Specify how long your Rafiki instance will cache exchange rates via the `EXCHANGE_RATES_LIFETIME`  variable (default is `15_000` ms). Caching improves performance as Rafiki will not need to request the rates from your endpoint for every payment.
+
+### Exchange rate environment variables
+
+The exchange rate environment variables are part of the `backend` service.
+
+The file that contains your variables varies depending on whether you are running Rafiki via Docker (`docker-compose.yaml`) or via Helm and Kubernetes (`values.yaml` for the Helm chart).
+
+| Environment variable | Description |
+| -------------------- | ----------- |
+| `EXCHANGE_RATES_URL` | Your exchange rates endpoint |
+| `EXCHANGE_RATES_LIFETIME` | The amount of time Rafiki caches exchange rates, in ms |
+| `SLIPPAGE` | The variance allowed between a quote and the actual amount required when a payment is initiated |
 
 ## IDP
 
