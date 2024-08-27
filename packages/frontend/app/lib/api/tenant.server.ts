@@ -6,11 +6,8 @@ import type {
   CreateTenantInput,
   CreateTenantMutation,
   CreateTenantMutationVariables,
-  DeleteTenantInput,
-  DeleteTenantMutation,
-  DeleteTenantMutationVariables,
   ListTenantsQuery,
-  ListTenantsVariables,
+  ListTenantsQueryVariables,
   QueryTenantsArgs
 } from '~/generated/graphql'
 import { apolloClient } from '../apollo.server'
@@ -21,11 +18,9 @@ export const getTenant = async (args: QueryTenantArgs, cookie?: string) => {
     GetTenantQueryVariables
   >({
     query: gql`
-      query GetTenantQuery($id: String!) {
+      query GetTenantQuery($id: ID!) {
         tenant(id: $id) {
           id
-          email
-          idpConsentUrl
         }
       }
     `,
@@ -39,7 +34,7 @@ export const getTenant = async (args: QueryTenantArgs, cookie?: string) => {
 export const listTenants = async (args: QueryTenantsArgs, cookie?: string) => {
   const response = await apolloClient.query<
     ListTenantsQuery,
-    ListTenantsVariables
+    ListTenantsQueryVariables
   >({
     query: gql`
       query ListTenantsQuery(
@@ -52,8 +47,6 @@ export const listTenants = async (args: QueryTenantsArgs, cookie?: string) => {
           edges {
             node {
               id
-              email
-              idpConsentUrl
               createdAt
             }
           }
@@ -86,8 +79,6 @@ export const createTenant = async (
         createTenant(input: $input) {
           tenant {
             id
-            email
-            idpConsentUrl
           }
         }
       }
@@ -99,32 +90,4 @@ export const createTenant = async (
   })
 
   return response.data?.createTenant
-}
-
-export const deleteTenant = async (
-  args: DeleteTenantInput,
-  cookie?: string
-) => {
-  const response = await apolloClient.mutate<
-    DeleteTenantMutation,
-    DeleteTenantMutationVariables
-  >({
-    mutation: gql`
-      mutation DeleteTenantMutation($input: DeleteTenantInput!) {
-        deleteTenant(input: $input) {
-          tenant {
-            id
-            email
-            idpConsentUrl
-          }
-        }
-      }
-    `,
-    variables: {
-      input: args
-    },
-    context: { headers: { cookie } }
-  })
-
-  return response.data?.deleteTenant
 }

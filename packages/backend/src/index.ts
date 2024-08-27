@@ -755,6 +755,9 @@ export const start = async (
   }
 
   await app.createOperatorIdentity()
+
+  await app.createOperatorIdentity()
+  logger.info('Operator identity created on Kratos')
 }
 
 // If this script is run directly, start the server
