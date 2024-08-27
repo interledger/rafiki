@@ -30,6 +30,8 @@ export interface TelemetryService {
     value: number,
     attributes?: Record<string, unknown>
   ): void
+  startTimer(name: string, attributes?: Record<string, unknown>): void
+  stopTimer(name: string): void
 }
 
 interface TelemetryServiceDependencies extends BaseService {
@@ -58,6 +60,10 @@ class TelemetryServiceImpl implements TelemetryService {
 
   private counters: Map<string, Counter> = new Map()
   private histograms: Map<string, Histogram> = new Map()
+  private timers: Map<
+    string,
+    { start: number; attributes: Record<string, unknown> }
+  > = new Map()
   constructor(private deps: TelemetryServiceDependencies) {
     this.instanceName = deps.instanceName
     this.internalRatesService = deps.internalRatesService
@@ -185,6 +191,18 @@ class TelemetryServiceImpl implements TelemetryService {
       source: this.instanceName,
       ...attributes
     })
+  }
+
+  public startTimer(name: string, attributes: Record<string, unknown> = {}) {
+    this.timers.set(name, { start: Date.now(), attributes })
+  }
+  public stopTimer(name: string) {
+    const timer = this.timers.get(name)
+    if (!timer) {
+      return
+    }
+    const end = Date.now()
+    this.recordHistogram(name, end - timer.start, timer.attributes)
   }
 
   private async convertAmount(
