@@ -16,23 +16,33 @@ const MAX_STATE_ATTEMPTS = 5
 export async function processPendingPayment(
   deps_: ServiceDependencies
 ): Promise<string | undefined> {
-  return deps_.knex.transaction(async (trx) => {
-    const payment = await getPendingPayment(trx)
-    if (!payment) return
+  const tracer = trace.getTracer('outgoing_payment_worker')
 
-    await handlePaymentLifecycle(
-      {
-        ...deps_,
-        knex: trx,
-        logger: deps_.logger.child({
-          payment: payment.id,
-          from_state: payment.state
-        })
-      },
-      payment
-    )
-    return payment.id
-  })
+  return tracer.startActiveSpan(
+    'outgoingPaymentLifecycle',
+    async (span: Span) => {
+      const paymentId = await deps_.knex.transaction(async (trx) => {
+        const payment = await getPendingPayment(trx)
+        if (!payment) return
+
+        await handlePaymentLifecycle(
+          {
+            ...deps_,
+            knex: trx,
+            logger: deps_.logger.child({
+              payment: payment.id,
+              from_state: payment.state
+            })
+          },
+          payment
+        )
+        return payment.id
+      })
+
+      span.end()
+      return paymentId
+    }
+  )
 }
 
 // Fetch (and lock) a payment for work.
@@ -64,24 +74,16 @@ async function handlePaymentLifecycle(
   deps: ServiceDependencies,
   payment: OutgoingPayment
 ): Promise<void> {
-  const tracer = trace.getTracer('outgoing_payment_worker')
-  await tracer.startActiveSpan(
-    'outgoingPaymentLifecycle',
-    async (span: Span) => {
-      if (payment.state !== OutgoingPaymentState.Sending) {
-        deps.logger.warn('unexpected payment in lifecycle')
-        span.end()
-        return
-      }
+  if (payment.state !== OutgoingPaymentState.Sending) {
+    deps.logger.warn('unexpected payment in lifecycle')
+    return
+  }
 
-      try {
-        await lifecycle.handleSending(deps, payment)
-      } catch (error) {
-        await onLifecycleError(deps, payment, error as Error | PaymentError)
-      }
-      span.end()
-    }
-  )
+  try {
+    await lifecycle.handleSending(deps, payment)
+  } catch (error) {
+    await onLifecycleError(deps, payment, error as Error | PaymentError)
+  }
 }
 
 async function onLifecycleError(
