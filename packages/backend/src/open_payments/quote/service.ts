@@ -86,7 +86,10 @@ async function createQuote(
   deps: ServiceDependencies,
   options: CreateQuoteOptions
 ): Promise<Quote | QuoteError> {
-  const start = Date.now()
+  deps.telemetry &&
+    deps.telemetry.startTimer('quote_service_create_time_ms', {
+      description: 'Time to create a quote'
+    })
   if (options.debitAmount && options.receiveAmount) {
     return QuoteError.InvalidAmount
   }
@@ -115,61 +118,45 @@ async function createQuote(
   }
 
   try {
-    const receiverStart = Date.now()
-    const receiver = await resolveReceiver(deps, options)
-    const receiverEnd = Date.now()
-    const receiverDuration = receiverEnd - receiverStart
-
-    if (deps.telemetry) {
-      deps.telemetry.recordHistogram(
+    deps.telemetry &&
+      deps.telemetry.startTimer(
         'quote_service_create_resolve_receiver_time_ms',
-        receiverDuration,
         {
           description: 'Time to resolve receiver'
         }
       )
-    }
+    const receiver = await resolveReceiver(deps, options)
 
-    const getQuoteStart = Date.now()
+    deps.telemetry &&
+      deps.telemetry.stopTimer('quote_service_create_resolve_receiver_time_ms')
+
+    deps.telemetry &&
+      deps.telemetry.startTimer('quote_service_create_get_quote_time_ms', {
+        description: 'Time to getQuote'
+      })
     const quote = await deps.paymentMethodHandlerService.getQuote('ILP', {
       walletAddress,
       receiver,
       receiveAmount: options.receiveAmount,
       debitAmount: options.debitAmount
     })
-    const getQuoteEnd = Date.now()
-    const getQuoteDuration = getQuoteEnd - getQuoteStart
-    if (deps.telemetry) {
-      deps.telemetry.recordHistogram(
-        'quote_service_create_get_quote_time_ms',
-        getQuoteDuration,
-        {
-          description: 'Time to getQuote'
-        }
-      )
-    }
+    deps.telemetry &&
+      deps.telemetry.stopTimer('quote_service_create_get_quote_time_ms')
 
     const maxPacketAmount = quote.additionalFields.maxPacketAmount as bigint
 
-    const getLatestFeeStart = Date.now()
+    deps.telemetry &&
+      deps.telemetry.startTimer('quote_service_create_get_latest_fee_time_ms', {
+        description: 'Time to getLatestFee'
+      })
     const sendingFee = await deps.feeService.getLatestFee(
       walletAddress.assetId,
       FeeType.Sending
     )
-    const getLatestFeeEnd = Date.now()
-    const getLatestFeeDuration = getLatestFeeEnd - getLatestFeeStart
-    if (deps.telemetry) {
-      deps.telemetry.recordHistogram(
-        'quote_service_create_get_latest_fee_time_ms',
-        getLatestFeeDuration,
-        {
-          description: 'Time to getLatestFee'
-        }
-      )
-    }
+    deps.telemetry &&
+      deps.telemetry.stopTimer('quote_service_create_get_latest_fee_time_ms')
 
     const q = await Quote.transaction(deps.knex, async (trx) => {
-      const createQuoteStart = Date.now()
       const createdQuote = await Quote.query(trx)
         .insertAndFetch({
           walletAddressId: options.walletAddressId,
@@ -190,21 +177,8 @@ async function createQuote(
           estimatedExchangeRate: quote.estimatedExchangeRate
         })
         .withGraphFetched('[asset, fee, walletAddress]')
-      const createQuoteEnd = Date.now()
-      const createQuoteDuration = createQuoteEnd - createQuoteStart
 
-      if (deps.telemetry) {
-        deps.telemetry.recordHistogram(
-          'quote_service_create_insert_time_ms',
-          createQuoteDuration,
-          {
-            description: 'Time to insert quote'
-          }
-        )
-      }
-
-      const finalizeQuoteStart = Date.now()
-      const finalizedQuote = await finalizeQuote(
+      return await finalizeQuote(
         {
           ...deps,
           knex: trx
@@ -213,30 +187,9 @@ async function createQuote(
         createdQuote,
         receiver
       )
-      const finalizeQuoteEnd = Date.now()
-      const finalizeQuoteDuration = finalizeQuoteEnd - finalizeQuoteStart
-
-      if (deps.telemetry) {
-        deps.telemetry.recordHistogram(
-          'quote_service_finalize_quote_ms',
-          finalizeQuoteDuration,
-          {
-            description: 'Time to finalize quote'
-          }
-        )
-      }
-
-      return finalizedQuote
     })
 
-    const end = Date.now()
-    const duration = end - start
-
-    if (deps.telemetry) {
-      deps.telemetry.recordHistogram('quote_service_create_time_ms', duration, {
-        description: 'Time to create a quote'
-      })
-    }
+    deps.telemetry && deps.telemetry.stopTimer('quote_service_create_time_ms')
 
     return q
   } catch (err) {
