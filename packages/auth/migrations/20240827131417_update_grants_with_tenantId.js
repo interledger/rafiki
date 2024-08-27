@@ -5,11 +5,7 @@
 exports.up = function (knex) {
   return knex.schema.table('grants', function (table) {
     table.uuid('tenantId').notNullable()
-    table
-      .foreign('tenantId')
-      .references('id')
-      .inTable('tenants')
-      .onDelete('CASCADE')
+    table.foreign('tenantId').references('id').inTable('tenants')
   })
 }
 

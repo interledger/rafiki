@@ -6,43 +6,23 @@ exports.up = function (knex) {
   return knex.schema
     .table('quotes', function (table) {
       table.uuid('tenantId').notNullable()
-      table
-        .foreign('tenantId')
-        .references('id')
-        .inTable('tenants')
-        .onDelete('CASCADE')
+      table.foreign('tenantId').references('id').inTable('tenants')
     })
     .table('incomingPayments', function (table) {
       table.uuid('tenantId').notNullable()
-      table
-        .foreign('tenantId')
-        .references('id')
-        .inTable('tenants')
-        .onDelete('CASCADE')
+      table.foreign('tenantId').references('id').inTable('tenants')
     })
     .table('outgoingPayments', function (table) {
       table.uuid('tenantId').notNullable()
-      table
-        .foreign('tenantId')
-        .references('id')
-        .inTable('tenants')
-        .onDelete('CASCADE')
+      table.foreign('tenantId').references('id').inTable('tenants')
     })
     .table('walletAddresses', function (table) {
       table.uuid('tenantId').notNullable()
-      table
-        .foreign('tenantId')
-        .references('id')
-        .inTable('tenants')
-        .onDelete('CASCADE')
+      table.foreign('tenantId').references('id').inTable('tenants')
     })
     .table('grants', function (table) {
       table.uuid('tenantId').notNullable()
-      table
-        .foreign('tenantId')
-        .references('id')
-        .inTable('tenants')
-        .onDelete('CASCADE')
+      table.foreign('tenantId').references('id').inTable('tenants')
     })
 }
 
