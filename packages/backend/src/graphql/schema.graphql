@@ -1119,7 +1119,7 @@ input CreateTenantInput {
   endpoints: [CreateTenantEndpointsInput!]!
 
   "IDP Endpoint"
-  idpEndpoint: String!
+  idpConsentEndpoint: String!
 
   "IDP Secret"
   idpSecret: String!
@@ -1337,7 +1337,7 @@ type CreateTenantMutationResponse {
 }
 
 type Tenant {
-  id: String!
+  id: ID!
 }
 
 type LiquidityMutationResponse {
