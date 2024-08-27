@@ -342,7 +342,7 @@ export type CreateTenantInput = {
   /** List of endpoints types for the tenant */
   endpoints: Array<CreateTenantEndpointsInput>;
   /** IDP Endpoint */
-  idpEndpoint: Scalars['String']['input'];
+  idpConsentEndpoint: Scalars['String']['input'];
   /** IDP Secret */
   idpSecret: Scalars['String']['input'];
 };
@@ -1281,7 +1281,7 @@ export enum SortOrder {
 
 export type Tenant = {
   __typename?: 'Tenant';
-  id: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
 };
 
 export enum TenantEndpointType {
@@ -2271,7 +2271,7 @@ export type SetFeeResponseResolvers<ContextType = any, ParentType extends Resolv
 };
 
 export type TenantResolvers<ContextType = any, ParentType extends ResolversParentTypes['Tenant'] = ResolversParentTypes['Tenant']> = {
-  id?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
