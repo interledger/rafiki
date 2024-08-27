@@ -66,7 +66,6 @@ services:
       REDIS_URL: redis://shared-redis:6379/2
       WALLET_ADDRESS_URL: ${HAPPY_LIFE_BANK_WALLET_ADDRESS_URL:-https://happy-life-bank-backend/.well-known/pay}
       ENABLE_TELEMETRY: true
-      ENABLE_TELEMETRY_TRACES: true
       KEY_ID: 53f2d913-e98a-40b9-b270-372d0547f23d
     depends_on:
       - cloud-nine-backend
