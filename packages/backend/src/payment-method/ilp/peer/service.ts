@@ -314,7 +314,7 @@ async function getPeerByDestinationAddress(
   // for `staticIlpAddress`s in the accounts table:
   // new RegExp('^' + staticIlpAddress + '($|\\.)')).test(destinationAddress)
   const peerQuery = Peer.query(deps.knex)
-    .withGraphJoined('asset')
+    .withGraphFetched('asset')
     .where(
       raw('?', [destinationAddress]),
       'like',

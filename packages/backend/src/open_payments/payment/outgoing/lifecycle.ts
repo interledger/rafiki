@@ -76,24 +76,24 @@ export async function handleSending(
     throw LifecycleError.BadState
   }
 
-  const payStartTime = Date.now()
-  await deps.paymentMethodHandlerService.pay('ILP', {
-    receiver,
-    outgoingPayment: payment,
-    finalDebitAmount: maxDebitAmount,
-    finalReceiveAmount: maxReceiveAmount
-  })
-  const payEndTime = Date.now()
+  deps.telemetry &&
+    deps.telemetry.startTimer('ilp_pay_time_ms', {
+      description: 'Time to complete an ILP payment',
+      callName: 'paymentMethodHandlerService.pay (ILP)'
+    }),
+    await deps.paymentMethodHandlerService.pay('ILP', {
+      receiver,
+      outgoingPayment: payment,
+      finalDebitAmount: maxDebitAmount,
+      finalReceiveAmount: maxReceiveAmount
+    })
 
   if (deps.telemetry) {
-    const payDuration = payEndTime - payStartTime
     await Promise.all([
       deps.telemetry.incrementCounter('transactions_total', 1, {
         description: 'Count of funded transactions'
       }),
-      deps.telemetry.recordHistogram('ilp_pay_time_ms', payDuration, {
-        description: 'Time to complete an ILP payment'
-      }),
+      deps.telemetry.stopTimer('ilp_pay_time_ms'),
       deps.telemetry.incrementCounterWithTransactionAmountDifference(
         'transaction_fee_amounts',
         payment.sentAmount,
@@ -144,17 +144,24 @@ export async function handleFailed(
   payment: OutgoingPayment,
   error: string
 ): Promise<void> {
+  deps.telemetry &&
+    deps.telemetry.startTimer('handleFailed', { callName: 'handleFailed ' })
   await payment.$query(deps.knex).patch({
     state: OutgoingPaymentState.Failed,
     error
   })
   await sendWebhookEvent(deps, payment, OutgoingPaymentEventType.PaymentFailed)
+  deps.telemetry && deps.telemetry.startTimer('handleFailed')
 }
 
 async function handleCompleted(
   deps: ServiceDependencies,
   payment: OutgoingPayment
 ): Promise<void> {
+  deps.telemetry &&
+    deps.telemetry.startTimer('handleCompleted', {
+      callName: 'handleCompleted'
+    })
   await payment.$query(deps.knex).patch({
     state: OutgoingPaymentState.Completed
   })
@@ -164,6 +171,7 @@ async function handleCompleted(
     payment,
     OutgoingPaymentEventType.PaymentCompleted
   )
+  deps.telemetry && deps.telemetry.stopTimer('handleCompleted')
 }
 
 export async function sendWebhookEvent(
@@ -172,6 +180,10 @@ export async function sendWebhookEvent(
   type: OutgoingPaymentEventType,
   trx?: TransactionOrKnex
 ): Promise<void> {
+  deps.telemetry &&
+    deps.telemetry.startTimer('sendWebhookEvent', {
+      callName: 'outgoingPaymentLifecycle_sendwebhookEvent'
+    })
   // TigerBeetle accounts are only created as the OutgoingPayment is funded.
   // So default the amountSent and balance to 0 for outgoing payments still in the funding state
   const amountSent =
@@ -201,6 +213,7 @@ export async function sendWebhookEvent(
     data: payment.toData({ amountSent, balance }),
     withdrawal
   })
+  deps.telemetry && deps.telemetry.stopTimer('sendWebhookEvent')
 }
 
 function validateAssets(
