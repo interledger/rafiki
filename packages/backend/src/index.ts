@@ -56,6 +56,7 @@ import { createStreamCredentialsService } from './payment-method/ilp/stream-cred
 import { createRatesService } from './rates/service'
 import { TelemetryService, createTelemetryService } from './telemetry/service'
 import { createWebhookService } from './webhook/service'
+import { createTenantService } from './tenant/service'
 
 BigInt.prototype.toJSON = function () {
   return this.toString()
@@ -438,6 +439,15 @@ export function initIocContainer(
     }
 
     return createIlpPaymentService(serviceDependencies)
+  })
+
+  container.singleton('tenantService', async (deps) => {
+    const [ logger, knex ] = await Promise.all([
+      deps.use('logger'),
+      deps.use('knex'),
+    ]);
+
+    return createTenantService({ logger, knex });
   })
 
   container.singleton('paymentMethodHandlerService', async (deps) => {

@@ -129,6 +129,9 @@ type Mutation {
   "Delete an asset"
   deleteAsset(input: DeleteAssetInput!): DeleteAssetMutationResponse!
 
+  "Create tenant"
+  createTenant(input: CreateTenantInput!): CreateTenantMutationResponse!
+
   "Deposit asset liquidity"
   depositAssetLiquidity(
     input: DepositAssetLiquidityInput!
@@ -588,6 +591,11 @@ type Asset implements Model {
   ): FeesConnection
   "Date-time of creation"
   createdAt: String!
+}
+
+enum TenantEndpointType {
+  WebhookBaseEndpoint
+  RatesEndpoint
 }
 
 enum SortOrder {
@@ -1101,6 +1109,22 @@ type CreateReceiverResponse {
   receiver: Receiver
 }
 
+input CreateTenantEndpointsInput {
+  type: TenantEndpointType!
+  value: String!
+}
+
+input CreateTenantInput {
+  "List of endpoints types for the tenant"
+  endpoints: [CreateTenantEndpointsInput!]!
+
+  "IDP Endpoint"
+  idpEndpoint: String!
+
+  "IDP Secret"
+  idpSecret: String!
+}
+
 input CreateWalletAddressInput {
   "Asset of the wallet address"
   assetId: String!
@@ -1306,6 +1330,14 @@ type UpdatePeerMutationResponse {
 
 type DeletePeerMutationResponse {
   success: Boolean!
+}
+
+type CreateTenantMutationResponse {
+  tenant: Tenant!
+}
+
+type Tenant {
+  id: String!
 }
 
 type LiquidityMutationResponse {
