@@ -58,7 +58,7 @@ The `incoming_payment.created` event indicates that an incoming payment was crea
 
 The `incoming_payment.completed` event indicates that an incoming payment was completed, either automatically or manually, and that any funds received into this incoming payment should be withdrawn and credited to the recipient’s account on your ledger.
 
-In addition, the `CreateIncomingPaymentWithdrawal` supports [two-phase transfers](https://rafiki.dev/reference/glossary/#two-phase-transfers).
+In addition, the `CreateIncomingPaymentWithdrawal` supports two-phase transfers.
 
 Example: An incoming payment was completed and the recipient received **$10**.
 
@@ -74,7 +74,7 @@ Example: An incoming payment was completed and the recipient received **$10**.
 `}
 />
 
-Example: An incoming payment supporting two-phase transfers was completed and recieved **$10**.
+Example: An incoming payment supporting two-phase transfers was completed and received **$10**.
 
 <Mermaid
   graph={`sequenceDiagram

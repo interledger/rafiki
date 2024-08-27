@@ -51,19 +51,36 @@ export default defineConfig({
       },
       sidebar: [
         {
-          label: 'Docs',
+          label: 'Rafiki Docs',
           items: [
             {
-              label: 'Intro to Rafiki',
-              collapsed: true,
+              label: 'Overview',
               items: [
                 {
-                  label: 'Overview',
-                  link: 'intro-to-rafiki/overview'
+                  label: 'Introducing Rafiki',
+                  link: '/overview/overview'
                 },
                 {
-                  label: 'Account servicing entities',
-                  link: 'intro-to-rafiki/account-servicing-entities'
+                  label: 'Concepts',
+                  collapsed: true,
+                  items: [
+                    {
+                      label: 'Accounts, transfers, and liquidity',
+                      link: '/concepts/accounts-transfers-liquidity'
+                    },
+                    {
+                      label: 'Interledger',
+                      link: '/concepts/interledger'
+                    },
+                    {
+                      label: 'Open Payments',
+                      link: '/concepts/open-payments'
+                    },
+                    {
+                      label: 'Telemetry',
+                      link: '/concepts/telemetry'
+                    }
+                  ]
                 }
               ]
             },
@@ -72,193 +89,137 @@ export default defineConfig({
               collapsed: true,
               items: [
                 {
-                  label: 'Get started',
-                  link: 'integration/get-started'
+                  label: 'Before you begin',
+                  link: '/integration/before-you-begin'
                 },
                 {
-                  label: 'Deploy to production',
+                  label: 'Deployment',
                   collapsed: true,
                   items: [
                     {
-                      label: 'Endpoints',
+                      label: 'Requirements',
+                      link: '/integration/deployment/requirements'
+                    },
+                    {
+                      label: 'Services',
                       collapsed: true,
                       items: [
                         {
-                          label: 'Webhook events',
-                          link: 'integration/deploy-to-prod/endpoints/webhook-events'
+                          label: 'Auth service',
+                          link: '/integration/deployment/services/auth-service'
                         },
                         {
-                          label: 'Exchange Rates',
-                          link: 'integration/deploy-to-prod/endpoints/exchange-rates'
+                          label: 'Backend service',
+                          link: '/integration/deployment/services/backend-service'
                         },
                         {
-                          label: 'IDP',
-                          link: 'integration/deploy-to-prod/endpoints/idp'
+                          label: 'Frontend service',
+                          link: '/integration/deployment/services/frontend-service'
+                        },
+                        {
+                          label: 'Token introspection',
+                          link: '/integration/deployment/services/token-introspection'
                         }
                       ]
                     },
                     {
-                      label: 'Environment variables',
-                      link: 'integration/deploy-to-prod/environment-variables'
+                      label: 'Deploy locally',
+                      collapsed: true,
+                      items: [
+                        {
+                          label: 'Local playground overview',
+                          link: '/integration/deployment/playground/overview'
+                        },
+                        {
+                          label: 'Autopeering',
+                          link: '/integration/deployment/playground/autopeering'
+                        },
+                        {
+                          label: 'Test network',
+                          link: '/integration/deployment/playground/testnet'
+                        }
+                      ]
                     },
                     {
-                      label: 'Deploying to cloud environment options',
-                      collapsed: true,
+                      label: 'Deploy to production',
                       items: [
                         {
                           label: 'nginx',
-                          link: 'integration/deploy-to-prod/deploy-to-cloud/nginx'
+                          link: '/integration/deployment/prod/nginx'
                         },
                         {
-                          label: 'Helm & K8s',
-                          link: 'integration/deploy-to-prod/deploy-to-cloud/helm-k8s'
-                        }
-                      ]
-                    },
-                    {
-                      label: 'Running your instance',
-                      collapsed: true,
-                      items: [
-                        {
-                          label: 'Adding asset',
-                          link: 'integration/deploy-to-prod/running-your-instance/adding-asset'
-                        },
-                        {
-                          label: 'Adding peer',
-                          link: 'integration/deploy-to-prod/running-your-instance/adding-peer'
-                        },
-                        {
-                          label: 'Creating wallet address',
-                          link: 'integration/deploy-to-prod/running-your-instance/creating-wallet-address'
-                        },
-                        {
-                          label: 'Managing liquidity',
-                          link: 'integration/deploy-to-prod/running-your-instance/managing-liquidity'
-                        },
-                        {
-                          label: 'Keys management',
-                          link: 'integration/deploy-to-prod/running-your-instance/keys-management'
-                        },
-                        {
-                          label: 'Grants management',
-                          link: 'integration/deploy-to-prod/running-your-instance/grants-management'
+                          label: 'Helm and K8s',
+                          link: '/integration/deployment/prod/helm-k8s'
                         }
                       ]
                     }
                   ]
                 },
                 {
-                  label: 'Integrator checklist',
-                  link: 'integration/integrator-checklist'
+                  label: 'Peering',
+                  link: '/integration/peering'
+                },
+                {
+                  label: 'Integration checklist',
+                  link: '/integration/integration-checklist'
+                },
+                {
+                  label: 'APIs',
+                  link: '/integration/apis/'
                 }
               ]
             },
             {
-              label: 'Components',
+              label: 'Administration',
               collapsed: true,
               items: [
                 {
-                  label: 'Accounts, transfers, and liquidity',
-                  link: 'components/accounts-transfers-liquidity'
+                  label: 'Rafiki Admin',
+                  link: '/admin/admin-user-guide'
                 },
                 {
-                  label: 'Telemetry',
-                  link: 'components/telemetry'
+                  label: 'Manage liquidity',
+                  link: '/admin/manage-liquidity'
                 },
                 {
-                  label: 'Interledger',
-                  link: 'components/interledger'
+                  label: 'Manage peering relationships',
+                  link: '/admin/manage-peering'
                 },
                 {
-                  label: 'Open Payments',
-                  link: 'components/open-payments'
+                  label: 'Manage keys',
+                  link: '/admin/manage-keys'
                 },
                 {
-                  label: 'Architecture',
-                  link: 'components/architecture'
-                }
-              ]
-            },
-            {
-              label: 'Services and Auxiliary Packages',
-              collapsed: true,
-              items: [
-                {
-                  label: 'Backend service',
-                  link: 'services-and-aux-packages/backend-service'
-                },
-                {
-                  label: 'Auth service',
-                  link: 'services-and-aux-packages/auth-service'
-                },
-                {
-                  label: 'Frontend service',
-                  link: 'services-and-aux-packages/frontend-service'
-                },
-                {
-                  label: 'Token introspection',
-                  link: 'services-and-aux-packages/token-introspection'
-                }
-              ]
-            },
-            {
-              label: 'Local Playground',
-              collapsed: true,
-              items: [
-                {
-                  label: 'Overview',
-                  link: 'playground/overview'
-                },
-                {
-                  label: 'Auto-Peering',
-                  link: 'playground/autopeering'
-                },
-                {
-                  label: 'Testnet',
-                  link: 'playground/testnet'
-                }
-              ]
-            },
-            {
-              label: 'APIs',
-              collapsed: true,
-              items: [
-                {
-                  label: 'GraphQL APIs',
-                  collapsed: true,
-                  items: [
-                    {
-                      label: 'Overview',
-                      link: 'apis/graphql/admin-api-overview'
-                    },
-                    {
-                      label: 'Backend Admin API',
-                      collapsed: true,
-                      autogenerate: {
-                        directory: 'apis/graphql/backend'
-                      }
-                    },
-                    {
-                      label: 'Auth Admin API',
-                      collapsed: true,
-                      autogenerate: {
-                        directory: 'apis/graphql/auth'
-                      }
-                    }
-                  ]
-                },
-                {
-                  label: 'OpenAPIs',
-                  link: 'apis/openapis'
+                  label: 'Manage grants',
+                  link: '/admin/manage-grants'
                 }
               ]
             },
             {
               label: 'Resources',
               collapsed: true,
-              autogenerate: {
-                directory: 'resources'
-              }
+              items: [
+                {
+                  label: 'Glossary',
+                  link: '/resources/glossary'
+                },
+                {
+                  label: 'Architecture',
+                  link: '/resources/architecture'
+                },
+                {
+                  label: 'Environment variables',
+                  link: '/resources/environment-variables'
+                },
+                {
+                  label: 'Grants',
+                  link: '/resources/grants'
+                },
+                {
+                  label: 'Get involved',
+                  link: '/resources/get-involved'
+                }
+              ]
             }
           ]
         }

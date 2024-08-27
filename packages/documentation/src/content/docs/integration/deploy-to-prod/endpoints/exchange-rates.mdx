@@ -24,7 +24,7 @@ In addition, you will need to specify the `EXCHANGE_RATES_LIFETIME` environment 
 
 In addition, you must consider your slippage tolerance. As mentioned, before an Interledger payment is made, a rate probe provides a quote that estimates the cost of transferring value over the network. This cost includes fees that connector nodes of the network may charge in exchange rates or even as a forwarding fee for payments denominated in the same asset (e.g. USD). As exchange rates and fees charged by connectors fluctuate, there will likely be a variance between the estimated amount provided in the quote and the actual amount required when the payment is initiated. The default slippage is 1% but can be configured via the `SLIPPAGE` environment variable using a value between 0 and 1. Using the default slippage, a payment of \$1.01 will go through on an initial quote estimated at \$1.00, but payment will not be sent if the total, inclusive of exchange rate and network fees, amounts to \$1.02.
 
-Depending on the particular deployment of your Rafiki instance, these environment variables will be set in a `docker-compose.yaml` file or as part of a Helm chart. Refer to the [environment variables](/integration/deploy-to-prod/environment-variables) page for more details.
+Depending on the particular deployment of your Rafiki instance, these environment variables will be set in a `docker-compose.yaml` file or as part of a Helm chart. Refer to the [environment variables](/resources/environment-variables) page for more details.
 
 ## Fees
 
@@ -108,4 +108,4 @@ These variables are used in the following request example:
 
 ### Rafiki Admin application
 
-You may also add fees via the Rafiki Admin application. See the [Rafiki Admin application user guide](/resources/admin-user-guide/#assets) for more information on configuring asset fees.
+You may also add fees via the Rafiki Admin application. See the [Rafiki Admin application user guide](/admin/admin-user-guide/#assets) for more information on configuring asset fees.

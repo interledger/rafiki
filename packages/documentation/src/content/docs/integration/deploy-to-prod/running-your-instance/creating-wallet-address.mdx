@@ -8,7 +8,7 @@ import { CodeBlock } from '@interledger/docs-design-system'
 
 To allow your account holders the ability to send and receive payments via the Open Payments APIs, you must create at least one wallet address for each account. The wallet address serves as a standardized identifier for a payment account.
 
-You can create wallet addresses for your account holders using the Backend Admin API. Note that at least one asset must be created before the wallet address is created. The `assetId` of the asset must be provided as an input variable when issuing the GraphQL mutation query. Refer to the [adding asset](/integration/deploy-to-prod/running-your-instance/adding-asset) page for details.
+You can create wallet addresses for your account holders using the Backend Admin API. Note that at least one asset must be created before the wallet address is created. The `assetId` of the asset must be provided as an input variable when issuing the GraphQL mutation query.
 
 ## Creating wallet addresses through a script
 
@@ -177,4 +177,4 @@ id
 
 ## Creating wallet addresses dynamically
 
-An alternative approach to creating wallet addresses for your account holders is to generate the addresses dynamically when your Rafiki instance fires the [`wallet_address.not_found`](/integration/deploy-to-prod/endpoints/webhook-events) webhook event. This event fires when Rafiki does not find the wallet address requested from an Open Payments API call. When receiving this event, you can look up the associated account in your system and call the `CreateWalletAddress` and `CreateWalletAddressKey` mutations to create the wallet address and its associated private-public key pair. Even if you opt to create the initial batch of wallet addresses for your existing account holders via a one-time script, you may implement this process to dynamically create wallet addresses for any new accounts you onboard to your system.
+An alternative approach to creating wallet addresses for your account holders is to generate the addresses dynamically when your Rafiki instance fires the [`wallet_address.not_found`](/integration/before-you-begin#webhook-events) webhook event. This event fires when Rafiki does not find the wallet address requested from an Open Payments API call. When receiving this event, you can look up the associated account in your system and call the `CreateWalletAddress` and `CreateWalletAddressKey` mutations to create the wallet address and its associated private-public key pair. Even if you opt to create the initial batch of wallet addresses for your existing account holders via a one-time script, you may implement this process to dynamically create wallet addresses for any new accounts you onboard to your system.

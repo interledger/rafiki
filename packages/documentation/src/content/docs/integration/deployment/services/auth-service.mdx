@@ -23,7 +23,7 @@ The following are required when using the `auth` service.
   :::
 - Integration with an identity provider (IdP)
 
-You must also set the [environment variables](/integration/deploy-to-prod/environment-variables#auth) for the `auth` service.
+You must also set the environment variables for the `auth` service.
 
 ## Incoming client auth requests
 
@@ -35,14 +35,14 @@ When a request comes from a client registered with another instance of Rafiki, t
 
 An identity provider (IdP) is a system or service that manages user authentication, identity information, and consent. When you use your Google account credentials to “Sign in with Google” on an app or website, for example, Google is acting as your identity provider.
 
-[Integration](/integration/deploy-to-prod/endpoints/idp) with an IdP is required when using Rafiki’s `auth` service because Open Payments requires interactive outgoing payment grant requests. This means there must be explicit interaction by an individual (typically a client’s end user/your customer) to approve or deny an outgoing payment before a grant is issued.
+Integration with an [IdP](/integration/before-you-begin#idp) is required when using Rafiki’s `auth` service because Open Payments requires interactive outgoing payment grant requests. This means there must be explicit interaction by an individual (typically a client’s end user/your customer) to approve or deny an outgoing payment before a grant is issued.
 
 :::note
-Rafiki’s [`frontend`](/services-and-aux-packages/frontend-service) service requires an IdP for authentication and user management of your administrators. Out of the box, Rafiki uses Ory Kratos to enable your admins to access the Admin API. Kratos is for internal use and cannot be used for your customer-facing Open Payments authorization server.
+Rafiki’s [`frontend`](/integration/deployment/services/frontend-service) service requires an IdP for authentication and user management of your administrators. Out of the box, Rafiki uses Ory Kratos to enable your admins to access the Admin API. Kratos is for internal use and cannot be used for your customer-facing Open Payments authorization server.
 :::
 
 For more information about interactive grants and how they work with identity providers, review the <LinkOut href="https://openpayments.dev/introduction/grants/">Grant negotiation and authorization</LinkOut> page in the Open Payments docs.
 
 ## GraphQL Auth Admin API
 
-The `auth` service exposes a [GraphQL Auth Admin API](/apis/graphql/admin-api-overview#auth-admin-api) to manage auth-related resources, such as Open Payments grants.
+The `auth` service exposes a [GraphQL Auth Admin API](/integration/deployment/apis/graphql/admin-api-overview#auth-admin-api) to manage auth-related resources, such as Open Payments grants.

@@ -23,15 +23,15 @@ To deploy, integrate, and operate Rafiki with your backend production environmen
 
 If you will be deploying to the cloud, then you will need the following additional components in your environment:
 
-- [nginx](/integration/deploy-to-prod/deploy-to-cloud/nginx) (if deploying all containers to a single node)
-- [Helm and Kubernetes](/integration/deploy-to-prod/deploy-to-cloud/helm-k8s) (if deploying containers across a distributed environment)
+- [nginx](/integration/deployment/prod/nginx) (if deploying all containers to a single node)
+- [Helm and Kubernetes](/integration/deployment/prod/helm-k8s) (if deploying containers across a distributed environment)
 
 ## Configuration
 
 To make your customers’ accounts Interledger-enabled, you must configure your Rafiki instance with these endpoints and services:
 
-- [Exchange Rates](/integration/deploy-to-prod/endpoints/exchange-rates)
-- [Webhook Events](/integration/deploy-to-prod/endpoints/webhook-events)
-- [Identity Provider](/integration/deploy-to-prod/endpoints/idp)
+- [Exchange Rates](/integration/before-you-begin#exchange-rates)
+- [Webhook Events](/integration/before-you-begin#webhook-events)
+- [Identity Provider](/integration/before-you-begin#idp)
 
-In addition, each account you manage on your ledger must be issued at least one [wallet address](/integration/deploy-to-prod/running-your-instance/creating-wallet-address) to send and receive payments across the Interledger network.
+In addition, each account you manage on your ledger must be issued at least one [wallet address](/integration/deployment/peering#create-wallet-address) to send and receive payments across the Interledger network.
