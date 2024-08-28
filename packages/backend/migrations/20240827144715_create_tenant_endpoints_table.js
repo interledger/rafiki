@@ -9,11 +9,7 @@ exports.up = function (knex) {
 
     table.string('value').notNullable()
 
-    table
-      .foreign('tenantId')
-      .references('id')
-      .inTable('tenants')
-      .onDelete('CASCADE')
+    table.foreign('tenantId').references('id').inTable('tenants')
 
     table.primary(['id', 'type'])
   })

@@ -53,11 +53,14 @@ async function createTenant(
   }
 
   try {
-    const result = await Tenant.query(deps.knex).insert(tenantData);
+    const result = await Tenant.query(deps.knex).insert(tenantData)
     return result
-  }catch(err) {
+  } catch (err) {
     deps.logger.warn(
-      { tenantId: tenantData.id, idpConsentEndpoint: tenantData.idpConsentEndpoint },
+      {
+        tenantId: tenantData.id,
+        idpConsentEndpoint: tenantData.idpConsentEndpoint
+      },
       'Unable to create tenant'
     )
 

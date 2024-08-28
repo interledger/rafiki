@@ -33,6 +33,8 @@ export class Quote extends WalletAddressSubresource {
   public feeId?: string
   public fee?: Fee
 
+  public tenantId!: string
+
   static get relationMappings() {
     return {
       ...super.relationMappings,

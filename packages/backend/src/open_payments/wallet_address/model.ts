@@ -61,6 +61,8 @@ export class WalletAddress
   public processAt!: Date | null
   public deactivatedAt!: Date | null
 
+  public tenantId!: string
+
   public get isActive() {
     return !this.deactivatedAt || this.deactivatedAt > new Date()
   }
