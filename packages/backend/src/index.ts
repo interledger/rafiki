@@ -564,7 +564,7 @@ export function initIocContainer(
     const httpLink = createHttpLink({
       uri: config.authAdminApiUrl
     })
-    
+
     const errorLink = onError(({ graphQLErrors }) => {
       if (graphQLErrors) {
         logger.error(graphQLErrors)
@@ -572,14 +572,14 @@ export function initIocContainer(
           if (extensions && extensions.code === 'UNAUTHENTICATED') {
             logger.error('UNAUTHENTICATED')
           }
-  
+
           if (extensions && extensions.code === 'FORBIDDEN') {
             logger.error('FORBIDDEN')
           }
         })
       }
     })
-    
+
     const authLink = setContext((_, { headers }) => {
       return {
         headers: {
@@ -588,7 +588,7 @@ export function initIocContainer(
       }
     })
     const link = ApolloLink.from([errorLink, authLink, httpLink])
-    
+
     const client = new ApolloClient({
       cache: new InMemoryCache({}),
       link: link,
