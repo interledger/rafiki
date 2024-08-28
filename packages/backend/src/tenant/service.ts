@@ -33,8 +33,12 @@ export interface CreateTenantOptions {
 
 export interface TenantService {
   get(id: string): Promise<Tenant | undefined>
+<<<<<<< HEAD
   getPage(pagination?: Pagination, sortOrder?: SortOrder): Promise<Tenant[]>
   create(createOptions: CreateTenantOptions): Promise<Tenant | TenantError>
+=======
+  create(CreateOptions: CreateTenantOptions): Promise<Tenant | TenantError>
+>>>>>>> c52a342a (feat(packages): make multi tenant work wip)
 }
 
 export interface ServiceDependencies extends BaseService {
@@ -66,12 +70,16 @@ export async function createTenantService(
 
   return {
     get: (id: string) => getTenant(deps, id),
+<<<<<<< HEAD
     getPage: (pagination?, sortOrder?) =>
       getTenantsPage(deps, pagination, sortOrder),
+=======
+>>>>>>> c52a342a (feat(packages): make multi tenant work wip)
     create: (options: CreateTenantOptions) => createTenant(deps, options)
   }
 }
 
+<<<<<<< HEAD
 async function getTenantsPage(
   deps: ServiceDependencies,
   pagination?: Pagination,
@@ -87,6 +95,12 @@ async function getTenant(
 ): Promise<Tenant | undefined> {
   return Tenant.query(deps.knex)
     .withGraphFetched('endpoints')
+=======
+async function getTenant(deps: ServiceDependencies, id: string): Promise<Tenant | undefined> {
+  return Tenant
+    .query(deps.knex)
+    .withGraphFetched('tenantEndpoints')
+>>>>>>> c52a342a (feat(packages): make multi tenant work wip)
     .findById(id)
 }
 
@@ -141,6 +155,7 @@ async function createTenant(
         variables
       })
     } catch (err) {
+      console.log('ERROR: ', err)
       await trx.rollback()
       throw err
     }
