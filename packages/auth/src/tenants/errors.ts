@@ -2,7 +2,7 @@ import { GraphQLErrorCode } from '../graphql/errors'
 
 export enum TenantError {
   UnknownError = 'UnknownError',
-  UnknownTenant = 'UnknownTenant',
+  UnknownTenant = 'UnknownTenant'
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
