@@ -27,7 +27,7 @@ You must also set the environment variables for the `auth` service.
 
 ## Incoming client auth requests
 
-When a request comes from a client with an account on your local instance of Rafiki, the `auth` service uses data stored in the `auth` service’s Postgres database.
+When a request comes from a client with an account known to your local instance of Rafiki, the `auth` service uses data stored in the `auth` service’s Postgres database.
 
 When a request comes from a client registered with another instance of Rafiki, the `auth` service resolves the client’s public key from the client’s source and uses the key to authenticate and authorize the client’s request.
 
