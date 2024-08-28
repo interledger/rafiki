@@ -5,6 +5,7 @@ import { OutgoingPayment, OutgoingPaymentState } from './model'
 import { LifecycleError, PaymentError } from './errors'
 import * as lifecycle from './lifecycle'
 import { PaymentMethodHandlerError } from '../../../payment-method/handler/errors'
+import { trace, Span } from '@opentelemetry/api'
 
 // First retry waits 10 seconds, second retry waits 20 (more) seconds, etc.
 export const RETRY_BACKOFF_SECONDS = 10
@@ -15,29 +16,44 @@ const MAX_STATE_ATTEMPTS = 5
 export async function processPendingPayment(
   deps_: ServiceDependencies
 ): Promise<string | undefined> {
-  return deps_.knex.transaction(async (trx) => {
-    const payment = await getPendingPayment(trx)
-    if (!payment) return
+  const tracer = trace.getTracer('outgoing_payment_worker')
 
-    await handlePaymentLifecycle(
-      {
-        ...deps_,
-        knex: trx,
-        logger: deps_.logger.child({
-          payment: payment.id,
-          from_state: payment.state
-        })
-      },
-      payment
-    )
-    return payment.id
-  })
+  return tracer.startActiveSpan(
+    'outgoingPaymentLifecycle',
+    async (span: Span) => {
+      const paymentId = await deps_.knex.transaction(async (trx) => {
+        const payment = await getPendingPayment(trx, deps_)
+        if (!payment) return
+
+        await handlePaymentLifecycle(
+          {
+            ...deps_,
+            knex: trx,
+            logger: deps_.logger.child({
+              payment: payment.id,
+              from_state: payment.state
+            })
+          },
+          payment
+        )
+        return payment.id
+      })
+
+      span.end()
+      return paymentId
+    }
+  )
 }
 
 // Fetch (and lock) a payment for work.
 async function getPendingPayment(
-  trx: Knex.Transaction
+  trx: Knex.Transaction,
+  deps: ServiceDependencies
 ): Promise<OutgoingPayment | undefined> {
+  deps.telemetry &&
+    deps.telemetry.startTimer('getPendingPayment', {
+      callName: 'getPendingPayment'
+    })
   const now = new Date(Date.now()).toISOString()
   const payments = await OutgoingPayment.query(trx)
     .limit(1)
@@ -56,6 +72,7 @@ async function getPendingPayment(
         )
     })
     .withGraphFetched('[walletAddress, quote.asset]')
+  deps.telemetry && deps.telemetry.stopTimer('getPendingPayment')
   return payments[0]
 }
 
@@ -69,7 +86,12 @@ async function handlePaymentLifecycle(
   }
 
   try {
+    deps.telemetry &&
+      deps.telemetry.startTimer('handleSending', {
+        callName: 'handleSending'
+      })
     await lifecycle.handleSending(deps, payment)
+    deps.telemetry && deps.telemetry.stopTimer('handleSending')
   } catch (error) {
     await onLifecycleError(deps, payment, error as Error | PaymentError)
   }
