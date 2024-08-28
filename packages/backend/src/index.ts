@@ -212,7 +212,9 @@ export function initIocContainer(
     const logger = await deps.use('logger')
     const knex = await deps.use('knex')
     const config = await deps.use('config')
-    const telemetry = await deps.use('telemetry')
+    const telemetry = config.enableTelemetry
+      ? await deps.use('telemetry')
+      : undefined
 
     if (config.useTigerBeetle) {
       container.singleton('tigerBeetle', async (deps) => {
@@ -347,7 +349,9 @@ export function initIocContainer(
       remoteIncomingPaymentService: await deps.use(
         'remoteIncomingPaymentService'
       ),
-      telemetry: deps.use('telemetry') ? await deps.use('telemetry') : undefined
+      telemetry: config.enableTelemetry
+        ? await deps.use('telemetry')
+        : undefined
     })
   })
 
