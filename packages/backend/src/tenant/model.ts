@@ -29,4 +29,3 @@ export enum EndpointType {
   WebhookBaseUrl = 'WebhookBaseUrl',
   RatesUrl = 'RatesUrl'
 }
-
