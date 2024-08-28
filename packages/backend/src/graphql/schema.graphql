@@ -594,8 +594,8 @@ type Asset implements Model {
 }
 
 enum TenantEndpointType {
-  WebhookBaseEndpoint
-  RatesEndpoint
+  WebhookBaseUrl
+  RatesUrl
 }
 
 enum SortOrder {

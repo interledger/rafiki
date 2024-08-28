@@ -7650,13 +7650,13 @@
         "interfaces": null,
         "enumValues": [
           {
-            "name": "RatesEndpoint",
+            "name": "RatesUrl",
             "description": null,
             "isDeprecated": false,
             "deprecationReason": null
           },
           {
-            "name": "WebhookBaseEndpoint",
+            "name": "WebhookBaseUrl",
             "description": null,
             "isDeprecated": false,
             "deprecationReason": null

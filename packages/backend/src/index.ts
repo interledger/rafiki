@@ -442,12 +442,12 @@ export function initIocContainer(
   })
 
   container.singleton('tenantService', async (deps) => {
-    const [ logger, knex ] = await Promise.all([
+    const [logger, knex] = await Promise.all([
       deps.use('logger'),
-      deps.use('knex'),
-    ]);
+      deps.use('knex')
+    ])
 
-    return createTenantService({ logger, knex });
+    return createTenantService({ logger, knex })
   })
 
   container.singleton('paymentMethodHandlerService', async (deps) => {

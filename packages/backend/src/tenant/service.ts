@@ -1,43 +1,43 @@
-import { Tenant } from "../graphql/generated/graphql"
-import { BaseService } from "../shared/baseService"
-import { TenantError } from "./errors"
-import { EndpointType } from "./model"
+import { BaseService } from '../shared/baseService'
+import { TenantError } from './errors'
+import { EndpointType, Tenant } from './model'
 
-interface EndpointOptions {
-    value: string
-    type: EndpointType
+export interface EndpointOptions {
+  value: string
+  type: EndpointType
 }
 
 export interface CreateTenantOptions {
-    idpEndpoint: string
-    idpSecret: string
-    endpoints: EndpointOptions[]
+  idpConsentEndpoint: string
+  idpSecret: string
+  endpoints: EndpointOptions[]
 }
 
 export interface TenantService {
-    create(CreateOptions: CreateTenantOptions): Promise<Tenant | TenantError>
+  create(CreateOptions: CreateTenantOptions): Promise<Tenant | TenantError>
 }
 
 type ServiceDependencies = BaseService
 
 export async function createTenantService({
-    logger, knex
+  logger,
+  knex
 }: ServiceDependencies): Promise<TenantService> {
-    const deps: ServiceDependencies = {
-        logger: logger.child({
-          service: 'TenantService'
-        }),
-        knex
-    }
+  const deps: ServiceDependencies = {
+    logger: logger.child({
+      service: 'TenantService'
+    }),
+    knex
+  }
 
-    return {
-        create: (options: CreateTenantOptions) => createTenant(deps, options)
-    }
+  return {
+    create: (options: CreateTenantOptions) => createTenant(deps, options)
+  }
 }
 
 async function createTenant(
-    deps: ServiceDependencies,
-    options: CreateTenantOptions
+  deps: ServiceDependencies,
+  options: CreateTenantOptions
 ): Promise<Tenant | TenantError> {
-    return TenantError.UnknownError
+  return TenantError.UnknownError
 }

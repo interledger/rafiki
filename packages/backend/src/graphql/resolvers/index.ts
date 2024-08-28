@@ -67,6 +67,7 @@ import { GraphQLJSONObject } from 'graphql-scalars'
 import { getCombinedPayments } from './combined_payments'
 import { createOrUpdatePeerByUrl } from './auto-peering'
 import { getAccountingTransfers } from './accounting_transfer'
+import { createTenant } from './tenant'
 
 export const resolvers: Resolvers = {
   UInt8: GraphQLUInt8,
@@ -147,6 +148,7 @@ export const resolvers: Resolvers = {
     depositOutgoingPaymentLiquidity,
     createIncomingPaymentWithdrawal,
     createOutgoingPaymentWithdrawal,
-    setFee
+    setFee,
+    createTenant
   }
 }
