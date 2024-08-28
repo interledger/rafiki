@@ -35,9 +35,9 @@ export type Access = Model & {
 };
 
 export type CreateTenantInput = {
-  id: Scalars['String']['input'];
   idpConsentEndpoint: Scalars['String']['input'];
   idpSecret: Scalars['String']['input'];
+  tenantId: Scalars['String']['input'];
 };
 
 export type CreateTenantMutationResponse = {
