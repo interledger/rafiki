@@ -1,6 +1,6 @@
-import { TenantEndpointType } from '../graphql/generated/graphql'
 import { BaseModel } from '../shared/baseModel'
 
+// export type EndpointType = 'WebhookBaseUrl' | 'RatesUrl'
 export enum EndpointType {
   WebhookBaseUrl = 'WebhookBaseUrl',
   RatesUrl = 'RatesUrl'
@@ -11,7 +11,7 @@ export class Tenant extends BaseModel {
     return 'tenants'
   }
 
-  public idpConsentEndpoint!: string
+  public kratosIdentityId!: string
   public deletedAt?: Date
 }
 
@@ -33,7 +33,7 @@ export class TenantEndpoints extends BaseModel {
     }
   }
 
-  public type!: TenantEndpointType
+  public type!: EndpointType
   public value!: string
   public tenant!: Tenant
 }
