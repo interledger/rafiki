@@ -51,7 +51,7 @@ export type DeleteTenantInput = {
 
 export type DeleteTenantMutationResponse = {
   __typename?: 'DeleteTenantMutationResponse';
-  id: Scalars['ID']['output'];
+  success: Scalars['Boolean']['output'];
 };
 
 export type FilterFinalizationReason = {
@@ -383,7 +383,7 @@ export type CreateTenantMutationResponseResolvers<ContextType = any, ParentType 
 };
 
 export type DeleteTenantMutationResponseResolvers<ContextType = any, ParentType extends ResolversParentTypes['DeleteTenantMutationResponse'] = ResolversParentTypes['DeleteTenantMutationResponse']> = {
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  success?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 

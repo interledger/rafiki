@@ -10,6 +10,7 @@ export interface CreateOptions {
 
 export interface TenantService {
   create(createOptions: CreateOptions): Promise<Tenant | TenantError>
+  delete(tenantId: string): Promise<Tenant | undefined>
 }
 
 type ServiceDependencies = BaseService
@@ -26,8 +27,19 @@ export async function createTenantService({
   }
 
   return {
-    create: (options: CreateOptions) => createTenant(deps, options)
+    create: (options: CreateOptions) => createTenant(deps, options),
+    delete: (id: string) => deleteTenant(deps, id)
   }
+}
+
+async function deleteTenant(
+  deps: ServiceDependencies,
+  id: string
+): Promise<Tenant | undefined> {
+  return Tenant.query(deps.knex)
+    .deleteById(id)
+    .returning('*')
+    .first()
 }
 
 async function createTenant(

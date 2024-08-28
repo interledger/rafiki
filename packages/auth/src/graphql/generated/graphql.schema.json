@@ -246,7 +246,7 @@
         "description": null,
         "fields": [
           {
-            "name": "id",
+            "name": "success",
             "description": null,
             "args": [],
             "type": {
@@ -254,7 +254,7 @@
               "name": null,
               "ofType": {
                 "kind": "SCALAR",
-                "name": "ID",
+                "name": "Boolean",
                 "ofType": null
               }
             },
