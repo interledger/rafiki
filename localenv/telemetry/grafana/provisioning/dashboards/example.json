@@ -547,151 +547,13 @@
           "editorMode": "code",
           "expr": "sum by (callName) (rate(psql_getAccountBalances_sum[$__rate_interval])/rate(psql_getAccountBalances_count[$__rate_interval]))",
           "instant": false,
-          "legendFormat": "{{description}}",
-          "range": true,
-          "refId": "A"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "editorMode": "code",
-          "expr": "rate(quote_service_create_resolve_receiver_time_ms_sum[$__rate_interval])/rate(quote_service_create_resolve_receiver_time_ms_count[$__rate_interval])",
-          "hide": false,
-          "instant": false,
-          "legendFormat": "{{description}}",
-          "range": true,
-          "refId": "B"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "editorMode": "code",
-          "expr": "rate(quote_service_create_get_quote_time_ms_sum[$__rate_interval])/rate(quote_service_create_get_quote_time_ms_count[$__rate_interval])",
-          "hide": false,
-          "instant": false,
-          "legendFormat": "{{description}}",
-          "range": true,
-          "refId": "C"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "editorMode": "code",
-          "expr": "rate(quote_service_create_get_latest_fee_time_ms_sum[$__rate_interval])/rate(quote_service_create_get_latest_fee_time_ms_count[$__rate_interval])",
-          "hide": false,
-          "instant": false,
-          "legendFormat": "{{description}}",
-          "range": true,
-          "refId": "D"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "editorMode": "code",
-          "expr": "rate(quote_service_create_insert_time_ms_sum[$__rate_interval])/rate(quote_service_create_insert_time_ms_count[$__rate_interval])",
-          "hide": false,
-          "instant": false,
-          "legendFormat": "{{description}}",
-          "range": true,
-          "refId": "E"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "editorMode": "code",
-          "expr": "rate(quote_service_finalize_quote_ms_sum[$__rate_interval])/rate(quote_service_finalize_quote_ms_count[$__rate_interval])",
-          "hide": false,
-          "instant": false,
-          "legendFormat": "{{description}}",
-          "range": true,
-          "refId": "F"
-        }
-      ],
-      "title": "PSQL Get Account Balance",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
-      },
-      "description": "",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "continuous-GrYlRd"
-          },
-          "fieldMinMax": false,
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          },
-          "unit": "s"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 12,
-        "w": 12,
-        "x": 12,
-        "y": 16
-      },
-      "id": 6,
-      "options": {
-        "displayMode": "gradient",
-        "maxVizHeight": 300,
-        "minVizHeight": 16,
-        "minVizWidth": 8,
-        "namePlacement": "auto",
-        "orientation": "horizontal",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "showUnfilled": true,
-        "sizing": "auto",
-        "valueMode": "color"
-      },
-      "pluginVersion": "11.1.4",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "editorMode": "code",
-          "expr": "histogram_quantile(0.95, sum(rate(traces_spanmetrics_latency_bucket{span_name=~\"^(mutation|query).*\"}[$__rate_interval])) by (le, span_name))",
-          "instant": false,
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
         }
       ],
-      "title": "Graphql Resolver Duration (95th Percentile)",
-      "type": "bargauge"
+      "title": "PSQL Get Account Balance",
+      "type": "timeseries"
     },
     {
       "datasource": {
@@ -866,7 +728,7 @@
           "refId": "G"
         }
       ],
-      "title": "Transaction Count",
+      "title": "Outgoing Payment Worker",
       "type": "timeseries"
     },
     {
@@ -944,45 +806,20 @@
     },
     {
       "datasource": {
-        "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
+        "type": "tempo",
+        "uid": "P214B5B846CF3925F"
       },
       "fieldConfig": {
         "defaults": {
           "color": {
-            "mode": "palette-classic"
+            "mode": "thresholds"
           },
           "custom": {
-            "axisBorderShow": false,
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 0,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
             },
-            "insertNulls": false,
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
+            "inspect": false
           },
           "mappings": [],
           "thresholds": {
@@ -1005,28 +842,33 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 16
+        "y": 18
       },
-      "id": 1,
-      "interval": "15s",
+      "id": 4,
       "options": {
         "cellHeight": "sm",
         "footer": {
           "countRows": false,
           "fields": "",
-          "reducer": ["sum"],
+          "reducer": [
+            "sum"
+          ],
           "show": false
         },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Duration"
+          }
+        ]
       },
+      "pluginVersion": "11.1.4",
       "targets": [
         {
           "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
+            "type": "tempo",
+            "uid": "P214B5B846CF3925F"
           },
           "filters": [
             {
@@ -1039,7 +881,9 @@
               "operator": "=",
               "scope": "resource",
               "tag": "service.name",
-              "value": ["RAFIKI_NETWORK"],
+              "value": [
+                "RAFIKI_NETWORK"
+              ],
               "valueType": "string"
             },
             {
@@ -1064,8 +908,8 @@
           "tableType": "traces"
         }
       ],
-      "title": "Transaction Count",
-      "type": "timeseries"
+      "title": "Traces > 100ms",
+      "type": "table"
     },
     {
       "datasource": {
@@ -1296,7 +1140,7 @@
         "h": 5,
         "w": 12,
         "x": 0,
-        "y": 24
+        "y": 46
       },
       "id": 3,
       "options": {
@@ -1393,7 +1237,7 @@
         "h": 5,
         "w": 12,
         "x": 0,
-        "y": 29
+        "y": 51
       },
       "id": 5,
       "options": {
@@ -1465,7 +1309,7 @@
     "list": []
   },
   "time": {
-    "from": "now-30m",
+    "from": "now-5m",
     "to": "now"
   },
   "timepicker": {
