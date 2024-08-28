@@ -49,6 +49,7 @@ type GrantEdge {
 }
 
 input CreateTenantInput {
+  id: String!
   idpSecret: String!
   idpConsentEndpoint: String!
 }
