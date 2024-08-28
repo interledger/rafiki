@@ -1285,8 +1285,8 @@ export type Tenant = {
 };
 
 export enum TenantEndpointType {
-  RatesEndpoint = 'RatesEndpoint',
-  WebhookBaseEndpoint = 'WebhookBaseEndpoint'
+  RatesUrl = 'RatesUrl',
+  WebhookBaseUrl = 'WebhookBaseUrl'
 }
 
 export enum TransferType {
