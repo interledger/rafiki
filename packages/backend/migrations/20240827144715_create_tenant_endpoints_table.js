@@ -11,7 +11,7 @@ exports.up = function (knex) {
 
     table.foreign('tenantId').references('id').inTable('tenants')
 
-    table.primary(['id', 'type'])
+    table.primary(['tenantId', 'type'])
   })
 }
 

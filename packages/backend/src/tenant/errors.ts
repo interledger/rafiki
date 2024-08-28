@@ -1,6 +1,7 @@
 import { GraphQLErrorCode } from '../graphql/errors'
 
 export enum TenantError {
+  UnknownTenant = 'UnknownTenant',
   UnknownError = 'UnknownError'
 }
 
@@ -11,11 +12,13 @@ export const isTenantError = (t: any): t is TenantError =>
 export const errorToCode: {
   [key in TenantError]: GraphQLErrorCode
 } = {
+  [TenantError.UnknownTenant]: GraphQLErrorCode.NotFound,
   [TenantError.UnknownError]: GraphQLErrorCode.InternalServerError
 }
 
 export const errorToMessage: {
   [key in TenantError]: string
 } = {
-  [TenantError.UnknownError]: 'Unknown error'
+  [TenantError.UnknownError]: 'Unknown error',
+  [TenantError.UnknownTenant]: 'Unknown tenant'
 }

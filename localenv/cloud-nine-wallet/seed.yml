@@ -1,3 +1,6 @@
+tenants:
+  - id: 9857be90-de5f-4b37-aa84-a0c0c285d021
+  - id: 38afbdf4-4ef6-45eb-b06a-e5543a84d2d0
 assets:
   - code: USD
     scale: 2

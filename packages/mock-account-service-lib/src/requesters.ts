@@ -12,9 +12,16 @@ import type {
   SetFeeResponse,
   FeeType,
   CreateOrUpdatePeerByUrlMutationResponse,
-  CreateOrUpdatePeerByUrlInput
+  CreateOrUpdatePeerByUrlInput,
+  TenantEndpointType,
+  CreateTenantMutationResponse
 } from './generated/graphql'
 import { v4 as uuid } from 'uuid'
+
+export type EndpointType = {
+  type: TenantEndpointType,
+  value: string
+};
 
 export function createRequesters(
   apolloClient: ApolloClient<NormalizedCacheObject>,
@@ -25,6 +32,11 @@ export function createRequesters(
     scale: number,
     liquidityThreshold: number
   ) => Promise<AssetMutationResponse>
+  createTenant: (
+    idpConsentUrl: string,
+    idpSecret: string,
+    endpoints: EndpointType[]
+  ) => Promise<CreateTenantMutationResponse>
   createPeer: (
     staticIlpAddress: string,
     outgoingEndpoint: string,
@@ -69,6 +81,8 @@ export function createRequesters(
   return {
     createAsset: (code, scale, liquidityThreshold) =>
       createAsset(apolloClient, code, scale, liquidityThreshold),
+    createTenant: (idpConsentUrl, idpSecret, endpoints) =>
+      createTenant(apolloClient, logger, idpConsentUrl, idpSecret, endpoints),
     createPeer: (
       staticIlpAddress,
       outgoingEndpoint,
@@ -143,6 +157,45 @@ export async function createAsset(
         throw new Error('Data was empty')
       }
       return data.createAsset
+    })
+}
+
+export async function createTenant(
+  apolloClient: ApolloClient<NormalizedCacheObject>,
+  logger: Logger,
+  idpConsentUrl: string,
+  idpSecret: string,
+  endpoints: EndpointType[]
+): Promise<CreateTenantMutationResponse> {
+  const createTenantMutation = gql`
+    mutation CreateTenant($input: CreateTenantInput!) {
+      createTenant(input: $input) {
+        tenant {
+          id
+        }
+      }
+    }
+  `
+
+  const createTenantInput = {
+    input: {
+      idpConsentUrl,
+      idpSecret,
+      endpoints
+    }
+  }
+
+  return apolloClient
+    .mutate({
+      mutation: createTenantMutation,
+      variables: createTenantInput
+    })
+    .then(({ data }): CreateTenantMutationResponse => {
+      logger.debug(data)
+      if (!data.createTenant.tenant) {
+        throw new Error('Data was empty')
+      }
+      return data.createTenant
     })
 }
 

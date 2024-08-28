@@ -22,6 +22,7 @@ export interface CreateTenantOptions {
 }
 
 export interface TenantService {
+  get(id: string): Promise<Tenant | undefined>
   create(CreateOptions: CreateTenantOptions): Promise<Tenant | TenantError>
 }
 
@@ -44,8 +45,16 @@ export async function createTenantService(
   }
 
   return {
+    get: (id: string) => getTenant(deps, id),
     create: (options: CreateTenantOptions) => createTenant(deps, options)
   }
+}
+
+async function getTenant(deps: ServiceDependencies, id: string): Promise<Tenant | undefined> {
+  return Tenant
+    .query(deps.knex)
+    .withGraphFetched('tenantEndpoints')
+    .findById(id)
 }
 
 async function createTenant(
@@ -70,13 +79,15 @@ async function createTenant(
       const tenantEndpointsData = options.endpoints.map((endpoint) => ({
         type: endpoint.type,
         value: endpoint.value,
-        tenant
+        tenantId: tenant
       }))
 
+      console.log('INSERT ...', tenant)
       await TenantEndpoints.query(trx).insert(tenantEndpointsData)
+      console.log('... DONE')
 
       // call auth admin api
-      deps.apolloClient.mutate<AuthTenant, CreateAuthTenantInput>({
+      await deps.apolloClient.mutate<AuthTenant, CreateAuthTenantInput>({
         mutation: gql`
           mutation CreateAuthTenant($input: CreateTenantInput!) {
             createTenant(input: $input) {
@@ -91,6 +102,7 @@ async function createTenant(
         }
       })
     } catch (err) {
+      console.log('ERROR: ', err)
       await trx.rollback()
       throw err
     }

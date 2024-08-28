@@ -1,4 +1,7 @@
 type Query {
+  "Feth a tenant"
+  tenant(id: ID!): Tenant
+
   "Fetch an asset"
   asset(id: String!): Asset
 

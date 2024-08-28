@@ -1,4 +1,4 @@
-import { BaseModel } from '../shared/baseModel'
+import { BaseModel, WeakModel } from '../shared/baseModel'
 
 // export type EndpointType = 'WebhookBaseUrl' | 'RatesUrl'
 export enum EndpointType {
@@ -15,7 +15,7 @@ export class Tenant extends BaseModel {
   public deletedAt?: Date
 }
 
-export class TenantEndpoints extends BaseModel {
+export class TenantEndpoints extends WeakModel {
   public static get tableName(): string {
     return 'tenantEndpoints'
   }
@@ -23,7 +23,7 @@ export class TenantEndpoints extends BaseModel {
   public static get relationMappings() {
     return {
       tenant: {
-        relation: BaseModel.HasOneRelation,
+        relation: WeakModel.HasOneRelation,
         modelClass: Tenant,
         join: {
           from: 'tenantEndpoints.tenantId',
@@ -35,5 +35,5 @@ export class TenantEndpoints extends BaseModel {
 
   public type!: EndpointType
   public value!: string
-  public tenant!: Tenant
+  public tenantId!: Tenant
 }

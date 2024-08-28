@@ -1,0 +1,40 @@
+meta {
+  name: Create Tenant
+  type: graphql
+  seq: 50
+}
+
+post {
+  url: {{RafikiGraphqlHost}}/graphql
+  body: graphql
+  auth: none
+}
+
+body:graphql {
+  mutation CreateTenant($input: CreateTenantInput!) {
+    createTenant(input: $input) {
+      tenant {
+        id
+      }
+    }
+  }
+}
+
+body:graphql:vars {
+  {
+    "input": {
+      "idpConsentEndpoint": "https://interledger.org/consent",
+      "idpSecret": "myVerySecureSecret",
+      "endpoints": [
+        {
+          "type": "RatesUrl",
+          "value": "https://interledger.org/rates"
+        },
+        {
+          "type": "WebhookBaseUrl",
+          "value": "https://interledger.org/webhooks"
+        }
+      ]
+    }
+  }
+}
