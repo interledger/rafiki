@@ -1,7 +1,11 @@
 import { TransactionOrKnex } from 'objection'
 import { BaseService } from '../shared/baseService'
 import { TenantError } from './errors'
+<<<<<<< HEAD
 import { Tenant } from './model'
+=======
+import { EndpointType, Tenant, TenantEndpoints } from './model'
+>>>>>>> 35b93ec2 (feat(backend): create tenant service implementation)
 import { IAppConfig } from '../config/app'
 import { ApolloClient, gql, NormalizedCacheObject } from '@apollo/client'
 import {
@@ -9,9 +13,17 @@ import {
   CreateTenantInput as CreateAuthTenantInput
 } from '../generated/graphql'
 import { v4 as uuidv4 } from 'uuid'
+<<<<<<< HEAD
 import { Pagination, SortOrder } from '../shared/baseModel'
 import { EndpointOptions, TenantEndpointService } from './endpoints/service'
 import { TenantEndpoint } from './endpoints/model'
+=======
+
+export interface EndpointOptions {
+  value: string
+  type: EndpointType
+}
+>>>>>>> 35b93ec2 (feat(backend): create tenant service implementation)
 
 export interface CreateTenantOptions {
   idpConsentEndpoint: string
@@ -29,7 +41,10 @@ export interface ServiceDependencies extends BaseService {
   knex: TransactionOrKnex
   config: IAppConfig
   apolloClient: ApolloClient<NormalizedCacheObject>
+<<<<<<< HEAD
   tenantEndpointService: TenantEndpointService
+=======
+>>>>>>> 35b93ec2 (feat(backend): create tenant service implementation)
 }
 
 export async function createTenantService(
@@ -41,8 +56,12 @@ export async function createTenantService(
     }),
     knex: deps_.knex,
     config: deps_.config,
+<<<<<<< HEAD
     apolloClient: deps_.apolloClient,
     tenantEndpointService: deps_.tenantEndpointService
+=======
+    apolloClient: deps_.apolloClient
+>>>>>>> 35b93ec2 (feat(backend): create tenant service implementation)
   }
 
   return {
@@ -125,7 +144,6 @@ async function createTenant(
       await trx.rollback()
       throw err
     }
-
     return tenant
   })
 }
