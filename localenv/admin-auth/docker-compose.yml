@@ -11,7 +11,6 @@ services:
       KRATOS_CONTAINER_PUBLIC_URL: 'http://cloud-nine-kratos:4433'
       KRATOS_BROWSER_PUBLIC_URL: 'http://localhost:4433'
       KRATOS_ADMIN_URL: 'http://cloud-nine-kratos:4434/admin'
-      KRATOS_ADMIN_EMAIL: 'admin@mail.com'
     depends_on:
       - cloud-nine-backend
       - cloud-nine-kratos
