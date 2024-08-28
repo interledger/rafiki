@@ -3,6 +3,7 @@ title: Backend service
 ---
 
 import { LinkOut } from '@interledger/docs-design-system'
+import Backend from '/src/partials/backend-variables.mdx'
 
 Rafiki’s <LinkOut href="https://github.com/interledger/rafiki/tree/main/packages/backend">`backend`</LinkOut> service is the software’s main service for handling business logic and external communication. The service is responsible for:
 
@@ -48,3 +49,7 @@ The amounts within ILP packets are used to update account liquidities in your ac
 ## GraphQL Backend Admin API
 
 The `backend` service exposes a GraphQL [Backend Admin API](/integration/deployment/apis/graphql/admin-api-overview#backend-admin-api) to manage assets, peers, wallet addresses, Open Payments resources, and several types of liquidity.
+
+## Environment variables
+
+<Backend />
