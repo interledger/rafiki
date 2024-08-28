@@ -36,10 +36,7 @@ async function deleteTenant(
   deps: ServiceDependencies,
   id: string
 ): Promise<Tenant | undefined> {
-  return Tenant.query(deps.knex)
-    .deleteById(id)
-    .returning('*')
-    .first()
+  return Tenant.query(deps.knex).deleteById(id).returning('*').first()
 }
 
 async function createTenant(
