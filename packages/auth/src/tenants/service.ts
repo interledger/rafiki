@@ -34,5 +34,21 @@ async function createTenant(
   deps: ServiceDependencies,
   options: CreateOptions
 ): Promise<Tenant | TenantError> {
-  return TenantError.UnknownError
+  const tenantData = {
+    id: options.tenantId,
+    idpConsentEndpoint: options.idpConsentEndpoint,
+    idpSecret: options.idpSecret
+  }
+
+  try {
+    const result = await Tenant.query(deps.knex).insert(tenantData);
+    return result
+  }catch(err) {
+    deps.logger.warn(
+      { tenantId: tenantData.id, idpConsentEndpoint: tenantData.idpConsentEndpoint },
+      'Unable to create tenant'
+    )
+
+    throw err
+  }
 }
