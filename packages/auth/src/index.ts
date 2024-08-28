@@ -325,7 +325,7 @@ const callWithRetry: CallableFunction = async (
   try {
     return await fn()
   } catch (e) {
-    if (depth > 7) {
+    if (depth > 10) {
       throw e
     }
     await wait(2 ** depth * 30)
