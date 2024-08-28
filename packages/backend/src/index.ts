@@ -555,6 +555,59 @@ export function initIocContainer(
     })
   })
 
+  container.singleton('apolloClient', async (deps) => {
+    const [logger, config] = await Promise.all([
+      deps.use('logger'),
+      deps.use('config')
+    ])
+
+    const httpLink = createHttpLink({
+      uri: config.authAdminApiUrl
+    })
+    
+    const errorLink = onError(({ graphQLErrors }) => {
+      if (graphQLErrors) {
+        logger.error(graphQLErrors)
+        graphQLErrors.map(({ extensions }) => {
+          if (extensions && extensions.code === 'UNAUTHENTICATED') {
+            logger.error('UNAUTHENTICATED')
+          }
+  
+          if (extensions && extensions.code === 'FORBIDDEN') {
+            logger.error('FORBIDDEN')
+          }
+        })
+      }
+    })
+    
+    const authLink = setContext((_, { headers }) => {
+      return {
+        headers: {
+          ...headers
+        }
+      }
+    })
+    const link = ApolloLink.from([errorLink, authLink, httpLink])
+    
+    const client = new ApolloClient({
+      cache: new InMemoryCache({}),
+      link: link,
+      defaultOptions: {
+        query: {
+          fetchPolicy: 'no-cache'
+        },
+        mutate: {
+          fetchPolicy: 'no-cache'
+        },
+        watchQuery: {
+          fetchPolicy: 'no-cache'
+        }
+      }
+    })
+
+    return client
+  })
+
   container.singleton('paymentMethodHandlerService', async (deps) => {
     return createPaymentMethodHandlerService({
       logger: await deps.use('logger'),
