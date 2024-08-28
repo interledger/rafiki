@@ -46,7 +46,7 @@ type IntrospectionCallObject = {
   access: {
     type: AccessType
     actions: AccessAction[]
-    identifier?: string
+    identifier: string
   }[]
 }
 
@@ -193,7 +193,8 @@ describe('Auth Middleware', (): void => {
       access: [
         {
           type: type,
-          actions: [action]
+          actions: [action],
+          identifier: ctx.walletAddressUrl
         }
       ]
     })
@@ -217,7 +218,8 @@ describe('Auth Middleware', (): void => {
       access: [
         {
           type: type,
-          actions: [action]
+          actions: [action],
+          identifier: ctx.walletAddressUrl
         }
       ]
     })
@@ -286,13 +288,10 @@ describe('Auth Middleware', (): void => {
             access: [
               {
                 type,
-                actions: [action]
+                actions: [action],
+                identifier: ctx.walletAddressUrl
               }
             ]
-          }
-
-          if (type === AccessType.OutgoingPayment) {
-            expectedCallObject.access[0].identifier = ctx.walletAddressUrl
           }
 
           expect(introspectSpy).toHaveBeenCalledWith(expectedCallObject)
@@ -313,7 +312,8 @@ describe('Auth Middleware', (): void => {
             access: [
               {
                 type,
-                actions: [action]
+                actions: [action],
+                identifier: ctx.walletAddressUrl
               }
             ]
           })
@@ -349,7 +349,8 @@ describe('Auth Middleware', (): void => {
               access: [
                 {
                   type,
-                  actions: [subAction]
+                  actions: [subAction],
+                  identifier: ctx.walletAddressUrl
                 }
               ]
             })
@@ -376,7 +377,8 @@ describe('Auth Middleware', (): void => {
               access: [
                 {
                   type,
-                  actions: [superAction]
+                  actions: [superAction],
+                  identifier: ctx.walletAddressUrl
                 }
               ]
             })
@@ -436,12 +438,10 @@ describe('Auth Middleware', (): void => {
                 access: [
                   {
                     type,
-                    actions: [action]
+                    actions: [action],
+                    identifier: ctx.walletAddressUrl
                   }
                 ]
-              }
-              if (type === AccessType.OutgoingPayment) {
-                expectedCallObject.access[0].identifier = ctx.walletAddressUrl
               }
 
               expect(introspectSpy).toHaveBeenCalledWith(expectedCallObject)
@@ -473,7 +473,8 @@ describe('Auth Middleware', (): void => {
             access: [
               {
                 type,
-                actions: [action]
+                actions: [action],
+                identifier: ctx.walletAddressUrl
               }
             ]
           })
