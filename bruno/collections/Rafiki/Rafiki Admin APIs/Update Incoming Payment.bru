@@ -13,7 +13,7 @@ post {
 body:graphql {
   mutation UpdateIncomingPayment($input: UpdateIncomingPaymentInput!) {
     updateIncomingPayment(input: $input) {
-      incomingPayment {
+      payment {
         id
         metadata
       }
