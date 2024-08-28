@@ -42,6 +42,8 @@ export const Config = {
           'AUTH_DATABASE_URL',
           'postgresql://postgres:password@localhost:5432/auth_development'
         ),
+
+  //TODO: move these two identity stuff from env to tenant
   identityServerUrl: envString('IDENTITY_SERVER_URL'),
   identityServerSecret: envString('IDENTITY_SERVER_SECRET'),
   authServerUrl: envString('AUTH_SERVER_URL'),
