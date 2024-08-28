@@ -88,6 +88,8 @@ export const createTenant: MutationResolvers<ApolloContext>['createTenant'] =
       email: args.input.email
     })
 
+    console.log('TEANT: ', tenantOrError)
+
     if (isTenantError(tenantOrError)) {
       throw new GraphQLError(errorToMessage[tenantOrError], {
         extensions: {
