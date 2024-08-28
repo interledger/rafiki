@@ -758,6 +758,9 @@ export const start = async (
       `Auto-peering server listening on ${config.autoPeeringServerPort}`
     )
   }
+
+  await app.createOperatorIdentity()
+  logger.info('Operator identity created on Kratos')
 }
 
 // If this script is run directly, start the server

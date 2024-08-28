@@ -1,6 +1,7 @@
 import { join } from 'path'
 import http, { Server } from 'http'
 import { ParsedUrlQuery } from 'querystring'
+import axios from 'axios'
 import { Client as TigerbeetleClient } from 'tigerbeetle-node'
 
 import { IocContract } from '@adonisjs/fold'
