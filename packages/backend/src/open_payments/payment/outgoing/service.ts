@@ -211,8 +211,6 @@ async function cancelOutgoingPayment(
   })
 }
 
-const _cacheWalletAddress = new Map()
-
 async function createOutgoingPayment(
   deps: ServiceDependencies,
   options: CreateOutgoingPaymentOptions
@@ -264,12 +262,7 @@ async function createOutgoingPayment(
           }
         )
 
-      let cacheWalletAdd = _cacheWalletAddress.get(walletAddressId)
-      if (!cacheWalletAdd) {
-        cacheWalletAdd = await deps.walletAddressService.get(walletAddressId)
-        _cacheWalletAddress.set(walletAddressId, cacheWalletAdd)
-      }
-      const walletAddress = cacheWalletAdd
+      const walletAddress = await deps.walletAddressService.get(walletAddressId)
 
       if (!walletAddress) {
         throw OutgoingPaymentError.UnknownWalletAddress

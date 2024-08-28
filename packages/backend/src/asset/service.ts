@@ -38,7 +38,8 @@ export interface AssetService {
 }
 
 interface ServiceDependencies extends BaseService {
-  accountingService: AccountingService
+  accountingService: AccountingService,
+  assetCache: Map<string, Asset>
 }
 
 export async function createAssetService({
@@ -49,11 +50,15 @@ export async function createAssetService({
   const log = logger.child({
     service: 'AssetService'
   })
+
+  const assetCache = new Map<string, Asset>()
   const deps: ServiceDependencies = {
     logger: log,
     knex,
-    accountingService
+    accountingService,
+    assetCache
   }
+
   return {
     create: (options) => createAsset(deps, options),
     update: (options) => updateAsset(deps, options),
@@ -78,6 +83,8 @@ async function createAsset(
       .first()
 
     if (deletedAsset) {
+      deps.assetCache.delete(deletedAsset.id)
+
       // if found, enable
       return await Asset.query(deps.knex)
         .patchAndFetchById(deletedAsset.id, { deletedAt: null })
@@ -102,6 +109,7 @@ async function createAsset(
         LiquidityAccountType.ASSET,
         trx
       )
+      deps.assetCache.set(asset.id, asset)
       return asset
     })
   } catch (err) {
@@ -120,9 +128,12 @@ async function updateAsset(
     throw new Error('Knex undefined')
   }
   try {
-    return await Asset.query(deps.knex)
+    const returnVal = await Asset.query(deps.knex)
       .patchAndFetchById(id, { withdrawalThreshold, liquidityThreshold })
       .throwIfNotFound()
+
+    deps.assetCache.set(id, returnVal)
+    return returnVal
   } catch (err) {
     if (err instanceof NotFoundError) {
       return AssetError.UnknownAsset
@@ -152,7 +163,7 @@ async function deleteAsset(
     if (walletAddress) {
       return AssetError.CannotDeleteInUseAsset
     }
-
+    deps.assetCache.delete(id)
     return await Asset.query(deps.knex)
       .patchAndFetchById(id, { deletedAt: deletedAt.toISOString() })
       .throwIfNotFound()
@@ -168,7 +179,10 @@ async function getAsset(
   deps: ServiceDependencies,
   id: string
 ): Promise<void | Asset> {
-  return await Asset.query(deps.knex).whereNull('deletedAt').findById(id)
+  const inMem = deps.assetCache.get(id)
+  if (inMem) return inMem
+
+  return Asset.query(deps.knex).whereNull('deletedAt').findById(id)
 }
 
 async function getAssetsPage(
@@ -176,11 +190,11 @@ async function getAssetsPage(
   pagination?: Pagination,
   sortOrder?: SortOrder
 ): Promise<Asset[]> {
-  return await Asset.query(deps.knex)
+  return Asset.query(deps.knex)
     .whereNull('deletedAt')
     .getPage(pagination, sortOrder)
 }
 
 async function getAll(deps: ServiceDependencies): Promise<Asset[]> {
-  return await Asset.query(deps.knex).whereNull('deletedAt')
+  return Asset.query(deps.knex).whereNull('deletedAt')
 }
