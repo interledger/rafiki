@@ -30,10 +30,6 @@ The `backend` service exposes the Open Payments APIs, which are auth-protected u
 
 The `backend` service allows you to manage Open Payments <LinkOut href="https://openpayments.dev/introduction/op-concepts/#incoming-payment">incoming payments</LinkOut>, <LinkOut href="https://openpayments.dev/introduction/op-concepts/#quote">quotes</LinkOut>, and <LinkOut href='https://openpayments.dev/introduction/op-concepts/#outgoing-payment'>outgoing payments</LinkOut>. Quotes and outgoing payments call the ILP connector, described in the next section, to send ILP packets. Quoting sends unfulfillable probe packets, for example to determine a transaction’s cost before executing the payment. Outgoing payments send packets as part of executing the payment.
 
-:::note
-The calls to the ILP connector are made by calling the `makeIlpPlugin`, which is an implementation detail of an ILP connector that Rafiki will abstract. After calling the plugin, it will be passed to the <LinkOut href="https://github.com/interledgerjs/interledgerjs/tree/master/packages/pay">`@interledger/pay`</LinkOut> library to facilitate sending payments over Interledger using STREAM.
-:::
-
 ## Interledger connector
 
 The `backend` service exposes an ILP connector to send and receive STREAM packets between peers.
@@ -47,7 +43,7 @@ The roles of the connector include:
 
 The connector receives incoming packets via HTTP and/or direct calls from within the `backend`. The `backend` includes an HTTP server listening on the configured `CONNECTOR_PORT`.
 
-The amounts within ILP packets are used to update account balances in your accounting database (TigerBeetle or Postgres). Amounts are adjusted based on Rafiki’s configured [exchange rates](/integration/before-you-begin#provide-exchange-rate-details) and the asset used by the sending (outgoing) and receiving (destination) accounts. The total amount received for the STREAM connection is tracked in Redis in order to support <LinkOut href="https://interledger.org/developers/rfcs/stream-receipts/">STREAM receipts</LinkOut>.
+The amounts within ILP packets are used to update account liquidities in your accounting database (TigerBeetle or Postgres). Amounts are adjusted based on Rafiki’s configured [exchange rates](/integration/before-you-begin#provide-exchange-rate-details) and the asset used by the sending (outgoing) and receiving (destination) accounts. The total amount received for the STREAM connection is tracked in Redis.
 
 ## GraphQL Backend Admin API
 

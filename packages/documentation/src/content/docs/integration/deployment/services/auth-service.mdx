@@ -9,7 +9,7 @@ Rafiki’s <LinkOut href="https://github.com/interledger/rafiki/tree/main/packag
 The authorization server is responsible for:
 
 - Authorizing incoming requests from clients (e.g., third-party applications) to create payments and quotes on the backend
-- Managing interactions with end users, such as your account holders, to gather consent and provide notice
+- Relaying information about the interaction to the client and recording the response
 - Issuing access tokens to clients and communicating with the resource server to validate each client’s access rights
 
 ## Requirements
@@ -21,7 +21,7 @@ The following are required when using the `auth` service.
   :::note
   You can use the same Postgres database instance for both the `backend` and `auth` services, but separate database schemas are required within that instance to maintain a boundary between the objects those services manage.
   :::
-- Integration with an identity provider (IdP)
+- Integration with an [identity provider](#identity-provider-idp)
 
 You must also set the environment variables for the `auth` service.
 
@@ -29,7 +29,7 @@ You must also set the environment variables for the `auth` service.
 
 When a request comes from a client with an account known to your local instance of Rafiki, the `auth` service uses data stored in the `auth` service’s Postgres database.
 
-When a request comes from a client registered with another instance of Rafiki, the `auth` service resolves the client’s public key from the client’s source and uses the key to authenticate and authorize the client’s request.
+When a request comes from a client registered with another instance of Rafiki, the `auth` service resolves the client's key endpoint (e.g., `https://wallet.example.com/alice/jwks.json`) to retrieve the client's public keys, then filters out the correct key using the key id (`kid`) in the client's signature.
 
 ## Identity provider (IdP)
 
