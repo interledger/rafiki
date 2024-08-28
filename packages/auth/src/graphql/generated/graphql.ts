@@ -37,12 +37,21 @@ export type Access = Model & {
 export type CreateTenantInput = {
   idpConsentEndpoint: Scalars['String']['input'];
   idpSecret: Scalars['String']['input'];
-  tenantId: Scalars['String']['input'];
+  tenantId: Scalars['ID']['input'];
 };
 
 export type CreateTenantMutationResponse = {
   __typename?: 'CreateTenantMutationResponse';
   tenant: Tenant;
+};
+
+export type DeleteTenantInput = {
+  tenantId: Scalars['ID']['input'];
+};
+
+export type DeleteTenantMutationResponse = {
+  __typename?: 'DeleteTenantMutationResponse';
+  id: Scalars['ID']['output'];
 };
 
 export type FilterFinalizationReason = {
@@ -134,6 +143,8 @@ export type Mutation = {
   __typename?: 'Mutation';
   /** Create Tenant */
   createTenant: CreateTenantMutationResponse;
+  /** Delete Tenant */
+  deleteTenant: DeleteTenantMutationResponse;
   /** Revoke Grant */
   revokeGrant: RevokeGrantMutationResponse;
 };
@@ -141,6 +152,11 @@ export type Mutation = {
 
 export type MutationCreateTenantArgs = {
   input: CreateTenantInput;
+};
+
+
+export type MutationDeleteTenantArgs = {
+  input: DeleteTenantInput;
 };
 
 
@@ -292,6 +308,8 @@ export type ResolversTypes = {
   Boolean: ResolverTypeWrapper<Partial<Scalars['Boolean']['output']>>;
   CreateTenantInput: ResolverTypeWrapper<Partial<CreateTenantInput>>;
   CreateTenantMutationResponse: ResolverTypeWrapper<Partial<CreateTenantMutationResponse>>;
+  DeleteTenantInput: ResolverTypeWrapper<Partial<DeleteTenantInput>>;
+  DeleteTenantMutationResponse: ResolverTypeWrapper<Partial<DeleteTenantMutationResponse>>;
   FilterFinalizationReason: ResolverTypeWrapper<Partial<FilterFinalizationReason>>;
   FilterGrantState: ResolverTypeWrapper<Partial<FilterGrantState>>;
   FilterString: ResolverTypeWrapper<Partial<FilterString>>;
@@ -324,6 +342,8 @@ export type ResolversParentTypes = {
   Boolean: Partial<Scalars['Boolean']['output']>;
   CreateTenantInput: Partial<CreateTenantInput>;
   CreateTenantMutationResponse: Partial<CreateTenantMutationResponse>;
+  DeleteTenantInput: Partial<DeleteTenantInput>;
+  DeleteTenantMutationResponse: Partial<DeleteTenantMutationResponse>;
   FilterFinalizationReason: Partial<FilterFinalizationReason>;
   FilterGrantState: Partial<FilterGrantState>;
   FilterString: Partial<FilterString>;
@@ -359,6 +379,11 @@ export type AccessResolvers<ContextType = any, ParentType extends ResolversParen
 
 export type CreateTenantMutationResponseResolvers<ContextType = any, ParentType extends ResolversParentTypes['CreateTenantMutationResponse'] = ResolversParentTypes['CreateTenantMutationResponse']> = {
   tenant?: Resolver<ResolversTypes['Tenant'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type DeleteTenantMutationResponseResolvers<ContextType = any, ParentType extends ResolversParentTypes['DeleteTenantMutationResponse'] = ResolversParentTypes['DeleteTenantMutationResponse']> = {
+  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -400,6 +425,7 @@ export type ModelResolvers<ContextType = any, ParentType extends ResolversParent
 
 export type MutationResolvers<ContextType = any, ParentType extends ResolversParentTypes['Mutation'] = ResolversParentTypes['Mutation']> = {
   createTenant?: Resolver<ResolversTypes['CreateTenantMutationResponse'], ParentType, ContextType, RequireFields<MutationCreateTenantArgs, 'input'>>;
+  deleteTenant?: Resolver<ResolversTypes['DeleteTenantMutationResponse'], ParentType, ContextType, RequireFields<MutationDeleteTenantArgs, 'input'>>;
   revokeGrant?: Resolver<ResolversTypes['RevokeGrantMutationResponse'], ParentType, ContextType, RequireFields<MutationRevokeGrantArgs, 'input'>>;
 };
 
@@ -444,6 +470,7 @@ export interface UInt64ScalarConfig extends GraphQLScalarTypeConfig<ResolversTyp
 export type Resolvers<ContextType = any> = {
   Access?: AccessResolvers<ContextType>;
   CreateTenantMutationResponse?: CreateTenantMutationResponseResolvers<ContextType>;
+  DeleteTenantMutationResponse?: DeleteTenantMutationResponseResolvers<ContextType>;
   Grant?: GrantResolvers<ContextType>;
   GrantEdge?: GrantEdgeResolvers<ContextType>;
   GrantsConnection?: GrantsConnectionResolvers<ContextType>;

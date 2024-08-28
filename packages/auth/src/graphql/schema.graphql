@@ -25,6 +25,9 @@ type Mutation {
 
   "Create Tenant"
   createTenant(input: CreateTenantInput!): CreateTenantMutationResponse!
+
+  "Delete Tenant"
+  deleteTenant(input: DeleteTenantInput!): DeleteTenantMutationResponse!
 }
 
 type PageInfo {
@@ -49,9 +52,13 @@ type GrantEdge {
 }
 
 input CreateTenantInput {
-  tenantId: String!
+  tenantId: ID!
   idpSecret: String!
   idpConsentEndpoint: String!
+}
+
+input DeleteTenantInput {
+  tenantId: ID!
 }
 
 input GrantFilter {
@@ -133,6 +140,10 @@ type PaymentAmount {
 }
 
 type RevokeGrantMutationResponse {
+  id: ID!
+}
+
+type DeleteTenantMutationResponse {
   id: ID!
 }
 
