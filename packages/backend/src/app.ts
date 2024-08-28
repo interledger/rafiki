@@ -341,6 +341,14 @@ export class App {
       logger.debug(
         `Successfully created user ${kratosAdminEmail} with ID ${createIdentityResponse.data.id}`
       )
+
+      const recoveryCodeResponse = await axios.post(
+        `${kratosAdminUrl}/recovery/link`,
+        {
+          identity_id: createIdentityResponse.data.id
+        }
+      )
+      logger.info(`Recovery link for ${kratosAdminEmail} at ${recoveryCodeResponse.data.recovery_link}`)
     } catch (error) {
       if (axios.isAxiosError(error)) {
         logger.error(
