@@ -7,9 +7,11 @@ export enum EndpointType {
 }
 
 export class Tenant extends BaseModel {
-  public static getTableName(): string {
-    return 'tenants'
-  }
+    public static get tableName(): string {
+        return 'tenants'
+    }
+
+    public idpConsentEndpoint!: string
 }
 
 export class TenantEndpoints extends BaseModel {
