@@ -303,49 +303,70 @@ export class App {
       await this.container.use('config')
     const logger = await this.container.use('logger')
     // TODO: error out since kratos is essentially required
-    if (!kratosAdminUrl || !kratosAdminEmail) return
+    if (!kratosAdminUrl || !kratosAdminEmail) {
+      throw new Error('Missing admin configuration')
+    }
     try {
       const identityQueryResponse = await axios.get(
         `${kratosAdminUrl}/identities?credentials_identifier=${kratosAdminEmail}`
       )
-      if (
+      const isExistingIdentity =
         identityQueryResponse.data.length > 0 &&
         identityQueryResponse.data[0].id
-      ) {
+      const operatorRole =
+        identityQueryResponse.data[0]?.metadata_admin.operator
+      let identityResponse
+      if (isExistingIdentity && operatorRole) {
+        // Identity already exists with operator role
         logger.debug(
-          `User with email ${kratosAdminEmail} exists on the system with the ID: ${identityQueryResponse.data[0].id}`
+          `Identity with email ${kratosAdminEmail} exists on the system with the ID: ${identityQueryResponse.data[0].id}`
         )
         return
-      }
-      logger.debug(
-        `No user with email ${kratosAdminEmail} exists on the system`
-      )
+      } else if (isExistingIdentity && !operatorRole) {
+        // Identity already exists but does not have operator role
+        identityResponse = await axios.put(
+          `${kratosAdminUrl}/admin/identities/${identityQueryResponse.data[0].id}`,
+          {
+            metadata_admin: {
+              operator: true
+            }
+          }
+        )
+        logger.debug(
+          `Successfully created user ${kratosAdminEmail} with ID ${identityResponse.data.id}`
+        )
+      } else {
+        // Identity does not exist
+        logger.debug(
+          `No identity with email ${kratosAdminEmail} exists on the system`
+        )
 
-      const createIdentityResponse = await axios.post(
-        `${kratosAdminUrl}/identities`,
-        {
-          schema_id: 'default',
-          traits: {
-            email: kratosAdminEmail
+        identityResponse = await axios.post(
+          `${kratosAdminUrl}/identities`,
+          {
+            schema_id: 'default',
+            traits: {
+              email: kratosAdminEmail
+            },
+            metadata_admin: {
+              operator: true
+            }
           },
-          metadata_admin: {
-            operator: true
+          {
+            headers: {
+              'Content-Type': 'application/json'
+            }
           }
-        },
-        {
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        }
-      )
-      logger.debug(
-        `Successfully created user ${kratosAdminEmail} with ID ${createIdentityResponse.data.id}`
-      )
+        )
+        logger.debug(
+          `Successfully created user ${kratosAdminEmail} with ID ${identityResponse.data.id}`
+        )
+      }
 
       const recoveryCodeResponse = await axios.post(
         `${kratosAdminUrl}/recovery/link`,
         {
-          identity_id: createIdentityResponse.data.id
+          identity_id: identityResponse.data.id
         }
       )
       logger.info(
