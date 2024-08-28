@@ -4,6 +4,10 @@ import { logger } from '../../app/utils/logger.server'
 
 // Use process.argv to accept an email argument from the command line
 const USER_EMAIL = process.argv[2]
+
+// Use process.argv to accept privilege argument from the command line
+const ROLE = process.argv[3]
+
 if (!USER_EMAIL) {
   logger.error('No email argument provided.')
   process.exit(1)
@@ -53,6 +57,9 @@ const createIdentity = async () => {
         schema_id: 'default',
         traits: {
           email: USER_EMAIL
+        },
+        metadata_admin: {
+          [ROLE]: true
         }
       },
       {
