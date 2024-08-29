@@ -1,20 +1,16 @@
 import { IocContract } from '@adonisjs/fold'
-import { faker } from '@faker-js/faker'
 import { Knex } from 'knex'
 import {
-  AuthenticatedClient,
-  AccessType,
-  AccessAction,
-  IncomingPaymentWithPaymentMethods as OpenPaymentsIncomingPaymentWithPaymentMethods,
-  WalletAddress as OpenPaymentsWalletAddress,
   mockWalletAddress,
-  Grant as OpenPaymentsGrant,
-  GrantRequest,
   mockIncomingPaymentWithPaymentMethods
 } from '@interledger/open-payments'
 import { v4 as uuid } from 'uuid'
 
-import { ReceiverService } from './service'
+import {
+  getLocalIncomingPayment,
+  ReceiverService,
+  ServiceDependencies
+} from './service'
 import { createTestApp, TestContainer } from '../../tests/app'
 import { Config } from '../../config/app'
 import { initIocContainer } from '../..'
@@ -25,7 +21,6 @@ import {
   MockWalletAddress
 } from '../../tests/walletAddress'
 import { truncateTables } from '../../tests/tableManager'
-import { GrantService } from '../grant/service'
 import { WalletAddressService } from '../wallet_address/service'
 import { Amount, parseAmount } from '../amount'
 import { RemoteIncomingPaymentService } from '../payment/incoming_remote/service'
@@ -36,34 +31,40 @@ import { ReceiverError } from './errors'
 import { RemoteIncomingPaymentError } from '../payment/incoming_remote/errors'
 import assert from 'assert'
 import { Receiver } from './model'
-import { Grant } from '../grant/model'
-import { IncomingPaymentState } from '../payment/incoming/model'
-import { PublicIncomingPayment } from '@interledger/open-payments/dist/types'
-import { mockPublicIncomingPayment } from '@interledger/open-payments/dist/test/helpers'
+import { IncomingPayment } from '../payment/incoming/model'
+import { StreamCredentialsService } from '../../payment-method/ilp/stream-credentials/service'
+import { WalletAddress } from '../wallet_address/model'
 
 describe('Receiver Service', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let receiverService: ReceiverService
   let incomingPaymentService: IncomingPaymentService
-  let openPaymentsClient: AuthenticatedClient
   let knex: Knex
   let walletAddressService: WalletAddressService
-  let grantService: GrantService
+  let streamCredentialsService: StreamCredentialsService
   let remoteIncomingPaymentService: RemoteIncomingPaymentService
+  let serviceDeps: ServiceDependencies
 
   beforeAll(async (): Promise<void> => {
     deps = initIocContainer(Config)
     appContainer = await createTestApp(deps)
     receiverService = await deps.use('receiverService')
     incomingPaymentService = await deps.use('incomingPaymentService')
-    openPaymentsClient = await deps.use('openPaymentsClient')
     walletAddressService = await deps.use('walletAddressService')
-    grantService = await deps.use('grantService')
+    streamCredentialsService = await deps.use('streamCredentialsService')
     remoteIncomingPaymentService = await deps.use(
       'remoteIncomingPaymentService'
     )
     knex = appContainer.knex
+    serviceDeps = {
+      knex,
+      logger: await deps.use('logger'),
+      incomingPaymentService,
+      remoteIncomingPaymentService,
+      walletAddressService,
+      streamCredentialsService
+    }
   })
 
   afterEach(async (): Promise<void> => {
@@ -76,7 +77,7 @@ describe('Receiver Service', (): void => {
   })
 
   describe('get', () => {
-    describe('incoming payments', () => {
+    describe('local incoming payment', () => {
       test('resolves local incoming payment', async () => {
         const walletAddress = await createWalletAddress(deps, {
           mockServerPort: Config.openPaymentsPort
@@ -100,13 +101,13 @@ describe('Receiver Service', (): void => {
           incomingPayment: {
             id: incomingPayment.getUrl(walletAddress),
             walletAddress: walletAddress.url,
-            completed: incomingPayment.completed,
-            receivedAmount: incomingPayment.receivedAmount,
             incomingAmount: incomingPayment.incomingAmount,
-            metadata: incomingPayment.metadata || undefined,
+            receivedAmount: incomingPayment.receivedAmount,
+            completed: false,
+            metadata: undefined,
             expiresAt: incomingPayment.expiresAt,
-            updatedAt: new Date(incomingPayment.updatedAt),
-            createdAt: new Date(incomingPayment.createdAt),
+            createdAt: incomingPayment.createdAt,
+            updatedAt: incomingPayment.updatedAt,
             methods: [
               {
                 type: 'ilp',
@@ -114,400 +115,164 @@ describe('Receiver Service', (): void => {
                 sharedSecret: expect.any(String)
               }
             ]
-          }
+          },
+          isLocal: true
         })
       })
 
-      describe.each`
-        existingGrant | description
-        ${false}      | ${'no grant'}
-        ${true}       | ${'existing grant'}
-      `('remote ($description)', ({ existingGrant }): void => {
-        let walletAddress: OpenPaymentsWalletAddress
-        let incomingPayment: OpenPaymentsIncomingPaymentWithPaymentMethods
-        let publicIncomingPayment: PublicIncomingPayment
-        const authServer = faker.internet.url({ appendSlash: false })
-        const INCOMING_PAYMENT_PATH = 'incoming-payments'
-        const grantOptions = {
-          accessType: AccessType.IncomingPayment,
-          accessActions: [AccessAction.ReadAll],
-          accessToken: 'OZB8CDFONP219RP1LT0OS9M2PMHKUR64TB8N6BW7',
-          managementUrl: `${authServer}/token/8f69de01-5bf9-4603-91ed-eeca101081f1`
-        }
-        const grantRequest: GrantRequest = {
-          access_token: {
-            access: [
+      describe('getLocalIncomingPayment helper', () => {
+        test('returns undefined if could not parse id from url', async () => {
+          const incomingPaymentServiceSpy = jest
+            .spyOn(incomingPaymentService, 'get')
+            .mockResolvedValueOnce(undefined)
+
+          await expect(
+            getLocalIncomingPayment(
+              serviceDeps,
+              `https://example.com/incoming-payments`
+            )
+          ).resolves.toBeUndefined()
+          expect(incomingPaymentServiceSpy).not.toHaveBeenCalled()
+        })
+
+        test('returns undefined if no payment found', async () => {
+          jest
+            .spyOn(incomingPaymentService, 'get')
+            .mockResolvedValueOnce(undefined)
+
+          await expect(
+            getLocalIncomingPayment(
+              serviceDeps,
+              `https://example.com/incoming-payments/${uuid()}`
+            )
+          ).resolves.toBeUndefined()
+        })
+
+        test('throws error if wallet address does not exist on incoming payment', async () => {
+          jest.spyOn(incomingPaymentService, 'get').mockResolvedValueOnce({
+            id: uuid()
+          } as IncomingPayment)
+
+          await expect(
+            getLocalIncomingPayment(
+              serviceDeps,
+              `https://example.com/incoming-payments/${uuid()}`
+            )
+          ).rejects.toThrow(
+            'Wallet address does not exist for incoming payment'
+          )
+        })
+
+        test('throws error if stream credentials could not be generated', async () => {
+          jest.spyOn(incomingPaymentService, 'get').mockResolvedValueOnce({
+            id: uuid(),
+            walletAddress: {
+              id: 'https://example.com/wallet-address'
+            } as WalletAddress
+          } as IncomingPayment)
+
+          jest
+            .spyOn(streamCredentialsService, 'get')
+            .mockReturnValueOnce(undefined)
+
+          await expect(
+            getLocalIncomingPayment(
+              serviceDeps,
+              `https://example.com/incoming-payments/${uuid()}`
+            )
+          ).rejects.toThrow(
+            'Could not get stream credentials for local incoming payment'
+          )
+        })
+      })
+    })
+
+    describe('remote incoming payment', () => {
+      test('gets receiver from remote incoming payment', async () => {
+        const mockedIncomingPayment = mockIncomingPaymentWithPaymentMethods()
+
+        jest
+          .spyOn(incomingPaymentService, 'get')
+          .mockResolvedValueOnce(undefined)
+
+        jest
+          .spyOn(remoteIncomingPaymentService, 'get')
+          .mockResolvedValueOnce(mockedIncomingPayment)
+
+        await expect(
+          receiverService.get(mockedIncomingPayment.id)
+        ).resolves.toEqual({
+          assetCode: mockedIncomingPayment.receivedAmount.assetCode,
+          assetScale: mockedIncomingPayment.receivedAmount.assetScale,
+          ilpAddress: mockedIncomingPayment.methods[0].ilpAddress,
+          sharedSecret: expect.any(Buffer),
+          incomingPayment: {
+            id: mockedIncomingPayment.id,
+            walletAddress: mockedIncomingPayment.walletAddress,
+            incomingAmount: mockedIncomingPayment.incomingAmount
+              ? parseAmount(mockedIncomingPayment.incomingAmount)
+              : undefined,
+            receivedAmount: parseAmount(mockedIncomingPayment.receivedAmount),
+            completed: mockedIncomingPayment.completed,
+            metadata: mockedIncomingPayment.metadata,
+            expiresAt: mockedIncomingPayment.expiresAt
+              ? new Date(mockedIncomingPayment.expiresAt)
+              : undefined,
+            createdAt: new Date(mockedIncomingPayment.createdAt),
+            updatedAt: new Date(mockedIncomingPayment.updatedAt),
+            methods: [
               {
-                type: grantOptions.accessType,
-                actions: grantOptions.accessActions
+                type: 'ilp',
+                ilpAddress: expect.any(String),
+                sharedSecret: expect.any(String)
               }
             ]
           },
-          interact: {
-            start: ['redirect']
-          }
-        } as GrantRequest
-        const grant: OpenPaymentsGrant = {
-          access_token: {
-            value: grantOptions.accessToken,
-            manage: grantOptions.managementUrl,
-            expires_in: 3600,
-            access: grantRequest.access_token.access
-          },
-          continue: {
-            access_token: {
-              value: '33OMUKMKSKU80UPRY5NM'
-            },
-            uri: `${authServer}/continue/4CF492MLVMSW9MKMXKHQ`,
-            wait: 30
-          }
-        }
-        const newToken = {
-          access_token: {
-            value: 'T0OS9M2PMHKUR64TB8N6BW7OZB8CDFONP219RP1L',
-            manage: `${authServer}/token/d3f288c2-0b41-42f0-9b2f-66ff4bf45a7a`,
-            expires_in: 3600,
-            access: grantRequest.access_token.access
-          }
-        }
+          isLocal: false
+        })
+      })
 
-        beforeEach(async (): Promise<void> => {
-          walletAddress = mockWalletAddress({
-            authServer
-          })
-          incomingPayment = mockIncomingPaymentWithPaymentMethods({
-            id: `${walletAddress.id}/incoming-payments/${uuid()}`,
-            walletAddress: walletAddress.id
-          })
-          publicIncomingPayment = mockPublicIncomingPayment({
-            authServer,
-            receivedAmount: incomingPayment.receivedAmount
-          })
-          if (existingGrant) {
-            await expect(
-              grantService.create({
-                ...grantOptions,
-                authServer
-              })
-            ).resolves.toMatchObject({
-              accessType: grantOptions.accessType,
-              accessActions: grantOptions.accessActions,
-              accessToken: grantOptions.accessToken,
-              managementId: '8f69de01-5bf9-4603-91ed-eeca101081f1'
-            })
-          }
-          jest
-            .spyOn(walletAddressService, 'getByUrl')
-            .mockResolvedValueOnce(undefined)
+      test('returns undefined if could not get remote incoming payment', async () => {
+        const mockedIncomingPayment = mockIncomingPaymentWithPaymentMethods()
+
+        const localIncomingPaymentServiceGetSpy = jest
+          .spyOn(incomingPaymentService, 'get')
+          .mockResolvedValueOnce(undefined)
+
+        const remoteIncomingPaymentServiceGetSpy = jest
+          .spyOn(remoteIncomingPaymentService, 'get')
+          .mockResolvedValueOnce(RemoteIncomingPaymentError.InvalidGrant)
+
+        await expect(
+          receiverService.get(mockedIncomingPayment.id)
+        ).resolves.toBeUndefined()
+        expect(localIncomingPaymentServiceGetSpy).toHaveBeenCalledTimes(1)
+        expect(remoteIncomingPaymentServiceGetSpy).toHaveBeenCalledTimes(1)
+      })
+
+      test('returns undefined if error getting receiver from remote incoming payment', async () => {
+        const mockedIncomingPayment = mockIncomingPaymentWithPaymentMethods({
+          completed: true // cannot get receiver with a completed incoming payment
         })
 
-        afterEach(() => {
-          jest.restoreAllMocks()
-        })
+        const localIncomingPaymentServiceGetSpy = jest
+          .spyOn(incomingPaymentService, 'get')
+          .mockResolvedValueOnce(undefined)
 
-        test.each`
-          rotate   | description
-          ${false} | ${''}
-          ${true}  | ${'- after rotating access token'}
-        `('resolves incoming payment $description', async ({ rotate }) => {
-          const clientRequestGrantSpy = jest
-            .spyOn(openPaymentsClient.grant, 'request')
-            .mockResolvedValueOnce(grant)
+        const remoteIncomingPaymentServiceGetSpy = jest
+          .spyOn(remoteIncomingPaymentService, 'get')
+          .mockResolvedValueOnce(mockedIncomingPayment)
 
-          const clientGetPublicIncomingPaymentSpy = jest
-            .spyOn(openPaymentsClient.incomingPayment, 'getPublic')
-            .mockResolvedValueOnce(publicIncomingPayment)
-
-          const clientGetIncomingPaymentSpy = jest
-            .spyOn(openPaymentsClient.incomingPayment, 'get')
-            .mockResolvedValueOnce(incomingPayment)
-
-          const clientRequestRotateTokenSpy = jest
-            .spyOn(openPaymentsClient.token, 'rotate')
-            .mockResolvedValueOnce(newToken)
-
-          if (existingGrant && rotate) {
-            const fetchedGrant = await grantService.get({
-              ...grantOptions,
-              authServer
-            })
-            await fetchedGrant?.$query(knex).patch({ expiresAt: new Date() })
-          }
-          await expect(
-            receiverService.get(incomingPayment.id)
-          ).resolves.toEqual({
-            assetCode: incomingPayment.receivedAmount.assetCode,
-            assetScale: incomingPayment.receivedAmount.assetScale,
-            ilpAddress: expect.any(String),
-            sharedSecret: expect.any(Buffer),
-            incomingPayment: {
-              id: incomingPayment.id,
-              walletAddress: incomingPayment.walletAddress,
-              updatedAt: new Date(incomingPayment.updatedAt),
-              createdAt: new Date(incomingPayment.createdAt),
-              completed: incomingPayment.completed,
-              receivedAmount:
-                incomingPayment.receivedAmount &&
-                parseAmount(incomingPayment.receivedAmount),
-              incomingAmount:
-                incomingPayment.incomingAmount &&
-                parseAmount(incomingPayment.incomingAmount),
-              expiresAt: incomingPayment.expiresAt,
-              methods: [
-                {
-                  type: 'ilp',
-                  ilpAddress: expect.any(String),
-                  sharedSecret: expect.any(String)
-                }
-              ]
-            }
-          })
-          if (!existingGrant) {
-            expect(clientRequestGrantSpy).toHaveBeenCalledWith(
-              { url: authServer },
-              grantRequest
-            )
-          }
-          expect(clientGetPublicIncomingPaymentSpy).toHaveBeenCalledWith({
-            url: incomingPayment.id
-          })
-          expect(clientGetIncomingPaymentSpy).toHaveBeenCalledWith({
-            url: incomingPayment.id,
-            accessToken:
-              existingGrant && rotate
-                ? newToken.access_token.value
-                : grantOptions.accessToken
-          })
-          if (existingGrant && rotate) {
-            expect(clientRequestRotateTokenSpy).toHaveBeenCalledWith({
-              url: grant.access_token.manage,
-              accessToken: grantOptions.accessToken
-            })
-          }
-        })
-
-        test('returns undefined for invalid remote public incoming payment', async (): Promise<void> => {
-          const clientGetPublicIncomingPaymentSpy = jest
-            .spyOn(openPaymentsClient.incomingPayment, 'getPublic')
-            .mockRejectedValueOnce({ status: 404 })
-
-          await expect(
-            receiverService.get(
-              `${
-                new URL(incomingPayment.id).origin
-              }/${INCOMING_PAYMENT_PATH}/${uuid()}`
-            )
-          ).resolves.toBeUndefined()
-          expect(clientGetPublicIncomingPaymentSpy).toHaveBeenCalledTimes(1)
-        })
-
-        if (existingGrant) {
-          test('returns undefined for invalid remote auth server', async (): Promise<void> => {
-            const grant = await grantService.get({
-              ...grantOptions,
-              authServer
-            })
-            assert.ok(grant)
-            const getExistingGrantSpy = jest
-              .spyOn(grantService, 'get')
-              .mockResolvedValueOnce({
-                ...grant,
-                authServer: undefined,
-                expired: true
-              } as Grant)
-            jest
-              .spyOn(openPaymentsClient.incomingPayment, 'getPublic')
-              .mockResolvedValueOnce(publicIncomingPayment)
-            const clientRequestGrantSpy = jest.spyOn(
-              openPaymentsClient.grant,
-              'request'
-            )
-
-            await expect(
-              receiverService.get(incomingPayment.id)
-            ).resolves.toBeUndefined()
-            expect(getExistingGrantSpy).toHaveBeenCalled()
-            expect(clientRequestGrantSpy).not.toHaveBeenCalled()
-          })
-          test('returns undefined for expired grant that cannot be rotated', async (): Promise<void> => {
-            const grant = await grantService.get({
-              ...grantOptions,
-              authServer
-            })
-            await grant?.$query(knex).patch({ expiresAt: new Date() })
-            jest
-              .spyOn(openPaymentsClient.incomingPayment, 'getPublic')
-              .mockResolvedValueOnce(publicIncomingPayment)
-            const clientRequestGrantSpy = jest.spyOn(
-              openPaymentsClient.grant,
-              'request'
-            )
-
-            await expect(
-              receiverService.get(incomingPayment.id)
-            ).resolves.toBeUndefined()
-            expect(clientRequestGrantSpy).not.toHaveBeenCalled()
-          })
-        } else {
-          test('returns undefined for invalid grant', async (): Promise<void> => {
-            jest
-              .spyOn(openPaymentsClient.incomingPayment, 'getPublic')
-              .mockResolvedValueOnce(publicIncomingPayment)
-            const clientRequestGrantSpy = jest
-              .spyOn(openPaymentsClient.grant, 'request')
-              .mockRejectedValueOnce(new Error('Could not request grant'))
-
-            await expect(
-              receiverService.get(incomingPayment.id)
-            ).resolves.toBeUndefined()
-            expect(clientRequestGrantSpy).toHaveBeenCalledWith(
-              { url: authServer },
-              grantRequest
-            )
-          })
-
-          test('returns undefined for interactive grant', async (): Promise<void> => {
-            jest
-              .spyOn(openPaymentsClient.incomingPayment, 'getPublic')
-              .mockResolvedValueOnce(publicIncomingPayment)
-            const clientRequestGrantSpy = jest
-              .spyOn(openPaymentsClient.grant, 'request')
-              .mockResolvedValueOnce({
-                continue: grant.continue,
-                interact: {
-                  redirect: `${authServer}/4CF492MLVMSW9MKMXKHQ`,
-                  finish: 'MBDOFXG4Y5CVJCX821LH'
-                }
-              })
-
-            await expect(
-              receiverService.get(incomingPayment.id)
-            ).resolves.toBeUndefined()
-            expect(clientRequestGrantSpy).toHaveBeenCalledWith(
-              { url: authServer },
-              grantRequest
-            )
-          })
-        }
-
-        test('returns undefined when fetching remote incoming payment throws', async (): Promise<void> => {
-          jest
-            .spyOn(openPaymentsClient.incomingPayment, 'getPublic')
-            .mockResolvedValueOnce(publicIncomingPayment)
-          jest
-            .spyOn(openPaymentsClient.grant, 'request')
-            .mockResolvedValueOnce(grant)
-          const clientGetIncomingPaymentSpy = jest
-            .spyOn(openPaymentsClient.incomingPayment, 'get')
-            .mockRejectedValueOnce(new Error('Could not get incoming payment'))
-
-          await expect(
-            receiverService.get(incomingPayment.id)
-          ).resolves.toBeUndefined()
-          expect(clientGetIncomingPaymentSpy).toHaveBeenCalledWith({
-            url: incomingPayment.id,
-            accessToken: expect.any(String)
-          })
-        })
+        await expect(
+          receiverService.get(mockedIncomingPayment.id)
+        ).resolves.toBeUndefined()
+        expect(localIncomingPaymentServiceGetSpy).toHaveBeenCalledTimes(1)
+        expect(remoteIncomingPaymentServiceGetSpy).toHaveBeenCalledTimes(1)
       })
     })
   })
 
   describe('create', () => {
-    describe('remote incoming payment', () => {
-      const walletAddress = mockWalletAddress({
-        assetCode: 'USD',
-        assetScale: 2
-      })
-
-      const amount: Amount = {
-        value: BigInt(123),
-        assetCode: 'USD',
-        assetScale: 2
-      }
-
-      test.each`
-        incomingAmount | expiresAt                        | metadata
-        ${undefined}   | ${undefined}                     | ${undefined}
-        ${amount}      | ${new Date(Date.now() + 30_000)} | ${{ description: 'Test incoming payment', externalRef: '#123' }}
-      `(
-        'creates receiver from remote incoming payment ($#)',
-        async ({ metadata, expiresAt, incomingAmount }): Promise<void> => {
-          const incomingPayment = mockIncomingPaymentWithPaymentMethods({
-            metadata,
-            expiresAt,
-            incomingAmount
-          })
-          const remoteIncomingPaymentServiceSpy = jest
-            .spyOn(remoteIncomingPaymentService, 'create')
-            .mockResolvedValueOnce(incomingPayment)
-
-          const localIncomingPaymentCreateSpy = jest.spyOn(
-            incomingPaymentService,
-            'create'
-          )
-
-          const receiver = await receiverService.create({
-            walletAddressUrl: walletAddress.id,
-            incomingAmount,
-            expiresAt,
-            metadata
-          })
-
-          expect(receiver).toEqual({
-            assetCode: incomingPayment.receivedAmount.assetCode,
-            assetScale: incomingPayment.receivedAmount.assetScale,
-            ilpAddress: incomingPayment.methods[0].ilpAddress,
-            sharedSecret: expect.any(Buffer),
-            incomingPayment: {
-              id: incomingPayment.id,
-              walletAddress: incomingPayment.walletAddress,
-              completed: incomingPayment.completed,
-              receivedAmount: parseAmount(incomingPayment.receivedAmount),
-              incomingAmount:
-                incomingPayment.incomingAmount &&
-                parseAmount(incomingPayment.incomingAmount),
-              metadata: incomingPayment.metadata || undefined,
-              updatedAt: new Date(incomingPayment.updatedAt),
-              createdAt: new Date(incomingPayment.createdAt),
-              expiresAt:
-                incomingPayment.expiresAt &&
-                new Date(incomingPayment.expiresAt),
-              methods: [
-                {
-                  type: 'ilp',
-                  ilpAddress: incomingPayment.methods[0].ilpAddress,
-                  sharedSecret: expect.any(String)
-                }
-              ]
-            }
-          })
-
-          expect(remoteIncomingPaymentServiceSpy).toHaveBeenCalledWith({
-            walletAddressUrl: walletAddress.id,
-            incomingAmount,
-            expiresAt,
-            metadata
-          })
-          expect(localIncomingPaymentCreateSpy).not.toHaveBeenCalled()
-        }
-      )
-
-      test('returns error if could not create remote incoming payment', async (): Promise<void> => {
-        jest
-          .spyOn(remoteIncomingPaymentService, 'create')
-          .mockResolvedValueOnce(
-            RemoteIncomingPaymentError.UnknownWalletAddress
-          )
-
-        await expect(
-          receiverService.create({
-            walletAddressUrl: walletAddress.id
-          })
-        ).resolves.toEqual(ReceiverError.UnknownWalletAddress)
-      })
-    })
-
     describe('local incoming payment', () => {
       let walletAddress: MockWalletAddress
       const amount: Amount = {
@@ -573,7 +338,8 @@ describe('Receiver Service', (): void => {
                   sharedSecret: expect.any(String)
                 }
               ]
-            }
+            },
+            isLocal: true
           })
 
           expect(incomingPaymentCreateSpy).toHaveBeenCalledWith({
@@ -598,31 +364,137 @@ describe('Receiver Service', (): void => {
         ).resolves.toEqual(ReceiverError.InvalidAmount)
       })
 
-      test.each([IncomingPaymentState.Completed, IncomingPaymentState.Expired])(
-        'throws if local incoming payment state is %s',
-        async (paymentState): Promise<void> => {
-          const incomingPayment = await createIncomingPayment(deps, {
-            walletAddressId: walletAddress.id,
-            incomingAmount: {
-              value: BigInt(5),
-              assetCode: walletAddress.asset.code,
-              assetScale: walletAddress.asset.scale
-            }
-          })
-          incomingPayment.state = paymentState
-          jest
-            .spyOn(incomingPaymentService, 'create')
-            .mockResolvedValueOnce(incomingPayment)
+      test('throws error if stream credentials could not be generated', async () => {
+        jest
+          .spyOn(streamCredentialsService, 'get')
+          .mockReturnValueOnce(undefined)
 
-          await expect(
-            receiverService.create({
-              walletAddressUrl: walletAddress.url
-            })
-          ).rejects.toThrow(
-            'Could not get stream credentials for local incoming payment'
+        await expect(
+          receiverService.create({
+            walletAddressUrl: walletAddress.url
+          })
+        ).rejects.toThrow(
+          'Could not get stream credentials for local incoming payment'
+        )
+      })
+    })
+
+    describe('remote incoming payment', () => {
+      const walletAddress = mockWalletAddress({
+        assetCode: 'USD',
+        assetScale: 2
+      })
+
+      const amount: Amount = {
+        value: BigInt(123),
+        assetCode: 'USD',
+        assetScale: 2
+      }
+
+      test.each`
+        incomingAmount | expiresAt                        | metadata
+        ${undefined}   | ${undefined}                     | ${undefined}
+        ${amount}      | ${new Date(Date.now() + 30_000)} | ${{ description: 'Test incoming payment', externalRef: '#123' }}
+      `(
+        'creates receiver from remote incoming payment ($#)',
+        async ({ metadata, expiresAt, incomingAmount }): Promise<void> => {
+          jest
+            .spyOn(walletAddressService, 'getByUrl')
+            .mockResolvedValueOnce(undefined)
+          const mockedIncomingPayment = mockIncomingPaymentWithPaymentMethods({
+            metadata,
+            expiresAt,
+            incomingAmount
+          })
+          const remoteIncomingPaymentServiceSpy = jest
+            .spyOn(remoteIncomingPaymentService, 'create')
+            .mockResolvedValueOnce(mockedIncomingPayment)
+
+          const localIncomingPaymentCreateSpy = jest.spyOn(
+            incomingPaymentService,
+            'create'
           )
+
+          const receiver = await receiverService.create({
+            walletAddressUrl: walletAddress.id,
+            incomingAmount,
+            expiresAt,
+            metadata
+          })
+
+          expect(receiver).toEqual({
+            assetCode: mockedIncomingPayment.receivedAmount.assetCode,
+            assetScale: mockedIncomingPayment.receivedAmount.assetScale,
+            ilpAddress: mockedIncomingPayment.methods[0].ilpAddress,
+            sharedSecret: expect.any(Buffer),
+            incomingPayment: {
+              id: mockedIncomingPayment.id,
+              walletAddress: mockedIncomingPayment.walletAddress,
+              incomingAmount: mockedIncomingPayment.incomingAmount
+                ? parseAmount(mockedIncomingPayment.incomingAmount)
+                : undefined,
+              receivedAmount: parseAmount(mockedIncomingPayment.receivedAmount),
+              completed: mockedIncomingPayment.completed,
+              metadata: mockedIncomingPayment.metadata,
+              expiresAt: mockedIncomingPayment.expiresAt
+                ? new Date(mockedIncomingPayment.expiresAt)
+                : undefined,
+              createdAt: new Date(mockedIncomingPayment.createdAt),
+              updatedAt: new Date(mockedIncomingPayment.updatedAt),
+              methods: [
+                {
+                  type: 'ilp',
+                  ilpAddress: expect.any(String),
+                  sharedSecret: expect.any(String)
+                }
+              ]
+            },
+            isLocal: false
+          })
+          expect(remoteIncomingPaymentServiceSpy).toHaveBeenCalledWith({
+            walletAddressUrl: walletAddress.id,
+            incomingAmount,
+            expiresAt,
+            metadata
+          })
+          expect(localIncomingPaymentCreateSpy).not.toHaveBeenCalled()
         }
       )
+
+      test('returns error if could not create remote incoming payment', async (): Promise<void> => {
+        jest
+          .spyOn(remoteIncomingPaymentService, 'create')
+          .mockResolvedValueOnce(
+            RemoteIncomingPaymentError.UnknownWalletAddress
+          )
+
+        await expect(
+          receiverService.create({
+            walletAddressUrl: walletAddress.id
+          })
+        ).resolves.toEqual(ReceiverError.UnknownWalletAddress)
+      })
+
+      test('throws if error creating receiver from remote incoming payment', async () => {
+        const mockedIncomingPayment = mockIncomingPaymentWithPaymentMethods({
+          completed: true // cannot get receiver with a completed incoming payment
+        })
+
+        jest
+          .spyOn(walletAddressService, 'getByUrl')
+          .mockResolvedValueOnce(undefined)
+
+        const remoteIncomingPaymentServiceCreateSpy = jest
+          .spyOn(remoteIncomingPaymentService, 'create')
+          .mockResolvedValueOnce(mockedIncomingPayment)
+
+        await expect(
+          receiverService.create({
+            walletAddressUrl: mockedIncomingPayment.walletAddress
+          })
+        ).rejects.toThrow('Could not create receiver from incoming payment')
+        expect(remoteIncomingPaymentServiceCreateSpy).toHaveBeenCalledTimes(1)
+      })
     })
   })
 })

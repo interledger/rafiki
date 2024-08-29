@@ -6,6 +6,7 @@ import { initIocContainer } from '../'
 import { AppServices } from '../app'
 import { CacheDataStore } from '../middleware/cache/data-stores'
 import { mockRatesApi } from '../tests/rates'
+import { AxiosInstance } from 'axios'
 
 const nock = (global as unknown as { nock: typeof import('nock') }).nock
 
@@ -214,23 +215,27 @@ describe('Rates service', function () {
       expect(apiRequestCount).toBe(2)
     })
 
-    it('prefetches when the cached request is old', async () => {
+    it('returns new rates after cache expires', async () => {
       await expect(service.rates('USD')).resolves.toEqual(usdRates)
-      jest.advanceTimersByTime(exchangeRatesLifetime * 0.5 + 1)
-      // ... cache isn't expired yet, but it will be soon
+      jest.advanceTimersByTime(exchangeRatesLifetime + 1)
       await expect(service.rates('USD')).resolves.toEqual(usdRates)
-      expect(apiRequestCount).toBe(1)
-
-      // Invalidate the cache.
-      jest.advanceTimersByTime(exchangeRatesLifetime * 0.5 + 1)
-      await expect(service.rates('USD')).resolves.toEqual(usdRates)
-      // The prefetch response is promoted to the cache.
       expect(apiRequestCount).toBe(2)
     })
 
-    it('cannot use an expired cache', async () => {
-      await expect(service.rates('USD')).resolves.toEqual(usdRates)
-      jest.advanceTimersByTime(exchangeRatesLifetime + 1)
+    it('returns rates on second request (first one was error)', async () => {
+      jest
+        .spyOn(
+          (service as RatesService & { axios: AxiosInstance }).axios,
+          'get'
+        )
+        .mockImplementationOnce(() => {
+          apiRequestCount++
+          throw new Error()
+        })
+
+      await expect(service.rates('USD')).rejects.toThrow(
+        'Could not fetch rates'
+      )
       await expect(service.rates('USD')).resolves.toEqual(usdRates)
       expect(apiRequestCount).toBe(2)
     })

@@ -29,6 +29,7 @@ import {
 } from '../../open_payments/payment/incoming/errors'
 import { Amount, serializeAmount } from '../../open_payments/amount'
 import { GraphQLErrorCode } from '../errors'
+import { updateIncomingPayment } from '../../tests/updateIncomingPayment'
 
 describe('Incoming Payment Resolver', (): void => {
   let deps: IocContract<AppServices>
@@ -38,6 +39,7 @@ describe('Incoming Payment Resolver', (): void => {
   let incomingPaymentService: IncomingPaymentService
   let accountingService: AccountingService
   let asset: Asset
+  let incomingPayment: IncomingPaymentResponse
 
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer(Config)
@@ -439,4 +441,192 @@ describe('Incoming Payment Resolver', (): void => {
       }
     })
   })
+
+  describe('Mutation.updateIncomingPayment', (): void => {
+    let amount: Amount
+    let expiresAt:Date
+
+    beforeEach((): void => {
+      amount = {
+        value: BigInt(56),
+        assetCode: asset.code,
+        assetScale: asset.scale
+      }
+      expiresAt = new Date(Date.now() + 30_000)
+      client = 'incoming-payment-client-update'
+    })
+    
+
+    test.each`
+      id                                                |  metadata
+      ${{incomingPayment}}                              |${{ description: 'rent', externalRef: '202201' }}
+      ${undefined}                                      | ${new Date(Date.now() + 30_000)}
+      ${undefined}                                      | ${undefined}
+    `(
+      'Successfully updates an incoming payment with $metadata',
+      async ({id, metadata}): Promise<void> => {
+        const incomingAmount = amount ? amount : undefined
+        const { id: walletAddressId } = await createWalletAddress(deps, {
+          assetId: asset.id
+        })
+        const payment = await createIncomingPayment(deps, {
+          walletAddressId,
+          client,
+          metadata,
+          expiresAt,
+          incomingAmount
+        })
+        console.log(payment)
+        const input = {
+          id:payment.id,
+          metadata
+        }
+        const paymentUpdated = await updateIncomingPayment(deps,input)
+
+       
+        const createSpy = jest
+          .spyOn(incomingPaymentService, 'update')
+          .mockResolvedValueOnce(paymentUpdated)
+
+
+        const query = await appContainer.apolloClient
+          .query({
+            query: gql`
+              mutation UpdateIncomingPayment(
+                $input: UpdateIncomingPaymentInput!
+              ) {
+                updateIncomingPayment(input: $input) {
+                  payment {
+                    id
+                    metadata
+                  }
+                }
+              }
+          `,
+            variables: { input }
+          })
+          .then(
+            (query): IncomingPaymentResponse =>
+              query.data?.createIncomingPayment
+          )
+
+        expect(createSpy).toHaveBeenCalledWith(input)
+        expect(query).toEqual({
+          __typename: 'IncomingPaymentResponse',
+          payment: {
+            __typename: 'IncomingPayment',
+            id: payment.id,
+            walletAddressId,
+            state: SchemaPaymentState.Pending,
+            expiresAt:
+              expiresAt?.toISOString() || payment.expiresAt.toISOString(),
+            incomingAmount:
+              incomingAmount === undefined
+                ? null
+                : {
+                    __typename: 'Amount',
+                    ...serializeAmount(incomingAmount)
+                  },
+            receivedAmount: {
+              __typename: 'Amount',
+              ...serializeAmount(payment.receivedAmount)
+            },
+            metadata: metadata || null,
+            createdAt: payment.createdAt.toISOString()
+          }
+        })
+      }
+    )
+
+    test('Errors when unknown wallet address', async (): Promise<void> => {
+      const createSpy = jest
+        .spyOn(incomingPaymentService, 'create')
+        .mockResolvedValueOnce(IncomingPaymentError.UnknownWalletAddress)
+
+      const input = {
+        walletAddressId: uuid()
+      }
+
+      expect.assertions(3)
+      try {
+        await appContainer.apolloClient
+          .query({
+            query: gql`
+               mutation UpdateIncomingPayment(
+               $input: UpdateIncomingPaymentInput!) {
+                  updateIncomingPayment(input: $input
+                ) {
+                  payment {
+                    id
+                    metadata
+                  }
+                }
+              }
+            `,
+            variables: { input }
+          })
+          .then(
+            (query): IncomingPaymentResponse =>
+              query.data?.createIncomingPayment
+          )
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApolloError)
+        expect((error as ApolloError).graphQLErrors).toContainEqual(
+          expect.objectContaining({
+            message: errorToMessage[IncomingPaymentError.UnknownWalletAddress],
+            extensions: expect.objectContaining({
+              code: errorToCode[IncomingPaymentError.UnknownWalletAddress]
+            })
+          })
+        )
+      }
+      expect(createSpy).toHaveBeenCalledWith(input)
+    })
+
+    test('Internal server error', async (): Promise<void> => {
+      const createSpy = jest
+        .spyOn(incomingPaymentService, 'create')
+        .mockRejectedValueOnce(new Error('unexpected'))
+
+      const input = {
+        walletAddressId: uuid()
+      }
+
+      expect.assertions(3)
+      try {
+        await appContainer.apolloClient
+          .query({
+            query: gql`
+               mutation UpdateIncomingPayment(
+                $input: UpdateIncomingPaymentInput!
+               ) {
+                updateIncomingPayment(input: $input) {
+                  payment {
+                    id
+                    metadata
+                  }
+                }
+              }
+            `,
+            variables: { input }
+          })
+          .then(
+            (query): IncomingPaymentResponse =>
+              query.data?.createIncomingPayment
+          )
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApolloError)
+        expect((error as ApolloError).graphQLErrors).toContainEqual(
+          expect.objectContaining({
+            message: 'unexpected',
+            extensions: expect.objectContaining({
+              code: GraphQLErrorCode.InternalServerError
+            })
+          })
+        )
+      }
+      expect(createSpy).toHaveBeenCalledWith(input)
+    })
+  })
+
 })

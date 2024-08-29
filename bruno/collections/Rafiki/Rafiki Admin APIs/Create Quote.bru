@@ -1,7 +1,7 @@
 meta {
   name: Create Quote
   type: graphql
-  seq: 29
+  seq: 31
 }
 
 post {
@@ -16,11 +16,7 @@ body:graphql {
       quote {
         createdAt
         expiresAt
-        highEstimatedExchangeRate
         id
-        lowEstimatedExchangeRate
-        maxPacketAmount
-        minExchangeRate
         walletAddressId
         receiveAmount {
           assetCode
@@ -87,7 +83,7 @@ script:pre-request {
 
 script:post-response {
   const body = res.getBody();
-
+  
   if (body?.data) {
     bru.setEnvVar("quoteId", body.data.createQuote.quote.id);
   }

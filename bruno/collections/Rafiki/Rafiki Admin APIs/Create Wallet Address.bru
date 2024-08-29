@@ -1,7 +1,7 @@
 meta {
   name: Create Wallet Address
   type: graphql
-  seq: 18
+  seq: 19
 }
 
 post {
@@ -61,7 +61,7 @@ script:pre-request {
 
 script:post-response {
   const body = res.getBody();
-
+  
   if (body?.data) {
     bru.setEnvVar("walletAddressId", body.data.createWalletAddress.walletAddress.id);
     bru.setEnvVar("walletAddressUrl", body.data.createWalletAddress.walletAddress.url);

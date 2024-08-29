@@ -1,0 +1,31 @@
+meta {
+  name: Get Outgoing Payments
+  type: graphql
+  seq: 36
+}
+
+post {
+  url: {{RafikiGraphqlHost}}/graphql
+  body: graphql
+  auth: none
+}
+
+body:graphql {
+  query OutgoingPayments($filter: OutgoingPaymentFilter) {
+    outgoingPayments(filter: $filter) {
+      edges {
+        node {
+          id
+          client
+        }
+        cursor
+      }
+    }
+  }
+}
+
+script:pre-request {
+  const scripts = require('./scripts');
+  
+  scripts.addApiSignatureHeader();
+}

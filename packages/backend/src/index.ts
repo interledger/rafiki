@@ -256,6 +256,7 @@ export function initIocContainer(
   container.singleton('grantService', async (deps) => {
     return await createGrantService({
       authServerService: await deps.use('authServerService'),
+      openPaymentsClient: await deps.use('openPaymentsClient'),
       logger: await deps.use('logger'),
       knex: await deps.use('knex')
     })
@@ -335,19 +336,14 @@ export function initIocContainer(
     })
   })
   container.singleton('receiverService', async (deps) => {
-    const config = await deps.use('config')
     return await createReceiverService({
       logger: await deps.use('logger'),
       streamCredentialsService: await deps.use('streamCredentialsService'),
-      grantService: await deps.use('grantService'),
       incomingPaymentService: await deps.use('incomingPaymentService'),
-      openPaymentsUrl: config.openPaymentsUrl,
       walletAddressService: await deps.use('walletAddressService'),
-      openPaymentsClient: await deps.use('openPaymentsClient'),
       remoteIncomingPaymentService: await deps.use(
         'remoteIncomingPaymentService'
-      ),
-      config: await deps.use('config')
+      )
     })
   })
 

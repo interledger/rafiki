@@ -1,7 +1,7 @@
 meta {
   name: Get Quote
   type: graphql
-  seq: 30
+  seq: 32
 }
 
 post {
@@ -14,13 +14,10 @@ body:graphql {
   query GetQuote($id: String!) {
       quote(id: $id) {
           createdAt
-          highEstimatedExchangeRate
           expiresAt
           id
-          lowEstimatedExchangeRate
-          maxPacketAmount
-          minExchangeRate
           walletAddressId
+          estimatedExchangeRate
           receiveAmount {
               assetCode
               assetScale
