@@ -79,12 +79,9 @@ export class WalletAddress
           'totalEventsAmount',
           totalReceived - this.asset.withdrawalThreshold
         ])
-      if (!fetchAssetService) {
-        //TODO console.log('JASON: lets do the query please: ', fetchAssetService)
+      if (!fetchAssetService)
         walletAddressQuery = walletAddressQuery.withGraphFetched('asset')
-      } else {
-        //TODO console.log('JASON: No Need!: ', fetchAssetService)
-      }
+
       const walletAddress = await walletAddressQuery
       if (fetchAssetService)
         await (await fetchAssetService()).setOn(walletAddress)

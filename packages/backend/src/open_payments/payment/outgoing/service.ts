@@ -548,6 +548,7 @@ async function validateGrantAndAddSpentAmountsToPayment(
     .andWhereNot({
       id: payment.id
     })
+    .forShare()
     .withGraphFetched('[quote]')
   if (grantPayments.length === 0) {
     return true
