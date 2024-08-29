@@ -215,10 +215,8 @@ async function processNextIncomingPayment(
       .where('processAt', '<=', now)
       .withGraphFetched('[walletAddress]')
 
-    if (incomingPayments && incomingPayments.length) {
-      for (const incomingPayment of incomingPayments) {
-        await deps_.assetService.setOn(incomingPayment)
-      }
+    for (const incomingPayment of incomingPayments) {
+      await deps_.assetService.setOn(incomingPayment)
     }
 
     const incomingPayment = incomingPayments[0]
@@ -321,11 +319,8 @@ async function getWalletAddressPage(
   const page = await IncomingPayment.query(deps.knex)
     .list(options)
     .withGraphFetched('[walletAddress]')
-    .withGraphFetched('[walletAddress]')
-  if (page && page.length) {
-    for (const incomingPayment of page) {
-      await deps.assetService.setOn(incomingPayment)
-    }
+  for (const incomingPayment of page) {
+    await deps.assetService.setOn(incomingPayment)
   }
 
   const amounts = await deps.accountingService.getAccountsTotalReceived(

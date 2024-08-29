@@ -41,6 +41,7 @@ export interface LiquidityAccount {
 export interface OnCreditOptions {
   totalReceived: bigint
   withdrawalThrottleDelay?: number
+  // TODO: make this required. should only need updating the tests to do this.
   fetchAssetService?: () => Promise<AssetService>
 }
 

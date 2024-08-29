@@ -379,8 +379,8 @@ async function getPeersPage(
   sortOrder?: SortOrder
 ): Promise<Peer[]> {
   const peers = await Peer.query(deps.knex).getPage(pagination, sortOrder)
-  if (peers && peers.length) {
-    for (const peer of peers) await deps.assetService.setOn(peer)
+  for (const peer of peers) {
+    await deps.assetService.setOn(peer)
   }
   return peers
 }

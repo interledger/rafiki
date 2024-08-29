@@ -315,10 +315,10 @@ async function getWalletAddressPage(
     pagination,
     sortOrder
   )
-  if (walletAddresses && walletAddresses.length) {
-    for (const walletAddress of walletAddresses)
-      await deps.assetService.setOn(walletAddress)
+  for (const walletAddress of walletAddresses) {
+    await deps.assetService.setOn(walletAddress)
   }
+
   return walletAddresses
 }
 
@@ -353,9 +353,9 @@ async function processNextWalletAddresses(
       // If a wallet address is locked, don't wait — just come back for it later.
       .skipLocked()
       .where('processAt', '<=', now)
-    if (walletAddresses && walletAddresses.length) {
-      for (const walletAddress of walletAddresses)
-        await deps_.assetService.setOn(walletAddress)
+
+    for (const walletAddress of walletAddresses) {
+      await deps_.assetService.setOn(walletAddress)
     }
 
     const deps = {
