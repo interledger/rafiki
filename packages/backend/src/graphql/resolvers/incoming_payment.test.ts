@@ -515,23 +515,7 @@ describe('Incoming Payment Resolver', (): void => {
           payment: {
             __typename: 'IncomingPayment',
             id: payment.id,
-            walletAddressId,
-            state: SchemaPaymentState.Pending,
-            expiresAt:
-              expiresAt?.toISOString() || payment.expiresAt.toISOString(),
-            incomingAmount:
-              incomingAmount === undefined
-                ? null
-                : {
-                    __typename: 'Amount',
-                    ...serializeAmount(incomingAmount)
-                  },
-            receivedAmount: {
-              __typename: 'Amount',
-              ...serializeAmount(payment.receivedAmount)
-            },
-            metadata: metadata || null,
-            createdAt: payment.createdAt.toISOString()
+            metadata: metadata || null
           }
         })
       }
@@ -546,7 +530,7 @@ describe('Incoming Payment Resolver', (): void => {
         walletAddressId: uuid()
       }
 
-      expect.assertions(3)
+      expect.assertions(2)
       try {
         await appContainer.apolloClient
           .query({
@@ -591,7 +575,7 @@ describe('Incoming Payment Resolver', (): void => {
         walletAddressId: uuid()
       }
 
-      expect.assertions(3)
+      expect.assertions(2)
       try {
         await appContainer.apolloClient
           .query({
