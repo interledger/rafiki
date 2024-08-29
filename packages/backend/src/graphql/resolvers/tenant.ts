@@ -6,24 +6,32 @@ import {
   isTenantError,
   TenantError
 } from '../../tenant/errors'
+<<<<<<< HEAD
 import { Tenant as SchemaTenant } from '../generated/graphql'
+=======
+>>>>>>> 7dbb74ab (feat(backend): update resolvers with tenant id and finish the tenant creation)
 import {
   MutationResolvers,
   QueryResolvers,
   ResolversTypes,
   TenantEndpointType
 } from '../generated/graphql'
+<<<<<<< HEAD
 import { Tenant } from '../../tenant/model'
 import { Pagination, SortOrder } from '../../shared/baseModel'
 import { getPageInfo } from '../../shared/pagination'
 import { EndpointType } from '../../tenant/endpoints/model'
 import { tenantEndpointToGraphql } from './tenant_endpoints'
+=======
+import { EndpointType } from '../../tenant/model'
+>>>>>>> 7dbb74ab (feat(backend): update resolvers with tenant id and finish the tenant creation)
 
 const mapTenantEndpointTypeToModelEndpointType = {
   [TenantEndpointType.RatesUrl]: EndpointType.RatesUrl,
   [TenantEndpointType.WebhookBaseUrl]: EndpointType.WebhookBaseUrl
 }
 
+<<<<<<< HEAD
 export const getTenants: QueryResolvers<ApolloContext>['tenants'] = async (
   _,
   args,
@@ -46,6 +54,33 @@ export const getTenants: QueryResolvers<ApolloContext>['tenants'] = async (
       cursor: tenant.id,
       node: tenantToGraphql(tenant)
     }))
+=======
+// export const getTenants: QueryResolvers<ApolloContext>['tenants'] = async (
+//   _,
+//   args,
+//   ctx
+// ): Promise<ResolversTypes['TenantsConnection']> => {
+//   const tenantService = await ctx.container.use('tenantService')
+//   const { sortOrder, ...pagination } = args
+//   const order = sortOrder === 'ASC' ? SortOrder.Asc : SortOrder.Desc
+//   const tenants = await tenantService.getPage()
+// }
+
+export const getTenant: QueryResolvers<ApolloContext>['tenant'] = async (
+  _,
+  args,
+  ctx
+): Promise<ResolversTypes['Tenant']> => {
+  const tenantService = await ctx.container.use('tenantService')
+  const tenant = await tenantService.get(args.id)
+
+  if (!tenant) {
+    throw new GraphQLError(errorToMessage[TenantError.UnknownTenant], {
+      extensions: {
+        code: errorToCode[TenantError.UnknownTenant]
+      }
+    })
+>>>>>>> 7dbb74ab (feat(backend): update resolvers with tenant id and finish the tenant creation)
   }
 }
 
@@ -68,6 +103,9 @@ export const getTenant: QueryResolvers<ApolloContext>['tenant'] = async (
   return tenantToGraphql(tenant)
 }
 
+  return tenant
+}
+
 export const createTenant: MutationResolvers<ApolloContext>['createTenant'] =
   async (
     _,
@@ -88,8 +126,6 @@ export const createTenant: MutationResolvers<ApolloContext>['createTenant'] =
       email: args.input.email
     })
 
-    console.log('TEANT: ', tenantOrError)
-
     if (isTenantError(tenantOrError)) {
       throw new GraphQLError(errorToMessage[tenantOrError], {
         extensions: {
@@ -103,6 +139,7 @@ export const createTenant: MutationResolvers<ApolloContext>['createTenant'] =
     }
   }
 
+<<<<<<< HEAD
 export function tenantToGraphql(tenant: Tenant): SchemaTenant {
   return {
     id: tenant.id,
@@ -114,3 +151,12 @@ export function tenantToGraphql(tenant: Tenant): SchemaTenant {
     updatedAt: tenant.updatedAt.toISOString()
   }
 }
+=======
+// export function tenantToGraphql(tenant: Tenant): SchemaTenant {
+//   tenant.
+//   return {
+//     id: tenant.id,
+
+//   }
+// }
+>>>>>>> 7dbb74ab (feat(backend): update resolvers with tenant id and finish the tenant creation)
