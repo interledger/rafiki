@@ -26,6 +26,7 @@
         "type": "prometheus",
         "uid": "PBFA97CFB590B2093"
       },
+      "description": "",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -77,8 +78,7 @@
                 "value": 80
               }
             ]
-          },
-          "unit": "ms"
+          }
         },
         "overrides": []
       },
@@ -88,14 +88,12 @@
         "x": 0,
         "y": 0
       },
-      "id": 12,
+      "id": 14,
       "options": {
         "legend": {
-          "calcs": [
-            "p95"
-          ],
-          "displayMode": "table",
-          "placement": "right",
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
           "showLegend": true
         },
         "tooltip": {
@@ -110,9 +108,9 @@
             "uid": "PBFA97CFB590B2093"
           },
           "editorMode": "code",
-          "expr": "sum by (callName) (rate(connector_middleware_sum[$__rate_interval])/rate(connector_middleware_count[$__rate_interval]))",
+          "expr": "rate(outgoing_payment_service_create_time_ms_sum[$__rate_interval])/rate(outgoing_payment_service_create_time_ms_count[$__rate_interval])",
           "instant": false,
-          "legendFormat": "{{caller}}",
+          "legendFormat": "{{description}}",
           "range": true,
           "refId": "A"
         },
@@ -122,22 +120,115 @@
             "uid": "PBFA97CFB590B2093"
           },
           "editorMode": "code",
-          "expr": "sum by (callName) (rate(connector_middleware_stack_sum[$__rate_interval])/rate(connector_middleware_stack_count[$__rate_interval]))",
+          "expr": "rate(outgoing_payment_service_create_quote_time_ms_sum[$__rate_interval])/rate(outgoing_payment_service_create_quote_time_ms_count[$__rate_interval])",
           "hide": false,
           "instant": false,
-          "legendFormat": "__auto",
+          "legendFormat": "{{description}}",
           "range": true,
           "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "editorMode": "code",
+          "expr": "rate(outgoing_payment_service_getwalletaddress_time_ms_sum[$__rate_interval])/rate(outgoing_payment_service_getwalletaddress_time_ms_count[$__rate_interval])",
+          "hide": false,
+          "instant": false,
+          "legendFormat": "{{description}}",
+          "range": true,
+          "refId": "E"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "editorMode": "code",
+          "expr": "rate(outgoing_payment_service_insertgrant_time_ms_sum[$__rate_interval])/rate(outgoing_payment_service_insertgrant_time_ms_count[$__rate_interval])",
+          "hide": false,
+          "instant": false,
+          "legendFormat": "{{description}}",
+          "range": true,
+          "refId": "D"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "editorMode": "code",
+          "expr": "rate(outgoing_payment_service_insertpayment_time_ms_sum[$__rate_interval])/rate(outgoing_payment_service_insertpayment_time_ms_count[$__rate_interval])",
+          "hide": false,
+          "instant": false,
+          "legendFormat": "{{description}}",
+          "range": true,
+          "refId": "F"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "editorMode": "code",
+          "expr": "rate(outgoing_payment_service_getreceiver_time_ms_sum[$__rate_interval])/rate(outgoing_payment_service_getreceiver_time_ms_count[$__rate_interval])",
+          "hide": false,
+          "instant": false,
+          "legendFormat": "{{description}}",
+          "range": true,
+          "refId": "H"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "editorMode": "code",
+          "expr": "rate(outgoing_payment_service_getpeer_time_ms_sum[$__rate_interval])/rate(outgoing_payment_service_getpeer_time_ms_count[$__rate_interval])",
+          "hide": false,
+          "instant": false,
+          "legendFormat": "{{description}}",
+          "range": true,
+          "refId": "G"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "editorMode": "code",
+          "expr": "rate(outgoing_payment_service_patchpeer_time_ms_sum[$__rate_interval])/rate(outgoing_payment_service_patchpeer_time_ms_count[$__rate_interval])",
+          "hide": false,
+          "instant": false,
+          "legendFormat": "{{description}}",
+          "range": true,
+          "refId": "I"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "editorMode": "code",
+          "expr": "rate(outgoing_payment_service_webhook_event_time_ms_sum[$__rate_interval])/rate(outgoing_payment_service_webhook_event_time_ms_count[$__rate_interval])",
+          "hide": false,
+          "instant": false,
+          "legendFormat": "{{description}}",
+          "range": true,
+          "refId": "C"
         }
       ],
-      "title": "ILP Connector",
+      "title": "Outgoing Payment Service Create Time (ms)",
       "type": "timeseries"
     },
     {
       "datasource": {
+        "default": true,
         "type": "prometheus",
         "uid": "PBFA97CFB590B2093"
       },
+      "description": "",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -200,7 +291,7 @@
         "x": 12,
         "y": 0
       },
-      "id": 9,
+      "id": 10,
       "options": {
         "legend": {
           "calcs": [
@@ -222,36 +313,9 @@
             "uid": "PBFA97CFB590B2093"
           },
           "editorMode": "code",
-          "expr": "rate(quote_service_create_get_quote_time_ms_sum[$__rate_interval])/rate(quote_service_create_get_quote_time_ms_count[$__rate_interval])",
-          "hide": false,
+          "expr": "sum by (callName) (rate(getPendingPayment_sum[$__rate_interval])/rate(getPendingPayment_count[$__rate_interval]))",
           "instant": false,
-          "legendFormat": "{{description}}",
-          "range": true,
-          "refId": "C"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "editorMode": "code",
-          "expr": "rate(ilp_rate_probe_time_ms_sum[$__rate_interval])/rate(ilp_rate_probe_time_ms_count[$__rate_interval])",
-          "hide": false,
-          "instant": false,
-          "legendFormat": "{{description}}",
-          "range": true,
-          "refId": "F"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "editorMode": "code",
-          "expr": "rate(ilp_get_quote_rate_time_ms_sum[$__rate_interval])/rate(ilp_get_quote_rate_time_ms_count[$__rate_interval])",
-          "hide": false,
-          "instant": false,
-          "legendFormat": "{{description}}",
+          "legendFormat": "{{caller}}",
           "range": true,
           "refId": "A"
         },
@@ -261,10 +325,10 @@
             "uid": "PBFA97CFB590B2093"
           },
           "editorMode": "code",
-          "expr": "rate(ilp_make_ilp_plugin_connect_time_ms_sum[$__rate_interval])/rate(ilp_make_ilp_plugin_connect_time_ms_count[$__rate_interval])",
+          "expr": "sum by (callName) (rate(handleSending_sum[$__rate_interval])/rate(handleSending_count[$__rate_interval]))",
           "hide": false,
           "instant": false,
-          "legendFormat": "{{description}}",
+          "legendFormat": "__auto",
           "range": true,
           "refId": "B"
         },
@@ -274,10 +338,23 @@
             "uid": "PBFA97CFB590B2093"
           },
           "editorMode": "code",
-          "expr": "rate(ilp_plugin_close_connect_time_ms_sum[$__rate_interval])/rate(ilp_plugin_close_connect_time_ms_count[$__rate_interval])",
+          "expr": "sum by (callName) (rate(getReceiver_sum[$__rate_interval])/rate(getReceiver_count[$__rate_interval]))",
           "hide": false,
           "instant": false,
-          "legendFormat": "{{description}}",
+          "legendFormat": "__auto",
+          "range": true,
+          "refId": "C"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "editorMode": "code",
+          "expr": "sum by (callName) (rate(psql_getAccountTotalSent_sum[$__rate_interval])/rate(psql_getAccountTotalSent_count[$__rate_interval]))",
+          "hide": false,
+          "instant": false,
+          "legendFormat": "__auto",
           "range": true,
           "refId": "D"
         },
@@ -287,15 +364,54 @@
             "uid": "PBFA97CFB590B2093"
           },
           "editorMode": "code",
-          "expr": "rate(ilp_plugin_disconnect_time_ms_sum[$__rate_interval])/rate(ilp_plugin_disconnect_time_ms_count[$__rate_interval])",
+          "expr": "sum by (callName) (rate(tb_getAccountTotalSent_sum[$__rate_interval])/rate(tb_getAccountTotalSent_count[$__rate_interval]))",
           "hide": false,
           "instant": false,
-          "legendFormat": "{{description}}",
+          "legendFormat": "__auto",
           "range": true,
           "refId": "E"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "editorMode": "code",
+          "expr": "sum by (callName) (rate(handleCompleted_sum[$__rate_interval])/rate(handleCompleted_count[$__rate_interval]))",
+          "hide": false,
+          "instant": false,
+          "legendFormat": "__auto",
+          "range": true,
+          "refId": "F"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "editorMode": "code",
+          "expr": "sum by (callName) (rate(sendWebhookEvent_sum[$__rate_interval])/rate(sendWebhookEvent_count[$__rate_interval]))",
+          "hide": false,
+          "instant": false,
+          "legendFormat": "__auto",
+          "range": true,
+          "refId": "G"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "editorMode": "code",
+          "expr": "sum by (callName) (rate(handleFailed_sum[$__rate_interval])/rate(handleFailed_count[$__rate_interval]))",
+          "hide": false,
+          "instant": false,
+          "legendFormat": "__auto",
+          "range": true,
+          "refId": "H"
         }
       ],
-      "title": "ILP Payment Service getQuote",
+      "title": "Outgoing Payment Worker",
       "type": "timeseries"
     },
     {
@@ -360,7 +476,7 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 5,
+        "h": 6,
         "w": 12,
         "x": 0,
         "y": 6
@@ -524,15 +640,17 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 5,
+        "h": 6,
         "w": 12,
         "x": 12,
         "y": 6
       },
-      "id": 11,
+      "id": 9,
       "options": {
         "legend": {
-          "calcs": [],
+          "calcs": [
+            "p95"
+          ],
           "displayMode": "table",
           "placement": "right",
           "showLegend": true
@@ -549,22 +667,88 @@
             "uid": "PBFA97CFB590B2093"
           },
           "editorMode": "code",
-          "expr": "sum by (callName) (rate(psql_getAccountBalances_sum[$__rate_interval])/rate(psql_getAccountBalances_count[$__rate_interval]))",
+          "expr": "rate(quote_service_create_get_quote_time_ms_sum[$__rate_interval])/rate(quote_service_create_get_quote_time_ms_count[$__rate_interval])",
+          "hide": false,
           "instant": false,
-          "legendFormat": "__auto",
+          "legendFormat": "{{description}}",
+          "range": true,
+          "refId": "C"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "editorMode": "code",
+          "expr": "rate(ilp_rate_probe_time_ms_sum[$__rate_interval])/rate(ilp_rate_probe_time_ms_count[$__rate_interval])",
+          "hide": false,
+          "instant": false,
+          "legendFormat": "{{description}}",
+          "range": true,
+          "refId": "F"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "editorMode": "code",
+          "expr": "rate(ilp_get_quote_rate_time_ms_sum[$__rate_interval])/rate(ilp_get_quote_rate_time_ms_count[$__rate_interval])",
+          "hide": false,
+          "instant": false,
+          "legendFormat": "{{description}}",
           "range": true,
           "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "editorMode": "code",
+          "expr": "rate(ilp_make_ilp_plugin_connect_time_ms_sum[$__rate_interval])/rate(ilp_make_ilp_plugin_connect_time_ms_count[$__rate_interval])",
+          "hide": false,
+          "instant": false,
+          "legendFormat": "{{description}}",
+          "range": true,
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "editorMode": "code",
+          "expr": "rate(ilp_plugin_close_connect_time_ms_sum[$__rate_interval])/rate(ilp_plugin_close_connect_time_ms_count[$__rate_interval])",
+          "hide": false,
+          "instant": false,
+          "legendFormat": "{{description}}",
+          "range": true,
+          "refId": "D"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "editorMode": "code",
+          "expr": "rate(ilp_plugin_disconnect_time_ms_sum[$__rate_interval])/rate(ilp_plugin_disconnect_time_ms_count[$__rate_interval])",
+          "hide": false,
+          "instant": false,
+          "legendFormat": "{{description}}",
+          "range": true,
+          "refId": "E"
         }
       ],
-      "title": "PSQL Get Account Balance",
+      "title": "ILP Payment Service getQuote",
       "type": "timeseries"
     },
     {
       "datasource": {
+        "default": true,
         "type": "prometheus",
         "uid": "PBFA97CFB590B2093"
       },
-      "description": "",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -616,22 +800,25 @@
                 "value": 80
               }
             ]
-          }
+          },
+          "unit": "ms"
         },
         "overrides": []
       },
       "gridPos": {
-        "h": 7,
+        "h": 6,
         "w": 12,
         "x": 0,
-        "y": 11
+        "y": 12
       },
-      "id": 13,
+      "id": 12,
       "options": {
         "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
+          "calcs": [
+            "p95"
+          ],
+          "displayMode": "table",
+          "placement": "right",
           "showLegend": true
         },
         "tooltip": {
@@ -646,9 +833,9 @@
             "uid": "PBFA97CFB590B2093"
           },
           "editorMode": "code",
-          "expr": "rate(outgoing_payment_service_create_time_ms_sum[$__rate_interval])/rate(outgoing_payment_service_create_time_ms_count[$__rate_interval])",
+          "expr": "sum by (callName) (rate(connector_middleware_sum[$__rate_interval])/rate(connector_middleware_count[$__rate_interval]))",
           "instant": false,
-          "legendFormat": "{{description}}",
+          "legendFormat": "{{caller}}",
           "range": true,
           "refId": "A"
         },
@@ -658,10 +845,10 @@
             "uid": "PBFA97CFB590B2093"
           },
           "editorMode": "code",
-          "expr": "rate(outgoing_payment_service_create_quote_time_ms_sum[$__rate_interval])/rate(outgoing_payment_service_create_quote_time_ms_count[$__rate_interval])",
+          "expr": "sum by (callName) (rate(connector_middleware_stack_sum[$__rate_interval])/rate(connector_middleware_stack_count[$__rate_interval]))",
           "hide": false,
           "instant": false,
-          "legendFormat": "{{description}}",
+          "legendFormat": "__auto",
           "range": true,
           "refId": "B"
         },
@@ -671,93 +858,15 @@
             "uid": "PBFA97CFB590B2093"
           },
           "editorMode": "code",
-          "expr": "rate(outgoing_payment_service_getwalletaddress_time_ms_sum[$__rate_interval])/rate(outgoing_payment_service_getwalletaddress_time_ms_count[$__rate_interval])",
+          "expr": "sum by (callName) (rate(balanceMiddleware_sum[$__rate_interval])/rate(balanceMiddleware_count[$__rate_interval]))",
           "hide": false,
           "instant": false,
-          "legendFormat": "{{description}}",
-          "range": true,
-          "refId": "E"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "editorMode": "code",
-          "expr": "rate(outgoing_payment_service_insertgrant_time_ms_sum[$__rate_interval])/rate(outgoing_payment_service_insertgrant_time_ms_count[$__rate_interval])",
-          "hide": false,
-          "instant": false,
-          "legendFormat": "{{description}}",
-          "range": true,
-          "refId": "D"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "editorMode": "code",
-          "expr": "rate(outgoing_payment_service_insertpayment_time_ms_sum[$__rate_interval])/rate(outgoing_payment_service_insertpayment_time_ms_count[$__rate_interval])",
-          "hide": false,
-          "instant": false,
-          "legendFormat": "{{description}}",
-          "range": true,
-          "refId": "F"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "editorMode": "code",
-          "expr": "rate(outgoing_payment_service_getreceiver_time_ms_sum[$__rate_interval])/rate(outgoing_payment_service_getreceiver_time_ms_count[$__rate_interval])",
-          "hide": false,
-          "instant": false,
-          "legendFormat": "{{description}}",
-          "range": true,
-          "refId": "H"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "editorMode": "code",
-          "expr": "rate(outgoing_payment_service_getpeer_time_ms_sum[$__rate_interval])/rate(outgoing_payment_service_getpeer_time_ms_count[$__rate_interval])",
-          "hide": false,
-          "instant": false,
-          "legendFormat": "{{description}}",
-          "range": true,
-          "refId": "G"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "editorMode": "code",
-          "expr": "rate(outgoing_payment_service_patchpeer_time_ms_sum[$__rate_interval])/rate(outgoing_payment_service_patchpeer_time_ms_count[$__rate_interval])",
-          "hide": false,
-          "instant": false,
-          "legendFormat": "{{description}}",
-          "range": true,
-          "refId": "I"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "editorMode": "code",
-          "expr": "rate(outgoing_payment_service_webhook_event_time_ms_sum[$__rate_interval])/rate(outgoing_payment_service_webhook_event_time_ms_count[$__rate_interval])",
-          "hide": false,
-          "instant": false,
-          "legendFormat": "{{description}}",
+          "legendFormat": "__auto",
           "range": true,
           "refId": "C"
         }
       ],
-      "title": "Outgoing Payment Service Create Time (ms)",
+      "title": "ILP Connector",
       "type": "timeseries"
     },
     {
@@ -822,12 +931,12 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 7,
+        "h": 6,
         "w": 12,
         "x": 12,
-        "y": 11
+        "y": 12
       },
-      "id": 10,
+      "id": 11,
       "options": {
         "legend": {
           "calcs": [
@@ -849,92 +958,14 @@
             "uid": "PBFA97CFB590B2093"
           },
           "editorMode": "code",
-          "expr": "sum by (callName) (rate(getPendingPayment_sum[$__rate_interval])/rate(getPendingPayment_count[$__rate_interval]))",
+          "expr": "sum by (callName) (rate(psql_getAccountBalances_sum[$__rate_interval])/rate(psql_getAccountBalances_count[$__rate_interval]))",
           "instant": false,
-          "legendFormat": "{{caller}}",
+          "legendFormat": "__auto",
           "range": true,
           "refId": "A"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "editorMode": "code",
-          "expr": "sum by (callName) (rate(handleSending_sum[$__rate_interval])/rate(handleSending_count[$__rate_interval]))",
-          "hide": false,
-          "instant": false,
-          "legendFormat": "__auto",
-          "range": true,
-          "refId": "B"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "editorMode": "code",
-          "expr": "sum by (callName) (rate(getReceiver_sum[$__rate_interval])/rate(getReceiver_count[$__rate_interval]))",
-          "hide": false,
-          "instant": false,
-          "legendFormat": "__auto",
-          "range": true,
-          "refId": "C"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "editorMode": "code",
-          "expr": "sum by (callName) (rate(psql_getAccountTotalSent_sum[$__rate_interval])/rate(psql_getAccountTotalSent_count[$__rate_interval]))",
-          "hide": false,
-          "instant": false,
-          "legendFormat": "__auto",
-          "range": true,
-          "refId": "D"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "editorMode": "code",
-          "expr": "sum by (callName) (rate(tb_getAccountTotalSent_sum[$__rate_interval])/rate(tb_getAccountTotalSent_count[$__rate_interval]))",
-          "hide": false,
-          "instant": false,
-          "legendFormat": "__auto",
-          "range": true,
-          "refId": "E"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "editorMode": "code",
-          "expr": "sum by (callName) (rate(handleCompleted_sum[$__rate_interval])/rate(handleCompleted_count[$__rate_interval]))",
-          "hide": false,
-          "instant": false,
-          "legendFormat": "__auto",
-          "range": true,
-          "refId": "F"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "editorMode": "code",
-          "expr": "sum by (callName) (rate(sendWebhookEvent_sum[$__rate_interval])/rate(sendWebhookEvent_count[$__rate_interval]))",
-          "hide": false,
-          "instant": false,
-          "legendFormat": "__auto",
-          "range": true,
-          "refId": "G"
         }
       ],
-      "title": "Outgoing Payment Worker",
+      "title": "PSQL Get Account Balance",
       "type": "timeseries"
     },
     {
@@ -1012,6 +1043,105 @@
     },
     {
       "datasource": {
+        "default": true,
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 12,
+        "y": 18
+      },
+      "id": 13,
+      "options": {
+        "legend": {
+          "calcs": [
+            "p95"
+          ],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "editorMode": "code",
+          "expr": "sum by (callName) (rate(createLiquidityAccount_sum[$__rate_interval])/rate(createLiquidityAccount_count[$__rate_interval]))",
+          "instant": false,
+          "legendFormat": "__auto",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Ilp Connector > Balance Middleware > createLiquidityAccount",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
         "type": "tempo",
         "uid": "P214B5B846CF3925F"
       },
@@ -1048,7 +1178,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 18
+        "y": 24
       },
       "id": 4,
       "options": {
@@ -1517,7 +1647,7 @@
     "list": []
   },
   "time": {
-    "from": "now-5m",
+    "from": "now-15m",
     "to": "now"
   },
   "timepicker": {

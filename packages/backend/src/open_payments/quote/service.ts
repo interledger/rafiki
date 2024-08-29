@@ -95,15 +95,18 @@ async function createQuote(
       description: 'Time to create a quote'
     })
   if (options.debitAmount && options.receiveAmount) {
+    deps.telemetry && deps.telemetry.stopTimer('quote_service_create_time_ms')
     return QuoteError.InvalidAmount
   }
   const walletAddress = await deps.walletAddressService.get(
     options.walletAddressId
   )
   if (!walletAddress) {
+    deps.telemetry && deps.telemetry.stopTimer('quote_service_create_time_ms')
     return QuoteError.UnknownWalletAddress
   }
   if (!walletAddress.isActive) {
+    deps.telemetry && deps.telemetry.stopTimer('quote_service_create_time_ms')
     return QuoteError.InactiveWalletAddress
   }
   if (options.debitAmount) {
@@ -112,11 +115,13 @@ async function createQuote(
       options.debitAmount.assetCode !== walletAddress.asset.code ||
       options.debitAmount.assetScale !== walletAddress.asset.scale
     ) {
+      deps.telemetry && deps.telemetry.stopTimer('quote_service_create_time_ms')
       return QuoteError.InvalidAmount
     }
   }
   if (options.receiveAmount) {
     if (options.receiveAmount.value <= BigInt(0)) {
+      deps.telemetry && deps.telemetry.stopTimer('quote_service_create_time_ms')
       return QuoteError.InvalidAmount
     }
   }
@@ -200,6 +205,7 @@ async function createQuote(
     return q
   } catch (err) {
     if (isQuoteError(err)) {
+      deps.telemetry && deps.telemetry.stopTimer('quote_service_create_time_ms')
       return err
     }
 
@@ -207,10 +213,12 @@ async function createQuote(
       err instanceof PaymentMethodHandlerError &&
       err.code === PaymentMethodHandlerErrorCode.QuoteNonPositiveReceiveAmount
     ) {
+      deps.telemetry && deps.telemetry.stopTimer('quote_service_create_time_ms')
       return QuoteError.NonPositiveReceiveAmount
     }
 
     deps.logger.error({ err }, 'error creating a quote')
+    deps.telemetry && deps.telemetry.stopTimer('quote_service_create_time_ms')
     throw err
   }
 }

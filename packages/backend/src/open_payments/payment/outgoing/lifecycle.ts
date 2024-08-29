@@ -151,7 +151,7 @@ export async function handleFailed(
     error
   })
   await sendWebhookEvent(deps, payment, OutgoingPaymentEventType.PaymentFailed)
-  deps.telemetry && deps.telemetry.startTimer('handleFailed')
+  deps.telemetry && deps.telemetry.stopTimer('handleFailed')
 }
 
 async function handleCompleted(
