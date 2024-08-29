@@ -54,7 +54,7 @@ describe('Incoming Payment Resolver', (): void => {
     await appContainer.apolloClient.stop()
     await appContainer.shutdown()
   })
-/*
+
   describe('Wallet address incoming payments', (): void => {
     beforeEach(async (): Promise<void> => {
       walletAddressId = (await createWalletAddress(deps, { assetId: asset.id }))
@@ -441,7 +441,7 @@ describe('Incoming Payment Resolver', (): void => {
       }
     })
   })
-*/
+
   describe('Mutation.updateIncomingPayment', (): void => {
     let amount: Amount
     let expiresAt:Date
