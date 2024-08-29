@@ -34,14 +34,14 @@ export interface Fee {
 }
 
 export interface Tenant {
-  id: string
-  idpConsentUrl: string,
-  idpSecret: string,
+  name: string
+  idpConsentUrl: string
+  idpSecret: string
   endpoints: EndpointType[]
 }
 
 export interface SeedInstance {
-  tenants: Array<Tenant>,
+  tenants: Array<Tenant>
   assets: Array<Asset>
   peeringAsset: string
   peers: Array<Peering>

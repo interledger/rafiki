@@ -19,9 +19,9 @@ import type {
 import { v4 as uuid } from 'uuid'
 
 export type EndpointType = {
-  type: TenantEndpointType,
+  type: TenantEndpointType
   value: string
-};
+}
 
 export function createRequesters(
   apolloClient: ApolloClient<NormalizedCacheObject>,
@@ -62,7 +62,8 @@ export function createRequesters(
   createWalletAddress: (
     accountName: string,
     accountUrl: string,
-    assetId: string
+    assetId: string,
+    tenantId: string
   ) => Promise<WalletAddress>
   createWalletAddressKey: ({
     walletAddressId,
@@ -107,13 +108,14 @@ export function createRequesters(
       depositPeerLiquidity(apolloClient, logger, peerId, amount, transferUid),
     depositAssetLiquidity: (assetId, amount, transferId) =>
       depositAssetLiquidity(apolloClient, logger, assetId, amount, transferId),
-    createWalletAddress: (accountName, accountUrl, assetId) =>
+    createWalletAddress: (accountName, accountUrl, assetId, tenantId) =>
       createWalletAddress(
         apolloClient,
         logger,
         accountName,
         accountUrl,
-        assetId
+        assetId,
+        tenantId
       ),
     createWalletAddressKey: ({ walletAddressId, jwk }) =>
       createWalletAddressKey(apolloClient, logger, { walletAddressId, jwk }),
@@ -366,7 +368,8 @@ export async function createWalletAddress(
   logger: Logger,
   accountName: string,
   accountUrl: string,
-  assetId: string
+  assetId: string,
+  tenantId: string
 ): Promise<WalletAddress> {
   const createWalletAddressMutation = gql`
     mutation CreateWalletAddress($input: CreateWalletAddressInput!) {
@@ -383,7 +386,8 @@ export async function createWalletAddress(
     assetId,
     url: accountUrl,
     publicName: accountName,
-    additionalProperties: []
+    additionalProperties: [],
+    tenantId
   }
 
   return apolloClient
