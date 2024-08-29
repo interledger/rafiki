@@ -20,6 +20,10 @@ export function createBalanceMiddleware(): ILPMiddleware {
     }: ILPContext,
     next: () => Promise<void>
   ): Promise<void> => {
+    services.telemetry &&
+      services.telemetry.startTimer('balanceMiddleware', {
+        callName: 'balanceMiddleware'
+      })
     const { amount } = request.prepare
     const logger = services.logger.child(
       { module: 'balance-middleware' },
@@ -31,6 +35,7 @@ export function createBalanceMiddleware(): ILPMiddleware {
     // Ignore zero amount packets
     if (amount === '0') {
       await next()
+      services.telemetry && services.telemetry.stopTimer('balanceMiddleware')
       return
     }
 
@@ -51,6 +56,7 @@ export function createBalanceMiddleware(): ILPMiddleware {
         },
         'Could not get rates'
       )
+      services.telemetry && services.telemetry.stopTimer('balanceMiddleware')
       throw new CannotReceiveError(
         `Exchange rate error: ${destinationAmountOrError}`
       )
@@ -60,6 +66,7 @@ export function createBalanceMiddleware(): ILPMiddleware {
 
     if (state.unfulfillable) {
       await next()
+      services.telemetry && services.telemetry.stopTimer('balanceMiddleware')
       return
     }
 
@@ -85,12 +92,17 @@ export function createBalanceMiddleware(): ILPMiddleware {
         switch (trxOrError) {
           case TransferError.InsufficientBalance:
           case TransferError.InsufficientLiquidity:
+            services.telemetry &&
+              services.telemetry.stopTimer('balanceMiddleware')
             throw new InsufficientLiquidityError(trxOrError)
           default:
+            services.telemetry &&
+              services.telemetry.stopTimer('balanceMiddleware')
             // TODO: map transfer errors to ILP errors
             ctxThrow(500, destinationAmountOrError.toString())
         }
       } else {
+        services.telemetry && services.telemetry.stopTimer('balanceMiddleware')
         return trxOrError
       }
     }
@@ -109,6 +121,7 @@ export function createBalanceMiddleware(): ILPMiddleware {
         } else {
           await trx.void()
         }
+        services.telemetry && services.telemetry.stopTimer('balanceMiddleware')
       }
     }
   }
