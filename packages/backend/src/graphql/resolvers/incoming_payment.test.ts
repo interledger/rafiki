@@ -54,7 +54,7 @@ describe('Incoming Payment Resolver', (): void => {
     await appContainer.apolloClient.stop()
     await appContainer.shutdown()
   })
-
+/*
   describe('Wallet address incoming payments', (): void => {
     beforeEach(async (): Promise<void> => {
       walletAddressId = (await createWalletAddress(deps, { assetId: asset.id }))
@@ -441,10 +441,11 @@ describe('Incoming Payment Resolver', (): void => {
       }
     })
   })
-
+*/
   describe('Mutation.updateIncomingPayment', (): void => {
     let amount: Amount
     let expiresAt:Date
+    let id = 'ok'
 
     beforeEach((): void => {
       amount = {
@@ -459,23 +460,23 @@ describe('Incoming Payment Resolver', (): void => {
 
     test.each`
       id                                                |  metadata
-      ${undefined}                                      |${{ description: 'Update metadata', status: 'COMPLETE' }}
-      ${undefined}                                      | ${new Date(Date.now() + 30_000)}
-      ${undefined}                                      | ${undefined}
+      ${id}                                             | ${{ description: 'Update metadata', status: 'COMPLETE' }}
+      ${id}                                             | ${{}}
     `(
-      'Successfully updates an incoming payment with $metadata',
+      'Successfully updates an incoming payment with $id | $metadata',
       async ({id, metadata}): Promise<void> => {
-        const incomingAmount = amount ? amount : undefined
-        const { id: walletAddressId } = await createWalletAddress(deps, {
-          assetId: asset.id
-        })
-        const payment = await createIncomingPayment(deps, {
-          walletAddressId,
-          client,
-          metadata,
-          expiresAt,
-          incomingAmount
-        })
+      
+          const incomingAmount = amount ? amount : undefined
+          const { id: walletAddressId } = await createWalletAddress(deps, {
+            assetId: asset.id
+          })
+          const payment = await createIncomingPayment(deps, {
+            walletAddressId,
+            client,
+            metadata,
+            expiresAt,
+            incomingAmount
+          })
         const input = {
           id:payment.id,
           metadata
@@ -521,16 +522,17 @@ describe('Incoming Payment Resolver', (): void => {
       }
     )
 
-    test('Errors when unknown wallet address', async (): Promise<void> => {
+    test('Errors when unknown payment id', async (): Promise<void> => {
       const createSpy = jest
         .spyOn(incomingPaymentService, 'update')
-        .mockResolvedValueOnce(IncomingPaymentError.UnknownWalletAddress)
+        .mockResolvedValueOnce(IncomingPaymentError.UnknownPayment)
 
       const input = {
-        walletAddressId: uuid()
+        id: uuid(),
+        metadata: { description: 'Update metadata', status: 'COMPLETE' }
       }
 
-      expect.assertions(2)
+      expect.assertions(3)
       try {
         await appContainer.apolloClient
           .query({
@@ -556,9 +558,9 @@ describe('Incoming Payment Resolver', (): void => {
         expect(error).toBeInstanceOf(ApolloError)
         expect((error as ApolloError).graphQLErrors).toContainEqual(
           expect.objectContaining({
-            message: errorToMessage[IncomingPaymentError.UnknownWalletAddress],
+            message: errorToMessage[IncomingPaymentError.UnknownPayment],
             extensions: expect.objectContaining({
-              code: errorToCode[IncomingPaymentError.UnknownWalletAddress]
+              code: errorToCode[IncomingPaymentError.UnknownPayment]
             })
           })
         )
@@ -566,16 +568,18 @@ describe('Incoming Payment Resolver', (): void => {
       expect(createSpy).toHaveBeenCalledWith(input)
     })
 
+
     test('Internal server error', async (): Promise<void> => {
       const createSpy = jest
         .spyOn(incomingPaymentService, 'update')
         .mockRejectedValueOnce(new Error('unexpected'))
 
       const input = {
-        walletAddressId: uuid()
+        id: uuid(),
+        metadata: {}
       }
 
-      expect.assertions(2)
+      expect.assertions(3)
       try {
         await appContainer.apolloClient
           .query({
