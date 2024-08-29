@@ -67,10 +67,11 @@ export class WalletAddress
 
   public async onCredit({
     totalReceived,
-    withdrawalThrottleDelay
+    withdrawalThrottleDelay,
+    fetchAssetService
   }: OnCreditOptions): Promise<WalletAddress> {
     if (this.asset.withdrawalThreshold !== null) {
-      const walletAddress = await WalletAddress.query()
+      let walletAddressQuery = WalletAddress.query()
         .patchAndFetchById(this.id, {
           processAt: new Date()
         })
@@ -78,10 +79,16 @@ export class WalletAddress
           'totalEventsAmount',
           totalReceived - this.asset.withdrawalThreshold
         ])
-        .withGraphFetched('asset')
-      if (walletAddress) {
-        return walletAddress
+      if (!fetchAssetService) {
+        //TODO console.log('JASON: lets do the query please: ', fetchAssetService)
+        walletAddressQuery = walletAddressQuery.withGraphFetched('asset')
+      } else {
+        //TODO console.log('JASON: No Need!: ', fetchAssetService)
       }
+      const walletAddress = await walletAddressQuery
+      if (fetchAssetService)
+        await (await fetchAssetService()).setOn(walletAddress)
+      if (walletAddress) return walletAddress
     }
     if (withdrawalThrottleDelay !== undefined && !this.processAt) {
       await this.$query().patch({

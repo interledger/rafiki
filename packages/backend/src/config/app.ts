@@ -122,16 +122,16 @@ export const Config = {
   quoteLifespan: envInt('QUOTE_LIFESPAN', 5 * 60_000), // milliseconds
 
   walletAddressWorkers: envInt('WALLET_ADDRESS_WORKERS', 1),
-  walletAddressWorkerIdle: envInt('WALLET_ADDRESS_WORKER_IDLE', 200), // milliseconds
+  walletAddressWorkerIdle: envInt('WALLET_ADDRESS_WORKER_IDLE', 3000), // milliseconds
 
   authServerGrantUrl: envString('AUTH_SERVER_GRANT_URL'),
   authServerIntrospectionUrl: envString('AUTH_SERVER_INTROSPECTION_URL'),
 
   outgoingPaymentWorkers: envInt('OUTGOING_PAYMENT_WORKERS', 1),
-  outgoingPaymentWorkerIdle: envInt('OUTGOING_PAYMENT_WORKER_IDLE', 200), // milliseconds
+  outgoingPaymentWorkerIdle: envInt('OUTGOING_PAYMENT_WORKER_IDLE', 3000), // milliseconds
 
   incomingPaymentWorkers: envInt('INCOMING_PAYMENT_WORKERS', 1),
-  incomingPaymentWorkerIdle: envInt('INCOMING_PAYMENT_WORKER_IDLE', 200), // milliseconds
+  incomingPaymentWorkerIdle: envInt('INCOMING_PAYMENT_WORKER_IDLE', 3000), // milliseconds
   pollIncomingPaymentCreatedWebhook: envBool(
     'POLL_INCOMING_PAYMENT_CREATED_WEBHOOK',
     false
@@ -146,7 +146,7 @@ export const Config = {
   ), // milliseconds
 
   webhookWorkers: envInt('WEBHOOK_WORKERS', 1),
-  webhookWorkerIdle: envInt('WEBHOOK_WORKER_IDLE', 200), // milliseconds
+  webhookWorkerIdle: envInt('WEBHOOK_WORKER_IDLE', 3000), // milliseconds
   webhookUrl: envString('WEBHOOK_URL'),
   webhookTimeout: envInt('WEBHOOK_TIMEOUT', 2000), // milliseconds
   webhookMaxRetry: envInt('WEBHOOK_MAX_RETRY', 10),

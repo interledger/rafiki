@@ -7,6 +7,8 @@ import { BaseService } from '../shared/baseService'
 import { AccountingService, LiquidityAccountType } from '../accounting/service'
 import { WalletAddress } from '../open_payments/wallet_address/model'
 import { Peer } from '../payment-method/ilp/peer/model'
+import { Quote } from '../open_payments/quote/model'
+import { IncomingPayment } from '../open_payments/payment/incoming/model'
 
 export interface AssetOptions {
   code: string
@@ -28,30 +30,33 @@ export interface DeleteOptions {
   deletedAt: Date
 }
 
+export type ToSetOn = Quote | IncomingPayment | WalletAddress | Peer | undefined
+
 export interface AssetService {
   create(options: CreateOptions): Promise<Asset | AssetError>
   update(options: UpdateOptions): Promise<Asset | AssetError>
   delete(options: DeleteOptions): Promise<Asset | AssetError>
   get(id: string): Promise<void | Asset>
+  setOn(obj: ToSetOn): Promise<void | Asset>
   getPage(pagination?: Pagination, sortOrder?: SortOrder): Promise<Asset[]>
   getAll(): Promise<Asset[]>
 }
 
 interface ServiceDependencies extends BaseService {
-  accountingService: AccountingService,
+  accountingService: AccountingService
   assetCache: Map<string, Asset>
 }
 
 export async function createAssetService({
   logger,
   knex,
-  accountingService
+  accountingService,
+  assetCache
 }: ServiceDependencies): Promise<AssetService> {
   const log = logger.child({
     service: 'AssetService'
   })
 
-  const assetCache = new Map<string, Asset>()
   const deps: ServiceDependencies = {
     logger: log,
     knex,
@@ -64,6 +69,7 @@ export async function createAssetService({
     update: (options) => updateAsset(deps, options),
     delete: (options) => deleteAsset(deps, options),
     get: (id) => getAsset(deps, id),
+    setOn: (toSetOn) => setAssetOn(deps, toSetOn),
     getPage: (pagination?, sortOrder?) =>
       getAssetsPage(deps, pagination, sortOrder),
     getAll: () => getAll(deps)
@@ -182,7 +188,10 @@ async function getAsset(
   const inMem = deps.assetCache.get(id)
   if (inMem) return inMem
 
-  return Asset.query(deps.knex).whereNull('deletedAt').findById(id)
+  const asset = await Asset.query(deps.knex).whereNull('deletedAt').findById(id)
+  if (asset) deps.assetCache.set(asset.id, asset)
+
+  return asset
 }
 
 async function getAssetsPage(
@@ -197,4 +206,13 @@ async function getAssetsPage(
 
 async function getAll(deps: ServiceDependencies): Promise<Asset[]> {
   return Asset.query(deps.knex).whereNull('deletedAt')
+}
+
+async function setAssetOn(
+  deps: ServiceDependencies,
+  obj: ToSetOn
+): Promise<void> {
+  if (!obj) return
+  const asset = await getAsset(deps, obj.assetId)
+  if (asset) obj.asset = asset
 }

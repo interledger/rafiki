@@ -56,6 +56,7 @@ import { createStreamCredentialsService } from './payment-method/ilp/stream-cred
 import { createRatesService } from './rates/service'
 import { TelemetryService, createTelemetryService } from './telemetry/service'
 import { createWebhookService } from './webhook/service'
+import { Asset } from './asset/model'
 
 BigInt.prototype.toJSON = function () {
   return this.toString()
@@ -202,9 +203,10 @@ export function initIocContainer(
     const logger = await deps.use('logger')
     const knex = await deps.use('knex')
     return await createAssetService({
-      logger: logger,
-      knex: knex,
-      accountingService: await deps.use('accountingService')
+      logger,
+      knex,
+      accountingService: await deps.use('accountingService'),
+      assetCache: new Map<string, Asset>()
     })
   })
 
@@ -232,7 +234,8 @@ export function initIocContainer(
         knex,
         tigerBeetle,
         withdrawalThrottleDelay: config.withdrawalThrottleDelay,
-        telemetry
+        telemetry,
+        fetchAssetService: () => Promise.resolve(deps.use('assetService'))
       })
     }
 
@@ -240,7 +243,8 @@ export function initIocContainer(
       logger,
       knex,
       withdrawalThrottleDelay: config.withdrawalThrottleDelay,
-      telemetry
+      telemetry,
+      fetchAssetService: () => Promise.resolve(deps.use('assetService'))
     })
   })
   container.singleton('peerService', async (deps) => {
@@ -280,7 +284,8 @@ export function initIocContainer(
       knex: await deps.use('knex'),
       logger: logger,
       accountingService: await deps.use('accountingService'),
-      webhookService: await deps.use('webhookService')
+      webhookService: await deps.use('webhookService'),
+      assetService: await deps.use('assetService')
     })
   })
   container.singleton('spspRoutes', async (deps) => {
@@ -298,7 +303,8 @@ export function initIocContainer(
       knex: await deps.use('knex'),
       accountingService: await deps.use('accountingService'),
       walletAddressService: await deps.use('walletAddressService'),
-      config: await deps.use('config')
+      config: await deps.use('config'),
+      assetService: await deps.use('assetService')
     })
   })
   container.singleton('remoteIncomingPaymentService', async (deps) => {
@@ -469,7 +475,8 @@ export function initIocContainer(
       ),
       telemetry: config.enableTelemetry
         ? await deps.use('telemetry')
-        : undefined
+        : undefined,
+      assetService: await deps.use('assetService')
     })
   })
 

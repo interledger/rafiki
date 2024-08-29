@@ -21,6 +21,7 @@ import {
   PaymentMethodHandlerErrorCode
 } from '../../payment-method/handler/errors'
 import { TelemetryService } from '../../telemetry/service'
+import { AssetService } from '../../asset/service'
 
 const MAX_INT64 = BigInt('9223372036854775807')
 
@@ -35,6 +36,7 @@ export interface ServiceDependencies extends BaseService {
   walletAddressService: WalletAddressService
   feeService: FeeService
   paymentMethodHandlerService: PaymentMethodHandlerService
+  assetService: AssetService
   telemetry?: TelemetryService
 }
 
@@ -56,9 +58,11 @@ async function getQuote(
   deps: ServiceDependencies,
   options: GetOptions
 ): Promise<Quote | undefined> {
-  return Quote.query(deps.knex)
+  const quote = await Quote.query(deps.knex)
     .get(options)
-    .withGraphFetched('[asset, fee, walletAddress]')
+    .withGraphFetched('[fee, walletAddress]')
+  await deps.assetService.setOn(quote)
+  return quote
 }
 
 interface QuoteOptionsBase {
@@ -176,7 +180,9 @@ async function createQuote(
           feeId: sendingFee?.id,
           estimatedExchangeRate: quote.estimatedExchangeRate
         })
-        .withGraphFetched('[asset, fee, walletAddress]')
+        .withGraphFetched('[fee, walletAddress]')
+
+      await deps.assetService.setOn(createdQuote)
 
       return await finalizeQuote(
         {
@@ -397,7 +403,13 @@ async function getWalletAddressPage(
   deps: ServiceDependencies,
   options: ListOptions
 ): Promise<Quote[]> {
-  return await Quote.query(deps.knex)
+  const quotes = await Quote.query(deps.knex)
     .list(options)
-    .withGraphFetched('[asset, fee, walletAddress]')
+    .withGraphFetched('[fee, walletAddress]')
+  if (quotes && quotes.length) {
+    for (const quote of quotes) {
+      await deps.assetService.setOn(quote)
+    }
+  }
+  return quotes
 }

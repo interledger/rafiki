@@ -25,6 +25,7 @@ import { Pagination, SortOrder } from '../../shared/baseModel'
 import { WebhookService } from '../../webhook/service'
 import { poll } from '../../shared/utils'
 import { WalletAddressAdditionalProperty } from './additional_property/model'
+import { AssetService } from '../../asset/service'
 
 interface Options {
   publicName?: string
@@ -77,6 +78,7 @@ interface ServiceDependencies extends BaseService {
   knex: TransactionOrKnex
   accountingService: AccountingService
   webhookService: WebhookService
+  assetService: AssetService
 }
 
 export async function createWalletAddressService({
@@ -84,7 +86,8 @@ export async function createWalletAddressService({
   config,
   knex,
   accountingService,
-  webhookService
+  webhookService,
+  assetService
 }: ServiceDependencies): Promise<WalletAddressService> {
   const log = logger.child({
     service: 'WalletAddressService'
@@ -94,7 +97,8 @@ export async function createWalletAddressService({
     logger: log,
     knex,
     accountingService,
-    webhookService
+    webhookService,
+    assetService
   }
   return {
     create: (options) => createWalletAddress(deps, options),
@@ -164,14 +168,16 @@ async function createWalletAddress(
       ? cleanAdditionalProperties(options.additionalProperties)
       : undefined
 
-    return await WalletAddress.query(deps.knex)
-      .insertGraphAndFetch({
-        url: options.url,
-        publicName: options.publicName,
-        assetId: options.assetId,
-        additionalProperties: additionalProperties
-      })
-      .withGraphFetched('asset')
+    const walletAddress = await WalletAddress.query(
+      deps.knex
+    ).insertGraphAndFetch({
+      url: options.url,
+      publicName: options.publicName,
+      assetId: options.assetId,
+      additionalProperties: additionalProperties
+    })
+    await deps.assetService.setOn(walletAddress)
+    return walletAddress
   } catch (err) {
     if (err instanceof ForeignKeyViolationError) {
       if (err.constraint === 'walletaddresses_assetid_foreign') {
@@ -203,8 +209,8 @@ async function updateWalletAddress(
     const updatedWalletAddress = await walletAddress
       .$query(trx)
       .patchAndFetch(update)
-      .withGraphFetched('asset')
       .throwIfNotFound()
+    await deps.assetService.setOn(updatedWalletAddress)
 
     // Override all existing additional properties if new ones are provided
     if (additionalProperties) {
@@ -239,9 +245,9 @@ async function getWalletAddress(
   deps: ServiceDependencies,
   id: string
 ): Promise<WalletAddress | undefined> {
-  return await WalletAddress.query(deps.knex)
-    .findById(id)
-    .withGraphFetched('asset')
+  const walletAddress = await WalletAddress.query(deps.knex).findById(id)
+  await deps.assetService.setOn(walletAddress)
+  return walletAddress
 }
 
 async function getWalletAdditionalProperties(
@@ -295,9 +301,8 @@ async function getWalletAddressByUrl(
   deps: ServiceDependencies,
   url: string
 ): Promise<WalletAddress | undefined> {
-  const walletAddress = await WalletAddress.query(deps.knex)
-    .findOne({ url })
-    .withGraphFetched('asset')
+  const walletAddress = await WalletAddress.query(deps.knex).findOne({ url })
+  await deps.assetService.setOn(walletAddress)
   return walletAddress || undefined
 }
 
@@ -306,9 +311,15 @@ async function getWalletAddressPage(
   pagination?: Pagination,
   sortOrder?: SortOrder
 ): Promise<WalletAddress[]> {
-  return await WalletAddress.query(deps.knex)
-    .getPage(pagination, sortOrder)
-    .withGraphFetched('asset')
+  const walletAddresses = await WalletAddress.query(deps.knex).getPage(
+    pagination,
+    sortOrder
+  )
+  if (walletAddresses && walletAddresses.length) {
+    for (const walletAddress of walletAddresses)
+      await deps.assetService.setOn(walletAddress)
+  }
+  return walletAddresses
 }
 
 // Returns the id of the processed wallet address (if any).
@@ -342,7 +353,10 @@ async function processNextWalletAddresses(
       // If a wallet address is locked, don't wait — just come back for it later.
       .skipLocked()
       .where('processAt', '<=', now)
-      .withGraphFetched('asset')
+    if (walletAddresses && walletAddresses.length) {
+      for (const walletAddress of walletAddresses)
+        await deps_.assetService.setOn(walletAddress)
+    }
 
     const deps = {
       ...deps_,
@@ -423,10 +437,6 @@ async function deactivateOpenIncomingPaymentsByWalletAddress(
       IncomingPaymentState.Processing
     ])
     .where('expiresAt', '>', expiresAt)
-}
-
-export interface CreateSubresourceOptions {
-  walletAddressId: string
 }
 
 export interface WalletAddressSubresourceService<

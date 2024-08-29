@@ -35,8 +35,10 @@ import {
 } from './ledger-transfer'
 import { LedgerTransfer, LedgerTransferType } from './ledger-transfer/model'
 import { TelemetryService } from '../../telemetry/service'
+import { AssetService } from '../../asset/service'
 
 export interface ServiceDependencies extends BaseService {
+  fetchAssetService?: () => Promise<AssetService>
   knex: TransactionOrKnex
   withdrawalThrottleDelay?: number
   telemetry?: TelemetryService

@@ -581,7 +581,8 @@ describe('Open Payments Wallet Address Service', (): void => {
                         await expect(
                           walletAddress.onCredit({
                             totalReceived: totalEventsAmount + BigInt(1),
-                            withdrawalThrottleDelay
+                            withdrawalThrottleDelay,
+                            fetchAssetService: undefined
                           })
                         ).resolves.toMatchObject({
                           processAt: startingProcessAt || delayProcessAt

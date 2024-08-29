@@ -745,21 +745,6 @@ importers:
         specifier: ^6.7.5
         version: 6.7.5
 
-  test/grpc-http-benchmark:
-    dependencies:
-      '@grpc/grpc-js':
-        specifier: ^1.11.1
-        version: 1.11.1
-      '@grpc/proto-loader':
-        specifier: ^0.7.13
-        version: 0.7.13
-      '@koa/router':
-        specifier: ^12.0.0
-        version: 12.0.0
-      koa:
-        specifier: ^2.15.3
-        version: 2.15.3
-
   test/integration:
     devDependencies:
       '@apollo/client':
@@ -4212,14 +4197,6 @@ packages:
 
   /@grpc/grpc-js@1.10.9:
     resolution: {integrity: sha512-5tcgUctCG0qoNyfChZifz2tJqbRbXVO9J7X6duFcOjY3HUNCxg5D0ZCK7EP9vIcZ0zRpLU9bWkyCqVCLZ46IbQ==}
-    engines: {node: '>=12.10.0'}
-    dependencies:
-      '@grpc/proto-loader': 0.7.13
-      '@js-sdsl/ordered-map': 4.4.2
-    dev: false
-
-  /@grpc/grpc-js@1.11.1:
-    resolution: {integrity: sha512-gyt/WayZrVPH2w/UTLansS7F9Nwld472JxxaETamrM8HNlsa+jSLNyKAZmhxI2Me4c3mQHFiS1wWHDY1g1Kthw==}
     engines: {node: '>=12.10.0'}
     dependencies:
       '@grpc/proto-loader': 0.7.13

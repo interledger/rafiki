@@ -1,6 +1,7 @@
 import { TransactionOrKnex } from 'objection'
 import { BaseService } from '../shared/baseService'
 import { TransferError, isTransferError } from './errors'
+import { AssetService } from '../asset/service'
 
 export enum LiquidityAccountType {
   ASSET = 'ASSET',
@@ -40,6 +41,7 @@ export interface LiquidityAccount {
 export interface OnCreditOptions {
   totalReceived: bigint
   withdrawalThrottleDelay?: number
+  fetchAssetService?: () => Promise<AssetService>
 }
 
 export interface OnDebitOptions {
@@ -133,6 +135,7 @@ export interface TransferToCreate {
 }
 
 export interface BaseAccountingServiceDependencies extends BaseService {
+  fetchAssetService?: () => Promise<AssetService>
   withdrawalThrottleDelay?: number
 }
 
@@ -160,7 +163,7 @@ export async function createAccountToAccountTransfer(
     getAccountBalance
   } = args
 
-  const { withdrawalThrottleDelay } = deps
+  const { withdrawalThrottleDelay, fetchAssetService } = deps
 
   const { sourceAccount, destinationAccount, sourceAmount, destinationAmount } =
     transferArgs
@@ -226,7 +229,8 @@ export async function createAccountToAccountTransfer(
 
         await destinationAccount.onCredit({
           totalReceived,
-          withdrawalThrottleDelay
+          withdrawalThrottleDelay,
+          fetchAssetService
         })
       }
     },

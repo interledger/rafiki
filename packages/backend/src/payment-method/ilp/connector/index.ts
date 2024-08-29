@@ -148,7 +148,7 @@ function compose(
       if (i <= index)
         return Promise.reject(new Error('next() called multiple times'))
       index = i
-      let m = middlewares[i]
+      const m = middlewares[i]
       if (i === middlewares.length) m.fn = next
       if (!m.fn) return Promise.resolve()
       try {
