@@ -503,7 +503,8 @@ export function initIocContainer(
       quoteService: await deps.use('quoteService'),
       telemetry: config.enableTelemetry
         ? await deps.use('telemetry')
-        : undefined
+        : undefined,
+      assetService: await deps.use('assetService')
     })
   })
 
