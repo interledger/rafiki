@@ -155,6 +155,66 @@ describe('Access utilities', (): void => {
     ).toBe(true)
   })
 
+  test('Can compare an access item on a grant and an access item from a request with different action ordering', async (): Promise<void> => {
+    const grantAccessItemSuperAction = await Access.query(trx).insertAndFetch({
+      grantId: grant.id,
+      type: AccessType.OutgoingPayment,
+      actions: [AccessAction.Create, AccessAction.ReadAll, AccessAction.List],
+      identifier,
+      limits: {
+        receiver,
+        debitAmount: {
+          value: '400',
+          assetCode: 'USD',
+          assetScale: 2
+        }
+      }
+    })
+
+    const requestAccessItem: AccessItem = {
+      type: 'outgoing-payment',
+      actions: ['read', 'list', 'create'],
+      identifier,
+      limits: {
+        receiver,
+        debitAmount: {
+          value: '400',
+          assetCode: 'USD',
+          assetScale: 2
+        }
+      }
+    }
+
+    expect(
+      compareRequestAndGrantAccessItems(
+        requestAccessItem,
+        toOpenPaymentsAccess(grantAccessItemSuperAction)
+      )
+    ).toBe(true)
+  })
+
+  test('Can compare an access item on a grant without an identifier with a request with an identifier', async (): Promise<void> => {
+    const grantAccessItemSuperAction = await Access.query(trx).insertAndFetch({
+      grantId: grant.id,
+      type: AccessType.IncomingPayment,
+      actions: [AccessAction.ReadAll],
+      identifier: undefined
+    })
+
+    const requestAccessItem: AccessItem = {
+      type: 'incoming-payment',
+      actions: [AccessAction.ReadAll],
+      identifier
+    }
+
+    expect(
+      compareRequestAndGrantAccessItems(
+        requestAccessItem,
+        toOpenPaymentsAccess(grantAccessItemSuperAction)
+      )
+    ).toBe(true)
+  })
+
   test('access comparison fails if grant action items are insufficient', async (): Promise<void> => {
     const identifier = `https://example.com/${v4()}`
     const receiver =
@@ -203,6 +263,48 @@ describe('Access utilities', (): void => {
       compareRequestAndGrantAccessItems(
         requestAccessItem,
         toOpenPaymentsAccess(grantAccessItem)
+      )
+    ).toBe(false)
+  })
+
+  test('access comparison fails if identifier mismatch', async (): Promise<void> => {
+    const grantAccessItemSuperAction = await Access.query(trx).insertAndFetch({
+      grantId: grant.id,
+      type: AccessType.IncomingPayment,
+      actions: [AccessAction.ReadAll],
+      identifier
+    })
+
+    const requestAccessItem: AccessItem = {
+      type: 'incoming-payment',
+      actions: [AccessAction.ReadAll],
+      identifier: `https://example.com/${v4()}`
+    }
+
+    expect(
+      compareRequestAndGrantAccessItems(
+        requestAccessItem,
+        toOpenPaymentsAccess(grantAccessItemSuperAction)
+      )
+    ).toBe(false)
+  })
+
+  test('access comparison fails if type mismatch', async (): Promise<void> => {
+    const grantAccessItemSuperAction = await Access.query(trx).insertAndFetch({
+      grantId: grant.id,
+      type: AccessType.Quote,
+      actions: [AccessAction.Read]
+    })
+
+    const requestAccessItem: AccessItem = {
+      type: 'incoming-payment',
+      actions: [AccessAction.Read]
+    }
+
+    expect(
+      compareRequestAndGrantAccessItems(
+        requestAccessItem,
+        toOpenPaymentsAccess(grantAccessItemSuperAction)
       )
     ).toBe(false)
   })
