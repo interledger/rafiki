@@ -125,9 +125,8 @@ async function getOutgoingPaymentsPage(
   }
 
   const page = await query.getPage(pagination, sortOrder)
-  if (page && page.length) {
-    for (const out of page) await deps.assetService.setOn(out.quote)
-  }
+
+  for (const out of page) await deps.assetService.setOn(out.quote)
 
   const amounts = await deps.accountingService.getAccountsTotalSent(
     page.map((payment: OutgoingPayment) => payment.id)
@@ -551,6 +550,7 @@ async function validateGrantAndAddSpentAmountsToPayment(
   if (grantPayments.length === 0) {
     return true
   }
+
   for (const payment of grantPayments)
     await deps.assetService.setOn(payment.quote)
 
@@ -672,10 +672,9 @@ async function getWalletAddressPage(
   const page = await OutgoingPayment.query(deps.knex)
     .list(options)
     .withGraphFetched('[walletAddress]')
-  if (page && page.length) {
-    for (const outgoingPayment of page)
-      await deps.assetService.setOn(outgoingPayment.quote)
-  }
+
+  for (const outgoingPayment of page)
+    await deps.assetService.setOn(outgoingPayment.quote)
 
   const amounts = await deps.accountingService.getAccountsTotalSent(
     page.map((payment: OutgoingPayment) => payment.id)
