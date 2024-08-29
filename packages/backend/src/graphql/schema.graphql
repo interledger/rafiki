@@ -56,6 +56,22 @@ type Query {
   "Fetch an Open Payments outgoing payment"
   outgoingPayment(id: String!): OutgoingPayment
 
+  "Fetch a page of outgoing payments by receiver"
+  outgoingPayments(
+    "Paginating forwards: the cursor before the requested page."
+    after: String
+    "Paginating backwards: the cursor after the the requested page."
+    before: String
+    "Paginating forwards: The first **n** elements from the page."
+    first: Int
+    "Paginating backwards: The last **n** elements from the page."
+    last: Int
+    "Ascending or descending order of creation."
+    sortOrder: SortOrder
+    "Filter outgoing payments based on specific criteria."
+    filter: OutgoingPaymentFilter
+  ): OutgoingPaymentConnection!
+
   "Fetch an Open Payments incoming payment"
   incomingPayment(id: String!): IncomingPayment
 
@@ -244,6 +260,16 @@ type Mutation {
 
   "Set the fee on an asset"
   setFee(input: SetFeeInput!): SetFeeResponse!
+
+  "Approves the incoming payment if the incoming payment is in the PENDING state"
+  approveIncomingPayment(
+    input: ApproveIncomingPaymentInput!
+  ): ApproveIncomingPaymentResponse!
+
+  "Cancel the incoming payment if the incoming payment is in the PENDING state"
+  cancelIncomingPayment(
+    input: CancelIncomingPaymentInput!
+  ): CancelIncomingPaymentResponse!
 }
 
 type PageInfo {
@@ -265,6 +291,16 @@ type AssetsConnection {
 type AssetEdge {
   node: Asset!
   cursor: String!
+}
+
+input ApproveIncomingPaymentInput {
+  "Unique identifier of the incoming payment to be approved. Note: Incoming Payment must be PENDING."
+  id: ID!
+}
+
+input CancelIncomingPaymentInput {
+  "Unique identifier of the incoming payment to be cancelled. Note: Incoming Payment must be PENDING."
+  id: ID!
 }
 
 input CreateAssetInput {
@@ -822,6 +858,12 @@ type OutgoingPaymentEdge {
   cursor: String!
 }
 
+input OutgoingPaymentFilter {
+  receiver: FilterString
+  walletAddressId: FilterString
+  state: FilterString
+}
+
 type OutgoingPayment implements BasePayment & Model {
   "Outgoing payment id"
   id: ID!
@@ -849,6 +891,8 @@ type OutgoingPayment implements BasePayment & Model {
   sentAmount: Amount!
   "Date-time of creation"
   createdAt: String!
+  "Id of the Grant under which this outgoing payment was created"
+  grantId: String
 }
 
 enum OutgoingPaymentState {
@@ -955,18 +999,12 @@ type Quote {
   debitAmount: Amount!
   "Amount to receive (fixed receive)"
   receiveAmount: Amount!
-  "Maximum value per packet allowed on the possible routes"
-  maxPacketAmount: UInt64!
-  "Aggregate exchange rate the payment is guaranteed to meet"
-  minExchangeRate: Float!
-  "Lower bound of probed exchange rate"
-  lowEstimatedExchangeRate: Float!
-  "Upper bound of probed exchange rate"
-  highEstimatedExchangeRate: Float!
   "Date-time of creation"
   createdAt: String!
   "Date-time of expiration"
   expiresAt: String!
+  "Estimated exchange rate"
+  estimatedExchangeRate: Float
 }
 
 input AmountInput {
@@ -1288,6 +1326,14 @@ type RevokeWalletAddressKeyMutationResponse {
 
 type SetFeeResponse {
   fee: Fee
+}
+
+type ApproveIncomingPaymentResponse {
+  payment: IncomingPayment
+}
+
+type CancelIncomingPaymentResponse {
+  payment: IncomingPayment
 }
 
 scalar UInt8

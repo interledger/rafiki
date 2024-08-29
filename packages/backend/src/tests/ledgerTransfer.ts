@@ -36,9 +36,13 @@ export const createLedgerTransfer = async (
     creditAccountId: creditAccountId,
     debitAccountId: debitAccountId,
     amount: amount ?? 10n,
-    expiresAt,
     ledger,
     state: state ?? LedgerTransferState.POSTED,
+    expiresAt:
+      expiresAt ??
+      (state === LedgerTransferState.PENDING
+        ? new Date(Date.now() + 86_400_000)
+        : undefined),
     type
   })
 }

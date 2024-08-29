@@ -22,10 +22,7 @@ import { messageStorage, type Message } from './lib/message.server'
 import tailwind from './styles/tailwind.css'
 import { getOpenPaymentsUrl } from './shared/utils'
 import { PublicEnv, type PublicEnvironment } from './PublicEnv'
-import {
-  isLoggedIn,
-  redirectIfUnauthorizedAccess
-} from './lib/kratos_checks.server'
+import { isLoggedIn, checkAuthAndRedirect } from './lib/kratos_checks.server'
 import variables from './lib/envConfig.server'
 import axios from 'axios'
 import { logger } from './utils/logger.server'
@@ -38,10 +35,12 @@ export const meta: MetaFunction = () => [
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const cookies = request.headers.get('cookie')
-  await redirectIfUnauthorizedAccess(request.url, cookies)
+  await checkAuthAndRedirect(request.url, cookies)
 
   let logoutUrl
   const loggedIn = await isLoggedIn(cookies)
+  const displaySidebar = !variables.authEnabled || loggedIn
+  const authEnabled = variables.authEnabled
   if (loggedIn) {
     const response = await axios.get(
       `${variables.kratosContainerPublicUrl}/self-service/logout/browser`,
@@ -66,11 +65,17 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   }
 
   if (!message) {
-    return json({ message: null, publicEnv, logoutUrl, loggedIn })
+    return json({
+      message: null,
+      publicEnv,
+      logoutUrl,
+      displaySidebar,
+      authEnabled
+    })
   }
 
   return json(
-    { message, publicEnv, logoutUrl, loggedIn },
+    { message, publicEnv, logoutUrl, displaySidebar, authEnabled },
     {
       headers: {
         'Set-Cookie': await messageStorage.destroySession(session, {
@@ -82,7 +87,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 }
 
 export default function App() {
-  const { message, publicEnv, logoutUrl, loggedIn } =
+  const { message, publicEnv, logoutUrl, displaySidebar, authEnabled } =
     useLoaderData<typeof loader>()
   const [snackbarOpen, setSnackbarOpen] = useState(false)
 
@@ -104,9 +109,11 @@ export default function App() {
       </head>
       <body className='h-full text-tealish'>
         <div className='min-h-full'>
-          {loggedIn && <Sidebar logoutUrl={logoutUrl} />}
+          {displaySidebar && (
+            <Sidebar logoutUrl={logoutUrl} authEnabled={authEnabled} />
+          )}
           <div
-            className={`pt-20 md:pt-0 flex ${loggedIn ? 'md:pl-60' : ''} flex-1 flex-col`}
+            className={`pt-20 md:pt-0 flex ${displaySidebar ? 'md:pl-60' : ''} flex-1 flex-col`}
           >
             <main className='pb-8 px-4'>
               <Outlet />

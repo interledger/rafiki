@@ -35,11 +35,11 @@ import {
 } from '~/lib/validate.server'
 import type { ZodFieldErrors } from '~/shared/types'
 import { formatAmount } from '~/shared/utils'
-import { redirectIfUnauthorizedAccess } from '../lib/kratos_checks.server'
+import { checkAuthAndRedirect } from '../lib/kratos_checks.server'
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
   const cookies = request.headers.get('cookie')
-  await redirectIfUnauthorizedAccess(request.url, cookies)
+  await checkAuthAndRedirect(request.url, cookies)
 
   const assetId = params.assetId
 
@@ -150,6 +150,7 @@ export default function ViewAssetPage() {
               <div className='flex space-x-4'>
                 <Button
                   aria-label='deposit asset liquidity page'
+                  preventScrollReset
                   type='button'
                   to={`/assets/${asset.id}/deposit-liquidity`}
                 >
@@ -157,6 +158,7 @@ export default function ViewAssetPage() {
                 </Button>
                 <Button
                   aria-label='withdraw asset liquidity page'
+                  preventScrollReset
                   type='button'
                   to={`/assets/${asset.id}/withdraw-liquidity`}
                 >

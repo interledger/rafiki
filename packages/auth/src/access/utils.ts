@@ -42,13 +42,22 @@ export function compareRequestAndGrantAccessItems(
     return false
   }
 
-  // Validate remaining keys
+  if (restOfRequestAccessItem.type !== restOfGrantAccessItem.type) {
+    return false
+  }
+
+  // Validate identifier, if present on the grant
+  const grantAccessIdentifier = (
+    restOfGrantAccessItem as OutgoingPaymentOrIncomingPaymentAccess
+  ).identifier
+
+  const requestAccessIdentifier = (
+    restOfRequestAccessItem as OutgoingPaymentOrIncomingPaymentAccess
+  ).identifier
+
   if (
-    restOfRequestAccessItem.type !== restOfGrantAccessItem.type ||
-    (restOfRequestAccessItem as OutgoingPaymentOrIncomingPaymentAccess)
-      .identifier !==
-      (restOfGrantAccessItem as OutgoingPaymentOrIncomingPaymentAccess)
-        .identifier
+    grantAccessIdentifier &&
+    requestAccessIdentifier !== grantAccessIdentifier
   ) {
     return false
   }

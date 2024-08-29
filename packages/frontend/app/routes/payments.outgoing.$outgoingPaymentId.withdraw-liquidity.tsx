@@ -5,12 +5,12 @@ import { LiquidityConfirmDialog } from '~/components/LiquidityConfirmDialog'
 import { createOutgoingPaymentWithdrawal } from '~/lib/api/payments.server'
 import { messageStorage, setMessageAndRedirect } from '~/lib/message.server'
 import type { LiquidityActionOutletContext } from './payments.outgoing.$outgoingPaymentId'
-import { redirectIfUnauthorizedAccess } from '../lib/kratos_checks.server'
+import { checkAuthAndRedirect } from '../lib/kratos_checks.server'
 import { type LoaderFunctionArgs } from '@remix-run/node'
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const cookies = request.headers.get('cookie')
-  await redirectIfUnauthorizedAccess(request.url, cookies)
+  await checkAuthAndRedirect(request.url, cookies)
   return null
 }
 

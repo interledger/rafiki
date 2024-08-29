@@ -1,4 +1,4 @@
-FROM node:20-alpine3.18 AS base
+FROM node:20-alpine3.19 AS base
 
 WORKDIR /home/rafiki
 
@@ -42,7 +42,7 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
     --frozen-lockfile
 RUN pnpm --filter mock-account-servicing-entity build
 
-FROM node:20-alpine3.18 AS runner
+FROM node:20-alpine3.19 AS runner
 
 WORKDIR /home/rafiki
 

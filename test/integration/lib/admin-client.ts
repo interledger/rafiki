@@ -68,11 +68,7 @@ export class AdminClient {
               quote {
                 createdAt
                 expiresAt
-                highEstimatedExchangeRate
                 id
-                lowEstimatedExchangeRate
-                maxPacketAmount
-                minExchangeRate
                 walletAddressId
                 receiveAmount {
                   assetCode

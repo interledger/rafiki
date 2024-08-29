@@ -178,7 +178,7 @@ async function revokeGrant(
   deps: ServiceDependencies,
   grantId: string
 ): Promise<boolean> {
-  const { accessTokenService, accessService } = deps
+  const { accessTokenService } = deps
 
   const trx = await deps.knex.transaction()
 
@@ -199,7 +199,6 @@ async function revokeGrant(
     }
 
     await accessTokenService.revokeByGrantId(grant.id, trx)
-    await accessService.revokeByGrantId(grant.id, trx)
 
     await trx.commit()
     return true

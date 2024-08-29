@@ -15,7 +15,7 @@ This includes
 Rafiki is intended to be run by [Account Servicing Entities](/reference/glossary#account-servicing-entity) only and should not be used in production by non-regulated entities.
 :::
 
-Rafiki is made up of several components including an Interledger connector, a high-throughput accounting database called [TigerBeetle](/reference/glossary#tigerbeetle), and several APIs:
+Rafiki is made up of several components including an Interledger connector, a high-throughput accounting database called [TigerBeetle](/reference/glossary#tigerbeetle), an internal [admin interface](/rafikiadmin/overview), and several APIs:
 
 - the [Admin API](/integration/management) to create [peering relationships](/reference/glossary#peer), add supported [assets](/reference/glossary#asset), and issue [wallet addresses](/reference/glossary#wallet-address)
 - the [Open Payments](/reference/glossary#open-payments) API to allow third-parties (with the account holder's consent) to initiate payments and to view the transaction history
