@@ -9,6 +9,7 @@ import {
   CreateTenantInput as CreateAuthTenantInput
 } from '../generated/graphql'
 import { v4 as uuidv4 } from 'uuid'
+import { Pagination, SortOrder } from '../shared/baseModel'
 
 export interface EndpointOptions {
   value: string
@@ -23,6 +24,7 @@ export interface CreateTenantOptions {
 
 export interface TenantService {
   get(id: string): Promise<Tenant | undefined>
+  getPage(pagination?: Pagination, sortOrder?: SortOrder): Promise<Tenant[]>
   create(CreateOptions: CreateTenantOptions): Promise<Tenant | TenantError>
 }
 
@@ -46,13 +48,25 @@ export async function createTenantService(
 
   return {
     get: (id: string) => getTenant(deps, id),
+    getPage: (pagination?, sortOrder?) =>
+      getTenantsPage(deps, pagination, sortOrder),
     create: (options: CreateTenantOptions) => createTenant(deps, options)
   }
 }
 
-async function getTenant(deps: ServiceDependencies, id: string): Promise<Tenant | undefined> {
-  return Tenant
-    .query(deps.knex)
+async function getTenantsPage(
+  deps: ServiceDependencies,
+  pagination?: Pagination,
+  sortOrder?: SortOrder
+): Promise<Tenant[]> {
+  return await Tenant.query(deps.knex).getPage(pagination, sortOrder)
+}
+
+async function getTenant(
+  deps: ServiceDependencies,
+  id: string
+): Promise<Tenant | undefined> {
+  return Tenant.query(deps.knex)
     .withGraphFetched('tenantEndpoints')
     .findById(id)
 }
@@ -79,34 +93,43 @@ async function createTenant(
       const tenantEndpointsData = options.endpoints.map((endpoint) => ({
         type: endpoint.type,
         value: endpoint.value,
-        tenantId: tenant
+        tenantId: tenant.id
       }))
 
-      console.log('INSERT ...', tenant)
-      await TenantEndpoints.query(trx).insert(tenantEndpointsData)
-      console.log('... DONE')
+      await TenantEndpoints.query(trx)
+        .insert(tenantEndpointsData)
+        .returning(['type', 'value'])
 
       // call auth admin api
-      await deps.apolloClient.mutate<AuthTenant, CreateAuthTenantInput>({
-        mutation: gql`
-          mutation CreateAuthTenant($input: CreateTenantInput!) {
-            createTenant(input: $input) {
-              success
+      const mutation = gql`
+        mutation CreateAuthTenant($input: CreateTenantInput!) {
+          createTenant(input: $input) {
+            tenant {
+              id
             }
           }
-        `,
-        variables: {
+        }
+      `
+      const variables = {
+        input: {
           tenantId: tenant.id,
           idpSecret: options.idpSecret,
           idpConsentEndpoint: options.idpConsentEndpoint
         }
+      }
+
+      await deps.apolloClient.mutate<
+        AuthTenant,
+        { input: CreateAuthTenantInput }
+      >({
+        mutation,
+        variables
       })
     } catch (err) {
-      console.log('ERROR: ', err)
       await trx.rollback()
       throw err
     }
-    await trx.commit()
+
     return tenant
   })
 }

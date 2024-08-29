@@ -35,5 +35,5 @@ export class TenantEndpoints extends WeakModel {
 
   public type!: EndpointType
   public value!: string
-  public tenantId!: Tenant
+  public tenantId!: string
 }

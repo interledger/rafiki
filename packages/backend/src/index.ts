@@ -7,6 +7,8 @@ import { createClient } from 'tigerbeetle-node'
 import { createClient as createIntrospectionClient } from 'token-introspection'
 import net from 'net'
 import dns from 'dns'
+import { createHmac } from 'crypto'
+import { print } from 'graphql/language/printer'
 
 import {
   createAuthenticatedClient as createOpenPaymentsClient,
@@ -65,6 +67,7 @@ import {
 } from '@apollo/client'
 import { onError } from '@apollo/client/link/error'
 import { setContext } from '@apollo/client/link/context'
+import { canonicalize } from 'json-canonicalize'
 
 BigInt.prototype.toJSON = function () {
   return this.toString()
@@ -449,15 +452,6 @@ export function initIocContainer(
     return createIlpPaymentService(serviceDependencies)
   })
 
-  container.singleton('tenantService', async (deps) => {
-    const [logger, knex] = await Promise.all([
-      deps.use('logger'),
-      deps.use('knex')
-    ])
-
-    return createTenantService({ logger, knex })
-  })
-
   container.singleton('apolloClient', async (deps) => {
     const [logger, config] = await Promise.all([
       deps.use('logger'),
@@ -483,13 +477,32 @@ export function initIocContainer(
       }
     })
 
-    const authLink = setContext((_, { headers }) => {
+    const authLink = setContext((request, { headers }) => {
+      if (!config.authAdminApiSecret || !config.authAdminApiSignatureVersion)
+        return { headers }
+      const timestamp = Math.round(new Date().getTime() / 1000)
+      const version = config.authAdminApiSignatureVersion
+
+      const { query, variables, operationName } = request
+      const formattedRequest = {
+        variables,
+        operationName,
+        query: print(query)
+      }
+
+      const payload = `${timestamp}.${canonicalize(formattedRequest)}`
+      const hmac = createHmac('sha256', config.authAdminApiSecret)
+      hmac.update(payload)
+      const digest = hmac.digest('hex')
+
       return {
         headers: {
-          ...headers
+          ...headers,
+          signature: `t=${timestamp}, v${version}=${digest}`
         }
       }
     })
+
     const link = ApolloLink.from([errorLink, authLink, httpLink])
 
     const client = new ApolloClient({
@@ -509,6 +522,17 @@ export function initIocContainer(
     })
 
     return client
+  })
+
+  container.singleton('tenantService', async (deps) => {
+    const [logger, knex, config, apolloClient] = await Promise.all([
+      deps.use('logger'),
+      deps.use('knex'),
+      deps.use('config'),
+      deps.use('apolloClient')
+    ])
+
+    return createTenantService({ logger, knex, config, apolloClient })
   })
 
   container.singleton('paymentMethodHandlerService', async (deps) => {

@@ -31,6 +31,7 @@ export interface CreateIncomingPaymentOptions {
   expiresAt?: Date
   incomingAmount?: Amount
   metadata?: Record<string, unknown>
+  tenantId: string
 }
 
 export interface IncomingPaymentService
@@ -91,7 +92,8 @@ async function createIncomingPayment(
     client,
     expiresAt,
     incomingAmount,
-    metadata
+    metadata,
+    tenantId
   }: CreateIncomingPaymentOptions,
   trx?: Knex.Transaction
 ): Promise<IncomingPayment | IncomingPaymentError> {
@@ -131,7 +133,8 @@ async function createIncomingPayment(
       incomingAmount,
       metadata,
       state: IncomingPaymentState.Pending,
-      processAt: expiresAt
+      processAt: expiresAt,
+      tenantId
     })
     .withGraphFetched('[asset, walletAddress]')
 

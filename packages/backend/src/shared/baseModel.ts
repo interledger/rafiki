@@ -128,7 +128,6 @@ export abstract class WeakModel extends PaginationModel {
   }
 
   $formatJson(json: Pojo): Pojo {
-    json = super.$formatJson(json)
     return {
       ...json,
       createdAt: json.createdAt.toISOString(),
@@ -139,7 +138,7 @@ export abstract class WeakModel extends PaginationModel {
 
 export abstract class BaseModel extends WeakModel {
   public id!: string
-  
+
   public $beforeInsert(context: QueryContext): void {
     super.$beforeInsert(context)
     this.id = this.id || uuid()

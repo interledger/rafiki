@@ -94,7 +94,8 @@ export const createIncomingPayment: MutationResolvers<ApolloContext>['createInco
         ? undefined
         : new Date(args.input.expiresAt),
       incomingAmount: args.input.incomingAmount,
-      metadata: args.input.metadata
+      metadata: args.input.metadata,
+      tenantId: args.input.tenantId
     })
     if (isIncomingPaymentError(incomingPaymentOrError)) {
       throw new GraphQLError(errorToMessage[incomingPaymentOrError], {

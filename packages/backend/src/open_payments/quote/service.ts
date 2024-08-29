@@ -76,9 +76,10 @@ interface QuoteOptionsWithReceiveAmount extends QuoteOptionsBase {
   debitAmount?: never
 }
 
-export type CreateQuoteOptions =
+export type CreateQuoteOptions = { tenantId: string } & (
   | QuoteOptionsWithDebitAmount
   | QuoteOptionsWithReceiveAmount
+)
 
 async function createQuote(
   deps: ServiceDependencies,
@@ -145,7 +146,8 @@ async function createQuote(
           expiresAt: new Date(0), // expiresAt is patched in finalizeQuote
           client: options.client,
           feeId: sendingFee?.id,
-          estimatedExchangeRate: quote.estimatedExchangeRate
+          estimatedExchangeRate: quote.estimatedExchangeRate,
+          tenantId: options.tenantId
         })
         .withGraphFetched('[asset, fee, walletAddress]')
 

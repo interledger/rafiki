@@ -39,6 +39,7 @@ export interface CreateOptions extends Options {
   url: string
   assetId: string
   additionalProperties?: WalletAddressAdditionalPropertyInput[]
+  tenantId: string
 }
 
 type Status = 'ACTIVE' | 'INACTIVE'
@@ -169,7 +170,8 @@ async function createWalletAddress(
         url: options.url,
         publicName: options.publicName,
         assetId: options.assetId,
-        additionalProperties: additionalProperties
+        additionalProperties: additionalProperties,
+        tenantId: options.tenantId
       })
       .withGraphFetched('asset')
   } catch (err) {
