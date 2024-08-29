@@ -1,5 +1,4 @@
 import { IocContract } from '@adonisjs/fold'
-import { LiquidityAccountType } from '../accounting/service'
 
 import { AppServices } from '../app'
 import { isIncomingPaymentError } from '../open_payments/payment/incoming/errors'
