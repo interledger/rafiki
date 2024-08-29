@@ -162,7 +162,7 @@ jobs:
   node-build:
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    needs: [auth, backend, frontend, token-introspection, mock-account-servicing-entity, graphql, codeql-analyze, integration-test]
+    needs: [auth, backend, frontend, token-introspection, mock-account-servicing-entity, graphql, codeql-analyze]
     steps: 
       - uses: actions/checkout@v4
       - uses: ./.github/workflows/rafiki/env-setup
