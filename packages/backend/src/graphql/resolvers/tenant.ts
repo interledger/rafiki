@@ -7,15 +7,20 @@ import {
   TenantError
 } from '../../tenant/errors'
 <<<<<<< HEAD
+<<<<<<< HEAD
 import { Tenant as SchemaTenant } from '../generated/graphql'
 =======
 >>>>>>> 7dbb74ab (feat(backend): update resolvers with tenant id and finish the tenant creation)
+=======
+import { Tenant as SchemaTenant } from '../generated/graphql'
+>>>>>>> 26a8c9b7 (feat(backend): small changes to schema + mapping of tenant to graphql + bruno)
 import {
   MutationResolvers,
   QueryResolvers,
   ResolversTypes,
   TenantEndpointType
 } from '../generated/graphql'
+<<<<<<< HEAD
 <<<<<<< HEAD
 import { Tenant } from '../../tenant/model'
 import { Pagination, SortOrder } from '../../shared/baseModel'
@@ -25,6 +30,11 @@ import { tenantEndpointToGraphql } from './tenant_endpoints'
 =======
 import { EndpointType } from '../../tenant/model'
 >>>>>>> 7dbb74ab (feat(backend): update resolvers with tenant id and finish the tenant creation)
+=======
+import { EndpointType, Tenant } from '../../tenant/model'
+import { Pagination, SortOrder } from '../../shared/baseModel'
+import { getPageInfo } from '../../shared/pagination'
+>>>>>>> 26a8c9b7 (feat(backend): small changes to schema + mapping of tenant to graphql + bruno)
 
 const mapTenantEndpointTypeToModelEndpointType = {
   [TenantEndpointType.RatesUrl]: EndpointType.RatesUrl,
@@ -32,6 +42,9 @@ const mapTenantEndpointTypeToModelEndpointType = {
 }
 
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 26a8c9b7 (feat(backend): small changes to schema + mapping of tenant to graphql + bruno)
 export const getTenants: QueryResolvers<ApolloContext>['tenants'] = async (
   _,
   args,
@@ -42,7 +55,11 @@ export const getTenants: QueryResolvers<ApolloContext>['tenants'] = async (
   const order = sortOrder === 'ASC' ? SortOrder.Asc : SortOrder.Desc
   const tenants = await tenantService.getPage(pagination, order)
   const pageInfo = await getPageInfo({
+<<<<<<< HEAD
     getPage: (pagination: Pagination, sortOrder?: SortOrder) =>
+=======
+    getPage: (pagination: Pagination, sortOrder?: SortOrder) => 
+>>>>>>> 26a8c9b7 (feat(backend): small changes to schema + mapping of tenant to graphql + bruno)
       tenantService.getPage(pagination, sortOrder),
     page: tenants,
     sortOrder: order
@@ -54,6 +71,7 @@ export const getTenants: QueryResolvers<ApolloContext>['tenants'] = async (
       cursor: tenant.id,
       node: tenantToGraphql(tenant)
     }))
+<<<<<<< HEAD
 =======
 // export const getTenants: QueryResolvers<ApolloContext>['tenants'] = async (
 //   _,
@@ -65,6 +83,10 @@ export const getTenants: QueryResolvers<ApolloContext>['tenants'] = async (
 //   const order = sortOrder === 'ASC' ? SortOrder.Asc : SortOrder.Desc
 //   const tenants = await tenantService.getPage()
 // }
+=======
+  }
+}
+>>>>>>> 26a8c9b7 (feat(backend): small changes to schema + mapping of tenant to graphql + bruno)
 
 export const getTenant: QueryResolvers<ApolloContext>['tenant'] = async (
   _,
@@ -82,6 +104,7 @@ export const getTenant: QueryResolvers<ApolloContext>['tenant'] = async (
     })
 >>>>>>> 7dbb74ab (feat(backend): update resolvers with tenant id and finish the tenant creation)
   }
+<<<<<<< HEAD
 }
 
 export const getTenant: QueryResolvers<ApolloContext>['tenant'] = async (
@@ -102,8 +125,11 @@ export const getTenant: QueryResolvers<ApolloContext>['tenant'] = async (
 
   return tenantToGraphql(tenant)
 }
+=======
+  console.log('TENANT: ', tenant)
+>>>>>>> 26a8c9b7 (feat(backend): small changes to schema + mapping of tenant to graphql + bruno)
 
-  return tenant
+  return tenantToGraphql(tenant)
 }
 
 export const createTenant: MutationResolvers<ApolloContext>['createTenant'] =
@@ -139,16 +165,23 @@ export const createTenant: MutationResolvers<ApolloContext>['createTenant'] =
   }
 
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 26a8c9b7 (feat(backend): small changes to schema + mapping of tenant to graphql + bruno)
 export function tenantToGraphql(tenant: Tenant): SchemaTenant {
   return {
     id: tenant.id,
     kratosIdentityId: tenant.kratosIdentityId,
+<<<<<<< HEAD
     //we should probably paginate this, but for now, that we only have like two endpoints it should be ok
     endpoints: tenant.endpoints.map(tenantEndpointToGraphql),
+=======
+>>>>>>> 26a8c9b7 (feat(backend): small changes to schema + mapping of tenant to graphql + bruno)
     createdAt: new Date(tenant.createdAt).toISOString(),
     updatedAt: new Date(tenant.updatedAt).toISOString()
   }
 }
+<<<<<<< HEAD
 =======
 // export function tenantToGraphql(tenant: Tenant): SchemaTenant {
 //   tenant.
@@ -158,3 +191,5 @@ export function tenantToGraphql(tenant: Tenant): SchemaTenant {
 //   }
 // }
 >>>>>>> 7dbb74ab (feat(backend): update resolvers with tenant id and finish the tenant creation)
+=======
+>>>>>>> 26a8c9b7 (feat(backend): small changes to schema + mapping of tenant to graphql + bruno)
