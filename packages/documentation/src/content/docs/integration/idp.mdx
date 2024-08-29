@@ -1,0 +1,92 @@
+---
+title: Identity provider (IdP)
+---
+
+import { Badge } from '@astrojs/starlight/components'
+import { Mermaid, CodeBlock, LinkOut } from '@interledger/docs-design-system'
+
+## Integrate with your identity provider
+
+An identity provider (IdP) is a system or service that stores and manages user identity information, authentication, and consent. Integration with an IdP is required due to Rafiki's use of the Open Payments standard and APIs. Skip to the [IdP environment variables](#idp-environment-variables) for a summary of required variables.
+
+Your IdP will:
+
+- Authenticate requests from clients to create payments and quotes on Rafiki's backend
+- Manage interactions with end users, such as your account holders, to gather consent
+
+Before a client can make an outgoing payment request, it must obtain a grant from your authorization server. Open Payments requires explicit interaction by an individual (typically the client's end user) before issuing the grant. Presenting the end-user with a consent screen from which they choose to accept or deny the payment is an example of an interaction.
+
+The interaction is facilitated by your IdP. Your IdP:
+
+- Provides the consent screen
+- Sends the user's interaction choice to your authorization server
+- Redirects the user after the interaction is complete
+
+### Rafiki Admin
+
+Rafiki Admin is a web app that allows you to manage your Rafiki instance through a UI. Out of the box, we provide Ory Kratos for the identity and user management of your administrators. Kratos is for internal use and cannot be used as an identity provider for your Open Payments authorization server.
+
+### IdP environment variables
+
+| Environment variable     | Description                                                                                                                                                                                                                        | Required |
+| ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| `IDENTITY_SERVER_DOMAIN` | The URL that your authorization server will direct the client to so the client's end-user can complete the interaction and authorize a grant.                                                                                      | Y        |
+| `IDENTITY_SERVER_SECRET` | A shared secret between your authorization server and your IdP that your authorization server will use to secure its IdP-related endpoints. Your IdP must provide this secret when it sends requests to your authorization server. | Y        |
+
+### Endpoints
+
+There are a number of endpoints that facilitate communication between your IdP and your authorization server after a pending grant request is created.
+
+The endpoints are called in the sequence listed in the table below.
+
+| Method                                               | Endpoint                        | Purpose                                                         |
+| ---------------------------------------------------- | ------------------------------- | --------------------------------------------------------------- |
+| <Badge text="GET" variant="note" size="medium"/>     | `/interact/:id /:nonce`         | [Establish interaction session](#establish-interaction-session) |
+| <Badge text="GET" variant="note" size="medium"/>     | `/grant/:id /:nonce`            | [Fetch grant information](#fetch-grant-information)             |
+| <Badge text="GET" variant="note" size="medium"/>     | `/grant/:id /:nonce`            | [Accept or reject grant](#accept-or-reject-grant)               |
+| <Badge text="GET" variant="note" size="medium"/>     | `/interact/:id /:nonce /finish` | [Finish interaction](#finish-interaction)                       |
+| <Badge text="POST" variant="success" size="medium"/> | `/interact/:id /:nonce`         | [Continue grant](#continue-grant)                               |
+
+Each interaction with an endpoint is identified by an `id` and a `nonce`. Both are provided as query parameters when your authorization server redirects to your IdP.
+
+#### Establish interaction session
+
+Called by the client and establishes an interactive session with your authorization server, which redirects the browser session to the IdP consent screen.
+
+#### Fetch grant information
+
+Called by your IdP to retrieve a list of access rights, requested by the client, from your authorization server. The access rights are presented to the client's end-user on the consent screen. The authorization server's response is served on the `INTERACTION_PORT`, which is `3009` by default.
+
+| Header         | Description                                                                                                                                                  | Required |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------- |
+| `x-idp-secret` | Used to secure communication between your IdP and authorization server using the shared secret defined in the `IDENTITY_SERVER_SECRET` environment variable. | Y        |
+
+#### Accept or reject grant
+
+Your IdP communicates the end-user’s acceptance or rejection on the consent screen to your authorization server, then redirects to `GET /interact/:id/:nonce/finish`. The response is served on `INTERACTION_PORT`, which is `3009` by default.
+
+| Header         | Description                                                                                                                                                  | Required |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------- |
+| `x-idp-secret` | Used to secure communication between your IdP and authorization server using the shared secret defined in the `IDENTITY_SERVER_SECRET` environment variable. | Y        |
+
+#### Finish interaction
+
+Your IdP ends the interaction initiated by `GET /interact/:id/:nonce` and redirects the end-user's browser session to the URI of the <LinkOut href="https://openpayments.dev/apis/auth-server/operations/post-request/">grant initialization request</LinkOut>. A query parameter will indicate a failure, or on success, a SHA-256 hash parameter that the client can use to verify the successful interaction.
+
+| Query parameter | Description                                                                                                                                                                                                                                                               | Required |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| `id`            | Interaction ID                                                                                                                                                                                                                                                            | Y        |
+| `nonce`         | Interaction nonce                                                                                                                                                                                                                                                         | Y        |
+| `result`        | Success or failure of the grant authorization. In case of success, the SHA-256 hash of the interaction is sent in the response along with the `interact_ref` that identifies the interaction on the authorization server and the URI of the grant initialization request. | Y        |
+
+The following tables list examples of the different possible response types on this endpoint.
+
+| Response | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | Example                                                                                                                          |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| Rejected | The interaction was rejected by the end-user.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | `?result=grant_rejected`                                                                                                         |
+| Invalid  | The grant was not in a state where it could be accepted or rejected (e.g., grant was already approved)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | `?result=grant_invalid`                                                                                                          |
+| Success  | The grant was successful with the following returned in the response:<br /><ul><li>A hash representing the SHA-256 hash of values provided by the client in the <LinkOut href="https://openpayments.dev/apis/auth-server/operations/post-request/">grant initialization request</LinkOut> (`interact.finish.nonce`), and the values in the response returned from your authorization server (`interact.finish`).</li><li>The `interact_ref` that identifies the interaction on your authorization server alongside the hash</li><li>The URI of the grant initialization request (e.g., `https://www.auth-server.com`)</li></ul> | `hash=p28jsq0Y2KK3WS__a42tavNC64ldGTBroywsWxT4md_jZQ1R\HZT8BOWYHcLmObM7XHPAdJzTZMtKBsaraJ64A &interact_ref=4IFWWIKYBC2PQ6U56NL1` |
+
+#### Continue grant
+
+The client requests a grant from your authorization server for an accepted interaction. Your authorization server responds with an <LinkOut href="https://openpayments.dev/apis/auth-server/operations/post-continue/">access token</LinkOut>.

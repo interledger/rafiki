@@ -1,0 +1,82 @@
+---
+title: Fees
+---
+
+import { Badge } from '@astrojs/starlight/components'
+import { Mermaid, CodeBlock, LinkOut } from '@interledger/docs-design-system'
+
+You can charge fees on top of estimated network fees to facilitate transfers. Each asset you support can have a different fee structure and you can specify both fixed and variable fees per asset.
+
+## Set fees using the `setFee` GraphQL mutation
+
+<CodeBlock title="setFee mutation">
+```graphql
+mutation SetFee($input: SetFeeInput!) {
+  setFee(input: $input) {
+    code
+    success
+    message
+    fee {
+      id
+      assetId
+      type
+      fixed
+      basisPoints
+      createdAt
+    }
+  }
+}
+```
+</CodeBlock>
+
+### Example
+
+Let's assume your asset scale is 2. You'll charge a fixed fee of 100 (\$1.00) and a variable fee of 100 (1%).
+
+<CodeBlock title="Example JSON request">
+```json
+{
+  "input": {
+    "assetId": "14863f6f-4bda-42ef-8715-bf4762898af8",
+    "type": "SENDING",
+    "fee": {
+      "fixed": 100,
+      "basisPoints": 100
+    }
+  }
+}
+```
+</CodeBlock>
+
+| Variable      | Description                                                                                                                                                                                                                         |
+| ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `assetId`     | The asset's unique ID assigned by Rafiki when the asset was created.                                                                                                                                                                |
+| `type`        | `SENDING` indicates the sender will incur the fee. Note that the API spec shows `RECEIVING` as a possible value; however, it's not been implemented.                                                                                |
+| `fixed`       | The amount of the flat, fixed fee to charge. Assuming USD with an asset scale of 2 in the example above, the value of `100` equals \$1.00.                                                                                          |
+| `basisPoints` | The amount of the variable fee to charge based on the total amount. One basis point is equal to 0.01% of the total amount. `100` basis points equals 1%, and `10000` basis points equals 100%. In the example above, the fee is 1%. |
+
+<CodeBlock title="Example JSON response">
+```json
+{
+  "data": {
+    "setFee": {
+      "code": "200",
+      "success": true,
+      "message": "Fee set",
+      "fee": {
+        "id": "140fd9c0-8f14-4850-9724-102f04d97e69",
+        "assetId": "14863f6f-4bda-42ef-8715-bf4762898af8",
+        "type": "SENDING",
+        "fixed": "100",
+        "basisPoints": 100,
+        "createdAt": "2023-09-13T14:59:53.435Z"
+      }
+    }
+  }
+}
+```
+</CodeBlock>
+
+## Set fees using Rafiki Admin
+
+After an asset is created, select to edit the asset within the [Rafiki Admin](/admin/admin-user-guide#edit-asset) application, then add a fixed fee and/or basis point for the asset.

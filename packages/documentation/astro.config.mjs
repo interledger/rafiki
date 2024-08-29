@@ -93,6 +93,32 @@ export default defineConfig({
                   link: '/integration/before-you-begin'
                 },
                 {
+                  label: 'Get started',
+                  collapsed: true,
+                  items: [
+                    {
+                      label: 'Overview',
+                      link: '/integration/get-started'
+                    },
+                    {
+                      label: 'Fees',
+                      link: '/integration/fees'
+                    },
+                    {
+                      label: 'Exchange rates',
+                      link: '/integration/exchange-rates'
+                    },
+                    {
+                      label: 'Webhook events',
+                      link: '/integration/webhook-events'
+                    },
+                    {
+                      label: 'Identity provider (IdP)',
+                      link: '/integration/idp'
+                    }
+                  ]
+                },
+                {
                   label: 'Deployment',
                   collapsed: true,
                   items: [
