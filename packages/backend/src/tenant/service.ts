@@ -1,11 +1,7 @@
 import { TransactionOrKnex } from 'objection'
 import { BaseService } from '../shared/baseService'
 import { TenantError } from './errors'
-<<<<<<< HEAD
 import { Tenant } from './model'
-=======
-import { EndpointType, Tenant, TenantEndpoints } from './model'
->>>>>>> 35b93ec2 (feat(backend): create tenant service implementation)
 import { IAppConfig } from '../config/app'
 import { ApolloClient, gql, NormalizedCacheObject } from '@apollo/client'
 import {
@@ -13,17 +9,9 @@ import {
   CreateTenantInput as CreateAuthTenantInput
 } from '../generated/graphql'
 import { v4 as uuidv4 } from 'uuid'
-<<<<<<< HEAD
 import { Pagination, SortOrder } from '../shared/baseModel'
 import { EndpointOptions, TenantEndpointService } from './endpoints/service'
 import { TenantEndpoint } from './endpoints/model'
-=======
-
-export interface EndpointOptions {
-  value: string
-  type: EndpointType
-}
->>>>>>> 35b93ec2 (feat(backend): create tenant service implementation)
 
 export interface CreateTenantOptions {
   idpConsentEndpoint: string
@@ -33,22 +21,15 @@ export interface CreateTenantOptions {
 
 export interface TenantService {
   get(id: string): Promise<Tenant | undefined>
-<<<<<<< HEAD
   getPage(pagination?: Pagination, sortOrder?: SortOrder): Promise<Tenant[]>
   create(createOptions: CreateTenantOptions): Promise<Tenant | TenantError>
-=======
-  create(CreateOptions: CreateTenantOptions): Promise<Tenant | TenantError>
->>>>>>> c52a342a (feat(packages): make multi tenant work wip)
 }
 
 export interface ServiceDependencies extends BaseService {
   knex: TransactionOrKnex
   config: IAppConfig
   apolloClient: ApolloClient<NormalizedCacheObject>
-<<<<<<< HEAD
   tenantEndpointService: TenantEndpointService
-=======
->>>>>>> 35b93ec2 (feat(backend): create tenant service implementation)
 }
 
 export async function createTenantService(
@@ -60,26 +41,18 @@ export async function createTenantService(
     }),
     knex: deps_.knex,
     config: deps_.config,
-<<<<<<< HEAD
     apolloClient: deps_.apolloClient,
     tenantEndpointService: deps_.tenantEndpointService
-=======
-    apolloClient: deps_.apolloClient
->>>>>>> 35b93ec2 (feat(backend): create tenant service implementation)
   }
 
   return {
     get: (id: string) => getTenant(deps, id),
-<<<<<<< HEAD
     getPage: (pagination?, sortOrder?) =>
       getTenantsPage(deps, pagination, sortOrder),
-=======
->>>>>>> c52a342a (feat(packages): make multi tenant work wip)
     create: (options: CreateTenantOptions) => createTenant(deps, options)
   }
 }
 
-<<<<<<< HEAD
 async function getTenantsPage(
   deps: ServiceDependencies,
   pagination?: Pagination,
@@ -95,12 +68,6 @@ async function getTenant(
 ): Promise<Tenant | undefined> {
   return Tenant.query(deps.knex)
     .withGraphFetched('endpoints')
-=======
-async function getTenant(deps: ServiceDependencies, id: string): Promise<Tenant | undefined> {
-  return Tenant
-    .query(deps.knex)
-    .withGraphFetched('tenantEndpoints')
->>>>>>> c52a342a (feat(packages): make multi tenant work wip)
     .findById(id)
 }
 
@@ -155,7 +122,6 @@ async function createTenant(
         variables
       })
     } catch (err) {
-      console.log('ERROR: ', err)
       await trx.rollback()
       throw err
     }
