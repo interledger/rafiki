@@ -68,6 +68,7 @@ import {
 import { onError } from '@apollo/client/link/error'
 import { setContext } from '@apollo/client/link/context'
 import { canonicalize } from 'json-canonicalize'
+import { createTenantEndpointService } from './tenant/endpoints/service'
 
 BigInt.prototype.toJSON = function () {
   return this.toString()
@@ -524,15 +525,32 @@ export function initIocContainer(
     return client
   })
 
-  container.singleton('tenantService', async (deps) => {
-    const [logger, knex, config, apolloClient] = await Promise.all([
+  container.singleton('tenantEndpointService', async (deps) => {
+    const [logger, knex] = await Promise.all([
       deps.use('logger'),
-      deps.use('knex'),
-      deps.use('config'),
-      deps.use('apolloClient')
+      deps.use('knex')
     ])
 
-    return createTenantService({ logger, knex, config, apolloClient })
+    return createTenantEndpointService({ knex, logger })
+  })
+
+  container.singleton('tenantService', async (deps) => {
+    const [logger, knex, config, apolloClient, tenantEndpointService] =
+      await Promise.all([
+        deps.use('logger'),
+        deps.use('knex'),
+        deps.use('config'),
+        deps.use('apolloClient'),
+        deps.use('tenantEndpointService')
+      ])
+
+    return createTenantService({
+      logger,
+      knex,
+      config,
+      apolloClient,
+      tenantEndpointService
+    })
   })
 
   container.singleton('paymentMethodHandlerService', async (deps) => {

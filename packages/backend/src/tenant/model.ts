@@ -1,39 +1,26 @@
+import { Model } from 'objection'
 import { BaseModel, WeakModel } from '../shared/baseModel'
-
-// export type EndpointType = 'WebhookBaseUrl' | 'RatesUrl'
-export enum EndpointType {
-  WebhookBaseUrl = 'WebhookBaseUrl',
-  RatesUrl = 'RatesUrl'
-}
+import { TenantEndpoint } from './endpoints/model'
 
 export class Tenant extends BaseModel {
   public static get tableName(): string {
     return 'tenants'
   }
 
-  public kratosIdentityId!: string
-  public deletedAt?: Date
-}
-
-export class TenantEndpoints extends WeakModel {
-  public static get tableName(): string {
-    return 'tenantEndpoints'
-  }
-
   public static get relationMappings() {
     return {
-      tenant: {
-        relation: WeakModel.HasOneRelation,
-        modelClass: Tenant,
+      endpoints: {
+        relation: Model.HasManyRelation,
+        modelClass: TenantEndpoint,
         join: {
-          from: 'tenantEndpoints.tenantId',
-          to: 'tenants.id'
+          from: 'tenants.id',
+          to: 'tenantEndpoints.tenantId'
         }
       }
     }
   }
 
-  public type!: EndpointType
-  public value!: string
-  public tenantId!: string
+  public kratosIdentityId!: string
+  public deletedAt?: Date
+  public endpoints!: TenantEndpoint[]
 }

@@ -13,9 +13,11 @@ import {
   ResolversTypes,
   TenantEndpointType
 } from '../generated/graphql'
-import { EndpointType, Tenant } from '../../tenant/model'
+import { Tenant } from '../../tenant/model'
 import { Pagination, SortOrder } from '../../shared/baseModel'
 import { getPageInfo } from '../../shared/pagination'
+import { EndpointType, TenantEndpoint } from '../../tenant/endpoints/model'
+import { tenantEndpointToGraphql } from './tenant_endpoints'
 
 const mapTenantEndpointTypeToModelEndpointType = {
   [TenantEndpointType.RatesUrl]: EndpointType.RatesUrl,
@@ -32,7 +34,7 @@ export const getTenants: QueryResolvers<ApolloContext>['tenants'] = async (
   const order = sortOrder === 'ASC' ? SortOrder.Asc : SortOrder.Desc
   const tenants = await tenantService.getPage(pagination, order)
   const pageInfo = await getPageInfo({
-    getPage: (pagination: Pagination, sortOrder?: SortOrder) => 
+    getPage: (pagination: Pagination, sortOrder?: SortOrder) =>
       tenantService.getPage(pagination, sortOrder),
     page: tenants,
     sortOrder: order
@@ -62,7 +64,6 @@ export const getTenant: QueryResolvers<ApolloContext>['tenant'] = async (
       }
     })
   }
-  console.log('TENANT: ', tenant)
 
   return tenantToGraphql(tenant)
 }
@@ -103,6 +104,8 @@ export function tenantToGraphql(tenant: Tenant): SchemaTenant {
   return {
     id: tenant.id,
     kratosIdentityId: tenant.kratosIdentityId,
+    //we should probably paginate this, but for now, that we only have like two endpoints it should be ok
+    endpoints: tenant.endpoints.map(tenantEndpointToGraphql),
     createdAt: new Date(tenant.createdAt).toISOString(),
     updatedAt: new Date(tenant.updatedAt).toISOString()
   }

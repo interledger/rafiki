@@ -303,6 +303,16 @@ type PageInfo {
   startCursor: String
 }
 
+type TenantEndpointsConnection {
+  pageInfo: PageInfo!
+  edges: [TenantEndpointEdge!]!
+}
+
+type TenantEndpointEdge {
+  node: TenantEndpoint
+  cursor: String!
+}
+
 type TenantsConnection {
   pageInfo: PageInfo!
   edges: [TenantEdge!]!
@@ -1371,7 +1381,12 @@ type CreateTenantMutationResponse {
   tenant: Tenant!
 }
 
-type Tenant {
+type TenantEndpoint {
+  type: TenantEndpointType!
+  value: String!
+}
+
+type Tenant implements Model {
   "Tenant ID that is used in subsequent resources"
   id: ID!
   "Kratos identity ID"
@@ -1380,6 +1395,8 @@ type Tenant {
   createdAt: String!
   "Date-time of the update"
   updatedAt: String!
+  "List of tenant endpoints associated with this tenant"
+  endpoints: [TenantEndpoint!]!
 }
 
 type LiquidityMutationResponse {

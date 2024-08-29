@@ -1,7 +1,7 @@
 import { TransactionOrKnex } from 'objection'
 import { BaseService } from '../shared/baseService'
 import { TenantError } from './errors'
-import { EndpointType, Tenant, TenantEndpoints } from './model'
+import { Tenant } from './model'
 import { IAppConfig } from '../config/app'
 import { ApolloClient, gql, NormalizedCacheObject } from '@apollo/client'
 import {
@@ -10,11 +10,8 @@ import {
 } from '../generated/graphql'
 import { v4 as uuidv4 } from 'uuid'
 import { Pagination, SortOrder } from '../shared/baseModel'
-
-export interface EndpointOptions {
-  value: string
-  type: EndpointType
-}
+import { EndpointOptions, TenantEndpointService } from './endpoints/service'
+import { TenantEndpoint } from './endpoints/model'
 
 export interface CreateTenantOptions {
   idpConsentEndpoint: string
@@ -25,13 +22,14 @@ export interface CreateTenantOptions {
 export interface TenantService {
   get(id: string): Promise<Tenant | undefined>
   getPage(pagination?: Pagination, sortOrder?: SortOrder): Promise<Tenant[]>
-  create(CreateOptions: CreateTenantOptions): Promise<Tenant | TenantError>
+  create(createOptions: CreateTenantOptions): Promise<Tenant | TenantError>
 }
 
 export interface ServiceDependencies extends BaseService {
   knex: TransactionOrKnex
   config: IAppConfig
   apolloClient: ApolloClient<NormalizedCacheObject>
+  tenantEndpointService: TenantEndpointService
 }
 
 export async function createTenantService(
@@ -43,7 +41,8 @@ export async function createTenantService(
     }),
     knex: deps_.knex,
     config: deps_.config,
-    apolloClient: deps_.apolloClient
+    apolloClient: deps_.apolloClient,
+    tenantEndpointService: deps_.tenantEndpointService
   }
 
   return {
@@ -59,7 +58,8 @@ async function getTenantsPage(
   pagination?: Pagination,
   sortOrder?: SortOrder
 ): Promise<Tenant[]> {
-  return await Tenant.query(deps.knex).getPage(pagination, sortOrder)
+  return await Tenant.query(deps.knex)
+    .getPage(pagination, sortOrder)
 }
 
 async function getTenant(
@@ -67,6 +67,7 @@ async function getTenant(
   id: string
 ): Promise<Tenant | undefined> {
   return Tenant.query(deps.knex)
+    .withGraphFetched('endpoints')
     .findById(id)
 }
 
@@ -89,15 +90,11 @@ async function createTenant(
         kratosIdentityId: uuidv4()
       })
 
-      const tenantEndpointsData = options.endpoints.map((endpoint) => ({
-        type: endpoint.type,
-        value: endpoint.value,
-        tenantId: tenant.id
-      }))
-
-      await TenantEndpoints.query(trx)
-        .insert(tenantEndpointsData)
-        .returning(['type', 'value'])
+      await deps.tenantEndpointService.create({
+        endpoints: options.endpoints,
+        tenantId: tenant.id,
+        trx
+      })
 
       // call auth admin api
       const mutation = gql`

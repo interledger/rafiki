@@ -1305,10 +1305,12 @@ export enum SortOrder {
   Desc = 'DESC'
 }
 
-export type Tenant = {
+export type Tenant = Model & {
   __typename?: 'Tenant';
   /** Date-time of creation */
   createdAt: Scalars['String']['output'];
+  /** List of tenant endpoints associated with this tenant */
+  endpoints: Array<TenantEndpoint>;
   /** Tenant ID that is used in subsequent resources */
   id: Scalars['ID']['output'];
   /** Kratos identity ID */
@@ -1323,10 +1325,28 @@ export type TenantEdge = {
   node: Tenant;
 };
 
+export type TenantEndpoint = {
+  __typename?: 'TenantEndpoint';
+  type: TenantEndpointType;
+  value: Scalars['String']['output'];
+};
+
+export type TenantEndpointEdge = {
+  __typename?: 'TenantEndpointEdge';
+  cursor: Scalars['String']['output'];
+  node?: Maybe<TenantEndpoint>;
+};
+
 export enum TenantEndpointType {
   RatesUrl = 'RatesUrl',
   WebhookBaseUrl = 'WebhookBaseUrl'
 }
+
+export type TenantEndpointsConnection = {
+  __typename?: 'TenantEndpointsConnection';
+  edges: Array<TenantEndpointEdge>;
+  pageInfo: PageInfo;
+};
 
 export type TenantsConnection = {
   __typename?: 'TenantsConnection';
@@ -1644,7 +1664,7 @@ export type DirectiveResolverFn<TResult = {}, TParent = {}, TContext = {}, TArgs
 /** Mapping of interface types */
 export type ResolversInterfaceTypes<RefType extends Record<string, unknown>> = {
   BasePayment: ( Partial<IncomingPayment> ) | ( Partial<OutgoingPayment> ) | ( Partial<Payment> );
-  Model: ( Partial<AccountingTransfer> ) | ( Partial<Asset> ) | ( Partial<Fee> ) | ( Partial<IncomingPayment> ) | ( Partial<OutgoingPayment> ) | ( Partial<Payment> ) | ( Partial<Peer> ) | ( Partial<WalletAddress> ) | ( Partial<WalletAddressKey> ) | ( Partial<WebhookEvent> );
+  Model: ( Partial<AccountingTransfer> ) | ( Partial<Asset> ) | ( Partial<Fee> ) | ( Partial<IncomingPayment> ) | ( Partial<OutgoingPayment> ) | ( Partial<Payment> ) | ( Partial<Peer> ) | ( Partial<Tenant> ) | ( Partial<WalletAddress> ) | ( Partial<WalletAddressKey> ) | ( Partial<WebhookEvent> );
 };
 
 /** Mapping between all available schema types and the resolvers types */
@@ -1756,7 +1776,10 @@ export type ResolversTypes = {
   String: ResolverTypeWrapper<Partial<Scalars['String']['output']>>;
   Tenant: ResolverTypeWrapper<Partial<Tenant>>;
   TenantEdge: ResolverTypeWrapper<Partial<TenantEdge>>;
+  TenantEndpoint: ResolverTypeWrapper<Partial<TenantEndpoint>>;
+  TenantEndpointEdge: ResolverTypeWrapper<Partial<TenantEndpointEdge>>;
   TenantEndpointType: ResolverTypeWrapper<Partial<TenantEndpointType>>;
+  TenantEndpointsConnection: ResolverTypeWrapper<Partial<TenantEndpointsConnection>>;
   TenantsConnection: ResolverTypeWrapper<Partial<TenantsConnection>>;
   TransferType: ResolverTypeWrapper<Partial<TransferType>>;
   TriggerWalletAddressEventsInput: ResolverTypeWrapper<Partial<TriggerWalletAddressEventsInput>>;
@@ -1885,6 +1908,9 @@ export type ResolversParentTypes = {
   String: Partial<Scalars['String']['output']>;
   Tenant: Partial<Tenant>;
   TenantEdge: Partial<TenantEdge>;
+  TenantEndpoint: Partial<TenantEndpoint>;
+  TenantEndpointEdge: Partial<TenantEndpointEdge>;
+  TenantEndpointsConnection: Partial<TenantEndpointsConnection>;
   TenantsConnection: Partial<TenantsConnection>;
   TriggerWalletAddressEventsInput: Partial<TriggerWalletAddressEventsInput>;
   TriggerWalletAddressEventsMutationResponse: Partial<TriggerWalletAddressEventsMutationResponse>;
@@ -2115,7 +2141,7 @@ export type LiquidityMutationResponseResolvers<ContextType = any, ParentType ext
 };
 
 export type ModelResolvers<ContextType = any, ParentType extends ResolversParentTypes['Model'] = ResolversParentTypes['Model']> = {
-  __resolveType: TypeResolveFn<'AccountingTransfer' | 'Asset' | 'Fee' | 'IncomingPayment' | 'OutgoingPayment' | 'Payment' | 'Peer' | 'WalletAddress' | 'WalletAddressKey' | 'WebhookEvent', ParentType, ContextType>;
+  __resolveType: TypeResolveFn<'AccountingTransfer' | 'Asset' | 'Fee' | 'IncomingPayment' | 'OutgoingPayment' | 'Payment' | 'Peer' | 'Tenant' | 'WalletAddress' | 'WalletAddressKey' | 'WebhookEvent', ParentType, ContextType>;
   createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
 };
@@ -2323,6 +2349,7 @@ export type SetFeeResponseResolvers<ContextType = any, ParentType extends Resolv
 
 export type TenantResolvers<ContextType = any, ParentType extends ResolversParentTypes['Tenant'] = ResolversParentTypes['Tenant']> = {
   createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  endpoints?: Resolver<Array<ResolversTypes['TenantEndpoint']>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   kratosIdentityId?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   updatedAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
@@ -2332,6 +2359,24 @@ export type TenantResolvers<ContextType = any, ParentType extends ResolversParen
 export type TenantEdgeResolvers<ContextType = any, ParentType extends ResolversParentTypes['TenantEdge'] = ResolversParentTypes['TenantEdge']> = {
   cursor?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   node?: Resolver<ResolversTypes['Tenant'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type TenantEndpointResolvers<ContextType = any, ParentType extends ResolversParentTypes['TenantEndpoint'] = ResolversParentTypes['TenantEndpoint']> = {
+  type?: Resolver<ResolversTypes['TenantEndpointType'], ParentType, ContextType>;
+  value?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type TenantEndpointEdgeResolvers<ContextType = any, ParentType extends ResolversParentTypes['TenantEndpointEdge'] = ResolversParentTypes['TenantEndpointEdge']> = {
+  cursor?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  node?: Resolver<Maybe<ResolversTypes['TenantEndpoint']>, ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type TenantEndpointsConnectionResolvers<ContextType = any, ParentType extends ResolversParentTypes['TenantEndpointsConnection'] = ResolversParentTypes['TenantEndpointsConnection']> = {
+  edges?: Resolver<Array<ResolversTypes['TenantEndpointEdge']>, ParentType, ContextType>;
+  pageInfo?: Resolver<ResolversTypes['PageInfo'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -2500,6 +2545,9 @@ export type Resolvers<ContextType = any> = {
   SetFeeResponse?: SetFeeResponseResolvers<ContextType>;
   Tenant?: TenantResolvers<ContextType>;
   TenantEdge?: TenantEdgeResolvers<ContextType>;
+  TenantEndpoint?: TenantEndpointResolvers<ContextType>;
+  TenantEndpointEdge?: TenantEndpointEdgeResolvers<ContextType>;
+  TenantEndpointsConnection?: TenantEndpointsConnectionResolvers<ContextType>;
   TenantsConnection?: TenantsConnectionResolvers<ContextType>;
   TriggerWalletAddressEventsMutationResponse?: TriggerWalletAddressEventsMutationResponseResolvers<ContextType>;
   UInt8?: GraphQLScalarType;
