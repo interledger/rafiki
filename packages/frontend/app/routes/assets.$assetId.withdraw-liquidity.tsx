@@ -20,7 +20,7 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
     throw json(null, { status: 400, statusText: 'Invalid asset ID.' })
   }
 
-  const asset = await getAssetInfo({ id: result.data })
+  const asset = await getAssetInfo({ id: result.data }, cookies as string)
 
   if (!asset) {
     throw json(null, { status: 404, statusText: 'Asset not found.' })
@@ -45,7 +45,8 @@ export default function AssetWithdrawLiquidity() {
 }
 
 export async function action({ request, params }: ActionFunctionArgs) {
-  const session = await messageStorage.getSession(request.headers.get('cookie'))
+  const cookies = request.headers.get('cookie')
+  const session = await messageStorage.getSession(cookies)
   const assetId = params.assetId
 
   if (!assetId) {
@@ -73,13 +74,16 @@ export async function action({ request, params }: ActionFunctionArgs) {
     })
   }
 
-  const response = await withdrawAssetLiquidity({
-    assetId,
-    amount: result.data,
-    id: v4(),
-    idempotencyKey: v4(),
-    timeoutSeconds: BigInt(0)
-  })
+  const response = await withdrawAssetLiquidity(
+    {
+      assetId,
+      amount: result.data,
+      id: v4(),
+      idempotencyKey: v4(),
+      timeoutSeconds: BigInt(0)
+    },
+    cookies as string
+  )
 
   if (!response?.success) {
     return setMessageAndRedirect({

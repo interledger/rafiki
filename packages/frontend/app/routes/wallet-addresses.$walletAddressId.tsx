@@ -34,7 +34,10 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
     throw json(null, { status: 400, statusText: 'Invalid wallet address ID.' })
   }
 
-  const walletAddress = await getWalletAddress({ id: result.data })
+  const walletAddress = await getWalletAddress(
+    { id: result.data },
+    cookies as string
+  )
 
   if (!walletAddress) {
     throw json(null, { status: 404, statusText: 'Wallet address not found.' })
@@ -235,9 +238,13 @@ export async function action({ request }: ActionFunctionArgs) {
     return json({ ...actionResponse }, { status: 400 })
   }
 
-  const response = await updateWalletAddress({
-    ...result.data
-  })
+  const cookies = request.headers.get('cookie')
+  const response = await updateWalletAddress(
+    {
+      ...result.data
+    },
+    cookies as string
+  )
 
   if (!response?.walletAddress) {
     actionResponse.errors.message = [
@@ -246,7 +253,7 @@ export async function action({ request }: ActionFunctionArgs) {
     return json({ ...actionResponse }, { status: 400 })
   }
 
-  const session = await messageStorage.getSession(request.headers.get('cookie'))
+  const session = await messageStorage.getSession(cookies)
 
   return setMessageAndRedirect({
     session,

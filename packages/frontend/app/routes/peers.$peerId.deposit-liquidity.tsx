@@ -20,7 +20,7 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
     throw json(null, { status: 400, statusText: 'Invalid peer ID.' })
   }
 
-  const peer = await getPeer({ id: result.data })
+  const peer = await getPeer({ id: result.data }, cookies as string)
 
   if (!peer) {
     throw json(null, { status: 400, statusText: 'Peer not found.' })
@@ -45,7 +45,8 @@ export default function PeerDepositLiquidity() {
 }
 
 export async function action({ request, params }: ActionFunctionArgs) {
-  const session = await messageStorage.getSession(request.headers.get('cookie'))
+  const cookies = request.headers.get('cookie')
+  const session = await messageStorage.getSession(cookies)
   const peerId = params.peerId
 
   if (!peerId) {
@@ -73,12 +74,15 @@ export async function action({ request, params }: ActionFunctionArgs) {
     })
   }
 
-  const response = await depositPeerLiquidity({
-    peerId,
-    amount: result.data,
-    id: v4(),
-    idempotencyKey: v4()
-  })
+  const response = await depositPeerLiquidity(
+    {
+      peerId,
+      amount: result.data,
+      id: v4(),
+      idempotencyKey: v4()
+    },
+    cookies as string
+  )
 
   if (!response?.success) {
     return setMessageAndRedirect({

@@ -9,6 +9,7 @@ import { Button } from '~/components/ui'
 interface SidebarProps {
   logoutUrl: string
   authEnabled: boolean
+  isOperator: boolean
 }
 
 const navigation = [
@@ -38,7 +39,11 @@ const navigation = [
   }
 ]
 
-export const Sidebar: FC<SidebarProps> = ({ logoutUrl, authEnabled }) => {
+export const Sidebar: FC<SidebarProps> = ({
+  logoutUrl,
+  authEnabled,
+  isOperator
+}) => {
   const [sidebarIsOpen, setSidebarIsOpen] = useState(false)
 
   return (
@@ -98,6 +103,22 @@ export const Sidebar: FC<SidebarProps> = ({ logoutUrl, authEnabled }) => {
                           {name}
                         </NavLink>
                       ))}
+                      {authEnabled && isOperator && (
+                        <NavLink
+                          key='Tenants'
+                          to='/tenants'
+                          className={({ isActive }) =>
+                            cx(
+                              isActive
+                                ? 'bg-mercury'
+                                : 'text-tealish/70 hover:bg-mercury/70',
+                              'flex p-2 font-medium rounded-md'
+                            )
+                          }
+                        >
+                          Tenants
+                        </NavLink>
+                      )}
                       {authEnabled && (
                         <NavLink
                           key='Account Settings'
@@ -156,6 +177,22 @@ export const Sidebar: FC<SidebarProps> = ({ logoutUrl, authEnabled }) => {
                   {name}
                 </NavLink>
               ))}
+              {authEnabled && isOperator && (
+                <NavLink
+                  key='Tenants'
+                  to='/tenants'
+                  className={({ isActive }) =>
+                    cx(
+                      isActive
+                        ? 'bg-mercury'
+                        : 'text-tealish/70 hover:bg-mercury/70',
+                      'flex p-2 font-medium rounded-md'
+                    )
+                  }
+                >
+                  Tenants
+                </NavLink>
+              )}
               {authEnabled && (
                 <NavLink
                   key='Account Settings'

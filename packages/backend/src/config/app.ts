@@ -191,6 +191,7 @@ export const Config = {
     2592000000
   ), // 30 days
   enableSpspPaymentPointers: envBool('ENABLE_SPSP_PAYMENT_POINTERS', true),
+  kratosPublicUrl: envString('KRATOS_PUBLIC_URL'),
   kratosAdminUrl: envString('KRATOS_ADMIN_URL'),
   kratosAdminEmail: envString('KRATOS_ADMIN_EMAIL')
 }

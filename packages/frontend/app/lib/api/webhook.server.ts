@@ -6,7 +6,10 @@ import type {
   ListWebhookEventsVariables
 } from '~/generated/graphql'
 
-export const listWebhooks = async (args: QueryWebhookEventsArgs) => {
+export const listWebhooks = async (
+  args: QueryWebhookEventsArgs,
+  cookie?: string
+) => {
   const response = await apolloClient.query<
     ListWebhookEvents,
     ListWebhookEventsVariables
@@ -44,7 +47,8 @@ export const listWebhooks = async (args: QueryWebhookEventsArgs) => {
         }
       }
     `,
-    variables: args
+    variables: args,
+    context: { headers: { cookie } }
   })
 
   return response.data.webhookEvents

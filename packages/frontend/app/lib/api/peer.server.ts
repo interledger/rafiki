@@ -24,7 +24,7 @@ import type {
 } from '~/generated/graphql'
 import { apolloClient } from '../apollo.server'
 
-export const getPeer = async (args: QueryPeerArgs) => {
+export const getPeer = async (args: QueryPeerArgs, cookie?: string) => {
   const response = await apolloClient.query<
     GetPeerQuery,
     GetPeerQueryVariables
@@ -53,13 +53,14 @@ export const getPeer = async (args: QueryPeerArgs) => {
         }
       }
     `,
-    variables: args
+    variables: args,
+    context: { headers: { cookie } }
   })
 
   return response.data.peer
 }
 
-export const listPeers = async (args: QueryPeersArgs) => {
+export const listPeers = async (args: QueryPeersArgs, cookie?: string) => {
   const response = await apolloClient.query<
     ListPeersQuery,
     ListPeersQueryVariables
@@ -97,13 +98,14 @@ export const listPeers = async (args: QueryPeersArgs) => {
         }
       }
     `,
-    variables: args
+    variables: args,
+    context: { headers: { cookie } }
   })
 
   return response.data.peers
 }
 
-export const createPeer = async (args: CreatePeerInput) => {
+export const createPeer = async (args: CreatePeerInput, cookie?: string) => {
   const response = await apolloClient.mutate<
     CreatePeerMutation,
     CreatePeerMutationVariables
@@ -119,13 +121,14 @@ export const createPeer = async (args: CreatePeerInput) => {
     `,
     variables: {
       input: args
-    }
+    },
+    context: { headers: { cookie } }
   })
 
   return response.data?.createPeer
 }
 
-export const updatePeer = async (args: UpdatePeerInput) => {
+export const updatePeer = async (args: UpdatePeerInput, cookie?: string) => {
   const response = await apolloClient.mutate<
     UpdatePeerMutation,
     UpdatePeerMutationVariables
@@ -141,13 +144,17 @@ export const updatePeer = async (args: UpdatePeerInput) => {
     `,
     variables: {
       input: args
-    }
+    },
+    context: { headers: { cookie } }
   })
 
   return response.data?.updatePeer
 }
 
-export const deletePeer = async (args: MutationDeletePeerArgs) => {
+export const deletePeer = async (
+  args: MutationDeletePeerArgs,
+  cookie?: string
+) => {
   const response = await apolloClient.mutate<
     DeletePeerMutation,
     DeletePeerMutationVariables
@@ -159,13 +166,17 @@ export const deletePeer = async (args: MutationDeletePeerArgs) => {
         }
       }
     `,
-    variables: args
+    variables: args,
+    context: { headers: { cookie } }
   })
 
   return response.data?.deletePeer
 }
 
-export const depositPeerLiquidity = async (args: DepositPeerLiquidityInput) => {
+export const depositPeerLiquidity = async (
+  args: DepositPeerLiquidityInput,
+  cookie?: string
+) => {
   const response = await apolloClient.mutate<
     DepositPeerLiquidityMutation,
     DepositPeerLiquidityMutationVariables
@@ -181,14 +192,16 @@ export const depositPeerLiquidity = async (args: DepositPeerLiquidityInput) => {
     `,
     variables: {
       input: args
-    }
+    },
+    context: { headers: { cookie } }
   })
 
   return response.data?.depositPeerLiquidity
 }
 
 export const withdrawPeerLiquidity = async (
-  args: CreatePeerLiquidityWithdrawalInput
+  args: CreatePeerLiquidityWithdrawalInput,
+  cookie?: string
 ) => {
   const response = await apolloClient.mutate<
     WithdrawPeerLiquidity,
@@ -205,7 +218,8 @@ export const withdrawPeerLiquidity = async (
     `,
     variables: {
       input: args
-    }
+    },
+    context: { headers: { cookie } }
   })
 
   return response.data?.createPeerLiquidityWithdrawal

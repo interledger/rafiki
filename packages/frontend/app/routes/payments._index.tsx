@@ -52,19 +52,22 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 
   const { type, walletAddressId, ...pagination } = result.data
 
-  const payments = await listPayments({
-    ...pagination,
-    ...(type || walletAddressId
-      ? {
-          filter: {
-            ...(type ? { type: { in: type } } : {}),
-            ...(walletAddressId
-              ? { walletAddressId: { in: [walletAddressId] } }
-              : {})
+  const payments = await listPayments(
+    {
+      ...pagination,
+      ...(type || walletAddressId
+        ? {
+            filter: {
+              ...(type ? { type: { in: type } } : {}),
+              ...(walletAddressId
+                ? { walletAddressId: { in: [walletAddressId] } }
+                : {})
+            }
           }
-        }
-      : {})
-  })
+        : {})
+    },
+    cookies as string
+  )
 
   return json({
     payments,

@@ -23,10 +23,13 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
     throw json(null, { status: 400, statusText: 'Invalid pagination.' })
   }
 
-  const asset = await getAssetWithFees({
-    ...pagination.data,
-    id: assetId
-  })
+  const asset = await getAssetWithFees(
+    {
+      ...pagination.data,
+      id: assetId
+    },
+    cookies as string
+  )
 
   if (!asset) {
     throw json(null, { status: 404, statusText: 'Asset not found.' })

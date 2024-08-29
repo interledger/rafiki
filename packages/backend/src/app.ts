@@ -86,7 +86,10 @@ import { IlpPaymentService } from './payment-method/ilp/service'
 import { TelemetryService } from './telemetry/service'
 import { ApolloArmor } from '@escape.tech/graphql-armor'
 import { openPaymentsServerErrorMiddleware } from './open_payments/route-errors'
-import { verifyApiSignature } from './shared/utils'
+import {
+  getTenantIdFromRequestHeaders,
+  verifyApiSignature
+} from './shared/utils'
 import { WalletAddress } from './open_payments/wallet_address/model'
 import {
   getWalletAddressUrlFromIncomingPayment,
@@ -122,7 +125,12 @@ export type AppRequest<ParamsT extends string = string> = Omit<
   params: Record<ParamsT, string>
 }
 
-export interface WalletAddressUrlContext extends AppContext {
+export interface TenantedAppContext extends AppContext {
+  tenantId: string
+  isOperator: boolean
+}
+
+export interface WalletAddressUrlContext extends TenantedAppContext {
   walletAddressUrl: string
   grant?: Grant
   client?: string
@@ -316,7 +324,7 @@ export class App {
         identityQueryResponse.data.length > 0 &&
         identityQueryResponse.data[0].id
       const operatorRole =
-        identityQueryResponse.data[0]?.metadata_admin.operator
+        identityQueryResponse.data[0]?.metadata_public.operator
       let identityResponse
       if (isExistingIdentity && operatorRole) {
         // Identity already exists with operator role
@@ -329,7 +337,7 @@ export class App {
         identityResponse = await axios.put(
           `${kratosAdminUrl}/admin/identities/${identityQueryResponse.data[0].id}`,
           {
-            metadata_admin: {
+            metadata_public: {
               operator: true
             }
           }
@@ -350,7 +358,7 @@ export class App {
             traits: {
               email: kratosAdminEmail
             },
-            metadata_admin: {
+            metadata_public: {
               operator: true
             }
           },
@@ -482,6 +490,12 @@ export class App {
         return next()
       })
     }
+
+    // Determine Kratos Identity
+    koa.use(async (ctx: TenantedAppContext, next: Koa.Next): Promise<void> => {
+      await getTenantIdFromRequestHeaders(ctx, this.config)
+      return next()
+    })
 
     koa.use(
       koaMiddleware(this.apolloServer, {

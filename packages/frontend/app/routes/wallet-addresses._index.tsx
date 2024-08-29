@@ -20,9 +20,12 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     throw json(null, { status: 400, statusText: 'Invalid pagination.' })
   }
 
-  const walletAddresses = await listWalletAddresses({
-    ...pagination.data
-  })
+  const walletAddresses = await listWalletAddresses(
+    {
+      ...pagination.data
+    },
+    cookies as string
+  )
 
   let previousPageUrl = '',
     nextPageUrl = ''

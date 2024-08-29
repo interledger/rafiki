@@ -42,7 +42,7 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
     throw json(null, { status: 400, statusText: 'Invalid peer ID.' })
   }
 
-  const peer = await getPeer({ id: result.data })
+  const peer = await getPeer({ id: result.data }, cookies as string)
 
   if (!peer) {
     throw json(null, { status: 400, statusText: 'Peer not found.' })
@@ -394,7 +394,8 @@ export async function action({ request }: ActionFunctionArgs) {
     }
   }
 
-  const session = await messageStorage.getSession(request.headers.get('cookie'))
+  const cookies = request.headers.get('cookie')
+  const session = await messageStorage.getSession(cookies)
   const formData = await request.formData()
   const intent = formData.get('intent')
   formData.delete('intent')
@@ -411,12 +412,15 @@ export async function action({ request }: ActionFunctionArgs) {
         return json({ ...actionResponse }, { status: 400 })
       }
 
-      const response = await updatePeer({
-        ...result.data,
-        ...(result.data.maxPacketAmount
-          ? { maxPacketAmount: result.data.maxPacketAmount }
-          : { maxPacketAmount: undefined })
-      })
+      const response = await updatePeer(
+        {
+          ...result.data,
+          ...(result.data.maxPacketAmount
+            ? { maxPacketAmount: result.data.maxPacketAmount }
+            : { maxPacketAmount: undefined })
+        },
+        cookies as string
+      )
 
       if (!response?.peer) {
         actionResponse.errors.general.message = [
@@ -436,24 +440,27 @@ export async function action({ request }: ActionFunctionArgs) {
         return json({ ...actionResponse }, { status: 400 })
       }
 
-      const response = await updatePeer({
-        id: result.data.id,
-        http: {
-          ...(result.data.incomingAuthTokens
-            ? {
-                incoming: {
-                  authTokens: result.data.incomingAuthTokens
-                    ?.replace(/ /g, '')
-                    .split(',')
+      const response = await updatePeer(
+        {
+          id: result.data.id,
+          http: {
+            ...(result.data.incomingAuthTokens
+              ? {
+                  incoming: {
+                    authTokens: result.data.incomingAuthTokens
+                      ?.replace(/ /g, '')
+                      .split(',')
+                  }
                 }
-              }
-            : {}),
-          outgoing: {
-            endpoint: result.data.outgoingEndpoint,
-            authToken: result.data.outgoingAuthToken
+              : {}),
+            outgoing: {
+              endpoint: result.data.outgoingEndpoint,
+              authToken: result.data.outgoingAuthToken
+            }
           }
-        }
-      })
+        },
+        cookies as string
+      )
 
       if (!response?.peer) {
         actionResponse.errors.general.message = [
@@ -477,7 +484,10 @@ export async function action({ request }: ActionFunctionArgs) {
         })
       }
 
-      const response = await deletePeer({ input: { id: result.data.id } })
+      const response = await deletePeer(
+        { input: { id: result.data.id } },
+        cookies as string
+      )
       if (!response?.success) {
         return setMessageAndRedirect({
           session,

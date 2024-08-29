@@ -16,7 +16,10 @@ import type {
   CreateWalletAddressWithdrawalInput
 } from '~/generated/graphql'
 
-export const getWalletAddress = async (args: QueryWalletAddressArgs) => {
+export const getWalletAddress = async (
+  args: QueryWalletAddressArgs,
+  cookie?: string
+) => {
   const response = await apolloClient.query<
     GetWalletAddressQuery,
     GetWalletAddressQueryVariables
@@ -39,13 +42,17 @@ export const getWalletAddress = async (args: QueryWalletAddressArgs) => {
         }
       }
     `,
-    variables: args
+    variables: args,
+    context: { headers: { cookie } }
   })
 
   return response.data.walletAddress
 }
 
-export const listWalletAddresses = async (args: QueryWalletAddressesArgs) => {
+export const listWalletAddresses = async (
+  args: QueryWalletAddressesArgs,
+  cookie?: string
+) => {
   const response = await apolloClient.query<
     ListWalletAddresssQuery,
     ListWalletAddresssQueryVariables
@@ -81,13 +88,17 @@ export const listWalletAddresses = async (args: QueryWalletAddressesArgs) => {
         }
       }
     `,
-    variables: args
+    variables: args,
+    context: { headers: { cookie } }
   })
 
   return response.data.walletAddresses
 }
 
-export const updateWalletAddress = async (args: UpdateWalletAddressInput) => {
+export const updateWalletAddress = async (
+  args: UpdateWalletAddressInput,
+  cookie?: string
+) => {
   const response = await apolloClient.mutate({
     mutation: gql`
       mutation UpdateWalletAddressMutation($input: UpdateWalletAddressInput!) {
@@ -100,13 +111,17 @@ export const updateWalletAddress = async (args: UpdateWalletAddressInput) => {
     `,
     variables: {
       input: args
-    }
+    },
+    context: { headers: { cookie } }
   })
 
   return response.data.updateWalletAddress
 }
 
-export const createWalletAddress = async (args: CreateWalletAddressInput) => {
+export const createWalletAddress = async (
+  args: CreateWalletAddressInput,
+  cookie?: string
+) => {
   const response = await apolloClient.mutate<
     CreateWalletAddressMutation,
     CreateWalletAddressMutationVariables
@@ -122,14 +137,16 @@ export const createWalletAddress = async (args: CreateWalletAddressInput) => {
     `,
     variables: {
       input: args
-    }
+    },
+    context: { headers: { cookie } }
   })
 
   return response.data?.createWalletAddress
 }
 
 export const createWalletAddressWithdrawal = async (
-  args: CreateWalletAddressWithdrawalInput
+  args: CreateWalletAddressWithdrawalInput,
+  cookie?: string
 ) => {
   const response = await apolloClient.mutate<
     CreateWalletAddressWithdrawal,
@@ -148,7 +165,8 @@ export const createWalletAddressWithdrawal = async (
     `,
     variables: {
       input: args
-    }
+    },
+    context: { headers: { cookie } }
   })
 
   return response.data?.createWalletAddressWithdrawal
