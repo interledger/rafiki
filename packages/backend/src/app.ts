@@ -86,7 +86,11 @@ import { TelemetryService } from './telemetry/service'
 import { ApolloArmor } from '@escape.tech/graphql-armor'
 import { openPaymentsServerErrorMiddleware } from './open_payments/route-errors'
 import {
+<<<<<<< HEAD
   // getTenantIdFromRequestHeaders,
+=======
+  getTenantIdFromRequestHeaders,
+>>>>>>> 1130b3e3 (feat(frontend,backend): tenant management api)
   verifyApiSignature
 } from './shared/utils'
 import { WalletAddress } from './open_payments/wallet_address/model'
@@ -427,11 +431,18 @@ export class App {
     }
 
     // Determine Kratos Identity
+<<<<<<< HEAD
     // TODO: Comment out for now until seed script has a good way to acquire a kratos session
     // koa.use(async (ctx: TenantedAppContext, next: Koa.Next): Promise<void> => {
     //   await getTenantIdFromRequestHeaders(ctx, this.config)
     //   return next()
     // })
+=======
+    koa.use(async (ctx: TenantedAppContext, next: Koa.Next): Promise<void> => {
+      await getTenantIdFromRequestHeaders(ctx, this.config)
+      return next()
+    })
+>>>>>>> 1130b3e3 (feat(frontend,backend): tenant management api)
 
     koa.use(
       koaMiddleware(this.apolloServer, {

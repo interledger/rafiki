@@ -207,6 +207,10 @@ export async function getTenantIdFromRequestHeaders(
   ctx: TenantedAppContext,
   config: IAppConfig
 ): Promise<void> {
+<<<<<<< HEAD
+=======
+  const logger = await ctx.container.use('logger')
+>>>>>>> 1130b3e3 (feat(frontend,backend): tenant management api)
   const cookie = ctx.request.headers['cookie']
   const session = await axios.get(`${config.kratosPublicUrl}/sessions/whoami`, {
     headers: {
@@ -221,7 +225,11 @@ export async function getTenantIdFromRequestHeaders(
 
   const identityId = session.data?.identity.id
   const tenantService = await ctx.container.use('tenantService')
+<<<<<<< HEAD
   const tenant = await tenantService.getByIdentity(identityId)
+=======
+  const tenant = await tenantService.getByKratosId(identityId)
+>>>>>>> 1130b3e3 (feat(frontend,backend): tenant management api)
   if (!tenant) {
     ctx.throw(401, 'Unauthorized')
   }
