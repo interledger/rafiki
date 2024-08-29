@@ -16,6 +16,13 @@ export interface TelemetryService {
   incrementCounterWithTransactionAmount(
     name: string,
     amount: { value: bigint; assetCode: string; assetScale: number },
+    attributes?: Record<string, unknown>,
+    preservePrivacy?: boolean
+  ): Promise<void>
+  incrementCounterWithTransactionAmountDifference(
+    name: string,
+    amountSource: { value: bigint; assetCode: string; assetScale: number },
+    amountDestination: { value: bigint; assetCode: string; assetScale: number },
     attributes?: Record<string, unknown>
   ): Promise<void>
   recordHistogram(
@@ -94,10 +101,58 @@ class TelemetryServiceImpl implements TelemetryService {
     })
   }
 
+  public async incrementCounterWithTransactionAmountDifference(
+    name: string,
+    amountSource: { value: bigint; assetCode: string; assetScale: number },
+    amountDestination: { value: bigint; assetCode: string; assetScale: number },
+    attributes: Record<string, unknown> = {}
+  ): Promise<void> {
+    if (!amountSource.value || !amountDestination.value) return
+
+    const convertedSource = await this.convertAmount({
+      sourceAmount: amountSource.value,
+      sourceAsset: {
+        code: amountSource.assetCode,
+        scale: amountSource.assetScale
+      }
+    })
+    if (isConvertError(convertedSource)) {
+      this.deps.logger.error(
+        `Unable to convert source amount: ${convertedSource}`
+      )
+      return
+    }
+    const convertedDestination = await this.convertAmount({
+      sourceAmount: amountDestination.value,
+      sourceAsset: {
+        code: amountDestination.assetCode,
+        scale: amountDestination.assetScale
+      }
+    })
+    if (isConvertError(convertedDestination)) {
+      this.deps.logger.error(
+        `Unable to convert destination amount: ${convertedSource}`
+      )
+      return
+    }
+
+    const diff = BigInt(convertedSource - convertedDestination)
+    if (diff === 0n) return
+
+    if (diff < 0n) {
+      this.deps.logger.error(
+        `Difference should not be negative!: ${diff}, source asset ${amountSource.assetCode} vs destination asset ${amountDestination.assetCode}.`
+      )
+      return
+    }
+    this.incrementCounter(name, Number(diff), attributes)
+  }
+
   public async incrementCounterWithTransactionAmount(
     name: string,
     amount: { value: bigint; assetCode: string; assetScale: number },
-    attributes: Record<string, unknown> = {}
+    attributes: Record<string, unknown> = {},
+    preservePrivacy = true
   ): Promise<void> {
     const { value, assetCode, assetScale } = amount
     try {
@@ -110,11 +165,14 @@ class TelemetryServiceImpl implements TelemetryService {
         return
       }
 
-      const obfuscatedAmount = privacy.applyPrivacy(Number(converted))
+      const obfuscatedAmount = preservePrivacy
+        ? privacy.applyPrivacy(Number(converted))
+        : Number(converted)
       this.incrementCounter(name, obfuscatedAmount, attributes)
     } catch (e) {
       this.deps.logger.error(e, `Unable to collect telemetry`)
     }
+    return Promise.resolve()
   }
 
   public recordHistogram(

@@ -8,6 +8,7 @@ import { mockCounter, mockHistogram } from '../tests/telemetry'
 import { TelemetryService } from './service'
 import { Counter, Histogram } from '@opentelemetry/api'
 import { privacy } from './privacy'
+import { mockRatesApi } from '../tests/rates'
 
 jest.mock('@opentelemetry/api', () => ({
   ...jest.requireActual('@opentelemetry/api'),
@@ -36,6 +37,18 @@ describe('TelemetryServiceImpl', () => {
   let aseRatesService: RatesService
   let internalRatesService: RatesService
 
+  let apiRequestCount = 0
+  const exchangeRatesUrl = 'http://example-rates.com'
+
+  const exampleRates = {
+    USD: {
+      EUR: 2
+    },
+    EUR: {
+      USD: 1.12
+    }
+  }
+
   beforeAll(async (): Promise<void> => {
     deps = initIocContainer({
       ...Config,
@@ -49,6 +62,11 @@ describe('TelemetryServiceImpl', () => {
     telemetryService = await deps.use('telemetry')!
     aseRatesService = await deps.use('ratesService')!
     internalRatesService = await deps.use('internalRatesService')!
+
+    mockRatesApi(exchangeRatesUrl, (base) => {
+      apiRequestCount++
+      return exampleRates[base as keyof typeof exampleRates]
+    })
   })
 
   afterAll(async (): Promise<void> => {
@@ -120,6 +138,162 @@ describe('TelemetryServiceImpl', () => {
 
     const histogram = histograms.get(name)
     expect(histogram?.record).toHaveBeenCalledTimes(2)
+  })
+
+  describe('incrementCounterWithTransactionAmountDifference', () => {
+    it('should not record fee when there is no fee value', async () => {
+      const spyAseConvert = jest.spyOn(aseRatesService, 'convert')
+      const spyIncCounter = jest.spyOn(telemetryService, 'incrementCounter')
+
+      await telemetryService.incrementCounterWithTransactionAmountDifference(
+        'test_amount_diff_counter',
+        {
+          value: 100n,
+          assetCode: 'USD',
+          assetScale: 2
+        },
+        {
+          value: 100n,
+          assetCode: 'USD',
+          assetScale: 2
+        }
+      )
+
+      expect(spyAseConvert).toHaveBeenCalled()
+      expect(spyIncCounter).not.toHaveBeenCalled()
+    })
+
+    it('should not record fee negative fee value', async () => {
+      const spyConvert = jest.spyOn(aseRatesService, 'convert')
+      const spyIncCounter = jest.spyOn(telemetryService, 'incrementCounter')
+
+      await telemetryService.incrementCounterWithTransactionAmountDifference(
+        'test_amount_diff_counter',
+        {
+          value: 100n,
+          assetCode: 'USD',
+          assetScale: 2
+        },
+        {
+          value: 101n,
+          assetCode: 'USD',
+          assetScale: 2
+        }
+      )
+
+      expect(spyConvert).toHaveBeenCalled()
+      expect(spyIncCounter).not.toHaveBeenCalled()
+    })
+
+    it('should not record zero amounts', async () => {
+      const spyConvert = jest.spyOn(aseRatesService, 'convert')
+      const spyIncCounter = jest.spyOn(telemetryService, 'incrementCounter')
+
+      await telemetryService.incrementCounterWithTransactionAmountDifference(
+        'test_amount_diff_counter',
+        {
+          value: 0n,
+          assetCode: 'USD',
+          assetScale: 2
+        },
+        {
+          value: 0n,
+          assetCode: 'USD',
+          assetScale: 2
+        }
+      )
+
+      expect(spyConvert).not.toHaveBeenCalled()
+      expect(spyIncCounter).not.toHaveBeenCalled()
+    })
+
+    it('should record since it is a valid fee', async () => {
+      const spyConvert = jest.spyOn(aseRatesService, 'convert')
+      const spyIncCounter = jest.spyOn(telemetryService, 'incrementCounter')
+
+      const source = {
+        value: 100n,
+        assetCode: 'USD',
+        assetScale: 2
+      }
+      const destination = {
+        value: 50n,
+        assetCode: 'USD',
+        assetScale: 2
+      }
+
+      const name = 'test_amount_diff_counter'
+      await telemetryService.incrementCounterWithTransactionAmountDifference(
+        name,
+        source,
+        destination
+      )
+
+      expect(spyConvert).toHaveBeenCalledTimes(2)
+      expect(spyConvert).toHaveBeenNthCalledWith(
+        1,
+        expect.objectContaining({
+          sourceAmount: source.value,
+          sourceAsset: { code: source.assetCode, scale: source.assetScale }
+        })
+      )
+      expect(spyConvert).toHaveBeenNthCalledWith(
+        2,
+        expect.objectContaining({
+          sourceAmount: destination.value,
+          sourceAsset: {
+            code: destination.assetCode,
+            scale: destination.assetScale
+          }
+        })
+      )
+      // Ensure the [incrementCounter] was called with the correct calculated value. Expected 5000 due to scale = 4.
+      expect(spyIncCounter).toHaveBeenCalledWith(name, 5000, {})
+    })
+
+    it('should record since it is a valid fee for different assets', async () => {
+      const spyConvert = jest.spyOn(aseRatesService, 'convert')
+      const spyIncCounter = jest.spyOn(telemetryService, 'incrementCounter')
+
+      const source = {
+        value: 100n,
+        assetCode: 'USD',
+        assetScale: 2
+      }
+      const destination = {
+        value: 50n,
+        assetCode: 'EUR',
+        assetScale: 2
+      }
+
+      const name = 'test_amount_diff_counter'
+      await telemetryService.incrementCounterWithTransactionAmountDifference(
+        name,
+        source,
+        destination
+      )
+
+      expect(spyConvert).toHaveBeenCalledTimes(2)
+      expect(spyConvert).toHaveBeenNthCalledWith(
+        1,
+        expect.objectContaining({
+          sourceAmount: source.value,
+          sourceAsset: { code: source.assetCode, scale: source.assetScale }
+        })
+      )
+      expect(spyConvert).toHaveBeenNthCalledWith(
+        2,
+        expect.objectContaining({
+          sourceAmount: destination.value,
+          sourceAsset: {
+            code: destination.assetCode,
+            scale: destination.assetScale
+          }
+        })
+      )
+      expect(spyIncCounter).toHaveBeenCalledWith(name, 4400, {})
+      expect(apiRequestCount).toBe(1)
+    })
   })
 
   describe('incrementCounterWithTransactionAmount', () => {

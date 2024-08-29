@@ -27,20 +27,18 @@ import {
   createStreamAddressMiddleware,
   createStreamController
 } from './core'
-
 import { TelemetryService } from '../../../telemetry/service'
-import { createTelemetryMiddleware } from './core/middleware/telemetry'
 
 interface ServiceDependencies extends BaseService {
   redis: Redis
   ratesService: RatesService
   accountingService: AccountingService
-  telemetry?: TelemetryService
   walletAddressService: WalletAddressService
   incomingPaymentService: IncomingPaymentService
   peerService: PeerService
   streamServer: StreamServer
   ilpAddress: string
+  telemetry?: TelemetryService
 }
 
 export async function createConnectorService({
@@ -48,12 +46,12 @@ export async function createConnectorService({
   redis,
   ratesService,
   accountingService,
-  telemetry,
   walletAddressService,
   incomingPaymentService,
   peerService,
   streamServer,
-  ilpAddress
+  ilpAddress,
+  telemetry
 }: ServiceDependencies): Promise<Rafiki> {
   return createApp(
     {
@@ -62,13 +60,13 @@ export async function createConnectorService({
         service: 'ConnectorService'
       }),
       accounting: accountingService,
-      telemetry,
       walletAddresses: walletAddressService,
       incomingPayments: incomingPaymentService,
       peers: peerService,
       redis,
       rates: ratesService,
-      streamServer
+      streamServer,
+      telemetry
     },
     compose([
       // Incoming Rules
@@ -82,7 +80,6 @@ export async function createConnectorService({
 
       // Local pay
       createBalanceMiddleware(),
-      createTelemetryMiddleware(),
 
       // Outgoing Rules
       createStreamController(),

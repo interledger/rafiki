@@ -118,27 +118,9 @@ services:
       GRAPHQL_URL: http://happy-life-bank-backend:3001/graphql
       OPEN_PAYMENTS_URL: https://happy-life-bank-backend/
       ENABLE_INSECURE_MESSAGE_COOKIE: true
-      KRATOS_CONTAINER_PUBLIC_URL: 'http://happy-life-kratos:4433'
-      KRATOS_BROWSER_PUBLIC_URL: 'http://localhost:4432'
-      KRATOS_ADMIN_URL: 'http://happy-life-kratos:4434/admin'
+      AUTH_ENABLED: false
       SIGNATURE_VERSION: 1
       SIGNATURE_SECRET: iyIgCprjb9uL8wFckR+pLEkJWMB7FJhgkvqhTQR/964=
     depends_on:
       - cloud-nine-admin
       - happy-life-backend
-      - happy-life-kratos
-  happy-life-kratos:
-    build:
-      context: ../..
-      dockerfile: ./packages/frontend/kratos/Dockerfile
-      args:
-        PATH_TO_KRATOS_CONFIG: ./localenv/happy-life-bank/kratos.yml
-    depends_on:
-      - shared-database
-      - mailslurper
-    environment:
-      DEV_MODE: true
-    ports:
-      - "4432:4433"
-    networks:
-      - rafiki

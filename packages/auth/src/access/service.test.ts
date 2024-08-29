@@ -125,18 +125,4 @@ describe('Access Service', (): void => {
       expect(fetchedAccess[0].actions).toEqual(incomingPaymentAccess.actions)
     })
   })
-
-  describe('revoke access', (): void => {
-    test('revokeByGrantId', async () => {
-      const access = await Access.query(trx).insert({
-        grantId: grant.id,
-        type: 'incoming-payment',
-        actions: [AccessAction.Create, AccessAction.Read, AccessAction.List]
-      })
-
-      await accessService.revokeByGrantId(grant.id)
-
-      expect(Access.query(trx).findById(access.id)).resolves.toBeUndefined()
-    })
-  })
 })

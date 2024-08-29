@@ -104,11 +104,8 @@ export function quoteToGraphql(quote: Quote): SchemaQuote {
     receiver: quote.receiver,
     debitAmount: quote.debitAmount,
     receiveAmount: quote.receiveAmount,
-    maxPacketAmount: quote.maxPacketAmount,
-    minExchangeRate: quote.minExchangeRate.valueOf(),
-    lowEstimatedExchangeRate: quote.lowEstimatedExchangeRate.valueOf(),
-    highEstimatedExchangeRate: quote.highEstimatedExchangeRate.valueOf(),
     createdAt: new Date(+quote.createdAt).toISOString(),
-    expiresAt: new Date(+quote.expiresAt).toISOString()
+    expiresAt: new Date(+quote.expiresAt).toISOString(),
+    estimatedExchangeRate: quote.estimatedExchangeRate?.valueOf()
   }
 }

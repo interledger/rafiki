@@ -60,7 +60,8 @@ describe('Receiver Resolver', (): void => {
             incomingAmount: incomingAmount
               ? serializeAmount(incomingAmount)
               : undefined
-          })
+          }),
+          false
         )
 
         const createSpy = jest
@@ -253,7 +254,8 @@ describe('Receiver Resolver', (): void => {
         id: `${walletAddress.id}/incoming-payments/${uuid()}`,
         walletAddress: walletAddress.id,
         incomingAmount: amount ? serializeAmount(amount) : undefined
-      })
+      }),
+      false
     )
 
     test('returns receiver', async (): Promise<void> => {

@@ -10,7 +10,11 @@ import { AppServices } from '../../app'
 import { initIocContainer } from '../..'
 import { Config } from '../../config/app'
 import { createAsset } from '../../tests/asset'
-import { createOutgoingPayment } from '../../tests/outgoingPayment'
+import { createIncomingPayment } from '../../tests/incomingPayment'
+import {
+  createOutgoingPayment,
+  CreateTestQuoteAndOutgoingPaymentOptions
+} from '../../tests/outgoingPayment'
 import { createWalletAddress } from '../../tests/walletAddress'
 import { truncateTables } from '../../tests/tableManager'
 import {
@@ -28,7 +32,8 @@ import { Asset } from '../../asset/model'
 import {
   OutgoingPayment,
   OutgoingPaymentResponse,
-  OutgoingPaymentState as SchemaPaymentState
+  OutgoingPaymentState as SchemaPaymentState,
+  OutgoingPaymentConnection
 } from '../generated/graphql'
 import { faker } from '@faker-js/faker'
 import { GraphQLErrorCode } from '../errors'
@@ -61,11 +66,14 @@ describe('OutgoingPayment Resolvers', (): void => {
     await appContainer.shutdown()
   })
 
-  const createPayment = async (options: {
-    walletAddressId: string
-    metadata?: Record<string, unknown>
-  }): Promise<OutgoingPaymentModel> => {
-    return await createOutgoingPayment(deps, {
+  const createPayment = async (
+    options: {
+      walletAddressId: string
+      metadata?: Record<string, unknown>
+    },
+    grantId?: string
+  ): Promise<OutgoingPaymentModel> => {
+    const obj: CreateTestQuoteAndOutgoingPaymentOptions = {
       ...options,
       method: 'ilp',
       receiver: `${Config.openPaymentsUrl}/${uuid()}`,
@@ -75,11 +83,279 @@ describe('OutgoingPayment Resolvers', (): void => {
         assetScale: asset.scale
       },
       validDestination: false
-    })
+    }
+
+    if (grantId) {
+      obj.grant = { id: grantId }
+    }
+
+    return await createOutgoingPayment(deps, obj)
   }
 
   describe('Query.outgoingPayment', (): void => {
     let payment: OutgoingPaymentModel
+    let walletAddressId: string
+
+    beforeEach(async (): Promise<void> => {
+      walletAddressId = (
+        await createWalletAddress(deps, {
+          assetId: asset.id
+        })
+      ).id
+    })
+
+    getPageTests({
+      getClient: () => appContainer.apolloClient,
+      createModel: () =>
+        createPayment({
+          walletAddressId
+        }),
+      pagedQuery: 'outgoingPayments'
+    })
+
+    describe('page filter tests', () => {
+      let receiver: string
+      let firstOutgoingPayment: OutgoingPaymentModel
+      let secondOutgoingPayment: OutgoingPaymentModel
+
+      const pageQuery = gql`
+        query OutgoingPayments($filter: OutgoingPaymentFilter) {
+          outgoingPayments(filter: $filter) {
+            edges {
+              node {
+                id
+                walletAddressId
+                state
+                receiver
+              }
+            }
+          }
+        }
+      `
+
+      beforeEach(async (): Promise<void> => {
+        const firstReceiverWalletAddress = await createWalletAddress(deps, {
+          assetId: asset.id
+        })
+        const secondWalletAddress = await createWalletAddress(deps, {
+          assetId: asset.id
+        })
+
+        const secondReceiverWalletAddress = await createWalletAddress(deps, {
+          assetId: asset.id
+        })
+
+        const baseOutgoingPayment = {
+          debitAmount: {
+            value: BigInt(10),
+            assetCode: asset.code,
+            assetScale: asset.scale
+          },
+          validDestination: true,
+          client: 'test-client'
+        }
+
+        const incomingPayment = await createIncomingPayment(deps, {
+          walletAddressId: firstReceiverWalletAddress.id
+        })
+        receiver = incomingPayment.getUrl(firstReceiverWalletAddress)
+        firstOutgoingPayment = await createOutgoingPayment(deps, {
+          walletAddressId,
+          receiver,
+          method: 'ilp',
+          ...baseOutgoingPayment
+        })
+
+        const secondIncomingPayment = await createIncomingPayment(deps, {
+          walletAddressId: secondReceiverWalletAddress.id
+        })
+        const secondReceiver = secondIncomingPayment.getUrl(secondWalletAddress)
+        secondOutgoingPayment = await createOutgoingPayment(deps, {
+          walletAddressId: secondWalletAddress.id,
+          receiver: secondReceiver,
+          method: 'ilp',
+          ...baseOutgoingPayment
+        })
+      })
+
+      test('can filter payments by receiver', async (): Promise<void> => {
+        const query = await appContainer.apolloClient
+          .query({
+            query: pageQuery,
+            variables: {
+              filter: {
+                receiver: {
+                  in: [receiver]
+                }
+              }
+            }
+          })
+          .then((query): OutgoingPaymentConnection => {
+            if (query.data) {
+              return query.data.outgoingPayments
+            } else {
+              throw new Error('Data was empty')
+            }
+          })
+
+        expect(query.edges).toHaveLength(1)
+        expect(query.edges[0].node).toMatchObject(
+          expect.objectContaining({
+            id: firstOutgoingPayment.id,
+            receiver
+          })
+        )
+        expect(query.edges).not.toContainEqual(
+          expect.objectContaining({
+            id: secondOutgoingPayment.id
+          })
+        )
+      })
+
+      test('can filter payments by wallet address id', async (): Promise<void> => {
+        const query = await appContainer.apolloClient
+          .query({
+            query: pageQuery,
+            variables: {
+              filter: {
+                walletAddressId: {
+                  in: [walletAddressId]
+                }
+              }
+            }
+          })
+          .then((query): OutgoingPaymentConnection => {
+            if (query.data) {
+              return query.data.outgoingPayments
+            } else {
+              throw new Error('Data was empty')
+            }
+          })
+
+        expect(query.edges).toHaveLength(1)
+        expect(query.edges[0].node).toMatchObject(
+          expect.objectContaining({
+            id: firstOutgoingPayment.id,
+            walletAddressId
+          })
+        )
+        expect(query.edges).not.toContainEqual(
+          expect.objectContaining({
+            id: secondOutgoingPayment.id
+          })
+        )
+      })
+
+      test('can filter payments by wallet address id', async (): Promise<void> => {
+        const query = await appContainer.apolloClient
+          .query({
+            query: pageQuery,
+            variables: {
+              filter: {
+                walletAddressId: {
+                  in: [walletAddressId]
+                }
+              }
+            }
+          })
+          .then((query): OutgoingPaymentConnection => {
+            if (query.data) {
+              return query.data.outgoingPayments
+            } else {
+              throw new Error('Data was empty')
+            }
+          })
+
+        expect(query.edges).toHaveLength(1)
+        expect(query.edges[0].node).toMatchObject(
+          expect.objectContaining({
+            id: firstOutgoingPayment.id,
+            walletAddressId
+          })
+        )
+        expect(query.edges).not.toContainEqual(
+          expect.objectContaining({
+            id: secondOutgoingPayment.id
+          })
+        )
+      })
+
+      test('can filter payments by state', async (): Promise<void> => {
+        await OutgoingPaymentModel.query().patchAndFetchById(
+          firstOutgoingPayment.id,
+          {
+            state: OutgoingPaymentState.Completed
+          }
+        )
+        const query = await appContainer.apolloClient
+          .query({
+            query: pageQuery,
+            variables: {
+              filter: {
+                state: {
+                  in: [OutgoingPaymentState.Completed]
+                }
+              }
+            }
+          })
+          .then((query): OutgoingPaymentConnection => {
+            if (query.data) {
+              return query.data.outgoingPayments
+            } else {
+              throw new Error('Data was empty')
+            }
+          })
+
+        expect(query.edges).toHaveLength(1)
+        expect(query.edges[0].node).toMatchObject(
+          expect.objectContaining({
+            id: firstOutgoingPayment.id,
+            state: OutgoingPaymentState.Completed
+          })
+        )
+        expect(query.edges).not.toContainEqual(
+          expect.objectContaining({
+            id: secondOutgoingPayment.id
+          })
+        )
+      })
+    })
+
+    describe('grantId', (): void => {
+      it('should return grantId', async (): Promise<void> => {
+        const grantId = uuid()
+
+        const { id: walletAddressId } = await createWalletAddress(deps, {
+          assetId: asset.id
+        })
+
+        const payment = await createPayment({ walletAddressId }, grantId)
+
+        const query = await appContainer.apolloClient
+          .query({
+            query: gql`
+              query OutgoingPayment($paymentId: String!) {
+                outgoingPayment(id: $paymentId) {
+                  id
+                  grantId
+                  walletAddressId
+                }
+              }
+            `,
+            variables: {
+              paymentId: payment.id
+            }
+          })
+          .then((query): OutgoingPayment => query.data?.outgoingPayment)
+
+        expect(query).toEqual({
+          id: payment.id,
+          grantId: payment.grantId,
+          walletAddressId: payment.walletAddressId,
+          __typename: 'OutgoingPayment'
+        })
+      })
+    })
 
     describe('metadata', (): void => {
       const metadata = {
@@ -150,10 +426,7 @@ describe('OutgoingPayment Resolvers', (): void => {
                     metadata
                     quote {
                       id
-                      maxPacketAmount
-                      minExchangeRate
-                      lowEstimatedExchangeRate
-                      highEstimatedExchangeRate
+                      estimatedExchangeRate
                       createdAt
                       expiresAt
                     }
@@ -197,14 +470,11 @@ describe('OutgoingPayment Resolvers', (): void => {
             metadata,
             quote: {
               id: payment.quote.id,
-              maxPacketAmount: payment.quote.maxPacketAmount.toString(),
-              minExchangeRate: payment.quote.minExchangeRate.valueOf(),
-              lowEstimatedExchangeRate:
-                payment.quote.lowEstimatedExchangeRate.valueOf(),
-              highEstimatedExchangeRate:
-                payment.quote.highEstimatedExchangeRate.valueOf(),
               createdAt: payment.quote.createdAt.toISOString(),
               expiresAt: payment.quote.expiresAt.toISOString(),
+              estimatedExchangeRate: payment.quote.estimatedExchangeRate
+                ? parseFloat(payment.quote.estimatedExchangeRate?.toString())
+                : undefined,
               __typename: 'Quote'
             },
             createdAt: payment.createdAt.toISOString(),

@@ -1,7 +1,7 @@
 import { Dialog } from '@headlessui/react'
 import { Form } from '@remix-run/react'
 import type { ChangeEvent } from 'react'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { XIcon } from '~/components/icons'
 import { Button, Input } from '~/components/ui'
 
@@ -42,6 +42,13 @@ export const LiquidityDialog = ({
     setActualAmount(integerScaledInput)
   }
 
+  const inputRef = useRef<HTMLInputElement>(null)
+  useEffect(() => {
+    if (inputRef.current) {
+      inputRef.current.focus()
+    }
+  }, [])
+
   return (
     <Dialog as='div' className='relative z-10' onClose={onClose} open={true}>
       <div className='fixed inset-0 bg-tealish/30 bg-opacity-75 transition-opacity' />
@@ -67,6 +74,7 @@ export const LiquidityDialog = ({
               </Dialog.Title>
               <div className='mt-2'>
                 <Input
+                  ref={inputRef}
                   required
                   type='number'
                   name='displayAmount'

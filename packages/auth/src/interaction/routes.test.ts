@@ -529,6 +529,7 @@ describe('Interaction Routes', (): void => {
     describe('IDP - Grant details', (): void => {
       let grant: Grant
       let access: Access
+      let interaction: Interaction
 
       beforeAll(async (): Promise<void> => {
         grant = await Grant.query().insert({
@@ -539,6 +540,10 @@ describe('Interaction Routes', (): void => {
           ...BASE_GRANT_ACCESS,
           grantId: grant.id
         })
+
+        interaction = await Interaction.query().insert(
+          generateBaseInteraction(grant)
+        )
       })
 
       test('Can get grant details', async (): Promise<void> => {
@@ -558,6 +563,7 @@ describe('Interaction Routes', (): void => {
         await expect(interactionRoutes.details(ctx)).resolves.toBeUndefined()
         expect(ctx.status).toBe(200)
         expect(ctx.body).toEqual({
+          grantId: grant.id,
           access: [
             {
               actions: access.actions,

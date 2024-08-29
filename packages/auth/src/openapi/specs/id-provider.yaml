@@ -129,6 +129,9 @@ paths:
                       - PENDING
                       - APPROVED
                       - DENIED
+                  grantId:
+                    description: Id of a grant
+                    type: string
         '401':
           description: Unauthorized
         '404':
