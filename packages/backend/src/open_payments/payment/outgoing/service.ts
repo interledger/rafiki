@@ -42,6 +42,7 @@ import { QuoteService } from '../../quote/service'
 import { isQuoteError } from '../../quote/errors'
 import { Pagination, SortOrder } from '../../../shared/baseModel'
 import { FilterString } from '../../../shared/filters'
+import { AssetService } from '../../../asset/service'
 
 export interface OutgoingPaymentService
   extends WalletAddressSubresourceService<OutgoingPayment> {
@@ -66,6 +67,7 @@ export interface ServiceDependencies extends BaseService {
   paymentMethodHandlerService: PaymentMethodHandlerService
   walletAddressService: WalletAddressService
   quoteService: QuoteService
+  assetService: AssetService
   telemetry?: TelemetryService
 }
 
@@ -106,9 +108,8 @@ async function getOutgoingPaymentsPage(
   const { filter, pagination, sortOrder } = options ?? {}
 
   const query = OutgoingPayment.query(deps.knex).withGraphFetched(
-    '[quote.asset, walletAddress]'
+    '[quote, walletAddress]'
   )
-
   if (filter?.receiver?.in && filter.receiver.in.length) {
     query
       .innerJoin('quotes', 'quotes.id', 'outgoingPayments.id')
@@ -124,6 +125,10 @@ async function getOutgoingPaymentsPage(
   }
 
   const page = await query.getPage(pagination, sortOrder)
+  if (page && page.length) {
+    for (const out of page) await deps.assetService.setOn(out.quote)
+  }
+
   const amounts = await deps.accountingService.getAccountsTotalSent(
     page.map((payment: OutgoingPayment) => payment.id)
   )
@@ -144,9 +149,10 @@ async function getOutgoingPayment(
 ): Promise<OutgoingPayment | undefined> {
   const outgoingPayment = await OutgoingPayment.query(deps.knex)
     .get(options)
-    .withGraphFetched('[quote.asset, walletAddress]')
+    .withGraphFetched('[walletAddress]')
 
   if (outgoingPayment) {
+    await deps.assetService.setOn(outgoingPayment.quote)
     return addSentAmount(deps, outgoingPayment)
   }
 }
@@ -205,7 +211,8 @@ async function cancelOutgoingPayment(
           ...(options.reason ? { cancellationReason: options.reason } : {})
         }
       })
-      .withGraphFetched('[quote.asset, walletAddress]')
+      .withGraphFetched('[walletAddress]')
+    await deps.assetService.setOn(payment.quote)
 
     return addSentAmount(deps, payment)
   })
@@ -312,7 +319,9 @@ async function createOutgoingPayment(
           state: OutgoingPaymentState.Funding,
           grantId
         })
-        .withGraphFetched('[quote.asset, walletAddress]')
+        .withGraphFetched('[walletAddress]')
+      await deps.assetService.setOn(payment.quote)
+
       deps.telemetry &&
         deps.telemetry.stopTimer(
           'outgoing_payment_service_insertpayment_time_ms'
@@ -539,11 +548,11 @@ async function validateGrantAndAddSpentAmountsToPayment(
     .andWhereNot({
       id: payment.id
     })
-    .withGraphFetched('[quote.asset]')
-
   if (grantPayments.length === 0) {
     return true
   }
+  for (const payment of grantPayments)
+    await deps.assetService.setOn(payment.quote)
 
   const amounts = {
     sent: {
@@ -616,8 +625,10 @@ async function fundPayment(
     const payment = await OutgoingPayment.query(trx)
       .findById(id)
       .forUpdate()
-      .withGraphFetched('[quote.asset]')
+      .withGraphFetched('[quote]')
     if (!payment) return FundingError.UnknownPayment
+    await deps.assetService.setOn(payment.quote)
+
     if (payment.state !== OutgoingPaymentState.Funding) {
       return FundingError.WrongState
     }
@@ -660,7 +671,12 @@ async function getWalletAddressPage(
 ): Promise<OutgoingPayment[]> {
   const page = await OutgoingPayment.query(deps.knex)
     .list(options)
-    .withGraphFetched('[quote.asset, walletAddress]')
+    .withGraphFetched('[walletAddress]')
+  if (page && page.length) {
+    for (const outgoingPayment of page)
+      await deps.assetService.setOn(outgoingPayment.quote)
+  }
+
   const amounts = await deps.accountingService.getAccountsTotalSent(
     page.map((payment: OutgoingPayment) => payment.id)
   )
