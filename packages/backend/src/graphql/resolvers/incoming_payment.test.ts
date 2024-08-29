@@ -459,7 +459,7 @@ describe('Incoming Payment Resolver', (): void => {
 
     test.each`
       id                                                |  metadata
-      ${{incomingPayment}}                              |${{ description: 'rent', externalRef: '202201' }}
+      ${undefined}                                      |${{ description: 'Update metadata', status: 'COMPLETE' }}
       ${undefined}                                      | ${new Date(Date.now() + 30_000)}
       ${undefined}                                      | ${undefined}
     `(
@@ -476,7 +476,6 @@ describe('Incoming Payment Resolver', (): void => {
           expiresAt,
           incomingAmount
         })
-        console.log(payment)
         const input = {
           id:payment.id,
           metadata
@@ -507,7 +506,7 @@ describe('Incoming Payment Resolver', (): void => {
           })
           .then(
             (query): IncomingPaymentResponse =>
-              query.data?.createIncomingPayment
+              query.data?.updateIncomingPayment
           )
 
         expect(createSpy).toHaveBeenCalledWith(input)
@@ -540,7 +539,7 @@ describe('Incoming Payment Resolver', (): void => {
 
     test('Errors when unknown wallet address', async (): Promise<void> => {
       const createSpy = jest
-        .spyOn(incomingPaymentService, 'create')
+        .spyOn(incomingPaymentService, 'update')
         .mockResolvedValueOnce(IncomingPaymentError.UnknownWalletAddress)
 
       const input = {
@@ -567,7 +566,7 @@ describe('Incoming Payment Resolver', (): void => {
           })
           .then(
             (query): IncomingPaymentResponse =>
-              query.data?.createIncomingPayment
+              query.data?.updateIncomingPayment
           )
       } catch (error) {
         expect(error).toBeInstanceOf(ApolloError)
@@ -585,7 +584,7 @@ describe('Incoming Payment Resolver', (): void => {
 
     test('Internal server error', async (): Promise<void> => {
       const createSpy = jest
-        .spyOn(incomingPaymentService, 'create')
+        .spyOn(incomingPaymentService, 'update')
         .mockRejectedValueOnce(new Error('unexpected'))
 
       const input = {
@@ -612,7 +611,7 @@ describe('Incoming Payment Resolver', (): void => {
           })
           .then(
             (query): IncomingPaymentResponse =>
-              query.data?.createIncomingPayment
+              query.data?.updateIncomingPayment
           )
       } catch (error) {
         expect(error).toBeInstanceOf(ApolloError)
