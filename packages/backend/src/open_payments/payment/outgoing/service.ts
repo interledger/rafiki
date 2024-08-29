@@ -149,7 +149,7 @@ async function getOutgoingPayment(
 ): Promise<OutgoingPayment | undefined> {
   const outgoingPayment = await OutgoingPayment.query(deps.knex)
     .get(options)
-    .withGraphFetched('[walletAddress]')
+    .withGraphFetched('[quote, walletAddress]')
 
   if (outgoingPayment) {
     await deps.assetService.setOn(outgoingPayment.quote)
@@ -211,7 +211,7 @@ async function cancelOutgoingPayment(
           ...(options.reason ? { cancellationReason: options.reason } : {})
         }
       })
-      .withGraphFetched('[walletAddress]')
+      .withGraphFetched('[quote, walletAddress]')
     await deps.assetService.setOn(payment.quote)
 
     return addSentAmount(deps, payment)
@@ -319,7 +319,7 @@ async function createOutgoingPayment(
           state: OutgoingPaymentState.Funding,
           grantId
         })
-        .withGraphFetched('[walletAddress]')
+        .withGraphFetched('[walletAddress, quote]')
       await deps.assetService.setOn(payment.quote)
 
       deps.telemetry &&
