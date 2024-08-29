@@ -1307,7 +1307,14 @@ export enum SortOrder {
 
 export type Tenant = {
   __typename?: 'Tenant';
+  /** Date-time of creation */
+  createdAt: Scalars['String']['output'];
+  /** Tenant ID that is used in subsequent resources */
   id: Scalars['ID']['output'];
+  /** Kratos identity ID */
+  kratosIdentityId: Scalars['String']['output'];
+  /** Date-time of the update */
+  updatedAt: Scalars['String']['output'];
 };
 
 export type TenantEdge = {
@@ -2315,7 +2322,10 @@ export type SetFeeResponseResolvers<ContextType = any, ParentType extends Resolv
 };
 
 export type TenantResolvers<ContextType = any, ParentType extends ResolversParentTypes['Tenant'] = ResolversParentTypes['Tenant']> = {
+  createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  kratosIdentityId?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  updatedAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 

@@ -6,29 +6,46 @@ import {
   isTenantError,
   TenantError
 } from '../../tenant/errors'
+import { Tenant as SchemaTenant } from '../generated/graphql'
 import {
   MutationResolvers,
   QueryResolvers,
   ResolversTypes,
   TenantEndpointType
 } from '../generated/graphql'
-import { EndpointType } from '../../tenant/model'
+import { EndpointType, Tenant } from '../../tenant/model'
+import { Pagination, SortOrder } from '../../shared/baseModel'
+import { getPageInfo } from '../../shared/pagination'
 
 const mapTenantEndpointTypeToModelEndpointType = {
   [TenantEndpointType.RatesUrl]: EndpointType.RatesUrl,
   [TenantEndpointType.WebhookBaseUrl]: EndpointType.WebhookBaseUrl
 }
 
-// export const getTenants: QueryResolvers<ApolloContext>['tenants'] = async (
-//   _,
-//   args,
-//   ctx
-// ): Promise<ResolversTypes['TenantsConnection']> => {
-//   const tenantService = await ctx.container.use('tenantService')
-//   const { sortOrder, ...pagination } = args
-//   const order = sortOrder === 'ASC' ? SortOrder.Asc : SortOrder.Desc
-//   const tenants = await tenantService.getPage()
-// }
+export const getTenants: QueryResolvers<ApolloContext>['tenants'] = async (
+  _,
+  args,
+  ctx
+): Promise<ResolversTypes['TenantsConnection']> => {
+  const tenantService = await ctx.container.use('tenantService')
+  const { sortOrder, ...pagination } = args
+  const order = sortOrder === 'ASC' ? SortOrder.Asc : SortOrder.Desc
+  const tenants = await tenantService.getPage(pagination, order)
+  const pageInfo = await getPageInfo({
+    getPage: (pagination: Pagination, sortOrder?: SortOrder) => 
+      tenantService.getPage(pagination, sortOrder),
+    page: tenants,
+    sortOrder: order
+  })
+
+  return {
+    pageInfo,
+    edges: tenants.map((tenant: Tenant) => ({
+      cursor: tenant.id,
+      node: tenantToGraphql(tenant)
+    }))
+  }
+}
 
 export const getTenant: QueryResolvers<ApolloContext>['tenant'] = async (
   _,
@@ -45,8 +62,9 @@ export const getTenant: QueryResolvers<ApolloContext>['tenant'] = async (
       }
     })
   }
+  console.log('TENANT: ', tenant)
 
-  return tenant
+  return tenantToGraphql(tenant)
 }
 
 export const createTenant: MutationResolvers<ApolloContext>['createTenant'] =
@@ -76,13 +94,16 @@ export const createTenant: MutationResolvers<ApolloContext>['createTenant'] =
       })
     }
 
-    return { tenant: tenantOrError }
+    return {
+      tenant: tenantToGraphql(tenantOrError)
+    }
   }
 
-// export function tenantToGraphql(tenant: Tenant): SchemaTenant {
-//   tenant.
-//   return {
-//     id: tenant.id,
-
-//   }
-// }
+export function tenantToGraphql(tenant: Tenant): SchemaTenant {
+  return {
+    id: tenant.id,
+    kratosIdentityId: tenant.kratosIdentityId,
+    createdAt: new Date(tenant.createdAt).toISOString(),
+    updatedAt: new Date(tenant.updatedAt).toISOString()
+  }
+}

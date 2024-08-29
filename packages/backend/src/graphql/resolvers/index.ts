@@ -67,7 +67,7 @@ import { GraphQLJSONObject } from 'graphql-scalars'
 import { getCombinedPayments } from './combined_payments'
 import { createOrUpdatePeerByUrl } from './auto-peering'
 import { getAccountingTransfers } from './accounting_transfer'
-import { createTenant } from './tenant'
+import { createTenant, getTenant, getTenants } from './tenant'
 
 export const resolvers: Resolvers = {
   UInt8: GraphQLUInt8,
@@ -96,7 +96,9 @@ export const resolvers: Resolvers = {
     webhookEvents: getWebhookEvents,
     payments: getCombinedPayments,
     accountingTransfers: getAccountingTransfers,
-    receiver: getReceiver
+    receiver: getReceiver,
+    tenant: getTenant,
+    tenants: getTenants
   },
   WalletAddress: {
     liquidity: getWalletAddressLiquidity,

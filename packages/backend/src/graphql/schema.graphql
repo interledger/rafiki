@@ -1372,7 +1372,14 @@ type CreateTenantMutationResponse {
 }
 
 type Tenant {
+  "Tenant ID that is used in subsequent resources"
   id: ID!
+  "Kratos identity ID"
+  kratosIdentityId: String!
+  "Date-time of creation"
+  createdAt: String!
+  "Date-time of the update"
+  updatedAt: String!
 }
 
 type LiquidityMutationResponse {

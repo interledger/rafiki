@@ -67,7 +67,6 @@ async function getTenant(
   id: string
 ): Promise<Tenant | undefined> {
   return Tenant.query(deps.knex)
-    .withGraphFetched('tenantEndpoints')
     .findById(id)
 }
 
