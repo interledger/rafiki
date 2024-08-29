@@ -548,6 +548,7 @@ async function validateGrantAndAddSpentAmountsToPayment(
     .andWhereNot({
       id: payment.id
     })
+    .withGraphFetched('[quote]')
   if (grantPayments.length === 0) {
     return true
   }
@@ -671,7 +672,7 @@ async function getWalletAddressPage(
 ): Promise<OutgoingPayment[]> {
   const page = await OutgoingPayment.query(deps.knex)
     .list(options)
-    .withGraphFetched('[walletAddress]')
+    .withGraphFetched('[quote, walletAddress]')
   if (page && page.length) {
     for (const outgoingPayment of page)
       await deps.assetService.setOn(outgoingPayment.quote)
