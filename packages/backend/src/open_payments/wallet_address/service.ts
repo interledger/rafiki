@@ -296,7 +296,7 @@ async function getWalletAddressByUrl(
   url: string
 ): Promise<WalletAddress | undefined> {
   const walletAddress = await WalletAddress.query(deps.knex)
-    .findOne({url: url.toLowerCase()})
+    .findOne({ url: url.toLowerCase() })
     .withGraphFetched('asset')
   return walletAddress || undefined
 }
