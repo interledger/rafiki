@@ -26,6 +26,11 @@ import { WebhookService } from '../../webhook/service'
 import { poll } from '../../shared/utils'
 import { WalletAddressAdditionalProperty } from './additional_property/model'
 import { AssetService } from '../../asset/service'
+import { Quote } from '../quote/model'
+import { CacheDataStore } from '../../cache'
+import { OutgoingPayment } from '../payment/outgoing/model'
+
+export type ToSetOn = Quote | IncomingPayment | OutgoingPayment | undefined
 
 interface Options {
   publicName?: string
@@ -71,6 +76,7 @@ export interface WalletAddressService {
   ): Promise<WalletAddress[]>
   processNext(): Promise<string | undefined>
   triggerEvents(limit: number): Promise<number>
+  setOn(obj: ToSetOn): Promise<void | WalletAddress>
 }
 
 interface ServiceDependencies extends BaseService {
@@ -79,6 +85,7 @@ interface ServiceDependencies extends BaseService {
   accountingService: AccountingService
   webhookService: WebhookService
   assetService: AssetService
+  cacheDataStore: CacheDataStore
 }
 
 export async function createWalletAddressService({
@@ -87,7 +94,8 @@ export async function createWalletAddressService({
   knex,
   accountingService,
   webhookService,
-  assetService
+  assetService,
+  cacheDataStore
 }: ServiceDependencies): Promise<WalletAddressService> {
   const log = logger.child({
     service: 'WalletAddressService'
@@ -98,7 +106,8 @@ export async function createWalletAddressService({
     knex,
     accountingService,
     webhookService,
-    assetService
+    assetService,
+    cacheDataStore
   }
   return {
     create: (options) => createWalletAddress(deps, options),
@@ -115,7 +124,8 @@ export async function createWalletAddressService({
     getPage: (pagination?, sortOrder?) =>
       getWalletAddressPage(deps, pagination, sortOrder),
     processNext: () => processNextWalletAddress(deps),
-    triggerEvents: (limit) => triggerWalletAddressEvents(deps, limit)
+    triggerEvents: (limit) => triggerWalletAddressEvents(deps, limit),
+    setOn: (toSetOn) => setWalletAddressOn(deps, toSetOn)
   }
 }
 
@@ -177,6 +187,7 @@ async function createWalletAddress(
       additionalProperties: additionalProperties
     })
     await deps.assetService.setOn(walletAddress)
+    await deps.cacheDataStore.set(walletAddress.id, walletAddress)
     return walletAddress
   } catch (err) {
     if (err instanceof ForeignKeyViolationError) {
@@ -231,6 +242,7 @@ async function updateWalletAddress(
     }
     await trx.commit()
 
+    await deps.cacheDataStore.delete(updatedWalletAddress.id)
     return updatedWalletAddress
   } catch (err) {
     await trx.rollback()
@@ -245,8 +257,15 @@ async function getWalletAddress(
   deps: ServiceDependencies,
   id: string
 ): Promise<WalletAddress | undefined> {
+  const walletAdd = await deps.cacheDataStore.get(id)
+  if (walletAdd) return walletAdd as WalletAddress
+
   const walletAddress = await WalletAddress.query(deps.knex).findById(id)
-  await deps.assetService.setOn(walletAddress)
+  if (walletAddress) {
+    await deps.assetService.setOn(walletAddress)
+    await deps.cacheDataStore.set(id, walletAddress)
+  }
+
   return walletAddress
 }
 
@@ -311,15 +330,9 @@ async function getWalletAddressPage(
   pagination?: Pagination,
   sortOrder?: SortOrder
 ): Promise<WalletAddress[]> {
-  const walletAddresses = await WalletAddress.query(deps.knex).getPage(
-    pagination,
-    sortOrder
-  )
-  for (const walletAddress of walletAddresses) {
-    await deps.assetService.setOn(walletAddress)
-  }
-
-  return walletAddresses
+  return WalletAddress.query(deps.knex)
+    .getPage(pagination, sortOrder)
+    .withGraphFetched('asset')
 }
 
 // Returns the id of the processed wallet address (if any).
@@ -437,6 +450,15 @@ async function deactivateOpenIncomingPaymentsByWalletAddress(
       IncomingPaymentState.Processing
     ])
     .where('expiresAt', '>', expiresAt)
+}
+
+async function setWalletAddressOn(
+  deps: ServiceDependencies,
+  obj: ToSetOn
+): Promise<void> {
+  if (!obj) return
+  const walletAddress = await getWalletAddress(deps, obj.walletAddressId)
+  if (walletAddress) obj.walletAddress = walletAddress
 }
 
 export interface WalletAddressSubresourceService<

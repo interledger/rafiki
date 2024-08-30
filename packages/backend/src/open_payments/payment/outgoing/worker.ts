@@ -74,8 +74,11 @@ async function getPendingPayment(
           [RETRY_BACKOFF_SECONDS, now]
         )
     })
-    .withGraphFetched('[walletAddress, quote]')
-  if (payments[0]) await deps.assetService.setOn(payments[0].quote)
+  if (payments[0]) {
+    await deps.quoteService.setOn(payments[0])
+    await deps.walletAddressService.setOn(payments[0])
+  }
+
   deps.telemetry && deps.telemetry.stopTimer('getPendingPayment')
   return payments[0]
 }

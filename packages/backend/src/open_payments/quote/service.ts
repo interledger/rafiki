@@ -22,11 +22,16 @@ import {
 } from '../../payment-method/handler/errors'
 import { TelemetryService } from '../../telemetry/service'
 import { AssetService } from '../../asset/service'
+import { OutgoingPayment } from '../payment/outgoing/model'
+import { CacheDataStore } from '../../cache'
 
 const MAX_INT64 = BigInt('9223372036854775807')
 
+export type ToSetOn = OutgoingPayment | undefined
+
 export interface QuoteService extends WalletAddressSubresourceService<Quote> {
   create(options: CreateQuoteOptions): Promise<Quote | QuoteError>
+  setOn(obj: ToSetOn): Promise<void | Quote>
 }
 
 export interface ServiceDependencies extends BaseService {
@@ -37,6 +42,7 @@ export interface ServiceDependencies extends BaseService {
   feeService: FeeService
   paymentMethodHandlerService: PaymentMethodHandlerService
   assetService: AssetService
+  cacheDataStore: CacheDataStore
   telemetry?: TelemetryService
 }
 
@@ -50,7 +56,8 @@ export async function createQuoteService(
   return {
     get: (options) => getQuote(deps, options),
     create: (options: CreateQuoteOptions) => createQuote(deps, options),
-    getWalletAddressPage: (options) => getWalletAddressPage(deps, options)
+    getWalletAddressPage: (options) => getQuotePage(deps, options),
+    setOn: (toSetOn) => setQuoteOn(deps, toSetOn)
   }
 }
 
@@ -58,11 +65,9 @@ async function getQuote(
   deps: ServiceDependencies,
   options: GetOptions
 ): Promise<Quote | undefined> {
-  const quote = await Quote.query(deps.knex)
+  return Quote.query(deps.knex)
     .get(options)
-    .withGraphFetched('[fee, walletAddress]')
-  await deps.assetService.setOn(quote)
-  return quote
+    .withGraphFetched('[asset, fee, walletAddress]')
 }
 
 interface QuoteOptionsBase {
@@ -185,8 +190,8 @@ async function createQuote(
           feeId: sendingFee?.id,
           estimatedExchangeRate: quote.estimatedExchangeRate
         })
-        .withGraphFetched('[fee, walletAddress]')
-
+        .withGraphFetched('[asset, fee, walletAddress]')
+      await deps.walletAddressService.setOn(createdQuote)
       await deps.assetService.setOn(createdQuote)
 
       return await finalizeQuote(
@@ -202,6 +207,7 @@ async function createQuote(
 
     deps.telemetry && deps.telemetry.stopTimer('quote_service_create_time_ms')
 
+    await deps.cacheDataStore.set(q.id, q)
     return q
   } catch (err) {
     if (isQuoteError(err)) {
@@ -324,7 +330,6 @@ function calculateFixedDeliveryQuoteAmounts(
   quote: Quote
 ): CalculateQuoteAmountsWithFeesResult {
   const fees = quote.fee?.calculate(quote.debitAmount.value) ?? BigInt(0)
-
   const debitAmountValue = BigInt(quote.debitAmount.value) + fees
 
   if (debitAmountValue <= BigInt(0)) {
@@ -403,21 +408,25 @@ async function finalizeQuote(
   }
 
   await quote.$query(deps.knex).patch(patchOptions)
+  await deps.cacheDataStore.delete(quote.id)
 
   return quote
 }
 
-async function getWalletAddressPage(
+async function getQuotePage(
   deps: ServiceDependencies,
   options: ListOptions
 ): Promise<Quote[]> {
-  const quotes = await Quote.query(deps.knex)
+  return await Quote.query(deps.knex)
     .list(options)
-    .withGraphFetched('[fee, walletAddress]')
-  if (quotes && quotes.length) {
-    for (const quote of quotes) {
-      await deps.assetService.setOn(quote)
-    }
-  }
-  return quotes
+    .withGraphFetched('[asset, fee, walletAddress]')
+}
+
+async function setQuoteOn(
+  deps: ServiceDependencies,
+  obj: ToSetOn
+): Promise<void> {
+  if (!obj) return
+  const quote = await getQuote(deps, { id: obj.id })
+  if (quote) obj.quote = quote
 }

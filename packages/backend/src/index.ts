@@ -57,6 +57,7 @@ import { createRatesService } from './rates/service'
 import { TelemetryService, createTelemetryService } from './telemetry/service'
 import { createWebhookService } from './webhook/service'
 import { Asset } from './asset/model'
+import { createInMemoryDataStore } from './cache/cache'
 
 BigInt.prototype.toJSON = function () {
   return this.toString()
@@ -285,7 +286,8 @@ export function initIocContainer(
       logger: logger,
       accountingService: await deps.use('accountingService'),
       webhookService: await deps.use('webhookService'),
-      assetService: await deps.use('assetService')
+      assetService: await deps.use('assetService'),
+      cacheDataStore: createInMemoryDataStore(config.localCacheDuration)
     })
   })
   container.singleton('spspRoutes', async (deps) => {
@@ -476,7 +478,8 @@ export function initIocContainer(
       telemetry: config.enableTelemetry
         ? await deps.use('telemetry')
         : undefined,
-      assetService: await deps.use('assetService')
+      assetService: await deps.use('assetService'),
+      cacheDataStore: createInMemoryDataStore(config.localCacheDuration)
     })
   })
 
@@ -504,7 +507,8 @@ export function initIocContainer(
       telemetry: config.enableTelemetry
         ? await deps.use('telemetry')
         : undefined,
-      assetService: await deps.use('assetService')
+      assetService: await deps.use('assetService'),
+      cacheDataStore: createInMemoryDataStore(config.localCacheDuration)
     })
   })
 
