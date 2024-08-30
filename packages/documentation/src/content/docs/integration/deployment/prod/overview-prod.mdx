@@ -1,0 +1,34 @@
+---
+title: Production deployment overview
+---
+
+This guide describes one of the ways possible to prepare for a Rafiki Production deployment, based on several key decisions described in this section.
+
+## Key decisions
+
+- Cloud-hosted or On-premises  
+    - Google Cloud Platform (GCP)
+- Containers
+    - Docker containers: (Do we recommend using Docker for deploying to Prod?)  
+- Kubernetes orchestration  
+Container orchestration to handle networking, scaling, restarts etc.  
+- Manage deployment & upgrades  
+Choose your tools based on your deployment strategy, and your needs for the future.  
+
+You may choose to manually apply the Kubernetes manifests, use Helm charts, or Kubernetes operators.
+
+    - Manually apply Kubernetes manifests
+    - Use Kubernetes operators to ...
+    - Use Helm charts to package, configure, and deploy Rafiki services to Kubernetes clusters eliminates the need to manually deploy each individual Kubernetes file.
+
+## Security  
+text
+
+### SSL and mTLS   
+text
+
+### Secrets  
+text
+
+### Certificates
+text

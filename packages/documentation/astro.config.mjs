@@ -170,6 +170,14 @@ export default defineConfig({
                       label: 'Deploy to production',
                       items: [
                         {
+                          label: 'Overview',
+                          link: '/integration/deployment/prod/overview-prod'
+                        },
+                        {
+                          label: 'Hardware',
+                          link: '/integration/deployment/prod/hardware'
+                        },
+                        {
                           label: 'nginx',
                           link: '/integration/deployment/prod/nginx'
                         },
