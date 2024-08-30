@@ -9,6 +9,7 @@ import { WalletAddress } from '../open_payments/wallet_address/model'
 import { Peer } from '../payment-method/ilp/peer/model'
 import { Quote } from '../open_payments/quote/model'
 import { IncomingPayment } from '../open_payments/payment/incoming/model'
+import { CacheDataStore } from '../cache'
 
 export interface AssetOptions {
   code: string
@@ -44,14 +45,14 @@ export interface AssetService {
 
 interface ServiceDependencies extends BaseService {
   accountingService: AccountingService
-  assetCache: Map<string, Asset>
+  cacheDataStore: CacheDataStore
 }
 
 export async function createAssetService({
   logger,
   knex,
   accountingService,
-  assetCache
+  cacheDataStore
 }: ServiceDependencies): Promise<AssetService> {
   const log = logger.child({
     service: 'AssetService'
@@ -61,7 +62,7 @@ export async function createAssetService({
     logger: log,
     knex,
     accountingService,
-    assetCache
+    cacheDataStore
   }
 
   return {
@@ -89,7 +90,7 @@ async function createAsset(
       .first()
 
     if (deletedAsset) {
-      deps.assetCache.delete(deletedAsset.id)
+      await deps.cacheDataStore.delete(deletedAsset.id)
 
       // if found, enable
       return await Asset.query(deps.knex)
@@ -115,7 +116,7 @@ async function createAsset(
         LiquidityAccountType.ASSET,
         trx
       )
-      deps.assetCache.set(asset.id, asset)
+      await deps.cacheDataStore.set(asset.id, asset)
       return asset
     })
   } catch (err) {
@@ -138,7 +139,7 @@ async function updateAsset(
       .patchAndFetchById(id, { withdrawalThreshold, liquidityThreshold })
       .throwIfNotFound()
 
-    deps.assetCache.set(id, returnVal)
+    await deps.cacheDataStore.set(id, returnVal)
     return returnVal
   } catch (err) {
     if (err instanceof NotFoundError) {
@@ -169,7 +170,7 @@ async function deleteAsset(
     if (walletAddress) {
       return AssetError.CannotDeleteInUseAsset
     }
-    deps.assetCache.delete(id)
+    await deps.cacheDataStore.delete(id)
     return await Asset.query(deps.knex)
       .patchAndFetchById(id, { deletedAt: deletedAt.toISOString() })
       .throwIfNotFound()
@@ -185,11 +186,11 @@ async function getAsset(
   deps: ServiceDependencies,
   id: string
 ): Promise<void | Asset> {
-  const inMem = deps.assetCache.get(id)
+  const inMem = (await deps.cacheDataStore.get(id)) as Asset
   if (inMem) return inMem
 
   const asset = await Asset.query(deps.knex).whereNull('deletedAt').findById(id)
-  if (asset) deps.assetCache.set(asset.id, asset)
+  if (asset) await deps.cacheDataStore.set(asset.id, asset)
 
   return asset
 }

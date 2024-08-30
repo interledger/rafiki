@@ -188,7 +188,7 @@ export const Config = {
     2592000000
   ), // 30 days
   enableSpspPaymentPointers: envBool('ENABLE_SPSP_PAYMENT_POINTERS', true),
-  localCacheDuration: envInt('LOCAL_CACHE_DURATION', 0)
+  localCacheDuration: envInt('LOCAL_CACHE_DURATION', 5000)
 }
 
 function parseRedisTlsConfig(

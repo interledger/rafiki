@@ -316,6 +316,7 @@ async function createOutgoingPayment(
         grantId
       })
       await deps.quoteService.setOn(payment)
+      await deps.assetService.setOn(payment.quote)
       await deps.walletAddressService.setOn(payment)
 
       deps.telemetry &&
@@ -680,7 +681,7 @@ async function getOutgoingPaymentPage(
 ): Promise<OutgoingPayment[]> {
   const page = await OutgoingPayment.query(deps.knex)
     .list(options)
-    .withGraphFetched('[quote.asset, walletAddress.asset]')
+    .withGraphFetched('[quote.asset, walletAddress]')
   const amounts = await deps.accountingService.getAccountsTotalSent(
     page.map((payment: OutgoingPayment) => payment.id)
   )

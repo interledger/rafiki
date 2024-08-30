@@ -265,7 +265,6 @@ async function getWalletAddress(
     await deps.assetService.setOn(walletAddress)
     await deps.cacheDataStore.set(id, walletAddress)
   }
-
   return walletAddress
 }
 

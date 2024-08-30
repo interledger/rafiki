@@ -56,7 +56,6 @@ import { createStreamCredentialsService } from './payment-method/ilp/stream-cred
 import { createRatesService } from './rates/service'
 import { TelemetryService, createTelemetryService } from './telemetry/service'
 import { createWebhookService } from './webhook/service'
-import { Asset } from './asset/model'
 import { createInMemoryDataStore } from './cache/cache'
 
 BigInt.prototype.toJSON = function () {
@@ -207,7 +206,7 @@ export function initIocContainer(
       logger,
       knex,
       accountingService: await deps.use('accountingService'),
-      assetCache: new Map<string, Asset>()
+      cacheDataStore: createInMemoryDataStore(30000)
     })
   })
 
