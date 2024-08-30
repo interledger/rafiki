@@ -39,7 +39,6 @@ describe('Incoming Payment Resolver', (): void => {
   let incomingPaymentService: IncomingPaymentService
   let accountingService: AccountingService
   let asset: Asset
-  let incomingPayment: IncomingPaymentResponse
 
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer(Config)
@@ -444,8 +443,7 @@ describe('Incoming Payment Resolver', (): void => {
 
   describe('Mutation.updateIncomingPayment', (): void => {
     let amount: Amount
-    let expiresAt:Date
-    let id = 'ok'
+    let expiresAt: Date
 
     beforeEach((): void => {
       amount = {
@@ -456,38 +454,36 @@ describe('Incoming Payment Resolver', (): void => {
       expiresAt = new Date(Date.now() + 30_000)
       client = 'incoming-payment-client-update'
     })
-    
 
     test.each`
-      id                                                |  metadata
-      ${id}                                             | ${{ description: 'Update metadata', status: 'COMPLETE' }}
-      ${id}                                             | ${{}}
+      metadata
+      ${{ description: 'Update metadata', status: 'COMPLETE' }}
+      ${{}}
     `(
-      'Successfully updates an incoming payment with $id | $metadata',
-      async ({id, metadata}): Promise<void> => {
-      
-          const incomingAmount = amount ? amount : undefined
-          const { id: walletAddressId } = await createWalletAddress(deps, {
-            assetId: asset.id
-          })
-          const payment = await createIncomingPayment(deps, {
-            walletAddressId,
-            client,
-            metadata,
-            expiresAt,
-            incomingAmount
-          })
+      'Successfully updates an incoming payment with $metadata',
+      async ({ metadata }): Promise<void> => {
+        const incomingAmount = amount ? amount : undefined
+        const { id: walletAddressId } = await createWalletAddress(deps, {
+          assetId: asset.id
+        })
+        const payment = await createIncomingPayment(deps, {
+          walletAddressId,
+          client,
+          metadata,
+          expiresAt,
+          incomingAmount
+        })
         const input = {
-          id:payment.id,
+          id: payment.id,
           metadata
         }
-        const paymentUpdated = await updateIncomingPayment(deps,input)
 
-       
         const createSpy = jest
           .spyOn(incomingPaymentService, 'update')
-          .mockResolvedValueOnce(paymentUpdated)
-
+          .mockResolvedValueOnce({
+            ...payment,
+            metadata: input.metadata
+          } as IncomingPaymentModel)
 
         const query = await appContainer.apolloClient
           .query({
@@ -502,7 +498,7 @@ describe('Incoming Payment Resolver', (): void => {
                   }
                 }
               }
-          `,
+            `,
             variables: { input }
           })
           .then(
@@ -537,10 +533,10 @@ describe('Incoming Payment Resolver', (): void => {
         await appContainer.apolloClient
           .query({
             query: gql`
-               mutation UpdateIncomingPayment(
-               $input: UpdateIncomingPaymentInput!) {
-                  updateIncomingPayment(input: $input
-                ) {
+              mutation UpdateIncomingPayment(
+                $input: UpdateIncomingPaymentInput!
+              ) {
+                updateIncomingPayment(input: $input) {
                   payment {
                     id
                     metadata
@@ -568,7 +564,6 @@ describe('Incoming Payment Resolver', (): void => {
       expect(createSpy).toHaveBeenCalledWith(input)
     })
 
-
     test('Internal server error', async (): Promise<void> => {
       const createSpy = jest
         .spyOn(incomingPaymentService, 'update')
@@ -584,9 +579,9 @@ describe('Incoming Payment Resolver', (): void => {
         await appContainer.apolloClient
           .query({
             query: gql`
-               mutation UpdateIncomingPayment(
+              mutation UpdateIncomingPayment(
                 $input: UpdateIncomingPaymentInput!
-               ) {
+              ) {
                 updateIncomingPayment(input: $input) {
                   payment {
                     id
@@ -615,5 +610,4 @@ describe('Incoming Payment Resolver', (): void => {
       expect(createSpy).toHaveBeenCalledWith(input)
     })
   })
-
 })

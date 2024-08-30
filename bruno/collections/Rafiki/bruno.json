@@ -2,13 +2,8 @@
   "version": "1",
   "name": "Rafiki",
   "type": "collection",
-  "ignore": [
-    "node_modules",
-    ".git"
-  ],
+  "ignore": ["node_modules", ".git"],
   "scripts": {
-    "moduleWhitelist": [
-      "crypto"
-    ]
+    "moduleWhitelist": ["crypto"]
   }
 }

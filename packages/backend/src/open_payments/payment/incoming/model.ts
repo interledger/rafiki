@@ -19,7 +19,8 @@ import base64url from 'base64url'
 export enum IncomingPaymentEventType {
   IncomingPaymentCreated = 'incoming_payment.created',
   IncomingPaymentExpired = 'incoming_payment.expired',
-  IncomingPaymentCompleted = 'incoming_payment.completed'
+  IncomingPaymentCompleted = 'incoming_payment.completed',
+  IncomingPaymentUpdated = 'incoming_payment.updated'
 }
 
 export enum IncomingPaymentState {
