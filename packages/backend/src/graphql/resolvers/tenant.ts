@@ -107,7 +107,7 @@ export function tenantToGraphql(tenant: Tenant): SchemaTenant {
     id: tenant.id,
     email: tenant.email,
     kratosIdentityId: tenant.kratosIdentityId,
-    //we should probably paginate this, but for now, that we only have like two endpoints it should be ok
+    // TODO: we should probably paginate this, but for now, that we only have like two endpoints it should be ok
     endpoints: tenant.endpoints.map(tenantEndpointToGraphql),
     createdAt: tenant.createdAt.toISOString(),
     updatedAt: tenant.updatedAt.toISOString()
