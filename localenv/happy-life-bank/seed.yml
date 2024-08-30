@@ -1,3 +1,17 @@
+tenants:
+  - name: hlbPrimaryTenant
+    idpConsentUrl: https://interledger.org/consent
+    idpSecret: myVerySecureSecret
+    endpoints: [
+      {
+        "type": "RatesUrl",
+        "value": "https://interledger.org/rates"
+      },
+      {
+        "type": "WebhookBaseUrl",
+        "value": "https://interledger.org/webhooks"
+      }
+    ]
 assets:
   - code: USD
     scale: 2

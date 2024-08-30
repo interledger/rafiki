@@ -1,5 +1,5 @@
 tenants:
-  - name: PrimaryTenant
+  - name: c9PrimaryTenant
     idpConsentUrl: https://interledger.org/consent
     idpSecret: myVerySecureSecret
     endpoints: [

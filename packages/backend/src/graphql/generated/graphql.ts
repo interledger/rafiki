@@ -345,10 +345,12 @@ export type CreateTenantEndpointsInput = {
 };
 
 export type CreateTenantInput = {
+  /** Email of the tenant */
+  email: Scalars['String']['input'];
   /** List of endpoints types for the tenant */
   endpoints: Array<CreateTenantEndpointsInput>;
   /** IDP Endpoint */
-  idpConsentEndpoint: Scalars['String']['input'];
+  idpConsentUrl: Scalars['String']['input'];
   /** IDP Secret */
   idpSecret: Scalars['String']['input'];
 };
@@ -1309,6 +1311,8 @@ export type Tenant = Model & {
   __typename?: 'Tenant';
   /** Date-time of creation */
   createdAt: Scalars['String']['output'];
+  /** Tenant Email for Kratos identity & recovery */
+  email: Scalars['String']['output'];
   /** List of tenant endpoints associated with this tenant */
   endpoints: Array<TenantEndpoint>;
   /** Tenant ID that is used in subsequent resources */
@@ -2349,6 +2353,7 @@ export type SetFeeResponseResolvers<ContextType = any, ParentType extends Resolv
 
 export type TenantResolvers<ContextType = any, ParentType extends ResolversParentTypes['Tenant'] = ResolversParentTypes['Tenant']> = {
   createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  email?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   endpoints?: Resolver<Array<ResolversTypes['TenantEndpoint']>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   kratosIdentityId?: Resolver<ResolversTypes['String'], ParentType, ContextType>;

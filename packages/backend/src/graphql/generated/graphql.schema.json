@@ -2175,6 +2175,22 @@
         "fields": null,
         "inputFields": [
           {
+            "name": "email",
+            "description": "Email of the tenant",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "endpoints",
             "description": "List of endpoints types for the tenant",
             "type": {
@@ -2199,7 +2215,7 @@
             "deprecationReason": null
           },
           {
-            "name": "idpConsentEndpoint",
+            "name": "idpConsentUrl",
             "description": "IDP Endpoint",
             "type": {
               "kind": "NON_NULL",
@@ -7797,6 +7813,22 @@
           {
             "name": "createdAt",
             "description": "Date-time of creation",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "email",
+            "description": "Tenant Email for Kratos identity & recovery",
             "args": [],
             "type": {
               "kind": "NON_NULL",

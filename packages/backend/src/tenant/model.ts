@@ -1,5 +1,5 @@
 import { Model } from 'objection'
-import { BaseModel, WeakModel } from '../shared/baseModel'
+import { BaseModel } from '../shared/baseModel'
 import { TenantEndpoint } from './endpoints/model'
 
 export class Tenant extends BaseModel {
@@ -20,6 +20,7 @@ export class Tenant extends BaseModel {
     }
   }
 
+  public email!: string
   public kratosIdentityId!: string
   public deletedAt?: Date
   public endpoints!: TenantEndpoint[]

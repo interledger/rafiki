@@ -1,12 +1,7 @@
-import {
-  json,
-  type ActionFunctionArgs,
-  type LoaderFunctionArgs
-} from '@remix-run/node'
+import { json, type LoaderFunctionArgs } from '@remix-run/node'
 import {
   Form,
   Outlet,
-  useActionData,
   useFormAction,
   useLoaderData,
   useNavigation,
@@ -20,9 +15,7 @@ import {
   ConfirmationDialog,
   type ConfirmationDialogRef
 } from '~/components/ConfirmationDialog'
-import { messageStorage, setMessageAndRedirect } from '~/lib/message.server'
-import { uuidSchema } from '~/lib/validate.server'
-import { getTenant, deleteTenant } from '~/lib/api/tenant.server'
+import { getTenant } from '~/lib/api/tenant.server'
 import { checkAuthAndRedirect } from '../lib/kratos_checks.server'
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
@@ -80,31 +73,15 @@ export default function ViewTenantPage() {
         <div className='grid grid-cols-1 py-3 gap-6 md:grid-cols-3 border-b border-pearl'>
           <div className='col-span-1 pt-3'>
             <h3 className='text-lg font-medium'>General Information</h3>
-            <p className='text-sm'>
-              Created at {new Date(tenant.createdAt).toLocaleString()}
-            </p>
           </div>
           <div className='md:col-span-2 bg-white rounded-md shadow-md'>
             <Form method='post' replace preventScrollReset>
               <fieldset disabled={currentPageAction}>
                 <div className='w-full p-4 space-y-3'>
                   <Input type='hidden' name='id' value={tenant.id} />
-                  <Input label='Email' value={tenant.email} disabled readOnly />
                   <Input
                     label='Tenant ID'
                     value={tenant.id}
-                    disabled
-                    readOnly
-                  />
-                  <Input
-                    label='Webhook URL'
-                    value={tenant.webhookUrl}
-                    disabled
-                    readOnly
-                  />
-                  <Input
-                    label='Identity Provider Consent Screen Url'
-                    value={tenant.idpConsentUrl}
                     disabled
                     readOnly
                   />
@@ -134,54 +111,4 @@ export default function ViewTenantPage() {
       <Outlet />
     </div>
   )
-}
-
-export async function action({ request }: ActionFunctionArgs) {
-  const cookies = request.headers.get('cookie')
-  const session = await messageStorage.getSession(cookies)
-  const formData = await request.formData()
-  const intent = formData.get('intent')
-  formData.delete('intent')
-
-  switch (intent) {
-    case 'delete': {
-      const result = uuidSchema.safeParse(Object.fromEntries(formData))
-      if (!result.success) {
-        return setMessageAndRedirect({
-          session,
-          message: {
-            content: 'Invalid tenant ID.',
-            type: 'error'
-          },
-          location: '.'
-        })
-      }
-
-      const response = await deleteTenant(
-        { id: result.data.id },
-        cookies as string
-      )
-      if (!response?.tenant) {
-        return setMessageAndRedirect({
-          session,
-          message: {
-            content: 'Could not delete Tenant.',
-            type: 'error'
-          },
-          location: '.'
-        })
-      }
-
-      return setMessageAndRedirect({
-        session,
-        message: {
-          content: 'Tenant was deleted.',
-          type: 'success'
-        },
-        location: '/tenant'
-      })
-    }
-    default:
-      throw json(null, { status: 400, statusText: 'Invalid intent.' })
-  }
 }

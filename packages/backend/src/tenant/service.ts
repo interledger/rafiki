@@ -1,3 +1,4 @@
+import axios from 'axios'
 import { TransactionOrKnex } from 'objection'
 import { BaseService } from '../shared/baseService'
 import { TenantError } from './errors'
@@ -8,19 +9,20 @@ import {
   Tenant as AuthTenant,
   CreateTenantInput as CreateAuthTenantInput
 } from '../generated/graphql'
-import { v4 as uuidv4 } from 'uuid'
 import { Pagination, SortOrder } from '../shared/baseModel'
 import { EndpointOptions, TenantEndpointService } from './endpoints/service'
-import { TenantEndpoint } from './endpoints/model'
 
 export interface CreateTenantOptions {
   idpConsentEndpoint: string
   idpSecret: string
   endpoints: EndpointOptions[]
+  email: string
+  isOperator?: boolean
 }
 
 export interface TenantService {
   get(id: string): Promise<Tenant | undefined>
+  getByIdentity(id: string): Promise<Tenant | undefined>
   getPage(pagination?: Pagination, sortOrder?: SortOrder): Promise<Tenant[]>
   create(createOptions: CreateTenantOptions): Promise<Tenant | TenantError>
 }
@@ -47,6 +49,7 @@ export async function createTenantService(
 
   return {
     get: (id: string) => getTenant(deps, id),
+    getByIdentity: (id: string) => getByIdentity(deps, id),
     getPage: (pagination?, sortOrder?) =>
       getTenantsPage(deps, pagination, sortOrder),
     create: (options: CreateTenantOptions) => createTenant(deps, options)
@@ -58,17 +61,24 @@ async function getTenantsPage(
   pagination?: Pagination,
   sortOrder?: SortOrder
 ): Promise<Tenant[]> {
-  return await Tenant.query(deps.knex)
-    .getPage(pagination, sortOrder)
+  return await Tenant.query(deps.knex).getPage(pagination, sortOrder)
 }
 
 async function getTenant(
   deps: ServiceDependencies,
   id: string
 ): Promise<Tenant | undefined> {
-  return Tenant.query(deps.knex)
-    .withGraphFetched('endpoints')
-    .findById(id)
+  return Tenant.query(deps.knex).withGraphFetched('endpoints').findById(id)
+}
+
+// TODO: tests for this service function
+async function getByIdentity(
+  deps: ServiceDependencies,
+  id: string
+): Promise<Tenant | undefined> {
+  return Tenant.query(deps.knex).findOne({
+    kratosIdentityId: id
+  })
 }
 
 async function createTenant(
@@ -85,9 +95,51 @@ async function createTenant(
   return deps.knex.transaction(async (trx) => {
     let tenant: Tenant
     try {
+      const { kratosAdminUrl } = deps.config
+      let identityId
+      const getIdentityResponse = await axios.get(
+        `${kratosAdminUrl}/identities?credentials_identifier=${options.email}`
+      )
+      if (
+        getIdentityResponse.data.length > 0 &&
+        getIdentityResponse.data[0].id
+      ) {
+        identityId = getIdentityResponse.data[0].id
+      } else {
+        const createIdentityResponse = await axios.post(
+          `${kratosAdminUrl}/identities`,
+          {
+            schema_id: 'default',
+            traits: {
+              email: options.email
+            },
+            metadata_public: {
+              operator: options.isOperator
+            }
+          },
+          {
+            headers: {
+              'Content-Type': 'application/json'
+            }
+          }
+        )
+
+        identityId = createIdentityResponse.data.id
+      }
+
+      const recoveryRequest = await axios.post(
+        `${kratosAdminUrl}/recovery/link`,
+        {
+          identity_id: identityId
+        }
+      )
+      deps.logger.info(
+        `Recovery link for ${options.email} at ${recoveryRequest.data.recovery_link}`
+      )
       // create tenant on backend
       tenant = await Tenant.query(trx).insert({
-        kratosIdentityId: uuidv4()
+        email: options.email,
+        kratosIdentityId: identityId
       })
 
       await deps.tenantEndpointService.create({
@@ -103,8 +155,6 @@ async function createTenant(
             tenant {
               id
             }
-          }
-        }
       `
       const variables = {
         input: {
@@ -121,10 +171,11 @@ async function createTenant(
         mutation,
         variables
       })
+      await trx.commit()
+      return tenant
     } catch (err) {
       await trx.rollback()
       throw err
     }
-    return tenant
   })
 }

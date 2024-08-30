@@ -68,10 +68,6 @@ import { getCombinedPayments } from './combined_payments'
 import { createOrUpdatePeerByUrl } from './auto-peering'
 import { getAccountingTransfers } from './accounting_transfer'
 import { createTenant, getTenant, getTenants } from './tenant'
-<<<<<<< HEAD
-import { getTenantEndpoints } from './tenant_endpoints'
-=======
->>>>>>> 26a8c9b7 (feat(backend): small changes to schema + mapping of tenant to graphql + bruno)
 
 export const resolvers: Resolvers = {
   UInt8: GraphQLUInt8,

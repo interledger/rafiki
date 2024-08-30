@@ -1158,11 +1158,14 @@ input CreateTenantEndpointsInput {
 }
 
 input CreateTenantInput {
+  "Email of the tenant"
+  email: String!
+
   "List of endpoints types for the tenant"
   endpoints: [CreateTenantEndpointsInput!]!
 
   "IDP Endpoint"
-  idpConsentEndpoint: String!
+  idpConsentUrl: String!
 
   "IDP Secret"
   idpSecret: String!
@@ -1389,6 +1392,8 @@ type TenantEndpoint {
 type Tenant implements Model {
   "Tenant ID that is used in subsequent resources"
   id: ID!
+  "Tenant Email for Kratos identity & recovery"
+  email: String!
   "Kratos identity ID"
   kratosIdentityId: String!
   "Date-time of creation"

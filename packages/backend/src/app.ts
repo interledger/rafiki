@@ -105,6 +105,7 @@ import { LoggingPlugin } from './graphql/plugin'
 import { GrantService } from './open_payments/grant/service'
 import { AuthServerService } from './open_payments/authServer/service'
 import { TenantService } from './tenant/service'
+import { EndpointType } from './tenant/model'
 export interface AppContextData {
   logger: Logger
   container: AppContainer
@@ -308,14 +309,15 @@ export class App {
     }
   }
 
+  // TODO: Move into Kratos service
   public async createOperatorIdentity(): Promise<void> {
     const { kratosAdminEmail, kratosAdminUrl } =
       await this.container.use('config')
     const logger = await this.container.use('logger')
-    // TODO: error out since kratos is essentially required
     if (!kratosAdminUrl || !kratosAdminEmail) {
       throw new Error('Missing admin configuration')
     }
+    let identityId
     try {
       const identityQueryResponse = await axios.get(
         `${kratosAdminUrl}/identities?credentials_identifier=${kratosAdminEmail}`
@@ -331,6 +333,7 @@ export class App {
         logger.debug(
           `Identity with email ${kratosAdminEmail} exists on the system with the ID: ${identityQueryResponse.data[0].id}`
         )
+        identityId = identityQueryResponse.data.id
         return
       } else if (isExistingIdentity && !operatorRole) {
         // Identity already exists but does not have operator role
@@ -345,6 +348,7 @@ export class App {
         logger.debug(
           `Successfully created user ${kratosAdminEmail} with ID ${identityResponse.data.id}`
         )
+        identityId = identityResponse.data.id
       } else {
         // Identity does not exist
         logger.debug(
@@ -371,17 +375,35 @@ export class App {
         logger.debug(
           `Successfully created user ${kratosAdminEmail} with ID ${identityResponse.data.id}`
         )
+        identityId = identityResponse.data.id
       }
 
       const recoveryCodeResponse = await axios.post(
         `${kratosAdminUrl}/recovery/link`,
         {
-          identity_id: identityResponse.data.id
+          identity_id: identityId
         }
       )
       logger.info(
         `Recovery link for ${kratosAdminEmail} at ${recoveryCodeResponse.data.recovery_link}`
       )
+
+      // Create tenant if it does not exist
+      // TODO: check if tenant exists by querying psql for tenant email, then querying kratos for stored kratosId if found
+      const tenantService = await this.container.use('tenantService')
+      const operatorTenant = await tenantService.getByIdentity(identityId)
+      if (!operatorTenant) {
+        const config = await this.container.use('config')
+        await tenantService.create({
+          idpSecret: config.operatorIdpSecret,
+          idpConsentEndpoint: config.operatorIdpConsentUrl,
+          endpoints: [
+            { value: config.webhookUrl, type: EndpointType.WebhookBaseUrl }
+          ],
+          email: config.kratosAdminEmail,
+          isOperator: true
+        })
+      }
     } catch (error) {
       if (axios.isAxiosError(error)) {
         logger.error(
@@ -492,10 +514,11 @@ export class App {
     }
 
     // Determine Kratos Identity
-    koa.use(async (ctx: TenantedAppContext, next: Koa.Next): Promise<void> => {
-      await getTenantIdFromRequestHeaders(ctx, this.config)
-      return next()
-    })
+    // TODO: Comment out for now until seed script has a good way to acquire a kratos session
+    // koa.use(async (ctx: TenantedAppContext, next: Koa.Next): Promise<void> => {
+    //   await getTenantIdFromRequestHeaders(ctx, this.config)
+    //   return next()
+    // })
 
     koa.use(
       koaMiddleware(this.apolloServer, {

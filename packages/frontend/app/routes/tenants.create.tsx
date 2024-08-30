@@ -9,6 +9,7 @@ import { createTenantSchema } from '~/lib/validate.server'
 import type { ZodFieldErrors } from '~/shared/types'
 import { checkAuthAndRedirect } from '../lib/kratos_checks.server'
 import { type LoaderFunctionArgs } from '@remix-run/node'
+import { TenantEndpointType } from '~/generated/graphql'
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const cookies = request.headers.get('cookie')
@@ -106,10 +107,14 @@ export async function action({ request }: ActionFunctionArgs) {
     return json({ errors }, { status: 400 })
   }
 
+  const { webhookUrl, ...restOfData } = result.data
   const cookies = request.headers.get('cookie')
   const response = await createTenant(
     {
-      ...result.data
+      ...restOfData,
+      endpoints: [
+        { type: TenantEndpointType.WebhookBaseUrl, value: webhookUrl }
+      ]
     },
     cookies as string
   )

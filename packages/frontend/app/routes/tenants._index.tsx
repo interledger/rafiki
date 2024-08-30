@@ -70,8 +70,6 @@ export default function TenantsPage() {
                   onClick={() => navigate(`/tenants/${tenant.node.id}`)}
                 >
                   <Table.Cell>{tenant.node.id}</Table.Cell>
-                  <Table.Cell>{tenant.node.email}</Table.Cell>
-                  <Table.Cell>{tenant.node.webhooks}</Table.Cell>
                 </Table.Row>
               ))
             ) : (

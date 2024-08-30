@@ -193,7 +193,9 @@ export const Config = {
   enableSpspPaymentPointers: envBool('ENABLE_SPSP_PAYMENT_POINTERS', true),
   kratosPublicUrl: envString('KRATOS_PUBLIC_URL'),
   kratosAdminUrl: envString('KRATOS_ADMIN_URL'),
-  kratosAdminEmail: envString('KRATOS_ADMIN_EMAIL')
+  kratosAdminEmail: envString('KRATOS_ADMIN_EMAIL'),
+  operatorIdpSecret: envString('OPERATOR_IDP_SECRET'),
+  operatorIdpConsentUrl: envString('OPERATOR_IDP_CONSENT_URL')
 }
 
 function parseRedisTlsConfig(
