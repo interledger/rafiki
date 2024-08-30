@@ -30,6 +30,7 @@ export interface TelemetryService {
     value: number,
     attributes?: Record<string, unknown>
   ): void
+  startTimer_(name: string, attributes?: Record<string, unknown>): () => void
   startTimer(name: string, attributes?: Record<string, unknown>): void
   stopTimer(name: string): void
 }
@@ -191,6 +192,17 @@ class TelemetryServiceImpl implements TelemetryService {
       source: this.instanceName,
       ...attributes
     })
+  }
+
+  // TODO: replace existing startTimer
+  public startTimer_(
+    name: string,
+    attributes: Record<string, unknown> = {}
+  ): () => void {
+    const start = Date.now()
+    return () => {
+      this.recordHistogram(name, Date.now() - start, attributes)
+    }
   }
 
   public startTimer(name: string, attributes: Record<string, unknown> = {}) {
