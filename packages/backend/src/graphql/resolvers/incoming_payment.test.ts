@@ -29,7 +29,6 @@ import {
 } from '../../open_payments/payment/incoming/errors'
 import { Amount, serializeAmount } from '../../open_payments/amount'
 import { GraphQLErrorCode } from '../errors'
-import { updateIncomingPayment } from '../../tests/updateIncomingPayment'
 
 describe('Incoming Payment Resolver', (): void => {
   let deps: IocContract<AppServices>

@@ -477,22 +477,22 @@ describe('Incoming Payment Service', (): void => {
     let amount: Amount
     let payment: IncomingPayment
 
-      beforeEach(async (): Promise<void> => {
-        amount = {
-          value: BigInt(123),
-          assetCode: asset.code,
-          assetScale: asset.scale
-        }
-         payment = (await incomingPaymentService.create({
-          walletAddressId,
-          incomingAmount: amount
-        })) as IncomingPayment
-        assert.ok(!isIncomingPaymentError(payment))
-      })
+    beforeEach(async (): Promise<void> => {
+      amount = {
+        value: BigInt(123),
+        assetCode: asset.code,
+        assetScale: asset.scale
+      }
+      payment = (await incomingPaymentService.create({
+        walletAddressId,
+        incomingAmount: amount
+      })) as IncomingPayment
+      assert.ok(!isIncomingPaymentError(payment))
+    })
 
     test.each`
       metadata
-      ${{ description: 'Update metadata', status: 'COMPLETE' }} 
+      ${{ description: 'Update metadata', status: 'COMPLETE' }}
       ${{}}
     `('An incoming payment can be updated', async (metadata): Promise<void> => {
       await expect(
@@ -500,10 +500,9 @@ describe('Incoming Payment Service', (): void => {
           type: IncomingPaymentEventType.IncomingPaymentUpdated
         })
       ).resolves.toHaveLength(0)
-      
-        
+
       const incomingPayment = await incomingPaymentService.update({
-        id:payment.id,
+        id: payment.id,
         metadata
       })
       assert.ok(!isIncomingPaymentError(incomingPayment))
