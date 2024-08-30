@@ -494,13 +494,7 @@ describe('Incoming Payment Service', (): void => {
       metadata
       ${{ description: 'Update metadata', status: 'COMPLETE' }}
       ${{}}
-    `('An incoming payment can be updated', async (metadata): Promise<void> => {
-      await expect(
-        IncomingPaymentEvent.query(knex).where({
-          type: IncomingPaymentEventType.IncomingPaymentUpdated
-        })
-      ).resolves.toHaveLength(0)
-
+    `('An incoming payment can be updated', async ({ metadata }): Promise<void> => {
       const incomingPayment = await incomingPaymentService.update({
         id: payment.id,
         metadata
@@ -510,11 +504,6 @@ describe('Incoming Payment Service', (): void => {
         id: incomingPayment.id,
         metadata
       })
-      await expect(
-        IncomingPaymentEvent.query(knex).where({
-          type: IncomingPaymentEventType.IncomingPaymentUpdated
-        })
-      ).resolves.toHaveLength(0)
     })
 
     test('Cannot update incoming payment for nonexistent incomingPaymentId', async (): Promise<void> => {

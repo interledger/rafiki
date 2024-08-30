@@ -451,7 +451,6 @@ describe('Incoming Payment Resolver', (): void => {
         assetScale: asset.scale
       }
       expiresAt = new Date(Date.now() + 30_000)
-      client = 'incoming-payment-client-update'
     })
 
     test.each`
@@ -467,7 +466,6 @@ describe('Incoming Payment Resolver', (): void => {
         })
         const payment = await createIncomingPayment(deps, {
           walletAddressId,
-          client,
           metadata,
           expiresAt,
           incomingAmount
