@@ -13,19 +13,18 @@ The production environment consists of:
 
 - [`backend`](/integration/deployment/services/backend-service/)
 - [`auth`](/integration/deployment/services/auth-service/)
-- [`frontend`](/integration/deployment/services/frontend-service/) (optional but recommended) 
+- [`frontend`](/integration/deployment/services/frontend-service/) (optional but recommended)
 
 and the following databases:
 
 | Database                 | Function                                |
-|--------------------------|-----------------------------------------|
+| ------------------------ | --------------------------------------- |
 | Tigerbeetle or Postrgres | Accounting                              |
 | Postgres                 | Open Payments resources, auth resources |
 | Redis                    | STREAM details                          |
 | Redis                    | auth sessions                           |
 
 To integrate Rafiki with your own services, view the [integration documentation](/integration/getting-started).
-
 
 ## Running Rafiki in production
 
@@ -39,7 +38,7 @@ To run Rafiki in your production environment you will need to have the following
   </LinkOut>
 - <LinkOut href='https://helm.sh/docs/intro/install/'>helm</LinkOut>
 
-### Installing the Helm Chart 
+### Installing the Helm Chart
 
 A Helm Chart that serves as a template is found <LinkOut href= 'https://github.com/interledger/rafiki/tree/main/infrastructure/helm/rafiki/'>here</LinkOut>.
 Once you have installed the dependencies run the following command to install the Helm Chart linked above:
@@ -47,6 +46,7 @@ Once you have installed the dependencies run the following command to install th
 ```sh
 helm install rafiki https://github.com/interledger/rafiki/tree/main/infrastructure/helm/rafiki
 ```
+
 This Helm Chart servers as a wrapper for the following charts:
 
 - Bitnami Postgres
@@ -58,22 +58,22 @@ This Helm Chart servers as a wrapper for the following charts:
 You must update the environment variables for the following services:
 
 <Tabs>
-<TabItem label='auth'>
-<AuthEnv />
-</TabItem>
-<TabItem label='backend'>
-<BackEnv />
-</TabItem>
-<TabItem label='frontend'>
-<FrontEnv />
-</TabItem>
+  <TabItem label='auth'>
+    <AuthEnv />
+  </TabItem>
+  <TabItem label='backend'>
+    <BackEnv />
+  </TabItem>
+  <TabItem label='frontend'>
+    <FrontEnv />
+  </TabItem>
 </Tabs>
 
 ### Using Tigerbeetle as the accounting database
 
-If you choose to run Tigerbeetle as your accounting database, then addition to running the Helm Chart for Rafiki you must install the chart for Tigerbeetle as well. 
+If you choose to run Tigerbeetle as your accounting database, then addition to running the Helm Chart for Rafiki you must install the chart for Tigerbeetle as well.
 
-```sh    
+```sh
 helm install tigerbeetle https://github.com/interledger/rafiki/tree/main/infrastructure/helm/tigerbeetle
 ```
 
