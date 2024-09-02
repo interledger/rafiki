@@ -351,6 +351,8 @@ export type CreateTenantInput = {
   idpConsentEndpoint: Scalars['String']['input'];
   /** IDP Secret */
   idpSecret: Scalars['String']['input'];
+  /** Public name of the tenant */
+  name: Scalars['String']['input'];
 };
 
 export type CreateTenantMutationResponse = {
@@ -1315,6 +1317,8 @@ export type Tenant = Model & {
   id: Scalars['ID']['output'];
   /** Kratos identity ID */
   kratosIdentityId: Scalars['String']['output'];
+  /** Name of the tenant */
+  name: Scalars['String']['output'];
   /** Date-time of the update */
   updatedAt: Scalars['String']['output'];
 };
@@ -2352,6 +2356,7 @@ export type TenantResolvers<ContextType = any, ParentType extends ResolversParen
   endpoints?: Resolver<Array<ResolversTypes['TenantEndpoint']>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   kratosIdentityId?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   updatedAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };

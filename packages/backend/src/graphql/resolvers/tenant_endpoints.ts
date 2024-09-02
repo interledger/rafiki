@@ -36,8 +36,6 @@ export const getTenantEndpoints: TenantResolvers<ApolloContext>['endpoints'] =
       order
     )
 
-    console.log('TENANT ENDPOINTS: ', tenantEndpoints)
-
     const pageInfo = await getPageInfo({
       getPage: (pagination_?: Pagination, sortOrder_?: SortOrder) =>
         tenantEndpointService.getPage(parent.id!, pagination_, sortOrder_),

@@ -5,7 +5,7 @@ export enum TenantEndpointError {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const isTenantError = (t: any): t is TenantEndpointError =>
+export const isTenantEndpointError = (t: any): t is TenantEndpointError =>
   Object.values(TenantEndpointError).includes(t)
 
 export const errorToCode: {

@@ -11,11 +11,13 @@ import {
 import { v4 as uuidv4 } from 'uuid'
 import { Pagination, SortOrder } from '../shared/baseModel'
 import { EndpointOptions, TenantEndpointService } from './endpoints/service'
-import { TenantEndpoint } from './endpoints/model'
+import { isTenantEndpointError } from './endpoints/errors'
+import { tr } from '@faker-js/faker'
 
 export interface CreateTenantOptions {
-  idpConsentEndpoint: string
+  name: string
   idpSecret: string
+  idpConsentEndpoint: string
   endpoints: EndpointOptions[]
 }
 
@@ -85,16 +87,14 @@ async function createTenant(
   return deps.knex.transaction(async (trx) => {
     let tenant: Tenant
     try {
-      // create tenant on backend
-      tenant = await Tenant.query(trx).insert({
-        kratosIdentityId: uuidv4()
-      })
-
-      await deps.tenantEndpointService.create({
-        endpoints: options.endpoints,
-        tenantId: tenant.id,
-        trx
-      })
+      const tenantData = {
+        name: options.name,
+        kratosIdentityId: uuidv4(),
+        endpoints: options.endpoints
+      }
+      
+      tenant = await Tenant.query(trx)
+        .insertGraphAndFetch(tenantData)
 
       // call auth admin api
       const mutation = gql`

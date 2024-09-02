@@ -1166,6 +1166,9 @@ input CreateTenantInput {
 
   "IDP Secret"
   idpSecret: String!
+
+  "Public name of the tenant"
+  name: String!
 }
 
 input CreateWalletAddressInput {
@@ -1389,6 +1392,8 @@ type TenantEndpoint {
 type Tenant implements Model {
   "Tenant ID that is used in subsequent resources"
   id: ID!
+  "Name of the tenant"
+  name: String!
   "Kratos identity ID"
   kratosIdentityId: String!
   "Date-time of creation"
