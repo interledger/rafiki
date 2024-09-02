@@ -619,6 +619,8 @@ type Peer implements Model {
   maxPacketAmount: UInt64
   "Peering connection details"
   http: Http!
+  "Incoming tokens"
+  incomingTokens: [String!]
   "Asset of peering relationship"
   asset: Asset!
   "Peer's ILP address"
