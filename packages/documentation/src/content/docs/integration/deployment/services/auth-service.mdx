@@ -36,7 +36,7 @@ When a request comes from a client registered with another instance of Rafiki, t
 
 An identity provider (IdP) is a system or service that manages user authentication, identity information, and consent. When you use your Google account credentials to “Sign in with Google” on an app or website, for example, Google is acting as your identity provider.
 
-Integration with an [IdP](/integration/before-you-begin#integrate-with-your-identity-provider) is required when using Rafiki’s `auth` service because Open Payments requires interactive outgoing payment grant requests. This means there must be explicit interaction by an individual (typically a client’s end user/your customer) to approve or deny an outgoing payment before a grant is issued.
+Integration with an [IdP](/integration/get-started/idp) is required when using Rafiki’s `auth` service because Open Payments requires interactive outgoing payment grant requests. This means there must be explicit interaction by an individual (typically a client’s end user/your customer) to approve or deny an outgoing payment before a grant is issued.
 
 :::note
 Rafiki’s [`frontend`](/integration/deployment/services/frontend-service) service requires an IdP for authentication and user management of your administrators. Out of the box, Rafiki uses Ory Kratos to enable your admins to access the Admin API. Kratos is for internal use and cannot be used for your customer-facing Open Payments authorization server.
