@@ -30,6 +30,7 @@ import {
 import type { ZodFieldErrors } from '~/shared/types'
 import { formatAmount } from '~/shared/utils'
 import { checkAuthAndRedirect } from '../lib/kratos_checks.server'
+import { EditableTable } from '~/components/ui/EditableTable'
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
   const cookies = request.headers.get('cookie')
@@ -204,10 +205,15 @@ export default function ViewPeerPage() {
               <fieldset disabled={currentPageAction}>
                 <div className='w-full p-4 space-y-3'>
                   <Input type='hidden' name='id' value={peer.id} />
-                  <Input
+                  <EditableTable
                     name='incomingAuthTokens'
                     label='Incoming Auth Tokens'
-                    placeholder='Accepts a comma separated list of tokens'
+                    options={(peer.incomingTokens || []).map((token) => ({
+                      label: token,
+                      value: token,
+                      canDelete: true,
+                      canEdit: true
+                    }))}
                     error={response?.errors.http.fieldErrors.incomingAuthTokens}
                     description={
                       <>
@@ -435,7 +441,6 @@ export async function action({ request }: ActionFunctionArgs) {
           result.error.flatten().fieldErrors
         return json({ ...actionResponse }, { status: 400 })
       }
-
       const response = await updatePeer({
         id: result.data.id,
         http: {
