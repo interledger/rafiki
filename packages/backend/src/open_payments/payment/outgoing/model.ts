@@ -50,6 +50,8 @@ export class OutgoingPayment
 
   public grantId?: string
 
+  public tenantId!: string
+
   public get receiver(): string {
     return this.quote.receiver
   }

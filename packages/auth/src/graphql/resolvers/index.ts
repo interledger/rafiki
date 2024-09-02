@@ -1,6 +1,7 @@
 import { Resolvers } from '../generated/graphql'
 
 import { getGrantById, getGrants, revokeGrant } from './grant'
+import { createTenant } from './tenant'
 import { GraphQLBigInt, GraphQLUInt8 } from '../scalars'
 
 export const resolvers: Resolvers = {
@@ -11,6 +12,7 @@ export const resolvers: Resolvers = {
     grant: getGrantById
   },
   Mutation: {
-    revokeGrant
+    revokeGrant,
+    createTenant
   }
 }

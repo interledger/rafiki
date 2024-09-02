@@ -34,6 +34,26 @@ export type Access = Model & {
   type: Scalars['String']['output'];
 };
 
+export type CreateTenantInput = {
+  idpConsentEndpoint: Scalars['String']['input'];
+  idpSecret: Scalars['String']['input'];
+  tenantId: Scalars['ID']['input'];
+};
+
+export type CreateTenantMutationResponse = {
+  __typename?: 'CreateTenantMutationResponse';
+  tenant: Tenant;
+};
+
+export type DeleteTenantInput = {
+  tenantId: Scalars['ID']['input'];
+};
+
+export type DeleteTenantMutationResponse = {
+  __typename?: 'DeleteTenantMutationResponse';
+  success: Scalars['Boolean']['output'];
+};
+
 export type FilterFinalizationReason = {
   in?: InputMaybe<Array<GrantFinalization>>;
   notIn?: InputMaybe<Array<GrantFinalization>>;
@@ -121,8 +141,22 @@ export type Model = {
 
 export type Mutation = {
   __typename?: 'Mutation';
+  /** Create Tenant */
+  createTenant: CreateTenantMutationResponse;
+  /** Delete Tenant */
+  deleteTenant: DeleteTenantMutationResponse;
   /** Revoke Grant */
   revokeGrant: RevokeGrantMutationResponse;
+};
+
+
+export type MutationCreateTenantArgs = {
+  input: CreateTenantInput;
+};
+
+
+export type MutationDeleteTenantArgs = {
+  input: DeleteTenantInput;
 };
 
 
@@ -189,6 +223,11 @@ export enum SortOrder {
   /** Choose descending order for results. */
   Desc = 'DESC'
 }
+
+export type Tenant = {
+  __typename?: 'Tenant';
+  id: Scalars['ID']['output'];
+};
 
 
 
@@ -267,6 +306,10 @@ export type ResolversInterfaceTypes<RefType extends Record<string, unknown>> = {
 export type ResolversTypes = {
   Access: ResolverTypeWrapper<Partial<Access>>;
   Boolean: ResolverTypeWrapper<Partial<Scalars['Boolean']['output']>>;
+  CreateTenantInput: ResolverTypeWrapper<Partial<CreateTenantInput>>;
+  CreateTenantMutationResponse: ResolverTypeWrapper<Partial<CreateTenantMutationResponse>>;
+  DeleteTenantInput: ResolverTypeWrapper<Partial<DeleteTenantInput>>;
+  DeleteTenantMutationResponse: ResolverTypeWrapper<Partial<DeleteTenantMutationResponse>>;
   FilterFinalizationReason: ResolverTypeWrapper<Partial<FilterFinalizationReason>>;
   FilterGrantState: ResolverTypeWrapper<Partial<FilterGrantState>>;
   FilterString: ResolverTypeWrapper<Partial<FilterString>>;
@@ -288,6 +331,7 @@ export type ResolversTypes = {
   RevokeGrantMutationResponse: ResolverTypeWrapper<Partial<RevokeGrantMutationResponse>>;
   SortOrder: ResolverTypeWrapper<Partial<SortOrder>>;
   String: ResolverTypeWrapper<Partial<Scalars['String']['output']>>;
+  Tenant: ResolverTypeWrapper<Partial<Tenant>>;
   UInt8: ResolverTypeWrapper<Partial<Scalars['UInt8']['output']>>;
   UInt64: ResolverTypeWrapper<Partial<Scalars['UInt64']['output']>>;
 };
@@ -296,6 +340,10 @@ export type ResolversTypes = {
 export type ResolversParentTypes = {
   Access: Partial<Access>;
   Boolean: Partial<Scalars['Boolean']['output']>;
+  CreateTenantInput: Partial<CreateTenantInput>;
+  CreateTenantMutationResponse: Partial<CreateTenantMutationResponse>;
+  DeleteTenantInput: Partial<DeleteTenantInput>;
+  DeleteTenantMutationResponse: Partial<DeleteTenantMutationResponse>;
   FilterFinalizationReason: Partial<FilterFinalizationReason>;
   FilterGrantState: Partial<FilterGrantState>;
   FilterString: Partial<FilterString>;
@@ -314,6 +362,7 @@ export type ResolversParentTypes = {
   RevokeGrantInput: Partial<RevokeGrantInput>;
   RevokeGrantMutationResponse: Partial<RevokeGrantMutationResponse>;
   String: Partial<Scalars['String']['output']>;
+  Tenant: Partial<Tenant>;
   UInt8: Partial<Scalars['UInt8']['output']>;
   UInt64: Partial<Scalars['UInt64']['output']>;
 };
@@ -325,6 +374,16 @@ export type AccessResolvers<ContextType = any, ParentType extends ResolversParen
   identifier?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   limits?: Resolver<Maybe<ResolversTypes['LimitData']>, ParentType, ContextType>;
   type?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type CreateTenantMutationResponseResolvers<ContextType = any, ParentType extends ResolversParentTypes['CreateTenantMutationResponse'] = ResolversParentTypes['CreateTenantMutationResponse']> = {
+  tenant?: Resolver<ResolversTypes['Tenant'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type DeleteTenantMutationResponseResolvers<ContextType = any, ParentType extends ResolversParentTypes['DeleteTenantMutationResponse'] = ResolversParentTypes['DeleteTenantMutationResponse']> = {
+  success?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -365,6 +424,8 @@ export type ModelResolvers<ContextType = any, ParentType extends ResolversParent
 };
 
 export type MutationResolvers<ContextType = any, ParentType extends ResolversParentTypes['Mutation'] = ResolversParentTypes['Mutation']> = {
+  createTenant?: Resolver<ResolversTypes['CreateTenantMutationResponse'], ParentType, ContextType, RequireFields<MutationCreateTenantArgs, 'input'>>;
+  deleteTenant?: Resolver<ResolversTypes['DeleteTenantMutationResponse'], ParentType, ContextType, RequireFields<MutationDeleteTenantArgs, 'input'>>;
   revokeGrant?: Resolver<ResolversTypes['RevokeGrantMutationResponse'], ParentType, ContextType, RequireFields<MutationRevokeGrantArgs, 'input'>>;
 };
 
@@ -393,6 +454,11 @@ export type RevokeGrantMutationResponseResolvers<ContextType = any, ParentType e
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
+export type TenantResolvers<ContextType = any, ParentType extends ResolversParentTypes['Tenant'] = ResolversParentTypes['Tenant']> = {
+  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
 export interface UInt8ScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes['UInt8'], any> {
   name: 'UInt8';
 }
@@ -403,6 +469,8 @@ export interface UInt64ScalarConfig extends GraphQLScalarTypeConfig<ResolversTyp
 
 export type Resolvers<ContextType = any> = {
   Access?: AccessResolvers<ContextType>;
+  CreateTenantMutationResponse?: CreateTenantMutationResponseResolvers<ContextType>;
+  DeleteTenantMutationResponse?: DeleteTenantMutationResponseResolvers<ContextType>;
   Grant?: GrantResolvers<ContextType>;
   GrantEdge?: GrantEdgeResolvers<ContextType>;
   GrantsConnection?: GrantsConnectionResolvers<ContextType>;
@@ -413,6 +481,7 @@ export type Resolvers<ContextType = any> = {
   PaymentAmount?: PaymentAmountResolvers<ContextType>;
   Query?: QueryResolvers<ContextType>;
   RevokeGrantMutationResponse?: RevokeGrantMutationResponseResolvers<ContextType>;
+  Tenant?: TenantResolvers<ContextType>;
   UInt8?: GraphQLScalarType;
   UInt64?: GraphQLScalarType;
 };

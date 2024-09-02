@@ -115,30 +115,32 @@ export class PaginationModel extends DbErrors(Model) {
   static QueryBuilder = PaginationQueryBuilder
 }
 
-export abstract class BaseModel extends PaginationModel {
+export abstract class WeakModel extends PaginationModel {
   public static get modelPaths(): string[] {
     return [__dirname]
   }
 
-  public id!: string
   public createdAt!: Date
   public updatedAt!: Date
-
-  public $beforeInsert(context: QueryContext): void {
-    super.$beforeInsert(context)
-    this.id = this.id || uuid()
-  }
 
   public $beforeUpdate(_opts: ModelOptions, _queryContext: QueryContext): void {
     this.updatedAt = new Date()
   }
 
   $formatJson(json: Pojo): Pojo {
-    json = super.$formatJson(json)
     return {
       ...json,
       createdAt: json.createdAt.toISOString(),
       updatedAt: json.updatedAt.toISOString()
     }
+  }
+}
+
+export abstract class BaseModel extends WeakModel {
+  public id!: string
+
+  public $beforeInsert(context: QueryContext): void {
+    super.$beforeInsert(context)
+    this.id = this.id || uuid()
   }
 }

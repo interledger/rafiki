@@ -78,6 +78,7 @@ export class Grant extends BaseModel {
   public clientNonce?: string // client-generated nonce for post-interaction hash
 
   public lastContinuedAt!: Date
+  public tenantId!: string
 
   public $beforeInsert(context: QueryContext): void {
     super.$beforeInsert(context)

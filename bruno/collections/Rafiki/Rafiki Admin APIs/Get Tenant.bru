@@ -1,0 +1,36 @@
+meta {
+  name: Get Tenant
+  type: graphql
+  seq: 51
+}
+
+post {
+  url: {{RafikiGraphqlHost}}/graphql
+  body: graphql
+  auth: none
+}
+
+body:graphql {
+  query GetTenant($id: ID!) {
+    tenant(id:$id) {
+      id
+      kratosIdentityId
+      createdAt
+      updatedAt
+      endpoints {
+        pageInfo {
+          startCursor
+          endCursor
+          hasNextPage
+          hasPreviousPage
+        }
+      }
+    }
+  }
+}
+
+body:graphql:vars {
+  {
+    "id": "7a0c75bd-6c09-4d38-b013-af89ab91557a"
+  }
+}

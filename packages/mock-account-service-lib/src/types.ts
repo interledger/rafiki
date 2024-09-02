@@ -1,4 +1,5 @@
 import type { KeyObject } from 'crypto'
+import { EndpointType } from './requesters'
 
 interface Asset {
   code: string
@@ -32,7 +33,15 @@ export interface Fee {
   scale: number
 }
 
+export interface Tenant {
+  name: string
+  idpConsentUrl: string
+  idpSecret: string
+  endpoints: EndpointType[]
+}
+
 export interface SeedInstance {
+  tenants: Array<Tenant>
   assets: Array<Asset>
   peeringAsset: string
   peers: Array<Peering>

@@ -7,6 +7,8 @@ import { createClient } from 'tigerbeetle-node'
 import { createClient as createIntrospectionClient } from 'token-introspection'
 import net from 'net'
 import dns from 'dns'
+import { createHmac } from 'crypto'
+import { print } from 'graphql/language/printer'
 
 import {
   createAuthenticatedClient as createOpenPaymentsClient,
@@ -56,6 +58,17 @@ import { createStreamCredentialsService } from './payment-method/ilp/stream-cred
 import { createRatesService } from './rates/service'
 import { TelemetryService, createTelemetryService } from './telemetry/service'
 import { createWebhookService } from './webhook/service'
+import { createTenantService } from './tenant/service'
+import {
+  ApolloClient,
+  ApolloLink,
+  createHttpLink,
+  InMemoryCache
+} from '@apollo/client'
+import { onError } from '@apollo/client/link/error'
+import { setContext } from '@apollo/client/link/context'
+import { canonicalize } from 'json-canonicalize'
+import { createTenantEndpointService } from './tenant/endpoints/service'
 
 BigInt.prototype.toJSON = function () {
   return this.toString()
@@ -438,6 +451,106 @@ export function initIocContainer(
     }
 
     return createIlpPaymentService(serviceDependencies)
+  })
+
+  container.singleton('apolloClient', async (deps) => {
+    const [logger, config] = await Promise.all([
+      deps.use('logger'),
+      deps.use('config')
+    ])
+
+    const httpLink = createHttpLink({
+      uri: config.authAdminApiUrl
+    })
+
+    const errorLink = onError(({ graphQLErrors }) => {
+      if (graphQLErrors) {
+        logger.error(graphQLErrors)
+        graphQLErrors.map(({ extensions }) => {
+          if (extensions && extensions.code === 'UNAUTHENTICATED') {
+            logger.error('UNAUTHENTICATED')
+          }
+
+          if (extensions && extensions.code === 'FORBIDDEN') {
+            logger.error('FORBIDDEN')
+          }
+        })
+      }
+    })
+
+    const authLink = setContext((request, { headers }) => {
+      if (!config.authAdminApiSecret || !config.authAdminApiSignatureVersion)
+        return { headers }
+      const timestamp = Math.round(new Date().getTime() / 1000)
+      const version = config.authAdminApiSignatureVersion
+
+      const { query, variables, operationName } = request
+      const formattedRequest = {
+        variables,
+        operationName,
+        query: print(query)
+      }
+
+      const payload = `${timestamp}.${canonicalize(formattedRequest)}`
+      const hmac = createHmac('sha256', config.authAdminApiSecret)
+      hmac.update(payload)
+      const digest = hmac.digest('hex')
+
+      return {
+        headers: {
+          ...headers,
+          signature: `t=${timestamp}, v${version}=${digest}`
+        }
+      }
+    })
+
+    const link = ApolloLink.from([errorLink, authLink, httpLink])
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache({}),
+      link: link,
+      defaultOptions: {
+        query: {
+          fetchPolicy: 'no-cache'
+        },
+        mutate: {
+          fetchPolicy: 'no-cache'
+        },
+        watchQuery: {
+          fetchPolicy: 'no-cache'
+        }
+      }
+    })
+
+    return client
+  })
+
+  container.singleton('tenantEndpointService', async (deps) => {
+    const [logger, knex] = await Promise.all([
+      deps.use('logger'),
+      deps.use('knex')
+    ])
+
+    return createTenantEndpointService({ knex, logger })
+  })
+
+  container.singleton('tenantService', async (deps) => {
+    const [logger, knex, config, apolloClient, tenantEndpointService] =
+      await Promise.all([
+        deps.use('logger'),
+        deps.use('knex'),
+        deps.use('config'),
+        deps.use('apolloClient'),
+        deps.use('tenantEndpointService')
+      ])
+
+    return createTenantService({
+      logger,
+      knex,
+      config,
+      apolloClient,
+      tenantEndpointService
+    })
   })
 
   container.singleton('paymentMethodHandlerService', async (deps) => {

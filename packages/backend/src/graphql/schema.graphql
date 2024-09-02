@@ -1,4 +1,21 @@
 type Query {
+  "Fetch a tenant"
+  tenant(id: ID!): Tenant
+
+  "Fetch a page of tenants"
+  tenants(
+    "Paginating forwards: the cursor before the the requested page."
+    after: String
+    "Paginating backwards: the cursor after the the requested page."
+    before: String
+    "Paginating forwards: The first **n** elements from the page."
+    first: Int
+    "Paginating backwards: The last **n** elements from the page."
+    last: Int
+    "Ascending or descending order of creation."
+    sortOrder: SortOrder
+  ): TenantsConnection!
+
   "Fetch an asset"
   asset(id: String!): Asset
 
@@ -128,6 +145,9 @@ type Mutation {
 
   "Delete an asset"
   deleteAsset(input: DeleteAssetInput!): DeleteAssetMutationResponse!
+
+  "Create tenant"
+  createTenant(input: CreateTenantInput!): CreateTenantMutationResponse!
 
   "Deposit asset liquidity"
   depositAssetLiquidity(
@@ -281,6 +301,26 @@ type PageInfo {
   hasPreviousPage: Boolean!
   "Paginating backwards: the cursor to continue."
   startCursor: String
+}
+
+type TenantEndpointsConnection {
+  pageInfo: PageInfo!
+  edges: [TenantEndpointEdge!]!
+}
+
+type TenantEndpointEdge {
+  node: TenantEndpoint
+  cursor: String!
+}
+
+type TenantsConnection {
+  pageInfo: PageInfo!
+  edges: [TenantEdge!]!
+}
+
+type TenantEdge {
+  node: Tenant!
+  cursor: String!
 }
 
 type AssetsConnection {
@@ -588,6 +628,11 @@ type Asset implements Model {
   ): FeesConnection
   "Date-time of creation"
   createdAt: String!
+}
+
+enum TenantEndpointType {
+  WebhookBaseUrl
+  RatesUrl
 }
 
 enum SortOrder {
@@ -1026,6 +1071,8 @@ input CreateQuoteInput {
   receiver: String!
   "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)"
   idempotencyKey: String
+  "ID of the tenant"
+  tenantId: ID!
 }
 
 type QuoteResponse {
@@ -1041,6 +1088,8 @@ input CreateOutgoingPaymentInput {
   metadata: JSONObject
   "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)"
   idempotencyKey: String
+  "ID of a tenant"
+  tenantId: ID!
 }
 
 input CancelOutgoingPaymentInput {
@@ -1074,6 +1123,8 @@ input CreateIncomingPaymentInput {
   incomingAmount: AmountInput
   "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)"
   idempotencyKey: String
+  "ID of the tenant"
+  tenantId: ID!
 }
 
 input CreateReceiverInput {
@@ -1101,6 +1152,22 @@ type CreateReceiverResponse {
   receiver: Receiver
 }
 
+input CreateTenantEndpointsInput {
+  type: TenantEndpointType!
+  value: String!
+}
+
+input CreateTenantInput {
+  "List of endpoints types for the tenant"
+  endpoints: [CreateTenantEndpointsInput!]!
+
+  "IDP Endpoint"
+  idpConsentEndpoint: String!
+
+  "IDP Secret"
+  idpSecret: String!
+}
+
 input CreateWalletAddressInput {
   "Asset of the wallet address"
   assetId: String!
@@ -1112,6 +1179,8 @@ input CreateWalletAddressInput {
   idempotencyKey: String
   "Additional properties associated with the [walletAddress]."
   additionalProperties: [AdditionalPropertyInput!]
+  "ID of a tenant"
+  tenantId: ID!
 }
 
 input AdditionalPropertyInput {
@@ -1306,6 +1375,28 @@ type UpdatePeerMutationResponse {
 
 type DeletePeerMutationResponse {
   success: Boolean!
+}
+
+type CreateTenantMutationResponse {
+  tenant: Tenant!
+}
+
+type TenantEndpoint {
+  type: TenantEndpointType!
+  value: String!
+}
+
+type Tenant implements Model {
+  "Tenant ID that is used in subsequent resources"
+  id: ID!
+  "Kratos identity ID"
+  kratosIdentityId: String!
+  "Date-time of creation"
+  createdAt: String!
+  "Date-time of the update"
+  updatedAt: String!
+  "List of tenant endpoints associated with this tenant"
+  endpoints: [TenantEndpoint!]!
 }
 
 type LiquidityMutationResponse {

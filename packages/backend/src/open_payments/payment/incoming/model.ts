@@ -108,6 +108,8 @@ export class IncomingPayment
   public readonly assetId!: string
   public asset!: Asset
 
+  public tenantId!: string
+
   private incomingAmountValue?: bigint | null
   private receivedAmountValue?: bigint
 

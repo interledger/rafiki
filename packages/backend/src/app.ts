@@ -101,6 +101,7 @@ import {
 import { LoggingPlugin } from './graphql/plugin'
 import { GrantService } from './open_payments/grant/service'
 import { AuthServerService } from './open_payments/authServer/service'
+import { TenantService } from './tenant/service'
 export interface AppContextData {
   logger: Logger
   container: AppContainer
@@ -255,6 +256,7 @@ export interface AppServices {
   tigerBeetle?: Promise<TigerbeetleClient>
   paymentMethodHandlerService: Promise<PaymentMethodHandlerService>
   ilpPaymentService: Promise<IlpPaymentService>
+  tenantService: Promise<TenantService>
 }
 
 export type AppContainer = IocContract<AppServices>

@@ -172,13 +172,14 @@ export type CancelOutgoingPaymentOptions = {
   reason?: string
 }
 
-export type CreateOutgoingPaymentOptions =
+export type CreateOutgoingPaymentOptions = { tenantId: string } & (
   | CreateFromQuote
   | CreateFromIncomingPayment
+)
 
 export function isCreateFromIncomingPayment(
   options: CreateOutgoingPaymentOptions
-): options is CreateFromIncomingPayment {
+): options is CreateFromIncomingPayment & { tenantId: string } {
   return 'incomingPayment' in options && 'debitAmount' in options
 }
 
@@ -224,7 +225,8 @@ async function createOutgoingPayment(
       receiver: incomingPayment,
       debitAmount,
       method: 'ilp',
-      walletAddressId
+      walletAddressId,
+      tenantId: options.tenantId
     })
 
     if (isQuoteError(quoteOrError)) {
@@ -261,7 +263,8 @@ async function createOutgoingPayment(
           client: options.client,
           metadata: options.metadata,
           state: OutgoingPaymentState.Funding,
-          grantId
+          grantId,
+          tenantId: options.tenantId
         })
         .withGraphFetched('[quote.asset, walletAddress]')
 

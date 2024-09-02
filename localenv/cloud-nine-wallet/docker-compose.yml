@@ -73,8 +73,10 @@ services:
       REDIS_URL: redis://shared-redis:6379/0
       WALLET_ADDRESS_URL: ${CLOUD_NINE_WALLET_ADDRESS_URL:-https://cloud-nine-wallet-backend/.well-known/pay}
       ILP_CONNECTOR_URL: ${CLOUD_NINE_CONNECTOR_URL:-http://cloud-nine-wallet-backend:3002}
+      AUTH_ADMIN_URL: http://cloud-nine-wallet-auth:3003/graphql
       ENABLE_TELEMETRY: true
       KEY_ID: 7097F83B-CB84-469E-96C6-2141C72E22C0
+      AUTH_ADMIN_API_SECRET: rPoZpe9tVyBNCigm05QDco7WLcYa0xMao7lO5KG1XG4=
     depends_on:
       - shared-database
       - shared-redis

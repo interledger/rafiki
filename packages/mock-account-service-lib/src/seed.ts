@@ -30,6 +30,7 @@ export async function setupFromSeed(
 
   const logger = createLogger(loggerOptions)
   const {
+    createTenant,
     createAsset,
     depositAssetLiquidity,
     setFee,
@@ -39,6 +40,17 @@ export async function setupFromSeed(
     createWalletAddress,
     createWalletAddressKey
   } = createRequesters(apolloClient, logger)
+
+  const tenants: Record<string, string> = {}
+  for (const { name, idpConsentUrl, idpSecret, endpoints } of config.seed
+    .tenants) {
+    const { tenant } = await createTenant(idpConsentUrl, idpSecret, endpoints)
+    if (!tenant) {
+      throw new Error('error creating tenant')
+    }
+
+    tenants[name] = tenant.id
+  }
 
   const assets: Record<string, Asset> = {}
   for (const { code, scale, liquidity, liquidityThreshold } of config.seed
@@ -129,7 +141,8 @@ export async function setupFromSeed(
       const walletAddress = await createWalletAddress(
         account.name,
         `${config.publicHost}/${account.path}`,
-        accountAsset.id
+        accountAsset.id,
+        tenants['PrimaryTenant']
       )
 
       await mockAccounts.setWalletAddress(
