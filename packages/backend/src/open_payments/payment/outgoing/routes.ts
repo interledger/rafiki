@@ -97,6 +97,7 @@ async function createOutgoingPayment(
   ctx: CreateContext<CreateBody>
 ): Promise<void> {
   const { body } = ctx.request
+  const { tenantId } = ctx.params
   const baseOptions: OutgoingPaymentCreateBaseOptions = {
     walletAddressId: ctx.walletAddress.id,
     metadata: body.metadata,
@@ -108,6 +109,7 @@ async function createOutgoingPayment(
   if (isCreateFromIncomingPayment(body)) {
     options = {
       ...baseOptions,
+      tenantId,
       incomingPayment: body.incomingPayment,
       debitAmount: body.debitAmount
     }
@@ -122,6 +124,7 @@ async function createOutgoingPayment(
     }
     options = {
       ...baseOptions,
+      tenantId,
       quoteId
     }
   }

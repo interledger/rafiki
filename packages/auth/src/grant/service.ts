@@ -24,7 +24,7 @@ interface GrantFilter {
 
 export interface GrantService {
   getByIdWithAccess(grantId: string): Promise<Grant | undefined>
-  create(grantRequest: GrantRequest, trx?: Transaction): Promise<Grant>
+  create(grantRequest: GrantRequest, tenantId: string, trx?: Transaction): Promise<Grant>
   markPending(grantId: string, trx?: Transaction): Promise<Grant | undefined>
   approve(grantId: string, trx?: Transaction): Promise<Grant>
   finalize(grantId: string, reason: GrantFinalization): Promise<Grant>
@@ -115,8 +115,8 @@ export async function createGrantService({
   }
   return {
     getByIdWithAccess: (grantId: string) => getByIdWithAccess(grantId),
-    create: (grantRequest: GrantRequest, trx?: Transaction) =>
-      create(deps, grantRequest, trx),
+    create: (grantRequest: GrantRequest, tenantId: string, trx?: Transaction) =>
+      create(deps, grantRequest, tenantId, trx),
     markPending: (grantId: string, trx?: Transaction) =>
       markPending(deps, grantId, trx),
     approve: (grantId: string) => approve(grantId),
@@ -211,6 +211,7 @@ async function revokeGrant(
 async function create(
   deps: ServiceDependencies,
   grantRequest: GrantRequest,
+  tenantId: string,
   trx?: Transaction
 ): Promise<Grant> {
   const { accessService, knex } = deps
@@ -224,6 +225,7 @@ async function create(
   const grantTrx = trx || (await Grant.startTransaction(knex))
   try {
     const grantData = {
+      tenantId,
       state: canSkipInteraction(deps.config, grantRequest)
         ? GrantState.Approved
         : GrantState.Pending,

@@ -60,8 +60,8 @@ export async function getWalletAddress(
     )
 
   ctx.body = walletAddress.toOpenPaymentsType({
-    authServer: deps.config.authServerGrantUrl,
-    resourceServer: deps.config.openPaymentsUrl
+    authServer: `${deps.config.authServerGrantUrl}/${walletAddress.tenantId}`,
+    resourceServer: `${deps.config.openPaymentsUrl}/${walletAddress.tenantId}`
   })
 }
 

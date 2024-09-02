@@ -135,7 +135,8 @@ async function createApprovedGrant(
   let grant: Grant
   let accessToken: AccessToken
   try {
-    grant = await grantService.create(body, trx)
+    const { tenantId } = ctx.params
+    grant = await grantService.create(body, tenantId, trx)
     accessToken = await deps.accessTokenService.create(grant.id, trx)
     await trx.commit()
   } catch (err) {
@@ -170,6 +171,7 @@ async function createPendingGrant(
   ctx: CreateContext
 ): Promise<void> {
   const { body } = ctx.request
+  const { tenantId } = ctx.params
   const { grantService, interactionService, config, logger } = deps
   if (!body.interact) {
     throw new GNAPServerRouteError(
@@ -191,7 +193,7 @@ async function createPendingGrant(
   const trx = await Grant.startTransaction()
 
   try {
-    const grant = await grantService.create(body, trx)
+    const grant = await grantService.create(body, tenantId, trx)
     const interaction = await interactionService.create(grant.id, trx)
     await trx.commit()
 

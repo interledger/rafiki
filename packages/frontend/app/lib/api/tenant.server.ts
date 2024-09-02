@@ -48,6 +48,7 @@ export const listTenants = async (args: QueryTenantsArgs, cookie?: string) => {
             node {
               id
               createdAt
+              email
             }
           }
           pageInfo {
