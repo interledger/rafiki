@@ -1,0 +1,18 @@
+---
+title: Webhook event types
+---
+
+The following is an enumeration of all the event types along with their descriptions, which you must listen to and handle.
+
+| Value                               | Description                                                                        |
+| ----------------------------------- | ---------------------------------------------------------------------------------- |
+| `incoming_payment.created`        | An incoming payment has been created.                                              |
+| `incoming_payment.completed`      | An incoming payment is complete and will not accept any additional incoming funds. |
+| `incoming_payment.expired`        | An incoming payment expired and will not accept any additional incoming funds.     |
+| `outgoing_payment.created`        | An outgoing payment was created.                                                   |
+| `outgoing_payment.completed`      | An outgoing payment completed.                                                     |
+| `outgoing_payment.failed`         | An outgoing payment partially or completely failed.                                |
+| `wallet_address.not_found`        | A requested wallet address was not found.                                          |
+| `wallet_address.web_monetization` | Web Monetization payments received via STREAM.                                     |
+| `asset.liquidity_low`             | Asset liquidity has dropped below defined threshold.                               |
+| `peer.liquidity_low`              | Peer liquidity has dropped below defined threshold.                                |

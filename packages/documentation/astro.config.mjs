@@ -89,32 +89,28 @@ export default defineConfig({
               collapsed: true,
               items: [
                 {
-                  label: 'Before you begin',
-                  link: '/integration/before-you-begin'
-                },
-                {
                   label: 'Get started',
                   collapsed: true,
                   items: [
                     {
                       label: 'Overview',
-                      link: '/integration/get-started'
+                      link: '/integration/get-started/overview'
                     },
                     {
                       label: 'Fees',
-                      link: '/integration/fees'
+                      link: '/integration/get-started/fees'
                     },
                     {
                       label: 'Exchange rates',
-                      link: '/integration/exchange-rates'
+                      link: '/integration/get-started/exchange-rates'
                     },
                     {
                       label: 'Webhook events',
-                      link: '/integration/webhook-events'
+                      link: '/integration/get-started/webhook-events'
                     },
                     {
                       label: 'Identity provider (IdP)',
-                      link: '/integration/idp'
+                      link: '/integration/get-started/idp'
                     }
                   ]
                 },
@@ -244,6 +240,10 @@ export default defineConfig({
                 {
                   label: 'Environment variables',
                   link: '/resources/environment-variables'
+                },
+                {
+                  label: 'Webhook event types',
+                  link: '/resources/webhook-event-types',
                 },
                 {
                   label: 'Get involved',
