@@ -16,6 +16,8 @@ process.env.WEBHOOK_URL = 'http://127.0.0.1:4001/webhook'
 process.env.STREAM_SECRET = '2/PxuRFV9PAp0yJlnAifJ+1OxujjjI16lN+DBnLNRLA='
 process.env.USE_TIGERBEETLE = false
 process.env.ENABLE_TELEMETRY = false
+process.env.KRATOS_ADMIN_URL = 'http://127.0.0.1:4434/admin'
+process.env.KRATOS_ADMIN_EMAIL = 'admin@mail.com'
 
 module.exports = {
   ...baseConfig,

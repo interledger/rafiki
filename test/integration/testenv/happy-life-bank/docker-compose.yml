@@ -36,6 +36,8 @@ services:
       EXCHANGE_RATES_URL: http://host.docker.internal:8889/rates
       REDIS_URL: redis://shared-redis:6379/2
       USE_TIGERBEETLE: false
+      KRATOS_ADMIN_URL: 'http://happy-life-kratos:4434/admin'
+      KRATOS_ADMIN_EMAIL: 'admin@mail.com'
     volumes:
       - ../private-key.pem:/workspace/private-key.pem
     depends_on:

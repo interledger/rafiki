@@ -640,6 +640,8 @@ export const start = async (
       `Auto-peering server listening on ${config.autoPeeringServerPort}`
     )
   }
+
+  await app.createOperatorIdentity()
 }
 
 // If this script is run directly, start the server
