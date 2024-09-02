@@ -114,7 +114,10 @@ async function getPeer(
   deps: ServiceDependencies,
   id: string
 ): Promise<Peer | undefined> {
-  return Peer.query(deps.knex).findById(id).withGraphFetched('asset').withGraphFetched('incomingTokens')
+  return Peer.query(deps.knex)
+    .findById(id)
+    .withGraphFetched('asset')
+    .withGraphFetched('incomingTokens')
 }
 
 async function createPeer(
