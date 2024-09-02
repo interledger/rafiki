@@ -120,7 +120,7 @@ export const EditableTable = ({
               <Table.Cell key={1}>
                 {option.canEdit && !option.showInput ? (
                   <Button
-                    aria-label='save http information'
+                    aria-label='edit'
                     onClick={() => toggleEditInput(index)}
                   >
                     Edit
@@ -129,7 +129,7 @@ export const EditableTable = ({
                 {option.canDelete ? (
                   <Button
                     className='ml-2'
-                    aria-label='delete http information'
+                    aria-label='delete'
                     onClick={() => deleteOption(index)}
                   >
                     Delete
@@ -141,7 +141,7 @@ export const EditableTable = ({
         </Table.Body>
       </Table>
       <div className='flex justify-end mt-2'>
-        <Button aria-label='add http information' onClick={() => addOption()}>
+        <Button aria-label='add' onClick={() => addOption()}>
           Add
         </Button>
       </div>
