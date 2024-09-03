@@ -243,7 +243,7 @@ export default defineConfig({
                 },
                 {
                   label: 'Webhook event types',
-                  link: '/resources/webhook-event-types',
+                  link: '/resources/webhook-event-types'
                 },
                 {
                   label: 'Get involved',

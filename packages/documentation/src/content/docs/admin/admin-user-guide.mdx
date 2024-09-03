@@ -13,6 +13,7 @@ The Rafiki Admin application provides tools to manage peers, assets, wallet addr
 ### Prerequisites
 
 - Familiarity with general Rafiki concepts. The [Rafiki overview](/overview/overview) is a great place to start.
+- Running the Rafiki `frontend` package. See [Frontend service](/integration/deployment/services/frontend-service) for more information.
 - Rafiki Admin login credentials
 
 ## Navigation
@@ -55,7 +56,7 @@ To create a new peer, select **Create Peer** from the main Peers page.
 
 Fill out the following fields to configure and create your peer:
 
-| **Section**         | **Field**            | **Description**                                                                                             |
+| Section             | Field                | Description                                                                                                 |
 | ------------------- | -------------------- | ----------------------------------------------------------------------------------------------------------- |
 | General Information | Name                 | A public name for the peer to identify it on your system.                                                   |
 |                     | Static ILP Address   | The peer’s ILP address, obtained from the peer.                                                             |
@@ -78,7 +79,7 @@ To edit an existing peer, select any peer entry from the table on the main Peers
 
 While the Edit Peer page shares fields with the Create Peer page, it also includes additional fields and actions specific to managing an existing peer:
 
-| **Section**           | **Field/Action**   | **Description**                                                                           |
+| Section               | Field/Action       | Description                                                                               |
 | --------------------- | ------------------ | ----------------------------------------------------------------------------------------- |
 | General Information   | Peer ID            | A unique identifier assigned by Rafiki when the peer was created. This cannot be changed. |
 | Asset Information     | View Asset         | For more information about an asset, select **View asset**.                               |
@@ -92,9 +93,11 @@ After editing any of the above fields in the General Information or HTTP Informa
 
 The final section of the Peers page is the irreversible action of deleting a peer. Select **Delete peer** to make this change.
 
-<LargeImg
+<img
   src='/img/admin-guide/delete-peer.png'
   alt='A screenshot of the Rafiki Admin application user interface displaying the "Delete Peer" modal window.'
+  class='img-outline'
+  style='max-width:400px'
 />
 
 Confirm the deletion by typing "delete peer" into the text field and selecting **Delete this peer**.
@@ -121,7 +124,7 @@ To create a new asset, select **Add Asset** from the main Assets page.
 
 Fill out the following fields to create your new asset:
 
-| **Section**         | **Field**            | **Description**                                                                   |
+| Section             | Field                | Description                                                                       |
 | ------------------- | -------------------- | --------------------------------------------------------------------------------- |
 | General Information | Code                 | The asset code, generally an ISO 4217 currency code where available.              |
 |                     | Scale                | Difference in order of magnitude between the standard unit and a fractional unit. |
@@ -140,7 +143,7 @@ To edit an existing asset, select any asset entry from the table on the main Ass
 
 While the Edit Asset page shares fields with the Create Asset page, it also includes additional fields and actions specific to managing an existing asset:
 
-| **Section**           | **Field/Action**   | **Description**                                                                                                                                                         |
+| Section               | Field/Action       | Description                                                                                                                                                             |
 | --------------------- | ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | General Information   | Asset ID           | A unique identifier assigned by Rafiki when the asset was created. This cannot be changed.                                                                              |
 | Liquidity Information | Amount             | Current amount of asset liquidity available.                                                                                                                            |
@@ -174,7 +177,7 @@ To create a new wallet address, select **Create wallet address** from the main W
 
 Fill out the following fields to create a new wallet address:
 
-| **Section**         | **Field**           | **Description**                                                             |
+| Section             | Field               | Description                                                                 |
 | ------------------- | ------------------- | --------------------------------------------------------------------------- |
 | General Information | Wallet address name | The URL of the wallet. Once set, it cannot be changed.                      |
 |                     | Public name         | The name associated with the wallet that is visible to anyone with the URL. |
@@ -197,7 +200,7 @@ To edit an existing wallet address, select any wallet address entry from the tab
 
 While the Edit Wallet Address page shares fields with the Create Wallet Address page, it also includes additional fields and actions specific to managing an existing wallet address.
 
-| **Section**           | **Field/Action**     | **Description**                                                                             |
+| Section               | Field/Action         | Description                                                                                 |
 | --------------------- | -------------------- | ------------------------------------------------------------------------------------------- |
 | General Information   | ID                   | A unique identifier assigned by Rafiki when the wallet was created. This cannot be changed. |
 |                       | URL                  | The wallet address. This cannot be changed.                                                 |
