@@ -13,7 +13,7 @@ export class TenantEndpoint extends WeakModel {
   // Tell Objection.js that there is no single id column
   // Define the composite primary key
   static get idColumn() {
-    return ['tenantId', 'type'];
+    return ['tenantId', 'type']
   }
 
   public type!: EndpointType

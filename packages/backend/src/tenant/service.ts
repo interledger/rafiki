@@ -11,8 +11,6 @@ import {
 import { v4 as uuidv4 } from 'uuid'
 import { Pagination, SortOrder } from '../shared/baseModel'
 import { EndpointOptions, TenantEndpointService } from './endpoints/service'
-import { isTenantEndpointError } from './endpoints/errors'
-import { tr } from '@faker-js/faker'
 
 export interface CreateTenantOptions {
   name: string
@@ -61,6 +59,7 @@ async function getTenantsPage(
   sortOrder?: SortOrder
 ): Promise<Tenant[]> {
   return await Tenant.query(deps.knex)
+    .withGraphFetched('endpoints')
     .getPage(pagination, sortOrder)
 }
 
@@ -68,9 +67,7 @@ async function getTenant(
   deps: ServiceDependencies,
   id: string
 ): Promise<Tenant | undefined> {
-  return Tenant.query(deps.knex)
-    .withGraphFetched('endpoints')
-    .findById(id)
+  return Tenant.query(deps.knex).withGraphFetched('endpoints').findById(id)
 }
 
 async function createTenant(
@@ -92,9 +89,8 @@ async function createTenant(
         kratosIdentityId: uuidv4(),
         endpoints: options.endpoints
       }
-      
-      tenant = await Tenant.query(trx)
-        .insertGraphAndFetch(tenantData)
+
+      tenant = await Tenant.query(trx).insertGraphAndFetch(tenantData)
 
       // call auth admin api
       const mutation = gql`

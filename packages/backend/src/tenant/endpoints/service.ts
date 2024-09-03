@@ -58,10 +58,11 @@ async function getTenantEndpointsPage(
   pagination?: Pagination,
   sortOrder?: SortOrder
 ) {
-    const data = await TenantEndpoint
-        .query(deps.knex)
-        .getPage(pagination, sortOrder)
-    return data
+  const data = await TenantEndpoint.query(deps.knex).getPage(
+    pagination,
+    sortOrder
+  )
+  return data
 }
 
 async function createTenantEndpoint(
@@ -74,8 +75,9 @@ async function createTenantEndpoint(
     tenantId: createOptions.tenantId
   }))
 
-  return await TenantEndpoint.query(createOptions.trx)
-    .insert(tenantEndpointsData)
+  return await TenantEndpoint.query(createOptions.trx).insert(
+    tenantEndpointsData
+  )
 }
 
 async function getEndpointsForTenant(
