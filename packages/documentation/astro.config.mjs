@@ -178,16 +178,18 @@ export default defineConfig({
                   ]
                 },
                 {
-                  label: 'Peering',
-                  link: '/integration/peering'
-                },
-                {
                   label: 'Integration checklist',
                   link: '/integration/integration-checklist'
                 },
                 {
                   label: 'APIs',
-                  link: '/integration/apis/'
+                  collapsed: true,
+                  items: [
+                    {
+                      label: 'GraphQL Admin APIs',
+                      link: '/integration/apis/graphql-apis'
+                    }
+                  ]
                 }
               ]
             },
@@ -210,14 +212,6 @@ export default defineConfig({
                 {
                   label: 'Manage peering relationships',
                   link: '/admin/manage-peering'
-                },
-                {
-                  label: 'Manage keys',
-                  link: '/admin/manage-keys'
-                },
-                {
-                  label: 'Manage grants',
-                  link: '/admin/manage-grants'
                 },
                 {
                   label: 'Manage wallet addresses',

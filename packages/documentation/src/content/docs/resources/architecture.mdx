@@ -10,15 +10,16 @@ Rafiki is a collection of three services that run together. Each one can be scal
 - [Auth](/integration/deployment/services/auth-service) - A reference implementation of an Open Payments authorization server, used for grant authorization and authentication
 - [Frontend](/integration/deployment/services/frontend-service) - An optional internal user interface, called the [Rafiki Admin](/admin/admin-user-guide), for you to manage your Rafiki instance
 
-These services rely on four databases.
+These services rely on a number of databases.
 
-- A Postgres database used by the `backend` service for Open Payments resources
-- A separate Postgres database used by the `auth` service for storing auth-related resources (grants, access tokens, and interactions)
+- A Postgres database used by the `auth` service for storing auth-related resources (grants, access tokens, and interactions)
+- A Redis database used by the `auth` service to store session data
+- A Postgres database used by the `backend` service for Open Payments resources and application data
 - <LinkOut href='https://github.com/tigerbeetle/tigerbeetle'>
     TigerBeetle
   </LinkOut>
   , used by the `backend` service for accounting balances at the ILP layer
-- Redis, used by the `backend` service as a cache to share STREAM connection details across processes and by the `auth` service to store session data
+- A Redis database used by the `backend` service as a cache to share STREAM connection details across processes
 
 An additional package for [token introspection](/integration/deployment/services/token-introspection) is also included with Rafiki. This is an internal package that requires no action on your part if you’re using Rafiki’s `auth` service.
 
