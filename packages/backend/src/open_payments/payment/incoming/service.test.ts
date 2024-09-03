@@ -494,17 +494,20 @@ describe('Incoming Payment Service', (): void => {
       metadata
       ${{ description: 'Update metadata', status: 'COMPLETE' }}
       ${{}}
-    `('An incoming payment can be updated', async ({ metadata }): Promise<void> => {
-      const incomingPayment = await incomingPaymentService.update({
-        id: payment.id,
-        metadata
-      })
-      assert.ok(!isIncomingPaymentError(incomingPayment))
-      expect(incomingPayment).toMatchObject({
-        id: incomingPayment.id,
-        metadata
-      })
-    })
+    `(
+      'An incoming payment can be updated',
+      async ({ metadata }): Promise<void> => {
+        const incomingPayment = await incomingPaymentService.update({
+          id: payment.id,
+          metadata
+        })
+        assert.ok(!isIncomingPaymentError(incomingPayment))
+        expect(incomingPayment).toMatchObject({
+          id: incomingPayment.id,
+          metadata
+        })
+      }
+    )
 
     test('Cannot update incoming payment for nonexistent incomingPaymentId', async (): Promise<void> => {
       await expect(
