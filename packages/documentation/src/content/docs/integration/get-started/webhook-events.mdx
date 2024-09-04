@@ -176,8 +176,9 @@ The incoming payment will either complete or expire.
 <Disclosure toggleText="Expand for event sequences" client:load>
 
 {' '}
-<Badge text='One-phase transfer' variant='tip' size='medium' /> An incoming
-payment of $10 was completed.
+
+<Badge text='One-phase transfer' variant='tip' size='medium' /> An incoming payment
+of $10 was completed.
 
   <Mermaid
     graph={`sequenceDiagram
@@ -192,8 +193,9 @@ payment of $10 was completed.
 />
 
 {' '}
-<Badge text='Two-phase transfer' variant='tip' size='medium' /> An incoming
-payment of $10 was completed.
+
+<Badge text='Two-phase transfer' variant='tip' size='medium' /> An incoming payment
+of $10 was completed.
 
   <Mermaid
     graph={`sequenceDiagram
@@ -226,7 +228,6 @@ The `incoming_payment.completed` event indicates the payment completed either au
       R->>ASE: Fires incoming_payment.expired event to WEBHOOK_URL endpoint, receivedAmount: $2.55
       ASE->>R: Backend Admin API call: CreateIncomingPaymentWithdrawal
       ASE->>ASE: Credit recipient's account with $2.55
-
 
 `}
 />
@@ -283,9 +284,9 @@ If the sender has insufficient funds or if the payment should otherwise not be f
 <Disclosure toggleText="Expand for event sequences" client:load>
 
 {' '}
-<Badge text='One-phase transfer' variant='tip' size='medium' /> An outgoing
-payment for \$12 is complete. \$11.50 was sent. You choose to keep \$0.50 as a
-service fee.
+
+<Badge text='One-phase transfer' variant='tip' size='medium' /> An outgoing payment
+for \$12 is complete. \$11.50 was sent. You choose to keep \$0.50 as a service fee.
 
   <Mermaid
     graph={`sequenceDiagram
