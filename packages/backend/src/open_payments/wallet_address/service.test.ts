@@ -135,6 +135,44 @@ describe('Open Payments Wallet Address Service', (): void => {
         accountingService.getBalance(walletAddress.id)
       ).resolves.toBeUndefined()
     })
+    
+
+    test.each`
+      url                       | description
+      ${'https://AlIce.me/PEy'} | ${'with a mixed case url'}
+    `(
+      'Creating wallet address with case insensitiveness',
+      async ({ url }): Promise<void> => {
+        await expect(
+          walletAddressService.create({
+              ...options,
+              url
+            })  
+        ).resolves.toMatchObject(
+          {url:url.toLowerCase()}
+        )
+      }
+    )
+
+    test.each`
+    url                       | description
+    ${'https://aliCe.me/pay'} | ${'with a mixed case url'}
+    ${'https://Alice.me/pay'} | ${'Duplied with a mixed case url'}
+
+  `(
+    'Wallet address cannot be created if the url is duplicated',
+    async ({ url }): Promise<void> => {
+      await expect(
+        walletAddressService.create({
+            ...options,
+            url
+          })  
+      ).resolves.toMatchObject(
+        {url:url.toLowerCase()}
+      )
+    }
+  )
+
   })
 
   describe('Update Wallet Address', (): void => {
@@ -421,6 +459,8 @@ describe('Open Payments Wallet Address Service', (): void => {
         }
       )
     )
+
+
   })
 
   describe('Get Or Poll Wallet Addres By Url', (): void => {
