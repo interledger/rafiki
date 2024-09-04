@@ -2,7 +2,7 @@ import axios from 'axios'
 import { TransactionOrKnex } from 'objection'
 import { BaseService } from '../shared/baseService'
 import { TenantError } from './errors'
-import { Tenant } from './model'
+import { Tenant, TenantWithEndpoints } from './model'
 import { IAppConfig } from '../config/app'
 import { ApolloClient, gql, NormalizedCacheObject } from '@apollo/client'
 import {
@@ -22,6 +22,7 @@ export interface CreateTenantOptions {
 
 export interface TenantService {
   get(id: string): Promise<Tenant | undefined>
+  getByEmail(email: string): Promise<Tenant | undefined>
   getByIdentity(id: string): Promise<Tenant | undefined>
   getPage(pagination?: Pagination, sortOrder?: SortOrder): Promise<Tenant[]>
   create(createOptions: CreateTenantOptions): Promise<Tenant | TenantError>
@@ -49,6 +50,7 @@ export async function createTenantService(
 
   return {
     get: (id: string) => getTenant(deps, id),
+    getByEmail: (email: string) => getByEmail(deps, email),
     getByIdentity: (id: string) => getByIdentity(deps, id),
     getPage: (pagination?, sortOrder?) =>
       getTenantsPage(deps, pagination, sortOrder),
@@ -61,7 +63,9 @@ async function getTenantsPage(
   pagination?: Pagination,
   sortOrder?: SortOrder
 ): Promise<Tenant[]> {
-  return await Tenant.query(deps.knex).getPage(pagination, sortOrder)
+  return await Tenant.query(deps.knex)
+    .withGraphFetched('endpoints')
+    .getPage(pagination, sortOrder)
 }
 
 async function getTenant(
@@ -69,6 +73,16 @@ async function getTenant(
   id: string
 ): Promise<Tenant | undefined> {
   return Tenant.query(deps.knex).withGraphFetched('endpoints').findById(id)
+}
+
+// TODO: Tests for this
+async function getByEmail(
+  deps: ServiceDependencies,
+  email: string
+): Promise<Tenant | undefined> {
+  return Tenant.query(deps.knex).findOne({
+    email
+  })
 }
 
 // TODO: tests for this service function
@@ -84,7 +98,7 @@ async function getByIdentity(
 async function createTenant(
   deps: ServiceDependencies,
   options: CreateTenantOptions
-): Promise<Tenant | TenantError> {
+): Promise<TenantWithEndpoints | TenantError> {
   /**
    * 1. Open DB transaction
    * 2. Insert tenant data into DB
@@ -92,90 +106,104 @@ async function createTenant(
    * 3.1 if success, commit DB trx and return tenant data
    * 3.2 if error, rollback DB trx and return error
    */
-  return deps.knex.transaction(async (trx) => {
-    let tenant: Tenant
-    try {
-      const { kratosAdminUrl } = deps.config
-      let identityId
-      const getIdentityResponse = await axios.get(
-        `${kratosAdminUrl}/identities?credentials_identifier=${options.email}`
-      )
-      if (
-        getIdentityResponse.data.length > 0 &&
-        getIdentityResponse.data[0].id
-      ) {
-        identityId = getIdentityResponse.data[0].id
-      } else {
-        const createIdentityResponse = await axios.post(
-          `${kratosAdminUrl}/identities`,
-          {
-            schema_id: 'default',
-            traits: {
-              email: options.email
-            },
-            metadata_public: {
-              operator: options.isOperator
-            }
-          },
-          {
-            headers: {
-              'Content-Type': 'application/json'
-            }
-          }
-        )
-
-        identityId = createIdentityResponse.data.id
-      }
-
-      const recoveryRequest = await axios.post(
-        `${kratosAdminUrl}/recovery/link`,
+  let tenant: Tenant
+  const trx = await Tenant.startTransaction()
+  try {
+    // TODO: move into kratos service
+    const { kratosAdminUrl } = deps.config
+    let identityId
+    const getIdentityResponse = await axios.get(
+      `${kratosAdminUrl}/identities?credentials_identifier=${options.email}`
+    )
+    const operatorRole = getIdentityResponse.data[0]?.metadata_public.operator
+    const isExistingIdentity =
+      getIdentityResponse.data.length > 0 && getIdentityResponse.data[0].id
+    if (isExistingIdentity && !options.isOperator) {
+      identityId = getIdentityResponse.data[0].id
+    } else if (isExistingIdentity && !operatorRole && options.isOperator) {
+      // Identity already exists but does not have operator role
+      const updateIdentityResponse = await axios.put(
+        `${kratosAdminUrl}/admin/identities/${getIdentityResponse.data[0].id}`,
         {
-          identity_id: identityId
+          metadata_public: {
+            operator: true
+          }
         }
       )
-      deps.logger.info(
-        `Recovery link for ${options.email} at ${recoveryRequest.data.recovery_link}`
+      identityId = updateIdentityResponse.data.id
+    } else {
+      const createIdentityResponse = await axios.post(
+        `${kratosAdminUrl}/identities`,
+        {
+          schema_id: 'default',
+          traits: {
+            email: options.email
+          },
+          metadata_public: {
+            operator: options.isOperator
+          }
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        }
       )
-      // create tenant on backend
-      tenant = await Tenant.query(trx).insert({
-        email: options.email,
-        kratosIdentityId: identityId
-      })
 
-      await deps.tenantEndpointService.create({
-        endpoints: options.endpoints,
-        tenantId: tenant.id,
-        trx
-      })
+      identityId = createIdentityResponse.data.id
+    }
 
-      // call auth admin api
-      const mutation = gql`
-        mutation CreateAuthTenant($input: CreateTenantInput!) {
-          createTenant(input: $input) {
-            tenant {
-              id
-            }
-      `
-      const variables = {
-        input: {
-          tenantId: tenant.id,
-          idpSecret: options.idpSecret,
-          idpConsentEndpoint: options.idpConsentEndpoint
+    const recoveryRequest = await axios.post(
+      `${kratosAdminUrl}/recovery/link`,
+      {
+        identity_id: identityId
+      }
+    )
+    deps.logger.info(
+      `Recovery link for ${options.email} at ${recoveryRequest.data.recovery_link}`
+    )
+    // create tenant on backend
+    tenant = await Tenant.query(trx).insertAndFetch({
+      email: options.email,
+      kratosIdentityId: identityId
+    })
+
+    const endpoints = await deps.tenantEndpointService.create({
+      endpoints: options.endpoints,
+      tenantId: tenant.id,
+      trx
+    })
+
+    // call auth admin api
+    const mutation = gql`
+      mutation CreateAuthTenant($input: CreateTenantInput!) {
+        createTenant(input: $input) {
+          tenant {
+            id
+          }
         }
       }
-
-      await deps.apolloClient.mutate<
-        AuthTenant,
-        { input: CreateAuthTenantInput }
-      >({
-        mutation,
-        variables
-      })
-      await trx.commit()
-      return tenant
-    } catch (err) {
-      await trx.rollback()
-      throw err
+    `
+    const variables = {
+      input: {
+        tenantId: tenant.id,
+        idpSecret: options.idpSecret,
+        idpConsentEndpoint: options.idpConsentEndpoint
+      }
     }
-  })
+
+    await deps.apolloClient.mutate<
+      AuthTenant,
+      { input: CreateAuthTenantInput }
+    >({
+      mutation,
+      variables
+    })
+    await trx.commit()
+    tenant.endpoints = endpoints
+    return tenant
+  } catch (err) {
+    await trx.rollback()
+    throw err
+  }
 }

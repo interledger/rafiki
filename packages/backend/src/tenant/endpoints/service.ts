@@ -1,6 +1,5 @@
 import { TransactionOrKnex } from 'objection'
 import { BaseService } from '../../shared/baseService'
-import { TenantEndpointError } from './errors'
 import { EndpointType, TenantEndpoint } from './model'
 import { Pagination, SortOrder } from '../../shared/baseModel'
 
@@ -16,9 +15,7 @@ export interface CreateOptions {
 }
 
 export interface TenantEndpointService {
-  create(
-    createOptions: CreateOptions
-  ): Promise<TenantEndpoint[] | TenantEndpointError>
+  create(createOptions: CreateOptions): Promise<TenantEndpoint[]>
   getForTenant(tenantId: string): Promise<TenantEndpoint[] | undefined>
   getPage(
     pagination?: Pagination,
@@ -69,7 +66,7 @@ async function getTenantEndpointsPage(
 async function createTenantEndpoint(
   deps: ServiceDependencies,
   createOptions: CreateOptions
-): Promise<TenantEndpoint[] | TenantEndpointError> {
+): Promise<TenantEndpoint[]> {
   const tenantEndpointsData = createOptions.endpoints.map((endpoint) => ({
     type: endpoint.type,
     value: endpoint.value,

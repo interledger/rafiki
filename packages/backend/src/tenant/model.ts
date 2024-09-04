@@ -26,6 +26,10 @@ export class Tenant extends BaseModel {
   public endpoints!: TenantEndpoint[]
 }
 
+export interface TenantWithEndpoints extends Tenant {
+  endpoints: NonNullable<Tenant['endpoints']>
+}
+
 export enum EndpointType {
   WebhookBaseUrl = 'WebhookBaseUrl',
   RatesUrl = 'RatesUrl'

@@ -1,7 +1,6 @@
 import { join } from 'path'
 import http, { Server } from 'http'
 import { ParsedUrlQuery } from 'querystring'
-import axios from 'axios'
 import { Client as TigerbeetleClient } from 'tigerbeetle-node'
 
 import { IocContract } from '@adonisjs/fold'
@@ -87,7 +86,7 @@ import { TelemetryService } from './telemetry/service'
 import { ApolloArmor } from '@escape.tech/graphql-armor'
 import { openPaymentsServerErrorMiddleware } from './open_payments/route-errors'
 import {
-  getTenantIdFromRequestHeaders,
+  // getTenantIdFromRequestHeaders,
   verifyApiSignature
 } from './shared/utils'
 import { WalletAddress } from './open_payments/wallet_address/model'
@@ -313,110 +312,24 @@ export class App {
   public async createOperatorIdentity(): Promise<void> {
     const { kratosAdminEmail, kratosAdminUrl } =
       await this.container.use('config')
-    const logger = await this.container.use('logger')
     if (!kratosAdminUrl || !kratosAdminEmail) {
       throw new Error('Missing admin configuration')
     }
-    let identityId
-    try {
-      const identityQueryResponse = await axios.get(
-        `${kratosAdminUrl}/identities?credentials_identifier=${kratosAdminEmail}`
-      )
-      const isExistingIdentity =
-        identityQueryResponse.data.length > 0 &&
-        identityQueryResponse.data[0].id
-      const operatorRole =
-        identityQueryResponse.data[0]?.metadata_public.operator
-      let identityResponse
-      if (isExistingIdentity && operatorRole) {
-        // Identity already exists with operator role
-        logger.debug(
-          `Identity with email ${kratosAdminEmail} exists on the system with the ID: ${identityQueryResponse.data[0].id}`
-        )
-        identityId = identityQueryResponse.data.id
-        return
-      } else if (isExistingIdentity && !operatorRole) {
-        // Identity already exists but does not have operator role
-        identityResponse = await axios.put(
-          `${kratosAdminUrl}/admin/identities/${identityQueryResponse.data[0].id}`,
-          {
-            metadata_public: {
-              operator: true
-            }
-          }
-        )
-        logger.debug(
-          `Successfully created user ${kratosAdminEmail} with ID ${identityResponse.data.id}`
-        )
-        identityId = identityResponse.data.id
-      } else {
-        // Identity does not exist
-        logger.debug(
-          `No identity with email ${kratosAdminEmail} exists on the system`
-        )
-
-        identityResponse = await axios.post(
-          `${kratosAdminUrl}/identities`,
-          {
-            schema_id: 'default',
-            traits: {
-              email: kratosAdminEmail
-            },
-            metadata_public: {
-              operator: true
-            }
-          },
-          {
-            headers: {
-              'Content-Type': 'application/json'
-            }
-          }
-        )
-        logger.debug(
-          `Successfully created user ${kratosAdminEmail} with ID ${identityResponse.data.id}`
-        )
-        identityId = identityResponse.data.id
-      }
-
-      const recoveryCodeResponse = await axios.post(
-        `${kratosAdminUrl}/recovery/link`,
-        {
-          identity_id: identityId
-        }
-      )
-      logger.info(
-        `Recovery link for ${kratosAdminEmail} at ${recoveryCodeResponse.data.recovery_link}`
-      )
-
-      // Create tenant if it does not exist
-      // TODO: check if tenant exists by querying psql for tenant email, then querying kratos for stored kratosId if found
-      const tenantService = await this.container.use('tenantService')
-      const operatorTenant = await tenantService.getByIdentity(identityId)
-      if (!operatorTenant) {
-        const config = await this.container.use('config')
-        await tenantService.create({
-          idpSecret: config.operatorIdpSecret,
-          idpConsentEndpoint: config.operatorIdpConsentUrl,
-          endpoints: [
-            { value: config.webhookUrl, type: EndpointType.WebhookBaseUrl }
-          ],
-          email: config.kratosAdminEmail,
-          isOperator: true
-        })
-      }
-    } catch (error) {
-      if (axios.isAxiosError(error)) {
-        logger.error(
-          `Error retrieving identity ${kratosAdminEmail}:`,
-          error.response?.status,
-          error.response?.data
-        )
-      } else {
-        logger.error(
-          `An unexpected error occurred while trying to retrieve the identity for ${kratosAdminEmail}:`,
-          error
-        )
-      }
+    // Create tenant if it does not exist
+    // TODO: check if tenant exists by querying psql for tenant email, then querying kratos for stored kratosId if found
+    const tenantService = await this.container.use('tenantService')
+    const operatorTenant = await tenantService.getByEmail(kratosAdminEmail)
+    if (!operatorTenant) {
+      const config = await this.container.use('config')
+      await tenantService.create({
+        idpSecret: config.operatorIdpSecret,
+        idpConsentEndpoint: config.operatorIdpConsentUrl,
+        endpoints: [
+          { value: config.webhookUrl, type: EndpointType.WebhookBaseUrl }
+        ],
+        email: config.kratosAdminEmail,
+        isOperator: true
+      })
     }
   }
 
