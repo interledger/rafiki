@@ -1,10 +1,28 @@
 import { IocContract } from '@adonisjs/fold'
 import { AppServices } from '../app'
 import { Tenant } from '../tenant/model'
-import { CreateTenantOptions } from '../tenant/service'
 import { v4 as uuidv4 } from 'uuid'
 import { EndpointType } from '../tenant/endpoints/model'
+import { faker } from '@faker-js/faker'
 import nock from 'nock'
+
+export function randomTenant() {
+  return {
+    name: faker.company.name(),
+    idpConsentEndpoint: faker.internet.url(),
+    idpSecret: faker.string.sample(10),
+    endpoints: [
+      {
+        type: EndpointType.RatesUrl,
+        value: faker.internet.url()
+      },
+      {
+        type: EndpointType.WebhookBaseUrl,
+        value: faker.internet.url()
+      }
+    ]
+  }
+}
 
 export function mockAdminAuthApiTenantCreation(mockedUrl: string) {
   const url = new URL(mockedUrl)
@@ -25,22 +43,5 @@ export async function createTenant(
   deps: IocContract<AppServices>
 ): Promise<Tenant> {
   const tenantService = await deps.use('tenantService')
-
-  const options: CreateTenantOptions = {
-    name: uuidv4(),
-    idpConsentEndpoint: `https://example.com/${uuidv4()}`,
-    idpSecret: `secret-${uuidv4()}`,
-    endpoints: [
-      {
-        type: EndpointType.RatesUrl,
-        value: `https://example.com/rates/${uuidv4()}`
-      },
-      {
-        type: EndpointType.WebhookBaseUrl,
-        value: `https://example.com/webhook/${uuidv4()}`
-      }
-    ]
-  }
-
-  return tenantService.create(options) as Promise<Tenant>
+  return tenantService.create(randomTenant()) as Promise<Tenant>
 }

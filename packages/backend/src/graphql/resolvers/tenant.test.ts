@@ -14,6 +14,7 @@ import { ApolloError, gql } from '@apollo/client'
 import { Scope } from 'nock'
 import { v4 as uuidv4 } from 'uuid'
 import { errorToCode, errorToMessage, TenantError } from '../../tenant/errors'
+import { TenantEndpointType } from '../generated/graphql'
 
 describe('Tenant Resolver', (): void => {
   let deps: IocContract<AppServices>
@@ -109,6 +110,55 @@ describe('Tenant Resolver', (): void => {
         id: tenant.id,
         name: tenant.name,
         kratosIdentityId: tenant.kratosIdentityId
+      })
+    })
+  })
+
+  describe('Create Tenant', (): void => {
+    it('should create new tenant', async (): Promise<void> => {
+      const mutation = gql`
+        mutation CreateTenant($input: CreateTenantInput!) {
+          createTenant(input: $input) {
+            tenant {
+              id
+              name
+            }
+          }
+        }
+      `
+
+      const variables = {
+        input: {
+          name: 'My Tenant',
+          idpConsentEndpoint: 'https://example.com/consent',
+          idpSecret: 'myVerySecureSecret',
+          endpoints: [
+            {
+              type: TenantEndpointType.RatesUrl,
+              value: 'https://example.com/rates'
+            },
+            {
+              type: TenantEndpointType.WebhookBaseUrl,
+              value: 'https://example.com/webhook'
+            }
+          ]
+        }
+      }
+
+      const response = await appContainer.apolloClient
+        .mutate({
+          mutation,
+          variables
+        })
+        .then((query) => {
+          if (query.data) return query.data.createTenant
+          throw new Error('Data was empty')
+        })
+
+      expect(response.tenant).toEqual({
+        __typename: 'Tenant',
+        id: response.tenant.id,
+        name: variables.input.name
       })
     })
   })
