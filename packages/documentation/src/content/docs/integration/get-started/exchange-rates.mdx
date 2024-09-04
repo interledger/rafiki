@@ -12,16 +12,25 @@ Every Interledger payment is preceded by a rate probe. A rate probe provides a q
 Rafiki fetches exchange rates from your exchange rates endpoint. Set your endpoint via the `backend` service's `EXCHAGE_RATES_URL` variable. An <LinkOut href="https://github.com/interledger/rafiki/blob/main/packages/backend/src/openapi/specs/exchange-rates.yaml">OpenAPI specification</LinkOut> for the endpoint is available.
 
 <CodeBlock title='Example'>
-  ``` EXCHANGE_RATES_URL: http://cloud-nine-wallet/rates ```
+
+```
+EXCHANGE_RATES_URL: http://cloud-nine-wallet/rates
+```
+
 </CodeBlock>
 
 The endpoint must accept <Badge text="GET" variant="note" size="medium"/> requests and respond as follows.
 
 <CodeBlock title='Example API request'>
-  ``` GET https://cloud-nine-wallet/rates ```
+
+```
+GET https://cloud-nine-wallet/rates
+```
+
 </CodeBlock>
 
-<CodeBlock title="Example API response">
+<CodeBlock title='Example API response'>
+
 ```
 {
     "base": "USD",
@@ -30,6 +39,7 @@ The endpoint must accept <Badge text="GET" variant="note" size="medium"/> reques
     }
 }
 ```
+
 </CodeBlock>
 
 ### Response objects
@@ -46,7 +56,13 @@ Specify how long your Rafiki instance will cache exchange rates via the `backend
 
 Caching improves performance as Rafiki will not need to request the rates from your endpoint for every payment.
 
-<CodeBlock title='Example'>``` EXCHANGE_RATES_LIFETIME: 20_000 ```</CodeBlock>
+<CodeBlock title='Example'>
+
+```
+EXCHANGE_RATES_LIFETIME: 20_000
+```
+
+</CodeBlock>
 
 ## Specify slippage (optional)
 
@@ -54,7 +70,13 @@ As exchange rates and fees charged by connectors fluctuate, there will likely be
 
 Set your allowed slippage rate to a value between 0 and 1 via the `backend` service's `SLIPPAGE` variable or use the default setting of `0.01` (1%).
 
-<CodeBlock title='Example'>``` SLIPPAGE: 0.05 ```</CodeBlock>
+<CodeBlock title='Example'>
+
+```
+SLIPPAGE: 0.05
+```
+
+</CodeBlock>
 
 ### Example
 

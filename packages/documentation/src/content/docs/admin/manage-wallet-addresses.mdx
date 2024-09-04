@@ -14,7 +14,7 @@ You can create wallet addresses for your account holders using the Backend Admin
 
 One approach to issuing wallet addresses to your account holders is writing a one-time script to loop through your list of account holders and call the `CreateWalletAddress` GraphQL mutation along with the input parameters. The following is an example:
 
-<CodeBlock title="Example CreateWalletAddress Mutation">
+<CodeBlock title='Example CreateWalletAddress Mutation'>
 
 ```graphql
 // Query:
@@ -56,12 +56,11 @@ mutation CreateWalletAddress($input:CreateWalletAddressInput!) {
   ]
  }
 }
-
 ```
 
 </CodeBlock>
 
-<CodeBlock title="Example Successful Response">
+<CodeBlock title='Example Successful Response'>
 
 ```graphql
 {
@@ -83,7 +82,6 @@ mutation CreateWalletAddress($input:CreateWalletAddressInput!) {
      }
    }
 }
-
 ```
 
 </CodeBlock>
@@ -94,7 +92,7 @@ You SHOULD store at least the `walletAddress.id` in their internal database to b
 
 To use the Open Payments APIs, a wallet address must be associated with at least one private-public key pair to sign an API request. One or multiple public keys are linked to the wallet address so that third parties can verify request signatures. The key pair can be added using the `CreateWalletAddressKey` GraphQL mutation. If you create wallet addresses for your account holders via a one-time script, you must call this mutation for each new wallet address.
 
-<CodeBlock title="Example CreateWalletAddressKey Mutation">
+<CodeBlock title='Example CreateWalletAddressKey Mutation'>
 
 ```graphql
 // Query:
@@ -139,12 +137,11 @@ id
 },
 "walletAddressId":"695e7546-1803-4b45-96b6-6a53f4082018"
  }}
-
 ```
 
 </CodeBlock>
 
-<CodeBlock title="Example Successful Response">
+<CodeBlock title='Example Successful Response'>
 
 ```graphql
 {
@@ -169,8 +166,6 @@ id
    }
   }
 }
-
-
 ```
 
 </CodeBlock>

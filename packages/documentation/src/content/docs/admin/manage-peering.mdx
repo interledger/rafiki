@@ -36,7 +36,7 @@ To add a peer to your Rafiki instance call the `CreatePeer` mutation query and p
 | `http.outgoing.authtoken`  | The token that you will use to present to your peer and connect to and send packets to their Rafiki instance.               | Y        |
 | `initialLiquidity`         | Initial amount of liquidity to deposit for peer. Liquidity can also be deposited using the `DepositPeerLiquidity` mutation. | N        |
 
-<CodeBlock title="Example CreatePeer Mutation">
+<CodeBlock title='Example CreatePeer Mutation'>
 
 ```graphql
 // Query:
@@ -73,12 +73,11 @@ mutation CreatePeer($input: CreatePeerInput!) {
 	"initialLiquidity": <optionally, an intial amount of liquity to provision. Liquidity can also be deposited via the `DepositPeerLiquidity`>
   }
 }
-
 ```
 
 </CodeBlock>
 
-<CodeBlock title="Example Successful Response">
+<CodeBlock title='Example Successful Response'>
 
 ```graphql
 {
@@ -99,9 +98,6 @@ mutation CreatePeer($input: CreatePeerInput!) {
 	  }
   }
 }
-
-
-
 ```
 
 </CodeBlock>

@@ -32,7 +32,7 @@ Rafiki’s Backend Admin API implements a GraphQL interface. Data insertions and
 
 To add US dollars, for example, as an asset type to your Rafiki instance, call the `CreateAsset` mutation and pass the `input` parameters for the asset `code`, represented by its <LinkOut href="https://en.wikipedia.org/wiki/ISO_4217">ISO 4217 currency code</LinkOut> (USD), and scale variables as follows:
 
-<CodeBlock title="Example CreateAsset Mutation">
+<CodeBlock title='Example CreateAsset Mutation'>
 
 ```graphql
 // Query:
@@ -64,7 +64,7 @@ mutation CreateAsset($input: CreateAssetInput!) {
 
 </CodeBlock>
 
-<CodeBlock title="Example Successful Response">
+<CodeBlock title='Example Successful Response'>
 
 ```graphql
 {
@@ -81,8 +81,6 @@ mutation CreateAsset($input: CreateAssetInput!) {
 	  }
   }
 }
-
-
 ```
 
 </CodeBlock>
