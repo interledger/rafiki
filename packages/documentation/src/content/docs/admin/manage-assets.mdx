@@ -2,69 +2,55 @@
 title: Manage assets
 ---
 
-import { LinkOut } from '@interledger/docs-design-system'
-
-import { CodeBlock } from '@interledger/docs-design-system'
+import { Badge } from '@astrojs/starlight/components'
+import { Mermaid, CodeBlock, LinkOut } from '@interledger/docs-design-system'
 
 Assets in Rafiki can be added through the Backend Admin API or the Rafiki Admin application.
 
-## The `asset` type
+## Add an asset using the `createAsset` GraphQL mutation
 
-The `asset` type in Rafiki consists of a value, an asset code, and an asset scale.
-
-| **Property** | **Type** | **Description**                                                                                                      | **Example** |
-| ------------ | -------- | -------------------------------------------------------------------------------------------------------------------- | ----------- |
-| `value`      | BigInt   | Numerical amount                                                                                                     | 10000       |
-| `assetCode`  | String   | Should be an <LinkOut href="https://en.wikipedia.org/wiki/ISO_4217">ISO 4217 currency code</LinkOut> where available | “USD”       |
-| `assetScale` | Integer  | Difference in order of magnitude between the standard unit and a fractional unit                                     | 2           |
-
-To convert from an asset to a currency amount that is more human-readable, apply the following formula:
-
-$currencyAmount = \frac{value}{10^{assetScale}}$
-
-Using the example from the table above, our formula looks like this:
-
-$\frac{10000}{10^2} =100.00$ USD
-
-## Add an asset using the Backend Admin API
-
-Rafiki’s Backend Admin API implements a GraphQL interface. Data insertions and modifications in GraphQL can be specified explicitly via a mutation query. Each GraphQL request has two parts; a query and an object containing query variables.
-
-To add US dollars, for example, as an asset type to your Rafiki instance, call the `CreateAsset` mutation and pass the `input` parameters for the asset `code`, represented by its <LinkOut href="https://en.wikipedia.org/wiki/ISO_4217">ISO 4217 currency code</LinkOut> (USD), and scale variables as follows:
-
-<CodeBlock title='Example CreateAsset Mutation'>
+<CodeBlock title='Example createAsset Mutation'>
 
 ```graphql
-// Query:
-
 mutation CreateAsset($input: CreateAssetInput!) {
   createAsset(input: $input) {
-	code
-	success
-	message
-	asset {
-  		id
-  		code
-  		scale
-	  }
+    code
+    success
+    message
+    asset {
+      id
+      code
+      scale
+    }
   }
 }
-
-
-// Query Variables:
-
-{
-  "input": {
-	"code": "USD",
-	"scale": 2
-  }
-}
-
 ```
 
 </CodeBlock>
 
-<CodeBlock title='Example Successful Response'>
+### Example
+
+To add US dollars, for example, as an asset type to your Rafiki instance, call the `CreateAsset` mutation and pass the `input` parameters for the asset `code`, represented by its <LinkOut href="https://en.wikipedia.org/wiki/ISO_4217">ISO 4217 currency code</LinkOut> (USD), and `scale` variables as follows:
+
+<CodeBlock title='Example JSON request'>
+
+```json
+{
+  "input": {
+    "code": "USD",
+    "scale": 2
+  }
+}
+```
+
+</CodeBlock>
+
+| Variable | Description                                                                       |
+| -------- | --------------------------------------------------------------------------------- |
+| `code`   | The asset code, generally an ISO 4217 currency code where available.              |
+| `scale`  | Difference in order of magnitude between the standard unit and a fractional unit. |
+
+<CodeBlock title='Example JSON response'>
 
 ```graphql
 {
@@ -87,6 +73,4 @@ mutation CreateAsset($input: CreateAssetInput!) {
 
 ## Add an asset using the Rafiki Admin application
 
-Alternatively, assets can be added through the Rafiki Admin application, which Rafiki makes available through its `frontend` package. Ideally, this will be done using your [local Rafiki environment](/integration/deployment/playground/overview/#running-the-local-environment).
-
-See the [Rafiki Admin application user guide](/admin/admin-user-guide/#assets) for more information on adding assets.
+Alternatively, assets can be added through the [Rafiki Admin](/admin/admin-user-guide/#assets) application. Navigate to the main Assets page and then configure the asset code and scale.
