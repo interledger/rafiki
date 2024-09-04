@@ -219,22 +219,23 @@ async function createOutgoingPayment(
   deps: ServiceDependencies,
   options: CreateOutgoingPaymentOptions
 ): Promise<OutgoingPayment | OutgoingPaymentError> {
-  deps.telemetry &&
-    deps.telemetry.startTimer('outgoing_payment_service_create_time_ms', {
+  const stopTimerOP = deps.telemetry?.startTimer(
+    'outgoing_payment_service_create_time_ms',
+    {
       description: 'Time to create an outgoing payment'
-    })
+    }
+  )
 
   const { walletAddressId } = options
   let quoteId: string
 
   if (isCreateFromIncomingPayment(options)) {
-    deps.telemetry &&
-      deps.telemetry.startTimer(
-        'outgoing_payment_service_create_quote_time_ms',
-        {
-          description: 'Time to create a quote in outgoing payment'
-        }
-      )
+    const stopTimerQuote = deps.telemetry?.startTimer(
+      'outgoing_payment_service_create_quote_time_ms',
+      {
+        description: 'Time to create a quote in outgoing payment'
+      }
+    )
 
     const { debitAmount, incomingPayment } = options
     const quoteOrError = await deps.quoteService.create({
@@ -244,8 +245,7 @@ async function createOutgoingPayment(
       walletAddressId
     })
 
-    deps.telemetry &&
-      deps.telemetry.stopTimer('outgoing_payment_service_create_quote_time_ms')
+    stopTimerQuote && stopTimerQuote()
 
     if (isQuoteError(quoteOrError)) {
       return quoteErrorToOutgoingPaymentError[quoteOrError]
@@ -258,55 +258,45 @@ async function createOutgoingPayment(
   const grantId = options.grant?.id
   try {
     return await OutgoingPayment.transaction(deps.knex, async (trx) => {
-      deps.telemetry &&
-        deps.telemetry.startTimer(
-          'outgoing_payment_service_getwalletaddress_time_ms',
-          {
-            description: 'Time to get wallet address in outgoing payment'
-          }
-        )
+      const stopTimerWA = deps.telemetry?.startTimer(
+        'outgoing_payment_service_getwalletaddress_time_ms',
+        {
+          description: 'Time to get wallet address in outgoing payment'
+        }
+      )
 
       const walletAddress = await deps.walletAddressService.get(walletAddressId)
 
       if (!walletAddress) {
         throw OutgoingPaymentError.UnknownWalletAddress
       }
-      deps.telemetry &&
-        deps.telemetry.stopTimer(
-          'outgoing_payment_service_getwalletaddress_time_ms'
-        )
+      stopTimerWA && stopTimerWA()
 
       if (!walletAddress.isActive) {
         throw OutgoingPaymentError.InactiveWalletAddress
       }
 
       if (grantId) {
-        deps.telemetry &&
-          deps.telemetry.startTimer(
-            'outgoing_payment_service_insertgrant_time_ms',
-            {
-              description: 'Time to insert grant in outgoing payment'
-            }
-          )
-
+        const stopTimerGrant = deps.telemetry?.startTimer(
+          'outgoing_payment_service_insertgrant_time_ms',
+          {
+            description: 'Time to insert grant in outgoing payment'
+          }
+        )
         await OutgoingPaymentGrant.query(trx)
           .insert({
             id: grantId
           })
           .onConflict('id')
           .ignore()
-        deps.telemetry &&
-          deps.telemetry.stopTimer(
-            'outgoing_payment_service_insertgrant_time_ms'
-          )
+        stopTimerGrant && stopTimerGrant()
       }
-      deps.telemetry &&
-        deps.telemetry.startTimer(
-          'outgoing_payment_service_insertpayment_time_ms',
-          {
-            description: 'Time to insert payment in outgoing payment'
-          }
-        )
+      const stopTimerInsertPayment = deps.telemetry?.startTimer(
+        'outgoing_payment_service_insertpayment_time_ms',
+        {
+          description: 'Time to insert payment in outgoing payment'
+        }
+      )
       const payment = await OutgoingPayment.query(trx).insertAndFetch({
         id: quoteId,
         walletAddressId: walletAddressId,
@@ -319,10 +309,7 @@ async function createOutgoingPayment(
       await deps.assetService.setOn(payment.quote)
       await deps.walletAddressService.setOn(payment)
 
-      deps.telemetry &&
-        deps.telemetry.stopTimer(
-          'outgoing_payment_service_insertpayment_time_ms'
-        )
+      stopTimerInsertPayment && stopTimerInsertPayment()
 
       if (
         payment.walletAddressId !== payment.quote.walletAddressId ||
@@ -332,13 +319,12 @@ async function createOutgoingPayment(
       }
 
       if (options.grant) {
-        deps.telemetry &&
-          deps.telemetry.startTimer(
-            'outgoing_payment_service_validate_grant_time_ms',
-            {
-              description: 'Time to validate a grant'
-            }
-          )
+        const stopTimerValidateGrant = deps.telemetry?.startTimer(
+          'outgoing_payment_service_validate_grant_time_ms',
+          {
+            description: 'Time to validate a grant'
+          }
+        )
 
         const isValid = await validateGrantAndAddSpentAmountsToPayment(
           deps,
@@ -349,74 +335,77 @@ async function createOutgoingPayment(
           options.grantLockTimeoutMs
         )
 
-        deps.telemetry &&
-          deps.telemetry.stopTimer(
-            'outgoing_payment_service_validate_grant_time_ms'
-          )
+        stopTimerValidateGrant && stopTimerValidateGrant()
         if (!isValid) {
           throw OutgoingPaymentError.InsufficientGrant
         }
       }
 
-      deps.telemetry &&
-        deps.telemetry.startTimer(
-          'outgoing_payment_service_getreceiver_time_ms',
-          {
-            description: 'Time to retrieve receiver in outgoing payment'
-          }
-        )
+      const stopTimerReceiver = deps.telemetry?.startTimer(
+        'outgoing_payment_service_getreceiver_time_ms',
+        {
+          description: 'Time to retrieve receiver in outgoing payment'
+        }
+      )
 
       const receiver = await deps.receiverService.get(payment.receiver)
-      deps.telemetry &&
-        deps.telemetry.stopTimer('outgoing_payment_service_getreceiver_time_ms')
+
+      stopTimerReceiver && stopTimerReceiver()
+
       if (!receiver) {
         throw OutgoingPaymentError.InvalidQuote
       }
 
-      deps.telemetry &&
-        deps.telemetry.startTimer('outgoing_payment_service_getpeer_time_ms', {
+      const stopTimerPeer = deps.telemetry?.startTimer(
+        'outgoing_payment_service_getpeer_time_ms',
+        {
           description: 'Time to retrieve peer in outgoing payment'
-        })
+        }
+      )
       const peer = await deps.peerService.getByDestinationAddress(
         receiver.ilpAddress
       )
-      deps.telemetry &&
-        deps.telemetry.stopTimer('outgoing_payment_service_getpeer_time_ms')
+      stopTimerPeer && stopTimerPeer()
 
-      deps.telemetry &&
-        deps.telemetry.startTimer(
-          'outgoing_payment_service_patchpeer_time_ms',
-          {
-            description: 'Time to patch peer in outgoing payment'
-          }
-        )
+      const stopTimerPeerUpdate = deps.telemetry?.startTimer(
+        'outgoing_payment_service_patchpeer_time_ms',
+        {
+          description: 'Time to patch peer in outgoing payment'
+        }
+      )
       if (peer) await payment.$query(trx).patch({ peerId: peer.id })
-      deps.telemetry &&
-        deps.telemetry.stopTimer('outgoing_payment_service_patchpeer_time_ms')
+      stopTimerPeerUpdate && stopTimerPeerUpdate()
 
-      deps.telemetry &&
-        deps.telemetry.startTimer(
-          'outgoing_payment_service_webhook_event_time_ms',
-          {
-            description: 'Time to add outgoing payment webhook event'
-          }
-        )
+      const stopTimerWebhook = deps.telemetry?.startTimer(
+        'outgoing_payment_service_webhook_event_time_ms',
+        {
+          description: 'Time to add outgoing payment webhook event'
+        }
+      )
       await sendWebhookEvent(
         deps,
         payment,
         OutgoingPaymentEventType.PaymentCreated,
         trx
       )
-      deps.telemetry &&
-        deps.telemetry.stopTimer(
-          'outgoing_payment_service_webhook_event_time_ms'
-        )
+      stopTimerWebhook && stopTimerWebhook()
 
-      deps.telemetry &&
-        deps.telemetry.startTimer('outgoing_payment_service_add_sent_time_ms', {
+      const stopTimerAddAmount = deps.telemetry?.startTimer(
+        'outgoing_payment_service_add_sent_time_ms',
+        {
           description: 'Time to add sent amount to outgoing payment'
-        })
-      return await addSentAmount(deps, payment, BigInt(0))
+        }
+      )
+
+      const paymentWithSentAmount = await addSentAmount(
+        deps,
+        payment,
+        BigInt(0)
+      )
+
+      stopTimerAddAmount && stopTimerAddAmount()
+
+      return paymentWithSentAmount
     })
   } catch (err) {
     if (err instanceof UniqueViolationError) {
@@ -441,8 +430,7 @@ async function createOutgoingPayment(
     }
     throw err
   } finally {
-    deps.telemetry &&
-      deps.telemetry.stopTimer('outgoing_payment_service_create_time_ms')
+    stopTimerOP && stopTimerOP()
   }
 }
 
@@ -619,7 +607,7 @@ async function fundPayment(
   deps: ServiceDependencies,
   { id, amount, transferId }: FundOutgoingPaymentOptions
 ): Promise<OutgoingPayment | FundingError> {
-  const stopTimer = deps.telemetry?.startTimer_('fundPayment', {
+  const stopTimer = deps.telemetry?.startTimer('fundPayment', {
     callName: 'fundPayment'
   })
   const outgoingPaymentOrError = deps.knex.transaction(async (trx) => {
@@ -631,15 +619,22 @@ async function fundPayment(
       payment = await OutgoingPayment.query(trx).findById(id)
       await deps.cacheDataStore.set(id, payment)
     }
-    if (!payment) return FundingError.UnknownPayment
+    if (!payment) {
+      stopTimer && stopTimer()
+      return FundingError.UnknownPayment
+    }
 
     await deps.quoteService.setOn(payment)
     await deps.assetService.setOn(payment.quote)
 
     if (payment.state !== OutgoingPaymentState.Funding) {
+      stopTimer && stopTimer()
       return FundingError.WrongState
     }
-    if (amount !== payment.debitAmount.value) return FundingError.InvalidAmount
+    if (amount !== payment.debitAmount.value) {
+      stopTimer && stopTimer()
+      return FundingError.InvalidAmount
+    }
 
     // Create the outgoing payment liquidity account before trying to transfer funds to it.
     try {
@@ -666,10 +661,13 @@ async function fundPayment(
       amount
     })
     if (error) {
+      stopTimer && stopTimer()
       return error
     }
     await payment.$query(trx).patch({ state: OutgoingPaymentState.Sending })
-    return await addSentAmount(deps, payment)
+    const paymentWithSentAmount = await addSentAmount(deps, payment)
+    stopTimer && stopTimer()
+    return paymentWithSentAmount
   })
   stopTimer && stopTimer()
   return outgoingPaymentOrError

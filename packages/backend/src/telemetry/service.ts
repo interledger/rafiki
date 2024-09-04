@@ -30,9 +30,7 @@ export interface TelemetryService {
     value: number,
     attributes?: Record<string, unknown>
   ): void
-  startTimer_(name: string, attributes?: Record<string, unknown>): () => void
-  startTimer(name: string, attributes?: Record<string, unknown>): void
-  stopTimer(name: string): void
+  startTimer(name: string, attributes?: Record<string, unknown>): () => void
 }
 
 interface TelemetryServiceDependencies extends BaseService {
@@ -194,8 +192,7 @@ class TelemetryServiceImpl implements TelemetryService {
     })
   }
 
-  // TODO: replace existing startTimer
-  public startTimer_(
+  public startTimer(
     name: string,
     attributes: Record<string, unknown> = {}
   ): () => void {
@@ -203,18 +200,6 @@ class TelemetryServiceImpl implements TelemetryService {
     return () => {
       this.recordHistogram(name, Date.now() - start, attributes)
     }
-  }
-
-  public startTimer(name: string, attributes: Record<string, unknown> = {}) {
-    this.timers.set(name, { start: Date.now(), attributes })
-  }
-  public stopTimer(name: string) {
-    const timer = this.timers.get(name)
-    if (!timer) {
-      return
-    }
-    const end = Date.now()
-    this.recordHistogram(name, end - timer.start, timer.attributes)
   }
 
   private async convertAmount(

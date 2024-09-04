@@ -139,10 +139,9 @@ function compose(
     // last called middleware
     let index = -1
 
-    telemetry &&
-      telemetry.startTimer('connector_middleware_stack', {
-        callName: 'connector_middleware_stack'
-      })
+    const stopTimer = telemetry?.startTimer('connector_middleware_stack', {
+      callName: 'connector_middleware_stack'
+    })
 
     async function dispatch(i: number): Promise<void> {
       if (i <= index)
@@ -152,12 +151,12 @@ function compose(
       if (i === middlewares.length) m.fn = next
       if (!m.fn) return Promise.resolve()
       try {
-        telemetry &&
-          telemetry.startTimer('connector_middleware', {
-            callName: m.name
-          })
+        const stopTimerMiddleware = telemetry?.startTimer(
+          'connector_middleware',
+          { callName: m.name }
+        )
         const p = Promise.resolve(m.fn(ctx, dispatch.bind(null, i + 1)))
-        telemetry && telemetry.stopTimer('connector_middleware')
+        stopTimerMiddleware && stopTimerMiddleware()
         return p
       } catch (err) {
         return Promise.reject(err)
@@ -165,7 +164,7 @@ function compose(
     }
 
     return dispatch(0).finally(() => {
-      telemetry && telemetry.stopTimer('connector_middleware_stack')
+      stopTimer && stopTimer()
     })
   }
 }

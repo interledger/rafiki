@@ -441,10 +441,9 @@ export const depositOutgoingPaymentLiquidity: MutationResolvers<ApolloContext>['
     ctx
   ): Promise<ResolversTypes['LiquidityMutationResponse']> => {
     const telemetry = await ctx.container.use('telemetry')
-    const stopTimer = telemetry?.startTimer_(
-      'depositOutgoingPaymentLiquidity',
-      { callName: 'depositOutgoingPaymentLiquidity' }
-    )
+    const stopTimer = telemetry?.startTimer('depositOutgoingPaymentLiquidity', {
+      callName: 'depositOutgoingPaymentLiquidity'
+    })
     const { outgoingPaymentId } = args.input
     const webhookService = await ctx.container.use('webhookService')
     const event = await webhookService.getLatestByResourceId({
@@ -461,6 +460,7 @@ export const depositOutgoingPaymentLiquidity: MutationResolvers<ApolloContext>['
     }
 
     if (!event.data.debitAmount) {
+      stopTimer && stopTimer()
       throw new Error('No debit amount')
     }
     const outgoingPaymentService = await ctx.container.use(

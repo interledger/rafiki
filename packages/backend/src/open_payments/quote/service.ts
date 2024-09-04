@@ -95,23 +95,22 @@ async function createQuote(
   deps: ServiceDependencies,
   options: CreateQuoteOptions
 ): Promise<Quote | QuoteError> {
-  deps.telemetry &&
-    deps.telemetry.startTimer('quote_service_create_time_ms', {
-      description: 'Time to create a quote'
-    })
+  const stopTimer = deps.telemetry?.startTimer('quote_service_create_time_ms', {
+    description: 'Time to create a quote'
+  })
   if (options.debitAmount && options.receiveAmount) {
-    deps.telemetry && deps.telemetry.stopTimer('quote_service_create_time_ms')
+    stopTimer && stopTimer()
     return QuoteError.InvalidAmount
   }
   const walletAddress = await deps.walletAddressService.get(
     options.walletAddressId
   )
   if (!walletAddress) {
-    deps.telemetry && deps.telemetry.stopTimer('quote_service_create_time_ms')
+    stopTimer && stopTimer()
     return QuoteError.UnknownWalletAddress
   }
   if (!walletAddress.isActive) {
-    deps.telemetry && deps.telemetry.stopTimer('quote_service_create_time_ms')
+    stopTimer && stopTimer()
     return QuoteError.InactiveWalletAddress
   }
   if (options.debitAmount) {
@@ -120,55 +119,54 @@ async function createQuote(
       options.debitAmount.assetCode !== walletAddress.asset.code ||
       options.debitAmount.assetScale !== walletAddress.asset.scale
     ) {
-      deps.telemetry && deps.telemetry.stopTimer('quote_service_create_time_ms')
+      stopTimer && stopTimer()
       return QuoteError.InvalidAmount
     }
   }
   if (options.receiveAmount) {
     if (options.receiveAmount.value <= BigInt(0)) {
-      deps.telemetry && deps.telemetry.stopTimer('quote_service_create_time_ms')
+      stopTimer && stopTimer()
       return QuoteError.InvalidAmount
     }
   }
 
   try {
-    deps.telemetry &&
-      deps.telemetry.startTimer(
-        'quote_service_create_resolve_receiver_time_ms',
-        {
-          description: 'Time to resolve receiver'
-        }
-      )
+    const stopTimerReceiver = deps.telemetry?.startTimer(
+      'quote_service_create_resolve_receiver_time_ms',
+      {
+        description: 'Time to resolve receiver'
+      }
+    )
     const receiver = await resolveReceiver(deps, options)
+    stopTimerReceiver && stopTimerReceiver()
 
-    deps.telemetry &&
-      deps.telemetry.stopTimer('quote_service_create_resolve_receiver_time_ms')
-
-    deps.telemetry &&
-      deps.telemetry.startTimer('quote_service_create_get_quote_time_ms', {
+    const stopTimerQuote = deps.telemetry?.startTimer(
+      'quote_service_create_get_quote_time_ms',
+      {
         description: 'Time to getQuote'
-      })
+      }
+    )
     const quote = await deps.paymentMethodHandlerService.getQuote('ILP', {
       walletAddress,
       receiver,
       receiveAmount: options.receiveAmount,
       debitAmount: options.debitAmount
     })
-    deps.telemetry &&
-      deps.telemetry.stopTimer('quote_service_create_get_quote_time_ms')
+    stopTimerQuote && stopTimerQuote()
 
     const maxPacketAmount = quote.additionalFields.maxPacketAmount as bigint
 
-    deps.telemetry &&
-      deps.telemetry.startTimer('quote_service_create_get_latest_fee_time_ms', {
+    const stopTimerFee = deps.telemetry?.startTimer(
+      'quote_service_create_get_latest_fee_time_ms',
+      {
         description: 'Time to getLatestFee'
-      })
+      }
+    )
     const sendingFee = await deps.feeService.getLatestFee(
       walletAddress.assetId,
       FeeType.Sending
     )
-    deps.telemetry &&
-      deps.telemetry.stopTimer('quote_service_create_get_latest_fee_time_ms')
+    stopTimerFee && stopTimerFee()
 
     const q = await Quote.transaction(deps.knex, async (trx) => {
       const createdQuote = await Quote.query(trx)
@@ -205,13 +203,13 @@ async function createQuote(
       )
     })
 
-    deps.telemetry && deps.telemetry.stopTimer('quote_service_create_time_ms')
+    stopTimer && stopTimer()
 
     await deps.cacheDataStore.set(q.id, q)
     return q
   } catch (err) {
     if (isQuoteError(err)) {
-      deps.telemetry && deps.telemetry.stopTimer('quote_service_create_time_ms')
+      stopTimer && stopTimer()
       return err
     }
 
@@ -219,12 +217,12 @@ async function createQuote(
       err instanceof PaymentMethodHandlerError &&
       err.code === PaymentMethodHandlerErrorCode.QuoteNonPositiveReceiveAmount
     ) {
-      deps.telemetry && deps.telemetry.stopTimer('quote_service_create_time_ms')
+      stopTimer && stopTimer()
       return QuoteError.NonPositiveReceiveAmount
     }
 
     deps.logger.error({ err }, 'error creating a quote')
-    deps.telemetry && deps.telemetry.stopTimer('quote_service_create_time_ms')
+    stopTimer && stopTimer()
     throw err
   }
 }

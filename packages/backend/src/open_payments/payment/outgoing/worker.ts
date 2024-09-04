@@ -21,7 +21,7 @@ export async function processPendingPayment(
   return tracer.startActiveSpan(
     'outgoingPaymentLifecycle',
     async (span: Span) => {
-      const stopTimer = deps_.telemetry?.startTimer_('processPendingPayment', {
+      const stopTimer = deps_.telemetry?.startTimer('processPendingPayment', {
         callName: 'processPendingPayment'
       })
       const paymentId = await deps_.knex.transaction(async (trx) => {
@@ -53,10 +53,9 @@ async function getPendingPayment(
   trx: Knex.Transaction,
   deps: ServiceDependencies
 ): Promise<OutgoingPayment | undefined> {
-  deps.telemetry &&
-    deps.telemetry.startTimer('getPendingPayment', {
-      callName: 'getPendingPayment'
-    })
+  const stopTimer = deps.telemetry?.startTimer('getPendingPayment', {
+    callName: 'getPendingPayment'
+  })
   const now = new Date(Date.now()).toISOString()
   const payments = await OutgoingPayment.query(trx)
     .limit(1)
@@ -79,7 +78,7 @@ async function getPendingPayment(
     await deps.walletAddressService.setOn(payments[0])
   }
 
-  deps.telemetry && deps.telemetry.stopTimer('getPendingPayment')
+  stopTimer && stopTimer()
   return payments[0]
 }
 
@@ -92,16 +91,16 @@ async function handlePaymentLifecycle(
     return
   }
 
+  const stopTimer = deps.telemetry?.startTimer('handleSending', {
+    callName: 'handleSending'
+  })
+
   try {
-    deps.telemetry &&
-      deps.telemetry.startTimer('handleSending', {
-        callName: 'handleSending'
-      })
     await lifecycle.handleSending(deps, payment)
-    deps.telemetry && deps.telemetry.stopTimer('handleSending')
+    stopTimer && stopTimer()
   } catch (error) {
     await onLifecycleError(deps, payment, error as Error | PaymentError)
-    deps.telemetry && deps.telemetry.stopTimer('handleSending')
+    stopTimer && stopTimer()
   }
 }
 

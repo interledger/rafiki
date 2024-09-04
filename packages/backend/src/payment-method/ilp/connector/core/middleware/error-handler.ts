@@ -11,21 +11,18 @@ export function createIncomingErrorHandlerMiddleware(
   serverAddress: string
 ): ILPMiddleware {
   return async (ctx: ILPContext, next: () => Promise<void>): Promise<void> => {
+    let stopTimer
     try {
       await next()
-      ctx.services.telemetry &&
-        ctx.services.telemetry.startTimer(
-          'createIncomingErrorHandlerMiddleware',
-          {
-            callName: 'createIncomingErrorHandlerMiddleware'
-          }
-        )
+      stopTimer = ctx.services.telemetry?.startTimer(
+        'createIncomingErrorHandlerMiddleware',
+        {
+          callName: 'createIncomingErrorHandlerMiddleware'
+        }
+      )
       if (!ctx.response.rawReply) {
         ctx.services.logger.error('handler did not return a valid value.')
-        ctx.services.telemetry &&
-          ctx.services.telemetry.stopTimer(
-            'createIncomingErrorHandlerMiddleware'
-          )
+        stopTimer && stopTimer()
         throw new Error('handler did not return a value.')
       }
     } catch (e) {
@@ -48,8 +45,7 @@ export function createIncomingErrorHandlerMiddleware(
           name: ''
         })
       }
-      ctx.services.telemetry &&
-        ctx.services.telemetry.stopTimer('createIncomingErrorHandlerMiddleware')
+      stopTimer && stopTimer()
     }
   }
 }

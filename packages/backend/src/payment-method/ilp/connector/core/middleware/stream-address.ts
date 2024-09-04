@@ -5,14 +5,13 @@ export function createStreamAddressMiddleware(): ILPMiddleware {
     { request, services: { streamServer, telemetry }, state }: ILPContext,
     next: () => Promise<void>
   ): Promise<void> => {
-    telemetry &&
-      telemetry.startTimer('createStreamAddressMiddleware', {
-        callName: 'createStreamAddressMiddleware'
-      })
+    const stopTimer = telemetry?.startTimer('createStreamAddressMiddleware', {
+      callName: 'createStreamAddressMiddleware'
+    })
     const { destination } = request.prepare
     // To preserve sender privacy, the accountId wasn't included in the original destination address.
     state.streamDestination = streamServer.decodePaymentTag(destination)
-    telemetry && telemetry.stopTimer('createStreamAddressMiddleware')
+    stopTimer && stopTimer()
     await next()
   }
 }

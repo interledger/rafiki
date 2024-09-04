@@ -149,26 +149,19 @@ export async function getAccountTotalSent(
   deps: ServiceDependencies,
   accountRef: string
 ): Promise<bigint | undefined> {
-  deps.telemetry &&
-    deps.telemetry.startTimer('psql_getAccountTotalSent', {
-      callName: 'psql_getAccountTotalSent'
-    })
+  const stopTimer = deps.telemetry?.startTimer('psql_getAccountTotalSent', {
+    callName: 'psql_getAccountTotalSent'
+  })
   const account = await getLiquidityAccount(deps, accountRef)
 
   if (!account) {
-    deps.telemetry &&
-      deps.telemetry.startTimer('psql_getAccountTotalSent', {
-        callName: 'psql_getAccountTotalSent'
-      })
+    stopTimer && stopTimer()
     return
   }
 
   const totalsSent = (await getAccountBalances(deps, account)).debitsPosted
 
-  deps.telemetry &&
-    deps.telemetry.startTimer('psql_getAccountTotalSent', {
-      callName: 'psql_getAccountTotalSent'
-    })
+  stopTimer && stopTimer()
 
   return totalsSent
 }
