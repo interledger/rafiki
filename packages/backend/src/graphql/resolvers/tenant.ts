@@ -16,7 +16,7 @@ import {
 import { Tenant } from '../../tenant/model'
 import { Pagination, SortOrder } from '../../shared/baseModel'
 import { getPageInfo } from '../../shared/pagination'
-import { EndpointType, TenantEndpoint } from '../../tenant/endpoints/model'
+import { EndpointType } from '../../tenant/endpoints/model'
 import { tenantEndpointToGraphql } from './tenant_endpoints'
 
 const mapTenantEndpointTypeToModelEndpointType = {
@@ -77,6 +77,7 @@ export const createTenant: MutationResolvers<ApolloContext>['createTenant'] =
     const tenantService = await ctx.container.use('tenantService')
 
     const tenantOrError = await tenantService.create({
+      name: args.input.name,
       idpConsentEndpoint: args.input.idpConsentEndpoint,
       idpSecret: args.input.idpSecret,
       endpoints: args.input.endpoints.map((endpoint) => {
@@ -103,6 +104,7 @@ export const createTenant: MutationResolvers<ApolloContext>['createTenant'] =
 export function tenantToGraphql(tenant: Tenant): SchemaTenant {
   return {
     id: tenant.id,
+    name: tenant.name,
     kratosIdentityId: tenant.kratosIdentityId,
     //we should probably paginate this, but for now, that we only have like two endpoints it should be ok
     endpoints: tenant.endpoints.map(tenantEndpointToGraphql),

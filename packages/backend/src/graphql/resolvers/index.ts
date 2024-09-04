@@ -68,7 +68,6 @@ import { getCombinedPayments } from './combined_payments'
 import { createOrUpdatePeerByUrl } from './auto-peering'
 import { getAccountingTransfers } from './accounting_transfer'
 import { createTenant, getTenant, getTenants } from './tenant'
-import { getTenantEndpoints } from './tenant_endpoints'
 
 export const resolvers: Resolvers = {
   UInt8: GraphQLUInt8,

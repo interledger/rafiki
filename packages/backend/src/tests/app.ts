@@ -1,19 +1,18 @@
 import Axios from 'axios'
 import { Knex } from 'knex'
-import fetch from 'cross-fetch'
 import { IocContract } from '@adonisjs/fold'
 import {
   ApolloClient,
   ApolloLink,
+  createHttpLink,
   InMemoryCache,
-  NormalizedCacheObject,
-  createHttpLink
+  NormalizedCacheObject
 } from '@apollo/client'
-import { setContext } from '@apollo/client/link/context'
 import { start, gracefulShutdown } from '..'
-import { onError } from '@apollo/client/link/error'
 
 import { App, AppServices } from '../app'
+import { setContext } from '@apollo/client/link/context'
+import { onError } from '@apollo/client/link/error'
 
 export const testAccessToken = 'test-app-access'
 
@@ -23,6 +22,7 @@ export interface TestContainer {
   app: App
   knex: Knex
   apolloClient: ApolloClient<NormalizedCacheObject>
+  authApolloClient: ApolloClient<NormalizedCacheObject>
   connectionUrl: string
   shutdown: () => Promise<void>
   container: IocContract<AppServices>
@@ -38,7 +38,6 @@ export const createTestApp = async (
   config.autoPeeringServerPort = 0
   config.openPaymentsUrl = 'https://op.example'
   config.walletAddressUrl = 'https://wallet.example/.well-known/pay'
-  const logger = await container.use('logger')
 
   const app = new App(container)
   await start(container, app)
@@ -57,6 +56,7 @@ export const createTestApp = async (
     .persist()
 
   const knex = await container.use('knex')
+  const logger = await container.use('logger')
 
   const httpLink = createHttpLink({
     uri: `http://localhost:${app.getAdminPort()}/graphql`,
@@ -108,6 +108,7 @@ export const createTestApp = async (
     openPaymentsPort: app.getOpenPaymentsPort(),
     knex,
     apolloClient: client,
+    authApolloClient: await container.use('apolloClient'),
     connectionUrl: config.databaseUrl,
     shutdown: async () => {
       nock.cleanAll()

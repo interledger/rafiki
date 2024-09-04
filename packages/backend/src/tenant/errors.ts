@@ -2,6 +2,7 @@ import { GraphQLErrorCode } from '../graphql/errors'
 
 export enum TenantError {
   UnknownTenant = 'UnknownTenant',
+  UnableToCreateEndpoint = 'UnableToCreateEndpoint',
   UnknownError = 'UnknownError'
 }
 
@@ -13,12 +14,14 @@ export const errorToCode: {
   [key in TenantError]: GraphQLErrorCode
 } = {
   [TenantError.UnknownTenant]: GraphQLErrorCode.NotFound,
-  [TenantError.UnknownError]: GraphQLErrorCode.InternalServerError
+  [TenantError.UnknownError]: GraphQLErrorCode.InternalServerError,
+  [TenantError.UnableToCreateEndpoint]: GraphQLErrorCode.BadUserInput
 }
 
 export const errorToMessage: {
   [key in TenantError]: string
 } = {
   [TenantError.UnknownError]: 'Unknown error',
-  [TenantError.UnknownTenant]: 'Unknown tenant'
+  [TenantError.UnknownTenant]: 'Unknown tenant',
+  [TenantError.UnableToCreateEndpoint]: 'Unable to create endpoint'
 }

@@ -11,11 +11,11 @@ import {
 import { v4 as uuidv4 } from 'uuid'
 import { Pagination, SortOrder } from '../shared/baseModel'
 import { EndpointOptions, TenantEndpointService } from './endpoints/service'
-import { TenantEndpoint } from './endpoints/model'
 
 export interface CreateTenantOptions {
-  idpConsentEndpoint: string
+  name: string
   idpSecret: string
+  idpConsentEndpoint: string
   endpoints: EndpointOptions[]
 }
 
@@ -59,6 +59,7 @@ async function getTenantsPage(
   sortOrder?: SortOrder
 ): Promise<Tenant[]> {
   return await Tenant.query(deps.knex)
+    .withGraphFetched('endpoints')
     .getPage(pagination, sortOrder)
 }
 
@@ -66,9 +67,7 @@ async function getTenant(
   deps: ServiceDependencies,
   id: string
 ): Promise<Tenant | undefined> {
-  return Tenant.query(deps.knex)
-    .withGraphFetched('endpoints')
-    .findById(id)
+  return Tenant.query(deps.knex).withGraphFetched('endpoints').findById(id)
 }
 
 async function createTenant(
@@ -85,16 +84,13 @@ async function createTenant(
   return deps.knex.transaction(async (trx) => {
     let tenant: Tenant
     try {
-      // create tenant on backend
-      tenant = await Tenant.query(trx).insert({
-        kratosIdentityId: uuidv4()
-      })
+      const tenantData = {
+        name: options.name,
+        kratosIdentityId: uuidv4(),
+        endpoints: options.endpoints
+      }
 
-      await deps.tenantEndpointService.create({
-        endpoints: options.endpoints,
-        tenantId: tenant.id,
-        trx
-      })
+      tenant = await Tenant.query(trx).insertGraphAndFetch(tenantData)
 
       // call auth admin api
       const mutation = gql`
