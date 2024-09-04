@@ -1128,7 +1128,7 @@
             "uid": "${PrometheusDS}"
           },
           "editorMode": "code",
-          "expr": "rate(fundPayment_sum[$__rate_interval])/rate(fundPayment_sum[$__rate_interval])",
+          "expr": "rate(fundPayment_sum[$__rate_interval])/rate(fundPayment_count[$__rate_interval])",
           "hide": false,
           "instant": false,
           "legendFormat": "{{callName}}",
