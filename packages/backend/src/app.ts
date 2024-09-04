@@ -86,7 +86,7 @@ import { TelemetryService } from './telemetry/service'
 import { ApolloArmor } from '@escape.tech/graphql-armor'
 import { openPaymentsServerErrorMiddleware } from './open_payments/route-errors'
 import {
-  getTenantIdFromRequestHeaders,
+  // getTenantIdFromRequestHeaders,
   verifyApiSignature
 } from './shared/utils'
 import { WalletAddress } from './open_payments/wallet_address/model'
