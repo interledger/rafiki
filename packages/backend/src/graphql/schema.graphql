@@ -1095,6 +1095,7 @@ input CreateReceiverInput {
 
 input UpdateIncomingPaymentInput {
   id: ID!
+  "The new metadata object to save for the incoming payment. It will overwrite any existing metadata."
   metadata: JSONObject!
 }
 
