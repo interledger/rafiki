@@ -15,7 +15,7 @@ import {
   Disclosure
 } from '@interledger/docs-design-system'
 
-The main communication channel between you and your Rafiki instance is composed of the [Backend Admin API](/apis/admin-api-overview) and a set of webhook events.
+The main communication channel between you and your Rafiki instance is composed of the [Backend Admin API](/apis/graphql/admin-api-overview) and a set of webhook events.
 
 Most events require you to interact with Rafiki to provide wallet address information or manage (deposit or withdraw) liquidity. This page describes how you should handle each webhook event.
 
@@ -356,16 +356,16 @@ The `outgoing_payment.failed` event indicates that an outgoing payment has eithe
 
 ### Wallet addresses
 
-| Event type                                                            | Description                                                           |
-| --------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| Event type                                                            | Description                                                        |
+| --------------------------------------------------------------------- | ------------------------------------------------------------------ |
 | [`wallet_address.not_found`](#wallet-address-not-found)               | The requested wallet address was not found on this Rafiki instance |
-| [`wallet_address.web_monetization`](#wallet-address-web-monetization) | Web Monetization payments have been received via STREAM               |
+| [`wallet_address.web_monetization`](#wallet-address-web-monetization) | Web Monetization payments have been received via STREAM            |
 
 #### Wallet address not found
 
 <Disclosure toggleText="Expand for event sequence" client:load>
 
-  The wallet address, `https://wallet.example.com/carla_garcia` was requested but does not exist.
+The wallet address, `https://wallet.example.com/carla_garcia` was requested but does not exist.
 
   <Mermaid
     graph={`sequenceDiagram
@@ -374,6 +374,7 @@ The `outgoing_payment.failed` event indicates that an outgoing payment has eithe
 
       R->>ASE: Fires wallet_address.not_found event to webhook endpoint,<br/>wallet address: https://wallet.example.com/carla_garcia
       ASE->>R: Backend Admin API call: CreateWalletAddress,<br/>url: https://wallet.example.com/carla_garcia,<br/>public name: Carla Eva Garcia
+
 `}
 />
 
@@ -383,15 +384,15 @@ The `wallet_address.not_found` event indicates that a wallet address was request
 
 When you receive this event, look up the associated account in your system and create a wallet address for the account. The initial wallet address request will succeed if you create it within your configured `WALLET_ADDRESS_LOOKUP_TIMEOUT_MS` time frame.
 
-| Environment variable | Type | Description |
-| -------------------- | ---- | ----------- |
-| `WALLET_ADDRESS_LOOKUP_TIMEOUT_MS` | `backend` | The time in milliseconds that you have to create a missing wallet address before the initial request times out | 
+| Environment variable               | Type      | Description                                                                                                    |
+| ---------------------------------- | --------- | -------------------------------------------------------------------------------------------------------------- |
+| `WALLET_ADDRESS_LOOKUP_TIMEOUT_MS` | `backend` | The time in milliseconds that you have to create a missing wallet address before the initial request times out |
 
 #### Wallet address Web Monetization
 
 <Disclosure toggleText="Expand for event sequence" client:load>
 
-  A wallet address received a Web Monetization payment of \$0.33
+A wallet address received a Web Monetization payment of \$0.33
 
   <Mermaid
     graph={`sequenceDiagram
@@ -401,6 +402,7 @@ When you receive this event, look up the associated account in your system and c
       R->>ASE: Fires wallet_address.web_monetization event to webhook endpoint,<br/>receivedAmount: $0.33
       ASE->>R: Backend Admin API call: CreateWalletAddressWithdrawal
       ASE->>ASE: Credit recipient's account with $0.33
+
 `}
 />
 
@@ -418,7 +420,7 @@ The `wallet_address.web_monetization` event indicates that a wallet address rece
 
 <Disclosure toggleText="Expand for event sequence" client:load>
 
-  Your asset liquidity for USD (asset scale: 2) drops below \$100.00.
+Your asset liquidity for USD (asset scale: 2) drops below \$100.00.
 
   <Mermaid
     graph={`sequenceDiagram
@@ -427,6 +429,7 @@ The `wallet_address.web_monetization` event indicates that a wallet address rece
 
       R->>ASE: Fires asset.liquidity_low event to webhook endpoint,<br/>asset: USD (scale: 2, id: "abc")
       ASE->>R: Backend Admin API call: DepositAssetLiquidity
+
 `}
 />
 
@@ -444,7 +447,7 @@ The `asset.liquidity_low` event indicates that an asset's liquidity has dropped 
 
 <Disclosure toggleText="Expand for event sequence" client:load>
 
-  The liquidity for your peer, Happy Life Bank, drops below \$100.00 USD.
+The liquidity for your peer, Happy Life Bank, drops below \$100.00 USD.
 
   <Mermaid
     graph={`sequenceDiagram
@@ -453,6 +456,7 @@ The `asset.liquidity_low` event indicates that an asset's liquidity has dropped 
 
       R->>ASE: Fires peer.liquidity_low event to webhook endpoint,<br/>peer: Happy Life Bank (asset: "USD", scale: 2, id: "abc")
       ASE->>R: Backend Admin API call: DepositPeerLiquidity
+
 `}
 />
 

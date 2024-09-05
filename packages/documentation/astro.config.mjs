@@ -111,7 +111,7 @@ export default defineConfig({
                     {
                       label: 'Fees',
                       link: '/integration/get-started/fees'
-                    },
+                    }
                   ]
                 },
                 {
@@ -150,7 +150,7 @@ export default defineConfig({
                       label: 'Token introspection',
                       link: '/integration/services/token-introspection'
                     }
-                  ],
+                  ]
                 },
                 {
                   label: 'Test locally',
@@ -168,8 +168,8 @@ export default defineConfig({
                       label: 'Test network',
                       link: '/integration/playground/testnet'
                     }
-                  ],
-                },
+                  ]
+                }
               ]
             },
             {
@@ -233,7 +233,7 @@ export default defineConfig({
                   link: '/apis/graphql/admin-api-overview'
                 }
               ]
-            },
+            }
           ]
         }
       ],

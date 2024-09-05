@@ -17,14 +17,12 @@ Since Rafiki requires Open Payments, Rafiki also requires that you integrate wit
 
 ## Facilitating interactions
 
-Before a client can make an outgoing payment request, it must obtain a grant from your authorization server. 
+Before a client can make an outgoing payment request, it must obtain a grant from your authorization server.
 
 auth
 service provides you with a reference implementation of an Open Payments authorization server. You can use the auth service as an alternative to developing your own in-house service for grant authorization and authentication.
 
-
-
- Open Payments requires explicit interaction by an individual (typically the client's end user) before issuing the grant. Presenting the end-user with a consent screen from which they choose to accept or deny the payment is an example of an interaction.
+Open Payments requires explicit interaction by an individual (typically the client's end user) before issuing the grant. Presenting the end-user with a consent screen from which they choose to accept or deny the payment is an example of an interaction.
 
 The interaction is facilitated by your IdP. Your IdP:
 
@@ -32,23 +30,15 @@ The interaction is facilitated by your IdP. Your IdP:
 - Sends the user's interaction choice to your authorization server
 - Redirects the user after the interaction is complete
 
-
-
-
------
+---
 
 The auth service includes support for such integration.
 
 Part of the Open Payments standard states that outgoing payment grant request must be interactive. In an interactive grant request, explicit interaction by an individual (e.g., an account holder) is required to approve a grant. A common example of this from the perspective of a mobile app user is being asked to authenticate (sign in) and then consent (approve) to some action.
 
-----
-
-
+---
 
 ## Integrate with your identity provider
-
-
-
 
 ### Rafiki Admin
 
