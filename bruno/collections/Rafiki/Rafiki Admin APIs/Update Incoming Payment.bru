@@ -1,0 +1,39 @@
+meta {
+  name: Update Incoming Payment
+  type: graphql
+  seq: 47
+}
+
+post {
+  url: {{RafikiGraphqlHost}}/graphql
+  body: graphql
+  auth: none
+}
+
+body:graphql {
+  mutation UpdateIncomingPayment($input: UpdateIncomingPaymentInput!) {
+    updateIncomingPayment(input: $input) {
+      payment {
+        id
+        metadata
+      }
+    }
+  }
+}
+
+body:graphql:vars {
+  {
+    "input": {
+      "id": "{{incomingPaymentId}}",
+      "metadata": {
+        "description": "Updated description"
+      }
+    }
+  }
+}
+
+script:pre-request {
+  const scripts = require('./scripts');
+  
+  scripts.addApiSignatureHeader();
+}

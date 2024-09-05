@@ -201,6 +201,10 @@ type Mutation {
   "Create an internal or external Open Payments Incoming Payment. The receiver has a wallet address on either this or another Open Payments resource server."
   createReceiver(input: CreateReceiverInput!): CreateReceiverResponse!
 
+  updateIncomingPayment(
+    input: UpdateIncomingPaymentInput!
+  ): IncomingPaymentResponse!
+
   "Create an Open Payments Quote"
   createQuote(input: CreateQuoteInput!): QuoteResponse!
 
@@ -1087,6 +1091,12 @@ input CreateReceiverInput {
   metadata: JSONObject
   "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)"
   idempotencyKey: String
+}
+
+input UpdateIncomingPaymentInput {
+  id: ID!
+  "The new metadata object to save for the incoming payment. It will overwrite any existing metadata."
+  metadata: JSONObject!
 }
 
 type OutgoingPaymentResponse {

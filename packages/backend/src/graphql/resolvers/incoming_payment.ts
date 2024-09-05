@@ -108,6 +108,30 @@ export const createIncomingPayment: MutationResolvers<ApolloContext>['createInco
       }
   }
 
+export const updateIncomingPayment: MutationResolvers<ApolloContext>['updateIncomingPayment'] =
+  async (
+    parent,
+    args,
+    ctx
+  ): Promise<ResolversTypes['IncomingPaymentResponse']> => {
+    const incomingPaymentService = await ctx.container.use(
+      'incomingPaymentService'
+    )
+    const incomingPaymentOrError = await incomingPaymentService.update(
+      args.input
+    )
+    if (isIncomingPaymentError(incomingPaymentOrError)) {
+      throw new GraphQLError(errorToMessage[incomingPaymentOrError], {
+        extensions: {
+          code: errorToCode[incomingPaymentOrError]
+        }
+      })
+    } else
+      return {
+        payment: paymentToGraphql(incomingPaymentOrError)
+      }
+  }
+
 export const approveIncomingPayment: MutationResolvers<ApolloContext>['approveIncomingPayment'] =
   async (
     parent,

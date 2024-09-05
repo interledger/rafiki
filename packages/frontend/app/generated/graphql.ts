@@ -688,6 +688,7 @@ export type Mutation = {
   triggerWalletAddressEvents: TriggerWalletAddressEventsMutationResponse;
   /** Update an asset */
   updateAsset: AssetMutationResponse;
+  updateIncomingPayment: IncomingPaymentResponse;
   /** Update a peer */
   updatePeer: UpdatePeerMutationResponse;
   /** Update a wallet address */
@@ -844,6 +845,11 @@ export type MutationTriggerWalletAddressEventsArgs = {
 
 export type MutationUpdateAssetArgs = {
   input: UpdateAssetInput;
+};
+
+
+export type MutationUpdateIncomingPaymentArgs = {
+  input: UpdateIncomingPaymentInput;
 };
 
 
@@ -1286,6 +1292,12 @@ export type UpdateAssetInput = {
   withdrawalThreshold?: InputMaybe<Scalars['UInt64']['input']>;
 };
 
+export type UpdateIncomingPaymentInput = {
+  id: Scalars['ID']['input'];
+  /** The new metadata object to save for the incoming payment. It will overwrite any existing metadata. */
+  metadata: Scalars['JSONObject']['input'];
+};
+
 export type UpdatePeerInput = {
   /** New peering connection details */
   http?: InputMaybe<HttpInput>;
@@ -1676,6 +1688,7 @@ export type ResolversTypes = {
   UInt8: ResolverTypeWrapper<Partial<Scalars['UInt8']['output']>>;
   UInt64: ResolverTypeWrapper<Partial<Scalars['UInt64']['output']>>;
   UpdateAssetInput: ResolverTypeWrapper<Partial<UpdateAssetInput>>;
+  UpdateIncomingPaymentInput: ResolverTypeWrapper<Partial<UpdateIncomingPaymentInput>>;
   UpdatePeerInput: ResolverTypeWrapper<Partial<UpdatePeerInput>>;
   UpdatePeerMutationResponse: ResolverTypeWrapper<Partial<UpdatePeerMutationResponse>>;
   UpdateWalletAddressInput: ResolverTypeWrapper<Partial<UpdateWalletAddressInput>>;
@@ -1797,6 +1810,7 @@ export type ResolversParentTypes = {
   UInt8: Partial<Scalars['UInt8']['output']>;
   UInt64: Partial<Scalars['UInt64']['output']>;
   UpdateAssetInput: Partial<UpdateAssetInput>;
+  UpdateIncomingPaymentInput: Partial<UpdateIncomingPaymentInput>;
   UpdatePeerInput: Partial<UpdatePeerInput>;
   UpdatePeerMutationResponse: Partial<UpdatePeerMutationResponse>;
   UpdateWalletAddressInput: Partial<UpdateWalletAddressInput>;
@@ -2051,6 +2065,7 @@ export type MutationResolvers<ContextType = any, ParentType extends ResolversPar
   setFee?: Resolver<ResolversTypes['SetFeeResponse'], ParentType, ContextType, RequireFields<MutationSetFeeArgs, 'input'>>;
   triggerWalletAddressEvents?: Resolver<ResolversTypes['TriggerWalletAddressEventsMutationResponse'], ParentType, ContextType, RequireFields<MutationTriggerWalletAddressEventsArgs, 'input'>>;
   updateAsset?: Resolver<ResolversTypes['AssetMutationResponse'], ParentType, ContextType, RequireFields<MutationUpdateAssetArgs, 'input'>>;
+  updateIncomingPayment?: Resolver<ResolversTypes['IncomingPaymentResponse'], ParentType, ContextType, RequireFields<MutationUpdateIncomingPaymentArgs, 'input'>>;
   updatePeer?: Resolver<ResolversTypes['UpdatePeerMutationResponse'], ParentType, ContextType, RequireFields<MutationUpdatePeerArgs, 'input'>>;
   updateWalletAddress?: Resolver<ResolversTypes['UpdateWalletAddressMutationResponse'], ParentType, ContextType, RequireFields<MutationUpdateWalletAddressArgs, 'input'>>;
   voidLiquidityWithdrawal?: Resolver<Maybe<ResolversTypes['LiquidityMutationResponse']>, ParentType, ContextType, RequireFields<MutationVoidLiquidityWithdrawalArgs, 'input'>>;
