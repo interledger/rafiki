@@ -1294,6 +1294,7 @@ export type UpdateAssetInput = {
 
 export type UpdateIncomingPaymentInput = {
   id: Scalars['ID']['input'];
+  /** The new metadata object to save for the incoming payment. It will overwrite any existing metadata. */
   metadata: Scalars['JSONObject']['input'];
 };
 

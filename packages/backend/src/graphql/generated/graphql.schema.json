@@ -7675,7 +7675,7 @@
           },
           {
             "name": "metadata",
-            "description": null,
+            "description": "The new metadata object to save for the incoming payment. It will overwrite any existing metadata.",
             "type": {
               "kind": "NON_NULL",
               "name": null,
