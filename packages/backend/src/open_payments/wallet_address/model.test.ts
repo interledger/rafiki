@@ -138,7 +138,7 @@ const baseGetTests = <M extends WalletAddressSubresource>({
           })
           test(`${
             match ? '' : 'cannot '
-          }list model`, async (): Promise<void> => {
+          }list model (get list)`, async (): Promise<void> => {
             if (testList && model.walletAddressId) {
               await testList(
                 {

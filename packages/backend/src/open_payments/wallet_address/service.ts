@@ -242,7 +242,7 @@ async function updateWalletAddress(
     }
     await trx.commit()
 
-    await deps.cacheDataStore.delete(updatedWalletAddress.id)
+    await deps.cacheDataStore.set(updatedWalletAddress.id, updatedWalletAddress)
     return updatedWalletAddress
   } catch (err) {
     await trx.rollback()

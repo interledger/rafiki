@@ -109,9 +109,7 @@ async function getOutgoingPaymentsPage(
 ): Promise<OutgoingPayment[]> {
   const { filter, pagination, sortOrder } = options ?? {}
 
-  const query = OutgoingPayment.query(deps.knex).withGraphFetched(
-    '[quote.asset, walletAddress]'
-  )
+  const query = OutgoingPayment.query(deps.knex)
 
   if (filter?.receiver?.in && filter.receiver.in.length) {
     query
@@ -131,6 +129,13 @@ async function getOutgoingPaymentsPage(
   const amounts = await deps.accountingService.getAccountsTotalSent(
     page.map((payment: OutgoingPayment) => payment.id)
   )
+  for (const payment of page) {
+    await deps.walletAddressService.setOn(payment)
+    await deps.assetService.setOn(payment.walletAddress)
+    await deps.quoteService.setOn(payment)
+    await deps.assetService.setOn(payment.quote)
+  }
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
   return page.map((payment: OutgoingPayment, i: number) => {
     payment.sentAmount = {
@@ -148,9 +153,9 @@ async function getOutgoingPayment(
 ): Promise<OutgoingPayment | undefined> {
   const outgoingPayment = await OutgoingPayment.query(deps.knex).get(options)
   if (outgoingPayment) {
+    await deps.walletAddressService.setOn(outgoingPayment)
     await deps.quoteService.setOn(outgoingPayment)
     await deps.assetService.setOn(outgoingPayment.quote)
-    await deps.walletAddressService.setOn(outgoingPayment)
     return addSentAmount(deps, outgoingPayment)
   }
 }
@@ -677,12 +682,18 @@ async function getOutgoingPaymentPage(
   deps: ServiceDependencies,
   options: ListOptions
 ): Promise<OutgoingPayment[]> {
-  const page = await OutgoingPayment.query(deps.knex)
-    .list(options)
-    .withGraphFetched('[quote.asset, walletAddress]')
+  const page = await OutgoingPayment.query(deps.knex).list(options)
   const amounts = await deps.accountingService.getAccountsTotalSent(
     page.map((payment: OutgoingPayment) => payment.id)
   )
+
+  for (const payment of page) {
+    await deps.walletAddressService.setOn(payment)
+    await deps.assetService.setOn(payment.walletAddress)
+    await deps.quoteService.setOn(payment)
+    await deps.assetService.setOn(payment.quote)
+  }
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
   return page.map((payment: OutgoingPayment, i: number) => {
     payment.sentAmount = {

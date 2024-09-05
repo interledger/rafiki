@@ -53,7 +53,11 @@ describe('Liquidity Resolvers', (): void => {
   const timeoutTwoPhase = 10
 
   beforeAll(async (): Promise<void> => {
-    deps = await initIocContainer(Config)
+    deps = initIocContainer({
+      ...Config,
+      enableTelemetry: true,
+      localCacheDuration: 0
+    })
     appContainer = await createTestApp(deps)
     knex = appContainer.knex
     accountingService = await deps.use('accountingService')

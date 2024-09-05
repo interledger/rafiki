@@ -206,7 +206,7 @@ export function initIocContainer(
       logger,
       knex,
       accountingService: await deps.use('accountingService'),
-      cacheDataStore: createInMemoryDataStore(30000)
+      cacheDataStore: createInMemoryDataStore(config.localCacheDuration)
     })
   })
 

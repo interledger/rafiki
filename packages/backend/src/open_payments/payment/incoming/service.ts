@@ -317,14 +317,16 @@ async function getIncomingPaymentPage(
   options: ListOptions
 ): Promise<IncomingPayment[]> {
   const page = await IncomingPayment.query(deps.knex).list(options)
-  for (const incomingPayment of page) {
-    await deps.assetService.setOn(incomingPayment)
-    await deps.walletAddressService.setOn(incomingPayment)
-  }
-
   const amounts = await deps.accountingService.getAccountsTotalReceived(
     page.map((payment: IncomingPayment) => payment.id)
   )
+
+  for (const payment of page) {
+    await deps.walletAddressService.setOn(payment)
+    await deps.assetService.setOn(payment.walletAddress)
+    await deps.assetService.setOn(payment)
+  }
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
   return page.map((payment: IncomingPayment, i: number) => {
     try {

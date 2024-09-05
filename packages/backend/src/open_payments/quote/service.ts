@@ -168,7 +168,7 @@ async function createQuote(
     )
     stopTimerFee && stopTimerFee()
 
-    const q = await Quote.transaction(deps.knex, async (trx) => {
+    return await Quote.transaction(deps.knex, async (trx) => {
       const createdQuote = await Quote.query(trx)
         .insertAndFetch({
           walletAddressId: options.walletAddressId,
@@ -189,10 +189,8 @@ async function createQuote(
           estimatedExchangeRate: quote.estimatedExchangeRate
         })
         .withGraphFetched('[asset, fee, walletAddress]')
-      await deps.walletAddressService.setOn(createdQuote)
-      await deps.assetService.setOn(createdQuote)
 
-      return await finalizeQuote(
+      const quoteFin = await finalizeQuote(
         {
           ...deps,
           knex: trx
@@ -201,12 +199,11 @@ async function createQuote(
         createdQuote,
         receiver
       )
+      await deps.cacheDataStore.set(quoteFin.id, quoteFin)
+      stopTimer && stopTimer()
+
+      return quoteFin
     })
-
-    stopTimer && stopTimer()
-
-    await deps.cacheDataStore.set(q.id, q)
-    return q
   } catch (err) {
     if (isQuoteError(err)) {
       stopTimer && stopTimer()

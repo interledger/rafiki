@@ -116,7 +116,6 @@ async function createAsset(
         LiquidityAccountType.ASSET,
         trx
       )
-      await deps.cacheDataStore.set(asset.id, asset)
       return asset
     })
   } catch (err) {
@@ -139,7 +138,7 @@ async function updateAsset(
       .patchAndFetchById(id, { withdrawalThreshold, liquidityThreshold })
       .throwIfNotFound()
 
-    await deps.cacheDataStore.set(id, returnVal)
+    await deps.cacheDataStore.delete(id)
     return returnVal
   } catch (err) {
     if (err instanceof NotFoundError) {
@@ -157,6 +156,8 @@ async function deleteAsset(
   if (!deps.knex) {
     throw new Error('Knex undefined')
   }
+
+  await deps.cacheDataStore.delete(id)
   try {
     // return error in case there is a peer or wallet address using the asset
     const peer = await Peer.query(deps.knex).where('assetId', id).first()
@@ -170,7 +171,6 @@ async function deleteAsset(
     if (walletAddress) {
       return AssetError.CannotDeleteInUseAsset
     }
-    await deps.cacheDataStore.delete(id)
     return await Asset.query(deps.knex)
       .patchAndFetchById(id, { deletedAt: deletedAt.toISOString() })
       .throwIfNotFound()
@@ -212,8 +212,9 @@ async function getAll(deps: ServiceDependencies): Promise<Asset[]> {
 async function setAssetOn(
   deps: ServiceDependencies,
   obj: ToSetOn
-): Promise<void> {
+): Promise<void | Asset> {
   if (!obj) return
   const asset = await getAsset(deps, obj.assetId)
   if (asset) obj.asset = asset
+  return asset
 }
