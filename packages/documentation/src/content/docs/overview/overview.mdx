@@ -3,37 +3,68 @@ title: Overview
 ---
 
 import { LinkOut } from '@interledger/docs-design-system'
+import { Card, CardGrid } from '@astrojs/starlight/components';
 
-Rafiki is open-source software that allows Account Servicing Entities (ASEs) to enable Interledger functionality on its users’ accounts. It serves as a packaged solution for facilitating payments over the Interledger network.
+Rafiki is open-source software that is freely available to any licensed **account servicing entity** (ASE) that wants to implement [Interledger](#interledger) and [Open Payments](#open-payments) on its users' accounts. 
 
-Implementing the Interledger Protocol stack can be complex and challenging. Rafiki simplifies this process by providing a reference implementation, reducing development overhead for ASEs, and fostering broader adoption of Interledger technology.
+Implementing and maintaining the Interledger Protocol (ILP) stack on your own can be difficult and time-consuming. Rafiki is maintained by a dedicated team, making it the perfect solution for ASEs who want to integrate with the Interledger network without developing and maintaining their own implementations.
 
-## What Rafiki can help you do
+<Card title="What is an account servicing entity?">
+It's an entity that provides and maintains payment accounts for its customers and is regulated within the jurisdictions it operates. Examples of ASEs include banks, digital wallet providers, and mobile money providers. Rafiki should **not** be used in production by non-regulated entities. [Learn more about ASEs](#more-about-account-servicing-entities-ases)
+</Card>
 
-- **Issue of payment pointers** - Rafiki facilitates creating and managing payment pointers, enabling users to send and receive payments over the Interledger network.
-- **Facilitate Interledger payments** - Rafiki facilitates sending and receiving payments using the Interledger Protocol (ILP).
-- **Enable third-party access** - Rafiki allows ASEs to authorize third-party access for initiating payments and managing transaction data using the Open Payments standard.
+## Real-world use cases
 
-## What Rafiki is not
+### Peer-to-peer payments
 
-Rafiki distinguishes itself as open-source software deployed by ASEs, rather than a platform, service, library, or standalone wallet. It provides the underlying infrastructure for Interledger functionality.
+Rafiki enables seamless peer-to-peer payments, including cross-currency transactions. Users can transfer funds directly to each other’s accounts, regardless of their respective currencies, leveraging the interoperability of the Interledger network.
 
-:::caution
-Rafiki is intended for use by Account Servicing Entities only and should not be used in production by non-regulated entities.
-:::
+### eCommerce payments
 
-## Real-world usage examples
+Rafiki facilitates eCommerce transactions for both one-time purchases and recurring subscriptions. ASEs can integrate Rafiki into their platforms to offer customers flexible payment options and streamline the checkout process.
 
-- **Peer-to-peer payments** - Rafiki enables seamless peer-to-peer payments, including cross-currency transactions. Users can transfer funds directly to each other’s accounts, regardless of their respective currencies, leveraging the interoperability of the Interledger network.
-- **eCommerce payments** - Rafiki facilitates eCommerce transactions for both one-time purchases and recurring subscriptions. ASEs can integrate Rafiki into their platforms to offer customers flexible payment options and streamline the checkout process.
-- **Web Monetization** - Websites can implement Web Monetization, a browser API that enables the streaming of payments directly from web site visitors to site owners. Rafiki provides support for Web Monetization payment flows right out of the box.
+### Web Monetization
 
-## Rafiki architecture
+Websites can implement Web Monetization, a browser API that enables the streaming of payments directly from web site visitors to site owners. Rafiki provides support for Web Monetization payment flows right out of the box.
 
-At its most basic level, Rafiki is comprised of the following three services:
+## Interledger
 
-- An authorization service that handles authorizing and authenticating incoming requests.
-- A backend service that allows you to manage business logic, such as account management and balance tracking; facilitates third-party access to accounts via an Open Payments implementation; and simplifies peering with other nodes on the Interledger network.
-- A front-end web application that allows Rafiki administrators to manage their Rafiki instance.
+The Interledger network is a network of nodes that have implemented the Interledger Protocol (ILP) stack. Rafiki is a reference implementation if the ILP stack, enabling you to more easily become a node on the network and start sending and receiving payments.
 
-For more detailed information on the components and architecture of Rafiki, see [Architecture](/resources/architecture).
+Interledger is designed to be a network on top of existing payment networks that serves as the interoperability layer between them all, forwarding payment messages (packets) while also taking care of currency conversion. Interledger ensures that packets take the fastest and cheapest route from one Interledger node to another.
+
+[Learn more about Interledger](/overview/concepts/interledger)
+
+## Open Payments
+
+Open Payments is an API standard and set of open RESTful APIs that facilitate interoperability in the setup and completion of payments. The standard provides a uniform way to create and manage grants and resources for incoming payments, quotes, and outgoing payments.
+
+By following the Open Payments standard, Rafiki allows your customers' accounts to become Open Payments-enabled. Clients, such as mobile apps, can then call the Open Payments APIs to securely retrieve transaction data and initiate payments from your customers' accounts with your customers' prior consent.
+
+[Learn more about Open Payments](/overview/concepts/open-payments)
+
+## More about account servicing entities (ASEs)
+
+As regulated entities, ASEs are subject to the laws, rules, and regulations of their jurisdictions. As such, Rafiki should **not** be used in production environments by non-regulated entities.
+
+Below are just a few examples of an ASE's responsibilities and obligations.
+
+### Regulatory compliance
+
+ASEs must onboarding account holders in compliance with regulatory requirements, such as performing Know Your Customer (KYC) checks, anti-money laundering (AML) processes, and sanctions screening.  
+
+### Account provisioning and maintenance
+
+ASEs manage the creation, upkeep, and security of payment accounts. This includes providing channels for account holders (individuals or businesses) to interact with their accounts via mobile apps, websites, and other interfaces.
+
+### Transaction handling
+
+ASEs handle deposits and withdrawals through various external payment methods such as bank transfers, credit cards, and other payment services.
+
+### Ledger management
+
+ASEs maintain a ledger of account balances and transaction histories for their account holders.
+
+### Authentication and consent
+
+In the context of Open Payments, ASEs are responsible for authenticating resource owners (e.g., account holders) and obtaining their consent when clients, such as mobile apps, request access to a resource (e.g., an account).

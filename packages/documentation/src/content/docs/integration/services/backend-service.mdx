@@ -27,7 +27,7 @@ You must also set the environment variables for the `backend` service.
 
 ## Open Payments
 
-The `backend` service exposes the Open Payments APIs, which are auth-protected using an opinionated version of the Grant Negotiation and Authorization Protocol (GNAP). Review the [`auth`](/integration/deployment/services/auth-service) service page for more details about grant authorization and authentication.
+The `backend` service exposes the Open Payments APIs, which are auth-protected using an opinionated version of the Grant Negotiation and Authorization Protocol (GNAP). Review the [`auth`](/integration/services/auth-service) service page for more details about grant authorization and authentication.
 
 The `backend` service allows you to manage Open Payments <LinkOut href="https://openpayments.dev/introduction/op-concepts/#incoming-payment">incoming payments</LinkOut>, <LinkOut href="https://openpayments.dev/introduction/op-concepts/#quote">quotes</LinkOut>, and <LinkOut href='https://openpayments.dev/introduction/op-concepts/#outgoing-payment'>outgoing payments</LinkOut>. Quotes and outgoing payments call the ILP connector, described in the next section, to send ILP packets. Quoting sends unfulfillable probe packets, for example to determine a transaction’s cost before executing the payment. Outgoing payments send packets as part of executing the payment.
 
@@ -39,7 +39,6 @@ The roles of the connector include:
 
 - Accepting packets via ILP over HTTP and authenticating the packets against ILP account credentials. An incoming packet is only accepted if it's from a configured peer and accompanied by the peer’s incoming HTTP `authToken`.
 - Converting currencies.
-- Routing packets to the appropriate peers if you are not the intended recipient. Otherwise the packets will terminate at your local Rafiki’s STREAM server.
 - Fulfilling packets with an internal STREAM server.
 
 The connector receives incoming packets via HTTP and/or direct calls from within the `backend`. The `backend` includes an HTTP server listening on the configured `CONNECTOR_PORT`.
@@ -48,7 +47,7 @@ The amounts within ILP packets are used to update account liquidities in your ac
 
 ## GraphQL Backend Admin API
 
-The `backend` service exposes a GraphQL [Backend Admin API](/integration/deployment/apis/graphql/admin-api-overview#backend-admin-api) to manage assets, peers, wallet addresses, Open Payments resources, and several types of liquidity.
+The `backend` service exposes a GraphQL [Backend Admin API](/apis/graphql/admin-api-overview#backend-admin-api) to manage assets, peers, wallet addresses, Open Payments resources, and several types of liquidity.
 
 ## Environment variables
 

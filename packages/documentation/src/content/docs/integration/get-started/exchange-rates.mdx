@@ -1,11 +1,16 @@
 ---
 title: Exchange rates
+banner:
+  content: |
+    MELISSA IS STILL WORKING ON THIS PAGE
 ---
 
 import { Badge } from '@astrojs/starlight/components'
 import { Mermaid, CodeBlock, LinkOut } from '@interledger/docs-design-system'
 
-Every Interledger payment is preceded by a rate probe. A rate probe provides a quote that estimates the cost of transferring value over the network, including any fees connector nodes may charge. For a rate probe to be successful, Rafiki needs current exchange rates.
+If you plan on supporting cross-currency transactions, you must specify from where your Rafiki instance will fetch current exchange rates. 
+
+Every Interledger payment is preceded by a rate probe. This probe provides a quote that estimates the full cost of transferring value over the network. For a rate probe involving a cross-currency transaction to be successful, Rafiki needs to know the exchange rates for each currency that makes up the transaction.
 
 ## Specify your exchange rates endpoint
 

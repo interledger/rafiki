@@ -66,19 +66,19 @@ export default defineConfig({
                   items: [
                     {
                       label: 'Accounts, transfers, and liquidity',
-                      link: '/concepts/accounts-transfers-liquidity'
+                      link: '/overview/concepts/accounts-transfers-liquidity'
                     },
                     {
                       label: 'Interledger',
-                      link: '/concepts/interledger'
+                      link: '/overview/concepts/interledger'
                     },
                     {
                       label: 'Open Payments',
-                      link: '/concepts/open-payments'
+                      link: '/overview/concepts/open-payments'
                     },
                     {
                       label: 'Telemetry',
-                      link: '/concepts/telemetry'
+                      link: '/overview/concepts/telemetry'
                     }
                   ]
                 }
@@ -97,100 +97,79 @@ export default defineConfig({
                       link: '/integration/get-started/overview'
                     },
                     {
-                      label: 'Fees',
-                      link: '/integration/get-started/fees'
-                    },
-                    {
-                      label: 'Exchange rates',
-                      link: '/integration/get-started/exchange-rates'
-                    },
-                    {
                       label: 'Webhook events',
                       link: '/integration/get-started/webhook-events'
                     },
                     {
                       label: 'Identity provider (IdP)',
                       link: '/integration/get-started/idp'
-                    }
+                    },
+                    {
+                      label: 'Exchange rates',
+                      link: '/integration/get-started/exchange-rates'
+                    },
+                    {
+                      label: 'Fees',
+                      link: '/integration/get-started/fees'
+                    },
                   ]
                 },
                 {
-                  label: 'Deployment',
-                  collapsed: true,
-                  items: [
-                    {
-                      label: 'Requirements',
-                      link: '/integration/deployment/requirements'
-                    },
-                    {
-                      label: 'Services',
-                      collapsed: true,
-                      items: [
-                        {
-                          label: 'Auth service',
-                          link: '/integration/deployment/services/auth-service'
-                        },
-                        {
-                          label: 'Backend service',
-                          link: '/integration/deployment/services/backend-service'
-                        },
-                        {
-                          label: 'Frontend service',
-                          link: '/integration/deployment/services/frontend-service'
-                        },
-                        {
-                          label: 'Token introspection',
-                          link: '/integration/deployment/services/token-introspection'
-                        }
-                      ]
-                    },
-                    {
-                      label: 'Deploy locally',
-                      collapsed: true,
-                      items: [
-                        {
-                          label: 'Local playground overview',
-                          link: '/integration/deployment/playground/overview'
-                        },
-                        {
-                          label: 'Autopeering',
-                          link: '/integration/deployment/playground/autopeering'
-                        },
-                        {
-                          label: 'Test network',
-                          link: '/integration/deployment/playground/testnet'
-                        }
-                      ]
-                    },
-                    {
-                      label: 'Deploy to production',
-                      items: [
-                        {
-                          label: 'nginx',
-                          link: '/integration/deployment/prod/nginx'
-                        },
-                        {
-                          label: 'Helm and K8s',
-                          link: '/integration/deployment/prod/helm-k8s'
-                        }
-                      ]
-                    }
-                  ]
+                  label: 'Requirements',
+                  link: '/integration/requirements'
                 },
                 {
                   label: 'Integration checklist',
                   link: '/integration/integration-checklist'
                 },
                 {
-                  label: 'APIs',
+                  label: 'Docker',
+                  link: '/integration/prod/nginx'
+                },
+                {
+                  label: 'Helm and K8s',
+                  link: '/integration/prod/helm-k8s'
+                },
+                {
+                  label: 'Services',
                   collapsed: true,
                   items: [
                     {
-                      label: 'GraphQL Admin APIs',
-                      link: '/integration/apis/graphql-apis'
+                      label: 'Auth service',
+                      link: '/integration/services/auth-service'
+                    },
+                    {
+                      label: 'Backend service',
+                      link: '/integration/services/backend-service'
+                    },
+                    {
+                      label: 'Frontend service',
+                      link: '/integration/services/frontend-service'
+                    },
+                    {
+                      label: 'Token introspection',
+                      link: '/integration/services/token-introspection'
                     }
-                  ]
-                }
+                  ],
+                },
+                {
+                  label: 'Test locally',
+                  collapsed: true,
+                  items: [
+                    {
+                      label: 'Local playground',
+                      link: '/integration/playground/overview'
+                    },
+                    {
+                      label: 'Autopeering',
+                      link: '/integration/playground/autopeering'
+                    },
+                    {
+                      label: 'Test network',
+                      link: '/integration/playground/testnet'
+                    }
+                  ],
+                },
               ]
             },
             {
@@ -244,7 +223,17 @@ export default defineConfig({
                   link: '/resources/get-involved'
                 }
               ]
-            }
+            },
+            {
+              label: 'APIs',
+              collapsed: true,
+              items: [
+                {
+                  label: 'GraphQL Admin APIs',
+                  link: '/apis/graphql/admin-api-overview'
+                }
+              ]
+            },
           ]
         }
       ],

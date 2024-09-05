@@ -1,26 +1,54 @@
 ---
 title: Identity provider (IdP)
+banner:
+  content: |
+    MELISSA IS STILL WORKING ON THIS PAGE
 ---
 
 import { Badge } from '@astrojs/starlight/components'
 import { Mermaid, CodeBlock, LinkOut } from '@interledger/docs-design-system'
 
-## Integrate with your identity provider
+An identity provider (IdP) is a system or service that stores and manages user identity information, authentication, and consent. Examples of IdPs include OpenID Connect and Okta.
 
-An identity provider (IdP) is a system or service that stores and manages user identity information, authentication, and consent. Integration with an IdP is required due to Rafiki's use of the Open Payments standard and APIs. Skip to the [IdP environment variables](#idp-environment-variables) for a summary of required variables.
+Since Rafiki requires Open Payments, Rafiki also requires that you integrate with an IdP. The purpose of the IdP is to:
 
-Your IdP will:
+- Authenticate requests from clients, such as mobile apps, to create quotes and payments on Rafiki's backend
+- Facilitate interactions with resource owners, such as your account holders, to gather consent
 
-- Authenticate requests from clients to create payments and quotes on Rafiki's backend
-- Manage interactions with end users, such as your account holders, to gather consent
+## Facilitating interactions
 
-Before a client can make an outgoing payment request, it must obtain a grant from your authorization server. Open Payments requires explicit interaction by an individual (typically the client's end user) before issuing the grant. Presenting the end-user with a consent screen from which they choose to accept or deny the payment is an example of an interaction.
+Before a client can make an outgoing payment request, it must obtain a grant from your authorization server. 
+
+auth
+service provides you with a reference implementation of an Open Payments authorization server. You can use the auth service as an alternative to developing your own in-house service for grant authorization and authentication.
+
+
+
+ Open Payments requires explicit interaction by an individual (typically the client's end user) before issuing the grant. Presenting the end-user with a consent screen from which they choose to accept or deny the payment is an example of an interaction.
 
 The interaction is facilitated by your IdP. Your IdP:
 
 - Provides the consent screen
 - Sends the user's interaction choice to your authorization server
 - Redirects the user after the interaction is complete
+
+
+
+
+-----
+
+The auth service includes support for such integration.
+
+Part of the Open Payments standard states that outgoing payment grant request must be interactive. In an interactive grant request, explicit interaction by an individual (e.g., an account holder) is required to approve a grant. A common example of this from the perspective of a mobile app user is being asked to authenticate (sign in) and then consent (approve) to some action.
+
+----
+
+
+
+## Integrate with your identity provider
+
+
+
 
 ### Rafiki Admin
 

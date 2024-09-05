@@ -6,16 +6,16 @@ import { LinkOut } from '@interledger/docs-design-system'
 
 import { CodeBlock } from '@interledger/docs-design-system'
 
-The Local Playground provides a suite of packages that, together, mock an account servicing entity that has deployed Rafiki. It exposes an <LinkOut href='https://interledger.org/developers/rfcs/simple-payment-setup-protocol/'>SPSP</LinkOut> endpoint, the [Open Payments APIs](/concepts/open-payments) with its required <LinkOut href='https://datatracker.ietf.org/doc/draft-ietf-gnap-core-protocol/'>GNAP</LinkOut> auth endpoints to request grants, a STREAM endpoint for receiving Interledger packets, and an admin UI to view and manage each Rafiki instance.
+The Local Playground provides a suite of packages that, together, mock an account servicing entity that has deployed Rafiki. It exposes an <LinkOut href='https://interledger.org/developers/rfcs/simple-payment-setup-protocol/'>SPSP</LinkOut> endpoint, the [Open Payments APIs](/overview/concepts/open-payments) with its required <LinkOut href='https://datatracker.ietf.org/doc/draft-ietf-gnap-core-protocol/'>GNAP</LinkOut> auth endpoints to request grants, a STREAM endpoint for receiving Interledger packets, and an admin UI to view and manage each Rafiki instance.
 
 This suite of packages includes:
 
 | Package name                                                    | Services                                                                                             |
 | --------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| [`backend`](/integration/deployment/services/backend-service)   | <ul><li>SPSP</li><li>Open Payments APIs</li><li>GraphQL Admin APIs</li><li>STREAM endpoint</li></ul> |
-| [`auth`](/integration/deployment/services/auth-service)         | GNAP auth server                                                                                     |
+| [`backend`](/integration/services/backend-service)   | <ul><li>SPSP</li><li>Open Payments APIs</li><li>GraphQL Admin APIs</li><li>STREAM endpoint</li></ul> |
+| [`auth`](/integration/services/auth-service)         | GNAP auth server                                                                                     |
 | `mock-account-servicing-entity`                                 | mocks an account servicing entity                                                                    |
-| [`frontend`](/integration/deployment/services/frontend-service) | Remix app to expose a UI for Rafiki admin management via interaction with the Backend Admin APIs     |
+| [`frontend`](/integration/services/frontend-service) | Remix app to expose a UI for Rafiki admin management via interaction with the Backend Admin APIs     |
 
 These packages depend on the following databases:
 
