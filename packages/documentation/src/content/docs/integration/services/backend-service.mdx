@@ -43,7 +43,7 @@ The roles of the connector include:
 
 The connector receives incoming packets via HTTP and/or direct calls from within the `backend`. The `backend` includes an HTTP server listening on the configured `CONNECTOR_PORT`.
 
-The amounts within ILP packets are used to update account liquidities in your accounting database (TigerBeetle or Postgres). Amounts are adjusted based on Rafiki’s configured [exchange rates](/integration/get-started/exchange-rates) and the asset used by the sending (outgoing) and receiving (destination) accounts. The total amount received for the STREAM connection is tracked in Redis.
+The amounts within ILP packets are used to update account liquidities in your accounting database (TigerBeetle or Postgres). Amounts are adjusted based on Rafiki’s configured [exchange rates](/integration/requirements/exchange-rates) and the asset used by the sending (outgoing) and receiving (destination) accounts. The total amount received for the STREAM connection is tracked in Redis.
 
 ## GraphQL Backend Admin API
 

@@ -89,38 +89,38 @@ export default defineConfig({
               collapsed: true,
               items: [
                 {
-                  label: 'Get started',
+                  label: 'Requirements',
                   collapsed: true,
                   items: [
                     {
-                      label: 'Overview',
-                      link: '/integration/get-started/overview'
+                      label: 'Overview and checklist',
+                      link: '/integration/requirements/overview'
+                    },
+                    {
+                      label: 'Assets',
+                      link: '/integration/requirements/assets'
+                    },
+                    {
+                      label: 'Wallet addresses',
+                      link: '/integration/requirements/wallet-addresses'
                     },
                     {
                       label: 'Webhook events',
-                      link: '/integration/get-started/webhook-events'
-                    },
-                    {
-                      label: 'Identity provider (IdP)',
-                      link: '/integration/get-started/idp'
+                      link: '/integration/requirements/webhook-events'
                     },
                     {
                       label: 'Exchange rates',
-                      link: '/integration/get-started/exchange-rates'
+                      link: '/integration/requirements/exchange-rates'
                     },
                     {
-                      label: 'Fees',
-                      link: '/integration/get-started/fees'
+                      label: 'Sending fees',
+                      link: '/integration/requirements/sending-fees'
+                    },
+                    {
+                      label: 'Identity provider (IdP)',
+                      link: '/integration/requirements/idp'
                     }
                   ]
-                },
-                {
-                  label: 'Requirements',
-                  link: '/integration/requirements'
-                },
-                {
-                  label: 'Integration checklist',
-                  link: '/integration/integration-checklist'
                 },
                 {
                   label: 'Docker',
@@ -181,20 +181,12 @@ export default defineConfig({
                   link: '/admin/admin-user-guide'
                 },
                 {
-                  label: 'Manage assets',
-                  link: '/admin/manage-assets'
-                },
-                {
-                  label: 'Manage liquidity',
-                  link: '/admin/manage-liquidity'
-                },
-                {
                   label: 'Manage peering relationships',
                   link: '/admin/manage-peering'
                 },
                 {
-                  label: 'Manage wallet addresses',
-                  link: '/admin/manage-wallet-addresses'
+                  label: 'Manage liquidity',
+                  link: '/admin/manage-liquidity'
                 }
               ]
             },

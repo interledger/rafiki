@@ -15,7 +15,7 @@ import {
   Disclosure
 } from '@interledger/docs-design-system'
 
-The main communication channel between you and your Rafiki instance is composed of the [Backend Admin API](/apis/graphql/admin-api-overview) and a set of webhook events.
+The main communication channel between you and your Rafiki instance is composed of the Backend Admin API and a set of webhook events.
 
 Most events require you to interact with Rafiki to provide wallet address information or manage (deposit or withdraw) liquidity. This page describes how you should handle each webhook event.
 
@@ -29,9 +29,9 @@ For Rafiki to notify you about webhook events, you must expose a webhook endpoin
 
 When an event occurs, the [`backend`](/integration/services/backend-service) service makes a <Badge text="POST" variant="success" size="medium"/> request to your configured webhook endpoint. The `backend` service expects a `200` status in return.
 
-| Environment variable | Type      | Description                                                         |
-| -------------------- | --------- | ------------------------------------------------------------------- |
-| `WEBHOOK_URL`        | `backend` | The endpoint to where requests are made when a webhook event occurs |
+| Variable      | Type      | Description                                                         |
+| ------------- | --------- | ------------------------------------------------------------------- |
+| `WEBHOOK_URL` | `backend` | The endpoint to where requests are made when a webhook event occurs |
 
 ## Webhook event request body
 
@@ -146,10 +146,10 @@ If a non-200 status is returned, indicating an error, or the request times out, 
 
 The first retry is after 10 seconds. Additional retries occur after 20 more seconds, then after 30 more seconds, and so on.
 
-| Environment variable | Type      | Description                                                                                                     |
-| -------------------- | --------- | --------------------------------------------------------------------------------------------------------------- |
-| `WEBHOOK_TIMEOUT`    | `backend` | The amount of time, in milliseconds, after which a webhook request will time out                                |
-| `WEBHOOK_MAX_RETRY`  | `backend` | The maximum number of retries for a webhook event when a non-200 status is returned or if the request timed out |
+| Variable            | Type      | Description                                                                                                     |
+| ------------------- | --------- | --------------------------------------------------------------------------------------------------------------- |
+| `WEBHOOK_TIMEOUT`   | `backend` | The amount of time, in milliseconds, after which a webhook request will time out                                |
+| `WEBHOOK_MAX_RETRY` | `backend` | The maximum number of retries for a webhook event when a non-200 status is returned or if the request timed out |
 
 ## Webhook events
 
