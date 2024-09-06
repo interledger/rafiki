@@ -55,7 +55,6 @@ describe('Liquidity Resolvers', (): void => {
   beforeAll(async (): Promise<void> => {
     deps = initIocContainer({
       ...Config,
-      enableTelemetry: true,
       localCacheDuration: 0
     })
     appContainer = await createTestApp(deps)

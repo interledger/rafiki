@@ -33,6 +33,7 @@ import {
   errorToCode as peerErrorToCode
 } from '../../payment-method/ilp/peer/errors'
 import { IncomingPaymentEventType } from '../../open_payments/payment/incoming/model'
+import { Config } from '../../config/app'
 
 export const getAssetLiquidity: AssetResolvers<ApolloContext>['liquidity'] =
   async (parent, args, ctx): Promise<ResolversTypes['UInt64']> => {
@@ -440,7 +441,8 @@ export const depositOutgoingPaymentLiquidity: MutationResolvers<ApolloContext>['
     args,
     ctx
   ): Promise<ResolversTypes['LiquidityMutationResponse']> => {
-    const telemetry = await ctx.container.use('telemetry')
+
+    const telemetry = Config.enableTelemetry ? await ctx.container.use('telemetry') : undefined
     const stopTimer = telemetry?.startTimer('depositOutgoingPaymentLiquidity', {
       callName: 'depositOutgoingPaymentLiquidity'
     })
