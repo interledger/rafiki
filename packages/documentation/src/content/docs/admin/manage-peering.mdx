@@ -2,13 +2,13 @@
 title: Manage peering relationships
 ---
 
-import { LinkOut } from '@interledger/docs-design-system'
+import { CodeBlock, LinkOut } from '@interledger/docs-design-system'
 
-import { CodeBlock } from '@interledger/docs-design-system'
+To join the Interledger network and be able to send and receive payments, you must add one or more peer(s) to your Rafiki instance.
 
 ## Prerequisites
 
-To add a peer and send Interledger payments you and the account servicing entity (ASE) you intend to peer with must both:
+Before you add a peer, you and the account servicing entity (ASE) you intend to peer with must both:
 
 - Run an implementation of an [Interledger connector](/integration/services/backend-service#interledger-connector) (ideally Rafiki).
 - Agree on an [asset](/overview/concepts/accounts-transfers-liquidity#assets) for the peering relationship. You can set up multiple peering relationships with the same peer based on different assets. At least one asset shared by you and your peer must be added to your Rafiki instance prior to setting up the peering relationship.
@@ -20,47 +20,36 @@ To add a peer and send Interledger payments you and the account servicing entity
 
 Optionally, you may also deposit an initial liquidity for your peer.
 
-## Add a peer using the Backend Admin API
+## Add peer using the `CreatePeer` GraphQL mutation
 
-Rafiki’s Backend Admin API implements a GraphQL interface. Data insertions and modifications in GraphQL can be specified explicitly via a mutation query. Each GraphQL request has two parts; a query and an object containing query variables.
-
-To add a peer to your Rafiki instance call the `CreatePeer` mutation query and pass the query variables for the following:
-
-| Query parameters           | Description                                                                                                                 | Required |
-| -------------------------- | --------------------------------------------------------------------------------------------------------------------------- | -------- |
-| `assetID`                  | the ID of the asset that you and your peer will use to ultimately settle your net obligations outside of Interledger.       | Y        |
-| `staticILPaddress`         | Your peer’s static ILP address (the following example uses `g.othergreatwallet`)                                            | Y        |
-| `name`                     | Your peer’s name (the following example uses “The Other Great Wallet”)                                                      | Y        |
-| `http.incoming.authTokens` | The token your peer will use to present and connect to and send packets to your Rafiki instance.                            | Y        |
-| `http.outgoing.endpoint`   | Your peer’s connector endpoint. By default it is on local port 0.0.0.0:3002                                                 | Y        |
-| `http.outgoing.authtoken`  | The token that you will use to present to your peer and connect to and send packets to their Rafiki instance.               | Y        |
-| `initialLiquidity`         | Initial amount of liquidity to deposit for peer. Liquidity can also be deposited using the `DepositPeerLiquidity` mutation. | N        |
-
-<CodeBlock title='Example CreatePeer Mutation'>
+<CodeBlock title="Example CreatePeer Mutation">
 
 ```graphql
-// Query:
-
 mutation CreatePeer($input: CreatePeerInput!) {
   createPeer(input: $input) {
-	code
-	success
-	message
-	peer {
-  		id
-  		asset {
-    			code
-    			scale
-  	}
-  		staticIlpAddress
-  		name
-	  }
+    code
+    success
+    message
+    peer {
+      id
+      asset {
+        code
+        scale
+      }
+      staticIlpAddress
+      name
+    }
   }
 }
+```
 
+</CodeBlock>
 
-// Query Variables (substitute the asset ID from the “create asset” response for INSERT_ASSET_ID):
+### Example
 
+<CodeBlock title='Example JSON request'>
+
+```json
 {
   "input": {
 	"staticIlpAddress": "g.othergreatwallet",
@@ -77,33 +66,44 @@ mutation CreatePeer($input: CreatePeerInput!) {
 
 </CodeBlock>
 
-<CodeBlock title='Example Successful Response'>
 
-```graphql
+| Variable                   | Description                                                                                                                 | Required |
+| -------------------------- | --------------------------------------------------------------------------------------------------------------------------- | -------- |
+| `assetID`                  | The ID of the asset that you and your peer will use to ultimately settle your net obligations outside of Interledger.       | Y        |
+| `staticILPaddress`         | Your peer’s static ILP address (the example uses `g.othergreatwallet`)                                                      | Y        |
+| `name`                     | Your peer’s name (the example uses “The Other Great Wallet”)                                                                | Y        |
+| `http.incoming.authTokens` | The token your peer will use to present and connect to and send packets to your Rafiki instance.                            | Y        |
+| `http.outgoing.endpoint`   | Your peer’s connector endpoint. By default it is on local port 0.0.0.0:3002                                                 | Y        |
+| `http.outgoing.authtoken`  | The token that you will use to present to your peer and connect to and send packets to their Rafiki instance.               | Y        |
+| `initialLiquidity`         | Initial amount of liquidity to deposit for peer. Liquidity can also be deposited using the `DepositPeerLiquidity` mutation. | N        |
+
+<CodeBlock title="Example JSON Response">
+
+```json
 {
   "data": {
-	"createPeer": {
-  	"code": "200",
-	"success": true,
-  	"message": "Created ILP Peer",
-  	"peer": {
-    		"id": "480ef339-7842-4501-a905-923fc1339cef",
-    		"asset": {
-      		"code": "USD",
-      		"scale": 2
-    	},
-    		"staticIlpAddress": "g.othergreatwallet",
-    		"name": "The Other Great Wallet"
-  	  }
-	  }
+    "createPeer": {
+      "code": "200",
+      "success": true,
+      "message": "Created ILP Peer",
+      "peer": {
+        "id": "480ef339-7842-4501-a905-923fc1339cef",
+        "asset": {
+          "code": "USD",
+          "scale": 2
+        },
+        "staticIlpAddress": "g.othergreatwallet",
+        "name": "The Other Great Wallet"
+      }
+    }
   }
 }
 ```
 
 </CodeBlock>
 
-## Add a peer using the Rafiki Admin application
+## Add a peer using Rafiki Admin
 
-Alternatively, a peer can be added through the Rafiki Admin application, which Rafiki makes available through its `frontend` package. Ideally, this will be done using your [local Rafiki environment](/integration/playground/overview/#running-the-local-environment).
+Alternatively, a peer can be added through the [Rafiki Admin](/admin/admin-user-guide#create-peer) application. Ideally, this will be done using your [local Rafiki environment](/integration/playground/overview/#running-the-local-environment).
 
-See the [Rafiki Admin application user guide](/admin/admin-user-guide/#peers) for more information on adding peers.
+Refer to the [Rafiki Admin application user guide](/admin/admin-user-guide/#peers) for more information on adding peers.
