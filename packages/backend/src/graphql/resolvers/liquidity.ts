@@ -441,8 +441,9 @@ export const depositOutgoingPaymentLiquidity: MutationResolvers<ApolloContext>['
     args,
     ctx
   ): Promise<ResolversTypes['LiquidityMutationResponse']> => {
-
-    const telemetry = Config.enableTelemetry ? await ctx.container.use('telemetry') : undefined
+    const telemetry = Config.enableTelemetry
+      ? await ctx.container.use('telemetry')
+      : undefined
     const stopTimer = telemetry?.startTimer('depositOutgoingPaymentLiquidity', {
       callName: 'depositOutgoingPaymentLiquidity'
     })
