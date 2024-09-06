@@ -1,4 +1,5 @@
-import axios from 'axios'
+import { AxiosInstance } from 'axios'
+import { v4 } from 'uuid'
 import { TransactionOrKnex } from 'objection'
 import { BaseService } from '../shared/baseService'
 import { TenantError } from './errors'
@@ -29,6 +30,7 @@ export interface TenantService {
 }
 
 export interface ServiceDependencies extends BaseService {
+  axios: AxiosInstance
   knex: TransactionOrKnex
   config: IAppConfig
   apolloClient: ApolloClient<NormalizedCacheObject>
@@ -39,6 +41,7 @@ export async function createTenantService(
   deps_: ServiceDependencies
 ): Promise<TenantService> {
   const deps: ServiceDependencies = {
+    axios: deps_.axios,
     logger: deps_.logger.child({
       service: 'TenantService'
     }),
@@ -108,6 +111,7 @@ async function createTenant(
    */
   let tenant: Tenant
   const trx = await Tenant.startTransaction()
+  const { axios } = deps
   try {
     // TODO: move into kratos service
     const { kratosAdminUrl } = deps.config
@@ -118,20 +122,9 @@ async function createTenant(
     const operatorRole = getIdentityResponse.data[0]?.metadata_public.operator
     const isExistingIdentity =
       getIdentityResponse.data.length > 0 && getIdentityResponse.data[0].id
-    if (isExistingIdentity && !options.isOperator) {
-      identityId = getIdentityResponse.data[0].id
-    } else if (isExistingIdentity && !operatorRole && options.isOperator) {
-      // Identity already exists but does not have operator role
-      const updateIdentityResponse = await axios.put(
-        `${kratosAdminUrl}/admin/identities/${getIdentityResponse.data[0].id}`,
-        {
-          metadata_public: {
-            operator: true
-          }
-        }
-      )
-      identityId = updateIdentityResponse.data.id
-    } else {
+    deps.logger.info({ res: getIdentityResponse.data, operatorRole, isExistingIdentity }, 'got response')
+    if (!isExistingIdentity) {
+      // Identity does not exist
       const createIdentityResponse = await axios.post(
         `${kratosAdminUrl}/identities`,
         {
@@ -151,6 +144,19 @@ async function createTenant(
       )
 
       identityId = createIdentityResponse.data.id
+    } else if (!operatorRole && options.isOperator) {
+      // Identity already exists but does not have operator role
+      const updateIdentityResponse = await axios.put(
+        `${kratosAdminUrl}/admin/identities/${getIdentityResponse.data[0].id}`,
+        {
+          metadata_public: {
+            operator: true
+          }
+        }
+      )
+      identityId = updateIdentityResponse.data.id
+    } else {
+      identityId = getIdentityResponse.data[0].id
     }
 
     const recoveryRequest = await axios.post(

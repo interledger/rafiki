@@ -104,7 +104,7 @@ import { LoggingPlugin } from './graphql/plugin'
 import { GrantService } from './open_payments/grant/service'
 import { AuthServerService } from './open_payments/authServer/service'
 import { TenantService } from './tenant/service'
-import { EndpointType } from './tenant/model'
+import { EndpointType } from './tenant/endpoints/model'
 export interface AppContextData {
   logger: Logger
   container: AppContainer
