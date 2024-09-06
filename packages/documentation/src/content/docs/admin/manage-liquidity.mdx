@@ -2,13 +2,9 @@
 title: Manage liquidity
 ---
 
-import { LinkOut } from '@interledger/docs-design-system'
+import { CodeBlock, LinkOut } from '@interledger/docs-design-system'
 
 As an implementation of the Interledger Protocol, Rafiki provides [accounting](/overview/concepts/accounts-transfers-liquidity) between transacting parties but doesn’t handle settlement. You and the account servicing entities you decide to peer with must agree on the means and how often you will settle your accounts. Consequently, Rafiki can manage the liquidity used to fund payments made through the Interledger network.
-
-## Add liquidity via GraphQL
-
-Liquidity can be managed in Rafiki through the [`backend`](/integration/services/backend-service/) Admin API, which implements a GraphQL interface, or via the [Rafiki Admin application](/admin/admin-user-guide). Data insertions and modifications in GraphQL can be specified explicitly via a mutation query. Each GraphQL request has two parts: a query and an object containing query variables.
 
 As Rafiki supports several types of liquidity, we’ll cover the typical scenarios you’ll need to manage.
 
@@ -22,71 +18,99 @@ Asset liquidity specifies the amount of value denominated in an asset you have p
 
 You should define and adjust the asset liquidity based on your risk tolerance.
 
-### Example
+### Deposit asset liquidity using the `DepositAssetLiquidity` mutation
 
-You’ve configured your Rafiki instance with two assets, EUR and USD, with an asset scale of 0. The EUR liquidity is 10, and the USD liquidity is 50. With liquidity support for these two assets, your Rafiki instance can function as a connector node within the Interledger network and provide currency exchange between a sender sending a payment in EUR and a recipient receiving the payment in USD.
+<CodeBlock title="DepositAssetLiquidity mutation">
 
-In a cross-currency transaction, your Rafiki instance would receive packets totaling 10 EUR and send packets worth 11 USD. The EUR liquidity would be increased to 20 EUR, and the USD liquidity would be reduced to 39 USD.
-
-If your Rafiki instance were to receive 50 EUR, but needed to send 55 USD, the transaction would fail because your instance does not have enough USD liquidity.
-
-### Deposit Asset Liquidity
-
-You can deposit asset liquidity via the `DepositAssetLiquidity` mutation:
-
-```sh
-mutation
-DepositAssetLiquidity($input:DepositAssetLiquidityInput!) {
-  depositAssetLiquidity(input:$input) {
+```graphql
+mutation DepositAssetLiquidity($input: DepositAssetLiquidityInput!) {
+  depositAssetLiquidity(input: $input) {
     code
     success
     message
     error
- }
+  }
 }
 ```
 
-The following are example `input` parameters for the `DepositAssetLiquidity` mutation query above.
+</CodeBlock>
 
-```sh
-{ "input": {
-    "id":"b97fd85a-126e-42ef-b40d-1a50a70ffa6f",
-    "assetId":"7b8b0f65-896d-4403-b7ba-2e24bf20eb35",
-    "amount":"100",
-    "idempotencyKey":"b97fd85a-126e-42ef-b40d-1a50a70ffa6f"
-    }
+#### Example
+
+<CodeBlock title="Example input">
+
+```json
+{
+  "input": {
+    "id": "b97fd85a-126e-42ef-b40d-1a50a70ffa6f",
+    "assetId": "7b8b0f65-896d-4403-b7ba-2e24bf20eb35",
+    "amount": "100",
+    "idempotencyKey": "b97fd85a-126e-42ef-b40d-1a50a70ffa6f"
+  }
 }
 ```
 
-### Withdraw Asset Liquidity
+</CodeBlock>
 
-You can withdraw asset liquidity via the `CreateAssetLiquidityWithdrawal` mutation:
+| Variable         | Description                                                                |
+| ---------------- | -------------------------------------------------------------------------- |
+| `assetID`        | The id of the asset to deposit liquidity into                              |
+| `amount`         | Amount of liquidity to deposit                                             |
+| `id`             | The id of the transfer (deposit)                                           |
+| `idempotencyKey` | Unique key to ensure duplicate or retried requests are processed only once |
 
-```sh
-mutation
-CreateAssetLiquidityWithdrawal(
-    $input:CreateAssetLiquidityWithdrawalInput!
+If the asset liquidity deposit was successful, `DepositAssetLiquidity` returns `true`.
+
+### Withdraw asset liquidity using the `CreateAssetLiquidityWithdrawal` mutation
+
+<CodeBlock title="CreateAssetLiquidityWithdrawal mutation">
+
+```graphql
+mutation CreateAssetLiquidityWithdrawal(
+  $input: CreateAssetLiquidityWithdrawalInput!
 ) {
-    createAssetLiquidityWithdrawal(input:$input) {
-     code
-     success
-     message
-     error
-   }
+  createAssetLiquidityWithdrawal(input: $input) {
+    code
+    success
+    message
+    error
+  }
 }
 ```
 
-The following are example `input` parameters for the `CreateAssetLiquidityWithdrawal` mutation query above.
+</CodeBlock>
 
-```sh
-{"input": {
-    "id":"b97fd85a-126e-42ef-b40d-1a50a70ffa6f",
-    "assetId":"7b8b0f65-896d-4403-b7ba-2e24bf20eb35",
-    "amount":"100",
-    "idempotencyKey":"b97fd85a-126e-42ef-b40d-1a50a70ffa6f",
-    "timeoutSeconds":0}
+#### Example
+
+<CodeBlock title="Example input">
+
+```json
+{
+  "input": {
+    "id": "b97fd85a-126e-42ef-b40d-1a50a70ffa6f",
+    "assetId": "7b8b0f65-896d-4403-b7ba-2e24bf20eb35",
+    "amount": "100",
+    "idempotencyKey": "b97fd85a-126e-42ef-b40d-1a50a70ffa6f",
+    "timeoutSeconds": 0
+  }
 }
 ```
+
+</CodeBlock>
+
+| Variable         | Description                                                                                                                                               |
+| ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`             | The id of the transfer (withdrawal)                                                                                                                       |
+| `assetId`        | The id of the asset to withdraw liquidity from                                                                                                            |
+| `amount`         | Amount of liquidity to withdraw                                                                                                                           |
+| `idempotencyKey` | Unique key to ensure duplicate or retried requests are processed only once                                                                                |
+| `timeoutSeconds` | Interval, in seconds, after a pending transfer is initiated at which it can be posted or voided (zero denotes a no timeout, single-phase posted transfer) |
+
+If the asset liquidity withdrawal was successful, `CreateAssetLiquidityWithdrawal` returns `true`.
+
+### Deposit and withdraw asset liquidity using Rafiki Admin
+
+Asset liquidity can also be added through the [Rafiki Admin](/admin/admin-user-guide/#edit-asset) application. Navigate to the liquidity information section on the main Assets page and then select deposit or withdraw liquidity.
 
 ## Peer Liquidity
 
@@ -96,76 +120,113 @@ Peer liquidity is the line of credit denominated in the asset of the peering rel
 You must decide whether to secure liquidity with your peers by extending credit or requiring them to pre-fund your accounts. Those agreements must be made before setting up peering relationships in Rafiki and are not managed through Interledger or Rafiki.
 :::
 
-### Example
+### Deposit peer liquidity using the `DepositPeerLiquidity` mutation
 
-A configured peer, _Cloud Nine Wallet,_ has a peer liquidity of 100 USD. Your Rafiki instance can send packets up to 100 USD to wallet addresses issued by _Cloud Nine Wallet_. Once that liquidity is used up, you should settle with _Cloud Nine Wallet_ and reset their liquidity to 100 USD.
+<CodeBlock title="DepositPeerLiquidity mutation">
 
-### Deposit Peer Liquidity
-
-You can add liquidity for a particular peer via the `DepositPeerLiquidity` mutation.
-
-```sh
-mutation DepositPeerLiquidity($input:DepositPeerLiquidityInput!) {
-  depositPeerLiquidity(input:$input) {
+```graphql
+mutation DepositPeerLiquidity($input: DepositPeerLiquidityInput!) {
+  depositPeerLiquidity(input: $input) {
     code
     success
     message
-    error}
+    error
+  }
 }
 ```
 
-The following are example `input` parameters for the `DepositPeerLiquidity` mutation query above.
+</CodeBlock>
 
-```sh
-{"input": {"id":"a09b730d-8610-4fda-98fa-ec7acb19c775",
- "peerId":"73158598-2e0c-4973-895e-aebd115af260",
- "amount":"1000000",
- "idempotencyKey":"a09b730d-8610-4fda-98fa-ec7acb19c775",
- "timeoutSeconds":0}
-}
-```
+#### Example
 
-### Withdraw Peer Liquidity
+<CodeBlock title="Example input">
 
-In case you want to reduce your peer’s credit line, you can withdraw peer liquidity via the `CreatePeerLiquidityWithdrawal` mutation:
-
-```sh
-mutation CreatePeerLiquidityWithdrawal(
-  $input:CreatePeerLiquidityWithdrawalInput!
-) {
-  createPeerLiquidityWithdrawal(input:$input) {
-    code
-    success
-    message
-    error}
-}
-```
-
-The following are example `input` parameters for the `CreatePeerLiquidityWithdrawal` mutation query above.
-
-```sh
+```json
 {
-"input": {"id":"421fae87-9a59-4217-9ff8-faf55ffab9c6",
-"peerId":"73158598-2e0c-4973-895e-aebd115af260",
-"amount":"100",
-"timeoutSeconds":0
-}
+  "input": {
+    "id": "a09b730d-8610-4fda-98fa-ec7acb19c775",
+    "peerId": "73158598-2e0c-4973-895e-aebd115af260",
+    "amount": "1000000",
+    "idempotencyKey": "a09b730d-8610-4fda-98fa-ec7acb19c775"
+  }
 }
 ```
+
+</CodeBlock>
+
+| Variable         | Description                                                                |
+| ---------------- | -------------------------------------------------------------------------- |
+| `id`             | The id of the transfer (deposit)                                           |
+| `peerId`         | The id of the peer to deposit liquidity into                               |
+| `amount`         | Amount of liquidity to deposit                                             |
+| `idempotencyKey` | Unique key to ensure duplicate or retried requests are processed only once |
+
+If the peer liquidity deposit was successful, `DepositPeerLiquidity` returns `true`.
+
+### Withdraw peer liquidity using the `CreatePeerLiquidityWithdrawal` mutation
+
+<CodeBlock title="CreatePeerLiquidityWithdrawal mutation">
+
+```graphql
+mutation CreatePeerLiquidityWithdrawal(
+  $input: CreatePeerLiquidityWithdrawalInput!
+) {
+  createPeerLiquidityWithdrawal(input: $input) {
+    code
+    success
+    message
+    error
+  }
+}
+```
+
+</CodeBlock>
+
+#### Example
+
+<CodeBlock title="Example input">
+
+```json
+{
+  "input": {
+    "id": "421fae87-9a59-4217-9ff8-faf55ffab9c6",
+    "peerId": "73158598-2e0c-4973-895e-aebd115af260",
+    "amount": "100",
+    "idempotencyKey": "b97fd85a-126e-42ef-b40d-1a50a70ffa6f",
+    "timeoutSeconds": 0
+  }
+}
+```
+
+</CodeBlock>
+
+| Variable         | Description                                                                                                                                               |
+| ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`             | The id of the transfer (withdrawal)                                                                                                                       |
+| `peerId`         | The id of the peer to withdraw liquidity from                                                                                                             |
+| `amount`         | Amount of liquidity to withdraw                                                                                                                           |
+| `idempotencyKey` | Unique key to ensure duplicate or retried requests are processed only once                                                                                |
+| `timeoutSeconds` | Interval, in seconds, after a pending transfer is initiated at which it can be posted or voided (zero denotes a no timeout, single-phase posted transfer) |
+
+If the peer liquidity withdrawal was successful, `CreatePeerLiquidityWithdrawal` returns `true`.
+
+### Deposit and withdraw peer liquidity using Rafiki Admin
+
+Peer liquidity can also be added through the [Rafiki Admin](/admin/admin-user-guide/#edit-peer) application. Navigate to the liquidity information section on the main Peers page and then select deposit or withdraw liquidity.
 
 ## Payment Liquidity
 
 When Open Payments incoming or outgoing payments are created, your Rafiki instance creates a liquidity account within the accounting database. Liquidity must be deposited into an outgoing payment before the payment can be processed. Rafiki will notify you to deposit liquidity via the `outgoing_payment.created` webhook event. Similarly, packets received for an incoming payment increase its liquidity account. Rafiki will notify you to withdraw that liquidity via the `incoming_payment.completed` webhook event.
 
-### Incoming payment
+### Withdraw incoming payment liquidity using the `CreateIncomingPaymentWithdrawal` mutation
 
-You can withdraw incoming payment liquidity via the `CreateIncomingPaymentWithdrawal` mutation query:
+<CodeBlock title="CreateIncomingPaymentWithdrawal mutation">
 
-```sh
+```graphql
 mutation CreateIncomingPaymentWithdrawal(
-  $input:CreateIncomingPaymentWithdrawalInput!
+  $input: CreateIncomingPaymentWithdrawalInput!
 ) {
-  createIncomingPaymentWithdrawal(input:$input) {
+  createIncomingPaymentWithdrawal(input: $input) {
     code
     error
     message
@@ -174,70 +235,115 @@ mutation CreateIncomingPaymentWithdrawal(
 }
 ```
 
-The following are example `input` parameters for the `CreateIncomingPaymentWithdrawal` mutation query above.
+</CodeBlock>
 
-```sh
-{ "input": {"incomingPaymentId":"b4f85d5c-652d-472d-873c-4ba2a5e39052,   "idempotencyKey":"a09b730d-8610-4fda-98fa-ec7acb19c775",
-"timeoutSeconds":0
+#### Example
+
+<CodeBlock title="Example input">
+
+```json
+{
+  "input": {
+    "incomingPaymentId": "b4f85d5c-652d-472d-873c-4ba2a5e39052",
+    "idempotencyKey": "a09b730d-8610-4fda-98fa-ec7acb19c775",
+    "timeoutSeconds": 0
   }
 }
 ```
 
-### Outgoing payment
+</CodeBlock>
 
-You can deposit outgoing payment liquidity via the `DepositOutgoingPaymentLiquidity` mutation query:
+| Variable            | Description                                                                                                                                               |
+| ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `incomingPaymentId` | The id of the incoming payment to withdraw from                                                                                                           |
+| `idempotencyKey`    | Unique key to ensure duplicate or retried requests are processed only once                                                                                |
+| `timeoutSeconds`    | Interval, in seconds, after a pending transfer is initiated at which it can be posted or voided (zero denotes a no timeout, single-phase posted transfer) |
 
-```sh
+If the incoming payment liquidity withdrawal was successful, `CreateIncomingPaymentWithdrawal` returns `true`.
+
+### Deposit outgoing payment liquidity using the `DepositOutgoingPaymentLiquidity` mutation
+
+<CodeBlock title="DepositOutgoingPaymentLiquidity mutation">
+
+```graphql
 mutation DepositOutgoingPaymentLiquidity(
-  $input:DepositOutgoingPaymentLiquidityInput!)
-{
-  depositOutgoingPaymentLiquidity(input:$input) {
-       code
-  	  error
-  	  message
-  	  success
- }
-}
-```
-
-The following are example `input` parameters for the `DepositOutgoingPaymentLiquidity` mutation query above.
-
-```sh
-{
- "input":{
-   "outgoingPaymentId":"b4f85d5c-652d-472d-873c-4ba2a5e39052",
-   "idempotencyKey":"a09b730d-8610-4fda-98fa-ec7acb19c775"
+  $input: DepositOutgoingPaymentLiquidityInput!
+) {
+  depositOutgoingPaymentLiquidity(input: $input) {
+    code
+    error
+    message
+    success
   }
 }
 ```
 
-You can withdraw outgoing payment liquidity via the `CreateOutgoingPaymentWithdrawal` mutation:
+</CodeBlock>
 
-```sh
-mutation
-CreateOutgoingPaymentWithdrawal
-(
- $input:CreateOutgoingPaymentWithdrawalInput!) {
- createOutgoingPaymentWithdrawal
-(input:$input) {
-  code
-  error
-  message
-  success
-}
+#### Example
+
+<CodeBlock title="Example input">
+
+```json
+{
+  "input": {
+    "outgoingPaymentId": "b4f85d5c-652d-472d-873c-4ba2a5e39052",
+    "idempotencyKey": "a09b730d-8610-4fda-98fa-ec7acb19c775"
+  }
 }
 ```
 
-The following are example `input` parameters for the `CreateOutgoingPaymentWithdrawal` mutation query above.
+</CodeBlock>
 
-```sh
-{"input": {
-  "outgoingPaymentId":"b4f85d5c-652d-472d-873c-4ba2a5e39052",
-  "idempotencyKey":"a09b730d-8610-4fda-98fa-ec7acb19c775",
-  "timeoutSeconds":0
- }
+| Variable            | Description                                                                |
+| ------------------- | -------------------------------------------------------------------------- |
+| `outgoingPaymentId` | The id of the outgoing payment to deposit into                             |
+| `idempotencyKey`    | Unique key to ensure duplicate or retried requests are processed only once |
+
+If the outgoing payment liquidity deposit was successful, `DepositOutgoingPaymentLiquidity` returns `true`.
+
+### Withdraw outgoing payment liquidity using the `CreateOutgoingPaymentWithdrawal` mutation
+
+<CodeBlock title="CreateOutgoingPaymentWithdrawal mutation">
+
+```graphql
+mutation CreateOutgoingPaymentWithdrawal(
+  $input: CreateOutgoingPaymentWithdrawalInput!
+) {
+  createOutgoingPaymentWithdrawal(input: $input) {
+    code
+    error
+    message
+    success
+  }
 }
 ```
+
+</CodeBlock>
+
+#### Example
+
+<CodeBlock title="Example input">
+
+```json
+{
+  "input": {
+    "outgoingPaymentId": "b4f85d5c-652d-472d-873c-4ba2a5e39052",
+    "idempotencyKey": "a09b730d-8610-4fda-98fa-ec7acb19c775",
+    "timeoutSeconds": 0
+  }
+}
+```
+
+</CodeBlock>
+
+| Variable            | Description                                                                                                                                               |
+| ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `outgoingPaymentId` | The id of the outgoing payment to withdraw from                                                                                                           |
+| `idempotencyKey`    | Unique key to ensure duplicate or retried requests are processed only once                                                                                |
+| `timeoutSeconds`    | Interval, in seconds, after a pending transfer is initiated at which it can be posted or voided (zero denotes a no timeout, single-phase posted transfer) |
+
+If the outgoing payment liquidity withdrawal was successful, `CreateOutgoingPaymentWithdrawal` returns `true`.
 
 ## Two-phase withdrawals
 
@@ -255,52 +361,80 @@ The following withdrawal transactions supports two-phase transfers:
 - Incoming payment withdrawal
 - Outgoing payment withdrawal
 
-### Examples
+### Post and commit a sucessful transfer using the `PostLiquidityWithdrawal` mutation
 
-You can post a successful transfer via the `PostLiquidityWithdrawal` mutation query:
+<CodeBlock title="PostLiquidityWithdrawal mutation">
 
-```sh
-mutation
-PostLiquidityWithdrawal($input:PostLiquidityWithdrawalInput!) {postLiquidityWithdrawal
-(
-input:$input) {
-  code
-  error
-  message
-  success}
+```graphql
+mutation PostLiquidityWithdrawal($input: PostLiquidityWithdrawalInput!) {
+  postLiquidityWithdrawal(input: $input) {
+    code
+    error
+    message
+    success
+  }
 }
 ```
 
-The following are example `input` parameters for the `PostLiquidityWithdrawal` mutation query above.
+</CodeBlock>
 
-```sh
+#### Example
+
+<CodeBlock title="Example input">
+
+```json
 {
- "input": {
-  "withdrawalId":"b4f85d5c-652d-472d-873c-4ba2a5e39052",
-  "idempotencyKey":"a09b730d-8610-4fda-98fa-ec7acb19c775"}
+  "input": {
+    "withdrawalId": "b4f85d5c-652d-472d-873c-4ba2a5e39052",
+    "idempotencyKey": "a09b730d-8610-4fda-98fa-ec7acb19c775"
+  }
 }
 ```
 
-You can void an unsuccessful transfer via the `VoidLiquidityWithdrawal` mutation query:
+</CodeBlock>
 
-```sh
-mutation
-VoidLiquidityWithdrawal($input:VoidLiquidityWithdrawalInput!) {
- voidLiquidityWithdrawal
-(input:$input) {
-  code
-  error
-  message
-  success}
+| Variable         | Description                                                                |
+| ---------------- | -------------------------------------------------------------------------- |
+| `withdrawalId`   | The id of the liquidity withdrawal to post                                 |
+| `idempotencyKey` | Unique key to ensure duplicate or retried requests are processed only once |
+
+If the liquidity withdrawal was successfully posted, `PostLiquidityWithdrawal` returns `true`.
+
+### Void and rollback an unsuccessful transfer using the `VoidLiquidityWithdrawal` mutation
+
+<CodeBlock title="VoidLiquidityWithdrawal mutation">
+
+```graphql
+mutation VoidLiquidityWithdrawal($input: VoidLiquidityWithdrawalInput!) {
+  voidLiquidityWithdrawal(input: $input) {
+    code
+    error
+    message
+    success
+  }
 }
 ```
 
-The following are example `input` parameters for the `VoidLiquidityWithdrawal` mutation query above.
+</CodeBlock>
 
-```sh
-{"input": {
-  "withdrawalId":"b4f85d5c-652d-472d-873c-4ba2a5e39052",
-"idempotencyKey":"a09b730d-8610-4fda-98fa-ec7acb19c775"
- }
+#### Example
+
+<CodeBlock title="Example input">
+
+```json
+{
+  "input": {
+    "withdrawalId": "b4f85d5c-652d-472d-873c-4ba2a5e39052",
+    "idempotencyKey": "a09b730d-8610-4fda-98fa-ec7acb19c775"
+  }
 }
 ```
+
+</CodeBlock>
+
+| Variable         | Description                                                                |
+| ---------------- | -------------------------------------------------------------------------- |
+| `withdrawalId`   | The id of the liquidity withdrawal to void                                 |
+| `idempotencyKey` | Unique key to ensure duplicate or retried requests are processed only once |
+
+If the liquidity withdrawal was successfully voided and rolled back, `VoidLiquidityWithdrawal` returns `true`.
