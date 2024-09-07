@@ -123,7 +123,7 @@ export default defineConfig({
                   ]
                 },
                 {
-                  label: 'Docker',
+                  label: 'Docker Compose',
                   link: '/integration/prod/nginx'
                 },
                 {
