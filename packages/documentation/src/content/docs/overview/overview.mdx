@@ -17,19 +17,19 @@ Implementing and maintaining the Interledger Protocol (ILP) stack on your own ca
   about ASEs](#more-about-account-servicing-entities)
 </Card>
 
-## Real-world use cases
+## Use cases
 
 ### Peer-to-peer payments
 
-Rafiki enables seamless peer-to-peer payments, including cross-currency transactions. Users can transfer funds directly to each other’s accounts, regardless of their respective currencies, leveraging the interoperability of the Interledger network.
+In the context of Rafiki, a peer is another ASE with whom you transact. Forming a peering relationship requires you to both agree on the currency in which you will transact, on a settlement mechanism and cadence, and other details. Interledger creates interoperability between different payment systems and currencies, making it easier for peers to directly transact with one another.
 
 ### eCommerce payments
 
-Rafiki facilitates eCommerce transactions for both one-time purchases and recurring subscriptions. ASEs can integrate Rafiki into their platforms to offer customers flexible payment options and streamline the checkout process.
+If a merchant accepts Interledger as a payment method, then a customer can pay using their wallet address instead of entering, for example, a credit card number and other personal details on the merchant’s site. Rafiki’s implementation of Interledger and Open Payments means your account holders can use their wallet addresses for both one-time purchases and recurring purchases, such as subscriptions, anywhere Interledger is an accepted payment method.
 
 ### Web Monetization
 
-Websites can implement Web Monetization, a browser API that enables the streaming of payments directly from web site visitors to site owners. Rafiki provides support for Web Monetization payment flows right out of the box.
+With <LinkOut href=“https://webmonetization.org”>Web Monetization</LinkOut>, site visitors can pay an amount of their choosing to a participating site with little to no interaction. Both the site and the site visitor must have an Open Payments-enabled wallet address in order to receive and send payments. Rafiki’s implementation of Interledger’s Simple Payment Setup Protocol (SPSP) and the Open Payments standard means you can assign one or more wallet addresses to your account holders’ accounts, making these accounts support incoming and outgoing Web Monetization payments right out of the box.
 
 ## Interledger
 
