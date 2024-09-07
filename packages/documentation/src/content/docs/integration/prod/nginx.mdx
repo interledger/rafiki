@@ -20,7 +20,6 @@ Generate the Let’s encrypt certificates:
 certbot certonly --manual --preferred-challenges=dns --email EMAIL --server https://acme-v02.api.letsencrypt.org/directory --agree-tos -d DOMAIN
 ```
 
-​
 :::note
 Domain can be in wildcard format. You will also need to update the TXT record in this step.
 :::
@@ -39,56 +38,14 @@ Next update the DNS records to point to the static external IP address of the vo
 
 | service   | URL              | example                |
 | --------- | ---------------- | ---------------------- |
+| admin     | admin.DOMAIN     | admin.myrafiki.com     |
 | auth      | auth.DOMAIN      | auth.myrafiki.com      |
 | connector | connector.DOMAIN | connector.myrafiki.com |
-| admin     | admin.DOMAIN     | admin.myrafiki.com     |
 | ilp       | ilp.DOMAIN       | ilp.myrafiki.com       |
 
 ## Server preparation
 
 Create nginx configuration files for every exposed domain:
-
-### Auth
-
-```sh
-server {
-    server_name auth.myrafiki.com;
-
-    listen 443 ssl;
-
-    ssl_certificate /etc/letsencrypt/live/auth.myrafiki.com/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/auth.myrafiki.com/privkey.pem;
-
-    include /etc/letsencrypt/options-ssl-nginx.conf;
-    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
-
-    location / {
-        proxy_http_version 1.1;
-        proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_set_header Upgrade "";
-        proxy_set_header Connection "";
-        proxy_set_header Host $server_name;
-        proxy_set_header Accept-Encoding "";
-        proxy_cache_bypass $http_upgrade;
-
-        proxy_pass_request_headers on;
-
-        proxy_pass http://localhost:3002;
-    }
-}
-
-server {
-    server_name auth.myrafiki.com;
-
-    listen 80;
-
-    if ($host = auth.myrafiki.com) {
-	    return 301 https://$host$request_uri;
-    }
-
-    return 404;
-}
-```
 
 ### Admin
 
@@ -132,16 +89,16 @@ server {
 }
 ```
 
-### ILP
+### Auth
 
 ```sh
 server {
-    server_name ilp.myrafiki.com;
+    server_name auth.myrafiki.com;
 
     listen 443 ssl;
 
-    ssl_certificate /etc/letsencrypt/live/ilp.myrafiki.com/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/ilp.myrafiki.com/privkey.pem;
+    ssl_certificate /etc/letsencrypt/live/auth.myrafiki.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/auth.myrafiki.com/privkey.pem;
 
     include /etc/letsencrypt/options-ssl-nginx.conf;
     ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
@@ -157,17 +114,17 @@ server {
 
         proxy_pass_request_headers on;
 
-        proxy_pass http://localhost:4000;
+        proxy_pass http://localhost:3002;
     }
 }
 
 server {
-    server_name ilp.myrafiki.com;
+    server_name auth.myrafiki.com;
 
     listen 80;
 
-    if ($host = ilp.myrafiki.com) {
-            return 301 https://$host$request_uri;
+    if ($host = auth.myrafiki.com) {
+	    return 301 https://$host$request_uri;
     }
 
     return 404;
@@ -209,6 +166,48 @@ server {
 
     if ($host = connector.myrafiki.com) {
 	    return 301 https://$host$request_uri;
+    }
+
+    return 404;
+}
+```
+
+### ILP
+
+```sh
+server {
+    server_name ilp.myrafiki.com;
+
+    listen 443 ssl;
+
+    ssl_certificate /etc/letsencrypt/live/ilp.myrafiki.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/ilp.myrafiki.com/privkey.pem;
+
+    include /etc/letsencrypt/options-ssl-nginx.conf;
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
+
+    location / {
+        proxy_http_version 1.1;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header Upgrade "";
+        proxy_set_header Connection "";
+        proxy_set_header Host $server_name;
+        proxy_set_header Accept-Encoding "";
+        proxy_cache_bypass $http_upgrade;
+
+        proxy_pass_request_headers on;
+
+        proxy_pass http://localhost:4000;
+    }
+}
+
+server {
+    server_name ilp.myrafiki.com;
+
+    listen 80;
+
+    if ($host = ilp.myrafiki.com) {
+            return 301 https://$host$request_uri;
     }
 
     return 404;
