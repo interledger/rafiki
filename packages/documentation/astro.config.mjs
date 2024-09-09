@@ -65,8 +65,8 @@ export default defineConfig({
                   collapsed: true,
                   items: [
                     {
-                      label: 'Accounts, transfers, and liquidity',
-                      link: '/overview/concepts/accounts-transfers-liquidity'
+                      label: 'Accounting',
+                      link: '/overview/concepts/accounting'
                     },
                     {
                       label: 'Interledger',
