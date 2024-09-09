@@ -16,6 +16,12 @@ The Rafiki Admin application provides tools to manage peers, assets, wallet addr
 - Running the Rafiki `frontend` package. See [Frontend service](/integration/services/frontend-service) for more information.
 - Rafiki Admin login credentials
 
+:::note[Login credentials]
+The admin user must run a script to generate a registration link and then send that link to a user via email or Slack. Currently, the process for obtaining login credentials is not automated, nor is the method for sending a registration link.
+
+For more information about obtaining login credentials, refer to the [Admin UI](/integration/playground/overview/#admin-ui) section of the local playground page.
+:::
+
 ## Navigation
 
 After logging in, you’ll be greeted by the main landing page with a left-hand navigation menu. This menu provides access to all of the main functionality needed to manage your Rafiki instance.
@@ -227,7 +233,7 @@ Wallet addresses cannot be deleted from the system. This restriction exists to e
 
 **Solution**
 
-In both cases, the recommended approach is to create a new wallet address and deactivate the old one. Note that deactivation of a wallet address is currently only available via the API and not through the Rafiki Admin application.
+In both cases, the recommended approach is to create a new wallet address and deactivate the old one. To deactivate a wallet address, change the wallet status to Inactive.
 :::
 
 ## Webhooks
