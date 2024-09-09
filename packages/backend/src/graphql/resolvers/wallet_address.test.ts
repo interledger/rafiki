@@ -43,7 +43,10 @@ describe('Wallet Address Resolvers', (): void => {
   let walletAddressService: WalletAddressService
 
   beforeAll(async (): Promise<void> => {
-    deps = await initIocContainer(Config)
+    deps = initIocContainer({
+      ...Config,
+      localCacheDuration: 0
+    })
     appContainer = await createTestApp(deps)
     knex = appContainer.knex
     walletAddressService = await deps.use('walletAddressService')

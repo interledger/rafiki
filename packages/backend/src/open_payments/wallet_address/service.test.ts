@@ -35,7 +35,10 @@ describe('Open Payments Wallet Address Service', (): void => {
   let knex: Knex
 
   beforeAll(async (): Promise<void> => {
-    deps = initIocContainer(Config)
+    deps = initIocContainer({
+      ...Config,
+      localCacheDuration: 0
+    })
     config = await deps.use('config')
     appContainer = await createTestApp(deps)
     knex = appContainer.knex
