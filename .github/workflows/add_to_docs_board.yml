@@ -6,7 +6,7 @@ on:
 
 jobs:
   add-to-project:
-    if: github.event.label.name == 'docs'
+    if: github.event.label.name == 'user-docs'
     name: Add issue to project
     runs-on: ubuntu-22.04
     steps:
