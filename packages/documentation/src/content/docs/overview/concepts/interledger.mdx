@@ -53,9 +53,7 @@ When a `GET` request is made to a payment pointer, the response contains the ILP
 
 ## STREAM Protocol
 
-The <LinkOut href='https://interledger.org/developers/rfcs/stream-protocol/'>STREAM Protocol</LinkOut> is the transport layer protocol in the Interledger Protocol stack. After
-SPSP communicates the ILP address of the destination account and the shared secret,
-the STREAM protocol uses these details to set up a STREAM connection between the
+The <LinkOut href='https://interledger.org/developers/rfcs/stream-protocol/'>STREAM Protocol</LinkOut> is the transport layer protocol in the Interledger Protocol stack. After SPSP communicates the ILP address of the destination account and the shared secret, the STREAM protocol uses these details to set up a STREAM connection between the
 counterparties.{' '}
 
 Rafiki’s `backend` service includes an Interledger connector for sending and receiving STREAM packets. STREAM packets are encoded, encrypted, and sent as the `data` field in ILP packets. The protocol uses the shared secret to authenticate and encrypt packets, and to generate conditions and fulfillments.

@@ -4,22 +4,23 @@
 
 ## What is Rafiki?
 
-Rafiki is open source software that provides an efficient solution for an [Account Servicing Entity](https://rafiki.dev/concepts/account-servicing-entity/) to enable Interledger functionality on its users' accounts.
+Rafiki is open source software that provides an efficient solution for an [account servicing entity](https://rafiki.dev/overview/overview) to enable Interledger functionality on its users' accounts.
 
 This includes
 
-- sending and receiving payments (via [SPSP](https://rafiki.dev/reference/glossary/#simple-payments-setup-protocol-spsp) and [Open Payments](https://rafiki.dev/concepts/open-payments/overview/))
-- allowing third-party access to initiate payments and view transaction data (via [Open Payments](https://rafiki.dev/concepts/open-payments/overview/))
+- sending and receiving payments (via [SPSP](https://rafiki.dev/resources/glossary#simple-payment-setup-protocol-spsp) and [Open Payments](https://rafiki.dev/overview/concepts/open-payments))
+- allowing third-party access to initiate payments and view transaction data (via [Open Payments](https://rafiki.dev/overview/concepts/open-payments))
 
-**❗ Rafiki is intended to be run by [Account Servicing Entities](https://rafiki.dev/reference/glossary/#account-servicing-entity) only and should not be used in production by non-regulated entities.**
+**❗ Rafiki is intended to be run by account servicing entities only and should not be used in production by non-regulated entities.**
 
-Rafiki is made up of several components, including an Interledger connector, a high-throughput accounting database called [TigerBeetle](https://rafiki.dev/concepts/accounting/tigerbeetle/), and several APIs:
+Rafiki is made up of several components, including an Interledger connector, a high-throughput accounting database called [TigerBeetle](https://rafiki.dev/overview/concepts/accounting#tigerbeetle), and several APIs:
 
-- the [Admin API](https://rafiki.dev/apis/backend/schema/) to create [peering relationships](https://rafiki.dev/concepts/interledger-protocol/peering/), add supported [assets](https://rafiki.dev/concepts/asset/), and issue [wallet addresses](https://rafiki.dev/reference/glossary/#wallet-address)
-- the [Open Payments](https://rafiki.dev/reference/glossary/#open-payments) API to allow third parties (with the account holder's consent) to initiate payments and to view the transaction history
-- the [SPSP](https://rafiki.dev/reference/glossary/#simple-payments-setup-protocol-spsp) API for simple Interledger Payments
+- the [Admin APIs](https://rafiki.dev/apis/graphql/admin-api-overview) to create [peering relationships](https://rafiki.dev/overview/concepts/interledger#peers), 
+add supported [assets](https://rafiki.dev/overview/concepts/accounting#assets), and issue [wallet addresses](https://rafiki.dev/resources/glossary#wallet-address)
+- the [Open Payments](https://rafiki.dev/overview/concepts/open-payments) API to allow third parties (with the account holder's consent) to initiate payments and to view the transaction history
+- the [SPSP](https://rafiki.dev/resources/glossary#simple-payment-setup-protocol-spsp) API for simple Interledger Payments
 
-Additionally, this package also includes a reference implementation of a [GNAP](https://rafiki.dev/reference/glossary/#grant-negotiation-authorization-protocol) authorization server, which handles the access control for the [Open Payments](https://rafiki.dev/reference/glossary/#open-payments) API. For more information on the architecture, check out the [Architecture documentation](https://rafiki.dev/introduction/architecture/).
+Additionally, this package also includes a reference implementation of a [GNAP](https://rafiki.dev/resources/glossary#grant-negotiation-and-authorization-protocol-gnap) authorization server, which handles the access control for the Open Payment API. For more information on the architecture, check out the [Architecture documentation](https://rafiki.dev/resources/architecture).
 
 ### New to Interledger?
 
@@ -28,7 +29,7 @@ Never heard of Interledger before? Or would you like to learn more? Here are som
 - [Interledger Website](https://interledger.org/)
 - [Interledger Specs](https://interledger.org/rfcs/0027-interledger-protocol-4/)
 - [Interledger Explainer Video](https://twitter.com/Interledger/status/1567916000074678272)
-- [Open Payments](https://openpayments.guide/)
+- [Open Payments](https://openpayments.dev/)
 - [Web monetization](https://webmonetization.org/)
 
 ## Contributing

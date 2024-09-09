@@ -126,7 +126,7 @@ export default function ViewPeerPage() {
                         The name of the{' '}
                         <a
                           className='default-link'
-                          href='https://rafiki.dev/concepts/interledger-protocol/peering/'
+                          href='https://rafiki.dev/resources/glossary#peer'
                         >
                           peer
                         </a>
@@ -211,13 +211,7 @@ export default function ViewPeerPage() {
                     error={response?.errors.http.fieldErrors.incomingAuthTokens}
                     description={
                       <>
-                        List of valid tokens to accept when receiving{' '}
-                        <a
-                          className='default-link'
-                          href='https://rafiki.dev/concepts/interledger-protocol/connector/#incoming-http'
-                        >
-                          incoming ILP packets from the peer.
-                        </a>
+                        List of valid tokens to accept when receiving incoming ILP packets from the peer.
                       </>
                     }
                   />
@@ -230,13 +224,7 @@ export default function ViewPeerPage() {
                     error={response?.errors.http.fieldErrors.outgoingAuthToken}
                     description={
                       <>
-                        List of valid tokens to present when sending{' '}
-                        <a
-                          className='default-link'
-                          href='https://rafiki.dev/concepts/interledger-protocol/connector/#outgoing-http'
-                        >
-                          outgoing ILP packets to the peer.
-                        </a>
+                        List of valid tokens to present when sending outgoing ILP packets to the peer.
                       </>
                     }
                   />
@@ -249,14 +237,7 @@ export default function ViewPeerPage() {
                     error={response?.errors.http.fieldErrors.outgoingEndpoint}
                     description={
                       <>
-                        Endpoint on the peer to which{' '}
-                        <a
-                          className='default-link'
-                          href='https://rafiki.dev/concepts/interledger-protocol/connector/#outgoing-http'
-                        >
-                          outgoing ILP packets
-                        </a>{' '}
-                        will be sent.
+                        Endpoint on the peer to which outgoing ILP packets will be sent.
                       </>
                     }
                   />

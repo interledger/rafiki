@@ -1,12 +1,12 @@
 # Local Playground
 
-We have created a suite of packages that, together, mock an account servicing entity that has deployed Rafiki, exposing an [SPSP](https://rafiki.dev/reference/glossary/#simple-payments-setup-protocol-spsp) endpoint, the [Open Payments](https://rafiki.dev/concepts/open-payments/overview/) APIs with its required [GNAP](https://rafiki.dev/reference/glossary/#grant-negotiation-authorization-protocol) auth endpoints to request grants, a STREAM endpoint for receiving Interledger packets, and a UI to view and manage the Rafiki instance.
+We have created a suite of packages that, together, mock an account servicing entity that has deployed Rafiki, exposing an [SPSP](https://rafiki.dev/resources/glossary#simple-payment-setup-protocol-spsp) endpoint, the [Open Payments](https://rafiki.dev/overview/concepts/open-payments) APIs with its required [GNAP](https://rafiki.dev/resources/glossary#grant-negotiation-and-authorization-protocol-gnap) auth endpoints to request grants, a STREAM endpoint for receiving Interledger packets, and a UI to view and manage the Rafiki instance.
 
 These packages include:
 
 - `backend` (SPSP, Open Payments APIs, GraphQL Admin APIs, STREAM endpoint)
 - `auth` (GNAP auth server)
-- `mock-account-servicing-entity` (mocks an [Account Servicing Entity](https://rafiki.dev/concepts/account-servicing-entity/)
+- `mock-account-servicing-entity` (mocks an [account servicing entity](https://rafiki.dev/overview/overview)
 - `frontend` (Remix app to expose a UI for Rafiki Admin management via interaction with the `backend` Admin APIs)
 - `kratos` (An identity and user management solution for the `frontend`)
 - `mailslurper` (A SMTP mail server to catch account recovery emails)
@@ -27,7 +27,7 @@ This environment will set up a playground where you can use the Rafiki Admin API
 
 ## Environment overview
 
-![Docker compose environment](../packages/documentation/public/img/localenv-architecture.png)
+![Docker compose environment](../packages/documentation/public/img/localenv.png)
 
 #### Cloud Nine Wallet
 
