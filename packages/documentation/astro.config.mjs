@@ -223,6 +223,20 @@ export default defineConfig({
                 {
                   label: 'GraphQL Admin APIs',
                   link: '/apis/graphql/admin-api-overview'
+                },
+                {
+                  label: 'Backend Admin API',
+                  collapsed: true,
+                  autogenerate: {
+                    directory: 'apis/graphql/backend'
+                  }
+                },
+                {
+                  label: 'Auth Admin API',
+                  collapsed: true,
+                  autogenerate: {
+                    directory: 'apis/graphql/auth'
+                  }
                 }
               ]
             }
