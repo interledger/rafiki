@@ -138,7 +138,7 @@ export default function CreatePeerPage() {
                     error={response?.errors?.fieldErrors?.outgoingAuthToken}
                     description={
                       <>
-                        List of valid tokens to present when sending outgoing ILP packets to the peer.
+                        Valid auth token to present when sending outgoing ILP packets to the peer.
                       </>
                     }
                   />
