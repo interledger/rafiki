@@ -1,4 +1,5 @@
 import Axios from 'axios'
+import { v4 } from 'uuid'
 import { Knex } from 'knex'
 import fetch from 'cross-fetch'
 import { IocContract } from '@adonisjs/fold'
@@ -40,10 +41,20 @@ export const createTestApp = async (
   config.walletAddressUrl = 'https://wallet.example/.well-known/pay'
   const logger = await container.use('logger')
 
+  const nock = (global as unknown as { nock: typeof import('nock') }).nock
+  nock(config.kratosAdminUrl)
+    .get('/identities')
+    .query({ credentials_identifier: config.kratosAdminEmail })
+    .reply(200, [{ metadata_public: { operator: true }, id: v4() }])
+    .persist()
+
+  nock(config.kratosAdminUrl)
+    .post('/recovery/link')
+    .reply(200, { recovery_link: 'https://example.com' })
+    .persist()
+
   const app = new App(container)
   await start(container, app)
-
-  const nock = (global as unknown as { nock: typeof import('nock') }).nock
 
   // Since wallet addresses MUST use HTTPS, manually mock an HTTPS proxy to the Open Payments / SPSP server
   nock(config.openPaymentsUrl)

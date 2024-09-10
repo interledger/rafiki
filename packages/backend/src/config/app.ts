@@ -195,7 +195,10 @@ export const Config = {
   kratosAdminUrl: envString('KRATOS_ADMIN_URL'),
   kratosAdminEmail: envString('KRATOS_ADMIN_EMAIL'),
   operatorIdpSecret: envString('OPERATOR_IDP_SECRET'),
-  operatorIdpConsentUrl: envString('OPERATOR_IDP_CONSENT_URL')
+  operatorIdpConsentUrl: envString('OPERATOR_IDP_CONSENT_URL'),
+  // TODO: something more permanent & agreed upon by the team
+  // Used by seed scripts/Bruno collection
+  operatorApiSecret: envString('OPERATOR_API_SECRET')
 }
 
 function parseRedisTlsConfig(

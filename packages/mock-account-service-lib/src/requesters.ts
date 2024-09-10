@@ -25,6 +25,7 @@ export type EndpointType = {
 
 export function createRequesters(
   apolloClient: ApolloClient<NormalizedCacheObject>,
+  operatorSecret: string,
   logger: Logger
 ): {
   createAsset: (
@@ -82,7 +83,13 @@ export function createRequesters(
 } {
   return {
     createAsset: (code, scale, liquidityThreshold) =>
-      createAsset(apolloClient, code, scale, liquidityThreshold),
+      createAsset(
+        apolloClient,
+        code,
+        scale,
+        liquidityThreshold,
+        operatorSecret
+      ),
     createTenant: (idpConsentUrl, idpSecret, endpoints, email) =>
       createTenant(
         apolloClient,
@@ -90,7 +97,8 @@ export function createRequesters(
         idpConsentUrl,
         idpSecret,
         endpoints,
-        email
+        email,
+        operatorSecret
       ),
     createPeer: (
       staticIlpAddress,
@@ -108,14 +116,29 @@ export function createRequesters(
         assetId,
         assetCode,
         name,
-        liquidityThreshold
+        liquidityThreshold,
+        operatorSecret
       ),
     createAutoPeer: (peerUrl, assetId) =>
-      createAutoPeer(apolloClient, logger, peerUrl, assetId),
+      createAutoPeer(apolloClient, logger, peerUrl, assetId, operatorSecret),
     depositPeerLiquidity: (peerId, amount, transferUid) =>
-      depositPeerLiquidity(apolloClient, logger, peerId, amount, transferUid),
+      depositPeerLiquidity(
+        apolloClient,
+        logger,
+        peerId,
+        amount,
+        transferUid,
+        operatorSecret
+      ),
     depositAssetLiquidity: (assetId, amount, transferId) =>
-      depositAssetLiquidity(apolloClient, logger, assetId, amount, transferId),
+      depositAssetLiquidity(
+        apolloClient,
+        logger,
+        assetId,
+        amount,
+        transferId,
+        operatorSecret
+      ),
     createWalletAddress: (accountName, accountUrl, assetId, tenantId) =>
       createWalletAddress(
         apolloClient,
@@ -123,12 +146,26 @@ export function createRequesters(
         accountName,
         accountUrl,
         assetId,
-        tenantId
+        tenantId,
+        operatorSecret
       ),
     createWalletAddressKey: ({ walletAddressId, jwk }) =>
-      createWalletAddressKey(apolloClient, logger, { walletAddressId, jwk }),
+      createWalletAddressKey(
+        apolloClient,
+        logger,
+        { walletAddressId, jwk },
+        operatorSecret
+      ),
     setFee: (assetId, type, fixed, basisPoints) =>
-      setFee(apolloClient, logger, assetId, type, fixed, basisPoints)
+      setFee(
+        apolloClient,
+        logger,
+        assetId,
+        type,
+        fixed,
+        basisPoints,
+        operatorSecret
+      )
   }
 }
 
@@ -136,7 +173,8 @@ export async function createAsset(
   apolloClient: ApolloClient<NormalizedCacheObject>,
   code: string,
   scale: number,
-  liquidityThreshold: number
+  liquidityThreshold: number,
+  operatorSecret: string
 ): Promise<AssetMutationResponse> {
   const createAssetMutation = gql`
     mutation CreateAsset($input: CreateAssetInput!) {
@@ -160,7 +198,8 @@ export async function createAsset(
   return apolloClient
     .mutate({
       mutation: createAssetMutation,
-      variables: createAssetInput
+      variables: createAssetInput,
+      context: { headers: { 'x-operator-secret': operatorSecret } }
     })
     .then(({ data }): AssetMutationResponse => {
       if (!data.createAsset.asset) {
@@ -176,7 +215,8 @@ export async function createTenant(
   idpConsentUrl: string,
   idpSecret: string,
   endpoints: EndpointType[],
-  email: string
+  email: string,
+  operatorSecret: string
 ): Promise<CreateTenantMutationResponse> {
   const createTenantMutation = gql`
     mutation CreateTenant($input: CreateTenantInput!) {
@@ -200,7 +240,8 @@ export async function createTenant(
   return apolloClient
     .mutate({
       mutation: createTenantMutation,
-      variables: createTenantInput
+      variables: createTenantInput,
+      context: { headers: { 'x-operator-secret': operatorSecret } }
     })
     .then(({ data }): CreateTenantMutationResponse => {
       logger.debug(data)
@@ -219,7 +260,8 @@ export async function createPeer(
   assetId: string,
   assetCode: string,
   name: string,
-  liquidityThreshold: number
+  liquidityThreshold: number,
+  operatorSecret: string
 ): Promise<CreatePeerMutationResponse> {
   const createPeerMutation = gql`
     mutation CreatePeer($input: CreatePeerInput!) {
@@ -245,7 +287,8 @@ export async function createPeer(
   return apolloClient
     .mutate({
       mutation: createPeerMutation,
-      variables: createPeerInput
+      variables: createPeerInput,
+      context: { headers: { 'x-operator-secret': operatorSecret } }
     })
     .then(({ data }): CreatePeerMutationResponse => {
       logger.debug(data)
@@ -260,7 +303,8 @@ export async function createAutoPeer(
   apolloClient: ApolloClient<NormalizedCacheObject>,
   logger: Logger,
   peerUrl: string,
-  assetId: string
+  assetId: string,
+  operatorSecret: string
 ): Promise<CreateOrUpdatePeerByUrlMutationResponse | undefined> {
   const createAutoPeerMutation = gql`
     mutation CreateOrUpdatePeerByUrl($input: CreateOrUpdatePeerByUrlInput!) {
@@ -290,7 +334,8 @@ export async function createAutoPeer(
   return apolloClient
     .mutate({
       mutation: createAutoPeerMutation,
-      variables: createPeerInput
+      variables: createPeerInput,
+      context: { headers: { 'x-operator-secret': operatorSecret } }
     })
     .then(({ data }): CreateOrUpdatePeerByUrlMutationResponse => {
       if (!data.createOrUpdatePeerByUrl.peer) {
@@ -306,7 +351,8 @@ export async function depositPeerLiquidity(
   logger: Logger,
   peerId: string,
   amount: string,
-  transferUid: string
+  transferUid: string,
+  operatorSecret: string
 ): Promise<LiquidityMutationResponse> {
   const depositPeerLiquidityMutation = gql`
     mutation DepositPeerLiquidity($input: DepositPeerLiquidityInput!) {
@@ -326,7 +372,8 @@ export async function depositPeerLiquidity(
   return apolloClient
     .mutate({
       mutation: depositPeerLiquidityMutation,
-      variables: depositPeerLiquidityInput
+      variables: depositPeerLiquidityInput,
+      context: { headers: { 'x-operator-secret': operatorSecret } }
     })
     .then(({ data }): LiquidityMutationResponse => {
       logger.debug(data)
@@ -342,7 +389,8 @@ export async function depositAssetLiquidity(
   logger: Logger,
   assetId: string,
   amount: number,
-  transferId: string
+  transferId: string,
+  operatorSecret: string
 ): Promise<LiquidityMutationResponse> {
   const depositAssetLiquidityMutation = gql`
     mutation DepositAssetLiquidity($input: DepositAssetLiquidityInput!) {
@@ -362,7 +410,8 @@ export async function depositAssetLiquidity(
   return apolloClient
     .mutate({
       mutation: depositAssetLiquidityMutation,
-      variables: depositAssetLiquidityInput
+      variables: depositAssetLiquidityInput,
+      context: { headers: { 'x-operator-secret': operatorSecret } }
     })
     .then(({ data }): LiquidityMutationResponse => {
       logger.debug(data)
@@ -379,7 +428,8 @@ export async function createWalletAddress(
   accountName: string,
   accountUrl: string,
   assetId: string,
-  tenantId: string
+  tenantId: string,
+  operatorSecret: string
 ): Promise<WalletAddress> {
   const createWalletAddressMutation = gql`
     mutation CreateWalletAddress($input: CreateWalletAddressInput!) {
@@ -405,7 +455,8 @@ export async function createWalletAddress(
       mutation: createWalletAddressMutation,
       variables: {
         input: createWalletAddressInput
-      }
+      },
+      context: { headers: { 'x-operator-secret': operatorSecret } }
     })
     .then(({ data }) => {
       logger.debug(data)
@@ -427,7 +478,8 @@ export async function createWalletAddressKey(
   }: {
     walletAddressId: string
     jwk: string
-  }
+  },
+  operatorSecret: string
 ): Promise<CreateWalletAddressKeyMutationResponse> {
   const createWalletAddressKeyMutation = gql`
     mutation CreateWalletAddressKey($input: CreateWalletAddressKeyInput!) {
@@ -448,7 +500,8 @@ export async function createWalletAddressKey(
       mutation: createWalletAddressKeyMutation,
       variables: {
         input: createWalletAddressKeyInput
-      }
+      },
+      context: { headers: { 'x-operator-secret': operatorSecret } }
     })
     .then(({ data }): CreateWalletAddressKeyMutationResponse => {
       logger.debug(data)
@@ -465,7 +518,8 @@ export async function setFee(
   assetId: string,
   type: FeeType,
   fixed: number,
-  basisPoints: number
+  basisPoints: number,
+  operatorSecret: string
 ): Promise<SetFeeResponse> {
   const setFeeMutation = gql`
     mutation SetFee($input: SetFeeInput!) {
@@ -495,7 +549,8 @@ export async function setFee(
       mutation: setFeeMutation,
       variables: {
         input: setFeeInput
-      }
+      },
+      context: { headers: { 'x-operator-secret': operatorSecret } }
     })
     .then(({ data }): SetFeeResponse => {
       logger.debug(data)

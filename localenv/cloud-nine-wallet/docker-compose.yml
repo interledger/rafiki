@@ -25,6 +25,7 @@ services:
       IDP_SECRET: 2pEcn2kkCclbOHQiGNEwhJ0rucATZhrA807HTm2rNXE=
       DISPLAY_NAME: Cloud Nine Wallet
       DISPLAY_ICON: wallet-icon.svg
+      OPERATOR_API_SECRET: tXhxCNRWuVOJs5W/CUgjsc+vBnKj0CVdqSb87EXN64E=
     volumes:
       - ../cloud-nine-wallet/seed.yml:/workspace/seed.yml
       - ../cloud-nine-wallet/private-key.pem:/workspace/private-key.pem
@@ -79,6 +80,7 @@ services:
       AUTH_ADMIN_API_SECRET: rPoZpe9tVyBNCigm05QDco7WLcYa0xMao7lO5KG1XG4=
       OPERATOR_IDP_CONSENT_URL: http://localhost:3030/mock-idp/
       OPERATOR_IDP_SECRET: 2pEcn2kkCclbOHQiGNEwhJ0rucATZhrA807HTm2rNXE=
+      OPERATOR_API_SECRET: tXhxCNRWuVOJs5W/CUgjsc+vBnKj0CVdqSb87EXN64E=
     depends_on:
       - shared-database
       - shared-redis

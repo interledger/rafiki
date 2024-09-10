@@ -86,7 +86,8 @@ import { TelemetryService } from './telemetry/service'
 import { ApolloArmor } from '@escape.tech/graphql-armor'
 import { openPaymentsServerErrorMiddleware } from './open_payments/route-errors'
 import {
-  // getTenantIdFromRequestHeaders,
+  getTenantIdFromOperatorSecret,
+  getTenantIdFromRequestHeaders,
   verifyApiSignature
 } from './shared/utils'
 import { WalletAddress } from './open_payments/wallet_address/model'
@@ -427,10 +428,20 @@ export class App {
     }
 
     // Determine Kratos Identity
-    // TODO: Comment out for now until seed script has a good way to acquire a kratos session
+    // TODO: We need a better solution for non-session-based authentication (i.e. requests not using a Kratos session)
     koa.use(async (ctx: TenantedAppContext, next: Koa.Next): Promise<void> => {
-      await getTenantIdFromRequestHeaders(ctx, this.config)
-      return next()
+      const { headers } = ctx.request
+      this.logger.info(
+        { headers, operatorApiSecret: this.config.operatorApiSecret },
+        'checking for secret'
+      )
+      if (headers['x-operator-secret'] === this.config.operatorApiSecret) {
+        await getTenantIdFromOperatorSecret(ctx, this.config)
+        return next()
+      } else {
+        await getTenantIdFromRequestHeaders(ctx, this.config)
+        return next()
+      }
     })
 
     koa.use(
