@@ -373,9 +373,7 @@ export class App {
         },
         next: Koa.Next
       ): Promise<void> => {
-        if (ctx.path == '/healthz') {
-          ctx.status = 200
-        } else if (ctx.path !== '/graphql') {
+        if (ctx.path !== '/graphql') {
           ctx.status = 404
         } else {
           return next()
