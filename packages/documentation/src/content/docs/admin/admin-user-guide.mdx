@@ -27,9 +27,19 @@ Ory Kratos and Rafiki Admin should be hosted on the same top-level domain. Hosti
 
 Access to Rafiki Admin is restricted to ensure that only authorized users can register. This is achieved by using an invitation-only system, where new users are invited by an administrator. The registration flow is not public, so users cannot sign up on their own. Instead, administrators create accounts using the `invite-user` script.
 
-An administrator (someone with backend interface system access) can run the invite-user script in one of two ways, either from outside the container, on the host machine where Docker is running, `docker exec -it <admin-container-name> npm run invite-user -- example@mail.com`, or directly inside the Rafiki Admin Docker container `npm run invite-user -- example@mail.com`.
+#### Invite a user
 
-After running the invite-user script, it generates a recovery link that also serves as an invitation link. This link is output to the terminal, and the administrator can send it to the user. When the user opens the link in their browser, they are automatically logged in and taken to the account settings page, where they can set a new password. Afterward, they can log in normally via the Rafiki Admin URL.
+An administrator (someone with backend interface system access) can run the `invite-user` script in one of two ways: from outside the container on the host machine where Docker is running or directly inside the Rafiki Admin Docker container.
+
+```nginx title="Outside container on host machine"
+docker exec -it <admin-container-name> npm run invite-user -- example@mail.com
+```
+
+```nginx title="Inside Rafiki Admin Docker container"
+npm run invite-user -- example@mail.com
+```
+
+After running the `invite-user` script, the script generates a recovery link that also serves as an invitation link. This link is output to the terminal, and the administrator can send it to the user. When the user opens the link in their browser, they are automatically logged in and taken to the account settings page where they can set a new password. Afterward, they can log in normally via the Rafiki Admin URL.
 
 <LargeImg
   src='/img/admin-guide/account-settings.png'
@@ -40,9 +50,17 @@ After running the invite-user script, it generates a recovery link that also ser
 The invitation link is single-use for security purposes. Once accessed, it becomes invalid. If sending the link through Slack, ensure you format it as code by placing it inside backticks (\`) to prevent Slack from automatically previewing the link, which would invalidate it. Example: \``http://localhost:4433/self-service/recovery?flow=116250ee-07bd-4b5c-a98e-87406192bb4b&token=miv0yZ7DFKKw8RyBBQvWoOsTRa2TVuZm`\`.
 :::
 
-There is an automated account recovery flow which requires an SMTP mail server for sending recovery links to users. Alternatively, an administrator may generate a recovery link using the same `invite-user` script.
+#### Generate a recovery link
 
-To remove a user, administrators can use the following script: `docker exec -it <admin-container-name> npm run delete-user -- example@mail.com`.
+There is an automated account recovery flow which requires an SMTP mail server for sending recovery links to users. Alternatively, an administrator can generate a recovery link using the same `invite-user` script.
+
+#### Remove a user
+
+To remove a user, administrators can run the following script in a terminal window:
+
+```nginx
+docker exec -it <admin-container-name> npm run delete-user -- example@mail.com.
+```
 
 ### Why Ory Kratos?
 
