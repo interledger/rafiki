@@ -83,6 +83,27 @@ describe('Balances', (): void => {
       })
     })
 
+    test('ignores expired pending transfers', async (): Promise<void> => {
+      await createLedgerTransfer(
+        {
+          ledger: account.ledger,
+          creditAccountId: account.id,
+          debitAccountId: peerAccount.id,
+          state: LedgerTransferState.PENDING,
+          expiresAt: new Date(Date.now() - 1),
+          amount: 10n
+        },
+        knex
+      )
+
+      await expect(getAccountBalances(serviceDeps, account)).resolves.toEqual({
+        creditsPosted: 0n,
+        creditsPending: 0n,
+        debitsPosted: 0n,
+        debitsPending: 0n
+      })
+    })
+
     describe('calculates balances for single transfers', (): void => {
       const amounts = {
         credit: {

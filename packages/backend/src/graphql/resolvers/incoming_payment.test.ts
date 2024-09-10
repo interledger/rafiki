@@ -439,4 +439,172 @@ describe('Incoming Payment Resolver', (): void => {
       }
     })
   })
+
+  describe('Mutation.updateIncomingPayment', (): void => {
+    let amount: Amount
+    let expiresAt: Date
+
+    beforeEach((): void => {
+      amount = {
+        value: BigInt(56),
+        assetCode: asset.code,
+        assetScale: asset.scale
+      }
+      expiresAt = new Date(Date.now() + 30_000)
+    })
+
+    test.each`
+      metadata
+      ${{ description: 'Update metadata', status: 'COMPLETE' }}
+      ${{}}
+    `(
+      'Successfully updates an incoming payment with $metadata',
+      async ({ metadata }): Promise<void> => {
+        const incomingAmount = amount ? amount : undefined
+        const { id: walletAddressId } = await createWalletAddress(deps, {
+          assetId: asset.id
+        })
+        const payment = await createIncomingPayment(deps, {
+          walletAddressId,
+          metadata,
+          expiresAt,
+          incomingAmount
+        })
+        const input = {
+          id: payment.id,
+          metadata
+        }
+
+        const createSpy = jest
+          .spyOn(incomingPaymentService, 'update')
+          .mockResolvedValueOnce({
+            ...payment,
+            metadata: input.metadata
+          } as IncomingPaymentModel)
+
+        const query = await appContainer.apolloClient
+          .query({
+            query: gql`
+              mutation UpdateIncomingPayment(
+                $input: UpdateIncomingPaymentInput!
+              ) {
+                updateIncomingPayment(input: $input) {
+                  payment {
+                    id
+                    metadata
+                  }
+                }
+              }
+            `,
+            variables: { input }
+          })
+          .then(
+            (query): IncomingPaymentResponse =>
+              query.data?.updateIncomingPayment
+          )
+
+        expect(createSpy).toHaveBeenCalledWith(input)
+        expect(query).toEqual({
+          __typename: 'IncomingPaymentResponse',
+          payment: {
+            __typename: 'IncomingPayment',
+            id: payment.id,
+            metadata: metadata || null
+          }
+        })
+      }
+    )
+
+    test('Errors when unknown payment id', async (): Promise<void> => {
+      const createSpy = jest
+        .spyOn(incomingPaymentService, 'update')
+        .mockResolvedValueOnce(IncomingPaymentError.UnknownPayment)
+
+      const input = {
+        id: uuid(),
+        metadata: { description: 'Update metadata', status: 'COMPLETE' }
+      }
+
+      expect.assertions(3)
+      try {
+        await appContainer.apolloClient
+          .query({
+            query: gql`
+              mutation UpdateIncomingPayment(
+                $input: UpdateIncomingPaymentInput!
+              ) {
+                updateIncomingPayment(input: $input) {
+                  payment {
+                    id
+                    metadata
+                  }
+                }
+              }
+            `,
+            variables: { input }
+          })
+          .then(
+            (query): IncomingPaymentResponse =>
+              query.data?.updateIncomingPayment
+          )
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApolloError)
+        expect((error as ApolloError).graphQLErrors).toContainEqual(
+          expect.objectContaining({
+            message: errorToMessage[IncomingPaymentError.UnknownPayment],
+            extensions: expect.objectContaining({
+              code: errorToCode[IncomingPaymentError.UnknownPayment]
+            })
+          })
+        )
+      }
+      expect(createSpy).toHaveBeenCalledWith(input)
+    })
+
+    test('Internal server error', async (): Promise<void> => {
+      const createSpy = jest
+        .spyOn(incomingPaymentService, 'update')
+        .mockRejectedValueOnce(new Error('unexpected'))
+
+      const input = {
+        id: uuid(),
+        metadata: {}
+      }
+
+      expect.assertions(3)
+      try {
+        await appContainer.apolloClient
+          .query({
+            query: gql`
+              mutation UpdateIncomingPayment(
+                $input: UpdateIncomingPaymentInput!
+              ) {
+                updateIncomingPayment(input: $input) {
+                  payment {
+                    id
+                    metadata
+                  }
+                }
+              }
+            `,
+            variables: { input }
+          })
+          .then(
+            (query): IncomingPaymentResponse =>
+              query.data?.updateIncomingPayment
+          )
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApolloError)
+        expect((error as ApolloError).graphQLErrors).toContainEqual(
+          expect.objectContaining({
+            message: 'unexpected',
+            extensions: expect.objectContaining({
+              code: GraphQLErrorCode.InternalServerError
+            })
+          })
+        )
+      }
+      expect(createSpy).toHaveBeenCalledWith(input)
+    })
+  })
 })

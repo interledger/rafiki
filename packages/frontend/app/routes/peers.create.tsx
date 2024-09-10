@@ -16,11 +16,11 @@ import { createPeer } from '~/lib/api/peer.server'
 import { messageStorage, setMessageAndRedirect } from '~/lib/message.server'
 import { createPeerSchema } from '~/lib/validate.server'
 import type { ZodFieldErrors } from '~/shared/types'
-import { redirectIfUnauthorizedAccess } from '../lib/kratos_checks.server'
+import { checkAuthAndRedirect } from '../lib/kratos_checks.server'
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const cookies = request.headers.get('cookie')
-  await redirectIfUnauthorizedAccess(request.url, cookies)
+  await checkAuthAndRedirect(request.url, cookies)
 
   return json({ assets: await loadAssets() })
 }

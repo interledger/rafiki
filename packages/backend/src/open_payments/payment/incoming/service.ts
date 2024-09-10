@@ -17,6 +17,7 @@ import {
 import { Amount } from '../../amount'
 import { IncomingPaymentError } from './errors'
 import { IAppConfig } from '../../../config/app'
+import { poll } from '../../../shared/utils'
 
 export const POSITIVE_SLIPPAGE = BigInt(1)
 // First retry waits 10 seconds
@@ -32,14 +33,24 @@ export interface CreateIncomingPaymentOptions {
   metadata?: Record<string, unknown>
 }
 
+export interface UpdateOptions {
+  id: string
+  metadata: Record<string, unknown>
+}
+
 export interface IncomingPaymentService
   extends WalletAddressSubresourceService<IncomingPayment> {
   create(
     options: CreateIncomingPaymentOptions,
     trx?: Knex.Transaction
   ): Promise<IncomingPayment | IncomingPaymentError>
+  approve(id: string): Promise<IncomingPayment | IncomingPaymentError>
+  cancel(id: string): Promise<IncomingPayment | IncomingPaymentError>
   complete(id: string): Promise<IncomingPayment | IncomingPaymentError>
   processNext(): Promise<string | undefined>
+  update(
+    options: UpdateOptions
+  ): Promise<IncomingPayment | IncomingPaymentError>
 }
 
 export interface ServiceDependencies extends BaseService {
@@ -62,9 +73,12 @@ export async function createIncomingPaymentService(
   return {
     get: (options) => getIncomingPayment(deps, options),
     create: (options, trx) => createIncomingPayment(deps, options, trx),
+    approve: (id) => approveIncomingPayment(deps, id),
+    cancel: (id) => cancelIncomingPayment(deps, id),
     complete: (id) => completeIncomingPayment(deps, id),
     getWalletAddressPage: (options) => getWalletAddressPage(deps, options),
-    processNext: () => processNextIncomingPayment(deps)
+    processNext: () => processNextIncomingPayment(deps),
+    update: (options) => updateIncomingPayment(deps, options)
   }
 }
 
@@ -77,6 +91,19 @@ async function getIncomingPayment(
     .withGraphFetched('[asset, walletAddress]')
   if (incomingPayment) return await addReceivedAmount(deps, incomingPayment)
   else return
+}
+
+async function updateIncomingPayment(
+  deps: ServiceDependencies,
+  options: UpdateOptions
+): Promise<IncomingPayment | IncomingPaymentError> {
+  const incomingPayment = await IncomingPayment.query(deps.knex)
+    .patchAndFetchById(options.id, { metadata: options.metadata })
+    .withGraphFetched('[asset, walletAddress]')
+
+  return incomingPayment
+    ? await addReceivedAmount(deps, incomingPayment)
+    : IncomingPaymentError.UnknownPayment
 }
 
 async function createIncomingPayment(
@@ -116,7 +143,8 @@ async function createIncomingPayment(
       return IncomingPaymentError.InvalidAmount
     }
   }
-  const incomingPayment = await IncomingPayment.query(trx || deps.knex)
+
+  let incomingPayment = await IncomingPayment.query(trx || deps.knex)
     .insertAndFetch({
       walletAddressId: walletAddressId,
       client,
@@ -135,7 +163,55 @@ async function createIncomingPayment(
     data: incomingPayment.toData(0n)
   })
 
-  return await addReceivedAmount(deps, incomingPayment, BigInt(0))
+  incomingPayment = await addReceivedAmount(deps, incomingPayment, BigInt(0))
+  if (!deps.config.pollIncomingPaymentCreatedWebhook) {
+    return incomingPayment
+  }
+
+  try {
+    const response = await poll({
+      request: async () =>
+        getApprovedOrCanceledIncomingPayment(deps, { id: incomingPayment.id }),
+      pollingFrequencyMs: deps.config.incomingPaymentCreatedPollFrequency,
+      timeoutMs: deps.config.incomingPaymentCreatedPollTimeout
+    })
+
+    if (response?.cancelledAt) {
+      deps.logger.info(
+        {
+          cancelledAt: response.cancelledAt.toISOString(),
+          paymentId: incomingPayment.id
+        },
+        'Incoming payment was cancelled'
+      )
+      return IncomingPaymentError.ActionNotPerformed
+    }
+
+    if (response?.approvedAt) return response
+    deps.logger.error(
+      { response },
+      'Got response, but incoming payment is not approved or cancelled'
+    )
+    return IncomingPaymentError.ActionNotPerformed
+  } catch (err) {
+    const errorMessage = 'Got error / timeout while polling incoming payment'
+    deps.logger.error(
+      { errorMessage: err instanceof Error && err.message },
+      errorMessage
+    )
+    return IncomingPaymentError.ActionNotPerformed
+  }
+}
+
+async function getApprovedOrCanceledIncomingPayment(
+  deps: ServiceDependencies,
+  options: GetOptions
+) {
+  return IncomingPayment.query(deps.knex)
+    .get(options)
+    .withGraphFetched('[asset, walletAddress]')
+    .whereNotNull('approvedAt')
+    .orWhereNotNull('cancelledAt')
 }
 
 // Fetch (and lock) an incoming payment for work.
@@ -275,6 +351,70 @@ async function getWalletAddressPage(
       )
     }
     return payment
+  })
+}
+
+async function approveIncomingPayment(
+  deps: ServiceDependencies,
+  id: string
+): Promise<IncomingPayment | IncomingPaymentError> {
+  return deps.knex.transaction(async (trx) => {
+    const payment = await IncomingPayment.query(trx)
+      .findById(id)
+      .forUpdate()
+      .withGraphFetched('[asset, walletAddress]')
+
+    if (!payment) return IncomingPaymentError.UnknownPayment
+    if (payment.state !== IncomingPaymentState.Pending)
+      return IncomingPaymentError.WrongState
+
+    if (payment.cancelledAt) {
+      deps.logger.info({
+        errorMessage: 'Cannot approve already cancelled incoming payment',
+        paymentId: payment.id
+      })
+      return IncomingPaymentError.AlreadyActioned
+    }
+
+    if (!payment.approvedAt) {
+      await payment.$query(trx).patch({
+        approvedAt: new Date(Date.now())
+      })
+    }
+
+    return await addReceivedAmount(deps, payment)
+  })
+}
+
+async function cancelIncomingPayment(
+  deps: ServiceDependencies,
+  id: string
+): Promise<IncomingPayment | IncomingPaymentError> {
+  return deps.knex.transaction(async (trx) => {
+    const payment = await IncomingPayment.query(trx)
+      .findById(id)
+      .forUpdate()
+      .withGraphFetched('[asset, walletAddress]')
+
+    if (!payment) return IncomingPaymentError.UnknownPayment
+    if (payment.state !== IncomingPaymentState.Pending)
+      return IncomingPaymentError.WrongState
+
+    if (payment.approvedAt) {
+      deps.logger.info({
+        errorMessage: 'Cannot cancel already approved incoming payment',
+        paymentId: payment.id
+      })
+      return IncomingPaymentError.AlreadyActioned
+    }
+
+    if (!payment.cancelledAt) {
+      await payment.$query(trx).patch({
+        cancelledAt: new Date(Date.now())
+      })
+    }
+
+    return await addReceivedAmount(deps, payment)
   })
 }
 

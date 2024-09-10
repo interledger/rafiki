@@ -22,6 +22,7 @@ export async function createReceiver(
     incomingPayment.toOpenPaymentsTypeWithMethods(
       walletAddress,
       streamCredentialsService.get(incomingPayment)!
-    )
+    ),
+    false
   )
 }

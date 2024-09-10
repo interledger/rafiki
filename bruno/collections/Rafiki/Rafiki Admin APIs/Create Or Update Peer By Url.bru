@@ -1,7 +1,7 @@
 meta {
   name: Create Or Update Peer By Url
   type: graphql
-  seq: 9
+  seq: 10
 }
 
 post {
@@ -45,7 +45,7 @@ script:pre-request {
 
 script:post-response {
   const body = res.getBody();
-
+  
   if (body?.data) {
     bru.setEnvVar("peerId", body.data.createOrUpdatePeerByUrl?.peer.id);
   }

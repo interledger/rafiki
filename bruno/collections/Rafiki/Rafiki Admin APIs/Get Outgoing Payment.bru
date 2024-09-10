@@ -1,7 +1,7 @@
 meta {
   name: Get Outgoing Payment
   type: graphql
-  seq: 33
+  seq: 35
 }
 
 post {
@@ -23,12 +23,9 @@ body:graphql {
       quote {
         createdAt
         expiresAt
-        highEstimatedExchangeRate
         id
-        lowEstimatedExchangeRate
-        maxPacketAmount
-        minExchangeRate
         walletAddressId
+        estimatedExchangeRate
         receiveAmount {
           assetCode
           assetScale
