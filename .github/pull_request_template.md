@@ -26,6 +26,7 @@ Checklist items become clickable check boxes once the pull request is created. T
 
 - [ ] Related issues linked using `fixes #number`
 - [ ] Tests added/updated
-- [ ] Documentation added
 - [ ] Make sure that all checks pass
-- [ ] Bruno collection updated
+- [ ] Bruno collection updated (if necessary)
+- [ ] Documentation issue created with `user-docs` label (if necessary)
+- [ ] OpenAPI specs updated (if necessary)
