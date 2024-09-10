@@ -106,7 +106,7 @@
             "uid": "PBFA97CFB590B2093"
           },
           "editorMode": "code",
-          "expr": "(increase(transactions_amount_total[30s]) * 0.5 * 0.0001)",
+          "expr": "(increase(packet_amount_fulfill_total[30s]) * 0.5 * 0.0001)",
           "hide": false,
           "instant": false,
           "interval": "",

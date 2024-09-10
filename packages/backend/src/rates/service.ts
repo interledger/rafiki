@@ -1,5 +1,5 @@
 import { BaseService } from '../shared/baseService'
-import Axios, { AxiosInstance } from 'axios'
+import Axios, { AxiosInstance, isAxiosError } from 'axios'
 import { convert, ConvertOptions } from './util'
 import { createInMemoryDataStore } from '../middleware/cache/data-stores/in-memory'
 import { CacheDataStore } from '../middleware/cache/data-stores'
@@ -74,29 +74,13 @@ class RatesServiceImpl implements RatesService {
   }
 
   private async getRates(baseAssetCode: string): Promise<Rates> {
-    const [cachedRate, cachedExpiry] = await Promise.all([
-      this.cachedRates.get(baseAssetCode),
-      this.cachedRates.getKeyExpiry(baseAssetCode)
-    ])
+    const cachedRate = await this.cachedRates.get(baseAssetCode)
 
-    if (cachedRate && cachedExpiry) {
-      const isCloseToExpiry =
-        cachedExpiry.getTime() <
-        Date.now() + 0.5 * this.deps.exchangeRatesLifetime
-
-      if (isCloseToExpiry) {
-        this.fetchNewRatesAndCache(baseAssetCode) // don't await, just get new rates for later
-      }
-
+    if (cachedRate) {
       return JSON.parse(cachedRate)
     }
 
-    try {
-      return await this.fetchNewRatesAndCache(baseAssetCode)
-    } catch (err) {
-      this.cachedRates.delete(baseAssetCode)
-      throw err
-    }
+    return await this.fetchNewRatesAndCache(baseAssetCode)
   }
 
   private async fetchNewRatesAndCache(baseAssetCode: string): Promise<Rates> {
@@ -106,12 +90,32 @@ class RatesServiceImpl implements RatesService {
       this.inProgressRequests[baseAssetCode] = this.fetchNewRates(baseAssetCode)
     }
 
-    const rates = await this.inProgressRequests[baseAssetCode]
+    try {
+      const rates = await this.inProgressRequests[baseAssetCode]
 
-    delete this.inProgressRequests[baseAssetCode]
+      await this.cachedRates.set(baseAssetCode, JSON.stringify(rates))
+      return rates
+    } catch (err) {
+      const errorMessage = 'Could not fetch rates'
 
-    await this.cachedRates.set(baseAssetCode, JSON.stringify(rates))
-    return rates
+      this.deps.logger.error(
+        {
+          ...(isAxiosError(err)
+            ? {
+                errorMessage: err.message,
+                errorCode: err.code,
+                errorStatus: err.status
+              }
+            : { err }),
+          url: this.deps.exchangeRatesUrl
+        },
+        errorMessage
+      )
+
+      throw new Error(errorMessage)
+    } finally {
+      delete this.inProgressRequests[baseAssetCode]
+    }
   }
 
   private async fetchNewRates(baseAssetCode: string): Promise<Rates> {
@@ -120,12 +124,9 @@ class RatesServiceImpl implements RatesService {
       return { base: baseAssetCode, rates: {} }
     }
 
-    const res = await this.axios
-      .get<Rates>(url, { params: { base: baseAssetCode } })
-      .catch((err) => {
-        this.deps.logger.warn({ err: err.message }, 'price request error')
-        throw err
-      })
+    const res = await this.axios.get<Rates>(url, {
+      params: { base: baseAssetCode }
+    })
 
     const { base, rates } = res.data
     this.checkBaseAsset(base)

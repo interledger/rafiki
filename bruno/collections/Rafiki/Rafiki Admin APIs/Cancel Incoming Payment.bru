@@ -1,0 +1,36 @@
+meta {
+  name: Cancel Incoming Payment
+  type: graphql
+  seq: 48
+}
+
+post {
+  url: {{PeerGraphqlHost}}/graphql
+  body: graphql
+  auth: none
+}
+
+body:graphql {
+  mutation CancelIncomingPayment($input: CancelIncomingPaymentInput!) {
+    cancelIncomingPayment(input: $input) {
+      payment {
+        id
+      }
+    }
+  }
+  
+}
+
+body:graphql:vars {
+  {
+    "input": {
+      "id": "{{incomingPaymentId}}"
+    }
+  }
+}
+
+script:pre-request {
+  const scripts = require('./scripts');
+  
+  scripts.addApiSignatureHeader();
+}

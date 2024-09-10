@@ -3,12 +3,12 @@ import { useLocation, useNavigate, useSearchParams } from '@remix-run/react'
 import { Fragment, useEffect } from 'react'
 import { XIcon } from '~/components/icons'
 import { prettify } from '~/shared/utils'
-import { redirectIfUnauthorizedAccess } from '../lib/kratos_checks.server'
+import { checkAuthAndRedirect } from '../lib/kratos_checks.server'
 import { type LoaderFunctionArgs } from '@remix-run/node'
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const cookies = request.headers.get('cookie')
-  await redirectIfUnauthorizedAccess(request.url, cookies)
+  await checkAuthAndRedirect(request.url, cookies)
   return null
 }
 

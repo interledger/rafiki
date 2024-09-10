@@ -40,9 +40,12 @@ import { TelemetryService } from '../../../telemetry/service'
 import { Amount } from '../../amount'
 import { QuoteService } from '../../quote/service'
 import { isQuoteError } from '../../quote/errors'
+import { Pagination, SortOrder } from '../../../shared/baseModel'
+import { FilterString } from '../../../shared/filters'
 
 export interface OutgoingPaymentService
   extends WalletAddressSubresourceService<OutgoingPayment> {
+  getPage(options?: GetPageOptions): Promise<OutgoingPayment[]>
   create(
     options: CreateOutgoingPaymentOptions
   ): Promise<OutgoingPayment | OutgoingPaymentError>
@@ -75,12 +78,64 @@ export async function createOutgoingPaymentService(
   }
   return {
     get: (options) => getOutgoingPayment(deps, options),
+    getPage: (options) => getOutgoingPaymentsPage(deps, options),
     create: (options) => createOutgoingPayment(deps, options),
     cancel: (options) => cancelOutgoingPayment(deps, options),
     fund: (options) => fundPayment(deps, options),
     processNext: () => worker.processPendingPayment(deps),
     getWalletAddressPage: (options) => getWalletAddressPage(deps, options)
   }
+}
+
+interface OutgoingPaymentFilter {
+  receiver?: FilterString
+  walletAddressId?: FilterString
+  state?: FilterString
+}
+
+interface GetPageOptions {
+  pagination?: Pagination
+  filter?: OutgoingPaymentFilter
+  sortOrder?: SortOrder
+}
+
+async function getOutgoingPaymentsPage(
+  deps: ServiceDependencies,
+  options?: GetPageOptions
+): Promise<OutgoingPayment[]> {
+  const { filter, pagination, sortOrder } = options ?? {}
+
+  const query = OutgoingPayment.query(deps.knex).withGraphFetched(
+    '[quote.asset, walletAddress]'
+  )
+
+  if (filter?.receiver?.in && filter.receiver.in.length) {
+    query
+      .innerJoin('quotes', 'quotes.id', 'outgoingPayments.id')
+      .whereIn('quotes.receiver', filter.receiver.in)
+  }
+
+  if (filter?.walletAddressId?.in && filter.walletAddressId.in.length) {
+    query.whereIn('walletAddressId', filter.walletAddressId.in)
+  }
+
+  if (filter?.state?.in && filter.state.in.length) {
+    query.whereIn('state', filter.state.in)
+  }
+
+  const page = await query.getPage(pagination, sortOrder)
+  const amounts = await deps.accountingService.getAccountsTotalSent(
+    page.map((payment: OutgoingPayment) => payment.id)
+  )
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
+  return page.map((payment: OutgoingPayment, i: number) => {
+    payment.sentAmount = {
+      value: validateSentAmount(deps, payment, amounts[i]),
+      assetCode: payment.asset.code,
+      assetScale: payment.asset.scale
+    }
+    return payment
+  })
 }
 
 async function getOutgoingPayment(

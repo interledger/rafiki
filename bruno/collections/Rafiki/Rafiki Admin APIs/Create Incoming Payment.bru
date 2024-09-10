@@ -1,7 +1,7 @@
 meta {
   name: Create Incoming Payment
   type: graphql
-  seq: 24
+  seq: 26
 }
 
 post {
@@ -57,7 +57,7 @@ script:pre-request {
 
 script:post-response {
   const body = res.getBody();
-
+  
   if (body?.data) {
     bru.setEnvVar("incomingPaymentId", body.data.createIncomingPayment.payment.id);
   }
