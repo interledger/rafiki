@@ -473,6 +473,54 @@ describe('Incoming Payment Service', (): void => {
       ).resolves.toBe(IncomingPaymentError.InvalidExpiry)
     })
   })
+  describe('Update IncomingPayment', (): void => {
+    let amount: Amount
+    let payment: IncomingPayment
+
+    beforeEach(async (): Promise<void> => {
+      amount = {
+        value: BigInt(123),
+        assetCode: asset.code,
+        assetScale: asset.scale
+      }
+      payment = (await incomingPaymentService.create({
+        walletAddressId,
+        incomingAmount: amount
+      })) as IncomingPayment
+      assert.ok(!isIncomingPaymentError(payment))
+    })
+
+    test.each`
+      metadata
+      ${{ description: 'Update metadata', status: 'COMPLETE' }}
+      ${{}}
+    `(
+      'An incoming payment can be updated',
+      async ({ metadata }): Promise<void> => {
+        const incomingPayment = await incomingPaymentService.update({
+          id: payment.id,
+          metadata
+        })
+        assert.ok(!isIncomingPaymentError(incomingPayment))
+        expect(incomingPayment).toMatchObject({
+          id: incomingPayment.id,
+          metadata
+        })
+      }
+    )
+
+    test('Cannot update incoming payment for nonexistent incomingPaymentId', async (): Promise<void> => {
+      await expect(
+        incomingPaymentService.update({
+          id: uuid(),
+          metadata: {
+            description: 'Test incoming payment',
+            externalRef: '#123'
+          }
+        })
+      ).resolves.toBe(IncomingPaymentError.UnknownPayment)
+    })
+  })
 
   describe('get/getWalletAddressPage', (): void => {
     getTests({

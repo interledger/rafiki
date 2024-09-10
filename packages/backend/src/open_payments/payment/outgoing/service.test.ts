@@ -51,6 +51,8 @@ import { UnionOmit } from '../../../shared/utils'
 import { QuoteError } from '../../quote/errors'
 import { withConfigOverride } from '../../../tests/helpers'
 import { TelemetryService } from '../../../telemetry/service'
+import { getPageTests } from '../../../shared/baseModel.test'
+import { Pagination, SortOrder } from '../../../shared/baseModel'
 
 describe('OutgoingPaymentService', (): void => {
   let deps: IocContract<AppServices>
@@ -61,6 +63,7 @@ describe('OutgoingPaymentService', (): void => {
   let quoteService: QuoteService
   let telemetryService: TelemetryService
   let knex: Knex
+  let assetId: string
   let walletAddressId: string
   let incomingPayment: IncomingPayment
   let receiverWalletAddress: MockWalletAddress
@@ -262,6 +265,7 @@ describe('OutgoingPaymentService', (): void => {
 
   beforeEach(async (): Promise<void> => {
     const { id: sendAssetId } = await createAsset(deps, asset)
+    assetId = sendAssetId
     const walletAddress = await createWalletAddress(deps, {
       assetId: sendAssetId
     })
@@ -354,6 +358,125 @@ describe('OutgoingPaymentService', (): void => {
       ).rejects.toThrow(
         'Could not get amount sent for payment. There was a problem getting the associated liquidity account.'
       )
+    })
+  })
+
+  describe('getPage', (): void => {
+    getPageTests({
+      createModel: () =>
+        createOutgoingPayment(deps, {
+          walletAddressId,
+          client,
+          receiver,
+          debitAmount: {
+            assetCode: asset.code,
+            assetScale: asset.scale,
+            value: BigInt(10)
+          },
+          validDestination: true,
+          method: 'ilp'
+        }),
+      getPage: (pagination?: Pagination, sortOrder?: SortOrder) =>
+        outgoingPaymentService.getPage({ pagination, sortOrder })
+    })
+
+    describe('filters', () => {
+      let otherSenderWalletAddress: WalletAddress
+      let otherReceiverWalletAddress: WalletAddress
+      let otherReceiver: string
+      let outgoingPayment: OutgoingPayment
+      let otherOutgoingPayment: OutgoingPayment
+      beforeEach(async (): Promise<void> => {
+        otherSenderWalletAddress = await createWalletAddress(deps, { assetId })
+        otherReceiverWalletAddress = await createWalletAddress(deps, {
+          assetId
+        })
+        const incomingPayment = await createIncomingPayment(deps, {
+          walletAddressId: receiverWalletAddress.id
+        })
+        otherReceiver = incomingPayment.getUrl(otherReceiverWalletAddress)
+
+        outgoingPayment = await createOutgoingPayment(deps, {
+          walletAddressId,
+          client,
+          receiver,
+          debitAmount: {
+            assetCode: asset.code,
+            assetScale: asset.scale,
+            value: BigInt(10)
+          },
+          validDestination: true,
+          method: 'ilp'
+        })
+
+        otherOutgoingPayment = await createOutgoingPayment(deps, {
+          walletAddressId: otherSenderWalletAddress.id,
+          client,
+          receiver: otherReceiver,
+          debitAmount: {
+            assetCode: asset.code,
+            assetScale: asset.scale,
+            value: BigInt(10)
+          },
+          validDestination: true,
+          method: 'ilp'
+        })
+      })
+
+      test('can filter by receiver', async (): Promise<void> => {
+        const page = await outgoingPaymentService.getPage({
+          filter: {
+            receiver: { in: [receiver] }
+          }
+        })
+
+        expect(page).toContainEqual(
+          expect.objectContaining({ id: outgoingPayment.id })
+        )
+        expect(page).not.toContainEqual(
+          expect.objectContaining({
+            id: otherOutgoingPayment.id,
+            receiver: otherReceiver
+          })
+        )
+      })
+
+      test('can filter by wallet address', async (): Promise<void> => {
+        const page = await outgoingPaymentService.getPage({
+          filter: {
+            walletAddressId: { in: [walletAddressId] }
+          }
+        })
+
+        expect(page).toContainEqual(
+          expect.objectContaining({ id: outgoingPayment.id, walletAddressId })
+        )
+        expect(page).not.toContainEqual(
+          expect.objectContaining({ id: otherOutgoingPayment.id })
+        )
+      })
+
+      test('can filter by state', async (): Promise<void> => {
+        await OutgoingPayment.query(trx).patchAndFetchById(outgoingPayment.id, {
+          state: OutgoingPaymentState.Completed
+        })
+
+        const page = await outgoingPaymentService.getPage({
+          filter: {
+            state: { in: [OutgoingPaymentState.Completed] }
+          }
+        })
+
+        expect(page).toContainEqual(
+          expect.objectContaining({
+            id: outgoingPayment.id,
+            state: OutgoingPaymentState.Completed
+          })
+        )
+        expect(page).not.toContainEqual(
+          expect.objectContaining({ id: otherOutgoingPayment.id })
+        )
+      })
     })
   })
 
@@ -1162,6 +1285,85 @@ describe('OutgoingPaymentService', (): void => {
 
       return payment
     }
+
+    test('Telemetry Transaction Counter increments for COMPLETED transactions', async (): Promise<void> => {
+      const incrementTrxCounterSpy = jest
+        .spyOn(telemetryService!, 'incrementCounter')
+        .mockImplementation(() => Promise.resolve())
+
+      incomingPayment = await createIncomingPayment(deps, {
+        walletAddressId: receiverWalletAddress.id,
+        incomingAmount: {
+          value: receiveAmount.value,
+          assetCode: receiverWalletAddress.asset.code,
+          assetScale: receiverWalletAddress.asset.scale
+        }
+      })
+      assert.ok(incomingPayment.walletAddress)
+
+      const createdPayment = await setup({
+        receiver: incomingPayment.getUrl(incomingPayment.walletAddress),
+        receiveAmount,
+        method: 'ilp'
+      })
+
+      mockPaymentHandlerPay(createdPayment, incomingPayment)
+      const payment = await processNext(
+        createdPayment.id,
+        OutgoingPaymentState.Completed
+      )
+      await expectOutcome(payment, {
+        accountBalance: 0n,
+        amountSent: payment.debitAmount.value,
+        amountDelivered: payment.receiveAmount.value,
+        incomingPaymentReceived: payment.receiveAmount.value,
+        withdrawAmount: 0n
+      })
+
+      expect(incrementTrxCounterSpy).toHaveBeenCalledWith(
+        'transactions_total',
+        1,
+        {
+          description: 'Count of funded transactions'
+        }
+      )
+    })
+
+    test('Telemetry Transaction Counter does not increments for FAILED transactions', async (): Promise<void> => {
+      const incrementTrxCounterSpy = jest
+        .spyOn(telemetryService!, 'incrementCounter')
+        .mockImplementation(() => Promise.resolve())
+      const createdPayment = await setup({
+        receiver,
+        debitAmount,
+        method: 'ilp'
+      })
+
+      mockPaymentHandlerPay(
+        createdPayment,
+        incomingPayment,
+        new PaymentMethodHandlerError('Failed payment', {
+          description: '',
+          retryable: false
+        })
+      )
+
+      const payment = await processNext(
+        createdPayment.id,
+        OutgoingPaymentState.Failed,
+        'Failed payment'
+      )
+
+      await expectOutcome(payment, {
+        accountBalance: payment.debitAmount.value,
+        amountSent: 0n,
+        amountDelivered: 0n,
+        incomingPaymentReceived: incomingPayment.receivedAmount.value,
+        withdrawAmount: 0n
+      })
+
+      expect(incrementTrxCounterSpy).not.toHaveBeenCalled()
+    })
 
     test('COMPLETED with Telemetry Fee Counter (receiveAmount < incomingPayment.incomingAmount)', async (): Promise<void> => {
       const spyTelFeeAmount = jest.spyOn(

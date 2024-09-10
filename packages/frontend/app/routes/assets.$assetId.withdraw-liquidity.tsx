@@ -5,13 +5,13 @@ import { LiquidityDialog } from '~/components/LiquidityDialog'
 import { getAssetInfo, withdrawAssetLiquidity } from '~/lib/api/asset.server'
 import { messageStorage, setMessageAndRedirect } from '~/lib/message.server'
 import { amountSchema } from '~/lib/validate.server'
-import { redirectIfUnauthorizedAccess } from '~/lib/kratos_checks.server'
+import { checkAuthAndRedirect } from '~/lib/kratos_checks.server'
 import { type LoaderFunctionArgs } from '@remix-run/node'
 import { z } from 'zod'
 
 export const loader = async ({ request, params }: LoaderFunctionArgs) => {
   const cookies = request.headers.get('cookie')
-  await redirectIfUnauthorizedAccess(request.url, cookies)
+  await checkAuthAndRedirect(request.url, cookies)
 
   const assetId = params.assetId
 
