@@ -15,8 +15,8 @@ This includes
 
 Rafiki is made up of several components, including an Interledger connector, a high-throughput accounting database called [TigerBeetle](https://rafiki.dev/overview/concepts/accounting#tigerbeetle), and several APIs:
 
-- the [Admin APIs](https://rafiki.dev/apis/graphql/admin-api-overview) to create [peering relationships](https://rafiki.dev/overview/concepts/interledger#peers), 
-add supported [assets](https://rafiki.dev/overview/concepts/accounting#assets), and issue [wallet addresses](https://rafiki.dev/resources/glossary#wallet-address)
+- the [Admin APIs](https://rafiki.dev/apis/graphql/admin-api-overview) to create [peering relationships](https://rafiki.dev/overview/concepts/interledger#peers),
+  add supported [assets](https://rafiki.dev/overview/concepts/accounting#assets), and issue [wallet addresses](https://rafiki.dev/resources/glossary#wallet-address)
 - the [Open Payments](https://rafiki.dev/overview/concepts/open-payments) API to allow third parties (with the account holder's consent) to initiate payments and to view the transaction history
 - the [SPSP](https://rafiki.dev/resources/glossary#simple-payment-setup-protocol-spsp) API for simple Interledger Payments
 
