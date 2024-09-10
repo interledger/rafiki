@@ -6,7 +6,7 @@ title: Rafiki Admin Auth
 
 Rafiki Admin functions as an interface to the Rafiki backend service and relies on the [Ory Kratos](https://www.ory.sh/docs/kratos/ory-kratos-intro) identity and user management solution. It doesn’t operate independently; all actions performed in the Rafiki Admin interface, such as fetching data or executing commands, are passed to the Rafiki `backend` service.
 
-Ory Kratos, a secure and open-source identity and user management solution, handles authentication (login) and user management (account creation and password recovery). Check it out on [GitHub](https://github.com/ory/kratos). For an example of how to get these services up and running, see our [local environment](/playground/overview) setup.
+Ory Kratos, a secure and open-source identity and user management solution, handles authentication (login) and user management (account creation and password recovery). Check it out on [GitHub](https://github.com/ory/kratos). For an example of how to get these services up and running, see our [local environment](/integration/playground/overview) setup.
 
 > **Note: Ory Kratos and Rafiki Admin must be hosted on the same top-level domain. Hosting Kratos on a subdomain is generally not recommended by Ory, but if you choose this approach, ensure you follow the guidelines provided in the Kratos documentation.**
 

@@ -4,7 +4,7 @@
 
 ## Telemetry Collection
 
-Currently, we collect packet count and packet amount metrics directly within the connector core. These metrics are captured at the Interledger layer to track packet activity while ensuring privacy by collecting amounts at the packet level, rather than at the transaction level. This approach helps to preserve privacy, as we do not expose entire transaction amounts, while also incorporating privacy-preserving measures into the collected amounts. You can read more about privacy [here](https://rafiki.dev/telemetry/privacy/).
+Currently, we collect packet count and packet amount metrics directly within the connector core. These metrics are captured at the Interledger layer to track packet activity while ensuring privacy by collecting amounts at the packet level, rather than at the transaction level. This approach helps to preserve privacy, as we do not expose entire transaction amounts, while also incorporating privacy-preserving measures into the collected amounts. You can read more about privacy [here](https://rafiki.dev/overview/concepts/telemetry#privacy).
 
 ### Why We Collect on the Sending Side
 
