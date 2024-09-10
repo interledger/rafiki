@@ -6,7 +6,7 @@ import { LinkOut } from '@interledger/docs-design-system'
 
 import { LargeImg } from '@interledger/docs-design-system'
 
-The Rafiki Admin application provides tools to manage peers, assets, wallet addresses, webhooks, payments, and account settings. The purpose of this document is to help you navigate and use the Rafiki Admin application effectively.
+The Rafiki Admin application provides tools to manage peers, assets, wallet addresses, webhooks, payments, and account settings. It functions as an interface to the Rafiki [backend service](/integration/services/backend-service/) and all actions performed, such as fetching data or executing commands, are passed to the Rafiki `backend` service. The purpose of this document is to help you navigate and use the Rafiki Admin application effectively.
 
 ## Getting started
 
@@ -14,13 +14,43 @@ The Rafiki Admin application provides tools to manage peers, assets, wallet addr
 
 - Familiarity with general Rafiki concepts. The [Rafiki overview](/overview/overview) is a great place to start.
 - Running the Rafiki `frontend` package. See [Frontend service](/integration/services/frontend-service) for more information.
-- Rafiki Admin login credentials
 
-:::note[Login credentials]
-The admin user must run a script to generate a registration link and then send that link to a user via email or Slack. Currently, the process for obtaining login credentials is not automated, nor is the method for sending a registration link.
+## Identity and user management
 
-For more information about obtaining login credentials, refer to the [Admin UI](/integration/playground/overview/#admin-ui) section of the local playground page.
+Rafiki Admin relies on the <LinkOut href="https://www.ory.sh/docs/kratos/ory-kratos-intro">Ory Kratos</LinkOut> identity and user management solution to handle authentication (login) and user management (account creation and password recovery).
+
+:::note
+Ory Kratos and Rafiki Admin should be hosted on the same top-level domain. Hosting Kratos on a subdomain is generally not recommended by Ory, but if you choose this approach, ensure you follow the guidelines provided in the <LinkOut href="https://www.ory.sh/docs/kratos/debug/csrf#running-on-separate-subdomains">Kratos documentation</LinkOut>.
 :::
+
+### Login and account management
+
+Access to Rafiki Admin is restricted to ensure that only authorized users can register. This is achieved by using an invitation-only system, where new users are invited by an administrator. The registration flow is not public, so users cannot sign up on their own. Instead, administrators create accounts using the `invite-user` script.
+
+An administrator (someone with backend interface system access) can run the invite-user script in one of two ways, either from outside the container, on the host machine where Docker is running, `docker exec -it <admin-container-name> npm run invite-user -- example@mail.com`, or directly inside the Rafiki Admin Docker container `npm run invite-user -- example@mail.com`.
+
+After running the invite-user script, it generates a recovery link that also serves as an invitation link. This link is output to the terminal, and the administrator can send it to the user. When the user opens the link in their browser, they are automatically logged in and taken to the account settings page, where they can set a new password. Afterward, they can log in normally via the Rafiki Admin URL.
+
+<LargeImg
+  src='/img/admin-guide/account-settings.png'
+  alt='A screenshot of the Rafiki Admin application user interface displaying the "Account Settings" section. It shows two text fields: one to change an email address and one to change a password.'
+/>
+
+:::note
+The invitation link is single-use for security purposes. Once accessed, it becomes invalid. If sending the link through Slack, ensure you format it as code by placing it inside backticks (\`) to prevent Slack from automatically previewing the link, which would invalidate it. Example: \``http://localhost:4433/self-service/recovery?flow=116250ee-07bd-4b5c-a98e-87406192bb4b&token=miv0yZ7DFKKw8RyBBQvWoOsTRa2TVuZm`\`.
+:::
+
+There is an automated account recovery flow which requires an SMTP mail server for sending recovery links to users. Alternatively, an administrator may generate a recovery link using the same `invite-user` script.
+
+To remove a user, administrators can use the following script: `docker exec -it <admin-container-name> npm run delete-user -- example@mail.com`.
+
+### Why Ory Kratos?
+
+We chose Kratos for its open-source nature, lightweight design, and robust security features. It eliminates the need to manage password hashing, storage, or account recovery flows ourselves, allowing us to focus on what we do best.
+
+Kratos also enhances security with features like built-in breach detection, secure session management, and regular security updates.
+
+Ory Kratos provides frontend components (such as forms and buttons) for identity management flows like login, and account settings. These components are not fixed in design; they are fetched via API calls which allows us to match the identity management components with Rafiki Admin's overall look and feel.
 
 ## Navigation
 
