@@ -124,10 +124,10 @@ export default defineConfig({
                 },
                 {
                   label: 'Docker Compose',
-                  link: '/integration/prod/nginx'
+                  link: '/integration/prod/docker-compose'
                 },
                 {
-                  label: 'Helm and K8s',
+                  label: 'Helm and Kubernetes',
                   link: '/integration/prod/helm-k8s'
                 },
                 {
