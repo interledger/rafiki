@@ -224,7 +224,7 @@ export default function ViewPeerPage() {
                     error={response?.errors.http.fieldErrors.outgoingAuthToken}
                     description={
                       <>
-                        List of valid tokens to present when sending outgoing ILP packets to the peer.
+                        Valid auth token to present when sending outgoing ILP packets to the peer.
                       </>
                     }
                   />
