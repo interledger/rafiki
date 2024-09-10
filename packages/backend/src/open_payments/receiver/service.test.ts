@@ -63,7 +63,8 @@ describe('Receiver Service', (): void => {
       incomingPaymentService,
       remoteIncomingPaymentService,
       walletAddressService,
-      streamCredentialsService
+      streamCredentialsService,
+      receiverCacheDS: undefined
     }
   })
 

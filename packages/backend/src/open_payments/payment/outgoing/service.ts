@@ -70,6 +70,7 @@ export interface ServiceDependencies extends BaseService {
   quoteService: QuoteService
   assetService: AssetService
   cacheDataStore: CacheDataStore
+  sendingOutgoing: string[]
   telemetry?: TelemetryService
 }
 
@@ -151,12 +152,21 @@ async function getOutgoingPayment(
   deps: ServiceDependencies,
   options: GetOptions
 ): Promise<OutgoingPayment | undefined> {
+  if (options.id.trim().length) {
+    const cache = (await deps.cacheDataStore.get(options.id)) as OutgoingPayment
+    if (cache) return cache
+  }
+
   const outgoingPayment = await OutgoingPayment.query(deps.knex).get(options)
   if (outgoingPayment) {
     await deps.walletAddressService.setOn(outgoingPayment)
     await deps.quoteService.setOn(outgoingPayment)
     await deps.assetService.setOn(outgoingPayment.quote)
-    return addSentAmount(deps, outgoingPayment)
+    const returnVal = await addSentAmount(deps, outgoingPayment)
+    if (options.id.trim().length) {
+      await deps.cacheDataStore.set(options.id, returnVal)
+    }
+    return returnVal
   }
 }
 
@@ -205,16 +215,20 @@ async function cancelOutgoingPayment(
       return OutgoingPaymentError.WrongState
     }
 
-    payment = await payment
-      .$query(trx)
-      .patchAndFetch({
-        state: OutgoingPaymentState.Cancelled,
-        metadata: {
-          ...payment.metadata,
-          ...(options.reason ? { cancellationReason: options.reason } : {})
-        }
-      })
-      .withGraphFetched('[quote.asset, walletAddress]')
+    payment = await payment.$query(trx).patchAndFetch({
+      state: OutgoingPaymentState.Cancelled,
+      metadata: {
+        ...payment.metadata,
+        ...(options.reason ? { cancellationReason: options.reason } : {})
+      }
+    })
+
+    await deps.walletAddressService.setOn(payment)
+    await deps.assetService.setOn(payment.walletAddress)
+    await deps.quoteService.setOn(payment)
+    await deps.assetService.setOn(payment.quote)
+
+    await deps.cacheDataStore.delete(options.id)
 
     return addSentAmount(deps, payment)
   })
@@ -409,6 +423,10 @@ async function createOutgoingPayment(
       )
 
       stopTimerAddAmount && stopTimerAddAmount()
+      await deps.cacheDataStore.set(
+        paymentWithSentAmount.id,
+        paymentWithSentAmount
+      )
 
       return paymentWithSentAmount
     })
@@ -622,7 +640,6 @@ async function fundPayment(
       payment = cache
     } else {
       payment = await OutgoingPayment.query(trx).findById(id)
-      await deps.cacheDataStore.set(id, payment)
     }
     if (!payment) {
       stopTimer && stopTimer()
@@ -671,7 +688,14 @@ async function fundPayment(
     }
     await payment.$query(trx).patch({ state: OutgoingPaymentState.Sending })
     const paymentWithSentAmount = await addSentAmount(deps, payment)
+
+    await deps.cacheDataStore.set(
+      paymentWithSentAmount.id,
+      paymentWithSentAmount
+    )
+    deps.sendingOutgoing.push(paymentWithSentAmount.id)
     stopTimer && stopTimer()
+
     return paymentWithSentAmount
   })
   stopTimer && stopTimer()
@@ -689,8 +713,8 @@ async function getOutgoingPaymentPage(
 
   for (const payment of page) {
     await deps.walletAddressService.setOn(payment)
-    await deps.assetService.setOn(payment.walletAddress)
     await deps.quoteService.setOn(payment)
+    await deps.assetService.setOn(payment.walletAddress)
     await deps.assetService.setOn(payment.quote)
   }
 

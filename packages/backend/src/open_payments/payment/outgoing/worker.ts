@@ -11,6 +11,8 @@ import { trace, Span } from '@opentelemetry/api'
 export const RETRY_BACKOFF_SECONDS = 10
 
 const MAX_STATE_ATTEMPTS = 5
+let ATTEMPT_COUNTER = 0
+const WORKER_CACHE_ONLY = true
 
 // Returns the id of the processed payment (if any).
 export async function processPendingPayment(
@@ -53,16 +55,41 @@ async function getPendingPayment(
   trx: Knex.Transaction,
   deps: ServiceDependencies
 ): Promise<OutgoingPayment | undefined> {
-  const stopTimer = deps.telemetry?.startTimer('getPendingPayment', {
-    callName: 'getPendingPayment'
-  })
   const now = new Date(Date.now()).toISOString()
+  const availSending = deps.sendingOutgoing.shift()
+  if (availSending) {
+    const stopTimerCache = deps.telemetry?.startTimer('getPendingPayment', {
+      callName: 'getPendingPayment_Cache'
+    })
+
+    const fromCache = (await deps.cacheDataStore.get(
+      availSending
+    )) as OutgoingPayment
+    if (fromCache) {
+      await deps.quoteService.setOn(fromCache)
+      await deps.walletAddressService.setOn(fromCache)
+      stopTimerCache && stopTimerCache()
+      return fromCache
+    }
+  }
+
+  ATTEMPT_COUNTER++
+  if (WORKER_CACHE_ONLY && ATTEMPT_COUNTER < 10) {
+    // TODO for now, simply wait for the next payment. We only rely on cache.
+    return undefined
+  }
+  ATTEMPT_COUNTER = 0
+
+  const stopTimerDB = deps.telemetry?.startTimer('getPendingPayment', {
+    callName: 'getPendingPayment_DB'
+  })
   const payments = await OutgoingPayment.query(trx)
     .limit(1)
     // Ensure the payment cannot be processed concurrently by multiple workers.
     .forUpdate()
     // Don't wait for a payment that is already being processed.
     .skipLocked()
+    .timeout(2000)
     .whereIn('state', [OutgoingPaymentState.Sending])
     // Back off between retries.
     .andWhere((builder: Knex.QueryBuilder) => {
@@ -78,7 +105,7 @@ async function getPendingPayment(
     await deps.walletAddressService.setOn(payments[0])
   }
 
-  stopTimer && stopTimer()
+  stopTimerDB && stopTimerDB()
   return payments[0]
 }
 
@@ -126,6 +153,7 @@ async function onLifecycleError(
     )
     await lifecycle.handleFailed(deps, payment, error)
   }
+  await deps.cacheDataStore.delete(payment.id)
 }
 
 function isRetryableError(error: Error | PaymentError): boolean {

@@ -15,6 +15,7 @@ import {
 } from './errors'
 import { isRemoteIncomingPaymentError } from '../payment/incoming_remote/errors'
 import { TelemetryService } from '../../telemetry/service'
+import { CacheDataStore } from '../../cache'
 
 interface CreateReceiverArgs {
   walletAddressUrl: string
@@ -34,6 +35,7 @@ export interface ServiceDependencies extends BaseService {
   incomingPaymentService: IncomingPaymentService
   walletAddressService: WalletAddressService
   remoteIncomingPaymentService: RemoteIncomingPaymentService
+  receiverCacheDS?: CacheDataStore
   telemetry?: TelemetryService
 }
 
@@ -142,9 +144,15 @@ async function getReceiver(
     callName: 'getReceiver'
   })
   try {
+    if (deps.receiverCacheDS) {
+      const cache = (await deps.receiverCacheDS.get(url)) as Receiver
+      if (cache) return cache
+    }
+
     const localIncomingPayment = await getLocalIncomingPayment(deps, url)
     if (localIncomingPayment) {
       const receiver = new Receiver(localIncomingPayment, true)
+      if (deps.receiverCacheDS) await deps.receiverCacheDS.set(url, receiver)
       stopTimer && stopTimer()
       return receiver
     }
@@ -152,6 +160,7 @@ async function getReceiver(
     const remoteIncomingPayment = await getRemoteIncomingPayment(deps, url)
     if (remoteIncomingPayment) {
       const receiver = new Receiver(remoteIncomingPayment, false)
+      if (deps.receiverCacheDS) await deps.receiverCacheDS.set(url, receiver)
       stopTimer && stopTimer()
       return receiver
     }

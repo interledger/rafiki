@@ -127,8 +127,8 @@ export const Config = {
   authServerGrantUrl: envString('AUTH_SERVER_GRANT_URL'),
   authServerIntrospectionUrl: envString('AUTH_SERVER_INTROSPECTION_URL'),
 
-  outgoingPaymentWorkers: envInt('OUTGOING_PAYMENT_WORKERS', 1),
-  outgoingPaymentWorkerIdle: envInt('OUTGOING_PAYMENT_WORKER_IDLE', 200), // milliseconds
+  outgoingPaymentWorkers: envInt('OUTGOING_PAYMENT_WORKERS', 4),
+  outgoingPaymentWorkerIdle: envInt('OUTGOING_PAYMENT_WORKER_IDLE', 10), // milliseconds
 
   incomingPaymentWorkers: envInt('INCOMING_PAYMENT_WORKERS', 1),
   incomingPaymentWorkerIdle: envInt('INCOMING_PAYMENT_WORKER_IDLE', 200), // milliseconds
@@ -188,7 +188,7 @@ export const Config = {
     2592000000
   ), // 30 days
   enableSpspPaymentPointers: envBool('ENABLE_SPSP_PAYMENT_POINTERS', true),
-  localCacheDuration: envInt('LOCAL_CACHE_DURATION', 5000)
+  localCacheDuration: envInt('LOCAL_CACHE_DURATION', 30000)
 }
 
 function parseRedisTlsConfig(

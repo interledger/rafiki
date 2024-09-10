@@ -165,6 +165,7 @@ async function handleCompleted(
   await payment.$query(deps.knex).patch({
     state: OutgoingPaymentState.Completed
   })
+  await deps.cacheDataStore.delete(payment.id)
 
   await sendWebhookEvent(
     deps,

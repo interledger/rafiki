@@ -356,6 +356,7 @@ export function initIocContainer(
       remoteIncomingPaymentService: await deps.use(
         'remoteIncomingPaymentService'
       ),
+      receiverCacheDS: createInMemoryDataStore(config.localCacheDuration),
       telemetry: config.enableTelemetry
         ? await deps.use('telemetry')
         : undefined
@@ -507,7 +508,8 @@ export function initIocContainer(
         ? await deps.use('telemetry')
         : undefined,
       assetService: await deps.use('assetService'),
-      cacheDataStore: createInMemoryDataStore(config.localCacheDuration)
+      cacheDataStore: createInMemoryDataStore(config.localCacheDuration),
+      sendingOutgoing: []
     })
   })
 
