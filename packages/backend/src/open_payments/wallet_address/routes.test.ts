@@ -46,12 +46,16 @@ describe('Wallet Address Routes', (): void => {
       .query({ credentials_identifier: tenantEmail })
       .reply(200, [{ id: uuid(), metadata_public: {} }])
       .persist()
-    tenantId = (await createTenant(deps, {
-      email: tenantEmail,
-      idpSecret: 'testsecret',
-      idpConsentEndpoint: faker.internet.url(),
-      endpoints: [{ type: EndpointType.WebhookBaseUrl, value: faker.internet.url() }]
-    })).id
+    tenantId = (
+      await createTenant(deps, {
+        email: tenantEmail,
+        idpSecret: 'testsecret',
+        idpConsentEndpoint: faker.internet.url(),
+        endpoints: [
+          { type: EndpointType.WebhookBaseUrl, value: faker.internet.url() }
+        ]
+      })
+    ).id
   })
 
   afterEach(async (): Promise<void> => {

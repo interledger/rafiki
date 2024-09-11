@@ -27,6 +27,10 @@ import { getTests } from '../../wallet_address/model.test'
 import { WalletAddress } from '../../wallet_address/model'
 import { withConfigOverride } from '../../../tests/helpers'
 import { sleep } from '../../../shared/utils'
+import { createTenant } from '../../../tests/tenant'
+import { EndpointType } from '../../../tenant/endpoints/model'
+
+const nock = (global as unknown as { nock: typeof import('nock') }).nock
 
 describe('Incoming Payment Service', (): void => {
   let deps: IocContract<AppServices>
@@ -38,6 +42,7 @@ describe('Incoming Payment Service', (): void => {
   let accountingService: AccountingService
   let asset: Asset
   let config: IAppConfig
+  let tenantId: string
 
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer(Config)
@@ -50,7 +55,25 @@ describe('Incoming Payment Service', (): void => {
 
   beforeEach(async (): Promise<void> => {
     asset = await createAsset(deps)
-    const address = await createWalletAddress(deps, { assetId: asset.id })
+    const tenantEmail = faker.internet.email()
+    nock(config.kratosAdminUrl)
+      .get('/identities')
+      .query({ credentials_identifier: tenantEmail })
+      .reply(200, [{ id: uuid(), metadata_public: {} }])
+      .persist()
+    tenantId = (
+      await createTenant(deps, {
+        email: tenantEmail,
+        idpSecret: 'testsecret',
+        idpConsentEndpoint: faker.internet.url(),
+        endpoints: [
+          { type: EndpointType.WebhookBaseUrl, value: faker.internet.url() }
+        ]
+      })
+    ).id
+    const address = await createWalletAddress(deps, tenantId, {
+      assetId: asset.id
+    })
     walletAddressId = address.id
     client = address.url
   })
@@ -103,6 +126,7 @@ describe('Incoming Payment Service', (): void => {
 
       return incomingPaymentService.create({
         walletAddressId,
+        tenantId,
         ...options,
         incomingAmount: undefined
       })
@@ -306,6 +330,7 @@ describe('Incoming Payment Service', (): void => {
       options.client = client
       const incomingPayment = await incomingPaymentService.create({
         walletAddressId,
+        tenantId,
         ...options,
         incomingAmount: options.incomingAmount ? amount : undefined
       })
@@ -328,6 +353,7 @@ describe('Incoming Payment Service', (): void => {
       await expect(
         incomingPaymentService.create({
           walletAddressId: uuid(),
+          tenantId,
           incomingAmount: {
             value: BigInt(123),
             assetCode: asset.code,
@@ -346,6 +372,7 @@ describe('Incoming Payment Service', (): void => {
       await expect(
         incomingPaymentService.create({
           walletAddressId,
+          tenantId,
           incomingAmount: {
             value: BigInt(123),
             assetCode: String.fromCharCode(
@@ -365,6 +392,7 @@ describe('Incoming Payment Service', (): void => {
       await expect(
         incomingPaymentService.create({
           walletAddressId,
+          tenantId,
           incomingAmount: {
             value: BigInt(123),
             assetCode: asset.code,
@@ -383,6 +411,7 @@ describe('Incoming Payment Service', (): void => {
       await expect(
         incomingPaymentService.create({
           walletAddressId,
+          tenantId,
           incomingAmount: {
             value: BigInt(0),
             assetCode: asset.code,
@@ -398,6 +427,7 @@ describe('Incoming Payment Service', (): void => {
       await expect(
         incomingPaymentService.create({
           walletAddressId,
+          tenantId,
           incomingAmount: {
             value: BigInt(-13),
             assetCode: asset.code,
@@ -416,6 +446,7 @@ describe('Incoming Payment Service', (): void => {
       await expect(
         incomingPaymentService.create({
           walletAddressId,
+          tenantId,
           incomingAmount: {
             value: BigInt(10),
             assetCode: asset.code,
@@ -439,6 +470,7 @@ describe('Incoming Payment Service', (): void => {
       await expect(
         incomingPaymentService.create({
           walletAddressId,
+          tenantId,
           incomingAmount: {
             value: BigInt(10),
             assetCode: asset.code,
@@ -457,6 +489,7 @@ describe('Incoming Payment Service', (): void => {
       await expect(
         incomingPaymentService.create({
           walletAddressId,
+          tenantId,
           incomingAmount: {
             value: BigInt(123),
             assetCode: asset.code,
@@ -479,6 +512,7 @@ describe('Incoming Payment Service', (): void => {
       createModel: ({ client }) =>
         createIncomingPayment(deps, {
           walletAddressId,
+          tenantId,
           client,
           incomingAmount: {
             value: BigInt(123),
@@ -502,6 +536,7 @@ describe('Incoming Payment Service', (): void => {
     beforeEach(async (): Promise<void> => {
       const incomingPaymentOrError = await incomingPaymentService.create({
         walletAddressId,
+        tenantId,
         incomingAmount: {
           value: BigInt(123),
           assetCode: asset.code,
@@ -566,6 +601,7 @@ describe('Incoming Payment Service', (): void => {
     test('Does not process not-expired pending incoming payment', async (): Promise<void> => {
       const incomingPaymentOrError = await incomingPaymentService.create({
         walletAddressId,
+        tenantId,
         incomingAmount: {
           value: BigInt(123),
           assetCode: asset.code,
@@ -595,6 +631,7 @@ describe('Incoming Payment Service', (): void => {
       test('Deactivates an expired incoming payment with received money', async (): Promise<void> => {
         const incomingPayment = await createIncomingPayment(deps, {
           walletAddressId,
+          tenantId,
           incomingAmount: {
             value: BigInt(123),
             assetCode: asset.code,
@@ -633,6 +670,7 @@ describe('Incoming Payment Service', (): void => {
       test('Deletes an expired incoming payment (and account) with no money', async (): Promise<void> => {
         const incomingPayment = await createIncomingPayment(deps, {
           walletAddressId,
+          tenantId,
           incomingAmount: {
             value: BigInt(123),
             assetCode: asset.code,
@@ -669,6 +707,7 @@ describe('Incoming Payment Service', (): void => {
         beforeEach(async (): Promise<void> => {
           incomingPayment = await createIncomingPayment(deps, {
             walletAddressId,
+            tenantId,
             client,
             incomingAmount: {
               value: BigInt(123),
@@ -758,6 +797,7 @@ describe('Incoming Payment Service', (): void => {
     beforeEach(async (): Promise<void> => {
       incomingPayment = await createIncomingPayment(deps, {
         walletAddressId,
+        tenantId,
         incomingAmount: {
           value: BigInt(123),
           assetCode: asset.code,

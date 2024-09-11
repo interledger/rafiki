@@ -65,6 +65,8 @@ export const setup = <
   ctx.client = options.client
   ctx.accessAction = options.accessAction
   ctx.authenticated = true
+  ctx.tenantId = options.walletAddress.tenantId
+  ctx.isOperator = true
   return ctx
 }
 
@@ -367,7 +369,6 @@ export const getRouteTests = <M extends WalletAddressSubresource>({
   }
 }
 
-
 const nock = (global as unknown as { nock: typeof import('nock') }).nock
 
 describe('Models', (): void => {
@@ -390,12 +391,16 @@ describe('Models', (): void => {
       .query({ credentials_identifier: tenantEmail })
       .reply(200, [{ id: uuid(), metadata_public: {} }])
       .persist()
-    tenantId = (await createTenant(deps, {
-      email: tenantEmail,
-      idpSecret: 'testsecret',
-      idpConsentEndpoint: faker.internet.url(),
-      endpoints: [{ type: EndpointType.WebhookBaseUrl, value: faker.internet.url() }]
-    })).id
+    tenantId = (
+      await createTenant(deps, {
+        email: tenantEmail,
+        idpSecret: 'testsecret',
+        idpConsentEndpoint: faker.internet.url(),
+        endpoints: [
+          { type: EndpointType.WebhookBaseUrl, value: faker.internet.url() }
+        ]
+      })
+    ).id
   })
 
   afterEach(async (): Promise<void> => {
