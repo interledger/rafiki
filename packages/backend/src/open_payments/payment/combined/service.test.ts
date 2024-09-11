@@ -1,4 +1,6 @@
 import { IocContract } from '@adonisjs/fold'
+import { faker } from '@faker-js/faker'
+import { v4 as uuid } from 'uuid'
 import { AppServices } from '../../../app'
 import { TestContainer, createTestApp } from '../../../tests/app'
 import { initIocContainer } from '../../..'
@@ -21,6 +23,10 @@ import {
   createCombinedPayment,
   toCombinedPayment
 } from '../../../tests/combinedPayment'
+import { createTenant } from '../../../tests/tenant'
+import { EndpointType } from '../../../tenant/endpoints/model'
+
+const nock = (global as unknown as { nock: typeof import('nock') }).nock
 
 describe('Combined Payment Service', (): void => {
   let deps: IocContract<AppServices>
@@ -42,10 +48,27 @@ describe('Combined Payment Service', (): void => {
   beforeEach(async (): Promise<void> => {
     sendAsset = await createAsset(deps)
     receiveAsset = await createAsset(deps)
-    sendWalletAddressId = (
-      await createWalletAddress(deps, { assetId: sendAsset.id })
+    const config = await deps.use('config')
+    const tenantEmail = faker.internet.email()
+    nock(config.kratosAdminUrl)
+      .get('/identities')
+      .query({ credentials_identifier: tenantEmail })
+      .reply(200, [{ id: uuid(), metadata_public: {} }])
+      .persist()
+    const tenantId = (
+      await createTenant(deps, {
+        email: tenantEmail,
+        idpSecret: 'testsecret',
+        idpConsentEndpoint: faker.internet.url(),
+        endpoints: [
+          { type: EndpointType.WebhookBaseUrl, value: faker.internet.url() }
+        ]
+      })
     ).id
-    receiveWalletAddress = await createWalletAddress(deps, {
+    sendWalletAddressId = (
+      await createWalletAddress(deps, tenantId, { assetId: sendAsset.id })
+    ).id
+    receiveWalletAddress = await createWalletAddress(deps, tenantId, {
       assetId: receiveAsset.id
     })
   })
@@ -60,12 +83,14 @@ describe('Combined Payment Service', (): void => {
 
   async function setupPayments(deps: IocContract<AppServices>) {
     const incomingPayment = await createIncomingPayment(deps, {
-      walletAddressId: receiveWalletAddress.id
+      walletAddressId: receiveWalletAddress.id,
+      tenantId: receiveWalletAddress.tenantId
     })
     const receiverUrl = incomingPayment.getUrl(receiveWalletAddress)
 
     const outgoingPayment = await createOutgoingPayment(deps, {
       walletAddressId: sendWalletAddressId,
+      tenantId: receiveWalletAddress.tenantId,
       method: 'ilp',
       receiver: receiverUrl,
       debitAmount: {
@@ -84,7 +109,8 @@ describe('Combined Payment Service', (): void => {
 
   describe('CombinedPayment Service', (): void => {
     getPageTests({
-      createModel: () => createCombinedPayment(deps),
+      createModel: () =>
+        createCombinedPayment(deps, receiveWalletAddress.tenantId),
       getPage: (pagination?: Pagination, sortOrder?: SortOrder) =>
         combinedPaymentService.getPage({ pagination, sortOrder })
     })
