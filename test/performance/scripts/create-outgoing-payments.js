@@ -2,7 +2,7 @@ import http from 'k6/http'
 import { fail } from 'k6'
 export const options = {
   // A number specifying the number of VUs to run concurrently.
-  vus: 9,
+  vus: 10,
   // A string specifying the total duration of the test run.
   duration: '300s'
 }

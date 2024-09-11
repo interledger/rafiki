@@ -65,9 +65,15 @@ async function getQuote(
   deps: ServiceDependencies,
   options: GetOptions
 ): Promise<Quote | undefined> {
-  return Quote.query(deps.knex)
+  const quote = await Quote.query(deps.knex)
     .get(options)
-    .withGraphFetched('[asset, fee, walletAddress]')
+    .withGraphFetched('[fee]')
+  if (quote) {
+    await deps.assetService.setOn(quote)
+    await deps.walletAddressService.setOn(quote)
+    await deps.assetService.setOn(quote.walletAddress)
+  }
+  return quote
 }
 
 interface QuoteOptionsBase {
@@ -188,7 +194,10 @@ async function createQuote(
           feeId: sendingFee?.id,
           estimatedExchangeRate: quote.estimatedExchangeRate
         })
-        .withGraphFetched('[asset, fee, walletAddress]')
+        .withGraphFetched('[fee]')
+      await deps.assetService.setOn(createdQuote)
+      await deps.walletAddressService.setOn(createdQuote)
+      await deps.assetService.setOn(createdQuote.walletAddress)
 
       const quoteFin = await finalizeQuote(
         {
@@ -412,9 +421,18 @@ async function getQuotePage(
   deps: ServiceDependencies,
   options: ListOptions
 ): Promise<Quote[]> {
-  return await Quote.query(deps.knex)
+  const quotePage = await Quote.query(deps.knex)
     .list(options)
-    .withGraphFetched('[asset, fee, walletAddress]')
+    .withGraphFetched('[fee]')
+  if (quotePage) {
+    for (const quote of quotePage) {
+      await deps.assetService.setOn(quote)
+      await deps.walletAddressService.setOn(quote)
+      await deps.assetService.setOn(quote.walletAddress)
+    }
+  }
+
+  return quotePage
 }
 
 async function setQuoteOn(
