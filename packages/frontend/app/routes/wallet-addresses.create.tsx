@@ -110,7 +110,7 @@ export async function action({ request }: ActionFunctionArgs) {
   }
 
   const response = await createWalletAddress({
-    url: `${getOpenPaymentsUrl()}${result.data.name}`,
+    url: `${getOpenPaymentsUrl()}/${result.data.name}`,
     publicName: result.data.publicName,
     assetId: result.data.asset,
     additionalProperties: []

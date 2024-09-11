@@ -149,7 +149,7 @@ services:
       LOG_LEVEL: debug
       NODE_ENV: ${NODE_ENV:-development}
       GRAPHQL_URL: http://cloud-nine-wallet-backend:3001/graphql
-      OPEN_PAYMENTS_URL: https://cloud-nine-wallet-backend/
+      OPEN_PAYMENTS_URL: https://cloud-nine-wallet-backend
       ENABLE_INSECURE_MESSAGE_COOKIE: true
       AUTH_ENABLED: false      
       SIGNATURE_VERSION: 1

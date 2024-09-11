@@ -18,7 +18,7 @@ export const parseBool = (str: string) => {
 
 export function getOpenPaymentsUrl() {
   if (typeof window === 'undefined') {
-    return process.env.OPEN_PAYMENTS_URL ?? 'https://cloud-nine-wallet-backend/'
+    return process.env.OPEN_PAYMENTS_URL ?? 'https://cloud-nine-wallet-backend'
   }
 
   return window.ENV.OPEN_PAYMENTS_URL
