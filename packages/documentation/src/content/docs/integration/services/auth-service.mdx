@@ -1,0 +1,53 @@
+---
+title: Auth service
+---
+
+import { LinkOut } from '@interledger/docs-design-system'
+import Auth from '/src/partials/auth-variables.mdx'
+
+Rafiki’s <LinkOut href="https://github.com/interledger/rafiki/tree/main/packages/auth">`auth`</LinkOut> service provides you with a reference implementation of an Open Payments authorization server. You can use the `auth` service as an alternative to developing your own in-house service for grant authorization and authentication.
+
+The authorization server is responsible for:
+
+- Authorizing incoming requests from clients (e.g., third-party applications) to create payments and quotes on the backend
+- Relaying information about the interaction to the client and recording the response
+- Issuing access tokens to clients and communicating with the resource server to validate each client’s access rights
+
+## Requirements
+
+The following are required when using the `auth` service.
+
+- A Redis database for storing session data
+- A Postgres database, separate from the `backend` service’s database, to store auth-related resources (grants, access tokens, and interactions)
+  :::note
+  You can use the same Postgres database instance for both the `backend` and `auth` services, but separate database schemas are required within that instance to maintain a boundary between the objects those services manage.
+  :::
+- Integration with an [identity provider](#identity-provider-idp)
+
+You must also set the environment variables for the `auth` service.
+
+## Incoming client auth requests
+
+When a request comes from a client with an account known to your local instance of Rafiki, the `auth` service uses data stored in the `auth` service’s Postgres database.
+
+When a request comes from a client registered with another instance of Rafiki, the `auth` service resolves the client's key endpoint (e.g., `https://wallet.example.com/alice/jwks.json`) to retrieve the client's public keys, then filters out the correct key using the key id (`kid`) in the client's signature.
+
+## Identity provider (IdP)
+
+An identity provider (IdP) is a system or service that manages user authentication, identity information, and consent. When you use your Google account credentials to “Sign in with Google” on an app or website, for example, Google is acting as your identity provider.
+
+Integration with an [IdP](/integration/requirements/idp) is required when using Rafiki’s `auth` service because Open Payments requires interactive outgoing payment grant requests. This means there must be explicit interaction by an individual (typically a client’s end user/your customer) to approve or deny an outgoing payment before a grant is issued.
+
+:::note
+Rafiki’s [`frontend`](/integration/services/frontend-service) service requires an IdP for authentication and user management of your administrators. Out of the box, Rafiki uses Ory Kratos to enable your admins to access the Admin API. Kratos is for internal use and cannot be used for your customer-facing Open Payments authorization server.
+:::
+
+For more information about interactive grants and how they work with identity providers, review the <LinkOut href="https://openpayments.dev/introduction/grants/">Grant negotiation and authorization</LinkOut> page in the Open Payments docs.
+
+## GraphQL Auth Admin API
+
+The `auth` service exposes a [GraphQL Auth Admin API](/apis/graphql/admin-api-overview#auth-admin-api) to manage auth-related resources, such as Open Payments grants.
+
+## Environment variables
+
+<Auth />

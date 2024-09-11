@@ -4,10 +4,6 @@ dist/
 # generated types
 .astro/
 
-# generated docs
-src/content/docs/apis/auth/*
-src/content/docs/apis/backend/*
-
 # dependencies
 node_modules/
 
@@ -26,3 +22,7 @@ pnpm-debug.log*
 
 # editors
 .vscode
+
+# generated docs
+src/content/docs/apis/graphql/auth/*
+src/content/docs/apis/graphql/backend/*

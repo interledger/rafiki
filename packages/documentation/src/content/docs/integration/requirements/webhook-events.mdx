@@ -1,0 +1,462 @@
+---
+title: Webhook events
+tableOfContents:
+  maxHeadingLevel: 4
+---
+
+import { Badge, Tabs, TabItem, Steps } from '@astrojs/starlight/components'
+import {
+  Mermaid,
+  CodeBlock,
+  LinkOut,
+  Disclosure
+} from '@interledger/docs-design-system'
+
+The main communication channel between you and your Rafiki instance is composed of the Backend Admin API and a set of webhook events.
+
+Most events require you to interact with Rafiki to provide wallet address information or manage (deposit or withdraw) liquidity. This page describes how you should handle each webhook event.
+
+:::note
+Rafiki doesn't hold _user_ account balances. Instead, Rafiki keeps track of the liquidity within your instance's asset, peer, and payment accounts within its own database.
+:::
+
+## Specify your webhook endpoint
+
+For Rafiki to notify you about webhook events, you must expose a webhook endpoint that listens for the events dispatched by Rafiki. These events notify your system of time-sensitive status updates, warnings, and errors so that you can react accordingly.
+
+When an event occurs, the [`backend`](/integration/services/backend-service) service makes a <Badge text="POST" variant="success" size="medium"/> request to your configured webhook endpoint. The `backend` service expects a `200` status in return.
+
+| Variable      | Type      | Description                                                         |
+| ------------- | --------- | ------------------------------------------------------------------- |
+| `WEBHOOK_URL` | `backend` | The endpoint to where requests are made when a webhook event occurs |
+
+## Webhook event request body
+
+Each webhook event is sent as a JSON payload with the following structure in the request body. The parameters within the `data` object will vary depending on the event.
+
+| Attribute | Type   | Description                                         | Required |
+| --------- | ------ | --------------------------------------------------- | -------- |
+| `id`      | String | UUID for the event                                  | Y        |
+| `type`    | Enum   | The `EventType`                                     | Y        |
+| `data`    | Object | Additional data that coincides with the `EventType` | Y        |
+
+:::tip[Duplicate events]
+The `id` in the webhook event payload is unique. Your system can use the ID to determine whether the event has been received previously, preventing duplicate event processing.
+:::
+
+<Disclosure toggleText="Expand for example JSON payloads" client:load>
+   <Tabs>
+      <TabItem label='incomingPaymentCompleted'>
+        ```json
+        {
+        "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+        "type": "incoming_payment.created",
+        "data": {
+            "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+            "walletAddressId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+            "client": "string",
+            "completed": true,
+            "incomingAmount": "string",
+            "receivedAmount": "string",
+            "metadata": {
+            "additionalProp1": {}
+            },
+            "createdAt": "2024-08-29T08:13:08.966Z",
+            "updatedAt": "2024-08-29T08:13:08.966Z",
+            "expiresAt": "2024-08-29T08:13:08.966Z"
+        }
+        }
+        ```
+      </TabItem>
+      <TabItem label='outgoingPaymentCreated'>
+        ```json
+        {
+        "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+        "type": "outgoing_payment.created",
+        "data": {
+            "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+            "walletAddressId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+            "client": "string",
+            "state": "FUNDING",
+            "receiver": "https://example.com/",
+            "debitAmount": "string",
+            "sentAmount": "string",
+            "metadata": {
+            "additionalProp1": {}
+            },
+            "createdAt": "2024-08-29T11:07:56.090Z",
+            "updatedAt": "2024-08-29T11:07:56.090Z",
+            "expiresAt": "2024-08-29T11:07:56.090Z",
+            "error": "string",
+            "stateAttempts": 0,
+            "balance": "string",
+            "peerId": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+        }
+        }
+        ```
+      </TabItem>
+          <TabItem label='assetLiquidityLow'>
+        ```json
+        {
+        "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+        "type": "asset.liquidity_low",
+        "data": {
+            "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+            "asset": {
+            "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+            "code": "string",
+            "scale": 0
+            },
+            "liquidityThreshold": "string",
+            "balance": "string"
+        }
+        }
+        ```
+      </TabItem>
+      <TabItem label='walletAddressNotFound'>
+        ```json
+        {
+        "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+        "type": "wallet_address.not_found",
+        "data": {
+            "walletAddressUrl": "string"
+        }
+        }
+        ```
+      </TabItem>
+   </Tabs>
+</Disclosure>
+
+We provide an <LinkOut href="https://github.com/interledger/rafiki/blob/main/packages/backend/src/openapi/specs/webhooks.yaml">OpenAPI specification</LinkOut> for the webhook events fired by Rafiki.
+
+Additionally, the [local playground](/integration/playground/overview) contains example payloads in the <LinkOut href="https://github.com/interledger/rafiki/tree/main/bruno/collections/Rafiki/Sample%20Webhook%20Events">Bruno collection</LinkOut> that can be used to test your webhook service integration.
+
+## Event handling
+
+### Asynchronous handling
+
+If requests to credit/debit user accounts are lengthy processes, we recommend using a worker to process received events. The worker allows the server to process events at a rate suitable for your system and reduces the number of failed/retried events since your event listener can immediately reply with a successful `200` status.
+
+### Error handling
+
+If a non-200 status is returned, indicating an error, or the request times out, Rafiki will retry the webhook request at increasing intervals until a `200` status is returned. You can configure
+
+The first retry is after 10 seconds. Additional retries occur after 20 more seconds, then after 30 more seconds, and so on.
+
+| Variable            | Type      | Description                                                                                                     |
+| ------------------- | --------- | --------------------------------------------------------------------------------------------------------------- |
+| `WEBHOOK_TIMEOUT`   | `backend` | The amount of time, in milliseconds, after which a webhook request will time out                                |
+| `WEBHOOK_MAX_RETRY` | `backend` | The maximum number of retries for a webhook event when a non-200 status is returned or if the request timed out |
+
+## Webhook events
+
+### Incoming payments
+
+| Event type                                                  | Description                                                                       |
+| ----------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| [`incoming_payment.created`](#incoming-payment-created)     | An incoming payment has been created                                              |
+| [`incoming_payment.completed`](#incoming-payment-completed) | An incoming payment is complete and will not accept any additional incoming funds |
+| [`incoming_payment.expired`](#incoming-payment-expired)     | An incoming payment expired and will not accept any additional incoming funds     |
+
+#### Incoming payment created
+
+<Disclosure toggleText="Expand for event sequence" client:load>
+  <Mermaid
+    graph={`sequenceDiagram
+      participant R as Rafiki
+      participant ASE as Account servicing entity
+
+      R->>ASE: Fires incoming_payment.created event to webhook endpoint
+      ASE->>ASE: No action required
+
+`}
+/>
+
+</Disclosure>
+
+The `incoming_payment.created` event indicates an incoming payment was created. This event is purely informational because, at this point, the incoming payment has not received any funds and no actions around liquidity are required. You can use this event to display upcoming incoming payments to your users.
+
+The incoming payment will either complete or expire.
+
+#### Incoming payment completed
+
+<Disclosure toggleText="Expand for event sequences" client:load>
+
+{' '}
+
+<Badge text='Single-phase transfer' variant='tip' size='medium' /> An incoming payment
+of $10 was completed.
+
+  <Mermaid
+    graph={`sequenceDiagram
+      participant R as Rafiki
+      participant ASE as Account servicing entity
+
+      R->>ASE: Fires incoming_payment.completed event to webhook endpoint,<br/>receivedAmount: $10
+      ASE->>R: Backend Admin API call: CreateIncomingPaymentWithdrawal
+      ASE->>ASE: Credit recipient's account with $10
+
+`}
+/>
+
+{' '}
+
+<Badge text='Two-phase transfer' variant='tip' size='medium' /> An incoming payment
+of $10 was completed.
+
+  <Mermaid
+    graph={`sequenceDiagram
+      participant R as Rafiki
+      participant ASE as Account servicing entity
+
+      R->>ASE: Fires incoming_payment.completed event to webhook endpoint,<br/>receivedAmount: $10
+      ASE->>R: Backend Admin API call: CreateIncomingPaymentWithdrawal
+      ASE->>ASE: Credit recipient's account with $10
+      ASE->>R: Backend Admin API call: PostLiquidityWithdrawal
+      R->>R: Two-phase transfer completed
+
+`}
+/>
+
+</Disclosure>
+
+The `incoming_payment.completed` event indicates the payment completed either automatically or manually, and that any funds received into the incoming payment should be withdrawn and then credited to the recipient's account on your ledger.
+
+#### Incoming payment expired
+
+<Disclosure toggleText="Expand for event sequence" client:load>
+  \$2.55 was received before the payment expired. The recipient is thus credited with \$2.55.
+
+  <Mermaid
+    graph={`sequenceDiagram
+      participant R as Rafiki
+      participant ASE as Account servicing entity
+
+      R->>ASE: Fires incoming_payment.expired event to webhook endpoint,<br/>receivedAmount: $2.55
+      ASE->>R: Backend Admin API call: CreateIncomingPaymentWithdrawal
+      ASE->>ASE: Credit recipient's account with $2.55
+
+`}
+/>
+
+</Disclosure>
+
+The `incoming_payment.expired` event will only fire if funds were received for the incoming payment. The event signals the end of any additional payments.
+
+The primary use case for this event is to know when a streaming payment, such as one supported through <LinkOut href="https://webmonetization.org">Web Monetization</LinkOut>, has expired. In response to the event, any funds already received for the payment should be withdrawn and credited to the recipient's account on your ledger.
+
+:::note
+In some scenarios, a sender may not have specified an `incomingAmount` when the incoming payment was created. Receiving an `incoming_payment.expired` event indicates that no further payments are expected.
+:::
+
+### Outgoing payments
+
+| Event type                                                  | Description                                        |
+| ----------------------------------------------------------- | -------------------------------------------------- |
+| [`outgoing_payment.created`](#outgoing-payment-created)     | An outgoing payment has been created               |
+| [`outgoing_payment.completed`](#outgoing-payment-completed) | An outgoing payment has completed                  |
+| [`outgoing_payment.failed`](#outgoing-payment-failed)       | An outgoing payment partially or completely failed |
+
+#### Outgoing payment created
+
+<Disclosure toggleText="Expand for event sequence" client:load>
+
+An outgoing payment for \$12 was created.
+
+  <Mermaid
+    graph={`sequenceDiagram
+      participant R as Rafiki
+      participant ASE as Account servicing entity
+
+      R->>ASE: Fires outgoing_payment.created event to webhook endpoint,<br/> debitAmount: $12
+      ASE->>ASE: Checks that sender's account has sufficient funds
+      alt Account has sufficient funds
+        ASE->>ASE: Put hold of $12 on sender's account
+        ASE->>R: Backend Admin API call: DepositOutgoingPaymentLiquidity
+      else Account has insufficient funds
+        ASE->>R: Backend Admin API call: CancelOutgoingPayment,<br/>reason: Insufficient funds
+      end
+
+`}
+/>
+
+</Disclosure>
+
+The `outgoing_payment.created` event indicates an outgoing payment was created and is awaiting liquidity. Verify the sender's account balance and perform any other necessary verifications before funding the payment.
+
+If the sender has insufficient funds or if the payment should otherwise not be fulfilled, cancel the outgoing payment. Otherwise, put a hold on the sender's account and deposit the funds into Rafiki.
+
+#### Outgoing payment completed
+
+<Disclosure toggleText="Expand for event sequences" client:load>
+
+{' '}
+
+<Badge text='Single-phase transfer' variant='tip' size='medium' /> An outgoing payment
+for \$12 is complete. \$11.50 was sent. You choose to keep \$0.50 as a service fee.
+
+  <Mermaid
+    graph={`sequenceDiagram
+      participant R as Rafiki
+      participant ASE as Account servicing entity
+
+      R->>ASE: Fires outgoing_payment.completed event to webhook endpoint,<br/>debitAmount: $12, sentAmount: $11.50
+      ASE->>R: Backend Admin API call: CreateOutgoingPaymentWithdrawal
+      ASE->>ASE: Remove hold and deduct $12 from sender's account,<br/>credit your account with $0.50
+
+`}
+/>
+
+    <Badge text="Two-phase transfer" variant="tip" size="medium"/> An outgoing payment  for \$12 is complete. \$11.50 was sent. You choose to keep \$0.50 as a service fee.
+
+  <Mermaid
+    graph={`sequenceDiagram
+      participant R as Rafiki
+      participant ASE as Account servicing entity
+
+      R->>ASE: Fires outgoing_payment.completed event to webhook endpoint,<br/>debitAmount: $12, sentAmount: $11.50
+      ASE->>R: Backend Admin API call: CreateOutgoingPaymentWithdrawal
+      ASE->>ASE: Remove hold and deduct $12 from sender's account,<br/>credit your account with $0.50
+      ASE->>R: Backend Admin API call: PostLiquidityWithdrawal
+      R->>R: Two-phase transfer complete
+
+`}
+/>
+
+</Disclosure>
+
+The `outgoing.payment_completed` event indicates that as much as possible has been sent to the recipient against their incoming payment.
+
+If there is excess liquidity in Rafiki due to differences between the sent and received amounts, withdraw the excess from the outgoing payment. What you choose to do with the excess is a business decision. One option is to return the excess to the sender. Another option is to retain the excess as a service fee. Lastly, remove the hold on your sender's account and debit their account on your ledger.
+
+#### Outgoing payment failed
+
+<Disclosure toggleText="Expand for event sequence" client:load>
+
+An outgoing payment for \$12 failed. \$8 was sent successfully.
+
+  <Mermaid
+    graph={`sequenceDiagram
+      participant R as Rafiki
+      participant ASE as Account servicing entity
+
+      R->>ASE: Fires outgoing_payment.failed event to webhook endpoint,<br/>debitAmount: $12, sentAmount: $8
+      ASE->>R: Backend Admin API call: CreateOutgoingPaymentWithdrawal
+      ASE->>ASE: Remove hold and deduct $8 from the sender's account
+
+`}
+/>
+
+</Disclosure>
+
+The `outgoing_payment.failed` event indicates that an outgoing payment has either partially or completely failed and a retry was unsuccessful. Withdraw any remaining liquidity from the outgoing payment in Rafiki. If the payment failed completely (the `sentAmount` is `0`), remove the hold from your sender's account. If the payment partially failed, remove the hold from your sender's account, then debit the sender's account on your ledger with the amount that was sent successfully. Since there will be a discrepancy between the quoted amount and the actual sent amount, we suggest you refrain from taking a sending fee.
+
+### Wallet addresses
+
+| Event type                                                            | Description                                                        |
+| --------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| [`wallet_address.not_found`](#wallet-address-not-found)               | The requested wallet address was not found on this Rafiki instance |
+| [`wallet_address.web_monetization`](#wallet-address-web-monetization) | Web Monetization payments have been received via STREAM            |
+
+#### Wallet address not found
+
+<Disclosure toggleText="Expand for event sequence" client:load>
+
+The wallet address, `https://wallet.example.com/carla_garcia` was requested but does not exist.
+
+  <Mermaid
+    graph={`sequenceDiagram
+      participant R as Rafiki
+      participant ASE as Account servicing entity
+
+      R->>ASE: Fires wallet_address.not_found event to webhook endpoint,<br/>wallet address: https://wallet.example.com/carla_garcia
+      ASE->>R: Backend Admin API call: CreateWalletAddress,<br/>url: https://wallet.example.com/carla_garcia,<br/>public name: Carla Eva Garcia
+
+`}
+/>
+
+</Disclosure>
+
+The `wallet_address.not_found` event indicates that a wallet address was requested via the Open Payments <Badge text="GET" variant="note" size="medium"/> wallet address API call, but the address doesn’t exist in your Rafiki instance.
+
+When you receive this event, look up the associated account in your system and create a wallet address for the account. The initial wallet address request will succeed if you create it within your configured `WALLET_ADDRESS_LOOKUP_TIMEOUT_MS` time frame.
+
+| Environment variable               | Type      | Description                                                                                                    |
+| ---------------------------------- | --------- | -------------------------------------------------------------------------------------------------------------- |
+| `WALLET_ADDRESS_LOOKUP_TIMEOUT_MS` | `backend` | The time in milliseconds that you have to create a missing wallet address before the initial request times out |
+
+#### Wallet address Web Monetization
+
+<Disclosure toggleText="Expand for event sequence" client:load>
+
+A wallet address received a Web Monetization payment of \$0.33
+
+  <Mermaid
+    graph={`sequenceDiagram
+      participant R as Rafiki
+      participant ASE as Account servicing entity
+
+      R->>ASE: Fires wallet_address.web_monetization event to webhook endpoint,<br/>receivedAmount: $0.33
+      ASE->>R: Backend Admin API call: CreateWalletAddressWithdrawal
+      ASE->>ASE: Credit recipient's account with $0.33
+
+`}
+/>
+
+</Disclosure>
+
+The `wallet_address.web_monetization` event indicates that a wallet address received Web Monetization payments via the ILP STREAM protocol. Withdraw the liquidity from the wallet address in Rafiki and credit the recipient's account on your ledger.
+
+### Low asset liquidity
+
+| Event type                                    | Description                                                   |
+| --------------------------------------------- | ------------------------------------------------------------- |
+| [`asset.liquidity_low`](#asset-liquidity-low) | Your asset liquidity has dropped below your defined threshold |
+
+#### Asset liquidity low
+
+<Disclosure toggleText="Expand for event sequence" client:load>
+
+Your asset liquidity for USD (asset scale: 2) drops below \$100.00.
+
+  <Mermaid
+    graph={`sequenceDiagram
+      participant R as Rafiki
+      participant ASE as Account servicing entity
+
+      R->>ASE: Fires asset.liquidity_low event to webhook endpoint,<br/>asset: USD (scale: 2, id: "abc")
+      ASE->>R: Backend Admin API call: DepositAssetLiquidity
+
+`}
+/>
+
+</Disclosure>
+
+The `asset.liquidity_low` event indicates that an asset's liquidity has dropped below your predefined liquidity threshold. Check if you already have, or can acquire, additional liquidity for that specific asset. If so, deposit it in Rafiki. Cross-currency transfers will fail if you don't increase the asset's liquidity.
+
+### Low peer liquidity
+
+| Event type                                  | Description                                                  |
+| ------------------------------------------- | ------------------------------------------------------------ |
+| [`peer.liquidity_low`](#peer-liquidity-low) | Your peer liquidity has dropped below your defined threshold |
+
+#### Peer liquidity low
+
+<Disclosure toggleText="Expand for event sequence" client:load>
+
+The liquidity for your peer, Happy Life Bank, drops below \$100.00 USD.
+
+  <Mermaid
+    graph={`sequenceDiagram
+      participant R as Rafiki
+      participant ASE as Account servicing entity
+
+      R->>ASE: Fires peer.liquidity_low event to webhook endpoint,<br/>peer: Happy Life Bank (asset: "USD", scale: 2, id: "abc")
+      ASE->>R: Backend Admin API call: DepositPeerLiquidity
+
+`}
+/>
+
+</Disclosure>
+
+The `peer.liquidity_low` event indicates that a peer's liquidity has dropped below your predefined liquidity threshold. Decide whether you want to extend the peer's credit line or if your peer must settle before you will extend a new line of credit. If you cannot or do not increase the peer liquidity in Rafiki, transfers to that peer will fail.

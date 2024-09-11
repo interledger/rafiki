@@ -1,12 +1,12 @@
 # Local Playground
 
-We have created a suite of packages that, together, mock an account servicing entity that has deployed Rafiki, exposing an [SPSP](https://rafiki.dev/reference/glossary/#simple-payments-setup-protocol-spsp) endpoint, the [Open Payments](https://rafiki.dev/concepts/open-payments/overview/) APIs with its required [GNAP](https://rafiki.dev/reference/glossary/#grant-negotiation-authorization-protocol) auth endpoints to request grants, a STREAM endpoint for receiving Interledger packets, and a UI to view and manage the Rafiki instance.
+We have created a suite of packages that, together, mock an account servicing entity that has deployed Rafiki, exposing an [SPSP](https://rafiki.dev/resources/glossary#simple-payment-setup-protocol-spsp) endpoint, the [Open Payments](https://rafiki.dev/overview/concepts/open-payments) APIs with its required [GNAP](https://rafiki.dev/resources/glossary#grant-negotiation-and-authorization-protocol-gnap) auth endpoints to request grants, a STREAM endpoint for receiving Interledger packets, and a UI to view and manage the Rafiki instance.
 
 These packages include:
 
 - `backend` (SPSP, Open Payments APIs, GraphQL Admin APIs, STREAM endpoint)
 - `auth` (GNAP auth server)
-- `mock-account-servicing-entity` (mocks an [Account Servicing Entity](https://rafiki.dev/concepts/account-servicing-entity/)
+- `mock-account-servicing-entity` (mocks an [account servicing entity](https://rafiki.dev/overview/overview)
 - `frontend` (Remix app to expose a UI for Rafiki Admin management via interaction with the `backend` Admin APIs)
 - `kratos` (An identity and user management solution for the `frontend`)
 - `mailslurper` (A SMTP mail server to catch account recovery emails for the `frontend`)
@@ -27,7 +27,7 @@ This environment will set up a playground where you can use the Rafiki Admin API
 
 ## Environment overview
 
-![Docker compose environment](../packages/documentation/public/img/localenv-architecture.png)
+![Docker compose environment](../packages/documentation/public/img/localenv.png)
 
 #### Cloud Nine Wallet
 
@@ -255,7 +255,7 @@ Note that you have to go through an interaction flow by clicking on the `redirec
 
 #### Admin UI
 
-In order to manage and view information about the Rafiki instance(s) you can use the [Rafiki Admin](https://rafiki.dev/rafikiadmin/overview/) UI. We have secured access to Rafiki Admin using [Ory Kratos](https://www.ory.sh/docs/kratos/ory-kratos-intro); however, in our local playground setup we've chosen to disable authorization for easier development and testing interactions.
+In order to manage and view information about the Rafiki instance(s) you can use the [Rafiki Admin](https://rafiki.dev/admin/admin-user-guide) UI. We have secured access to Rafiki Admin using [Ory Kratos](https://www.ory.sh/docs/kratos/ory-kratos-intro); however, in our local playground setup we've chosen to disable authorization for easier development and testing interactions.
 
 If you'd like to enable authorization locally you can run `pnpm localenv:compose:adminauth up` and check out the setup in the [`admin-auth`](./admin-auth/) subdirectory. Note that, if authorization is enabled, you must register separately for Cloud Nine Wallet's Rafiki Admin and Happy Life Bank's Rafiki Admin, as they are intended to operate as distinct mock account servicing entities. Once you've registered, you can always come back to your Rafiki Admin account by navigating to [`localhost:3010`](http://localhost:3010) (Cloud Nine Wallet) or [`localhost:4010`](http://localhost:4010) (Happy Life Bank) and logging in. Since access to the UI is on an invitation-only basis the registration flow is not publicly available. As such, in order to access Rafiki Admin you can manually add a new user with the invite-user script. Run `docker exec -it <admin-container-name> npm run invite-user -- example@mail.com`, and it will output a link to the terminal. Copy and paste this link in your browser and you will automatically be logged in and directed to the account settings page. The next step is changing your password. We are using a simple email and password authentication method.
 
