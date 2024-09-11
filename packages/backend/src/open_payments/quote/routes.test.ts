@@ -21,6 +21,10 @@ import {
 import { createAsset, randomAsset } from '../../tests/asset'
 import { createWalletAddress } from '../../tests/walletAddress'
 import { createQuote } from '../../tests/quote'
+import { createTenant } from '../../tests/tenant'
+import { EndpointType } from '../../tenant/endpoints/model'
+
+const nock = (global as unknown as { nock: typeof import('nock') }).nock
 
 describe('Quote Routes', (): void => {
   let deps: IocContract<AppServices>
@@ -41,13 +45,16 @@ describe('Quote Routes', (): void => {
 
   const createWalletAddressQuote = async ({
     walletAddressId,
-    client
+    client,
+    tenantId
   }: {
     walletAddressId: string
+    tenantId: string
     client?: string
   }): Promise<Quote> => {
     return await createQuote(deps, {
       walletAddressId,
+      tenantId,
       receiver,
       debitAmount: {
         value: BigInt(56),
@@ -76,7 +83,23 @@ describe('Quote Routes', (): void => {
       code: debitAmount.assetCode,
       scale: debitAmount.assetScale
     })
-    walletAddress = await createWalletAddress(deps, {
+    const tenantEmail = faker.internet.email()
+    nock(config.kratosAdminUrl)
+      .get('/identities')
+      .query({ credentials_identifier: tenantEmail })
+      .reply(200, [{ id: uuid(), metadata_public: {} }])
+      .persist()
+    const tenantId = (
+      await createTenant(deps, {
+        email: tenantEmail,
+        idpSecret: 'testsecret',
+        idpConsentEndpoint: faker.internet.url(),
+        endpoints: [
+          { type: EndpointType.WebhookBaseUrl, value: faker.internet.url() }
+        ]
+      })
+    ).id
+    walletAddress = await createWalletAddress(deps, tenantId, {
       assetId
     })
     baseUrl = new URL(walletAddress.url).origin
@@ -96,6 +119,7 @@ describe('Quote Routes', (): void => {
       createModel: async ({ client }) =>
         createWalletAddressQuote({
           walletAddressId: walletAddress.id,
+          tenantId: walletAddress.tenantId,
           client
         }),
       get: (ctx) => quoteRoutes.get(ctx),
@@ -195,6 +219,7 @@ describe('Quote Routes', (): void => {
           await expect(quoteRoutes.create(ctx)).resolves.toBeUndefined()
           expect(quoteSpy).toHaveBeenCalledWith({
             walletAddressId: walletAddress.id,
+            tenantId: walletAddress.tenantId,
             receiver,
             debitAmount: options.debitAmount && {
               ...options.debitAmount,
@@ -254,6 +279,7 @@ describe('Quote Routes', (): void => {
         await expect(quoteRoutes.create(ctx)).resolves.toBeUndefined()
         expect(quoteSpy).toHaveBeenCalledWith({
           walletAddressId: walletAddress.id,
+          tenantId: walletAddress.tenantId,
           receiver,
           client,
           method: 'ilp'
