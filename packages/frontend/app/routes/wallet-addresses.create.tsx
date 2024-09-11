@@ -109,8 +109,8 @@ export async function action({ request }: ActionFunctionArgs) {
     return json({ errors }, { status: 400 })
   }
 
-  const baseUrl = removeTrailingSlash(getOpenPaymentsUrl());
-  const path = removeTrailingSlash(result.data.name);
+  const baseUrl = removeTrailingSlash(getOpenPaymentsUrl())
+  const path = removeTrailingSlash(result.data.name)
 
   const response = await createWalletAddress({
     url: `${baseUrl}/${path}`,

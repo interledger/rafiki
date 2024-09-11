@@ -103,11 +103,11 @@ export const parseBool = (str: string) => {
 
 export function removeTrailingSlash(str: string): string {
   if (!str.length) {
-    return str;
+    return str
   }
 
-  str = str.endsWith("/") ? str.slice(0, str.length - 1) : str;
-  str = str.startsWith("/") ? str.substring(1) : str;
+  str = str.endsWith('/') ? str.slice(0, str.length - 1) : str
+  str = str.startsWith('/') ? str.substring(1) : str
 
-  return str;
+  return str
 }
