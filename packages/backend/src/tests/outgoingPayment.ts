@@ -136,7 +136,7 @@ export async function createOutgoingPaymentWithReceiver(
     walletAddressId: args.sendingWalletAddress.id,
     method: args.method,
     receiver: receiver.incomingPayment!.id!,
-    tenantId: args.receivingWalletAddress.tenantId,
+    tenantId: args.sendingWalletAddress.tenantId,
     ...args.quoteOptions
   })
 
