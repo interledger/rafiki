@@ -135,43 +135,38 @@ describe('Open Payments Wallet Address Service', (): void => {
         accountingService.getBalance(walletAddress.id)
       ).resolves.toBeUndefined()
     })
-    
 
-    test.each`
-      url                       | description
-      ${'https://AlIce.me/PEy'} | ${'with a mixed case url'}
-    `(
-      'Creating wallet address with case insensitiveness',
-      async ({ url }): Promise<void> => {
-        await expect(
-          walletAddressService.create({
-              ...options,
-              url
-            })  
-        ).resolves.toMatchObject(
-          {url:url.toLowerCase()}
-        )
-      }
-    )
 
-    test.each`
-    url                       | description
-    ${'https://aliCe.me/pay'} | ${'with a mixed case url'}
-    ${'https://Alice.me/pay'} | ${'Duplied with a mixed case url'}
-
-  `(
-    'Wallet address cannot be created if the url is duplicated',
-    async ({ url }): Promise<void> => {
+    test('Creating wallet address with case insensitiveness', async (): Promise<void> => {
+      const url = 'https://Alice.me/pay'
       await expect(
         walletAddressService.create({
-            ...options,
-            url
-          })  
+          ...options,
+          url
+        })
       ).resolves.toMatchObject(
-        {url:url.toLowerCase()}
+        { url: url.toLowerCase() }
       )
     }
-  )
+    )
+
+    test(
+      'Wallet address cannot be created if the url is duplicated',
+      async (): Promise<void> => {
+        const url = 'https://Alice.me/pay'
+        const wallet = walletAddressService.create({
+          ...options,
+          url
+        })
+        assert.ok(!isWalletAddressError(wallet))
+        await expect(
+          walletAddressService.create({
+            ...options,
+            url
+          })
+        ).resolves.toEqual(WalletAddressError.InvalidUrl)
+      }
+    )
 
   })
 
@@ -262,8 +257,8 @@ describe('Open Payments Wallet Address Service', (): void => {
 
             expect(incomingPaymentUpdated.expiresAt.getTime()).toEqual(
               expiresAt.getTime() +
-                config.walletAddressDeactivationPaymentGracePeriodMs -
-                duration
+              config.walletAddressDeactivationPaymentGracePeriodMs -
+              duration
             )
           }
         )
@@ -459,8 +454,6 @@ describe('Open Payments Wallet Address Service', (): void => {
         }
       )
     )
-
-
   })
 
   describe('Get Or Poll Wallet Addres By Url', (): void => {
