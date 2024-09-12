@@ -53,3 +53,23 @@
 .accounting-table.accounting-table tr td {
   text-align: center;
 }
+
+/* Markdown table testing styles */
+
+/* HTML custom class - doesn't break lines within words formatted as `code` whether they break the container size or not*/
+.rafiki-table code {
+  word-break: keep-all;
+  overflow-wrap: normal;
+}
+
+/* Markdown table - doesn't break lines within words formatted as `code` whether they break the container size or not */
+table code {
+  word-break: keep-all;
+  overflow-wrap: normal;  
+}
+
+/* Custom div wrapper for tables that are too wide for the main content area - adds a horizontal scroll and keeps the table from overflowing into the sidebars */
+.wide-table {
+overflow-x: auto;
+width: 100%;
+}
