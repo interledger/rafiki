@@ -1,4 +1,6 @@
 import { IocContract } from '@adonisjs/fold'
+import { faker } from '@faker-js/faker'
+import { v4 as uuid } from 'uuid'
 import { createTestApp, TestContainer } from '../../tests/app'
 import { Config } from '../../config/app'
 import { initIocContainer } from '../..'
@@ -15,16 +17,41 @@ import { IncomingPaymentState } from '../payment/incoming/model'
 import assert from 'assert'
 import base64url from 'base64url'
 import { IlpAddress } from 'ilp-packet'
+import { createTenant } from '../../tests/tenant'
+import { EndpointType } from '../../tenant/endpoints/model'
+
+const nock = (global as unknown as { nock: typeof import('nock') }).nock
 
 describe('Receiver Model', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let streamCredentialsService: StreamCredentialsService
+  let tenantId: string
 
   beforeAll(async (): Promise<void> => {
     deps = initIocContainer(Config)
     appContainer = await createTestApp(deps)
     streamCredentialsService = await deps.use('streamCredentialsService')
+  })
+
+  beforeEach(async (): Promise<void> => {
+    const config = await deps.use('config')
+    const tenantEmail = faker.internet.email()
+    nock(config.kratosAdminUrl)
+      .get('/identities')
+      .query({ credentials_identifier: tenantEmail })
+      .reply(200, [{ id: uuid(), metadata_public: {} }])
+      .persist()
+    tenantId = (
+      await createTenant(deps, {
+        email: tenantEmail,
+        idpSecret: 'testsecret',
+        idpConsentEndpoint: faker.internet.url(),
+        endpoints: [
+          { type: EndpointType.WebhookBaseUrl, value: faker.internet.url() }
+        ]
+      })
+    ).id
   })
 
   afterEach(async (): Promise<void> => {
@@ -38,9 +65,10 @@ describe('Receiver Model', (): void => {
 
   describe('constructor', () => {
     test('creates receiver', async () => {
-      const walletAddress = await createWalletAddress(deps)
+      const walletAddress = await createWalletAddress(deps, tenantId)
       const incomingPayment = await createIncomingPayment(deps, {
-        walletAddressId: walletAddress.id
+        walletAddressId: walletAddress.id,
+        tenantId: walletAddress.tenantId
       })
       const isLocal = true
 
@@ -82,9 +110,10 @@ describe('Receiver Model', (): void => {
     })
 
     test('throws if incoming payment is completed', async () => {
-      const walletAddress = await createWalletAddress(deps)
+      const walletAddress = await createWalletAddress(deps, tenantId)
       const incomingPayment = await createIncomingPayment(deps, {
-        walletAddressId: walletAddress.id
+        walletAddressId: walletAddress.id,
+        tenantId: walletAddress.tenantId
       })
 
       incomingPayment.state = IncomingPaymentState.Completed
@@ -105,9 +134,10 @@ describe('Receiver Model', (): void => {
     })
 
     test('throws if incoming payment is expired', async () => {
-      const walletAddress = await createWalletAddress(deps)
+      const walletAddress = await createWalletAddress(deps, tenantId)
       const incomingPayment = await createIncomingPayment(deps, {
-        walletAddressId: walletAddress.id
+        walletAddressId: walletAddress.id,
+        tenantId: walletAddress.tenantId
       })
 
       incomingPayment.expiresAt = new Date(Date.now() - 1)
@@ -125,9 +155,10 @@ describe('Receiver Model', (): void => {
     })
 
     test('throws if stream credentials has invalid ILP address', async () => {
-      const walletAddress = await createWalletAddress(deps)
+      const walletAddress = await createWalletAddress(deps, tenantId)
       const incomingPayment = await createIncomingPayment(deps, {
-        walletAddressId: walletAddress.id
+        walletAddressId: walletAddress.id,
+        tenantId: walletAddress.tenantId
       })
 
       const streamCredentials = streamCredentialsService.get(incomingPayment)
