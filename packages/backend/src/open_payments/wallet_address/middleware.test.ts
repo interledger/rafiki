@@ -31,6 +31,12 @@ import { OutgoingPaymentService } from '../payment/outgoing/service'
 import { Quote } from '../quote/model'
 import { IncomingPayment } from '../payment/incoming/model'
 import { OutgoingPayment } from '../payment/outgoing/model'
+import { faker } from '@faker-js/faker'
+import { v4 as uuid } from 'uuid'
+import { createTenant } from '../../tests/tenant'
+import { EndpointType } from '../../tenant/endpoints/model'
+
+const nock = (global as unknown as { nock: typeof import('nock') }).nock
 
 describe('Wallet Address Middleware', (): void => {
   let deps: IocContract<AppServices>
@@ -39,6 +45,7 @@ describe('Wallet Address Middleware', (): void => {
   let incomingPaymentService: IncomingPaymentService
   let quoteService: QuoteService
   let outgoingPaymentService: OutgoingPaymentService
+  let tenantId: string
 
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer(Config)
@@ -47,6 +54,26 @@ describe('Wallet Address Middleware', (): void => {
     incomingPaymentService = await deps.use('incomingPaymentService')
     quoteService = await deps.use('quoteService')
     outgoingPaymentService = await deps.use('outgoingPaymentService')
+  })
+
+  beforeEach(async (): Promise<void> => {
+    const config = await deps.use('config')
+    const tenantEmail = faker.internet.email()
+    nock(config.kratosAdminUrl)
+      .get('/identities')
+      .query({ credentials_identifier: tenantEmail })
+      .reply(200, [{ id: uuid(), metadata_public: {} }])
+      .persist()
+    tenantId = (
+      await createTenant(deps, {
+        email: tenantEmail,
+        idpSecret: 'testsecret',
+        idpConsentEndpoint: faker.internet.url(),
+        endpoints: [
+          { type: EndpointType.WebhookBaseUrl, value: faker.internet.url() }
+        ]
+      })
+    ).id
   })
 
   afterEach(async (): Promise<void> => {
@@ -355,7 +382,7 @@ describe('Wallet Address Middleware', (): void => {
     })
 
     test('throws error for deactivated wallet address', async (): Promise<void> => {
-      const walletAddress = await createWalletAddress(deps)
+      const walletAddress = await createWalletAddress(deps, tenantId)
       ctx.walletAddressUrl = walletAddress.url
 
       await walletAddress.$query().patch({ deactivatedAt: new Date() })
@@ -372,7 +399,7 @@ describe('Wallet Address Middleware', (): void => {
     })
 
     test('sets walletAddress on context and calls next', async (): Promise<void> => {
-      const walletAddress = await createWalletAddress(deps)
+      const walletAddress = await createWalletAddress(deps, tenantId)
       ctx.walletAddressUrl = walletAddress.url
 
       await expect(
