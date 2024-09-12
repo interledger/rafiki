@@ -11,6 +11,8 @@ import { withConfigOverride } from '../../tests/helpers'
 import { StartQuoteOptions } from '../handler/service'
 import { WalletAddress } from '../../open_payments/wallet_address/model'
 import * as Pay from '@interledger/pay'
+import { faker } from '@faker-js/faker'
+import { v4 as uuid } from 'uuid'
 
 import { createReceiver } from '../../tests/receiver'
 import { mockRatesApi } from '../../tests/rates'
@@ -23,6 +25,8 @@ import { AccountingService } from '../../accounting/service'
 import { IncomingPayment } from '../../open_payments/payment/incoming/model'
 import { truncateTables } from '../../tests/tableManager'
 import { createOutgoingPaymentWithReceiver } from '../../tests/outgoingPayment'
+import { createTenant } from '../../tests/tenant'
+import { EndpointType } from '../../tenant/endpoints/model'
 
 const nock = (global as unknown as { nock: typeof import('nock') }).nock
 
@@ -32,6 +36,7 @@ describe('IlpPaymentService', (): void => {
   let ilpPaymentService: IlpPaymentService
   let accountingService: AccountingService
   let config: IAppConfig
+  let tenantId: string
 
   const exchangeRatesUrl = 'https://example-rates.com'
 
@@ -62,11 +67,33 @@ describe('IlpPaymentService', (): void => {
       scale: 2
     })
 
-    walletAddressMap['USD'] = await createWalletAddress(deps, {
+    const tenantEmail = faker.internet.email()
+    nock(config.kratosAdminUrl)
+      .get('/identities')
+      .query({ credentials_identifier: tenantEmail })
+      .reply(200, [{ id: uuid(), metadata_public: {} }])
+      .persist()
+
+    nock(config.kratosAdminUrl)
+      .post('/recovery/link')
+      .reply(200, { recovery_link: faker.internet.url() })
+      .persist()
+    tenantId = (
+      await createTenant(deps, {
+        email: tenantEmail,
+        idpSecret: 'testsecret',
+        idpConsentEndpoint: faker.internet.url(),
+        endpoints: [
+          { type: EndpointType.WebhookBaseUrl, value: faker.internet.url() }
+        ]
+      })
+    ).id
+
+    walletAddressMap['USD'] = await createWalletAddress(deps, tenantId, {
       assetId: assetMap['USD'].id
     })
 
-    walletAddressMap['EUR'] = await createWalletAddress(deps, {
+    walletAddressMap['EUR'] = await createWalletAddress(deps, tenantId, {
       assetId: assetMap['EUR'].id
     })
   })
@@ -186,6 +213,7 @@ describe('IlpPaymentService', (): void => {
       const options: StartQuoteOptions = {
         walletAddress: walletAddressMap['USD'],
         receiver: await createReceiver(deps, walletAddressMap['USD'], {
+          tenantId,
           incomingAmount
         })
       }
@@ -274,6 +302,7 @@ describe('IlpPaymentService', (): void => {
       const options: StartQuoteOptions = {
         walletAddress: walletAddressMap['USD'],
         receiver: await createReceiver(deps, walletAddressMap['USD'], {
+          tenantId,
           incomingAmount: {
             assetCode: 'USD',
             assetScale: 2,
