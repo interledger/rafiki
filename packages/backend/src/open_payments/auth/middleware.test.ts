@@ -30,6 +30,8 @@ import { parseLimits } from '../payment/outgoing/limits'
 import { AccessAction, AccessType } from '@interledger/open-payments'
 import { OpenPaymentsServerRouteError } from '../route-errors'
 import assert from 'assert'
+import { createTenant } from '../../tests/tenant'
+import { EndpointType } from '../../tenant/endpoints/model'
 
 const nock = (global as unknown as { nock: typeof import('nock') }).nock
 
@@ -71,6 +73,23 @@ describe('Auth Middleware', (): void => {
   })
 
   beforeEach(async (): Promise<void> => {
+    const config = await deps.use('config')
+    const tenantEmail = faker.internet.email()
+    nock(config.kratosAdminUrl)
+      .get('/identities')
+      .query({ credentials_identifier: tenantEmail })
+      .reply(200, [{ id: uuid(), metadata_public: {} }])
+      .persist()
+    const tenantId = (
+      await createTenant(deps, {
+        email: tenantEmail,
+        idpSecret: 'testsecret',
+        idpConsentEndpoint: faker.internet.url(),
+        endpoints: [
+          { type: EndpointType.WebhookBaseUrl, value: faker.internet.url() }
+        ]
+      })
+    ).id
     ctx = setup({
       reqOpts: {
         headers: {
@@ -78,7 +97,7 @@ describe('Auth Middleware', (): void => {
           Authorization: `GNAP ${token}`
         }
       },
-      walletAddress: await createWalletAddress(deps)
+      walletAddress: await createWalletAddress(deps, tenantId)
     })
     ctx.container = deps
   })
