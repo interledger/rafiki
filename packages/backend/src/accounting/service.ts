@@ -181,41 +181,6 @@ export async function createAccountToAccountTransfer(
     sourceAccount.asset.ledger === destinationAccount.asset.ledger
       ? buildSameAssetTransfers(transferArgs)
       : buildCrossAssetTransfers(transferArgs)
-  // transfersToCreateOrError
-  // for local payment method (on P2P > Create Outgoing Payment)
-  // - something not right here - shouldnt have the 110n one
-  // cloud-nine-backend-1   | {
-  //   cloud-nine-backend-1   |   transfersToCreateOrError: [
-  //   cloud-nine-backend-1   |     {
-  //   cloud-nine-backend-1   |       sourceAccountId: '6c16f28c-85a9-4011-b693-b8a7cd8cc23b',
-  //   cloud-nine-backend-1   |       destinationAccountId: '549d4ef2-9c03-48e6-a734-a1eaab5a07ce',
-  //   cloud-nine-backend-1   |       amount: 500n,
-  //   cloud-nine-backend-1   |       ledger: 1,
-  //   cloud-nine-backend-1   |       transferType: 'TRANSFER'
-  //   cloud-nine-backend-1   |     },
-  //   cloud-nine-backend-1   |     {
-  //   cloud-nine-backend-1   |       sourceAccountId: '6c16f28c-85a9-4011-b693-b8a7cd8cc23b',
-  //   cloud-nine-backend-1   |       destinationAccountId: '7c157fcd-3ea4-4cb4-bf3b-e498d9e749d3',
-  //   cloud-nine-backend-1   |       amount: 110n,
-  //   cloud-nine-backend-1   |       ledger: 1,
-  //   cloud-nine-backend-1   |       transferType: 'TRANSFER'
-  //   cloud-nine-backend-1   |     }
-  //   cloud-nine-backend-1   |   ]
-  //   cloud-nine-backend-1   | }
-
-  // for remote payment method (on P2P > Create Outgoing Payment)
-  // cloud-nine-backend-1   |   transfersToCreateOrError: [
-  //   cloud-nine-backend-1   |     {
-  //   cloud-nine-backend-1   |       sourceAccountId: '595aab3b-3a8d-4f42-af14-f7e359014a3c',
-  //   cloud-nine-backend-1   |       destinationAccountId: '0a07a341-a930-4d54-b6d7-d33faf9e4ff7',
-  //   cloud-nine-backend-1   |       amount: 500n,
-  //   cloud-nine-backend-1   |       ledger: 1,
-  //   cloud-nine-backend-1   |       transferType: 'TRANSFER'
-  //   cloud-nine-backend-1   |     }
-  //   cloud-nine-backend-1   |   ]
-
-  // Why is there an extra transfer on the local one? is the extra a fee? (both values sum to equal debitAmount in any case)
-  // The extra 110n one is to a different destination too ... ?
 
   if (isTransferError(transfersToCreateOrError)) {
     return transfersToCreateOrError

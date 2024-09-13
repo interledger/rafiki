@@ -80,6 +80,7 @@ exports.up = function (knex) {
           table.dropColumn('lowEstimatedExchangeRateDenominator')
           table.dropColumn('highEstimatedExchangeRateNumerator')
           table.dropColumn('highEstimatedExchangeRateDenominator')
+          table.bigInteger('sourceAmount').nullable()
         })
       })
   )

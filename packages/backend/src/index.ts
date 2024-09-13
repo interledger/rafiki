@@ -451,7 +451,9 @@ export function initIocContainer(
       config: await deps.use('config'),
       ratesService: await deps.use('ratesService'),
       accountingService: await deps.use('accountingService'),
-      incomingPaymentService: await deps.use('incomingPaymentService')
+      incomingPaymentService: await deps.use('incomingPaymentService'),
+      // TODO: rm if saving base debitAmount on quote
+      feeService: await deps.use('feeService')
     }
 
     return createLocalPaymentService(serviceDependencies)

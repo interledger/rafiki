@@ -16,16 +16,19 @@ import { WalletAddress } from '../../open_payments/wallet_address/model'
 
 import { createReceiver } from '../../tests/receiver'
 import { mockRatesApi } from '../../tests/rates'
-// import { AccountingService } from '../../accounting/service'
+import { AccountingService } from '../../accounting/service'
 import { truncateTables } from '../../tests/tableManager'
+import { createOutgoingPaymentWithReceiver } from '../../tests/outgoingPayment'
+import { OutgoingPayment } from '../../open_payments/payment/outgoing/model'
+import { IncomingPayment } from '../../open_payments/payment/incoming/model'
 
 const nock = (global as unknown as { nock: typeof import('nock') }).nock
 
-describe('IlpPaymentService', (): void => {
+describe('LocalPaymentService', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let localPaymentService: LocalPaymentService
-  // let accountingService: AccountingService
+  let accountingService: AccountingService
   // let config: IAppConfig
 
   const exchangeRatesUrl = 'https://example-rates.com'
@@ -43,7 +46,7 @@ describe('IlpPaymentService', (): void => {
 
     // config = await deps.use('config')
     localPaymentService = await deps.use('localPaymentService')
-    // accountingService = await deps.use('accountingService')
+    accountingService = await deps.use('accountingService')
   })
 
   beforeEach(async (): Promise<void> => {
@@ -335,8 +338,8 @@ describe('IlpPaymentService', (): void => {
     //   ratesScope.done()
     // })
 
-    describe('successfully gets ilp quote', (): void => {
-      describe.only('with incomingAmount', () => {
+    describe('successfully gets local quote', (): void => {
+      describe('with incomingAmount', () => {
         test.each`
           incomingAssetCode | incomingAmountValue | debitAssetCode | expectedDebitAmount | exchangeRate | description
           ${'EUR'}          | ${100n}             | ${'USD'}       | ${100n}             | ${1.0}       | ${'cross currency, same rate'}
@@ -401,7 +404,7 @@ describe('IlpPaymentService', (): void => {
         )
       })
 
-      describe.only('with debitAmount', () => {
+      describe('with debitAmount', () => {
         test.each`
           debitAssetCode | debitAmountValue | incomingAssetCode | expectedReceiveAmount | exchangeRate | description
           ${'EUR'}       | ${100n}          | ${'USD'}          | ${100n}               | ${1.0}       | ${'cross currency, same rate'}
@@ -460,281 +463,371 @@ describe('IlpPaymentService', (): void => {
     })
   })
 
-  // describe('pay', (): void => {
-  //   function mockIlpPay(
-  //     overrideQuote: Partial<Pay.Quote>,
-  //     error?: Pay.PaymentError
-  //   ): jest.SpyInstance<
-  //     Promise<Pay.PaymentProgress>,
-  //     [options: Pay.PayOptions]
-  //   > {
-  //     return jest
-  //       .spyOn(Pay, 'pay')
-  //       .mockImplementationOnce(async (opts: Pay.PayOptions) => {
-  //         const res = await Pay.pay({
-  //           ...opts,
-  //           quote: { ...opts.quote, ...overrideQuote }
-  //         })
-  //         if (error) res.error = error
-  //         return res
-  //       })
-  //   }
+  describe('pay', (): void => {
+    // function mockIlpPay(
+    //   overrideQuote: Partial<Pay.Quote>,
+    //   error?: Pay.PaymentError
+    // ): jest.SpyInstance<
+    //   Promise<Pay.PaymentProgress>,
+    //   [options: Pay.PayOptions]
+    // > {
+    //   return jest
+    //     .spyOn(Pay, 'pay')
+    //     .mockImplementationOnce(async (opts: Pay.PayOptions) => {
+    //       const res = await Pay.pay({
+    //         ...opts,
+    //         quote: { ...opts.quote, ...overrideQuote }
+    //       })
+    //       if (error) res.error = error
+    //       return res
+    //     })
+    // }
 
-  //   async function validateBalances(
-  //     outgoingPayment: OutgoingPayment,
-  //     incomingPayment: IncomingPayment,
-  //     {
-  //       amountSent,
-  //       amountReceived
-  //     }: {
-  //       amountSent: bigint
-  //       amountReceived: bigint
-  //     }
-  //   ) {
-  //     await expect(
-  //       accountingService.getTotalSent(outgoingPayment.id)
-  //     ).resolves.toBe(amountSent)
-  //     await expect(
-  //       accountingService.getTotalReceived(incomingPayment.id)
-  //     ).resolves.toEqual(amountReceived)
-  //   }
+    async function validateBalances(
+      outgoingPayment: OutgoingPayment,
+      incomingPayment: IncomingPayment,
+      {
+        amountSent,
+        amountReceived
+      }: {
+        amountSent: bigint
+        amountReceived: bigint
+      }
+    ) {
+      await expect(
+        accountingService.getTotalSent(outgoingPayment.id)
+      ).resolves.toBe(amountSent)
+      await expect(
+        accountingService.getTotalReceived(incomingPayment.id)
+      ).resolves.toEqual(amountReceived)
+    }
 
-  //   test('successfully streams between accounts', async (): Promise<void> => {
-  //     const { incomingPayment, receiver, outgoingPayment } =
-  //       await createOutgoingPaymentWithReceiver(deps, {
-  //         sendingWalletAddress: walletAddressMap['USD'],
-  //         receivingWalletAddress: walletAddressMap['USD'],
-  //         method: 'ilp',
-  //         quoteOptions: {
-  //           debitAmount: {
-  //             value: 100n,
-  //             assetScale: walletAddressMap['USD'].asset.scale,
-  //             assetCode: walletAddressMap['USD'].asset.code
-  //           }
-  //         }
-  //       })
+    test('succesfully make local payment', async (): Promise<void> => {
+      const { incomingPayment, receiver, outgoingPayment } =
+        await createOutgoingPaymentWithReceiver(deps, {
+          sendingWalletAddress: walletAddressMap['USD'],
+          receivingWalletAddress: walletAddressMap['USD'],
+          method: 'ilp',
+          quoteOptions: {
+            debitAmount: {
+              value: 100n,
+              assetScale: walletAddressMap['USD'].asset.scale,
+              assetCode: walletAddressMap['USD'].asset.code
+            }
+          }
+        })
 
-  //     await expect(
-  //       ilpPaymentService.pay({
-  //         receiver,
-  //         outgoingPayment,
-  //         finalDebitAmount: 100n,
-  //         finalReceiveAmount: 100n
-  //       })
-  //     ).resolves.toBeUndefined()
+      const payResponse = await localPaymentService.pay({
+        receiver,
+        outgoingPayment,
+        finalDebitAmount: 100n,
+        finalReceiveAmount: 100n
+      })
 
-  //     await validateBalances(outgoingPayment, incomingPayment, {
-  //       amountSent: 100n,
-  //       amountReceived: 100n
-  //     })
-  //   })
+      console.log({ payResponse })
 
-  //   test('partially streams between accounts, then streams to completion', async (): Promise<void> => {
-  //     const { incomingPayment, receiver, outgoingPayment } =
-  //       await createOutgoingPaymentWithReceiver(deps, {
-  //         sendingWalletAddress: walletAddressMap['USD'],
-  //         receivingWalletAddress: walletAddressMap['USD'],
-  //         method: 'ilp',
-  //         quoteOptions: {
-  //           exchangeRate: 1,
-  //           debitAmount: {
-  //             value: 100n,
-  //             assetScale: walletAddressMap['USD'].asset.scale,
-  //             assetCode: walletAddressMap['USD'].asset.code
-  //           }
-  //         }
-  //       })
+      expect(payResponse).toBe(undefined)
 
-  //     mockIlpPay(
-  //       { maxSourceAmount: 5n, minDeliveryAmount: 5n },
-  //       Pay.PaymentError.ClosedByReceiver
-  //     )
+      await validateBalances(outgoingPayment, incomingPayment, {
+        amountSent: 100n,
+        amountReceived: 100n
+      })
+    })
 
-  //     await expect(
-  //       ilpPaymentService.pay({
-  //         receiver,
-  //         outgoingPayment,
-  //         finalDebitAmount: 100n,
-  //         finalReceiveAmount: 100n
-  //       })
-  //     ).rejects.toThrow(PaymentMethodHandlerError)
+    test.only('succesfully make local payment with fee', async (): Promise<void> => {
+      // for this case, the underyling outgoing payment that gets created should have a quote that with amounts
+      // that look like:
+      // {
+      //     "id": "a6a157d7-93ab-4104-b590-3cae00a30798",
+      //     "walletAddressId": "9683a8bf-2a24-4dc1-853e-9d11d6681115",
+      //     "receiver": "https://cloud-nine-wallet-backend/incoming-payments/c1617263-3b29-4d6b-9561-a5723b3e16ac",
+      //     "debitAmount": {
+      //         "value": "610",
+      //         "assetCode": "USD",
+      //         "assetScale": 2
+      //     },
+      //     "receiveAmount": {
+      //         "value": "500",
+      //         "assetCode": "USD",
+      //         "assetScale": 2
+      //     },
+      //     "createdAt": "2024-08-21T17:45:07.227Z",
+      //     "expiresAt": "2024-08-21T17:50:07.227Z"
+      // }
+      const { incomingPayment, receiver, outgoingPayment } =
+        await createOutgoingPaymentWithReceiver(deps, {
+          sendingWalletAddress: walletAddressMap['USD'],
+          receivingWalletAddress: walletAddressMap['USD'],
+          method: 'ilp',
+          quoteOptions: {
+            debitAmount: {
+              value: 610n,
+              assetScale: walletAddressMap['USD'].asset.scale,
+              assetCode: walletAddressMap['USD'].asset.code
+            }
+          }
+        })
 
-  //     await validateBalances(outgoingPayment, incomingPayment, {
-  //       amountSent: 5n,
-  //       amountReceived: 5n
-  //     })
+      console.log(
+        'do the amounts/quote match the expected ones in the test code comment?',
+        { outgoingPayment }
+      )
 
-  //     await expect(
-  //       ilpPaymentService.pay({
-  //         receiver,
-  //         outgoingPayment,
-  //         finalDebitAmount: 100n - 5n,
-  //         finalReceiveAmount: 100n - 5n
-  //       })
-  //     ).resolves.toBeUndefined()
+      expect(true).toBe(false)
 
-  //     await validateBalances(outgoingPayment, incomingPayment, {
-  //       amountSent: 100n,
-  //       amountReceived: 100n
-  //     })
-  //   })
+      const payResponse = await localPaymentService.pay({
+        receiver,
+        outgoingPayment,
+        finalDebitAmount: 100n,
+        finalReceiveAmount: 100n
+      })
 
-  //   test('throws if invalid finalDebitAmount', async (): Promise<void> => {
-  //     const { incomingPayment, receiver, outgoingPayment } =
-  //       await createOutgoingPaymentWithReceiver(deps, {
-  //         sendingWalletAddress: walletAddressMap['USD'],
-  //         receivingWalletAddress: walletAddressMap['USD'],
-  //         method: 'ilp',
-  //         quoteOptions: {
-  //           debitAmount: {
-  //             value: 100n,
-  //             assetScale: walletAddressMap['USD'].asset.scale,
-  //             assetCode: walletAddressMap['USD'].asset.code
-  //           }
-  //         }
-  //       })
+      console.log({ payResponse })
 
-  //     expect.assertions(6)
-  //     try {
-  //       await ilpPaymentService.pay({
-  //         receiver,
-  //         outgoingPayment,
-  //         finalDebitAmount: 0n,
-  //         finalReceiveAmount: 50n
-  //       })
-  //     } catch (error) {
-  //       expect(error).toBeInstanceOf(PaymentMethodHandlerError)
-  //       expect((error as PaymentMethodHandlerError).message).toBe(
-  //         'Could not start ILP streaming'
-  //       )
-  //       expect((error as PaymentMethodHandlerError).description).toBe(
-  //         'Invalid finalDebitAmount'
-  //       )
-  //       expect((error as PaymentMethodHandlerError).retryable).toBe(false)
-  //     }
+      expect(payResponse).toBe(undefined)
 
-  //     await validateBalances(outgoingPayment, incomingPayment, {
-  //       amountSent: 0n,
-  //       amountReceived: 0n
-  //     })
-  //   })
+      await validateBalances(outgoingPayment, incomingPayment, {
+        amountSent: 100n,
+        amountReceived: 100n
+      })
+    })
 
-  //   test('throws if invalid finalReceiveAmount', async (): Promise<void> => {
-  //     const { incomingPayment, receiver, outgoingPayment } =
-  //       await createOutgoingPaymentWithReceiver(deps, {
-  //         sendingWalletAddress: walletAddressMap['USD'],
-  //         receivingWalletAddress: walletAddressMap['USD'],
-  //         method: 'ilp',
-  //         quoteOptions: {
-  //           debitAmount: {
-  //             value: 100n,
-  //             assetScale: walletAddressMap['USD'].asset.scale,
-  //             assetCode: walletAddressMap['USD'].asset.code
-  //           }
-  //         }
-  //       })
+    // test('successfully streams between accounts', async (): Promise<void> => {
+    //   const { incomingPayment, receiver, outgoingPayment } =
+    //     await createOutgoingPaymentWithReceiver(deps, {
+    //       sendingWalletAddress: walletAddressMap['USD'],
+    //       receivingWalletAddress: walletAddressMap['USD'],
+    //       method: 'ilp',
+    //       quoteOptions: {
+    //         debitAmount: {
+    //           value: 100n,
+    //           assetScale: walletAddressMap['USD'].asset.scale,
+    //           assetCode: walletAddressMap['USD'].asset.code
+    //         }
+    //       }
+    //     })
 
-  //     expect.assertions(6)
-  //     try {
-  //       await ilpPaymentService.pay({
-  //         receiver,
-  //         outgoingPayment,
-  //         finalDebitAmount: 50n,
-  //         finalReceiveAmount: 0n
-  //       })
-  //     } catch (error) {
-  //       expect(error).toBeInstanceOf(PaymentMethodHandlerError)
-  //       expect((error as PaymentMethodHandlerError).message).toBe(
-  //         'Could not start ILP streaming'
-  //       )
-  //       expect((error as PaymentMethodHandlerError).description).toBe(
-  //         'Invalid finalReceiveAmount'
-  //       )
-  //       expect((error as PaymentMethodHandlerError).retryable).toBe(false)
-  //     }
+    //   await expect(
+    //     ilpPaymentService.pay({
+    //       receiver,
+    //       outgoingPayment,
+    //       finalDebitAmount: 100n,
+    //       finalReceiveAmount: 100n
+    //     })
+    //   ).resolves.toBeUndefined()
 
-  //     await validateBalances(outgoingPayment, incomingPayment, {
-  //       amountSent: 0n,
-  //       amountReceived: 0n
-  //     })
-  //   })
+    //   await validateBalances(outgoingPayment, incomingPayment, {
+    //     amountSent: 100n,
+    //     amountReceived: 100n
+    //   })
+    // })
 
-  //   test('throws retryable ILP error', async (): Promise<void> => {
-  //     const { receiver, outgoingPayment } =
-  //       await createOutgoingPaymentWithReceiver(deps, {
-  //         sendingWalletAddress: walletAddressMap['USD'],
-  //         receivingWalletAddress: walletAddressMap['USD'],
-  //         method: 'ilp',
-  //         quoteOptions: {
-  //           debitAmount: {
-  //             value: 100n,
-  //             assetScale: walletAddressMap['USD'].asset.scale,
-  //             assetCode: walletAddressMap['USD'].asset.code
-  //           }
-  //         }
-  //       })
+    // test('partially streams between accounts, then streams to completion', async (): Promise<void> => {
+    //   const { incomingPayment, receiver, outgoingPayment } =
+    //     await createOutgoingPaymentWithReceiver(deps, {
+    //       sendingWalletAddress: walletAddressMap['USD'],
+    //       receivingWalletAddress: walletAddressMap['USD'],
+    //       method: 'ilp',
+    //       quoteOptions: {
+    //         exchangeRate: 1,
+    //         debitAmount: {
+    //           value: 100n,
+    //           assetScale: walletAddressMap['USD'].asset.scale,
+    //           assetCode: walletAddressMap['USD'].asset.code
+    //         }
+    //       }
+    //     })
 
-  //     mockIlpPay({}, Object.keys(retryableIlpErrors)[0] as Pay.PaymentError)
+    //   mockIlpPay(
+    //     { maxSourceAmount: 5n, minDeliveryAmount: 5n },
+    //     Pay.PaymentError.ClosedByReceiver
+    //   )
 
-  //     expect.assertions(4)
-  //     try {
-  //       await ilpPaymentService.pay({
-  //         receiver,
-  //         outgoingPayment,
-  //         finalDebitAmount: 50n,
-  //         finalReceiveAmount: 50n
-  //       })
-  //     } catch (error) {
-  //       expect(error).toBeInstanceOf(PaymentMethodHandlerError)
-  //       expect((error as PaymentMethodHandlerError).message).toBe(
-  //         'Received error during ILP pay'
-  //       )
-  //       expect((error as PaymentMethodHandlerError).description).toBe(
-  //         Object.keys(retryableIlpErrors)[0]
-  //       )
-  //       expect((error as PaymentMethodHandlerError).retryable).toBe(true)
-  //     }
-  //   })
+    //   await expect(
+    //     ilpPaymentService.pay({
+    //       receiver,
+    //       outgoingPayment,
+    //       finalDebitAmount: 100n,
+    //       finalReceiveAmount: 100n
+    //     })
+    //   ).rejects.toThrow(PaymentMethodHandlerError)
 
-  //   test('throws non-retryable ILP error', async (): Promise<void> => {
-  //     const { receiver, outgoingPayment } =
-  //       await createOutgoingPaymentWithReceiver(deps, {
-  //         sendingWalletAddress: walletAddressMap['USD'],
-  //         receivingWalletAddress: walletAddressMap['USD'],
-  //         method: 'ilp',
-  //         quoteOptions: {
-  //           debitAmount: {
-  //             value: 100n,
-  //             assetScale: walletAddressMap['USD'].asset.scale,
-  //             assetCode: walletAddressMap['USD'].asset.code
-  //           }
-  //         }
-  //       })
+    //   await validateBalances(outgoingPayment, incomingPayment, {
+    //     amountSent: 5n,
+    //     amountReceived: 5n
+    //   })
 
-  //     const nonRetryableIlpError = Object.values(Pay.PaymentError).find(
-  //       (error) => !retryableIlpErrors[error]
-  //     )
+    //   await expect(
+    //     ilpPaymentService.pay({
+    //       receiver,
+    //       outgoingPayment,
+    //       finalDebitAmount: 100n - 5n,
+    //       finalReceiveAmount: 100n - 5n
+    //     })
+    //   ).resolves.toBeUndefined()
 
-  //     mockIlpPay({}, nonRetryableIlpError)
+    //   await validateBalances(outgoingPayment, incomingPayment, {
+    //     amountSent: 100n,
+    //     amountReceived: 100n
+    //   })
+    // })
 
-  //     expect.assertions(4)
-  //     try {
-  //       await ilpPaymentService.pay({
-  //         receiver,
-  //         outgoingPayment,
-  //         finalDebitAmount: 50n,
-  //         finalReceiveAmount: 50n
-  //       })
-  //     } catch (error) {
-  //       expect(error).toBeInstanceOf(PaymentMethodHandlerError)
-  //       expect((error as PaymentMethodHandlerError).message).toBe(
-  //         'Received error during ILP pay'
-  //       )
-  //       expect((error as PaymentMethodHandlerError).description).toBe(
-  //         nonRetryableIlpError
-  //       )
-  //       expect((error as PaymentMethodHandlerError).retryable).toBe(false)
-  //     }
-  //   })
-  // })
+    // test('throws if invalid finalDebitAmount', async (): Promise<void> => {
+    //   const { incomingPayment, receiver, outgoingPayment } =
+    //     await createOutgoingPaymentWithReceiver(deps, {
+    //       sendingWalletAddress: walletAddressMap['USD'],
+    //       receivingWalletAddress: walletAddressMap['USD'],
+    //       method: 'ilp',
+    //       quoteOptions: {
+    //         debitAmount: {
+    //           value: 100n,
+    //           assetScale: walletAddressMap['USD'].asset.scale,
+    //           assetCode: walletAddressMap['USD'].asset.code
+    //         }
+    //       }
+    //     })
+
+    //   expect.assertions(6)
+    //   try {
+    //     await ilpPaymentService.pay({
+    //       receiver,
+    //       outgoingPayment,
+    //       finalDebitAmount: 0n,
+    //       finalReceiveAmount: 50n
+    //     })
+    //   } catch (error) {
+    //     expect(error).toBeInstanceOf(PaymentMethodHandlerError)
+    //     expect((error as PaymentMethodHandlerError).message).toBe(
+    //       'Could not start ILP streaming'
+    //     )
+    //     expect((error as PaymentMethodHandlerError).description).toBe(
+    //       'Invalid finalDebitAmount'
+    //     )
+    //     expect((error as PaymentMethodHandlerError).retryable).toBe(false)
+    //   }
+
+    //   await validateBalances(outgoingPayment, incomingPayment, {
+    //     amountSent: 0n,
+    //     amountReceived: 0n
+    //   })
+    // })
+
+    // test('throws if invalid finalReceiveAmount', async (): Promise<void> => {
+    //   const { incomingPayment, receiver, outgoingPayment } =
+    //     await createOutgoingPaymentWithReceiver(deps, {
+    //       sendingWalletAddress: walletAddressMap['USD'],
+    //       receivingWalletAddress: walletAddressMap['USD'],
+    //       method: 'ilp',
+    //       quoteOptions: {
+    //         debitAmount: {
+    //           value: 100n,
+    //           assetScale: walletAddressMap['USD'].asset.scale,
+    //           assetCode: walletAddressMap['USD'].asset.code
+    //         }
+    //       }
+    //     })
+
+    //   expect.assertions(6)
+    //   try {
+    //     await ilpPaymentService.pay({
+    //       receiver,
+    //       outgoingPayment,
+    //       finalDebitAmount: 50n,
+    //       finalReceiveAmount: 0n
+    //     })
+    //   } catch (error) {
+    //     expect(error).toBeInstanceOf(PaymentMethodHandlerError)
+    //     expect((error as PaymentMethodHandlerError).message).toBe(
+    //       'Could not start ILP streaming'
+    //     )
+    //     expect((error as PaymentMethodHandlerError).description).toBe(
+    //       'Invalid finalReceiveAmount'
+    //     )
+    //     expect((error as PaymentMethodHandlerError).retryable).toBe(false)
+    //   }
+
+    //   await validateBalances(outgoingPayment, incomingPayment, {
+    //     amountSent: 0n,
+    //     amountReceived: 0n
+    //   })
+    // })
+
+    // test('throws retryable ILP error', async (): Promise<void> => {
+    //   const { receiver, outgoingPayment } =
+    //     await createOutgoingPaymentWithReceiver(deps, {
+    //       sendingWalletAddress: walletAddressMap['USD'],
+    //       receivingWalletAddress: walletAddressMap['USD'],
+    //       method: 'ilp',
+    //       quoteOptions: {
+    //         debitAmount: {
+    //           value: 100n,
+    //           assetScale: walletAddressMap['USD'].asset.scale,
+    //           assetCode: walletAddressMap['USD'].asset.code
+    //         }
+    //       }
+    //     })
+
+    //   mockIlpPay({}, Object.keys(retryableIlpErrors)[0] as Pay.PaymentError)
+
+    //   expect.assertions(4)
+    //   try {
+    //     await ilpPaymentService.pay({
+    //       receiver,
+    //       outgoingPayment,
+    //       finalDebitAmount: 50n,
+    //       finalReceiveAmount: 50n
+    //     })
+    //   } catch (error) {
+    //     expect(error).toBeInstanceOf(PaymentMethodHandlerError)
+    //     expect((error as PaymentMethodHandlerError).message).toBe(
+    //       'Received error during ILP pay'
+    //     )
+    //     expect((error as PaymentMethodHandlerError).description).toBe(
+    //       Object.keys(retryableIlpErrors)[0]
+    //     )
+    //     expect((error as PaymentMethodHandlerError).retryable).toBe(true)
+    //   }
+    // })
+
+    // test('throws non-retryable ILP error', async (): Promise<void> => {
+    //   const { receiver, outgoingPayment } =
+    //     await createOutgoingPaymentWithReceiver(deps, {
+    //       sendingWalletAddress: walletAddressMap['USD'],
+    //       receivingWalletAddress: walletAddressMap['USD'],
+    //       method: 'ilp',
+    //       quoteOptions: {
+    //         debitAmount: {
+    //           value: 100n,
+    //           assetScale: walletAddressMap['USD'].asset.scale,
+    //           assetCode: walletAddressMap['USD'].asset.code
+    //         }
+    //       }
+    //     })
+
+    //   const nonRetryableIlpError = Object.values(Pay.PaymentError).find(
+    //     (error) => !retryableIlpErrors[error]
+    //   )
+
+    //   mockIlpPay({}, nonRetryableIlpError)
+
+    //   expect.assertions(4)
+    //   try {
+    //     await ilpPaymentService.pay({
+    //       receiver,
+    //       outgoingPayment,
+    //       finalDebitAmount: 50n,
+    //       finalReceiveAmount: 50n
+    //     })
+    //   } catch (error) {
+    //     expect(error).toBeInstanceOf(PaymentMethodHandlerError)
+    //     expect((error as PaymentMethodHandlerError).message).toBe(
+    //       'Received error during ILP pay'
+    //     )
+    //     expect((error as PaymentMethodHandlerError).description).toBe(
+    //       nonRetryableIlpError
+    //     )
+    //     expect((error as PaymentMethodHandlerError).retryable).toBe(false)
+    //   }
+    // })
+  })
 })

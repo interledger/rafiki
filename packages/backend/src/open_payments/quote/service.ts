@@ -128,6 +128,8 @@ async function createQuote(
       FeeType.Sending
     )
 
+    console.log({ sendingFee })
+
     const graph: PartialModelGraph<Quote> = {
       walletAddressId: options.walletAddressId,
       assetId: walletAddress.assetId,
@@ -357,7 +359,17 @@ async function finalizeQuote(
     ? calculateFixedSendQuoteAmounts(deps, quote, maxReceiveAmountValue)
     : calculateFixedDeliveryQuoteAmounts(deps, quote)
 
+  console.log({
+    debitAmountValue,
+    receiveAmountValue,
+    'quote.debitAmount.value': quote.debitAmount.value,
+    maxReceiveAmountValue
+  })
+
   const patchOptions = {
+    sourceAmount: maxReceiveAmountValue
+      ? receiveAmountValue
+      : quote.debitAmount.value,
     debitAmountValue,
     receiveAmountValue,
     expiresAt: calculateExpiry(deps, quote, receiver)
