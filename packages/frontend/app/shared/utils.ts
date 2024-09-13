@@ -61,7 +61,7 @@ export function capitalize(str: string) {
 
 export function getOpenPaymentsUrl() {
   if (typeof window === 'undefined') {
-    return process.env.OPEN_PAYMENTS_URL ?? 'https://cloud-nine-wallet-backend'
+    return process.env.OPEN_PAYMENTS_URL ?? 'https://cloud-nine-wallet-backend/'
   }
 
   return window.ENV.OPEN_PAYMENTS_URL
@@ -101,7 +101,7 @@ export const parseBool = (str: string) => {
   return ['true', 't', '1'].includes(str.toLowerCase())
 }
 
-export function removeTrailingSlash(str: string): string {
+export function removeTrailingAndLeadingSlash(str: string): string {
   if (!str.length) {
     return str
   }
