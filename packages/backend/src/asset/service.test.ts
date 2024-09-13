@@ -20,6 +20,8 @@ import { WalletAddressService } from '../open_payments/wallet_address/service'
 import { isWalletAddressError } from '../open_payments/wallet_address/errors'
 import { PeerService } from '../payment-method/ilp/peer/service'
 import { isPeerError } from '../payment-method/ilp/peer/errors'
+import { createTenant } from '../tests/tenant'
+import { EndpointType } from '../tenant/endpoints/model'
 
 describe('Asset Service', (): void => {
   let deps: IocContract<AppServices>
@@ -271,9 +273,29 @@ describe('Asset Service', (): void => {
       assert.ok(!isAssetError(newAsset))
       const newAssetId = newAsset.id
 
+      const nock = (global as unknown as { nock: typeof import('nock') }).nock
+      const config = await deps.use('config')
+      const tenantEmail = faker.internet.email()
+      nock(config.kratosAdminUrl)
+        .get('/identities')
+        .query({ credentials_identifier: tenantEmail })
+        .reply(200, [{ id: uuid(), metadata_public: {} }])
+        .persist()
+      const tenantId = (
+        await createTenant(deps, {
+          email: tenantEmail,
+          idpSecret: 'testsecret',
+          idpConsentEndpoint: faker.internet.url(),
+          endpoints: [
+            { type: EndpointType.WebhookBaseUrl, value: faker.internet.url() }
+          ]
+        })
+      ).id
+
       // make sure there is at least 1 wallet address using asset
       const walletAddress = walletAddressService.create({
         url: 'https://alice.me/.well-known/pay',
+        tenantId,
         assetId: newAssetId
       })
       assert.ok(!isWalletAddressError(walletAddress))
