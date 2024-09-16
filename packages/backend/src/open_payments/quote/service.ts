@@ -240,6 +240,11 @@ function calculateFixedSendQuoteAmounts(
   quote: Quote,
   maxReceiveAmountValue: bigint
 ): CalculateQuoteAmountsWithFeesResult {
+  // TODO: rework to
+  // debitAmount = 500
+  // sourceAmount/debitAmountMinusFees = 500 - (500 * 0.02 + 100) = 390
+  // receiveAmount = floor(debitAmountMinusFees * estimatedExchangeRate) = floor(390 * 0.91) = 354
+
   const fees = quote.fee?.calculate(quote.receiveAmount.value) ?? BigInt(0)
 
   const { estimatedExchangeRate } = quote
@@ -264,6 +269,7 @@ function calculateFixedSendQuoteAmounts(
 
   deps.logger.debug(
     {
+      'quote.receiveAmount.value': quote.receiveAmount.value,
       debitAmountValue: quote.debitAmount.value,
       receiveAmountValue,
       fees,
@@ -277,6 +283,70 @@ function calculateFixedSendQuoteAmounts(
     receiveAmountValue
   }
 }
+
+// WIP: rework to
+// debitAmount = 500
+// sourceAmount/debitAmountMinusFees = 500 - (500 * 0.02 + 100) = 390
+// receiveAmount = floor(debitAmountMinusFees * estimatedExchangeRate) = floor(390 * 0.91) = 354
+
+// Problem: some quote tests are off by 1. changing calculate to floor/receive amount to floor (and every combo) didnt seem to fix it
+
+// function calculateFixedSendQuoteAmounts(
+//   deps: ServiceDependencies,
+//   quote: Quote,
+//   maxReceiveAmountValue: bigint
+// ): CalculateQuoteAmountsWithFeesResult {
+//   // TODO: rework to
+//   // debitAmount = 500
+//   // sourceAmount/debitAmountMinusFees = 500 - (500 * 0.02 + 100) = 390
+//   // receiveAmount = floor(debitAmountMinusFees * estimatedExchangeRate) = floor(390 * 0.91) = 354
+
+//   const fees = quote.fee?.calculate(quote.debitAmount.value) ?? BigInt(0)
+//   const debitAmountMinusFees = quote.debitAmount.value - fees
+//   const { estimatedExchangeRate } = quote
+//   const receiveAmountValue = BigInt(
+//     Math.floor(Number(debitAmountMinusFees) * estimatedExchangeRate)
+//   )
+
+//   // console.log({ estimatedExchangeRate })
+
+//   // const exchangeAdjustedFees = BigInt(
+//   //   Math.ceil(Number(fees) * estimatedExchangeRate)
+//   // )
+//   // const receiveAmountValue =
+//   //   BigInt(quote.receiveAmount.value) - exchangeAdjustedFees
+
+//   if (receiveAmountValue <= BigInt(0)) {
+//     deps.logger.info(
+//       { fees, estimatedExchangeRate, receiveAmountValue },
+//       'Negative receive amount when calculating quote amount'
+//     )
+//     throw QuoteError.NonPositiveReceiveAmount
+//   }
+
+//   if (receiveAmountValue > maxReceiveAmountValue) {
+//     throw QuoteError.InvalidAmount
+//   }
+
+//   deps.logger.debug(
+//     {
+//       'quote.receiveAmount.value': quote.receiveAmount.value,
+//       debitAmountValue: quote.debitAmount.value,
+//       receiveAmountValue,
+//       fees
+//       // exchangeAdjustedFees
+//     },
+//     'Calculated fixed-send quote amount with fees'
+//   )
+
+//   // what is the debit amount that satisfies the receiveAmount after fees
+//   // - in my case, debitAmount of 500 includes fees. (answer is 390 in this case)
+
+//   return {
+//     debitAmountValue: quote.debitAmount.value,
+//     receiveAmountValue
+//   }
+// }
 
 /**
  * Calculate fixed-delivery quote amounts: receiveAmount is locked,
@@ -368,7 +438,9 @@ async function finalizeQuote(
 
   const patchOptions = {
     sourceAmount: maxReceiveAmountValue
-      ? receiveAmountValue
+      ? // TODO: change fixed send to return the sourceAmount if I can get new calc working
+        quote.debitAmount.value -
+        (quote.fee?.calculate(quote.debitAmount.value) ?? 0n)
       : quote.debitAmount.value,
     debitAmountValue,
     receiveAmountValue,

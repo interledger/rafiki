@@ -136,7 +136,8 @@ async function getQuote(
   return {
     receiver: options.receiver,
     walletAddress: options.walletAddress,
-    estimatedExchangeRate: Number(receiveAmountValue / debitAmountValue),
+    estimatedExchangeRate:
+      Number(receiveAmountValue) / Number(debitAmountValue),
     debitAmount: {
       value: debitAmountValue,
       assetCode: options.walletAddress.asset.code,
