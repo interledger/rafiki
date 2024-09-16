@@ -51,6 +51,7 @@ describe('QuoteService', (): void => {
   let receiverGetSpy: jest.SpyInstance<
     Promise<Receiver | undefined>,
     [url: string],
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     any
   >
 
@@ -110,6 +111,7 @@ describe('QuoteService', (): void => {
         const receiver = await receiverGet.call(receiverService, url)
         if (receiver) {
           // "as any" to circumvent "readonly" check (compile time only) to allow overriding "isLocal" here
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           ;(receiver.isLocal as any) = false
           return receiver
         }

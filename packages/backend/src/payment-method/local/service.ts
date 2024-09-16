@@ -155,8 +155,8 @@ async function pay(
   deps: ServiceDependencies,
   options: PayOptions
 ): Promise<void> {
-  const { outgoingPayment, receiver, finalDebitAmount, finalReceiveAmount } =
-    options
+  // TODO: use finalDebitAmount instead of sourceAmount? pass sourceAmount in as finalDebitAmount?
+  const { outgoingPayment, receiver, finalReceiveAmount } = options
   if (!outgoingPayment.quote.sourceAmount) {
     // TODO: handle this better. perhaps sourceAmount should not be nullable?
     // If throwing an error, follow existing patterns
