@@ -23,7 +23,6 @@ import { InsufficientLiquidityError } from 'ilp-packet/dist/errors'
 import { IncomingPaymentService } from '../../open_payments/payment/incoming/service'
 import { IncomingPaymentState } from '../../open_payments/payment/incoming/model'
 import { FeeService } from '../../fee/service'
-import { Fee } from '../../fee/model'
 
 export interface LocalPaymentService extends PaymentMethodService {}
 
@@ -207,13 +206,10 @@ async function pay(
     }
   }
 
-  console.log('pay fee', outgoingPayment.quote.fee)
-  console.log('pay feeid', outgoingPayment.quote.feeId)
-
   // let feeAmount: number | null
 
   // baseDebitAmount excludes fees
-  let sourceAmount = outgoingPayment.quote.sourceAmount //finalDebitAmount
+  const sourceAmount = outgoingPayment.quote.sourceAmount //finalDebitAmount
 
   console.log({ finalDebitAmount, sourceAmount, finalReceiveAmount })
 
