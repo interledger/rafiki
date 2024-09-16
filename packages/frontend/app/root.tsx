@@ -39,6 +39,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 
   let logoutUrl
   const loggedIn = await isLoggedIn(cookies)
+  const isOperator = await isLoggedIn(cookies, { checkIsOperator: true })
   const displaySidebar = !variables.authEnabled || loggedIn
   const authEnabled = variables.authEnabled
   if (loggedIn) {
@@ -70,12 +71,13 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       publicEnv,
       logoutUrl,
       displaySidebar,
-      authEnabled
+      authEnabled,
+      isOperator
     })
   }
 
   return json(
-    { message, publicEnv, logoutUrl, displaySidebar, authEnabled },
+    { message, publicEnv, logoutUrl, displaySidebar, authEnabled, isOperator },
     {
       headers: {
         'Set-Cookie': await messageStorage.destroySession(session, {
@@ -87,8 +89,14 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 }
 
 export default function App() {
-  const { message, publicEnv, logoutUrl, displaySidebar, authEnabled } =
-    useLoaderData<typeof loader>()
+  const {
+    message,
+    publicEnv,
+    logoutUrl,
+    displaySidebar,
+    authEnabled,
+    isOperator
+  } = useLoaderData<typeof loader>()
   const [snackbarOpen, setSnackbarOpen] = useState(false)
 
   useEffect(() => {
@@ -110,7 +118,11 @@ export default function App() {
       <body className='h-full text-tealish'>
         <div className='min-h-full'>
           {displaySidebar && (
-            <Sidebar logoutUrl={logoutUrl} authEnabled={authEnabled} />
+            <Sidebar
+              logoutUrl={logoutUrl}
+              authEnabled={authEnabled}
+              isOperator={isOperator}
+            />
           )}
           <div
             className={`pt-20 md:pt-0 flex ${displaySidebar ? 'md:pl-60' : ''} flex-1 flex-col`}

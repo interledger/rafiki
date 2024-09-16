@@ -535,8 +535,9 @@ export function initIocContainer(
   })
 
   container.singleton('tenantService', async (deps) => {
-    const [logger, knex, config, apolloClient, tenantEndpointService] =
+    const [axios, logger, knex, config, apolloClient, tenantEndpointService] =
       await Promise.all([
+        deps.use('axios'),
         deps.use('logger'),
         deps.use('knex'),
         deps.use('config'),
@@ -545,6 +546,7 @@ export function initIocContainer(
       ])
 
     return createTenantService({
+      axios,
       logger,
       knex,
       config,
@@ -755,6 +757,7 @@ export const start = async (
   }
 
   await app.createOperatorIdentity()
+  logger.info('Operator identity created on Kratos')
 }
 
 // If this script is run directly, start the server

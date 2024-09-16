@@ -36,7 +36,6 @@ export const deleteTenant: MutationResolvers<ApolloContext>['deleteTenant'] =
     ctx
   ): Promise<ResolversTypes['DeleteTenantMutationResponse']> => {
     const tenantService = await ctx.container.use('tenantService')
-
     const tenant = await tenantService.delete(args.input.tenantId)
     if (!tenant) {
       throw new GraphQLError(errorToMessage[TenantError.UnknownTenant], {

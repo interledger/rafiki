@@ -138,7 +138,6 @@ export abstract class WeakModel extends PaginationModel {
 
 export abstract class BaseModel extends WeakModel {
   public id!: string
-
   public $beforeInsert(context: QueryContext): void {
     super.$beforeInsert(context)
     this.id = this.id || uuid()

@@ -30,10 +30,13 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   }
 
   const { type, ...pagination } = result.data
-  const webhooks = await listWebhooks({
-    ...pagination,
-    ...(type ? { filter: { type: { in: type } } } : {})
-  })
+  const webhooks = await listWebhooks(
+    {
+      ...pagination,
+      ...(type ? { filter: { type: { in: type } } } : {})
+    },
+    cookies as string
+  )
 
   let previousPageUrl = '',
     nextPageUrl = ''

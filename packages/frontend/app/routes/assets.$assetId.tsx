@@ -48,7 +48,7 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
     throw json(null, { status: 400, statusText: 'Invalid asset ID.' })
   }
 
-  const asset = await getAssetInfo({ id: result.data })
+  const asset = await getAssetInfo({ id: result.data }, cookies as string)
 
   if (!asset) {
     throw json(null, { status: 404, statusText: 'Asset not found.' })
@@ -282,7 +282,8 @@ export async function action({ request }: ActionFunctionArgs) {
     }
   }
 
-  const session = await messageStorage.getSession(request.headers.get('cookie'))
+  const cookies = request.headers.get('cookie')
+  const session = await messageStorage.getSession(cookies)
   const formData = await request.formData()
   const intent = formData.get('intent')
   formData.delete('intent')
@@ -296,12 +297,15 @@ export async function action({ request }: ActionFunctionArgs) {
         return json({ ...actionResponse }, { status: 400 })
       }
 
-      const response = await updateAsset({
-        ...result.data,
-        ...(result.data.withdrawalThreshold
-          ? { withdrawalThreshold: result.data.withdrawalThreshold }
-          : { withdrawalThreshold: undefined })
-      })
+      const response = await updateAsset(
+        {
+          ...result.data,
+          ...(result.data.withdrawalThreshold
+            ? { withdrawalThreshold: result.data.withdrawalThreshold }
+            : { withdrawalThreshold: undefined })
+        },
+        cookies as string
+      )
 
       if (!response?.asset) {
         actionResponse.errors.general.message = [
@@ -320,14 +324,17 @@ export async function action({ request }: ActionFunctionArgs) {
         return json({ ...actionResponse }, { status: 400 })
       }
 
-      const response = await setFee({
-        assetId: result.data.assetId,
-        type: FeeType.Sending,
-        fee: {
-          fixed: result.data.fixed,
-          basisPoints: result.data.basisPoints
-        }
-      })
+      const response = await setFee(
+        {
+          assetId: result.data.assetId,
+          type: FeeType.Sending,
+          fee: {
+            fixed: result.data.fixed,
+            basisPoints: result.data.basisPoints
+          }
+        },
+        cookies as string
+      )
 
       if (!response?.fee) {
         actionResponse.errors.sendingFee.message = [
@@ -351,7 +358,10 @@ export async function action({ request }: ActionFunctionArgs) {
         })
       }
 
-      const response = await deleteAsset({ id: result.data.id })
+      const response = await deleteAsset(
+        { id: result.data.id },
+        cookies as string
+      )
       if (!response?.asset) {
         return setMessageAndRedirect({
           session,

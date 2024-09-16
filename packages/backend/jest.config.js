@@ -18,6 +18,12 @@ process.env.USE_TIGERBEETLE = false
 process.env.ENABLE_TELEMETRY = false
 process.env.KRATOS_ADMIN_URL = 'http://127.0.0.1:4434/admin'
 process.env.KRATOS_ADMIN_EMAIL = 'admin@mail.com'
+process.env.OPERATOR_IDP_SECRET = 'testsecret'
+process.env.OPERATOR_IDP_CONSENT_URL = 'http://127.0.0.1:3030/mock-idp/'
+process.env.AUTH_ADMIN_URL = 'http://127.0.0.1:3003/graphql'
+process.env.AUTH_ADMIN_API_SECRET =
+  'rPoZpe9tVyBNCigm05QDco7WLcYa0xMao7lO5KG1XG4='
+process.env.KRATOS_PUBLIC_URL = 'http://127.0.0.1:4433/graphql'
 
 module.exports = {
   ...baseConfig,

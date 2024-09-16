@@ -345,10 +345,12 @@ export type CreateTenantEndpointsInput = {
 };
 
 export type CreateTenantInput = {
+  /** Email of the tenant */
+  email: Scalars['String']['input'];
   /** List of endpoints types for the tenant */
   endpoints: Array<CreateTenantEndpointsInput>;
   /** IDP Endpoint */
-  idpConsentEndpoint: Scalars['String']['input'];
+  idpConsentUrl: Scalars['String']['input'];
   /** IDP Secret */
   idpSecret: Scalars['String']['input'];
 };
@@ -1309,6 +1311,8 @@ export type Tenant = Model & {
   __typename?: 'Tenant';
   /** Date-time of creation */
   createdAt: Scalars['String']['output'];
+  /** Tenant Email for Kratos identity & recovery */
+  email: Scalars['String']['output'];
   /** List of tenant endpoints associated with this tenant */
   endpoints: Array<TenantEndpoint>;
   /** Tenant ID that is used in subsequent resources */
@@ -2349,6 +2353,7 @@ export type SetFeeResponseResolvers<ContextType = any, ParentType extends Resolv
 
 export type TenantResolvers<ContextType = any, ParentType extends ResolversParentTypes['Tenant'] = ResolversParentTypes['Tenant']> = {
   createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  email?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   endpoints?: Resolver<Array<ResolversTypes['TenantEndpoint']>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   kratosIdentityId?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
@@ -2735,6 +2740,30 @@ export type WithdrawPeerLiquidityVariables = Exact<{
 
 
 export type WithdrawPeerLiquidity = { __typename?: 'Mutation', createPeerLiquidityWithdrawal?: { __typename?: 'LiquidityMutationResponse', success: boolean } | null };
+
+export type GetTenantQueryVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type GetTenantQuery = { __typename?: 'Query', tenant?: { __typename?: 'Tenant', id: string } | null };
+
+export type ListTenantsQueryVariables = Exact<{
+  after?: InputMaybe<Scalars['String']['input']>;
+  before?: InputMaybe<Scalars['String']['input']>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+}>;
+
+
+export type ListTenantsQuery = { __typename?: 'Query', tenants: { __typename?: 'TenantsConnection', edges: Array<{ __typename?: 'TenantEdge', node: { __typename?: 'Tenant', id: string, createdAt: string } }>, pageInfo: { __typename?: 'PageInfo', startCursor?: string | null, endCursor?: string | null, hasNextPage: boolean, hasPreviousPage: boolean } } };
+
+export type CreateTenantMutationVariables = Exact<{
+  input: CreateTenantInput;
+}>;
+
+
+export type CreateTenantMutation = { __typename?: 'Mutation', createTenant: { __typename?: 'CreateTenantMutationResponse', tenant: { __typename?: 'Tenant', id: string } } };
 
 export type GetWalletAddressQueryVariables = Exact<{
   id: Scalars['String']['input'];

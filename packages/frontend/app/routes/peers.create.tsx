@@ -22,7 +22,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
   const cookies = request.headers.get('cookie')
   await checkAuthAndRedirect(request.url, cookies)
 
-  return json({ assets: await loadAssets() })
+  return json({ assets: await loadAssets(cookies as string) })
 }
 
 export default function CreatePeerPage() {
@@ -242,34 +242,38 @@ export async function action({ request }: ActionFunctionArgs) {
     return json({ errors }, { status: 400 })
   }
 
-  const response = await createPeer({
-    name: result.data.name,
-    http: {
-      outgoing: {
-        endpoint: result.data.outgoingEndpoint,
-        authToken: result.data.outgoingAuthToken
+  const cookies = request.headers.get('cookie')
+  const response = await createPeer(
+    {
+      name: result.data.name,
+      http: {
+        outgoing: {
+          endpoint: result.data.outgoingEndpoint,
+          authToken: result.data.outgoingAuthToken
+        },
+        incoming: result.data.incomingAuthTokens
+          ? {
+              authTokens: result.data.incomingAuthTokens
+                ?.replace(/ /g, '')
+                .split(',')
+            }
+          : undefined
       },
-      incoming: result.data.incomingAuthTokens
-        ? {
-            authTokens: result.data.incomingAuthTokens
-              ?.replace(/ /g, '')
-              .split(',')
-          }
-        : undefined
+      assetId: result.data.asset,
+      staticIlpAddress: result.data.staticIlpAddress,
+      ...(result.data.maxPacketAmount
+        ? { maxPacketAmount: result.data.maxPacketAmount }
+        : { maxPacketAmount: undefined })
     },
-    assetId: result.data.asset,
-    staticIlpAddress: result.data.staticIlpAddress,
-    ...(result.data.maxPacketAmount
-      ? { maxPacketAmount: result.data.maxPacketAmount }
-      : { maxPacketAmount: undefined })
-  })
+    cookies as string
+  )
 
   if (!response?.peer) {
     errors.message = ['Could not create peer. Please try again!']
     return json({ errors }, { status: 400 })
   }
 
-  const session = await messageStorage.getSession(request.headers.get('cookie'))
+  const session = await messageStorage.getSession(cookies)
 
   return setMessageAndRedirect({
     session,

@@ -19,7 +19,7 @@ import { type LoaderFunctionArgs } from '@remix-run/node'
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const cookies = request.headers.get('cookie')
   await checkAuthAndRedirect(request.url, cookies)
-  return json({ assets: await loadAssets() })
+  return json({ assets: await loadAssets(cookies as string) })
 }
 
 export default function CreateWalletAddressPage() {
@@ -109,19 +109,23 @@ export async function action({ request }: ActionFunctionArgs) {
     return json({ errors }, { status: 400 })
   }
 
-  const response = await createWalletAddress({
-    url: `${getOpenPaymentsUrl()}${result.data.name}`,
-    publicName: result.data.publicName,
-    assetId: result.data.asset,
-    additionalProperties: []
-  })
+  const cookies = request.headers.get('cookie')
+  const response = await createWalletAddress(
+    {
+      url: `${getOpenPaymentsUrl()}${result.data.name}`,
+      publicName: result.data.publicName,
+      assetId: result.data.asset,
+      additionalProperties: []
+    },
+    cookies as string
+  )
 
   if (!response?.walletAddress) {
     errors.message = ['Could not create wallet address. Please try again!']
     return json({ errors }, { status: 400 })
   }
 
-  const session = await messageStorage.getSession(request.headers.get('cookie'))
+  const session = await messageStorage.getSession(cookies)
 
   return setMessageAndRedirect({
     session,

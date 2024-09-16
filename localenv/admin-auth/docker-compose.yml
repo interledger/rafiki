@@ -1,6 +1,7 @@
 services:
   cloud-nine-backend:
     environment:
+      KRATOS_PUBLIC_URL: 'http://cloud-nine-kratos:4433'
       KRATOS_ADMIN_URL: http://cloud-nine-kratos:4434/admin
       KRATOS_ADMIN_EMAIL: admin@mail.com
     depends_on:
@@ -17,6 +18,7 @@ services:
 
   happy-life-backend:
     environment:
+      KRATOS_PUBLIC_URL: 'http://happy-life-kratos:4433'
       KRATOS_ADMIN_URL: 'http://happy-life-kratos:4434/admin'
       KRATOS_ADMIN_EMAIL: 'admin@mail.com'
     depends_on:

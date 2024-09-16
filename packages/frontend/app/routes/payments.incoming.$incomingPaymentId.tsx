@@ -27,7 +27,10 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
     })
   }
 
-  const incomingPayment = await getIncomingPayment({ id: result.data })
+  const incomingPayment = await getIncomingPayment(
+    { id: result.data },
+    cookies as string
+  )
 
   if (!incomingPayment) {
     throw json(null, { status: 400, statusText: 'Incoming payment not found.' })

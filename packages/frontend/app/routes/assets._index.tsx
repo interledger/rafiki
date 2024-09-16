@@ -19,9 +19,12 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     throw json(null, { status: 400, statusText: 'Invalid pagination.' })
   }
 
-  const assets = await listAssets({
-    ...pagination.data
-  })
+  const assets = await listAssets(
+    {
+      ...pagination.data
+    },
+    cookies as string
+  )
 
   let previousPageUrl = '',
     nextPageUrl = ''

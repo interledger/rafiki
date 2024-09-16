@@ -127,3 +127,10 @@ export const updateWalletAddressSchema = z
     status: z.enum([WalletAddressStatus.Active, WalletAddressStatus.Inactive])
   })
   .merge(uuidSchema)
+
+export const createTenantSchema = z.object({
+  email: z.string().min(1).email(),
+  webhookUrl: z.string().min(1).url(),
+  idpSecret: z.string().min(6),
+  idpConsentUrl: z.string().min(1).url()
+})

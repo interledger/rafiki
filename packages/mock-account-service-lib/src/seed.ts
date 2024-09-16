@@ -44,7 +44,12 @@ export async function setupFromSeed(
   const tenants: Record<string, string> = {}
   for (const { name, idpConsentUrl, idpSecret, endpoints } of config.seed
     .tenants) {
-    const { tenant } = await createTenant(idpConsentUrl, idpSecret, endpoints)
+    const { tenant } = await createTenant(
+      idpConsentUrl,
+      idpSecret,
+      endpoints,
+      `${name}@example.com`
+    )
     if (!tenant) {
       throw new Error('error creating tenant')
     }
@@ -142,7 +147,7 @@ export async function setupFromSeed(
         account.name,
         `${config.publicHost}/${account.path}`,
         accountAsset.id,
-        tenants['PrimaryTenant']
+        tenants[config.seed.tenants[0].name]
       )
 
       await mockAccounts.setWalletAddress(

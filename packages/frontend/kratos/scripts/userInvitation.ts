@@ -58,7 +58,7 @@ const createIdentity = async () => {
         traits: {
           email: USER_EMAIL
         },
-        metadata_admin: {
+        metadata_public: {
           [ROLE]: true
         }
       },

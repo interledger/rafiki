@@ -2,8 +2,9 @@ import { validate, version } from 'uuid'
 import { URL, type URL as URLType } from 'url'
 import { createHmac } from 'crypto'
 import { canonicalize } from 'json-canonicalize'
+import axios from 'axios'
 import { IAppConfig } from '../config/app'
-import { AppContext } from '../app'
+import { AppContext, TenantedAppContext } from '../app'
 
 export function validateId(id: string): boolean {
   return validate(id) && version(id) === 4
@@ -200,4 +201,31 @@ export async function verifyApiSignature(
     return false
 
   return verifyApiSignatureDigest(signature as string, ctx.request, config)
+}
+
+export async function getTenantIdFromRequestHeaders(
+  ctx: TenantedAppContext,
+  config: IAppConfig
+): Promise<void> {
+  const cookie = ctx.request.headers['cookie']
+  const session = await axios.get(`${config.kratosPublicUrl}/sessions/whoami`, {
+    headers: {
+      cookie
+    },
+    withCredentials: true
+  })
+
+  if (session.status !== 200 || !session.data?.active) {
+    ctx.throw(401, 'Unauthorized')
+  }
+
+  const identityId = session.data?.identity.id
+  const tenantService = await ctx.container.use('tenantService')
+  const tenant = await tenantService.getByIdentity(identityId)
+  if (!tenant) {
+    ctx.throw(401, 'Unauthorized')
+  }
+
+  ctx.tenantId = tenant.id
+  ctx.isOperator = session.data?.identity.metadata_public.operator
 }

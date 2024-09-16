@@ -29,7 +29,7 @@ import type {
 } from '~/generated/graphql'
 import { apolloClient } from '../apollo.server'
 
-export const getAssetInfo = async (args: QueryAssetArgs) => {
+export const getAssetInfo = async (args: QueryAssetArgs, cookie?: string) => {
   const response = await apolloClient.query<
     GetAssetQuery,
     GetAssetQueryVariables
@@ -51,12 +51,16 @@ export const getAssetInfo = async (args: QueryAssetArgs) => {
         }
       }
     `,
-    variables: args
+    variables: args,
+    context: { headers: { cookie } }
   })
   return response.data.asset
 }
 
-export const getAssetWithFees = async (args: QueryAssetArgs) => {
+export const getAssetWithFees = async (
+  args: QueryAssetArgs,
+  cookie?: string
+) => {
   const response = await apolloClient.query<
     GetAssetWithFeesQuery,
     GetAssetWithFeesQueryVariables
@@ -92,12 +96,13 @@ export const getAssetWithFees = async (args: QueryAssetArgs) => {
         }
       }
     `,
-    variables: args
+    variables: args,
+    context: { headers: { cookie } }
   })
   return response.data.asset
 }
 
-export const listAssets = async (args: QueryAssetsArgs) => {
+export const listAssets = async (args: QueryAssetsArgs, cookie?: string) => {
   const response = await apolloClient.query<
     ListAssetsQuery,
     ListAssetsQueryVariables
@@ -128,13 +133,14 @@ export const listAssets = async (args: QueryAssetsArgs) => {
         }
       }
     `,
-    variables: args
+    variables: args,
+    context: { headers: { cookie } }
   })
 
   return response.data.assets
 }
 
-export const createAsset = async (args: CreateAssetInput) => {
+export const createAsset = async (args: CreateAssetInput, cookie?: string) => {
   const response = await apolloClient.mutate<
     CreateAssetMutation,
     CreateAssetMutationVariables
@@ -160,13 +166,14 @@ export const createAsset = async (args: CreateAssetInput) => {
     `,
     variables: {
       input: args
-    }
+    },
+    context: { headers: { cookie } }
   })
 
   return response.data?.createAsset
 }
 
-export const updateAsset = async (args: UpdateAssetInput) => {
+export const updateAsset = async (args: UpdateAssetInput, cookie?: string) => {
   const response = await apolloClient.mutate<
     UpdateAssetMutation,
     UpdateAssetMutationVariables
@@ -192,13 +199,14 @@ export const updateAsset = async (args: UpdateAssetInput) => {
     `,
     variables: {
       input: args
-    }
+    },
+    context: { headers: { cookie } }
   })
 
   return response.data?.updateAsset
 }
 
-export const setFee = async (args: SetFeeInput) => {
+export const setFee = async (args: SetFeeInput, cookie?: string) => {
   const response = await apolloClient.mutate<
     SetFeeMutation,
     SetFeeMutationVariables
@@ -219,14 +227,16 @@ export const setFee = async (args: SetFeeInput) => {
     `,
     variables: {
       input: args
-    }
+    },
+    context: { headers: { cookie } }
   })
 
   return response.data?.setFee
 }
 
 export const depositAssetLiquidity = async (
-  args: DepositAssetLiquidityInput
+  args: DepositAssetLiquidityInput,
+  cookie?: string
 ) => {
   const response = await apolloClient.mutate<
     DepositAssetLiquidityMutation,
@@ -243,14 +253,16 @@ export const depositAssetLiquidity = async (
     `,
     variables: {
       input: args
-    }
+    },
+    context: { headers: { cookie } }
   })
 
   return response.data?.depositAssetLiquidity
 }
 
 export const withdrawAssetLiquidity = async (
-  args: CreateAssetLiquidityWithdrawalInput
+  args: CreateAssetLiquidityWithdrawalInput,
+  cookie?: string
 ) => {
   const response = await apolloClient.mutate<
     WithdrawAssetLiquidity,
@@ -267,19 +279,20 @@ export const withdrawAssetLiquidity = async (
     `,
     variables: {
       input: args
-    }
+    },
+    context: { headers: { cookie } }
   })
 
   return response.data?.createAssetLiquidityWithdrawal
 }
 
-export const loadAssets = async () => {
+export const loadAssets = async (cookie?: string) => {
   let assets: ListAssetsQuery['assets']['edges'] = []
   let hasNextPage = true
   let after: string | undefined
 
   while (hasNextPage) {
-    const response = await listAssets({ first: 100, after })
+    const response = await listAssets({ first: 100, after }, cookie)
 
     if (response.edges) {
       assets = [...assets, ...response.edges]
@@ -292,7 +305,7 @@ export const loadAssets = async () => {
   return assets
 }
 
-export const deleteAsset = async (args: DeleteAssetInput) => {
+export const deleteAsset = async (args: DeleteAssetInput, cookie?: string) => {
   const response = await apolloClient.mutate<
     DeleteAssetMutation,
     DeleteAssetMutationVariables
@@ -318,7 +331,8 @@ export const deleteAsset = async (args: DeleteAssetInput) => {
     `,
     variables: {
       input: args
-    }
+    },
+    context: { headers: { cookie } }
   })
 
   return response.data?.deleteAsset

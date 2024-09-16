@@ -35,7 +35,8 @@ export function createRequesters(
   createTenant: (
     idpConsentUrl: string,
     idpSecret: string,
-    endpoints: EndpointType[]
+    endpoints: EndpointType[],
+    email: string
   ) => Promise<CreateTenantMutationResponse>
   createPeer: (
     staticIlpAddress: string,
@@ -82,8 +83,15 @@ export function createRequesters(
   return {
     createAsset: (code, scale, liquidityThreshold) =>
       createAsset(apolloClient, code, scale, liquidityThreshold),
-    createTenant: (idpConsentUrl, idpSecret, endpoints) =>
-      createTenant(apolloClient, logger, idpConsentUrl, idpSecret, endpoints),
+    createTenant: (idpConsentUrl, idpSecret, endpoints, email) =>
+      createTenant(
+        apolloClient,
+        logger,
+        idpConsentUrl,
+        idpSecret,
+        endpoints,
+        email
+      ),
     createPeer: (
       staticIlpAddress,
       outgoingEndpoint,
@@ -167,7 +175,8 @@ export async function createTenant(
   logger: Logger,
   idpConsentUrl: string,
   idpSecret: string,
-  endpoints: EndpointType[]
+  endpoints: EndpointType[],
+  email: string
 ): Promise<CreateTenantMutationResponse> {
   const createTenantMutation = gql`
     mutation CreateTenant($input: CreateTenantInput!) {
@@ -183,7 +192,8 @@ export async function createTenant(
     input: {
       idpConsentUrl,
       idpSecret,
-      endpoints
+      endpoints,
+      email
     }
   }
 

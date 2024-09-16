@@ -23,7 +23,10 @@ import {
 } from '~/generated/graphql'
 import { apolloClient } from '../apollo.server'
 
-export const getIncomingPayment = async (args: QueryIncomingPaymentArgs) => {
+export const getIncomingPayment = async (
+  args: QueryIncomingPaymentArgs,
+  cookie?: string
+) => {
   await apolloClient.query
   const response = await apolloClient.query<
     GetIncomingPayment,
@@ -52,12 +55,16 @@ export const getIncomingPayment = async (args: QueryIncomingPaymentArgs) => {
         }
       }
     `,
-    variables: args
+    variables: args,
+    context: { headers: { cookie } }
   })
   return response.data.incomingPayment
 }
 
-export const getOutgoingPayment = async (args: QueryOutgoingPaymentArgs) => {
+export const getOutgoingPayment = async (
+  args: QueryOutgoingPaymentArgs,
+  cookie?: string
+) => {
   const response = await apolloClient.query<
     GetOutgoingPayment,
     GetOutgoingPaymentVariables
@@ -91,12 +98,16 @@ export const getOutgoingPayment = async (args: QueryOutgoingPaymentArgs) => {
         }
       }
     `,
-    variables: args
+    variables: args,
+    context: { headers: { cookie } }
   })
   return response.data.outgoingPayment
 }
 
-export const listPayments = async (args: QueryPaymentsArgs) => {
+export const listPayments = async (
+  args: QueryPaymentsArgs,
+  cookie?: string
+) => {
   const response = await apolloClient.query<
     ListPaymentsQuery,
     ListPaymentsQueryVariables
@@ -133,14 +144,16 @@ export const listPayments = async (args: QueryPaymentsArgs) => {
         }
       }
     `,
-    variables: args
+    variables: args,
+    context: { headers: { cookie } }
   })
 
   return response.data.payments
 }
 
 export const depositOutgoingPaymentLiquidity = async (
-  args: DepositOutgoingPaymentLiquidityInput
+  args: DepositOutgoingPaymentLiquidityInput,
+  cookie?: string
 ) => {
   const response = await apolloClient.mutate<
     DepositOutgoingPaymentLiquidity,
@@ -157,14 +170,16 @@ export const depositOutgoingPaymentLiquidity = async (
     `,
     variables: {
       input: args
-    }
+    },
+    context: { headers: { cookie } }
   })
 
   return response.data?.depositOutgoingPaymentLiquidity
 }
 
 export const createOutgoingPaymentWithdrawal = async (
-  args: CreateOutgoingPaymentWithdrawalInput
+  args: CreateOutgoingPaymentWithdrawalInput,
+  cookie?: string
 ) => {
   const response = await apolloClient.mutate<
     CreateOutgoingPaymentWithdrawal,
@@ -181,14 +196,16 @@ export const createOutgoingPaymentWithdrawal = async (
     `,
     variables: {
       input: args
-    }
+    },
+    context: { headers: { cookie } }
   })
 
   return response.data?.createOutgoingPaymentWithdrawal
 }
 
 export const createIncomingPaymentWithdrawal = async (
-  args: CreateIncomingPaymentWithdrawalInput
+  args: CreateIncomingPaymentWithdrawalInput,
+  cookie?: string
 ) => {
   const response = await apolloClient.mutate<
     CreateIncomingPaymentWithdrawal,
@@ -205,7 +222,8 @@ export const createIncomingPaymentWithdrawal = async (
     `,
     variables: {
       input: args
-    }
+    },
+    context: { headers: { cookie } }
   })
 
   return response.data?.createIncomingPaymentWithdrawal

@@ -29,7 +29,8 @@ export default function WalletAddressWithdrawLiquidity() {
 }
 
 export async function action({ request, params }: ActionFunctionArgs) {
-  const session = await messageStorage.getSession(request.headers.get('cookie'))
+  const cookies = request.headers.get('cookie')
+  const session = await messageStorage.getSession(cookies)
   const walletAddressId = params.walletAddressId
 
   if (!walletAddressId) {
@@ -43,12 +44,15 @@ export async function action({ request, params }: ActionFunctionArgs) {
     })
   }
 
-  const response = await createWalletAddressWithdrawal({
-    id: v4(),
-    walletAddressId,
-    idempotencyKey: v4(),
-    timeoutSeconds: BigInt(0)
-  })
+  const response = await createWalletAddressWithdrawal(
+    {
+      id: v4(),
+      walletAddressId,
+      idempotencyKey: v4(),
+      timeoutSeconds: BigInt(0)
+    },
+    cookies as string
+  )
 
   if (!response?.withdrawal) {
     return setMessageAndRedirect({

@@ -2,20 +2,22 @@ import { json, type ActionFunctionArgs } from '@remix-run/node'
 import { Form, useActionData, useNavigation } from '@remix-run/react'
 import { PageHeader } from '~/components'
 import { Button, ErrorPanel, Input } from '~/components/ui'
-import { createAsset } from '~/lib/api/asset.server'
+
+import { createTenant } from '~/lib/api/tenant.server'
 import { messageStorage, setMessageAndRedirect } from '~/lib/message.server'
-import { createAssetSchema } from '~/lib/validate.server'
+import { createTenantSchema } from '~/lib/validate.server'
 import type { ZodFieldErrors } from '~/shared/types'
 import { checkAuthAndRedirect } from '../lib/kratos_checks.server'
 import { type LoaderFunctionArgs } from '@remix-run/node'
+import { TenantEndpointType } from '~/generated/graphql'
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const cookies = request.headers.get('cookie')
-  await checkAuthAndRedirect(request.url, cookies)
+  await checkAuthAndRedirect(request.url, cookies, { checkIsOperator: true })
   return null
 }
 
-export default function CreateAssetPage() {
+export default function CreateTenantPage() {
   const response = useActionData<typeof action>()
   const { state } = useNavigation()
   const isSubmitting = state === 'submitting'
@@ -24,19 +26,19 @@ export default function CreateAssetPage() {
     <div className='pt-4 flex flex-col space-y-4'>
       <div className='flex flex-col rounded-md bg-offwhite px-6'>
         <PageHeader>
-          <h3 className='text-xl'>Create Asset</h3>
-          <Button aria-label='go back to assets page' to='/assets'>
-            Go to assets page
+          <h3 className='text-xl'>Create Tenant</h3>
+          <Button aria-label='go back to tenants page' to='/tenants'>
+            Go to tenants page
           </Button>
         </PageHeader>
-        {/* Create Asset form */}
+        {/* Create Tenant form */}
         <Form method='post' replace>
           <div className='px-6 pt-5'>
             <ErrorPanel errors={response?.errors.message} />
           </div>
 
           <fieldset disabled={isSubmitting}>
-            {/* Asset General Info */}
+            {/* Tenant General Info */}
             <div className='grid grid-cols-1 px-0 py-3 gap-6 md:grid-cols-3 border-b border-pearl'>
               <div className='col-span-1 pt-3'>
                 <h3 className='text-lg font-medium'>General Information</h3>
@@ -45,35 +47,43 @@ export default function CreateAssetPage() {
                 <div className='w-full p-4 space-y-3'>
                   <Input
                     required
-                    name='code'
-                    label='Code'
-                    placeholder='Code'
-                    error={response?.errors?.fieldErrors.code}
+                    name='email'
+                    label='Email'
+                    placeholder='Email'
+                    error={response?.errors?.fieldErrors.email}
                   />
                   <Input
                     required
-                    name='scale'
-                    label='Scale'
-                    placeholder='Scale'
-                    error={response?.errors?.fieldErrors.scale}
+                    name='webhookUrl'
+                    label='Webhook URL'
+                    placeholder='Webhook URL'
+                    error={response?.errors?.fieldErrors.webhookUrl}
                   />
                   <Input
-                    type='number'
-                    name='withdrawalThreshold'
-                    label='Withdrawal Threshold'
-                    error={response?.errors.fieldErrors.withdrawalThreshold}
+                    required
+                    name='idpSecret'
+                    label='Identity Provider Secret'
+                    placeholder='Identity Provider Secret'
+                    error={response?.errors.fieldErrors.idpSecret}
+                  />
+                  <Input
+                    required
+                    name='idpConsentUrl'
+                    label='Identity Provider Consent Page URL'
+                    placeholder='Identity Provider Consent Page URL'
+                    error={response?.errors.fieldErrors.idpConsentUrl}
                   />
                 </div>
               </div>
             </div>
             <div className='flex justify-end py-3'>
-              <Button aria-label='create asset' type='submit'>
-                {isSubmitting ? 'Creating asset ...' : 'Create'}
+              <Button aria-label='create tenant' type='submit'>
+                {isSubmitting ? 'Creating tenant ...' : 'Create'}
               </Button>
             </div>
           </fieldset>
         </Form>
-        {/* Create Asset form - END */}
+        {/* Create Tenant form - END */}
       </div>
     </div>
   )
@@ -81,7 +91,7 @@ export default function CreateAssetPage() {
 
 export async function action({ request }: ActionFunctionArgs) {
   const errors: {
-    fieldErrors: ZodFieldErrors<typeof createAssetSchema>
+    fieldErrors: ZodFieldErrors<typeof createTenantSchema>
     message: string[]
   } = {
     fieldErrors: {},
@@ -90,37 +100,38 @@ export async function action({ request }: ActionFunctionArgs) {
 
   const formData = Object.fromEntries(await request.formData())
 
-  const result = createAssetSchema.safeParse(formData)
+  const result = createTenantSchema.safeParse(formData)
 
   if (!result.success) {
     errors.fieldErrors = result.error.flatten().fieldErrors
     return json({ errors }, { status: 400 })
   }
 
+  const { webhookUrl, ...restOfData } = result.data
   const cookies = request.headers.get('cookie')
-  const response = await createAsset(
+  const response = await createTenant(
     {
-      ...result.data,
-      ...(result.data.withdrawalThreshold
-        ? { withdrawalThreshold: result.data.withdrawalThreshold }
-        : { withdrawalThreshold: undefined })
+      ...restOfData,
+      endpoints: [
+        { type: TenantEndpointType.WebhookBaseUrl, value: webhookUrl }
+      ]
     },
     cookies as string
   )
 
-  if (!response?.asset) {
-    errors.message = ['Could not create asset. Please try again!']
+  if (!response?.tenant) {
+    errors.message = ['Could not create tenant. Please try again!']
     return json({ errors }, { status: 400 })
   }
 
-  const session = await messageStorage.getSession(request.headers.get('cookie'))
+  const session = await messageStorage.getSession(cookies)
 
   return setMessageAndRedirect({
     session,
     message: {
-      content: 'Asset created.',
+      content: 'Tenant created.',
       type: 'success'
     },
-    location: `/assets/${response.asset?.id}`
+    location: `/tenants/${response.tenant.id}`
   })
 }

@@ -3,7 +3,10 @@ import axios from 'axios'
 import variables from './envConfig.server'
 
 export async function isLoggedIn(
-  cookieHeader?: string | null
+  cookieHeader?: string | null,
+  opts?: {
+    checkIsOperator?: boolean
+  }
 ): Promise<boolean> {
   if (!variables.authEnabled) {
     return false
@@ -20,6 +23,12 @@ export async function isLoggedIn(
     )
 
     const isLoggedIn = session.status === 200 && session.data?.active
+    if (
+      opts?.checkIsOperator &&
+      !session.data?.identity.metadata_public.operator
+    ) {
+      return false
+    }
 
     return isLoggedIn
   } catch {
@@ -29,7 +38,10 @@ export async function isLoggedIn(
 
 export async function checkAuthAndRedirect(
   url: string,
-  cookieHeader?: string | null
+  cookieHeader?: string | null,
+  opts?: {
+    checkIsOperator?: boolean
+  }
 ) {
   const { pathname } = new URL(url)
   const isAuthPath = pathname.startsWith('/auth')
@@ -45,7 +57,9 @@ export async function checkAuthAndRedirect(
     }
   }
 
-  const loggedIn = await isLoggedIn(cookieHeader)
+  const loggedIn = await isLoggedIn(cookieHeader, {
+    checkIsOperator: opts?.checkIsOperator
+  })
 
   // Logged-in users can access all pages except auth pages, with the exception of the manual logout page
   if (loggedIn) {
