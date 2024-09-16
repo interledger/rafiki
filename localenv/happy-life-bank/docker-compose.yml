@@ -25,8 +25,10 @@ services:
       - ../happy-life-bank/seed.yml:/workspace/seed.yml
       - ../happy-life-bank/private-key.pem:/workspace/private-key.pem
     depends_on:
-      - cloud-nine-mock-ase
-      - happy-life-backend
+      happy-life-backend:
+        condition: service_healthy
+      cloud-nine-mock-ase:
+        condition: service_started
   happy-life-backend:
     hostname: happy-life-bank-backend
     image: rafiki-backend
@@ -69,6 +71,13 @@ services:
       KEY_ID: 53f2d913-e98a-40b9-b270-372d0547f23d
     depends_on:
       - cloud-nine-backend
+    healthcheck:
+      test: ["CMD", "wget", "--header=apollo-require-preflight: true", "http://localhost:3001/graphql?query=%7B__typename%7D", "-O", "/dev/null"]
+      start_period: 60s
+      start_interval: 5s
+      interval: 30s
+      retries: 1
+      timeout: 3s
   happy-life-auth:
     hostname: happy-life-bank-auth
     image: rafiki-auth

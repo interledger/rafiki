@@ -1,0 +1,1218 @@
+---
+title: Accounting concepts
+---
+
+import { LinkOut } from '@interledger/docs-design-system'
+
+import { CodeBlock } from '@interledger/docs-design-system'
+
+## Accounts and assets
+
+Rafiki uses a combination of liquidity (credit) and settlement (debit) accounts to perform <LinkOut href="https://en.wikipedia.org/wiki/Double-entry_bookkeeping">double-entry accounting</LinkOut>.
+
+In this context, accounts in Rafiki are specifically the accounts that peers hold with one another. These are not customer accounts. This distinction is crucial for understanding how Rafiki handles transactions and settlements.
+
+### Liquidity accounts
+
+A liquidity account holds a non-negative balance, with Rafiki ensuring that total debits do not exceed total credits.
+
+There is one liquidity account for each of the following resources:
+
+- Asset
+- Peer
+- Wallet address (for SPSP/Web Monetization receiving)
+- Incoming payment
+- Outgoing payment
+
+### Settlement accounts
+
+A settlement account holds a non-positive balance, with Rafiki ensuring that total credits do not exceed total debits. A settlement account represents the total funds you as the ASE have deposited into Rafiki.
+
+Before you can peer with another ASE, you must both agree on the asset you will use for settlement. The Interledger packets exchanged between you and your peer will be denominated in the agreed-upon asset.
+
+There is one settlement account for each asset.
+
+### Assets
+
+An asset represents an item of value that can be transferred via the Interledger Protocol. Since the Interledger Protocol aims to create an internet of value, it allows for the transfer of any asset, not just currency. In practice, however, assets are usually denominated in a currency (fiat or branded currencies).
+
+In Rafiki, the `asset` type is comprised of the following properties.
+
+| Property     | Type    | Description                                                                                                            | Example |
+| ------------ | ------- | ---------------------------------------------------------------------------------------------------------------------- | ------- |
+| `value `     | BigInt  | A numerical amount                                                                                                     | `10000` |
+| `assetCode`  | String  | Should be an <LinkOut href="https://en.wikipedia.org/wiki/ISO_4217">ISO 4217 currency code</LinkOut> whenever possible | `"USD"` |
+| `assetScale` | Integer | Difference in order of magnitude between the standard unit and a fractional unit                                       | `2`     |
+
+To convert an asset amount into a currency amount that's easier to read, apply the following formula:
+
+$currencyAmount = \frac{value}{10^{assetScale}}$
+
+Using the example from the table above, our formula looks like this:
+
+$\frac{10000}{10^2} =100.00$ USD
+
+### TigerBeetle
+
+TigerBeetle is a high-performance distributed financial accounting database used by Rafiki’s `backend` service to store account balance data at the ILP layer. Both liquidity and settlement accounts in Rafiki correspond to TigerBeetle credit and debit accounts, respectively. TigerBeetle only holds balance data without any additional ILP packet metadata. For detailed information on TigerBeetle, including its consensus mechanism and its limitations, visit the official TigerBeetle <LinkOut href="https://docs.tigerbeetle.com/">documentation</LinkOut> and <LinkOut href="https://tigerbeetle.com/blog/">blog</LinkOut>.
+
+You have the flexibility to choose whether to use TigerBeetle or opt for a separate Postgres database. However, TigerBeetle is recommended due to its speed, efficiency, and dedicated design for handling double ledger accounting. For more information about Tigerbeetle in a production environment, see [Running Rafiki in production](/integration/prod/helm-k8s/#tigerbeetle).
+
+## Liquidity
+
+Rafiki tracks liquidity using the Interledger Protocol, which is a clearing protocol, without physically holding funds.
+
+### Asset liquidity
+
+Asset liquidity represents the value, denominated in a given asset, that Rafiki has at its disposal in which to send or forward ILP packets. Asset liquidity increases when packets are received and decreases when packets are sent. Asset liquidity is always positive and cannot fall below zero.
+
+Additionally, you must provide asset liquidity if you are exchanging one currency for another. Asset liquidity ensures there is enough value available to handle transactions in the specified assets.
+
+You should define and adjust asset liquidity based on your liquidity risk profile.
+
+#### Asset liquidity examples
+
+Your Rafiki instance is configured with two assets: EUR and USD. You've set both to have an asset scale of 0. Your EUR liquidity is 10, and your USD liquidity is 50.
+
+In a cross currency transaction:
+
+- Rafiki receives packets worth 10 EUR and sends packets worth 11 USD. Your EUR liquidity increases to 20 (10 + 10) and your USD liquidity decreases to 39 (50 - 11).
+- Rafiki receives packets worth 50 EUR which equates to 55 USD. This transaction fails because Rafiki does not have enough USD liquidity.
+
+### Peer liquidity
+
+Peer liquidity is the credit line, denominated in the asset of the peering relationship, you extend to a peer. Peer liquidity should be defined in the peering agreement and depends on the trust between you and your peer. If peer liquidity is insufficient, payments will not be processed. When peer liquidity is used up, you and your peer should settle then reset your liquidity.
+
+:::note
+A peering agreement is a legal contract between the parties involved in a peering relationship. It defines terms such as the assets involved, auth tokens, connection endpoints, and other operational details. It is not configured or managed within Rafiki but is necessary for establishing the terms under which assets are exchanged between peers.
+:::
+
+#### Peer liquidity example
+
+Your peer, Cloud Nine Wallet, has a peer liquidity of 100 USD. Rafiki can send packets that total up to 100 USD to wallet addresses issued by Cloud Nine Wallet.
+
+After the 100 USD liquidity is used up, you settle with Cloud Nine Wallet and reset the peer liquidity in Rafiki to 100 USD.
+
+### Payment liquidity
+
+Payment liquidity is managed for incoming and outgoing payments created via Open Payments through liquidity accounts in your accounting database. When incoming or outgoing payments are created via the Open Payments APIs, a corresponding liquidity account is automatically created. Liquidity must be deposited to an outgoing payment account before the payment can be processed. You are notified to deposit or withdraw liquidity via [webhook events](/integration/requirements/webhook-events).
+
+## Transfers
+
+Transfers in Rafiki are based on double-entry accounting, increasing both the total debits (withdrawals )of one account and the total credits (deposits) of another by the same amount.
+
+### Single-phase transfer
+
+A single-phase transfer posts funds to accounts immediately when the transfer is created.
+
+### Two-phase transfer
+
+A two-phase transfer moves funds in stages.
+
+1. Reserve funds (`pending`)
+2. Resolve funds (`post`, `void`, or `expire`)
+
+The name _two-phase transfer_ is a reference to the <LinkOut href="https://en.wikipedia.org/wiki/Two-phase_commit_protocol">two-phase commit protocol</LinkOut> for distributed transactions.
+
+### Intra-Rafiki transfer examples
+
+Remember that a settlement account will always have a zero or negative balance and a liquidity account will always have a zero or positive balance.
+
+#### Deposits
+
+A deposit is the act of debiting the settlement account and crediting the liquidity account.
+
+**Depositing asset liquidity**
+
+| Debit Account | Credit Account  |
+| ------------- | --------------- |
+| Settlement    | Asset liquidity |
+
+**Example:** Depositing `100 USD`
+
+<table class='accounting-table not-content'>
+  <tr class='header-row'>
+    <th style='text-align: left'>USD settlement acct </th>
+    <th style='text-align: left'>USD asset liquidity acct</th>
+  </tr>
+  <tr>
+    <td>
+      <table>
+        <tr>
+          <th>Debit</th>
+          <th>Credit</th>
+        </tr>
+        <tr>
+          <td>100</td>
+          <td></td>
+        </tr>
+      </table>
+    </td>
+    <td>
+      <table>
+        <tr>
+          <th>Debit</th>
+          <th>Credit</th>
+        </tr>
+        <tr>
+          <td></td>
+          <td>100</td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+
+**Depositing peer liquidity**
+
+| Debit Account | Credit Account |
+| ------------- | -------------- |
+| Settlement    | Peer liquidity |
+
+**Example:** Peering relationship in USD, depositing `100 USD`
+
+<table class='accounting-table not-content'>
+  <tr class='header-row'>
+    <th style='text-align: left'>USD settlement acct </th>
+    <th style='text-align: left'>USD peer liquidity acct</th>
+  </tr>
+  <tr>
+    <td>
+      <table>
+        <tr>
+          <th>Debit</th>
+          <th>Credit</th>
+        </tr>
+        <tr>
+          <td>100</td>
+          <td></td>
+        </tr>
+      </table>
+    </td>
+    <td>
+      <table>
+        <tr>
+          <th>Debit</th>
+          <th>Credit</th>
+        </tr>
+        <tr>
+          <td></td>
+          <td>100</td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+
+**Depositing outgoing payment liquidity**
+
+| Debit Account | Credit Account   |
+| ------------- | ---------------- |
+| Settlement    | Outgoing payment |
+
+**Example:** Depositing `35 USD`
+
+<table class='accounting-table not-content'>
+  <tr class='header-row'>
+    <th style='text-align: left'>USD settlement acct</th>
+    <th style='text-align: left'>USD outgoing payment liquidity acct</th>
+  </tr>
+  <tr>
+    <td>
+      <table>
+        <tr>
+          <th>Debit</th>
+          <th>Credit</th>
+        </tr>
+        <tr>
+          <td>35</td>
+          <td></td>
+        </tr>
+      </table>
+    </td>
+    <td>
+      <table>
+        <tr>
+          <th>Debit</th>
+          <th>Credit</th>
+        </tr>
+        <tr>
+          <td></td>
+          <td>35</td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+
+#### Withdrawals
+
+A withdrawal is the act of debiting the liquidity account and crediting the settlement account.
+
+**Withdrawing asset liquidity**
+
+| Debit Account   | Credit Account |
+| --------------- | -------------- |
+| Asset liquidity | Settlement     |
+
+**Example:** Withdrawing `50 USD`
+
+<table class='accounting-table not-content'>
+  <tr class='header-row'>
+    <th style='text-align: left'>USD asset liquidity acct</th>
+    <th style='text-align: left'>USD settlement acct</th>
+  </tr>
+  <tr>
+    <td>
+      <table>
+        <tr>
+          <th>Debit</th>
+          <th>Credit</th>
+        </tr>
+        <tr>
+          <td>50</td>
+          <td></td>
+        </tr>
+      </table>
+    </td>
+    <td>
+      <table>
+        <tr>
+          <th>Debit</th>
+          <th>Credit</th>
+        </tr>
+        <tr>
+          <td></td>
+          <td>50</td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+
+**Withdrawing peer liquidity**
+
+| Debit Account  | Credit Account |
+| -------------- | -------------- |
+| Peer liquidity | Settlement     |
+
+**Example:** Peering relationship in USD, withdrawing `50 USD`
+
+<table class='accounting-table not-content'>
+  <tr class='header-row'>
+    <th style='text-align: left'>USD peer liquidity acct</th>
+    <th style='text-align: left'>USD settlement acct</th>
+  </tr>
+  <tr>
+    <td>
+      <table>
+        <tr>
+          <th>Debit</th>
+          <th>Credit</th>
+        </tr>
+        <tr>
+          <td>50</td>
+          <td></td>
+        </tr>
+      </table>
+    </td>
+    <td>
+      <table>
+        <tr>
+          <th>Debit</th>
+          <th>Credit</th>
+        </tr>
+        <tr>
+          <td></td>
+          <td>50</td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+
+**Withdrawing wallet address liquidity**
+
+| Debit Account  | Credit Account |
+| -------------- | -------------- |
+| Wallet address | Settlement     |
+
+**Example:** Withdrawing `2 USD`
+
+<table class='accounting-table not-content'>
+  <tr class='header-row'>
+    <th style='text-align: left'>USD wallet address liquidity acct</th>
+    <th style='text-align: left'>USD settlement acct</th>
+  </tr>
+  <tr>
+    <td>
+      <table>
+        <tr>
+          <th>Debit</th>
+          <th>Credit</th>
+        </tr>
+        <tr>
+          <td>2</td>
+          <td></td>
+        </tr>
+      </table>
+    </td>
+    <td>
+      <table>
+        <tr>
+          <th>Debit</th>
+          <th>Credit</th>
+        </tr>
+        <tr>
+          <td></td>
+          <td>2</td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+
+**Withdrawing incoming payment liquidity**
+
+| Debit Account    | Credit Account |
+| ---------------- | -------------- |
+| Incoming payment | Settlement     |
+
+**Example:** Withdrawing `25 USD`
+
+<table class='accounting-table not-content'>
+  <tr class='header-row'>
+    <th style='text-align: left'>USD incoming payment liquidity acct</th>
+    <th style='text-align: left'>USD settlement acct</th>
+  </tr>
+  <tr>
+    <td>
+      <table>
+        <tr>
+          <th>Debit</th>
+          <th>Credit</th>
+        </tr>
+        <tr>
+          <td>25</td>
+          <td></td>
+        </tr>
+      </table>
+    </td>
+    <td>
+      <table>
+        <tr>
+          <th>Debit</th>
+          <th>Credit</th>
+        </tr>
+        <tr>
+          <td></td>
+          <td>25</td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+
+**Withdrawing outgoing payment liquidity**
+
+| Debit Account    | Credit Account |
+| ---------------- | -------------- |
+| Outgoing payment | Settlement     |
+
+**Example:** Withdrawing `1 USD`
+
+<table class='accounting-table not-content'>
+  <tr class='header-row'>
+    <th style='text-align: left'>USD outgoing payment liquidity acct</th>
+    <th style='text-align: left'>USD settlement acct</th>
+  </tr>
+  <tr>
+    <td>
+      <table>
+        <tr>
+          <th>Debit</th>
+          <th>Credit</th>
+        </tr>
+        <tr>
+          <td>1</td>
+          <td></td>
+        </tr>
+      </table>
+    </td>
+    <td>
+      <table>
+        <tr>
+          <th>Debit</th>
+          <th>Credit</th>
+        </tr>
+        <tr>
+          <td></td>
+          <td>1</td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+
+#### Payments in the same asset
+
+**Simple Payment Setup Protocol (SPSP) / Web Monetization**
+
+| Debit Account    | Credit Account |
+| ---------------- | -------------- |
+| Outgoing payment | Wallet address |
+
+**Example:** Send a Web Monetization Payment of `2 USD` over SPSP to a wallet address. Sender and receiver have wallet addresses at the same Rafiki.
+
+<table class='accounting-table not-content'>
+  <tr class='header-row'>
+    <th style='text-align: left'>USD outgoing payment liquidity acct</th>
+    <th style='text-align: left'>USD wallet address liquidity acct</th>
+  </tr>
+  <tr>
+    <td>
+      <table>
+        <tr>
+          <th>Debit</th>
+          <th>Credit</th>
+        </tr>
+        <tr>
+          <td>2</td>
+          <td></td>
+        </tr>
+      </table>
+    </td>
+    <td>
+      <table>
+        <tr>
+          <th>Debit</th>
+          <th>Credit</th>
+        </tr>
+        <tr>
+          <td></td>
+          <td>2</td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+
+**Send amount < receive amount**
+
+| Debit Account    | Credit Account   |
+| ---------------- | ---------------- |
+| Outgoing payment | Incoming payment |
+| Asset liquidity  | Incoming payment |
+
+**Example:** Sender consented to a payment of `14 USD` but the quote promised to deliver `15 USD`.
+
+<table class='accounting-table not-content'>
+  <tr class='header-row'>
+    <th style='text-align: left'>USD outgoing payment liquidity acct</th>
+    <th style='text-align: left'>USD asset liquidity acct</th>
+    <th style='text-align: left'>USD incoming payment liquidity acct</th>
+  </tr>
+  <tr>
+    <td>
+      <table>
+        <tr>
+          <th>Debit</th>
+          <th>Credit</th>
+        </tr>
+        <tr>
+          <td>14</td>
+          <td></td>
+        </tr>
+      </table>
+    </td>
+    <td>
+      <table>
+        <tr>
+          <th>Debit</th>
+          <th>Credit</th>
+        </tr>
+        <tr>
+          <td>1</td>
+          <td></td>
+        </tr>
+      </table>
+    </td>
+    <td>
+      <table>
+        <tr>
+          <th>Debit</th>
+          <th>Credit</th>
+        </tr>
+        <tr>
+          <td></td>
+          <td>15</td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+
+**Send amount > receive amount**
+
+| Debit Account    | Credit Account   |
+| ---------------- | ---------------- |
+| Outgoing payment | Incoming payment |
+| Outgoing payment | Asset liquidity  |
+
+**Example:** Sender consented to a payment of `15 USD` but the quote promised to deliver `14 USD`.
+
+<table class='accounting-table not-content'>
+  <tr class='header-row'>
+    <th style='text-align: left'>USD outgoing payment liquidity acct</th>
+    <th style='text-align: left'>USD asset liquidity acct</th>
+    <th style='text-align: left'>USD incoming payment liquidity acct</th>
+  </tr>
+  <tr>
+    <td>
+      <table>
+        <tr>
+          <th>Debit</th>
+          <th>Credit</th>
+        </tr>
+        <tr>
+          <td>15</td>
+          <td></td>
+        </tr>
+      </table>
+    </td>
+    <td>
+      <table>
+        <tr>
+          <th>Debit</th>
+          <th>Credit</th>
+        </tr>
+        <tr>
+          <td></td>
+          <td>1</td>
+        </tr>
+      </table>
+    </td>
+    <td>
+      <table>
+        <tr>
+          <th>Debit</th>
+          <th>Credit</th>
+        </tr>
+        <tr>
+          <td></td>
+          <td>14</td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+
+#### Cross currency payments
+
+**Exchanging currencies**
+
+| Debit Account    | Credit Account   | Asset |
+| ---------------- | ---------------- | ----- |
+| Outgoing payment | Asset liquidity  | `USD` |
+| Asset liquidity  | Incoming payment | `EUR` |
+
+**Example:** Outgoing payment for `10 USD`, incoming payment receives `9 EUR`.
+
+<table class='accounting-table not-content'>
+  <tr class='header-row'>
+    <th style='text-align: left'>USD outgoing payment liquidity acct</th>
+    <th style='text-align: left'>USD asset liquidity acct</th>
+  </tr>
+  <tr>
+    <td>
+      <table>
+        <tr>
+          <th>Debit</th>
+          <th>Credit</th>
+        </tr>
+        <tr>
+          <td>10</td>
+          <td></td>
+        </tr>
+      </table>
+    </td>
+    <td>
+      <table>
+        <tr>
+          <th>Debit</th>
+          <th>Credit</th>
+        </tr>
+        <tr>
+          <td></td>
+          <td>10</td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+  <tr class='header-row'>
+    <th style='text-align: left'>EUR asset liquidity acct</th>
+    <th style='text-align: left'>EUR incoming payment liquidity acct</th>
+  </tr>
+  <tr>
+    <td>
+      <table>
+        <tr>
+          <th>Debit</th>
+          <th>Credit</th>
+        </tr>
+        <tr>
+          <td>9</td>
+          <td></td>
+        </tr>
+      </table>
+    </td>
+    <td>
+      <table>
+        <tr>
+          <th>Debit</th>
+          <th>Credit</th>
+        </tr>
+        <tr>
+          <td></td>
+          <td>9</td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+
+**Exchanging currencies in Simple Payment Setup Protocol (SPSP) / Web Monetization**
+
+| Debit Account    | Credit Account  | Asset |
+| ---------------- | --------------- | ----- |
+| Outgoing payment | Asset liquidity | `USD` |
+| Asset liquidity  | Wallet address  | `EUR` |
+
+**Example:** Outgoing payment for `2 USD`, wallet address receives `1 EUR`.
+
+<table class='accounting-table not-content'>
+  <tr class='header-row'>
+    <th style='text-align: left'>USD outgoing payment liquidity acct</th>
+    <th style='text-align: left'>USD asset liquidity acct</th>
+  </tr>
+  <tr>
+    <td>
+      <table>
+        <tr>
+          <th>Debit</th>
+          <th>Credit</th>
+        </tr>
+        <tr>
+          <td>2</td>
+          <td></td>
+        </tr>
+      </table>
+    </td>
+    <td>
+      <table>
+        <tr>
+          <th>Debit</th>
+          <th>Credit</th>
+        </tr>
+        <tr>
+          <td></td>
+          <td>2</td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+  <tr class='header-row'>
+    <th style='text-align: left'>EUR asset liquidity acct</th>
+    <th style='text-align: left'>EUR wallet address liquidity acct</th>
+  </tr>
+  <tr>
+    <td>
+      <table>
+        <tr>
+          <th>Debit</th>
+          <th>Credit</th>
+        </tr>
+        <tr>
+          <td>1</td>
+          <td></td>
+        </tr>
+      </table>
+    </td>
+    <td>
+      <table>
+        <tr>
+          <th>Debit</th>
+          <th>Credit</th>
+        </tr>
+        <tr>
+          <td></td>
+          <td>1</td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+
+### Interledger transfer examples
+
+In these examples, the sender and receiver do not have wallet addresses at the same Rafiki instance.
+
+Remember that a settlement account will always have a zero or negative balance and a liquidity account will always have a zero or positive balance.
+
+#### Sending connector
+
+**Same asset**
+
+| Debit Account    | Credit Account |
+| ---------------- | -------------- |
+| Outgoing payment | Peer liquidity |
+
+**Example:** Sender creates an outgoing payment for 100 USD to an incoming payment at a peer's Rafiki instance. The peering relationship is in USD.
+
+<table class='accounting-table not-content'>
+  <tr class='header-row'>
+    <th style='text-align: left'>USD outgoing payment liquidity acct</th>
+    <th style='text-align: left'>USD peer liquidity acct</th>
+  </tr>
+  <tr>
+    <td>
+      <table>
+        <tr>
+          <th>Debit</th>
+          <th>Credit</th>
+        </tr>
+        <tr>
+          <td>100</td>
+          <td></td>
+        </tr>
+      </table>
+    </td>
+    <td>
+      <table>
+        <tr>
+          <th>Debit</th>
+          <th>Credit</th>
+        </tr>
+        <tr>
+          <td></td>
+          <td>100</td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+
+**Cross currency**
+
+| Debit Account    | Credit Account  | Asset |
+| ---------------- | --------------- | ----- |
+| Outgoing payment | Asset liquidity | `USD` |
+| Asset Liquidity  | Peer Liquidity  | `EUR` |
+
+**Example:** Sender creates an outgoing payment for 100 USD to an incoming payment at a peer's Rafiki instance. The peering relationship is in EUR, so payment is converted on the sending side.
+
+<table class='accounting-table not-content'>
+  <tr class='header-row'>
+    <th style='text-align: left'>USD outgoing payment liquidity acct</th>
+    <th style='text-align: left'>USD asset liquidity acct</th>
+  </tr>
+  <tr>
+    <td>
+      <table>
+        <tr>
+          <th>Debit</th>
+          <th>Credit</th>
+        </tr>
+        <tr>
+          <td>100</td>
+          <td></td>
+        </tr>
+      </table>
+    </td>
+    <td>
+      <table>
+        <tr>
+          <th>Debit</th>
+          <th>Credit</th>
+        </tr>
+        <tr>
+          <td></td>
+          <td>100</td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+  <tr class='header-row'>
+    <th style='text-align: left'>EUR asset liquidity acct</th>
+    <th style='text-align: left'>EUR peer liquidity acct</th>
+  </tr>
+  <tr>
+    <td>
+      <table>
+        <tr>
+          <th>Debit</th>
+          <th>Credit</th>
+        </tr>
+        <tr>
+          <td>90</td>
+          <td></td>
+        </tr>
+      </table>
+    </td>
+    <td>
+      <table>
+        <tr>
+          <th>Debit</th>
+          <th>Credit</th>
+        </tr>
+        <tr>
+          <td></td>
+          <td>90</td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+
+#### Receiving connector
+
+**Same asset**
+
+| Debit Account  | Credit Account   |
+| -------------- | ---------------- |
+| Peer liquidity | Incoming payment |
+
+**Example:** An incoming payment receives `100 USD` from an outgoing payment at a peer's Rafiki instance.
+
+<table class='accounting-table not-content'>
+  <tr class='header-row'>
+    <th style='text-align: left'>USD peer liquidity acct</th>
+    <th style='text-align: left'>USD incoming payment liquidity acct</th>
+  </tr>
+  <tr>
+    <td>
+      <table>
+        <tr>
+          <th>Debit</th>
+          <th>Credit</th>
+        </tr>
+        <tr>
+          <td>100</td>
+          <td></td>
+        </tr>
+      </table>
+    </td>
+    <td>
+      <table>
+        <tr>
+          <th>Debit</th>
+          <th>Credit</th>
+        </tr>
+        <tr>
+          <td></td>
+          <td>100</td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+
+**Same asset in Simple Payment Setup Protocol (SPSP) / Web Monetization**
+
+| Debit Account  | Credit Account |
+| -------------- | -------------- |
+| Peer liquidity | Wallet address |
+
+**Example:** A wallet address receives `2 USD` from an ILP payment at a peer's Rafiki instance.
+
+<table class='accounting-table not-content'>
+  <tr class='header-row'>
+    <th style='text-align: left'>USD peer liquidity acct</th>
+    <th style='text-align: left'>USD wallet address liquidity acct</th>
+  </tr>
+  <tr>
+    <td>
+      <table>
+        <tr>
+          <th>Debit</th>
+          <th>Credit</th>
+        </tr>
+        <tr>
+          <td>2</td>
+          <td></td>
+        </tr>
+      </table>
+    </td>
+    <td>
+      <table>
+        <tr>
+          <th>Debit</th>
+          <th>Credit</th>
+        </tr>
+        <tr>
+          <td></td>
+          <td>2</td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+
+**Cross currency**
+
+| Debit Account   | Credit Account   | Asset |
+| --------------- | ---------------- | ----- |
+| Peer liquidity  | Asset liquidity  | `USD` |
+| Asset liquidity | Incoming payment | `EUR` |
+
+**Example:** A Rafiki instance receives `10 USD` from a peer (peering relationship in USD) to be deposited in an incoming payment liquidity account denominated in EUR. The payment is converted to EUR and deposited.
+
+<table class='accounting-table not-content'>
+  <tr class='header-row'>
+    <th style='text-align: left'>USD peer liquidity acct</th>
+    <th style='text-align: left'>USD asset liquidity acct</th>
+  </tr>
+  <tr>
+    <td>
+      <table>
+        <tr>
+          <th>Debit</th>
+          <th>Credit</th>
+        </tr>
+        <tr>
+          <td>10</td>
+          <td></td>
+        </tr>
+      </table>
+    </td>
+    <td>
+      <table>
+        <tr>
+          <th>Debit</th>
+          <th>Credit</th>
+        </tr>
+        <tr>
+          <td></td>
+          <td>10</td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+  <tr class='header-row'>
+    <th style='text-align: left'>EUR asset liquidity acct</th>
+    <th style='text-align: left'>EUR incoming payment liquidity acct</th>
+  </tr>
+  <tr>
+    <td>
+      <table>
+        <tr>
+          <th>Debit</th>
+          <th>Credit</th>
+        </tr>
+        <tr>
+          <td>9</td>
+          <td></td>
+        </tr>
+      </table>
+    </td>
+    <td>
+      <table>
+        <tr>
+          <th>Debit</th>
+          <th>Credit</th>
+        </tr>
+        <tr>
+          <td></td>
+          <td>9</td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+
+**Cross-currency in Simple Payment Setup Protocol (SPSP) / Web Monetization**
+
+| Debit Account   | Credit Account  | Asset |
+| --------------- | --------------- | ----- |
+| Peer liquidity  | Asset liquidity | `USD` |
+| Asset liquidity | Wallet address  | `EUR` |
+
+**Example:** A Rafiki instance receives `10 USD` from a peer (peering relationship in USD) to be deposited in a wallet address liquidity account denominated in EUR. The payment is converted to EUR and deposited.
+
+<table class='accounting-table not-content'>
+  <tr class='header-row'>
+    <th style='text-align: left'>USD peer liquidity acct</th>
+    <th style='text-align: left'>USD asset liquidity acct</th>
+  </tr>
+  <tr>
+    <td>
+      <table>
+        <tr>
+          <th>Debit</th>
+          <th>Credit</th>
+        </tr>
+        <tr>
+          <td>2</td>
+          <td></td>
+        </tr>
+      </table>
+    </td>
+    <td>
+      <table>
+        <tr>
+          <th>Debit</th>
+          <th>Credit</th>
+        </tr>
+        <tr>
+          <td></td>
+          <td>2</td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+  <tr class='header-row'>
+    <th style='text-align: left'>EUR asset liquidity acct</th>
+    <th style='text-align: left'>EUR wallet address liquidity acct</th>
+  </tr>
+  <tr>
+    <td>
+      <table>
+        <tr>
+          <th>Debit</th>
+          <th>Credit</th>
+        </tr>
+        <tr>
+          <td>1</td>
+          <td></td>
+        </tr>
+      </table>
+    </td>
+    <td>
+      <table>
+        <tr>
+          <th>Debit</th>
+          <th>Credit</th>
+        </tr>
+        <tr>
+          <td></td>
+          <td>1</td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+
+#### Connector
+
+**Same asset**
+
+| Debit Account  | Credit Account |
+| -------------- | -------------- |
+| Peer liquidity | Peer liquidity |
+
+**Example:** Rafiki forwards `10 USD` from peer A to peer B.
+
+<table class='accounting-table not-content'>
+  <tr class='header-row'>
+    <th style='text-align: left'>USD peer "A" liquidity acct</th>
+    <th style='text-align: left'>USD peer "B" liquidity acct</th>
+  </tr>
+  <tr>
+    <td>
+      <table>
+        <tr>
+          <th>Debit</th>
+          <th>Credit</th>
+        </tr>
+        <tr>
+          <td>10</td>
+          <td></td>
+        </tr>
+      </table>
+    </td>
+    <td>
+      <table>
+        <tr>
+          <th>Debit</th>
+          <th>Credit</th>
+        </tr>
+        <tr>
+          <td></td>
+          <td>10</td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+
+**Cross currency**
+
+| Debit Account   | Credit Account  | Asset |
+| --------------- | --------------- | ----- |
+| Peer liquidity  | Asset liquidity | `USD` |
+| Asset liquidity | Peer liquidity  | `EUR` |
+
+**Example:** Rafiki receives `100 USD` from peer A and forwards `90 EUR` to peer B.
+
+<table class='accounting-table not-content'>
+  <tr class='header-row'>
+    <th style='text-align: left'>USD peer "A" liquidity acct</th>
+    <th style='text-align: left'>USD asset liquidity acct</th>
+  </tr>
+  <tr>
+    <td>
+      <table>
+        <tr>
+          <th>Debit</th>
+          <th>Credit</th>
+        </tr>
+        <tr>
+          <td>100</td>
+          <td></td>
+        </tr>
+      </table>
+    </td>
+    <td>
+      <table>
+        <tr>
+          <th>Debit</th>
+          <th>Credit</th>
+        </tr>
+        <tr>
+          <td></td>
+          <td>100</td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+  <tr class='header-row'>
+    <th style='text-align: left'>EUR asset liquidity acct</th>
+    <th style='text-align: left'>EUR peer "B" liquidity acct</th>
+  </tr>
+  <tr>
+    <td>
+      <table>
+        <tr>
+          <th>Debit</th>
+          <th>Credit</th>
+        </tr>
+        <tr>
+          <td>90</td>
+          <td></td>
+        </tr>
+      </table>
+    </td>
+    <td>
+      <table>
+        <tr>
+          <th>Debit</th>
+          <th>Credit</th>
+        </tr>
+        <tr>
+          <td></td>
+          <td>90</td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>

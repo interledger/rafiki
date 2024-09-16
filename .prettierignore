@@ -14,5 +14,5 @@ build
 **/styles/*.css
 .docusaurus
 .cache-loader
-packages/documentation/src/content/docs/apis
+packages/documentation/src/content/docs/apis/graphql/**
 .astro

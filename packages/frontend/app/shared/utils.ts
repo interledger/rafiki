@@ -100,3 +100,14 @@ export const paymentSubpathByType: {
 export const parseBool = (str: string) => {
   return ['true', 't', '1'].includes(str.toLowerCase())
 }
+
+export function removeTrailingAndLeadingSlash(str: string): string {
+  if (!str.length) {
+    return str
+  }
+
+  str = str.endsWith('/') ? str.slice(0, str.length - 1) : str
+  str = str.startsWith('/') ? str.substring(1) : str
+
+  return str
+}
