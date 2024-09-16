@@ -35,6 +35,7 @@ import {
   PaymentMethodHandlerError,
   PaymentMethodHandlerErrorCode
 } from '../../payment-method/handler/errors'
+import { Receiver } from '../receiver/model'
 
 describe('QuoteService', (): void => {
   let deps: IocContract<AppServices>
@@ -46,6 +47,12 @@ describe('QuoteService', (): void => {
   let sendingWalletAddress: MockWalletAddress
   let receivingWalletAddress: MockWalletAddress
   let config: IAppConfig
+  let receiverGet: typeof receiverService.get
+  let receiverGetSpy: jest.SpyInstance<
+    Promise<Receiver | undefined>,
+    [url: string],
+    any
+  >
 
   const asset: AssetOptions = {
     scale: 9,
@@ -93,6 +100,21 @@ describe('QuoteService', (): void => {
       assetId: destinationAssetId,
       mockServerPort: appContainer.openPaymentsPort
     })
+
+    // Make receivers non-local by default
+    receiverGet = receiverService.get
+    receiverGetSpy = jest
+      .spyOn(receiverService, 'get')
+      .mockImplementation(async (url: string) => {
+        // call original instead of receiverService.get to avoid infinite loop
+        const receiver = await receiverGet.call(receiverService, url)
+        if (receiver) {
+          // "as any" to circumvent "readonly" check (compile time only) to allow overriding "isLocal" here
+          ;(receiver.isLocal as any) = false
+          return receiver
+        }
+        return undefined
+      })
   })
 
   afterEach(async (): Promise<void> => {
@@ -763,6 +785,9 @@ describe('QuoteService', (): void => {
     })
 
     describe('Local Receiver', (): void => {
+      beforeEach(() => {
+        receiverGetSpy.mockRestore()
+      })
       test('Local receiver uses local payment method', async () => {
         const incomingPayment = await createIncomingPayment(deps, {
           walletAddressId: receivingWalletAddress.id,
