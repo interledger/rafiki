@@ -385,8 +385,6 @@ describe('LocalPaymentService', (): void => {
 
             const quote = await localPaymentService.getQuote(options)
 
-            console.log('quote gotten in test', { quote })
-
             expect(quote).toMatchObject({
               debitAmount: {
                 assetCode: sendingWalletAddress.asset.code,
@@ -524,8 +522,6 @@ describe('LocalPaymentService', (): void => {
         finalReceiveAmount: 100n
       })
 
-      console.log({ payResponse })
-
       expect(payResponse).toBe(undefined)
 
       await validateBalances(outgoingPayment, incomingPayment, {
@@ -568,11 +564,6 @@ describe('LocalPaymentService', (): void => {
           }
         })
 
-      console.log(
-        'do the amounts/quote match the expected ones in the test code comment?',
-        { outgoingPayment }
-      )
-
       expect(true).toBe(false)
 
       const payResponse = await localPaymentService.pay({
@@ -581,8 +572,6 @@ describe('LocalPaymentService', (): void => {
         finalDebitAmount: 100n,
         finalReceiveAmount: 100n
       })
-
-      console.log({ payResponse })
 
       expect(payResponse).toBe(undefined)
 

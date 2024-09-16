@@ -211,8 +211,6 @@ async function pay(
   // baseDebitAmount excludes fees
   const sourceAmount = outgoingPayment.quote.sourceAmount //finalDebitAmount
 
-  console.log({ finalDebitAmount, sourceAmount, finalReceiveAmount })
-
   // if (outgoingPayment.quote.feeId) {
   //   const fee = await deps.feeService.getById(outgoingPayment.quote.feeId)
 
