@@ -1,3 +1,5 @@
+import { faker } from '@faker-js/faker'
+import { v4 as uuid } from 'uuid'
 import {
   createSpspMiddleware,
   SPSPRouteError,
@@ -16,6 +18,10 @@ import { WalletAddress } from '../../../open_payments/wallet_address/model'
 import assert from 'assert'
 import { SPSPRoutes } from './routes'
 import { WalletAddressService } from '../../../open_payments/wallet_address/service'
+import { createTenant } from '../../../tests/tenant'
+import { EndpointType } from '../../../tenant/endpoints/model'
+
+const nock = (global as unknown as { nock: typeof import('nock') }).nock
 
 describe('SPSP Middleware', (): void => {
   let deps: IocContract<AppServices>
@@ -36,7 +42,24 @@ describe('SPSP Middleware', (): void => {
 
   beforeEach(async (): Promise<void> => {
     const asset = await createAsset(deps)
-    walletAddress = await createWalletAddress(deps, {
+    const config = await deps.use('config')
+    const tenantEmail = faker.internet.email()
+    nock(config.kratosAdminUrl)
+      .get('/identities')
+      .query({ credentials_identifier: tenantEmail })
+      .reply(200, [{ id: uuid(), metadata_public: {} }])
+      .persist()
+    const tenantId = (
+      await createTenant(deps, {
+        email: tenantEmail,
+        idpSecret: 'testsecret',
+        idpConsentEndpoint: faker.internet.url(),
+        endpoints: [
+          { type: EndpointType.WebhookBaseUrl, value: faker.internet.url() }
+        ]
+      })
+    ).id
+    walletAddress = await createWalletAddress(deps, tenantId, {
       assetId: asset.id
     })
     ctx = setup<SPSPWalletAddressContext>({

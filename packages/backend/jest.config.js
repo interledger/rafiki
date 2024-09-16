@@ -24,6 +24,7 @@ process.env.AUTH_ADMIN_URL = 'http://127.0.0.1:3003/graphql'
 process.env.AUTH_ADMIN_API_SECRET =
   'rPoZpe9tVyBNCigm05QDco7WLcYa0xMao7lO5KG1XG4='
 process.env.KRATOS_PUBLIC_URL = 'http://127.0.0.1:4433/graphql'
+process.env.OPERATOR_API_SECRET = 'tXhxCNRWuVOJs5W/CUgjsc+vBnKj0CVdqSb87EXN64E='
 
 module.exports = {
   ...baseConfig,

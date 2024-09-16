@@ -31,6 +31,10 @@ import { createOutgoingPayment } from '../../../tests/outgoingPayment'
 import { createWalletAddress } from '../../../tests/walletAddress'
 import { UnionOmit } from '../../../shared/utils'
 import { OpenPaymentsServerRouteError } from '../../route-errors'
+import { createTenant } from '../../../tests/tenant'
+import { EndpointType } from '../../../tenant/endpoints/model'
+
+const nock = (global as unknown as { nock: typeof import('nock') }).nock
 
 describe('Outgoing Payment Routes', (): void => {
   let deps: IocContract<AppServices>
@@ -41,6 +45,7 @@ describe('Outgoing Payment Routes', (): void => {
   let outgoingPaymentService: OutgoingPaymentService
   let walletAddress: WalletAddress
   let baseUrl: string
+  let tenantId: string
 
   const receivingWalletAddress = `https://wallet.example/${uuid()}`
 
@@ -52,6 +57,7 @@ describe('Outgoing Payment Routes', (): void => {
     return await createOutgoingPayment(deps, {
       ...options,
       walletAddressId: walletAddress.id,
+      tenantId,
       method: 'ilp',
       receiver: `${receivingWalletAddress}/incoming-payments/${uuid()}`,
       debitAmount: {
@@ -77,7 +83,25 @@ describe('Outgoing Payment Routes', (): void => {
 
   beforeEach(async (): Promise<void> => {
     const asset = await createAsset(deps)
-    walletAddress = await createWalletAddress(deps, { assetId: asset.id })
+    const tenantEmail = faker.internet.email()
+    nock(config.kratosAdminUrl)
+      .get('/identities')
+      .query({ credentials_identifier: tenantEmail })
+      .reply(200, [{ id: uuid(), metadata_public: {} }])
+      .persist()
+    tenantId = (
+      await createTenant(deps, {
+        email: tenantEmail,
+        idpSecret: 'testsecret',
+        idpConsentEndpoint: faker.internet.url(),
+        endpoints: [
+          { type: EndpointType.WebhookBaseUrl, value: faker.internet.url() }
+        ]
+      })
+    ).id
+    walletAddress = await createWalletAddress(deps, tenantId, {
+      assetId: asset.id
+    })
     baseUrl = new URL(walletAddress.url).origin
   })
 
@@ -282,6 +306,7 @@ describe('Outgoing Payment Routes', (): void => {
       async (error): Promise<void> => {
         const quoteId = uuid()
         const ctx = setup({
+          tenantId,
           quoteId: `${baseUrl}/quotes/${quoteId}`
         })
         const createSpy = jest

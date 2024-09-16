@@ -1,3 +1,5 @@
+import { faker } from '@faker-js/faker'
+import { v4 as uuid } from 'uuid'
 import {
   PaymentMethodHandlerService,
   PayOptions,
@@ -15,12 +17,17 @@ import { createReceiver } from '../../tests/receiver'
 import { IlpPaymentService } from '../ilp/service'
 import { truncateTables } from '../../tests/tableManager'
 import { createOutgoingPaymentWithReceiver } from '../../tests/outgoingPayment'
+import { createTenant } from '../../tests/tenant'
+import { EndpointType } from '../../tenant/endpoints/model'
+
+const nock = (global as unknown as { nock: typeof import('nock') }).nock
 
 describe('PaymentMethodHandlerService', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let paymentMethodHandlerService: PaymentMethodHandlerService
   let ilpPaymentService: IlpPaymentService
+  let tenantId: string
 
   beforeAll(async (): Promise<void> => {
     deps = initIocContainer(Config)
@@ -28,6 +35,26 @@ describe('PaymentMethodHandlerService', (): void => {
 
     paymentMethodHandlerService = await deps.use('paymentMethodHandlerService')
     ilpPaymentService = await deps.use('ilpPaymentService')
+  })
+
+  beforeEach(async (): Promise<void> => {
+    const config = await deps.use('config')
+    const tenantEmail = faker.internet.email()
+    nock(config.kratosAdminUrl)
+      .get('/identities')
+      .query({ credentials_identifier: tenantEmail })
+      .reply(200, [{ id: uuid(), metadata_public: {} }])
+      .persist()
+    tenantId = (
+      await createTenant(deps, {
+        email: tenantEmail,
+        idpSecret: 'testsecret',
+        idpConsentEndpoint: faker.internet.url(),
+        endpoints: [
+          { type: EndpointType.WebhookBaseUrl, value: faker.internet.url() }
+        ]
+      })
+    ).id
   })
 
   afterEach(async (): Promise<void> => {
@@ -42,7 +69,7 @@ describe('PaymentMethodHandlerService', (): void => {
   describe('getQuote', (): void => {
     test('calls ilpPaymentService for ILP payment type', async (): Promise<void> => {
       const asset = await createAsset(deps)
-      const walletAddress = await createWalletAddress(deps, {
+      const walletAddress = await createWalletAddress(deps, tenantId, {
         assetId: asset.id
       })
 
@@ -69,7 +96,7 @@ describe('PaymentMethodHandlerService', (): void => {
   describe('pay', (): void => {
     test('calls ilpPaymentService for ILP payment type', async (): Promise<void> => {
       const asset = await createAsset(deps)
-      const walletAddress = await createWalletAddress(deps, {
+      const walletAddress = await createWalletAddress(deps, tenantId, {
         assetId: asset.id
       })
       const { receiver, outgoingPayment } =

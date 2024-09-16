@@ -26,11 +26,13 @@ export type MockWalletAddress = WalletAddress & {
 
 export async function createWalletAddress(
   deps: IocContract<AppServices>,
+  tenantId: string,
   options: Partial<CreateOptions> = {}
 ): Promise<MockWalletAddress> {
   const walletAddressService = await deps.use('walletAddressService')
   const walletAddressOrError = (await walletAddressService.create({
     ...options,
+    tenantId,
     assetId: options.assetId || (await createAsset(deps)).id,
     url: options.url || `https://${faker.internet.domainName()}/.well-known/pay`
   })) as MockWalletAddress

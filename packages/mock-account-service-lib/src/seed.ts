@@ -39,7 +39,7 @@ export async function setupFromSeed(
     createAutoPeer,
     createWalletAddress,
     createWalletAddressKey
-  } = createRequesters(apolloClient, logger)
+  } = createRequesters(apolloClient, config.operatorApiSecret, logger)
 
   const tenants: Record<string, string> = {}
   for (const { name, idpConsentUrl, idpSecret, endpoints } of config.seed

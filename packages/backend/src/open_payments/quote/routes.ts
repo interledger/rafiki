@@ -75,6 +75,7 @@ async function createQuote(
   const { body } = ctx.request
   const options: CreateQuoteOptions = {
     walletAddressId: ctx.walletAddress.id,
+    tenantId: ctx.tenantId,
     receiver: body.receiver,
     client: ctx.client,
     method: body.method

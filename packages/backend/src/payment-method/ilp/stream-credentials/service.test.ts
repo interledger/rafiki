@@ -1,4 +1,6 @@
 import { Knex } from 'knex'
+import { faker } from '@faker-js/faker'
+import { v4 as uuid } from 'uuid'
 import { createTestApp, TestContainer } from '../../../tests/app'
 import { StreamCredentialsService } from './service'
 import { IncomingPayment } from '../../../open_payments/payment/incoming/model'
@@ -11,6 +13,10 @@ import { createWalletAddress } from '../../../tests/walletAddress'
 import { truncateTables } from '../../../tests/tableManager'
 import assert from 'assert'
 import { IncomingPaymentState } from '../../../graphql/generated/graphql'
+import { createTenant } from '../../../tests/tenant'
+import { EndpointType } from '../../../tenant/endpoints/model'
+
+const nock = (global as unknown as { nock: typeof import('nock') }).nock
 
 describe('Stream Credentials Service', (): void => {
   let deps: IocContract<AppServices>
@@ -27,9 +33,27 @@ describe('Stream Credentials Service', (): void => {
   })
 
   beforeEach(async (): Promise<void> => {
-    const { id: walletAddressId } = await createWalletAddress(deps)
+    const config = await deps.use('config')
+    const tenantEmail = faker.internet.email()
+    nock(config.kratosAdminUrl)
+      .get('/identities')
+      .query({ credentials_identifier: tenantEmail })
+      .reply(200, [{ id: uuid(), metadata_public: {} }])
+      .persist()
+    const tenantId = (
+      await createTenant(deps, {
+        email: tenantEmail,
+        idpSecret: 'testsecret',
+        idpConsentEndpoint: faker.internet.url(),
+        endpoints: [
+          { type: EndpointType.WebhookBaseUrl, value: faker.internet.url() }
+        ]
+      })
+    ).id
+    const { id: walletAddressId } = await createWalletAddress(deps, tenantId)
     incomingPayment = await createIncomingPayment(deps, {
-      walletAddressId
+      walletAddressId,
+      tenantId
     })
   })
 

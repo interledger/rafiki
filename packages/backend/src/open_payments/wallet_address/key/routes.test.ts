@@ -1,6 +1,7 @@
 import jestOpenAPI from 'jest-openapi'
 import { generateJwk } from '@interledger/http-signature-utils'
 import { v4 as uuid } from 'uuid'
+import { faker } from '@faker-js/faker'
 
 import { createContext } from '../../../tests/context'
 import { createTestApp, TestContainer } from '../../../tests/app'
@@ -15,8 +16,11 @@ import { createWalletAddress } from '../../../tests/walletAddress'
 import { WalletAddressService } from '../service'
 import { OpenPaymentsServerRouteError } from '../../route-errors'
 import assert from 'assert'
+import { createTenant } from '../../../tests/tenant'
+import { EndpointType } from '../../../tenant/endpoints/model'
 
 const TEST_KEY = generateJwk({ keyId: uuid() })
+const nock = (global as unknown as { nock: typeof import('nock') }).nock
 
 describe('Wallet Address Keys Routes', (): void => {
   let deps: IocContract<AppServices>
@@ -24,6 +28,7 @@ describe('Wallet Address Keys Routes', (): void => {
   let walletAddressKeyService: WalletAddressKeyService
   let walletAddressKeyRoutes: WalletAddressKeyRoutes
   let walletAddressService: WalletAddressService
+  let tenantId: string
 
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer(Config)
@@ -33,6 +38,26 @@ describe('Wallet Address Keys Routes', (): void => {
     walletAddressKeyRoutes = await deps.use('walletAddressKeyRoutes')
     walletAddressKeyService = await deps.use('walletAddressKeyService')
     walletAddressService = await deps.use('walletAddressService')
+  })
+
+  beforeEach(async (): Promise<void> => {
+    const config = await deps.use('config')
+    const tenantEmail = faker.internet.email()
+    nock(config.kratosAdminUrl)
+      .get('/identities')
+      .query({ credentials_identifier: tenantEmail })
+      .reply(200, [{ id: uuid(), metadata_public: {} }])
+      .persist()
+    tenantId = (
+      await createTenant(deps, {
+        email: tenantEmail,
+        idpSecret: 'testsecret',
+        idpConsentEndpoint: faker.internet.url(),
+        endpoints: [
+          { type: EndpointType.WebhookBaseUrl, value: faker.internet.url() }
+        ]
+      })
+    ).id
   })
 
   afterEach(async (): Promise<void> => {
@@ -45,7 +70,7 @@ describe('Wallet Address Keys Routes', (): void => {
 
   describe('get', (): void => {
     test('returns 200 with all keys for a wallet address', async (): Promise<void> => {
-      const walletAddress = await createWalletAddress(deps)
+      const walletAddress = await createWalletAddress(deps, tenantId)
 
       const keyOption = {
         walletAddressId: walletAddress.id,
@@ -67,7 +92,7 @@ describe('Wallet Address Keys Routes', (): void => {
     })
 
     test('returns 200 with empty array if no keys for a wallet address', async (): Promise<void> => {
-      const walletAddress = await createWalletAddress(deps)
+      const walletAddress = await createWalletAddress(deps, tenantId)
 
       const ctx = createContext<WalletAddressUrlContext>({
         headers: { Accept: 'application/json' },
@@ -119,7 +144,7 @@ describe('Wallet Address Keys Routes', (): void => {
     })
 
     test('throws 404 error for inactive wallet address', async (): Promise<void> => {
-      const walletAddress = await createWalletAddress(deps)
+      const walletAddress = await createWalletAddress(deps, tenantId)
 
       await walletAddress.$query().patch({ deactivatedAt: new Date() })
 

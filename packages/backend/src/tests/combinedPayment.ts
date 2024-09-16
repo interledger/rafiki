@@ -35,14 +35,15 @@ export function toCombinedPayment(
  * @returns A CombinedPayment object that represents the created payment.
  */
 export async function createCombinedPayment(
-  deps: IocContract<AppServices>
+  deps: IocContract<AppServices>,
+  tenantId: string
 ): Promise<CombinedPayment> {
   const sendAsset = await createAsset(deps)
   const receiveAsset = await createAsset(deps)
   const sendWalletAddressId = (
-    await createWalletAddress(deps, { assetId: sendAsset.id })
+    await createWalletAddress(deps, tenantId, { assetId: sendAsset.id })
   ).id
-  const receiveWalletAddress = await createWalletAddress(deps, {
+  const receiveWalletAddress = await createWalletAddress(deps, tenantId, {
     assetId: receiveAsset.id
   })
 
@@ -50,10 +51,12 @@ export async function createCombinedPayment(
   const payment =
     type === PaymentType.Incoming
       ? await createIncomingPayment(deps, {
-          walletAddressId: receiveWalletAddress.id
+          walletAddressId: receiveWalletAddress.id,
+          tenantId: receiveWalletAddress.tenantId
         })
       : await createOutgoingPayment(deps, {
           walletAddressId: sendWalletAddressId,
+          tenantId,
           method: 'ilp',
           receiver: `${Config.openPaymentsUrl}/${uuid()}`,
           validDestination: false

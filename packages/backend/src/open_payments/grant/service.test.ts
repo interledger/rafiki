@@ -21,6 +21,10 @@ import {
 import { v4 as uuid } from 'uuid'
 import { GrantError, isGrantError } from './errors'
 import { AuthServerService } from '../authServer/service'
+import { createTenant } from '../../tests/tenant'
+import { EndpointType } from '../../tenant/endpoints/model'
+
+const nock = (global as unknown as { nock: typeof import('nock') }).nock
 
 describe('Grant Service', (): void => {
   let deps: IocContract<AppServices>
@@ -29,6 +33,7 @@ describe('Grant Service', (): void => {
   let openPaymentsClient: AuthenticatedClient
   let authServerService: AuthServerService
   let knex: Knex
+  let tenantId: string
 
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer(Config)
@@ -40,6 +45,23 @@ describe('Grant Service', (): void => {
   })
 
   beforeEach(async (): Promise<void> => {
+    const config = await deps.use('config')
+    const tenantEmail = faker.internet.email()
+    nock(config.kratosAdminUrl)
+      .get('/identities')
+      .query({ credentials_identifier: tenantEmail })
+      .reply(200, [{ id: uuid(), metadata_public: {} }])
+      .persist()
+    tenantId = (
+      await createTenant(deps, {
+        email: tenantEmail,
+        idpSecret: 'testsecret',
+        idpConsentEndpoint: faker.internet.url(),
+        endpoints: [
+          { type: EndpointType.WebhookBaseUrl, value: faker.internet.url() }
+        ]
+      })
+    ).id
     jest.useFakeTimers()
     jest.setSystemTime(Date.now())
   })
@@ -64,6 +86,7 @@ describe('Grant Service', (): void => {
 
     test('gets existing grant', async () => {
       const existingGrant = await Grant.query(knex).insertAndFetch({
+        tenantId,
         authServerId: authServer.id,
         accessToken: uuid(),
         managementId: uuid(),
@@ -79,7 +102,8 @@ describe('Grant Service', (): void => {
       const options = {
         authServer: authServer.url,
         accessType: AccessType.IncomingPayment,
-        accessActions: [AccessAction.ReadAll]
+        accessActions: [AccessAction.ReadAll],
+        tenantId
       }
 
       const grant = await grantService.getOrCreate(options)
@@ -91,6 +115,7 @@ describe('Grant Service', (): void => {
 
     test('updates expired grant (by rotating existing token)', async () => {
       const existingGrant = await Grant.query(knex).insertAndFetch({
+        tenantId,
         authServerId: authServer.id,
         accessToken: uuid(),
         managementId: uuid(),
@@ -119,7 +144,8 @@ describe('Grant Service', (): void => {
       const options = {
         authServer: authServer.url,
         accessType: AccessType.IncomingPayment,
-        accessActions: [AccessAction.Create, AccessAction.ReadAll]
+        accessActions: [AccessAction.Create, AccessAction.ReadAll],
+        tenantId
       }
 
       const grant = await grantService.getOrCreate(options)
@@ -127,6 +153,7 @@ describe('Grant Service', (): void => {
       assert(!isGrantError(grant))
       expect(grant).toMatchObject({
         id: existingGrant.id,
+        tenantId,
         authServerId: existingGrant.authServerId,
         accessToken: rotatedAccessToken.access_token.value,
         expiresAt: new Date(
@@ -154,7 +181,8 @@ describe('Grant Service', (): void => {
       const options = {
         authServer: authServer.url,
         accessType: AccessType.IncomingPayment,
-        accessActions: [AccessAction.Create, AccessAction.Read]
+        accessActions: [AccessAction.Create, AccessAction.Read],
+        tenantId
       }
 
       const authServerServiceGetOrCreateSoy = jest.spyOn(
@@ -167,6 +195,7 @@ describe('Grant Service', (): void => {
       assert(!isGrantError(grant))
       expect(grant).toMatchObject({
         authServerId: authServer.id,
+        tenantId,
         accessType: options.accessType,
         accessActions: options.accessActions,
         accessToken: newOpenPaymentsGrant.access_token.value,
@@ -210,7 +239,8 @@ describe('Grant Service', (): void => {
           AccessAction.Create,
           AccessAction.ReadAll,
           AccessAction.ListAll
-        ]
+        ],
+        tenantId
       }
 
       const authServerServiceGetOrCreateSoy = jest.spyOn(
@@ -252,6 +282,7 @@ describe('Grant Service', (): void => {
 
     test('creates new grant and deletes old one after being unable to rotate existing token', async () => {
       const existingGrant = await Grant.query(knex).insertAndFetch({
+        tenantId,
         authServerId: authServer.id,
         accessToken: uuid(),
         managementId: uuid(),
@@ -280,7 +311,8 @@ describe('Grant Service', (): void => {
       const options = {
         authServer: authServer.url,
         accessType: AccessType.IncomingPayment,
-        accessActions: [AccessAction.Create, AccessAction.Read]
+        accessActions: [AccessAction.Create, AccessAction.Read],
+        tenantId
       }
 
       const grant = await grantService.getOrCreate(options)
@@ -288,6 +320,7 @@ describe('Grant Service', (): void => {
       assert(!isGrantError(grant))
       expect(grant.id).not.toBe(existingGrant.id)
       expect(grant).toMatchObject({
+        tenantId,
         accessType: options.accessType,
         accessActions: options.accessActions,
         authServerId: authServer.id,
@@ -314,7 +347,8 @@ describe('Grant Service', (): void => {
       const options = {
         authServer: authServer.url,
         accessType: AccessType.IncomingPayment,
-        accessActions: [AccessAction.Create, AccessAction.ReadAll]
+        accessActions: [AccessAction.Create, AccessAction.ReadAll],
+        tenantId
       }
 
       const error = await grantService.getOrCreate(options)
@@ -331,7 +365,8 @@ describe('Grant Service', (): void => {
       const options = {
         authServer: authServer.url,
         accessType: AccessType.IncomingPayment,
-        accessActions: [AccessAction.Create, AccessAction.ReadAll]
+        accessActions: [AccessAction.Create, AccessAction.ReadAll],
+        tenantId
       }
 
       const error = await grantService.getOrCreate(options)
@@ -352,6 +387,7 @@ describe('Grant Service', (): void => {
 
     test('gets existing grant (identical match)', async () => {
       const existingGrant = await Grant.query(knex).insertAndFetch({
+        tenantId,
         authServerId: authServer.id,
         accessToken: uuid(),
         managementId: uuid(),
@@ -362,7 +398,8 @@ describe('Grant Service', (): void => {
       const options = {
         authServer: authServer.url,
         accessType: AccessType.IncomingPayment,
-        accessActions: [AccessAction.ReadAll]
+        accessActions: [AccessAction.ReadAll],
+        tenantId
       }
 
       await expect(
@@ -372,6 +409,7 @@ describe('Grant Service', (): void => {
 
     test('gets existing grant (requested actions are a subset of saved actions)', async () => {
       const existingGrant = await Grant.query(knex).insertAndFetch({
+        tenantId,
         authServerId: authServer.id,
         accessToken: uuid(),
         managementId: uuid(),
@@ -386,7 +424,8 @@ describe('Grant Service', (): void => {
       const options = {
         authServer: authServer.url,
         accessType: AccessType.IncomingPayment,
-        accessActions: [AccessAction.ReadAll, AccessAction.Create]
+        accessActions: [AccessAction.ReadAll, AccessAction.Create],
+        tenantId
       }
 
       await expect(
@@ -396,6 +435,7 @@ describe('Grant Service', (): void => {
 
     test('ignores deleted grants', async () => {
       await Grant.query(knex).insertAndFetch({
+        tenantId,
         authServerId: authServer.id,
         accessToken: uuid(),
         managementId: uuid(),
@@ -407,7 +447,8 @@ describe('Grant Service', (): void => {
       const options = {
         authServer: authServer.url,
         accessType: AccessType.IncomingPayment,
-        accessActions: [AccessAction.ReadAll]
+        accessActions: [AccessAction.ReadAll],
+        tenantId
       }
 
       await expect(
@@ -417,6 +458,7 @@ describe('Grant Service', (): void => {
 
     test('ignores different accessType', async () => {
       await Grant.query(knex).insertAndFetch({
+        tenantId,
         authServerId: authServer.id,
         accessToken: uuid(),
         managementId: uuid(),
@@ -427,7 +469,8 @@ describe('Grant Service', (): void => {
       const options = {
         authServer: authServer.url,
         accessType: AccessType.OutgoingPayment,
-        accessActions: [AccessAction.ReadAll]
+        accessActions: [AccessAction.ReadAll],
+        tenantId
       }
 
       await expect(
@@ -437,6 +480,7 @@ describe('Grant Service', (): void => {
 
     test('ignores different auth server url', async () => {
       await Grant.query(knex).insertAndFetch({
+        tenantId,
         authServerId: authServer.id,
         accessToken: uuid(),
         managementId: uuid(),
@@ -447,7 +491,8 @@ describe('Grant Service', (): void => {
       const options = {
         authServer: uuid(),
         accessType: AccessType.IncomingPayment,
-        accessActions: [AccessAction.ReadAll]
+        accessActions: [AccessAction.ReadAll],
+        tenantId
       }
 
       await expect(
@@ -457,6 +502,7 @@ describe('Grant Service', (): void => {
 
     test('ignores insufficient accessActions', async () => {
       await Grant.query(knex).insertAndFetch({
+        tenantId,
         authServerId: authServer.id,
         accessToken: uuid(),
         managementId: uuid(),
@@ -467,7 +513,8 @@ describe('Grant Service', (): void => {
       const options = {
         authServer: authServer.id,
         accessType: AccessType.IncomingPayment,
-        accessActions: [AccessAction.ReadAll, AccessAction.Create]
+        accessActions: [AccessAction.ReadAll, AccessAction.Create],
+        tenantId
       }
 
       await expect(
@@ -487,6 +534,7 @@ describe('Grant Service', (): void => {
 
     test('deletes grant', async () => {
       const existingGrant = await Grant.query(knex).insertAndFetch({
+        tenantId,
         authServerId: authServer.id,
         accessToken: uuid(),
         managementId: uuid(),
@@ -515,6 +563,7 @@ describe('Grant Service', (): void => {
 
     test('gets existing grant', async () => {
       const existingGrant = await Grant.query(knex).insertAndFetch({
+        tenantId,
         authServerId: authServer.id,
         accessToken: uuid(),
         managementId: uuid(),
@@ -530,7 +579,8 @@ describe('Grant Service', (): void => {
       const options = {
         authServer: authServer.url,
         accessType: AccessType.IncomingPayment,
-        accessActions: [AccessAction.ReadAll]
+        accessActions: [AccessAction.ReadAll],
+        tenantId
       }
 
       const grant = await grantService.getOrCreate(options)
@@ -542,6 +592,7 @@ describe('Grant Service', (): void => {
 
     test('updates expired grant (by rotating existing token)', async () => {
       const existingGrant = await Grant.query(knex).insertAndFetch({
+        tenantId,
         authServerId: authServer.id,
         accessToken: uuid(),
         managementId: uuid(),
@@ -570,7 +621,8 @@ describe('Grant Service', (): void => {
       const options = {
         authServer: authServer.url,
         accessType: AccessType.IncomingPayment,
-        accessActions: [AccessAction.Create, AccessAction.ReadAll]
+        accessActions: [AccessAction.Create, AccessAction.ReadAll],
+        tenantId
       }
 
       const grant = await grantService.getOrCreate(options)
@@ -578,6 +630,7 @@ describe('Grant Service', (): void => {
       assert(!isGrantError(grant))
       expect(grant).toMatchObject({
         id: existingGrant.id,
+        tenantId,
         authServerId: existingGrant.authServerId,
         accessToken: rotatedAccessToken.access_token.value,
         expiresAt: new Date(
@@ -605,7 +658,8 @@ describe('Grant Service', (): void => {
       const options = {
         authServer: authServer.url,
         accessType: AccessType.IncomingPayment,
-        accessActions: [AccessAction.Create, AccessAction.Read]
+        accessActions: [AccessAction.Create, AccessAction.Read],
+        tenantId
       }
 
       const authServerServiceGetOrCreateSoy = jest.spyOn(
@@ -617,6 +671,7 @@ describe('Grant Service', (): void => {
 
       assert(!isGrantError(grant))
       expect(grant).toMatchObject({
+        tenantId,
         authServerId: authServer.id,
         accessType: options.accessType,
         accessActions: options.accessActions,
@@ -661,7 +716,8 @@ describe('Grant Service', (): void => {
           AccessAction.Create,
           AccessAction.ReadAll,
           AccessAction.ListAll
-        ]
+        ],
+        tenantId
       }
 
       const authServerServiceGetOrCreateSoy = jest.spyOn(
@@ -703,6 +759,7 @@ describe('Grant Service', (): void => {
 
     test('creates new grant and deletes old one after being unable to rotate existing token', async () => {
       const existingGrant = await Grant.query(knex).insertAndFetch({
+        tenantId,
         authServerId: authServer.id,
         accessToken: uuid(),
         managementId: uuid(),
@@ -731,7 +788,8 @@ describe('Grant Service', (): void => {
       const options = {
         authServer: authServer.url,
         accessType: AccessType.IncomingPayment,
-        accessActions: [AccessAction.Create, AccessAction.Read]
+        accessActions: [AccessAction.Create, AccessAction.Read],
+        tenantId
       }
 
       const grant = await grantService.getOrCreate(options)
@@ -739,6 +797,7 @@ describe('Grant Service', (): void => {
       assert(!isGrantError(grant))
       expect(grant.id).not.toBe(existingGrant.id)
       expect(grant).toMatchObject({
+        tenantId,
         accessType: options.accessType,
         accessActions: options.accessActions,
         authServerId: authServer.id,
@@ -765,7 +824,8 @@ describe('Grant Service', (): void => {
       const options = {
         authServer: authServer.url,
         accessType: AccessType.IncomingPayment,
-        accessActions: [AccessAction.Create, AccessAction.ReadAll]
+        accessActions: [AccessAction.Create, AccessAction.ReadAll],
+        tenantId
       }
 
       const error = await grantService.getOrCreate(options)
@@ -782,7 +842,8 @@ describe('Grant Service', (): void => {
       const options = {
         authServer: authServer.url,
         accessType: AccessType.IncomingPayment,
-        accessActions: [AccessAction.Create, AccessAction.ReadAll]
+        accessActions: [AccessAction.Create, AccessAction.ReadAll],
+        tenantId
       }
 
       const error = await grantService.getOrCreate(options)
@@ -803,6 +864,7 @@ describe('Grant Service', (): void => {
 
     test('gets existing grant (identical match)', async () => {
       const existingGrant = await Grant.query(knex).insertAndFetch({
+        tenantId,
         authServerId: authServer.id,
         accessToken: uuid(),
         managementId: uuid(),
@@ -813,7 +875,8 @@ describe('Grant Service', (): void => {
       const options = {
         authServer: authServer.url,
         accessType: AccessType.IncomingPayment,
-        accessActions: [AccessAction.ReadAll]
+        accessActions: [AccessAction.ReadAll],
+        tenantId
       }
 
       await expect(
@@ -823,6 +886,7 @@ describe('Grant Service', (): void => {
 
     test('gets existing grant (requested actions are a subset of saved actions)', async () => {
       const existingGrant = await Grant.query(knex).insertAndFetch({
+        tenantId,
         authServerId: authServer.id,
         accessToken: uuid(),
         managementId: uuid(),
@@ -837,7 +901,8 @@ describe('Grant Service', (): void => {
       const options = {
         authServer: authServer.url,
         accessType: AccessType.IncomingPayment,
-        accessActions: [AccessAction.ReadAll, AccessAction.Create]
+        accessActions: [AccessAction.ReadAll, AccessAction.Create],
+        tenantId
       }
 
       await expect(
@@ -847,6 +912,7 @@ describe('Grant Service', (): void => {
 
     test('ignores deleted grants', async () => {
       await Grant.query(knex).insertAndFetch({
+        tenantId,
         authServerId: authServer.id,
         accessToken: uuid(),
         managementId: uuid(),
@@ -858,7 +924,8 @@ describe('Grant Service', (): void => {
       const options = {
         authServer: authServer.url,
         accessType: AccessType.IncomingPayment,
-        accessActions: [AccessAction.ReadAll]
+        accessActions: [AccessAction.ReadAll],
+        tenantId
       }
 
       await expect(
@@ -868,6 +935,7 @@ describe('Grant Service', (): void => {
 
     test('ignores different accessType', async () => {
       await Grant.query(knex).insertAndFetch({
+        tenantId,
         authServerId: authServer.id,
         accessToken: uuid(),
         managementId: uuid(),
@@ -878,7 +946,8 @@ describe('Grant Service', (): void => {
       const options = {
         authServer: authServer.url,
         accessType: AccessType.OutgoingPayment,
-        accessActions: [AccessAction.ReadAll]
+        accessActions: [AccessAction.ReadAll],
+        tenantId
       }
 
       await expect(
@@ -888,6 +957,7 @@ describe('Grant Service', (): void => {
 
     test('ignores different auth server url', async () => {
       await Grant.query(knex).insertAndFetch({
+        tenantId,
         authServerId: authServer.id,
         accessToken: uuid(),
         managementId: uuid(),
@@ -898,7 +968,8 @@ describe('Grant Service', (): void => {
       const options = {
         authServer: uuid(),
         accessType: AccessType.IncomingPayment,
-        accessActions: [AccessAction.ReadAll]
+        accessActions: [AccessAction.ReadAll],
+        tenantId
       }
 
       await expect(
@@ -908,6 +979,7 @@ describe('Grant Service', (): void => {
 
     test('ignores insufficient accessActions', async () => {
       await Grant.query(knex).insertAndFetch({
+        tenantId,
         authServerId: authServer.id,
         accessToken: uuid(),
         managementId: uuid(),
@@ -918,7 +990,8 @@ describe('Grant Service', (): void => {
       const options = {
         authServer: authServer.id,
         accessType: AccessType.IncomingPayment,
-        accessActions: [AccessAction.ReadAll, AccessAction.Create]
+        accessActions: [AccessAction.ReadAll, AccessAction.Create],
+        tenantId
       }
 
       await expect(
@@ -938,6 +1011,7 @@ describe('Grant Service', (): void => {
 
     test('deletes grant', async () => {
       const existingGrant = await Grant.query(knex).insertAndFetch({
+        tenantId,
         authServerId: authServer.id,
         accessToken: uuid(),
         managementId: uuid(),

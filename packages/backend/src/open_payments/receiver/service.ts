@@ -99,6 +99,7 @@ async function createLocalIncomingPayment(
 
   const incomingPaymentOrError = await deps.incomingPaymentService.create({
     walletAddressId: walletAddress.id,
+    tenantId: walletAddress.tenantId,
     expiresAt,
     incomingAmount,
     metadata

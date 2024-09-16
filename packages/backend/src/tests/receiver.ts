@@ -13,6 +13,7 @@ export async function createReceiver(
 ): Promise<Receiver> {
   const incomingPayment = await createIncomingPayment(deps, {
     ...options,
+    tenantId: walletAddress.tenantId,
     walletAddressId: walletAddress.id
   })
 

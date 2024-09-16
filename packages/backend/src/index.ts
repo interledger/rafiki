@@ -742,6 +742,9 @@ export const start = async (
   await app.startAdminServer(config.adminPort)
   logger.info(`Admin listening on ${app.getAdminPort()}`)
 
+  await app.createOperatorIdentity()
+  logger.info('Operator identity created on Kratos')
+
   await app.startOpenPaymentsServer(config.openPaymentsPort)
   logger.info(`Open Payments listening on ${app.getOpenPaymentsPort()}`)
 
@@ -755,9 +758,6 @@ export const start = async (
       `Auto-peering server listening on ${config.autoPeeringServerPort}`
     )
   }
-
-  await app.createOperatorIdentity()
-  logger.info('Operator identity created on Kratos')
 }
 
 // If this script is run directly, start the server

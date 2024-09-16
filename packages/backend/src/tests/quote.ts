@@ -176,6 +176,7 @@ export async function createQuote(
   return await Quote.query()
     .insertAndFetch({
       walletAddressId,
+      tenantId: walletAddress.tenantId,
       assetId: walletAddress.assetId,
       receiver: receiverUrl,
       debitAmount,

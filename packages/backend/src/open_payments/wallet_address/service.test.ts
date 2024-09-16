@@ -12,6 +12,7 @@ import { CreateOptions, FORBIDDEN_PATHS, WalletAddressService } from './service'
 import { AccountingService } from '../../accounting/service'
 import { createTestApp, TestContainer } from '../../tests/app'
 import { createAsset } from '../../tests/asset'
+import { createTenant } from '../../tests/tenant'
 import { createWalletAddress } from '../../tests/walletAddress'
 import { truncateTables } from '../../tests/tableManager'
 import { Config, IAppConfig } from '../../config/app'
@@ -25,6 +26,9 @@ import { Pagination, SortOrder } from '../../shared/baseModel'
 import { sleep } from '../../shared/utils'
 import { withConfigOverride } from '../../tests/helpers'
 import { WalletAddressAdditionalProperty } from './additional_property/model'
+import { EndpointType } from '../../tenant/endpoints/model'
+
+const nock = (global as unknown as { nock: typeof import('nock') }).nock
 
 describe('Open Payments Wallet Address Service', (): void => {
   let deps: IocContract<AppServices>
@@ -33,6 +37,7 @@ describe('Open Payments Wallet Address Service', (): void => {
   let walletAddressService: WalletAddressService
   let accountingService: AccountingService
   let knex: Knex
+  let tenantId: string
 
   beforeAll(async (): Promise<void> => {
     deps = initIocContainer(Config)
@@ -41,6 +46,25 @@ describe('Open Payments Wallet Address Service', (): void => {
     knex = appContainer.knex
     walletAddressService = await deps.use('walletAddressService')
     accountingService = await deps.use('accountingService')
+  })
+
+  beforeEach(async (): Promise<void> => {
+    const tenantEmail = faker.internet.email()
+    nock(config.kratosAdminUrl)
+      .get('/identities')
+      .query({ credentials_identifier: tenantEmail })
+      .reply(200, [{ id: uuid(), metadata_public: {} }])
+      .persist()
+    tenantId = (
+      await createTenant(deps, {
+        email: tenantEmail,
+        idpSecret: 'test-secret',
+        idpConsentEndpoint: faker.internet.url(),
+        endpoints: [
+          { type: EndpointType.WebhookBaseUrl, value: faker.internet.url() }
+        ]
+      })
+    ).id
   })
 
   afterEach(async (): Promise<void> => {
@@ -59,7 +83,8 @@ describe('Open Payments Wallet Address Service', (): void => {
       const { id: assetId } = await createAsset(deps)
       options = {
         url: 'https://alice.me/.well-known/pay',
-        assetId
+        assetId,
+        tenantId
       }
     })
 
@@ -147,7 +172,7 @@ describe('Open Payments Wallet Address Service', (): void => {
     `(
       'Wallet address with initial isActive of $initialIsActive can be updated with $status status ',
       async ({ initialIsActive, status, expectedIsActive }): Promise<void> => {
-        const walletAddress = await createWalletAddress(deps)
+        const walletAddress = await createWalletAddress(deps, tenantId)
 
         if (!initialIsActive) {
           await walletAddress.$query(knex).patch({ deactivatedAt: new Date() })
@@ -168,7 +193,7 @@ describe('Open Payments Wallet Address Service', (): void => {
     )
 
     test('publicName', async (): Promise<void> => {
-      const walletAddress = await createWalletAddress(deps, {
+      const walletAddress = await createWalletAddress(deps, tenantId, {
         publicName: 'Initial Name'
       })
       const newName = 'New Name'
@@ -194,7 +219,7 @@ describe('Open Payments Wallet Address Service', (): void => {
             incomingPaymentExpiryMaxMs: 2592000000 * 3
           },
           async (): Promise<void> => {
-            const walletAddress = await createWalletAddress(deps)
+            const walletAddress = await createWalletAddress(deps, tenantId)
             const now = new Date('2023-06-01T00:00:00Z').getTime()
             jest.useFakeTimers({ now })
 
@@ -204,6 +229,7 @@ describe('Open Payments Wallet Address Service', (): void => {
 
             const incomingPayment = await createIncomingPayment(deps, {
               walletAddressId: walletAddress.id,
+              tenantId,
               incomingAmount: {
                 value: BigInt(123),
                 assetCode: walletAddress.asset.code,
@@ -237,7 +263,7 @@ describe('Open Payments Wallet Address Service', (): void => {
           () => config,
           { walletAddressDeactivationPaymentGracePeriodMs: 2592000000 },
           async (): Promise<void> => {
-            const walletAddress = await createWalletAddress(deps)
+            const walletAddress = await createWalletAddress(deps, tenantId)
             const now = new Date('2023-06-01T00:00:00Z').getTime()
             jest.useFakeTimers({ now })
 
@@ -246,6 +272,7 @@ describe('Open Payments Wallet Address Service', (): void => {
 
             const incomingPayment = await createIncomingPayment(deps, {
               walletAddressId: walletAddress.id,
+              tenantId,
               incomingAmount: {
                 value: BigInt(123),
                 assetCode: walletAddress.asset.code,
@@ -272,7 +299,7 @@ describe('Open Payments Wallet Address Service', (): void => {
 
     describe('additionalProperties', (): void => {
       test('should do nothing if additionalProperties is undefined', async (): Promise<void> => {
-        const walletAddress = await createWalletAddress(deps, {
+        const walletAddress = await createWalletAddress(deps, tenantId, {
           publicName: 'Initial Name',
           additionalProperties: [
             {
@@ -301,7 +328,7 @@ describe('Open Payments Wallet Address Service', (): void => {
       })
 
       test('should update to [] (deleting all) when additionalProperties is []', async (): Promise<void> => {
-        const walletAddress = await createWalletAddress(deps, {
+        const walletAddress = await createWalletAddress(deps, tenantId, {
           additionalProperties: [
             {
               fieldKey: 'key1',
@@ -333,7 +360,7 @@ describe('Open Payments Wallet Address Service', (): void => {
         expect(properties).toHaveLength(0)
       })
       test('should replace existing additionalProperties', async (): Promise<void> => {
-        const walletAddress = await createWalletAddress(deps, {
+        const walletAddress = await createWalletAddress(deps, tenantId, {
           additionalProperties: [
             {
               fieldKey: 'key1',
@@ -395,7 +422,7 @@ describe('Open Payments Wallet Address Service', (): void => {
 
   describe('Get Wallet Address By Url', (): void => {
     test('can retrieve wallet address by url', async (): Promise<void> => {
-      const walletAddress = await createWalletAddress(deps)
+      const walletAddress = await createWalletAddress(deps, tenantId)
       await expect(
         walletAddressService.getByUrl(walletAddress.url)
       ).resolves.toEqual(walletAddress)
@@ -426,7 +453,7 @@ describe('Open Payments Wallet Address Service', (): void => {
   describe('Get Or Poll Wallet Addres By Url', (): void => {
     describe('existing wallet address', (): void => {
       test('can retrieve wallet address by url', async (): Promise<void> => {
-        const walletAddress = await createWalletAddress(deps)
+        const walletAddress = await createWalletAddress(deps, tenantId)
         await expect(
           walletAddressService.getOrPollByUrl(walletAddress.url)
         ).resolves.toEqual(walletAddress)
@@ -471,7 +498,7 @@ describe('Open Payments Wallet Address Service', (): void => {
                 walletAddressService.getOrPollByUrl(walletAddressUrl),
                 (async () => {
                   await sleep(5)
-                  return createWalletAddress(deps, {
+                  return createWalletAddress(deps, tenantId, {
                     url: walletAddressUrl
                   })
                 })()
@@ -501,7 +528,7 @@ describe('Open Payments Wallet Address Service', (): void => {
   describe('Wallet Address pagination', (): void => {
     describe('getPage', (): void => {
       getPageTests({
-        createModel: () => createWalletAddress(deps),
+        createModel: () => createWalletAddress(deps, tenantId),
         getPage: (pagination?: Pagination, sortOrder?: SortOrder) =>
           walletAddressService.getPage(pagination, sortOrder)
       })
@@ -512,7 +539,7 @@ describe('Open Payments Wallet Address Service', (): void => {
     let walletAddress: WalletAddress
 
     beforeEach(async (): Promise<void> => {
-      walletAddress = await createWalletAddress(deps)
+      walletAddress = await createWalletAddress(deps, tenantId)
     })
 
     describe.each`
@@ -631,7 +658,7 @@ describe('Open Payments Wallet Address Service', (): void => {
     let walletAddress: WalletAddress
 
     beforeEach(async (): Promise<void> => {
-      walletAddress = await createWalletAddress(deps, {
+      walletAddress = await createWalletAddress(deps, tenantId, {
         createLiquidityAccount: true
       })
     })
@@ -704,7 +731,7 @@ describe('Open Payments Wallet Address Service', (): void => {
       walletAddresses = []
       for (let i = 0; i < 5; i++) {
         walletAddresses.push(
-          await createWalletAddress(deps, {
+          await createWalletAddress(deps, tenantId, {
             assetId,
             createLiquidityAccount: true
           })

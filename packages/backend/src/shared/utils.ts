@@ -229,3 +229,19 @@ export async function getTenantIdFromRequestHeaders(
   ctx.tenantId = tenant.id
   ctx.isOperator = session.data?.identity.metadata_public.operator
 }
+
+export async function getTenantIdFromOperatorSecret(
+  ctx: TenantedAppContext,
+  config: IAppConfig
+): Promise<void> {
+  const tenantService = await ctx.container.use('tenantService')
+  const tenant = await tenantService.getByEmail(config.kratosAdminEmail)
+
+  if (!tenant) {
+    ctx.logger.info({ email: config.kratosAdminEmail }, 'tenant not found')
+    ctx.throw(401, 'Unauthorized')
+  }
+
+  ctx.tenantId = tenant.id
+  ctx.isOperator = true
+}

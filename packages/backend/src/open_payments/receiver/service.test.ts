@@ -5,6 +5,7 @@ import {
   mockIncomingPaymentWithPaymentMethods
 } from '@interledger/open-payments'
 import { v4 as uuid } from 'uuid'
+import { faker } from '@faker-js/faker'
 
 import {
   getLocalIncomingPayment,
@@ -34,6 +35,10 @@ import { Receiver } from './model'
 import { IncomingPayment } from '../payment/incoming/model'
 import { StreamCredentialsService } from '../../payment-method/ilp/stream-credentials/service'
 import { WalletAddress } from '../wallet_address/model'
+import { createTenant } from '../../tests/tenant'
+import { EndpointType } from '../../tenant/endpoints/model'
+
+const nock = (global as unknown as { nock: typeof import('nock') }).nock
 
 describe('Receiver Service', (): void => {
   let deps: IocContract<AppServices>
@@ -45,6 +50,7 @@ describe('Receiver Service', (): void => {
   let streamCredentialsService: StreamCredentialsService
   let remoteIncomingPaymentService: RemoteIncomingPaymentService
   let serviceDeps: ServiceDependencies
+  let tenantId: string
 
   beforeAll(async (): Promise<void> => {
     deps = initIocContainer(Config)
@@ -67,6 +73,26 @@ describe('Receiver Service', (): void => {
     }
   })
 
+  beforeEach(async (): Promise<void> => {
+    const config = await deps.use('config')
+    const tenantEmail = faker.internet.email()
+    nock(config.kratosAdminUrl)
+      .get('/identities')
+      .query({ credentials_identifier: tenantEmail })
+      .reply(200, [{ id: uuid(), metadata_public: {} }])
+      .persist()
+    tenantId = (
+      await createTenant(deps, {
+        email: tenantEmail,
+        idpSecret: 'testsecret',
+        idpConsentEndpoint: faker.internet.url(),
+        endpoints: [
+          { type: EndpointType.WebhookBaseUrl, value: faker.internet.url() }
+        ]
+      })
+    ).id
+  })
+
   afterEach(async (): Promise<void> => {
     jest.restoreAllMocks()
     await truncateTables(knex)
@@ -79,11 +105,12 @@ describe('Receiver Service', (): void => {
   describe('get', () => {
     describe('local incoming payment', () => {
       test('resolves local incoming payment', async () => {
-        const walletAddress = await createWalletAddress(deps, {
+        const walletAddress = await createWalletAddress(deps, tenantId, {
           mockServerPort: Config.openPaymentsPort
         })
         const incomingPayment = await createIncomingPayment(deps, {
           walletAddressId: walletAddress.id,
+          tenantId,
           incomingAmount: {
             value: BigInt(5),
             assetCode: walletAddress.asset.code,
@@ -287,7 +314,7 @@ describe('Receiver Service', (): void => {
           scale: 2
         })
 
-        walletAddress = await createWalletAddress(deps, {
+        walletAddress = await createWalletAddress(deps, tenantId, {
           mockServerPort: Config.openPaymentsPort,
           assetId: asset.id
         })
@@ -344,6 +371,7 @@ describe('Receiver Service', (): void => {
 
           expect(incomingPaymentCreateSpy).toHaveBeenCalledWith({
             walletAddressId: walletAddress.id,
+            tenantId,
             incomingAmount,
             expiresAt,
             metadata

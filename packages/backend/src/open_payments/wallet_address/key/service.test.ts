@@ -1,5 +1,6 @@
 import { generateJwk } from '@interledger/http-signature-utils'
 import { v4 as uuid } from 'uuid'
+import { faker } from '@faker-js/faker'
 
 import { WalletAddressKeyService } from './service'
 import { createTestApp, TestContainer } from '../../../tests/app'
@@ -13,8 +14,11 @@ import { getPageTests } from '../../../shared/baseModel.test'
 import { createWalletAddressKey } from '../../../tests/walletAddressKey'
 import { WalletAddress } from '../model'
 import { Pagination, SortOrder } from '../../../shared/baseModel'
+import { createTenant } from '../../../tests/tenant'
+import { EndpointType } from '../../../tenant/endpoints/model'
 
 const TEST_KEY = generateJwk({ keyId: uuid() })
+const nock = (global as unknown as { nock: typeof import('nock') }).nock
 
 describe('Wallet Address Key Service', (): void => {
   let deps: IocContract<AppServices>
@@ -29,7 +33,24 @@ describe('Wallet Address Key Service', (): void => {
   })
 
   beforeEach(async (): Promise<void> => {
-    walletAddress = await createWalletAddress(deps)
+    const config = await deps.use('config')
+    const tenantEmail = faker.internet.email()
+    nock(config.kratosAdminUrl)
+      .get('/identities')
+      .query({ credentials_identifier: tenantEmail })
+      .reply(200, [{ id: uuid(), metadata_public: {} }])
+      .persist()
+    const tenantId = (
+      await createTenant(deps, {
+        email: tenantEmail,
+        idpSecret: 'testsecret',
+        idpConsentEndpoint: faker.internet.url(),
+        endpoints: [
+          { type: EndpointType.WebhookBaseUrl, value: faker.internet.url() }
+        ]
+      })
+    ).id
+    walletAddress = await createWalletAddress(deps, tenantId)
   })
 
   afterEach(async (): Promise<void> => {

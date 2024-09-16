@@ -1,4 +1,6 @@
 import { IocContract } from '@adonisjs/fold'
+import { faker } from '@faker-js/faker'
+import { v4 as uuid } from 'uuid'
 import { AppServices } from '../app'
 import { createTestApp, TestContainer } from '../tests/app'
 import { Amount } from '../open_payments/amount'
@@ -18,6 +20,10 @@ import { getPageInfo, parsePaginationQueryParameters } from './pagination'
 import { AssetService } from '../asset/service'
 import { PeerService } from '../payment-method/ilp/peer/service'
 import { createPeer } from '../tests/peer'
+import { createTenant } from '../tests/tenant'
+import { EndpointType } from '../tenant/endpoints/model'
+
+const nock = (global as unknown as { nock: typeof import('nock') }).nock
 
 describe('Pagination', (): void => {
   let deps: IocContract<AppServices>
@@ -46,7 +52,23 @@ describe('Pagination', (): void => {
 
     beforeEach(async (): Promise<void> => {
       const asset = await createAsset(deps)
-      walletAddress = await createWalletAddress(deps, {
+      const tenantEmail = faker.internet.email()
+      nock(config.kratosAdminUrl)
+        .get('/identities')
+        .query({ credentials_identifier: tenantEmail })
+        .reply(200, [{ id: uuid(), metadata_public: {} }])
+        .persist()
+      const tenantId = (
+        await createTenant(deps, {
+          email: tenantEmail,
+          idpSecret: 'testsecret',
+          idpConsentEndpoint: faker.internet.url(),
+          endpoints: [
+            { type: EndpointType.WebhookBaseUrl, value: faker.internet.url() }
+          ]
+        })
+      ).id
+      walletAddress = await createWalletAddress(deps, tenantId, {
         assetId: asset.id
       })
     })
@@ -83,10 +105,26 @@ describe('Pagination', (): void => {
         quoteService = await deps.use('quoteService')
 
         const asset = await createAsset(deps)
-        defaultWalletAddress = await createWalletAddress(deps, {
+        const tenantEmail = faker.internet.email()
+        nock(config.kratosAdminUrl)
+          .get('/identities')
+          .query({ credentials_identifier: tenantEmail })
+          .reply(200, [{ id: uuid(), metadata_public: {} }])
+          .persist()
+        const tenantId = (
+          await createTenant(deps, {
+            email: tenantEmail,
+            idpSecret: 'testsecret',
+            idpConsentEndpoint: faker.internet.url(),
+            endpoints: [
+              { type: EndpointType.WebhookBaseUrl, value: faker.internet.url() }
+            ]
+          })
+        ).id
+        defaultWalletAddress = await createWalletAddress(deps, tenantId, {
           assetId: asset.id
         })
-        secondaryWalletAddress = await createWalletAddress(deps, {
+        secondaryWalletAddress = await createWalletAddress(deps, tenantId, {
           assetId: asset.id
         })
         debitAmount = {
@@ -118,7 +156,8 @@ describe('Pagination', (): void => {
             const paymentIds: string[] = []
             for (let i = 0; i < num; i++) {
               const payment = await createIncomingPayment(deps, {
-                walletAddressId: defaultWalletAddress.id
+                walletAddressId: defaultWalletAddress.id,
+                tenantId: defaultWalletAddress.tenantId
               })
               paymentIds.push(payment.id)
             }
@@ -172,6 +211,7 @@ describe('Pagination', (): void => {
             for (let i = 0; i < num; i++) {
               const payment = await createOutgoingPayment(deps, {
                 walletAddressId: defaultWalletAddress.id,
+                tenantId: defaultWalletAddress.tenantId,
                 receiver: secondaryWalletAddress.url,
                 method: 'ilp',
                 debitAmount,
@@ -229,6 +269,7 @@ describe('Pagination', (): void => {
             for (let i = 0; i < num; i++) {
               const quote = await createQuote(deps, {
                 walletAddressId: defaultWalletAddress.id,
+                tenantId: defaultWalletAddress.tenantId,
                 receiver: secondaryWalletAddress.url,
                 debitAmount,
                 validDestination: false,

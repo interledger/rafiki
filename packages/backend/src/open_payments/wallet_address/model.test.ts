@@ -32,6 +32,8 @@ import assert from 'assert'
 import { ReadContextWithAuthenticatedStatus } from '../payment/incoming/routes'
 import { Knex } from 'knex'
 import { OpenPaymentsServerRouteError } from '../route-errors'
+import { createTenant } from '../../tests/tenant'
+import { EndpointType } from '../../tenant/endpoints/model'
 
 export interface SetupOptions {
   reqOpts: httpMocks.RequestOptions
@@ -63,6 +65,8 @@ export const setup = <
   ctx.client = options.client
   ctx.accessAction = options.accessAction
   ctx.authenticated = true
+  ctx.tenantId = options.walletAddress.tenantId
+  ctx.isOperator = true
   return ctx
 }
 
@@ -365,15 +369,38 @@ export const getRouteTests = <M extends WalletAddressSubresource>({
   }
 }
 
+const nock = (global as unknown as { nock: typeof import('nock') }).nock
+
 describe('Models', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let knex: Knex
+  let tenantId: string
 
   beforeAll(async (): Promise<void> => {
     deps = initIocContainer(Config)
     knex = await deps.use('knex')
     appContainer = await createTestApp(deps)
+  })
+
+  beforeEach(async (): Promise<void> => {
+    const tenantEmail = faker.internet.email()
+    const config = await deps.use('config')
+    nock(config.kratosAdminUrl)
+      .get('/identities')
+      .query({ credentials_identifier: tenantEmail })
+      .reply(200, [{ id: uuid(), metadata_public: {} }])
+      .persist()
+    tenantId = (
+      await createTenant(deps, {
+        email: tenantEmail,
+        idpSecret: 'testsecret',
+        idpConsentEndpoint: faker.internet.url(),
+        endpoints: [
+          { type: EndpointType.WebhookBaseUrl, value: faker.internet.url() }
+        ]
+      })
+    ).id
   })
 
   afterEach(async (): Promise<void> => {
@@ -413,7 +440,7 @@ describe('Models', (): void => {
       test.each(deactivatedAtCases)(
         '$description',
         async ({ value, expectedIsActive }) => {
-          const walletAddress = await createWalletAddress(deps)
+          const walletAddress = await createWalletAddress(deps, tenantId)
           if (value) {
             await walletAddress
               .$query(appContainer.knex)

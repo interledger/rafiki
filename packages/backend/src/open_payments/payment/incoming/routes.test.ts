@@ -1,5 +1,6 @@
 import { faker } from '@faker-js/faker'
 import jestOpenAPI from 'jest-openapi'
+import { v4 as uuid } from 'uuid'
 
 import { Amount, AmountJSON, parseAmount, serializeAmount } from '../../amount'
 import { WalletAddress } from '../../wallet_address/model'
@@ -23,6 +24,10 @@ import { Asset } from '../../../asset/model'
 import { IncomingPaymentError, errorToHTTPCode, errorToMessage } from './errors'
 import { IncomingPaymentService } from './service'
 import { IncomingPaymentWithPaymentMethods as OpenPaymentsIncomingPaymentWithPaymentMethods } from '@interledger/open-payments'
+import { createTenant } from '../../../tests/tenant'
+import { EndpointType } from '../../../tenant/endpoints/model'
+
+const nock = (global as unknown as { nock: typeof import('nock') }).nock
 
 describe('Incoming Payment Routes', (): void => {
   let deps: IocContract<AppServices>
@@ -45,6 +50,7 @@ describe('Incoming Payment Routes', (): void => {
   let expiresAt: Date
   let incomingAmount: Amount
   let metadata: Record<string, unknown>
+  let tenantId: string
 
   beforeEach(async (): Promise<void> => {
     config = await deps.use('config')
@@ -53,7 +59,23 @@ describe('Incoming Payment Routes', (): void => {
 
     expiresAt = new Date(Date.now() + 30_000)
     asset = await createAsset(deps)
-    walletAddress = await createWalletAddress(deps, {
+    const tenantEmail = faker.internet.email()
+    nock(config.kratosAdminUrl)
+      .get('/identities')
+      .query({ credentials_identifier: tenantEmail })
+      .reply(200, [{ id: uuid(), metadata_public: {} }])
+      .persist()
+    tenantId = (
+      await createTenant(deps, {
+        email: tenantEmail,
+        idpSecret: 'testsecret',
+        idpConsentEndpoint: faker.internet.url(),
+        endpoints: [
+          { type: EndpointType.WebhookBaseUrl, value: faker.internet.url() }
+        ]
+      })
+    ).id
+    walletAddress = await createWalletAddress(deps, tenantId, {
       assetId: asset.id
     })
     baseUrl = new URL(walletAddress.url).origin
@@ -82,6 +104,7 @@ describe('Incoming Payment Routes', (): void => {
       createModel: async ({ client }) =>
         createIncomingPayment(deps, {
           walletAddressId: walletAddress.id,
+          tenantId,
           client,
           expiresAt,
           incomingAmount,
@@ -127,9 +150,10 @@ describe('Incoming Payment Routes', (): void => {
     test.each([IncomingPaymentState.Completed, IncomingPaymentState.Expired])(
       'returns incoming payment with empty methods if payment state is %s',
       async (paymentState): Promise<void> => {
-        const walletAddress = await createWalletAddress(deps)
+        const walletAddress = await createWalletAddress(deps, tenantId)
         const incomingPayment = await createIncomingPayment(deps, {
-          walletAddressId: walletAddress.id
+          walletAddressId: walletAddress.id,
+          tenantId
         })
         await incomingPayment.$query().update({ state: paymentState })
 
@@ -179,7 +203,8 @@ describe('Incoming Payment Routes', (): void => {
           status: errorToHTTPCode[error]
         })
         expect(createSpy).toHaveBeenCalledWith({
-          walletAddressId: walletAddress.id
+          walletAddressId: walletAddress.id,
+          tenantId
         })
       }
     )
@@ -214,6 +239,7 @@ describe('Incoming Payment Routes', (): void => {
         await expect(incomingPaymentRoutes.create(ctx)).resolves.toBeUndefined()
         expect(createSpy).toHaveBeenCalledWith({
           walletAddressId: walletAddress.id,
+          tenantId,
           incomingAmount: incomingAmount ? parseAmount(amount) : undefined,
           metadata,
           expiresAt: expiresAt ? new Date(expiresAt) : undefined,
@@ -259,6 +285,7 @@ describe('Incoming Payment Routes', (): void => {
     beforeEach(async (): Promise<void> => {
       incomingPayment = await createIncomingPayment(deps, {
         walletAddressId: walletAddress.id,
+        tenantId,
         expiresAt,
         incomingAmount,
         metadata
@@ -304,6 +331,7 @@ describe('Incoming Payment Routes', (): void => {
     test('Can get incoming payment with public fields', async (): Promise<void> => {
       const incomingPayment = await createIncomingPayment(deps, {
         walletAddressId: walletAddress.id,
+        tenantId,
         expiresAt,
         incomingAmount,
         metadata

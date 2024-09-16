@@ -135,6 +135,7 @@ async function createIncomingPayment(
 
   const incomingPaymentOrError = await deps.incomingPaymentService.create({
     walletAddressId: ctx.walletAddress.id,
+    tenantId: ctx.tenantId,
     client: ctx.client,
     metadata: body.metadata,
     expiresAt,

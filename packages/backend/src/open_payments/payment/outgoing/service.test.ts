@@ -53,6 +53,10 @@ import { withConfigOverride } from '../../../tests/helpers'
 import { TelemetryService } from '../../../telemetry/service'
 import { getPageTests } from '../../../shared/baseModel.test'
 import { Pagination, SortOrder } from '../../../shared/baseModel'
+import { createTenant } from '../../../tests/tenant'
+import { EndpointType } from '../../../tenant/endpoints/model'
+
+const nock = (global as unknown as { nock: typeof import('nock') }).nock
 
 describe('OutgoingPaymentService', (): void => {
   let deps: IocContract<AppServices>
@@ -72,6 +76,7 @@ describe('OutgoingPaymentService', (): void => {
   let amtDelivered: bigint
   let trx: Knex.Transaction
   let config: IAppConfig
+  let tenantId: string
 
   const asset: AssetOptions = {
     scale: 9,
@@ -266,13 +271,29 @@ describe('OutgoingPaymentService', (): void => {
   beforeEach(async (): Promise<void> => {
     const { id: sendAssetId } = await createAsset(deps, asset)
     assetId = sendAssetId
-    const walletAddress = await createWalletAddress(deps, {
+    const tenantEmail = faker.internet.email()
+    nock(config.kratosAdminUrl)
+      .get('/identities')
+      .query({ credentials_identifier: tenantEmail })
+      .reply(200, [{ id: uuid(), metadata_public: {} }])
+      .persist()
+    tenantId = (
+      await createTenant(deps, {
+        email: tenantEmail,
+        idpSecret: 'testsecret',
+        idpConsentEndpoint: faker.internet.url(),
+        endpoints: [
+          { type: EndpointType.WebhookBaseUrl, value: faker.internet.url() }
+        ]
+      })
+    ).id
+    const walletAddress = await createWalletAddress(deps, tenantId, {
       assetId: sendAssetId
     })
     walletAddressId = walletAddress.id
     client = walletAddress.url
     const { id: destinationAssetId } = await createAsset(deps, destinationAsset)
-    receiverWalletAddress = await createWalletAddress(deps, {
+    receiverWalletAddress = await createWalletAddress(deps, tenantId, {
       assetId: destinationAssetId,
       mockServerPort: appContainer.openPaymentsPort
     })
@@ -285,7 +306,8 @@ describe('OutgoingPaymentService', (): void => {
     ).resolves.toBeUndefined()
 
     incomingPayment = await createIncomingPayment(deps, {
-      walletAddressId: receiverWalletAddress.id
+      walletAddressId: receiverWalletAddress.id,
+      tenantId
     })
     receiver = incomingPayment.getUrl(receiverWalletAddress)
 
@@ -307,6 +329,7 @@ describe('OutgoingPaymentService', (): void => {
       createModel: ({ client }) =>
         createOutgoingPayment(deps, {
           walletAddressId,
+          tenantId,
           client,
           receiver,
           debitAmount,
@@ -322,6 +345,7 @@ describe('OutgoingPaymentService', (): void => {
     test('throws error if cannot find liquidity account for SENDING payment', async () => {
       const quote = await createQuote(deps, {
         walletAddressId,
+        tenantId,
         receiver,
         debitAmount,
         method: 'ilp'
@@ -329,6 +353,7 @@ describe('OutgoingPaymentService', (): void => {
 
       const payment = await outgoingPaymentService.create({
         walletAddressId,
+        tenantId,
         quoteId: quote.id,
         client
       })
@@ -366,6 +391,7 @@ describe('OutgoingPaymentService', (): void => {
       createModel: () =>
         createOutgoingPayment(deps, {
           walletAddressId,
+          tenantId,
           client,
           receiver,
           debitAmount: {
@@ -387,17 +413,21 @@ describe('OutgoingPaymentService', (): void => {
       let outgoingPayment: OutgoingPayment
       let otherOutgoingPayment: OutgoingPayment
       beforeEach(async (): Promise<void> => {
-        otherSenderWalletAddress = await createWalletAddress(deps, { assetId })
-        otherReceiverWalletAddress = await createWalletAddress(deps, {
+        otherSenderWalletAddress = await createWalletAddress(deps, tenantId, {
+          assetId
+        })
+        otherReceiverWalletAddress = await createWalletAddress(deps, tenantId, {
           assetId
         })
         const incomingPayment = await createIncomingPayment(deps, {
-          walletAddressId: receiverWalletAddress.id
+          walletAddressId: receiverWalletAddress.id,
+          tenantId
         })
         otherReceiver = incomingPayment.getUrl(otherReceiverWalletAddress)
 
         outgoingPayment = await createOutgoingPayment(deps, {
           walletAddressId,
+          tenantId,
           client,
           receiver,
           debitAmount: {
@@ -411,6 +441,7 @@ describe('OutgoingPaymentService', (): void => {
 
         otherOutgoingPayment = await createOutgoingPayment(deps, {
           walletAddressId: otherSenderWalletAddress.id,
+          tenantId,
           client,
           receiver: otherReceiver,
           debitAmount: {
@@ -484,6 +515,7 @@ describe('OutgoingPaymentService', (): void => {
     test('throws error if cannot find liquidity account for SENDING payment', async () => {
       const quote = await createQuote(deps, {
         walletAddressId,
+        tenantId,
         receiver,
         debitAmount,
         method: 'ilp'
@@ -491,6 +523,7 @@ describe('OutgoingPaymentService', (): void => {
 
       const payment = await outgoingPaymentService.create({
         walletAddressId,
+        tenantId,
         client,
         quoteId: quote.id
       })
@@ -557,6 +590,7 @@ describe('OutgoingPaymentService', (): void => {
          */
         const outgoingPayment = await createOutgoingPayment(deps, {
           walletAddressId,
+          tenantId,
           client,
           receiver,
           debitAmount: {
@@ -611,6 +645,7 @@ describe('OutgoingPaymentService', (): void => {
 
       const payment = await outgoingPaymentService.create({
         walletAddressId,
+        tenantId,
         debitAmount,
         incomingPayment: incomingPaymentUrl
       })
@@ -618,6 +653,7 @@ describe('OutgoingPaymentService', (): void => {
       expect(!isOutgoingPaymentError(payment)).toBeTruthy()
       expect(quoteSpy).toHaveBeenCalledWith({
         walletAddressId,
+        tenantId,
         receiver: incomingPaymentUrl,
         debitAmount,
         method: 'ilp'
@@ -651,6 +687,7 @@ describe('OutgoingPaymentService', (): void => {
 
           const options: CreateOutgoingPaymentOptions = {
             walletAddressId: receiverWalletAddress.id,
+            tenantId,
             debitAmount,
             incomingPayment: incomingPayment.toOpenPaymentsTypeWithMethods(
               receiverWalletAddress
@@ -696,6 +733,7 @@ describe('OutgoingPaymentService', (): void => {
 
           const options: CreateOutgoingPaymentOptions = {
             walletAddressId: receiverWalletAddress.id,
+            tenantId,
             debitAmount,
             incomingPayment: incomingPayment.toOpenPaymentsTypeWithMethods(
               receiverWalletAddress
@@ -733,6 +771,7 @@ describe('OutgoingPaymentService', (): void => {
 
       const payment = await outgoingPaymentService.create({
         walletAddressId,
+        tenantId,
         debitAmount,
         incomingPayment: incomingPaymentUrl
       })
@@ -741,6 +780,7 @@ describe('OutgoingPaymentService', (): void => {
       expect(payment).toBe(quoteCreateResponse)
       expect(quoteSpy).toHaveBeenCalledWith({
         walletAddressId,
+        tenantId,
         receiver: incomingPaymentUrl,
         debitAmount,
         method: 'ilp'
@@ -782,12 +822,14 @@ describe('OutgoingPaymentService', (): void => {
             const peer = await createPeer(deps)
             const quote = await createQuote(deps, {
               walletAddressId,
+              tenantId,
               receiver,
               debitAmount,
               method: 'ilp'
             })
             const options = {
               walletAddressId,
+              tenantId,
               client,
               quoteId: quote.id,
               metadata: {
@@ -845,6 +887,7 @@ describe('OutgoingPaymentService', (): void => {
       it('fails to create on unknown wallet address', async () => {
         const { id: quoteId } = await createQuote(deps, {
           walletAddressId,
+          tenantId,
           receiver,
           debitAmount,
           validDestination: false,
@@ -853,6 +896,7 @@ describe('OutgoingPaymentService', (): void => {
         await expect(
           outgoingPaymentService.create({
             walletAddressId: uuid(),
+            tenantId,
             quoteId
           })
         ).resolves.toEqual(OutgoingPaymentError.UnknownWalletAddress)
@@ -862,6 +906,7 @@ describe('OutgoingPaymentService', (): void => {
         await expect(
           outgoingPaymentService.create({
             walletAddressId,
+            tenantId,
             quoteId: uuid()
           })
         ).resolves.toEqual(OutgoingPaymentError.UnknownQuote)
@@ -870,6 +915,7 @@ describe('OutgoingPaymentService', (): void => {
       it('fails to create on "consumed" quote', async () => {
         const { quote } = await createOutgoingPayment(deps, {
           walletAddressId,
+          tenantId,
           client,
           receiver,
           validDestination: false,
@@ -878,6 +924,7 @@ describe('OutgoingPaymentService', (): void => {
         await expect(
           outgoingPaymentService.create({
             walletAddressId,
+            tenantId,
             client,
             quoteId: quote.id
           })
@@ -887,6 +934,7 @@ describe('OutgoingPaymentService', (): void => {
       it('fails to create on invalid quote wallet address', async () => {
         const quote = await createQuote(deps, {
           walletAddressId,
+          tenantId,
           receiver,
           debitAmount,
           validDestination: false,
@@ -895,6 +943,7 @@ describe('OutgoingPaymentService', (): void => {
         await expect(
           outgoingPaymentService.create({
             walletAddressId: receiverWalletAddress.id,
+            tenantId,
             quoteId: quote.id
           })
         ).resolves.toEqual(OutgoingPaymentError.InvalidQuote)
@@ -903,6 +952,7 @@ describe('OutgoingPaymentService', (): void => {
       it('fails to create on expired quote', async () => {
         const quote = await createQuote(deps, {
           walletAddressId,
+          tenantId,
           receiver,
           debitAmount,
           validDestination: false,
@@ -914,6 +964,7 @@ describe('OutgoingPaymentService', (): void => {
         await expect(
           outgoingPaymentService.create({
             walletAddressId,
+            tenantId,
             quoteId: quote.id
           })
         ).resolves.toEqual(OutgoingPaymentError.InvalidQuote)
@@ -927,6 +978,7 @@ describe('OutgoingPaymentService', (): void => {
         async ({ state }): Promise<void> => {
           const quote = await createQuote(deps, {
             walletAddressId,
+            tenantId,
             receiver,
             debitAmount,
             method: 'ilp'
@@ -939,6 +991,7 @@ describe('OutgoingPaymentService', (): void => {
           await expect(
             outgoingPaymentService.create({
               walletAddressId,
+              tenantId,
               quoteId: quote.id
             })
           ).resolves.toEqual(OutgoingPaymentError.InvalidQuote)
@@ -948,12 +1001,13 @@ describe('OutgoingPaymentService', (): void => {
       test('fails to create on inactive wallet address', async () => {
         const { id: quoteId } = await createQuote(deps, {
           walletAddressId,
+          tenantId,
           receiver,
           debitAmount,
           validDestination: false,
           method: 'ilp'
         })
-        const walletAddress = await createWalletAddress(deps)
+        const walletAddress = await createWalletAddress(deps, tenantId)
         const walletAddressUpdated = await WalletAddress.query(
           knex
         ).patchAndFetchById(walletAddress.id, { deactivatedAt: new Date() })
@@ -961,6 +1015,7 @@ describe('OutgoingPaymentService', (): void => {
         await expect(
           outgoingPaymentService.create({
             walletAddressId: walletAddress.id,
+            tenantId,
             quoteId
           })
         ).resolves.toEqual(OutgoingPaymentError.InactiveWalletAddress)
@@ -977,6 +1032,7 @@ describe('OutgoingPaymentService', (): void => {
             [0, 1].map(async (_) => {
               return await createQuote(deps, {
                 walletAddressId,
+                tenantId,
                 receiver,
                 debitAmount,
                 method: 'ilp'
@@ -986,6 +1042,7 @@ describe('OutgoingPaymentService', (): void => {
           const options = quotes.map((quote) => {
             return {
               walletAddressId,
+              tenantId,
               client,
               quoteId: quote.id,
               metadata: {
@@ -1026,14 +1083,17 @@ describe('OutgoingPaymentService', (): void => {
           let options: UnionOmit<CreateOutgoingPaymentOptions, 'grant'>
           let interval: string
           beforeEach(async (): Promise<void> => {
+            console.log('tenantId=', tenantId)
             quote = await createQuote(deps, {
               walletAddressId,
+              tenantId,
               receiver,
               debitAmount,
               method: 'ilp'
             })
             options = {
               walletAddressId,
+              tenantId,
               quoteId: quote.id,
               metadata: {
                 description: 'rent',
@@ -1132,6 +1192,7 @@ describe('OutgoingPaymentService', (): void => {
               }
               const firstPayment = await createOutgoingPayment(deps, {
                 walletAddressId,
+                tenantId,
                 client,
                 receiver: `${
                   Config.openPaymentsUrl
@@ -1219,6 +1280,7 @@ describe('OutgoingPaymentService', (): void => {
                 }
                 const firstPayment = await createOutgoingPayment(deps, {
                   walletAddressId,
+                  tenantId,
                   client,
                   receiver: `${
                     Config.openPaymentsUrl
@@ -1291,6 +1353,7 @@ describe('OutgoingPaymentService', (): void => {
 
       incomingPayment = await createIncomingPayment(deps, {
         walletAddressId: receiverWalletAddress.id,
+        tenantId,
         incomingAmount: {
           value: receiveAmount.value,
           assetCode: receiverWalletAddress.asset.code,
@@ -1300,6 +1363,7 @@ describe('OutgoingPaymentService', (): void => {
       assert.ok(incomingPayment.walletAddress)
 
       const createdPayment = await setup({
+        tenantId,
         receiver: incomingPayment.getUrl(incomingPayment.walletAddress),
         receiveAmount,
         method: 'ilp'
@@ -1332,6 +1396,7 @@ describe('OutgoingPaymentService', (): void => {
         .spyOn(telemetryService!, 'incrementCounter')
         .mockImplementation(() => Promise.resolve())
       const createdPayment = await setup({
+        tenantId,
         receiver,
         debitAmount,
         method: 'ilp'
@@ -1372,6 +1437,7 @@ describe('OutgoingPaymentService', (): void => {
 
       incomingPayment = await createIncomingPayment(deps, {
         walletAddressId: receiverWalletAddress.id,
+        tenantId,
         incomingAmount: {
           value: receiveAmount.value * 2n,
           assetCode: receiverWalletAddress.asset.code,
@@ -1381,6 +1447,7 @@ describe('OutgoingPaymentService', (): void => {
       assert.ok(incomingPayment.walletAddress)
 
       const createdPayment = await setup({
+        tenantId,
         receiver: incomingPayment.getUrl(incomingPayment.walletAddress),
         receiveAmount,
         method: 'ilp'
@@ -1416,6 +1483,7 @@ describe('OutgoingPaymentService', (): void => {
       const spyCounter = jest.spyOn(telemetryService, 'incrementCounter')
 
       const createdPayment = await setup({
+        tenantId,
         receiver,
         debitAmount,
         receiveAmount,
@@ -1442,6 +1510,7 @@ describe('OutgoingPaymentService', (): void => {
     test('COMPLETED (receiveAmount < incomingPayment.incomingAmount)', async (): Promise<void> => {
       incomingPayment = await createIncomingPayment(deps, {
         walletAddressId: receiverWalletAddress.id,
+        tenantId,
         incomingAmount: {
           value: receiveAmount.value * 2n,
           assetCode: receiverWalletAddress.asset.code,
@@ -1469,6 +1538,7 @@ describe('OutgoingPaymentService', (): void => {
       assert.ok(incomingPayment.receivedAmount?.assetScale)
 
       const createdPayment = await setup({
+        tenantId,
         receiver: incomingPayment.getUrl(incomingPayment.walletAddress),
         receiveAmount,
         method: 'ilp'
@@ -1491,6 +1561,7 @@ describe('OutgoingPaymentService', (): void => {
     test('COMPLETED (with incoming payment initially partially paid)', async (): Promise<void> => {
       const createdPayment = await setup(
         {
+          tenantId,
           receiver,
           receiveAmount,
           method: 'ilp'
@@ -1528,6 +1599,7 @@ describe('OutgoingPaymentService', (): void => {
 
     test('SENDING -> FAILED (partial payment then retryable Pay error)', async (): Promise<void> => {
       const createdPayment = await setup({
+        tenantId,
         receiver,
         debitAmount,
         method: 'ilp'
@@ -1578,6 +1650,7 @@ describe('OutgoingPaymentService', (): void => {
 
     test('FAILED (non-retryable error)', async (): Promise<void> => {
       const createdPayment = await setup({
+        tenantId,
         receiver,
         debitAmount,
         method: 'ilp'
@@ -1609,6 +1682,7 @@ describe('OutgoingPaymentService', (): void => {
 
     test('SENDING→COMPLETED (partial payment, resume, complete)', async (): Promise<void> => {
       const createdPayment = await setup({
+        tenantId,
         receiver,
         receiveAmount,
         method: 'ilp'
@@ -1640,6 +1714,7 @@ describe('OutgoingPaymentService', (): void => {
     test('COMPLETED (already fully paid)', async (): Promise<void> => {
       const createdPayment = await setup(
         {
+          tenantId,
           receiver,
           receiveAmount,
           method: 'ilp'
@@ -1671,6 +1746,7 @@ describe('OutgoingPaymentService', (): void => {
     test('COMPLETED (already fully paid)', async (): Promise<void> => {
       const { id: paymentId } = await setup(
         {
+          tenantId,
           receiver,
           receiveAmount,
           method: 'ilp'
@@ -1696,6 +1772,7 @@ describe('OutgoingPaymentService', (): void => {
     test('FAILED (source asset changed)', async (): Promise<void> => {
       const { id: paymentId } = await setup(
         {
+          tenantId,
           receiver,
           receiveAmount,
           method: 'ilp'
@@ -1720,6 +1797,7 @@ describe('OutgoingPaymentService', (): void => {
     })
     test('FAILED (destination asset changed)', async (): Promise<void> => {
       const createdPayment = await setup({
+        tenantId,
         receiver,
         debitAmount,
         method: 'ilp'
@@ -1749,6 +1827,7 @@ describe('OutgoingPaymentService', (): void => {
     beforeEach(async (): Promise<void> => {
       payment = await createOutgoingPayment(deps, {
         walletAddressId,
+        tenantId,
         receiver,
         debitAmount,
         validDestination: false,

@@ -1,4 +1,6 @@
 import { IocContract } from '@adonisjs/fold'
+import { faker } from '@faker-js/faker'
+import { v4 as uuid } from 'uuid'
 import { createTestApp, TestContainer } from '../../../tests/app'
 import { Config } from '../../../config/app'
 import { initIocContainer } from '../../..'
@@ -17,6 +19,10 @@ import {
   IncomingPaymentEventError
 } from './model'
 import { WalletAddress } from '../../wallet_address/model'
+import { createTenant } from '../../../tests/tenant'
+import { EndpointType } from '../../../tenant/endpoints/model'
+
+const nock = (global as unknown as { nock: typeof import('nock') }).nock
 
 describe('Models', (): void => {
   let deps: IocContract<AppServices>
@@ -42,10 +48,28 @@ describe('Models', (): void => {
     let incomingPayment: IncomingPayment
 
     beforeEach(async (): Promise<void> => {
-      walletAddress = await createWalletAddress(deps)
+      const config = await deps.use('config')
+      const tenantEmail = faker.internet.email()
+      nock(config.kratosAdminUrl)
+        .get('/identities')
+        .query({ credentials_identifier: tenantEmail })
+        .reply(200, [{ id: uuid(), metadata_public: {} }])
+        .persist()
+      const tenantId = (
+        await createTenant(deps, {
+          email: tenantEmail,
+          idpSecret: 'testsecret',
+          idpConsentEndpoint: faker.internet.url(),
+          endpoints: [
+            { type: EndpointType.WebhookBaseUrl, value: faker.internet.url() }
+          ]
+        })
+      ).id
+      walletAddress = await createWalletAddress(deps, tenantId)
       baseUrl = new URL(walletAddress.url).origin
       incomingPayment = await createIncomingPayment(deps, {
         walletAddressId: walletAddress.id,
+        tenantId,
         metadata: { description: 'my payment' }
       })
     })

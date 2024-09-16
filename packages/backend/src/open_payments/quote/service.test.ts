@@ -35,6 +35,10 @@ import {
   PaymentMethodHandlerError,
   PaymentMethodHandlerErrorCode
 } from '../../payment-method/handler/errors'
+import { createTenant } from '../../tests/tenant'
+import { EndpointType } from '../../tenant/endpoints/model'
+
+const nock = (global as unknown as { nock: typeof import('nock') }).nock
 
 describe('QuoteService', (): void => {
   let deps: IocContract<AppServices>
@@ -46,6 +50,7 @@ describe('QuoteService', (): void => {
   let sendingWalletAddress: MockWalletAddress
   let receivingWalletAddress: MockWalletAddress
   let config: IAppConfig
+  let tenantId: string
 
   const asset: AssetOptions = {
     scale: 9,
@@ -85,11 +90,27 @@ describe('QuoteService', (): void => {
       code: debitAmount.assetCode,
       scale: debitAmount.assetScale
     })
-    sendingWalletAddress = await createWalletAddress(deps, {
+    const tenantEmail = faker.internet.email()
+    nock(config.kratosAdminUrl)
+      .get('/identities')
+      .query({ credentials_identifier: tenantEmail })
+      .reply(200, [{ id: uuid(), metadata_public: {} }])
+      .persist()
+    tenantId = (
+      await createTenant(deps, {
+        email: tenantEmail,
+        idpSecret: 'testsecret',
+        idpConsentEndpoint: faker.internet.url(),
+        endpoints: [
+          { type: EndpointType.WebhookBaseUrl, value: faker.internet.url() }
+        ]
+      })
+    ).id
+    sendingWalletAddress = await createWalletAddress(deps, tenantId, {
       assetId: sendAssetId
     })
     const { id: destinationAssetId } = await createAsset(deps, destinationAsset)
-    receivingWalletAddress = await createWalletAddress(deps, {
+    receivingWalletAddress = await createWalletAddress(deps, tenantId, {
       assetId: destinationAssetId,
       mockServerPort: appContainer.openPaymentsPort
     })
@@ -110,6 +131,7 @@ describe('QuoteService', (): void => {
       createModel: ({ client }) =>
         createQuote(deps, {
           walletAddressId: sendingWalletAddress.id,
+          tenantId,
           receiver: `${receivingWalletAddress.url}/incoming-payments/${uuid()}`,
           debitAmount: {
             value: BigInt(56),
@@ -150,10 +172,12 @@ describe('QuoteService', (): void => {
         beforeEach(async (): Promise<void> => {
           incomingPayment = await createIncomingPayment(deps, {
             walletAddressId: receivingWalletAddress.id,
+            tenantId,
             incomingAmount
           })
           options = {
             walletAddressId: sendingWalletAddress.id,
+            tenantId,
             receiver: incomingPayment.getUrl(receivingWalletAddress),
             method: 'ilp'
           }
@@ -343,11 +367,13 @@ describe('QuoteService', (): void => {
       async ({ expiryDate }): Promise<void> => {
         const incomingPayment = await createIncomingPayment(deps, {
           walletAddressId: receivingWalletAddress.id,
+          tenantId,
           incomingAmount,
           expiresAt: expiryDate
         })
         const options: CreateQuoteOptions = {
           walletAddressId: sendingWalletAddress.id,
+          tenantId,
           receiver: incomingPayment.getUrl(receivingWalletAddress),
           receiveAmount,
           method: 'ilp'
@@ -389,6 +415,7 @@ describe('QuoteService', (): void => {
     test('creates a quote with large exchange rate amounts', async (): Promise<void> => {
       const receiveAmountValue = 100n
       const receiver = await createReceiver(deps, receivingWalletAddress, {
+        tenantId,
         incomingAmount: {
           assetCode: receivingWalletAddress.asset.code,
           assetScale: receivingWalletAddress.asset.scale,
@@ -419,6 +446,7 @@ describe('QuoteService', (): void => {
       await expect(
         quoteService.create({
           walletAddressId: sendingWalletAddress.id,
+          tenantId,
           receiver: receiver.incomingPayment!.id,
           method: 'ilp'
         })
@@ -436,6 +464,7 @@ describe('QuoteService', (): void => {
       await expect(
         quoteService.create({
           walletAddressId: uuid(),
+          tenantId,
           receiver: `${receivingWalletAddress.url}/incoming-payments/${uuid()}`,
           debitAmount,
           method: 'ilp'
@@ -444,7 +473,7 @@ describe('QuoteService', (): void => {
     })
 
     test('fails on inactive wallet address', async () => {
-      const walletAddress = await createWalletAddress(deps)
+      const walletAddress = await createWalletAddress(deps, tenantId)
       const walletAddressUpdated = await WalletAddress.query(
         knex
       ).patchAndFetchById(walletAddress.id, { deactivatedAt: new Date() })
@@ -452,6 +481,7 @@ describe('QuoteService', (): void => {
       await expect(
         quoteService.create({
           walletAddressId: walletAddress.id,
+          tenantId,
           receiver: `${receivingWalletAddress.url}/incoming-payments/${uuid()}`,
           debitAmount,
           method: 'ilp'
@@ -463,6 +493,7 @@ describe('QuoteService', (): void => {
       await expect(
         quoteService.create({
           walletAddressId: sendingWalletAddress.id,
+          tenantId,
           receiver: `${receivingWalletAddress.url}/incoming-payments/${uuid()}`,
           debitAmount,
           method: 'ilp'
@@ -485,6 +516,7 @@ describe('QuoteService', (): void => {
       await expect(
         quoteService.create({
           walletAddressId: sendingWalletAddress.id,
+          tenantId,
           receiver: receiver.incomingPayment!.id,
           method: 'ilp',
           debitAmount: {
@@ -509,10 +541,12 @@ describe('QuoteService', (): void => {
       'fails to create $description',
       async ({ debitAmount, receiveAmount }): Promise<void> => {
         const incomingPayment = await createIncomingPayment(deps, {
+          tenantId,
           walletAddressId: receivingWalletAddress.id
         })
         const options: CreateQuoteOptions = {
           walletAddressId: sendingWalletAddress.id,
+          tenantId,
           receiver: incomingPayment.getUrl(receivingWalletAddress),
           method: 'ilp'
         }
@@ -534,10 +568,10 @@ describe('QuoteService', (): void => {
           code: 'USD',
           scale: 2
         })
-        sendingWalletAddress = await createWalletAddress(deps, {
+        sendingWalletAddress = await createWalletAddress(deps, tenantId, {
           assetId: asset.id
         })
-        receivingWalletAddress = await createWalletAddress(deps, {
+        receivingWalletAddress = await createWalletAddress(deps, tenantId, {
           assetId: asset.id
         })
       })
@@ -557,6 +591,7 @@ describe('QuoteService', (): void => {
           expectedQuoteDebitAmountValue
         }): Promise<void> => {
           const receiver = await createReceiver(deps, receivingWalletAddress, {
+            tenantId,
             incomingAmount: {
               assetCode: asset.code,
               assetScale: asset.scale,
@@ -583,6 +618,7 @@ describe('QuoteService', (): void => {
 
           const quote = await quoteService.create({
             walletAddressId: sendingWalletAddress.id,
+            tenantId,
             receiver: receiver.incomingPayment!.id,
             method: 'ilp'
           })
@@ -599,6 +635,7 @@ describe('QuoteService', (): void => {
       test('fails on invalid debit amount', async () => {
         const incomingAmountValue = 100n
         const receiver = await createReceiver(deps, receivingWalletAddress, {
+          tenantId,
           incomingAmount: {
             assetCode: asset.code,
             assetScale: asset.scale,
@@ -620,6 +657,7 @@ describe('QuoteService', (): void => {
         await expect(
           quoteService.create({
             walletAddressId: sendingWalletAddress.id,
+            tenantId,
             receiver: receiver.incomingPayment!.id,
             method: 'ilp'
           })
@@ -642,10 +680,10 @@ describe('QuoteService', (): void => {
           code: 'XRP',
           scale: 2
         })
-        sendingWalletAddress = await createWalletAddress(deps, {
+        sendingWalletAddress = await createWalletAddress(deps, tenantId, {
           assetId: sendAsset.id
         })
-        receivingWalletAddress = await createWalletAddress(deps, {
+        receivingWalletAddress = await createWalletAddress(deps, tenantId, {
           assetId: receiveAsset.id
         })
       })
@@ -690,6 +728,7 @@ describe('QuoteService', (): void => {
 
           const quote = await quoteService.create({
             walletAddressId: sendingWalletAddress.id,
+            tenantId,
             receiver: receiver.incomingPayment!.id,
             debitAmount: {
               value: debitAmountValue,
@@ -733,6 +772,7 @@ describe('QuoteService', (): void => {
         await expect(
           quoteService.create({
             walletAddressId: sendingWalletAddress.id,
+            tenantId,
             receiver: receiver.incomingPayment!.id,
             debitAmount: {
               value: debitAmountValue,

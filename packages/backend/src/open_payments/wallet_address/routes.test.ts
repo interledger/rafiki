@@ -1,6 +1,7 @@
 import jestOpenAPI from 'jest-openapi'
 import { IocContract } from '@adonisjs/fold'
 import { faker } from '@faker-js/faker'
+import { v4 as uuid } from 'uuid'
 import { initIocContainer } from '../../'
 import { AppServices, WalletAddressUrlContext } from '../../app'
 import { Config, IAppConfig } from '../../config/app'
@@ -13,6 +14,10 @@ import assert from 'assert'
 import { OpenPaymentsServerRouteError } from '../route-errors'
 import { WalletAddressService } from './service'
 import { WalletAddressAdditionalProperty } from './additional_property/model'
+import { createTenant } from '../../tests/tenant'
+import { EndpointType } from '../../tenant/endpoints/model'
+
+const nock = (global as unknown as { nock: typeof import('nock') }).nock
 
 describe('Wallet Address Routes', (): void => {
   let deps: IocContract<AppServices>
@@ -20,6 +25,7 @@ describe('Wallet Address Routes', (): void => {
   let config: IAppConfig
   let walletAddressRoutes: WalletAddressRoutes
   let walletAddressService: WalletAddressService
+  let tenantId: string
 
   beforeAll(async (): Promise<void> => {
     config = Config
@@ -31,6 +37,25 @@ describe('Wallet Address Routes', (): void => {
     config = await deps.use('config')
     walletAddressRoutes = await deps.use('walletAddressRoutes')
     walletAddressService = await deps.use('walletAddressService')
+  })
+
+  beforeEach(async (): Promise<void> => {
+    const tenantEmail = faker.internet.email()
+    nock(config.kratosAdminUrl)
+      .get('/identities')
+      .query({ credentials_identifier: tenantEmail })
+      .reply(200, [{ id: uuid(), metadata_public: {} }])
+      .persist()
+    tenantId = (
+      await createTenant(deps, {
+        email: tenantEmail,
+        idpSecret: 'testsecret',
+        idpConsentEndpoint: faker.internet.url(),
+        endpoints: [
+          { type: EndpointType.WebhookBaseUrl, value: faker.internet.url() }
+        ]
+      })
+    ).id
   })
 
   afterEach(async (): Promise<void> => {
@@ -61,7 +86,7 @@ describe('Wallet Address Routes', (): void => {
     })
 
     test('throws 404 error for inactive wallet address', async (): Promise<void> => {
-      const walletAddress = await createWalletAddress(deps, {
+      const walletAddress = await createWalletAddress(deps, tenantId, {
         publicName: faker.person.firstName()
       })
 
@@ -101,7 +126,7 @@ describe('Wallet Address Routes', (): void => {
       addPropNotVisibleInOpenPayments.fieldKey = 'not-visible-in-op'
       addPropNotVisibleInOpenPayments.fieldValue = 'it-is-not'
       addPropNotVisibleInOpenPayments.visibleInOpenPayments = false
-      const walletAddress = await createWalletAddress(deps, {
+      const walletAddress = await createWalletAddress(deps, tenantId, {
         publicName: faker.person.firstName(),
         additionalProperties: [addProp, addPropNotVisibleInOpenPayments]
       })
@@ -144,7 +169,7 @@ describe('Wallet Address Routes', (): void => {
     })
 
     test('returns wallet address', async (): Promise<void> => {
-      const walletAddress = await createWalletAddress(deps, {
+      const walletAddress = await createWalletAddress(deps, tenantId, {
         publicName: faker.person.firstName()
       })
 

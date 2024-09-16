@@ -29,7 +29,8 @@ export async function createOutgoingPayment(
     receiver: options.receiver,
     validDestination: options.validDestination,
     exchangeRate: options.exchangeRate,
-    method: options.method
+    method: options.method,
+    tenantId: options.tenantId
   }
   if (options.debitAmount) quoteOptions.debitAmount = options.debitAmount
   if (options.receiveAmount) quoteOptions.receiveAmount = options.receiveAmount
@@ -42,7 +43,8 @@ export async function createOutgoingPayment(
     const streamCredentials = streamServer.generateCredentials()
 
     const incomingPayment = await createIncomingPayment(deps, {
-      walletAddressId: options.walletAddressId
+      walletAddressId: options.walletAddressId,
+      tenantId: options.tenantId
     })
     await incomingPayment.$query().delete()
     const walletAddress = await walletAddressService.get(
@@ -115,7 +117,8 @@ export async function createOutgoingPaymentWithReceiver(
 
   const incomingPayment = await createIncomingPayment(deps, {
     ...args.incomingPaymentOptions,
-    walletAddressId: args.receivingWalletAddress.id
+    walletAddressId: args.receivingWalletAddress.id,
+    tenantId: args.receivingWalletAddress.tenantId
   })
 
   const streamCredentialsService = await deps.use('streamCredentialsService')
@@ -133,6 +136,7 @@ export async function createOutgoingPaymentWithReceiver(
     walletAddressId: args.sendingWalletAddress.id,
     method: args.method,
     receiver: receiver.incomingPayment!.id!,
+    tenantId: args.receivingWalletAddress.tenantId,
     ...args.quoteOptions
   })
 
