@@ -1,5 +1,4 @@
 import { AxiosInstance } from 'axios'
-import { v4 } from 'uuid'
 import { TransactionOrKnex } from 'objection'
 import { BaseService } from '../shared/baseService'
 import { TenantError } from './errors'
@@ -122,7 +121,10 @@ async function createTenant(
     const operatorRole = getIdentityResponse.data[0]?.metadata_public.operator
     const isExistingIdentity =
       getIdentityResponse.data.length > 0 && getIdentityResponse.data[0].id
-    deps.logger.info({ res: getIdentityResponse.data, operatorRole, isExistingIdentity }, 'got response')
+    deps.logger.info(
+      { res: getIdentityResponse.data, operatorRole, isExistingIdentity },
+      'got response'
+    )
     if (!isExistingIdentity) {
       // Identity does not exist
       const createIdentityResponse = await axios.post(
