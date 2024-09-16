@@ -1,4 +1,5 @@
 import { gql } from '@apollo/client'
+import { faker } from '@faker-js/faker'
 import { getPageTests } from './page.test'
 import { createTestApp, TestContainer } from '../../tests/app'
 import { IocContract } from '@adonisjs/fold'
@@ -9,6 +10,8 @@ import { truncateTables } from '../../tests/tableManager'
 import { WebhookEventsConnection } from '../generated/graphql'
 import { createWebhookEvent, webhookEventTypes } from '../../tests/webhook'
 import { WebhookEvent } from '../../webhook/model'
+import { createTenant } from '../../tests/tenant'
+import { EndpointType } from '../../tenant/endpoints/model'
 
 describe('Webhook Events Query', (): void => {
   let deps: IocContract<AppServices>
@@ -17,6 +20,17 @@ describe('Webhook Events Query', (): void => {
   beforeAll(async (): Promise<void> => {
     deps = initIocContainer(Config)
     appContainer = await createTestApp(deps)
+  })
+
+  beforeEach(async (): Promise<void> => {
+    await createTenant(deps, {
+      email: Config.kratosAdminEmail,
+      idpSecret: 'testsecret',
+      idpConsentEndpoint: faker.internet.url(),
+      endpoints: [
+        { type: EndpointType.WebhookBaseUrl, value: faker.internet.url() }
+      ]
+    })
   })
 
   afterEach(async (): Promise<void> => {

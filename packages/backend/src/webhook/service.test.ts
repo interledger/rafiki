@@ -3,6 +3,7 @@ import { Definition, ReplyHeaderValue, Scope } from 'nock'
 import { URL } from 'url'
 import { Knex } from 'knex'
 import { v4 as uuid } from 'uuid'
+import { faker } from '@faker-js/faker'
 
 import { WebhookEvent } from './model'
 import {
@@ -31,6 +32,8 @@ import {
   WalletAddressEventType
 } from '../open_payments/wallet_address/model'
 import { createOutgoingPayment } from '../tests/outgoingPayment'
+import { createTenant } from '../tests/tenant'
+import { EndpointType } from '../tenant/endpoints/model'
 
 const nock = (global as unknown as { nock: typeof import('nock') }).nock
 
@@ -42,6 +45,7 @@ describe('Webhook Service', (): void => {
   let knex: Knex
   let webhookUrl: URL
   let event: WebhookEvent
+  let tenantId: string
   const WEBHOOK_SECRET = 'test secret'
 
   async function makeWithdrawalEvent(event: WebhookEvent): Promise<void> {
@@ -72,6 +76,18 @@ describe('Webhook Service', (): void => {
     webhookUrl = new URL(Config.webhookUrl)
   })
 
+  beforeEach(async (): Promise<void> => {
+    tenantId = (
+      await createTenant(deps, {
+        email: Config.kratosAdminEmail,
+        idpSecret: 'testsecret',
+        idpConsentEndpoint: faker.internet.url(),
+        endpoints: [
+          { type: EndpointType.WebhookBaseUrl, value: faker.internet.url() }
+        ]
+      })
+    ).id
+  })
   afterEach(async (): Promise<void> => {
     await truncateTables(knex)
   })
@@ -116,17 +132,19 @@ describe('Webhook Service', (): void => {
     let events: WebhookEvent[] = []
 
     beforeEach(async (): Promise<void> => {
-      walletAddressIn = await createWalletAddress(deps)
-      walletAddressOut = await createWalletAddress(deps)
+      walletAddressIn = await createWalletAddress(deps, tenantId)
+      walletAddressOut = await createWalletAddress(deps, tenantId)
       incomingPaymentIds = [
         (
           await createIncomingPayment(deps, {
-            walletAddressId: walletAddressIn.id
+            walletAddressId: walletAddressIn.id,
+            tenantId
           })
         ).id,
         (
           await createIncomingPayment(deps, {
-            walletAddressId: walletAddressIn.id
+            walletAddressId: walletAddressIn.id,
+            tenantId
           })
         ).id
       ]
@@ -135,6 +153,7 @@ describe('Webhook Service', (): void => {
           await createOutgoingPayment(deps, {
             method: 'ilp',
             walletAddressId: walletAddressOut.id,
+            tenantId,
             receiver: '',
             validDestination: false
           })
@@ -143,6 +162,7 @@ describe('Webhook Service', (): void => {
           await createOutgoingPayment(deps, {
             method: 'ilp',
             walletAddressId: walletAddressOut.id,
+            tenantId,
             receiver: '',
             validDestination: false
           })

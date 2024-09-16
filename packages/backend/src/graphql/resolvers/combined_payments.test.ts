@@ -1,5 +1,6 @@
 import { IocContract } from '@adonisjs/fold'
 import { gql } from '@apollo/client'
+import { faker } from '@faker-js/faker'
 import { AppServices } from '../../app'
 import { createTestApp, TestContainer } from '../../tests/app'
 import { initIocContainer } from '../..'
@@ -18,11 +19,16 @@ import {
 } from '../../tests/combinedPayment'
 import { PaymentType } from '../../open_payments/payment/combined/model'
 import { getPageTests } from './page.test'
+import { createTenant } from '../../tests/tenant'
+import { EndpointType } from '../../tenant/endpoints/model'
+
+const nock = (global as unknown as { nock: typeof import('nock') }).nock
 
 describe('Payment', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let asset: Asset
+  let tenantId: string
 
   beforeAll(async (): Promise<void> => {
     deps = initIocContainer(Config)
@@ -31,6 +37,21 @@ describe('Payment', (): void => {
 
   beforeEach(async (): Promise<void> => {
     asset = await createAsset(deps)
+    nock(Config.kratosAdminUrl)
+      .get('/identities')
+      .query({ credentials_identifier: Config.kratosAdminEmail })
+      .reply(200, [{ id: uuid(), metadata_public: {} }])
+      .persist()
+    tenantId = (
+      await createTenant(deps, {
+        email: Config.kratosAdminEmail,
+        idpSecret: 'testsecret',
+        idpConsentEndpoint: faker.internet.url(),
+        endpoints: [
+          { type: EndpointType.WebhookBaseUrl, value: faker.internet.url() }
+        ]
+      })
+    ).id
   })
 
   afterEach(async (): Promise<void> => {
@@ -44,18 +65,23 @@ describe('Payment', (): void => {
 
   getPageTests({
     getClient: () => appContainer.apolloClient,
-    createModel: () => createCombinedPayment(deps),
+    createModel: () => createCombinedPayment(deps, tenantId),
     pagedQuery: 'payments'
   })
 
   test('Can get payments', async (): Promise<void> => {
-    const { id: outWalletAddressId } = await createWalletAddress(deps, {
-      assetId: asset.id
-    })
+    const { id: outWalletAddressId } = await createWalletAddress(
+      deps,
+      tenantId,
+      {
+        assetId: asset.id
+      }
+    )
 
     const client = 'client-test'
     const outgoingPayment = await createOutgoingPayment(deps, {
       walletAddressId: outWalletAddressId,
+      tenantId,
       client: client,
       method: 'ilp',
       receiver: `${Config.openPaymentsUrl}/${uuid()}`,
@@ -67,11 +93,16 @@ describe('Payment', (): void => {
       validDestination: false
     })
 
-    const { id: inWalletAddressId } = await createWalletAddress(deps, {
-      assetId: asset.id
-    })
+    const { id: inWalletAddressId } = await createWalletAddress(
+      deps,
+      tenantId,
+      {
+        assetId: asset.id
+      }
+    )
     const incomingPayment = await createIncomingPayment(deps, {
       walletAddressId: inWalletAddressId,
+      tenantId,
       client: client
     })
 
@@ -145,9 +176,13 @@ describe('Payment', (): void => {
   })
 
   test('Can filter payments by type and wallet address', async (): Promise<void> => {
-    const { id: outWalletAddressId } = await createWalletAddress(deps, {
-      assetId: asset.id
-    })
+    const { id: outWalletAddressId } = await createWalletAddress(
+      deps,
+      tenantId,
+      {
+        assetId: asset.id
+      }
+    )
 
     const baseOutgoingPayment = {
       receiver: `${Config.openPaymentsUrl}/${uuid()}`,
@@ -162,16 +197,22 @@ describe('Payment', (): void => {
     const client = 'client-test-type-wallet-address'
     const outgoingPayment = await createOutgoingPayment(deps, {
       walletAddressId: outWalletAddressId,
+      tenantId,
       client: client,
       method: 'ilp',
       ...baseOutgoingPayment
     })
 
-    const { id: outWalletAddressId2 } = await createWalletAddress(deps, {
-      assetId: asset.id
-    })
+    const { id: outWalletAddressId2 } = await createWalletAddress(
+      deps,
+      tenantId,
+      {
+        assetId: asset.id
+      }
+    )
     await createOutgoingPayment(deps, {
       walletAddressId: outWalletAddressId2,
+      tenantId,
       client: client,
       method: 'ilp',
       ...baseOutgoingPayment

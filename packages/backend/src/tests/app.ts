@@ -90,6 +90,7 @@ export const createTestApp = async (
   const authLink = setContext((_, { headers }) => {
     return {
       headers: {
+        'x-operator-secret': config.operatorApiSecret,
         ...headers
       }
     }

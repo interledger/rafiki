@@ -30,6 +30,8 @@ import {
 } from '../generated/graphql'
 import { AccountingService } from '../../accounting/service'
 import { GraphQLErrorCode } from '../errors'
+import { createTenant } from '../../tests/tenant'
+import { EndpointType } from '../../tenant/endpoints/model'
 
 describe('Peer Resolvers', (): void => {
   let deps: IocContract<AppServices>
@@ -65,6 +67,14 @@ describe('Peer Resolvers', (): void => {
 
   beforeEach(async (): Promise<void> => {
     asset = await createAsset(deps)
+    await createTenant(deps, {
+      email: Config.kratosAdminEmail,
+      idpSecret: 'testsecret',
+      idpConsentEndpoint: faker.internet.url(),
+      endpoints: [
+        { type: EndpointType.WebhookBaseUrl, value: faker.internet.url() }
+      ]
+    })
   })
 
   afterEach(async (): Promise<void> => {

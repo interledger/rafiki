@@ -1,6 +1,7 @@
 import { ApolloError, gql } from '@apollo/client'
 import assert from 'assert'
 import { v4 as uuid } from 'uuid'
+import { faker } from '@faker-js/faker'
 
 import { getPageTests } from './page.test'
 import { createTestApp, TestContainer } from '../../tests/app'
@@ -32,6 +33,8 @@ import { isFeeError } from '../../fee/errors'
 import { createFee } from '../../tests/fee'
 import { createAsset } from '../../tests/asset'
 import { GraphQLErrorCode } from '../errors'
+import { createTenant } from '../../tests/tenant'
+import { EndpointType } from '../../tenant/endpoints/model'
 
 describe('Asset Resolvers', (): void => {
   let deps: IocContract<AppServices>
@@ -46,6 +49,17 @@ describe('Asset Resolvers', (): void => {
     assetService = await deps.use('assetService')
     accountingService = await deps.use('accountingService')
     feeService = await deps.use('feeService')
+  })
+
+  beforeEach(async (): Promise<void> => {
+    await createTenant(deps, {
+      email: Config.kratosAdminEmail,
+      idpSecret: 'testsecret',
+      idpConsentEndpoint: faker.internet.url(),
+      endpoints: [
+        { type: EndpointType.WebhookBaseUrl, value: faker.internet.url() }
+      ]
+    })
   })
 
   afterEach(async (): Promise<void> => {

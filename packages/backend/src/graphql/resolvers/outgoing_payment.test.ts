@@ -37,6 +37,8 @@ import {
 } from '../generated/graphql'
 import { faker } from '@faker-js/faker'
 import { GraphQLErrorCode } from '../errors'
+import { createTenant } from '../../tests/tenant'
+import { EndpointType } from '../../tenant/endpoints/model'
 
 describe('OutgoingPayment Resolvers', (): void => {
   let deps: IocContract<AppServices>
@@ -44,6 +46,7 @@ describe('OutgoingPayment Resolvers', (): void => {
   let accountingService: AccountingService
   let outgoingPaymentService: OutgoingPaymentService
   let asset: Asset
+  let tenantId: string
 
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer(Config)
@@ -54,6 +57,16 @@ describe('OutgoingPayment Resolvers', (): void => {
 
   beforeEach(async (): Promise<void> => {
     asset = await createAsset(deps)
+    tenantId = (
+      await createTenant(deps, {
+        email: Config.kratosAdminEmail,
+        idpSecret: 'testsecret',
+        idpConsentEndpoint: faker.internet.url(),
+        endpoints: [
+          { type: EndpointType.WebhookBaseUrl, value: faker.internet.url() }
+        ]
+      })
+    ).id
   })
 
   afterEach(async (): Promise<void> => {
@@ -75,6 +88,7 @@ describe('OutgoingPayment Resolvers', (): void => {
   ): Promise<OutgoingPaymentModel> => {
     const obj: CreateTestQuoteAndOutgoingPaymentOptions = {
       ...options,
+      tenantId,
       method: 'ilp',
       receiver: `${Config.openPaymentsUrl}/${uuid()}`,
       debitAmount: {
@@ -98,7 +112,7 @@ describe('OutgoingPayment Resolvers', (): void => {
 
     beforeEach(async (): Promise<void> => {
       walletAddressId = (
-        await createWalletAddress(deps, {
+        await createWalletAddress(deps, tenantId, {
           assetId: asset.id
         })
       ).id
@@ -134,16 +148,24 @@ describe('OutgoingPayment Resolvers', (): void => {
       `
 
       beforeEach(async (): Promise<void> => {
-        const firstReceiverWalletAddress = await createWalletAddress(deps, {
-          assetId: asset.id
-        })
-        const secondWalletAddress = await createWalletAddress(deps, {
+        const firstReceiverWalletAddress = await createWalletAddress(
+          deps,
+          tenantId,
+          {
+            assetId: asset.id
+          }
+        )
+        const secondWalletAddress = await createWalletAddress(deps, tenantId, {
           assetId: asset.id
         })
 
-        const secondReceiverWalletAddress = await createWalletAddress(deps, {
-          assetId: asset.id
-        })
+        const secondReceiverWalletAddress = await createWalletAddress(
+          deps,
+          tenantId,
+          {
+            assetId: asset.id
+          }
+        )
 
         const baseOutgoingPayment = {
           debitAmount: {
@@ -156,22 +178,26 @@ describe('OutgoingPayment Resolvers', (): void => {
         }
 
         const incomingPayment = await createIncomingPayment(deps, {
-          walletAddressId: firstReceiverWalletAddress.id
+          walletAddressId: firstReceiverWalletAddress.id,
+          tenantId
         })
         receiver = incomingPayment.getUrl(firstReceiverWalletAddress)
         firstOutgoingPayment = await createOutgoingPayment(deps, {
           walletAddressId,
+          tenantId,
           receiver,
           method: 'ilp',
           ...baseOutgoingPayment
         })
 
         const secondIncomingPayment = await createIncomingPayment(deps, {
-          walletAddressId: secondReceiverWalletAddress.id
+          walletAddressId: secondReceiverWalletAddress.id,
+          tenantId
         })
         const secondReceiver = secondIncomingPayment.getUrl(secondWalletAddress)
         secondOutgoingPayment = await createOutgoingPayment(deps, {
           walletAddressId: secondWalletAddress.id,
+          tenantId,
           receiver: secondReceiver,
           method: 'ilp',
           ...baseOutgoingPayment
@@ -325,9 +351,13 @@ describe('OutgoingPayment Resolvers', (): void => {
       it('should return grantId', async (): Promise<void> => {
         const grantId = uuid()
 
-        const { id: walletAddressId } = await createWalletAddress(deps, {
-          assetId: asset.id
-        })
+        const { id: walletAddressId } = await createWalletAddress(
+          deps,
+          tenantId,
+          {
+            assetId: asset.id
+          }
+        )
 
         const payment = await createPayment({ walletAddressId }, grantId)
 
@@ -364,9 +394,13 @@ describe('OutgoingPayment Resolvers', (): void => {
       }
 
       beforeEach(async (): Promise<void> => {
-        const { id: walletAddressId } = await createWalletAddress(deps, {
-          assetId: asset.id
-        })
+        const { id: walletAddressId } = await createWalletAddress(
+          deps,
+          tenantId,
+          {
+            assetId: asset.id
+          }
+        )
         payment = await createPayment({ walletAddressId, metadata })
       })
 
@@ -552,9 +586,13 @@ describe('OutgoingPayment Resolvers', (): void => {
     }
 
     test('success (metadata)', async (): Promise<void> => {
-      const { id: walletAddressId } = await createWalletAddress(deps, {
-        assetId: asset.id
-      })
+      const { id: walletAddressId } = await createWalletAddress(
+        deps,
+        tenantId,
+        {
+          assetId: asset.id
+        }
+      )
       const payment = await createPayment({ walletAddressId, metadata })
 
       const createSpy = jest
@@ -563,6 +601,7 @@ describe('OutgoingPayment Resolvers', (): void => {
 
       const input = {
         walletAddressId: payment.walletAddressId,
+        tenantId,
         quoteId: payment.quote.id
       }
 
@@ -598,6 +637,7 @@ describe('OutgoingPayment Resolvers', (): void => {
 
       const input = {
         walletAddressId: uuid(),
+        tenantId: uuid(),
         quoteId: uuid()
       }
 
@@ -644,6 +684,7 @@ describe('OutgoingPayment Resolvers', (): void => {
 
       const input = {
         walletAddressId: uuid(),
+        tenantId: uuid(),
         quoteId: uuid()
       }
 
@@ -688,7 +729,7 @@ describe('OutgoingPayment Resolvers', (): void => {
     const mockIncomingPaymentUrl = `https://${faker.internet.domainName()}/incoming-payments/${uuid()}`
 
     test('create', async (): Promise<void> => {
-      const walletAddress = await createWalletAddress(deps, {
+      const walletAddress = await createWalletAddress(deps, tenantId, {
         assetId: asset.id
       })
       const payment = await createPayment({ walletAddressId: walletAddress.id })
@@ -839,7 +880,7 @@ describe('OutgoingPayment Resolvers', (): void => {
   describe('Mutation.cancelOutgoingPayment', (): void => {
     let payment: OutgoingPaymentModel
     beforeEach(async () => {
-      const walletAddress = await createWalletAddress(deps, {
+      const walletAddress = await createWalletAddress(deps, tenantId, {
         assetId: asset.id
       })
 
@@ -955,7 +996,7 @@ describe('OutgoingPayment Resolvers', (): void => {
 
     beforeEach(async (): Promise<void> => {
       walletAddressId = (
-        await createWalletAddress(deps, {
+        await createWalletAddress(deps, tenantId, {
           assetId: asset.id
         })
       ).id

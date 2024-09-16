@@ -111,7 +111,7 @@ async function createTenant(
    * 3.2 if error, rollback DB trx and return error
    */
   let tenant: Tenant
-  const trx = await Tenant.startTransaction()
+  const trx = await deps.knex.transaction()
   const { axios } = deps
   try {
     // TODO: move into kratos service
@@ -123,10 +123,6 @@ async function createTenant(
     const operatorRole = getIdentityResponse.data[0]?.metadata_public.operator
     const isExistingIdentity =
       getIdentityResponse.data.length > 0 && getIdentityResponse.data[0].id
-    deps.logger.info(
-      { res: getIdentityResponse.data, operatorRole, isExistingIdentity },
-      'got response'
-    )
     if (!isExistingIdentity) {
       // Identity does not exist
       const createIdentityResponse = await axios.post(

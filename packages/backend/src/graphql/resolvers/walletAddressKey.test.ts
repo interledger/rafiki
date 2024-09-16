@@ -2,6 +2,7 @@ import assert from 'assert'
 import { ApolloError, gql } from '@apollo/client'
 import { generateJwk } from '@interledger/http-signature-utils'
 import { v4 as uuid } from 'uuid'
+import { faker } from '@faker-js/faker'
 
 import { createTestApp, TestContainer } from '../../tests/app'
 import { IocContract } from '@adonisjs/fold'
@@ -20,6 +21,8 @@ import { createWalletAddress } from '../../tests/walletAddress'
 import { getPageTests } from './page.test'
 import { createWalletAddressKey } from '../../tests/walletAddressKey'
 import { GraphQLErrorCode } from '../errors'
+import { createTenant } from '../../tests/tenant'
+import { EndpointType } from '../../tenant/endpoints/model'
 
 const TEST_KEY = generateJwk({ keyId: uuid() })
 
@@ -27,11 +30,25 @@ describe('Wallet Address Key Resolvers', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let walletAddressKeyService: WalletAddressKeyService
+  let tenantId: string
 
   beforeAll(async (): Promise<void> => {
     deps = initIocContainer(Config)
     appContainer = await createTestApp(deps)
     walletAddressKeyService = await deps.use('walletAddressKeyService')
+  })
+
+  beforeEach(async (): Promise<void> => {
+    tenantId = (
+      await createTenant(deps, {
+        email: Config.kratosAdminEmail,
+        idpSecret: 'testsecret',
+        idpConsentEndpoint: faker.internet.url(),
+        endpoints: [
+          { type: EndpointType.WebhookBaseUrl, value: faker.internet.url() }
+        ]
+      })
+    ).id
   })
 
   afterEach(async (): Promise<void> => {
@@ -45,7 +62,7 @@ describe('Wallet Address Key Resolvers', (): void => {
 
   describe('Create Wallet Address Keys', (): void => {
     test('Can create wallet address key', async (): Promise<void> => {
-      const walletAddress = await createWalletAddress(deps)
+      const walletAddress = await createWalletAddress(deps, tenantId)
 
       const input: CreateWalletAddressKeyInput = {
         walletAddressId: walletAddress.id,
@@ -106,7 +123,7 @@ describe('Wallet Address Key Resolvers', (): void => {
           throw new Error('unexpected')
         })
 
-      const walletAddress = await createWalletAddress(deps)
+      const walletAddress = await createWalletAddress(deps, tenantId)
 
       const input = {
         walletAddressId: walletAddress.id,
@@ -164,7 +181,7 @@ describe('Wallet Address Key Resolvers', (): void => {
 
   describe('Revoke key', (): void => {
     test('Can revoke a key', async (): Promise<void> => {
-      const walletAddress = await createWalletAddress(deps)
+      const walletAddress = await createWalletAddress(deps, tenantId)
 
       const key = await walletAddressKeyService.create({
         walletAddressId: walletAddress.id,
@@ -267,7 +284,7 @@ describe('Wallet Address Key Resolvers', (): void => {
   describe('List Wallet Address Keys', (): void => {
     let walletAddressId: string
     beforeEach(async (): Promise<void> => {
-      walletAddressId = (await createWalletAddress(deps)).id
+      walletAddressId = (await createWalletAddress(deps, tenantId)).id
     })
     getPageTests({
       getClient: () => appContainer.apolloClient,

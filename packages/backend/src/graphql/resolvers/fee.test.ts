@@ -1,4 +1,5 @@
 import { IocContract } from '@adonisjs/fold'
+import { faker } from '@faker-js/faker'
 import { AppServices } from '../../app'
 import { initIocContainer } from '../..'
 import { Config } from '../../config/app'
@@ -13,6 +14,8 @@ import { FeeService } from '../../fee/service'
 import { v4 } from 'uuid'
 import { FeeError, errorToMessage, errorToCode } from '../../fee/errors'
 import { GraphQLErrorCode } from '../errors'
+import { createTenant } from '../../tests/tenant'
+import { EndpointType } from '../../tenant/endpoints/model'
 
 describe('Fee Resolvers', () => {
   let deps: IocContract<AppServices>
@@ -28,6 +31,15 @@ describe('Fee Resolvers', () => {
 
   beforeEach(async (): Promise<void> => {
     asset = await createAsset(deps)
+    const config = await deps.use('config')
+    await createTenant(deps, {
+      email: config.kratosAdminEmail,
+      idpSecret: 'testsecret',
+      idpConsentEndpoint: faker.internet.url(),
+      endpoints: [
+        { type: EndpointType.WebhookBaseUrl, value: faker.internet.url() }
+      ]
+    })
   })
 
   afterEach(async () => {
