@@ -1,156 +1,173 @@
 type Query {
-  "Fetch a page of grants."
+  "Fetch a paginated list of grants."
   grants(
-    "Paginating forwards: the cursor before the the requested page."
+    "Forward pagination: Fetch grants after this cursor."
     after: String
-    "Paginating backwards: the cursor after the the requested page."
+    "Backward pagination: Fetch grants before this cursor."
     before: String
-    "Paginating forwards: The first **n** elements from the page."
+    "Forward pagination: Fetch the first **n** grants from the page."
     first: Int
-    "Paginating backwards: The last **n** elements from the page."
+    "Backward pagination: Fetch the last **n** grants from the page."
     last: Int
-    "Filter grants based on specific criteria."
+    "Filter grants based on specified criteria."
     filter: GrantFilter
-    "Ascending or descending order of creation."
+    "Sort grants by their creation date in ascending or descending order."
     sortOrder: SortOrder
   ): GrantsConnection!
 
-  "Fetch a grant"
+  "Fetch a specific grant by its ID."
   grant(id: ID!): Grant!
 }
 
 type Mutation {
-  "Revoke Grant"
+  "Revoke an existing grant."
   revokeGrant(input: RevokeGrantInput!): RevokeGrantMutationResponse!
 }
 
 type PageInfo {
-  "Paginating forwards: the cursor to continue."
+  "Cursor for fetching the next set of results when paginating forward."
   endCursor: String
-  "Paginating forwards: Are there more pages?"
+  "Indicates if there are more pages when paginating forward."
   hasNextPage: Boolean!
-  "Paginating backwards: Are there more pages?"
+  "Indicates if there are more pages when paginating backward."
   hasPreviousPage: Boolean!
-  "Paginating backwards: the cursor to continue."
+  "Cursor for fetching the next set of results when paginating backward."
   startCursor: String
 }
 
 type GrantsConnection {
+  "Pagination information for grants."
   pageInfo: PageInfo!
+  "List of grant edges containing the grant node and its cursor."
   edges: [GrantEdge!]!
 }
 
 type GrantEdge {
+  "The grant object."
   node: Grant!
+  "The cursor for this grant."
   cursor: String!
 }
 
 input GrantFilter {
+  "Filter grants by their unique identifier."
   identifier: FilterString
+  "Filter grants by their state."
   state: FilterGrantState
+  "Filter grants by their finalization reason."
   finalizationReason: FilterFinalizationReason
 }
 
 input FilterString {
+  "List of identifiers to include in the filter."
   in: [String!]
 }
 
 input FilterGrantState {
+  "List of states to include in the filter."
   in: [GrantState!]
+  "List of states to exclude in the filter."
   notIn: [GrantState!]
 }
 
 input FilterFinalizationReason {
+  "List of finalization reasons to include in the filter."
   in: [GrantFinalization!]
+  "List of finalization reasons to exclude in the filter."
   notIn: [GrantFinalization!]
 }
 
 input RevokeGrantInput {
+  "ID of the grant to revoke."
   grantId: String!
 }
 
 interface Model {
+  "Unique identifier for the model."
   id: ID!
+  "The date and time when the model was created."
   createdAt: String!
 }
 
 type Grant implements Model {
-  "Grant id"
+  "Unique identifier of the grant."
   id: ID!
-  "Wallet address of the grantee's account"
+  "Wallet address of the grantee's account."
   client: String!
-  "Access details"
+  "Details of the access provided by the grant."
   access: [Access!]!
-  "State of the grant"
+  "Current state of the grant."
   state: GrantState!
-  "Reason a grant was finalized"
+  "Reason why the grant was finalized."
   finalizationReason: GrantFinalization
-  "Date-time of creation"
+  "The date and time when the grant was created."
   createdAt: String!
 }
 
 type Access implements Model {
-  "Access id"
+  "Unique identifier of the access object."
   id: ID!
-  "Wallet address of a sub-resource (incoming payment, outgoing payment, or quote)"
+  "Wallet address of the sub-resource (incoming payment, outgoing payment, or quote)."
   identifier: String
-  "Access type (incoming payment, outgoing payment, or quote)"
+  "Type of access (incoming payment, outgoing payment, or quote)."
   type: String!
-  "Access action (create, read, list or complete)"
+  "Actions allowed with this access (create, read, list, or complete)."
   actions: [String]!
-  "Payment limits"
+  "Limits for payment associated with this access."
   limits: LimitData
-  "Date-time of creation"
+  "The date and time when the access was created."
   createdAt: String!
 }
 
 type LimitData {
-  "Wallet address URL of the receiver"
+  "Wallet address URL of the receiver."
   receiver: String
-  "Amount to debit"
+  "Amount to debit."
   debitAmount: PaymentAmount
-  "Amount to receive"
+  "Amount to receive."
   receiveAmount: PaymentAmount
-  "Interval between payments"
+  "Interval between payments."
   interval: String
 }
 
 type PaymentAmount {
+  "The value of the payment amount."
   value: UInt64!
-  "[ISO 4217 currency code](https://en.wikipedia.org/wiki/ISO_4217), e.g. `USD`"
+  "[ISO 4217 currency code](https://en.wikipedia.org/wiki/ISO_4217), e.g. `USD`."
   assetCode: String!
-  "Difference in orders of magnitude between the standard unit of an asset and a corresponding fractional unit"
+  "Difference in orders of magnitude between the standard unit of an asset and a corresponding fractional unit."
   assetScale: UInt8!
 }
 
 type RevokeGrantMutationResponse {
+  "ID of the revoked grant."
   id: ID!
 }
 
 enum GrantState {
-  "grant request is determining what state to enter next"
+  "The grant request is processing."
   PROCESSING
-  "grant request is awaiting interaction"
+  "The grant request is awaiting interaction."
   PENDING
-  "grant was approved"
+  "The grant request has been approved."
   APPROVED
-  "grant was finalized and no more access tokens or interactions can be made on it"
+  "The grant request has been finalized, and no more access tokens or interactions can be made."
   FINALIZED
 }
 
 enum GrantFinalization {
-  "grant was issued"
+  "The grant was issued successfully."
   ISSUED
-  "grant was revoked"
+  "The grant was revoked."
   REVOKED
-  "grant was rejected"
+  "The grant request was rejected."
   REJECTED
 }
 
 enum SortOrder {
-  "Choose ascending order for results."
+  "Sort the results in ascending order."
   ASC
-  "Choose descending order for results."
+  "Sort the results in descending order."
   DESC
 }
 
