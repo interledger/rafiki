@@ -353,7 +353,6 @@ components:
           type: number
       additionalProperties: false
     amount:
-      title: amount
       type: object
       properties:
         value:
@@ -361,20 +360,15 @@ components:
           format: uint64
           description: 'The value is an unsigned 64-bit integer amount, represented as a string.'
         assetCode:
-          $ref: '#/components/schemas/assetCode'
+          type: string
+          description: The assetCode is a code that indicates the underlying asset. This SHOULD be an ISO4217 currency code.
         assetScale:
-          $ref: '#/components/schemas/assetScale'
+          type: integer
+          minimum: 0
+          maximum: 255
+          description: The scale of amounts denoted in the corresponding asset code.
       required:
         - value
         - assetCode
         - assetScale
-    assetCode:
-      title: Asset code
-      type: string
-      description: The assetCode is a code that indicates the underlying asset. This SHOULD be an ISO4217 currency code.
-    assetScale:
-      title: Asset scale
-      type: integer
-      minimum: 0
-      maximum: 255
-      description: The scale of amounts denoted in the corresponding asset code.
+      additionalProperties: false
