@@ -56,20 +56,15 @@
 
 /* Markdown table testing styles */
 
-/* HTML custom class - doesn't break lines within words formatted as `code` whether they break the container size or not*/
-.rafiki-table code {
+/* Markdown table - doesn't break lines within words formatted as `code` whether they break the container size or not */
+/* Note - this overrides a setting in ILF-docs.css in the docs-design-system that sets word-break: break-all for table code */
+table code {
   word-break: keep-all;
   overflow-wrap: normal;
 }
 
-/* Markdown table - doesn't break lines within words formatted as `code` whether they break the container size or not */
-table code {
-  word-break: keep-all;
-  overflow-wrap: normal;  
-}
-
 /* Custom div wrapper for tables that are too wide for the main content area - adds a horizontal scroll and keeps the table from overflowing into the sidebars */
 .wide-table {
-overflow-x: auto;
-width: 100%;
+  overflow-x: auto;
+  width: 100%;
 }

@@ -153,13 +153,38 @@ You must deploy your own OTEL Collector that acts as a sidecar container to Rafi
 
 ### Telemetry environment variables
 
-| Variable name                    | Type    | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 | Required |
-| -------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
-| `ENABLE_TELEMETRY`               | Boolean | Enables the telemetry service on Rafiki. Defaults to `true`.                                                                                                                                                                                                                                                                                                                                                                                                                                                | N        |
-| `LIVENET`                        | Boolean | Determines where to send metrics. Defaults to `false`, resulting in metrics being sent to the testnet OTEL Collector. <p>Set to `true` on production environments dealing with real money.</p>                                                                                                                                                                                                                                                                                                              | N        |
-| `OPEN_TELEMETRY_COLLECTOR_URLS`  | String  | A CSV of URLs for OTEL Collectors (e.g., `http://otel-collector-NLB-e3172ff9d2f4bc8a.elb.eu-west-2.amazonaws.com:4317,http://happy-life-otel-collector:4317`).                                                                                                                                                                                                                                                                                                                                              | N        |
-| `OPEN_TELEMETRY_EXPORT_INTERVAL` | Number  | Indicates, in milliseconds, how often the instrumented Rafiki instance should send metrics. Defaults to `15000`.                                                                                                                                                                                                                                                                                                                                                                                            | N        |
-| `TELEMETRY_EXCHANGE_RATES_URL`   | String  | <p>Defines the endpoint Rafiki will query for exchange rates. Used as a fallback if/when [exchange rates](/integration/requirements/exchange-rates) aren’t provided.</p><p>When set, the response format of the external exchange rates API should be of type `rates`, as is expected by the rate service.</p><p>Defaults to `https://telemetry-exchange-rates.s3.amazonaws.com/exchange-rates-usd.json`, which points to a public S3 that has the previously mentioned required format, updated daily.</p> | N        |
+<div class='wide-table'>
+  | Variable name | Type | Description | Required | |
+  -------------------------------- | ------- |
+  -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+  | -------- | | `ENABLE_TELEMETRY` | Boolean | Enables the telemetry service on
+  Rafiki. Defaults to `true`. | N | | `LIVENET` | Boolean | Determines where to
+  send metrics. Defaults to `false`, resulting in metrics being sent to the
+  testnet OTEL Collector.{' '}
+  <p>Set to `true` on production environments dealing with real money.</p> | N |
+  | `OPEN_TELEMETRY_COLLECTOR_URLS` | String | A CSV of URLs for OTEL Collectors
+  (e.g.,
+  `http://otel-collector-NLB-e3172ff9d2f4bc8a.elb.eu-west-2.amazonaws.com:4317,http://happy-life-otel-collector:4317`).
+  | N | | `OPEN_TELEMETRY_EXPORT_INTERVAL` | Number | Indicates, in
+  milliseconds, how often the instrumented Rafiki instance should send metrics.
+  Defaults to `15000`. | N | | `TELEMETRY_EXCHANGE_RATES_URL` | String |{' '}
+  <p>
+    Defines the endpoint Rafiki will query for exchange rates. Used as a
+    fallback if/when [exchange rates](/integration/requirements/exchange-rates)
+    aren’t provided.
+  </p>
+  <p>
+    When set, the response format of the external exchange rates API should be
+    of type `rates`, as is expected by the rate service.
+  </p>
+  <p>
+    Defaults to
+    `https://telemetry-exchange-rates.s3.amazonaws.com/exchange-rates-usd.json`,
+    which points to a public S3 that has the previously mentioned required
+    format, updated daily.
+  </p>{' '}
+  | N |
+</div>
 
 ### Example Docker OTEL Collector image and configuration
 

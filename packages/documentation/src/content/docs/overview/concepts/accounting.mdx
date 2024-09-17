@@ -38,52 +38,11 @@ An asset represents an item of value that can be transferred via the Interledger
 
 In Rafiki, the `asset` type is comprised of the following properties.
 
-#### MARKDOWN TABLE
-
 | Property     | Type    | Description                                                                                                            | Example |
 | ------------ | ------- | ---------------------------------------------------------------------------------------------------------------------- | ------- |
 | `value `     | BigInt  | A numerical amount                                                                                                     | `10000` |
 | `assetCode`  | String  | Should be an <LinkOut href="https://en.wikipedia.org/wiki/ISO_4217">ISO 4217 currency code</LinkOut> whenever possible | `"USD"` |
 | `assetScale` | Integer | Difference in order of magnitude between the standard unit and a fractional unit                                       | `2`     |
-
-#### HTML TABLE
-
-<table class="rafiki-table"><thead>
-  <tr>
-    <th>Property</th>
-    <th>Type</th>
-    <th>Description</th>
-    <th>Example</th>
-  </tr></thead>
-<tbody>
-  <tr>
-    <td><code>value</code></td>
-    <td>BigInt</td>
-    <td>A numerical amount</td>
-    <td><code>10000</code></td>
-  </tr>
-  <tr>
-    <td><code>assetCode</code></td>
-    <td>String</td>
-    <td>Should be an <LinkOut href="https://en.wikipedia.org/wiki/ISO_4217">ISO 4217 currency code</LinkOut> whenever possible</td>
-    <td><code>"USD"</code></td>
-  </tr>
-  <tr>
-    <td><code>assetScale</code></td>
-    <td>Integer</td>
-    <td>Difference in order of magnitude between the standard unit and a fractional unit</td>
-    <td><code>2</code></td>
-  </tr>
-</tbody></table>
-
-#### WRAPPED MARKDOWN TABLE
-<div class="wide-table">
-| Property     | Type    | Description                                                                                                            | Example | Column  | Column  | Column  | Column  | Column  |
-| ------------ | ------- | ---------------------------------------------------------------------------------------------------------------------- | ------- | ------- | ------- | ------- | ------- | ------- |
-| `value `     | BigInt  | A numerical amount                                                                                                     | `10000` | `10000` | `10000` | `10000` | `10000` | `10000` |
-| `assetCode`  | String  | Should be an <LinkOut href="https://en.wikipedia.org/wiki/ISO_4217">ISO 4217 currency code</LinkOut> whenever possible | `"USD"` | `"USD"` | `"USD"` | `"USD"` | `"USD"` | `"USD"` |
-| `assetScale` | Integer | Difference in order of magnitude between the standard unit and a fractional unit                                       | `2`     | `2`     | `2`     | `2`     | `2`     | `2`     |
-</div>
 
 To convert an asset amount into a currency amount that's easier to read, apply the following formula:
 
