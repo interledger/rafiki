@@ -8,6 +8,17 @@ info:
 servers:
   - url: 'https://account-servicing-entity.com/webhooks'
 webhooks:
+  incomingPaymentCreated:
+    post:
+      requestBody:
+        description: Notify account servicing entity that an incoming payment was created.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/incomingPaymentEvent'
+      responses:
+        '200':
+          description: Returns a 200 status to indicate that the data was received successfully.
   incomingPaymentCompleted:
     post:
       requestBody:
@@ -148,9 +159,9 @@ components:
             completed:
               type: boolean
             incomingAmount:
-              $ref: ./schemas.yaml#/components/schemas/amount
+              $ref: '#/components/schemas/amount'
             receivedAmount:
-              $ref: ./schemas.yaml#/components/schemas/amount
+              $ref: '#/components/schemas/amount'
             metadata:
               type: object
               additionalProperties: true
@@ -214,9 +225,9 @@ components:
               type: string
               format: uri
             debitAmount:
-              $ref: ./schemas.yaml#/components/schemas/amount
+              $ref: '#/components/schemas/amount'
             sentAmount:
-              $ref: ./schemas.yaml#/components/schemas/amount
+              $ref: '#/components/schemas/amount'
             metadata:
               type: object
               additionalProperties: true
@@ -293,7 +304,7 @@ components:
                   type: string
                   format: date-time
                 receivedAmount:
-                  $ref: ./schemas.yaml#/components/schemas/amount
+                  $ref: '#/components/schemas/amount'
       additionalProperties: false
     liquidityEvent:
       required:
@@ -341,3 +352,29 @@ components:
         scale:
           type: number
       additionalProperties: false
+    amount:
+      title: amount
+      type: object
+      properties:
+        value:
+          type: string
+          format: uint64
+          description: 'The value is an unsigned 64-bit integer amount, represented as a string.'
+        assetCode:
+          $ref: '#/components/schemas/assetCode'
+        assetScale:
+          $ref: '#/components/schemas/assetScale'
+      required:
+        - value
+        - assetCode
+        - assetScale
+    assetCode:
+      title: Asset code
+      type: string
+      description: The assetCode is a code that indicates the underlying asset. This SHOULD be an ISO4217 currency code.
+    assetScale:
+      title: Asset scale
+      type: integer
+      minimum: 0
+      maximum: 255
+      description: The scale of amounts denoted in the corresponding asset code.

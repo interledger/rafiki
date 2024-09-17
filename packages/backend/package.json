@@ -12,9 +12,7 @@
     "build": "pnpm build:deps && pnpm clean && tsc --build tsconfig.json && pnpm copy-files",
     "clean": "rm -fr dist/",
     "copy-files": "cp src/graphql/schema.graphql dist/graphql/ && cp -r ./src/openapi ./dist/",
-    "copy-op-schemas": "cp ./node_modules/@interledger/open-payments/dist/openapi/specs/schemas.yaml ./src/openapi/specs/",
     "prepack": "pnpm build",
-    "postinstall": "pnpm copy-op-schemas",
     "dev": "ts-node-dev --inspect=0.0.0.0:9229 --respawn --transpile-only --require ./src/telemetry/index.ts src/index.ts"
   },
   "devDependencies": {
