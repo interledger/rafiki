@@ -136,7 +136,6 @@ describe('Open Payments Wallet Address Service', (): void => {
       ).resolves.toBeUndefined()
     })
 
-
     test('Creating wallet address with case insensitiveness', async (): Promise<void> => {
       const url = 'https://Alice.me/pay'
       await expect(
@@ -144,30 +143,23 @@ describe('Open Payments Wallet Address Service', (): void => {
           ...options,
           url
         })
-      ).resolves.toMatchObject(
-        { url: url.toLowerCase() }
-      )
-    }
-    )
+      ).resolves.toMatchObject({ url: url.toLowerCase() })
+    })
 
-    test(
-      'Wallet address cannot be created if the url is duplicated',
-      async (): Promise<void> => {
-        const url = 'https://Alice.me/pay'
-        const wallet = walletAddressService.create({
+    test('Wallet address cannot be created if the url is duplicated', async (): Promise<void> => {
+      const url = 'https://Alice.me/pay'
+      const wallet = walletAddressService.create({
+        ...options,
+        url
+      })
+      assert.ok(!isWalletAddressError(wallet))
+      await expect(
+        walletAddressService.create({
           ...options,
           url
         })
-        assert.ok(!isWalletAddressError(wallet))
-        await expect(
-          walletAddressService.create({
-            ...options,
-            url
-          })
-        ).resolves.toEqual(WalletAddressError.InvalidUrl)
-      }
-    )
-
+      ).resolves.toEqual(WalletAddressError.DuplicateWalletAddress)
+    })
   })
 
   describe('Update Wallet Address', (): void => {
@@ -257,8 +249,8 @@ describe('Open Payments Wallet Address Service', (): void => {
 
             expect(incomingPaymentUpdated.expiresAt.getTime()).toEqual(
               expiresAt.getTime() +
-              config.walletAddressDeactivationPaymentGracePeriodMs -
-              duration
+                config.walletAddressDeactivationPaymentGracePeriodMs -
+                duration
             )
           }
         )

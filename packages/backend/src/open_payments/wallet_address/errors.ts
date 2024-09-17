@@ -3,7 +3,8 @@ import { GraphQLErrorCode } from '../../graphql/errors'
 export enum WalletAddressError {
   InvalidUrl = 'InvalidUrl',
   UnknownAsset = 'UnknownAsset',
-  UnknownWalletAddress = 'UnknownWalletAddress'
+  UnknownWalletAddress = 'UnknownWalletAddress',
+  DuplicateWalletAddress = 'DuplicateWalletAddress'
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
@@ -15,7 +16,8 @@ export const errorToCode: {
 } = {
   [WalletAddressError.InvalidUrl]: GraphQLErrorCode.BadUserInput,
   [WalletAddressError.UnknownAsset]: GraphQLErrorCode.BadUserInput,
-  [WalletAddressError.UnknownWalletAddress]: GraphQLErrorCode.NotFound
+  [WalletAddressError.UnknownWalletAddress]: GraphQLErrorCode.NotFound,
+  [WalletAddressError.DuplicateWalletAddress]: GraphQLErrorCode.Duplicate
 }
 
 export const errorToMessage: {
@@ -23,5 +25,7 @@ export const errorToMessage: {
 } = {
   [WalletAddressError.InvalidUrl]: 'invalid url',
   [WalletAddressError.UnknownAsset]: 'unknown asset',
-  [WalletAddressError.UnknownWalletAddress]: 'unknown wallet address'
+  [WalletAddressError.UnknownWalletAddress]: 'unknown wallet address',
+  [WalletAddressError.DuplicateWalletAddress]:
+    'wallet address is already registered'
 }

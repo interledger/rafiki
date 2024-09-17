@@ -1,7 +1,8 @@
 import {
   ForeignKeyViolationError,
   TransactionOrKnex,
-  NotFoundError
+  NotFoundError,
+  UniqueViolationError
 } from 'objection'
 import { URL } from 'url'
 
@@ -176,6 +177,11 @@ async function createWalletAddress(
     if (err instanceof ForeignKeyViolationError) {
       if (err.constraint === 'walletaddresses_assetid_foreign') {
         return WalletAddressError.UnknownAsset
+      }
+    }
+    if (err instanceof UniqueViolationError) {
+      if (err.constraint === 'walletaddresses_url_unique') {
+        return WalletAddressError.DuplicateWalletAddress
       }
     }
     throw err
