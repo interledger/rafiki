@@ -55,10 +55,11 @@
 }
 
 .sl-markdown-content :is(h1, h2, h3, h4, h5, h6) > a {
-  color: var(--sl-color-white);
+  color: inherit;
   text-decoration: none;
+  transition: color 0.2s ease-in-out;
+}
 
-  &:hover {
-    text-decoration: underline;
-  }
+.sl-markdown-content :is(h1, h2, h3, h4, h5, h6) > a:hover {
+  color: var(--sl-color-accent-high);
 }
