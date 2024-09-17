@@ -7,10 +7,10 @@ import Backend from '/src/partials/backend-variables.mdx'
 
 Rafiki’s <LinkOut href="https://github.com/interledger/rafiki/tree/main/packages/backend">`backend`</LinkOut> service is the software’s main service for handling business logic and external communication. The service is responsible for:
 
-- Exposing the endpoints of the [Open Payments APIs](#open-payments) for public clients to perform account management tasks. This is the external communication piece.
+- Exposing the endpoints of the [Open Payments APIs](#open-payments) for public clients to initiate payments and look up information. This is the external communication piece.
 - Exposing an [Interledger connector](#interledger-connector) to send and receive STREAM packets with peers.
-- Enabling you to manage accounts and track balances.
-- Exposing an internal [GraphQL Backend Admin API](#graphql-backend-admin-api) for service operators to manage accounts and application settings, like peering relationships.
+- Enabling you to manage accounts and track liquidity.
+- Exposing an internal [GraphQL Backend Admin API](#graphql-backend-admin-api) for service operators to manage accounts, liquidity, and application settings, like peering relationships.
 
 ## Requirements
 
@@ -18,9 +18,9 @@ The following are required when using the `backend` service.
 
 - A Redis database as a cache to share STREAM connection details and total amounts received across processes
 - A Postgres database, separate from the `auth` service’s database, for Open Payments resources
-- TigerBeetle or a separate Postgres database for accounting balances at the ILP layer
+- TigerBeetle or a separate Postgres database for accounting liquidity
   :::note
-  You can use the same database instance of Postgres for the `backend` service, `auth` service, and accounting balances (if not using TigerBeetle). However, separate database schemas are required within the Rafiki instance to maintain boundaries between the objects being managed.
+  You can use the same database instance of Postgres for the `backend` service, `auth` service, and accounting liquidities (if not using TigerBeetle). However, separate database schemas are required within the Rafiki instance to maintain boundaries between the objects being managed.
   :::
 
 You must also set the environment variables for the `backend` service.
