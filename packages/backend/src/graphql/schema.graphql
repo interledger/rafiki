@@ -620,7 +620,7 @@ type Peer implements Model {
   "Peering connection details"
   http: Http!
   "Incoming tokens"
-  incomingTokens: [String!]
+  incomingTokens: [String!]!
   "Asset of peering relationship"
   asset: Asset!
   "Peer's ILP address"
