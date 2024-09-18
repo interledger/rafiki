@@ -1,6 +1,5 @@
 import { TransactionOrKnex } from 'objection'
-// TODO: move IlpQuoteDetails to this dir
-import { IlpQuoteDetails } from '../../../open_payments/quote/model'
+import { IlpQuoteDetails } from './model'
 import { BaseService } from '../../../shared/baseService'
 
 export interface IlpQuoteDetailsService {
