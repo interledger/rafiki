@@ -55,7 +55,6 @@ describe('IlpQuoteDetails Service', (): void => {
         const foundIlpQuote = await ilpQuoteDetailsService.getByQuoteId(
           quote.id
         )
-        console.log({ foundIlpQuote })
         expect(foundIlpQuote).toBeDefined()
       })
 
