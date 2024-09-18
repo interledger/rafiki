@@ -225,14 +225,16 @@ async function updatePeer(
     return await Peer.transaction(deps.knex, async (trx) => {
       if (options.http?.incoming) {
         await deps.httpTokenService.deleteByPeer(options.id, trx)
-        const err = await addIncomingHttpTokens({
-          deps,
-          peerId: options.id,
-          tokens: options.http?.incoming?.authTokens,
-          trx
-        })
-        if (err) {
-          throw err
+        if (options.http?.incoming?.authTokens.length > 0) {
+          const err = await addIncomingHttpTokens({
+            deps,
+            peerId: options.id,
+            tokens: options.http?.incoming?.authTokens,
+            trx
+          })
+          if (err) {
+            throw err
+          }
         }
       }
       return await Peer.query(trx)
