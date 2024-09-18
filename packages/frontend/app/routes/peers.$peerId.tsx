@@ -434,8 +434,13 @@ export async function action({ request }: ActionFunctionArgs) {
       break
     }
     case 'http': {
-      const result = peerHttpInfoSchema.safeParse(Object.fromEntries(formData))
-
+      const formDataEntries = Object.fromEntries(formData)
+      const result = peerHttpInfoSchema.safeParse({
+        ...formDataEntries,
+        incomingAuthTokens: formDataEntries.incomingAuthTokens
+          ? formDataEntries.incomingAuthTokens.toString().split(',')
+          : []
+      })
       if (!result.success) {
         actionResponse.errors.http.fieldErrors =
           result.error.flatten().fieldErrors
@@ -448,8 +453,6 @@ export async function action({ request }: ActionFunctionArgs) {
             ? {
                 incoming: {
                   authTokens: result.data.incomingAuthTokens
-                    ?.replace(/ /g, '')
-                    .split(',')
                 }
               }
             : {}),

@@ -47,7 +47,7 @@ export const peerGeneralInfoSchema = z
 
 export const peerHttpInfoSchema = z
   .object({
-    incomingAuthTokens: z.string().optional(),
+    incomingAuthTokens: z.array(z.string()),
     outgoingAuthToken: z.string(),
     outgoingEndpoint: z
       .string()
