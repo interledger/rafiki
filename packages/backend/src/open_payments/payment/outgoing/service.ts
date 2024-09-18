@@ -450,7 +450,7 @@ async function validateGrantAndAddSpentAmountsToPayment(
     .andWhereNot({
       id: payment.id
     })
-    .withGraphFetched('[quote.[asset, ilpQuoteDetails]]')
+    .withGraphFetched('quote.asset')
 
   if (grantPayments.length === 0) {
     return true
