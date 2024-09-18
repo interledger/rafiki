@@ -135,6 +135,31 @@ describe('Open Payments Wallet Address Service', (): void => {
         accountingService.getBalance(walletAddress.id)
       ).resolves.toBeUndefined()
     })
+
+    test('Creating wallet address with case insensitiveness', async (): Promise<void> => {
+      const url = 'https://Alice.me/pay'
+      await expect(
+        walletAddressService.create({
+          ...options,
+          url
+        })
+      ).resolves.toMatchObject({ url: url.toLowerCase() })
+    })
+
+    test('Wallet address cannot be created if the url is duplicated', async (): Promise<void> => {
+      const url = 'https://Alice.me/pay'
+      const wallet = walletAddressService.create({
+        ...options,
+        url
+      })
+      assert.ok(!isWalletAddressError(wallet))
+      await expect(
+        walletAddressService.create({
+          ...options,
+          url
+        })
+      ).resolves.toEqual(WalletAddressError.DuplicateWalletAddress)
+    })
   })
 
   describe('Update Wallet Address', (): void => {
