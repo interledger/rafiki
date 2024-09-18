@@ -154,9 +154,9 @@ async function getOutgoingPayment(
   }
 }
 
-// TODO: Dont return the payment joined on the ilpQuoteDetails by default.
-// - [X] replace every outgoingPaymentService.get with .getWithILPDetails
-// - [ ] for each getWithILPDetails call, change to getOutgoingPayment (if able) and validate
+// TODO: Remove this entirely after removing ilpQuoteDetails elsewhere?
+// Think the only thing using it now are tests because the service create
+// method is driving the expectation for ilpQuoteDetails
 async function getOutgoingPaymentWithILPDetails(
   deps: ServiceDependencies,
   options: GetOptions
@@ -230,6 +230,10 @@ async function cancelOutgoingPayment(
   })
 }
 
+// TODO: when refactorting to remove implicit ilpQuoteDetails join,
+// remove usage of outgoingPaymentService.getWithILPDetails where possible. Some
+// of these (such as rafiki/packages/backend/src/open_payments/payment/outgoing/service.test.ts)
+// are being compared with the create, thus they cant be removed until its removed in the create as well.
 async function createOutgoingPayment(
   deps: ServiceDependencies,
   options: CreateOutgoingPaymentOptions

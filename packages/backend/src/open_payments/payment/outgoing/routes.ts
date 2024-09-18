@@ -52,7 +52,7 @@ async function getOutgoingPayment(
   deps: ServiceDependencies,
   ctx: ReadContext
 ): Promise<void> {
-  const outgoingPayment = await deps.outgoingPaymentService.getWithIlpDetails({
+  const outgoingPayment = await deps.outgoingPaymentService.get({
     id: ctx.params.id,
     client: ctx.accessAction === AccessAction.Read ? ctx.client : undefined
   })

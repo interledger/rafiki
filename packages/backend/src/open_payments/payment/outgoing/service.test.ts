@@ -110,7 +110,7 @@ describe('OutgoingPaymentService', (): void => {
     expectedError?: string
   ): Promise<OutgoingPayment> {
     await expect(outgoingPaymentService.processNext()).resolves.toBe(paymentId)
-    const payment = await outgoingPaymentService.getWithIlpDetails({
+    const payment = await outgoingPaymentService.get({
       id: paymentId
     })
     if (!payment) throw 'no payment'
