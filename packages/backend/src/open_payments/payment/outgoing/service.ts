@@ -45,6 +45,7 @@ import { FilterString } from '../../../shared/filters'
 
 export interface OutgoingPaymentService
   extends WalletAddressSubresourceService<OutgoingPayment> {
+  getWithIlpDetails(options: GetOptions): Promise<OutgoingPayment | undefined>
   getPage(options?: GetPageOptions): Promise<OutgoingPayment[]>
   create(
     options: CreateOutgoingPaymentOptions
@@ -78,6 +79,8 @@ export async function createOutgoingPaymentService(
   }
   return {
     get: (options) => getOutgoingPayment(deps, options),
+    getWithIlpDetails: (options) =>
+      getOutgoingPaymentWithILPDetails(deps, options),
     getPage: (options) => getOutgoingPaymentsPage(deps, options),
     create: (options) => createOutgoingPayment(deps, options),
     cancel: (options) => cancelOutgoingPayment(deps, options),
@@ -139,6 +142,22 @@ async function getOutgoingPaymentsPage(
 }
 
 async function getOutgoingPayment(
+  deps: ServiceDependencies,
+  options: GetOptions
+): Promise<OutgoingPayment | undefined> {
+  const outgoingPayment = await OutgoingPayment.query(deps.knex)
+    .get(options)
+    .withGraphFetched('[quote.asset, walletAddress]')
+
+  if (outgoingPayment) {
+    return addSentAmount(deps, outgoingPayment)
+  }
+}
+
+// TODO: Dont return the payment joined on the ilpQuoteDetails by default.
+// - [X] replace every outgoingPaymentService.get with .getWithILPDetails
+// - [ ] for each getWithILPDetails call, change to getOutgoingPayment (if able) and validate
+async function getOutgoingPaymentWithILPDetails(
   deps: ServiceDependencies,
   options: GetOptions
 ): Promise<OutgoingPayment | undefined> {

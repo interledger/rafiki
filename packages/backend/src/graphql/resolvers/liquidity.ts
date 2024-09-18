@@ -539,7 +539,7 @@ export const createOutgoingPaymentWithdrawal: MutationResolvers<ApolloContext>['
     const outgoingPaymentService = await ctx.container.use(
       'outgoingPaymentService'
     )
-    const outgoingPayment = await outgoingPaymentService.get({
+    const outgoingPayment = await outgoingPaymentService.getWithIlpDetails({
       id: outgoingPaymentId
     })
     const webhookService = await ctx.container.use('webhookService')

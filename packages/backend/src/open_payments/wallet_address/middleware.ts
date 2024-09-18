@@ -64,7 +64,7 @@ export async function getWalletAddressUrlFromOutgoingPayment(
   const outgoingPaymentService = await ctx.container.use(
     'outgoingPaymentService'
   )
-  const outgoingPayment = await outgoingPaymentService.get({
+  const outgoingPayment = await outgoingPaymentService.getWithIlpDetails({
     id: ctx.params.id
   })
 
