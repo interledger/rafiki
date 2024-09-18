@@ -45,7 +45,6 @@ import { FilterString } from '../../../shared/filters'
 
 export interface OutgoingPaymentService
   extends WalletAddressSubresourceService<OutgoingPayment> {
-  getWithIlpDetails(options: GetOptions): Promise<OutgoingPayment | undefined>
   getPage(options?: GetPageOptions): Promise<OutgoingPayment[]>
   create(
     options: CreateOutgoingPaymentOptions
@@ -79,8 +78,6 @@ export async function createOutgoingPaymentService(
   }
   return {
     get: (options) => getOutgoingPayment(deps, options),
-    getWithIlpDetails: (options) =>
-      getOutgoingPaymentWithILPDetails(deps, options),
     getPage: (options) => getOutgoingPaymentsPage(deps, options),
     create: (options) => createOutgoingPayment(deps, options),
     cancel: (options) => cancelOutgoingPayment(deps, options),
@@ -154,22 +151,6 @@ async function getOutgoingPayment(
   }
 }
 
-// TODO: Remove this entirely after removing ilpQuoteDetails elsewhere?
-// Think the only thing using it now are tests because the service create
-// method is driving the expectation for ilpQuoteDetails
-async function getOutgoingPaymentWithILPDetails(
-  deps: ServiceDependencies,
-  options: GetOptions
-): Promise<OutgoingPayment | undefined> {
-  const outgoingPayment = await OutgoingPayment.query(deps.knex)
-    .get(options)
-    .withGraphFetched('[quote.[asset, ilpQuoteDetails], walletAddress]')
-
-  if (outgoingPayment) {
-    return addSentAmount(deps, outgoingPayment)
-  }
-}
-
 export interface BaseOptions {
   walletAddressId: string
   client?: string
@@ -230,10 +211,6 @@ async function cancelOutgoingPayment(
   })
 }
 
-// TODO: when refactorting to remove implicit ilpQuoteDetails join,
-// remove usage of outgoingPaymentService.getWithILPDetails where possible. Some
-// of these (such as rafiki/packages/backend/src/open_payments/payment/outgoing/service.test.ts)
-// are being compared with the create, thus they cant be removed until its removed in the create as well.
 async function createOutgoingPayment(
   deps: ServiceDependencies,
   options: CreateOutgoingPaymentOptions
@@ -286,7 +263,7 @@ async function createOutgoingPayment(
           state: OutgoingPaymentState.Funding,
           grantId
         })
-        .withGraphFetched('[quote.[asset, ilpQuoteDetails], walletAddress]')
+        .withGraphFetched('[quote.asset, walletAddress]')
 
       if (
         payment.walletAddressId !== payment.quote.walletAddressId ||
@@ -572,7 +549,7 @@ async function getWalletAddressPage(
 ): Promise<OutgoingPayment[]> {
   const page = await OutgoingPayment.query(deps.knex)
     .list(options)
-    .withGraphFetched('[quote.[asset, ilpQuoteDetails], walletAddress]')
+    .withGraphFetched('[quote.asset, walletAddress]')
   const amounts = await deps.accountingService.getAccountsTotalSent(
     page.map((payment: OutgoingPayment) => payment.id)
   )

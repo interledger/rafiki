@@ -333,7 +333,7 @@ describe('OutgoingPaymentService', (): void => {
           validDestination: false,
           method: 'ilp'
         }),
-      get: (options) => outgoingPaymentService.getWithIlpDetails(options),
+      get: (options) => outgoingPaymentService.get(options),
       list: (options) => outgoingPaymentService.getWalletAddressPage(options)
     })
   })
@@ -355,7 +355,7 @@ describe('OutgoingPaymentService', (): void => {
       assert.ok(!isOutgoingPaymentError(payment))
 
       await expect(
-        outgoingPaymentService.getWithIlpDetails({
+        outgoingPaymentService.get({
           id: payment.id,
           client
         })
@@ -371,7 +371,7 @@ describe('OutgoingPaymentService', (): void => {
         .spyOn(accountingService, 'getTotalSent')
         .mockResolvedValueOnce(undefined)
       await expect(
-        outgoingPaymentService.getWithIlpDetails({
+        outgoingPaymentService.get({
           id: payment.id,
           client
         })
@@ -517,7 +517,7 @@ describe('OutgoingPaymentService', (): void => {
       assert.ok(!isOutgoingPaymentError(payment))
 
       await expect(
-        outgoingPaymentService.getWithIlpDetails({
+        outgoingPaymentService.get({
           id: payment.id,
           client
         })
@@ -836,7 +836,7 @@ describe('OutgoingPaymentService', (): void => {
             })
 
             await expect(
-              outgoingPaymentService.getWithIlpDetails({
+              outgoingPaymentService.get({
                 id: payment.id
               })
             ).resolves.toEqual(payment)
@@ -1806,7 +1806,7 @@ describe('OutgoingPaymentService', (): void => {
         state: OutgoingPaymentState.Sending
       })
 
-      const after = await outgoingPaymentService.getWithIlpDetails({
+      const after = await outgoingPaymentService.get({
         id: payment.id
       })
       expect(after?.state).toBe(OutgoingPaymentState.Sending)
@@ -1822,7 +1822,7 @@ describe('OutgoingPaymentService', (): void => {
         })
       ).resolves.toEqual(FundingError.InvalidAmount)
 
-      const after = await outgoingPaymentService.getWithIlpDetails({
+      const after = await outgoingPaymentService.get({
         id: payment.id
       })
       expect(after?.state).toBe(OutgoingPaymentState.Funding)
@@ -1841,7 +1841,7 @@ describe('OutgoingPaymentService', (): void => {
           })
         ).resolves.toEqual(FundingError.WrongState)
 
-        const after = await outgoingPaymentService.getWithIlpDetails({
+        const after = await outgoingPaymentService.get({
           id: payment.id
         })
         expect(after?.state).toBe(startState)
