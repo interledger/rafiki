@@ -101,6 +101,7 @@ import { LoggingPlugin } from './graphql/plugin'
 import { LocalPaymentService } from './payment-method/local/service'
 import { GrantService } from './open_payments/grant/service'
 import { AuthServerService } from './open_payments/authServer/service'
+import { IlpQuoteDetailsService } from './payment-method/ilp/quote-details/service'
 export interface AppContextData {
   logger: Logger
   container: AppContainer
@@ -256,6 +257,7 @@ export interface AppServices {
   paymentMethodHandlerService: Promise<PaymentMethodHandlerService>
   ilpPaymentService: Promise<IlpPaymentService>
   localPaymentService: Promise<LocalPaymentService>
+  ilpQuoteDetailsService: Promise<IlpQuoteDetailsService>
 }
 
 export type AppContainer = IocContract<AppServices>

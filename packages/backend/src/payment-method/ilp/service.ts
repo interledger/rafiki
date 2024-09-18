@@ -15,6 +15,7 @@ import {
   PaymentMethodHandlerErrorCode
 } from '../handler/errors'
 import { TelemetryService } from '../../telemetry/service'
+import { IlpQuoteDetailsService } from './quote-details/service'
 
 export interface IlpPaymentService extends PaymentMethodService {}
 
@@ -23,6 +24,7 @@ export interface ServiceDependencies extends BaseService {
   ratesService: RatesService
   makeIlpPlugin: (options: IlpPluginOptions) => IlpPlugin
   telemetry?: TelemetryService
+  ilpQuoteDetailsService: IlpQuoteDetailsService
 }
 
 export async function createIlpPaymentService(
@@ -217,16 +219,19 @@ async function pay(
     })
   }
 
-  // TODO: prevent ilpQuoteDetails with better type instead of having to check and error?
-  // Or make better error.
-  // Is there a way to ensure that right here, outgoingPayment.quote is QuoteWithDetails?
-  // I dont think so... this is where the ambiguousness of our DB types surfaces and we have
-  // to do some explicit check like this. Even if we had table inheritance we'd have this problem
-  // so long as an outgoing payment could have either type of quote on them. To truly make this
-  // typesafe you might need to have seperate outgoing payment tables for each type of quote (which
-  // goes way too far)
   if (!outgoingPayment.quote.ilpQuoteDetails) {
-    throw new Error('Missing ILP quote details')
+    outgoingPayment.quote.ilpQuoteDetails =
+      await deps.ilpQuoteDetailsService.getByQuoteId(outgoingPayment.quote.id)
+
+    if (!outgoingPayment.quote.ilpQuoteDetails) {
+      throw new PaymentMethodHandlerError(
+        'Could not find required ILP Quote Details',
+        {
+          description: 'ILP Quote Details not found',
+          retryable: false
+        }
+      )
+    }
   }
 
   const {
@@ -238,11 +243,7 @@ async function pay(
 
   const quote: Pay.Quote = {
     maxPacketAmount,
-    // TODO: is paymentType controlling something in Pay.pay that we should be replicating in
-    // local payment method?
     paymentType: Pay.PaymentType.FixedDelivery,
-    // finalDebitAmount: 617n
-    // finalReceiveAmount: 500n
     maxSourceAmount: finalDebitAmount,
     minDeliveryAmount: finalReceiveAmount,
     lowEstimatedExchangeRate,
@@ -251,8 +252,6 @@ async function pay(
   }
 
   const plugin = deps.makeIlpPlugin({
-    // outgoingPayment.quote.receiveAmountValue:  500n
-    // outgoingPayment.quote.debitAmountValue:  617n
     sourceAccount: outgoingPayment
   })
 

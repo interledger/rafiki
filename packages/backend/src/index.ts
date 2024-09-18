@@ -51,6 +51,7 @@ import {
   createIlpPaymentService,
   ServiceDependencies as IlpPaymentServiceDependencies
 } from './payment-method/ilp/service'
+import { createIlpQuoteDetailsService } from './payment-method/ilp/quote-details/service'
 import {
   createLocalPaymentService,
   ServiceDependencies as LocalPaymentServiceDependencies
@@ -428,13 +429,21 @@ export function initIocContainer(
     })
   })
 
+  container.singleton('ilpQuoteDetailsService', async (deps) => {
+    return await createIlpQuoteDetailsService({
+      logger: await deps.use('logger'),
+      knex: await deps.use('knex')
+    })
+  })
+
   container.singleton('ilpPaymentService', async (deps) => {
     const serviceDependencies: IlpPaymentServiceDependencies = {
       logger: await deps.use('logger'),
       knex: await deps.use('knex'),
       config: await deps.use('config'),
       makeIlpPlugin: await deps.use('makeIlpPlugin'),
-      ratesService: await deps.use('ratesService')
+      ratesService: await deps.use('ratesService'),
+      ilpQuoteDetailsService: await deps.use('ilpQuoteDetailsService')
     }
 
     if (config.enableTelemetry) {

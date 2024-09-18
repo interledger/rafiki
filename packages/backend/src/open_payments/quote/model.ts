@@ -11,12 +11,6 @@ import { Quote as OpenPaymentsQuote } from '@interledger/open-payments'
 import { Fee } from '../../fee/model'
 import { BaseModel } from '../../shared/baseModel'
 
-// TODO: use or lose. could maybe be used as a typegaurd instead of checking that details
-// field(s) are present
-// export interface QuoteWithDetails extends Quote {
-//   ilpQuoteDetails: IlpQuoteDetails
-// }
-
 export class Quote extends WalletAddressSubresource {
   public static readonly tableName = 'quotes'
   public static readonly urlPath = '/quotes'
