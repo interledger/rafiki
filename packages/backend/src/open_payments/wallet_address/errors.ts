@@ -27,5 +27,5 @@ export const errorToMessage: {
   [WalletAddressError.UnknownAsset]: 'unknown asset',
   [WalletAddressError.UnknownWalletAddress]: 'unknown wallet address',
   [WalletAddressError.DuplicateWalletAddress]:
-    'wallet address is already registered'
+    'Duplicate wallet address found with the same url'
 }
