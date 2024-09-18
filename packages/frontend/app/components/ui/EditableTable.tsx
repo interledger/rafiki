@@ -11,7 +11,6 @@ type EditableTableProps = {
   options: EditableTableOption[]
   error?: string | string[]
   description?: ReactNode
-  valueFormatter?: (values: string[]) => string
   required?: boolean
 }
 
@@ -29,11 +28,10 @@ export const EditableTable = ({
   options,
   error,
   description = undefined,
-  valueFormatter = (values) => values.join(','),
   required = false
 }: EditableTableProps) => {
   const [optionsList, setOptionsList] = useState<EditableTableOption[]>(options)
-  const [value, setValue] = useState<string>('')
+  const [values, setValues] = useState<string[]>()
 
   const toggleEditInput = (index: number) => {
     setOptionsList(
@@ -79,20 +77,17 @@ export const EditableTable = ({
     ])
   }
 
-  useEffect(() => {
-    setValue(getValue())
-  }, [optionsList])
-
-  const getValue = () => {
-    return valueFormatter(optionsList.map((option) => option.value))
-  }
+  useEffect(
+    () => setValues(optionsList.map((option) => option.value)),
+    [optionsList]
+  )
 
   return (
     <>
       <Input
         type='hidden'
         name={name}
-        value={value}
+        value={values}
         required={required}
         label={label}
       />
