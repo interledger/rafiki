@@ -527,7 +527,7 @@ async function fundPayment(
     const payment = await OutgoingPayment.query(trx)
       .findById(id)
       .forUpdate()
-      .withGraphFetched('[quote.[asset, ilpQuoteDetails]]')
+      .withGraphFetched('quote.asset')
     if (!payment) return FundingError.UnknownPayment
     if (payment.state !== OutgoingPaymentState.Funding) {
       return FundingError.WrongState
