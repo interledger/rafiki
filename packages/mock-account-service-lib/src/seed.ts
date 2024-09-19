@@ -57,6 +57,9 @@ export async function setupFromSeed(
     tenants[name] = tenant.id
   }
 
+  // Realistically there would only be one tenant per ASE
+  mockAccounts.setTenantId(tenants[config.seed.tenants[0].name])
+
   const assets: Record<string, Asset> = {}
   for (const { code, scale, liquidity, liquidityThreshold } of config.seed
     .assets) {

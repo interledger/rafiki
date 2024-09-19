@@ -14,6 +14,7 @@ interface Account {
 }
 
 interface AccountsServer {
+  tenantId?: string
   clearAccounts(): Promise<void>
   setWalletAddress(
     id: string,
@@ -44,6 +45,11 @@ interface AccountsServer {
 
 export class AccountProvider implements AccountsServer {
   accounts = new Map<string, Account>()
+  public tenantId?: string
+
+  setTenantId(tenantId: string) {
+    this.tenantId = tenantId
+  }
 
   async clearAccounts(): Promise<void> {
     this.accounts.clear()

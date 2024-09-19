@@ -254,6 +254,9 @@ export async function handleWalletAddressWebMonetization(wh: Webhook) {
 }
 
 export async function handleWalletAddressNotFound(wh: Webhook) {
+  if (!mockAccounts.tenantId) {
+    throw new Error('No tenantId set')
+  }
   const walletAddressUrl = wh.data['walletAddressUrl'] as string | undefined
 
   if (!walletAddressUrl) {
@@ -271,7 +274,8 @@ export async function handleWalletAddressNotFound(wh: Webhook) {
   const walletAddress = await createWalletAddress(
     account.name,
     walletAddressUrl,
-    account.assetId
+    account.assetId,
+    mockAccounts.tenantId
   )
 
   await mockAccounts.setWalletAddress(
