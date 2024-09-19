@@ -159,8 +159,6 @@ async function createQuote(
         .insertGraphAndFetch(graph)
         .withGraphFetched('[asset, fee, walletAddress]')
 
-      console.log({ createdQuote })
-
       return await finalizeQuote(
         {
           ...deps,
