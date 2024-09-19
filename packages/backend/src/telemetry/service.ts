@@ -32,7 +32,7 @@ export interface TelemetryService {
   ): void
 }
 
-interface TelemetryServiceDependencies extends BaseService {
+export interface TelemetryServiceDependencies extends BaseService {
   instanceName: string
   collectorUrls: string[]
   exportIntervalMillis?: number
@@ -40,6 +40,7 @@ interface TelemetryServiceDependencies extends BaseService {
   internalRatesService: RatesService
   baseAssetCode: string
   baseScale: number
+  enableTelemetry: boolean
 }
 
 const METER_NAME = 'Rafiki'
@@ -47,10 +48,13 @@ const METER_NAME = 'Rafiki'
 export function createTelemetryService(
   deps: TelemetryServiceDependencies
 ): TelemetryService {
+  if (!deps.enableTelemetry) {
+    return new NoopTelemetryServiceImpl(deps)
+  }
   return new TelemetryServiceImpl(deps)
 }
 
-class TelemetryServiceImpl implements TelemetryService {
+export class TelemetryServiceImpl implements TelemetryService {
   private instanceName: string
   private meterProvider?: MeterProvider
   private internalRatesService: RatesService
@@ -178,7 +182,7 @@ class TelemetryServiceImpl implements TelemetryService {
   public recordHistogram(
     name: string,
     value: number,
-    attributes: Record<string, unknown> = {}
+    attributes?: Record<string, unknown>
   ): void {
     const histogram = this.getOrCreateHistogram(name)
     histogram.record(value, {
@@ -214,5 +218,57 @@ class TelemetryServiceImpl implements TelemetryService {
       }
     }
     return converted
+  }
+}
+
+/* eslint-disable @typescript-eslint/no-unused-vars */
+export class NoopTelemetryServiceImpl implements TelemetryService {
+  private instanceName: string
+  private meterProvider?: MeterProvider
+  private internalRatesService: RatesService
+  private aseRatesService: RatesService
+
+  constructor(private deps: TelemetryServiceDependencies) {
+    this.instanceName = deps.instanceName
+    this.internalRatesService = deps.internalRatesService
+    this.aseRatesService = deps.aseRatesService
+  }
+
+  public async shutdown(): Promise<void> {
+    // do nothing
+  }
+
+  public incrementCounter(
+    name: string,
+    value: number,
+    attributes?: Record<string, unknown>
+  ): void {
+    // do nothing
+  }
+
+  public recordHistogram(
+    name: string,
+    value: number,
+    attributes?: Record<string, unknown>
+  ): void {
+    // do nothing
+  }
+
+  public async incrementCounterWithTransactionAmountDifference(
+    name: string,
+    amountSource: { value: bigint; assetCode: string; assetScale: number },
+    amountDestination: { value: bigint; assetCode: string; assetScale: number },
+    attributes?: Record<string, unknown>
+  ): Promise<void> {
+    // do nothing
+  }
+
+  public async incrementCounterWithTransactionAmount(
+    name: string,
+    amount: { value: bigint; assetCode: string; assetScale: number },
+    attributes: Record<string, unknown> = {},
+    preservePrivacy = true
+  ): Promise<void> {
+    // do nothing
   }
 }
