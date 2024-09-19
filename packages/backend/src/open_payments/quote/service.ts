@@ -56,7 +56,7 @@ async function getQuote(
 ): Promise<Quote | undefined> {
   return Quote.query(deps.knex)
     .get(options)
-    .withGraphFetched('[asset, fee, walletAddress, ilpQuoteDetails]')
+    .withGraphFetched('[asset, fee, walletAddress]')
 }
 
 interface QuoteOptionsBase {
@@ -113,8 +113,9 @@ async function createQuote(
 
   try {
     const receiver = await resolveReceiver(deps, options)
+    const paymentMethod = receiver.isLocal ? 'LOCAL' : 'ILP'
     const quote = await deps.paymentMethodHandlerService.getQuote(
-      receiver.isLocal ? 'LOCAL' : 'ILP',
+      paymentMethod,
       {
         walletAddress,
         receiver,
@@ -140,7 +141,7 @@ async function createQuote(
       estimatedExchangeRate: quote.estimatedExchangeRate
     }
 
-    if (!receiver.isLocal) {
+    if (paymentMethod === 'ILP') {
       const maxPacketAmount = quote.additionalFields.maxPacketAmount as bigint
       graph.ilpQuoteDetails = {
         maxPacketAmount:
@@ -156,7 +157,9 @@ async function createQuote(
     return await Quote.transaction(deps.knex, async (trx) => {
       const createdQuote = await Quote.query(trx)
         .insertGraphAndFetch(graph)
-        .withGraphFetched('[asset, fee, walletAddress, ilpQuoteDetails]')
+        .withGraphFetched('[asset, fee, walletAddress]')
+
+      console.log({ createdQuote })
 
       return await finalizeQuote(
         {
@@ -449,5 +452,5 @@ async function getWalletAddressPage(
 ): Promise<Quote[]> {
   return await Quote.query(deps.knex)
     .list(options)
-    .withGraphFetched('[asset, fee, walletAddress, ilpQuoteDetails]')
+    .withGraphFetched('[asset, fee, walletAddress]')
 }
