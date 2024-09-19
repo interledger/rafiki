@@ -67,12 +67,22 @@ table code {
 .wide-table {
   max-height: 500px;
   overflow-x: auto;
+  overflow: auto;
   width: 100%;
+  box-sizing: border-box;
 }
 
 .wide-table table {
   width: 100%;
-  table-layout: fixed;
+  max-width: 100%;
+  table-layout: auto;
+  border-collapse: collapse;
+}
+
+.wide-table code {
+  white-space: pre;
+  overflow-x: auto;
+  display: inline-block;
 }
 
 @media (max-width: 768px) {
