@@ -92,9 +92,9 @@ table code {
 }
 
 /* Additional table styling for a sticky header row */
-thead th {
+.wide-table thead th {
   position: sticky;
-  background-color: hsl(224, 19%, 97%);
+  background-color: var(--sl-color-bg);
   top: 0;
   z-index: 10;
   opacity: 1;
