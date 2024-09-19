@@ -83,38 +83,11 @@ The `result` query parameter will indicate the success or failure of the grant a
 The following table lists examples of the different possible response types on this endpoint.
 
 <div class='wide-table'>
-  | Response | Description | Example | | -------- |
-  -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-  |
-  --------------------------------------------------------------------------------------------------------------------------------
-  | | Rejected | The interaction was rejected by the end-user. |
-  `?result=grant_rejected` | | Invalid | The grant was not in a state where it
-  could be accepted or rejected (e.g., grant was already approved) |
-  `?result=grant_invalid` | | Success | The grant was successful with the
-  following returned in the response:
-  <br />
-  <ul>
-    <li>
-      A hash representing the SHA-256 hash of values provided by the client in
-      the{' '}
-      <LinkOut href='https://openpayments.dev/apis/auth-server/operations/post-request/'>
-        grant initialization request
-      </LinkOut>{' '}
-      (`interact.finish.nonce`), and the values in the response returned from
-      your authorization server (`interact.finish`).
-    </li>
-    <li>
-      The `interact_ref` that identifies the interaction on your authorization
-      server alongside the hash
-    </li>
-    <li>
-      The URI of the grant initialization request (e.g.,
-      `https://www.auth-server.com`)
-    </li>
-  </ul>{' '}
-  |
-  `hash=p28jsq0Y2KK3WS__a42tavNC64ldGTBroywsWxT4md_jZQ1R\HZT8BOWYHcLmObM7XHPAdJzTZMtKBsaraJ64A
-  &interact_ref=4IFWWIKYBC2PQ6U56NL1` |
+  | Response | Description | Example | 
+  | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |-------------------------------------------------------------------------------------------------------------------------------- | 
+  | Rejected | The interaction was rejected by the end-user. | `?result=grant_rejected` | 
+  | Invalid | The grant was not in a state where it could be accepted or rejected (e.g., grant was already approved) | `?result=grant_invalid` | 
+  | Success | The grant was successful with the following returned in the response: <br /><ul><li> A hash representing the SHA-256 hash of values provided by the client in the{' '}<LinkOut href='https://openpayments.dev/apis/auth-server/operations/post-request/'> grant initialization request </LinkOut>{' '}(`interact.finish.nonce`), and the values in the response returned from your authorization server (`interact.finish`).</li><li>The `interact_ref` that identifies the interaction on your authorization server alongside the hash</li><li>The URI of the grant initialization request (e.g., `https://www.auth-server.com`)</li></ul>{' '}| `hash=p28jsq0Y2KK3WS__a42tavNC64ldGTBroywsWxT4md_jZQ1R\HZT8BOWYHcLmObM7XHPAdJzTZMtKBsaraJ64A&interact_ref=4IFWWIKYBC2PQ6U56NL1` |
 </div>
 
 #### Continue grant

@@ -65,6 +65,22 @@ table code {
 
 /* Custom div wrapper for tables that are too wide for the main content area - adds a horizontal scroll and keeps the table from overflowing into the sidebars */
 .wide-table {
+  max-height: 500px;
   overflow-x: auto;
   width: 100%;
+}
+
+@media (max-width: 768px) {
+  .wide-table {
+    max-height: 300px; 
+  }
+}
+
+/* Additional table styling for a sticky header row */
+thead th {
+  position: sticky;
+  background-color: hsl(224, 19%, 97%);
+  top: 0;
+  z-index: 10;
+  opacity: 1;
 }
