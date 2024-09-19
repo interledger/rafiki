@@ -70,6 +70,11 @@ table code {
   width: 100%;
 }
 
+.wide-table table {
+  width: 100%;
+  table-layout: fixed;
+}
+
 @media (max-width: 768px) {
   .wide-table {
     max-height: 300px; 
