@@ -66,7 +66,7 @@ export interface ServiceDependencies extends BaseService {
   paymentMethodHandlerService: PaymentMethodHandlerService
   walletAddressService: WalletAddressService
   quoteService: QuoteService
-  telemetry?: TelemetryService
+  telemetry: TelemetryService
 }
 
 export async function createOutgoingPaymentService(
