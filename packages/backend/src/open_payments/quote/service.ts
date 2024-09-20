@@ -20,6 +20,7 @@ import {
   PaymentMethodHandlerError,
   PaymentMethodHandlerErrorCode
 } from '../../payment-method/handler/errors'
+import { TelemetryService } from '../../telemetry/service'
 
 const MAX_INT64 = BigInt('9223372036854775807')
 
@@ -34,6 +35,7 @@ export interface ServiceDependencies extends BaseService {
   walletAddressService: WalletAddressService
   feeService: FeeService
   paymentMethodHandlerService: PaymentMethodHandlerService
+  telemetry: TelemetryService
 }
 
 export async function createQuoteService(

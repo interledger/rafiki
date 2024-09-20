@@ -14,6 +14,7 @@ import {
   errorToMessage as receiverErrorToMessage
 } from './errors'
 import { isRemoteIncomingPaymentError } from '../payment/incoming_remote/errors'
+import { TelemetryService } from '../../telemetry/service'
 
 interface CreateReceiverArgs {
   walletAddressUrl: string
@@ -33,6 +34,7 @@ export interface ServiceDependencies extends BaseService {
   incomingPaymentService: IncomingPaymentService
   walletAddressService: WalletAddressService
   remoteIncomingPaymentService: RemoteIncomingPaymentService
+  telemetry: TelemetryService
 }
 
 const INCOMING_PAYMENT_URL_REGEX =

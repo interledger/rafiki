@@ -34,9 +34,11 @@ import {
   getAccountTransfers
 } from './ledger-transfer'
 import { LedgerTransfer, LedgerTransferType } from './ledger-transfer/model'
+import { TelemetryService } from '../../telemetry/service'
 
 export interface ServiceDependencies extends BaseService {
   knex: TransactionOrKnex
+  telemetry: TelemetryService
   withdrawalThrottleDelay?: number
 }
 
