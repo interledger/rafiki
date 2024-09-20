@@ -30,6 +30,7 @@ export interface TelemetryService {
     value: number,
     attributes?: Record<string, unknown>
   ): void
+  startTimer(name: string, attributes?: Record<string, unknown>): () => void
 }
 
 export interface TelemetryServiceDependencies extends BaseService {
@@ -219,6 +220,16 @@ export class TelemetryServiceImpl implements TelemetryService {
     }
     return converted
   }
+
+  public startTimer(
+    name: string,
+    attributes: Record<string, unknown> = {}
+  ): () => void {
+    const start = Date.now()
+    return () => {
+      this.recordHistogram(name, Date.now() - start, attributes)
+    }
+  }
 }
 
 /* eslint-disable @typescript-eslint/no-unused-vars */
@@ -270,5 +281,14 @@ export class NoopTelemetryServiceImpl implements TelemetryService {
     preservePrivacy = true
   ): Promise<void> {
     // do nothing
+  }
+
+  public startTimer(
+    name: string,
+    attributes: Record<string, unknown> = {}
+  ): () => void {
+    return () => {
+      // do nothing
+    }
   }
 }
