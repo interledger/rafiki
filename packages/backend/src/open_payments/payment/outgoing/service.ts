@@ -215,10 +215,22 @@ async function createOutgoingPayment(
   deps: ServiceDependencies,
   options: CreateOutgoingPaymentOptions
 ): Promise<OutgoingPayment | OutgoingPaymentError> {
+  const stopTimerOP = deps.telemetry.startTimer(
+    'outgoing_payment_service_create_time_ms',
+    {
+      description: 'Time to create an outgoing payment'
+    }
+  )
   const { walletAddressId } = options
   let quoteId: string
 
   if (isCreateFromIncomingPayment(options)) {
+    const stopTimerQuote = deps.telemetry.startTimer(
+      'outgoing_payment_service_create_quote_time_ms',
+      {
+        description: 'Time to create a quote in outgoing payment'
+      }
+    )
     const { debitAmount, incomingPayment } = options
     const quoteOrError = await deps.quoteService.create({
       receiver: incomingPayment,
@@ -226,6 +238,7 @@ async function createOutgoingPayment(
       method: 'ilp',
       walletAddressId
     })
+    stopTimerQuote()
 
     if (isQuoteError(quoteOrError)) {
       return quoteErrorToOutgoingPaymentError[quoteOrError]
@@ -238,7 +251,14 @@ async function createOutgoingPayment(
   const grantId = options.grant?.id
   try {
     return await OutgoingPayment.transaction(deps.knex, async (trx) => {
+      const stopTimerWA = deps.telemetry.startTimer(
+        'outgoing_payment_service_getwalletaddress_time_ms',
+        {
+          description: 'Time to get wallet address in outgoing payment'
+        }
+      )
       const walletAddress = await deps.walletAddressService.get(walletAddressId)
+      stopTimerWA()
       if (!walletAddress) {
         throw OutgoingPaymentError.UnknownWalletAddress
       }
@@ -247,13 +267,26 @@ async function createOutgoingPayment(
       }
 
       if (grantId) {
+        const stopTimerGrant = deps.telemetry.startTimer(
+          'outgoing_payment_service_insertgrant_time_ms',
+          {
+            description: 'Time to insert grant in outgoing payment'
+          }
+        )
         await OutgoingPaymentGrant.query(trx)
           .insert({
             id: grantId
           })
           .onConflict('id')
           .ignore()
+        stopTimerGrant()
       }
+      const stopTimerInsertPayment = deps.telemetry.startTimer(
+        'outgoing_payment_service_insertpayment_time_ms',
+        {
+          description: 'Time to insert payment in outgoing payment'
+        }
+      )
       const payment = await OutgoingPayment.query(trx)
         .insertAndFetch({
           id: quoteId,
@@ -264,6 +297,7 @@ async function createOutgoingPayment(
           grantId
         })
         .withGraphFetched('[quote.asset, walletAddress]')
+      stopTimerInsertPayment()
 
       if (
         payment.walletAddressId !== payment.quote.walletAddressId ||
@@ -273,6 +307,12 @@ async function createOutgoingPayment(
       }
 
       if (options.grant) {
+        const stopTimerValidateGrant = deps.telemetry.startTimer(
+          'outgoing_payment_service_validate_grant_time_ms',
+          {
+            description: 'Time to validate a grant'
+          }
+        )
         const isValid = await validateGrantAndAddSpentAmountsToPayment(
           deps,
           payment,
@@ -281,27 +321,72 @@ async function createOutgoingPayment(
           options.callback,
           options.grantLockTimeoutMs
         )
+        stopTimerValidateGrant()
         if (!isValid) {
           throw OutgoingPaymentError.InsufficientGrant
         }
       }
+      const stopTimerReceiver = deps.telemetry.startTimer(
+        'outgoing_payment_service_getreceiver_time_ms',
+        {
+          description: 'Time to retrieve receiver in outgoing payment'
+        }
+      )
       const receiver = await deps.receiverService.get(payment.receiver)
+      stopTimerReceiver()
       if (!receiver) {
         throw OutgoingPaymentError.InvalidQuote
       }
+      const stopTimerPeer = deps.telemetry.startTimer(
+        'outgoing_payment_service_getpeer_time_ms',
+        {
+          description: 'Time to retrieve peer in outgoing payment'
+        }
+      )
       const peer = await deps.peerService.getByDestinationAddress(
         receiver.ilpAddress
       )
-      if (peer) await payment.$query(trx).patch({ peerId: peer.id })
+      stopTimerPeer()
 
+      const stopTimerPeerUpdate = deps.telemetry.startTimer(
+        'outgoing_payment_service_patchpeer_time_ms',
+        {
+          description: 'Time to patch peer in outgoing payment'
+        }
+      )
+      if (peer) await payment.$query(trx).patch({ peerId: peer.id })
+      stopTimerPeerUpdate()
+
+      const stopTimerWebhook = deps.telemetry.startTimer(
+        'outgoing_payment_service_webhook_event_time_ms',
+        {
+          description: 'Time to add outgoing payment webhook event'
+        }
+      )
       await sendWebhookEvent(
         deps,
         payment,
         OutgoingPaymentEventType.PaymentCreated,
         trx
       )
+      stopTimerWebhook()
 
-      return await addSentAmount(deps, payment, BigInt(0))
+      const stopTimerAddAmount = deps.telemetry.startTimer(
+        'outgoing_payment_service_add_sent_time_ms',
+        {
+          description: 'Time to add sent amount to outgoing payment'
+        }
+      )
+
+      const paymentWithSentAmount = await addSentAmount(
+        deps,
+        payment,
+        BigInt(0)
+      )
+
+      stopTimerAddAmount()
+
+      return paymentWithSentAmount
     })
   } catch (err) {
     if (err instanceof UniqueViolationError) {
@@ -325,6 +410,8 @@ async function createOutgoingPayment(
       )
     }
     throw err
+  } finally {
+    stopTimerOP()
   }
 }
 
