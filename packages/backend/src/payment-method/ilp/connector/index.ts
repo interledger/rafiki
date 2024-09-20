@@ -68,49 +68,103 @@ export async function createConnectorService({
       streamServer,
       telemetry
     },
-    compose([
-      // Incoming Rules
-      createIncomingErrorHandlerMiddleware(ilpAddress),
-      createStreamAddressMiddleware(),
-      createAccountMiddleware(ilpAddress),
-      createIncomingMaxPacketAmountMiddleware(),
-      createIncomingRateLimitMiddleware({}),
-      createIncomingThroughputMiddleware(),
-      createIldcpMiddleware(ilpAddress),
+    compose(
+      [
+        // Incoming Rules
+        {
+          name: 'createIncomingErrorHandlerMiddleware',
+          fn: createIncomingErrorHandlerMiddleware(ilpAddress)
+        },
+        {
+          name: 'createStreamAddressMiddleware',
+          fn: createStreamAddressMiddleware()
+        },
+        {
+          name: 'createAccountMiddleware',
+          fn: createAccountMiddleware(ilpAddress)
+        },
+        {
+          name: 'createIncomingMaxPacketAmountMiddleware',
+          fn: createIncomingMaxPacketAmountMiddleware()
+        },
+        {
+          name: 'createIncomingRateLimitMiddleware',
+          fn: createIncomingRateLimitMiddleware({})
+        },
+        {
+          name: 'createIncomingThroughputMiddleware',
+          fn: createIncomingThroughputMiddleware()
+        },
+        {
+          name: 'createIldcpMiddleware',
+          fn: createIldcpMiddleware(ilpAddress)
+        },
 
-      // Local pay
-      createBalanceMiddleware(),
+        // Local pay
+        { name: 'createBalanceMiddleware', fn: createBalanceMiddleware() },
 
-      // Outgoing Rules
-      createStreamController(),
-      createOutgoingThroughputMiddleware(),
-      createOutgoingReduceExpiryMiddleware({}),
-      createOutgoingExpireMiddleware(),
-      createOutgoingValidateFulfillmentMiddleware(),
+        // Outgoing Rules
+        { name: 'createStreamController', fn: createStreamController() },
+        {
+          name: 'createOutgoingThroughputMiddleware',
+          fn: createOutgoingThroughputMiddleware()
+        },
+        {
+          name: 'createOutgoingReduceExpiryMiddleware',
+          fn: createOutgoingReduceExpiryMiddleware({})
+        },
+        {
+          name: 'createOutgoingExpireMiddleware',
+          fn: createOutgoingExpireMiddleware()
+        },
+        {
+          name: 'createOutgoingValidateFulfillmentMiddleware',
+          fn: createOutgoingValidateFulfillmentMiddleware()
+        },
 
-      // Send outgoing packets
-      createClientController()
-    ])
+        // Send outgoing packets
+        { name: 'createClientController', fn: createClientController() }
+      ],
+      telemetry
+    )
   )
 }
 
 // Adapted from koa-compose
-function compose(middlewares: ILPMiddleware[]): ILPMiddleware {
+function compose(
+  middlewares: { name: string; fn: ILPMiddleware }[],
+  telemetry: TelemetryService
+): ILPMiddleware {
   return function (ctx: ILPContext, next: () => Promise<void>): Promise<void> {
     // last called middleware
     let index = -1
-    return (function dispatch(i: number): Promise<void> {
+
+    const stopTimer = telemetry.startTimer('connector_middleware_stack', {
+      callName: 'connector_middleware_stack'
+    })
+
+    async function dispatch(i: number): Promise<void> {
       if (i <= index)
         return Promise.reject(new Error('next() called multiple times'))
       index = i
-      let fn = middlewares[i]
-      if (i === middlewares.length) fn = next
-      if (!fn) return Promise.resolve()
+      const m = middlewares[i]
+      if (i === middlewares.length) m.fn = next
+      if (!m.fn) return Promise.resolve()
       try {
-        return Promise.resolve(fn(ctx, dispatch.bind(null, i + 1)))
+        const stopTimerMiddleware = telemetry.startTimer(
+          'connector_middleware',
+          { callName: m.name }
+        )
+        const p = Promise.resolve(m.fn(ctx, dispatch.bind(null, i + 1)))
+        stopTimerMiddleware && stopTimerMiddleware()
+        return p
       } catch (err) {
         return Promise.reject(err)
       }
-    })(0)
+    }
+
+    return dispatch(0).finally(() => {
+      stopTimer && stopTimer()
+    })
   }
 }

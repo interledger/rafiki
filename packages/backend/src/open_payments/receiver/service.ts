@@ -138,21 +138,28 @@ async function getReceiver(
   deps: ServiceDependencies,
   url: string
 ): Promise<Receiver | undefined> {
+  const stopTimer = deps.telemetry.startTimer('getReceiver', {
+    callName: 'getReceiver'
+  })
   try {
     const localIncomingPayment = await getLocalIncomingPayment(deps, url)
     if (localIncomingPayment) {
-      return new Receiver(localIncomingPayment, true)
+      const receiver = new Receiver(localIncomingPayment, true)
+      return receiver
     }
 
     const remoteIncomingPayment = await getRemoteIncomingPayment(deps, url)
     if (remoteIncomingPayment) {
-      return new Receiver(remoteIncomingPayment, false)
+      const receiver = new Receiver(remoteIncomingPayment, false)
+      return receiver
     }
   } catch (err) {
     deps.logger.error(
       { errorMessage: err instanceof Error && err.message },
       'Could not get incoming payment'
     )
+  } finally {
+    stopTimer()
   }
 }
 

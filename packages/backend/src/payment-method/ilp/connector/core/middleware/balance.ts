@@ -20,6 +20,9 @@ export function createBalanceMiddleware(): ILPMiddleware {
     }: ILPContext,
     next: () => Promise<void>
   ): Promise<void> => {
+    const stopTimer = services.telemetry.startTimer('balanceMiddleware', {
+      callName: 'balanceMiddleware'
+    })
     const { amount } = request.prepare
     const logger = services.logger.child(
       { module: 'balance-middleware' },
@@ -31,6 +34,7 @@ export function createBalanceMiddleware(): ILPMiddleware {
     // Ignore zero amount packets
     if (amount === '0') {
       await next()
+      stopTimer()
       return
     }
 
@@ -51,6 +55,7 @@ export function createBalanceMiddleware(): ILPMiddleware {
         },
         'Could not get rates'
       )
+      stopTimer()
       throw new CannotReceiveError(
         `Exchange rate error: ${destinationAmountOrError}`
       )
@@ -60,6 +65,7 @@ export function createBalanceMiddleware(): ILPMiddleware {
 
     if (state.unfulfillable) {
       await next()
+      stopTimer()
       return
     }
 
@@ -85,8 +91,10 @@ export function createBalanceMiddleware(): ILPMiddleware {
         switch (trxOrError) {
           case TransferError.InsufficientBalance:
           case TransferError.InsufficientLiquidity:
+            stopTimer()
             throw new InsufficientLiquidityError(trxOrError)
           default:
+            stopTimer()
             // TODO: map transfer errors to ILP errors
             ctxThrow(500, destinationAmountOrError.toString())
         }
@@ -110,6 +118,7 @@ export function createBalanceMiddleware(): ILPMiddleware {
           await trx.void()
         }
       }
+      stopTimer()
     }
   }
 }

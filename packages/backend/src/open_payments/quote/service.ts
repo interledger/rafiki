@@ -86,16 +86,22 @@ async function createQuote(
   deps: ServiceDependencies,
   options: CreateQuoteOptions
 ): Promise<Quote | QuoteError> {
+  const stopTimer = deps.telemetry.startTimer('quote_service_create_time_ms', {
+    description: 'Time to create a quote'
+  })
   if (options.debitAmount && options.receiveAmount) {
+    stopTimer()
     return QuoteError.InvalidAmount
   }
   const walletAddress = await deps.walletAddressService.get(
     options.walletAddressId
   )
   if (!walletAddress) {
+    stopTimer()
     return QuoteError.UnknownWalletAddress
   }
   if (!walletAddress.isActive) {
+    stopTimer()
     return QuoteError.InactiveWalletAddress
   }
   if (options.debitAmount) {
@@ -104,30 +110,54 @@ async function createQuote(
       options.debitAmount.assetCode !== walletAddress.asset.code ||
       options.debitAmount.assetScale !== walletAddress.asset.scale
     ) {
+      stopTimer()
       return QuoteError.InvalidAmount
     }
   }
   if (options.receiveAmount) {
     if (options.receiveAmount.value <= BigInt(0)) {
+      stopTimer()
       return QuoteError.InvalidAmount
     }
   }
 
   try {
+    const stopTimerReceiver = deps.telemetry.startTimer(
+      'quote_service_create_resolve_receiver_time_ms',
+      {
+        description: 'Time to resolve receiver'
+      }
+    )
     const receiver = await resolveReceiver(deps, options)
+    stopTimerReceiver && stopTimerReceiver()
+
+    const stopTimerQuote = deps.telemetry.startTimer(
+      'quote_service_create_get_quote_time_ms',
+      {
+        description: 'Time to getQuote'
+      }
+    )
     const quote = await deps.paymentMethodHandlerService.getQuote('ILP', {
       walletAddress,
       receiver,
       receiveAmount: options.receiveAmount,
       debitAmount: options.debitAmount
     })
+    stopTimerQuote()
 
     const maxPacketAmount = quote.additionalFields.maxPacketAmount as bigint
 
+    const stopTimerFee = deps.telemetry.startTimer(
+      'quote_service_create_get_latest_fee_time_ms',
+      {
+        description: 'Time to getLatestFee'
+      }
+    )
     const sendingFee = await deps.feeService.getLatestFee(
       walletAddress.assetId,
       FeeType.Sending
     )
+    stopTimerFee()
 
     return await Quote.transaction(deps.knex, async (trx) => {
       const createdQuote = await Quote.query(trx)
@@ -151,7 +181,7 @@ async function createQuote(
         })
         .withGraphFetched('[asset, fee, walletAddress]')
 
-      return await finalizeQuote(
+      const finalizedQuote = await finalizeQuote(
         {
           ...deps,
           knex: trx
@@ -160,6 +190,7 @@ async function createQuote(
         createdQuote,
         receiver
       )
+      return finalizedQuote
     })
   } catch (err) {
     if (isQuoteError(err)) {
@@ -175,6 +206,8 @@ async function createQuote(
 
     deps.logger.error({ err }, 'error creating a quote')
     throw err
+  } finally {
+    stopTimer()
   }
 }
 

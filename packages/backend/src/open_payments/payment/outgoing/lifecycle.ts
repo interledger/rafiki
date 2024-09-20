@@ -156,7 +156,7 @@ async function handleCompleted(
   deps: ServiceDependencies,
   payment: OutgoingPayment
 ): Promise<void> {
-  const stopTimer = deps.telemetry?.startTimer('handleCompleted', {
+  const stopTimer = deps.telemetry.startTimer('handleCompleted', {
     callName: 'handleCompleted'
   })
   await payment.$query(deps.knex).patch({
@@ -177,7 +177,7 @@ export async function sendWebhookEvent(
   type: OutgoingPaymentEventType,
   trx?: TransactionOrKnex
 ): Promise<void> {
-  const stopTimer = deps.telemetry?.startTimer('sendWebhookEvent', {
+  const stopTimer = deps.telemetry.startTimer('sendWebhookEvent', {
     callName: 'outgoingPaymentLifecycle_sendwebhookEvent'
   })
   // TigerBeetle accounts are only created as the OutgoingPayment is funded.
