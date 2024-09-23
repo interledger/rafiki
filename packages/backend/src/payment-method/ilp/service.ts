@@ -46,6 +46,7 @@ async function getQuote(
   const stopTimerRates = deps.telemetry.startTimer(
     'ilp_get_quote_rate_time_ms',
     {
+      callName: 'rates',
       description: 'Time to get rates'
     }
   )
@@ -62,6 +63,7 @@ async function getQuote(
   const stopTimerPlugin = deps.telemetry.startTimer(
     'ilp_make_ilp_plugin_time_ms',
     {
+      callName: 'makeIlpPlugin',
       description: 'Time to make ilp plugin'
     }
   )
@@ -76,6 +78,7 @@ async function getQuote(
     const stopTimerConnect = deps.telemetry.startTimer(
       'ilp_make_ilp_plugin_connect_time_ms',
       {
+        callName: 'plugin.connect',
         description: 'Time to connect ilp plugin'
       }
     )
@@ -98,6 +101,7 @@ async function getQuote(
 
     let ilpQuote: Pay.Quote | undefined
     const stopTimerProbe = deps.telemetry.startTimer('ilp_rate_probe_time_ms', {
+      callName: 'Pay.startQuote',
       description: 'Time to get an ILP quote (Pay.startQuote)'
     })
     try {
@@ -188,7 +192,10 @@ async function getQuote(
   } finally {
     const stopTimerClose = deps.telemetry.startTimer(
       'ilp_plugin_close_connect_time_ms',
-      { description: 'Time to close ilp plugin' }
+      {
+        callName: 'Pay.closeConnection',
+        description: 'Time to close ilp plugin'
+      }
     )
     try {
       await Pay.closeConnection(plugin, destination)
@@ -204,6 +211,13 @@ async function getQuote(
       stopTimerClose()
     }
 
+    const stopTimerDisconnect = deps.telemetry.startTimer(
+      'ilp_plugin_disconnect_time_ms',
+      {
+        callName: 'plugin.disconnect',
+        description: 'Time to disconnect ilp plugin'
+      }
+    )
     try {
       await plugin.disconnect()
     } catch (error) {
@@ -211,6 +225,8 @@ async function getQuote(
         { error: error instanceof Error && error.message },
         'error disconnecting ilp plugin'
       )
+    } finally {
+      stopTimerDisconnect()
     }
   }
 }

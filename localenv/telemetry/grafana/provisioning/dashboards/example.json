@@ -50,8 +50,8 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 7,
-        "w": 3,
+        "h": 5,
+        "w": 5,
         "x": 0,
         "y": 0
       },
@@ -63,7 +63,9 @@
         "orientation": "auto",
         "percentChangeColorMode": "standard",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
@@ -88,6 +90,867 @@
       ],
       "title": "Panel Title",
       "type": "stat"
+    },
+    {
+      "datasource": {
+        "name": "${PrometheusDS}",
+        "type": "prometheus",
+        "uid": "${PrometheusDS}"
+      },
+      "description": "Maximum time it takes to complete the fastest 25%/50%/75% of ILP quotes.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "ms"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 9,
+        "x": 5,
+        "y": 0
+      },
+      "id": 5,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.2.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${PrometheusDS}"
+          },
+          "editorMode": "code",
+          "expr": "histogram_quantile(0.25, ilp_rate_probe_time_ms_bucket)",
+          "instant": false,
+          "legendFormat": "First Quartile",
+          "range": true,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${PrometheusDS}"
+          },
+          "editorMode": "code",
+          "expr": "histogram_quantile(0.50, ilp_rate_probe_time_ms_bucket)",
+          "hide": false,
+          "instant": false,
+          "legendFormat": "Second Quartile",
+          "range": true,
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${PrometheusDS}"
+          },
+          "editorMode": "code",
+          "expr": "histogram_quantile(0.75, ilp_rate_probe_time_ms_bucket)",
+          "hide": false,
+          "instant": false,
+          "legendFormat": "Third Quartile",
+          "range": true,
+          "refId": "C"
+        }
+      ],
+      "title": "ILP Quote Time Quartile Approximations",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "name": "${PrometheusDS}",
+        "type": "prometheus",
+        "uid": "${PrometheusDS}"
+      },
+      "description": "Maximum time it takes to complete the fastest 25%/50%/75% of ILP payments.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "ms"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 10,
+        "x": 14,
+        "y": 0
+      },
+      "id": 3,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.2.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${PrometheusDS}"
+          },
+          "editorMode": "code",
+          "expr": "histogram_quantile(0.25, ilp_pay_time_ms_bucket)",
+          "instant": false,
+          "legendFormat": "First Quartile",
+          "range": true,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${PrometheusDS}"
+          },
+          "editorMode": "code",
+          "expr": "histogram_quantile(0.50, ilp_pay_time_ms_bucket)",
+          "hide": false,
+          "instant": false,
+          "legendFormat": "Second Quartile",
+          "range": true,
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${PrometheusDS}"
+          },
+          "editorMode": "code",
+          "expr": "histogram_quantile(0.75, ilp_pay_time_ms_bucket)",
+          "hide": false,
+          "instant": false,
+          "legendFormat": "Third Quartile",
+          "range": true,
+          "refId": "C"
+        }
+      ],
+      "title": "ILP Pay Time Quartile Approximations",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "name": "${PrometheusDS}",
+        "type": "prometheus",
+        "uid": "${PrometheusDS}"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "continuous-GrYlRd"
+          },
+          "fieldMinMax": false,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 12,
+        "w": 12,
+        "x": 0,
+        "y": 5
+      },
+      "id": 6,
+      "options": {
+        "displayMode": "gradient",
+        "maxVizHeight": 300,
+        "minVizHeight": 16,
+        "minVizWidth": 8,
+        "namePlacement": "auto",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showUnfilled": true,
+        "sizing": "auto",
+        "valueMode": "color"
+      },
+      "pluginVersion": "11.2.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${PrometheusDS}"
+          },
+          "editorMode": "code",
+          "expr": "histogram_quantile(0.95, sum(rate(traces_spanmetrics_latency_bucket{span_name=~\"^(mutation|query).*\"}[$__rate_interval])) by (le, span_name))",
+          "instant": false,
+          "legendFormat": "__auto",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Graphql Resolver Duration (95th Percentile)",
+      "type": "bargauge"
+    },
+    {
+      "datasource": {
+        "name": "${TempoDS}",
+        "type": "tempo",
+        "uid": "${TempoDS}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 12,
+        "w": 12,
+        "x": 12,
+        "y": 5
+      },
+      "id": 4,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Duration"
+          }
+        ]
+      },
+      "pluginVersion": "11.2.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "tempo",
+            "uid": "${TempoDS}"
+          },
+          "filters": [
+            {
+              "id": "9bab4a0a",
+              "operator": "=",
+              "scope": "span"
+            },
+            {
+              "id": "service-name",
+              "operator": "=",
+              "scope": "resource",
+              "tag": "service.name",
+              "value": [
+                "RAFIKI_NETWORK"
+              ],
+              "valueType": "string"
+            },
+            {
+              "id": "span-name",
+              "operator": "=",
+              "scope": "span",
+              "tag": "name",
+              "value": [],
+              "valueType": "string"
+            },
+            {
+              "id": "min-duration",
+              "operator": ">",
+              "tag": "duration",
+              "value": "100ms",
+              "valueType": "duration"
+            }
+          ],
+          "limit": 20,
+          "queryType": "traceqlSearch",
+          "refId": "A",
+          "tableType": "traces"
+        }
+      ],
+      "title": "Traces > 100ms",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "default": false,
+        "type": "prometheus",
+        "uid": "${PrometheusDS}"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "ms"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 0,
+        "y": 17
+      },
+      "id": 10,
+      "options": {
+        "legend": {
+          "calcs": [
+            "p95"
+          ],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${PrometheusDS}"
+          },
+          "editorMode": "code",
+          "expr": "sum by (callName) (rate(get_pending_payment_ms_sum[$__rate_interval])/rate(get_pending_payment_ms_count[$__rate_interval]))",
+          "instant": false,
+          "legendFormat": "{{caller}}",
+          "range": true,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${PrometheusDS}"
+          },
+          "editorMode": "code",
+          "expr": "sum by (callName) (rate(handle_sending_ms_sum[$__rate_interval])/rate(handle_sending_ms_count[$__rate_interval]))",
+          "hide": false,
+          "instant": false,
+          "legendFormat": "__auto",
+          "range": true,
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${PrometheusDS}"
+          },
+          "editorMode": "code",
+          "expr": "sum by (callName) (rate(getReceiver_sum[$__rate_interval])/rate(getReceiver_count[$__rate_interval]))",
+          "hide": false,
+          "instant": false,
+          "legendFormat": "__auto",
+          "range": true,
+          "refId": "C"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${PrometheusDS}"
+          },
+          "editorMode": "code",
+          "expr": "sum by (callName) (rate(psql_get_account_total_sent_ms_sum[$__rate_interval])/rate(psql_get_account_total_sent_ms_count[$__rate_interval]))",
+          "hide": false,
+          "instant": false,
+          "legendFormat": "__auto",
+          "range": true,
+          "refId": "D"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${PrometheusDS}"
+          },
+          "editorMode": "code",
+          "expr": "sum by (callName) (rate(tb_get_account_total_sent_ms_sum[$__rate_interval])/rate(tb_get_account_total_sent_ms_count[$__rate_interval]))",
+          "hide": false,
+          "instant": false,
+          "legendFormat": "__auto",
+          "range": true,
+          "refId": "E"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${PrometheusDS}"
+          },
+          "editorMode": "code",
+          "expr": "sum by (callName) (rate(handle_completed_ms_sum[$__rate_interval])/rate(handle_completed_ms_count[$__rate_interval]))",
+          "hide": false,
+          "instant": false,
+          "legendFormat": "__auto",
+          "range": true,
+          "refId": "F"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${PrometheusDS}"
+          },
+          "editorMode": "code",
+          "expr": "sum by (callName) (rate(op_send_webhook_event_ms_sum[$__rate_interval])/rate(op_send_webhook_event_ms_count[$__rate_interval]))",
+          "hide": false,
+          "instant": false,
+          "legendFormat": "__auto",
+          "range": true,
+          "refId": "G"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${PrometheusDS}"
+          },
+          "editorMode": "code",
+          "expr": "sum by (callName) (rate(handle_failed_ms_sum[$__rate_interval])/rate(handle_failed_ms_count[$__rate_interval]))",
+          "hide": false,
+          "instant": false,
+          "legendFormat": "__auto",
+          "range": true,
+          "refId": "H"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${PrometheusDS}"
+          },
+          "editorMode": "code",
+          "expr": "sum by (callName) (rate(process_pending_payment_ms_sum[$__rate_interval])/rate(process_pending_payment_ms_count[$__rate_interval]))",
+          "hide": false,
+          "instant": false,
+          "legendFormat": "__auto",
+          "range": true,
+          "refId": "I"
+        }
+      ],
+      "title": "Outgoing Payment Worker",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "default": false,
+        "type": "prometheus",
+        "uid": "${PrometheusDS}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "ms"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 12,
+        "y": 17
+      },
+      "id": 9,
+      "options": {
+        "legend": {
+          "calcs": [
+            "p95"
+          ],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${PrometheusDS}"
+          },
+          "editorMode": "code",
+          "expr": "rate(quote_service_create_get_quote_time_ms_sum[$__rate_interval])/rate(quote_service_create_get_quote_time_ms_count[$__rate_interval])",
+          "hide": false,
+          "instant": false,
+          "legendFormat": "{{callName}}",
+          "range": true,
+          "refId": "C"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${PrometheusDS}"
+          },
+          "editorMode": "code",
+          "expr": "rate(ilp_rate_probe_time_ms_sum[$__rate_interval])/rate(ilp_rate_probe_time_ms_count[$__rate_interval])",
+          "hide": false,
+          "instant": false,
+          "legendFormat": "{{callName}}",
+          "range": true,
+          "refId": "F"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${PrometheusDS}"
+          },
+          "editorMode": "code",
+          "expr": "rate(ilp_get_quote_rate_time_ms_sum[$__rate_interval])/rate(ilp_get_quote_rate_time_ms_count[$__rate_interval])",
+          "hide": false,
+          "instant": false,
+          "legendFormat": "{{callName}}",
+          "range": true,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${PrometheusDS}"
+          },
+          "editorMode": "code",
+          "expr": "rate(ilp_make_ilp_plugin_connect_time_ms_sum[$__rate_interval])/rate(ilp_make_ilp_plugin_connect_time_ms_count[$__rate_interval])",
+          "hide": false,
+          "instant": false,
+          "legendFormat": "{{callName}}",
+          "range": true,
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${PrometheusDS}"
+          },
+          "editorMode": "code",
+          "expr": "rate(ilp_plugin_close_connect_time_ms_sum[$__rate_interval])/rate(ilp_plugin_close_connect_time_ms_count[$__rate_interval])",
+          "hide": false,
+          "instant": false,
+          "legendFormat": "{{callName}}",
+          "range": true,
+          "refId": "D"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${PrometheusDS}"
+          },
+          "editorMode": "code",
+          "expr": "rate(ilp_plugin_disconnect_time_ms_sum[$__rate_interval])/rate(ilp_plugin_disconnect_time_ms_count[$__rate_interval])",
+          "hide": false,
+          "instant": false,
+          "legendFormat": "{{callName}}",
+          "range": true,
+          "refId": "E"
+        }
+      ],
+      "title": "ILP Payment Service getQuote",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "default": false,
+        "type": "prometheus",
+        "uid": "${PrometheusDS}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 0,
+        "y": 23
+      },
+      "id": 16,
+      "options": {
+        "legend": {
+          "calcs": [
+            "p95"
+          ],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "editorMode": "code",
+          "expr": "rate(depositOutgoingPaymentLiquidity_sum[$__rate_interval])/rate(depositOutgoingPaymentLiquidity_count[$__rate_interval])",
+          "instant": false,
+          "legendFormat": "{{callName}}",
+          "range": true,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${PrometheusDS}"
+          },
+          "editorMode": "code",
+          "expr": "rate(fundPayment_sum[$__rate_interval])/rate(fundPayment_count[$__rate_interval])",
+          "hide": false,
+          "instant": false,
+          "legendFormat": "{{callName}}",
+          "range": true,
+          "refId": "B"
+        }
+      ],
+      "title": "Deposit Outgoing Payment Liquidity ",
+      "type": "timeseries"
     },
     {
       "datasource": {
@@ -154,552 +1017,18 @@
       },
       "gridPos": {
         "h": 7,
-        "w": 21,
-        "x": 3,
-        "y": 0
-      },
-      "id": 10,
-      "options": {
-        "legend": {
-          "calcs": ["p95"],
-          "displayMode": "table",
-          "placement": "right",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${PrometheusDS}"
-          },
-          "editorMode": "code",
-          "expr": "sum by (callName) (rate(getPendingPayment_sum[$__rate_interval])/rate(getPendingPayment_count[$__rate_interval]))",
-          "instant": false,
-          "legendFormat": "{{caller}}",
-          "range": true,
-          "refId": "A"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${PrometheusDS}"
-          },
-          "editorMode": "code",
-          "expr": "sum by (callName) (rate(handleSending_sum[$__rate_interval])/rate(handleSending_count[$__rate_interval]))",
-          "hide": false,
-          "instant": false,
-          "legendFormat": "__auto",
-          "range": true,
-          "refId": "B"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${PrometheusDS}"
-          },
-          "editorMode": "code",
-          "expr": "sum by (callName) (rate(getReceiver_sum[$__rate_interval])/rate(getReceiver_count[$__rate_interval]))",
-          "hide": false,
-          "instant": false,
-          "legendFormat": "__auto",
-          "range": true,
-          "refId": "C"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${PrometheusDS}"
-          },
-          "editorMode": "code",
-          "expr": "sum by (callName) (rate(psql_getAccountTotalSent_sum[$__rate_interval])/rate(psql_getAccountTotalSent_count[$__rate_interval]))",
-          "hide": false,
-          "instant": false,
-          "legendFormat": "__auto",
-          "range": true,
-          "refId": "D"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${PrometheusDS}"
-          },
-          "editorMode": "code",
-          "expr": "sum by (callName) (rate(tb_getAccountTotalSent_sum[$__rate_interval])/rate(tb_getAccountTotalSent_count[$__rate_interval]))",
-          "hide": false,
-          "instant": false,
-          "legendFormat": "__auto",
-          "range": true,
-          "refId": "E"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${PrometheusDS}"
-          },
-          "editorMode": "code",
-          "expr": "sum by (callName) (rate(handleCompleted_sum[$__rate_interval])/rate(handleCompleted_count[$__rate_interval]))",
-          "hide": false,
-          "instant": false,
-          "legendFormat": "__auto",
-          "range": true,
-          "refId": "F"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${PrometheusDS}"
-          },
-          "editorMode": "code",
-          "expr": "sum by (callName) (rate(sendWebhookEvent_sum[$__rate_interval])/rate(sendWebhookEvent_count[$__rate_interval]))",
-          "hide": false,
-          "instant": false,
-          "legendFormat": "__auto",
-          "range": true,
-          "refId": "G"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${PrometheusDS}"
-          },
-          "editorMode": "code",
-          "expr": "sum by (callName) (rate(handleFailed_sum[$__rate_interval])/rate(handleFailed_count[$__rate_interval]))",
-          "hide": false,
-          "instant": false,
-          "legendFormat": "__auto",
-          "range": true,
-          "refId": "H"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${PrometheusDS}"
-          },
-          "editorMode": "code",
-          "expr": "sum by (callName) (rate(processPendingPayment_sum[$__rate_interval])/rate(processPendingPayment_count[$__rate_interval]))",
-          "hide": false,
-          "instant": false,
-          "legendFormat": "__auto",
-          "range": true,
-          "refId": "I"
-        }
-      ],
-      "title": "Outgoing Payment Worker",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "name": "${PrometheusDS}",
-        "type": "prometheus",
-        "uid": "${PrometheusDS}"
-      },
-      "description": "",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "continuous-GrYlRd"
-          },
-          "fieldMinMax": false,
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          },
-          "unit": "s"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 12,
-        "w": 12,
-        "x": 0,
-        "y": 7
-      },
-      "id": 6,
-      "options": {
-        "displayMode": "gradient",
-        "maxVizHeight": 300,
-        "minVizHeight": 16,
-        "minVizWidth": 8,
-        "namePlacement": "auto",
-        "orientation": "horizontal",
-        "reduceOptions": {
-          "calcs": ["lastNotNull"],
-          "fields": "",
-          "values": false
-        },
-        "showUnfilled": true,
-        "sizing": "auto",
-        "valueMode": "color"
-      },
-      "pluginVersion": "11.2.0",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${PrometheusDS}"
-          },
-          "editorMode": "code",
-          "expr": "histogram_quantile(0.95, sum(rate(traces_spanmetrics_latency_bucket{span_name=~\"^(mutation|query).*\"}[$__rate_interval])) by (le, span_name))",
-          "instant": false,
-          "legendFormat": "__auto",
-          "range": true,
-          "refId": "A"
-        }
-      ],
-      "title": "Graphql Resolver Duration (95th Percentile)",
-      "type": "bargauge"
-    },
-    {
-      "datasource": {
-        "name": "${PrometheusDS}",
-        "type": "prometheus",
-        "uid": "${PrometheusDS}"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisBorderShow": false,
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "barWidthFactor": 0.6,
-            "drawStyle": "line",
-            "fillOpacity": 0,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "insertNulls": false,
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          },
-          "unit": "ms"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 6,
         "w": 12,
         "x": 12,
-        "y": 7
-      },
-      "id": 9,
-      "options": {
-        "legend": {
-          "calcs": ["p95"],
-          "displayMode": "table",
-          "placement": "right",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${PrometheusDS}"
-          },
-          "editorMode": "code",
-          "expr": "rate(quote_service_create_get_quote_time_ms_sum[$__rate_interval])/rate(quote_service_create_get_quote_time_ms_count[$__rate_interval])",
-          "hide": false,
-          "instant": false,
-          "legendFormat": "{{description}}",
-          "range": true,
-          "refId": "C"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${PrometheusDS}"
-          },
-          "editorMode": "code",
-          "expr": "rate(ilp_rate_probe_time_ms_sum[$__rate_interval])/rate(ilp_rate_probe_time_ms_count[$__rate_interval])",
-          "hide": false,
-          "instant": false,
-          "legendFormat": "{{description}}",
-          "range": true,
-          "refId": "F"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${PrometheusDS}"
-          },
-          "editorMode": "code",
-          "expr": "rate(ilp_get_quote_rate_time_ms_sum[$__rate_interval])/rate(ilp_get_quote_rate_time_ms_count[$__rate_interval])",
-          "hide": false,
-          "instant": false,
-          "legendFormat": "{{description}}",
-          "range": true,
-          "refId": "A"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${PrometheusDS}"
-          },
-          "editorMode": "code",
-          "expr": "rate(ilp_make_ilp_plugin_connect_time_ms_sum[$__rate_interval])/rate(ilp_make_ilp_plugin_connect_time_ms_count[$__rate_interval])",
-          "hide": false,
-          "instant": false,
-          "legendFormat": "{{description}}",
-          "range": true,
-          "refId": "B"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${PrometheusDS}"
-          },
-          "editorMode": "code",
-          "expr": "rate(ilp_plugin_close_connect_time_ms_sum[$__rate_interval])/rate(ilp_plugin_close_connect_time_ms_count[$__rate_interval])",
-          "hide": false,
-          "instant": false,
-          "legendFormat": "{{description}}",
-          "range": true,
-          "refId": "D"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${PrometheusDS}"
-          },
-          "editorMode": "code",
-          "expr": "rate(ilp_plugin_disconnect_time_ms_sum[$__rate_interval])/rate(ilp_plugin_disconnect_time_ms_count[$__rate_interval])",
-          "hide": false,
-          "instant": false,
-          "legendFormat": "{{description}}",
-          "range": true,
-          "refId": "E"
-        }
-      ],
-      "title": "ILP Payment Service getQuote",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "name": "${PrometheusDS}",
-        "type": "prometheus",
-        "uid": "${PrometheusDS}"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisBorderShow": false,
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "barWidthFactor": 0.6,
-            "drawStyle": "line",
-            "fillOpacity": 0,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "insertNulls": false,
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          },
-          "unit": "ms"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 6,
-        "w": 12,
-        "x": 12,
-        "y": 13
-      },
-      "id": 11,
-      "options": {
-        "legend": {
-          "calcs": ["p95"],
-          "displayMode": "table",
-          "placement": "right",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${PrometheusDS}"
-          },
-          "editorMode": "code",
-          "expr": "sum by (callName) (rate(psql_getAccountBalances_sum[$__rate_interval])/rate(psql_getAccountBalances_count[$__rate_interval]))",
-          "instant": false,
-          "legendFormat": "__auto",
-          "range": true,
-          "refId": "A"
-        }
-      ],
-      "title": "PSQL Get Account Balance",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "name": "${PrometheusDS}",
-        "type": "prometheus",
-        "uid": "${PrometheusDS}"
-      },
-      "description": "",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisBorderShow": false,
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "barWidthFactor": 0.6,
-            "drawStyle": "line",
-            "fillOpacity": 0,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "insertNulls": false,
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 7,
-        "w": 12,
-        "x": 0,
-        "y": 19
+        "y": 23
       },
       "id": 14,
       "options": {
         "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
+          "calcs": [
+            "p95"
+          ],
+          "displayMode": "table",
+          "placement": "right",
           "showLegend": true
         },
         "tooltip": {
@@ -716,7 +1045,7 @@
           "editorMode": "code",
           "expr": "rate(outgoing_payment_service_create_time_ms_sum[$__rate_interval])/rate(outgoing_payment_service_create_time_ms_count[$__rate_interval])",
           "instant": false,
-          "legendFormat": "{{description}}",
+          "legendFormat": "{{callName}}",
           "range": true,
           "refId": "A"
         },
@@ -729,7 +1058,7 @@
           "expr": "rate(outgoing_payment_service_create_quote_time_ms_sum[$__rate_interval])/rate(outgoing_payment_service_create_quote_time_ms_count[$__rate_interval])",
           "hide": false,
           "instant": false,
-          "legendFormat": "{{description}}",
+          "legendFormat": "{{callName}}",
           "range": true,
           "refId": "B"
         },
@@ -742,7 +1071,7 @@
           "expr": "rate(outgoing_payment_service_getwalletaddress_time_ms_sum[$__rate_interval])/rate(outgoing_payment_service_getwalletaddress_time_ms_count[$__rate_interval])",
           "hide": false,
           "instant": false,
-          "legendFormat": "{{description}}",
+          "legendFormat": "{{callName}}",
           "range": true,
           "refId": "E"
         },
@@ -755,7 +1084,7 @@
           "expr": "rate(outgoing_payment_service_insertgrant_time_ms_sum[$__rate_interval])/rate(outgoing_payment_service_insertgrant_time_ms_count[$__rate_interval])",
           "hide": false,
           "instant": false,
-          "legendFormat": "{{description}}",
+          "legendFormat": "{{callName}}",
           "range": true,
           "refId": "D"
         },
@@ -768,7 +1097,7 @@
           "expr": "rate(outgoing_payment_service_insertpayment_time_ms_sum[$__rate_interval])/rate(outgoing_payment_service_insertpayment_time_ms_count[$__rate_interval])",
           "hide": false,
           "instant": false,
-          "legendFormat": "{{description}}",
+          "legendFormat": "{{callName}}",
           "range": true,
           "refId": "F"
         },
@@ -781,7 +1110,7 @@
           "expr": "rate(outgoing_payment_service_getreceiver_time_ms_sum[$__rate_interval])/rate(outgoing_payment_service_getreceiver_time_ms_count[$__rate_interval])",
           "hide": false,
           "instant": false,
-          "legendFormat": "{{description}}",
+          "legendFormat": "{{callName}}",
           "range": true,
           "refId": "H"
         },
@@ -794,7 +1123,7 @@
           "expr": "rate(outgoing_payment_service_getpeer_time_ms_sum[$__rate_interval])/rate(outgoing_payment_service_getpeer_time_ms_count[$__rate_interval])",
           "hide": false,
           "instant": false,
-          "legendFormat": "{{description}}",
+          "legendFormat": "{{callName}}",
           "range": true,
           "refId": "G"
         },
@@ -807,7 +1136,7 @@
           "expr": "rate(outgoing_payment_service_patchpeer_time_ms_sum[$__rate_interval])/rate(outgoing_payment_service_patchpeer_time_ms_count[$__rate_interval])",
           "hide": false,
           "instant": false,
-          "legendFormat": "{{description}}",
+          "legendFormat": "{{callName}}",
           "range": true,
           "refId": "I"
         },
@@ -820,7 +1149,7 @@
           "expr": "rate(outgoing_payment_service_webhook_event_time_ms_sum[$__rate_interval])/rate(outgoing_payment_service_webhook_event_time_ms_count[$__rate_interval])",
           "hide": false,
           "instant": false,
-          "legendFormat": "{{description}}",
+          "legendFormat": "{{callName}}",
           "range": true,
           "refId": "C"
         }
@@ -885,20 +1214,23 @@
                 "value": 80
               }
             ]
-          }
+          },
+          "unit": "ms"
         },
         "overrides": []
       },
       "gridPos": {
-        "h": 6,
+        "h": 7,
         "w": 12,
-        "x": 12,
-        "y": 19
+        "x": 0,
+        "y": 30
       },
-      "id": 13,
+      "id": 12,
       "options": {
         "legend": {
-          "calcs": ["p95"],
+          "calcs": [
+            "p95"
+          ],
           "displayMode": "table",
           "placement": "right",
           "showLegend": true
@@ -915,210 +1247,9 @@
             "uid": "${PrometheusDS}"
           },
           "editorMode": "code",
-          "expr": "sum by (callName) (rate(createLiquidityAccount_sum[$__rate_interval])/rate(createLiquidityAccount_count[$__rate_interval]))",
+          "expr": "sum by (callName) (rate(connector_middleware_sum[$__rate_interval])/rate(connector_middleware_count[$__rate_interval]))",
           "instant": false,
-          "legendFormat": "__auto",
-          "range": true,
-          "refId": "A"
-        }
-      ],
-      "title": "Ilp Connector > Balance Middleware > createLiquidityAccount",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "name": "${TempoDS}",
-        "type": "tempo",
-        "uid": "${TempoDS}"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "custom": {
-            "align": "auto",
-            "cellOptions": {
-              "type": "auto"
-            },
-            "inspect": false
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 25
-      },
-      "id": 4,
-      "options": {
-        "cellHeight": "sm",
-        "footer": {
-          "countRows": false,
-          "fields": "",
-          "reducer": ["sum"],
-          "show": false
-        },
-        "showHeader": true,
-        "sortBy": [
-          {
-            "desc": true,
-            "displayName": "Duration"
-          }
-        ]
-      },
-      "pluginVersion": "11.2.0",
-      "targets": [
-        {
-          "datasource": {
-            "type": "tempo",
-            "uid": "${TempoDS}"
-          },
-          "filters": [
-            {
-              "id": "9bab4a0a",
-              "operator": "=",
-              "scope": "span"
-            },
-            {
-              "id": "service-name",
-              "operator": "=",
-              "scope": "resource",
-              "tag": "service.name",
-              "value": ["RAFIKI_NETWORK"],
-              "valueType": "string"
-            },
-            {
-              "id": "span-name",
-              "operator": "=",
-              "scope": "span",
-              "tag": "name",
-              "value": [],
-              "valueType": "string"
-            },
-            {
-              "id": "min-duration",
-              "operator": ">",
-              "tag": "duration",
-              "value": "100ms",
-              "valueType": "duration"
-            }
-          ],
-          "limit": 20,
-          "queryType": "traceqlSearch",
-          "refId": "A",
-          "tableType": "traces"
-        }
-      ],
-      "title": "Traces > 100ms",
-      "type": "table"
-    },
-    {
-      "datasource": {
-        "default": false,
-        "type": "prometheus",
-        "uid": "${PrometheusDS}"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisBorderShow": false,
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "barWidthFactor": 0.6,
-            "drawStyle": "line",
-            "fillOpacity": 0,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "insertNulls": false,
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 6,
-        "w": 12,
-        "x": 0,
-        "y": 26
-      },
-      "id": 16,
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "editorMode": "code",
-          "expr": "rate(depositOutgoingPaymentLiquidity_sum[$__rate_interval])/rate(depositOutgoingPaymentLiquidity_count[$__rate_interval])",
-          "instant": false,
-          "legendFormat": "{{callName}}",
+          "legendFormat": "{{caller}}",
           "range": true,
           "refId": "A"
         },
@@ -1128,20 +1259,33 @@
             "uid": "${PrometheusDS}"
           },
           "editorMode": "code",
-          "expr": "rate(fundPayment_sum[$__rate_interval])/rate(fundPayment_count[$__rate_interval])",
+          "expr": "sum by (callName) (rate(connector_middleware_stack_sum[$__rate_interval])/rate(connector_middleware_stack_count[$__rate_interval]))",
           "hide": false,
           "instant": false,
-          "legendFormat": "{{callName}}",
+          "legendFormat": "__auto",
           "range": true,
           "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${PrometheusDS}"
+          },
+          "editorMode": "code",
+          "expr": "sum by (callName) (rate(balanceMiddleware_sum[$__rate_interval])/rate(balanceMiddleware_count[$__rate_interval]))",
+          "hide": false,
+          "instant": false,
+          "legendFormat": "__auto",
+          "range": true,
+          "refId": "C"
         }
       ],
-      "title": "Deposit Outgoing Payment Liquidity ",
+      "title": "ILP Connector",
       "type": "timeseries"
     },
     {
       "datasource": {
-        "name": "${PrometheusDS}",
+        "default": false,
         "type": "prometheus",
         "uid": "${PrometheusDS}"
       },
@@ -1204,13 +1348,15 @@
       "gridPos": {
         "h": 6,
         "w": 12,
-        "x": 0,
-        "y": 32
+        "x": 12,
+        "y": 30
       },
       "id": 7,
       "options": {
         "legend": {
-          "calcs": ["p95"],
+          "calcs": [
+            "p95"
+          ],
           "displayMode": "table",
           "placement": "right",
           "showLegend": true
@@ -1229,7 +1375,7 @@
           "editorMode": "code",
           "expr": "rate(quote_service_create_time_ms_sum[$__rate_interval])/rate(quote_service_create_time_ms_count[$__rate_interval])",
           "instant": false,
-          "legendFormat": "{{description}}",
+          "legendFormat": "{{callName}}",
           "range": true,
           "refId": "A"
         },
@@ -1242,7 +1388,7 @@
           "expr": "rate(quote_service_create_resolve_receiver_time_ms_sum[$__rate_interval])/rate(quote_service_create_resolve_receiver_time_ms_count[$__rate_interval])",
           "hide": false,
           "instant": false,
-          "legendFormat": "{{description}}",
+          "legendFormat": "{{callName}}",
           "range": true,
           "refId": "B"
         },
@@ -1255,7 +1401,7 @@
           "expr": "rate(quote_service_create_get_quote_time_ms_sum[$__rate_interval])/rate(quote_service_create_get_quote_time_ms_count[$__rate_interval])",
           "hide": false,
           "instant": false,
-          "legendFormat": "{{description}}",
+          "legendFormat": "{{callName}}",
           "range": true,
           "refId": "C"
         },
@@ -1268,7 +1414,7 @@
           "expr": "rate(quote_service_create_get_latest_fee_time_ms_sum[$__rate_interval])/rate(quote_service_create_get_latest_fee_time_ms_count[$__rate_interval])",
           "hide": false,
           "instant": false,
-          "legendFormat": "{{description}}",
+          "legendFormat": "{{callName}}",
           "range": true,
           "refId": "D"
         },
@@ -1281,7 +1427,7 @@
           "expr": "rate(quote_service_create_insert_time_ms_sum[$__rate_interval])/rate(quote_service_create_insert_time_ms_count[$__rate_interval])",
           "hide": false,
           "instant": false,
-          "legendFormat": "{{description}}",
+          "legendFormat": "{{callName}}",
           "range": true,
           "refId": "E"
         },
@@ -1294,7 +1440,7 @@
           "expr": "rate(quote_service_finalize_quote_ms_sum[$__rate_interval])/rate(quote_service_finalize_quote_ms_count[$__rate_interval])",
           "hide": false,
           "instant": false,
-          "legendFormat": "{{description}}",
+          "legendFormat": "{{callName}}",
           "range": true,
           "refId": "F"
         }
@@ -1365,15 +1511,17 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 6,
-        "w": 12,
+        "h": 7,
+        "w": 24,
         "x": 0,
-        "y": 38
+        "y": 37
       },
-      "id": 12,
+      "id": 11,
       "options": {
         "legend": {
-          "calcs": ["p95"],
+          "calcs": [
+            "p95"
+          ],
           "displayMode": "table",
           "placement": "right",
           "showLegend": true
@@ -1390,40 +1538,14 @@
             "uid": "${PrometheusDS}"
           },
           "editorMode": "code",
-          "expr": "sum by (callName) (rate(connector_middleware_sum[$__rate_interval])/rate(connector_middleware_count[$__rate_interval]))",
+          "expr": "sum by (callName) (rate(psql_getAccountBalances_sum[$__rate_interval])/rate(psql_getAccountBalances_count[$__rate_interval]))",
           "instant": false,
-          "legendFormat": "{{caller}}",
+          "legendFormat": "__auto",
           "range": true,
           "refId": "A"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${PrometheusDS}"
-          },
-          "editorMode": "code",
-          "expr": "sum by (callName) (rate(connector_middleware_stack_sum[$__rate_interval])/rate(connector_middleware_stack_count[$__rate_interval]))",
-          "hide": false,
-          "instant": false,
-          "legendFormat": "__auto",
-          "range": true,
-          "refId": "B"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${PrometheusDS}"
-          },
-          "editorMode": "code",
-          "expr": "sum by (callName) (rate(balanceMiddleware_sum[$__rate_interval])/rate(balanceMiddleware_count[$__rate_interval]))",
-          "hide": false,
-          "instant": false,
-          "legendFormat": "__auto",
-          "range": true,
-          "refId": "C"
         }
       ],
-      "title": "ILP Connector",
+      "title": "PSQL Get Account Balance",
       "type": "timeseries"
     },
     {
@@ -1590,8 +1712,8 @@
       "gridPos": {
         "h": 8,
         "w": 12,
-        "x": 0,
-        "y": 52
+        "x": 12,
+        "y": 44
       },
       "id": 1,
       "interval": "15s",
@@ -1625,198 +1747,6 @@
       ],
       "title": "Transaction Count",
       "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "name": "${PrometheusDS}",
-        "type": "prometheus",
-        "uid": "${PrometheusDS}"
-      },
-      "description": "Maximum time it takes to complete the fastest 25%/50%/75% of ILP payments.",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          },
-          "unit": "ms"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 5,
-        "w": 12,
-        "x": 0,
-        "y": 60
-      },
-      "id": 3,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "none",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "percentChangeColorMode": "standard",
-        "reduceOptions": {
-          "calcs": ["lastNotNull"],
-          "fields": "",
-          "values": false
-        },
-        "showPercentChange": false,
-        "textMode": "auto",
-        "wideLayout": true
-      },
-      "pluginVersion": "11.2.0",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${PrometheusDS}"
-          },
-          "editorMode": "code",
-          "expr": "histogram_quantile(0.25, ilp_pay_time_ms_bucket)",
-          "instant": false,
-          "legendFormat": "First Quartile",
-          "range": true,
-          "refId": "A"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${PrometheusDS}"
-          },
-          "editorMode": "code",
-          "expr": "histogram_quantile(0.50, ilp_pay_time_ms_bucket)",
-          "hide": false,
-          "instant": false,
-          "legendFormat": "Second Quartile",
-          "range": true,
-          "refId": "B"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${PrometheusDS}"
-          },
-          "editorMode": "code",
-          "expr": "histogram_quantile(0.75, ilp_pay_time_ms_bucket)",
-          "hide": false,
-          "instant": false,
-          "legendFormat": "Third Quartile",
-          "range": true,
-          "refId": "C"
-        }
-      ],
-      "title": "ILP Pay Time Quartile Approximations",
-      "type": "stat"
-    },
-    {
-      "datasource": {
-        "name": "${PrometheusDS}",
-        "type": "prometheus",
-        "uid": "${PrometheusDS}"
-      },
-      "description": "Maximum time it takes to complete the fastest 25%/50%/75% of ILP quotes.",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          },
-          "unit": "ms"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 5,
-        "w": 12,
-        "x": 0,
-        "y": 65
-      },
-      "id": 5,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "none",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "percentChangeColorMode": "standard",
-        "reduceOptions": {
-          "calcs": ["lastNotNull"],
-          "fields": "",
-          "values": false
-        },
-        "showPercentChange": false,
-        "textMode": "auto",
-        "wideLayout": true
-      },
-      "pluginVersion": "11.2.0",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${PrometheusDS}"
-          },
-          "editorMode": "code",
-          "expr": "histogram_quantile(0.25, ilp_rate_probe_time_ms_bucket)",
-          "instant": false,
-          "legendFormat": "First Quartile",
-          "range": true,
-          "refId": "A"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${PrometheusDS}"
-          },
-          "editorMode": "code",
-          "expr": "histogram_quantile(0.50, ilp_rate_probe_time_ms_bucket)",
-          "hide": false,
-          "instant": false,
-          "legendFormat": "Second Quartile",
-          "range": true,
-          "refId": "B"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${PrometheusDS}"
-          },
-          "editorMode": "code",
-          "expr": "histogram_quantile(0.75, ilp_rate_probe_time_ms_bucket)",
-          "hide": false,
-          "instant": false,
-          "legendFormat": "Third Quartile",
-          "range": true,
-          "refId": "C"
-        }
-      ],
-      "title": "ILP Quote Time Quartile Approximations",
-      "type": "stat"
     }
   ],
   "refresh": "15s",
@@ -1864,7 +1794,7 @@
     ]
   },
   "time": {
-    "from": "now-5m",
+    "from": "now-30m",
     "to": "now"
   },
   "timepicker": {

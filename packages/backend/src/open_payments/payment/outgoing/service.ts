@@ -218,6 +218,7 @@ async function createOutgoingPayment(
   const stopTimerOP = deps.telemetry.startTimer(
     'outgoing_payment_service_create_time_ms',
     {
+      callName: 'createOutgoingPayment',
       description: 'Time to create an outgoing payment'
     }
   )
@@ -228,6 +229,7 @@ async function createOutgoingPayment(
     const stopTimerQuote = deps.telemetry.startTimer(
       'outgoing_payment_service_create_quote_time_ms',
       {
+        callName: 'quoteService.create',
         description: 'Time to create a quote in outgoing payment'
       }
     )
@@ -254,6 +256,7 @@ async function createOutgoingPayment(
       const stopTimerWA = deps.telemetry.startTimer(
         'outgoing_payment_service_getwalletaddress_time_ms',
         {
+          callName: 'walletAddressService.get',
           description: 'Time to get wallet address in outgoing payment'
         }
       )
@@ -270,6 +273,7 @@ async function createOutgoingPayment(
         const stopTimerGrant = deps.telemetry.startTimer(
           'outgoing_payment_service_insertgrant_time_ms',
           {
+            callName: 'OutgoingPaymentGrant.insert',
             description: 'Time to insert grant in outgoing payment'
           }
         )
@@ -284,6 +288,7 @@ async function createOutgoingPayment(
       const stopTimerInsertPayment = deps.telemetry.startTimer(
         'outgoing_payment_service_insertpayment_time_ms',
         {
+          callName: 'OutgoingPayment.insert',
           description: 'Time to insert payment in outgoing payment'
         }
       )
@@ -310,6 +315,7 @@ async function createOutgoingPayment(
         const stopTimerValidateGrant = deps.telemetry.startTimer(
           'outgoing_payment_service_validate_grant_time_ms',
           {
+            callName: 'validateGrantAndAddSpentAmountsToPayment',
             description: 'Time to validate a grant'
           }
         )
@@ -329,6 +335,7 @@ async function createOutgoingPayment(
       const stopTimerReceiver = deps.telemetry.startTimer(
         'outgoing_payment_service_getreceiver_time_ms',
         {
+          callName: 'receiverService.get',
           description: 'Time to retrieve receiver in outgoing payment'
         }
       )
@@ -340,6 +347,7 @@ async function createOutgoingPayment(
       const stopTimerPeer = deps.telemetry.startTimer(
         'outgoing_payment_service_getpeer_time_ms',
         {
+          callName: 'peerService.getByDestinationAddress',
           description: 'Time to retrieve peer in outgoing payment'
         }
       )
@@ -351,6 +359,7 @@ async function createOutgoingPayment(
       const stopTimerPeerUpdate = deps.telemetry.startTimer(
         'outgoing_payment_service_patchpeer_time_ms',
         {
+          callName: 'payment.patch',
           description: 'Time to patch peer in outgoing payment'
         }
       )
@@ -360,6 +369,7 @@ async function createOutgoingPayment(
       const stopTimerWebhook = deps.telemetry.startTimer(
         'outgoing_payment_service_webhook_event_time_ms',
         {
+          callName: 'sendWebhookEvent',
           description: 'Time to add outgoing payment webhook event'
         }
       )
@@ -374,6 +384,7 @@ async function createOutgoingPayment(
       const stopTimerAddAmount = deps.telemetry.startTimer(
         'outgoing_payment_service_add_sent_time_ms',
         {
+          callName: 'addSentAmount',
           description: 'Time to add sent amount to outgoing payment'
         }
       )

@@ -21,9 +21,12 @@ export async function processPendingPayment(
   return tracer.startActiveSpan(
     'outgoingPaymentLifecycle',
     async (span: Span) => {
-      const stopTimer = deps_.telemetry.startTimer('processPendingPayment', {
-        callName: 'processPendingPayment'
-      })
+      const stopTimer = deps_.telemetry.startTimer(
+        'process_pending_payment_ms',
+        {
+          callName: 'processPendingPayment'
+        }
+      )
       const paymentId = await deps_.knex.transaction(async (trx) => {
         const payment = await getPendingPayment(trx, deps_)
         if (!payment) return
@@ -54,7 +57,7 @@ async function getPendingPayment(
   trx: Knex.Transaction,
   deps: ServiceDependencies
 ): Promise<OutgoingPayment | undefined> {
-  const stopTimer = deps.telemetry.startTimer('getPendingPayment', {
+  const stopTimer = deps.telemetry.startTimer('get_pending_payment_ms', {
     callName: 'getPendingPayment'
   })
   const now = new Date(Date.now()).toISOString()
@@ -88,7 +91,7 @@ async function handlePaymentLifecycle(
     return
   }
 
-  const stopTimer = deps.telemetry.startTimer('handleSending', {
+  const stopTimer = deps.telemetry.startTimer('handle_sending_ms', {
     callName: 'handleSending'
   })
   try {

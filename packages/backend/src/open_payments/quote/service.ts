@@ -87,6 +87,7 @@ async function createQuote(
   options: CreateQuoteOptions
 ): Promise<Quote | QuoteError> {
   const stopTimer = deps.telemetry.startTimer('quote_service_create_time_ms', {
+    callName: 'createQuote',
     description: 'Time to create a quote'
   })
   if (options.debitAmount && options.receiveAmount) {
@@ -125,6 +126,7 @@ async function createQuote(
     const stopTimerReceiver = deps.telemetry.startTimer(
       'quote_service_create_resolve_receiver_time_ms',
       {
+        callName: 'resolveReceiver',
         description: 'Time to resolve receiver'
       }
     )
@@ -134,6 +136,7 @@ async function createQuote(
     const stopTimerQuote = deps.telemetry.startTimer(
       'quote_service_create_get_quote_time_ms',
       {
+        callName: 'getQuote',
         description: 'Time to getQuote'
       }
     )
@@ -150,6 +153,7 @@ async function createQuote(
     const stopTimerFee = deps.telemetry.startTimer(
       'quote_service_create_get_latest_fee_time_ms',
       {
+        callName: 'getLatestFee',
         description: 'Time to getLatestFee'
       }
     )
@@ -160,6 +164,13 @@ async function createQuote(
     stopTimerFee()
 
     return await Quote.transaction(deps.knex, async (trx) => {
+      const stopQuoteCreate = deps.telemetry.startTimer(
+        'quote_service_create_insert_time_ms',
+        {
+          callName: 'Quote.insert',
+          description: 'Time to insert quote'
+        }
+      )
       const createdQuote = await Quote.query(trx)
         .insertAndFetch({
           walletAddressId: options.walletAddressId,
@@ -180,7 +191,15 @@ async function createQuote(
           estimatedExchangeRate: quote.estimatedExchangeRate
         })
         .withGraphFetched('[asset, fee, walletAddress]')
+      stopQuoteCreate()
 
+      const stopFinalize = deps.telemetry.startTimer(
+        'quote_service_finalize_quote_ms',
+        {
+          callName: 'finalizedQuote',
+          description: 'Time to finalize quote'
+        }
+      )
       const finalizedQuote = await finalizeQuote(
         {
           ...deps,
@@ -190,6 +209,7 @@ async function createQuote(
         createdQuote,
         receiver
       )
+      stopFinalize()
       return finalizedQuote
     })
   } catch (err) {

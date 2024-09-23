@@ -220,7 +220,7 @@ export async function getAccountTotalSent(
   deps: ServiceDependencies,
   id: string
 ): Promise<bigint | undefined> {
-  const stopTimer = deps.telemetry.startTimer('tb_getAccountTotalSent', {
+  const stopTimer = deps.telemetry.startTimer('tb_get_account_total_sent_ms', {
     callName: 'tb_getAccountTotalSent'
   })
   const account = (await getAccounts(deps, [id]))[0]
