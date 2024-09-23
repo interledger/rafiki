@@ -33,17 +33,25 @@ The `backend` service allows you to manage Open Payments <LinkOut href="https://
 
 ## Interledger connector
 
-The `backend` service exposes an ILP connector to send and receive STREAM packets between peers.
+The `backend` service exposes an ILP connector to send and receive ILP packets between peers.
 
-The roles of the connector include:
+Some of the responsibilities of a connector include:
 
-- Accepting packets via ILP over HTTP and authenticating the packets against ILP account credentials. An incoming packet is only accepted if it's from a configured peer and accompanied by the peer’s incoming HTTP `authToken`.
+- Authenticating packets against ILP account credentials.
+- Forwarding packets to a sender or receiver.
+- Rejecting a packet for any number of reasons, including expiration, insufficient liquidity, rate limit exceeded, or if the amount exceeds the `maxPacketAmount` [agreed to](/admin/manage-peering) by the connector and its peer.
 - Converting currencies.
 - Fulfilling packets with an internal STREAM server.
 
-The connector receives incoming packets via HTTP and/or direct calls from within the `backend`. The `backend` includes an HTTP server listening on the configured `CONNECTOR_PORT`.
+The `backend` service includes an HTTP server listening on the configured `CONNECTOR_PORT`. Your connector can receive incoming packets via HTTP and/or direct calls from within the `backend` service. An incoming packet is only accepted if it's from a configured peer and accompanied by your peer’s incoming HTTP `authToken`.
 
-The amounts within ILP packets are used to update account liquidities in your accounting database (TigerBeetle or Postgres). Amounts are adjusted based on Rafiki’s configured [exchange rates](/integration/requirements/exchange-rates) and the asset used by the sending (outgoing) and receiving (destination) accounts. The total amount received for the STREAM connection is tracked in Redis.
+Similarly, if a packet's destination address corresponds to a peer, your connector will forward the packet to your peer over HTTP, along with your peer's outgoing HTTP `authToken`.
+
+:::note[Auth tokens]
+You and your peer should have exchanged incoming and outgoing auth tokens as part of establishing your [peering relationship](/admin/manage-peering).
+:::
+
+A packet can either continue on to your peer via HTTP or terminate at your Rafiki instance's STREAM server. If the packet terminates at your STREAM server, your connector will attempt to extract and decode the payment tag from the packet's destination address. When your connector successfully matches the tag with a locally managed wallet address or incoming payment, the connector will not forward the packet. Instead, it will credit the corresponding balance and track the total amount received in REDIS to support STREAM receipts. Packets addressed to a wallet address happen via SPSP.
 
 ## GraphQL Backend Admin API
 
