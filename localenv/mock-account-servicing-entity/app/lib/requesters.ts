@@ -81,7 +81,8 @@ export async function depositAssetLiquidity(
 export async function createWalletAddress(
   accountName: string,
   accountUrl: string,
-  assetId: string
+  assetId: string,
+  tenantId: string
 ): Promise<WalletAddress> {
   const createWalletAddressMutation = gql`
     mutation CreateWalletAddress($input: CreateWalletAddressInput!) {
@@ -98,7 +99,8 @@ export async function createWalletAddress(
     assetId,
     url: accountUrl,
     publicName: accountName,
-    additionalProperties: []
+    additionalProperties: [],
+    tenantId
   }
 
   return apolloClient

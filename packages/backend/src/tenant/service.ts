@@ -92,9 +92,11 @@ async function getByIdentity(
   deps: ServiceDependencies,
   id: string
 ): Promise<Tenant | undefined> {
-  return Tenant.query(deps.knex).findOne({
-    kratosIdentityId: id
-  }).withGraphFetched('endpoints')
+  return Tenant.query(deps.knex)
+    .findOne({
+      kratosIdentityId: id
+    })
+    .withGraphFetched('endpoints')
 }
 
 async function createTenant(
