@@ -51,7 +51,10 @@ import { createIlpPaymentService } from './payment-method/ilp/service'
 import { createSPSPRoutes } from './payment-method/ilp/spsp/routes'
 import { createStreamCredentialsService } from './payment-method/ilp/stream-credentials/service'
 import { createRatesService } from './rates/service'
-import { createTelemetryService } from './telemetry/service'
+import {
+  createTelemetryService,
+  createNoopTelemetryService
+} from './telemetry/service'
 import { createWebhookService } from './webhook/service'
 
 BigInt.prototype.toJSON = function () {
@@ -142,6 +145,11 @@ export function initIocContainer(
 
   container.singleton('telemetry', async (deps) => {
     const config = await deps.use('config')
+
+    if (!config.enableTelemetry) {
+      return createNoopTelemetryService()
+    }
+
     return createTelemetryService({
       logger: await deps.use('logger'),
       aseRatesService: await deps.use('ratesService'),
@@ -149,7 +157,6 @@ export function initIocContainer(
       instanceName: config.instanceName,
       collectorUrls: config.openTelemetryCollectors,
       exportIntervalMillis: config.openTelemetryExportInterval,
-      enableTelemetry: config.enableTelemetry,
       baseAssetCode: 'USD',
       baseScale: 4
     })

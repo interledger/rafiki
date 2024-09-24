@@ -41,7 +41,6 @@ export interface TelemetryServiceDependencies extends BaseService {
   internalRatesService: RatesService
   baseAssetCode: string
   baseScale: number
-  enableTelemetry: boolean
 }
 
 const METER_NAME = 'Rafiki'
@@ -49,10 +48,11 @@ const METER_NAME = 'Rafiki'
 export function createTelemetryService(
   deps: TelemetryServiceDependencies
 ): TelemetryService {
-  if (!deps.enableTelemetry) {
-    return new NoopTelemetryServiceImpl(deps)
-  }
   return new TelemetryServiceImpl(deps)
+}
+
+export function createNoopTelemetryService(): TelemetryService {
+  return new NoopTelemetryServiceImpl()
 }
 
 export class TelemetryServiceImpl implements TelemetryService {
@@ -234,16 +234,7 @@ export class TelemetryServiceImpl implements TelemetryService {
 
 /* eslint-disable @typescript-eslint/no-unused-vars */
 export class NoopTelemetryServiceImpl implements TelemetryService {
-  private instanceName: string
-  private meterProvider?: MeterProvider
-  private internalRatesService: RatesService
-  private aseRatesService: RatesService
-
-  constructor(private deps: TelemetryServiceDependencies) {
-    this.instanceName = deps.instanceName
-    this.internalRatesService = deps.internalRatesService
-    this.aseRatesService = deps.aseRatesService
-  }
+  constructor() {}
 
   public async shutdown(): Promise<void> {
     // do nothing

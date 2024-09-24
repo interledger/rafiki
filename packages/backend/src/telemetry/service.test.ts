@@ -6,11 +6,9 @@ import { ConvertError, RatesService } from '../rates/service'
 import { TestContainer, createTestApp } from '../tests/app'
 import { mockCounter, mockHistogram } from '../tests/telemetry'
 import {
-  createTelemetryService,
   NoopTelemetryServiceImpl,
   TelemetryService,
-  TelemetryServiceImpl,
-  TelemetryServiceDependencies
+  TelemetryServiceImpl
 } from './service'
 import { Counter, Histogram } from '@opentelemetry/api'
 import { privacy } from './privacy'
@@ -66,9 +64,9 @@ describe('Telemetry Service', () => {
       })
 
       appContainer = await createTestApp(deps)
-      telemetryService = await deps.use('telemetry')!
-      aseRatesService = await deps.use('ratesService')!
-      internalRatesService = await deps.use('internalRatesService')!
+      telemetryService = await deps.use('telemetry')
+      aseRatesService = await deps.use('ratesService')
+      internalRatesService = await deps.use('internalRatesService')
 
       mockRatesApi(exchangeRatesUrl, (base) => {
         apiRequestCount++
@@ -78,6 +76,10 @@ describe('Telemetry Service', () => {
 
     afterAll(async (): Promise<void> => {
       await appContainer.shutdown()
+    })
+
+    test('telemetryService instance should be real implementation', () => {
+      expect(telemetryService instanceof TelemetryServiceImpl).toBe(true)
     })
 
     it('should create a counter with source attribute for a new metric', () => {
@@ -441,29 +443,28 @@ describe('Telemetry Service', () => {
     })
   })
   describe('Telemetry Disabled', () => {
-    let deps: TelemetryServiceDependencies
+    let deps: IocContract<AppServices>
+    let appContainer: TestContainer
+    let telemetryService: TelemetryService
 
-    beforeEach(() => {
-      deps = {
+    beforeAll(async (): Promise<void> => {
+      deps = initIocContainer({
+        ...Config,
         enableTelemetry: false
-      } as TelemetryServiceDependencies
+      })
+      appContainer = await createTestApp(deps)
+      telemetryService = await deps.use('telemetry')!
     })
 
-    test('should return NoopTelemetryServiceImpl when enableTelemetry is false', () => {
-      const telemetryService = createTelemetryService(deps)
-
-      expect(telemetryService).toBeInstanceOf(NoopTelemetryServiceImpl)
+    afterAll(async (): Promise<void> => {
+      await appContainer.shutdown()
     })
 
-    test('should return TelemetryServiceImpl when enableTelemetry is true', () => {
-      deps.enableTelemetry = true
-      const telemetryService = createTelemetryService(deps)
-
-      expect(telemetryService).toBeInstanceOf(TelemetryServiceImpl)
+    test('telemetryService instance should be no-op implementation', () => {
+      expect(telemetryService instanceof NoopTelemetryServiceImpl).toBe(true)
     })
 
     test('NoopTelemetryServiceImpl should not get meter ', () => {
-      const telemetryService = createTelemetryService(deps)
       telemetryService.recordHistogram('testhistogram', 1)
       telemetryService.incrementCounter('testcounter', 1)
 
