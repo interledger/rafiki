@@ -14,7 +14,7 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@apollo/client": "^3.11.4",
+    "@apollo/client": "^3.11.8",
     "@interledger/http-signature-utils": "2.0.2",
     "@interledger/open-payments": "6.13.1",
     "@koa/bodyparser": "^5.1.1",
