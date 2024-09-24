@@ -2,7 +2,7 @@ import { ILPMiddleware, ILPContext } from '../rafiki'
 
 export function createStreamAddressMiddleware(): ILPMiddleware {
   return async (
-    { request, services: { streamServer, telemetry }, state }: ILPContext,
+    { request, services: { streamServer }, state }: ILPContext,
     next: () => Promise<void>
   ): Promise<void> => {
     const { destination } = request.prepare
