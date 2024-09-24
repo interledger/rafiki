@@ -288,7 +288,7 @@ async function createOutgoingPayment(
           throw OutgoingPaymentError.InsufficientGrant
         }
       }
-      const receiver = await deps.receiverService.get(payment.receiver)
+      const receiver = await deps.receiverService.get(payment.receiver, options.tenantId)
       if (!receiver) {
         throw OutgoingPaymentError.InvalidQuote
       }
