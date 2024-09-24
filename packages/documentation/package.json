@@ -9,12 +9,14 @@
     "astro": "astro"
   },
   "dependencies": {
+    "@astrojs/markdown-remark": "^5.2.0",
     "@astrojs/starlight": "^0.25.5",
     "@interledger/docs-design-system": "^0.5.2",
     "astro": "4.13.4",
     "astro-graphql-plugin": "^0.3.0",
     "graphql": "16.8.1",
     "mermaid": "^10.9.1",
+    "rehype-autolink-headings": "^7.1.0",
     "rehype-mathjax": "^6.0.0",
     "remark-math": "^6.0.0",
     "starlight-links-validator": "^0.10.1"
