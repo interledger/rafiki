@@ -22,22 +22,24 @@ script:pre-request {
 
 script:post-response {
   const url = require('url')
-
+  
   if (res.getStatus() !== 200) {
     return
   }
-
+  
   const body = res.getBody()
   bru.setEnvVar("receiverAssetCode", body?.assetCode)
   bru.setEnvVar("receiverAssetScale", body?.assetScale)
   
   const authUrl = url.parse(body?.authServer)
+  const receiverTenantId = authUrl.pathname.split('/')[1]
+  bru.setEnvVar("receiverTenantId", receiverTenantId)
   if (
       authUrl.hostname.includes('cloud-nine-wallet') || 
       authUrl.hostname.includes('happy-life-bank')
   ){
       const port = authUrl.hostname.includes('cloud-nine-wallet')? authUrl.port: Number(authUrl.port) + 1000
-      bru.setEnvVar("receiverOpenPaymentsAuthHost", authUrl.protocol + '//localhost:' + port );
+      bru.setEnvVar("receiverOpenPaymentsAuthHost", authUrl.protocol + '//localhost:' + port);
   } else {
       bru.setEnvVar("receiverOpenPaymentsAuthHost", body?.authServer);
   }

@@ -5,7 +5,7 @@ meta {
 }
 
 post {
-  url: {{senderOpenPaymentsHost}}/outgoing-payments
+  url: {{senderOpenPaymentsHost}}/{{senderTenantId}}/outgoing-payments
   body: json
   auth: none
 }
@@ -16,7 +16,7 @@ headers {
 
 body:json {
   {
-      "walletAddress": {{senderWalletAddress}},
+      "walletAddress": "{{senderWalletAddress}}",
       "quoteId": "{{senderOpenPaymentsHost}}/quotes/{{quoteId}}",
       "metadata": {
           "description": "yolo",

@@ -5,13 +5,14 @@ meta {
 }
 
 post {
-  url: {{receiverOpenPaymentsHost}}/incoming-payments
+  url: {{receiverOpenPaymentsHost}}/{{receiverTenantId}}/incoming-payments
   body: json
   auth: none
 }
 
 headers {
   Authorization: GNAP {{accessToken}}
+  x-operator-secret: {{operatorApiSecret}}
 }
 
 body:json {
@@ -41,7 +42,7 @@ script:pre-request {
 
 script:post-response {
   const body = res.getBody();
-
+  
   if (body?.id) {
     bru.setEnvVar("incomingPaymentId", body.id.split("/").pop());
   }
