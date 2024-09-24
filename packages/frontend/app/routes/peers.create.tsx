@@ -127,7 +127,7 @@ export default function CreatePeerPage() {
                     description={
                       <>
                         List of valid tokens to accept when receiving incoming{' '}
-                        <a 
+                        <a
                           className='default-link'
                           href='https://rafiki.dev/integration/services/backend-service/#interledger-connector'
                         >
@@ -146,8 +146,8 @@ export default function CreatePeerPage() {
                     description={
                       <>
                         Valid auth token to present when sending outgoing{' '}
-                        <a 
-                          className='default-link' 
+                        <a
+                          className='default-link'
                           href='https://rafiki.dev/integration/services/backend-service/#interledger-connector'
                         >
                           ILP packets
