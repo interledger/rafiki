@@ -115,50 +115,50 @@ type Query {
     limit: Int
   ): AccountingTransferConnection!
 
-  "Retrieve an Open Payments Incoming Payment by receiver ID. The receiver's wallet address can be hosted on this server or a remote Open Payments resource server."
+  "Retrieve an Open Payments incoming payment by receiver ID. The receiver's wallet address can be hosted on this server or a remote Open Payments resource server."
   receiver(id: String!): Receiver
 }
 
 type Mutation {
-  "Create an asset"
+  "Create a new asset."
   createAsset(input: CreateAssetInput!): AssetMutationResponse!
 
-  "Update an asset"
+  "Update an existing asset."
   updateAsset(input: UpdateAssetInput!): AssetMutationResponse!
 
-  "Delete an asset"
+  "Delete an asset."
   deleteAsset(input: DeleteAssetInput!): DeleteAssetMutationResponse!
 
-  "Deposit asset liquidity"
+  "Deposit asset liquidity."
   depositAssetLiquidity(
     input: DepositAssetLiquidityInput!
   ): LiquidityMutationResponse
 
-  "Withdraw asset liquidity"
+  "Withdraw asset liquidity."
   createAssetLiquidityWithdrawal(
     input: CreateAssetLiquidityWithdrawalInput!
   ): LiquidityMutationResponse
 
-  "Create a peer"
+  "Create a new peer."
   createPeer(input: CreatePeerInput!): CreatePeerMutationResponse!
 
-  "Create a peer using a URL"
+  "Create or update a peer using a URL."
   createOrUpdatePeerByUrl(
     input: CreateOrUpdatePeerByUrlInput!
   ): CreateOrUpdatePeerByUrlMutationResponse!
 
-  "Update a peer"
+  "Update an existing peer."
   updatePeer(input: UpdatePeerInput!): UpdatePeerMutationResponse!
 
-  "Delete a peer"
+  "Delete a peer."
   deletePeer(input: DeletePeerInput!): DeletePeerMutationResponse!
 
-  "Deposit peer liquidity"
+  "Deposit peer liquidity."
   depositPeerLiquidity(
     input: DepositPeerLiquidityInput!
   ): LiquidityMutationResponse
 
-  "Withdraw peer liquidity"
+  "Withdraw peer liquidity."
   createPeerLiquidityWithdrawal(
     input: CreatePeerLiquidityWithdrawalInput!
   ): LiquidityMutationResponse
@@ -173,12 +173,12 @@ type Mutation {
     input: VoidLiquidityWithdrawalInput!
   ): LiquidityMutationResponse
 
-  "Create a wallet address"
+  "Create a new wallet address."
   createWalletAddress(
     input: CreateWalletAddressInput!
   ): CreateWalletAddressMutationResponse!
 
-  "Update a wallet address"
+  "Update an existing wallet address."
   updateWalletAddress(
     input: UpdateWalletAddressInput!
   ): UpdateWalletAddressMutationResponse!
@@ -193,43 +193,44 @@ type Mutation {
     input: RevokeWalletAddressKeyInput!
   ): RevokeWalletAddressKeyMutationResponse
 
-  "Create an internal Open Payments Incoming Payment. The receiver has a wallet address on this Rafiki instance."
+  "Create an internal Open Payments incoming payment. The receiver has a wallet address on this Rafiki instance."
   createIncomingPayment(
     input: CreateIncomingPaymentInput!
   ): IncomingPaymentResponse!
 
-  "Create an internal or external Open Payments Incoming Payment. The receiver has a wallet address on either this or another Open Payments resource server."
+  "Create an internal or external Open Payments incoming payment. The receiver has a wallet address on either this or another Open Payments resource server."
   createReceiver(input: CreateReceiverInput!): CreateReceiverResponse!
 
+  "Update an existing incoming payment."
   updateIncomingPayment(
     input: UpdateIncomingPaymentInput!
   ): IncomingPaymentResponse!
 
-  "Create an Open Payments Quote"
+  "Create an Open Payments quote."
   createQuote(input: CreateQuoteInput!): QuoteResponse!
 
-  "Create an Open Payments Outgoing Payment"
+  "Create an Open Payments outgoing payment."
   createOutgoingPayment(
     input: CreateOutgoingPaymentInput!
   ): OutgoingPaymentResponse!
 
-  "Cancel Outgoing Payment"
+  "Cancel an outgoing payment."
   cancelOutgoingPayment(
     input: CancelOutgoingPaymentInput!
   ): OutgoingPaymentResponse!
 
-  "Create an Open Payments Outgoing Payment from an incoming payment"
+  "Create an Open Payments outgoing payment from an incoming payment."
   createOutgoingPaymentFromIncomingPayment(
     input: CreateOutgoingPaymentFromIncomingPaymentInput!
   ): OutgoingPaymentResponse!
 
-  "Deposit webhook event liquidity"
+  "Deposit webhook event liquidity (deprecated)."
   depositEventLiquidity(
     input: DepositEventLiquidityInput!
   ): LiquidityMutationResponse
     @deprecated(reason: "Use `depositOutgoingPaymentLiquidity`")
 
-  "Withdraw webhook event liquidity"
+  "Withdraw webhook event liquidity (deprecated)."
   withdrawEventLiquidity(
     input: WithdrawEventLiquidityInput!
   ): LiquidityMutationResponse
@@ -237,17 +238,17 @@ type Mutation {
       reason: "Use `createOutgoingPaymentWithdrawal, createIncomingPaymentWithdrawal, or createWalletAddressWithdrawal`"
     )
 
-  "Withdraw incoming payment liquidity"
+  "Withdraw incoming payment liquidity."
   createIncomingPaymentWithdrawal(
     input: CreateIncomingPaymentWithdrawalInput!
   ): LiquidityMutationResponse
 
-  "Withdraw outgoing payment liquidity"
+  "Withdraw outgoing payment liquidity."
   createOutgoingPaymentWithdrawal(
     input: CreateOutgoingPaymentWithdrawalInput!
   ): LiquidityMutationResponse
 
-  "Deposit outgoing payment liquidity"
+  "Deposit outgoing payment liquidity."
   depositOutgoingPaymentLiquidity(
     input: DepositOutgoingPaymentLiquidityInput!
   ): LiquidityMutationResponse
@@ -262,7 +263,7 @@ type Mutation {
     input: TriggerWalletAddressEventsInput!
   ): TriggerWalletAddressEventsMutationResponse!
 
-  "Set the fee on an asset"
+  "Set the fee structure on an asset."
   setFee(input: SetFeeInput!): SetFeeResponse!
 
   "Approves the incoming payment if the incoming payment is in the PENDING state"
@@ -302,12 +303,12 @@ type AssetEdge {
 }
 
 input ApproveIncomingPaymentInput {
-  "Unique identifier of the incoming payment to be approved. Note: Incoming Payment must be PENDING."
+  "Unique identifier of the incoming payment to be approved. Note: incoming payment must be PENDING."
   id: ID!
 }
 
 input CancelIncomingPaymentInput {
-  "Unique identifier of the incoming payment to be canceled. Note: Incoming Payment must be PENDING."
+  "Unique identifier of the incoming payment to be canceled. Note: incoming payment must be PENDING."
   id: ID!
 }
 
@@ -670,7 +671,6 @@ type Http {
   outgoing: HttpOutgoing!
 }
 
-
 type HttpOutgoing {
   "Authorization token to be presented to the peer's Rafiki instance."
   authToken: String!
@@ -819,10 +819,15 @@ type IncomingPaymentEdge {
 }
 
 interface BasePayment {
+  "Unique identifier for the payment."
   id: ID!
+  "Unique identifer of the wallet address under which the payment was created."
   walletAddressId: ID!
+  "Additional metadata associated with the payment."
   metadata: JSONObject
+  "The date and time that the payment was created."
   createdAt: String!
+  "Information about the wallet address of the Open Payments client that created the payment."
   client: String
 }
 
@@ -1358,7 +1363,9 @@ input FilterString {
 }
 
 interface Model {
+  "Unique identifer for the entity."
   id: ID!
+  "The date and time that the entity was created."
   createdAt: String!
 }
 
@@ -1442,6 +1449,17 @@ type CancelIncomingPaymentResponse {
   payment: IncomingPayment
 }
 
+"""
+The `UInt8` scalar type represents unsigned 8-bit whole numeric values, ranging from 0 to 255.
+"""
 scalar UInt8
+
+"""
+The `UInt64` scalar type represents unsigned 64-bit whole numeric values. It is capable of handling values that are larger than the JavaScript `Number` type limit (greater than 2^53).
+"""
 scalar UInt64
+
+"""
+The `JSONObject` scalar type represents JSON objects as specified by the [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf) standard.
+"""
 scalar JSONObject
