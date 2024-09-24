@@ -24,7 +24,8 @@ export function createContext<T extends AppContext>(
       {
         key: 'sessionId',
         maxAge: 60 * 1000,
-        signed: true
+        signed: true,
+        sameSite: 'strict' // testing with strict, most restrictive, anything less will work if it does with strict
       },
       koa
     )
