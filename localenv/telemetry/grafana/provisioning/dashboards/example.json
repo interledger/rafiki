@@ -63,7 +63,9 @@
         "orientation": "auto",
         "percentChangeColorMode": "standard",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
@@ -133,7 +135,9 @@
         "orientation": "auto",
         "percentChangeColorMode": "standard",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
@@ -229,7 +233,9 @@
         "orientation": "auto",
         "percentChangeColorMode": "standard",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
@@ -327,7 +333,9 @@
         "namePlacement": "auto",
         "orientation": "horizontal",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
@@ -400,7 +408,9 @@
         "footer": {
           "countRows": false,
           "fields": "",
-          "reducer": ["sum"],
+          "reducer": [
+            "sum"
+          ],
           "show": false
         },
         "showHeader": true,
@@ -429,7 +439,9 @@
               "operator": "=",
               "scope": "resource",
               "tag": "service.name",
-              "value": ["RAFIKI_NETWORK"],
+              "value": [
+                "RAFIKI_NETWORK"
+              ],
               "valueType": "string"
             },
             {
@@ -529,7 +541,9 @@
       "id": 10,
       "options": {
         "legend": {
-          "calcs": ["p95"],
+          "calcs": [
+            "p95"
+          ],
           "displayMode": "table",
           "placement": "right",
           "showLegend": true
@@ -731,7 +745,9 @@
       "id": 9,
       "options": {
         "legend": {
-          "calcs": ["p95"],
+          "calcs": [
+            "p95"
+          ],
           "displayMode": "table",
           "placement": "right",
           "showLegend": true
@@ -881,7 +897,8 @@
                 "value": 80
               }
             ]
-          }
+          },
+          "unit": "ms"
         },
         "overrides": []
       },
@@ -894,7 +911,9 @@
       "id": 16,
       "options": {
         "legend": {
-          "calcs": ["p95"],
+          "calcs": [
+            "p95"
+          ],
           "displayMode": "table",
           "placement": "right",
           "showLegend": true
@@ -911,7 +930,7 @@
             "uid": "PBFA97CFB590B2093"
           },
           "editorMode": "code",
-          "expr": "rate(depositOutgoingPaymentLiquidity_sum[$__rate_interval])/rate(depositOutgoingPaymentLiquidity_count[$__rate_interval])",
+          "expr": "rate(deposit_outgoing_payment_liquidity_ms_sum[$__rate_interval])/rate(deposit_outgoing_payment_liquidity_ms_count[$__rate_interval])",
           "instant": false,
           "legendFormat": "{{callName}}",
           "range": true,
@@ -923,12 +942,25 @@
             "uid": "${PrometheusDS}"
           },
           "editorMode": "code",
-          "expr": "rate(fundPayment_sum[$__rate_interval])/rate(fundPayment_count[$__rate_interval])",
+          "expr": "rate(fund_payment_ms_sum[$__rate_interval])/rate(fund_payment_ms_count[$__rate_interval])",
           "hide": false,
           "instant": false,
           "legendFormat": "{{callName}}",
           "range": true,
-          "refId": "B"
+          "refId": "C"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${PrometheusDS}"
+          },
+          "editorMode": "code",
+          "expr": "rate(wh_get_latest_ms_sum[$__rate_interval])/rate(wh_get_latest_ms_count[$__rate_interval])",
+          "hide": false,
+          "instant": false,
+          "legendFormat": "{{callName}}",
+          "range": true,
+          "refId": "D"
         }
       ],
       "title": "Deposit Outgoing Payment Liquidity ",
@@ -1006,7 +1038,9 @@
       "id": 14,
       "options": {
         "legend": {
-          "calcs": ["p95"],
+          "calcs": [
+            "p95"
+          ],
           "displayMode": "table",
           "placement": "right",
           "showLegend": true
@@ -1139,7 +1173,7 @@
     },
     {
       "datasource": {
-        "name": "${PrometheusDS}",
+        "default": false,
         "type": "prometheus",
         "uid": "${PrometheusDS}"
       },
@@ -1205,134 +1239,12 @@
         "x": 0,
         "y": 30
       },
-      "id": 12,
-      "options": {
-        "legend": {
-          "calcs": ["p95"],
-          "displayMode": "table",
-          "placement": "right",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${PrometheusDS}"
-          },
-          "editorMode": "code",
-          "expr": "sum by (callName) (rate(connector_middleware_sum[$__rate_interval])/rate(connector_middleware_count[$__rate_interval]))",
-          "instant": false,
-          "legendFormat": "{{caller}}",
-          "range": true,
-          "refId": "A"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${PrometheusDS}"
-          },
-          "editorMode": "code",
-          "expr": "sum by (callName) (rate(connector_middleware_stack_sum[$__rate_interval])/rate(connector_middleware_stack_count[$__rate_interval]))",
-          "hide": false,
-          "instant": false,
-          "legendFormat": "__auto",
-          "range": true,
-          "refId": "B"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${PrometheusDS}"
-          },
-          "editorMode": "code",
-          "expr": "sum by (callName) (rate(balanceMiddleware_sum[$__rate_interval])/rate(balanceMiddleware_count[$__rate_interval]))",
-          "hide": false,
-          "instant": false,
-          "legendFormat": "__auto",
-          "range": true,
-          "refId": "C"
-        }
-      ],
-      "title": "ILP Connector",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "default": false,
-        "type": "prometheus",
-        "uid": "${PrometheusDS}"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisBorderShow": false,
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "barWidthFactor": 0.6,
-            "drawStyle": "line",
-            "fillOpacity": 0,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "insertNulls": false,
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          },
-          "unit": "ms"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 7,
-        "w": 12,
-        "x": 12,
-        "y": 30
-      },
       "id": 7,
       "options": {
         "legend": {
-          "calcs": ["p95"],
+          "calcs": [
+            "p95"
+          ],
           "displayMode": "table",
           "placement": "right",
           "showLegend": true
@@ -1488,14 +1400,16 @@
       },
       "gridPos": {
         "h": 7,
-        "w": 24,
-        "x": 0,
-        "y": 37
+        "w": 12,
+        "x": 12,
+        "y": 30
       },
       "id": 11,
       "options": {
         "legend": {
-          "calcs": ["p95"],
+          "calcs": [
+            "p95"
+          ],
           "displayMode": "table",
           "placement": "right",
           "showLegend": true
@@ -1587,7 +1501,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 44
+        "y": 37
       },
       "id": 2,
       "interval": "15s",
@@ -1687,7 +1601,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 44
+        "y": 37
       },
       "id": 1,
       "interval": "15s",
@@ -1768,7 +1682,7 @@
     ]
   },
   "time": {
-    "from": "now-30m",
+    "from": "now-5m",
     "to": "now"
   },
   "timepicker": {
@@ -1787,6 +1701,6 @@
   "timezone": "browser",
   "title": "Example Dashboard",
   "uid": "fdr58stwkr6yof",
-  "version": 1,
+  "version": 3,
   "weekStart": ""
 }

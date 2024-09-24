@@ -598,11 +598,7 @@ async function fundPayment(
   deps: ServiceDependencies,
   { id, amount, transferId }: FundOutgoingPaymentOptions
 ): Promise<OutgoingPayment | FundingError> {
-  const stopTimer = deps.telemetry.startTimer('fundPayment', {
-    callName: 'fundPayment'
-  })
-
-  const outgoingPaymentOrError = deps.knex.transaction(async (trx) => {
+  return await deps.knex.transaction(async (trx) => {
     const payment = await OutgoingPayment.query(trx)
       .findById(id)
       .forUpdate()
@@ -627,7 +623,6 @@ async function fundPayment(
       if (err instanceof AccountAlreadyExistsError) {
         // Do nothing.
       } else {
-        stopTimer()
         throw err
       }
     }
@@ -643,10 +638,6 @@ async function fundPayment(
     await payment.$query(trx).patch({ state: OutgoingPaymentState.Sending })
     return await addSentAmount(deps, payment)
   })
-
-  stopTimer()
-
-  return outgoingPaymentOrError
 }
 
 async function getWalletAddressPage(

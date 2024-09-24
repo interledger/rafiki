@@ -441,15 +441,22 @@ export const depositOutgoingPaymentLiquidity: MutationResolvers<ApolloContext>['
     ctx
   ): Promise<ResolversTypes['LiquidityMutationResponse']> => {
     const telemetry = await ctx.container.use('telemetry')
-    const stopTimer = telemetry.startTimer('depositOutgoingPaymentLiquidity', {
-      callName: 'depositOutgoingPaymentLiquidity'
-    })
+    const stopTimer = telemetry.startTimer(
+      'deposit_outgoing_payment_liquidity_ms',
+      {
+        callName: 'depositOutgoingPaymentLiquidity'
+      }
+    )
     const { outgoingPaymentId } = args.input
     const webhookService = await ctx.container.use('webhookService')
+    const stopTimerWh = telemetry.startTimer('wh_get_latest_ms', {
+      callName: 'webhookService.getLatestByResourceId'
+    })
     const event = await webhookService.getLatestByResourceId({
       outgoingPaymentId,
       types: [OutgoingPaymentDepositType.PaymentCreated]
     })
+    stopTimerWh()
     if (!event || !isOutgoingPaymentEvent(event)) {
       stopTimer()
       throw new GraphQLError(errorToMessage[LiquidityError.InvalidId], {
@@ -466,11 +473,16 @@ export const depositOutgoingPaymentLiquidity: MutationResolvers<ApolloContext>['
     const outgoingPaymentService = await ctx.container.use(
       'outgoingPaymentService'
     )
+    const stopTimerFund = telemetry.startTimer('fund_payment_ms', {
+      callName: 'outgoingPaymentService.fund'
+    })
     const paymentOrErr = await outgoingPaymentService.fund({
       id: outgoingPaymentId,
       amount: BigInt(event.data.debitAmount.value),
       transferId: event.id
     })
+    stopTimerFund()
+
     if (isFundingError(paymentOrErr)) {
       stopTimer()
       throw new GraphQLError(fundingErrorToMessage[paymentOrErr], {
