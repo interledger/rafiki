@@ -51,7 +51,7 @@ Similarly, if a packet's destination address corresponds to a peer, your connect
 You and your peer should have exchanged incoming and outgoing auth tokens as part of establishing your [peering relationship](/admin/manage-peering).
 :::
 
-A packet can either continue on to your peer via HTTP or terminate at your Rafiki instance's STREAM server. If the packet terminates at your STREAM server, your connector will attempt to extract and decode the payment tag from the packet's destination address. When your connector successfully matches the tag with a locally managed wallet address or incoming payment, the connector will not forward the packet. Instead, it will credit the corresponding balance and track the total amount received in REDIS to support STREAM receipts. Packets addressed to a wallet address happen via SPSP.
+A packet can either continue on to your peer via HTTP or terminate at your Rafiki instance's STREAM server. If the packet terminates at your STREAM server, your connector will attempt to extract and decode the payment tag from the packet's destination address. When your connector successfully matches the tag with a locally managed wallet address or incoming payment, the connector will not forward the packet. Instead, it will credit the corresponding balance and track the total amount received in Redis to support STREAM receipts. Packets addressed to a wallet address happen via SPSP.
 
 ## GraphQL Backend Admin API
 
