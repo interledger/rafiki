@@ -64,7 +64,6 @@ export const getTenant: QueryResolvers<ApolloContext>['tenant'] = async (
       }
     })
   }
-  console.log('TENANT: ', tenant)
 
   return tenantToGraphql(tenant)
 }
