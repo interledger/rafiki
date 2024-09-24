@@ -215,7 +215,12 @@ async function getIncomingPayment(
     tenantId,
     authServerUrl,
     retryOnTokenError = true
-  }: { url: string; tenantId: string; authServerUrl: string; retryOnTokenError?: boolean }
+  }: {
+    url: string
+    tenantId: string
+    authServerUrl: string
+    retryOnTokenError?: boolean
+  }
 ): Promise<
   OpenPaymentsIncomingPaymentWithPaymentMethods | RemoteIncomingPaymentError
 > {

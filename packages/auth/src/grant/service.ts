@@ -24,7 +24,11 @@ interface GrantFilter {
 
 export interface GrantService {
   getByIdWithAccess(grantId: string): Promise<Grant | undefined>
-  create(grantRequest: GrantRequest, tenantId: string, trx?: Transaction): Promise<Grant>
+  create(
+    grantRequest: GrantRequest,
+    tenantId: string,
+    trx?: Transaction
+  ): Promise<Grant>
   markPending(grantId: string, trx?: Transaction): Promise<Grant | undefined>
   approve(grantId: string, trx?: Transaction): Promise<Grant>
   finalize(grantId: string, reason: GrantFinalization): Promise<Grant>

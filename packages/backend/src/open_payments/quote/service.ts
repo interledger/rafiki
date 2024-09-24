@@ -183,7 +183,10 @@ export async function resolveReceiver(
   deps: ServiceDependencies,
   options: CreateQuoteOptions
 ): Promise<Receiver> {
-  const receiver = await deps.receiverService.get(options.receiver, options.tenantId)
+  const receiver = await deps.receiverService.get(
+    options.receiver,
+    options.tenantId
+  )
   if (!receiver) {
     deps.logger.info(
       { receiver: options.receiver },

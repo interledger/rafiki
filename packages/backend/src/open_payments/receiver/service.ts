@@ -145,7 +145,11 @@ async function getReceiver(
       return new Receiver(localIncomingPayment, true)
     }
 
-    const remoteIncomingPayment = await getRemoteIncomingPayment(deps, url, tenantId)
+    const remoteIncomingPayment = await getRemoteIncomingPayment(
+      deps,
+      url,
+      tenantId
+    )
     if (remoteIncomingPayment) {
       return new Receiver(remoteIncomingPayment, false)
     }
@@ -217,8 +221,10 @@ async function getRemoteIncomingPayment(
   url: string,
   tenantId: string
 ): Promise<OpenPaymentsIncomingPaymentWithPaymentMethods | undefined> {
-  const incomingPaymentOrError =
-    await deps.remoteIncomingPaymentService.get(url, tenantId)
+  const incomingPaymentOrError = await deps.remoteIncomingPaymentService.get(
+    url,
+    tenantId
+  )
 
   if (isRemoteIncomingPaymentError(incomingPaymentOrError)) {
     return undefined
