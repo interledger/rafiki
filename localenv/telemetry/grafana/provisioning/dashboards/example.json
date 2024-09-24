@@ -1316,7 +1316,7 @@
     },
     {
       "datasource": {
-        "name": "${PrometheusDS}",
+        "default": false,
         "type": "prometheus",
         "uid": "${PrometheusDS}"
       },
@@ -1402,7 +1402,7 @@
             "uid": "${PrometheusDS}"
           },
           "editorMode": "code",
-          "expr": "sum by (callName) (rate(psql_getAccountBalances_sum[$__rate_interval])/rate(psql_getAccountBalances_count[$__rate_interval]))",
+          "expr": "sum by (callName) (rate(psql_get_account_balances_sum[$__rate_interval])/rate(psql_get_account_balances_count[$__rate_interval]))",
           "instant": false,
           "legendFormat": "__auto",
           "range": true,
