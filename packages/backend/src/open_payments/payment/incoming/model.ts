@@ -265,7 +265,7 @@ export class IncomingPayment
   } {
     return {
       receivedAmount: serializeAmount(this.receivedAmount),
-      authServer: authServerUrl
+      authServer: `${authServerUrl}/${this.tenantId}`
     }
   }
 }

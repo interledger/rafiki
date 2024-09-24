@@ -16,6 +16,7 @@ import { isGrantError } from '../../grant/errors'
 
 interface CreateRemoteIncomingPaymentArgs {
   walletAddressUrl: string
+  tenantId: string
   expiresAt?: Date
   incomingAmount?: Amount
   metadata?: Record<string, unknown>
@@ -23,7 +24,8 @@ interface CreateRemoteIncomingPaymentArgs {
 
 export interface RemoteIncomingPaymentService {
   get(
-    url: string
+    url: string,
+    tenantId: string
   ): Promise<
     OpenPaymentsIncomingPaymentWithPaymentMethods | RemoteIncomingPaymentError
   >
@@ -52,7 +54,7 @@ export async function createRemoteIncomingPaymentService(
   }
 
   return {
-    get: (url) => get(deps, url),
+    get: (url, tenantId) => get(deps, url, tenantId),
     create: (args) => create(deps, args)
   }
 }
@@ -103,6 +105,7 @@ async function createIncomingPayment(
 
   const grantOptions = {
     authServer: walletAddress.authServer,
+    tenantId: createArgs.tenantId,
     accessType: AccessType.IncomingPayment,
     accessActions: [AccessAction.Create, AccessAction.ReadAll]
   }
@@ -176,7 +179,8 @@ async function createIncomingPayment(
 
 async function get(
   deps: ServiceDependencies,
-  url: string
+  url: string,
+  tenantId: string
 ): Promise<
   OpenPaymentsIncomingPaymentWithPaymentMethods | RemoteIncomingPaymentError
 > {
@@ -199,6 +203,7 @@ async function get(
 
   return getIncomingPayment(deps, {
     url,
+    tenantId,
     authServerUrl: publicIncomingPayment.authServer
   })
 }
@@ -207,13 +212,15 @@ async function getIncomingPayment(
   deps: ServiceDependencies,
   {
     url,
+    tenantId,
     authServerUrl,
     retryOnTokenError = true
-  }: { url: string; authServerUrl: string; retryOnTokenError?: boolean }
+  }: { url: string; tenantId: string; authServerUrl: string; retryOnTokenError?: boolean }
 ): Promise<
   OpenPaymentsIncomingPaymentWithPaymentMethods | RemoteIncomingPaymentError
 > {
   const grantOptions = {
+    tenantId,
     authServer: authServerUrl,
     accessType: AccessType.IncomingPayment,
     accessActions: [AccessAction.ReadAll]
@@ -267,6 +274,7 @@ async function getIncomingPayment(
 
         return getIncomingPayment(deps, {
           url,
+          tenantId,
           authServerUrl,
           retryOnTokenError: false
         })

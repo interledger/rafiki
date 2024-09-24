@@ -77,7 +77,6 @@ async function createQuote(
   const options: CreateQuoteOptions = {
     tenantId,
     walletAddressId: ctx.walletAddress.id,
-    tenantId: ctx.tenantId,
     receiver: body.receiver,
     client: ctx.client,
     method: body.method
