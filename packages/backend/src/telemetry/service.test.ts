@@ -5,7 +5,11 @@ import { Config } from '../config/app'
 import { ConvertError, RatesService } from '../rates/service'
 import { TestContainer, createTestApp } from '../tests/app'
 import { mockCounter, mockHistogram } from '../tests/telemetry'
-import { TelemetryService, TelemetryServiceImpl } from './service'
+import {
+  NoopTelemetryServiceImpl,
+  TelemetryService,
+  TelemetryServiceImpl
+} from './service'
 import { Counter, Histogram } from '@opentelemetry/api'
 import { privacy } from './privacy'
 import { mockRatesApi } from '../tests/rates'
@@ -436,6 +440,36 @@ describe('Telemetry Service', () => {
           expect.any(Object)
         )
       })
+    })
+  })
+  describe('Telemetry Disabled', () => {
+    let deps: IocContract<AppServices>
+    let appContainer: TestContainer
+    let telemetryService: TelemetryService
+
+    beforeAll(async (): Promise<void> => {
+      deps = initIocContainer({
+        ...Config,
+        enableTelemetry: false
+      })
+      appContainer = await createTestApp(deps)
+      telemetryService = await deps.use('telemetry')!
+    })
+
+    afterAll(async (): Promise<void> => {
+      await appContainer.shutdown()
+    })
+
+    test('telemetryService instance should be no-op implementation', () => {
+      expect(telemetryService instanceof NoopTelemetryServiceImpl).toBe(true)
+    })
+
+    test('NoopTelemetryServiceImpl should not get meter ', () => {
+      telemetryService.recordHistogram('testhistogram', 1)
+      telemetryService.incrementCounter('testcounter', 1)
+
+      expect(mockCounter.add).toHaveBeenCalledTimes(0)
+      expect(mockHistogram.record).toHaveBeenCalledTimes(0)
     })
   })
 })
