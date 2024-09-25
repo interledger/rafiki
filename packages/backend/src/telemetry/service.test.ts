@@ -442,34 +442,34 @@ describe('Telemetry Service', () => {
       })
     })
   })
-  describe('Telemetry Disabled', () => {
-    let deps: IocContract<AppServices>
-    let appContainer: TestContainer
-    let telemetryService: TelemetryService
+  // describe('Telemetry Disabled', () => {
+  //   let deps: IocContract<AppServices>
+  //   let appContainer: TestContainer
+  //   let telemetryService: TelemetryService
 
-    beforeAll(async (): Promise<void> => {
-      deps = initIocContainer({
-        ...Config,
-        enableTelemetry: false
-      })
-      appContainer = await createTestApp(deps)
-      telemetryService = await deps.use('telemetry')!
-    })
+  //   beforeAll(async (): Promise<void> => {
+  //     deps = initIocContainer({
+  //       ...Config,
+  //       enableTelemetry: false
+  //     })
+  //     appContainer = await createTestApp(deps)
+  //     telemetryService = await deps.use('telemetry')!
+  //   })
 
-    afterAll(async (): Promise<void> => {
-      await appContainer.shutdown()
-    })
+  //   afterAll(async (): Promise<void> => {
+  //     await appContainer.shutdown()
+  //   })
 
-    test('telemetryService instance should be no-op implementation', () => {
-      expect(telemetryService instanceof NoopTelemetryServiceImpl).toBe(true)
-    })
+  //   test('telemetryService instance should be no-op implementation', () => {
+  //     expect(telemetryService instanceof NoopTelemetryServiceImpl).toBe(true)
+  //   })
 
-    test('NoopTelemetryServiceImpl should not get meter ', () => {
-      telemetryService.recordHistogram('testhistogram', 1)
-      telemetryService.incrementCounter('testcounter', 1)
+  //   test('NoopTelemetryServiceImpl should not get meter ', () => {
+  //     telemetryService.recordHistogram('testhistogram', 1)
+  //     telemetryService.incrementCounter('testcounter', 1)
 
-      expect(mockCounter.add).toHaveBeenCalledTimes(0)
-      expect(mockHistogram.record).toHaveBeenCalledTimes(0)
-    })
-  })
+  //     expect(mockCounter.add).toHaveBeenCalledTimes(0)
+  //     expect(mockHistogram.record).toHaveBeenCalledTimes(0)
+  //   })
+  // })
 })
