@@ -20,8 +20,18 @@ function envBool(name: string, value: boolean): boolean {
   const envValue = process.env[name]
   return envValue == null ? value : envValue === 'true'
 }
+function envEnum<T extends string>(
+  name: string,
+  allowedValues: T[],
+  defaultValue: T | undefined
+): T | undefined {
+  const envValue = process.env[name]
+  if (envValue && allowedValues.includes(envValue as T)) {
+    return envValue as T
+  }
+  return defaultValue
+}
 export type IAppConfig = typeof Config
-export type SameSiteCookieProp = boolean | 'strict' | 'lax' | 'none' | undefined
 
 dotenv.config({
   path: process.env.ENV_FILE || '.env'
@@ -51,7 +61,11 @@ export const Config = {
   adminApiSignatureTtl: envInt('ADMIN_API_SIGNATURE_TTL_SECONDS', 30),
   waitTimeSeconds: envInt('WAIT_SECONDS', 5),
   cookieKey: envString('COOKIE_KEY'),
-  interactionCookieSameSite: process.env.INTERACTION_COOKIE_SAME_SITE, // optional
+  interactionCookieSameSite: envEnum(
+    'INTERACTION_COOKIE_SAME_SITE',
+    ['lax', 'none'],
+    undefined
+  ),
   interactionExpirySeconds: envInt('INTERACTION_EXPIRY_SECONDS', 10 * 60), // Default 10 minutes
   accessTokenExpirySeconds: envInt('ACCESS_TOKEN_EXPIRY_SECONDS', 10 * 60), // Default 10 minutes
   databaseCleanupWorkers: envInt('DATABASE_CLEANUP_WORKERS', 1),

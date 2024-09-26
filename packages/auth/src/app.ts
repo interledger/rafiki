@@ -13,7 +13,7 @@ import { ApolloServer } from '@apollo/server'
 import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer'
 import { koaMiddleware } from '@as-integrations/koa'
 
-import { IAppConfig, SameSiteCookieProp } from './config/app'
+import { IAppConfig } from './config/app'
 import { addResolversToSchema } from '@graphql-tools/schema'
 import { GraphQLFileLoader } from '@graphql-tools/graphql-file-loader'
 import { loadSchemaSync } from '@graphql-tools/load'
@@ -345,8 +345,7 @@ export class App {
 
     const redis = await this.container.use('redis')
     const maxAgeMs = this.config.interactionExpirySeconds * 1000
-    const interactionSameSite = this.config
-      .interactionCookieSameSite as SameSiteCookieProp
+    const interactionSameSite = this.config.interactionCookieSameSite
     koa.use(
       session(
         {
