@@ -155,12 +155,12 @@ async function pay(
   deps: ServiceDependencies,
   options: PayOptions
 ): Promise<void> {
-  // TODO: use finalDebitAmount instead of sourceAmount? pass sourceAmount in as finalDebitAmount?
+  // TODO: use finalDebitAmount instead of debitAmountMinusFees? pass debitAmountMinusFees in as finalDebitAmount?
   const { outgoingPayment, receiver, finalReceiveAmount } = options
-  if (!outgoingPayment.quote.sourceAmount) {
-    // TODO: handle this better. perhaps sourceAmount should not be nullable?
+  if (!outgoingPayment.quote.debitAmountMinusFees) {
+    // TODO: handle this better. perhaps debitAmountMinusFees should not be nullable?
     // If throwing an error, follow existing patterns
-    throw new Error('could do local pay, missing sourceAmount')
+    throw new Error('could do local pay, missing debitAmountMinusFees')
   }
 
   // Cannot directly use receiver/receiver.incomingAccount for destinationAccount.
@@ -209,7 +209,7 @@ async function pay(
   // let feeAmount: number | null
 
   // baseDebitAmount excludes fees
-  const sourceAmount = outgoingPayment.quote.sourceAmount //finalDebitAmount
+  const sourceAmount = outgoingPayment.quote.debitAmountMinusFees //finalDebitAmount
 
   // if (outgoingPayment.quote.feeId) {
   //   const fee = await deps.feeService.getById(outgoingPayment.quote.feeId)

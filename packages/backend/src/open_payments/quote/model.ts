@@ -26,7 +26,7 @@ export class Quote extends WalletAddressSubresource {
   public fee?: Fee
 
   public ilpQuoteDetails?: IlpQuoteDetails
-  public sourceAmount?: bigint
+  public debitAmountMinusFees?: bigint
 
   static get relationMappings() {
     return {

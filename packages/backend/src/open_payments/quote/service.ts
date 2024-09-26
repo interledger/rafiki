@@ -429,8 +429,8 @@ async function finalizeQuote(
     : calculateFixedDeliveryQuoteAmounts(deps, quote)
 
   const patchOptions = {
-    sourceAmount: maxReceiveAmountValue
-      ? // TODO: change fixed send to return the sourceAmount if I can get new calc working
+    debitAmountMinusFees: maxReceiveAmountValue
+      ? // TODO: change fixed send to return the debitAmountMinusFees if I can get new calc working
         quote.debitAmount.value -
         (quote.fee?.calculate(quote.debitAmount.value) ?? 0n)
       : quote.debitAmount.value,

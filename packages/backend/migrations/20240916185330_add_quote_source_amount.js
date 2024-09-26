@@ -4,7 +4,7 @@
  */
 exports.up = function (knex) {
   return knex.schema.alterTable('quotes', function (table) {
-    table.bigInteger('sourceAmount').nullable()
+    table.bigInteger('debitAmountMinusFees').nullable()
   })
 }
 
@@ -14,6 +14,6 @@ exports.up = function (knex) {
  */
 exports.down = function (knex) {
   return knex.schema.alterTable('quotes', function (table) {
-    table.dropColumn('sourceAmount')
+    table.dropColumn('debitAmountMinusFees')
   })
 }
