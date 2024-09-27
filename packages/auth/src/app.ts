@@ -345,12 +345,14 @@ export class App {
 
     const redis = await this.container.use('redis')
     const maxAgeMs = this.config.interactionExpirySeconds * 1000
+    const interactionSameSite = this.config.interactionCookieSameSite
     koa.use(
       session(
         {
           key: 'sessionId',
           maxAge: maxAgeMs,
           signed: true,
+          sameSite: interactionSameSite,
           store: {
             async get(key) {
               const s = await redis.get(key)
