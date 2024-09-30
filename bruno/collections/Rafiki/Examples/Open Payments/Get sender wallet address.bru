@@ -32,15 +32,18 @@ script:post-response {
   bru.setEnvVar("senderAssetScale", body?.assetScale)
   
   const authUrl = url.parse(body?.authServer)
+  const senderTenantId = authUrl.pathname.split('/')[1]
+  bru.setEnvVar("senderTenantId", senderTenantId)
   if (
       authUrl.hostname.includes('cloud-nine-wallet') || 
       authUrl.hostname.includes('happy-life-bank')
   ){
       const port = authUrl.hostname.includes('cloud-nine-wallet')? authUrl.port: Number(authUrl.port) + 1000
-      bru.setEnvVar("senderOpenPaymentsAuthHost", authUrl.protocol + '//localhost:' + port );
+      bru.setEnvVar("senderOpenPaymentsAuthHost", authUrl.protocol + '//localhost:' + port);
   } else {
       bru.setEnvVar("senderOpenPaymentsAuthHost", body?.authServer);
   }
+  
 }
 
 tests {

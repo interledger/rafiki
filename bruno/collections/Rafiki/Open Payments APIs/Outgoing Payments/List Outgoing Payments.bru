@@ -5,12 +5,12 @@ meta {
 }
 
 get {
-  url: {{senderOpenPaymentsHost}}/outgoing-payments?first=2&wallet-address={{senderWalletAddress}}
+  url: {{senderOpenPaymentsHost}}/{{senderTenantId}}/outgoing-payments?first=2&wallet-address={{senderWalletAddress}}
   body: none
   auth: none
 }
 
-query {
+params:query {
   first: 2
   wallet-address: {{senderWalletAddress}}
   ~cursor: ea3bf38f-2719-4473-a0f7-4ba967d1d81b

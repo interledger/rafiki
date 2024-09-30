@@ -5,9 +5,13 @@ meta {
 }
 
 post {
-  url: {{senderOpenPaymentsAuthHost}}/
+  url: {{senderOpenPaymentsAuthHost}}/{{senderTenantId}}
   body: json
   auth: none
+}
+
+headers {
+  x-operator-secret: {{operatorApiSecret}}
 }
 
 body:json {

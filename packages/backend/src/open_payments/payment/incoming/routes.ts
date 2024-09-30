@@ -127,6 +127,7 @@ async function createIncomingPayment(
   ctx: CreateContext<CreateBody>
 ): Promise<void> {
   const { body } = ctx.request
+  const { tenantId } = ctx.params
 
   let expiresAt: Date | undefined
   if (body.expiresAt !== undefined) {
@@ -134,8 +135,8 @@ async function createIncomingPayment(
   }
 
   const incomingPaymentOrError = await deps.incomingPaymentService.create({
+    tenantId,
     walletAddressId: ctx.walletAddress.id,
-    tenantId: ctx.tenantId,
     client: ctx.client,
     metadata: body.metadata,
     expiresAt,

@@ -5,7 +5,7 @@ meta {
 }
 
 post {
-  url: {{senderOpenPaymentsHost}}/quotes
+  url: {{senderOpenPaymentsHost}}/{{senderTenantId}}/quotes
   body: json
   auth: none
 }
@@ -37,7 +37,7 @@ script:pre-request {
 
 script:post-response {
   const body = res.getBody();
-
+  
   if (body?.id) {
     bru.setEnvVar("quoteId", body.id.split("/").pop());
     bru.setEnvVar("quoteDebitAmount", JSON.stringify(body.debitAmount))

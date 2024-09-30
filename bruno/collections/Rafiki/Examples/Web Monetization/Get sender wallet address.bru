@@ -32,6 +32,8 @@ script:post-response {
   bru.setEnvVar("senderAssetScale", body?.assetScale)
   
   const authUrl = url.parse(body?.authServer)
+  const senderTenantId = authUrl.pathname.split('/')[1]
+  bru.setEnvVar('senderTenantId', senderTenantId)
   if (
       authUrl.hostname.includes('cloud-nine-wallet') || 
       authUrl.hostname.includes('happy-life-bank')

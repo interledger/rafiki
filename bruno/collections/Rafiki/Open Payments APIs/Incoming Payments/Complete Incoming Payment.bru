@@ -5,7 +5,7 @@ meta {
 }
 
 post {
-  url: {{receiverOpenPaymentsHost}}/incoming-payments/{{incomingPaymentId}}/complete
+  url: {{receiverOpenPaymentsHost}}/{{receiverTenantId}}/incoming-payments/{{incomingPaymentId}}/complete
   body: json
   auth: none
 }

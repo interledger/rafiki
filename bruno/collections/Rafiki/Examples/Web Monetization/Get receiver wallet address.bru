@@ -28,11 +28,13 @@ script:post-response {
   }
   
   const body = res.getBody()
-
+  
   bru.setEnvVar("receiverAssetCode", body?.assetCode)
   bru.setEnvVar("receiverAssetScale", body?.assetScale)
   
   const authUrl = url.parse(body?.authServer)
+  const receiverTenantId = authUrl.pathname.split('/')[1]
+  bru.setEnvVar('receiverTenantId', receiverTenantId)
   if (
       authUrl.hostname.includes('cloud-nine-wallet') || 
       authUrl.hostname.includes('happy-life-bank')
