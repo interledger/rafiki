@@ -53,6 +53,11 @@ export const createTestApp = async (
     .reply(200, { recovery_link: 'https://example.com' })
     .persist()
 
+  nock(config.authAdminApiUrl)
+    .post('')
+    .reply(200, { data: { createAuthTenant: { success: true } } })
+    .persist()
+
   const app = new App(container)
   await start(container, app)
 
@@ -66,7 +71,6 @@ export const createTestApp = async (
       }).then((res) => res.data)
     })
     .persist()
-
   const knex = await container.use('knex')
 
   const httpLink = createHttpLink({
@@ -90,6 +94,7 @@ export const createTestApp = async (
   const authLink = setContext((_, { headers }) => {
     return {
       headers: {
+        'x-operator-secret': config.operatorApiSecret,
         ...headers
       }
     }

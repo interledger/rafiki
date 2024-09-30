@@ -1,4 +1,5 @@
 import { ApolloError, gql } from '@apollo/client'
+import { faker } from '@faker-js/faker'
 import { getPageTests } from './page.test'
 import { createTestApp, TestContainer } from '../../tests/app'
 import { IocContract } from '@adonisjs/fold'
@@ -29,6 +30,8 @@ import {
 } from '../../open_payments/payment/incoming/errors'
 import { Amount, serializeAmount } from '../../open_payments/amount'
 import { GraphQLErrorCode } from '../errors'
+import { EndpointType } from '../../tenant/endpoints/model'
+import { createTenant } from '../../tests/tenant'
 
 describe('Incoming Payment Resolver', (): void => {
   let deps: IocContract<AppServices>
@@ -38,6 +41,7 @@ describe('Incoming Payment Resolver', (): void => {
   let incomingPaymentService: IncomingPaymentService
   let accountingService: AccountingService
   let asset: Asset
+  let tenantId: string
 
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer(Config)
@@ -45,6 +49,19 @@ describe('Incoming Payment Resolver', (): void => {
     incomingPaymentService = await deps.use('incomingPaymentService')
     accountingService = await deps.use('accountingService')
     asset = await createAsset(deps)
+  })
+
+  beforeEach(async (): Promise<void> => {
+    tenantId = (
+      await createTenant(deps, {
+        email: Config.kratosAdminEmail,
+        idpSecret: 'testsecret',
+        idpConsentEndpoint: faker.internet.url(),
+        endpoints: [
+          { type: EndpointType.WebhookBaseUrl, value: faker.internet.url() }
+        ]
+      })
+    ).id
   })
 
   afterAll(async (): Promise<void> => {
@@ -55,8 +72,9 @@ describe('Incoming Payment Resolver', (): void => {
 
   describe('Wallet address incoming payments', (): void => {
     beforeEach(async (): Promise<void> => {
-      walletAddressId = (await createWalletAddress(deps, { assetId: asset.id }))
-        .id
+      walletAddressId = (
+        await createWalletAddress(deps, tenantId, { assetId: asset.id })
+      ).id
     })
 
     getPageTests({
@@ -64,6 +82,7 @@ describe('Incoming Payment Resolver', (): void => {
       createModel: () =>
         createIncomingPayment(deps, {
           walletAddressId,
+          tenantId,
           client,
           incomingAmount: {
             value: BigInt(123),
@@ -105,11 +124,16 @@ describe('Incoming Payment Resolver', (): void => {
       'Successfully creates an incoming payment with $desc',
       async ({ metadata, expiresAt, withAmount }): Promise<void> => {
         const incomingAmount = withAmount ? amount : undefined
-        const { id: walletAddressId } = await createWalletAddress(deps, {
-          assetId: asset.id
-        })
+        const { id: walletAddressId } = await createWalletAddress(
+          deps,
+          tenantId,
+          {
+            assetId: asset.id
+          }
+        )
         const payment = await createIncomingPayment(deps, {
           walletAddressId,
+          tenantId,
           client,
           metadata,
           expiresAt,
@@ -122,6 +146,7 @@ describe('Incoming Payment Resolver', (): void => {
 
         const input = {
           walletAddressId,
+          tenantId,
           incomingAmount,
           expiresAt,
           metadata
@@ -196,7 +221,8 @@ describe('Incoming Payment Resolver', (): void => {
         .mockResolvedValueOnce(IncomingPaymentError.UnknownWalletAddress)
 
       const input = {
-        walletAddressId: uuid()
+        walletAddressId: uuid(),
+        tenantId
       }
 
       expect.assertions(3)
@@ -241,7 +267,8 @@ describe('Incoming Payment Resolver', (): void => {
         .mockRejectedValueOnce(new Error('unexpected'))
 
       const input = {
-        walletAddressId: uuid()
+        walletAddressId: uuid(),
+        tenantId
       }
 
       expect.assertions(3)
@@ -290,6 +317,7 @@ describe('Incoming Payment Resolver', (): void => {
     }): Promise<IncomingPaymentModel> => {
       return await createIncomingPayment(deps, {
         ...options,
+        tenantId,
         incomingAmount: {
           value: BigInt(56),
           assetCode: asset.code,
@@ -304,9 +332,13 @@ describe('Incoming Payment Resolver', (): void => {
         externalRef: '202201'
       }
       beforeEach(async (): Promise<void> => {
-        const { id: walletAddressId } = await createWalletAddress(deps, {
-          assetId: asset.id
-        })
+        const { id: walletAddressId } = await createWalletAddress(
+          deps,
+          tenantId,
+          {
+            assetId: asset.id
+          }
+        )
         payment = await createPayment({ walletAddressId, metadata })
       })
 

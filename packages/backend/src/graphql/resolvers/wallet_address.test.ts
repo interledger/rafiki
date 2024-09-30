@@ -2,6 +2,7 @@ import assert from 'assert'
 import { gql, ApolloError } from '@apollo/client'
 import { Knex } from 'knex'
 import { v4 as uuid } from 'uuid'
+import { faker } from '@faker-js/faker'
 
 import { createTestApp, TestContainer } from '../../tests/app'
 import { IocContract } from '@adonisjs/fold'
@@ -35,18 +36,34 @@ import {
 import { getPageTests } from './page.test'
 import { WalletAddressAdditionalProperty } from '../../open_payments/wallet_address/additional_property/model'
 import { GraphQLErrorCode } from '../errors'
+import { createTenant } from '../../tests/tenant'
+import { EndpointType } from '../../tenant/endpoints/model'
 
 describe('Wallet Address Resolvers', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let knex: Knex
   let walletAddressService: WalletAddressService
+  let tenantId: string
 
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer(Config)
     appContainer = await createTestApp(deps)
     knex = appContainer.knex
     walletAddressService = await deps.use('walletAddressService')
+  })
+
+  beforeEach(async (): Promise<void> => {
+    tenantId = (
+      await createTenant(deps, {
+        email: Config.kratosAdminEmail,
+        idpSecret: 'testsecret',
+        idpConsentEndpoint: faker.internet.url(),
+        endpoints: [
+          { type: EndpointType.WebhookBaseUrl, value: faker.internet.url() }
+        ]
+      })
+    ).id
   })
 
   afterEach(async (): Promise<void> => {
@@ -66,6 +83,7 @@ describe('Wallet Address Resolvers', (): void => {
       asset = await createAsset(deps)
       input = {
         assetId: asset.id,
+        tenantId,
         url: 'https://alice.me/.well-known/pay'
       }
     })
@@ -309,7 +327,7 @@ describe('Wallet Address Resolvers', (): void => {
     let walletAddress: WalletAddressModel
 
     beforeEach(async (): Promise<void> => {
-      walletAddress = await createWalletAddress(deps)
+      walletAddress = await createWalletAddress(deps, tenantId)
     })
 
     test('Can update a wallet address', async (): Promise<void> => {
@@ -436,7 +454,7 @@ describe('Wallet Address Resolvers', (): void => {
             }
           ]
         }
-        walletAddress = await createWalletAddress(deps, createOptions)
+        walletAddress = await createWalletAddress(deps, tenantId, createOptions)
 
         const updateOptions = {
           id: walletAddress.id,
@@ -497,7 +515,7 @@ describe('Wallet Address Resolvers', (): void => {
             }
           ]
         }
-        walletAddress = await createWalletAddress(deps, createOptions)
+        walletAddress = await createWalletAddress(deps, tenantId, createOptions)
 
         const updateOptions = {
           id: walletAddress.id,
@@ -651,7 +669,7 @@ describe('Wallet Address Resolvers', (): void => {
         walletProp02.visibleInOpenPayments = false
         const additionalProperties = [walletProp01, walletProp02]
 
-        const walletAddress = await createWalletAddress(deps, {
+        const walletAddress = await createWalletAddress(deps, tenantId, {
           publicName,
           createLiquidityAccount: true,
           additionalProperties
@@ -756,14 +774,14 @@ describe('Wallet Address Resolvers', (): void => {
 
     getPageTests({
       getClient: () => appContainer.apolloClient,
-      createModel: () => createWalletAddress(deps),
+      createModel: () => createWalletAddress(deps, tenantId),
       pagedQuery: 'walletAddresses'
     })
 
     test('Can get page of wallet addresses', async (): Promise<void> => {
       const walletAddresses: WalletAddressModel[] = []
       for (let i = 0; i < 2; i++) {
-        walletAddresses.push(await createWalletAddress(deps))
+        walletAddresses.push(await createWalletAddress(deps, tenantId))
       }
       walletAddresses.reverse() // Calling the default getPage will result in descending order
       const query = await appContainer.apolloClient
@@ -826,7 +844,7 @@ describe('Wallet Address Resolvers', (): void => {
         const walletAddresses: WalletAddressModel[] = []
         const withdrawalAmount = BigInt(10)
         for (let i = 0; i < 3; i++) {
-          const walletAddress = await createWalletAddress(deps, {
+          const walletAddress = await createWalletAddress(deps, tenantId, {
             createLiquidityAccount: true
           })
           if (i) {

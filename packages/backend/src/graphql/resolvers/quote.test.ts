@@ -1,5 +1,6 @@
 import { gql, ApolloError } from '@apollo/client'
 import { v4 as uuid } from 'uuid'
+import { faker } from '@faker-js/faker'
 
 import { getPageTests } from './page.test'
 import { createTestApp, TestContainer } from '../../tests/app'
@@ -22,12 +23,15 @@ import { Quote as QuoteModel } from '../../open_payments/quote/model'
 import { Amount } from '../../open_payments/amount'
 import { CreateQuoteInput, Quote, QuoteResponse } from '../generated/graphql'
 import { GraphQLErrorCode } from '../errors'
+import { createTenant } from '../../tests/tenant'
+import { EndpointType } from '../../tenant/endpoints/model'
 
 describe('Quote Resolvers', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let quoteService: QuoteService
   let asset: Asset
+  let tenantId: string
 
   const receivingWalletAddress = 'http://wallet2.example/bob'
   const receiver = `${receivingWalletAddress}/incoming-payments/${uuid()}`
@@ -40,6 +44,16 @@ describe('Quote Resolvers', (): void => {
 
   beforeEach(async (): Promise<void> => {
     asset = await createAsset(deps)
+    tenantId = (
+      await createTenant(deps, {
+        email: Config.kratosAdminEmail,
+        idpSecret: 'testsecret',
+        idpConsentEndpoint: faker.internet.url(),
+        endpoints: [
+          { type: EndpointType.WebhookBaseUrl, value: faker.internet.url() }
+        ]
+      })
+    ).id
   })
 
   afterEach(async (): Promise<void> => {
@@ -57,6 +71,7 @@ describe('Quote Resolvers', (): void => {
   ): Promise<QuoteModel> => {
     return await createQuote(deps, {
       walletAddressId,
+      tenantId,
       receiver,
       debitAmount: {
         value: BigInt(56),
@@ -70,9 +85,13 @@ describe('Quote Resolvers', (): void => {
 
   describe('Query.quote', (): void => {
     test('success', async (): Promise<void> => {
-      const { id: walletAddressId } = await createWalletAddress(deps, {
-        assetId: asset.id
-      })
+      const { id: walletAddressId } = await createWalletAddress(
+        deps,
+        tenantId,
+        {
+          assetId: asset.id
+        }
+      )
       const quote = await createWalletAddressQuote(walletAddressId)
 
       const query = await appContainer.apolloClient
@@ -176,6 +195,7 @@ describe('Quote Resolvers', (): void => {
       }
       input = {
         walletAddressId: uuid(),
+        tenantId: uuid(),
         receiver,
         debitAmount
       }
@@ -188,11 +208,16 @@ describe('Quote Resolvers', (): void => {
       ${false}   | ${undefined}     | ${'incoming payment'}
     `('$type', async ({ withAmount, receiveAmount }): Promise<void> => {
       const amount = withAmount ? debitAmount : undefined
-      const { id: walletAddressId } = await createWalletAddress(deps, {
-        assetId: asset.id
-      })
+      const { id: walletAddressId } = await createWalletAddress(
+        deps,
+        tenantId,
+        {
+          assetId: asset.id
+        }
+      )
       const input = {
         walletAddressId,
+        tenantId,
         debitAmount: amount,
         receiveAmount,
         receiver
@@ -299,7 +324,7 @@ describe('Quote Resolvers', (): void => {
 
     beforeEach(async (): Promise<void> => {
       walletAddressId = (
-        await createWalletAddress(deps, {
+        await createWalletAddress(deps, tenantId, {
           assetId: asset.id
         })
       ).id

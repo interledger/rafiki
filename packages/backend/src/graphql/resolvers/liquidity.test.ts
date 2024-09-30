@@ -2,6 +2,7 @@ import assert from 'assert'
 import { ApolloError, gql } from '@apollo/client'
 import { Knex } from 'knex'
 import { v4 as uuid } from 'uuid'
+import { faker } from '@faker-js/faker'
 
 import { DepositEventType } from './liquidity'
 import { createTestApp, TestContainer } from '../../tests/app'
@@ -44,12 +45,15 @@ import {
   WalletAddressWithdrawalMutationResponse
 } from '../generated/graphql'
 import { GraphQLErrorCode } from '../errors'
+import { createTenant } from '../../tests/tenant'
+import { EndpointType } from '../../tenant/endpoints/model'
 
 describe('Liquidity Resolvers', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let accountingService: AccountingService
   let knex: Knex
+  let tenantId: string
   const timeoutTwoPhase = 10
 
   beforeAll(async (): Promise<void> => {
@@ -57,6 +61,19 @@ describe('Liquidity Resolvers', (): void => {
     appContainer = await createTestApp(deps)
     knex = appContainer.knex
     accountingService = await deps.use('accountingService')
+  })
+
+  beforeEach(async (): Promise<void> => {
+    tenantId = (
+      await createTenant(deps, {
+        email: Config.kratosAdminEmail,
+        idpSecret: 'testsecret',
+        idpConsentEndpoint: faker.internet.url(),
+        endpoints: [
+          { type: EndpointType.WebhookBaseUrl, value: faker.internet.url() }
+        ]
+      })
+    ).id
   })
 
   afterAll(async (): Promise<void> => {
@@ -1014,7 +1031,7 @@ describe('Liquidity Resolvers', (): void => {
     const amount = BigInt(100)
 
     beforeEach(async (): Promise<void> => {
-      walletAddress = await createWalletAddress(deps, {
+      walletAddress = await createWalletAddress(deps, tenantId, {
         createLiquidityAccount: true
       })
 
@@ -1747,10 +1764,11 @@ describe('Liquidity Resolvers', (): void => {
     let payment: OutgoingPayment
 
     beforeEach(async (): Promise<void> => {
-      walletAddress = await createWalletAddress(deps)
+      walletAddress = await createWalletAddress(deps, tenantId)
       const walletAddressId = walletAddress.id
       incomingPayment = await createIncomingPayment(deps, {
         walletAddressId,
+        tenantId,
         incomingAmount: {
           value: BigInt(56),
           assetCode: walletAddress.asset.code,
@@ -1760,6 +1778,7 @@ describe('Liquidity Resolvers', (): void => {
       })
       payment = await createOutgoingPayment(deps, {
         walletAddressId,
+        tenantId,
         method: 'ilp',
         receiver: `${Config.openPaymentsUrl}/incoming-payments/${uuid()}`,
         debitAmount: {
@@ -2157,10 +2176,11 @@ describe('Liquidity Resolvers', (): void => {
     let outgoingPayment: OutgoingPayment
 
     beforeEach(async (): Promise<void> => {
-      walletAddress = await createWalletAddress(deps)
+      walletAddress = await createWalletAddress(deps, tenantId)
       const walletAddressId = walletAddress.id
       incomingPayment = await createIncomingPayment(deps, {
         walletAddressId,
+        tenantId,
         incomingAmount: {
           value: BigInt(56),
           assetCode: walletAddress.asset.code,
@@ -2170,6 +2190,7 @@ describe('Liquidity Resolvers', (): void => {
       })
       outgoingPayment = await createOutgoingPayment(deps, {
         walletAddressId,
+        tenantId,
         method: 'ilp',
         receiver: `${
           Config.openPaymentsUrl

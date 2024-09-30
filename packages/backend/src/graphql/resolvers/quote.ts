@@ -42,6 +42,7 @@ export const createQuote: MutationResolvers<ApolloContext>['createQuote'] =
     const quoteService = await ctx.container.use('quoteService')
     const options: CreateQuoteOptions = {
       walletAddressId: args.input.walletAddressId,
+      tenantId: args.input.tenantId,
       receiver: args.input.receiver,
       method: 'ilp'
     }

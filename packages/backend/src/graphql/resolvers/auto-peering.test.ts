@@ -18,8 +18,11 @@ import { createAsset } from '../../tests/asset'
 import { CreateOrUpdatePeerByUrlInput } from '../generated/graphql'
 import { AutoPeeringService } from '../../payment-method/ilp/auto-peering/service'
 import { v4 as uuid } from 'uuid'
-import nock from 'nock'
 import { GraphQLErrorCode } from '../errors'
+import { createTenant } from '../../tests/tenant'
+import { EndpointType } from '../../tenant/endpoints/model'
+
+const nock = (global as unknown as { nock: typeof import('nock') }).nock
 
 describe('Auto Peering Resolvers', (): void => {
   let deps: IocContract<AppServices>
@@ -90,6 +93,15 @@ describe('Auto Peering Resolvers', (): void => {
 
   beforeEach(async (): Promise<void> => {
     asset = await createAsset(deps)
+    const config = await deps.use('config')
+    await createTenant(deps, {
+      email: config.kratosAdminEmail,
+      idpSecret: 'testsecret',
+      idpConsentEndpoint: faker.internet.url(),
+      endpoints: [
+        { type: EndpointType.WebhookBaseUrl, value: faker.internet.url() }
+      ]
+    })
   })
 
   afterEach(async (): Promise<void> => {
