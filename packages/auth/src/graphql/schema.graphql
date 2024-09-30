@@ -171,5 +171,12 @@ enum SortOrder {
   DESC
 }
 
+"""
+The `UInt8` scalar type represents unsigned 8-bit whole numeric values, ranging from 0 to 255.
+"""
 scalar UInt8
+
+"""
+The `UInt64` scalar type represents unsigned 64-bit whole numeric values. It is capable of handling values that are larger than the JavaScript `Number` type limit (greater than 2^53).
+"""
 scalar UInt64
