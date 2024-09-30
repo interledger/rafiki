@@ -206,78 +206,16 @@ async function pay(
     }
   }
 
-  // let feeAmount: number | null
-
-  // baseDebitAmount excludes fees
-  const sourceAmount = outgoingPayment.quote.debitAmountMinusFees //finalDebitAmount
-
-  // if (outgoingPayment.quote.feeId) {
-  //   const fee = await deps.feeService.getById(outgoingPayment.quote.feeId)
-
-  //   if (!fee) {
-  //     throw new PaymentMethodHandlerError(
-  //       'Received error during local payment',
-  //       {
-  //         description: 'Quote fee could not be found by id',
-  //         retryable: false
-  //       }
-  //     )
-  //   }
-
-  //   // TODO: store this on quote instead?
-  //   // Original debit amount value excluding fees
-  //   sourceAmount = BigInt(
-  //     Math.floor(
-  //       Number(finalDebitAmount - fee.fixedFee) /
-  //         (1 + fee.basisPointFee / 10000)
-  //     )
-  //   )
-  // }
-
-  // TODO: is this going to work for fixed send/delivery?
-  // At this stage does that concept still have an effect? in ilp pay I
-  // think its all fixed delivery here...
-
-  // [x] Use finalDebitAmount - fees for sourceAmount and finalReceiveAmount for destinationAmount
-  // ilp pay is sending min of debitAmount/converted min delivery (finalReceiveAmount)
-
-  // extra things to verify:
-  // - [X] before implenting this, ensure transfersToCreateOrError 110 amt destinationAccontId is the us asset account
-  //   - IT DOES MATCH. the destinationAccontId for the 110 amt corresponds to USD asset id
-  //   - 110 record had destinationAccountId: 7b628461-0d45-4cd5-9b2d-ec6de9fe8159
-  //   - ledgerAccount had 2 records with accountRef: 7b628461-0d45-4cd5-9b2d-ec6de9fe8159.
-  //     1 with type SETTLEMENT and another with type LIQUIDITY_ASSET
-  //   - USD asset had id of 7b628461-0d45-4cd5-9b2d-ec6de9fe8159
-  // - [ ] after implementing, ensure there are 3 transfers made for cross currency:
-  //    - 1 outgoing payment to usd asset
-  //    - 1 usd asset to fx asset
-  //    - 1 fx asset to incoming payment
-
-  // const fee = await deps.feeService.get(outgoingPayment.quote.feeId)
+  const sourceAmount = outgoingPayment.quote.debitAmountMinusFees //finalDebitAmount?
 
   const transferOptions: TransferOptions = {
-    // outgoingPayment.quote.debitAmount = 610n
-    // outgoingPayment.quote.receiveAmount = 500n
-    // ^ consistent with ilp payment method
     sourceAccount: outgoingPayment,
     destinationAccount: incomingPayment,
-    // finalDebitAmount: 610n
-    // finalReceiveAmount: 500n
-    // ^ consistent with amounts passed into ilpPaymentMethodService.pay and Pay.pay
-    // ^ inconsisten with transfer passed into createTrasnfer in balance middleware
-    //   - that is sourceAmount: 500, destinationAmount: 500
-    //   - this transfer gets 500 from the request.prepare (formed from Pay.pay?). request.prepare
-    //     is the sourceAmount then the destinationAmount is derived from it with rates.convert
     sourceAmount,
     destinationAmount: finalReceiveAmount,
     transferType: TransferType.TRANSFER
   }
 
-  // Here, createTransfer gets debitAmount = 610 and receiveAmount =  500n
-  // however, in ilp balance middleware its 500/500. In ilpPaymentService.pay,
-  // Pay.pay is called with the same sort of quote as here. debitAmount = 617 (higher due to slippage?)
-  // and receiveAmount =  500. There is some adjustment happening between Pay.pay (in Pay.pay?)
-  // (in ilpPaymentMethodService.pay) and createTransfer in the connector balance middleware
   const trxOrError =
     await deps.accountingService.createTransfer(transferOptions)
 

@@ -156,24 +156,6 @@ describe('Fee Service', (): void => {
         expect(latestFee).toBeUndefined()
       })
     })
-    describe('getById', (): void => {
-      it('should get fee by id', async (): Promise<void> => {
-        const fee = await Fee.query().insertAndFetch({
-          assetId: asset.id,
-          type: FeeType.Receiving,
-          basisPointFee: 100,
-          fixedFee: BigInt(100)
-        })
-
-        const foundFee = await feeService.getById(fee.id)
-        expect(foundFee).toMatchObject(fee)
-      })
-
-      it('should return undefined when not foudn fee by id', async (): Promise<void> => {
-        const foundFee = await feeService.getById(v4())
-        expect(foundFee).toBe(undefined)
-      })
-    })
 
     describe('Fee pagination', (): void => {
       getPageTests({
