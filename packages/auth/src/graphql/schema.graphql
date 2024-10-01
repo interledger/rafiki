@@ -16,7 +16,10 @@ type Query {
   ): GrantsConnection!
 
   "Fetch a specific grant by its ID."
-  grant(id: ID!): Grant!
+  grant(
+    "Unique identifier of the grant."
+    id: ID!
+  ): Grant!
 }
 
 type Mutation {
