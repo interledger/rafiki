@@ -36,6 +36,7 @@ import { AccessAction, AccessType } from '@interledger/open-payments'
 import { generateBaseGrant } from '../tests/grant'
 import { generateBaseInteraction } from '../tests/interaction'
 import { GNAPErrorCode } from '../shared/gnapErrors'
+import { Tenant } from '../tenants/model'
 
 export const TEST_CLIENT_DISPLAY = {
   name: 'Test Client',
@@ -80,10 +81,18 @@ describe('Grant Routes', (): void => {
   let clientService: ClientService
   let interactionService: InteractionService
 
+  let tenantId: string
   let grant: Grant
 
   beforeEach(async (): Promise<void> => {
-    grant = await Grant.query().insert(generateBaseGrant())
+    tenantId = (
+      await Tenant.query().insertAndFetch({
+        id: v4(),
+        idpConsentEndpoint: faker.internet.url(),
+        idpSecret: 'test-secret'
+      })
+    ).id
+    grant = await Grant.query().insert(generateBaseGrant({ tenantId }))
 
     await Access.query().insert({
       ...BASE_GRANT_ACCESS,
@@ -173,7 +182,7 @@ describe('Grant Routes', (): void => {
                           url,
                           method
                         },
-                        {}
+                        { tenantId }
                       )
                       const body = {
                         access_token: {
@@ -252,7 +261,7 @@ describe('Grant Routes', (): void => {
             url,
             method
           },
-          {}
+          { tenantId }
         )
 
         ctx.request.body = BASE_GRANT_REQUEST
@@ -291,7 +300,7 @@ describe('Grant Routes', (): void => {
             url,
             method
           },
-          {}
+          { tenantId }
         )
         const body = {
           access_token: {
@@ -327,7 +336,7 @@ describe('Grant Routes', (): void => {
             url,
             method
           },
-          {}
+          { tenantId }
         )
 
         ctx.request.body = { ...BASE_GRANT_REQUEST, interact: undefined }
@@ -443,6 +452,7 @@ describe('Grant Routes', (): void => {
       beforeEach(async (): Promise<void> => {
         grant = await Grant.query().insert(
           generateBaseGrant({
+            tenantId,
             state: GrantState.Approved
           })
         )
@@ -545,6 +555,7 @@ describe('Grant Routes', (): void => {
       test('Cannot issue access token if grant has not been granted', async (): Promise<void> => {
         const grant = await Grant.query().insert(
           generateBaseGrant({
+            tenantId,
             state: GrantState.Pending
           })
         )
@@ -589,6 +600,7 @@ describe('Grant Routes', (): void => {
       test('Cannot issue access token if grant has been revoked', async (): Promise<void> => {
         const grant = await Grant.query().insert(
           generateBaseGrant({
+            tenantId,
             state: GrantState.Finalized,
             finalizationReason: GrantFinalization.Revoked
           })
@@ -699,7 +711,9 @@ describe('Grant Routes', (): void => {
       })
 
       test('Honors wait value when continuing too early', async (): Promise<void> => {
-        const grantWithWait = await Grant.query().insert(generateBaseGrant())
+        const grantWithWait = await Grant.query().insert(
+          generateBaseGrant({ tenantId })
+        )
 
         await Access.query().insert({
           ...BASE_GRANT_ACCESS,
@@ -746,6 +760,7 @@ describe('Grant Routes', (): void => {
         async ({ state }): Promise<void> => {
           const polledGrant = await Grant.query().insert(
             generateBaseGrant({
+              tenantId,
               state,
               noFinishMethod: true
             })
@@ -842,6 +857,7 @@ describe('Grant Routes', (): void => {
       test('Cannot poll a finalized grant', async (): Promise<void> => {
         const finalizedPolledGrant = await Grant.query().insert(
           generateBaseGrant({
+            tenantId,
             state: GrantState.Finalized,
             noFinishMethod: true
           })
@@ -903,6 +919,7 @@ describe('Grant Routes', (): void => {
       test('Cannot poll a grant faster than its wait method', async (): Promise<void> => {
         const polledGrant = await Grant.query().insert(
           generateBaseGrant({
+            tenantId,
             noFinishMethod: true
           })
         )
@@ -963,6 +980,7 @@ describe('Grant Routes', (): void => {
       test('Can revoke an existing grant', async (): Promise<void> => {
         const grant = await Grant.query().insert(
           generateBaseGrant({
+            tenantId,
             state: GrantState.Finalized,
             finalizationReason: GrantFinalization.Issued
           })
@@ -987,6 +1005,7 @@ describe('Grant Routes', (): void => {
       test('Cannot revoke an already revoked grant', async (): Promise<void> => {
         const grant = await Grant.query().insert(
           generateBaseGrant({
+            tenantId,
             state: GrantState.Finalized,
             finalizationReason: GrantFinalization.Revoked
           })

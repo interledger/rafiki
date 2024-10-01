@@ -14,6 +14,7 @@ import { IncomingPaymentRequest, OutgoingPaymentRequest } from './types'
 import { generateNonce, generateToken } from '../shared/utils'
 import { AccessType, AccessAction } from '@interledger/open-payments'
 import { Access } from './model'
+import { Tenant } from '../tenants/model'
 
 describe('Access Service', (): void => {
   let deps: IocContract<AppServices>
@@ -22,7 +23,8 @@ describe('Access Service', (): void => {
   let trx: Knex.Transaction
   let grant: Grant
 
-  const generateBaseGrant = () => ({
+  const generateBaseGrant = (tenantId: string) => ({
+    tenantId,
     state: GrantState.Pending,
     startMethod: [StartMethod.Redirect],
     continueToken: generateToken(),
@@ -34,7 +36,12 @@ describe('Access Service', (): void => {
   })
 
   beforeEach(async (): Promise<void> => {
-    grant = await Grant.query(trx).insertAndFetch(generateBaseGrant())
+    const tenant = await Tenant.query(trx).insertAndFetch({
+      id: v4(),
+      idpConsentEndpoint: faker.internet.url(),
+      idpSecret: 'test-secret'
+    })
+    grant = await Grant.query(trx).insertAndFetch(generateBaseGrant(tenant.id))
   })
 
   beforeAll(async (): Promise<void> => {

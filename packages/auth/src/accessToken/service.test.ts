@@ -20,17 +20,30 @@ import {
   AccessItem
 } from '@interledger/open-payments'
 import { generateBaseGrant } from '../tests/grant'
+import { Tenant } from '../tenants/model'
+import { faker } from '@faker-js/faker'
 
 describe('Access Token Service', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let trx: Knex.Transaction
   let accessTokenService: AccessTokenService
+  let tenantId: string
 
   beforeAll(async (): Promise<void> => {
     deps = initIocContainer(Config)
     appContainer = await createTestApp(deps)
     accessTokenService = await deps.use('accessTokenService')
+  })
+
+  beforeEach(async (): Promise<void> => {
+    tenantId = (
+      await Tenant.query(trx).insertAndFetch({
+        id: v4(),
+        idpConsentEndpoint: faker.internet.url(),
+        idpSecret: 'test-secret'
+      })
+    ).id
   })
 
   afterEach(async (): Promise<void> => {
@@ -64,7 +77,7 @@ describe('Access Token Service', (): void => {
   let grant: Grant
   beforeEach(async (): Promise<void> => {
     grant = await Grant.query(trx).insertAndFetch(
-      generateBaseGrant({ state: GrantState.Approved })
+      generateBaseGrant({ tenantId, state: GrantState.Approved })
     )
     grant.access = [
       await Access.query(trx).insertAndFetch({
@@ -187,7 +200,7 @@ describe('Access Token Service', (): void => {
 
     test('Introspection only returns requested access', async (): Promise<void> => {
       const grantWithTwoAccesses = await Grant.query(trx).insertAndFetch(
-        generateBaseGrant({ state: GrantState.Approved })
+        generateBaseGrant({ tenantId, state: GrantState.Approved })
       )
       grantWithTwoAccesses.access = [
         await Access.query(trx).insertAndFetch({
@@ -252,6 +265,7 @@ describe('Access Token Service', (): void => {
     beforeEach(async (): Promise<void> => {
       grant = await Grant.query(trx).insertAndFetch(
         generateBaseGrant({
+          tenantId,
           state: GrantState.Finalized,
           finalizationReason: GrantFinalization.Issued
         })
@@ -354,6 +368,7 @@ describe('Access Token Service', (): void => {
     beforeEach(async (): Promise<void> => {
       grant = await Grant.query(trx).insertAndFetch(
         generateBaseGrant({
+          tenantId,
           state: GrantState.Finalized,
           finalizationReason: GrantFinalization.Issued
         })
