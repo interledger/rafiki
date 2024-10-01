@@ -215,8 +215,8 @@ const WALLET_ADDRESS_PATH = '/:walletAddressPath+'
 
 export interface AppServices {
   logger: Promise<Logger>
-  telemetry?: Promise<TelemetryService>
-  internalRatesService?: Promise<RatesService>
+  telemetry: Promise<TelemetryService>
+  internalRatesService: Promise<RatesService>
   knex: Promise<Knex>
   axios: Promise<AxiosInstance>
   config: Promise<IAppConfig>

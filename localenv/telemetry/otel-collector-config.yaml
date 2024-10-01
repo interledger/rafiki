@@ -8,6 +8,8 @@ processors:
   batch:
 
 exporters:
+  logging:
+    loglevel: info
   debug:
     verbosity: detailed
   prometheus:
@@ -18,6 +20,9 @@ exporters:
       insecure: true
 
 service:
+  telemetry:
+    logs:
+      level: warn
   pipelines:
     metrics:
       receivers: [otlp]
