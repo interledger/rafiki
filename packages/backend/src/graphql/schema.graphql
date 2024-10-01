@@ -10,7 +10,7 @@ type Query {
     before: String
     "Foward pagination: Limit the result to the first **n** assets after the `after` cursor."
     first: Int
-    "Backward pagination: Limit the result to the last **n**" assets before the `before` cursor."
+    "Backward pagination: Limit the result to the last **n** assets before the `before` cursor."
     last: Int
     "Specify the sort order of assets based on their creation data, either ascending or descending."
     sortOrder: SortOrder
@@ -258,7 +258,7 @@ type Mutation {
     input: CreateWalletAddressWithdrawalInput!
   ): WalletAddressWithdrawalMutationResponse
 
-  "If automatic withdrawal of funds received via Web Monetization by the wallet address are disabled, this mutation can be used to trigger up to n withdrawal events."
+  "If automatic withdrawal of funds received via Web Monetization by the wallet address are disabled, this mutation can be used to trigger up to **n** withdrawal events."
   triggerWalletAddressEvents(
     input: TriggerWalletAddressEventsInput!
   ): TriggerWalletAddressEventsMutationResponse!
@@ -595,7 +595,7 @@ type Asset implements Model {
     before: String
     "Foward pagination: Limit the result to the first **n** fees after the `after` cursor."
     first: Int
-    "Backward pagination: Limit the result to the last **n**" fees before the `before` cursor."
+    "Backward pagination: Limit the result to the last **n** fees before the `before` cursor."
     last: Int
     "Specify the sort order of fees based on their creation data, either ascending or descending."
     sortOrder: SortOrder
@@ -730,7 +730,7 @@ type WalletAddress implements Model {
     before: String
     "Foward pagination: Limit the result to the first **n** quotes after the `after` cursor."
     first: Int
-    "Backward pagination: Limit the result to the last **n**" quotes before the `before` cursor."
+    "Backward pagination: Limit the result to the last **n** quotes before the `before` cursor."
     last: Int
     "Specify the sort order of quotes based on their creation data, either ascending or descending."
     sortOrder: SortOrder
@@ -764,7 +764,7 @@ type WalletAddress implements Model {
     before: String
     "Foward pagination: Limit the result to the first **n** keys after the `after` cursor."
     first: Int
-    "Backward pagination: Limit the result to the last **n**" keys before the `before` cursor."
+    "Backward pagination: Limit the result to the last **n** keys before the `before` cursor."
     last: Int
     "Specify the sort order of keys based on their creation data, either ascending or descending."
     sortOrder: SortOrder
@@ -931,7 +931,7 @@ type OutgoingPayment implements BasePayment & Model {
   state: OutgoingPaymentState!
   "Any error encountered during the payment process."
   error: String
-  "NEED TO ASK ABOUT THIS ONE - NUMBER OF PAYMENT ATTEMPTS? NUMBER OF STATE TRANSITIONS?"
+  "Number of attempts made to send an outgoing payment."
   stateAttempts: Int!
   "Amount to send (fixed send)."
   debitAmount: Amount!
@@ -1038,7 +1038,7 @@ enum TransferType {
   DEPOSIT
   "Represents a withdrawal transfer."
   WITHDRAWAL
-  "Not sure what this one is? - Transfer type that isn't deposit or withdrawal?"
+  "Represents a generic transfer. - Follow up with Max (?)"
   TRANSFER
 }
 
