@@ -17,6 +17,7 @@ import { createTestApp, TestContainer } from '../tests/app'
 import { truncateTables } from '../tests/tableManager'
 import { generateToken, generateNonce } from '../shared/utils'
 import { compareRequestAndGrantAccessItems } from './utils'
+import { Tenant } from '../tenants/model'
 
 describe('Access utilities', (): void => {
   let deps: IocContract<AppServices>
@@ -25,6 +26,7 @@ describe('Access utilities', (): void => {
   let identifier: string
   let grant: Grant
   let grantAccessItem: Access
+  let tenantId: string
 
   const receiver: string =
     'https://wallet.com/alice/incoming-payments/12341234-1234-1234-1234-123412341234'
@@ -35,8 +37,16 @@ describe('Access utilities', (): void => {
   })
 
   beforeEach(async (): Promise<void> => {
+    tenantId = (
+      await Tenant.query(trx).insertAndFetch({
+        id: v4(),
+        idpConsentEndpoint: faker.internet.url(),
+        idpSecret: 'test-secret'
+      })
+    ).id
     identifier = `https://example.com/${v4()}`
     grant = await Grant.query(trx).insertAndFetch({
+      tenantId,
       state: GrantState.Processing,
       startMethod: [StartMethod.Redirect],
       continueToken: generateToken(),
@@ -174,6 +184,7 @@ describe('Access utilities', (): void => {
     }
 
     const grant = await Grant.query(trx).insertAndFetch({
+      tenantId,
       state: GrantState.Processing,
       startMethod: [StartMethod.Redirect],
       continueToken: generateToken(),

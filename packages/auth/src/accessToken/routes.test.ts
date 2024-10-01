@@ -24,6 +24,7 @@ import {
 import { GrantService } from '../grant/service'
 import { AccessTokenService } from './service'
 import { GNAPErrorCode } from '../shared/gnapErrors'
+import { Tenant } from '../tenants/model'
 
 describe('Access Token Routes', (): void => {
   let deps: IocContract<AppServices>
@@ -32,6 +33,7 @@ describe('Access Token Routes', (): void => {
   let accessTokenRoutes: AccessTokenRoutes
   let accessTokenService: AccessTokenService
   let grantService: GrantService
+  let tenantId: string
 
   beforeAll(async (): Promise<void> => {
     deps = initIocContainer(Config)
@@ -41,6 +43,16 @@ describe('Access Token Routes', (): void => {
     accessTokenService = await deps.use('accessTokenService')
     const openApi = await deps.use('openApi')
     jestOpenAPI(openApi.authServerSpec)
+  })
+
+  beforeEach(async (): Promise<void> => {
+    tenantId = (
+      await Tenant.query(trx).insertAndFetch({
+        id: v4(),
+        idpConsentEndpoint: faker.internet.url(),
+        idpSecret: 'test-secret'
+      })
+    ).id
   })
 
   afterEach(async (): Promise<void> => {
@@ -96,7 +108,10 @@ describe('Access Token Routes', (): void => {
     const method = 'POST'
 
     beforeEach(async (): Promise<void> => {
-      grant = await Grant.query(trx).insertAndFetch(BASE_GRANT)
+      grant = await Grant.query(trx).insertAndFetch({
+        tenantId,
+        ...BASE_GRANT
+      })
       access = await Access.query(trx).insertAndFetch({
         grantId: grant.id,
         ...BASE_ACCESS
@@ -367,7 +382,10 @@ describe('Access Token Routes', (): void => {
     let token: AccessToken
 
     beforeEach(async (): Promise<void> => {
-      grant = await Grant.query(trx).insertAndFetch(BASE_GRANT)
+      grant = await Grant.query(trx).insertAndFetch({
+        tenantId,
+        ...BASE_GRANT
+      })
       token = await AccessToken.query(trx).insertAndFetch({
         grantId: grant.id,
         ...BASE_TOKEN
@@ -406,7 +424,10 @@ describe('Access Token Routes', (): void => {
     let token: AccessToken
 
     beforeEach(async (): Promise<void> => {
-      grant = await Grant.query(trx).insertAndFetch(BASE_GRANT)
+      grant = await Grant.query(trx).insertAndFetch({
+        tenantId,
+        ...BASE_GRANT
+      })
       access = await Access.query(trx).insertAndFetch({
         grantId: grant.id,
         ...BASE_ACCESS

@@ -24,18 +24,30 @@ import { AccessToken } from '../accessToken/model'
 import { Interaction, InteractionState } from '../interaction/model'
 import { Pagination, SortOrder } from '../shared/baseModel'
 import { getPageTests } from '../shared/baseModel.test'
+import { Tenant } from '../tenants/model'
 
 describe('Grant Service', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let grantService: GrantService
   let trx: Knex.Transaction
+  let tenantId: string
 
   beforeAll(async (): Promise<void> => {
     deps = initIocContainer(Config)
     appContainer = await createTestApp(deps)
 
     grantService = await deps.use('grantService')
+  })
+
+  beforeEach(async (): Promise<void> => {
+    tenantId = (
+      await Tenant.query(trx).insertAndFetch({
+        id: v4(),
+        idpConsentEndpoint: faker.internet.url(),
+        idpSecret: 'test-secret'
+      })
+    ).id
   })
 
   afterEach(async (): Promise<void> => {
@@ -63,6 +75,7 @@ describe('Grant Service', (): void => {
 
     beforeEach(async (): Promise<void> => {
       grant = await Grant.query().insert({
+        tenantId,
         state: GrantState.Processing,
         startMethod: [StartMethod.Redirect],
         continueToken: generateToken(),
@@ -126,7 +139,7 @@ describe('Grant Service', (): void => {
           }
         }
 
-        const grant = await grantService.create(grantRequest)
+        const grant = await grantService.create(grantRequest, tenantId)
 
         expect(grant).toMatchObject({
           state: GrantState.Approved,
@@ -170,7 +183,7 @@ describe('Grant Service', (): void => {
             interact
           }
 
-          const grant = await grantService.create(grantRequest)
+          const grant = await grantService.create(grantRequest, tenantId)
 
           expect(grant).toMatchObject({
             state: expectedState,
@@ -266,13 +279,13 @@ describe('Grant Service', (): void => {
           interact: undefined
         }
 
-        const grant1 = await grantService.create(grantRequest)
+        const grant1 = await grantService.create(grantRequest, tenantId)
         await grant1
           .$query()
           .patch({ finalizationReason: GrantFinalization.Issued })
 
-        const grant2 = await grantService.create(grantRequest)
-        const grant3 = await grantService.create(grantRequest)
+        const grant2 = await grantService.create(grantRequest, tenantId)
+        const grant3 = await grantService.create(grantRequest, tenantId)
         await grant3
           .$query()
           .patch({ finalizationReason: GrantFinalization.Revoked })
@@ -386,7 +399,7 @@ describe('Grant Service', (): void => {
           }
         }
 
-        const grant = await grantService.create(grantRequest)
+        const grant = await grantService.create(grantRequest, tenantId)
 
         const timeoutMs = 50
 
