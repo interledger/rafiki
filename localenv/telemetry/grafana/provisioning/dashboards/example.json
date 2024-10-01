@@ -64,9 +64,7 @@
         "orientation": "auto",
         "percentChangeColorMode": "standard",
         "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
+          "calcs": ["lastNotNull"],
           "fields": "",
           "values": false
         },
@@ -136,9 +134,7 @@
         "orientation": "auto",
         "percentChangeColorMode": "standard",
         "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
+          "calcs": ["lastNotNull"],
           "fields": "",
           "values": false
         },
@@ -234,9 +230,7 @@
         "orientation": "auto",
         "percentChangeColorMode": "standard",
         "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
+          "calcs": ["lastNotNull"],
           "fields": "",
           "values": false
         },
@@ -334,9 +328,7 @@
         "namePlacement": "auto",
         "orientation": "horizontal",
         "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
+          "calcs": ["lastNotNull"],
           "fields": "",
           "values": false
         },
@@ -409,9 +401,7 @@
         "footer": {
           "countRows": false,
           "fields": "",
-          "reducer": [
-            "sum"
-          ],
+          "reducer": ["sum"],
           "show": false
         },
         "showHeader": true,
@@ -440,9 +430,7 @@
               "operator": "=",
               "scope": "resource",
               "tag": "service.name",
-              "value": [
-                "RAFIKI_NETWORK"
-              ],
+              "value": ["RAFIKI_NETWORK"],
               "valueType": "string"
             },
             {
@@ -542,9 +530,7 @@
       "id": 10,
       "options": {
         "legend": {
-          "calcs": [
-            "p95"
-          ],
+          "calcs": ["p95"],
           "displayMode": "table",
           "placement": "right",
           "showLegend": true
@@ -746,9 +732,7 @@
       "id": 9,
       "options": {
         "legend": {
-          "calcs": [
-            "p95"
-          ],
+          "calcs": ["p95"],
           "displayMode": "table",
           "placement": "right",
           "showLegend": true
@@ -912,9 +896,7 @@
       "id": 16,
       "options": {
         "legend": {
-          "calcs": [
-            "p95"
-          ],
+          "calcs": ["p95"],
           "displayMode": "table",
           "placement": "right",
           "showLegend": true
@@ -1039,9 +1021,7 @@
       "id": 14,
       "options": {
         "legend": {
-          "calcs": [
-            "p95"
-          ],
+          "calcs": ["p95"],
           "displayMode": "table",
           "placement": "right",
           "showLegend": true
@@ -1243,9 +1223,7 @@
       "id": 7,
       "options": {
         "legend": {
-          "calcs": [
-            "p95"
-          ],
+          "calcs": ["p95"],
           "displayMode": "table",
           "placement": "right",
           "showLegend": true
@@ -1408,9 +1386,7 @@
       "id": 11,
       "options": {
         "legend": {
-          "calcs": [
-            "p95"
-          ],
+          "calcs": ["p95"],
           "displayMode": "table",
           "placement": "right",
           "showLegend": true
