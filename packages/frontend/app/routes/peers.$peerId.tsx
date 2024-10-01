@@ -211,8 +211,14 @@ export default function ViewPeerPage() {
                     error={response?.errors.http.fieldErrors.incomingAuthTokens}
                     description={
                       <>
-                        List of valid tokens to accept when receiving incoming
-                        ILP packets from the peer.
+                        List of valid tokens to accept when receiving incoming{' '}
+                        <a
+                          className='default-link'
+                          href='https://rafiki.dev/integration/services/backend-service/#interledger-connector'
+                        >
+                          ILP packets
+                        </a>{' '}
+                        from the peer.
                       </>
                     }
                   />
@@ -225,8 +231,14 @@ export default function ViewPeerPage() {
                     error={response?.errors.http.fieldErrors.outgoingAuthToken}
                     description={
                       <>
-                        Valid auth token to present when sending outgoing ILP
-                        packets to the peer.
+                        Valid auth token to present when sending outgoing{' '}
+                        <a
+                          className='default-link'
+                          href='https://rafiki.dev/integration/services/backend-service/#interledger-connector'
+                        >
+                          ILP packets
+                        </a>{' '}
+                        to the peer.
                       </>
                     }
                   />
