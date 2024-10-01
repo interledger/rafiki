@@ -170,6 +170,7 @@ export async function createQuote(
       assetId: walletAddress.assetId,
       receiver: receiverUrl,
       debitAmount,
+      debitAmountMinusFees: debitAmount.value,
       receiveAmount,
       estimatedExchangeRate: exchangeRate,
       expiresAt: new Date(Date.now() + config.quoteLifespan),

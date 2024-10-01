@@ -11,11 +11,11 @@ export interface Rates {
   rates: Record<string, number>
 }
 
+export type RateConvertOpts = Omit<ConvertOptions, 'exchangeRate'>
+
 export interface RatesService {
   rates(baseAssetCode: string): Promise<Rates>
-  convert(
-    opts: Omit<ConvertOptions, 'exchangeRate'>
-  ): Promise<bigint | ConvertError>
+  convert(opts: RateConvertOpts): Promise<bigint | ConvertError>
 }
 
 interface ServiceDependencies extends BaseService {

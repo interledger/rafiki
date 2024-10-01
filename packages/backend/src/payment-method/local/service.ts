@@ -5,9 +5,17 @@ import {
   StartQuoteOptions,
   PayOptions
 } from '../handler/service'
-import { isConvertError, RatesService } from '../../rates/service'
+import {
+  ConvertError,
+  isConvertError,
+  RateConvertOpts,
+  RatesService
+} from '../../rates/service'
 import { IAppConfig } from '../../config/app'
-import { PaymentMethodHandlerError } from '../handler/errors'
+import {
+  PaymentMethodHandlerError,
+  PaymentMethodHandlerErrorCode
+} from '../handler/errors'
 import {
   AccountingService,
   LiquidityAccountType,
@@ -16,6 +24,7 @@ import {
 } from '../../accounting/service'
 import {
   AccountAlreadyExistsError,
+  errorToMessage,
   isTransferError,
   TransferError
 } from '../../accounting/errors'
@@ -56,17 +65,39 @@ async function getQuote(
 
   let debitAmountValue: bigint
   let receiveAmountValue: bigint
-  // let estimatedExchangeRate: number
+
+  const convert = async (opts: RateConvertOpts) => {
+    let converted: bigint | ConvertError
+    try {
+      converted = await deps.ratesService.convert(opts)
+    } catch (err) {
+      deps.logger.error(
+        { receiver, debitAmount, receiveAmount, err },
+        'Unknown error while attempting to convert rates'
+      )
+      throw new PaymentMethodHandlerError(
+        'Received error during local quoting',
+        {
+          description: 'Unknown error while attempting to convert rates',
+          retryable: false
+        }
+      )
+    }
+    return converted
+  }
 
   if (debitAmount) {
     debitAmountValue = debitAmount.value
-    const converted = await deps.ratesService.convert({
+    const converted = await convert({
       sourceAmount: debitAmountValue,
       sourceAsset: {
         code: debitAmount.assetCode,
         scale: debitAmount.assetScale
       },
-      destinationAsset: { code: receiver.assetCode, scale: receiver.assetScale }
+      destinationAsset: {
+        code: receiver.assetCode,
+        scale: receiver.assetScale
+      }
     })
     if (isConvertError(converted)) {
       throw new PaymentMethodHandlerError(
@@ -80,7 +111,7 @@ async function getQuote(
     receiveAmountValue = converted
   } else if (receiveAmount) {
     receiveAmountValue = receiveAmount.value
-    const converted = await deps.ratesService.convert({
+    const converted = await convert({
       sourceAmount: receiveAmountValue,
       sourceAsset: {
         code: receiveAmount.assetCode,
@@ -103,7 +134,7 @@ async function getQuote(
     debitAmountValue = converted
   } else if (receiver.incomingAmount) {
     receiveAmountValue = receiver.incomingAmount.value
-    const converted = await deps.ratesService.convert({
+    const converted = await convert({
       sourceAmount: receiveAmountValue,
       sourceAsset: {
         code: receiver.incomingAmount.assetCode,
@@ -132,6 +163,21 @@ async function getQuote(
     })
   }
 
+  if (debitAmountValue <= BigInt(0)) {
+    throw new PaymentMethodHandlerError('Received error during local quoting', {
+      description: 'debit amount of local quote is non-positive',
+      retryable: false
+    })
+  }
+
+  if (receiveAmountValue <= BigInt(0)) {
+    throw new PaymentMethodHandlerError('Received error during local quoting', {
+      description: 'receive amount of local quote is non-positive',
+      retryable: false,
+      code: PaymentMethodHandlerErrorCode.QuoteNonPositiveReceiveAmount
+    })
+  }
+
   return {
     receiver: options.receiver,
     walletAddress: options.walletAddress,
@@ -155,20 +201,13 @@ async function pay(
   deps: ServiceDependencies,
   options: PayOptions
 ): Promise<void> {
-  // TODO: use finalDebitAmount instead of debitAmountMinusFees? pass debitAmountMinusFees in as finalDebitAmount?
-  const { outgoingPayment, receiver, finalReceiveAmount } = options
-  if (!outgoingPayment.quote.debitAmountMinusFees) {
-    // TODO: handle this better. perhaps debitAmountMinusFees should not be nullable?
-    // If throwing an error, follow existing patterns
-    throw new Error('could do local pay, missing debitAmountMinusFees')
-  }
+  const { outgoingPayment, receiver, finalReceiveAmount, finalDebitAmount } =
+    options
 
-  // Cannot directly use receiver/receiver.incomingAccount for destinationAccount.
-  // createTransfer Expects LiquidityAccount (gets Peer in ilp).
   const incomingPaymentId = receiver.incomingPayment.id.split('/').pop()
   if (!incomingPaymentId) {
     throw new PaymentMethodHandlerError('Received error during local payment', {
-      description: 'Incoming payment not found from receiver',
+      description: 'Failed to parse incoming payment on receiver',
       retryable: false
     })
   }
@@ -182,8 +221,6 @@ async function pay(
     })
   }
 
-  // TODO: anything more needed from balance middleware?
-  // Necessary to avoid `UnknownDestinationAccount` error
   // TODO: remove incoming state check? perhaps only applies ilp account middleware where its checking many different things
   if (incomingPayment.state === IncomingPaymentState.Pending) {
     try {
@@ -191,27 +228,28 @@ async function pay(
         incomingPayment,
         LiquidityAccountType.INCOMING
       )
-      deps.logger.debug(
-        { incomingPayment },
-        'Created liquidity account for local incoming payment'
-      )
     } catch (err) {
       if (!(err instanceof AccountAlreadyExistsError)) {
         deps.logger.error(
           { incomingPayment, err },
           'Failed to create liquidity account for local incoming payment'
         )
-        throw err
+        throw new PaymentMethodHandlerError(
+          'Received error during local payment',
+          {
+            description:
+              'Unknown error while trying to create liquidity account',
+            retryable: false
+          }
+        )
       }
     }
   }
 
-  const sourceAmount = outgoingPayment.quote.debitAmountMinusFees //finalDebitAmount?
-
   const transferOptions: TransferOptions = {
     sourceAccount: outgoingPayment,
     destinationAccount: incomingPayment,
-    sourceAmount,
+    sourceAmount: finalDebitAmount,
     destinationAmount: finalReceiveAmount,
     transferType: TransferType.TRANSFER
   }
@@ -227,9 +265,21 @@ async function pay(
     switch (trxOrError) {
       case TransferError.InsufficientBalance:
       case TransferError.InsufficientLiquidity:
-        throw new InsufficientLiquidityError(trxOrError)
+        throw new PaymentMethodHandlerError(
+          'Received error during local payment',
+          {
+            description: errorToMessage[trxOrError],
+            retryable: false
+          }
+        )
       default:
-        throw new Error('Unknown error while trying to create transfer')
+        throw new PaymentMethodHandlerError(
+          'Received error during local payment',
+          {
+            description: 'Unknown error while trying to create transfer',
+            retryable: false
+          }
+        )
     }
   }
   await trxOrError.post()

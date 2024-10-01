@@ -77,15 +77,33 @@ export async function handleSending(
   }
 
   const payStartTime = Date.now()
-  await deps.paymentMethodHandlerService.pay(
-    receiver.isLocal ? 'LOCAL' : 'ILP',
-    {
+  if (receiver.isLocal) {
+    if (
+      !payment.quote.debitAmountMinusFees ||
+      payment.quote.debitAmountMinusFees <= BigInt(0)
+    ) {
+      deps.logger.error(
+        {
+          debitAmountMinusFees: payment.quote.debitAmountMinusFees
+        },
+        'handleSending: quote.debitAmountMinusFees invalid'
+      )
+      throw LifecycleError.BadState
+    }
+    await deps.paymentMethodHandlerService.pay('LOCAL', {
+      receiver,
+      outgoingPayment: payment,
+      finalDebitAmount: payment.quote.debitAmountMinusFees,
+      finalReceiveAmount: maxReceiveAmount
+    })
+  } else {
+    await deps.paymentMethodHandlerService.pay('ILP', {
       receiver,
       outgoingPayment: payment,
       finalDebitAmount: maxDebitAmount,
       finalReceiveAmount: maxReceiveAmount
-    }
-  )
+    })
+  }
   const payEndTime = Date.now()
 
   if (deps.telemetry) {

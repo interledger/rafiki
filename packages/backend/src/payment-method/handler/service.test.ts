@@ -67,7 +67,7 @@ describe('PaymentMethodHandlerService', (): void => {
 
       expect(ilpPaymentServiceGetQuoteSpy).toHaveBeenCalledWith(options)
     })
-    test('calls lcaolPaymentService for local payment type', async (): Promise<void> => {
+    test('calls localPaymentService for local payment type', async (): Promise<void> => {
       const asset = await createAsset(deps)
       const walletAddress = await createWalletAddress(deps, {
         assetId: asset.id
