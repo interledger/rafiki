@@ -550,6 +550,7 @@ describe('LocalPaymentService', (): void => {
 
       jest
         .spyOn(accountingService, 'createTransfer')
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .mockResolvedValueOnce('UnknownError' as any)
 
       expect.assertions(4)

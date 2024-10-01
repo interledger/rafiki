@@ -28,7 +28,6 @@ import {
   isTransferError,
   TransferError
 } from '../../accounting/errors'
-import { InsufficientLiquidityError } from 'ilp-packet/dist/errors'
 import { IncomingPaymentService } from '../../open_payments/payment/incoming/service'
 import { IncomingPaymentState } from '../../open_payments/payment/incoming/model'
 import { FeeService } from '../../fee/service'
