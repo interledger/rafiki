@@ -67,7 +67,8 @@
 
 /* Overflowing table styles */
 .overflow-table {
-  overflow-x: scroll;
+  max-height: 500px;
+  overflow: auto;
   background:
     linear-gradient(to right, var(--sl-color-bg) 30%, rgba(255, 255, 255, 0)),
     linear-gradient(to right, rgba(255, 255, 255, 0), var(--sl-color-bg) 70%) 0
@@ -98,6 +99,18 @@
   background-attachment: local, local, scroll, scroll;
 }
 
+.overflow-table thead th {
+  position: sticky;
+  background-color: var(--sl-color-gray-7);
+  top: 0;
+}
+
+@media screen and (max-width: 40rem) {
+  .overflow-table table {
+    min-width: 60rem;
+  }
+}
+
 @media screen and (min-width: 80rem) {
   .overflow-table {
     max-width: 755px;
@@ -105,8 +118,16 @@
 }
 
 .overflow-table table code {
-  white-space: nowrap;
   font-size: 95%;
+  max-width: 300px;
+  overflow-wrap: break-word;
+  word-break: normal;
+}
+
+.overflow-table td,
+.overflow-table th {
+  max-width: 300px;
+  min-width: fit-content;
 }
 
 .overflow-table tbody {
