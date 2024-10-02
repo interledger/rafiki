@@ -1038,7 +1038,7 @@ enum TransferType {
   DEPOSIT
   "Represents a withdrawal transfer."
   WITHDRAWAL
-  "Represents a generic transfer. - Follow up with Max (?)"
+  "Represents a generic transfer within Rafiki."
   TRANSFER
 }
 
