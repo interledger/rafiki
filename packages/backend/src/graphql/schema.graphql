@@ -1,6 +1,9 @@
 type Query {
   "Fetch an asset by its ID."
-  asset(id: String!): Asset
+  asset(
+    "Unique identifier of the asset."
+    id: String!
+  ): Asset
 
   "Fetch a paginated list of assets."
   assets(
@@ -17,7 +20,10 @@ type Query {
   ): AssetsConnection!
 
   "Fetch a peer by its ID."
-  peer(id: String!): Peer
+  peer(
+    "Unique identifier of the peer."
+    id: String!
+  ): Peer
 
   "Fetch a paginated list of peers."
   peers(
@@ -34,7 +40,10 @@ type Query {
   ): PeersConnection!
 
   "Fetch a wallet address by its ID."
-  walletAddress(id: String!): WalletAddress
+  walletAddress(
+    "Unique identifier of the wallet address."
+    id: String!
+  ): WalletAddress
 
   "Fetch a paginated list of wallet addresses."
   walletAddresses(
@@ -51,10 +60,16 @@ type Query {
   ): WalletAddressesConnection!
 
   "Fetch an Open Payments quote by its ID."
-  quote(id: String!): Quote
+  quote(
+    "Unique identifier of the quote."
+    id: String!
+  ): Quote
 
   "Fetch an Open Payments outgoing payment by its ID."
-  outgoingPayment(id: String!): OutgoingPayment
+  outgoingPayment(
+    "Unique identifier of the outgoing payment."
+    id: String!
+  ): OutgoingPayment
 
   "Fetch a paginated list of outgoing payments by receiver."
   outgoingPayments(
@@ -73,7 +88,10 @@ type Query {
   ): OutgoingPaymentConnection!
 
   "Fetch an Open Payments incoming payment by its ID."
-  incomingPayment(id: String!): IncomingPayment
+  incomingPayment(
+    "Unique identifier of the incoming payment."
+    id: String!
+  ): IncomingPayment
 
   "Fetch a paginated list of webhook events."
   webhookEvents(
@@ -109,14 +127,17 @@ type Query {
 
   "Fetch a paginated list of accounting transfers for a given account."
   accountingTransfers(
-    "The unique identifier of the account."
+    "Unique identifier of the account."
     id: String!
     "Limit the number of results returned. If no limit is provided, the default limit of 100,000 is set for TigerBeetle."
     limit: Int
   ): AccountingTransferConnection!
 
   "Retrieve an Open Payments incoming payment by receiver ID. The receiver's wallet address can be hosted on this server or a remote Open Payments resource server."
-  receiver(id: String!): Receiver
+  receiver(
+    "Unique identifier of the receiver (incoming payment URL)."
+    id: String!
+  ): Receiver
 }
 
 type Mutation {
@@ -693,7 +714,7 @@ type WalletAddressEdge {
 }
 
 type WalletAddress implements Model {
-  "Unique identifer of the wallet address."
+  "Unique identifier of the wallet address."
   id: ID!
 
   "Asset of the wallet address."
@@ -821,7 +842,7 @@ type IncomingPaymentEdge {
 interface BasePayment {
   "Unique identifier for the payment."
   id: ID!
-  "Unique identifer of the wallet address under which the payment was created."
+  "Unique identifier of the wallet address under which the payment was created."
   walletAddressId: ID!
   "Additional metadata associated with the payment."
   metadata: JSONObject
@@ -832,9 +853,9 @@ interface BasePayment {
 }
 
 type IncomingPayment implements BasePayment & Model {
-  "Unique identifer of the incoming payment."
+  "Unique identifier of the incoming payment."
   id: ID!
-  "Unique identifer of the wallet address under which the incoming payment was created."
+  "Unique identifier of the wallet address under which the incoming payment was created."
   walletAddressId: ID!
   "Information about the wallet address of the Open Payments client that created the incoming payment."
   client: String
@@ -855,7 +876,7 @@ type IncomingPayment implements BasePayment & Model {
 }
 
 type Receiver {
-  "Incoming payment URL."
+  "Unique identifier of the receiver (incoming payment URL)."
   id: String!
   "Wallet address URL under which the incoming payment was created."
   walletAddressUrl: String!
@@ -921,7 +942,7 @@ input OutgoingPaymentFilter {
 type OutgoingPayment implements BasePayment & Model {
   "Unique identifier of the outgoing payment."
   id: ID!
-  "Unique identifer of the wallet address under which the outgoing payment was created."
+  "Unique identifier of the wallet address under which the outgoing payment was created."
   walletAddressId: ID!
   "Information about the wallet address of the Open Payments client that created the outgoing payment."
   client: String
@@ -983,7 +1004,7 @@ type Payment implements BasePayment & Model {
   id: ID!
   "Type of payment, either incoming or outgoing."
   type: PaymentType!
-  "Unique identifer of the wallet address under which the payment was created."
+  "Unique identifier of the wallet address under which the payment was created."
   walletAddressId: ID!
   "Information about the wallet address of the Open Payments client that created the payment."
   client: String
@@ -1019,9 +1040,9 @@ type AccountingTransferConnection {
 type AccountingTransfer implements Model {
   "Unique identifier for the accounting transfer."
   id: ID!
-  "Unique identifer for the debit account."
+  "Unique identifier for the debit account."
   debitAccountId: ID!
-  "Unique identifer for the credit account."
+  "Unique identifier for the credit account."
   creditAccountId: ID!
   "Amount sent (fixed send)."
   amount: UInt64!
@@ -1057,9 +1078,9 @@ type QuoteEdge {
 }
 
 type Quote {
-  "Unique identifer of the quote."
+  "Unique identifier of the quote."
   id: ID!
-  "Unique identifer of the wallet address under which the quote was created."
+  "Unique identifier of the wallet address under which the quote was created."
   walletAddressId: ID!
   "Wallet address URL of the receiver."
   receiver: String!
@@ -1103,9 +1124,9 @@ type QuoteResponse {
 }
 
 input CreateOutgoingPaymentInput {
-  "Unique identifer of the wallet address under which the outgoing payment will be created."
+  "Unique identifier of the wallet address under which the outgoing payment will be created."
   walletAddressId: String!
-  "Unique identifer of the corresponding quote for that outgoing payment."
+  "Unique identifier of the corresponding quote for that outgoing payment."
   quoteId: String!
   "Additional metadata associated with the outgoing payment."
   metadata: JSONObject
@@ -1114,7 +1135,7 @@ input CreateOutgoingPaymentInput {
 }
 
 input CancelOutgoingPaymentInput {
-  "Unique identifer of the outgoing payment to cancel."
+  "Unique identifier of the outgoing payment to cancel."
   id: ID!
   "Reason why this outgoing payment has been canceled. This value will be publicly visible in the metadata field if this outgoing payment is requested through Open Payments."
   reason: String
@@ -1134,7 +1155,7 @@ input CreateOutgoingPaymentFromIncomingPaymentInput {
 }
 
 input CreateIncomingPaymentInput {
-  "Unique identifer of the wallet address under which the incoming payment will be created."
+  "Unique identifier of the wallet address under which the incoming payment will be created."
   walletAddressId: String!
   "Date and time that the incoming payment will expire."
   expiresAt: String
@@ -1160,7 +1181,7 @@ input CreateReceiverInput {
 }
 
 input UpdateIncomingPaymentInput {
-  "Unique identifer of the incoming payment to update."
+  "Unique identifier of the incoming payment to update."
   id: ID!
   "The new metadata object to save for the incoming payment. It will overwrite any existing metadata."
   metadata: JSONObject!
@@ -1245,7 +1266,7 @@ type Jwk {
 }
 
 type WalletAddressKey implements Model {
-  "Unique internal identifer for the wallet address key."
+  "Unique internal identifier for the wallet address key."
   id: ID!
   "Unique identifier of the wallet address to associate with the key."
   walletAddressId: ID!
@@ -1321,7 +1342,7 @@ type Fee implements Model {
 }
 
 input SetFeeInput {
-  "Unique identifer of the asset id to add the fees to."
+  "Unique identifier of the asset id to add the fees to."
   assetId: ID!
   "Type of fee, either sending or receiving."
   type: FeeType!
@@ -1363,7 +1384,7 @@ input FilterString {
 }
 
 interface Model {
-  "Unique identifer for the entity."
+  "Unique identifier for the entity."
   id: ID!
   "The date and time that the entity was created."
   createdAt: String!
