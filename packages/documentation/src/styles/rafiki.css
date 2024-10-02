@@ -67,6 +67,7 @@
 
 /* Overflowing table styles */
 .overflow-table {
+  container-type: inline-size;
   max-height: 500px;
   overflow: auto;
   background:
@@ -105,9 +106,13 @@
   top: 0;
 }
 
-@media screen and (max-width: 40rem) {
-  .overflow-table table {
+@container (max-width: 45rem) {
+  .wide-column table {
     min-width: 60rem;
+  }
+
+  .wider-column table {
+    min-width: 80rem;
   }
 }
 
@@ -119,7 +124,6 @@
 
 .overflow-table table code {
   font-size: 95%;
-  max-width: 300px;
   overflow-wrap: break-word;
   word-break: normal;
 }
@@ -140,12 +144,4 @@
 
 .overflow-table tbody tr:not(:last-of-type) td {
   border-block-end: 1px solid var(--sl-color-gray-6);
-}
-
-.wider-160-table.wider-160-table table {
-  width: 160%;
-}
-
-.wider-190-table.wider-190-table table {
-  width: 190%;
 }
