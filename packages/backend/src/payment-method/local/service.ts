@@ -250,7 +250,11 @@ async function pay(
     destinationAccount: incomingPayment,
     sourceAmount: finalDebitAmount,
     destinationAmount: finalReceiveAmount,
-    transferType: TransferType.TRANSFER
+    transferType: TransferType.TRANSFER,
+    // TODO: no timeout? theoretically possible (perhaps even correct?) but need to
+    // update IncomingPayment state to COMPLETE some other way. trxOrError.post usually
+    // will (via onCredit) but post will return error instead because its already posted.
+    timeout: deps.config.tigerBeetleTwoPhaseTimeout
   }
 
   const trxOrError =
