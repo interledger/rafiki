@@ -30,7 +30,6 @@ import {
 } from '../../accounting/errors'
 import { IncomingPaymentService } from '../../open_payments/payment/incoming/service'
 import { IncomingPaymentState } from '../../open_payments/payment/incoming/model'
-import { FeeService } from '../../fee/service'
 
 export interface LocalPaymentService extends PaymentMethodService {}
 
