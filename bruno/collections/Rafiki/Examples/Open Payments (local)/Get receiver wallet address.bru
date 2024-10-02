@@ -5,7 +5,7 @@ meta {
 }
 
 get {
-  url: {{receiverWalletAddress}}
+  url: http://localhost:3000/accounts/bhamchest
   body: none
   auth: none
 }
@@ -28,6 +28,7 @@ script:post-response {
   }
   
   const body = res.getBody()
+  bru.setEnvVar("receiverWalletAddress", "http://localhost:3000/accounts/bhamchest")
   bru.setEnvVar("receiverAssetCode", body?.assetCode)
   bru.setEnvVar("receiverAssetScale", body?.assetScale)
   
