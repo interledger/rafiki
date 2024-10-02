@@ -340,7 +340,6 @@ async function createAccountDeposit(
     type: LedgerTransferType.DEPOSIT
   }
 
-  // ilp - 617n (not final sentAmount)
   const { errors } = await createTransfers(deps, [transfer], trx)
 
   if (errors[0]) {
