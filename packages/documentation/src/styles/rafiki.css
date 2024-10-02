@@ -106,7 +106,7 @@
   top: 0;
 }
 
-@container (max-width: 45rem) {
+@container (max-width: 48rem) {
   .wide-column table {
     min-width: 60rem;
   }
