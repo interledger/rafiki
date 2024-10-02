@@ -34,7 +34,6 @@ describe('IlpQuoteDetails Service', (): void => {
   describe('IlpQuoteDetails Service', (): void => {
     describe('getById', (): void => {
       it('should get ILP quote by id', async (): Promise<void> => {
-        // const ilpQuote = await createIlpQuote(deps, asset.id, BigInt(1000))
         const asset = await createAsset(deps)
         const { id: walletAddressId } = await createWalletAddress(deps, {
           assetId: asset.id

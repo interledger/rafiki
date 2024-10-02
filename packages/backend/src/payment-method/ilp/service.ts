@@ -256,8 +256,6 @@ async function pay(
   const destination = receiver.toResolvedPayment()
 
   try {
-    // receipt.amountDelivered: 500n
-    // receipt.amountSent: 500n
     const receipt = await Pay.pay({ plugin, destination, quote })
 
     if (receipt.error) {

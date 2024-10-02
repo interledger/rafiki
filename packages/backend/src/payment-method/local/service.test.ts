@@ -1,10 +1,7 @@
 import { LocalPaymentService } from './service'
 import { initIocContainer } from '../../'
 import { createTestApp, TestContainer } from '../../tests/app'
-import {
-  // IAppConfig,
-  Config
-} from '../../config/app'
+import { Config } from '../../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { AppServices } from '../../app'
 import { createAsset } from '../../tests/asset'
@@ -12,7 +9,6 @@ import { createWalletAddress } from '../../tests/walletAddress'
 import { Asset } from '../../asset/model'
 import { StartQuoteOptions } from '../handler/service'
 import { WalletAddress } from '../../open_payments/wallet_address/model'
-// import * as Pay from '@interledger/pay'
 
 import { createReceiver } from '../../tests/receiver'
 import { mockRatesApi } from '../../tests/rates'

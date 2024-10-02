@@ -46,28 +46,4 @@ exports.down = function (knex) {
         WHERE "quotes"."id" = "ilpQuoteDetails"."quoteId"
       `)
     })
-  // .then(() => {
-  //   // Apply the not null constraints after data insertion
-  //   return knex.schema.alterTable('quotes', function (table) {
-  //     table.bigInteger('maxPacketAmount').notNullable().alter()
-  //     table.decimal('minExchangeRateNumerator', 64, 0).notNullable().alter()
-  //     table.decimal('minExchangeRateDenominator', 64, 0).notNullable().alter()
-  //     table
-  //       .decimal('lowEstimatedExchangeRateNumerator', 64, 0)
-  //       .notNullable()
-  //       .alter()
-  //     table
-  //       .decimal('lowEstimatedExchangeRateDenominator', 64, 0)
-  //       .notNullable()
-  //       .alter()
-  //     table
-  //       .decimal('highEstimatedExchangeRateNumerator', 64, 0)
-  //       .notNullable()
-  //       .alter()
-  //     table
-  //       .decimal('highEstimatedExchangeRateDenominator', 64, 0)
-  //       .notNullable()
-  //       .alter()
-  //   })
-  // })
 }

@@ -34,10 +34,6 @@ export function createBalanceMiddleware(): ILPMiddleware {
       return
     }
 
-    // in happy-path (non local p2p create outgoing payment)
-    // both source and destination amounts are 500n. In local payment
-    // method, one is 610 but should be 500. S
-
     const sourceAmount = BigInt(amount)
     const destinationAmountOrError = await services.rates.convert({
       sourceAmount,

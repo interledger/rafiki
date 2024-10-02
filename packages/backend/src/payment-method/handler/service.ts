@@ -19,8 +19,6 @@ export interface PaymentQuote {
   debitAmount: Amount
   receiveAmount: Amount
   estimatedExchangeRate: number
-  // TODO: make this an amount like debitAmount? update db field, handle conversion to num/denom, etc.
-  // sourceAmount: bigint
   additionalFields: Record<string, unknown>
 }
 

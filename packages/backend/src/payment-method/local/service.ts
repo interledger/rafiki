@@ -39,7 +39,6 @@ export interface ServiceDependencies extends BaseService {
   ratesService: RatesService
   accountingService: AccountingService
   incomingPaymentService: IncomingPaymentService
-  feeService: FeeService
 }
 
 export async function createLocalPaymentService(
