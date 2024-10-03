@@ -497,7 +497,7 @@ describe('Integration tests', (): void => {
         expect(incomingPayment.state).toBe(IncomingPaymentState.Completed)
       })
 
-      test('Peer to Peer (Fixed Send)', async (): Promise<void> => {
+      test('Peer to Peer - Fixed Send', async (): Promise<void> => {
         const {
           createReceiver,
           createQuote,
