@@ -333,7 +333,10 @@ describe('Integration tests', (): void => {
         }
 
         const receiver = await createReceiver(createReceiverInput)
-        const quote = await createQuote(senderWalletAddressId, receiver)
+        const quote = await createQuote({
+          walletAddressId: senderWalletAddressId,
+          receiver: receiver.id
+        })
         const outgoingPayment = await createOutgoingPayment(
           senderWalletAddressId,
           quote
@@ -381,7 +384,10 @@ describe('Integration tests', (): void => {
         const receiver = await createReceiver(createReceiverInput)
         assert(receiver.incomingAmount)
 
-        const quote = await createQuote(senderWalletAddressId, receiver)
+        const quote = await createQuote({
+          walletAddressId: senderWalletAddressId,
+          receiver: receiver.id
+        })
         const outgoingPayment = await createOutgoingPayment(
           senderWalletAddressId,
           quote
@@ -471,7 +477,10 @@ describe('Integration tests', (): void => {
         }
 
         const receiver = await createReceiver(createReceiverInput)
-        const quote = await createQuote(senderWalletAddressId, receiver)
+        const quote = await createQuote({
+          walletAddressId: senderWalletAddressId,
+          receiver: receiver.id
+        })
         const outgoingPayment = await createOutgoingPayment(
           senderWalletAddressId,
           quote
@@ -486,6 +495,70 @@ describe('Integration tests', (): void => {
         const incomingPayment = await getIncomingPayment(incomingPaymentId)
         expect(incomingPayment.receivedAmount.value).toBe(BigInt(value))
         expect(incomingPayment.state).toBe(IncomingPaymentState.Completed)
+      })
+
+      test('Peer to Peer (Fixed Send)', async (): Promise<void> => {
+        const {
+          createReceiver,
+          createQuote,
+          createOutgoingPayment,
+          getOutgoingPayment,
+          getIncomingPayment
+        } = testActions.admin
+
+        const receiver = await createReceiver({
+          metadata: {
+            description: 'For lunch!'
+          },
+          walletAddressUrl:
+            'https://cloud-nine-wallet-test-backend:3100/accounts/bhamchest'
+        })
+        expect(receiver.id).toBeDefined()
+
+        const senderWalletAddress = await c9.accounts.getByWalletAddressUrl(
+          'https://cloud-nine-wallet-test-backend:3100/accounts/gfranklin'
+        )
+        assert(senderWalletAddress?.walletAddressID)
+        const senderWalletAddressId = senderWalletAddress.walletAddressID
+
+        const createQuoteInput = {
+          walletAddressId: senderWalletAddressId,
+          receiver: receiver.id,
+          debitAmount: {
+            assetCode: 'USD',
+            assetScale: 2,
+            value: '500' as unknown as bigint
+          }
+        }
+        const quote = await createQuote(createQuoteInput)
+        expect(quote.id).toBeDefined()
+
+        const outgoingPayment = await createOutgoingPayment(
+          senderWalletAddressId,
+          quote
+        )
+        expect(outgoingPayment.id).toBeDefined()
+
+        const outgoingPayment_ = await getOutgoingPayment(
+          outgoingPayment.id,
+          String(quote.receiveAmount.value)
+        )
+        expect(outgoingPayment_.sentAmount.value).toBe(
+          BigInt(quote.receiveAmount.value)
+        )
+
+        expect(outgoingPayment_.state).toBe('COMPLETED')
+
+        const incomingPaymentId = receiver.id.split('/').slice(-1)[0]
+        const incomingPayment = await getIncomingPayment(incomingPaymentId)
+
+        expect(incomingPayment.receivedAmount).toMatchObject({
+          assetCode: 'USD',
+          assetScale: 2,
+          value: BigInt(quote.receiveAmount.value)
+        })
+        // TODO: fix bug where fixed-send (regardless of local/remote) is not completeing
+        // expect(incomingPayment.state).toBe(IncomingPaymentState.Completed)
       })
 
       test('Peer to Peer - Cross Currency', async (): Promise<void> => {
@@ -503,7 +576,6 @@ describe('Integration tests', (): void => {
         assert(senderWalletAddress)
         const senderAssetCode = senderWalletAddress.assetCode
         const senderWalletAddressId = senderWalletAddress.walletAddressID
-        const value = '500'
         const createReceiverInput = {
           metadata: {
             description: 'cross-currency'
@@ -511,23 +583,25 @@ describe('Integration tests', (): void => {
           incomingAmount: {
             assetCode: 'EUR',
             assetScale: 2,
-            value: value as unknown as bigint
+            value: '500' as unknown as bigint
           },
           walletAddressUrl:
             'https://cloud-nine-wallet-backend:3100/accounts/lrossi'
         }
-
         const receiver = await createReceiver(createReceiverInput)
         assert(receiver.incomingAmount)
 
-        const quote = await createQuote(senderWalletAddressId, receiver)
+        const quote = await createQuote({
+          walletAddressId: senderWalletAddressId,
+          receiver: receiver.id
+        })
         const outgoingPayment = await createOutgoingPayment(
           senderWalletAddressId,
           quote
         )
         const completedOutgoingPayment = await getOutgoingPayment(
           outgoingPayment.id,
-          value
+          String(createReceiverInput.incomingAmount.value)
         )
 
         const receiverAssetCode = receiver.incomingAmount.assetCode
