@@ -102,7 +102,7 @@
 
 .overflow-table thead th {
   position: sticky;
-  background-color: var(--sl-color-gray-7);
+  background-color: var(--sl-color-gray-7, var(--sl-color-gray-6));
   top: 0;
 }
 
