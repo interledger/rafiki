@@ -85,39 +85,61 @@ The following components are made available via the Local Playground:
 
 #### Mock account servicing entity 1 - Cloud Nine Wallet
 
-| Label | Component              | URL                           |
-| ----- | ---------------------- | ----------------------------- |
-| a     | User Interface         | http://localhost:3030         |
-| b     | Backend Admin API      | http://localhost:3001/graphql |
-| c     | Open Payments API      | http://localhost:3000         |
-| d     | Auth Admin API         | http://localhost:3003/graphql |
-| e     | Open Payments Auth API | http://localhost:3006         |
-| f     | Rafiki Admin UI        | http://localhost:3010         |
-| g     | Kratos API             | http://localhost:4433         |
+| Label | Component                          | URL                           |
+| ----- | ---------------------------------- | ----------------------------- |
+| a     | User Interface                     | http://localhost:3030         |
+| b     | Backend Admin API                  | http://localhost:3001/graphql |
+| c     | Open Payments API                  | http://localhost:3000         |
+| d     | Auth Admin API                     | http://localhost:3003/graphql |
+| e     | Open Payments Auth API             | http://localhost:3006         |
+| f     | Rafiki Admin UI                    | http://localhost:3010         |
+| g     | Kratos API - _disabled by default_ | http://localhost:4433         |
 
 #### Mock account servicing entity 2 - Happy Life Bank
 
-| Label | Component              | URL                           |
-| ----- | ---------------------- | ----------------------------- |
-| h     | User Interface         | http://localhost:3031         |
-| i     | Backend Admin API      | http://localhost:4001/graphql |
-| j     | Open Payments API      | http://localhost:4000         |
-| k     | Auth Admin API         | http://localhost:4003/graphql |
-| l     | Open Payments Auth API | http://localhost:4006         |
-| m     | Rafiki Admin UI        | http://localhost:4010         |
-| n     | Kratos API             | http://localhost:4432         |
+| Label | Component                          | URL                           |
+| ----- | ---------------------------------- | ----------------------------- |
+| h     | User Interface                     | http://localhost:3031         |
+| i     | Backend Admin API                  | http://localhost:4001/graphql |
+| j     | Open Payments API                  | http://localhost:4000         |
+| k     | Auth Admin API                     | http://localhost:4003/graphql |
+| l     | Open Payments Auth API             | http://localhost:4006         |
+| m     | Rafiki Admin UI                    | http://localhost:4010         |
+| n     | Kratos API - _disabled by default_ | http://localhost:4432         |
 
 #### Mail Slurper
 
-| Label | Component | URL                   |
-| ----- | --------- | --------------------- |
-| o     | Mail UI   | http://localhost:4436 |
+| Label | Component                        | URL                   |
+| ----- | -------------------------------- | --------------------- |
+| o     | Mail UI - _disabled by default_  | http://localhost:4436 |
 
 #### Database
 
 | Component       | URL                   |
 | --------------- | --------------------- |
 | Postgres Server | http://localhost:5432 |
+
+### Rafiki Admin
+
+Manage and view information about the Rafiki instance(s) through the [Rafiki Admin](/admin/admin-user-guide/) application. Rafiki Admin is a Remix app for querying info and executing mutations against the Rafiki [Backend Admin API](https://rafiki.dev/integration/playground/overview#admin-apis).
+
+- Cloud Nine Wallet - http://localhost:3010
+- Happy Life Bank - http://localhost:4010
+
+We have secured access to Rafiki Admin using <LinkOut href='https://www.ory.sh/docs/kratos/ory-kratos-intro'>Ory Kratos</LinkOut>; however, in our local playground setup we've chosen to disable user authentication for easier development and testing interactions.
+
+:::note[Enabling Rafiki Admin authentication locally]
+If you'd like to enable authentication locally you can run `pnpm localenv:compose:adminauth up`
+
+Separate registrations/users are required for each mock ASE's Admin app as the ASEs are designed to run as separate mock entities. Visit the Rafiki Admin user guide to learn how to [invite](/admin/admin-user-guide#invite-a-user) and [remove](/admin/admin-user-guide#remove-a-user) users via provided scripts.
+
+After you've registered, you can come back to your Rafiki Admin account by navigating to [`localhost:3010`](http://localhost:3010) (Cloud Nine Wallet) or [`localhost:4010`](http://localhost:4010) (Happy Life Bank) and logging in.
+
+Follow these steps to reset a user's Rafiki Admin password.
+
+1. Click the forgot password link and enter an email for a registered user.
+2. Open [Mail Slurper](http://localhost:4436/) to access the recovery link for the account.
+:::
 
 ### Exploring Accounts on Cloud Nine Wallet
 
@@ -178,20 +200,21 @@ pnpm localenv:compose down --volumes --rmi all
 
 The following are the most commonly used commands:
 
-| Command                                        | Description                                      |
-| ---------------------------------------------- | ------------------------------------------------ |
-| pnpm localenv:compose config                   | Show all merged config (with TigerBeetle)        |
-| pnpm localenv:compose up                       | Start (with TigerBeetle)                         |
-| pnpm localenv:compose up -d                    | Start (with TigerBeetle) detached                |
-| pnpm localenv:compose down                     | Down (with TigerBeetle)                          |
-| pnpm localenv:compose down --volumes           | Down and kill volumes (with TigerBeetle)         |
-| pnpm localenv:compose down --volumes --rmi all | Down, kill volumes (with TigerBeetle) and images |
-| pnpm localenv:compose:psql config              | Show all merged config (with PostgreSQL)         |
-| pnpm localenv:compose build                    | Build all the containers (with TigerBeetle)      |
-| pnpm localenv:compose:psql up                  | Start (with PostgreSQL)                          |
-| pnpm localenv:compose:psql down                | Down (with PostgreSQL)                           |
-| pnpm localenv:compose:psql down --volumes      | Down (with PostgreSQL) and kill volumes          |
-| pnpm localenv:compose:psql build               | Build all the containers (with PostgreSQL)       |
+| Command                                        | Description                                                       |
+| ---------------------------------------------- | ----------------------------------------------------------------- |
+| pnpm localenv:compose config                   | Show all merged config (with TigerBeetle)                         |
+| pnpm localenv:compose up                       | Start (with TigerBeetle)                                          |
+| pnpm localenv:compose up -d                    | Start (with TigerBeetle) detached                                 |
+| pnpm localenv:compose down                     | Down (with TigerBeetle)                                           |
+| pnpm localenv:compose down --volumes           | Down and kill volumes (with TigerBeetle)                          |
+| pnpm localenv:compose down --volumes --rmi all | Down, kill volumes (with TigerBeetle) and images                  |
+| pnpm localenv:compose:psql config              | Show all merged config (with PostgreSQL)                          |
+| pnpm localenv:compose build                    | Build all the containers (with TigerBeetle)                       |
+| pnpm localenv:compose:psql up                  | Start (with PostgreSQL)                                           |
+| pnpm localenv:compose:psql down                | Down (with PostgreSQL)                                            |
+| pnpm localenv:compose:psql down --volumes      | Down (with PostgreSQL) and kill volumes                           |
+| pnpm localenv:compose:psql build               | Build all the containers (with PostgreSQL)                        |
+| pnpm localenv:compose:adminauth up             | Start with local admin auth enabled (this is disabled by default) | 
 
 ### Interacting with the Local Playground
 
@@ -222,26 +245,6 @@ You have to go through an interaction flow by clicking on the `redirect` link in
 8.  Continues the grant request
 9.  Creates an outgoing payment on the sender's account
 10. Fetches the outgoing payment on the sender's account
-
-#### Rafiki Admin
-
-Manage and view information about the Rafiki instance(s) through the [Rafiki Admin](/admin/admin-user-guide/) application. Rafiki Admin is a Remix app for querying info and executing mutations against the Rafiki [Backend Admin API](https://rafiki.dev/integration/playground/overview#admin-apis).
-
-- Cloud Nine Wallet - http://localhost:3010
-- Happy Life Bank - http://localhost:4010
-
-Visit the Rafiki Admin user guide to learn how to [invite](/admin/admin-user-guide#invite-a-user) and [remove](/admin/admin-user-guide#remove-a-user) users via provided scripts.
-
-:::note
-Separate registrations/users are required for each mock ASE's Admin app as the ASEs are designed to run as separate mock entities. After you've registered, you can come back to your Rafiki Admin account by navigating to [`localhost:3010`](http://localhost:3010) (Cloud Nine Wallet) or [`localhost:4010`](http://localhost:4010) (Happy Life Bank) and logging in.
-:::
-
-##### Rafiki Admin password recovery
-
-Follow these steps to reset a user's Rafiki Admin password.
-
-1. Click the forgot password link and enter an email for a registered user.
-2. Open [Mail Slurper](http://localhost:4436/) to access the recovery link for the account.
 
 #### Admin APIs
 
