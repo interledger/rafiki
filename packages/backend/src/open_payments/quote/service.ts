@@ -77,10 +77,9 @@ interface QuoteOptionsWithReceiveAmount extends QuoteOptionsBase {
   debitAmount?: never
 }
 
-export type CreateQuoteOptions = { tenantId: string } & (
+export type CreateQuoteOptions =
   | QuoteOptionsWithDebitAmount
   | QuoteOptionsWithReceiveAmount
-)
 
 async function createQuote(
   deps: ServiceDependencies,
