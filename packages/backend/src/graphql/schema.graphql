@@ -617,9 +617,9 @@ type Asset implements Model {
 }
 
 enum SortOrder {
-  "Choose ascending order for results."
+  "Sort the results in ascending order."
   ASC
-  "Choose descending order for results."
+  "Sort the results in descending order."
   DESC
 }
 
