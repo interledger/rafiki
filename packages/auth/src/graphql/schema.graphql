@@ -1,17 +1,17 @@
 type Query {
   "Fetch a paginated list of grants."
   grants(
-    "Forward pagination: Fetch grants after this cursor."
+    "Forward pagination: Cursor (grant ID) to start retrieving grants after this point."
     after: String
-    "Backward pagination: Fetch grants before this cursor."
+    "Backward pagination: Cursor (grant ID) to start retrieving grants before this point."
     before: String
-    "Forward pagination: Fetch the first **n** grants from the page."
+    "Forward pagination: Limit the result to the first **n** grants after the `after` cursor."
     first: Int
-    "Backward pagination: Fetch the last **n** grants from the page."
+    "Backward pagination: Limit the result to the last **n** grants before the `before` cursor."
     last: Int
-    "Filter grants based on specified criteria."
+    "Filter grants based on specified criteria such as ID, state, or finalization reason."
     filter: GrantFilter
-    "Sort grants by their creation date in ascending or descending order."
+    "Specify the sort order of grants based on their creation date, either ascending or descending."
     sortOrder: SortOrder
   ): GrantsConnection!
 
@@ -28,27 +28,27 @@ type Mutation {
 }
 
 type PageInfo {
-  "Cursor for fetching the next set of results when paginating forward."
+  "The cursor used to fetch the next page when paginating forward."
   endCursor: String
   "Indicates if there are more pages when paginating forward."
   hasNextPage: Boolean!
   "Indicates if there are more pages when paginating backward."
   hasPreviousPage: Boolean!
-  "Cursor for fetching the next set of results when paginating backward."
+  "The cursor used to fetch the next page when paginating backward."
   startCursor: String
 }
 
 type GrantsConnection {
-  "Pagination information for grants."
+  "Information to aid in pagination."
   pageInfo: PageInfo!
-  "List of grant edges containing the grant node and its cursor."
+  "A list of edges representing grants and cursors for pagination."
   edges: [GrantEdge!]!
 }
 
 type GrantEdge {
-  "The grant object."
+  "A grant node in the list."
   node: Grant!
-  "The cursor for this grant."
+  "A cursor for paginating through the grants."
   cursor: String!
 }
 
@@ -62,7 +62,7 @@ input GrantFilter {
 }
 
 input FilterString {
-  "List of identifiers to include in the filter."
+  "Array of strings to filter by."
   in: [String!]
 }
 
@@ -81,7 +81,7 @@ input FilterFinalizationReason {
 }
 
 input RevokeGrantInput {
-  "ID of the grant to revoke."
+  "Unique identifier of the grant to revoke."
   grantId: String!
 }
 
@@ -136,14 +136,14 @@ type LimitData {
 type PaymentAmount {
   "The value of the payment amount."
   value: UInt64!
-  "[ISO 4217 currency code](https://en.wikipedia.org/wiki/ISO_4217), e.g. `USD`."
+  "Should be an ISO 4217 currency code whenever possible, e.g. `USD`. For more information, refer to [assets](https://rafiki.dev/overview/concepts/accounting/#assets)."
   assetCode: String!
   "Difference in orders of magnitude between the standard unit of an asset and a corresponding fractional unit."
   assetScale: UInt8!
 }
 
 type RevokeGrantMutationResponse {
-  "ID of the revoked grant."
+  "Unique identifier of the revoked grant."
   id: ID!
 }
 
