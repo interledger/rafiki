@@ -106,54 +106,6 @@ export function initIocContainer(
   )
 
   container.singleton(
-    'tenantService',
-    async (deps: IocContract<AppServices>) => {
-      const [logger, knex] = await Promise.all([
-        deps.use('logger'),
-        deps.use('knex')
-      ])
-
-      return createTenantService({ logger, knex })
-    }
-  )
-
-  container.singleton(
-    'tenantService',
-    async (deps: IocContract<AppServices>) => {
-      const [logger, knex] = await Promise.all([
-        deps.use('logger'),
-        deps.use('knex')
-      ])
-
-      return createTenantService({ logger, knex })
-    }
-  )
-
-  container.singleton(
-    'tenantService',
-    async (deps: IocContract<AppServices>) => {
-      const [logger, knex] = await Promise.all([
-        deps.use('logger'),
-        deps.use('knex')
-      ])
-
-      return createTenantService({ logger, knex })
-    }
-  )
-
-  container.singleton(
-    'tenantService',
-    async (deps: IocContract<AppServices>) => {
-      const [logger, knex] = await Promise.all([
-        deps.use('logger'),
-        deps.use('knex')
-      ])
-
-      return createTenantService({ logger, knex })
-    }
-  )
-
-  container.singleton(
     'accessService',
     async (deps: IocContract<AppServices>) => {
       return createAccessService({
