@@ -9,6 +9,7 @@ import { ServiceDependencies } from './service'
 import { Receiver } from '../../receiver/model'
 import { TransactionOrKnex } from 'objection'
 import { ValueType } from '@opentelemetry/api'
+import { WebhookEventType } from '../../../webhook/model'
 
 // "payment" is locked by the "deps.knex" transaction.
 export async function handleSending(
@@ -148,7 +149,7 @@ export async function handleFailed(
     state: OutgoingPaymentState.Failed,
     error
   })
-  await sendWebhookEvent(deps, payment, OutgoingPaymentEventType.PaymentFailed)
+  await sendWebhookEvent(deps, payment, WebhookEventType.OutgoingPaymentFailed)
 }
 
 async function handleCompleted(
@@ -162,7 +163,7 @@ async function handleCompleted(
   await sendWebhookEvent(
     deps,
     payment,
-    OutgoingPaymentEventType.PaymentCompleted
+    WebhookEventType.OutgoingPaymentCompleted
   )
 }
 

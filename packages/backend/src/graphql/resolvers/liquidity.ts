@@ -24,15 +24,14 @@ import {
 } from '../../accounting/errors'
 import {
   isOutgoingPaymentEvent,
-  OutgoingPaymentDepositType,
-  OutgoingPaymentEventType
+  OutgoingPaymentDepositType
 } from '../../open_payments/payment/outgoing/model'
 import {
   PeerError,
   errorToMessage as peerErrorToMessage,
   errorToCode as peerErrorToCode
 } from '../../payment-method/ilp/peer/errors'
-import { IncomingPaymentEventType } from '../../open_payments/payment/incoming/model'
+import { WebhookEventType } from '../../webhook/model'
 
 export const getAssetLiquidity: AssetResolvers<ApolloContext>['liquidity'] =
   async (parent, args, ctx): Promise<ResolversTypes['UInt64']> => {
@@ -348,7 +347,7 @@ export type DepositEventType = OutgoingPaymentDepositType
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
 const isDepositEventType = (o: any): o is DepositEventType =>
-  Object.values(DepositEventType).includes(o)
+  Object.values(OutgoingPaymentDepositType).includes(o)
 
 export const depositEventLiquidity: MutationResolvers<ApolloContext>['depositEventLiquidity'] =
   async (
@@ -444,7 +443,7 @@ export const depositOutgoingPaymentLiquidity: MutationResolvers<ApolloContext>['
     const webhookService = await ctx.container.use('webhookService')
     const event = await webhookService.getLatestByResourceId({
       outgoingPaymentId,
-      types: [OutgoingPaymentDepositType.PaymentCreated]
+      types: [WebhookEventType.OutgoingPaymentCreated]
     })
     if (!event || !isOutgoingPaymentEvent(event)) {
       throw new GraphQLError(errorToMessage[LiquidityError.InvalidId], {
@@ -494,8 +493,8 @@ export const createIncomingPaymentWithdrawal: MutationResolvers<ApolloContext>['
     const event = await webhookService.getLatestByResourceId({
       incomingPaymentId,
       types: [
-        IncomingPaymentEventType.IncomingPaymentCompleted,
-        IncomingPaymentEventType.IncomingPaymentExpired
+        WebhookEventType.IncomingPaymentCompleted,
+        WebhookEventType.IncomingPaymentExpired
       ]
     })
     if (!incomingPayment || !incomingPayment.receivedAmount || !event?.id) {
@@ -546,8 +545,8 @@ export const createOutgoingPaymentWithdrawal: MutationResolvers<ApolloContext>['
     const event = await webhookService.getLatestByResourceId({
       outgoingPaymentId,
       types: [
-        OutgoingPaymentEventType.PaymentCompleted,
-        OutgoingPaymentEventType.PaymentFailed
+        WebhookEventType.OutgoingPaymentCompleted,
+        WebhookEventType.OutgoingPaymentFailed
       ]
     })
     if (!outgoingPayment || !event?.id) {

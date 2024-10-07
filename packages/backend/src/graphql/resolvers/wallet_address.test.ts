@@ -17,8 +17,7 @@ import {
 } from '../../open_payments/wallet_address/errors'
 import {
   WalletAddress as WalletAddressModel,
-  WalletAddressEvent,
-  WalletAddressEventType
+  WalletAddressEvent
 } from '../../open_payments/wallet_address/model'
 import { WalletAddressService } from '../../open_payments/wallet_address/service'
 import { createAsset } from '../../tests/asset'
@@ -35,6 +34,7 @@ import {
 import { getPageTests } from './page.test'
 import { WalletAddressAdditionalProperty } from '../../open_payments/wallet_address/additional_property/model'
 import { GraphQLErrorCode } from '../errors'
+import { WebhookEventType } from '../../webhook/model'
 
 describe('Wallet Address Resolvers', (): void => {
   let deps: IocContract<AppServices>
@@ -872,7 +872,7 @@ describe('Wallet Address Resolvers', (): void => {
         expect(response.count).toEqual(count)
         await expect(
           WalletAddressEvent.query(knex).where({
-            type: WalletAddressEventType.WalletAddressWebMonetization
+            type: WebhookEventType.WalletAddressWebMonetization
           })
         ).resolves.toHaveLength(count)
         for (let i = 1; i <= count; i++) {

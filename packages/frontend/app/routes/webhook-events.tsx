@@ -107,8 +107,8 @@ export default function WebhookEventsPage() {
                   },
                   ...Object.values(WebhookEventType).map((value) => ({
                     name:
-                      value.charAt(0).toUpperCase() +
-                      value.slice(1).replace(/[_.]/g, ' '),
+                      value.charAt(0) +
+                      value.toLowerCase().slice(1).replace(/[_]/g, ' '),
                     value: value,
                     action: () => {
                       setTypeFilterParams(value)

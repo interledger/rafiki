@@ -41,7 +41,7 @@ describe('Outgoing Payment Event Model', (): void => {
       async ({ type, error }): Promise<void> => {
         expect(
           OutgoingPaymentEvent.query(knex).insert({
-            type
+            type: type as OutgoingPaymentEventType
           })
         ).rejects.toThrow(error)
       }

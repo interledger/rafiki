@@ -16,7 +16,7 @@ Your Rafiki instance must be set up for at least one asset before wallet address
 There are a few ways in which you can create wallet addresses.
 
 - [Through a script](#create-wallet-addresses-through-a-script)
-- [In response to the `wallet_address.not_found` webhook event](#create-wallet-addresses-in-response-to-a-webhook-event)
+- [In response to the `WALLET_ADDRESS_NOT_FOUND` webhook event](#create-wallet-addresses-in-response-to-a-webhook-event)
 - [In the Rafiki Admin app](#create-and-manage-wallet-addresses-using-rafiki-admin)
 
 ### Create wallet addresses through a script
@@ -116,7 +116,7 @@ We strongly recommend you store at least the `walletAddress.id` in your internal
 
 ### Create wallet addresses in response to a webhook event
 
-The [`wallet_address.not_found`](/integration/requirements/webhook-events#wallet-address-not-found) event fires when a wallet address is requested through the Open Payments Get Wallet Address API, but Rafiki can't find the address.
+The [`WALLET_ADDRESS_NOT_FOUND`](/integration/requirements/webhook-events#wallet-address-not-found) event fires when a wallet address is requested through the Open Payments Get Wallet Address API, but Rafiki can't find the address.
 
 When you receive the event, look up the associated account in your system, then call the `createWalletAddress` mutation to create a wallet address for the account.
 

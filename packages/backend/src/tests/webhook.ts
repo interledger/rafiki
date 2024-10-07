@@ -2,12 +2,12 @@ import { faker } from '@faker-js/faker'
 import { v4 as uuid } from 'uuid'
 import { IocContract } from '@adonisjs/fold'
 import { AppServices } from '../app'
-import { WebhookEvent } from '../webhook/model'
+import { WebhookEvent, WebhookEventType } from '../webhook/model'
 import { sample } from 'lodash'
 import { EventPayload } from '../webhook/service'
 import { createAsset } from './asset'
 
-export const webhookEventTypes = ['event1', 'event2', 'event3'] as const
+export const webhookEventTypes = [WebhookEventType.IncomingPaymentCreated, WebhookEventType.IncomingPaymentCompleted, WebhookEventType.IncomingPaymentExpired] as const
 type WebhookEventPayload = EventPayload & { assetId: string }
 
 export async function createWebhookEvent(
@@ -19,7 +19,7 @@ export async function createWebhookEvent(
   const newEvent = {
     id: uuid(),
     assetId: asset.id,
-    type: sample(webhookEventTypes) as string,
+    type: sample(webhookEventTypes),
     data: { field1: faker.string.sample() },
     ...overrides
   }

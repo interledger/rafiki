@@ -53,6 +53,7 @@ import { withConfigOverride } from '../../../tests/helpers'
 import { TelemetryService } from '../../../telemetry/service'
 import { getPageTests } from '../../../shared/baseModel.test'
 import { Pagination, SortOrder } from '../../../shared/baseModel'
+import { WebhookEventType } from '../../../webhook/model'
 
 describe('OutgoingPaymentService', (): void => {
   let deps: IocContract<AppServices>
@@ -94,10 +95,10 @@ describe('OutgoingPaymentService', (): void => {
   const webhookTypes: {
     [key in OutgoingPaymentState]: OutgoingPaymentEventType | undefined
   } = {
-    [OutgoingPaymentState.Funding]: OutgoingPaymentEventType.PaymentCreated,
+    [OutgoingPaymentState.Funding]: WebhookEventType.OutgoingPaymentCreated,
     [OutgoingPaymentState.Sending]: undefined,
-    [OutgoingPaymentState.Failed]: OutgoingPaymentEventType.PaymentFailed,
-    [OutgoingPaymentState.Completed]: OutgoingPaymentEventType.PaymentCompleted,
+    [OutgoingPaymentState.Failed]: WebhookEventType.OutgoingPaymentFailed,
+    [OutgoingPaymentState.Completed]: WebhookEventType.OutgoingPaymentCompleted,
     [OutgoingPaymentState.Cancelled]: undefined
   }
 
@@ -830,7 +831,7 @@ describe('OutgoingPaymentService', (): void => {
             }
             await expect(
               OutgoingPaymentEvent.query(knex).where({
-                type: OutgoingPaymentEventType.PaymentCreated
+                type: WebhookEventType.OutgoingPaymentCreated
               })
             ).resolves.toMatchObject([
               {

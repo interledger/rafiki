@@ -10,7 +10,7 @@ import {
 } from '../../wallet_address/model'
 import { Quote } from '../../quote/model'
 import { Amount, AmountJSON, serializeAmount } from '../../amount'
-import { WebhookEvent } from '../../../webhook/model'
+import { WebhookEvent, WebhookEventType } from '../../../webhook/model'
 import {
   OutgoingPayment as OpenPaymentsOutgoingPayment,
   OutgoingPaymentWithSpentAmounts
@@ -237,19 +237,28 @@ export enum OutgoingPaymentState {
   Cancelled = 'CANCELLED'
 }
 
-export enum OutgoingPaymentDepositType {
-  PaymentCreated = 'outgoing_payment.created'
-}
+export type OutgoingPaymentDepositType = Extract<
+  WebhookEventType,
+  WebhookEventType.OutgoingPaymentCreated
+>
+export const OutgoingPaymentDepositType = [
+  WebhookEventType.OutgoingPaymentCreated
+]
 
-export enum OutgoingPaymentWithdrawType {
-  PaymentFailed = 'outgoing_payment.failed',
-  PaymentCompleted = 'outgoing_payment.completed'
-}
+export type OutgoingPaymentWithdrawType = Extract<
+  WebhookEventType,
+  | WebhookEventType.OutgoingPaymentCompleted
+  | WebhookEventType.OutgoingPaymentFailed
+>
+export const OutgoingPaymentWithdrawType = [
+  WebhookEventType.OutgoingPaymentCompleted,
+  WebhookEventType.OutgoingPaymentFailed
+]
 
-export const OutgoingPaymentEventType = {
+export const OutgoingPaymentEventType = [
   ...OutgoingPaymentDepositType,
   ...OutgoingPaymentWithdrawType
-}
+]
 export type OutgoingPaymentEventType =
   | OutgoingPaymentDepositType
   | OutgoingPaymentWithdrawType
@@ -279,8 +288,7 @@ export type PaymentData = Omit<OutgoingPaymentResponse, 'failed'> & {
 export const isOutgoingPaymentEventType = (
   // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
   o: any
-): o is OutgoingPaymentEventType =>
-  Object.values(OutgoingPaymentEventType).includes(o)
+): o is OutgoingPaymentEventType => OutgoingPaymentEventType.includes(o)
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
 export const isOutgoingPaymentEvent = (o: any): o is OutgoingPaymentEvent =>

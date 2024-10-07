@@ -8845,8 +8845,8 @@
               "kind": "NON_NULL",
               "name": null,
               "ofType": {
-                "kind": "SCALAR",
-                "name": "String",
+                "kind": "ENUM",
+                "name": "WebhookEventType",
                 "ofType": null
               }
             },
@@ -8886,6 +8886,77 @@
         ],
         "interfaces": null,
         "enumValues": null,
+        "possibleTypes": null
+      },
+      {
+        "kind": "ENUM",
+        "name": "WebhookEventType",
+        "description": null,
+        "fields": null,
+        "inputFields": null,
+        "interfaces": null,
+        "enumValues": [
+          {
+            "name": "ASSET_LIQUIDITY_LOW",
+            "description": "Asset liquidity is low",
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "INCOMING_PAYMENT_COMPLETED",
+            "description": "An incoming payment was completed",
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "INCOMING_PAYMENT_CREATED",
+            "description": "An incoming payment was created",
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "INCOMING_PAYMENT_EXPIRED",
+            "description": "An incoming payment has expired",
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "OUTGOING_PAYMENT_COMPLETED",
+            "description": "An outgoing payment was completed",
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "OUTGOING_PAYMENT_CREATED",
+            "description": "An outgoing payment was created",
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "OUTGOING_PAYMENT_FAILED",
+            "description": "An outgoing payment has failed and won't be retried",
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "PEER_LIQUIDITY_LOW",
+            "description": "Peer liquidity is low",
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "WALLET_ADDRESS_NOT_FOUND",
+            "description": "Wallet address was not found and it will be created if there exists a corresponding account",
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "WALLET_ADDRESS_WEB_MONETIZATION",
+            "description": "A Web Monetization payment was created",
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
         "possibleTypes": null
       },
       {

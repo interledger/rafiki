@@ -167,7 +167,7 @@ describe('Models', (): void => {
         async ({ type, error }): Promise<void> => {
           expect(
             IncomingPaymentEvent.query().insert({
-              type
+              type: type as IncomingPaymentEventType
             })
           ).rejects.toThrow(error)
         }

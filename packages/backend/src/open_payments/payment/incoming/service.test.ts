@@ -9,7 +9,6 @@ import { createTestApp, TestContainer } from '../../../tests/app'
 import {
   IncomingPayment,
   IncomingPaymentEvent,
-  IncomingPaymentEventType,
   IncomingPaymentState
 } from './model'
 import { Config, IAppConfig } from '../../../config/app'
@@ -27,6 +26,7 @@ import { getTests } from '../../wallet_address/model.test'
 import { WalletAddress } from '../../wallet_address/model'
 import { withConfigOverride } from '../../../tests/helpers'
 import { sleep } from '../../../shared/utils'
+import { WebhookEventType } from '../../../webhook/model'
 
 describe('Incoming Payment Service', (): void => {
   let deps: IocContract<AppServices>
@@ -80,7 +80,7 @@ describe('Incoming Payment Service', (): void => {
       const incomingPaymentEvent = await IncomingPaymentEvent.query(
         knex
       ).findOne({
-        type: IncomingPaymentEventType.IncomingPaymentCreated
+        type: WebhookEventType.IncomingPaymentCreated
       })
       assert.ok(!!incomingPaymentEvent)
       await IncomingPayment.query(knex)
@@ -154,7 +154,7 @@ describe('Incoming Payment Service', (): void => {
         async (): Promise<void> => {
           await expect(
             IncomingPaymentEvent.query(knex).where({
-              type: IncomingPaymentEventType.IncomingPaymentCreated
+              type: WebhookEventType.IncomingPaymentCreated
             })
           ).resolves.toHaveLength(0)
 
@@ -300,7 +300,7 @@ describe('Incoming Payment Service', (): void => {
     `('An incoming payment can be created', async (options): Promise<void> => {
       await expect(
         IncomingPaymentEvent.query(knex).where({
-          type: IncomingPaymentEventType.IncomingPaymentCreated
+          type: WebhookEventType.IncomingPaymentCreated
         })
       ).resolves.toHaveLength(0)
       options.client = client
@@ -319,7 +319,7 @@ describe('Incoming Payment Service', (): void => {
       })
       await expect(
         IncomingPaymentEvent.query(knex).where({
-          type: IncomingPaymentEventType.IncomingPaymentCreated
+          type: WebhookEventType.IncomingPaymentCreated
         })
       ).resolves.toHaveLength(1)
     })
@@ -706,9 +706,9 @@ describe('Incoming Payment Service', (): void => {
     })
 
     describe.each`
-      eventType                                            | expiresAt                        | amountReceived
-      ${IncomingPaymentEventType.IncomingPaymentExpired}   | ${new Date(Date.now() + 30_000)} | ${BigInt(1)}
-      ${IncomingPaymentEventType.IncomingPaymentCompleted} | ${undefined}                     | ${BigInt(123)}
+      eventType                                    | expiresAt                        | amountReceived
+      ${WebhookEventType.IncomingPaymentExpired}   | ${new Date(Date.now() + 30_000)} | ${BigInt(1)}
+      ${WebhookEventType.IncomingPaymentCompleted} | ${undefined}                     | ${BigInt(123)}
     `(
       'handleDeactivated ($eventType)',
       ({ eventType, expiresAt, amountReceived }): void => {
@@ -736,7 +736,7 @@ describe('Incoming Payment Service', (): void => {
               amount: amountReceived
             })
           ).resolves.toBeUndefined()
-          if (eventType === IncomingPaymentEventType.IncomingPaymentExpired) {
+          if (eventType === WebhookEventType.IncomingPaymentExpired) {
             jest.useFakeTimers()
             jest.setSystemTime(incomingPayment.expiresAt)
             await expect(incomingPaymentService.processNext()).resolves.toBe(
@@ -753,7 +753,7 @@ describe('Incoming Payment Service', (): void => {
           })) as IncomingPayment
           expect(incomingPayment).toMatchObject({
             state:
-              eventType === IncomingPaymentEventType.IncomingPaymentExpired
+              eventType === WebhookEventType.IncomingPaymentExpired
                 ? IncomingPaymentState.Expired
                 : IncomingPaymentState.Completed,
             processAt: expect.any(Date),

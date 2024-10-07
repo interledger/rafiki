@@ -4,7 +4,7 @@ import { Asset } from '../../../asset/model'
 import { ConnectorAccount } from '../connector/core/rafiki'
 import { HttpToken } from '../peer-http-token/model'
 import { BaseModel } from '../../../shared/baseModel'
-import { WebhookEvent } from '../../../webhook/model'
+import { WebhookEvent, WebhookEventType } from '../../../webhook/model'
 import { join } from 'path'
 
 export class Peer
@@ -58,7 +58,7 @@ export class Peer
       if (balance <= this.liquidityThreshold) {
         await PeerEvent.query().insert({
           peerId: this.id,
-          type: PeerEventType.LiquidityLow,
+          type: WebhookEventType.PeerLiquidityLow,
           data: {
             id: this.id,
             asset: {
@@ -100,9 +100,11 @@ export class Peer
   }
 }
 
-export enum PeerEventType {
-  LiquidityLow = 'peer.liquidity_low'
-}
+export type PeerEventType = Extract<
+  WebhookEventType,
+  WebhookEventType.PeerLiquidityLow
+>
+export const PeerEventType = [WebhookEventType.PeerLiquidityLow]
 
 export type PeerEventData = {
   id: string

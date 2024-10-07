@@ -10,7 +10,6 @@ import { WalletAddressError } from './errors'
 import {
   WalletAddress,
   WalletAddressEvent,
-  WalletAddressEventType,
   GetOptions,
   ListOptions,
   WalletAddressSubresource
@@ -26,6 +25,7 @@ import { Pagination, SortOrder } from '../../shared/baseModel'
 import { WebhookService } from '../../webhook/service'
 import { poll } from '../../shared/utils'
 import { WalletAddressAdditionalProperty } from './additional_property/model'
+import { WebhookEventType } from '../../webhook/model'
 
 interface Options {
   publicName?: string
@@ -275,7 +275,7 @@ async function getOrPollByUrl(
   if (existingWalletAddress) return existingWalletAddress
 
   await WalletAddressEvent.query(deps.knex).insert({
-    type: WalletAddressEventType.WalletAddressNotFound,
+    type: WebhookEventType.WalletAddressNotFound,
     data: {
       walletAddressUrl: url
     }
@@ -399,7 +399,7 @@ async function createWithdrawalEvent(
 
   await WalletAddressEvent.query(deps.knex).insert({
     walletAddressId: walletAddress.id,
-    type: WalletAddressEventType.WalletAddressWebMonetization,
+    type: WebhookEventType.WalletAddressWebMonetization,
     data: walletAddress.toData(amount),
     withdrawal: {
       accountId: walletAddress.id,

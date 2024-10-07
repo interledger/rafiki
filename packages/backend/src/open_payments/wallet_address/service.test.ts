@@ -3,11 +3,7 @@ import { Knex } from 'knex'
 import { v4 as uuid } from 'uuid'
 
 import { isWalletAddressError, WalletAddressError } from './errors'
-import {
-  WalletAddress,
-  WalletAddressEvent,
-  WalletAddressEventType
-} from './model'
+import { WalletAddress, WalletAddressEvent } from './model'
 import { CreateOptions, FORBIDDEN_PATHS, WalletAddressService } from './service'
 import { AccountingService } from '../../accounting/service'
 import { createTestApp, TestContainer } from '../../tests/app'
@@ -25,6 +21,7 @@ import { Pagination, SortOrder } from '../../shared/baseModel'
 import { sleep } from '../../shared/utils'
 import { withConfigOverride } from '../../tests/helpers'
 import { WalletAddressAdditionalProperty } from './additional_property/model'
+import { WebhookEventType } from '../../webhook/model'
 
 describe('Open Payments Wallet Address Service', (): void => {
   let deps: IocContract<AppServices>
@@ -473,7 +470,7 @@ describe('Open Payments Wallet Address Service', (): void => {
             const walletAddressNotFoundEvents = await WalletAddressEvent.query(
               knex
             ).where({
-              type: WalletAddressEventType.WalletAddressNotFound
+              type: WebhookEventType.WalletAddressNotFound
             })
 
             expect(walletAddressNotFoundEvents[0]).toMatchObject({
@@ -711,7 +708,7 @@ describe('Open Payments Wallet Address Service', (): void => {
         })
         await expect(
           WalletAddressEvent.query(knex).where({
-            type: WalletAddressEventType.WalletAddressWebMonetization,
+            type: WebhookEventType.WalletAddressWebMonetization,
             withdrawalAccountId: walletAddress.id,
             withdrawalAssetId: walletAddress.assetId,
             withdrawalAmount
@@ -777,7 +774,7 @@ describe('Open Payments Wallet Address Service', (): void => {
         )
         await expect(
           WalletAddressEvent.query(knex).where({
-            type: WalletAddressEventType.WalletAddressWebMonetization
+            type: WebhookEventType.WalletAddressWebMonetization
           })
         ).resolves.toHaveLength(count)
         for (let i = 1; i <= count; i++) {

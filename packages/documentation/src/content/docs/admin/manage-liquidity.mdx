@@ -216,7 +216,7 @@ Peer liquidity can also be added through the [Rafiki Admin](/admin/admin-user-gu
 
 ## Payment Liquidity
 
-When Open Payments incoming or outgoing payments are created, your Rafiki instance creates a liquidity account within the accounting database. Liquidity must be deposited into an outgoing payment before the payment can be processed. Rafiki will notify you to deposit liquidity via the `outgoing_payment.created` webhook event. Similarly, packets received for an incoming payment increase its liquidity account. Rafiki will notify you to withdraw that liquidity via the `incoming_payment.completed` webhook event.
+When Open Payments incoming or outgoing payments are created, your Rafiki instance creates a liquidity account within the accounting database. Liquidity must be deposited into an outgoing payment before the payment can be processed. Rafiki will notify you to deposit liquidity via the `OUTGOING_PAYMENT_CREATED` webhook event. Similarly, packets received for an incoming payment increase its liquidity account. Rafiki will notify you to withdraw that liquidity via the `INCOMING_PAYMENT_COMPLETED` webhook event.
 
 ### Withdraw incoming payment liquidity using the `CreateIncomingPaymentWithdrawal` mutation
 

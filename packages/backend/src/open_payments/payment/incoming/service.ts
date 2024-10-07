@@ -1,7 +1,6 @@
 import {
   IncomingPayment,
   IncomingPaymentEvent,
-  IncomingPaymentEventType,
   IncomingPaymentState
 } from './model'
 import { AccountingService } from '../../../accounting/service'
@@ -18,6 +17,7 @@ import { Amount } from '../../amount'
 import { IncomingPaymentError } from './errors'
 import { IAppConfig } from '../../../config/app'
 import { poll } from '../../../shared/utils'
+import { WebhookEventType } from '../../../webhook/model'
 
 export const POSITIVE_SLIPPAGE = BigInt(1)
 // First retry waits 10 seconds
@@ -159,7 +159,7 @@ async function createIncomingPayment(
 
   await IncomingPaymentEvent.query(trx || deps.knex).insert({
     incomingPaymentId: incomingPayment.id,
-    type: IncomingPaymentEventType.IncomingPaymentCreated,
+    type: WebhookEventType.IncomingPaymentCreated,
     data: incomingPayment.toData(0n)
   })
 
@@ -300,8 +300,8 @@ async function handleDeactivated(
 
     const type =
       incomingPayment.state == IncomingPaymentState.Expired
-        ? IncomingPaymentEventType.IncomingPaymentExpired
-        : IncomingPaymentEventType.IncomingPaymentCompleted
+        ? WebhookEventType.IncomingPaymentExpired
+        : WebhookEventType.IncomingPaymentCompleted
     deps.logger.trace({ type }, 'creating incoming payment webhook event')
 
     await IncomingPaymentEvent.query(deps.knex).insert({

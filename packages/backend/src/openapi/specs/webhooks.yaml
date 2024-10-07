@@ -133,9 +133,9 @@ components:
         type:
           type: string
           enum:
-            - incoming_payment.created
-            - incoming_payment.completed
-            - incoming_payment.expired
+            - INCOMING_PAYMENT_CREATED
+            - INCOMING_PAYMENT_COMPLETED
+            - INCOMING_PAYMENT_EXPIRED
         data:
           type: object
           required:
@@ -187,9 +187,9 @@ components:
         type:
           type: string
           enum:
-            - outgoing_payment.created
-            - outgoing_payment.completed
-            - outgoing_payment.failed
+            - OUTGOING_PAYMENT_CREATED
+            - OUTGOING_PAYMENT_COMPLETED
+            - OUTGOING_PAYMENT_FAILED
         data:
           type: object
           required:
@@ -263,7 +263,7 @@ components:
         type:
           type: string
           enum:
-            - wallet_address.not_found
+            - WALLET_ADDRESS_NOT_FOUND
         data:
           type: object
           required:
@@ -284,7 +284,7 @@ components:
         type:
           type: string
           enum:
-            - wallet_address.web_monetization
+            - WALLET_ADDRESS_WEB_MONETIZATION
         data:
           type: object
           required:
@@ -318,8 +318,8 @@ components:
         type:
           type: string
           enum:
-            - asset.liquidity_low
-            - peer.liquidity_low
+            - ASSET_LIQUIDITY_LOW
+            - PEER_LIQUIDITY_LOW
         data:
           type: object
           required:

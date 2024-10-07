@@ -1,7 +1,7 @@
 import { QueryContext } from 'objection'
 import { LiquidityAccount, OnDebitOptions } from '../accounting/service'
 import { BaseModel } from '../shared/baseModel'
-import { WebhookEvent } from '../webhook/model'
+import { WebhookEvent, WebhookEventType } from '../webhook/model'
 
 export class Asset extends BaseModel implements LiquidityAccount {
   public static get tableName(): string {
@@ -33,7 +33,7 @@ export class Asset extends BaseModel implements LiquidityAccount {
       if (balance <= this.liquidityThreshold) {
         await AssetEvent.query().insert({
           assetId: this.id,
-          type: AssetEventType.LiquidityLow,
+          type: WebhookEventType.AssetLiquidityLow,
           data: {
             id: this.id,
             asset: {
@@ -51,9 +51,11 @@ export class Asset extends BaseModel implements LiquidityAccount {
   }
 }
 
-export enum AssetEventType {
-  LiquidityLow = 'asset.liquidity_low'
-}
+export type AssetEventType = Extract<
+  WebhookEventType,
+  WebhookEventType.AssetLiquidityLow
+>
+export const AssetEventType = [WebhookEventType.AssetLiquidityLow]
 
 export type AssetEventData = {
   id: string

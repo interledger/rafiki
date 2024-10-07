@@ -4,7 +4,7 @@ import { URL } from 'url'
 import { Knex } from 'knex'
 import { v4 as uuid } from 'uuid'
 
-import { WebhookEvent } from './model'
+import { WebhookEvent, WebhookEventType } from './model'
 import {
   WebhookService,
   generateWebhookSignature,
@@ -22,14 +22,9 @@ import { AppServices } from '../app'
 import { getPageTests } from '../shared/baseModel.test'
 import { Pagination, SortOrder } from '../shared/baseModel'
 import { createWebhookEvent, webhookEventTypes } from '../tests/webhook'
-import { IncomingPaymentEventType } from '../open_payments/payment/incoming/model'
-import { OutgoingPaymentEventType } from '../open_payments/payment/outgoing/model'
 import { createIncomingPayment } from '../tests/incomingPayment'
 import { createWalletAddress } from '../tests/walletAddress'
-import {
-  WalletAddress,
-  WalletAddressEventType
-} from '../open_payments/wallet_address/model'
+import { WalletAddress } from '../open_payments/wallet_address/model'
 import { createOutgoingPayment } from '../tests/outgoingPayment'
 
 const nock = (global as unknown as { nock: typeof import('nock') }).nock
@@ -84,7 +79,7 @@ describe('Webhook Service', (): void => {
     beforeEach(async (): Promise<void> => {
       event = await WebhookEvent.query(knex).insertAndFetch({
         id: uuid(),
-        type: WalletAddressEventType.WalletAddressNotFound,
+        type: WebhookEventType.WalletAddressNotFound,
         data: {
           account: {
             id: uuid()
@@ -152,25 +147,25 @@ describe('Webhook Service', (): void => {
       events = [
         await WebhookEvent.query(knex).insertAndFetch({
           id: uuid(),
-          type: IncomingPaymentEventType.IncomingPaymentCompleted,
+          type: WebhookEventType.IncomingPaymentCompleted,
           data: { id: uuid() },
           incomingPaymentId: incomingPaymentIds[0]
         }),
         await WebhookEvent.query(knex).insertAndFetch({
           id: uuid(),
-          type: IncomingPaymentEventType.IncomingPaymentExpired,
+          type: WebhookEventType.IncomingPaymentExpired,
           data: { id: uuid() },
           incomingPaymentId: incomingPaymentIds[0]
         }),
         await WebhookEvent.query(knex).insertAndFetch({
           id: uuid(),
-          type: IncomingPaymentEventType.IncomingPaymentCompleted,
+          type: WebhookEventType.IncomingPaymentCompleted,
           data: { id: uuid() },
           incomingPaymentId: incomingPaymentIds[1]
         }),
         await WebhookEvent.query(knex).insertAndFetch({
           id: uuid(),
-          type: OutgoingPaymentEventType.PaymentCreated,
+          type: WebhookEventType.OutgoingPaymentCreated,
           data: { id: uuid() },
           outgoingPaymentId: outgoingPaymentIds[0]
         })
@@ -182,15 +177,15 @@ describe('Webhook Service', (): void => {
         webhookService.getLatestByResourceId({
           incomingPaymentId: incomingPaymentIds[0],
           types: [
-            IncomingPaymentEventType.IncomingPaymentCompleted,
-            IncomingPaymentEventType.IncomingPaymentExpired
+            WebhookEventType.IncomingPaymentCompleted,
+            WebhookEventType.IncomingPaymentExpired
           ]
         })
       ).resolves.toEqual(events[1])
       await expect(
         webhookService.getLatestByResourceId({
           outgoingPaymentId: outgoingPaymentIds[0],
-          types: [OutgoingPaymentEventType.PaymentCreated]
+          types: [WebhookEventType.OutgoingPaymentCreated]
         })
       ).resolves.toEqual(events[3])
     })
@@ -198,7 +193,7 @@ describe('Webhook Service', (): void => {
     test('Gets latest of any type when type not provided', async (): Promise<void> => {
       const newLatestEvent = await WebhookEvent.query(knex).insertAndFetch({
         id: uuid(),
-        type: 'some_new_type',
+        type: WebhookEventType.IncomingPaymentCreated,
         data: { id: uuid() },
         incomingPaymentId: incomingPaymentIds[0]
       })
@@ -222,7 +217,7 @@ describe('Webhook Service', (): void => {
         await expect(
           webhookService.getLatestByResourceId({
             incomingPaymentId: uuid(),
-            types: [IncomingPaymentEventType.IncomingPaymentCompleted]
+            types: [WebhookEventType.IncomingPaymentCompleted]
           })
         ).resolves.toBeUndefined()
       })
@@ -302,7 +297,7 @@ describe('Webhook Service', (): void => {
     beforeEach(async (): Promise<void> => {
       event = await WebhookEvent.query(knex).insertAndFetch({
         id: uuid(),
-        type: WalletAddressEventType.WalletAddressNotFound,
+        type: WebhookEventType.WalletAddressNotFound,
         data: {
           account: {
             id: uuid()
@@ -414,7 +409,7 @@ describe('Webhook Service', (): void => {
 
       const nextEvent = await WebhookEvent.query(knex).insertAndFetch({
         id: uuid(),
-        type: WalletAddressEventType.WalletAddressNotFound,
+        type: WebhookEventType.WalletAddressNotFound,
         data: {
           account: {
             id: uuid()

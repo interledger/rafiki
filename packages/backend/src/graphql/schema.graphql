@@ -1201,11 +1201,34 @@ type WebhookEvent implements Model {
   "Event id"
   id: ID!
   "Type of event"
-  type: String!
+  type: WebhookEventType!
   "Stringified JSON data"
   data: JSONObject!
   "Date-time of creation"
   createdAt: String!
+}
+
+enum WebhookEventType {
+  "An incoming payment was created"
+  INCOMING_PAYMENT_CREATED
+  "An incoming payment was completed"
+  INCOMING_PAYMENT_COMPLETED
+  "An incoming payment has expired"
+  INCOMING_PAYMENT_EXPIRED
+  "An outgoing payment was created"
+  OUTGOING_PAYMENT_CREATED
+  "An outgoing payment was completed"
+  OUTGOING_PAYMENT_COMPLETED
+  "An outgoing payment has failed and won't be retried"
+  OUTGOING_PAYMENT_FAILED
+  "A Web Monetization payment was created"
+  WALLET_ADDRESS_WEB_MONETIZATION
+  "Wallet address was not found and it will be created if there exists a corresponding account"
+  WALLET_ADDRESS_NOT_FOUND
+  "Asset liquidity is low"
+  ASSET_LIQUIDITY_LOW
+  "Peer liquidity is low"
+  PEER_LIQUIDITY_LOW
 }
 
 type WebhookEventsConnection {

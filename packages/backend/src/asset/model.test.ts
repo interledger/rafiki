@@ -10,6 +10,7 @@ import { randomAsset } from '../tests/asset'
 import { truncateTables } from '../tests/tableManager'
 import { Asset, AssetEvent, AssetEventError, AssetEventType } from './model'
 import { isAssetError } from './errors'
+import { WebhookEventType } from '../webhook/model'
 
 describe('Models', (): void => {
   let deps: IocContract<AppServices>
@@ -57,11 +58,11 @@ describe('Models', (): void => {
           const event = (
             await AssetEvent.query(knex).where(
               'type',
-              AssetEventType.LiquidityLow
+              WebhookEventType.AssetLiquidityLow
             )
           )[0]
           expect(event).toMatchObject({
-            type: AssetEventType.LiquidityLow,
+            type: WebhookEventType.AssetLiquidityLow,
             data: {
               id: asset.id,
               asset: {
@@ -78,7 +79,10 @@ describe('Models', (): void => {
       test('does not create webhook event if balance > liquidityThreshold', async (): Promise<void> => {
         await asset.onDebit({ balance: BigInt(110) })
         await expect(
-          AssetEvent.query(knex).where('type', AssetEventType.LiquidityLow)
+          AssetEvent.query(knex).where(
+            'type',
+            WebhookEventType.AssetLiquidityLow
+          )
         ).resolves.toEqual([])
       })
     })
@@ -94,7 +98,7 @@ describe('Models', (): void => {
       )('Asset Id is required', async ({ type, error }): Promise<void> => {
         expect(
           AssetEvent.query().insert({
-            type
+            type: type as AssetEventType
           })
         ).rejects.toThrow(error)
       })

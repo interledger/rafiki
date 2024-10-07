@@ -1478,12 +1478,35 @@ export type WebhookEvent = Model & {
   /** Event id */
   id: Scalars['ID']['output'];
   /** Type of event */
-  type: Scalars['String']['output'];
+  type: WebhookEventType;
 };
 
 export type WebhookEventFilter = {
   type?: InputMaybe<FilterString>;
 };
+
+export enum WebhookEventType {
+  /** Asset liquidity is low */
+  AssetLiquidityLow = 'ASSET_LIQUIDITY_LOW',
+  /** An incoming payment was completed */
+  IncomingPaymentCompleted = 'INCOMING_PAYMENT_COMPLETED',
+  /** An incoming payment was created */
+  IncomingPaymentCreated = 'INCOMING_PAYMENT_CREATED',
+  /** An incoming payment has expired */
+  IncomingPaymentExpired = 'INCOMING_PAYMENT_EXPIRED',
+  /** An outgoing payment was completed */
+  OutgoingPaymentCompleted = 'OUTGOING_PAYMENT_COMPLETED',
+  /** An outgoing payment was created */
+  OutgoingPaymentCreated = 'OUTGOING_PAYMENT_CREATED',
+  /** An outgoing payment has failed and won't be retried */
+  OutgoingPaymentFailed = 'OUTGOING_PAYMENT_FAILED',
+  /** Peer liquidity is low */
+  PeerLiquidityLow = 'PEER_LIQUIDITY_LOW',
+  /** Wallet address was not found and it will be created if there exists a corresponding account */
+  WalletAddressNotFound = 'WALLET_ADDRESS_NOT_FOUND',
+  /** A Web Monetization payment was created */
+  WalletAddressWebMonetization = 'WALLET_ADDRESS_WEB_MONETIZATION'
+}
 
 export type WebhookEventsConnection = {
   __typename?: 'WebhookEventsConnection';
@@ -1705,6 +1728,7 @@ export type ResolversTypes = {
   WalletAddressesConnection: ResolverTypeWrapper<Partial<WalletAddressesConnection>>;
   WebhookEvent: ResolverTypeWrapper<Partial<WebhookEvent>>;
   WebhookEventFilter: ResolverTypeWrapper<Partial<WebhookEventFilter>>;
+  WebhookEventType: ResolverTypeWrapper<Partial<WebhookEventType>>;
   WebhookEventsConnection: ResolverTypeWrapper<Partial<WebhookEventsConnection>>;
   WebhookEventsEdge: ResolverTypeWrapper<Partial<WebhookEventsEdge>>;
   WithdrawEventLiquidityInput: ResolverTypeWrapper<Partial<WithdrawEventLiquidityInput>>;
@@ -2322,7 +2346,7 @@ export type WebhookEventResolvers<ContextType = any, ParentType extends Resolver
   createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   data?: Resolver<ResolversTypes['JSONObject'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  type?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  type?: Resolver<ResolversTypes['WebhookEventType'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 

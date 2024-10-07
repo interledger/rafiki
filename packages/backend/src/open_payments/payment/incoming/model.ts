@@ -9,18 +9,24 @@ import {
 import { Asset } from '../../../asset/model'
 import { LiquidityAccount, OnCreditOptions } from '../../../accounting/service'
 import { ConnectorAccount } from '../../../payment-method/ilp/connector/core/rafiki'
-import { WebhookEvent } from '../../../webhook/model'
+import { WebhookEvent, WebhookEventType } from '../../../webhook/model'
 import {
   IncomingPayment as OpenPaymentsIncomingPayment,
   IncomingPaymentWithPaymentMethods as OpenPaymentsIncomingPaymentWithPaymentMethod
 } from '@interledger/open-payments'
 import base64url from 'base64url'
 
-export enum IncomingPaymentEventType {
-  IncomingPaymentCreated = 'incoming_payment.created',
-  IncomingPaymentExpired = 'incoming_payment.expired',
-  IncomingPaymentCompleted = 'incoming_payment.completed'
-}
+export type IncomingPaymentEventType = Extract<
+  WebhookEventType,
+  | WebhookEventType.IncomingPaymentCreated
+  | WebhookEventType.IncomingPaymentCompleted
+  | WebhookEventType.IncomingPaymentExpired
+>
+export const IncomingPaymentEventType = [
+  WebhookEventType.IncomingPaymentCreated,
+  WebhookEventType.IncomingPaymentCompleted,
+  WebhookEventType.IncomingPaymentExpired
+]
 
 export enum IncomingPaymentState {
   // The payment has a state of `PENDING` when it is initially created.

@@ -288,7 +288,7 @@ export async function handleLowLiquidity(wh: Webhook) {
     throw new Error('id not found')
   }
 
-  if (wh.type == 'asset.liquidity_low') {
+  if (wh.type == WebhookEventType.ASSET_LIQUIDITY_LOW) {
     await depositAssetLiquidity(id, 1000000, uuid())
   } else {
     await depositPeerLiquidity(id, '1000000', uuid())

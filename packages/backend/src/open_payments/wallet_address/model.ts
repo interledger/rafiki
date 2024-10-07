@@ -4,7 +4,7 @@ import { LiquidityAccount, OnCreditOptions } from '../../accounting/service'
 import { ConnectorAccount } from '../../payment-method/ilp/connector/core/rafiki'
 import { Asset } from '../../asset/model'
 import { BaseModel, Pagination, SortOrder } from '../../shared/baseModel'
-import { WebhookEvent } from '../../webhook/model'
+import { WebhookEvent, WebhookEventType } from '../../webhook/model'
 import { WalletAddressKey } from '../../open_payments/wallet_address/key/model'
 import { AmountJSON } from '../amount'
 import { WalletAddressAdditionalProperty } from './additional_property/model'
@@ -54,7 +54,7 @@ export class WalletAddress
   public asset!: Asset
 
   // The cumulative received amount tracked by
-  // `wallet_address.web_monetization` webhook events.
+  // `WALLET_ADDRESS_WEB_MONETIZATION` webhook events.
   // The value should be equivalent to the following query:
   // select sum(`withdrawalAmount`) from `webhookEvents` where `withdrawalAccountId` = `walletAddress.id`
   public totalEventsAmount!: bigint
@@ -133,10 +133,15 @@ export class WalletAddress
   }
 }
 
-export enum WalletAddressEventType {
-  WalletAddressWebMonetization = 'wallet_address.web_monetization',
-  WalletAddressNotFound = 'wallet_address.not_found'
-}
+export type WalletAddressEventType = Extract<
+  WebhookEventType,
+  | WebhookEventType.WalletAddressWebMonetization
+  | WebhookEventType.WalletAddressNotFound
+>
+export const WalletAddressEventType = [
+  WebhookEventType.WalletAddressWebMonetization,
+  WebhookEventType.WalletAddressNotFound
+]
 
 export type WalletAddressData = {
   walletAddress: {
@@ -163,12 +168,12 @@ export class WalletAddressEvent extends WebhookEvent {
     super.$beforeInsert(context)
 
     if (
-      this.type === WalletAddressEventType.WalletAddressNotFound &&
+      this.type === WebhookEventType.WalletAddressNotFound &&
       this.walletAddressId
     ) {
       throw new Error(WalletAddressEventError.WalletAddressIdProhibited)
     } else if (
-      this.type !== WalletAddressEventType.WalletAddressNotFound &&
+      this.type !== WebhookEventType.WalletAddressNotFound &&
       !this.walletAddressId
     ) {
       throw new Error(WalletAddressEventError.WalletAddressIdRequired)

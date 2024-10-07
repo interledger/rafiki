@@ -15,8 +15,7 @@ import { Limits, getInterval } from './limits'
 import {
   OutgoingPayment,
   OutgoingPaymentGrant,
-  OutgoingPaymentState,
-  OutgoingPaymentEventType
+  OutgoingPaymentState
 } from './model'
 import { Grant } from '../../auth/middleware'
 import {
@@ -42,6 +41,7 @@ import { QuoteService } from '../../quote/service'
 import { isQuoteError } from '../../quote/errors'
 import { Pagination, SortOrder } from '../../../shared/baseModel'
 import { FilterString } from '../../../shared/filters'
+import { WebhookEventType } from '../../../webhook/model'
 
 export interface OutgoingPaymentService
   extends WalletAddressSubresourceService<OutgoingPayment> {
@@ -297,7 +297,7 @@ async function createOutgoingPayment(
       await sendWebhookEvent(
         deps,
         payment,
-        OutgoingPaymentEventType.PaymentCreated,
+        WebhookEventType.OutgoingPaymentCreated,
         trx
       )
 

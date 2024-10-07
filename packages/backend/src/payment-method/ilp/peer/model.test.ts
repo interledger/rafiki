@@ -13,6 +13,7 @@ import { truncateTables } from '../../../tests/tableManager'
 import { Peer, PeerEvent, PeerEventError, PeerEventType } from './model'
 import { isPeerError } from './errors'
 import { Asset } from '../../../asset/model'
+import { WebhookEventType } from '../../../webhook/model'
 
 describe('Models', (): void => {
   let deps: IocContract<AppServices>
@@ -77,11 +78,11 @@ describe('Models', (): void => {
           const event = (
             await PeerEvent.query(knex).where(
               'type',
-              PeerEventType.LiquidityLow
+              WebhookEventType.PeerLiquidityLow
             )
           )[0]
           expect(event).toMatchObject({
-            type: PeerEventType.LiquidityLow,
+            type: WebhookEventType.PeerLiquidityLow,
             data: {
               id: peer.id,
               asset: {
@@ -98,7 +99,7 @@ describe('Models', (): void => {
       test('does not create webhook event if balance > liquidityThreshold', async (): Promise<void> => {
         await peer.onDebit({ balance: BigInt(110) })
         await expect(
-          PeerEvent.query(knex).where('type', PeerEventType.LiquidityLow)
+          PeerEvent.query(knex).where('type', WebhookEventType.PeerLiquidityLow)
         ).resolves.toEqual([])
       })
     })
@@ -114,7 +115,7 @@ describe('Models', (): void => {
       )('Peer Id is required', async ({ type, error }): Promise<void> => {
         expect(
           PeerEvent.query().insert({
-            type
+            type: type as PeerEventType
           })
         ).rejects.toThrow(error)
       })

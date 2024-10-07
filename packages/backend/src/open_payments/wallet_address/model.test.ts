@@ -32,6 +32,7 @@ import assert from 'assert'
 import { ReadContextWithAuthenticatedStatus } from '../payment/incoming/routes'
 import { Knex } from 'knex'
 import { OpenPaymentsServerRouteError } from '../route-errors'
+import { WebhookEventType } from '../../webhook/model'
 
 export interface SetupOptions {
   reqOpts: httpMocks.RequestOptions
@@ -430,7 +431,7 @@ describe('Models', (): void => {
     describe('beforeInsert', (): void => {
       test.each([
         {
-          type: WalletAddressEventType.WalletAddressWebMonetization,
+          type: WebhookEventType.WalletAddressWebMonetization,
           error: WalletAddressEventError.WalletAddressIdRequired
         }
       ])(
@@ -438,7 +439,7 @@ describe('Models', (): void => {
         async ({ type, error }): Promise<void> => {
           expect(
             WalletAddressEvent.query(knex).insert({
-              type
+              type: type as WalletAddressEventType
             })
           ).rejects.toThrow(error)
         }
@@ -446,7 +447,7 @@ describe('Models', (): void => {
 
       test.each([
         {
-          type: WalletAddressEventType.WalletAddressNotFound,
+          type: WebhookEventType.WalletAddressNotFound,
           error: WalletAddressEventError.WalletAddressIdProhibited
         }
       ])(
@@ -455,7 +456,7 @@ describe('Models', (): void => {
           expect(
             WalletAddressEvent.query(knex).insert({
               walletAddressId: uuid(),
-              type
+              type: type as WalletAddressEventType
             })
           ).rejects.toThrow(error)
         }
