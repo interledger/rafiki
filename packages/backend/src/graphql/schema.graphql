@@ -1071,8 +1071,6 @@ input CreateQuoteInput {
   receiver: String!
   "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)"
   idempotencyKey: String
-  "ID of the tenant"
-  tenantId: ID!
 }
 
 type QuoteResponse {
@@ -1110,6 +1108,8 @@ input CreateOutgoingPaymentFromIncomingPaymentInput {
   metadata: JSONObject
   "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)"
   idempotencyKey: String
+  "ID of a tenant"
+  tenantId: ID!
 }
 
 input CreateIncomingPaymentInput {

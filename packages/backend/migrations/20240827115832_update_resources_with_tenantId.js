@@ -20,10 +20,6 @@ exports.up = function (knex) {
       table.uuid('tenantId').notNullable()
       table.foreign('tenantId').references('id').inTable('tenants')
     })
-    .table('grants', function (table) {
-      table.uuid('tenantId').notNullable()
-      table.foreign('tenantId').references('id').inTable('tenants')
-    })
 }
 
 /**
@@ -45,10 +41,6 @@ exports.down = function (knex) {
       table.dropColumn('tenantId')
     })
     .table('walletAddresses', function (table) {
-      table.dropForeign(['tenantId'])
-      table.dropColumn('tenantId')
-    })
-    .table('grants', function (table) {
       table.dropForeign(['tenantId'])
       table.dropColumn('tenantId')
     })

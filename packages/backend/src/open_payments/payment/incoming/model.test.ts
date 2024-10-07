@@ -46,6 +46,7 @@ describe('Models', (): void => {
     let walletAddress: WalletAddress
     let baseUrl: string
     let incomingPayment: IncomingPayment
+    let tenantId: string
 
     beforeEach(async (): Promise<void> => {
       const config = await deps.use('config')
@@ -55,7 +56,7 @@ describe('Models', (): void => {
         .query({ credentials_identifier: tenantEmail })
         .reply(200, [{ id: uuid(), metadata_public: {} }])
         .persist()
-      const tenantId = (
+      tenantId = (
         await createTenant(deps, {
           email: tenantEmail,
           idpSecret: 'testsecret',
@@ -77,7 +78,7 @@ describe('Models', (): void => {
     describe('toOpenPaymentsType', () => {
       test('returns incoming payment', async () => {
         expect(incomingPayment.toOpenPaymentsType(walletAddress)).toEqual({
-          id: `${baseUrl}${IncomingPayment.urlPath}/${incomingPayment.id}`,
+          id: `${baseUrl}/${tenantId}${IncomingPayment.urlPath}/${incomingPayment.id}`,
           walletAddress: walletAddress.url,
           completed: incomingPayment.completed,
           receivedAmount: serializeAmount(incomingPayment.receivedAmount),
@@ -105,7 +106,7 @@ describe('Models', (): void => {
             streamCredentials
           )
         ).toEqual({
-          id: `${baseUrl}${IncomingPayment.urlPath}/${incomingPayment.id}`,
+          id: `${baseUrl}/${tenantId}${IncomingPayment.urlPath}/${incomingPayment.id}`,
           walletAddress: walletAddress.url,
           completed: incomingPayment.completed,
           receivedAmount: serializeAmount(incomingPayment.receivedAmount),
@@ -130,7 +131,7 @@ describe('Models', (): void => {
         expect(
           incomingPayment.toOpenPaymentsTypeWithMethods(walletAddress)
         ).toEqual({
-          id: `${baseUrl}${IncomingPayment.urlPath}/${incomingPayment.id}`,
+          id: `${baseUrl}/${tenantId}${IncomingPayment.urlPath}/${incomingPayment.id}`,
           walletAddress: walletAddress.url,
           completed: incomingPayment.completed,
           receivedAmount: serializeAmount(incomingPayment.receivedAmount),
@@ -161,7 +162,7 @@ describe('Models', (): void => {
               streamCredentials
             )
           ).toEqual({
-            id: `${baseUrl}${IncomingPayment.urlPath}/${incomingPayment.id}`,
+            id: `${baseUrl}/${tenantId}${IncomingPayment.urlPath}/${incomingPayment.id}`,
             walletAddress: walletAddress.url,
             completed: incomingPayment.completed,
             receivedAmount: serializeAmount(incomingPayment.receivedAmount),

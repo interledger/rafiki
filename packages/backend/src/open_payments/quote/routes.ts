@@ -73,9 +73,7 @@ async function createQuote(
   ctx: CreateContext<CreateBody>
 ): Promise<void> {
   const { body } = ctx.request
-  const { tenantId } = ctx.params
   const options: CreateQuoteOptions = {
-    tenantId,
     walletAddressId: ctx.walletAddress.id,
     receiver: body.receiver,
     client: ctx.client,

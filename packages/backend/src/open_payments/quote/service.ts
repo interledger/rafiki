@@ -61,7 +61,6 @@ async function getQuote(
 
 interface QuoteOptionsBase {
   walletAddressId: string
-  tenantId: string
   receiver: string
   method: 'ilp'
   client?: string
@@ -77,10 +76,9 @@ interface QuoteOptionsWithReceiveAmount extends QuoteOptionsBase {
   debitAmount?: never
 }
 
-export type CreateQuoteOptions = { tenantId: string } & (
+export type CreateQuoteOptions =
   | QuoteOptionsWithDebitAmount
   | QuoteOptionsWithReceiveAmount
-)
 
 async function createQuote(
   deps: ServiceDependencies,
@@ -148,7 +146,7 @@ async function createQuote(
           client: options.client,
           feeId: sendingFee?.id,
           estimatedExchangeRate: quote.estimatedExchangeRate,
-          tenantId: options.tenantId
+          tenantId: walletAddress.tenantId
         })
         .withGraphFetched('[asset, fee, walletAddress]')
 
@@ -183,10 +181,7 @@ export async function resolveReceiver(
   deps: ServiceDependencies,
   options: CreateQuoteOptions
 ): Promise<Receiver> {
-  const receiver = await deps.receiverService.get(
-    options.receiver,
-    options.tenantId
-  )
+  const receiver = await deps.receiverService.get(options.receiver)
   if (!receiver) {
     deps.logger.info(
       { receiver: options.receiver },

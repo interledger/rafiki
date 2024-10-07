@@ -740,6 +740,7 @@ describe('OutgoingPayment Resolvers', (): void => {
 
       const input = {
         walletAddressId: payment.walletAddressId,
+        tenantId,
         incomingPayment: mockIncomingPaymentUrl,
         debitAmount: {
           value: BigInt(56),
@@ -781,6 +782,7 @@ describe('OutgoingPayment Resolvers', (): void => {
 
       const input = {
         walletAddressId: uuid(),
+        tenantId,
         incomingPayment: mockIncomingPaymentUrl,
         debitAmount: {
           value: BigInt(56),
@@ -832,6 +834,7 @@ describe('OutgoingPayment Resolvers', (): void => {
 
       const input = {
         walletAddressId: uuid(),
+        tenantId,
         incomingPayment: mockIncomingPaymentUrl,
         debitAmount: {
           value: BigInt(56),

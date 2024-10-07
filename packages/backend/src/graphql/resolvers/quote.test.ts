@@ -71,7 +71,6 @@ describe('Quote Resolvers', (): void => {
   ): Promise<QuoteModel> => {
     return await createQuote(deps, {
       walletAddressId,
-      tenantId,
       receiver,
       debitAmount: {
         value: BigInt(56),
@@ -195,7 +194,6 @@ describe('Quote Resolvers', (): void => {
       }
       input = {
         walletAddressId: uuid(),
-        tenantId: uuid(),
         receiver,
         debitAmount
       }
@@ -217,7 +215,6 @@ describe('Quote Resolvers', (): void => {
       )
       const input = {
         walletAddressId,
-        tenantId,
         debitAmount: amount,
         receiveAmount,
         receiver

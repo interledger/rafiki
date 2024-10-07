@@ -29,8 +29,7 @@ export async function createOutgoingPayment(
     receiver: options.receiver,
     validDestination: options.validDestination,
     exchangeRate: options.exchangeRate,
-    method: options.method,
-    tenantId: options.tenantId
+    method: options.method
   }
   if (options.debitAmount) quoteOptions.debitAmount = options.debitAmount
   if (options.receiveAmount) quoteOptions.receiveAmount = options.receiveAmount
