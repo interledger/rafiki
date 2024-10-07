@@ -50,6 +50,7 @@ export const getPeer = async (args: QueryPeerArgs) => {
               authToken
             }
           }
+          incomingTokens
         }
       }
     `,

@@ -122,6 +122,9 @@ export const peerToGraphql = (peer: Peer): SchemaPeer => ({
   id: peer.id,
   maxPacketAmount: peer.maxPacketAmount,
   http: peer.http,
+  incomingTokens: peer.incomingTokens?.map(
+    (incomingToken) => incomingToken.token
+  ),
   asset: assetToGraphql(peer.asset),
   staticIlpAddress: peer.staticIlpAddress,
   name: peer.name,

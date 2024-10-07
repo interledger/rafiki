@@ -1004,6 +1004,8 @@ export type Peer = Model & {
   http: Http;
   /** Peer id */
   id: Scalars['ID']['output'];
+  /** Incoming tokens */
+  incomingTokens: Array<Scalars['String']['output']>;
   /** Available liquidity */
   liquidity?: Maybe<Scalars['UInt64']['output']>;
   /** Account Servicing Entity will be notified via a webhook event if peer liquidity falls below this value */
@@ -2145,6 +2147,7 @@ export type PeerResolvers<ContextType = any, ParentType extends ResolversParentT
   createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   http?: Resolver<ResolversTypes['Http'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  incomingTokens?: Resolver<Array<ResolversTypes['String']>, ParentType, ContextType>;
   liquidity?: Resolver<Maybe<ResolversTypes['UInt64']>, ParentType, ContextType>;
   liquidityThreshold?: Resolver<Maybe<ResolversTypes['UInt64']>, ParentType, ContextType>;
   maxPacketAmount?: Resolver<Maybe<ResolversTypes['UInt64']>, ParentType, ContextType>;
