@@ -4,9 +4,9 @@ type Query {
 
   "Fetch a paginated list of assets."
   assets(
-    "Forward pagination: Cursor to start retrieving assets after this point."
+    "Forward pagination: Cursor (asset ID) to start retrieving assets after this point."
     after: String
-    "Backward pagination: Cursor to start retrieving assets before this point."
+    "Backward pagination: Cursor (asset ID) to start retrieving assets before this point."
     before: String
     "Foward pagination: Limit the result to the first **n** assets after the `after` cursor."
     first: Int
@@ -21,9 +21,9 @@ type Query {
 
   "Fetch a paginated list of peers."
   peers(
-    "Forward pagination: Cursor to start retrieving peers after this point."
+    "Forward pagination: Cursor (peer ID) to start retrieving peers after this point."
     after: String
-    "Backward pagination: Cursor to start retrieving peers before this point."
+    "Backward pagination: Cursor (peer ID) to start retrieving peers before this point."
     before: String
     "Forward pagination: Limit the result to the first **n** peers after the `after` cursor."
     first: Int
@@ -41,9 +41,9 @@ type Query {
 
   "Fetch a paginated list of wallet addresses."
   walletAddresses(
-    "Forward pagination: Cursor to start retrieving wallet addresses after this point."
+    "Forward pagination: Cursor (wallet address ID) to start retrieving wallet addresses after this point."
     after: String
-    "Backward pagination: Cursor to start retrieving wallet addresses before this point."
+    "Backward pagination: Cursor (wallet address ID) to start retrieving wallet addresses before this point."
     before: String
     "Forward pagination: Limit the result to the first **n** wallet addresses after the `after` cursor."
     first: Int
@@ -64,9 +64,9 @@ type Query {
 
   "Fetch a paginated list of outgoing payments by receiver."
   outgoingPayments(
-    "Forward pagination: Cursor to start retrieving outgoing payments after this point."
+    "Forward pagination: Cursor (outgoing payment ID) to start retrieving outgoing payments after this point."
     after: String
-    "Backward pagination: Cursor to start retrieving outgoing payments before this point."
+    "Backward pagination: Cursor (outgoing payment ID) to start retrieving outgoing payments before this point."
     before: String
     "Forward pagination: Limit the result to the first **n** outgoing payments after the `after` cursor."
     first: Int
@@ -86,9 +86,9 @@ type Query {
 
   "Fetch a paginated list of webhook events."
   webhookEvents(
-    "Forward pagination: Cursor to start retrieving webhook events after this point."
+    "Forward pagination: Cursor (webhook event ID) to start retrieving webhook events after this point."
     after: String
-    "Backward pagination: Cursor to start retrieving webhook events before this point."
+    "Backward pagination: Cursor (webhook event ID) to start retrieving webhook events before this point."
     before: String
     "Forward pagination: Limit the result to the first **n** webhook events after the `after` cursor."
     first: Int
@@ -102,9 +102,9 @@ type Query {
 
   "Fetch a paginated list of combined payments, including incoming and outgoing payments."
   payments(
-    "Forward pagination: Cursor to start retrieving payments after this point."
+    "Forward pagination: Cursor (payment ID) to start retrieving payments after this point."
     after: String
-    "Backward pagination: Cursor to start retrieving payments before this point."
+    "Backward pagination: Cursor (payment ID) to start retrieving payments before this point."
     before: String
     "Forward pagination: Limit the result to the first **n** payments after the `after` cursor."
     first: Int
@@ -325,7 +325,7 @@ input CancelIncomingPaymentInput {
 }
 
 input CreateAssetInput {
-  "[ISO 4217 currency code](https://en.wikipedia.org/wiki/ISO_4217), e.g. `USD`."
+  "Should be an ISO 4217 currency code whenever possible, e.g. `USD`. For more information, refer to [assets](https://rafiki.dev/overview/concepts/accounting/#assets)."
   code: String!
   "Difference in order of magnitude between the standard unit of an asset and its corresponding fractional unit."
   scale: UInt8!
@@ -333,7 +333,7 @@ input CreateAssetInput {
   withdrawalThreshold: UInt64
   "A webhook event will notify the Account Servicing Entity if liquidity falls below this value."
   liquidityThreshold: UInt64
-  "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence).."
+  "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency)."
   idempotencyKey: String
 }
 
@@ -344,14 +344,14 @@ input UpdateAssetInput {
   withdrawalThreshold: UInt64
   "A webhook event will notify the Account Servicing Entity if liquidity falls below this new value."
   liquidityThreshold: UInt64
-  "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence).."
+  "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency)."
   idempotencyKey: String
 }
 
 input DeleteAssetInput {
   "Unique identifier of the asset to delete."
   id: ID!
-  "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence).."
+  "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency)."
   idempotencyKey: String
 }
 
@@ -384,7 +384,7 @@ input CreatePeerInput {
   liquidityThreshold: UInt64
   "Initial amount of liquidity to deposit for the peer."
   initialLiquidity: UInt64
-  "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence).."
+  "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency)."
   idempotencyKey: String
 }
 
@@ -401,7 +401,7 @@ input CreateOrUpdatePeerByUrlInput {
   liquidityThreshold: UInt64
   "Amount of liquidity to deposit for the peer."
   liquidityToDeposit: UInt64
-  "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence).."
+  "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency)."
   idempotencyKey: String
 }
 
@@ -418,7 +418,7 @@ input UpdatePeerInput {
   name: String
   "A webhook event will notify the Account Servicing Entity if peer liquidity falls below this new value."
   liquidityThreshold: UInt64
-  "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence).."
+  "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency)."
   idempotencyKey: String
 }
 
@@ -448,7 +448,7 @@ input DepositPeerLiquidityInput {
   amount: UInt64!
   "Unique identifier of the liquidity transfer."
   id: String!
-  "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence).."
+  "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency)."
   idempotencyKey: String!
 }
 
@@ -459,7 +459,7 @@ input DepositAssetLiquidityInput {
   amount: UInt64!
   "Unique identifier of the liquidity transfer."
   id: String!
-  "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence).."
+  "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency)."
   idempotencyKey: String!
 }
 
@@ -470,7 +470,7 @@ input CreatePeerLiquidityWithdrawalInput {
   amount: UInt64!
   "Unique identifier of the withdrawal."
   id: String!
-  "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence).."
+  "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency)."
   idempotencyKey: String!
   "Interval in seconds after a pending transfer's created at which it may be posted or voided. Zero denotes a no timeout single-phase posted transfer."
   timeoutSeconds: UInt64!
@@ -483,7 +483,7 @@ input CreateAssetLiquidityWithdrawalInput {
   amount: UInt64!
   "Unique identifier of the withdrawal."
   id: String!
-  "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence).."
+  "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency)."
   idempotencyKey: String!
   "Interval in seconds after a pending transfer's created at which it may be posted or voided. Zero denotes a no timeout single-phase posted transfer."
   timeoutSeconds: UInt64!
@@ -492,28 +492,28 @@ input CreateAssetLiquidityWithdrawalInput {
 input PostLiquidityWithdrawalInput {
   "Unique identifier of the liquidity withdrawal to post."
   withdrawalId: String!
-  "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence).."
+  "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency)."
   idempotencyKey: String!
 }
 
 input VoidLiquidityWithdrawalInput {
   "Unique identifier of the liquidity withdrawal to void."
   withdrawalId: String!
-  "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence).."
+  "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency)."
   idempotencyKey: String!
 }
 
 input DepositOutgoingPaymentLiquidityInput {
   "Unique identifier of the outgoing payment to deposit liquidity into."
   outgoingPaymentId: String!
-  "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence).."
+  "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency)."
   idempotencyKey: String!
 }
 
 input CreateIncomingPaymentWithdrawalInput {
   "Unique identifier of the incoming payment to withdraw liquidity from."
   incomingPaymentId: String!
-  "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence).."
+  "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency)."
   idempotencyKey: String!
   "Interval in seconds after a pending transfer's created at which it may be posted or voided. Zero denotes a no timeout single-phase posted transfer."
   timeoutSeconds: UInt64!
@@ -522,7 +522,7 @@ input CreateIncomingPaymentWithdrawalInput {
 input CreateOutgoingPaymentWithdrawalInput {
   "Unique identifier of the outgoing payment to withdraw liquidity from."
   outgoingPaymentId: String!
-  "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence).."
+  "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency)."
   idempotencyKey: String!
   "Interval in seconds after a pending transfer's created at which it may be posted or voided. Zero denotes a no timeout single-phase posted transfer."
   timeoutSeconds: UInt64!
@@ -531,14 +531,14 @@ input CreateOutgoingPaymentWithdrawalInput {
 input DepositEventLiquidityInput {
   "Unique identifier of the event to deposit liquidity into."
   eventId: String!
-  "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence).."
+  "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency)."
   idempotencyKey: String!
 }
 
 input WithdrawEventLiquidityInput {
   "Unique identifier of the event to withdraw liquidity from."
   eventId: String!
-  "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence).."
+  "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency)."
   idempotencyKey: String!
 }
 
@@ -547,7 +547,7 @@ input CreateWalletAddressWithdrawalInput {
   walletAddressId: String!
   "Unique identifier of the withdrawal."
   id: String!
-  "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence).."
+  "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency)."
   idempotencyKey: String!
   "Interval in seconds after a pending transfer's created at which it may be posted or voided. Zero denotes a no timeout single-phase posted transfer."
   timeoutSeconds: UInt64!
@@ -571,21 +571,21 @@ input CreateWalletAddressKeyInput {
   walletAddressId: String!
   "Public key in JSON Web Key (JWK) format."
   jwk: JwkInput!
-  "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence).."
+  "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency)."
   idempotencyKey: String
 }
 
 input RevokeWalletAddressKeyInput {
   "Internal unique identifier of the key to revoke."
   id: String!
-  "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence).."
+  "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency)."
   idempotencyKey: String
 }
 
 type Asset implements Model {
   "Unique identifier of the asset."
   id: ID!
-  "[ISO 4217 currency code](https://en.wikipedia.org/wiki/ISO_4217), e.g. `USD`."
+  "Should be an ISO 4217 currency code whenever possible, e.g. `USD`. For more information, refer to [assets](https://rafiki.dev/overview/concepts/accounting/#assets)."
   code: String!
   "Difference in order of magnitude between the standard unit of an asset and its corresponding fractional unit."
   scale: UInt8!
@@ -601,9 +601,9 @@ type Asset implements Model {
   sendingFee: Fee
   "Fetches a paginated list of fees associated with this asset."
   fees(
-    "Forward pagination: Cursor to start retrieving fees after this point."
+    "Forward pagination: Cursor (fee ID) to start retrieving fees after this point."
     after: String
-    "Backward pagination: Cursor to start retrieving fees before this point."
+    "Backward pagination: Cursor (fee ID) to start retrieving fees before this point."
     before: String
     "Foward pagination: Limit the result to the first **n** fees after the `after` cursor."
     first: Int
@@ -674,7 +674,7 @@ type Peer implements Model {
 input DeletePeerInput {
   "Unique identifier of the peer to be deleted."
   id: ID!
-  "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)."
+  "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency)."
   idempotencyKey: String
 }
 
@@ -722,9 +722,9 @@ type WalletAddress implements Model {
 
   "List of incoming payments received by this wallet address"
   incomingPayments(
-    "Forward pagination: Cursor to start retrieving incoming payments after this point."
+    "Forward pagination: Cursor (incoming payment ID) to start retrieving incoming payments after this point."
     after: String
-    "Backward pagination: Cursor to start retrieving incoming payments before this point."
+    "Backward pagination: Cursor (incoming payment ID) to start retrieving incoming payments before this point."
     before: String
     "Forward pagination: Limit the result to the first **n** incoming payments after the `after` cursor."
     first: Int
@@ -736,9 +736,9 @@ type WalletAddress implements Model {
 
   "List of quotes created at this wallet address"
   quotes(
-    "Forward pagination: Cursor to start retrieving quotes after this point."
+    "Forward pagination: Cursor (quote ID) to start retrieving quotes after this point."
     after: String
-    "Backward pagination: Cursor to start retrieving quotes before this point."
+    "Backward pagination: Cursor (quote ID) to start retrieving quotes before this point."
     before: String
     "Foward pagination: Limit the result to the first **n** quotes after the `after` cursor."
     first: Int
@@ -750,9 +750,9 @@ type WalletAddress implements Model {
 
   "List of outgoing payments sent from this wallet address"
   outgoingPayments(
-    "Forward pagination: Cursor to start retrieving outgoing payments after this point."
+    "Forward pagination: Cursor (outgoing payment ID) to start retrieving outgoing payments after this point."
     after: String
-    "Backward pagination: Cursor to start retrieving outgoing payments before this point."
+    "Backward pagination: Cursor (outgoing payment ID) to start retrieving outgoing payments before this point."
     before: String
     "Forward pagination: Limit the result to the first **n** outgoing payments after the `after` cursor."
     first: Int
@@ -770,9 +770,9 @@ type WalletAddress implements Model {
 
   "List of keys associated with this wallet address"
   walletAddressKeys(
-    "Forward pagination: Cursor to start retrieving keys after this point."
+    "Forward pagination: Cursor (wallet address key ID) to start retrieving keys after this point."
     after: String
-    "Backward pagination: Cursor to start retrieving keys before this point."
+    "Backward pagination: Cursor (wallet address key ID) to start retrieving keys before this point."
     before: String
     "Foward pagination: Limit the result to the first **n** keys after the `after` cursor."
     first: Int
@@ -791,7 +791,7 @@ type AdditionalProperty {
   key: String!
   "Value for the additional property."
   value: String!
-  "Indicates whether the property is visible in Open Payments."
+  "Indicates whether the property is visible in Open Payments wallet address requests."
   visibleInOpenPayments: Boolean!
 }
 
@@ -901,7 +901,7 @@ enum IncomingPaymentState {
 type Amount {
   "Numerical value."
   value: UInt64!
-  "[ISO 4217 currency code](https://en.wikipedia.org/wiki/ISO_4217), e.g. `USD`."
+  "Should be an ISO 4217 currency code whenever possible, e.g. `USD`. For more information, refer to [assets](https://rafiki.dev/overview/concepts/accounting/#assets)."
   assetCode: String!
   "Difference in order of magnitude between the standard unit of an asset and its corresponding fractional unit."
   assetScale: UInt8!
@@ -1090,7 +1090,7 @@ type Quote {
 input AmountInput {
   "Numerical value."
   value: UInt64!
-  "[ISO 4217 currency code](https://en.wikipedia.org/wiki/ISO_4217), e.g. `USD`."
+  "Should be an ISO 4217 currency code whenever possible, e.g. `USD`. For more information, refer to [assets](https://rafiki.dev/overview/concepts/accounting/#assets)."
   assetCode: String!
   "Difference in order of magnitude between the standard unit of an asset and its corresponding fractional unit."
   assetScale: UInt8!
@@ -1105,7 +1105,7 @@ input CreateQuoteInput {
   receiveAmount: AmountInput
   "Wallet address URL of the receiver."
   receiver: String!
-  "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)."
+  "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency)."
   idempotencyKey: String
 }
 
@@ -1121,7 +1121,7 @@ input CreateOutgoingPaymentInput {
   quoteId: String!
   "Additional metadata associated with the outgoing payment."
   metadata: JSONObject
-  "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)."
+  "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency)."
   idempotencyKey: String
 }
 
@@ -1141,7 +1141,7 @@ input CreateOutgoingPaymentFromIncomingPaymentInput {
   debitAmount: AmountInput!
   "Additional metadata associated with the outgoing payment."
   metadata: JSONObject
-  "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)."
+  "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency)."
   idempotencyKey: String
 }
 
@@ -1154,7 +1154,7 @@ input CreateIncomingPaymentInput {
   metadata: JSONObject
   "Maximum amount to be received for this incoming payment."
   incomingAmount: AmountInput
-  "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)."
+  "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency)."
   idempotencyKey: String
 }
 
@@ -1167,7 +1167,7 @@ input CreateReceiverInput {
   incomingAmount: AmountInput
   "Additional metadata associated with the incoming payment."
   metadata: JSONObject
-  "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)."
+  "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency)."
   idempotencyKey: String
 }
 
@@ -1200,7 +1200,7 @@ input CreateWalletAddressInput {
   url: String!
   "Public name associated with the wallet address. This is visible to anyone with the wallet address URL."
   publicName: String
-  "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)."
+  "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency)."
   idempotencyKey: String
   "Additional properties associated with the wallet address."
   additionalProperties: [AdditionalPropertyInput!]
@@ -1211,7 +1211,7 @@ input AdditionalPropertyInput {
   key: String!
   "Value for the additional property."
   value: String!
-  "Indicates whether the property is visible in Open Payments."
+  "Indicates whether the property is visible in Open Payments wallet address requests."
   visibleInOpenPayments: Boolean!
 }
 
@@ -1222,7 +1222,7 @@ input UpdateWalletAddressInput {
   publicName: String
   "New status to set the wallet address to, either active or inactive."
   status: WalletAddressStatus
-  "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)."
+  "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency)."
   idempotencyKey: String
   "Additional properties associated with this wallet address."
   additionalProperties: [AdditionalPropertyInput!]
@@ -1272,7 +1272,7 @@ type WalletAddressKey implements Model {
 input TriggerWalletAddressEventsInput {
   "Maximum number of events being triggered (n)."
   limit: Int!
-  "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)."
+  "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency)."
   idempotencyKey: String
 }
 
@@ -1339,7 +1339,7 @@ input SetFeeInput {
   type: FeeType!
   "Fee values"
   fee: FeeDetails!
-  "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)."
+  "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency)."
   idempotencyKey: String
 }
 
