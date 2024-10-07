@@ -1,9 +1,6 @@
 type Query {
   "Fetch an asset by its ID."
-  asset(
-    "Unique identifier of the asset."
-    id: String!
-  ): Asset
+  asset("Unique identifier of the asset." id: String!): Asset
 
   "Fetch a paginated list of assets."
   assets(
@@ -20,10 +17,7 @@ type Query {
   ): AssetsConnection!
 
   "Fetch a peer by its ID."
-  peer(
-    "Unique identifier of the peer."
-    id: String!
-  ): Peer
+  peer("Unique identifier of the peer." id: String!): Peer
 
   "Fetch a paginated list of peers."
   peers(
@@ -60,10 +54,7 @@ type Query {
   ): WalletAddressesConnection!
 
   "Fetch an Open Payments quote by its ID."
-  quote(
-    "Unique identifier of the quote."
-    id: String!
-  ): Quote
+  quote("Unique identifier of the quote." id: String!): Quote
 
   "Fetch an Open Payments outgoing payment by its ID."
   outgoingPayment(
