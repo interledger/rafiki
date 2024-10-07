@@ -38,7 +38,7 @@ interface ServiceDependencies extends BaseService {
   peerService: PeerService
   streamServer: StreamServer
   ilpAddress: string
-  telemetry?: TelemetryService
+  telemetry: TelemetryService
 }
 
 export async function createConnectorService({

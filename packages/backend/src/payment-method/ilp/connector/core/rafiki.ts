@@ -63,7 +63,7 @@ export interface TransferOptions {
 export interface RafikiServices {
   //router: Router
   accounting: AccountingService
-  telemetry?: TelemetryService
+  telemetry: TelemetryService
   walletAddresses: WalletAddressService
   logger: Logger
   incomingPayments: IncomingPaymentService
@@ -143,7 +143,7 @@ export class Rafiki<T = any> {
       get walletAddresses(): WalletAddressService {
         return config.walletAddresses
       },
-      get telemetry(): TelemetryService | undefined {
+      get telemetry(): TelemetryService {
         return config.telemetry
       },
       logger
@@ -162,9 +162,7 @@ export class Rafiki<T = any> {
     const response = new IlpResponse()
     const telemetry = this.publicServer.context.services.telemetry
 
-    if (telemetry) {
-      incrementPreparePacketCount(unfulfillable, prepare.amount, telemetry)
-    }
+    incrementPreparePacketCount(unfulfillable, prepare.amount, telemetry)
 
     await this.routes(
       {
@@ -194,23 +192,21 @@ export class Rafiki<T = any> {
     )
     if (!response.rawReply) throw new Error('error generating reply')
 
-    if (telemetry) {
-      const { code, scale } = sourceAccount.asset
-      incrementFulfillOrRejectPacketCount(
-        unfulfillable,
-        prepare.amount,
-        response,
-        telemetry
-      )
-      await incrementAmount(
-        unfulfillable,
-        prepare.amount,
-        response,
-        code,
-        scale,
-        telemetry
-      )
-    }
+    const { code, scale } = sourceAccount.asset
+    incrementFulfillOrRejectPacketCount(
+      unfulfillable,
+      prepare.amount,
+      response,
+      telemetry
+    )
+    await incrementAmount(
+      unfulfillable,
+      prepare.amount,
+      response,
+      code,
+      scale,
+      telemetry
+    )
     return response.rawReply
   }
 

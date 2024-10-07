@@ -22,7 +22,7 @@ export interface ServiceDependencies extends BaseService {
   config: IAppConfig
   ratesService: RatesService
   makeIlpPlugin: (options: IlpPluginOptions) => IlpPlugin
-  telemetry?: TelemetryService
+  telemetry: TelemetryService
 }
 
 export async function createIlpPaymentService(
@@ -94,16 +94,14 @@ async function getQuote(
     }
     const payEndTime = Date.now()
 
-    if (deps.telemetry) {
-      const rateProbeDuraiton = payEndTime - rateProbeStartTime
-      deps.telemetry.recordHistogram(
-        'ilp_rate_probe_time_ms',
-        rateProbeDuraiton,
-        {
-          description: 'Time to get an ILP quote'
-        }
-      )
-    }
+    const rateProbeDuraiton = payEndTime - rateProbeStartTime
+    deps.telemetry.recordHistogram(
+      'ilp_rate_probe_time_ms',
+      rateProbeDuraiton,
+      {
+        description: 'Time to get an ILP quote'
+      }
+    )
     // Pay.startQuote should return PaymentError.InvalidSourceAmount or
     // PaymentError.InvalidDestinationAmount for non-positive amounts.
     // Outgoing payments' sendAmount or receiveAmount should never be

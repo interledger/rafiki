@@ -86,26 +86,24 @@ export async function handleSending(
   })
   const payEndTime = Date.now()
 
-  if (deps.telemetry) {
-    const payDuration = payEndTime - payStartTime
-    await Promise.all([
-      deps.telemetry.incrementCounter('transactions_total', 1, {
-        description: 'Count of funded transactions'
-      }),
-      deps.telemetry.recordHistogram('ilp_pay_time_ms', payDuration, {
-        description: 'Time to complete an ILP payment'
-      }),
-      deps.telemetry.incrementCounterWithTransactionAmountDifference(
-        'transaction_fee_amounts',
-        payment.sentAmount,
-        payment.receiveAmount,
-        {
-          description: 'Amount sent through the network as fees',
-          valueType: ValueType.DOUBLE
-        }
-      )
-    ])
-  }
+  const payDuration = payEndTime - payStartTime
+  await Promise.all([
+    deps.telemetry.incrementCounter('transactions_total', 1, {
+      description: 'Count of funded transactions'
+    }),
+    deps.telemetry.recordHistogram('ilp_pay_time_ms', payDuration, {
+      description: 'Time to complete an ILP payment'
+    }),
+    deps.telemetry.incrementCounterWithTransactionAmountDifference(
+      'transaction_fee_amounts',
+      payment.sentAmount,
+      payment.receiveAmount,
+      {
+        description: 'Amount sent through the network as fees',
+        valueType: ValueType.DOUBLE
+      }
+    )
+  ])
 
   await handleCompleted(deps, payment)
 }
