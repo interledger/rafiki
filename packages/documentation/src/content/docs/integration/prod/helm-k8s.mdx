@@ -28,7 +28,7 @@ helm install rafiki PATH_TO_RAFIKI_REPO/infrastructure/helm/rafiki
 
 #### Tigerbeetle
 
-For Rafiki's accounting database, you may opt to run Tigerbeetle in place of Postres. Though you must run one Postgres instance that's used for the `auth` services and Open Payments resources.
+For Rafiki's accounting database, you may opt to run Tigerbeetle in place of Postgres. Though you must run one Postgres instance that's used for the `auth` services and Open Payments resources.
 
 To change the version of Tigerbeetle you must change the respective tag in the <LinkOut href='https://github.com/interledger/rafiki/blob/main/infrastructure/helm/tigerbeetle/values.yaml'>values.yaml</LinkOut> file for Tigerbeetle.
 
