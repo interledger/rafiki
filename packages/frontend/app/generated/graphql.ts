@@ -52,7 +52,7 @@ export type AdditionalProperty = {
   key: Scalars['String']['output'];
   /** Value for the additional property. */
   value: Scalars['String']['output'];
-  /** Indicates whether the property is visible in Open Payments. */
+  /** Indicates whether the property is visible in Open Payments wallet address requests. */
   visibleInOpenPayments: Scalars['Boolean']['output'];
 };
 
@@ -61,7 +61,7 @@ export type AdditionalPropertyInput = {
   key: Scalars['String']['input'];
   /** Value for the additional property. */
   value: Scalars['String']['input'];
-  /** Indicates whether the property is visible in Open Payments. */
+  /** Indicates whether the property is visible in Open Payments wallet address requests. */
   visibleInOpenPayments: Scalars['Boolean']['input'];
 };
 
@@ -72,7 +72,7 @@ export enum Alg {
 
 export type Amount = {
   __typename?: 'Amount';
-  /** [ISO 4217 currency code](https://en.wikipedia.org/wiki/ISO_4217), e.g. `USD`. */
+  /** Should be an ISO 4217 currency code whenever possible, e.g. `USD`. For more information, refer to [assets](https://rafiki.dev/overview/concepts/accounting/#assets). */
   assetCode: Scalars['String']['output'];
   /** Difference in order of magnitude between the standard unit of an asset and its corresponding fractional unit. */
   assetScale: Scalars['UInt8']['output'];
@@ -81,7 +81,7 @@ export type Amount = {
 };
 
 export type AmountInput = {
-  /** [ISO 4217 currency code](https://en.wikipedia.org/wiki/ISO_4217), e.g. `USD`. */
+  /** Should be an ISO 4217 currency code whenever possible, e.g. `USD`. For more information, refer to [assets](https://rafiki.dev/overview/concepts/accounting/#assets). */
   assetCode: Scalars['String']['input'];
   /** Difference in order of magnitude between the standard unit of an asset and its corresponding fractional unit. */
   assetScale: Scalars['UInt8']['input'];
@@ -102,7 +102,7 @@ export type ApproveIncomingPaymentResponse = {
 
 export type Asset = Model & {
   __typename?: 'Asset';
-  /** [ISO 4217 currency code](https://en.wikipedia.org/wiki/ISO_4217), e.g. `USD`. */
+  /** Should be an ISO 4217 currency code whenever possible, e.g. `USD`. For more information, refer to [assets](https://rafiki.dev/overview/concepts/accounting/#assets). */
   code: Scalars['String']['output'];
   /** The date and time when the asset was created. */
   createdAt: Scalars['String']['output'];
@@ -187,9 +187,9 @@ export type CancelOutgoingPaymentInput = {
 };
 
 export type CreateAssetInput = {
-  /** [ISO 4217 currency code](https://en.wikipedia.org/wiki/ISO_4217), e.g. `USD`. */
+  /** Should be an ISO 4217 currency code whenever possible, e.g. `USD`. For more information, refer to [assets](https://rafiki.dev/overview/concepts/accounting/#assets). */
   code: Scalars['String']['input'];
-  /** Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence).. */
+  /** Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency). */
   idempotencyKey?: InputMaybe<Scalars['String']['input']>;
   /** A webhook event will notify the Account Servicing Entity if liquidity falls below this value. */
   liquidityThreshold?: InputMaybe<Scalars['UInt64']['input']>;
@@ -206,7 +206,7 @@ export type CreateAssetLiquidityWithdrawalInput = {
   assetId: Scalars['String']['input'];
   /** Unique identifier of the withdrawal. */
   id: Scalars['String']['input'];
-  /** Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence).. */
+  /** Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency). */
   idempotencyKey: Scalars['String']['input'];
   /** Interval in seconds after a pending transfer's created at which it may be posted or voided. Zero denotes a no timeout single-phase posted transfer. */
   timeoutSeconds: Scalars['UInt64']['input'];
@@ -215,7 +215,7 @@ export type CreateAssetLiquidityWithdrawalInput = {
 export type CreateIncomingPaymentInput = {
   /** Date and time that the incoming payment will expire. */
   expiresAt?: InputMaybe<Scalars['String']['input']>;
-  /** Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence). */
+  /** Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency). */
   idempotencyKey?: InputMaybe<Scalars['String']['input']>;
   /** Maximum amount to be received for this incoming payment. */
   incomingAmount?: InputMaybe<AmountInput>;
@@ -226,7 +226,7 @@ export type CreateIncomingPaymentInput = {
 };
 
 export type CreateIncomingPaymentWithdrawalInput = {
-  /** Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence).. */
+  /** Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency). */
   idempotencyKey: Scalars['String']['input'];
   /** Unique identifier of the incoming payment to withdraw liquidity from. */
   incomingPaymentId: Scalars['String']['input'];
@@ -237,7 +237,7 @@ export type CreateIncomingPaymentWithdrawalInput = {
 export type CreateOrUpdatePeerByUrlInput = {
   /** Unique identifier of the asset associated with the peering relationship. */
   assetId: Scalars['String']['input'];
-  /** Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence).. */
+  /** Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency). */
   idempotencyKey?: InputMaybe<Scalars['String']['input']>;
   /** A webhook event will notify the Account Servicing Entity if peer liquidity falls below this value. */
   liquidityThreshold?: InputMaybe<Scalars['UInt64']['input']>;
@@ -260,7 +260,7 @@ export type CreateOrUpdatePeerByUrlMutationResponse = {
 export type CreateOutgoingPaymentFromIncomingPaymentInput = {
   /** Amount to send (fixed send). */
   debitAmount: AmountInput;
-  /** Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence). */
+  /** Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency). */
   idempotencyKey?: InputMaybe<Scalars['String']['input']>;
   /** Incoming payment URL to create the outgoing payment from. */
   incomingPayment: Scalars['String']['input'];
@@ -271,7 +271,7 @@ export type CreateOutgoingPaymentFromIncomingPaymentInput = {
 };
 
 export type CreateOutgoingPaymentInput = {
-  /** Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence). */
+  /** Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency). */
   idempotencyKey?: InputMaybe<Scalars['String']['input']>;
   /** Additional metadata associated with the outgoing payment. */
   metadata?: InputMaybe<Scalars['JSONObject']['input']>;
@@ -282,7 +282,7 @@ export type CreateOutgoingPaymentInput = {
 };
 
 export type CreateOutgoingPaymentWithdrawalInput = {
-  /** Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence).. */
+  /** Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency). */
   idempotencyKey: Scalars['String']['input'];
   /** Unique identifier of the outgoing payment to withdraw liquidity from. */
   outgoingPaymentId: Scalars['String']['input'];
@@ -295,7 +295,7 @@ export type CreatePeerInput = {
   assetId: Scalars['String']['input'];
   /** Peering connection details. */
   http: HttpInput;
-  /** Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence).. */
+  /** Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency). */
   idempotencyKey?: InputMaybe<Scalars['String']['input']>;
   /** Initial amount of liquidity to deposit for the peer. */
   initialLiquidity?: InputMaybe<Scalars['UInt64']['input']>;
@@ -314,7 +314,7 @@ export type CreatePeerLiquidityWithdrawalInput = {
   amount: Scalars['UInt64']['input'];
   /** Unique identifier of the withdrawal. */
   id: Scalars['String']['input'];
-  /** Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence).. */
+  /** Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency). */
   idempotencyKey: Scalars['String']['input'];
   /** Unique identifier of the peer to create the withdrawal for. */
   peerId: Scalars['String']['input'];
@@ -331,7 +331,7 @@ export type CreatePeerMutationResponse = {
 export type CreateQuoteInput = {
   /** Amount to send (fixed send). */
   debitAmount?: InputMaybe<AmountInput>;
-  /** Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence). */
+  /** Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency). */
   idempotencyKey?: InputMaybe<Scalars['String']['input']>;
   /** Amount to receive (fixed receive). */
   receiveAmount?: InputMaybe<AmountInput>;
@@ -344,7 +344,7 @@ export type CreateQuoteInput = {
 export type CreateReceiverInput = {
   /** Date and time that the incoming payment expires for the receiver. */
   expiresAt?: InputMaybe<Scalars['String']['input']>;
-  /** Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence). */
+  /** Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency). */
   idempotencyKey?: InputMaybe<Scalars['String']['input']>;
   /** Maximum amount to be received for this incoming payment. */
   incomingAmount?: InputMaybe<AmountInput>;
@@ -365,7 +365,7 @@ export type CreateWalletAddressInput = {
   additionalProperties?: InputMaybe<Array<AdditionalPropertyInput>>;
   /** Unique identifier of the asset associated with the wallet address. This cannot be changed. */
   assetId: Scalars['String']['input'];
-  /** Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence). */
+  /** Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency). */
   idempotencyKey?: InputMaybe<Scalars['String']['input']>;
   /** Public name associated with the wallet address. This is visible to anyone with the wallet address URL. */
   publicName?: InputMaybe<Scalars['String']['input']>;
@@ -374,7 +374,7 @@ export type CreateWalletAddressInput = {
 };
 
 export type CreateWalletAddressKeyInput = {
-  /** Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence).. */
+  /** Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency). */
   idempotencyKey?: InputMaybe<Scalars['String']['input']>;
   /** Public key in JSON Web Key (JWK) format. */
   jwk: JwkInput;
@@ -397,7 +397,7 @@ export type CreateWalletAddressMutationResponse = {
 export type CreateWalletAddressWithdrawalInput = {
   /** Unique identifier of the withdrawal. */
   id: Scalars['String']['input'];
-  /** Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence).. */
+  /** Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency). */
   idempotencyKey: Scalars['String']['input'];
   /** Interval in seconds after a pending transfer's created at which it may be posted or voided. Zero denotes a no timeout single-phase posted transfer. */
   timeoutSeconds: Scalars['UInt64']['input'];
@@ -413,7 +413,7 @@ export enum Crv {
 export type DeleteAssetInput = {
   /** Unique identifier of the asset to delete. */
   id: Scalars['ID']['input'];
-  /** Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence).. */
+  /** Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency). */
   idempotencyKey?: InputMaybe<Scalars['String']['input']>;
 };
 
@@ -426,7 +426,7 @@ export type DeleteAssetMutationResponse = {
 export type DeletePeerInput = {
   /** Unique identifier of the peer to be deleted. */
   id: Scalars['ID']['input'];
-  /** Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence). */
+  /** Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency). */
   idempotencyKey?: InputMaybe<Scalars['String']['input']>;
 };
 
@@ -443,19 +443,19 @@ export type DepositAssetLiquidityInput = {
   assetId: Scalars['String']['input'];
   /** Unique identifier of the liquidity transfer. */
   id: Scalars['String']['input'];
-  /** Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence).. */
+  /** Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency). */
   idempotencyKey: Scalars['String']['input'];
 };
 
 export type DepositEventLiquidityInput = {
   /** Unique identifier of the event to deposit liquidity into. */
   eventId: Scalars['String']['input'];
-  /** Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence).. */
+  /** Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency). */
   idempotencyKey: Scalars['String']['input'];
 };
 
 export type DepositOutgoingPaymentLiquidityInput = {
-  /** Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence).. */
+  /** Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency). */
   idempotencyKey: Scalars['String']['input'];
   /** Unique identifier of the outgoing payment to deposit liquidity into. */
   outgoingPaymentId: Scalars['String']['input'];
@@ -466,7 +466,7 @@ export type DepositPeerLiquidityInput = {
   amount: Scalars['UInt64']['input'];
   /** Unique identifier of the liquidity transfer. */
   id: Scalars['String']['input'];
-  /** Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence).. */
+  /** Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency). */
   idempotencyKey: Scalars['String']['input'];
   /** Unique identifier of the peer to deposit liquidity into. */
   peerId: Scalars['String']['input'];
@@ -1112,7 +1112,7 @@ export type PeersConnection = {
 };
 
 export type PostLiquidityWithdrawalInput = {
-  /** Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence).. */
+  /** Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency). */
   idempotencyKey: Scalars['String']['input'];
   /** Unique identifier of the liquidity withdrawal to post. */
   withdrawalId: Scalars['String']['input'];
@@ -1315,7 +1315,7 @@ export type Receiver = {
 export type RevokeWalletAddressKeyInput = {
   /** Internal unique identifier of the key to revoke. */
   id: Scalars['String']['input'];
-  /** Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence).. */
+  /** Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency). */
   idempotencyKey?: InputMaybe<Scalars['String']['input']>;
 };
 
@@ -1330,7 +1330,7 @@ export type SetFeeInput = {
   assetId: Scalars['ID']['input'];
   /** Fee values */
   fee: FeeDetails;
-  /** Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence). */
+  /** Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency). */
   idempotencyKey?: InputMaybe<Scalars['String']['input']>;
   /** Type of fee, either sending or receiving. */
   type: FeeType;
@@ -1343,9 +1343,9 @@ export type SetFeeResponse = {
 };
 
 export enum SortOrder {
-  /** Choose ascending order for results. */
+  /** Sort the results in ascending order. */
   Asc = 'ASC',
-  /** Choose descending order for results. */
+  /** Sort the results in descending order. */
   Desc = 'DESC'
 }
 
@@ -1359,7 +1359,7 @@ export enum TransferType {
 }
 
 export type TriggerWalletAddressEventsInput = {
-  /** Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence). */
+  /** Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency). */
   idempotencyKey?: InputMaybe<Scalars['String']['input']>;
   /** Maximum number of events being triggered (n). */
   limit: Scalars['Int']['input'];
@@ -1374,7 +1374,7 @@ export type TriggerWalletAddressEventsMutationResponse = {
 export type UpdateAssetInput = {
   /** Unique identifier of the asset to update. */
   id: Scalars['String']['input'];
-  /** Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence).. */
+  /** Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency). */
   idempotencyKey?: InputMaybe<Scalars['String']['input']>;
   /** A webhook event will notify the Account Servicing Entity if liquidity falls below this new value. */
   liquidityThreshold?: InputMaybe<Scalars['UInt64']['input']>;
@@ -1394,7 +1394,7 @@ export type UpdatePeerInput = {
   http?: InputMaybe<HttpInput>;
   /** Unique identifier of the peer to update. */
   id: Scalars['String']['input'];
-  /** Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence).. */
+  /** Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency). */
   idempotencyKey?: InputMaybe<Scalars['String']['input']>;
   /** A webhook event will notify the Account Servicing Entity if peer liquidity falls below this new value. */
   liquidityThreshold?: InputMaybe<Scalars['UInt64']['input']>;
@@ -1417,7 +1417,7 @@ export type UpdateWalletAddressInput = {
   additionalProperties?: InputMaybe<Array<AdditionalPropertyInput>>;
   /** Unique identifier of the wallet address to update. This cannot be changed. */
   id: Scalars['ID']['input'];
-  /** Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence). */
+  /** Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency). */
   idempotencyKey?: InputMaybe<Scalars['String']['input']>;
   /** New public name for the wallet address. This is visible to anyone with the wallet address URL. */
   publicName?: InputMaybe<Scalars['String']['input']>;
@@ -1432,7 +1432,7 @@ export type UpdateWalletAddressMutationResponse = {
 };
 
 export type VoidLiquidityWithdrawalInput = {
-  /** Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence).. */
+  /** Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency). */
   idempotencyKey: Scalars['String']['input'];
   /** Unique identifier of the liquidity withdrawal to void. */
   withdrawalId: Scalars['String']['input'];
@@ -1607,7 +1607,7 @@ export type WebhookEventsEdge = {
 export type WithdrawEventLiquidityInput = {
   /** Unique identifier of the event to withdraw liquidity from. */
   eventId: Scalars['String']['input'];
-  /** Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence).. */
+  /** Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency). */
   idempotencyKey: Scalars['String']['input'];
 };
 

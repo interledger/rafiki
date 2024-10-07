@@ -235,7 +235,7 @@
           },
           {
             "name": "visibleInOpenPayments",
-            "description": "Indicates whether the property is visible in Open Payments.",
+            "description": "Indicates whether the property is visible in Open Payments wallet address requests.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -295,7 +295,7 @@
           },
           {
             "name": "visibleInOpenPayments",
-            "description": "Indicates whether the property is visible in Open Payments.",
+            "description": "Indicates whether the property is visible in Open Payments wallet address requests.",
             "type": {
               "kind": "NON_NULL",
               "name": null,
@@ -338,7 +338,7 @@
         "fields": [
           {
             "name": "assetCode",
-            "description": "[ISO 4217 currency code](https://en.wikipedia.org/wiki/ISO_4217), e.g. `USD`.",
+            "description": "Should be an ISO 4217 currency code whenever possible, e.g. `USD`. For more information, refer to [assets](https://rafiki.dev/overview/concepts/accounting/#assets).",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -398,7 +398,7 @@
         "inputFields": [
           {
             "name": "assetCode",
-            "description": "[ISO 4217 currency code](https://en.wikipedia.org/wiki/ISO_4217), e.g. `USD`.",
+            "description": "Should be an ISO 4217 currency code whenever possible, e.g. `USD`. For more information, refer to [assets](https://rafiki.dev/overview/concepts/accounting/#assets).",
             "type": {
               "kind": "NON_NULL",
               "name": null,
@@ -506,7 +506,7 @@
         "fields": [
           {
             "name": "code",
-            "description": "[ISO 4217 currency code](https://en.wikipedia.org/wiki/ISO_4217), e.g. `USD`.",
+            "description": "Should be an ISO 4217 currency code whenever possible, e.g. `USD`. For more information, refer to [assets](https://rafiki.dev/overview/concepts/accounting/#assets).",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -542,7 +542,7 @@
             "args": [
               {
                 "name": "after",
-                "description": "Forward pagination: Cursor to start retrieving fees after this point.",
+                "description": "Forward pagination: Cursor (fee ID) to start retrieving fees after this point.",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -554,7 +554,7 @@
               },
               {
                 "name": "before",
-                "description": "Backward pagination: Cursor to start retrieving fees before this point.",
+                "description": "Backward pagination: Cursor (fee ID) to start retrieving fees before this point.",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -1036,7 +1036,7 @@
         "inputFields": [
           {
             "name": "code",
-            "description": "[ISO 4217 currency code](https://en.wikipedia.org/wiki/ISO_4217), e.g. `USD`.",
+            "description": "Should be an ISO 4217 currency code whenever possible, e.g. `USD`. For more information, refer to [assets](https://rafiki.dev/overview/concepts/accounting/#assets).",
             "type": {
               "kind": "NON_NULL",
               "name": null,
@@ -1052,7 +1052,7 @@
           },
           {
             "name": "idempotencyKey",
-            "description": "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)..",
+            "description": "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency).",
             "type": {
               "kind": "SCALAR",
               "name": "String",
@@ -1163,7 +1163,7 @@
           },
           {
             "name": "idempotencyKey",
-            "description": "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)..",
+            "description": "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency).",
             "type": {
               "kind": "NON_NULL",
               "name": null,
@@ -1218,7 +1218,7 @@
           },
           {
             "name": "idempotencyKey",
-            "description": "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence).",
+            "description": "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency).",
             "type": {
               "kind": "SCALAR",
               "name": "String",
@@ -1281,7 +1281,7 @@
         "inputFields": [
           {
             "name": "idempotencyKey",
-            "description": "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)..",
+            "description": "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency).",
             "type": {
               "kind": "NON_NULL",
               "name": null,
@@ -1356,7 +1356,7 @@
           },
           {
             "name": "idempotencyKey",
-            "description": "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)..",
+            "description": "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency).",
             "type": {
               "kind": "SCALAR",
               "name": "String",
@@ -1482,7 +1482,7 @@
           },
           {
             "name": "idempotencyKey",
-            "description": "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence).",
+            "description": "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency).",
             "type": {
               "kind": "SCALAR",
               "name": "String",
@@ -1549,7 +1549,7 @@
         "inputFields": [
           {
             "name": "idempotencyKey",
-            "description": "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence).",
+            "description": "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency).",
             "type": {
               "kind": "SCALAR",
               "name": "String",
@@ -1616,7 +1616,7 @@
         "inputFields": [
           {
             "name": "idempotencyKey",
-            "description": "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)..",
+            "description": "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency).",
             "type": {
               "kind": "NON_NULL",
               "name": null,
@@ -1707,7 +1707,7 @@
           },
           {
             "name": "idempotencyKey",
-            "description": "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)..",
+            "description": "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency).",
             "type": {
               "kind": "SCALAR",
               "name": "String",
@@ -1826,7 +1826,7 @@
           },
           {
             "name": "idempotencyKey",
-            "description": "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)..",
+            "description": "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency).",
             "type": {
               "kind": "NON_NULL",
               "name": null,
@@ -1920,7 +1920,7 @@
           },
           {
             "name": "idempotencyKey",
-            "description": "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence).",
+            "description": "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency).",
             "type": {
               "kind": "SCALAR",
               "name": "String",
@@ -1999,7 +1999,7 @@
           },
           {
             "name": "idempotencyKey",
-            "description": "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence).",
+            "description": "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency).",
             "type": {
               "kind": "SCALAR",
               "name": "String",
@@ -2121,7 +2121,7 @@
           },
           {
             "name": "idempotencyKey",
-            "description": "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence).",
+            "description": "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency).",
             "type": {
               "kind": "SCALAR",
               "name": "String",
@@ -2172,7 +2172,7 @@
         "inputFields": [
           {
             "name": "idempotencyKey",
-            "description": "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)..",
+            "description": "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency).",
             "type": {
               "kind": "SCALAR",
               "name": "String",
@@ -2289,7 +2289,7 @@
           },
           {
             "name": "idempotencyKey",
-            "description": "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)..",
+            "description": "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency).",
             "type": {
               "kind": "NON_NULL",
               "name": null,
@@ -2381,7 +2381,7 @@
           },
           {
             "name": "idempotencyKey",
-            "description": "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)..",
+            "description": "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency).",
             "type": {
               "kind": "SCALAR",
               "name": "String",
@@ -2443,7 +2443,7 @@
           },
           {
             "name": "idempotencyKey",
-            "description": "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence).",
+            "description": "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency).",
             "type": {
               "kind": "SCALAR",
               "name": "String",
@@ -2541,7 +2541,7 @@
           },
           {
             "name": "idempotencyKey",
-            "description": "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)..",
+            "description": "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency).",
             "type": {
               "kind": "NON_NULL",
               "name": null,
@@ -2584,7 +2584,7 @@
           },
           {
             "name": "idempotencyKey",
-            "description": "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)..",
+            "description": "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency).",
             "type": {
               "kind": "NON_NULL",
               "name": null,
@@ -2611,7 +2611,7 @@
         "inputFields": [
           {
             "name": "idempotencyKey",
-            "description": "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)..",
+            "description": "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency).",
             "type": {
               "kind": "NON_NULL",
               "name": null,
@@ -2686,7 +2686,7 @@
           },
           {
             "name": "idempotencyKey",
-            "description": "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)..",
+            "description": "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency).",
             "type": {
               "kind": "NON_NULL",
               "name": null,
@@ -6101,7 +6101,7 @@
         "inputFields": [
           {
             "name": "idempotencyKey",
-            "description": "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)..",
+            "description": "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency).",
             "type": {
               "kind": "NON_NULL",
               "name": null,
@@ -6221,7 +6221,7 @@
             "args": [
               {
                 "name": "after",
-                "description": "Forward pagination: Cursor to start retrieving assets after this point.",
+                "description": "Forward pagination: Cursor (asset ID) to start retrieving assets after this point.",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -6233,7 +6233,7 @@
               },
               {
                 "name": "before",
-                "description": "Backward pagination: Cursor to start retrieving assets before this point.",
+                "description": "Backward pagination: Cursor (asset ID) to start retrieving assets before this point.",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -6356,7 +6356,7 @@
             "args": [
               {
                 "name": "after",
-                "description": "Forward pagination: Cursor to start retrieving outgoing payments after this point.",
+                "description": "Forward pagination: Cursor (outgoing payment ID) to start retrieving outgoing payments after this point.",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -6368,7 +6368,7 @@
               },
               {
                 "name": "before",
-                "description": "Backward pagination: Cursor to start retrieving outgoing payments before this point.",
+                "description": "Backward pagination: Cursor (outgoing payment ID) to start retrieving outgoing payments before this point.",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -6445,7 +6445,7 @@
             "args": [
               {
                 "name": "after",
-                "description": "Forward pagination: Cursor to start retrieving payments after this point.",
+                "description": "Forward pagination: Cursor (payment ID) to start retrieving payments after this point.",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -6457,7 +6457,7 @@
               },
               {
                 "name": "before",
-                "description": "Backward pagination: Cursor to start retrieving payments before this point.",
+                "description": "Backward pagination: Cursor (payment ID) to start retrieving payments before this point.",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -6563,7 +6563,7 @@
             "args": [
               {
                 "name": "after",
-                "description": "Forward pagination: Cursor to start retrieving peers after this point.",
+                "description": "Forward pagination: Cursor (peer ID) to start retrieving peers after this point.",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -6575,7 +6575,7 @@
               },
               {
                 "name": "before",
-                "description": "Backward pagination: Cursor to start retrieving peers before this point.",
+                "description": "Backward pagination: Cursor (peer ID) to start retrieving peers before this point.",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -6727,7 +6727,7 @@
             "args": [
               {
                 "name": "after",
-                "description": "Forward pagination: Cursor to start retrieving wallet addresses after this point.",
+                "description": "Forward pagination: Cursor (wallet address ID) to start retrieving wallet addresses after this point.",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -6739,7 +6739,7 @@
               },
               {
                 "name": "before",
-                "description": "Backward pagination: Cursor to start retrieving wallet addresses before this point.",
+                "description": "Backward pagination: Cursor (wallet address ID) to start retrieving wallet addresses before this point.",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -6804,7 +6804,7 @@
             "args": [
               {
                 "name": "after",
-                "description": "Forward pagination: Cursor to start retrieving webhook events after this point.",
+                "description": "Forward pagination: Cursor (webhook event ID) to start retrieving webhook events after this point.",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -6816,7 +6816,7 @@
               },
               {
                 "name": "before",
-                "description": "Backward pagination: Cursor to start retrieving webhook events before this point.",
+                "description": "Backward pagination: Cursor (webhook event ID) to start retrieving webhook events before this point.",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -7312,7 +7312,7 @@
           },
           {
             "name": "idempotencyKey",
-            "description": "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)..",
+            "description": "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency).",
             "type": {
               "kind": "SCALAR",
               "name": "String",
@@ -7390,7 +7390,7 @@
           },
           {
             "name": "idempotencyKey",
-            "description": "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence).",
+            "description": "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency).",
             "type": {
               "kind": "SCALAR",
               "name": "String",
@@ -7454,13 +7454,13 @@
         "enumValues": [
           {
             "name": "ASC",
-            "description": "Choose ascending order for results.",
+            "description": "Sort the results in ascending order.",
             "isDeprecated": false,
             "deprecationReason": null
           },
           {
             "name": "DESC",
-            "description": "Choose descending order for results.",
+            "description": "Sort the results in descending order.",
             "isDeprecated": false,
             "deprecationReason": null
           }
@@ -7514,7 +7514,7 @@
         "inputFields": [
           {
             "name": "idempotencyKey",
-            "description": "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence).",
+            "description": "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency).",
             "type": {
               "kind": "SCALAR",
               "name": "String",
@@ -7612,7 +7612,7 @@
           },
           {
             "name": "idempotencyKey",
-            "description": "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)..",
+            "description": "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency).",
             "type": {
               "kind": "SCALAR",
               "name": "String",
@@ -7730,7 +7730,7 @@
           },
           {
             "name": "idempotencyKey",
-            "description": "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)..",
+            "description": "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency).",
             "type": {
               "kind": "SCALAR",
               "name": "String",
@@ -7860,7 +7860,7 @@
           },
           {
             "name": "idempotencyKey",
-            "description": "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence).",
+            "description": "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency).",
             "type": {
               "kind": "SCALAR",
               "name": "String",
@@ -7930,7 +7930,7 @@
         "inputFields": [
           {
             "name": "idempotencyKey",
-            "description": "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)..",
+            "description": "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency).",
             "type": {
               "kind": "NON_NULL",
               "name": null,
@@ -8040,7 +8040,7 @@
             "args": [
               {
                 "name": "after",
-                "description": "Forward pagination: Cursor to start retrieving incoming payments after this point.",
+                "description": "Forward pagination: Cursor (incoming payment ID) to start retrieving incoming payments after this point.",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -8052,7 +8052,7 @@
               },
               {
                 "name": "before",
-                "description": "Backward pagination: Cursor to start retrieving incoming payments before this point.",
+                "description": "Backward pagination: Cursor (incoming payment ID) to start retrieving incoming payments before this point.",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -8125,7 +8125,7 @@
             "args": [
               {
                 "name": "after",
-                "description": "Forward pagination: Cursor to start retrieving outgoing payments after this point.",
+                "description": "Forward pagination: Cursor (outgoing payment ID) to start retrieving outgoing payments after this point.",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -8137,7 +8137,7 @@
               },
               {
                 "name": "before",
-                "description": "Backward pagination: Cursor to start retrieving outgoing payments before this point.",
+                "description": "Backward pagination: Cursor (outgoing payment ID) to start retrieving outgoing payments before this point.",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -8210,7 +8210,7 @@
             "args": [
               {
                 "name": "after",
-                "description": "Forward pagination: Cursor to start retrieving quotes after this point.",
+                "description": "Forward pagination: Cursor (quote ID) to start retrieving quotes after this point.",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -8222,7 +8222,7 @@
               },
               {
                 "name": "before",
-                "description": "Backward pagination: Cursor to start retrieving quotes before this point.",
+                "description": "Backward pagination: Cursor (quote ID) to start retrieving quotes before this point.",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -8315,7 +8315,7 @@
             "args": [
               {
                 "name": "after",
-                "description": "Forward pagination: Cursor to start retrieving keys after this point.",
+                "description": "Forward pagination: Cursor (wallet address key ID) to start retrieving keys after this point.",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -8327,7 +8327,7 @@
               },
               {
                 "name": "before",
-                "description": "Backward pagination: Cursor to start retrieving keys before this point.",
+                "description": "Backward pagination: Cursor (wallet address key ID) to start retrieving keys before this point.",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -9006,7 +9006,7 @@
           },
           {
             "name": "idempotencyKey",
-            "description": "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)..",
+            "description": "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency).",
             "type": {
               "kind": "NON_NULL",
               "name": null,
