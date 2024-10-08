@@ -244,12 +244,13 @@ Fill out the following fields to create a new wallet address:
 
 | Section             | Field               | Description                                                                 |
 | ------------------- | ------------------- | --------------------------------------------------------------------------- |
-| General Information | Wallet address name | The URL of the wallet. Once set, it cannot be changed.                      |
+| General Information | Wallet address name | The case-insensitive URL of the wallet. Once set, it cannot be changed.     |
 |                     | Public name         | The name associated with the wallet that is visible to anyone with the URL. |
 |                     | Asset               | Select an asset to associate with this wallet.                              |
 
-:::note
-At least one asset has to be created prior to creating a new wallet address. Refer to [Create asset](#create-asset) for more information.
+:::note[Wallet address requirements]
+- At least one asset has to be created prior to creating a new wallet address. Refer to [Create asset](#create-asset) for more information.
+- Wallet address URLs are treated as case-insensitive, meaning that both lowercase and uppercase variations of the same address will be recognized as identical.
 :::
 
 After completing this section, select **Create** to add the new wallet address.
