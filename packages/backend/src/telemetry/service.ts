@@ -8,6 +8,8 @@ import { privacy } from './privacy'
 
 export interface TelemetryService {
   shutdown(): Promise<void>
+  getCounters(): Map<string, Counter>
+  getHistograms(): Map<string, Histogram>
   incrementCounter(
     name: string,
     value: number,
@@ -104,6 +106,14 @@ class TelemetryServiceImpl implements TelemetryService {
       source: this.instanceName,
       ...attributes
     })
+  }
+
+  getCounters(): Map<string, Counter> {
+    return this.counters
+  }
+
+  getHistograms(): Map<string, Histogram> {
+    return this.histograms
   }
 
   public async incrementCounterWithTransactionAmountDifference(

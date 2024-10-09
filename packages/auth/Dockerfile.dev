@@ -16,7 +16,7 @@ COPY . ./
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
     pnpm install \
     --recursive \
-    --offline \
+    #--offline \
     --frozen-lockfile
 
 RUN pnpm --filter auth build:deps

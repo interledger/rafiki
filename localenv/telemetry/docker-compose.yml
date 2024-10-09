@@ -16,7 +16,7 @@ services:
       OPEN_TELEMETRY_TRACE_COLLECTOR_URLS: http://otel-collector:4317
 
   otel-collector:
-    image: otel/opentelemetry-collector:latest
+    image: otel/opentelemetry-collector:0.110.0
     command: "--config=/etc/otel-collector-config.yaml"
     networks:
       - rafiki

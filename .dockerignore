@@ -25,3 +25,6 @@ bruno
 **/docker-compose.yml
 
 **/*.test.ts
+
+# Allow for now:
+!packages/backend/interledgerjs/packages/pay/dist

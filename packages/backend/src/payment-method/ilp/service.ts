@@ -8,6 +8,11 @@ import {
 import { RatesService } from '../../rates/service'
 import { IlpPlugin, IlpPluginOptions } from './ilp_plugin'
 import * as Pay from '@interledger/pay'
+import {
+  Counter as TelCounter,
+  Histogram as TelHistogram
+} from '@opentelemetry/api'
+
 import { convertRatesToIlpPrices } from './rates'
 import { IAppConfig } from '../../config/app'
 import {
@@ -245,9 +250,10 @@ async function pay(
   const {
     lowEstimatedExchangeRate,
     highEstimatedExchangeRate,
-    minExchangeRate,
-    maxPacketAmount
+    minExchangeRate
+    //TODO maxPacketAmount
   } = outgoingPayment.quote
+  const maxPacketAmount = 10000n
 
   const quote: Pay.Quote = {
     maxPacketAmount,
@@ -264,13 +270,52 @@ async function pay(
   })
 
   const destination = receiver.toResolvedPayment()
+  let counters: Map<string, TelCounter> | undefined = undefined
+  let histograms: Map<string, TelHistogram> | undefined = undefined
+  deps.logger.info(
+    {
+      doWeHaveTelemetry: deps.telemetry ? 'yes' : 'no'
+    },
+    'JASON (ILP-PAY): Lets see if we have TELEMETRY!'
+  )
+
+  if (deps.telemetry) {
+    counters = deps.telemetry.getCounters()
+    histograms = deps.telemetry.getHistograms()
+  }
 
   try {
-    const receipt = await Pay.pay({ plugin, destination, quote })
+    //TODO const receipt = await Pay.pay({ plugin, destination, quote })
+    deps.logger.info(
+      {
+        finalDebitAmount,
+        finalReceiveAmount,
+        maxPacketAmount
+      },
+      'JASON (ILP-PAY): ILP payment STARTED!'
+    )
 
-    if (receipt.error) {
-      throw receipt.error
-    }
+    const receipt = await Pay.pay({
+      plugin,
+      destination,
+      quote,
+      counters,
+      histograms
+    })
+
+    if (receipt.error) throw receipt.error
+
+    deps.logger.info(
+      {
+        destination: destination.destinationAddress,
+        error: receipt.error,
+        finalDebitAmount,
+        finalReceiveAmount,
+        receiptAmountSent: receipt.amountSent,
+        receiptAmountDelivered: receipt.amountDelivered
+      },
+      'JASON (ILP-PAY): ILP payment completed. GREAT SUCCESS!!!!'
+    )
 
     deps.logger.debug(
       {

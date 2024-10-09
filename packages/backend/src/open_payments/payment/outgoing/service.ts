@@ -71,6 +71,7 @@ export interface ServiceDependencies extends BaseService {
   assetService: AssetService
   cacheDataStore: CacheDataStore
   sendingOutgoing: string[]
+  toBeCompleted: string[]
   telemetry?: TelemetryService
 }
 
@@ -316,7 +317,7 @@ async function createOutgoingPayment(
           description: 'Time to insert payment in outgoing payment'
         }
       )
-      const payment = await OutgoingPayment.query(trx).insertAndFetch({
+      const payment = await OutgoingPayment.query(trx).insert({
         id: quoteId,
         walletAddressId: walletAddressId,
         client: options.client,
@@ -324,6 +325,9 @@ async function createOutgoingPayment(
         state: OutgoingPaymentState.Funding,
         grantId
       })
+      //.returning('*')
+      payment.createdAt = new Date() //TODO jason hack
+
       await deps.quoteService.setOn(payment)
       await deps.assetService.setOn(payment.quote)
       await deps.walletAddressService.setOn(payment)
@@ -427,7 +431,6 @@ async function createOutgoingPayment(
         paymentWithSentAmount.id,
         paymentWithSentAmount
       )
-
       return paymentWithSentAmount
     })
   } catch (err) {
@@ -444,6 +447,12 @@ async function createOutgoingPayment(
         return OutgoingPaymentError.UnknownWalletAddress
       }
     } else if (isOutgoingPaymentError(err)) {
+      deps.logger.error(
+        {
+          err
+        },
+        'JASON (Outgoing-Payment-OutPayErrorTrue): !' + err
+      )
       return err
     } else if (err instanceof knex.KnexTimeoutError) {
       deps.logger.error(
@@ -451,6 +460,13 @@ async function createOutgoingPayment(
         'Could not create outgoing payment: grant locked'
       )
     }
+
+    deps.logger.error(
+      {
+        err
+      },
+      'JASON (Outgoing-Payment): !' + err
+    )
     throw err
   } finally {
     stopTimerOP && stopTimerOP()

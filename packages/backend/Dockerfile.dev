@@ -13,10 +13,15 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
 
 COPY . ./
 
+# JASON COPY DIST
+RUN pwd
+RUN ls -ltra ./packages/backend/interledgerjs/packages/pay
+# JASON END
+
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
     pnpm install \
     --recursive \
-    --offline \
+    #--offline \
     --frozen-lockfile
 
 RUN pnpm --filter backend build:deps

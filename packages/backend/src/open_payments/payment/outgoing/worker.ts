@@ -14,18 +14,22 @@ const MAX_STATE_ATTEMPTS = 5
 let ATTEMPT_COUNTER = 0
 const WORKER_CACHE_ONLY = true
 
+// Cached Completed Payments:
+let LAST_CHECKIN = Date.now()
+let BUSY_PROCESSING = false
+
 // Returns the id of the processed payment (if any).
 export async function processPendingPayment(
   deps_: ServiceDependencies
 ): Promise<string | undefined> {
   const tracer = trace.getTracer('outgoing_payment_worker')
-
   return tracer.startActiveSpan(
     'outgoingPaymentLifecycle',
     async (span: Span) => {
       const stopTimer = deps_.telemetry?.startTimer('processPendingPayment', {
         callName: 'processPendingPayment'
       })
+      // Continue to Process Pending:
       const paymentId = await deps_.knex.transaction(async (trx) => {
         const payment = await getPendingPayment(trx, deps_)
         if (!payment) return
@@ -43,11 +47,100 @@ export async function processPendingPayment(
         )
         return payment.id
       })
+
+      /*deps_.logger.info(
+        {
+          busyProcessing: BUSY_PROCESSING,
+          toBeCompletedSize: deps_.toBeCompleted.length
+        },
+        'JASON: Lets process worker complete cache.'
+      )*/
+
+      // Mark Completed
+      if (readyToProcessCacheCompletedPayments(deps_)) {
+        const stopTimerComplPay = deps_.telemetry?.startTimer(
+          'getPendingPayment',
+          {
+            callName: 'workerCompleteCachedOutgoingPayments'
+          }
+        )
+        await deps_.knex.transaction(async (trx) => {
+          await processCacheCompletedPayments(trx, deps_)
+        })
+        stopTimerComplPay && stopTimerComplPay()
+      }
+
       stopTimer && stopTimer()
       span.end()
       return paymentId
     }
   )
+}
+
+function readyToProcessCacheCompletedPayments(
+  deps: ServiceDependencies
+): boolean {
+  if (BUSY_PROCESSING) return false
+  BUSY_PROCESSING = true
+
+  if (!deps.toBeCompleted.length) {
+    BUSY_PROCESSING = false
+    return false
+  }
+
+  const diff = Date.now() - LAST_CHECKIN
+  if (diff > 5000 || deps.toBeCompleted.length > 200) return true
+
+  BUSY_PROCESSING = false
+  return false
+}
+
+async function processCacheCompletedPayments(
+  trx: Knex.Transaction,
+  deps: ServiceDependencies
+): Promise<void> {
+  try {
+    if (!deps.toBeCompleted.length) return
+
+    /*deps.logger.info(
+      {
+        busyProcessing: BUSY_PROCESSING,
+        now: new Date(Date.now()),
+        lastCheckin: new Date(LAST_CHECKIN),
+        letsProcess: 'Yes!!!!!!!!!!!!',
+        toBeCompleted: deps.toBeCompleted.length
+      },
+      'JASON: Finally! '
+    )*/
+
+    const state = OutgoingPaymentState.Completed
+
+    let inValue = ''
+    let toUpdate
+    while ((toUpdate = deps.toBeCompleted.shift())) {
+      inValue += `'${toUpdate}',`
+      /*const outPay = await OutgoingPayment.query(trx)
+        .findOne({ id: toUpdate })
+        .forUpdate()
+        .skipLocked()
+      if (!outPay) {
+        deps.toBeCompleted.push(toUpdate)
+        continue
+      }
+      await outPay.$query(trx).patch({ state })*/
+    }
+    inValue = inValue.substring(0, inValue.length - 1)
+    await trx.raw(
+      `UPDATE "outgoingPayments" SET state = '${state}' WHERE id IN(${inValue})`
+    )
+    await trx.commit()
+  } catch (err) {
+    await trx.rollback()
+    throw err
+  } finally {
+    BUSY_PROCESSING = false
+    LAST_CHECKIN = Date.now()
+  }
 }
 
 // Fetch (and lock) a payment for work.
@@ -61,7 +154,6 @@ async function getPendingPayment(
     const stopTimerCache = deps.telemetry?.startTimer('getPendingPayment', {
       callName: 'getPendingPayment_Cache'
     })
-
     const fromCache = (await deps.cacheDataStore.get(
       availSending
     )) as OutgoingPayment
@@ -74,7 +166,7 @@ async function getPendingPayment(
   }
 
   ATTEMPT_COUNTER++
-  if (WORKER_CACHE_ONLY && ATTEMPT_COUNTER < 10) {
+  if (WORKER_CACHE_ONLY && ATTEMPT_COUNTER < 100) {
     // TODO for now, simply wait for the next payment. We only rely on cache.
     return undefined
   }

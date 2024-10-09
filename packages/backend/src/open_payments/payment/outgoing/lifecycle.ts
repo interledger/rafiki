@@ -162,16 +162,17 @@ async function handleCompleted(
   const stopTimer = deps.telemetry?.startTimer('handleCompleted', {
     callName: 'handleCompleted'
   })
-  await payment.$query(deps.knex).patch({
+  //TODO TEST THIS!!!
+  /*await payment.$query(deps.knex).patch({
     state: OutgoingPaymentState.Completed
-  })
-  await deps.cacheDataStore.delete(payment.id)
+  })*/
 
   await sendWebhookEvent(
     deps,
     payment,
     OutgoingPaymentEventType.PaymentCompleted
   )
+  deps.toBeCompleted.push(payment.id)
   stopTimer && stopTimer()
 }
 

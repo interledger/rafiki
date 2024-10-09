@@ -127,7 +127,7 @@ export const Config = {
   authServerGrantUrl: envString('AUTH_SERVER_GRANT_URL'),
   authServerIntrospectionUrl: envString('AUTH_SERVER_INTROSPECTION_URL'),
 
-  outgoingPaymentWorkers: envInt('OUTGOING_PAYMENT_WORKERS', 4),
+  outgoingPaymentWorkers: envInt('OUTGOING_PAYMENT_WORKERS', 1),
   outgoingPaymentWorkerIdle: envInt('OUTGOING_PAYMENT_WORKER_IDLE', 10), // milliseconds
 
   incomingPaymentWorkers: envInt('INCOMING_PAYMENT_WORKERS', 1),

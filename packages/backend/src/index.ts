@@ -509,7 +509,8 @@ export function initIocContainer(
         : undefined,
       assetService: await deps.use('assetService'),
       cacheDataStore: createInMemoryDataStore(config.localCacheDuration),
-      sendingOutgoing: []
+      sendingOutgoing: [],
+      toBeCompleted: []
     })
   })
 

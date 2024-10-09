@@ -144,24 +144,12 @@ async function getReceiver(
     callName: 'getReceiver'
   })
   try {
-    if (deps.receiverCacheDS) {
-      const stopTimer_Cache = deps.telemetry?.startTimer('getReceiver', {
-        callName: 'getReceiver_Cache'
-      })
-      const cache = (await deps.receiverCacheDS.get(url)) as Receiver
-      if (cache) {
-        stopTimer_Cache && stopTimer_Cache()
-        return cache
-      }
-    }
-
     const stopTimer_DB_Local = deps.telemetry?.startTimer('getReceiver', {
       callName: 'getReceiver_DB_Local'
     })
     const localIncomingPayment = await getLocalIncomingPayment(deps, url)
     if (localIncomingPayment) {
       const receiver = new Receiver(localIncomingPayment, true)
-      if (deps.receiverCacheDS) await deps.receiverCacheDS.set(url, receiver)
       stopTimer_DB_Local && stopTimer_DB_Local()
       return receiver
     }
@@ -172,7 +160,6 @@ async function getReceiver(
     const remoteIncomingPayment = await getRemoteIncomingPayment(deps, url)
     if (remoteIncomingPayment) {
       const receiver = new Receiver(remoteIncomingPayment, false)
-      if (deps.receiverCacheDS) await deps.receiverCacheDS.set(url, receiver)
       stopTimer_DB_Remote && stopTimer_DB_Remote()
       return receiver
     }
