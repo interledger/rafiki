@@ -62,12 +62,9 @@ export const createQuote: MutationResolvers<ApolloContext>['createQuote'] =
     }
 
     const quoteService = await ctx.container.use('quoteService')
-    // Optionally, quoteService.create could implicity add the correct tenantId
-    // based on the the wallet address tenantId. This would circumvent need for
-    // operator to pass in tenantId - is there any downside? Could the operator
-    // accidentally create it for the wrong tenant this way? I dont think so...
-    // Haven't fully thought through the implications, but consider this use case is
-    // atypical and tenant will usually be creating these (does that inform anything?)
+    // Optionally for creates, we could not require the tenantId from an operator and
+    // just use the tenantId associated with args.input.walletAddressId. Is there any downside?
+    // Could the operator accidentally create it for the wrong tenant this way? I dont think so...
     const options: CreateQuoteOptions = {
       walletAddressId: args.input.walletAddressId,
       tenantId: args.input.tenantId,
