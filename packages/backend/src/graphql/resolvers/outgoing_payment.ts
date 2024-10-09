@@ -26,7 +26,27 @@ export const getOutgoingPayment: QueryResolvers<ApolloContext>['outgoingPayment'
     const payment = await outgoingPaymentService.get({
       id: args.id
     })
-    if (!payment) {
+    // ACCESS CONTROL CASE: Gets. No additional query - just compare resource/given tenantId.
+
+    // Simple, non-service based access control that should generally work for gets.
+    // But is it a good pattern? Is the access control happening too late, and too
+    // embedded in resolver logic?
+    // Alternatives (with their own, different considarations):
+    // - util fn or middleware to lookup resource and check access before getting it.
+    //   Maybe uses a new service method like: outgoingPaymentService.canAccess(tenantId, isOperator)
+    //   - Adds extra service call but better seperation of concerns. Does not enforce
+    //     access control in a central way (have to add middleware/call fn for each resolver).
+    // - Check in service. Either in existing method or new method like:
+    //   outgoingPaymentService.getTenanted(id, tenantId, isOperator)
+    //   - Updating existing enforces access control in more central way, but perhaps too univerals?
+    //     Wont have tenantId/isOperator in all cases (calling from connector, for example).
+    //     Can add new methods instead in those cases but I think this duplicates a lot of code (and tests).
+    //     And is it really enforcing it more centrally if it's still up to the caller to call the
+    //     right method? tenanted vs. non-tenanted? If not it would be simpler to handle in resolver level.
+
+    // Operator can always get resource. If not the operator and tenantId's don't match,
+    // it should present as-if the resouce wasn't found.
+    if (!payment || (!ctx.isOperator && payment.tenantId !== ctx.tenantId)) {
       throw new GraphQLError('payment does not exist', {
         extensions: {
           code: GraphQLErrorCode.NotFound
@@ -104,12 +124,30 @@ export const createOutgoingPayment: MutationResolvers<ApolloContext>['createOutg
     args,
     ctx
   ): Promise<ResolversTypes['OutgoingPaymentResponse']> => {
+    if (!ctx.isOperator) {
+      const walletAddressService = await ctx.container.use(
+        'walletAddressService'
+      )
+      const walletAddress = await walletAddressService.get(
+        args.input.walletAddressId
+      )
+      if (!walletAddress || ctx.tenantId !== walletAddress.tenantId) {
+        throw new GraphQLError('Unknown wallet address id input', {
+          extensions: {
+            code: 400,
+            walletAddressUrl: args.input.walletAddressId
+          }
+        })
+      }
+    }
+
     const outgoingPaymentService = await ctx.container.use(
       'outgoingPaymentService'
     )
-    const outgoingPaymentOrError = await outgoingPaymentService.create(
-      args.input
-    )
+    const outgoingPaymentOrError = await outgoingPaymentService.create({
+      ...args.input,
+      tenantId: ctx.tenantId
+    })
     if (isOutgoingPaymentError(outgoingPaymentOrError)) {
       throw new GraphQLError(errorToMessage[outgoingPaymentOrError], {
         extensions: {

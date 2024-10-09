@@ -10,6 +10,10 @@ post {
   auth: none
 }
 
+headers {
+  ~x-operator-secret: tXhxCNRWuVOJs5W/CUgjsc+vBnKj0CVdqSb87EXN64E=
+}
+
 body:graphql {
   query GetOutgoingPayment($id: String!) {
   outgoingPayment(id: $id) {

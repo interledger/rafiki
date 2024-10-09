@@ -185,6 +185,8 @@ export async function getLocalIncomingPayment(
     return undefined
   }
 
+  // Problem if moving access control check to existing service methods:
+  // - will not have tenantId/isOperator in everywhere this is called (ie outgoing payment worker)
   const incomingPayment = await deps.incomingPaymentService.get({
     id: urlParseResult.id
   })

@@ -116,6 +116,8 @@ export interface AppContextData {
 export interface ApolloContext {
   container: IocContract<AppServices>
   logger: Logger
+  tenantId: string
+  isOperator: boolean
 }
 export type AppContext = Koa.ParameterizedContext<DefaultState, AppContextData>
 
@@ -439,15 +441,36 @@ export class App {
         await getTenantIdFromOperatorSecret(ctx, this.config)
         return next()
       } else {
-        await getTenantIdFromRequestHeaders(ctx, this.config)
+        // TODO: cache. adds network call to every gql resolver and
+        // not all resolvers need tenantId/isOperator.
+        // await getTenantIdFromRequestHeaders(ctx, this.config)
+
+        // TODO: remove this and restore getTenantIdFromRequestHeaders.
+        // This is just a hack to be able to test normal tenant (non-operator)
+        // case from bruno
+        const tenantService = await this.container.use('tenantService')
+        const tenant = await tenantService.getByEmail(
+          'c9PrimaryTenant@example.com' ??
+            (await tenantService.getByEmail('hlbPrimaryTenant@example.com'))
+        )
+        console.log(tenant)
+
+        if (!tenant) {
+          throw new Error('could not find tenantId')
+        }
+
+        ctx.tenantId = tenant.id
+        ctx.isOperator = false
         return next()
       }
     })
 
     koa.use(
       koaMiddleware(this.apolloServer, {
-        context: async (): Promise<ApolloContext> => {
+        context: async ({ ctx }) => {
           return {
+            tenantId: ctx.tenantId,
+            isOperator: ctx.isOperator,
             container: this.container,
             logger: await this.container.use('logger')
           }

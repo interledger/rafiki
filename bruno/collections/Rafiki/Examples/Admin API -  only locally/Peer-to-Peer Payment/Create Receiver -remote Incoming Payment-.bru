@@ -10,6 +10,10 @@ post {
   auth: none
 }
 
+headers {
+  ~x-operator-secret: {{operatorApiSecret}}
+}
+
 body:graphql {
   mutation CreateReceiver($input: CreateReceiverInput!) {
     createReceiver(input: $input) {
@@ -60,7 +64,7 @@ script:pre-request {
 
 script:post-response {
   const body = res.getBody();
-
+  
   if (body?.data) {
     bru.setEnvVar("receiverId", body.data.createReceiver.receiver.id);
   }

@@ -39,7 +39,35 @@ export const getQuote: QueryResolvers<ApolloContext>['quote'] = async (
 
 export const createQuote: MutationResolvers<ApolloContext>['createQuote'] =
   async (parent, args, ctx): Promise<ResolversTypes['QuoteResponse']> => {
+    // ACCESS CONTROL CASE: Creates. Get associated wallet address tenantId and compare
+    // to requestor's tenantId before creating.
+
+    // If from operator use tenantId in input, otherwise use the tenant id from the requestor.
+    // In other words, dont use the operator's tenantId - operator must create
+    // on behalf of non-operator tenant
+    const tenantId = ctx.isOperator ? args.input.tenantId : ctx.tenantId
+
+    // tenantId should match tenantId on wallet address - present as-if WA was not found
+    const walletAddressService = await ctx.container.use('walletAddressService')
+    const walletAddress = await walletAddressService.get(
+      args.input.walletAddressId
+    )
+    if (!walletAddress || tenantId !== walletAddress.tenantId) {
+      throw new GraphQLError('Unknown wallet address id input', {
+        extensions: {
+          code: GraphQLErrorCode.BadUserInput,
+          walletAddressId: args.input.walletAddressId
+        }
+      })
+    }
+
     const quoteService = await ctx.container.use('quoteService')
+    // Optionally, quoteService.create could implicity add the correct tenantId
+    // based on the the wallet address tenantId. This would circumvent need for
+    // operator to pass in tenantId - is there any downside? Could the operator
+    // accidentally create it for the wrong tenant this way? I dont think so...
+    // Haven't fully thought through the implications, but consider this use case is
+    // atypical and tenant will usually be creating these (does that inform anything?)
     const options: CreateQuoteOptions = {
       walletAddressId: args.input.walletAddressId,
       tenantId: args.input.tenantId,
