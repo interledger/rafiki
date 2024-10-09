@@ -1289,11 +1289,38 @@ type WebhookEvent implements Model {
   "Unique identifier of the webhook event."
   id: ID!
   "Type of webhook event."
-  type: String!
+  type: WebhookEventType!
   "Stringified JSON data for the webhook event."
   data: JSONObject!
   "The date and time when the webhook event was created."
   createdAt: String!
+}
+
+"""
+GraphQL enums support only upper snake case, therefore a mapper was added in the webhook resolver.
+The actual value of the type is commented on each enum member.
+"""
+enum WebhookEventType {
+  "incoming_payment.created - An incoming payment was created"
+  INCOMING_PAYMENT_CREATED
+  "incoming_payment.completed - An incoming payment was completed"  
+  INCOMING_PAYMENT_COMPLETED
+  "incoming_payment.expired - An incoming payment has expired"
+  INCOMING_PAYMENT_EXPIRED     
+  "outgoing_payment.created - An outgoing payment was created"
+  OUTGOING_PAYMENT_CREATED       
+  "outgoing_payment.completed - An outgoing payment was completed"
+  OUTGOING_PAYMENT_COMPLETED    
+  "outgoing_payment.failed - An outgoing payment has failed and won't be retried"
+  OUTGOING_PAYMENT_FAILED        
+  "wallet_address.web_monetization - A Web Monetization payment was created"
+  WALLET_ADDRESS_WEB_MONETIZATION
+  "wallet_address.not_found - Wallet address was not found and it will be created if there exists a corresponding account"
+  WALLET_ADDRESS_NOT_FOUND
+  "asset.liquidity_low - Asset liquidity is low"
+  ASSET_LIQUIDITY_LOW           
+  "peer.liquidity_low - Peer liquidity is low"
+  PEER_LIQUIDITY_LOW           
 }
 
 type WebhookEventsConnection {
