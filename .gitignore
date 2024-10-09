@@ -64,5 +64,4 @@ packages/**/src/openapi/specs/auth-server.yaml
 packages/**/src/openapi/specs/resource-server.yaml
 packages/**/src/openapi/specs/wallet-address-server.yaml
 
-/packages/backend/interledgerjs/
-/packages/backend/interledgerjs_/
+/packages/backend/interledgerjs
