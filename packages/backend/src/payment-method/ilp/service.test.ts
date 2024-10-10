@@ -78,6 +78,11 @@ describe('IlpPaymentService', (): void => {
       .post('/recovery/link')
       .reply(200, { recovery_link: faker.internet.url() })
       .persist()
+
+    nock(config.authAdminApiUrl)
+      .post('')
+      .reply(200, { data: { createAuthTenant: { success: true } } })
+      .persist()
     tenantId = (
       await createTenant(deps, {
         email: tenantEmail,
