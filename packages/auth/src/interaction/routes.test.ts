@@ -1,4 +1,5 @@
 import { v4 } from 'uuid'
+import { faker } from '@faker-js/faker'
 import * as crypto from 'crypto'
 import jestOpenAPI from 'jest-openapi'
 import { IocContract } from '@adonisjs/fold'
@@ -26,6 +27,7 @@ import { generateNonce } from '../shared/utils'
 import { GNAPErrorCode } from '../shared/gnapErrors'
 import { generateBaseGrant } from '../tests/grant'
 import { generateBaseInteraction } from '../tests/interaction'
+import { Tenant } from '../tenants/model'
 
 const BASE_GRANT_ACCESS = {
   type: AccessType.IncomingPayment,
@@ -39,11 +41,19 @@ describe('Interaction Routes', (): void => {
   let interactionRoutes: InteractionRoutes
   let config: IAppConfig
 
+  let tenantId: string
   let grant: Grant
   let interaction: Interaction
 
   beforeEach(async (): Promise<void> => {
-    grant = await Grant.query().insert(generateBaseGrant())
+    tenantId = (
+      await Tenant.query().insertAndFetch({
+        id: v4(),
+        idpConsentEndpoint: faker.internet.url(),
+        idpSecret: 'test-secret'
+      })
+    ).id
+    grant = await Grant.query().insert(generateBaseGrant({ tenantId }))
 
     await Access.query().insert({
       ...BASE_GRANT_ACCESS,
@@ -100,6 +110,7 @@ describe('Interaction Routes', (): void => {
       test('Interaction start fails if grant is revoked', async (): Promise<void> => {
         const grant = await Grant.query().insert(
           generateBaseGrant({
+            tenantId,
             state: GrantState.Finalized,
             finalizationReason: GrantFinalization.Revoked
           })
@@ -236,6 +247,7 @@ describe('Interaction Routes', (): void => {
       test('Cannot finish interaction with revoked grant', async (): Promise<void> => {
         const grant = await Grant.query().insert(
           generateBaseGrant({
+            tenantId,
             state: GrantState.Finalized,
             finalizationReason: GrantFinalization.Revoked
           })
@@ -265,10 +277,9 @@ describe('Interaction Routes', (): void => {
 
       describe('Interactions for grant with finish method', (): void => {
         test('Can finish accepted interaction', async (): Promise<void> => {
-          const grant = await Grant.query().insert({
-            ...generateBaseGrant(),
-            state: GrantState.Approved
-          })
+          const grant = await Grant.query().insert(
+            generateBaseGrant({ tenantId, state: GrantState.Approved })
+          )
 
           await Access.query().insert({
             ...BASE_GRANT_ACCESS,
@@ -324,11 +335,13 @@ describe('Interaction Routes', (): void => {
         })
 
         test('Can finish rejected interaction', async (): Promise<void> => {
-          const grant = await Grant.query().insert({
-            ...generateBaseGrant(),
-            state: GrantState.Finalized,
-            finalizationReason: GrantFinalization.Rejected
-          })
+          const grant = await Grant.query().insert(
+            generateBaseGrant({
+              tenantId,
+              state: GrantState.Finalized,
+              finalizationReason: GrantFinalization.Rejected
+            })
+          )
 
           await Access.query().insert({
             ...BASE_GRANT_ACCESS,
@@ -410,7 +423,7 @@ describe('Interaction Routes', (): void => {
         let grantWithoutFinish: Grant
         beforeEach(async (): Promise<void> => {
           grantWithoutFinish = await Grant.query().insert(
-            generateBaseGrant({ noFinishMethod: true })
+            generateBaseGrant({ tenantId, noFinishMethod: true })
           )
 
           await Access.query().insert({
@@ -446,13 +459,14 @@ describe('Interaction Routes', (): void => {
         })
 
         test('Can finish rejected interaction', async (): Promise<void> => {
-          const grant = await Grant.query().insert({
-            ...generateBaseGrant({
+          const grant = await Grant.query().insert(
+            generateBaseGrant({
+              tenantId,
+              state: GrantState.Finalized,
+              finalizationReason: GrantFinalization.Rejected,
               noFinishMethod: true
-            }),
-            state: GrantState.Finalized,
-            finalizationReason: GrantFinalization.Rejected
-          })
+            })
+          )
 
           await Access.query().insert({
             ...BASE_GRANT_ACCESS,
@@ -485,13 +499,14 @@ describe('Interaction Routes', (): void => {
         })
 
         test('Cannot finish invalid interaction', async (): Promise<void> => {
-          const grant = await Grant.query().insert({
-            ...generateBaseGrant({
+          const grant = await Grant.query().insert(
+            generateBaseGrant({
+              tenantId,
+              state: GrantState.Finalized,
+              finalizationReason: GrantFinalization.Rejected,
               noFinishMethod: true
-            }),
-            state: GrantState.Finalized,
-            finalizationReason: GrantFinalization.Rejected
-          })
+            })
+          )
 
           await Access.query().insert({
             ...BASE_GRANT_ACCESS,
@@ -532,9 +547,14 @@ describe('Interaction Routes', (): void => {
       let interaction: Interaction
 
       beforeAll(async (): Promise<void> => {
-        grant = await Grant.query().insert({
-          ...generateBaseGrant()
-        })
+        const tenantId = (
+          await Tenant.query().insertAndFetch({
+            id: v4(),
+            idpConsentEndpoint: faker.internet.url(),
+            idpSecret: 'test-secret'
+          })
+        ).id
+        grant = await Grant.query().insert(generateBaseGrant({ tenantId }))
 
         access = await Access.query().insertAndFetch({
           ...BASE_GRANT_ACCESS,
@@ -596,11 +616,13 @@ describe('Interaction Routes', (): void => {
       })
 
       test('Cannot get grant details for revoked grant', async (): Promise<void> => {
-        const revokedGrant = await Grant.query().insert({
-          ...generateBaseGrant(),
-          state: GrantState.Finalized,
-          finalizationReason: GrantFinalization.Revoked
-        })
+        const revokedGrant = await Grant.query().insert(
+          generateBaseGrant({
+            tenantId,
+            state: GrantState.Finalized,
+            finalizationReason: GrantFinalization.Revoked
+          })
+        )
 
         const interaction = await Interaction.query().insert(
           generateBaseInteraction(revokedGrant)
@@ -667,10 +689,12 @@ describe('Interaction Routes', (): void => {
     describe('IDP - accept/reject interaction', (): void => {
       let pendingGrant: Grant
       beforeEach(async (): Promise<void> => {
-        pendingGrant = await Grant.query().insert({
-          ...generateBaseGrant(),
-          state: GrantState.Pending
-        })
+        pendingGrant = await Grant.query().insert(
+          generateBaseGrant({
+            tenantId,
+            state: GrantState.Pending
+          })
+        )
 
         await Access.query().insert({
           ...BASE_GRANT_ACCESS,

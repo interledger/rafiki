@@ -17,6 +17,7 @@ import { Access } from '../access/model'
 import { Interaction, InteractionState } from './model'
 import { InteractionService } from './service'
 import { generateNonce, generateToken } from '../shared/utils'
+import { Tenant } from '../tenants/model'
 
 const CLIENT = faker.internet.url({ appendSlash: false })
 const BASE_GRANT_ACCESS = {
@@ -30,6 +31,7 @@ describe('Interaction Service', (): void => {
   let interactionService: InteractionService
   let interaction: Interaction
   let grant: Grant
+  let tenantId: string
 
   beforeAll(async (): Promise<void> => {
     deps = initIocContainer(Config)
@@ -39,7 +41,15 @@ describe('Interaction Service', (): void => {
   })
 
   beforeEach(async (): Promise<void> => {
+    tenantId = (
+      await Tenant.query().insertAndFetch({
+        id: v4(),
+        idpConsentEndpoint: faker.internet.url(),
+        idpSecret: 'test-secret'
+      })
+    ).id
     grant = await Grant.query().insert({
+      tenantId,
       state: GrantState.Processing,
       startMethod: [StartMethod.Redirect],
       continueToken: generateToken(),
@@ -75,7 +85,7 @@ describe('Interaction Service', (): void => {
 
   describe('create', (): void => {
     test('can create an interaction', async (): Promise<void> => {
-      const grant = await Grant.query().insert(generateBaseGrant())
+      const grant = await Grant.query().insert(generateBaseGrant({ tenantId }))
 
       const interaction = await interactionService.create(grant.id)
 
