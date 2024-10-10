@@ -32,7 +32,6 @@ export class Grant extends BaseModel {
   public managementId!: string
   public accessType!: AccessType
   public accessActions!: AccessAction[]
-  public tenantId!: string
   public expiresAt?: Date | null
   public deletedAt?: Date
 

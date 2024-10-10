@@ -143,8 +143,8 @@ describe('Wallet Address Routes', (): void => {
         publicName: walletAddress.publicName,
         assetCode: walletAddress.asset.code,
         assetScale: walletAddress.asset.scale,
-        authServer: config.authServerGrantUrl,
-        resourceServer: config.openPaymentsUrl,
+        authServer: `${config.authServerGrantUrl}/${tenantId}`,
+        resourceServer: `${config.openPaymentsUrl}/${tenantId}`,
         additionalProperties: {
           [addProp.fieldKey]: addProp.fieldValue
         }
@@ -185,8 +185,8 @@ describe('Wallet Address Routes', (): void => {
         publicName: walletAddress.publicName,
         assetCode: walletAddress.asset.code,
         assetScale: walletAddress.asset.scale,
-        authServer: config.authServerGrantUrl,
-        resourceServer: config.openPaymentsUrl
+        authServer: `${config.authServerGrantUrl}/${tenantId}`,
+        resourceServer: `${config.openPaymentsUrl}/${tenantId}`
       })
     })
   })

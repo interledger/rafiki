@@ -17,7 +17,6 @@ import { isRemoteIncomingPaymentError } from '../payment/incoming_remote/errors'
 
 interface CreateReceiverArgs {
   walletAddressUrl: string
-  tenantId: string
   expiresAt?: Date
   incomingAmount?: Amount
   metadata?: Record<string, unknown>
@@ -25,7 +24,7 @@ interface CreateReceiverArgs {
 
 // A receiver is resolved from an incoming payment
 export interface ReceiverService {
-  get(url: string, tenantId: string): Promise<Receiver | undefined>
+  get(url: string): Promise<Receiver | undefined>
   create(args: CreateReceiverArgs): Promise<Receiver | ReceiverError>
 }
 
@@ -51,7 +50,7 @@ export async function createReceiverService(
   }
 
   return {
-    get: (url, tenantId) => getReceiver(deps, url, tenantId),
+    get: (url) => getReceiver(deps, url),
     create: (url) => createReceiver(deps, url)
   }
 }
@@ -136,8 +135,7 @@ async function createLocalIncomingPayment(
 
 async function getReceiver(
   deps: ServiceDependencies,
-  url: string,
-  tenantId: string
+  url: string
 ): Promise<Receiver | undefined> {
   try {
     const localIncomingPayment = await getLocalIncomingPayment(deps, url)
@@ -145,11 +143,7 @@ async function getReceiver(
       return new Receiver(localIncomingPayment, true)
     }
 
-    const remoteIncomingPayment = await getRemoteIncomingPayment(
-      deps,
-      url,
-      tenantId
-    )
+    const remoteIncomingPayment = await getRemoteIncomingPayment(deps, url)
     if (remoteIncomingPayment) {
       return new Receiver(remoteIncomingPayment, false)
     }
@@ -218,13 +212,10 @@ export async function getLocalIncomingPayment(
 
 async function getRemoteIncomingPayment(
   deps: ServiceDependencies,
-  url: string,
-  tenantId: string
+  url: string
 ): Promise<OpenPaymentsIncomingPaymentWithPaymentMethods | undefined> {
-  const incomingPaymentOrError = await deps.remoteIncomingPaymentService.get(
-    url,
-    tenantId
-  )
+  const incomingPaymentOrError =
+    await deps.remoteIncomingPaymentService.get(url)
 
   if (isRemoteIncomingPaymentError(incomingPaymentOrError)) {
     return undefined

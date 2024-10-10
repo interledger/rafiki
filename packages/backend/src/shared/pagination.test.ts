@@ -269,7 +269,6 @@ describe('Pagination', (): void => {
             for (let i = 0; i < num; i++) {
               const quote = await createQuote(deps, {
                 walletAddressId: defaultWalletAddress.id,
-                tenantId: defaultWalletAddress.tenantId,
                 receiver: secondaryWalletAddress.url,
                 debitAmount,
                 validDestination: false,

@@ -193,6 +193,9 @@ describe('Incoming Payment Routes', (): void => {
       async (error): Promise<void> => {
         const ctx = setup<CreateContext<CreateBody>>({
           reqOpts: { body: {} },
+          params: {
+            tenantId
+          },
           walletAddress
         })
         const createSpy = jest
@@ -231,6 +234,9 @@ describe('Incoming Payment Routes', (): void => {
             method: 'POST',
             url: `/incoming-payments`
           },
+          params: {
+            tenantId
+          },
           walletAddress,
           client
         })
@@ -253,7 +259,7 @@ describe('Incoming Payment Routes', (): void => {
           .pop()
 
         expect(ctx.response.body).toEqual({
-          id: `${baseUrl}/incoming-payments/${incomingPaymentId}`,
+          id: `${baseUrl}/${tenantId}/incoming-payments/${incomingPaymentId}`,
           walletAddress: walletAddress.url,
           incomingAmount: incomingAmount ? amount : undefined,
           expiresAt: expiresAt || expect.any(String),
@@ -353,7 +359,7 @@ describe('Incoming Payment Routes', (): void => {
       await expect(incomingPaymentRoutes.get(ctx)).resolves.toBeUndefined()
       expect(ctx.response).toSatisfyApiSpec()
       expect(ctx.body).toEqual({
-        authServer: config.authServerGrantUrl,
+        authServer: `${config.authServerGrantUrl}/${tenantId}`,
         receivedAmount: {
           value: '0',
           assetCode: asset.code,
