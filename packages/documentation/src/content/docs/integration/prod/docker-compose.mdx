@@ -48,7 +48,7 @@ Generate the Let’s Encrypt certificates using Certbot:
 certbot certonly --manual --preferred-challenges=dns --email EMAIL --server https://acme-v02.api.letsencrypt.org/directory --agree-tos -d DOMAIN
 ```
 
-:::note
+:::caution[Update TXT record]
 Domain can be in wildcard format. You will also need to update the TXT record in this step.
 :::
 
@@ -104,10 +104,10 @@ sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin 
 
 ## Configure compose file
 
-Update the following compose file with values relevant to your environment and system:
+Update the variables in the following compose file with values relevant to your environment and system. Refer to the [environment variables page](/resources/environment-variables/) for details.
 
-:::note
-You must change the values enclosed within curly brackets {} of the following compose file.
+:::danger[Update compose file]
+You must change the values enclosed within curly brackets {} in the following compose file.
 :::
 
 ```sh
