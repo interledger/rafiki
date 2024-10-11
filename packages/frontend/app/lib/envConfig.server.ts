@@ -1,4 +1,4 @@
-import { parseBool } from '../shared/utils'
+import { parseBool } from '~/shared/utils'
 
 const variables = {
   authEnabled: process.env.AUTH_ENABLED
