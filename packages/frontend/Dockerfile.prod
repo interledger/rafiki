@@ -4,6 +4,8 @@ WORKDIR /home/rafiki
 
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
+ENV NODE_ENV=production
+ENV ENABLE_INSECURE_MESSAGE_COOKIE=true
 
 RUN corepack enable
 RUN corepack prepare pnpm@8.7.4 --activate

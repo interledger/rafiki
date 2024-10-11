@@ -1,6 +1,7 @@
 import axios from 'axios'
 import process from 'process'
 import { logger } from '../../app/utils/logger.server'
+import variables from '~/lib/envConfig.server'
 
 // Use process.argv to accept an email argument from the command line
 const USER_EMAIL = process.argv[2]
@@ -9,7 +10,7 @@ if (!USER_EMAIL) {
   process.exit(1)
 }
 
-const KRATOS_INSTANCE = process.env.KRATOS_ADMIN_URL
+const KRATOS_INSTANCE = variables.kratosAdminUrl
 if (!KRATOS_INSTANCE) {
   logger.error('No Kratos instance found.')
   process.exit(1)
