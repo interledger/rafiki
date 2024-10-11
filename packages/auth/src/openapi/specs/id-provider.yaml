@@ -39,8 +39,6 @@ paths:
               description: Interaction id
         '401':
           description: Unauthorized
-        '500':
-          description: Request denied
       operationId: get-interact
       parameters:
         - schema:
@@ -92,7 +90,7 @@ paths:
         '401':
           description: Unauthorized
         '404':
-          description: Unknown interaction
+          description: Not Found
       description: "To finish the user interaction for grant approval, this endpoint redirects the user to the client's finish url."
       parameters:
         - schema:
