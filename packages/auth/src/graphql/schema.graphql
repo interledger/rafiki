@@ -101,7 +101,7 @@ type Grant implements Model {
   access: [Access!]!
   "Current state of the grant."
   state: GrantState!
-  "Reason why the grant was finalized."
+  "Specific outcome of a finalized grant, indicating whether the grant was issued, revoked, or rejected."
   finalizationReason: GrantFinalization
   "The date and time when the grant was created."
   createdAt: String!
@@ -114,9 +114,9 @@ type Access implements Model {
   identifier: String
   "Type of access (incoming payment, outgoing payment, or quote)."
   type: String!
-  "Actions allowed with this access (create, read, list, or complete)."
+  "Actions allowed with this access."
   actions: [String]!
-  "Limits for payment associated with this access."
+  "Limits for an outgoing payment associated with this access."
   limits: LimitData
   "The date and time when the access was created."
   createdAt: String!
