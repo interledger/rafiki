@@ -9,7 +9,8 @@ import {
 import {
   isOutgoingPaymentError,
   errorToMessage,
-  errorToCode
+  errorToCode,
+  OutgoingPaymentError
 } from '../../open_payments/payment/outgoing/errors'
 import { OutgoingPayment } from '../../open_payments/payment/outgoing/model'
 import { ApolloContext } from '../../app'
@@ -124,21 +125,23 @@ export const createOutgoingPayment: MutationResolvers<ApolloContext>['createOutg
     args,
     ctx
   ): Promise<ResolversTypes['OutgoingPaymentResponse']> => {
-    if (!ctx.isOperator) {
-      const walletAddressService = await ctx.container.use(
-        'walletAddressService'
-      )
-      const walletAddress = await walletAddressService.get(
-        args.input.walletAddressId
-      )
-      if (!walletAddress || ctx.tenantId !== walletAddress.tenantId) {
-        throw new GraphQLError('Unknown wallet address id input', {
+    const tenantId = ctx.isOperator ? args.input.tenantId : ctx.tenantId
+
+    // tenantId should match tenantId on wallet address. fail should appear as-if WA was not found
+    const walletAddressService = await ctx.container.use('walletAddressService')
+    const walletAddress = await walletAddressService.get(
+      args.input.walletAddressId
+    )
+    if (!walletAddress || tenantId !== walletAddress.tenantId) {
+      throw new GraphQLError(
+        errorToMessage[OutgoingPaymentError.UnknownWalletAddress],
+        {
           extensions: {
-            code: 400,
-            walletAddressUrl: args.input.walletAddressId
+            code: errorToCode[OutgoingPaymentError.UnknownWalletAddress],
+            walletAddressId: args.input.walletAddressId
           }
-        })
-      }
+        }
+      )
     }
 
     const outgoingPaymentService = await ctx.container.use(

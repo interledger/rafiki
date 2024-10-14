@@ -443,24 +443,24 @@ export class App {
       } else {
         // TODO: cache. adds network call to every gql resolver and
         // not all resolvers need tenantId/isOperator.
-        // await getTenantIdFromRequestHeaders(ctx, this.config)
+        await getTenantIdFromRequestHeaders(ctx, this.config)
 
         // TODO: remove this and restore getTenantIdFromRequestHeaders.
         // This is just a hack to be able to test normal tenant (non-operator)
         // case from bruno
-        const tenantService = await this.container.use('tenantService')
-        const tenant = await tenantService.getByEmail(
-          'c9PrimaryTenant@example.com' ??
-            (await tenantService.getByEmail('hlbPrimaryTenant@example.com'))
-        )
-        console.log(tenant)
+        // const tenantService = await this.container.use('tenantService')
+        // const tenant = await tenantService.getByEmail(
+        //   'c9PrimaryTenant@example.com' ??
+        //     (await tenantService.getByEmail('hlbPrimaryTenant@example.com'))
+        // )
+        // console.log(tenant)
 
-        if (!tenant) {
-          throw new Error('could not find tenantId')
-        }
+        // if (!tenant) {
+        //   throw new Error('could not find tenantId')
+        // }
 
-        ctx.tenantId = tenant.id
-        ctx.isOperator = false
+        // ctx.tenantId = tenant.id
+        // ctx.isOperator = false
         return next()
       }
     })

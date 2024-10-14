@@ -631,17 +631,13 @@ describe('OutgoingPayment Resolvers', (): void => {
     })
 
     test('Fails if walletAddress unknown', async (): Promise<void> => {
-      const createSpy = jest
-        .spyOn(outgoingPaymentService, 'create')
-        .mockResolvedValueOnce(OutgoingPaymentError.UnknownWalletAddress)
-
       const input = {
         walletAddressId: uuid(),
-        tenantId: uuid(),
+        tenantId,
         quoteId: uuid()
       }
 
-      expect.assertions(3)
+      expect.assertions(2)
       try {
         await appContainer.apolloClient
           .query({
@@ -674,17 +670,72 @@ describe('OutgoingPayment Resolvers', (): void => {
           })
         )
       }
-      expect(createSpy).toHaveBeenCalledWith(input)
+    })
+
+    test('Fails if tenantId doesnt match walletAddress.tenantId', async (): Promise<void> => {
+      const { id: walletAddressId } = await createWalletAddress(
+        deps,
+        tenantId,
+        {
+          assetId: asset.id
+        }
+      )
+      const input = {
+        walletAddressId: walletAddressId,
+        tenantId: uuid(),
+        quoteId: uuid()
+      }
+
+      expect.assertions(2)
+      try {
+        await appContainer.apolloClient
+          .query({
+            query: gql`
+              mutation CreateOutgoingPayment(
+                $input: CreateOutgoingPaymentInput!
+              ) {
+                createOutgoingPayment(input: $input) {
+                  payment {
+                    id
+                    state
+                  }
+                }
+              }
+            `,
+            variables: { input }
+          })
+          .then(
+            (query): OutgoingPaymentResponse =>
+              query.data?.createOutgoingPayment
+          )
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApolloError)
+        expect((error as ApolloError).graphQLErrors).toContainEqual(
+          expect.objectContaining({
+            message: errorToMessage[OutgoingPaymentError.UnknownWalletAddress],
+            extensions: expect.objectContaining({
+              code: errorToCode[OutgoingPaymentError.UnknownWalletAddress]
+            })
+          })
+        )
+      }
     })
 
     test('internal server error', async (): Promise<void> => {
+      const { id: walletAddressId } = await createWalletAddress(
+        deps,
+        tenantId,
+        {
+          assetId: asset.id
+        }
+      )
       const createSpy = jest
         .spyOn(outgoingPaymentService, 'create')
         .mockRejectedValueOnce(new Error('unexpected'))
 
       const input = {
-        walletAddressId: uuid(),
-        tenantId: uuid(),
+        walletAddressId,
+        tenantId,
         quoteId: uuid()
       }
 
