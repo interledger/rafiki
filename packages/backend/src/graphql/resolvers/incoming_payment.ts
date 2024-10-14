@@ -148,19 +148,19 @@ export const cancelIncomingPayment: MutationResolvers<ApolloContext>['cancelInco
 
     // ACCESS CONTROL CASE: Update/Deletes. Check existing resource's tenantId before mutating.
 
-    // If from operator use tenantId given on input, otherwise use the requestor's tenant's id.
-    // In other words, dont use the operator's tenantId
-    const tenantId = ctx.isOperator ? args.input.tenantId : ctx.tenantId
-    const incomingPayment = await incomingPaymentService.get({
-      id: args.input.id
-    })
-    if (!incomingPayment || tenantId !== incomingPayment.tenantId) {
-      throw new GraphQLError('Unknown incoming payment', {
-        extensions: {
-          code: GraphQLErrorCode.NotFound,
-          id: args.input.id
-        }
+    // TODO: move into incomingPaymentService.canAccess(isOperator, tenantId, incomingPaymentId)?
+    if (!ctx.isOperator) {
+      const incomingPayment = await incomingPaymentService.get({
+        id: args.input.id
       })
+      if (!incomingPayment || ctx.tenantId !== incomingPayment.tenantId) {
+        throw new GraphQLError('Unknown incoming payment', {
+          extensions: {
+            code: GraphQLErrorCode.NotFound,
+            id: args.input.id
+          }
+        })
+      }
     }
 
     const incomingPaymentOrError = await incomingPaymentService.cancel(
