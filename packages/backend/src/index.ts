@@ -464,6 +464,7 @@ export function initIocContainer(
 
   container.singleton('outgoingPaymentService', async (deps) => {
     return await createOutgoingPaymentService({
+      config: await deps.use('config'),
       logger: await deps.use('logger'),
       knex: await deps.use('knex'),
       accountingService: await deps.use('accountingService'),

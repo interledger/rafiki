@@ -42,6 +42,7 @@ import { QuoteService } from '../../quote/service'
 import { isQuoteError } from '../../quote/errors'
 import { Pagination, SortOrder } from '../../../shared/baseModel'
 import { FilterString } from '../../../shared/filters'
+import { IAppConfig } from '../../../config/app'
 
 export interface OutgoingPaymentService
   extends WalletAddressSubresourceService<OutgoingPayment> {
@@ -59,6 +60,7 @@ export interface OutgoingPaymentService
 }
 
 export interface ServiceDependencies extends BaseService {
+  config: IAppConfig
   knex: TransactionOrKnex
   accountingService: AccountingService
   receiverService: ReceiverService
