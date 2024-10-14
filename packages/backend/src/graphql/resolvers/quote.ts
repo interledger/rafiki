@@ -27,13 +27,17 @@ export const getQuote: QueryResolvers<ApolloContext>['quote'] = async (
   const quote = await quoteService.get({
     id: args.id
   })
-  if (!quote) {
+  if (
+    !quote ||
+    !(await quoteService.canAccess(ctx.isOperator, ctx.tenantId, quote))
+  ) {
     throw new GraphQLError('quote does not exist', {
       extensions: {
         code: GraphQLErrorCode.NotFound
       }
     })
   }
+
   return quoteToGraphql(quote)
 }
 
@@ -78,6 +82,7 @@ export const createQuote: MutationResolvers<ApolloContext>['createQuote'] =
       }
   }
 
+// TODO: tenancy - need to add tenantId to getWalletAddressPage
 export const getWalletAddressQuotes: WalletAddressResolvers<ApolloContext>['quotes'] =
   async (parent, args, ctx): Promise<ResolversTypes['QuoteConnection']> => {
     if (!parent.id) {
