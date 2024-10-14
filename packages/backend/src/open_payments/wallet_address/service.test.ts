@@ -841,5 +841,23 @@ describe('Open Payments Wallet Address Service', (): void => {
       )
       expect(result).toBe(false)
     })
+
+    it('should return true if the user is not an operator and the wallet address is passed directly with matching tenantId', async () => {
+      const result = await walletAddressService.canAccess(
+        false,
+        tenantId,
+        walletAddress
+      )
+      expect(result).toBe(true)
+    })
+
+    it('should return false if the user is not an operator and the wallet address is passed directly with non-matching tenantId', async () => {
+      const result = await walletAddressService.canAccess(
+        false,
+        uuid(),
+        walletAddress
+      )
+      expect(result).toBe(false)
+    })
   })
 })
