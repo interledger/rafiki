@@ -24,7 +24,7 @@ export const messageStorage = createCookieSessionStorage<
     secure:
       process.env.ENABLE_INSECURE_MESSAGE_COOKIE !== undefined
         ? !parseBool(process.env.ENABLE_INSECURE_MESSAGE_COOKIE)
-        : false
+        : true
   }
 })
 
