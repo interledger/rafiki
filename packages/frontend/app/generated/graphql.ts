@@ -20,6 +20,11 @@ export type Scalars = {
   UInt8: { input: number; output: number; }
   /** The `UInt64` scalar type represents unsigned 64-bit whole numeric values. It is capable of handling values that are larger than the JavaScript `Number` type limit (greater than 2^53). */
   UInt64: { input: bigint; output: bigint; }
+  /**
+   * The 'WebhookEventType' scalar represents the type of an webhook event.
+   * NOTE: The possible options are: 'incoming_payment.created', 'incoming_payment.completed', 'incoming_payment.expired', 'outgoing_payment.created', 'outgoing_payment.completed', 'outgoing_payment.failed', 'wallet_address.not_found', 'wallet_address.web_monetization', 'asset.liquidity_low', 'peer.liquidity_low'.
+   */
+  WebhookEventType: { input: any; output: any; }
 };
 
 export type AccountingTransfer = Model & {
@@ -1580,40 +1585,13 @@ export type WebhookEvent = Model & {
   /** Unique identifier of the webhook event. */
   id: Scalars['ID']['output'];
   /** Type of webhook event. */
-  type: WebhookEventType;
+  type: Scalars['WebhookEventType']['output'];
 };
 
 export type WebhookEventFilter = {
   /** Filter for webhook events based on their type. */
   type?: InputMaybe<FilterString>;
 };
-
-/**
- * GraphQL enums support only upper snake case, therefore a mapper was added in the webhook resolver.
- * The actual value of the type is commented on each enum member.
- */
-export enum WebhookEventType {
-  /** asset.liquidity_low - Asset liquidity is low */
-  AssetLiquidityLow = 'ASSET_LIQUIDITY_LOW',
-  /** incoming_payment.completed - An incoming payment was completed */
-  IncomingPaymentCompleted = 'INCOMING_PAYMENT_COMPLETED',
-  /** incoming_payment.created - An incoming payment was created */
-  IncomingPaymentCreated = 'INCOMING_PAYMENT_CREATED',
-  /** incoming_payment.expired - An incoming payment has expired */
-  IncomingPaymentExpired = 'INCOMING_PAYMENT_EXPIRED',
-  /** outgoing_payment.completed - An outgoing payment was completed */
-  OutgoingPaymentCompleted = 'OUTGOING_PAYMENT_COMPLETED',
-  /** outgoing_payment.created - An outgoing payment was created */
-  OutgoingPaymentCreated = 'OUTGOING_PAYMENT_CREATED',
-  /** outgoing_payment.failed - An outgoing payment has failed and won't be retried */
-  OutgoingPaymentFailed = 'OUTGOING_PAYMENT_FAILED',
-  /** peer.liquidity_low - Peer liquidity is low */
-  PeerLiquidityLow = 'PEER_LIQUIDITY_LOW',
-  /** wallet_address.not_found - Wallet address was not found and it will be created if there exists a corresponding account */
-  WalletAddressNotFound = 'WALLET_ADDRESS_NOT_FOUND',
-  /** wallet_address.web_monetization - A Web Monetization payment was created */
-  WalletAddressWebMonetization = 'WALLET_ADDRESS_WEB_MONETIZATION'
-}
 
 export type WebhookEventsConnection = {
   __typename?: 'WebhookEventsConnection';
@@ -1839,7 +1817,7 @@ export type ResolversTypes = {
   WalletAddressesConnection: ResolverTypeWrapper<Partial<WalletAddressesConnection>>;
   WebhookEvent: ResolverTypeWrapper<Partial<WebhookEvent>>;
   WebhookEventFilter: ResolverTypeWrapper<Partial<WebhookEventFilter>>;
-  WebhookEventType: ResolverTypeWrapper<Partial<WebhookEventType>>;
+  WebhookEventType: ResolverTypeWrapper<Partial<Scalars['WebhookEventType']['output']>>;
   WebhookEventsConnection: ResolverTypeWrapper<Partial<WebhookEventsConnection>>;
   WebhookEventsEdge: ResolverTypeWrapper<Partial<WebhookEventsEdge>>;
   WithdrawEventLiquidityInput: ResolverTypeWrapper<Partial<WithdrawEventLiquidityInput>>;
@@ -1961,6 +1939,7 @@ export type ResolversParentTypes = {
   WalletAddressesConnection: Partial<WalletAddressesConnection>;
   WebhookEvent: Partial<WebhookEvent>;
   WebhookEventFilter: Partial<WebhookEventFilter>;
+  WebhookEventType: Partial<Scalars['WebhookEventType']['output']>;
   WebhookEventsConnection: Partial<WebhookEventsConnection>;
   WebhookEventsEdge: Partial<WebhookEventsEdge>;
   WithdrawEventLiquidityInput: Partial<WithdrawEventLiquidityInput>;
@@ -2461,6 +2440,10 @@ export type WebhookEventResolvers<ContextType = any, ParentType extends Resolver
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
+export interface WebhookEventTypeScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes['WebhookEventType'], any> {
+  name: 'WebhookEventType';
+}
+
 export type WebhookEventsConnectionResolvers<ContextType = any, ParentType extends ResolversParentTypes['WebhookEventsConnection'] = ResolversParentTypes['WebhookEventsConnection']> = {
   edges?: Resolver<Array<ResolversTypes['WebhookEventsEdge']>, ParentType, ContextType>;
   pageInfo?: Resolver<ResolversTypes['PageInfo'], ParentType, ContextType>;
@@ -2539,6 +2522,7 @@ export type Resolvers<ContextType = any> = {
   WalletAddressWithdrawalMutationResponse?: WalletAddressWithdrawalMutationResponseResolvers<ContextType>;
   WalletAddressesConnection?: WalletAddressesConnectionResolvers<ContextType>;
   WebhookEvent?: WebhookEventResolvers<ContextType>;
+  WebhookEventType?: GraphQLScalarType;
   WebhookEventsConnection?: WebhookEventsConnectionResolvers<ContextType>;
   WebhookEventsEdge?: WebhookEventsEdgeResolvers<ContextType>;
 };
@@ -2759,4 +2743,4 @@ export type ListWebhookEventsVariables = Exact<{
 }>;
 
 
-export type ListWebhookEvents = { __typename?: 'Query', webhookEvents: { __typename?: 'WebhookEventsConnection', edges: Array<{ __typename?: 'WebhookEventsEdge', cursor: string, node: { __typename?: 'WebhookEvent', id: string, data: any, type: WebhookEventType, createdAt: string } }>, pageInfo: { __typename?: 'PageInfo', startCursor?: string | null, endCursor?: string | null, hasNextPage: boolean, hasPreviousPage: boolean } } };
+export type ListWebhookEvents = { __typename?: 'Query', webhookEvents: { __typename?: 'WebhookEventsConnection', edges: Array<{ __typename?: 'WebhookEventsEdge', cursor: string, node: { __typename?: 'WebhookEvent', id: string, data: any, type: any, createdAt: string } }>, pageInfo: { __typename?: 'PageInfo', startCursor?: string | null, endCursor?: string | null, hasNextPage: boolean, hasPreviousPage: boolean } } };

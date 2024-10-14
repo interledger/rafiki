@@ -6,11 +6,9 @@ import { AppServices } from '../../app'
 import { initIocContainer } from '../..'
 import { Config } from '../../config/app'
 import { truncateTables } from '../../tests/tableManager'
-import { WebhookEventsConnection, WebhookEventType } from '../generated/graphql'
+import { WebhookEventsConnection } from '../generated/graphql'
 import { createWebhookEvent, webhookEventTypes } from '../../tests/webhook'
 import { WebhookEvent } from '../../webhook/model'
-import { webhookEventTypeGraphqlMapper } from './webhooks'
-import { GraphQLError } from 'graphql'
 
 describe('Webhook Events Query', (): void => {
   let deps: IocContract<AppServices>
@@ -88,21 +86,9 @@ describe('Webhook Events Query', (): void => {
       expect(edge.node).toEqual({
         __typename: 'WebhookEvent',
         id: webhookEvent.id,
-        type: webhookEventTypeGraphqlMapper(webhookEvent.type),
+        type: webhookEvent.type,
         data: webhookEvent.data
       })
     })
-  })
-
-  test('Can map webhook event type correctly', () => {
-    expect(webhookEventTypeGraphqlMapper('incoming_payment.created')).toBe(
-      WebhookEventType.IncomingPaymentCreated
-    )
-    expect(() => webhookEventTypeGraphqlMapper('some_string')).toThrow(
-      GraphQLError
-    )
-    expect(() => webhookEventTypeGraphqlMapper('some_string')).toThrow(
-      'Webhook event type is not allowed'
-    )
   })
 })

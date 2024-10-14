@@ -8845,7 +8845,7 @@
               "kind": "NON_NULL",
               "name": null,
               "ofType": {
-                "kind": "ENUM",
+                "kind": "SCALAR",
                 "name": "WebhookEventType",
                 "ofType": null
               }
@@ -8889,74 +8889,13 @@
         "possibleTypes": null
       },
       {
-        "kind": "ENUM",
+        "kind": "SCALAR",
         "name": "WebhookEventType",
-        "description": "GraphQL enums support only upper snake case, therefore a mapper was added in the webhook resolver.\nThe actual value of the type is commented on each enum member.",
+        "description": "The 'WebhookEventType' scalar represents the type of an webhook event.\nNOTE: The possible options are: 'incoming_payment.created', 'incoming_payment.completed', 'incoming_payment.expired', 'outgoing_payment.created', 'outgoing_payment.completed', 'outgoing_payment.failed', 'wallet_address.not_found', 'wallet_address.web_monetization', 'asset.liquidity_low', 'peer.liquidity_low'.",
         "fields": null,
         "inputFields": null,
         "interfaces": null,
-        "enumValues": [
-          {
-            "name": "ASSET_LIQUIDITY_LOW",
-            "description": "asset.liquidity_low - Asset liquidity is low",
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
-            "name": "INCOMING_PAYMENT_COMPLETED",
-            "description": "incoming_payment.completed - An incoming payment was completed",
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
-            "name": "INCOMING_PAYMENT_CREATED",
-            "description": "incoming_payment.created - An incoming payment was created",
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
-            "name": "INCOMING_PAYMENT_EXPIRED",
-            "description": "incoming_payment.expired - An incoming payment has expired",
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
-            "name": "OUTGOING_PAYMENT_COMPLETED",
-            "description": "outgoing_payment.completed - An outgoing payment was completed",
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
-            "name": "OUTGOING_PAYMENT_CREATED",
-            "description": "outgoing_payment.created - An outgoing payment was created",
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
-            "name": "OUTGOING_PAYMENT_FAILED",
-            "description": "outgoing_payment.failed - An outgoing payment has failed and won't be retried",
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
-            "name": "PEER_LIQUIDITY_LOW",
-            "description": "peer.liquidity_low - Peer liquidity is low",
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
-            "name": "WALLET_ADDRESS_NOT_FOUND",
-            "description": "wallet_address.not_found - Wallet address was not found and it will be created if there exists a corresponding account",
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
-            "name": "WALLET_ADDRESS_WEB_MONETIZATION",
-            "description": "wallet_address.web_monetization - A Web Monetization payment was created",
-            "isDeprecated": false,
-            "deprecationReason": null
-          }
-        ],
+        "enumValues": null,
         "possibleTypes": null
       },
       {

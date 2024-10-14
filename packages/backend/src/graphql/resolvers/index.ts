@@ -68,11 +68,13 @@ import { GraphQLJSONObject } from 'graphql-scalars'
 import { getCombinedPayments } from './combined_payments'
 import { createOrUpdatePeerByUrl } from './auto-peering'
 import { getAccountingTransfers } from './accounting_transfer'
+import { WebhookEventType } from '../scalars/WebhookEventType'
 
 export const resolvers: Resolvers = {
   UInt8: GraphQLUInt8,
   UInt64: GraphQLBigInt,
   JSONObject: GraphQLJSONObject,
+  WebhookEventType: WebhookEventType,
   Asset: {
     liquidity: getAssetLiquidity,
     sendingFee: getAssetSendingFee,

@@ -2,13 +2,11 @@ import { ApolloContext } from '../../app'
 import {
   QueryResolvers,
   ResolversTypes,
-  WebhookEvent as SchemaWebhookEvent,
-  WebhookEventType
+  WebhookEvent as SchemaWebhookEvent
 } from '../generated/graphql'
 import { getPageInfo } from '../../shared/pagination'
 import { WebhookEvent } from '../../webhook/model'
 import { Pagination, SortOrder } from '../../shared/baseModel'
-import { GraphQLError } from 'graphql'
 
 export const getWebhookEvents: QueryResolvers<ApolloContext>['webhookEvents'] =
   async (
@@ -45,34 +43,7 @@ export const webhookEventToGraphql = (
   webhookEvent: WebhookEvent
 ): SchemaWebhookEvent => ({
   id: webhookEvent.id,
-  type: webhookEventTypeGraphqlMapper(webhookEvent.type),
+  type: webhookEvent.type,
   data: webhookEvent.data,
   createdAt: new Date(webhookEvent.createdAt).toISOString()
 })
-
-export function webhookEventTypeGraphqlMapper(type: string): WebhookEventType {
-  switch (type) {
-    case 'incoming_payment.created':
-      return WebhookEventType.IncomingPaymentCreated
-    case 'incoming_payment.completed':
-      return WebhookEventType.IncomingPaymentCompleted
-    case 'incoming_payment.expired':
-      return WebhookEventType.IncomingPaymentExpired
-    case 'outgoing_payment.created':
-      return WebhookEventType.OutgoingPaymentCreated
-    case 'outgoing_payment.completed':
-      return WebhookEventType.OutgoingPaymentCompleted
-    case 'outgoing_payment.failed':
-      return WebhookEventType.OutgoingPaymentFailed
-    case 'wallet_address.not_found':
-      return WebhookEventType.WalletAddressNotFound
-    case 'wallet_address.web_monetization':
-      return WebhookEventType.WalletAddressWebMonetization
-    case 'asset.liquidity_low':
-      return WebhookEventType.AssetLiquidityLow
-    case 'peer.liquidity_low':
-      return WebhookEventType.PeerLiquidityLow
-    default:
-      throw new GraphQLError('Webhook event type is not allowed')
-  }
-}
