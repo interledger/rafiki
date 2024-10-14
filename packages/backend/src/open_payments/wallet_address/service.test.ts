@@ -798,4 +798,48 @@ describe('Open Payments Wallet Address Service', (): void => {
       }
     )
   })
+
+  describe('canAccess', () => {
+    let walletAddress: WalletAddress
+
+    beforeEach(async () => {
+      walletAddress = await createWalletAddress(deps, tenantId)
+    })
+
+    it('should return true if the user is an operator', async () => {
+      const result = await walletAddressService.canAccess(
+        true,
+        'tenant1',
+        'wallet1'
+      )
+      expect(result).toBe(true)
+    })
+
+    it('should return true if the user is not an operator and wallet address is found with matching tenantId', async () => {
+      const result = await walletAddressService.canAccess(
+        false,
+        tenantId,
+        walletAddress.id
+      )
+      expect(result).toBe(true)
+    })
+
+    it('should return false if the user is not an operator and wallet address is found with non-matching tenantId', async () => {
+      const result = await walletAddressService.canAccess(
+        false,
+        uuid(),
+        walletAddress.id
+      )
+      expect(result).toBe(false)
+    })
+
+    it('should return false if the wallet address is not found', async () => {
+      const result = await walletAddressService.canAccess(
+        false,
+        tenantId,
+        uuid()
+      )
+      expect(result).toBe(false)
+    })
+  })
 })
