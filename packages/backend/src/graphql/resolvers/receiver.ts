@@ -41,7 +41,6 @@ export const createReceiver: MutationResolvers<ApolloContext>['createReceiver'] 
     const receiverService = await ctx.container.use('receiverService')
 
     const receiverOrError = await receiverService.create({
-      tenantId: ctx.tenantId,
       walletAddressUrl: args.input.walletAddressUrl,
       expiresAt: args.input.expiresAt
         ? new Date(args.input.expiresAt)
