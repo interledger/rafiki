@@ -93,6 +93,9 @@ export const createTestApp = async (
   })
   const authLink = setContext((_, { headers }) => {
     return {
+      // TODO: enable testing resolvers as tenant? This (and nock)
+      // configuration makes all requests as-if from operator. Override with
+      // new optional createTestApp config?
       headers: {
         'x-operator-secret': config.operatorApiSecret,
         ...headers

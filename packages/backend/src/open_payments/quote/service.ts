@@ -46,7 +46,9 @@ export async function createQuoteService(
   return {
     get: (options) => getQuote(deps, options),
     create: (options: CreateQuoteOptions) => createQuote(deps, options),
-    getWalletAddressPage: (options) => getWalletAddressPage(deps, options)
+    getWalletAddressPage: (options) => getWalletAddressPage(deps, options),
+    canAccess: (isOperator, tenantId, idOrResource) =>
+      canAccessQuote(deps, isOperator, tenantId, idOrResource)
   }
 }
 
@@ -359,6 +361,24 @@ async function finalizeQuote(
   await quote.$query(deps.knex).patch(patchOptions)
 
   return quote
+}
+
+async function canAccessQuote(
+  deps: ServiceDependencies,
+  isOperator: boolean,
+  tenantId: string,
+  idOrResource: string | Quote
+) {
+  if (isOperator) return true
+
+  const q =
+    typeof idOrResource === 'string'
+      ? await Quote.query(deps.knex).findById(idOrResource)
+      : idOrResource
+
+  if (q && q.tenantId === tenantId) return true
+
+  return false
 }
 
 async function getWalletAddressPage(

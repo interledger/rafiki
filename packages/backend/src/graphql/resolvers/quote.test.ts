@@ -25,11 +25,13 @@ import { CreateQuoteInput, Quote, QuoteResponse } from '../generated/graphql'
 import { GraphQLErrorCode } from '../errors'
 import { createTenant } from '../../tests/tenant'
 import { EndpointType } from '../../tenant/endpoints/model'
+import { WalletAddressService } from '../../open_payments/wallet_address/service'
 
 describe('Quote Resolvers', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let quoteService: QuoteService
+  let walletAddressService: WalletAddressService
   let asset: Asset
   let tenantId: string
 
@@ -40,6 +42,7 @@ describe('Quote Resolvers', (): void => {
     deps = await initIocContainer(Config)
     appContainer = await createTestApp(deps)
     quoteService = await deps.use('quoteService')
+    walletAddressService = await deps.use('walletAddressService')
   })
 
   beforeEach(async (): Promise<void> => {
@@ -92,6 +95,7 @@ describe('Quote Resolvers', (): void => {
         }
       )
       const quote = await createWalletAddressQuote(walletAddressId)
+      const spy = jest.spyOn(quoteService, 'canAccess')
 
       const query = await appContainer.apolloClient
         .query({
@@ -142,6 +146,7 @@ describe('Quote Resolvers', (): void => {
         expiresAt: quote.expiresAt.toISOString(),
         __typename: 'Quote'
       })
+      expect(spy).toHaveBeenCalled()
     })
 
     test('Not found', async (): Promise<void> => {
@@ -169,6 +174,46 @@ describe('Quote Resolvers', (): void => {
             })
           })
         )
+      }
+    })
+
+    test('Cannot access', async (): Promise<void> => {
+      const { id: walletAddressId } = await createWalletAddress(
+        deps,
+        tenantId,
+        {
+          assetId: asset.id
+        }
+      )
+      const quote = await createWalletAddressQuote(walletAddressId)
+
+      const spy = jest
+        .spyOn(quoteService, 'canAccess')
+        .mockImplementation(async () => false)
+
+      expect.assertions(3)
+      try {
+        await appContainer.apolloClient.query({
+          query: gql`
+            query Quote($quoteId: String!) {
+              quote(id: $quoteId) {
+                id
+              }
+            }
+          `,
+          variables: { quoteId: quote.id }
+        })
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApolloError)
+        expect((error as ApolloError).graphQLErrors).toContainEqual(
+          expect.objectContaining({
+            message: 'quote does not exist',
+            extensions: expect.objectContaining({
+              code: GraphQLErrorCode.NotFound
+            })
+          })
+        )
+        expect(spy).toHaveBeenCalled()
       }
     })
   })
@@ -230,6 +275,7 @@ describe('Quote Resolvers', (): void => {
           })
           return quote
         })
+      const canAccessSpy = jest.spyOn(walletAddressService, 'canAccess')
 
       const query = await appContainer.apolloClient
         .query({
@@ -248,6 +294,7 @@ describe('Quote Resolvers', (): void => {
 
       expect(createSpy).toHaveBeenCalledWith({ ...input, method: 'ilp' })
       expect(query.quote?.id).toBe(quote?.id)
+      expect(canAccessSpy).toHaveBeenCalled()
     })
 
     test('unknown walletAddress', async (): Promise<void> => {
