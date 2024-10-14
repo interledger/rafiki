@@ -45,8 +45,7 @@ describe('Quote Routes', (): void => {
 
   const createWalletAddressQuote = async ({
     walletAddressId,
-    client,
-    tenantId
+    client
   }: {
     walletAddressId: string
     tenantId: string
@@ -54,7 +53,6 @@ describe('Quote Routes', (): void => {
   }): Promise<Quote> => {
     return await createQuote(deps, {
       walletAddressId,
-      tenantId,
       receiver,
       debitAmount: {
         value: BigInt(56),
@@ -219,7 +217,6 @@ describe('Quote Routes', (): void => {
           await expect(quoteRoutes.create(ctx)).resolves.toBeUndefined()
           expect(quoteSpy).toHaveBeenCalledWith({
             walletAddressId: walletAddress.id,
-            tenantId: walletAddress.tenantId,
             receiver,
             debitAmount: options.debitAmount && {
               ...options.debitAmount,
@@ -279,7 +276,6 @@ describe('Quote Routes', (): void => {
         await expect(quoteRoutes.create(ctx)).resolves.toBeUndefined()
         expect(quoteSpy).toHaveBeenCalledWith({
           walletAddressId: walletAddress.id,
-          tenantId: walletAddress.tenantId,
           receiver,
           client,
           method: 'ilp'

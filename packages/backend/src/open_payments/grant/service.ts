@@ -40,7 +40,6 @@ interface GrantOptions {
   authServer: string
   accessType: AccessType
   accessActions: AccessAction[]
-  tenantId: string
 }
 
 interface UpdateOptions {
@@ -99,7 +98,6 @@ export async function getExistingGrant(
     // all options.accessActions are a subset of saved accessActions
     // e.g. if [ReadAll, Create] is saved, requesting just [Create] would still match
     .andWhere('accessActions', '@>', options.accessActions)
-    .andWhere('tenantId', options.tenantId)
     .withGraphJoined('authServer')
 }
 
@@ -150,7 +148,6 @@ async function requestNewGrant(
       accessToken: openPaymentsGrant.access_token.value,
       managementId: retrieveManagementId(openPaymentsGrant.access_token.manage),
       authServerId,
-      tenantId: options.tenantId,
       expiresAt: openPaymentsGrant.access_token.expires_in
         ? new Date(
             Date.now() + openPaymentsGrant.access_token.expires_in * 1000

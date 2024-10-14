@@ -225,8 +225,7 @@ async function createOutgoingPayment(
       receiver: incomingPayment,
       debitAmount,
       method: 'ilp',
-      walletAddressId,
-      tenantId: options.tenantId
+      walletAddressId
     })
 
     if (isQuoteError(quoteOrError)) {
@@ -288,10 +287,7 @@ async function createOutgoingPayment(
           throw OutgoingPaymentError.InsufficientGrant
         }
       }
-      const receiver = await deps.receiverService.get(
-        payment.receiver,
-        options.tenantId
-      )
+      const receiver = await deps.receiverService.get(payment.receiver)
       if (!receiver) {
         throw OutgoingPaymentError.InvalidQuote
       }

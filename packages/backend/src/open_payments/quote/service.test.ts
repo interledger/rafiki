@@ -131,7 +131,6 @@ describe('QuoteService', (): void => {
       createModel: ({ client }) =>
         createQuote(deps, {
           walletAddressId: sendingWalletAddress.id,
-          tenantId,
           receiver: `${receivingWalletAddress.url}/incoming-payments/${uuid()}`,
           debitAmount: {
             value: BigInt(56),
@@ -177,7 +176,6 @@ describe('QuoteService', (): void => {
           })
           options = {
             walletAddressId: sendingWalletAddress.id,
-            tenantId,
             receiver: incomingPayment.getUrl(receivingWalletAddress),
             method: 'ilp'
           }
@@ -373,7 +371,6 @@ describe('QuoteService', (): void => {
         })
         const options: CreateQuoteOptions = {
           walletAddressId: sendingWalletAddress.id,
-          tenantId,
           receiver: incomingPayment.getUrl(receivingWalletAddress),
           receiveAmount,
           method: 'ilp'
@@ -446,7 +443,6 @@ describe('QuoteService', (): void => {
       await expect(
         quoteService.create({
           walletAddressId: sendingWalletAddress.id,
-          tenantId,
           receiver: receiver.incomingPayment!.id,
           method: 'ilp'
         })
@@ -464,7 +460,6 @@ describe('QuoteService', (): void => {
       await expect(
         quoteService.create({
           walletAddressId: uuid(),
-          tenantId,
           receiver: `${receivingWalletAddress.url}/incoming-payments/${uuid()}`,
           debitAmount,
           method: 'ilp'
@@ -481,7 +476,6 @@ describe('QuoteService', (): void => {
       await expect(
         quoteService.create({
           walletAddressId: walletAddress.id,
-          tenantId,
           receiver: `${receivingWalletAddress.url}/incoming-payments/${uuid()}`,
           debitAmount,
           method: 'ilp'
@@ -493,7 +487,6 @@ describe('QuoteService', (): void => {
       await expect(
         quoteService.create({
           walletAddressId: sendingWalletAddress.id,
-          tenantId,
           receiver: `${receivingWalletAddress.url}/incoming-payments/${uuid()}`,
           debitAmount,
           method: 'ilp'
@@ -516,7 +509,6 @@ describe('QuoteService', (): void => {
       await expect(
         quoteService.create({
           walletAddressId: sendingWalletAddress.id,
-          tenantId,
           receiver: receiver.incomingPayment!.id,
           method: 'ilp',
           debitAmount: {
@@ -546,7 +538,6 @@ describe('QuoteService', (): void => {
         })
         const options: CreateQuoteOptions = {
           walletAddressId: sendingWalletAddress.id,
-          tenantId,
           receiver: incomingPayment.getUrl(receivingWalletAddress),
           method: 'ilp'
         }
@@ -618,7 +609,6 @@ describe('QuoteService', (): void => {
 
           const quote = await quoteService.create({
             walletAddressId: sendingWalletAddress.id,
-            tenantId,
             receiver: receiver.incomingPayment!.id,
             method: 'ilp'
           })
@@ -657,7 +647,6 @@ describe('QuoteService', (): void => {
         await expect(
           quoteService.create({
             walletAddressId: sendingWalletAddress.id,
-            tenantId,
             receiver: receiver.incomingPayment!.id,
             method: 'ilp'
           })
@@ -728,7 +717,6 @@ describe('QuoteService', (): void => {
 
           const quote = await quoteService.create({
             walletAddressId: sendingWalletAddress.id,
-            tenantId,
             receiver: receiver.incomingPayment!.id,
             debitAmount: {
               value: debitAmountValue,
@@ -772,7 +760,6 @@ describe('QuoteService', (): void => {
         await expect(
           quoteService.create({
             walletAddressId: sendingWalletAddress.id,
-            tenantId,
             receiver: receiver.incomingPayment!.id,
             debitAmount: {
               value: debitAmountValue,

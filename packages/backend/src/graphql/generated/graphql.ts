@@ -243,6 +243,8 @@ export type CreateOutgoingPaymentFromIncomingPaymentInput = {
   incomingPayment: Scalars['String']['input'];
   /** Additional metadata associated with the outgoing payment. */
   metadata?: InputMaybe<Scalars['JSONObject']['input']>;
+  /** ID of a tenant */
+  tenantId: Scalars['ID']['input'];
   /** Id of the wallet address under which the outgoing payment will be created */
   walletAddressId: Scalars['String']['input'];
 };
@@ -315,8 +317,6 @@ export type CreateQuoteInput = {
   receiveAmount?: InputMaybe<AmountInput>;
   /** Wallet address URL of the receiver */
   receiver: Scalars['String']['input'];
-  /** ID of the tenant */
-  tenantId: Scalars['ID']['input'];
   /** Id of the wallet address under which the quote will be created */
   walletAddressId: Scalars['String']['input'];
 };
