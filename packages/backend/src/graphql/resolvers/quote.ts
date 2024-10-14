@@ -39,20 +39,15 @@ export const getQuote: QueryResolvers<ApolloContext>['quote'] = async (
 
 export const createQuote: MutationResolvers<ApolloContext>['createQuote'] =
   async (parent, args, ctx): Promise<ResolversTypes['QuoteResponse']> => {
-    // ACCESS CONTROL CASE: Creates. Get associated wallet address tenantId and compare
-    // to requestor's tenantId before creating.
-
-    // If from operator use tenantId in input, otherwise use the tenant id from the requestor.
-    // In other words, dont use the operator's tenantId - operator must create
-    // on behalf of non-operator tenant
-    const tenantId = ctx.isOperator ? args.input.tenantId : ctx.tenantId
-
-    // tenantId should match tenantId on wallet address - present as-if WA was not found
+    // ACCESS CONTROL CASE: Creates. If operator, OK. Else, get associated wallet address
+    // tenantId and compare to requestor's tenantId before creating.
     const walletAddressService = await ctx.container.use('walletAddressService')
-    const walletAddress = await walletAddressService.get(
+    const canAccess = walletAddressService.canAccess(
+      ctx.isOperator,
+      ctx.tenantId,
       args.input.walletAddressId
     )
-    if (!walletAddress || tenantId !== walletAddress.tenantId) {
+    if (!canAccess) {
       throw new GraphQLError('Unknown wallet address id input', {
         extensions: {
           code: GraphQLErrorCode.BadUserInput,
@@ -62,9 +57,6 @@ export const createQuote: MutationResolvers<ApolloContext>['createQuote'] =
     }
 
     const quoteService = await ctx.container.use('quoteService')
-    // Optionally for creates, we could not require the tenantId from an operator and
-    // just use the tenantId associated with args.input.walletAddressId. Is there any downside?
-    // Could the operator accidentally create it for the wrong tenant this way? I dont think so...
     const options: CreateQuoteOptions = {
       walletAddressId: args.input.walletAddressId,
       receiver: args.input.receiver,
