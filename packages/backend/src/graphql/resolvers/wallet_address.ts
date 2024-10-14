@@ -24,6 +24,7 @@ import {
   UpdateOptions
 } from '../../open_payments/wallet_address/service'
 
+// TODO: access control. need to add tenantId to getPage
 export const getWalletAddresses: QueryResolvers<ApolloContext>['walletAddresses'] =
   async (
     parent,
@@ -56,7 +57,14 @@ export const getWalletAddress: QueryResolvers<ApolloContext>['walletAddress'] =
   async (parent, args, ctx): Promise<ResolversTypes['WalletAddress']> => {
     const walletAddressService = await ctx.container.use('walletAddressService')
     const walletAddress = await walletAddressService.get(args.id)
-    if (!walletAddress) {
+    if (
+      !walletAddress ||
+      !(await walletAddressService.canAccess(
+        ctx.isOperator,
+        ctx.tenantId,
+        walletAddress
+      ))
+    ) {
       throw new GraphQLError(
         errorToMessage[WalletAddressError.UnknownWalletAddress],
         {
@@ -114,6 +122,24 @@ export const updateWalletAddress: MutationResolvers<ApolloContext>['updateWallet
     ctx
   ): Promise<ResolversTypes['UpdateWalletAddressMutationResponse']> => {
     const walletAddressService = await ctx.container.use('walletAddressService')
+
+    const canAccess = await walletAddressService.canAccess(
+      ctx.isOperator,
+      ctx.tenantId,
+      args.input.id
+    )
+
+    if (!canAccess) {
+      throw new GraphQLError(
+        errorToMessage[WalletAddressError.UnknownWalletAddress],
+        {
+          extensions: {
+            code: errorToCode[WalletAddressError.UnknownWalletAddress]
+          }
+        }
+      )
+    }
+
     const { additionalProperties, ...rest } = args.input
     const updateOptions: UpdateOptions = {
       ...rest
@@ -143,6 +169,9 @@ export const updateWalletAddress: MutationResolvers<ApolloContext>['updateWallet
     }
   }
 
+// TODO: access control? operator only, anyone, or tenanted?
+// Perhaps operator only? if tenanted will maybe need to fn
+// like existing processNextWalletAddresses that filters by tenant
 export const triggerWalletAddressEvents: MutationResolvers<ApolloContext>['triggerWalletAddressEvents'] =
   async (
     parent,

@@ -82,7 +82,7 @@ export const createQuote: MutationResolvers<ApolloContext>['createQuote'] =
       }
   }
 
-// TODO: tenancy - need to add tenantId to getWalletAddressPage
+// TODO: access control. need to add tenantId to getPage
 export const getWalletAddressQuotes: WalletAddressResolvers<ApolloContext>['quotes'] =
   async (parent, args, ctx): Promise<ResolversTypes['QuoteConnection']> => {
     if (!parent.id) {
