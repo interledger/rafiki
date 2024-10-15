@@ -317,16 +317,16 @@ async function createOutgoingPayment(
           description: 'Time to insert payment in outgoing payment'
         }
       )
-      const payment = await OutgoingPayment.query(trx).insert({
-        id: quoteId,
-        walletAddressId: walletAddressId,
-        client: options.client,
-        metadata: options.metadata,
-        state: OutgoingPaymentState.Funding,
-        grantId
-      })
-      //.returning('*')
-      payment.createdAt = new Date() //TODO jason hack
+      const payment = await OutgoingPayment.query(trx)
+        .insert({
+          id: quoteId,
+          walletAddressId: walletAddressId,
+          client: options.client,
+          metadata: options.metadata,
+          state: OutgoingPaymentState.Funding,
+          grantId
+        })
+        .returning('*')
 
       await deps.quoteService.setOn(payment)
       await deps.assetService.setOn(payment.quote)
