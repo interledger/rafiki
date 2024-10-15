@@ -12,11 +12,22 @@ Rafiki’s <LinkOut href="https://github.com/interledger/rafiki/tree/main/packag
 The following are required when using the `frontend` service:
 
 - A Rafiki [`backend`](/integration/services/backend-service) service up and running to access the Backend Admin API.
-- An identity provider for authentication and user management. Out of the box, the Rafiki Admin application uses <LinkOut href="https://www.ory.sh/docs/kratos/ory-kratos-intro">Ory Kratos</LinkOut>, a secure and fully open-source identity management solution. Kratos will be made optional in a future Rafiki release, allowing you to run your own solution if you so choose.
+- An identity provider for authentication and user management. Out of the box, the Rafiki Admin application uses <LinkOut href="https://www.ory.sh/docs/kratos/ory-kratos-intro">Ory Kratos</LinkOut>, a secure and fully open-source identity management solution.
+
+:::danger[Disabling authentication]
+
+Rafiki Admin provides access to sensitive data like peering relationships and wallet addresses. Authentication is enabled by default to restrict access to authorized users only.
+
+In the [Local Playground](/integration/playground/overview#rafiki-admin), authentication is disabled by default to simplify local development and testing. To disable it in other environments, set the environment variable `AUTH_ENABLED` to `false`. This should be done with **extreme caution** and only in specific scenarios:
+
+- Secure, non-production environments like the Local Playground for local development and testing.
+- Internal systems where Rafiki Admin is not exposed externally and other access controls (firewalls, local-only access) ensure that the system is secured.
+
+:::
 
 You must also set the environment variables for the `frontend` service.
 
-## Rafiki admin settings
+## Rafiki Admin settings
 
 While the `frontend` service is not required to run a Rafiki instance, it is highly recommended. A number of administrative tasks could be performed programmatically via the Backend Admin API, but the `frontend` service makes these functions available through a user-friendly interface.
 

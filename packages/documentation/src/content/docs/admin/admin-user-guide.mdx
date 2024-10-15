@@ -70,6 +70,17 @@ Kratos also enhances security with features like built-in breach detection, secu
 
 Ory Kratos provides frontend components (such as forms and buttons) for identity management flows like login, and account settings. These components are not fixed in design; they are fetched via API calls which allows us to match the identity management components with Rafiki Admin's overall look and feel.
 
+:::danger[Disabling authentication]
+
+Rafiki Admin provides access to sensitive data like peering relationships and wallet addresses. Authentication is enabled by default to restrict access to authorized users only.
+
+In the [Local Playground](/integration/playground/overview#rafiki-admin), authentication is disabled by default to simplify local development and testing. To disable it in other environments, set the environment variable `AUTH_ENABLED` to `false`. This should be done with **extreme caution** and only in specific scenarios:
+
+- Secure, non-production environments like the Local Playground for local development and testing.
+- Internal systems where Rafiki Admin is not exposed externally and other access controls (firewalls, local-only access) ensure that the system is secured.
+
+:::
+
 ## Navigation
 
 After logging in, you’ll be greeted by the main landing page with a left-hand navigation menu. This menu provides access to all of the main functionality needed to manage your Rafiki instance.
@@ -233,12 +244,13 @@ Fill out the following fields to create a new wallet address:
 
 | Section             | Field               | Description                                                                 |
 | ------------------- | ------------------- | --------------------------------------------------------------------------- |
-| General Information | Wallet address name | The URL of the wallet. Once set, it cannot be changed.                      |
+| General Information | Wallet address name | The case-insensitive URL of the wallet. Once set, it cannot be changed.     |
 |                     | Public name         | The name associated with the wallet that is visible to anyone with the URL. |
 |                     | Asset               | Select an asset to associate with this wallet.                              |
 
-:::note
-At least one asset has to be created prior to creating a new wallet address. Refer to [Create asset](#create-asset) for more information.
+:::note[Wallet address requirements]
+- At least one asset has to be created prior to creating a new wallet address. Refer to [Create asset](#create-asset) for more information.
+- Wallet address URLs are treated as case-insensitive, meaning that both lowercase and uppercase variations of the same address will be recognized as identical.
 :::
 
 After completing this section, select **Create** to add the new wallet address.
