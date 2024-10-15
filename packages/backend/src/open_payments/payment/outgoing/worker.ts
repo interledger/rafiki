@@ -96,9 +96,9 @@ async function handlePaymentLifecycle(
   })
   try {
     await lifecycle.handleSending(deps, payment)
-    stopTimer()
   } catch (error) {
     await onLifecycleError(deps, payment, error as Error | PaymentError)
+  } finally {
     stopTimer()
   }
 }

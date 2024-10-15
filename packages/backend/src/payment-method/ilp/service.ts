@@ -50,15 +50,18 @@ async function getQuote(
       description: 'Time to get rates'
     }
   )
-  const rates = await deps.ratesService
-    .rates(options.walletAddress.asset.code)
-    .catch((_err: Error) => {
-      throw new PaymentMethodHandlerError('Received error during ILP quoting', {
-        description: 'Could not get rates from service',
-        retryable: false
-      })
+
+  let rates
+  try {
+    rates = await deps.ratesService.rates(options.walletAddress.asset.code)
+  } catch (_err) {
+    throw new PaymentMethodHandlerError('Received error during ILP quoting', {
+      description: 'Could not get rates from service',
+      retryable: false
     })
-    .finally(() => stopTimerRates())
+  } finally {
+    stopTimerRates()
+  }
 
   const stopTimerPlugin = deps.telemetry.startTimer(
     'ilp_make_ilp_plugin_time_ms',
