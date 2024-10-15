@@ -15,7 +15,7 @@
         "fields": [
           {
             "name": "actions",
-            "description": "Access action (create, read, list or complete)",
+            "description": "Actions allowed with this access.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -35,7 +35,7 @@
           },
           {
             "name": "createdAt",
-            "description": "Date-time of creation",
+            "description": "The date and time when the access was created.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -51,7 +51,7 @@
           },
           {
             "name": "id",
-            "description": "Access id",
+            "description": "Unique identifier of the access object.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -67,7 +67,7 @@
           },
           {
             "name": "identifier",
-            "description": "Wallet address of a sub-resource (incoming payment, outgoing payment, or quote)",
+            "description": "Wallet address of the sub-resource (incoming payment, outgoing payment, or quote).",
             "args": [],
             "type": {
               "kind": "SCALAR",
@@ -79,7 +79,7 @@
           },
           {
             "name": "limits",
-            "description": "Payment limits",
+            "description": "Limits for an outgoing payment associated with this access.",
             "args": [],
             "type": {
               "kind": "OBJECT",
@@ -91,7 +91,7 @@
           },
           {
             "name": "type",
-            "description": "Access type (incoming payment, outgoing payment, or quote)",
+            "description": "Type of access (incoming payment, outgoing payment, or quote).",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -135,7 +135,7 @@
         "inputFields": [
           {
             "name": "in",
-            "description": null,
+            "description": "List of finalization reasons to include in the filter.",
             "type": {
               "kind": "LIST",
               "name": null,
@@ -155,7 +155,7 @@
           },
           {
             "name": "notIn",
-            "description": null,
+            "description": "List of finalization reasons to exclude in the filter.",
             "type": {
               "kind": "LIST",
               "name": null,
@@ -186,7 +186,7 @@
         "inputFields": [
           {
             "name": "in",
-            "description": null,
+            "description": "List of states to include in the filter.",
             "type": {
               "kind": "LIST",
               "name": null,
@@ -206,7 +206,7 @@
           },
           {
             "name": "notIn",
-            "description": null,
+            "description": "List of states to exclude in the filter.",
             "type": {
               "kind": "LIST",
               "name": null,
@@ -237,7 +237,7 @@
         "inputFields": [
           {
             "name": "in",
-            "description": null,
+            "description": "Array of strings to filter by.",
             "type": {
               "kind": "LIST",
               "name": null,
@@ -267,7 +267,7 @@
         "fields": [
           {
             "name": "access",
-            "description": "Access details",
+            "description": "Details of the access provided by the grant.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -291,7 +291,7 @@
           },
           {
             "name": "client",
-            "description": "Wallet address of the grantee's account",
+            "description": "Wallet address of the grantee's account.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -307,7 +307,7 @@
           },
           {
             "name": "createdAt",
-            "description": "Date-time of creation",
+            "description": "The date and time when the grant was created.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -323,7 +323,7 @@
           },
           {
             "name": "finalizationReason",
-            "description": "Reason a grant was finalized",
+            "description": "Specific outcome of a finalized grant, indicating whether the grant was issued, revoked, or rejected.",
             "args": [],
             "type": {
               "kind": "ENUM",
@@ -335,7 +335,7 @@
           },
           {
             "name": "id",
-            "description": "Grant id",
+            "description": "Unique identifier of the grant.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -351,7 +351,7 @@
           },
           {
             "name": "state",
-            "description": "State of the grant",
+            "description": "Current state of the grant.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -384,7 +384,7 @@
         "fields": [
           {
             "name": "cursor",
-            "description": null,
+            "description": "A cursor for paginating through the grants.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -400,7 +400,7 @@
           },
           {
             "name": "node",
-            "description": null,
+            "description": "A grant node in the list.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -428,7 +428,7 @@
         "inputFields": [
           {
             "name": "finalizationReason",
-            "description": null,
+            "description": "Filter grants by their finalization reason.",
             "type": {
               "kind": "INPUT_OBJECT",
               "name": "FilterFinalizationReason",
@@ -440,7 +440,7 @@
           },
           {
             "name": "identifier",
-            "description": null,
+            "description": "Filter grants by their unique identifier.",
             "type": {
               "kind": "INPUT_OBJECT",
               "name": "FilterString",
@@ -452,7 +452,7 @@
           },
           {
             "name": "state",
-            "description": null,
+            "description": "Filter grants by their state.",
             "type": {
               "kind": "INPUT_OBJECT",
               "name": "FilterGrantState",
@@ -477,19 +477,19 @@
         "enumValues": [
           {
             "name": "ISSUED",
-            "description": "grant was issued",
+            "description": "The grant was issued successfully.",
             "isDeprecated": false,
             "deprecationReason": null
           },
           {
             "name": "REJECTED",
-            "description": "grant was rejected",
+            "description": "The grant request was rejected.",
             "isDeprecated": false,
             "deprecationReason": null
           },
           {
             "name": "REVOKED",
-            "description": "grant was revoked",
+            "description": "The grant was revoked.",
             "isDeprecated": false,
             "deprecationReason": null
           }
@@ -506,25 +506,25 @@
         "enumValues": [
           {
             "name": "APPROVED",
-            "description": "grant was approved",
+            "description": "The grant request has been approved.",
             "isDeprecated": false,
             "deprecationReason": null
           },
           {
             "name": "FINALIZED",
-            "description": "grant was finalized and no more access tokens or interactions can be made on it",
+            "description": "The grant request has been finalized, and no more access tokens or interactions can be made.",
             "isDeprecated": false,
             "deprecationReason": null
           },
           {
             "name": "PENDING",
-            "description": "grant request is awaiting interaction",
+            "description": "The grant request is awaiting interaction.",
             "isDeprecated": false,
             "deprecationReason": null
           },
           {
             "name": "PROCESSING",
-            "description": "grant request is determining what state to enter next",
+            "description": "The grant request is processing.",
             "isDeprecated": false,
             "deprecationReason": null
           }
@@ -538,7 +538,7 @@
         "fields": [
           {
             "name": "edges",
-            "description": null,
+            "description": "A list of edges representing grants and cursors for pagination.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -562,7 +562,7 @@
           },
           {
             "name": "pageInfo",
-            "description": null,
+            "description": "Information to aid in pagination.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -609,7 +609,7 @@
         "fields": [
           {
             "name": "debitAmount",
-            "description": "Amount to debit",
+            "description": "Amount to debit.",
             "args": [],
             "type": {
               "kind": "OBJECT",
@@ -621,7 +621,7 @@
           },
           {
             "name": "interval",
-            "description": "Interval between payments",
+            "description": "Interval between payments.",
             "args": [],
             "type": {
               "kind": "SCALAR",
@@ -633,7 +633,7 @@
           },
           {
             "name": "receiveAmount",
-            "description": "Amount to receive",
+            "description": "Amount to receive.",
             "args": [],
             "type": {
               "kind": "OBJECT",
@@ -645,7 +645,7 @@
           },
           {
             "name": "receiver",
-            "description": "Wallet address URL of the receiver",
+            "description": "Wallet address URL of the receiver.",
             "args": [],
             "type": {
               "kind": "SCALAR",
@@ -668,7 +668,7 @@
         "fields": [
           {
             "name": "createdAt",
-            "description": null,
+            "description": "The date and time when the model was created.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -684,7 +684,7 @@
           },
           {
             "name": "id",
-            "description": null,
+            "description": "Unique identifier for the model.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -722,7 +722,7 @@
         "fields": [
           {
             "name": "revokeGrant",
-            "description": "Revoke Grant",
+            "description": "Revoke an existing grant.",
             "args": [
               {
                 "name": "input",
@@ -766,7 +766,7 @@
         "fields": [
           {
             "name": "endCursor",
-            "description": "Paginating forwards: the cursor to continue.",
+            "description": "The cursor used to fetch the next page when paginating forward.",
             "args": [],
             "type": {
               "kind": "SCALAR",
@@ -778,7 +778,7 @@
           },
           {
             "name": "hasNextPage",
-            "description": "Paginating forwards: Are there more pages?",
+            "description": "Indicates if there are more pages when paginating forward.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -794,7 +794,7 @@
           },
           {
             "name": "hasPreviousPage",
-            "description": "Paginating backwards: Are there more pages?",
+            "description": "Indicates if there are more pages when paginating backward.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -810,7 +810,7 @@
           },
           {
             "name": "startCursor",
-            "description": "Paginating backwards: the cursor to continue.",
+            "description": "The cursor used to fetch the next page when paginating backward.",
             "args": [],
             "type": {
               "kind": "SCALAR",
@@ -833,7 +833,7 @@
         "fields": [
           {
             "name": "assetCode",
-            "description": "[ISO 4217 currency code](https://en.wikipedia.org/wiki/ISO_4217), e.g. `USD`",
+            "description": "Should be an ISO 4217 currency code whenever possible, e.g. `USD`. For more information, refer to [assets](https://rafiki.dev/overview/concepts/accounting/#assets).",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -849,7 +849,7 @@
           },
           {
             "name": "assetScale",
-            "description": "Difference in orders of magnitude between the standard unit of an asset and a corresponding fractional unit",
+            "description": "Difference in orders of magnitude between the standard unit of an asset and a corresponding fractional unit.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -865,7 +865,7 @@
           },
           {
             "name": "value",
-            "description": null,
+            "description": "The value of the payment amount.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -892,11 +892,11 @@
         "fields": [
           {
             "name": "grant",
-            "description": "Fetch a grant",
+            "description": "Fetch a specific grant by its ID.",
             "args": [
               {
                 "name": "id",
-                "description": null,
+                "description": "Unique identifier of the grant.",
                 "type": {
                   "kind": "NON_NULL",
                   "name": null,
@@ -925,11 +925,11 @@
           },
           {
             "name": "grants",
-            "description": "Fetch a page of grants.",
+            "description": "Fetch a paginated list of grants.",
             "args": [
               {
                 "name": "after",
-                "description": "Paginating forwards: the cursor before the the requested page.",
+                "description": "Forward pagination: Cursor (grant ID) to start retrieving grants after this point.",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -941,7 +941,7 @@
               },
               {
                 "name": "before",
-                "description": "Paginating backwards: the cursor after the the requested page.",
+                "description": "Backward pagination: Cursor (grant ID) to start retrieving grants before this point.",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -953,7 +953,7 @@
               },
               {
                 "name": "filter",
-                "description": "Filter grants based on specific criteria.",
+                "description": "Filter grants based on specified criteria such as ID, state, or finalization reason.",
                 "type": {
                   "kind": "INPUT_OBJECT",
                   "name": "GrantFilter",
@@ -965,7 +965,7 @@
               },
               {
                 "name": "first",
-                "description": "Paginating forwards: The first **n** elements from the page.",
+                "description": "Forward pagination: Limit the result to the first **n** grants after the `after` cursor.",
                 "type": {
                   "kind": "SCALAR",
                   "name": "Int",
@@ -977,7 +977,7 @@
               },
               {
                 "name": "last",
-                "description": "Paginating backwards: The last **n** elements from the page.",
+                "description": "Backward pagination: Limit the result to the last **n** grants before the `before` cursor.",
                 "type": {
                   "kind": "SCALAR",
                   "name": "Int",
@@ -989,7 +989,7 @@
               },
               {
                 "name": "sortOrder",
-                "description": "Ascending or descending order of creation.",
+                "description": "Specify the sort order of grants based on their creation date, either ascending or descending.",
                 "type": {
                   "kind": "ENUM",
                   "name": "SortOrder",
@@ -1026,7 +1026,7 @@
         "inputFields": [
           {
             "name": "grantId",
-            "description": null,
+            "description": "Unique identifier of the grant to revoke.",
             "type": {
               "kind": "NON_NULL",
               "name": null,
@@ -1052,7 +1052,7 @@
         "fields": [
           {
             "name": "id",
-            "description": null,
+            "description": "Unique identifier of the revoked grant.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -1082,13 +1082,13 @@
         "enumValues": [
           {
             "name": "ASC",
-            "description": "Choose ascending order for results.",
+            "description": "Sort the results in ascending order.",
             "isDeprecated": false,
             "deprecationReason": null
           },
           {
             "name": "DESC",
-            "description": "Choose descending order for results.",
+            "description": "Sort the results in descending order.",
             "isDeprecated": false,
             "deprecationReason": null
           }
@@ -1108,7 +1108,7 @@
       {
         "kind": "SCALAR",
         "name": "UInt8",
-        "description": null,
+        "description": "The `UInt8` scalar type represents unsigned 8-bit whole numeric values, ranging from 0 to 255.",
         "fields": null,
         "inputFields": null,
         "interfaces": null,
@@ -1118,7 +1118,7 @@
       {
         "kind": "SCALAR",
         "name": "UInt64",
-        "description": null,
+        "description": "The `UInt64` scalar type represents unsigned 64-bit whole numeric values. It is capable of handling values that are larger than the JavaScript `Number` type limit (greater than 2^53).",
         "fields": null,
         "inputFields": null,
         "interfaces": null,
