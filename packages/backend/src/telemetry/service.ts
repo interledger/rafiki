@@ -30,7 +30,10 @@ export interface TelemetryService {
     value: number,
     attributes?: Record<string, unknown>
   ): void
-  startTimer(name: string, attributes?: Record<string, unknown>): () => void
+  startTimer(
+    name: string,
+    attributes?: Record<string, unknown>
+  ): (additionalAttributes?: Record<string, unknown>) => void
 }
 
 export interface TelemetryServiceDependencies extends BaseService {
@@ -224,10 +227,11 @@ export class TelemetryServiceImpl implements TelemetryService {
   public startTimer(
     name: string,
     attributes: Record<string, unknown> = {}
-  ): () => void {
+  ): (additionalAttributes?: Record<string, unknown>) => void {
     const start = Date.now()
-    return () => {
-      this.recordHistogram(name, Date.now() - start, attributes)
+    return (additionalAttributes: Record<string, unknown> = {}) => {
+      const mergedAttributes = { ...attributes, ...additionalAttributes }
+      this.recordHistogram(name, Date.now() - start, mergedAttributes)
     }
   }
 }
@@ -277,8 +281,8 @@ export class NoopTelemetryServiceImpl implements TelemetryService {
   public startTimer(
     name: string,
     attributes: Record<string, unknown> = {}
-  ): () => void {
-    return () => {
+  ): (additionalAttributes?: Record<string, unknown>) => void {
+    return (additionalAttributes?: Record<string, unknown>) => {
       // do nothing
     }
   }
