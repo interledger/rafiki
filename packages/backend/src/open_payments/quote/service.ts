@@ -131,7 +131,7 @@ async function createQuote(
       }
     )
     const receiver = await resolveReceiver(deps, options)
-    stopTimerReceiver && stopTimerReceiver()
+    stopTimerReceiver
 
     const stopTimerQuote = deps.telemetry.startTimer(
       'quote_service_create_get_quote_time_ms',
