@@ -493,6 +493,9 @@ export const depositOutgoingPaymentLiquidity: MutationResolvers<ApolloContext>['
       return {
         success: true
       }
+      // Not a useless catch. Wrapped resolver in try and simply re-throwing
+      // errors to enforce stopTimer always being called once at end of the resolver
+      // eslint-disable-next-line no-useless-catch
     } catch (err) {
       throw err
     } finally {
