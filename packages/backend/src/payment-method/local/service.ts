@@ -217,29 +217,31 @@ async function pay(
       retryable: false
     })
   }
+  if (incomingPayment.state !== IncomingPaymentState.Pending) {
+    throw new PaymentMethodHandlerError('Bad Incoming Payment State', {
+      description: `Incoming Payment state should be ${IncomingPaymentState.Pending}`,
+      retryable: false
+    })
+  }
 
-  // TODO: remove incoming state check? perhaps only applies ilp account middleware where its checking many different things
-  if (incomingPayment.state === IncomingPaymentState.Pending) {
-    try {
-      await deps.accountingService.createLiquidityAccount(
-        incomingPayment,
-        LiquidityAccountType.INCOMING
+  try {
+    await deps.accountingService.createLiquidityAccount(
+      incomingPayment,
+      LiquidityAccountType.INCOMING
+    )
+  } catch (err) {
+    if (!(err instanceof AccountAlreadyExistsError)) {
+      deps.logger.error(
+        { incomingPayment, err },
+        'Failed to create liquidity account for local incoming payment'
       )
-    } catch (err) {
-      if (!(err instanceof AccountAlreadyExistsError)) {
-        deps.logger.error(
-          { incomingPayment, err },
-          'Failed to create liquidity account for local incoming payment'
-        )
-        throw new PaymentMethodHandlerError(
-          'Received error during local payment',
-          {
-            description:
-              'Unknown error while trying to create liquidity account',
-            retryable: false
-          }
-        )
-      }
+      throw new PaymentMethodHandlerError(
+        'Received error during local payment',
+        {
+          description: 'Unknown error while trying to create liquidity account',
+          retryable: false
+        }
+      )
     }
   }
 

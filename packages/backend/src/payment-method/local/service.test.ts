@@ -16,7 +16,10 @@ import { AccountingService } from '../../accounting/service'
 import { truncateTables } from '../../tests/tableManager'
 import { createOutgoingPaymentWithReceiver } from '../../tests/outgoingPayment'
 import { OutgoingPayment } from '../../open_payments/payment/outgoing/model'
-import { IncomingPayment } from '../../open_payments/payment/incoming/model'
+import {
+  IncomingPayment,
+  IncomingPaymentState
+} from '../../open_payments/payment/incoming/model'
 import { IncomingPaymentService } from '../../open_payments/payment/incoming/service'
 import { errorToMessage, TransferError } from '../../accounting/errors'
 import { PaymentMethodHandlerError } from '../handler/errors'
@@ -446,6 +449,45 @@ describe('LocalPaymentService', (): void => {
         )
         expect((err as PaymentMethodHandlerError).description).toBe(
           'Incoming payment not found from receiver'
+        )
+        expect((err as PaymentMethodHandlerError).retryable).toBe(false)
+      }
+    })
+
+    test('throws error if incoming payment state is not pending', async (): Promise<void> => {
+      const { receiver, outgoingPayment } =
+        await createOutgoingPaymentWithReceiver(deps, {
+          sendingWalletAddress: walletAddressMap['USD'],
+          receivingWalletAddress: walletAddressMap['USD'],
+          method: 'ilp',
+          quoteOptions: {
+            debitAmount: {
+              value: 100n,
+              assetScale: walletAddressMap['USD'].asset.scale,
+              assetCode: walletAddressMap['USD'].asset.code
+            }
+          }
+        })
+
+      jest.spyOn(incomingPaymentService, 'get').mockResolvedValueOnce({
+        state: IncomingPaymentState.Processing
+      } as IncomingPayment)
+
+      expect.assertions(4)
+      try {
+        await localPaymentService.pay({
+          receiver,
+          outgoingPayment,
+          finalDebitAmount: 100n,
+          finalReceiveAmount: 100n
+        })
+      } catch (err) {
+        expect(err).toBeInstanceOf(PaymentMethodHandlerError)
+        expect((err as PaymentMethodHandlerError).message).toBe(
+          'Bad Incoming Payment State'
+        )
+        expect((err as PaymentMethodHandlerError).description).toBe(
+          `Incoming Payment state should be ${IncomingPaymentState.Pending}`
         )
         expect((err as PaymentMethodHandlerError).retryable).toBe(false)
       }
