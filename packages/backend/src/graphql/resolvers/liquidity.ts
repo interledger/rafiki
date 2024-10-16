@@ -444,7 +444,7 @@ export const depositOutgoingPaymentLiquidity: MutationResolvers<ApolloContext>['
     const stopTimer = telemetry.startTimer(
       'deposit_outgoing_payment_liquidity_ms',
       {
-        callName: 'depositOutgoingPaymentLiquidity'
+        callName: 'Resolver:depositOutgoingPaymentLiquidity'
       }
     )
 
@@ -452,7 +452,7 @@ export const depositOutgoingPaymentLiquidity: MutationResolvers<ApolloContext>['
       const { outgoingPaymentId } = args.input
       const webhookService = await ctx.container.use('webhookService')
       const stopTimerWh = telemetry.startTimer('wh_get_latest_ms', {
-        callName: 'webhookService.getLatestByResourceId'
+        callName: 'WebhookService:getLatestByResourceId'
       })
       const event = await webhookService.getLatestByResourceId({
         outgoingPaymentId,
@@ -474,7 +474,7 @@ export const depositOutgoingPaymentLiquidity: MutationResolvers<ApolloContext>['
         'outgoingPaymentService'
       )
       const stopTimerFund = telemetry.startTimer('fund_payment_ms', {
-        callName: 'outgoingPaymentService.fund'
+        callName: 'OutgoingPaymentService:fund'
       })
       const paymentOrErr = await outgoingPaymentService.fund({
         id: outgoingPaymentId,

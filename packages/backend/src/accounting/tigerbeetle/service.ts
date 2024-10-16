@@ -221,7 +221,7 @@ export async function getAccountTotalSent(
   id: string
 ): Promise<bigint | undefined> {
   const stopTimer = deps.telemetry.startTimer('tb_get_account_total_sent_ms', {
-    callName: 'tb_getAccountTotalSent'
+    callName: 'AccountingService:Tigerbeetle:getAccountTotalSent'
   })
   const account = (await getAccounts(deps, [id]))[0]
   if (account) {

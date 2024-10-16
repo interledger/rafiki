@@ -22,7 +22,7 @@ export async function processPendingPayment(
       const stopTimer = deps_.telemetry.startTimer(
         'process_pending_payment_ms',
         {
-          callName: 'processPendingPayment'
+          callName: 'OutgoingPaymentWorker:processPendingPayment'
         }
       )
       const paymentId = await deps_.knex.transaction(async (trx) => {
@@ -56,7 +56,7 @@ async function getPendingPayment(
   deps: ServiceDependencies
 ): Promise<OutgoingPayment | undefined> {
   const stopTimer = deps.telemetry.startTimer('get_pending_payment_ms', {
-    callName: 'getPendingPayment'
+    callName: 'OutoingPaymentWorker:getPendingPayment'
   })
   const now = new Date(Date.now()).toISOString()
   const payments = await OutgoingPayment.query(trx)
@@ -90,7 +90,7 @@ async function handlePaymentLifecycle(
   }
 
   const stopTimer = deps.telemetry.startTimer('handle_sending_ms', {
-    callName: 'handleSending'
+    callName: 'OutoingPaymentWorker:handleSending'
   })
   try {
     await lifecycle.handleSending(deps, payment)

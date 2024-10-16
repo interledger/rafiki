@@ -139,7 +139,7 @@ async function getReceiver(
   url: string
 ): Promise<Receiver | undefined> {
   const stopTimer = deps.telemetry.startTimer('getReceiver', {
-    callName: 'getReceiver'
+    callName: 'ReceiverService:get'
   })
   try {
     const localIncomingPayment = await getLocalIncomingPayment(deps, url)

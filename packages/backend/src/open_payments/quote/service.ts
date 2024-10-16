@@ -87,7 +87,7 @@ async function createQuote(
   options: CreateQuoteOptions
 ): Promise<Quote | QuoteError> {
   const stopTimer = deps.telemetry.startTimer('quote_service_create_time_ms', {
-    callName: 'createQuote',
+    callName: 'QuoteService:create',
     description: 'Time to create a quote'
   })
   if (options.debitAmount && options.receiveAmount) {
@@ -126,7 +126,7 @@ async function createQuote(
     const stopTimerReceiver = deps.telemetry.startTimer(
       'quote_service_create_resolve_receiver_time_ms',
       {
-        callName: 'resolveReceiver',
+        callName: 'QuoteService:resolveReceiver',
         description: 'Time to resolve receiver'
       }
     )
@@ -136,7 +136,7 @@ async function createQuote(
     const stopTimerQuote = deps.telemetry.startTimer(
       'quote_service_create_get_quote_time_ms',
       {
-        callName: 'getQuote',
+        callName: 'PaymentMethodHandlerService:getQuote',
         description: 'Time to getQuote'
       }
     )
@@ -153,7 +153,7 @@ async function createQuote(
     const stopTimerFee = deps.telemetry.startTimer(
       'quote_service_create_get_latest_fee_time_ms',
       {
-        callName: 'getLatestFee',
+        callName: 'FeeService:getLatestFee',
         description: 'Time to getLatestFee'
       }
     )
@@ -167,7 +167,7 @@ async function createQuote(
       const stopQuoteCreate = deps.telemetry.startTimer(
         'quote_service_create_insert_time_ms',
         {
-          callName: 'Quote.insert',
+          callName: 'QuoteModel.insert',
           description: 'Time to insert quote'
         }
       )
@@ -196,7 +196,7 @@ async function createQuote(
       const stopFinalize = deps.telemetry.startTimer(
         'quote_service_finalize_quote_ms',
         {
-          callName: 'finalizedQuote',
+          callName: 'QuoteService:finalizedQuote',
           description: 'Time to finalize quote'
         }
       )

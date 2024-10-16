@@ -150,7 +150,7 @@ export async function getAccountTotalSent(
   const stopTimer = deps.telemetry.startTimer(
     'psql_get_account_total_sent_ms',
     {
-      callName: 'psql_getAccountTotalSent'
+      callName: 'AccountingService:Postgres:getAccountTotalSent'
     }
   )
   const account = await getLiquidityAccount(deps, accountRef)
