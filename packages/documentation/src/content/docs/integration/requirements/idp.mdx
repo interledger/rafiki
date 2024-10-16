@@ -67,6 +67,8 @@ https://idp.wallet.example.com/interact/{id}/{nonce}`
 
 The endpoints are called in the sequence listed in the table below.
 
+<div class="overflow-table">
+
 | Method                                               | Endpoint                        | Purpose                                                           |
 | ---------------------------------------------------- | ------------------------------- | ----------------------------------------------------------------- |
 | <Badge text="GET" variant="note" size="medium"/>     | `/interact/{id}/{nonce}`        | [Start user interaction session](#start-user-interaction-session) |
@@ -74,6 +76,8 @@ The endpoints are called in the sequence listed in the table below.
 | <Badge text="POST" variant="success" size="medium"/> | `/grant/{id}/{nonce}/{choice}`  | [Accept or reject grant](#accept-or-reject-grant)                 |
 | <Badge text="GET" variant="note" size="medium"/>     | `/interact/{id}/{nonce}/finish` | [Finish user interaction](#finish-interaction)<br />              |
 | <Badge text="POST" variant="success" size="medium"/> | `/interact/{id}/{nonce}`        | [Continue grant](#continue-grant)                                 |
+
+</div>
 
 We also provide an <LinkOut href="https://github.com/interledger/rafiki/blob/main/packages/auth/src/openapi/specs/id-provider.yaml">OpenAPI specification</LinkOut> that describes the endpoints.
 
