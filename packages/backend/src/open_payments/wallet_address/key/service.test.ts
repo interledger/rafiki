@@ -1,3 +1,4 @@
+import assert from 'assert'
 import { generateJwk } from '@interledger/http-signature-utils'
 import { v4 as uuid } from 'uuid'
 
@@ -13,6 +14,7 @@ import { getPageTests } from '../../../shared/baseModel.test'
 import { createWalletAddressKey } from '../../../tests/walletAddressKey'
 import { WalletAddress } from '../model'
 import { Pagination, SortOrder } from '../../../shared/baseModel'
+import { isWalletAddressKeyError, WalletAddressKeyError } from './errors'
 
 const TEST_KEY = generateJwk({ keyId: uuid() })
 
@@ -51,6 +53,18 @@ describe('Wallet Address Key Service', (): void => {
         walletAddressKeyService.create(options)
       ).resolves.toMatchObject(options)
     })
+
+    test('cannot add duplicate key to a wallet address', async (): Promise<void> => {
+      const options = {
+        walletAddressId: walletAddress.id,
+        jwk: TEST_KEY
+      }
+
+      await walletAddressKeyService.create(options)
+      await expect(walletAddressKeyService.create(options)).resolves.toEqual(
+        WalletAddressKeyError.DuplicateKey
+      )
+    })
   })
 
   describe('Fetch Wallet Address Keys', (): void => {
@@ -79,6 +93,8 @@ describe('Wallet Address Key Service', (): void => {
 
       const key1 = await walletAddressKeyService.create(keyOption1)
       const key2 = await walletAddressKeyService.create(keyOption2)
+      assert.ok(!isWalletAddressKeyError(key1))
+      assert.ok(!isWalletAddressKeyError(key2))
       await walletAddressKeyService.revoke(key1.id)
 
       await expect(
@@ -107,6 +123,7 @@ describe('Wallet Address Key Service', (): void => {
       }
 
       const key = await walletAddressKeyService.create(keyOption)
+      assert.ok(!isWalletAddressKeyError(key))
       const revokedKey = await walletAddressKeyService.revoke(key.id)
       expect(revokedKey).toEqual({
         ...key,
@@ -129,6 +146,7 @@ describe('Wallet Address Key Service', (): void => {
       }
 
       const key = await walletAddressKeyService.create(keyOption)
+      assert.ok(!isWalletAddressKeyError(key))
 
       const revokedKey = await walletAddressKeyService.revoke(key.id)
       await expect(walletAddressKeyService.revoke(key.id)).resolves.toEqual(
