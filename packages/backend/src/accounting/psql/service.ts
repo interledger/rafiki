@@ -34,9 +34,11 @@ import {
   getAccountTransfers
 } from './ledger-transfer'
 import { LedgerTransfer, LedgerTransferType } from './ledger-transfer/model'
+import { TelemetryService } from '../../telemetry/service'
 
 export interface ServiceDependencies extends BaseService {
   knex: TransactionOrKnex
+  telemetry: TelemetryService
   withdrawalThrottleDelay?: number
 }
 
@@ -145,13 +147,24 @@ export async function getAccountTotalSent(
   deps: ServiceDependencies,
   accountRef: string
 ): Promise<bigint | undefined> {
+  const stopTimer = deps.telemetry.startTimer(
+    'psql_get_account_total_sent_ms',
+    {
+      callName: 'AccountingService:Postgres:getAccountTotalSent'
+    }
+  )
   const account = await getLiquidityAccount(deps, accountRef)
 
   if (!account) {
+    stopTimer()
     return
   }
 
-  return (await getAccountBalances(deps, account)).debitsPosted
+  const totalsSent = (await getAccountBalances(deps, account)).debitsPosted
+
+  stopTimer()
+
+  return totalsSent
 }
 
 export async function getAccountsTotalSent(

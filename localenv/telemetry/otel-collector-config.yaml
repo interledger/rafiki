@@ -8,8 +8,6 @@ processors:
   batch:
 
 exporters:
-  logging:
-    loglevel: info
   debug:
     verbosity: detailed
   prometheus:
