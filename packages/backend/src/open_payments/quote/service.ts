@@ -1,4 +1,4 @@
-import { TransactionOrKnex } from 'objection'
+import { PartialModelGraph, TransactionOrKnex } from 'objection'
 import * as Pay from '@interledger/pay'
 
 import { BaseService } from '../../shared/baseService'
@@ -113,40 +113,50 @@ async function createQuote(
 
   try {
     const receiver = await resolveReceiver(deps, options)
-    const quote = await deps.paymentMethodHandlerService.getQuote('ILP', {
-      walletAddress,
-      receiver,
-      receiveAmount: options.receiveAmount,
-      debitAmount: options.debitAmount
-    })
-
-    const maxPacketAmount = quote.additionalFields.maxPacketAmount as bigint
+    const paymentMethod = receiver.isLocal ? 'LOCAL' : 'ILP'
+    const quote = await deps.paymentMethodHandlerService.getQuote(
+      paymentMethod,
+      {
+        walletAddress,
+        receiver,
+        receiveAmount: options.receiveAmount,
+        debitAmount: options.debitAmount
+      }
+    )
 
     const sendingFee = await deps.feeService.getLatestFee(
       walletAddress.assetId,
       FeeType.Sending
     )
 
+    const graph: PartialModelGraph<Quote> = {
+      walletAddressId: options.walletAddressId,
+      assetId: walletAddress.assetId,
+      receiver: options.receiver,
+      debitAmount: quote.debitAmount,
+      receiveAmount: quote.receiveAmount,
+      expiresAt: new Date(0), // expiresAt is patched in finalizeQuote
+      client: options.client,
+      feeId: sendingFee?.id,
+      estimatedExchangeRate: quote.estimatedExchangeRate
+    }
+
+    if (paymentMethod === 'ILP') {
+      const maxPacketAmount = quote.additionalFields.maxPacketAmount as bigint
+      graph.ilpQuoteDetails = {
+        maxPacketAmount:
+          MAX_INT64 < maxPacketAmount ? MAX_INT64 : maxPacketAmount, // Cap at MAX_INT64 because of postgres type limits.
+        minExchangeRate: quote.additionalFields.minExchangeRate as Pay.Ratio,
+        lowEstimatedExchangeRate: quote.additionalFields
+          .lowEstimatedExchangeRate as Pay.Ratio,
+        highEstimatedExchangeRate: quote.additionalFields
+          .highEstimatedExchangeRate as Pay.PositiveRatio
+      }
+    }
+
     return await Quote.transaction(deps.knex, async (trx) => {
       const createdQuote = await Quote.query(trx)
-        .insertAndFetch({
-          walletAddressId: options.walletAddressId,
-          assetId: walletAddress.assetId,
-          receiver: options.receiver,
-          debitAmount: quote.debitAmount,
-          receiveAmount: quote.receiveAmount,
-          maxPacketAmount:
-            MAX_INT64 < maxPacketAmount ? MAX_INT64 : maxPacketAmount, // Cap at MAX_INT64 because of postgres type limits.
-          minExchangeRate: quote.additionalFields.minExchangeRate as Pay.Ratio,
-          lowEstimatedExchangeRate: quote.additionalFields
-            .lowEstimatedExchangeRate as Pay.Ratio,
-          highEstimatedExchangeRate: quote.additionalFields
-            .highEstimatedExchangeRate as Pay.PositiveRatio,
-          expiresAt: new Date(0), // expiresAt is patched in finalizeQuote
-          client: options.client,
-          feeId: sendingFee?.id,
-          estimatedExchangeRate: quote.estimatedExchangeRate
-        })
+        .insertGraphAndFetch(graph)
         .withGraphFetched('[asset, fee, walletAddress]')
 
       return await finalizeQuote(
@@ -229,10 +239,10 @@ function calculateFixedSendQuoteAmounts(
   quote: Quote,
   maxReceiveAmountValue: bigint
 ): CalculateQuoteAmountsWithFeesResult {
+  // TODO: derive fee from debitAmount and convert that to receiveAmount
   const fees = quote.fee?.calculate(quote.receiveAmount.value) ?? BigInt(0)
 
-  const estimatedExchangeRate =
-    quote.estimatedExchangeRate || quote.lowEstimatedExchangeRate.valueOf()
+  const { estimatedExchangeRate } = quote
 
   const exchangeAdjustedFees = BigInt(
     Math.ceil(Number(fees) * estimatedExchangeRate)
@@ -254,6 +264,7 @@ function calculateFixedSendQuoteAmounts(
 
   deps.logger.debug(
     {
+      'quote.receiveAmount.value': quote.receiveAmount.value,
       debitAmountValue: quote.debitAmount.value,
       receiveAmountValue,
       fees,
@@ -350,6 +361,11 @@ async function finalizeQuote(
     : calculateFixedDeliveryQuoteAmounts(deps, quote)
 
   const patchOptions = {
+    debitAmountMinusFees: maxReceiveAmountValue
+      ? // TODO: change calculateFixedSendQuoteAmounts to return the debitAmountMinusFees if using new calculation
+        quote.debitAmount.value -
+        (quote.fee?.calculate(quote.debitAmount.value) ?? 0n)
+      : quote.debitAmount.value,
     debitAmountValue,
     receiveAmountValue,
     expiresAt: calculateExpiry(deps, quote, receiver)

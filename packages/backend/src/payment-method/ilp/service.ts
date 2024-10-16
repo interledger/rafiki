@@ -15,6 +15,7 @@ import {
   PaymentMethodHandlerErrorCode
 } from '../handler/errors'
 import { TelemetryService } from '../../telemetry/service'
+import { IlpQuoteDetailsService } from './quote-details/service'
 
 export interface IlpPaymentService extends PaymentMethodService {}
 
@@ -22,6 +23,7 @@ export interface ServiceDependencies extends BaseService {
   config: IAppConfig
   ratesService: RatesService
   makeIlpPlugin: (options: IlpPluginOptions) => IlpPlugin
+  ilpQuoteDetailsService: IlpQuoteDetailsService
   telemetry: TelemetryService
 }
 
@@ -215,12 +217,27 @@ async function pay(
     })
   }
 
+  if (!outgoingPayment.quote.ilpQuoteDetails) {
+    outgoingPayment.quote.ilpQuoteDetails =
+      await deps.ilpQuoteDetailsService.getByQuoteId(outgoingPayment.quote.id)
+
+    if (!outgoingPayment.quote.ilpQuoteDetails) {
+      throw new PaymentMethodHandlerError(
+        'Could not find required ILP Quote Details',
+        {
+          description: 'ILP Quote Details not found',
+          retryable: false
+        }
+      )
+    }
+  }
+
   const {
     lowEstimatedExchangeRate,
     highEstimatedExchangeRate,
     minExchangeRate,
     maxPacketAmount
-  } = outgoingPayment.quote
+  } = outgoingPayment.quote.ilpQuoteDetails
 
   const quote: Pay.Quote = {
     maxPacketAmount,

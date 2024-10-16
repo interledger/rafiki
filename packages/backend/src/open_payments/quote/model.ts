@@ -1,6 +1,4 @@
 import { Model, Pojo } from 'objection'
-import * as Pay from '@interledger/pay'
-
 import { Amount, serializeAmount } from '../amount'
 import {
   WalletAddress,
@@ -9,29 +7,26 @@ import {
 import { Asset } from '../../asset/model'
 import { Quote as OpenPaymentsQuote } from '@interledger/open-payments'
 import { Fee } from '../../fee/model'
+import { IlpQuoteDetails } from '../../payment-method/ilp/quote-details/model'
 
 export class Quote extends WalletAddressSubresource {
   public static readonly tableName = 'quotes'
   public static readonly urlPath = '/quotes'
 
   static get virtualAttributes(): string[] {
-    return [
-      'debitAmount',
-      'receiveAmount',
-      'minExchangeRate',
-      'lowEstimatedExchangeRate',
-      'highEstimatedExchangeRate',
-      'method'
-    ]
+    return ['debitAmount', 'receiveAmount', 'method']
   }
 
   // Asset id of the sender
   public assetId!: string
   public asset!: Asset
 
-  public estimatedExchangeRate?: number
+  public estimatedExchangeRate!: number
   public feeId?: string
   public fee?: Fee
+
+  public ilpQuoteDetails?: IlpQuoteDetails
+  public debitAmountMinusFees?: bigint
 
   static get relationMappings() {
     return {
@@ -50,6 +45,14 @@ export class Quote extends WalletAddressSubresource {
         join: {
           from: 'quotes.feeId',
           to: 'fees.id'
+        }
+      },
+      ilpQuoteDetails: {
+        relation: Model.HasOneRelation,
+        modelClass: IlpQuoteDetails,
+        join: {
+          from: 'ilpQuoteDetails.quoteId',
+          to: 'quotes.id'
         }
       }
     }
@@ -96,61 +99,12 @@ export class Quote extends WalletAddressSubresource {
     this.receiveAmountAssetScale = amount?.assetScale
   }
 
-  public maxPacketAmount!: bigint
-  private minExchangeRateNumerator!: bigint
-  private minExchangeRateDenominator!: bigint
-  private lowEstimatedExchangeRateNumerator!: bigint
-  private lowEstimatedExchangeRateDenominator!: bigint
-  private highEstimatedExchangeRateNumerator!: bigint
-  private highEstimatedExchangeRateDenominator!: bigint
-
   public get maxSourceAmount(): bigint {
     return this.debitAmountValue
   }
 
   public get minDeliveryAmount(): bigint {
     return this.receiveAmountValue
-  }
-
-  public get minExchangeRate(): Pay.Ratio {
-    return Pay.Ratio.of(
-      Pay.Int.from(this.minExchangeRateNumerator) as Pay.PositiveInt,
-      Pay.Int.from(this.minExchangeRateDenominator) as Pay.PositiveInt
-    )
-  }
-
-  public set minExchangeRate(value: Pay.Ratio) {
-    this.minExchangeRateNumerator = value.a.value
-    this.minExchangeRateDenominator = value.b.value
-  }
-
-  public get lowEstimatedExchangeRate(): Pay.Ratio {
-    return Pay.Ratio.of(
-      Pay.Int.from(this.lowEstimatedExchangeRateNumerator) as Pay.PositiveInt,
-      Pay.Int.from(this.lowEstimatedExchangeRateDenominator) as Pay.PositiveInt
-    )
-  }
-
-  public set lowEstimatedExchangeRate(value: Pay.Ratio) {
-    this.lowEstimatedExchangeRateNumerator = value.a.value
-    this.lowEstimatedExchangeRateDenominator = value.b.value
-  }
-
-  // Note that the upper exchange rate bound is *exclusive*.
-  public get highEstimatedExchangeRate(): Pay.PositiveRatio {
-    const highEstimatedExchangeRate = Pay.Ratio.of(
-      Pay.Int.from(this.highEstimatedExchangeRateNumerator) as Pay.PositiveInt,
-      Pay.Int.from(this.highEstimatedExchangeRateDenominator) as Pay.PositiveInt
-    )
-    if (!highEstimatedExchangeRate.isPositive()) {
-      throw new Error('high estimated exchange rate is not positive')
-    }
-    return highEstimatedExchangeRate
-  }
-
-  public set highEstimatedExchangeRate(value: Pay.PositiveRatio) {
-    this.highEstimatedExchangeRateNumerator = value.a.value
-    this.highEstimatedExchangeRateDenominator = value.b.value
   }
 
   public get method(): 'ilp' {
