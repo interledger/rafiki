@@ -7,7 +7,11 @@ import { sample } from 'lodash'
 import { EventPayload } from '../webhook/service'
 import { createAsset } from './asset'
 
-export const webhookEventTypes = ['event1', 'event2', 'event3'] as const
+export const webhookEventTypes = [
+  'incoming_payment.created',
+  'incoming_payment.completed',
+  'asset.liquidity_low'
+] as const
 type WebhookEventPayload = EventPayload & { assetId: string }
 
 export async function createWebhookEvent(
