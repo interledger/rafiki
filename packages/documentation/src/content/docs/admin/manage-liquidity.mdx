@@ -52,12 +52,16 @@ mutation DepositAssetLiquidity($input: DepositAssetLiquidityInput!) {
 
 </CodeBlock>
 
+<div class="overflow-table">
+
 | Variable         | Description                                                                |
 | ---------------- | -------------------------------------------------------------------------- |
 | `assetID`        | The id of the asset to deposit liquidity into                              |
 | `amount`         | Amount of liquidity to deposit                                             |
 | `id`             | The id of the transfer (deposit)                                           |
 | `idempotencyKey` | Unique key to ensure duplicate or retried requests are processed only once |
+
+</div>
 
 If the asset liquidity deposit was successful, `DepositAssetLiquidity` returns `true`.
 
@@ -98,6 +102,8 @@ mutation CreateAssetLiquidityWithdrawal(
 
 </CodeBlock>
 
+<div class="overflow-table">
+
 | Variable         | Description                                                                                                                                               |
 | ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `id`             | The id of the transfer (withdrawal)                                                                                                                       |
@@ -105,6 +111,8 @@ mutation CreateAssetLiquidityWithdrawal(
 | `amount`         | Amount of liquidity to withdraw                                                                                                                           |
 | `idempotencyKey` | Unique key to ensure duplicate or retried requests are processed only once                                                                                |
 | `timeoutSeconds` | Interval, in seconds, after a pending transfer is initiated at which it can be posted or voided (zero denotes a no timeout, single-phase posted transfer) |
+
+</div>
 
 If the asset liquidity withdrawal was successful, `CreateAssetLiquidityWithdrawal` returns `true`.
 
@@ -154,12 +162,16 @@ mutation DepositPeerLiquidity($input: DepositPeerLiquidityInput!) {
 
 </CodeBlock>
 
+<div class="overflow-table">
+
 | Variable         | Description                                                                |
 | ---------------- | -------------------------------------------------------------------------- |
 | `id`             | The id of the transfer (deposit)                                           |
 | `peerId`         | The id of the peer to deposit liquidity into                               |
 | `amount`         | Amount of liquidity to deposit                                             |
 | `idempotencyKey` | Unique key to ensure duplicate or retried requests are processed only once |
+
+</div>
 
 If the peer liquidity deposit was successful, `DepositPeerLiquidity` returns `true`.
 
@@ -200,6 +212,8 @@ mutation CreatePeerLiquidityWithdrawal(
 
 </CodeBlock>
 
+<div class="overflow-table">
+
 | Variable         | Description                                                                                                                                               |
 | ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `id`             | The id of the transfer (withdrawal)                                                                                                                       |
@@ -207,6 +221,8 @@ mutation CreatePeerLiquidityWithdrawal(
 | `amount`         | Amount of liquidity to withdraw                                                                                                                           |
 | `idempotencyKey` | Unique key to ensure duplicate or retried requests are processed only once                                                                                |
 | `timeoutSeconds` | Interval, in seconds, after a pending transfer is initiated at which it can be posted or voided (zero denotes a no timeout, single-phase posted transfer) |
+
+</div>
 
 If the peer liquidity withdrawal was successful, `CreatePeerLiquidityWithdrawal` returns `true`.
 
@@ -253,11 +269,15 @@ mutation CreateIncomingPaymentWithdrawal(
 
 </CodeBlock>
 
+<div class="overflow-table">
+
 | Variable            | Description                                                                                                                                               |
 | ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `incomingPaymentId` | The id of the incoming payment to withdraw from                                                                                                           |
 | `idempotencyKey`    | Unique key to ensure duplicate or retried requests are processed only once                                                                                |
 | `timeoutSeconds`    | Interval, in seconds, after a pending transfer is initiated at which it can be posted or voided (zero denotes a no timeout, single-phase posted transfer) |
+
+</div>
 
 If the incoming payment liquidity withdrawal was successful, `CreateIncomingPaymentWithdrawal` returns `true`.
 
@@ -295,10 +315,14 @@ mutation DepositOutgoingPaymentLiquidity(
 
 </CodeBlock>
 
+<div class="overflow-table">
+
 | Variable            | Description                                                                |
 | ------------------- | -------------------------------------------------------------------------- |
 | `outgoingPaymentId` | The id of the outgoing payment to deposit into                             |
 | `idempotencyKey`    | Unique key to ensure duplicate or retried requests are processed only once |
+
+</div>
 
 If the outgoing payment liquidity deposit was successful, `DepositOutgoingPaymentLiquidity` returns `true`.
 
@@ -337,11 +361,15 @@ mutation CreateOutgoingPaymentWithdrawal(
 
 </CodeBlock>
 
+<div class="overflow-table">
+
 | Variable            | Description                                                                                                                                               |
 | ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `outgoingPaymentId` | The id of the outgoing payment to withdraw from                                                                                                           |
 | `idempotencyKey`    | Unique key to ensure duplicate or retried requests are processed only once                                                                                |
 | `timeoutSeconds`    | Interval, in seconds, after a pending transfer is initiated at which it can be posted or voided (zero denotes a no timeout, single-phase posted transfer) |
+
+</div>
 
 If the outgoing payment liquidity withdrawal was successful, `CreateOutgoingPaymentWithdrawal` returns `true`.
 
@@ -393,10 +421,14 @@ mutation PostLiquidityWithdrawal($input: PostLiquidityWithdrawalInput!) {
 
 </CodeBlock>
 
+<div class="overflow-table">
+
 | Variable         | Description                                                                |
 | ---------------- | -------------------------------------------------------------------------- |
 | `withdrawalId`   | The id of the liquidity withdrawal to post                                 |
 | `idempotencyKey` | Unique key to ensure duplicate or retried requests are processed only once |
+
+</div>
 
 If the liquidity withdrawal was successfully posted, `PostLiquidityWithdrawal` returns `true`.
 
@@ -432,9 +464,13 @@ mutation VoidLiquidityWithdrawal($input: VoidLiquidityWithdrawalInput!) {
 
 </CodeBlock>
 
+<div class="overflow-table">
+
 | Variable         | Description                                                                |
 | ---------------- | -------------------------------------------------------------------------- |
 | `withdrawalId`   | The id of the liquidity withdrawal to void                                 |
 | `idempotencyKey` | Unique key to ensure duplicate or retried requests are processed only once |
+
+</div>
 
 If the liquidity withdrawal was successfully voided and rolled back, `VoidLiquidityWithdrawal` returns `true`.

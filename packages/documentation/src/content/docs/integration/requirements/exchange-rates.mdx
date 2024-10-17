@@ -48,11 +48,15 @@ GET https://cloud-nine-wallet/rates
 
 ### Response objects
 
+<div class="overflow-table">
+
 | Variable             | Type   | Description                                                                                                                        | Required |
 | -------------------- | ------ | ---------------------------------------------------------------------------------------------------------------------------------- | -------- |
 | `base`               | String | The asset code represented as an <LinkOut href="https://en.wikipedia.org/wiki/ISO_4217">ISO 4217</LinkOut> currency code, e.g. USD | Y        |
 | `rates`              | Object | Object containing `<asset_code : exchange_rate>` pairs, e.g. `{EUR: 0.8930}`                                                       | Y        |
 | `rates.<asset_code>` | Number | The exchange rate given `base` and `<asset_code>`                                                                                  | Y        |
+
+</div>
 
 ## Specify rate caching duration (optional)
 
@@ -98,8 +102,12 @@ export function loader({ request }: LoaderFunctionArgs) {
 
 ## Environment variables
 
+<div class="overflow-table">
+
 | Variable                  | Type      | Description                                                                                     | Required |
 | ------------------------- | --------- | ----------------------------------------------------------------------------------------------- | -------- |
 | `EXCHANGE_RATES_URL`      | `backend` | Your exchange rates endpoint                                                                    | Y        |
 | `EXCHANGE_RATES_LIFETIME` | `backend` | The amount of time Rafiki caches exchange rates, in ms                                          | Y        |
 | `SLIPPAGE`                | `backend` | The variance allowed between a quote and the actual amount required when a payment is initiated | Y        |
+
+</div>

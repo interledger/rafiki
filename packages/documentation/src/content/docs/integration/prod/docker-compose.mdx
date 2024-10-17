@@ -6,7 +6,7 @@ This is an example deployment of Rafiki on a Linux virtual machine using nginx a
 
 ## Virtual Machine preparation
 
-Deploy the virutal machine:
+Deploy the virtual machine:
 
 ```sh
 sudo apt update && sudo apt install nginx certbot python3-certbot-nginx
@@ -14,7 +14,7 @@ sudo apt update && sudo apt install nginx certbot python3-certbot-nginx
 
 ## Domain preparation
 
-Generate the Let’s encrypt certificates:
+Generate the Let's Encrypt certificates:
 
 ```sh
 certbot certonly --manual --preferred-challenges=dns --email EMAIL --server https://acme-v02.api.letsencrypt.org/directory --agree-tos -d DOMAIN
@@ -24,7 +24,7 @@ certbot certonly --manual --preferred-challenges=dns --email EMAIL --server http
 Domain can be in wildcard format. You will also need to update the TXT record in this step.
 :::
 
-As Let's encrypt certificates are valid for 90 days, you must set up a cron process to renew the certificate on a regular schedule:
+As Let's Encrypt certificates are valid for 90 days, you must set up a cron process to renew the certificate on a regular schedule:
 
 ```sh
 crontab -e
@@ -36,12 +36,16 @@ crontab -e
 
 Next update the DNS records to point to the static external IP address of the volumes:
 
+<div class="overflow-table">
+
 | service   | URL              | example                |
 | --------- | ---------------- | ---------------------- |
 | admin     | admin.DOMAIN     | admin.myrafiki.com     |
 | auth      | auth.DOMAIN      | auth.myrafiki.com      |
 | connector | connector.DOMAIN | connector.myrafiki.com |
 | ilp       | ilp.DOMAIN       | ilp.myrafiki.com       |
+
+</div>
 
 ## Server preparation
 
