@@ -8891,7 +8891,7 @@
       {
         "kind": "SCALAR",
         "name": "WebhookEventType",
-        "description": "The 'WebhookEventType' scalar represents the type of an webhook event.\nNOTE: The possible options are: 'incoming_payment.created', 'incoming_payment.completed', 'incoming_payment.expired', 'outgoing_payment.created', 'outgoing_payment.completed', 'outgoing_payment.failed', 'wallet_address.not_found', 'wallet_address.web_monetization', 'asset.liquidity_low', 'peer.liquidity_low'.",
+        "description": "The 'WebhookEventType' scalar represents the type of an webhook event.\nFor allowed values, see [WebhookEventType enum definition](https://rafiki.dev/resources/webhook-event-types/).",
         "fields": null,
         "inputFields": null,
         "interfaces": null,

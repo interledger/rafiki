@@ -22,7 +22,7 @@ export type Scalars = {
   UInt64: { input: bigint; output: bigint; }
   /**
    * The 'WebhookEventType' scalar represents the type of an webhook event.
-   * NOTE: The possible options are: 'incoming_payment.created', 'incoming_payment.completed', 'incoming_payment.expired', 'outgoing_payment.created', 'outgoing_payment.completed', 'outgoing_payment.failed', 'wallet_address.not_found', 'wallet_address.web_monetization', 'asset.liquidity_low', 'peer.liquidity_low'.
+   * For allowed values, see [WebhookEventType enum definition](https://rafiki.dev/resources/webhook-event-types/).
    */
   WebhookEventType: { input: any; output: any; }
 };
