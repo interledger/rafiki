@@ -160,6 +160,22 @@ The first retry is after 10 seconds. Additional retries occur after 20 more seco
 
 #### Incoming payment created
 
+<details>
+<summary>Expand for event sequence</summary>
+
+<Mermaid
+    graph={`sequenceDiagram
+      participant R as Rafiki
+      participant ASE as Account servicing entity
+
+      R->>ASE: Fires incoming_payment.created event to webhook endpoint
+      ASE->>ASE: No action required
+
+`}
+/>
+
+</details>
+
 <Disclosure toggleText="Expand for event sequence" client:load>
   <Mermaid
     graph={`sequenceDiagram

@@ -10,14 +10,18 @@ This guide is an example of deploying Rafiki using Docker Compose with Nginx as 
 
 ### Domain and subdomains setup
 
-We will map the [Open Payments resource server](/integration/services/backend-service#open-payments) to your domain, and the [ILP Connector](/integration/services/backend-service#interledger-connector), [Open Payments auth server](/integration/services/auth-service), and [Admin UI](/integration/services/frontend-service) to subdomains. Using the DNS host of your choice, set up your domain and subdomains according to the following convention:
+We will map the [Open Payments resource server](/integration/services/backend-service#open-payments) to your domain, and the [ILP Connector](/integration/services/backend-service#interledger-connector), [Open Payments auth server](/integration/services/auth-service), and [Admin UI](/integration/services/frontend-service) to subdomains. Using the DNS host of your choice, set up your domain and subdomains according to the following recommended convention:
 
-| service                       | URL          | example            |
-| ----------------------------- | ------------ | ------------------ |
-| Open Payments resource server | DOMAIN       | myrafiki.com       |
-| ILP Connector                 | ilp.DOMAIN   | ilp.myrafiki.com   |
-| Open Payments auth server     | auth.DOMAIN  | auth.myrafiki.com  |
-| Admin UI                      | admin.DOMAIN | admin.myrafiki.com |
+<div class="overflow-table">
+
+| service                       | function                                                                    | URL          | example            |
+| ----------------------------- | --------------------------------------------------------------------------- | ------------ | ------------------ |
+| Open Payments resource server | Exposes the Open Payments APIs                                              | DOMAIN       | myrafiki.com       |
+| ILP Connector                 | Exposes an ILP connector to send and receive ILP packets between peers      | ilp.DOMAIN   | ilp.myrafiki.com   |
+| Open Payments auth server     | Exposes a reference implementation of an Open Payments authorization server | auth.DOMAIN  | auth.myrafiki.com  |
+| Admin UI                      | Exposes an Admin UI to manage Rafiki                                        | admin.DOMAIN | admin.myrafiki.com |
+
+</div>
 
 :::note
 The example domain and subdomain values are for demonstration purposes only. You must use the actual domain names that you set up with your DNS host.  
@@ -25,12 +29,11 @@ The example domain and subdomain values are for demonstration purposes only. You
 
 ### VM specifications
 
-This example deployment uses the `e2-standard-2` VM on <LinkOut href='https://cloud.google.com/compute/docs/general-purpose-machines#e2_machine_types'>Google Cloud Platform</LinkOut> with the following specifications:
+A general purpose VM with the following specifications is sufficient for running Rafiki via Docker:
 
-- OS: Ubuntu LTS
-- RAM: 8GB
+- OS: Linux distro
+- RAM: 4GB
 - vCPUs: 2
-- Disk: 257 TiB total Persistent Disk (PD) size
 
 ### Install Nginx and Certbot
 
@@ -52,7 +55,7 @@ certbot certonly --manual --preferred-challenges=dns --email EMAIL --server http
 Domain can be in wildcard format. You will also need to update the TXT record in this step.
 :::
 
-As Let's encrypt certificates are valid for 90 days, you must set up a cron process to renew the certificate on a regular schedule:
+As Let's Encrypt certificates are valid for 90 days, you must set up a cron process to renew the certificate on a regular schedule:
 
 ```sh
 crontab -e
@@ -64,6 +67,8 @@ crontab -e
 
 Next update the DNS records (A records) to point to the static external IP address of the virtual machine:
 
+<div class="overflow-table">
+
 | service                       | URL          | example            |
 | ----------------------------- | ------------ | ------------------ |
 | Open Payments resource server | DOMAIN       | myrafiki.com       |
@@ -71,13 +76,15 @@ Next update the DNS records (A records) to point to the static external IP addre
 | Open Payments auth server     | auth.DOMAIN  | auth.myrafiki.com  |
 | Admin UI                      | admin.DOMAIN | admin.myrafiki.com |
 
+</div>
+
 :::note
 The example domain and subdomain values are for demonstration purposes only. You must use the actual domain names that you set up with your DNS host.  
 :::
 
 ### Install Docker Engine and Docker Compose plugin
 
-Set up Docker's `apt` respository on your Ubuntu VM:
+Set up Docker's `apt` respository on your Linux-based VM:
 
 ```sh
 # Add Docker's official GPG key:
@@ -106,7 +113,7 @@ sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin 
 
 Update the variables in the following compose file with values relevant to your environment and system. Refer to the [environment variables page](/resources/environment-variables/) for details.
 
-:::danger[Update compose file]
+:::note[Update compose file]
 You must change the values enclosed within curly brackets {} in the following compose file.
 :::
 
@@ -271,12 +278,16 @@ volumes:
 
 Create nginx configuration files for every exposed domain:
 
-| service                       | URL          | example            | Nginx config file                      |
-| ----------------------------- | ------------ | ------------------ | -------------------------------------- |
-| Open Payments resource server | DOMAIN       | myrafiki.com       | /etc/nginx/sites-available/oprs.config |
-| ILP Connector                 | ilp.DOMAIN   | ilp.myrafiki.com   | /etc/nginx/sites-available/ilp.config  |
-| Open Payments auth server     | auth.DOMAIN  | auth.myrafiki.com  | /etc/nginx/sites-available/auth.config |
-| Admin UI                      | admin.DOMAIN | admin.myrafiki.com | /etc/nginx/site-available/admin.config |
+<div class="overflow-table">
+
+| service                       | URL          | example            | Nginx config file                                               |
+| ----------------------------- | ------------ | ------------------ | --------------------------------------------------------------- |
+| Open Payments resource server | DOMAIN       | myrafiki.com       | /etc/nginx/sites-available/open_payments_resource_server.config |
+| ILP Connector                 | ilp.DOMAIN   | ilp.myrafiki.com   | /etc/nginx/sites-available/ilp.config                           |
+| Open Payments auth server     | auth.DOMAIN  | auth.myrafiki.com  | /etc/nginx/sites-available/open_payments_auth_server.config     |
+| Admin UI                      | admin.DOMAIN | admin.myrafiki.com | /etc/nginx/site-available/admin.config                          |
+
+</div>
 
 :::note
 The example domain and subdomain values are for demonstration purposes only. You must use the actual domain names that you set up with your DNS host.  
@@ -284,22 +295,22 @@ The example domain and subdomain values are for demonstration purposes only. You
 
 ### Open Payments Resource Server (`backend` package)
 
-Using the editor of your choice, save the following file as `oprs.config` in the `/etc/nginx/sites-available` directory on your VM:
+Using the editor of your choice, save the following file as `open_payments_resource_server.config` in the `/etc/nginx/sites-available` directory on your VM:
 
 ```sh
 
-    server {
-    server_name myrafiki.com;
+  server {
+      server_name myrafiki.com;
 
-    listen 443 ssl;
+      listen 443 ssl;
 
-    ssl_certificate /etc/letsencrypt/live/myrafiki.com/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/myrafiki.com/privkey.pem;
+      ssl_certificate /etc/letsencrypt/live/myrafiki.com/fullchain.pem;
+      ssl_certificate_key /etc/letsencrypt/live/myrafiki.com/privkey.pem;
 
-    include /etc/letsencrypt/options-ssl-nginx.conf;
-    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
+      include /etc/letsencrypt/options-ssl-nginx.conf;
+      ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
 
-    location / {
+      location / {
         proxy_http_version 1.1;
         proxy_set_header X-Forwarded-Proto $scheme;
         proxy_set_header Upgrade "";
@@ -373,7 +384,7 @@ server {
 
 ### Open Payments Auth Server (`auth` package)
 
-Save the following file as `auth.config` in the `/etc/nginx/sites-available` directory on your VM:
+Save the following file as `open_payments_auth_server.config` in the `/etc/nginx/sites-available` directory on your VM:
 
 ```sh
 server {
@@ -465,11 +476,11 @@ Once the Nginx configuration files have been created, set up symbolic links that
 ```sh
 sudo ln -s /etc/nginx/sites-available/admin.conf /etc/nginx/sites-enabled/admin.conf
 
-sudo ln -s /etc/nginx/sites-available/auth.conf /etc/nginx/sites-enabled/auth.conf
+sudo ln -s /etc/nginx/sites-available/open_payments_auth_server.conf /etc/nginx/sites-enabled/auth.conf
 
 sudo ln -s /etc/nginx/sites-available/ilp.conf /etc/nginx/sites-enabled/ilp.conf
 
-sudo ln -s /etc/nginx/sites-available/oprs.conf /etc/nginx/sites-enabled/oprs.conf
+sudo ln -s /etc/nginx/sites-available/open_payments_resource_server.conf /etc/nginx/sites-enabled/oprs.conf
 
 ```
 
