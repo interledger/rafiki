@@ -8846,7 +8846,7 @@
               "name": null,
               "ofType": {
                 "kind": "SCALAR",
-                "name": "String",
+                "name": "WebhookEventType",
                 "ofType": null
               }
             },
@@ -8884,6 +8884,16 @@
             "deprecationReason": null
           }
         ],
+        "interfaces": null,
+        "enumValues": null,
+        "possibleTypes": null
+      },
+      {
+        "kind": "SCALAR",
+        "name": "WebhookEventType",
+        "description": "The 'WebhookEventType' scalar represents the type of an webhook event.\nFor allowed values, see [WebhookEventType enum definition](https://rafiki.dev/resources/webhook-event-types/).",
+        "fields": null,
+        "inputFields": null,
         "interfaces": null,
         "enumValues": null,
         "possibleTypes": null

@@ -1289,7 +1289,7 @@ type WebhookEvent implements Model {
   "Unique identifier of the webhook event."
   id: ID!
   "Type of webhook event."
-  type: String!
+  type: WebhookEventType!
   "Stringified JSON data for the webhook event."
   data: JSONObject!
   "The date and time when the webhook event was created."
@@ -1475,3 +1475,9 @@ scalar UInt64
 The `JSONObject` scalar type represents JSON objects as specified by the [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf) standard.
 """
 scalar JSONObject
+
+"""
+The 'WebhookEventType' scalar represents the type of an webhook event.
+For allowed values, see [WebhookEventType enum definition](https://rafiki.dev/resources/webhook-event-types/).
+"""
+scalar WebhookEventType
