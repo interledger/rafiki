@@ -35,6 +35,8 @@ import {
   PaymentMethodHandlerError,
   PaymentMethodHandlerErrorCode
 } from '../../payment-method/handler/errors'
+import { Receiver } from '../receiver/model'
+import { IlpQuoteDetailsService } from '../../payment-method/ilp/quote-details/service'
 
 describe('QuoteService', (): void => {
   let deps: IocContract<AppServices>
@@ -46,6 +48,14 @@ describe('QuoteService', (): void => {
   let sendingWalletAddress: MockWalletAddress
   let receivingWalletAddress: MockWalletAddress
   let config: IAppConfig
+  let ilpQuoteDetailsService: IlpQuoteDetailsService
+  let receiverGet: typeof receiverService.get
+  let receiverGetSpy: jest.SpyInstance<
+    Promise<Receiver | undefined>,
+    [url: string],
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    any
+  >
 
   const asset: AssetOptions = {
     scale: 9,
@@ -78,6 +88,7 @@ describe('QuoteService', (): void => {
     quoteService = await deps.use('quoteService')
     paymentMethodHandlerService = await deps.use('paymentMethodHandlerService')
     receiverService = await deps.use('receiverService')
+    ilpQuoteDetailsService = await deps.use('ilpQuoteDetailsService')
   })
 
   beforeEach(async (): Promise<void> => {
@@ -93,6 +104,22 @@ describe('QuoteService', (): void => {
       assetId: destinationAssetId,
       mockServerPort: appContainer.openPaymentsPort
     })
+
+    // Make receivers non-local by default
+    receiverGet = receiverService.get
+    receiverGetSpy = jest
+      .spyOn(receiverService, 'get')
+      .mockImplementation(async (url: string) => {
+        // call original instead of receiverService.get to avoid infinite loop
+        const receiver = await receiverGet.call(receiverService, url)
+        if (receiver) {
+          // "as any" to circumvent "readonly" check (compile time only) to allow overriding "isLocal" here
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          ;(receiver.isLocal as any) = false
+          return receiver
+        }
+        return undefined
+      })
   })
 
   afterEach(async (): Promise<void> => {
@@ -121,8 +148,32 @@ describe('QuoteService', (): void => {
           withFee: true,
           method: 'ilp'
         }),
-      get: (options) => quoteService.get(options),
-      list: (options) => quoteService.getWalletAddressPage(options)
+      get: async (options) => {
+        const quote = await quoteService.get(options)
+        assert.ok(!isQuoteError(quote))
+
+        if (!quote) {
+          return
+        }
+
+        quote.ilpQuoteDetails = await ilpQuoteDetailsService.getByQuoteId(
+          quote.id
+        )
+
+        return quote
+      },
+      list: async (options) => {
+        const quotes = await quoteService.getWalletAddressPage(options)
+
+        const quotesWithDetails = await Promise.all(
+          quotes.map(async (q) => {
+            q.ilpQuoteDetails = await ilpQuoteDetailsService.getByQuoteId(q.id)
+            return q
+          })
+        )
+
+        return quotesWithDetails
+      }
     })
   })
 
@@ -191,7 +242,7 @@ describe('QuoteService', (): void => {
                       })
                 })
 
-                jest
+                const getQuoteSpy = jest
                   .spyOn(paymentMethodHandlerService, 'getQuote')
                   .mockResolvedValueOnce(mockedQuote)
 
@@ -201,12 +252,25 @@ describe('QuoteService', (): void => {
                 })
                 assert.ok(!isQuoteError(quote))
 
+                expect(getQuoteSpy).toHaveBeenCalledTimes(1)
+                expect(getQuoteSpy).toHaveBeenCalledWith(
+                  'ILP',
+                  expect.objectContaining({
+                    walletAddress: sendingWalletAddress,
+                    receiver: expect.anything(),
+                    receiveAmount: options.receiveAmount,
+                    debitAmount: options.debitAmount
+                  })
+                )
+
                 expect(quote).toMatchObject({
                   walletAddressId: sendingWalletAddress.id,
                   receiver: options.receiver,
                   debitAmount: debitAmount || mockedQuote.debitAmount,
                   receiveAmount: receiveAmount || mockedQuote.receiveAmount,
-                  maxPacketAmount: BigInt('9223372036854775807'),
+                  ilpQuoteDetails: {
+                    maxPacketAmount: BigInt('9223372036854775807')
+                  },
                   createdAt: expect.any(Date),
                   updatedAt: expect.any(Date),
                   expiresAt: new Date(
@@ -215,11 +279,13 @@ describe('QuoteService', (): void => {
                   client: client || null
                 })
 
-                await expect(
-                  quoteService.get({
-                    id: quote.id
-                  })
-                ).resolves.toEqual(quote)
+                const foundQuote = await quoteService.get({
+                  id: quote.id
+                })
+                assert(foundQuote)
+                foundQuote.ilpQuoteDetails =
+                  await ilpQuoteDetailsService.getByQuoteId(quote.id)
+                expect(foundQuote).toEqual(quote)
               }
             )
 
@@ -291,7 +357,9 @@ describe('QuoteService', (): void => {
 
                 expect(quote).toMatchObject({
                   ...options,
-                  maxPacketAmount: BigInt('9223372036854775807'),
+                  ilpQuoteDetails: {
+                    maxPacketAmount: BigInt('9223372036854775807')
+                  },
                   debitAmount: mockedQuote.debitAmount,
                   receiveAmount: incomingAmount,
                   createdAt: expect.any(Date),
@@ -302,11 +370,13 @@ describe('QuoteService', (): void => {
                   client: client || null
                 })
 
-                await expect(
-                  quoteService.get({
-                    id: quote.id
-                  })
-                ).resolves.toEqual(quote)
+                const foundQuote = await quoteService.get({
+                  id: quote.id
+                })
+                assert(foundQuote)
+                foundQuote.ilpQuoteDetails =
+                  await ilpQuoteDetailsService.getByQuoteId(quote.id)
+                expect(foundQuote).toEqual(quote)
               }
             )
           }
@@ -416,15 +486,23 @@ describe('QuoteService', (): void => {
         .spyOn(paymentMethodHandlerService, 'getQuote')
         .mockResolvedValueOnce(mockedQuote)
 
-      await expect(
-        quoteService.create({
-          walletAddressId: sendingWalletAddress.id,
-          receiver: receiver.incomingPayment!.id,
-          method: 'ilp'
-        })
-      ).resolves.toMatchObject({
+      const quote = await quoteService.create({
+        walletAddressId: sendingWalletAddress.id,
+        receiver: receiver.incomingPayment!.id,
+        method: 'ilp'
+      })
+      assert.ok(!isQuoteError(quote))
+
+      const ilpQuoteDetails = await ilpQuoteDetailsService.getByQuoteId(
+        quote.id
+      )
+
+      expect(quote).toMatchObject({
         debitAmount: mockedQuote.debitAmount,
-        receiveAmount: receiver.incomingAmount,
+        receiveAmount: receiver.incomingAmount
+      })
+
+      expect(ilpQuoteDetails).toMatchObject({
         maxPacketAmount: BigInt('9223372036854775807'),
         lowEstimatedExchangeRate: Pay.Ratio.from(10 ** 20),
         highEstimatedExchangeRate: Pay.Ratio.from(10 ** 20),
@@ -742,6 +820,67 @@ describe('QuoteService', (): void => {
             method: 'ilp'
           })
         ).resolves.toEqual(QuoteError.NonPositiveReceiveAmount)
+      })
+    })
+
+    describe('Local Receiver', (): void => {
+      beforeEach(() => {
+        receiverGetSpy.mockRestore()
+      })
+      test('Local receiver uses local payment method', async () => {
+        const incomingPayment = await createIncomingPayment(deps, {
+          walletAddressId: receivingWalletAddress.id,
+          incomingAmount
+        })
+
+        const options: CreateQuoteOptions = {
+          walletAddressId: sendingWalletAddress.id,
+          receiver: incomingPayment.getUrl(receivingWalletAddress),
+          method: 'ilp'
+        }
+
+        const mockedQuote = mockQuote({
+          receiver: (await receiverService.get(
+            incomingPayment.getUrl(receivingWalletAddress)
+          ))!,
+          walletAddress: sendingWalletAddress,
+          exchangeRate: 0.5,
+          debitAmountValue: debitAmount.value
+        })
+
+        const getQuoteSpy = jest
+          .spyOn(paymentMethodHandlerService, 'getQuote')
+          .mockResolvedValueOnce(mockedQuote)
+
+        const quote = await quoteService.create(options)
+        assert.ok(!isQuoteError(quote))
+
+        expect(getQuoteSpy).toHaveBeenCalledTimes(1)
+        expect(getQuoteSpy).toHaveBeenCalledWith(
+          'LOCAL',
+          expect.objectContaining({
+            walletAddress: sendingWalletAddress,
+            receiver: expect.anything(),
+            receiveAmount: options.receiveAmount,
+            debitAmount: options.debitAmount
+          })
+        )
+
+        expect(quote).toMatchObject({
+          walletAddressId: sendingWalletAddress.id,
+          receiver: options.receiver,
+          debitAmount: mockedQuote.debitAmount,
+          receiveAmount: mockedQuote.receiveAmount,
+          createdAt: expect.any(Date),
+          updatedAt: expect.any(Date),
+          expiresAt: new Date(quote.createdAt.getTime() + config.quoteLifespan)
+        })
+
+        await expect(
+          quoteService.get({
+            id: quote.id
+          })
+        ).resolves.toEqual(quote)
       })
     })
   })
