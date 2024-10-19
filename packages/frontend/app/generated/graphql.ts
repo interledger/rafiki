@@ -20,6 +20,11 @@ export type Scalars = {
   UInt8: { input: number; output: number; }
   /** The `UInt64` scalar type represents unsigned 64-bit whole numeric values. It is capable of handling values that are larger than the JavaScript `Number` type limit (greater than 2^53). */
   UInt64: { input: bigint; output: bigint; }
+  /**
+   * The 'WebhookEventType' scalar represents the type of an webhook event.
+   * For allowed values, see [WebhookEventType enum definition](https://rafiki.dev/resources/webhook-event-types/).
+   */
+  WebhookEventType: { input: any; output: any; }
 };
 
 export type AccountingTransfer = Model & {
@@ -1580,7 +1585,7 @@ export type WebhookEvent = Model & {
   /** Unique identifier of the webhook event. */
   id: Scalars['ID']['output'];
   /** Type of webhook event. */
-  type: Scalars['String']['output'];
+  type: Scalars['WebhookEventType']['output'];
 };
 
 export type WebhookEventFilter = {
@@ -1812,6 +1817,7 @@ export type ResolversTypes = {
   WalletAddressesConnection: ResolverTypeWrapper<Partial<WalletAddressesConnection>>;
   WebhookEvent: ResolverTypeWrapper<Partial<WebhookEvent>>;
   WebhookEventFilter: ResolverTypeWrapper<Partial<WebhookEventFilter>>;
+  WebhookEventType: ResolverTypeWrapper<Partial<Scalars['WebhookEventType']['output']>>;
   WebhookEventsConnection: ResolverTypeWrapper<Partial<WebhookEventsConnection>>;
   WebhookEventsEdge: ResolverTypeWrapper<Partial<WebhookEventsEdge>>;
   WithdrawEventLiquidityInput: ResolverTypeWrapper<Partial<WithdrawEventLiquidityInput>>;
@@ -1933,6 +1939,7 @@ export type ResolversParentTypes = {
   WalletAddressesConnection: Partial<WalletAddressesConnection>;
   WebhookEvent: Partial<WebhookEvent>;
   WebhookEventFilter: Partial<WebhookEventFilter>;
+  WebhookEventType: Partial<Scalars['WebhookEventType']['output']>;
   WebhookEventsConnection: Partial<WebhookEventsConnection>;
   WebhookEventsEdge: Partial<WebhookEventsEdge>;
   WithdrawEventLiquidityInput: Partial<WithdrawEventLiquidityInput>;
@@ -2429,9 +2436,13 @@ export type WebhookEventResolvers<ContextType = any, ParentType extends Resolver
   createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   data?: Resolver<ResolversTypes['JSONObject'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  type?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  type?: Resolver<ResolversTypes['WebhookEventType'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
+
+export interface WebhookEventTypeScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes['WebhookEventType'], any> {
+  name: 'WebhookEventType';
+}
 
 export type WebhookEventsConnectionResolvers<ContextType = any, ParentType extends ResolversParentTypes['WebhookEventsConnection'] = ResolversParentTypes['WebhookEventsConnection']> = {
   edges?: Resolver<Array<ResolversTypes['WebhookEventsEdge']>, ParentType, ContextType>;
@@ -2511,6 +2522,7 @@ export type Resolvers<ContextType = any> = {
   WalletAddressWithdrawalMutationResponse?: WalletAddressWithdrawalMutationResponseResolvers<ContextType>;
   WalletAddressesConnection?: WalletAddressesConnectionResolvers<ContextType>;
   WebhookEvent?: WebhookEventResolvers<ContextType>;
+  WebhookEventType?: GraphQLScalarType;
   WebhookEventsConnection?: WebhookEventsConnectionResolvers<ContextType>;
   WebhookEventsEdge?: WebhookEventsEdgeResolvers<ContextType>;
 };
@@ -2731,4 +2743,4 @@ export type ListWebhookEventsVariables = Exact<{
 }>;
 
 
-export type ListWebhookEvents = { __typename?: 'Query', webhookEvents: { __typename?: 'WebhookEventsConnection', edges: Array<{ __typename?: 'WebhookEventsEdge', cursor: string, node: { __typename?: 'WebhookEvent', id: string, data: any, type: string, createdAt: string } }>, pageInfo: { __typename?: 'PageInfo', startCursor?: string | null, endCursor?: string | null, hasNextPage: boolean, hasPreviousPage: boolean } } };
+export type ListWebhookEvents = { __typename?: 'Query', webhookEvents: { __typename?: 'WebhookEventsConnection', edges: Array<{ __typename?: 'WebhookEventsEdge', cursor: string, node: { __typename?: 'WebhookEvent', id: string, data: any, type: any, createdAt: string } }>, pageInfo: { __typename?: 'PageInfo', startCursor?: string | null, endCursor?: string | null, hasNextPage: boolean, hasPreviousPage: boolean } } };
