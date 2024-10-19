@@ -30,6 +30,10 @@ export interface TelemetryService {
     value: number,
     attributes?: Record<string, unknown>
   ): void
+  startTimer(
+    name: string,
+    attributes?: Record<string, unknown>
+  ): (additionalAttributes?: Record<string, unknown>) => void
 }
 
 export interface TelemetryServiceDependencies extends BaseService {
@@ -219,6 +223,17 @@ export class TelemetryServiceImpl implements TelemetryService {
     }
     return converted
   }
+
+  public startTimer(
+    name: string,
+    attributes: Record<string, unknown> = {}
+  ): (additionalAttributes?: Record<string, unknown>) => void {
+    const start = Date.now()
+    return (additionalAttributes: Record<string, unknown> = {}) => {
+      const mergedAttributes = { ...attributes, ...additionalAttributes }
+      this.recordHistogram(name, Date.now() - start, mergedAttributes)
+    }
+  }
 }
 
 /* eslint-disable @typescript-eslint/no-unused-vars */
@@ -261,5 +276,14 @@ export class NoopTelemetryServiceImpl implements TelemetryService {
     preservePrivacy = true
   ): Promise<void> {
     // do nothing
+  }
+
+  public startTimer(
+    name: string,
+    attributes: Record<string, unknown> = {}
+  ): (additionalAttributes?: Record<string, unknown>) => void {
+    return (additionalAttributes?: Record<string, unknown>) => {
+      // do nothing
+    }
   }
 }
