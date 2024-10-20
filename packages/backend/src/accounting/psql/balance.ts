@@ -14,6 +14,9 @@ export async function getAccountBalances(
   account: LedgerAccount,
   trx?: TransactionOrKnex
 ): Promise<AccountBalance> {
+  const stopTimer = deps.telemetry?.startTimer('psql_getAccountBalances', {
+    callName: 'psql_getAccountBalances'
+  })
   try {
     const queryResult = await (trx ?? deps.knex).raw(
       `
@@ -37,6 +40,8 @@ export async function getAccountBalances(
     const creditsPending = BigInt(queryResult.rows[0].creditsPending)
     const debitsPosted = BigInt(queryResult.rows[0].debitsPosted)
     const debitsPending = BigInt(queryResult.rows[0].debitsPending)
+
+    stopTimer && stopTimer()
 
     return {
       creditsPosted,

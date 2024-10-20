@@ -18,6 +18,7 @@ import { Amount } from '../../amount'
 import { IncomingPaymentError } from './errors'
 import { IAppConfig } from '../../../config/app'
 import { poll } from '../../../shared/utils'
+import { AssetService } from '../../../asset/service'
 
 export const POSITIVE_SLIPPAGE = BigInt(1)
 // First retry waits 10 seconds
@@ -57,6 +58,7 @@ export interface ServiceDependencies extends BaseService {
   knex: TransactionOrKnex
   accountingService: AccountingService
   walletAddressService: WalletAddressService
+  assetService: AssetService
   config: IAppConfig
 }
 

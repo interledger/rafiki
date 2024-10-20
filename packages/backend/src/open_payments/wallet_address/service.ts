@@ -26,6 +26,12 @@ import { Pagination, SortOrder } from '../../shared/baseModel'
 import { WebhookService } from '../../webhook/service'
 import { poll } from '../../shared/utils'
 import { WalletAddressAdditionalProperty } from './additional_property/model'
+import { AssetService } from '../../asset/service'
+import { Quote } from '../quote/model'
+import { CacheDataStore } from '../../cache'
+import { OutgoingPayment } from '../payment/outgoing/model'
+
+export type ToSetOn = Quote | IncomingPayment | OutgoingPayment | undefined
 
 interface Options {
   publicName?: string
@@ -71,6 +77,7 @@ export interface WalletAddressService {
   ): Promise<WalletAddress[]>
   processNext(): Promise<string | undefined>
   triggerEvents(limit: number): Promise<number>
+  setOn(obj: ToSetOn): Promise<void | WalletAddress>
 }
 
 interface ServiceDependencies extends BaseService {
@@ -78,6 +85,8 @@ interface ServiceDependencies extends BaseService {
   knex: TransactionOrKnex
   accountingService: AccountingService
   webhookService: WebhookService
+  assetService: AssetService
+  cacheDataStore: CacheDataStore
 }
 
 export async function createWalletAddressService({
@@ -85,7 +94,9 @@ export async function createWalletAddressService({
   config,
   knex,
   accountingService,
-  webhookService
+  webhookService,
+  assetService,
+  cacheDataStore
 }: ServiceDependencies): Promise<WalletAddressService> {
   const log = logger.child({
     service: 'WalletAddressService'
@@ -95,7 +106,9 @@ export async function createWalletAddressService({
     logger: log,
     knex,
     accountingService,
-    webhookService
+    webhookService,
+    assetService,
+    cacheDataStore
   }
   return {
     create: (options) => createWalletAddress(deps, options),
@@ -112,7 +125,8 @@ export async function createWalletAddressService({
     getPage: (pagination?, sortOrder?) =>
       getWalletAddressPage(deps, pagination, sortOrder),
     processNext: () => processNextWalletAddress(deps),
-    triggerEvents: (limit) => triggerWalletAddressEvents(deps, limit)
+    triggerEvents: (limit) => triggerWalletAddressEvents(deps, limit),
+    setOn: (toSetOn) => setWalletAddressOn(deps, toSetOn)
   }
 }
 
@@ -165,21 +179,23 @@ async function createWalletAddress(
       ? cleanAdditionalProperties(options.additionalProperties)
       : undefined
 
-    return await WalletAddress.query(deps.knex)
-      .insertGraphAndFetch({
-        url: options.url.toLowerCase(),
-        publicName: options.publicName,
-        assetId: options.assetId,
-        additionalProperties: additionalProperties
-      })
-      .withGraphFetched('asset')
+    const walletAddress = await WalletAddress.query(
+      deps.knex
+    ).insertGraphAndFetch({
+      url: options.url,
+      publicName: options.publicName,
+      assetId: options.assetId,
+      additionalProperties: additionalProperties
+    })
+    await deps.assetService.setOn(walletAddress)
+    await deps.cacheDataStore.set(walletAddress.id, walletAddress)
+    return walletAddress
   } catch (err) {
     if (err instanceof ForeignKeyViolationError) {
       if (err.constraint === 'walletaddresses_assetid_foreign') {
         return WalletAddressError.UnknownAsset
       }
-    }
-    if (err instanceof UniqueViolationError) {
+    } else if (err instanceof UniqueViolationError) {
       if (err.constraint === 'walletaddresses_url_unique') {
         return WalletAddressError.DuplicateWalletAddress
       }
@@ -209,8 +225,8 @@ async function updateWalletAddress(
     const updatedWalletAddress = await walletAddress
       .$query(trx)
       .patchAndFetch(update)
-      .withGraphFetched('asset')
       .throwIfNotFound()
+    await deps.assetService.setOn(updatedWalletAddress)
 
     // Override all existing additional properties if new ones are provided
     if (additionalProperties) {
@@ -231,6 +247,7 @@ async function updateWalletAddress(
     }
     await trx.commit()
 
+    await deps.cacheDataStore.set(updatedWalletAddress.id, updatedWalletAddress)
     return updatedWalletAddress
   } catch (err) {
     await trx.rollback()
@@ -245,9 +262,15 @@ async function getWalletAddress(
   deps: ServiceDependencies,
   id: string
 ): Promise<WalletAddress | undefined> {
-  return await WalletAddress.query(deps.knex)
-    .findById(id)
-    .withGraphFetched('asset')
+  const walletAdd = await deps.cacheDataStore.get(id)
+  if (walletAdd) return walletAdd as WalletAddress
+
+  const walletAddress = await WalletAddress.query(deps.knex).findById(id)
+  if (walletAddress) {
+    await deps.assetService.setOn(walletAddress)
+    await deps.cacheDataStore.set(id, walletAddress)
+  }
+  return walletAddress
 }
 
 async function getWalletAdditionalProperties(
@@ -301,9 +324,8 @@ async function getWalletAddressByUrl(
   deps: ServiceDependencies,
   url: string
 ): Promise<WalletAddress | undefined> {
-  const walletAddress = await WalletAddress.query(deps.knex)
-    .findOne({ url: url.toLowerCase() })
-    .withGraphFetched('asset')
+  const walletAddress = await WalletAddress.query(deps.knex).findOne({ url })
+  await deps.assetService.setOn(walletAddress)
   return walletAddress || undefined
 }
 
@@ -348,7 +370,10 @@ async function processNextWalletAddresses(
       // If a wallet address is locked, don't wait — just come back for it later.
       .skipLocked()
       .where('processAt', '<=', now)
-      .withGraphFetched('asset')
+
+    for (const walletAddress of walletAddresses) {
+      await deps_.assetService.setOn(walletAddress)
+    }
 
     const deps = {
       ...deps_,
@@ -431,8 +456,17 @@ async function deactivateOpenIncomingPaymentsByWalletAddress(
     .where('expiresAt', '>', expiresAt)
 }
 
-export interface CreateSubresourceOptions {
+/*export interface CreateSubresourceOptions {
   walletAddressId: string
+}*/
+
+async function setWalletAddressOn(
+  deps: ServiceDependencies,
+  obj: ToSetOn
+): Promise<void> {
+  if (!obj) return
+  const walletAddress = await getWalletAddress(deps, obj.walletAddressId)
+  if (walletAddress) obj.walletAddress = walletAddress
 }
 
 export interface WalletAddressSubresourceService<

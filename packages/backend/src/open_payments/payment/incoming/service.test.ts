@@ -40,7 +40,10 @@ describe('Incoming Payment Service', (): void => {
   let config: IAppConfig
 
   beforeAll(async (): Promise<void> => {
-    deps = await initIocContainer(Config)
+    deps = initIocContainer({
+      ...Config,
+      localCacheDuration: 0
+    })
     appContainer = await createTestApp(deps)
     accountingService = await deps.use('accountingService')
     knex = appContainer.knex

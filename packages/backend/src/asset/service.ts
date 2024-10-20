@@ -7,6 +7,9 @@ import { BaseService } from '../shared/baseService'
 import { AccountingService, LiquidityAccountType } from '../accounting/service'
 import { WalletAddress } from '../open_payments/wallet_address/model'
 import { Peer } from '../payment-method/ilp/peer/model'
+import { Quote } from '../open_payments/quote/model'
+import { IncomingPayment } from '../open_payments/payment/incoming/model'
+import { CacheDataStore } from '../cache'
 
 export interface AssetOptions {
   code: string
@@ -28,37 +31,46 @@ export interface DeleteOptions {
   deletedAt: Date
 }
 
+export type ToSetOn = Quote | IncomingPayment | WalletAddress | Peer | undefined
+
 export interface AssetService {
   create(options: CreateOptions): Promise<Asset | AssetError>
   update(options: UpdateOptions): Promise<Asset | AssetError>
   delete(options: DeleteOptions): Promise<Asset | AssetError>
   get(id: string): Promise<void | Asset>
+  setOn(obj: ToSetOn): Promise<void | Asset>
   getPage(pagination?: Pagination, sortOrder?: SortOrder): Promise<Asset[]>
   getAll(): Promise<Asset[]>
 }
 
 interface ServiceDependencies extends BaseService {
   accountingService: AccountingService
+  cacheDataStore: CacheDataStore
 }
 
 export async function createAssetService({
   logger,
   knex,
-  accountingService
+  accountingService,
+  cacheDataStore
 }: ServiceDependencies): Promise<AssetService> {
   const log = logger.child({
     service: 'AssetService'
   })
+
   const deps: ServiceDependencies = {
     logger: log,
     knex,
-    accountingService
+    accountingService,
+    cacheDataStore
   }
+
   return {
     create: (options) => createAsset(deps, options),
     update: (options) => updateAsset(deps, options),
     delete: (options) => deleteAsset(deps, options),
     get: (id) => getAsset(deps, id),
+    setOn: (toSetOn) => setAssetOn(deps, toSetOn),
     getPage: (pagination?, sortOrder?) =>
       getAssetsPage(deps, pagination, sortOrder),
     getAll: () => getAll(deps)
@@ -78,6 +90,8 @@ async function createAsset(
       .first()
 
     if (deletedAsset) {
+      await deps.cacheDataStore.delete(deletedAsset.id)
+
       // if found, enable
       return await Asset.query(deps.knex)
         .patchAndFetchById(deletedAsset.id, { deletedAt: null })
@@ -120,9 +134,12 @@ async function updateAsset(
     throw new Error('Knex undefined')
   }
   try {
-    return await Asset.query(deps.knex)
+    const asset = await Asset.query(deps.knex)
       .patchAndFetchById(id, { withdrawalThreshold, liquidityThreshold })
       .throwIfNotFound()
+
+    await deps.cacheDataStore.set(id, asset)
+    return asset
   } catch (err) {
     if (err instanceof NotFoundError) {
       return AssetError.UnknownAsset
@@ -139,6 +156,8 @@ async function deleteAsset(
   if (!deps.knex) {
     throw new Error('Knex undefined')
   }
+
+  await deps.cacheDataStore.delete(id)
   try {
     // return error in case there is a peer or wallet address using the asset
     const peer = await Peer.query(deps.knex).where('assetId', id).first()
@@ -152,7 +171,6 @@ async function deleteAsset(
     if (walletAddress) {
       return AssetError.CannotDeleteInUseAsset
     }
-
     return await Asset.query(deps.knex)
       .patchAndFetchById(id, { deletedAt: deletedAt.toISOString() })
       .throwIfNotFound()
@@ -168,7 +186,13 @@ async function getAsset(
   deps: ServiceDependencies,
   id: string
 ): Promise<void | Asset> {
-  return await Asset.query(deps.knex).whereNull('deletedAt').findById(id)
+  const inMem = (await deps.cacheDataStore.get(id)) as Asset
+  if (inMem) return inMem
+
+  const asset = await Asset.query(deps.knex).whereNull('deletedAt').findById(id)
+  if (asset) await deps.cacheDataStore.set(asset.id, asset)
+
+  return asset
 }
 
 async function getAssetsPage(
@@ -183,4 +207,14 @@ async function getAssetsPage(
 
 async function getAll(deps: ServiceDependencies): Promise<Asset[]> {
   return await Asset.query(deps.knex).whereNull('deletedAt')
+}
+
+async function setAssetOn(
+  deps: ServiceDependencies,
+  obj: ToSetOn
+): Promise<void | Asset> {
+  if (!obj) return
+  const asset = await getAsset(deps, obj.assetId)
+  if (asset) obj.asset = asset
+  return asset
 }
