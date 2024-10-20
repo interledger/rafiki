@@ -9,7 +9,7 @@
     "dev": "tsc ./kratos/scripts/*.ts --esModuleInterop --outDir ./build && remix dev",
     "lint:fix": "eslint --fix app/",
     "lint:check": "eslint app/",
-    "start": "ENABLE_INSECURE_MESSAGE_COOKIE=true remix-serve ./build/index.js",
+    "start": "remix-serve ./build/index.js",
     "typecheck": "tsc"
   },
   "dependencies": {
