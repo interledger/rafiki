@@ -114,7 +114,9 @@ async function getPeer(
   deps: ServiceDependencies,
   id: string
 ): Promise<Peer | undefined> {
-  return Peer.query(deps.knex).findById(id).withGraphFetched('asset')
+  const peer = await Peer.query(deps.knex).findById(id)
+  await deps.assetService.setOn(peer)
+  return peer
 }
 
 async function createPeer(
@@ -131,16 +133,15 @@ async function createPeer(
 
   try {
     return await Peer.transaction(deps.knex, async (trx) => {
-      const peer = await Peer.query(trx)
-        .insertAndFetch({
-          assetId: options.assetId,
-          http: options.http,
-          maxPacketAmount: options.maxPacketAmount,
-          staticIlpAddress: options.staticIlpAddress,
-          name: options.name,
-          liquidityThreshold: options.liquidityThreshold
-        })
-        .withGraphFetched('asset')
+      const peer = await Peer.query(trx).insertAndFetch({
+        assetId: options.assetId,
+        http: options.http,
+        maxPacketAmount: options.maxPacketAmount,
+        staticIlpAddress: options.staticIlpAddress,
+        name: options.name,
+        liquidityThreshold: options.liquidityThreshold
+      })
+      await deps.assetService.setOn(peer)
 
       if (options.http?.incoming) {
         const err = await addIncomingHttpTokens({
@@ -232,10 +233,12 @@ async function updatePeer(
           throw err
         }
       }
-      return await Peer.query(trx)
+
+      const peer = await Peer.query(trx)
         .patchAndFetchById(options.id, options)
-        .withGraphFetched('asset')
         .throwIfNotFound()
+      await deps.assetService.setOn(peer)
+      return peer
     })
   } catch (err) {
     if (err instanceof NotFoundError) {
@@ -314,7 +317,6 @@ async function getPeerByDestinationAddress(
   // for `staticIlpAddress`s in the accounts table:
   // new RegExp('^' + staticIlpAddress + '($|\\.)')).test(destinationAddress)
   const peerQuery = Peer.query(deps.knex)
-    .withGraphJoined('asset')
     .where(
       raw('?', [destinationAddress]),
       'like',
@@ -344,6 +346,7 @@ async function getPeerByDestinationAddress(
   }
 
   const peer = await peerQuery.first()
+  await deps.assetService.setOn(peer)
 
   return peer || undefined
 }
@@ -375,18 +378,20 @@ async function getPeersPage(
   pagination?: Pagination,
   sortOrder?: SortOrder
 ): Promise<Peer[]> {
-  return await Peer.query(deps.knex)
-    .getPage(pagination, sortOrder)
-    .withGraphFetched('asset')
+  const peers = await Peer.query(deps.knex).getPage(pagination, sortOrder)
+  for (const peer of peers) await deps.assetService.setOn(peer)
+  return peers
 }
 
 async function deletePeer(
   deps: ServiceDependencies,
   id: string
 ): Promise<Peer | undefined> {
-  return Peer.query(deps.knex)
+  const peer = await Peer.query(deps.knex)
     .withGraphFetched('asset')
     .deleteById(id)
     .returning('*')
     .first()
+  await deps.assetService.setOn(peer)
+  return peer
 }

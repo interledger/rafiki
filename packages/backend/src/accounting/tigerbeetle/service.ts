@@ -31,6 +31,7 @@ import {
   getAccountTransfers
 } from './transfers'
 import { toTigerBeetleId } from './utils'
+import { TelemetryService } from '../../telemetry/service'
 
 export enum TigerBeetleAccountCode {
   LIQUIDITY_WEB_MONETIZATION = 1,
@@ -69,6 +70,7 @@ export const convertToTigerBeetleTransferCode: {
 export interface ServiceDependencies extends BaseService {
   tigerBeetle: Client
   withdrawalThrottleDelay?: number
+  telemetry?: TelemetryService
 }
 
 export function createAccountingService(
@@ -218,10 +220,15 @@ export async function getAccountTotalSent(
   deps: ServiceDependencies,
   id: string
 ): Promise<bigint | undefined> {
+  const stopTimer = deps.telemetry?.startTimer('tb_getAccountTotalSent', {
+    callName: 'tb_getAccountTotalSent'
+  })
   const account = (await getAccounts(deps, [id]))[0]
   if (account) {
+    stopTimer && stopTimer()
     return account.debits_posted
   }
+  stopTimer && stopTimer()
 }
 
 export async function getAccountsTotalSent(
