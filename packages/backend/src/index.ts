@@ -56,6 +56,7 @@ import {
   createNoopTelemetryService
 } from './telemetry/service'
 import { createWebhookService } from './webhook/service'
+import { createInMemoryDataStore } from './cache/cache'
 
 BigInt.prototype.toJSON = function () {
   return this.toString()
@@ -207,7 +208,8 @@ export function initIocContainer(
     return await createAssetService({
       logger: logger,
       knex: knex,
-      accountingService: await deps.use('accountingService')
+      accountingService: await deps.use('accountingService'),
+      cacheDataStore: createInMemoryDataStore(config.localCacheDuration)
     })
   })
 
@@ -278,7 +280,9 @@ export function initIocContainer(
       knex: await deps.use('knex'),
       logger: logger,
       accountingService: await deps.use('accountingService'),
-      webhookService: await deps.use('webhookService')
+      webhookService: await deps.use('webhookService'),
+      assetService: await deps.use('assetService'),
+      cacheDataStore: createInMemoryDataStore(config.localCacheDuration)
     })
   })
   container.singleton('spspRoutes', async (deps) => {
@@ -296,7 +300,8 @@ export function initIocContainer(
       knex: await deps.use('knex'),
       accountingService: await deps.use('accountingService'),
       walletAddressService: await deps.use('walletAddressService'),
-      config: await deps.use('config')
+      config: await deps.use('config'),
+      assetService: await deps.use('assetService')
     })
   })
   container.singleton('remoteIncomingPaymentService', async (deps) => {
