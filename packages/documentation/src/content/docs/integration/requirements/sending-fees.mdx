@@ -52,12 +52,16 @@ Let's assume your asset scale is 2. You'll charge a fixed fee of 100 (\$1.00) an
 
 </CodeBlock>
 
+<div class="overflow-table">
+
 | Variable      | Description                                                                                                                                                                                                                         |
 | ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `assetId`     | The asset's unique ID assigned by Rafiki when the asset was created.                                                                                                                                                                |
 | `type`        | `SENDING` indicates the sender will incur the fee. Note that the API spec shows `RECEIVING` as a possible value; however, it's not been implemented.                                                                                |
 | `fixed`       | The amount of the flat, fixed fee to charge. Assuming USD with an asset scale of 2 in the example above, the value of `100` equals \$1.00.                                                                                          |
 | `basisPoints` | The amount of the variable fee to charge based on the total amount. One basis point is equal to 0.01% of the total amount. `100` basis points equals 1%, and `10000` basis points equals 100%. In the example above, the fee is 1%. |
+
+</div>
 
 <CodeBlock title='Example JSON response'>
 

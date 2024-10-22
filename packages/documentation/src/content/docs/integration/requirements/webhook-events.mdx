@@ -26,19 +26,27 @@ For Rafiki to notify you about webhook events, you must expose a webhook endpoin
 
 When an event occurs, the [`backend`](/integration/services/backend-service) service makes a <Badge text="POST" variant="success" size="medium"/> request to your configured webhook endpoint. The `backend` service expects a `200` status in return.
 
+<div class="overflow-table">
+
 | Variable      | Type      | Description                                                         |
 | ------------- | --------- | ------------------------------------------------------------------- |
 | `WEBHOOK_URL` | `backend` | The endpoint to where requests are made when a webhook event occurs |
 
+</div>
+
 ## Webhook event request body
 
 Each webhook event is sent as a JSON payload with the following structure in the request body. The parameters within the `data` object will vary depending on the event.
+
+<div class="overflow-table">
 
 | Attribute | Type   | Description                                         | Required |
 | --------- | ------ | --------------------------------------------------- | -------- |
 | `id`      | String | UUID for the event                                  | Y        |
 | `type`    | Enum   | The `EventType`                                     | Y        |
 | `data`    | Object | Additional data that coincides with the `EventType` | Y        |
+
+</div>
 
 :::tip[Duplicate events]
 The `id` in the webhook event payload is unique. Your system can use the ID to determine whether the event has been received previously, preventing duplicate event processing.
@@ -143,20 +151,28 @@ If a non-200 status is returned, indicating an error, or the request times out, 
 
 The first retry is after 10 seconds. Additional retries occur after 20 more seconds, then after 30 more seconds, and so on.
 
+<div class="overflow-table">
+
 | Variable            | Type      | Description                                                                                                     |
 | ------------------- | --------- | --------------------------------------------------------------------------------------------------------------- |
 | `WEBHOOK_TIMEOUT`   | `backend` | The amount of time, in milliseconds, after which a webhook request will time out                                |
 | `WEBHOOK_MAX_RETRY` | `backend` | The maximum number of retries for a webhook event when a non-200 status is returned or if the request timed out |
 
+</div>
+
 ## Webhook events
 
 ### Incoming payments
+
+<div class="overflow-table">
 
 | Event type                                                  | Description                                                                       |
 | ----------------------------------------------------------- | --------------------------------------------------------------------------------- |
 | [`incoming_payment.created`](#incoming-payment-created)     | An incoming payment has been created                                              |
 | [`incoming_payment.completed`](#incoming-payment-completed) | An incoming payment is complete and will not accept any additional incoming funds |
 | [`incoming_payment.expired`](#incoming-payment-expired)     | An incoming payment expired and will not accept any additional incoming funds     |
+
+</div>
 
 #### Incoming payment created
 
@@ -251,11 +267,15 @@ In some scenarios, a sender may not have specified an `incomingAmount` when the 
 
 ### Outgoing payments
 
+<div class="overflow-table">
+
 | Event type                                                  | Description                                        |
 | ----------------------------------------------------------- | -------------------------------------------------- |
 | [`outgoing_payment.created`](#outgoing-payment-created)     | An outgoing payment has been created               |
 | [`outgoing_payment.completed`](#outgoing-payment-completed) | An outgoing payment has completed                  |
 | [`outgoing_payment.failed`](#outgoing-payment-failed)       | An outgoing payment partially or completely failed |
+
+</div>
 
 #### Outgoing payment created
 
@@ -353,10 +373,14 @@ The `outgoing_payment.failed` event indicates that an outgoing payment has eithe
 
 ### Wallet addresses
 
+<div class="overflow-table">
+
 | Event type                                                            | Description                                                        |
 | --------------------------------------------------------------------- | ------------------------------------------------------------------ |
 | [`wallet_address.not_found`](#wallet-address-not-found)               | The requested wallet address was not found on this Rafiki instance |
 | [`wallet_address.web_monetization`](#wallet-address-web-monetization) | Web Monetization payments have been received via STREAM            |
+
+</div>
 
 #### Wallet address not found
 
@@ -381,9 +405,13 @@ The `wallet_address.not_found` event indicates that a wallet address was request
 
 When you receive this event, look up the associated account in your system and create a wallet address for the account. The initial wallet address request will succeed if you create it within your configured `WALLET_ADDRESS_LOOKUP_TIMEOUT_MS` time frame.
 
+<div class="overflow-table">
+
 | Environment variable               | Type      | Description                                                                                                    |
 | ---------------------------------- | --------- | -------------------------------------------------------------------------------------------------------------- |
 | `WALLET_ADDRESS_LOOKUP_TIMEOUT_MS` | `backend` | The time in milliseconds that you have to create a missing wallet address before the initial request times out |
+
+</div>
 
 #### Wallet address Web Monetization
 
@@ -409,9 +437,13 @@ The `wallet_address.web_monetization` event indicates that a wallet address rece
 
 ### Low asset liquidity
 
+<div class="overflow-table">
+
 | Event type                                    | Description                                                   |
 | --------------------------------------------- | ------------------------------------------------------------- |
 | [`asset.liquidity_low`](#asset-liquidity-low) | Your asset liquidity has dropped below your defined threshold |
+
+</div>
 
 #### Asset liquidity low
 
@@ -436,9 +468,13 @@ The `asset.liquidity_low` event indicates that an asset's liquidity has dropped 
 
 ### Low peer liquidity
 
+<div class="overflow-table">
+
 | Event type                                  | Description                                                  |
 | ------------------------------------------- | ------------------------------------------------------------ |
 | [`peer.liquidity_low`](#peer-liquidity-low) | Your peer liquidity has dropped below your defined threshold |
+
+</div>
 
 #### Peer liquidity low
 

@@ -72,6 +72,8 @@ If an ASE does not provide the necessary exchange rate for a transaction, the te
 
 Rafiki has the following metrics. All data points (counter increases) are exported to collection endpoints at a configurable interval. The default interval is 15 seconds.
 
+<div class="overflow-table wide-column">
+
 | Metric                    | Type      | Description                                | Behavior                                                                       |
 | ------------------------- | --------- | ------------------------------------------ | ------------------------------------------------------------------------------ |
 | `transactions_total`      | Counter   | Count of funded outgoing transactions      | Increases by 1 for each successfully funded outgoing payment resource          |
@@ -81,6 +83,8 @@ Rafiki has the following metrics. All data points (counter increases) are export
 | `packet_amount_fulfill`   | Counter   | Amount sent through the network            | Increases by the amount sent in each ILP packet                                |
 | `transaction_fee_amounts` | Counter   | Fee amount sent through network            | Increases by the amount sent minus the amount received for an outgoing payment |
 | `ilp_pay_time_ms`         | Histogram | Time to complete an ILP payment            | Records the time taken to make an ILP payment                                  |
+
+</div>
 
 The current implementation only collects metrics on the SENDING side of a transaction. Metrics for external Open Payments transactions RECEIVED by a Rafiki instance in the network are not collected.
 
@@ -120,6 +124,8 @@ Another factor that obscures sensitive data is currency conversion. In cross-cur
 
 The following table shows the values in the algorithm when running transactions for different amounts. The raw value increases as you move down the rows of the table. All values are in scale 4.
 
+<div class="overflow-table">
+
 | Raw value | Bucket size | Rounded value | Privacy parameter | Laplace noise | Final value |
 | --------- | ----------- | ------------- | ----------------- | ------------- | ----------- |
 | 8300      | 10000       | 10000         | 1000              | 2037          | 12037       |
@@ -130,6 +136,8 @@ The following table shows the values in the algorithm when running transactions 
 | 90422400  | 10000000    | 90000000      | 1000000           | 2210649       | 92210649    |
 | 112400400 | 10000000    | 100000000     | 1000000           | 407847        | 100407847   |
 | 222290500 | 10000000    | 100000000     | 1000000           | -686149       | 99313851    |
+
+</div>
 
 ### References
 
@@ -153,6 +161,8 @@ You must deploy your own OTEL Collector that acts as a sidecar container to Rafi
 
 ### Telemetry environment variables
 
+<div class="overflow-table wide-column">
+
 | Variable name                    | Type    | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 | Required |
 | -------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
 | `ENABLE_TELEMETRY`               | Boolean | Enables the telemetry service on Rafiki. Defaults to `true`.                                                                                                                                                                                                                                                                                                                                                                                                                                                | N        |
@@ -160,6 +170,8 @@ You must deploy your own OTEL Collector that acts as a sidecar container to Rafi
 | `OPEN_TELEMETRY_COLLECTOR_URLS`  | String  | A CSV of URLs for OTEL Collectors (e.g., `http://otel-collector-NLB-e3172ff9d2f4bc8a.elb.eu-west-2.amazonaws.com:4317,http://happy-life-otel-collector:4317`).                                                                                                                                                                                                                                                                                                                                              | N        |
 | `OPEN_TELEMETRY_EXPORT_INTERVAL` | Number  | Indicates, in milliseconds, how often the instrumented Rafiki instance should send metrics. Defaults to `15000`.                                                                                                                                                                                                                                                                                                                                                                                            | N        |
 | `TELEMETRY_EXCHANGE_RATES_URL`   | String  | <p>Defines the endpoint Rafiki will query for exchange rates. Used as a fallback if/when [exchange rates](/integration/requirements/exchange-rates) aren’t provided.</p><p>When set, the response format of the external exchange rates API should be of type `rates`, as is expected by the rate service.</p><p>Defaults to `https://telemetry-exchange-rates.s3.amazonaws.com/exchange-rates-usd.json`, which points to a public S3 that has the previously mentioned required format, updated daily.</p> | N        |
+
+</div>
 
 ### Example Docker OTEL Collector image and configuration
 

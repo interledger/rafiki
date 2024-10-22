@@ -38,11 +38,15 @@ An asset represents an item of value that can be transferred via the Interledger
 
 In Rafiki, the `asset` type is comprised of the following properties.
 
+<div class="overflow-table">
+
 | Property     | Type    | Description                                                                                                            | Example |
 | ------------ | ------- | ---------------------------------------------------------------------------------------------------------------------- | ------- |
 | `value `     | BigInt  | A numerical amount                                                                                                     | `10000` |
 | `assetCode`  | String  | Should be an <LinkOut href="https://en.wikipedia.org/wiki/ISO_4217">ISO 4217 currency code</LinkOut> whenever possible | `"USD"` |
 | `assetScale` | Integer | Difference in order of magnitude between the standard unit and a fractional unit                                       | `2`     |
+
+</div>
 
 To convert an asset amount into a currency amount that's easier to read, apply the following formula:
 
