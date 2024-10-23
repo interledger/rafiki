@@ -98,6 +98,7 @@ import {
 } from './open_payments/wallet_address/middleware'
 
 import { LoggingPlugin } from './graphql/plugin'
+import { LocalPaymentService } from './payment-method/local/service'
 import { GrantService } from './open_payments/grant/service'
 import { AuthServerService } from './open_payments/authServer/service'
 export interface AppContextData {
@@ -254,6 +255,7 @@ export interface AppServices {
   tigerBeetle?: Promise<TigerbeetleClient>
   paymentMethodHandlerService: Promise<PaymentMethodHandlerService>
   ilpPaymentService: Promise<IlpPaymentService>
+  localPaymentService: Promise<LocalPaymentService>
 }
 
 export type AppContainer = IocContract<AppServices>

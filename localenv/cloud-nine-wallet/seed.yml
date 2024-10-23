@@ -46,6 +46,12 @@ accounts:
     path: accounts/broke
     brunoEnvVar: brokeWalletAddress
     assetCode: USD
+  - name: "Luca Rossi"
+    id: 63dcc665-d946-4263-ac27-d0da1eb08a83
+    initialBalance: 50
+    path: accounts/lrossi
+    brunoEnvVar: lrossiWalletAddressId
+    assetCode: EUR
 rates:
   EUR:
     MXN: 18.78

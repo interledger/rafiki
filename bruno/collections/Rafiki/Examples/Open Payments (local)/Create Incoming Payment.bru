@@ -1,0 +1,55 @@
+meta {
+  name: Create Incoming Payment
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{receiverOpenPaymentsHost}}/incoming-payments
+  body: json
+  auth: none
+}
+
+headers {
+  Authorization: GNAP {{accessToken}}
+}
+
+body:json {
+  {
+      "walletAddress": "{{receiverWalletAddress}}",
+      "incomingAmount": {
+          "value": "100",
+          "assetCode": "{{receiverAssetCode}}",
+          "assetScale": {{receiverAssetScale}}
+      },
+      "expiresAt": "{{tomorrow}}",
+      "metadata": {
+          "description": "Free Money!"
+      }
+  }
+}
+
+script:pre-request {
+  const scripts = require('./scripts');
+  
+  bru.setEnvVar("tomorrow", (new Date(new Date().setDate(new Date().getDate() + 1))).toISOString());
+  
+  scripts.addHostHeader();
+  
+  await scripts.addSignatureHeaders();
+}
+
+script:post-response {
+  const body = res.getBody();
+  
+  if (body?.id) {
+    bru.setEnvVar("incomingPaymentId", body.id.split("/").pop());
+  }
+  
+}
+
+tests {
+  test("Status code is 201", function() {
+    expect(res.getStatus()).to.equal(201);
+  });
+}
