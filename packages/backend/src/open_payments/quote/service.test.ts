@@ -36,7 +36,7 @@ import {
   PaymentMethodHandlerErrorCode
 } from '../../payment-method/handler/errors'
 import { Receiver } from '../receiver/model'
-import { IlpQuoteDetailsService } from '../../payment-method/ilp/quote-details/service'
+import { IlpQuoteDetails } from '../../payment-method/ilp/quote-details/model'
 
 describe('QuoteService', (): void => {
   let deps: IocContract<AppServices>
@@ -48,7 +48,6 @@ describe('QuoteService', (): void => {
   let sendingWalletAddress: MockWalletAddress
   let receivingWalletAddress: MockWalletAddress
   let config: IAppConfig
-  let ilpQuoteDetailsService: IlpQuoteDetailsService
   let receiverGet: typeof receiverService.get
   let receiverGetSpy: jest.SpyInstance<
     Promise<Receiver | undefined>,
@@ -88,7 +87,6 @@ describe('QuoteService', (): void => {
     quoteService = await deps.use('quoteService')
     paymentMethodHandlerService = await deps.use('paymentMethodHandlerService')
     receiverService = await deps.use('receiverService')
-    ilpQuoteDetailsService = await deps.use('ilpQuoteDetailsService')
   })
 
   beforeEach(async (): Promise<void> => {
@@ -156,9 +154,9 @@ describe('QuoteService', (): void => {
           return
         }
 
-        quote.ilpQuoteDetails = await ilpQuoteDetailsService.getByQuoteId(
-          quote.id
-        )
+        quote.ilpQuoteDetails = await IlpQuoteDetails.query()
+          .where({ quoteId: quote.id })
+          .first()
 
         return quote
       },
@@ -167,7 +165,9 @@ describe('QuoteService', (): void => {
 
         const quotesWithDetails = await Promise.all(
           quotes.map(async (q) => {
-            q.ilpQuoteDetails = await ilpQuoteDetailsService.getByQuoteId(q.id)
+            q.ilpQuoteDetails = await IlpQuoteDetails.query()
+              .where({ quoteId: q.id })
+              .first()
             return q
           })
         )
@@ -283,8 +283,9 @@ describe('QuoteService', (): void => {
                   id: quote.id
                 })
                 assert(foundQuote)
-                foundQuote.ilpQuoteDetails =
-                  await ilpQuoteDetailsService.getByQuoteId(quote.id)
+                foundQuote.ilpQuoteDetails = await IlpQuoteDetails.query()
+                  .where({ quoteId: quote.id })
+                  .first()
                 expect(foundQuote).toEqual(quote)
               }
             )
@@ -374,8 +375,9 @@ describe('QuoteService', (): void => {
                   id: quote.id
                 })
                 assert(foundQuote)
-                foundQuote.ilpQuoteDetails =
-                  await ilpQuoteDetailsService.getByQuoteId(quote.id)
+                foundQuote.ilpQuoteDetails = await IlpQuoteDetails.query()
+                  .where({ quoteId: quote.id })
+                  .first()
                 expect(foundQuote).toEqual(quote)
               }
             )
@@ -493,9 +495,9 @@ describe('QuoteService', (): void => {
       })
       assert.ok(!isQuoteError(quote))
 
-      const ilpQuoteDetails = await ilpQuoteDetailsService.getByQuoteId(
-        quote.id
-      )
+      const ilpQuoteDetails = await IlpQuoteDetails.query()
+        .where({ quoteId: quote.id })
+        .first()
 
       expect(quote).toMatchObject({
         debitAmount: mockedQuote.debitAmount,

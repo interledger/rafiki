@@ -48,7 +48,6 @@ import {
 import { createHttpTokenService } from './payment-method/ilp/peer-http-token/service'
 import { createPeerService } from './payment-method/ilp/peer/service'
 import { createIlpPaymentService } from './payment-method/ilp/service'
-import { createIlpQuoteDetailsService } from './payment-method/ilp/quote-details/service'
 import {
   createLocalPaymentService,
   ServiceDependencies as LocalPaymentServiceDependencies
@@ -428,13 +427,6 @@ export function initIocContainer(
     })
   })
 
-  container.singleton('ilpQuoteDetailsService', async (deps) => {
-    return await createIlpQuoteDetailsService({
-      logger: await deps.use('logger'),
-      knex: await deps.use('knex')
-    })
-  })
-
   container.singleton('ilpPaymentService', async (deps) => {
     return await createIlpPaymentService({
       logger: await deps.use('logger'),
@@ -442,7 +434,6 @@ export function initIocContainer(
       config: await deps.use('config'),
       makeIlpPlugin: await deps.use('makeIlpPlugin'),
       ratesService: await deps.use('ratesService'),
-      ilpQuoteDetailsService: await deps.use('ilpQuoteDetailsService'),
       telemetry: await deps.use('telemetry')
     })
   })

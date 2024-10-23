@@ -15,7 +15,6 @@ import {
   PaymentMethodHandlerErrorCode
 } from '../handler/errors'
 import { TelemetryService } from '../../telemetry/service'
-import { IlpQuoteDetailsService } from './quote-details/service'
 import { IlpQuoteDetails } from './quote-details/model'
 
 export interface IlpPaymentService extends PaymentMethodService {}
@@ -24,7 +23,6 @@ export interface ServiceDependencies extends BaseService {
   config: IAppConfig
   ratesService: RatesService
   makeIlpPlugin: (options: IlpPluginOptions) => IlpPlugin
-  ilpQuoteDetailsService: IlpQuoteDetailsService
   telemetry: TelemetryService
 }
 
