@@ -251,9 +251,8 @@ async function pay(
     sourceAmount: finalDebitAmount,
     destinationAmount: finalReceiveAmount,
     transferType: TransferType.TRANSFER,
-    // TODO: no timeout? theoretically possible (perhaps even correct?) but need to
-    // update IncomingPayment state to COMPLETE some other way. trxOrError.post usually
-    // will (via onCredit) but post will return error instead because its already posted.
+    // TODO: remove timeout after implementing single phase transfer
+    // https://github.com/interledger/rafiki/issues/2629
     timeout: deps.config.tigerBeetleTwoPhaseTimeout
   }
 
