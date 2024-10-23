@@ -27,9 +27,6 @@ exports.up = function (knex) {
         table.timestamp('updatedAt').defaultTo(knex.fn.now())
       })
       .then(() => {
-        return knex.raw(`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`)
-      })
-      .then(() => {
         return knex.raw(`
           INSERT INTO "ilpQuoteDetails" (
             id,
@@ -43,7 +40,7 @@ exports.up = function (knex) {
             "highEstimatedExchangeRateDenominator"
           )
           SELECT
-            uuid_generate_v4(),
+            gen_random_uuid(),
             id AS "quoteId",
             "maxPacketAmount",
             "minExchangeRateNumerator",
@@ -63,7 +60,5 @@ exports.up = function (knex) {
  * @returns { Promise<void> }
  */
 exports.down = function (knex) {
-  return knex.raw(`DROP EXTENSION IF EXISTS "uuid-ossp"`).then(() => {
-    return knex.schema.dropTableIfExists('ilpQuoteDetails')
-  })
+  return knex.schema.dropTableIfExists('ilpQuoteDetails')
 }

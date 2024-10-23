@@ -7,9 +7,6 @@ exports.up = function (knex) {
   return knex('quotes')
     .whereNull('estimatedExchangeRate')
     .update({
-      // TODO: vet this more... looks like the low* fields were (inadvertently?)
-      // made nullable when updating from bigint to decimal. If they are null
-      // anywhere then this wont work.
       estimatedExchangeRate: knex.raw('?? / ??', [
         'lowEstimatedExchangeRateNumerator',
         'lowEstimatedExchangeRateDenominator'
