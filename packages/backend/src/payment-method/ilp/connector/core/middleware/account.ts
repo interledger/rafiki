@@ -87,10 +87,6 @@ export function createAccountMiddleware(serverAddress: string): ILPMiddleware {
               LiquidityAccountType.INCOMING
             )
           }
-          ctx.services.logger.debug(
-            { incomingPaymentId: incomingPayment.id },
-            'destination account is incoming payment'
-          )
           return incomingPayment
         }
         // Open Payments SPSP fallback account
@@ -104,20 +100,12 @@ export function createAccountMiddleware(serverAddress: string): ILPMiddleware {
               LiquidityAccountType.WEB_MONETIZATION
             )
           }
-          ctx.services.logger.debug(
-            { walletAddressId: walletAddress.id },
-            'destination account is wallet address'
-          )
           return walletAddress
         }
       }
       const address = ctx.request.prepare.destination
       const peer = await peers.getByDestinationAddress(address)
       if (peer) {
-        ctx.services.logger.debug(
-          { peerId: peer.id },
-          'destination account is peer'
-        )
         return peer
       }
       if (
