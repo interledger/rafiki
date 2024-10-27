@@ -14,8 +14,8 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 export const action = () => {
   return redirectDocument(
     `${variables.kratosBrowserPublicUrl}/self-service/login/browser`
-  );
-};
+  )
+}
 
 export default function Auth() {
   return (
@@ -39,7 +39,7 @@ export default function Auth() {
             </a>
           </p>
           <div>
-            <Form method="post">
+            <Form method='post'>
               <Button aria-label='logout' type='submit' className='mr-2'>
                 Login
               </Button>
