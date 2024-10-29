@@ -15,8 +15,8 @@ type Query {
     sortOrder: SortOrder
   ): GrantsConnection!
 
-  "Fetch a grant"
-  grant(id: ID!): Grant!
+  "Fetch a specific grant by its ID."
+  grant("Unique identifier of the grant." id: ID!): Grant!
 }
 
 type Mutation {

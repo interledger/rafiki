@@ -114,6 +114,12 @@ export async function createAsset(
   scale: number,
   liquidityThreshold: number
 ): Promise<AssetMutationResponse> {
+  const existingAsset = await getAssetByCodeAndScale(apolloClient, code, scale)
+
+  if (existingAsset) {
+    return existingAsset
+  }
+
   const createAssetMutation = gql`
     mutation CreateAsset($input: CreateAssetInput!) {
       createAsset(input: $input) {
@@ -146,6 +152,33 @@ export async function createAsset(
     })
 }
 
+async function getAssetByCodeAndScale(
+  apolloClient: ApolloClient<NormalizedCacheObject>,
+  code: string,
+  scale: number
+) {
+  const getAssetQuery = gql`
+    query GetAssetByCodeAndScale($code: String!, $scale: UInt8!) {
+      assetByCodeAndScale(code: $code, scale: $scale) {
+        id
+        code
+        scale
+        liquidityThreshold
+      }
+    }
+  `
+  const args = { code: code, scale: scale }
+  const { data } = await apolloClient.query({
+    query: getAssetQuery,
+    variables: args
+  })
+
+  if (data.assetByCodeAndScale) {
+    return { asset: data.assetByCodeAndScale }
+  }
+  return null
+}
+
 export async function createPeer(
   apolloClient: ApolloClient<NormalizedCacheObject>,
   logger: Logger,
@@ -156,6 +189,15 @@ export async function createPeer(
   name: string,
   liquidityThreshold: number
 ): Promise<CreatePeerMutationResponse> {
+  const existingPeer = await getPeerByAddressAndAsset(
+    apolloClient,
+    staticIlpAddress,
+    assetId
+  )
+  if (existingPeer) {
+    return existingPeer
+  }
+
   const createPeerMutation = gql`
     mutation CreatePeer($input: CreatePeerInput!) {
       createPeer(input: $input) {
@@ -189,6 +231,44 @@ export async function createPeer(
       }
       return data.createPeer
     })
+}
+
+async function getPeerByAddressAndAsset(
+  apolloClient: ApolloClient<NormalizedCacheObject>,
+  staticIlpAddress: string,
+  assetId: string
+) {
+  const getPeerByAddressAndAssetQuery = gql`
+    query getPeerByAddressAndAsset(
+      $staticIlpAddress: String!
+      $assetId: String!
+    ) {
+      peerByAddressAndAsset(
+        staticIlpAddress: $staticIlpAddress
+        assetId: $assetId
+      ) {
+        id
+        name
+        asset {
+          id
+          scale
+          code
+          withdrawalThreshold
+        }
+      }
+    }
+  `
+  const args = { staticIlpAddress: staticIlpAddress, assetId: assetId }
+
+  const { data } = await apolloClient.query({
+    query: getPeerByAddressAndAssetQuery,
+    variables: args
+  })
+
+  if (data.peerByAddressAndAsset) {
+    return { peer: data.peerByAddressAndAsset }
+  }
+  return null
 }
 
 export async function createAutoPeer(
@@ -315,6 +395,14 @@ export async function createWalletAddress(
   accountUrl: string,
   assetId: string
 ): Promise<WalletAddress> {
+  const existingWalletAddress = await getWalletAddressByURL(
+    apolloClient,
+    accountUrl
+  )
+  if (existingWalletAddress) {
+    return existingWalletAddress
+  }
+
   const createWalletAddressMutation = gql`
     mutation CreateWalletAddress($input: CreateWalletAddressInput!) {
       createWalletAddress(input: $input) {
@@ -349,6 +437,34 @@ export async function createWalletAddress(
 
       return data.createWalletAddress.walletAddress
     })
+}
+
+async function getWalletAddressByURL(
+  apolloClient: ApolloClient<NormalizedCacheObject>,
+  url: string
+) {
+  const query = gql`
+    query getWalletAddressByUrl($url: String!) {
+      walletAddressByUrl(url: $url) {
+        id
+        liquidity
+        url
+        publicName
+        asset {
+          id
+          scale
+          code
+          withdrawalThreshold
+        }
+      }
+    }
+  `
+  const { data } = await apolloClient.query({
+    query: query,
+    variables: { url: url }
+  })
+
+  return data.walletAddressByUrl ?? null
 }
 
 export async function createWalletAddressKey(

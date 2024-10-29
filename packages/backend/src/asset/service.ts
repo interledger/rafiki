@@ -33,6 +33,7 @@ export interface AssetService {
   update(options: UpdateOptions): Promise<Asset | AssetError>
   delete(options: DeleteOptions): Promise<Asset | AssetError>
   get(id: string): Promise<void | Asset>
+  getByCodeAndScale(code: string, scale: number): Promise<void | Asset>
   getPage(pagination?: Pagination, sortOrder?: SortOrder): Promise<Asset[]>
   getAll(): Promise<Asset[]>
 }
@@ -59,6 +60,8 @@ export async function createAssetService({
     update: (options) => updateAsset(deps, options),
     delete: (options) => deleteAsset(deps, options),
     get: (id) => getAsset(deps, id),
+    getByCodeAndScale: (code, scale) =>
+      getAssetByCodeAndScale(deps, code, scale),
     getPage: (pagination?, sortOrder?) =>
       getAssetsPage(deps, pagination, sortOrder),
     getAll: () => getAll(deps)
@@ -169,6 +172,16 @@ async function getAsset(
   id: string
 ): Promise<void | Asset> {
   return await Asset.query(deps.knex).whereNull('deletedAt').findById(id)
+}
+
+async function getAssetByCodeAndScale(
+  deps: ServiceDependencies,
+  code: string,
+  scale: number
+): Promise<void | Asset> {
+  return await Asset.query(deps.knex)
+    .where({ code: code, scale: scale })
+    .first()
 }
 
 async function getAssetsPage(

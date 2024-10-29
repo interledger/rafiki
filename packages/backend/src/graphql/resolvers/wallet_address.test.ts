@@ -718,6 +718,89 @@ describe('Wallet Address Resolvers', (): void => {
       }
     )
 
+    test.each`
+      publicName
+      ${'Alice'}
+      ${undefined}
+    `(
+      'Can get a wallet address by its url (publicName: $publicName)',
+      async ({ publicName }): Promise<void> => {
+        const walletProp01 = new WalletAddressAdditionalProperty()
+        walletProp01.fieldKey = 'key-test-query-one'
+        walletProp01.fieldValue = 'value-test-query'
+        walletProp01.visibleInOpenPayments = true
+        const walletProp02 = new WalletAddressAdditionalProperty()
+        walletProp02.fieldKey = 'key-test-query-two'
+        walletProp02.fieldValue = 'value-test-query'
+        walletProp02.visibleInOpenPayments = false
+        const additionalProperties = [walletProp01, walletProp02]
+
+        const walletAddress = await createWalletAddress(deps, {
+          publicName,
+          createLiquidityAccount: true,
+          additionalProperties
+        })
+        const args = { url: walletAddress.url }
+        const query = await appContainer.apolloClient
+          .query({
+            query: gql`
+              query getWalletAddressByUrl($url: String!) {
+                walletAddressByUrl(url: $url) {
+                  id
+                  liquidity
+                  asset {
+                    code
+                    scale
+                  }
+                  url
+                  publicName
+                  additionalProperties {
+                    key
+                    value
+                    visibleInOpenPayments
+                  }
+                }
+              }
+            `,
+            variables: args
+          })
+          .then((query): WalletAddress => {
+            if (query.data) {
+              return query.data.walletAddressByUrl
+            } else {
+              throw new Error('Data was empty')
+            }
+          })
+
+        expect(query).toEqual({
+          __typename: 'WalletAddress',
+          id: walletAddress.id,
+          liquidity: '0',
+          asset: {
+            __typename: 'Asset',
+            code: walletAddress.asset.code,
+            scale: walletAddress.asset.scale
+          },
+          url: walletAddress.url,
+          publicName: publicName ?? null,
+          additionalProperties: [
+            {
+              __typename: 'AdditionalProperty',
+              key: walletProp01.fieldKey,
+              value: walletProp01.fieldValue,
+              visibleInOpenPayments: walletProp01.visibleInOpenPayments
+            },
+            {
+              __typename: 'AdditionalProperty',
+              key: walletProp02.fieldKey,
+              value: walletProp02.fieldValue,
+              visibleInOpenPayments: walletProp02.visibleInOpenPayments
+            }
+          ]
+        })
+      }
+    )
+
     test('Returns error for unknown wallet address', async (): Promise<void> => {
       expect.assertions(2)
       try {

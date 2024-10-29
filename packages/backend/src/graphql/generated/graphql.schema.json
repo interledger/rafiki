@@ -6216,6 +6216,51 @@
             "deprecationReason": null
           },
           {
+            "name": "assetByCodeAndScale",
+            "description": "Get an asset based on its currency code and scale if it exists.",
+            "args": [
+              {
+                "name": "code",
+                "description": "ISO 4217 currency code.",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "String",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "scale",
+                "description": "Difference in order of magnitude between the standard unit of an asset and its corresponding fractional unit.",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "UInt8",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              }
+            ],
+            "type": {
+              "kind": "OBJECT",
+              "name": "Asset",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "assets",
             "description": "Fetch a paginated list of assets.",
             "args": [
@@ -6558,6 +6603,51 @@
             "deprecationReason": null
           },
           {
+            "name": "peerByAddressAndAsset",
+            "description": "Get a peer based on its ILP address and asset ID if it exists.",
+            "args": [
+              {
+                "name": "assetId",
+                "description": "Asset ID of peering relationship.",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "String",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "staticIlpAddress",
+                "description": "ILP address of the peer.",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "String",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              }
+            ],
+            "type": {
+              "kind": "OBJECT",
+              "name": "Peer",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "peers",
             "description": "Fetch a paginated list of peers.",
             "args": [
@@ -6699,6 +6789,35 @@
               {
                 "name": "id",
                 "description": "Unique identifier of the wallet address.",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "String",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              }
+            ],
+            "type": {
+              "kind": "OBJECT",
+              "name": "WalletAddress",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "walletAddressByUrl",
+            "description": "Get a wallet address by its url if it exists",
+            "args": [
+              {
+                "name": "url",
+                "description": "Wallet Address URL.",
                 "type": {
                   "kind": "NON_NULL",
                   "name": null,
