@@ -730,7 +730,7 @@ describe('QuoteService', (): void => {
         })
       })
 
-      test.each`
+      test.only.each`
         debitAmountValue | fixedFee | basisPointFee | exchangeRate | expectedReceiveAmountValue | description
         ${200n}          | ${0}     | ${0}          | ${0.5}       | ${100n}                    | ${'no fees'}
         ${200n}          | ${0}     | ${0}          | ${1.0}       | ${200n}                    | ${'no fees, equal exchange rate'}
@@ -746,8 +746,11 @@ describe('QuoteService', (): void => {
           fixedFee,
           basisPointFee,
           expectedReceiveAmountValue,
-          exchangeRate
+          exchangeRate,
+          description
         }): Promise<void> => {
+          if (description !== 'basis point fee') return
+
           const receiver = await createReceiver(deps, receivingWalletAddress)
 
           await Fee.query().insertAndFetch({

@@ -250,6 +250,24 @@ function calculateFixedSendQuoteAmounts(
   const receiveAmountValue =
     BigInt(quote.receiveAmount.value) - exchangeAdjustedFees
 
+  Here is the discrepency... the fee is 2n instead of 4n in other calculation.... why?
+  - I guess because we are using exchange adjusted fee...
+  // For test case: QuoteService › create › fees - fixed send with cross-currency › basis point fee
+  // {
+  //   debitAmountMinusFees: 196n,
+  //   fees: 2n,
+  //   estimatedExchangeRate: '0.5000000000',
+  //   receiveAmountValue: 99n
+  // }
+  console.log({
+    debitAmountMinusFees:
+      quote.debitAmount.value -
+      (quote.fee?.calculate(quote.debitAmount.value) ?? 0n),
+    fees,
+    estimatedExchangeRate,
+    receiveAmountValue
+  })
+
   if (receiveAmountValue <= BigInt(0)) {
     deps.logger.info(
       { fees, exchangeAdjustedFees, estimatedExchangeRate, receiveAmountValue },
@@ -278,6 +296,85 @@ function calculateFixedSendQuoteAmounts(
     receiveAmountValue
   }
 }
+
+// WIP: rework to
+// debitAmount = 500
+// sourceAmount/debitAmountMinusFees = 500 - (500 * 0.02 + 100) = 390
+// receiveAmount = floor(debitAmountMinusFees * estimatedExchangeRate) = floor(390 * 0.91) = 354
+
+// Problem: some quote tests are off by 1. changing calculate to floor/receive amount to floor (and every combo) didnt seem to fix it
+
+// function calculateFixedSendQuoteAmounts(
+//   deps: ServiceDependencies,
+//   quote: Quote,
+//   maxReceiveAmountValue: bigint
+// ): CalculateQuoteAmountsWithFeesResult {
+//   // TODO: rework to
+//   // debitAmount = 500
+//   // sourceAmount/debitAmountMinusFees = 500 - (500 * 0.02 + 100) = 390
+//   // receiveAmount = floor(debitAmountMinusFees * estimatedExchangeRate) = floor(390 * 0.91) = 354
+
+//   const fees = quote.fee?.calculate(quote.debitAmount.value) ?? BigInt(0)
+//   const debitAmountMinusFees = quote.debitAmount.value - fees
+//   console.log({ debitAmountMinusFees, fees })
+//   const { estimatedExchangeRate } = quote
+//   const receiveAmountValue = BigInt(
+//     Math.floor(Number(debitAmountMinusFees) * estimatedExchangeRate)
+//   )
+
+//   // For test case: QuoteService › create › fees - fixed send with cross-currency › basis point fee
+//   // {
+//   //   debitAmountMinusFees: 196n,
+//   //   fees: 4n,
+//   //   estimatedExchangeRate: '0.5000000000',
+//   //   receiveAmountValue: 98n
+//   // }
+//   console.log({
+//     debitAmountMinusFees,
+//     fees,
+//     estimatedExchangeRate,
+//     receiveAmountValue
+//   })
+
+//   // console.log({ estimatedExchangeRate })
+
+//   // const exchangeAdjustedFees = BigInt(
+//   //   Math.ceil(Number(fees) * estimatedExchangeRate)
+//   // )
+//   // const receiveAmountValue =
+//   //   BigInt(quote.receiveAmount.value) - exchangeAdjustedFees
+
+//   if (receiveAmountValue <= BigInt(0)) {
+//     deps.logger.info(
+//       { fees, estimatedExchangeRate, receiveAmountValue },
+//       'Negative receive amount when calculating quote amount'
+//     )
+//     throw QuoteError.NonPositiveReceiveAmount
+//   }
+
+//   if (receiveAmountValue > maxReceiveAmountValue) {
+//     throw QuoteError.InvalidAmount
+//   }
+
+//   deps.logger.debug(
+//     {
+//       'quote.receiveAmount.value': quote.receiveAmount.value,
+//       debitAmountValue: quote.debitAmount.value,
+//       receiveAmountValue,
+//       fees
+//       // exchangeAdjustedFees
+//     },
+//     'Calculated fixed-send quote amount with fees'
+//   )
+
+//   // what is the debit amount that satisfies the receiveAmount after fees
+//   // - in my case, debitAmount of 500 includes fees. (answer is 390 in this case)
+
+//   return {
+//     debitAmountValue: quote.debitAmount.value,
+//     receiveAmountValue
+//   }
+// }
 
 /**
  * Calculate fixed-delivery quote amounts: receiveAmount is locked,
@@ -359,6 +456,8 @@ async function finalizeQuote(
   const { debitAmountValue, receiveAmountValue } = maxReceiveAmountValue
     ? calculateFixedSendQuoteAmounts(deps, quote, maxReceiveAmountValue)
     : calculateFixedDeliveryQuoteAmounts(deps, quote)
+
+  console.log('before forming patchOptions', { maxReceiveAmountValue })
 
   const patchOptions = {
     debitAmountMinusFees: maxReceiveAmountValue
