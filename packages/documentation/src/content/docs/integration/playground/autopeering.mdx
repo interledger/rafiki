@@ -4,7 +4,7 @@ title: Auto-Peering with the Test Network
 
 import { LinkOut } from '@interledger/docs-design-system'
 
-You can start one local instance of Rafiki and peer it automatically with the remote <LinkOut href='rafiki.money'>Test Network</LinkOut> by running the following commands:
+You can start one local instance of Rafiki and peer it automatically with the remote <LinkOut href='https://wallet.interledger-test.dev/'>Test Network</LinkOut> by running the following commands:
 
 ```sh
 ## using Tigerbeetle DB
@@ -13,7 +13,7 @@ pnpm localenv:compose:autopeer
 pnpm localenv:compose:psql:autopeer
 ```
 
-The mock account servicing entity, Cloud Nine Wallet, in your local Rafiki instance will automatically peer with the remote <LinkOut href='https://rafiki.money/'>Test Network</LinkOut> instance. The required services will be exposed externally using the <LinkOut href='https://www.npmjs.com/package/localtunnel'>localtunnel package</LinkOut>.
+The mock account servicing entity, Cloud Nine Wallet, in your local Rafiki instance will automatically peer with the remote <LinkOut href='https://wallet.interledger-test.dev/'>Test Network</LinkOut> instance. The required services will be exposed externally using the <LinkOut href='https://www.npmjs.com/package/localtunnel'>localtunnel package</LinkOut>.
 
 The exposed ports are:
 
