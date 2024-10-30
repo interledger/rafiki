@@ -139,6 +139,64 @@ We provide an <LinkOut href="https://github.com/interledger/rafiki/blob/main/pac
 
 Additionally, the [local playground](/integration/playground/overview) contains example payloads in the <LinkOut href="https://github.com/interledger/rafiki/tree/main/bruno/collections/Rafiki/Sample%20Webhook%20Events">Bruno collection</LinkOut> that can be used to test your webhook service integration.
 
+## Verify webhook signatures
+
+To protect your endpoint from unauthorized or spoofed requests, Rafiki supports an optional, but highly recommended, webhook signature verification process. By enabling signature verification, you can ensure that webhook requests are genuinely from Rafiki.
+
+Each webhook request includes a `Rafiki-Signature` header with a timestamp and signature digest. If you instance is configured with a `SIGNATURE_SECRET` environment variable, you can verify the authenticity of each webhook request using the steps below.
+
+### Extract the timestamp and signature from the header
+
+The `Rafiki-Signature` header in each webhook request has the following format:
+
+<CodeBlock title="Rafiki-Signature header">
+
+```
+Rafiki-Signature: t=<timestamp>, v<version>=<signature_digest>
+```
+
+</CodeBlock>
+
+- `t=<timestamp>`: The UNIX timestamp (in seconds) when the signature was generated.
+- `v<version>=<digest>`: The versioned HMAC SHA-256 signature digest. The default version is `v1`.
+
+### Prepare the signed payload string
+
+To recreate the signed payload string, concatenate the following.
+- The timestamp extracted from the header
+- A period (.) character
+- The actual JSON payload from the request body, containing the `id`, `type`, and `data` attributes
+
+This string format is essential for accurate signature validation.
+
+### Generate the expected signature
+
+Use HMAC SHA-256 with the `SIGNATURE_SECRET` environment variable as the key and the signed payload string as the message.
+
+### Compare the signatures
+
+Finally, compare the signature in the header to the expected signature you generated. For security, use a constant-time comparison function to prevent timing attacks. Also, check the timestamp to ensure that it is within the allowed TTL (configured in the `ADMIN_API_SIGNATURE_TTL_SECONDS` environment variable) to ensure freshness.
+
+### Example
+Below is an example in `<YOUR PROGRAMMING LANGUAGE OF CHOICE>` to verify Rafiki's webhook signature:
+
+<CodeBlock title="Verify webhook signature example">
+
+```
+// Really cool code example in some commonly used language (JavaScript, Python?)
+
+// Extract timestamp and signatures from header
+
+// Prepare the signed payload string
+
+// Generate the expected signature
+
+// Compare the signatures and check the timestamp
+
+```
+
+</CodeBlock>
+
 ## Event handling
 
 ### Asynchronous handling
