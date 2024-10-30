@@ -586,7 +586,7 @@ describe('Integration tests', (): void => {
             value: '500' as unknown as bigint
           },
           walletAddressUrl:
-            'https://cloud-nine-wallet-backend:3100/accounts/lrossi'
+            'https://cloud-nine-wallet-test-backend:3100/accounts/lrossi'
         }
         const receiver = await createReceiver(createReceiverInput)
         assert(receiver.incomingAmount)
