@@ -228,6 +228,7 @@ export async function resolveReceiver(
 interface CalculateQuoteAmountsWithFeesResult {
   receiveAmountValue: bigint
   debitAmountValue: bigint
+  debitAmountMinusFees: bigint
 }
 
 /**
@@ -239,7 +240,7 @@ function calculateFixedSendQuoteAmounts(
   quote: Quote,
   maxReceiveAmountValue: bigint
 ): CalculateQuoteAmountsWithFeesResult {
-  // TODO: derive fee from debitAmount and convert that to receiveAmount
+  // TODO: derive fee from debitAmount instead? Current behavior/tests may be wrong with basis point fees.
   const fees = quote.fee?.calculate(quote.receiveAmount.value) ?? BigInt(0)
 
   const { estimatedExchangeRate } = quote
@@ -262,10 +263,15 @@ function calculateFixedSendQuoteAmounts(
     throw QuoteError.InvalidAmount
   }
 
+  const debitAmountMinusFees =
+    quote.debitAmount.value -
+    (quote.fee?.calculate(quote.debitAmount.value) ?? 0n)
+
   deps.logger.debug(
     {
       'quote.receiveAmount.value': quote.receiveAmount.value,
       debitAmountValue: quote.debitAmount.value,
+      debitAmountMinusFees,
       receiveAmountValue,
       fees,
       exchangeAdjustedFees
@@ -275,6 +281,7 @@ function calculateFixedSendQuoteAmounts(
 
   return {
     debitAmountValue: quote.debitAmount.value,
+    debitAmountMinusFees,
     receiveAmountValue
   }
 }
@@ -306,6 +313,7 @@ function calculateFixedDeliveryQuoteAmounts(
 
   return {
     debitAmountValue,
+    debitAmountMinusFees: quote.debitAmount.value,
     receiveAmountValue: quote.receiveAmount.value
   }
 }
@@ -356,16 +364,13 @@ async function finalizeQuote(
     `Calculating ${maxReceiveAmountValue ? 'fixed-send' : 'fixed-delivery'} quote amount with fees`
   )
 
-  const { debitAmountValue, receiveAmountValue } = maxReceiveAmountValue
-    ? calculateFixedSendQuoteAmounts(deps, quote, maxReceiveAmountValue)
-    : calculateFixedDeliveryQuoteAmounts(deps, quote)
+  const { debitAmountValue, debitAmountMinusFees, receiveAmountValue } =
+    maxReceiveAmountValue
+      ? calculateFixedSendQuoteAmounts(deps, quote, maxReceiveAmountValue)
+      : calculateFixedDeliveryQuoteAmounts(deps, quote)
 
   const patchOptions = {
-    debitAmountMinusFees: maxReceiveAmountValue
-      ? // TODO: change calculateFixedSendQuoteAmounts to return the debitAmountMinusFees if using new calculation
-        quote.debitAmount.value -
-        (quote.fee?.calculate(quote.debitAmount.value) ?? 0n)
-      : quote.debitAmount.value,
+    debitAmountMinusFees,
     debitAmountValue,
     receiveAmountValue,
     expiresAt: calculateExpiry(deps, quote, receiver)
