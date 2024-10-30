@@ -6,12 +6,13 @@ import { Badge, Steps } from '@astrojs/starlight/components'
 import {
   Mermaid,
   MermaidWrapper,
-  LinkOut
+  LinkOut,
+  CodeBlock
 } from '@interledger/docs-design-system'
 
 An identity provider (IdP) is a system or service that stores and manages user identity information, authentication, and consent. Examples of IdPs include OpenID Connect and Okta.
 
-Integration with an IdP is required if you plan to support outgoing payments via <LinkOut href="https://openpayments.dev">Open Payments</LinkOut>. Open Payments requires outgoing payment _grant_ requests, which precede outgoing payment requests, be interactive. In an interactive grant request, explicit interaction by an individual (e.g., an account holder) is required to approve the grant. An example of an interaction is an end-user tapping _Approve_ in an app to authorize a payment.
+Integration with an IdP is required if you plan to support outgoing payments via <LinkOut href="https://openpayments.dev">Open Payments</LinkOut>. The Open Payments standard requires interactive outgoing payment _grant_ requests, which precede outgoing payment requests. In an interactive grant request, explicit interaction by an individual (e.g., the client's end-user) is required to approve the grant. An example of an interaction is an end-user tapping _Approve_ in an app to authorize a payment.
 
 Your IdP will:
 
@@ -24,22 +25,28 @@ We provide Ory Kratos, a cloud-based user management system, for the identity an
 
 ### Interactions and consent
 
-Before an outgoing payment is created via Open Payments, an outgoing payment grant must be issued.
+Before an outgoing payment is created via Open Payments, an outgoing payment _grant_ must be issued.
 
-Outgoing payment grant requests must be interactive. This means the request requires explicit interaction, often from the account holder, to gather consent (permission) to create the outgoing payment. The interaction is facilitated by your IdP. Your IdP:
+Outgoing payment grant requests must be interactive. This means the request requires explicit interaction, often from the a client's end-user, to gather consent (permission) before creating the outgoing payment. The interaction is facilitated by your IdP.
+
+Your IdP:
 
 <Steps>
-  1. Provides an interface to gather consent (for example, a consent screen) 2.
-  Sends the interaction choice (accept/deny) to your authorization server 3.
-  Sends a request to your authorization server to finish the interaction 4.
-  Redirects the user after the interaction is complete
+
+1. Provides an interface to gather consent (for example, a consent screen)
+2. Sends the interaction choice (accept/deny) to your authorization server
+3. Sends a request to your authorization server to finish the interaction
+4. Redirects the user after the interaction is complete
+
 </Steps>
 
 ### Authorization server
 
 The purpose of an Open Payments authorization server is to grant permission to clients to access the Open Payments APIs. These APIs are used to create incoming payments, quotes, and outgoing payments against an account holder's account.
 
-Rafiki's [auth service](/integration/services/auth-service) provides you with a reference implementation of an Open Payments authorization server. The server extends an [API](#interaction-endpoints) for your IdP to use to begin and finish an interaction, collect authorization, get information about a particular grant, and communicate that a user has authorized a grant. You can use the service as an alternative to developing your own in-house service.
+Rafiki's [auth service](/integration/services/auth-service) provides you with a reference implementation of an Open Payments authorization server. You can use the service as an alternative to developing your own in-house service.
+
+The authorization server extends an HTTP API for your IdP to use to start and finish interactions, collect authorization, get information about a grant, and communicate whether an end-user has authorized a grant. The API's [endpoints](#interaction-endpoints) are described below.
 
 ## Environment variables
 
@@ -61,11 +68,24 @@ The following `backend` variables must be configured on your authorization serve
 
 ## Manage grants
 
-Your Open Payments authorization server extends an API for your IdP server to use after a pending grant request is created.
+After a pending grant request is created, your IdP server can use the interaction endpoints listed below to:
 
-Each interaction with an endpoint is identified by an `id` and a `nonce`. Both are provided as query parameters when your authorization server redirects to your IdP server.
+- Start and finish interactions
+- Collect authorization
+- Get information about a grant
+- Communicate whether an end-user has authorized a grant
 
-The endpoints are appended to the `IDENTITY_SERVER_URL` you defined when configuring your [environment variables](#environment-variables). For example: `https://idp.wallet.example.com/interact/{id}/{nonce}`
+Each interaction is identified by an `id` and a `nonce`. Both are provided as query parameters when your authorization server redirects to your IdP server.
+
+The endpoints are appended to the `IDENTITY_SERVER_URL` you defined when configuring your [environment variables](#environment-variables).
+
+<CodeBlock title="Example">
+
+```http
+https://idp.wallet.example.com/interact/{id}/{nonce}
+```
+
+</CodeBlock>
 
 ### Interaction endpoints
 
