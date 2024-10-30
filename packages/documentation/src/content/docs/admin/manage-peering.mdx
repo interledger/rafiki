@@ -66,6 +66,8 @@ mutation CreatePeer($input: CreatePeerInput!) {
 
 </CodeBlock>
 
+<div class="overflow-table">
+
 | Variable                   | Description                                                                                                                 | Required |
 | -------------------------- | --------------------------------------------------------------------------------------------------------------------------- | -------- |
 | `assetID`                  | The ID of the asset that you and your peer will use to ultimately settle your net obligations outside of Interledger.       | Y        |
@@ -75,6 +77,8 @@ mutation CreatePeer($input: CreatePeerInput!) {
 | `http.outgoing.endpoint`   | Your peer’s connector endpoint. By default it is on local port 0.0.0.0:3002                                                 | Y        |
 | `http.outgoing.authtoken`  | The token that you will use to present to your peer and connect to and send packets to their Rafiki instance.               | Y        |
 | `initialLiquidity`         | Initial amount of liquidity to deposit for peer. Liquidity can also be deposited using the `DepositPeerLiquidity` mutation. | N        |
+
+</div>
 
 <CodeBlock title="Example JSON Response">
 

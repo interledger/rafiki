@@ -12,7 +12,9 @@ import type {
   SetFeeResponse,
   FeeType,
   CreateOrUpdatePeerByUrlMutationResponse,
-  CreateOrUpdatePeerByUrlInput
+  CreateOrUpdatePeerByUrlInput,
+  Peer,
+  Asset
 } from './generated/graphql'
 import { v4 as uuid } from 'uuid'
 
@@ -65,6 +67,12 @@ export function createRequesters(
     fixed: number,
     basisPoints: number
   ) => Promise<SetFeeResponse>
+  getAssetByCodeAndScale: (code: string, scale: number) => Promise<Asset | null>
+  getWalletAddressByURL: (url: string) => Promise<WalletAddress | null>
+  getPeerByAddressAndAsset: (
+    staticIlpAddress: string,
+    assetId: string
+  ) => Promise<Peer | null>
 } {
   return {
     createAsset: (code, scale, liquidityThreshold) =>
@@ -104,7 +112,12 @@ export function createRequesters(
     createWalletAddressKey: ({ walletAddressId, jwk }) =>
       createWalletAddressKey(apolloClient, logger, { walletAddressId, jwk }),
     setFee: (assetId, type, fixed, basisPoints) =>
-      setFee(apolloClient, logger, assetId, type, fixed, basisPoints)
+      setFee(apolloClient, logger, assetId, type, fixed, basisPoints),
+    getAssetByCodeAndScale: (code, scale) =>
+      getAssetByCodeAndScale(apolloClient, code, scale),
+    getWalletAddressByURL: (url) => getWalletAddressByURL(apolloClient, url),
+    getPeerByAddressAndAsset: (staticIlpAddress, assetId) =>
+      getPeerByAddressAndAsset(apolloClient, staticIlpAddress, assetId)
   }
 }
 
@@ -114,12 +127,6 @@ export async function createAsset(
   scale: number,
   liquidityThreshold: number
 ): Promise<AssetMutationResponse> {
-  const existingAsset = await getAssetByCodeAndScale(apolloClient, code, scale)
-
-  if (existingAsset) {
-    return existingAsset
-  }
-
   const createAssetMutation = gql`
     mutation CreateAsset($input: CreateAssetInput!) {
       createAsset(input: $input) {
@@ -162,15 +169,6 @@ export async function createPeer(
   name: string,
   liquidityThreshold: number
 ): Promise<CreatePeerMutationResponse> {
-  const existingPeer = await getPeerByAddressAndAsset(
-    apolloClient,
-    staticIlpAddress,
-    assetId
-  )
-  if (existingPeer) {
-    return existingPeer
-  }
-
   const createPeerMutation = gql`
     mutation CreatePeer($input: CreatePeerInput!) {
       createPeer(input: $input) {
@@ -330,14 +328,6 @@ export async function createWalletAddress(
   accountUrl: string,
   assetId: string
 ): Promise<WalletAddress> {
-  const existingWalletAddress = await getWalletAddressByURL(
-    apolloClient,
-    accountUrl
-  )
-  if (existingWalletAddress) {
-    return existingWalletAddress
-  }
-
   const createWalletAddressMutation = gql`
     mutation CreateWalletAddress($input: CreateWalletAddressInput!) {
       createWalletAddress(input: $input) {
@@ -466,7 +456,7 @@ async function getAssetByCodeAndScale(
   apolloClient: ApolloClient<NormalizedCacheObject>,
   code: string,
   scale: number
-) {
+): Promise<Asset | null> {
   const getAssetQuery = gql`
     query GetAssetByCodeAndScale($code: String!, $scale: UInt8!) {
       assetByCodeAndScale(code: $code, scale: $scale) {
@@ -483,16 +473,13 @@ async function getAssetByCodeAndScale(
     variables: args
   })
 
-  if (data.assetByCodeAndScale) {
-    return { asset: data.assetByCodeAndScale }
-  }
-  return null
+  return data.assetByCodeAndScale
 }
 
 async function getWalletAddressByURL(
   apolloClient: ApolloClient<NormalizedCacheObject>,
   url: string
-) {
+): Promise<WalletAddress | null> {
   const query = gql`
     query getWalletAddressByUrl($url: String!) {
       walletAddressByUrl(url: $url) {
@@ -514,14 +501,14 @@ async function getWalletAddressByURL(
     variables: { url: url }
   })
 
-  return data.walletAddressByUrl ?? null
+  return data.walletAddressByUrl
 }
 
 async function getPeerByAddressAndAsset(
   apolloClient: ApolloClient<NormalizedCacheObject>,
   staticIlpAddress: string,
   assetId: string
-) {
+): Promise<Peer | null> {
   const getPeerByAddressAndAssetQuery = gql`
     query getPeerByAddressAndAsset(
       $staticIlpAddress: String!
@@ -549,8 +536,5 @@ async function getPeerByAddressAndAsset(
     variables: args
   })
 
-  if (data.peerByAddressAndAsset) {
-    return { peer: data.peerByAddressAndAsset }
-  }
-  return null
+  return data.peerByAddressAndAsset ?? null
 }

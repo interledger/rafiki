@@ -8,9 +8,10 @@ import { CodeBlock } from '@interledger/docs-design-system'
 Each payment account belonging to your users (e.g., customers) must have at least one associated wallet address for the account to be able to send and receive payments over Interledger and Open Payments. A wallet address serves as a publicly shareable standardized ID for a payment account.
 
 :::note[Wallet address requirements]
+
 - Your Rafiki instance must be set up for at least one asset before wallet addresses can be created as each wallet address must have an asset assigned to it.
 - Wallet address URLs are treated as case-insensitive, meaning that both lowercase and uppercase variations of the same address will be recognized as identical.
-:::
+  :::
 
 ## Create wallet addresses
 
@@ -81,12 +82,16 @@ We strongly recommend you store at least the `walletAddress.id` in your internal
 
 </CodeBlock>
 
+<div class="overflow-table">
+
 | Variable               | Description                                                                                                                                       |
 | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `assetId`              | The unique ID of the asset, assigned by Rafiki when the asset was created, that the wallet address's underlying payment account is denominated in |
 | `publicName`           | The public name associated with the wallet address                                                                                                |
 | `url`                  | The wallet address's case-insensitive URL                                                                                                         |
 | `additionalProperties` | Optional [additional properties](/apis/graphql/backend/inputobjects/#additionalpropertyinput) associated with the wallet address                  |
+
+</div>
 
 <CodeBlock title="Example JSON response">
 
@@ -187,11 +192,15 @@ The request is a standard request to create a JSON Web Key (JWK), which is a JSO
 
 Open Payments <LinkOut href="https://openpayments.dev/apis/wallet-address-server/operations/get-wallet-address-keys/">requires</LinkOut> the following values.
 
+<div class="overflow-table">
+
 | Parameter | Required value | Description                                                                   |
 | --------- | -------------- | ----------------------------------------------------------------------------- |
 | `alg`     | `EdDSA`        | The algorithm used to generate the key pair                                   |
 | `kty`     | `OKP`          | The key type identifying the cryptographic algorithm family used with the key |
 | `crv`     | `Ed25519`      | The cryptographic curve used with the key                                     |
+
+</div>
 
 Additionally, the request must contain the `walletAddressId` of the wallet address that the key pair will be associated with.
 
