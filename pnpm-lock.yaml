@@ -185,8 +185,8 @@ importers:
         specifier: 2.0.2
         version: 2.0.2
       '@interledger/open-payments':
-        specifier: 6.11.1
-        version: 6.11.1
+        specifier: 6.13.2
+        version: 6.13.2
       '@interledger/openapi':
         specifier: 2.0.1
         version: 2.0.1
@@ -336,8 +336,8 @@ importers:
         specifier: 2.0.2
         version: 2.0.2
       '@interledger/open-payments':
-        specifier: 6.11.1
-        version: 6.11.1
+        specifier: 6.13.2
+        version: 6.13.2
       '@interledger/openapi':
         specifier: 2.0.1
         version: 2.0.1
@@ -729,8 +729,8 @@ importers:
   packages/token-introspection:
     dependencies:
       '@interledger/open-payments':
-        specifier: 6.11.1
-        version: 6.11.1
+        specifier: 6.13.2
+        version: 6.13.2
       '@interledger/openapi':
         specifier: 2.0.1
         version: 2.0.1
@@ -760,8 +760,8 @@ importers:
         specifier: 2.0.2
         version: 2.0.2
       '@interledger/open-payments':
-        specifier: 6.13.1
-        version: 6.13.1
+        specifier: 6.13.2
+        version: 6.13.2
       '@koa/bodyparser':
         specifier: ^5.1.1
         version: 5.1.1(koa@2.15.3)
@@ -830,6 +830,15 @@ packages:
       '@types/lodash.clonedeep': 4.5.7
       js-yaml: 4.1.0
       lodash.clonedeep: 4.5.0
+    dev: false
+
+  /@apidevtools/json-schema-ref-parser@11.7.2:
+    resolution: {integrity: sha512-4gY54eEGEstClvEkGnwVkTkrx0sqwemEFG5OSRRn3tD91XH0+Q8XIkYIfo7IwEWPpJZwILb9GUXeShtplRc/eA==}
+    engines: {node: '>= 16'}
+    dependencies:
+      '@jsdevtools/ono': 7.1.3
+      '@types/json-schema': 7.0.15
+      js-yaml: 4.1.0
 
   /@apollo/cache-control-types@1.0.3(graphql@16.8.1):
     resolution: {integrity: sha512-F17/vCp7QVwom9eG7ToauIKdAxpSoadsJnqIfyryLFSkLSOEqu+eC5Z3N8OXcUVStuOMcNHlyraRsA6rRICu4g==}
@@ -4019,11 +4028,11 @@ packages:
       jose: 5.4.0
       uuid: 9.0.1
 
-  /@interledger/open-payments@6.11.1:
-    resolution: {integrity: sha512-pknkzslJgL/mFVVz+QQhR82d56T+87bG4WAYBfolGfrWAIBzkomqUoode1mVdjc5axsZMBCNz/M1/Vixa1xaOA==}
+  /@interledger/open-payments@6.13.2:
+    resolution: {integrity: sha512-siAnS+Rp+SEZtm+YSWVHWCA4EJB7a6pKBZ9SR61UV1kgrzVzVHAZ8HA0cNTteLEEdFuW1xqVv8zqz27lxdvLgA==}
     dependencies:
       '@interledger/http-signature-utils': 2.0.2
-      '@interledger/openapi': 2.0.1
+      '@interledger/openapi': 2.0.2
       base64url: 3.0.1
       http-message-signatures: 0.1.2
       ky: 1.3.0
@@ -4031,26 +4040,27 @@ packages:
       uuid: 9.0.1
     transitivePeerDependencies:
       - supports-color
-    dev: false
-
-  /@interledger/open-payments@6.13.1:
-    resolution: {integrity: sha512-LMNj051ee473ylQ1fPD8XUR0U/TCxQo1kaD/8iXZ85J/Hmp7Na5wTJ3WrYfk4HbW7O6efWuDvD4PqMSym2rmiQ==}
-    dependencies:
-      '@interledger/http-signature-utils': 2.0.2
-      '@interledger/openapi': 2.0.1
-      base64url: 3.0.1
-      http-message-signatures: 0.1.2
-      ky: 1.3.0
-      pino: 8.19.0
-      uuid: 9.0.1
-    transitivePeerDependencies:
-      - supports-color
-    dev: true
 
   /@interledger/openapi@2.0.1:
     resolution: {integrity: sha512-eS5mzfb6sHa0M3YvlYl1ahlTQn7Jng2VF++agS5XeL93ZrFnSaniyARNdLU0r/tJcUQxKLVSCcoKn84mU9X+pg==}
     dependencies:
       '@apidevtools/json-schema-ref-parser': 10.1.0
+      ajv: 8.12.0
+      ajv-formats: 2.1.1(ajv@8.12.0)
+      koa: 2.15.3
+      openapi-default-setter: 12.1.3
+      openapi-request-coercer: 12.1.3
+      openapi-request-validator: 12.1.3
+      openapi-response-validator: 12.1.3
+      openapi-types: 12.1.3
+    transitivePeerDependencies:
+      - supports-color
+    dev: false
+
+  /@interledger/openapi@2.0.2:
+    resolution: {integrity: sha512-HOQnALmRtRkGkh63OnFhoCVsK4BKhQosJyoBCe6Cuu+jp8Oj2fAqTNz8ys+h6s30cJcIpk2UBlsj4wZ3pj26Ug==}
+    dependencies:
+      '@apidevtools/json-schema-ref-parser': 11.7.2
       ajv: 8.12.0
       ajv-formats: 2.1.1(ajv@8.12.0)
       koa: 2.15.3
@@ -6459,6 +6469,9 @@ packages:
   /@types/json-schema@7.0.12:
     resolution: {integrity: sha512-Hr5Jfhc9eYOQNPYO5WLDq/n4jqijdHNlDXjuAQkkt+mWdQR+XJToOHrsD4cPaMXpn6KO7y2+wM8AZEs8VpBLVA==}
 
+  /@types/json-schema@7.0.15:
+    resolution: {integrity: sha512-5+fP8P8MFNC+AyZCDxrB2pkZFPGzqQWUzpSeuuVLvm8VMcorNYavBqoFcxK8bQz4Qsbn4oUEEem4wDLfcysGHA==}
+
   /@types/json-stable-stringify@1.0.34:
     resolution: {integrity: sha512-s2cfwagOQAS8o06TcwKfr9Wx11dNGbH2E9vJz1cqV+a/LOyhWNLUNd6JSRYNzvB4d29UuJX2M0Dj9vE1T8fRXw==}
     dev: true
@@ -6523,6 +6536,7 @@ packages:
     resolution: {integrity: sha512-ccNqkPptFIXrpVqUECi60/DFxjNKsfoQxSQsgcBJCX/fuX1wgyQieojkcWH/KpE3xzLoWN/2k+ZeGqIN3paSvw==}
     dependencies:
       '@types/lodash': 4.17.0
+    dev: false
 
   /@types/lodash@4.17.0:
     resolution: {integrity: sha512-t7dhREVv6dbNj0q17X12j7yDG4bD/DHYX7o5/DbDxobP0HnGPgpRz2Ej77aL7TZT3DSw13fqUTj8J4mMnqa7WA==}
@@ -13199,6 +13213,7 @@ packages:
 
   /lodash.clonedeep@4.5.0:
     resolution: {integrity: sha512-H5ZhCF25riFd9uB5UCkVKo61m3S/xZk1x4wA6yp/L3RFP6Z/eHH1ymQcGLo7J3GMPfm0V/7m1tryHuGVxpqEBQ==}
+    dev: false
 
   /lodash.debounce@4.0.8:
     resolution: {integrity: sha512-FT1yDzDYEoYWhnSGnpE/4Kj1fLZkDFyqRb7fNt6FdYOSxlUWAtp42Eh6Wb0rGIv/m9Bgo7x4GhQbm5Ys4SG5ow==}
