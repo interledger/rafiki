@@ -518,7 +518,7 @@ describe('Grant Resolvers', (): void => {
       } catch (error) {
         assert.ok(error instanceof ApolloError)
         expect(error.message).toBe('No grant')
-        expect(error.graphQLErrors[0].extensions.code).toEqual(
+        expect(error.graphQLErrors[0].extensions?.code).toEqual(
           GraphQLErrorCode.NotFound
         )
       }
@@ -590,7 +590,7 @@ describe('Grant Resolvers', (): void => {
       } catch (error) {
         assert.ok(error instanceof ApolloError)
         expect(error.message).toBe('Grant id is not provided')
-        expect(error.graphQLErrors[0].extensions.code).toEqual(
+        expect(error.graphQLErrors[0].extensions?.code).toEqual(
           GraphQLErrorCode.Forbidden
         )
       }
@@ -626,7 +626,7 @@ describe('Grant Resolvers', (): void => {
       } catch (error) {
         assert.ok(error instanceof ApolloError)
         expect(error.message).toBe('Revoke grant was not successful')
-        expect(error.graphQLErrors[0].extensions.code).toEqual(
+        expect(error.graphQLErrors[0].extensions?.code).toEqual(
           GraphQLErrorCode.NotFound
         )
       }
@@ -662,7 +662,7 @@ describe('Grant Resolvers', (): void => {
           })
       } catch (error) {
         assert.ok(error instanceof ApolloError)
-        expect(error.graphQLErrors[0].extensions.code).toEqual(
+        expect(error.graphQLErrors[0].extensions?.code).toEqual(
           GraphQLErrorCode.InternalServerError
         )
       }
