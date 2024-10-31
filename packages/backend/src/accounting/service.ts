@@ -65,7 +65,7 @@ export interface TransferOptions extends BaseTransfer {
   destinationAccount: LiquidityAccount
   sourceAmount: bigint
   destinationAmount?: bigint
-  timeout?: number
+  timeout: number
 }
 
 export interface Transaction {
