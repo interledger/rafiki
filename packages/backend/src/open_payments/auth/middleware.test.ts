@@ -87,12 +87,12 @@ describe('Auth Middleware', (): void => {
     await appContainer.shutdown()
   })
 
-  describe('bypassError option', (): void => {
-    test('calls next for HTTP errors', async (): Promise<void> => {
+  describe('canSkipAuthValidation option', (): void => {
+    test('calls next for undefined authorization header', async (): Promise<void> => {
       const middleware = createTokenIntrospectionMiddleware({
         requestType: type,
         requestAction: action,
-        bypassError: true
+        canSkipAuthValidation: true
       })
       ctx.request.headers.authorization = ''
 
@@ -107,7 +107,7 @@ describe('Auth Middleware', (): void => {
       const middleware = createTokenIntrospectionMiddleware({
         requestType: AccessType.OutgoingPayment,
         requestAction: action,
-        bypassError: true
+        canSkipAuthValidation: true
       })
 
       jest.spyOn(tokenIntrospectionClient, 'introspect').mockResolvedValueOnce({
@@ -136,6 +136,56 @@ describe('Auth Middleware', (): void => {
       }
 
       expect(ctx.response.get('WWW-Authenticate')).not.toBe(
+        `GNAP as_uri=${Config.authServerGrantUrl}`
+      )
+      expect(next).not.toHaveBeenCalled()
+    })
+
+    test('proceeds with validation when authorization header exists, even with canSkipAuthValidation true', async (): Promise<void> => {
+      const middleware = createTokenIntrospectionMiddleware({
+        requestType: type,
+        requestAction: action,
+        canSkipAuthValidation: true
+      })
+      ctx.request.headers.authorization = 'GNAP valid_token'
+      jest.spyOn(tokenIntrospectionClient, 'introspect').mockResolvedValueOnce({
+        active: true,
+        access: [{ type: type, actions: [action] }],
+        client: 'test-client'
+      } as TokenInfo)
+  
+      await middleware(ctx, next)
+      
+      expect(tokenIntrospectionClient.introspect).toHaveBeenCalled()
+      expect(ctx.client).toBe('test-client')
+      expect(next).toHaveBeenCalled()
+    })
+
+    test('throws error when skipAuthValidation is false and no authorization header', async (): Promise<void> => {
+      const middleware = createTokenIntrospectionMiddleware({
+        requestType: type,
+        requestAction: action,
+        canSkipAuthValidation: false
+      })
+      ctx.request.headers.authorization = ''
+  
+      await expect(middleware(ctx, next)).rejects.toThrow(OpenPaymentsServerRouteError)
+      expect(ctx.response.get('WWW-Authenticate')).toBe(
+        `GNAP as_uri=${Config.authServerGrantUrl}`
+      )
+      expect(next).not.toHaveBeenCalled()
+    })
+
+    test('throws error when canSkipAuthValidation is false and no authorization header', async (): Promise<void> => {
+      const middleware = createTokenIntrospectionMiddleware({
+        requestType: type,
+        requestAction: action,
+        canSkipAuthValidation: false
+      })
+      ctx.request.headers.authorization = ''
+  
+      await expect(middleware(ctx, next)).rejects.toThrow(OpenPaymentsServerRouteError)
+      expect(ctx.response.get('WWW-Authenticate')).toBe(
         `GNAP as_uri=${Config.authServerGrantUrl}`
       )
       expect(next).not.toHaveBeenCalled()
