@@ -130,8 +130,8 @@ importers:
         specifier: ^9.0.1
         version: 9.0.1
       yaml:
-        specifier: ^2.4.1
-        version: 2.4.1
+        specifier: ^2.6.0
+        version: 2.6.0
       zod:
         specifier: ^3.22.4
         version: 3.23.4
@@ -646,8 +646,8 @@ importers:
         specifier: ^9.0.1
         version: 9.0.1
       yaml:
-        specifier: ^2.3.4
-        version: 2.4.1
+        specifier: ^2.6.0
+        version: 2.6.0
       zod:
         specifier: ^3.22.4
         version: 3.22.4
@@ -787,8 +787,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/mock-account-service-lib
       yaml:
-        specifier: ^2.5.0
-        version: 2.5.0
+        specifier: ^2.6.0
+        version: 2.6.0
 
   test/performance:
     dependencies:
@@ -2912,7 +2912,7 @@ packages:
       string-env-interpolation: 1.0.1
       ts-log: 2.2.5
       tslib: 2.5.0
-      yaml: 2.4.1
+      yaml: 2.6.0
       yargs: 17.7.1
     transitivePeerDependencies:
       - '@babel/core'
@@ -9401,7 +9401,7 @@ packages:
     resolution: {integrity: sha512-VidlUyNzXMaVsuM79sjSvwC4nfojkP2VneL+Zfs538M2XFnffZDhx6veqnz/evCNIYGyz5O+1fgL6+g0NLWTBA==}
     engines: {node: '>= 6.0.0'}
     dependencies:
-      yaml: 2.5.0
+      yaml: 2.6.0
     dev: true
 
   /docker-modem@3.0.6:
@@ -15692,7 +15692,7 @@ packages:
     dependencies:
       lilconfig: 2.1.0
       postcss: 8.4.38
-      yaml: 2.5.0
+      yaml: 2.6.0
     dev: true
 
   /postcss-modules-extract-imports@3.0.0(postcss@8.4.38):
@@ -19190,16 +19190,10 @@ packages:
     resolution: {integrity: sha512-2PTINUwsRqSd+s8XxKaJWQlUuEMHJQyEuh2edBbW8KNJz0SJPwUSD2zRWqezFEdN7IzAgeuYHFUCF7o8zRdZ0A==}
     dev: true
 
-  /yaml@2.4.1:
-    resolution: {integrity: sha512-pIXzoImaqmfOrL7teGUBt/T7ZDnyeGBWyXQBvOVhLkWLN37GXv8NMLK406UY6dS51JfcQHsmcW5cJ441bHg6Lg==}
+  /yaml@2.6.0:
+    resolution: {integrity: sha512-a6ae//JvKDEra2kdi1qzCyrJW/WZCgFi8ydDV+eXExl95t+5R+ijnqHJbz9tmMh8FUjx3iv2fCQ4dclAQlO2UQ==}
     engines: {node: '>= 14'}
     hasBin: true
-
-  /yaml@2.5.0:
-    resolution: {integrity: sha512-2wWLbGbYDiSqqIKoPjar3MPgB94ErzCtrNE1FdqGuaO0pi2JGjmE8aW8TDZwzU7vuxcGRdL/4gPQwQ7hD5AMSw==}
-    engines: {node: '>= 14'}
-    hasBin: true
-    dev: true
 
   /yargs-parser@18.1.3:
     resolution: {integrity: sha512-o50j0JeToy/4K6OZcaQmW6lyXXKhq7csREXcDwk2omFPJEwUNOVtJKvmDr9EI1fAJZUyZcRF7kxGBWmRXudrCQ==}
