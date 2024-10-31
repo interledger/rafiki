@@ -284,5 +284,12 @@ async function pay(
         )
     }
   }
-  await trxOrError.post()
+  const transferError = await trxOrError.post()
+
+  if (isTransferError(transferError)) {
+    throw new PaymentMethodHandlerError('Received error during local payment', {
+      description: errorToMessage[transferError],
+      retryable: false
+    })
+  }
 }

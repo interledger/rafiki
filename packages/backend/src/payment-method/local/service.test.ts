@@ -12,7 +12,7 @@ import { WalletAddress } from '../../open_payments/wallet_address/model'
 
 import { createReceiver } from '../../tests/receiver'
 import { mockRatesApi } from '../../tests/rates'
-import { AccountingService } from '../../accounting/service'
+import { AccountingService, Transaction } from '../../accounting/service'
 import { truncateTables } from '../../tests/tableManager'
 import { createOutgoingPaymentWithReceiver } from '../../tests/outgoingPayment'
 import { OutgoingPayment } from '../../open_payments/payment/outgoing/model'
@@ -606,6 +606,45 @@ describe('LocalPaymentService', (): void => {
         )
         expect((err as PaymentMethodHandlerError).description).toBe(
           'Unknown error while trying to create transfer'
+        )
+        expect((err as PaymentMethodHandlerError).retryable).toBe(false)
+      }
+    })
+
+    test('throws error when transfer post fails', async (): Promise<void> => {
+      const { receiver, outgoingPayment } =
+        await createOutgoingPaymentWithReceiver(deps, {
+          sendingWalletAddress: walletAddressMap['USD'],
+          receivingWalletAddress: walletAddressMap['USD'],
+          method: 'ilp',
+          quoteOptions: {
+            debitAmount: {
+              value: 100n,
+              assetScale: walletAddressMap['USD'].asset.scale,
+              assetCode: walletAddressMap['USD'].asset.code
+            }
+          }
+        })
+
+      jest.spyOn(accountingService, 'createTransfer').mockResolvedValueOnce({
+        post: () => Promise.resolve(TransferError.UnknownTransfer)
+      } as Transaction)
+
+      expect.assertions(4)
+      try {
+        await localPaymentService.pay({
+          receiver,
+          outgoingPayment,
+          finalDebitAmount: 100n,
+          finalReceiveAmount: 100n
+        })
+      } catch (err) {
+        expect(err).toBeInstanceOf(PaymentMethodHandlerError)
+        expect((err as PaymentMethodHandlerError).message).toBe(
+          'Received error during local payment'
+        )
+        expect((err as PaymentMethodHandlerError).description).toBe(
+          errorToMessage[TransferError.UnknownTransfer]
         )
         expect((err as PaymentMethodHandlerError).retryable).toBe(false)
       }
