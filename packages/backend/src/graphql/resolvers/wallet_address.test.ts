@@ -331,6 +331,8 @@ describe('Wallet Address Resolvers', (): void => {
     })
 
     test('Can update a wallet address', async (): Promise<void> => {
+      const spy = jest.spyOn(walletAddressService, 'canAccess')
+
       const updateOptions = {
         id: walletAddress.id,
         status: WalletAddressStatus.Inactive,
@@ -392,6 +394,7 @@ describe('Wallet Address Resolvers', (): void => {
       expect(updatedWalletAddress.updatedAt.getTime()).toBeGreaterThan(
         originalUpdatedAt.getTime()
       )
+      expect(spy).toHaveBeenCalled()
     })
 
     describe('Wallet Address Additional Properties', (): void => {
@@ -649,6 +652,57 @@ describe('Wallet Address Resolvers', (): void => {
         )
       }
     })
+
+    test('Unauthorized', async (): Promise<void> => {
+      const canAccessSpy = jest
+        .spyOn(walletAddressService, 'canAccess')
+        .mockImplementationOnce(async () => false)
+      const updateSpy = jest.spyOn(walletAddressService, 'update')
+
+      const input = {
+        id: walletAddress.id,
+        status: WalletAddressStatus.Inactive,
+        publicName: 'Public Wallet Address'
+      }
+
+      expect.assertions(4)
+      try {
+        await appContainer.apolloClient
+          .mutate({
+            mutation: gql`
+              mutation UpdateWalletAddress($input: UpdateWalletAddressInput!) {
+                updateWalletAddress(input: $input) {
+                  walletAddress {
+                    id
+                  }
+                }
+              }
+            `,
+            variables: {
+              input
+            }
+          })
+          .then((query): CreateWalletAddressMutationResponse => {
+            if (query.data) {
+              return query.data.createWalletAddress
+            } else {
+              throw new Error('Data was empty')
+            }
+          })
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApolloError)
+        expect((error as ApolloError).graphQLErrors).toContainEqual(
+          expect.objectContaining({
+            message: errorToMessage[WalletAddressError.UnknownWalletAddress],
+            extensions: expect.objectContaining({
+              code: errorToCode[WalletAddressError.UnknownWalletAddress]
+            })
+          })
+        )
+        expect(canAccessSpy).toHaveBeenCalled()
+        expect(updateSpy).not.toHaveBeenCalled()
+      }
+    })
   })
 
   describe('Wallet Address Queries', (): void => {
@@ -674,6 +728,7 @@ describe('Wallet Address Resolvers', (): void => {
           createLiquidityAccount: true,
           additionalProperties
         })
+        const spy = jest.spyOn(walletAddressService, 'canAccess')
         const query = await appContainer.apolloClient
           .query({
             query: gql`
@@ -733,6 +788,7 @@ describe('Wallet Address Resolvers', (): void => {
             }
           ]
         })
+        expect(spy).toHaveBeenCalled()
       }
     )
 
@@ -769,6 +825,48 @@ describe('Wallet Address Resolvers', (): void => {
             })
           })
         )
+      }
+    })
+
+    test('Returns error for for unauthorized request', async (): Promise<void> => {
+      const walletAddress = await createWalletAddress(deps, tenantId)
+      const spy = jest
+        .spyOn(walletAddressService, 'canAccess')
+        .mockImplementationOnce(async () => false)
+
+      expect.assertions(3)
+      try {
+        await appContainer.apolloClient
+          .query({
+            query: gql`
+              query WalletAddress($walletAddressId: String!) {
+                walletAddress(id: $walletAddressId) {
+                  id
+                }
+              }
+            `,
+            variables: {
+              walletAddressId: walletAddress.id
+            }
+          })
+          .then((query): WalletAddress => {
+            if (query.data) {
+              return query.data.walletAddress
+            } else {
+              throw new Error('Data was empty')
+            }
+          })
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApolloError)
+        expect((error as ApolloError).graphQLErrors).toContainEqual(
+          expect.objectContaining({
+            message: errorToMessage[WalletAddressError.UnknownWalletAddress],
+            extensions: expect.objectContaining({
+              code: errorToCode[WalletAddressError.UnknownWalletAddress]
+            })
+          })
+        )
+        expect(spy).toHaveBeenCalled()
       }
     })
 

@@ -27,18 +27,37 @@ export const getQuote: QueryResolvers<ApolloContext>['quote'] = async (
   const quote = await quoteService.get({
     id: args.id
   })
-  if (!quote) {
+  if (
+    !quote ||
+    !(await quoteService.canAccess(ctx.isOperator, ctx.tenantId, quote))
+  ) {
     throw new GraphQLError('quote does not exist', {
       extensions: {
         code: GraphQLErrorCode.NotFound
       }
     })
   }
+
   return quoteToGraphql(quote)
 }
 
 export const createQuote: MutationResolvers<ApolloContext>['createQuote'] =
   async (parent, args, ctx): Promise<ResolversTypes['QuoteResponse']> => {
+    const walletAddressService = await ctx.container.use('walletAddressService')
+    const canAccess = await walletAddressService.canAccess(
+      ctx.isOperator,
+      ctx.tenantId,
+      args.input.walletAddressId
+    )
+    if (!canAccess) {
+      throw new GraphQLError('Unknown wallet address id input', {
+        extensions: {
+          code: GraphQLErrorCode.BadUserInput,
+          walletAddressId: args.input.walletAddressId
+        }
+      })
+    }
+
     const quoteService = await ctx.container.use('quoteService')
     const options: CreateQuoteOptions = {
       walletAddressId: args.input.walletAddressId,
@@ -61,6 +80,7 @@ export const createQuote: MutationResolvers<ApolloContext>['createQuote'] =
       }
   }
 
+// TODO: access control. need to add tenantId to getPage
 export const getWalletAddressQuotes: WalletAddressResolvers<ApolloContext>['quotes'] =
   async (parent, args, ctx): Promise<ResolversTypes['QuoteConnection']> => {
     if (!parent.id) {

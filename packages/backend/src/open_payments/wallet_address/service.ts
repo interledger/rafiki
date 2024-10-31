@@ -71,6 +71,11 @@ export interface WalletAddressService {
   ): Promise<WalletAddress[]>
   processNext(): Promise<string | undefined>
   triggerEvents(limit: number): Promise<number>
+  canAccess(
+    isOperator: boolean,
+    tenantId: string,
+    idOrResource: string | WalletAddress
+  ): Promise<boolean>
 }
 
 interface ServiceDependencies extends BaseService {
@@ -112,7 +117,9 @@ export async function createWalletAddressService({
     getPage: (pagination?, sortOrder?) =>
       getWalletAddressPage(deps, pagination, sortOrder),
     processNext: () => processNextWalletAddress(deps),
-    triggerEvents: (limit) => triggerWalletAddressEvents(deps, limit)
+    triggerEvents: (limit) => triggerWalletAddressEvents(deps, limit),
+    canAccess: (isOperator, tenantId, idOrResource) =>
+      canAccessWalletAddress(deps, isOperator, tenantId, idOrResource)
   }
 }
 
@@ -427,6 +434,24 @@ async function deactivateOpenIncomingPaymentsByWalletAddress(
     .where('expiresAt', '>', expiresAt)
 }
 
+async function canAccessWalletAddress(
+  deps: ServiceDependencies,
+  isOperator: boolean,
+  tenantId: string,
+  idOrResource: string | WalletAddress
+) {
+  if (isOperator) return true
+
+  const wa =
+    typeof idOrResource === 'string'
+      ? await WalletAddress.query(deps.knex).findById(idOrResource)
+      : idOrResource
+
+  if (wa && wa.tenantId === tenantId) return true
+
+  return false
+}
+
 export interface CreateSubresourceOptions {
   walletAddressId: string
 }
@@ -437,4 +462,9 @@ export interface WalletAddressSubresourceService<
   get(options: GetOptions): Promise<M | undefined>
   create(options: { walletAddressId: string }): Promise<M | string>
   getWalletAddressPage(options: ListOptions): Promise<M[]>
+  canAccess(
+    isOperator: boolean,
+    tenantId: string,
+    idOrResource: string | M
+  ): Promise<boolean>
 }

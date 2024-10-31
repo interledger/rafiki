@@ -34,6 +34,10 @@ export const getReceiver: QueryResolvers<ApolloContext>['receiver'] = async (
 
 export const createReceiver: MutationResolvers<ApolloContext>['createReceiver'] =
   async (_, args, ctx): Promise<ResolversTypes['CreateReceiverResponse']> => {
+    // TODO: do we need to check tenantId for remote args.input.walletAddressUrl?
+    // Not found on P2P example because wa url is remote - not sure if we can (probably not?)
+    // nor necessarily need to do such a check
+
     const receiverService = await ctx.container.use('receiverService')
 
     const receiverOrError = await receiverService.create({

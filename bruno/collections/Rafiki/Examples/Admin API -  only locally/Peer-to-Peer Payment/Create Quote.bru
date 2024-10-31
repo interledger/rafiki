@@ -10,6 +10,10 @@ post {
   auth: none
 }
 
+headers {
+  ~x-operator-secret: {{operatorApiSecret}}
+}
+
 body:graphql {
   mutation CreateQuote($input: CreateQuoteInput!) {
     createQuote(input: $input) {
@@ -38,7 +42,8 @@ body:graphql:vars {
   {
     "input": {
       "walletAddressId": "{{gfranklinWalletAddressId}}",
-      "receiver": "{{receiverId}}"
+      "receiver": "{{receiverId}}",
+      "tenantId": ""
     }
   }
 }
@@ -53,7 +58,7 @@ script:pre-request {
 
 script:post-response {
   const body = res.getBody();
-
+  
   if (body?.data) {
     bru.setEnvVar("quoteId", body.data.createQuote.quote.id);
   }

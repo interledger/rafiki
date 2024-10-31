@@ -37,6 +37,7 @@ import {
 } from '../../payment-method/handler/errors'
 import { createTenant } from '../../tests/tenant'
 import { EndpointType } from '../../tenant/endpoints/model'
+import { Quote } from './model'
 
 const nock = (global as unknown as { nock: typeof import('nock') }).nock
 
@@ -770,6 +771,49 @@ describe('QuoteService', (): void => {
           })
         ).resolves.toEqual(QuoteError.NonPositiveReceiveAmount)
       })
+    })
+  })
+
+  describe('canAccess', () => {
+    let quote: Quote
+
+    beforeEach(async () => {
+      quote = await createQuote(deps, {
+        walletAddressId: sendingWalletAddress.id,
+        receiver: `${receivingWalletAddress.url}/incoming-payments/${uuid()}`,
+        validDestination: false,
+        method: 'ilp'
+      })
+    })
+
+    it('should return true if the user is an operator', async () => {
+      const result = await quoteService.canAccess(true, 'tenant1', 'quote1')
+      expect(result).toBe(true)
+    })
+
+    it('should return true if the user is not an operator and quote is found with matching tenantId', async () => {
+      const result = await quoteService.canAccess(false, tenantId, quote.id)
+      expect(result).toBe(true)
+    })
+
+    it('should return false if the user is not an operator and quote is found with non-matching tenantId', async () => {
+      const result = await quoteService.canAccess(false, uuid(), quote.id)
+      expect(result).toBe(false)
+    })
+
+    it('should return false if the quote is not found', async () => {
+      const result = await quoteService.canAccess(false, tenantId, uuid())
+      expect(result).toBe(false)
+    })
+
+    it('should return true if the user is not an operator and the quote resource is passed directly with matching tenantId', async () => {
+      const result = await quoteService.canAccess(false, tenantId, quote)
+      expect(result).toBe(true)
+    })
+
+    it('should return false if the user is not an operator and the quote resource is passed directly with non-matching tenantId', async () => {
+      const result = await quoteService.canAccess(false, uuid(), quote)
+      expect(result).toBe(false)
     })
   })
 })

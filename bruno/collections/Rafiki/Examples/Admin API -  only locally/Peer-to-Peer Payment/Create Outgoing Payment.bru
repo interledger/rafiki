@@ -10,6 +10,10 @@ post {
   auth: none
 }
 
+headers {
+  ~x-operator-secret: tXhxCNRWuVOJs5W/CUgjsc+vBnKj0CVdqSb87EXN64E=
+}
+
 body:graphql {
   mutation CreateOutgoingPayment($input: CreateOutgoingPaymentInput!) {
     createOutgoingPayment(input: $input) {
@@ -46,7 +50,7 @@ body:graphql:vars {
   {
     "input": {
       "walletAddressId": "{{gfranklinWalletAddressId}}",
-      "quoteId": "{{quoteId}}"
+      "quoteId": "{{quoteId}}", "tenantId": ""
     }
   }
 }

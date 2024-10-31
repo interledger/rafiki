@@ -373,6 +373,9 @@ export function initIocContainer(
     if (config.enableTelemetry) {
       telemetry = await deps.use('telemetry')
     }
+    // Problem if moving access control check to existing service methods such as:
+    // walletAddressService, incomingPaymentService.
+    // Will not have tenantId/isOperator in connector.
     return await createConnectorService({
       logger: await deps.use('logger'),
       redis: await deps.use('redis'),

@@ -181,7 +181,8 @@ const scripts = {
       method: 'post',
       headers: {
         signature: this.generateBackendApiSignature(postBody),
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'x-operator-secret': bru.getEnvVar('operatorApiSecret')
       },
       body: JSON.stringify(postBody)
     }
