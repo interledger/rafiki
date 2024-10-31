@@ -361,6 +361,41 @@ describe('Quote Resolvers', (): void => {
       }
       expect(createSpy).toHaveBeenCalledWith({ ...input, method: 'ilp' })
     })
+
+    test('cannot access', async (): Promise<void> => {
+      const spy = jest
+        .spyOn(walletAddressService, 'canAccess')
+        .mockImplementation(async () => false)
+
+      expect.assertions(3)
+      try {
+        await appContainer.apolloClient
+          .query({
+            query: gql`
+              mutation CreateQuote($input: CreateQuoteInput!) {
+                createQuote(input: $input) {
+                  quote {
+                    id
+                  }
+                }
+              }
+            `,
+            variables: { input }
+          })
+          .then((query): QuoteResponse => query.data?.createQuote)
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApolloError)
+        expect((error as ApolloError).graphQLErrors).toContainEqual(
+          expect.objectContaining({
+            message: 'Unknown wallet address id input',
+            extensions: expect.objectContaining({
+              code: GraphQLErrorCode.BadUserInput
+            })
+          })
+        )
+      }
+      expect(spy).toHaveBeenCalled()
+    })
   })
 
   describe('Wallet address quotes', (): void => {

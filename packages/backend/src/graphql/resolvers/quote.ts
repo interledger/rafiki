@@ -43,10 +43,8 @@ export const getQuote: QueryResolvers<ApolloContext>['quote'] = async (
 
 export const createQuote: MutationResolvers<ApolloContext>['createQuote'] =
   async (parent, args, ctx): Promise<ResolversTypes['QuoteResponse']> => {
-    // ACCESS CONTROL CASE: Creates. If operator, OK. Else, get associated wallet address
-    // tenantId and compare to requestor's tenantId before creating.
     const walletAddressService = await ctx.container.use('walletAddressService')
-    const canAccess = walletAddressService.canAccess(
+    const canAccess = await walletAddressService.canAccess(
       ctx.isOperator,
       ctx.tenantId,
       args.input.walletAddressId

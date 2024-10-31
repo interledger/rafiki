@@ -170,7 +170,7 @@ export const updateWalletAddress: MutationResolvers<ApolloContext>['updateWallet
   }
 
 // TODO: access control? operator only, anyone, or tenanted?
-// Perhaps operator only? if tenanted will maybe need to fn
+// Perhaps operator only? if tenanted will maybe need fn
 // like existing processNextWalletAddresses that filters by tenant
 export const triggerWalletAddressEvents: MutationResolvers<ApolloContext>['triggerWalletAddressEvents'] =
   async (
