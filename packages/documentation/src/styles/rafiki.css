@@ -98,6 +98,8 @@
     0 0,
     100%;
   background-attachment: local, local, scroll, scroll;
+  box-shadow: var(--sl-shadow-sm);
+  border-radius: var(--border-radius);
 }
 
 .overflow-table thead th {

@@ -10,8 +10,6 @@ import { trace, Span } from '@opentelemetry/api'
 // First retry waits 10 seconds, second retry waits 20 (more) seconds, etc.
 export const RETRY_BACKOFF_SECONDS = 10
 
-const MAX_STATE_ATTEMPTS = 5
-
 // Returns the id of the processed payment (if any).
 export async function processPendingPayment(
   deps_: ServiceDependencies
@@ -94,7 +92,10 @@ async function onLifecycleError(
   const error = typeof err === 'string' ? err : err.message
   const stateAttempts = payment.stateAttempts + 1
 
-  if (stateAttempts < MAX_STATE_ATTEMPTS && isRetryableError(err)) {
+  if (
+    stateAttempts < deps.config.maxOutgoingPaymentRetryAttempts &&
+    isRetryableError(err)
+  ) {
     deps.logger.warn(
       { state: payment.state, error, stateAttempts },
       'payment lifecycle failed; retrying'
