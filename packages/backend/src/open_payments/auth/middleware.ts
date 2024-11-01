@@ -171,14 +171,9 @@ export const authenticatedStatusMiddleware = async (
     await next()
     return
   }
-  try {
-    await throwIfSignatureInvalid(ctx)
-    ctx.authenticated = true
-  } catch (err) {
-    if (!(err instanceof OpenPaymentsServerRouteError)) {
-      throw err
-    }
-  }
+
+  await throwIfSignatureInvalid(ctx)
+  ctx.authenticated = true
   await next()
 }
 
