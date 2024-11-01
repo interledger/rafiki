@@ -9,6 +9,8 @@ import { CreateQuoteOptions } from '../open_payments/quote/service'
 import { PaymentQuote } from '../payment-method/handler/service'
 import { WalletAddress } from '../open_payments/wallet_address/model'
 import { Receiver } from '../open_payments/receiver/model'
+import { IlpQuoteDetails } from '../payment-method/ilp/quote-details/model'
+import { v4 as uuid } from 'uuid'
 
 export type CreateTestQuoteOptions = CreateQuoteOptions & {
   exchangeRate?: number
@@ -158,14 +160,26 @@ export async function createQuote(
     }
   }
 
-  const withGraphFetchedArray = ['asset', 'walletAddress', 'ilpQuoteDetails']
+  const quoteId = uuid()
+  await IlpQuoteDetails.query().insert({
+    quoteId,
+    lowEstimatedExchangeRate: Pay.Ratio.from(exchangeRate),
+    highEstimatedExchangeRate: Pay.Ratio.from(
+      exchangeRate + 0.000000000001
+    ) as unknown as Pay.PositiveRatio,
+    minExchangeRate: Pay.Ratio.from(exchangeRate * 0.99),
+    maxPacketAmount: BigInt('9223372036854775807')
+  })
+
+  const withGraphFetchedArray = ['asset', 'walletAddress']
   if (withFee) {
     withGraphFetchedArray.push('fee')
   }
   const withGraphFetchedExpression = `[${withGraphFetchedArray.join(', ')}]`
 
   return await Quote.query()
-    .insertGraphAndFetch({
+    .insertAndFetch({
+      id: quoteId,
       walletAddressId,
       assetId: walletAddress.assetId,
       receiver: receiverUrl,
@@ -174,15 +188,7 @@ export async function createQuote(
       receiveAmount,
       estimatedExchangeRate: exchangeRate,
       expiresAt: new Date(Date.now() + config.quoteLifespan),
-      client,
-      ilpQuoteDetails: {
-        lowEstimatedExchangeRate: Pay.Ratio.from(exchangeRate),
-        highEstimatedExchangeRate: Pay.Ratio.from(
-          exchangeRate + 0.000000000001
-        ) as unknown as Pay.PositiveRatio,
-        minExchangeRate: Pay.Ratio.from(exchangeRate * 0.99),
-        maxPacketAmount: BigInt('9223372036854775807')
-      }
+      client
     })
     .withGraphFetched(withGraphFetchedExpression)
 }

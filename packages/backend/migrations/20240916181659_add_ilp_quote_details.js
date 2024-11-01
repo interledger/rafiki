@@ -8,8 +8,12 @@ exports.up = function (knex) {
       // Create new table with columns from "quotes" to migrate
       .createTable('ilpQuoteDetails', function (table) {
         table.uuid('id').notNullable().primary()
-        table.uuid('quoteId').notNullable().unique()
-        table.foreign('quoteId').references('quotes.id')
+
+        // quoteId is purposefully not a FK referencing quote.id
+        // this allows us to create ilpQuoteDetail before quotes in service of
+        // fully decoupling payment method/quote services.
+        // https://github.com/interledger/rafiki/pull/2857#discussion_r1825891327
+        table.uuid('quoteId').notNullable().unique().index()
 
         table.bigInteger('maxPacketAmount').notNullable()
         table.decimal('minExchangeRateNumerator', 64, 0).notNullable()

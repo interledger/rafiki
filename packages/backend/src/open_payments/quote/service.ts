@@ -148,34 +148,20 @@ async function createQuote(
       FeeType.Sending
     )
 
-    const graph: PartialModelGraph<Quote> = {
-      walletAddressId: options.walletAddressId,
-      assetId: walletAddress.assetId,
-      receiver: options.receiver,
-      debitAmount: quote.debitAmount,
-      receiveAmount: quote.receiveAmount,
-      expiresAt: new Date(0), // expiresAt is patched in finalizeQuote
-      client: options.client,
-      feeId: sendingFee?.id,
-      estimatedExchangeRate: quote.estimatedExchangeRate
-    }
-
-    if (paymentMethod === 'ILP') {
-      const maxPacketAmount = quote.additionalFields.maxPacketAmount as bigint
-      graph.ilpQuoteDetails = {
-        maxPacketAmount:
-          MAX_INT64 < maxPacketAmount ? MAX_INT64 : maxPacketAmount, // Cap at MAX_INT64 because of postgres type limits.
-        minExchangeRate: quote.additionalFields.minExchangeRate as Pay.Ratio,
-        lowEstimatedExchangeRate: quote.additionalFields
-          .lowEstimatedExchangeRate as Pay.Ratio,
-        highEstimatedExchangeRate: quote.additionalFields
-          .highEstimatedExchangeRate as Pay.PositiveRatio
-      }
-    }
-
     return await Quote.transaction(deps.knex, async (trx) => {
       const createdQuote = await Quote.query(trx)
-        .insertGraphAndFetch(graph)
+        .insertAndFetch({
+          id: quoteId,
+          walletAddressId: options.walletAddressId,
+          assetId: walletAddress.assetId,
+          receiver: options.receiver,
+          debitAmount: quote.debitAmount,
+          receiveAmount: quote.receiveAmount,
+          expiresAt: new Date(0), // expiresAt is patched in finalizeQuote
+          client: options.client,
+          feeId: sendingFee?.id,
+          estimatedExchangeRate: quote.estimatedExchangeRate
+        })
         .withGraphFetched('[asset, fee, walletAddress]')
 
       return await finalizeQuote(

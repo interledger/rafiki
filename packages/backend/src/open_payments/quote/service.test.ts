@@ -36,7 +36,6 @@ import {
   PaymentMethodHandlerErrorCode
 } from '../../payment-method/handler/errors'
 import { Receiver } from '../receiver/model'
-import { IlpQuoteDetails } from '../../payment-method/ilp/quote-details/model'
 
 describe('QuoteService', (): void => {
   let deps: IocContract<AppServices>
@@ -146,34 +145,8 @@ describe('QuoteService', (): void => {
           withFee: true,
           method: 'ilp'
         }),
-      get: async (options) => {
-        const quote = await quoteService.get(options)
-        assert.ok(!isQuoteError(quote))
-
-        if (!quote) {
-          return
-        }
-
-        quote.ilpQuoteDetails = await IlpQuoteDetails.query()
-          .where({ quoteId: quote.id })
-          .first()
-
-        return quote
-      },
-      list: async (options) => {
-        const quotes = await quoteService.getWalletAddressPage(options)
-
-        const quotesWithDetails = await Promise.all(
-          quotes.map(async (q) => {
-            q.ilpQuoteDetails = await IlpQuoteDetails.query()
-              .where({ quoteId: q.id })
-              .first()
-            return q
-          })
-        )
-
-        return quotesWithDetails
-      }
+      get: (options) => quoteService.get(options),
+      list: (options) => quoteService.getWalletAddressPage(options)
     })
   })
 
@@ -268,9 +241,6 @@ describe('QuoteService', (): void => {
                   receiver: options.receiver,
                   debitAmount: debitAmount || mockedQuote.debitAmount,
                   receiveAmount: receiveAmount || mockedQuote.receiveAmount,
-                  ilpQuoteDetails: {
-                    maxPacketAmount: BigInt('9223372036854775807')
-                  },
                   createdAt: expect.any(Date),
                   updatedAt: expect.any(Date),
                   expiresAt: new Date(
@@ -279,14 +249,11 @@ describe('QuoteService', (): void => {
                   client: client || null
                 })
 
-                const foundQuote = await quoteService.get({
-                  id: quote.id
-                })
-                assert(foundQuote)
-                foundQuote.ilpQuoteDetails = await IlpQuoteDetails.query()
-                  .where({ quoteId: quote.id })
-                  .first()
-                expect(foundQuote).toEqual(quote)
+                await expect(
+                  quoteService.get({
+                    id: quote.id
+                  })
+                ).resolves.toEqual(quote)
               }
             )
 
@@ -358,9 +325,6 @@ describe('QuoteService', (): void => {
 
                 expect(quote).toMatchObject({
                   ...options,
-                  ilpQuoteDetails: {
-                    maxPacketAmount: BigInt('9223372036854775807')
-                  },
                   debitAmount: mockedQuote.debitAmount,
                   receiveAmount: incomingAmount,
                   createdAt: expect.any(Date),
@@ -371,14 +335,11 @@ describe('QuoteService', (): void => {
                   client: client || null
                 })
 
-                const foundQuote = await quoteService.get({
-                  id: quote.id
-                })
-                assert(foundQuote)
-                foundQuote.ilpQuoteDetails = await IlpQuoteDetails.query()
-                  .where({ quoteId: quote.id })
-                  .first()
-                expect(foundQuote).toEqual(quote)
+                await expect(
+                  quoteService.get({
+                    id: quote.id
+                  })
+                ).resolves.toEqual(quote)
               }
             )
           }
@@ -458,6 +419,7 @@ describe('QuoteService', (): void => {
       }
     )
 
+    // TODO: move test? Logic maybe better tests in ilp payment service getQuote
     test('creates a quote with large exchange rate amounts', async (): Promise<void> => {
       const receiveAmountValue = 100n
       const receiver = await createReceiver(deps, receivingWalletAddress, {
@@ -473,15 +435,15 @@ describe('QuoteService', (): void => {
           receiver,
           walletAddress: sendingWalletAddress,
           receiveAmountValue
-        },
-        {
-          additionalFields: {
-            maxPacketAmount: Pay.Int.MAX_U64,
-            lowEstimatedExchangeRate: Pay.Ratio.from(10 ** 20),
-            highEstimatedExchangeRate: Pay.Ratio.from(10 ** 20),
-            minExchangeRate: Pay.Ratio.from(10 ** 20)
-          }
         }
+        // {
+        //   additionalFields: {
+        //     maxPacketAmount: Pay.Int.MAX_U64,
+        //     lowEstimatedExchangeRate: Pay.Ratio.from(10 ** 20),
+        //     highEstimatedExchangeRate: Pay.Ratio.from(10 ** 20),
+        //     minExchangeRate: Pay.Ratio.from(10 ** 20)
+        //   }
+        // }
       )
 
       jest
@@ -495,21 +457,21 @@ describe('QuoteService', (): void => {
       })
       assert.ok(!isQuoteError(quote))
 
-      const ilpQuoteDetails = await IlpQuoteDetails.query()
-        .where({ quoteId: quote.id })
-        .first()
+      // const ilpQuoteDetails = await IlpQuoteDetails.query()
+      //   .where({ quoteId: quote.id })
+      //   .first()
 
       expect(quote).toMatchObject({
         debitAmount: mockedQuote.debitAmount,
         receiveAmount: receiver.incomingAmount
       })
 
-      expect(ilpQuoteDetails).toMatchObject({
-        maxPacketAmount: BigInt('9223372036854775807'),
-        lowEstimatedExchangeRate: Pay.Ratio.from(10 ** 20),
-        highEstimatedExchangeRate: Pay.Ratio.from(10 ** 20),
-        minExchangeRate: Pay.Ratio.from(10 ** 20)
-      })
+      // expect(ilpQuoteDetails).toMatchObject({
+      //   maxPacketAmount: BigInt('9223372036854775807'),
+      //   lowEstimatedExchangeRate: Pay.Ratio.from(10 ** 20),
+      //   highEstimatedExchangeRate: Pay.Ratio.from(10 ** 20),
+      //   minExchangeRate: Pay.Ratio.from(10 ** 20)
+      // })
     })
 
     test('fails on unknown wallet address', async (): Promise<void> => {

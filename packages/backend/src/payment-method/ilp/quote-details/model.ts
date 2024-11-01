@@ -1,5 +1,3 @@
-import { Model } from 'objection'
-import { Quote } from '../../../open_payments/quote/model'
 import { BaseModel } from '../../../shared/baseModel'
 import * as Pay from '@interledger/pay'
 
@@ -15,7 +13,6 @@ export class IlpQuoteDetails extends BaseModel {
   }
 
   public quoteId!: string
-  public quote?: Quote
 
   public maxPacketAmount!: bigint
   public minExchangeRateNumerator!: bigint
@@ -24,19 +21,6 @@ export class IlpQuoteDetails extends BaseModel {
   public lowEstimatedExchangeRateDenominator!: bigint
   public highEstimatedExchangeRateNumerator!: bigint
   public highEstimatedExchangeRateDenominator!: bigint
-
-  static get relationMappings() {
-    return {
-      quote: {
-        relation: Model.BelongsToOneRelation,
-        modelClass: Quote,
-        join: {
-          from: 'ilpQuoteDetails.quoteId',
-          to: 'quotes.id'
-        }
-      }
-    }
-  }
 
   public get minExchangeRate(): Pay.Ratio {
     return Pay.Ratio.of(

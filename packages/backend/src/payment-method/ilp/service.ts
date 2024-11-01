@@ -223,22 +223,18 @@ async function pay(
     })
   }
 
-  if (!outgoingPayment.quote.ilpQuoteDetails) {
-    outgoingPayment.quote.ilpQuoteDetails = await IlpQuoteDetails.query(
-      deps.knex
-    )
-      .where('quoteId', outgoingPayment.quote.id)
-      .first()
+  const ilpQuoteDetails = await IlpQuoteDetails.query(deps.knex)
+    .where('quoteId', outgoingPayment.quote.id)
+    .first()
 
-    if (!outgoingPayment.quote.ilpQuoteDetails) {
-      throw new PaymentMethodHandlerError(
-        'Could not find required ILP Quote Details',
-        {
-          description: 'ILP Quote Details not found',
-          retryable: false
-        }
-      )
-    }
+  if (!ilpQuoteDetails) {
+    throw new PaymentMethodHandlerError(
+      'Could not find required ILP Quote Details',
+      {
+        description: 'ILP Quote Details not found',
+        retryable: false
+      }
+    )
   }
 
   const {
@@ -246,7 +242,7 @@ async function pay(
     highEstimatedExchangeRate,
     minExchangeRate,
     maxPacketAmount
-  } = outgoingPayment.quote.ilpQuoteDetails
+  } = ilpQuoteDetails
 
   const quote: Pay.Quote = {
     maxPacketAmount,

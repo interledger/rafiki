@@ -7,7 +7,6 @@ import {
 import { Asset } from '../../asset/model'
 import { Quote as OpenPaymentsQuote } from '@interledger/open-payments'
 import { Fee } from '../../fee/model'
-import { IlpQuoteDetails } from '../../payment-method/ilp/quote-details/model'
 
 export class Quote extends WalletAddressSubresource {
   public static readonly tableName = 'quotes'
@@ -25,7 +24,6 @@ export class Quote extends WalletAddressSubresource {
   public feeId?: string
   public fee?: Fee
 
-  public ilpQuoteDetails?: IlpQuoteDetails
   public debitAmountMinusFees?: bigint
 
   static get relationMappings() {
@@ -45,14 +43,6 @@ export class Quote extends WalletAddressSubresource {
         join: {
           from: 'quotes.feeId',
           to: 'fees.id'
-        }
-      },
-      ilpQuoteDetails: {
-        relation: Model.HasOneRelation,
-        modelClass: IlpQuoteDetails,
-        join: {
-          from: 'ilpQuoteDetails.quoteId',
-          to: 'quotes.id'
         }
       }
     }
