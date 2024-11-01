@@ -153,8 +153,9 @@ export function createTokenIntrospectionMiddleware({
     } catch (err) {
       if (err instanceof OpenPaymentsServerRouteError) {
         ctx.set('WWW-Authenticate', `GNAP as_uri=${config.authServerGrantUrl}`)
-        throw err
       }
+
+      throw err
     }
 
     await next()
