@@ -11,7 +11,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   return null
 }
 
-export const action = () => {
+export async function action() {
   return redirectDocument(
     `${variables.kratosBrowserPublicUrl}/self-service/login/browser`
   )
