@@ -67,11 +67,11 @@ function toOpenPaymentsAccess(
 export function createTokenIntrospectionMiddleware({
   requestType,
   requestAction,
-  canSkipAuthValidation = false
+  bypassError = false
 }: {
   requestType: AccessType
   requestAction: RequestAction
-  canSkipAuthValidation?: boolean
+  bypassError?: boolean
 }) {
   return async (
     ctx: WalletAddressUrlContext,
@@ -79,19 +79,14 @@ export function createTokenIntrospectionMiddleware({
   ): Promise<void> => {
     const config = await ctx.container.use('config')
     try {
-      if (canSkipAuthValidation && !ctx.request.headers.authorization) {
-        await next()
-        return
-      }
-
-      const authSplit = ctx.request.headers.authorization?.split(' ')
-      if (authSplit?.length !== 2 || authSplit[0] !== 'GNAP') {
+      const parts = ctx.request.headers.authorization?.split(' ')
+      if (parts?.length !== 2 || parts[0] !== 'GNAP') {
         throw new OpenPaymentsServerRouteError(
           401,
           'Missing or invalid authorization header value'
         )
       }
-      const token = authSplit[1]
+      const token = parts[1]
       const tokenIntrospectionClient = await ctx.container.use(
         'tokenIntrospectionClient'
       )
@@ -151,11 +146,15 @@ export function createTokenIntrospectionMiddleware({
         }
       }
     } catch (err) {
-      if (!(err instanceof OpenPaymentsServerRouteError)) {
-        ctx.set('WWW-Authenticate', `GNAP as_uri=${config.authServerGrantUrl}`)
+      if (err instanceof OpenPaymentsServerRouteError) {
+        throw err
       }
 
-      throw err
+      ctx.set('WWW-Authenticate', `GNAP as_uri=${config.authServerGrantUrl}`)
+
+      if (!bypassError) {
+        throw err
+      }
     }
 
     await next()
@@ -167,11 +166,6 @@ export const authenticatedStatusMiddleware = async (
   next: () => Promise<unknown>
 ): Promise<void> => {
   ctx.authenticated = false
-  if (!ctx.request.headers.authorization) {
-    await next()
-    return
-  }
-
   try {
     await throwIfSignatureInvalid(ctx)
     ctx.authenticated = true
