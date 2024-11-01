@@ -67,7 +67,10 @@ describe('PaymentMethodHandlerService', (): void => {
 
       await paymentMethodHandlerService.getQuote('ILP', options)
 
-      expect(ilpPaymentServiceGetQuoteSpy).toHaveBeenCalledWith(options)
+      expect(ilpPaymentServiceGetQuoteSpy).toHaveBeenCalledWith(
+        options,
+        undefined
+      )
     })
     test('calls localPaymentService for local payment type', async (): Promise<void> => {
       const asset = await createAsset(deps)
@@ -91,7 +94,10 @@ describe('PaymentMethodHandlerService', (): void => {
 
       await paymentMethodHandlerService.getQuote('LOCAL', options)
 
-      expect(localPaymentServiceGetQuoteSpy).toHaveBeenCalledWith(options)
+      expect(localPaymentServiceGetQuoteSpy).toHaveBeenCalledWith(
+        options,
+        undefined
+      )
     })
   })
 
