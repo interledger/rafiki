@@ -7,6 +7,7 @@ import { IlpPaymentService } from '../ilp/service'
 import { LocalPaymentService } from '../local/service'
 
 export interface StartQuoteOptions {
+  quoteId?: string
   walletAddress: WalletAddress
   debitAmount?: Amount
   receiveAmount?: Amount

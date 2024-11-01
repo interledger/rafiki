@@ -44,6 +44,13 @@ async function getQuote(
   deps: ServiceDependencies,
   options: StartQuoteOptions
 ): Promise<PaymentQuote> {
+  if (!options.quoteId) {
+    throw new PaymentMethodHandlerError('Received error during ILP quoting', {
+      description: 'quoteId is required for ILP quotes',
+      retryable: false
+    })
+  }
+
   const rates = await deps.ratesService
     .rates(options.walletAddress.asset.code)
     .catch((_err: Error) => {

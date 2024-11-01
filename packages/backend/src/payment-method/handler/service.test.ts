@@ -16,6 +16,7 @@ import { IlpPaymentService } from '../ilp/service'
 import { truncateTables } from '../../tests/tableManager'
 import { createOutgoingPaymentWithReceiver } from '../../tests/outgoingPayment'
 import { LocalPaymentService } from '../local/service'
+import { v4 as uuid } from 'uuid'
 
 describe('PaymentMethodHandlerService', (): void => {
   let deps: IocContract<AppServices>
@@ -50,6 +51,7 @@ describe('PaymentMethodHandlerService', (): void => {
       })
 
       const options: StartQuoteOptions = {
+        quoteId: uuid(),
         walletAddress,
         receiver: await createReceiver(deps, walletAddress),
         debitAmount: {

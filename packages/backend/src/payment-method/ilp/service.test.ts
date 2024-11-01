@@ -23,6 +23,7 @@ import { AccountingService } from '../../accounting/service'
 import { IncomingPayment } from '../../open_payments/payment/incoming/model'
 import { truncateTables } from '../../tests/tableManager'
 import { createOutgoingPaymentWithReceiver } from '../../tests/outgoingPayment'
+import { v4 as uuid } from 'uuid'
 
 const nock = (global as unknown as { nock: typeof import('nock') }).nock
 
@@ -90,6 +91,7 @@ describe('IlpPaymentService', (): void => {
       const ratesScope = mockRatesApi(exchangeRatesUrl, () => ({}))
 
       const options: StartQuoteOptions = {
+        quoteId: uuid(),
         walletAddress: walletAddressMap['USD'],
         receiver: await createReceiver(deps, walletAddressMap['USD']),
         debitAmount: {
@@ -108,6 +110,32 @@ describe('IlpPaymentService', (): void => {
       ratesScope.done()
     })
 
+    test('Throws if quoteId is not provided', async (): Promise<void> => {
+      const options: StartQuoteOptions = {
+        walletAddress: walletAddressMap['USD'],
+        receiver: await createReceiver(deps, walletAddressMap['USD']),
+        debitAmount: {
+          assetCode: 'USD',
+          assetScale: 2,
+          value: 100n
+        }
+      }
+
+      expect.assertions(4)
+      try {
+        await ilpPaymentService.getQuote(options)
+      } catch (error) {
+        expect(error).toBeInstanceOf(PaymentMethodHandlerError)
+        expect((error as PaymentMethodHandlerError).message).toBe(
+          'Received error during ILP quoting'
+        )
+        expect((error as PaymentMethodHandlerError).description).toBe(
+          'quoteId is required for ILP quotes'
+        )
+        expect((error as PaymentMethodHandlerError).retryable).toBe(false)
+      }
+    })
+
     test('fails on rate service error', async (): Promise<void> => {
       const ratesService = await deps.use('ratesService')
       jest
@@ -117,6 +145,7 @@ describe('IlpPaymentService', (): void => {
       expect.assertions(4)
       try {
         await ilpPaymentService.getQuote({
+          quoteId: uuid(),
           walletAddress: walletAddressMap['USD'],
           receiver: await createReceiver(deps, walletAddressMap['USD']),
           debitAmount: {
@@ -141,6 +170,7 @@ describe('IlpPaymentService', (): void => {
       const ratesScope = mockRatesApi(exchangeRatesUrl, () => ({}))
 
       const options: StartQuoteOptions = {
+        quoteId: uuid(),
         walletAddress: walletAddressMap['USD'],
         receiver: await createReceiver(deps, walletAddressMap['USD']),
         debitAmount: {
@@ -184,6 +214,7 @@ describe('IlpPaymentService', (): void => {
       }
 
       const options: StartQuoteOptions = {
+        quoteId: uuid(),
         walletAddress: walletAddressMap['USD'],
         receiver: await createReceiver(deps, walletAddressMap['USD'], {
           incomingAmount
@@ -218,6 +249,7 @@ describe('IlpPaymentService', (): void => {
           expect.assertions(4)
           try {
             await ilpPaymentService.getQuote({
+              quoteId: uuid(),
               walletAddress: walletAddressMap['USD'],
               receiver: await createReceiver(deps, walletAddressMap['USD']),
               debitAmount: {
@@ -243,6 +275,7 @@ describe('IlpPaymentService', (): void => {
       const ratesScope = mockRatesApi(exchangeRatesUrl, () => ({}))
 
       const options: StartQuoteOptions = {
+        quoteId: uuid(),
         walletAddress: walletAddressMap['USD'],
         receiver: await createReceiver(deps, walletAddressMap['USD'])
       }
@@ -272,6 +305,7 @@ describe('IlpPaymentService', (): void => {
       const ratesScope = mockRatesApi(exchangeRatesUrl, () => ({}))
 
       const options: StartQuoteOptions = {
+        quoteId: uuid(),
         walletAddress: walletAddressMap['USD'],
         receiver: await createReceiver(deps, walletAddressMap['USD'], {
           incomingAmount: {
@@ -311,6 +345,7 @@ describe('IlpPaymentService', (): void => {
       const ratesScope = mockRatesApi(exchangeRatesUrl, () => ({}))
 
       const options: StartQuoteOptions = {
+        quoteId: uuid(),
         walletAddress: walletAddressMap['USD'],
         receiver: await createReceiver(deps, walletAddressMap['USD'])
       }
@@ -371,6 +406,7 @@ describe('IlpPaymentService', (): void => {
                 const sendingWalletAddress = walletAddressMap[debitAssetCode]
 
                 const options: StartQuoteOptions = {
+                  quoteId: uuid(),
                   walletAddress: sendingWalletAddress,
                   receiver: await createReceiver(deps, receivingWalletAddress),
                   receiveAmount: {
@@ -430,6 +466,7 @@ describe('IlpPaymentService', (): void => {
                 const sendingWalletAddress = walletAddressMap[debitAssetCode]
 
                 const options: StartQuoteOptions = {
+                  quoteId: uuid(),
                   walletAddress: sendingWalletAddress,
                   receiver: await createReceiver(deps, receivingWalletAddress),
                   debitAmount: {
