@@ -67,11 +67,11 @@ function toOpenPaymentsAccess(
 export function createTokenIntrospectionMiddleware({
   requestType,
   requestAction,
-  bypassError = false
+  canSkipAuthValidation = false
 }: {
   requestType: AccessType
   requestAction: RequestAction
-  bypassError?: boolean
+  canSkipAuthValidation?: boolean
 }) {
   return async (
     ctx: WalletAddressUrlContext,
@@ -79,14 +79,19 @@ export function createTokenIntrospectionMiddleware({
   ): Promise<void> => {
     const config = await ctx.container.use('config')
     try {
-      const parts = ctx.request.headers.authorization?.split(' ')
-      if (parts?.length !== 2 || parts[0] !== 'GNAP') {
+      if (canSkipAuthValidation && !ctx.request.headers.authorization) {
+        await next()
+        return
+      }
+
+      const authSplit = ctx.request.headers.authorization?.split(' ')
+      if (authSplit?.length !== 2 || authSplit[0] !== 'GNAP') {
         throw new OpenPaymentsServerRouteError(
           401,
           'Missing or invalid authorization header value'
         )
       }
-      const token = parts[1]
+      const token = authSplit[1]
       const tokenIntrospectionClient = await ctx.container.use(
         'tokenIntrospectionClient'
       )
@@ -147,12 +152,7 @@ export function createTokenIntrospectionMiddleware({
       }
     } catch (err) {
       if (err instanceof OpenPaymentsServerRouteError) {
-        throw err
-      }
-
-      ctx.set('WWW-Authenticate', `GNAP as_uri=${config.authServerGrantUrl}`)
-
-      if (!bypassError) {
+        ctx.set('WWW-Authenticate', `GNAP as_uri=${config.authServerGrantUrl}`)
         throw err
       }
     }
@@ -166,6 +166,10 @@ export const authenticatedStatusMiddleware = async (
   next: () => Promise<unknown>
 ): Promise<void> => {
   ctx.authenticated = false
+  if (!ctx.request.headers.authorization) {
+    await next()
+    return
+  }
   try {
     await throwIfSignatureInvalid(ctx)
     ctx.authenticated = true
