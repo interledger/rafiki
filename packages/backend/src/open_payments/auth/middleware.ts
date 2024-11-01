@@ -84,7 +84,7 @@ export function createTokenIntrospectionMiddleware({
         return
       }
 
-      const authSplit = ctx.request.headers.authorization?.split(' ')
+      const authSplit = ctx.request.headers.authorization.split(' ')
       if (authSplit?.length !== 2 || authSplit[0] !== 'GNAP') {
         throw new OpenPaymentsServerRouteError(
           401,
