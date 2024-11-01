@@ -1,5 +1,4 @@
-import { PartialModelGraph, TransactionOrKnex } from 'objection'
-import * as Pay from '@interledger/pay'
+import { TransactionOrKnex } from 'objection'
 
 import { BaseService } from '../../shared/baseService'
 import { QuoteError, isQuoteError } from './errors'
@@ -21,8 +20,6 @@ import {
   PaymentMethodHandlerErrorCode
 } from '../../payment-method/handler/errors'
 import { v4 as uuid } from 'uuid'
-
-const MAX_INT64 = BigInt('9223372036854775807')
 
 export interface QuoteService extends WalletAddressSubresourceService<Quote> {
   create(options: CreateQuoteOptions): Promise<Quote | QuoteError>
@@ -81,22 +78,6 @@ export type CreateQuoteOptions =
   | QuoteOptionsWithDebitAmount
   | QuoteOptionsWithReceiveAmount
 
-// TODO: refactor
-// - re-model
-//   - [ ] remove IlpQuoteDetails.quoteId FK relation so i can insert that first
-//   - [ ] remove relationship on Quote objection model (and ilp quote details?)
-// - quote service
-//   - [X] make id for quote
-//   - [X] pass id into getQuote
-//   - [X] use id for quote create
-//   ... make payment method service changes
-//   - [ ] dont do anything with additionalFields
-// - payment method service
-//   - [ ] take quoteId
-//   - [ ] insert ilpQuoteDetails at end of method and use the given quoteId
-//   - [ ] remove additionalFields if unused
-// - new tests (in addition to updating tests based on above)
-//   - [ ] ilpQuoteDetails should be checked in payment method getQuote tests. not quote create, as currently
 async function createQuote(
   deps: ServiceDependencies,
   options: CreateQuoteOptions
@@ -132,23 +113,25 @@ async function createQuote(
     const receiver = await resolveReceiver(deps, options)
     const paymentMethod = receiver.isLocal ? 'LOCAL' : 'ILP'
     const quoteId = uuid()
-    const quote = await deps.paymentMethodHandlerService.getQuote(
-      paymentMethod,
-      {
-        quoteId,
-        walletAddress,
-        receiver,
-        receiveAmount: options.receiveAmount,
-        debitAmount: options.debitAmount
-      }
-    )
-
-    const sendingFee = await deps.feeService.getLatestFee(
-      walletAddress.assetId,
-      FeeType.Sending
-    )
 
     return await Quote.transaction(deps.knex, async (trx) => {
+      const quote = await deps.paymentMethodHandlerService.getQuote(
+        paymentMethod,
+        {
+          quoteId,
+          walletAddress,
+          receiver,
+          receiveAmount: options.receiveAmount,
+          debitAmount: options.debitAmount
+        },
+        trx
+      )
+
+      const sendingFee = await deps.feeService.getLatestFee(
+        walletAddress.assetId,
+        FeeType.Sending
+      )
+
       const createdQuote = await Quote.query(trx)
         .insertAndFetch({
           id: quoteId,

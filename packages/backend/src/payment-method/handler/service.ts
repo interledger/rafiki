@@ -5,6 +5,7 @@ import { Receiver } from '../../open_payments/receiver/model'
 import { BaseService } from '../../shared/baseService'
 import { IlpPaymentService } from '../ilp/service'
 import { LocalPaymentService } from '../local/service'
+import { Transaction } from 'objection'
 
 export interface StartQuoteOptions {
   quoteId?: string
@@ -20,7 +21,6 @@ export interface PaymentQuote {
   debitAmount: Amount
   receiveAmount: Amount
   estimatedExchangeRate: number
-  additionalFields: Record<string, unknown>
 }
 
 export interface PayOptions {
@@ -31,7 +31,10 @@ export interface PayOptions {
 }
 
 export interface PaymentMethodService {
-  getQuote(quoteOptions: StartQuoteOptions): Promise<PaymentQuote>
+  getQuote(
+    quoteOptions: StartQuoteOptions,
+    trx?: Transaction
+  ): Promise<PaymentQuote>
   pay(payOptions: PayOptions): Promise<void>
 }
 
@@ -40,7 +43,8 @@ export type PaymentMethod = 'ILP' | 'LOCAL'
 export interface PaymentMethodHandlerService {
   getQuote(
     method: PaymentMethod,
-    quoteOptions: StartQuoteOptions
+    quoteOptions: StartQuoteOptions,
+    trx?: Transaction
   ): Promise<PaymentQuote>
   pay(method: PaymentMethod, payOptions: PayOptions): Promise<void>
 }
@@ -72,8 +76,8 @@ export async function createPaymentMethodHandlerService({
   }
 
   return {
-    getQuote: (method, quoteOptions) =>
-      paymentMethods[method].getQuote(quoteOptions),
+    getQuote: (method, quoteOptions, trx) =>
+      paymentMethods[method].getQuote(quoteOptions, trx),
     pay: (method, payOptions) => paymentMethods[method].pay(payOptions)
   }
 }

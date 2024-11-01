@@ -30,7 +30,6 @@ import { Asset } from '../../asset/model'
 import { PaymentMethodHandlerService } from '../../payment-method/handler/service'
 import { ReceiverService } from '../receiver/service'
 import { createReceiver } from '../../tests/receiver'
-import * as Pay from '@interledger/pay'
 import {
   PaymentMethodHandlerError,
   PaymentMethodHandlerErrorCode
@@ -233,7 +232,8 @@ describe('QuoteService', (): void => {
                     receiver: expect.anything(),
                     receiveAmount: options.receiveAmount,
                     debitAmount: options.debitAmount
-                  })
+                  }),
+                  expect.anything()
                 )
 
                 expect(quote).toMatchObject({
@@ -418,61 +418,6 @@ describe('QuoteService', (): void => {
         })
       }
     )
-
-    // TODO: move test? Logic maybe better tests in ilp payment service getQuote
-    test('creates a quote with large exchange rate amounts', async (): Promise<void> => {
-      const receiveAmountValue = 100n
-      const receiver = await createReceiver(deps, receivingWalletAddress, {
-        incomingAmount: {
-          assetCode: receivingWalletAddress.asset.code,
-          assetScale: receivingWalletAddress.asset.scale,
-          value: receiveAmountValue
-        }
-      })
-
-      const mockedQuote = mockQuote(
-        {
-          receiver,
-          walletAddress: sendingWalletAddress,
-          receiveAmountValue
-        }
-        // {
-        //   additionalFields: {
-        //     maxPacketAmount: Pay.Int.MAX_U64,
-        //     lowEstimatedExchangeRate: Pay.Ratio.from(10 ** 20),
-        //     highEstimatedExchangeRate: Pay.Ratio.from(10 ** 20),
-        //     minExchangeRate: Pay.Ratio.from(10 ** 20)
-        //   }
-        // }
-      )
-
-      jest
-        .spyOn(paymentMethodHandlerService, 'getQuote')
-        .mockResolvedValueOnce(mockedQuote)
-
-      const quote = await quoteService.create({
-        walletAddressId: sendingWalletAddress.id,
-        receiver: receiver.incomingPayment!.id,
-        method: 'ilp'
-      })
-      assert.ok(!isQuoteError(quote))
-
-      // const ilpQuoteDetails = await IlpQuoteDetails.query()
-      //   .where({ quoteId: quote.id })
-      //   .first()
-
-      expect(quote).toMatchObject({
-        debitAmount: mockedQuote.debitAmount,
-        receiveAmount: receiver.incomingAmount
-      })
-
-      // expect(ilpQuoteDetails).toMatchObject({
-      //   maxPacketAmount: BigInt('9223372036854775807'),
-      //   lowEstimatedExchangeRate: Pay.Ratio.from(10 ** 20),
-      //   highEstimatedExchangeRate: Pay.Ratio.from(10 ** 20),
-      //   minExchangeRate: Pay.Ratio.from(10 ** 20)
-      // })
-    })
 
     test('fails on unknown wallet address', async (): Promise<void> => {
       await expect(
@@ -827,7 +772,8 @@ describe('QuoteService', (): void => {
             receiver: expect.anything(),
             receiveAmount: options.receiveAmount,
             debitAmount: options.debitAmount
-          })
+          }),
+          expect.anything()
         )
 
         expect(quote).toMatchObject({

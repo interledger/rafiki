@@ -189,8 +189,7 @@ async function getQuote(
       value: receiveAmountValue,
       assetCode: options.receiver.assetCode,
       assetScale: options.receiver.assetScale
-    },
-    additionalFields: {}
+    }
   }
 }
 

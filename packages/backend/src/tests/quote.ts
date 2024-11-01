@@ -50,12 +50,6 @@ export function mockQuote(
           : BigInt(Math.ceil(Number(args.debitAmountValue) * exchangeRate))
     },
     estimatedExchangeRate: exchangeRate,
-    additionalFields: {
-      maxPacketAmount: BigInt(Pay.Int.MAX_U64.toString()),
-      lowEstimatedExchangeRate: Pay.Ratio.from(exchangeRate ?? 1),
-      highEstimatedExchangeRate: Pay.Ratio.from(exchangeRate ?? 1),
-      minExchangeRate: Pay.Ratio.from(exchangeRate ?? 1)
-    },
     ...overrides
   }
 }

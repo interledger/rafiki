@@ -11,6 +11,8 @@ import { withConfigOverride } from '../../tests/helpers'
 import { StartQuoteOptions } from '../handler/service'
 import { WalletAddress } from '../../open_payments/wallet_address/model'
 import * as Pay from '@interledger/pay'
+import { Ratio, Int, PaymentType } from '@interledger/pay'
+import assert from 'assert'
 
 import { createReceiver } from '../../tests/receiver'
 import { mockRatesApi } from '../../tests/rates'
@@ -24,6 +26,7 @@ import { IncomingPayment } from '../../open_payments/payment/incoming/model'
 import { truncateTables } from '../../tests/tableManager'
 import { createOutgoingPaymentWithReceiver } from '../../tests/outgoingPayment'
 import { v4 as uuid } from 'uuid'
+import { IlpQuoteDetails } from './quote-details/model'
 
 const nock = (global as unknown as { nock: typeof import('nock') }).nock
 
@@ -110,6 +113,130 @@ describe('IlpPaymentService', (): void => {
       ratesScope.done()
     })
 
+    test('inserts ilpQuoteDetails', async (): Promise<void> => {
+      const ratesScope = mockRatesApi(exchangeRatesUrl, () => ({}))
+      const quoteId = uuid()
+      const options: StartQuoteOptions = {
+        quoteId,
+        walletAddress: walletAddressMap['USD'],
+        receiver: await createReceiver(deps, walletAddressMap['USD']),
+        debitAmount: {
+          assetCode: 'USD',
+          assetScale: 2,
+          value: 100n
+        }
+      }
+
+      const highEstimatedExchangeRate = Ratio.of(Int.ONE, Int.TWO)
+      const lowEstimatedExchangeRate = Ratio.from(0.5)
+      const minExchangeRate = Ratio.from(0.5)
+
+      assert(highEstimatedExchangeRate)
+      assert(lowEstimatedExchangeRate)
+      assert(minExchangeRate)
+
+      const mockIlpQuote = {
+        paymentType: PaymentType.FixedDelivery,
+        maxSourceAmount: BigInt(500),
+        minDeliveryAmount: BigInt(400),
+        highEstimatedExchangeRate,
+        lowEstimatedExchangeRate,
+        minExchangeRate,
+        maxPacketAmount: BigInt('9223372036854775807')
+      }
+
+      jest.spyOn(Pay, 'startQuote').mockResolvedValue(mockIlpQuote)
+
+      await ilpPaymentService.getQuote(options)
+
+      const ilpQuoteDetails = await IlpQuoteDetails.query()
+        .where({ quoteId })
+        .first()
+
+      ilpQuoteDetails?.lowEstimatedExchangeRate
+
+      expect(ilpQuoteDetails).toMatchObject({
+        quoteId,
+        maxPacketAmount: mockIlpQuote.maxPacketAmount,
+        minExchangeRate: mockIlpQuote.minExchangeRate,
+        minExchangeRateNumerator: mockIlpQuote.minExchangeRate.a.toString(),
+        minExchangeRateDenominator: mockIlpQuote.minExchangeRate.b.toString(),
+        lowEstimatedExchangeRate: mockIlpQuote.lowEstimatedExchangeRate,
+        lowEstimatedExchangeRateNumerator:
+          mockIlpQuote.lowEstimatedExchangeRate.a.toString(),
+        lowEstimatedExchangeRateDenominator:
+          mockIlpQuote.lowEstimatedExchangeRate.b.toString(),
+        highEstimatedExchangeRate: mockIlpQuote.highEstimatedExchangeRate,
+        highEstimatedExchangeRateNumerator:
+          mockIlpQuote.highEstimatedExchangeRate.a.toString(),
+        highEstimatedExchangeRateDenominator:
+          mockIlpQuote.highEstimatedExchangeRate.b.toString()
+      })
+      ratesScope.done()
+    })
+
+    test('creates a quote with large exchange rate amounts', async (): Promise<void> => {
+      const ratesScope = mockRatesApi(exchangeRatesUrl, () => ({}))
+      const quoteId = uuid()
+      const options: StartQuoteOptions = {
+        quoteId,
+        walletAddress: walletAddressMap['USD'],
+        receiver: await createReceiver(deps, walletAddressMap['USD']),
+        debitAmount: {
+          assetCode: 'USD',
+          assetScale: 2,
+          value: 100n
+        }
+      }
+
+      const highEstimatedExchangeRate = Ratio.of(Int.MAX_U64, Int.ONE)
+      const lowEstimatedExchangeRate = Ratio.from(10 ** 20)
+      const minExchangeRate = Ratio.from(0.5)
+
+      assert(highEstimatedExchangeRate)
+      assert(lowEstimatedExchangeRate)
+      assert(minExchangeRate)
+
+      const mockIlpQuote = {
+        paymentType: PaymentType.FixedDelivery,
+        maxSourceAmount: BigInt(500),
+        minDeliveryAmount: BigInt(400),
+        highEstimatedExchangeRate,
+        lowEstimatedExchangeRate,
+        minExchangeRate,
+        maxPacketAmount: BigInt('9223372036854775807')
+      }
+
+      jest.spyOn(Pay, 'startQuote').mockResolvedValue(mockIlpQuote)
+
+      await ilpPaymentService.getQuote(options)
+
+      const ilpQuoteDetails = await IlpQuoteDetails.query()
+        .where({ quoteId })
+        .first()
+
+      ilpQuoteDetails?.lowEstimatedExchangeRate
+
+      expect(ilpQuoteDetails).toMatchObject({
+        quoteId,
+        maxPacketAmount: mockIlpQuote.maxPacketAmount,
+        minExchangeRate: mockIlpQuote.minExchangeRate,
+        minExchangeRateNumerator: mockIlpQuote.minExchangeRate.a.toString(),
+        minExchangeRateDenominator: mockIlpQuote.minExchangeRate.b.toString(),
+        lowEstimatedExchangeRate: mockIlpQuote.lowEstimatedExchangeRate,
+        lowEstimatedExchangeRateNumerator:
+          mockIlpQuote.lowEstimatedExchangeRate.a.toString(),
+        lowEstimatedExchangeRateDenominator:
+          mockIlpQuote.lowEstimatedExchangeRate.b.toString(),
+        highEstimatedExchangeRate: mockIlpQuote.highEstimatedExchangeRate,
+        highEstimatedExchangeRateNumerator:
+          mockIlpQuote.highEstimatedExchangeRate.a.toString(),
+        highEstimatedExchangeRateDenominator:
+          mockIlpQuote.highEstimatedExchangeRate.b.toString()
+      })
+      ratesScope.done()
+    })
+
     test('Throws if quoteId is not provided', async (): Promise<void> => {
       const options: StartQuoteOptions = {
         walletAddress: walletAddressMap['USD'],
@@ -193,13 +320,7 @@ describe('IlpPaymentService', (): void => {
           assetScale: 2,
           value: 99n
         },
-        estimatedExchangeRate: expect.any(Number),
-        additionalFields: {
-          minExchangeRate: expect.any(Pay.Ratio),
-          highEstimatedExchangeRate: expect.any(Pay.Ratio),
-          lowEstimatedExchangeRate: expect.any(Pay.Ratio),
-          maxPacketAmount: BigInt(Pay.Int.MAX_U64.toString())
-        }
+        estimatedExchangeRate: expect.any(Number)
       })
       ratesScope.done()
     })

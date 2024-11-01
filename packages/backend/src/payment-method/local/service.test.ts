@@ -171,8 +171,7 @@ describe('LocalPaymentService', (): void => {
           assetScale: 2,
           value: 100n
         },
-        estimatedExchangeRate: 1,
-        additionalFields: {}
+        estimatedExchangeRate: 1
       })
     })
 
