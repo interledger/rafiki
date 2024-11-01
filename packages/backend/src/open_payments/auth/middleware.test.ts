@@ -153,38 +153,45 @@ describe('Auth Middleware', (): void => {
         access: [{ type: type, actions: [action] }],
         client: 'test-client'
       } as TokenInfo)
-  
+
       await middleware(ctx, next)
-      
+
       expect(tokenIntrospectionClient.introspect).toHaveBeenCalled()
       expect(ctx.client).toBe('test-client')
       expect(next).toHaveBeenCalled()
     })
 
-    test('throws error when skipAuthValidation is false and no authorization header', async (): Promise<void> => {
+    test('throws OpenPaymentsServerRouteError for invalid token with skipAuthValidation true', async (): Promise<void> => {
       const middleware = createTokenIntrospectionMiddleware({
         requestType: type,
         requestAction: action,
-        canSkipAuthValidation: false
+        canSkipAuthValidation: true
       })
-      ctx.request.headers.authorization = ''
-  
-      await expect(middleware(ctx, next)).rejects.toThrow(OpenPaymentsServerRouteError)
+      ctx.request.headers.authorization = 'GNAP invalid_token'
+      jest
+        .spyOn(tokenIntrospectionClient, 'introspect')
+        .mockRejectedValueOnce(new Error())
+
+      await expect(middleware(ctx, next)).rejects.toThrow(
+        OpenPaymentsServerRouteError
+      )
       expect(ctx.response.get('WWW-Authenticate')).toBe(
         `GNAP as_uri=${Config.authServerGrantUrl}`
       )
       expect(next).not.toHaveBeenCalled()
     })
 
-    test('throws error when canSkipAuthValidation is false and no authorization header', async (): Promise<void> => {
+    test('throws OpenPaymentsServerRouteError when canSkipAuthValidation is false and no authorization header', async (): Promise<void> => {
       const middleware = createTokenIntrospectionMiddleware({
         requestType: type,
         requestAction: action,
         canSkipAuthValidation: false
       })
       ctx.request.headers.authorization = ''
-  
-      await expect(middleware(ctx, next)).rejects.toThrow(OpenPaymentsServerRouteError)
+
+      await expect(middleware(ctx, next)).rejects.toThrow(
+        OpenPaymentsServerRouteError
+      )
       expect(ctx.response.get('WWW-Authenticate')).toBe(
         `GNAP as_uri=${Config.authServerGrantUrl}`
       )

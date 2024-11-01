@@ -71,7 +71,7 @@ export function createTokenIntrospectionMiddleware({
 }: {
   requestType: AccessType
   requestAction: RequestAction
-  canSkipAuthValidation?: boolean 
+  canSkipAuthValidation?: boolean
 }) {
   return async (
     ctx: WalletAddressUrlContext,
@@ -80,7 +80,6 @@ export function createTokenIntrospectionMiddleware({
     const config = await ctx.container.use('config')
     try {
       if (canSkipAuthValidation && !ctx.request.headers.authorization) {
-        ctx.set('WWW-Authenticate', `GNAP as_uri=${config.authServerGrantUrl}`)
         await next()
         return
       }
@@ -151,16 +150,15 @@ export function createTokenIntrospectionMiddleware({
               : undefined
         }
       }
-
-      await next()
     } catch (err) {
       if (!(err instanceof OpenPaymentsServerRouteError)) {
-        throw err
+        ctx.set('WWW-Authenticate', `GNAP as_uri=${config.authServerGrantUrl}`)
       }
 
-      ctx.set('WWW-Authenticate', `GNAP as_uri=${config.authServerGrantUrl}`)
       throw err
     }
+
+    await next()
   }
 }
 
@@ -169,6 +167,11 @@ export const authenticatedStatusMiddleware = async (
   next: () => Promise<unknown>
 ): Promise<void> => {
   ctx.authenticated = false
+  if (!ctx.request.headers.authorization) {
+    await next()
+    return
+  }
+
   try {
     await throwIfSignatureInvalid(ctx)
     ctx.authenticated = true
