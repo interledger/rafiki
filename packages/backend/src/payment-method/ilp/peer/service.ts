@@ -38,7 +38,8 @@ export type Options = {
   maxPacketAmount?: bigint
   staticIlpAddress: string
   name?: string
-  liquidityThreshold?: bigint
+  liquidityThresholdLow?: bigint
+  liquidityThresholdHigh?: bigint
   initialLiquidity?: bigint
 }
 
@@ -138,7 +139,8 @@ async function createPeer(
           maxPacketAmount: options.maxPacketAmount,
           staticIlpAddress: options.staticIlpAddress,
           name: options.name,
-          liquidityThreshold: options.liquidityThreshold
+          liquidityThresholdLow: options.liquidityThresholdLow,
+          liquidityThresholdHigh: options.liquidityThresholdHigh,
         })
         .withGraphFetched('asset')
 

@@ -15,13 +15,15 @@ export interface AssetOptions {
 
 export interface CreateOptions extends AssetOptions {
   withdrawalThreshold?: bigint
-  liquidityThreshold?: bigint
+  liquidityThresholdLow?: bigint
+  liquidityThresholdHigh?: bigint | null
 }
 
 export interface UpdateOptions {
   id: string
   withdrawalThreshold: bigint | null
-  liquidityThreshold: bigint | null
+  liquidityThresholdLow: bigint | null
+  liquidityThresholdHigh?: bigint | null
 }
 export interface DeleteOptions {
   id: string
@@ -67,7 +69,7 @@ export async function createAssetService({
 
 async function createAsset(
   deps: ServiceDependencies,
-  { code, scale, withdrawalThreshold, liquidityThreshold }: CreateOptions
+  { code, scale, withdrawalThreshold, liquidityThresholdLow, liquidityThresholdHigh }: CreateOptions
 ): Promise<Asset | AssetError> {
   try {
     // check if exists but deleted | by code-scale
@@ -95,7 +97,8 @@ async function createAsset(
         code,
         scale,
         withdrawalThreshold,
-        liquidityThreshold
+        liquidityThresholdLow,
+        liquidityThresholdHigh,
       })
       await deps.accountingService.createLiquidityAndLinkedSettlementAccount(
         asset,
@@ -114,14 +117,14 @@ async function createAsset(
 
 async function updateAsset(
   deps: ServiceDependencies,
-  { id, withdrawalThreshold, liquidityThreshold }: UpdateOptions
+  { id, withdrawalThreshold, liquidityThresholdLow, liquidityThresholdHigh }: UpdateOptions
 ): Promise<Asset | AssetError> {
   if (!deps.knex) {
     throw new Error('Knex undefined')
   }
   try {
     return await Asset.query(deps.knex)
-      .patchAndFetchById(id, { withdrawalThreshold, liquidityThreshold })
+      .patchAndFetchById(id, { withdrawalThreshold, liquidityThresholdLow, liquidityThresholdHigh })
       .throwIfNotFound()
   } catch (err) {
     if (err instanceof NotFoundError) {
