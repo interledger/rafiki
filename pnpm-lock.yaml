@@ -58,8 +58,8 @@ importers:
         specifier: ^2.0.2
         version: 2.0.2
       npm-run-all2:
-        specifier: ^6.1.2
-        version: 6.1.2
+        specifier: ^6.2.6
+        version: 6.2.6
       prettier:
         specifier: ^3.2.5
         version: 3.2.5
@@ -14953,9 +14953,9 @@ packages:
       semver: 7.6.3
     dev: true
 
-  /npm-run-all2@6.1.2:
-    resolution: {integrity: sha512-WwwnS8Ft+RpXve6T2EIEVpFLSqN+ORHRvgNk3H9N62SZXjmzKoRhMFg3I17TK3oMaAEr+XFbRirWS2Fn3BCPSg==}
-    engines: {node: ^14.18.0 || >=16.0.0, npm: '>= 8'}
+  /npm-run-all2@6.2.6:
+    resolution: {integrity: sha512-tkyb4pc0Zb0oOswCb5tORPk9MvVL6gcDq1cMItQHmsbVk1skk7YF6cH+UU2GxeNLHMuk6wFEOSmEmJ2cnAK1jg==}
+    engines: {node: ^14.18.0 || ^16.13.0 || >=18.0.0, npm: '>= 8'}
     hasBin: true
     dependencies:
       ansi-styles: 6.2.1
@@ -14965,6 +14965,7 @@ packages:
       pidtree: 0.6.0
       read-package-json-fast: 3.0.2
       shell-quote: 1.8.0
+      which: 3.0.1
     dev: true
 
   /npm-run-path@4.0.1:
