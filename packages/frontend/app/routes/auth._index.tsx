@@ -11,12 +11,6 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   return null
 }
 
-export async function action() {
-  return redirectDocument(
-    `${variables.kratosBrowserPublicUrl}/self-service/login/browser`
-  )
-}
-
 export default function Auth() {
   return (
     <div className='pt-4 flex flex-col'>
@@ -40,7 +34,7 @@ export default function Auth() {
           </p>
           <div>
             <Form method='post'>
-              <Button aria-label='logout' type='submit' className='mr-2'>
+              <Button aria-label='login' type='submit' className='mr-2'>
                 Login
               </Button>
             </Form>
@@ -48,5 +42,11 @@ export default function Auth() {
         </div>
       </div>
     </div>
+  )
+}
+
+export async function action() {
+  return redirectDocument(
+    `${variables.kratosBrowserPublicUrl}/self-service/login/browser`
   )
 }
