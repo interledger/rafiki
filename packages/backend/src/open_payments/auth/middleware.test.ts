@@ -97,7 +97,7 @@ describe('Auth Middleware', (): void => {
       ctx.request.headers.authorization = ''
 
       await expect(middleware(ctx, next)).resolves.toBeUndefined()
-      expect(ctx.response.get('WWW-Authenticate')).toBe('')
+      expect(ctx.response.get('WWW-Authenticate')).toBeUndefined()
       expect(next).toHaveBeenCalled()
     })
 
@@ -553,7 +553,7 @@ describe('authenticatedStatusMiddleware', (): void => {
     await appContainer.shutdown()
   })
 
-  test('sets ctx.authenticated to false if http signature is invalid and missing auth header', async (): Promise<void> => {
+  test('sets ctx.authenticated to false if missing auth header', async (): Promise<void> => {
     const ctx = createContext<HttpSigWithAuthenticatedStatusContext>({
       headers: { 'signature-input': '' }
     })
