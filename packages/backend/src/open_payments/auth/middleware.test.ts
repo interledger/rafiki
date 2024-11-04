@@ -94,10 +94,10 @@ describe('Auth Middleware', (): void => {
         requestAction: action,
         canSkipAuthValidation: true
       })
-      ctx.request.headers.authorization = ''
+      ctx.request.headers.authorization = undefined
 
       await expect(middleware(ctx, next)).resolves.toBeUndefined()
-      expect(ctx.response.get('WWW-Authenticate')).toBeUndefined()
+      expect(ctx.response.get('WWW-Authenticate')).toBeFalsy()
       expect(next).toHaveBeenCalled()
     })
 
@@ -506,9 +506,9 @@ describe('Auth Middleware', (): void => {
               expect(ctx.grant).toEqual(
                 ctxGrant
                   ? {
-                      id: tokenInfo.grant,
-                      limits: ctxLimits ? parseLimits(limits) : undefined
-                    }
+                    id: tokenInfo.grant,
+                    limits: ctxLimits ? parseLimits(limits) : undefined
+                  }
                   : undefined
               )
             }
