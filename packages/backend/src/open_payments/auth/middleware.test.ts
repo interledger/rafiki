@@ -506,9 +506,9 @@ describe('Auth Middleware', (): void => {
               expect(ctx.grant).toEqual(
                 ctxGrant
                   ? {
-                    id: tokenInfo.grant,
-                    limits: ctxLimits ? parseLimits(limits) : undefined
-                  }
+                      id: tokenInfo.grant,
+                      limits: ctxLimits ? parseLimits(limits) : undefined
+                    }
                   : undefined
               )
             }
