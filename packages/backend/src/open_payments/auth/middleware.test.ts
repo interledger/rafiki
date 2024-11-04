@@ -97,9 +97,7 @@ describe('Auth Middleware', (): void => {
       ctx.request.headers.authorization = ''
 
       await expect(middleware(ctx, next)).resolves.toBeUndefined()
-      expect(ctx.response.get('WWW-Authenticate')).toBe(
-        `GNAP as_uri=${Config.authServerGrantUrl}`
-      )
+      expect(ctx.response.get('WWW-Authenticate')).toBe('')
       expect(next).toHaveBeenCalled()
     })
 
@@ -555,12 +553,25 @@ describe('authenticatedStatusMiddleware', (): void => {
     await appContainer.shutdown()
   })
 
-  test('sets ctx.authenticated to false if http signature is invalid', async (): Promise<void> => {
+  test('sets ctx.authenticated to false if http signature is invalid and missing auth header', async (): Promise<void> => {
     const ctx = createContext<HttpSigWithAuthenticatedStatusContext>({
       headers: { 'signature-input': '' }
     })
 
     expect(authenticatedStatusMiddleware(ctx, next)).resolves.toBeUndefined()
+    expect(next).toHaveBeenCalled()
+    expect(ctx.authenticated).toBe(false)
+  })
+
+  test('sets ctx.authenticated to false if http signature is invalid and existing auth header', async (): Promise<void> => {
+    const ctx = createContext<HttpSigWithAuthenticatedStatusContext>({
+      headers: { 'signature-input': '', authorization: 'GNAP token' }
+    })
+
+    expect(authenticatedStatusMiddleware(ctx, next)).rejects.toMatchObject({
+      status: 401,
+      message: 'Signature validation error: missing keyId in signature input'
+    })
     expect(next).not.toHaveBeenCalled()
     expect(ctx.authenticated).toBe(false)
   })
