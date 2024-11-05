@@ -17,8 +17,11 @@ export const parseBool = (str: string) => {
 }
 
 export function getOpenPaymentsUrl() {
+  if (!process.env.OPEN_PAYMENTS_URL) {
+    throw new Error('Environment variable OPEN_PAYMENTS_URL is missing')
+  }
   if (typeof window === 'undefined') {
-    return process.env.OPEN_PAYMENTS_URL ?? 'https://cloud-nine-wallet-backend/'
+    return process.env.OPEN_PAYMENTS_URL
   }
 
   return window.ENV.OPEN_PAYMENTS_URL
