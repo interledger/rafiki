@@ -4,11 +4,13 @@ interface Asset {
   code: string
   scale: number
   liquidity: number
-  liquidityThreshold: number
+  liquidityThresholdLow: number
+  liquidityThresholdHigh: number
 }
 
 export interface Peering {
-  liquidityThreshold: number
+  liquidityThresholdLow: number
+  liquidityThresholdHigh: number
   peerUrl: string
   peerIlpAddress: string
   initialLiquidity: string

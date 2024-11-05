@@ -59,26 +59,29 @@ describe('Asset Resolvers', (): void => {
 
   describe('Create Asset', (): void => {
     test.each`
-      withdrawalThreshold | expectedWithdrawalThreshold | liquidityThresholdLow | expectedLiquidityThresholdLow
-      ${undefined}        | ${null}                     | ${undefined}          | ${null}
-      ${BigInt(0)}        | ${'0'}                      | ${undefined}          | ${null}
-      ${BigInt(5)}        | ${'5'}                      | ${undefined}          | ${null}
-      ${undefined}        | ${null}                     | ${BigInt(0)}          | ${'0'}
-      ${undefined}        | ${null}                     | ${BigInt(5)}          | ${'5'}
-      ${BigInt(0)}        | ${'0'}                      | ${BigInt(0)}          | ${'0'}
-      ${BigInt(5)}        | ${'5'}                      | ${BigInt(5)}          | ${'5'}
+      withdrawalThreshold | expectedWithdrawalThreshold | liquidityThresholdLow | expectedLiquidityThresholdLow | liquidityThresholdHigh  | expectedLiquidityThresholdHigh
+      ${undefined}        | ${null}                     | ${undefined}          | ${null}                       | ${undefined}            | ${null}
+      ${BigInt(0)}        | ${'0'}                      | ${undefined}          | ${null}                       | ${undefined}            | ${null}
+      ${BigInt(5)}        | ${'5'}                      | ${undefined}          | ${null}                       | ${undefined}            | ${null}
+      ${undefined}        | ${null}                     | ${BigInt(0)}          | ${'0'}                        | ${BigInt(100)}          | ${'100'}      
+      ${undefined}        | ${null}                     | ${BigInt(5)}          | ${'5'}                        | ${BigInt(5000)}         | ${'5000'}
+      ${BigInt(0)}        | ${'0'}                      | ${BigInt(0)}          | ${'0'}                        | ${BigInt(100)}          | ${'100'}      
+      ${BigInt(5)}        | ${'5'}                      | ${BigInt(5)}          | ${'5'}                        | ${BigInt(5000)}         | ${'5000'}
     `(
-      'Can create an asset (withdrawalThreshold: $withdrawalThreshold, liquidityThresholdLow: $liquidityThresholdLow)',
+      'Can create an asset (withdrawalThreshold: $withdrawalThreshold, liquidityThresholdLow: $liquidityThresholdLow, liquidityThresholdHigh: $liquidityThresholdHigh)',
       async ({
         withdrawalThreshold,
         expectedWithdrawalThreshold,
         liquidityThresholdLow,
-        expectedLiquidityThresholdLow
+        expectedLiquidityThresholdLow,
+        liquidityThresholdHigh,
+        expectedLiquidityThresholdHigh
       }): Promise<void> => {
         const input: CreateAssetInput = {
           ...randomAsset(),
           withdrawalThreshold,
-          liquidityThresholdLow
+          liquidityThresholdLow,
+          liquidityThresholdHigh
         }
 
         const response = await appContainer.apolloClient
@@ -93,6 +96,7 @@ describe('Asset Resolvers', (): void => {
                     liquidity
                     withdrawalThreshold
                     liquidityThresholdLow
+                    liquidityThresholdHigh
                   }
                 }
               }
@@ -117,14 +121,16 @@ describe('Asset Resolvers', (): void => {
           scale: input.scale,
           liquidity: '0',
           withdrawalThreshold: expectedWithdrawalThreshold,
-          liquidityThresholdLow: expectedLiquidityThresholdLow
+          liquidityThresholdLow: expectedLiquidityThresholdLow,
+          liquidityThresholdHigh: expectedLiquidityThresholdHigh
         })
         await expect(
           assetService.get(response.asset.id)
         ).resolves.toMatchObject({
           ...input,
           withdrawalThreshold: withdrawalThreshold ?? null,
-          liquidityThresholdLow: liquidityThresholdLow ?? null
+          liquidityThresholdLow: liquidityThresholdLow ?? null,
+          liquidityThresholdHigh: liquidityThresholdHigh ?? null
         })
       }
     )
@@ -235,6 +241,7 @@ describe('Asset Resolvers', (): void => {
                   liquidity
                   withdrawalThreshold
                   liquidityThresholdLow
+                  liquidityThresholdHigh
                   createdAt
                 }
               }
@@ -259,6 +266,7 @@ describe('Asset Resolvers', (): void => {
         liquidity: '0',
         withdrawalThreshold: asset.withdrawalThreshold.toString(),
         liquidityThresholdLow: asset.liquidityThresholdLow?.toString(),
+        liquidityThresholdHigh: asset.liquidityThresholdHigh?.toString(),
         createdAt: new Date(+asset.createdAt).toISOString()
       })
 
@@ -276,6 +284,7 @@ describe('Asset Resolvers', (): void => {
         liquidity: '100',
         withdrawalThreshold: asset.withdrawalThreshold.toString(),
         liquidityThresholdLow: asset.liquidityThresholdLow?.toString(),
+        liquidityThresholdHigh: asset.liquidityThresholdHigh?.toString(),
         createdAt: new Date(+asset.createdAt).toISOString()
       })
     })
@@ -406,7 +415,8 @@ describe('Asset Resolvers', (): void => {
         assetService.create({
           ...randomAsset(),
           withdrawalThreshold: BigInt(10),
-          liquidityThresholdLow: BigInt(100)
+          liquidityThresholdLow: BigInt(100),
+          liquidityThresholdHigh: BigInt(1000)
         }) as Promise<AssetModel>,
       pagedQuery: 'assets'
     })
@@ -417,7 +427,8 @@ describe('Asset Resolvers', (): void => {
         const asset = await assetService.create({
           ...randomAsset(),
           withdrawalThreshold: BigInt(10),
-          liquidityThresholdLow: BigInt(100)
+          liquidityThresholdLow: BigInt(100),
+          liquidityThresholdHigh: BigInt(1000)
         })
         assert.ok(!isAssetError(asset))
         assets.push(asset)
@@ -435,6 +446,7 @@ describe('Asset Resolvers', (): void => {
                     scale
                     withdrawalThreshold
                     liquidityThresholdLow
+                    liquidityThresholdHigh
                   }
                   cursor
                 }
@@ -454,6 +466,7 @@ describe('Asset Resolvers', (): void => {
         const asset = assets[idx]
         assert.ok(asset.withdrawalThreshold)
         assert.ok(asset.liquidityThresholdLow)
+        assert.ok(asset.liquidityThresholdHigh)
         expect(edge.cursor).toEqual(asset.id)
         expect(edge.node).toEqual({
           __typename: 'Asset',
@@ -461,7 +474,8 @@ describe('Asset Resolvers', (): void => {
           code: asset.code,
           scale: asset.scale,
           withdrawalThreshold: asset.withdrawalThreshold.toString(),
-          liquidityThresholdLow: asset.liquidityThresholdLow.toString()
+          liquidityThresholdLow: asset.liquidityThresholdLow.toString(),
+          liquidityThresholdHigh: asset.liquidityThresholdHigh.toString()
         })
       })
     })
@@ -540,39 +554,40 @@ describe('Asset Resolvers', (): void => {
 
   describe('updateAsset', (): void => {
     describe.each`
-      withdrawalThreshold | liquidityThresholdLow
-      ${null}             | ${null}
-      ${BigInt(0)}        | ${null}
-      ${BigInt(5)}        | ${null}
-      ${null}             | ${BigInt(0)}
-      ${null}             | ${BigInt(5)}
-      ${BigInt(0)}        | ${BigInt(0)}
-      ${BigInt(5)}        | ${BigInt(5)}
+      withdrawalThreshold | liquidityThresholdLow | liquidityThresholdHigh
+      ${null}             | ${null}               | ${null}
+      ${BigInt(0)}        | ${null}               | ${null}
+      ${BigInt(5)}        | ${null}               | ${null}
+      ${null}             | ${BigInt(0)}          | ${BigInt(1000)}
+      ${null}             | ${BigInt(5)}          | ${BigInt(5000)}
+      ${BigInt(0)}        | ${BigInt(0)}          | ${BigInt(1000)}
+      ${BigInt(5)}        | ${BigInt(5)}          | ${BigInt(5000)}
     `(
-      'from withdrawalThreshold: $withdrawalThreshold and liquidityThresholdLow: $liquidityThresholdLow',
-      ({ withdrawalThreshold, liquidityThresholdLow }): void => {
+      'from withdrawalThreshold: $withdrawalThreshold, liquidityThresholdLow: $liquidityThresholdLow and liquidityThresholdHigh: $liquidityThresholdHigh',
+      ({ withdrawalThreshold, liquidityThresholdLow, liquidityThresholdHigh }): void => {
         let asset: AssetModel
 
         beforeEach(async (): Promise<void> => {
           asset = (await assetService.create({
             ...randomAsset(),
             withdrawalThreshold,
-            liquidityThresholdLow
+            liquidityThresholdLow,
+            liquidityThresholdHigh
           })) as AssetModel
           assert.ok(!isAssetError(asset))
         })
 
         test.each`
-          withdrawalThreshold | liquidityThresholdLow
-          ${null}             | ${null}
-          ${BigInt(0)}        | ${null}
-          ${BigInt(5)}        | ${null}
-          ${null}             | ${BigInt(0)}
-          ${null}             | ${BigInt(5)}
-          ${BigInt(0)}        | ${BigInt(0)}
-          ${BigInt(5)}        | ${BigInt(5)}
+          withdrawalThreshold | liquidityThresholdLow | liquidityThresholdHigh
+          ${null}             | ${null}               | ${null} 
+          ${BigInt(0)}        | ${null}               | ${null}
+          ${BigInt(5)}        | ${null}               | ${null}
+          ${null}             | ${BigInt(0)}          | ${BigInt(1000)}
+          ${null}             | ${BigInt(5)}          | ${BigInt(5000)}
+          ${BigInt(0)}        | ${BigInt(0)}          | ${BigInt(1000)}
+          ${BigInt(5)}        | ${BigInt(5)}          | ${BigInt(5000)}
         `(
-          'to withdrawalThreshold: $withdrawalThreshold and liquidityThresholdLow: $liquidityThresholdLow',
+          'to withdrawalThreshold: $withdrawalThreshold, liquidityThresholdLow: $liquidityThresholdLow and liquidityThresholdHigh: $liquidityThresholdHigh',
           async ({ withdrawalThreshold }): Promise<void> => {
             const response = await appContainer.apolloClient
               .mutate({
@@ -585,6 +600,7 @@ describe('Asset Resolvers', (): void => {
                         scale
                         withdrawalThreshold
                         liquidityThresholdLow
+                        liquidityThresholdHigh
                       }
                     }
                   }
@@ -593,7 +609,8 @@ describe('Asset Resolvers', (): void => {
                   input: {
                     id: asset.id,
                     withdrawalThreshold,
-                    liquidityThresholdLow
+                    liquidityThresholdLow,
+                    liquidityThresholdHigh
                   }
                 }
               })
@@ -617,11 +634,16 @@ describe('Asset Resolvers', (): void => {
               liquidityThresholdLow:
                 liquidityThresholdLow === null
                   ? null
-                  : liquidityThresholdLow.toString()
+                  : liquidityThresholdLow.toString(),
+              liquidityThresholdHigh:
+                liquidityThresholdHigh === null
+                  ? null
+                  : liquidityThresholdHigh.toString()
             })
             await expect(assetService.get(asset.id)).resolves.toMatchObject({
               withdrawalThreshold,
-              liquidityThresholdLow
+              liquidityThresholdLow,
+              liquidityThresholdHigh
             })
           }
         )

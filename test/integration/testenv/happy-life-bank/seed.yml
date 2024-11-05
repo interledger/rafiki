@@ -2,25 +2,30 @@ assets:
   - code: USD
     scale: 2
     liquidity: 1000000
-    liquidityThreshold: 100000
+    liquidityThresholdLow: 100000
+    liquidityThresholdHigh: 1000000
   - code: EUR
     scale: 2
     liquidity: 1000000
-    liquidityThreshold: 100000
+    liquidityThresholdLow: 100000
+    liquidityThresholdHigh: 1000000
   - code: MXN
     scale: 2
     liquidity: 1000000
-    liquidityThreshold: 100000
+    liquidityThresholdLow: 100000
+    liquidityThresholdHigh: 1000000
   - code: JPY
     scale: 0
     liquidity: 10000
-    liquidityThreshold: 1000
+    liquidityThresholdLow: 1000
+    liquidityThreshoHighow: 10000
 peeringAsset: 'USD'
 peers:
   - initialLiquidity: '1000000000000'
     peerUrl: http://cloud-nine-wallet-test-backend:3102
     peerIlpAddress: test.cloud-nine-wallet-test
-    liquidityThreshold: 100000
+    liquidityThresholdLow: 100000
+    liquidityThresholdHigh: 1000000
 accounts:
   - name: 'Philip Fry'
     path: accounts/pfry

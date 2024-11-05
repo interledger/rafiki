@@ -23,7 +23,8 @@ export function createRequesters(
   createAsset: (
     code: string,
     scale: number,
-    liquidityThreshold: number
+    liquidityThresholdLow: number,
+    liquidityThresholdHigh: number
   ) => Promise<AssetMutationResponse>
   createPeer: (
     staticIlpAddress: string,
@@ -31,7 +32,8 @@ export function createRequesters(
     assetId: string,
     assetCode: string,
     name: string,
-    liquidityThreshold: number
+    liquidityThresholdLow: number,
+    liquidityThresholdHigh: number
   ) => Promise<CreatePeerMutationResponse>
   createAutoPeer: (
     peerUrl: string,
@@ -67,15 +69,16 @@ export function createRequesters(
   ) => Promise<SetFeeResponse>
 } {
   return {
-    createAsset: (code, scale, liquidityThreshold) =>
-      createAsset(apolloClient, code, scale, liquidityThreshold),
+    createAsset: (code, scale, liquidityThresholdLow, liquidityThresholdHigh) =>
+      createAsset(apolloClient, code, scale, liquidityThresholdLow, liquidityThresholdHigh),
     createPeer: (
       staticIlpAddress,
       outgoingEndpoint,
       assetId,
       assetCode,
       name,
-      liquidityThreshold
+      liquidityThresholdLow,
+      liquidityThresholdHigh
     ) =>
       createPeer(
         apolloClient,
@@ -85,7 +88,8 @@ export function createRequesters(
         assetId,
         assetCode,
         name,
-        liquidityThreshold
+        liquidityThresholdLow,
+        liquidityThresholdHigh
       ),
     createAutoPeer: (peerUrl, assetId) =>
       createAutoPeer(apolloClient, logger, peerUrl, assetId),
@@ -112,7 +116,8 @@ export async function createAsset(
   apolloClient: ApolloClient<NormalizedCacheObject>,
   code: string,
   scale: number,
-  liquidityThreshold: number
+  liquidityThresholdLow: number,
+  liquidityThresholdHigh: number
 ): Promise<AssetMutationResponse> {
   const createAssetMutation = gql`
     mutation CreateAsset($input: CreateAssetInput!) {
@@ -121,7 +126,8 @@ export async function createAsset(
           id
           code
           scale
-          liquidityThreshold
+          liquidityThresholdLow
+          liquidityThresholdHigh
         }
       }
     }
@@ -130,7 +136,8 @@ export async function createAsset(
     input: {
       code,
       scale,
-      liquidityThreshold
+      liquidityThresholdLow,
+      liquidityThresholdHigh
     }
   }
   return apolloClient
@@ -154,7 +161,8 @@ export async function createPeer(
   assetId: string,
   assetCode: string,
   name: string,
-  liquidityThreshold: number
+  liquidityThresholdLow: number,
+  liquidityThresholdHigh: number
 ): Promise<CreatePeerMutationResponse> {
   const createPeerMutation = gql`
     mutation CreatePeer($input: CreatePeerInput!) {
@@ -174,7 +182,8 @@ export async function createPeer(
       },
       assetId,
       name,
-      liquidityThreshold
+      liquidityThresholdLow,
+      liquidityThresholdHigh
     }
   }
   return apolloClient

@@ -38,20 +38,50 @@ describe('Models', (): void => {
       beforeEach(async (): Promise<void> => {
         const options = {
           ...randomAsset(),
-          liquidityThreshold: BigInt(100)
+          liquidityThresholdLow: BigInt(100),
+          liquidityThresholdHigh: BigInt(500)
         }
         const assetOrError = await assetService.create(options)
         if (!isAssetError(assetOrError)) {
           asset = assetOrError
         }
       })
+
+      test.each`
+        balance
+        ${BigInt(500)}
+        ${BigInt(1000)}
+      `(
+        'creates webhook event if balance=$balance >= liquidityThresholdHigh',
+        async ({ balance }): Promise<void> => {
+          await asset.onDebit({ balance })
+          const event = (
+            await AssetEvent.query(knex).where('type', AssetEventType.LiquidityHigh)
+          )[0]
+
+          expect(event).toMatchObject({
+            type: AssetEventType.LiquidityHigh,
+            data: {
+              id: asset.id,
+              asset: {
+                id: asset.id,
+                code: asset.code,
+                scale: asset.scale
+              },
+              liquidityThreshold: asset.liquidityThresholdHigh?.toString(),
+              balance: balance.toString()
+            }
+          })
+        }
+      )
+
       test.each`
         balance
         ${BigInt(50)}
         ${BigInt(99)}
         ${BigInt(100)}
       `(
-        'creates webhook event if balance=$balance <= liquidityThreshold',
+        'creates webhook event if balance=$balance <= liquidityThresholdLow',
         async ({ balance }): Promise<void> => {
           await asset.onDebit({ balance })
           const event = (
@@ -69,18 +99,33 @@ describe('Models', (): void => {
                 code: asset.code,
                 scale: asset.scale
               },
-              liquidityThreshold: asset.liquidityThreshold?.toString(),
+              liquidityThreshold: asset.liquidityThresholdLow?.toString(),
               balance: balance.toString()
             }
           })
         }
       )
-      test('does not create webhook event if balance > liquidityThreshold', async (): Promise<void> => {
+      test('does not create webhook event if balance > liquidityThresholdLow', async (): Promise<void> => {
         await asset.onDebit({ balance: BigInt(110) })
         await expect(
           AssetEvent.query(knex).where('type', AssetEventType.LiquidityLow)
         ).resolves.toEqual([])
       })
+
+
+      test.each`
+        balance
+        ${BigInt(200)}
+        ${BigInt(499)}
+      `(
+        'does not create webhook event if balance=$balance < liquidityThresholdLow',
+        async ({ balance }): Promise<void> => {
+          await asset.onDebit({ balance })
+          await expect(
+            AssetEvent.query(knex).where('type', AssetEventType.LiquidityHigh)
+          ).resolves.toEqual([])
+        }
+      )
     })
   })
 

@@ -33,6 +33,10 @@ export async function createPeer(
   if (options.liquidityThresholdLow) {
     peerOptions.liquidityThresholdLow = options.liquidityThresholdLow
   }
+  if (options.liquidityThresholdHigh) {
+    peerOptions.liquidityThresholdHigh = options.liquidityThresholdHigh
+  }
+  
   const peerService = await deps.use('peerService')
   const peer = await peerService.create(peerOptions)
   if (isPeerError(peer)) {

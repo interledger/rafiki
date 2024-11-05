@@ -41,9 +41,9 @@ export async function setupFromSeed(
   } = createRequesters(apolloClient, logger)
 
   const assets: Record<string, Asset> = {}
-  for (const { code, scale, liquidity, liquidityThreshold } of config.seed
+  for (const { code, scale, liquidity, liquidityThresholdLow, liquidityThresholdHigh } of config.seed
     .assets) {
-    const { asset } = await createAsset(code, scale, liquidityThreshold)
+    const { asset } = await createAsset(code, scale, liquidityThresholdLow, liquidityThresholdHigh)
     if (!asset) {
       throw new Error('asset not defined')
     }
@@ -70,7 +70,8 @@ export async function setupFromSeed(
         assets[peeringAsset].id,
         assets[peeringAsset].code,
         peer.name,
-        peer.liquidityThreshold
+        peer.liquidityThresholdLow,
+        peer.liquidityThresholdHigh
       ).then((response) => response.peer)
       if (!peerResponse) {
         throw new Error('peer response not defined')

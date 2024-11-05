@@ -102,6 +102,7 @@ describe('Peer Resolvers', (): void => {
                   liquidity
                   name
                   liquidityThresholdLow
+                  liquidityThresholdHigh
                 }
               }
             }
@@ -138,7 +139,8 @@ describe('Peer Resolvers', (): void => {
         staticIlpAddress: peer.staticIlpAddress,
         liquidity: peer.initialLiquidity?.toString(),
         name: peer.name,
-        liquidityThresholdLow: peer.liquidityThresholdLow?.toString()
+        liquidityThresholdLow: peer.liquidityThresholdLow?.toString(),
+        liquidityThresholdHigh: peer.liquidityThresholdHigh?.toString()
       })
       delete peer.http.incoming
       await expect(peerService.get(response.peer.id)).resolves.toMatchObject({
@@ -269,6 +271,7 @@ describe('Peer Resolvers', (): void => {
                   liquidity
                   name
                   liquidityThresholdLow
+                  liquidityThresholdHigh
                 }
               }
             `,
@@ -303,7 +306,8 @@ describe('Peer Resolvers', (): void => {
         maxPacketAmount: peer.maxPacketAmount?.toString(),
         liquidity: '0',
         name: peer.name,
-        liquidityThresholdLow: '100'
+        liquidityThresholdLow: '100',
+        liquidityThresholdHigh: '2000'
       })
 
       await accountingService.createDeposit({
@@ -331,7 +335,8 @@ describe('Peer Resolvers', (): void => {
         maxPacketAmount: peer.maxPacketAmount?.toString(),
         liquidity: '100',
         name: peer.name,
-        liquidityThresholdLow: '100'
+        liquidityThresholdLow: '100',
+        liquidityThresholdHigh: '2000'
       })
     })
 
@@ -411,6 +416,7 @@ describe('Peer Resolvers', (): void => {
                     staticIlpAddress
                     name
                     liquidityThresholdLow
+                    liquidityThresholdHigh
                   }
                   cursor
                 }
@@ -448,7 +454,8 @@ describe('Peer Resolvers', (): void => {
           staticIlpAddress: peer.staticIlpAddress,
           maxPacketAmount: peer.maxPacketAmount?.toString(),
           name: peer.name,
-          liquidityThresholdLow: '100'
+          liquidityThresholdLow: '100',
+          liquidityThresholdHigh: '2000'
         })
       })
     })
@@ -476,7 +483,8 @@ describe('Peer Resolvers', (): void => {
         },
         staticIlpAddress: 'g.rafiki.' + peer.id,
         name: faker.person.fullName(),
-        liquidityThresholdLow: BigInt(200)
+        liquidityThresholdLow: BigInt(200),
+        liquidityThresholdHigh: BigInt(3000)
       }
       assert.ok(updateOptions.http)
       const response = await appContainer.apolloClient
@@ -496,6 +504,7 @@ describe('Peer Resolvers', (): void => {
                   staticIlpAddress
                   name
                   liquidityThresholdLow
+                  liquidityThresholdHigh
                 }
               }
             }
@@ -524,7 +533,8 @@ describe('Peer Resolvers', (): void => {
         },
         staticIlpAddress: updateOptions.staticIlpAddress,
         name: updateOptions.name,
-        liquidityThresholdLow: '200'
+        liquidityThresholdLow: '200',
+        liquidityThresholdHigh: '3000'
       })
       await expect(peerService.get(peer.id)).resolves.toMatchObject({
         asset: peer.asset,
@@ -534,7 +544,8 @@ describe('Peer Resolvers', (): void => {
         maxPacketAmount: BigInt(updateOptions.maxPacketAmount),
         staticIlpAddress: updateOptions.staticIlpAddress,
         name: updateOptions.name,
-        liquidityThresholdLow: BigInt(200)
+        liquidityThresholdLow: BigInt(200),
+        liquidityThresholdHigh: BigInt(3000)
       })
     })
 
