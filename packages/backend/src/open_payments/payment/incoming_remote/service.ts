@@ -143,6 +143,7 @@ async function createIncomingPayment(
           {
             ...baseErrorLog,
             errStatus: err.status,
+            errCode: err.code,
             errDescription: err.description
           },
           `Retrying request after receiving ${err.status} error code when creating incoming payment`
@@ -161,6 +162,7 @@ async function createIncomingPayment(
         {
           ...baseErrorLog,
           errStatus: err.status,
+          errCode: err.code,
           errDescription: err.description,
           errMessage: err.message,
           errValidation: err.validationErrors
@@ -231,14 +233,6 @@ async function getIncomingPayment(
       accessToken: grant.accessToken
     })
 
-    // TODO: remove after #2889 is completed
-    if (!incomingPayment.walletAddress) {
-      throw new OpenPaymentsClientError('Got invalid incoming payment', {
-        status: 401,
-        description: 'Received public incoming payment instead of private'
-      })
-    }
-
     return incomingPayment
   } catch (err) {
     const errorMessage = 'Could not get remote incoming payment'
@@ -258,6 +252,7 @@ async function getIncomingPayment(
           {
             ...baseErrorLog,
             errStatus: err.status,
+            errCode: err.code,
             errDescription: err.description
           },
           `Retrying request after receiving ${err.status} error code when getting incoming payment`
@@ -276,6 +271,7 @@ async function getIncomingPayment(
         {
           ...baseErrorLog,
           errStatus: err.status,
+          errCode: err.code,
           errDescription: err.description,
           errMessage: err.message,
           errValidation: err.validationErrors

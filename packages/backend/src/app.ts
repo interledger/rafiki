@@ -579,7 +579,7 @@ export class App {
       createTokenIntrospectionMiddleware({
         requestType: AccessType.IncomingPayment,
         requestAction: RequestAction.Read,
-        bypassError: true
+        canSkipAuthValidation: true
       }),
       authenticatedStatusMiddleware,
       getWalletAddressForSubresource,

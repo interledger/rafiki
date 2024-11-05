@@ -718,6 +718,65 @@ describe('Wallet Address Resolvers', (): void => {
       }
     )
 
+    test.each`
+      publicName
+      ${'Alice'}
+      ${undefined}
+    `(
+      'Can get a wallet address by its url (publicName: $publicName)',
+      async ({ publicName }): Promise<void> => {
+        const walletAddress = await createWalletAddress(deps, {
+          publicName,
+          createLiquidityAccount: true
+        })
+        const args = { url: walletAddress.url }
+        const query = await appContainer.apolloClient
+          .query({
+            query: gql`
+              query getWalletAddressByUrl($url: String!) {
+                walletAddressByUrl(url: $url) {
+                  id
+                  liquidity
+                  asset {
+                    code
+                    scale
+                  }
+                  url
+                  publicName
+                  additionalProperties {
+                    key
+                    value
+                    visibleInOpenPayments
+                  }
+                }
+              }
+            `,
+            variables: args
+          })
+          .then((query): WalletAddress => {
+            if (query.data) {
+              return query.data.walletAddressByUrl
+            } else {
+              throw new Error('Data was empty')
+            }
+          })
+
+        expect(query).toEqual({
+          __typename: 'WalletAddress',
+          id: walletAddress.id,
+          liquidity: '0',
+          asset: {
+            __typename: 'Asset',
+            code: walletAddress.asset.code,
+            scale: walletAddress.asset.scale
+          },
+          url: walletAddress.url,
+          publicName: publicName ?? null,
+          additionalProperties: []
+        })
+      }
+    )
+
     test('Returns error for unknown wallet address', async (): Promise<void> => {
       expect.assertions(2)
       try {
