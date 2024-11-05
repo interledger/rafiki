@@ -771,7 +771,8 @@ describe('Wallet Address Resolvers', (): void => {
             scale: walletAddress.asset.scale
           },
           url: walletAddress.url,
-          publicName: publicName ?? null
+          publicName: publicName ?? null,
+          additionalProperties: []
         })
       }
     )
