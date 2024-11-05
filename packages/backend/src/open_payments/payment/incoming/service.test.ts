@@ -587,8 +587,7 @@ describe('Incoming Payment Service', (): void => {
 
     test('Sets state of fully paid incoming payment to "completed"', async (): Promise<void> => {
       const now = new Date()
-      jest.useFakeTimers()
-      jest.setSystemTime(now)
+      jest.useFakeTimers({ now })
       await expect(
         incomingPayment.onCredit({
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -597,7 +596,7 @@ describe('Incoming Payment Service', (): void => {
       ).resolves.toMatchObject({
         id: incomingPayment.id,
         state: IncomingPaymentState.Completed,
-        processAt: new Date(now.getTime() + 30_000)
+        processAt: now
       })
       await expect(
         incomingPaymentService.get({
@@ -605,7 +604,7 @@ describe('Incoming Payment Service', (): void => {
         })
       ).resolves.toMatchObject({
         state: IncomingPaymentState.Completed,
-        processAt: new Date(now.getTime() + 30_000)
+        processAt: now
       })
     })
   })
@@ -662,9 +661,8 @@ describe('Incoming Payment Service', (): void => {
           })
         ).resolves.toBeUndefined()
 
-        const now = incomingPayment.expiresAt
         jest.useFakeTimers()
-        jest.setSystemTime(now)
+        jest.setSystemTime(incomingPayment.expiresAt)
         await expect(incomingPaymentService.processNext()).resolves.toBe(
           incomingPayment.id
         )
@@ -674,7 +672,7 @@ describe('Incoming Payment Service', (): void => {
           })
         ).resolves.toMatchObject({
           state: IncomingPaymentState.Expired,
-          processAt: new Date(now.getTime() + 30_000)
+          processAt: new Date()
         })
       })
 
@@ -820,13 +818,14 @@ describe('Incoming Payment Service', (): void => {
     })
     test('updates state of pending incoming payment to complete', async (): Promise<void> => {
       const now = new Date()
-      jest.spyOn(global.Date, 'now').mockImplementation(() => now.valueOf())
+      jest.useFakeTimers({ now })
+
       await expect(
         incomingPaymentService.complete(incomingPayment.id)
       ).resolves.toMatchObject({
         id: incomingPayment.id,
         state: IncomingPaymentState.Completed,
-        processAt: new Date(now.getTime() + 30_000)
+        processAt: now
       })
       await expect(
         incomingPaymentService.get({
@@ -834,7 +833,7 @@ describe('Incoming Payment Service', (): void => {
         })
       ).resolves.toMatchObject({
         state: IncomingPaymentState.Completed,
-        processAt: new Date(now.getTime() + 30_000)
+        processAt: now
       })
     })
 
@@ -845,6 +844,9 @@ describe('Incoming Payment Service', (): void => {
     })
 
     test('updates state of processing incoming payment to complete', async (): Promise<void> => {
+      const now = new Date()
+      jest.useFakeTimers({ now })
+
       await incomingPayment.onCredit({
         totalReceived: BigInt(100)
       })
@@ -860,7 +862,7 @@ describe('Incoming Payment Service', (): void => {
       ).resolves.toMatchObject({
         id: incomingPayment.id,
         state: IncomingPaymentState.Completed,
-        processAt: new Date(incomingPayment.expiresAt.getTime())
+        processAt: now
       })
       await expect(
         incomingPaymentService.get({
@@ -868,7 +870,7 @@ describe('Incoming Payment Service', (): void => {
         })
       ).resolves.toMatchObject({
         state: IncomingPaymentState.Completed,
-        processAt: new Date(incomingPayment.expiresAt.getTime())
+        processAt: now
       })
     })
 

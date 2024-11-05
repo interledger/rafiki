@@ -2,6 +2,8 @@
 title: Overview
 ---
 
+import { LargeImg } from '@interledger/docs-design-system'
+
 import { LinkOut } from '@interledger/docs-design-system'
 
 import { CodeBlock } from '@interledger/docs-design-system'
@@ -10,12 +12,16 @@ The Local Playground provides a suite of packages that, together, mock an accoun
 
 This suite of packages includes:
 
+<div class="overflow-table">
+
 | Package name                                         | Services                                                                                             |
 | ---------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
 | [`backend`](/integration/services/backend-service)   | <ul><li>SPSP</li><li>Open Payments APIs</li><li>GraphQL Admin APIs</li><li>STREAM endpoint</li></ul> |
 | [`auth`](/integration/services/auth-service)         | GNAP auth server                                                                                     |
 | `mock-account-servicing-entity`                      | mocks an account servicing entity                                                                    |
 | [`frontend`](/integration/services/frontend-service) | Remix app to expose a UI for Rafiki admin management via interaction with the Backend Admin APIs     |
+
+</div>
 
 These packages depend on the following databases:
 
@@ -77,11 +83,7 @@ The secondary Happy Life Bank docker-compose file (`./happy-life-bank/docker-com
 
 The following components are made available via the Local Playground:
 
-<img
-  src='/img/localenv.png'
-  alt='Overview of components'
-  style='max-width:800px'
-/>
+<LargeImg src='/img/localenv.png' alt='Overview of components' />
 
 #### Mock account servicing entity 1 - Cloud Nine Wallet
 
@@ -176,6 +178,18 @@ You can either trigger the debugger by adding `debugger` statements in the code 
 #### Debugging with VS Code:
 
 To debug with VS Code, add this configuration to your `.vscode/launch.json`:
+```json
+{
+    "name": "Attach to docker (cloud-nine-backend)",
+    "type": "node",
+    "request": "attach",
+    "port": 9229,
+    "address": "localhost",
+    "localRoot": "${workspaceFolder}",
+    "remoteRoot": "/home/rafiki/",
+    "restart": true
+},
+```
 
 The `localRoot` variable will depend on the location of the `launch.json` file relative to Rafiki’s root directory.
 

@@ -47,7 +47,15 @@ After running the `invite-user` script, the script generates a recovery link tha
 />
 
 :::note
-The invitation link is single-use for security purposes. Once accessed, it becomes invalid. If sending the link through Slack, ensure you format it as code by placing it inside backticks (\`) to prevent Slack from automatically previewing the link, which would invalidate it. Example: \``http://localhost:4433/self-service/recovery?flow=116250ee-07bd-4b5c-a98e-87406192bb4b&token=miv0yZ7DFKKw8RyBBQvWoOsTRa2TVuZm`\`.
+The invitation link is single-use for security purposes. Once accessed, it becomes invalid.
+
+If sending the link through Slack, ensure you format it as code by placing it inside backticks (\`) to prevent Slack from automatically previewing the link, which would invalidate it. For example:
+
+{/* prettier-ignore */}
+```js wrap
+`http://localhost:4433/self-service/recovery?flow=116250ee-07bd-4b5c-a98e-87406192bb4b&token=miv0yZ7DFKKw8RyBBQvWoOsTRa2TVuZm`
+```
+
 :::
 
 #### Generate a recovery link
@@ -249,9 +257,10 @@ Fill out the following fields to create a new wallet address:
 |                     | Asset               | Select an asset to associate with this wallet.                              |
 
 :::note[Wallet address requirements]
+
 - At least one asset has to be created prior to creating a new wallet address. Refer to [Create asset](#create-asset) for more information.
 - Wallet address URLs are treated as case-insensitive, meaning that both lowercase and uppercase variations of the same address will be recognized as identical.
-:::
+  :::
 
 After completing this section, select **Create** to add the new wallet address.
 

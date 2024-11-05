@@ -4,7 +4,8 @@ import {
   getWalletAddresses,
   createWalletAddress,
   updateWalletAddress,
-  triggerWalletAddressEvents
+  triggerWalletAddressEvents,
+  getWalletAddressByUrl
 } from './wallet_address'
 import {
   getAsset,
@@ -14,7 +15,8 @@ import {
   deleteAsset,
   getAssetReceivingFee,
   getAssetSendingFee,
-  getFees
+  getFees,
+  getAssetByCodeAndScale
 } from './asset'
 import {
   getWalletAddressIncomingPayments,
@@ -33,7 +35,14 @@ import {
   createOutgoingPaymentFromIncomingPayment,
   cancelOutgoingPayment
 } from './outgoing_payment'
-import { getPeer, getPeers, createPeer, updatePeer, deletePeer } from './peer'
+import {
+  getPeer,
+  getPeers,
+  createPeer,
+  updatePeer,
+  deletePeer,
+  getPeerByAddressAndAsset
+} from './peer'
 import {
   getAssetLiquidity,
   getPeerLiquidity,
@@ -84,13 +93,16 @@ export const resolvers: Resolvers = {
   },
   Query: {
     walletAddress: getWalletAddress,
+    walletAddressByUrl: getWalletAddressByUrl,
     walletAddresses: getWalletAddresses,
     asset: getAsset,
     assets: getAssets,
+    assetByCodeAndScale: getAssetByCodeAndScale,
     outgoingPayment: getOutgoingPayment,
     outgoingPayments: getOutgoingPayments,
     incomingPayment: getIncomingPayment,
     peer: getPeer,
+    peerByAddressAndAsset: getPeerByAddressAndAsset,
     peers: getPeers,
     quote: getQuote,
     webhookEvents: getWebhookEvents,

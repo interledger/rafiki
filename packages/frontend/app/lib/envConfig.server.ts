@@ -5,7 +5,8 @@ const variables = {
     ? parseBool(process.env.AUTH_ENABLED)
     : true,
   kratosContainerPublicUrl: process.env.KRATOS_CONTAINER_PUBLIC_URL,
-  kratosBrowserPublicUrl: process.env.KRATOS_BROWSER_PUBLIC_URL
+  kratosBrowserPublicUrl: process.env.KRATOS_BROWSER_PUBLIC_URL,
+  kratosAdminUrl: process.env.KRATOS_ADMIN_URL
 }
 
 if (variables.authEnabled) {
