@@ -69,6 +69,17 @@ export const getWalletAddress: QueryResolvers<ApolloContext>['walletAddress'] =
     return walletAddressToGraphql(walletAddress)
   }
 
+export const getWalletAddressByUrl: QueryResolvers<ApolloContext>['walletAddressByUrl'] =
+  async (
+    parent,
+    args,
+    ctx
+  ): Promise<ResolversTypes['WalletAddress'] | null> => {
+    const walletAddressService = await ctx.container.use('walletAddressService')
+    const walletAddress = await walletAddressService.getByUrl(args.url)
+    return walletAddress ? walletAddressToGraphql(walletAddress) : null
+  }
+
 export const createWalletAddress: MutationResolvers<ApolloContext>['createWalletAddress'] =
   async (
     parent,
