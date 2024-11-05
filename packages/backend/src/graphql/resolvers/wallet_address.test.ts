@@ -725,20 +725,9 @@ describe('Wallet Address Resolvers', (): void => {
     `(
       'Can get a wallet address by its url (publicName: $publicName)',
       async ({ publicName }): Promise<void> => {
-        const walletProp01 = new WalletAddressAdditionalProperty()
-        walletProp01.fieldKey = 'key-test-query-one'
-        walletProp01.fieldValue = 'value-test-query'
-        walletProp01.visibleInOpenPayments = true
-        const walletProp02 = new WalletAddressAdditionalProperty()
-        walletProp02.fieldKey = 'key-test-query-two'
-        walletProp02.fieldValue = 'value-test-query'
-        walletProp02.visibleInOpenPayments = false
-        const additionalProperties = [walletProp01, walletProp02]
-
         const walletAddress = await createWalletAddress(deps, {
           publicName,
-          createLiquidityAccount: true,
-          additionalProperties
+          createLiquidityAccount: true
         })
         const args = { url: walletAddress.url }
         const query = await appContainer.apolloClient
@@ -782,21 +771,7 @@ describe('Wallet Address Resolvers', (): void => {
             scale: walletAddress.asset.scale
           },
           url: walletAddress.url,
-          publicName: publicName ?? null,
-          additionalProperties: [
-            {
-              __typename: 'AdditionalProperty',
-              key: walletProp01.fieldKey,
-              value: walletProp01.fieldValue,
-              visibleInOpenPayments: walletProp01.visibleInOpenPayments
-            },
-            {
-              __typename: 'AdditionalProperty',
-              key: walletProp02.fieldKey,
-              value: walletProp02.fieldValue,
-              visibleInOpenPayments: walletProp02.visibleInOpenPayments
-            }
-          ]
+          publicName: publicName ?? null
         })
       }
     )
