@@ -2,17 +2,17 @@ assets:
   - code: USD
     scale: 2
     liquidity: 1000000
-    liquidityThreshold: 100000
+    liquidityThresholdLow: 100000
   - code: JPY
     scale: 2
     liquidity: 10000
-    liquidityThreshold: 1000
+    liquidityThresholdLow: 1000
 peeringAsset: 'USD'
 peers:
   - initialLiquidity: '100000'
     peerUrl: http://peer-backend:3002
     peerIlpAddress: test.peer
-    liquidityThreshold: 10000
+    liquidityThresholdLow: 10000
 accounts:
   - name: 'Grace Franklin'
     path: accounts/gfranklin

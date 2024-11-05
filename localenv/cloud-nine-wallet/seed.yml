@@ -2,25 +2,25 @@ assets:
   - code: USD
     scale: 2
     liquidity: 100000000
-    liquidityThreshold: 10000000
+    liquidityThresholdLow: 10000000
   - code: EUR
     scale: 2
     liquidity: 100000000
-    liquidityThreshold: 10000000
+    liquidityThresholdLow: 10000000
   - code: MXN
     scale: 2
     liquidity: 100000000
-    liquidityThreshold: 10000000
+    liquidityThresholdLow: 10000000
   - code: JPY
     scale: 0
     liquidity: 1000000
-    liquidityThreshold: 100000
+    liquidityThresholdLow: 100000
 peeringAsset: 'USD'
 peers:
   - initialLiquidity: '10000000'
     peerUrl: http://happy-life-bank-backend:3002
     peerIlpAddress: test.happy-life-bank
-    liquidityThreshold: 1000000
+    liquidityThresholdLow: 1000000
 accounts:
   - name: 'Grace Franklin'
     path: accounts/gfranklin
