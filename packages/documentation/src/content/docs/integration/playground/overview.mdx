@@ -178,6 +178,18 @@ You can either trigger the debugger by adding `debugger` statements in the code 
 #### Debugging with VS Code:
 
 To debug with VS Code, add this configuration to your `.vscode/launch.json`:
+```json
+{
+    "name": "Attach to docker (cloud-nine-backend)",
+    "type": "node",
+    "request": "attach",
+    "port": 9229,
+    "address": "localhost",
+    "localRoot": "${workspaceFolder}",
+    "remoteRoot": "/home/rafiki/",
+    "restart": true
+},
+```
 
 The `localRoot` variable will depend on the location of the `launch.json` file relative to Rafiki’s root directory.
 

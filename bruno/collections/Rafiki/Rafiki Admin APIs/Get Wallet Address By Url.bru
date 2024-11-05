@@ -1,0 +1,88 @@
+meta {
+  name: Get Wallet Address By Url
+  type: graphql
+  seq: 53
+}
+
+post {
+  url: {{RafikiGraphqlHost}}/graphql
+  body: graphql
+  auth: none
+}
+
+body:graphql {
+  query GetWalletAddress($url: String!) {
+      walletAddressByUrl(url: $url) {
+          id
+          asset {
+              id
+              code
+              scale
+              withdrawalThreshold
+              createdAt
+          }
+          createdAt
+          incomingPayments {
+              edges {
+                  node {
+                      id
+                      state
+                      incomingAmount {
+                          value
+                      }
+                      receivedAmount {
+                          value
+                      }
+                  }
+                  cursor
+              }
+              pageInfo {
+                  endCursor
+                  hasNextPage
+                  hasPreviousPage
+                  startCursor
+              }
+          }
+          walletAddressKeys {
+            edges {
+              node {
+                id
+                jwk {
+                  kid
+                  x
+                  alg
+                  kty
+                  crv
+                }
+                revoked
+                createdAt
+              }
+            }
+            pageInfo {
+              endCursor
+              hasNextPage
+              hasPreviousPage
+              startCursor
+            }
+          }
+          status
+          additionalProperties {
+            key
+            value
+            visibleInOpenPayments
+          }
+      }
+  }
+}
+
+body:graphql:vars {
+  {
+      "url": "https://cloud-nine-wallet-backend/accounts/broke"
+  }
+}
+
+script:pre-request {
+  const scripts = require('./scripts');
+  
+  scripts.addApiSignatureHeader();
+}
