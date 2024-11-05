@@ -557,8 +557,6 @@ describe('Integration tests', (): void => {
           assetScale: 2,
           value: BigInt(quote.receiveAmount.value)
         })
-        // TODO: fix bug where fixed-send (regardless of local/remote) is not completeing
-        // expect(incomingPayment.state).toBe(IncomingPaymentState.Completed)
       })
 
       test('Peer to Peer - Cross Currency', async (): Promise<void> => {
