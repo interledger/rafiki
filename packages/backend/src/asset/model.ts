@@ -30,12 +30,18 @@ export class Asset extends BaseModel implements LiquidityAccount {
     }
   }
 
-  private async checkAndInsertEvent(balance: bigint, threshold: bigint | null, eventType: AssetEventType) {
+  private async checkAndInsertEvent(
+    balance: bigint,
+    threshold: bigint | null,
+    eventType: AssetEventType
+  ) {
     if (threshold === null) {
       return
     }
 
-    const isThresholdCrossed = (eventType === AssetEventType.LiquidityLow && balance <= threshold) || (eventType === AssetEventType.LiquidityHigh && balance >= threshold)
+    const isThresholdCrossed =
+      (eventType === AssetEventType.LiquidityLow && balance <= threshold) ||
+      (eventType === AssetEventType.LiquidityHigh && balance >= threshold)
 
     if (isThresholdCrossed) {
       await AssetEvent.query().insert({
@@ -57,8 +63,16 @@ export class Asset extends BaseModel implements LiquidityAccount {
 
   public async onDebit({ balance }: OnDebitOptions): Promise<Asset> {
     await Promise.all([
-      this.checkAndInsertEvent(balance, this.liquidityThresholdLow, AssetEventType.LiquidityLow),
-      this.checkAndInsertEvent(balance, this.liquidityThresholdHigh, AssetEventType.LiquidityHigh)
+      this.checkAndInsertEvent(
+        balance,
+        this.liquidityThresholdLow,
+        AssetEventType.LiquidityLow
+      ),
+      this.checkAndInsertEvent(
+        balance,
+        this.liquidityThresholdHigh,
+        AssetEventType.LiquidityHigh
+      )
     ])
 
     return this

@@ -54,12 +54,18 @@ export class Peer
 
   public name?: string
 
-  private async checkAndInsertEvent(balance: bigint, threshold: bigint | null, eventType: PeerEventType) {
+  private async checkAndInsertEvent(
+    balance: bigint,
+    threshold: bigint | null,
+    eventType: PeerEventType
+  ) {
     if (threshold === null) {
       return
     }
 
-    const isThresholdCrossed = (eventType === PeerEventType.LiquidityLow && balance <= threshold) || (eventType === PeerEventType.LiquidityHigh && balance >= threshold)
+    const isThresholdCrossed =
+      (eventType === PeerEventType.LiquidityLow && balance <= threshold) ||
+      (eventType === PeerEventType.LiquidityHigh && balance >= threshold)
 
     if (isThresholdCrossed) {
       await PeerEvent.query().insert({
@@ -81,8 +87,16 @@ export class Peer
 
   public async onDebit({ balance }: OnDebitOptions): Promise<Peer> {
     await Promise.all([
-      this.checkAndInsertEvent(balance, this.liquidityThresholdLow, PeerEventType.LiquidityLow),
-      this.checkAndInsertEvent(balance, this.liquidityThresholdHigh, PeerEventType.LiquidityHigh)
+      this.checkAndInsertEvent(
+        balance,
+        this.liquidityThresholdLow,
+        PeerEventType.LiquidityLow
+      ),
+      this.checkAndInsertEvent(
+        balance,
+        this.liquidityThresholdHigh,
+        PeerEventType.LiquidityHigh
+      )
     ])
     return this
   }

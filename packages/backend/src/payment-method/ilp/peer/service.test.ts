@@ -39,7 +39,8 @@ describe('Peer Service', (): void => {
     maxPacketAmount: BigInt(100),
     staticIlpAddress: 'test.' + uuid(),
     name: faker.person.fullName(),
-    liquidityThreshold: BigInt(10000),
+    liquidityThresholdLow: BigInt(10000),
+    liquidityThresholdHigh: BigInt(100000),
     ...override
   })
 
@@ -223,12 +224,12 @@ describe('Peer Service', (): void => {
 
   describe('Update Peer', (): void => {
     test.each`
-      liquidityThreshold
+      liquidityThresholdLow
       ${null}
       ${BigInt(2000)}
     `(
-      'Can update a peer, liquidityThreshold: $liquidityThreshold',
-      async ({ liquidityThreshold }): Promise<void> => {
+      'Can update a peer, liquidityThresholdLow: $liquidityThresholdLow',
+      async ({ liquidityThresholdLow }): Promise<void> => {
         const peer = await createPeer(deps)
         const { http, maxPacketAmount, staticIlpAddress, name } = randomPeer()
         const updateOptions: UpdateOptions = {
@@ -237,7 +238,7 @@ describe('Peer Service', (): void => {
           maxPacketAmount,
           staticIlpAddress,
           name,
-          liquidityThreshold
+          liquidityThresholdLow
         }
 
         const peerOrError = await peerService.update(updateOptions)
@@ -252,7 +253,7 @@ describe('Peer Service', (): void => {
           maxPacketAmount: updateOptions.maxPacketAmount,
           staticIlpAddress: updateOptions.staticIlpAddress,
           name: updateOptions.name,
-          liquidityThreshold: updateOptions.liquidityThreshold || null
+          liquidityThresholdLow: updateOptions.liquidityThresholdLow || null
         }
         expect(peerOrError).toMatchObject(expectedPeer)
         await expect(peerService.get(peer.id)).resolves.toEqual(peerOrError)

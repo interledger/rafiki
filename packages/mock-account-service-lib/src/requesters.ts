@@ -78,7 +78,13 @@ export function createRequesters(
 } {
   return {
     createAsset: (code, scale, liquidityThresholdLow, liquidityThresholdHigh) =>
-      createAsset(apolloClient, code, scale, liquidityThresholdLow, liquidityThresholdHigh),
+      createAsset(
+        apolloClient,
+        code,
+        scale,
+        liquidityThresholdLow,
+        liquidityThresholdHigh
+      ),
     createPeer: (
       staticIlpAddress,
       outgoingEndpoint,

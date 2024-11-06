@@ -57,12 +57,16 @@ describe('Asset Service', (): void => {
       ${BigInt(5)}        | ${BigInt(5)}          | ${BigInt(500)}
     `(
       'Asset can be created and fetched',
-      async ({ withdrawalThreshold, liquidityThresholdLow, liquidityThresholdHigh }): Promise<void> => {
+      async ({
+        withdrawalThreshold,
+        liquidityThresholdLow,
+        liquidityThresholdHigh
+      }): Promise<void> => {
         const options = {
           ...randomAsset(),
           withdrawalThreshold,
           liquidityThresholdLow,
-          liquidityThresholdHigh,
+          liquidityThresholdHigh
         }
         const asset = await assetService.create(options)
         assert.ok(!isAssetError(asset))
@@ -72,7 +76,7 @@ describe('Asset Service', (): void => {
           ledger: asset.ledger,
           withdrawalThreshold: withdrawalThreshold || null,
           liquidityThresholdLow: liquidityThresholdLow || null,
-          liquidityThresholdHigh: liquidityThresholdHigh || null,
+          liquidityThresholdHigh: liquidityThresholdHigh || null
         })
         await expect(assetService.get(asset.id)).resolves.toEqual(asset)
       }
@@ -150,7 +154,7 @@ describe('Asset Service', (): void => {
 
   describe('update', (): void => {
     describe.each`
-      withdrawalThreshold | liquidityThresholdLow | liquidityThresholdHigh 
+      withdrawalThreshold | liquidityThresholdLow | liquidityThresholdHigh
       ${null}             | ${null}               | ${null}
       ${null}             | ${null}               | ${BigInt(500)}
       ${null}             | ${BigInt(5)}          | ${null}
@@ -165,7 +169,11 @@ describe('Asset Service', (): void => {
       ${BigInt(5)}        | ${BigInt(5)}          | ${BigInt(500)}
     `(
       'Asset threshold can be updated from withdrawalThreshold: $withdrawalThreshold, liquidityThresholdLow: $liquidityThresholdLow, liquidityThresholdHigh: $liquidityThresholdHigh',
-      ({ withdrawalThreshold, liquidityThresholdLow, liquidityThresholdHigh }): void => {
+      ({
+        withdrawalThreshold,
+        liquidityThresholdLow,
+        liquidityThresholdHigh
+      }): void => {
         let assetId: string
 
         beforeEach(async (): Promise<void> => {
@@ -181,7 +189,7 @@ describe('Asset Service', (): void => {
         })
 
         test.each`
-          withdrawalThreshold | liquidityThresholdLow | liquidityThresholdHigh 
+          withdrawalThreshold | liquidityThresholdLow | liquidityThresholdHigh
           ${null}             | ${null}               | ${null}
           ${null}             | ${null}               | ${BigInt(500)}
           ${null}             | ${BigInt(5)}          | ${null}

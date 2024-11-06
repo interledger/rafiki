@@ -59,14 +59,14 @@ describe('Asset Resolvers', (): void => {
 
   describe('Create Asset', (): void => {
     test.each`
-      withdrawalThreshold | expectedWithdrawalThreshold | liquidityThresholdLow | expectedLiquidityThresholdLow | liquidityThresholdHigh  | expectedLiquidityThresholdHigh
-      ${undefined}        | ${null}                     | ${undefined}          | ${null}                       | ${undefined}            | ${null}
-      ${BigInt(0)}        | ${'0'}                      | ${undefined}          | ${null}                       | ${undefined}            | ${null}
-      ${BigInt(5)}        | ${'5'}                      | ${undefined}          | ${null}                       | ${undefined}            | ${null}
-      ${undefined}        | ${null}                     | ${BigInt(0)}          | ${'0'}                        | ${BigInt(100)}          | ${'100'}      
-      ${undefined}        | ${null}                     | ${BigInt(5)}          | ${'5'}                        | ${BigInt(5000)}         | ${'5000'}
-      ${BigInt(0)}        | ${'0'}                      | ${BigInt(0)}          | ${'0'}                        | ${BigInt(100)}          | ${'100'}      
-      ${BigInt(5)}        | ${'5'}                      | ${BigInt(5)}          | ${'5'}                        | ${BigInt(5000)}         | ${'5000'}
+      withdrawalThreshold | expectedWithdrawalThreshold | liquidityThresholdLow | expectedLiquidityThresholdLow | liquidityThresholdHigh | expectedLiquidityThresholdHigh
+      ${undefined}        | ${null}                     | ${undefined}          | ${null}                       | ${undefined}           | ${null}
+      ${BigInt(0)}        | ${'0'}                      | ${undefined}          | ${null}                       | ${undefined}           | ${null}
+      ${BigInt(5)}        | ${'5'}                      | ${undefined}          | ${null}                       | ${undefined}           | ${null}
+      ${undefined}        | ${null}                     | ${BigInt(0)}          | ${'0'}                        | ${BigInt(100)}         | ${'100'}
+      ${undefined}        | ${null}                     | ${BigInt(5)}          | ${'5'}                        | ${BigInt(5000)}        | ${'5000'}
+      ${BigInt(0)}        | ${'0'}                      | ${BigInt(0)}          | ${'0'}                        | ${BigInt(100)}         | ${'100'}
+      ${BigInt(5)}        | ${'5'}                      | ${BigInt(5)}          | ${'5'}                        | ${BigInt(5000)}        | ${'5000'}
     `(
       'Can create an asset (withdrawalThreshold: $withdrawalThreshold, liquidityThresholdLow: $liquidityThresholdLow, liquidityThresholdHigh: $liquidityThresholdHigh)',
       async ({
@@ -293,7 +293,7 @@ describe('Asset Resolvers', (): void => {
       const asset = await assetService.create({
         ...randomAsset(),
         withdrawalThreshold: BigInt(10),
-        liquidityThreshold: BigInt(100)
+        liquidityThresholdLow: BigInt(100)
       })
       assert.ok(!isAssetError(asset))
       assert.ok(asset.withdrawalThreshold)
@@ -331,7 +331,8 @@ describe('Asset Resolvers', (): void => {
         scale: asset.scale,
         liquidity: '0',
         withdrawalThreshold: asset.withdrawalThreshold.toString(),
-        liquidityThreshold: asset.liquidityThreshold?.toString(),
+        liquidityThresholdLow: asset.liquidityThresholdLow?.toString(),
+        liquidityThresholdHigh: asset.liquidityThresholdHigh?.toString(),
         createdAt: new Date(+asset.createdAt).toISOString()
       })
 
@@ -348,7 +349,8 @@ describe('Asset Resolvers', (): void => {
         scale: asset.scale,
         liquidity: '100',
         withdrawalThreshold: asset.withdrawalThreshold.toString(),
-        liquidityThreshold: asset.liquidityThreshold?.toString(),
+        liquidityThresholdLow: asset.liquidityThresholdLow?.toString(),
+        liquidityThresholdHigh: asset.liquidityThresholdHigh?.toString(),
         createdAt: new Date(+asset.createdAt).toISOString()
       })
     })
@@ -628,7 +630,11 @@ describe('Asset Resolvers', (): void => {
       ${BigInt(5)}        | ${BigInt(5)}          | ${BigInt(5000)}
     `(
       'from withdrawalThreshold: $withdrawalThreshold, liquidityThresholdLow: $liquidityThresholdLow and liquidityThresholdHigh: $liquidityThresholdHigh',
-      ({ withdrawalThreshold, liquidityThresholdLow, liquidityThresholdHigh }): void => {
+      ({
+        withdrawalThreshold,
+        liquidityThresholdLow,
+        liquidityThresholdHigh
+      }): void => {
         let asset: AssetModel
 
         beforeEach(async (): Promise<void> => {
@@ -643,7 +649,7 @@ describe('Asset Resolvers', (): void => {
 
         test.each`
           withdrawalThreshold | liquidityThresholdLow | liquidityThresholdHigh
-          ${null}             | ${null}               | ${null} 
+          ${null}             | ${null}               | ${null}
           ${BigInt(0)}        | ${null}               | ${null}
           ${BigInt(5)}        | ${null}               | ${null}
           ${null}             | ${BigInt(0)}          | ${BigInt(1000)}

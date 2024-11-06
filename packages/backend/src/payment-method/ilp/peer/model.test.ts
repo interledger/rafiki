@@ -89,7 +89,7 @@ describe('Models', (): void => {
                 code: asset.code,
                 scale: asset.scale
               },
-              liquidityThreshold: peer.liquidityThreshold?.toString(),
+              liquidityThreshold: peer.liquidityThresholdLow?.toString(),
               balance: balance.toString()
             }
           })

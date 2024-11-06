@@ -44,12 +44,24 @@ export async function setupFromSeed(
   } = createRequesters(apolloClient, logger)
 
   const assets: Record<string, Asset> = {}
-  for (const { code, scale, liquidity, liquidityThresholdLow, liquidityThresholdHigh } of config.seed
-    .assets) {
-
+  for (const {
+    code,
+    scale,
+    liquidity,
+    liquidityThresholdLow,
+    liquidityThresholdHigh
+  } of config.seed.assets) {
     let asset = await getAssetByCodeAndScale(code, scale)
     if (!asset) {
-      asset = (await createAsset(code, scale, liquidityThresholdLow, liquidityThresholdHigh)).asset || null
+      asset =
+        (
+          await createAsset(
+            code,
+            scale,
+            liquidityThresholdLow,
+            liquidityThresholdHigh
+          )
+        ).asset || null
     }
 
     if (!asset) {

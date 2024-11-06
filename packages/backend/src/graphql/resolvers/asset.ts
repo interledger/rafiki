@@ -94,7 +94,7 @@ export const updateAsset: MutationResolvers<ApolloContext>['updateAsset'] =
       id: args.input.id,
       withdrawalThreshold: args.input.withdrawalThreshold ?? null,
       liquidityThresholdLow: args.input.liquidityThresholdLow ?? null,
-      liquidityThresholdHigh: args.input.liquidityThresholdHigh ?? null,
+      liquidityThresholdHigh: args.input.liquidityThresholdHigh ?? null
     })
     if (isAssetError(assetOrError)) {
       throw new GraphQLError(errorToMessage[assetOrError], {

@@ -56,7 +56,10 @@ describe('Models', (): void => {
         async ({ balance }): Promise<void> => {
           await asset.onDebit({ balance })
           const event = (
-            await AssetEvent.query(knex).where('type', AssetEventType.LiquidityHigh)
+            await AssetEvent.query(knex).where(
+              'type',
+              AssetEventType.LiquidityHigh
+            )
           )[0]
 
           expect(event).toMatchObject({
@@ -111,7 +114,6 @@ describe('Models', (): void => {
           AssetEvent.query(knex).where('type', AssetEventType.LiquidityLow)
         ).resolves.toEqual([])
       })
-
 
       test.each`
         balance

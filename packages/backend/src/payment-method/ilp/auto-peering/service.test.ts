@@ -214,7 +214,7 @@ describe('Auto Peering Service', (): void => {
         peerUrl: 'http://peer.rafiki.money',
         assetId: asset.id,
         maxPacketAmount: 1000n,
-        liquidityThreshold: 100n
+        liquidityThresholdLow: 100n
       }
 
       const peerDetails: PeeringDetails = {
@@ -261,7 +261,7 @@ describe('Auto Peering Service', (): void => {
         },
         maxPacketAmount: args.maxPacketAmount,
         name: peerDetails.name,
-        liquidityThreshold: args.liquidityThreshold
+        liquidityThreshold: args.liquidityThresholdLow
       })
 
       scope.done()
@@ -274,7 +274,7 @@ describe('Auto Peering Service', (): void => {
         peerUrl: 'http://peer.rafiki.money',
         assetId: asset.id,
         maxPacketAmount: 1000n,
-        liquidityThreshold: 100n,
+        liquidityThresholdLow: 100n,
         liquidityToDeposit: 10000n
       }
 
@@ -320,7 +320,7 @@ describe('Auto Peering Service', (): void => {
         peerUrl: 'http://peer.rafiki.money',
         assetId: asset.id,
         maxPacketAmount: 1000n,
-        liquidityThreshold: 100n,
+        liquidityThresholdLow: 100n,
         liquidityToDeposit: -10000n
       }
 

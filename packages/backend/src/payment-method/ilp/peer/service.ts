@@ -140,7 +140,7 @@ async function createPeer(
           staticIlpAddress: options.staticIlpAddress,
           name: options.name,
           liquidityThresholdLow: options.liquidityThresholdLow,
-          liquidityThresholdHigh: options.liquidityThresholdHigh,
+          liquidityThresholdHigh: options.liquidityThresholdHigh
         })
         .withGraphFetched('asset')
 
