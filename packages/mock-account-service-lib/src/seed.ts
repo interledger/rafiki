@@ -37,13 +37,21 @@ export async function setupFromSeed(
     depositPeerLiquidity,
     createAutoPeer,
     createWalletAddress,
-    createWalletAddressKey
+    createWalletAddressKey,
+    getAssetByCodeAndScale,
+    getWalletAddressByURL,
+    getPeerByAddressAndAsset
   } = createRequesters(apolloClient, logger)
 
   const assets: Record<string, Asset> = {}
   for (const { code, scale, liquidity, liquidityThresholdLow, liquidityThresholdHigh } of config.seed
     .assets) {
-    const { asset } = await createAsset(code, scale, liquidityThresholdLow, liquidityThresholdHigh)
+
+    let asset = await getAssetByCodeAndScale(code, scale)
+    if (!asset) {
+      asset = (await createAsset(code, scale, liquidityThresholdLow, liquidityThresholdHigh)).asset || null
+    }
+
     if (!asset) {
       throw new Error('asset not defined')
     }
@@ -64,15 +72,21 @@ export async function setupFromSeed(
 
   const peerResponses = await Promise.all(
     config.seed.peers.map(async (peer: Peering) => {
-      const peerResponse = await createPeer(
+      let peerResponse = await getPeerByAddressAndAsset(
         peer.peerIlpAddress,
-        peer.peerUrl,
-        assets[peeringAsset].id,
-        assets[peeringAsset].code,
-        peer.name,
-        peer.liquidityThresholdLow,
-        peer.liquidityThresholdHigh
-      ).then((response) => response.peer)
+        assets[peeringAsset].id
+      )
+      if (!peerResponse) {
+        peerResponse = await createPeer(
+          peer.peerIlpAddress,
+          peer.peerUrl,
+          assets[peeringAsset].id,
+          assets[peeringAsset].code,
+          peer.name,
+          peer.liquidityThresholdLow,
+          peer.liquidityThresholdHigh
+        ).then((response) => response.peer || null)
+      }
       if (!peerResponse) {
         throw new Error('peer response not defined')
       }
@@ -127,11 +141,16 @@ export async function setupFromSeed(
       }
 
       logger.debug('hostname: ', config.publicHost)
-      const walletAddress = await createWalletAddress(
-        account.name,
-        `${config.publicHost}/${account.path}`,
-        accountAsset.id
-      )
+
+      const url = `${config.publicHost}/${account.path}`
+      let walletAddress = await getWalletAddressByURL(url)
+      if (!walletAddress) {
+        walletAddress = await createWalletAddress(
+          account.name,
+          url,
+          accountAsset.id
+        )
+      }
 
       await mockAccounts.setWalletAddress(
         account.id,

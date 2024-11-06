@@ -21,7 +21,7 @@
   },
   "devDependencies": {
     "@types/node": "^18.7.12",
-    "nock": "^13.5.4",
+    "nock": "^13.5.5",
     "openapi-typescript": "^6.7.5"
   },
   "dependencies": {

@@ -56,6 +56,13 @@ export const getAsset: QueryResolvers<ApolloContext>['asset'] = async (
   return assetToGraphql(asset)
 }
 
+export const getAssetByCodeAndScale: QueryResolvers<ApolloContext>['assetByCodeAndScale'] =
+  async (parent, args, ctx): Promise<ResolversTypes['Asset'] | null> => {
+    const assetService = await ctx.container.use('assetService')
+    const asset = await assetService.getByCodeAndScale(args.code, args.scale)
+    return asset ? assetToGraphql(asset) : null
+  }
+
 export const createAsset: MutationResolvers<ApolloContext>['createAsset'] =
   async (
     parent,

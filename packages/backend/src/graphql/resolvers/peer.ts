@@ -58,6 +58,16 @@ export const getPeer: QueryResolvers<ApolloContext>['peer'] = async (
   return peerToGraphql(peer)
 }
 
+export const getPeerByAddressAndAsset: QueryResolvers<ApolloContext>['peerByAddressAndAsset'] =
+  async (parent, args, ctx): Promise<ResolversTypes['Peer'] | null> => {
+    const peerService = await ctx.container.use('peerService')
+    const peer = await peerService.getByDestinationAddress(
+      args.staticIlpAddress,
+      args.assetId
+    )
+    return peer ? peerToGraphql(peer) : null
+  }
+
 export const createPeer: MutationResolvers<ApolloContext>['createPeer'] =
   async (
     parent,

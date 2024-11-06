@@ -1132,6 +1132,8 @@ export type Query = {
   accountingTransfers: AccountingTransferConnection;
   /** Fetch an asset by its ID. */
   asset?: Maybe<Asset>;
+  /** Get an asset based on its currency code and scale if it exists. */
+  assetByCodeAndScale?: Maybe<Asset>;
   /** Fetch a paginated list of assets. */
   assets: AssetsConnection;
   /** Fetch an Open Payments incoming payment by its ID. */
@@ -1144,6 +1146,8 @@ export type Query = {
   payments: PaymentConnection;
   /** Fetch a peer by its ID. */
   peer?: Maybe<Peer>;
+  /** Get a peer based on its ILP address and asset ID if it exists. */
+  peerByAddressAndAsset?: Maybe<Peer>;
   /** Fetch a paginated list of peers. */
   peers: PeersConnection;
   /** Fetch an Open Payments quote by its ID. */
@@ -1152,6 +1156,8 @@ export type Query = {
   receiver?: Maybe<Receiver>;
   /** Fetch a wallet address by its ID. */
   walletAddress?: Maybe<WalletAddress>;
+  /** Get a wallet address by its url if it exists */
+  walletAddressByUrl?: Maybe<WalletAddress>;
   /** Fetch a paginated list of wallet addresses. */
   walletAddresses: WalletAddressesConnection;
   /** Fetch a paginated list of webhook events. */
@@ -1167,6 +1173,12 @@ export type QueryAccountingTransfersArgs = {
 
 export type QueryAssetArgs = {
   id: Scalars['String']['input'];
+};
+
+
+export type QueryAssetByCodeAndScaleArgs = {
+  code: Scalars['String']['input'];
+  scale: Scalars['UInt8']['input'];
 };
 
 
@@ -1214,6 +1226,12 @@ export type QueryPeerArgs = {
 };
 
 
+export type QueryPeerByAddressAndAssetArgs = {
+  assetId: Scalars['String']['input'];
+  staticIlpAddress: Scalars['String']['input'];
+};
+
+
 export type QueryPeersArgs = {
   after?: InputMaybe<Scalars['String']['input']>;
   before?: InputMaybe<Scalars['String']['input']>;
@@ -1235,6 +1253,11 @@ export type QueryReceiverArgs = {
 
 export type QueryWalletAddressArgs = {
   id: Scalars['String']['input'];
+};
+
+
+export type QueryWalletAddressByUrlArgs = {
+  url: Scalars['String']['input'];
 };
 
 
@@ -2289,16 +2312,19 @@ export type PeersConnectionResolvers<ContextType = any, ParentType extends Resol
 export type QueryResolvers<ContextType = any, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> = {
   accountingTransfers?: Resolver<ResolversTypes['AccountingTransferConnection'], ParentType, ContextType, RequireFields<QueryAccountingTransfersArgs, 'id'>>;
   asset?: Resolver<Maybe<ResolversTypes['Asset']>, ParentType, ContextType, RequireFields<QueryAssetArgs, 'id'>>;
+  assetByCodeAndScale?: Resolver<Maybe<ResolversTypes['Asset']>, ParentType, ContextType, RequireFields<QueryAssetByCodeAndScaleArgs, 'code' | 'scale'>>;
   assets?: Resolver<ResolversTypes['AssetsConnection'], ParentType, ContextType, Partial<QueryAssetsArgs>>;
   incomingPayment?: Resolver<Maybe<ResolversTypes['IncomingPayment']>, ParentType, ContextType, RequireFields<QueryIncomingPaymentArgs, 'id'>>;
   outgoingPayment?: Resolver<Maybe<ResolversTypes['OutgoingPayment']>, ParentType, ContextType, RequireFields<QueryOutgoingPaymentArgs, 'id'>>;
   outgoingPayments?: Resolver<ResolversTypes['OutgoingPaymentConnection'], ParentType, ContextType, Partial<QueryOutgoingPaymentsArgs>>;
   payments?: Resolver<ResolversTypes['PaymentConnection'], ParentType, ContextType, Partial<QueryPaymentsArgs>>;
   peer?: Resolver<Maybe<ResolversTypes['Peer']>, ParentType, ContextType, RequireFields<QueryPeerArgs, 'id'>>;
+  peerByAddressAndAsset?: Resolver<Maybe<ResolversTypes['Peer']>, ParentType, ContextType, RequireFields<QueryPeerByAddressAndAssetArgs, 'assetId' | 'staticIlpAddress'>>;
   peers?: Resolver<ResolversTypes['PeersConnection'], ParentType, ContextType, Partial<QueryPeersArgs>>;
   quote?: Resolver<Maybe<ResolversTypes['Quote']>, ParentType, ContextType, RequireFields<QueryQuoteArgs, 'id'>>;
   receiver?: Resolver<Maybe<ResolversTypes['Receiver']>, ParentType, ContextType, RequireFields<QueryReceiverArgs, 'id'>>;
   walletAddress?: Resolver<Maybe<ResolversTypes['WalletAddress']>, ParentType, ContextType, RequireFields<QueryWalletAddressArgs, 'id'>>;
+  walletAddressByUrl?: Resolver<Maybe<ResolversTypes['WalletAddress']>, ParentType, ContextType, RequireFields<QueryWalletAddressByUrlArgs, 'url'>>;
   walletAddresses?: Resolver<ResolversTypes['WalletAddressesConnection'], ParentType, ContextType, Partial<QueryWalletAddressesArgs>>;
   webhookEvents?: Resolver<ResolversTypes['WebhookEventsConnection'], ParentType, ContextType, Partial<QueryWebhookEventsArgs>>;
 };

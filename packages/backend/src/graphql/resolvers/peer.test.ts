@@ -340,6 +340,105 @@ describe('Peer Resolvers', (): void => {
       })
     })
 
+    test('Can get a peer by address and asset id', async (): Promise<void> => {
+      const peer = await createPeer(deps, randomPeer())
+      const args = {
+        staticIlpAddress: peer.staticIlpAddress,
+        assetId: peer.assetId
+      }
+
+      const query = async () =>
+        await appContainer.apolloClient
+          .query({
+            query: gql`
+              query getPeerByAddressAndAsset(
+                $staticIlpAddress: String!
+                $assetId: String!
+              ) {
+                peerByAddressAndAsset(
+                  staticIlpAddress: $staticIlpAddress
+                  assetId: $assetId
+                ) {
+                  id
+                  asset {
+                    code
+                    scale
+                  }
+                  maxPacketAmount
+                  http {
+                    outgoing {
+                      authToken
+                      endpoint
+                    }
+                  }
+                  staticIlpAddress
+                  liquidity
+                  name
+                  liquidityThreshold
+                }
+              }
+            `,
+            variables: args
+          })
+          .then((query): GraphQLPeer => {
+            if (query.data) {
+              return query.data.peerByAddressAndAsset
+            } else {
+              throw new Error('Data was empty')
+            }
+          })
+
+      await expect(query()).resolves.toEqual({
+        __typename: 'Peer',
+        id: peer.id,
+        asset: {
+          __typename: 'Asset',
+          code: peer.asset.code,
+          scale: peer.asset.scale
+        },
+        http: {
+          __typename: 'Http',
+          outgoing: {
+            __typename: 'HttpOutgoing',
+            ...peer.http.outgoing
+          }
+        },
+        staticIlpAddress: peer.staticIlpAddress,
+        maxPacketAmount: peer.maxPacketAmount?.toString(),
+        liquidity: '0',
+        name: peer.name,
+        liquidityThreshold: '100'
+      })
+
+      await accountingService.createDeposit({
+        id: uuid(),
+        account: peer,
+        amount: BigInt(100)
+      })
+
+      await expect(query()).resolves.toEqual({
+        __typename: 'Peer',
+        id: peer.id,
+        asset: {
+          __typename: 'Asset',
+          code: peer.asset.code,
+          scale: peer.asset.scale
+        },
+        http: {
+          __typename: 'Http',
+          outgoing: {
+            __typename: 'HttpOutgoing',
+            ...peer.http.outgoing
+          }
+        },
+        staticIlpAddress: peer.staticIlpAddress,
+        maxPacketAmount: peer.maxPacketAmount?.toString(),
+        liquidity: '100',
+        name: peer.name,
+        liquidityThreshold: '100'
+      })
+    })
+
     test('Returns error for unknown peer', async (): Promise<void> => {
       expect.assertions(2)
       try {

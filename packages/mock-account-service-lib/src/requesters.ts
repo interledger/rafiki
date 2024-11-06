@@ -12,7 +12,9 @@ import type {
   SetFeeResponse,
   FeeType,
   CreateOrUpdatePeerByUrlMutationResponse,
-  CreateOrUpdatePeerByUrlInput
+  CreateOrUpdatePeerByUrlInput,
+  Peer,
+  Asset
 } from './generated/graphql'
 import { v4 as uuid } from 'uuid'
 
@@ -67,6 +69,12 @@ export function createRequesters(
     fixed: number,
     basisPoints: number
   ) => Promise<SetFeeResponse>
+  getAssetByCodeAndScale: (code: string, scale: number) => Promise<Asset | null>
+  getWalletAddressByURL: (url: string) => Promise<WalletAddress | null>
+  getPeerByAddressAndAsset: (
+    staticIlpAddress: string,
+    assetId: string
+  ) => Promise<Peer | null>
 } {
   return {
     createAsset: (code, scale, liquidityThresholdLow, liquidityThresholdHigh) =>
@@ -108,7 +116,12 @@ export function createRequesters(
     createWalletAddressKey: ({ walletAddressId, jwk }) =>
       createWalletAddressKey(apolloClient, logger, { walletAddressId, jwk }),
     setFee: (assetId, type, fixed, basisPoints) =>
-      setFee(apolloClient, logger, assetId, type, fixed, basisPoints)
+      setFee(apolloClient, logger, assetId, type, fixed, basisPoints),
+    getAssetByCodeAndScale: (code, scale) =>
+      getAssetByCodeAndScale(apolloClient, code, scale),
+    getWalletAddressByURL: (url) => getWalletAddressByURL(apolloClient, url),
+    getPeerByAddressAndAsset: (staticIlpAddress, assetId) =>
+      getPeerByAddressAndAsset(apolloClient, staticIlpAddress, assetId)
   }
 }
 
@@ -446,4 +459,91 @@ export async function setFee(
       }
       return data.setFee
     })
+}
+
+async function getAssetByCodeAndScale(
+  apolloClient: ApolloClient<NormalizedCacheObject>,
+  code: string,
+  scale: number
+): Promise<Asset | null> {
+  const getAssetQuery = gql`
+    query GetAssetByCodeAndScale($code: String!, $scale: UInt8!) {
+      assetByCodeAndScale(code: $code, scale: $scale) {
+        id
+        code
+        scale
+        liquidityThreshold
+      }
+    }
+  `
+  const args = { code: code, scale: scale }
+  const { data } = await apolloClient.query({
+    query: getAssetQuery,
+    variables: args
+  })
+
+  return data.assetByCodeAndScale
+}
+
+async function getWalletAddressByURL(
+  apolloClient: ApolloClient<NormalizedCacheObject>,
+  url: string
+): Promise<WalletAddress | null> {
+  const query = gql`
+    query getWalletAddressByUrl($url: String!) {
+      walletAddressByUrl(url: $url) {
+        id
+        liquidity
+        url
+        publicName
+        asset {
+          id
+          scale
+          code
+          withdrawalThreshold
+        }
+      }
+    }
+  `
+  const { data } = await apolloClient.query({
+    query: query,
+    variables: { url: url }
+  })
+
+  return data.walletAddressByUrl
+}
+
+async function getPeerByAddressAndAsset(
+  apolloClient: ApolloClient<NormalizedCacheObject>,
+  staticIlpAddress: string,
+  assetId: string
+): Promise<Peer | null> {
+  const getPeerByAddressAndAssetQuery = gql`
+    query getPeerByAddressAndAsset(
+      $staticIlpAddress: String!
+      $assetId: String!
+    ) {
+      peerByAddressAndAsset(
+        staticIlpAddress: $staticIlpAddress
+        assetId: $assetId
+      ) {
+        id
+        name
+        asset {
+          id
+          scale
+          code
+          withdrawalThreshold
+        }
+      }
+    }
+  `
+  const args = { staticIlpAddress: staticIlpAddress, assetId: assetId }
+
+  const { data } = await apolloClient.query({
+    query: getPeerByAddressAndAssetQuery,
+    variables: args
+  })
+
+  return data.peerByAddressAndAsset ?? null
 }
