@@ -20,7 +20,7 @@ There is one liquidity account for each of the following resources:
 
 - Asset
 - Peer
-- Wallet address (for SPSP/Web Monetization receiving)
+- Wallet address
 - Incoming payment
 - Outgoing payment
 
@@ -460,47 +460,6 @@ A withdrawal is the act of debiting the liquidity account and crediting the sett
 
 #### Payments in the same asset
 
-**Simple Payment Setup Protocol (SPSP) / Web Monetization**
-
-| Debit Account    | Credit Account |
-| ---------------- | -------------- |
-| Outgoing payment | Wallet address |
-
-**Example:** Send a Web Monetization Payment of `2 USD` over SPSP to a wallet address. Sender and receiver have wallet addresses at the same Rafiki.
-
-<table class='accounting-table not-content'>
-  <tr class='header-row'>
-    <th style='text-align: left'>USD outgoing payment liquidity acct</th>
-    <th style='text-align: left'>USD wallet address liquidity acct</th>
-  </tr>
-  <tr>
-    <td>
-      <table>
-        <tr>
-          <th>Debit</th>
-          <th>Credit</th>
-        </tr>
-        <tr>
-          <td>2</td>
-          <td></td>
-        </tr>
-      </table>
-    </td>
-    <td>
-      <table>
-        <tr>
-          <th>Debit</th>
-          <th>Credit</th>
-        </tr>
-        <tr>
-          <td></td>
-          <td>2</td>
-        </tr>
-      </table>
-    </td>
-  </tr>
-</table>
-
 **Send amount < receive amount**
 
 | Debit Account    | Credit Account   |
@@ -685,78 +644,6 @@ A withdrawal is the act of debiting the liquidity account and crediting the sett
   </tr>
 </table>
 
-**Exchanging currencies in Simple Payment Setup Protocol (SPSP) / Web Monetization**
-
-| Debit Account    | Credit Account  | Asset |
-| ---------------- | --------------- | ----- |
-| Outgoing payment | Asset liquidity | `USD` |
-| Asset liquidity  | Wallet address  | `EUR` |
-
-**Example:** Outgoing payment for `2 USD`, wallet address receives `1 EUR`.
-
-<table class='accounting-table not-content'>
-  <tr class='header-row'>
-    <th style='text-align: left'>USD outgoing payment liquidity acct</th>
-    <th style='text-align: left'>USD asset liquidity acct</th>
-  </tr>
-  <tr>
-    <td>
-      <table>
-        <tr>
-          <th>Debit</th>
-          <th>Credit</th>
-        </tr>
-        <tr>
-          <td>2</td>
-          <td></td>
-        </tr>
-      </table>
-    </td>
-    <td>
-      <table>
-        <tr>
-          <th>Debit</th>
-          <th>Credit</th>
-        </tr>
-        <tr>
-          <td></td>
-          <td>2</td>
-        </tr>
-      </table>
-    </td>
-  </tr>
-  <tr class='header-row'>
-    <th style='text-align: left'>EUR asset liquidity acct</th>
-    <th style='text-align: left'>EUR wallet address liquidity acct</th>
-  </tr>
-  <tr>
-    <td>
-      <table>
-        <tr>
-          <th>Debit</th>
-          <th>Credit</th>
-        </tr>
-        <tr>
-          <td>1</td>
-          <td></td>
-        </tr>
-      </table>
-    </td>
-    <td>
-      <table>
-        <tr>
-          <th>Debit</th>
-          <th>Credit</th>
-        </tr>
-        <tr>
-          <td></td>
-          <td>1</td>
-        </tr>
-      </table>
-    </td>
-  </tr>
-</table>
-
 ### Interledger transfer examples
 
 In these examples, the sender and receiver do not have wallet addresses at the same Rafiki instance.
@@ -921,47 +808,6 @@ Remember that a settlement account will always have a zero or negative balance a
   </tr>
 </table>
 
-**Same asset in Simple Payment Setup Protocol (SPSP) / Web Monetization**
-
-| Debit Account  | Credit Account |
-| -------------- | -------------- |
-| Peer liquidity | Wallet address |
-
-**Example:** A wallet address receives `2 USD` from an ILP payment at a peer's Rafiki instance.
-
-<table class='accounting-table not-content'>
-  <tr class='header-row'>
-    <th style='text-align: left'>USD peer liquidity acct</th>
-    <th style='text-align: left'>USD wallet address liquidity acct</th>
-  </tr>
-  <tr>
-    <td>
-      <table>
-        <tr>
-          <th>Debit</th>
-          <th>Credit</th>
-        </tr>
-        <tr>
-          <td>2</td>
-          <td></td>
-        </tr>
-      </table>
-    </td>
-    <td>
-      <table>
-        <tr>
-          <th>Debit</th>
-          <th>Credit</th>
-        </tr>
-        <tr>
-          <td></td>
-          <td>2</td>
-        </tr>
-      </table>
-    </td>
-  </tr>
-</table>
-
 **Cross currency**
 
 | Debit Account   | Credit Account   | Asset |
@@ -1028,78 +874,6 @@ Remember that a settlement account will always have a zero or negative balance a
         <tr>
           <td></td>
           <td>9</td>
-        </tr>
-      </table>
-    </td>
-  </tr>
-</table>
-
-**Cross-currency in Simple Payment Setup Protocol (SPSP) / Web Monetization**
-
-| Debit Account   | Credit Account  | Asset |
-| --------------- | --------------- | ----- |
-| Peer liquidity  | Asset liquidity | `USD` |
-| Asset liquidity | Wallet address  | `EUR` |
-
-**Example:** A Rafiki instance receives `10 USD` from a peer (peering relationship in USD) to be deposited in a wallet address liquidity account denominated in EUR. The payment is converted to EUR and deposited.
-
-<table class='accounting-table not-content'>
-  <tr class='header-row'>
-    <th style='text-align: left'>USD peer liquidity acct</th>
-    <th style='text-align: left'>USD asset liquidity acct</th>
-  </tr>
-  <tr>
-    <td>
-      <table>
-        <tr>
-          <th>Debit</th>
-          <th>Credit</th>
-        </tr>
-        <tr>
-          <td>2</td>
-          <td></td>
-        </tr>
-      </table>
-    </td>
-    <td>
-      <table>
-        <tr>
-          <th>Debit</th>
-          <th>Credit</th>
-        </tr>
-        <tr>
-          <td></td>
-          <td>2</td>
-        </tr>
-      </table>
-    </td>
-  </tr>
-  <tr class='header-row'>
-    <th style='text-align: left'>EUR asset liquidity acct</th>
-    <th style='text-align: left'>EUR wallet address liquidity acct</th>
-  </tr>
-  <tr>
-    <td>
-      <table>
-        <tr>
-          <th>Debit</th>
-          <th>Credit</th>
-        </tr>
-        <tr>
-          <td>1</td>
-          <td></td>
-        </tr>
-      </table>
-    </td>
-    <td>
-      <table>
-        <tr>
-          <th>Debit</th>
-          <th>Credit</th>
-        </tr>
-        <tr>
-          <td></td>
-          <td>1</td>
         </tr>
       </table>
     </td>

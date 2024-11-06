@@ -2,7 +2,7 @@ openapi: 3.1.0
 info:
   title: Rafiki Webhooks
   version: 1.1.0
-  description: 'Webhook Events fired by Rafiki'
+  description: 'Webhook events fired by Rafiki'
   contact:
     email: tech@interledger.org
 servers:
@@ -11,113 +11,113 @@ webhooks:
   incomingPaymentCreated:
     post:
       requestBody:
-        description: Notify account servicing entity that an incoming payment was created.
+        description: Notifies the account servicing entity that an incoming payment was created. This event is purely informational.
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/incomingPaymentEvent'
       responses:
         '200':
-          description: Returns a 200 status to indicate that the data was received successfully.
+          description: Data received successfully
   incomingPaymentCompleted:
     post:
       requestBody:
-        description: Notify account servicing entity that an incoming payment was completed and funds should now be withdrawn.
+        description: Notifies the account servicing entity that an incoming payment was completed and funds should be withdrawn.
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/incomingPaymentEvent'
       responses:
         '200':
-          description: Return a 200 status to indicate that the data was received successfully
+          description: Data was received successfully
   incomingPaymentExpired:
     post:
       requestBody:
-        description: Notify account servicing entity that an incoming payment has expired and funds should now be withdrawn.
+        description: Notifies the account servicing entity that an incoming payment has expired and funds should be withdrawn.
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/incomingPaymentEvent'
       responses:
         '200':
-          description: Return a 200 status to indicate that the data was received successfully
+          description: Data was received successfully
   outgoingPaymentCreated:
     post:
       requestBody:
-        description: Notify account servicing entity that an outgoing payment was created and should now be funded.
+        description: Notifies the account servicing entity that an outgoing payment was created and is awaiting funding.
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/outgoingPaymentEvent'
       responses:
         '200':
-          description: Return a 200 status to indicate that the data was received successfully
+          description: Data was received successfully
   outgoingPaymentCompleted:
     post:
       requestBody:
-        description: Notify account servicing entity that an outgoing payment completed. Remaining funds should be withdrawn.
+        description: Notifies the account servicing entity that an outgoing payment completed and any remaining funds should be withdrawn.
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/outgoingPaymentEvent'
       responses:
         '200':
-          description: Return a 200 status to indicate that the data was received successfully
+          description: Data was received successfully
   outgoingPaymentFailed:
     post:
       requestBody:
-        description: Notify account servicing entity that an outgoing payment failed and won't be retried. Funds should be withdrawn.
+        description: Notifies the account servicing entity that an outgoing payment failed, the retry was unsuccessful, and funds should be withdrawn.
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/outgoingPaymentEvent'
       responses:
         '200':
-          description: Return a 200 status to indicate that the data was received successfully
+          description: Data was received successfully
   walletAddressNotFound:
     post:
       requestBody:
-        description: Notify account servicing entity to create a wallet address if it can find a corresponding account in their system.
+        description: Notifies the account servicing entity to create a wallet address for the associated account in their system.
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/walletAddressNotFound'
       responses:
         '200':
-          description: Return a 200 status to indicate that the data was received successfully
+          description: Data was received successfully
   webMonetization:
     post:
       requestBody:
-        description: Notify account servicing entity that a Web Monetization payment was received and funds should be withdrawn.
+        description: Notifies the account servicing entity that a Web Monetization payment was received and funds should be withdrawn.
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/webMonetizationEvent'
       responses:
         '200':
-          description: Return a 200 status to indicate that the data was received successfully
+          description: Data was received successfully
   assetLiquidity:
     post:
       requestBody:
-        description: Notify account servicing entity that asset liquidity is low.
+        description: Notifies the account servicing entity that the liquidity for a specific asset is low.
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/liquidityEvent'
       responses:
         '200':
-          description: Return a 200 status to indicate that the data was received successfully
+          description: Data was received successfully
   peerLiquidity:
     post:
       requestBody:
-        description: Notify account servicing entity that peer liquidity is low.
+        description: Notifies the account servicing entity that the liquidity for a specific peer is low.
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/liquidityEvent'
       responses:
         '200':
-          description: Return a 200 status to indicate that the data was received successfully
+          description: Data was received successfully
 
 components:
   schemas:
@@ -358,10 +358,10 @@ components:
         value:
           type: string
           format: uint64
-          description: 'The value is an unsigned 64-bit integer amount, represented as a string.'
+          description: 'An unsigned 64-bit integer amount, represented as a string.'
         assetCode:
           type: string
-          description: The assetCode is a code that indicates the underlying asset. This SHOULD be an ISO4217 currency code.
+          description: A code that indicates the underlying asset. This SHOULD be an ISO4217 currency code.
         assetScale:
           type: integer
           minimum: 0
