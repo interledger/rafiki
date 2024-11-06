@@ -86,8 +86,8 @@ importers:
         specifier: ^3.11.8
         version: 3.11.8(@types/react@18.2.73)(graphql@16.8.1)(react-dom@18.2.0)(react@18.2.0)
       '@headlessui/react':
-        specifier: ^1.7.18
-        version: 1.7.18(react-dom@18.2.0)(react@18.2.0)
+        specifier: ^1.7.19
+        version: 1.7.19(react-dom@18.2.0)(react@18.2.0)
       '@interledger/http-signature-utils':
         specifier: 2.0.2
         version: 2.0.2
@@ -596,8 +596,8 @@ importers:
         specifier: ^3.11.8
         version: 3.11.8(@types/react@18.2.73)(graphql@16.8.1)(react-dom@18.2.0)(react@18.2.0)
       '@headlessui/react':
-        specifier: ^1.7.18
-        version: 1.7.18(react-dom@18.2.0)(react@18.2.0)
+        specifier: ^1.7.19
+        version: 1.7.19(react-dom@18.2.0)(react@18.2.0)
       '@ory/client':
         specifier: ^1.9.0
         version: 1.9.0
@@ -3805,8 +3805,8 @@ packages:
       yargs: 17.7.2
     dev: false
 
-  /@headlessui/react@1.7.18(react-dom@18.2.0)(react@18.2.0):
-    resolution: {integrity: sha512-4i5DOrzwN4qSgNsL4Si61VMkUcWbcSKueUV7sFhpHzQcSShdlHENE5+QBntMSRvHt8NyoFO2AGG8si9lq+w4zQ==}
+  /@headlessui/react@1.7.19(react-dom@18.2.0)(react@18.2.0):
+    resolution: {integrity: sha512-Ll+8q3OlMJfJbAKM/+/Y2q6PPYbryqNTXDbryx7SXLIDamkF6iQFbriYHga0dY44PvDhvvBWCx1Xj4U5+G4hOw==}
     engines: {node: '>=10'}
     peerDependencies:
       react: ^16 || ^17 || ^18
