@@ -23,7 +23,8 @@ body:graphql {
           }
         }
         liquidity
-        liquidityThreshold
+        liquidityThresholdLow
+        liquidityThresholdHigh
       }
     }
   }
@@ -39,7 +40,8 @@ body:graphql:vars {
         "outgoing": {"endpoint": "http://peer-backend:3002", "authToken": "test"}
       },
       "maxPacketAmount": 1000,
-      "liquidityThreshold": 100
+      "liquidityThresholdLow": 100
+      "liquidityThresholdHigh": 500
     }
   }
 }

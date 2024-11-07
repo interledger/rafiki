@@ -17,7 +17,8 @@ body:graphql {
               id
               name
               liquidity
-              liquidityThreshold
+              liquidityThresholdLow
+              liquidityThresholdHigh
               asset{
                   id
                   scale
@@ -40,7 +41,8 @@ body:graphql:vars {
       },
       "assetId": "{{assetId}}",
       "maxPacketAmount": 1000,
-      "liquidityThreshold": 100000000,
+      "liquidityThresholdLow": 100000000,
+      "liquidityThresholdHigh": "100000000",
       "initialLiquidity": 200000000
     }
   }
