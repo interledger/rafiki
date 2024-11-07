@@ -14,9 +14,9 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@apollo/client": "^3.11.4",
+    "@apollo/client": "^3.11.8",
     "@interledger/http-signature-utils": "2.0.2",
-    "@interledger/open-payments": "6.13.1",
+    "@interledger/open-payments": "6.13.2",
     "@koa/bodyparser": "^5.1.1",
     "@types/koa": "2.15.0",
     "@types/koa-bodyparser": "^4.3.12",
@@ -25,6 +25,6 @@
     "hostile": "^1.4.0",
     "koa": "^2.15.3",
     "mock-account-service-lib": "workspace:*",
-    "yaml": "^2.5.0"
+    "yaml": "^2.6.0"
   }
 }

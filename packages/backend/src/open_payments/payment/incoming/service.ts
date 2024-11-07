@@ -270,8 +270,7 @@ async function handleExpired(
     )
     await incomingPayment.$query(deps.knex).patch({
       state: IncomingPaymentState.Expired,
-      // Add 30 seconds to allow a prepared (but not yet fulfilled/rejected) packet to finish before sending webhook event.
-      processAt: new Date(Date.now() + 30_000)
+      processAt: new Date()
     })
   } else {
     deps.logger.debug({ amountReceived }, 'deleting expired incoming payment')
@@ -439,7 +438,7 @@ async function completeIncomingPayment(
     }
     await payment.$query(trx).patch({
       state: IncomingPaymentState.Completed,
-      processAt: new Date(Date.now() + 30_000)
+      processAt: new Date()
     })
     return await addReceivedAmount(deps, payment)
   })

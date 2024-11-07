@@ -2,12 +2,17 @@
 title: Identity provider (IdP)
 ---
 
-import { Badge } from '@astrojs/starlight/components'
-import { Mermaid, CodeBlock, LinkOut } from '@interledger/docs-design-system'
+import { Badge, Steps } from '@astrojs/starlight/components'
+import {
+  Mermaid,
+  MermaidWrapper,
+  LinkOut,
+  CodeBlock
+} from '@interledger/docs-design-system'
 
 An identity provider (IdP) is a system or service that stores and manages user identity information, authentication, and consent. Examples of IdPs include OpenID Connect and Okta.
 
-Integration with an IdP is required if you plan to support <LinkOut href="https://openpayments.dev">Open Payments</LinkOut> outgoing payments for your users. Open Payments requires that outgoing payment grant requests, which precede outgoing payment requests, be interactive. In an interactive grant request, explicit interaction by an individual (e.g., an account holder) is required to approve the grant. An example of an interaction is an end-user tapping an Approve button in an app to authorize a payment.
+Integration with an IdP is required if you plan to support outgoing payments via <LinkOut href="https://openpayments.dev">Open Payments</LinkOut>. The Open Payments standard requires interactive outgoing payment _grant_ requests, which precede outgoing payment requests. In an interactive grant request, explicit interaction by an individual (e.g., the client's end-user) is required to approve the grant. An example of an interaction is an end-user tapping _Approve_ in an app to authorize a payment.
 
 Your IdP will:
 
@@ -15,25 +20,33 @@ Your IdP will:
 - Facilitate interactions with the client's end-user to gather consent
 
 :::note
-We provide Ory Kratos, a cloud-based user management system, for the identity and user management of your Rafiki Admin users. Kratos is for internal use only and **cannot** be used here as your IdP.
+We provide Ory Kratos, a cloud-based user management system, for the identity and user management of your [Rafiki Admin](/admin/admin-user-guide) users. Kratos is for internal use only and **cannot** be used as your client-facing IdP.
 :::
 
 ### Interactions and consent
 
-Before an Open Payments outgoing payment is created, an outgoing payment grant must be issued.
+Before an outgoing payment is created via Open Payments, an outgoing payment _grant_ must be issued.
 
-Outgoing payment grant requests must be interactive. This means the request requires explicit interaction, often from the account holder, to gather consent (permission) to create the outgoing payment. The interaction is facilitated by your IdP. Your IdP:
+Outgoing payment grant requests must be interactive. This means the request requires explicit interaction, often from the a client's end-user, to gather consent (permission) before creating the outgoing payment. The interaction is facilitated by your IdP.
 
-1. Provides an interface to gather consent, for example, a consent screen
-2. Sends the interaction choice to your authorization server
+Your IdP:
+
+<Steps>
+
+1. Provides an interface to gather consent (for example, a consent screen)
+2. Sends the interaction choice (accept/deny) to your authorization server
 3. Sends a request to your authorization server to finish the interaction
 4. Redirects the user after the interaction is complete
 
+</Steps>
+
 ### Authorization server
 
-The purpose of an Open Payments authorization server is to grant permission to clients to access the Open Payments APIs for creating incoming payments, quotes, and outgoing payments against an account holder's account.
+The purpose of an Open Payments authorization server is to grant permission to clients to access the Open Payments APIs. These APIs are used to create incoming payments, quotes, and outgoing payments against an account holder's account.
 
-Rafiki's [auth service](/integration/services/auth-service) provides you with a reference implementation of an Open Payments authorization server. The server extends an [API](#interaction-endpoints) for your IdP to use to begin and finish an interaction, collect authorization, get information about a particular grant, and communicate that a user has authorized a grant. You can use the service as an alternative to developing your own in-house service.
+Rafiki's [auth service](/integration/services/auth-service) provides you with a reference implementation of an Open Payments authorization server. You can use the service as an alternative to developing your own in-house service.
+
+The authorization server extends an HTTP API for your IdP to use to start and finish interactions, collect authorization, get information about a grant, and communicate whether an end-user has authorized a grant. The API's [endpoints](#interaction-endpoints) are described below.
 
 ## Environment variables
 
@@ -53,19 +66,30 @@ The following `backend` variables must be configured on your authorization serve
 
 </div>
 
-## Interaction endpoints
+## Manage grants
 
-Your Open Payments authorization server extends an API for your IdP server to use after a pending grant request is created.
+After a pending grant request is created, your IdP server can use the interaction endpoints listed below to:
 
-Each interaction with an endpoint is identified by an `id` and a `nonce`. Both are provided as query parameters when your authorization server redirects to your IdP server.
+- Start and finish interactions
+- Collect authorization
+- Get information about a grant
+- Communicate whether an end-user has authorized a grant
 
-The endpoints are tied to the `IDENTITY_SERVER_URL` you defined when configuring your environment variables. For example, if your identity server URL is `https://idp.wallet.example.com`, then to start a user interaction session, the `/interact/{id}/{nonce}` endpoint would be called:
+Each interaction is identified by an `id` and a `nonce`. Both are provided as query parameters when your authorization server redirects to your IdP server.
 
+The endpoints are appended to the `IDENTITY_SERVER_URL` you defined when configuring your [environment variables](#environment-variables).
+
+<CodeBlock title="Example">
+
+```http
+https://idp.wallet.example.com/interact/{id}/{nonce}
 ```
-https://idp.wallet.example.com/interact/{id}/{nonce}`
-```
 
-The endpoints are called in the sequence listed in the table below.
+</CodeBlock>
+
+### Interaction endpoints
+
+The endpoints are called in the sequence listed below.
 
 <div class="overflow-table">
 
@@ -83,25 +107,29 @@ We also provide an <LinkOut href="https://github.com/interledger/rafiki/blob/mai
 
 #### Start user interaction session
 
-Called by the client and establishes an interactive session with your authorization server, which redirects the client's browser session to your IdP consent screen.
+Called by the client to establish an interactive session with your authorization server. Also redirects the client's browser session to your IdP consent screen.
 
 #### Look up grant information
 
-Called by your IdP server to retrieve a list of access rights, requested by the client, from your authorization server. The request is secured with an [`x-idp-secret`](#x-idp-secret-header) header. The access rights are presented to the client's end-user on the consent screen. The authorization server's response is served on your defined [`INTERACTION_PORT`](#environment-variables).
+Called by your IdP server, and secured with an [`x-idp-secret`](#x-idp-secret-header) header, to get the list of access rights the client requested from your authorization server.
+
+The access rights are presented to the client's end-user on the consent screen. The authorization server's response is served on your defined [`INTERACTION_PORT`](#environment-variables).
 
 #### Accept or reject grant
 
-Your IdP server communicates the choice made by the end-user on the consent screen (accept/reject) to your authorization server. The request is secured with an [`x-idp-secret`](#x-idp-secret-header) header. Then, your IdP server redirects to the `finish` endpoint. The response is served on your defined [`INTERACTION_PORT`](#environment-variables).
+Called by your IdP server, and secured with an [`x-idp-secret`](#x-idp-secret-header) header, to communicate the choice made by the end-user on the consent screen (accept/deny) to your authorization server.
+
+Your IdP server then redirects to the `finish` endpoint. The response is served on your defined [`INTERACTION_PORT`](#environment-variables)
 
 #### Finish interaction
 
-Your IdP server ends the interaction and redirects the end-user's browser session to the URI of the <LinkOut href="https://openpayments.dev/apis/auth-server/operations/post-request/">grant initialization request</LinkOut>.
+Called by your IdP server to end the interaction and redirect the end-user's browser session to the URI of the <LinkOut href="https://openpayments.dev/apis/auth-server/operations/post-request/">grant initialization request</LinkOut>.
 
-The `result` query parameter will indicate the success or failure of the grant authorization. In case of success, the SHA-256 hash of the interaction is sent in the response along with an `interact_ref` that identifies the interaction on the authorization server and the URI of the grant initialization request.
+The `result` query parameter will indicate the success or failure of the grant authorization. When successful, the SHA-256 hash of the interaction is sent in the response along with an `interact_ref` that identifies the interaction on your authorization server and the URI of the grant initialization request.
 
-The following table lists examples of the possible response types on this endpoint.
+The following are examples of the possible response types.
 
-<div class="overflow-table">
+<div class="overflow-table wider-column">
 
 | Response | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | Example                                                                                                                          |
 | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
@@ -113,16 +141,50 @@ The following table lists examples of the possible response types on this endpoi
 
 #### Continue grant
 
-The client requests a grant from your authorization server for an accepted interaction. Your authorization server responds with an <LinkOut href="https://openpayments.dev/apis/auth-server/operations/post-continue/">access token</LinkOut>.
+Called by the client to request a grant from your authorization server if the interaction was successful (accepted). Your authorization server responds with an <LinkOut href="https://openpayments.dev/apis/auth-server/operations/post-continue/">access token</LinkOut>.
 
-## x-idp-secret header
+### x-idp-secret header
 
-`x-idp-secret` is the name of a header that is used for requests to the following endpoints:
+The purpose of the `x-idp-secret` header is to secure communications between your IdP and authorization servers.
+
+The header is used for requests to the following endpoints and its value should be a shared secret known to both entities.
 
 - `GET /grant/:id/:nonce`
 - `POST /grant/:id/:nonce/accept`
 - `POST /grant/:id/:nonce/reject`
 
-The header's purpose is to secure communications between your IdP and authorization servers and its value should be a shared secret known to both entities. When your IdP server sends requests to your authorization server, your IdP must provide the secret via this header.
+When your IdP server sends requests to your authorization server, your IdP must provide the secret via this header.
 
 To set up the header, set the [`IDENTITY_SERVER_SECRET`](#environment-variables) on your authorization server environment to a value that is also used to configure your IdP server's requests to your authorization server.
+
+### Sequence diagram
+
+The following diagram provides a high-level view of the flow from when a pending grant request is created through to the authorization server returning an access token to continue a successful (accepted) interaction.
+
+The diagram is for illustrative purposes and is not an exact representation of the flow. Additional information can be found in the <LinkOut href="https://openpayments.dev/introduction/grants/#identity-providers">Open Payments</LinkOut> documentation.
+
+<MermaidWrapper client:load hasBorder={false}>
+
+{/* prettier-ignore */}
+<Mermaid
+  graph={`sequenceDiagram
+   Client->>Authorization Server: Sends interactive outgoing payment grant request
+   Authorization Server-->>Client: HTTP 200 request successful 
+   Client->>Authorization Server: Starts user interaction session
+   Authorization Server->>Authorization Server: Sets session
+   Authorization Server-->>Client: HTTP 302 instructs client to redirect to Identity Provider
+   Client->>Identity Provider: Redirects end-user's browser to the Identity Provider's consent screen
+   Identity Provider->>Identity Provider: End-user accepts interaction
+   Identity Provider->>Authorization Server: Provides end-user's interaction choice
+   Authorization Server-->>Identity Provider: 202 HTTP choice accepted
+   Identity Provider->>Authorization Server: Instructs server to finish interaction
+   Authorization Server->>Authorization Server: Ends session
+   Authorization Server-->>Identity Provider: 302 HTTP instructs Identity Provider to redirect to client
+   Identity Provider->>Client: Redirects to Client
+   Client->>Client: Verifies hash
+   Client->>Authorization Server: Requests continuation of grant
+   Authorization Server->>Client: 200 HTTP OK, returns access token
+`}
+/>
+
+</MermaidWrapper>
