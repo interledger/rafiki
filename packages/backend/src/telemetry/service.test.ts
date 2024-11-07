@@ -441,6 +441,117 @@ describe('Telemetry Service', () => {
         )
       })
     })
+
+    describe('startTimer', () => {
+      beforeEach(() => {
+        jest.useFakeTimers()
+      })
+
+      afterEach(() => {
+        jest.useRealTimers()
+      })
+
+      it('should return a function', () => {
+        const stopTimer = telemetryService.startTimer('test_timer')
+        expect(typeof stopTimer).toBe('function')
+      })
+
+      it('should record histogram with elapsed time and initial attributes', () => {
+        const recordHistogramSpy = jest.spyOn(
+          telemetryService,
+          'recordHistogram'
+        )
+        const stopTimer = telemetryService.startTimer('test_timer', {
+          initialAttr: 'value'
+        })
+
+        jest.advanceTimersByTime(1000)
+        stopTimer()
+
+        expect(recordHistogramSpy).toHaveBeenCalledWith(
+          'test_timer',
+          1000,
+          expect.objectContaining({ initialAttr: 'value' })
+        )
+      })
+
+      it('should merge initial attributes with additional attributes', () => {
+        const recordHistogramSpy = jest.spyOn(
+          telemetryService,
+          'recordHistogram'
+        )
+        const stopTimer = telemetryService.startTimer('test_timer', {
+          initialAttr: 'value'
+        })
+
+        jest.advanceTimersByTime(1000)
+        stopTimer({ additionalAttr: 'newValue' })
+
+        expect(recordHistogramSpy).toHaveBeenCalledWith(
+          'test_timer',
+          1000,
+          expect.objectContaining({
+            initialAttr: 'value',
+            additionalAttr: 'newValue'
+          })
+        )
+      })
+
+      it('should override initial attributes with additional attributes if keys conflict', () => {
+        const recordHistogramSpy = jest.spyOn(
+          telemetryService,
+          'recordHistogram'
+        )
+        const stopTimer = telemetryService.startTimer('test_timer', {
+          attr: 'initialValue'
+        })
+
+        jest.advanceTimersByTime(1000)
+        stopTimer({ attr: 'newValue' })
+
+        expect(recordHistogramSpy).toHaveBeenCalledWith(
+          'test_timer',
+          1000,
+          expect.objectContaining({ attr: 'newValue' })
+        )
+      })
+
+      it('should work without initial attributes', () => {
+        const recordHistogramSpy = jest.spyOn(
+          telemetryService,
+          'recordHistogram'
+        )
+        const stopTimer = telemetryService.startTimer('test_timer')
+
+        jest.advanceTimersByTime(1000)
+        stopTimer({ attr: 'value' })
+
+        expect(recordHistogramSpy).toHaveBeenCalledWith(
+          'test_timer',
+          1000,
+          expect.objectContaining({ attr: 'value' })
+        )
+      })
+
+      it('should work without additional attributes', () => {
+        const recordHistogramSpy = jest.spyOn(
+          telemetryService,
+          'recordHistogram'
+        )
+        const stopTimer = telemetryService.startTimer('test_timer', {
+          initialAttr: 'value'
+        })
+
+        jest.advanceTimersByTime(1000)
+        stopTimer()
+
+        expect(recordHistogramSpy).toHaveBeenCalledWith(
+          'test_timer',
+          1000,
+          expect.objectContaining({ initialAttr: 'value' })
+        )
+      })
+    })
   })
   describe('Telemetry Disabled', () => {
     let deps: IocContract<AppServices>
