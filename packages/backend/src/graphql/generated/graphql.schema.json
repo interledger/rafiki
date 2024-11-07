@@ -1391,7 +1391,19 @@
             "deprecationReason": null
           },
           {
-            "name": "liquidityThreshold",
+            "name": "liquidityThresholdHigh",
+            "description": "A webhook event will notify the Account Servicing Entity if peer liquidity is higher than this value.",
+            "type": {
+              "kind": "SCALAR",
+              "name": "UInt64",
+              "ofType": null
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "liquidityThresholdLow",
             "description": "A webhook event will notify the Account Servicing Entity if peer liquidity falls below this value.",
             "type": {
               "kind": "SCALAR",

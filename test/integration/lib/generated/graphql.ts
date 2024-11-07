@@ -243,8 +243,10 @@ export type CreateOrUpdatePeerByUrlInput = {
   assetId: Scalars['String']['input'];
   /** Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency). */
   idempotencyKey?: InputMaybe<Scalars['String']['input']>;
+  /** A webhook event will notify the Account Servicing Entity if peer liquidity is higher than this value. */
+  liquidityThresholdHigh?: InputMaybe<Scalars['UInt64']['input']>;
   /** A webhook event will notify the Account Servicing Entity if peer liquidity falls below this value. */
-  liquidityThreshold?: InputMaybe<Scalars['UInt64']['input']>;
+  liquidityThresholdLow?: InputMaybe<Scalars['UInt64']['input']>;
   /** Amount of liquidity to deposit for the peer. */
   liquidityToDeposit?: InputMaybe<Scalars['UInt64']['input']>;
   /** Maximum packet amount that the peer accepts. */

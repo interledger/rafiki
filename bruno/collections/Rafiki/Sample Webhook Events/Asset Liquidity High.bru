@@ -1,7 +1,7 @@
 meta {
-  name: Peer Liquidity Low
+  name: Asset Liquidity High
   type: http
-  seq: 10
+  seq: 9
 }
 
 post {
@@ -13,16 +13,16 @@ post {
 body:json {
   {
     "id": "{{uuid}}",
-    "type": "peer.liquidity_low",
+    "type": "asset.liquidity_low",
     "data": {
-      "id": "{{peerId}}",
+      "id": "{{assetId}}",
       "asset": {
         "id": "{{assetId}}",
-        "code": "USD",
+        "code": "EUR",
         "scale": 2
       },
-      "liquidityThreshold": "10000",
-      "balance": "9850"
+      "liquidityThresholdHigh": "9950",
+      "balance": "9980"
     }
   }
 }

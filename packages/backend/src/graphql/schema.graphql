@@ -423,7 +423,9 @@ input CreateOrUpdatePeerByUrlInput {
   "Internal name for the peer, used to override auto-peering default names."
   name: String
   "A webhook event will notify the Account Servicing Entity if peer liquidity falls below this value."
-  liquidityThreshold: UInt64
+  liquidityThresholdLow: UInt64
+  "A webhook event will notify the Account Servicing Entity if peer liquidity is higher than this value."
+  liquidityThresholdHigh: UInt64
   "Amount of liquidity to deposit for the peer."
   liquidityToDeposit: UInt64
   "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency)."
