@@ -11,7 +11,7 @@ webhooks:
   incomingPaymentCreated:
     post:
       requestBody:
-        description: Notifies the account servicing entity that an incoming payment was created. This event is purely informational.
+        description: Notifies the account servicing entity that an incoming payment was created.
         content:
           application/json:
             schema:
@@ -361,7 +361,7 @@ components:
           description: 'An unsigned 64-bit integer amount, represented as a string.'
         assetCode:
           type: string
-          description: A code that indicates the underlying asset. This SHOULD be an ISO4217 currency code.
+          description: A code, generally an ISO 4217 currency code where available, representing the underlying asset
         assetScale:
           type: integer
           minimum: 0

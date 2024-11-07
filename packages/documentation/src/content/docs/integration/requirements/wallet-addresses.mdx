@@ -241,20 +241,10 @@ Use the `revokeWalletAddressKey` GraphQL mutation to revoke a public key associa
 ```graphql
 mutation RevokeWalletAddressKey($input: RevokeWalletAddressKeyInput!) {
   revokeWalletAddressKey(input: $input) {
-    code
-    message
-    success
     walletAddressKey {
       id
-      walletAddressId
       revoked
-      jwk {
-        alg
-        crv
-        kid
-        kty
-        x
-      }
+      walletAddressId
       createdAt
     }
   }
@@ -270,14 +260,7 @@ mutation RevokeWalletAddressKey($input: RevokeWalletAddressKeyInput!) {
 ```json
 {
   "input": {
-    "jwk": {
-      "kid": "keyid-97a3a431-8ee1-48fc-ac85-70e2f5eba8e5",
-      "x": "ubqoInifJ5sssIPPnQR1gVPfmoZnJtPhTkyMXNoJF_8",
-      "alg": "EdDSA",
-      "kty": "OKP",
-      "crv": "Ed25519"
-    },
-    "walletAddressId": "695e7546-1803-4b45-96b6-6a53f4082018"
+    "id": "e7532552-cff9-4ffe-883e-56613d3ae611"
   }
 }
 ```
