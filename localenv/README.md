@@ -150,7 +150,7 @@ Note that you have to go through an additional "login" step by providing you IPv
 To shut down the connection and to clear the environment, run
 
 ```sh
-pnpm localenv:compose down --volumes
+pnpm localenv:compose down
 ```
 
 This is necessary since on a new run of the scripts (with autopeering or not), the wallet address urls will differ.
@@ -202,9 +202,6 @@ For more ways to connect debuggers, see the Node docs for debugging: https://nod
 # tear down
 pnpm localenv:compose down
 
-# tear down and delete database volumes
-pnpm localenv:compose down --volumes
-
 # tear down, delete database volumes and remove images
 pnpm localenv:compose down --volumes --rmi all
 ```
@@ -217,7 +214,6 @@ pnpm localenv:compose down --volumes --rmi all
 | `pnpm localenv:compose up`                       | Start (with Tigerbeetle)                         |
 | `pnpm localenv:compose up -d`                    | Start (with Tigerbeetle) detached                |
 | `pnpm localenv:compose down`                     | Down (with Tigerbeetle)                          |
-| `pnpm localenv:compose down --volumes`           | Down and kill volumes (with Tigerbeetle)         |
 | `pnpm localenv:compose down --volumes --rmi all` | Down, kill volumes (with Tigerbeetle) and images |
 | `pnpm localenv:compose:psql config`              | Show all merged config (with Postgresql)         |
 | `pnpm localenv:compose build`                    | Build all the containers (with Tigerbeetle)      |
@@ -286,15 +282,6 @@ Keep-Alive: timeout=5
 ```
 
 ### Known Issues
-
-#### No data in Mock Account Servicing Entity (MASE)
-
-It is possible that upon (re)starting the local playground, you may run into an issue where there are no accounts/wallet addresses visible in the mock account servicing entities' pages (http://localhost:3030, http://localhost:3031). This is because seeding of the initial account data only works against an empty database. To correct this, clear the volumes, and restart the container via:
-
-```sh
-pnpm localenv:compose down --volumes
-pnpm localenv:compose up -d
-```
 
 #### TigerBeetle container exits with code 137
 
