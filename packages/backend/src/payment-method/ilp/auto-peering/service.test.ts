@@ -261,7 +261,7 @@ describe('Auto Peering Service', (): void => {
         },
         maxPacketAmount: args.maxPacketAmount,
         name: peerDetails.name,
-        liquidityThreshold: args.liquidityThresholdLow
+        liquidityThresholdLow: args.liquidityThresholdLow
       })
 
       scope.done()

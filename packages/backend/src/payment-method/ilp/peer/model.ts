@@ -69,7 +69,7 @@ export class Peer
 
     if (isThresholdCrossed) {
       await PeerEvent.query().insert({
-        assetId: this.id,
+        peerId: this.id,
         type: eventType,
         data: {
           id: this.id,

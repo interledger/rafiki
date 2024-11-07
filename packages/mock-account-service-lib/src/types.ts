@@ -68,5 +68,7 @@ export enum WebhookEventType {
   WalletAddressWebMonetization = 'wallet_address.web_monetization',
   WalletAddressNotFound = 'wallet_address.not_found',
   AssetLiquidityLow = 'asset.liquidity_low',
-  PeerLiquidityLow = 'peer.liquidity_low'
+  PeerLiquidityLow = 'peer.liquidity_low',
+  AssetLiquidityHigh = 'asset.liquidity_high',
+  PeerLiquidityHigh = 'peer.liquidity_high'
 }

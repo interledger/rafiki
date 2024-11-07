@@ -374,7 +374,8 @@ describe('Peer Resolvers', (): void => {
                   staticIlpAddress
                   liquidity
                   name
-                  liquidityThreshold
+                  liquidityThresholdLow
+                  liquidityThresholdHigh
                 }
               }
             `,
@@ -407,7 +408,8 @@ describe('Peer Resolvers', (): void => {
         maxPacketAmount: peer.maxPacketAmount?.toString(),
         liquidity: '0',
         name: peer.name,
-        liquidityThreshold: '100'
+        liquidityThresholdLow: '100',
+        liquidityThresholdHigh: '2000'
       })
 
       await accountingService.createDeposit({
@@ -435,7 +437,8 @@ describe('Peer Resolvers', (): void => {
         maxPacketAmount: peer.maxPacketAmount?.toString(),
         liquidity: '100',
         name: peer.name,
-        liquidityThreshold: '100'
+        liquidityThresholdLow: '100',
+        liquidityThresholdHigh: '2000'
       })
     })
 

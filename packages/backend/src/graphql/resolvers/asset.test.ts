@@ -225,7 +225,8 @@ describe('Asset Resolvers', (): void => {
       const asset = await assetService.create({
         ...randomAsset(),
         withdrawalThreshold: BigInt(10),
-        liquidityThresholdLow: BigInt(100)
+        liquidityThresholdLow: BigInt(100),
+        liquidityThresholdHigh: BigInt(1000)
       })
       assert.ok(!isAssetError(asset))
       assert.ok(asset.withdrawalThreshold)
@@ -293,7 +294,8 @@ describe('Asset Resolvers', (): void => {
       const asset = await assetService.create({
         ...randomAsset(),
         withdrawalThreshold: BigInt(10),
-        liquidityThresholdLow: BigInt(100)
+        liquidityThresholdLow: BigInt(100),
+        liquidityThresholdHigh: BigInt(1000)
       })
       assert.ok(!isAssetError(asset))
       assert.ok(asset.withdrawalThreshold)
@@ -309,7 +311,8 @@ describe('Asset Resolvers', (): void => {
                   scale
                   liquidity
                   withdrawalThreshold
-                  liquidityThreshold
+                  liquidityThresholdLow
+                  liquidityThresholdHigh
                   createdAt
                 }
               }

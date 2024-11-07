@@ -65,12 +65,12 @@ describe('Peer Service', (): void => {
 
   describe('Create/Get Peer', (): void => {
     test.each`
-      liquidityThreshold
+      liquidityThresholdLow
       ${undefined}
       ${BigInt(1000)}
     `(
-      'A peer can be created and fetched, liquidityThreshold: $liquidityThreshold',
-      async ({ liquidityThreshold }): Promise<void> => {
+      'A peer can be created and fetched, liquidityThresholdLow: $liquidityThresholdLow',
+      async ({ liquidityThresholdLow }): Promise<void> => {
         const options = {
           assetId: asset.id,
           http: {
@@ -81,7 +81,7 @@ describe('Peer Service', (): void => {
           },
           staticIlpAddress: 'test.' + uuid(),
           name: faker.person.fullName(),
-          liquidityThreshold
+          liquidityThresholdLow
         }
         const peer = await peerService.create(options)
         assert.ok(!isPeerError(peer))
@@ -92,7 +92,7 @@ describe('Peer Service', (): void => {
           },
           staticIlpAddress: options.staticIlpAddress,
           name: options.name,
-          liquidityThreshold: liquidityThreshold || null
+          liquidityThresholdLow: liquidityThresholdLow || null
         })
         const retrievedPeer = await peerService.get(peer.id)
         if (!retrievedPeer) throw new Error('peer not found')

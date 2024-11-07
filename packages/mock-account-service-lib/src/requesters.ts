@@ -478,7 +478,7 @@ async function getAssetByCodeAndScale(
         id
         code
         scale
-        liquidityThreshold
+        liquidityThresholdLow
       }
     }
   `
