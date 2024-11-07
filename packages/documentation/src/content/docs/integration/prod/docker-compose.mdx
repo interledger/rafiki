@@ -27,13 +27,18 @@ We will map the [Open Payments resource server](/integration/services/backend-se
 The example domain and subdomain values are for demonstration purposes only. You must use the actual domain names that you set up with your DNS host.  
 :::
 
-### VM specifications
+### Prerequisites
 
-A general purpose VM with the following specifications is sufficient for running Rafiki via Docker:
+Deploy a general purpose VM with the following minimum specifications:
 
 - OS: Linux distro
 - RAM: 4GB
 - vCPUs: 2
+
+Install the following software on the VM:
+
+- <LinkOut href='https://docs.docker.com/engine/install/'>Docker Engine</LinkOut>
+- <LinkOut href='https://docs.docker.com/compose/install/#scenario-two-install-the-compose-plugin'>Docker Compose</LinkOut>
 
 ### Install Nginx and Certbot
 
@@ -81,33 +86,6 @@ Next update the DNS records (A records) to point to the static external IP addre
 :::note
 The example domain and subdomain values are for demonstration purposes only. You must use the actual domain names that you set up with your DNS host.  
 :::
-
-### Install Docker Engine and Docker Compose plugin
-
-Set up Docker's `apt` respository on your Linux-based VM:
-
-```sh
-# Add Docker's official GPG key:
-sudo apt-get update
-sudo apt-get install ca-certificates curl
-sudo install -m 0755 -d /etc/apt/keyrings
-sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
-sudo chmod a+r /etc/apt/keyrings/docker.asc
-
-# Add the repository to Apt sources:
-echo \
-  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
-  $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
-  sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-sudo apt-get update
-
-```
-
-Install the Docker packages:
-
-```sh
-sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-```
 
 ## Configure compose file
 
@@ -476,11 +454,11 @@ Once the Nginx configuration files have been created, set up symbolic links that
 ```sh
 sudo ln -s /etc/nginx/sites-available/admin.conf /etc/nginx/sites-enabled/admin.conf
 
-sudo ln -s /etc/nginx/sites-available/open_payments_auth_server.conf /etc/nginx/sites-enabled/auth.conf
+sudo ln -s /etc/nginx/sites-available/open_payments_auth_server.conf /etc/nginx/sites-enabled/open_payments_auth_server.conf
 
 sudo ln -s /etc/nginx/sites-available/ilp.conf /etc/nginx/sites-enabled/ilp.conf
 
-sudo ln -s /etc/nginx/sites-available/open_payments_resource_server.conf /etc/nginx/sites-enabled/oprs.conf
+sudo ln -s /etc/nginx/sites-available/open_payments_resource_server.conf /etc/nginx/sites-enabled/open_payments_resource_server.conf
 
 ```
 
