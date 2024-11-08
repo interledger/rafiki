@@ -32,7 +32,10 @@ export interface TelemetryService {
     value: number,
     attributes?: Record<string, unknown>
   ): void
-  startTimer(name: string, attributes?: Record<string, unknown>): () => void
+  startTimer(
+    name: string,
+    attributes?: Record<string, unknown>
+  ): (additionalAttributes?: Record<string, unknown>) => void
 }
 
 export interface TelemetryServiceDependencies extends BaseService {
@@ -65,10 +68,6 @@ export class TelemetryServiceImpl implements TelemetryService {
 
   private counters: Map<string, Counter> = new Map()
   private histograms: Map<string, Histogram> = new Map()
-  private timers: Map<
-    string,
-    { start: number; attributes: Record<string, unknown> }
-  > = new Map()
   constructor(private deps: TelemetryServiceDependencies) {
     this.instanceName = deps.instanceName
     this.internalRatesService = deps.internalRatesService
@@ -197,23 +196,13 @@ export class TelemetryServiceImpl implements TelemetryService {
   public recordHistogram(
     name: string,
     value: number,
-    attributes: Record<string, unknown> = {}
+    attributes?: Record<string, unknown>
   ): void {
     const histogram = this.getOrCreateHistogram(name)
     histogram.record(value, {
       source: this.instanceName,
       ...attributes
     })
-  }
-
-  public startTimer(
-    name: string,
-    attributes: Record<string, unknown> = {}
-  ): () => void {
-    const start = Date.now()
-    return () => {
-      this.recordHistogram(name, Date.now() - start, attributes)
-    }
   }
 
   private async convertAmount(
@@ -243,6 +232,17 @@ export class TelemetryServiceImpl implements TelemetryService {
       }
     }
     return converted
+  }
+
+  public startTimer(
+    name: string,
+    attributes: Record<string, unknown> = {}
+  ): (additionalAttributes?: Record<string, unknown>) => void {
+    const start = Date.now()
+    return (additionalAttributes: Record<string, unknown> = {}) => {
+      const mergedAttributes = { ...attributes, ...additionalAttributes }
+      this.recordHistogram(name, Date.now() - start, mergedAttributes)
+    }
   }
 }
 
@@ -296,7 +296,12 @@ export class NoopTelemetryServiceImpl implements TelemetryService {
     return new Map<string, Histogram>()
   }
 
-  startTimer(name: string, attributes?: Record<string, unknown>): () => void {
-    return function () {}
+  public startTimer(
+    name: string,
+    attributes: Record<string, unknown> = {}
+  ): (additionalAttributes?: Record<string, unknown>) => void {
+    return (additionalAttributes?: Record<string, unknown>) => {
+      // do nothing
+    }
   }
 }

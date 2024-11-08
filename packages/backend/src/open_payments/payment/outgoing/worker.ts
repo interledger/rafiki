@@ -19,8 +19,14 @@ export async function processPendingPayment(
   return tracer.startActiveSpan(
     'outgoingPaymentLifecycle',
     async (span: Span) => {
+      const stopTimer = deps_.telemetry.startTimer(
+        'process_pending_payment_ms',
+        {
+          callName: 'OutgoingPaymentWorker:processPendingPayment'
+        }
+      )
       const paymentId = await deps_.knex.transaction(async (trx) => {
-        const payment = await getPendingPayment(trx)
+        const payment = await getPendingPayment(trx, deps_)
         if (!payment) return
 
         await handlePaymentLifecycle(
@@ -37,6 +43,7 @@ export async function processPendingPayment(
         return payment.id
       })
 
+      stopTimer()
       span.end()
       return paymentId
     }
@@ -45,8 +52,12 @@ export async function processPendingPayment(
 
 // Fetch (and lock) a payment for work.
 async function getPendingPayment(
-  trx: Knex.Transaction
+  trx: Knex.Transaction,
+  deps: ServiceDependencies
 ): Promise<OutgoingPayment | undefined> {
+  const stopTimer = deps.telemetry.startTimer('get_pending_payment_ms', {
+    callName: 'OutoingPaymentWorker:getPendingPayment'
+  })
   const now = new Date(Date.now()).toISOString()
   const payments = await OutgoingPayment.query(trx)
     .limit(1)
@@ -65,6 +76,7 @@ async function getPendingPayment(
         )
     })
     .withGraphFetched('[walletAddress, quote.asset]')
+  stopTimer()
   return payments[0]
 }
 
@@ -77,10 +89,15 @@ async function handlePaymentLifecycle(
     return
   }
 
+  const stopTimer = deps.telemetry.startTimer('handle_sending_ms', {
+    callName: 'OutoingPaymentWorker:handleSending'
+  })
   try {
     await lifecycle.handleSending(deps, payment)
   } catch (error) {
     await onLifecycleError(deps, payment, error as Error | PaymentError)
+  } finally {
+    stopTimer()
   }
 }
 

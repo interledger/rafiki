@@ -69,8 +69,8 @@ export const convertToTigerBeetleTransferCode: {
 
 export interface ServiceDependencies extends BaseService {
   tigerBeetle: Client
-  withdrawalThrottleDelay?: number
   telemetry?: TelemetryService
+  withdrawalThrottleDelay?: number
 }
 
 export function createAccountingService(
@@ -220,8 +220,8 @@ export async function getAccountTotalSent(
   deps: ServiceDependencies,
   id: string
 ): Promise<bigint | undefined> {
-  const stopTimer = deps.telemetry?.startTimer('tb_getAccountTotalSent', {
-    callName: 'tb_getAccountTotalSent'
+  const stopTimer = deps.telemetry?.startTimer('tb_get_account_total_sent_ms', {
+    callName: 'AccountingService:Tigerbeetle:getAccountTotalSent'
   })
   const account = (await getAccounts(deps, [id]))[0]
   if (account) {

@@ -53,6 +53,9 @@ export class MockTelemetryService implements TelemetryService {
     return () => undefined
   }
   public async shutdown(): Promise<void> {}
+  public startTimer(): () => void {
+    return () => undefined
+  }
 
   public async convertAmount(
     _convertOptions: Omit<ConvertOptions, 'exchangeRate'>
