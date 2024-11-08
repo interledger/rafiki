@@ -217,7 +217,7 @@ pnpm localenv:compose down --volumes --rmi all
 | `pnpm localenv:compose up`                       | Start (with Tigerbeetle)                         |
 | `pnpm localenv:compose up -d`                    | Start (with Tigerbeetle) detached                |
 | `pnpm localenv:compose down`                     | Down (with Tigerbeetle)                          |
-| `pnpm localenv:compose down --volumes`           | Down and kill volumes (with TigerBeetle)
+| `pnpm localenv:compose down --volumes`           | Down and kill volumes (with TigerBeetle)         |
 | `pnpm localenv:compose down --volumes --rmi all` | Down, kill volumes (with Tigerbeetle) and images |
 | `pnpm localenv:compose:psql config`              | Show all merged config (with Postgresql)         |
 | `pnpm localenv:compose build`                    | Build all the containers (with Tigerbeetle)      |
