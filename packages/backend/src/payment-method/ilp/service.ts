@@ -54,24 +54,50 @@ async function getQuote(
       retryable: false
     })
   }
+  const stopTimerRates = deps.telemetry.startTimer(
+    'ilp_get_quote_rate_time_ms',
+    {
+      callName: 'RateService:rates',
+      description: 'Time to get rates'
+    }
+  )
 
-  const rates = await deps.ratesService
-    .rates(options.walletAddress.asset.code)
-    .catch((_err: Error) => {
-      throw new PaymentMethodHandlerError('Received error during ILP quoting', {
-        description: 'Could not get rates from service',
-        retryable: false
-      })
+  let rates
+  try {
+    rates = await deps.ratesService.rates(options.walletAddress.asset.code)
+  } catch (_err) {
+    throw new PaymentMethodHandlerError('Received error during ILP quoting', {
+      description: 'Could not get rates from service',
+      retryable: false
     })
+  } finally {
+    stopTimerRates()
+  }
 
+  const stopTimerPlugin = deps.telemetry.startTimer(
+    'ilp_make_ilp_plugin_time_ms',
+    {
+      callName: 'PaymentMethod:ILP:makeIlpPlugin',
+      description: 'Time to make ilp plugin'
+    }
+  )
   const plugin = deps.makeIlpPlugin({
     sourceAccount: options.walletAddress,
     unfulfillable: true
   })
+  stopTimerPlugin()
   const destination = options.receiver.toResolvedPayment()
 
   try {
+    const stopTimerConnect = deps.telemetry.startTimer(
+      'ilp_make_ilp_plugin_connect_time_ms',
+      {
+        callName: 'PaymentMethod:ILP:connect',
+        description: 'Time to connect ilp plugin'
+      }
+    )
     await plugin.connect()
+    stopTimerConnect()
     const quoteOptions: Pay.QuoteOptions = {
       plugin,
       destination,
@@ -88,7 +114,10 @@ async function getQuote(
     }
 
     let ilpQuote: Pay.Quote | undefined
-    const rateProbeStartTime = Date.now()
+    const stopTimerProbe = deps.telemetry.startTimer('ilp_rate_probe_time_ms', {
+      callName: 'Pay:startQuote',
+      description: 'Time to get an ILP quote (Pay.startQuote)'
+    })
     try {
       ilpQuote = await Pay.startQuote({
         ...quoteOptions,
@@ -103,17 +132,9 @@ async function getQuote(
         description: Pay.isPaymentError(err) ? err : 'Unknown error',
         retryable: canRetryError(err as Error | Pay.PaymentError)
       })
+    } finally {
+      stopTimerProbe()
     }
-    const payEndTime = Date.now()
-
-    const rateProbeDuraiton = payEndTime - rateProbeStartTime
-    deps.telemetry.recordHistogram(
-      'ilp_rate_probe_time_ms',
-      rateProbeDuraiton,
-      {
-        description: 'Time to get an ILP quote'
-      }
-    )
     // Pay.startQuote should return PaymentError.InvalidSourceAmount or
     // PaymentError.InvalidDestinationAmount for non-positive amounts.
     // Outgoing payments' sendAmount or receiveAmount should never be
@@ -189,6 +210,13 @@ async function getQuote(
       }
     }
   } finally {
+    const stopTimerClose = deps.telemetry.startTimer(
+      'ilp_plugin_close_connect_time_ms',
+      {
+        callName: 'Pay:closeConnection',
+        description: 'Time to close ilp plugin'
+      }
+    )
     try {
       await Pay.closeConnection(plugin, destination)
     } catch (error) {
@@ -199,8 +227,17 @@ async function getQuote(
         },
         'close quote connection failed'
       )
+    } finally {
+      stopTimerClose()
     }
 
+    const stopTimerDisconnect = deps.telemetry.startTimer(
+      'ilp_plugin_disconnect_time_ms',
+      {
+        callName: 'PaymentMethod:ILP:disconnect',
+        description: 'Time to disconnect ilp plugin'
+      }
+    )
     try {
       await plugin.disconnect()
     } catch (error) {
@@ -208,6 +245,8 @@ async function getQuote(
         { error: error instanceof Error && error.message },
         'error disconnecting ilp plugin'
       )
+    } finally {
+      stopTimerDisconnect()
     }
   }
 }

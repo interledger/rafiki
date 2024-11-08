@@ -220,7 +220,7 @@ The following are the most commonly used commands:
 | pnpm localenv:compose up                       | Start (with TigerBeetle)                                          |
 | pnpm localenv:compose up -d                    | Start (with TigerBeetle) detached                                 |
 | pnpm localenv:compose down                     | Down (with TigerBeetle)                                           |
-| pnpm localenv:compose down --volumes           | Down and kill volumes (with TigerBeetle)                          |
+| pnpm localenv:compose down --volumes           | Down and kill volumes (with TigerBeetle)
 | pnpm localenv:compose down --volumes --rmi all | Down, kill volumes (with TigerBeetle) and images                  |
 | pnpm localenv:compose:psql config              | Show all merged config (with PostgreSQL)                          |
 | pnpm localenv:compose build                    | Build all the containers (with TigerBeetle)                       |
@@ -289,10 +289,6 @@ test.rafiki.viXmy1OVHgvmQakNjX1C6kQMri92DzHeISEv-5VzTDuFhrpsrkDzsq5OO9Lfa9yed0L2
 ```
 
 ### Known issues
-
-#### No data in the mock account servicing entities
-
-It is possible that upon starting or restarting the local playground, you may run into an issue where there are no accounts and wallet addresses in the mock account service entities’ pages on [http://localhost:3030](http://localhost:3030) and [http://localhost:3031](http://localhost:3031), respectively. You can only seed the initial account data against an empty database. To seed the database with this initial data, clear the existing volumes and restart the docker containers by issuing the following commands:
 
 #### TigerBeetle container exists with code 137
 

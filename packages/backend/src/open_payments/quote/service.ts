@@ -20,6 +20,7 @@ import {
   PaymentMethodHandlerErrorCode
 } from '../../payment-method/handler/errors'
 import { v4 as uuid } from 'uuid'
+import { TelemetryService } from '../../telemetry/service'
 
 export interface QuoteService extends WalletAddressSubresourceService<Quote> {
   create(options: CreateQuoteOptions): Promise<Quote | QuoteError>
@@ -32,6 +33,7 @@ export interface ServiceDependencies extends BaseService {
   walletAddressService: WalletAddressService
   feeService: FeeService
   paymentMethodHandlerService: PaymentMethodHandlerService
+  telemetry: TelemetryService
 }
 
 export async function createQuoteService(
@@ -82,16 +84,23 @@ async function createQuote(
   deps: ServiceDependencies,
   options: CreateQuoteOptions
 ): Promise<Quote | QuoteError> {
+  const stopTimer = deps.telemetry.startTimer('quote_service_create_time_ms', {
+    callName: 'QuoteService:create',
+    description: 'Time to create a quote'
+  })
   if (options.debitAmount && options.receiveAmount) {
+    stopTimer()
     return QuoteError.InvalidAmount
   }
   const walletAddress = await deps.walletAddressService.get(
     options.walletAddressId
   )
   if (!walletAddress) {
+    stopTimer()
     return QuoteError.UnknownWalletAddress
   }
   if (!walletAddress.isActive) {
+    stopTimer()
     return QuoteError.InactiveWalletAddress
   }
   if (options.debitAmount) {
@@ -100,21 +109,46 @@ async function createQuote(
       options.debitAmount.assetCode !== walletAddress.asset.code ||
       options.debitAmount.assetScale !== walletAddress.asset.scale
     ) {
+      stopTimer()
       return QuoteError.InvalidAmount
     }
   }
   if (options.receiveAmount) {
     if (options.receiveAmount.value <= BigInt(0)) {
+      stopTimer()
       return QuoteError.InvalidAmount
     }
   }
 
   try {
+    const stopTimerReceiver = deps.telemetry.startTimer(
+      'quote_service_create_resolve_receiver_time_ms',
+      {
+        callName: 'QuoteService:resolveReceiver',
+        description: 'Time to resolve receiver'
+      }
+    )
     const receiver = await resolveReceiver(deps, options)
+    stopTimerReceiver()
+
     const paymentMethod = receiver.isLocal ? 'LOCAL' : 'ILP'
     const quoteId = uuid()
 
     return await Quote.transaction(deps.knex, async (trx) => {
+      const stopQuoteCreate = deps.telemetry.startTimer(
+        'quote_service_create_insert_time_ms',
+        {
+          callName: 'QuoteModel.insert',
+          description: 'Time to insert quote'
+        }
+      )
+      const stopTimerQuote = deps.telemetry.startTimer(
+        'quote_service_create_get_quote_time_ms',
+        {
+          callName: 'PaymentMethodHandlerService:getQuote',
+          description: 'Time to getQuote'
+        }
+      )
       const quote = await deps.paymentMethodHandlerService.getQuote(
         paymentMethod,
         {
@@ -126,11 +160,20 @@ async function createQuote(
         },
         trx
       )
+      stopTimerQuote()
 
+      const stopTimerFee = deps.telemetry.startTimer(
+        'quote_service_create_get_latest_fee_time_ms',
+        {
+          callName: 'FeeService:getLatestFee',
+          description: 'Time to getLatestFee'
+        }
+      )
       const sendingFee = await deps.feeService.getLatestFee(
         walletAddress.assetId,
         FeeType.Sending
       )
+      stopTimerFee()
 
       const createdQuote = await Quote.query(trx)
         .insertAndFetch({
@@ -146,8 +189,16 @@ async function createQuote(
           estimatedExchangeRate: quote.estimatedExchangeRate
         })
         .withGraphFetched('[asset, fee, walletAddress]')
+      stopQuoteCreate()
 
-      return await finalizeQuote(
+      const stopFinalize = deps.telemetry.startTimer(
+        'quote_service_finalize_quote_ms',
+        {
+          callName: 'QuoteService:finalizedQuote',
+          description: 'Time to finalize quote'
+        }
+      )
+      const finalizedQuote = await finalizeQuote(
         {
           ...deps,
           knex: trx
@@ -156,6 +207,8 @@ async function createQuote(
         createdQuote,
         receiver
       )
+      stopFinalize()
+      return finalizedQuote
     })
   } catch (err) {
     if (isQuoteError(err)) {
@@ -171,6 +224,8 @@ async function createQuote(
 
     deps.logger.error({ err }, 'error creating a quote')
     throw err
+  } finally {
+    stopTimer()
   }
 }
 
