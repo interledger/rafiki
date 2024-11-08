@@ -203,6 +203,9 @@ To shut down your local instance, run the following commands:
 # tear down
 pnpm localenv:compose down
 
+# tear down and delete database volumes
+pnpm localenv:compose down --volumes
+
 # tear down, delete database volumes and remove images
 pnpm localenv:compose down --volumes --rmi all
 ```
@@ -217,6 +220,7 @@ The following are the most commonly used commands:
 | pnpm localenv:compose up                       | Start (with TigerBeetle)                                          |
 | pnpm localenv:compose up -d                    | Start (with TigerBeetle) detached                                 |
 | pnpm localenv:compose down                     | Down (with TigerBeetle)                                           |
+| pnpm localenv:compose down --volumes           | Down and kill volumes (with TigerBeetle)
 | pnpm localenv:compose down --volumes --rmi all | Down, kill volumes (with TigerBeetle) and images                  |
 | pnpm localenv:compose:psql config              | Show all merged config (with PostgreSQL)                          |
 | pnpm localenv:compose build                    | Build all the containers (with TigerBeetle)                       |
