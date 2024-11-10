@@ -46,7 +46,7 @@
     "npm-run-all2": "^6.1.2",
     "prettier": "^3.2.5",
     "typescript": "^5.4.3",
-    "uuid": "^9.0.1"
+    "uuid": "^11.0.3"
   },
   "dependenciesMeta": {
     "tigerbeetle-node": {
