@@ -143,7 +143,7 @@ Additionally, the [local playground](/integration/playground/overview) contains 
 
 To protect your endpoint from unauthorized or spoofed requests, Rafiki supports an optional, but highly recommended, webhook signature verification process. By enabling signature verification, you can ensure that webhook requests are genuinely from Rafiki.
 
-Each webhook request includes a `Rafiki-Signature` header with a timestamp and signature digest. If you instance is configured with a `SIGNATURE_SECRET` environment variable, you can verify the authenticity of each webhook request using the steps below.
+Each webhook request includes a `Rafiki-Signature` header with a timestamp, version, and signature digest. If you instance is configured with both the `SIGNATURE_SECRET` (to generate the signature) and the `SIGNATURE_VERSION` (to set the version, defaults to v1) environment variables, you can verify the authenticity of each webhook request using the steps below.
 
 ### Extract the timestamp and signature from the header
 
@@ -175,24 +175,29 @@ Use HMAC SHA-256 with the `SIGNATURE_SECRET` environment variable as the key and
 
 ### Compare the signatures
 
-Finally, compare the signature in the header to the expected signature you generated. For security, use a constant-time comparison function to prevent timing attacks. Also, check the timestamp to ensure that it is within the allowed TTL (configured in the `ADMIN_API_SIGNATURE_TTL_SECONDS` environment variable) to ensure freshness.
+Finally, compare the signature in the header to the expected signature you generated. For security, use a constant-time comparison function to prevent timing attacks.
 
 ### Example
-Below is an example in `<YOUR PROGRAMMING LANGUAGE OF CHOICE>` to verify Rafiki's webhook signature:
+Below is an example in JavaScript to verify Rafiki's webhook signature:
 
 <CodeBlock title="Verify webhook signature example">
 
-```
-// Really cool code example in some commonly used language (JavaScript, Python?)
-
-// Extract timestamp and signatures from header
-
-// Prepare the signed payload string
-
-// Generate the expected signature
-
-// Compare the signatures and check the timestamp
-
+```js
+function verifyWebhookSignature(request: Request): boolean {
+  const signatureParts = request.headers['Rafiki-Signature'].split(', ')
+  const timestamp = signatureParts[0].split('=')[1]
+  const signatureVersionAndDigest = signatureParts[1].split('=')
+  const signatureVersion = signatureVersionAndDigest[0].replace('v', '')
+  const signatureDigest = signatureVersionAndDigest[1]
+  if (signatureVersion !== config['SIGNATURE_VERSION']) {
+    return false
+  }
+  const payload = `${timestamp}.${canonicalize(request.body)}`
+  const hmac = createHmac('sha256', config['SIGNATURE_SECRET'])
+  hmac.update(payload)
+  const digest = hmac.digest('hex')
+  return digest === signatureDigest
+}
 ```
 
 </CodeBlock>
