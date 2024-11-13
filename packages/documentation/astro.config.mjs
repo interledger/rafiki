@@ -254,7 +254,11 @@ export default defineConfig({
           ]
         }
       ],
-      plugins: [starlightLinksValidator()]
+      plugins: [
+        starlightLinksValidator({
+          errorOnLocalLinks: false,
+        }),
+      ],
     }),
     GraphQL({
       schema: '../backend/src/graphql/schema.graphql',
