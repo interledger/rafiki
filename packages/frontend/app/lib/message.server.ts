@@ -21,9 +21,10 @@ export const messageStorage = createCookieSessionStorage<
     sameSite: 'lax',
     maxAge: ONE_MINUTE_IN_S,
     secrets: ['MY_SUPER_SECRET_TOKEN'],
-    secure: process.env.ENABLE_INSECURE_MESSAGE_COOKIE
-      ? !parseBool(process.env.ENABLE_INSECURE_MESSAGE_COOKIE)
-      : process.env.NODE_ENV === 'production'
+    secure:
+      process.env.ENABLE_INSECURE_MESSAGE_COOKIE !== undefined
+        ? !parseBool(process.env.ENABLE_INSECURE_MESSAGE_COOKIE)
+        : true
   }
 })
 

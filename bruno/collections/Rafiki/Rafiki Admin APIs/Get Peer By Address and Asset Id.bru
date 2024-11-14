@@ -1,0 +1,42 @@
+meta {
+  name: Get Peer By Address and Asset Id
+  type: graphql
+  seq: 51
+}
+
+post {
+  url: {{RafikiGraphqlHost}}/graphql
+  body: graphql
+  auth: none
+}
+
+body:graphql {
+  query GetPeerByAddressAndAsset($address: String!, $assetId: String!) {
+    peerByAddressAndAsset(staticIlpAddress: $address, assetId: $assetId) {
+      id
+      name
+      http {
+        outgoing {
+          authToken
+          endpoint
+        }
+      }
+      liquidity
+      liquidityThreshold
+    }
+  }
+  
+}
+
+body:graphql:vars {
+  {
+    "address": "test.happy-life-bank",
+    "assetId": "b7acf591-f77f-404b-bb31-d9ac96aba1f9"
+  }
+}
+
+script:pre-request {
+  const scripts = require('./scripts');
+  
+  scripts.addApiSignatureHeader();
+}

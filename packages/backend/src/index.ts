@@ -215,6 +215,7 @@ export function initIocContainer(
     const logger = await deps.use('logger')
     const knex = await deps.use('knex')
     const config = await deps.use('config')
+    const telemetry = await deps.use('telemetry')
 
     if (config.useTigerBeetle) {
       container.singleton('tigerBeetle', async (deps) => {
@@ -231,14 +232,16 @@ export function initIocContainer(
         logger,
         knex,
         tigerBeetle,
-        withdrawalThrottleDelay: config.withdrawalThrottleDelay
+        withdrawalThrottleDelay: config.withdrawalThrottleDelay,
+        telemetry
       })
     }
 
     return createPsqlAccountingService({
       logger,
       knex,
-      withdrawalThrottleDelay: config.withdrawalThrottleDelay
+      withdrawalThrottleDelay: config.withdrawalThrottleDelay,
+      telemetry
     })
   })
   container.singleton('peerService', async (deps) => {
@@ -346,7 +349,8 @@ export function initIocContainer(
       walletAddressService: await deps.use('walletAddressService'),
       remoteIncomingPaymentService: await deps.use(
         'remoteIncomingPaymentService'
-      )
+      ),
+      telemetry: await deps.use('telemetry')
     })
   })
 
@@ -450,7 +454,10 @@ export function initIocContainer(
       receiverService: await deps.use('receiverService'),
       feeService: await deps.use('feeService'),
       walletAddressService: await deps.use('walletAddressService'),
-      paymentMethodHandlerService: await deps.use('paymentMethodHandlerService')
+      paymentMethodHandlerService: await deps.use(
+        'paymentMethodHandlerService'
+      ),
+      telemetry: await deps.use('telemetry')
     })
   })
 
@@ -464,6 +471,7 @@ export function initIocContainer(
 
   container.singleton('outgoingPaymentService', async (deps) => {
     return await createOutgoingPaymentService({
+      config: await deps.use('config'),
       logger: await deps.use('logger'),
       knex: await deps.use('knex'),
       accountingService: await deps.use('accountingService'),

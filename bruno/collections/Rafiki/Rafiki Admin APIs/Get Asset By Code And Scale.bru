@@ -1,0 +1,50 @@
+meta {
+  name: Get Asset By Code And Scale
+  type: graphql
+  seq: 52
+}
+
+post {
+  url: {{RafikiGraphqlHost}}/graphql
+  body: graphql
+  auth: none
+}
+
+body:graphql {
+  query GetAssetByCodeAndScale($code: String!, $scale: UInt8!) {
+    assetByCodeAndScale(code: $code, scale: $scale) {
+      code
+      createdAt
+      id
+      scale
+      withdrawalThreshold
+      liquidityThreshold
+      sendingFee {
+        id
+        type
+        basisPoints
+        fixed
+      }
+      receivingFee {
+        id
+        type
+        basisPoints
+        fixed
+      }
+    }
+  }
+  
+}
+
+body:graphql:vars {
+  {
+      "code": "USD",
+      "scale": 2
+  }
+}
+
+script:pre-request {
+  const scripts = require('./scripts');
+  
+  scripts.addApiSignatureHeader();
+}

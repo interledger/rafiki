@@ -280,6 +280,70 @@ describe('Asset Resolvers', (): void => {
       })
     })
 
+    test('Can get an asset by code and scale', async (): Promise<void> => {
+      const asset = await assetService.create({
+        ...randomAsset(),
+        withdrawalThreshold: BigInt(10),
+        liquidityThreshold: BigInt(100)
+      })
+      assert.ok(!isAssetError(asset))
+      assert.ok(asset.withdrawalThreshold)
+      const args = { code: asset.code, scale: asset.scale }
+      const query = async () =>
+        await appContainer.apolloClient
+          .query({
+            query: gql`
+              query GetAssetByCodeAndScale($code: String!, $scale: UInt8!) {
+                assetByCodeAndScale(code: $code, scale: $scale) {
+                  id
+                  code
+                  scale
+                  liquidity
+                  withdrawalThreshold
+                  liquidityThreshold
+                  createdAt
+                }
+              }
+            `,
+            variables: args
+          })
+          .then((query): Asset => {
+            if (query.data) {
+              return query.data.assetByCodeAndScale
+            } else {
+              throw new Error('Data was empty')
+            }
+          })
+
+      await expect(query()).resolves.toEqual({
+        __typename: 'Asset',
+        id: asset.id,
+        code: asset.code,
+        scale: asset.scale,
+        liquidity: '0',
+        withdrawalThreshold: asset.withdrawalThreshold.toString(),
+        liquidityThreshold: asset.liquidityThreshold?.toString(),
+        createdAt: new Date(+asset.createdAt).toISOString()
+      })
+
+      await accountingService.createDeposit({
+        id: uuid(),
+        account: asset,
+        amount: BigInt(100)
+      })
+
+      await expect(query()).resolves.toEqual({
+        __typename: 'Asset',
+        id: asset.id,
+        code: asset.code,
+        scale: asset.scale,
+        liquidity: '100',
+        withdrawalThreshold: asset.withdrawalThreshold.toString(),
+        liquidityThreshold: asset.liquidityThreshold?.toString(),
+        createdAt: new Date(+asset.createdAt).toISOString()
+      })
+    })
+
     test.each([
       undefined,
       { fixed: BigInt(100), basisPoints: 1000, type: FeeType.Sending },

@@ -155,8 +155,7 @@ export class IncomingPayment
       incomingPayment = await IncomingPayment.query()
         .patchAndFetchById(this.id, {
           state: IncomingPaymentState.Completed,
-          // Add 30 seconds to allow a prepared (but not yet fulfilled/rejected) packet to finish before sending webhook event.
-          processAt: new Date(Date.now() + 30_000)
+          processAt: new Date()
         })
         .whereNotIn('state', [
           IncomingPaymentState.Expired,

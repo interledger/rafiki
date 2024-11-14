@@ -24,7 +24,8 @@ describe('Balances', (): void => {
     appContainer = await createTestApp(deps)
     serviceDeps = {
       logger: await deps.use('logger'),
-      knex: await deps.use('knex')
+      knex: await deps.use('knex'),
+      telemetry: await deps.use('telemetry')
     }
     knex = appContainer.knex
   })

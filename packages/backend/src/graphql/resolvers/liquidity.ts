@@ -440,40 +440,66 @@ export const depositOutgoingPaymentLiquidity: MutationResolvers<ApolloContext>['
     args,
     ctx
   ): Promise<ResolversTypes['LiquidityMutationResponse']> => {
-    const { outgoingPaymentId } = args.input
-    const webhookService = await ctx.container.use('webhookService')
-    const event = await webhookService.getLatestByResourceId({
-      outgoingPaymentId,
-      types: [OutgoingPaymentDepositType.PaymentCreated]
-    })
-    if (!event || !isOutgoingPaymentEvent(event)) {
-      throw new GraphQLError(errorToMessage[LiquidityError.InvalidId], {
-        extensions: {
-          code: errorToCode[LiquidityError.InvalidId]
-        }
-      })
-    }
-
-    if (!event.data.debitAmount) {
-      throw new Error('No debit amount')
-    }
-    const outgoingPaymentService = await ctx.container.use(
-      'outgoingPaymentService'
+    const telemetry = await ctx.container.use('telemetry')
+    const stopTimer = telemetry.startTimer(
+      'deposit_outgoing_payment_liquidity_ms',
+      {
+        callName: 'Resolver:depositOutgoingPaymentLiquidity'
+      }
     )
-    const paymentOrErr = await outgoingPaymentService.fund({
-      id: outgoingPaymentId,
-      amount: BigInt(event.data.debitAmount.value),
-      transferId: event.id
-    })
-    if (isFundingError(paymentOrErr)) {
-      throw new GraphQLError(fundingErrorToMessage[paymentOrErr], {
-        extensions: {
-          code: fundingErrorToCode[paymentOrErr]
-        }
+
+    try {
+      const { outgoingPaymentId } = args.input
+      const webhookService = await ctx.container.use('webhookService')
+      const stopTimerWh = telemetry.startTimer('wh_get_latest_ms', {
+        callName: 'WebhookService:getLatestByResourceId'
       })
-    }
-    return {
-      success: true
+      const event = await webhookService.getLatestByResourceId({
+        outgoingPaymentId,
+        types: [OutgoingPaymentDepositType.PaymentCreated]
+      })
+      stopTimerWh()
+      if (!event || !isOutgoingPaymentEvent(event)) {
+        throw new GraphQLError(errorToMessage[LiquidityError.InvalidId], {
+          extensions: {
+            code: errorToCode[LiquidityError.InvalidId]
+          }
+        })
+      }
+
+      if (!event.data.debitAmount) {
+        throw new Error('No debit amount')
+      }
+      const outgoingPaymentService = await ctx.container.use(
+        'outgoingPaymentService'
+      )
+      const stopTimerFund = telemetry.startTimer('fund_payment_ms', {
+        callName: 'OutgoingPaymentService:fund'
+      })
+      const paymentOrErr = await outgoingPaymentService.fund({
+        id: outgoingPaymentId,
+        amount: BigInt(event.data.debitAmount.value),
+        transferId: event.id
+      })
+      stopTimerFund()
+
+      if (isFundingError(paymentOrErr)) {
+        throw new GraphQLError(fundingErrorToMessage[paymentOrErr], {
+          extensions: {
+            code: fundingErrorToCode[paymentOrErr]
+          }
+        })
+      }
+      return {
+        success: true
+      }
+      // Not a useless catch. Wrapped resolver in try and simply re-throwing
+      // errors to enforce stopTimer always being called once at end of the resolver
+      // eslint-disable-next-line no-useless-catch
+    } catch (err) {
+      throw err
+    } finally {
+      stopTimer()
     }
   }
 

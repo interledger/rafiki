@@ -82,12 +82,16 @@ We strongly recommend you store at least the `walletAddress.id` in your internal
 
 </CodeBlock>
 
-| Variable               | Description                                                                                                                                       |
-| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `assetId`              | The unique ID of the asset, assigned by Rafiki when the asset was created, that the wallet address's underlying payment account is denominated in |
-| `publicName`           | The public name associated with the wallet address                                                                                                |
-| `url`                  | The wallet address's case-insensitive URL                                                                                                         |
-| `additionalProperties` | Optional [additional properties](/apis/graphql/backend/inputobjects/#additionalpropertyinput) associated with the wallet address                  |
+<div class="overflow-table">
+
+|Variable | Description |
+|-------- | ----------- |
+| `assetId` | The unique ID of the asset, assigned by Rafiki when the asset was created, that the wallet address's underlying payment account is denominated in |
+| `publicName` | The public name associated with the wallet address |
+| `url` | The wallet address's case-insensitive URL |
+| `additionalProperties` | Optional [additional properties](/apis/graphql/backend/inputobjects/#additionalpropertyinput) associated with the wallet address |
+
+</div>
 
 <CodeBlock title="Example JSON response">
 
@@ -188,11 +192,15 @@ The request is a standard request to create a JSON Web Key (JWK), which is a JSO
 
 Open Payments <LinkOut href="https://openpayments.dev/apis/wallet-address-server/operations/get-wallet-address-keys/">requires</LinkOut> the following values.
 
-| Parameter | Required value | Description                                                                   |
-| --------- | -------------- | ----------------------------------------------------------------------------- |
-| `alg`     | `EdDSA`        | The algorithm used to generate the key pair                                   |
-| `kty`     | `OKP`          | The key type identifying the cryptographic algorithm family used with the key |
-| `crv`     | `Ed25519`      | The cryptographic curve used with the key                                     |
+<div class="overflow-table">
+
+| Parameter | Required value | Description |
+| --------- | -------------- | ----------- |
+| `alg` | `EdDSA` | The algorithm used to generate the key pair |
+| `kty` | `OKP` | The key type identifying the cryptographic algorithm family used with the key |
+| `crv` | `Ed25519` | The cryptographic curve used with the key |
+
+</div>
 
 Additionally, the request must contain the `walletAddressId` of the wallet address that the key pair will be associated with.
 
@@ -216,6 +224,60 @@ Additionally, the request must contain the `walletAddressId` of the wallet addre
           "kty": "OKP",
           "x": "ubqoInifJ5sssIPPnQR1gVPfmoZnJtPhTkyMXNoJF_8"
         },
+        "createdAt": "2023-03-03T09:26:41.424Z"
+      }
+    }
+  }
+}
+```
+
+</CodeBlock>
+
+## Revoke a wallet address key
+
+Use the `revokeWalletAddressKey` GraphQL mutation to revoke a public key associated with a wallet address. Open Payments requests using this key for request signatures will be denied going forward.
+
+<CodeBlock title='revokeWalletAddressKey mutation'>
+
+```graphql
+mutation RevokeWalletAddressKey($input: RevokeWalletAddressKeyInput!) {
+  revokeWalletAddressKey(input: $input) {
+    walletAddressKey {
+      id
+      revoked
+      walletAddressId
+      createdAt
+    }
+  }
+}
+```
+
+</CodeBlock>
+
+#### Example
+
+<CodeBlock title="Example JSON request">
+
+```json
+{
+  "input": {
+    "id": "e7532552-cff9-4ffe-883e-56613d3ae611"
+  }
+}
+```
+
+</CodeBlock>
+
+<CodeBlock title='Example JSON response'>
+
+```json
+{
+  "data": {
+    "revokeWalletAddressKey": {
+      "walletAddressKey": {
+        "id": "f2953571-f10c-44eb-ab41-4450a7ad6771",
+        "revoked": true,
+        "walletAddressId": "695e7546-1803-4b45-96b6-6a53f4082018",
         "createdAt": "2023-03-03T09:26:41.424Z"
       }
     }
