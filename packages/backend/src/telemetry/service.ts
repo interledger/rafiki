@@ -144,7 +144,7 @@ export class TelemetryServiceImpl implements TelemetryService {
       return
     }
 
-    const diff = BigInt(convertedSource - convertedDestination)
+    const diff = BigInt(convertedSource.amount - convertedDestination.amount)
     if (diff === 0n) return
 
     if (diff < 0n) {

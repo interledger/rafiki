@@ -49,7 +49,10 @@ export const RafikiServicesFactory = Factory.define<MockRafikiServices>(
       await accounting._getByIncomingToken(token)
   }))
   .attr('rates', {
-    convert: async (opts) => opts.sourceAmount,
+    convert: async (opts) => ({
+      amount: opts.sourceAmount,
+      scaledExchangeRate: 1
+    }),
     rates: () => {
       throw new Error('unimplemented')
     }

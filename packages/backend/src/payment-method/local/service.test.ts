@@ -202,7 +202,9 @@ describe('LocalPaymentService', (): void => {
       const ratesService = await deps.use('ratesService')
       jest
         .spyOn(ratesService, 'convert')
-        .mockImplementation(() => Promise.resolve(100n))
+        .mockImplementation(() =>
+          Promise.resolve({ amount: 100n, scaledExchangeRate: 1 })
+        )
       expect.assertions(4)
       try {
         await localPaymentService.getQuote({
@@ -257,7 +259,7 @@ describe('LocalPaymentService', (): void => {
           incomingAssetCode | incomingAmountValue | debitAssetCode | expectedDebitAmount | exchangeRate | description
           ${'USD'}          | ${100n}             | ${'USD'}       | ${100n}             | ${null}      | ${'local currency'}
           ${'EUR'}          | ${100n}             | ${'USD'}       | ${100n}             | ${1.0}       | ${'cross currency, same rate'}
-          ${'EUR'}          | ${100n}             | ${'USD'}       | ${111n}             | ${0.9}       | ${'cross currency, exchange rate < 1'}
+          ${'EUR'}          | ${100n}             | ${'USD'}       | ${112n}             | ${0.9}       | ${'cross currency, exchange rate < 1'}
           ${'EUR'}          | ${100n}             | ${'USD'}       | ${50n}              | ${2.0}       | ${'cross currency, exchange rate > 1'}
         `(
           '$description',
@@ -272,7 +274,7 @@ describe('LocalPaymentService', (): void => {
 
             if (incomingAssetCode !== debitAssetCode) {
               ratesScope = mockRatesApi(exchangeRatesUrl, () => ({
-                [debitAssetCode]: 1 / exchangeRate
+                [incomingAssetCode]: exchangeRate
               }))
             }
 

@@ -314,7 +314,9 @@ describe('Telemetry Service', () => {
           )
         const internalConvertSpy = jest
           .spyOn(internalRatesService, 'convert')
-          .mockImplementation(() => Promise.resolve(10000n))
+          .mockImplementation(() =>
+            Promise.resolve({ amount: 10_000n, scaledExchangeRate: 1 })
+          )
 
         await telemetryService.incrementCounterWithTransactionAmount(
           'test_counter',
@@ -332,7 +334,9 @@ describe('Telemetry Service', () => {
       it('should not call the fallback internalRatesService if aseRatesService call is successful', async () => {
         const aseConvertSpy = jest
           .spyOn(aseRatesService, 'convert')
-          .mockImplementation(() => Promise.resolve(500n))
+          .mockImplementation(() =>
+            Promise.resolve({ amount: 500n, scaledExchangeRate: 1 })
+          )
         const internalConvertSpy = jest.spyOn(internalRatesService, 'convert')
 
         await telemetryService.incrementCounterWithTransactionAmount(

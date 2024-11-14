@@ -81,7 +81,10 @@ describe('Rates service', function () {
           sourceAsset: { code: 'USD', scale: 9 },
           destinationAsset: { code: 'USD', scale: 9 }
         })
-      ).resolves.toBe(1234n)
+      ).resolves.toEqual({
+        amount: 1234n,
+        scaledExchangeRate: 1
+      })
       expect(apiRequestCount).toBe(0)
     })
 
@@ -92,14 +95,20 @@ describe('Rates service', function () {
           sourceAsset: { code: 'USD', scale: 9 },
           destinationAsset: { code: 'USD', scale: 12 }
         })
-      ).resolves.toBe(123_000n)
+      ).resolves.toEqual({
+        amount: 123_000n,
+        scaledExchangeRate: 1000
+      })
       await expect(
         service.convert({
           sourceAmount: 123456n,
           sourceAsset: { code: 'USD', scale: 12 },
           destinationAsset: { code: 'USD', scale: 9 }
         })
-      ).resolves.toBe(123n)
+      ).resolves.toEqual({
+        amount: 123n,
+        scaledExchangeRate: 0.001
+      })
       expect(apiRequestCount).toBe(0)
     })
 
@@ -111,14 +120,20 @@ describe('Rates service', function () {
           sourceAsset: { code: 'USD', scale: 2 },
           destinationAsset: { code: 'EUR', scale: 2 }
         })
-      ).resolves.toBe(BigInt(sourceAmount * exampleRates.USD.EUR))
+      ).resolves.toEqual({
+        amount: BigInt(sourceAmount * exampleRates.USD.EUR),
+        scaledExchangeRate: exampleRates.USD.EUR
+      })
       await expect(
         service.convert({
           sourceAmount: BigInt(sourceAmount),
           sourceAsset: { code: 'EUR', scale: 2 },
           destinationAsset: { code: 'USD', scale: 2 }
         })
-      ).resolves.toBe(BigInt(sourceAmount * exampleRates.EUR.USD))
+      ).resolves.toEqual({
+        amount: BigInt(sourceAmount * exampleRates.EUR.USD),
+        scaledExchangeRate: exampleRates.EUR.USD
+      })
     })
 
     it('returns an error when an asset price is invalid', async () => {
