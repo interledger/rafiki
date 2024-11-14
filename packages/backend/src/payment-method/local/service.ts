@@ -8,7 +8,8 @@ import {
 import {
   ConvertError,
   isConvertError,
-  RateConvertOpts,
+  RateConvertDestinationOpts,
+  RateConvertSourceOpts,
   RatesService
 } from '../../rates/service'
 import { IAppConfig } from '../../config/app'
@@ -66,11 +67,14 @@ async function getQuote(
   let exchangeRate: number
 
   const convert = async (
-    opts: RateConvertOpts
+    opts: RateConvertSourceOpts | RateConvertDestinationOpts
   ): Promise<ConvertResults | ConvertError> => {
     let convertResults: ConvertResults | ConvertError
     try {
-      convertResults = await deps.ratesService.convert(opts)
+      convertResults =
+        'sourceAmount' in opts
+          ? await deps.ratesService.convertSource(opts)
+          : await deps.ratesService.convertDestination(opts)
     } catch (err) {
       deps.logger.error(
         { opts, err },
@@ -114,8 +118,7 @@ async function getQuote(
   } else if (receiveAmount) {
     receiveAmountValue = receiveAmount.value
     const convertResults = await convert({
-      reverseDirection: true,
-      sourceAmount: receiveAmountValue,
+      destinationAmount: receiveAmountValue,
       sourceAsset: {
         code: walletAddress.asset.code,
         scale: walletAddress.asset.scale
@@ -139,8 +142,7 @@ async function getQuote(
   } else if (receiver.incomingAmount) {
     receiveAmountValue = receiver.incomingAmount.value
     const convertResults = await convert({
-      reverseDirection: true,
-      sourceAmount: receiveAmountValue,
+      destinationAmount: receiveAmountValue,
       sourceAsset: {
         code: walletAddress.asset.code,
         scale: walletAddress.asset.scale

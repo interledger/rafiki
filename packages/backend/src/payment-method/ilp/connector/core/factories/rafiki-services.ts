@@ -49,8 +49,12 @@ export const RafikiServicesFactory = Factory.define<MockRafikiServices>(
       await accounting._getByIncomingToken(token)
   }))
   .attr('rates', {
-    convert: async (opts) => ({
+    convertSource: async (opts) => ({
       amount: opts.sourceAmount,
+      scaledExchangeRate: 1
+    }),
+    convertDestination: async (opts) => ({
+      amount: opts.destinationAmount,
       scaledExchangeRate: 1
     }),
     rates: () => {

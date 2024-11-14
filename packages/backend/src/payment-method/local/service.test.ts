@@ -90,7 +90,7 @@ describe('LocalPaymentService', (): void => {
     test('fails on unknown rate service error', async (): Promise<void> => {
       const ratesService = await deps.use('ratesService')
       jest
-        .spyOn(ratesService, 'convert')
+        .spyOn(ratesService, 'convertSource')
         .mockImplementation(() => Promise.reject(new Error('fail')))
 
       expect.assertions(4)
@@ -119,7 +119,7 @@ describe('LocalPaymentService', (): void => {
     test('fails on rate service error', async (): Promise<void> => {
       const ratesService = await deps.use('ratesService')
       jest
-        .spyOn(ratesService, 'convert')
+        .spyOn(ratesService, 'convertSource')
         .mockImplementation(() =>
           Promise.resolve(ConvertError.InvalidDestinationPrice)
         )
@@ -201,7 +201,7 @@ describe('LocalPaymentService', (): void => {
     test('fails if receive amount is non-positive', async (): Promise<void> => {
       const ratesService = await deps.use('ratesService')
       jest
-        .spyOn(ratesService, 'convert')
+        .spyOn(ratesService, 'convertDestination')
         .mockImplementation(() =>
           Promise.resolve({ amount: 100n, scaledExchangeRate: 1 })
         )

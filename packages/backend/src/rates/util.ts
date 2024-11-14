@@ -1,7 +1,14 @@
-export interface ConvertOptions {
+export interface ConvertSourceOptions {
   // The raw exchange rate, not including the scale difference.
   exchangeRate: number
   sourceAmount: bigint
+  sourceAsset: Asset
+  destinationAsset: Asset
+}
+
+export interface ConvertDestinationOptions {
+  exchangeRate: number
+  destinationAmount: bigint
   sourceAsset: Asset
   destinationAsset: Asset
 }
@@ -16,7 +23,7 @@ export interface ConvertResults {
   scaledExchangeRate: number
 }
 
-export function convert(opts: ConvertOptions): ConvertResults {
+export function convertSource(opts: ConvertSourceOptions): ConvertResults {
   const scaleDiff = opts.destinationAsset.scale - opts.sourceAsset.scale
   const scaledExchangeRate = opts.exchangeRate * 10 ** scaleDiff
 
@@ -26,12 +33,16 @@ export function convert(opts: ConvertOptions): ConvertResults {
   }
 }
 
-export function convertReverse(opts: ConvertOptions): ConvertResults {
+export function convertDestination(
+  opts: ConvertDestinationOptions
+): ConvertResults {
   const scaleDiff = opts.sourceAsset.scale - opts.destinationAsset.scale
   const scaledExchangeRate = opts.exchangeRate * 10 ** scaleDiff
 
   return {
-    amount: BigInt(Math.ceil(Number(opts.sourceAmount) / scaledExchangeRate)),
+    amount: BigInt(
+      Math.ceil(Number(opts.destinationAmount) / scaledExchangeRate)
+    ),
     scaledExchangeRate
   }
 }

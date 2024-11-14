@@ -1,4 +1,4 @@
-import { convert, Asset, convertReverse } from './util'
+import { convertSource, Asset, convertDestination } from './util'
 
 describe('Rates util', () => {
   describe('convert', () => {
@@ -20,7 +20,7 @@ describe('Rates util', () => {
           expectedResult
         }): Promise<void> => {
           expect(
-            convert({
+            convertSource({
               exchangeRate,
               sourceAmount,
               sourceAsset: createAsset(assetScale),
@@ -46,7 +46,7 @@ describe('Rates util', () => {
           expectedResult
         }): Promise<void> => {
           expect(
-            convert({
+            convertSource({
               exchangeRate,
               sourceAmount,
               sourceAsset: createAsset(sourceAssetScale),
@@ -60,23 +60,23 @@ describe('Rates util', () => {
   describe('convert reverse', () => {
     describe('convert same scales', () => {
       test.each`
-        exchangeRate | sourceAmount | assetScale | expectedResult                                    | description
-        ${2.0}       | ${100n}      | ${9}       | ${{ amount: 50n, scaledExchangeRate: 2.0 }}       | ${'exchange rate above 1'}
-        ${1.1602}    | ${12345n}    | ${2}       | ${{ amount: 10641n, scaledExchangeRate: 1.1602 }} | ${'exchange rate above 1 with rounding up'}
-        ${0.5}       | ${100n}      | ${9}       | ${{ amount: 200n, scaledExchangeRate: 0.5 }}      | ${'exchange rate below 1'}
-        ${0.8611}    | ${1000n}     | ${2}       | ${{ amount: 1162n, scaledExchangeRate: 0.8611 }}  | ${'exchange rate below 1 with rounding up'}
+        exchangeRate | destinationAmount | assetScale | expectedResult                                    | description
+        ${2.0}       | ${100n}           | ${9}       | ${{ amount: 50n, scaledExchangeRate: 2.0 }}       | ${'exchange rate above 1'}
+        ${1.1602}    | ${12345n}         | ${2}       | ${{ amount: 10641n, scaledExchangeRate: 1.1602 }} | ${'exchange rate above 1 with rounding up'}
+        ${0.5}       | ${100n}           | ${9}       | ${{ amount: 200n, scaledExchangeRate: 0.5 }}      | ${'exchange rate below 1'}
+        ${0.8611}    | ${1000n}          | ${2}       | ${{ amount: 1162n, scaledExchangeRate: 0.8611 }}  | ${'exchange rate below 1 with rounding up'}
       `(
         '$description',
         async ({
           exchangeRate,
-          sourceAmount,
+          destinationAmount,
           assetScale,
           expectedResult
         }): Promise<void> => {
           expect(
-            convertReverse({
+            convertDestination({
               exchangeRate,
-              sourceAmount,
+              destinationAmount,
               sourceAsset: createAsset(assetScale),
               destinationAsset: createAsset(assetScale)
             })
@@ -87,22 +87,22 @@ describe('Rates util', () => {
 
     describe('convert different scales', () => {
       test.each`
-        exchangeRate | sourceAmount | sourceAssetScale | destinationAssetScale | expectedResult                                    | description
-        ${2.0}       | ${100n}      | ${9}             | ${12}                 | ${{ amount: 50_000n, scaledExchangeRate: 0.002 }} | ${'convert scale from low to high'}
-        ${2.0}       | ${100_000n}  | ${12}            | ${9}                  | ${{ amount: 50n, scaledExchangeRate: 2000 }}      | ${'convert scale from high to low'}
+        exchangeRate | destinationAmount | sourceAssetScale | destinationAssetScale | expectedResult                                    | description
+        ${2.0}       | ${100n}           | ${9}             | ${12}                 | ${{ amount: 50_000n, scaledExchangeRate: 0.002 }} | ${'convert scale from low to high'}
+        ${2.0}       | ${100_000n}       | ${12}            | ${9}                  | ${{ amount: 50n, scaledExchangeRate: 2000 }}      | ${'convert scale from high to low'}
       `(
         '$description',
         async ({
           exchangeRate,
-          sourceAmount,
+          destinationAmount,
           sourceAssetScale,
           destinationAssetScale,
           expectedResult
         }): Promise<void> => {
           expect(
-            convertReverse({
+            convertDestination({
               exchangeRate,
-              sourceAmount,
+              destinationAmount,
               sourceAsset: createAsset(sourceAssetScale),
               destinationAsset: createAsset(destinationAssetScale)
             })

@@ -36,7 +36,7 @@ export function createBalanceMiddleware(): ILPMiddleware {
     }
 
     const sourceAmount = BigInt(amount)
-    const destinationAmountOrError = await services.rates.convert({
+    const destinationAmountOrError = await services.rates.convertSource({
       sourceAmount,
       sourceAsset: accounts.incoming.asset,
       destinationAsset: accounts.outgoing.asset

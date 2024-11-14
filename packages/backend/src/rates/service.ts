@@ -1,6 +1,12 @@
 import { BaseService } from '../shared/baseService'
 import Axios, { AxiosInstance, isAxiosError } from 'axios'
-import { convert, convertReverse, ConvertOptions, ConvertResults } from './util'
+import {
+  ConvertResults,
+  ConvertSourceOptions,
+  ConvertDestinationOptions,
+  convertDestination,
+  convertSource
+} from './util'
 import { createInMemoryDataStore } from '../middleware/cache/data-stores/in-memory'
 import { CacheDataStore } from '../middleware/cache/data-stores'
 
@@ -11,13 +17,20 @@ export interface Rates {
   rates: Record<string, number>
 }
 
-export type RateConvertOpts = Omit<ConvertOptions, 'exchangeRate'> & {
-  reverseDirection?: boolean
-}
+export type RateConvertSourceOpts = Omit<ConvertSourceOptions, 'exchangeRate'>
+export type RateConvertDestinationOpts = Omit<
+  ConvertDestinationOptions,
+  'exchangeRate'
+>
 
 export interface RatesService {
   rates(baseAssetCode: string): Promise<Rates>
-  convert(opts: RateConvertOpts): Promise<ConvertResults | ConvertError>
+  convertSource(
+    opts: RateConvertSourceOpts
+  ): Promise<ConvertResults | ConvertError>
+  convertDestination(
+    opts: RateConvertDestinationOpts
+  ): Promise<ConvertResults | ConvertError>
 }
 
 interface ServiceDependencies extends BaseService {
@@ -53,42 +66,48 @@ class RatesServiceImpl implements RatesService {
     this.cachedRates = createInMemoryDataStore(deps.exchangeRatesLifetime)
   }
 
-  async convert(opts: RateConvertOpts): Promise<ConvertResults | ConvertError> {
-    const {
-      reverseDirection = false,
-      sourceAsset,
-      destinationAsset,
-      sourceAmount
-    } = opts
-
+  async convert<T extends RateConvertSourceOpts | RateConvertDestinationOpts>(
+    opts: T,
+    convertFn: (
+      opts: T & { exchangeRate: number }
+    ) => ConvertResults | ConvertError
+  ): Promise<ConvertResults | ConvertError> {
+    const { sourceAsset, destinationAsset } = opts
     const sameCode = sourceAsset.code === destinationAsset.code
     const sameScale = sourceAsset.scale === destinationAsset.scale
-    if (sameCode && sameScale)
-      return { amount: sourceAmount, scaledExchangeRate: 1 }
 
-    const conversionFn = reverseDirection ? convertReverse : convert
+    if (sameCode && sameScale) {
+      const amount =
+        'sourceAmount' in opts ? opts.sourceAmount : opts.destinationAmount
+      return {
+        amount,
+        scaledExchangeRate: 1
+      }
+    }
 
-    if (sameCode)
-      return conversionFn({
-        exchangeRate: 1.0,
-        sourceAsset,
-        destinationAsset,
-        sourceAmount
-      })
+    if (sameCode) {
+      return convertFn({ ...opts, exchangeRate: 1.0 })
+    }
 
     const { rates } = await this.getRates(sourceAsset.code)
-
     const destinationExchangeRate = rates[destinationAsset.code]
     if (!destinationExchangeRate || !isValidPrice(destinationExchangeRate)) {
       return ConvertError.InvalidDestinationPrice
     }
 
-    return conversionFn({
-      exchangeRate: destinationExchangeRate,
-      sourceAsset,
-      destinationAsset,
-      sourceAmount
-    })
+    return convertFn({ ...opts, exchangeRate: destinationExchangeRate })
+  }
+
+  async convertSource(
+    opts: RateConvertSourceOpts
+  ): Promise<ConvertResults | ConvertError> {
+    return this.convert(opts, convertSource)
+  }
+
+  async convertDestination(
+    opts: RateConvertDestinationOpts
+  ): Promise<ConvertResults | ConvertError> {
+    return this.convert(opts, convertDestination)
   }
 
   async rates(baseAssetCode: string): Promise<Rates> {
