@@ -6,6 +6,7 @@ import {
 } from '../../../../../accounting/errors'
 import { Transaction, TransferType } from '../../../../../accounting/service'
 import { Config as AppConfig } from '../../../../../config/app'
+import { isConvertError } from '../../../../../rates/service'
 const { CannotReceiveError, InsufficientLiquidityError } = Errors
 
 export function createBalanceMiddleware(): ILPMiddleware {
@@ -35,13 +36,12 @@ export function createBalanceMiddleware(): ILPMiddleware {
     }
 
     const sourceAmount = BigInt(amount)
-    const destinationAmountOrError = await services.rates.convert({
+    const destinationAmountOrError = await services.rates.convertSource({
       sourceAmount,
       sourceAsset: accounts.incoming.asset,
       destinationAsset: accounts.outgoing.asset
     })
-    if (typeof destinationAmountOrError !== 'bigint') {
-      // ConvertError
+    if (isConvertError(destinationAmountOrError)) {
       logger.error(
         {
           amount,
@@ -55,8 +55,9 @@ export function createBalanceMiddleware(): ILPMiddleware {
         `Exchange rate error: ${destinationAmountOrError}`
       )
     }
+    const { amount: destinationAmount } = destinationAmountOrError
 
-    request.prepare.amount = destinationAmountOrError.toString()
+    request.prepare.amount = destinationAmount.toString()
 
     if (state.unfulfillable) {
       await next()
@@ -71,7 +72,7 @@ export function createBalanceMiddleware(): ILPMiddleware {
         sourceAccount: accounts.incoming,
         destinationAccount: accounts.outgoing,
         sourceAmount,
-        destinationAmount: destinationAmountOrError,
+        destinationAmount,
         transferType: TransferType.TRANSFER,
         timeout: AppConfig.tigerBeetleTwoPhaseTimeout
       }

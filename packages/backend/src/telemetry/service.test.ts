@@ -151,7 +151,7 @@ describe('Telemetry Service', () => {
 
     describe('incrementCounterWithTransactionAmountDifference', () => {
       it('should not record fee when there is no fee value', async () => {
-        const spyAseConvert = jest.spyOn(aseRatesService, 'convert')
+        const spyAseConvert = jest.spyOn(aseRatesService, 'convertSource')
         const spyIncCounter = jest.spyOn(telemetryService, 'incrementCounter')
 
         await telemetryService.incrementCounterWithTransactionAmountDifference(
@@ -173,7 +173,7 @@ describe('Telemetry Service', () => {
       })
 
       it('should not record fee negative fee value', async () => {
-        const spyConvert = jest.spyOn(aseRatesService, 'convert')
+        const spyConvert = jest.spyOn(aseRatesService, 'convertSource')
         const spyIncCounter = jest.spyOn(telemetryService, 'incrementCounter')
 
         await telemetryService.incrementCounterWithTransactionAmountDifference(
@@ -195,7 +195,7 @@ describe('Telemetry Service', () => {
       })
 
       it('should not record zero amounts', async () => {
-        const spyConvert = jest.spyOn(aseRatesService, 'convert')
+        const spyConvert = jest.spyOn(aseRatesService, 'convertSource')
         const spyIncCounter = jest.spyOn(telemetryService, 'incrementCounter')
 
         await telemetryService.incrementCounterWithTransactionAmountDifference(
@@ -217,7 +217,7 @@ describe('Telemetry Service', () => {
       })
 
       it('should record since it is a valid fee', async () => {
-        const spyConvert = jest.spyOn(aseRatesService, 'convert')
+        const spyConvert = jest.spyOn(aseRatesService, 'convertSource')
         const spyIncCounter = jest.spyOn(telemetryService, 'incrementCounter')
 
         const source = {
@@ -261,7 +261,7 @@ describe('Telemetry Service', () => {
       })
 
       it('should record since it is a valid fee for different assets', async () => {
-        const spyConvert = jest.spyOn(aseRatesService, 'convert')
+        const spyConvert = jest.spyOn(aseRatesService, 'convertSource')
         const spyIncCounter = jest.spyOn(telemetryService, 'incrementCounter')
 
         const source = {
@@ -308,13 +308,15 @@ describe('Telemetry Service', () => {
     describe('incrementCounterWithTransactionAmount', () => {
       it('should try to convert using aseRatesService and fallback to internalRatesService', async () => {
         const aseConvertSpy = jest
-          .spyOn(aseRatesService, 'convert')
+          .spyOn(aseRatesService, 'convertSource')
           .mockImplementation(() =>
             Promise.resolve(ConvertError.InvalidDestinationPrice)
           )
         const internalConvertSpy = jest
-          .spyOn(internalRatesService, 'convert')
-          .mockImplementation(() => Promise.resolve(10000n))
+          .spyOn(internalRatesService, 'convertSource')
+          .mockImplementation(() =>
+            Promise.resolve({ amount: 10_000n, scaledExchangeRate: 1 })
+          )
 
         await telemetryService.incrementCounterWithTransactionAmount(
           'test_counter',
@@ -331,9 +333,14 @@ describe('Telemetry Service', () => {
 
       it('should not call the fallback internalRatesService if aseRatesService call is successful', async () => {
         const aseConvertSpy = jest
-          .spyOn(aseRatesService, 'convert')
-          .mockImplementation(() => Promise.resolve(500n))
-        const internalConvertSpy = jest.spyOn(internalRatesService, 'convert')
+          .spyOn(aseRatesService, 'convertSource')
+          .mockImplementation(() =>
+            Promise.resolve({ amount: 500n, scaledExchangeRate: 1 })
+          )
+        const internalConvertSpy = jest.spyOn(
+          internalRatesService,
+          'convertSource'
+        )
 
         await telemetryService.incrementCounterWithTransactionAmount(
           'test_counter',

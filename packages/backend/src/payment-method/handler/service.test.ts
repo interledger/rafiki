@@ -15,12 +15,15 @@ import { createReceiver } from '../../tests/receiver'
 import { IlpPaymentService } from '../ilp/service'
 import { truncateTables } from '../../tests/tableManager'
 import { createOutgoingPaymentWithReceiver } from '../../tests/outgoingPayment'
+import { LocalPaymentService } from '../local/service'
+import { v4 as uuid } from 'uuid'
 
 describe('PaymentMethodHandlerService', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let paymentMethodHandlerService: PaymentMethodHandlerService
   let ilpPaymentService: IlpPaymentService
+  let localPaymentService: LocalPaymentService
 
   beforeAll(async (): Promise<void> => {
     deps = initIocContainer(Config)
@@ -28,6 +31,7 @@ describe('PaymentMethodHandlerService', (): void => {
 
     paymentMethodHandlerService = await deps.use('paymentMethodHandlerService')
     ilpPaymentService = await deps.use('ilpPaymentService')
+    localPaymentService = await deps.use('localPaymentService')
   })
 
   afterEach(async (): Promise<void> => {
@@ -47,6 +51,7 @@ describe('PaymentMethodHandlerService', (): void => {
       })
 
       const options: StartQuoteOptions = {
+        quoteId: uuid(),
         walletAddress,
         receiver: await createReceiver(deps, walletAddress),
         debitAmount: {
@@ -62,7 +67,37 @@ describe('PaymentMethodHandlerService', (): void => {
 
       await paymentMethodHandlerService.getQuote('ILP', options)
 
-      expect(ilpPaymentServiceGetQuoteSpy).toHaveBeenCalledWith(options)
+      expect(ilpPaymentServiceGetQuoteSpy).toHaveBeenCalledWith(
+        options,
+        undefined
+      )
+    })
+    test('calls localPaymentService for local payment type', async (): Promise<void> => {
+      const asset = await createAsset(deps)
+      const walletAddress = await createWalletAddress(deps, {
+        assetId: asset.id
+      })
+
+      const options: StartQuoteOptions = {
+        walletAddress,
+        receiver: await createReceiver(deps, walletAddress),
+        debitAmount: {
+          assetCode: 'USD',
+          assetScale: 2,
+          value: 100n
+        }
+      }
+
+      const localPaymentServiceGetQuoteSpy = jest
+        .spyOn(localPaymentService, 'getQuote')
+        .mockImplementationOnce(jest.fn())
+
+      await paymentMethodHandlerService.getQuote('LOCAL', options)
+
+      expect(localPaymentServiceGetQuoteSpy).toHaveBeenCalledWith(
+        options,
+        undefined
+      )
     })
   })
 
@@ -100,6 +135,40 @@ describe('PaymentMethodHandlerService', (): void => {
       await paymentMethodHandlerService.pay('ILP', options)
 
       expect(ilpPaymentServicePaySpy).toHaveBeenCalledWith(options)
+    })
+    test('calls localPaymentService for local payment type', async (): Promise<void> => {
+      const asset = await createAsset(deps)
+      const walletAddress = await createWalletAddress(deps, {
+        assetId: asset.id
+      })
+      const { receiver, outgoingPayment } =
+        await createOutgoingPaymentWithReceiver(deps, {
+          sendingWalletAddress: walletAddress,
+          receivingWalletAddress: walletAddress,
+          method: 'ilp',
+          quoteOptions: {
+            debitAmount: {
+              assetCode: walletAddress.asset.code,
+              assetScale: walletAddress.asset.scale,
+              value: 100n
+            }
+          }
+        })
+
+      const options: PayOptions = {
+        receiver,
+        outgoingPayment,
+        finalDebitAmount: outgoingPayment.debitAmount.value,
+        finalReceiveAmount: outgoingPayment.receiveAmount.value
+      }
+
+      const localPaymentServicePaySpy = jest
+        .spyOn(localPaymentService, 'pay')
+        .mockImplementationOnce(jest.fn())
+
+      await paymentMethodHandlerService.pay('LOCAL', options)
+
+      expect(localPaymentServicePaySpy).toHaveBeenCalledWith(options)
     })
   })
 })

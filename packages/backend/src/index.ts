@@ -48,6 +48,10 @@ import {
 import { createHttpTokenService } from './payment-method/ilp/peer-http-token/service'
 import { createPeerService } from './payment-method/ilp/peer/service'
 import { createIlpPaymentService } from './payment-method/ilp/service'
+import {
+  createLocalPaymentService,
+  ServiceDependencies as LocalPaymentServiceDependencies
+} from './payment-method/local/service'
 import { createSPSPRoutes } from './payment-method/ilp/spsp/routes'
 import { createStreamCredentialsService } from './payment-method/ilp/stream-credentials/service'
 import { createRatesService } from './rates/service'
@@ -438,11 +442,25 @@ export function initIocContainer(
     })
   })
 
+  container.singleton('localPaymentService', async (deps) => {
+    const serviceDependencies: LocalPaymentServiceDependencies = {
+      logger: await deps.use('logger'),
+      knex: await deps.use('knex'),
+      config: await deps.use('config'),
+      ratesService: await deps.use('ratesService'),
+      accountingService: await deps.use('accountingService'),
+      incomingPaymentService: await deps.use('incomingPaymentService')
+    }
+
+    return createLocalPaymentService(serviceDependencies)
+  })
+
   container.singleton('paymentMethodHandlerService', async (deps) => {
     return createPaymentMethodHandlerService({
       logger: await deps.use('logger'),
       knex: await deps.use('knex'),
-      ilpPaymentService: await deps.use('ilpPaymentService')
+      ilpPaymentService: await deps.use('ilpPaymentService'),
+      localPaymentService: await deps.use('localPaymentService')
     })
   })
 

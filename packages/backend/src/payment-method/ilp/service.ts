@@ -15,6 +15,10 @@ import {
   PaymentMethodHandlerErrorCode
 } from '../handler/errors'
 import { TelemetryService } from '../../telemetry/service'
+import { IlpQuoteDetails } from './quote-details/model'
+import { Transaction } from 'objection'
+
+const MAX_INT64 = BigInt('9223372036854775807')
 
 export interface IlpPaymentService extends PaymentMethodService {}
 
@@ -34,15 +38,22 @@ export async function createIlpPaymentService(
   }
 
   return {
-    getQuote: (quoteOptions) => getQuote(deps, quoteOptions),
+    getQuote: (quoteOptions, trx) => getQuote(deps, quoteOptions, trx),
     pay: (payOptions) => pay(deps, payOptions)
   }
 }
 
 async function getQuote(
   deps: ServiceDependencies,
-  options: StartQuoteOptions
+  options: StartQuoteOptions,
+  trx?: Transaction
 ): Promise<PaymentQuote> {
+  if (!options.quoteId) {
+    throw new PaymentMethodHandlerError('Received error during ILP quoting', {
+      description: 'quoteId is required for ILP quotes',
+      retryable: false
+    })
+  }
   const stopTimerRates = deps.telemetry.startTimer(
     'ilp_get_quote_rate_time_ms',
     {
@@ -171,6 +182,18 @@ async function getQuote(
       })
     }
 
+    await IlpQuoteDetails.query(trx ?? deps.knex).insert({
+      quoteId: options.quoteId,
+      lowEstimatedExchangeRate: ilpQuote.lowEstimatedExchangeRate,
+      highEstimatedExchangeRate: ilpQuote.highEstimatedExchangeRate,
+      minExchangeRate: ilpQuote.minExchangeRate,
+      maxPacketAmount:
+        // Cap at MAX_INT64 because of postgres type limits
+        MAX_INT64 < ilpQuote.maxPacketAmount
+          ? MAX_INT64
+          : ilpQuote.maxPacketAmount
+    })
+
     return {
       receiver: options.receiver,
       walletAddress: options.walletAddress,
@@ -184,12 +207,6 @@ async function getQuote(
         value: ilpQuote.minDeliveryAmount,
         assetCode: options.receiver.assetCode,
         assetScale: options.receiver.assetScale
-      },
-      additionalFields: {
-        lowEstimatedExchangeRate: ilpQuote.lowEstimatedExchangeRate,
-        highEstimatedExchangeRate: ilpQuote.highEstimatedExchangeRate,
-        minExchangeRate: ilpQuote.minExchangeRate,
-        maxPacketAmount: ilpQuote.maxPacketAmount
       }
     }
   } finally {
@@ -255,12 +272,26 @@ async function pay(
     })
   }
 
+  const ilpQuoteDetails = await IlpQuoteDetails.query(deps.knex)
+    .where('quoteId', outgoingPayment.quote.id)
+    .first()
+
+  if (!ilpQuoteDetails) {
+    throw new PaymentMethodHandlerError(
+      'Could not find required ILP Quote Details',
+      {
+        description: 'ILP Quote Details not found',
+        retryable: false
+      }
+    )
+  }
+
   const {
     lowEstimatedExchangeRate,
     highEstimatedExchangeRate,
     minExchangeRate,
     maxPacketAmount
-  } = outgoingPayment.quote
+  } = ilpQuoteDetails
 
   const quote: Pay.Quote = {
     maxPacketAmount,

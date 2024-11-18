@@ -528,7 +528,7 @@ async function validateGrantAndAddSpentAmountsToPayment(
     .andWhereNot({
       id: payment.id
     })
-    .withGraphFetched('[quote.asset]')
+    .withGraphFetched('quote.asset')
 
   if (grantPayments.length === 0) {
     return true
@@ -605,7 +605,7 @@ async function fundPayment(
     const payment = await OutgoingPayment.query(trx)
       .findById(id)
       .forUpdate()
-      .withGraphFetched('[quote.asset]')
+      .withGraphFetched('quote.asset')
     if (!payment) return FundingError.UnknownPayment
     if (payment.state !== OutgoingPaymentState.Funding) {
       return FundingError.WrongState

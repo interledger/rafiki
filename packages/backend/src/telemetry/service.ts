@@ -2,7 +2,7 @@ import { Counter, Histogram, MetricOptions, metrics } from '@opentelemetry/api'
 import { MeterProvider } from '@opentelemetry/sdk-metrics'
 
 import { RatesService, isConvertError } from '../rates/service'
-import { ConvertOptions } from '../rates/util'
+import { ConvertSourceOptions } from '../rates/util'
 import { BaseService } from '../shared/baseService'
 import { privacy } from './privacy'
 
@@ -144,7 +144,7 @@ export class TelemetryServiceImpl implements TelemetryService {
       return
     }
 
-    const diff = BigInt(convertedSource - convertedDestination)
+    const diff = BigInt(convertedSource.amount - convertedDestination.amount)
     if (diff === 0n) return
 
     if (diff < 0n) {
@@ -196,14 +196,14 @@ export class TelemetryServiceImpl implements TelemetryService {
   }
 
   private async convertAmount(
-    convertOptions: Pick<ConvertOptions, 'sourceAmount' | 'sourceAsset'>
+    convertOptions: Pick<ConvertSourceOptions, 'sourceAmount' | 'sourceAsset'>
   ) {
     const destinationAsset = {
       code: this.deps.baseAssetCode,
       scale: this.deps.baseScale
     }
 
-    let converted = await this.aseRatesService.convert({
+    let converted = await this.aseRatesService.convertSource({
       ...convertOptions,
       destinationAsset
     })
@@ -211,7 +211,7 @@ export class TelemetryServiceImpl implements TelemetryService {
       this.deps.logger.error(
         `Unable to convert amount from provided rates: ${converted}`
       )
-      converted = await this.internalRatesService.convert({
+      converted = await this.internalRatesService.convertSource({
         ...convertOptions,
         destinationAsset
       })
