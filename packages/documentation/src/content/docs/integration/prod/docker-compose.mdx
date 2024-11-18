@@ -263,7 +263,7 @@ Create nginx configuration files for every exposed domain:
 | Open Payments resource server | DOMAIN       | myrafiki.com       | /etc/nginx/sites-available/open_payments_resource_server.config |
 | ILP Connector                 | ilp.DOMAIN   | ilp.myrafiki.com   | /etc/nginx/sites-available/ilp.config                           |
 | Open Payments auth server     | auth.DOMAIN  | auth.myrafiki.com  | /etc/nginx/sites-available/open_payments_auth_server.config     |
-| Admin UI                      | admin.DOMAIN | admin.myrafiki.com | /etc/nginx/site-available/admin.config                          |
+| Admin UI                      | admin.DOMAIN | admin.myrafiki.com | /etc/nginx/sites-available/admin.config                          |
 
 </div>
 
@@ -462,9 +462,9 @@ sudo ln -s /etc/nginx/sites-available/open_payments_resource_server.conf /etc/ng
 
 ```
 
-## Deploy with docker compose
+## Deploy with Docker Compose
 
-Deploy the configured Rafiki services with docker compose:
+Deploy the configured Rafiki services with Docker Compose:
 
 ```sh
 docker compose up -d
