@@ -98,6 +98,9 @@ import {
 } from './open_payments/wallet_address/middleware'
 
 import { LoggingPlugin } from './graphql/plugin'
+import { LocalPaymentService } from './payment-method/local/service'
+import { GrantService } from './open_payments/grant/service'
+import { AuthServerService } from './open_payments/authServer/service'
 export interface AppContextData {
   logger: Logger
   container: AppContainer
@@ -213,8 +216,8 @@ const WALLET_ADDRESS_PATH = '/:walletAddressPath+'
 
 export interface AppServices {
   logger: Promise<Logger>
-  telemetry?: Promise<TelemetryService>
-  internalRatesService?: Promise<RatesService>
+  telemetry: Promise<TelemetryService>
+  internalRatesService: Promise<RatesService>
   knex: Promise<Knex>
   axios: Promise<AxiosInstance>
   config: Promise<IAppConfig>
@@ -232,6 +235,8 @@ export interface AppServices {
   incomingPaymentService: Promise<IncomingPaymentService>
   remoteIncomingPaymentService: Promise<RemoteIncomingPaymentService>
   receiverService: Promise<ReceiverService>
+  grantService: Promise<GrantService>
+  authServerService: Promise<AuthServerService>
   streamServer: Promise<StreamServer>
   webhookService: Promise<WebhookService>
   quoteService: Promise<QuoteService>
@@ -250,6 +255,7 @@ export interface AppServices {
   tigerBeetle?: Promise<TigerbeetleClient>
   paymentMethodHandlerService: Promise<PaymentMethodHandlerService>
   ilpPaymentService: Promise<IlpPaymentService>
+  localPaymentService: Promise<LocalPaymentService>
 }
 
 export type AppContainer = IocContract<AppServices>
@@ -573,7 +579,7 @@ export class App {
       createTokenIntrospectionMiddleware({
         requestType: AccessType.IncomingPayment,
         requestAction: RequestAction.Read,
-        bypassError: true
+        canSkipAuthValidation: true
       }),
       authenticatedStatusMiddleware,
       getWalletAddressForSubresource,

@@ -1,0 +1,51 @@
+---
+title: Helm & Kubernetes
+---
+
+import { LinkOut } from '@interledger/docs-design-system'
+
+### Running Rafiki in production
+
+To run Rafiki in your production environment you will need to have the following software and tools installed:
+
+#### Dependencies:
+
+- <LinkOut href='https://kubernetes.io/releases/download/'>Kubernetes</LinkOut>
+- <LinkOut href='https://kubernetes.io/docs/tasks/tools/#kubectl'>
+    kubectl
+  </LinkOut>
+- <LinkOut href='https://helm.sh/docs/intro/install/'>helm</LinkOut>
+
+Rafiki requires an instance of Postgres and Redis instance running with it.
+
+An example Helm Chart including Rafiki, Postgres, and Redis can be found <LinkOut href= 'https://github.com/interledger/rafiki/tree/main/infrastructure/helm/rafiki/'>here</LinkOut>.
+
+Run the following command to install the example Helm Chart above:
+
+```sh
+helm install rafiki PATH_TO_RAFIKI_REPO/infrastructure/helm/rafiki
+```
+
+#### Tigerbeetle
+
+For Rafiki's accounting database, you may opt to run Tigerbeetle in place of Postgres. Though you must run one Postgres instance that's used for the `auth` services and Open Payments resources.
+
+To change the version of Tigerbeetle you must change the respective tag in the <LinkOut href='https://github.com/interledger/rafiki/blob/main/infrastructure/helm/tigerbeetle/values.yaml'>values.yaml</LinkOut> file for Tigerbeetle.
+
+#### Port Forwarding
+
+In the current alpha version of Rafiki, no ports are exposed by default. You can port-forward the frontend (Admin UI) port by running the following:
+
+```sh
+// get list of pod names
+kubectl get pods
+
+// port forward
+kubectl port-forward rafiki-rafiki-frontend-YOUR-SEQUENCE 3010:3010
+```
+
+Now, the Admin UI can be found on localhost:3010.
+
+:::caution
+You must update the environment variable values in the <LinkOut href='https://github.com/interledger/rafiki/blob/main/infrastructure/helm/rafiki/values.yaml'>values.yaml</LinkOut> file before you deploy to a production environment
+:::

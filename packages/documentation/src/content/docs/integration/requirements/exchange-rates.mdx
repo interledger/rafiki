@@ -1,0 +1,113 @@
+---
+title: Exchange rates
+---
+
+import { Badge } from '@astrojs/starlight/components'
+import { Mermaid, CodeBlock, LinkOut } from '@interledger/docs-design-system'
+
+If you plan to support cross-currency transactions, you must specify from where your Rafiki instance will fetch current exchange rates.
+
+Every Interledger payment is preceded by a rate probe. This probe provides a quote that estimates the full cost of transferring value over the network. For a rate probe involving a cross-currency transaction to be successful, Rafiki needs to know the exchange rates for each currency that makes up the transaction.
+
+Often, it's the receiving ASE that provides the exchange rates for each ILP packet. For example, let's say you and your peer transact in USD. Your peer also supports MXN. If a USD payment from from your side was addressed to a wallet address set up for MXN on your peer's side, then your peer would provide the USD to MXN exchange rate.
+
+## Specify your exchange rates endpoint
+
+Rafiki fetches exchange rates from your exchange rates endpoint. Set your endpoint via the `backend` service's `EXCHAGE_RATES_URL` variable. An <LinkOut href="https://github.com/interledger/rafiki/blob/main/packages/backend/src/openapi/specs/exchange-rates.yaml">OpenAPI specification</LinkOut> for the endpoint is available.
+
+<CodeBlock title='Example'>
+
+```
+EXCHANGE_RATES_URL: http://cloud-nine-wallet/rates
+```
+
+</CodeBlock>
+
+The endpoint must accept <Badge text="GET" variant="note" size="medium"/> requests and respond as follows.
+
+<CodeBlock title='Example API request'>
+
+```
+GET https://cloud-nine-wallet/rates
+```
+
+</CodeBlock>
+
+<CodeBlock title='Example API response'>
+
+```
+{
+    "base": "USD",
+    "rates": {
+        "EUR": 0.813399,
+    }
+}
+```
+
+</CodeBlock>
+
+### Response objects
+
+<div class="overflow-table">
+
+| Variable             | Type   | Description                                                                                                                        | Required |
+| -------------------- | ------ | ---------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| `base`               | String | The asset code represented as an <LinkOut href="https://en.wikipedia.org/wiki/ISO_4217">ISO 4217</LinkOut> currency code, e.g. USD | Y        |
+| `rates`              | Object | Object containing `<asset_code : exchange_rate>` pairs, e.g. `{EUR: 0.8930}`                                                       | Y        |
+| `rates.<asset_code>` | Number | The exchange rate given `base` and `<asset_code>`                                                                                  | Y        |
+
+</div>
+
+## Specify rate caching duration (optional)
+
+Specify how long your Rafiki instance will cache exchange rates via the `backend` service's `EXCHANGE_RATES_LIFETIME` variable or use the default setting of `15_000` ms (15 seconds).
+
+Caching improves performance as Rafiki will not need to request the rates from your endpoint for every payment.
+
+## Specify slippage (optional)
+
+As exchange rates and fees charged by connectors fluctuate, there will likely be a variance between the estimated amount provided in the quote and the actual amount required when the payment is initiated. This difference is called slippage.
+
+Set your allowed slippage rate to a value between 0 and 1 via the `backend` service's `SLIPPAGE` variable or use the default setting of `0.01` (1%).
+
+<CodeBlock title='Example'>
+
+```
+SLIPPAGE: 0.05
+```
+
+</CodeBlock>
+
+### Example
+
+Let's say your Rafiki instance is using the default slippage of `0.01` (1%). The rate probe that precedes a USD payment returns a quote of `$1.00`. One percent of one dollar equals one cent.
+
+If the total of the payment, inclusive of currency exchange rates and network fees, amounts to `$1.01`, the payment will be successful. If the total is `$1.02` or more, the payment will fail.
+
+Below is a minimalistic example of a successful (200) response.
+
+```json
+export function loader({ request }: LoaderFunctionArgs) {
+  const base = new URL(request.url).searchParams.get('base') || 'USD'
+
+  return json(
+    {
+      base,
+      rates: config.seed.rates[base] || {}
+    },
+    { status: 200 }
+  )
+}
+```
+
+## Environment variables
+
+<div class="overflow-table">
+
+| Variable                  | Type      | Description                                                                                     | Required |
+| ------------------------- | --------- | ----------------------------------------------------------------------------------------------- | -------- |
+| `EXCHANGE_RATES_URL`      | `backend` | Your exchange rates endpoint                                                                    | Y        |
+| `EXCHANGE_RATES_LIFETIME` | `backend` | The amount of time Rafiki caches exchange rates, in ms                                          | Y        |
+| `SLIPPAGE`                | `backend` | The variance allowed between a quote and the actual amount required when a payment is initiated | Y        |
+
+</div>

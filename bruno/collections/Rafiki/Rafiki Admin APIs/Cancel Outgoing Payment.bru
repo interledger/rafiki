@@ -1,7 +1,7 @@
 meta {
   name: Cancel Outgoing Payment
   type: graphql
-  seq: 43
+  seq: 46
 }
 
 post {
@@ -22,11 +22,8 @@ body:graphql {
         quote {
           createdAt
           expiresAt
-          highEstimatedExchangeRate
           id
-          lowEstimatedExchangeRate
-          maxPacketAmount
-          minExchangeRate
+          estimatedExchangeRate
           walletAddressId
           receiveAmount {
             assetCode

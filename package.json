@@ -22,6 +22,7 @@
     "localenv:compose": "docker compose -f ./localenv/cloud-nine-wallet/docker-compose.yml -f ./localenv/happy-life-bank/docker-compose.yml -f ./localenv/merged/docker-compose.yml -f ./localenv/tigerbeetle/docker-compose.yml --env-file ./localenv/tigerbeetle/.env.tigerbeetle",
     "localenv:compose:psql:telemetry": "docker compose -f ./localenv/cloud-nine-wallet/docker-compose.yml -f ./localenv/happy-life-bank/docker-compose.yml -f ./localenv/merged/docker-compose.yml -f ./localenv/telemetry/docker-compose.yml",
     "localenv:compose:telemetry": "docker compose -f ./localenv/cloud-nine-wallet/docker-compose.yml -f ./localenv/happy-life-bank/docker-compose.yml -f ./localenv/merged/docker-compose.yml -f ./localenv/tigerbeetle/docker-compose.yml -f ./localenv/telemetry/docker-compose.yml --env-file ./localenv/tigerbeetle/.env.tigerbeetle",
+    "localenv:compose:adminauth": "docker compose -f ./localenv/cloud-nine-wallet/docker-compose.yml -f ./localenv/happy-life-bank/docker-compose.yml -f ./localenv/merged/docker-compose.yml -f ./localenv/admin-auth/docker-compose.yml",
     "localenv:seed:auth": "pnpm -C ./packages/auth knex seed:run --env=development && pnpm -C ./packages/auth knex seed:run --env=peerdevelopment",
     "sanity": "pnpm -r build && pnpm -r test",
     "localenv:compose:autopeer": "run-p tunnel:start wait-tunnel:localenv:compose",
@@ -33,12 +34,12 @@
   },
   "devDependencies": {
     "@jest/types": "^29.6.3",
-    "@swc/jest": "^0.2.36",
-    "@types/jest": "^29.5.12",
+    "@swc/jest": "^0.2.37",
+    "@types/jest": "^29.5.14",
     "@typescript-eslint/eslint-plugin": "^7.3.1",
     "@typescript-eslint/parser": "^7.3.1",
     "dotenv": "^16.4.5",
-    "eslint": "^8.57.0",
+    "eslint": "^8.57.1",
     "eslint-config-prettier": "^9.1.0",
     "jest": "^29.7.0",
     "localtunnel": "^2.0.2",
@@ -76,7 +77,8 @@
       "undici@<=5.28.2": ">=5.28.3",
       "tar@<6.2.1": ">=6.2.1",
       "braces@<3.0.3": ">=3.0.3",
-      "@grpc/grpc-js@>=1.10.0 <1.10.9": ">=1.10.9"
+      "@grpc/grpc-js@>=1.10.0 <1.10.9": ">=1.10.9",
+      "dset@<3.1.4": ">=3.1.4"
     }
   }
 }

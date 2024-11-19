@@ -26,10 +26,6 @@
   - changed-files:
     - any-glob-to-any-file: '.github/**/*'
 
-'type: documentation':
-  - changed-files:
-    - any-glob-to-any-file: 'packages/documentation/**/*.md*'
-
 'type: source':
   - changed-files:
     - any-glob-to-any-file: ['packages/backend/src/**/*', 'packages/frontend/src/**/*', 'packages/auth/src/**/*']

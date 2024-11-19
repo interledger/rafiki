@@ -6,6 +6,7 @@ import { initIocContainer } from '../'
 import { AppServices } from '../app'
 import { CacheDataStore } from '../middleware/cache/data-stores'
 import { mockRatesApi } from '../tests/rates'
+import { AxiosInstance } from 'axios'
 
 const nock = (global as unknown as { nock: typeof import('nock') }).nock
 
@@ -58,7 +59,7 @@ describe('Rates service', function () {
     await appContainer.shutdown()
   })
 
-  describe('convert', () => {
+  describe('convertSource', () => {
     beforeAll(() => {
       mockRatesApi(exchangeRatesUrl, (base) => {
         apiRequestCount++
@@ -75,68 +76,83 @@ describe('Rates service', function () {
 
     it('returns the source amount when assets are alike', async () => {
       await expect(
-        service.convert({
+        service.convertSource({
           sourceAmount: 1234n,
           sourceAsset: { code: 'USD', scale: 9 },
           destinationAsset: { code: 'USD', scale: 9 }
         })
-      ).resolves.toBe(1234n)
+      ).resolves.toEqual({
+        amount: 1234n,
+        scaledExchangeRate: 1
+      })
       expect(apiRequestCount).toBe(0)
     })
 
     it('scales the source amount when currencies are alike but scales are different', async () => {
       await expect(
-        service.convert({
+        service.convertSource({
           sourceAmount: 123n,
           sourceAsset: { code: 'USD', scale: 9 },
           destinationAsset: { code: 'USD', scale: 12 }
         })
-      ).resolves.toBe(123_000n)
+      ).resolves.toEqual({
+        amount: 123_000n,
+        scaledExchangeRate: 1000
+      })
       await expect(
-        service.convert({
+        service.convertSource({
           sourceAmount: 123456n,
           sourceAsset: { code: 'USD', scale: 12 },
           destinationAsset: { code: 'USD', scale: 9 }
         })
-      ).resolves.toBe(123n)
+      ).resolves.toEqual({
+        amount: 123n,
+        scaledExchangeRate: 0.001
+      })
       expect(apiRequestCount).toBe(0)
     })
 
     it('returns the converted amount when assets are different', async () => {
       const sourceAmount = 500
       await expect(
-        service.convert({
+        service.convertSource({
           sourceAmount: BigInt(sourceAmount),
           sourceAsset: { code: 'USD', scale: 2 },
           destinationAsset: { code: 'EUR', scale: 2 }
         })
-      ).resolves.toBe(BigInt(sourceAmount * exampleRates.USD.EUR))
+      ).resolves.toEqual({
+        amount: BigInt(sourceAmount * exampleRates.USD.EUR),
+        scaledExchangeRate: exampleRates.USD.EUR
+      })
       await expect(
-        service.convert({
+        service.convertSource({
           sourceAmount: BigInt(sourceAmount),
           sourceAsset: { code: 'EUR', scale: 2 },
           destinationAsset: { code: 'USD', scale: 2 }
         })
-      ).resolves.toBe(BigInt(sourceAmount * exampleRates.EUR.USD))
+      ).resolves.toEqual({
+        amount: BigInt(sourceAmount * exampleRates.EUR.USD),
+        scaledExchangeRate: exampleRates.EUR.USD
+      })
     })
 
     it('returns an error when an asset price is invalid', async () => {
       await expect(
-        service.convert({
+        service.convertSource({
           sourceAmount: 1234n,
           sourceAsset: { code: 'USD', scale: 2 },
           destinationAsset: { code: 'MISSING', scale: 2 }
         })
       ).resolves.toBe(ConvertError.InvalidDestinationPrice)
       await expect(
-        service.convert({
+        service.convertSource({
           sourceAmount: 1234n,
           sourceAsset: { code: 'USD', scale: 2 },
           destinationAsset: { code: 'ZERO', scale: 2 }
         })
       ).resolves.toBe(ConvertError.InvalidDestinationPrice)
       await expect(
-        service.convert({
+        service.convertSource({
           sourceAmount: 1234n,
           sourceAsset: { code: 'USD', scale: 2 },
           destinationAsset: { code: 'NEGATIVE', scale: 2 }
@@ -214,23 +230,27 @@ describe('Rates service', function () {
       expect(apiRequestCount).toBe(2)
     })
 
-    it('prefetches when the cached request is old', async () => {
+    it('returns new rates after cache expires', async () => {
       await expect(service.rates('USD')).resolves.toEqual(usdRates)
-      jest.advanceTimersByTime(exchangeRatesLifetime * 0.5 + 1)
-      // ... cache isn't expired yet, but it will be soon
+      jest.advanceTimersByTime(exchangeRatesLifetime + 1)
       await expect(service.rates('USD')).resolves.toEqual(usdRates)
-      expect(apiRequestCount).toBe(1)
-
-      // Invalidate the cache.
-      jest.advanceTimersByTime(exchangeRatesLifetime * 0.5 + 1)
-      await expect(service.rates('USD')).resolves.toEqual(usdRates)
-      // The prefetch response is promoted to the cache.
       expect(apiRequestCount).toBe(2)
     })
 
-    it('cannot use an expired cache', async () => {
-      await expect(service.rates('USD')).resolves.toEqual(usdRates)
-      jest.advanceTimersByTime(exchangeRatesLifetime + 1)
+    it('returns rates on second request (first one was error)', async () => {
+      jest
+        .spyOn(
+          (service as RatesService & { axios: AxiosInstance }).axios,
+          'get'
+        )
+        .mockImplementationOnce(() => {
+          apiRequestCount++
+          throw new Error()
+        })
+
+      await expect(service.rates('USD')).rejects.toThrow(
+        'Could not fetch rates'
+      )
       await expect(service.rates('USD')).resolves.toEqual(usdRates)
       expect(apiRequestCount).toBe(2)
     })

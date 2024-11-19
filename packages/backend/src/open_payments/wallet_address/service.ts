@@ -1,7 +1,8 @@
 import {
   ForeignKeyViolationError,
   TransactionOrKnex,
-  NotFoundError
+  NotFoundError,
+  UniqueViolationError
 } from 'objection'
 import { URL } from 'url'
 
@@ -166,7 +167,7 @@ async function createWalletAddress(
 
     return await WalletAddress.query(deps.knex)
       .insertGraphAndFetch({
-        url: options.url,
+        url: options.url.toLowerCase(),
         publicName: options.publicName,
         assetId: options.assetId,
         additionalProperties: additionalProperties
@@ -176,6 +177,11 @@ async function createWalletAddress(
     if (err instanceof ForeignKeyViolationError) {
       if (err.constraint === 'walletaddresses_assetid_foreign') {
         return WalletAddressError.UnknownAsset
+      }
+    }
+    if (err instanceof UniqueViolationError) {
+      if (err.constraint === 'walletaddresses_url_unique') {
+        return WalletAddressError.DuplicateWalletAddress
       }
     }
     throw err
@@ -296,7 +302,7 @@ async function getWalletAddressByUrl(
   url: string
 ): Promise<WalletAddress | undefined> {
   const walletAddress = await WalletAddress.query(deps.knex)
-    .findOne({ url })
+    .findOne({ url: url.toLowerCase() })
     .withGraphFetched('asset')
   return walletAddress || undefined
 }

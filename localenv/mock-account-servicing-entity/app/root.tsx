@@ -114,9 +114,9 @@ export default function App() {
             This is an example application for an{' '}
             <Link
               className='cursor-pointer font-bold'
-              to='https://rafiki.dev/concepts/account-servicing-entity/'
+              to='https://rafiki.dev/resources/glossary#account-servicing-entity-ase'
             >
-              [Account Servicing Entity]
+              [account servicing entity]
             </Link>
             , used for demonstration & internal development purposes only.
           </div>

@@ -132,6 +132,18 @@ export const Config = {
 
   incomingPaymentWorkers: envInt('INCOMING_PAYMENT_WORKERS', 1),
   incomingPaymentWorkerIdle: envInt('INCOMING_PAYMENT_WORKER_IDLE', 200), // milliseconds
+  pollIncomingPaymentCreatedWebhook: envBool(
+    'POLL_INCOMING_PAYMENT_CREATED_WEBHOOK',
+    false
+  ),
+  incomingPaymentCreatedPollTimeout: envInt(
+    'INCOMING_PAYMENT_CREATED_POLL_TIMEOUT_MS',
+    10000
+  ), // milliseconds
+  incomingPaymentCreatedPollFrequency: envInt(
+    'INCOMING_PAYMENT_CREATED_POLL_FREQUENCY_MS',
+    1000
+  ), // milliseconds
 
   webhookWorkers: envInt('WEBHOOK_WORKERS', 1),
   webhookWorkerIdle: envInt('WEBHOOK_WORKER_IDLE', 200), // milliseconds
@@ -175,7 +187,11 @@ export const Config = {
     'INCOMING_PAYMENT_EXPIRY_MAX_MS',
     2592000000
   ), // 30 days
-  enableSpspPaymentPointers: envBool('ENABLE_SPSP_PAYMENT_POINTERS', true)
+  enableSpspPaymentPointers: envBool('ENABLE_SPSP_PAYMENT_POINTERS', true),
+  maxOutgoingPaymentRetryAttempts: envInt(
+    'MAX_OUTGOING_PAYMENT_RETRY_ATTEMPTS',
+    5
+  )
 }
 
 function parseRedisTlsConfig(

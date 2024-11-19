@@ -29,7 +29,8 @@ services:
       - ../cloud-nine-wallet/seed.yml:/workspace/seed.yml
       - ../cloud-nine-wallet/private-key.pem:/workspace/private-key.pem
     depends_on:
-      - cloud-nine-backend
+      cloud-nine-backend:
+        condition: service_healthy
   cloud-nine-backend:
     hostname: cloud-nine-wallet-backend
     image: rafiki-backend
@@ -78,6 +79,13 @@ services:
     depends_on:
       - shared-database
       - shared-redis
+    healthcheck:
+      test: ["CMD", "wget", "--header=apollo-require-preflight: true", "http://localhost:3001/graphql?query=%7B__typename%7D", "-O", "/dev/null"]
+      start_period: 60s
+      start_interval: 5s
+      interval: 30s
+      retries: 1
+      timeout: 3s
   cloud-nine-auth:
     hostname: cloud-nine-wallet-auth
     image: rafiki-auth
@@ -151,36 +159,11 @@ services:
       GRAPHQL_URL: http://cloud-nine-wallet-backend:3001/graphql
       OPEN_PAYMENTS_URL: https://cloud-nine-wallet-backend/
       ENABLE_INSECURE_MESSAGE_COOKIE: true
-      KRATOS_CONTAINER_PUBLIC_URL: 'http://cloud-nine-kratos:4433'
-      KRATOS_BROWSER_PUBLIC_URL: 'http://localhost:4433'
-      KRATOS_ADMIN_URL: 'http://cloud-nine-kratos:4434/admin'
+      AUTH_ENABLED: false      
       SIGNATURE_VERSION: 1
       SIGNATURE_SECRET: iyIgCprjb9uL8wFckR+pLEkJWMB7FJhgkvqhTQR/964=
     depends_on:
       - cloud-nine-backend
-      - cloud-nine-kratos
-  cloud-nine-kratos:
-    build:
-      context: ../..
-      dockerfile: ./packages/frontend/kratos/Dockerfile
-      args:
-        PATH_TO_KRATOS_CONFIG: ./localenv/cloud-nine-wallet/kratos.yml
-    depends_on:
-      - shared-database
-      - mailslurper
-    environment:
-      DEV_MODE: true
-    ports:
-      - "4433:4433"
-    networks:
-      - rafiki
-  mailslurper:
-    image: oryd/mailslurper:latest-smtps
-    ports:
-      - "4436:4436"
-      - "4437:4437"
-    networks:
-      - rafiki
 
 volumes:
   database-data: # named volumes can be managed easier using docker-compose

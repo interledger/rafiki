@@ -2,7 +2,7 @@ import { Counter, Histogram, MetricOptions, metrics } from '@opentelemetry/api'
 import { MeterProvider } from '@opentelemetry/sdk-metrics'
 
 import { RatesService, isConvertError } from '../rates/service'
-import { ConvertOptions } from '../rates/util'
+import { ConvertSourceOptions } from '../rates/util'
 import { BaseService } from '../shared/baseService'
 import { privacy } from './privacy'
 
@@ -30,9 +30,13 @@ export interface TelemetryService {
     value: number,
     attributes?: Record<string, unknown>
   ): void
+  startTimer(
+    name: string,
+    attributes?: Record<string, unknown>
+  ): (additionalAttributes?: Record<string, unknown>) => void
 }
 
-interface TelemetryServiceDependencies extends BaseService {
+export interface TelemetryServiceDependencies extends BaseService {
   instanceName: string
   collectorUrls: string[]
   exportIntervalMillis?: number
@@ -50,7 +54,11 @@ export function createTelemetryService(
   return new TelemetryServiceImpl(deps)
 }
 
-class TelemetryServiceImpl implements TelemetryService {
+export function createNoopTelemetryService(): TelemetryService {
+  return new NoopTelemetryServiceImpl()
+}
+
+export class TelemetryServiceImpl implements TelemetryService {
   private instanceName: string
   private meterProvider?: MeterProvider
   private internalRatesService: RatesService
@@ -136,7 +144,7 @@ class TelemetryServiceImpl implements TelemetryService {
       return
     }
 
-    const diff = BigInt(convertedSource - convertedDestination)
+    const diff = BigInt(convertedSource.amount - convertedDestination.amount)
     if (diff === 0n) return
 
     if (diff < 0n) {
@@ -178,7 +186,7 @@ class TelemetryServiceImpl implements TelemetryService {
   public recordHistogram(
     name: string,
     value: number,
-    attributes: Record<string, unknown> = {}
+    attributes?: Record<string, unknown>
   ): void {
     const histogram = this.getOrCreateHistogram(name)
     histogram.record(value, {
@@ -188,14 +196,14 @@ class TelemetryServiceImpl implements TelemetryService {
   }
 
   private async convertAmount(
-    convertOptions: Pick<ConvertOptions, 'sourceAmount' | 'sourceAsset'>
+    convertOptions: Pick<ConvertSourceOptions, 'sourceAmount' | 'sourceAsset'>
   ) {
     const destinationAsset = {
       code: this.deps.baseAssetCode,
       scale: this.deps.baseScale
     }
 
-    let converted = await this.aseRatesService.convert({
+    let converted = await this.aseRatesService.convertSource({
       ...convertOptions,
       destinationAsset
     })
@@ -203,7 +211,7 @@ class TelemetryServiceImpl implements TelemetryService {
       this.deps.logger.error(
         `Unable to convert amount from provided rates: ${converted}`
       )
-      converted = await this.internalRatesService.convert({
+      converted = await this.internalRatesService.convertSource({
         ...convertOptions,
         destinationAsset
       })
@@ -214,5 +222,68 @@ class TelemetryServiceImpl implements TelemetryService {
       }
     }
     return converted
+  }
+
+  public startTimer(
+    name: string,
+    attributes: Record<string, unknown> = {}
+  ): (additionalAttributes?: Record<string, unknown>) => void {
+    const start = Date.now()
+    return (additionalAttributes: Record<string, unknown> = {}) => {
+      const mergedAttributes = { ...attributes, ...additionalAttributes }
+      this.recordHistogram(name, Date.now() - start, mergedAttributes)
+    }
+  }
+}
+
+/* eslint-disable @typescript-eslint/no-unused-vars */
+export class NoopTelemetryServiceImpl implements TelemetryService {
+  constructor() {}
+
+  public async shutdown(): Promise<void> {
+    // do nothing
+  }
+
+  public incrementCounter(
+    name: string,
+    value: number,
+    attributes?: Record<string, unknown>
+  ): void {
+    // do nothing
+  }
+
+  public recordHistogram(
+    name: string,
+    value: number,
+    attributes?: Record<string, unknown>
+  ): void {
+    // do nothing
+  }
+
+  public async incrementCounterWithTransactionAmountDifference(
+    name: string,
+    amountSource: { value: bigint; assetCode: string; assetScale: number },
+    amountDestination: { value: bigint; assetCode: string; assetScale: number },
+    attributes?: Record<string, unknown>
+  ): Promise<void> {
+    // do nothing
+  }
+
+  public async incrementCounterWithTransactionAmount(
+    name: string,
+    amount: { value: bigint; assetCode: string; assetScale: number },
+    attributes: Record<string, unknown> = {},
+    preservePrivacy = true
+  ): Promise<void> {
+    // do nothing
+  }
+
+  public startTimer(
+    name: string,
+    attributes: Record<string, unknown> = {}
+  ): (additionalAttributes?: Record<string, unknown>) => void {
+    return (additionalAttributes?: Record<string, unknown>) => {
+      // do nothing
+    }
   }
 }

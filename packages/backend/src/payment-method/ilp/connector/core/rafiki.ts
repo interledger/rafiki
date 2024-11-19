@@ -21,6 +21,11 @@ import {
   createIlpPacketMiddleware
 } from './middleware/ilp-packet'
 import { TelemetryService } from '../../../../telemetry/service'
+import {
+  incrementPreparePacketCount,
+  incrementFulfillOrRejectPacketCount,
+  incrementAmount
+} from './telemetry'
 
 // Model classes that represent an Interledger sender, receiver, or
 // connector SHOULD implement this ConnectorAccount interface.
@@ -58,7 +63,7 @@ export interface TransferOptions {
 export interface RafikiServices {
   //router: Router
   accounting: AccountingService
-  telemetry?: TelemetryService
+  telemetry: TelemetryService
   walletAddresses: WalletAddressService
   logger: Logger
   incomingPayments: IncomingPaymentService
@@ -138,7 +143,7 @@ export class Rafiki<T = any> {
       get walletAddresses(): WalletAddressService {
         return config.walletAddresses
       },
-      get telemetry(): TelemetryService | undefined {
+      get telemetry(): TelemetryService {
         return config.telemetry
       },
       logger
@@ -155,6 +160,9 @@ export class Rafiki<T = any> {
   ): Promise<Buffer> {
     const prepare = new ZeroCopyIlpPrepare(rawPrepare)
     const response = new IlpResponse()
+    const telemetry = this.publicServer.context.services.telemetry
+
+    incrementPreparePacketCount(unfulfillable, prepare.amount, telemetry)
 
     await this.routes(
       {
@@ -183,6 +191,22 @@ export class Rafiki<T = any> {
       }
     )
     if (!response.rawReply) throw new Error('error generating reply')
+
+    const { code, scale } = sourceAccount.asset
+    incrementFulfillOrRejectPacketCount(
+      unfulfillable,
+      prepare.amount,
+      response,
+      telemetry
+    )
+    await incrementAmount(
+      unfulfillable,
+      prepare.amount,
+      response,
+      code,
+      scale,
+      telemetry
+    )
     return response.rawReply
   }
 

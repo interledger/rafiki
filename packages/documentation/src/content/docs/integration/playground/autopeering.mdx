@@ -1,0 +1,51 @@
+---
+title: Auto-Peering with the Test Network
+---
+
+import { LinkOut } from '@interledger/docs-design-system'
+
+You can start one local instance of Rafiki and peer it automatically with the remote <LinkOut href='https://wallet.interledger-test.dev/'>Test Network</LinkOut> by running the following commands:
+
+```sh
+## using Tigerbeetle DB
+pnpm localenv:compose:autopeer
+## OR using Postgres DB`
+pnpm localenv:compose:psql:autopeer
+```
+
+The mock account servicing entity, Cloud Nine Wallet, in your local Rafiki instance will automatically peer with the remote <LinkOut href='https://wallet.interledger-test.dev/'>Test Network</LinkOut> instance. The required services will be exposed externally using the <LinkOut href='https://www.npmjs.com/package/localtunnel'>localtunnel package</LinkOut>.
+
+The exposed ports are:
+
+| Service       | Port |
+| ------------- | ---- |
+| Open Payments | 3000 |
+| ILP connector | 3002 |
+| Auth server   | 3006 |
+
+To use the Open Payments example in the <LinkOut href='https://rafiki.dev/integration/playground/overview#bruno--open-payments-apis'>Bruno API collection</LinkOut>, follow these steps:
+
+1. Navigate to <LinkOut href='http://localhost:3030'>localhost:3030</LinkOut> to find the list of created wallet addresses. Alternatively, you can run the following command:
+
+```sh
+docker logs rafiki-cloud-nine-mock-ase-1
+```
+
+2. Copy the URL of one of the wallet addresses.
+
+3. Set the URL as the `senderWalletAddress` variable in the Bruno Autopeering environment.
+
+:::note
+To visit the consent screen for the outgoing payment grant request, you must go through an additional login step by providing your IPv4 address as a tunnel password. You can look up your current IPv4 address by visiting <LinkOut href='https://loca.lt/mytunnelpassword'>
+loca.lt/mytunnelpassword</LinkOut> or <LinkOut href='https://www.whatismyip.com/'>whatismyip.com</LinkOut>
+:::
+
+To shut down the connection and clear the environment, run the following command:
+
+```sh
+pnpm localenv:compose down
+
+## Running the command to shut down is necessary
+## as any subsequent script run to spin up a local Rafiki instance
+## will use different wallet addresses.
+```

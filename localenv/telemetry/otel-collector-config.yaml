@@ -18,6 +18,9 @@ exporters:
       insecure: true
 
 service:
+  telemetry:
+    logs:
+      level: warn
   pipelines:
     metrics:
       receivers: [otlp]

@@ -5,6 +5,8 @@ import remarkMath from 'remark-math'
 import rehypeMathjax from 'rehype-mathjax'
 import GraphQL from 'astro-graphql-plugin'
 import starlightLinksValidator from 'starlight-links-validator'
+import { rehypeHeadingIds } from '@astrojs/markdown-remark'
+import rehypeAutolinkHeadings from 'rehype-autolink-headings'
 
 // https://astro.build/config
 export default defineConfig({
@@ -12,7 +14,16 @@ export default defineConfig({
   outDir: './build',
   markdown: {
     remarkPlugins: [remarkMath],
-    rehypePlugins: [rehypeMathjax]
+    rehypePlugins: [
+      rehypeMathjax,
+      rehypeHeadingIds,
+      [
+        rehypeAutolinkHeadings,
+        {
+          behavior: 'wrap'
+        }
+      ]
+    ]
   },
   integrations: [
     starlight({
@@ -51,74 +62,36 @@ export default defineConfig({
       },
       sidebar: [
         {
-          label: 'Docs',
+          label: 'Rafiki Docs',
           items: [
             {
-              label: 'Introduction',
-              collapsed: true,
+              label: 'Overview',
               items: [
                 {
-                  label: 'Overview',
-                  link: 'introduction/overview'
+                  label: 'Introducing Rafiki',
+                  link: '/overview/overview'
                 },
                 {
-                  label: 'Architecture',
-                  link: 'introduction/architecture'
-                }
-              ]
-            },
-            {
-              label: 'Concepts',
-              collapsed: true,
-              items: [
-                {
-                  label: 'Interledger Protocol',
-                  items: [
-                    {
-                      label: 'Overview',
-                      link: 'concepts/interledger-protocol/overview'
-                    },
-                    {
-                      label: 'Connector',
-                      link: 'concepts/interledger-protocol/connector'
-                    },
-                    {
-                      label: 'Peering',
-                      link: 'concepts/interledger-protocol/peering'
-                    }
-                  ]
-                },
-                {
-                  label: 'Open Payments',
-                  items: [
-                    {
-                      label: 'Overview',
-                      link: 'concepts/open-payments/overview'
-                    },
-                    {
-                      label: 'Key Registry',
-                      link: 'concepts/open-payments/key-registry'
-                    },
-                    {
-                      label: 'Grant Interaction Flow',
-                      link: 'concepts/open-payments/grant-interaction'
-                    }
-                  ]
-                },
-                {
-                  label: 'Accounting',
+                  label: 'Concepts',
                   collapsed: true,
-                  autogenerate: {
-                    directory: 'concepts/accounting'
-                  }
-                },
-                {
-                  label: 'Account Servicing Entity',
-                  link: 'concepts/account-servicing-entity'
-                },
-                {
-                  label: 'Asset',
-                  link: 'concepts/asset'
+                  items: [
+                    {
+                      label: 'Accounting',
+                      link: '/overview/concepts/accounting'
+                    },
+                    {
+                      label: 'Interledger',
+                      link: '/overview/concepts/interledger'
+                    },
+                    {
+                      label: 'Open Payments',
+                      link: '/overview/concepts/open-payments'
+                    },
+                    {
+                      label: 'Telemetry',
+                      link: '/overview/concepts/telemetry'
+                    }
+                  ]
                 }
               ]
             },
@@ -127,93 +100,175 @@ export default defineConfig({
               collapsed: true,
               items: [
                 {
-                  label: 'Getting Started',
-                  link: 'integration/getting-started'
+                  label: 'Requirements',
+                  collapsed: true,
+                  items: [
+                    {
+                      label: 'Overview and checklist',
+                      link: '/integration/requirements/overview'
+                    },
+                    {
+                      label: 'Assets',
+                      link: '/integration/requirements/assets'
+                    },
+                    {
+                      label: 'Wallet addresses',
+                      link: '/integration/requirements/wallet-addresses'
+                    },
+                    {
+                      label: 'Webhook events',
+                      link: '/integration/requirements/webhook-events'
+                    },
+                    {
+                      label: 'Exchange rates',
+                      link: '/integration/requirements/exchange-rates'
+                    },
+                    {
+                      label: 'Sending fees',
+                      link: '/integration/requirements/sending-fees'
+                    },
+                    {
+                      label: 'Identity provider (IdP)',
+                      link: '/integration/requirements/idp'
+                    }
+                  ]
                 },
                 {
-                  label: 'Deployment',
-                  link: 'integration/deployment'
+                  label: 'Docker Compose',
+                  link: '/integration/prod/docker-compose'
                 },
                 {
-                  label: 'Management',
-                  link: 'integration/management'
+                  label: 'Helm and Kubernetes',
+                  link: '/integration/prod/helm-k8s'
                 },
                 {
-                  label: 'Webhook Events',
-                  link: 'integration/webhook-events'
+                  label: 'Services',
+                  collapsed: true,
+                  items: [
+                    {
+                      label: 'Auth service',
+                      link: '/integration/services/auth-service'
+                    },
+                    {
+                      label: 'Backend service',
+                      link: '/integration/services/backend-service'
+                    },
+                    {
+                      label: 'Frontend service',
+                      link: '/integration/services/frontend-service'
+                    },
+                    {
+                      label: 'Token introspection',
+                      link: '/integration/services/token-introspection'
+                    }
+                  ]
+                },
+                {
+                  label: 'Test locally',
+                  collapsed: true,
+                  items: [
+                    {
+                      label: 'Local playground',
+                      link: '/integration/playground/overview'
+                    },
+                    {
+                      label: 'Autopeering',
+                      link: '/integration/playground/autopeering'
+                    },
+                    {
+                      label: 'Test network',
+                      link: '/integration/playground/testnet'
+                    }
+                  ]
                 }
               ]
             },
             {
-              label: 'Telemetry',
+              label: 'Administration',
               collapsed: true,
               items: [
-                { label: 'Overview', link: 'telemetry/overview' },
-                { label: 'Privacy', link: 'telemetry/privacy' },
                 {
-                  label: 'Deploying Custom Telemetry',
-                  link: 'telemetry/integrating'
+                  label: 'Rafiki Admin',
+                  link: '/admin/admin-user-guide'
+                },
+                {
+                  label: 'Manage peering relationships',
+                  link: '/admin/manage-peering'
+                },
+                {
+                  label: 'Manage liquidity',
+                  link: '/admin/manage-liquidity'
                 }
               ]
             },
             {
-              label: 'Local Playground',
+              label: 'Resources',
               collapsed: true,
               items: [
                 {
-                  label: 'Overview',
-                  link: 'playground/overview'
+                  label: 'Glossary',
+                  link: '/resources/glossary'
                 },
                 {
-                  label: 'Auto-Peering',
-                  link: 'playground/autopeering'
+                  label: 'Architecture',
+                  link: '/resources/architecture'
+                },
+                {
+                  label: 'Environment variables',
+                  link: '/resources/environment-variables'
+                },
+                {
+                  label: 'Webhook event types',
+                  link: '/resources/webhook-event-types'
+                },
+                {
+                  label: 'Get involved',
+                  link: '/resources/get-involved'
                 }
               ]
             },
             {
-              label: 'Reference',
+              label: 'APIs',
               collapsed: true,
-              autogenerate: {
-                directory: 'reference'
-              }
-            }
-          ]
-        },
-        {
-          label: 'Admin APIs',
-          items: [
-            {
-              label: 'Idempotency',
-              link: 'apis/idempotency'
-            },
-            {
-              label: 'Backend Admin API',
-              collapsed: true,
-              autogenerate: {
-                directory: 'apis/backend'
-              }
-            },
-            {
-              label: 'Auth Admin API',
-              collapsed: true,
-              autogenerate: {
-                directory: 'apis/auth'
-              }
+              items: [
+                {
+                  label: 'GraphQL Admin APIs',
+                  link: '/apis/graphql/admin-api-overview'
+                },
+                {
+                  label: 'Backend Admin API',
+                  collapsed: true,
+                  autogenerate: {
+                    directory: 'apis/graphql/backend'
+                  }
+                },
+                {
+                  label: 'Auth Admin API',
+                  collapsed: true,
+                  autogenerate: {
+                    directory: 'apis/graphql/auth'
+                  }
+                }
+              ]
             }
           ]
         }
       ],
-      plugins: [starlightLinksValidator()]
+      plugins: [
+        starlightLinksValidator({
+          errorOnLocalLinks: false,
+        }),
+      ],
     }),
     GraphQL({
       schema: '../backend/src/graphql/schema.graphql',
-      output: './src/content/docs/apis/backend/',
-      linkPrefix: '/apis/backend/'
+      output: './src/content/docs/apis/graphql/backend/',
+      linkPrefix: '/apis/graphql/backend/'
     }),
     GraphQL({
       schema: '../auth/src/graphql/schema.graphql',
-      output: './src/content/docs/apis/auth/',
-      linkPrefix: '/apis/auth/'
+      output: './src/content/docs/apis/graphql/auth/',
+      linkPrefix: '/apis/graphql/auth/'
     })
   ],
   server: {

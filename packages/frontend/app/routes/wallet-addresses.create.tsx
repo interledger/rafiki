@@ -12,13 +12,16 @@ import { createWalletAddress } from '~/lib/api/wallet-address.server'
 import { messageStorage, setMessageAndRedirect } from '~/lib/message.server'
 import { createWalletAddressSchema } from '~/lib/validate.server'
 import type { ZodFieldErrors } from '~/shared/types'
-import { getOpenPaymentsUrl } from '~/shared/utils'
-import { redirectIfUnauthorizedAccess } from '../lib/kratos_checks.server'
+import {
+  getOpenPaymentsUrl,
+  removeTrailingAndLeadingSlash
+} from '~/shared/utils'
+import { checkAuthAndRedirect } from '../lib/kratos_checks.server'
 import { type LoaderFunctionArgs } from '@remix-run/node'
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const cookies = request.headers.get('cookie')
-  await redirectIfUnauthorizedAccess(request.url, cookies)
+  await checkAuthAndRedirect(request.url, cookies)
   return json({ assets: await loadAssets() })
 }
 
@@ -109,8 +112,11 @@ export async function action({ request }: ActionFunctionArgs) {
     return json({ errors }, { status: 400 })
   }
 
+  const baseUrl = removeTrailingAndLeadingSlash(getOpenPaymentsUrl())
+  const path = removeTrailingAndLeadingSlash(result.data.name)
+
   const response = await createWalletAddress({
-    url: `${getOpenPaymentsUrl()}${result.data.name}`,
+    url: `${baseUrl}/${path}`,
     publicName: result.data.publicName,
     assetId: result.data.asset,
     additionalProperties: []

@@ -25,8 +25,10 @@ services:
       - ../happy-life-bank/seed.yml:/workspace/seed.yml
       - ../happy-life-bank/private-key.pem:/workspace/private-key.pem
     depends_on:
-      - cloud-nine-mock-ase
-      - happy-life-backend
+      happy-life-backend:
+        condition: service_healthy
+      cloud-nine-mock-ase:
+        condition: service_started
   happy-life-backend:
     hostname: happy-life-bank-backend
     image: rafiki-backend
@@ -69,6 +71,13 @@ services:
       KEY_ID: 53f2d913-e98a-40b9-b270-372d0547f23d
     depends_on:
       - cloud-nine-backend
+    healthcheck:
+      test: ["CMD", "wget", "--header=apollo-require-preflight: true", "http://localhost:3001/graphql?query=%7B__typename%7D", "-O", "/dev/null"]
+      start_period: 60s
+      start_interval: 5s
+      interval: 30s
+      retries: 1
+      timeout: 3s
   happy-life-auth:
     hostname: happy-life-bank-auth
     image: rafiki-auth
@@ -118,27 +127,9 @@ services:
       GRAPHQL_URL: http://happy-life-bank-backend:3001/graphql
       OPEN_PAYMENTS_URL: https://happy-life-bank-backend/
       ENABLE_INSECURE_MESSAGE_COOKIE: true
-      KRATOS_CONTAINER_PUBLIC_URL: 'http://happy-life-kratos:4433'
-      KRATOS_BROWSER_PUBLIC_URL: 'http://localhost:4432'
-      KRATOS_ADMIN_URL: 'http://happy-life-kratos:4434/admin'
+      AUTH_ENABLED: false
       SIGNATURE_VERSION: 1
       SIGNATURE_SECRET: iyIgCprjb9uL8wFckR+pLEkJWMB7FJhgkvqhTQR/964=
     depends_on:
       - cloud-nine-admin
       - happy-life-backend
-      - happy-life-kratos
-  happy-life-kratos:
-    build:
-      context: ../..
-      dockerfile: ./packages/frontend/kratos/Dockerfile
-      args:
-        PATH_TO_KRATOS_CONFIG: ./localenv/happy-life-bank/kratos.yml
-    depends_on:
-      - shared-database
-      - mailslurper
-    environment:
-      DEV_MODE: true
-    ports:
-      - "4432:4433"
-    networks:
-      - rafiki

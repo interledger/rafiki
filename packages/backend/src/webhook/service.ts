@@ -7,6 +7,7 @@ import { IAppConfig } from '../config/app'
 import { BaseService } from '../shared/baseService'
 import { Pagination, SortOrder } from '../shared/baseModel'
 import { FilterString } from '../shared/filters'
+import { trace, Span } from '@opentelemetry/api'
 
 // First retry waits 10 seconds
 // Second retry waits 20 (more) seconds
@@ -121,32 +122,40 @@ async function processNextWebhookEvent(
   if (!deps_.knex) {
     throw new Error('Knex undefined')
   }
-  return deps_.knex.transaction(async (trx) => {
-    const now = Date.now()
-    const events = await WebhookEvent.query(trx)
-      .limit(1)
-      // Ensure the webhook event cannot be processed concurrently by multiple workers.
-      .forUpdate()
-      // If a webhook event is locked, don't wait — just come back for it later.
-      .skipLocked()
-      .where('attempts', '<', deps_.config.webhookMaxRetry)
-      .where('processAt', '<=', new Date(now).toISOString())
 
-    const event = events[0]
-    if (!event) return
+  const tracer = trace.getTracer('webhook_worker')
 
-    const deps = {
-      ...deps_,
-      knex: trx,
-      logger: deps_.logger.child({
-        event: event.id
+  return tracer.startActiveSpan(
+    'processNextWebhookEvent',
+    async (span: Span) => {
+      return deps_.knex!.transaction(async (trx) => {
+        const now = Date.now()
+        const events = await WebhookEvent.query(trx)
+          .limit(1)
+          // Ensure the webhook event cannot be processed concurrently by multiple workers.
+          .forUpdate()
+          // If a webhook event is locked, don't wait — just come back for it later.
+          .skipLocked()
+          .where('attempts', '<', deps_.config.webhookMaxRetry)
+          .where('processAt', '<=', new Date(now).toISOString())
+
+        const event = events[0]
+        if (!event) return
+
+        const deps = {
+          ...deps_,
+          knex: trx,
+          logger: deps_.logger.child({
+            event: event.id
+          })
+        }
+
+        await sendWebhookEvent(deps, event)
+        span.end()
+        return event.id
       })
     }
-
-    await sendWebhookEvent(deps, event)
-
-    return event.id
-  })
+  )
 }
 
 type WebhookHeaders = {

@@ -16,11 +16,11 @@ import { createPeer } from '~/lib/api/peer.server'
 import { messageStorage, setMessageAndRedirect } from '~/lib/message.server'
 import { createPeerSchema } from '~/lib/validate.server'
 import type { ZodFieldErrors } from '~/shared/types'
-import { redirectIfUnauthorizedAccess } from '../lib/kratos_checks.server'
+import { checkAuthAndRedirect } from '../lib/kratos_checks.server'
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const cookies = request.headers.get('cookie')
-  await redirectIfUnauthorizedAccess(request.url, cookies)
+  await checkAuthAndRedirect(request.url, cookies)
 
   return json({ assets: await loadAssets() })
 }
@@ -64,7 +64,7 @@ export default function CreatePeerPage() {
                         The name of the{' '}
                         <a
                           className='default-link'
-                          href='https://rafiki.dev/concepts/interledger-protocol/peering/'
+                          href='https://rafiki.dev/resources/glossary#peer'
                         >
                           peer
                         </a>{' '}
@@ -126,13 +126,14 @@ export default function CreatePeerPage() {
                     error={response?.errors?.fieldErrors?.incomingAuthTokens}
                     description={
                       <>
-                        List of valid tokens to accept when receiving{' '}
+                        List of valid tokens to accept when receiving incoming{' '}
                         <a
                           className='default-link'
-                          href='https://rafiki.dev/concepts/interledger-protocol/connector/#incoming-http'
+                          href='https://rafiki.dev/integration/services/backend-service/#interledger-connector'
                         >
-                          incoming ILP packets from the peer.
-                        </a>
+                          ILP packets
+                        </a>{' '}
+                        from the peer.
                       </>
                     }
                   />
@@ -144,13 +145,14 @@ export default function CreatePeerPage() {
                     error={response?.errors?.fieldErrors?.outgoingAuthToken}
                     description={
                       <>
-                        List of valid tokens to present when sending{' '}
+                        Valid auth token to present when sending outgoing{' '}
                         <a
                           className='default-link'
-                          href='https://rafiki.dev/concepts/interledger-protocol/connector/#outgoing-http'
+                          href='https://rafiki.dev/integration/services/backend-service/#interledger-connector'
                         >
-                          outgoing ILP packets to the peer.
-                        </a>
+                          ILP packets
+                        </a>{' '}
+                        to the peer.
                       </>
                     }
                   />
@@ -162,14 +164,8 @@ export default function CreatePeerPage() {
                     error={response?.errors?.fieldErrors?.outgoingEndpoint}
                     description={
                       <>
-                        Endpoint on the peer to which{' '}
-                        <a
-                          className='default-link'
-                          href='https://rafiki.dev/concepts/interledger-protocol/connector/#outgoing-http'
-                        >
-                          outgoing ILP packets
-                        </a>{' '}
-                        will be sent.
+                        Endpoint on the peer to which outgoing ILP packets will
+                        be sent.
                       </>
                     }
                   />
@@ -198,7 +194,7 @@ export default function CreatePeerPage() {
                         The type of{' '}
                         <a
                           className='default-link'
-                          href='https://rafiki.dev/concepts/asset/'
+                          href='https://rafiki.dev/overview/concepts/accounting#assets'
                         >
                           asset
                         </a>{' '}

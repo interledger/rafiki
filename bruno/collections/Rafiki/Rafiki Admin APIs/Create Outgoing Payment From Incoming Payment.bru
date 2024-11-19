@@ -1,7 +1,7 @@
 meta {
   name: Create Outgoing Payment From Incoming Payment
   type: graphql
-  seq: 32
+  seq: 34
 }
 
 post {
@@ -22,12 +22,9 @@ body:graphql {
         quote {
           createdAt
           expiresAt
-          highEstimatedExchangeRate
           id
-          lowEstimatedExchangeRate
-          maxPacketAmount
-          minExchangeRate
           walletAddressId
+          estimatedExchangeRate
           receiveAmount {
             assetCode
             assetScale
@@ -89,7 +86,7 @@ script:pre-request {
 
 script:post-response {
   const body = res.getBody();
-
+  
   if (body?.data) {
     bru.setEnvVar("outgoingPaymentId", body.data.createOutgoingPaymentFromIncomingPayment.payment.id);  
   }

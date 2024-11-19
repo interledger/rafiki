@@ -3,6 +3,17 @@
   text-decoration: none;
 }
 
+/* Header link styling */
+.sl-markdown-content :is(h1, h2, h3, h4, h5, h6) > a {
+  color: inherit;
+  text-decoration: none;
+  transition: color 0.2s ease-in-out;
+}
+
+.sl-markdown-content :is(h1, h2, h3, h4, h5, h6) > a:hover {
+  color: var(--sl-color-accent-high);
+}
+
 /* API table styling */
 .content details ~ table tbody tr td:first-of-type strong,
 .content details ~ table tbody tr td:nth-of-type(2) a {
@@ -52,4 +63,87 @@
 .accounting-table.accounting-table tr th,
 .accounting-table.accounting-table tr td {
   text-align: center;
+}
+
+/* Overflowing table styles */
+.overflow-table {
+  container-type: inline-size;
+  max-height: 500px;
+  overflow: auto;
+  background:
+    linear-gradient(to right, var(--sl-color-bg) 30%, rgba(255, 255, 255, 0)),
+    linear-gradient(to right, rgba(255, 255, 255, 0), var(--sl-color-bg) 70%) 0
+      100%,
+    radial-gradient(
+      farthest-side at 0% 50%,
+      rgba(0, 0, 0, 0.2),
+      rgba(0, 0, 0, 0)
+    ),
+    radial-gradient(
+        farthest-side at 100% 50%,
+        rgba(0, 0, 0, 0.2),
+        rgba(0, 0, 0, 0)
+      )
+      0 100%;
+  background-repeat: no-repeat;
+  background-color: var(--sl-color-bg);
+  background-size:
+    40px 100%,
+    40px 100%,
+    14px 100%,
+    14px 100%;
+  background-position:
+    0 0,
+    100%,
+    0 0,
+    100%;
+  background-attachment: local, local, scroll, scroll;
+  box-shadow: var(--sl-shadow-sm);
+  border-radius: var(--border-radius);
+}
+
+.overflow-table thead th {
+  position: sticky;
+  background-color: var(--sl-color-gray-7, var(--sl-color-gray-6));
+  top: 0;
+}
+
+@container (max-width: 48rem) {
+  .wide-column table {
+    min-width: 60rem;
+  }
+
+  .wider-column table {
+    min-width: 80rem;
+  }
+}
+
+@media screen and (min-width: 80rem) {
+  .overflow-table {
+    max-width: 755px;
+  }
+}
+
+.overflow-table table code {
+  font-size: 95%;
+  overflow-wrap: break-word;
+  word-break: normal;
+}
+
+.overflow-table td,
+.overflow-table th {
+  max-width: 300px;
+  min-width: fit-content;
+}
+
+.overflow-table tbody {
+  font-size: smaller;
+}
+
+.overflow-table table tbody tr:nth-child(2n):not(:where(.not-content *)) {
+  background-color: initial;
+}
+
+.overflow-table tbody tr:not(:last-of-type) td {
+  border-block-end: 1px solid var(--sl-color-gray-6);
 }

@@ -95,9 +95,15 @@ describe('Wallet Address Routes', (): void => {
       addProp.fieldKey = 'field-key-open-pay'
       addProp.fieldValue = 'field-val-open-pay'
       addProp.visibleInOpenPayments = true
+
+      const addPropNotVisibleInOpenPayments =
+        new WalletAddressAdditionalProperty()
+      addPropNotVisibleInOpenPayments.fieldKey = 'not-visible-in-op'
+      addPropNotVisibleInOpenPayments.fieldValue = 'it-is-not'
+      addPropNotVisibleInOpenPayments.visibleInOpenPayments = false
       const walletAddress = await createWalletAddress(deps, {
         publicName: faker.person.firstName(),
-        additionalProperties: [addProp]
+        additionalProperties: [addProp, addPropNotVisibleInOpenPayments]
       })
 
       const ctx = createContext<WalletAddressUrlContext>({
@@ -114,7 +120,9 @@ describe('Wallet Address Routes', (): void => {
         assetScale: walletAddress.asset.scale,
         authServer: config.authServerGrantUrl,
         resourceServer: config.openPaymentsUrl,
-        additionalProperties: walletAddress.additionalProperties
+        additionalProperties: {
+          [addProp.fieldKey]: addProp.fieldValue
+        }
       })
     })
 

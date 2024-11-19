@@ -15,7 +15,7 @@
         "fields": [
           {
             "name": "amount",
-            "description": "Amount sent (fixed send)",
+            "description": "Amount sent (fixed send).",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -31,7 +31,7 @@
           },
           {
             "name": "createdAt",
-            "description": "Date-time of creation",
+            "description": "The date and time that the accounting transfer was created.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -47,7 +47,7 @@
           },
           {
             "name": "creditAccountId",
-            "description": "Credit account id",
+            "description": "Unique identifier for the credit account.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -63,7 +63,7 @@
           },
           {
             "name": "debitAccountId",
-            "description": "Debit account id",
+            "description": "Unique identifier for the debit account.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -79,7 +79,7 @@
           },
           {
             "name": "id",
-            "description": "Payment id",
+            "description": "Unique identifier for the accounting transfer.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -111,7 +111,7 @@
           },
           {
             "name": "transferType",
-            "description": "Type of accounting transfer",
+            "description": "Type of the accounting transfer.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -203,7 +203,7 @@
         "fields": [
           {
             "name": "key",
-            "description": null,
+            "description": "Key for the additional property.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -219,7 +219,7 @@
           },
           {
             "name": "value",
-            "description": null,
+            "description": "Value for the additional property.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -235,7 +235,7 @@
           },
           {
             "name": "visibleInOpenPayments",
-            "description": null,
+            "description": "Indicates whether the property is visible in Open Payments wallet address requests.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -263,7 +263,7 @@
         "inputFields": [
           {
             "name": "key",
-            "description": null,
+            "description": "Key for the additional property.",
             "type": {
               "kind": "NON_NULL",
               "name": null,
@@ -279,7 +279,7 @@
           },
           {
             "name": "value",
-            "description": null,
+            "description": "Value for the additional property.",
             "type": {
               "kind": "NON_NULL",
               "name": null,
@@ -295,7 +295,7 @@
           },
           {
             "name": "visibleInOpenPayments",
-            "description": null,
+            "description": "Indicates whether the property is visible in Open Payments wallet address requests.",
             "type": {
               "kind": "NON_NULL",
               "name": null,
@@ -324,7 +324,7 @@
         "enumValues": [
           {
             "name": "EdDSA",
-            "description": null,
+            "description": "EdDSA cryptographic algorithm.",
             "isDeprecated": false,
             "deprecationReason": null
           }
@@ -338,7 +338,7 @@
         "fields": [
           {
             "name": "assetCode",
-            "description": "[ISO 4217 currency code](https://en.wikipedia.org/wiki/ISO_4217), e.g. `USD`",
+            "description": "Should be an ISO 4217 currency code whenever possible, e.g. `USD`. For more information, refer to [assets](https://rafiki.dev/overview/concepts/accounting/#assets).",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -354,7 +354,7 @@
           },
           {
             "name": "assetScale",
-            "description": "Difference in orders of magnitude between the standard unit of an asset and a corresponding fractional unit",
+            "description": "Difference in order of magnitude between the standard unit of an asset and its corresponding fractional unit.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -370,7 +370,7 @@
           },
           {
             "name": "value",
-            "description": null,
+            "description": "Numerical value.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -398,7 +398,7 @@
         "inputFields": [
           {
             "name": "assetCode",
-            "description": "[ISO 4217 currency code](https://en.wikipedia.org/wiki/ISO_4217), e.g. `USD`",
+            "description": "Should be an ISO 4217 currency code whenever possible, e.g. `USD`. For more information, refer to [assets](https://rafiki.dev/overview/concepts/accounting/#assets).",
             "type": {
               "kind": "NON_NULL",
               "name": null,
@@ -414,7 +414,7 @@
           },
           {
             "name": "assetScale",
-            "description": "Difference in orders of magnitude between the standard unit of an asset and a corresponding fractional unit",
+            "description": "Difference in order of magnitude between the standard unit of an asset and its corresponding fractional unit.",
             "type": {
               "kind": "NON_NULL",
               "name": null,
@@ -430,7 +430,7 @@
           },
           {
             "name": "value",
-            "description": null,
+            "description": "Numerical value.",
             "type": {
               "kind": "NON_NULL",
               "name": null,
@@ -450,13 +450,63 @@
         "possibleTypes": null
       },
       {
+        "kind": "INPUT_OBJECT",
+        "name": "ApproveIncomingPaymentInput",
+        "description": null,
+        "fields": null,
+        "inputFields": [
+          {
+            "name": "id",
+            "description": "Unique identifier of the incoming payment to be approved. Note: incoming payment must be PENDING.",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "ID",
+                "ofType": null
+              }
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
+        "interfaces": null,
+        "enumValues": null,
+        "possibleTypes": null
+      },
+      {
+        "kind": "OBJECT",
+        "name": "ApproveIncomingPaymentResponse",
+        "description": null,
+        "fields": [
+          {
+            "name": "payment",
+            "description": "The incoming payment that was approved.",
+            "args": [],
+            "type": {
+              "kind": "OBJECT",
+              "name": "IncomingPayment",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
+        "inputFields": null,
+        "interfaces": [],
+        "enumValues": null,
+        "possibleTypes": null
+      },
+      {
         "kind": "OBJECT",
         "name": "Asset",
         "description": null,
         "fields": [
           {
             "name": "code",
-            "description": "[ISO 4217 currency code](https://en.wikipedia.org/wiki/ISO_4217), e.g. `USD`",
+            "description": "Should be an ISO 4217 currency code whenever possible, e.g. `USD`. For more information, refer to [assets](https://rafiki.dev/overview/concepts/accounting/#assets).",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -472,7 +522,7 @@
           },
           {
             "name": "createdAt",
-            "description": "Date-time of creation",
+            "description": "The date and time when the asset was created.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -488,11 +538,11 @@
           },
           {
             "name": "fees",
-            "description": "Fetch a page of asset fees",
+            "description": "Fetches a paginated list of fees associated with this asset.",
             "args": [
               {
                 "name": "after",
-                "description": "Paginating forwards: the cursor before the the requested page.",
+                "description": "Forward pagination: Cursor (fee ID) to start retrieving fees after this point.",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -504,7 +554,7 @@
               },
               {
                 "name": "before",
-                "description": "Paginating backwards: the cursor after the the requested page.",
+                "description": "Backward pagination: Cursor (fee ID) to start retrieving fees before this point.",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -516,7 +566,7 @@
               },
               {
                 "name": "first",
-                "description": "Paginating forwards: The first **n** elements from the page.",
+                "description": "Foward pagination: Limit the result to the first **n** fees after the `after` cursor.",
                 "type": {
                   "kind": "SCALAR",
                   "name": "Int",
@@ -528,7 +578,7 @@
               },
               {
                 "name": "last",
-                "description": "Paginating backwards: The last **n** elements from the page.",
+                "description": "Backward pagination: Limit the result to the last **n** fees before the `before` cursor.",
                 "type": {
                   "kind": "SCALAR",
                   "name": "Int",
@@ -540,7 +590,7 @@
               },
               {
                 "name": "sortOrder",
-                "description": "Ascending or descending order of creation.",
+                "description": "Specify the sort order of fees based on their creation data, either ascending or descending.",
                 "type": {
                   "kind": "ENUM",
                   "name": "SortOrder",
@@ -561,7 +611,7 @@
           },
           {
             "name": "id",
-            "description": "Asset id",
+            "description": "Unique identifier of the asset.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -589,7 +639,7 @@
           },
           {
             "name": "liquidityThreshold",
-            "description": "Account Servicing Entity will be notified via a webhook event if liquidity falls below this value",
+            "description": "A webhook event will notify the Account Servicing Entity if liquidity falls below this value.",
             "args": [],
             "type": {
               "kind": "SCALAR",
@@ -601,7 +651,7 @@
           },
           {
             "name": "receivingFee",
-            "description": "The receiving fee structure for the asset",
+            "description": "The receiving fee structure for the asset.",
             "args": [],
             "type": {
               "kind": "OBJECT",
@@ -613,7 +663,7 @@
           },
           {
             "name": "scale",
-            "description": "Difference in orders of magnitude between the standard unit of an asset and a corresponding fractional unit",
+            "description": "Difference in order of magnitude between the standard unit of an asset and its corresponding fractional unit.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -629,7 +679,7 @@
           },
           {
             "name": "sendingFee",
-            "description": "The sending fee structure for the asset",
+            "description": "The sending fee structure for the asset.",
             "args": [],
             "type": {
               "kind": "OBJECT",
@@ -641,7 +691,7 @@
           },
           {
             "name": "withdrawalThreshold",
-            "description": "Minimum amount of liquidity that can be withdrawn from the asset",
+            "description": "Minimum amount of liquidity that can be withdrawn from the asset.",
             "args": [],
             "type": {
               "kind": "SCALAR",
@@ -670,7 +720,7 @@
         "fields": [
           {
             "name": "cursor",
-            "description": null,
+            "description": "A cursor for paginating through the assets.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -686,7 +736,7 @@
           },
           {
             "name": "node",
-            "description": null,
+            "description": "An asset node in the list.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -713,7 +763,7 @@
         "fields": [
           {
             "name": "asset",
-            "description": null,
+            "description": "The asset affected by the mutation.",
             "args": [],
             "type": {
               "kind": "OBJECT",
@@ -736,7 +786,7 @@
         "fields": [
           {
             "name": "edges",
-            "description": null,
+            "description": "A list of edges representing assets and cursors for pagination.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -760,7 +810,7 @@
           },
           {
             "name": "pageInfo",
-            "description": null,
+            "description": "Information to aid in pagination.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -787,7 +837,7 @@
         "fields": [
           {
             "name": "client",
-            "description": null,
+            "description": "Information about the wallet address of the Open Payments client that created the payment.",
             "args": [],
             "type": {
               "kind": "SCALAR",
@@ -799,7 +849,7 @@
           },
           {
             "name": "createdAt",
-            "description": null,
+            "description": "The date and time that the payment was created.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -815,7 +865,7 @@
           },
           {
             "name": "id",
-            "description": null,
+            "description": "Unique identifier for the payment.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -831,7 +881,7 @@
           },
           {
             "name": "metadata",
-            "description": null,
+            "description": "Additional metadata associated with the payment.",
             "args": [],
             "type": {
               "kind": "SCALAR",
@@ -843,7 +893,7 @@
           },
           {
             "name": "walletAddressId",
-            "description": null,
+            "description": "Unique identifier of the wallet address under which the payment was created.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -891,13 +941,63 @@
       },
       {
         "kind": "INPUT_OBJECT",
+        "name": "CancelIncomingPaymentInput",
+        "description": null,
+        "fields": null,
+        "inputFields": [
+          {
+            "name": "id",
+            "description": "Unique identifier of the incoming payment to be canceled. Note: incoming payment must be PENDING.",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "ID",
+                "ofType": null
+              }
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
+        "interfaces": null,
+        "enumValues": null,
+        "possibleTypes": null
+      },
+      {
+        "kind": "OBJECT",
+        "name": "CancelIncomingPaymentResponse",
+        "description": null,
+        "fields": [
+          {
+            "name": "payment",
+            "description": "The incoming payment that was canceled.",
+            "args": [],
+            "type": {
+              "kind": "OBJECT",
+              "name": "IncomingPayment",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
+        "inputFields": null,
+        "interfaces": [],
+        "enumValues": null,
+        "possibleTypes": null
+      },
+      {
+        "kind": "INPUT_OBJECT",
         "name": "CancelOutgoingPaymentInput",
         "description": null,
         "fields": null,
         "inputFields": [
           {
             "name": "id",
-            "description": "Outgoing payment id",
+            "description": "Unique identifier of the outgoing payment to cancel.",
             "type": {
               "kind": "NON_NULL",
               "name": null,
@@ -913,7 +1013,7 @@
           },
           {
             "name": "reason",
-            "description": "Reason why this Outgoing Payment has been cancelled. This value will be publicly visible in the metadata field if this outgoing payment is requested through Open Payments.",
+            "description": "Reason why this outgoing payment has been canceled. This value will be publicly visible in the metadata field if this outgoing payment is requested through Open Payments.",
             "type": {
               "kind": "SCALAR",
               "name": "String",
@@ -936,7 +1036,7 @@
         "inputFields": [
           {
             "name": "code",
-            "description": "[ISO 4217 currency code](https://en.wikipedia.org/wiki/ISO_4217), e.g. `USD`",
+            "description": "Should be an ISO 4217 currency code whenever possible, e.g. `USD`. For more information, refer to [assets](https://rafiki.dev/overview/concepts/accounting/#assets).",
             "type": {
               "kind": "NON_NULL",
               "name": null,
@@ -952,7 +1052,7 @@
           },
           {
             "name": "idempotencyKey",
-            "description": "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)",
+            "description": "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency).",
             "type": {
               "kind": "SCALAR",
               "name": "String",
@@ -964,7 +1064,7 @@
           },
           {
             "name": "liquidityThreshold",
-            "description": "Account Servicing Entity will be notified via a webhook event if liquidity falls below this value",
+            "description": "A webhook event will notify the Account Servicing Entity if liquidity falls below this value.",
             "type": {
               "kind": "SCALAR",
               "name": "UInt64",
@@ -976,7 +1076,7 @@
           },
           {
             "name": "scale",
-            "description": "Difference in orders of magnitude between the standard unit of an asset and a corresponding fractional unit",
+            "description": "Difference in order of magnitude between the standard unit of an asset and its corresponding fractional unit.",
             "type": {
               "kind": "NON_NULL",
               "name": null,
@@ -992,7 +1092,7 @@
           },
           {
             "name": "withdrawalThreshold",
-            "description": "Minimum amount of liquidity that can be withdrawn from the asset",
+            "description": "Minimum amount of liquidity that can be withdrawn from the asset.",
             "type": {
               "kind": "SCALAR",
               "name": "UInt64",
@@ -1015,7 +1115,7 @@
         "inputFields": [
           {
             "name": "amount",
-            "description": "Amount of withdrawal.",
+            "description": "Amount of liquidity to withdraw.",
             "type": {
               "kind": "NON_NULL",
               "name": null,
@@ -1031,7 +1131,7 @@
           },
           {
             "name": "assetId",
-            "description": "The id of the asset to create the withdrawal for.",
+            "description": "Unique identifier of the asset to create the withdrawal for.",
             "type": {
               "kind": "NON_NULL",
               "name": null,
@@ -1047,7 +1147,7 @@
           },
           {
             "name": "id",
-            "description": "The id of the withdrawal.",
+            "description": "Unique identifier of the withdrawal.",
             "type": {
               "kind": "NON_NULL",
               "name": null,
@@ -1063,7 +1163,7 @@
           },
           {
             "name": "idempotencyKey",
-            "description": "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)",
+            "description": "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency).",
             "type": {
               "kind": "NON_NULL",
               "name": null,
@@ -1079,7 +1179,7 @@
           },
           {
             "name": "timeoutSeconds",
-            "description": "This is the interval in seconds after a pending transfer's created at which it may be posted or voided. Zero denotes a no timeout single-phase posted transfer.",
+            "description": "Interval in seconds after a pending transfer's created at which it may be posted or voided. Zero denotes a no timeout single-phase posted transfer.",
             "type": {
               "kind": "NON_NULL",
               "name": null,
@@ -1106,7 +1206,7 @@
         "inputFields": [
           {
             "name": "expiresAt",
-            "description": "Expiration date-time",
+            "description": "Date and time that the incoming payment will expire.",
             "type": {
               "kind": "SCALAR",
               "name": "String",
@@ -1118,7 +1218,7 @@
           },
           {
             "name": "idempotencyKey",
-            "description": "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)",
+            "description": "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency).",
             "type": {
               "kind": "SCALAR",
               "name": "String",
@@ -1130,7 +1230,7 @@
           },
           {
             "name": "incomingAmount",
-            "description": "Maximum amount to be received",
+            "description": "Maximum amount to be received for this incoming payment.",
             "type": {
               "kind": "INPUT_OBJECT",
               "name": "AmountInput",
@@ -1154,7 +1254,7 @@
           },
           {
             "name": "walletAddressId",
-            "description": "Id of the wallet address under which the incoming payment will be created",
+            "description": "Unique identifier of the wallet address under which the incoming payment will be created.",
             "type": {
               "kind": "NON_NULL",
               "name": null,
@@ -1181,7 +1281,7 @@
         "inputFields": [
           {
             "name": "idempotencyKey",
-            "description": "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)",
+            "description": "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency).",
             "type": {
               "kind": "NON_NULL",
               "name": null,
@@ -1197,7 +1297,7 @@
           },
           {
             "name": "incomingPaymentId",
-            "description": "The id of the incoming payment to withdraw from.",
+            "description": "Unique identifier of the incoming payment to withdraw liquidity from.",
             "type": {
               "kind": "NON_NULL",
               "name": null,
@@ -1213,7 +1313,7 @@
           },
           {
             "name": "timeoutSeconds",
-            "description": "This is the interval in seconds after a pending transfer's created at which it may be posted or voided. Zero denotes a no timeout single-phase posted transfer.",
+            "description": "Interval in seconds after a pending transfer's created at which it may be posted or voided. Zero denotes a no timeout single-phase posted transfer.",
             "type": {
               "kind": "NON_NULL",
               "name": null,
@@ -1240,7 +1340,7 @@
         "inputFields": [
           {
             "name": "assetId",
-            "description": "Asset id of peering relationship",
+            "description": "Unique identifier of the asset associated with the peering relationship.",
             "type": {
               "kind": "NON_NULL",
               "name": null,
@@ -1256,7 +1356,7 @@
           },
           {
             "name": "idempotencyKey",
-            "description": "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)",
+            "description": "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency).",
             "type": {
               "kind": "SCALAR",
               "name": "String",
@@ -1268,7 +1368,7 @@
           },
           {
             "name": "liquidityThreshold",
-            "description": "Account Servicing Entity will be notified via a webhook event if peer liquidity falls below this value",
+            "description": "A webhook event will notify the Account Servicing Entity if peer liquidity falls below this value.",
             "type": {
               "kind": "SCALAR",
               "name": "UInt64",
@@ -1280,7 +1380,7 @@
           },
           {
             "name": "liquidityToDeposit",
-            "description": "Amount of liquidity to deposit for peer",
+            "description": "Amount of liquidity to deposit for the peer.",
             "type": {
               "kind": "SCALAR",
               "name": "UInt64",
@@ -1292,7 +1392,7 @@
           },
           {
             "name": "maxPacketAmount",
-            "description": "Maximum packet amount that the peer accepts",
+            "description": "Maximum packet amount that the peer accepts.",
             "type": {
               "kind": "SCALAR",
               "name": "UInt64",
@@ -1304,7 +1404,7 @@
           },
           {
             "name": "name",
-            "description": "Peer's internal name for overriding auto-peer's default naming",
+            "description": "Internal name for the peer, used to override auto-peering default names.",
             "type": {
               "kind": "SCALAR",
               "name": "String",
@@ -1316,7 +1416,7 @@
           },
           {
             "name": "peerUrl",
-            "description": "Peer's URL address at which the peer accepts auto-peering requests",
+            "description": "Peer's URL address, where auto-peering requests are accepted.",
             "type": {
               "kind": "NON_NULL",
               "name": null,
@@ -1342,7 +1442,7 @@
         "fields": [
           {
             "name": "peer",
-            "description": null,
+            "description": "The peer created or updated based on a URL.",
             "args": [],
             "type": {
               "kind": "OBJECT",
@@ -1366,7 +1466,7 @@
         "inputFields": [
           {
             "name": "debitAmount",
-            "description": "Amount to send (fixed send)",
+            "description": "Amount to send (fixed send).",
             "type": {
               "kind": "NON_NULL",
               "name": null,
@@ -1382,7 +1482,7 @@
           },
           {
             "name": "idempotencyKey",
-            "description": "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)",
+            "description": "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency).",
             "type": {
               "kind": "SCALAR",
               "name": "String",
@@ -1394,7 +1494,7 @@
           },
           {
             "name": "incomingPayment",
-            "description": "Incoming payment url to create the outgoing payment from",
+            "description": "Incoming payment URL to create the outgoing payment from.",
             "type": {
               "kind": "NON_NULL",
               "name": null,
@@ -1422,7 +1522,7 @@
           },
           {
             "name": "walletAddressId",
-            "description": "Id of the wallet address under which the outgoing payment will be created",
+            "description": "Unique identifier of the wallet address under which the outgoing payment will be created.",
             "type": {
               "kind": "NON_NULL",
               "name": null,
@@ -1449,7 +1549,7 @@
         "inputFields": [
           {
             "name": "idempotencyKey",
-            "description": "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)",
+            "description": "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency).",
             "type": {
               "kind": "SCALAR",
               "name": "String",
@@ -1473,7 +1573,7 @@
           },
           {
             "name": "quoteId",
-            "description": "Id of the corresponding quote for that outgoing payment",
+            "description": "Unique identifier of the corresponding quote for that outgoing payment.",
             "type": {
               "kind": "NON_NULL",
               "name": null,
@@ -1489,7 +1589,7 @@
           },
           {
             "name": "walletAddressId",
-            "description": "Id of the wallet address under which the outgoing payment will be created",
+            "description": "Unique identifier of the wallet address under which the outgoing payment will be created.",
             "type": {
               "kind": "NON_NULL",
               "name": null,
@@ -1516,7 +1616,7 @@
         "inputFields": [
           {
             "name": "idempotencyKey",
-            "description": "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)",
+            "description": "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency).",
             "type": {
               "kind": "NON_NULL",
               "name": null,
@@ -1532,7 +1632,7 @@
           },
           {
             "name": "outgoingPaymentId",
-            "description": "The id of the outgoing payment to withdraw from.",
+            "description": "Unique identifier of the outgoing payment to withdraw liquidity from.",
             "type": {
               "kind": "NON_NULL",
               "name": null,
@@ -1548,7 +1648,7 @@
           },
           {
             "name": "timeoutSeconds",
-            "description": "This is the interval in seconds after a pending transfer's created at which it may be posted or voided. Zero denotes a no timeout single-phase posted transfer.",
+            "description": "Interval in seconds after a pending transfer's created at which it may be posted or voided. Zero denotes a no timeout single-phase posted transfer.",
             "type": {
               "kind": "NON_NULL",
               "name": null,
@@ -1575,7 +1675,7 @@
         "inputFields": [
           {
             "name": "assetId",
-            "description": "Asset id of peering relationship",
+            "description": "Unique identifier of the asset associated with the peering relationship.",
             "type": {
               "kind": "NON_NULL",
               "name": null,
@@ -1591,7 +1691,7 @@
           },
           {
             "name": "http",
-            "description": "Peering connection details",
+            "description": "Peering connection details.",
             "type": {
               "kind": "NON_NULL",
               "name": null,
@@ -1607,7 +1707,7 @@
           },
           {
             "name": "idempotencyKey",
-            "description": "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)",
+            "description": "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency).",
             "type": {
               "kind": "SCALAR",
               "name": "String",
@@ -1619,7 +1719,7 @@
           },
           {
             "name": "initialLiquidity",
-            "description": "Initial amount of liquidity to deposit for peer",
+            "description": "Initial amount of liquidity to deposit for the peer.",
             "type": {
               "kind": "SCALAR",
               "name": "UInt64",
@@ -1631,7 +1731,7 @@
           },
           {
             "name": "liquidityThreshold",
-            "description": "Account Servicing Entity will be notified via a webhook event if peer liquidity falls below this value",
+            "description": "A webhook event will notify the Account Servicing Entity if peer liquidity falls below this value.",
             "type": {
               "kind": "SCALAR",
               "name": "UInt64",
@@ -1643,7 +1743,7 @@
           },
           {
             "name": "maxPacketAmount",
-            "description": "Maximum packet amount that the peer accepts",
+            "description": "Maximum packet amount that the peer accepts.",
             "type": {
               "kind": "SCALAR",
               "name": "UInt64",
@@ -1655,7 +1755,7 @@
           },
           {
             "name": "name",
-            "description": "Peer's internal name",
+            "description": "Internal name of the peer.",
             "type": {
               "kind": "SCALAR",
               "name": "String",
@@ -1667,7 +1767,7 @@
           },
           {
             "name": "staticIlpAddress",
-            "description": "Peer's ILP address",
+            "description": "ILP address of the peer.",
             "type": {
               "kind": "NON_NULL",
               "name": null,
@@ -1694,7 +1794,7 @@
         "inputFields": [
           {
             "name": "amount",
-            "description": "Amount of withdrawal.",
+            "description": "Amount of liquidity to withdraw.",
             "type": {
               "kind": "NON_NULL",
               "name": null,
@@ -1710,7 +1810,7 @@
           },
           {
             "name": "id",
-            "description": "The id of the withdrawal.",
+            "description": "Unique identifier of the withdrawal.",
             "type": {
               "kind": "NON_NULL",
               "name": null,
@@ -1726,7 +1826,7 @@
           },
           {
             "name": "idempotencyKey",
-            "description": "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)",
+            "description": "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency).",
             "type": {
               "kind": "NON_NULL",
               "name": null,
@@ -1742,7 +1842,7 @@
           },
           {
             "name": "peerId",
-            "description": "The id of the peer to create the withdrawal for.",
+            "description": "Unique identifier of the peer to create the withdrawal for.",
             "type": {
               "kind": "NON_NULL",
               "name": null,
@@ -1758,7 +1858,7 @@
           },
           {
             "name": "timeoutSeconds",
-            "description": "This is the interval in seconds after a pending transfer's created at which it may be posted or voided. Zero denotes a no timeout single-phase posted transfer.",
+            "description": "Interval in seconds after a pending transfer's created at which it may be posted or voided. Zero denotes a no timeout single-phase posted transfer.",
             "type": {
               "kind": "NON_NULL",
               "name": null,
@@ -1784,7 +1884,7 @@
         "fields": [
           {
             "name": "peer",
-            "description": null,
+            "description": "The peer created by the mutation.",
             "args": [],
             "type": {
               "kind": "OBJECT",
@@ -1808,7 +1908,7 @@
         "inputFields": [
           {
             "name": "debitAmount",
-            "description": "Amount to send (fixed send)",
+            "description": "Amount to send (fixed send).",
             "type": {
               "kind": "INPUT_OBJECT",
               "name": "AmountInput",
@@ -1820,7 +1920,7 @@
           },
           {
             "name": "idempotencyKey",
-            "description": "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)",
+            "description": "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency).",
             "type": {
               "kind": "SCALAR",
               "name": "String",
@@ -1832,7 +1932,7 @@
           },
           {
             "name": "receiveAmount",
-            "description": "Amount to receive (fixed receive)",
+            "description": "Amount to receive (fixed receive).",
             "type": {
               "kind": "INPUT_OBJECT",
               "name": "AmountInput",
@@ -1844,7 +1944,7 @@
           },
           {
             "name": "receiver",
-            "description": "Wallet address URL of the receiver",
+            "description": "Wallet address URL of the receiver.",
             "type": {
               "kind": "NON_NULL",
               "name": null,
@@ -1860,7 +1960,7 @@
           },
           {
             "name": "walletAddressId",
-            "description": "Id of the wallet address under which the quote will be created",
+            "description": "Unique identifier of the wallet address under which the quote will be created.",
             "type": {
               "kind": "NON_NULL",
               "name": null,
@@ -1887,7 +1987,7 @@
         "inputFields": [
           {
             "name": "expiresAt",
-            "description": "Expiration date-time",
+            "description": "Date and time that the incoming payment expires for the receiver.",
             "type": {
               "kind": "SCALAR",
               "name": "String",
@@ -1899,7 +1999,7 @@
           },
           {
             "name": "idempotencyKey",
-            "description": "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)",
+            "description": "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency).",
             "type": {
               "kind": "SCALAR",
               "name": "String",
@@ -1911,7 +2011,7 @@
           },
           {
             "name": "incomingAmount",
-            "description": "Maximum amount to be received",
+            "description": "Maximum amount to be received for this incoming payment.",
             "type": {
               "kind": "INPUT_OBJECT",
               "name": "AmountInput",
@@ -1935,7 +2035,7 @@
           },
           {
             "name": "walletAddressUrl",
-            "description": "Receiving wallet address URL",
+            "description": "Receiving wallet address URL.",
             "type": {
               "kind": "NON_NULL",
               "name": null,
@@ -1961,7 +2061,7 @@
         "fields": [
           {
             "name": "receiver",
-            "description": null,
+            "description": "The receiver object returned in the response.",
             "args": [],
             "type": {
               "kind": "OBJECT",
@@ -1985,7 +2085,7 @@
         "inputFields": [
           {
             "name": "additionalProperties",
-            "description": "Additional properties associated with the [walletAddress].",
+            "description": "Additional properties associated with the wallet address.",
             "type": {
               "kind": "LIST",
               "name": null,
@@ -2005,7 +2105,7 @@
           },
           {
             "name": "assetId",
-            "description": "Asset of the wallet address",
+            "description": "Unique identifier of the asset associated with the wallet address. This cannot be changed.",
             "type": {
               "kind": "NON_NULL",
               "name": null,
@@ -2021,7 +2121,7 @@
           },
           {
             "name": "idempotencyKey",
-            "description": "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)",
+            "description": "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency).",
             "type": {
               "kind": "SCALAR",
               "name": "String",
@@ -2033,7 +2133,7 @@
           },
           {
             "name": "publicName",
-            "description": "Public name associated with the wallet address",
+            "description": "Public name associated with the wallet address. This is visible to anyone with the wallet address URL.",
             "type": {
               "kind": "SCALAR",
               "name": "String",
@@ -2045,7 +2145,7 @@
           },
           {
             "name": "url",
-            "description": "Wallet Address URL",
+            "description": "Wallet address URL. This cannot be changed.",
             "type": {
               "kind": "NON_NULL",
               "name": null,
@@ -2072,7 +2172,7 @@
         "inputFields": [
           {
             "name": "idempotencyKey",
-            "description": "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)",
+            "description": "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency).",
             "type": {
               "kind": "SCALAR",
               "name": "String",
@@ -2084,7 +2184,7 @@
           },
           {
             "name": "jwk",
-            "description": "Public key",
+            "description": "Public key in JSON Web Key (JWK) format.",
             "type": {
               "kind": "NON_NULL",
               "name": null,
@@ -2100,7 +2200,7 @@
           },
           {
             "name": "walletAddressId",
-            "description": null,
+            "description": "Unique identifier of the wallet address to associate with the key.",
             "type": {
               "kind": "NON_NULL",
               "name": null,
@@ -2126,7 +2226,7 @@
         "fields": [
           {
             "name": "walletAddressKey",
-            "description": null,
+            "description": "The wallet address key that was created.",
             "args": [],
             "type": {
               "kind": "OBJECT",
@@ -2149,7 +2249,7 @@
         "fields": [
           {
             "name": "walletAddress",
-            "description": null,
+            "description": "The newly created wallet address.",
             "args": [],
             "type": {
               "kind": "OBJECT",
@@ -2173,7 +2273,7 @@
         "inputFields": [
           {
             "name": "id",
-            "description": "The id of the withdrawal.",
+            "description": "Unique identifier of the withdrawal.",
             "type": {
               "kind": "NON_NULL",
               "name": null,
@@ -2189,7 +2289,7 @@
           },
           {
             "name": "idempotencyKey",
-            "description": "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)",
+            "description": "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency).",
             "type": {
               "kind": "NON_NULL",
               "name": null,
@@ -2205,7 +2305,7 @@
           },
           {
             "name": "timeoutSeconds",
-            "description": "This is the interval in seconds after a pending transfer's created at which it may be posted or voided. Zero denotes a no timeout single-phase posted transfer.",
+            "description": "Interval in seconds after a pending transfer's created at which it may be posted or voided. Zero denotes a no timeout single-phase posted transfer.",
             "type": {
               "kind": "NON_NULL",
               "name": null,
@@ -2221,7 +2321,7 @@
           },
           {
             "name": "walletAddressId",
-            "description": "The id of the Open Payments wallet address to create the withdrawal for.",
+            "description": "Unique identifier of the Open Payments wallet address to create the withdrawal for.",
             "type": {
               "kind": "NON_NULL",
               "name": null,
@@ -2250,7 +2350,7 @@
         "enumValues": [
           {
             "name": "Ed25519",
-            "description": null,
+            "description": "Elliptic curve `Ed25519`, used in EdDSA.",
             "isDeprecated": false,
             "deprecationReason": null
           }
@@ -2265,7 +2365,7 @@
         "inputFields": [
           {
             "name": "id",
-            "description": "Asset id",
+            "description": "Unique identifier of the asset to delete.",
             "type": {
               "kind": "NON_NULL",
               "name": null,
@@ -2281,7 +2381,7 @@
           },
           {
             "name": "idempotencyKey",
-            "description": "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)",
+            "description": "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency).",
             "type": {
               "kind": "SCALAR",
               "name": "String",
@@ -2303,7 +2403,7 @@
         "fields": [
           {
             "name": "asset",
-            "description": null,
+            "description": "The asset that was deleted.",
             "args": [],
             "type": {
               "kind": "OBJECT",
@@ -2327,7 +2427,7 @@
         "inputFields": [
           {
             "name": "id",
-            "description": null,
+            "description": "Unique identifier of the peer to be deleted.",
             "type": {
               "kind": "NON_NULL",
               "name": null,
@@ -2343,7 +2443,7 @@
           },
           {
             "name": "idempotencyKey",
-            "description": "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)",
+            "description": "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency).",
             "type": {
               "kind": "SCALAR",
               "name": "String",
@@ -2365,7 +2465,7 @@
         "fields": [
           {
             "name": "success",
-            "description": null,
+            "description": "Indicates whether the peer deletion was successful.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -2409,7 +2509,7 @@
           },
           {
             "name": "assetId",
-            "description": "The id of the asset to deposit liquidity.",
+            "description": "Unique identifier of the asset to deposit liquidity into.",
             "type": {
               "kind": "NON_NULL",
               "name": null,
@@ -2425,7 +2525,7 @@
           },
           {
             "name": "id",
-            "description": "The id of the transfer.",
+            "description": "Unique identifier of the liquidity transfer.",
             "type": {
               "kind": "NON_NULL",
               "name": null,
@@ -2441,7 +2541,7 @@
           },
           {
             "name": "idempotencyKey",
-            "description": "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)",
+            "description": "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency).",
             "type": {
               "kind": "NON_NULL",
               "name": null,
@@ -2468,7 +2568,7 @@
         "inputFields": [
           {
             "name": "eventId",
-            "description": "The id of the event to deposit into.",
+            "description": "Unique identifier of the event to deposit liquidity into.",
             "type": {
               "kind": "NON_NULL",
               "name": null,
@@ -2484,7 +2584,7 @@
           },
           {
             "name": "idempotencyKey",
-            "description": "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)",
+            "description": "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency).",
             "type": {
               "kind": "NON_NULL",
               "name": null,
@@ -2511,7 +2611,7 @@
         "inputFields": [
           {
             "name": "idempotencyKey",
-            "description": "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)",
+            "description": "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency).",
             "type": {
               "kind": "NON_NULL",
               "name": null,
@@ -2527,7 +2627,7 @@
           },
           {
             "name": "outgoingPaymentId",
-            "description": "The id of the outgoing payment to deposit into.",
+            "description": "Unique identifier of the outgoing payment to deposit liquidity into.",
             "type": {
               "kind": "NON_NULL",
               "name": null,
@@ -2570,7 +2670,7 @@
           },
           {
             "name": "id",
-            "description": "The id of the transfer.",
+            "description": "Unique identifier of the liquidity transfer.",
             "type": {
               "kind": "NON_NULL",
               "name": null,
@@ -2586,7 +2686,7 @@
           },
           {
             "name": "idempotencyKey",
-            "description": "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)",
+            "description": "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency).",
             "type": {
               "kind": "NON_NULL",
               "name": null,
@@ -2602,7 +2702,7 @@
           },
           {
             "name": "peerId",
-            "description": "The id of the peer to deposit liquidity.",
+            "description": "Unique identifier of the peer to deposit liquidity into.",
             "type": {
               "kind": "NON_NULL",
               "name": null,
@@ -2628,7 +2728,7 @@
         "fields": [
           {
             "name": "assetId",
-            "description": "Asset id associated with the fee",
+            "description": "Unique identifier of the asset associated with the fee.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -2644,7 +2744,7 @@
           },
           {
             "name": "basisPoints",
-            "description": "Basis points fee. 1 basis point = 0.01%, 100 basis points = 1%, 10000 basis points = 100%",
+            "description": "Basis points fee is a variable fee charged based on the total amount. Should be between 0 and 10000 (inclusive). 1 basis point = 0.01%, 100 basis points = 1%, 10000 basis points = 100%.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -2660,7 +2760,7 @@
           },
           {
             "name": "createdAt",
-            "description": "Date-time of creation",
+            "description": "The date and time that this fee was created.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -2676,7 +2776,7 @@
           },
           {
             "name": "fixed",
-            "description": "Fixed fee",
+            "description": "Amount of the flat, fixed fee to charge.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -2692,7 +2792,7 @@
           },
           {
             "name": "id",
-            "description": "Fee id",
+            "description": "Unique identifier of the fee.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -2708,7 +2808,7 @@
           },
           {
             "name": "type",
-            "description": "Type of fee (sending or receiving)",
+            "description": "Type of fee, either sending or receiving.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -2742,7 +2842,7 @@
         "inputFields": [
           {
             "name": "basisPoints",
-            "description": "Basis points fee. Should be between 0 and 10000 (inclusive). 1 basis point = 0.01%, 100 basis points = 1%, 10000 basis points = 100%",
+            "description": "Basis points fee is a variable fee charged based on the total amount. Should be between 0 and 10000 (inclusive). 1 basis point = 0.01%, 100 basis points = 1%, 10000 basis points = 100%.",
             "type": {
               "kind": "NON_NULL",
               "name": null,
@@ -2758,7 +2858,7 @@
           },
           {
             "name": "fixed",
-            "description": "A flat fee",
+            "description": "Amount of the flat, fixed fee to charge.",
             "type": {
               "kind": "NON_NULL",
               "name": null,
@@ -2784,7 +2884,7 @@
         "fields": [
           {
             "name": "cursor",
-            "description": null,
+            "description": "A cursor for paginating through the fees.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -2800,7 +2900,7 @@
           },
           {
             "name": "node",
-            "description": null,
+            "description": "A fee node in the list.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -2830,13 +2930,13 @@
         "enumValues": [
           {
             "name": "RECEIVING",
-            "description": "Receiver pays the fees",
+            "description": "The receiver is responsible for paying the fees.",
             "isDeprecated": false,
             "deprecationReason": null
           },
           {
             "name": "SENDING",
-            "description": "Sender pays the fees",
+            "description": "The sender is responsible for paying the fees.",
             "isDeprecated": false,
             "deprecationReason": null
           }
@@ -2850,7 +2950,7 @@
         "fields": [
           {
             "name": "edges",
-            "description": null,
+            "description": "A list of fee edges, containing fee nodes and cursors for pagination.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -2874,7 +2974,7 @@
           },
           {
             "name": "pageInfo",
-            "description": null,
+            "description": "Pagination information for fees.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -2902,7 +3002,7 @@
         "inputFields": [
           {
             "name": "in",
-            "description": null,
+            "description": "Array of strings to filter by.",
             "type": {
               "kind": "NON_NULL",
               "name": null,
@@ -2946,7 +3046,7 @@
         "fields": [
           {
             "name": "outgoing",
-            "description": "Outgoing connection details",
+            "description": "Details of the outgoing connection for peering.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -2974,7 +3074,7 @@
         "inputFields": [
           {
             "name": "authTokens",
-            "description": "Array of auth tokens accepted by this Rafiki instance",
+            "description": "Array of authorization tokens accepted by this Rafiki instance.",
             "type": {
               "kind": "NON_NULL",
               "name": null,
@@ -3009,7 +3109,7 @@
         "inputFields": [
           {
             "name": "incoming",
-            "description": "Incoming connection details",
+            "description": "Incoming connection details.",
             "type": {
               "kind": "INPUT_OBJECT",
               "name": "HttpIncomingInput",
@@ -3021,7 +3121,7 @@
           },
           {
             "name": "outgoing",
-            "description": "Outgoing connection details",
+            "description": "Outgoing connection details.",
             "type": {
               "kind": "NON_NULL",
               "name": null,
@@ -3047,7 +3147,7 @@
         "fields": [
           {
             "name": "authToken",
-            "description": "Auth token to present at the peering Rafiki instance",
+            "description": "Authorization token to be presented to the peer's Rafiki instance.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -3063,7 +3163,7 @@
           },
           {
             "name": "endpoint",
-            "description": "Peer's connection endpoint",
+            "description": "Connection endpoint of the peer.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -3091,7 +3191,7 @@
         "inputFields": [
           {
             "name": "authToken",
-            "description": "Auth token to present at the peering Rafiki instance",
+            "description": "Authorization token to present at the peer's Rafiki instance.",
             "type": {
               "kind": "NON_NULL",
               "name": null,
@@ -3107,7 +3207,7 @@
           },
           {
             "name": "endpoint",
-            "description": "Peer's connection endpoint",
+            "description": "Connection endpoint of the peer.",
             "type": {
               "kind": "NON_NULL",
               "name": null,
@@ -3155,7 +3255,7 @@
           },
           {
             "name": "createdAt",
-            "description": "Date-time of creation",
+            "description": "The date and time that the incoming payment was created.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -3171,7 +3271,7 @@
           },
           {
             "name": "expiresAt",
-            "description": "Date-time of expiry. After this time, the incoming payment will not accept further payments made to it.",
+            "description": "Date and time that the incoming payment will expire. After this time, the incoming payment will not accept further payments made to it.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -3187,7 +3287,7 @@
           },
           {
             "name": "id",
-            "description": "Incoming Payment id",
+            "description": "Unique identifier of the incoming payment.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -3215,7 +3315,7 @@
           },
           {
             "name": "liquidity",
-            "description": "Available liquidity",
+            "description": "Current amount of liquidity available for this incoming payment.",
             "args": [],
             "type": {
               "kind": "SCALAR",
@@ -3255,7 +3355,7 @@
           },
           {
             "name": "state",
-            "description": "Incoming payment state",
+            "description": "State of the incoming payment.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -3271,7 +3371,7 @@
           },
           {
             "name": "walletAddressId",
-            "description": "Id of the wallet address under which this incoming payment was created.",
+            "description": "Unique identifier of the wallet address under which the incoming payment was created.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -3309,7 +3409,7 @@
         "fields": [
           {
             "name": "edges",
-            "description": null,
+            "description": "A list of incoming payment edges, containing incoming payment nodes and cursors for pagination.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -3333,7 +3433,7 @@
           },
           {
             "name": "pageInfo",
-            "description": null,
+            "description": "Pagination information for the incoming payments.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -3360,7 +3460,7 @@
         "fields": [
           {
             "name": "cursor",
-            "description": null,
+            "description": "A cursor for paginating through the incoming payments.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -3376,7 +3476,7 @@
           },
           {
             "name": "node",
-            "description": null,
+            "description": "An incoming payment node in the list.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -3403,7 +3503,7 @@
         "fields": [
           {
             "name": "payment",
-            "description": null,
+            "description": "The incoming payment object returned in the response.",
             "args": [],
             "type": {
               "kind": "OBJECT",
@@ -3429,25 +3529,25 @@
         "enumValues": [
           {
             "name": "COMPLETED",
-            "description": "The payment is either auto-completed once the received amount equals the expected `incomingAmount`, or it is completed manually via an API call.",
+            "description": "The payment is completed automatically once the expected `incomingAmount` is received or manually via an API call.",
             "isDeprecated": false,
             "deprecationReason": null
           },
           {
             "name": "EXPIRED",
-            "description": "If the payment expires before it is completed then the state will move to EXPIRED and no further payments will be accepted.",
+            "description": "The payment has expired before completion, and no further funds will be accepted.",
             "isDeprecated": false,
             "deprecationReason": null
           },
           {
             "name": "PENDING",
-            "description": "The payment has a state of PENDING when it is initially created.",
+            "description": "The payment is pending when it is initially created and has not started processing.",
             "isDeprecated": false,
             "deprecationReason": null
           },
           {
             "name": "PROCESSING",
-            "description": "As soon as payment has started (funds have cleared into the account) the state moves to PROCESSING",
+            "description": "The payment is being processed after funds have started clearing into the account.",
             "isDeprecated": false,
             "deprecationReason": null
           }
@@ -3467,7 +3567,7 @@
       {
         "kind": "SCALAR",
         "name": "JSONObject",
-        "description": null,
+        "description": "The `JSONObject` scalar type represents JSON objects as specified by the [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf) standard.",
         "fields": null,
         "inputFields": null,
         "interfaces": null,
@@ -3481,7 +3581,7 @@
         "fields": [
           {
             "name": "alg",
-            "description": "Cryptographic algorithm family used with the key. The only allowed value is `EdDSA`.",
+            "description": "Cryptographic algorithm used with the key. The only allowed value is `EdDSA`.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -3497,7 +3597,7 @@
           },
           {
             "name": "crv",
-            "description": "Curve that the key pair is derived from. The only allowed value is `Ed25519`.",
+            "description": "Cryptographic curve that the key pair is derived from. The only allowed value is `Ed25519`.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -3513,7 +3613,7 @@
           },
           {
             "name": "kid",
-            "description": "Key id",
+            "description": "Unique identifier for the key.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -3573,7 +3673,7 @@
         "inputFields": [
           {
             "name": "alg",
-            "description": "Cryptographic algorithm family used with the key. The only allowed value is `EdDSA`.",
+            "description": "Cryptographic algorithm used with the key. The only allowed value is `EdDSA`.",
             "type": {
               "kind": "NON_NULL",
               "name": null,
@@ -3589,7 +3689,7 @@
           },
           {
             "name": "crv",
-            "description": "Curve that the key pair is derived from. The only allowed value is `Ed25519`.",
+            "description": "Cryptographic curve that the key pair is derived from. The only allowed value is `Ed25519`.",
             "type": {
               "kind": "NON_NULL",
               "name": null,
@@ -3605,7 +3705,7 @@
           },
           {
             "name": "kid",
-            "description": "Key id",
+            "description": "Unique identifier for the key.",
             "type": {
               "kind": "NON_NULL",
               "name": null,
@@ -3666,7 +3766,7 @@
         "enumValues": [
           {
             "name": "OKP",
-            "description": null,
+            "description": "Octet Key Pair (OKP) key type.",
             "isDeprecated": false,
             "deprecationReason": null
           }
@@ -3683,73 +3783,73 @@
         "enumValues": [
           {
             "name": "AlreadyPosted",
-            "description": null,
+            "description": "The transfer has already been posted.",
             "isDeprecated": false,
             "deprecationReason": null
           },
           {
             "name": "AlreadyVoided",
-            "description": null,
+            "description": "The transfer has already been voided.",
             "isDeprecated": false,
             "deprecationReason": null
           },
           {
             "name": "AmountZero",
-            "description": null,
+            "description": "The amount specified for the transfer is zero.",
             "isDeprecated": false,
             "deprecationReason": null
           },
           {
             "name": "InsufficientBalance",
-            "description": null,
+            "description": "Insufficient balance to complete the transfer.",
             "isDeprecated": false,
             "deprecationReason": null
           },
           {
             "name": "InvalidId",
-            "description": null,
+            "description": "The provided ID for the transfer is invalid.",
             "isDeprecated": false,
             "deprecationReason": null
           },
           {
             "name": "TransferExists",
-            "description": null,
+            "description": "A transfer with the same ID already exists.",
             "isDeprecated": false,
             "deprecationReason": null
           },
           {
             "name": "UnknownAsset",
-            "description": null,
+            "description": "The specified asset could not be found.",
             "isDeprecated": false,
             "deprecationReason": null
           },
           {
             "name": "UnknownIncomingPayment",
-            "description": null,
+            "description": "The specified incoming payment could not be found.",
             "isDeprecated": false,
             "deprecationReason": null
           },
           {
             "name": "UnknownPayment",
-            "description": null,
+            "description": "The specified payment could not be found.",
             "isDeprecated": false,
             "deprecationReason": null
           },
           {
             "name": "UnknownPeer",
-            "description": null,
+            "description": "The specified peer could not be found.",
             "isDeprecated": false,
             "deprecationReason": null
           },
           {
             "name": "UnknownTransfer",
-            "description": null,
+            "description": "The specified transfer could not be found.",
             "isDeprecated": false,
             "deprecationReason": null
           },
           {
             "name": "UnknownWalletAddress",
-            "description": null,
+            "description": "The specified wallet address could not be found.",
             "isDeprecated": false,
             "deprecationReason": null
           }
@@ -3763,7 +3863,7 @@
         "fields": [
           {
             "name": "success",
-            "description": null,
+            "description": "Indicates whether the liquidity operation was successful.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -3790,7 +3890,7 @@
         "fields": [
           {
             "name": "createdAt",
-            "description": null,
+            "description": "The date and time that the entity was created.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -3806,7 +3906,7 @@
           },
           {
             "name": "id",
-            "description": null,
+            "description": "Unique identifier for the entity.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -3883,8 +3983,74 @@
         "description": null,
         "fields": [
           {
+            "name": "approveIncomingPayment",
+            "description": "Approves the incoming payment if the incoming payment is in the PENDING state",
+            "args": [
+              {
+                "name": "input",
+                "description": null,
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "INPUT_OBJECT",
+                    "name": "ApproveIncomingPaymentInput",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              }
+            ],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "ApproveIncomingPaymentResponse",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "cancelIncomingPayment",
+            "description": "Cancel the incoming payment if the incoming payment is in the PENDING state",
+            "args": [
+              {
+                "name": "input",
+                "description": null,
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "INPUT_OBJECT",
+                    "name": "CancelIncomingPaymentInput",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              }
+            ],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "CancelIncomingPaymentResponse",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "cancelOutgoingPayment",
-            "description": "Cancel Outgoing Payment",
+            "description": "Cancel an outgoing payment.",
             "args": [
               {
                 "name": "input",
@@ -3917,7 +4083,7 @@
           },
           {
             "name": "createAsset",
-            "description": "Create an asset",
+            "description": "Create a new asset.",
             "args": [
               {
                 "name": "input",
@@ -3950,7 +4116,7 @@
           },
           {
             "name": "createAssetLiquidityWithdrawal",
-            "description": "Withdraw asset liquidity",
+            "description": "Withdraw asset liquidity.",
             "args": [
               {
                 "name": "input",
@@ -3979,7 +4145,7 @@
           },
           {
             "name": "createIncomingPayment",
-            "description": "Create an internal Open Payments Incoming Payment. The receiver has a wallet address on this Rafiki instance.",
+            "description": "Create an internal Open Payments incoming payment. The receiver has a wallet address on this Rafiki instance.",
             "args": [
               {
                 "name": "input",
@@ -4012,7 +4178,7 @@
           },
           {
             "name": "createIncomingPaymentWithdrawal",
-            "description": "Withdraw incoming payment liquidity",
+            "description": "Withdraw incoming payment liquidity.",
             "args": [
               {
                 "name": "input",
@@ -4041,7 +4207,7 @@
           },
           {
             "name": "createOrUpdatePeerByUrl",
-            "description": "Create a peer using a URL",
+            "description": "Create or update a peer using a URL.",
             "args": [
               {
                 "name": "input",
@@ -4074,7 +4240,7 @@
           },
           {
             "name": "createOutgoingPayment",
-            "description": "Create an Open Payments Outgoing Payment",
+            "description": "Create an Open Payments outgoing payment.",
             "args": [
               {
                 "name": "input",
@@ -4107,7 +4273,7 @@
           },
           {
             "name": "createOutgoingPaymentFromIncomingPayment",
-            "description": "Create an Open Payments Outgoing Payment from an incoming payment",
+            "description": "Create an Open Payments outgoing payment from an incoming payment.",
             "args": [
               {
                 "name": "input",
@@ -4140,7 +4306,7 @@
           },
           {
             "name": "createOutgoingPaymentWithdrawal",
-            "description": "Withdraw outgoing payment liquidity",
+            "description": "Withdraw outgoing payment liquidity.",
             "args": [
               {
                 "name": "input",
@@ -4169,7 +4335,7 @@
           },
           {
             "name": "createPeer",
-            "description": "Create a peer",
+            "description": "Create a new peer.",
             "args": [
               {
                 "name": "input",
@@ -4202,7 +4368,7 @@
           },
           {
             "name": "createPeerLiquidityWithdrawal",
-            "description": "Withdraw peer liquidity",
+            "description": "Withdraw peer liquidity.",
             "args": [
               {
                 "name": "input",
@@ -4231,7 +4397,7 @@
           },
           {
             "name": "createQuote",
-            "description": "Create an Open Payments Quote",
+            "description": "Create an Open Payments quote.",
             "args": [
               {
                 "name": "input",
@@ -4264,7 +4430,7 @@
           },
           {
             "name": "createReceiver",
-            "description": "Create an internal or external Open Payments Incoming Payment. The receiver has a wallet address on either this or another Open Payments resource server.",
+            "description": "Create an internal or external Open Payments incoming payment. The receiver has a wallet address on either this or another Open Payments resource server.",
             "args": [
               {
                 "name": "input",
@@ -4297,7 +4463,7 @@
           },
           {
             "name": "createWalletAddress",
-            "description": "Create a wallet address",
+            "description": "Create a new wallet address.",
             "args": [
               {
                 "name": "input",
@@ -4388,7 +4554,7 @@
           },
           {
             "name": "deleteAsset",
-            "description": "Delete an asset",
+            "description": "Delete an asset.",
             "args": [
               {
                 "name": "input",
@@ -4421,7 +4587,7 @@
           },
           {
             "name": "deletePeer",
-            "description": "Delete a peer",
+            "description": "Delete a peer.",
             "args": [
               {
                 "name": "input",
@@ -4454,7 +4620,7 @@
           },
           {
             "name": "depositAssetLiquidity",
-            "description": "Deposit asset liquidity",
+            "description": "Deposit asset liquidity.",
             "args": [
               {
                 "name": "input",
@@ -4483,7 +4649,7 @@
           },
           {
             "name": "depositEventLiquidity",
-            "description": "Deposit webhook event liquidity",
+            "description": "Deposit webhook event liquidity (deprecated).",
             "args": [
               {
                 "name": "input",
@@ -4512,7 +4678,7 @@
           },
           {
             "name": "depositOutgoingPaymentLiquidity",
-            "description": "Deposit outgoing payment liquidity",
+            "description": "Deposit outgoing payment liquidity.",
             "args": [
               {
                 "name": "input",
@@ -4541,7 +4707,7 @@
           },
           {
             "name": "depositPeerLiquidity",
-            "description": "Deposit peer liquidity",
+            "description": "Deposit peer liquidity.",
             "args": [
               {
                 "name": "input",
@@ -4628,7 +4794,7 @@
           },
           {
             "name": "setFee",
-            "description": "Set the fee on an asset",
+            "description": "Set the fee structure on an asset.",
             "args": [
               {
                 "name": "input",
@@ -4661,7 +4827,7 @@
           },
           {
             "name": "triggerWalletAddressEvents",
-            "description": "If automatic withdrawal of funds received via Web Monetization by the wallet address are disabled, this mutation can be used to trigger up to n withdrawal events.",
+            "description": "If automatic withdrawal of funds received via Web Monetization by the wallet address are disabled, this mutation can be used to trigger up to **n** withdrawal events.",
             "args": [
               {
                 "name": "input",
@@ -4694,7 +4860,7 @@
           },
           {
             "name": "updateAsset",
-            "description": "Update an asset",
+            "description": "Update an existing asset.",
             "args": [
               {
                 "name": "input",
@@ -4726,8 +4892,41 @@
             "deprecationReason": null
           },
           {
+            "name": "updateIncomingPayment",
+            "description": "Update an existing incoming payment.",
+            "args": [
+              {
+                "name": "input",
+                "description": null,
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "INPUT_OBJECT",
+                    "name": "UpdateIncomingPaymentInput",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              }
+            ],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "IncomingPaymentResponse",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "updatePeer",
-            "description": "Update a peer",
+            "description": "Update an existing peer.",
             "args": [
               {
                 "name": "input",
@@ -4760,7 +4959,7 @@
           },
           {
             "name": "updateWalletAddress",
-            "description": "Update a wallet address",
+            "description": "Update an existing wallet address.",
             "args": [
               {
                 "name": "input",
@@ -4822,7 +5021,7 @@
           },
           {
             "name": "withdrawEventLiquidity",
-            "description": "Withdraw webhook event liquidity",
+            "description": "Withdraw webhook event liquidity (deprecated).",
             "args": [
               {
                 "name": "input",
@@ -4874,7 +5073,7 @@
           },
           {
             "name": "createdAt",
-            "description": "Date-time of creation",
+            "description": "The date and time that the outgoing payment was created.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -4890,7 +5089,7 @@
           },
           {
             "name": "debitAmount",
-            "description": "Amount to send (fixed send)",
+            "description": "Amount to send (fixed send).",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -4906,7 +5105,7 @@
           },
           {
             "name": "error",
-            "description": null,
+            "description": "Any error encountered during the payment process.",
             "args": [],
             "type": {
               "kind": "SCALAR",
@@ -4918,7 +5117,7 @@
           },
           {
             "name": "grantId",
-            "description": "Id of the Grant under which this outgoing payment was created",
+            "description": "Unique identifier of the grant under which the outgoing payment was created.",
             "args": [],
             "type": {
               "kind": "SCALAR",
@@ -4930,7 +5129,7 @@
           },
           {
             "name": "id",
-            "description": "Outgoing payment id",
+            "description": "Unique identifier of the outgoing payment.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -4946,7 +5145,7 @@
           },
           {
             "name": "liquidity",
-            "description": "Available liquidity",
+            "description": "Current amount of liquidity available for this outgoing payment.",
             "args": [],
             "type": {
               "kind": "SCALAR",
@@ -4970,7 +5169,7 @@
           },
           {
             "name": "quote",
-            "description": "Quote for this outgoing payment",
+            "description": "Corresponding quote for the outgoing payment.",
             "args": [],
             "type": {
               "kind": "OBJECT",
@@ -4982,7 +5181,7 @@
           },
           {
             "name": "receiveAmount",
-            "description": "Amount to receive (fixed receive)",
+            "description": "Amount to receive (fixed receive).",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -4998,7 +5197,7 @@
           },
           {
             "name": "receiver",
-            "description": "Wallet address URL of the receiver",
+            "description": "Wallet address URL of the receiver.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -5014,7 +5213,7 @@
           },
           {
             "name": "sentAmount",
-            "description": "Amount already sent",
+            "description": "Amount already sent.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -5030,7 +5229,7 @@
           },
           {
             "name": "state",
-            "description": "Outgoing payment state",
+            "description": "State of the outgoing payment.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -5046,7 +5245,7 @@
           },
           {
             "name": "stateAttempts",
-            "description": null,
+            "description": "Number of attempts made to send an outgoing payment.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -5062,7 +5261,7 @@
           },
           {
             "name": "walletAddressId",
-            "description": "Id of the wallet address under which this outgoing payment was created",
+            "description": "Unique identifier of the wallet address under which the outgoing payment was created.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -5100,7 +5299,7 @@
         "fields": [
           {
             "name": "edges",
-            "description": null,
+            "description": "A list of outgoing payment edges, containing outgoing payment nodes and cursors for pagination.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -5124,7 +5323,7 @@
           },
           {
             "name": "pageInfo",
-            "description": null,
+            "description": "Pagination information for the outgoing payments.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -5151,7 +5350,7 @@
         "fields": [
           {
             "name": "cursor",
-            "description": null,
+            "description": "A cursor for paginating through the outgoing payments.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -5167,7 +5366,7 @@
           },
           {
             "name": "node",
-            "description": null,
+            "description": "An outgoing payment node in the list.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -5188,13 +5387,60 @@
         "possibleTypes": null
       },
       {
+        "kind": "INPUT_OBJECT",
+        "name": "OutgoingPaymentFilter",
+        "description": null,
+        "fields": null,
+        "inputFields": [
+          {
+            "name": "receiver",
+            "description": "Filter for outgoing payments based on the receiver's details.",
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "FilterString",
+              "ofType": null
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "state",
+            "description": "Filter for outgoing payments based on their state.",
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "FilterString",
+              "ofType": null
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "walletAddressId",
+            "description": "Filter for outgoing payments based on the wallet address ID.",
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "FilterString",
+              "ofType": null
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
+        "interfaces": null,
+        "enumValues": null,
+        "possibleTypes": null
+      },
+      {
         "kind": "OBJECT",
         "name": "OutgoingPaymentResponse",
         "description": null,
         "fields": [
           {
             "name": "payment",
-            "description": null,
+            "description": "The outgoing payment object returned in the response.",
             "args": [],
             "type": {
               "kind": "OBJECT",
@@ -5220,31 +5466,31 @@
         "enumValues": [
           {
             "name": "CANCELLED",
-            "description": "Payment cancelled",
+            "description": "The payment has been canceled.",
             "isDeprecated": false,
             "deprecationReason": null
           },
           {
             "name": "COMPLETED",
-            "description": "Successful completion",
+            "description": "The payment has been successfully completed.",
             "isDeprecated": false,
             "deprecationReason": null
           },
           {
             "name": "FAILED",
-            "description": "Payment failed",
+            "description": "The payment has failed.",
             "isDeprecated": false,
             "deprecationReason": null
           },
           {
             "name": "FUNDING",
-            "description": "Will transition to SENDING once payment funds are reserved",
+            "description": "The payment is reserving funds and will transition to `SENDING` once funds are secured.",
             "isDeprecated": false,
             "deprecationReason": null
           },
           {
             "name": "SENDING",
-            "description": "Paying, will transition to COMPLETED on success",
+            "description": "The payment is in progress and will transition to `COMPLETED` upon success.",
             "isDeprecated": false,
             "deprecationReason": null
           }
@@ -5258,7 +5504,7 @@
         "fields": [
           {
             "name": "endCursor",
-            "description": "Paginating forwards: the cursor to continue.",
+            "description": "The cursor used to fetch the next page when paginating forwards.",
             "args": [],
             "type": {
               "kind": "SCALAR",
@@ -5270,7 +5516,7 @@
           },
           {
             "name": "hasNextPage",
-            "description": "Paginating forwards: Are there more pages?",
+            "description": "Indicates if there are more pages when paginating forwards.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -5286,7 +5532,7 @@
           },
           {
             "name": "hasPreviousPage",
-            "description": "Paginating backwards: Are there more pages?",
+            "description": "Indicates if there are more pages when paginating backwards.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -5302,7 +5548,7 @@
           },
           {
             "name": "startCursor",
-            "description": "Paginating backwards: the cursor to continue.",
+            "description": "The cursor used to fetch the next page when paginating backwards.",
             "args": [],
             "type": {
               "kind": "SCALAR",
@@ -5337,7 +5583,7 @@
           },
           {
             "name": "createdAt",
-            "description": "Date-time of creation",
+            "description": "The date and time that the payment was created.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -5353,7 +5599,7 @@
           },
           {
             "name": "id",
-            "description": "Payment id",
+            "description": "Unique identifier of the payment.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -5369,7 +5615,7 @@
           },
           {
             "name": "liquidity",
-            "description": "Available liquidity",
+            "description": "Current amount of liquidity available for this payment.",
             "args": [],
             "type": {
               "kind": "SCALAR",
@@ -5393,7 +5639,7 @@
           },
           {
             "name": "state",
-            "description": "Either the IncomingPaymentState or OutgoingPaymentState according to type",
+            "description": "State of the payment, either `IncomingPaymentState` or `OutgoingPaymentState` according to payment type",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -5409,7 +5655,7 @@
           },
           {
             "name": "type",
-            "description": "Type of payment",
+            "description": "Type of payment, either incoming or outgoing.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -5425,7 +5671,7 @@
           },
           {
             "name": "walletAddressId",
-            "description": "Id of the wallet address under which this payment was created",
+            "description": "Unique identifier of the wallet address under which the payment was created.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -5463,7 +5709,7 @@
         "fields": [
           {
             "name": "edges",
-            "description": null,
+            "description": "A list of payment edges, containing payment nodes and cursors for pagination.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -5487,7 +5733,7 @@
           },
           {
             "name": "pageInfo",
-            "description": null,
+            "description": "Pagination information for the payments.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -5514,7 +5760,7 @@
         "fields": [
           {
             "name": "cursor",
-            "description": null,
+            "description": "A cursor for paginating through the payments.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -5530,7 +5776,7 @@
           },
           {
             "name": "node",
-            "description": null,
+            "description": "A payment node in the list.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -5558,7 +5804,7 @@
         "inputFields": [
           {
             "name": "type",
-            "description": null,
+            "description": "Filter for payments based on their type.",
             "type": {
               "kind": "INPUT_OBJECT",
               "name": "FilterString",
@@ -5570,7 +5816,7 @@
           },
           {
             "name": "walletAddressId",
-            "description": null,
+            "description": "Filter for payments based on the wallet address ID.",
             "type": {
               "kind": "INPUT_OBJECT",
               "name": "FilterString",
@@ -5595,13 +5841,13 @@
         "enumValues": [
           {
             "name": "INCOMING",
-            "description": null,
+            "description": "Represents an incoming payment.",
             "isDeprecated": false,
             "deprecationReason": null
           },
           {
             "name": "OUTGOING",
-            "description": null,
+            "description": "Represents an outgoing payment.",
             "isDeprecated": false,
             "deprecationReason": null
           }
@@ -5615,7 +5861,7 @@
         "fields": [
           {
             "name": "asset",
-            "description": "Asset of peering relationship",
+            "description": "Asset of peering relationship.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -5631,7 +5877,7 @@
           },
           {
             "name": "createdAt",
-            "description": "Date-time of creation",
+            "description": "The date and time when the peer was created.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -5647,7 +5893,7 @@
           },
           {
             "name": "http",
-            "description": "Peering connection details",
+            "description": "Peering connection details.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -5663,7 +5909,7 @@
           },
           {
             "name": "id",
-            "description": "Peer id",
+            "description": "Unique identifier of the peer.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -5679,7 +5925,7 @@
           },
           {
             "name": "liquidity",
-            "description": "Available liquidity",
+            "description": "Current amount of peer liquidity available.",
             "args": [],
             "type": {
               "kind": "SCALAR",
@@ -5691,7 +5937,7 @@
           },
           {
             "name": "liquidityThreshold",
-            "description": "Account Servicing Entity will be notified via a webhook event if peer liquidity falls below this value",
+            "description": "A webhook event will notify the Account Servicing Entity if liquidity falls below this value.",
             "args": [],
             "type": {
               "kind": "SCALAR",
@@ -5703,7 +5949,7 @@
           },
           {
             "name": "maxPacketAmount",
-            "description": "Maximum packet amount that the peer accepts",
+            "description": "Maximum packet amount that the peer accepts.",
             "args": [],
             "type": {
               "kind": "SCALAR",
@@ -5715,7 +5961,7 @@
           },
           {
             "name": "name",
-            "description": "Peer's public name",
+            "description": "Public name for the peer.",
             "args": [],
             "type": {
               "kind": "SCALAR",
@@ -5727,7 +5973,7 @@
           },
           {
             "name": "staticIlpAddress",
-            "description": "Peer's ILP address",
+            "description": "ILP address of the peer.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -5760,7 +6006,7 @@
         "fields": [
           {
             "name": "cursor",
-            "description": null,
+            "description": "A cursor for paginating through the peers.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -5776,7 +6022,7 @@
           },
           {
             "name": "node",
-            "description": null,
+            "description": "A peer node in the list.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -5803,7 +6049,7 @@
         "fields": [
           {
             "name": "edges",
-            "description": null,
+            "description": "A list of edges representing peers and cursors for pagination.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -5827,7 +6073,7 @@
           },
           {
             "name": "pageInfo",
-            "description": null,
+            "description": "Information to aid in pagination.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -5855,7 +6101,7 @@
         "inputFields": [
           {
             "name": "idempotencyKey",
-            "description": "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)",
+            "description": "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency).",
             "type": {
               "kind": "NON_NULL",
               "name": null,
@@ -5871,7 +6117,7 @@
           },
           {
             "name": "withdrawalId",
-            "description": "The id of the liquidity withdrawal to post.",
+            "description": "Unique identifier of the liquidity withdrawal to post.",
             "type": {
               "kind": "NON_NULL",
               "name": null,
@@ -5897,11 +6143,11 @@
         "fields": [
           {
             "name": "accountingTransfers",
-            "description": "Fetch a page of accounting transfers",
+            "description": "Fetch a paginated list of accounting transfers for a given account.",
             "args": [
               {
                 "name": "id",
-                "description": "Account id.",
+                "description": "Unique identifier of the account.",
                 "type": {
                   "kind": "NON_NULL",
                   "name": null,
@@ -5917,7 +6163,7 @@
               },
               {
                 "name": "limit",
-                "description": "Limit the number of results returned. If no limit is provided, the default limit of 100_000 is set for TigerBeetle.",
+                "description": "Limit the number of results returned. If no limit is provided, the default limit of 100,000 is set for TigerBeetle.",
                 "type": {
                   "kind": "SCALAR",
                   "name": "Int",
@@ -5942,11 +6188,11 @@
           },
           {
             "name": "asset",
-            "description": "Fetch an asset",
+            "description": "Fetch an asset by its ID.",
             "args": [
               {
                 "name": "id",
-                "description": null,
+                "description": "Unique identifier of the asset.",
                 "type": {
                   "kind": "NON_NULL",
                   "name": null,
@@ -5970,12 +6216,57 @@
             "deprecationReason": null
           },
           {
+            "name": "assetByCodeAndScale",
+            "description": "Get an asset based on its currency code and scale if it exists.",
+            "args": [
+              {
+                "name": "code",
+                "description": "ISO 4217 currency code.",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "String",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "scale",
+                "description": "Difference in order of magnitude between the standard unit of an asset and its corresponding fractional unit.",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "UInt8",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              }
+            ],
+            "type": {
+              "kind": "OBJECT",
+              "name": "Asset",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "assets",
-            "description": "Fetch a page of assets.",
+            "description": "Fetch a paginated list of assets.",
             "args": [
               {
                 "name": "after",
-                "description": "Paginating forwards: the cursor before the the requested page.",
+                "description": "Forward pagination: Cursor (asset ID) to start retrieving assets after this point.",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -5987,7 +6278,7 @@
               },
               {
                 "name": "before",
-                "description": "Paginating backwards: the cursor after the the requested page.",
+                "description": "Backward pagination: Cursor (asset ID) to start retrieving assets before this point.",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -5999,7 +6290,7 @@
               },
               {
                 "name": "first",
-                "description": "Paginating forwards: The first **n** elements from the page.",
+                "description": "Foward pagination: Limit the result to the first **n** assets after the `after` cursor.",
                 "type": {
                   "kind": "SCALAR",
                   "name": "Int",
@@ -6011,7 +6302,7 @@
               },
               {
                 "name": "last",
-                "description": "Paginating backwards: The last **n** elements from the page.",
+                "description": "Backward pagination: Limit the result to the last **n** assets before the `before` cursor.",
                 "type": {
                   "kind": "SCALAR",
                   "name": "Int",
@@ -6023,7 +6314,7 @@
               },
               {
                 "name": "sortOrder",
-                "description": "Ascending or descending order of creation.",
+                "description": "Specify the sort order of assets based on their creation data, either ascending or descending.",
                 "type": {
                   "kind": "ENUM",
                   "name": "SortOrder",
@@ -6048,11 +6339,11 @@
           },
           {
             "name": "incomingPayment",
-            "description": "Fetch an Open Payments incoming payment",
+            "description": "Fetch an Open Payments incoming payment by its ID.",
             "args": [
               {
                 "name": "id",
-                "description": null,
+                "description": "Unique identifier of the incoming payment.",
                 "type": {
                   "kind": "NON_NULL",
                   "name": null,
@@ -6077,11 +6368,11 @@
           },
           {
             "name": "outgoingPayment",
-            "description": "Fetch an Open Payments outgoing payment",
+            "description": "Fetch an Open Payments outgoing payment by its ID.",
             "args": [
               {
                 "name": "id",
-                "description": null,
+                "description": "Unique identifier of the outgoing payment.",
                 "type": {
                   "kind": "NON_NULL",
                   "name": null,
@@ -6105,12 +6396,12 @@
             "deprecationReason": null
           },
           {
-            "name": "payments",
-            "description": "Fetch a page of combined payments",
+            "name": "outgoingPayments",
+            "description": "Fetch a paginated list of outgoing payments by receiver.",
             "args": [
               {
                 "name": "after",
-                "description": "Paginating forwards: the cursor before the the requested page.",
+                "description": "Forward pagination: Cursor (outgoing payment ID) to start retrieving outgoing payments after this point.",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -6122,7 +6413,7 @@
               },
               {
                 "name": "before",
-                "description": "Paginating backwards: the cursor after the the requested page.",
+                "description": "Backward pagination: Cursor (outgoing payment ID) to start retrieving outgoing payments before this point.",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -6134,10 +6425,10 @@
               },
               {
                 "name": "filter",
-                "description": "Filter payment events based on specific criteria.",
+                "description": "Filter outgoing payments based on specific criteria such as receiver, wallet address ID, or state.",
                 "type": {
                   "kind": "INPUT_OBJECT",
-                  "name": "PaymentFilter",
+                  "name": "OutgoingPaymentFilter",
                   "ofType": null
                 },
                 "defaultValue": null,
@@ -6146,7 +6437,7 @@
               },
               {
                 "name": "first",
-                "description": "Paginating forwards: The first **n** elements from the page.",
+                "description": "Forward pagination: Limit the result to the first **n** outgoing payments after the `after` cursor.",
                 "type": {
                   "kind": "SCALAR",
                   "name": "Int",
@@ -6158,7 +6449,7 @@
               },
               {
                 "name": "last",
-                "description": "Paginating backwards: The last **n** elements from the page.",
+                "description": "Backward pagination: Limit the result to the last **n** outgoing payments before the `before` cursor.",
                 "type": {
                   "kind": "SCALAR",
                   "name": "Int",
@@ -6170,7 +6461,96 @@
               },
               {
                 "name": "sortOrder",
-                "description": "Ascending or descending order of creation.",
+                "description": "Specify the sort order of outgoing payments based on their creation date, either ascending or descending.",
+                "type": {
+                  "kind": "ENUM",
+                  "name": "SortOrder",
+                  "ofType": null
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              }
+            ],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "OutgoingPaymentConnection",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "payments",
+            "description": "Fetch a paginated list of combined payments, including incoming and outgoing payments.",
+            "args": [
+              {
+                "name": "after",
+                "description": "Forward pagination: Cursor (payment ID) to start retrieving payments after this point.",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "before",
+                "description": "Backward pagination: Cursor (payment ID) to start retrieving payments before this point.",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "filter",
+                "description": "Filter payment events based on specific criteria such as payment type or wallet address ID.",
+                "type": {
+                  "kind": "INPUT_OBJECT",
+                  "name": "PaymentFilter",
+                  "ofType": null
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "first",
+                "description": "Forward pagination: Limit the result to the first **n** payments after the `after` cursor.",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "Int",
+                  "ofType": null
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "last",
+                "description": "Backward pagination: Limit the result to the last **n** payments before the `before` cursor.",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "Int",
+                  "ofType": null
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "sortOrder",
+                "description": "Specify the sort order of payments based on their creation date, either ascending or descending.",
                 "type": {
                   "kind": "ENUM",
                   "name": "SortOrder",
@@ -6195,11 +6575,56 @@
           },
           {
             "name": "peer",
-            "description": "Fetch a peer",
+            "description": "Fetch a peer by its ID.",
             "args": [
               {
                 "name": "id",
-                "description": null,
+                "description": "Unique identifier of the peer.",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "String",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              }
+            ],
+            "type": {
+              "kind": "OBJECT",
+              "name": "Peer",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "peerByAddressAndAsset",
+            "description": "Get a peer based on its ILP address and asset ID if it exists.",
+            "args": [
+              {
+                "name": "assetId",
+                "description": "Asset ID of peering relationship.",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "String",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "staticIlpAddress",
+                "description": "ILP address of the peer.",
                 "type": {
                   "kind": "NON_NULL",
                   "name": null,
@@ -6224,11 +6649,11 @@
           },
           {
             "name": "peers",
-            "description": "Fetch a page of peers.",
+            "description": "Fetch a paginated list of peers.",
             "args": [
               {
                 "name": "after",
-                "description": "Paginating forwards: the cursor before the the requested page.",
+                "description": "Forward pagination: Cursor (peer ID) to start retrieving peers after this point.",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -6240,7 +6665,7 @@
               },
               {
                 "name": "before",
-                "description": "Paginating backwards: the cursor after the the requested page.",
+                "description": "Backward pagination: Cursor (peer ID) to start retrieving peers before this point.",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -6252,7 +6677,7 @@
               },
               {
                 "name": "first",
-                "description": "Paginating forwards: The first **n** elements from the page.",
+                "description": "Forward pagination: Limit the result to the first **n** peers after the `after` cursor.",
                 "type": {
                   "kind": "SCALAR",
                   "name": "Int",
@@ -6264,7 +6689,7 @@
               },
               {
                 "name": "last",
-                "description": "Paginating backwards: The last **n** elements from the page.",
+                "description": "Backward pagination: Limit the result to the last **n** peers before the `before` cursor.",
                 "type": {
                   "kind": "SCALAR",
                   "name": "Int",
@@ -6276,7 +6701,7 @@
               },
               {
                 "name": "sortOrder",
-                "description": "Ascending or descending order of creation.",
+                "description": "Specify the sort order of peers based on their creation date, either ascending or descending.",
                 "type": {
                   "kind": "ENUM",
                   "name": "SortOrder",
@@ -6301,11 +6726,11 @@
           },
           {
             "name": "quote",
-            "description": "Fetch an Open Payments quote",
+            "description": "Fetch an Open Payments quote by its ID.",
             "args": [
               {
                 "name": "id",
-                "description": null,
+                "description": "Unique identifier of the quote.",
                 "type": {
                   "kind": "NON_NULL",
                   "name": null,
@@ -6330,11 +6755,11 @@
           },
           {
             "name": "receiver",
-            "description": "Get an local or remote Open Payments Incoming Payment. The receiver has a wallet address on either this or another Open Payments resource server.",
+            "description": "Retrieve an Open Payments incoming payment by receiver ID. The receiver's wallet address can be hosted on this server or a remote Open Payments resource server.",
             "args": [
               {
                 "name": "id",
-                "description": null,
+                "description": "Unique identifier of the receiver (incoming payment URL).",
                 "type": {
                   "kind": "NON_NULL",
                   "name": null,
@@ -6359,11 +6784,40 @@
           },
           {
             "name": "walletAddress",
-            "description": "Fetch a wallet address.",
+            "description": "Fetch a wallet address by its ID.",
             "args": [
               {
                 "name": "id",
-                "description": null,
+                "description": "Unique identifier of the wallet address.",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "String",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              }
+            ],
+            "type": {
+              "kind": "OBJECT",
+              "name": "WalletAddress",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "walletAddressByUrl",
+            "description": "Get a wallet address by its url if it exists",
+            "args": [
+              {
+                "name": "url",
+                "description": "Wallet Address URL.",
                 "type": {
                   "kind": "NON_NULL",
                   "name": null,
@@ -6388,11 +6842,11 @@
           },
           {
             "name": "walletAddresses",
-            "description": "Fetch a page of wallet addresses.",
+            "description": "Fetch a paginated list of wallet addresses.",
             "args": [
               {
                 "name": "after",
-                "description": "Paginating forwards: the cursor before the the requested page.",
+                "description": "Forward pagination: Cursor (wallet address ID) to start retrieving wallet addresses after this point.",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -6404,7 +6858,7 @@
               },
               {
                 "name": "before",
-                "description": "Paginating backwards: the cursor after the the requested page.",
+                "description": "Backward pagination: Cursor (wallet address ID) to start retrieving wallet addresses before this point.",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -6416,7 +6870,7 @@
               },
               {
                 "name": "first",
-                "description": "Paginating forwards: The first **n** elements from the page.",
+                "description": "Forward pagination: Limit the result to the first **n** wallet addresses after the `after` cursor.",
                 "type": {
                   "kind": "SCALAR",
                   "name": "Int",
@@ -6428,7 +6882,7 @@
               },
               {
                 "name": "last",
-                "description": "Paginating backwards: The last **n** elements from the page.",
+                "description": "Backward pagination: Limit the result to the last **n** wallet addresses before the `before` cursor.",
                 "type": {
                   "kind": "SCALAR",
                   "name": "Int",
@@ -6440,7 +6894,7 @@
               },
               {
                 "name": "sortOrder",
-                "description": "Ascending or descending order of creation.",
+                "description": "Specify the sort order of wallet addresses based on their creation date, either ascending or descending.",
                 "type": {
                   "kind": "ENUM",
                   "name": "SortOrder",
@@ -6465,11 +6919,11 @@
           },
           {
             "name": "webhookEvents",
-            "description": "Fetch a page of webhook events",
+            "description": "Fetch a paginated list of webhook events.",
             "args": [
               {
                 "name": "after",
-                "description": "Paginating forwards: the cursor before the the requested page.",
+                "description": "Forward pagination: Cursor (webhook event ID) to start retrieving webhook events after this point.",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -6481,7 +6935,7 @@
               },
               {
                 "name": "before",
-                "description": "Paginating backwards: the cursor after the the requested page.",
+                "description": "Backward pagination: Cursor (webhook event ID) to start retrieving webhook events before this point.",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -6505,7 +6959,7 @@
               },
               {
                 "name": "first",
-                "description": "Paginating forwards: The first **n** elements from the page.",
+                "description": "Forward pagination: Limit the result to the first **n** webhook events after the `after` cursor.",
                 "type": {
                   "kind": "SCALAR",
                   "name": "Int",
@@ -6517,7 +6971,7 @@
               },
               {
                 "name": "last",
-                "description": "Paginating backwards: The last **n** elements from the page.",
+                "description": "Backward pagination: Limit the result to the last **n** webhook events before the `before` cursor.",
                 "type": {
                   "kind": "SCALAR",
                   "name": "Int",
@@ -6529,7 +6983,7 @@
               },
               {
                 "name": "sortOrder",
-                "description": "Ascending or descending order of creation.",
+                "description": "Specify the sort order of webhook events based on their creation date, either ascending or descending.",
                 "type": {
                   "kind": "ENUM",
                   "name": "SortOrder",
@@ -6565,7 +7019,7 @@
         "fields": [
           {
             "name": "createdAt",
-            "description": "Date-time of creation",
+            "description": "The date and time that the quote was created.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -6581,7 +7035,7 @@
           },
           {
             "name": "debitAmount",
-            "description": "Amount to send (fixed send)",
+            "description": "Amount to send (fixed send).",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -6596,8 +7050,20 @@
             "deprecationReason": null
           },
           {
+            "name": "estimatedExchangeRate",
+            "description": "Estimated exchange rate for this quote.",
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "Float",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "expiresAt",
-            "description": "Date-time of expiration",
+            "description": "The date and time that the quote will expire.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -6612,24 +7078,8 @@
             "deprecationReason": null
           },
           {
-            "name": "highEstimatedExchangeRate",
-            "description": "Upper bound of probed exchange rate",
-            "args": [],
-            "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "SCALAR",
-                "name": "Float",
-                "ofType": null
-              }
-            },
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
             "name": "id",
-            "description": "Quote id",
+            "description": "Unique identifier of the quote.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -6644,56 +7094,8 @@
             "deprecationReason": null
           },
           {
-            "name": "lowEstimatedExchangeRate",
-            "description": "Lower bound of probed exchange rate",
-            "args": [],
-            "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "SCALAR",
-                "name": "Float",
-                "ofType": null
-              }
-            },
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
-            "name": "maxPacketAmount",
-            "description": "Maximum value per packet allowed on the possible routes",
-            "args": [],
-            "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "SCALAR",
-                "name": "UInt64",
-                "ofType": null
-              }
-            },
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
-            "name": "minExchangeRate",
-            "description": "Aggregate exchange rate the payment is guaranteed to meet",
-            "args": [],
-            "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "SCALAR",
-                "name": "Float",
-                "ofType": null
-              }
-            },
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
             "name": "receiveAmount",
-            "description": "Amount to receive (fixed receive)",
+            "description": "Amount to receive (fixed receive).",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -6709,7 +7111,7 @@
           },
           {
             "name": "receiver",
-            "description": "Wallet address URL of the receiver",
+            "description": "Wallet address URL of the receiver.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -6725,7 +7127,7 @@
           },
           {
             "name": "walletAddressId",
-            "description": "Id of the wallet address under which this quote was created",
+            "description": "Unique identifier of the wallet address under which the quote was created.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -6752,7 +7154,7 @@
         "fields": [
           {
             "name": "edges",
-            "description": null,
+            "description": "A list of quote edges, containing quote nodes and cursors for pagination.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -6776,7 +7178,7 @@
           },
           {
             "name": "pageInfo",
-            "description": null,
+            "description": "Pagination information for quotes.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -6803,7 +7205,7 @@
         "fields": [
           {
             "name": "cursor",
-            "description": null,
+            "description": "A cursor for paginating through the quotes.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -6819,7 +7221,7 @@
           },
           {
             "name": "node",
-            "description": null,
+            "description": "A quote node in the list.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -6846,7 +7248,7 @@
         "fields": [
           {
             "name": "quote",
-            "description": null,
+            "description": "The quote object returned in the response.",
             "args": [],
             "type": {
               "kind": "OBJECT",
@@ -6869,7 +7271,7 @@
         "fields": [
           {
             "name": "completed",
-            "description": "Describes whether the incoming payment has completed receiving funds.",
+            "description": "Indicates whether the incoming payment has completed receiving funds.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -6885,7 +7287,7 @@
           },
           {
             "name": "createdAt",
-            "description": "Date-time of creation",
+            "description": "The date and time that the incoming payment was created.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -6901,7 +7303,7 @@
           },
           {
             "name": "expiresAt",
-            "description": "Date-time of expiry. After this time, the incoming payment will accept further payments made to it.",
+            "description": "Date and time that the incoming payment will expire. After this time, the incoming payment will not accept further payments made to it.",
             "args": [],
             "type": {
               "kind": "SCALAR",
@@ -6913,7 +7315,7 @@
           },
           {
             "name": "id",
-            "description": "Incoming payment URL",
+            "description": "Unique identifier of the receiver (incoming payment URL).",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -6969,7 +7371,7 @@
           },
           {
             "name": "updatedAt",
-            "description": "Date-time of last update",
+            "description": "The date and time that the incoming payment was last updated.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -6985,7 +7387,7 @@
           },
           {
             "name": "walletAddressUrl",
-            "description": "Wallet address URL under which the incoming payment was created",
+            "description": "Wallet address URL under which the incoming payment was created.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -7013,7 +7415,7 @@
         "inputFields": [
           {
             "name": "id",
-            "description": "Internal id of key",
+            "description": "Internal unique identifier of the key to revoke.",
             "type": {
               "kind": "NON_NULL",
               "name": null,
@@ -7029,7 +7431,7 @@
           },
           {
             "name": "idempotencyKey",
-            "description": "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)",
+            "description": "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency).",
             "type": {
               "kind": "SCALAR",
               "name": "String",
@@ -7051,7 +7453,7 @@
         "fields": [
           {
             "name": "walletAddressKey",
-            "description": null,
+            "description": "The wallet address key that was revoked.",
             "args": [],
             "type": {
               "kind": "OBJECT",
@@ -7075,7 +7477,7 @@
         "inputFields": [
           {
             "name": "assetId",
-            "description": "Asset id to add the fee to",
+            "description": "Unique identifier of the asset id to add the fees to.",
             "type": {
               "kind": "NON_NULL",
               "name": null,
@@ -7107,7 +7509,7 @@
           },
           {
             "name": "idempotencyKey",
-            "description": "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)",
+            "description": "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency).",
             "type": {
               "kind": "SCALAR",
               "name": "String",
@@ -7119,7 +7521,7 @@
           },
           {
             "name": "type",
-            "description": "Type of fee (sending or receiving)",
+            "description": "Type of fee, either sending or receiving.",
             "type": {
               "kind": "NON_NULL",
               "name": null,
@@ -7145,7 +7547,7 @@
         "fields": [
           {
             "name": "fee",
-            "description": null,
+            "description": "The fee that was set.",
             "args": [],
             "type": {
               "kind": "OBJECT",
@@ -7171,13 +7573,13 @@
         "enumValues": [
           {
             "name": "ASC",
-            "description": "Choose ascending order for results.",
+            "description": "Sort the results in ascending order.",
             "isDeprecated": false,
             "deprecationReason": null
           },
           {
             "name": "DESC",
-            "description": "Choose descending order for results.",
+            "description": "Sort the results in descending order.",
             "isDeprecated": false,
             "deprecationReason": null
           }
@@ -7204,19 +7606,19 @@
         "enumValues": [
           {
             "name": "DEPOSIT",
-            "description": "Deposit transfer type.",
+            "description": "Represents a deposit transfer.",
             "isDeprecated": false,
             "deprecationReason": null
           },
           {
             "name": "TRANSFER",
-            "description": "Transfer type.",
+            "description": "Represents a generic transfer within Rafiki.",
             "isDeprecated": false,
             "deprecationReason": null
           },
           {
             "name": "WITHDRAWAL",
-            "description": "Withdrawal transfer type.",
+            "description": "Represents a withdrawal transfer.",
             "isDeprecated": false,
             "deprecationReason": null
           }
@@ -7231,7 +7633,7 @@
         "inputFields": [
           {
             "name": "idempotencyKey",
-            "description": "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)",
+            "description": "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency).",
             "type": {
               "kind": "SCALAR",
               "name": "String",
@@ -7269,7 +7671,7 @@
         "fields": [
           {
             "name": "count",
-            "description": "Number of events triggered",
+            "description": "The number of events that were triggered.",
             "args": [],
             "type": {
               "kind": "SCALAR",
@@ -7288,7 +7690,7 @@
       {
         "kind": "SCALAR",
         "name": "UInt8",
-        "description": null,
+        "description": "The `UInt8` scalar type represents unsigned 8-bit whole numeric values, ranging from 0 to 255.",
         "fields": null,
         "inputFields": null,
         "interfaces": null,
@@ -7298,7 +7700,7 @@
       {
         "kind": "SCALAR",
         "name": "UInt64",
-        "description": null,
+        "description": "The `UInt64` scalar type represents unsigned 64-bit whole numeric values. It is capable of handling values that are larger than the JavaScript `Number` type limit (greater than 2^53).",
         "fields": null,
         "inputFields": null,
         "interfaces": null,
@@ -7313,7 +7715,7 @@
         "inputFields": [
           {
             "name": "id",
-            "description": "Asset id",
+            "description": "Unique identifier of the asset to update.",
             "type": {
               "kind": "NON_NULL",
               "name": null,
@@ -7329,7 +7731,7 @@
           },
           {
             "name": "idempotencyKey",
-            "description": "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)",
+            "description": "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency).",
             "type": {
               "kind": "SCALAR",
               "name": "String",
@@ -7341,7 +7743,7 @@
           },
           {
             "name": "liquidityThreshold",
-            "description": "Account Servicing Entity will be notified via a webhook event if liquidity falls below this new value",
+            "description": "A webhook event will notify the Account Servicing Entity if liquidity falls below this new value.",
             "type": {
               "kind": "SCALAR",
               "name": "UInt64",
@@ -7353,11 +7755,54 @@
           },
           {
             "name": "withdrawalThreshold",
-            "description": "New minimum amount of liquidity that can be withdrawn from the asset",
+            "description": "New minimum amount of liquidity that can be withdrawn from the asset.",
             "type": {
               "kind": "SCALAR",
               "name": "UInt64",
               "ofType": null
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
+        "interfaces": null,
+        "enumValues": null,
+        "possibleTypes": null
+      },
+      {
+        "kind": "INPUT_OBJECT",
+        "name": "UpdateIncomingPaymentInput",
+        "description": null,
+        "fields": null,
+        "inputFields": [
+          {
+            "name": "id",
+            "description": "Unique identifier of the incoming payment to update.",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "ID",
+                "ofType": null
+              }
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "metadata",
+            "description": "The new metadata object to save for the incoming payment. It will overwrite any existing metadata.",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "JSONObject",
+                "ofType": null
+              }
             },
             "defaultValue": null,
             "isDeprecated": false,
@@ -7376,7 +7821,7 @@
         "inputFields": [
           {
             "name": "http",
-            "description": "New peering connection details",
+            "description": "New peering connection details.",
             "type": {
               "kind": "INPUT_OBJECT",
               "name": "HttpInput",
@@ -7388,7 +7833,7 @@
           },
           {
             "name": "id",
-            "description": "Peer id",
+            "description": "Unique identifier of the peer to update.",
             "type": {
               "kind": "NON_NULL",
               "name": null,
@@ -7404,7 +7849,7 @@
           },
           {
             "name": "idempotencyKey",
-            "description": "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)",
+            "description": "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency).",
             "type": {
               "kind": "SCALAR",
               "name": "String",
@@ -7416,7 +7861,7 @@
           },
           {
             "name": "liquidityThreshold",
-            "description": "Account Servicing Entity will be notified via a webhook event if peer liquidity falls below this new value",
+            "description": "A webhook event will notify the Account Servicing Entity if peer liquidity falls below this new value.",
             "type": {
               "kind": "SCALAR",
               "name": "UInt64",
@@ -7428,7 +7873,7 @@
           },
           {
             "name": "maxPacketAmount",
-            "description": "New maximum packet amount that the peer accepts",
+            "description": "New maximum packet amount that the peer accepts.",
             "type": {
               "kind": "SCALAR",
               "name": "UInt64",
@@ -7440,7 +7885,7 @@
           },
           {
             "name": "name",
-            "description": "Peer's new public name",
+            "description": "New public name for the peer.",
             "type": {
               "kind": "SCALAR",
               "name": "String",
@@ -7452,7 +7897,7 @@
           },
           {
             "name": "staticIlpAddress",
-            "description": "Peer's new ILP address",
+            "description": "New ILP address for the peer.",
             "type": {
               "kind": "SCALAR",
               "name": "String",
@@ -7474,7 +7919,7 @@
         "fields": [
           {
             "name": "peer",
-            "description": null,
+            "description": "The peer that was updated.",
             "args": [],
             "type": {
               "kind": "OBJECT",
@@ -7498,7 +7943,7 @@
         "inputFields": [
           {
             "name": "additionalProperties",
-            "description": "List additional properties associated with this wallet address.",
+            "description": "Additional properties associated with this wallet address.",
             "type": {
               "kind": "LIST",
               "name": null,
@@ -7518,7 +7963,7 @@
           },
           {
             "name": "id",
-            "description": "ID of wallet address to update",
+            "description": "Unique identifier of the wallet address to update. This cannot be changed.",
             "type": {
               "kind": "NON_NULL",
               "name": null,
@@ -7534,7 +7979,7 @@
           },
           {
             "name": "idempotencyKey",
-            "description": "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)",
+            "description": "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency).",
             "type": {
               "kind": "SCALAR",
               "name": "String",
@@ -7546,7 +7991,7 @@
           },
           {
             "name": "publicName",
-            "description": "New public name for wallet address",
+            "description": "New public name for the wallet address. This is visible to anyone with the wallet address URL.",
             "type": {
               "kind": "SCALAR",
               "name": "String",
@@ -7558,7 +8003,7 @@
           },
           {
             "name": "status",
-            "description": "New status to set the wallet address to",
+            "description": "New status to set the wallet address to, either active or inactive.",
             "type": {
               "kind": "ENUM",
               "name": "WalletAddressStatus",
@@ -7580,7 +8025,7 @@
         "fields": [
           {
             "name": "walletAddress",
-            "description": null,
+            "description": "The updated wallet address.",
             "args": [],
             "type": {
               "kind": "OBJECT",
@@ -7604,7 +8049,7 @@
         "inputFields": [
           {
             "name": "idempotencyKey",
-            "description": "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)",
+            "description": "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency).",
             "type": {
               "kind": "NON_NULL",
               "name": null,
@@ -7620,7 +8065,7 @@
           },
           {
             "name": "withdrawalId",
-            "description": "The id of the liquidity withdrawal to void.",
+            "description": "Unique identifier of the liquidity withdrawal to void.",
             "type": {
               "kind": "NON_NULL",
               "name": null,
@@ -7646,7 +8091,7 @@
         "fields": [
           {
             "name": "additionalProperties",
-            "description": "List additional properties associated with this wallet address.",
+            "description": "Additional properties associated with the wallet address.",
             "args": [],
             "type": {
               "kind": "LIST",
@@ -7662,7 +8107,7 @@
           },
           {
             "name": "asset",
-            "description": "Asset of the wallet address",
+            "description": "Asset of the wallet address.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -7678,7 +8123,7 @@
           },
           {
             "name": "createdAt",
-            "description": "Date-time of creation",
+            "description": "The date and time when the wallet address was created.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -7694,7 +8139,7 @@
           },
           {
             "name": "id",
-            "description": "Wallet address id",
+            "description": "Unique identifier of the wallet address.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -7714,7 +8159,7 @@
             "args": [
               {
                 "name": "after",
-                "description": "Paginating forwards: the cursor before the the requested page.",
+                "description": "Forward pagination: Cursor (incoming payment ID) to start retrieving incoming payments after this point.",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -7726,7 +8171,7 @@
               },
               {
                 "name": "before",
-                "description": "Paginating backwards: the cursor after the the requested page.",
+                "description": "Backward pagination: Cursor (incoming payment ID) to start retrieving incoming payments before this point.",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -7738,7 +8183,7 @@
               },
               {
                 "name": "first",
-                "description": "Paginating forwards: The first **n** elements from the page.",
+                "description": "Forward pagination: Limit the result to the first **n** incoming payments after the `after` cursor.",
                 "type": {
                   "kind": "SCALAR",
                   "name": "Int",
@@ -7750,7 +8195,7 @@
               },
               {
                 "name": "last",
-                "description": "Paginating backwards: The last **n** elements from the page.",
+                "description": "Backward pagination: Limit the result to the last **n** incoming payments before the `before` cursor.",
                 "type": {
                   "kind": "SCALAR",
                   "name": "Int",
@@ -7762,7 +8207,7 @@
               },
               {
                 "name": "sortOrder",
-                "description": "Ascending or descending order of creation.",
+                "description": "Specify the sort order of incoming payments based on their creation date, either ascending or descending.",
                 "type": {
                   "kind": "ENUM",
                   "name": "SortOrder",
@@ -7783,7 +8228,7 @@
           },
           {
             "name": "liquidity",
-            "description": "Available liquidity",
+            "description": "Current amount of liquidity available for this wallet address.",
             "args": [],
             "type": {
               "kind": "SCALAR",
@@ -7799,7 +8244,7 @@
             "args": [
               {
                 "name": "after",
-                "description": "Paginating forwards: the cursor before the the requested page.",
+                "description": "Forward pagination: Cursor (outgoing payment ID) to start retrieving outgoing payments after this point.",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -7811,7 +8256,7 @@
               },
               {
                 "name": "before",
-                "description": "Paginating backwards: the cursor after the the requested page.",
+                "description": "Backward pagination: Cursor (outgoing payment ID) to start retrieving outgoing payments before this point.",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -7823,7 +8268,7 @@
               },
               {
                 "name": "first",
-                "description": "Paginating forwards: The first **n** elements from the page.",
+                "description": "Forward pagination: Limit the result to the first **n** outgoing payments after the `after` cursor.",
                 "type": {
                   "kind": "SCALAR",
                   "name": "Int",
@@ -7835,7 +8280,7 @@
               },
               {
                 "name": "last",
-                "description": "Paginating backwards: The last **n** elements from the page.",
+                "description": "Backward pagination: Limit the result to the last **n** outgoing payments before the `before` cursor.",
                 "type": {
                   "kind": "SCALAR",
                   "name": "Int",
@@ -7847,7 +8292,7 @@
               },
               {
                 "name": "sortOrder",
-                "description": "Ascending or descending order of creation.",
+                "description": "Specify the sort order of outgoing payments based on their creation date, either ascending or descending.",
                 "type": {
                   "kind": "ENUM",
                   "name": "SortOrder",
@@ -7868,7 +8313,7 @@
           },
           {
             "name": "publicName",
-            "description": "Public name associated with the wallet address",
+            "description": "Public name associated with the wallet address. This is visible to anyone with the wallet address URL.",
             "args": [],
             "type": {
               "kind": "SCALAR",
@@ -7884,7 +8329,7 @@
             "args": [
               {
                 "name": "after",
-                "description": "Paginating forwards: the cursor before the the requested page.",
+                "description": "Forward pagination: Cursor (quote ID) to start retrieving quotes after this point.",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -7896,7 +8341,7 @@
               },
               {
                 "name": "before",
-                "description": "Paginating backwards: the cursor after the the requested page.",
+                "description": "Backward pagination: Cursor (quote ID) to start retrieving quotes before this point.",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -7908,7 +8353,7 @@
               },
               {
                 "name": "first",
-                "description": "Paginating forwards: The first **n** elements from the page.",
+                "description": "Foward pagination: Limit the result to the first **n** quotes after the `after` cursor.",
                 "type": {
                   "kind": "SCALAR",
                   "name": "Int",
@@ -7920,7 +8365,7 @@
               },
               {
                 "name": "last",
-                "description": "Paginating backwards: The last **n** elements from the page.",
+                "description": "Backward pagination: Limit the result to the last **n** quotes before the `before` cursor.",
                 "type": {
                   "kind": "SCALAR",
                   "name": "Int",
@@ -7932,7 +8377,7 @@
               },
               {
                 "name": "sortOrder",
-                "description": "Ascending or descending order of creation.",
+                "description": "Specify the sort order of quotes based on their creation data, either ascending or descending.",
                 "type": {
                   "kind": "ENUM",
                   "name": "SortOrder",
@@ -7953,7 +8398,7 @@
           },
           {
             "name": "status",
-            "description": "Status of the wallet address",
+            "description": "The current status of the wallet, either active or inactive.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -7969,7 +8414,7 @@
           },
           {
             "name": "url",
-            "description": "Wallet Address URL",
+            "description": "Wallet Address URL.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -7989,7 +8434,7 @@
             "args": [
               {
                 "name": "after",
-                "description": "Paginating forwards: the cursor before the the requested page.",
+                "description": "Forward pagination: Cursor (wallet address key ID) to start retrieving keys after this point.",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -8001,7 +8446,7 @@
               },
               {
                 "name": "before",
-                "description": "Paginating backwards: the cursor after the the requested page.",
+                "description": "Backward pagination: Cursor (wallet address key ID) to start retrieving keys before this point.",
                 "type": {
                   "kind": "SCALAR",
                   "name": "String",
@@ -8013,7 +8458,7 @@
               },
               {
                 "name": "first",
-                "description": "Paginating forwards: The first **n** elements from the page.",
+                "description": "Foward pagination: Limit the result to the first **n** keys after the `after` cursor.",
                 "type": {
                   "kind": "SCALAR",
                   "name": "Int",
@@ -8025,7 +8470,7 @@
               },
               {
                 "name": "last",
-                "description": "Paginating backwards: The last **n** elements from the page.",
+                "description": "Backward pagination: Limit the result to the last **n** keys before the `before` cursor.",
                 "type": {
                   "kind": "SCALAR",
                   "name": "Int",
@@ -8037,7 +8482,7 @@
               },
               {
                 "name": "sortOrder",
-                "description": "Ascending or descending order of creation.",
+                "description": "Specify the sort order of keys based on their creation data, either ascending or descending.",
                 "type": {
                   "kind": "ENUM",
                   "name": "SortOrder",
@@ -8075,7 +8520,7 @@
         "fields": [
           {
             "name": "cursor",
-            "description": null,
+            "description": "A cursor for paginating through the wallet addresses.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -8091,7 +8536,7 @@
           },
           {
             "name": "node",
-            "description": null,
+            "description": "A wallet address node in the list.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -8118,7 +8563,7 @@
         "fields": [
           {
             "name": "createdAt",
-            "description": "Date-time of creation",
+            "description": "The date and time that this wallet address key was created.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -8134,7 +8579,7 @@
           },
           {
             "name": "id",
-            "description": "Internal id of key",
+            "description": "Unique internal identifier for the wallet address key.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -8150,7 +8595,7 @@
           },
           {
             "name": "jwk",
-            "description": "Public key",
+            "description": "The public key object in JSON Web Key (JWK) format.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -8166,7 +8611,7 @@
           },
           {
             "name": "revoked",
-            "description": "Indicator whether the key has been revoked",
+            "description": "Indicator of whether the key has been revoked.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -8182,7 +8627,7 @@
           },
           {
             "name": "walletAddressId",
-            "description": "Id of the wallet address to which this key belongs to",
+            "description": "Unique identifier of the wallet address to associate with the key.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -8215,7 +8660,7 @@
         "fields": [
           {
             "name": "edges",
-            "description": null,
+            "description": "A list of wallet address key edges, containing wallet address key nodes and cursors for pagination.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -8239,7 +8684,7 @@
           },
           {
             "name": "pageInfo",
-            "description": null,
+            "description": "Pagination information for wallet address keys.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -8266,7 +8711,7 @@
         "fields": [
           {
             "name": "cursor",
-            "description": null,
+            "description": "A cursor for paginating through the wallet address keys.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -8282,7 +8727,7 @@
           },
           {
             "name": "node",
-            "description": null,
+            "description": "A wallet address key node in the list.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -8312,13 +8757,13 @@
         "enumValues": [
           {
             "name": "ACTIVE",
-            "description": "Default status",
+            "description": "The default status of a wallet address.",
             "isDeprecated": false,
             "deprecationReason": null
           },
           {
             "name": "INACTIVE",
-            "description": "Status after deactivating",
+            "description": "The status after deactivating a wallet address.",
             "isDeprecated": false,
             "deprecationReason": null
           }
@@ -8332,7 +8777,7 @@
         "fields": [
           {
             "name": "amount",
-            "description": "Amount to withdraw",
+            "description": "Amount to be withdrawn.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -8348,7 +8793,7 @@
           },
           {
             "name": "id",
-            "description": "Withdrawal Id",
+            "description": "Unique identifier for the withdrawal.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -8364,7 +8809,7 @@
           },
           {
             "name": "walletAddress",
-            "description": "Wallet address details",
+            "description": "Details about the wallet address from which the withdrawal is made.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -8391,7 +8836,7 @@
         "fields": [
           {
             "name": "withdrawal",
-            "description": null,
+            "description": "The wallet address withdrawal that was processed.",
             "args": [],
             "type": {
               "kind": "OBJECT",
@@ -8414,7 +8859,7 @@
         "fields": [
           {
             "name": "edges",
-            "description": null,
+            "description": "A list of wallet address edges, containing wallet address nodes and cursors for pagination.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -8438,7 +8883,7 @@
           },
           {
             "name": "pageInfo",
-            "description": null,
+            "description": "Pagination information for the wallet addresses.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -8465,7 +8910,7 @@
         "fields": [
           {
             "name": "createdAt",
-            "description": "Date-time of creation",
+            "description": "The date and time when the webhook event was created.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -8481,7 +8926,7 @@
           },
           {
             "name": "data",
-            "description": "Stringified JSON data",
+            "description": "Stringified JSON data for the webhook event.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -8497,7 +8942,7 @@
           },
           {
             "name": "id",
-            "description": "Event id",
+            "description": "Unique identifier of the webhook event.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -8513,7 +8958,7 @@
           },
           {
             "name": "type",
-            "description": "Type of event",
+            "description": "Type of webhook event.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -8547,7 +8992,7 @@
         "inputFields": [
           {
             "name": "type",
-            "description": null,
+            "description": "Filter for webhook events based on their type.",
             "type": {
               "kind": "INPUT_OBJECT",
               "name": "FilterString",
@@ -8569,7 +9014,7 @@
         "fields": [
           {
             "name": "edges",
-            "description": null,
+            "description": "A list of webhook event edges, containing event nodes and cursors for pagination.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -8593,7 +9038,7 @@
           },
           {
             "name": "pageInfo",
-            "description": null,
+            "description": "Pagination information for webhook events.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -8620,7 +9065,7 @@
         "fields": [
           {
             "name": "cursor",
-            "description": null,
+            "description": "A cursor for paginating through the webhook events.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -8636,7 +9081,7 @@
           },
           {
             "name": "node",
-            "description": null,
+            "description": "A webhook event node in the list.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -8664,7 +9109,7 @@
         "inputFields": [
           {
             "name": "eventId",
-            "description": "The id of the event to withdraw from.",
+            "description": "Unique identifier of the event to withdraw liquidity from.",
             "type": {
               "kind": "NON_NULL",
               "name": null,
@@ -8680,7 +9125,7 @@
           },
           {
             "name": "idempotencyKey",
-            "description": "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)",
+            "description": "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency).",
             "type": {
               "kind": "NON_NULL",
               "name": null,

@@ -2,9 +2,12 @@
 import { json, type LoaderFunctionArgs } from '@remix-run/node'
 import { useLoaderData } from '@remix-run/react'
 import variables from '../lib/envConfig.server'
+import { checkAuthAndRedirect } from '../lib/kratos_checks.server'
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const cookies = request.headers.get('cookie')
+  await checkAuthAndRedirect(request.url, cookies)
+
   const url = new URL(request.url)
 
   const id = url.searchParams.get('id')

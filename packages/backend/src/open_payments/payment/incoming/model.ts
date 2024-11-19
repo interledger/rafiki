@@ -46,6 +46,8 @@ export interface IncomingPaymentResponse {
   receivedAmount: AmountJSON
   completed: boolean
   metadata?: Record<string, unknown>
+  approvedAt?: string
+  cancelledAt?: string
 }
 
 export type IncomingPaymentData = IncomingPaymentResponse &
@@ -100,6 +102,8 @@ export class IncomingPayment
   public metadata?: Record<string, unknown>
 
   public processAt!: Date | null
+  public approvedAt?: Date | null
+  public cancelledAt?: Date | null
 
   public readonly assetId!: string
   public asset!: Asset
@@ -151,8 +155,7 @@ export class IncomingPayment
       incomingPayment = await IncomingPayment.query()
         .patchAndFetchById(this.id, {
           state: IncomingPaymentState.Completed,
-          // Add 30 seconds to allow a prepared (but not yet fulfilled/rejected) packet to finish before sending webhook event.
-          processAt: new Date(Date.now() + 30_000)
+          processAt: new Date()
         })
         .whereNotIn('state', [
           IncomingPaymentState.Expired,
@@ -205,6 +208,12 @@ export class IncomingPayment
     }
     if (this.metadata) {
       data.metadata = this.metadata
+    }
+    if (this.approvedAt) {
+      data.approvedAt = new Date(this.approvedAt).toISOString()
+    }
+    if (this.cancelledAt) {
+      data.cancelledAt = new Date(this.cancelledAt).toISOString()
     }
 
     return data

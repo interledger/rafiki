@@ -47,14 +47,18 @@ import {
 } from './payment-method/ilp/ilp_plugin'
 import { createHttpTokenService } from './payment-method/ilp/peer-http-token/service'
 import { createPeerService } from './payment-method/ilp/peer/service'
+import { createIlpPaymentService } from './payment-method/ilp/service'
 import {
-  createIlpPaymentService,
-  ServiceDependencies as IlpPaymentServiceDependencies
-} from './payment-method/ilp/service'
+  createLocalPaymentService,
+  ServiceDependencies as LocalPaymentServiceDependencies
+} from './payment-method/local/service'
 import { createSPSPRoutes } from './payment-method/ilp/spsp/routes'
 import { createStreamCredentialsService } from './payment-method/ilp/stream-credentials/service'
 import { createRatesService } from './rates/service'
-import { TelemetryService, createTelemetryService } from './telemetry/service'
+import {
+  createTelemetryService,
+  createNoopTelemetryService
+} from './telemetry/service'
 import { createWebhookService } from './webhook/service'
 
 BigInt.prototype.toJSON = function () {
@@ -135,29 +139,32 @@ export function initIocContainer(
     })
   })
 
-  if (config.enableTelemetry) {
-    container.singleton('internalRatesService', async (deps) => {
-      return createRatesService({
-        logger: await deps.use('logger'),
-        exchangeRatesUrl: config.telemetryExchangeRatesUrl,
-        exchangeRatesLifetime: config.telemetryExchangeRatesLifetime
-      })
+  container.singleton('internalRatesService', async (deps) => {
+    return createRatesService({
+      logger: await deps.use('logger'),
+      exchangeRatesUrl: config.telemetryExchangeRatesUrl,
+      exchangeRatesLifetime: config.telemetryExchangeRatesLifetime
     })
+  })
 
-    container.singleton('telemetry', async (deps) => {
-      const config = await deps.use('config')
-      return createTelemetryService({
-        logger: await deps.use('logger'),
-        aseRatesService: await deps.use('ratesService'),
-        internalRatesService: await deps.use('internalRatesService')!,
-        instanceName: config.instanceName,
-        collectorUrls: config.openTelemetryCollectors,
-        exportIntervalMillis: config.openTelemetryExportInterval,
-        baseAssetCode: 'USD',
-        baseScale: 4
-      })
+  container.singleton('telemetry', async (deps) => {
+    const config = await deps.use('config')
+
+    if (!config.enableTelemetry) {
+      return createNoopTelemetryService()
+    }
+
+    return createTelemetryService({
+      logger: await deps.use('logger'),
+      aseRatesService: await deps.use('ratesService'),
+      internalRatesService: await deps.use('internalRatesService')!,
+      instanceName: config.instanceName,
+      collectorUrls: config.openTelemetryCollectors,
+      exportIntervalMillis: config.openTelemetryExportInterval,
+      baseAssetCode: 'USD',
+      baseScale: 4
     })
-  }
+  })
 
   container.singleton('openApi', async () => {
     const resourceServerSpec = await getResourceServerOpenAPI()
@@ -212,6 +219,7 @@ export function initIocContainer(
     const logger = await deps.use('logger')
     const knex = await deps.use('knex')
     const config = await deps.use('config')
+    const telemetry = await deps.use('telemetry')
 
     if (config.useTigerBeetle) {
       container.singleton('tigerBeetle', async (deps) => {
@@ -228,14 +236,16 @@ export function initIocContainer(
         logger,
         knex,
         tigerBeetle,
-        withdrawalThrottleDelay: config.withdrawalThrottleDelay
+        withdrawalThrottleDelay: config.withdrawalThrottleDelay,
+        telemetry
       })
     }
 
     return createPsqlAccountingService({
       logger,
       knex,
-      withdrawalThrottleDelay: config.withdrawalThrottleDelay
+      withdrawalThrottleDelay: config.withdrawalThrottleDelay,
+      telemetry
     })
   })
   container.singleton('peerService', async (deps) => {
@@ -256,6 +266,7 @@ export function initIocContainer(
   container.singleton('grantService', async (deps) => {
     return await createGrantService({
       authServerService: await deps.use('authServerService'),
+      openPaymentsClient: await deps.use('openPaymentsClient'),
       logger: await deps.use('logger'),
       knex: await deps.use('knex')
     })
@@ -335,19 +346,15 @@ export function initIocContainer(
     })
   })
   container.singleton('receiverService', async (deps) => {
-    const config = await deps.use('config')
     return await createReceiverService({
       logger: await deps.use('logger'),
       streamCredentialsService: await deps.use('streamCredentialsService'),
-      grantService: await deps.use('grantService'),
       incomingPaymentService: await deps.use('incomingPaymentService'),
-      openPaymentsUrl: config.openPaymentsUrl,
       walletAddressService: await deps.use('walletAddressService'),
-      openPaymentsClient: await deps.use('openPaymentsClient'),
       remoteIncomingPaymentService: await deps.use(
         'remoteIncomingPaymentService'
       ),
-      config: await deps.use('config')
+      telemetry: await deps.use('telemetry')
     })
   })
 
@@ -360,10 +367,6 @@ export function initIocContainer(
 
   container.singleton('connectorApp', async (deps) => {
     const config = await deps.use('config')
-    let telemetry: TelemetryService | undefined
-    if (config.enableTelemetry) {
-      telemetry = await deps.use('telemetry')
-    }
     return await createConnectorService({
       logger: await deps.use('logger'),
       redis: await deps.use('redis'),
@@ -374,7 +377,7 @@ export function initIocContainer(
       ratesService: await deps.use('ratesService'),
       streamServer: await deps.use('streamServer'),
       ilpAddress: config.ilpAddress,
-      telemetry
+      telemetry: await deps.use('telemetry')
     })
   })
 
@@ -429,26 +432,35 @@ export function initIocContainer(
   })
 
   container.singleton('ilpPaymentService', async (deps) => {
-    const serviceDependencies: IlpPaymentServiceDependencies = {
+    return await createIlpPaymentService({
       logger: await deps.use('logger'),
       knex: await deps.use('knex'),
       config: await deps.use('config'),
       makeIlpPlugin: await deps.use('makeIlpPlugin'),
-      ratesService: await deps.use('ratesService')
+      ratesService: await deps.use('ratesService'),
+      telemetry: await deps.use('telemetry')
+    })
+  })
+
+  container.singleton('localPaymentService', async (deps) => {
+    const serviceDependencies: LocalPaymentServiceDependencies = {
+      logger: await deps.use('logger'),
+      knex: await deps.use('knex'),
+      config: await deps.use('config'),
+      ratesService: await deps.use('ratesService'),
+      accountingService: await deps.use('accountingService'),
+      incomingPaymentService: await deps.use('incomingPaymentService')
     }
 
-    if (config.enableTelemetry) {
-      serviceDependencies.telemetry = await deps.use('telemetry')
-    }
-
-    return createIlpPaymentService(serviceDependencies)
+    return createLocalPaymentService(serviceDependencies)
   })
 
   container.singleton('paymentMethodHandlerService', async (deps) => {
     return createPaymentMethodHandlerService({
       logger: await deps.use('logger'),
       knex: await deps.use('knex'),
-      ilpPaymentService: await deps.use('ilpPaymentService')
+      ilpPaymentService: await deps.use('ilpPaymentService'),
+      localPaymentService: await deps.use('localPaymentService')
     })
   })
 
@@ -460,7 +472,10 @@ export function initIocContainer(
       receiverService: await deps.use('receiverService'),
       feeService: await deps.use('feeService'),
       walletAddressService: await deps.use('walletAddressService'),
-      paymentMethodHandlerService: await deps.use('paymentMethodHandlerService')
+      paymentMethodHandlerService: await deps.use(
+        'paymentMethodHandlerService'
+      ),
+      telemetry: await deps.use('telemetry')
     })
   })
 
@@ -473,8 +488,8 @@ export function initIocContainer(
   })
 
   container.singleton('outgoingPaymentService', async (deps) => {
-    const config = await deps.use('config')
     return await createOutgoingPaymentService({
+      config: await deps.use('config'),
       logger: await deps.use('logger'),
       knex: await deps.use('knex'),
       accountingService: await deps.use('accountingService'),
@@ -485,9 +500,7 @@ export function initIocContainer(
       peerService: await deps.use('peerService'),
       walletAddressService: await deps.use('walletAddressService'),
       quoteService: await deps.use('quoteService'),
-      telemetry: config.enableTelemetry
-        ? await deps.use('telemetry')
-        : undefined
+      telemetry: await deps.use('telemetry')
     })
   })
 
@@ -552,10 +565,8 @@ export const gracefulShutdown = async (
   await redis.quit()
   redis.disconnect()
 
-  if (config.enableTelemetry) {
-    const telemetry = await container.use('telemetry')
-    telemetry?.shutdown()
-  }
+  const telemetry = await container.use('telemetry')
+  telemetry.shutdown()
 }
 
 export const start = async (
