@@ -9,7 +9,7 @@ import { WalletAddress } from '../open_payments/wallet_address/model'
 import { Peer } from '../payment-method/ilp/peer/model'
 import { Quote } from '../open_payments/quote/model'
 import { IncomingPayment } from '../open_payments/payment/incoming/model'
-import { CacheDataStore } from '../cache'
+import { CacheDataStore } from '../middleware/cache/data-stores'
 
 export interface AssetOptions {
   code: string
@@ -46,7 +46,7 @@ export interface AssetService {
 
 interface ServiceDependencies extends BaseService {
   accountingService: AccountingService
-  cacheDataStore: CacheDataStore
+  cacheDataStore: CacheDataStore<Asset>
 }
 
 export async function createAssetService({

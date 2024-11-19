@@ -28,7 +28,7 @@ import { poll } from '../../shared/utils'
 import { WalletAddressAdditionalProperty } from './additional_property/model'
 import { AssetService } from '../../asset/service'
 import { Quote } from '../quote/model'
-import { CacheDataStore } from '../../cache'
+import { CacheDataStore } from '../../middleware/cache/data-stores'
 import { OutgoingPayment } from '../payment/outgoing/model'
 
 export type ToSetOn = Quote | IncomingPayment | OutgoingPayment | undefined
@@ -86,7 +86,7 @@ interface ServiceDependencies extends BaseService {
   accountingService: AccountingService
   webhookService: WebhookService
   assetService: AssetService
-  cacheDataStore: CacheDataStore
+  cacheDataStore: CacheDataStore<WalletAddress>
 }
 
 export async function createWalletAddressService({

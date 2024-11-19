@@ -24,7 +24,9 @@ export function lockGraphQLMutationMiddleware(lock: Lock): {
   }
 }
 
-export function idempotencyGraphQLMiddleware(dataStore: CacheDataStore): {
+export function idempotencyGraphQLMiddleware(
+  dataStore: CacheDataStore<string>
+): {
   Mutation: IMiddleware
 } {
   return {

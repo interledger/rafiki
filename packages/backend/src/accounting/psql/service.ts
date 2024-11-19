@@ -38,7 +38,7 @@ import { TelemetryService } from '../../telemetry/service'
 
 export interface ServiceDependencies extends BaseService {
   knex: TransactionOrKnex
-  telemetry?: TelemetryService
+  telemetry: TelemetryService
   withdrawalThrottleDelay?: number
 }
 
@@ -147,7 +147,7 @@ export async function getAccountTotalSent(
   deps: ServiceDependencies,
   accountRef: string
 ): Promise<bigint | undefined> {
-  const stopTimer = deps.telemetry?.startTimer(
+  const stopTimer = deps.telemetry.startTimer(
     'psql_get_account_total_sent_ms',
     {
       callName: 'AccountingService:Postgres:getAccountTotalSent'
@@ -156,12 +156,12 @@ export async function getAccountTotalSent(
   const account = await getLiquidityAccount(deps, accountRef)
 
   if (!account) {
-    stopTimer && stopTimer()
+    stopTimer()
     return
   }
 
   const totalsSent = (await getAccountBalances(deps, account)).debitsPosted
-  stopTimer && stopTimer()
+  stopTimer()
   return totalsSent
 }
 

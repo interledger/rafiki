@@ -16,6 +16,7 @@ export interface MockIncomingMessageOptions {
   url?: string
   headers?: IncomingHttpHeaders
   rawHeaders?: string[]
+  headersDistinct?: string[]
 }
 
 export class MockIncomingMessage extends Transform {

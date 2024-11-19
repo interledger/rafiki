@@ -60,7 +60,7 @@ import {
   createNoopTelemetryService
 } from './telemetry/service'
 import { createWebhookService } from './webhook/service'
-import { createInMemoryDataStore } from './cache/cache'
+import { createInMemoryDataStore } from './middleware/cache/data-stores/in-memory'
 
 BigInt.prototype.toJSON = function () {
   return this.toString()
