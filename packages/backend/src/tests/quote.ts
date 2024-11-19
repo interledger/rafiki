@@ -9,6 +9,8 @@ import { CreateQuoteOptions } from '../open_payments/quote/service'
 import { PaymentQuote } from '../payment-method/handler/service'
 import { WalletAddress } from '../open_payments/wallet_address/model'
 import { Receiver } from '../open_payments/receiver/model'
+import { IlpQuoteDetails } from '../payment-method/ilp/quote-details/model'
+import { v4 as uuid } from 'uuid'
 
 export type CreateTestQuoteOptions = CreateQuoteOptions & {
   exchangeRate?: number
@@ -48,12 +50,6 @@ export function mockQuote(
           : BigInt(Math.ceil(Number(args.debitAmountValue) * exchangeRate))
     },
     estimatedExchangeRate: exchangeRate,
-    additionalFields: {
-      maxPacketAmount: BigInt(Pay.Int.MAX_U64.toString()),
-      lowEstimatedExchangeRate: Pay.Ratio.from(exchangeRate ?? 1),
-      highEstimatedExchangeRate: Pay.Ratio.from(exchangeRate ?? 1),
-      minExchangeRate: Pay.Ratio.from(exchangeRate ?? 1)
-    },
     ...overrides
   }
 }
@@ -158,32 +154,35 @@ export async function createQuote(
     }
   }
 
+  const quoteId = uuid()
+  await IlpQuoteDetails.query().insert({
+    quoteId,
+    lowEstimatedExchangeRate: Pay.Ratio.from(exchangeRate),
+    highEstimatedExchangeRate: Pay.Ratio.from(
+      exchangeRate + 0.000000000001
+    ) as unknown as Pay.PositiveRatio,
+    minExchangeRate: Pay.Ratio.from(exchangeRate * 0.99),
+    maxPacketAmount: BigInt('9223372036854775807')
+  })
+
   const withGraphFetchedArray = ['asset', 'walletAddress']
   if (withFee) {
     withGraphFetchedArray.push('fee')
   }
   const withGraphFetchedExpression = `[${withGraphFetchedArray.join(', ')}]`
 
-  const ilpData = {
-    lowEstimatedExchangeRate: Pay.Ratio.from(exchangeRate) as Pay.PositiveRatio,
-    highEstimatedExchangeRate: Pay.Ratio.from(
-      exchangeRate + 0.000000000001
-    ) as Pay.PositiveRatio,
-    minExchangeRate: Pay.Ratio.from(exchangeRate * 0.99) as Pay.PositiveRatio,
-    maxPacketAmount: BigInt('9223372036854775807')
-  }
-
   return await Quote.query()
     .insertAndFetch({
+      id: quoteId,
       walletAddressId,
       assetId: walletAddress.assetId,
       receiver: receiverUrl,
       debitAmount,
+      debitAmountMinusFees: debitAmount.value,
       receiveAmount,
       estimatedExchangeRate: exchangeRate,
       expiresAt: new Date(Date.now() + config.quoteLifespan),
-      client,
-      ...ilpData
+      client
     })
     .withGraphFetched(withGraphFetchedExpression)
 }

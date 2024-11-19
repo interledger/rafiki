@@ -1,0 +1,66 @@
+meta {
+  name: Create Quote
+  type: graphql
+  seq: 2
+}
+
+post {
+  url: {{RafikiGraphqlHost}}/graphql
+  body: graphql
+  auth: none
+}
+
+body:graphql {
+  mutation CreateQuote($input: CreateQuoteInput!) {
+    createQuote(input: $input) {
+      quote {
+        createdAt
+        expiresAt
+        id
+        walletAddressId
+        receiveAmount {
+          assetCode
+          assetScale
+          value
+        }
+        receiver
+        debitAmount {
+          assetCode
+          assetScale
+          value
+        }
+      }
+    }
+  }
+}
+
+body:graphql:vars {
+  {
+    "input": {
+      "walletAddressId": "{{gfranklinWalletAddressId}}",
+      "receiver": "{{receiverId}}"
+    }
+  }
+}
+
+script:pre-request {
+  const scripts = require('./scripts');
+  
+  await scripts.loadWalletAddressIdsIntoVariables();
+  
+  scripts.addApiSignatureHeader();
+}
+
+script:post-response {
+  const body = res.getBody();
+  
+  if (body?.data) {
+    bru.setEnvVar("quoteId", body.data.createQuote.quote.id);
+  }
+}
+
+tests {
+  test("Quote id is string", function() {
+    expect(bru.getEnvVar("quoteId")).to.be.a("string");
+  })
+}

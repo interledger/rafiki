@@ -1,14 +1,22 @@
 import { Counter, Histogram } from '@opentelemetry/api'
 import { TelemetryService } from '../telemetry/service'
-import { ConvertError, Rates, RatesService } from '../rates/service'
-import { ConvertOptions } from '../rates/util'
+import {
+  ConvertError,
+  isConvertError,
+  Rates,
+  RatesService
+} from '../rates/service'
+import { ConvertResults, ConvertSourceOptions } from '../rates/util'
 
 export const mockCounter = { add: jest.fn() } as Counter
 export const mockHistogram = { record: jest.fn() } as Histogram
 
 export class MockRatesService implements RatesService {
-  async convert(): Promise<bigint | ConvertError> {
-    return BigInt(10000)
+  async convertSource(): Promise<ConvertResults | ConvertError> {
+    return { amount: BigInt(10000), scaledExchangeRate: 1.0 }
+  }
+  async convertDestination(): Promise<ConvertResults | ConvertError> {
+    return { amount: BigInt(10000), scaledExchangeRate: 1.0 }
   }
   async rates(): Promise<Rates> {
     return {
@@ -52,11 +60,11 @@ export class MockTelemetryService implements TelemetryService {
   }
 
   public async convertAmount(
-    _convertOptions: Omit<ConvertOptions, 'exchangeRate'>
-  ): Promise<bigint | ConvertError> {
-    let converted = await this.aseRatesService.convert()
-    if (typeof converted !== 'bigint' && converted in ConvertError) {
-      converted = await this.internalRatesService.convert()
+    _convertOptions: Omit<ConvertSourceOptions, 'exchangeRate'>
+  ): Promise<ConvertResults | ConvertError> {
+    let converted = await this.aseRatesService.convertSource()
+    if (isConvertError(converted)) {
+      converted = await this.internalRatesService.convertSource()
     }
     return Promise.resolve(converted)
   }

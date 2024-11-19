@@ -5,7 +5,8 @@ import {
   OutgoingPayment,
   OutgoingPaymentState,
   CreateReceiverInput,
-  IncomingPayment
+  IncomingPayment,
+  CreateQuoteInput
 } from '../generated/graphql'
 import { MockASE } from '../mock-ase'
 import { pollCondition } from '../utils'
@@ -17,8 +18,8 @@ interface AdminActionsDeps {
 }
 
 export interface AdminActions {
-  createReceiver(createReceiverInput: CreateReceiverInput): Promise<Receiver>
-  createQuote(senderWalletAddressId: string, receiver: Receiver): Promise<Quote>
+  createReceiver(input: CreateReceiverInput): Promise<Receiver>
+  createQuote(input: CreateQuoteInput): Promise<Quote>
   createOutgoingPayment(
     senderWalletAddressId: string,
     quote: Quote
@@ -32,10 +33,8 @@ export interface AdminActions {
 
 export function createAdminActions(deps: AdminActionsDeps): AdminActions {
   return {
-    createReceiver: (createReceiverInput) =>
-      createReceiver(deps, createReceiverInput),
-    createQuote: (senderWalletAddressId, receiver) =>
-      createQuote(deps, senderWalletAddressId, receiver),
+    createReceiver: (input) => createReceiver(deps, input),
+    createQuote: (input) => createQuote(deps, input),
     createOutgoingPayment: (senderWalletAddressId, quote) =>
       createOutgoingPayment(deps, senderWalletAddressId, quote),
     getIncomingPayment: (incomingPaymentId) =>
@@ -47,15 +46,14 @@ export function createAdminActions(deps: AdminActionsDeps): AdminActions {
 
 async function createReceiver(
   deps: AdminActionsDeps,
-  createReceiverInput: CreateReceiverInput
+  input: CreateReceiverInput
 ): Promise<Receiver> {
   const { receivingASE, sendingASE } = deps
   const handleWebhookEventSpy = jest.spyOn(
     receivingASE.integrationServer.webhookEventHandler,
     'handleWebhookEvent'
   )
-  const response =
-    await sendingASE.adminClient.createReceiver(createReceiverInput)
+  const response = await sendingASE.adminClient.createReceiver(input)
 
   assert(response.receiver)
 
@@ -80,14 +78,10 @@ async function createReceiver(
 }
 async function createQuote(
   deps: AdminActionsDeps,
-  senderWalletAddressId: string,
-  receiver: Receiver
+  input: CreateQuoteInput
 ): Promise<Quote> {
   const { sendingASE } = deps
-  const response = await sendingASE.adminClient.createQuote({
-    walletAddressId: senderWalletAddressId,
-    receiver: receiver.id
-  })
+  const response = await sendingASE.adminClient.createQuote(input)
 
   assert(response.quote)
 
