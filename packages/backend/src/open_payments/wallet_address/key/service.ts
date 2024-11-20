@@ -11,6 +11,7 @@ export interface WalletAddressKeyService {
     options: CreateOptions
   ): Promise<WalletAddressKey | WalletAddressKeyError>
   revoke(id: string): Promise<WalletAddressKey | undefined>
+  unrevoke(id: string): Promise<WalletAddressKey | undefined>
   getPage(
     walletAddressId: string,
     pagination?: Pagination,
@@ -37,6 +38,7 @@ export async function createWalletAddressKeyService({
   return {
     create: (options) => create(deps, options),
     revoke: (id) => revoke(deps, id),
+    unrevoke: (id) => unrevoke(deps, id),
     getPage: (
       walletAddressId: string,
       pagination?: Pagination,
@@ -95,6 +97,33 @@ async function revoke(
         err
       },
       'error revoking key'
+    )
+    throw err
+  }
+}
+
+async function unrevoke(
+  deps: ServiceDependencies,
+  id: string
+): Promise<WalletAddressKey | undefined> {
+  const key = await WalletAddressKey.query(deps.knex).findById(id)
+  if (!key) {
+    return undefined
+  } else if (!key.revoked) {
+    return key
+  }
+
+  try {
+    return WalletAddressKey.query(deps.knex).insertAndFetch({
+      walletAddressId: key.walletAddressId,
+      jwk: key.jwk
+    })
+  } catch (err) {
+    deps.logger.error(
+      {
+        err
+      },
+      'error unrevoking key'
     )
     throw err
   }

@@ -80,6 +80,29 @@ export const revokeWalletAddressKey: MutationResolvers<ApolloContext>['revokeWal
     }
   }
 
+export const unrevokeWalletAddressKey: MutationResolvers<ApolloContext>['unrevokeWalletAddressKey'] =
+  async (
+    parent,
+    args,
+    ctx
+  ): Promise<ResolversTypes['RevokeWalletAddressKeyMutationResponse']> => {
+    const walletAddressKeyService = await ctx.container.use(
+      'walletAddressKeyService'
+    )
+    const key = await walletAddressKeyService.unrevoke(args.input.id)
+    if (!key) {
+      throw new GraphQLError('Wallet address key not found', {
+        extensions: {
+          code: GraphQLErrorCode.NotFound
+        }
+      })
+    }
+
+    return {
+      walletAddressKey: walletAddressKeyToGraphql(key)
+    }
+  }
+
 export const createWalletAddressKey: MutationResolvers<ApolloContext>['createWalletAddressKey'] =
   async (
     parent,

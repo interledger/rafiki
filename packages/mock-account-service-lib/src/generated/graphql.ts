@@ -746,6 +746,8 @@ export type Mutation = {
   setFee: SetFeeResponse;
   /** If automatic withdrawal of funds received via Web Monetization by the wallet address are disabled, this mutation can be used to trigger up to **n** withdrawal events. */
   triggerWalletAddressEvents: TriggerWalletAddressEventsMutationResponse;
+  /** Unrevoke a public key associated with a wallet address. A new unrevoked key with the same values will be created. */
+  unrevokeWalletAddressKey?: Maybe<RevokeWalletAddressKeyMutationResponse>;
   /** Update an existing asset. */
   updateAsset: AssetMutationResponse;
   /** Update an existing incoming payment. */
@@ -901,6 +903,11 @@ export type MutationSetFeeArgs = {
 
 export type MutationTriggerWalletAddressEventsArgs = {
   input: TriggerWalletAddressEventsInput;
+};
+
+
+export type MutationUnrevokeWalletAddressKeyArgs = {
+  input: RevokeWalletAddressKeyInput;
 };
 
 
@@ -2194,6 +2201,7 @@ export type MutationResolvers<ContextType = any, ParentType extends ResolversPar
   revokeWalletAddressKey?: Resolver<Maybe<ResolversTypes['RevokeWalletAddressKeyMutationResponse']>, ParentType, ContextType, RequireFields<MutationRevokeWalletAddressKeyArgs, 'input'>>;
   setFee?: Resolver<ResolversTypes['SetFeeResponse'], ParentType, ContextType, RequireFields<MutationSetFeeArgs, 'input'>>;
   triggerWalletAddressEvents?: Resolver<ResolversTypes['TriggerWalletAddressEventsMutationResponse'], ParentType, ContextType, RequireFields<MutationTriggerWalletAddressEventsArgs, 'input'>>;
+  unrevokeWalletAddressKey?: Resolver<Maybe<ResolversTypes['RevokeWalletAddressKeyMutationResponse']>, ParentType, ContextType, RequireFields<MutationUnrevokeWalletAddressKeyArgs, 'input'>>;
   updateAsset?: Resolver<ResolversTypes['AssetMutationResponse'], ParentType, ContextType, RequireFields<MutationUpdateAssetArgs, 'input'>>;
   updateIncomingPayment?: Resolver<ResolversTypes['IncomingPaymentResponse'], ParentType, ContextType, RequireFields<MutationUpdateIncomingPaymentArgs, 'input'>>;
   updatePeer?: Resolver<ResolversTypes['UpdatePeerMutationResponse'], ParentType, ContextType, RequireFields<MutationUpdatePeerArgs, 'input'>>;

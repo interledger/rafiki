@@ -224,6 +224,11 @@ type Mutation {
     input: RevokeWalletAddressKeyInput!
   ): RevokeWalletAddressKeyMutationResponse
 
+  "Unrevoke a public key associated with a wallet address. A new unrevoked key with the same values will be created."
+  unrevokeWalletAddressKey(
+    input: RevokeWalletAddressKeyInput!
+  ): RevokeWalletAddressKeyMutationResponse
+
   "Create an internal Open Payments incoming payment. The receiver has a wallet address on this Rafiki instance."
   createIncomingPayment(
     input: CreateIncomingPaymentInput!

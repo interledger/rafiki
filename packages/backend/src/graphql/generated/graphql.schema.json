@@ -4859,6 +4859,35 @@
             "deprecationReason": null
           },
           {
+            "name": "unrevokeWalletAddressKey",
+            "description": "Unrevoke a public key associated with a wallet address. A new unrevoked key with the same values will be created.",
+            "args": [
+              {
+                "name": "input",
+                "description": null,
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "INPUT_OBJECT",
+                    "name": "RevokeWalletAddressKeyInput",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              }
+            ],
+            "type": {
+              "kind": "OBJECT",
+              "name": "RevokeWalletAddressKeyMutationResponse",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "updateAsset",
             "description": "Update an existing asset.",
             "args": [

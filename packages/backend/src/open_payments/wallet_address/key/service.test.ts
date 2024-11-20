@@ -154,4 +154,49 @@ describe('Wallet Address Key Service', (): void => {
       )
     })
   })
+
+  describe('Unrevoke Wallet Address Keys', (): void => {
+    test('Creates a new key unrevoked', async (): Promise<void> => {
+      const keyOption = {
+        walletAddressId: walletAddress.id,
+        jwk: TEST_KEY
+      }
+
+      const key = await walletAddressKeyService.create(keyOption)
+      assert.ok(!isWalletAddressKeyError(key))
+      const revokedKey = await walletAddressKeyService.revoke(key.id)
+
+      const unrevokedKey = await walletAddressKeyService.unrevoke(key.id)
+
+      expect(unrevokedKey?.revoked).toBe(false)
+
+      expect(unrevokedKey?.id).not.toEqual(revokedKey?.id)
+
+      expect(unrevokedKey).toMatchObject({
+        jwk: key.jwk,
+        walletAddressId: key.walletAddressId
+      })
+    })
+
+    test('Returns undefined if key does not exist', async (): Promise<void> => {
+      await expect(
+        walletAddressKeyService.unrevoke(uuid())
+      ).resolves.toBeUndefined()
+    })
+
+    test('Returns key if key is already runevoked', async (): Promise<void> => {
+      const keyOption = {
+        walletAddressId: walletAddress.id,
+        jwk: TEST_KEY
+      }
+
+      const key = await walletAddressKeyService.create(keyOption)
+      assert.ok(!isWalletAddressKeyError(key))
+
+      const revokedKey = await walletAddressKeyService.unrevoke(key.id)
+      await expect(walletAddressKeyService.unrevoke(key.id)).resolves.toEqual(
+        revokedKey
+      )
+    })
+  })
 })
