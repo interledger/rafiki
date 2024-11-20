@@ -484,12 +484,12 @@ describe('Access Token Routes', (): void => {
       )
     })
 
-    test('Returns status 400 if could not rotate token', async (): Promise<void> => {
+    test('Returns status 404 if could not rotate token', async (): Promise<void> => {
       const ctx = createTokenHttpSigContext(token, grant)
       jest.spyOn(accessTokenService, 'rotate').mockResolvedValueOnce(undefined)
 
       await expect(accessTokenRoutes.rotate(ctx)).rejects.toMatchObject({
-        status: 400,
+        status: 404,
         code: GNAPErrorCode.InvalidRotation,
         message: 'invalid access token'
       })
