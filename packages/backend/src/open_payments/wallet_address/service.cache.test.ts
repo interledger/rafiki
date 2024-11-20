@@ -3,13 +3,8 @@ import { Knex } from 'knex'
 import { v4 as uuid } from 'uuid'
 
 import { isWalletAddressError, WalletAddressError } from './errors'
-import {
-  WalletAddress,
-  WalletAddressEvent,
-  WalletAddressEventType
-} from './model'
-import { CreateOptions, FORBIDDEN_PATHS, WalletAddressService } from './service'
-import { AccountingService } from '../../accounting/service'
+import { WalletAddress } from './model'
+import { CreateOptions, WalletAddressService } from './service'
 import { createTestApp, TestContainer } from '../../tests/app'
 import { createAsset } from '../../tests/asset'
 import { createWalletAddress } from '../../tests/walletAddress'
@@ -22,9 +17,7 @@ import { faker } from '@faker-js/faker'
 import { createIncomingPayment } from '../../tests/incomingPayment'
 import { getPageTests } from '../../shared/baseModel.test'
 import { Pagination, SortOrder } from '../../shared/baseModel'
-import { sleep } from '../../shared/utils'
 import { withConfigOverride } from '../../tests/helpers'
-import { WalletAddressAdditionalProperty } from './additional_property/model'
 
 describe('Open Payments Wallet Address Service using Cache', (): void => {
   let deps: IocContract<AppServices>
@@ -36,7 +29,7 @@ describe('Open Payments Wallet Address Service using Cache', (): void => {
   beforeAll(async (): Promise<void> => {
     deps = initIocContainer({
       ...Config,
-      localCacheDuration: 5_000// 5-second default.
+      localCacheDuration: 5_000 // 5-second default.
     })
     config = await deps.use('config')
     appContainer = await createTestApp(deps)
@@ -97,8 +90,20 @@ describe('Open Payments Wallet Address Service using Cache', (): void => {
         const walletAddress = await createWalletAddress(deps)
 
         if (!initialIsActive) {
+          // Only update the database:
+          await walletAddress.$query(knex).patch({ deactivatedAt: new Date() })
+          const fromCacheActive = await walletAddressService.get(
+            walletAddress.id
+          )
+
+          // We don't expect a match here, since the cache and database is out-of-sync:
+          expect(fromCacheActive!.isActive).toEqual(false)
+
           // Update through the service, will also update the wallet-address cache:
-          await walletAddressService.update({ id: walletAddress.id, status: 'INACTIVE' })
+          await walletAddressService.update({
+            id: walletAddress.id,
+            status: 'INACTIVE'
+          })
         }
 
         const updatedWalletAddress = await walletAddressService.update({
@@ -237,33 +242,6 @@ describe('Open Payments Wallet Address Service using Cache', (): void => {
           walletAddressService.getPage(pagination, sortOrder)
       })
     })
-  })
-
-  describe('onCredit with cache', (): void => {
-    let walletAddress: WalletAddress
-
-    beforeEach(async (): Promise<void> => {
-      walletAddress = await createWalletAddress(deps)
-    })
-
-    describe.each`
-      withdrawalThrottleDelay
-      ${undefined}
-      ${0}
-      ${60_000}
-    `(
-      'withdrawalThrottleDelay: $withdrawalThrottleDelay',
-      ({ withdrawalThrottleDelay }): void => {
-        let delayProcessAt: Date | null = null
-
-        beforeEach((): void => {
-          jest.useFakeTimers({ now: Date.now() })
-          if (withdrawalThrottleDelay !== undefined) {
-            delayProcessAt = new Date(Date.now() + withdrawalThrottleDelay)
-          }
-        })
-      }
-    )
   })
 
   describe('processNext', (): void => {
