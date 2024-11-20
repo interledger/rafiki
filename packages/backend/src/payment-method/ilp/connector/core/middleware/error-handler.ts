@@ -12,9 +12,9 @@ export function createIncomingErrorHandlerMiddleware(
 ): ILPMiddleware {
   return async (ctx: ILPContext, next: () => Promise<void>): Promise<void> => {
     const stopTimer = ctx.services.telemetry.startTimer(
-      'createIncomingErrorHandlerMiddleware',
+      'create_incoming_error_handler_middleware_next',
       {
-        callName: 'createIncomingErrorHandlerMiddleware'
+        callName: 'createIncomingErrorHandlerMiddleware:next'
       }
     )
     try {

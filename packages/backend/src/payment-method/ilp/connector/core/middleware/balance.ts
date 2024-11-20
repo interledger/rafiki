@@ -21,8 +21,8 @@ export function createBalanceMiddleware(): ILPMiddleware {
     }: ILPContext,
     next: () => Promise<void>
   ): Promise<void> => {
-    const stopTimer = services.telemetry.startTimer('balanceMiddleware', {
-      callName: 'balanceMiddleware'
+    const stopTimer = services.telemetry.startTimer('balance_middleware_next', {
+      callName: 'balanceMiddleware:next'
     })
     const { amount } = request.prepare
     const logger = services.logger.child(
