@@ -212,8 +212,15 @@ export async function getAccountBalance(
   deps: ServiceDependencies,
   id: string
 ): Promise<bigint | undefined> {
-  const account = (await getAccounts(deps, [id]))[0]
-  if (account) return calculateBalance(account)
+  const stopTimer = deps.telemetry.startTimer('tb_get_account_balances', {
+    callName: 'AccountingService:Tigerbeetle:getAccountBalances'
+  })
+  try {
+    const account = (await getAccounts(deps, [id]))[0]
+    if (account) return calculateBalance(account)
+  } finally {
+    stopTimer()
+  }
 }
 
 export async function getAccountTotalSent(
