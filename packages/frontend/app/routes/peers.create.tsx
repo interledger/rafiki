@@ -46,7 +46,7 @@ export default function CreatePeerPage() {
       <RedirectDialog
         ref={dialogRef}
         title='Before You Continue'
-        message='Please note, the required asset type must already exist before you can create a peer.'
+        message='Please note: you must have at least one asset before you can create a peer.'
         redirectPath={'/assets/create'}
         redirectButtonText={'Create Asset'}
       ></RedirectDialog>
