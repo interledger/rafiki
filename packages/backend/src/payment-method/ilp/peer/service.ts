@@ -388,7 +388,6 @@ async function deletePeer(
   id: string
 ): Promise<Peer | undefined> {
   const peer = await Peer.query(deps.knex)
-    .withGraphFetched('asset')
     .deleteById(id)
     .returning('*')
     .first()
