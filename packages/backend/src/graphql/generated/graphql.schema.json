@@ -6163,7 +6163,7 @@
               },
               {
                 "name": "limit",
-                "description": "Limit the number of results returned. If no limit is provided, the default limit of 100,000 is set for TigerBeetle.",
+                "description": "Limit the number of results returned. If no limit is provided, the default limit of 20 is set for TigerBeetle.",
                 "type": {
                   "kind": "SCALAR",
                   "name": "Int",
