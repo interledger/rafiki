@@ -141,7 +141,7 @@ Additionally, the [local playground](/integration/playground/overview) contains 
 
 ## Verify webhook signatures
 
-To protect your endpoint from unauthorized or spoofed requests, Rafiki supports an optional, but highly recommended, webhook signature verification process. By enabling signature verification, you can ensure that webhook requests are genuinely from Rafiki.
+To protect your endpoint from unauthorized or spoofed requests, Rafiki supports an optional, but highly recommended, webhook signature verification process. By enabling signature verification, you can ensure that webhook requests are genuinely from Rafiki, and have not been tampered with.
 
 Each webhook request includes a `Rafiki-Signature` header with a timestamp, version, and signature digest. If your instance is configured with both the `SIGNATURE_SECRET` (to generate the signature) and the `SIGNATURE_VERSION` (to set the version, defaults to v1) environment variables, you can verify the authenticity of each webhook request using the steps below.
 
