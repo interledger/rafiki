@@ -8,8 +8,6 @@ import { privacy } from './privacy'
 
 export interface TelemetryService {
   shutdown(): Promise<void>
-  getCounters(): Map<string, Counter>
-  getHistograms(): Map<string, Histogram>
   incrementCounter(
     name: string,
     value: number,
@@ -286,14 +284,6 @@ export class NoopTelemetryServiceImpl implements TelemetryService {
     preservePrivacy = true
   ): Promise<void> {
     // do nothing
-  }
-
-  getCounters(): Map<string, Counter> {
-    return new Map<string, Counter>()
-  }
-
-  getHistograms(): Map<string, Histogram> {
-    return new Map<string, Histogram>()
   }
 
   public startTimer(

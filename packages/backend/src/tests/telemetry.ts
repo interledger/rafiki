@@ -44,12 +44,6 @@ export class MockTelemetryService implements TelemetryService {
   async incrementCounterWithTransactionAmount(): Promise<void> {}
   async incrementCounterWithTransactionAmountDifference(): Promise<void> {}
   async recordHistogram(): Promise<void> {}
-  getCounters(): Map<string, Counter> {
-    return new Map<string, Counter>()
-  }
-  getHistograms(): Map<string, Histogram> {
-    return new Map<string, Histogram>()
-  }
   public getInstanceName(): string | undefined {
     return 'serviceName'
   }
