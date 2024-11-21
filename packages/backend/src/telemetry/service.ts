@@ -109,14 +109,6 @@ export class TelemetryServiceImpl implements TelemetryService {
     })
   }
 
-  getCounters(): Map<string, Counter> {
-    return this.counters
-  }
-
-  getHistograms(): Map<string, Histogram> {
-    return this.histograms
-  }
-
   public async incrementCounterWithTransactionAmountDifference(
     name: string,
     amountSource: { value: bigint; assetCode: string; assetScale: number },

@@ -387,10 +387,7 @@ async function deletePeer(
   deps: ServiceDependencies,
   id: string
 ): Promise<Peer | undefined> {
-  const peer = await Peer.query(deps.knex)
-    .deleteById(id)
-    .returning('*')
-    .first()
+  const peer = await Peer.query(deps.knex).deleteById(id).returning('*').first()
   await deps.assetService.setOn(peer)
   return peer
 }
