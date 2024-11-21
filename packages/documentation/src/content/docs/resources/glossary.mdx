@@ -16,9 +16,9 @@ A reference implementation of an Open Payments authorization server in Rafiki. T
 
 ## Authorization server
 
-A server that grants delegated authorization and privileges, via GNAP, to a particular instance of client software in the form of access tokens, allowing the client to call the Open Payments APIs.
+A server that grants delegated authorization and privileges, via [GNAP](#grant-negotiation-and-authorization-protocol-gnap), to a particular instance of client software in the form of access tokens, allowing the client to call the Open Payments APIs.
 
-We've provided an opinionated version of a GNAP authorization server via the `auth` service, meaning that we've made certain decisions regarding the implementation and configuration of the server that may limit customization but ensure consistency and adherence to preferred practices.
+We’ve provided an opinionated version of a GNAP authorization server via the `auth` service, meaning that we’ve made certain decisions regarding the implementation and configuration of the server that may limit customization but ensure consistency and adherence to preferred practices.
 
 ## Backend service
 
@@ -26,7 +26,7 @@ The core service in Rafiki responsible for managing business logic and external 
 
 ## Client
 
-An application or service, such as a mobile or web app, that interacts with the authorization server to obtain grants and tokens. A client uses these tokens to access resources on a resource server to perform actions, such as retriving transaction history and setting up payments, on behalf of a user or system.
+An application or service, such as a mobile or web app, that interacts with the authorization server to obtain grants and access tokens. Clients use tokens to access resource servers and perform actions, such as retriving transaction history and setting up payments, on behalf of a user or system.
 
 ## Frontend service
 
@@ -34,76 +34,65 @@ An optional internal interface in Rafiki, known as the Rafiki Admin, used to man
 
 ## Grant Negotiation and Authorization Protocol (GNAP)
 
-The Grant Negotiation Authorization Protocol (GNAP) defines a mechanism for delegating authorization to a piece of software (client), and conveying the results and artifacts of that delegation to the software. This delegation can include access to a set of APIs as well as subject information passed directly to the software. For more information, refer to the <LinkOut href="https://datatracker.ietf.org/doc/html/draft-ietf-gnap-core-protocol-12">specification</LinkOut>.
+The Grant Negotiation Authorization Protocol (GNAP) defines a mechanism for delegating authorization to a piece of software (client), and conveying the results and artifacts of that delegation to the software. This delegation can include access to a set of APIs as well as subject information passed directly to the software. For more information, refer to the <LinkOut href="https://datatracker.ietf.org/doc/html/draft-ietf-gnap-core-protocol-12">GNAP specification</LinkOut>.
 
 ## Grant
 
-A delegation of authorization from a resource owner to a client instance, allowing it to access protected resources or perform actions on the owner's behalf. In Rafiki, this process is managed by the authorization server, which issues grants as access tokens. These grants permit third-party clients to interact with Open Payments APIs, such as creating payments or retrieving account information, based on the permissions granted by the resource owner.
+A delegation of authorization from a resource owner to a client, allowing the client to access protected resources or perform actions on the owner’s behalf. In Rafiki, this process is managed by the authorization server, which issues grants as access tokens. These grants permit clients to interact with Open Payments APIs to, for example, create payments and retrieve account information, based on the permissions granted by the resource owner.
 
 ## Identity provider (IdP)
 
-A system or service that stores and manages user identity information, authentication, and consent for Rafiki. Integration with an IdP is essential due to Rafiki’s use of the Open Payments standard. The IdP authenticates client requests, manages user interactions to gather consent, and facilitates the authorization process by presenting consent screens and redirecting users based on their decisions.
+A system or service that stores and manages user identity information, authentication, and consent. Due to Rafiki's implementation of the Open Payments standard, Rafiki requires integration with an IdP to support interactive Open Payments grants.
 
 ## Incoming payment
 
-An incoming payment resource is an object created by the recipient’s ASE, on their resource server, that represents a payment being received by an entity. This resource contains information about the incoming payment, such as the amount, currency, receiver’s wallet address, and payment status. It is used to track and manage payments that are expected to or have been received.
+An object created by the recipient’s ASE, on their resource server, that represents a payment being received. The object contains information about the incoming payment, such as the amount, currency, receiver’s wallet address, and payment status. It is used to track and manage payments that are expected to or have been received.
 
-## Interledger
+## Interledger Protocol (ILP)
 
-An open protocol stack designed to facilitate the transfer of value across different currencies, platforms, and payment networks. Rafiki is a reference implementation of the Interledger stack, allowing you to quickly enable Interledger functionality on your users' accounts, allowing you to join the Interledger network and enable Interledger functionality on your users' accounts. For more information, refer to the <LinkOut href="https://interledger.org/developers/get-started/">Interledger specification</LinkOut>.
+An open protocol stack designed to facilitate the transfer of value across different currencies, platforms, and payment networks. Rafiki is a reference implementation of the Interledger stack, allowing you to join the Interledger network and quickly enable Interledger functionality on your users’ accounts. For more information, refer to the <LinkOut href="https://interledger.org/developers/get-started/">Interledger specification</LinkOut>.
 
 ## ILP packet
 
-A packet is a unit of data that carries payment information through the network. A single payment is broken into smaller packets of value which are then routed across the Interledger network.
+A unit of data that carries payment information through the Interledger network. A single payment can be broken into smaller packets of value which are then routed across the network.
 
 ## Open Payments
 
-An API standard and a set of APIs that allows third-party clients to securely retrieve account information and initiate payments from your customers' accounts with their consent. By adhering to this standard, Rafiki enables integration with external applications and supports the secure and uniform management of payments, quotes, and account data through the Open Payments APIs. For more information, visit the <LinkOut href="https://openpayments.dev/">Open Payments</LinkOut> documentation.
+An API standard and a set of APIs that allows clients to securely retrieve account information and initiate payments from your customers’ accounts with their consent. By adhering to this standard, Rafiki enables integration with external applications and supports the secure and uniform management of payments, quotes, and account data through the Open Payments APIs. For more information, visit the <LinkOut href="https://openpayments.dev">Open Payments documentation</LinkOut>.
 
 ## Outgoing payment
 
-An outgoing payment resource is an object created by the sender’s ASE, on their resource server, that represents a payment being sent by an entity. This resource contains information about the outgoing payment, such as the amount, currency, receiver’s wallet address, and payment status. Outgoing payment resources require explicit consent from the sender before the resource can be created.
+An object created by the sender’s ASE, on their resource server, that represents a payment being sent. This object contains information about the outgoing payment, such as the amount, currency, receiver’s wallet address, and payment status. 
 
 ## Payment pointer
 
-A type of wallet address for an account within the Interledger network. They're similar to email addresses in that they're used to determine which account to send a payment from and which account to deliver the payment to. Every payment pointer serves as a Simple Payment Setup Protocol (SPSP) endpoint and must resolve to an HTTPS URL.
+A type of wallet address that serves as an SPSP endpoint to facilitate sending and receiving ILP packets. Payment pointers can be written out using the `$` shorthand (e.g., `$wallet.example.com/alice`) or as a URL (e.g., `https://wallet.example.com/alice`).
 
 ## Peer
 
-A peer is a counterparty that a party transacts with in the Interledger Protocol. Peering relationships are established to exchange information and route payments efficiently across the network.
-
-## Protected resource
-
-An Open Payments API that can be accessed by a client if and only if a valid and sufficient access token is provided.
+A counterparty with whom you transact with over the Interledger network. Your Rafiki instance will hold liquidity accounts for each of your peers.
 
 ## Quote
 
-A quote resource is an object created by the sender’s ASE, on their resource server, after the incoming payment resource is created by the recipient’s ASE. A quote resource represents a potential payment being received by an entity and contains information about the potential payment, but is mainly used to indicate the total cost, including any applicable fees, to make the payment. The quote resource also serves as a commitment from the sender’s ASE to deliver a particular amount to the receiver’s ASE and it only valid for a limited time.
-
-## Rafiki
-
-Rafiki is open-source software that allows Account Servicing Entities (ASEs) to enable Interledger functionality on its users’ accounts. It serves as a packaged solution for facilitating payments over the Interledger network.
+An object created by the sender’s ASE, on their resource server, that represents the total cost for the sender to send a payment. When a quote is created, it serves as a commitment from the sender's ASE to deliver the amount to the recipient's ASE and is only valid for a limited time.
 
 ## Resource server
 
-A resource server is responsible for hosting and managing access to protected resources related to payments. It enforces access controls based on tokens provided by the authorization server, ensuring that only authorized clients can interact with payment-related resources like incoming payments, quotes, and outgoing payments through the Open Payments APIs.
+A server that hosts and manages access to protected Open Payments resources for incoming payments, quotes, and outgoing payments. 
+
+Rafiki's `backend` service runs an Open Payments resource server.
 
 ## Simple Payment Setup Protocol (SPSP)
 
-The Simple Payments Setup Protocol is a basic protocol for exchanging payment information between payee and payer to facilitate payment over Interledger. For more details, refer to the <LinkOut href="https://interledger.org/developers/rfcs/simple-payment-setup-protocol/">SPSP specification</LinkOut>.
+An Interledger application layer protocol for exchanging payment information between two counterparties to facilitate direct payments over Interledger. The information is then used to set up a STREAM connection. You can read more about SPSP in its <LinkOut href="https://interledger.org/developers/rfcs/simple-payment-setup-protocol/">specification
+</LinkOut>.
 
 ## Streaming Transport for the Real-Time Exchange of Assets and Messages (STREAM)
 
-STREAM is a multiplexed Interledger Transport Protocol that provides for sending multiple “streams” of money and data between two parties using ILP. For more details, refer to the <LinkOut href="https://interledger.org/developers/rfcs/stream-protocol/">STREAM specification</LinkOut>.
-
-## TigerBeetle
-
-A distributed financial accounting database designed for mission-critical safety and performance. For more information, visit the <LinkOut href="https://tigerbeetle.com/">official website</LinkOut>.
+An Interledger transport layer protocol for sending and receiving authenticated ILP packets between peers and determining the path exchange rate. See the <LinkOut href="https://interledger.org/developers/rfcs/stream-protocol/">STREAM specification</LinkOut> for more information.
 
 ## Wallet address
 
-A secure, unique URL that identifies an Open Payments-enabled account. It acts as an entry point to the Open Payments APIs, facilitating interactions like sending and receiving payments. Similar to how an email address serves as a public identifier for an email account, a wallet address is publicly shareable and used to interact with the underlying payment account without compromising its security. Wallet address URLs are treated as case-insensitive, meaning that both lowercase and uppercase variations of the same address will be recognized as identical.
+A secure, unique URL that identifies an Open Payments-enabled account. It acts as an entry point to the Open Payments APIs, facilitating interactions like sending and receiving payments. 
 
-## Web Monetization
-
-A browser API that allows websites to stream payments directly from visitors to site owners as they interact with the content. Rafiki supports Web Monetization payment flows natively, enabling seamless integration for websites looking to implement this feature and monetize their content via the Interledger network. For more details, visit the <LinkOut href="https://webmonetization.org/">Web Monetization</LinkOut> website.
+A wallet address is publicly shareable and used to interact with the underlying payment account without compromising its security. Wallet address URLs are treated as case-insensitive, meaning that both lowercase and uppercase variations of the same address will be recognized as identical.
