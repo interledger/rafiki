@@ -140,7 +140,7 @@ describe('Open Payments Wallet Address Service', (): void => {
     })
 
     test('Creating wallet address with case insensitiveness', async (): Promise<void> => {
-      const url = 'https://Alice.me/pay'
+      const url = 'https://alice.me/pay'
       await expect(
         walletAddressService.create({
           ...options,
