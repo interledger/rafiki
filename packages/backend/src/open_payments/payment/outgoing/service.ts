@@ -296,15 +296,18 @@ async function createOutgoingPayment(
           description: 'Time to insert payment in outgoing payment'
         }
       )
-      const payment = await OutgoingPayment.query(trx).insertAndFetch({
-        id: quoteId,
-        walletAddressId: walletAddressId,
-        client: options.client,
-        metadata: options.metadata,
-        state: OutgoingPaymentState.Funding,
-        grantId
-      })
+      const payment = await OutgoingPayment.query(trx)
+        .insertAndFetch({
+          id: quoteId,
+          walletAddressId: walletAddressId,
+          client: options.client,
+          metadata: options.metadata,
+          state: OutgoingPaymentState.Funding,
+          grantId
+        })
+        .withGraphFetched('quote')
       await deps.assetService.setOn(payment.quote)
+      await deps.walletAddressService.setOn(payment.quote)
       await deps.walletAddressService.setOn(payment)
 
       stopTimerInsertPayment()
