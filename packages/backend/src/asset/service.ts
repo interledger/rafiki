@@ -93,12 +93,12 @@ async function createAsset(
       .first()
 
     if (deletedAsset) {
-      await deps.cacheDataStore.delete(deletedAsset.id)
-
       // if found, enable
-      return await Asset.query(deps.knex)
+      const reActivated = await Asset.query(deps.knex)
         .patchAndFetchById(deletedAsset.id, { deletedAt: null })
         .throwIfNotFound()
+      await deps.cacheDataStore.set(reActivated.id, reActivated)
+      return reActivated
     }
 
     // Asset rows include a smallserial 'ledger' column that would have sequence gaps

@@ -24,103 +24,100 @@ export function createBalanceMiddleware(): ILPMiddleware {
     const stopTimer = services.telemetry.startTimer('balance_middleware_next', {
       callName: 'balanceMiddleware:next'
     })
-    const { amount } = request.prepare
-    const logger = services.logger.child(
-      { module: 'balance-middleware' },
-      {
-        redact: ['transferOptions.destinationAccount.http.outgoing.authToken']
-      }
-    )
-
-    // Ignore zero amount packets
-    if (amount === '0') {
-      await next()
-      stopTimer()
-      return
-    }
-
-    const sourceAmount = BigInt(amount)
-    const destinationAmountOrError = await services.rates.convertSource({
-      sourceAmount,
-      sourceAsset: accounts.incoming.asset,
-      destinationAsset: accounts.outgoing.asset
-    })
-    if (isConvertError(destinationAmountOrError)) {
-      logger.error(
+    try {
+      const { amount } = request.prepare
+      const logger = services.logger.child(
+        { module: 'balance-middleware' },
         {
-          amount,
-          destinationAmountOrError,
-          sourceAsset: accounts.incoming.asset,
-          destinationAsset: accounts.outgoing.asset
-        },
-        'Could not get rates'
+          redact: ['transferOptions.destinationAccount.http.outgoing.authToken']
+        }
       )
-      stopTimer()
-      throw new CannotReceiveError(
-        `Exchange rate error: ${destinationAmountOrError}`
-      )
-    }
-    const { amount: destinationAmount } = destinationAmountOrError
 
-    request.prepare.amount = destinationAmount.toString()
+      // Ignore zero amount packets
+      if (amount === '0') {
+        await next()
+        return
+      }
 
-    if (state.unfulfillable) {
-      await next()
-      stopTimer()
-      return
-    }
-
-    // Update balances on prepare:
-    const createPendingTransfer = async (): Promise<
-      Transaction | undefined
-    > => {
-      const transferOptions = {
-        sourceAccount: accounts.incoming,
-        destinationAccount: accounts.outgoing,
+      const sourceAmount = BigInt(amount)
+      const destinationAmountOrError = await services.rates.convertSource({
         sourceAmount,
-        destinationAmount,
-        transferType: TransferType.TRANSFER,
-        timeout: AppConfig.tigerBeetleTwoPhaseTimeout
-      }
-      const trxOrError =
-        await services.accounting.createTransfer(transferOptions)
-      if (isTransferError(trxOrError)) {
+        sourceAsset: accounts.incoming.asset,
+        destinationAsset: accounts.outgoing.asset
+      })
+      if (isConvertError(destinationAmountOrError)) {
         logger.error(
-          { transferOptions, transferError: trxOrError },
-          'Could not create transfer'
+          {
+            amount,
+            destinationAmountOrError,
+            sourceAsset: accounts.incoming.asset,
+            destinationAsset: accounts.outgoing.asset
+          },
+          'Could not get rates'
         )
-        switch (trxOrError) {
-          case TransferError.InsufficientBalance:
-          case TransferError.InsufficientLiquidity:
-            stopTimer()
-            throw new InsufficientLiquidityError(trxOrError)
-          default:
-            stopTimer()
-            // TODO: map transfer errors to ILP errors
-            ctxThrow(500, destinationAmountOrError.toString())
-        }
-      } else {
-        stopTimer()
-        return trxOrError
+        throw new CannotReceiveError(
+          `Exchange rate error: ${destinationAmountOrError}`
+        )
       }
-    }
+      const { amount: destinationAmount } = destinationAmountOrError
 
-    if (state.streamDestination) await next()
+      request.prepare.amount = destinationAmount.toString()
 
-    if (!state.streamDestination || response.fulfill) {
-      // TODO: make this single-phase if streamDestination === true
-      const trx = await createPendingTransfer()
+      if (state.unfulfillable) {
+        await next()
+        return
+      }
 
-      if (!state.streamDestination) await next()
-
-      if (trx) {
-        if (response.fulfill) {
-          await trx.post()
+      // Update balances on prepare:
+      const createPendingTransfer = async (): Promise<
+        Transaction | undefined
+      > => {
+        const transferOptions = {
+          sourceAccount: accounts.incoming,
+          destinationAccount: accounts.outgoing,
+          sourceAmount,
+          destinationAmount,
+          transferType: TransferType.TRANSFER,
+          timeout: AppConfig.tigerBeetleTwoPhaseTimeout
+        }
+        const trxOrError =
+          await services.accounting.createTransfer(transferOptions)
+        if (isTransferError(trxOrError)) {
+          logger.error(
+            { transferOptions, transferError: trxOrError },
+            'Could not create transfer'
+          )
+          switch (trxOrError) {
+            case TransferError.InsufficientBalance:
+            case TransferError.InsufficientLiquidity:
+              throw new InsufficientLiquidityError(trxOrError)
+            default:
+              // TODO: map transfer errors to ILP errors
+              ctxThrow(500, destinationAmountOrError.toString())
+          }
         } else {
-          await trx.void()
+          return trxOrError
         }
-        stopTimer()
       }
+
+      if (state.streamDestination) await next()
+
+      if (!state.streamDestination || response.fulfill) {
+        // TODO: make this single-phase if streamDestination === true
+        const trx = await createPendingTransfer()
+
+        if (!state.streamDestination) await next()
+
+        if (trx) {
+          if (response.fulfill) {
+            await trx.post()
+          } else {
+            await trx.void()
+          }
+        }
+      }
+    } finally {
+      stopTimer()
     }
   }
 }

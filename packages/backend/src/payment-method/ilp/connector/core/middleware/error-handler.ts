@@ -21,7 +21,6 @@ export function createIncomingErrorHandlerMiddleware(
       await next()
       if (!ctx.response.rawReply) {
         ctx.services.logger.error('handler did not return a valid value.')
-        stopTimer()
         throw new Error('handler did not return a value.')
       }
     } catch (e) {
@@ -44,6 +43,7 @@ export function createIncomingErrorHandlerMiddleware(
           name: ''
         })
       }
+    } finally {
       stopTimer()
     }
   }
