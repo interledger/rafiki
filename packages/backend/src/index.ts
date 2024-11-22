@@ -213,7 +213,7 @@ export function initIocContainer(
       logger: logger,
       knex: knex,
       accountingService: await deps.use('accountingService'),
-      cacheDataStore: createInMemoryDataStore(config.localCacheDuration)
+      assetCache: createInMemoryDataStore(config.localCacheDuration)
     })
   })
 
@@ -289,7 +289,7 @@ export function initIocContainer(
       accountingService: await deps.use('accountingService'),
       webhookService: await deps.use('webhookService'),
       assetService: await deps.use('assetService'),
-      cacheDataStore: createInMemoryDataStore(config.localCacheDuration)
+      walletAddressCache: createInMemoryDataStore(config.localCacheDuration)
     })
   })
   container.singleton('spspRoutes', async (deps) => {

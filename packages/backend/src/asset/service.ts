@@ -46,14 +46,14 @@ export interface AssetService {
 
 interface ServiceDependencies extends BaseService {
   accountingService: AccountingService
-  cacheDataStore: CacheDataStore<Asset>
+  assetCache: CacheDataStore<Asset>
 }
 
 export async function createAssetService({
   logger,
   knex,
   accountingService,
-  cacheDataStore
+  assetCache
 }: ServiceDependencies): Promise<AssetService> {
   const log = logger.child({
     service: 'AssetService'
@@ -63,7 +63,7 @@ export async function createAssetService({
     logger: log,
     knex,
     accountingService,
-    cacheDataStore
+    assetCache
   }
 
   return {
@@ -97,7 +97,7 @@ async function createAsset(
       const reActivated = await Asset.query(deps.knex)
         .patchAndFetchById(deletedAsset.id, { deletedAt: null })
         .throwIfNotFound()
-      await deps.cacheDataStore.set(reActivated.id, reActivated)
+      await deps.assetCache.set(reActivated.id, reActivated)
       return reActivated
     }
 
@@ -141,7 +141,7 @@ async function updateAsset(
       .patchAndFetchById(id, { withdrawalThreshold, liquidityThreshold })
       .throwIfNotFound()
 
-    await deps.cacheDataStore.set(id, asset)
+    await deps.assetCache.set(id, asset)
     return asset
   } catch (err) {
     if (err instanceof NotFoundError) {
@@ -160,7 +160,7 @@ async function deleteAsset(
     throw new Error('Knex undefined')
   }
 
-  await deps.cacheDataStore.delete(id)
+  await deps.assetCache.delete(id)
   try {
     // return error in case there is a peer or wallet address using the asset
     const peer = await Peer.query(deps.knex).where('assetId', id).first()
@@ -189,11 +189,11 @@ async function getAsset(
   deps: ServiceDependencies,
   id: string
 ): Promise<void | Asset> {
-  const inMem = (await deps.cacheDataStore.get(id)) as Asset
+  const inMem = (await deps.assetCache.get(id)) as Asset
   if (inMem) return inMem
 
   const asset = await Asset.query(deps.knex).whereNull('deletedAt').findById(id)
-  if (asset) await deps.cacheDataStore.set(asset.id, asset)
+  if (asset) await deps.assetCache.set(asset.id, asset)
 
   return asset
 }

@@ -86,7 +86,7 @@ interface ServiceDependencies extends BaseService {
   accountingService: AccountingService
   webhookService: WebhookService
   assetService: AssetService
-  cacheDataStore: CacheDataStore<WalletAddress>
+  walletAddressCache: CacheDataStore<WalletAddress>
 }
 
 export async function createWalletAddressService({
@@ -96,7 +96,7 @@ export async function createWalletAddressService({
   accountingService,
   webhookService,
   assetService,
-  cacheDataStore
+  walletAddressCache
 }: ServiceDependencies): Promise<WalletAddressService> {
   const log = logger.child({
     service: 'WalletAddressService'
@@ -108,7 +108,7 @@ export async function createWalletAddressService({
     accountingService,
     webhookService,
     assetService,
-    cacheDataStore
+    walletAddressCache
   }
   return {
     create: (options) => createWalletAddress(deps, options),
@@ -188,7 +188,7 @@ async function createWalletAddress(
       additionalProperties: additionalProperties
     })
     await deps.assetService.setOn(walletAddress)
-    await deps.cacheDataStore.set(walletAddress.id, walletAddress)
+    await deps.walletAddressCache.set(walletAddress.id, walletAddress)
     return walletAddress
   } catch (err) {
     if (err instanceof ForeignKeyViolationError) {
@@ -247,7 +247,10 @@ async function updateWalletAddress(
     }
     await trx.commit()
 
-    await deps.cacheDataStore.set(updatedWalletAddress.id, updatedWalletAddress)
+    await deps.walletAddressCache.set(
+      updatedWalletAddress.id,
+      updatedWalletAddress
+    )
     return updatedWalletAddress
   } catch (err) {
     await trx.rollback()
@@ -262,13 +265,13 @@ async function getWalletAddress(
   deps: ServiceDependencies,
   id: string
 ): Promise<WalletAddress | undefined> {
-  const walletAdd = await deps.cacheDataStore.get(id)
+  const walletAdd = await deps.walletAddressCache.get(id)
   if (walletAdd) return walletAdd as WalletAddress
 
   const walletAddress = await WalletAddress.query(deps.knex).findById(id)
   if (walletAddress) {
     await deps.assetService.setOn(walletAddress)
-    await deps.cacheDataStore.set(id, walletAddress)
+    await deps.walletAddressCache.set(id, walletAddress)
   }
   return walletAddress
 }
