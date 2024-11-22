@@ -43,6 +43,7 @@ import { isQuoteError } from '../../quote/errors'
 import { Pagination, SortOrder } from '../../../shared/baseModel'
 import { FilterString } from '../../../shared/filters'
 import { IAppConfig } from '../../../config/app'
+import { AssetService } from '../../../asset/service'
 
 export interface OutgoingPaymentService
   extends WalletAddressSubresourceService<OutgoingPayment> {
@@ -68,6 +69,7 @@ export interface ServiceDependencies extends BaseService {
   paymentMethodHandlerService: PaymentMethodHandlerService
   walletAddressService: WalletAddressService
   quoteService: QuoteService
+  assetService: AssetService
   telemetry: TelemetryService
 }
 
@@ -294,16 +296,17 @@ async function createOutgoingPayment(
           description: 'Time to insert payment in outgoing payment'
         }
       )
-      const payment = await OutgoingPayment.query(trx)
-        .insertAndFetch({
-          id: quoteId,
-          walletAddressId: walletAddressId,
-          client: options.client,
-          metadata: options.metadata,
-          state: OutgoingPaymentState.Funding,
-          grantId
-        })
-        .withGraphFetched('[quote.asset, walletAddress]')
+      const payment = await OutgoingPayment.query(trx).insertAndFetch({
+        id: quoteId,
+        walletAddressId: walletAddressId,
+        client: options.client,
+        metadata: options.metadata,
+        state: OutgoingPaymentState.Funding,
+        grantId
+      })
+      await deps.assetService.setOn(payment.quote)
+      await deps.walletAddressService.setOn(payment)
+
       stopTimerInsertPayment()
 
       if (
