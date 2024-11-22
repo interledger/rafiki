@@ -109,9 +109,7 @@ async function getOutgoingPaymentsPage(
 ): Promise<OutgoingPayment[]> {
   const { filter, pagination, sortOrder } = options ?? {}
 
-  const query = OutgoingPayment.query(deps.knex).withGraphFetched(
-    '[quote.asset, walletAddress]'
-  )
+  const query = OutgoingPayment.query(deps.knex).withGraphFetched('quote')
 
   if (filter?.receiver?.in && filter.receiver.in.length) {
     query
@@ -128,6 +126,11 @@ async function getOutgoingPaymentsPage(
   }
 
   const page = await query.getPage(pagination, sortOrder)
+  for (const payment of page) {
+    await deps.walletAddressService.setOn(payment)
+    await deps.assetService.setOn(payment.quote)
+  }
+
   const amounts = await deps.accountingService.getAccountsTotalSent(
     page.map((payment: OutgoingPayment) => payment.id)
   )
@@ -148,9 +151,11 @@ async function getOutgoingPayment(
 ): Promise<OutgoingPayment | undefined> {
   const outgoingPayment = await OutgoingPayment.query(deps.knex)
     .get(options)
-    .withGraphFetched('[quote.asset, walletAddress]')
+    .withGraphFetched('quote')
+  await deps.walletAddressService.setOn(outgoingPayment)
 
   if (outgoingPayment) {
+    await deps.assetService.setOn(outgoingPayment.quote)
     return addSentAmount(deps, outgoingPayment)
   }
 }
@@ -306,9 +311,8 @@ async function createOutgoingPayment(
           grantId
         })
         .withGraphFetched('quote')
-      await deps.assetService.setOn(payment.quote)
-      await deps.walletAddressService.setOn(payment.quote)
       await deps.walletAddressService.setOn(payment)
+      await deps.assetService.setOn(payment.quote)
 
       stopTimerInsertPayment()
 
@@ -611,13 +615,14 @@ async function fundPayment(
     const payment = await OutgoingPayment.query(trx)
       .findById(id)
       .forUpdate()
-      .withGraphFetched('quote.asset')
+      .withGraphFetched('quote')
     if (!payment) return FundingError.UnknownPayment
     if (payment.state !== OutgoingPaymentState.Funding) {
       return FundingError.WrongState
     }
     if (amount !== payment.debitAmount.value) return FundingError.InvalidAmount
 
+    await deps.assetService.setOn(payment.quote)
     // Create the outgoing payment liquidity account before trying to transfer funds to it.
     try {
       await deps.accountingService.createLiquidityAccount(
@@ -655,7 +660,12 @@ async function getWalletAddressPage(
 ): Promise<OutgoingPayment[]> {
   const page = await OutgoingPayment.query(deps.knex)
     .list(options)
-    .withGraphFetched('[quote.asset, walletAddress]')
+    .withGraphFetched('quote')
+  for (const payment of page) {
+    await deps.walletAddressService.setOn(payment)
+    await deps.assetService.setOn(payment.quote)
+  }
+
   const amounts = await deps.accountingService.getAccountsTotalSent(
     page.map((payment: OutgoingPayment) => payment.id)
   )
