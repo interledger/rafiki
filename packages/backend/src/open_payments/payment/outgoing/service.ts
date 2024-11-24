@@ -617,12 +617,13 @@ async function fundPayment(
       .forUpdate()
       .withGraphFetched('quote')
     if (!payment) return FundingError.UnknownPayment
+
+    await deps.assetService.setOn(payment.quote)
     if (payment.state !== OutgoingPaymentState.Funding) {
       return FundingError.WrongState
     }
     if (amount !== payment.debitAmount.value) return FundingError.InvalidAmount
 
-    await deps.assetService.setOn(payment.quote)
     // Create the outgoing payment liquidity account before trying to transfer funds to it.
     try {
       await deps.accountingService.createLiquidityAccount(
