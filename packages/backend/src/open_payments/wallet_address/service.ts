@@ -182,7 +182,7 @@ async function createWalletAddress(
     const walletAddress = await WalletAddress.query(
       deps.knex
     ).insertGraphAndFetch({
-      url: options.url,
+      url: options.url.toLowerCase(),
       publicName: options.publicName,
       assetId: options.assetId,
       additionalProperties: additionalProperties
