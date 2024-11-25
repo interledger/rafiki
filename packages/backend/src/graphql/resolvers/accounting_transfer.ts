@@ -2,10 +2,15 @@ import {
   ResolversTypes,
   QueryResolvers,
   AccountingTransfer,
-  TransferType as SchemaTransferType
+  TransferType as SchemaTransferType,
+  TransferState
 } from '../generated/graphql'
 import { ApolloContext } from '../../app'
-import { LedgerTransfer, TransferType } from '../../accounting/service'
+import {
+  LedgerTransfer,
+  LedgerTransferState,
+  TransferType
+} from '../../accounting/service'
 
 export const getAccountingTransfers: QueryResolvers<ApolloContext>['accountingTransfers'] =
   async (
@@ -37,7 +42,11 @@ export function transferToGraphql(
     creditAccountId: transfer.creditAccountId,
     amount: transfer.amount,
     ledger: transfer.ledger,
-    transferType: transferTypeToGraphql(transfer.type)
+    transferType: transferTypeToGraphql(transfer.type),
+    state: transferStateToGraphql(transfer.state),
+    expiresAt: transfer.expiresAt
+      ? new Date(Number(transfer.expiresAt)).toISOString()
+      : undefined
   }
 }
 
@@ -51,5 +60,18 @@ function transferTypeToGraphql(type: TransferType): SchemaTransferType {
       return SchemaTransferType.Withdrawal
     default:
       throw new Error(`Transfer type '${type}' is not mapped!`)
+  }
+}
+
+function transferStateToGraphql(state: LedgerTransferState): TransferState {
+  switch (state) {
+    case LedgerTransferState.PENDING:
+      return TransferState.Pending
+    case LedgerTransferState.POSTED:
+      return TransferState.Posted
+    case LedgerTransferState.VOIDED:
+      return TransferState.Voided
+    default:
+      throw new Error(`Transfer state '${state}' is not mapped!`)
   }
 }

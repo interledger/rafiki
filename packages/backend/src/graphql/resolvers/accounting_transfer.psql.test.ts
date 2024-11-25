@@ -7,6 +7,7 @@ import { Config } from '../../config/app'
 import { truncateTables } from '../../tests/tableManager'
 import {
   AccountingTransferConnection,
+  TransferState,
   TransferType
 } from '../generated/graphql'
 import { createAsset } from '../../tests/asset'
@@ -100,7 +101,7 @@ describe('Accounting Transfer', (): void => {
     const transferAmount = 123
     const ledger = 1
     const queryLimit = 100_000
-
+    const tomorrow = new Date(new Date().getDate() + 1)
     const insertedTransfer = await createLedgerTransfer(
       {
         amount: BigInt(transferAmount),
@@ -109,7 +110,8 @@ describe('Accounting Transfer', (): void => {
         ledger: ledger,
         state: LedgerTransferState.POSTED,
         transferRef: uuid(),
-        type: LedgerTransferType.DEPOSIT
+        type: LedgerTransferType.DEPOSIT,
+        expiresAt: tomorrow
       },
       appContainer.knex
     )
@@ -127,6 +129,8 @@ describe('Accounting Transfer', (): void => {
                 transferType
                 ledger
                 createdAt
+                state
+                expiresAt
               }
               credits {
                 id
@@ -136,6 +140,8 @@ describe('Accounting Transfer', (): void => {
                 transferType
                 ledger
                 createdAt
+                state
+                expiresAt
               }
             }
           }
@@ -161,7 +167,9 @@ describe('Accounting Transfer', (): void => {
       debitAccountId: accountDebitId,
       amount: `${transferAmount}`,
       transferType: TransferType.Deposit,
-      ledger
+      ledger,
+      state: TransferState.Posted,
+      expiresAt: tomorrow.toISOString()
     })
 
     // Credit:
@@ -179,6 +187,8 @@ describe('Accounting Transfer', (): void => {
                 transferType
                 ledger
                 createdAt
+                state
+                expiresAt
               }
               credits {
                 id
@@ -188,6 +198,8 @@ describe('Accounting Transfer', (): void => {
                 transferType
                 ledger
                 createdAt
+                state
+                expiresAt
               }
             }
           }
@@ -214,7 +226,9 @@ describe('Accounting Transfer', (): void => {
       creditAccountId: accountCreditId,
       amount: `${transferAmount}`,
       transferType: TransferType.Deposit,
-      ledger
+      ledger,
+      state: TransferState.Posted,
+      expiresAt: tomorrow.toISOString()
     })
   })
 })
