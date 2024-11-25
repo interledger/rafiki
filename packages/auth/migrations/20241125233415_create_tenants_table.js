@@ -8,8 +8,6 @@ exports.up = function (knex) {
     table.string('idpConsentUrl').notNullable()
     table.string('idpSecret').notNullable()
 
-    table.timestamp('createdAt').defaultTo(knex.fn.now())
-    table.timestamp('updatedAt').defaultTo(knex.fn.now())
     table.timestamp('deletedAt')
   })
 }
