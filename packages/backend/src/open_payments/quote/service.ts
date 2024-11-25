@@ -21,6 +21,7 @@ import {
 } from '../../payment-method/handler/errors'
 import { v4 as uuid } from 'uuid'
 import { TelemetryService } from '../../telemetry/service'
+import { AssetService } from '../../asset/service'
 
 export interface QuoteService extends WalletAddressSubresourceService<Quote> {
   create(options: CreateQuoteOptions): Promise<Quote | QuoteError>
@@ -31,6 +32,7 @@ export interface ServiceDependencies extends BaseService {
   knex: TransactionOrKnex
   receiverService: ReceiverService
   walletAddressService: WalletAddressService
+  assetService: AssetService
   feeService: FeeService
   paymentMethodHandlerService: PaymentMethodHandlerService
   telemetry: TelemetryService
@@ -54,9 +56,14 @@ async function getQuote(
   deps: ServiceDependencies,
   options: GetOptions
 ): Promise<Quote | undefined> {
-  return Quote.query(deps.knex)
+  const quote = await Quote.query(deps.knex)
     .get(options)
-    .withGraphFetched('[asset, fee, walletAddress]')
+    .withGraphFetched('[fee, walletAddress]')
+  if (quote) {
+    const asset = await deps.assetService.get(quote.assetId)
+    if (asset) quote.asset = asset
+  }
+  return quote
 }
 
 interface QuoteOptionsBase {
@@ -188,7 +195,10 @@ async function createQuote(
           feeId: sendingFee?.id,
           estimatedExchangeRate: quote.estimatedExchangeRate
         })
-        .withGraphFetched('[asset, fee, walletAddress]')
+        .withGraphFetched('[fee, walletAddress]')
+      const asset = await deps.assetService.get(createdQuote.assetId)
+      if (asset) createdQuote.asset = asset
+
       stopQuoteCreate()
 
       const stopFinalize = deps.telemetry.startTimer(
@@ -428,7 +438,12 @@ async function getWalletAddressPage(
   deps: ServiceDependencies,
   options: ListOptions
 ): Promise<Quote[]> {
-  return await Quote.query(deps.knex)
+  const quotes = await Quote.query(deps.knex)
     .list(options)
-    .withGraphFetched('[asset, fee, walletAddress]')
+    .withGraphFetched('[fee, walletAddress]')
+  for (const quote of quotes) {
+    const asset = await deps.assetService.get(quote.assetId)
+    if (asset) quote.asset = asset
+  }
+  return quotes
 }

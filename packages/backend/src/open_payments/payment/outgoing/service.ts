@@ -127,8 +127,11 @@ async function getOutgoingPaymentsPage(
 
   const page = await query.getPage(pagination, sortOrder)
   for (const payment of page) {
-    await deps.walletAddressService.setOn(payment)
-    await deps.assetService.setOn(payment.quote)
+    payment.walletAddress = await deps.walletAddressService.get(
+      payment.walletAddressId
+    )
+    const asset = await deps.assetService.get(payment.quote.assetId)
+    if (asset) payment.quote.asset = asset
   }
 
   const amounts = await deps.accountingService.getAccountsTotalSent(
@@ -152,10 +155,13 @@ async function getOutgoingPayment(
   const outgoingPayment = await OutgoingPayment.query(deps.knex)
     .get(options)
     .withGraphFetched('quote')
-  await deps.walletAddressService.setOn(outgoingPayment)
-
   if (outgoingPayment) {
-    await deps.assetService.setOn(outgoingPayment.quote)
+    outgoingPayment.walletAddress = await deps.walletAddressService.get(
+      outgoingPayment.walletAddressId
+    )
+    const asset = await deps.assetService.get(outgoingPayment.quote.assetId)
+    if (asset) outgoingPayment.quote.asset = asset
+
     return addSentAmount(deps, outgoingPayment)
   }
 }
@@ -311,8 +317,11 @@ async function createOutgoingPayment(
           grantId
         })
         .withGraphFetched('quote')
-      await deps.walletAddressService.setOn(payment)
-      await deps.assetService.setOn(payment.quote)
+      payment.walletAddress = await deps.walletAddressService.get(
+        payment.walletAddressId
+      )
+      const asset = await deps.assetService.get(payment.quote.assetId)
+      if (asset) payment.quote.asset = asset
 
       stopTimerInsertPayment()
 
@@ -618,7 +627,9 @@ async function fundPayment(
       .withGraphFetched('quote')
     if (!payment) return FundingError.UnknownPayment
 
-    await deps.assetService.setOn(payment.quote)
+    const asset = await deps.assetService.get(payment.quote.assetId)
+    if (asset) payment.quote.asset = asset
+
     if (payment.state !== OutgoingPaymentState.Funding) {
       return FundingError.WrongState
     }
@@ -663,8 +674,11 @@ async function getWalletAddressPage(
     .list(options)
     .withGraphFetched('quote')
   for (const payment of page) {
-    await deps.walletAddressService.setOn(payment)
-    await deps.assetService.setOn(payment.quote)
+    payment.walletAddress = await deps.walletAddressService.get(
+      payment.walletAddressId
+    )
+    const asset = await deps.assetService.get(payment.quote.assetId)
+    if (asset) payment.quote.asset = asset
   }
 
   const amounts = await deps.accountingService.getAccountsTotalSent(

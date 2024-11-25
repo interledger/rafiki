@@ -476,6 +476,7 @@ export function initIocContainer(
       receiverService: await deps.use('receiverService'),
       feeService: await deps.use('feeService'),
       walletAddressService: await deps.use('walletAddressService'),
+      assetService: await deps.use('assetService'),
       paymentMethodHandlerService: await deps.use(
         'paymentMethodHandlerService'
       ),

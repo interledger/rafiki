@@ -115,7 +115,10 @@ async function getPeer(
   id: string
 ): Promise<Peer | undefined> {
   const peer = await Peer.query(deps.knex).findById(id)
-  await deps.assetService.setOn(peer)
+  if (peer) {
+    const asset = await deps.assetService.get(peer.assetId)
+    if (asset) peer.asset = asset
+  }
   return peer
 }
 
@@ -141,7 +144,8 @@ async function createPeer(
         name: options.name,
         liquidityThreshold: options.liquidityThreshold
       })
-      await deps.assetService.setOn(peer)
+      const asset = await deps.assetService.get(peer.assetId)
+      if (asset) peer.asset = asset
 
       if (options.http?.incoming) {
         const err = await addIncomingHttpTokens({
@@ -237,7 +241,8 @@ async function updatePeer(
       const peer = await Peer.query(trx)
         .patchAndFetchById(options.id, options)
         .throwIfNotFound()
-      await deps.assetService.setOn(peer)
+      const asset = await deps.assetService.get(peer.assetId)
+      if (asset) peer.asset = asset
       return peer
     })
   } catch (err) {
@@ -346,8 +351,10 @@ async function getPeerByDestinationAddress(
   }
 
   const peer = await peerQuery.first()
-  await deps.assetService.setOn(peer)
-
+  if (peer) {
+    const asset = await deps.assetService.get(peer.assetId)
+    if (asset) peer.asset = asset
+  }
   return peer || undefined
 }
 
@@ -379,7 +386,10 @@ async function getPeersPage(
   sortOrder?: SortOrder
 ): Promise<Peer[]> {
   const peers = await Peer.query(deps.knex).getPage(pagination, sortOrder)
-  for (const peer of peers) await deps.assetService.setOn(peer)
+  for (const peer of peers) {
+    const asset = await deps.assetService.get(peer.assetId)
+    if (asset) peer.asset = asset
+  }
   return peers
 }
 
@@ -388,6 +398,9 @@ async function deletePeer(
   id: string
 ): Promise<Peer | undefined> {
   const peer = await Peer.query(deps.knex).deleteById(id).returning('*').first()
-  await deps.assetService.setOn(peer)
+  if (peer) {
+    const asset = await deps.assetService.get(peer.assetId)
+    if (asset) peer.asset = asset
+  }
   return peer
 }

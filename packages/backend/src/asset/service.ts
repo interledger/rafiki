@@ -7,8 +7,6 @@ import { BaseService } from '../shared/baseService'
 import { AccountingService, LiquidityAccountType } from '../accounting/service'
 import { WalletAddress } from '../open_payments/wallet_address/model'
 import { Peer } from '../payment-method/ilp/peer/model'
-import { Quote } from '../open_payments/quote/model'
-import { IncomingPayment } from '../open_payments/payment/incoming/model'
 import { CacheDataStore } from '../middleware/cache/data-stores'
 
 export interface AssetOptions {
@@ -31,15 +29,12 @@ export interface DeleteOptions {
   deletedAt: Date
 }
 
-export type ToSetOn = Quote | IncomingPayment | WalletAddress | Peer | undefined
-
 export interface AssetService {
   create(options: CreateOptions): Promise<Asset | AssetError>
   update(options: UpdateOptions): Promise<Asset | AssetError>
   delete(options: DeleteOptions): Promise<Asset | AssetError>
   get(id: string): Promise<void | Asset>
   getByCodeAndScale(code: string, scale: number): Promise<void | Asset>
-  setOn(obj: ToSetOn): Promise<void | Asset>
   getPage(pagination?: Pagination, sortOrder?: SortOrder): Promise<Asset[]>
   getAll(): Promise<Asset[]>
 }
@@ -73,7 +68,6 @@ export async function createAssetService({
     get: (id) => getAsset(deps, id),
     getByCodeAndScale: (code, scale) =>
       getAssetByCodeAndScale(deps, code, scale),
-    setOn: (toSetOn) => setAssetOn(deps, toSetOn),
     getPage: (pagination?, sortOrder?) =>
       getAssetsPage(deps, pagination, sortOrder),
     getAll: () => getAll(deps)
@@ -114,6 +108,7 @@ async function createAsset(
         withdrawalThreshold,
         liquidityThreshold
       })
+      await deps.assetCache.set(asset.id, asset)
       await deps.accountingService.createLiquidityAndLinkedSettlementAccount(
         asset,
         LiquidityAccountType.ASSET,
@@ -220,14 +215,4 @@ async function getAssetsPage(
 
 async function getAll(deps: ServiceDependencies): Promise<Asset[]> {
   return await Asset.query(deps.knex).whereNull('deletedAt')
-}
-
-async function setAssetOn(
-  deps: ServiceDependencies,
-  obj: ToSetOn
-): Promise<void | Asset> {
-  if (!obj) return
-  const asset = await getAsset(deps, obj.assetId)
-  if (asset) obj.asset = asset
-  return asset
 }

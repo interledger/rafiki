@@ -27,11 +27,7 @@ import { WebhookService } from '../../webhook/service'
 import { poll } from '../../shared/utils'
 import { WalletAddressAdditionalProperty } from './additional_property/model'
 import { AssetService } from '../../asset/service'
-import { Quote } from '../quote/model'
 import { CacheDataStore } from '../../middleware/cache/data-stores'
-import { OutgoingPayment } from '../payment/outgoing/model'
-
-export type ToSetOn = Quote | IncomingPayment | OutgoingPayment | undefined
 
 interface Options {
   publicName?: string
@@ -77,7 +73,6 @@ export interface WalletAddressService {
   ): Promise<WalletAddress[]>
   processNext(): Promise<string | undefined>
   triggerEvents(limit: number): Promise<number>
-  setOn(obj: ToSetOn): Promise<void | WalletAddress>
 }
 
 interface ServiceDependencies extends BaseService {
@@ -125,8 +120,7 @@ export async function createWalletAddressService({
     getPage: (pagination?, sortOrder?) =>
       getWalletAddressPage(deps, pagination, sortOrder),
     processNext: () => processNextWalletAddress(deps),
-    triggerEvents: (limit) => triggerWalletAddressEvents(deps, limit),
-    setOn: (toSetOn) => setWalletAddressOn(deps, toSetOn)
+    triggerEvents: (limit) => triggerWalletAddressEvents(deps, limit)
   }
 }
 
@@ -187,7 +181,9 @@ async function createWalletAddress(
       assetId: options.assetId,
       additionalProperties: additionalProperties
     })
-    await deps.assetService.setOn(walletAddress)
+    const asset = await deps.assetService.get(walletAddress.assetId)
+    if (asset) walletAddress.asset = asset
+
     await deps.walletAddressCache.set(walletAddress.id, walletAddress)
     return walletAddress
   } catch (err) {
@@ -226,7 +222,8 @@ async function updateWalletAddress(
       .$query(trx)
       .patchAndFetch(update)
       .throwIfNotFound()
-    await deps.assetService.setOn(updatedWalletAddress)
+    const asset = await deps.assetService.get(updatedWalletAddress.assetId)
+    if (asset) updatedWalletAddress.asset = asset
 
     // Override all existing additional properties if new ones are provided
     if (additionalProperties) {
@@ -270,7 +267,8 @@ async function getWalletAddress(
 
   const walletAddress = await WalletAddress.query(deps.knex).findById(id)
   if (walletAddress) {
-    await deps.assetService.setOn(walletAddress)
+    const asset = await deps.assetService.get(walletAddress.assetId)
+    if (asset) walletAddress.asset = asset
     await deps.walletAddressCache.set(id, walletAddress)
   }
   return walletAddress
@@ -328,7 +326,10 @@ async function getWalletAddressByUrl(
   url: string
 ): Promise<WalletAddress | undefined> {
   const walletAddress = await WalletAddress.query(deps.knex).findOne({ url })
-  await deps.assetService.setOn(walletAddress)
+  if (walletAddress) {
+    const asset = await deps.assetService.get(walletAddress.assetId)
+    if (asset) walletAddress.asset = asset
+  }
   return walletAddress || undefined
 }
 
@@ -373,9 +374,9 @@ async function processNextWalletAddresses(
       // If a wallet address is locked, don't wait — just come back for it later.
       .skipLocked()
       .where('processAt', '<=', now)
-
     for (const walletAddress of walletAddresses) {
-      await deps_.assetService.setOn(walletAddress)
+      const asset = await deps_.assetService.get(walletAddress.assetId)
+      if (asset) walletAddress.asset = asset
     }
 
     const deps = {
@@ -457,19 +458,6 @@ async function deactivateOpenIncomingPaymentsByWalletAddress(
       IncomingPaymentState.Processing
     ])
     .where('expiresAt', '>', expiresAt)
-}
-
-/*export interface CreateSubresourceOptions {
-  walletAddressId: string
-}*/
-
-async function setWalletAddressOn(
-  deps: ServiceDependencies,
-  obj: ToSetOn
-): Promise<void> {
-  if (!obj) return
-  const walletAddress = await getWalletAddress(deps, obj.walletAddressId)
-  if (walletAddress) obj.walletAddress = walletAddress
 }
 
 export interface WalletAddressSubresourceService<
