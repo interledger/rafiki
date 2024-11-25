@@ -498,13 +498,14 @@ A wallet address received a Web Monetization payment of \$0.33
 
 The `wallet_address.web_monetization` event indicates that a wallet address received Web Monetization payments via the ILP STREAM protocol. Withdraw the liquidity from the wallet address in Rafiki and credit the recipient's account on your ledger.
 
-### Low asset liquidity
+### Asset liquidity
 
 <div class="overflow-table">
 
-| Event type                                    | Description                                                   |
-| --------------------------------------------- | ------------------------------------------------------------- |
-| [`asset.liquidity_low`](#asset-liquidity-low) | Your asset liquidity has dropped below your defined threshold |
+| Event type                                      | Description                                                   |
+| ----------------------------------------------- | ------------------------------------------------------------- |
+| [`asset.liquidity_low`](#asset-liquidity-low)   | Your asset liquidity has dropped below your defined threshold |
+| [`asset.liquidity_high`](#asset-liquidity-high) | Your asset liquidity has exceeded your defined threshold      |
 
 </div>
 
@@ -529,13 +530,35 @@ Your asset liquidity for USD (asset scale: 2) drops below \$100.00.
 
 The `asset.liquidity_low` event indicates that an asset's liquidity has dropped below your predefined liquidity threshold. Check if you already have, or can acquire, additional liquidity for that specific asset. If so, deposit it in Rafiki. Cross-currency transfers will fail if you don't increase the asset's liquidity.
 
-### Low peer liquidity
+#### Asset liquidity high
+
+<Disclosure toggleText="Expand for event sequence" client:load>
+
+Your asset liquidity for USD (asset scale: 2) exceeds \$10000.00.
+
+  <Mermaid
+    graph={`sequenceDiagram
+      participant R as Rafiki
+      participant ASE as Account servicing entity
+
+      R->>ASE: Fires asset.liquidity_high event to webhook endpoint,<br/>asset: USD (scale: 2, id: "abc")
+      ASE->>R: Backend Admin API call: CreateAssetLiquidityWithdrawal
+
+`}
+/>
+
+</Disclosure>
+
+The `asset.liquidity_high` event indicates that an asset's liquidity has exceeded your predefined liquidity threshold. You may want to assess if adjustments to your liquidity thresholds or asset allocation strategies are needed. For example, this could occur during cross-currency transfers or significant asset inflows.
+
+### Peer liquidity
 
 <div class="overflow-table">
 
-| Event type                                  | Description                                                  |
-| ------------------------------------------- | ------------------------------------------------------------ |
-| [`peer.liquidity_low`](#peer-liquidity-low) | Your peer liquidity has dropped below your defined threshold |
+| Event type                                    | Description                                                  |
+| --------------------------------------------- | ------------------------------------------------------------ |
+| [`peer.liquidity_low`](#peer-liquidity-low)   | Your peer liquidity has dropped below your defined threshold |
+| [`peer.liquidity_high`](#peer-liquidity-high) | Your peer liquidity has exceeded your defined threshold      |
 
 </div>
 
@@ -559,3 +582,24 @@ The liquidity for your peer, Happy Life Bank, drops below \$100.00 USD.
 </Disclosure>
 
 The `peer.liquidity_low` event indicates that a peer's liquidity has dropped below your predefined liquidity threshold. Decide whether you want to extend the peer's credit line or if your peer must settle before you will extend a new line of credit. If you cannot or do not increase the peer liquidity in Rafiki, transfers to that peer will fail.
+
+#### Peer liquidity high
+
+<Disclosure toggleText="Expand for event sequence" client:load>
+
+The liquidity for your peer, Happy Life Bank, exceeds \$10000.00 USD.
+
+  <Mermaid
+    graph={`sequenceDiagram
+      participant R as Rafiki
+      participant ASE as Account servicing entity
+
+      R->>ASE: Fires peer.liquidity_high event to webhook endpoint,<br/>peer: Happy Life Bank (asset: "USD", scale: 2, id: "abc")
+      ASE->>R: Backend Admin API call: CreatePeerLiquidityWithdrawal
+
+`}
+/>
+
+</Disclosure>
+
+The `peer.liquidity_high` event indicates that a peer's liquidity has exceeded your predefined liquidity threshold. This typically happens when the peer is sending payments, which increases their available liquidity within the system. However, this also reflects a growing debt obligation they owe to the other peer. Use this information to manage your risk and assess whether further actions, such as adjusting credit limits or requesting settlements, are required.
