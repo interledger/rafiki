@@ -547,7 +547,7 @@ async function validateGrantAndAddSpentAmountsToPayment(
     .andWhereNot({
       id: payment.id
     })
-    .withGraphFetched('quote.asset')
+    .withGraphFetched('quote')
 
   if (grantPayments.length === 0) {
     return true
@@ -566,6 +566,9 @@ async function validateGrantAndAddSpentAmountsToPayment(
     }
   }
   for (const grantPayment of grantPayments) {
+    const asset = await deps.assetService.get(grantPayment.quote.assetId)
+    if (asset) grantPayment.quote.asset = asset
+
     if (
       validatePaymentInterval({
         limits: paymentLimits,
