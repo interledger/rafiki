@@ -60,6 +60,9 @@ export function tbTransferToLedgerTransfer(
     transferRef: fromTigerBeetleId(tbTransfer.user_data_128),
     type: transferTypeFromCode(tbTransfer.code),
     state: state,
-    ledger: tbTransfer.ledger
+    ledger: tbTransfer.ledger,
+    expiresAt: new Date(
+      Number(tbTransfer.timestamp / 1_000_000n) + tbTransfer.timeout
+    )
   }
 }
