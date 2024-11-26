@@ -281,6 +281,9 @@ export const loadAssets = async () => {
   while (hasNextPage) {
     const response = await listAssets({ first: 100, after })
 
+    if (!response.edges.length) {
+      return []
+    }
     if (response.edges) {
       assets = [...assets, ...response.edges]
     }
