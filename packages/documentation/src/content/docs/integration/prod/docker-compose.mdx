@@ -2,25 +2,61 @@
 title: Docker Compose
 ---
 
-This is an example deployment of Rafiki on a Linux virtual machine using nginx as a reverse proxy. You must change the values in the examples appropriate for your environment.
+import { LinkOut } from '@interledger/docs-design-system'
 
-## Virtual Machine preparation
+This guide is an example of deploying Rafiki using Docker Compose with Nginx as a reverse proxy on a virtual machine (VM) in a cloud environment. This guide also uses <LinkOut href='https://certbot.eff.org/'>Certbot</LinkOut> to generate <LinkOut href='https://letsencrypt.org/'>Let’s Encrypt TLS certificates</LinkOut> to secure exposed ports using HTTPS.
 
-Deploy the virtual machine:
+## Prerequisites
+
+### Domain and subdomains setup
+
+We will map the [Open Payments resource server](/integration/services/backend-service#open-payments) to your domain, and the [ILP Connector](/integration/services/backend-service#interledger-connector), [Open Payments auth server](/integration/services/auth-service), and [Admin UI](/integration/services/frontend-service) to subdomains. Using the DNS host of your choice, set up your domain and subdomains according to the following recommended convention:
+
+<div class="overflow-table">
+
+| service                       | function                                                                    | URL          | example            |
+| ----------------------------- | --------------------------------------------------------------------------- | ------------ | ------------------ |
+| Open Payments resource server | Exposes the Open Payments APIs                                              | DOMAIN       | myrafiki.com       |
+| ILP Connector                 | Exposes an ILP connector to send and receive ILP packets between peers      | ilp.DOMAIN   | ilp.myrafiki.com   |
+| Open Payments auth server     | Exposes a reference implementation of an Open Payments authorization server | auth.DOMAIN  | auth.myrafiki.com  |
+| Admin UI                      | Exposes an Admin UI to manage Rafiki                                        | admin.DOMAIN | admin.myrafiki.com |
+
+</div>
+
+:::note
+The example domain and subdomain values are for demonstration purposes only. You must use the actual domain names that you set up with your DNS host.  
+:::
+
+### Deploy VM and install Docker
+
+Deploy a general purpose VM with the following minimum specifications:
+
+- OS: Linux distro
+- RAM: 4GB
+- vCPUs: 2
+
+Install the following software on the VM:
+
+- <LinkOut href='https://docs.docker.com/engine/install/'>Docker Engine</LinkOut>
+- <LinkOut href='https://docs.docker.com/compose/install/#scenario-two-install-the-compose-plugin'>Docker Compose</LinkOut>
+
+### Install Nginx and Certbot
+
+Once you have provisioned the VM in your cloud environment, install Nginx along with Certbot:
 
 ```sh
 sudo apt update && sudo apt install nginx certbot python3-certbot-nginx
 ```
 
-## Domain preparation
+### Domain preparation
 
-Generate the Let's Encrypt certificates:
+Generate the Let’s Encrypt certificates using Certbot:
 
 ```sh
 certbot certonly --manual --preferred-challenges=dns --email EMAIL --server https://acme-v02.api.letsencrypt.org/directory --agree-tos -d DOMAIN
 ```
 
-:::note
+:::caution[Update TXT record]
 Domain can be in wildcard format. You will also need to update the TXT record in this step.
 :::
 
@@ -29,154 +65,260 @@ As Let's Encrypt certificates are valid for 90 days, you must set up a cron proc
 ```sh
 crontab -e
 ​
-0 3 * * * crontab renew
+0 3 * * * certbot renew
 ```
 
-## Update DNS records
+### Update DNS records
 
-Next update the DNS records to point to the static external IP address of the volumes:
+Next update the DNS records (A records) to point to the static external IP address of the virtual machine:
 
 <div class="overflow-table">
 
-| service   | URL              | example                |
-| --------- | ---------------- | ---------------------- |
-| admin     | admin.DOMAIN     | admin.myrafiki.com     |
-| auth      | auth.DOMAIN      | auth.myrafiki.com      |
-| connector | connector.DOMAIN | connector.myrafiki.com |
-| ilp       | ilp.DOMAIN       | ilp.myrafiki.com       |
+| service                       | URL          | example            |
+| ----------------------------- | ------------ | ------------------ |
+| Open Payments resource server | DOMAIN       | myrafiki.com       |
+| ILP Connector                 | ilp.DOMAIN   | ilp.myrafiki.com   |
+| Open Payments auth server     | auth.DOMAIN  | auth.myrafiki.com  |
+| Admin UI                      | admin.DOMAIN | admin.myrafiki.com |
 
 </div>
 
-## Server preparation
+:::note
+The example domain and subdomain values are for demonstration purposes only. You must use the actual domain names that you set up with your DNS host.  
+:::
+
+## Configure compose file
+
+Update the variables in the following compose file with values relevant to your environment and system. Refer to the [environment variables page](/resources/environment-variables/) for details.
+
+:::note[Update compose file]
+You must change the values enclosed within curly brackets {} in the following compose file.
+:::
+
+```sh
+name: 'my-rafiki'
+services:
+  rafiki-auth:
+    image: ghcr.io/interledger/rafiki-auth:v1.0.0-alpha.<newest-version>
+    container_name: rafiki-auth
+    environment:
+      AUTH_DATABASE_URL: {postgresql://...}
+      AUTH_SERVER_URL: {https://auth.myrafiki.com}
+      ADMIN_PORT: 3003
+      AUTH_PORT: 3006
+      INTROSPECTION_PORT: 3007
+      INTERACTION_PORT: 3009
+      COOKIE_KEY: {...}
+      IDENTITY_SERVER_SECRET: {...}
+      IDENTITY_SERVER_URL: {https://idp.mysystem.com}
+      REDIS_URL: {redis://...}
+      TRUST_PROXY: true
+    depends_on:
+      - postgres
+    networks:
+      - rafiki
+    ports:
+      - '3003:3003'
+      - '3006:3006'
+      - '3007:3007'
+      - '3009:3009'
+    restart: always
+
+  rafiki-backend:
+    image: ghcr.io/interledger/rafiki-backend:v1.0.0-alpha.<newest-version>
+    container_name: rafiki-backend
+    depends_on:
+      - postgres
+      - redis
+    environment:
+      AUTH_SERVER_GRANT_URL: {https://auth.myrafiki.com}
+      AUTH_SERVER_INTROSPECTION_URL: {https://auth.myrafiki.com/3007}
+      DATABASE_URL: {postgresql://...}
+      ILP_ADDRESS: {test.myrafiki}
+      ADMIN_PORT: 3001
+      CONNECTOR_PORT: 3002
+      OPEN_PAYMENTS_PORT: 3000
+      OPEN_PAYMENTS_URL: {https://myrafiki.com}
+      REDIS_URL: {redis://...}
+      WALLET_ADDRESS_URL: {https://myrafiki.com/rafiki-instance}
+      WEBHOOK_URL: {https://mysystem.com/webhooks}
+      EXCHANGE_RATES_URL: {https://mysystem.com/rates}
+      ILP_CONNECTOR_URL: {https://ilp.myrafiki.com}
+      INSTANCE_NAME: {'My ASE name'}
+      TRUST_PROXY: true
+      KEY_ID: ...
+      USE_TIGERBEETLE: true
+      TIGERBEETLE_CLUSTER_ID: 0
+      TIGERBEETLE_REPLICA_ADDRESSES: 10.5.0.50:4342
+    networks:
+      - rafiki
+    ports:
+      - '3000:3000'
+      - '3001:3001'
+      - '3002:3002'
+    privileged: true
+    restart: always
+    volumes:
+      - ../temp/:/workspace/temp/
+
+  rafiki-frontend:
+    image: ghcr.io/interledger/rafiki-frontend:v1.0.0-alpha.<newest-version>
+    container_name: rafiki-frontend
+    depends_on:
+      - rafiki-backend
+    environment:
+      PORT: 3005
+      GRAPHQL_URL: {https://myrafiki.com:3001}
+      OPEN_PAYMENTS_URL: {https://myrafiki.com}
+      KRATOS_CONTAINER_PUBLIC_URL: {http://kratos:4433}
+      KRATOS_BROWSER_PUBLIC_URL: {https://admin.myrafiki.com/kratos}
+      KRATOS_ADMIN_URL: {http://kratos:4434/admin}
+    networks:
+      - rafiki
+    restart: always
+    privileged: true
+    ports:
+      - '3005:3005'
+
+  tigerbeetle:
+    image: ghcr.io/tigerbeetle/tigerbeetle:0.15.4
+    privileged: true
+    volumes:
+      - tigerbeetle-data:/var/lib/tigerbeetle
+    networks:
+      rafiki:
+        ipv4_address: 10.5.0.50
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        set -ex
+        DATA_FILE=/var/lib/tigerbeetle/cluster_0_replica_0.tigerbeetle
+        set +e
+        ls $$DATA_FILE
+        DATA_FILE_EXISTS="$$?"
+        set -e
+        echo $$DATA_FILE_EXISTS
+        if [ "$$DATA_FILE_EXISTS" != 0 ]; then
+          ./tigerbeetle format --cluster=0 --replica=0 --replica-count=1 $$DATA_FILE;
+        fi
+        hostname -i
+        ls /var/lib/tigerbeetle
+        ./tigerbeetle start --addresses=0.0.0.0:4342 $$DATA_FILE
+
+  postgres:
+    image: 'postgres:16'
+    container_name: postgres
+    environment:
+      POSTGRES_USER: ...
+      POSTGRES_PASSWORD: ...
+    networks:
+      - rafiki
+    restart: unless-stopped
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+      - ../dbinit.sql:/docker-entrypoint-initdb.d/init.sql
+
+  redis:
+    image: 'redis:7'
+    restart: unless-stopped
+    networks:
+      - rafiki
+
+  kratos:
+    image: 'oryd/kratos:v1.2.0'
+    privileged: true
+    ports:
+      - '4433:4433'
+    volumes:
+      - ../entrypoint.sh:/entrypoint.sh
+      - ../identity.schema.json:/etc/config/kratos/identity.schema.json
+      - ./kratos.yml:/etc/config/kratos/kratos.yml
+    entrypoint: ['/entrypoint.sh']
+    networks:
+      - rafiki
+
+networks:
+  testnet:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 10.5.0.0/24
+          gateway: 10.5.0.1
+
+volumes:
+  pg-data:
+  tigerbeetle-data:
+
+```
+
+## Create Nginx config files
 
 Create nginx configuration files for every exposed domain:
 
-### Admin
+<div class="overflow-table">
+
+| service                       | URL          | example            | Nginx config file                                               |
+| ----------------------------- | ------------ | ------------------ | --------------------------------------------------------------- |
+| Open Payments resource server | DOMAIN       | myrafiki.com       | /etc/nginx/sites-available/open_payments_resource_server.config |
+| ILP Connector                 | ilp.DOMAIN   | ilp.myrafiki.com   | /etc/nginx/sites-available/ilp.config                           |
+| Open Payments auth server     | auth.DOMAIN  | auth.myrafiki.com  | /etc/nginx/sites-available/open_payments_auth_server.config     |
+| Admin UI                      | admin.DOMAIN | admin.myrafiki.com | /etc/nginx/sites-available/admin.config                          |
+
+</div>
+
+:::note
+The example domain and subdomain values are for demonstration purposes only. You must use the actual domain names that you set up with your DNS host.  
+:::
+
+### Open Payments Resource Server (`backend` package)
+
+Using the editor of your choice, save the following file as `open_payments_resource_server.config` in the `/etc/nginx/sites-available` directory on your VM:
 
 ```sh
 
-    server_name admin.myrafiki.com;
+server {
+      server_name myrafiki.com;
 
-    listen 443 ssl;
+      listen 443 ssl;
 
-    ssl_certificate /etc/letsencrypt/live/admin.myrafiki.com/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/admin.myrafiki.com/privkey.pem;
+      ssl_certificate /etc/letsencrypt/live/myrafiki.com/fullchain.pem;
+      ssl_certificate_key /etc/letsencrypt/live/myrafiki.com/privkey.pem;
 
-    include /etc/letsencrypt/options-ssl-nginx.conf;
-    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
+      include /etc/letsencrypt/options-ssl-nginx.conf;
+      ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
 
-    location / {
-        proxy_http_version 1.1;
-        proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_set_header Upgrade "";
-        proxy_set_header Connection "";
-        proxy_set_header Host $server_name;
-        proxy_set_header Accept-Encoding "";
-        proxy_cache_bypass $http_upgrade;
+      location / {
+          proxy_http_version 1.1;
+          proxy_set_header X-Forwarded-Proto $scheme;
+          proxy_set_header Upgrade "";
+          proxy_set_header Connection "";
+          proxy_set_header Host $server_name;
+          proxy_set_header Accept-Encoding "";
+          proxy_cache_bypass $http_upgrade;
 
-        proxy_pass_request_headers on;
+          proxy_pass_request_headers on;
 
-        proxy_pass http://localhost:4010;
+          proxy_pass http://localhost:3000;
     }
 }
 
 server {
-    server_name admin.myrafiki.com;
+    server_name myrafiki.com;
 
     listen 80;
 
-    if ($host = admin.myrafiki.com) {
-	    return 301 https://$host$request_uri;
+    if ($host = myrafiki.com) {
+        return 301 https://$host$request_uri;
     }
 
     return 404;
 }
 ```
 
-### Auth
+### ILP Connector (`backend` package)
 
-```sh
-server {
-    server_name auth.myrafiki.com;
-
-    listen 443 ssl;
-
-    ssl_certificate /etc/letsencrypt/live/auth.myrafiki.com/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/auth.myrafiki.com/privkey.pem;
-
-    include /etc/letsencrypt/options-ssl-nginx.conf;
-    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
-
-    location / {
-        proxy_http_version 1.1;
-        proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_set_header Upgrade "";
-        proxy_set_header Connection "";
-        proxy_set_header Host $server_name;
-        proxy_set_header Accept-Encoding "";
-        proxy_cache_bypass $http_upgrade;
-
-        proxy_pass_request_headers on;
-
-        proxy_pass http://localhost:3002;
-    }
-}
-
-server {
-    server_name auth.myrafiki.com;
-
-    listen 80;
-
-    if ($host = auth.myrafiki.com) {
-	    return 301 https://$host$request_uri;
-    }
-
-    return 404;
-}
-```
-
-### Connector
-
-```sh
-server {
-    server_name connector.myrafiki.com;
-
-    listen 443 ssl;
-    ssl_certificate /etc/letsencrypt/live/connector.myrafiki.com/fullchain.pem; # managed by Certbot
-    ssl_certificate_key /etc/letsencrypt/live/connector.myrafiki.com/privkey.pem; # managed by Certbot
-
-    include /etc/letsencrypt/options-ssl-nginx.conf;
-    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
-
-    location / {
-        proxy_http_version 1.1;
-        proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_set_header Upgrade "";
-        proxy_set_header Connection "";
-        proxy_set_header Host $server_name;
-        proxy_set_header Accept-Encoding "";
-        proxy_cache_bypass $http_upgrade;
-
-        proxy_pass_request_headers on;
-
-        proxy_pass http://localhost:3002;
-    }
-}
-
-server {
-    server_name connector.myrafiki.com;
-
-    listen 80;
-
-    if ($host = connector.myrafiki.com) {
-	    return 301 https://$host$request_uri;
-    }
-
-    return 404;
-}
-```
-
-### ILP
+Save the following file as `ilp.config` in the `/etc/nginx/sites-available` directory on your VM:
 
 ```sh
 server {
@@ -201,7 +343,7 @@ server {
 
         proxy_pass_request_headers on;
 
-        proxy_pass http://localhost:4000;
+        proxy_pass http://localhost:3002;
     }
 }
 
@@ -211,9 +353,119 @@ server {
     listen 80;
 
     if ($host = ilp.myrafiki.com) {
-            return 301 https://$host$request_uri;
+        return 301 https://$host$request_uri;
     }
 
     return 404;
 }
+```
+
+### Open Payments Auth Server (`auth` package)
+
+Save the following file as `open_payments_auth_server.config` in the `/etc/nginx/sites-available` directory on your VM:
+
+```sh
+server {
+    server_name auth.myrafiki.com;
+
+    listen 443 ssl;
+    ssl_certificate /etc/letsencrypt/live/auth.myrafiki.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/auth.myrafiki.com/privkey.pem;
+
+    include /etc/letsencrypt/options-ssl-nginx.conf;
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
+
+    location / {
+        proxy_http_version 1.1;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header Upgrade "";
+        proxy_set_header Connection "";
+        proxy_set_header Host $server_name;
+        proxy_set_header Accept-Encoding "";
+        proxy_cache_bypass $http_upgrade;
+
+        proxy_pass_request_headers on;
+
+        proxy_pass http://localhost:3006;
+    }
+}
+
+server {
+    server_name auth.myrafiki.com;
+
+    listen 80;
+
+    if ($host = auth.myrafiki.com) {
+        return 301 https://$host$request_uri;
+    }
+
+    return 404;
+}
+```
+
+### Admin (`frontend` package)
+
+Save the following file as `admin.config` in the `/etc/nginx/sites-available` directory on your VM:
+
+```sh
+server {
+    server_name admin.myrafiki.com;
+
+    listen 443 ssl;
+
+    ssl_certificate /etc/letsencrypt/live/admin.myrafiki.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/admin.myrafiki.com/privkey.pem;
+
+    include /etc/letsencrypt/options-ssl-nginx.conf;
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
+
+    location / {
+        proxy_http_version 1.1;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header Upgrade "";
+        proxy_set_header Connection "";
+        proxy_set_header Host $server_name;
+        proxy_set_header Accept-Encoding "";
+        proxy_cache_bypass $http_upgrade;
+
+        proxy_pass_request_headers on;
+
+        proxy_pass http://localhost:3005;
+    }
+}
+
+server {
+    server_name admin.myrafiki.com;
+
+    listen 80;
+
+    if ($host = admin.myrafiki.com) {
+        return 301 https://$host$request_uri;
+    }
+
+    return 404;
+}
+```
+
+## Set up symbolic links
+
+Once the Nginx configuration files have been created, set up symbolic links that will allow Nginx to read those files and redirect the local paths to the exposed domains and ports.
+
+```sh
+sudo ln -s /etc/nginx/sites-available/admin.conf /etc/nginx/sites-enabled/admin.conf
+
+sudo ln -s /etc/nginx/sites-available/open_payments_auth_server.conf /etc/nginx/sites-enabled/open_payments_auth_server.conf
+
+sudo ln -s /etc/nginx/sites-available/ilp.conf /etc/nginx/sites-enabled/ilp.conf
+
+sudo ln -s /etc/nginx/sites-available/open_payments_resource_server.conf /etc/nginx/sites-enabled/open_payments_resource_server.conf
+
+```
+
+## Deploy with Docker Compose
+
+Deploy the configured Rafiki services with Docker Compose:
+
+```sh
+docker compose up -d
 ```
