@@ -177,7 +177,7 @@ export async function getAccountTransfers(
     account_id,
     timestamp_min: 0n,
     timestamp_max: 0n,
-    limit, // 20 is the default limit for TB.
+    limit,
     flags: AccountFilterFlags.credits | AccountFilterFlags.debits
   }
   const tbAccountTransfers: TbTransfer[] =

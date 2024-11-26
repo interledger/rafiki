@@ -139,7 +139,7 @@ type Query {
   accountingTransfers(
     "Unique identifier of the account."
     id: String!
-    "Limit the number of results returned. If no limit is provided, the default limit of 20 is set for TigerBeetle."
+    "Limit the number of results returned. If no limit is provided, the default limit is 20."
     limit: Int
   ): AccountingTransferConnection!
 
