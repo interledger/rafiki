@@ -220,7 +220,7 @@ async function cancelOutgoingPayment(
           ...(options.reason ? { cancellationReason: options.reason } : {})
         }
       })
-      .withGraphFetched('[quote]')
+      .withGraphFetched('quote')
     const asset = await deps.assetService.get(payment.quote.assetId)
     if (asset) payment.quote.asset = asset
 

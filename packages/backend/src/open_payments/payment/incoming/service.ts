@@ -90,8 +90,16 @@ async function getIncomingPayment(
 ): Promise<IncomingPayment | undefined> {
   const incomingPayment = await IncomingPayment.query(deps.knex)
     .get(options)
-    .withGraphFetched('[asset, walletAddress]')
-  if (incomingPayment) return await addReceivedAmount(deps, incomingPayment)
+  if (incomingPayment) {
+    const asset = await deps.assetService.get(incomingPayment.assetId)
+    if (asset) incomingPayment.asset = asset
+
+    incomingPayment.walletAddress = await deps.walletAddressService.get(
+      incomingPayment.walletAddressId
+    )
+
+    return await addReceivedAmount(deps, incomingPayment)
+  }
   else return
 }
 
@@ -165,7 +173,13 @@ async function createIncomingPayment(
       state: IncomingPaymentState.Pending,
       processAt: expiresAt
     })
-    .withGraphFetched('[asset, walletAddress]')
+
+  const asset = await deps.assetService.get(incomingPayment.assetId)
+  if (asset) incomingPayment.asset = asset
+
+  incomingPayment.walletAddress = await deps.walletAddressService.get(
+    incomingPayment.walletAddressId
+  )
 
   await IncomingPaymentEvent.query(trx || deps.knex).insert({
     incomingPaymentId: incomingPayment.id,
@@ -217,11 +231,19 @@ async function getApprovedOrCanceledIncomingPayment(
   deps: ServiceDependencies,
   options: GetOptions
 ) {
-  return IncomingPayment.query(deps.knex)
+  const incomingPayment = await IncomingPayment.query(deps.knex)
     .get(options)
-    .withGraphFetched('[asset, walletAddress]')
     .whereNotNull('approvedAt')
     .orWhereNotNull('cancelledAt')
+  if (incomingPayment) {
+    const asset = await deps.assetService.get(incomingPayment.assetId)
+    if (asset) incomingPayment.asset = asset
+
+    incomingPayment.walletAddress = await deps.walletAddressService.get(
+      incomingPayment.walletAddressId
+    )
+  }
+  return incomingPayment
 }
 
 // Fetch (and lock) an incoming payment for work.
@@ -238,10 +260,16 @@ async function processNextIncomingPayment(
       // If an incoming payment is locked, don't wait — just come back for it later.
       .skipLocked()
       .where('processAt', '<=', now)
-      .withGraphFetched('[asset, walletAddress]')
 
     const incomingPayment = incomingPayments[0]
     if (!incomingPayment) return
+
+    const asset = await deps_.assetService.get(incomingPayment.assetId)
+    if (asset) incomingPayment.asset = asset
+
+    incomingPayment.walletAddress = await deps_.walletAddressService.get(
+      incomingPayment.walletAddressId
+    )
 
     const deps = {
       ...deps_,
@@ -338,7 +366,15 @@ async function getWalletAddressPage(
 ): Promise<IncomingPayment[]> {
   const page = await IncomingPayment.query(deps.knex)
     .list(options)
-    .withGraphFetched('[asset, walletAddress]')
+  for (const payment of page) {
+    const asset = await deps.assetService.get(payment.assetId)
+    if (asset) payment.asset = asset
+
+    payment.walletAddress = await deps.walletAddressService.get(
+      payment.walletAddressId
+    )
+  }
+
   const amounts = await deps.accountingService.getAccountsTotalReceived(
     page.map((payment: IncomingPayment) => payment.id)
   )
@@ -371,9 +407,16 @@ async function approveIncomingPayment(
     const payment = await IncomingPayment.query(trx)
       .findById(id)
       .forUpdate()
-      .withGraphFetched('[asset, walletAddress]')
 
     if (!payment) return IncomingPaymentError.UnknownPayment
+
+    const asset = await deps.assetService.get(payment.assetId)
+    if (asset) payment.asset = asset
+
+    payment.walletAddress = await deps.walletAddressService.get(
+      payment.walletAddressId
+    )
+
     if (payment.state !== IncomingPaymentState.Pending)
       return IncomingPaymentError.WrongState
 
@@ -403,9 +446,16 @@ async function cancelIncomingPayment(
     const payment = await IncomingPayment.query(trx)
       .findById(id)
       .forUpdate()
-      .withGraphFetched('[asset, walletAddress]')
 
     if (!payment) return IncomingPaymentError.UnknownPayment
+
+    const asset = await deps.assetService.get(payment.assetId)
+    if (asset) payment.asset = asset
+
+    payment.walletAddress = await deps.walletAddressService.get(
+      payment.walletAddressId
+    )
+
     if (payment.state !== IncomingPaymentState.Pending)
       return IncomingPaymentError.WrongState
 
@@ -435,8 +485,15 @@ async function completeIncomingPayment(
     const payment = await IncomingPayment.query(trx)
       .findById(id)
       .forUpdate()
-      .withGraphFetched('[asset, walletAddress]')
     if (!payment) return IncomingPaymentError.UnknownPayment
+
+    const asset = await deps.assetService.get(payment.assetId)
+    if (asset) payment.asset = asset
+
+    payment.walletAddress = await deps.walletAddressService.get(
+      payment.walletAddressId
+    )
+
     if (
       ![IncomingPaymentState.Pending, IncomingPaymentState.Processing].includes(
         payment.state
