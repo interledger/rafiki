@@ -60,6 +60,7 @@ import {
   createNoopTelemetryService
 } from './telemetry/service'
 import { createWebhookService } from './webhook/service'
+import { createTenantSettingService } from './tenants/settings/service'
 
 BigInt.prototype.toJSON = function () {
   return this.toString()
@@ -510,6 +511,15 @@ export function initIocContainer(
       logger: await deps.use('logger'),
       outgoingPaymentService: await deps.use('outgoingPaymentService')
     })
+  })
+
+  container.singleton('tenantSettings', async (deps) => {
+    const [logger, knex] = await Promise.all([
+      deps.use('logger'),
+      deps.use('knex')
+    ])
+
+    return createTenantSettingService({ logger, knex })
   })
 
   return container
