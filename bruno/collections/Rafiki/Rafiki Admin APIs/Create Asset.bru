@@ -19,7 +19,8 @@ body:graphql {
         id
         scale
         withdrawalThreshold
-        liquidityThreshold
+        liquidityThresholdLow
+        liquidityThresholdHigh
       }
     }
   }
@@ -31,7 +32,8 @@ body:graphql:vars {
       "code": "JPY",
       "scale": 6,
       "withdrawalThreshold": null,
-      "liquidityThreshold": "100000000"
+      "liquidityThresholdLow": "100000000",
+      "liquidityThresholdHigh": "10000000000"
     }
   }
 }

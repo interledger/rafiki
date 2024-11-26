@@ -34,7 +34,8 @@ export class Peer
     }
   }
 
-  public readonly liquidityThreshold!: bigint | null
+  public readonly liquidityThresholdLow!: bigint | null
+  public readonly liquidityThresholdHigh!: bigint | null
 
   public assetId!: string
   public asset!: Asset
@@ -53,25 +54,50 @@ export class Peer
 
   public name?: string
 
-  public async onDebit({ balance }: OnDebitOptions): Promise<Peer> {
-    if (this.liquidityThreshold !== null) {
-      if (balance <= this.liquidityThreshold) {
-        await PeerEvent.query().insert({
-          peerId: this.id,
-          type: PeerEventType.LiquidityLow,
-          data: {
-            id: this.id,
-            asset: {
-              id: this.asset.id,
-              code: this.asset.code,
-              scale: this.asset.scale
-            },
-            liquidityThreshold: this.liquidityThreshold,
-            balance
-          }
-        })
-      }
+  private async checkAndInsertEvent(
+    balance: bigint,
+    threshold: bigint | null,
+    eventType: PeerEventType
+  ) {
+    if (threshold === null) {
+      return
     }
+
+    const isThresholdCrossed =
+      (eventType === PeerEventType.LiquidityLow && balance <= threshold) ||
+      (eventType === PeerEventType.LiquidityHigh && balance >= threshold)
+
+    if (isThresholdCrossed) {
+      await PeerEvent.query().insert({
+        peerId: this.id,
+        type: eventType,
+        data: {
+          id: this.id,
+          asset: {
+            id: this.asset.id,
+            code: this.asset.code,
+            scale: this.asset.scale
+          },
+          liquidityThreshold: threshold,
+          balance
+        }
+      })
+    }
+  }
+
+  public async onDebit({ balance }: OnDebitOptions): Promise<Peer> {
+    await Promise.all([
+      this.checkAndInsertEvent(
+        balance,
+        this.liquidityThresholdLow,
+        PeerEventType.LiquidityLow
+      ),
+      this.checkAndInsertEvent(
+        balance,
+        this.liquidityThresholdHigh,
+        PeerEventType.LiquidityHigh
+      )
+    ])
     return this
   }
 
@@ -101,7 +127,8 @@ export class Peer
 }
 
 export enum PeerEventType {
-  LiquidityLow = 'peer.liquidity_low'
+  LiquidityLow = 'peer.liquidity_low',
+  LiquidityHigh = 'peer.liquidity_high'
 }
 
 export type PeerEventData = {

@@ -58,7 +58,7 @@ describe('Models', (): void => {
           maxPacketAmount: BigInt(100),
           staticIlpAddress: 'test.' + uuid(),
           name: faker.person.fullName(),
-          liquidityThreshold: BigInt(100)
+          liquidityThresholdLow: BigInt(100)
         }
         const peerOrError = await peerService.create(options)
         if (!isPeerError(peerOrError)) {
@@ -89,7 +89,7 @@ describe('Models', (): void => {
                 code: asset.code,
                 scale: asset.scale
               },
-              liquidityThreshold: peer.liquidityThreshold?.toString(),
+              liquidityThreshold: peer.liquidityThresholdLow?.toString(),
               balance: balance.toString()
             }
           })

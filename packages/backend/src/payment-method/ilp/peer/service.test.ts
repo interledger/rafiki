@@ -39,7 +39,8 @@ describe('Peer Service', (): void => {
     maxPacketAmount: BigInt(100),
     staticIlpAddress: 'test.' + uuid(),
     name: faker.person.fullName(),
-    liquidityThreshold: BigInt(10000),
+    liquidityThresholdLow: BigInt(10000),
+    liquidityThresholdHigh: BigInt(100000),
     ...override
   })
 
@@ -64,12 +65,12 @@ describe('Peer Service', (): void => {
 
   describe('Create/Get Peer', (): void => {
     test.each`
-      liquidityThreshold
+      liquidityThresholdLow
       ${undefined}
       ${BigInt(1000)}
     `(
-      'A peer can be created and fetched, liquidityThreshold: $liquidityThreshold',
-      async ({ liquidityThreshold }): Promise<void> => {
+      'A peer can be created and fetched, liquidityThresholdLow: $liquidityThresholdLow',
+      async ({ liquidityThresholdLow }): Promise<void> => {
         const options = {
           assetId: asset.id,
           http: {
@@ -80,7 +81,7 @@ describe('Peer Service', (): void => {
           },
           staticIlpAddress: 'test.' + uuid(),
           name: faker.person.fullName(),
-          liquidityThreshold
+          liquidityThresholdLow
         }
         const peer = await peerService.create(options)
         assert.ok(!isPeerError(peer))
@@ -91,7 +92,7 @@ describe('Peer Service', (): void => {
           },
           staticIlpAddress: options.staticIlpAddress,
           name: options.name,
-          liquidityThreshold: liquidityThreshold || null
+          liquidityThresholdLow: liquidityThresholdLow || null
         })
         const retrievedPeer = await peerService.get(peer.id)
         if (!retrievedPeer) throw new Error('peer not found')
@@ -223,12 +224,12 @@ describe('Peer Service', (): void => {
 
   describe('Update Peer', (): void => {
     test.each`
-      liquidityThreshold
+      liquidityThresholdLow
       ${null}
       ${BigInt(2000)}
     `(
-      'Can update a peer, liquidityThreshold: $liquidityThreshold',
-      async ({ liquidityThreshold }): Promise<void> => {
+      'Can update a peer, liquidityThresholdLow: $liquidityThresholdLow',
+      async ({ liquidityThresholdLow }): Promise<void> => {
         const peer = await createPeer(deps)
         const { http, maxPacketAmount, staticIlpAddress, name } = randomPeer()
         const updateOptions: UpdateOptions = {
@@ -237,7 +238,7 @@ describe('Peer Service', (): void => {
           maxPacketAmount,
           staticIlpAddress,
           name,
-          liquidityThreshold
+          liquidityThresholdLow
         }
 
         const peerOrError = await peerService.update(updateOptions)
@@ -252,7 +253,7 @@ describe('Peer Service', (): void => {
           maxPacketAmount: updateOptions.maxPacketAmount,
           staticIlpAddress: updateOptions.staticIlpAddress,
           name: updateOptions.name,
-          liquidityThreshold: updateOptions.liquidityThreshold || null
+          liquidityThresholdLow: updateOptions.liquidityThresholdLow || null
         }
         expect(peerOrError).toMatchObject(expectedPeer)
         await expect(peerService.get(peer.id)).resolves.toEqual(peerOrError)

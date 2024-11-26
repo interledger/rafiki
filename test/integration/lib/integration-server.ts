@@ -105,6 +105,11 @@ export class WebhookEventHandler {
         break
       case WebhookEventType.OutgoingPaymentCompleted:
         break
+      case WebhookEventType.AssetLiquidityHigh:
+      case WebhookEventType.AssetLiquidityLow:
+      case WebhookEventType.PeerLiquidityHigh:
+      case WebhookEventType.PeerLiquidityLow:
+        break
       default:
         console.log(`unknown event type: ${webhookEvent.type}`)
     }

@@ -16,7 +16,9 @@ export class Asset extends BaseModel implements LiquidityAccount {
 
   public readonly withdrawalThreshold!: bigint | null
 
-  public readonly liquidityThreshold!: bigint | null
+  public readonly liquidityThresholdLow!: bigint | null
+
+  public readonly liquidityThresholdHigh!: bigint | null
 
   public readonly deletedAt: string | null | undefined
 
@@ -28,31 +30,58 @@ export class Asset extends BaseModel implements LiquidityAccount {
     }
   }
 
-  public async onDebit({ balance }: OnDebitOptions): Promise<Asset> {
-    if (this.liquidityThreshold !== null) {
-      if (balance <= this.liquidityThreshold) {
-        await AssetEvent.query().insert({
-          assetId: this.id,
-          type: AssetEventType.LiquidityLow,
-          data: {
-            id: this.id,
-            asset: {
-              id: this.id,
-              code: this.code,
-              scale: this.scale
-            },
-            liquidityThreshold: this.liquidityThreshold,
-            balance
-          }
-        })
-      }
+  private async checkAndInsertEvent(
+    balance: bigint,
+    threshold: bigint | null,
+    eventType: AssetEventType
+  ) {
+    if (threshold === null) {
+      return
     }
+
+    const isThresholdCrossed =
+      (eventType === AssetEventType.LiquidityLow && balance <= threshold) ||
+      (eventType === AssetEventType.LiquidityHigh && balance >= threshold)
+
+    if (isThresholdCrossed) {
+      await AssetEvent.query().insert({
+        assetId: this.id,
+        type: eventType,
+        data: {
+          id: this.id,
+          asset: {
+            id: this.id,
+            code: this.code,
+            scale: this.scale
+          },
+          liquidityThreshold: threshold,
+          balance
+        }
+      })
+    }
+  }
+
+  public async onDebit({ balance }: OnDebitOptions): Promise<Asset> {
+    await Promise.all([
+      this.checkAndInsertEvent(
+        balance,
+        this.liquidityThresholdLow,
+        AssetEventType.LiquidityLow
+      ),
+      this.checkAndInsertEvent(
+        balance,
+        this.liquidityThresholdHigh,
+        AssetEventType.LiquidityHigh
+      )
+    ])
+
     return this
   }
 }
 
 export enum AssetEventType {
-  LiquidityLow = 'asset.liquidity_low'
+  LiquidityLow = 'asset.liquidity_low',
+  LiquidityHigh = 'asset.liquidity_high'
 }
 
 export type AssetEventData = {

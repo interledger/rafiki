@@ -19,7 +19,8 @@ body:graphql {
         id
         scale
         withdrawalThreshold
-        liquidityThreshold
+        liquidityThresholdLow
+        liquidityThresholdHigh
       }
     }
   }
@@ -30,7 +31,8 @@ body:graphql:vars {
     "input": {
       "id": "{{assetId}}",
       "withdrawalThreshold": 100,
-      "liquidityThreshold": 100
+      "liquidityThresholdLow": 100,
+      "liquidityThresholdHigh": 500
     }
   }
 }

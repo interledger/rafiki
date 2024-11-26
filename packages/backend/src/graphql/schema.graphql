@@ -351,7 +351,9 @@ input CreateAssetInput {
   "Minimum amount of liquidity that can be withdrawn from the asset."
   withdrawalThreshold: UInt64
   "A webhook event will notify the Account Servicing Entity if liquidity falls below this value."
-  liquidityThreshold: UInt64
+  liquidityThresholdLow: UInt64
+  "A webhook event will notify the Account Servicing Entity if liquidity is higher than this value."
+  liquidityThresholdHigh: UInt64
   "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency)."
   idempotencyKey: String
 }
@@ -362,7 +364,9 @@ input UpdateAssetInput {
   "New minimum amount of liquidity that can be withdrawn from the asset."
   withdrawalThreshold: UInt64
   "A webhook event will notify the Account Servicing Entity if liquidity falls below this new value."
-  liquidityThreshold: UInt64
+  liquidityThresholdLow: UInt64
+  "A webhook event will notify the Account Servicing Entity if liquidity is higher than this new value."
+  liquidityThresholdHigh: UInt64
   "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency)."
   idempotencyKey: String
 }
@@ -400,7 +404,9 @@ input CreatePeerInput {
   "Internal name of the peer."
   name: String
   "A webhook event will notify the Account Servicing Entity if peer liquidity falls below this value."
-  liquidityThreshold: UInt64
+  liquidityThresholdLow: UInt64
+  "A webhook event will notify the Account Servicing Entity if peer liqudity is higher than this value."
+  liquidityThresholdHigh: UInt64
   "Initial amount of liquidity to deposit for the peer."
   initialLiquidity: UInt64
   "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency)."
@@ -417,7 +423,9 @@ input CreateOrUpdatePeerByUrlInput {
   "Internal name for the peer, used to override auto-peering default names."
   name: String
   "A webhook event will notify the Account Servicing Entity if peer liquidity falls below this value."
-  liquidityThreshold: UInt64
+  liquidityThresholdLow: UInt64
+  "A webhook event will notify the Account Servicing Entity if peer liquidity is higher than this value."
+  liquidityThresholdHigh: UInt64
   "Amount of liquidity to deposit for the peer."
   liquidityToDeposit: UInt64
   "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency)."
@@ -436,7 +444,9 @@ input UpdatePeerInput {
   "New public name for the peer."
   name: String
   "A webhook event will notify the Account Servicing Entity if peer liquidity falls below this new value."
-  liquidityThreshold: UInt64
+  liquidityThresholdLow: UInt64
+  "A webhook event will notify the Account Servicing Entity if peer liquidity is higher than this new value."
+  liquidityThresholdHigh: UInt64
   "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency)."
   idempotencyKey: String
 }
@@ -613,7 +623,9 @@ type Asset implements Model {
   "Minimum amount of liquidity that can be withdrawn from the asset."
   withdrawalThreshold: UInt64
   "A webhook event will notify the Account Servicing Entity if liquidity falls below this value."
-  liquidityThreshold: UInt64
+  liquidityThresholdLow: UInt64
+  "A webhook event will notify the Account Servicing Entity if liquidity is higher than this value."
+  liquidityThresholdHigh: UInt64
   "The receiving fee structure for the asset."
   receivingFee: Fee
   "The sending fee structure for the asset."
@@ -683,7 +695,9 @@ type Peer implements Model {
   "Public name for the peer."
   name: String
   "A webhook event will notify the Account Servicing Entity if liquidity falls below this value."
-  liquidityThreshold: UInt64
+  liquidityThresholdLow: UInt64
+  "A webhook event will notify the Account Servicing Entity if liquidity is higher than this value."
+  liquidityThresholdHigh: UInt64
   "Current amount of peer liquidity available."
   liquidity: UInt64
   "The date and time when the peer was created."

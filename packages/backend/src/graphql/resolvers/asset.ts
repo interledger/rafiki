@@ -93,7 +93,8 @@ export const updateAsset: MutationResolvers<ApolloContext>['updateAsset'] =
     const assetOrError = await assetService.update({
       id: args.input.id,
       withdrawalThreshold: args.input.withdrawalThreshold ?? null,
-      liquidityThreshold: args.input.liquidityThreshold ?? null
+      liquidityThresholdLow: args.input.liquidityThresholdLow ?? null,
+      liquidityThresholdHigh: args.input.liquidityThresholdHigh ?? null
     })
     if (isAssetError(assetOrError)) {
       throw new GraphQLError(errorToMessage[assetOrError], {
@@ -188,6 +189,7 @@ export const assetToGraphql = (asset: Asset): SchemaAsset => ({
   code: asset.code,
   scale: asset.scale,
   withdrawalThreshold: asset.withdrawalThreshold,
-  liquidityThreshold: asset.liquidityThreshold,
+  liquidityThresholdLow: asset.liquidityThresholdLow,
+  liquidityThresholdHigh: asset.liquidityThresholdHigh,
   createdAt: new Date(+asset.createdAt).toISOString()
 })

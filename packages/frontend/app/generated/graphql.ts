@@ -112,8 +112,10 @@ export type Asset = Model & {
   id: Scalars['ID']['output'];
   /** Available liquidity */
   liquidity?: Maybe<Scalars['UInt64']['output']>;
+  /** A webhook event will notify the Account Servicing Entity if liquidity is higher than this value. */
+  liquidityThresholdHigh?: Maybe<Scalars['UInt64']['output']>;
   /** A webhook event will notify the Account Servicing Entity if liquidity falls below this value. */
-  liquidityThreshold?: Maybe<Scalars['UInt64']['output']>;
+  liquidityThresholdLow?: Maybe<Scalars['UInt64']['output']>;
   /** The receiving fee structure for the asset. */
   receivingFee?: Maybe<Fee>;
   /** Difference in order of magnitude between the standard unit of an asset and its corresponding fractional unit. */
@@ -191,8 +193,10 @@ export type CreateAssetInput = {
   code: Scalars['String']['input'];
   /** Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency). */
   idempotencyKey?: InputMaybe<Scalars['String']['input']>;
+  /** A webhook event will notify the Account Servicing Entity if liquidity is higher than this value. */
+  liquidityThresholdHigh?: InputMaybe<Scalars['UInt64']['input']>;
   /** A webhook event will notify the Account Servicing Entity if liquidity falls below this value. */
-  liquidityThreshold?: InputMaybe<Scalars['UInt64']['input']>;
+  liquidityThresholdLow?: InputMaybe<Scalars['UInt64']['input']>;
   /** Difference in order of magnitude between the standard unit of an asset and its corresponding fractional unit. */
   scale: Scalars['UInt8']['input'];
   /** Minimum amount of liquidity that can be withdrawn from the asset. */
@@ -239,8 +243,10 @@ export type CreateOrUpdatePeerByUrlInput = {
   assetId: Scalars['String']['input'];
   /** Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency). */
   idempotencyKey?: InputMaybe<Scalars['String']['input']>;
+  /** A webhook event will notify the Account Servicing Entity if peer liquidity is higher than this value. */
+  liquidityThresholdHigh?: InputMaybe<Scalars['UInt64']['input']>;
   /** A webhook event will notify the Account Servicing Entity if peer liquidity falls below this value. */
-  liquidityThreshold?: InputMaybe<Scalars['UInt64']['input']>;
+  liquidityThresholdLow?: InputMaybe<Scalars['UInt64']['input']>;
   /** Amount of liquidity to deposit for the peer. */
   liquidityToDeposit?: InputMaybe<Scalars['UInt64']['input']>;
   /** Maximum packet amount that the peer accepts. */
@@ -299,8 +305,10 @@ export type CreatePeerInput = {
   idempotencyKey?: InputMaybe<Scalars['String']['input']>;
   /** Initial amount of liquidity to deposit for the peer. */
   initialLiquidity?: InputMaybe<Scalars['UInt64']['input']>;
+  /** A webhook event will notify the Account Servicing Entity if peer liqudity is higher than this value. */
+  liquidityThresholdHigh?: InputMaybe<Scalars['UInt64']['input']>;
   /** A webhook event will notify the Account Servicing Entity if peer liquidity falls below this value. */
-  liquidityThreshold?: InputMaybe<Scalars['UInt64']['input']>;
+  liquidityThresholdLow?: InputMaybe<Scalars['UInt64']['input']>;
   /** Maximum packet amount that the peer accepts. */
   maxPacketAmount?: InputMaybe<Scalars['UInt64']['input']>;
   /** Internal name of the peer. */
@@ -1085,8 +1093,10 @@ export type Peer = Model & {
   id: Scalars['ID']['output'];
   /** Current amount of peer liquidity available. */
   liquidity?: Maybe<Scalars['UInt64']['output']>;
+  /** A webhook event will notify the Account Servicing Entity if liquidity is higher than this value. */
+  liquidityThresholdHigh?: Maybe<Scalars['UInt64']['output']>;
   /** A webhook event will notify the Account Servicing Entity if liquidity falls below this value. */
-  liquidityThreshold?: Maybe<Scalars['UInt64']['output']>;
+  liquidityThresholdLow?: Maybe<Scalars['UInt64']['output']>;
   /** Maximum packet amount that the peer accepts. */
   maxPacketAmount?: Maybe<Scalars['UInt64']['output']>;
   /** Public name for the peer. */
@@ -1399,8 +1409,10 @@ export type UpdateAssetInput = {
   id: Scalars['String']['input'];
   /** Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency). */
   idempotencyKey?: InputMaybe<Scalars['String']['input']>;
+  /** A webhook event will notify the Account Servicing Entity if liquidity is higher than this new value. */
+  liquidityThresholdHigh?: InputMaybe<Scalars['UInt64']['input']>;
   /** A webhook event will notify the Account Servicing Entity if liquidity falls below this new value. */
-  liquidityThreshold?: InputMaybe<Scalars['UInt64']['input']>;
+  liquidityThresholdLow?: InputMaybe<Scalars['UInt64']['input']>;
   /** New minimum amount of liquidity that can be withdrawn from the asset. */
   withdrawalThreshold?: InputMaybe<Scalars['UInt64']['input']>;
 };
@@ -1419,8 +1431,10 @@ export type UpdatePeerInput = {
   id: Scalars['String']['input'];
   /** Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency). */
   idempotencyKey?: InputMaybe<Scalars['String']['input']>;
+  /** A webhook event will notify the Account Servicing Entity if peer liquidity is higher than this new value. */
+  liquidityThresholdHigh?: InputMaybe<Scalars['UInt64']['input']>;
   /** A webhook event will notify the Account Servicing Entity if peer liquidity falls below this new value. */
-  liquidityThreshold?: InputMaybe<Scalars['UInt64']['input']>;
+  liquidityThresholdLow?: InputMaybe<Scalars['UInt64']['input']>;
   /** New maximum packet amount that the peer accepts. */
   maxPacketAmount?: InputMaybe<Scalars['UInt64']['input']>;
   /** New public name for the peer. */
@@ -2003,7 +2017,8 @@ export type AssetResolvers<ContextType = any, ParentType extends ResolversParent
   fees?: Resolver<Maybe<ResolversTypes['FeesConnection']>, ParentType, ContextType, Partial<AssetFeesArgs>>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   liquidity?: Resolver<Maybe<ResolversTypes['UInt64']>, ParentType, ContextType>;
-  liquidityThreshold?: Resolver<Maybe<ResolversTypes['UInt64']>, ParentType, ContextType>;
+  liquidityThresholdHigh?: Resolver<Maybe<ResolversTypes['UInt64']>, ParentType, ContextType>;
+  liquidityThresholdLow?: Resolver<Maybe<ResolversTypes['UInt64']>, ParentType, ContextType>;
   receivingFee?: Resolver<Maybe<ResolversTypes['Fee']>, ParentType, ContextType>;
   scale?: Resolver<ResolversTypes['UInt8'], ParentType, ContextType>;
   sendingFee?: Resolver<Maybe<ResolversTypes['Fee']>, ParentType, ContextType>;
@@ -2276,7 +2291,8 @@ export type PeerResolvers<ContextType = any, ParentType extends ResolversParentT
   http?: Resolver<ResolversTypes['Http'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   liquidity?: Resolver<Maybe<ResolversTypes['UInt64']>, ParentType, ContextType>;
-  liquidityThreshold?: Resolver<Maybe<ResolversTypes['UInt64']>, ParentType, ContextType>;
+  liquidityThresholdHigh?: Resolver<Maybe<ResolversTypes['UInt64']>, ParentType, ContextType>;
+  liquidityThresholdLow?: Resolver<Maybe<ResolversTypes['UInt64']>, ParentType, ContextType>;
   maxPacketAmount?: Resolver<Maybe<ResolversTypes['UInt64']>, ParentType, ContextType>;
   name?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   staticIlpAddress?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
