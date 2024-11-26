@@ -45,7 +45,7 @@ export function transferToGraphql(
     transferType: transferTypeToGraphql(transfer.type),
     state: transferStateToGraphql(transfer.state),
     expiresAt: transfer.expiresAt
-      ? new Date(Number(transfer.expiresAt)).toISOString()
+      ? new Date(transfer.expiresAt).toISOString()
       : undefined
   }
 }
