@@ -88,8 +88,7 @@ async function getIncomingPayment(
   deps: ServiceDependencies,
   options: GetOptions
 ): Promise<IncomingPayment | undefined> {
-  const incomingPayment = await IncomingPayment.query(deps.knex)
-    .get(options)
+  const incomingPayment = await IncomingPayment.query(deps.knex).get(options)
   if (incomingPayment) {
     const asset = await deps.assetService.get(incomingPayment.assetId)
     if (asset) incomingPayment.asset = asset
@@ -99,8 +98,7 @@ async function getIncomingPayment(
     )
 
     return await addReceivedAmount(deps, incomingPayment)
-  }
-  else return
+  } else return
 }
 
 async function updateIncomingPayment(
@@ -162,17 +160,18 @@ async function createIncomingPayment(
     }
   }
 
-  let incomingPayment = await IncomingPayment.query(trx || deps.knex)
-    .insertAndFetch({
-      walletAddressId: walletAddressId,
-      client,
-      assetId: walletAddress.asset.id,
-      expiresAt,
-      incomingAmount,
-      metadata,
-      state: IncomingPaymentState.Pending,
-      processAt: expiresAt
-    })
+  let incomingPayment = await IncomingPayment.query(
+    trx || deps.knex
+  ).insertAndFetch({
+    walletAddressId: walletAddressId,
+    client,
+    assetId: walletAddress.asset.id,
+    expiresAt,
+    incomingAmount,
+    metadata,
+    state: IncomingPaymentState.Pending,
+    processAt: expiresAt
+  })
 
   const asset = await deps.assetService.get(incomingPayment.assetId)
   if (asset) incomingPayment.asset = asset
@@ -364,8 +363,7 @@ async function getWalletAddressPage(
   deps: ServiceDependencies,
   options: ListOptions
 ): Promise<IncomingPayment[]> {
-  const page = await IncomingPayment.query(deps.knex)
-    .list(options)
+  const page = await IncomingPayment.query(deps.knex).list(options)
   for (const payment of page) {
     const asset = await deps.assetService.get(payment.assetId)
     if (asset) payment.asset = asset
@@ -404,9 +402,7 @@ async function approveIncomingPayment(
   id: string
 ): Promise<IncomingPayment | IncomingPaymentError> {
   return deps.knex.transaction(async (trx) => {
-    const payment = await IncomingPayment.query(trx)
-      .findById(id)
-      .forUpdate()
+    const payment = await IncomingPayment.query(trx).findById(id).forUpdate()
 
     if (!payment) return IncomingPaymentError.UnknownPayment
 
@@ -443,9 +439,7 @@ async function cancelIncomingPayment(
   id: string
 ): Promise<IncomingPayment | IncomingPaymentError> {
   return deps.knex.transaction(async (trx) => {
-    const payment = await IncomingPayment.query(trx)
-      .findById(id)
-      .forUpdate()
+    const payment = await IncomingPayment.query(trx).findById(id).forUpdate()
 
     if (!payment) return IncomingPaymentError.UnknownPayment
 
@@ -482,9 +476,7 @@ async function completeIncomingPayment(
   id: string
 ): Promise<IncomingPayment | IncomingPaymentError> {
   return deps.knex.transaction(async (trx) => {
-    const payment = await IncomingPayment.query(trx)
-      .findById(id)
-      .forUpdate()
+    const payment = await IncomingPayment.query(trx).findById(id).forUpdate()
     if (!payment) return IncomingPaymentError.UnknownPayment
 
     const asset = await deps.assetService.get(payment.assetId)
