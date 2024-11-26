@@ -184,7 +184,7 @@ async function getAsset(
   deps: ServiceDependencies,
   id: string
 ): Promise<void | Asset> {
-  const inMem = (await deps.assetCache.get(id)) as Asset
+  const inMem = await deps.assetCache.get(id)
   if (inMem) return inMem
 
   const asset = await Asset.query(deps.knex).whereNull('deletedAt').findById(id)

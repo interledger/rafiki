@@ -1550,7 +1550,7 @@
             "uid": "${PrometheusDS}"
           },
           "editorMode": "code",
-          "expr": "(increase(packet_amount_fulfill_total[30s]) * 0.5 * 0.0001)",
+          "expr": "(increase(packet_amount_fulfill_total[30s]) * 0.0001)",
           "hide": false,
           "instant": false,
           "interval": "",
@@ -1651,7 +1651,7 @@
             "uid": "${PrometheusDS}"
           },
           "editorMode": "code",
-          "expr": "sum by (source) (round(increase(transactions_total[30s]) * 0.5))",
+          "expr": "sum by (source) (round(increase(transactions_total[30s])))",
           "hide": false,
           "instant": false,
           "interval": "",

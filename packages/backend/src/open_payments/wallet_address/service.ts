@@ -263,7 +263,7 @@ async function getWalletAddress(
   id: string
 ): Promise<WalletAddress | undefined> {
   const walletAdd = await deps.walletAddressCache.get(id)
-  if (walletAdd) return walletAdd as WalletAddress
+  if (walletAdd) return walletAdd
 
   const walletAddress = await WalletAddress.query(deps.knex).findById(id)
   if (walletAddress) {
@@ -325,7 +325,9 @@ async function getWalletAddressByUrl(
   deps: ServiceDependencies,
   url: string
 ): Promise<WalletAddress | undefined> {
-  const walletAddress = await WalletAddress.query(deps.knex).findOne({ url })
+  const walletAddress = await WalletAddress.query(deps.knex).findOne({
+    url: url.toLowerCase()
+  })
   if (walletAddress) {
     const asset = await deps.assetService.get(walletAddress.assetId)
     if (asset) walletAddress.asset = asset

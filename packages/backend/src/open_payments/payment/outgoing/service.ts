@@ -220,7 +220,13 @@ async function cancelOutgoingPayment(
           ...(options.reason ? { cancellationReason: options.reason } : {})
         }
       })
-      .withGraphFetched('[quote.asset, walletAddress]')
+      .withGraphFetched('[quote]')
+    const asset = await deps.assetService.get(payment.quote.assetId)
+    if (asset) payment.quote.asset = asset
+
+    payment.walletAddress = await deps.walletAddressService.get(
+      payment.walletAddressId
+    )
 
     return addSentAmount(deps, payment)
   })

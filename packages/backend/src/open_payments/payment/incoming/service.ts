@@ -18,6 +18,7 @@ import { Amount } from '../../amount'
 import { IncomingPaymentError } from './errors'
 import { IAppConfig } from '../../../config/app'
 import { poll } from '../../../shared/utils'
+import { AssetService } from '../../../asset/service'
 
 export const POSITIVE_SLIPPAGE = BigInt(1)
 // First retry waits 10 seconds
@@ -57,6 +58,7 @@ export interface ServiceDependencies extends BaseService {
   knex: TransactionOrKnex
   accountingService: AccountingService
   walletAddressService: WalletAddressService
+  assetService: AssetService
   config: IAppConfig
 }
 
@@ -97,9 +99,17 @@ async function updateIncomingPayment(
   deps: ServiceDependencies,
   options: UpdateOptions
 ): Promise<IncomingPayment | IncomingPaymentError> {
-  const incomingPayment = await IncomingPayment.query(deps.knex)
-    .patchAndFetchById(options.id, { metadata: options.metadata })
-    .withGraphFetched('[asset, walletAddress]')
+  const incomingPayment = await IncomingPayment.query(
+    deps.knex
+  ).patchAndFetchById(options.id, { metadata: options.metadata })
+  if (incomingPayment) {
+    const asset = await deps.assetService.get(incomingPayment.assetId)
+    if (asset) incomingPayment.asset = asset
+
+    incomingPayment.walletAddress = await deps.walletAddressService.get(
+      incomingPayment.walletAddressId
+    )
+  }
 
   return incomingPayment
     ? await addReceivedAmount(deps, incomingPayment)
