@@ -62,7 +62,7 @@ export function tbTransferToLedgerTransfer(
     state: state,
     ledger: tbTransfer.ledger,
     expiresAt: new Date(
-      Number(tbTransfer.timestamp / 1_000_000n) + tbTransfer.timeout
+      Number(tbTransfer.timestamp / 1_000_000n) + tbTransfer.timeout * 1000
     )
   }
 }
