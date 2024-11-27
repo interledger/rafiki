@@ -1550,7 +1550,7 @@
             "uid": "${PrometheusDS}"
           },
           "editorMode": "code",
-          "expr": "(increase(packet_amount_fulfill_total[30s]) * 0.0001)",
+          "expr": "sum by (source) (increase(packet_amount_fulfill_total[30s]) * 0.0001)",
           "hide": false,
           "instant": false,
           "interval": "",

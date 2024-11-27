@@ -390,7 +390,11 @@ describe('Asset Service using Cache', (): void => {
         expect(spyCacheUpdateSet).toHaveBeenCalledTimes(2)
         expect(spyCacheUpdateSet).toHaveBeenCalledWith(
           asset.id,
-          expect.anything()
+          expect.objectContaining({
+            id: asset.id,
+            code: asset.code,
+            deletedAt: null
+          })
         )
 
         // Delete the asset, and ensure it is not cached:

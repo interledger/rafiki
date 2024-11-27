@@ -829,7 +829,7 @@ describe('Open Payments Wallet Address Service using Cache', (): void => {
     await appContainer.shutdown()
   })
 
-  describe('Update and Fetch Wallet Address with cache', (): void => {
+  describe('Create, Update and Fetch Wallet Address with cache', (): void => {
     test.each`
       initialIsActive | status        | expectedIsActive | expectedCallCount
       ${true}         | ${undefined}  | ${true}          | ${2}
@@ -876,7 +876,10 @@ describe('Open Payments Wallet Address Service using Cache', (): void => {
         expect(spyCacheSet).toHaveBeenCalledTimes(expectedCallCount)
         expect(spyCacheSet).toHaveBeenCalledWith(
           walletAddress.id,
-          expect.anything()
+          expect.objectContaining({
+            id: walletAddress.id,
+            url: walletAddress.url
+          })
         )
 
         const spyCacheGet = jest.spyOn(walletAddressCache, 'get')
