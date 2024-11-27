@@ -67,8 +67,7 @@ import { GraphQLBigInt, GraphQLUInt8 } from '../scalars'
 import {
   createWalletAddressKey,
   getWalletAddressKeys,
-  revokeWalletAddressKey,
-  unrevokeWalletAddressKey
+  revokeWalletAddressKey
 } from './walletAddressKey'
 import { getWalletAddressAdditionalProperties } from './walletAddressAdditionalProperties'
 import { createReceiver, getReceiver } from './receiver'
@@ -131,7 +130,6 @@ export const resolvers: Resolvers = {
   Mutation: {
     createWalletAddressKey,
     revokeWalletAddressKey,
-    unrevokeWalletAddressKey,
     createWalletAddress,
     updateWalletAddress,
     triggerWalletAddressEvents,

@@ -3,11 +3,27 @@
  * @returns { Promise<void> }
  */
 exports.up = async function (knex) {
-  return knex.raw(`
+  return knex
+    .raw(
+      // Keep only one active walletAddressKey (the most recent one)
+      `DELETE FROM "walletAddressKeys" w
+        WHERE revoked = false
+        AND "createdAt" <> (
+          SELECT MAX("createdAt")
+          FROM "walletAddressKeys"
+          WHERE revoked = false
+          AND "walletAddressId" = w."walletAddressId"
+          GROUP BY "walletAddressId"
+);
+      `
+    )
+    .then(() => {
+      return knex.raw(`
       CREATE UNIQUE INDEX "wallet_address_keys_revoked_false_idx"
-      ON "walletAddressKeys" ("walletAddressId", kid, x)
+      ON "walletAddressKeys" ("walletAddressId", kid)
       WHERE revoked = false;
   `)
+    })
 }
 
 /**
