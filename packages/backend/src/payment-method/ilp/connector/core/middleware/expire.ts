@@ -12,7 +12,7 @@ export function createOutgoingExpireMiddleware() {
     { request, services: { logger } }: ILPContext,
     next: () => Promise<void>
   ): Promise<void> => {
-    const { expiresAt } = request.prepare
+    const { expiresAt, destination } = request.prepare
     const duration = expiresAt.getTime() - Date.now()
 
     let timeoutId
@@ -30,7 +30,7 @@ export function createOutgoingExpireMiddleware() {
       await Promise.race([next(), timeout()])
     } catch (error) {
       if (error instanceof TransferTimedOutError) {
-        logger.debug({ request }, 'packet expired')
+        logger.debug({ expiresAt, destination }, 'packet expired')
       }
       throw error
     } finally {
