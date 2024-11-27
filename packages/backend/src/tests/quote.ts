@@ -165,13 +165,13 @@ export async function createQuote(
     maxPacketAmount: BigInt('9223372036854775807')
   })
 
-  const withGraphFetchedArray = ['asset', 'walletAddress']
+  const withGraphFetchedArray = ['asset', 'walletAddress', 'walletAddress.asset']
   if (withFee) {
     withGraphFetchedArray.push('fee')
   }
   const withGraphFetchedExpression = `[${withGraphFetchedArray.join(', ')}]`
 
-  return await Quote.query()
+  return Quote.query()
     .insertAndFetch({
       id: quoteId,
       walletAddressId,

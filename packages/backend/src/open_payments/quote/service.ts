@@ -58,10 +58,14 @@ async function getQuote(
 ): Promise<Quote | undefined> {
   const quote = await Quote.query(deps.knex)
     .get(options)
-    .withGraphFetched('[fee, walletAddress]')
+    .withGraphFetched('fee')
   if (quote) {
     const asset = await deps.assetService.get(quote.assetId)
     if (asset) quote.asset = asset
+
+    quote.walletAddress = await deps.walletAddressService.get(
+      quote.walletAddressId
+    )
   }
   return quote
 }
@@ -195,9 +199,13 @@ async function createQuote(
           feeId: sendingFee?.id,
           estimatedExchangeRate: quote.estimatedExchangeRate
         })
-        .withGraphFetched('[fee, walletAddress]')
+        .withGraphFetched('fee')
       const asset = await deps.assetService.get(createdQuote.assetId)
       if (asset) createdQuote.asset = asset
+
+      createdQuote.walletAddress = await deps.walletAddressService.get(
+        createdQuote.walletAddressId
+      )
 
       stopQuoteCreate()
 
@@ -440,10 +448,14 @@ async function getWalletAddressPage(
 ): Promise<Quote[]> {
   const quotes = await Quote.query(deps.knex)
     .list(options)
-    .withGraphFetched('[fee, walletAddress]')
+    .withGraphFetched('fee')
   for (const quote of quotes) {
     const asset = await deps.assetService.get(quote.assetId)
     if (asset) quote.asset = asset
+
+    quote.walletAddress = await deps.walletAddressService.get(
+      quote.walletAddressId
+    )
   }
   return quotes
 }
