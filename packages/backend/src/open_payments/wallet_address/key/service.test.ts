@@ -15,7 +15,6 @@ import { createWalletAddressKey } from '../../../tests/walletAddressKey'
 import { WalletAddress } from '../model'
 import { Pagination, SortOrder } from '../../../shared/baseModel'
 import { isWalletAddressKeyError, WalletAddressKeyError } from './errors'
-import { WalletAddressKey } from './model'
 
 const TEST_KEY = generateJwk({ keyId: uuid() })
 
