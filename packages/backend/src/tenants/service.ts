@@ -37,7 +37,7 @@ async function getTenant(
   id: string
 ): Promise<TenantWithIdpConfig | undefined> {
   const tenant = await Tenant.query(deps.knex).findById(id)
-  if (!tenant) return undefined
+  if (!tenant || !!tenant.deletedAt) return undefined
 
   const query = gql`
     query GetAuthTenant($input: GetTenantInput!) {
@@ -124,8 +124,8 @@ interface UpdateTenantOptions {
   email?: string
   publicName?: string
   apiSecret?: string
-  idpConsentUrl: string | null
-  idpSecret: string | null
+  idpConsentUrl?: string
+  idpSecret?: string
 }
 
 async function updateTenant(
@@ -143,6 +143,7 @@ async function updateTenant(
         publicName,
         apiSecret
       })
+      .whereNull('deletedAt')
       .throwIfNotFound()
 
     if (idpConsentUrl || idpSecret) {
@@ -183,7 +184,9 @@ async function deleteTenant(
   const trx = await deps.knex.transaction()
 
   try {
-    await Tenant.query(trx).deleteById(id)
+    await Tenant.query(trx).patchAndFetchById(id, {
+      deletedAt: new Date(Date.now())
+    })
     const mutation = gql`
       mutation DeleteAuthTenantMutation($input: DeleteTenantInput!) {
         deleteTenant(input: $input) {

@@ -2,6 +2,7 @@ import assert from 'assert'
 import { faker } from '@faker-js/faker'
 import { IocContract } from '@adonisjs/fold'
 import nock from 'nock'
+import { Knex } from 'knex'
 import { AppServices } from '../app'
 import { initIocContainer } from '..'
 import { createTestApp, TestContainer } from '../tests/app'
@@ -17,6 +18,7 @@ describe('Tenant Service', (): void => {
   let tenantService: TenantService
   let config: IAppConfig
   let apolloClient: ApolloClient<NormalizedCacheObject>
+  let knex: Knex
 
   beforeAll(async (): Promise<void> => {
     deps = initIocContainer(Config)
@@ -24,6 +26,7 @@ describe('Tenant Service', (): void => {
     tenantService = await deps.use('tenantService')
     config = await deps.use('config')
     apolloClient = await deps.use('apolloClient')
+    knex = await deps.use('knex')
   })
 
   afterEach(async (): Promise<void> => {
@@ -119,6 +122,17 @@ describe('Tenant Service', (): void => {
         )
       }
       getScope.done()
+    })
+
+    test('returns undefined if tenant is deleted', async (): Promise<void> => {
+      const dbTenant = await Tenant.query(knex).insertAndFetch({
+        apiSecret: 'test-secret',
+        email: faker.internet.email(),
+        deletedAt: new Date()
+      })
+
+      const tenant = await tenantService.get(dbTenant.id)
+      expect(tenant).toBeUndefined()
     })
   })
 
@@ -291,6 +305,31 @@ describe('Tenant Service', (): void => {
 
       nock.cleanAll()
     })
+
+    test('Cannot update deleted tenant', async (): Promise<void> => {
+      const originalSecret = 'test-secret'
+      const dbTenant = await Tenant.query(knex).insertAndFetch({
+        email: faker.internet.url(),
+        apiSecret: originalSecret,
+        deletedAt: new Date()
+      })
+
+      const apolloSpy = jest.spyOn(apolloClient, 'mutate')
+      try {
+        await tenantService.update({
+          id: dbTenant.id,
+          apiSecret: 'test-secret-2'
+        })
+      } catch (err) {
+        const dbTenantAfterUpdate = await Tenant.query(knex).findById(
+          dbTenant.id
+        )
+
+        assert.ok(dbTenantAfterUpdate)
+        expect(dbTenantAfterUpdate.apiSecret).toEqual(originalSecret)
+        expect(apolloSpy).toHaveBeenCalledTimes(0)
+      }
+    })
   })
 
   describe('Delete Tenant', (): void => {
@@ -313,7 +352,9 @@ describe('Tenant Service', (): void => {
       await tenantService.delete(tenant.id)
 
       const dbTenant = await Tenant.query().findById(tenant.id)
-      expect(dbTenant).toBeUndefined()
+      expect(dbTenant?.deletedAt?.getTime()).toBeLessThanOrEqual(
+        new Date(Date.now()).getTime()
+      )
       expect(apolloSpy).toHaveBeenCalledWith(
         expect.objectContaining({
           variables: {
@@ -349,6 +390,7 @@ describe('Tenant Service', (): void => {
         const dbTenant = await Tenant.query().findById(tenant.id)
         assert.ok(dbTenant)
         expect(dbTenant.id).toEqual(tenant.id)
+        expect(dbTenant.deletedAt).toBeNull()
         expect(apolloSpy).toHaveBeenCalledWith(
           expect.objectContaining({
             variables: {
