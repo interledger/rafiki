@@ -161,9 +161,7 @@ export async function getAccountTotalSent(
   }
 
   const totalsSent = (await getAccountBalances(deps, account)).debitsPosted
-
   stopTimer()
-
   return totalsSent
 }
 
@@ -231,66 +229,73 @@ export async function createTransfer(
   deps: ServiceDependencies,
   args: TransferOptions
 ): Promise<Transaction | TransferError> {
-  return createAccountToAccountTransfer(deps, {
-    transferArgs: args,
-    voidTransfers: async (transferRefs) => voidTransfers(deps, transferRefs),
-    postTransfers: async (transferRefs) => postTransfers(deps, transferRefs),
-    getAccountReceived: async (accountRef) =>
-      getAccountTotalReceived(deps, accountRef),
-    getAccountBalance: async (accountRef) =>
-      getLiquidityAccountBalance(deps, accountRef),
-    createPendingTransfers: async (transfersToCreate) => {
-      const [
-        sourceAccount,
-        sourceAssetAccount,
-        destinationAccount,
-        destinationAssetAccount
-      ] = await Promise.all([
-        getLiquidityAccount(deps, args.sourceAccount.id),
-        getLiquidityAccount(deps, args.sourceAccount.asset.id),
-        getLiquidityAccount(deps, args.destinationAccount.id),
-        getLiquidityAccount(deps, args.destinationAccount.asset.id)
-      ])
-
-      if (!sourceAccount || !sourceAssetAccount) {
-        return TransferError.UnknownSourceAccount
-      }
-
-      if (!destinationAccount || !destinationAssetAccount) {
-        return TransferError.UnknownDestinationAccount
-      }
-
-      const accountMap = {
-        [sourceAccount.accountRef]: sourceAccount,
-        [sourceAssetAccount.accountRef]: sourceAssetAccount,
-        [destinationAccount.accountRef]: destinationAccount,
-        [destinationAssetAccount.accountRef]: destinationAssetAccount
-      }
-
-      const pendingTransfersOrError = handleTransferCreateResults(
-        args,
-        transfersToCreate,
-        await createTransfers(
-          deps,
-          transfersToCreate.map((transfer) => ({
-            transferRef: uuid(),
-            debitAccount: accountMap[transfer.sourceAccountId],
-            creditAccount: accountMap[transfer.destinationAccountId],
-            amount: transfer.amount,
-            timeoutMs: BigInt(args.timeout * 1000)
-          }))
-        )
-      )
-
-      if (isTransferError(pendingTransfersOrError)) {
-        return pendingTransfersOrError
-      }
-
-      return pendingTransfersOrError.map(
-        (pendingTransfer) => pendingTransfer.transferRef
-      )
-    }
+  const stopTimer = deps.telemetry.startTimer('psql_create_transfer_ms', {
+    callName: 'AccountingService:Postgres:createTransfer'
   })
+  try {
+    return createAccountToAccountTransfer(deps, {
+      transferArgs: args,
+      voidTransfers: async (transferRefs) => voidTransfers(deps, transferRefs),
+      postTransfers: async (transferRefs) => postTransfers(deps, transferRefs),
+      getAccountReceived: async (accountRef) =>
+        getAccountTotalReceived(deps, accountRef),
+      getAccountBalance: async (accountRef) =>
+        getLiquidityAccountBalance(deps, accountRef),
+      createPendingTransfers: async (transfersToCreate) => {
+        const [
+          sourceAccount,
+          sourceAssetAccount,
+          destinationAccount,
+          destinationAssetAccount
+        ] = await Promise.all([
+          getLiquidityAccount(deps, args.sourceAccount.id),
+          getLiquidityAccount(deps, args.sourceAccount.asset.id),
+          getLiquidityAccount(deps, args.destinationAccount.id),
+          getLiquidityAccount(deps, args.destinationAccount.asset.id)
+        ])
+
+        if (!sourceAccount || !sourceAssetAccount) {
+          return TransferError.UnknownSourceAccount
+        }
+
+        if (!destinationAccount || !destinationAssetAccount) {
+          return TransferError.UnknownDestinationAccount
+        }
+
+        const accountMap = {
+          [sourceAccount.accountRef]: sourceAccount,
+          [sourceAssetAccount.accountRef]: sourceAssetAccount,
+          [destinationAccount.accountRef]: destinationAccount,
+          [destinationAssetAccount.accountRef]: destinationAssetAccount
+        }
+
+        const pendingTransfersOrError = handleTransferCreateResults(
+          args,
+          transfersToCreate,
+          await createTransfers(
+            deps,
+            transfersToCreate.map((transfer) => ({
+              transferRef: uuid(),
+              debitAccount: accountMap[transfer.sourceAccountId],
+              creditAccount: accountMap[transfer.destinationAccountId],
+              amount: transfer.amount,
+              timeoutMs: BigInt(args.timeout * 1000)
+            }))
+          )
+        )
+
+        if (isTransferError(pendingTransfersOrError)) {
+          return pendingTransfersOrError
+        }
+
+        return pendingTransfersOrError.map(
+          (pendingTransfer) => pendingTransfer.transferRef
+        )
+      }
+    })
+  } finally {
+    stopTimer()
+  }
 }
 
 function handleTransferCreateResults(

@@ -72,7 +72,7 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "11.2.0",
+      "pluginVersion": "11.3.1",
       "targets": [
         {
           "datasource": {
@@ -142,7 +142,7 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "11.2.0",
+      "pluginVersion": "11.3.1",
       "targets": [
         {
           "datasource": {
@@ -238,7 +238,7 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "11.2.0",
+      "pluginVersion": "11.3.1",
       "targets": [
         {
           "datasource": {
@@ -322,6 +322,12 @@
       "id": 6,
       "options": {
         "displayMode": "gradient",
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": false
+        },
         "maxVizHeight": 300,
         "minVizHeight": 16,
         "minVizWidth": 8,
@@ -336,7 +342,7 @@
         "sizing": "auto",
         "valueMode": "color"
       },
-      "pluginVersion": "11.2.0",
+      "pluginVersion": "11.3.1",
       "targets": [
         {
           "datasource": {
@@ -412,7 +418,7 @@
           }
         ]
       },
-      "pluginVersion": "11.2.0",
+      "pluginVersion": "11.3.1",
       "targets": [
         {
           "datasource": {
@@ -540,6 +546,7 @@
           "sort": "none"
         }
       },
+      "pluginVersion": "11.3.1",
       "targets": [
         {
           "datasource": {
@@ -742,6 +749,7 @@
           "sort": "none"
         }
       },
+      "pluginVersion": "11.3.1",
       "targets": [
         {
           "datasource": {
@@ -906,6 +914,7 @@
           "sort": "none"
         }
       },
+      "pluginVersion": "11.3.1",
       "targets": [
         {
           "datasource": {
@@ -1031,6 +1040,7 @@
           "sort": "none"
         }
       },
+      "pluginVersion": "11.3.1",
       "targets": [
         {
           "datasource": {
@@ -1233,6 +1243,7 @@
           "sort": "none"
         }
       },
+      "pluginVersion": "11.3.1",
       "targets": [
         {
           "datasource": {
@@ -1375,7 +1386,30 @@
           },
           "unit": "ms"
         },
-        "overrides": []
+        "overrides": [
+          {
+            "__systemRef": "hideSeriesFrom",
+            "matcher": {
+              "id": "byNames",
+              "options": {
+                "mode": "exclude",
+                "names": ["AccountingService:Postgres:getAccountBalances"],
+                "prefix": "All except:",
+                "readOnly": true
+              }
+            },
+            "properties": [
+              {
+                "id": "custom.hideFrom",
+                "value": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": true
+                }
+              }
+            ]
+          }
+        ]
       },
       "gridPos": {
         "h": 7,
@@ -1396,6 +1430,7 @@
           "sort": "none"
         }
       },
+      "pluginVersion": "11.3.1",
       "targets": [
         {
           "datasource": {
@@ -1408,9 +1443,22 @@
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${PrometheusDS}"
+          },
+          "editorMode": "code",
+          "expr": "sum by (callName) (rate(tb_get_account_balances_sum[$__rate_interval])/rate(tb_get_account_balances_count[$__rate_interval]))",
+          "hide": false,
+          "instant": false,
+          "legendFormat": "__auto",
+          "range": true,
+          "refId": "B"
         }
       ],
-      "title": "PSQL Get Account Balance",
+      "title": "Get Account Balance",
       "type": "timeseries"
     },
     {
@@ -1462,7 +1510,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": null
               },
               {
                 "color": "red",
@@ -1493,6 +1542,7 @@
           "sort": "none"
         }
       },
+      "pluginVersion": "11.3.1",
       "targets": [
         {
           "datasource": {
@@ -1500,7 +1550,7 @@
             "uid": "${PrometheusDS}"
           },
           "editorMode": "code",
-          "expr": "(increase(packet_amount_fulfill_total[30s]) * 0.5 * 0.0001)",
+          "expr": "sum by (source) (increase(packet_amount_fulfill_total[30s]) * 0.0001)",
           "hide": false,
           "instant": false,
           "interval": "",
@@ -1561,7 +1611,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": null
               },
               {
                 "color": "red",
@@ -1592,6 +1643,7 @@
           "sort": "none"
         }
       },
+      "pluginVersion": "11.3.1",
       "targets": [
         {
           "datasource": {
@@ -1599,7 +1651,7 @@
             "uid": "${PrometheusDS}"
           },
           "editorMode": "code",
-          "expr": "sum by (source) (round(increase(transactions_total[30s]) * 0.5))",
+          "expr": "sum by (source) (round(increase(transactions_total[30s])))",
           "hide": false,
           "instant": false,
           "interval": "",
@@ -1612,46 +1664,38 @@
       "type": "timeseries"
     }
   ],
+  "preload": false,
   "refresh": "15s",
-  "schemaVersion": 39,
+  "schemaVersion": 40,
   "tags": [],
   "templating": {
     "list": [
       {
         "current": {
-          "selected": false,
           "text": "Prometheus",
           "value": "PBFA97CFB590B2093"
         },
         "description": "The Prometheus data-source.",
-        "hide": 0,
         "includeAll": false,
-        "multi": false,
         "name": "PrometheusDS",
         "options": [],
         "query": "prometheus",
-        "queryValue": "",
         "refresh": 1,
         "regex": "",
-        "skipUrlSync": false,
         "type": "datasource"
       },
       {
         "current": {
-          "selected": false,
           "text": "Tempo",
           "value": "P214B5B846CF3925F"
         },
         "description": "The Tempo datasource uid.",
-        "hide": 0,
         "includeAll": false,
-        "multi": false,
         "name": "TempoDS",
         "options": [],
         "query": "tempo",
         "refresh": 1,
         "regex": "",
-        "skipUrlSync": false,
         "type": "datasource"
       }
     ]

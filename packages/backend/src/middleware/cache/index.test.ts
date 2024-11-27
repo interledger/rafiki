@@ -8,7 +8,7 @@ describe('Cache Middleware', (): void => {
   const defaultRequest = () => Promise.resolve('requestResult')
   const defaultOperationName = 'defaultOperationName'
 
-  const dataStore = createInMemoryDataStore(10000)
+  const dataStore = createInMemoryDataStore<string>(10000)
   const handleParamMismatch = () => {
     throw new Error('Param mismatch')
   }
