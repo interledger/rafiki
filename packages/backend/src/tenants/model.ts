@@ -22,3 +22,11 @@ export class Tenant extends BaseModel {
     }
   }
 }
+
+export type TenantWithIdpConfig = Pick<
+  Tenant,
+  'id' | 'email' | 'apiSecret' | 'publicName' | 'createdAt' | 'updatedAt'
+> & {
+  idpConsentUrl: string
+  idpSecret: string
+}
