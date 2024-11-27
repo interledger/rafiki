@@ -70,12 +70,11 @@ describe('Tenant Service', (): void => {
       const apolloSpy = jest.spyOn(apolloClient, 'query')
       const tenant = await tenantService.get(createdTenant.id)
       assert.ok(tenant)
-      expect(tenant.id).toEqual(createdTenant.id)
-      expect(tenant.email).toEqual(createOptions.email)
-      expect(tenant.publicName).toEqual(createOptions.publicName)
-      expect(tenant.apiSecret).toEqual(createOptions.apiSecret)
-      expect(tenant.idpConsentUrl).toEqual(createOptions.idpConsentUrl)
-      expect(tenant.idpSecret).toEqual(createOptions.idpSecret)
+      expect(tenant).toEqual({
+        ...createdTenant,
+        idpConsentUrl: createOptions.idpConsentUrl,
+        idpSecret: createOptions.idpSecret
+      })
       expect(apolloSpy).toHaveBeenCalledWith(
         expect.objectContaining({
           variables: {
