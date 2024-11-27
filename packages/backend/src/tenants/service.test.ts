@@ -1,0 +1,366 @@
+import assert from 'assert'
+import { faker } from '@faker-js/faker'
+import { IocContract } from '@adonisjs/fold'
+import nock from 'nock'
+import { AppServices } from '../app'
+import { initIocContainer } from '..'
+import { createTestApp, TestContainer } from '../tests/app'
+import { TenantService } from './service'
+import { Config, IAppConfig } from '../config/app'
+import { truncateTables } from '../tests/tableManager'
+import { ApolloClient, NormalizedCacheObject } from '@apollo/client'
+import { Tenant } from './model'
+
+describe('Tenant Service', (): void => {
+  let deps: IocContract<AppServices>
+  let appContainer: TestContainer
+  let tenantService: TenantService
+  let config: IAppConfig
+  let apolloClient: ApolloClient<NormalizedCacheObject>
+
+  beforeAll(async (): Promise<void> => {
+    deps = initIocContainer(Config)
+    appContainer = await createTestApp(deps)
+    tenantService = await deps.use('tenantService')
+    config = await deps.use('config')
+    apolloClient = await deps.use('apolloClient')
+  })
+
+  afterEach(async (): Promise<void> => {
+    await truncateTables(appContainer.knex)
+  })
+
+  afterAll(async (): Promise<void> => {
+    nock.cleanAll()
+    await appContainer.shutdown()
+  })
+
+  describe('get', (): void => {
+    test('can get a tenant', async (): Promise<void> => {
+      const createOptions = {
+        apiSecret: 'test-api-secret',
+        publicName: 'test tenant',
+        email: faker.internet.email(),
+        idpConsentUrl: faker.internet.url(),
+        idpSecret: 'test-idp-secret'
+      }
+
+      const createScope = nock(config.authAdminApiUrl)
+        .post('')
+        .reply(200, { data: { createTenant: { id: 1234 } } })
+
+      const createdTenant = await tenantService.create(createOptions)
+      createScope.done()
+
+      const getScope = nock(config.authAdminApiUrl)
+        .post('')
+        .reply(200, {
+          data: {
+            getTenant: {
+              tenant: {
+                idpConsentUrl: createOptions.idpConsentUrl,
+                idpSecret: createOptions.idpSecret
+              }
+            }
+          }
+        })
+      const apolloSpy = jest.spyOn(apolloClient, 'query')
+      const tenant = await tenantService.get(createdTenant.id)
+      assert.ok(tenant)
+      expect(tenant.id).toEqual(createdTenant.id)
+      expect(tenant.email).toEqual(createOptions.email)
+      expect(tenant.publicName).toEqual(createOptions.publicName)
+      expect(tenant.apiSecret).toEqual(createOptions.apiSecret)
+      expect(tenant.idpConsentUrl).toEqual(createOptions.idpConsentUrl)
+      expect(tenant.idpSecret).toEqual(createOptions.idpSecret)
+      expect(apolloSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          variables: {
+            input: {
+              id: tenant.id
+            }
+          }
+        })
+      )
+      getScope.done()
+    })
+
+    test("returns undefined if auth tenant doesn't exist", async (): Promise<void> => {
+      const createOptions = {
+        apiSecret: 'test-api-secret',
+        publicName: 'test tenant',
+        email: faker.internet.email(),
+        idpConsentUrl: faker.internet.url(),
+        idpSecret: 'test-idp-secret'
+      }
+
+      const createScope = nock(config.authAdminApiUrl)
+        .post('')
+        .reply(200, { data: { createTenant: { id: 1234 } } })
+
+      const createdTenant = await tenantService.create(createOptions)
+      createScope.done()
+
+      const getScope = nock(config.authAdminApiUrl).post('').reply(400)
+      const apolloSpy = jest.spyOn(apolloClient, 'query')
+      let tenant
+      try {
+        tenant = await tenantService.get(createdTenant.id)
+      } catch (err) {
+        expect(tenant).toBeUndefined()
+        expect(apolloSpy).toHaveBeenCalledWith(
+          expect.objectContaining({
+            variables: {
+              input: {
+                id: createdTenant.id
+              }
+            }
+          })
+        )
+      }
+      getScope.done()
+    })
+  })
+
+  describe('create', (): void => {
+    test('can create a tenant', async (): Promise<void> => {
+      const createOptions = {
+        apiSecret: 'test-api-secret',
+        publicName: 'test tenant',
+        email: faker.internet.email(),
+        idpConsentUrl: faker.internet.url(),
+        idpSecret: 'test-idp-secret'
+      }
+
+      const scope = nock(config.authAdminApiUrl)
+        .post('')
+        .reply(200, { data: { createTenant: { id: 1234 } } })
+
+      const apolloSpy = jest.spyOn(apolloClient, 'mutate')
+      const tenant = await tenantService.create(createOptions)
+
+      expect(tenant.email).toEqual(createOptions.email)
+      expect(tenant.publicName).toEqual(createOptions.publicName)
+      expect(tenant.apiSecret).toEqual(createOptions.apiSecret)
+
+      expect(apolloSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          variables: {
+            input: {
+              id: tenant.id,
+              idpSecret: createOptions.idpSecret,
+              idpConsentUrl: createOptions.idpConsentUrl
+            }
+          }
+        })
+      )
+
+      scope.done()
+    })
+
+    test('tenant creation rolls back if auth tenant create fails', async (): Promise<void> => {
+      const createOptions = {
+        apiSecret: 'test-api-secret',
+        publicName: 'test tenant',
+        email: faker.internet.email(),
+        idpConsentUrl: faker.internet.url(),
+        idpSecret: 'test-idp-secret'
+      }
+
+      const scope = nock(config.authAdminApiUrl).post('').reply(400)
+
+      const apolloSpy = jest.spyOn(apolloClient, 'mutate')
+      let tenant
+      try {
+        tenant = await tenantService.create(createOptions)
+      } catch (err) {
+        expect(tenant).toBeUndefined()
+
+        const tenants = await Tenant.query()
+        expect(tenants.length).toEqual(0)
+
+        expect(apolloSpy).toHaveBeenCalledWith(
+          expect.objectContaining({
+            variables: {
+              input: {
+                id: expect.any(String),
+                idpConsentUrl: createOptions.idpConsentUrl,
+                idpSecret: createOptions.idpSecret
+              }
+            }
+          })
+        )
+      }
+      scope.done()
+    })
+  })
+
+  describe('update', (): void => {
+    test('can update a tenant', async (): Promise<void> => {
+      const originalTenantInfo = {
+        apiSecret: 'test-api-secret',
+        email: faker.internet.url(),
+        publicName: 'test name',
+        idpConsentUrl: faker.internet.url(),
+        idpSecret: 'test-idp-secret'
+      }
+
+      const scope = nock(config.authAdminApiUrl)
+        .post('')
+        .reply(200, { data: { createTenant: { id: 1234 } } })
+        .persist()
+      const tenant = await tenantService.create(originalTenantInfo)
+
+      const updatedTenantInfo = {
+        id: tenant.id,
+        apiSecret: 'test-api-secret-two',
+        email: faker.internet.url(),
+        publicName: 'second test name',
+        idpConsentUrl: faker.internet.url(),
+        idpSecret: 'test-idp-secret-two'
+      }
+
+      const apolloSpy = jest.spyOn(apolloClient, 'mutate')
+      const updatedTenant = await tenantService.update(updatedTenantInfo)
+
+      expect(updatedTenant.apiSecret).toEqual(updatedTenantInfo.apiSecret)
+      expect(updatedTenant.email).toEqual(updatedTenantInfo.email)
+      expect(updatedTenant.publicName).toEqual(updatedTenantInfo.publicName)
+      expect(apolloSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          variables: {
+            input: {
+              id: tenant.id,
+              idpConsentUrl: updatedTenantInfo.idpConsentUrl,
+              idpSecret: updatedTenantInfo.idpSecret
+            }
+          }
+        })
+      )
+      scope.done()
+    })
+
+    test('rolls back tenant if auth tenant update fails', async (): Promise<void> => {
+      const originalTenantInfo = {
+        apiSecret: 'test-api-secret',
+        email: faker.internet.url(),
+        publicName: 'test name',
+        idpConsentUrl: faker.internet.url(),
+        idpSecret: 'test-idp-secret'
+      }
+
+      nock(config.authAdminApiUrl)
+        .post('')
+        .reply(200, { data: { createTenant: { id: 1234 } } })
+      const tenant = await tenantService.create(originalTenantInfo)
+      const updatedTenantInfo = {
+        id: tenant.id,
+        apiSecret: 'test-api-secret-two',
+        email: faker.internet.url(),
+        publicName: 'second test name',
+        idpConsentUrl: faker.internet.url(),
+        idpSecret: 'test-idp-secret-two'
+      }
+
+      nock.cleanAll()
+
+      nock(config.authAdminApiUrl).post('').reply(400)
+      const apolloSpy = jest.spyOn(apolloClient, 'mutate')
+      let updatedTenant
+      try {
+        updatedTenant = await tenantService.update(updatedTenantInfo)
+      } catch (err) {
+        expect(updatedTenant).toBeUndefined()
+        const dbTenant = await Tenant.query().findById(tenant.id)
+        assert.ok(dbTenant)
+        expect(dbTenant.apiSecret).toEqual(originalTenantInfo.apiSecret)
+        expect(dbTenant.email).toEqual(originalTenantInfo.email)
+        expect(dbTenant.publicName).toEqual(originalTenantInfo.publicName)
+        expect(apolloSpy).toHaveBeenCalledWith(
+          expect.objectContaining({
+            variables: {
+              input: {
+                id: tenant.id,
+                idpConsentUrl: updatedTenantInfo.idpConsentUrl,
+                idpSecret: updatedTenantInfo.idpSecret
+              }
+            }
+          })
+        )
+      }
+
+      nock.cleanAll()
+    })
+  })
+
+  describe('Delete Tenant', (): void => {
+    test('Can delete tenant', async (): Promise<void> => {
+      const createOptions = {
+        apiSecret: 'test-api-secret',
+        email: faker.internet.url(),
+        publicName: 'test name',
+        idpConsentUrl: faker.internet.url(),
+        idpSecret: 'test-idp-secret'
+      }
+
+      const scope = nock(config.authAdminApiUrl)
+        .post('')
+        .reply(200, { data: { createTenant: { id: 1234 } } })
+        .persist()
+      const tenant = await tenantService.create(createOptions)
+
+      const apolloSpy = jest.spyOn(apolloClient, 'mutate')
+      await tenantService.delete(tenant.id)
+
+      const dbTenant = await Tenant.query().findById(tenant.id)
+      expect(dbTenant).toBeUndefined()
+      expect(apolloSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          variables: {
+            input: { id: tenant.id }
+          }
+        })
+      )
+
+      scope.done()
+    })
+
+    test('Reverts deletion if auth tenant delete fails', async (): Promise<void> => {
+      const createOptions = {
+        apiSecret: 'test-api-secret',
+        email: faker.internet.url(),
+        publicName: 'test name',
+        idpConsentUrl: faker.internet.url(),
+        idpSecret: 'test-idp-secret'
+      }
+
+      nock(config.authAdminApiUrl)
+        .post('')
+        .reply(200, { data: { createTenant: { id: 1234 } } })
+      const tenant = await tenantService.create(createOptions)
+
+      nock.cleanAll()
+
+      const apolloSpy = jest.spyOn(apolloClient, 'mutate')
+      const deleteScope = nock(config.authAdminApiUrl).post('').reply(400)
+      try {
+        await tenantService.delete(tenant.id)
+      } catch (err) {
+        const dbTenant = await Tenant.query().findById(tenant.id)
+        assert.ok(dbTenant)
+        expect(dbTenant.id).toEqual(tenant.id)
+        expect(apolloSpy).toHaveBeenCalledWith(
+          expect.objectContaining({
+            variables: {
+              input: {
+                id: tenant.id
+              }
+            }
+          })
+        )
+      }
+
+      deleteScope.done()
+    })
+  })
+})
