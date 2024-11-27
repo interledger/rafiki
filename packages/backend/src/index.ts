@@ -206,6 +206,9 @@ export function initIocContainer(
       knex: knex
     })
   })
+  container.singleton('assetCache', async () => {
+    return createInMemoryDataStore(config.localCacheDuration)
+  })
   container.singleton('assetService', async (deps) => {
     const logger = await deps.use('logger')
     const knex = await deps.use('knex')
@@ -213,7 +216,7 @@ export function initIocContainer(
       logger: logger,
       knex: knex,
       accountingService: await deps.use('accountingService'),
-      assetCache: createInMemoryDataStore(config.localCacheDuration)
+      assetCache: await deps.use('assetCache')
     })
   })
 
@@ -280,6 +283,9 @@ export function initIocContainer(
       logger: await deps.use('logger')
     })
   })
+  container.singleton('walletAddressCache', async () => {
+    return createInMemoryDataStore(config.localCacheDuration)
+  })
   container.singleton('walletAddressService', async (deps) => {
     const logger = await deps.use('logger')
     return await createWalletAddressService({
@@ -289,7 +295,7 @@ export function initIocContainer(
       accountingService: await deps.use('accountingService'),
       webhookService: await deps.use('webhookService'),
       assetService: await deps.use('assetService'),
-      walletAddressCache: createInMemoryDataStore(config.localCacheDuration)
+      walletAddressCache: await deps.use('walletAddressCache')
     })
   })
   container.singleton('spspRoutes', async (deps) => {

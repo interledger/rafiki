@@ -20,6 +20,7 @@ import { WalletAddressService } from '../open_payments/wallet_address/service'
 import { isWalletAddressError } from '../open_payments/wallet_address/errors'
 import { PeerService } from '../payment-method/ilp/peer/service'
 import { isPeerError } from '../payment-method/ilp/peer/errors'
+import { CacheDataStore } from '../middleware/cache/data-stores'
 
 describe('Asset Service', (): void => {
   let deps: IocContract<AppServices>
@@ -319,6 +320,7 @@ describe('Asset Service using Cache', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let assetService: AssetService
+  let assetCache: CacheDataStore<Asset>
 
   beforeAll(async (): Promise<void> => {
     deps = initIocContainer({
@@ -327,6 +329,7 @@ describe('Asset Service using Cache', (): void => {
     })
     appContainer = await createTestApp(deps)
     assetService = await deps.use('assetService')
+    assetCache = await deps.use('assetCache')
   })
 
   afterEach(async (): Promise<void> => {
@@ -337,7 +340,7 @@ describe('Asset Service using Cache', (): void => {
     await appContainer.shutdown()
   })
 
-  describe('create', (): void => {
+  describe('create, update and retrieve asset using cache', (): void => {
     test.each`
       withdrawalThreshold | liquidityThreshold
       ${undefined}        | ${undefined}
@@ -345,13 +348,16 @@ describe('Asset Service using Cache', (): void => {
       ${undefined}        | ${BigInt(5)}
       ${BigInt(5)}        | ${BigInt(5)}
     `(
-      'Asset can be created and fetched',
+      'Asset can be created, updated and fetched',
       async ({ withdrawalThreshold, liquidityThreshold }): Promise<void> => {
         const options = {
           ...randomAsset(),
           withdrawalThreshold,
           liquidityThreshold
         }
+
+        const spyCacheSet = jest.spyOn(assetCache, 'set')
+
         const asset = await assetService.create(options)
         assert.ok(!isAssetError(asset))
         expect(asset).toMatchObject({
@@ -361,115 +367,42 @@ describe('Asset Service using Cache', (): void => {
           withdrawalThreshold: withdrawalThreshold || null,
           liquidityThreshold: liquidityThreshold || null
         })
+        // Ensure that the cache was set for create:
+        expect(spyCacheSet).toHaveBeenCalledTimes(1)
+
+        const spyCacheGet = jest.spyOn(assetCache, 'get')
         await expect(assetService.get(asset.id)).resolves.toEqual(asset)
-      }
-    )
-  })
 
-  describe('get', (): void => {
-    test('Can get asset by id', async (): Promise<void> => {
-      const asset = await assetService.create(randomAsset())
-      assert.ok(!isAssetError(asset))
-      await expect(assetService.get(asset.id)).resolves.toEqual(asset)
-    })
+        expect(spyCacheGet).toHaveBeenCalledTimes(1)
+        expect(spyCacheGet).toHaveBeenCalledWith(asset.id)
 
-    test('Cannot get unknown asset', async (): Promise<void> => {
-      await expect(assetService.get(uuid())).resolves.toBeUndefined()
-    })
-  })
-
-  describe('update', (): void => {
-    describe.each`
-      withdrawalThreshold | liquidityThreshold
-      ${null}             | ${null}
-      ${BigInt(0)}        | ${null}
-      ${BigInt(5)}        | ${null}
-      ${null}             | ${BigInt(0)}
-      ${null}             | ${BigInt(5)}
-      ${BigInt(0)}        | ${BigInt(0)}
-      ${BigInt(5)}        | ${BigInt(5)}
-    `(
-      'Asset threshold can be updated from withdrawalThreshold: $withdrawalThreshold, liquidityThreshold: $liquidityThreshold',
-      ({ withdrawalThreshold, liquidityThreshold }): void => {
-        let assetId: string
-
-        beforeEach(async (): Promise<void> => {
-          const asset = await assetService.create({
-            ...randomAsset(),
-            withdrawalThreshold,
-            liquidityThreshold
-          })
-          assert.ok(!isAssetError(asset))
-          expect(asset.withdrawalThreshold).toEqual(withdrawalThreshold)
-          assetId = asset.id
+        // Update the asset:
+        const spyCacheUpdateSet = jest.spyOn(assetCache, 'set')
+        const assetUpdate = await assetService.update({
+          id: asset.id,
+          withdrawalThreshold,
+          liquidityThreshold
         })
+        assert.ok(!isAssetError(asset))
 
-        test.each`
-          withdrawalThreshold | liquidityThreshold
-          ${null}             | ${null}
-          ${BigInt(0)}        | ${null}
-          ${BigInt(5)}        | ${null}
-          ${null}             | ${BigInt(0)}
-          ${null}             | ${BigInt(5)}
-          ${BigInt(0)}        | ${BigInt(0)}
-          ${BigInt(5)}        | ${BigInt(5)}
-        `(
-          'to withdrawalThreshold: $withdrawalThreshold, liquidityThreshold: $liquidityThreshold',
-          async ({
-            withdrawalThreshold,
-            liquidityThreshold
-          }): Promise<void> => {
-            const asset = await assetService.update({
-              id: assetId,
-              withdrawalThreshold,
-              liquidityThreshold
-            })
-            assert.ok(!isAssetError(asset))
-            expect(asset.withdrawalThreshold).toEqual(withdrawalThreshold)
-            expect(asset.liquidityThreshold).toEqual(liquidityThreshold)
-            await expect(assetService.get(assetId)).resolves.toEqual(asset)
-          }
+        await expect(assetService.get(asset.id)).resolves.toEqual(assetUpdate)
+
+        expect(spyCacheUpdateSet).toHaveBeenCalledTimes(2)
+        expect(spyCacheUpdateSet).toHaveBeenCalledWith(
+          asset.id,
+          expect.anything()
         )
+
+        // Delete the asset, and ensure it is not cached:
+        const deletedAsset = await assetService.delete({
+          id: asset.id,
+          deletedAt: new Date()
+        })
+        assert.ok(!isAssetError(deletedAsset))
+        expect(deletedAsset.deletedAt).not.toBeNull()
+
+        await expect(assetService.get(asset.id)).resolves.toBeUndefined()
       }
     )
-  })
-
-  describe('getPage', (): void => {
-    getPageTests({
-      createModel: () => createAsset(deps),
-      getPage: (pagination?: Pagination, sortOrder?: SortOrder) =>
-        assetService.getPage(pagination, sortOrder)
-    })
-  })
-
-  describe('getAll', (): void => {
-    test('returns all assets', async (): Promise<void> => {
-      const assets: (Asset | AssetError)[] = []
-      for (let i = 0; i < 3; i++) {
-        const asset = await assetService.create(randomAsset())
-        assets.push(asset)
-      }
-
-      await expect(assetService.getAll()).resolves.toEqual(assets)
-    })
-
-    test('returns empty array if no assets', async (): Promise<void> => {
-      await expect(assetService.getAll()).resolves.toEqual([])
-    })
-  })
-
-  describe('delete', (): void => {
-    test('Can delete asset', async (): Promise<void> => {
-      const newAsset = await assetService.create(randomAsset())
-      assert.ok(!isAssetError(newAsset))
-      const newAssetId = newAsset.id
-
-      const deletedAsset = await assetService.delete({
-        id: newAssetId,
-        deletedAt: new Date()
-      })
-      assert.ok(!isAssetError(deletedAsset))
-      expect(deletedAsset.deletedAt).not.toBeNull()
-    })
   })
 })
