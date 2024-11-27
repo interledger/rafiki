@@ -11,7 +11,7 @@ interface CachedRequest {
 type Request = () => Promise<unknown>
 
 interface CacheMiddlewareArgs {
-  deps: { logger: Logger; dataStore: CacheDataStore }
+  deps: { logger: Logger; dataStore: CacheDataStore<string> }
   idempotencyKey?: string
   request: Request
   requestParams: Record<string, unknown>

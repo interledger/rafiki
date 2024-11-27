@@ -24,7 +24,10 @@ describe('GraphQL Middleware', (): void => {
   let assetService: AssetService
 
   beforeAll(async (): Promise<void> => {
-    deps = initIocContainer(Config)
+    deps = initIocContainer({
+      ...Config,
+      localCacheDuration: 0
+    })
     appContainer = await createTestApp(deps)
     assetService = await deps.use('assetService')
   })

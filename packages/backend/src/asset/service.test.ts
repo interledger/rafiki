@@ -20,6 +20,7 @@ import { WalletAddressService } from '../open_payments/wallet_address/service'
 import { isWalletAddressError } from '../open_payments/wallet_address/errors'
 import { PeerService } from '../payment-method/ilp/peer/service'
 import { isPeerError } from '../payment-method/ilp/peer/errors'
+import { CacheDataStore } from '../middleware/cache/data-stores'
 
 describe('Asset Service', (): void => {
   let deps: IocContract<AppServices>
@@ -312,5 +313,100 @@ describe('Asset Service', (): void => {
         assetService.delete({ id: newAssetId, deletedAt: new Date() })
       ).resolves.toEqual(AssetError.CannotDeleteInUseAsset)
     })
+  })
+})
+
+describe('Asset Service using Cache', (): void => {
+  let deps: IocContract<AppServices>
+  let appContainer: TestContainer
+  let assetService: AssetService
+  let assetCache: CacheDataStore<Asset>
+
+  beforeAll(async (): Promise<void> => {
+    deps = initIocContainer({
+      ...Config,
+      localCacheDuration: 5_000 // 5-second default.
+    })
+    appContainer = await createTestApp(deps)
+    assetService = await deps.use('assetService')
+    assetCache = await deps.use('assetCache')
+  })
+
+  afterEach(async (): Promise<void> => {
+    await truncateTables(appContainer.knex)
+  })
+
+  afterAll(async (): Promise<void> => {
+    await appContainer.shutdown()
+  })
+
+  describe('create, update and retrieve asset using cache', (): void => {
+    test.each`
+      withdrawalThreshold | liquidityThreshold
+      ${undefined}        | ${undefined}
+      ${BigInt(5)}        | ${undefined}
+      ${undefined}        | ${BigInt(5)}
+      ${BigInt(5)}        | ${BigInt(5)}
+    `(
+      'Asset can be created, updated and fetched',
+      async ({ withdrawalThreshold, liquidityThreshold }): Promise<void> => {
+        const options = {
+          ...randomAsset(),
+          withdrawalThreshold,
+          liquidityThreshold
+        }
+
+        const spyCacheSet = jest.spyOn(assetCache, 'set')
+
+        const asset = await assetService.create(options)
+        assert.ok(!isAssetError(asset))
+        expect(asset).toMatchObject({
+          ...options,
+          id: asset.id,
+          ledger: asset.ledger,
+          withdrawalThreshold: withdrawalThreshold || null,
+          liquidityThreshold: liquidityThreshold || null
+        })
+        // Ensure that the cache was set for create:
+        expect(spyCacheSet).toHaveBeenCalledTimes(1)
+
+        const spyCacheGet = jest.spyOn(assetCache, 'get')
+        await expect(assetService.get(asset.id)).resolves.toEqual(asset)
+
+        expect(spyCacheGet).toHaveBeenCalledTimes(1)
+        expect(spyCacheGet).toHaveBeenCalledWith(asset.id)
+
+        // Update the asset:
+        const spyCacheUpdateSet = jest.spyOn(assetCache, 'set')
+        const assetUpdate = await assetService.update({
+          id: asset.id,
+          withdrawalThreshold,
+          liquidityThreshold
+        })
+        assert.ok(!isAssetError(asset))
+
+        await expect(assetService.get(asset.id)).resolves.toEqual(assetUpdate)
+
+        expect(spyCacheUpdateSet).toHaveBeenCalledTimes(2)
+        expect(spyCacheUpdateSet).toHaveBeenCalledWith(
+          asset.id,
+          expect.objectContaining({
+            id: asset.id,
+            code: asset.code,
+            deletedAt: null
+          })
+        )
+
+        // Delete the asset, and ensure it is not cached:
+        const deletedAsset = await assetService.delete({
+          id: asset.id,
+          deletedAt: new Date()
+        })
+        assert.ok(!isAssetError(deletedAsset))
+        expect(deletedAsset.deletedAt).not.toBeNull()
+
+        await expect(assetService.get(asset.id)).resolves.toBeUndefined()
+      }
+    )
   })
 })

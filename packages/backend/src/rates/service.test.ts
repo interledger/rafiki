@@ -46,7 +46,7 @@ describe('Rates service', function () {
 
   beforeEach(async (): Promise<void> => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    ;((service as any).cachedRates as CacheDataStore).deleteAll()
+    ;((service as any).cachedRates as CacheDataStore<string>).deleteAll()
 
     apiRequestCount = 0
   })

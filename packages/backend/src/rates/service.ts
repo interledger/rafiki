@@ -54,7 +54,7 @@ export function createRatesService(deps: ServiceDependencies): RatesService {
 
 class RatesServiceImpl implements RatesService {
   private axios: AxiosInstance
-  private cachedRates: CacheDataStore
+  private cachedRates: CacheDataStore<string>
   private inProgressRequests: Record<string, Promise<Rates>> = {}
 
   constructor(private deps: ServiceDependencies) {

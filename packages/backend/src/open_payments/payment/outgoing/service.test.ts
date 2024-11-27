@@ -254,7 +254,8 @@ describe('OutgoingPaymentService', (): void => {
     deps = await initIocContainer({
       ...Config,
       exchangeRatesUrl,
-      enableTelemetry: true
+      enableTelemetry: true,
+      localCacheDuration: 0
     })
     appContainer = await createTestApp(deps)
     outgoingPaymentService = await deps.use('outgoingPaymentService')

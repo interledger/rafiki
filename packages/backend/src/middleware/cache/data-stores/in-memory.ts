@@ -1,16 +1,17 @@
 import { CacheDataStore } from '.'
 
-interface Cached {
+interface Cached<T> {
   expiry: number
-  data: string
+  data: T
 }
 
-export function createInMemoryDataStore(keyTtlMs: number): CacheDataStore {
-  const map = new Map<string, Cached>()
+export function createInMemoryDataStore<T>(
+  keyTtlMs: number
+): CacheDataStore<T> {
+  const map = new Map<string, Cached<T>>()
 
-  const getAndCheckExpiry = (key: string): Cached | undefined => {
+  const getAndCheckExpiry = (key: string): Cached<T> | undefined => {
     const cached = map.get(key)
-
     if (cached?.expiry && Date.now() >= cached.expiry) {
       deleteKey(key)
       return undefined
@@ -22,7 +23,7 @@ export function createInMemoryDataStore(keyTtlMs: number): CacheDataStore {
   const deleteKey = (key: string) => map.delete(key)
 
   return {
-    async get(key): Promise<string | undefined> {
+    async get(key): Promise<T | undefined> {
       const cached = getAndCheckExpiry(key)
 
       return cached?.data
@@ -35,7 +36,7 @@ export function createInMemoryDataStore(keyTtlMs: number): CacheDataStore {
     async delete(key): Promise<void> {
       deleteKey(key)
     },
-    async set(key: string, value: string): Promise<boolean> {
+    async set(key: string, value: T): Promise<boolean> {
       map.set(key, { expiry: Date.now() + keyTtlMs, data: value })
       return true
     },
