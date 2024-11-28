@@ -25,6 +25,7 @@ import { Pagination, SortOrder } from '../../shared/baseModel'
 import { sleep } from '../../shared/utils'
 import { withConfigOverride } from '../../tests/helpers'
 import { WalletAddressAdditionalProperty } from './additional_property/model'
+import { CacheDataStore } from '../../middleware/cache/data-stores'
 
 describe('Open Payments Wallet Address Service', (): void => {
   let deps: IocContract<AppServices>
@@ -35,7 +36,10 @@ describe('Open Payments Wallet Address Service', (): void => {
   let knex: Knex
 
   beforeAll(async (): Promise<void> => {
-    deps = initIocContainer(Config)
+    deps = initIocContainer({
+      ...Config,
+      localCacheDuration: 0
+    })
     config = await deps.use('config')
     appContainer = await createTestApp(deps)
     knex = appContainer.knex
@@ -793,6 +797,98 @@ describe('Open Payments Wallet Address Service', (): void => {
             walletAddressService.get(walletAddresses[i].id)
           ).resolves.toEqual(walletAddresses[i])
         }
+      }
+    )
+  })
+})
+
+describe('Open Payments Wallet Address Service using Cache', (): void => {
+  let deps: IocContract<AppServices>
+  let appContainer: TestContainer
+  let walletAddressService: WalletAddressService
+  let walletAddressCache: CacheDataStore<WalletAddress>
+  let knex: Knex
+
+  beforeAll(async (): Promise<void> => {
+    deps = initIocContainer({
+      ...Config,
+      localCacheDuration: 5_000 // 5-second default.
+    })
+    appContainer = await createTestApp(deps)
+    knex = appContainer.knex
+    walletAddressService = await deps.use('walletAddressService')
+    walletAddressCache = await deps.use('walletAddressCache')
+  })
+
+  afterEach(async (): Promise<void> => {
+    jest.useRealTimers()
+    await truncateTables(knex)
+  })
+
+  afterAll(async (): Promise<void> => {
+    await appContainer.shutdown()
+  })
+
+  describe('Create, Update and Fetch Wallet Address with cache', (): void => {
+    test.each`
+      initialIsActive | status        | expectedIsActive | expectedCallCount
+      ${true}         | ${undefined}  | ${true}          | ${2}
+      ${true}         | ${'INACTIVE'} | ${false}         | ${2}
+      ${false}        | ${'ACTIVE'}   | ${true}          | ${3}
+      ${false}        | ${undefined}  | ${false}         | ${3}
+    `(
+      'Wallet address with initial isActive of $initialIsActive can be updated with $status status and called $expectedCallCount',
+      async ({
+        initialIsActive,
+        status,
+        expectedIsActive,
+        expectedCallCount
+      }): Promise<void> => {
+        const spyCacheSet = jest.spyOn(walletAddressCache, 'set')
+        const walletAddress = await createWalletAddress(deps)
+        expect(spyCacheSet).toHaveBeenCalledTimes(1)
+
+        if (!initialIsActive) {
+          // Only update the database:
+          await walletAddress.$query(knex).patch({ deactivatedAt: new Date() })
+          const fromCacheActive = await walletAddressService.get(
+            walletAddress.id
+          )
+
+          // We don't expect a match here, since the cache and database is out-of-sync:
+          expect(fromCacheActive!.isActive).toEqual(false)
+
+          // Update through the service, will also update the wallet-address cache:
+          await walletAddressService.update({
+            id: walletAddress.id,
+            status: 'INACTIVE'
+          })
+        }
+
+        const updatedWalletAddress = await walletAddressService.update({
+          id: walletAddress.id,
+          status
+        })
+        assert.ok(!isWalletAddressError(updatedWalletAddress))
+        expect(updatedWalletAddress.isActive).toEqual(expectedIsActive)
+
+        // We expect the [set] to be called again with the new data:
+        expect(spyCacheSet).toHaveBeenCalledTimes(expectedCallCount)
+        expect(spyCacheSet).toHaveBeenCalledWith(
+          walletAddress.id,
+          expect.objectContaining({
+            id: walletAddress.id,
+            url: walletAddress.url
+          })
+        )
+
+        const spyCacheGet = jest.spyOn(walletAddressCache, 'get')
+        await expect(
+          walletAddressService.get(walletAddress.id)
+        ).resolves.toEqual(updatedWalletAddress)
+
+        expect(spyCacheGet).toHaveBeenCalledTimes(expectedCallCount - 1)
+        expect(spyCacheGet).toHaveBeenCalledWith(walletAddress.id)
       }
     )
   })

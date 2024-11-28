@@ -60,6 +60,7 @@ import {
   createNoopTelemetryService
 } from './telemetry/service'
 import { createWebhookService } from './webhook/service'
+import { createInMemoryDataStore } from './middleware/cache/data-stores/in-memory'
 
 BigInt.prototype.toJSON = function () {
   return this.toString()
@@ -205,13 +206,17 @@ export function initIocContainer(
       knex: knex
     })
   })
+  container.singleton('assetCache', async () => {
+    return createInMemoryDataStore(config.localCacheDuration)
+  })
   container.singleton('assetService', async (deps) => {
     const logger = await deps.use('logger')
     const knex = await deps.use('knex')
     return await createAssetService({
       logger: logger,
       knex: knex,
-      accountingService: await deps.use('accountingService')
+      accountingService: await deps.use('accountingService'),
+      assetCache: await deps.use('assetCache')
     })
   })
 
@@ -278,6 +283,9 @@ export function initIocContainer(
       logger: await deps.use('logger')
     })
   })
+  container.singleton('walletAddressCache', async () => {
+    return createInMemoryDataStore(config.localCacheDuration)
+  })
   container.singleton('walletAddressService', async (deps) => {
     const logger = await deps.use('logger')
     return await createWalletAddressService({
@@ -285,7 +293,9 @@ export function initIocContainer(
       knex: await deps.use('knex'),
       logger: logger,
       accountingService: await deps.use('accountingService'),
-      webhookService: await deps.use('webhookService')
+      webhookService: await deps.use('webhookService'),
+      assetService: await deps.use('assetService'),
+      walletAddressCache: await deps.use('walletAddressCache')
     })
   })
   container.singleton('spspRoutes', async (deps) => {
@@ -303,6 +313,7 @@ export function initIocContainer(
       knex: await deps.use('knex'),
       accountingService: await deps.use('accountingService'),
       walletAddressService: await deps.use('walletAddressService'),
+      assetService: await deps.use('assetService'),
       config: await deps.use('config')
     })
   })
@@ -472,6 +483,7 @@ export function initIocContainer(
       receiverService: await deps.use('receiverService'),
       feeService: await deps.use('feeService'),
       walletAddressService: await deps.use('walletAddressService'),
+      assetService: await deps.use('assetService'),
       paymentMethodHandlerService: await deps.use(
         'paymentMethodHandlerService'
       ),
@@ -500,6 +512,7 @@ export function initIocContainer(
       peerService: await deps.use('peerService'),
       walletAddressService: await deps.use('walletAddressService'),
       quoteService: await deps.use('quoteService'),
+      assetService: await deps.use('assetService'),
       telemetry: await deps.use('telemetry')
     })
   })
