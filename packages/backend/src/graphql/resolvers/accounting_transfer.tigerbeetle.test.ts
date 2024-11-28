@@ -73,7 +73,7 @@ describe('TigerBeetle: Accounting Transfer', (): void => {
 
     // Top up debit account first:
     const transferAmount = 123
-    const queryLimit = 100_000
+    const queryLimit = 20
     const depositId = uuid()
     const insertedTransfer = await accountingService.createDeposit({
       id: depositId,

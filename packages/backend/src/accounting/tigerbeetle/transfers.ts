@@ -170,14 +170,14 @@ export async function createTransfers(
 export async function getAccountTransfers(
   deps: ServiceDependencies,
   id: string | number,
-  limit: number = 100_000
+  limit: number = 20
 ): Promise<GetLedgerTransfersResult> {
   const account_id = toTigerBeetleId(id)
   const filter: AccountFilter = {
     account_id,
     timestamp_min: 0n,
     timestamp_max: 0n,
-    limit, //100_000 is the default limit for TB.
+    limit,
     flags: AccountFilterFlags.credits | AccountFilterFlags.debits
   }
   const tbAccountTransfers: TbTransfer[] =

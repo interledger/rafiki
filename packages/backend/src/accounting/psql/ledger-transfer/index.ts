@@ -39,7 +39,7 @@ export type CreateLedgerTransferArgs = Pick<
 export async function getAccountTransfers(
   deps: ServiceDependencies,
   id: string | number,
-  limit?: number,
+  limit: number = 20,
   trx?: TransactionOrKnex
 ): Promise<GetLedgerTransfersResult> {
   const builder = LedgerTransfer.query(trx || deps.knex)

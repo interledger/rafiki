@@ -99,7 +99,7 @@ describe('Accounting Transfer', (): void => {
     // Top up debit account first:
     const transferAmount = 123
     const ledger = 1
-    const queryLimit = 100_000
+    const queryLimit = 20
 
     const insertedTransfer = await createLedgerTransfer(
       {
