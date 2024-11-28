@@ -214,7 +214,13 @@ describe('TigerBeetle Accounting Service', (): void => {
         transferRef: '00000000-0000-0000-0000-000000000000'
       })
       expect(transferCredit.timestamp).toBeGreaterThan(0)
-      expect(transferCredit.expiresAt).toBeUndefined()
+
+      const toleranceInMs = 10
+      const now = new Date().getTime()
+      const creditExpiresAt = transferCredit.expiresAt
+        ? transferCredit.expiresAt.getTime()
+        : now
+      expect(Math.abs(now - creditExpiresAt)).toBeLessThanOrEqual(toleranceInMs)
 
       const accTransfersDebit =
         await accountingService.getAccountTransfers(ledger)
@@ -232,7 +238,11 @@ describe('TigerBeetle Accounting Service', (): void => {
         transferRef: '00000000-0000-0000-0000-000000000000'
       })
       expect(transferDebit.timestamp).toBeGreaterThan(0)
-      expect(transferDebit.expiresAt).toBeUndefined()
+
+      const debitExpiresAt = transferDebit.expiresAt
+        ? transferDebit.expiresAt.getTime()
+        : now
+      expect(Math.abs(now - debitExpiresAt)).toBeLessThanOrEqual(toleranceInMs)
     })
 
     test('Returns undefined for nonexistent account', async (): Promise<void> => {
