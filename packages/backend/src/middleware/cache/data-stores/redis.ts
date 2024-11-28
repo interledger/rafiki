@@ -4,7 +4,7 @@ import { CacheDataStore } from '.'
 export function createRedisDataStore(
   redisClient: Redis,
   keyTtlMs: number
-): CacheDataStore {
+): CacheDataStore<string> {
   return {
     async get(key: string): Promise<string | undefined> {
       return (await redisClient.get(key)) || undefined

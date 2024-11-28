@@ -77,7 +77,10 @@ describe('QuoteService', (): void => {
   }
 
   beforeAll(async (): Promise<void> => {
-    deps = initIocContainer(Config)
+    deps = initIocContainer({
+      ...Config,
+      localCacheDuration: 0
+    })
     appContainer = await createTestApp(deps)
 
     knex = appContainer.knex

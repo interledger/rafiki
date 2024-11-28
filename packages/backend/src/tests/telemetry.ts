@@ -47,6 +47,7 @@ export class MockTelemetryService implements TelemetryService {
   public getInstanceName(): string | undefined {
     return 'serviceName'
   }
+
   public async shutdown(): Promise<void> {}
   public startTimer(): () => void {
     return () => undefined
