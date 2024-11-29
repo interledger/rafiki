@@ -136,7 +136,7 @@ describe('TigerBeetle: Accounting Transfer', (): void => {
       transferType: TransferType.Deposit,
       ledger,
       state: TransferState.Posted,
-      expiresAt: response.debits[0].createdAt
+      expiresAt: null
     })
 
     // Credit:
@@ -193,7 +193,7 @@ describe('TigerBeetle: Accounting Transfer', (): void => {
       transferType: TransferType.Deposit,
       ledger,
       state: TransferState.Posted,
-      expiresAt: response.credits[0].createdAt
+      expiresAt: null
     })
   })
 })

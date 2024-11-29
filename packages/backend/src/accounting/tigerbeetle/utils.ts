@@ -61,8 +61,18 @@ export function tbTransferToLedgerTransfer(
     type: transferTypeFromCode(tbTransfer.code),
     state: state,
     ledger: tbTransfer.ledger,
-    expiresAt: new Date(
-      Number(tbTransfer.timestamp / 1_000_000n) + tbTransfer.timeout * 1000
+    expiresAt: expiresAtFromTimestampAndTimeout(
+      tbTransfer.timestamp,
+      tbTransfer.timeout
     )
   }
+}
+
+function expiresAtFromTimestampAndTimeout(
+  timestamp: bigint,
+  timeout: number
+): Date | undefined {
+  return timeout
+    ? new Date(Number(timestamp) / 1_000_000 + timeout * 1000)
+    : undefined
 }

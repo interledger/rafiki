@@ -214,13 +214,7 @@ describe('TigerBeetle Accounting Service', (): void => {
         transferRef: '00000000-0000-0000-0000-000000000000'
       })
       expect(transferCredit.timestamp).toBeGreaterThan(0)
-
-      const toleranceInMs = 10
-      const now = new Date().getTime()
-      const creditExpiresAt = transferCredit.expiresAt
-        ? transferCredit.expiresAt.getTime()
-        : now
-      expect(Math.abs(now - creditExpiresAt)).toBeLessThanOrEqual(toleranceInMs)
+      expect(transferCredit.expiresAt).toBeUndefined()
 
       const accTransfersDebit =
         await accountingService.getAccountTransfers(ledger)
@@ -238,11 +232,42 @@ describe('TigerBeetle Accounting Service', (): void => {
         transferRef: '00000000-0000-0000-0000-000000000000'
       })
       expect(transferDebit.timestamp).toBeGreaterThan(0)
+      expect(transferDebit.expiresAt).toBeUndefined()
+    })
 
-      const debitExpiresAt = transferDebit.expiresAt
-        ? transferDebit.expiresAt.getTime()
-        : now
-      expect(Math.abs(now - debitExpiresAt)).toBeLessThanOrEqual(toleranceInMs)
+    test('Returns expiry date correctly', async (): Promise<void> => {
+      const receivingAccount = await accountFactory.build()
+      const balances = [BigInt(100), BigInt(100)]
+      const accounts = await Promise.all(
+        balances.map(async (balance) => {
+          return await accountFactory.build({
+            balance,
+            asset: receivingAccount.asset
+          })
+        })
+      )
+      const timeout = 10
+      await Promise.all(
+        accounts.map(async (account, i) => {
+          const transfer = await accountingService.createTransfer({
+            sourceAccount: account,
+            sourceAmount: BigInt(10 * (i + 1)),
+            destinationAccount: receivingAccount,
+            timeout: timeout
+          })
+          assert.ok(!isTransferError(transfer))
+          await transfer.post()
+        })
+      )
+      const transfer = await accountingService.getAccountTransfers(
+        receivingAccount.id
+      )
+      expect(transfer.credits).not.toHaveLength(0)
+      const timestamp = transfer.credits[0].timestamp
+      const expiresAtTime = transfer.credits[0].expiresAt?.getTime()
+      expect(expiresAtTime).toBe(
+        new Date(Number(timestamp) + timeout * 1000).getTime()
+      )
     })
 
     test('Returns undefined for nonexistent account', async (): Promise<void> => {
