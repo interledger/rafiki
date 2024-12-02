@@ -5,6 +5,7 @@ export class Tenant extends BaseModel {
     return 'tenants'
   }
 
+<<<<<<< HEAD
   public apiSecret!: string
 
   public idpConsentUrl?: string
@@ -21,3 +22,10 @@ export interface TenantWithIdp extends Tenant {
 export function isTenantWithIdp(tenant: Tenant): tenant is TenantWithIdp {
   return !!(tenant.idpConsentUrl && tenant.idpSecret)
 }
+=======
+  public idpConsentUrl!: string
+  public idpSecret!: string
+
+  public deletedAt?: Date
+}
+>>>>>>> ea7e6603 (feat(auth): tenants table v1 (#3133))
