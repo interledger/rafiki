@@ -54,6 +54,7 @@ import { Redis } from 'ioredis'
 import { LoggingPlugin } from './graphql/plugin'
 import { gnapServerErrorMiddleware } from './shared/gnapErrors'
 import { verifyApiSignature } from './shared/utils'
+import { TenantService } from './tenant/service'
 
 export interface AppContextData extends DefaultContext {
   logger: Logger
@@ -102,6 +103,7 @@ export interface AppServices {
   grantRoutes: Promise<GrantRoutes>
   interactionRoutes: Promise<InteractionRoutes>
   redis: Promise<Redis>
+  tenantService: Promise<TenantService>
 }
 
 export type AppContainer = IocContract<AppServices>
