@@ -1,14 +1,6 @@
 import { BaseService } from '../shared/baseService'
-import { TransactionOrKnex, Model } from 'objection'
-
-// TODO: remove. temporary implementation while other issue is completed
-export class Tenant extends Model {
-  static tableName = 'tenants'
-
-  id!: string
-  idpConsentUrl!: string
-  idpSecret!: string
-}
+import { TransactionOrKnex } from 'objection'
+import { Tenant } from './model'
 
 export interface CreateOptions {
   id: string

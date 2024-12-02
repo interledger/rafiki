@@ -17,14 +17,6 @@ describe('Tenant Service', (): void => {
     appContainer = await createTestApp(deps)
 
     tenantService = await deps.use('tenantService')
-
-    // TODO: remove. temporary implementation while other issue is completed
-    const knex = await deps.use('knex')
-    await knex.schema.createTable('tenants', (table) => {
-      table.string('id').primary()
-      table.string('idpConsentUrl').notNullable()
-      table.string('idpSecret').notNullable()
-    })
   })
 
   afterEach(async (): Promise<void> => {
