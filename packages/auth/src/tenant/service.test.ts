@@ -1,5 +1,4 @@
 import { faker } from '@faker-js/faker'
-import { Knex } from 'knex'
 import { createTestApp, TestContainer } from '../tests/app'
 import { truncateTables } from '../tests/tableManager'
 import { Config } from '../config/app'
@@ -7,7 +6,6 @@ import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../'
 import { AppServices } from '../app'
 import { TenantService } from './service'
-import { Tenant } from './service'
 
 describe('Tenant Service', (): void => {
   let deps: IocContract<AppServices>
