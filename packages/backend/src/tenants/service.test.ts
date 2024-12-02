@@ -12,6 +12,44 @@ import { truncateTables } from '../tests/tableManager'
 import { ApolloClient, NormalizedCacheObject } from '@apollo/client'
 import { Tenant } from './model'
 
+const generateMutateGqlError = (path: string = 'createTenant') => ({
+  errors: [
+    {
+      message: 'invalid input syntax',
+      locations: [
+        {
+          line: 1,
+          column: 1
+        }
+      ],
+      path: [path],
+      extensions: {
+        code: 'INTERNAl_SERVER_ERROR'
+      }
+    }
+  ],
+  data: null
+})
+
+const queryGqlError = {
+  errors: [
+    {
+      message: 'unknown peer',
+      locations: [
+        {
+          line: 1,
+          column: 1
+        }
+      ],
+      path: ['tenant'],
+      extensions: {
+        code: 'NOT_FOUND'
+      }
+    }
+  ],
+  data: null
+}
+
 describe('Tenant Service', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
@@ -103,7 +141,9 @@ describe('Tenant Service', (): void => {
       const createdTenant = await tenantService.create(createOptions)
       createScope.done()
 
-      const getScope = nock(config.authAdminApiUrl).post('').reply(400)
+      const getScope = nock(config.authAdminApiUrl)
+        .post('')
+        .reply(200, queryGqlError)
       const apolloSpy = jest.spyOn(apolloClient, 'query')
       let tenant
       try {
@@ -180,7 +220,9 @@ describe('Tenant Service', (): void => {
         idpSecret: 'test-idp-secret'
       }
 
-      const scope = nock(config.authAdminApiUrl).post('').reply(400)
+      const scope = nock(config.authAdminApiUrl)
+        .post('')
+        .reply(200, generateMutateGqlError('createTenant'))
 
       const apolloSpy = jest.spyOn(apolloClient, 'mutate')
       let tenant
@@ -277,7 +319,9 @@ describe('Tenant Service', (): void => {
 
       nock.cleanAll()
 
-      nock(config.authAdminApiUrl).post('').reply(400)
+      nock(config.authAdminApiUrl)
+        .post('')
+        .reply(200, generateMutateGqlError('updateTenant'))
       const apolloSpy = jest.spyOn(apolloClient, 'mutate')
       let updatedTenant
       try {
@@ -382,7 +426,9 @@ describe('Tenant Service', (): void => {
       nock.cleanAll()
 
       const apolloSpy = jest.spyOn(apolloClient, 'mutate')
-      const deleteScope = nock(config.authAdminApiUrl).post('').reply(400)
+      const deleteScope = nock(config.authAdminApiUrl)
+        .post('')
+        .reply(200, generateMutateGqlError('deleteTenant'))
       try {
         await tenantService.delete(tenant.id)
       } catch (err) {
