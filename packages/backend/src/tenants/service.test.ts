@@ -11,6 +11,9 @@ import { Config, IAppConfig } from '../config/app'
 import { truncateTables } from '../tests/tableManager'
 import { ApolloClient, NormalizedCacheObject } from '@apollo/client'
 import { Tenant } from './model'
+import { getPageTests } from '../shared/baseModel.test'
+import { Pagination, SortOrder } from '../shared/baseModel'
+import { createTenant } from '../tests/tenant'
 
 const generateMutateGqlError = (path: string = 'createTenant') => ({
   errors: [
@@ -30,25 +33,6 @@ const generateMutateGqlError = (path: string = 'createTenant') => ({
   ],
   data: null
 })
-
-const queryGqlError = {
-  errors: [
-    {
-      message: 'unknown peer',
-      locations: [
-        {
-          line: 1,
-          column: 1
-        }
-      ],
-      path: ['tenant'],
-      extensions: {
-        code: 'NOT_FOUND'
-      }
-    }
-  ],
-  data: null
-}
 
 describe('Tenant Service', (): void => {
   let deps: IocContract<AppServices>
@@ -76,6 +60,16 @@ describe('Tenant Service', (): void => {
     await appContainer.shutdown()
   })
 
+  describe('Tenant pangination', (): void => {
+    describe('getPage', (): void => {
+      getPageTests({
+        createModel: () => createTenant(deps),
+        getPage: (pagination?: Pagination, sortOrder?: SortOrder) =>
+          tenantService.getPage(pagination, sortOrder)
+      })
+    })
+  })
+
   describe('get', (): void => {
     test('can get a tenant', async (): Promise<void> => {
       const createOptions = {
@@ -93,19 +87,6 @@ describe('Tenant Service', (): void => {
       const createdTenant = await tenantService.create(createOptions)
       createScope.done()
 
-      const getScope = nock(config.authAdminApiUrl)
-        .post('')
-        .reply(200, {
-          data: {
-            getTenant: {
-              tenant: {
-                idpConsentUrl: createOptions.idpConsentUrl,
-                idpSecret: createOptions.idpSecret
-              }
-            }
-          }
-        })
-      const apolloSpy = jest.spyOn(apolloClient, 'query')
       const tenant = await tenantService.get(createdTenant.id)
       assert.ok(tenant)
       expect(tenant).toEqual({
@@ -113,54 +94,6 @@ describe('Tenant Service', (): void => {
         idpConsentUrl: createOptions.idpConsentUrl,
         idpSecret: createOptions.idpSecret
       })
-      expect(apolloSpy).toHaveBeenCalledWith(
-        expect.objectContaining({
-          variables: {
-            input: {
-              id: tenant.id
-            }
-          }
-        })
-      )
-      getScope.done()
-    })
-
-    test("returns undefined if auth tenant doesn't exist", async (): Promise<void> => {
-      const createOptions = {
-        apiSecret: 'test-api-secret',
-        publicName: 'test tenant',
-        email: faker.internet.email(),
-        idpConsentUrl: faker.internet.url(),
-        idpSecret: 'test-idp-secret'
-      }
-
-      const createScope = nock(config.authAdminApiUrl)
-        .post('')
-        .reply(200, { data: { createTenant: { id: 1234 } } })
-
-      const createdTenant = await tenantService.create(createOptions)
-      createScope.done()
-
-      const getScope = nock(config.authAdminApiUrl)
-        .post('')
-        .reply(200, queryGqlError)
-      const apolloSpy = jest.spyOn(apolloClient, 'query')
-      let tenant
-      try {
-        tenant = await tenantService.get(createdTenant.id)
-      } catch (err) {
-        expect(tenant).toBeUndefined()
-        expect(apolloSpy).toHaveBeenCalledWith(
-          expect.objectContaining({
-            variables: {
-              input: {
-                id: createdTenant.id
-              }
-            }
-          })
-        )
-      }
-      getScope.done()
     })
 
     test('returns undefined if tenant is deleted', async (): Promise<void> => {
@@ -399,7 +332,7 @@ describe('Tenant Service', (): void => {
       expect(apolloSpy).toHaveBeenCalledWith(
         expect.objectContaining({
           variables: {
-            input: { id: tenant.id }
+            input: { id: tenant.id, deletedAt: dbTenant?.deletedAt }
           }
         })
       )
@@ -438,7 +371,8 @@ describe('Tenant Service', (): void => {
           expect.objectContaining({
             variables: {
               input: {
-                id: tenant.id
+                id: tenant.id,
+                deletedAt: expect.any(Date)
               }
             }
           })
