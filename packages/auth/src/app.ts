@@ -113,6 +113,7 @@ export class App {
   private interactionServer!: Server
   private introspectionServer!: Server
   private adminServer!: Server
+  private serviceAPIServer!: Server
   private logger!: Logger
   private config!: IAppConfig
   private databaseCleanupRules!: {
@@ -455,6 +456,23 @@ export class App {
     this.interactionServer = koa.listen(port)
   }
 
+  public async startServiceAPIServer(port: number | string): Promise<void> {
+    const koa = await this.createKoaServer()
+
+    const router = new Router<DefaultState, AppContext>()
+    router.use(bodyParser())
+
+    router.get('/healthz', (ctx: AppContext): void => {
+      ctx.status = 200
+    })
+
+    koa.use(cors())
+    koa.use(router.middleware())
+    koa.use(router.routes())
+
+    this.serviceAPIServer = koa.listen(port)
+  }
+
   private async createKoaServer(): Promise<Koa<Koa.DefaultState, AppContext>> {
     const koa = new Koa<DefaultState, AppContext>({
       proxy: this.config.trustProxy
@@ -500,6 +518,9 @@ export class App {
     if (this.introspectionServer) {
       await this.stopServer(this.introspectionServer)
     }
+    if (this.serviceAPIServer) {
+      await this.stopServer(this.serviceAPIServer)
+    }
   }
 
   private async stopServer(server: Server): Promise<void> {
@@ -528,6 +549,10 @@ export class App {
 
   public getIntrospectionPort(): number {
     return this.getPort(this.introspectionServer)
+  }
+
+  public getServiceAPIPort(): number {
+    return this.getPort(this.serviceAPIServer)
   }
 
   private getPort(server: Server): number {

@@ -315,6 +315,9 @@ export const start = async (
 
   await app.startIntrospectionServer(config.introspectionPort)
   logger.info(`Introspection server listening on ${app.getIntrospectionPort()}`)
+
+  await app.startServiceAPIServer(config.serviceAPIPort)
+  logger.info(`Service API server listening on ${app.getServiceAPIPort()}`)
 }
 
 // If this script is run directly, start the server
