@@ -1,14 +1,16 @@
-import { Tenant, TenantWithIdpConfig } from './model'
+import { Tenant } from './model'
 import { BaseService } from '../shared/baseService'
 import { gql, NormalizedCacheObject } from '@apollo/client'
 import { ApolloClient } from '@apollo/client'
 import { TransactionOrKnex } from 'objection'
+import { Pagination, SortOrder } from '../shared/baseModel'
 
 export interface TenantService {
-  get: (id: string) => Promise<TenantWithIdpConfig | undefined>
+  get: (id: string) => Promise<Tenant | undefined>
   create: (options: CreateTenantOptions) => Promise<Tenant>
   update: (options: UpdateTenantOptions) => Promise<Tenant>
   delete: (id: string) => Promise<void>
+  getPage: (pagination?: Pagination, sortOrder?: SortOrder) => Promise<Tenant[]>
 }
 
 export interface ServiceDependencies extends BaseService {
@@ -28,46 +30,25 @@ export async function createTenantService(
     get: (id: string) => getTenant(deps, id),
     create: (options) => createTenant(deps, options),
     update: (options) => updateTenant(deps, options),
-    delete: (id) => deleteTenant(deps, id)
+    delete: (id) => deleteTenant(deps, id),
+    getPage: (pagination, sortOrder) =>
+      getTenantPage(deps, pagination, sortOrder)
   }
 }
 
 async function getTenant(
   deps: ServiceDependencies,
   id: string
-): Promise<TenantWithIdpConfig | undefined> {
-  const tenant = await Tenant.query(deps.knex).findById(id)
-  if (!tenant || !!tenant.deletedAt) return undefined
+): Promise<Tenant | undefined> {
+  return await Tenant.query(deps.knex).findById(id).whereNull('deletedAt')
+}
 
-  const query = gql`
-    query GetAuthTenant($input: GetTenantInput!) {
-      getTenant(input: $input) {
-        tenant {
-          id
-          idpConsentUrl
-          idpSecret
-        }
-      }
-    }
-  `
-  const variables = { input: { id } }
-  // TODO: add type to this in https://github.com/interledger/rafiki/issues/3125
-  const authTenantResponse = await deps.apolloClient.query({ query, variables })
-  const authTenant = authTenantResponse.data.getTenant.tenant
-  if (!authTenant) {
-    deps.logger.error(
-      { tenantId: id },
-      'could not find auth tenant entry for existing backend entry'
-    )
-    return undefined
-  }
-
-  const { idpConsentUrl, idpSecret } = authTenant
-  return {
-    ...tenant,
-    idpConsentUrl,
-    idpSecret
-  }
+async function getTenantPage(
+  deps: ServiceDependencies,
+  pagination?: Pagination,
+  sortOrder?: SortOrder
+): Promise<Tenant[]> {
+  return await Tenant.query(deps.knex).getPage(pagination, sortOrder)
 }
 
 interface CreateTenantOptions {
@@ -188,8 +169,9 @@ async function deleteTenant(
   const trx = await deps.knex.transaction()
 
   try {
+    const deletedAt = new Date(Date.now())
     await Tenant.query(trx).patchAndFetchById(id, {
-      deletedAt: new Date(Date.now())
+      deletedAt
     })
     const mutation = gql`
       mutation DeleteAuthTenantMutation($input: DeleteTenantInput!) {
@@ -198,7 +180,7 @@ async function deleteTenant(
         }
       }
     `
-    const variables = { input: { id } }
+    const variables = { input: { id, deletedAt } }
     // TODO: add types to this in https://github.com/interledger/rafiki/issues/3125
     await deps.apolloClient.mutate({ mutation, variables })
     await trx.commit()
