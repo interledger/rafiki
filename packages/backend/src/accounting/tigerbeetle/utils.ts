@@ -73,6 +73,6 @@ function expiresAtFromTimestampAndTimeout(
   timeout: number
 ): Date | undefined {
   return timeout
-    ? new Date(Number(timestamp) / 1_000_000 + timeout * 1000)
+    ? new Date(Number(timestamp / 1_000_000n) + timeout * 1000)
     : undefined
 }
