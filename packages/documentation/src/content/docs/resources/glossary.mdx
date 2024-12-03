@@ -62,7 +62,7 @@ An API standard and a set of APIs that allows clients to securely retrieve accou
 
 ## Outgoing payment
 
-An object created by the sender’s ASE, on their resource server, that represents a payment being sent. This object contains information about the outgoing payment, such as the amount, currency, receiver’s wallet address, and payment status. 
+An object created by the sender’s ASE, on their resource server, that represents a payment being sent. This object contains information about the outgoing payment, such as the amount, currency, receiver’s wallet address, and payment status.
 
 ## Payment pointer
 
@@ -78,14 +78,13 @@ An object created by the sender’s ASE, on their resource server, that represen
 
 ## Resource server
 
-A server that hosts and manages access to protected Open Payments resources for incoming payments, quotes, and outgoing payments. 
+A server that hosts and manages access to protected Open Payments resources for incoming payments, quotes, and outgoing payments.
 
 Rafiki's `backend` service runs an Open Payments resource server.
 
 ## Simple Payment Setup Protocol (SPSP)
 
-An Interledger application layer protocol for exchanging payment information between two counterparties to facilitate direct payments over Interledger. The information is then used to set up a STREAM connection. You can read more about SPSP in its <LinkOut href="https://interledger.org/developers/rfcs/simple-payment-setup-protocol/">specification
-</LinkOut>.
+An Interledger application layer protocol for exchanging payment information between two counterparties to facilitate direct payments over Interledger. The information is then used to set up a STREAM connection. You can read more about SPSP in its <LinkOut href="https://interledger.org/developers/rfcs/simple-payment-setup-protocol/">specification</LinkOut>.
 
 ## Streaming Transport for the Real-Time Exchange of Assets and Messages (STREAM)
 
@@ -93,6 +92,6 @@ An Interledger transport layer protocol for sending and receiving authenticated 
 
 ## Wallet address
 
-A secure, unique URL that identifies an Open Payments-enabled account. It acts as an entry point to the Open Payments APIs, facilitating interactions like sending and receiving payments. 
+A secure, unique URL that identifies an Open Payments-enabled account. It acts as an entry point to the Open Payments APIs, facilitating interactions like sending and receiving payments.
 
 A wallet address is publicly shareable and used to interact with the underlying payment account without compromising its security. Wallet address URLs are treated as case-insensitive, meaning that both lowercase and uppercase variations of the same address will be recognized as identical.

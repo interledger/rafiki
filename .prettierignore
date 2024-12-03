@@ -14,5 +14,4 @@ build
 **/styles/*.css
 .docusaurus
 .cache-loader
-packages/documentation/**
 .astro
