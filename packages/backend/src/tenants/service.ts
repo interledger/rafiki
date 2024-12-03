@@ -4,10 +4,7 @@ import { gql, NormalizedCacheObject } from '@apollo/client'
 import { ApolloClient } from '@apollo/client'
 import { TransactionOrKnex } from 'objection'
 import { Pagination, SortOrder } from '../shared/baseModel'
-<<<<<<< HEAD
 import { CacheDataStore } from '../middleware/cache/data-stores'
-=======
->>>>>>> 1ce5bae0 (feat: pagination tests, push deletedAt to auth api call)
 
 export interface TenantService {
   get: (id: string) => Promise<Tenant | undefined>
@@ -45,7 +42,6 @@ async function getTenant(
   deps: ServiceDependencies,
   id: string
 ): Promise<Tenant | undefined> {
-<<<<<<< HEAD
   const inMem = await deps.tenantCache.get(id)
   if (inMem) return inMem
   const tenant = await Tenant.query(deps.knex)
@@ -56,11 +52,6 @@ async function getTenant(
   return tenant
 }
 
-=======
-  return await Tenant.query(deps.knex).findById(id).whereNull('deletedAt')
-}
-
->>>>>>> 1ce5bae0 (feat: pagination tests, push deletedAt to auth api call)
 async function getTenantPage(
   deps: ServiceDependencies,
   pagination?: Pagination,
@@ -191,11 +182,7 @@ async function deleteTenant(
 
   await deps.tenantCache.delete(id)
   try {
-<<<<<<< HEAD
     const deletedAt = new Date()
-=======
-    const deletedAt = new Date(Date.now())
->>>>>>> 1ce5bae0 (feat: pagination tests, push deletedAt to auth api call)
     await Tenant.query(trx).patchAndFetchById(id, {
       deletedAt
     })
