@@ -12,7 +12,8 @@ import {
   UpdateContext,
   DeleteContext,
   TenantRoutes,
-  createTenantRoutes
+  createTenantRoutes,
+  GetContext
 } from './routes'
 import { TenantService } from './service'
 import { Tenant } from './model'
@@ -41,6 +42,54 @@ describe('Tenant Routes', (): void => {
 
   afterAll(async (): Promise<void> => {
     await appContainer.shutdown()
+  })
+
+  describe('get', (): void => {
+    test('Gets a tenant', async (): Promise<void> => {
+      const tenant = await Tenant.query().insert({
+        id: v4(),
+        idpConsentUrl: 'https://example.com/consent',
+        idpSecret: 'secret123'
+      })
+
+      const ctx = createContext<GetContext>(
+        {
+          headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json'
+          }
+        },
+        {
+          id: tenant.id
+        }
+      )
+
+      await expect(tenantRoutes.get(ctx)).resolves.toBeUndefined()
+      expect(ctx.status).toBe(200)
+      expect(ctx.body).toEqual({
+        id: tenant.id,
+        idpConsentUrl: tenant.idpConsentUrl,
+        idpSecret: tenant.idpSecret
+      })
+    })
+
+    test('Returns 404 when getting non-existent tenant', async (): Promise<void> => {
+      const ctx = createContext<GetContext>(
+        {
+          headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json'
+          }
+        },
+        {
+          id: v4()
+        }
+      )
+
+      await expect(tenantRoutes.get(ctx)).resolves.toBeUndefined()
+      expect(ctx.status).toBe(404)
+      expect(ctx.body).toBeUndefined()
+    })
   })
 
   describe('create', (): void => {

@@ -2,6 +2,7 @@ import { ParsedUrlQuery } from 'querystring'
 import { AppContext } from '../app'
 import { TenantService } from './service'
 import { BaseService } from '../shared/baseService'
+import { Tenant } from './model'
 
 type TenantRequest<BodyT = never, QueryT = ParsedUrlQuery> = Exclude<
   AppContext['request'],
@@ -28,6 +29,12 @@ type UpdateTenantBody = Partial<Omit<CreateTenantBody, 'id'>>
 
 interface TenantParams {
   id: string
+}
+
+interface TenantResponse {
+  id: string
+  idpConsentUrl: string
+  idpSecret: string
 }
 
 export type GetContext = TenantContext<never, TenantParams>
@@ -117,5 +124,13 @@ async function getTenant(
   }
 
   ctx.status = 200
-  ctx.body = tenant
+  ctx.body = toTenantResponse(tenant)
+}
+
+function toTenantResponse(tenant: Tenant): TenantResponse {
+  return {
+    id: tenant.id,
+    idpConsentUrl: tenant.idpConsentUrl,
+    idpSecret: tenant.idpSecret
+  }
 }
