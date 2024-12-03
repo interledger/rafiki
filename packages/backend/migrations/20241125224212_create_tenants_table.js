@@ -7,6 +7,8 @@ exports.up = function (knex) {
     table.uuid('id').notNullable().primary()
     table.string('email').notNullable()
     table.string('apiSecret').notNullable()
+    table.string('idpConsentUrl').notNullable()
+    table.string('idpSecret').notNullable()
     table.string('publicName')
 
     table.timestamp('createdAt').defaultTo(knex.fn.now())

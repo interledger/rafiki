@@ -167,6 +167,8 @@ describe('Tenant Service', (): void => {
       const dbTenant = await Tenant.query(knex).insertAndFetch({
         apiSecret: 'test-secret',
         email: faker.internet.email(),
+        idpConsentUrl: faker.internet.url(),
+        idpSecret: 'test-idp-secret',
         deletedAt: new Date()
       })
 
@@ -192,9 +194,7 @@ describe('Tenant Service', (): void => {
       const apolloSpy = jest.spyOn(apolloClient, 'mutate')
       const tenant = await tenantService.create(createOptions)
 
-      expect(tenant.email).toEqual(createOptions.email)
-      expect(tenant.publicName).toEqual(createOptions.publicName)
-      expect(tenant.apiSecret).toEqual(createOptions.apiSecret)
+      expect(tenant).toEqual(expect.objectContaining(createOptions))
 
       expect(apolloSpy).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -278,9 +278,7 @@ describe('Tenant Service', (): void => {
       const apolloSpy = jest.spyOn(apolloClient, 'mutate')
       const updatedTenant = await tenantService.update(updatedTenantInfo)
 
-      expect(updatedTenant.apiSecret).toEqual(updatedTenantInfo.apiSecret)
-      expect(updatedTenant.email).toEqual(updatedTenantInfo.email)
-      expect(updatedTenant.publicName).toEqual(updatedTenantInfo.publicName)
+      expect(updatedTenant).toEqual(expect.objectContaining(updatedTenantInfo))
       expect(apolloSpy).toHaveBeenCalledWith(
         expect.objectContaining({
           variables: {
@@ -330,9 +328,7 @@ describe('Tenant Service', (): void => {
         expect(updatedTenant).toBeUndefined()
         const dbTenant = await Tenant.query().findById(tenant.id)
         assert.ok(dbTenant)
-        expect(dbTenant.apiSecret).toEqual(originalTenantInfo.apiSecret)
-        expect(dbTenant.email).toEqual(originalTenantInfo.email)
-        expect(dbTenant.publicName).toEqual(originalTenantInfo.publicName)
+        expect(dbTenant).toEqual(expect.objectContaining(originalTenantInfo))
         expect(apolloSpy).toHaveBeenCalledWith(
           expect.objectContaining({
             variables: {
@@ -354,6 +350,8 @@ describe('Tenant Service', (): void => {
       const dbTenant = await Tenant.query(knex).insertAndFetch({
         email: faker.internet.url(),
         apiSecret: originalSecret,
+        idpSecret: 'test-idp-secret',
+        idpConsentUrl: faker.internet.url(),
         deletedAt: new Date()
       })
 
