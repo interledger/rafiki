@@ -466,6 +466,13 @@ export class App {
       ctx.status = 200
     })
 
+    const tenantRoutes = await this.container.use('tenantRoutes')
+
+    router.get('/tenant/:id', tenantRoutes.get)
+    router.post('/tenant', tenantRoutes.create)
+    router.patch('/tenant/:id', tenantRoutes.update)
+    router.delete('/tenant/:id', tenantRoutes.delete)
+
     koa.use(cors())
     koa.use(router.middleware())
     koa.use(router.routes())
