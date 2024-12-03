@@ -54,7 +54,10 @@ async function getTenant(
   deps: ServiceDependencies,
   id: string
 ): Promise<Tenant | undefined> {
-  return await Tenant.query(deps.knex).findById(id)
+  return await Tenant.query(deps.knex)
+    .findById(id)
+    .whereNull('deletedAt')
+    .first()
 }
 
 async function updateTenant(
@@ -62,13 +65,18 @@ async function updateTenant(
   id: string,
   input: Partial<Omit<CreateOptions, 'id'>>
 ): Promise<Tenant | undefined> {
-  return await Tenant.query(deps.knex).patchAndFetchById(id, input)
+  return await Tenant.query(deps.knex)
+    .whereNull('deletedAt')
+    .patchAndFetchById(id, input)
 }
 
 async function deleteTenant(
   deps: ServiceDependencies,
   id: string
 ): Promise<boolean> {
-  const deleted = await Tenant.query(deps.knex).deleteById(id)
+  const deleted = await Tenant.query(deps.knex)
+    .patch({ deletedAt: new Date() })
+    .whereNull('deletedAt')
+    .where('id', id)
   return deleted > 0
 }

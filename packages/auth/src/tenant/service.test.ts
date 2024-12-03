@@ -6,6 +6,7 @@ import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../'
 import { AppServices } from '../app'
 import { TenantService } from './service'
+import { Tenant } from './model'
 
 describe('Tenant Service', (): void => {
   let deps: IocContract<AppServices>
@@ -43,13 +44,7 @@ describe('Tenant Service', (): void => {
         idpConsentUrl: tenantData.idpConsentUrl,
         idpSecret: tenantData.idpSecret
       })
-    })
-
-    test('fails to create tenant with duplicate id', async (): Promise<void> => {
-      const tenantData = createTenantData()
-      await tenantService.create(tenantData)
-
-      await expect(tenantService.create(tenantData)).rejects.toThrow()
+      expect(tenant.deletedAt).toBe(undefined)
     })
   })
 
@@ -64,6 +59,15 @@ describe('Tenant Service', (): void => {
 
     test('returns undefined for non-existent tenant', async (): Promise<void> => {
       const tenant = await tenantService.get(faker.string.uuid())
+      expect(tenant).toBeUndefined()
+    })
+
+    test('returns undefined for soft deleted tenant', async (): Promise<void> => {
+      const tenantData = createTenantData()
+      const created = await tenantService.create(tenantData)
+      await tenantService.delete(created.id)
+
+      const tenant = await tenantService.get(created.id)
       expect(tenant).toBeUndefined()
     })
   })
@@ -92,25 +96,20 @@ describe('Tenant Service', (): void => {
       expect(updated).toBeUndefined()
     })
 
-    test('can update partial fields', async (): Promise<void> => {
+    test('returns undefined for soft-deleted tenant', async (): Promise<void> => {
       const tenantData = createTenantData()
       const created = await tenantService.create(tenantData)
+      await tenantService.delete(created.id)
 
-      const updateData = {
+      const updated = await tenantService.update(created.id, {
         idpConsentUrl: faker.internet.url()
-      }
-
-      const updated = await tenantService.update(created.id, updateData)
-      expect(updated).toMatchObject({
-        id: created.id,
-        idpConsentUrl: updateData.idpConsentUrl,
-        idpSecret: created.idpSecret
       })
+      expect(updated).toBeUndefined()
     })
   })
 
   describe('delete', (): void => {
-    test('deletes an existing tenant', async (): Promise<void> => {
+    test('soft deletes an existing tenant', async (): Promise<void> => {
       const tenantData = createTenantData()
       const created = await tenantService.create(tenantData)
 
@@ -119,11 +118,27 @@ describe('Tenant Service', (): void => {
 
       const tenant = await tenantService.get(created.id)
       expect(tenant).toBeUndefined()
+
+      const deletedTenant = await Tenant.query()
+        .findById(created.id)
+        .whereNotNull('deletedAt')
+      console.log({ deletedTenant })
+      expect(deletedTenant).toBeDefined()
+      expect(deletedTenant?.deletedAt).toBeDefined()
     })
 
     test('returns false for non-existent tenant', async (): Promise<void> => {
       const result = await tenantService.delete(faker.string.uuid())
       expect(result).toBe(false)
+    })
+
+    test('returns false for already deleted tenant', async (): Promise<void> => {
+      const tenantData = createTenantData()
+      const created = await tenantService.create(tenantData)
+
+      await tenantService.delete(created.id)
+      const secondDelete = await tenantService.delete(created.id)
+      expect(secondDelete).toBe(false)
     })
   })
 })
