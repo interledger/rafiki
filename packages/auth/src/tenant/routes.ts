@@ -64,8 +64,6 @@ export function createTenantRoutes({
   }
 }
 
-// TODO: error handling?
-
 async function createTenant(
   deps: ServiceDependencies,
   ctx: CreateContext
