@@ -216,11 +216,16 @@ export function initIocContainer(
     return client
   })
 
+  container.singleton('tenantCache', async () => {
+    return createInMemoryDataStore(config.localCacheDuration)
+  })
+
   container.singleton('tenantService', async (deps) => {
     return createTenantService({
       logger: await deps.use('logger'),
       knex: await deps.use('knex'),
-      apolloClient: await deps.use('apolloClient')
+      apolloClient: await deps.use('apolloClient'),
+      tenantCache: await deps.use('tenantCache')
     })
   })
 

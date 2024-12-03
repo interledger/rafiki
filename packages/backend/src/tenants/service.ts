@@ -4,6 +4,7 @@ import { gql, NormalizedCacheObject } from '@apollo/client'
 import { ApolloClient } from '@apollo/client'
 import { TransactionOrKnex } from 'objection'
 import { Pagination, SortOrder } from '../shared/baseModel'
+import { CacheDataStore } from '../middleware/cache/data-stores'
 
 export interface TenantService {
   get: (id: string) => Promise<Tenant | undefined>
@@ -16,6 +17,7 @@ export interface TenantService {
 export interface ServiceDependencies extends BaseService {
   knex: TransactionOrKnex
   apolloClient: ApolloClient<NormalizedCacheObject>
+  tenantCache: CacheDataStore<Tenant>
 }
 
 export async function createTenantService(
@@ -40,7 +42,14 @@ async function getTenant(
   deps: ServiceDependencies,
   id: string
 ): Promise<Tenant | undefined> {
-  return await Tenant.query(deps.knex).findById(id).whereNull('deletedAt')
+  const inMem = await deps.tenantCache.get(id)
+  if (inMem) return inMem
+  const tenant = await Tenant.query(deps.knex)
+    .findById(id)
+    .whereNull('deletedAt')
+  if (tenant) await deps.tenantCache.set(tenant.id, tenant)
+
+  return tenant
 }
 
 async function getTenantPage(
@@ -95,6 +104,8 @@ async function createTenant(
     // TODO: add type to this in https://github.com/interledger/rafiki/issues/3125
     await deps.apolloClient.mutate({ mutation, variables })
     await trx.commit()
+
+    await deps.tenantCache.set(tenant.id, tenant)
     return tenant
   } catch (err) {
     await trx.rollback()
@@ -155,6 +166,7 @@ async function updateTenant(
     }
 
     await trx.commit()
+    await deps.tenantCache.set(tenant.id, tenant)
     return tenant
   } catch (err) {
     await trx.rollback()
@@ -168,6 +180,7 @@ async function deleteTenant(
 ): Promise<void> {
   const trx = await deps.knex.transaction()
 
+  await deps.tenantCache.delete(id)
   try {
     const deletedAt = new Date(Date.now())
     await Tenant.query(trx).patchAndFetchById(id, {
