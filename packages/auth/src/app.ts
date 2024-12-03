@@ -462,6 +462,30 @@ export class App {
     const router = new Router<DefaultState, AppContext>()
     router.use(bodyParser())
 
+    const errorHandler = async (ctx: Koa.Context, next: Koa.Next) => {
+      try {
+        await next()
+      } catch (err) {
+        const logger = await ctx.container.use('logger')
+
+        let message
+        if (err instanceof Error) {
+          message = err.message
+        }
+
+        logger.info({
+          method: ctx.method,
+          route: ctx.path,
+          headers: ctx.headers,
+          params: ctx.params,
+          requestBody: ctx.request.body
+        })
+        logger.error({ err })
+      }
+    }
+
+    koa.use(errorHandler)
+
     router.get('/healthz', (ctx: AppContext): void => {
       ctx.status = 200
     })
