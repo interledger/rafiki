@@ -88,7 +88,9 @@ async function createTenant(
     const tenant = await Tenant.query(trx).insertAndFetch({
       email,
       publicName,
-      apiSecret
+      apiSecret,
+      idpSecret,
+      idpConsentUrl
     })
 
     const mutation = gql`
@@ -141,7 +143,9 @@ async function updateTenant(
       .patchAndFetchById(options.id, {
         email,
         publicName,
-        apiSecret
+        apiSecret,
+        idpConsentUrl,
+        idpSecret
       })
       .whereNull('deletedAt')
       .throwIfNotFound()

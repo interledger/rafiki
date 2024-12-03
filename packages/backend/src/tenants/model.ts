@@ -8,6 +8,8 @@ export class Tenant extends BaseModel {
 
   public email!: string
   public apiSecret!: string
+  public idpConsentUrl!: string
+  public idpSecret!: string
   public publicName?: string
 
   public deletedAt?: Date
