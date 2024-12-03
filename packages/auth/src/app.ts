@@ -467,20 +467,17 @@ export class App {
         await next()
       } catch (err) {
         const logger = await ctx.container.use('logger')
-
-        let message
-        if (err instanceof Error) {
-          message = err.message
-        }
-
-        logger.info({
-          method: ctx.method,
-          route: ctx.path,
-          headers: ctx.headers,
-          params: ctx.params,
-          requestBody: ctx.request.body
-        })
-        logger.error({ err })
+        logger.info(
+          {
+            method: ctx.method,
+            route: ctx.path,
+            headers: ctx.headers,
+            params: ctx.params,
+            requestBody: ctx.request.body,
+            err
+          },
+          'Service API Error'
+        )
       }
     }
 

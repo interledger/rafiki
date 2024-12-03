@@ -82,7 +82,8 @@ async function updateTenant(
   const tenant = await deps.tenantService.update(id, body)
 
   if (!tenant) {
-    ctx.throw(404)
+    ctx.status = 404
+    return
   }
 
   ctx.status = 200
@@ -96,7 +97,8 @@ async function deleteTenant(
   const deleted = await deps.tenantService.delete(id)
 
   if (!deleted) {
-    ctx.throw(404)
+    ctx.status = 404
+    return
   }
 
   ctx.status = 204
@@ -110,7 +112,8 @@ async function getTenant(
   const tenant = await deps.tenantService.get(id)
 
   if (!tenant) {
-    ctx.throw(404)
+    ctx.status = 404
+    return
   }
 
   ctx.status = 200
