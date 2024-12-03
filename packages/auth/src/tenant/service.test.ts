@@ -46,6 +46,13 @@ describe('Tenant Service', (): void => {
       })
       expect(tenant.deletedAt).toBe(undefined)
     })
+
+    test('fails to create tenant with duplicate id', async (): Promise<void> => {
+      const tenantData = createTenantData()
+      await tenantService.create(tenantData)
+
+      await expect(tenantService.create(tenantData)).rejects.toThrow()
+    })
   })
 
   describe('get', (): void => {
@@ -89,6 +96,22 @@ describe('Tenant Service', (): void => {
       })
     })
 
+    test('can update partial fields', async (): Promise<void> => {
+      const tenantData = createTenantData()
+      const created = await tenantService.create(tenantData)
+
+      const updateData = {
+        idpConsentUrl: faker.internet.url()
+      }
+
+      const updated = await tenantService.update(created.id, updateData)
+      expect(updated).toMatchObject({
+        id: created.id,
+        idpConsentUrl: updateData.idpConsentUrl,
+        idpSecret: created.idpSecret
+      })
+    })
+
     test('returns undefined for non-existent tenant', async (): Promise<void> => {
       const updated = await tenantService.update(faker.string.uuid(), {
         idpConsentUrl: faker.internet.url()
@@ -122,7 +145,6 @@ describe('Tenant Service', (): void => {
       const deletedTenant = await Tenant.query()
         .findById(created.id)
         .whereNotNull('deletedAt')
-      console.log({ deletedTenant })
       expect(deletedTenant).toBeDefined()
       expect(deletedTenant?.deletedAt).toBeDefined()
     })
