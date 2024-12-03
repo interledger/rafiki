@@ -106,6 +106,8 @@ describe('Tenant Service', (): void => {
       const dbTenant = await Tenant.query(knex).insertAndFetch({
         apiSecret: 'test-secret',
         email: faker.internet.email(),
+        idpConsentUrl: faker.internet.url(),
+        idpSecret: 'test-idp-secret',
         deletedAt: new Date()
       })
 
