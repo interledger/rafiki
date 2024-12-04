@@ -292,8 +292,8 @@ importers:
         specifier: ^0.14.2
         version: 0.14.2
       nock:
-        specifier: 14.0.0-beta.15
-        version: 14.0.0-beta.15
+        specifier: 14.0.0-beta.19
+        version: 14.0.0-beta.19
       node-mocks-http:
         specifier: ^1.14.1
         version: 1.14.1
@@ -530,8 +530,8 @@ importers:
         specifier: ^0.14.2
         version: 0.14.2
       nock:
-        specifier: 14.0.0-beta.15
-        version: 14.0.0-beta.15
+        specifier: 14.0.0-beta.19
+        version: 14.0.0-beta.19
       node-mocks-http:
         specifier: ^1.14.1
         version: 1.14.1
@@ -4536,8 +4536,8 @@ packages:
       langium: 3.0.0
     dev: false
 
-  /@mswjs/interceptors@0.36.7:
-    resolution: {integrity: sha512-sdx02Wlus5hv6Bx7uUDb25gb0WGjCuSgnJB2LVERemoSGuqkZMe3QI6nEXhieFGtYwPrZbYrT2vPbsFN2XfbUw==}
+  /@mswjs/interceptors@0.37.3:
+    resolution: {integrity: sha512-USvgCL/uOGFtVa6SVyRrC8kIAedzRohxIXN5LISlg5C5vLZCn7dgMFVSNhSF9cuBEFrm/O2spDWEZeMnw4ZXYg==}
     engines: {node: '>=18'}
     dependencies:
       '@open-draft/deferred-promise': 2.2.0
@@ -15198,11 +15198,11 @@ packages:
       - supports-color
     dev: true
 
-  /nock@14.0.0-beta.15:
-    resolution: {integrity: sha512-rp72chatxoZbR/2cYHwtb+IX6n6kkanYKGN2PKn4c12JBrj9n4xGUKFykuQHB+Gkz3fynlikFbMH2LI6VoebuQ==}
+  /nock@14.0.0-beta.19:
+    resolution: {integrity: sha512-xqWQQZ/Hv01tj5uL7BE4j752hhB2MHP7aaEcTp/iDT1EHsh3TYZOIx4HHFL81yRc8KFx4pqb2P2OtuxKShKhjw==}
     engines: {node: '>= 18'}
     dependencies:
-      '@mswjs/interceptors': 0.36.7
+      '@mswjs/interceptors': 0.37.3
       json-stringify-safe: 5.0.1
       propagate: 2.0.1
     dev: true
