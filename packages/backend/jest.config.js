@@ -12,6 +12,8 @@ process.env.ILP_CONNECTOR_URL = 'http://127.0.0.1:3002'
 process.env.ILP_ADDRESS = 'test.rafiki'
 process.env.AUTH_SERVER_GRANT_URL = 'http://127.0.0.1:3006'
 process.env.AUTH_SERVER_INTROSPECTION_URL = 'http://127.0.0.1:3007/'
+process.env.AUTH_ADMIN_API_URL = 'http://127.0.0.1:3003/graphql'
+process.env.AUTH_ADMIN_API_SECRET = 'test-secret'
 process.env.WEBHOOK_URL = 'http://127.0.0.1:4001/webhook'
 process.env.STREAM_SECRET = '2/PxuRFV9PAp0yJlnAifJ+1OxujjjI16lN+DBnLNRLA='
 process.env.USE_TIGERBEETLE = false

@@ -31,6 +31,8 @@ services:
       PRIVATE_KEY_FILE: /workspace/private-key.pem
       AUTH_SERVER_INTROSPECTION_URL: http://cloud-nine-wallet-test-auth:3107
       AUTH_SERVER_GRANT_URL: http://cloud-nine-wallet-test-auth:3106
+      AUTH_ADMIN_API_URL: 'http://cloud-nine-wallet-test-auth:3003/graphql'
+      AUTH_ADMIN_API_SECRET: 'test-secret'
       ILP_ADDRESS: test.cloud-nine-wallet-test
       ILP_CONNECTOR_URL: http://cloud-nine-wallet-test-backend:3102
       STREAM_SECRET: BjPXtnd00G2mRQwP/8ZpwyZASOch5sUXT5o0iR5b5wU=
