@@ -1062,6 +1062,19 @@ type AccountingTransfer implements Model {
   ledger: UInt8!
   "The date and time that the accounting transfer was created."
   createdAt: String!
+  "The state of the accounting transfer."
+  state: TransferState!
+  "The date and time that the accounting transfer will expire."
+  expiresAt: String
+}
+
+enum TransferState {
+  "The accounting transfer is pending"
+  PENDING
+  "The accounting transfer is posted"
+  POSTED
+  "The accounting transfer is voided"
+  VOIDED
 }
 
 enum TransferType {
