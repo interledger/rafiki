@@ -12,6 +12,7 @@ import { CreateOptions, FORBIDDEN_PATHS, WalletAddressService } from './service'
 import { AccountingService } from '../../accounting/service'
 import { createTestApp, TestContainer } from '../../tests/app'
 import { createAsset } from '../../tests/asset'
+import { createTenant } from '../../tests/tenant'
 import { createWalletAddress } from '../../tests/walletAddress'
 import { truncateTables } from '../../tests/tableManager'
 import { Config, IAppConfig } from '../../config/app'
@@ -61,9 +62,11 @@ describe('Open Payments Wallet Address Service', (): void => {
 
     beforeEach(async (): Promise<void> => {
       const { id: assetId } = await createAsset(deps)
+      const { id: tenantId } = await createTenant(deps)
       options = {
         url: 'https://alice.me/.well-known/pay',
-        assetId
+        assetId,
+        tenantId
       }
     })
 

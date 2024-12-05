@@ -21,11 +21,13 @@ import { isWalletAddressError } from '../open_payments/wallet_address/errors'
 import { PeerService } from '../payment-method/ilp/peer/service'
 import { isPeerError } from '../payment-method/ilp/peer/errors'
 import { CacheDataStore } from '../middleware/cache/data-stores'
+import { TenantService } from '../tenants/service'
 
 describe('Asset Service', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let assetService: AssetService
+  let tenantService: TenantService
   let peerService: PeerService
   let walletAddressService: WalletAddressService
 
@@ -272,9 +274,17 @@ describe('Asset Service', (): void => {
       assert.ok(!isAssetError(newAsset))
       const newAssetId = newAsset.id
 
+      const newTenant = await tenantService.create({
+        email: 'test@tenent.za',
+        apiSecret: 'secret',
+        idpSecret: 'idpSecret',
+        idpConsentUrl: 'idpConsentUrl'
+      })
+
       // make sure there is at least 1 wallet address using asset
       const walletAddress = walletAddressService.create({
         url: 'https://alice.me/.well-known/pay',
+        tenantId: newTenant.id,
         assetId: newAssetId
       })
       assert.ok(!isWalletAddressError(walletAddress))

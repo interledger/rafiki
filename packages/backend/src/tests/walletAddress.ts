@@ -6,6 +6,7 @@ import { URL } from 'url'
 
 import { testAccessToken } from './app'
 import { createAsset } from './asset'
+import { createTenant } from './tenant'
 import { AppServices } from '../app'
 import { isWalletAddressError } from '../open_payments/wallet_address/errors'
 import { WalletAddress } from '../open_payments/wallet_address/model'
@@ -32,6 +33,7 @@ export async function createWalletAddress(
   const walletAddressOrError = (await walletAddressService.create({
     ...options,
     assetId: options.assetId || (await createAsset(deps)).id,
+    tenantId: options.tenantId || (await createTenant(deps)).id,
     url: options.url || `https://${faker.internet.domainName()}/.well-known/pay`
   })) as MockWalletAddress
   if (isWalletAddressError(walletAddressOrError)) {

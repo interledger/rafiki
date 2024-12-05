@@ -7,6 +7,7 @@ import { createTestApp, TestContainer } from '../../tests/app'
 import { IocContract } from '@adonisjs/fold'
 import { AppServices } from '../../app'
 import { Asset } from '../../asset/model'
+import { Tenant } from '../../tenants/model'
 import { initIocContainer } from '../..'
 import { Config } from '../../config/app'
 import { truncateTables } from '../../tests/tableManager'
@@ -35,6 +36,8 @@ import {
 import { getPageTests } from './page.test'
 import { WalletAddressAdditionalProperty } from '../../open_payments/wallet_address/additional_property/model'
 import { GraphQLErrorCode } from '../errors'
+//TODO import { TenantService } from '../../tenants/service'
+import { createTenant } from '../../tests/tenant'
 
 describe('Wallet Address Resolvers', (): void => {
   let deps: IocContract<AppServices>
@@ -63,11 +66,14 @@ describe('Wallet Address Resolvers', (): void => {
 
   describe('Create Wallet Address', (): void => {
     let asset: Asset
+    let tenant: Tenant
     let input: CreateWalletAddressInput
 
     beforeEach(async (): Promise<void> => {
       asset = await createAsset(deps)
+      tenant = await createTenant(deps)
       input = {
+        tenantId: tenant.id,
         assetId: asset.id,
         url: 'https://alice.me/.well-known/pay'
       }

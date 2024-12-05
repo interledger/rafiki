@@ -99,6 +99,7 @@ export const createWalletAddress: MutationResolvers<ApolloContext>['createWallet
 
     const options: CreateOptions = {
       assetId: args.input.assetId,
+      tenantId: args.input.tenantId,
       additionalProperties: addProps,
       publicName: args.input.publicName,
       url: args.input.url

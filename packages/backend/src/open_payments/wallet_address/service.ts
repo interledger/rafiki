@@ -28,6 +28,7 @@ import { poll } from '../../shared/utils'
 import { WalletAddressAdditionalProperty } from './additional_property/model'
 import { AssetService } from '../../asset/service'
 import { CacheDataStore } from '../../middleware/cache/data-stores'
+import { Tenant } from '../../tenants/model'
 
 interface Options {
   publicName?: string
@@ -41,6 +42,7 @@ export type WalletAddressAdditionalPropertyInput = Pick<
 export interface CreateOptions extends Options {
   url: string
   assetId: string
+  tenantId: string
   additionalProperties?: WalletAddressAdditionalPropertyInput[]
 }
 
@@ -176,6 +178,7 @@ async function createWalletAddress(
     const walletAddress = await WalletAddress.query(
       deps.knex
     ).insertGraphAndFetch({
+      tenantId: options.tenantId,
       url: options.url.toLowerCase(),
       publicName: options.publicName,
       assetId: options.assetId,
@@ -183,6 +186,9 @@ async function createWalletAddress(
     })
     const asset = await deps.assetService.get(walletAddress.assetId)
     if (asset) walletAddress.asset = asset
+
+    const tenant: Tenant | undefined = undefined //TODO need to lookup tenant here!
+    if (tenant) walletAddress.tenant = tenant
 
     await deps.walletAddressCache.set(walletAddress.id, walletAddress)
     return walletAddress
@@ -340,9 +346,15 @@ async function getWalletAddressPage(
   pagination?: Pagination,
   sortOrder?: SortOrder
 ): Promise<WalletAddress[]> {
-  return await WalletAddress.query(deps.knex)
-    .getPage(pagination, sortOrder)
-    .withGraphFetched('asset')
+  const addresses = await WalletAddress.query(deps.knex).getPage(
+    pagination,
+    sortOrder
+  )
+  for (const address of addresses) {
+    const asset = await deps.assetService.get(address.assetId)
+    if (asset) address.asset = asset
+  }
+  return addresses
 }
 
 // Returns the id of the processed wallet address (if any).
