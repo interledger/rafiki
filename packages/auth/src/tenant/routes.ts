@@ -76,8 +76,10 @@ async function createTenant(
   ctx: CreateContext
 ): Promise<void> {
   const { body } = ctx.request
+
   await deps.tenantService.create(body)
-  ctx.status = 201
+
+  ctx.status = 204
 }
 
 async function updateTenant(
@@ -93,7 +95,7 @@ async function updateTenant(
     return
   }
 
-  ctx.status = 200
+  ctx.status = 204
 }
 
 async function deleteTenant(

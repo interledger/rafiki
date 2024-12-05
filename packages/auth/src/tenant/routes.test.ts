@@ -112,7 +112,7 @@ describe('Tenant Routes', (): void => {
       ctx.request.body = tenantData
 
       await expect(tenantRoutes.create(ctx)).resolves.toBeUndefined()
-      expect(ctx.status).toBe(201)
+      expect(ctx.status).toBe(204)
       expect(ctx.body).toBe(undefined)
 
       const tenant = await Tenant.query().findById(tenantData.id)
@@ -149,7 +149,7 @@ describe('Tenant Routes', (): void => {
       ctx.request.body = updateData
 
       await expect(tenantRoutes.update(ctx)).resolves.toBeUndefined()
-      expect(ctx.status).toBe(200)
+      expect(ctx.status).toBe(204)
       expect(ctx.body).toBe(undefined)
 
       const updatedTenant = await Tenant.query().findById(tenant.id)
