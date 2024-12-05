@@ -5,6 +5,7 @@
 exports.up = function (knex) {
   return Promise.all([
     knex.schema.alterTable('walletAddresses', function (table) {
+      table.uuid('tenantId')
       table.foreign(['tenantId']).references('tenants.id')
       table.index(['tenantId'])
     })
@@ -18,8 +19,8 @@ exports.up = function (knex) {
 exports.down = function (knex) {
   return Promise.all([
     knex.schema.alterTable('walletAddresses', function (table) {
-      table.foreign(['tenantId']).references('tenants.id')
-      table.index(['tenantId'])
+      table.dropIndex('tenantId')
+      table.dropColumn('tenantId')
     })
   ])
 }
