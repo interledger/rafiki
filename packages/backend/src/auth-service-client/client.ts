@@ -8,6 +8,7 @@ export class AuthServiceClientError extends Error {
   constructor(
     message: string,
     public status: number,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public details?: any
   ) {
     super(message)
@@ -23,7 +24,11 @@ export class AuthServiceClient {
     this.baseUrl = baseUrl
   }
 
-  private async request<T>(path: string, options: RequestInit): Promise<T> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private async request<T = any>(
+    path: string,
+    options: RequestInit
+  ): Promise<T> {
     const response = await fetch(`${this.baseUrl}${path}`, options)
 
     if (!response.ok) {
@@ -45,7 +50,7 @@ export class AuthServiceClient {
       response.status === 204 ||
       response.headers.get('Content-Length') === '0'
     ) {
-      return undefined as T // TODO: not this. handle the type correctly
+      return undefined as T
     }
 
     const contentType = response.headers.get('Content-Type')
