@@ -197,6 +197,7 @@ describe('Tenant Routes', (): void => {
           id: tenant.id
         }
       )
+      ctx.request.body = { deletedAt: new Date().toISOString() }
 
       await expect(tenantRoutes.delete(ctx)).resolves.toBeUndefined()
       expect(ctx.status).toBe(204)
@@ -217,6 +218,7 @@ describe('Tenant Routes', (): void => {
           id: v4()
         }
       )
+      ctx.request.body = { deletedAt: new Date().toISOString() }
 
       await expect(tenantRoutes.delete(ctx)).resolves.toBeUndefined()
       expect(ctx.status).toBe(404)

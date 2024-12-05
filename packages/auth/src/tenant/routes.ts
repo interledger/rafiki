@@ -3,6 +3,7 @@ import { AppContext } from '../app'
 import { TenantService } from './service'
 import { BaseService } from '../shared/baseService'
 import { Tenant } from './model'
+import { isValidDateString } from '../shared/utils'
 
 type TenantRequest<BodyT = never, QueryT = ParsedUrlQuery> = Exclude<
   AppContext['request'],
@@ -40,7 +41,7 @@ interface TenantResponse {
 export type GetContext = TenantContext<never, TenantParams>
 export type CreateContext = TenantContext<CreateTenantBody>
 export type UpdateContext = TenantContext<UpdateTenantBody, TenantParams>
-export type DeleteContext = TenantContext<never, TenantParams>
+export type DeleteContext = TenantContext<{ deletedAt: string }, TenantParams>
 
 export interface TenantRoutes {
   get(ctx: GetContext): Promise<void>
@@ -103,6 +104,13 @@ async function deleteTenant(
   ctx: DeleteContext
 ): Promise<void> {
   const { id } = ctx.params
+  const { deletedAt: deletedAtString } = ctx.request.body
+
+  if (!isValidDateString(deletedAtString)) {
+    ctx.status = 400
+    return
+  }
+
   const deleted = await deps.tenantService.delete(id)
 
   if (!deleted) {
