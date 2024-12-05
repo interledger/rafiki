@@ -65,6 +65,27 @@ describe('Wallet Address Key Service', (): void => {
         WalletAddressKeyError.DuplicateKey
       )
     })
+
+    test('Creates a new key unrevoked', async (): Promise<void> => {
+      const keyOption = {
+        walletAddressId: walletAddress.id,
+        jwk: TEST_KEY
+      }
+
+      const key = await walletAddressKeyService.create(keyOption)
+      assert.ok(!isWalletAddressKeyError(key))
+      await walletAddressKeyService.revoke(key.id)
+
+      const unrevokedKey = await walletAddressKeyService.create(keyOption)
+
+      assert.ok(!isWalletAddressKeyError(key))
+
+      expect(unrevokedKey).toMatchObject({
+        jwk: key.jwk,
+        walletAddressId: key.walletAddressId,
+        revoked: false
+      })
+    })
   })
 
   describe('Fetch Wallet Address Keys', (): void => {
@@ -152,42 +173,6 @@ describe('Wallet Address Key Service', (): void => {
       await expect(walletAddressKeyService.revoke(key.id)).resolves.toEqual(
         revokedKey
       )
-    })
-  })
-
-  describe('Unrevoke Wallet Address Keys', (): void => {
-    test('Creates a new key unrevoked', async (): Promise<void> => {
-      const keyOption = {
-        walletAddressId: walletAddress.id,
-        jwk: TEST_KEY
-      }
-
-      const key = await walletAddressKeyService.create(keyOption)
-      assert.ok(!isWalletAddressKeyError(key))
-      await walletAddressKeyService.revoke(key.id)
-
-      const unrevokedKey = await walletAddressKeyService.create(keyOption)
-
-      assert.ok(!isWalletAddressKeyError(key))
-
-      expect(unrevokedKey).toMatchObject({
-        jwk: key.jwk,
-        walletAddressId: key.walletAddressId,
-        revoked: false
-      })
-    })
-
-    test('Returns DuplicateKey when the key already exists and it is unrevoked', async (): Promise<void> => {
-      const keyOption = {
-        walletAddressId: walletAddress.id,
-        jwk: TEST_KEY
-      }
-
-      const key = await walletAddressKeyService.create(keyOption)
-      assert.ok(!isWalletAddressKeyError(key))
-
-      const unrevokedKey = await walletAddressKeyService.create(keyOption)
-      assert.ok(isWalletAddressKeyError(unrevokedKey))
     })
   })
 })
