@@ -192,7 +192,9 @@ export const Config = {
     'MAX_OUTGOING_PAYMENT_RETRY_ATTEMPTS',
     5
   ),
-  localCacheDuration: envInt('LOCAL_CACHE_DURATION_MS', 15_000)
+  localCacheDuration: envInt('LOCAL_CACHE_DURATION_MS', 15_000),
+  operatorTenantId: envString('OPERATOR_TENANT_ID'),
+  operatorTenantSecret: envString('OPERATOR_TENANT_SECRET')
 }
 
 function parseRedisTlsConfig(
