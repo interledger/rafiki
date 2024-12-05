@@ -1,0 +1,83 @@
+interface Tenant {
+  id: string
+  idpConsentUrl: string
+  idpSecret: string
+}
+
+export class AuthServiceClientError extends Error {
+  constructor(
+    message: string,
+    public status: number,
+    public details?: any
+  ) {
+    super(message)
+    this.status = status
+    this.details = details
+  }
+}
+
+export class AuthServiceClient {
+  private baseUrl: string
+
+  constructor(baseUrl: string) {
+    this.baseUrl = baseUrl
+  }
+
+  private async request<T>(path: string, options: RequestInit): Promise<T> {
+    const response = await fetch(`${this.baseUrl}${path}`, options)
+
+    if (!response.ok) {
+      let errorDetails
+      try {
+        errorDetails = await response.json()
+      } catch {
+        errorDetails = { message: response.statusText }
+      }
+
+      throw new AuthServiceClientError(
+        `Auth Service Client Error: ${response.status} ${response.statusText}`,
+        response.status,
+        errorDetails
+      )
+    }
+
+    if (
+      response.status === 204 ||
+      response.headers.get('Content-Length') === '0'
+    ) {
+      return undefined as T // TODO: not this. handle the type correctly
+    }
+
+    const contentType = response.headers.get('Content-Type')
+    if (contentType && contentType.includes('application/json')) {
+      try {
+        return (await response.json()) as T
+      } catch (error) {
+        throw new AuthServiceClientError(
+          `Failed to parse JSON response from ${path}`,
+          response.status
+        )
+      }
+    }
+
+    return (await response.text()) as T
+  }
+
+  public tenant = {
+    get: (id: string) =>
+      this.request<Tenant>(`/tenant/${id}`, { method: 'GET' }),
+    create: (data: Omit<Tenant, 'id'>) =>
+      this.request('/tenant', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      }),
+    update: (id: string, data: Partial<Omit<Tenant, 'id'>>) =>
+      this.request(`/tenant/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      }),
+    delete: (id: string) => this.request(`/tenant/${id}`, { method: 'DELETE' })
+  }
+}
