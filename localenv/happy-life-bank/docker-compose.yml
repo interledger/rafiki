@@ -69,6 +69,8 @@ services:
       WALLET_ADDRESS_URL: ${HAPPY_LIFE_BANK_WALLET_ADDRESS_URL:-https://happy-life-bank-backend/.well-known/pay}
       ENABLE_TELEMETRY: true
       KEY_ID: 53f2d913-e98a-40b9-b270-372d0547f23d
+      OPERATOR_TENANT_ID: cf5fd7d3-1eb1-4041-8e43-ba45747e9e5d
+      OPERATOR_TENANT_SECRET: KQEXlZO65jUJXakXnLxGO7dk387mt71G9tZ42rULSNU=
     depends_on:
       - cloud-nine-backend
     healthcheck:
@@ -104,6 +106,7 @@ services:
       IDENTITY_SERVER_SECRET: 2pEcn2kkCclbOHQiGNEwhJ0rucATZhrA807HTm2rNXE=
       COOKIE_KEY: 42397d1f371dd4b8b7d0308a689a57c882effd4ea909d792302542af47e2cd37
       ADMIN_API_SECRET: rPoZpe9tVyBNCigm05QDco7WLcYa0xMao7lO5KG1XG4=
+      OPERATOR_TENANT_ID: cf5fd7d3-1eb1-4041-8e43-ba45747e9e5d
     depends_on:
       - cloud-nine-auth
   happy-life-admin:
