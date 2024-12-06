@@ -182,7 +182,7 @@ async function deleteTenant(
 
   await deps.tenantCache.delete(id)
   try {
-    const deletedAt = new Date(Date.now())
+    const deletedAt = new Date()
     await Tenant.query(trx).patchAndFetchById(id, {
       deletedAt
     })
