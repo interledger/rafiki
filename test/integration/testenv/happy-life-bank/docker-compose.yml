@@ -26,6 +26,8 @@ services:
       DATABASE_URL: postgresql://happy_life_bank_test_backend:happy_life_bank_test_backend@shared-database/happy_life_bank_test_backend
       AUTH_SERVER_GRANT_URL: http://happy-life-bank-test-auth:4106
       AUTH_SERVER_INTROSPECTION_URL: http://happy-life-bank-test-auth:4107
+      AUTH_ADMIN_API_URL: 'http://happy-life-bank-test-auth:4003/graphql'
+      AUTH_ADMIN_API_SECRET: 'test-secret'
       # matches pfry key id
       KEY_ID: keyid-97a3a431-8ee1-48fc-ac85-70e2f5eba8e5
       PRIVATE_KEY_FILE: /workspace/private-key.pem
