@@ -1,12 +1,15 @@
-import { TransactionOrKnex } from 'objection'
+import { TransactionOrKnex, UniqueViolationError } from 'objection'
 
 import { WalletAddressKey } from './model'
 import { BaseService } from '../../../shared/baseService'
 import { JWK } from '@interledger/http-signature-utils'
 import { Pagination, SortOrder } from '../../../shared/baseModel'
+import { WalletAddressKeyError } from './errors'
 
 export interface WalletAddressKeyService {
-  create(options: CreateOptions): Promise<WalletAddressKey>
+  create(
+    options: CreateOptions
+  ): Promise<WalletAddressKey | WalletAddressKeyError>
   revoke(id: string): Promise<WalletAddressKey | undefined>
   getPage(
     walletAddressId: string,
@@ -52,12 +55,25 @@ export interface CreateOptions {
 async function create(
   deps: ServiceDependencies,
   options: CreateOptions
-): Promise<WalletAddressKey> {
-  const key = await WalletAddressKey.query(deps.knex).insertAndFetch({
-    walletAddressId: options.walletAddressId,
-    jwk: options.jwk
-  })
-  return key
+): Promise<WalletAddressKey | WalletAddressKeyError> {
+  try {
+    const key = await WalletAddressKey.query(deps.knex).insertAndFetch({
+      walletAddressId: options.walletAddressId,
+      jwk: options.jwk
+    })
+    return key
+  } catch (err) {
+    if (err instanceof UniqueViolationError) {
+      return WalletAddressKeyError.DuplicateKey
+    }
+    deps.logger.error(
+      {
+        err
+      },
+      'error adding key'
+    )
+    throw err
+  }
 }
 
 async function revoke(
