@@ -113,6 +113,10 @@ export default defineConfig({
                       link: '/integration/requirements/assets'
                     },
                     {
+                      label: 'Peers',
+                      link: '/integration/requirements/peers'
+                    },
+                    {
                       label: 'Wallet addresses',
                       link: '/integration/requirements/wallet-addresses'
                     },
@@ -135,36 +139,6 @@ export default defineConfig({
                   ]
                 },
                 {
-                  label: 'Docker Compose',
-                  link: '/integration/prod/docker-compose'
-                },
-                {
-                  label: 'Helm and Kubernetes',
-                  link: '/integration/prod/helm-k8s'
-                },
-                {
-                  label: 'Services',
-                  collapsed: true,
-                  items: [
-                    {
-                      label: 'Auth service',
-                      link: '/integration/services/auth-service'
-                    },
-                    {
-                      label: 'Backend service',
-                      link: '/integration/services/backend-service'
-                    },
-                    {
-                      label: 'Frontend service',
-                      link: '/integration/services/frontend-service'
-                    },
-                    {
-                      label: 'Token introspection',
-                      link: '/integration/services/token-introspection'
-                    }
-                  ]
-                },
-                {
                   label: 'Test locally',
                   collapsed: true,
                   items: [
@@ -181,6 +155,42 @@ export default defineConfig({
                       link: '/integration/playground/testnet'
                     }
                   ]
+                },
+                {
+                  label: 'Deployment',
+                  collapsed: true,
+                  items: [
+                    {
+                      label: 'Services',
+                      collapsed: true,
+                      items: [
+                        {
+                          label: 'Auth service',
+                          link: '/integration/deployment/services/auth-service'
+                        },
+                        {
+                          label: 'Backend service',
+                          link: '/integration/deployment/services/backend-service'
+                        },
+                        {
+                          label: 'Frontend service',
+                          link: '/integration/deployment/services/frontend-service'
+                        },
+                        {
+                          label: 'Token introspection',
+                          link: '/integration/deployment/services/token-introspection'
+                        }
+                      ]
+                    },
+                  {
+                    label: 'Docker Compose',
+                    link: '/integration/deployment/docker-compose'
+                  },
+                  {
+                    label: 'Helm and Kubernetes',
+                    link: '/integration/deployment/helm-k8s'
+                  },
+                  ]
                 }
               ]
             },
@@ -191,10 +201,6 @@ export default defineConfig({
                 {
                   label: 'Rafiki Admin',
                   link: '/admin/admin-user-guide'
-                },
-                {
-                  label: 'Manage peering relationships',
-                  link: '/admin/manage-peering'
                 },
                 {
                   label: 'Manage liquidity',
