@@ -18,7 +18,7 @@ Whether you are using the Backend Admin API or the Rafiki Admin application, the
 
 Before adding a peer, you and the account servicing entity you intend to peer with must both:
 
-- Run an implementation of an [Interledger connector](/integration/services/backend-service#interledger-connector) (ideally Rafiki).
+- Run an implementation of an [Interledger connector](/integration/deployment/services/backend-service#interledger-connector) (ideally Rafiki).
 - Agree on an [asset](/overview/concepts/accounting#assets) for the peering relationship. You can set up multiple peering relationships with the same peer based on different assets. At least one asset shared by you and your peer must be added to your Rafiki instance prior to setting up the peering relationship. For more information, refer to [Assets](/integration/requirements/assets/).
 - Agree on a `maxPacketAmount` value, which specifies how many packets a payment is split into.
 - Communicate your respective static <LinkOut href="https://interledger.org/developers/rfcs/ilp-addresses/">Interledger (ILP) addresses</LinkOut>.

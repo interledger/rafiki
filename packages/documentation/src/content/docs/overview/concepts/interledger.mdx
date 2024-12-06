@@ -30,7 +30,7 @@ Each node on the Interledger network can take on the role of sender, connector, 
 - Connector - An intermediary between a sender and receiver that forwards ILP packets. Connectors can facilitate payments to or from anyone they’re peered with.
 - Receiver - The final recipient of the ILP packets and, as such, the payment.
 
-If the sender and receiver nodes are peers, then the payment flow is straightforward and no intermediary connector nodes are needed. However, if the sender and receiver aren’t peers, then the payment must be routed through one or more connectors. Rafiki’s [backend service](/integration/services/backend-service#interledger-connector) includes an Interledger connector for sending and receiving ILP packets.
+If the sender and receiver nodes are peers, then the payment flow is straightforward and no intermediary connector nodes are needed. However, if the sender and receiver aren’t peers, then the payment must be routed through one or more connectors. Rafiki’s [backend service](/integration/deployment/services/backend-service#interledger-connector) includes an Interledger connector for sending and receiving ILP packets.
 
 In the image below, the sender node (A) and the receiver node (C) share a common peer (B). In payments from the sender to the receiver, node B performs the role of connector to facilitate payments between the two.
 
