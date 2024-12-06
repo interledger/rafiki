@@ -291,6 +291,7 @@ jobs:
           - backend
           - frontend
     steps:
+      - uses: actions/checkout@v4
       - name: Fetch docker image from cache
         uses: actions/cache/restore@v4
         with:
