@@ -326,6 +326,7 @@ jobs:
           - backend
           - frontend
     steps:
+      - uses: actions/checkout@v4
       - name: Fetch docker image from cache
         uses: actions/cache/restore@v4
         with:
@@ -338,7 +339,7 @@ jobs:
       - name: Scan docker image
         run: |
           docker images
-          /tmp/trivy image --debug --ignorefile ${{ github.workspace }}/.trivyignore --db-repository ghcr.io/aquasecurity/trivy-db,public.ecr.aws/aquasecurity/trivy-db --java-db-repository ghcr.io/aquasecurity/trivy-java-db,public.ecr.aws/aquasecurity/trivy-java-db --ignore-unfixed --format table --vuln-type os,library --exit-code 1 --severity HIGH --input /tmp/${{ github.sha }}-${{ matrix.package }}-${{ matrix.platform.name }}-${{ needs.version-generator.outputs.version }}.tar
+          /tmp/trivy image --debug --db-repository ghcr.io/aquasecurity/trivy-db,public.ecr.aws/aquasecurity/trivy-db --java-db-repository ghcr.io/aquasecurity/trivy-java-db,public.ecr.aws/aquasecurity/trivy-java-db --ignore-unfixed --format table --vuln-type os,library --exit-code 1 --severity HIGH --input /tmp/${{ github.sha }}-${{ matrix.package }}-${{ matrix.platform.name }}-${{ needs.version-generator.outputs.version }}.tar
   
   push:
     name: Push to registry
