@@ -1062,6 +1062,19 @@ type AccountingTransfer implements Model {
   ledger: UInt8!
   "The date and time that the accounting transfer was created."
   createdAt: String!
+  "The state of the accounting transfer."
+  state: TransferState!
+  "The date and time that the accounting transfer will expire."
+  expiresAt: String
+}
+
+enum TransferState {
+  "The accounting transfer is pending"
+  PENDING
+  "The accounting transfer is posted"
+  POSTED
+  "The accounting transfer is voided"
+  VOIDED
 }
 
 enum TransferType {
@@ -1213,6 +1226,8 @@ type CreateReceiverResponse {
 }
 
 input CreateWalletAddressInput {
+  "Unique identifier of the tenant associated with the wallet address. This cannot be changed."
+  tenantId: String!
   "Unique identifier of the asset associated with the wallet address. This cannot be changed."
   assetId: String!
   "Wallet address URL. This cannot be changed."

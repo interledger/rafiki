@@ -235,6 +235,41 @@ describe('TigerBeetle Accounting Service', (): void => {
       expect(transferDebit.expiresAt).toBeUndefined()
     })
 
+    test('Returns expiry date correctly', async (): Promise<void> => {
+      const receivingAccount = await accountFactory.build()
+      const balances = [BigInt(100), BigInt(100)]
+      const accounts = await Promise.all(
+        balances.map(async (balance) => {
+          return await accountFactory.build({
+            balance,
+            asset: receivingAccount.asset
+          })
+        })
+      )
+      const timeout = 10
+      await Promise.all(
+        accounts.map(async (account, i) => {
+          const transfer = await accountingService.createTransfer({
+            sourceAccount: account,
+            sourceAmount: BigInt(10 * (i + 1)),
+            destinationAccount: receivingAccount,
+            timeout: timeout
+          })
+          assert.ok(!isTransferError(transfer))
+          await transfer.post()
+        })
+      )
+      const transfer = await accountingService.getAccountTransfers(
+        receivingAccount.id
+      )
+      expect(transfer.credits).not.toHaveLength(0)
+      const timestamp = transfer.credits[0].timestamp
+      const expiresAtTime = transfer.credits[0].expiresAt?.getTime()
+      expect(expiresAtTime).toBe(
+        new Date(Number(timestamp) + timeout * 1000).getTime()
+      )
+    })
+
     test('Returns undefined for nonexistent account', async (): Promise<void> => {
       await expect(
         accountingService.getTotalReceived(uuid())

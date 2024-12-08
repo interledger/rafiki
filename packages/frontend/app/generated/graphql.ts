@@ -32,10 +32,14 @@ export type AccountingTransfer = Model & {
   creditAccountId: Scalars['ID']['output'];
   /** Unique identifier for the debit account. */
   debitAccountId: Scalars['ID']['output'];
+  /** The date and time that the accounting transfer will expire. */
+  expiresAt?: Maybe<Scalars['String']['output']>;
   /** Unique identifier for the accounting transfer. */
   id: Scalars['ID']['output'];
   /** Identifier that partitions the sets of accounts that can transact with each other. */
   ledger: Scalars['UInt8']['output'];
+  /** The state of the accounting transfer. */
+  state: TransferState;
   /** Type of the accounting transfer. */
   transferType: TransferType;
 };
@@ -369,6 +373,8 @@ export type CreateWalletAddressInput = {
   idempotencyKey?: InputMaybe<Scalars['String']['input']>;
   /** Public name associated with the wallet address. This is visible to anyone with the wallet address URL. */
   publicName?: InputMaybe<Scalars['String']['input']>;
+  /** Unique identifier of the tenant associated with the wallet address. This cannot be changed. */
+  tenantId: Scalars['String']['input'];
   /** Wallet address URL. This cannot be changed. */
   url: Scalars['String']['input'];
 };
@@ -1372,6 +1378,15 @@ export enum SortOrder {
   Desc = 'DESC'
 }
 
+export enum TransferState {
+  /** The accounting transfer is pending */
+  Pending = 'PENDING',
+  /** The accounting transfer is posted */
+  Posted = 'POSTED',
+  /** The accounting transfer is voided */
+  Voided = 'VOIDED'
+}
+
 export enum TransferType {
   /** Represents a deposit transfer. */
   Deposit = 'DEPOSIT',
@@ -1812,6 +1827,7 @@ export type ResolversTypes = {
   SetFeeResponse: ResolverTypeWrapper<Partial<SetFeeResponse>>;
   SortOrder: ResolverTypeWrapper<Partial<SortOrder>>;
   String: ResolverTypeWrapper<Partial<Scalars['String']['output']>>;
+  TransferState: ResolverTypeWrapper<Partial<TransferState>>;
   TransferType: ResolverTypeWrapper<Partial<TransferType>>;
   TriggerWalletAddressEventsInput: ResolverTypeWrapper<Partial<TriggerWalletAddressEventsInput>>;
   TriggerWalletAddressEventsMutationResponse: ResolverTypeWrapper<Partial<TriggerWalletAddressEventsMutationResponse>>;
@@ -1966,8 +1982,10 @@ export type AccountingTransferResolvers<ContextType = any, ParentType extends Re
   createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   creditAccountId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   debitAccountId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  expiresAt?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   ledger?: Resolver<ResolversTypes['UInt8'], ParentType, ContextType>;
+  state?: Resolver<ResolversTypes['TransferState'], ParentType, ContextType>;
   transferType?: Resolver<ResolversTypes['TransferType'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };

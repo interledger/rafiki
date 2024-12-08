@@ -75,7 +75,7 @@ async function getPendingPayment(
           [RETRY_BACKOFF_SECONDS, now]
         )
     })
-    .withGraphFetched('[walletAddress, quote.asset]')
+    .withGraphFetched('quote')
   stopTimer()
   return payments[0]
 }
@@ -87,6 +87,16 @@ async function handlePaymentLifecycle(
   if (payment.state !== OutgoingPaymentState.Sending) {
     deps.logger.warn('unexpected payment in lifecycle')
     return
+  }
+
+  const [paymentWalletAddress, quoteAsset] = await Promise.all([
+    deps.walletAddressService.get(payment.walletAddressId),
+    deps.assetService.get(payment.quote.assetId)
+  ])
+
+  payment.walletAddress = paymentWalletAddress
+  if (quoteAsset) {
+    payment.quote.asset = quoteAsset
   }
 
   const stopTimer = deps.telemetry.startTimer('handle_sending_ms', {

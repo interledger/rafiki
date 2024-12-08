@@ -140,11 +140,13 @@ export async function setupFromSeed(
       logger.debug('hostname: ', config.publicHost)
 
       const url = `${config.publicHost}/${account.path}`
+      const tenantId = 'TODO' //TODO @jason complete this: <-
       let walletAddress = await getWalletAddressByURL(url)
       if (!walletAddress) {
         walletAddress = await createWalletAddress(
           account.name,
           url,
+          tenantId,
           accountAsset.id
         )
       }

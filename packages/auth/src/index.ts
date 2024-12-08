@@ -21,6 +21,7 @@ import {
 import { createInteractionService } from './interaction/service'
 import { getTokenIntrospectionOpenAPI } from 'token-introspection'
 import { Redis } from 'ioredis'
+import { createTenantService } from './tenant/service'
 
 const container = initIocContainer(Config)
 const app = new App(container)
@@ -208,6 +209,16 @@ export function initIocContainer(
     const config = await deps.use('config')
     return new Redis(config.redisUrl, { tls: config.redisTls })
   })
+
+  container.singleton(
+    'tenantService',
+    async (deps: IocContract<AppServices>) => {
+      return createTenantService({
+        logger: await deps.use('logger'),
+        knex: await deps.use('knex')
+      })
+    }
+  )
 
   return container
 }

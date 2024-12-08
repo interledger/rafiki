@@ -8,6 +8,7 @@ import { WebhookEvent } from '../../webhook/model'
 import { WalletAddressKey } from '../../open_payments/wallet_address/key/model'
 import { AmountJSON } from '../amount'
 import { WalletAddressAdditionalProperty } from './additional_property/model'
+import { Tenant } from '../../tenants/model'
 
 export class WalletAddress
   extends BaseModel
@@ -18,6 +19,14 @@ export class WalletAddress
   }
 
   static relationMappings = () => ({
+    tenant: {
+      relation: Model.HasOneRelation,
+      modelClass: Tenant,
+      join: {
+        from: 'walletAddresses.tenantId',
+        to: 'tenants.id'
+      }
+    },
     asset: {
       relation: Model.HasOneRelation,
       modelClass: Asset,
@@ -52,6 +61,9 @@ export class WalletAddress
 
   public readonly assetId!: string
   public asset!: Asset
+
+  public readonly tenantId!: string
+  public tenant!: Tenant
 
   // The cumulative received amount tracked by
   // `wallet_address.web_monetization` webhook events.
