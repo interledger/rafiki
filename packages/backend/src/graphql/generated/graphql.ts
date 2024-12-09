@@ -373,6 +373,8 @@ export type CreateWalletAddressInput = {
   idempotencyKey?: InputMaybe<Scalars['String']['input']>;
   /** Public name associated with the wallet address. This is visible to anyone with the wallet address URL. */
   publicName?: InputMaybe<Scalars['String']['input']>;
+  /** Unique identifier of the tenant associated with the wallet address. This cannot be changed. */
+  tenantId: Scalars['String']['input'];
   /** Wallet address URL. This cannot be changed. */
   url: Scalars['String']['input'];
 };
