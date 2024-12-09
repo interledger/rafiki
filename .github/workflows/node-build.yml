@@ -266,7 +266,7 @@ jobs:
           push: false
           platforms: ${{ matrix.platform.arch }}
           file: packages/${{ matrix.package }}/Dockerfile.prod
-          tags: ghcr.io/${{ github.repository_owner }}/rafiki-${{ matrix.package }}:${{ needs.version-generator.outputs.version }}
+          tags: ghcr.io/${{ github.repository_owner }}/rafiki-${{ matrix.package }}-${{ matrix.platform.name }}:${{ needs.version-generator.outputs.version }}
           outputs: type=docker,dest=/tmp/${{ github.sha }}-${{ matrix.package }}-${{ matrix.platform.name }}-${{ needs.version-generator.outputs.version }}.tar
       - name: Save docker image to cache
         uses: actions/cache@v4
@@ -382,7 +382,34 @@ jobs:
         run: docker images
       - name: Push to registry
         run: |
-          docker push ghcr.io/${{ github.repository_owner }}/rafiki-${{ matrix.package }}:${{ needs.version-generator.outputs.version }}
+          docker push ghcr.io/${{ github.repository_owner }}/rafiki-${{ matrix.package }}-${{ matrix.platform.name }}:${{ needs.version-generator.outputs.version }}
+  
+  push-manifest:
+    name: Push multi-arch manifest list
+    needs: [version-generator, push]
+    runs-on: ubuntu-latest
+    if: needs.version-generator.outputs.dockerPush == 'true'
+    strategy:
+      matrix:
+        package:
+          - auth
+          - backend
+          - frontend
+    steps:
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Create manifest list  
+        run: |
+          docker manifest create ghcr.io/${{ github.repository_owner }}/rafiki-${{ matrix.package }}:${{ needs.version-generator.outputs.version }} \
+          --amend ghcr.io/${{ github.repository_owner }}/rafiki-${{ matrix.package }}-amd64:${{ needs.version-generator.outputs.version }} \
+          --amend ghcr.io/${{ github.repository_owner }}/rafiki-${{ matrix.package }}-arm64:${{ needs.version-generator.outputs.version }}
+      - name: Push manifest list
+        run: |
+          docker manifest push ghcr.io/${{ github.repository_owner }}/rafiki-${{ matrix.package }}:${{ needs.version-generator.outputs.version }}
   
   generate-release:
     runs-on: ubuntu-latest
@@ -397,6 +424,7 @@ jobs:
         with:
           token: ${{ github.token }}
           tag: ${{ needs.version-generator.outputs.version }}
+          includeRefIssues: false
       - name: Create Release
         uses: ncipollo/release-action@v1.14.0
         with:
