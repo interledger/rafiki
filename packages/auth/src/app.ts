@@ -113,6 +113,7 @@ export class App {
   private interactionServer!: Server
   private introspectionServer!: Server
   private adminServer!: Server
+  private serviceAPIServer!: Server
   private logger!: Logger
   private config!: IAppConfig
   private databaseCleanupRules!: {
@@ -455,6 +456,51 @@ export class App {
     this.interactionServer = koa.listen(port)
   }
 
+  public async startServiceAPIServer(port: number | string): Promise<void> {
+    const koa = await this.createKoaServer()
+
+    const router = new Router<DefaultState, AppContext>()
+    router.use(bodyParser())
+
+    const errorHandler = async (ctx: Koa.Context, next: Koa.Next) => {
+      try {
+        await next()
+      } catch (err) {
+        const logger = await ctx.container.use('logger')
+        logger.info(
+          {
+            method: ctx.method,
+            route: ctx.path,
+            headers: ctx.headers,
+            params: ctx.params,
+            requestBody: ctx.request.body,
+            err
+          },
+          'Service API Error'
+        )
+      }
+    }
+
+    koa.use(errorHandler)
+
+    router.get('/healthz', (ctx: AppContext): void => {
+      ctx.status = 200
+    })
+
+    const tenantRoutes = await this.container.use('tenantRoutes')
+
+    router.get('/tenant/:id', tenantRoutes.get)
+    router.post('/tenant', tenantRoutes.create)
+    router.patch('/tenant/:id', tenantRoutes.update)
+    router.delete('/tenant/:id', tenantRoutes.delete)
+
+    koa.use(cors())
+    koa.use(router.middleware())
+    koa.use(router.routes())
+
+    this.serviceAPIServer = koa.listen(port)
+  }
+
   private async createKoaServer(): Promise<Koa<Koa.DefaultState, AppContext>> {
     const koa = new Koa<DefaultState, AppContext>({
       proxy: this.config.trustProxy
@@ -500,6 +546,9 @@ export class App {
     if (this.introspectionServer) {
       await this.stopServer(this.introspectionServer)
     }
+    if (this.serviceAPIServer) {
+      await this.stopServer(this.serviceAPIServer)
+    }
   }
 
   private async stopServer(server: Server): Promise<void> {
@@ -528,6 +577,10 @@ export class App {
 
   public getIntrospectionPort(): number {
     return this.getPort(this.introspectionServer)
+  }
+
+  public getServiceAPIPort(): number {
+    return this.getPort(this.serviceAPIServer)
   }
 
   private getPort(server: Server): number {
