@@ -163,6 +163,7 @@ Rafiki-Signature: t=<timestamp>, v<version>=<signature_digest>
 ### Prepare the signed payload string
 
 To recreate the signed payload string, concatenate the following.
+
 - The timestamp extracted from the header
 - A period (.) character
 - The actual JSON payload from the request body, containing the `id`, `type`, and `data` attributes
@@ -178,6 +179,7 @@ Use HMAC SHA-256 with the `SIGNATURE_SECRET` environment variable as the key and
 Finally, compare the signature in the header to the expected signature you generated. For security, use a constant-time comparison function to prevent timing attacks.
 
 ### Example
+
 Below is an example in JavaScript to verify Rafiki's webhook signature:
 
 <CodeBlock title="Verify webhook signature example">
