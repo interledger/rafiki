@@ -52,6 +52,15 @@ export default defineConfig({
             src: '/scripts.js',
             defer: true
           }
+        },
+        {
+          tag: 'script',
+          attrs: {
+            defer: true,
+            'data-website-id': '75fba178-7dca-4874-adc9-50cf85c83528',
+            src: 'https://ilf-site-analytics.netlify.app/script.js',
+            'data-domains': 'rafiki.dev'
+          }
         }
       ],
       logo: {
