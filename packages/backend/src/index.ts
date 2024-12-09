@@ -7,6 +7,7 @@ import { createClient } from 'tigerbeetle-node'
 import { createClient as createIntrospectionClient } from 'token-introspection'
 import net from 'net'
 import dns from 'dns'
+import { createHmac } from 'crypto'
 
 import { createAuthenticatedClient as createOpenPaymentsClient } from '@interledger/open-payments'
 import { createOpenAPI } from '@interledger/openapi'
