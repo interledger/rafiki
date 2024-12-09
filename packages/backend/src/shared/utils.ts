@@ -3,7 +3,7 @@ import { URL, type URL as URLType } from 'url'
 import { createHmac } from 'crypto'
 import { canonicalize } from 'json-canonicalize'
 import { IAppConfig } from '../config/app'
-import { AppContext } from '../app'
+import { AppContext, TenantedHttpSigContext } from '../app'
 
 export function validateId(id: string): boolean {
   return validate(id) && version(id) === 4
@@ -126,7 +126,8 @@ function getSignatureParts(signature: string) {
 function verifyApiSignatureDigest(
   signature: string,
   request: AppContext['request'],
-  config: IAppConfig
+  config: IAppConfig,
+  secret: string
 ): boolean {
   const { body } = request
   const {
@@ -140,7 +141,7 @@ function verifyApiSignatureDigest(
   }
 
   const payload = `${timestamp}.${canonicalize(body)}`
-  const hmac = createHmac('sha256', config.adminApiSecret as string)
+  const hmac = createHmac('sha256', secret)
   hmac.update(payload)
   const digest = hmac.digest('hex')
 
@@ -171,6 +172,64 @@ async function canApiSignatureBeProcessed(
   return true
 }
 
+/*
+  Verifies http signatures by first attempting to replicate it with a secret
+  associated with a tenant id in the headers, then with the configured admin secret.
+
+  If a tenant secret can replicate the signature, the request is tenanted to that particular tenant.
+  If the environment admin secret replicates the signature, then it is an operator request with elevated permissions.
+  If neither can replicate the signature then it is unauthorized.
+*/
+export async function verifyTenantOrOperatorApiSignature(
+  ctx: TenantedHttpSigContext,
+  config: IAppConfig
+): Promise<boolean> {
+  ctx.tenant = undefined
+  ctx.isOperator = false
+  const { headers } = ctx.request
+  const signature = headers['signature']
+  if (!signature) {
+    return false
+  }
+
+  const tenantService = await ctx.container.use('tenantService')
+  const tenantId = headers['tenantid']
+  const tenant = tenantId ? await tenantService.get(tenantId) : undefined
+
+  if (!(await canApiSignatureBeProcessed(signature as string, ctx, config)))
+    return false
+
+  // First, try validating with the tenant api secret
+  if (
+    tenant?.apiSecret &&
+    verifyApiSignatureDigest(
+      signature as string,
+      ctx.request,
+      config,
+      tenant.apiSecret
+    )
+  ) {
+    ctx.tenant = tenant
+    return true
+  }
+
+  // Fall back on validating with operator api secret if prior validation fails
+  if (
+    verifyApiSignatureDigest(
+      signature as string,
+      ctx.request,
+      config,
+      config.adminApiSecret as string
+    )
+  ) {
+    ctx.tenant = tenant
+    ctx.isOperator = true
+    return true
+  }
+
+  return false
+}
+
 export async function verifyApiSignature(
   ctx: AppContext,
   config: IAppConfig
@@ -184,5 +243,10 @@ export async function verifyApiSignature(
   if (!(await canApiSignatureBeProcessed(signature as string, ctx, config)))
     return false
 
-  return verifyApiSignatureDigest(signature as string, ctx.request, config)
+  return verifyApiSignatureDigest(
+    signature as string,
+    ctx.request,
+    config,
+    config.adminApiSecret as string
+  )
 }

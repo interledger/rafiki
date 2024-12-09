@@ -1,13 +1,23 @@
+import crypto from 'crypto'
 import { IocContract } from '@adonisjs/fold'
 import { Redis } from 'ioredis'
-import { isValidHttpUrl, poll, requestWithTimeout, sleep } from './utils'
-import { AppServices, AppContext } from '../app'
+import { faker } from '@faker-js/faker'
+import {
+  isValidHttpUrl,
+  poll,
+  requestWithTimeout,
+  sleep,
+  verifyTenantOrOperatorApiSignature
+} from './utils'
+import { AppServices, AppContext, TenantedHttpSigContext } from '../app'
 import { TestContainer, createTestApp } from '../tests/app'
 import { initIocContainer } from '..'
 import { verifyApiSignature } from './utils'
 import { generateApiSignature } from '../tests/apiSignature'
-import { Config } from '../config/app'
+import { Config, IAppConfig } from '../config/app'
 import { createContext } from '../tests/context'
+import { Tenant } from '../tenants/model'
+import { truncateTables } from '../tests/tableManager'
 
 describe('utils', (): void => {
   describe('isValidHttpUrl', (): void => {
@@ -257,5 +267,132 @@ describe('utils', (): void => {
       })
       expect(verified).toBe(false)
     })
+  })
+
+  describe('tenant/operator admin api signatures', (): void => {
+    let deps: IocContract<AppServices>
+    let appContainer: TestContainer
+    let tenant: Tenant
+    let config: IAppConfig
+    let redis: Redis
+
+    const operatorApiSecret = 'test-operator-secret'
+
+    beforeAll(async (): Promise<void> => {
+      deps = initIocContainer({
+        ...Config,
+        adminApiSecret: operatorApiSecret
+      })
+      appContainer = await createTestApp(deps)
+      config = await deps.use('config')
+      redis = await deps.use('redis')
+    })
+
+    beforeEach(async (): Promise<void> => {
+      tenant = await Tenant.query(appContainer.knex).insertAndFetch({
+        email: faker.internet.email(),
+        publicName: faker.company.name(),
+        apiSecret: crypto.randomBytes(8).toString('base64'),
+        idpConsentUrl: faker.internet.url(),
+        idpSecret: 'test-idp-secret'
+      })
+    })
+
+    afterEach(async (): Promise<void> => {
+      await redis.flushall()
+      await truncateTables(appContainer.knex)
+    })
+
+    afterAll(async (): Promise<void> => {
+      await appContainer.shutdown()
+    })
+
+    test.each`
+      tenanted | isOperator | description
+      ${true}  | ${false}   | ${'tenanted non-operator'}
+      ${true}  | ${true}    | ${'tenanted operator'}
+      ${false} | ${true}    | ${'non-tenanted operator'}
+    `(
+      'returns true if $description request has valid signature',
+      async ({ tenanted, isOperator }): Promise<void> => {
+        const requestBody = { test: 'value' }
+
+        const signature = isOperator
+          ? generateApiSignature(
+              config.adminApiSecret as string,
+              Config.adminApiSignatureVersion,
+              requestBody
+            )
+          : generateApiSignature(
+              tenant.apiSecret,
+              Config.adminApiSignatureVersion,
+              requestBody
+            )
+
+        const ctx = createContext<TenantedHttpSigContext>(
+          {
+            headers: {
+              Accept: 'application/json',
+              signature,
+              tenantId: tenanted ? tenant.id : undefined
+            },
+            url: '/graphql'
+          },
+          {},
+          appContainer.container
+        )
+        ctx.request.body = requestBody
+
+        const result = await verifyTenantOrOperatorApiSignature(ctx, config)
+        expect(result).toEqual(true)
+
+        if (tenanted) {
+          expect(ctx.tenant).toEqual(tenant)
+        } else {
+          expect(ctx.tenant).toBeUndefined()
+        }
+
+        if (isOperator) {
+          expect(ctx.isOperator).toEqual(true)
+        } else {
+          expect(ctx.isOperator).toEqual(false)
+        }
+      }
+    )
+
+    test.each`
+      failurePoint
+      ${'tenant'}
+      ${'operator'}
+    `(
+      "returns false when $failurePoint signature isn't valid",
+      async ({ failurePoint }): Promise<void> => {
+        const tenantedRequest = failurePoint === 'tenant'
+        const requestBody = { test: 'value' }
+        const signature = generateApiSignature(
+          'wrongsecret',
+          Config.adminApiSignatureVersion,
+          requestBody
+        )
+        const ctx = createContext<TenantedHttpSigContext>(
+          {
+            headers: {
+              Accept: 'application/json',
+              signature,
+              tenantId: tenantedRequest ? tenant.id : undefined
+            },
+            url: '/graphql'
+          },
+          {},
+          appContainer.container
+        )
+        ctx.request.body = requestBody
+
+        const result = await verifyTenantOrOperatorApiSignature(ctx, config)
+        expect(result).toEqual(false)
+        expect(ctx.tenant).toBeUndefined()
+        expect(ctx.isOperator).toEqual(false)
+      }
+    )
   })
 })

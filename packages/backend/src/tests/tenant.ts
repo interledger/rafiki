@@ -1,3 +1,4 @@
+import nock from 'nock'
 import { IocContract } from '@adonisjs/fold'
 import { faker } from '@faker-js/faker'
 import { AppServices } from '../app'
@@ -10,8 +11,6 @@ interface CreateOptions {
   idpConsentUrl: string
   idpSecret: string
 }
-
-const nock = (global as unknown as { nock: typeof import('nock') }).nock
 
 export async function createTenant(
   deps: IocContract<AppServices>,
