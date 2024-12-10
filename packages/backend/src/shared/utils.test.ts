@@ -352,21 +352,6 @@ describe('utils', (): void => {
         )
         ctx.request.body = requestBody
 
-        if (isOperator) {
-          console.log(
-            'tenant secret=',
-            operator.apiSecret,
-            'config secret=',
-            config.adminApiSecret
-          )
-        } else {
-          console.log(
-            'tenant secret=',
-            tenant.apiSecret,
-            'config secret=',
-            config.adminApiSecret
-          )
-        }
         const result = await verifyTenantOrOperatorApiSignature(ctx, config)
         expect(result).toEqual(true)
 
