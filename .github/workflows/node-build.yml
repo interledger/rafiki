@@ -413,7 +413,7 @@ jobs:
   
   generate-release:
     runs-on: ubuntu-latest
-    needs: [push, version-generator]
+    needs: [push-manifest, version-generator]
     if: needs.version-generator.outputs.generateRelease == 'true'
     steps:
       - name: Checkout Code
