@@ -397,16 +397,14 @@ export class App {
       }
     )
 
-    if (this.config.adminApiSecret) {
-      koa.use(
-        async (ctx: TenantedHttpSigContext, next: Koa.Next): Promise<void> => {
-          if (!verifyTenantOrOperatorApiSignature(ctx, this.config)) {
-            ctx.throw(401, 'Unauthorized')
-          }
-          return next()
+    koa.use(
+      async (ctx: TenantedHttpSigContext, next: Koa.Next): Promise<void> => {
+        if (!verifyTenantOrOperatorApiSignature(ctx, this.config)) {
+          ctx.throw(401, 'Unauthorized')
         }
-      )
-    }
+        return next()
+      }
+    )
 
     koa.use(
       koaMiddleware(this.apolloServer, {
