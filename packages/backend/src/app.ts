@@ -397,22 +397,13 @@ export class App {
       }
     )
 
-<<<<<<< HEAD
     if (this.config.env !== 'test') {
-      koa.use(async (ctx, next: Koa.Next): Promise<void> => {
-        if (!(await verifyApiSignature(ctx, this.config))) {
+      async (ctx: TenantedHttpSigContext, next: Koa.Next): Promise<void> => {
+        if (!verifyTenantOrOperatorApiSignature(ctx, this.config)) {
           ctx.throw(401, 'Unauthorized')
-=======
-    if (this.config.adminApiSecret) {
-      koa.use(
-        async (ctx: TenantedHttpSigContext, next: Koa.Next): Promise<void> => {
-          if (!verifyTenantOrOperatorApiSignature(ctx, this.config)) {
-            ctx.throw(401, 'Unauthorized')
-          }
-          return next()
->>>>>>> 3805b100 (feat(backend): tenant signature validation for admin api)
         }
-      )
+        return next()
+      }
     }
 
     koa.use(
