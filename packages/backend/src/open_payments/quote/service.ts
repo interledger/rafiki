@@ -71,6 +71,7 @@ async function getQuote(
 }
 
 interface QuoteOptionsBase {
+  tenantId: string
   walletAddressId: string
   receiver: string
   method: 'ilp'
@@ -99,6 +100,14 @@ async function createQuote(
     callName: 'QuoteService:create',
     description: 'Time to create a quote'
   })
+  // TODO
+  // const tenant = await deps.tenantService.get(
+  //   options.tenantId
+  // )
+  // if (!tenant) {
+  //   stopTimer()
+  //   return QuoteError.UnknownTenant
+  // }
   if (options.debitAmount && options.receiveAmount) {
     stopTimer()
     return QuoteError.InvalidAmount
@@ -164,6 +173,7 @@ async function createQuote(
         paymentMethod,
         {
           quoteId,
+          tenantId: options.tenantId,
           walletAddress,
           receiver,
           receiveAmount: options.receiveAmount,
@@ -189,6 +199,7 @@ async function createQuote(
       const createdQuote = await Quote.query(trx)
         .insertAndFetch({
           id: quoteId,
+          tenantId: options.tenantId,
           walletAddressId: options.walletAddressId,
           assetId: walletAddress.assetId,
           receiver: options.receiver,
@@ -251,7 +262,10 @@ export async function resolveReceiver(
   deps: ServiceDependencies,
   options: CreateQuoteOptions
 ): Promise<Receiver> {
-  const receiver = await deps.receiverService.get(options.receiver)
+  const receiver = await deps.receiverService.get(
+    options.receiver,
+    options.tenantId
+  )
   if (!receiver) {
     deps.logger.info(
       { receiver: options.receiver },

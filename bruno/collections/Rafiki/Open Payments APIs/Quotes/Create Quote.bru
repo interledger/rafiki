@@ -5,7 +5,7 @@ meta {
 }
 
 post {
-  url: {{senderOpenPaymentsHost}}/quotes
+  url: {{senderOpenPaymentsHost}}/{{senderTenantId}}/quotes
   body: json
   auth: none
 }

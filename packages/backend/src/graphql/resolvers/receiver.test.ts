@@ -266,8 +266,8 @@ describe('Receiver Resolver', (): void => {
       const query = await appContainer.apolloClient
         .query({
           query: gql`
-            query GetReceiver($id: String!) {
-              receiver(id: $id) {
+            query GetReceiver($id: String!, $tenantId: String!) {
+              receiver(id: $id, tenantId: $tenantId) {
                 id
                 walletAddressUrl
                 completed
@@ -289,7 +289,8 @@ describe('Receiver Resolver', (): void => {
             }
           `,
           variables: {
-            id: receiver.incomingPayment.id
+            id: receiver.incomingPayment.id,
+            tenantId: '8e1db008-ab2f-4f1d-8c44-593354084100'
           }
         })
         .then((query): Receiver => query.data?.receiver)
@@ -326,13 +327,13 @@ describe('Receiver Resolver', (): void => {
       try {
         await appContainer.apolloClient.query({
           query: gql`
-            query GetReceiver($id: String!) {
-              receiver(id: $id) {
+            query GetReceiver($id: String!, $tenantId: String!) {
+              receiver(id: $id, tenantId: $tenantId) {
                 id
               }
             }
           `,
-          variables: { id: uuid() }
+          variables: { id: uuid(), tenantId: uuid() }
         })
       } catch (error) {
         expect(error).toBeInstanceOf(ApolloError)

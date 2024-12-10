@@ -11,6 +11,8 @@ export async function truncateTable(
 export async function truncateTables(
   knex: Knex,
   ignoreTables = [
+    // TODO do not ignore tenants table
+    'tenants',
     'knex_migrations',
     'knex_migrations_lock',
     'knex_migrations_backend',

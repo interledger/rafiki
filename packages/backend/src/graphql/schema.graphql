@@ -72,8 +72,8 @@ type Query {
     sortOrder: SortOrder
   ): WalletAddressesConnection!
 
-  "Fetch an Open Payments quote by its ID."
-  quote("Unique identifier of the quote." id: String!): Quote
+  "Fetch an Open Payments quote by its ID and tenant ID."
+  quote("Unique identifier of the quote." id: String!, tenantId: String!): Quote
 
   "Fetch an Open Payments outgoing payment by its ID."
   outgoingPayment(
@@ -147,6 +147,8 @@ type Query {
   receiver(
     "Unique identifier of the receiver (incoming payment URL)."
     id: String!
+    "Unique identifier of the tenant of the incoming payment that resolves the receiver"
+    tenantId: String!
   ): Receiver
 }
 
@@ -1090,6 +1092,8 @@ type QuoteEdge {
 type Quote {
   "Unique identifier of the quote."
   id: ID!
+  "Unique identifier of the tenant under which the quote was created."
+  tenantId: ID!
   "Unique identifier of the wallet address under which the quote was created."
   walletAddressId: ID!
   "Wallet address URL of the receiver."
@@ -1116,6 +1120,8 @@ input AmountInput {
 }
 
 input CreateQuoteInput {
+  "Unique identifier of the tenant under which the quote was created."
+  tenantId: String!
   "Unique identifier of the wallet address under which the quote will be created."
   walletAddressId: String!
   "Amount to send (fixed send)."

@@ -180,6 +180,7 @@ export interface GetOptions {
   id: string
   client?: string
   walletAddressId?: string
+  tenantId?: string
 }
 
 export interface ListOptions {

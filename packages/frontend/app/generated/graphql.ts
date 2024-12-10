@@ -337,6 +337,8 @@ export type CreateQuoteInput = {
   receiveAmount?: InputMaybe<AmountInput>;
   /** Wallet address URL of the receiver. */
   receiver: Scalars['String']['input'];
+  /** Unique identifier of the tenant under which the quote was created. */
+  tenantId: Scalars['String']['input'];
   /** Unique identifier of the wallet address under which the quote will be created. */
   walletAddressId: Scalars['String']['input'];
 };
@@ -1142,7 +1144,7 @@ export type Query = {
   peerByAddressAndAsset?: Maybe<Peer>;
   /** Fetch a paginated list of peers. */
   peers: PeersConnection;
-  /** Fetch an Open Payments quote by its ID. */
+  /** Fetch an Open Payments quote by its ID and tenant ID. */
   quote?: Maybe<Quote>;
   /** Retrieve an Open Payments incoming payment by receiver ID. The receiver's wallet address can be hosted on this server or a remote Open Payments resource server. */
   receiver?: Maybe<Receiver>;
@@ -1235,11 +1237,13 @@ export type QueryPeersArgs = {
 
 export type QueryQuoteArgs = {
   id: Scalars['String']['input'];
+  tenantId: Scalars['String']['input'];
 };
 
 
 export type QueryReceiverArgs = {
   id: Scalars['String']['input'];
+  tenantId: Scalars['String']['input'];
 };
 
 
@@ -1287,6 +1291,8 @@ export type Quote = {
   receiveAmount: Amount;
   /** Wallet address URL of the receiver. */
   receiver: Scalars['String']['output'];
+  /** Unique identifier of the tenant under which the quote was created. */
+  tenantId: Scalars['ID']['output'];
   /** Unique identifier of the wallet address under which the quote was created. */
   walletAddressId: Scalars['ID']['output'];
 };
@@ -2307,8 +2313,8 @@ export type QueryResolvers<ContextType = any, ParentType extends ResolversParent
   peer?: Resolver<Maybe<ResolversTypes['Peer']>, ParentType, ContextType, RequireFields<QueryPeerArgs, 'id'>>;
   peerByAddressAndAsset?: Resolver<Maybe<ResolversTypes['Peer']>, ParentType, ContextType, RequireFields<QueryPeerByAddressAndAssetArgs, 'assetId' | 'staticIlpAddress'>>;
   peers?: Resolver<ResolversTypes['PeersConnection'], ParentType, ContextType, Partial<QueryPeersArgs>>;
-  quote?: Resolver<Maybe<ResolversTypes['Quote']>, ParentType, ContextType, RequireFields<QueryQuoteArgs, 'id'>>;
-  receiver?: Resolver<Maybe<ResolversTypes['Receiver']>, ParentType, ContextType, RequireFields<QueryReceiverArgs, 'id'>>;
+  quote?: Resolver<Maybe<ResolversTypes['Quote']>, ParentType, ContextType, RequireFields<QueryQuoteArgs, 'id' | 'tenantId'>>;
+  receiver?: Resolver<Maybe<ResolversTypes['Receiver']>, ParentType, ContextType, RequireFields<QueryReceiverArgs, 'id' | 'tenantId'>>;
   walletAddress?: Resolver<Maybe<ResolversTypes['WalletAddress']>, ParentType, ContextType, RequireFields<QueryWalletAddressArgs, 'id'>>;
   walletAddressByUrl?: Resolver<Maybe<ResolversTypes['WalletAddress']>, ParentType, ContextType, RequireFields<QueryWalletAddressByUrlArgs, 'url'>>;
   walletAddresses?: Resolver<ResolversTypes['WalletAddressesConnection'], ParentType, ContextType, Partial<QueryWalletAddressesArgs>>;
@@ -2323,6 +2329,7 @@ export type QuoteResolvers<ContextType = any, ParentType extends ResolversParent
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   receiveAmount?: Resolver<ResolversTypes['Amount'], ParentType, ContextType>;
   receiver?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  tenantId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   walletAddressId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };

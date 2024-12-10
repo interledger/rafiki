@@ -247,6 +247,7 @@ export const getRouteTests = <M extends WalletAddressSubresource>({
     createModel,
     testGet: async ({ id, walletAddressId, client }, expectedMatch) => {
       const walletAddress = await getWalletAddress()
+      const tenantId = '8e1db008-ab2f-4f1d-8c44-593354084100'
       walletAddress.id = walletAddressId
       const ctx = setup<ReadContext>({
         reqOpts: {
@@ -255,7 +256,8 @@ export const getRouteTests = <M extends WalletAddressSubresource>({
           url: `${urlPath}/${id}`
         },
         params: {
-          id
+          id,
+          tenantId
         },
         walletAddress,
         client,

@@ -57,6 +57,7 @@ export function mockQuote(
 export async function createQuote(
   deps: IocContract<AppServices>,
   {
+    tenantId,
     walletAddressId,
     receiver: receiverUrl,
     debitAmount,
@@ -69,6 +70,18 @@ export async function createQuote(
     exchangeRate = 0.5
   }: CreateTestQuoteOptions
 ): Promise<Quote> {
+  if (!tenantId) {
+    throw new Error('Invalid tenant id')
+  }
+  // TODO remove this
+  const knex = await deps.use('knex')
+  const tenantResult = await knex.raw('SELECT * FROM tenants WHERE id = ?', [
+    tenantId
+  ])
+
+  if (!tenantResult.rows.length) {
+    throw new Error(`Tenant with id ${tenantId} does not exist.`)
+  }
   const walletAddressService = await deps.use('walletAddressService')
   const walletAddress = await walletAddressService.get(walletAddressId)
   if (!walletAddress) {
@@ -86,7 +99,7 @@ export async function createQuote(
   let receiveAsset: AssetOptions | undefined
   if (validDestination) {
     const receiverService = await deps.use('receiverService')
-    const receiver = await receiverService.get(receiverUrl)
+    const receiver = await receiverService.get(receiverUrl, tenantId)
     if (!receiver) {
       throw new Error('receiver not found')
     }
@@ -178,6 +191,7 @@ export async function createQuote(
   return Quote.query()
     .insertAndFetch({
       id: quoteId,
+      tenantId,
       walletAddressId,
       assetId: walletAddress.assetId,
       receiver: receiverUrl,

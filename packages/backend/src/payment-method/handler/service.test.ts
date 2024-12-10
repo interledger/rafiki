@@ -52,6 +52,7 @@ describe('PaymentMethodHandlerService', (): void => {
 
       const options: StartQuoteOptions = {
         quoteId: uuid(),
+        tenantId: '8e1db008-ab2f-4f1d-8c44-593354084100',
         walletAddress,
         receiver: await createReceiver(deps, walletAddress),
         debitAmount: {
@@ -79,6 +80,7 @@ describe('PaymentMethodHandlerService', (): void => {
       })
 
       const options: StartQuoteOptions = {
+        tenantId: '8e1db008-ab2f-4f1d-8c44-593354084100',
         walletAddress,
         receiver: await createReceiver(deps, walletAddress),
         debitAmount: {
@@ -113,6 +115,7 @@ describe('PaymentMethodHandlerService', (): void => {
           receivingWalletAddress: walletAddress,
           method: 'ilp',
           quoteOptions: {
+            tenantId: '8e1db008-ab2f-4f1d-8c44-593354084100',
             debitAmount: {
               assetCode: walletAddress.asset.code,
               assetScale: walletAddress.asset.scale,
@@ -147,6 +150,7 @@ describe('PaymentMethodHandlerService', (): void => {
           receivingWalletAddress: walletAddress,
           method: 'ilp',
           quoteOptions: {
+            tenantId: '8e1db008-ab2f-4f1d-8c44-593354084100',
             debitAmount: {
               assetCode: walletAddress.asset.code,
               assetScale: walletAddress.asset.scale,

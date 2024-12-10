@@ -5,7 +5,7 @@ meta {
 }
 
 get {
-  url: {{senderOpenPaymentsHost}}/quotes/{{quoteId}}
+  url: {{senderOpenPaymentsHost}}/{{senderTenantId}}/quotes/{{quoteId}}
   body: none
   auth: none
 }

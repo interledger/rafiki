@@ -1742,11 +1742,13 @@ describe('Liquidity Resolvers', (): void => {
   )
 
   describe('Event Liquidity', (): void => {
+    let tenantId: string
     let walletAddress: WalletAddress
     let incomingPayment: IncomingPayment
     let payment: OutgoingPayment
 
     beforeEach(async (): Promise<void> => {
+      tenantId = '8e1db008-ab2f-4f1d-8c44-593354084100'
       walletAddress = await createWalletAddress(deps)
       const walletAddressId = walletAddress.id
       incomingPayment = await createIncomingPayment(deps, {
@@ -1759,6 +1761,7 @@ describe('Liquidity Resolvers', (): void => {
         expiresAt: new Date(Date.now() + 60 * 1000)
       })
       payment = await createOutgoingPayment(deps, {
+        tenantId,
         walletAddressId,
         method: 'ilp',
         receiver: `${Config.openPaymentsUrl}/incoming-payments/${uuid()}`,
@@ -2152,11 +2155,13 @@ describe('Liquidity Resolvers', (): void => {
   })
 
   describe('Payment Liquidity', (): void => {
+    let tenantId: string
     let walletAddress: WalletAddress
     let incomingPayment: IncomingPayment
     let outgoingPayment: OutgoingPayment
 
     beforeEach(async (): Promise<void> => {
+      tenantId = '8e1db008-ab2f-4f1d-8c44-593354084100'
       walletAddress = await createWalletAddress(deps)
       const walletAddressId = walletAddress.id
       incomingPayment = await createIncomingPayment(deps, {
@@ -2169,6 +2174,7 @@ describe('Liquidity Resolvers', (): void => {
         expiresAt: new Date(Date.now() + 60 * 1000)
       })
       outgoingPayment = await createOutgoingPayment(deps, {
+        tenantId,
         walletAddressId,
         method: 'ilp',
         receiver: `${
