@@ -8,7 +8,7 @@ exports.up = async function (knex) {
       // Keep only one active walletAddressKey (the most recent row)
       `DELETE FROM "walletAddressKeys" w
        WHERE revoked = false
-       AND ctid NOT IT (
+       AND ctid NOT IN (
           SELECT MIN(ctid)
           FROM "walletAddressKeys"
           WHERE revoked = false
