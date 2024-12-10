@@ -75,7 +75,7 @@
     "ajv": "^8.12.0",
     "axios": "1.7.4",
     "base64url": "^3.0.1",
-    "dotenv": "^16.4.5",
+    "dotenv": "^16.4.7",
     "extensible-error": "^1.0.2",
     "graphql": "^16.8.1",
     "graphql-middleware": "^6.1.35",

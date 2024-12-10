@@ -45,8 +45,8 @@ importers:
         specifier: ^7.3.1
         version: 7.5.0(eslint@8.57.1)(typescript@5.4.3)
       dotenv:
-        specifier: ^16.4.5
-        version: 16.4.5
+        specifier: ^16.4.7
+        version: 16.4.7
       eslint:
         specifier: ^8.57.1
         version: 8.57.1
@@ -205,8 +205,8 @@ importers:
         specifier: ^1.7.4
         version: 1.7.4
       dotenv:
-        specifier: ^16.4.5
-        version: 16.4.5
+        specifier: ^16.4.7
+        version: 16.4.7
       graphql:
         specifier: ^16.8.1
         version: 16.8.1
@@ -401,8 +401,8 @@ importers:
         specifier: ^3.0.1
         version: 3.0.1
       dotenv:
-        specifier: ^16.4.5
-        version: 16.4.5
+        specifier: ^16.4.7
+        version: 16.4.7
       extensible-error:
         specifier: ^1.0.2
         version: 1.0.2
@@ -777,8 +777,8 @@ importers:
         specifier: ^20.14.15
         version: 20.14.15
       dotenv:
-        specifier: ^16.4.5
-        version: 16.4.5
+        specifier: ^16.4.7
+        version: 16.4.7
       hostile:
         specifier: ^1.4.0
         version: 1.4.0
@@ -3571,7 +3571,7 @@ packages:
       '@whatwg-node/fetch': 0.9.8
       chalk: 4.1.2
       debug: 4.3.7(supports-color@9.4.0)
-      dotenv: 16.4.5
+      dotenv: 16.4.7
       graphql: 16.8.1
       graphql-request: 6.1.0(graphql@16.8.1)
       http-proxy-agent: 7.0.0
@@ -5400,7 +5400,7 @@ packages:
       chalk: 4.1.2
       chokidar: 3.5.3
       cross-spawn: 7.0.6
-      dotenv: 16.4.1
+      dotenv: 16.4.7
       es-module-lexer: 1.4.1
       esbuild: 0.17.6
       esbuild-plugins-node-modules-polyfill: 1.6.1(esbuild@0.17.6)
@@ -9780,8 +9780,8 @@ packages:
     engines: {node: '>=12'}
     dev: true
 
-  /dotenv@16.4.5:
-    resolution: {integrity: sha512-ZmdL2rui+eB2YwhsWzjInR8LldtZHGDoQ1ugH85ppHKwpUHL7j7rN0Ti9NCnGiQbhaZ11FpR+7ao1dNsmduNUg==}
+  /dotenv@16.4.7:
+    resolution: {integrity: sha512-47qPchRCykZC03FhkYAhrvwU4xDBFIj1QPqaarj6mdM/hgUzfPHcpkHJOn3mJAufFeeAxAzeGsr5X0M4k6fLZQ==}
     engines: {node: '>=12'}
 
   /dset@3.1.4:
