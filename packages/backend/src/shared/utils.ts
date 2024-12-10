@@ -177,7 +177,7 @@ async function canApiSignatureBeProcessed(
   associated with a tenant id in the headers, then with the configured admin secret.
 
   If a tenant secret can replicate the signature, the request is tenanted to that particular tenant.
-  If the environment admin secret replicates the signature, then it is an operator request with elevated permissions.
+  If the environment admin secret matches the tenant's secret, then it is an operator request with elevated permissions.
   If neither can replicate the signature then it is unauthorized.
 */
 export async function verifyTenantOrOperatorApiSignature(
@@ -193,15 +193,17 @@ export async function verifyTenantOrOperatorApiSignature(
   }
 
   const tenantService = await ctx.container.use('tenantService')
-  const tenantId = headers['tenantid']
+  const tenantId = headers['tenant-id']
   const tenant = tenantId ? await tenantService.get(tenantId) : undefined
+
+  if (!tenant) return false
 
   if (!(await canApiSignatureBeProcessed(signature as string, ctx, config)))
     return false
 
   // First, try validating with the tenant api secret
   if (
-    tenant?.apiSecret &&
+    tenant.apiSecret &&
     verifyApiSignatureDigest(
       signature as string,
       ctx.request,
@@ -210,20 +212,7 @@ export async function verifyTenantOrOperatorApiSignature(
     )
   ) {
     ctx.tenant = tenant
-    return true
-  }
-
-  // Fall back on validating with operator api secret if prior validation fails
-  if (
-    verifyApiSignatureDigest(
-      signature as string,
-      ctx.request,
-      config,
-      config.adminApiSecret as string
-    )
-  ) {
-    ctx.tenant = tenant
-    ctx.isOperator = true
+    ctx.isOperator = tenant.apiSecret === config.adminApiSecret
     return true
   }
 
