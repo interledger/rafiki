@@ -11,6 +11,7 @@ Each payment account belonging to your users (e.g., customers) must have at leas
 
 - Your Rafiki instance must be set up for at least one asset before wallet addresses can be created as each wallet address must have an asset assigned to it.
 - Wallet address URLs are treated as case-insensitive, meaning that both lowercase and uppercase variations of the same address will be recognized as identical.
+
 :::
 
 ## Create wallet addresses
@@ -84,12 +85,12 @@ We strongly recommend you store at least the `walletAddress.id` in your internal
 
 <div class="overflow-table">
 
-|Variable | Description |
-|-------- | ----------- |
-| `assetId` | The unique ID of the asset, assigned by Rafiki when the asset was created, that the wallet address's underlying payment account is denominated in |
-| `publicName` | The public name associated with the wallet address |
-| `url` | The wallet address's case-insensitive URL |
-| `additionalProperties` | Optional [additional properties](/apis/graphql/backend/inputobjects/#additionalpropertyinput) associated with the wallet address |
+| Variable               | Description                                                                                                                                       |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `assetId`              | The unique ID of the asset, assigned by Rafiki when the asset was created, that the wallet address's underlying payment account is denominated in |
+| `publicName`           | The public name associated with the wallet address                                                                                                |
+| `url`                  | The wallet address's case-insensitive URL                                                                                                         |
+| `additionalProperties` | Optional [additional properties](/apis/graphql/backend/inputobjects/#additionalpropertyinput) associated with the wallet address                  |
 
 </div>
 
@@ -194,11 +195,11 @@ Open Payments <LinkOut href="https://openpayments.dev/apis/wallet-address-server
 
 <div class="overflow-table">
 
-| Parameter | Required value | Description |
-| --------- | -------------- | ----------- |
-| `alg` | `EdDSA` | The algorithm used to generate the key pair |
-| `kty` | `OKP` | The key type identifying the cryptographic algorithm family used with the key |
-| `crv` | `Ed25519` | The cryptographic curve used with the key |
+| Parameter | Required value | Description                                                                   |
+| --------- | -------------- | ----------------------------------------------------------------------------- |
+| `alg`     | `EdDSA`        | The algorithm used to generate the key pair                                   |
+| `kty`     | `OKP`          | The key type identifying the cryptographic algorithm family used with the key |
+| `crv`     | `Ed25519`      | The cryptographic curve used with the key                                     |
 
 </div>
 

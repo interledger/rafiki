@@ -1,8 +1,8 @@
 import { convertSource, Asset, convertDestination } from './util'
 
 describe('Rates util', () => {
-  describe('convert', () => {
-    describe('convert same scales', () => {
+  describe('convertSource', () => {
+    describe('convertSource same scales', () => {
       test.each`
         exchangeRate | sourceAmount | assetScale | expectedResult                                    | description
         ${1.5}       | ${100n}      | ${9}       | ${{ amount: 150n, scaledExchangeRate: 1.5 }}      | ${'exchange rate above 1'}
@@ -31,11 +31,12 @@ describe('Rates util', () => {
       )
     })
 
-    describe('convert different scales', () => {
+    describe('convertSource different scales', () => {
       test.each`
-        exchangeRate | sourceAmount | sourceAssetScale | destinationAssetScale | expectedResult                                    | description
-        ${1.5}       | ${100n}      | ${9}             | ${12}                 | ${{ amount: 150_000n, scaledExchangeRate: 1500 }} | ${'convert scale from low to high'}
-        ${1.5}       | ${100_000n}  | ${12}            | ${9}                  | ${{ amount: 150n, scaledExchangeRate: 0.0015 }}   | ${'convert scale from high to low'}
+        exchangeRate | sourceAmount    | sourceAssetScale | destinationAssetScale | expectedResult                                    | description
+        ${1.5}       | ${100n}         | ${9}             | ${12}                 | ${{ amount: 150_000n, scaledExchangeRate: 1500 }} | ${'convert scale from low to high'}
+        ${1.5}       | ${100_000n}     | ${12}            | ${9}                  | ${{ amount: 150n, scaledExchangeRate: 0.0015 }}   | ${'convert scale from high to low'}
+        ${1}         | ${100_000_000n} | ${9}             | ${2}                  | ${{ amount: 10n, scaledExchangeRate: 0.0000001 }} | ${'exchange rate of 1 with different scale'}
       `(
         '$description',
         async ({
@@ -57,7 +58,7 @@ describe('Rates util', () => {
       )
     })
   })
-  describe('convert reverse', () => {
+  describe('convertDestination', () => {
     describe('convert same scales', () => {
       test.each`
         exchangeRate | destinationAmount | assetScale | expectedResult                                    | description
@@ -88,8 +89,9 @@ describe('Rates util', () => {
     describe('convert different scales', () => {
       test.each`
         exchangeRate | destinationAmount | sourceAssetScale | destinationAssetScale | expectedResult                                    | description
-        ${2.0}       | ${100n}           | ${9}             | ${12}                 | ${{ amount: 50_000n, scaledExchangeRate: 0.002 }} | ${'convert scale from low to high'}
-        ${2.0}       | ${100_000n}       | ${12}            | ${9}                  | ${{ amount: 50n, scaledExchangeRate: 2000 }}      | ${'convert scale from high to low'}
+        ${2.0}       | ${100n}           | ${12}            | ${9}                  | ${{ amount: 50_000n, scaledExchangeRate: 0.002 }} | ${'convert scale from low to high'}
+        ${2.0}       | ${100_000n}       | ${9}             | ${12}                 | ${{ amount: 50n, scaledExchangeRate: 2000 }}      | ${'convert scale from high to low'}
+        ${1}         | ${100_000_000n}   | ${2}             | ${9}                  | ${{ amount: 10n, scaledExchangeRate: 10000000 }}  | ${'convert scale from high to low (same asset)'}
       `(
         '$description',
         async ({
