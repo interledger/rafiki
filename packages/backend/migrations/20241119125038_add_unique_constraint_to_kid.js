@@ -5,30 +5,15 @@
 exports.up = async function (knex) {
   return knex
     .raw(
-      // Keep only one active walletAddressKey (the most recent one)
+      // Keep only one active walletAddressKey (the most recent row)
       `DELETE FROM "walletAddressKeys" w
        WHERE revoked = false
-       AND w."createdAt" = (
-          SELECT "createdAt"
+       AND ctid NOT IT (
+          SELECT MIN(ctid)
           FROM "walletAddressKeys"
           WHERE revoked = false
             AND kid = w.kid
-          ORDER BY "createdAt" DESC
-          LIMIT 1
-       )
-       /* 
-        if there are multiple keys that have the most recent "createdAt",
-        we keep just one of them and delete the rest
-       */
-       AND w.id <> (
-          SELECT id
-          FROM "walletAddressKeys"
-          WHERE revoked = false
-            AND kid = w.kid
-          ORDER BY "createdAt" DESC
-          LIMIT 1 OFFSET 1
-       );
-      `
+       )`
     )
     .then(() => {
       return knex.raw(`
