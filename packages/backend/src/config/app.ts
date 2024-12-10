@@ -162,7 +162,7 @@ export const Config = {
   signatureSecret: process.env.SIGNATURE_SECRET, // optional
   signatureVersion: envInt('SIGNATURE_VERSION', 1),
 
-  adminApiSecret: process.env.API_SECRET, // optional
+  adminApiSecret: envString('API_SECRET'),
   adminApiSignatureVersion: envInt('API_SIGNATURE_VERSION', 1),
   adminApiSignatureTtl: envInt('ADMIN_API_SIGNATURE_TTL_SECONDS', 30),
 
@@ -196,8 +196,7 @@ export const Config = {
     5
   ),
   localCacheDuration: envInt('LOCAL_CACHE_DURATION_MS', 15_000),
-  operatorTenantId: envString('OPERATOR_TENANT_ID'),
-  operatorTenantSecret: envString('OPERATOR_TENANT_SECRET')
+  operatorTenantId: envString('OPERATOR_TENANT_ID')
 }
 
 function parseRedisTlsConfig(

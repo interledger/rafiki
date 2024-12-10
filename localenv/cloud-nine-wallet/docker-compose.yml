@@ -79,7 +79,6 @@ services:
       ENABLE_TELEMETRY: true
       KEY_ID: 7097F83B-CB84-469E-96C6-2141C72E22C0
       OPERATOR_TENANT_ID: 438fa74a-fa7d-4317-9ced-dde32ece1787
-      OPERATOR_TENANT_SECRET: 4RRtVErbQqdI9E6o6vOOKuLEbchVvOBvFIXzLWX9GWQ=
     depends_on:
       - shared-database
       - shared-redis

@@ -39,7 +39,7 @@ services:
       REDIS_URL: redis://shared-redis:6379/2
       USE_TIGERBEETLE: false
       OPERATOR_TENANT_ID: cf5fd7d3-1eb1-4041-8e43-ba45747e9e5d
-      OPERATOR_TENANT_SECRET: KQEXlZO65jUJXakXnLxGO7dk387mt71G9tZ42rULSNU=
+      API_SECRET: iyIgCprjb9uL8wFckR+pLEkJWMB7FJhgkvqhTQR/964=
     volumes:
       - ../private-key.pem:/workspace/private-key.pem
     depends_on:
