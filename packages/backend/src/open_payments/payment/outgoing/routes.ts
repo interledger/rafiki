@@ -98,6 +98,7 @@ async function createOutgoingPayment(
 ): Promise<void> {
   const { body } = ctx.request
   const baseOptions: OutgoingPaymentCreateBaseOptions = {
+    tenantId: ctx.params.tenantId,
     walletAddressId: ctx.walletAddress.id,
     metadata: body.metadata,
     client: ctx.client,

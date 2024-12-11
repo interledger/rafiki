@@ -95,6 +95,7 @@ describe('IlpPaymentService', (): void => {
 
       const options: StartQuoteOptions = {
         quoteId: uuid(),
+        tenantId: '8e1db008-ab2f-4f1d-8c44-593354084100',
         walletAddress: walletAddressMap['USD'],
         receiver: await createReceiver(deps, walletAddressMap['USD']),
         debitAmount: {
@@ -118,6 +119,7 @@ describe('IlpPaymentService', (): void => {
       const quoteId = uuid()
       const options: StartQuoteOptions = {
         quoteId,
+        tenantId: '8e1db008-ab2f-4f1d-8c44-593354084100',
         walletAddress: walletAddressMap['USD'],
         receiver: await createReceiver(deps, walletAddressMap['USD']),
         debitAmount: {
@@ -180,6 +182,7 @@ describe('IlpPaymentService', (): void => {
       const quoteId = uuid()
       const options: StartQuoteOptions = {
         quoteId,
+        tenantId: '8e1db008-ab2f-4f1d-8c44-593354084100',
         walletAddress: walletAddressMap['USD'],
         receiver: await createReceiver(deps, walletAddressMap['USD']),
         debitAmount: {
@@ -298,6 +301,7 @@ describe('IlpPaymentService', (): void => {
 
       const options: StartQuoteOptions = {
         quoteId: uuid(),
+        tenantId: '8e1db008-ab2f-4f1d-8c44-593354084100',
         walletAddress: walletAddressMap['USD'],
         receiver: await createReceiver(deps, walletAddressMap['USD']),
         debitAmount: {
@@ -336,6 +340,7 @@ describe('IlpPaymentService', (): void => {
 
       const options: StartQuoteOptions = {
         quoteId: uuid(),
+        tenantId: '8e1db008-ab2f-4f1d-8c44-593354084100',
         walletAddress: walletAddressMap['USD'],
         receiver: await createReceiver(deps, walletAddressMap['USD'], {
           incomingAmount
@@ -397,6 +402,7 @@ describe('IlpPaymentService', (): void => {
 
       const options: StartQuoteOptions = {
         quoteId: uuid(),
+        tenantId: '8e1db008-ab2f-4f1d-8c44-593354084100',
         walletAddress: walletAddressMap['USD'],
         receiver: await createReceiver(deps, walletAddressMap['USD'])
       }
@@ -427,6 +433,7 @@ describe('IlpPaymentService', (): void => {
 
       const options: StartQuoteOptions = {
         quoteId: uuid(),
+        tenantId: '8e1db008-ab2f-4f1d-8c44-593354084100',
         walletAddress: walletAddressMap['USD'],
         receiver: await createReceiver(deps, walletAddressMap['USD'], {
           incomingAmount: {
@@ -467,6 +474,7 @@ describe('IlpPaymentService', (): void => {
 
       const options: StartQuoteOptions = {
         quoteId: uuid(),
+        tenantId: '8e1db008-ab2f-4f1d-8c44-593354084100',
         walletAddress: walletAddressMap['USD'],
         receiver: await createReceiver(deps, walletAddressMap['USD'])
       }
@@ -528,6 +536,7 @@ describe('IlpPaymentService', (): void => {
 
                 const options: StartQuoteOptions = {
                   quoteId: uuid(),
+                  tenantId: '8e1db008-ab2f-4f1d-8c44-593354084100',
                   walletAddress: sendingWalletAddress,
                   receiver: await createReceiver(deps, receivingWalletAddress),
                   receiveAmount: {
@@ -588,6 +597,7 @@ describe('IlpPaymentService', (): void => {
 
                 const options: StartQuoteOptions = {
                   quoteId: uuid(),
+                  tenantId: '8e1db008-ab2f-4f1d-8c44-593354084100',
                   walletAddress: sendingWalletAddress,
                   receiver: await createReceiver(deps, receivingWalletAddress),
                   debitAmount: {
@@ -665,6 +675,7 @@ describe('IlpPaymentService', (): void => {
           receivingWalletAddress: walletAddressMap['USD'],
           method: 'ilp',
           quoteOptions: {
+            tenantId: '8e1db008-ab2f-4f1d-8c44-593354084100',
             debitAmount: {
               value: 100n,
               assetScale: walletAddressMap['USD'].asset.scale,
@@ -695,6 +706,7 @@ describe('IlpPaymentService', (): void => {
           receivingWalletAddress: walletAddressMap['USD'],
           method: 'ilp',
           quoteOptions: {
+            tenantId: '8e1db008-ab2f-4f1d-8c44-593354084100',
             exchangeRate: 1,
             debitAmount: {
               value: 100n,
@@ -745,6 +757,7 @@ describe('IlpPaymentService', (): void => {
           receivingWalletAddress: walletAddressMap['USD'],
           method: 'ilp',
           quoteOptions: {
+            tenantId: '8e1db008-ab2f-4f1d-8c44-593354084100',
             debitAmount: {
               value: 100n,
               assetScale: walletAddressMap['USD'].asset.scale,
@@ -785,6 +798,7 @@ describe('IlpPaymentService', (): void => {
           receivingWalletAddress: walletAddressMap['USD'],
           method: 'ilp',
           quoteOptions: {
+            tenantId: '8e1db008-ab2f-4f1d-8c44-593354084100',
             debitAmount: {
               value: 100n,
               assetScale: walletAddressMap['USD'].asset.scale,
@@ -825,6 +839,7 @@ describe('IlpPaymentService', (): void => {
           receivingWalletAddress: walletAddressMap['USD'],
           method: 'ilp',
           quoteOptions: {
+            tenantId: '8e1db008-ab2f-4f1d-8c44-593354084100',
             debitAmount: {
               value: 100n,
               assetScale: walletAddressMap['USD'].asset.scale,
@@ -862,6 +877,7 @@ describe('IlpPaymentService', (): void => {
           receivingWalletAddress: walletAddressMap['USD'],
           method: 'ilp',
           quoteOptions: {
+            tenantId: '8e1db008-ab2f-4f1d-8c44-593354084100',
             debitAmount: {
               value: 100n,
               assetScale: walletAddressMap['USD'].asset.scale,

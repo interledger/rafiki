@@ -167,6 +167,7 @@ async function getOutgoingPayment(
 }
 
 export interface BaseOptions {
+  tenantId: string
   walletAddressId: string
   client?: string
   grant?: Grant
@@ -256,6 +257,7 @@ async function createOutgoingPayment(
     )
     const { debitAmount, incomingPayment } = options
     const quoteOrError = await deps.quoteService.create({
+      tenantId: options.tenantId,
       receiver: incomingPayment,
       debitAmount,
       method: 'ilp',
@@ -367,7 +369,11 @@ async function createOutgoingPayment(
           description: 'Time to retrieve receiver in outgoing payment'
         }
       )
-      const receiver = await deps.receiverService.get(payment.receiver)
+      //TODO tenantId should not be taken from `options` but from `payment`
+      const receiver = await deps.receiverService.get(
+        payment.receiver,
+        options.tenantId
+      )
       stopTimerReceiver()
       if (!receiver) {
         throw OutgoingPaymentError.InvalidQuote

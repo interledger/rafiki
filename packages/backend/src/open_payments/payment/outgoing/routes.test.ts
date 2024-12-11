@@ -39,6 +39,7 @@ describe('Outgoing Payment Routes', (): void => {
   let config: IAppConfig
   let outgoingPaymentRoutes: OutgoingPaymentRoutes
   let outgoingPaymentService: OutgoingPaymentService
+  let tenantId: string
   let walletAddress: WalletAddress
   let baseUrl: string
 
@@ -51,6 +52,7 @@ describe('Outgoing Payment Routes', (): void => {
   }): Promise<OutgoingPayment> => {
     return await createOutgoingPayment(deps, {
       ...options,
+      tenantId: '8e1db008-ab2f-4f1d-8c44-593354084100',
       walletAddressId: walletAddress.id,
       method: 'ilp',
       receiver: `${receivingWalletAddress}/incoming-payments/${uuid()}`,
@@ -77,6 +79,7 @@ describe('Outgoing Payment Routes', (): void => {
 
   beforeEach(async (): Promise<void> => {
     const asset = await createAsset(deps)
+    tenantId = '8e1db008-ab2f-4f1d-8c44-593354084100'
     walletAddress = await createWalletAddress(deps, { assetId: asset.id })
     baseUrl = new URL(walletAddress.url).origin
   })
@@ -134,7 +137,7 @@ describe('Outgoing Payment Routes', (): void => {
 
   type SetupContextOptions = UnionOmit<
     CreateOutgoingPaymentOptions,
-    'walletAddressId'
+    'walletAddressId' | 'tenantId'
   >
 
   describe('create', (): void => {
@@ -148,6 +151,9 @@ describe('Outgoing Payment Routes', (): void => {
           method: 'POST',
           url: `/outgoing-payments`,
           body: options
+        },
+        params: {
+          tenantId: '8e1db008-ab2f-4f1d-8c44-593354084100'
         },
         walletAddress,
         client: options.client,
@@ -182,6 +188,7 @@ describe('Outgoing Payment Routes', (): void => {
             CreateOutgoingPaymentBaseOptions,
             'walletAddressId'
           > = {
+            tenantId,
             client,
             grant,
             metadata
@@ -189,7 +196,7 @@ describe('Outgoing Payment Routes', (): void => {
           if (createFrom === CreateFrom.Quote) {
             options = {
               ...options,
-              quoteId: `${baseUrl}/quotes/${payment.quote.id}`
+              quoteId: `${baseUrl}/${tenantId}/quotes/${payment.quote.id}`
             } as CreateFromQuote
           } else {
             assert(createFrom === CreateFrom.IncomingPayment)
@@ -212,6 +219,7 @@ describe('Outgoing Payment Routes', (): void => {
           ).resolves.toBeUndefined()
 
           let expectedCreateOptions: CreateOutgoingPaymentBaseOptions = {
+            tenantId,
             walletAddressId: walletAddress.id,
             metadata,
             client,
@@ -282,7 +290,7 @@ describe('Outgoing Payment Routes', (): void => {
       async (error): Promise<void> => {
         const quoteId = uuid()
         const ctx = setup({
-          quoteId: `${baseUrl}/quotes/${quoteId}`
+          quoteId: `${baseUrl}/${tenantId}/quotes/${quoteId}`
         })
         const createSpy = jest
           .spyOn(outgoingPaymentService, 'create')
@@ -300,7 +308,8 @@ describe('Outgoing Payment Routes', (): void => {
 
         expect(createSpy).toHaveBeenCalledWith({
           walletAddressId: walletAddress.id,
-          quoteId
+          quoteId,
+          tenantId
         })
       }
     )

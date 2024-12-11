@@ -39,6 +39,7 @@ export async function createCombinedPayment(
 ): Promise<CombinedPayment> {
   const sendAsset = await createAsset(deps)
   const receiveAsset = await createAsset(deps)
+  const tenantId = '8e1db008-ab2f-4f1d-8c44-593354084100'
   const sendWalletAddressId = (
     await createWalletAddress(deps, { assetId: sendAsset.id })
   ).id
@@ -53,6 +54,7 @@ export async function createCombinedPayment(
           walletAddressId: receiveWalletAddress.id
         })
       : await createOutgoingPayment(deps, {
+          tenantId,
           walletAddressId: sendWalletAddressId,
           method: 'ilp',
           receiver: `${Config.openPaymentsUrl}/${uuid()}`,

@@ -109,6 +109,7 @@ describe('Webhook Service', (): void => {
   })
 
   describe('Get Webhook Event by account id and types', (): void => {
+    let tenantId: string
     let walletAddressIn: WalletAddress
     let walletAddressOut: WalletAddress
     let incomingPaymentIds: string[]
@@ -116,6 +117,7 @@ describe('Webhook Service', (): void => {
     let events: WebhookEvent[] = []
 
     beforeEach(async (): Promise<void> => {
+      tenantId = '8e1db008-ab2f-4f1d-8c44-593354084100'
       walletAddressIn = await createWalletAddress(deps)
       walletAddressOut = await createWalletAddress(deps)
       incomingPaymentIds = [
@@ -134,6 +136,7 @@ describe('Webhook Service', (): void => {
         (
           await createOutgoingPayment(deps, {
             method: 'ilp',
+            tenantId,
             walletAddressId: walletAddressOut.id,
             receiver: '',
             validDestination: false
@@ -142,6 +145,7 @@ describe('Webhook Service', (): void => {
         (
           await createOutgoingPayment(deps, {
             method: 'ilp',
+            tenantId,
             walletAddressId: walletAddressOut.id,
             receiver: '',
             validDestination: false

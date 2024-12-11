@@ -28,6 +28,7 @@ describe('Quote Resolvers', (): void => {
   let appContainer: TestContainer
   let quoteService: QuoteService
   let asset: Asset
+  let tenantId: string
 
   const receivingWalletAddress = 'http://wallet2.example/bob'
   const receiver = `${receivingWalletAddress}/incoming-payments/${uuid()}`
@@ -39,6 +40,7 @@ describe('Quote Resolvers', (): void => {
   })
 
   beforeEach(async (): Promise<void> => {
+    tenantId = '8e1db008-ab2f-4f1d-8c44-593354084100'
     asset = await createAsset(deps)
   })
 
@@ -56,6 +58,7 @@ describe('Quote Resolvers', (): void => {
     walletAddressId: string
   ): Promise<QuoteModel> => {
     return await createQuote(deps, {
+      tenantId,
       walletAddressId,
       receiver,
       debitAmount: {
@@ -78,9 +81,10 @@ describe('Quote Resolvers', (): void => {
       const query = await appContainer.apolloClient
         .query({
           query: gql`
-            query Quote($quoteId: String!) {
-              quote(id: $quoteId) {
+            query Quote($quoteId: String!, $tenantId: String!) {
+              quote(id: $quoteId, tenantId: $tenantId) {
                 id
+                tenantId
                 walletAddressId
                 receiver
                 debitAmount {
@@ -99,13 +103,15 @@ describe('Quote Resolvers', (): void => {
             }
           `,
           variables: {
-            quoteId: quote.id
+            quoteId: quote.id,
+            tenantId: quote.tenantId
           }
         })
         .then((query): Quote => query.data?.quote)
 
       expect(query).toEqual({
         id: quote.id,
+        tenantId: quote.tenantId,
         walletAddressId,
         receiver: quote.receiver,
         debitAmount: {
@@ -133,13 +139,17 @@ describe('Quote Resolvers', (): void => {
       try {
         await appContainer.apolloClient.query({
           query: gql`
-            query Quote($quoteId: String!) {
-              quote(id: $quoteId) {
+            query Quote($quoteId: String!, $tenantId: String!) {
+              quote(id: $quoteId, tenantId: $tenantId) {
                 id
+                tenantId
               }
             }
           `,
-          variables: { quoteId: uuid() }
+          variables: {
+            quoteId: uuid(),
+            tenantId: '8e1db008-ab2f-4f1d-8c44-593354084100'
+          }
         })
       } catch (error) {
         expect(error).toBeInstanceOf(ApolloError)
@@ -175,6 +185,7 @@ describe('Quote Resolvers', (): void => {
         assetScale: asset.scale
       }
       input = {
+        tenantId: '8e1db008-ab2f-4f1d-8c44-593354084100',
         walletAddressId: uuid(),
         receiver,
         debitAmount
@@ -191,7 +202,9 @@ describe('Quote Resolvers', (): void => {
       const { id: walletAddressId } = await createWalletAddress(deps, {
         assetId: asset.id
       })
+      const tenantId = '8e1db008-ab2f-4f1d-8c44-593354084100'
       const input = {
+        tenantId,
         walletAddressId,
         debitAmount: amount,
         receiveAmount,
@@ -204,6 +217,7 @@ describe('Quote Resolvers', (): void => {
         .mockImplementationOnce(async (opts) => {
           quote = await createQuote(deps, {
             ...opts,
+            tenantId,
             validDestination: false
           })
           return quote
@@ -216,6 +230,7 @@ describe('Quote Resolvers', (): void => {
               createQuote(input: $input) {
                 quote {
                   id
+                  tenantId
                 }
               }
             }
@@ -226,6 +241,7 @@ describe('Quote Resolvers', (): void => {
 
       expect(createSpy).toHaveBeenCalledWith({ ...input, method: 'ilp' })
       expect(query.quote?.id).toBe(quote?.id)
+      expect(query.quote?.tenantId).toBe(quote?.tenantId)
     })
 
     test('unknown walletAddress', async (): Promise<void> => {
@@ -238,6 +254,7 @@ describe('Quote Resolvers', (): void => {
                 createQuote(input: $input) {
                   quote {
                     id
+                    tenantId
                   }
                 }
               }
@@ -272,6 +289,7 @@ describe('Quote Resolvers', (): void => {
                 createQuote(input: $input) {
                   quote {
                     id
+                    tenantId
                   }
                 }
               }
