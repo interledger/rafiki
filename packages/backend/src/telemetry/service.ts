@@ -173,14 +173,13 @@ export class TelemetryServiceImpl implements TelemetryService {
         return
       }
 
-      const obfuscatedAmount = preservePrivacy
-        ? privacy.applyPrivacy(Number(converted))
-        : Number(converted)
-      this.incrementCounter(name, obfuscatedAmount, attributes)
+      const finalAmount = preservePrivacy
+        ? privacy.applyPrivacy(Number(converted.amount))
+        : Number(converted.amount)
+      this.incrementCounter(name, finalAmount, attributes)
     } catch (e) {
-      this.deps.logger.error(e, `Unable to collect telemetry`)
+      this.deps.logger.error(e, 'Unable to collect telemetry')
     }
-    return Promise.resolve()
   }
 
   public recordHistogram(
