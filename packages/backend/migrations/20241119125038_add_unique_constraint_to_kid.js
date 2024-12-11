@@ -9,10 +9,11 @@ exports.up = async function (knex) {
       `DELETE FROM "walletAddressKeys" w
        WHERE revoked = false
        AND ctid NOT IN (
-          SELECT MIN(ctid)
+          SELECT MAX(ctid)
           FROM "walletAddressKeys"
           WHERE revoked = false
             AND kid = w.kid
+          GROUP BY kid, "walletAddressId"
        )`
     )
     .then(() => {
