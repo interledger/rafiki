@@ -392,6 +392,7 @@ export function initIocContainer(
       logger: logger,
       accountingService: await deps.use('accountingService'),
       webhookService: await deps.use('webhookService'),
+      tenantService: await deps.use('tenantService'),
       assetService: await deps.use('assetService'),
       walletAddressCache: await deps.use('walletAddressCache')
     })
