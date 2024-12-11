@@ -26,5 +26,7 @@ export const CONFIG: Config = {
   testnetAutoPeerUrl: process.env.TESTNET_AUTOPEER_URL ?? '',
   authServerDomain: process.env.AUTH_SERVER_DOMAIN || 'http://localhost:3006',
   graphqlUrl: process.env.GRAPHQL_URL,
-  idpSecret: process.env.IDP_SECRET
+  idpSecret: process.env.IDP_SECRET,
+  operatorTenantId:
+    process.env.OPERATOR_TENANT_ID || '438fa74a-fa7d-4317-9ced-dde32ece1787'
 }

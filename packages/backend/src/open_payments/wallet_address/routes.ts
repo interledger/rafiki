@@ -60,9 +60,14 @@ export async function getWalletAddress(
     )
 
   ctx.body = walletAddress.toOpenPaymentsType({
-    authServer: deps.config.authServerGrantUrl,
-    resourceServer: deps.config.openPaymentsUrl
+    authServer: `${ensureTrailingSlash(deps.config.authServerGrantUrl)}${walletAddress.tenantId}`,
+    resourceServer: `${ensureTrailingSlash(deps.config.openPaymentsUrl)}${walletAddress.tenantId}`
   })
+}
+
+function ensureTrailingSlash(str: string): string {
+  if (!str.endsWith('/')) return `${str}/`
+  return str
 }
 
 interface ListSubresourceOptions<M extends WalletAddressSubresource> {
