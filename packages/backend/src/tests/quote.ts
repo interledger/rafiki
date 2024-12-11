@@ -168,6 +168,7 @@ export async function createQuote(
   const withGraphFetchedArray = [
     'asset',
     'walletAddress',
+    'walletAddress.tenant',
     'walletAddress.asset'
   ]
   if (withFee) {

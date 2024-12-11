@@ -186,3 +186,8 @@ export async function verifyApiSignature(
 
   return verifyApiSignatureDigest(signature as string, ctx.request, config)
 }
+
+export function ensureTrailingSlash(str: string): string {
+  if (!str.endsWith('/')) return `${str}/`
+  return str
+}

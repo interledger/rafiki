@@ -11,6 +11,7 @@ import {
 } from '../../shared/pagination'
 import { OpenPaymentsServerRouteError } from '../route-errors'
 import { IAppConfig } from '../../config/app'
+import { ensureTrailingSlash } from '../../shared/utils'
 
 interface ServiceDependencies {
   config: IAppConfig
@@ -63,11 +64,6 @@ export async function getWalletAddress(
     authServer: `${ensureTrailingSlash(deps.config.authServerGrantUrl)}${walletAddress.tenantId}`,
     resourceServer: `${ensureTrailingSlash(deps.config.openPaymentsUrl)}${walletAddress.tenantId}`
   })
-}
-
-function ensureTrailingSlash(str: string): string {
-  if (!str.endsWith('/')) return `${str}/`
-  return str
 }
 
 interface ListSubresourceOptions<M extends WalletAddressSubresource> {
