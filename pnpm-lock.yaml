@@ -135,8 +135,8 @@ importers:
         specifier: ^2.6.0
         version: 2.6.0
       zod:
-        specifier: ^3.22.4
-        version: 3.23.4
+        specifier: ^3.24.1
+        version: 3.24.1
     devDependencies:
       '@remix-run/dev':
         specifier: ^2.6.0
@@ -651,8 +651,8 @@ importers:
         specifier: ^2.6.0
         version: 2.6.0
       zod:
-        specifier: ^3.22.4
-        version: 3.22.4
+        specifier: ^3.24.1
+        version: 3.24.1
     devDependencies:
       '@remix-run/dev':
         specifier: ^2.13.1
@@ -1213,7 +1213,7 @@ packages:
     dependencies:
       sitemap: 7.1.2
       stream-replace-string: 2.0.0
-      zod: 3.23.8
+      zod: 3.24.1
     dev: false
 
   /@astrojs/starlight@0.29.0(astro@4.16.11):
@@ -7959,9 +7959,9 @@ packages:
       which-pm: 3.0.0
       xxhash-wasm: 1.0.2
       yargs-parser: 21.1.1
-      zod: 3.23.8
-      zod-to-json-schema: 3.23.5(zod@3.23.8)
-      zod-to-ts: 1.2.0(typescript@5.6.3)(zod@3.23.8)
+      zod: 3.24.1
+      zod-to-json-schema: 3.23.5(zod@3.24.1)
+      zod-to-ts: 1.2.0(typescript@5.6.3)(zod@3.24.1)
     optionalDependencies:
       sharp: 0.33.5
     transitivePeerDependencies:
@@ -19847,34 +19847,26 @@ packages:
       readable-stream: 3.6.0
     dev: true
 
-  /zod-to-json-schema@3.23.5(zod@3.23.8):
+  /zod-to-json-schema@3.23.5(zod@3.24.1):
     resolution: {integrity: sha512-5wlSS0bXfF/BrL4jPAbz9da5hDlDptdEppYfe+x4eIJ7jioqKG9uUxOwPzqof09u/XeVdrgFu29lZi+8XNDJtA==}
     peerDependencies:
       zod: ^3.23.3
     dependencies:
-      zod: 3.23.8
+      zod: 3.24.1
     dev: false
 
-  /zod-to-ts@1.2.0(typescript@5.6.3)(zod@3.23.8):
+  /zod-to-ts@1.2.0(typescript@5.6.3)(zod@3.24.1):
     resolution: {integrity: sha512-x30XE43V+InwGpvTySRNz9kB7qFU8DlyEy7BsSTCHPH1R0QasMmHWZDCzYm6bVXtj/9NNJAZF3jW8rzFvH5OFA==}
     peerDependencies:
       typescript: ^4.9.4 || ^5.0.2
       zod: ^3
     dependencies:
       typescript: 5.6.3
-      zod: 3.23.8
+      zod: 3.24.1
     dev: false
 
-  /zod@3.22.4:
-    resolution: {integrity: sha512-iC+8Io04lddc+mVqQ9AZ7OQ2MrUKGN+oIQyq1vemgt46jwCwLfhq7/pwnBnNXXXZb8VTVLKwp9EDkx+ryxIWmg==}
-    dev: false
-
-  /zod@3.23.4:
-    resolution: {integrity: sha512-/AtWOKbBgjzEYYQRNfoGKHObgfAZag6qUJX1VbHo2PRBgS+wfWagEY2mizjfyAPcGesrJOcx/wcl0L9WnVrHFw==}
-    dev: false
-
-  /zod@3.23.8:
-    resolution: {integrity: sha512-XBx9AXhXktjUqnepgTiE5flcKIYWi/rme0Eaj+5Y0lftuGBq+jyRu/md4WnuxqgP1ubdpNCsYEYPxrzVHD8d6g==}
+  /zod@3.24.1:
+    resolution: {integrity: sha512-muH7gBL9sI1nciMZV67X5fTKKBLtwpZ5VBp1vsOQzj1MhrBZ4wlVCm3gedKZWLp0Oyel8sIGfeiz54Su+OVT+A==}
     dev: false
 
   /zwitch@2.0.4:
