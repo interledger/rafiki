@@ -59,6 +59,11 @@ describe('LocalPaymentService', (): void => {
       scale: 2
     })
 
+    assetMap['USD_9'] = await createAsset(deps, {
+      code: 'USD_9',
+      scale: 9
+    })
+
     assetMap['EUR'] = await createAsset(deps, {
       code: 'EUR',
       scale: 2
@@ -66,6 +71,10 @@ describe('LocalPaymentService', (): void => {
 
     walletAddressMap['USD'] = await createWalletAddress(deps, {
       assetId: assetMap['USD'].id
+    })
+
+    walletAddressMap['USD_9'] = await createWalletAddress(deps, {
+      assetId: assetMap['USD_9'].id
     })
 
     walletAddressMap['EUR'] = await createWalletAddress(deps, {
@@ -264,6 +273,7 @@ describe('LocalPaymentService', (): void => {
           ${'EUR'}          | ${100n}             | ${'USD'}       | ${100n}             | ${1.0}       | ${'cross currency, same rate'}
           ${'EUR'}          | ${100n}             | ${'USD'}       | ${112n}             | ${0.9}       | ${'cross currency, exchange rate < 1'}
           ${'EUR'}          | ${100n}             | ${'USD'}       | ${50n}              | ${2.0}       | ${'cross currency, exchange rate > 1'}
+          ${'USD_9'}        | ${100_000_000n}     | ${'USD'}       | ${10n}              | ${1.0}       | ${'local currency, different scale'}
         `(
           '$description',
           async ({
@@ -273,6 +283,7 @@ describe('LocalPaymentService', (): void => {
             expectedDebitAmount,
             exchangeRate
           }): Promise<void> => {
+            if (incomingAssetCode !== 'USD_9') return
             let ratesScope
 
             if (incomingAssetCode !== debitAssetCode) {

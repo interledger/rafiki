@@ -60,12 +60,16 @@ export function capitalize(str: string) {
 }
 
 export function getOpenPaymentsUrl() {
-  if (!process.env.OPEN_PAYMENTS_URL) {
-    throw new Error('Environment variable OPEN_PAYMENTS_URL is missing')
+  if (typeof window === 'undefined') {
+    if (!process.env.OPEN_PAYMENTS_URL) {
+      throw new Error('Environment variable OPEN_PAYMENTS_URL is missing')
+    }
+
+    return process.env.OPEN_PAYMENTS_URL
   }
 
-  if (typeof window === 'undefined') {
-    return process.env.OPEN_PAYMENTS_URL
+  if (!window.ENV.OPEN_PAYMENTS_URL) {
+    throw new Error('Environment variable OPEN_PAYMENTS_URL is missing')
   }
 
   return window.ENV.OPEN_PAYMENTS_URL
