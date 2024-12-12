@@ -399,7 +399,7 @@ export class App {
 
     if (this.config.env !== 'test') {
       async (ctx: TenantedHttpSigContext, next: Koa.Next): Promise<void> => {
-        if (!verifyTenantOrOperatorApiSignature(ctx, this.config)) {
+        if (!(await verifyTenantOrOperatorApiSignature(ctx, this.config))) {
           ctx.throw(401, 'Unauthorized')
         }
         return next()

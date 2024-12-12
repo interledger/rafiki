@@ -198,8 +198,7 @@ export async function verifyTenantOrOperatorApiSignature(
 
   if (!tenant) return false
 
-  if (!(await canApiSignatureBeProcessed(signature as string, ctx, config)))
-    return false
+  if (!(await canApiSignatureBeProcessed(signature, ctx, config))) return false
 
   // First, try validating with the tenant api secret
   if (

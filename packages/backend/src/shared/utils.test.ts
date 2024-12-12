@@ -441,8 +441,11 @@ describe('utils', (): void => {
 
       ctx.request.body = requestBody
 
+      const tenantService = await deps.use('tenantService')
+      const getSpy = jest.spyOn(tenantService, 'get')
       const result = await verifyTenantOrOperatorApiSignature(ctx, config)
       expect(result).toEqual(false)
+      expect(getSpy).toHaveBeenCalled()
       expect(ctx.tenant).toBeUndefined()
       expect(ctx.isOperator).toEqual(false)
     })
