@@ -85,7 +85,6 @@ import { IlpPaymentService } from './payment-method/ilp/service'
 import { TelemetryService } from './telemetry/service'
 import { ApolloArmor } from '@escape.tech/graphql-armor'
 import { openPaymentsServerErrorMiddleware } from './open_payments/route-errors'
-import { verifyApiSignature } from './shared/utils'
 import { WalletAddress } from './open_payments/wallet_address/model'
 import {
   getWalletAddressUrlFromIncomingPayment,
@@ -101,6 +100,8 @@ import { LoggingPlugin } from './graphql/plugin'
 import { LocalPaymentService } from './payment-method/local/service'
 import { GrantService } from './open_payments/grant/service'
 import { AuthServerService } from './open_payments/authServer/service'
+import { Tenant } from './tenants/model'
+import { verifyTenantOrOperatorApiSignature } from './shared/utils'
 export interface AppContextData {
   logger: Logger
   container: AppContainer
@@ -142,6 +143,19 @@ export type HttpSigContext = AppContext & {
   request: HttpSigRequest
   headers: HttpSigHeaders
   client: string
+}
+
+type TenantedHttpSigHeaders = HttpSigHeaders & Record<'tenantId', string>
+
+type TenantedHttpSigRequest = Omit<HttpSigContext['request'], 'headers'> & {
+  headers: TenantedHttpSigHeaders
+}
+
+export type TenantedHttpSigContext = HttpSigContext & {
+  headers: TenantedHttpSigHeaders
+  request: TenantedHttpSigRequest
+  tenant?: Tenant
+  isOperator: boolean
 }
 
 export type HttpSigWithAuthenticatedStatusContext = HttpSigContext &
@@ -383,14 +397,14 @@ export class App {
       }
     )
 
-    if (this.config.adminApiSecret) {
-      koa.use(async (ctx, next: Koa.Next): Promise<void> => {
-        if (!verifyApiSignature(ctx, this.config)) {
+    koa.use(
+      async (ctx: TenantedHttpSigContext, next: Koa.Next): Promise<void> => {
+        if (!verifyTenantOrOperatorApiSignature(ctx, this.config)) {
           ctx.throw(401, 'Unauthorized')
         }
         return next()
-      })
-    }
+      }
+    )
 
     koa.use(
       koaMiddleware(this.apolloServer, {
