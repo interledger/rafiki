@@ -28,6 +28,7 @@ import { poll } from '../../shared/utils'
 import { WalletAddressAdditionalProperty } from './additional_property/model'
 import { AssetService } from '../../asset/service'
 import { CacheDataStore } from '../../middleware/cache/data-stores'
+import { TenantService } from '../../tenants/service'
 
 interface Options {
   publicName?: string
@@ -41,6 +42,7 @@ export type WalletAddressAdditionalPropertyInput = Pick<
 export interface CreateOptions extends Options {
   url: string
   assetId: string
+  tenantId: string
   additionalProperties?: WalletAddressAdditionalPropertyInput[]
 }
 
@@ -80,6 +82,7 @@ interface ServiceDependencies extends BaseService {
   knex: TransactionOrKnex
   accountingService: AccountingService
   webhookService: WebhookService
+  tenantService: TenantService
   assetService: AssetService
   walletAddressCache: CacheDataStore<WalletAddress>
 }
@@ -90,6 +93,7 @@ export async function createWalletAddressService({
   knex,
   accountingService,
   webhookService,
+  tenantService,
   assetService,
   walletAddressCache
 }: ServiceDependencies): Promise<WalletAddressService> {
@@ -102,6 +106,7 @@ export async function createWalletAddressService({
     knex,
     accountingService,
     webhookService,
+    tenantService,
     assetService,
     walletAddressCache
   }
@@ -176,13 +181,19 @@ async function createWalletAddress(
     const walletAddress = await WalletAddress.query(
       deps.knex
     ).insertGraphAndFetch({
+      tenantId: options.tenantId,
       url: options.url.toLowerCase(),
       publicName: options.publicName,
       assetId: options.assetId,
       additionalProperties: additionalProperties
     })
-    const asset = await deps.assetService.get(walletAddress.assetId)
+
+    const [asset, tenant] = await Promise.all([
+      deps.assetService.get(walletAddress.assetId),
+      deps.tenantService.get(walletAddress.tenantId)
+    ])
     if (asset) walletAddress.asset = asset
+    if (tenant) walletAddress.tenant = tenant
 
     await deps.walletAddressCache.set(walletAddress.id, walletAddress)
     return walletAddress
@@ -222,8 +233,12 @@ async function updateWalletAddress(
       .$query(trx)
       .patchAndFetch(update)
       .throwIfNotFound()
-    const asset = await deps.assetService.get(updatedWalletAddress.assetId)
+    const [asset, tenant] = await Promise.all([
+      deps.assetService.get(updatedWalletAddress.assetId),
+      deps.tenantService.get(updatedWalletAddress.tenantId)
+    ])
     if (asset) updatedWalletAddress.asset = asset
+    if (tenant) updatedWalletAddress.tenant = tenant
 
     // Override all existing additional properties if new ones are provided
     if (additionalProperties) {
@@ -267,8 +282,13 @@ async function getWalletAddress(
 
   const walletAddress = await WalletAddress.query(deps.knex).findById(id)
   if (walletAddress) {
-    const asset = await deps.assetService.get(walletAddress.assetId)
+    const [asset, tenant] = await Promise.all([
+      deps.assetService.get(walletAddress.assetId),
+      deps.tenantService.get(walletAddress.tenantId)
+    ])
     if (asset) walletAddress.asset = asset
+    if (tenant) walletAddress.tenant = tenant
+
     await deps.walletAddressCache.set(id, walletAddress)
   }
   return walletAddress
@@ -329,8 +349,12 @@ async function getWalletAddressByUrl(
     url: url.toLowerCase()
   })
   if (walletAddress) {
-    const asset = await deps.assetService.get(walletAddress.assetId)
+    const [asset, tenant] = await Promise.all([
+      deps.assetService.get(walletAddress.assetId),
+      deps.tenantService.get(walletAddress.tenantId)
+    ])
     if (asset) walletAddress.asset = asset
+    if (tenant) walletAddress.tenant = tenant
   }
   return walletAddress || undefined
 }
@@ -340,9 +364,19 @@ async function getWalletAddressPage(
   pagination?: Pagination,
   sortOrder?: SortOrder
 ): Promise<WalletAddress[]> {
-  return await WalletAddress.query(deps.knex)
-    .getPage(pagination, sortOrder)
-    .withGraphFetched('asset')
+  const addresses = await WalletAddress.query(deps.knex).getPage(
+    pagination,
+    sortOrder
+  )
+  for (const address of addresses) {
+    const [asset, tenant] = await Promise.all([
+      deps.assetService.get(address.assetId),
+      deps.tenantService.get(address.tenantId)
+    ])
+    if (asset) address.asset = asset
+    if (tenant) address.tenant = tenant
+  }
+  return addresses
 }
 
 // Returns the id of the processed wallet address (if any).
@@ -377,8 +411,12 @@ async function processNextWalletAddresses(
       .skipLocked()
       .where('processAt', '<=', now)
     for (const walletAddress of walletAddresses) {
-      const asset = await deps_.assetService.get(walletAddress.assetId)
+      const [asset, tenant] = await Promise.all([
+        deps_.assetService.get(walletAddress.assetId),
+        deps_.tenantService.get(walletAddress.tenantId)
+      ])
       if (asset) walletAddress.asset = asset
+      if (tenant) walletAddress.tenant = tenant
     }
 
     const deps = {

@@ -61,7 +61,7 @@ describe('Tenant Service', (): void => {
     await appContainer.shutdown()
   })
 
-  describe('Tenant pangination', (): void => {
+  describe('Tenant pagination', (): void => {
     describe('getPage', (): void => {
       getPageTests({
         createModel: () => createTenant(deps),
@@ -87,6 +87,19 @@ describe('Tenant Service', (): void => {
       const tenant = await tenantService.get(createdTenant.id)
       assert.ok(tenant)
       expect(tenant).toEqual(createdTenant)
+    })
+
+    test('returns undefined if tenant is deleted', async (): Promise<void> => {
+      const dbTenant = await Tenant.query(knex).insertAndFetch({
+        apiSecret: 'test-secret',
+        email: faker.internet.email(),
+        idpConsentUrl: faker.internet.url(),
+        idpSecret: 'test-idp-secret',
+        deletedAt: new Date()
+      })
+
+      const tenant = await tenantService.get(dbTenant.id)
+      expect(tenant).toBeUndefined()
     })
 
     test('returns undefined if tenant is deleted', async (): Promise<void> => {
