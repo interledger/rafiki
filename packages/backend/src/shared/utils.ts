@@ -126,7 +126,7 @@ function getSignatureParts(signature: string) {
 function verifyApiSignatureDigest(
   signature: string,
   request: AppContext['request'],
-  config: IAppConfig,
+  adminApiSignatureVersion: number,
   secret: string
 ): boolean {
   const { body } = request
@@ -136,7 +136,7 @@ function verifyApiSignatureDigest(
     timestamp
   } = getSignatureParts(signature as string)
 
-  if (Number(signatureVersion) !== config.adminApiSignatureVersion) {
+  if (Number(signatureVersion) !== adminApiSignatureVersion) {
     return false
   }
 
@@ -206,7 +206,7 @@ export async function verifyTenantOrOperatorApiSignature(
     verifyApiSignatureDigest(
       signature as string,
       ctx.request,
-      config,
+      config.adminApiSignatureVersion,
       tenant.apiSecret
     )
   ) {
@@ -234,7 +234,7 @@ export async function verifyApiSignature(
   return verifyApiSignatureDigest(
     signature as string,
     ctx.request,
-    config,
+    config.adminApiSignatureVersion,
     config.adminApiSecret as string
   )
 }
