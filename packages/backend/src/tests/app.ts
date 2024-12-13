@@ -12,8 +12,9 @@ import {
 import { setContext } from '@apollo/client/link/context'
 import { start, gracefulShutdown } from '..'
 import { onError } from '@apollo/client/link/error'
-
+import { print } from 'graphql/language/printer'
 import { App, AppServices } from '../app'
+import { generateApiSignature } from './apiSignature'
 
 export const testAccessToken = 'test-app-access'
 
@@ -76,10 +77,20 @@ export const createTestApp = async (
       })
     }
   })
-  const authLink = setContext((_, { headers }) => {
+  const authLink = setContext((request, { headers }) => {
+    const requestBody = {
+      variables: request.variables,
+      operationName: request.operationName,
+      query: print(request.query)
+    }
     return {
       headers: {
-        ...headers
+        ...headers,
+        signature: generateApiSignature(
+          config.adminApiSecret,
+          config.adminApiSignatureVersion,
+          requestBody
+        )
       }
     }
   })
