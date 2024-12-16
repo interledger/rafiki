@@ -16,6 +16,10 @@ Whether you are using the Backend Admin API or the Rafiki Admin application, the
 
 ## Prerequisites
 
+:::note
+Peering is not required unless you want to participate in transactions with another ASE on the Interledger network. For foundational peering concepts, refer to the Peers section of [Interledger Concepts](/overview/concepts/interledger/#peers).
+:::
+
 Before adding a peer, you and the account servicing entity you intend to peer with must both:
 
 - Run an implementation of an [Interledger connector](/integration/deployment/services/backend-service#interledger-connector) (ideally Rafiki).
@@ -30,11 +34,7 @@ Before adding a peer, you and the account servicing entity you intend to peer wi
 - Deposit an `initialLiquidity` for your peer. Liquidity can also be deposited later using the `depositPeerLiquidity` mutation.
 - Define a `maxPacketAmount` value, which specifies the maximum packet size you are willing to accept from the peer. Your peer's `maxPacketAmount` value does not need to match, as this value is independently set by each ASE. If omitted, payments will not be broken into smaller packets.
 
-:::note
-Peering is not required unless you want to participate in transactions with another ASE on the Interledger network. For foundational peering concepts, refer to the Peers section of [Interledger Concepts](/overview/concepts/interledger/#peers).
-:::
-
-## Setting up peering in Rafiki
+## Set up peering in Rafiki
 
 The basic workflow of setting up a peering relationship starts with adding the agreed upon asset and then adding a peer.
 
@@ -131,7 +131,7 @@ mutation CreatePeer($input: CreatePeerInput!) {
 
 </CodeBlock>
 
-## Managing peers
+## Manage peers
 
 Once a peer has been added to your Rafiki instance, there is minimal ongoing management required. Most peer interactions focus on monitoring liquidity and ensuring smooth payment flows. In rare cases, you may need to update a peer's configuration due to changes in their technical details or remove a peer created in error, as long as no payments have been exchanged. These actions help ensure your Rafiki instance stays up to date with operational changes.
 
