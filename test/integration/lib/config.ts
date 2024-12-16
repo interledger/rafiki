@@ -13,6 +13,7 @@ export type TestConfig = Config & {
   keyId: string
   signatureSecret: string
   signatureVersion: string
+  operatorTenantId: string
 }
 
 type EnvConfig = {
@@ -26,6 +27,7 @@ type EnvConfig = {
   IDP_SECRET: string
   SIGNATURE_SECRET: string
   SIGNATURE_VERSION: string
+  OPERATOR_TENANT_ID: string
 }
 
 const REQUIRED_KEYS: (keyof EnvConfig)[] = [
@@ -38,7 +40,8 @@ const REQUIRED_KEYS: (keyof EnvConfig)[] = [
   'KEY_ID',
   'IDP_SECRET',
   'SIGNATURE_SECRET',
-  'SIGNATURE_VERSION'
+  'SIGNATURE_VERSION',
+  'OPERATOR_TENANT_ID'
 ]
 
 const loadEnv = (filePath: string): EnvConfig => {
@@ -78,7 +81,8 @@ const createConfig = (name: string): TestConfig => {
     keyId: env.KEY_ID,
     idpSecret: env.IDP_SECRET,
     signatureSecret: env.SIGNATURE_SECRET,
-    signatureVersion: env.SIGNATURE_VERSION
+    signatureVersion: env.SIGNATURE_VERSION,
+    operatorTenantId: env.OPERATOR_TENANT_ID
   }
 }
 

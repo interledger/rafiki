@@ -14,6 +14,7 @@ interface CreateApolloClientArgs {
   graphqlUrl: string
   signatureSecret: string
   signatureVersion: string
+  operatorTenantId: string
 }
 
 function createAuthLink(args: CreateApolloClientArgs) {
@@ -35,7 +36,8 @@ function createAuthLink(args: CreateApolloClientArgs) {
     return {
       headers: {
         ...headers,
-        signature: `t=${timestamp}, v${version}=${digest}`
+        signature: `t=${timestamp}, v${version}=${digest}`,
+        'tenant-id': args.operatorTenantId
       }
     }
   })

@@ -11,7 +11,7 @@ import {
   sleep,
   getTenantFromApiSignature
 } from './utils'
-import { AppServices, AppContext, TenantedHttpSigContext } from '../app'
+import { AppServices, AppContext } from '../app'
 import { TestContainer, createTestApp } from '../tests/app'
 import { initIocContainer } from '..'
 import { verifyApiSignature } from './utils'
@@ -339,7 +339,7 @@ describe('utils', (): void => {
               requestBody
             )
 
-        const ctx = createContext<TenantedHttpSigContext>(
+        const ctx = createContext<AppContext>(
           {
             headers: {
               Accept: 'application/json',
@@ -372,7 +372,7 @@ describe('utils', (): void => {
         Config.adminApiSignatureVersion,
         requestBody
       )
-      const ctx = createContext<TenantedHttpSigContext>(
+      const ctx = createContext<AppContext>(
         {
           headers: {
             Accept: 'application/json',
@@ -397,7 +397,7 @@ describe('utils', (): void => {
         Config.adminApiSignatureVersion,
         requestBody
       )
-      const ctx = createContext<TenantedHttpSigContext>(
+      const ctx = createContext<AppContext>(
         {
           headers: {
             Accept: 'application/json',
@@ -422,7 +422,7 @@ describe('utils', (): void => {
         Config.adminApiSignatureVersion,
         requestBody
       )
-      const ctx = createContext<TenantedHttpSigContext>(
+      const ctx = createContext<AppContext>(
         {
           headers: {
             Accept: 'application/json',

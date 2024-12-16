@@ -148,19 +148,6 @@ export type HttpSigContext = AppContext & {
   client: string
 }
 
-type TenantedHttpSigHeaders = HttpSigHeaders & Record<'tenantId', string>
-
-type TenantedHttpSigRequest = Omit<HttpSigContext['request'], 'headers'> & {
-  headers: TenantedHttpSigHeaders
-}
-
-export type TenantedHttpSigContext = HttpSigContext & {
-  headers: TenantedHttpSigHeaders
-  request: TenantedHttpSigRequest
-  tenant?: Tenant
-  isOperator: boolean
-}
-
 export type HttpSigWithAuthenticatedStatusContext = HttpSigContext &
   AuthenticatedStatusContext
 
@@ -405,18 +392,22 @@ export class App {
       }
     )
 
-    let tenantApiSignatureResult: TenantApiSignatureResult
+    let tenantApiSignatureResult: TenantApiSignatureResult = {
+      tenant: undefined,
+      isOperator: false
+    }
     if (this.config.env !== 'test') {
-      koa.use(
-        async (ctx: TenantedHttpSigContext, next: Koa.Next): Promise<void> => {
-          const result = await getTenantFromApiSignature(ctx, this.config)
-          if (!result) {
-            ctx.throw(401, 'Unauthorized')
-          }
-          tenantApiSignatureResult = result
-          return next()
+      koa.use(async (ctx, next: Koa.Next): Promise<void> => {
+        const result = await getTenantFromApiSignature(ctx, this.config)
+        if (!result) {
+          ctx.throw(401, 'Unauthorized')
         }
-      )
+        tenantApiSignatureResult = {
+          tenant: result?.tenant,
+          isOperator: result?.isOperator ? true : false
+        }
+        return next()
+      })
     }
 
     koa.use(

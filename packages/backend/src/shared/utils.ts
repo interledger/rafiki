@@ -3,7 +3,7 @@ import { URL, type URL as URLType } from 'url'
 import { createHmac } from 'crypto'
 import { canonicalize } from 'json-canonicalize'
 import { IAppConfig } from '../config/app'
-import { AppContext, TenantedHttpSigContext } from '../app'
+import { AppContext } from '../app'
 import { Tenant } from '../tenants/model'
 
 export function validateId(id: string): boolean {
@@ -187,11 +187,9 @@ export interface TenantApiSignatureResult {
   If neither can replicate the signature then it is unauthorized.
 */
 export async function getTenantFromApiSignature(
-  ctx: TenantedHttpSigContext,
+  ctx: AppContext,
   config: IAppConfig
 ): Promise<TenantApiSignatureResult | undefined> {
-  ctx.tenant = undefined
-  ctx.isOperator = false
   const { headers } = ctx.request
   const signature = headers['signature']
   if (!signature) {
@@ -204,7 +202,7 @@ export async function getTenantFromApiSignature(
 
   if (!tenant) return undefined
 
-  if (!(await canApiSignatureBeProcessed(signature, ctx, config)))
+  if (!(await canApiSignatureBeProcessed(signature as string, ctx, config)))
     return undefined
 
   if (
