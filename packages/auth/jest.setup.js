@@ -2,6 +2,7 @@
 const { knex } = require('knex')
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { GenericContainer, Wait } = require('testcontainers')
+require('./jest.env') // set environment variables
 
 const POSTGRES_PORT = 5432
 const REDIS_PORT = 6379

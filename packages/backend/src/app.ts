@@ -383,7 +383,7 @@ export class App {
       }
     )
 
-    if (this.config.adminApiSecret) {
+    if (this.config.env !== 'test') {
       koa.use(async (ctx, next: Koa.Next): Promise<void> => {
         if (!(await verifyApiSignature(ctx, this.config))) {
           ctx.throw(401, 'Unauthorized')

@@ -126,6 +126,9 @@ export const Config = {
 
   authServerGrantUrl: envString('AUTH_SERVER_GRANT_URL'),
   authServerIntrospectionUrl: envString('AUTH_SERVER_INTROSPECTION_URL'),
+  authAdminApiUrl: envString('AUTH_ADMIN_API_URL'),
+  authAdminApiSecret: envString('AUTH_ADMIN_API_SECRET'),
+  authAdminApiSignatureVersion: envInt('AUTH_ADMIN_API_SIGNATURE_VERSION', 1),
 
   outgoingPaymentWorkers: envInt('OUTGOING_PAYMENT_WORKERS', 1),
   outgoingPaymentWorkerIdle: envInt('OUTGOING_PAYMENT_WORKER_IDLE', 10), // milliseconds
@@ -159,7 +162,7 @@ export const Config = {
   signatureSecret: process.env.SIGNATURE_SECRET, // optional
   signatureVersion: envInt('SIGNATURE_VERSION', 1),
 
-  adminApiSecret: process.env.API_SECRET, // optional
+  adminApiSecret: envString('API_SECRET'),
   adminApiSignatureVersion: envInt('API_SIGNATURE_VERSION', 1),
   adminApiSignatureTtl: envInt('ADMIN_API_SIGNATURE_TTL_SECONDS', 30),
 
@@ -192,7 +195,8 @@ export const Config = {
     'MAX_OUTGOING_PAYMENT_RETRY_ATTEMPTS',
     5
   ),
-  localCacheDuration: envInt('LOCAL_CACHE_DURATION_MS', 15_000)
+  localCacheDuration: envInt('LOCAL_CACHE_DURATION_MS', 15_000),
+  operatorTenantId: envString('OPERATOR_TENANT_ID')
 }
 
 function parseRedisTlsConfig(
