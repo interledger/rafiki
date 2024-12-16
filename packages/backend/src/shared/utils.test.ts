@@ -3,12 +3,13 @@ import { IocContract } from '@adonisjs/fold'
 import { Redis } from 'ioredis'
 import { faker } from '@faker-js/faker'
 import { v4 } from 'uuid'
+import assert from 'assert'
 import {
   isValidHttpUrl,
   poll,
   requestWithTimeout,
   sleep,
-  verifyTenantOrOperatorApiSignature
+  getTenantFromApiSignature
 } from './utils'
 import { AppServices, AppContext, TenantedHttpSigContext } from '../app'
 import { TestContainer, createTestApp } from '../tests/app'
@@ -322,7 +323,7 @@ describe('utils', (): void => {
       ${false}   | ${'tenanted non-operator'}
       ${true}    | ${'tenanted operator'}
     `(
-      'returns true if $description request has valid signature',
+      'returns if $description request has valid signature',
       async ({ isOperator }): Promise<void> => {
         const requestBody = { test: 'value' }
 
@@ -352,20 +353,19 @@ describe('utils', (): void => {
         )
         ctx.request.body = requestBody
 
-        const result = await verifyTenantOrOperatorApiSignature(ctx, config)
-        expect(result).toEqual(true)
-
-        expect(ctx.tenant).toEqual(isOperator ? operator : tenant)
+        const result = await getTenantFromApiSignature(ctx, config)
+        assert.ok(result)
+        expect(result.tenant).toEqual(isOperator ? operator : tenant)
 
         if (isOperator) {
-          expect(ctx.isOperator).toEqual(true)
+          expect(result.isOperator).toEqual(true)
         } else {
-          expect(ctx.isOperator).toEqual(false)
+          expect(result.isOperator).toEqual(false)
         }
       }
     )
 
-    test("returns false when signature isn't signed with tenant secret", async (): Promise<void> => {
+    test("returns undefined when signature isn't signed with tenant secret", async (): Promise<void> => {
       const requestBody = { test: 'value' }
       const signature = generateApiSignature(
         'wrongsecret',
@@ -386,13 +386,11 @@ describe('utils', (): void => {
       )
       ctx.request.body = requestBody
 
-      const result = await verifyTenantOrOperatorApiSignature(ctx, config)
-      expect(result).toEqual(false)
-      expect(ctx.tenant).toBeUndefined()
-      expect(ctx.isOperator).toEqual(false)
+      const result = await getTenantFromApiSignature(ctx, config)
+      expect(result).toBeUndefined
     })
 
-    test('returns false if tenant id is not included', async (): Promise<void> => {
+    test('returns undefined if tenant id is not included', async (): Promise<void> => {
       const requestBody = { test: 'value' }
       const signature = generateApiSignature(
         tenant.apiSecret,
@@ -413,13 +411,11 @@ describe('utils', (): void => {
 
       ctx.request.body = requestBody
 
-      const result = await verifyTenantOrOperatorApiSignature(ctx, config)
-      expect(result).toEqual(false)
-      expect(ctx.tenant).toBeUndefined()
-      expect(ctx.isOperator).toEqual(false)
+      const result = await getTenantFromApiSignature(ctx, config)
+      expect(result).toBeUndefined()
     })
 
-    test('returns false if tenant does not exist', async (): Promise<void> => {
+    test('returns undefined if tenant does not exist', async (): Promise<void> => {
       const requestBody = { test: 'value' }
       const signature = generateApiSignature(
         tenant.apiSecret,
@@ -443,11 +439,9 @@ describe('utils', (): void => {
 
       const tenantService = await deps.use('tenantService')
       const getSpy = jest.spyOn(tenantService, 'get')
-      const result = await verifyTenantOrOperatorApiSignature(ctx, config)
-      expect(result).toEqual(false)
+      const result = await getTenantFromApiSignature(ctx, config)
+      expect(result).toBeUndefined()
       expect(getSpy).toHaveBeenCalled()
-      expect(ctx.tenant).toBeUndefined()
-      expect(ctx.isOperator).toEqual(false)
     })
   })
 })

@@ -4,6 +4,7 @@ import { createHmac } from 'crypto'
 import { canonicalize } from 'json-canonicalize'
 import { IAppConfig } from '../config/app'
 import { AppContext, TenantedHttpSigContext } from '../app'
+import { Tenant } from '../tenants/model'
 
 export function validateId(id: string): boolean {
   return validate(id) && version(id) === 4
@@ -172,35 +173,40 @@ async function canApiSignatureBeProcessed(
   return true
 }
 
+export interface TenantApiSignatureResult {
+  tenant?: Tenant
+  isOperator: boolean
+}
+
 /*
   Verifies http signatures by first attempting to replicate it with a secret
-  associated with a tenant id in the headers, then with the configured admin secret.
+  associated with a tenant id in the headers.
 
   If a tenant secret can replicate the signature, the request is tenanted to that particular tenant.
   If the environment admin secret matches the tenant's secret, then it is an operator request with elevated permissions.
   If neither can replicate the signature then it is unauthorized.
 */
-export async function verifyTenantOrOperatorApiSignature(
+export async function getTenantFromApiSignature(
   ctx: TenantedHttpSigContext,
   config: IAppConfig
-): Promise<boolean> {
+): Promise<TenantApiSignatureResult | undefined> {
   ctx.tenant = undefined
   ctx.isOperator = false
   const { headers } = ctx.request
   const signature = headers['signature']
   if (!signature) {
-    return false
+    return undefined
   }
 
   const tenantService = await ctx.container.use('tenantService')
   const tenantId = headers['tenant-id']
   const tenant = tenantId ? await tenantService.get(tenantId) : undefined
 
-  if (!tenant) return false
+  if (!tenant) return undefined
 
-  if (!(await canApiSignatureBeProcessed(signature, ctx, config))) return false
+  if (!(await canApiSignatureBeProcessed(signature, ctx, config)))
+    return undefined
 
-  // First, try validating with the tenant api secret
   if (
     tenant.apiSecret &&
     verifyApiSignatureDigest(
@@ -210,12 +216,10 @@ export async function verifyTenantOrOperatorApiSignature(
       tenant.apiSecret
     )
   ) {
-    ctx.tenant = tenant
-    ctx.isOperator = tenant.apiSecret === config.adminApiSecret
-    return true
+    return { tenant, isOperator: tenant.apiSecret === config.adminApiSecret }
   }
 
-  return false
+  return undefined
 }
 
 export async function verifyApiSignature(
