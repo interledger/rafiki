@@ -779,9 +779,15 @@ importers:
       dotenv:
         specifier: ^16.4.5
         version: 16.4.5
+      graphql:
+        specifier: ^16.8.1
+        version: 16.8.1
       hostile:
         specifier: ^1.4.0
         version: 1.4.0
+      json-canonicalize:
+        specifier: ^1.0.6
+        version: 1.0.6
       koa:
         specifier: ^2.15.3
         version: 2.15.3
@@ -13193,7 +13199,6 @@ packages:
 
   /json-canonicalize@1.0.6:
     resolution: {integrity: sha512-kP2iYpOS5SZHYhIaR1t9oG80d4uTY3jPoaBj+nimy3njtJk8+sRsVatN8pyJRDRtk9Su3+6XqA2U8k0dByJBUQ==}
-    dev: false
 
   /json-parse-even-better-errors@2.3.1:
     resolution: {integrity: sha512-xyFwyhro/JEof6Ghe2iz2NcXoj2sloNsWr/XsERDK/oiPCfaNhl5ONfp+jQdAZRQQ0IJWNzH9zIZF7li91kh2w==}
