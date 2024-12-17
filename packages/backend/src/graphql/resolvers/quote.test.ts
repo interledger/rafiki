@@ -22,13 +22,15 @@ import { Quote as QuoteModel } from '../../open_payments/quote/model'
 import { Amount } from '../../open_payments/amount'
 import { CreateQuoteInput, Quote, QuoteResponse } from '../generated/graphql'
 import { GraphQLErrorCode } from '../errors'
+import { Tenant } from '../../tenants/model'
+import { createTenant } from '../../tests/tenant'
 
 describe('Quote Resolvers', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let quoteService: QuoteService
   let asset: Asset
-  let tenantId: string
+  let tenant: Tenant
 
   const receivingWalletAddress = 'http://wallet2.example/bob'
   const receiver = `${receivingWalletAddress}/incoming-payments/${uuid()}`
@@ -40,7 +42,7 @@ describe('Quote Resolvers', (): void => {
   })
 
   beforeEach(async (): Promise<void> => {
-    tenantId = '8e1db008-ab2f-4f1d-8c44-593354084100'
+    tenant = await createTenant(deps)
     asset = await createAsset(deps)
   })
 
@@ -58,7 +60,7 @@ describe('Quote Resolvers', (): void => {
     walletAddressId: string
   ): Promise<QuoteModel> => {
     return await createQuote(deps, {
-      tenantId,
+      tenantId: tenant.id,
       walletAddressId,
       receiver,
       debitAmount: {
@@ -148,7 +150,7 @@ describe('Quote Resolvers', (): void => {
           `,
           variables: {
             quoteId: uuid(),
-            tenantId: '8e1db008-ab2f-4f1d-8c44-593354084100'
+            tenantId: tenant.id
           }
         })
       } catch (error) {
@@ -185,7 +187,7 @@ describe('Quote Resolvers', (): void => {
         assetScale: asset.scale
       }
       input = {
-        tenantId: '8e1db008-ab2f-4f1d-8c44-593354084100',
+        tenantId: tenant.id,
         walletAddressId: uuid(),
         receiver,
         debitAmount
@@ -202,7 +204,7 @@ describe('Quote Resolvers', (): void => {
       const { id: walletAddressId } = await createWalletAddress(deps, {
         assetId: asset.id
       })
-      const tenantId = '8e1db008-ab2f-4f1d-8c44-593354084100'
+      const tenantId = tenant.id
       const input = {
         tenantId,
         walletAddressId,

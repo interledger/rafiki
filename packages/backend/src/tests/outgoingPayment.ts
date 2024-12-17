@@ -131,9 +131,9 @@ export async function createOutgoingPaymentWithReceiver(
   )
 
   const outgoingPayment = await createOutgoingPayment(deps, {
-    //TODO
+    //TODO fix this in outgoing payments changes
     tenantId:
-      args.quoteOptions?.tenantId || '8e1db008-ab2f-4f1d-8c44-593354084100',
+      args.quoteOptions?.tenantId || uuid(),
     walletAddressId: args.sendingWalletAddress.id,
     method: args.method,
     receiver: receiver.incomingPayment!.id!,

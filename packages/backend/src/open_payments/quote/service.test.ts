@@ -35,6 +35,7 @@ import {
   PaymentMethodHandlerErrorCode
 } from '../../payment-method/handler/errors'
 import { Receiver } from '../receiver/model'
+import { createTenant } from '../../tests/tenant'
 
 describe('QuoteService', (): void => {
   let deps: IocContract<AppServices>
@@ -92,8 +93,9 @@ describe('QuoteService', (): void => {
   })
 
   beforeEach(async (): Promise<void> => {
-    tenantId = '8e1db008-ab2f-4f1d-8c44-593354084100'
-
+    tenantId = ( 
+      await createTenant(deps) 
+    ).id
     const { id: sendAssetId } = await createAsset(deps, {
       code: debitAmount.assetCode,
       scale: debitAmount.assetScale
@@ -111,9 +113,9 @@ describe('QuoteService', (): void => {
     receiverGet = receiverService.get
     receiverGetSpy = jest
       .spyOn(receiverService, 'get')
-      .mockImplementation(async (url: string, tenantId: string) => {
+      .mockImplementation(async (url: string) => {
         // call original instead of receiverService.get to avoid infinite loop
-        const receiver = await receiverGet.call(receiverService, url, tenantId)
+        const receiver = await receiverGet.call(receiverService, url)
         if (receiver) {
           // "as any" to circumvent "readonly" check (compile time only) to allow overriding "isLocal" here
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -209,8 +211,7 @@ describe('QuoteService', (): void => {
               async ({ client }): Promise<void> => {
                 const mockedQuote = mockQuote({
                   receiver: (await receiverService.get(
-                    incomingPayment.getUrl(receivingWalletAddress),
-                    tenantId
+                    incomingPayment.getUrl(receivingWalletAddress)
                   ))!,
                   walletAddress: sendingWalletAddress,
                   exchangeRate: 0.5,
@@ -271,8 +272,7 @@ describe('QuoteService', (): void => {
               test('fails if receiveAmount exceeds receiver.incomingAmount', async (): Promise<void> => {
                 const mockedQuote = mockQuote({
                   receiver: (await receiverService.get(
-                    incomingPayment.getUrl(receivingWalletAddress),
-                    tenantId
+                    incomingPayment.getUrl(receivingWalletAddress)
                   ))!,
                   walletAddress: sendingWalletAddress,
                   exchangeRate: 0.5,
@@ -311,8 +311,7 @@ describe('QuoteService', (): void => {
               async ({ client }): Promise<void> => {
                 const mockedQuote = mockQuote({
                   receiver: (await receiverService.get(
-                    incomingPayment.getUrl(receivingWalletAddress),
-                    tenantId
+                    incomingPayment.getUrl(receivingWalletAddress)
                   ))!,
                   walletAddress: sendingWalletAddress,
                   exchangeRate: 0.5,
@@ -402,8 +401,7 @@ describe('QuoteService', (): void => {
 
         const mockedQuote = mockQuote({
           receiver: (await receiverService.get(
-            incomingPayment.getUrl(receivingWalletAddress),
-            tenantId
+            incomingPayment.getUrl(receivingWalletAddress)
           ))!,
           walletAddress: sendingWalletAddress,
           receiveAmountValue: receiveAmount.value,
@@ -775,8 +773,7 @@ describe('QuoteService', (): void => {
 
         const mockedQuote = mockQuote({
           receiver: (await receiverService.get(
-            incomingPayment.getUrl(receivingWalletAddress),
-            tenantId
+            incomingPayment.getUrl(receivingWalletAddress)
           ))!,
           walletAddress: sendingWalletAddress,
           exchangeRate: 0.5,

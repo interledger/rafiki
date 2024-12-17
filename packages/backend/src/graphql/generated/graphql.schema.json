@@ -1050,6 +1050,22 @@
             "defaultValue": null,
             "isDeprecated": false,
             "deprecationReason": null
+          },
+          {
+            "name": "tenantId",
+            "description": "Unique identifier of the tenant under which the outgoing payment was created.",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
           }
         ],
         "interfaces": null,
@@ -1549,6 +1565,22 @@
             "deprecationReason": null
           },
           {
+            "name": "tenantId",
+            "description": "Unique identifier of the tenant under which the outgoing payment was created.",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "walletAddressId",
             "description": "Unique identifier of the wallet address under which the outgoing payment will be created.",
             "type": {
@@ -1602,6 +1634,22 @@
           {
             "name": "quoteId",
             "description": "Unique identifier of the corresponding quote for that outgoing payment.",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "tenantId",
+            "description": "Unique identifier of the tenant under which the outgoing payment was created.",
             "type": {
               "kind": "NON_NULL",
               "name": null,

@@ -54,6 +54,7 @@ import { TelemetryService } from '../../../telemetry/service'
 import { getPageTests } from '../../../shared/baseModel.test'
 import { Pagination, SortOrder } from '../../../shared/baseModel'
 import { ReceiverService } from '../../receiver/service'
+import { createTenant } from '../../../tests/tenant'
 
 describe('OutgoingPaymentService', (): void => {
   let deps: IocContract<AppServices>
@@ -270,9 +271,10 @@ describe('OutgoingPaymentService', (): void => {
   })
 
   beforeEach(async (): Promise<void> => {
+    const { id: sendTenantId } = await createTenant(deps)
+    tenantId = sendTenantId
     const { id: sendAssetId } = await createAsset(deps, asset)
     assetId = sendAssetId
-    tenantId = '8e1db008-ab2f-4f1d-8c44-593354084100'
     const walletAddress = await createWalletAddress(deps, {
       assetId: sendAssetId
     })
@@ -304,7 +306,7 @@ describe('OutgoingPaymentService', (): void => {
       .spyOn(receiverService, 'get')
       .mockImplementation(async (url: string) => {
         // call original instead of receiverService.get to avoid infinite loop
-        const receiver = await receiverGet.call(receiverService, url, tenantId)
+        const receiver = await receiverGet.call(receiverService, url)
         if (receiver) {
           // "as any" to circumvent "readonly" check (compile time only) to allow overriding "isLocal" here
           // eslint-disable-next-line @typescript-eslint/no-explicit-any

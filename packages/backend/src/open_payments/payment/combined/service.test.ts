@@ -21,6 +21,7 @@ import {
   createCombinedPayment,
   toCombinedPayment
 } from '../../../tests/combinedPayment'
+import { createTenant } from '../../../tests/tenant'
 
 describe('Combined Payment Service', (): void => {
   let deps: IocContract<AppServices>
@@ -41,7 +42,9 @@ describe('Combined Payment Service', (): void => {
   })
 
   beforeEach(async (): Promise<void> => {
-    tenantId = '8e1db008-ab2f-4f1d-8c44-593354084100'
+    tenantId = (
+      await createTenant(deps)
+    ).id
     sendAsset = await createAsset(deps)
     receiveAsset = await createAsset(deps)
     sendWalletAddressId = (

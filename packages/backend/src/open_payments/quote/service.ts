@@ -22,6 +22,7 @@ import {
 import { v4 as uuid } from 'uuid'
 import { TelemetryService } from '../../telemetry/service'
 import { AssetService } from '../../asset/service'
+import { TenantService } from '../../tenants/service'
 
 export interface QuoteService extends WalletAddressSubresourceService<Quote> {
   create(options: CreateQuoteOptions): Promise<Quote | QuoteError>
@@ -30,6 +31,7 @@ export interface QuoteService extends WalletAddressSubresourceService<Quote> {
 export interface ServiceDependencies extends BaseService {
   config: IAppConfig
   knex: TransactionOrKnex
+  tenantService: TenantService
   receiverService: ReceiverService
   walletAddressService: WalletAddressService
   assetService: AssetService
@@ -100,14 +102,13 @@ async function createQuote(
     callName: 'QuoteService:create',
     description: 'Time to create a quote'
   })
-  // TODO
-  // const tenant = await deps.tenantService.get(
-  //   options.tenantId
-  // )
-  // if (!tenant) {
-  //   stopTimer()
-  //   return QuoteError.UnknownTenant
-  // }
+  const tenant = await deps.tenantService.get(
+    options.tenantId
+  )
+  if (!tenant) {
+    stopTimer()
+    return QuoteError.InvalidTenant
+  }
   if (options.debitAmount && options.receiveAmount) {
     stopTimer()
     return QuoteError.InvalidAmount
@@ -263,8 +264,7 @@ export async function resolveReceiver(
   options: CreateQuoteOptions
 ): Promise<Receiver> {
   const receiver = await deps.receiverService.get(
-    options.receiver,
-    options.tenantId
+    options.receiver
   )
   if (!receiver) {
     deps.logger.info(

@@ -18,12 +18,14 @@ import {
 } from '../../tests/combinedPayment'
 import { PaymentType } from '../../open_payments/payment/combined/model'
 import { getPageTests } from './page.test'
+import { createTenant } from '../../tests/tenant'
+import { Tenant } from '../../tenants/model'
 
 describe('Payment', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let asset: Asset
-  let tenantId: string
+  let tenant: Tenant
 
   beforeAll(async (): Promise<void> => {
     deps = initIocContainer(Config)
@@ -32,7 +34,7 @@ describe('Payment', (): void => {
 
   beforeEach(async (): Promise<void> => {
     asset = await createAsset(deps)
-    tenantId = '8e1db008-ab2f-4f1d-8c44-593354084100'
+    tenant = await createTenant(deps)
   })
 
   afterEach(async (): Promise<void> => {
@@ -57,7 +59,7 @@ describe('Payment', (): void => {
 
     const client = 'client-test'
     const outgoingPayment = await createOutgoingPayment(deps, {
-      tenantId,
+      tenantId: tenant.id,
       walletAddressId: outWalletAddressId,
       client: client,
       method: 'ilp',
@@ -164,7 +166,7 @@ describe('Payment', (): void => {
 
     const client = 'client-test-type-wallet-address'
     const outgoingPayment = await createOutgoingPayment(deps, {
-      tenantId,
+      tenantId: tenant.id,
       walletAddressId: outWalletAddressId,
       client: client,
       method: 'ilp',
@@ -175,7 +177,7 @@ describe('Payment', (): void => {
       assetId: asset.id
     })
     await createOutgoingPayment(deps, {
-      tenantId,
+      tenantId: tenant.id,
       walletAddressId: outWalletAddressId2,
       client: client,
       method: 'ilp',

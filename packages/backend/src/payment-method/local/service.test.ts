@@ -24,6 +24,8 @@ import { IncomingPaymentService } from '../../open_payments/payment/incoming/ser
 import { errorToMessage, TransferError } from '../../accounting/errors'
 import { PaymentMethodHandlerError } from '../handler/errors'
 import { ConvertError } from '../../rates/service'
+import { v4 as uuid } from 'uuid'
+import { createTenant } from '../../tests/tenant'
 
 const nock = (global as unknown as { nock: typeof import('nock') }).nock
 
@@ -33,8 +35,8 @@ describe('LocalPaymentService', (): void => {
   let localPaymentService: LocalPaymentService
   let accountingService: AccountingService
   let incomingPaymentService: IncomingPaymentService
+  let tenantId: string
 
-  const tenantId = '8e1db008-ab2f-4f1d-8c44-593354084100'
   const exchangeRatesUrl = 'https://example-rates.com'
 
   const assetMap: Record<string, Asset> = {}
@@ -54,6 +56,7 @@ describe('LocalPaymentService', (): void => {
   })
 
   beforeEach(async (): Promise<void> => {
+    tenantId = ( await createTenant(deps) ).id
     assetMap['USD'] = await createAsset(deps, {
       code: 'USD',
       scale: 2

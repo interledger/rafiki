@@ -23,8 +23,7 @@ interface CreateRemoteIncomingPaymentArgs {
 
 export interface RemoteIncomingPaymentService {
   get(
-    url: string,
-    tenantId?: string //TODO this is not optional
+    url: string
   ): Promise<
     OpenPaymentsIncomingPaymentWithPaymentMethods | RemoteIncomingPaymentError
   >

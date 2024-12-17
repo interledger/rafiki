@@ -18,6 +18,7 @@ import { getPageInfo, parsePaginationQueryParameters } from './pagination'
 import { AssetService } from '../asset/service'
 import { PeerService } from '../payment-method/ilp/peer/service'
 import { createPeer } from '../tests/peer'
+import { createTenant } from '../tests/tenant'
 
 describe('Pagination', (): void => {
   let deps: IocContract<AppServices>
@@ -83,7 +84,7 @@ describe('Pagination', (): void => {
         outgoingPaymentService = await deps.use('outgoingPaymentService')
         quoteService = await deps.use('quoteService')
 
-        tenantId = '8e1db008-ab2f-4f1d-8c44-593354084100'
+        tenantId = (await createTenant(deps) ).id
         const asset = await createAsset(deps)
         defaultWalletAddress = await createWalletAddress(deps, {
           assetId: asset.id

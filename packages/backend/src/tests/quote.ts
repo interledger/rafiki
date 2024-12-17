@@ -70,17 +70,10 @@ export async function createQuote(
     exchangeRate = 0.5
   }: CreateTestQuoteOptions
 ): Promise<Quote> {
-  if (!tenantId) {
-    throw new Error('Invalid tenant id')
-  }
-  // TODO remove this
-  const knex = await deps.use('knex')
-  const tenantResult = await knex.raw('SELECT * FROM tenants WHERE id = ?', [
-    tenantId
-  ])
-
-  if (!tenantResult.rows.length) {
-    throw new Error(`Tenant with id ${tenantId} does not exist.`)
+  const tenantService = await deps.use('tenantService')
+  const tenant = await tenantService.get(tenantId)
+  if (!tenant) {
+    throw new Error(`tenant not found.`)
   }
   const walletAddressService = await deps.use('walletAddressService')
   const walletAddress = await walletAddressService.get(walletAddressId)
@@ -99,7 +92,7 @@ export async function createQuote(
   let receiveAsset: AssetOptions | undefined
   if (validDestination) {
     const receiverService = await deps.use('receiverService')
-    const receiver = await receiverService.get(receiverUrl, tenantId)
+    const receiver = await receiverService.get(receiverUrl)
     if (!receiver) {
       throw new Error('receiver not found')
     }

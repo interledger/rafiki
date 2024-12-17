@@ -80,7 +80,6 @@ describe('Receiver Service', (): void => {
   describe('get', () => {
     describe('local incoming payment', () => {
       test('resolves local incoming payment', async () => {
-        const tenantId = '8e1db008-ab2f-4f1d-8c44-593354084100'
         const walletAddress = await createWalletAddress(deps, {
           mockServerPort: Config.openPaymentsPort
         })
@@ -94,7 +93,7 @@ describe('Receiver Service', (): void => {
         })
 
         await expect(
-          receiverService.get(incomingPayment.getUrl(walletAddress), tenantId)
+          receiverService.get(incomingPayment.getUrl(walletAddress))
         ).resolves.toEqual({
           assetCode: incomingPayment.receivedAmount.assetCode,
           assetScale: incomingPayment.receivedAmount.assetScale,
@@ -192,7 +191,6 @@ describe('Receiver Service', (): void => {
     describe('remote incoming payment', () => {
       test('gets receiver from remote incoming payment', async () => {
         const mockedIncomingPayment = mockIncomingPaymentWithPaymentMethods()
-        const tenantId = '8e1db008-ab2f-4f1d-8c44-593354084100'
 
         jest
           .spyOn(incomingPaymentService, 'get')
@@ -203,7 +201,7 @@ describe('Receiver Service', (): void => {
           .mockResolvedValueOnce(mockedIncomingPayment)
 
         await expect(
-          receiverService.get(mockedIncomingPayment.id, tenantId)
+          receiverService.get(mockedIncomingPayment.id)
         ).resolves.toEqual({
           assetCode: mockedIncomingPayment.receivedAmount.assetCode,
           assetScale: mockedIncomingPayment.receivedAmount.assetScale,
@@ -237,7 +235,6 @@ describe('Receiver Service', (): void => {
 
       test('returns undefined if could not get remote incoming payment', async () => {
         const mockedIncomingPayment = mockIncomingPaymentWithPaymentMethods()
-        const tenantId = '8e1db008-ab2f-4f1d-8c44-593354084100'
 
         const localIncomingPaymentServiceGetSpy = jest
           .spyOn(incomingPaymentService, 'get')
@@ -248,7 +245,7 @@ describe('Receiver Service', (): void => {
           .mockResolvedValueOnce(RemoteIncomingPaymentError.InvalidGrant)
 
         await expect(
-          receiverService.get(mockedIncomingPayment.id, tenantId)
+          receiverService.get(mockedIncomingPayment.id)
         ).resolves.toBeUndefined()
         expect(localIncomingPaymentServiceGetSpy).toHaveBeenCalledTimes(1)
         expect(remoteIncomingPaymentServiceGetSpy).toHaveBeenCalledTimes(1)
@@ -258,7 +255,6 @@ describe('Receiver Service', (): void => {
         const mockedIncomingPayment = mockIncomingPaymentWithPaymentMethods({
           completed: true // cannot get receiver with a completed incoming payment
         })
-        const tenantId = '8e1db008-ab2f-4f1d-8c44-593354084100'
 
         const localIncomingPaymentServiceGetSpy = jest
           .spyOn(incomingPaymentService, 'get')
@@ -269,7 +265,7 @@ describe('Receiver Service', (): void => {
           .mockResolvedValueOnce(mockedIncomingPayment)
 
         await expect(
-          receiverService.get(mockedIncomingPayment.id, tenantId)
+          receiverService.get(mockedIncomingPayment.id)
         ).resolves.toBeUndefined()
         expect(localIncomingPaymentServiceGetSpy).toHaveBeenCalledTimes(1)
         expect(remoteIncomingPaymentServiceGetSpy).toHaveBeenCalledTimes(1)

@@ -37,6 +37,7 @@ import {
 } from '../generated/graphql'
 import { faker } from '@faker-js/faker'
 import { GraphQLErrorCode } from '../errors'
+import { createTenant } from '../../tests/tenant'
 
 describe('OutgoingPayment Resolvers', (): void => {
   let deps: IocContract<AppServices>
@@ -99,7 +100,9 @@ describe('OutgoingPayment Resolvers', (): void => {
     let walletAddressId: string
 
     beforeEach(async (): Promise<void> => {
-      tenantId = '8e1db008-ab2f-4f1d-8c44-593354084100'
+      tenantId = (
+        await createTenant(deps)
+      ).id
       walletAddressId = (
         await createWalletAddress(deps, {
           assetId: asset.id
@@ -555,13 +558,19 @@ describe('OutgoingPayment Resolvers', (): void => {
   })
 
   describe('Mutation.createOutgoingPayment', (): void => {
+    let tenantId: string
     const metadata = {
       description: 'rent',
       externalRef: '202201'
     }
 
+    beforeEach(async (): Promise<void> => {
+      tenantId = (
+        await createTenant(deps)
+      ).id
+    })
+
     test('success (metadata)', async (): Promise<void> => {
-      const tenantId = '8e1db008-ab2f-4f1d-8c44-593354084100'
       const { id: walletAddressId } = await createWalletAddress(deps, {
         assetId: asset.id
       })
@@ -576,6 +585,7 @@ describe('OutgoingPayment Resolvers', (): void => {
         .mockResolvedValueOnce(payment)
 
       const input = {
+        tenantId: payment.quote.tenantId,
         walletAddressId: payment.walletAddressId,
         quoteId: payment.quote.id
       }
@@ -611,6 +621,7 @@ describe('OutgoingPayment Resolvers', (): void => {
         .mockResolvedValueOnce(OutgoingPaymentError.UnknownWalletAddress)
 
       const input = {
+        tenantId,
         walletAddressId: uuid(),
         quoteId: uuid()
       }
@@ -657,6 +668,7 @@ describe('OutgoingPayment Resolvers', (): void => {
         .mockRejectedValueOnce(new Error('unexpected'))
 
       const input = {
+        tenantId,
         walletAddressId: uuid(),
         quoteId: uuid()
       }
@@ -699,10 +711,16 @@ describe('OutgoingPayment Resolvers', (): void => {
   })
 
   describe('Mutation.createOutgoingPaymentFromIncomingPayment', (): void => {
+    let tenantId: string
     const mockIncomingPaymentUrl = `https://${faker.internet.domainName()}/incoming-payments/${uuid()}`
 
+    beforeEach(async (): Promise<void> => {
+      tenantId = (
+        await createTenant(deps)
+      ).id
+    })
+
     test('create', async (): Promise<void> => {
-      const tenantId = '8e1db008-ab2f-4f1d-8c44-593354084100'
       const walletAddress = await createWalletAddress(deps, {
         assetId: asset.id
       })
@@ -716,6 +734,7 @@ describe('OutgoingPayment Resolvers', (): void => {
         .mockResolvedValueOnce(payment)
 
       const input = {
+        tenantId: payment.quote.tenantId,
         walletAddressId: payment.walletAddressId,
         incomingPayment: mockIncomingPaymentUrl,
         debitAmount: {
@@ -757,6 +776,7 @@ describe('OutgoingPayment Resolvers', (): void => {
         .mockResolvedValueOnce(OutgoingPaymentError.UnknownWalletAddress)
 
       const input = {
+        tenantId,
         walletAddressId: uuid(),
         incomingPayment: mockIncomingPaymentUrl,
         debitAmount: {
@@ -808,6 +828,7 @@ describe('OutgoingPayment Resolvers', (): void => {
         .mockRejectedValueOnce(new Error('unexpected'))
 
       const input = {
+        tenantId,
         walletAddressId: uuid(),
         incomingPayment: mockIncomingPaymentUrl,
         debitAmount: {
@@ -857,13 +878,13 @@ describe('OutgoingPayment Resolvers', (): void => {
   describe('Mutation.cancelOutgoingPayment', (): void => {
     let payment: OutgoingPaymentModel
     beforeEach(async () => {
-      const tenantId = '8e1db008-ab2f-4f1d-8c44-593354084100'
+      const tenant = await createTenant(deps)
       const walletAddress = await createWalletAddress(deps, {
         assetId: asset.id
       })
 
       payment = await createPayment({
-        tenantId,
+        tenantId: tenant.id,
         walletAddressId: walletAddress.id
       })
     })
@@ -874,6 +895,7 @@ describe('OutgoingPayment Resolvers', (): void => {
       async (reason): Promise<void> => {
         const input = {
           id: payment.id,
+          tenantId: payment.quote.tenantId,
           reason
         }
 
@@ -931,7 +953,7 @@ describe('OutgoingPayment Resolvers', (): void => {
           .spyOn(outgoingPaymentService, 'cancel')
           .mockResolvedValueOnce(paymentError)
 
-        const input = { id: uuid() }
+        const input = { id: uuid(), tenantId: payment.quote.tenantId }
 
         expect.assertions(3)
         try {
@@ -977,7 +999,9 @@ describe('OutgoingPayment Resolvers', (): void => {
     let tenantId: string
 
     beforeEach(async (): Promise<void> => {
-      tenantId = '8e1db008-ab2f-4f1d-8c44-593354084100'
+      tenantId = (
+        await createTenant(deps)
+      ).id
       walletAddressId = (
         await createWalletAddress(deps, {
           assetId: asset.id

@@ -290,7 +290,8 @@ describe('Receiver Resolver', (): void => {
           `,
           variables: {
             id: receiver.incomingPayment.id,
-            tenantId: '8e1db008-ab2f-4f1d-8c44-593354084100'
+            //TODO: This would make more sense to be modified in the incoming payments PR
+            tenantId: uuid()
           }
         })
         .then((query): Receiver => query.data?.receiver)

@@ -188,6 +188,8 @@ export type CancelOutgoingPaymentInput = {
   id: Scalars['ID']['input'];
   /** Reason why this outgoing payment has been canceled. This value will be publicly visible in the metadata field if this outgoing payment is requested through Open Payments. */
   reason?: InputMaybe<Scalars['String']['input']>;
+  /** Unique identifier of the tenant under which the outgoing payment was created. */
+  tenantId: Scalars['String']['input'];
 };
 
 export type CreateAssetInput = {
@@ -270,6 +272,8 @@ export type CreateOutgoingPaymentFromIncomingPaymentInput = {
   incomingPayment: Scalars['String']['input'];
   /** Additional metadata associated with the outgoing payment. */
   metadata?: InputMaybe<Scalars['JSONObject']['input']>;
+  /** Unique identifier of the tenant under which the outgoing payment was created. */
+  tenantId: Scalars['String']['input'];
   /** Unique identifier of the wallet address under which the outgoing payment will be created. */
   walletAddressId: Scalars['String']['input'];
 };
@@ -281,6 +285,8 @@ export type CreateOutgoingPaymentInput = {
   metadata?: InputMaybe<Scalars['JSONObject']['input']>;
   /** Unique identifier of the corresponding quote for that outgoing payment. */
   quoteId: Scalars['String']['input'];
+  /** Unique identifier of the tenant under which the outgoing payment was created. */
+  tenantId: Scalars['String']['input'];
   /** Unique identifier of the wallet address under which the outgoing payment will be created. */
   walletAddressId: Scalars['String']['input'];
 };

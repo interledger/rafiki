@@ -44,6 +44,7 @@ import { Pagination, SortOrder } from '../../../shared/baseModel'
 import { FilterString } from '../../../shared/filters'
 import { IAppConfig } from '../../../config/app'
 import { AssetService } from '../../../asset/service'
+import { TenantService } from '../../../tenants/service'
 
 export interface OutgoingPaymentService
   extends WalletAddressSubresourceService<OutgoingPayment> {
@@ -63,6 +64,7 @@ export interface OutgoingPaymentService
 export interface ServiceDependencies extends BaseService {
   config: IAppConfig
   knex: TransactionOrKnex
+  tenantService: TenantService
   accountingService: AccountingService
   receiverService: ReceiverService
   peerService: PeerService
@@ -185,6 +187,7 @@ export interface CreateFromIncomingPayment extends BaseOptions {
 
 export type CancelOutgoingPaymentOptions = {
   id: string
+  tenantId: string
   reason?: string
 }
 
@@ -197,7 +200,7 @@ export function isCreateFromIncomingPayment(
 ): options is CreateFromIncomingPayment {
   return 'incomingPayment' in options && 'debitAmount' in options
 }
-
+//TODO use tenantId in outgoing payment changes
 async function cancelOutgoingPayment(
   deps: ServiceDependencies,
   options: CancelOutgoingPaymentOptions
@@ -369,10 +372,8 @@ async function createOutgoingPayment(
           description: 'Time to retrieve receiver in outgoing payment'
         }
       )
-      //TODO tenantId should not be taken from `options` but from `payment`
       const receiver = await deps.receiverService.get(
-        payment.receiver,
-        options.tenantId
+        payment.receiver
       )
       stopTimerReceiver()
       if (!receiver) {

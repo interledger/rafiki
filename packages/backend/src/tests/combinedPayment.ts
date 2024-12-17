@@ -12,6 +12,7 @@ import { Config } from '../config/app'
 import { v4 as uuid } from 'uuid'
 import { createAsset } from './asset'
 import { createWalletAddress } from './walletAddress'
+import { createTenant } from './tenant'
 
 export function toCombinedPayment(
   type: PaymentType,
@@ -39,7 +40,7 @@ export async function createCombinedPayment(
 ): Promise<CombinedPayment> {
   const sendAsset = await createAsset(deps)
   const receiveAsset = await createAsset(deps)
-  const tenantId = '8e1db008-ab2f-4f1d-8c44-593354084100'
+  const tenant = await createTenant(deps)
   const sendWalletAddressId = (
     await createWalletAddress(deps, { assetId: sendAsset.id })
   ).id
@@ -54,7 +55,7 @@ export async function createCombinedPayment(
           walletAddressId: receiveWalletAddress.id
         })
       : await createOutgoingPayment(deps, {
-          tenantId,
+          tenantId: tenant.id,
           walletAddressId: sendWalletAddressId,
           method: 'ilp',
           receiver: `${Config.openPaymentsUrl}/${uuid()}`,

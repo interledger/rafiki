@@ -334,6 +334,7 @@ describe('Integration tests', (): void => {
 
         const receiver = await createReceiver(createReceiverInput)
         const quote = await createQuote({
+          // TODO
           tenantId: '8e1db008-ab2f-4f1d-8c44-593354084100',
           walletAddressId: senderWalletAddressId,
           receiver: receiver.id
@@ -386,6 +387,7 @@ describe('Integration tests', (): void => {
         assert(receiver.incomingAmount)
 
         const quote = await createQuote({
+          // TODO
           tenantId: '8e1db008-ab2f-4f1d-8c44-593354084100',
           walletAddressId: senderWalletAddressId,
           receiver: receiver.id
@@ -480,6 +482,7 @@ describe('Integration tests', (): void => {
 
         const receiver = await createReceiver(createReceiverInput)
         const quote = await createQuote({
+          // TODO
           tenantId: '8e1db008-ab2f-4f1d-8c44-593354084100',
           walletAddressId: senderWalletAddressId,
           receiver: receiver.id
@@ -525,6 +528,7 @@ describe('Integration tests', (): void => {
         const senderWalletAddressId = senderWalletAddress.walletAddressID
 
         const createQuoteInput = {
+          // TODO
           tenantId: '8e1db008-ab2f-4f1d-8c44-593354084100',
           walletAddressId: senderWalletAddressId,
           receiver: receiver.id,
@@ -594,6 +598,7 @@ describe('Integration tests', (): void => {
         assert(receiver.incomingAmount)
 
         const quote = await createQuote({
+          // TODO
           tenantId: '8e1db008-ab2f-4f1d-8c44-593354084100',
           walletAddressId: senderWalletAddressId,
           receiver: receiver.id

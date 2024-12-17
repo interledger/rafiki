@@ -20,7 +20,7 @@ export const getReceiver: QueryResolvers<ApolloContext>['receiver'] = async (
   ctx
 ): Promise<ResolversTypes['Receiver']> => {
   const receiverService = await ctx.container.use('receiverService')
-  const receiver = await receiverService.get(args.id, args.tenantId)
+  const receiver = await receiverService.get(args.id)
   if (!receiver) {
     ctx.logger.error(`Receiver "${args.id}" was not found.`)
     throw new GraphQLError('receiver does not exist', {
