@@ -24,6 +24,7 @@ import { IncomingPaymentService } from '../../open_payments/payment/incoming/ser
 import { errorToMessage, TransferError } from '../../accounting/errors'
 import { PaymentMethodHandlerError } from '../handler/errors'
 import { ConvertError } from '../../rates/service'
+import { createTenant } from '../../tests/tenant'
 
 const nock = (global as unknown as { nock: typeof import('nock') }).nock
 
@@ -33,6 +34,7 @@ describe('LocalPaymentService', (): void => {
   let localPaymentService: LocalPaymentService
   let accountingService: AccountingService
   let incomingPaymentService: IncomingPaymentService
+  let tenantId: string
 
   const exchangeRatesUrl = 'https://example-rates.com'
 
@@ -53,6 +55,7 @@ describe('LocalPaymentService', (): void => {
   })
 
   beforeEach(async (): Promise<void> => {
+    tenantId = (await createTenant(deps)).id
     assetMap['USD'] = await createAsset(deps, {
       code: 'USD',
       scale: 2
@@ -158,6 +161,7 @@ describe('LocalPaymentService', (): void => {
 
     test('returns all fields correctly', async (): Promise<void> => {
       const options: StartQuoteOptions = {
+        tenantId,
         walletAddress: walletAddressMap['USD'],
         receiver: await createReceiver(deps, walletAddressMap['USD']),
         debitAmount: {
@@ -245,6 +249,7 @@ describe('LocalPaymentService', (): void => {
       }
 
       const options: StartQuoteOptions = {
+        tenantId,
         walletAddress: walletAddressMap['USD'],
         receiver: await createReceiver(deps, walletAddressMap['USD'], {
           incomingAmount
@@ -293,6 +298,7 @@ describe('LocalPaymentService', (): void => {
             const sendingWalletAddress = walletAddressMap[debitAssetCode]
 
             const options: StartQuoteOptions = {
+              tenantId,
               walletAddress: sendingWalletAddress,
               receiver: await createReceiver(deps, receivingWalletAddress),
               receiveAmount: {
@@ -349,6 +355,7 @@ describe('LocalPaymentService', (): void => {
             const sendingWalletAddress = walletAddressMap[debitAssetCode]
 
             const options: StartQuoteOptions = {
+              tenantId,
               walletAddress: sendingWalletAddress,
               receiver: await createReceiver(deps, receivingWalletAddress),
               debitAmount: {
@@ -406,6 +413,7 @@ describe('LocalPaymentService', (): void => {
           receivingWalletAddress: walletAddressMap['USD'],
           method: 'ilp',
           quoteOptions: {
+            tenantId,
             debitAmount: {
               value: 100n,
               assetScale: walletAddressMap['USD'].asset.scale,
@@ -436,6 +444,7 @@ describe('LocalPaymentService', (): void => {
           receivingWalletAddress: walletAddressMap['USD'],
           method: 'ilp',
           quoteOptions: {
+            tenantId,
             debitAmount: {
               value: 100n,
               assetScale: walletAddressMap['USD'].asset.scale,
@@ -473,6 +482,7 @@ describe('LocalPaymentService', (): void => {
           receivingWalletAddress: walletAddressMap['USD'],
           method: 'ilp',
           quoteOptions: {
+            tenantId,
             debitAmount: {
               value: 100n,
               assetScale: walletAddressMap['USD'].asset.scale,
@@ -512,6 +522,7 @@ describe('LocalPaymentService', (): void => {
           receivingWalletAddress: walletAddressMap['USD'],
           method: 'ilp',
           quoteOptions: {
+            tenantId,
             debitAmount: {
               value: 100n,
               assetScale: walletAddressMap['USD'].asset.scale,
@@ -551,6 +562,7 @@ describe('LocalPaymentService', (): void => {
           receivingWalletAddress: walletAddressMap['USD'],
           method: 'ilp',
           quoteOptions: {
+            tenantId,
             debitAmount: {
               value: 100n,
               assetScale: walletAddressMap['USD'].asset.scale,
@@ -590,6 +602,7 @@ describe('LocalPaymentService', (): void => {
           receivingWalletAddress: walletAddressMap['USD'],
           method: 'ilp',
           quoteOptions: {
+            tenantId,
             debitAmount: {
               value: 100n,
               assetScale: walletAddressMap['USD'].asset.scale,
@@ -630,6 +643,7 @@ describe('LocalPaymentService', (): void => {
           receivingWalletAddress: walletAddressMap['USD'],
           method: 'ilp',
           quoteOptions: {
+            tenantId,
             debitAmount: {
               value: 100n,
               assetScale: walletAddressMap['USD'].asset.scale,

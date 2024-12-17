@@ -24,6 +24,7 @@ export async function createOutgoingPayment(
   options: CreateTestQuoteAndOutgoingPaymentOptions
 ): Promise<OutgoingPayment> {
   const quoteOptions: CreateTestQuoteOptions = {
+    tenantId: options.tenantId,
     walletAddressId: options.walletAddressId,
     client: options.client,
     receiver: options.receiver,
@@ -85,7 +86,7 @@ interface CreateOutgoingPaymentWithReceiverArgs {
   quoteOptions?: Partial<
     Pick<
       CreateTestQuoteAndOutgoingPaymentOptions,
-      'debitAmount' | 'receiveAmount' | 'exchangeRate'
+      'debitAmount' | 'receiveAmount' | 'exchangeRate' | 'tenantId'
     >
   >
   sendingWalletAddress: WalletAddress
@@ -130,6 +131,8 @@ export async function createOutgoingPaymentWithReceiver(
   )
 
   const outgoingPayment = await createOutgoingPayment(deps, {
+    //TODO fix this in outgoing payments changes
+    tenantId: args.quoteOptions?.tenantId || uuid(),
     walletAddressId: args.sendingWalletAddress.id,
     method: args.method,
     receiver: receiver.incomingPayment!.id!,

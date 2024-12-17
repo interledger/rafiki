@@ -44,6 +44,7 @@ import { Pagination, SortOrder } from '../../../shared/baseModel'
 import { FilterString } from '../../../shared/filters'
 import { IAppConfig } from '../../../config/app'
 import { AssetService } from '../../../asset/service'
+import { TenantService } from '../../../tenants/service'
 
 export interface OutgoingPaymentService
   extends WalletAddressSubresourceService<OutgoingPayment> {
@@ -63,6 +64,7 @@ export interface OutgoingPaymentService
 export interface ServiceDependencies extends BaseService {
   config: IAppConfig
   knex: TransactionOrKnex
+  tenantService: TenantService
   accountingService: AccountingService
   receiverService: ReceiverService
   peerService: PeerService
@@ -167,6 +169,7 @@ async function getOutgoingPayment(
 }
 
 export interface BaseOptions {
+  tenantId: string
   walletAddressId: string
   client?: string
   grant?: Grant
@@ -184,6 +187,7 @@ export interface CreateFromIncomingPayment extends BaseOptions {
 
 export type CancelOutgoingPaymentOptions = {
   id: string
+  tenantId: string
   reason?: string
 }
 
@@ -196,7 +200,7 @@ export function isCreateFromIncomingPayment(
 ): options is CreateFromIncomingPayment {
   return 'incomingPayment' in options && 'debitAmount' in options
 }
-
+//TODO use tenantId in outgoing payment changes
 async function cancelOutgoingPayment(
   deps: ServiceDependencies,
   options: CancelOutgoingPaymentOptions
@@ -256,6 +260,7 @@ async function createOutgoingPayment(
     )
     const { debitAmount, incomingPayment } = options
     const quoteOrError = await deps.quoteService.create({
+      tenantId: options.tenantId,
       receiver: incomingPayment,
       debitAmount,
       method: 'ilp',

@@ -1050,6 +1050,22 @@
             "defaultValue": null,
             "isDeprecated": false,
             "deprecationReason": null
+          },
+          {
+            "name": "tenantId",
+            "description": "Unique identifier of the tenant under which the outgoing payment was created.",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
           }
         ],
         "interfaces": null,
@@ -1549,6 +1565,22 @@
             "deprecationReason": null
           },
           {
+            "name": "tenantId",
+            "description": "Unique identifier of the tenant under which the outgoing payment was created.",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "walletAddressId",
             "description": "Unique identifier of the wallet address under which the outgoing payment will be created.",
             "type": {
@@ -1602,6 +1634,22 @@
           {
             "name": "quoteId",
             "description": "Unique identifier of the corresponding quote for that outgoing payment.",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "tenantId",
+            "description": "Unique identifier of the tenant under which the outgoing payment was created.",
             "type": {
               "kind": "NON_NULL",
               "name": null,
@@ -1973,6 +2021,22 @@
           {
             "name": "receiver",
             "description": "Wallet address URL of the receiver.",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "tenantId",
+            "description": "Unique identifier of the tenant under which the quote was created.",
             "type": {
               "kind": "NON_NULL",
               "name": null,
@@ -6754,11 +6818,27 @@
           },
           {
             "name": "quote",
-            "description": "Fetch an Open Payments quote by its ID.",
+            "description": "Fetch an Open Payments quote by its ID and tenant ID.",
             "args": [
               {
                 "name": "id",
                 "description": "Unique identifier of the quote.",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "String",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "tenantId",
+                "description": null,
                 "type": {
                   "kind": "NON_NULL",
                   "name": null,
@@ -6788,6 +6868,22 @@
               {
                 "name": "id",
                 "description": "Unique identifier of the receiver (incoming payment URL).",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "String",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "tenantId",
+                "description": "Unique identifier of the tenant of the incoming payment that resolves the receiver",
                 "type": {
                   "kind": "NON_NULL",
                   "name": null,
@@ -7147,6 +7243,22 @@
               "ofType": {
                 "kind": "SCALAR",
                 "name": "String",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "tenantId",
+            "description": "Unique identifier of the tenant under which the quote was created.",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "ID",
                 "ofType": null
               }
             },
