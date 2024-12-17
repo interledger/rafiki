@@ -1,3 +1,4 @@
+import nock from 'nock'
 import { IocContract } from '@adonisjs/fold'
 import { faker } from '@faker-js/faker'
 import { AppServices } from '../app'

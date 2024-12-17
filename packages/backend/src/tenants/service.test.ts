@@ -113,6 +113,19 @@ describe('Tenant Service', (): void => {
       const tenantDel = await tenantService.get(dbTenant.id, true)
       expect(tenantDel?.deletedAt).toBeDefined()
     })
+
+    test('returns undefined if tenant is deleted', async (): Promise<void> => {
+      const dbTenant = await Tenant.query(knex).insertAndFetch({
+        apiSecret: 'test-secret',
+        email: faker.internet.email(),
+        idpConsentUrl: faker.internet.url(),
+        idpSecret: 'test-idp-secret',
+        deletedAt: new Date()
+      })
+
+      const tenant = await tenantService.get(dbTenant.id)
+      expect(tenant).toBeUndefined()
+    })
   })
 
   describe('create', (): void => {
