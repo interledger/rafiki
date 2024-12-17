@@ -7,12 +7,10 @@ exports.up = async function (knex) {
     .raw(
       // Keep only one active walletAddressKey (the most recent row)
       `DELETE FROM "walletAddressKeys" w
-       WHERE revoked = false
-       AND ctid NOT IN (
+       WHERE ctid NOT IN (
           SELECT MAX(ctid)
           FROM "walletAddressKeys"
           WHERE revoked = false
-            AND kid = w.kid
           GROUP BY kid, "walletAddressId"
        )`
     )
