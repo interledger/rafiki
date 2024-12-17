@@ -174,7 +174,7 @@ async function canApiSignatureBeProcessed(
 }
 
 export interface TenantApiSignatureResult {
-  tenant?: Tenant
+  tenant: Tenant
   isOperator: boolean
 }
 

@@ -219,7 +219,7 @@ type ContextType<T> = T extends (
 const WALLET_ADDRESS_PATH = '/:walletAddressPath+'
 
 export interface TenantedApolloContext extends ApolloContext {
-  tenant?: Tenant
+  tenant: Tenant
   isOperator: boolean
 }
 
@@ -392,19 +392,17 @@ export class App {
       }
     )
 
-    let tenantApiSignatureResult: TenantApiSignatureResult = {
-      tenant: undefined,
-      isOperator: false
-    }
+    let tenantApiSignatureResult: TenantApiSignatureResult
     if (this.config.env !== 'test') {
       koa.use(async (ctx, next: Koa.Next): Promise<void> => {
         const result = await getTenantFromApiSignature(ctx, this.config)
         if (!result) {
           ctx.throw(401, 'Unauthorized')
-        }
-        tenantApiSignatureResult = {
-          tenant: result?.tenant,
-          isOperator: result?.isOperator ? true : false
+        } else {
+          tenantApiSignatureResult = {
+            tenant: result.tenant,
+            isOperator: result.isOperator ? true : false
+          }
         }
         return next()
       })
