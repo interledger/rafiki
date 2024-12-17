@@ -14,7 +14,11 @@ import { GrantService } from '../grant/service'
 
 export interface InteractionService {
   getInteractionByGrant(grantId: string): Promise<InteractionWithGrant | void>
-  getBySession(id: string, nonce: string): Promise<InteractionWithGrant | void>
+  getBySession(
+    id: string,
+    nonce: string,
+    tenantId?: string
+  ): Promise<InteractionWithGrant | void>
   getByRef(ref: string): Promise<InteractionWithGrant | void>
   create(grantId: string, trx?: Transaction): Promise<Interaction>
   approve(id: string): Promise<Interaction | void>
@@ -103,11 +107,12 @@ async function getBySession(
   id: string,
   nonce: string
 ): Promise<InteractionWithGrant | undefined> {
-  const interaction = await Interaction.query()
+  const queryBuilder = Interaction.query()
     .findById(id)
     .where('nonce', nonce)
     .withGraphFetched('grant')
 
+  const interaction = await queryBuilder
   if (!interaction || !isInteractionWithGrant(interaction)) {
     return undefined
   }

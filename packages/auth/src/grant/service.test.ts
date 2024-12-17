@@ -24,18 +24,25 @@ import { AccessToken } from '../accessToken/model'
 import { Interaction, InteractionState } from '../interaction/model'
 import { Pagination, SortOrder } from '../shared/baseModel'
 import { getPageTests } from '../shared/baseModel.test'
+import { Tenant } from '../tenant/model'
+import { generateTenant } from '../tests/tenant'
 
 describe('Grant Service', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let grantService: GrantService
   let trx: Knex.Transaction
+  let tenant: Tenant
 
   beforeAll(async (): Promise<void> => {
     deps = initIocContainer(Config)
     appContainer = await createTestApp(deps)
 
     grantService = await deps.use('grantService')
+  })
+
+  beforeEach(async (): Promise<void> => {
+    tenant = await Tenant.query().insertAndFetch(generateTenant())
   })
 
   afterEach(async (): Promise<void> => {
@@ -48,13 +55,14 @@ describe('Grant Service', (): void => {
 
   describe('getPage', (): void => {
     getPageTests({
-      createModel: () => createGrant(deps),
+      createModel: () => createGrant(deps, tenant.id),
       getPage: (pagination?: Pagination, sortOrder?: SortOrder) =>
         grantService.getPage(pagination, undefined, sortOrder)
     })
   })
 
   describe('grant flow', (): void => {
+    let tenant: Tenant
     let grant: Grant
     let access: Access
     let accessToken: AccessToken
@@ -62,6 +70,7 @@ describe('Grant Service', (): void => {
     const CLIENT = faker.internet.url({ appendSlash: false })
 
     beforeEach(async (): Promise<void> => {
+      tenant = await Tenant.query().insert(generateTenant())
       grant = await Grant.query().insert({
         state: GrantState.Processing,
         startMethod: [StartMethod.Redirect],
@@ -70,7 +79,8 @@ describe('Grant Service', (): void => {
         finishMethod: FinishMethod.Redirect,
         finishUri: 'https://example.com',
         clientNonce: generateNonce(),
-        client: CLIENT
+        client: CLIENT,
+        tenantId: tenant.id
       })
 
       await Interaction.query().insert({
@@ -126,7 +136,7 @@ describe('Grant Service', (): void => {
           }
         }
 
-        const grant = await grantService.create(grantRequest)
+        const grant = await grantService.create(grantRequest, tenant.id)
 
         expect(grant).toMatchObject({
           state: GrantState.Approved,
@@ -170,7 +180,7 @@ describe('Grant Service', (): void => {
             interact
           }
 
-          const grant = await grantService.create(grantRequest)
+          const grant = await grantService.create(grantRequest, tenant.id)
 
           expect(grant).toMatchObject({
             state: expectedState,
@@ -266,13 +276,13 @@ describe('Grant Service', (): void => {
           interact: undefined
         }
 
-        const grant1 = await grantService.create(grantRequest)
+        const grant1 = await grantService.create(grantRequest, tenant.id)
         await grant1
           .$query()
           .patch({ finalizationReason: GrantFinalization.Issued })
 
-        const grant2 = await grantService.create(grantRequest)
-        const grant3 = await grantService.create(grantRequest)
+        const grant2 = await grantService.create(grantRequest, tenant.id)
+        const grant3 = await grantService.create(grantRequest, tenant.id)
         await grant3
           .$query()
           .patch({ finalizationReason: GrantFinalization.Revoked })
@@ -386,7 +396,7 @@ describe('Grant Service', (): void => {
           }
         }
 
-        const grant = await grantService.create(grantRequest)
+        const grant = await grantService.create(grantRequest, tenant.id)
 
         const timeoutMs = 50
 
@@ -420,7 +430,7 @@ describe('Grant Service', (): void => {
       ]
 
       for (const { identifier, state, finalizationReason } of grantDetails) {
-        const grant = await createGrant(deps, { identifier })
+        const grant = await createGrant(deps, tenant.id, { identifier })
         const updatedGrant = await grant
           .$query()
           .patchAndFetch({ state, finalizationReason })
