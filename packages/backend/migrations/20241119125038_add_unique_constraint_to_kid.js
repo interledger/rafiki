@@ -12,7 +12,6 @@ exports.up = async function (knex) {
           SELECT MAX(ctid)
           FROM "walletAddressKeys"
           WHERE revoked = false
-            AND kid = w.kid
           GROUP BY kid, "walletAddressId"
        )`
     )
