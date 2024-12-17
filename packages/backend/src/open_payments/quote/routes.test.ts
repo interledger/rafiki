@@ -47,7 +47,7 @@ describe('Quote Routes', (): void => {
     walletAddressId,
     client
   }: {
-    tenantId: string,
+    tenantId: string
     walletAddressId: string
     client?: string
   }): Promise<Quote> => {
@@ -78,7 +78,7 @@ describe('Quote Routes', (): void => {
   })
 
   beforeEach(async (): Promise<void> => {
-    tenant = await createTenant(deps) 
+    tenant = await createTenant(deps)
     const { id: assetId } = await createAsset(deps, {
       code: debitAmount.assetCode,
       scale: debitAmount.assetScale

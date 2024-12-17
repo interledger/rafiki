@@ -372,9 +372,7 @@ async function createOutgoingPayment(
           description: 'Time to retrieve receiver in outgoing payment'
         }
       )
-      const receiver = await deps.receiverService.get(
-        payment.receiver
-      )
+      const receiver = await deps.receiverService.get(payment.receiver)
       stopTimerReceiver()
       if (!receiver) {
         throw OutgoingPaymentError.InvalidQuote

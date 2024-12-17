@@ -136,7 +136,7 @@ async function createLocalIncomingPayment(
 
 async function getReceiver(
   deps: ServiceDependencies,
-  url: string,
+  url: string
 ): Promise<Receiver | undefined> {
   const stopTimer = deps.telemetry.startTimer('getReceiver', {
     callName: 'ReceiverService:get'
@@ -148,10 +148,7 @@ async function getReceiver(
       return receiver
     }
 
-    const remoteIncomingPayment = await getRemoteIncomingPayment(
-      deps,
-      url
-    )
+    const remoteIncomingPayment = await getRemoteIncomingPayment(deps, url)
     if (remoteIncomingPayment) {
       const receiver = new Receiver(remoteIncomingPayment, false)
       return receiver
@@ -223,11 +220,10 @@ export async function getLocalIncomingPayment(
 
 async function getRemoteIncomingPayment(
   deps: ServiceDependencies,
-  url: string,
+  url: string
 ): Promise<OpenPaymentsIncomingPaymentWithPaymentMethods | undefined> {
-  const incomingPaymentOrError = await deps.remoteIncomingPaymentService.get(
-    url
-  )
+  const incomingPaymentOrError =
+    await deps.remoteIncomingPaymentService.get(url)
 
   if (isRemoteIncomingPaymentError(incomingPaymentOrError)) {
     return undefined

@@ -118,7 +118,7 @@ describe('Webhook Service', (): void => {
     let events: WebhookEvent[] = []
 
     beforeEach(async (): Promise<void> => {
-      tenantId = ( await createTenant(deps) ).id
+      tenantId = (await createTenant(deps)).id
       walletAddressIn = await createWalletAddress(deps)
       walletAddressOut = await createWalletAddress(deps)
       incomingPaymentIds = [

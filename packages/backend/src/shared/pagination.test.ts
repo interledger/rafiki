@@ -84,7 +84,7 @@ describe('Pagination', (): void => {
         outgoingPaymentService = await deps.use('outgoingPaymentService')
         quoteService = await deps.use('quoteService')
 
-        tenantId = (await createTenant(deps) ).id
+        tenantId = (await createTenant(deps)).id
         const asset = await createAsset(deps)
         defaultWalletAddress = await createWalletAddress(deps, {
           assetId: asset.id

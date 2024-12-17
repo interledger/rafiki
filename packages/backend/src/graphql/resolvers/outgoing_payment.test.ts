@@ -100,9 +100,7 @@ describe('OutgoingPayment Resolvers', (): void => {
     let walletAddressId: string
 
     beforeEach(async (): Promise<void> => {
-      tenantId = (
-        await createTenant(deps)
-      ).id
+      tenantId = (await createTenant(deps)).id
       walletAddressId = (
         await createWalletAddress(deps, {
           assetId: asset.id
@@ -565,9 +563,7 @@ describe('OutgoingPayment Resolvers', (): void => {
     }
 
     beforeEach(async (): Promise<void> => {
-      tenantId = (
-        await createTenant(deps)
-      ).id
+      tenantId = (await createTenant(deps)).id
     })
 
     test('success (metadata)', async (): Promise<void> => {
@@ -715,9 +711,7 @@ describe('OutgoingPayment Resolvers', (): void => {
     const mockIncomingPaymentUrl = `https://${faker.internet.domainName()}/incoming-payments/${uuid()}`
 
     beforeEach(async (): Promise<void> => {
-      tenantId = (
-        await createTenant(deps)
-      ).id
+      tenantId = (await createTenant(deps)).id
     })
 
     test('create', async (): Promise<void> => {
@@ -999,9 +993,7 @@ describe('OutgoingPayment Resolvers', (): void => {
     let tenantId: string
 
     beforeEach(async (): Promise<void> => {
-      tenantId = (
-        await createTenant(deps)
-      ).id
+      tenantId = (await createTenant(deps)).id
       walletAddressId = (
         await createWalletAddress(deps, {
           assetId: asset.id

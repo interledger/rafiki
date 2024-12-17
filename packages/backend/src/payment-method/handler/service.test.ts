@@ -46,7 +46,7 @@ describe('PaymentMethodHandlerService', (): void => {
 
   describe('getQuote', (): void => {
     test('calls ilpPaymentService for ILP payment type', async (): Promise<void> => {
-      const tenantId = ( await createTenant(deps) ).id
+      const tenantId = (await createTenant(deps)).id
       const asset = await createAsset(deps)
       const walletAddress = await createWalletAddress(deps, {
         assetId: asset.id
@@ -76,7 +76,7 @@ describe('PaymentMethodHandlerService', (): void => {
       )
     })
     test('calls localPaymentService for local payment type', async (): Promise<void> => {
-      const tenantId = ( await createTenant(deps) ).id
+      const tenantId = (await createTenant(deps)).id
       const asset = await createAsset(deps)
       const walletAddress = await createWalletAddress(deps, {
         assetId: asset.id
@@ -108,7 +108,7 @@ describe('PaymentMethodHandlerService', (): void => {
 
   describe('pay', (): void => {
     test('calls ilpPaymentService for ILP payment type', async (): Promise<void> => {
-      const tenantId = ( await createTenant(deps) ).id
+      const tenantId = (await createTenant(deps)).id
       const asset = await createAsset(deps)
       const walletAddress = await createWalletAddress(deps, {
         assetId: asset.id
@@ -144,7 +144,7 @@ describe('PaymentMethodHandlerService', (): void => {
       expect(ilpPaymentServicePaySpy).toHaveBeenCalledWith(options)
     })
     test('calls localPaymentService for local payment type', async (): Promise<void> => {
-      const tenantId = ( await createTenant(deps) ).id
+      const tenantId = (await createTenant(deps)).id
       const asset = await createAsset(deps)
       const walletAddress = await createWalletAddress(deps, {
         assetId: asset.id

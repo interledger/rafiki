@@ -42,9 +42,7 @@ describe('Combined Payment Service', (): void => {
   })
 
   beforeEach(async (): Promise<void> => {
-    tenantId = (
-      await createTenant(deps)
-    ).id
+    tenantId = (await createTenant(deps)).id
     sendAsset = await createAsset(deps)
     receiveAsset = await createAsset(deps)
     sendWalletAddressId = (

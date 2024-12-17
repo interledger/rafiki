@@ -93,9 +93,7 @@ describe('QuoteService', (): void => {
   })
 
   beforeEach(async (): Promise<void> => {
-    tenantId = ( 
-      await createTenant(deps) 
-    ).id
+    tenantId = (await createTenant(deps)).id
     const { id: sendAssetId } = await createAsset(deps, {
       code: debitAmount.assetCode,
       scale: debitAmount.assetScale

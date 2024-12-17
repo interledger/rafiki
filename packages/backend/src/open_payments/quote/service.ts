@@ -102,9 +102,7 @@ async function createQuote(
     callName: 'QuoteService:create',
     description: 'Time to create a quote'
   })
-  const tenant = await deps.tenantService.get(
-    options.tenantId
-  )
+  const tenant = await deps.tenantService.get(options.tenantId)
   if (!tenant) {
     stopTimer()
     return QuoteError.InvalidTenant
@@ -263,9 +261,7 @@ export async function resolveReceiver(
   deps: ServiceDependencies,
   options: CreateQuoteOptions
 ): Promise<Receiver> {
-  const receiver = await deps.receiverService.get(
-    options.receiver
-  )
+  const receiver = await deps.receiverService.get(options.receiver)
   if (!receiver) {
     deps.logger.info(
       { receiver: options.receiver },
