@@ -606,6 +606,7 @@ describe('OutgoingPaymentService', (): void => {
 
         const response = await outgoingPaymentService.cancel({
           id: outgoingPayment.id,
+          tenantId,
           reason
         })
 
