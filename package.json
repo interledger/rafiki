@@ -4,10 +4,10 @@
   "license": "Apache-2.0",
   "repository": "https://github.com/interledger/rafiki",
   "engines": {
-    "pnpm": "^8.15.4",
+    "pnpm": "^8.15.9",
     "node": "20"
   },
-  "packageManager": "pnpm@8.15.5",
+  "packageManager": "pnpm@8.15.9",
   "scripts": {
     "preinstall": "npx only-allow pnpm",
     "lint": "eslint --max-warnings=0 --fix .",
@@ -78,7 +78,8 @@
       "tar@<6.2.1": ">=6.2.1",
       "braces@<3.0.3": ">=3.0.3",
       "@grpc/grpc-js@>=1.10.0 <1.10.9": ">=1.10.9",
-      "dset@<3.1.4": ">=3.1.4"
+      "dset@<3.1.4": ">=3.1.4",
+      "cross-spawn@>=7.0.0 <7.0.5": ">=7.0.5"
     }
   }
 }

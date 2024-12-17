@@ -178,6 +178,7 @@ You can either trigger the debugger by adding `debugger` statements in the code 
 #### Debugging with VS Code:
 
 To debug with VS Code, add this configuration to your `.vscode/launch.json`:
+
 ```json
 {
     "name": "Attach to docker (cloud-nine-backend)",
@@ -220,7 +221,7 @@ The following are the most commonly used commands:
 | pnpm localenv:compose up                       | Start (with TigerBeetle)                                          |
 | pnpm localenv:compose up -d                    | Start (with TigerBeetle) detached                                 |
 | pnpm localenv:compose down                     | Down (with TigerBeetle)                                           |
-| pnpm localenv:compose down --volumes           | Down and kill volumes (with TigerBeetle)
+| pnpm localenv:compose down --volumes           | Down and kill volumes (with TigerBeetle)                          |
 | pnpm localenv:compose down --volumes --rmi all | Down, kill volumes (with TigerBeetle) and images                  |
 | pnpm localenv:compose:psql config              | Show all merged config (with PostgreSQL)                          |
 | pnpm localenv:compose build                    | Build all the containers (with TigerBeetle)                       |
