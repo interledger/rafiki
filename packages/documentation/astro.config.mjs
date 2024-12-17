@@ -191,14 +191,14 @@ export default defineConfig({
                         }
                       ]
                     },
-                  {
-                    label: 'Docker Compose',
-                    link: '/integration/deployment/docker-compose'
-                  },
-                  {
-                    label: 'Helm and Kubernetes',
-                    link: '/integration/deployment/helm-k8s'
-                  },
+                    {
+                      label: 'Docker Compose',
+                      link: '/integration/deployment/docker-compose'
+                    },
+                    {
+                      label: 'Helm and Kubernetes',
+                      link: '/integration/deployment/helm-k8s'
+                    }
                   ]
                 }
               ]

@@ -136,6 +136,7 @@ mutation CreatePeer($input: CreatePeerInput!) {
 Once a peer has been added to your Rafiki instance, there is minimal ongoing management required. Most peer interactions focus on monitoring liquidity and ensuring smooth payment flows. In rare cases, you may need to update a peer's configuration due to changes in their technical details or remove a peer created in error, as long as no payments have been exchanged. These actions help ensure your Rafiki instance stays up to date with operational changes.
 
 ### Edit a peer
+
 <details>
 <summary>How to edit a peer</summary>
 Occasionally, you may need to adjust peering configurations or address any changes communicated by the peer. Some examples include updating new endpoints or tokens, technical settings like the maximum packet amount, or peer liquidity thresholds.
@@ -179,7 +180,7 @@ The input object for the update operation only requires that the `id` is present
     "id": "480ef339-7842-4501-a905-923fc1339cef",
     "maxPacketAmount": 1000,
     "liquidityThreshold": 100
-    }
+  }
 }
 ```
 
@@ -187,11 +188,11 @@ The input object for the update operation only requires that the `id` is present
 
 <div class="overflow-table">
 
-| Variable                   | Description                                                                                                   | Required |
-| -------------------------- | ------------------------------------------------------------------------------------------------------------- | -------- |
-| `id`                       | The ID of the peer you wish to update.                                                                        | Y        |
-| `maxPacketAmount`          | Maximum packet size you are willing to accept from the peer.                                                  | N        |
-| `liquidityThreshold`       | A webhook event will notify the Account Servicing Entity if peer liquidity falls below this new value.        | N        |
+| Variable             | Description                                                                                            | Required |
+| -------------------- | ------------------------------------------------------------------------------------------------------ | -------- |
+| `id`                 | The ID of the peer you wish to update.                                                                 | Y        |
+| `maxPacketAmount`    | Maximum packet size you are willing to accept from the peer.                                           | N        |
+| `liquidityThreshold` | A webhook event will notify the Account Servicing Entity if peer liquidity falls below this new value. | N        |
 
 </div>
 
@@ -211,7 +212,7 @@ The input object for the update operation only requires that the `id` is present
           "outgoing": {
             "authToken": "test",
             "endpoint": "http://peering-test:3002"
-            }
+          }
         },
         "maxPacketAmount": 1000,
         "liquidityThreshold": 100
@@ -225,13 +226,14 @@ The input object for the update operation only requires that the `id` is present
 </details>
 
 ### Delete a peer
+
 <details>
 <summary>How to delete a peer</summary>
 Deleting a peer is an action that removes a peer from your Rafiki instance. There are specific rules and considerations to keep in mind before initating this irreversible operation.
 
 A peer can only be deleted if no payments have been made to or received from that peer. This ensures that historical payment records are preserved. If you attempt to delete a peer with payment history, the backend will throw an error, preventing the deletion.
 
-Deleting a peer is useful in situations where there were configuration errors when the peer was first created like an incorrect auth token or ILP address. 
+Deleting a peer is useful in situations where there were configuration errors when the peer was first created like an incorrect auth token or ILP address.
 
 :::danger
 Deleting a peer is permanent and cannot be reversed. If you delete a peer in error, you must create another new peer.
@@ -258,7 +260,7 @@ mutation DeletePeer($input: DeletePeerInput!) {
 ```json
 {
   "input": {
-    "id": "480ef339-7842-4501-a905-923fc1339cef",
+    "id": "480ef339-7842-4501-a905-923fc1339cef"
   }
 }
 ```
@@ -267,9 +269,9 @@ mutation DeletePeer($input: DeletePeerInput!) {
 
 <div class="overflow-table">
 
-| Variable  | Description                            | Required |
-| --------- | -------------------------------------- | -------- |
-| `id`      | The ID of the peer you wish to delete. | Y        |
+| Variable | Description                            | Required |
+| -------- | -------------------------------------- | -------- |
+| `id`     | The ID of the peer you wish to delete. | Y        |
 
 </div>
 
@@ -279,7 +281,7 @@ mutation DeletePeer($input: DeletePeerInput!) {
 {
   "data": {
     "deletePeer": {
-      "success": true,
+      "success": true
     }
   }
 }
