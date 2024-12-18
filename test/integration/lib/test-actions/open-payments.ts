@@ -94,11 +94,11 @@ async function grantRequestIncomingPayment(
   deps: OpenPaymentsActionsDeps,
   receiverWalletAddress: WalletAddress
 ): Promise<Grant> {
-  const { sendingASE } = deps
+  const { sendingASE, receivingASE } = deps
 
   const grant = await sendingASE.opClient.grant.request(
     {
-      url: receiverWalletAddress.authServer
+      url: `${receiverWalletAddress.authServer}/${receivingASE.config.operatorTenantId}`
     },
     {
       access_token: {
@@ -185,7 +185,7 @@ async function grantRequestQuote(
   const { sendingASE } = deps
   const grant = await sendingASE.opClient.grant.request(
     {
-      url: senderWalletAddress.authServer
+      url: `${senderWalletAddress.authServer}/${sendingASE.config.operatorTenantId}`
     },
     {
       access_token: {
@@ -232,10 +232,10 @@ async function grantRequestOutgoingPayment(
   limits: GrantRequestPaymentLimits,
   finish?: InteractFinish
 ): Promise<PendingGrant> {
-  const { receivingASE } = deps
+  const { receivingASE, sendingASE } = deps
   const grant = await receivingASE.opClient.grant.request(
     {
-      url: senderWalletAddress.authServer
+      url: `${senderWalletAddress.authServer}/${sendingASE.config.operatorTenantId}`
     },
     {
       access_token: {
