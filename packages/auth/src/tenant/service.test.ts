@@ -39,12 +39,14 @@ describe('Tenant Service', (): void => {
       const tenantData = createTenantData()
       const tenant = await tenantService.create(tenantData)
 
-      expect(tenant).toMatchObject({
+      expect(tenant).toEqual({
         id: tenantData.id,
         idpConsentUrl: tenantData.idpConsentUrl,
-        idpSecret: tenantData.idpSecret
+        idpSecret: tenantData.idpSecret,
+        createdAt: expect.any(Date),
+        updatedAt: expect.any(Date),
+        deletedAt: undefined
       })
-      expect(tenant.deletedAt).toBe(undefined)
     })
 
     test('fails to create tenant with duplicate id', async (): Promise<void> => {
@@ -61,7 +63,14 @@ describe('Tenant Service', (): void => {
       const created = await tenantService.create(tenantData)
 
       const tenant = await tenantService.get(created.id)
-      expect(tenant).toMatchObject(tenantData)
+      expect(tenant).toEqual({
+        id: tenantData.id,
+        idpConsentUrl: tenantData.idpConsentUrl,
+        idpSecret: tenantData.idpSecret,
+        createdAt: expect.any(Date),
+        updatedAt: expect.any(Date),
+        deletedAt: null
+      })
     })
 
     test('returns undefined for non-existent tenant', async (): Promise<void> => {
@@ -90,9 +99,12 @@ describe('Tenant Service', (): void => {
       }
 
       const updated = await tenantService.update(created.id, updateData)
-      expect(updated).toMatchObject({
+      expect(updated).toEqual({
         id: created.id,
-        ...updateData
+        ...updateData,
+        createdAt: expect.any(Date),
+        updatedAt: expect.any(Date),
+        deletedAt: null
       })
     })
 
@@ -105,10 +117,13 @@ describe('Tenant Service', (): void => {
       }
 
       const updated = await tenantService.update(created.id, updateData)
-      expect(updated).toMatchObject({
+      expect(updated).toEqual({
         id: created.id,
         idpConsentUrl: updateData.idpConsentUrl,
-        idpSecret: created.idpSecret
+        idpSecret: created.idpSecret,
+        createdAt: expect.any(Date),
+        updatedAt: expect.any(Date),
+        deletedAt: null
       })
     })
 
