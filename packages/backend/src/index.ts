@@ -74,6 +74,7 @@ import {
 import { createWebhookService } from './webhook/service'
 import { createInMemoryDataStore } from './middleware/cache/data-stores/in-memory'
 import { createTenantService } from './tenants/service'
+import { AuthServiceClient } from './auth-service-client/client'
 
 BigInt.prototype.toJSON = function () {
   return this.toString()
@@ -218,6 +219,10 @@ export function initIocContainer(
 
   container.singleton('tenantCache', async () => {
     return createInMemoryDataStore(config.localCacheDuration)
+  })
+
+  container.singleton('authServiceClient', async () => {
+    return new AuthServiceClient(config.authServiceApiUrl)
   })
 
   container.singleton('tenantService', async (deps) => {
