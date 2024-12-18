@@ -32,7 +32,12 @@ import { AccessTokenService } from '../accessToken/service'
 import { generateNonce } from '../shared/utils'
 import { ClientService } from '../client/service'
 import { withConfigOverride } from '../tests/helpers'
-import { AccessAction, AccessType } from '@interledger/open-payments'
+import {
+  AccessAction,
+  AccessType,
+  GrantContinuation,
+  PendingGrant
+} from '@interledger/open-payments'
 import { generateBaseGrant } from '../tests/grant'
 import { generateBaseInteraction } from '../tests/interaction'
 import { GNAPErrorCode } from '../shared/gnapErrors'
@@ -71,6 +76,18 @@ const BASE_GRANT_REQUEST = {
       nonce: generateNonce()
     }
   }
+}
+
+function getGrantContinueId(continueUrl: string): string {
+  const continueUrlObj = new URL(continueUrl)
+  const pathItems = continueUrlObj.pathname.split('/')
+  return pathItems[pathItems.length - 1]
+}
+
+function getInteractionId(redirectUrl: string): string {
+  const redirectUrlObj = new URL(redirectUrl)
+  const pathItems = redirectUrlObj.pathname.split('/')
+  return pathItems[pathItems.length - 2]
 }
 
 describe('Grant Routes', (): void => {
@@ -215,6 +232,14 @@ describe('Grant Routes', (): void => {
                         ).resolves.toBeUndefined()
                         expect(ctx.response).toSatisfyApiSpec()
                         expect(ctx.status).toBe(200)
+                        const createdGrant = await Grant.query().findOne({
+                          continueId: getGrantContinueId(
+                            (ctx.body as GrantContinuation).continue.uri
+                          ),
+                          continueToken: (ctx.body as GrantContinuation)
+                            .continue.access_token.value
+                        })
+                        assert.ok(createdGrant)
                         expect(ctx.body).toEqual({
                           access_token: {
                             value: expect.any(String),
@@ -224,9 +249,9 @@ describe('Grant Routes', (): void => {
                           },
                           continue: {
                             access_token: {
-                              value: expect.any(String)
+                              value: createdGrant.continueToken
                             },
-                            uri: expect.any(String)
+                            uri: `${config.authServerUrl}/${tenant.id}/continue/${createdGrant.continueId}`
                           }
                         })
                       }
@@ -270,16 +295,37 @@ describe('Grant Routes', (): void => {
         await expect(grantRoutes.create(ctx)).resolves.toBeUndefined()
         expect(ctx.response).toSatisfyApiSpec()
         expect(ctx.status).toBe(200)
+        const createdGrant = await Grant.query().findOne({
+          continueId: getGrantContinueId(
+            (ctx.body as PendingGrant).continue.uri
+          ),
+          continueToken: (ctx.body as PendingGrant).continue.access_token.value
+        })
+        assert.ok(createdGrant)
+        const createdInteraction = await Interaction.query().findOne({
+          nonce: (ctx.body as PendingGrant).interact.finish,
+          id: getInteractionId((ctx.body as PendingGrant).interact.redirect)
+        })
+        assert.ok(createdInteraction)
+        const expectedRedirectUrl = new URL(
+          config.authServerUrl +
+            `/interact/${createdInteraction.id}/${createdInteraction.nonce}`
+        )
+        expectedRedirectUrl.searchParams.set(
+          'clientName',
+          TEST_CLIENT_DISPLAY.name
+        )
+        expectedRedirectUrl.searchParams.set('clientUri', CLIENT)
         expect(ctx.body).toEqual({
           interact: {
-            redirect: expect.any(String),
-            finish: expect.any(String)
+            redirect: expectedRedirectUrl.toString(),
+            finish: createdInteraction.nonce
           },
           continue: {
             access_token: {
-              value: expect.any(String)
+              value: createdGrant.continueToken
             },
-            uri: expect.any(String),
+            uri: `${config.authServerUrl}/${tenant.id}/continue/${createdGrant.continueId}`,
             wait: Config.waitTimeSeconds
           }
         })
@@ -563,6 +609,14 @@ describe('Grant Routes', (): void => {
         assert.ok(accessToken)
 
         expect(ctx.status).toBe(200)
+        const createdGrant = await Grant.query().findOne({
+          continueId: getGrantContinueId(
+            (ctx.body as GrantContinuation).continue.uri
+          ),
+          continueToken: (ctx.body as GrantContinuation).continue.access_token
+            .value
+        })
+        assert.ok(createdGrant)
         expect(ctx.body).toEqual({
           access_token: {
             value: accessToken.value,
@@ -578,9 +632,9 @@ describe('Grant Routes', (): void => {
           },
           continue: {
             access_token: {
-              value: expect.any(String)
+              value: createdGrant.continueToken
             },
-            uri: expect.any(String)
+            uri: `${config.authServerUrl}/${tenant.id}/continue/${createdGrant.continueId}`
           }
         })
       })

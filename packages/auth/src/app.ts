@@ -268,7 +268,7 @@ export class App {
     /* Back-channel GNAP Routes */
     // Grant Initiation
     router.post<DefaultState, CreateContext>(
-      '/:tenantId/',
+      '/:tenantId',
       createValidatorMiddleware<CreateContext>(openApi.authServerSpec, {
         path: '/',
         method: HttpMethod.POST
