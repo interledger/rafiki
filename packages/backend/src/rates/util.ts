@@ -36,7 +36,7 @@ export function convertSource(opts: ConvertSourceOptions): ConvertResults {
 export function convertDestination(
   opts: ConvertDestinationOptions
 ): ConvertResults {
-  const scaleDiff = opts.sourceAsset.scale - opts.destinationAsset.scale
+  const scaleDiff = opts.destinationAsset.scale - opts.sourceAsset.scale
   const scaledExchangeRate = opts.exchangeRate * 10 ** scaleDiff
 
   return {

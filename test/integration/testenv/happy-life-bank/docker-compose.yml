@@ -26,6 +26,8 @@ services:
       DATABASE_URL: postgresql://happy_life_bank_test_backend:happy_life_bank_test_backend@shared-database/happy_life_bank_test_backend
       AUTH_SERVER_GRANT_URL: http://happy-life-bank-test-auth:4106
       AUTH_SERVER_INTROSPECTION_URL: http://happy-life-bank-test-auth:4107
+      AUTH_ADMIN_API_URL: 'http://happy-life-bank-test-auth:4003/graphql'
+      AUTH_ADMIN_API_SECRET: 'test-secret'
       # matches pfry key id
       KEY_ID: keyid-97a3a431-8ee1-48fc-ac85-70e2f5eba8e5
       PRIVATE_KEY_FILE: /workspace/private-key.pem
@@ -36,6 +38,9 @@ services:
       EXCHANGE_RATES_URL: http://host.docker.internal:8889/rates
       REDIS_URL: redis://shared-redis:6379/2
       USE_TIGERBEETLE: false
+      OPERATOR_TENANT_ID: cf5fd7d3-1eb1-4041-8e43-ba45747e9e5d
+      API_SECRET: iyIgCprjb9uL8wFckR+pLEkJWMB7FJhgkvqhTQR/964=
+      API_SIGNATURE_VERSION: 1
     volumes:
       - ../private-key.pem:/workspace/private-key.pem
     depends_on:
@@ -71,5 +76,6 @@ services:
       IDENTITY_SERVER_SECRET: 2pEcn2kkCclbOHQiGNEwhJ0rucATZhrA807HTm2rNXE=
       COOKIE_KEY: 42397d1f371dd4b8b7d0308a689a57c882effd4ea909d792302542af47e2cd37
       AUTH_CHOICE_PORT: 4109
+      OPERATOR_TENANT_ID: cf5fd7d3-1eb1-4041-8e43-ba45747e9e5d
     depends_on:
       - cloud-nine-wallet-test-auth

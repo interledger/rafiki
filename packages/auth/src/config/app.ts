@@ -79,7 +79,8 @@ export const Config = {
     process.env.REDIS_TLS_CA_FILE_PATH,
     process.env.REDIS_TLS_KEY_FILE_PATH,
     process.env.REDIS_TLS_CERT_FILE_PATH
-  )
+  ),
+  operatorTenantId: envString('OPERATOR_TENANT_ID')
 }
 
 function parseRedisTlsConfig(

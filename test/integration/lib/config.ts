@@ -11,6 +11,9 @@ export type TestConfig = Config & {
   interactionServer: string
   walletAddressUrl: string
   keyId: string
+  signatureSecret: string
+  signatureVersion: string
+  operatorTenantId: string
 }
 
 type EnvConfig = {
@@ -22,7 +25,11 @@ type EnvConfig = {
   GRAPHQL_URL: string
   KEY_ID: string
   IDP_SECRET: string
+  SIGNATURE_SECRET: string
+  SIGNATURE_VERSION: string
+  OPERATOR_TENANT_ID: string
 }
+
 const REQUIRED_KEYS: (keyof EnvConfig)[] = [
   'OPEN_PAYMENTS_URL',
   'AUTH_SERVER_DOMAIN',
@@ -31,7 +38,10 @@ const REQUIRED_KEYS: (keyof EnvConfig)[] = [
   'WALLET_ADDRESS_URL',
   'GRAPHQL_URL',
   'KEY_ID',
-  'IDP_SECRET'
+  'IDP_SECRET',
+  'SIGNATURE_SECRET',
+  'SIGNATURE_VERSION',
+  'OPERATOR_TENANT_ID'
 ]
 
 const loadEnv = (filePath: string): EnvConfig => {
@@ -69,7 +79,10 @@ const createConfig = (name: string): TestConfig => {
     walletAddressUrl: env.WALLET_ADDRESS_URL,
     graphqlUrl: env.GRAPHQL_URL,
     keyId: env.KEY_ID,
-    idpSecret: env.IDP_SECRET
+    idpSecret: env.IDP_SECRET,
+    signatureSecret: env.SIGNATURE_SECRET,
+    signatureVersion: env.SIGNATURE_VERSION,
+    operatorTenantId: env.OPERATOR_TENANT_ID
   }
 }
 

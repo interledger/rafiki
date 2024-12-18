@@ -23,6 +23,7 @@ overrides:
   braces@<3.0.3: '>=3.0.3'
   '@grpc/grpc-js@>=1.10.0 <1.10.9': '>=1.10.9'
   dset@<3.1.4: '>=3.1.4'
+  cross-spawn@>=7.0.0 <7.0.5: '>=7.0.5'
 
 importers:
 
@@ -312,6 +313,9 @@ importers:
       '@adonisjs/fold':
         specifier: ^8.2.0
         version: 8.2.0
+      '@apollo/client':
+        specifier: ^3.11.8
+        version: 3.11.8(@types/react@18.2.73)(graphql@16.8.1)(react-dom@18.2.0)(react@18.2.0)
       '@apollo/server':
         specifier: ^4.11.2
         version: 4.11.2(graphql@16.8.1)
@@ -472,9 +476,6 @@ importers:
         specifier: ^9.0.1
         version: 9.0.1
     devDependencies:
-      '@apollo/client':
-        specifier: ^3.11.8
-        version: 3.11.8(@types/react@18.2.73)(graphql@16.8.1)(react-dom@18.2.0)(react@18.2.0)
       '@graphql-codegen/cli':
         specifier: 5.0.2
         version: 5.0.2(@babel/core@7.26.0)(@types/node@18.19.64)(graphql@16.8.1)
@@ -778,9 +779,15 @@ importers:
       dotenv:
         specifier: ^16.4.5
         version: 16.4.5
+      graphql:
+        specifier: ^16.8.1
+        version: 16.8.1
       hostile:
         specifier: ^1.4.0
         version: 1.4.0
+      json-canonicalize:
+        specifier: ^1.0.6
+        version: 1.0.6
       koa:
         specifier: ^2.15.3
         version: 2.15.3
@@ -5278,7 +5285,7 @@ packages:
     resolution: {integrity: sha512-wfzX8kc1PMyUILA+1Z/EqoE4UCXGy0iRGMhPwdfae1+f0OXlLqCk+By+aMzgJBzR9AzS4CDizioG6Ss1gvAFJw==}
     engines: {node: ^12.20.0 || ^14.18.0 || >=16.0.0}
     dependencies:
-      cross-spawn: 7.0.3
+      cross-spawn: 7.0.6
       is-glob: 4.0.3
       open: 8.4.0
       picocolors: 1.1.1
@@ -5398,7 +5405,7 @@ packages:
       cacache: 17.1.4
       chalk: 4.1.2
       chokidar: 3.5.3
-      cross-spawn: 7.0.3
+      cross-spawn: 7.0.6
       dotenv: 16.4.1
       es-module-lexer: 1.4.1
       esbuild: 0.17.6
@@ -5488,7 +5495,7 @@ packages:
       cacache: 17.1.4
       chalk: 4.1.2
       chokidar: 3.5.3
-      cross-spawn: 7.0.3
+      cross-spawn: 7.0.6
       dotenv: 16.4.1
       es-module-lexer: 1.4.1
       esbuild: 0.17.6
@@ -9072,8 +9079,8 @@ packages:
     dependencies:
       tslib: 2.8.0
 
-  /cross-spawn@7.0.3:
-    resolution: {integrity: sha512-iRDPJKUPVEND7dHPO8rkbOnPpyDygcDFtWjpeWNCgy8WP2rXcxXL8TskReQl6OrB2G7+UJrags1q15Fudc7G6w==}
+  /cross-spawn@7.0.6:
+    resolution: {integrity: sha512-uV2QOWP2nWzsy2aMp8aRibhi9dlzF5Hgh5SHaB9OiTGEyDTiJJyx0uy51QXdyWbtAHNua4XJzUKca3OzKUd3vA==}
     engines: {node: '>= 8'}
     dependencies:
       path-key: 3.1.1
@@ -10460,7 +10467,7 @@ packages:
       '@ungap/structured-clone': 1.2.0
       ajv: 6.12.6
       chalk: 4.1.2
-      cross-spawn: 7.0.3
+      cross-spawn: 7.0.6
       debug: 4.3.7(supports-color@9.4.0)
       doctrine: 3.0.0
       escape-string-regexp: 4.0.0
@@ -10650,7 +10657,7 @@ packages:
     resolution: {integrity: sha512-8uSpZZocAZRBAPIEINJj3Lo9HyGitllczc27Eh5YYojjMFMn8yHMDMaUHE2Jqfq05D/wucwI4JGURyXt1vchyg==}
     engines: {node: '>=10'}
     dependencies:
-      cross-spawn: 7.0.3
+      cross-spawn: 7.0.6
       get-stream: 6.0.1
       human-signals: 2.1.0
       is-stream: 2.0.1
@@ -11004,7 +11011,7 @@ packages:
     resolution: {integrity: sha512-TMKDUnIte6bfb5nWv7V/caI169OHgvwjb7V4WkeUvbQQdjr5rWKqHFiKWb/fcOwB+CzBT+qbWjvj+DVwRskpIg==}
     engines: {node: '>=14'}
     dependencies:
-      cross-spawn: 7.0.3
+      cross-spawn: 7.0.6
       signal-exit: 4.1.0
     dev: true
 
@@ -13192,7 +13199,6 @@ packages:
 
   /json-canonicalize@1.0.6:
     resolution: {integrity: sha512-kP2iYpOS5SZHYhIaR1t9oG80d4uTY3jPoaBj+nimy3njtJk8+sRsVatN8pyJRDRtk9Su3+6XqA2U8k0dByJBUQ==}
-    dev: false
 
   /json-parse-even-better-errors@2.3.1:
     resolution: {integrity: sha512-xyFwyhro/JEof6Ghe2iz2NcXoj2sloNsWr/XsERDK/oiPCfaNhl5ONfp+jQdAZRQQ0IJWNzH9zIZF7li91kh2w==}
@@ -15342,7 +15348,7 @@ packages:
     hasBin: true
     dependencies:
       ansi-styles: 6.2.1
-      cross-spawn: 7.0.3
+      cross-spawn: 7.0.6
       memorystream: 0.3.1
       minimatch: 9.0.3
       pidtree: 0.6.0
