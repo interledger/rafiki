@@ -1,4 +1,3 @@
-import nock from 'nock'
 import { IocContract } from '@adonisjs/fold'
 import { faker } from '@faker-js/faker'
 import { AppServices } from '../app'
@@ -17,10 +16,10 @@ export async function createTenant(
   options?: CreateOptions
 ): Promise<Tenant> {
   const tenantService = await deps.use('tenantService')
-  const config = await deps.use('config')
-  const scope = nock(config.authAdminApiUrl)
-    .post('')
-    .reply(200, { data: { createTenant: { id: 1234 } } })
+  const authServiceClient = await deps.use('authServiceClient')
+  jest
+    .spyOn(authServiceClient.tenant, 'create')
+    .mockImplementationOnce(async () => undefined)
   const tenant = await tenantService.create(
     options || {
       email: faker.internet.email(),
@@ -30,7 +29,6 @@ export async function createTenant(
       idpSecret: 'test-idp-secret'
     }
   )
-  scope.done()
 
   if (!tenant) {
     throw Error('Failed to create test tenant')

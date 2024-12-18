@@ -25,10 +25,7 @@ export class AuthServiceClient {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private async request<T = any>(
-    path: string,
-    options: RequestInit
-  ): Promise<T> {
+  private async request<T>(path: string, options: RequestInit): Promise<T> {
     const response = await fetch(`${this.baseUrl}${path}`, options)
 
     if (!response.ok) {
@@ -71,7 +68,7 @@ export class AuthServiceClient {
   public tenant = {
     get: (id: string) =>
       this.request<Tenant>(`/tenant/${id}`, { method: 'GET' }),
-    create: (data: Omit<Tenant, 'id'>) =>
+    create: (data: Tenant) =>
       this.request('/tenant', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -83,6 +80,7 @@ export class AuthServiceClient {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
       }),
-    delete: (id: string) => this.request(`/tenant/${id}`, { method: 'DELETE' })
+    delete: (id: string, deletedAt?: Date) =>
+      this.request(`/tenant/${id}`, { method: 'DELETE' })
   }
 }

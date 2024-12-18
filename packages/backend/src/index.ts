@@ -221,7 +221,7 @@ export function initIocContainer(
     return createInMemoryDataStore(config.localCacheDuration)
   })
 
-  container.singleton('authServiceClient', async () => {
+  container.singleton('authServiceClient', () => {
     return new AuthServiceClient(config.authServiceApiUrl)
   })
 
@@ -229,8 +229,8 @@ export function initIocContainer(
     return createTenantService({
       logger: await deps.use('logger'),
       knex: await deps.use('knex'),
-      apolloClient: await deps.use('apolloClient'),
-      tenantCache: await deps.use('tenantCache')
+      tenantCache: await deps.use('tenantCache'),
+      authServiceClient: deps.use('authServiceClient')
     })
   })
 
