@@ -9,10 +9,10 @@
     "astro": "astro"
   },
   "dependencies": {
-    "@astrojs/markdown-remark": "^5.3.0",
+    "@astrojs/markdown-remark": "^6.0.1",
     "@astrojs/starlight": "^0.29.0",
     "@interledger/docs-design-system": "^0.5.2",
-    "astro": "4.16.11",
+    "astro": "5.0.9",
     "astro-graphql-plugin": "^0.3.0",
     "graphql": "16.8.1",
     "mermaid": "^11.4.0",
