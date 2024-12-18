@@ -15,7 +15,7 @@
     "astro": "4.16.11",
     "astro-graphql-plugin": "^0.3.0",
     "graphql": "16.8.1",
-    "mermaid": "^11.4.0",
+    "mermaid": "^11.4.1",
     "rehype-autolink-headings": "^7.1.0",
     "rehype-mathjax": "^6.0.0",
     "remark-math": "^6.0.0",
