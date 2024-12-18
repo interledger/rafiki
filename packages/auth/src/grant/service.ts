@@ -8,7 +8,9 @@ import {
   GrantState,
   GrantFinalization,
   StartMethod,
-  FinishMethod
+  FinishMethod,
+  GrantWithTenant,
+  isGrantWithTenant
 } from './model'
 import { AccessRequest } from '../access/types'
 import { AccessService } from '../access/service'
@@ -24,8 +26,12 @@ interface GrantFilter {
 
 export interface GrantService {
   getByIdWithAccess(grantId: string): Promise<Grant | undefined>
-  create(grantRequest: GrantRequest, trx?: Transaction): Promise<Grant>
-  markPending(grantId: string, trx?: Transaction): Promise<Grant | undefined>
+  create(
+    grantRequest: GrantRequest,
+    tenantId: string,
+    trx?: Transaction
+  ): Promise<Grant>
+  markPending(grantId: string, trx?: Transaction): Promise<GrantWithTenant>
   approve(grantId: string, trx?: Transaction): Promise<Grant>
   finalize(grantId: string, reason: GrantFinalization): Promise<Grant>
   getByContinue(
@@ -115,8 +121,8 @@ export async function createGrantService({
   }
   return {
     getByIdWithAccess: (grantId: string) => getByIdWithAccess(grantId),
-    create: (grantRequest: GrantRequest, trx?: Transaction) =>
-      create(deps, grantRequest, trx),
+    create: (grantRequest: GrantRequest, tenantId: string, trx?: Transaction) =>
+      create(deps, grantRequest, tenantId, trx),
     markPending: (grantId: string, trx?: Transaction) =>
       markPending(deps, grantId, trx),
     approve: (grantId: string) => approve(grantId),
@@ -149,12 +155,17 @@ async function markPending(
   deps: ServiceDependencies,
   id: string,
   trx?: Transaction
-): Promise<Grant> {
+): Promise<GrantWithTenant> {
   const grantTrx = trx || (await deps.knex.transaction())
   try {
-    const grant = await Grant.query(trx).patchAndFetchById(id, {
-      state: GrantState.Pending
-    })
+    const grant = await Grant.query(trx)
+      .patchAndFetchById(id, {
+        state: GrantState.Pending
+      })
+      .withGraphFetched('tenant')
+
+    if (!isGrantWithTenant(grant))
+      throw new Error('required graph not returned in query')
 
     if (!trx) {
       await grantTrx.commit()
@@ -211,6 +222,7 @@ async function revokeGrant(
 async function create(
   deps: ServiceDependencies,
   grantRequest: GrantRequest,
+  tenantId: string,
   trx?: Transaction
 ): Promise<Grant> {
   const { accessService, knex } = deps
@@ -233,7 +245,8 @@ async function create(
       clientNonce: interact?.finish?.nonce,
       client,
       continueId: v4(),
-      continueToken: generateToken()
+      continueToken: generateToken(),
+      tenantId
     }
 
     const grant = await Grant.query(grantTrx).insert(grantData)

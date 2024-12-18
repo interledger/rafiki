@@ -13,6 +13,7 @@ import { BaseService } from '../../../shared/baseService'
 import { Amount, serializeAmount } from '../../amount'
 import { RemoteIncomingPaymentError } from './errors'
 import { isGrantError } from '../../grant/errors'
+import { IAppConfig } from '../../../config/app'
 
 interface CreateRemoteIncomingPaymentArgs {
   walletAddressUrl: string
@@ -35,6 +36,7 @@ export interface RemoteIncomingPaymentService {
 }
 
 interface ServiceDependencies extends BaseService {
+  config: IAppConfig
   grantService: GrantService
   openPaymentsUrl: string
   openPaymentsClient: AuthenticatedClient
@@ -102,7 +104,7 @@ async function createIncomingPayment(
     walletAddress.resourceServer ?? new URL(walletAddress.id).origin
 
   const grantOptions = {
-    authServer: walletAddress.authServer,
+    authServer: `${walletAddress.authServer}/cf5fd7d3-1eb1-4041-8e43-ba45747e9e5d`, // TODO: update with wallet address tenant id when tenanted wallet addresses are in
     accessType: AccessType.IncomingPayment,
     accessActions: [AccessAction.Create, AccessAction.ReadAll]
   }
