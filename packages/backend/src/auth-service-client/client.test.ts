@@ -47,9 +47,9 @@ describe('AuthServiceClient', () => {
       test('creates a new tenant', async () => {
         const tenantData = createTenantData()
 
-        nock(baseUrl).post('/tenant', tenantData).reply(201)
+        nock(baseUrl).post('/tenant', tenantData).reply(204)
 
-        await expect(client.tenant.create(tenantData)).resolves.toBe('')
+        await expect(client.tenant.create(tenantData)).resolves.toBeUndefined()
       })
 
       test('throws on bad request', async () => {
@@ -73,9 +73,11 @@ describe('AuthServiceClient', () => {
           idpSecret: faker.string.alphanumeric(32)
         }
 
-        nock(baseUrl).patch(`/tenant/${id}`, updateData).reply(200)
+        nock(baseUrl).patch(`/tenant/${id}`, updateData).reply(204)
 
-        await expect(client.tenant.update(id, updateData)).resolves.toBe('')
+        await expect(
+          client.tenant.update(id, updateData)
+        ).resolves.toBeUndefined()
       })
 
       test('throws on bad request', async () => {
