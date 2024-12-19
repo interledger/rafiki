@@ -222,6 +222,10 @@ export default defineConfig({
               collapsed: true,
               items: [
                 {
+                  label: 'Releases',
+                  link: '/resources/releases'
+                },
+                {
                   label: 'Glossary',
                   link: '/resources/glossary'
                 },
