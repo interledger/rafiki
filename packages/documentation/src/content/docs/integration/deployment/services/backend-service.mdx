@@ -27,7 +27,7 @@ You must also set the environment variables for the `backend` service.
 
 ## Open Payments
 
-The `backend` service exposes the Open Payments APIs, which are auth-protected using an opinionated version of the Grant Negotiation and Authorization Protocol (GNAP). Review the [`auth`](/integration/services/auth-service) service page for more details about grant authorization and authentication.
+The `backend` service exposes the Open Payments APIs, which are auth-protected using an opinionated version of the Grant Negotiation and Authorization Protocol (GNAP). Review the [`auth`](/integration/deployment/services/auth-service) service page for more details about grant authorization and authentication.
 
 The `backend` service allows you to manage Open Payments <LinkOut href="https://openpayments.dev/introduction/op-concepts/#incoming-payment">incoming payments</LinkOut>, <LinkOut href="https://openpayments.dev/introduction/op-concepts/#quote">quotes</LinkOut>, and <LinkOut href='https://openpayments.dev/introduction/op-concepts/#outgoing-payment'>outgoing payments</LinkOut>. Quotes and outgoing payments call the ILP connector, described in the next section, to send ILP packets. Quoting sends unfulfillable probe packets, for example to determine a transaction’s cost before executing the payment. Outgoing payments send packets as part of executing the payment.
 
@@ -39,7 +39,7 @@ Some of the responsibilities of a connector include:
 
 - Authenticating packets against ILP account credentials.
 - Forwarding packets to a sender or receiver.
-- Rejecting a packet for any number of reasons, including expiration, insufficient liquidity, rate limit exceeded, or if the amount exceeds the `maxPacketAmount` [agreed to](/admin/manage-peering) by the connector and its peer.
+- Rejecting a packet for any number of reasons, including expiration, insufficient liquidity, rate limit exceeded, or if the amount exceeds the `maxPacketAmount` [agreed to](/integration/requirements/peers#prerequisites) by the connector and its peer.
 - Converting currencies.
 - Fulfilling packets with an internal STREAM server.
 
@@ -48,7 +48,7 @@ The `backend` service includes an HTTP server listening on the configured `CONNE
 Similarly, if a packet's destination address corresponds to a peer, your connector will forward the packet to your peer over HTTP, along with your peer's outgoing HTTP `authToken`.
 
 :::note[Auth tokens]
-You and your peer should have exchanged incoming and outgoing auth tokens as part of establishing your [peering relationship](/admin/manage-peering).
+You and your peer should have exchanged incoming and outgoing auth tokens as part of establishing your [peering relationship](/integration/requirements/peers#prerequisites).
 :::
 
 A packet can either continue on to your peer via HTTP or terminate at your Rafiki instance's STREAM server. If the packet terminates at your STREAM server, your connector will attempt to extract and decode the payment tag from the packet's destination address. When your connector successfully matches the tag with a locally managed wallet address or incoming payment, the connector will not forward the packet. Instead, it will credit the corresponding balance and track the total amount received in Redis to support STREAM receipts. Packets addressed to a wallet address happen via SPSP.
