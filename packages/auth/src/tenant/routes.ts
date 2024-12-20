@@ -110,8 +110,9 @@ async function deleteTenant(
     ctx.status = 400
     return
   }
+  const deletedAt = new Date(deletedAtString)
 
-  const deleted = await deps.tenantService.delete(id)
+  const deleted = await deps.tenantService.delete(id, deletedAt)
 
   if (!deleted) {
     ctx.status = 404

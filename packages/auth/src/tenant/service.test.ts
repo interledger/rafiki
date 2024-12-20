@@ -81,7 +81,7 @@ describe('Tenant Service', (): void => {
     test('returns undefined for soft deleted tenant', async (): Promise<void> => {
       const tenantData = createTenantData()
       const created = await tenantService.create(tenantData)
-      await tenantService.delete(created.id)
+      await tenantService.delete(created.id, new Date())
 
       const tenant = await tenantService.get(created.id)
       expect(tenant).toBeUndefined()
@@ -137,7 +137,7 @@ describe('Tenant Service', (): void => {
     test('returns undefined for soft-deleted tenant', async (): Promise<void> => {
       const tenantData = createTenantData()
       const created = await tenantService.create(tenantData)
-      await tenantService.delete(created.id)
+      await tenantService.delete(created.id, new Date())
 
       const updated = await tenantService.update(created.id, {
         idpConsentUrl: faker.internet.url()
@@ -151,7 +151,7 @@ describe('Tenant Service', (): void => {
       const tenantData = createTenantData()
       const created = await tenantService.create(tenantData)
 
-      const result = await tenantService.delete(created.id)
+      const result = await tenantService.delete(created.id, new Date())
       expect(result).toBe(true)
 
       const tenant = await tenantService.get(created.id)
@@ -165,7 +165,7 @@ describe('Tenant Service', (): void => {
     })
 
     test('returns false for non-existent tenant', async (): Promise<void> => {
-      const result = await tenantService.delete(faker.string.uuid())
+      const result = await tenantService.delete(faker.string.uuid(), new Date())
       expect(result).toBe(false)
     })
 
@@ -173,8 +173,8 @@ describe('Tenant Service', (): void => {
       const tenantData = createTenantData()
       const created = await tenantService.create(tenantData)
 
-      await tenantService.delete(created.id)
-      const secondDelete = await tenantService.delete(created.id)
+      await tenantService.delete(created.id, new Date())
+      const secondDelete = await tenantService.delete(created.id, new Date())
       expect(secondDelete).toBe(false)
     })
   })

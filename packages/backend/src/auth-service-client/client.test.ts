@@ -102,7 +102,9 @@ describe('AuthServiceClient', () => {
 
         nock(baseUrl).delete(`/tenant/${id}`).reply(204)
 
-        await expect(client.tenant.delete(id)).resolves.toBeUndefined()
+        await expect(
+          client.tenant.delete(id, new Date())
+        ).resolves.toBeUndefined()
       })
 
       test('throws on bad request', async () => {
@@ -112,7 +114,7 @@ describe('AuthServiceClient', () => {
           .delete(`/tenant/${id}`)
           .reply(404, { message: 'Tenant not found' })
 
-        await expect(client.tenant.delete(id)).rejects.toThrow(
+        await expect(client.tenant.delete(id, new Date())).rejects.toThrow(
           AuthServiceClientError
         )
       })
