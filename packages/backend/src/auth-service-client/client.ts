@@ -80,7 +80,7 @@ export class AuthServiceClient {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
       }),
-    delete: (id: string, deletedAt?: Date) =>
+    delete: (id: string, _deletedAt?: Date) =>
       this.request(`/tenant/${id}`, { method: 'DELETE' })
   }
 }

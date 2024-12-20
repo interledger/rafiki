@@ -7,7 +7,7 @@ import { AppServices } from '../app'
 import { initIocContainer } from '..'
 import { createTestApp, TestContainer } from '../tests/app'
 import { TenantService } from './service'
-import { Config, IAppConfig } from '../config/app'
+import { Config } from '../config/app'
 import { truncateTables } from '../tests/tableManager'
 import { Tenant } from './model'
 import { getPageTests } from '../shared/baseModel.test'
@@ -20,7 +20,6 @@ describe('Tenant Service', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let tenantService: TenantService
-  let config: IAppConfig
   let knex: Knex
   let authServiceClient: AuthServiceClient
 
@@ -28,7 +27,6 @@ describe('Tenant Service', (): void => {
     deps = initIocContainer(Config)
     appContainer = await createTestApp(deps)
     tenantService = await deps.use('tenantService')
-    config = await deps.use('config')
     knex = await deps.use('knex')
     authServiceClient = await deps.use('authServiceClient')
   })
@@ -337,7 +335,6 @@ describe('Tenant Service', (): void => {
   describe('Tenant Service using cache', (): void => {
     let deps: IocContract<AppServices>
     let appContainer: TestContainer
-    let config: IAppConfig
     let tenantService: TenantService
     let tenantCache: CacheDataStore<Tenant>
     let authServiceClient: AuthServiceClient
@@ -348,7 +345,6 @@ describe('Tenant Service', (): void => {
         localCacheDuration: 5_000 // 5-second default.
       })
       appContainer = await createTestApp(deps)
-      config = await deps.use('config')
       tenantService = await deps.use('tenantService')
       tenantCache = await deps.use('tenantCache')
       authServiceClient = await deps.use('authServiceClient')
