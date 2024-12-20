@@ -105,6 +105,7 @@ import {
   getTenantFromApiSignature,
   TenantApiSignatureResult
 } from './shared/utils'
+import { AuthServiceClient } from './auth-service-client/client'
 export interface AppContextData {
   logger: Logger
   container: AppContainer
@@ -265,6 +266,7 @@ export interface AppServices {
   paymentMethodHandlerService: Promise<PaymentMethodHandlerService>
   ilpPaymentService: Promise<IlpPaymentService>
   localPaymentService: Promise<LocalPaymentService>
+  authServiceClient: AuthServiceClient
 }
 
 export type AppContainer = IocContract<AppServices>

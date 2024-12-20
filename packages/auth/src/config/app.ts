@@ -43,6 +43,7 @@ export const Config = {
   authPort: envInt('AUTH_PORT', 3006),
   interactionPort: envInt('INTERACTION_PORT', 3009),
   introspectionPort: envInt('INTROSPECTION_PORT', 3007),
+  serviceAPIPort: envInt('SERVICE_API_PORT', 3011),
   env: envString('NODE_ENV', 'development'),
   trustProxy: envBool('TRUST_PROXY', false),
   enableManualMigrations: envBool('ENABLE_MANUAL_MIGRATIONS', false),

@@ -15,7 +15,7 @@ export interface TenantService {
     id: string,
     input: Partial<Omit<CreateOptions, 'id'>>
   ): Promise<Tenant | undefined>
-  delete(id: string): Promise<boolean>
+  delete(id: string, deletedAt: Date): Promise<boolean>
 }
 
 interface ServiceDependencies extends BaseService {
@@ -39,7 +39,7 @@ export async function createTenantService({
     get: (id: string) => getTenant(deps, id),
     update: (id: string, input: Partial<Omit<CreateOptions, 'id'>>) =>
       updateTenant(deps, id, input),
-    delete: (id: string) => deleteTenant(deps, id)
+    delete: (id: string, deletedAt: Date) => deleteTenant(deps, id, deletedAt)
   }
 }
 
@@ -72,10 +72,11 @@ async function updateTenant(
 
 async function deleteTenant(
   deps: ServiceDependencies,
-  id: string
+  id: string,
+  deletedAt: Date
 ): Promise<boolean> {
   const deleted = await Tenant.query(deps.knex)
-    .patch({ deletedAt: new Date() })
+    .patch({ deletedAt })
     .whereNull('deletedAt')
     .where('id', id)
   return deleted > 0
