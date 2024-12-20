@@ -96,14 +96,14 @@ The example domain and subdomain values are for demonstration purposes only. You
 Update the variables in the following compose file with values relevant to your environment and system. Refer to the [environment variables page](/resources/environment-variables/) for details.
 
 :::note[Update compose file]
-You must change the values enclosed within curly brackets {} in the following compose file.
+You must change the values enclosed within the brackets of the following compose file. Substitute `newest-version` with the latest Rafiki <LinkOut href='https://github.com/interledger/rafiki/releases'>version</LinkOut>.
 :::
 
 ```sh
 name: 'my-rafiki'
 services:
   rafiki-auth:
-    image: ghcr.io/interledger/rafiki-auth:v1.0.0-alpha.<newest-version>
+    image: ghcr.io/interledger/rafiki-auth:<newest-version>
     container_name: rafiki-auth
     environment:
       AUTH_DATABASE_URL: {postgresql://...}
@@ -129,7 +129,7 @@ services:
     restart: always
 
   rafiki-backend:
-    image: ghcr.io/interledger/rafiki-backend:v1.0.0-alpha.<newest-version>
+    image: ghcr.io/interledger/rafiki-backend:<newest-version>
     container_name: rafiki-backend
     depends_on:
       - postgres
@@ -166,7 +166,7 @@ services:
       - ../temp/:/workspace/temp/
 
   rafiki-frontend:
-    image: ghcr.io/interledger/rafiki-frontend:v1.0.0-alpha.<newest-version>
+    image: ghcr.io/interledger/rafiki-frontend:<newest-version>
     container_name: rafiki-frontend
     depends_on:
       - rafiki-backend
