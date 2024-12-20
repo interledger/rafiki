@@ -211,8 +211,8 @@ importers:
         specifier: ^16.8.1
         version: 16.8.1
       ioredis:
-        specifier: ^5.3.2
-        version: 5.3.2
+        specifier: ^5.4.2
+        version: 5.4.2
       json-canonicalize:
         specifier: ^1.0.6
         version: 1.0.6
@@ -425,8 +425,8 @@ importers:
         specifier: ^2.2.4-alpha.2
         version: 2.2.4-alpha.2
       ioredis:
-        specifier: ^5.3.2
-        version: 5.3.2
+        specifier: ^5.4.2
+        version: 5.4.2
       json-canonicalize:
         specifier: ^1.0.6
         version: 1.0.6
@@ -12089,13 +12089,13 @@ packages:
       loose-envify: 1.4.0
     dev: true
 
-  /ioredis@5.3.2:
-    resolution: {integrity: sha512-1DKMMzlIHM02eBBVOFQ1+AolGjs6+xEcM4PDL7NqOS6szq7H9jSaEkIUH6/a5Hl241LzW6JLSiAbNvTQjUupUA==}
+  /ioredis@5.4.2:
+    resolution: {integrity: sha512-0SZXGNGZ+WzISQ67QDyZ2x0+wVxjjUndtD8oSeik/4ajifeiRufed8fCb8QW8VMyi4MXcS+UO1k/0NGhvq1PAg==}
     engines: {node: '>=12.22.0'}
     dependencies:
       '@ioredis/commands': 1.2.0
       cluster-key-slot: 1.1.0
-      debug: 4.3.4
+      debug: 4.3.7(supports-color@9.4.0)
       denque: 2.1.0
       lodash.defaults: 4.2.0
       lodash.isarguments: 3.1.0
