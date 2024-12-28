@@ -527,6 +527,8 @@ input VoidLiquidityWithdrawalInput {
 input DepositOutgoingPaymentLiquidityInput {
   "Unique identifier of the outgoing payment to deposit liquidity into."
   outgoingPaymentId: String!
+  "Unique identifier of the tenant under which the quote was created."
+  tenantId: String!
   "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency)."
   idempotencyKey: String!
 }
@@ -552,6 +554,8 @@ input CreateOutgoingPaymentWithdrawalInput {
 input DepositEventLiquidityInput {
   "Unique identifier of the event to deposit liquidity into."
   eventId: String!
+  "Unique identifier of the tenant under which the quote was created."
+  tenantId: String!
   "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency)."
   idempotencyKey: String!
 }

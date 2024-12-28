@@ -370,6 +370,7 @@ describe('OutgoingPaymentService', (): void => {
       ).resolves.toEqual(payment)
       await expect(
         outgoingPaymentService.fund({
+          tenantId,
           id: payment.id,
           amount: payment.debitAmount.value,
           transferId: uuid()
@@ -538,6 +539,7 @@ describe('OutgoingPaymentService', (): void => {
       await expect(
         outgoingPaymentService.fund({
           id: payment.id,
+          tenantId,
           amount: payment.debitAmount.value,
           transferId: uuid()
         })
@@ -1336,6 +1338,7 @@ describe('OutgoingPaymentService', (): void => {
       await expect(
         outgoingPaymentService.fund({
           id: payment.id,
+          tenantId,
           amount: payment.debitAmount.value,
           transferId: uuid()
         })
@@ -1842,6 +1845,7 @@ describe('OutgoingPaymentService', (): void => {
       await expect(
         outgoingPaymentService.fund({
           id: uuid(),
+          tenantId,
           amount: quoteAmount,
           transferId: uuid()
         })
@@ -1852,6 +1856,7 @@ describe('OutgoingPaymentService', (): void => {
       await expect(
         outgoingPaymentService.fund({
           id: payment.id,
+          tenantId,
           amount: quoteAmount,
           transferId: uuid()
         })
@@ -1871,6 +1876,7 @@ describe('OutgoingPaymentService', (): void => {
       await expect(
         outgoingPaymentService.fund({
           id: payment.id,
+          tenantId,
           amount: quoteAmount - BigInt(1),
           transferId: uuid()
         })
@@ -1890,6 +1896,7 @@ describe('OutgoingPaymentService', (): void => {
         await expect(
           outgoingPaymentService.fund({
             id: payment.id,
+            tenantId,
             amount: quoteAmount,
             transferId: uuid()
           })

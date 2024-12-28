@@ -131,7 +131,7 @@ export async function createOutgoingPaymentWithReceiver(
   )
 
   const outgoingPayment = await createOutgoingPayment(deps, {
-    //TODO fix this in outgoing payments changes
+    //TODO get this from WA
     tenantId: args.quoteOptions?.tenantId || uuid(),
     walletAddressId: args.sendingWalletAddress.id,
     method: args.method,
@@ -143,6 +143,8 @@ export async function createOutgoingPaymentWithReceiver(
     const outgoingPaymentService = await deps.use('outgoingPaymentService')
     await outgoingPaymentService.fund({
       id: outgoingPayment.id,
+      //TODO
+      tenantId: '',
       amount: outgoingPayment.debitAmount.value,
       transferId: uuid()
     })
