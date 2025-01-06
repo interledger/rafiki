@@ -213,7 +213,25 @@ export default defineConfig({
                 },
                 {
                   label: 'Manage liquidity',
-                  link: '/admin/manage-liquidity'
+                  collapsed: true,
+                  items: [
+                    {
+                      label: 'Asset liquidity',
+                      link: '/admin/liquidity/asset-liquidity'
+                    },
+                    {
+                      label: 'Peer liquidity',
+                      link: '/admin/liquidity/peer-liquidity'
+                    },
+                    {
+                      label: 'Payment liquidity',
+                      link: '/admin/liquidity/payment-liquidity'
+                    },
+                    {
+                      label: 'Two-phase withdrawals',
+                      link: '/admin/liquidity/two-phase-withdrawals'
+                    }
+                  ]
                 }
               ]
             },
