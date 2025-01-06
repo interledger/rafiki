@@ -240,3 +240,8 @@ export async function verifyApiSignature(
     config.adminApiSecret as string
   )
 }
+
+export function ensureTrailingSlash(str: string): string {
+  if (!str.endsWith('/')) return `${str}/`
+  return str
+}
