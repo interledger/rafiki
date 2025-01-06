@@ -30,7 +30,12 @@ export class MockASE {
   // Use static MockASE.create instead.
   private constructor(config: TestConfig) {
     this.config = config
-    this.apolloClient = createApolloClient(config.graphqlUrl)
+    this.apolloClient = createApolloClient({
+      graphqlUrl: config.graphqlUrl,
+      signatureSecret: config.signatureSecret,
+      signatureVersion: config.signatureVersion,
+      operatorTenantId: config.operatorTenantId
+    })
     this.adminClient = new AdminClient(this.apolloClient)
     this.accounts = new AccountProvider()
     this.integrationServer = new IntegrationServer(

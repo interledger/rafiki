@@ -101,7 +101,10 @@ import { LocalPaymentService } from './payment-method/local/service'
 import { GrantService } from './open_payments/grant/service'
 import { AuthServerService } from './open_payments/authServer/service'
 import { Tenant } from './tenants/model'
-import { verifyTenantOrOperatorApiSignature } from './shared/utils'
+import {
+  getTenantFromApiSignature,
+  TenantApiSignatureResult
+} from './shared/utils'
 export interface AppContextData {
   logger: Logger
   container: AppContainer
@@ -143,19 +146,6 @@ export type HttpSigContext = AppContext & {
   request: HttpSigRequest
   headers: HttpSigHeaders
   client: string
-}
-
-type TenantedHttpSigHeaders = HttpSigHeaders & Record<'tenantId', string>
-
-type TenantedHttpSigRequest = Omit<HttpSigContext['request'], 'headers'> & {
-  headers: TenantedHttpSigHeaders
-}
-
-export type TenantedHttpSigContext = HttpSigContext & {
-  headers: TenantedHttpSigHeaders
-  request: TenantedHttpSigRequest
-  tenant?: Tenant
-  isOperator: boolean
 }
 
 export type HttpSigWithAuthenticatedStatusContext = HttpSigContext &
@@ -227,6 +217,11 @@ type ContextType<T> = T extends (
   : never
 
 const WALLET_ADDRESS_PATH = '/:walletAddressPath+'
+
+export interface TenantedApolloContext extends ApolloContext {
+  tenant: Tenant
+  isOperator: boolean
+}
 
 export interface AppServices {
   logger: Promise<Logger>
@@ -397,19 +392,27 @@ export class App {
       }
     )
 
-    koa.use(
-      async (ctx: TenantedHttpSigContext, next: Koa.Next): Promise<void> => {
-        if (!verifyTenantOrOperatorApiSignature(ctx, this.config)) {
+    let tenantApiSignatureResult: TenantApiSignatureResult
+    if (this.config.env !== 'test') {
+      koa.use(async (ctx, next: Koa.Next): Promise<void> => {
+        const result = await getTenantFromApiSignature(ctx, this.config)
+        if (!result) {
           ctx.throw(401, 'Unauthorized')
+        } else {
+          tenantApiSignatureResult = {
+            tenant: result.tenant,
+            isOperator: result.isOperator ? true : false
+          }
         }
         return next()
-      }
-    )
+      })
+    }
 
     koa.use(
       koaMiddleware(this.apolloServer, {
-        context: async (): Promise<ApolloContext> => {
+        context: async (): Promise<TenantedApolloContext> => {
           return {
+            ...tenantApiSignatureResult,
             container: this.container,
             logger: await this.container.use('logger')
           }

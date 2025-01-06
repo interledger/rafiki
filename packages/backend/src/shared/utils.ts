@@ -3,7 +3,8 @@ import { URL, type URL as URLType } from 'url'
 import { createHmac } from 'crypto'
 import { canonicalize } from 'json-canonicalize'
 import { IAppConfig } from '../config/app'
-import { AppContext, TenantedHttpSigContext } from '../app'
+import { AppContext } from '../app'
+import { Tenant } from '../tenants/model'
 
 export function validateId(id: string): boolean {
   return validate(id) && version(id) === 4
@@ -126,7 +127,7 @@ function getSignatureParts(signature: string) {
 function verifyApiSignatureDigest(
   signature: string,
   request: AppContext['request'],
-  config: IAppConfig,
+  adminApiSignatureVersion: number,
   secret: string
 ): boolean {
   const { body } = request
@@ -136,7 +137,7 @@ function verifyApiSignatureDigest(
     timestamp
   } = getSignatureParts(signature as string)
 
-  if (Number(signatureVersion) !== config.adminApiSignatureVersion) {
+  if (Number(signatureVersion) !== adminApiSignatureVersion) {
     return false
   }
 
@@ -172,51 +173,51 @@ async function canApiSignatureBeProcessed(
   return true
 }
 
+export interface TenantApiSignatureResult {
+  tenant: Tenant
+  isOperator: boolean
+}
+
 /*
   Verifies http signatures by first attempting to replicate it with a secret
-  associated with a tenant id in the headers, then with the configured admin secret.
+  associated with a tenant id in the headers.
 
   If a tenant secret can replicate the signature, the request is tenanted to that particular tenant.
   If the environment admin secret matches the tenant's secret, then it is an operator request with elevated permissions.
   If neither can replicate the signature then it is unauthorized.
 */
-export async function verifyTenantOrOperatorApiSignature(
-  ctx: TenantedHttpSigContext,
+export async function getTenantFromApiSignature(
+  ctx: AppContext,
   config: IAppConfig
-): Promise<boolean> {
-  ctx.tenant = undefined
-  ctx.isOperator = false
+): Promise<TenantApiSignatureResult | undefined> {
   const { headers } = ctx.request
   const signature = headers['signature']
   if (!signature) {
-    return false
+    return undefined
   }
 
   const tenantService = await ctx.container.use('tenantService')
   const tenantId = headers['tenant-id']
   const tenant = tenantId ? await tenantService.get(tenantId) : undefined
 
-  if (!tenant) return false
+  if (!tenant) return undefined
 
   if (!(await canApiSignatureBeProcessed(signature as string, ctx, config)))
-    return false
+    return undefined
 
-  // First, try validating with the tenant api secret
   if (
     tenant.apiSecret &&
     verifyApiSignatureDigest(
       signature as string,
       ctx.request,
-      config,
+      config.adminApiSignatureVersion,
       tenant.apiSecret
     )
   ) {
-    ctx.tenant = tenant
-    ctx.isOperator = tenant.apiSecret === config.adminApiSecret
-    return true
+    return { tenant, isOperator: tenant.apiSecret === config.adminApiSecret }
   }
 
-  return false
+  return undefined
 }
 
 export async function verifyApiSignature(
@@ -235,12 +236,7 @@ export async function verifyApiSignature(
   return verifyApiSignatureDigest(
     signature as string,
     ctx.request,
-    config,
+    config.adminApiSignatureVersion,
     config.adminApiSecret as string
   )
-}
-
-export function ensureTrailingSlash(str: string): string {
-  if (!str.endsWith('/')) return `${str}/`
-  return str
 }
