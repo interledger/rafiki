@@ -43,7 +43,7 @@ describe('Wallet Address Resolvers', (): void => {
   let walletAddressService: WalletAddressService
 
   beforeAll(async (): Promise<void> => {
-    deps = await initIocContainer({
+    deps = initIocContainer({
       ...Config,
       localCacheDuration: 0
     })
