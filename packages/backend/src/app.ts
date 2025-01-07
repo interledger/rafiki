@@ -406,6 +406,10 @@ export class App {
         }
         return next()
       })
+    } else {
+      const tenantService = await this.container.use('tenantService')
+      const tenant = await tenantService.get(this.config.operatorTenantId)
+      tenantApiSignatureResult = { tenant, isOperator: true }
     }
 
     koa.use(

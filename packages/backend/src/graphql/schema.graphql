@@ -1226,8 +1226,6 @@ type CreateReceiverResponse {
 }
 
 input CreateWalletAddressInput {
-  "Unique identifier of the tenant associated with the wallet address. This cannot be changed."
-  tenantId: String!
   "Unique identifier of the asset associated with the wallet address. This cannot be changed."
   assetId: String!
   "Wallet address URL. This cannot be changed."

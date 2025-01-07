@@ -8,7 +8,7 @@ import {
   MutationResolvers,
   WalletAddressStatus
 } from '../generated/graphql'
-import { ApolloContext } from '../../app'
+import { ApolloContext, TenantedApolloContext } from '../../app'
 import {
   WalletAddressError,
   isWalletAddressError,
@@ -80,7 +80,7 @@ export const getWalletAddressByUrl: QueryResolvers<ApolloContext>['walletAddress
     return walletAddress ? walletAddressToGraphql(walletAddress) : null
   }
 
-export const createWalletAddress: MutationResolvers<ApolloContext>['createWalletAddress'] =
+export const createWalletAddress: MutationResolvers<TenantedApolloContext>['createWalletAddress'] =
   async (
     parent,
     args,
@@ -99,7 +99,7 @@ export const createWalletAddress: MutationResolvers<ApolloContext>['createWallet
 
     const options: CreateOptions = {
       assetId: args.input.assetId,
-      tenantId: args.input.tenantId,
+      tenantId: ctx.tenant.id,
       additionalProperties: addProps,
       publicName: args.input.publicName,
       url: args.input.url

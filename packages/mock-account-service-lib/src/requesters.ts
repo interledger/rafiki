@@ -52,7 +52,6 @@ export function createRequesters(
   createWalletAddress: (
     accountName: string,
     accountUrl: string,
-    tenantId: string,
     assetId: string
   ) => Promise<WalletAddress>
   createWalletAddressKey: ({
@@ -102,13 +101,12 @@ export function createRequesters(
       depositPeerLiquidity(apolloClient, logger, peerId, amount, transferUid),
     depositAssetLiquidity: (assetId, amount, transferId) =>
       depositAssetLiquidity(apolloClient, logger, assetId, amount, transferId),
-    createWalletAddress: (accountName, accountUrl, tenantId, assetId) =>
+    createWalletAddress: (accountName, accountUrl, assetId) =>
       createWalletAddress(
         apolloClient,
         logger,
         accountName,
         accountUrl,
-        tenantId,
         assetId
       ),
     createWalletAddressKey: ({ walletAddressId, jwk }) =>
@@ -328,7 +326,6 @@ export async function createWalletAddress(
   logger: Logger,
   accountName: string,
   accountUrl: string,
-  tenantId: string,
   assetId: string
 ): Promise<WalletAddress> {
   const createWalletAddressMutation = gql`
@@ -343,7 +340,6 @@ export async function createWalletAddress(
     }
   `
   const createWalletAddressInput: CreateWalletAddressInput = {
-    tenantId,
     assetId,
     url: accountUrl,
     publicName: accountName,

@@ -98,7 +98,7 @@ export async function poll<T>(args: PollArgs<T>): Promise<T> {
 }
 
 /**
- * Omit distrubuted to all types in a union.
+ * Omit distributed to all types in a union.
  * @example
  * type WithoutA = UnionOmit<{ a: number; c: number } | { b: number }, 'a'> // { c: number } | { b: number }
  * const withoutAOK: WithoutA = { c: 1 } // OK
@@ -114,14 +114,10 @@ function getSignatureParts(signature: string) {
   const signatureParts = signature.split(', ')
   const timestamp = signatureParts[0].split('=')[1]
   const signatureVersionAndDigest = signatureParts[1].split('=')
-  const signatureVersion = signatureVersionAndDigest[0].replace('v', '')
-  const signatureDigest = signatureVersionAndDigest[1]
+  const version = signatureVersionAndDigest[0].replace('v', '')
+  const digest = signatureVersionAndDigest[1]
 
-  return {
-    timestamp,
-    version: signatureVersion,
-    digest: signatureDigest
-  }
+  return { timestamp, version, digest }
 }
 
 function verifyApiSignatureDigest(

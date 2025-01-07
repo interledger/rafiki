@@ -2172,22 +2172,6 @@
             "deprecationReason": null
           },
           {
-            "name": "tenantId",
-            "description": "Unique identifier of the tenant associated with the wallet address. This cannot be changed.",
-            "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "SCALAR",
-                "name": "String",
-                "ofType": null
-              }
-            },
-            "defaultValue": null,
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
             "name": "url",
             "description": "Wallet address URL. This cannot be changed.",
             "type": {
