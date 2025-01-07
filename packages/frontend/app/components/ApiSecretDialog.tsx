@@ -9,6 +9,7 @@ type ApiSecretDialogProps = {
   onClose: (success?: boolean) => void
 }
 
+// TODO: rm if unused
 export const ApiSecretDialog = ({ title, onClose }: ApiSecretDialogProps) => {
   const inputRef = useRef<HTMLInputElement>(null)
 
