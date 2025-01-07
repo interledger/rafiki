@@ -62,6 +62,7 @@ describe('Wallet Address Routes', (): void => {
 
     test('throws 404 error for inactive wallet address', async (): Promise<void> => {
       const walletAddress = await createWalletAddress(deps, {
+        tenantId: Config.operatorTenantId,
         publicName: faker.person.firstName()
       })
 

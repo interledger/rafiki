@@ -43,7 +43,10 @@ describe('Combined Payment Service', (): void => {
     sendAsset = await createAsset(deps)
     receiveAsset = await createAsset(deps)
     sendWalletAddressId = (
-      await createWalletAddress(deps, { assetId: sendAsset.id })
+      await createWalletAddress(deps, {
+        tenantId: Config.operatorTenantId,
+        assetId: sendAsset.id
+      })
     ).id
     receiveWalletAddress = await createWalletAddress(deps, {
       assetId: receiveAsset.id

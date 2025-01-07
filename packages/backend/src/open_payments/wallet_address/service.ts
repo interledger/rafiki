@@ -49,6 +49,7 @@ export interface CreateOptions extends Options {
 type Status = 'ACTIVE' | 'INACTIVE'
 
 export interface UpdateOptions extends Options {
+  tenantId: string
   id: string
   status?: Status
   additionalProperties?: WalletAddressAdditionalPropertyInput[]
@@ -213,13 +214,14 @@ async function createWalletAddress(
 
 async function updateWalletAddress(
   deps: ServiceDependencies,
-  { id, status, publicName, additionalProperties }: UpdateOptions
+  { id, tenantId, status, publicName, additionalProperties }: UpdateOptions
 ): Promise<WalletAddress | WalletAddressError> {
   const trx = await WalletAddress.startTransaction()
   try {
     const update: UpdateInput = { publicName }
     const walletAddress = await WalletAddress.query(trx)
-      .findById(id)
+      .where({ id, tenantId })
+      .first()
       .throwIfNotFound()
 
     if (status === 'INACTIVE' && walletAddress.isActive) {

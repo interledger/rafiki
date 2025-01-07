@@ -312,7 +312,9 @@ describe('Wallet Address Resolvers', (): void => {
     let walletAddress: WalletAddressModel
 
     beforeEach(async (): Promise<void> => {
-      walletAddress = await createWalletAddress(deps)
+      walletAddress = await createWalletAddress(deps, {
+        tenantId: Config.operatorTenantId
+      })
     })
 
     test('Can update a wallet address', async (): Promise<void> => {
@@ -426,6 +428,7 @@ describe('Wallet Address Resolvers', (): void => {
       })
       test('New additional properties override previous additional properties', async (): Promise<void> => {
         const createOptions = {
+          tenantId: Config.operatorTenantId,
           additionalProperties: [
             {
               fieldKey: 'existingKey',
@@ -492,6 +495,7 @@ describe('Wallet Address Resolvers', (): void => {
       })
       test('Updating with empty additional properties deletes existing', async (): Promise<void> => {
         const createOptions = {
+          tenantId: Config.operatorTenantId,
           additionalProperties: [
             {
               fieldKey: 'existingKey',
@@ -655,6 +659,7 @@ describe('Wallet Address Resolvers', (): void => {
         const additionalProperties = [walletProp01, walletProp02]
 
         const walletAddress = await createWalletAddress(deps, {
+          tenantId: Config.operatorTenantId,
           publicName,
           createLiquidityAccount: true,
           additionalProperties
@@ -729,6 +734,7 @@ describe('Wallet Address Resolvers', (): void => {
       'Can get a wallet address by its url (publicName: $publicName)',
       async ({ publicName }): Promise<void> => {
         const walletAddress = await createWalletAddress(deps, {
+          tenantId: Config.operatorTenantId,
           publicName,
           createLiquidityAccount: true
         })
@@ -818,14 +824,17 @@ describe('Wallet Address Resolvers', (): void => {
 
     getPageTests({
       getClient: () => appContainer.apolloClient,
-      createModel: () => createWalletAddress(deps),
+      createModel: () =>
+        createWalletAddress(deps, { tenantId: Config.operatorTenantId }),
       pagedQuery: 'walletAddresses'
     })
 
     test('Can get page of wallet addresses', async (): Promise<void> => {
       const walletAddresses: WalletAddressModel[] = []
       for (let i = 0; i < 2; i++) {
-        walletAddresses.push(await createWalletAddress(deps))
+        walletAddresses.push(
+          await createWalletAddress(deps, { tenantId: Config.operatorTenantId })
+        )
       }
       walletAddresses.reverse() // Calling the default getPage will result in descending order
       const query = await appContainer.apolloClient
@@ -889,6 +898,7 @@ describe('Wallet Address Resolvers', (): void => {
         const withdrawalAmount = BigInt(10)
         for (let i = 0; i < 3; i++) {
           const walletAddress = await createWalletAddress(deps, {
+            tenantId: Config.operatorTenantId,
             createLiquidityAccount: true
           })
           if (i) {

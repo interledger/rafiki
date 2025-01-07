@@ -54,6 +54,7 @@ describe('Incoming Payment Routes', (): void => {
     expiresAt = new Date(Date.now() + 30_000)
     asset = await createAsset(deps)
     walletAddress = await createWalletAddress(deps, {
+      tenantId: Config.operatorTenantId,
       assetId: asset.id
     })
     baseUrl = new URL(walletAddress.url).origin
@@ -127,7 +128,9 @@ describe('Incoming Payment Routes', (): void => {
     test.each([IncomingPaymentState.Completed, IncomingPaymentState.Expired])(
       'returns incoming payment with empty methods if payment state is %s',
       async (paymentState): Promise<void> => {
-        const walletAddress = await createWalletAddress(deps)
+        const walletAddress = await createWalletAddress(deps, {
+          tenantId: Config.operatorTenantId
+        })
         const incomingPayment = await createIncomingPayment(deps, {
           walletAddressId: walletAddress.id
         })

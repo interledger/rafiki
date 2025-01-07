@@ -436,7 +436,9 @@ describe('QuoteService', (): void => {
     })
 
     test('fails on inactive wallet address', async () => {
-      const walletAddress = await createWalletAddress(deps)
+      const walletAddress = await createWalletAddress(deps, {
+        tenantId: Config.operatorTenantId
+      })
       const walletAddressUpdated = await WalletAddress.query(
         knex
       ).patchAndFetchById(walletAddress.id, { deactivatedAt: new Date() })

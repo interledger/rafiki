@@ -45,7 +45,9 @@ describe('Wallet Address Key Resolvers', (): void => {
 
   describe('Create Wallet Address Keys', (): void => {
     test('Can create wallet address key', async (): Promise<void> => {
-      const walletAddress = await createWalletAddress(deps)
+      const walletAddress = await createWalletAddress(deps, {
+        tenantId: Config.operatorTenantId
+      })
 
       const input: CreateWalletAddressKeyInput = {
         walletAddressId: walletAddress.id,
@@ -106,7 +108,9 @@ describe('Wallet Address Key Resolvers', (): void => {
           throw new Error('unexpected')
         })
 
-      const walletAddress = await createWalletAddress(deps)
+      const walletAddress = await createWalletAddress(deps, {
+        tenantId: Config.operatorTenantId
+      })
 
       const input = {
         walletAddressId: walletAddress.id,
@@ -164,7 +168,9 @@ describe('Wallet Address Key Resolvers', (): void => {
 
   describe('Revoke key', (): void => {
     test('Can revoke a key', async (): Promise<void> => {
-      const walletAddress = await createWalletAddress(deps)
+      const walletAddress = await createWalletAddress(deps, {
+        tenantId: Config.operatorTenantId
+      })
 
       const key = await walletAddressKeyService.create({
         walletAddressId: walletAddress.id,
@@ -267,7 +273,9 @@ describe('Wallet Address Key Resolvers', (): void => {
   describe('List Wallet Address Keys', (): void => {
     let walletAddressId: string
     beforeEach(async (): Promise<void> => {
-      walletAddressId = (await createWalletAddress(deps)).id
+      walletAddressId = (
+        await createWalletAddress(deps, { tenantId: Config.operatorTenantId })
+      ).id
     })
     getPageTests({
       getClient: () => appContainer.apolloClient,

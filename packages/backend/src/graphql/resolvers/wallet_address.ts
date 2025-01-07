@@ -8,7 +8,7 @@ import {
   MutationResolvers,
   WalletAddressStatus
 } from '../generated/graphql'
-import { ApolloContext, TenantedApolloContext } from '../../app'
+import { TenantedApolloContext } from '../../app'
 import {
   WalletAddressError,
   isWalletAddressError,
@@ -24,7 +24,7 @@ import {
   UpdateOptions
 } from '../../open_payments/wallet_address/service'
 
-export const getWalletAddresses: QueryResolvers<ApolloContext>['walletAddresses'] =
+export const getWalletAddresses: QueryResolvers<TenantedApolloContext>['walletAddresses'] =
   async (
     parent,
     args,
@@ -52,11 +52,11 @@ export const getWalletAddresses: QueryResolvers<ApolloContext>['walletAddresses'
     }
   }
 
-export const getWalletAddress: QueryResolvers<ApolloContext>['walletAddress'] =
+export const getWalletAddress: QueryResolvers<TenantedApolloContext>['walletAddress'] =
   async (parent, args, ctx): Promise<ResolversTypes['WalletAddress']> => {
     const walletAddressService = await ctx.container.use('walletAddressService')
     const walletAddress = await walletAddressService.get(args.id)
-    if (!walletAddress) {
+    if (!walletAddress || walletAddress.tenantId !== ctx.tenant.id) {
       throw new GraphQLError(
         errorToMessage[WalletAddressError.UnknownWalletAddress],
         {
@@ -69,7 +69,7 @@ export const getWalletAddress: QueryResolvers<ApolloContext>['walletAddress'] =
     return walletAddressToGraphql(walletAddress)
   }
 
-export const getWalletAddressByUrl: QueryResolvers<ApolloContext>['walletAddressByUrl'] =
+export const getWalletAddressByUrl: QueryResolvers<TenantedApolloContext>['walletAddressByUrl'] =
   async (
     parent,
     args,
@@ -77,7 +77,9 @@ export const getWalletAddressByUrl: QueryResolvers<ApolloContext>['walletAddress
   ): Promise<ResolversTypes['WalletAddress'] | null> => {
     const walletAddressService = await ctx.container.use('walletAddressService')
     const walletAddress = await walletAddressService.getByUrl(args.url)
-    return walletAddress ? walletAddressToGraphql(walletAddress) : null
+    return walletAddress && ctx.tenant.id === walletAddress.tenantId
+      ? walletAddressToGraphql(walletAddress)
+      : null
   }
 
 export const createWalletAddress: MutationResolvers<TenantedApolloContext>['createWalletAddress'] =
@@ -118,7 +120,7 @@ export const createWalletAddress: MutationResolvers<TenantedApolloContext>['crea
     }
   }
 
-export const updateWalletAddress: MutationResolvers<ApolloContext>['updateWalletAddress'] =
+export const updateWalletAddress: MutationResolvers<TenantedApolloContext>['updateWalletAddress'] =
   async (
     parent,
     args,
@@ -127,6 +129,7 @@ export const updateWalletAddress: MutationResolvers<ApolloContext>['updateWallet
     const walletAddressService = await ctx.container.use('walletAddressService')
     const { additionalProperties, ...rest } = args.input
     const updateOptions: UpdateOptions = {
+      tenantId: ctx.tenant.id,
       ...rest
     }
     if (additionalProperties) {
@@ -154,7 +157,7 @@ export const updateWalletAddress: MutationResolvers<ApolloContext>['updateWallet
     }
   }
 
-export const triggerWalletAddressEvents: MutationResolvers<ApolloContext>['triggerWalletAddressEvents'] =
+export const triggerWalletAddressEvents: MutationResolvers<TenantedApolloContext>['triggerWalletAddressEvents'] =
   async (
     parent,
     args,

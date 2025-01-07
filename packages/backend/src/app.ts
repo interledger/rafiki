@@ -393,7 +393,11 @@ export class App {
     )
 
     let tenantApiSignatureResult: TenantApiSignatureResult
-    if (this.config.env !== 'test') {
+    if (this.config.env === 'test') {
+      const tenantService = await this.container.use('tenantService')
+      const tenant = await tenantService.get(this.config.operatorTenantId)
+      tenantApiSignatureResult = { tenant, isOperator: true }
+    } else {
       koa.use(async (ctx, next: Koa.Next): Promise<void> => {
         const result = await getTenantFromApiSignature(ctx, this.config)
         if (!result) {
@@ -406,10 +410,6 @@ export class App {
         }
         return next()
       })
-    } else {
-      const tenantService = await this.container.use('tenantService')
-      const tenant = await tenantService.get(this.config.operatorTenantId)
-      tenantApiSignatureResult = { tenant, isOperator: true }
     }
 
     koa.use(
