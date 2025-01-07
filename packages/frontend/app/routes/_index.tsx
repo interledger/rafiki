@@ -55,7 +55,10 @@ export default function Index() {
           {/* 
               TODO: is this the best place for the credential prompt?
               Should it be similar to kratos login where it checks on every page and prompts?
-              How does it work in conjunction with kratos login prompt when it is enabled? How should it work in that case?  
+              How does it work in conjunction with kratos login prompt when it is enabled? How should it work in that case?
+              How to handle uncredentialed requests? block tabs in UI if not set? before sending any request ensure credentials
+              are set else redirect to page to set?
+                - perhaps a good enough initial prompt with a redirect is better than trying to make a bullet proof initial prompt.
           */}
           <div className='space-y-4'>
             {hasCredentials ? (
