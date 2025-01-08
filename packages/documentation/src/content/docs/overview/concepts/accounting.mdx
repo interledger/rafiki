@@ -16,7 +16,7 @@ Rafiki uses <LinkOut href="https://en.wikipedia.org/wiki/Double-entry_bookkeepin
 
 Transactions in Rafiki represent Interledger packet interactions, denominated in a given [asset](#assets). Packet interactions can be successful, fail, or be rejected. Rafiki's accounting layer processes the interactions and converts the activities into financial records, which are then written to your [accounting database](#accounting-databases).
 
-Accounts within Rafiki are your internal [liquidity](#liquidity-accounts) and [settlement](#settlement-accounts) accounts used to fund payments, not the accounts that you service for your customers. This distinction is crucial for understanding how Rafiki handles transactions and settlements. Some accounts are created on-the-fly during payment processing, while others must be created when integrating with Rafiki or setting up a peer.
+Accounts within Rafiki are your internal [liquidity](#liquidity-accounts) and [settlement](#settlement-accounts) accounts used to fund payments, not the accounts that you service for your customers. This distinction is crucial for understanding how Rafiki handles transactions and settlements.
 
 ## Assets
 
@@ -62,7 +62,7 @@ Liquidity accounts hold either a zero or a positive balance. Rafiki ensures that
 | [Peer liquidity](#peer-liquidity-accounts)                         | The credit line, denominated in the asset of your peering relationship, that you extend to a peer         | One per peer             |
 | [Incoming payment liquidity](#incoming-payment-liquidity-accounts) | The value received from a completed incoming payment                                                      | One per incoming payment |
 | [Outgoing payment liquidity](#outgoing-payment-liquidity-accounts) | The value that Rafiki will attempt to send in an outgoing payment                                         | One per outgoing payment |
-| [Wallet address liquidity](#wallet-address-liquidity-accounts)     | The value of an incoming payment received to a wallet address via either SPSP or Web Monetization         | One per wallet address   |
+| [Wallet address liquidity](#wallet-address-liquidity-accounts)     | The value that a wallet address received via SPSP                                                         | One per wallet address   |
 
 </div>
 
@@ -75,7 +75,7 @@ An asset liquidity account represents the value that Rafiki has available for se
 :::note
 If you and your peer transact in the same asset (there's no currency conversion) and you both provide your customers only with wallet addresses denominated in that asset, then there will be no movement into/from the corresponding asset liquidity account.
 
-For example, you and your peer transact in USD and only provide your customers with USD wallet addresses. One of your customers sends $10 to your peer's customer. There's no movement from your USD asset liquidity account because there was no currency conversion. There is, however, an [outgoing payment liquidity account](/overview/concepts/accounting#outgoing-payment-liquidity-accounts) created to support the transaction.
+For example, you and your peer transact in USD and only provide your customers with USD wallet addresses. One of your customers sends \$10 to your peer's customer. There's no movement from your USD asset liquidity account because there was no currency conversion. There is, however, an [outgoing payment liquidity account](/overview/concepts/accounting#outgoing-payment-liquidity-accounts) created to support the transaction.
 :::
 
 You can add a liquidity threshold for each asset liquidity account via the [`updateAsset`](https://rafiki.dev/apis/graphql/backend/mutations/#updateasset) mutation's `liquidityThreshold` input argument.
@@ -95,21 +95,25 @@ Your Rafiki instance is configured for two assets: EUR and USD.
 **Cross-currency transaction #1:**
 
 <Steps>
-  1. Rafiki receives packets from a peer. These packets are all denominated in
-  EUR, worth €10. Your EUR liquidity increases to 20 (10 + 10). 2. The current
-  EUR-to-USD exchange rate is applied, with €10 equating to $12 USD. 3. Rafiki
-  moves $12 USD from your USD asset liquidity account into an incoming payment
-  liquidity account. Your USD liquidity decreases to 38 (50 - 12).
+
+1. Rafiki receives packets from a peer. These packets are all denominated in EUR, worth €10. 10 EUR move from the peer's liquidity account on your Rafiki instance to your EUR asset liquidity account. Your EUR liquidity increases to 20 (10 + 10).
+
+2. The EUR-to-USD exchange rate is applied, with €10 equating to \$12 USD. Since your starting USD liquidity is 50, your USD asset liquidity account can cover the transfer of \$12 USD to an incoming payment liquidity account. Your USD liquidity decreases to 38 (50 - 12). If your USD liquidity account had less than \$12, the transfer would fail.
+
 </Steps>
 
 **Cross-currency transaction #2:**
 
 <Steps>
+
 1. Rafiki receives packets from a peer. These packets are all denominated in EUR, worth €50. Your EUR liquidity increases to 70 (20 + 50).
-2. The current EUR-to-USD exchange rate is applied, with €50 equating to $55 USD.
-3. The transaction fails. Your USD liquidity account is 38, so you don't have enough liquidity to cover the transaction.
-4. Your EUR liquidity reduces back to 20 (70 - 50).
+
+2. The current EUR-to-USD exchange rate is applied, with €50 equating to \$55 USD. The transaction fails. Your USD liquidity account is 38, so you don't have enough liquidity to cover the transaction.
+
+3. Your EUR liquidity reduces back to 20 (70 - 50).
+
 </Steps>
+
 </details>
 
 #### Peer liquidity accounts
@@ -119,7 +123,7 @@ Peer liquidity is the credit line you've extended to a peer. A peer liquidity ac
 The amount of credit that you extend to a peer, the asset that you transact in, and the mechanism you use to settle are just a few items that should be defined in your respective peering agreements.
 
 :::note
-A peering agreement is a legal contract between the parties involved in a peering relationship. It defines terms such as the assets involved, auth tokens, connection endpoints, and other operational details. It is not configured or managed within Rafiki but is necessary for establishing the terms under which assets are exchanged.
+A peering agreement is a legal contract between the parties involved in a peering relationship. It defines terms such as the assets involved and other operational details. It is not configured or managed within Rafiki but is necessary for establishing the terms under which assets are exchanged.
 :::
 
 If a peer’s liquidity is insufficient (e.g., they’ve used up their allotted credit line), payments will not be processed. Your peer should settle with you so that you can reset their liquidity.
@@ -132,9 +136,9 @@ You should define and adjust each peer's liquidity based on your liquidity risk 
 
 <details>
 <summary>Peer liquidity example</summary>
-You and Cloud Nine Wallet are peers. You’ve agreed to extend Cloud Nine Wallet a line of credit worth 100.00 USD. This means Cloud Nine Wallet has 100.00 in their peer liquidity account on your Rafiki instance.
+You and Cloud Nine Wallet are peers. You’ve agreed to extend Cloud Nine Wallet a line of credit worth \$100.00 USD. This means Cloud Nine Wallet has \$100.00 in their peer liquidity account on your Rafiki instance.
 
-Your Rafiki instance can send packets that total up to 100.00 to wallet addresses issued by Cloud Nine Wallet. When the 100.00 is used up, Cloud Nine Wallet settles with you by sending 100.00 via the shared settlement mechanism outlined in your peering agreement. When you receive the funds, you reset their liquidity in Rafiki.
+Your Rafiki instance can receive packets that total up to \$100.00 to wallet addresses issued by Cloud Nine Wallet. When the \$100.00 is used up, Cloud Nine Wallet settles with you by sending \$100.00 via the shared settlement mechanism outlined in your peering agreement. When you receive the funds, you reset their liquidity in Rafiki.
 
 </details>
 
@@ -146,15 +150,15 @@ Payment liquidity is the amount that's available because of an incoming or outgo
 
 | Payment type                                         | Purpose                                                    |
 | ---------------------------------------------------- | ---------------------------------------------------------- |
-| [Incoming](#incoming-payment-liquidity-accounts)     | For incoming payments created via the Open Payments APIs   |
-| [Outgoing](#outgoing-payment-liquidity-accounts)     | For outgoing payments created via the Open Payments APIs   |
+| [Incoming](#incoming-payment-liquidity-accounts)     | For incoming payments created via the Open Payments API    |
+| [Outgoing](#outgoing-payment-liquidity-accounts)     | For outgoing payments created via the Open Payments API    |
 | [Wallet address](#wallet-address-liquidity-accounts) | For incoming payments created via SPSP or Web Monetization |
 
 </div>
 
 ##### Incoming payment liquidity accounts
 
-An incoming payment liquidity account represents the value received from a completed incoming payment. When an incoming payment is created via the <LinkOut href="https://openpayments.dev/apis/resource-server/operations/create-incoming-payment/">Open Payments APIs</LinkOut>, a corresponding liquidity account is automatically created. You will have one liquidity account per incoming payment.
+An incoming payment liquidity account represents the value received for an incoming payment. An incoming payment is created via an <LinkOut href="https://openpayments.dev/apis/resource-server/operations/create-incoming-payment/">Open Payments API</LinkOut>. When the first packet for the incoming payment is received, a corresponding liquidity account is automatically created. You will have one liquidity account per incoming payment.
 
 You are notified of created, completed, and expired incoming payments by listening for the appropriate [webhook events](/integration/requirements/webhook-events/#incoming-payments). Since Rafiki doesn't hold funds, anything you receive must be withdrawn and then credited to the recipient's account on your ledger.
 
@@ -162,11 +166,11 @@ The liquidity account isn’t used again after the payment completes, but its re
 
 ##### Outgoing payment liquidity accounts
 
-An outgoing payment liquidity account represents the value available to send in an outgoing payment. When an outgoing payment is created via the <LinkOut href="https://openpayments.dev/apis/resource-server/operations/create-outgoing-payment/">Open Payments APIs</LinkOut>, a corresponding liquidity account is automatically created. You will have one liquidity account per outgoing payment.
+An outgoing payment liquidity account represents the value available to send in an outgoing payment. When an outgoing payment is created via the <LinkOut href="https://openpayments.dev/apis/resource-server/operations/create-outgoing-payment/">Open Payments API</LinkOut>, a corresponding liquidity account is automatically created. You will have one liquidity account per outgoing payment.
 
 You are notified of created, completed, and failed outgoing payments by listening for the appropriate [webhook events](/integration/requirements/webhook-events/#outgoing-payments). Liquidity must be deposited into the outgoing payment account before the payment can be processed.
 
-Since Rafiki doesn’t hold funds, any excess liquidity that remains after the outgoing payment completes must be withdrawn. While we recommend refunding the excess to the sender, the choice is ultimately up to you.
+You may occasionally have excess liquidity, such as when an outgoing payment only partially completes and a portion of the send-amount remains. Since Rafiki doesn’t hold funds, any excess liquidity that remains after an outgoing payment completes must be withdrawn from the outgoing payment liquidity account. How you choose to handle the excess is up to you. You could, for example, refund the excess to the sender or take the amount as a fee.
 
 The account isn’t used again after the payment completes, but its record remains in your accounting database. When a new outgoing payment is created, a new liquidity account is created.
 
