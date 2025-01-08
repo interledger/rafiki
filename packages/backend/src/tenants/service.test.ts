@@ -8,7 +8,6 @@ import { initIocContainer } from '..'
 import { createTestApp, TestContainer } from '../tests/app'
 import { TenantService } from './service'
 import { Config, IAppConfig } from '../config/app'
-import { truncateTables } from '../tests/tableManager'
 import { ApolloClient, NormalizedCacheObject } from '@apollo/client'
 import { Tenant } from './model'
 import { getPageTests } from '../shared/baseModel.test'
@@ -53,8 +52,7 @@ describe('Tenant Service', (): void => {
   })
 
   afterEach(async (): Promise<void> => {
-    await truncateTables(knex)
-    await Tenant.query(knex).truncate() // Tenants aren't truncated automatically
+    await Tenant.query(knex).delete()
   })
 
   afterAll(async (): Promise<void> => {
@@ -409,7 +407,7 @@ describe('Tenant Service', (): void => {
     })
 
     afterEach(async (): Promise<void> => {
-      await truncateTables(appContainer.knex)
+      await Tenant.query(appContainer.knex).delete()
     })
 
     afterAll(async (): Promise<void> => {
