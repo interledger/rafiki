@@ -6,22 +6,25 @@ import { LedgerAccountType } from './model'
 import { Config } from '../../../config/app'
 import { initIocContainer } from '../../..'
 import { Asset } from '../../../asset/model'
-import { randomAsset } from '../../../tests/asset'
+import { createAsset } from '../../../tests/asset'
 import { truncateTables } from '../../../tests/tableManager'
 import { AccountAlreadyExistsError } from '../../errors'
 import { ForeignKeyViolationError } from 'objection'
 import { createLedgerAccount } from '../../../tests/ledgerAccount'
 import { ServiceDependencies } from '../service'
 import { createAccount, getLiquidityAccount } from '.'
+import { IocContract } from '@adonisjs/fold'
+import { AppServices } from '../../../app'
 
 describe('Ledger Account', (): void => {
+  let deps: IocContract<AppServices>
   let serviceDeps: ServiceDependencies
   let appContainer: TestContainer
   let knex: Knex
   let asset: Asset
 
   beforeAll(async (): Promise<void> => {
-    const deps = initIocContainer({ ...Config, useTigerBeetle: false })
+    deps = initIocContainer({ ...Config, useTigerBeetle: false })
     appContainer = await createTestApp(deps)
     serviceDeps = {
       logger: await deps.use('logger'),
@@ -32,7 +35,7 @@ describe('Ledger Account', (): void => {
   })
 
   beforeEach(async (): Promise<void> => {
-    asset = await Asset.query().insertAndFetch(randomAsset())
+    asset = await createAsset(deps)
   })
 
   afterEach(async (): Promise<void> => {

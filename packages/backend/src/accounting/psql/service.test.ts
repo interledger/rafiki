@@ -8,7 +8,7 @@ import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../../'
 import { AppServices } from '../../app'
 import { Asset } from '../../asset/model'
-import { randomAsset } from '../../tests/asset'
+import { createAsset, randomAsset } from '../../tests/asset'
 import { truncateTables } from '../../tests/tableManager'
 import {
   AccountingService,
@@ -54,7 +54,7 @@ describe('Psql Accounting Service', (): void => {
   })
 
   beforeEach(async (): Promise<void> => {
-    asset = await Asset.query().insertAndFetch(randomAsset())
+    asset = await createAsset(deps)
   })
 
   afterEach(async (): Promise<void> => {
