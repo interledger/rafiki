@@ -1,57 +1,42 @@
-import { Form } from '@remix-run/react'
-import { useEffect, useRef, useState } from 'react'
-import { Button, Input } from '~/components/ui'
+import { Form, useActionData, useNavigation } from '@remix-run/react'
+import { useRef } from 'react'
+import { Input, Button } from '~/components/ui'
 
-export const ApiCredentialsForm = () => {
+interface ApiCredentialsFormProps {
+  hasCredentials: boolean
+}
+
+interface ActionErrorResponse {
+  status: number
+  statusText: string
+}
+
+export const ApiCredentialsForm = ({
+  hasCredentials
+}: ApiCredentialsFormProps) => {
+  const actionData = useActionData<ActionErrorResponse>()
+  const navigation = useNavigation()
   const inputRef = useRef<HTMLInputElement>(null)
-  const [hasCredentials, setHasCredentials] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return !!(
-        sessionStorage.getItem('tenantId') &&
-        sessionStorage.getItem('apiSecret')
-      )
-    }
-    return false
-  })
-
-  useEffect(() => {
-    if (inputRef.current && !hasCredentials) {
-      inputRef.current.focus()
-    }
-  }, [hasCredentials])
-
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
-    const formData = new FormData(event.currentTarget)
-    const tenantId = formData.get('tenantId') as string
-    const apiSecret = formData.get('apiSecret') as string
-
-    sessionStorage.setItem('tenantId', tenantId)
-    sessionStorage.setItem('apiSecret', apiSecret)
-    setHasCredentials(true)
-  }
-
-  const handleClearCredentials = () => {
-    sessionStorage.removeItem('tenantId')
-    sessionStorage.removeItem('apiSecret')
-    setHasCredentials(false)
-  }
 
   return (
     <div className='space-y-4'>
       {hasCredentials ? (
-        <div className='space-y-4'>
+        <Form method='post' className='space-y-4'>
           <p className='text-green-600'>✓ API credentials configured</p>
           <Button
-            onClick={handleClearCredentials}
+            name='intent'
+            value='clear'
+            type='submit'
             intent='danger'
             aria-label='clear'
           >
-            Clear Credentials
+            {navigation.state === 'submitting'
+              ? 'Submitting...'
+              : 'Clear Credentials'}
           </Button>
-        </div>
+        </Form>
       ) : (
-        <Form onSubmit={handleSubmit} className='space-y-4'>
+        <Form method='post' className='space-y-4'>
           <Input
             ref={inputRef}
             required
@@ -61,11 +46,21 @@ export const ApiCredentialsForm = () => {
           />
           <Input required type='password' name='apiSecret' label='API Secret' />
           <div className='flex justify-center'>
-            <Button type='submit' aria-label='submit'>
-              Save Credentials
+            <Button
+              type='submit'
+              name='intent'
+              value='save'
+              aria-label='submit'
+            >
+              {navigation.state === 'submitting'
+                ? 'Submitting...'
+                : 'Save Credentials'}
             </Button>
           </div>
         </Form>
+      )}
+      {actionData?.statusText && (
+        <div className='text-red-500'>{actionData.statusText}</div>
       )}
     </div>
   )

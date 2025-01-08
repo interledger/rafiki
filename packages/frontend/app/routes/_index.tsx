@@ -1,14 +1,86 @@
 import { checkAuthAndRedirect } from '../lib/kratos_checks.server'
-import { type LoaderFunctionArgs } from '@remix-run/node'
+import {
+  ActionFunction,
+  json,
+  redirect,
+  TypedResponse,
+  type LoaderFunctionArgs
+} from '@remix-run/node'
+import { useLoaderData } from '@remix-run/react'
 import { ApiCredentialsForm } from '~/components/ApiCredentialsForm'
+import { commitSession, getSession } from '~/lib/session.server'
 
-export const loader = async ({ request }: LoaderFunctionArgs) => {
+interface LoaderData {
+  hasCredentials: boolean
+}
+
+export const loader = async ({
+  request
+}: LoaderFunctionArgs): Promise<TypedResponse<LoaderData>> => {
   const cookies = request.headers.get('cookie')
+  // TODO: check how new api credential form works with checkAuthAndRedirect with kratos enabled
   await checkAuthAndRedirect(request.url, cookies)
-  return null
+
+  const session = await getSession(cookies)
+  const hasCredentials = !!session.get('tenantId') && !!session.get('apiSecret')
+
+  return json({ hasCredentials })
+}
+
+interface ActionErrorResponse {
+  status: number
+  statusText: string
+}
+
+export const action: ActionFunction = async ({
+  request
+}): Promise<Response | TypedResponse<ActionErrorResponse>> => {
+  try {
+    const formData = await request.formData()
+    const intent = formData.get('intent')
+
+    switch (intent) {
+      case 'clear': {
+        const session = await getSession(request.headers.get('Cookie'))
+        session.unset('tenantId')
+        session.unset('apiSecret')
+        return redirect('/', {
+          headers: { 'Set-Cookie': await commitSession(session) }
+        })
+      }
+      case 'save': {
+        const tenantId = formData.get('tenantId') as string
+        const apiSecret = formData.get('apiSecret') as string
+
+        if (!tenantId || !apiSecret) {
+          return json<ActionErrorResponse>({
+            status: 400,
+            statusText: 'Missing tenantId or apiSecret'
+          })
+        }
+
+        const session = await getSession(request.headers.get('Cookie'))
+        session.set('tenantId', tenantId)
+        session.set('apiSecret', apiSecret)
+
+        return redirect('/', {
+          headers: { 'Set-Cookie': await commitSession(session) }
+        })
+      }
+      default:
+        throw new Error(`Invalid intent: ${intent}`)
+    }
+  } catch (error) {
+    console.error('Error in action:', error)
+    return json<ActionErrorResponse>({
+      status: 500,
+      statusText: 'An unexpected error occurred.'
+    })
+  }
 }
 
 export default function Index() {
+  const { hasCredentials } = useLoaderData<LoaderData>()
   return (
     <div className='pt-4 flex flex-col'>
       <div className='flex flex-col rounded-md bg-offwhite px-6 text-center min-h-[calc(100vh-7rem)] md:min-h-[calc(100vh-3rem)]'>
@@ -30,7 +102,7 @@ export default function Index() {
               To get started, please configure your API credentials
             </p>
             <div className='max-w-md mx-auto'>
-              <ApiCredentialsForm />
+              <ApiCredentialsForm hasCredentials={hasCredentials} />
             </div>
           </div>
 
