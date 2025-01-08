@@ -53,7 +53,8 @@ describe('Tenant Service', (): void => {
   })
 
   afterEach(async (): Promise<void> => {
-    await truncateTables(appContainer.knex)
+    await truncateTables(knex)
+    await Tenant.query(knex).truncate() // Tenants aren't truncated automatically
   })
 
   afterAll(async (): Promise<void> => {
