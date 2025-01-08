@@ -13,6 +13,7 @@ export class Asset extends BaseModel implements LiquidityAccount {
 
   // TigerBeetle account 2 byte ledger field representing account's asset
   public readonly ledger!: number
+  public readonly tenantId!: string
 
   public readonly withdrawalThreshold!: bigint | null
 
