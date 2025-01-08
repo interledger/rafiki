@@ -5,7 +5,7 @@ meta {
 }
 
 post {
-  url: {{receiverOpenPaymentsAuthHost}}/continue/{{continueId}}
+  url: {{receiverOpenPaymentsAuthHost}}/{{receiverTenantId}}/continue/{{continueId}}
   body: json
   auth: none
 }
