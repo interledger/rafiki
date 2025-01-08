@@ -398,15 +398,14 @@ export class App {
       const tenantService = await this.container.use('tenantService')
       let tenant = await tenantService.get(this.config.operatorTenantId)
       if (!tenant) {
-        const createOptions = {
+        tenant = await Tenant.query().insertAndFetch({
           id: this.config.operatorTenantId,
           email: faker.internet.email(),
           publicName: faker.company.name(),
           apiSecret: 'test-api-secret',
           idpConsentUrl: faker.internet.url(),
           idpSecret: 'test-idp-secret'
-        }
-        tenant = await Tenant.query().insertAndFetch(createOptions)
+        })
       }
       tenantApiSignatureResult = { tenant, isOperator: true }
     } else {

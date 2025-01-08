@@ -63,7 +63,6 @@ export class WalletAddress
   public asset!: Asset
 
   public readonly tenantId!: string
-  public tenant!: Tenant
 
   // The cumulative received amount tracked by
   // `wallet_address.web_monetization` webhook events.
