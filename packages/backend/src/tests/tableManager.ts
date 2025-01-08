@@ -14,7 +14,8 @@ export async function truncateTables(
     'knex_migrations',
     'knex_migrations_lock',
     'knex_migrations_backend',
-    'knex_migrations_backend_lock'
+    'knex_migrations_backend_lock',
+    'tenants' // So we do not truncate the operator tenant
   ]
 ): Promise<void> {
   const tables = await getTables(knex, ignoreTables)

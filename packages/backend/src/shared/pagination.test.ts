@@ -302,7 +302,11 @@ describe('Pagination', (): void => {
             }
             const page = await assetService.getPage(pagination)
             const pageInfo = await getPageInfo({
-              getPage: (pagination) => assetService.getPage(pagination),
+              getPage: (pagination) =>
+                assetService.getPage({
+                  ...pagination,
+                  tenantId: Config.operatorTenantId
+                }),
               page
             })
             expect(pageInfo).toEqual({

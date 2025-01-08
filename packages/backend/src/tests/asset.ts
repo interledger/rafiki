@@ -27,8 +27,13 @@ export async function createAsset(
   deps: IocContract<AppServices>,
   options?: AssetOptions
 ): Promise<Asset> {
+  const config = await deps.use('config')
   const assetService = await deps.use('assetService')
-  const assetOrError = await assetService.create(options || randomAsset())
+  const createOptions = options || randomAsset()
+  const assetOrError = await assetService.create({
+    ...createOptions,
+    tenantId: config.operatorTenantId
+  })
   if (isAssetError(assetOrError)) {
     throw assetOrError
   }

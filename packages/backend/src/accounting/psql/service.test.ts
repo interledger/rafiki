@@ -892,7 +892,10 @@ describe('Psql Accounting Service', (): void => {
       const timeout = 10 // 10 seconds
 
       beforeEach(async (): Promise<void> => {
-        const sourceAsset = await assetService.create(randomAsset())
+        const sourceAsset = await assetService.create({
+          ...randomAsset(),
+          tenantId: Config.operatorTenantId
+        })
         assert.ok(!isAssetError(sourceAsset))
 
         sourceAccount = await accountFactory.build({
@@ -902,7 +905,10 @@ describe('Psql Accounting Service', (): void => {
 
         const destinationAsset = sameAsset
           ? sourceAsset
-          : await assetService.create(randomAsset())
+          : await assetService.create({
+              ...randomAsset(),
+              tenantId: Config.operatorTenantId
+            })
 
         assert.ok(!isAssetError(destinationAsset))
 
