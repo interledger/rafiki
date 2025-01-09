@@ -50,7 +50,7 @@ export const getAsset: QueryResolvers<TenantedApolloContext>['asset'] = async (
   ctx
 ): Promise<ResolversTypes['Asset']> => {
   const assetService = await ctx.container.use('assetService')
-  const asset = await assetService.get(args.id)
+  const asset = await assetService.get(args.id, ctx.tenant.id)
   if (!asset) {
     throw new GraphQLError('Asset not found', {
       extensions: {
