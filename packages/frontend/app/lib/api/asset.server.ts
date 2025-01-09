@@ -97,7 +97,7 @@ export const getAssetWithFees = async (args: QueryAssetArgs) => {
   return response.data.asset
 }
 
-export const listAssets = async (args: QueryAssetsArgs) => {
+export const listAssets = async (request: Request, args: QueryAssetsArgs) => {
   const response = await apolloClient.query<
     ListAssetsQuery,
     ListAssetsQueryVariables
@@ -128,7 +128,8 @@ export const listAssets = async (args: QueryAssetsArgs) => {
         }
       }
     `,
-    variables: args
+    variables: args,
+    context: { headers: request.headers }
   })
 
   return response.data.assets

@@ -8,7 +8,7 @@ import {
 } from '@remix-run/node'
 import { useLoaderData } from '@remix-run/react'
 import { ApiCredentialsForm } from '~/components/ApiCredentialsForm'
-import { commitSession, getSession } from '~/lib/session.server'
+import { commitSession, getSession, SESSION_NAME } from '~/lib/session.server'
 
 interface LoaderData {
   hasCredentials: boolean
@@ -41,11 +41,12 @@ export const action: ActionFunction = async ({
 
     switch (intent) {
       case 'clear': {
-        const session = await getSession(request.headers.get('Cookie'))
-        session.unset('tenantId')
-        session.unset('apiSecret')
         return redirect('/', {
-          headers: { 'Set-Cookie': await commitSession(session) }
+          headers: {
+            'Set-Cookie':
+              // Effectively deletes the cookie (server will delete because of past expirey)
+              `${SESSION_NAME}=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT`
+          }
         })
       }
       case 'save': {

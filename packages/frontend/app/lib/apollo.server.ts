@@ -1,5 +1,4 @@
 import { createHmac } from 'crypto'
-
 import {
   ApolloClient,
   ApolloLink,
@@ -10,6 +9,7 @@ import type { NormalizedCacheObject } from '@apollo/client'
 import { setContext } from '@apollo/client/link/context'
 import { canonicalize } from 'json-canonicalize'
 import { print } from 'graphql/language/printer'
+import { getSession } from '~/lib/session.server'
 
 /* eslint-disable no-var */
 declare global {
@@ -26,7 +26,7 @@ BigInt.prototype.toJSON = function (this: bigint) {
   return this.toString()
 }
 
-const authLink = setContext((request, { headers }) => {
+const authLink = setContext(async (request, { headers }) => {
   if (!process.env.SIGNATURE_SECRET || !process.env.SIGNATURE_VERSION)
     return { headers }
   const timestamp = Math.round(new Date().getTime() / 1000)
@@ -44,12 +44,20 @@ const authLink = setContext((request, { headers }) => {
   hmac.update(payload)
   const digest = hmac.digest('hex')
 
-  return {
+  const link = {
     headers: {
       ...headers,
       signature: `t=${timestamp}, v${version}=${digest}`
     }
   }
+
+  const session = await getSession(headers.get('cookie'))
+  const tenantId = session.get('tenantId')
+  if (tenantId) {
+    link.headers['x-tenant-id'] = tenantId
+  }
+
+  return link
 })
 
 const httpLink = createHttpLink({
