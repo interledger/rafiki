@@ -20,7 +20,7 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
     throw json(null, { status: 400, statusText: 'Invalid asset ID.' })
   }
 
-  const asset = await getAssetInfo({ id: result.data })
+  const asset = await getAssetInfo(request, { id: result.data })
 
   if (!asset) {
     throw json(null, { status: 404, statusText: 'Asset not found.' })
@@ -73,7 +73,7 @@ export async function action({ request, params }: ActionFunctionArgs) {
     })
   }
 
-  const response = await withdrawAssetLiquidity({
+  const response = await withdrawAssetLiquidity(request, {
     assetId,
     amount: result.data,
     id: v4(),

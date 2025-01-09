@@ -42,7 +42,7 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
     throw json(null, { status: 400, statusText: 'Invalid peer ID.' })
   }
 
-  const peer = await getPeer({ id: result.data })
+  const peer = await getPeer(request, { id: result.data })
 
   if (!peer) {
     throw json(null, { status: 400, statusText: 'Peer not found.' })
@@ -407,7 +407,7 @@ export async function action({ request }: ActionFunctionArgs) {
         return json({ ...actionResponse }, { status: 400 })
       }
 
-      const response = await updatePeer({
+      const response = await updatePeer(request, {
         ...result.data,
         ...(result.data.maxPacketAmount
           ? { maxPacketAmount: result.data.maxPacketAmount }
@@ -432,7 +432,7 @@ export async function action({ request }: ActionFunctionArgs) {
         return json({ ...actionResponse }, { status: 400 })
       }
 
-      const response = await updatePeer({
+      const response = await updatePeer(request, {
         id: result.data.id,
         http: {
           ...(result.data.incomingAuthTokens
@@ -473,7 +473,9 @@ export async function action({ request }: ActionFunctionArgs) {
         })
       }
 
-      const response = await deletePeer({ input: { id: result.data.id } })
+      const response = await deletePeer(request, {
+        input: { id: result.data.id }
+      })
       if (!response?.success) {
         return setMessageAndRedirect({
           session,

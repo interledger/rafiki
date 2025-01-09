@@ -1,5 +1,5 @@
 import { gql } from '@apollo/client'
-import { apolloClient } from '../apollo.server'
+import { getApolloClient } from '../apollo.server'
 import type {
   CreateWalletAddressMutation,
   CreateWalletAddressInput,
@@ -16,7 +16,11 @@ import type {
   CreateWalletAddressWithdrawalInput
 } from '~/generated/graphql'
 
-export const getWalletAddress = async (args: QueryWalletAddressArgs) => {
+export const getWalletAddress = async (
+  request: Request,
+  args: QueryWalletAddressArgs
+) => {
+  const apolloClient = await getApolloClient(request)
   const response = await apolloClient.query<
     GetWalletAddressQuery,
     GetWalletAddressQueryVariables
@@ -45,7 +49,11 @@ export const getWalletAddress = async (args: QueryWalletAddressArgs) => {
   return response.data.walletAddress
 }
 
-export const listWalletAddresses = async (args: QueryWalletAddressesArgs) => {
+export const listWalletAddresses = async (
+  request: Request,
+  args: QueryWalletAddressesArgs
+) => {
+  const apolloClient = await getApolloClient(request)
   const response = await apolloClient.query<
     ListWalletAddresssQuery,
     ListWalletAddresssQueryVariables
@@ -87,7 +95,11 @@ export const listWalletAddresses = async (args: QueryWalletAddressesArgs) => {
   return response.data.walletAddresses
 }
 
-export const updateWalletAddress = async (args: UpdateWalletAddressInput) => {
+export const updateWalletAddress = async (
+  request: Request,
+  args: UpdateWalletAddressInput
+) => {
+  const apolloClient = await getApolloClient(request)
   const response = await apolloClient.mutate({
     mutation: gql`
       mutation UpdateWalletAddressMutation($input: UpdateWalletAddressInput!) {
@@ -106,7 +118,11 @@ export const updateWalletAddress = async (args: UpdateWalletAddressInput) => {
   return response.data.updateWalletAddress
 }
 
-export const createWalletAddress = async (args: CreateWalletAddressInput) => {
+export const createWalletAddress = async (
+  request: Request,
+  args: CreateWalletAddressInput
+) => {
+  const apolloClient = await getApolloClient(request)
   const response = await apolloClient.mutate<
     CreateWalletAddressMutation,
     CreateWalletAddressMutationVariables
@@ -129,8 +145,10 @@ export const createWalletAddress = async (args: CreateWalletAddressInput) => {
 }
 
 export const createWalletAddressWithdrawal = async (
+  request: Request,
   args: CreateWalletAddressWithdrawalInput
 ) => {
+  const apolloClient = await getApolloClient(request)
   const response = await apolloClient.mutate<
     CreateWalletAddressWithdrawal,
     CreateWalletAddressWithdrawalVariables

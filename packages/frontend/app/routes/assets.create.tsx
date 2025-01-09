@@ -97,7 +97,7 @@ export async function action({ request }: ActionFunctionArgs) {
     return json({ errors }, { status: 400 })
   }
 
-  const response = await createAsset({
+  const response = await createAsset(request, {
     ...result.data,
     ...(result.data.withdrawalThreshold
       ? { withdrawalThreshold: result.data.withdrawalThreshold }
