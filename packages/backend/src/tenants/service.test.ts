@@ -14,6 +14,7 @@ import { getPageTests } from '../shared/baseModel.test'
 import { Pagination, SortOrder } from '../shared/baseModel'
 import { createTenant } from '../tests/tenant'
 import { CacheDataStore } from '../middleware/cache/data-stores'
+import { truncateTables } from '../tests/tableManager'
 
 const generateMutateGqlError = (path: string = 'createTenant') => ({
   errors: [
@@ -52,7 +53,7 @@ describe('Tenant Service', (): void => {
   })
 
   afterEach(async (): Promise<void> => {
-    await Tenant.query(knex).delete()
+    await truncateTables(knex)
   })
 
   afterAll(async (): Promise<void> => {
@@ -407,7 +408,7 @@ describe('Tenant Service', (): void => {
     })
 
     afterEach(async (): Promise<void> => {
-      await Tenant.query(appContainer.knex).delete()
+      await truncateTables(knex)
     })
 
     afterAll(async (): Promise<void> => {

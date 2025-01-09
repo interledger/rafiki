@@ -15,12 +15,17 @@ export async function truncateTables(
     'knex_migrations_lock',
     'knex_migrations_backend',
     'knex_migrations_backend_lock',
-    'tenants' // So we do not truncate the operator tenant
+    'tenants' // So we do not delete the operator tenant
   ]
 ): Promise<void> {
   const tables = await getTables(knex, ignoreTables)
   const RAW = `TRUNCATE TABLE "${tables}" RESTART IDENTITY`
   await knex.raw(RAW)
+
+  // Delete all tenants except operator
+  await knex.raw(
+    'DELETE FROM "tenants" WHERE ctid NOT IN (SELECT MIN(ctid) FROM "tenants")'
+  )
 }
 
 async function getTables(knex: Knex, ignoredTables: string[]): Promise<string> {
