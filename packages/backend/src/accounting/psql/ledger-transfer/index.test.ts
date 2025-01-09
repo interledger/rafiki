@@ -4,7 +4,7 @@ import { createTestApp, TestContainer } from '../../../tests/app'
 import { Config } from '../../../config/app'
 import { initIocContainer } from '../../..'
 import { Asset } from '../../../asset/model'
-import { createAsset } from '../../../tests/asset'
+import { randomAsset } from '../../../tests/asset'
 import { truncateTables } from '../../../tests/tableManager'
 import { LedgerAccount, LedgerAccountType } from '../ledger-account/model'
 import { LedgerTransfer, LedgerTransferType } from './model'
@@ -22,18 +22,15 @@ import {
 } from '.'
 import { ServiceDependencies } from '../service'
 import { TransferError } from '../../errors'
-import { IocContract } from '@adonisjs/fold'
-import { AppServices } from '../../../app'
 
 describe('Ledger Transfer', (): void => {
-  let deps: IocContract<AppServices>
   let serviceDeps: ServiceDependencies
   let appContainer: TestContainer
   let knex: Knex
   let asset: Asset
 
   beforeAll(async (): Promise<void> => {
-    deps = initIocContainer({ ...Config, useTigerBeetle: false })
+    const deps = initIocContainer({ ...Config, useTigerBeetle: false })
     appContainer = await createTestApp(deps)
     serviceDeps = {
       logger: await deps.use('logger'),
@@ -48,7 +45,10 @@ describe('Ledger Transfer', (): void => {
   let settlementAccount: LedgerAccount
 
   beforeEach(async (): Promise<void> => {
-    asset = await createAsset(deps)
+    asset = await Asset.query(knex).insertAndFetch({
+      ...randomAsset(),
+      tenantId: Config.operatorTenantId
+    })
     ;[account, peerAccount, settlementAccount] = await Promise.all([
       createLedgerAccount({ ledger: asset.ledger }, knex),
       createLedgerAccount({ ledger: asset.ledger }, knex),

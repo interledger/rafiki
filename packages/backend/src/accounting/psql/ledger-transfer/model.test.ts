@@ -3,7 +3,7 @@ import { createTestApp, TestContainer } from '../../../tests/app'
 import { Config } from '../../../config/app'
 import { initIocContainer } from '../../..'
 import { Asset } from '../../../asset/model'
-import { createAsset } from '../../../tests/asset'
+import { randomAsset } from '../../../tests/asset'
 import { truncateTables } from '../../../tests/tableManager'
 import { LedgerAccount, LedgerAccountType } from '../ledger-account/model'
 import { createLedgerAccount } from '../../../tests/ledgerAccount'
@@ -28,7 +28,10 @@ describe('Ledger Transfer Model', (): void => {
   let debitAccount: LedgerAccount
 
   beforeEach(async (): Promise<void> => {
-    asset = await createAsset(deps)
+    asset = await Asset.query(knex).insertAndFetch({
+      ...randomAsset(),
+      tenantId: Config.operatorTenantId
+    })
     ;[creditAccount, debitAccount] = await Promise.all([
       createLedgerAccount({ ledger: asset.ledger }, knex),
       createLedgerAccount(
