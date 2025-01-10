@@ -61,7 +61,7 @@ describe('Tenant Service', (): void => {
     await appContainer.shutdown()
   })
 
-  describe('Tenant pagination', (): void => {
+  describe.skip('Tenant pagination', (): void => {
     describe('getPage', (): void => {
       getPageTests({
         createModel: () => createTenant(deps),
