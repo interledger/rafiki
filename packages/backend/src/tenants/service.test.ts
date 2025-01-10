@@ -44,7 +44,10 @@ describe('Tenant Service', (): void => {
   let knex: Knex
 
   beforeAll(async (): Promise<void> => {
-    deps = initIocContainer(Config)
+    deps = initIocContainer({
+      ...Config,
+      dbSchema: 'tenant_service_test_schema'
+    })
     appContainer = await createTestApp(deps)
     tenantService = await deps.use('tenantService')
     config = await deps.use('config')
@@ -53,7 +56,7 @@ describe('Tenant Service', (): void => {
   })
 
   afterEach(async (): Promise<void> => {
-    await truncateTables(knex, false)
+    await truncateTables(knex, true)
   })
 
   afterAll(async (): Promise<void> => {
@@ -61,7 +64,7 @@ describe('Tenant Service', (): void => {
     await appContainer.shutdown()
   })
 
-  describe.skip('Tenant pagination', (): void => {
+  describe('Tenant pagination', (): void => {
     describe('getPage', (): void => {
       getPageTests({
         createModel: () => createTenant(deps),
