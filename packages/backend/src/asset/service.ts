@@ -250,11 +250,9 @@ async function getAssetsPage(
 ): Promise<Asset[]> {
   const { tenantId, pagination, sortOrder } = options
 
-  const query = Asset.query(deps.knex).whereNull('deletedAt')
-
-  if (tenantId) {
-    query.andWhere({ tenantId })
-  }
+  const query = Asset.query(deps.knex)
+    .whereNull('deletedAt')
+    .andWhere({ tenantId })
 
   return await query.getPage(pagination, sortOrder)
 }
