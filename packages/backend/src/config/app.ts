@@ -48,6 +48,7 @@ try {
 const privateKeyFileValue = loadOrGenerateKey(privateKeyFileEnv)
 
 export const Config = {
+  dbSchema: undefined as string | undefined,
   logLevel: envString('LOG_LEVEL', 'info'),
   enableTelemetry: envBool('ENABLE_TELEMETRY', false),
   enableTelemetryTraces: envBool('ENABLE_TELEMETRY_TRACES', false),

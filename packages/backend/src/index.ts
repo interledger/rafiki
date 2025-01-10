@@ -106,6 +106,7 @@ export function initIocContainer(
         directory: './',
         tableName: 'knex_migrations'
       },
+      searchPath: Config.dbSchema,
       log: {
         warn(message) {
           logger.warn(message)
