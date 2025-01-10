@@ -21,6 +21,7 @@ services:
       IDP_SECRET: 2pEcn2kkCclbOHQiGNEwhJ0rucATZhrA807HTm2rNXE=
       DISPLAY_NAME: Happy Life Bank
       DISPLAY_ICON: bank-icon.svg
+      OPERATOR_TENANT_ID: cf5fd7d3-1eb1-4041-8e43-ba45747e9e5d
     volumes:
       - ../happy-life-bank/seed.yml:/workspace/seed.yml
       - ../happy-life-bank/private-key.pem:/workspace/private-key.pem
@@ -75,7 +76,7 @@ services:
     depends_on:
       - cloud-nine-backend
     healthcheck:
-      test: ["CMD", "wget", "--header=apollo-require-preflight: true", "http://localhost:3001/graphql?query=%7B__typename%7D", "-O", "/dev/null"]
+      test: ["CMD", "wget", "--spider", "http://localhost:3001/healthz"]
       start_period: 60s
       start_interval: 5s
       interval: 30s

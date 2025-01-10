@@ -25,6 +25,7 @@ services:
       IDP_SECRET: 2pEcn2kkCclbOHQiGNEwhJ0rucATZhrA807HTm2rNXE=
       DISPLAY_NAME: Cloud Nine Wallet
       DISPLAY_ICON: wallet-icon.svg
+      OPERATOR_TENANT_ID: 438fa74a-fa7d-4317-9ced-dde32ece1787
     volumes:
       - ../cloud-nine-wallet/seed.yml:/workspace/seed.yml
       - ../cloud-nine-wallet/private-key.pem:/workspace/private-key.pem
@@ -83,7 +84,7 @@ services:
       - shared-database
       - shared-redis
     healthcheck:
-      test: ["CMD", "wget", "--header=apollo-require-preflight: true", "http://localhost:3001/graphql?query=%7B__typename%7D", "-O", "/dev/null"]
+      test: ["CMD", "wget", "--spider", "http://localhost:3001/healthz"]
       start_period: 60s
       start_interval: 5s
       interval: 30s
