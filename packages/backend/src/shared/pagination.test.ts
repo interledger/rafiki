@@ -300,12 +300,15 @@ describe('Pagination', (): void => {
               if (pagination.last) pagination.before = assetIds[cursor]
               else pagination.after = assetIds[cursor]
             }
-            const page = await assetService.getPage(pagination)
+            const page = await assetService.getPage({
+              pagination,
+              tenantId: config.operatorTenantId
+            })
             const pageInfo = await getPageInfo({
               getPage: (pagination) =>
                 assetService.getPage({
-                  ...pagination,
-                  tenantId: Config.operatorTenantId
+                  pagination,
+                  tenantId: config.operatorTenantId
                 }),
               page
             })
