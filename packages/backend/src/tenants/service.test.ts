@@ -14,6 +14,7 @@ import { getPageTests } from '../shared/baseModel.test'
 import { Pagination, SortOrder } from '../shared/baseModel'
 import { createTenant } from '../tests/tenant'
 import { CacheDataStore } from '../middleware/cache/data-stores'
+import { withConfigOverride } from '../tests/helpers'
 import { truncateTables } from '../tests/tableManager'
 
 const generateMutateGqlError = (path: string = 'createTenant') => ({
@@ -42,11 +43,12 @@ describe('Tenant Service', (): void => {
   let config: IAppConfig
   let apolloClient: ApolloClient<NormalizedCacheObject>
   let knex: Knex
+  const dbSchema = 'tenant_service_test_schema'
 
   beforeAll(async (): Promise<void> => {
     deps = initIocContainer({
       ...Config,
-      dbSchema: 'tenant_service_test_schema'
+      dbSchema
     })
     appContainer = await createTestApp(deps)
     tenantService = await deps.use('tenantService')
@@ -56,7 +58,7 @@ describe('Tenant Service', (): void => {
   })
 
   afterEach(async (): Promise<void> => {
-    await truncateTables(knex, true)
+    await truncateTables(knex, true, dbSchema)
   })
 
   afterAll(async (): Promise<void> => {
@@ -393,87 +395,78 @@ describe('Tenant Service', (): void => {
   })
 
   describe('Tenant Service using cache', (): void => {
-    let deps: IocContract<AppServices>
-    let appContainer: TestContainer
-    let config: IAppConfig
-    let tenantService: TenantService
     let tenantCache: CacheDataStore<Tenant>
 
     beforeAll(async (): Promise<void> => {
-      deps = initIocContainer({
-        ...Config,
-        localCacheDuration: 5_000 // 5-second default.
-      })
-      appContainer = await createTestApp(deps)
-      config = await deps.use('config')
-      tenantService = await deps.use('tenantService')
       tenantCache = await deps.use('tenantCache')
     })
 
-    afterEach(async (): Promise<void> => {
-      await truncateTables(knex)
-    })
-
-    afterAll(async (): Promise<void> => {
-      await appContainer.shutdown()
-    })
-
     describe('create, update, and retrieve tenant using cache', (): void => {
-      test('Tenant can be created, updated, and fetched', async (): Promise<void> => {
-        const createOptions = {
-          email: faker.internet.email(),
-          publicName: faker.company.name(),
-          apiSecret: 'test-api-secret',
-          idpConsentUrl: faker.internet.url(),
-          idpSecret: 'test-idp-secret'
-        }
+      test(
+        'Tenant can be created, updated, and fetched',
+        withConfigOverride(
+          () => config,
+          { localCacheDuration: 5_000 },
+          async (): Promise<void> => {
+            const createOptions = {
+              email: faker.internet.email(),
+              publicName: faker.company.name(),
+              apiSecret: 'test-api-secret',
+              idpConsentUrl: faker.internet.url(),
+              idpSecret: 'test-idp-secret'
+            }
 
-        const scope = nock(config.authAdminApiUrl)
-          .post('')
-          .reply(200, { data: { createTenant: { tenant: { id: 1234 } } } })
-          .persist()
+            const scope = nock(config.authAdminApiUrl)
+              .post('')
+              .reply(200, { data: { createTenant: { tenant: { id: 1234 } } } })
+              .persist()
 
-        const spyCacheSet = jest.spyOn(tenantCache, 'set')
-        const tenant = await tenantService.create(createOptions)
-        expect(tenant).toMatchObject({
-          ...createOptions,
-          id: tenant.id
-        })
+            const spyCacheSet = jest.spyOn(tenantCache, 'set')
+            const tenant = await tenantService.create(createOptions)
+            expect(tenant).toMatchObject({
+              ...createOptions,
+              id: tenant.id
+            })
 
-        // Ensure that the cache was set for create
-        expect(spyCacheSet).toHaveBeenCalledTimes(1)
+            // Ensure that the cache was set for create
+            expect(spyCacheSet).toHaveBeenCalledTimes(1)
 
-        const spyCacheGet = jest.spyOn(tenantCache, 'get')
-        await expect(tenantService.get(tenant.id)).resolves.toEqual(tenant)
+            const spyCacheGet = jest.spyOn(tenantCache, 'get')
+            await expect(tenantService.get(tenant.id)).resolves.toEqual(tenant)
 
-        expect(spyCacheGet).toHaveBeenCalledTimes(1)
-        expect(spyCacheGet).toHaveBeenCalledWith(tenant.id)
+            expect(spyCacheGet).toHaveBeenCalledTimes(1)
+            expect(spyCacheGet).toHaveBeenCalledWith(tenant.id)
 
-        const spyCacheUpdateSet = jest.spyOn(tenantCache, 'set')
-        const updatedTenant = await tenantService.update({
-          id: tenant.id,
-          apiSecret: 'test-api-secret-2'
-        })
+            const spyCacheUpdateSet = jest.spyOn(tenantCache, 'set')
+            const updatedTenant = await tenantService.update({
+              id: tenant.id,
+              apiSecret: 'test-api-secret-2'
+            })
 
-        await expect(tenantService.get(tenant.id)).resolves.toEqual(
-          updatedTenant
+            await expect(tenantService.get(tenant.id)).resolves.toEqual(
+              updatedTenant
+            )
+
+            // Ensure that cache was set for update
+            expect(spyCacheUpdateSet).toHaveBeenCalledTimes(2)
+            expect(spyCacheUpdateSet).toHaveBeenCalledWith(
+              tenant.id,
+              updatedTenant
+            )
+
+            const spyCacheDelete = jest.spyOn(tenantCache, 'delete')
+            await tenantService.delete(tenant.id)
+
+            await expect(tenantService.get(tenant.id)).resolves.toBeUndefined()
+
+            // Ensure that cache was set for deletion
+            expect(spyCacheDelete).toHaveBeenCalledTimes(1)
+            expect(spyCacheDelete).toHaveBeenCalledWith(tenant.id)
+
+            scope.done()
+          }
         )
-
-        // Ensure that cache was set for update
-        expect(spyCacheUpdateSet).toHaveBeenCalledTimes(2)
-        expect(spyCacheUpdateSet).toHaveBeenCalledWith(tenant.id, updatedTenant)
-
-        const spyCacheDelete = jest.spyOn(tenantCache, 'delete')
-        await tenantService.delete(tenant.id)
-
-        await expect(tenantService.get(tenant.id)).resolves.toBeUndefined()
-
-        // Ensure that cache was set for deletion
-        expect(spyCacheDelete).toHaveBeenCalledTimes(1)
-        expect(spyCacheDelete).toHaveBeenCalledWith(tenant.id)
-
-        scope.done()
-      })
+      )
     })
   })
 })
