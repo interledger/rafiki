@@ -20,7 +20,7 @@ There are a few ways in which you can create wallet addresses.
 
 - [Through a script](#create-wallet-addresses-through-a-script)
 - [In response to the `wallet_address.not_found` webhook event](#create-wallet-addresses-in-response-to-a-webhook-event)
-- [In the Rafiki Admin app](#create-and-manage-wallet-addresses-using-rafiki-admin)
+- [In the Rafiki Admin app](/admin/admin-user-guide#create-wallet-address)
 
 ### Create wallet addresses through a script
 
@@ -128,10 +128,6 @@ The [`wallet_address.not_found`](/integration/requirements/webhook-events#wallet
 When you receive the event, look up the associated account in your system, then call the `createWalletAddress` mutation to create a wallet address for the account.
 
 The mutation and example JSON request/response is the same as what's given [above](#create-wallet-addresses-through-a-script).
-
-### Create and manage wallet addresses using Rafiki Admin
-
-You can create and manage wallet addresses manually through the [Rafiki Admin](/admin/admin-user-guide#create-wallet-address) app.
 
 ## Create a wallet address key pair
 
