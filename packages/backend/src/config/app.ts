@@ -48,7 +48,6 @@ try {
 const privateKeyFileValue = loadOrGenerateKey(privateKeyFileEnv)
 
 export const Config = {
-  dbSchema: undefined as string | undefined,
   logLevel: envString('LOG_LEVEL', 'info'),
   enableTelemetry: envBool('ENABLE_TELEMETRY', false),
   enableTelemetryTraces: envBool('ENABLE_TELEMETRY_TRACES', false),
@@ -197,7 +196,8 @@ export const Config = {
     5
   ),
   localCacheDuration: envInt('LOCAL_CACHE_DURATION_MS', 15_000),
-  operatorTenantId: envString('OPERATOR_TENANT_ID')
+  operatorTenantId: envString('OPERATOR_TENANT_ID'),
+  dbSchema: undefined as string | undefined
 }
 
 function parseRedisTlsConfig(
