@@ -1,4 +1,5 @@
 import { Knex } from 'knex'
+import { Config } from '../config/app'
 
 export async function truncateTable(
   knex: Knex,
@@ -10,22 +11,21 @@ export async function truncateTable(
 
 export async function truncateTables(
   knex: Knex,
-  ignoreTables = [
+  doSeedOperatorTenant = true
+): Promise<void> {
+  const ignoreTables = [
     'knex_migrations',
     'knex_migrations_lock',
     'knex_migrations_backend',
-    'knex_migrations_backend_lock',
-    'tenants' // So we do not delete the operator tenant
+    'knex_migrations_backend_lock'
   ]
-): Promise<void> {
   const tables = await getTables(knex, ignoreTables)
   const RAW = `TRUNCATE TABLE "${tables}" RESTART IDENTITY`
   await knex.raw(RAW)
 
-  // Delete all tenants except operator
-  await knex.raw(
-    'DELETE FROM "tenants" WHERE ctid NOT IN (SELECT MIN(ctid) FROM "tenants")'
-  )
+  if (doSeedOperatorTenant) {
+    await seedOperatorTenant(knex)
+  }
 }
 
 async function getTables(knex: Knex, ignoredTables: string[]): Promise<string> {
@@ -38,4 +38,10 @@ async function getTables(knex: Knex, ignoredTables: string[]): Promise<string> {
     })
     .filter(Boolean)
     .join('","')
+}
+
+export async function seedOperatorTenant(knex: Knex): Promise<void> {
+  await knex
+    .table('tenants')
+    .insert({ id: Config.operatorTenantId, apiSecret: Config.adminApiSecret })
 }
