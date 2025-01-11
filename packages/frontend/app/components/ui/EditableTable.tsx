@@ -91,7 +91,7 @@ export const EditableTable = ({
         required={required}
         label={label}
       />
-      <Table>
+      <Table style={{ width: '100%' }}>
         <Table.Head columns={['Token', 'Action']} />
         <Table.Body>
           {(optionsList || []).map((option, index) => (
