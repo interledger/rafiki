@@ -6,8 +6,7 @@ import {
   ResolversTypes,
   WalletAddress as SchemaWalletAddress,
   MutationResolvers,
-  WalletAddressStatus,
-  Receiver as SchemaReceiver
+  WalletAddressStatus
 } from '../generated/graphql'
 import { TenantedApolloContext } from '../../app'
 import {
@@ -25,7 +24,6 @@ import {
   UpdateOptions
 } from '../../open_payments/wallet_address/service'
 import { tenantIdToProceed } from '../../shared/utils'
-import { Receiver } from '../../open_payments/receiver/model'
 
 export const getWalletAddresses: QueryResolvers<TenantedApolloContext>['walletAddresses'] =
   async (
