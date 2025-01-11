@@ -23,6 +23,7 @@ import {
   CreateOptions,
   UpdateOptions
 } from '../../open_payments/wallet_address/service'
+import { tenantIdToProceed } from '../../shared/utils'
 
 export const getWalletAddresses: QueryResolvers<TenantedApolloContext>['walletAddresses'] =
   async (
@@ -56,7 +57,7 @@ export const getWalletAddress: QueryResolvers<TenantedApolloContext>['walletAddr
   async (parent, args, ctx): Promise<ResolversTypes['WalletAddress']> => {
     const walletAddressService = await ctx.container.use('walletAddressService')
     const walletAddress = await walletAddressService.get(args.id)
-    if (!walletAddress || walletAddress.tenantId !== ctx.tenant.id) {
+    if (!walletAddress) {
       throw new GraphQLError(
         errorToMessage[WalletAddressError.UnknownWalletAddress],
         {
@@ -65,6 +66,19 @@ export const getWalletAddress: QueryResolvers<TenantedApolloContext>['walletAddr
           }
         }
       )
+    }
+    const tenantId = tenantIdToProceed(
+      ctx.isOperator,
+      ctx.tenant.id,
+      walletAddress.tenantId
+    )
+    if (!tenantId) {
+      const err = WalletAddressError.InvalidTenantIdNotAllowed
+      throw new GraphQLError(errorToMessage[err], {
+        extensions: {
+          code: errorToCode[err]
+        }
+      })
     }
     return walletAddressToGraphql(walletAddress)
   }
@@ -77,9 +91,22 @@ export const getWalletAddressByUrl: QueryResolvers<TenantedApolloContext>['walle
   ): Promise<ResolversTypes['WalletAddress'] | null> => {
     const walletAddressService = await ctx.container.use('walletAddressService')
     const walletAddress = await walletAddressService.getByUrl(args.url)
-    return walletAddress && ctx.tenant.id === walletAddress.tenantId
-      ? walletAddressToGraphql(walletAddress)
-      : null
+    if (walletAddress) {
+      const tenantId = tenantIdToProceed(
+        ctx.isOperator,
+        ctx.tenant.id,
+        walletAddress.tenantId
+      )
+      if (!tenantId) {
+        const err = WalletAddressError.InvalidTenantIdNotAllowed
+        throw new GraphQLError(errorToMessage[err], {
+          extensions: {
+            code: errorToCode[err]
+          }
+        })
+      }
+      return walletAddressToGraphql(walletAddress)
+    } else return null
   }
 
 export const createWalletAddress: MutationResolvers<TenantedApolloContext>['createWalletAddress'] =
@@ -99,9 +126,23 @@ export const createWalletAddress: MutationResolvers<TenantedApolloContext>['crea
         addProps.push(toAdd)
       })
 
+    const tenantId = tenantIdToProceed(
+      ctx.isOperator,
+      ctx.tenant.id,
+      args.input.tenantId
+    )
+    if (!tenantId) {
+      const err = WalletAddressError.InvalidTenantIdNotAllowed
+      throw new GraphQLError(errorToMessage[err], {
+        extensions: {
+          code: errorToCode[err]
+        }
+      })
+    }
+
     const options: CreateOptions = {
       assetId: args.input.assetId,
-      tenantId: ctx.tenant.id,
+      tenantId,
       additionalProperties: addProps,
       publicName: args.input.publicName,
       url: args.input.url
@@ -128,8 +169,22 @@ export const updateWalletAddress: MutationResolvers<TenantedApolloContext>['upda
   ): Promise<ResolversTypes['UpdateWalletAddressMutationResponse']> => {
     const walletAddressService = await ctx.container.use('walletAddressService')
     const { additionalProperties, ...rest } = args.input
+
+    const tenantId = tenantIdToProceed(
+      ctx.isOperator,
+      ctx.tenant.id,
+      args.input.tenantId
+    )
+    if (!tenantId) {
+      const err = WalletAddressError.InvalidTenantIdNotAllowed
+      throw new GraphQLError(errorToMessage[err], {
+        extensions: {
+          code: errorToCode[err]
+        }
+      })
+    }
+
     const updateOptions: UpdateOptions = {
-      tenantId: ctx.tenant.id,
       ...rest
     }
     if (additionalProperties) {

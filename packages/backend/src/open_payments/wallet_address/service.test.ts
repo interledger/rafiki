@@ -188,7 +188,6 @@ describe('Open Payments Wallet Address Service', (): void => {
         }
 
         const updatedWalletAddress = await walletAddressService.update({
-          tenantId: Config.operatorTenantId,
           id: walletAddress.id,
           status
         })
@@ -209,7 +208,6 @@ describe('Open Payments Wallet Address Service', (): void => {
       })
       const newName = 'New Name'
       const updatedWalletAddress = await walletAddressService.update({
-        tenantId: Config.operatorTenantId,
         id: walletAddress.id,
         publicName: newName
       })
@@ -256,7 +254,6 @@ describe('Open Payments Wallet Address Service', (): void => {
             })
 
             await walletAddressService.update({
-              tenantId: Config.operatorTenantId,
               id: walletAddress.id,
               status: 'INACTIVE'
             })
@@ -301,7 +298,6 @@ describe('Open Payments Wallet Address Service', (): void => {
             })
 
             await walletAddressService.update({
-              tenantId: Config.operatorTenantId,
               id: walletAddress.id,
               status: 'INACTIVE'
             })
@@ -328,7 +324,6 @@ describe('Open Payments Wallet Address Service', (): void => {
         })
 
         const updatedWalletAddress = await walletAddressService.update({
-          tenantId: Config.operatorTenantId,
           id: walletAddress.id,
           status: walletAddress.isActive ? 'ACTIVE' : 'INACTIVE',
           publicName: 'Updated Name',
@@ -364,7 +359,6 @@ describe('Open Payments Wallet Address Service', (): void => {
 
         const publicName = 'Updated Name'
         const updatedWalletAddress = await walletAddressService.update({
-          tenantId: Config.operatorTenantId,
           id: walletAddress.id,
           publicName,
           additionalProperties: []
@@ -410,7 +404,6 @@ describe('Open Payments Wallet Address Service', (): void => {
         ]
 
         const updatedWalletAddress = await walletAddressService.update({
-          tenantId: Config.operatorTenantId,
           id: walletAddress.id,
           additionalProperties: newProperties
         })
@@ -434,7 +427,6 @@ describe('Open Payments Wallet Address Service', (): void => {
     test('Cannot update unknown wallet address', async (): Promise<void> => {
       await expect(
         walletAddressService.update({
-          tenantId: Config.operatorTenantId,
           id: uuid(),
           status: 'INACTIVE',
           publicName: 'Some Public Name'
@@ -893,14 +885,12 @@ describe('Open Payments Wallet Address Service using Cache', (): void => {
 
           // Update through the service, will also update the wallet-address cache:
           await walletAddressService.update({
-            tenantId: Config.operatorTenantId,
             id: walletAddress.id,
             status: 'INACTIVE'
           })
         }
 
         const updatedWalletAddress = await walletAddressService.update({
-          tenantId: Config.operatorTenantId,
           id: walletAddress.id,
           status
         })

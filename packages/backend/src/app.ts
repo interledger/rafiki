@@ -105,7 +105,6 @@ import {
   getTenantFromApiSignature,
   TenantApiSignatureResult
 } from './shared/utils'
-import { faker } from '@faker-js/faker'
 export interface AppContextData {
   logger: Logger
   container: AppContainer
@@ -396,17 +395,7 @@ export class App {
     let tenantApiSignatureResult: TenantApiSignatureResult
     if (this.config.env === 'test') {
       const tenantService = await this.container.use('tenantService')
-      let tenant = await tenantService.get(this.config.operatorTenantId)
-      if (!tenant) {
-        tenant = await Tenant.query().insertAndFetch({
-          id: this.config.operatorTenantId,
-          email: faker.internet.email(),
-          publicName: faker.company.name(),
-          apiSecret: 'test-api-secret',
-          idpConsentUrl: faker.internet.url(),
-          idpSecret: 'test-idp-secret'
-        })
-      }
+      const tenant = await tenantService.get(this.config.operatorTenantId)
       tenantApiSignatureResult = { tenant, isOperator: true }
     } else {
       koa.use(async (ctx, next: Koa.Next): Promise<void> => {

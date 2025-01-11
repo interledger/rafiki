@@ -14,7 +14,9 @@ export async function truncateTables(
     'knex_migrations',
     'knex_migrations_lock',
     'knex_migrations_backend',
-    'knex_migrations_backend_lock'
+    'knex_migrations_backend_lock',
+    // We always keep the [cf5fd7d3-1eb1-4041-8e43-ba45747e9e5d] tenant for our test case.
+    'tenants'
   ]
 ): Promise<void> {
   const tables = await getTables(knex, ignoreTables)

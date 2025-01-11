@@ -39,16 +39,15 @@ export type WalletAddressAdditionalPropertyInput = Pick<
 >
 
 export interface CreateOptions extends Options {
+  tenantId?: string
   url: string
   assetId: string
-  tenantId: string
   additionalProperties?: WalletAddressAdditionalPropertyInput[]
 }
 
 type Status = 'ACTIVE' | 'INACTIVE'
 
 export interface UpdateOptions extends Options {
-  tenantId: string
   id: string
   status?: Status
   additionalProperties?: WalletAddressAdditionalPropertyInput[]
@@ -175,10 +174,14 @@ async function createWalletAddress(
       ? cleanAdditionalProperties(options.additionalProperties)
       : undefined
 
+    const tenantId = options.tenantId
+      ? options.tenantId
+      : deps.config.operatorTenantId
+
     const walletAddress = await WalletAddress.query(
       deps.knex
     ).insertGraphAndFetch({
-      tenantId: options.tenantId,
+      tenantId,
       url: options.url.toLowerCase(),
       publicName: options.publicName,
       assetId: options.assetId,
@@ -205,14 +208,13 @@ async function createWalletAddress(
 
 async function updateWalletAddress(
   deps: ServiceDependencies,
-  { id, tenantId, status, publicName, additionalProperties }: UpdateOptions
+  { id, status, publicName, additionalProperties }: UpdateOptions
 ): Promise<WalletAddress | WalletAddressError> {
   const trx = await WalletAddress.startTransaction()
   try {
     const update: UpdateInput = { publicName }
     const walletAddress = await WalletAddress.query(trx)
-      .where({ id, tenantId })
-      .first()
+      .findById(id)
       .throwIfNotFound()
 
     if (status === 'INACTIVE' && walletAddress.isActive) {

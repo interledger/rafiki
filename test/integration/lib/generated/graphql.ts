@@ -373,6 +373,8 @@ export type CreateWalletAddressInput = {
   idempotencyKey?: InputMaybe<Scalars['String']['input']>;
   /** Public name associated with the wallet address. This is visible to anyone with the wallet address URL. */
   publicName?: InputMaybe<Scalars['String']['input']>;
+  /** Unique identifier of the tenant associated with the wallet address. This cannot be changed. Optional, if not provided, the tenantId will be obtained from the signature. */
+  tenantId?: InputMaybe<Scalars['String']['input']>;
   /** Wallet address URL. This cannot be changed. */
   url: Scalars['String']['input'];
 };
@@ -1459,6 +1461,8 @@ export type UpdateWalletAddressInput = {
   publicName?: InputMaybe<Scalars['String']['input']>;
   /** New status to set the wallet address to, either active or inactive. */
   status?: InputMaybe<WalletAddressStatus>;
+  /** Unique identifier of the tenant associated with the wallet address. This cannot be changed. Optional, if not provided, the tenantId will be obtained from the signature. */
+  tenantId?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type UpdateWalletAddressMutationResponse = {

@@ -1226,6 +1226,8 @@ type CreateReceiverResponse {
 }
 
 input CreateWalletAddressInput {
+  "Unique identifier of the tenant associated with the wallet address. This cannot be changed. Optional, if not provided, the tenantId will be obtained from the signature."
+  tenantId: String
   "Unique identifier of the asset associated with the wallet address. This cannot be changed."
   assetId: String!
   "Wallet address URL. This cannot be changed."
@@ -1248,6 +1250,8 @@ input AdditionalPropertyInput {
 }
 
 input UpdateWalletAddressInput {
+  "Unique identifier of the tenant associated with the wallet address. This cannot be changed. Optional, if not provided, the tenantId will be obtained from the signature."
+  tenantId: String
   "Unique identifier of the wallet address to update. This cannot be changed."
   id: ID!
   "New public name for the wallet address. This is visible to anyone with the wallet address URL."
