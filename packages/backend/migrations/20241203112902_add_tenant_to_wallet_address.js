@@ -5,8 +5,8 @@
 exports.up = function (knex) {
   return Promise.all([
     knex.schema.alterTable('walletAddresses', function (table) {
-      table.uuid('tenantId').index().notNullable()
-      //table.foreign(['tenantId']).references('tenants.id')
+      table.uuid('tenantId').notNullable()
+      table.foreign(['tenantId']).references('tenants.id')
     })
   ])
 }
