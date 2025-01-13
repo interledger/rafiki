@@ -1,6 +1,7 @@
 import { Form, useActionData, useNavigation } from '@remix-run/react'
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 import { Input, Button } from '~/components/ui'
+import { validate as validateUUID } from 'uuid'
 
 interface ApiCredentialsFormProps {
   hasCredentials: boolean
@@ -17,6 +18,21 @@ export const ApiCredentialsForm = ({
   const actionData = useActionData<ActionErrorResponse>()
   const navigation = useNavigation()
   const inputRef = useRef<HTMLInputElement>(null)
+  const [tenantIdError, setTenantIdError] = useState<string | null>(null)
+
+  const handleTenantIdChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const tenantId = event.target.value
+    if (tenantId === '') {
+      setTenantIdError('Tenant ID is required')
+      return
+    }
+
+    if (!validateUUID(tenantId)) {
+      setTenantIdError('Invalid Tenant ID (must be a valid UUID)')
+    } else {
+      setTenantIdError(null)
+    }
+  }
 
   return (
     <div className='space-y-4'>
@@ -43,7 +59,15 @@ export const ApiCredentialsForm = ({
             type='text'
             name='tenantId'
             label='Tenant ID'
+            onChange={handleTenantIdChange}
+            aria-invalid={!!tenantIdError}
+            aria-describedby={tenantIdError ? 'tenantId-error' : undefined}
           />
+          {tenantIdError && (
+            <p id='tenantId-error' className='text-red-500 text-sm'>
+              {tenantIdError}
+            </p>
+          )}
           <Input required type='password' name='apiSecret' label='API Secret' />
           <div className='flex justify-center'>
             <Button
@@ -51,6 +75,7 @@ export const ApiCredentialsForm = ({
               name='intent'
               value='save'
               aria-label='submit'
+              disabled={!!tenantIdError}
             >
               {navigation.state === 'submitting'
                 ? 'Submitting...'
