@@ -54,9 +54,21 @@ describe('Tenant Service', (): void => {
 
   afterEach(async (): Promise<void> => {
     await truncateTables(appContainer.knex)
+
+    const RAW = `TRUNCATE TABLE "${Tenant.tableName}" RESTART IDENTITY`
+    await knex.raw(RAW)
   })
 
   afterAll(async (): Promise<void> => {
+    const OPERATOR_TENANT_ID = process.env['OPERATOR_TENANT_ID']
+    const OPERATOR_API_SECRET = process.env['API_SECRET']
+
+    knex.raw(
+      `
+        INSERT INTO "tenants" ("id", "apiSecret") 
+        VALUES ('${OPERATOR_TENANT_ID}', '${OPERATOR_API_SECRET}')
+    `
+    )
     nock.cleanAll()
     await appContainer.shutdown()
   })

@@ -1,4 +1,5 @@
 import { Knex } from 'knex'
+import { Tenant } from '../tenants/model'
 
 export async function truncateTable(
   knex: Knex,
@@ -16,7 +17,7 @@ export async function truncateTables(
     'knex_migrations_backend',
     'knex_migrations_backend_lock',
     // We always keep the [cf5fd7d3-1eb1-4041-8e43-ba45747e9e5d] tenant for our test case.
-    'tenants'
+    Tenant.tableName
   ]
 ): Promise<void> {
   const tables = await getTables(knex, ignoreTables)
