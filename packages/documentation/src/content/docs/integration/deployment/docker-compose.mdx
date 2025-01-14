@@ -128,6 +128,7 @@ rafiki-auth:
       AUTH_PORT: 3006
       INTROSPECTION_PORT: 3007
       INTERACTION_PORT: 3009
+      SERVICE_API_PORT: 3011
       COOKIE_KEY: {...}
       IDENTITY_SERVER_SECRET: {...}
       IDENTITY_SERVER_URL: {https://idp.mysystem.com}
@@ -142,6 +143,7 @@ rafiki-auth:
       - '3006:3006'
       - '3007:3007'
       - '3009:3009'
+      - '3011:3011'
     restart: always
 ```
 
