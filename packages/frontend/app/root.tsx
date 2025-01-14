@@ -184,6 +184,10 @@ export function ErrorBoundary() {
   let errorMessage = 'Unknown error'
   if (error instanceof Error) {
     errorMessage = error.message
+
+    if (error.message.includes('401')) {
+      errorMessage = 'Unauthorized. Please set your API credentials.'
+    }
   }
 
   return (

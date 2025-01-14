@@ -5,7 +5,6 @@ import {
   InMemoryCache,
   createHttpLink
 } from '@apollo/client'
-import type { NormalizedCacheObject } from '@apollo/client'
 import { setContext } from '@apollo/client/link/context'
 import { canonicalize } from 'json-canonicalize'
 import { print } from 'graphql/language/printer'
@@ -24,12 +23,20 @@ BigInt.prototype.toJSON = function (this: bigint) {
   return this.toString()
 }
 
+// TODO: rm env vars? SIGNATURE_VERSION, SIGNATURE_SECRET
 async function createAuthLink(request: Request) {
   return setContext(async (gqlRequest, { headers }) => {
     if (!process.env.SIGNATURE_SECRET || !process.env.SIGNATURE_VERSION)
       return { headers }
     const timestamp = Math.round(new Date().getTime() / 1000)
-    const version = process.env.SIGNATURE_VERSION
+    const version = 1 // process.env.SIGNATURE_VERSION
+    const session = await getSession(request.headers.get('cookie'))
+    const apiSecret = session.get('apiSecret')
+
+    if (!apiSecret) {
+      // TODO: is this the correct behavior? same things as if sig secret and version are not set
+      return { headers }
+    }
 
     const { query, variables, operationName } = gqlRequest
     const formattedRequest = {
@@ -50,10 +57,9 @@ async function createAuthLink(request: Request) {
       }
     }
 
-    const session = await getSession(request.headers.get('cookie'))
     const tenantId = session.get('tenantId')
     if (tenantId) {
-      link.headers['x-tenant-id'] = tenantId
+      link.headers['tenant-id'] = tenantId
     }
 
     return link

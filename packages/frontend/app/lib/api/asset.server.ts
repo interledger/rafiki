@@ -134,10 +134,8 @@ export const listAssets = async (request: Request, args: QueryAssetsArgs) => {
         }
       }
     `,
-    variables: args,
-    context: { headers: request.headers }
+    variables: args
   })
-
   return response.data.assets
 }
 
