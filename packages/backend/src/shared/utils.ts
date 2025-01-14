@@ -3,8 +3,14 @@ import { URL, type URL as URLType } from 'url'
 import { createHmac } from 'crypto'
 import { canonicalize } from 'json-canonicalize'
 import { IAppConfig } from '../config/app'
-import { AppContext } from '../app'
+import { AppContext, TenantedApolloContext } from '../app'
 import { Tenant } from '../tenants/model'
+import {
+  errorToCode,
+  errorToMessage,
+  WalletAddressError
+} from '../open_payments/wallet_address/errors'
+import { GraphQLError } from 'graphql/index'
 
 export function validateId(id: string): boolean {
   return validate(id) && version(id) === 4
@@ -253,7 +259,7 @@ export function ensureTrailingSlash(str: string): string {
  * @param signatureTenantId the signature tenantId
  * @param tenantId the intended tenantId
  */
-export function tenantIdToProceed(
+function tenantIdToProceed(
   isOperator: boolean,
   signatureTenantId: string,
   tenantId?: string
@@ -263,4 +269,20 @@ export function tenantIdToProceed(
   return tenantId && tenantId !== signatureTenantId
     ? undefined
     : signatureTenantId
+}
+
+export function tenantIdToUseAndValidate(
+  ctx: TenantedApolloContext,
+  tenantId?: string
+): string {
+  const returnVal = tenantIdToProceed(ctx.isOperator, ctx.tenant.id, tenantId)
+  if (!returnVal) {
+    const err = WalletAddressError.InvalidTenantIdNotAllowed
+    throw new GraphQLError(errorToMessage[err], {
+      extensions: {
+        code: errorToCode[err]
+      }
+    })
+  }
+  return returnVal
 }

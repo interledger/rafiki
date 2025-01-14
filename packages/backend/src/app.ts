@@ -405,7 +405,7 @@ export class App {
         } else {
           tenantApiSignatureResult = {
             tenant: result.tenant,
-            isOperator: result.isOperator ? true : false
+            isOperator: result.isOperator
           }
         }
         return next()

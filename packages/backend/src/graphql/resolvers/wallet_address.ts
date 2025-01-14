@@ -23,7 +23,7 @@ import {
   CreateOptions,
   UpdateOptions
 } from '../../open_payments/wallet_address/service'
-import { tenantIdToProceed } from '../../shared/utils'
+import { tenantIdToUseAndValidate } from '../../shared/utils'
 
 export const getWalletAddresses: QueryResolvers<TenantedApolloContext>['walletAddresses'] =
   async (
@@ -98,20 +98,7 @@ export const createWalletAddress: MutationResolvers<TenantedApolloContext>['crea
         addProps.push(toAdd)
       })
 
-    const tenantId = tenantIdToProceed(
-      ctx.isOperator,
-      ctx.tenant.id,
-      args.input.tenantId
-    )
-    if (!tenantId) {
-      const err = WalletAddressError.InvalidTenantIdNotAllowed
-      throw new GraphQLError(errorToMessage[err], {
-        extensions: {
-          code: errorToCode[err]
-        }
-      })
-    }
-
+    const tenantId = tenantIdToUseAndValidate(ctx, args.input.tenantId)
     const options: CreateOptions = {
       assetId: args.input.assetId,
       tenantId,
@@ -142,19 +129,7 @@ export const updateWalletAddress: MutationResolvers<TenantedApolloContext>['upda
     const walletAddressService = await ctx.container.use('walletAddressService')
     const { additionalProperties, ...rest } = args.input
 
-    const tenantId = tenantIdToProceed(
-      ctx.isOperator,
-      ctx.tenant.id,
-      args.input.tenantId
-    )
-    if (!tenantId) {
-      const err = WalletAddressError.InvalidTenantIdNotAllowed
-      throw new GraphQLError(errorToMessage[err], {
-        extensions: {
-          code: errorToCode[err]
-        }
-      })
-    }
+    tenantIdToUseAndValidate(ctx, args.input.tenantId)
 
     const updateOptions: UpdateOptions = {
       ...rest
@@ -201,21 +176,8 @@ export function walletAddressToGraphql(
   walletAddress: WalletAddress,
   ctx?: TenantedApolloContext
 ): SchemaWalletAddress {
-  if (ctx) {
-    const tenantId = tenantIdToProceed(
-      ctx.isOperator,
-      ctx.tenant.id,
-      walletAddress.tenantId
-    )
-    if (!tenantId) {
-      const err = WalletAddressError.InvalidTenantIdNotAllowed
-      throw new GraphQLError(errorToMessage[err], {
-        extensions: {
-          code: errorToCode[err]
-        }
-      })
-    }
-  }
+  if (ctx) tenantIdToUseAndValidate(ctx, walletAddress.tenantId)
+
   return {
     id: walletAddress.id,
     url: walletAddress.url,
