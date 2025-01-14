@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import { validate as validateUuid } from 'uuid'
 import { Tenant } from './model'
 import { BaseService } from '../shared/baseService'
@@ -26,28 +25,6 @@ export interface ServiceDependencies extends BaseService {
   authServiceClient: AuthServiceClient
   tenantSettingService: TenantSettingService
   config: IAppConfig
-=======
-import { Tenant } from './model'
-import { BaseService } from '../shared/baseService'
-import { gql, NormalizedCacheObject } from '@apollo/client'
-import { ApolloClient } from '@apollo/client'
-import { TransactionOrKnex } from 'objection'
-import { Pagination, SortOrder } from '../shared/baseModel'
-import { CacheDataStore } from '../middleware/cache/data-stores'
-
-export interface TenantService {
-  get: (id: string) => Promise<Tenant | undefined>
-  create: (options: CreateTenantOptions) => Promise<Tenant>
-  update: (options: UpdateTenantOptions) => Promise<Tenant>
-  delete: (id: string) => Promise<void>
-  getPage: (pagination?: Pagination, sortOrder?: SortOrder) => Promise<Tenant[]>
-}
-
-export interface ServiceDependencies extends BaseService {
-  knex: TransactionOrKnex
-  apolloClient: ApolloClient<NormalizedCacheObject>
-  tenantCache: CacheDataStore<Tenant>
->>>>>>> 07630c10 (feat(backend): tenants service (#3123) (#3140))
 }
 
 export async function createTenantService(
@@ -59,29 +36,20 @@ export async function createTenantService(
   }
 
   return {
-<<<<<<< HEAD
     get: (id: string, includeDeleted?: boolean) =>
       getTenant(deps, id, includeDeleted),
-=======
-    get: (id: string) => getTenant(deps, id),
->>>>>>> 07630c10 (feat(backend): tenants service (#3123) (#3140))
     create: (options) => createTenant(deps, options),
     update: (options) => updateTenant(deps, options),
     delete: (id) => deleteTenant(deps, id),
     getPage: (pagination, sortOrder) =>
-<<<<<<< HEAD
       getTenantPage(deps, pagination, sortOrder),
     updateOperatorApiSecretFromConfig: () =>
       updateOperatorApiSecretFromConfig(deps)
-=======
-      getTenantPage(deps, pagination, sortOrder)
->>>>>>> 07630c10 (feat(backend): tenants service (#3123) (#3140))
   }
 }
 
 async function getTenant(
   deps: ServiceDependencies,
-<<<<<<< HEAD
   id: string,
   includeDeleted: boolean = false
 ): Promise<Tenant | undefined> {
@@ -94,15 +62,6 @@ async function getTenant(
   if (!includeDeleted) query = query.whereNull('deletedAt')
 
   const tenant = await query.findById(id)
-=======
-  id: string
-): Promise<Tenant | undefined> {
-  const inMem = await deps.tenantCache.get(id)
-  if (inMem) return inMem
-  const tenant = await Tenant.query(deps.knex)
-    .findById(id)
-    .whereNull('deletedAt')
->>>>>>> 07630c10 (feat(backend): tenants service (#3123) (#3140))
   if (tenant) await deps.tenantCache.set(tenant.id, tenant)
 
   return tenant
@@ -117,7 +76,6 @@ async function getTenantPage(
 }
 
 interface CreateTenantOptions {
-<<<<<<< HEAD
   id?: string
   email?: string
   apiSecret: string
@@ -125,19 +83,11 @@ interface CreateTenantOptions {
   idpConsentUrl?: string
   publicName?: string
   settings?: TenantSettingInput[]
-=======
-  email: string
-  apiSecret: string
-  idpSecret: string
-  idpConsentUrl: string
-  publicName?: string
->>>>>>> 07630c10 (feat(backend): tenants service (#3123) (#3140))
 }
 
 async function createTenant(
   deps: ServiceDependencies,
   options: CreateTenantOptions
-<<<<<<< HEAD
 ): Promise<Tenant | TenantError> {
   const trx = await deps.knex.transaction()
   try {
@@ -155,13 +105,6 @@ async function createTenant(
     }
     const tenant = await Tenant.query(trx).insertAndFetch({
       id,
-=======
-): Promise<Tenant> {
-  const trx = await deps.knex.transaction()
-  try {
-    const { email, apiSecret, publicName, idpSecret, idpConsentUrl } = options
-    const tenant = await Tenant.query(trx).insertAndFetch({
->>>>>>> 07630c10 (feat(backend): tenants service (#3123) (#3140))
       email,
       publicName,
       apiSecret,
@@ -169,7 +112,6 @@ async function createTenant(
       idpConsentUrl
     })
 
-<<<<<<< HEAD
     await deps.authServiceClient.tenant.create({
       id: tenant.id,
       apiSecret,
@@ -215,38 +157,13 @@ async function createTenant(
       trx
     })
 
-=======
-    const mutation = gql`
-      mutation CreateAuthTenant($input: CreateTenantInput!) {
-        createTenant(input: $input) {
-          tenant {
-            id
-          }
-        }
-      }
-    `
-
-    const variables = {
-      input: {
-        id: tenant.id,
-        idpSecret,
-        idpConsentUrl
-      }
-    }
-
-    // TODO: add type to this in https://github.com/interledger/rafiki/issues/3125
-    await deps.apolloClient.mutate({ mutation, variables })
->>>>>>> 07630c10 (feat(backend): tenants service (#3123) (#3140))
     await trx.commit()
 
     await deps.tenantCache.set(tenant.id, tenant)
     return tenant
   } catch (err) {
     await trx.rollback()
-<<<<<<< HEAD
     if (isTenantError(err)) return err
-=======
->>>>>>> 07630c10 (feat(backend): tenants service (#3123) (#3140))
     throw err
   }
 }
@@ -280,36 +197,12 @@ async function updateTenant(
       .whereNull('deletedAt')
       .throwIfNotFound()
 
-<<<<<<< HEAD
     if (idpConsentUrl || idpSecret || apiSecret) {
       await deps.authServiceClient.tenant.update(id, {
         apiSecret,
         idpConsentUrl,
         idpSecret
       })
-=======
-    if (idpConsentUrl || idpSecret) {
-      const mutation = gql`
-        mutation UpdateAuthTenant($input: UpdateTenantInput!) {
-          updateTenant(input: $input) {
-            tenant {
-              id
-            }
-          }
-        }
-      `
-
-      const variables = {
-        input: {
-          id,
-          idpConsentUrl,
-          idpSecret
-        }
-      }
-
-      // TODO: add types to this in https://github.com/interledger/rafiki/issues/3125
-      await deps.apolloClient.mutate({ mutation, variables })
->>>>>>> 07630c10 (feat(backend): tenants service (#3123) (#3140))
     }
 
     await trx.commit()
@@ -330,7 +223,6 @@ async function deleteTenant(
   await deps.tenantCache.delete(id)
   try {
     const deletedAt = new Date()
-<<<<<<< HEAD
 
     await deps.tenantSettingService.delete(
       {
@@ -342,28 +234,12 @@ async function deleteTenant(
       deletedAt
     })
     await deps.authServiceClient.tenant.delete(id, deletedAt)
-=======
-    await Tenant.query(trx).patchAndFetchById(id, {
-      deletedAt
-    })
-    const mutation = gql`
-      mutation DeleteAuthTenantMutation($input: DeleteTenantInput!) {
-        deleteTenant(input: $input) {
-          sucess
-        }
-      }
-    `
-    const variables = { input: { id, deletedAt } }
-    // TODO: add types to this in https://github.com/interledger/rafiki/issues/3125
-    await deps.apolloClient.mutate({ mutation, variables })
->>>>>>> 07630c10 (feat(backend): tenants service (#3123) (#3140))
     await trx.commit()
   } catch (err) {
     await trx.rollback()
     throw err
   }
 }
-<<<<<<< HEAD
 
 async function updateOperatorApiSecretFromConfig(
   deps: ServiceDependencies
@@ -382,5 +258,3 @@ async function updateOperatorApiSecretFromConfig(
     await deps.tenantCache.set(operatorTenantId, tenant)
   }
 }
-=======
->>>>>>> 07630c10 (feat(backend): tenants service (#3123) (#3140))
