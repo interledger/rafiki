@@ -34,3 +34,8 @@ export function ensureTrailingSlash(str: string): string {
   if (!str.endsWith('/')) return `${str}/`
   return str
 }
+
+// Intended for Date strings like "2024-12-05T15:10:09.545Z" (e.g., from new Date().toISOString())
+export function isValidDateString(date: string): boolean {
+  return !isNaN(Date.parse(date))
+}
