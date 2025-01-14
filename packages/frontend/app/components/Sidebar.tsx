@@ -9,6 +9,7 @@ import { Button } from '~/components/ui'
 interface SidebarProps {
   logoutUrl: string
   authEnabled: boolean
+  hasApiCredentials: boolean
 }
 
 const navigation = [
@@ -38,7 +39,11 @@ const navigation = [
   }
 ]
 
-export const Sidebar: FC<SidebarProps> = ({ logoutUrl, authEnabled }) => {
+export const Sidebar: FC<SidebarProps> = ({
+  logoutUrl,
+  authEnabled,
+  hasApiCredentials
+}) => {
   const [sidebarIsOpen, setSidebarIsOpen] = useState(false)
 
   return (
@@ -91,7 +96,10 @@ export const Sidebar: FC<SidebarProps> = ({ logoutUrl, authEnabled }) => {
                               isActive
                                 ? 'bg-mercury'
                                 : 'text-tealish/70 hover:bg-mercury/70',
-                              'flex p-2 font-medium rounded-md'
+                              'flex p-2 font-medium rounded-md',
+                              !hasApiCredentials &&
+                                name !== 'Home' &&
+                                'text-gray-400 pointer-events-none cursor-not-allowed'
                             )
                           }
                         >
@@ -149,7 +157,10 @@ export const Sidebar: FC<SidebarProps> = ({ logoutUrl, authEnabled }) => {
                       isActive
                         ? 'bg-mercury'
                         : 'text-tealish/70 hover:bg-mercury/70',
-                      'flex p-2 font-medium rounded-md'
+                      'flex p-2 font-medium rounded-md',
+                      !hasApiCredentials &&
+                        name !== 'Home' &&
+                        'text-gray-400 pointer-events-none cursor-not-allowed'
                     )
                   }
                 >

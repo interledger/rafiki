@@ -26,6 +26,7 @@ import { isLoggedIn, checkAuthAndRedirect } from './lib/kratos_checks.server'
 import variables from './lib/envConfig.server'
 import axios from 'axios'
 import { logger } from './utils/logger.server'
+import { getSession } from './lib/session.server'
 
 export const meta: MetaFunction = () => [
   { title: 'Rafiki Admin' },
@@ -64,18 +65,30 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     OPEN_PAYMENTS_URL: getOpenPaymentsUrl()
   }
 
+  const apiCredSession = await getSession(cookies)
+  const hasApiCredentials =
+    !!apiCredSession.get('tenantId') && !!apiCredSession.get('apiSecret')
+
   if (!message) {
     return json({
       message: null,
       publicEnv,
       logoutUrl,
       displaySidebar,
-      authEnabled
+      authEnabled,
+      hasApiCredentials
     })
   }
 
   return json(
-    { message, publicEnv, logoutUrl, displaySidebar, authEnabled },
+    {
+      message,
+      publicEnv,
+      logoutUrl,
+      displaySidebar,
+      authEnabled,
+      hasApiCredentials
+    },
     {
       headers: {
         'Set-Cookie': await messageStorage.destroySession(session, {
@@ -87,8 +100,14 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 }
 
 export default function App() {
-  const { message, publicEnv, logoutUrl, displaySidebar, authEnabled } =
-    useLoaderData<typeof loader>()
+  const {
+    message,
+    publicEnv,
+    logoutUrl,
+    displaySidebar,
+    authEnabled,
+    hasApiCredentials
+  } = useLoaderData<typeof loader>()
   const [snackbarOpen, setSnackbarOpen] = useState(false)
 
   useEffect(() => {
@@ -110,7 +129,11 @@ export default function App() {
       <body className='h-full text-tealish'>
         <div className='min-h-full'>
           {displaySidebar && (
-            <Sidebar logoutUrl={logoutUrl} authEnabled={authEnabled} />
+            <Sidebar
+              logoutUrl={logoutUrl}
+              authEnabled={authEnabled}
+              hasApiCredentials={hasApiCredentials}
+            />
           )}
           <div
             className={`pt-20 md:pt-0 flex ${displaySidebar ? 'md:pl-60' : ''} flex-1 flex-col`}
