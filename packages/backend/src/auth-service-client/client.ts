@@ -26,6 +26,8 @@ export class AuthServiceClient {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private async request<T>(path: string, options: RequestInit): Promise<T> {
+    options.headers = { 'Content-Type': 'application/json', ...options.headers }
+
     const response = await fetch(`${this.baseUrl}${path}`, options)
 
     if (!response.ok) {
