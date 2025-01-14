@@ -1,9 +1,10 @@
 import { checkAuthAndRedirect } from '../lib/kratos_checks.server'
-import {
+import type {
   ActionFunction,
+  TypedResponse} from '@remix-run/node';
+import {
   json,
   redirect,
-  TypedResponse,
   type LoaderFunctionArgs
 } from '@remix-run/node'
 import { useLoaderData } from '@remix-run/react'
