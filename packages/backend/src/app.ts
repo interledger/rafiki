@@ -70,7 +70,8 @@ import { applyMiddleware } from 'graphql-middleware'
 import { Redis } from 'ioredis'
 import {
   idempotencyGraphQLMiddleware,
-  lockGraphQLMutationMiddleware
+  lockGraphQLMutationMiddleware,
+  tenantValidateGraphQLMutationMiddleware
 } from './graphql/middleware'
 import { createRedisDataStore } from './middleware/cache/data-stores/redis'
 import { createRedisLock } from './middleware/lock/redis'
@@ -335,7 +336,8 @@ export class App {
       ),
       idempotencyGraphQLMiddleware(
         createRedisDataStore(redis, this.config.graphQLIdempotencyKeyTtlMs)
-      )
+      ),
+      tenantValidateGraphQLMutationMiddleware()
     )
 
     // Setup Armor
@@ -398,7 +400,8 @@ export class App {
     if (this.config.env === 'test') {
       const tenantService = await this.container.use('tenantService')
       const tenant = await tenantService.get(this.config.operatorTenantId)
-      tenantApiSignatureResult = { tenant, isOperator: true }
+      const isOperator = this.config.isTestTenantOperator
+      tenantApiSignatureResult = { tenant, isOperator }
     } else {
       koa.use(async (ctx, next: Koa.Next): Promise<void> => {
         const result = await getTenantFromApiSignature(ctx, this.config)

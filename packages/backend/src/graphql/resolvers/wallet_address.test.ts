@@ -45,7 +45,8 @@ describe('Wallet Address Resolvers', (): void => {
   beforeAll(async (): Promise<void> => {
     deps = initIocContainer({
       ...Config,
-      localCacheDuration: 0
+      localCacheDuration: 0,
+      isTestTenantOperator: false
     })
     appContainer = await createTestApp(deps)
     knex = appContainer.knex
@@ -305,6 +306,74 @@ describe('Wallet Address Resolvers', (): void => {
           })
         )
       }
+    })
+
+    test('bad input data when not allowed to perform cross tenant create', async (): Promise<void> => {
+      /*await appContainer.apolloClient.stop()
+      await appContainer.shutdown()
+      appContainer = await createTestApp(
+        initIocContainer({
+          ...Config,
+          localCacheDuration: 0,
+          isTestTenantOperator: false
+        })
+      )
+      knex = appContainer.knex*/
+      const badInputData = {
+        tenantId: 'ae4950b6-3e1b-4e50-ad24-25c065bdd3a9',
+        assetId: input.assetId,
+        url: input.url
+      }
+      try {
+        await appContainer.apolloClient
+          .mutate({
+            mutation: gql`
+              mutation CreateWalletAddress(
+                $badInputData: CreateWalletAddressInput!
+              ) {
+                createWalletAddress(input: $badInputData) {
+                  walletAddress {
+                    id
+                    asset {
+                      code
+                      scale
+                    }
+                  }
+                }
+              }
+            `,
+            variables: {
+              badInputData
+            }
+          })
+          .then((query): CreateWalletAddressMutationResponse => {
+            if (query.data) {
+              return query.data.createWalletAddress
+            } else {
+              throw new Error('Data was empty')
+            }
+          })
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApolloError)
+        expect((error as ApolloError).graphQLErrors).toContainEqual(
+          expect.objectContaining({
+            message: 'Assignment to the specified tenant is not permitted.',
+            extensions: expect.objectContaining({
+              code: GraphQLErrorCode.BadUserInput
+            })
+          })
+        )
+      }
+
+      // Recover with default:
+      /*await appContainer.apolloClient.stop()
+      await appContainer.shutdown()
+      deps = initIocContainer({
+        ...Config,
+        localCacheDuration: 0
+      })
+      appContainer = await createTestApp(deps)
+      knex = appContainer.knex*/
     })
   })
 
