@@ -1,12 +1,6 @@
 import { checkAuthAndRedirect } from '../lib/kratos_checks.server'
-import type {
-  ActionFunction,
-  TypedResponse} from '@remix-run/node';
-import {
-  json,
-  redirect,
-  type LoaderFunctionArgs
-} from '@remix-run/node'
+import type { ActionFunction, TypedResponse } from '@remix-run/node'
+import { json, redirect, type LoaderFunctionArgs } from '@remix-run/node'
 import { useLoaderData } from '@remix-run/react'
 import { ApiCredentialsForm } from '~/components/ApiCredentialsForm'
 import { commitSession, getSession, SESSION_NAME } from '~/lib/session.server'
