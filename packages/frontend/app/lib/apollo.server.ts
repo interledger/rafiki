@@ -74,15 +74,5 @@ export async function getApolloClient(request: Request) {
   return new ApolloClient({
     cache: new InMemoryCache({}),
     link: ApolloLink.from([await createAuthLink(request), httpLink])
-    // TODO: keep or remove? I saw on the OG pr this was added because cache is required but the client
-    // would be shared. Client will no longer be shared so I think we can remove. https://github.com/interledger/rafiki/pull/969
-    // defaultOptions: {
-    //   query: {
-    //     fetchPolicy: 'no-cache'
-    //   },
-    //   mutate: {
-    //     fetchPolicy: 'no-cache'
-    //   }
-    // }
   })
 }
