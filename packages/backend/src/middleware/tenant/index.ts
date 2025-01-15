@@ -18,19 +18,25 @@ export async function validateTenantMiddleware(
     onFailValidation,
     next
   } = args
-  if (!('tenant' in ctx && 'isOperator' in ctx) || !tenantIdInput) return next()
+  if (!('tenant' in ctx && 'isOperator' in ctx)) return next()
 
   const tenantCtx = ctx as TenantedApolloContext
-  const returnVal = tenantIdToProceed(
+  if (!tenantIdInput) {
+    tenantCtx.forTenantId = tenantCtx.tenant.id
+    return next()
+  }
+
+  const forTenantId = tenantIdToProceed(
     tenantCtx.isOperator,
     tenantCtx.tenant.id,
     tenantIdInput
   )
-  if (!returnVal) {
+  if (!forTenantId) {
     ctx.logger.error('Tenant validation error')
     return onFailValidation()
   }
 
+  tenantCtx.forTenantId = forTenantId
   return next()
 }
 

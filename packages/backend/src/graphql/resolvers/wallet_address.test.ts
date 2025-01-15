@@ -70,6 +70,7 @@ describe('Wallet Address Resolvers', (): void => {
       asset = await createAsset(deps)
       input = {
         assetId: asset.id,
+        tenantId: Config.operatorTenantId,
         url: 'https://alice.me/.well-known/pay'
       }
     })
@@ -357,7 +358,7 @@ describe('Wallet Address Resolvers', (): void => {
         expect(error).toBeInstanceOf(ApolloError)
         expect((error as ApolloError).graphQLErrors).toContainEqual(
           expect.objectContaining({
-            message: 'Assignment to the specified tenant is not permitted.',
+            message: 'Assignment to the specified tenant is not permitted',
             extensions: expect.objectContaining({
               code: GraphQLErrorCode.BadUserInput
             })

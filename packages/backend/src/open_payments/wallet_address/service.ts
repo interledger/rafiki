@@ -39,7 +39,7 @@ export type WalletAddressAdditionalPropertyInput = Pick<
 >
 
 export interface CreateOptions extends Options {
-  tenantId?: string
+  tenantId: string
   url: string
   assetId: string
   additionalProperties?: WalletAddressAdditionalPropertyInput[]

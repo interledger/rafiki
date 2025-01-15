@@ -5,6 +5,7 @@ import { CacheDataStore } from '../../middleware/cache/data-stores'
 import { lockMiddleware, Lock } from '../../middleware/lock'
 import { cacheMiddleware } from '../../middleware/cache'
 import { validateTenantMiddleware } from '../../middleware/tenant'
+import { GraphQLErrorCode } from '../errors'
 
 export function lockGraphQLMutationMiddleware(lock: Lock): {
   Mutation: IMiddleware
@@ -56,10 +57,15 @@ export function tenantValidateGraphQLMutationMiddleware(): {
       return validateTenantMiddleware({
         deps: { ctx: context },
         next: () => resolve(root, args, context, info),
-        tenantIdInput: args?.input?.idempotencyKey,
+        tenantIdInput: args?.input?.tenantId,
         onFailValidation: () => {
           throw new GraphQLError(
-            `Assignment to the specified tenant is not permitted`
+            `Assignment to the specified tenant is not permitted`,
+            {
+              extensions: {
+                code: GraphQLErrorCode.BadUserInput
+              }
+            }
           )
         }
       })

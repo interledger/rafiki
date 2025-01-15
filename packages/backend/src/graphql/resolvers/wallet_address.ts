@@ -98,10 +98,10 @@ export const createWalletAddress: MutationResolvers<TenantedApolloContext>['crea
         addProps.push(toAdd)
       })
 
-    const tenantId = tenantIdToUseAndValidate(ctx, args.input.tenantId)
     const options: CreateOptions = {
       assetId: args.input.assetId,
-      tenantId,
+      // We always have a tenant for [TenantedApolloContext].
+      tenantId: ctx.forTenantId!,
       additionalProperties: addProps,
       publicName: args.input.publicName,
       url: args.input.url
@@ -128,8 +128,6 @@ export const updateWalletAddress: MutationResolvers<TenantedApolloContext>['upda
   ): Promise<ResolversTypes['UpdateWalletAddressMutationResponse']> => {
     const walletAddressService = await ctx.container.use('walletAddressService')
     const { additionalProperties, ...rest } = args.input
-
-    tenantIdToUseAndValidate(ctx, args.input.tenantId)
 
     const updateOptions: UpdateOptions = {
       ...rest
