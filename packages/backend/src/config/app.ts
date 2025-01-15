@@ -197,7 +197,8 @@ export const Config = {
     5
   ),
   localCacheDuration: envInt('LOCAL_CACHE_DURATION_MS', 15_000),
-  operatorTenantId: envString('OPERATOR_TENANT_ID')
+  operatorTenantId: envString('OPERATOR_TENANT_ID'),
+  dbSchema: undefined as string | undefined
 }
 
 function parseRedisTlsConfig(

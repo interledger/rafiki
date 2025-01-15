@@ -132,7 +132,7 @@ describe('Asset Resolvers', (): void => {
     test('Returns error for duplicate asset', async (): Promise<void> => {
       const input = randomAsset()
 
-      await assetService.create(input)
+      await assetService.create({ ...input, tenantId: Config.operatorTenantId })
 
       expect.assertions(2)
       try {
@@ -218,6 +218,7 @@ describe('Asset Resolvers', (): void => {
     test('Can get an asset', async (): Promise<void> => {
       const asset = await assetService.create({
         ...randomAsset(),
+        tenantId: Config.operatorTenantId,
         withdrawalThreshold: BigInt(10),
         liquidityThreshold: BigInt(100)
       })
@@ -283,6 +284,7 @@ describe('Asset Resolvers', (): void => {
     test('Can get an asset by code and scale', async (): Promise<void> => {
       const asset = await assetService.create({
         ...randomAsset(),
+        tenantId: Config.operatorTenantId,
         withdrawalThreshold: BigInt(10),
         liquidityThreshold: BigInt(100)
       })
@@ -349,7 +351,10 @@ describe('Asset Resolvers', (): void => {
       { fixed: BigInt(100), basisPoints: 1000, type: FeeType.Sending },
       { fixed: BigInt(100), basisPoints: 1000, type: FeeType.Receiving }
     ])('Can get an asset with fee of %p', async (fee): Promise<void> => {
-      const asset = await assetService.create(randomAsset())
+      const asset = await assetService.create({
+        ...randomAsset(),
+        tenantId: Config.operatorTenantId
+      })
       assert.ok(!isAssetError(asset))
 
       let expectedFee = null
@@ -469,6 +474,7 @@ describe('Asset Resolvers', (): void => {
       createModel: () =>
         assetService.create({
           ...randomAsset(),
+          tenantId: Config.operatorTenantId,
           withdrawalThreshold: BigInt(10),
           liquidityThreshold: BigInt(100)
         }) as Promise<AssetModel>,
@@ -480,6 +486,7 @@ describe('Asset Resolvers', (): void => {
       for (let i = 0; i < 2; i++) {
         const asset = await assetService.create({
           ...randomAsset(),
+          tenantId: Config.operatorTenantId,
           withdrawalThreshold: BigInt(10),
           liquidityThreshold: BigInt(100)
         })
@@ -620,6 +627,7 @@ describe('Asset Resolvers', (): void => {
         beforeEach(async (): Promise<void> => {
           asset = (await assetService.create({
             ...randomAsset(),
+            tenantId: Config.operatorTenantId,
             withdrawalThreshold,
             liquidityThreshold
           })) as AssetModel

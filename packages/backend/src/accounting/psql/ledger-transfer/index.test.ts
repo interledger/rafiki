@@ -45,7 +45,10 @@ describe('Ledger Transfer', (): void => {
   let settlementAccount: LedgerAccount
 
   beforeEach(async (): Promise<void> => {
-    asset = await Asset.query(knex).insertAndFetch(randomAsset())
+    asset = await Asset.query(knex).insertAndFetch({
+      ...randomAsset(),
+      tenantId: Config.operatorTenantId
+    })
     ;[account, peerAccount, settlementAccount] = await Promise.all([
       createLedgerAccount({ ledger: asset.ledger }, knex),
       createLedgerAccount({ ledger: asset.ledger }, knex),
