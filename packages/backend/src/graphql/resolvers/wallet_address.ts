@@ -101,7 +101,7 @@ export const createWalletAddress: MutationResolvers<TenantedApolloContext>['crea
     const options: CreateOptions = {
       assetId: args.input.assetId,
       // We always have a tenant for [TenantedApolloContext].
-      tenantId: ctx.forTenantId!,
+      tenantId: ctx.forTenantId,
       additionalProperties: addProps,
       publicName: args.input.publicName,
       url: args.input.url

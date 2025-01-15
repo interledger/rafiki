@@ -223,7 +223,7 @@ const WALLET_ADDRESS_PATH = '/:walletAddressPath+'
 export interface TenantedApolloContext extends ApolloContext {
   tenant: Tenant
   isOperator: boolean
-  forTenantId?: string
+  forTenantId: string
 }
 
 export interface AppServices {
@@ -424,7 +424,8 @@ export class App {
           return {
             ...tenantApiSignatureResult,
             container: this.container,
-            logger: await this.container.use('logger')
+            logger: await this.container.use('logger'),
+            forTenantId: this.config.operatorTenantId
           }
         }
       })
