@@ -13,7 +13,6 @@ export const loader = async ({
   request
 }: LoaderFunctionArgs): Promise<TypedResponse<LoaderData>> => {
   const cookies = request.headers.get('cookie')
-  // TODO: check how new api credential form works with checkAuthAndRedirect with kratos enabled
   await checkAuthAndRedirect(request.url, cookies)
 
   const session = await getSession(cookies)
