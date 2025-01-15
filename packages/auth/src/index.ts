@@ -22,6 +22,7 @@ import { createInteractionService } from './interaction/service'
 import { getTokenIntrospectionOpenAPI } from 'token-introspection'
 import { Redis } from 'ioredis'
 import { createTenantService } from './tenant/service'
+import { createTenantRoutes } from './tenant/routes'
 
 const container = initIocContainer(Config)
 const app = new App(container)
@@ -159,6 +160,16 @@ export function initIocContainer(
         grantService: await deps.use('grantService'),
         logger: await deps.use('logger'),
         config: await deps.use('config')
+      })
+    }
+  )
+
+  container.singleton(
+    'tenantRoutes',
+    async (deps: IocContract<AppServices>) => {
+      return createTenantRoutes({
+        tenantService: await deps.use('tenantService'),
+        logger: await deps.use('logger')
       })
     }
   )
@@ -315,6 +326,9 @@ export const start = async (
 
   await app.startIntrospectionServer(config.introspectionPort)
   logger.info(`Introspection server listening on ${app.getIntrospectionPort()}`)
+
+  await app.startServiceAPIServer(config.serviceAPIPort)
+  logger.info(`Service API server listening on ${app.getServiceAPIPort()}`)
 }
 
 // If this script is run directly, start the server

@@ -67,6 +67,7 @@ services:
       AUTH_SERVER_INTROSPECTION_URL: http://cloud-nine-wallet-auth:3007
       AUTH_ADMIN_API_URL: 'http://cloud-nine-wallet-auth:3003/graphql'
       AUTH_ADMIN_API_SECRET: 'rPoZpe9tVyBNCigm05QDco7WLcYa0xMao7lO5KG1XG4='
+      AUTH_SERVICE_API_URL: 'http://cloud-nine-wallet-auth:3011'
       ILP_ADDRESS: ${ILP_ADDRESS:-test.cloud-nine-wallet}
       STREAM_SECRET: BjPXtnd00G2mRQwP/8ZpwyZASOch5sUXT5o0iR5b5wU=
       API_SECRET: iyIgCprjb9uL8wFckR+pLEkJWMB7FJhgkvqhTQR/964=
@@ -108,6 +109,7 @@ services:
       - '3006:3006'
       - "9230:9229"
       - '3009:3009'
+      - '3011:3011'
     environment:
       NODE_ENV: ${NODE_ENV:-development}
       TRUST_PROXY: ${TRUST_PROXY}
@@ -119,6 +121,7 @@ services:
       COOKIE_KEY: 42397d1f371dd4b8b7d0308a689a57c882effd4ea909d792302542af47e2cd37
       ADMIN_API_SECRET: rPoZpe9tVyBNCigm05QDco7WLcYa0xMao7lO5KG1XG4=
       OPERATOR_TENANT_ID: 438fa74a-fa7d-4317-9ced-dde32ece1787
+      SERVICE_API_PORT: 3011
     depends_on:
       - shared-database
       - shared-redis
