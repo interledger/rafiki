@@ -7,49 +7,28 @@ import { AppServices } from '../app'
 import { initIocContainer } from '..'
 import { createTestApp, TestContainer } from '../tests/app'
 import { TenantService } from './service'
-import { Config, IAppConfig } from '../config/app'
+import { Config } from '../config/app'
 import { truncateTables } from '../tests/tableManager'
-import { ApolloClient, NormalizedCacheObject } from '@apollo/client'
 import { Tenant } from './model'
 import { getPageTests } from '../shared/baseModel.test'
 import { Pagination, SortOrder } from '../shared/baseModel'
 import { createTenant } from '../tests/tenant'
 import { CacheDataStore } from '../middleware/cache/data-stores'
-
-const generateMutateGqlError = (path: string = 'createTenant') => ({
-  errors: [
-    {
-      message: 'invalid input syntax',
-      locations: [
-        {
-          line: 1,
-          column: 1
-        }
-      ],
-      path: [path],
-      extensions: {
-        code: 'INTERNAl_SERVER_ERROR'
-      }
-    }
-  ],
-  data: null
-})
+import { AuthServiceClient } from '../auth-service-client/client'
 
 describe('Tenant Service', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let tenantService: TenantService
-  let config: IAppConfig
-  let apolloClient: ApolloClient<NormalizedCacheObject>
   let knex: Knex
+  let authServiceClient: AuthServiceClient
 
   beforeAll(async (): Promise<void> => {
     deps = initIocContainer(Config)
     appContainer = await createTestApp(deps)
     tenantService = await deps.use('tenantService')
-    config = await deps.use('config')
-    apolloClient = await deps.use('apolloClient')
     knex = await deps.use('knex')
+    authServiceClient = await deps.use('authServiceClient')
   })
 
   afterEach(async (): Promise<void> => {
@@ -138,28 +117,21 @@ describe('Tenant Service', (): void => {
         idpSecret: 'test-idp-secret'
       }
 
-      const scope = nock(config.authAdminApiUrl)
-        .post('')
-        .reply(200, { data: { createTenant: { id: 1234 } } })
+      const spy = jest
+        .spyOn(authServiceClient.tenant, 'create')
+        .mockImplementationOnce(async () => undefined)
 
-      const apolloSpy = jest.spyOn(apolloClient, 'mutate')
       const tenant = await tenantService.create(createOptions)
 
       expect(tenant).toEqual(expect.objectContaining(createOptions))
 
-      expect(apolloSpy).toHaveBeenCalledWith(
+      expect(spy).toHaveBeenCalledWith(
         expect.objectContaining({
-          variables: {
-            input: {
-              id: tenant.id,
-              idpSecret: createOptions.idpSecret,
-              idpConsentUrl: createOptions.idpConsentUrl
-            }
-          }
+          id: tenant.id,
+          idpSecret: createOptions.idpSecret,
+          idpConsentUrl: createOptions.idpConsentUrl
         })
       )
-
-      scope.done()
     })
 
     test('tenant creation rolls back if auth tenant create fails', async (): Promise<void> => {
@@ -171,11 +143,13 @@ describe('Tenant Service', (): void => {
         idpSecret: 'test-idp-secret'
       }
 
-      const scope = nock(config.authAdminApiUrl)
-        .post('')
-        .reply(200, generateMutateGqlError('createTenant'))
+      const spy = jest
+        .spyOn(authServiceClient.tenant, 'create')
+        .mockImplementationOnce(() => {
+          throw new Error()
+        })
 
-      const apolloSpy = jest.spyOn(apolloClient, 'mutate')
+      expect.assertions(3)
       let tenant
       try {
         tenant = await tenantService.create(createOptions)
@@ -185,19 +159,14 @@ describe('Tenant Service', (): void => {
         const tenants = await Tenant.query()
         expect(tenants.length).toEqual(0)
 
-        expect(apolloSpy).toHaveBeenCalledWith(
+        expect(spy).toHaveBeenCalledWith(
           expect.objectContaining({
-            variables: {
-              input: {
-                id: expect.any(String),
-                idpConsentUrl: createOptions.idpConsentUrl,
-                idpSecret: createOptions.idpSecret
-              }
-            }
+            id: expect.any(String),
+            idpConsentUrl: createOptions.idpConsentUrl,
+            idpSecret: createOptions.idpSecret
           })
         )
       }
-      scope.done()
     })
   })
 
@@ -211,10 +180,10 @@ describe('Tenant Service', (): void => {
         idpSecret: 'test-idp-secret'
       }
 
-      const scope = nock(config.authAdminApiUrl)
-        .post('')
-        .reply(200, { data: { createTenant: { id: 1234 } } })
-        .persist()
+      jest
+        .spyOn(authServiceClient.tenant, 'create')
+        .mockImplementationOnce(async () => undefined)
+
       const tenant = await tenantService.create(originalTenantInfo)
 
       const updatedTenantInfo = {
@@ -226,22 +195,16 @@ describe('Tenant Service', (): void => {
         idpSecret: 'test-idp-secret-two'
       }
 
-      const apolloSpy = jest.spyOn(apolloClient, 'mutate')
+      const spy = jest
+        .spyOn(authServiceClient.tenant, 'update')
+        .mockImplementationOnce(async () => undefined)
       const updatedTenant = await tenantService.update(updatedTenantInfo)
 
       expect(updatedTenant).toEqual(expect.objectContaining(updatedTenantInfo))
-      expect(apolloSpy).toHaveBeenCalledWith(
-        expect.objectContaining({
-          variables: {
-            input: {
-              id: tenant.id,
-              idpConsentUrl: updatedTenantInfo.idpConsentUrl,
-              idpSecret: updatedTenantInfo.idpSecret
-            }
-          }
-        })
-      )
-      scope.done()
+      expect(spy).toHaveBeenCalledWith(tenant.id, {
+        idpConsentUrl: updatedTenantInfo.idpConsentUrl,
+        idpSecret: updatedTenantInfo.idpSecret
+      })
     })
 
     test('rolls back tenant if auth tenant update fails', async (): Promise<void> => {
@@ -253,9 +216,10 @@ describe('Tenant Service', (): void => {
         idpSecret: 'test-idp-secret'
       }
 
-      nock(config.authAdminApiUrl)
-        .post('')
-        .reply(200, { data: { createTenant: { id: 1234 } } })
+      jest
+        .spyOn(authServiceClient.tenant, 'create')
+        .mockImplementationOnce(async () => undefined)
+
       const tenant = await tenantService.create(originalTenantInfo)
       const updatedTenantInfo = {
         id: tenant.id,
@@ -266,13 +230,14 @@ describe('Tenant Service', (): void => {
         idpSecret: 'test-idp-secret-two'
       }
 
-      nock.cleanAll()
+      const spy = jest
+        .spyOn(authServiceClient.tenant, 'update')
+        .mockImplementationOnce(async () => {
+          throw new Error()
+        })
 
-      nock(config.authAdminApiUrl)
-        .post('')
-        .reply(200, generateMutateGqlError('updateTenant'))
-      const apolloSpy = jest.spyOn(apolloClient, 'mutate')
       let updatedTenant
+      expect.assertions(3)
       try {
         updatedTenant = await tenantService.update(updatedTenantInfo)
       } catch (err) {
@@ -280,20 +245,14 @@ describe('Tenant Service', (): void => {
         const dbTenant = await Tenant.query().findById(tenant.id)
         assert.ok(dbTenant)
         expect(dbTenant).toEqual(expect.objectContaining(originalTenantInfo))
-        expect(apolloSpy).toHaveBeenCalledWith(
+        expect(spy).toHaveBeenCalledWith(
+          tenant.id,
           expect.objectContaining({
-            variables: {
-              input: {
-                id: tenant.id,
-                idpConsentUrl: updatedTenantInfo.idpConsentUrl,
-                idpSecret: updatedTenantInfo.idpSecret
-              }
-            }
+            idpConsentUrl: updatedTenantInfo.idpConsentUrl,
+            idpSecret: updatedTenantInfo.idpSecret
           })
         )
       }
-
-      nock.cleanAll()
     })
 
     test('Cannot update deleted tenant', async (): Promise<void> => {
@@ -306,7 +265,7 @@ describe('Tenant Service', (): void => {
         deletedAt: new Date()
       })
 
-      const apolloSpy = jest.spyOn(apolloClient, 'mutate')
+      const spy = jest.spyOn(authServiceClient.tenant, 'update')
       try {
         await tenantService.update({
           id: dbTenant.id,
@@ -319,7 +278,7 @@ describe('Tenant Service', (): void => {
 
         assert.ok(dbTenantAfterUpdate)
         expect(dbTenantAfterUpdate.apiSecret).toEqual(originalSecret)
-        expect(apolloSpy).toHaveBeenCalledTimes(0)
+        expect(spy).toHaveBeenCalledTimes(0)
       }
     })
   })
@@ -334,28 +293,22 @@ describe('Tenant Service', (): void => {
         idpSecret: 'test-idp-secret'
       }
 
-      const scope = nock(config.authAdminApiUrl)
-        .post('')
-        .reply(200, { data: { createTenant: { id: 1234 } } })
-        .persist()
+      jest
+        .spyOn(authServiceClient.tenant, 'create')
+        .mockImplementationOnce(async () => undefined)
       const tenant = await tenantService.create(createOptions)
 
-      const apolloSpy = jest.spyOn(apolloClient, 'mutate')
+      const spy = jest
+        .spyOn(authServiceClient.tenant, 'delete')
+        .mockImplementationOnce(async () => undefined)
       await tenantService.delete(tenant.id)
 
       const dbTenant = await Tenant.query().findById(tenant.id)
-      expect(dbTenant?.deletedAt?.getTime()).toBeLessThanOrEqual(
+      assert.ok(dbTenant?.deletedAt)
+      expect(dbTenant.deletedAt.getTime()).toBeLessThanOrEqual(
         new Date(Date.now()).getTime()
       )
-      expect(apolloSpy).toHaveBeenCalledWith(
-        expect.objectContaining({
-          variables: {
-            input: { id: tenant.id, deletedAt: dbTenant?.deletedAt }
-          }
-        })
-      )
-
-      scope.done()
+      expect(spy).toHaveBeenCalledWith(tenant.id, dbTenant.deletedAt)
     })
 
     test('Reverts deletion if auth tenant delete fails', async (): Promise<void> => {
@@ -367,17 +320,18 @@ describe('Tenant Service', (): void => {
         idpSecret: 'test-idp-secret'
       }
 
-      nock(config.authAdminApiUrl)
-        .post('')
-        .reply(200, { data: { createTenant: { id: 1234 } } })
+      jest
+        .spyOn(authServiceClient.tenant, 'create')
+        .mockImplementationOnce(async () => undefined)
       const tenant = await tenantService.create(createOptions)
 
-      nock.cleanAll()
+      const spy = jest
+        .spyOn(authServiceClient.tenant, 'delete')
+        .mockImplementationOnce(async () => {
+          throw new Error()
+        })
 
-      const apolloSpy = jest.spyOn(apolloClient, 'mutate')
-      const deleteScope = nock(config.authAdminApiUrl)
-        .post('')
-        .reply(200, generateMutateGqlError('deleteTenant'))
+      expect.assertions(3)
       try {
         await tenantService.delete(tenant.id)
       } catch (err) {
@@ -385,28 +339,17 @@ describe('Tenant Service', (): void => {
         assert.ok(dbTenant)
         expect(dbTenant.id).toEqual(tenant.id)
         expect(dbTenant.deletedAt).toBeNull()
-        expect(apolloSpy).toHaveBeenCalledWith(
-          expect.objectContaining({
-            variables: {
-              input: {
-                id: tenant.id,
-                deletedAt: expect.any(Date)
-              }
-            }
-          })
-        )
+        expect(spy).toHaveBeenCalledWith(tenant.id, expect.any(Date))
       }
-
-      deleteScope.done()
     })
   })
 
   describe('Tenant Service using cache', (): void => {
     let deps: IocContract<AppServices>
     let appContainer: TestContainer
-    let config: IAppConfig
     let tenantService: TenantService
     let tenantCache: CacheDataStore<Tenant>
+    let authServiceClient: AuthServiceClient
 
     beforeAll(async (): Promise<void> => {
       deps = initIocContainer({
@@ -414,9 +357,9 @@ describe('Tenant Service', (): void => {
         localCacheDuration: 5_000 // 5-second default.
       })
       appContainer = await createTestApp(deps)
-      config = await deps.use('config')
       tenantService = await deps.use('tenantService')
       tenantCache = await deps.use('tenantCache')
+      authServiceClient = await deps.use('authServiceClient')
     })
 
     afterEach(async (): Promise<void> => {
@@ -437,10 +380,9 @@ describe('Tenant Service', (): void => {
           idpSecret: 'test-idp-secret'
         }
 
-        const scope = nock(config.authAdminApiUrl)
-          .post('')
-          .reply(200, { data: { createTenant: { tenant: { id: 1234 } } } })
-          .persist()
+        jest
+          .spyOn(authServiceClient.tenant, 'create')
+          .mockImplementation(async () => undefined)
 
         const spyCacheSet = jest.spyOn(tenantCache, 'set')
         const tenant = await tenantService.create(createOptions)
@@ -459,6 +401,9 @@ describe('Tenant Service', (): void => {
         expect(spyCacheGet).toHaveBeenCalledWith(tenant.id)
 
         const spyCacheUpdateSet = jest.spyOn(tenantCache, 'set')
+        jest
+          .spyOn(authServiceClient.tenant, 'update')
+          .mockImplementation(async () => undefined)
         const updatedTenant = await tenantService.update({
           id: tenant.id,
           apiSecret: 'test-api-secret-2'
@@ -473,6 +418,9 @@ describe('Tenant Service', (): void => {
         expect(spyCacheUpdateSet).toHaveBeenCalledWith(tenant.id, updatedTenant)
 
         const spyCacheDelete = jest.spyOn(tenantCache, 'delete')
+        jest
+          .spyOn(authServiceClient.tenant, 'delete')
+          .mockImplementation(async () => undefined)
         await tenantService.delete(tenant.id)
 
         await expect(tenantService.get(tenant.id)).resolves.toBeUndefined()
@@ -480,8 +428,6 @@ describe('Tenant Service', (): void => {
         // Ensure that cache was set for deletion
         expect(spyCacheDelete).toHaveBeenCalledTimes(1)
         expect(spyCacheDelete).toHaveBeenCalledWith(tenant.id)
-
-        scope.done()
       })
     })
   })
