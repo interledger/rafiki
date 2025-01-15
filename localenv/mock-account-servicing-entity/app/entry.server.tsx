@@ -39,6 +39,11 @@ if (!global.__seeded) {
   })
     .then(() => {
       global.__seeded = true
+      setTimeout(() => {
+        console.log('Server started with the following environment variables:')
+        console.log(`OPERATOR_TENANT_ID: ${process.env.OPERATOR_TENANT_ID}`)
+        console.log(`SIGNATURE_SECRET: ${process.env.SIGNATURE_SECRET}`)
+      }, 2000)
     })
     .catch((e) => {
       console.log(
