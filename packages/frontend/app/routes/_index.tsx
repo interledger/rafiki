@@ -3,7 +3,7 @@ import type { ActionFunction, TypedResponse } from '@remix-run/node'
 import { json, redirect, type LoaderFunctionArgs } from '@remix-run/node'
 import { useLoaderData } from '@remix-run/react'
 import { ApiCredentialsForm } from '~/components/ApiCredentialsForm'
-import { commitSession, getSession, SESSION_NAME } from '~/lib/session.server'
+import { commitSession, getSession, destroySession } from '~/lib/session.server'
 
 interface LoaderData {
   hasCredentials: boolean
@@ -35,11 +35,13 @@ export const action: ActionFunction = async ({
 
     switch (intent) {
       case 'clear': {
+        const session = await getSession(request.headers.get('cookie'))
+
         return redirect('/', {
           headers: {
-            'Set-Cookie':
-              // Effectively deletes the cookie (server will delete because of past expirey)
-              `${SESSION_NAME}=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT`
+            'Set-Cookie': await destroySession(session, {
+              maxAge: -1
+            })
           }
         })
       }

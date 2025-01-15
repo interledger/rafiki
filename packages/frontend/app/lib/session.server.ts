@@ -1,7 +1,5 @@
 import { createCookieSessionStorage } from '@remix-run/node'
 
-const SESSION_NAME = '__session'
-
 const { getSession, commitSession, destroySession } =
   createCookieSessionStorage({
     cookie: {
@@ -14,4 +12,4 @@ const { getSession, commitSession, destroySession } =
     }
   })
 
-export { getSession, commitSession, destroySession, SESSION_NAME }
+export { getSession, commitSession, destroySession }
