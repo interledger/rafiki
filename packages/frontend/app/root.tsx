@@ -27,7 +27,6 @@ import variables from './lib/envConfig.server'
 import axios from 'axios'
 import { logger } from './utils/logger.server'
 import { getSession } from './lib/session.server'
-import { isApolloError } from '@apollo/client'
 
 export const meta: MetaFunction = () => [
   { title: 'Rafiki Admin' },
@@ -207,16 +206,9 @@ export function ErrorBoundary() {
 
   let errorMessage = 'Unknown error'
   if (error instanceof Error) {
-    errorMessage = error.message
-
-    if (
-      isApolloError(error) &&
-      error.networkError &&
-      'statusCode' in error.networkError &&
-      error.networkError.statusCode === 401
-    ) {
-      errorMessage = 'Unauthorized. Please set your API credentials.'
-    }
+    errorMessage = error.message.includes('401')
+      ? 'Unauthorized. Please set your API credentials.'
+      : error.message
   }
 
   return (
