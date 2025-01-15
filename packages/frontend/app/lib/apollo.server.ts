@@ -23,18 +23,14 @@ BigInt.prototype.toJSON = function (this: bigint) {
   return this.toString()
 }
 
-// TODO: rm env vars? SIGNATURE_VERSION, SIGNATURE_SECRET
 async function createAuthLink(request: Request) {
   return setContext(async (gqlRequest, { headers }) => {
-    if (!process.env.SIGNATURE_SECRET || !process.env.SIGNATURE_VERSION)
-      return { headers }
     const timestamp = Math.round(new Date().getTime() / 1000)
-    const version = 1 // process.env.SIGNATURE_VERSION
+    const version = 1
     const session = await getSession(request.headers.get('cookie'))
     const apiSecret = session.get('apiSecret')
 
     if (!apiSecret) {
-      // TODO: is this the correct behavior? same things as if sig secret and version are not set
       return { headers }
     }
 
@@ -46,7 +42,7 @@ async function createAuthLink(request: Request) {
     }
 
     const payload = `${timestamp}.${canonicalize(formattedRequest)}`
-    const hmac = createHmac('sha256', process.env.SIGNATURE_SECRET)
+    const hmac = createHmac('sha256', apiSecret)
     hmac.update(payload)
     const digest = hmac.digest('hex')
 
