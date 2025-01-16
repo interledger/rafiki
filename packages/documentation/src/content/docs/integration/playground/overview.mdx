@@ -37,7 +37,7 @@ This environment will set up a playground where you can use the Rafiki Admin API
 
 :::note
 
-The Mock ASE provided in this repository is intended solely for internal use and demonstration purposes. It is not designed to serve as a reference architecture. If you are looking for a reference implementation of an ASE, please refer to the Test Wallet.
+The Mock ASE provided in this repository is intended solely for internal use and demonstration purposes. It is not designed to serve as a reference architecture. If you are looking for a reference implementation of an ASE, please refer to the [Test Wallet](https://wallet.interledger-test.dev/).
 :::
 
 ## Running the local environment
@@ -139,7 +139,7 @@ After you've registered, you can come back to your Rafiki Admin account by navig
 
 Follow these steps to reset a user's Rafiki Admin password.
 
-1. Click the forgot password link and enter an email for a registered user.
+1. Select the forgot password link and enter an email for a registered user.
 2. Open [Mail Slurper](http://localhost:4436/) to access the recovery link for the account.
    :::
 
@@ -153,7 +153,7 @@ The accounts for Happy Life Bank can be found on [localhost:3031](http://localho
 
 :::
 
-Click an account name to view a list of transactions.
+Select an account name to view a list of transactions.
 
 ### Debugging
 
@@ -169,9 +169,9 @@ Debuggers for the services are exposed on the following ports:
 #### Debugging with a Chromium browser:
 
 1. Go to chrome://inspect
-2. Click **Configure** and add the IP addresses and ports detailed above
+2. Select **Configure** and add the IP addresses and ports detailed above
 3. Start the docker containers
-4. Click **Inspect** on the service you want to debug to open the Chromium debugger.
+4. Select **Inspect** on the service you want to debug to open the Chromium debugger.
 
 You can either trigger the debugger by adding `debugger` statements in the code and restarting the Docker containers or by adding breakpoints directly to the Chromium debugger after starting the Docker containers.
 
@@ -238,9 +238,19 @@ The following are the most commonly used commands:
 The Open Payments APIs can be interacted with using the [Bruno collection](https://github.com/interledger/rafiki/tree/main/bruno/collections/Rafiki) ([resource server endpoints](https://github.com/interledger/rafiki/tree/main/bruno/collections/Rafiki/Open%20Payments%20APIs) and [auth server endpoints](https://github.com/interledger/rafiki/tree/main/bruno/collections/Rafiki/Open%20Payments%20Auth%20APIs)).
 To interact with the Open Payments APIs using Bruno, you must:
 
-1. load the collection into Bruno by clicking "Open Collection"
-2. navigating to `/rafiki/bruno/collections/Rafiki` on your machine and clicking "Open"
+1. Load the collection into Bruno by selecting "Open Collection"
+2. Navigate to `/rafiki/bruno/collections/Rafiki` on your machine and select "Open"
 3. Furthermore, you need to either load the [Local Environment](https://github.com/interledger/rafiki/tree/main/bruno/collections/Rafiki/environments/Local%20Playground.bru) or the [Remote Test Network Environment](https://github.com/interledger/rafiki/tree/main/bruno/collections/Rafiki/environments/Remote.bru).
+
+:::tip[Troubleshooting Bruno errors]
+
+If you receive the error below while running the Bruno collection, try switching from <LinkOut href='https://docs.usebruno.com/get-started/javascript-sandbox'>Safe Mode to Developer Mode</LinkOut>
+
+```
+Error invoking remote method `send-http-request`: Error : Error: Cannot find module crypto
+```
+
+:::
 
 The Examples folder in the Bruno collection includes an [Open Payments](https://github.com/interledger/rafiki/tree/main/bruno/collections/Rafiki/Examples/Open%20Payments) example that can be executed in the following sequence:
 
@@ -254,7 +264,7 @@ The Examples folder in the Bruno collection includes an [Open Payments](https://
 
 :::note
 
-You have to go through an interaction flow by clicking on the `redirect` link in the grant request response. More information about the interaction flow can be found <LinkOut href ='https://openpayments.dev/introduction/grants/'>here</LinkOut>.
+You have to go through an interaction flow by selecting the `redirect` link in the grant request response. More information about the interaction flow can be found <LinkOut href ='https://openpayments.dev/introduction/grants/'>here</LinkOut>.
 :::
 
 8.  Continues the grant request
