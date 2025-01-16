@@ -1,6 +1,6 @@
 # Local Playground
 
-The Local Playground, or `localenv` package, provides a suite of tools and packages to simulate an account servicing entity (ASE) deploying Rafiki. It enables developers to test Rafiki functionalities by exposing key services, such as: 
+The Local Playground, or `localenv` package, provides a suite of tools and packages to simulate an account servicing entity (ASE) deploying Rafiki. It enables developers to test Rafiki functionalities by exposing key services, such as:
 
 - [SPSP](https://rafiki.dev/resources/glossary#simple-payment-setup-protocol-spsp) endpoint
 - [Open Payments](https://rafiki.dev/overview/concepts/open-payments) APIs with its required [GNAP](https://rafiki.dev/resources/glossary#grant-negotiation-and-authorization-protocol-gnap) auth endpoints to request grants
@@ -91,41 +91,41 @@ pnpm localenv:compose down --volumes --rmi all
 
 ## Cloud Nine Wallet
 
-| Label | Component                 | URL                           |
-| ----- | ------------------------- | ----------------------------- |
-| (a)   | User interface            | http://localhost:3030         |
-| (b)   | Backend Admin API         | http://localhost:3001/graphql |
-| (c)   | Open Payments API         | http://localhost:3000         |
-| (d)   | Auth Admin API            | http://localhost:3003/graphql |
-| (e)   | Open Payments Auth API    | http://localhost:3006         |
-| (f)   | Rafiki Admin application  | http://localhost:3010         |
-| (g)   | *_Kratos API_             | http://localhost:4433         |
+| Label | Component                | URL                           |
+| ----- | ------------------------ | ----------------------------- |
+| (a)   | User interface           | http://localhost:3030         |
+| (b)   | Backend Admin API        | http://localhost:3001/graphql |
+| (c)   | Open Payments API        | http://localhost:3000         |
+| (d)   | Auth Admin API           | http://localhost:3003/graphql |
+| (e)   | Open Payments Auth API   | http://localhost:3006         |
+| (f)   | Rafiki Admin application | http://localhost:3010         |
+| (g)   | \*_Kratos API_           | http://localhost:4433         |
 
 ## Happy Life Bank
 
-| Label | Component                 | URL                           |
-| ----- | ------------------------- | ----------------------------- |
-| (h)   | User interface            | http://localhost:3031         |
-| (i)   | Backend Admin API         | http://localhost:4001/graphql |
-| (j)   | Open Payments API         | http://localhost:4000         |
-| (k)   | Auth Admin API            | http://localhost:4003/graphql |
-| (l)   | Open Payments Auth API    | http://localhost:4006         |
-| (m)   | Rafiki Admin application  | http://localhost:4010         |
-| (n)   | *_Kratos API_             | http://localhost:4432         |
+| Label | Component                | URL                           |
+| ----- | ------------------------ | ----------------------------- |
+| (h)   | User interface           | http://localhost:3031         |
+| (i)   | Backend Admin API        | http://localhost:4001/graphql |
+| (j)   | Open Payments API        | http://localhost:4000         |
+| (k)   | Auth Admin API           | http://localhost:4003/graphql |
+| (l)   | Open Payments Auth API   | http://localhost:4006         |
+| (m)   | Rafiki Admin application | http://localhost:4010         |
+| (n)   | \*_Kratos API_           | http://localhost:4432         |
 
 ## Mail Slurper
 
-| Label | Component          | URL                           |
-| ----- | ------------------ | ----------------------------- |
-| (o)   | *_Mail UI_         | http://localhost:4436         |
+| Label | Component   | URL                   |
+| ----- | ----------- | --------------------- |
+| (o)   | \*_Mail UI_ | http://localhost:4436 |
 
 ## Postgres Server
-| Label | Component          | URL                           |
-| ----- | ------------------ | ----------------------------- |
-|       | Postgres Server    | http://localhost:5432         |
 
+| Label | Component       | URL                   |
+| ----- | --------------- | --------------------- |
+|       | Postgres Server | http://localhost:5432 |
 
-> *Note: In the Local Playground, Kratos and Mail Slurper are disabled by default.
+> \*Note: In the Local Playground, Kratos and Mail Slurper are disabled by default.
 
 ## Exploring Accounts on Mock Account Servicing Entity
 
@@ -200,7 +200,7 @@ For additional details on using the Rafiki Admin application within the Local Pl
 
 ## Useful commands
 
-| Description                                      | Command                                      |
+| Description                                      | Command                                          |
 | ------------------------------------------------ | ------------------------------------------------ |
 | Show all merged config (with Tigerbeetle)        | `pnpm localenv:compose config`                   |
 | Start (with Tigerbeetle)                         | `pnpm localenv:compose up`                       |
