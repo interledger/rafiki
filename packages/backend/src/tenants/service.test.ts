@@ -7,7 +7,7 @@ import { AppServices } from '../app'
 import { initIocContainer } from '..'
 import { createTestApp, TestContainer } from '../tests/app'
 import { TenantService } from './service'
-import { Config } from '../config/app'
+import { Config, IAppConfig } from '../config/app'
 import { truncateTables } from '../tests/tableManager'
 import { Tenant } from './model'
 import { getPageTests } from '../shared/baseModel.test'
@@ -15,39 +15,34 @@ import { Pagination, SortOrder } from '../shared/baseModel'
 import { createTenant } from '../tests/tenant'
 import { CacheDataStore } from '../middleware/cache/data-stores'
 import { AuthServiceClient } from '../auth-service-client/client'
+import { withConfigOverride } from '../tests/helpers'
 
 describe('Tenant Service', (): void => {
   let deps: IocContract<AppServices>
+  let config: IAppConfig
   let appContainer: TestContainer
   let tenantService: TenantService
   let knex: Knex
+  const dbSchema = 'tenant_service_test_schema'
   let authServiceClient: AuthServiceClient
 
   beforeAll(async (): Promise<void> => {
-    deps = initIocContainer(Config)
+    deps = initIocContainer({
+      ...Config,
+      dbSchema
+    })
     appContainer = await createTestApp(deps)
     tenantService = await deps.use('tenantService')
     knex = await deps.use('knex')
+    config = await deps.use('config')
     authServiceClient = await deps.use('authServiceClient')
   })
 
   afterEach(async (): Promise<void> => {
-    await truncateTables(appContainer.knex)
-
-    const RAW = `TRUNCATE TABLE "${Tenant.tableName}" RESTART IDENTITY`
-    await knex.raw(RAW)
+    await truncateTables(knex, true, dbSchema)
   })
 
   afterAll(async (): Promise<void> => {
-    const OPERATOR_TENANT_ID = process.env['OPERATOR_TENANT_ID']
-    const OPERATOR_API_SECRET = process.env['API_SECRET']
-
-    knex.raw(
-      `
-        INSERT INTO "tenants" ("id", "apiSecret") 
-        VALUES ('${OPERATOR_TENANT_ID}', '${OPERATOR_API_SECRET}')
-    `
-    )
     nock.cleanAll()
     await appContainer.shutdown()
   })
@@ -345,90 +340,83 @@ describe('Tenant Service', (): void => {
   })
 
   describe('Tenant Service using cache', (): void => {
-    let deps: IocContract<AppServices>
-    let appContainer: TestContainer
-    let tenantService: TenantService
     let tenantCache: CacheDataStore<Tenant>
     let authServiceClient: AuthServiceClient
 
     beforeAll(async (): Promise<void> => {
-      deps = initIocContainer({
-        ...Config,
-        localCacheDuration: 5_000 // 5-second default.
-      })
-      appContainer = await createTestApp(deps)
-      tenantService = await deps.use('tenantService')
       tenantCache = await deps.use('tenantCache')
       authServiceClient = await deps.use('authServiceClient')
     })
 
-    afterEach(async (): Promise<void> => {
-      await truncateTables(appContainer.knex)
-    })
-
-    afterAll(async (): Promise<void> => {
-      await appContainer.shutdown()
-    })
-
     describe('create, update, and retrieve tenant using cache', (): void => {
-      test('Tenant can be created, updated, and fetched', async (): Promise<void> => {
-        const createOptions = {
-          email: faker.internet.email(),
-          publicName: faker.company.name(),
-          apiSecret: 'test-api-secret',
-          idpConsentUrl: faker.internet.url(),
-          idpSecret: 'test-idp-secret'
-        }
+      test(
+        'Tenant can be created, updated, and fetched',
+        withConfigOverride(
+          () => config,
+          { localCacheDuration: 5_000 },
+          async (): Promise<void> => {
+            const createOptions = {
+              email: faker.internet.email(),
+              publicName: faker.company.name(),
+              apiSecret: 'test-api-secret',
+              idpConsentUrl: faker.internet.url(),
+              idpSecret: 'test-idp-secret'
+            }
 
-        jest
-          .spyOn(authServiceClient.tenant, 'create')
-          .mockImplementation(async () => undefined)
+            jest
+              .spyOn(authServiceClient.tenant, 'create')
+              .mockImplementation(async () => undefined)
 
-        const spyCacheSet = jest.spyOn(tenantCache, 'set')
-        const tenant = await tenantService.create(createOptions)
-        expect(tenant).toMatchObject({
-          ...createOptions,
-          id: tenant.id
-        })
+            const spyCacheSet = jest.spyOn(tenantCache, 'set')
+            const tenant = await tenantService.create(createOptions)
+            expect(tenant).toMatchObject({
+              ...createOptions,
+              id: tenant.id
+            })
 
-        // Ensure that the cache was set for create
-        expect(spyCacheSet).toHaveBeenCalledTimes(1)
+            // Ensure that the cache was set for create
+            expect(spyCacheSet).toHaveBeenCalledTimes(1)
 
-        const spyCacheGet = jest.spyOn(tenantCache, 'get')
-        await expect(tenantService.get(tenant.id)).resolves.toEqual(tenant)
+            const spyCacheGet = jest.spyOn(tenantCache, 'get')
+            await expect(tenantService.get(tenant.id)).resolves.toEqual(tenant)
 
-        expect(spyCacheGet).toHaveBeenCalledTimes(1)
-        expect(spyCacheGet).toHaveBeenCalledWith(tenant.id)
+            expect(spyCacheGet).toHaveBeenCalledTimes(1)
+            expect(spyCacheGet).toHaveBeenCalledWith(tenant.id)
 
-        const spyCacheUpdateSet = jest.spyOn(tenantCache, 'set')
-        jest
-          .spyOn(authServiceClient.tenant, 'update')
-          .mockImplementation(async () => undefined)
-        const updatedTenant = await tenantService.update({
-          id: tenant.id,
-          apiSecret: 'test-api-secret-2'
-        })
+            const spyCacheUpdateSet = jest.spyOn(tenantCache, 'set')
+            jest
+              .spyOn(authServiceClient.tenant, 'update')
+              .mockImplementation(async () => undefined)
+            const updatedTenant = await tenantService.update({
+              id: tenant.id,
+              apiSecret: 'test-api-secret-2'
+            })
 
-        await expect(tenantService.get(tenant.id)).resolves.toEqual(
-          updatedTenant
+            await expect(tenantService.get(tenant.id)).resolves.toEqual(
+              updatedTenant
+            )
+
+            // Ensure that cache was set for update
+            expect(spyCacheUpdateSet).toHaveBeenCalledTimes(2)
+            expect(spyCacheUpdateSet).toHaveBeenCalledWith(
+              tenant.id,
+              updatedTenant
+            )
+
+            const spyCacheDelete = jest.spyOn(tenantCache, 'delete')
+            jest
+              .spyOn(authServiceClient.tenant, 'delete')
+              .mockImplementation(async () => undefined)
+            await tenantService.delete(tenant.id)
+
+            await expect(tenantService.get(tenant.id)).resolves.toBeUndefined()
+
+            // Ensure that cache was set for deletion
+            expect(spyCacheDelete).toHaveBeenCalledTimes(1)
+            expect(spyCacheDelete).toHaveBeenCalledWith(tenant.id)
+          }
         )
-
-        // Ensure that cache was set for update
-        expect(spyCacheUpdateSet).toHaveBeenCalledTimes(2)
-        expect(spyCacheUpdateSet).toHaveBeenCalledWith(tenant.id, updatedTenant)
-
-        const spyCacheDelete = jest.spyOn(tenantCache, 'delete')
-        jest
-          .spyOn(authServiceClient.tenant, 'delete')
-          .mockImplementation(async () => undefined)
-        await tenantService.delete(tenant.id)
-
-        await expect(tenantService.get(tenant.id)).resolves.toBeUndefined()
-
-        // Ensure that cache was set for deletion
-        expect(spyCacheDelete).toHaveBeenCalledTimes(1)
-        expect(spyCacheDelete).toHaveBeenCalledWith(tenant.id)
-      })
+      )
     })
   })
 })

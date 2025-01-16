@@ -107,6 +107,7 @@ export function initIocContainer(
         directory: './',
         tableName: 'knex_migrations'
       },
+      searchPath: config.dbSchema,
       log: {
         warn(message) {
           logger.warn(message)
@@ -128,6 +129,9 @@ export function initIocContainer(
       'text',
       BigInt
     )
+    if (config.dbSchema) {
+      await db.raw(`CREATE SCHEMA IF NOT EXISTS "${config.dbSchema}"`)
+    }
     return db
   })
   container.singleton('redis', async (deps): Promise<Redis> => {

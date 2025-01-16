@@ -106,7 +106,9 @@ import {
   getTenantFromApiSignature,
   TenantApiSignatureResult
 } from './shared/utils'
+import { TenantService } from './tenants/service'
 import { AuthServiceClient } from './auth-service-client/client'
+
 export interface AppContextData {
   logger: Logger
   container: AppContainer
@@ -268,6 +270,7 @@ export interface AppServices {
   paymentMethodHandlerService: Promise<PaymentMethodHandlerService>
   ilpPaymentService: Promise<IlpPaymentService>
   localPaymentService: Promise<LocalPaymentService>
+  tenantService: Promise<TenantService>
   authServiceClient: AuthServiceClient
 }
 
@@ -398,25 +401,51 @@ export class App {
     )
 
     let tenantApiSignatureResult: TenantApiSignatureResult
-    if (this.config.env === 'test') {
-      const tenantService = await this.container.use('tenantService')
-      const tenant = await tenantService.get(this.config.operatorTenantId)
-      const isOperator = this.config.isTestTenantOperator
-      tenantApiSignatureResult = { tenant, isOperator }
-    } else {
-      koa.use(async (ctx, next: Koa.Next): Promise<void> => {
-        const result = await getTenantFromApiSignature(ctx, this.config)
-        if (!result) {
-          ctx.throw(401, 'Unauthorized')
-        } else {
-          tenantApiSignatureResult = {
-            tenant: result.tenant,
-            isOperator: result.isOperator
-          }
+    const tenantSignatureMiddleware = async (
+      ctx: AppContext,
+      next: Koa.Next
+    ): Promise<void> => {
+      const result = await getTenantFromApiSignature(ctx, this.config)
+      if (!result) {
+        ctx.throw(401, 'Unauthorized')
+      } else {
+        tenantApiSignatureResult = {
+          tenant: result.tenant,
+          isOperator: result.isOperator ? true : false
         }
-        return next()
-      })
+      }
+      return next()
     }
+
+    const testTenantSignatureMiddleware = async (
+      ctx: AppContext,
+      next: Koa.Next
+    ): Promise<void> => {
+      if (ctx.headers['tenant-id']) {
+        const tenantService = await ctx.container.use('tenantService')
+        const tenant = await tenantService.get(
+          ctx.headers['tenant-id'] as string
+        )
+
+        if (tenant) {
+          tenantApiSignatureResult = {
+            tenant,
+            isOperator: tenant.apiSecret === this.config.adminApiSecret
+          }
+        } else {
+          ctx.throw(401, 'Unauthorized')
+        }
+      }
+      return next()
+    }
+
+    // For tests, we still need to get the tenant in the middleware, but
+    // we don't need to verify the signature nor prevent replay attacks
+    koa.use(
+      this.config.env !== 'test'
+        ? tenantSignatureMiddleware
+        : testTenantSignatureMiddleware
+    )
 
     koa.use(
       koaMiddleware(this.apolloServer, {
@@ -424,8 +453,7 @@ export class App {
           return {
             ...tenantApiSignatureResult,
             container: this.container,
-            logger: await this.container.use('logger'),
-            forTenantId: this.config.operatorTenantId
+            logger: await this.container.use('logger')
           }
         }
       })

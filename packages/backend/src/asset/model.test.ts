@@ -38,6 +38,7 @@ describe('Models', (): void => {
       beforeEach(async (): Promise<void> => {
         const options = {
           ...randomAsset(),
+          tenantId: Config.operatorTenantId,
           liquidityThreshold: BigInt(100)
         }
         const assetOrError = await assetService.create(options)

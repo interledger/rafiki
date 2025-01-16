@@ -57,6 +57,7 @@ describe('Asset Service', (): void => {
       async ({ withdrawalThreshold, liquidityThreshold }): Promise<void> => {
         const options = {
           ...randomAsset(),
+          tenantId: Config.operatorTenantId,
           withdrawalThreshold,
           liquidityThreshold
         }
@@ -80,7 +81,10 @@ describe('Asset Service', (): void => {
         'createLiquidityAndLinkedSettlementAccount'
       )
 
-      const asset = await assetService.create(randomAsset())
+      const asset = await assetService.create({
+        ...randomAsset(),
+        tenantId: Config.operatorTenantId
+      })
       assert.ok(!isAssetError(asset))
 
       expect(liquidityAndSettlementSpy).toHaveBeenCalledWith(
@@ -100,6 +104,7 @@ describe('Asset Service', (): void => {
     test('Asset can be created with minimum account withdrawal amount', async (): Promise<void> => {
       const options = {
         ...randomAsset(),
+        tenantId: Config.operatorTenantId,
         withdrawalThreshold: BigInt(10)
       }
       const asset = await assetService.create(options)
@@ -113,7 +118,7 @@ describe('Asset Service', (): void => {
     })
 
     test('Cannot create duplicate asset', async (): Promise<void> => {
-      const options = randomAsset()
+      const options = { ...randomAsset(), tenantId: Config.operatorTenantId }
       await expect(assetService.create(options)).resolves.toMatchObject(options)
       await expect(assetService.create(options)).resolves.toEqual(
         AssetError.DuplicateAsset
@@ -123,7 +128,8 @@ describe('Asset Service', (): void => {
     test('Cannot create asset with scale > 255', async (): Promise<void> => {
       const options = {
         code: 'ABC',
-        scale: 256
+        scale: 256,
+        tenantId: Config.operatorTenantId
       }
       await expect(assetService.create(options)).rejects.toThrow(
         CheckViolationError
@@ -133,7 +139,10 @@ describe('Asset Service', (): void => {
 
   describe('get', (): void => {
     test('Can get asset by id', async (): Promise<void> => {
-      const asset = await assetService.create(randomAsset())
+      const asset = await assetService.create({
+        ...randomAsset(),
+        tenantId: Config.operatorTenantId
+      })
       assert.ok(!isAssetError(asset))
       await expect(assetService.get(asset.id)).resolves.toEqual(asset)
     })
@@ -161,6 +170,7 @@ describe('Asset Service', (): void => {
         beforeEach(async (): Promise<void> => {
           const asset = await assetService.create({
             ...randomAsset(),
+            tenantId: Config.operatorTenantId,
             withdrawalThreshold,
             liquidityThreshold
           })
@@ -186,6 +196,7 @@ describe('Asset Service', (): void => {
           }): Promise<void> => {
             const asset = await assetService.update({
               id: assetId,
+              tenantId: Config.operatorTenantId,
               withdrawalThreshold,
               liquidityThreshold
             })
@@ -198,10 +209,29 @@ describe('Asset Service', (): void => {
       }
     )
 
+    test('Cannot update asset with incorrect tenantId', async (): Promise<void> => {
+      const asset = await assetService.create({
+        ...randomAsset(),
+        tenantId: Config.operatorTenantId
+      })
+
+      assert.ok(!isAssetError(asset))
+
+      await expect(
+        assetService.update({
+          id: asset.id,
+          tenantId: uuid(),
+          withdrawalThreshold: BigInt(10),
+          liquidityThreshold: null
+        })
+      ).resolves.toEqual(AssetError.UnknownAsset)
+    })
+
     test('Cannot update unknown asset', async (): Promise<void> => {
       await expect(
         assetService.update({
           id: uuid(),
+          tenantId: Config.operatorTenantId,
           withdrawalThreshold: BigInt(10),
           liquidityThreshold: null
         })
@@ -213,7 +243,11 @@ describe('Asset Service', (): void => {
     getPageTests({
       createModel: () => createAsset(deps),
       getPage: (pagination?: Pagination, sortOrder?: SortOrder) =>
-        assetService.getPage(pagination, sortOrder)
+        assetService.getPage({
+          pagination,
+          sortOrder,
+          tenantId: Config.operatorTenantId
+        })
     })
   })
 
@@ -221,7 +255,10 @@ describe('Asset Service', (): void => {
     test('returns all assets', async (): Promise<void> => {
       const assets: (Asset | AssetError)[] = []
       for (let i = 0; i < 3; i++) {
-        const asset = await assetService.create(randomAsset())
+        const asset = await assetService.create({
+          ...randomAsset(),
+          tenantId: Config.operatorTenantId
+        })
         assets.push(asset)
       }
 
@@ -235,12 +272,16 @@ describe('Asset Service', (): void => {
 
   describe('delete', (): void => {
     test('Can delete asset', async (): Promise<void> => {
-      const newAsset = await assetService.create(randomAsset())
+      const newAsset = await assetService.create({
+        ...randomAsset(),
+        tenantId: Config.operatorTenantId
+      })
       assert.ok(!isAssetError(newAsset))
       const newAssetId = newAsset.id
 
       const deletedAsset = await assetService.delete({
         id: newAssetId,
+        tenantId: newAsset.tenantId,
         deletedAt: new Date()
       })
       assert.ok(!isAssetError(deletedAsset))
@@ -248,18 +289,26 @@ describe('Asset Service', (): void => {
     })
 
     test('Can delete and restore asset', async (): Promise<void> => {
-      const newAsset = await assetService.create(randomAsset())
+      const newAsset = await assetService.create({
+        ...randomAsset(),
+        tenantId: Config.operatorTenantId
+      })
       assert.ok(!isAssetError(newAsset))
       const newAssetId = newAsset.id
       const { code, scale } = newAsset
 
       const deletedAsset = await assetService.delete({
         id: newAssetId,
+        tenantId: newAsset.tenantId,
         deletedAt: new Date()
       })
       assert.ok(!isAssetError(deletedAsset))
 
-      const restoredAsset = await assetService.create({ code, scale })
+      const restoredAsset = await assetService.create({
+        code,
+        scale,
+        tenantId: newAsset.tenantId
+      })
       assert.ok(!isAssetError(restoredAsset))
       expect(restoredAsset.id).toEqual(newAssetId)
       expect(restoredAsset.code).toEqual(code)
@@ -268,7 +317,10 @@ describe('Asset Service', (): void => {
     })
 
     test('Cannot delete in use asset (wallet)', async (): Promise<void> => {
-      const newAsset = await assetService.create(randomAsset())
+      const newAsset = await assetService.create({
+        ...randomAsset(),
+        tenantId: Config.operatorTenantId
+      })
       assert.ok(!isAssetError(newAsset))
       const newAssetId = newAsset.id
 
@@ -281,12 +333,19 @@ describe('Asset Service', (): void => {
       assert.ok(!isWalletAddressError(walletAddress))
 
       await expect(
-        assetService.delete({ id: newAssetId, deletedAt: new Date() })
+        assetService.delete({
+          id: newAssetId,
+          tenantId: newAsset.tenantId,
+          deletedAt: new Date()
+        })
       ).resolves.toEqual(AssetError.CannotDeleteInUseAsset)
     })
 
     test('Cannot delete in use asset (peer)', async (): Promise<void> => {
-      const newAsset = await assetService.create(randomAsset())
+      const newAsset = await assetService.create({
+        ...randomAsset(),
+        tenantId: Config.operatorTenantId
+      })
       assert.ok(!isAssetError(newAsset))
       const newAssetId = newAsset.id
 
@@ -311,8 +370,29 @@ describe('Asset Service', (): void => {
       assert.ok(!isPeerError(peer))
 
       await expect(
-        assetService.delete({ id: newAssetId, deletedAt: new Date() })
+        assetService.delete({
+          id: newAssetId,
+          tenantId: newAsset.tenantId,
+          deletedAt: new Date()
+        })
       ).resolves.toEqual(AssetError.CannotDeleteInUseAsset)
+    })
+
+    test('Cannot delete asset with incorrect tenantId', async (): Promise<void> => {
+      const asset = await assetService.create({
+        ...randomAsset(),
+        tenantId: Config.operatorTenantId
+      })
+
+      assert.ok(!isAssetError(asset))
+
+      await expect(
+        assetService.delete({
+          id: asset.id,
+          tenantId: uuid(),
+          deletedAt: new Date()
+        })
+      ).resolves.toEqual(AssetError.UnknownAsset)
     })
   })
 })
@@ -353,6 +433,7 @@ describe('Asset Service using Cache', (): void => {
       async ({ withdrawalThreshold, liquidityThreshold }): Promise<void> => {
         const options = {
           ...randomAsset(),
+          tenantId: Config.operatorTenantId,
           withdrawalThreshold,
           liquidityThreshold
         }
@@ -381,6 +462,7 @@ describe('Asset Service using Cache', (): void => {
         const spyCacheUpdateSet = jest.spyOn(assetCache, 'set')
         const assetUpdate = await assetService.update({
           id: asset.id,
+          tenantId: asset.tenantId,
           withdrawalThreshold,
           liquidityThreshold
         })
@@ -401,6 +483,7 @@ describe('Asset Service using Cache', (): void => {
         // Delete the asset, and ensure it is not cached:
         const deletedAsset = await assetService.delete({
           id: asset.id,
+          tenantId: asset.tenantId,
           deletedAt: new Date()
         })
         assert.ok(!isAssetError(deletedAsset))
@@ -409,5 +492,27 @@ describe('Asset Service using Cache', (): void => {
         await expect(assetService.get(asset.id)).resolves.toBeUndefined()
       }
     )
+  })
+
+  test('cannot get asset from cache if incorrect tenantId', async (): Promise<void> => {
+    const options = {
+      ...randomAsset(),
+      tenantId: Config.operatorTenantId
+    }
+    const spyCacheSet = jest.spyOn(assetCache, 'set')
+
+    const asset = await assetService.create(options)
+    assert.ok(!isAssetError(asset))
+
+    expect(spyCacheSet).toHaveBeenCalledWith(
+      asset.id,
+      expect.objectContaining(options)
+    )
+
+    const spyCacheGet = jest.spyOn(assetCache, 'get')
+    await expect(assetService.get(asset.id, uuid())).resolves.toEqual(undefined)
+
+    expect(spyCacheGet).toHaveBeenCalledTimes(1)
+    expect(spyCacheGet).toHaveBeenCalledWith(asset.id)
   })
 })

@@ -7,7 +7,7 @@ import {
 } from '../generated/graphql'
 import { Asset } from '../../asset/model'
 import { errorToCode, errorToMessage, isAssetError } from '../../asset/errors'
-import { ApolloContext } from '../../app'
+import { TenantedApolloContext } from '../../app'
 import { getPageInfo } from '../../shared/pagination'
 import { Pagination, SortOrder } from '../../shared/baseModel'
 import { feeToGraphql } from './fee'
@@ -15,37 +15,42 @@ import { Fee, FeeType } from '../../fee/model'
 import { GraphQLError } from 'graphql'
 import { GraphQLErrorCode } from '../errors'
 
-export const getAssets: QueryResolvers<ApolloContext>['assets'] = async (
-  parent,
-  args,
-  ctx
-): Promise<ResolversTypes['AssetsConnection']> => {
-  const assetService = await ctx.container.use('assetService')
-  const { sortOrder, ...pagination } = args
-  const order = sortOrder === 'ASC' ? SortOrder.Asc : SortOrder.Desc
-  const assets = await assetService.getPage(pagination, order)
-  const pageInfo = await getPageInfo({
-    getPage: (pagination: Pagination, sortOrder?: SortOrder) =>
-      assetService.getPage(pagination, sortOrder),
-    page: assets,
-    sortOrder: order
-  })
-  return {
-    pageInfo,
-    edges: assets.map((asset: Asset) => ({
-      cursor: asset.id,
-      node: assetToGraphql(asset)
-    }))
+export const getAssets: QueryResolvers<TenantedApolloContext>['assets'] =
+  async (parent, args, ctx): Promise<ResolversTypes['AssetsConnection']> => {
+    const assetService = await ctx.container.use('assetService')
+    const { sortOrder, ...pagination } = args
+    const order = sortOrder === 'ASC' ? SortOrder.Asc : SortOrder.Desc
+    const assets = await assetService.getPage({
+      pagination,
+      sortOrder: order,
+      tenantId: ctx.tenant.id
+    })
+    const pageInfo = await getPageInfo({
+      getPage: (pagination: Pagination, sortOrder?: SortOrder) =>
+        assetService.getPage({
+          pagination,
+          sortOrder,
+          tenantId: ctx.tenant.id
+        }),
+      page: assets,
+      sortOrder: order
+    })
+    return {
+      pageInfo,
+      edges: assets.map((asset: Asset) => ({
+        cursor: asset.id,
+        node: assetToGraphql(asset)
+      }))
+    }
   }
-}
 
-export const getAsset: QueryResolvers<ApolloContext>['asset'] = async (
+export const getAsset: QueryResolvers<TenantedApolloContext>['asset'] = async (
   parent,
   args,
   ctx
 ): Promise<ResolversTypes['Asset']> => {
   const assetService = await ctx.container.use('assetService')
-  const asset = await assetService.get(args.id)
+  const asset = await assetService.get(args.id, ctx.tenant.id)
   if (!asset) {
     throw new GraphQLError('Asset not found', {
       extensions: {
@@ -56,44 +61,27 @@ export const getAsset: QueryResolvers<ApolloContext>['asset'] = async (
   return assetToGraphql(asset)
 }
 
-export const getAssetByCodeAndScale: QueryResolvers<ApolloContext>['assetByCodeAndScale'] =
+export const getAssetByCodeAndScale: QueryResolvers<TenantedApolloContext>['assetByCodeAndScale'] =
   async (parent, args, ctx): Promise<ResolversTypes['Asset'] | null> => {
     const assetService = await ctx.container.use('assetService')
-    const asset = await assetService.getByCodeAndScale(args.code, args.scale)
+    const asset = await assetService.getByCodeAndScale({
+      code: args.code,
+      scale: args.scale,
+      tenantId: ctx.tenant.id
+    })
     return asset ? assetToGraphql(asset) : null
   }
 
-export const createAsset: MutationResolvers<ApolloContext>['createAsset'] =
+export const createAsset: MutationResolvers<TenantedApolloContext>['createAsset'] =
   async (
     parent,
     args,
     ctx
   ): Promise<ResolversTypes['AssetMutationResponse']> => {
     const assetService = await ctx.container.use('assetService')
-    const assetOrError = await assetService.create(args.input)
-    if (isAssetError(assetOrError)) {
-      throw new GraphQLError(errorToMessage[assetOrError], {
-        extensions: {
-          code: errorToCode[assetOrError]
-        }
-      })
-    }
-    return {
-      asset: assetToGraphql(assetOrError)
-    }
-  }
-
-export const updateAsset: MutationResolvers<ApolloContext>['updateAsset'] =
-  async (
-    parent,
-    args,
-    ctx
-  ): Promise<ResolversTypes['AssetMutationResponse']> => {
-    const assetService = await ctx.container.use('assetService')
-    const assetOrError = await assetService.update({
-      id: args.input.id,
-      withdrawalThreshold: args.input.withdrawalThreshold ?? null,
-      liquidityThreshold: args.input.liquidityThreshold ?? null
+    const assetOrError = await assetService.create({
+      ...args.input,
+      tenantId: ctx.tenant.id
     })
     if (isAssetError(assetOrError)) {
       throw new GraphQLError(errorToMessage[assetOrError], {
@@ -107,7 +95,32 @@ export const updateAsset: MutationResolvers<ApolloContext>['updateAsset'] =
     }
   }
 
-export const getAssetSendingFee: AssetResolvers<ApolloContext>['sendingFee'] =
+export const updateAsset: MutationResolvers<TenantedApolloContext>['updateAsset'] =
+  async (
+    parent,
+    args,
+    ctx
+  ): Promise<ResolversTypes['AssetMutationResponse']> => {
+    const assetService = await ctx.container.use('assetService')
+    const assetOrError = await assetService.update({
+      id: args.input.id,
+      withdrawalThreshold: args.input.withdrawalThreshold ?? null,
+      liquidityThreshold: args.input.liquidityThreshold ?? null,
+      tenantId: ctx.tenant.id
+    })
+    if (isAssetError(assetOrError)) {
+      throw new GraphQLError(errorToMessage[assetOrError], {
+        extensions: {
+          code: errorToCode[assetOrError]
+        }
+      })
+    }
+    return {
+      asset: assetToGraphql(assetOrError)
+    }
+  }
+
+export const getAssetSendingFee: AssetResolvers<TenantedApolloContext>['sendingFee'] =
   async (parent, args, ctx): Promise<ResolversTypes['Fee'] | null> => {
     if (!parent.id) return null
 
@@ -119,7 +132,7 @@ export const getAssetSendingFee: AssetResolvers<ApolloContext>['sendingFee'] =
     return feeToGraphql(fee)
   }
 
-export const getAssetReceivingFee: AssetResolvers<ApolloContext>['receivingFee'] =
+export const getAssetReceivingFee: AssetResolvers<TenantedApolloContext>['receivingFee'] =
   async (parent, args, ctx): Promise<ResolversTypes['Fee'] | null> => {
     if (!parent.id) return null
 
@@ -131,7 +144,7 @@ export const getAssetReceivingFee: AssetResolvers<ApolloContext>['receivingFee']
     return feeToGraphql(fee)
   }
 
-export const getFees: AssetResolvers<ApolloContext>['fees'] = async (
+export const getFees: AssetResolvers<TenantedApolloContext>['fees'] = async (
   parent,
   args,
   ctx
@@ -159,7 +172,7 @@ export const getFees: AssetResolvers<ApolloContext>['fees'] = async (
   }
 }
 
-export const deleteAsset: MutationResolvers<ApolloContext>['deleteAsset'] =
+export const deleteAsset: MutationResolvers<TenantedApolloContext>['deleteAsset'] =
   async (
     _,
     args,
@@ -168,6 +181,7 @@ export const deleteAsset: MutationResolvers<ApolloContext>['deleteAsset'] =
     const assetService = await ctx.container.use('assetService')
     const assetOrError = await assetService.delete({
       id: args.input.id,
+      tenantId: ctx.tenant.id,
       deletedAt: new Date()
     })
 

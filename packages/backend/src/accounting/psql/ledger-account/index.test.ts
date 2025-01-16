@@ -32,7 +32,10 @@ describe('Ledger Account', (): void => {
   })
 
   beforeEach(async (): Promise<void> => {
-    asset = await Asset.query().insertAndFetch(randomAsset())
+    asset = await Asset.query().insertAndFetch({
+      ...randomAsset(),
+      tenantId: Config.operatorTenantId
+    })
   })
 
   afterEach(async (): Promise<void> => {
