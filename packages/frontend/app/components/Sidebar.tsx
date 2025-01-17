@@ -46,6 +46,10 @@ export const Sidebar: FC<SidebarProps> = ({
 }) => {
   const [sidebarIsOpen, setSidebarIsOpen] = useState(false)
 
+  const navigationToShow = hasApiCredentials
+    ? navigation
+    : navigation.filter(({ name }) => name === 'Home')
+
   return (
     <>
       <Transition.Root show={sidebarIsOpen} as={Fragment}>
@@ -86,7 +90,7 @@ export const Sidebar: FC<SidebarProps> = ({
                 <div className='mt-5 h-0 flex-1 overflow-y-auto'>
                   <nav className='px-2'>
                     <div className='space-y-1'>
-                      {navigation.map(({ name, href }) => (
+                      {navigationToShow.map(({ name, href }) => (
                         <NavLink
                           key={name}
                           to={href}
@@ -96,10 +100,7 @@ export const Sidebar: FC<SidebarProps> = ({
                               isActive
                                 ? 'bg-mercury'
                                 : 'text-tealish/70 hover:bg-mercury/70',
-                              'flex p-2 font-medium rounded-md',
-                              !hasApiCredentials &&
-                                name !== 'Home' &&
-                                'text-gray-400 pointer-events-none cursor-not-allowed'
+                              'flex p-2 font-medium rounded-md'
                             )
                           }
                         >
@@ -148,7 +149,7 @@ export const Sidebar: FC<SidebarProps> = ({
           {/* Desktop Navigation */}
           <div className='hidden w-full mt-5 flex-1 flex-col overflow-y-auto md:block'>
             <div className='space-y-2'>
-              {navigation.map(({ name, href }) => (
+              {navigationToShow.map(({ name, href }) => (
                 <NavLink
                   key={name}
                   to={href}
@@ -157,10 +158,7 @@ export const Sidebar: FC<SidebarProps> = ({
                       isActive
                         ? 'bg-mercury'
                         : 'text-tealish/70 hover:bg-mercury/70',
-                      'flex p-2 font-medium rounded-md',
-                      !hasApiCredentials &&
-                        name !== 'Home' &&
-                        'text-gray-400 pointer-events-none cursor-not-allowed'
+                      'flex p-2 font-medium rounded-md'
                     )
                   }
                 >
