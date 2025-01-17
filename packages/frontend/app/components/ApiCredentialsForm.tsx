@@ -20,14 +20,14 @@ export const ApiCredentialsForm = ({
   const inputRef = useRef<HTMLInputElement>(null)
   const [tenantIdError, setTenantIdError] = useState<string | null>(null)
 
+  const isSubmitting = navigation.state === 'submitting'
+
   const handleTenantIdChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const tenantId = event.target.value
+    const tenantId = event.target.value.trim()
+
     if (tenantId === '') {
       setTenantIdError('Tenant ID is required')
-      return
-    }
-
-    if (!validateUUID(tenantId)) {
+    } else if (!validateUUID(tenantId)) {
       setTenantIdError('Invalid Tenant ID (must be a valid UUID)')
     } else {
       setTenantIdError(null)
@@ -37,22 +37,21 @@ export const ApiCredentialsForm = ({
   return (
     <div className='space-y-4'>
       {hasCredentials ? (
-        <Form method='post' className='space-y-4'>
+        <Form method='post' action='/api/set-credentials' className='space-y-4'>
           <p className='text-green-600'>✓ API credentials configured</p>
           <Button
             name='intent'
             value='clear'
             type='submit'
             intent='danger'
-            aria-label='clear'
+            aria-label='Clear API credentials'
+            disabled={isSubmitting}
           >
-            {navigation.state === 'submitting'
-              ? 'Submitting...'
-              : 'Clear Credentials'}
+            {isSubmitting ? 'Submitting...' : 'Clear Credentials'}
           </Button>
         </Form>
       ) : (
-        <Form method='post' className='space-y-4'>
+        <Form method='post' action='/api/set-credentials' className='space-y-4'>
           <Input
             ref={inputRef}
             required
@@ -74,12 +73,10 @@ export const ApiCredentialsForm = ({
               type='submit'
               name='intent'
               value='save'
-              aria-label='submit'
-              disabled={!!tenantIdError}
+              aria-label='Save API credentials'
+              disabled={!!tenantIdError || isSubmitting}
             >
-              {navigation.state === 'submitting'
-                ? 'Submitting...'
-                : 'Save Credentials'}
+              {isSubmitting ? 'Submitting...' : 'Save Credentials'}
             </Button>
           </div>
         </Form>
