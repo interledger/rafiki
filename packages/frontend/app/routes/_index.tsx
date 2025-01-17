@@ -9,6 +9,12 @@ interface LoaderData {
   hasCredentials: boolean
 }
 
+interface LoaderData {
+  hasCredentials: boolean
+  defaultTenantId: string
+  defaultApiSecret: string
+}
+
 export const loader = async ({
   request
 }: LoaderFunctionArgs): Promise<TypedResponse<LoaderData>> => {
@@ -18,11 +24,21 @@ export const loader = async ({
   const session = await getSession(cookies)
   const hasCredentials = !!session.get('tenantId') && !!session.get('apiSecret')
 
-  return json({ hasCredentials })
+  const url = new URL(request.url)
+  const defaultTenantId = url.searchParams.get('tenantId') ?? ''
+  const defaultApiSecret = url.searchParams.get('apiSecret') ?? ''
+
+  return json({ hasCredentials, defaultTenantId, defaultApiSecret })
+}
+
+interface LoaderData {
+  hasCredentials: boolean
 }
 
 export default function Index() {
-  const { hasCredentials } = useLoaderData<LoaderData>()
+  const { hasCredentials, defaultTenantId, defaultApiSecret } =
+    useLoaderData<LoaderData>()
+
   return (
     <div className='pt-4 flex flex-col'>
       <div className='flex flex-col rounded-md bg-offwhite px-6 text-center min-h-[calc(100vh-7rem)] md:min-h-[calc(100vh-3rem)]'>
@@ -44,10 +60,15 @@ export default function Index() {
               To get started, please configure your API credentials
             </p>
             <div className='max-w-md mx-auto'>
-              <ApiCredentialsForm hasCredentials={hasCredentials} />
+              <ApiCredentialsForm
+                showClearCredentials={
+                  hasCredentials && !defaultTenantId && !defaultApiSecret
+                }
+                defaultTenantId={defaultTenantId}
+                defaultApiSecret={defaultApiSecret}
+              />
             </div>
           </div>
-
           <p>
             <a href='https://rafiki.dev' className='font-semibold'>
               https://rafiki.dev

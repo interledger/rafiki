@@ -26,6 +26,7 @@ services:
       DISPLAY_NAME: Cloud Nine Wallet
       DISPLAY_ICON: wallet-icon.svg
       OPERATOR_TENANT_ID: 438fa74a-fa7d-4317-9ced-dde32ece1787
+      FRONTEND_PORT: 3010
     volumes:
       - ../cloud-nine-wallet/seed.yml:/workspace/seed.yml
       - ../cloud-nine-wallet/private-key.pem:/workspace/private-key.pem

@@ -4,7 +4,9 @@ import { Input, Button } from '~/components/ui'
 import { validate as validateUUID } from 'uuid'
 
 interface ApiCredentialsFormProps {
-  hasCredentials: boolean
+  showClearCredentials: boolean
+  defaultTenantId: string
+  defaultApiSecret: string
 }
 
 interface ActionErrorResponse {
@@ -13,7 +15,9 @@ interface ActionErrorResponse {
 }
 
 export const ApiCredentialsForm = ({
-  hasCredentials
+  showClearCredentials,
+  defaultTenantId,
+  defaultApiSecret
 }: ApiCredentialsFormProps) => {
   const actionData = useActionData<ActionErrorResponse>()
   const navigation = useNavigation()
@@ -36,7 +40,7 @@ export const ApiCredentialsForm = ({
 
   return (
     <div className='space-y-4'>
-      {hasCredentials ? (
+      {showClearCredentials ? (
         <Form method='post' action='/api/set-credentials' className='space-y-4'>
           <p className='text-green-600'>✓ API credentials configured</p>
           <Button
@@ -58,6 +62,7 @@ export const ApiCredentialsForm = ({
             type='text'
             name='tenantId'
             label='Tenant ID'
+            defaultValue={defaultTenantId}
             onChange={handleTenantIdChange}
             aria-invalid={!!tenantIdError}
             aria-describedby={tenantIdError ? 'tenantId-error' : undefined}
@@ -67,7 +72,13 @@ export const ApiCredentialsForm = ({
               {tenantIdError}
             </p>
           )}
-          <Input required type='password' name='apiSecret' label='API Secret' />
+          <Input
+            required
+            type='password'
+            name='apiSecret'
+            label='API Secret'
+            defaultValue={defaultApiSecret}
+          />
           <div className='flex justify-center'>
             <Button
               type='submit'
