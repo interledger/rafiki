@@ -1,6 +1,6 @@
 import { GraphQLError } from 'graphql'
 import { IMiddleware } from 'graphql-middleware'
-import { ApolloContext } from '../../app'
+import { ApolloContext, ForTenantIdContext } from '../../app'
 import { CacheDataStore } from '../../middleware/cache/data-stores'
 import { lockMiddleware, Lock } from '../../middleware/lock'
 import { cacheMiddleware } from '../../middleware/cache'
@@ -49,13 +49,19 @@ export function idempotencyGraphQLMiddleware(
   }
 }
 
-export function tenantValidateGraphQLMutationMiddleware(): {
-  Mutation: IMiddleware
+export function setForTenantIdGraphQLMutationMiddleware(): {
+  Mutation: IMiddleware<ForTenantIdContext>
 } {
   return {
-    Mutation: async (resolve, root, args, context: ApolloContext, info) => {
+    Mutation: async (
+      resolve,
+      root,
+      args,
+      context: ForTenantIdContext,
+      info
+    ) => {
       return validateTenantMiddleware({
-        deps: { ctx: context },
+        deps: { context },
         next: () => resolve(root, args, context, info),
         tenantIdInput: args?.input?.tenantId,
         onFailValidation: () => {

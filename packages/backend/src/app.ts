@@ -71,7 +71,7 @@ import { Redis } from 'ioredis'
 import {
   idempotencyGraphQLMiddleware,
   lockGraphQLMutationMiddleware,
-  tenantValidateGraphQLMutationMiddleware
+  setForTenantIdGraphQLMutationMiddleware
 } from './graphql/middleware'
 import { createRedisDataStore } from './middleware/cache/data-stores/redis'
 import { createRedisLock } from './middleware/lock/redis'
@@ -225,6 +225,9 @@ const WALLET_ADDRESS_PATH = '/:walletAddressPath+'
 export interface TenantedApolloContext extends ApolloContext {
   tenant: Tenant
   isOperator: boolean
+}
+
+export interface ForTenantIdContext extends TenantedApolloContext {
   forTenantId: string
 }
 
@@ -341,7 +344,7 @@ export class App {
       idempotencyGraphQLMiddleware(
         createRedisDataStore(redis, this.config.graphQLIdempotencyKeyTtlMs)
       ),
-      tenantValidateGraphQLMutationMiddleware()
+      setForTenantIdGraphQLMutationMiddleware()
     )
 
     // Setup Armor
@@ -449,7 +452,7 @@ export class App {
 
     koa.use(
       koaMiddleware(this.apolloServer, {
-        context: async (): Promise<TenantedApolloContext> => {
+        context: async (): Promise<ForTenantIdContext> => {
           return {
             ...tenantApiSignatureResult,
             container: this.container,

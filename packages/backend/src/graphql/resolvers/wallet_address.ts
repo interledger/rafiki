@@ -8,7 +8,7 @@ import {
   MutationResolvers,
   WalletAddressStatus
 } from '../generated/graphql'
-import { TenantedApolloContext } from '../../app'
+import { ForTenantIdContext } from '../../app'
 import {
   WalletAddressError,
   isWalletAddressError,
@@ -26,7 +26,7 @@ import {
 import { tenantIdToProceed } from '../../shared/utils'
 import { GraphQLErrorCode } from '../errors'
 
-export const getWalletAddresses: QueryResolvers<TenantedApolloContext>['walletAddresses'] =
+export const getWalletAddresses: QueryResolvers<ForTenantIdContext>['walletAddresses'] =
   async (
     parent,
     args,
@@ -60,7 +60,7 @@ export const getWalletAddresses: QueryResolvers<TenantedApolloContext>['walletAd
     }
   }
 
-export const getWalletAddress: QueryResolvers<TenantedApolloContext>['walletAddress'] =
+export const getWalletAddress: QueryResolvers<ForTenantIdContext>['walletAddress'] =
   async (parent, args, ctx): Promise<ResolversTypes['WalletAddress']> => {
     const walletAddressService = await ctx.container.use('walletAddressService')
     const walletAddress = await walletAddressService.get(args.id)
@@ -80,7 +80,7 @@ export const getWalletAddress: QueryResolvers<TenantedApolloContext>['walletAddr
     return walletAddressToGraphql(walletAddress)
   }
 
-export const getWalletAddressByUrl: QueryResolvers<TenantedApolloContext>['walletAddressByUrl'] =
+export const getWalletAddressByUrl: QueryResolvers<ForTenantIdContext>['walletAddressByUrl'] =
   async (
     parent,
     args,
@@ -94,7 +94,7 @@ export const getWalletAddressByUrl: QueryResolvers<TenantedApolloContext>['walle
       : null
   }
 
-export const createWalletAddress: MutationResolvers<TenantedApolloContext>['createWalletAddress'] =
+export const createWalletAddress: MutationResolvers<ForTenantIdContext>['createWalletAddress'] =
   async (
     parent,
     args,
@@ -113,7 +113,7 @@ export const createWalletAddress: MutationResolvers<TenantedApolloContext>['crea
 
     const options: CreateOptions = {
       assetId: args.input.assetId,
-      // We always have a tenant for [TenantedApolloContext].
+      // We always have a tenant for [ForTenantIdContext].
       tenantId: ctx.forTenantId,
       additionalProperties: addProps,
       publicName: args.input.publicName,
@@ -133,7 +133,7 @@ export const createWalletAddress: MutationResolvers<TenantedApolloContext>['crea
     }
   }
 
-export const updateWalletAddress: MutationResolvers<TenantedApolloContext>['updateWalletAddress'] =
+export const updateWalletAddress: MutationResolvers<ForTenantIdContext>['updateWalletAddress'] =
   async (
     parent,
     args,
@@ -183,7 +183,7 @@ export const updateWalletAddress: MutationResolvers<TenantedApolloContext>['upda
     }
   }
 
-export const triggerWalletAddressEvents: MutationResolvers<TenantedApolloContext>['triggerWalletAddressEvents'] =
+export const triggerWalletAddressEvents: MutationResolvers<ForTenantIdContext>['triggerWalletAddressEvents'] =
   async (
     parent,
     args,

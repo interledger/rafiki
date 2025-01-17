@@ -1,10 +1,10 @@
-import { ApolloContext, TenantedApolloContext } from '../../app'
+import { ForTenantIdContext } from '../../app'
 import { tenantIdToProceed } from '../../shared/utils'
 
 type Request = () => Promise<unknown>
 
 interface TenantValidateMiddlewareArgs {
-  deps: { ctx: ApolloContext }
+  deps: { context: ForTenantIdContext }
   tenantIdInput: string | undefined
   onFailValidation: Request
   next: Request
@@ -14,29 +14,25 @@ export async function validateTenantMiddleware(
   args: TenantValidateMiddlewareArgs
 ): ReturnType<Request> {
   const {
-    deps: { ctx },
+    deps: { context },
     tenantIdInput,
     onFailValidation,
     next
   } = args
-  if (!('tenant' in ctx && 'isOperator' in ctx)) return next()
-
-  const tenantCtx = ctx as TenantedApolloContext
   if (!tenantIdInput) {
-    tenantCtx.forTenantId = tenantCtx.tenant.id
+    context.forTenantId = context.tenant.id
     return next()
   }
 
   const forTenantId = tenantIdToProceed(
-    tenantCtx.isOperator,
-    tenantCtx.tenant.id,
+    context.isOperator,
+    context.tenant.id,
     tenantIdInput
   )
   if (!forTenantId) {
-    ctx.logger.error('Tenant validation error')
+    context.logger.error('Tenant validation error')
     return onFailValidation()
   }
-
-  tenantCtx.forTenantId = forTenantId
+  context.forTenantId = forTenantId
   return next()
 }
