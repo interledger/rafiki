@@ -32,7 +32,9 @@ export async function createWalletAddress(
   const walletAddressService = await deps.use('walletAddressService')
   const walletAddressOrError = (await walletAddressService.create({
     ...options,
-    assetId: options.assetId || (await createAsset(deps)).id,
+    assetId:
+      options.assetId ||
+      (await createAsset(deps, undefined, options.tenantId)).id,
     tenantId: options.tenantId || (await createTenant(deps)).id,
     url: options.url || `https://${faker.internet.domainName()}/.well-known/pay`
   })) as MockWalletAddress

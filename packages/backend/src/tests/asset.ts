@@ -25,14 +25,15 @@ export function randomLedger(): number {
 
 export async function createAsset(
   deps: IocContract<AppServices>,
-  options?: AssetOptions
+  options?: AssetOptions,
+  tenantId?: string
 ): Promise<Asset> {
   const config = await deps.use('config')
   const assetService = await deps.use('assetService')
   const createOptions = options || randomAsset()
   const assetOrError = await assetService.create({
     ...createOptions,
-    tenantId: config.operatorTenantId
+    tenantId: tenantId ? tenantId : config.operatorTenantId
   })
   if (isAssetError(assetOrError)) {
     throw assetOrError

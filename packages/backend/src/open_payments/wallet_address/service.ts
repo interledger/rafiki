@@ -169,7 +169,10 @@ async function createWalletAddress(
   }
 
   try {
-    const asset = await deps.assetService.get(options.assetId, options.tenantId)
+    const tenantId = options.tenantId
+      ? options.tenantId
+      : deps.config.operatorTenantId
+    const asset = await deps.assetService.get(options.assetId, tenantId)
     if (!asset) return WalletAddressError.UnknownAsset
 
     // Remove blank key/value pairs:

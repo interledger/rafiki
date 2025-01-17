@@ -61,8 +61,8 @@ describe('Open Payments Wallet Address Service', (): void => {
     let options: CreateOptions
 
     beforeEach(async (): Promise<void> => {
-      const { id: assetId } = await createAsset(deps)
       const { id: tenantId } = await createTenant(deps)
+      const { id: assetId } = await createAsset(deps, undefined, tenantId)
       options = {
         url: 'https://alice.me/.well-known/pay',
         assetId,
