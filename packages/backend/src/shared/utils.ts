@@ -197,7 +197,7 @@ export async function getTenantFromApiSignature(
   }
 
   const tenantService = await ctx.container.use('tenantService')
-  const tenantId = headers['tenant-id']
+  const tenantId = headers['tenant-id'] as string
   const tenant = tenantId ? await tenantService.get(tenantId) : undefined
 
   if (!tenant) return undefined

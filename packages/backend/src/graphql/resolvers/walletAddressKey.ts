@@ -14,6 +14,11 @@ import { GraphQLError } from 'graphql'
 import { GraphQLErrorCode } from '../errors'
 import { Pagination } from '../../shared/baseModel'
 import { getPageInfo } from '../../shared/pagination'
+import {
+  errorToCode,
+  errorToMessage,
+  isWalletAddressKeyError
+} from '../../open_payments/wallet_address/key/errors'
 
 export const getWalletAddressKeys: WalletAddressResolvers<ApolloContext>['walletAddressKeys'] =
   async (
@@ -85,10 +90,17 @@ export const createWalletAddressKey: MutationResolvers<ApolloContext>['createWal
       'walletAddressKeyService'
     )
 
-    const key = await walletAddressKeyService.create(args.input)
+    const keyOrError = await walletAddressKeyService.create(args.input)
+    if (isWalletAddressKeyError(keyOrError)) {
+      throw new GraphQLError(errorToMessage[keyOrError], {
+        extensions: {
+          code: errorToCode[keyOrError]
+        }
+      })
+    }
 
     return {
-      walletAddressKey: walletAddressKeyToGraphql(key)
+      walletAddressKey: walletAddressKeyToGraphql(keyOrError)
     }
   }
 

@@ -5,7 +5,7 @@ title: Sending fees
 import { Badge } from '@astrojs/starlight/components'
 import { Mermaid, CodeBlock, LinkOut } from '@interledger/docs-design-system'
 
-You have the option to charge sending fees, on top of any estimated network fees, for facilitating transfers. Each asset you support can have a different fee structure and you can specify both fixed and variable fees per asset. The fee amount is added on top of the quote that is generated after the ILP rate probe completes.
+You have the option to charge sending fees, on top of any estimated network fees, for facilitating transfers. Each asset you support can have a different fee structure and you can specify both fixed and variable fees per asset. The fee amount is added on top of the quote that is generated after the ILP rate probe completes. Sending fees in Rafiki can be defined through the Backend Admin API or the [Rafiki Admin](/admin/admin-user-guide/#edit-asset) application.
 
 ## Set fees using the `setFee` GraphQL mutation
 
@@ -86,7 +86,3 @@ Let's assume your asset scale is 2. You'll charge a fixed fee of 100 (\$1.00) an
 ```
 
 </CodeBlock>
-
-## Set fees using Rafiki Admin
-
-After an asset is created, select to edit the asset within the [Rafiki Admin](/admin/admin-user-guide#edit-asset) application, then add a fixed fee and/or basis point for the asset.
