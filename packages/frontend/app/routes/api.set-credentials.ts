@@ -1,9 +1,5 @@
-import {
-  json,
-  redirect,
-  TypedResponse,
-  type ActionFunction
-} from '@remix-run/node'
+import type { TypedResponse } from '@remix-run/node'
+import { json, redirect, type ActionFunction } from '@remix-run/node'
 import { getSession, commitSession, destroySession } from '~/lib/session.server'
 
 interface ActionErrorResponse {
