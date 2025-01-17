@@ -9,7 +9,9 @@ import {
   poll,
   requestWithTimeout,
   sleep,
-  getTenantFromApiSignature
+  getTenantFromApiSignature,
+  ensureTrailingSlash,
+  tenantIdToProceed
 } from './utils'
 import { AppServices, AppContext } from '../app'
 import { TestContainer, createTestApp } from '../tests/app'
@@ -443,5 +445,22 @@ describe('utils', (): void => {
       expect(result).toBeUndefined()
       expect(getSpy).toHaveBeenCalled()
     })
+  })
+
+  test('test ensuring trailing slash', async (): Promise<void> => {
+    const path = '/utils'
+
+    expect(ensureTrailingSlash(path)).toBe(`${path}/`)
+    expect(ensureTrailingSlash(`${path}/`)).toBe(`${path}/`)
+  })
+
+  test('test tenant id to proceed', async (): Promise<void> => {
+    const sig = 'sig'
+    const tenantId = 'tenantId'
+    expect(tenantIdToProceed(false, sig)).toBe(sig)
+    expect(tenantIdToProceed(false, sig, tenantId)).toBeUndefined()
+    expect(tenantIdToProceed(false, sig, sig)).toBe(sig)
+    expect(tenantIdToProceed(true, sig)).toBe(sig)
+    expect(tenantIdToProceed(true, sig, tenantId)).toBe(tenantId)
   })
 })

@@ -453,7 +453,8 @@ export class App {
           return {
             ...tenantApiSignatureResult,
             container: this.container,
-            logger: await this.container.use('logger')
+            logger: await this.container.use('logger'),
+            forTenantId: this.config.operatorTenantId
           }
         }
       })

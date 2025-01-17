@@ -198,7 +198,6 @@ export const Config = {
   ),
   localCacheDuration: envInt('LOCAL_CACHE_DURATION_MS', 15_000),
   operatorTenantId: envString('OPERATOR_TENANT_ID'),
-  isTestTenantOperator: envBool('IS_TEST_TENANT_OPERATOR', true),
   dbSchema: undefined as string | undefined
 }
 

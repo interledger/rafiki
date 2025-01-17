@@ -35,22 +35,27 @@ import {
 import { getPageTests } from './page.test'
 import { WalletAddressAdditionalProperty } from '../../open_payments/wallet_address/additional_property/model'
 import { GraphQLErrorCode } from '../errors'
+import { AssetService } from '../../asset/service'
+import { faker } from '@faker-js/faker'
+import { Tenant } from '../../tenants/model'
 
 describe('Wallet Address Resolvers', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let knex: Knex
   let walletAddressService: WalletAddressService
+  let assetService: AssetService
 
   beforeAll(async (): Promise<void> => {
     deps = initIocContainer({
       ...Config,
       localCacheDuration: 0,
-      isTestTenantOperator: false
+      adminApiSecret: '123' //to force not being an operator.
     })
     appContainer = await createTestApp(deps)
     knex = appContainer.knex
     walletAddressService = await deps.use('walletAddressService')
+    assetService = await deps.use('assetService')
   })
 
   afterEach(async (): Promise<void> => {
@@ -310,16 +315,6 @@ describe('Wallet Address Resolvers', (): void => {
     })
 
     test('bad input data when not allowed to perform cross tenant create', async (): Promise<void> => {
-      /*await appContainer.apolloClient.stop()
-      await appContainer.shutdown()
-      appContainer = await createTestApp(
-        initIocContainer({
-          ...Config,
-          localCacheDuration: 0,
-          isTestTenantOperator: false
-        })
-      )
-      knex = appContainer.knex*/
       const badInputData = {
         tenantId: 'ae4950b6-3e1b-4e50-ad24-25c065bdd3a9',
         assetId: input.assetId,
@@ -365,16 +360,6 @@ describe('Wallet Address Resolvers', (): void => {
           })
         )
       }
-
-      // Recover with default:
-      /*await appContainer.apolloClient.stop()
-      await appContainer.shutdown()
-      deps = initIocContainer({
-        ...Config,
-        localCacheDuration: 0
-      })
-      appContainer = await createTestApp(deps)
-      knex = appContainer.knex*/
     })
   })
 
@@ -703,6 +688,68 @@ describe('Wallet Address Resolvers', (): void => {
             message: 'unexpected',
             extensions: expect.objectContaining({
               code: GraphQLErrorCode.InternalServerError
+            })
+          })
+        )
+      }
+    })
+
+    test('bad input data when not allowed to perform cross tenant update', async (): Promise<void> => {
+      try {
+        const tenantOptions = {
+          apiSecret: 'test-api-secret-new',
+          publicName: 'test tenant new',
+          email: faker.internet.email(),
+          idpConsentUrl: faker.internet.url(),
+          idpSecret: 'test-idp-secret-new'
+        }
+        const newTenant = await Tenant.query(knex).insertAndFetch(tenantOptions)
+
+        const newAsset = await assetService.create({
+          code: 'USD',
+          scale: 2,
+          tenantId: newTenant!.id
+        })
+        const newWalletAddress = await walletAddressService.create({
+          assetId: (newAsset as Asset).id,
+          tenantId: newTenant!.id,
+          url: 'https://alice.me/.well-known/pay-2'
+        })
+        const id = (newWalletAddress as WalletAddressModel).id
+
+        await appContainer.apolloClient
+          .mutate({
+            mutation: gql`
+              mutation UpdateWalletAddress($input: UpdateWalletAddressInput!) {
+                updateWalletAddress(input: $input) {
+                  walletAddress {
+                    id
+                    status
+                  }
+                }
+              }
+            `,
+            variables: {
+              input: {
+                id,
+                status: WalletAddressStatus.Inactive
+              }
+            }
+          })
+          .then((query): UpdateWalletAddressMutationResponse => {
+            if (query.data) {
+              return query.data.updateWalletAddress
+            } else {
+              throw new Error('Data was empty')
+            }
+          })
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApolloError)
+        expect((error as ApolloError).graphQLErrors).toContainEqual(
+          expect.objectContaining({
+            message: 'Unknown wallet address',
+            extensions: expect.objectContaining({
+              code: GraphQLErrorCode.NotFound
             })
           })
         )
