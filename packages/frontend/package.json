@@ -45,7 +45,7 @@
     "@types/uuid": "^9.0.8",
     "autoprefixer": "^10.4.20",
     "eslint": "^8.57.1",
-    "eslint-plugin-jsx-a11y": "^6.8.0",
+    "eslint-plugin-jsx-a11y": "^6.10.2",
     "eslint-plugin-react": "^7.34.1",
     "pino-pretty": "^11.0.0",
     "postcss": "^8.4.49",
