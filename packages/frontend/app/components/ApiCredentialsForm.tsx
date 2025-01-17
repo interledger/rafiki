@@ -1,5 +1,5 @@
 import { Form, useActionData, useNavigation } from '@remix-run/react'
-import { useRef, useState } from 'react'
+import { useRef, useState, useEffect } from 'react'
 import { Input, Button } from '~/components/ui'
 import { validate as validateUUID } from 'uuid'
 
@@ -22,6 +22,7 @@ export const ApiCredentialsForm = ({
   const actionData = useActionData<ActionErrorResponse>()
   const navigation = useNavigation()
   const inputRef = useRef<HTMLInputElement>(null)
+  const formRef = useRef<HTMLFormElement>(null)
   const [tenantIdError, setTenantIdError] = useState<string | null>(null)
 
   const isSubmitting = navigation.state === 'submitting'
@@ -38,14 +39,22 @@ export const ApiCredentialsForm = ({
     }
   }
 
+  // auto submit form if values passed in
+  useEffect(() => {
+    if (defaultTenantId && defaultApiSecret && !tenantIdError) {
+      if (formRef.current) {
+        formRef.current.submit()
+      }
+    }
+  }, [defaultTenantId, defaultApiSecret, tenantIdError])
+
   return (
     <div className='space-y-4'>
       {showClearCredentials ? (
         <Form method='post' action='/api/set-credentials' className='space-y-4'>
           <p className='text-green-600'>✓ API credentials configured</p>
+          <input hidden readOnly name='intent' value='clear' />
           <Button
-            name='intent'
-            value='clear'
             type='submit'
             intent='danger'
             aria-label='Clear API credentials'
@@ -55,7 +64,12 @@ export const ApiCredentialsForm = ({
           </Button>
         </Form>
       ) : (
-        <Form method='post' action='/api/set-credentials' className='space-y-4'>
+        <Form
+          method='post'
+          action='/api/set-credentials'
+          className='space-y-4'
+          ref={formRef} // Reference for the credentials form
+        >
           <Input
             ref={inputRef}
             required
@@ -79,11 +93,10 @@ export const ApiCredentialsForm = ({
             label='API Secret'
             defaultValue={defaultApiSecret}
           />
+          <input hidden readOnly name='intent' value='save' />
           <div className='flex justify-center'>
             <Button
               type='submit'
-              name='intent'
-              value='save'
               aria-label='Save API credentials'
               disabled={!!tenantIdError || isSubmitting}
             >
