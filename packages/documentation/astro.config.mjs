@@ -52,6 +52,15 @@ export default defineConfig({
             src: '/scripts.js',
             defer: true
           }
+        },
+        {
+          tag: 'script',
+          attrs: {
+            defer: true,
+            'data-website-id': '75fba178-7dca-4874-adc9-50cf85c83528',
+            src: 'https://ilf-site-analytics.netlify.app/script.js',
+            'data-domains': 'rafiki.dev'
+          }
         }
       ],
       logo: {
@@ -113,6 +122,10 @@ export default defineConfig({
                       link: '/integration/requirements/assets'
                     },
                     {
+                      label: 'Peers',
+                      link: '/integration/requirements/peers'
+                    },
+                    {
                       label: 'Wallet addresses',
                       link: '/integration/requirements/wallet-addresses'
                     },
@@ -135,36 +148,6 @@ export default defineConfig({
                   ]
                 },
                 {
-                  label: 'Docker Compose',
-                  link: '/integration/prod/docker-compose'
-                },
-                {
-                  label: 'Helm and Kubernetes',
-                  link: '/integration/prod/helm-k8s'
-                },
-                {
-                  label: 'Services',
-                  collapsed: true,
-                  items: [
-                    {
-                      label: 'Auth service',
-                      link: '/integration/services/auth-service'
-                    },
-                    {
-                      label: 'Backend service',
-                      link: '/integration/services/backend-service'
-                    },
-                    {
-                      label: 'Frontend service',
-                      link: '/integration/services/frontend-service'
-                    },
-                    {
-                      label: 'Token introspection',
-                      link: '/integration/services/token-introspection'
-                    }
-                  ]
-                },
-                {
                   label: 'Test locally',
                   collapsed: true,
                   items: [
@@ -181,6 +164,42 @@ export default defineConfig({
                       link: '/integration/playground/testnet'
                     }
                   ]
+                },
+                {
+                  label: 'Deployment',
+                  collapsed: true,
+                  items: [
+                    {
+                      label: 'Services',
+                      collapsed: true,
+                      items: [
+                        {
+                          label: 'Auth service',
+                          link: '/integration/deployment/services/auth-service'
+                        },
+                        {
+                          label: 'Backend service',
+                          link: '/integration/deployment/services/backend-service'
+                        },
+                        {
+                          label: 'Frontend service',
+                          link: '/integration/deployment/services/frontend-service'
+                        },
+                        {
+                          label: 'Token introspection',
+                          link: '/integration/deployment/services/token-introspection'
+                        }
+                      ]
+                    },
+                    {
+                      label: 'Docker Compose',
+                      link: '/integration/deployment/docker-compose'
+                    },
+                    {
+                      label: 'Helm and Kubernetes',
+                      link: '/integration/deployment/helm-k8s'
+                    }
+                  ]
                 }
               ]
             },
@@ -193,10 +212,6 @@ export default defineConfig({
                   link: '/admin/admin-user-guide'
                 },
                 {
-                  label: 'Manage peering relationships',
-                  link: '/admin/manage-peering'
-                },
-                {
                   label: 'Manage liquidity',
                   link: '/admin/manage-liquidity'
                 }
@@ -206,6 +221,10 @@ export default defineConfig({
               label: 'Resources',
               collapsed: true,
               items: [
+                {
+                  label: 'Releases',
+                  link: '/resources/releases'
+                },
                 {
                   label: 'Glossary',
                   link: '/resources/glossary'
