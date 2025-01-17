@@ -15,6 +15,7 @@ import { createWalletAddress } from '../../../tests/walletAddress'
 import { WalletAddressService } from '../service'
 import { OpenPaymentsServerRouteError } from '../../route-errors'
 import assert from 'assert'
+import { isWalletAddressKeyError } from './errors'
 
 const TEST_KEY = generateJwk({ keyId: uuid() })
 
@@ -54,6 +55,7 @@ describe('Wallet Address Keys Routes', (): void => {
         jwk: TEST_KEY
       }
       const key = await walletAddressKeyService.create(keyOption)
+      assert.ok(!isWalletAddressKeyError(key))
 
       const ctx = createContext<WalletAddressUrlContext>({
         headers: { Accept: 'application/json' },
