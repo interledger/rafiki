@@ -169,26 +169,24 @@ async function createWalletAddress(
   }
 
   try {
+    const asset = await deps.assetService.get(options.assetId, options.tenantId)
+    if (!asset) return WalletAddressError.UnknownAsset
+
     // Remove blank key/value pairs:
     const additionalProperties = options.additionalProperties
       ? cleanAdditionalProperties(options.additionalProperties)
       : undefined
 
-    const tenantId = options.tenantId
-      ? options.tenantId
-      : deps.config.operatorTenantId
-
     const walletAddress = await WalletAddress.query(
       deps.knex
     ).insertGraphAndFetch({
-      tenantId,
+      tenantId: options.tenantId,
       url: options.url.toLowerCase(),
       publicName: options.publicName,
-      assetId: options.assetId,
+      assetId: asset.id,
       additionalProperties: additionalProperties
     })
-    const asset = await deps.assetService.get(walletAddress.assetId)
-    if (asset) walletAddress.asset = asset
+    walletAddress.asset = asset
 
     await deps.walletAddressCache.set(walletAddress.id, walletAddress)
     return walletAddress
