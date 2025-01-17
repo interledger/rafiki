@@ -196,8 +196,8 @@ importers:
         specifier: ^5.0.0
         version: 5.0.0
       '@koa/router':
-        specifier: ^12.0.2
-        version: 12.0.2
+        specifier: ^13.1.0
+        version: 13.1.0
       ajv:
         specifier: ^8.12.0
         version: 8.12.0
@@ -353,8 +353,8 @@ importers:
         specifier: ^5.0.0
         version: 5.0.0
       '@koa/router':
-        specifier: ^12.0.2
-        version: 12.0.2
+        specifier: ^13.1.0
+        version: 13.1.0
       '@opentelemetry/api':
         specifier: ^1.8.0
         version: 1.8.0
@@ -4462,17 +4462,13 @@ packages:
       vary: 1.1.2
     dev: false
 
-  /@koa/router@12.0.2:
-    resolution: {integrity: sha512-sYcHglGKTxGF+hQ6x67xDfkE9o+NhVlRHBqq6gLywaMc6CojK/5vFZByphdonKinYlMLkEkacm+HEse9HzwgTA==}
-    engines: {node: '>= 12'}
+  /@koa/router@13.1.0:
+    resolution: {integrity: sha512-mNVu1nvkpSd8Q8gMebGbCkDWJ51ODetrFvLKYusej+V0ByD4btqHYnPIzTBLXnQMVUlm/oxVwqmWBY3zQfZilw==}
+    engines: {node: '>= 18'}
     dependencies:
-      debug: 4.3.7(supports-color@9.4.0)
       http-errors: 2.0.0
       koa-compose: 4.1.0
-      methods: 1.1.2
       path-to-regexp: 6.3.0
-    transitivePeerDependencies:
-      - supports-color
     dev: false
 
   /@ljharb/through@2.3.13:
@@ -7614,12 +7610,6 @@ packages:
 
   /argparse@2.0.1:
     resolution: {integrity: sha512-8+9WqebbFzpX9OR+Wa6O29asIogeRMzcGtAINdpMHHyAg10f05aSFVBbcEqGf/PXw1EjAZ+q2/bEBg3DvurK3Q==}
-
-  /aria-query@5.3.0:
-    resolution: {integrity: sha512-b0P0sZPKtyu8HkeRAfCq0IfURZK+SuwMjY1UXGBU27wpAiTwQAIlq56IbIO+ytk/JjS1fMR14ee5WBBfKi5J6A==}
-    dependencies:
-      dequal: 2.0.3
-    dev: true
 
   /aria-query@5.3.2:
     resolution: {integrity: sha512-COROpnaoap1E2F000S62r6A60uHZnmlvomhfyT2DlTcrY1OrBKn2UhH7qn5wTC9zMvD0AY7csdPSNwKP+7WiQw==}
