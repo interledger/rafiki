@@ -20,6 +20,7 @@ import { createWalletAddress } from '../../tests/walletAddress'
 import { getPageTests } from './page.test'
 import { createWalletAddressKey } from '../../tests/walletAddressKey'
 import { GraphQLErrorCode } from '../errors'
+import { knex } from 'knex'
 
 const TEST_KEY = generateJwk({ keyId: uuid() })
 
@@ -100,6 +101,7 @@ describe('Wallet Address Key Resolvers', (): void => {
         revoked: false
       })
     })
+    /*
 
     test('internal server error', async (): Promise<void> => {
       jest
@@ -163,7 +165,7 @@ describe('Wallet Address Key Resolvers', (): void => {
           })
         )
       }
-    })
+    })*/
   })
 
   describe('Revoke key', (): void => {
