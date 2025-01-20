@@ -1,10 +1,10 @@
-import { ForTenantIdContext } from '../../app'
+import { ForTenantIdContext, TenantedApolloContext } from '../../app'
 import { tenantIdToProceed } from '../../shared/utils'
 
 type Request = () => Promise<unknown>
 
 interface TenantValidateMiddlewareArgs {
-  deps: { context: ForTenantIdContext }
+  deps: { context: TenantedApolloContext }
   tenantIdInput: string | undefined
   onFailValidation: Request
   next: Request
@@ -20,7 +20,8 @@ export async function validateTenantMiddleware(
     next
   } = args
   if (!tenantIdInput) {
-    context.forTenantId = context.tenant.id
+    ;(context as ForTenantIdContext).forTenantId = context.tenant.id
+    //TODO context.forTenantId = context.tenant.id
     return next()
   }
 
@@ -33,6 +34,8 @@ export async function validateTenantMiddleware(
     context.logger.error('Tenant validation error')
     return onFailValidation()
   }
-  context.forTenantId = forTenantId
+  ;(context as ForTenantIdContext).forTenantId = forTenantId
+  //context.forTenantId = forTenantId
+
   return next()
 }
