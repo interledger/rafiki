@@ -26,7 +26,6 @@ import {
   isWalletAddressKeyError,
   WalletAddressKeyError
 } from '../../open_payments/wallet_address/key/errors'
-import { knex } from 'knex'
 
 const TEST_KEY = generateJwk({ keyId: uuid() })
 
@@ -107,8 +106,6 @@ describe('Wallet Address Key Resolvers', (): void => {
         revoked: false
       })
     })
-    /*
-
     test('Cannot add duplicate key', async (): Promise<void> => {
       const walletAddress = await createWalletAddress(deps)
 
@@ -231,7 +228,7 @@ describe('Wallet Address Key Resolvers', (): void => {
           })
         )
       }
-    })*/
+    })
   })
 
   describe('Revoke key', (): void => {
