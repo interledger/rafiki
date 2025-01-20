@@ -27,6 +27,5 @@ export const CONFIG: Config = {
   authServerDomain: process.env.AUTH_SERVER_DOMAIN || 'http://localhost:3006',
   graphqlUrl: process.env.GRAPHQL_URL,
   idpSecret: process.env.IDP_SECRET,
-  operatorTenantId:
-    process.env.OPERATOR_TENANT_ID || '438fa74a-fa7d-4317-9ced-dde32ece1787'
+  operatorTenantId: process.env.OPERATOR_TENANT_ID || ''
 }
