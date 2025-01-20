@@ -321,6 +321,7 @@ describe('Wallet Address Resolvers', (): void => {
         url: input.url
       }
       try {
+        expect.assertions(2)
         await appContainer.apolloClient
           .mutate({
             mutation: gql`
