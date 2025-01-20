@@ -107,7 +107,10 @@ describe('Wallet Address Key Resolvers', (): void => {
       })
     })
     test('Cannot add duplicate key', async (): Promise<void> => {
-      const walletAddress = await createWalletAddress(deps)
+      const walletAddress = await createWalletAddress(deps, {
+          tenantId: Config.operatorTenantId
+        }
+      )
 
       const input: CreateWalletAddressKeyInput = {
         walletAddressId: walletAddress.id,
