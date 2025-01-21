@@ -18,6 +18,7 @@ import { getPageInfo, parsePaginationQueryParameters } from './pagination'
 import { AssetService } from '../asset/service'
 import { PeerService } from '../payment-method/ilp/peer/service'
 import { createPeer } from '../tests/peer'
+import { createTenant } from '../tests/tenant'
 
 describe('Pagination', (): void => {
   let deps: IocContract<AppServices>
@@ -73,6 +74,7 @@ describe('Pagination', (): void => {
   })
   describe('getPageInfo', (): void => {
     describe('wallet address resources', (): void => {
+      let tenantId: string
       let defaultWalletAddress: WalletAddress
       let secondaryWalletAddress: WalletAddress
       let debitAmount: Amount
@@ -82,6 +84,7 @@ describe('Pagination', (): void => {
         outgoingPaymentService = await deps.use('outgoingPaymentService')
         quoteService = await deps.use('quoteService')
 
+        tenantId = (await createTenant(deps)).id
         const asset = await createAsset(deps)
         defaultWalletAddress = await createWalletAddress(deps, {
           assetId: asset.id
@@ -171,6 +174,7 @@ describe('Pagination', (): void => {
             const paymentIds: string[] = []
             for (let i = 0; i < num; i++) {
               const payment = await createOutgoingPayment(deps, {
+                tenantId,
                 walletAddressId: defaultWalletAddress.id,
                 receiver: secondaryWalletAddress.url,
                 method: 'ilp',
@@ -228,6 +232,7 @@ describe('Pagination', (): void => {
             const quoteIds: string[] = []
             for (let i = 0; i < num; i++) {
               const quote = await createQuote(deps, {
+                tenantId,
                 walletAddressId: defaultWalletAddress.id,
                 receiver: secondaryWalletAddress.url,
                 debitAmount,

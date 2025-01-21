@@ -21,6 +21,8 @@ import {
 import { createAsset, randomAsset } from '../../tests/asset'
 import { createWalletAddress } from '../../tests/walletAddress'
 import { createQuote } from '../../tests/quote'
+import { Tenant } from '../../tenants/model'
+import { createTenant } from '../../tests/tenant'
 
 describe('Quote Routes', (): void => {
   let deps: IocContract<AppServices>
@@ -28,6 +30,7 @@ describe('Quote Routes', (): void => {
   let quoteService: QuoteService
   let config: IAppConfig
   let quoteRoutes: QuoteRoutes
+  let tenant: Tenant
   let walletAddress: WalletAddress
   let baseUrl: string
 
@@ -40,13 +43,16 @@ describe('Quote Routes', (): void => {
   }
 
   const createWalletAddressQuote = async ({
+    tenantId,
     walletAddressId,
     client
   }: {
+    tenantId: string
     walletAddressId: string
     client?: string
   }): Promise<Quote> => {
     return await createQuote(deps, {
+      tenantId,
       walletAddressId,
       receiver,
       debitAmount: {
@@ -72,6 +78,7 @@ describe('Quote Routes', (): void => {
   })
 
   beforeEach(async (): Promise<void> => {
+    tenant = await createTenant(deps)
     const { id: assetId } = await createAsset(deps, {
       code: debitAmount.assetCode,
       scale: debitAmount.assetScale
@@ -95,13 +102,14 @@ describe('Quote Routes', (): void => {
       getWalletAddress: async () => walletAddress,
       createModel: async ({ client }) =>
         createWalletAddressQuote({
+          tenantId: tenant.id,
           walletAddressId: walletAddress.id,
           client
         }),
       get: (ctx) => quoteRoutes.get(ctx),
       getBody: (quote) => {
         return {
-          id: `${baseUrl}/quotes/${quote.id}`,
+          id: `${baseUrl}/${quote.tenantId}/quotes/${quote.id}`,
           walletAddress: walletAddress.url,
           receiver: quote.receiver,
           debitAmount: serializeAmount(quote.debitAmount),
@@ -128,6 +136,9 @@ describe('Quote Routes', (): void => {
           body: options,
           method: 'POST',
           url: `/quotes`
+        },
+        params: {
+          tenantId: tenant.id
         },
         walletAddress,
         client
@@ -194,6 +205,7 @@ describe('Quote Routes', (): void => {
             })
           await expect(quoteRoutes.create(ctx)).resolves.toBeUndefined()
           expect(quoteSpy).toHaveBeenCalledWith({
+            tenantId: tenant.id,
             walletAddressId: walletAddress.id,
             receiver,
             debitAmount: options.debitAmount && {
@@ -213,9 +225,10 @@ describe('Quote Routes', (): void => {
           )
             .split('/')
             .pop()
+          // Pop here to get tenant id?
           assert.ok(quote)
           expect(ctx.response.body).toEqual({
-            id: `${baseUrl}/quotes/${quoteId}`,
+            id: `${baseUrl}/${tenant.id}/quotes/${quoteId}`,
             walletAddress: walletAddress.url,
             receiver: quote.receiver,
             debitAmount: {
@@ -253,6 +266,7 @@ describe('Quote Routes', (): void => {
           })
         await expect(quoteRoutes.create(ctx)).resolves.toBeUndefined()
         expect(quoteSpy).toHaveBeenCalledWith({
+          tenantId: tenant.id,
           walletAddressId: walletAddress.id,
           receiver,
           client,
@@ -266,7 +280,7 @@ describe('Quote Routes', (): void => {
           .pop()
         assert.ok(quote)
         expect(ctx.response.body).toEqual({
-          id: `${baseUrl}/quotes/${quoteId}`,
+          id: `${baseUrl}/${tenant.id}/quotes/${quoteId}`,
           walletAddress: walletAddress.url,
           receiver: options.receiver,
           debitAmount: {

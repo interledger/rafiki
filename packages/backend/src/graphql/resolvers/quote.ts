@@ -25,7 +25,8 @@ export const getQuote: QueryResolvers<ApolloContext>['quote'] = async (
 ): Promise<ResolversTypes['Quote']> => {
   const quoteService = await ctx.container.use('quoteService')
   const quote = await quoteService.get({
-    id: args.id
+    id: args.id,
+    tenantId: args.tenantId
   })
   if (!quote) {
     throw new GraphQLError('quote does not exist', {
@@ -41,6 +42,7 @@ export const createQuote: MutationResolvers<ApolloContext>['createQuote'] =
   async (parent, args, ctx): Promise<ResolversTypes['QuoteResponse']> => {
     const quoteService = await ctx.container.use('quoteService')
     const options: CreateQuoteOptions = {
+      tenantId: args.input.tenantId,
       walletAddressId: args.input.walletAddressId,
       receiver: args.input.receiver,
       method: 'ilp'
@@ -100,6 +102,7 @@ export const getWalletAddressQuotes: WalletAddressResolvers<ApolloContext>['quot
 export function quoteToGraphql(quote: Quote): SchemaQuote {
   return {
     id: quote.id,
+    tenantId: quote.tenantId,
     walletAddressId: quote.walletAddressId,
     receiver: quote.receiver,
     debitAmount: quote.debitAmount,

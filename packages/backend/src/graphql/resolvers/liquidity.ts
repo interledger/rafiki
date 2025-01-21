@@ -377,6 +377,7 @@ export const depositEventLiquidity: MutationResolvers<ApolloContext>['depositEve
     )
     const paymentOrErr = await outgoingPaymentService.fund({
       id: event.data.id,
+      tenantId: args.input.tenantId,
       amount: BigInt(event.data.debitAmount.value),
       transferId: event.id
     })
@@ -478,6 +479,7 @@ export const depositOutgoingPaymentLiquidity: MutationResolvers<ApolloContext>['
       })
       const paymentOrErr = await outgoingPaymentService.fund({
         id: outgoingPaymentId,
+        tenantId: args.input.tenantId,
         amount: BigInt(event.data.debitAmount.value),
         transferId: event.id
       })

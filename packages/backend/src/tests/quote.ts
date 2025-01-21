@@ -57,6 +57,7 @@ export function mockQuote(
 export async function createQuote(
   deps: IocContract<AppServices>,
   {
+    tenantId,
     walletAddressId,
     receiver: receiverUrl,
     debitAmount,
@@ -69,6 +70,11 @@ export async function createQuote(
     exchangeRate = 0.5
   }: CreateTestQuoteOptions
 ): Promise<Quote> {
+  const tenantService = await deps.use('tenantService')
+  const tenant = await tenantService.get(tenantId)
+  if (!tenant) {
+    throw new Error(`tenant not found.`)
+  }
   const walletAddressService = await deps.use('walletAddressService')
   const walletAddress = await walletAddressService.get(walletAddressId)
   if (!walletAddress) {
@@ -178,6 +184,7 @@ export async function createQuote(
   return Quote.query()
     .insertAndFetch({
       id: quoteId,
+      tenantId,
       walletAddressId,
       assetId: walletAddress.assetId,
       receiver: receiverUrl,

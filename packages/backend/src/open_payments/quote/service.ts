@@ -22,6 +22,7 @@ import {
 import { v4 as uuid } from 'uuid'
 import { TelemetryService } from '../../telemetry/service'
 import { AssetService } from '../../asset/service'
+import { TenantService } from '../../tenants/service'
 
 export interface QuoteService extends WalletAddressSubresourceService<Quote> {
   create(options: CreateQuoteOptions): Promise<Quote | QuoteError>
@@ -30,6 +31,7 @@ export interface QuoteService extends WalletAddressSubresourceService<Quote> {
 export interface ServiceDependencies extends BaseService {
   config: IAppConfig
   knex: TransactionOrKnex
+  tenantService: TenantService
   receiverService: ReceiverService
   walletAddressService: WalletAddressService
   assetService: AssetService
@@ -71,6 +73,7 @@ async function getQuote(
 }
 
 interface QuoteOptionsBase {
+  tenantId: string
   walletAddressId: string
   receiver: string
   method: 'ilp'
@@ -99,6 +102,11 @@ async function createQuote(
     callName: 'QuoteService:create',
     description: 'Time to create a quote'
   })
+  const tenant = await deps.tenantService.get(options.tenantId)
+  if (!tenant) {
+    stopTimer()
+    return QuoteError.InvalidTenant
+  }
   if (options.debitAmount && options.receiveAmount) {
     stopTimer()
     return QuoteError.InvalidAmount
@@ -164,6 +172,7 @@ async function createQuote(
         paymentMethod,
         {
           quoteId,
+          tenantId: options.tenantId,
           walletAddress,
           receiver,
           receiveAmount: options.receiveAmount,
@@ -189,6 +198,7 @@ async function createQuote(
       const createdQuote = await Quote.query(trx)
         .insertAndFetch({
           id: quoteId,
+          tenantId: options.tenantId,
           walletAddressId: options.walletAddressId,
           assetId: walletAddress.assetId,
           receiver: options.receiver,
