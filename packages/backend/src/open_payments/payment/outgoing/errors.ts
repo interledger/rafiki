@@ -114,5 +114,4 @@ export enum LifecycleError {
 
   // To be thrown when a Quote has expired
   QuoteExpired = 'QuoteExpired'
-
 }
