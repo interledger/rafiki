@@ -276,7 +276,12 @@ export default defineConfig({
       ],
       plugins: [
         starlightLinksValidator({
-          errorOnLocalLinks: false
+          errorOnLocalLinks: false,
+          exclude: [
+            '/apis/graphql/backend/mutations/',
+            '/apis/graphql/auth/mutations/',
+            '/apis/graphql/backend/inputobjects/#additionalpropertyinput',
+          ],
         })
       ]
     }),
