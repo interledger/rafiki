@@ -71,7 +71,7 @@ class PaginationQueryBuilder<M extends Model, R = M[]> extends QueryBuilder<
     if (last < 0 || last > 100) throw new Error('Pagination index error')
 
     const tenantFilterClause = tenantId
-      ? ` AND "${tableName}"."tenantId" = ? ${tenantId}`
+      ? ` AND "${tableName}"."tenantId" = '${tenantId}'`
       : ''
 
     /**
