@@ -1766,23 +1766,20 @@ describe('OutgoingPaymentService', (): void => {
       const createdPayment = await setup({
         receiver,
         debitAmount,
-        method: 'ilp',
-      });
-    
+        method: 'ilp'
+      })
+
       // Test case for `expiresAt` in the past (greater than current time)
       await createdPayment.quote.$query(knex).patch({
-        expiresAt: new Date(Date.now() - 60 * 60 * 1000), // 1 hour ago
-      });
-    
+        expiresAt: new Date(Date.now() - 60 * 60 * 1000) // 1 hour ago
+      })
+
       await processNext(
         createdPayment.id,
         OutgoingPaymentState.Failed,
         LifecycleError.QuoteExpired
-      );
-    
-    });
-    
-    
+      )
+    })
   })
 
   describe('fund', (): void => {

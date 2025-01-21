@@ -1,4 +1,4 @@
-import { LifecycleError, OutgoingPaymentError } from './errors'
+import { LifecycleError } from './errors'
 import {
   OutgoingPayment,
   OutgoingPaymentState,
@@ -20,7 +20,7 @@ export async function handleSending(
   // Check if the current time is greater than or equal to when the Quote should be expiring
   if (Date.now() >= payment.quote.expiresAt.getTime()) {
     throw LifecycleError.QuoteExpired
-  } 
+  }
 
   const receiver = await deps.receiverService.get(payment.receiver)
 
