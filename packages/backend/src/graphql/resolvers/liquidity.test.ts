@@ -1814,7 +1814,8 @@ describe('Liquidity Resolvers', (): void => {
                 variables: {
                   input: {
                     eventId,
-                    idempotencyKey: uuid()
+                    idempotencyKey: uuid(),
+                    tenantId: tenant.id
                   }
                 }
               })
@@ -1855,7 +1856,8 @@ describe('Liquidity Resolvers', (): void => {
                   variables: {
                     input: {
                       eventId: uuid(),
-                      idempotencyKey: uuid()
+                      idempotencyKey: uuid(),
+                      tenantId: tenant.id
                     }
                   }
                 })
@@ -1904,7 +1906,8 @@ describe('Liquidity Resolvers', (): void => {
                   variables: {
                     input: {
                       eventId,
-                      idempotencyKey: uuid()
+                      idempotencyKey: uuid(),
+                      tenantId: tenant.id
                     }
                   }
                 })
@@ -2690,7 +2693,8 @@ describe('Liquidity Resolvers', (): void => {
                 variables: {
                   input: {
                     outgoingPaymentId: outgoingPayment.id,
-                    idempotencyKey: uuid()
+                    idempotencyKey: uuid(),
+                    tenantId: tenant.id
                   }
                 }
               })
@@ -2731,7 +2735,8 @@ describe('Liquidity Resolvers', (): void => {
                   variables: {
                     input: {
                       outgoingPaymentId: uuid(),
-                      idempotencyKey: uuid()
+                      idempotencyKey: uuid(),
+                      tenantId: tenant.id
                     }
                   }
                 })
@@ -2780,7 +2785,8 @@ describe('Liquidity Resolvers', (): void => {
                   variables: {
                     input: {
                       outgoingPaymentId: outgoingPayment.id,
-                      idempotencyKey: uuid()
+                      idempotencyKey: uuid(),
+                      tenantId: tenant.id
                     }
                   }
                 })

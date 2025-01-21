@@ -100,7 +100,8 @@ async function createOutgoingPayment(
 
   const response = await sendingASE.adminClient.createOutgoingPayment({
     walletAddressId: senderWalletAddressId,
-    quoteId: quote.id
+    quoteId: quote.id,
+    tenantId: quote.tenantId
   })
 
   assert(response.payment)
