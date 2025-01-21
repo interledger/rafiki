@@ -14,7 +14,7 @@
     "@interledger/docs-design-system": "^0.6.1",
     "astro": "5.1.7",
     "astro-graphql-plugin": "^0.3.0",
-    "graphql": "16.10.0",
+    "graphql": "16.8.1",
     "mermaid": "^11.4.1",
     "rehype-autolink-headings": "^7.1.0",
     "rehype-mathjax": "^6.0.0",
