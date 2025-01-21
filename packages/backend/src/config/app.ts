@@ -129,6 +129,7 @@ export const Config = {
   authAdminApiUrl: envString('AUTH_ADMIN_API_URL'),
   authAdminApiSecret: envString('AUTH_ADMIN_API_SECRET'),
   authAdminApiSignatureVersion: envInt('AUTH_ADMIN_API_SIGNATURE_VERSION', 1),
+  authServiceApiUrl: envString('AUTH_SERVICE_API_URL'),
 
   outgoingPaymentWorkers: envInt('OUTGOING_PAYMENT_WORKERS', 1),
   outgoingPaymentWorkerIdle: envInt('OUTGOING_PAYMENT_WORKER_IDLE', 10), // milliseconds
@@ -196,7 +197,8 @@ export const Config = {
     5
   ),
   localCacheDuration: envInt('LOCAL_CACHE_DURATION_MS', 15_000),
-  operatorTenantId: envString('OPERATOR_TENANT_ID')
+  operatorTenantId: envString('OPERATOR_TENANT_ID'),
+  dbSchema: undefined as string | undefined
 }
 
 function parseRedisTlsConfig(

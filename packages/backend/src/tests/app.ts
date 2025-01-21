@@ -79,7 +79,8 @@ export const createTestApp = async (
   const authLink = setContext((_, { headers }) => {
     return {
       headers: {
-        ...headers
+        ...headers,
+        'tenant-id': config.operatorTenantId
       }
     }
   })

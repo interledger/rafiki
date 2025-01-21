@@ -74,6 +74,7 @@ import {
 import { createWebhookService } from './webhook/service'
 import { createInMemoryDataStore } from './middleware/cache/data-stores/in-memory'
 import { createTenantService } from './tenants/service'
+import { AuthServiceClient } from './auth-service-client/client'
 
 BigInt.prototype.toJSON = function () {
   return this.toString()
@@ -106,6 +107,7 @@ export function initIocContainer(
         directory: './',
         tableName: 'knex_migrations'
       },
+      searchPath: config.dbSchema,
       log: {
         warn(message) {
           logger.warn(message)
@@ -127,6 +129,9 @@ export function initIocContainer(
       'text',
       BigInt
     )
+    if (config.dbSchema) {
+      await db.raw(`CREATE SCHEMA IF NOT EXISTS "${config.dbSchema}"`)
+    }
     return db
   })
   container.singleton('redis', async (deps): Promise<Redis> => {
@@ -220,12 +225,16 @@ export function initIocContainer(
     return createInMemoryDataStore(config.localCacheDuration)
   })
 
+  container.singleton('authServiceClient', () => {
+    return new AuthServiceClient(config.authServiceApiUrl)
+  })
+
   container.singleton('tenantService', async (deps) => {
     return createTenantService({
       logger: await deps.use('logger'),
       knex: await deps.use('knex'),
-      apolloClient: await deps.use('apolloClient'),
-      tenantCache: await deps.use('tenantCache')
+      tenantCache: await deps.use('tenantCache'),
+      authServiceClient: deps.use('authServiceClient')
     })
   })
 

@@ -24,7 +24,7 @@ Rafiki doesn't hold _user_ account balances. Instead, Rafiki keeps track of the 
 
 For Rafiki to notify you about webhook events, you must expose a webhook endpoint that listens for the events dispatched by Rafiki. These events notify your system of time-sensitive status updates, warnings, and errors so that you can react accordingly.
 
-When an event occurs, the [`backend`](/integration/services/backend-service) service makes a <Badge text="POST" variant="success" size="medium"/> request to your configured webhook endpoint. The `backend` service expects a `200` status in return.
+When an event occurs, the [`backend`](/integration/deployment/services/backend-service) service makes a <Badge text="POST" variant="success" size="medium"/> request to your configured webhook endpoint. The `backend` service expects a `200` status in return.
 
 <div class="overflow-table">
 

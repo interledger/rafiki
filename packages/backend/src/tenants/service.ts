@@ -1,10 +1,9 @@
 import { Tenant } from './model'
 import { BaseService } from '../shared/baseService'
-import { gql, NormalizedCacheObject } from '@apollo/client'
-import { ApolloClient } from '@apollo/client'
 import { TransactionOrKnex } from 'objection'
 import { Pagination, SortOrder } from '../shared/baseModel'
 import { CacheDataStore } from '../middleware/cache/data-stores'
+import type { AuthServiceClient } from '../auth-service-client/client'
 
 export interface TenantService {
   get: (id: string) => Promise<Tenant | undefined>
@@ -16,8 +15,8 @@ export interface TenantService {
 
 export interface ServiceDependencies extends BaseService {
   knex: TransactionOrKnex
-  apolloClient: ApolloClient<NormalizedCacheObject>
   tenantCache: CacheDataStore<Tenant>
+  authServiceClient: AuthServiceClient
 }
 
 export async function createTenantService(
@@ -83,26 +82,12 @@ async function createTenant(
       idpConsentUrl
     })
 
-    const mutation = gql`
-      mutation CreateAuthTenant($input: CreateTenantInput!) {
-        createTenant(input: $input) {
-          tenant {
-            id
-          }
-        }
-      }
-    `
+    await deps.authServiceClient.tenant.create({
+      id: tenant.id,
+      idpSecret,
+      idpConsentUrl
+    })
 
-    const variables = {
-      input: {
-        id: tenant.id,
-        idpSecret,
-        idpConsentUrl
-      }
-    }
-
-    // TODO: add type to this in https://github.com/interledger/rafiki/issues/3125
-    await deps.apolloClient.mutate({ mutation, variables })
     await trx.commit()
 
     await deps.tenantCache.set(tenant.id, tenant)
@@ -143,26 +128,10 @@ async function updateTenant(
       .throwIfNotFound()
 
     if (idpConsentUrl || idpSecret) {
-      const mutation = gql`
-        mutation UpdateAuthTenant($input: UpdateTenantInput!) {
-          updateTenant(input: $input) {
-            tenant {
-              id
-            }
-          }
-        }
-      `
-
-      const variables = {
-        input: {
-          id,
-          idpConsentUrl,
-          idpSecret
-        }
-      }
-
-      // TODO: add types to this in https://github.com/interledger/rafiki/issues/3125
-      await deps.apolloClient.mutate({ mutation, variables })
+      await deps.authServiceClient.tenant.update(id, {
+        idpConsentUrl,
+        idpSecret
+      })
     }
 
     await trx.commit()
@@ -186,16 +155,7 @@ async function deleteTenant(
     await Tenant.query(trx).patchAndFetchById(id, {
       deletedAt
     })
-    const mutation = gql`
-      mutation DeleteAuthTenantMutation($input: DeleteTenantInput!) {
-        deleteTenant(input: $input) {
-          sucess
-        }
-      }
-    `
-    const variables = { input: { id, deletedAt } }
-    // TODO: add types to this in https://github.com/interledger/rafiki/issues/3125
-    await deps.apolloClient.mutate({ mutation, variables })
+    await deps.authServiceClient.tenant.delete(id, deletedAt)
     await trx.commit()
   } catch (err) {
     await trx.rollback()

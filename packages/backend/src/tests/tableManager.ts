@@ -10,21 +10,28 @@ export async function truncateTable(
 
 export async function truncateTables(
   knex: Knex,
-  ignoreTables = [
+  truncateTenants = false,
+  dbSchema?: string
+): Promise<void> {
+  const ignoreTables = [
     'knex_migrations',
     'knex_migrations_lock',
     'knex_migrations_backend',
-    'knex_migrations_backend_lock'
+    'knex_migrations_backend_lock',
+    ...(truncateTenants ? [] : ['tenants']) // So we don't delete operator tenant
   ]
-): Promise<void> {
-  const tables = await getTables(knex, ignoreTables)
+  const tables = await getTables(knex, dbSchema, ignoreTables)
   const RAW = `TRUNCATE TABLE "${tables}" RESTART IDENTITY`
   await knex.raw(RAW)
 }
 
-async function getTables(knex: Knex, ignoredTables: string[]): Promise<string> {
+async function getTables(
+  knex: Knex,
+  dbSchema: string = 'public',
+  ignoredTables: string[]
+): Promise<string> {
   const result = await knex.raw(
-    "SELECT tablename FROM pg_catalog.pg_tables WHERE schemaname='public'"
+    `SELECT tablename FROM pg_catalog.pg_tables WHERE schemaname='${dbSchema}'`
   )
   return result.rows
     .map((val: { tablename: string }) => {

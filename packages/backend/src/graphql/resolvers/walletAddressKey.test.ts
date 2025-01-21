@@ -20,6 +20,12 @@ import { createWalletAddress } from '../../tests/walletAddress'
 import { getPageTests } from './page.test'
 import { createWalletAddressKey } from '../../tests/walletAddressKey'
 import { GraphQLErrorCode } from '../errors'
+import {
+  errorToCode,
+  errorToMessage,
+  isWalletAddressKeyError,
+  WalletAddressKeyError
+} from '../../open_payments/wallet_address/key/errors'
 
 const TEST_KEY = generateJwk({ keyId: uuid() })
 
@@ -99,6 +105,66 @@ describe('Wallet Address Key Resolvers', (): void => {
       })
     })
 
+    test('Cannot add duplicate key', async (): Promise<void> => {
+      const walletAddress = await createWalletAddress(deps)
+
+      const input: CreateWalletAddressKeyInput = {
+        walletAddressId: walletAddress.id,
+        jwk: TEST_KEY as JwkInput
+      }
+
+      await walletAddressKeyService.create(input)
+
+      expect.assertions(2)
+
+      try {
+        await appContainer.apolloClient
+          .mutate({
+            mutation: gql`
+              mutation CreateWalletAddressKey(
+                $input: CreateWalletAddressKeyInput!
+              ) {
+                createWalletAddressKey(input: $input) {
+                  walletAddressKey {
+                    id
+                    walletAddressId
+                    jwk {
+                      kid
+                      x
+                      alg
+                      kty
+                      crv
+                    }
+                    revoked
+                    createdAt
+                  }
+                }
+              }
+            `,
+            variables: {
+              input
+            }
+          })
+          .then((query): CreateWalletAddressKeyMutationResponse => {
+            if (query.data) {
+              return query.data.createWalletAddressKey
+            } else {
+              throw new Error('Data was empty')
+            }
+          })
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApolloError)
+        expect((error as ApolloError).graphQLErrors).toContainEqual(
+          expect.objectContaining({
+            message: errorToMessage[WalletAddressKeyError.DuplicateKey],
+            extensions: expect.objectContaining({
+              code: errorToCode[WalletAddressKeyError.DuplicateKey]
+            })
+          })
+        )
+      }
+    })
+
     test('internal server error', async (): Promise<void> => {
       jest
         .spyOn(walletAddressKeyService, 'create')
@@ -170,6 +236,7 @@ describe('Wallet Address Key Resolvers', (): void => {
         walletAddressId: walletAddress.id,
         jwk: TEST_KEY
       })
+      assert.ok(!isWalletAddressKeyError(key))
 
       const response = await appContainer.apolloClient
         .mutate({
