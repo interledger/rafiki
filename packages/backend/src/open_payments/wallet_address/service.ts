@@ -70,7 +70,8 @@ export interface WalletAddressService {
   getOrPollByUrl(url: string): Promise<WalletAddress | undefined>
   getPage(
     pagination?: Pagination,
-    sortOrder?: SortOrder
+    sortOrder?: SortOrder,
+    tenantId?: string
   ): Promise<WalletAddress[]>
   processNext(): Promise<string | undefined>
   triggerEvents(limit: number): Promise<number>
@@ -118,8 +119,8 @@ export async function createWalletAddressService({
     get: (id) => getWalletAddress(deps, id),
     getByUrl: (url) => getWalletAddressByUrl(deps, url),
     getOrPollByUrl: (url) => getOrPollByUrl(deps, url),
-    getPage: (pagination?, sortOrder?) =>
-      getWalletAddressPage(deps, pagination, sortOrder),
+    getPage: (pagination?, sortOrder?, tenantId?) =>
+      getWalletAddressPage(deps, pagination, sortOrder, tenantId),
     processNext: () => processNextWalletAddress(deps),
     triggerEvents: (limit) => triggerWalletAddressEvents(deps, limit)
   }
@@ -345,11 +346,13 @@ async function getWalletAddressByUrl(
 async function getWalletAddressPage(
   deps: ServiceDependencies,
   pagination?: Pagination,
-  sortOrder?: SortOrder
+  sortOrder?: SortOrder,
+  tenantId?: string
 ): Promise<WalletAddress[]> {
   const addresses = await WalletAddress.query(deps.knex).getPage(
     pagination,
-    sortOrder
+    sortOrder,
+    tenantId
   )
   for (const address of addresses) {
     const asset = await deps.assetService.get(address.assetId)

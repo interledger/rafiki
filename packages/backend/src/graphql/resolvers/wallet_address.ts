@@ -8,7 +8,7 @@ import {
   MutationResolvers,
   WalletAddressStatus
 } from '../generated/graphql'
-import { ForTenantIdContext } from '../../app'
+import { ForTenantIdContext, TenantedApolloContext } from '../../app'
 import {
   WalletAddressError,
   isWalletAddressError,
@@ -26,18 +26,22 @@ import {
 import { tenantIdToProceed } from '../../shared/utils'
 import { GraphQLErrorCode } from '../errors'
 
-export const getWalletAddresses: QueryResolvers<ForTenantIdContext>['walletAddresses'] =
+export const getWalletAddresses: QueryResolvers<TenantedApolloContext>['walletAddresses'] =
   async (
     parent,
     args,
     ctx
   ): Promise<ResolversTypes['WalletAddressesConnection']> => {
     const walletAddressService = await ctx.container.use('walletAddressService')
-    const { sortOrder, ...pagination } = args
+    const { tenantId, sortOrder, ...pagination } = args
     const order = sortOrder === 'ASC' ? SortOrder.Asc : SortOrder.Desc
+
+    const tenantForLookup =
+      tenantId && ctx.isOperator ? tenantId : ctx.tenant.id
     const walletAddresses = await walletAddressService.getPage(
       pagination,
-      order
+      order,
+      tenantForLookup
     )
     const pageInfo = await getPageInfo({
       getPage: (pagination: Pagination, sortOrder?: SortOrder) =>
@@ -47,20 +51,14 @@ export const getWalletAddresses: QueryResolvers<ForTenantIdContext>['walletAddre
     })
     return {
       pageInfo,
-      edges: walletAddresses
-        .filter(
-          (wa: WalletAddress) =>
-            tenantIdToProceed(ctx.isOperator, ctx.tenant.id, wa.tenantId) !=
-            undefined
-        )
-        .map((walletAddress: WalletAddress) => ({
-          cursor: walletAddress.id,
-          node: walletAddressToGraphql(walletAddress)
-        }))
+      edges: walletAddresses.map((walletAddress: WalletAddress) => ({
+        cursor: walletAddress.id,
+        node: walletAddressToGraphql(walletAddress)
+      }))
     }
   }
 
-export const getWalletAddress: QueryResolvers<ForTenantIdContext>['walletAddress'] =
+export const getWalletAddress: QueryResolvers<TenantedApolloContext>['walletAddress'] =
   async (parent, args, ctx): Promise<ResolversTypes['WalletAddress']> => {
     const walletAddressService = await ctx.container.use('walletAddressService')
     const walletAddress = await walletAddressService.get(args.id)
@@ -80,7 +78,7 @@ export const getWalletAddress: QueryResolvers<ForTenantIdContext>['walletAddress
     return walletAddressToGraphql(walletAddress)
   }
 
-export const getWalletAddressByUrl: QueryResolvers<ForTenantIdContext>['walletAddressByUrl'] =
+export const getWalletAddressByUrl: QueryResolvers<TenantedApolloContext>['walletAddressByUrl'] =
   async (
     parent,
     args,
@@ -183,7 +181,7 @@ export const updateWalletAddress: MutationResolvers<ForTenantIdContext>['updateW
     }
   }
 
-export const triggerWalletAddressEvents: MutationResolvers<ForTenantIdContext>['triggerWalletAddressEvents'] =
+export const triggerWalletAddressEvents: MutationResolvers<TenantedApolloContext>['triggerWalletAddressEvents'] =
   async (
     parent,
     args,
@@ -207,6 +205,7 @@ export function walletAddressToGraphql(
     createdAt: new Date(+walletAddress.createdAt).toISOString(),
     status: walletAddress.isActive
       ? WalletAddressStatus.Active
-      : WalletAddressStatus.Inactive
+      : WalletAddressStatus.Inactive,
+    tenantId: walletAddress.tenantId
   }
 }

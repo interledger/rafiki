@@ -454,12 +454,11 @@ export class App {
 
     koa.use(
       koaMiddleware(this.apolloServer, {
-        context: async (): Promise<ForTenantIdContext> => {
+        context: async (): Promise<TenantedApolloContext> => {
           return {
             ...tenantApiSignatureResult,
             container: this.container,
-            logger: await this.container.use('logger'),
-            forTenantId: this.config.operatorTenantId
+            logger: await this.container.use('logger')
           }
         }
       })

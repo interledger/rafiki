@@ -70,6 +70,8 @@ type Query {
     last: Int
     "Specify the sort order of wallet addresses based on their creation date, either ascending or descending."
     sortOrder: SortOrder
+    "Unique identifier of the tenant associated with the wallet address. Optional, if not provided, the tenantId will be obtained from the signature."
+    tenantId: String
   ): WalletAddressesConnection!
 
   "Fetch an Open Payments quote by its ID."
@@ -793,7 +795,7 @@ type WalletAddress implements Model {
     after: String
     "Backward pagination: Cursor (wallet address key ID) to start retrieving keys before this point."
     before: String
-    "Foward pagination: Limit the result to the first **n** keys after the `after` cursor."
+    "Forward pagination: Limit the result to the first **n** keys after the `after` cursor."
     first: Int
     "Backward pagination: Limit the result to the last **n** keys before the `before` cursor."
     last: Int
@@ -803,6 +805,9 @@ type WalletAddress implements Model {
 
   "Additional properties associated with the wallet address."
   additionalProperties: [AdditionalProperty]
+
+  "Tenant ID of the wallet address."
+  tenantId: String!
 }
 
 type AdditionalProperty {

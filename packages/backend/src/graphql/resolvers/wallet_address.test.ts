@@ -696,6 +696,7 @@ describe('Wallet Address Resolvers', (): void => {
     })
 
     test('bad input data when not allowed to perform cross tenant update', async (): Promise<void> => {
+      expect.assertions(2)
       try {
         const tenantOptions = {
           apiSecret: 'test-api-secret-new',
@@ -975,6 +976,64 @@ describe('Wallet Address Resolvers', (): void => {
               }
             }
           `
+        })
+        .then((query): WalletAddressesConnection => {
+          if (query.data) {
+            return query.data.walletAddresses
+          } else {
+            throw new Error('Data was empty')
+          }
+        })
+
+      expect(query.edges).toHaveLength(2)
+      query.edges.forEach((edge, idx) => {
+        const walletAddress = walletAddresses[idx]
+        expect(edge.cursor).toEqual(walletAddress.id)
+        expect(edge.node).toEqual({
+          __typename: 'WalletAddress',
+          id: walletAddress.id,
+          asset: {
+            __typename: 'Asset',
+            code: walletAddress.asset.code,
+            scale: walletAddress.asset.scale
+          },
+          url: walletAddress.url,
+          publicName: walletAddress.publicName
+        })
+      })
+    })
+
+    test('Can get page of wallet addresses with tenantId param', async (): Promise<void> => {
+      const walletAddresses: WalletAddressModel[] = []
+      for (let i = 0; i < 2; i++) {
+        walletAddresses.push(
+          await createWalletAddress(deps, { tenantId: Config.operatorTenantId })
+        )
+      }
+      walletAddresses.reverse() // Calling the default getPage will result in descending order
+      const query = await appContainer.apolloClient
+        .query({
+          query: gql`
+            query WalletAddresses($tenantId: String) {
+              walletAddresses(tenantId: $tenantId) {
+                edges {
+                  node {
+                    id
+                    asset {
+                      code
+                      scale
+                    }
+                    url
+                    publicName
+                  }
+                  cursor
+                }
+              }
+            }
+          `,
+          variables: {
+            tenantId: Config.operatorTenantId
+          }
         })
         .then((query): WalletAddressesConnection => {
           if (query.data) {

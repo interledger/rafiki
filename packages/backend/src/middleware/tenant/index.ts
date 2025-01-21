@@ -21,7 +21,6 @@ export async function validateTenantMiddleware(
   } = args
   if (!tenantIdInput) {
     ;(context as ForTenantIdContext).forTenantId = context.tenant.id
-    //TODO context.forTenantId = context.tenant.id
     return next()
   }
 
@@ -34,8 +33,7 @@ export async function validateTenantMiddleware(
     context.logger.error('Tenant validation error')
     return onFailValidation()
   }
-  ;(context as ForTenantIdContext).forTenantId = forTenantId
-  //context.forTenantId = forTenantId
 
+  ;(context as ForTenantIdContext).forTenantId = forTenantId
   return next()
 }

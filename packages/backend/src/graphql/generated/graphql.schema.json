@@ -6943,6 +6943,18 @@
                 "defaultValue": null,
                 "isDeprecated": false,
                 "deprecationReason": null
+              },
+              {
+                "name": "tenantId",
+                "description": "Unique identifier of the tenant associated with the wallet address. Optional, if not provided, the tenantId will be obtained from the signature.",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
               }
             ],
             "type": {
@@ -8482,6 +8494,22 @@
             "deprecationReason": null
           },
           {
+            "name": "tenantId",
+            "description": "Tenant ID of the wallet address.",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "url",
             "description": "Wallet Address URL.",
             "args": [],
@@ -8527,7 +8555,7 @@
               },
               {
                 "name": "first",
-                "description": "Foward pagination: Limit the result to the first **n** keys after the `after` cursor.",
+                "description": "Forward pagination: Limit the result to the first **n** keys after the `after` cursor.",
                 "type": {
                   "kind": "SCALAR",
                   "name": "Int",
