@@ -14,7 +14,6 @@ import { start, gracefulShutdown } from '..'
 import { onError } from '@apollo/client/link/error'
 
 import { App, AppServices } from '../app'
-import { Config } from '../config/app'
 
 export const testAccessToken = 'test-app-access'
 
