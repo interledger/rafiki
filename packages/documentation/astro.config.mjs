@@ -280,8 +280,8 @@ export default defineConfig({
           exclude: [
             '/apis/graphql/backend/mutations/',
             '/apis/graphql/auth/mutations/',
-            '/apis/graphql/backend/inputobjects/#additionalpropertyinput',
-          ],
+            '/apis/graphql/backend/inputobjects/#additionalpropertyinput'
+          ]
         })
       ]
     }),
