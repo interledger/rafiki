@@ -16,7 +16,7 @@ type Query {
     after: String
     "Backward pagination: Cursor (asset ID) to start retrieving assets before this point."
     before: String
-    "Foward pagination: Limit the result to the first **n** assets after the `after` cursor."
+    "Forward pagination: Limit the result to the first **n** assets after the `after` cursor."
     first: Int
     "Backward pagination: Limit the result to the last **n** assets before the `before` cursor."
     last: Int
@@ -626,7 +626,7 @@ type Asset implements Model {
     after: String
     "Backward pagination: Cursor (fee ID) to start retrieving fees before this point."
     before: String
-    "Foward pagination: Limit the result to the first **n** fees after the `after` cursor."
+    "Forward pagination: Limit the result to the first **n** fees after the `after` cursor."
     first: Int
     "Backward pagination: Limit the result to the last **n** fees before the `before` cursor."
     last: Int
@@ -761,7 +761,7 @@ type WalletAddress implements Model {
     after: String
     "Backward pagination: Cursor (quote ID) to start retrieving quotes before this point."
     before: String
-    "Foward pagination: Limit the result to the first **n** quotes after the `after` cursor."
+    "Forward pagination: Limit the result to the first **n** quotes after the `after` cursor."
     first: Int
     "Backward pagination: Limit the result to the last **n** quotes before the `before` cursor."
     last: Int
@@ -807,7 +807,7 @@ type WalletAddress implements Model {
   additionalProperties: [AdditionalProperty]
 
   "Tenant ID of the wallet address."
-  tenantId: String!
+  tenantId: String
 }
 
 type AdditionalProperty {
