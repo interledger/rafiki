@@ -122,9 +122,20 @@ export const createWalletAddress: MutationResolvers<ForTenantIdContext>['createW
         addProps.push(toAdd)
       })
 
+    const tenantId = ctx.forTenantId
+    if (!tenantId)
+      throw new GraphQLError(
+        `Assignment to the specified tenant is not permitted`,
+        {
+          extensions: {
+            code: GraphQLErrorCode.BadUserInput
+          }
+        }
+      )
+
     const options: CreateOptions = {
       assetId: args.input.assetId,
-      tenantId: ctx.forTenantId,
+      tenantId,
       additionalProperties: addProps,
       publicName: args.input.publicName,
       url: args.input.url
@@ -156,11 +167,11 @@ export const updateWalletAddress: MutationResolvers<ForTenantIdContext>['updateW
       ...rest
     }
 
-    const existing = await walletAddressService.get(updateOptions.id)
-    if (
-      existing &&
-      !tenantIdToProceed(ctx.isOperator, ctx.forTenantId, existing.tenantId)
-    ) {
+    const existing = await walletAddressService.get(
+      updateOptions.id,
+      ctx.forTenantId
+    )
+    if (!existing) {
       throw new GraphQLError(`Unknown wallet address`, {
         extensions: {
           code: GraphQLErrorCode.NotFound

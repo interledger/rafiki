@@ -706,7 +706,6 @@ describe('Wallet Address Resolvers', (): void => {
           idpSecret: 'test-idp-secret-new'
         }
         const newTenant = await Tenant.query(knex).insertAndFetch(tenantOptions)
-
         const newAsset = await assetService.create({
           code: 'USD',
           scale: 2,
@@ -845,39 +844,42 @@ describe('Wallet Address Resolvers', (): void => {
 
         // Attempt to switch tenant:
         try {
-          const queryTenant = await appContainer.apolloClient
-          .query({
-            query: gql`
-                query WalletAddress($walletAddressId: String!, $tenantId: String) {
-                    walletAddress(id: $walletAddressId, tenantId: $tenantId) {
-                        id
-                        liquidity
-                        asset {
-                            code
-                            scale
-                        }
-                        url
-                        publicName
-                        additionalProperties {
-                            key
-                            value
-                            visibleInOpenPayments
-                        }
+          await appContainer.apolloClient
+            .query({
+              query: gql`
+                query WalletAddress(
+                  $walletAddressId: String!
+                  $tenantId: String
+                ) {
+                  walletAddress(id: $walletAddressId, tenantId: $tenantId) {
+                    id
+                    liquidity
+                    asset {
+                      code
+                      scale
                     }
+                    url
+                    publicName
+                    additionalProperties {
+                      key
+                      value
+                      visibleInOpenPayments
+                    }
+                  }
                 }
-            `,
-            variables: {
-              walletAddressId: walletAddress.id,
-              tenantId: 'ae4950b6-3e1b-4e50-ad24-25c065bdd3a9',
-            }
-          })
-          .then((query): WalletAddress => {
-            if (query.data) {
-              return query.data.walletAddress
-            } else {
-              throw new Error('Data was empty')
-            }
-          })
+              `,
+              variables: {
+                walletAddressId: walletAddress.id,
+                tenantId: 'ae4950b6-3e1b-4e50-ad24-25c065bdd3a9'
+              }
+            })
+            .then((queryTenant): WalletAddress => {
+              if (queryTenant.data) {
+                return queryTenant.data.walletAddress
+              } else {
+                throw new Error('Data was empty')
+              }
+            })
         } catch (error) {
           expect(error).toBeInstanceOf(ApolloError)
           expect((error as ApolloError).graphQLErrors).toContainEqual(

@@ -228,7 +228,7 @@ export interface TenantedApolloContext extends ApolloContext {
 }
 
 export interface ForTenantIdContext extends TenantedApolloContext {
-  forTenantId: string
+  forTenantId?: string
 }
 
 export interface AppServices {
