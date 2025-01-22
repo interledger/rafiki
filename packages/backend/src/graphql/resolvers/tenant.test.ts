@@ -14,7 +14,6 @@ import { createTenant, generateTenantInput } from '../../tests/tenant'
 import { ApolloError, gql, NormalizedCacheObject } from '@apollo/client'
 import { getPageTests } from './page.test'
 import { truncateTables } from '../../tests/tableManager'
-import nock from 'nock'
 import {
   createHttpLink,
   ApolloLink,
@@ -67,13 +66,26 @@ describe('Tenant Resolvers', (): void => {
   let config: IAppConfig
 
   beforeAll(async (): Promise<void> => {
-    deps = await initIocContainer(Config)
+    deps = await initIocContainer({
+      ...Config,
+      databaseUrl: process.env.TENANT_TEST_DATABASE_URL as string
+    })
     appContainer = await createTestApp(deps)
     config = await deps.use('config')
+    const authServiceClient = await deps.use('authServiceClient')
+    jest
+      .spyOn(authServiceClient.tenant, 'create')
+      .mockImplementation(async () => undefined)
+    jest
+      .spyOn(authServiceClient.tenant, 'update')
+      .mockImplementation(async () => undefined)
+    jest
+      .spyOn(authServiceClient.tenant, 'delete')
+      .mockImplementation(async () => undefined)
   })
 
   afterEach(async (): Promise<void> => {
-    await truncateTables(appContainer.knex)
+    await truncateTables(appContainer.knex, true)
   })
   afterAll(async (): Promise<void> => {
     await appContainer.apolloClient.stop()
@@ -249,9 +261,6 @@ describe('Tenant Resolvers', (): void => {
     describe('Create', (): void => {
       test('can create a tenant', async (): Promise<void> => {
         const input = generateTenantInput()
-        const scope = nock(config.authAdminApiUrl)
-          .post('')
-          .reply(200, { data: { createTenant: { id: 1234 } } })
 
         const mutation = await appContainer.apolloClient
           .mutate({
@@ -280,7 +289,6 @@ describe('Tenant Resolvers', (): void => {
           id: expect.any(String),
           __typename: 'Tenant'
         })
-        scope.done()
       })
 
       test('cannot create tenant as non-operator', async (): Promise<void> => {
@@ -353,9 +361,6 @@ describe('Tenant Resolvers', (): void => {
             id: tenant.id
           }
 
-          const scope = nock(config.authAdminApiUrl)
-            .post('')
-            .reply(200, { data: { updateTenant: { id: tenant.id } } })
           const mutation = await client
             .mutate({
               mutation: gql`
@@ -378,7 +383,6 @@ describe('Tenant Resolvers', (): void => {
             })
             .then((query): TenantMutationResponse => query.data?.updateTenant)
 
-          scope.done()
           expect(mutation.tenant).toEqual({
             ...updateInput,
             __typename: 'Tenant'
@@ -443,9 +447,6 @@ describe('Tenant Resolvers', (): void => {
           const client = isOperator
             ? appContainer.apolloClient
             : createTenantedApolloClient(appContainer, tenant.id)
-          const scope = nock(config.authAdminApiUrl)
-            .post('')
-            .reply(200, { data: { deleteTenant: { id: tenant.id } } })
           const mutation = await client
             .mutate({
               mutation: gql`
@@ -463,7 +464,6 @@ describe('Tenant Resolvers', (): void => {
               (query): DeleteTenantMutationResponse => query.data?.deleteTenant
             )
 
-          scope.done()
           expect(mutation.success).toBe(true)
         }
       )
