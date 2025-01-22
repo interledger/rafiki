@@ -50,13 +50,11 @@ class PaginationQueryBuilder<M extends Model, R = M[]> extends QueryBuilder<
    * https://relay.dev/graphql/connections.htm
    * @param pagination Pagination - cursors and limits.
    * @param sortOrder SortOrder - Asc/Desc sort order.
-   * @param tenantId string - When filtering for a specific tenant.
    * @returns Model[] An array of Models that form a page.
    */
   getPage(
     pagination?: Pagination,
-    sortOrder: SortOrder = SortOrder.Desc,
-    tenantId?: string
+    sortOrder: SortOrder = SortOrder.Desc
   ): this {
     const tableName = this.modelClass().tableName
     if (
@@ -69,18 +67,13 @@ class PaginationQueryBuilder<M extends Model, R = M[]> extends QueryBuilder<
     if (first < 0 || first > 100) throw new Error('Pagination index error')
     const last = pagination?.last || 20
     if (last < 0 || last > 100) throw new Error('Pagination index error')
-
-    const tenantFilterClause = tenantId
-      ? ` AND "${tableName}"."tenantId" = '${tenantId}'`
-      : ''
-
     /**
      * Forward pagination
      */
     if (typeof pagination?.after === 'string') {
       const comparisonOperator = sortOrder === SortOrder.Asc ? '>' : '<'
       return this.whereRaw(
-        `("${tableName}"."createdAt", "${tableName}"."id") ${comparisonOperator} (select "${tableName}"."createdAt" :: TIMESTAMP, "${tableName}"."id" from ?? where "${tableName}"."id" = ?${tenantFilterClause})`,
+        `("${tableName}"."createdAt", "${tableName}"."id") ${comparisonOperator} (select "${tableName}"."createdAt" :: TIMESTAMP, "${tableName}"."id" from ?? where "${tableName}"."id" = ?)`,
         [this.modelClass().tableName, pagination.after]
       )
         .orderBy([

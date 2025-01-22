@@ -60,12 +60,25 @@ export const getWalletAddresses: QueryResolvers<TenantedApolloContext>['walletAd
 
 export const getWalletAddress: QueryResolvers<TenantedApolloContext>['walletAddress'] =
   async (parent, args, ctx): Promise<ResolversTypes['WalletAddress']> => {
+    const tenantId = tenantIdToProceed(
+      ctx.isOperator,
+      ctx.tenant.id,
+      args.tenantId
+    )
+    if (!tenantId) {
+      throw new GraphQLError(
+        errorToMessage[WalletAddressError.UnknownWalletAddress],
+        {
+          extensions: {
+            code: errorToCode[WalletAddressError.UnknownWalletAddress]
+          }
+        }
+      )
+    }
+
     const walletAddressService = await ctx.container.use('walletAddressService')
-    const walletAddress = await walletAddressService.get(args.id)
-    if (
-      !walletAddress ||
-      !tenantIdToProceed(ctx.isOperator, ctx.tenant.id, walletAddress.tenantId)
-    ) {
+    const walletAddress = await walletAddressService.get(args.id, tenantId)
+    if (!walletAddress) {
       throw new GraphQLError(
         errorToMessage[WalletAddressError.UnknownWalletAddress],
         {
@@ -111,7 +124,6 @@ export const createWalletAddress: MutationResolvers<ForTenantIdContext>['createW
 
     const options: CreateOptions = {
       assetId: args.input.assetId,
-      // We always have a tenant for [ForTenantIdContext].
       tenantId: ctx.forTenantId,
       additionalProperties: addProps,
       publicName: args.input.publicName,

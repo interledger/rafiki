@@ -65,7 +65,7 @@ export interface WalletAddressService {
     id: string,
     includeVisibleOnlyAddProps: boolean
   ): Promise<WalletAddressAdditionalProperty[] | undefined>
-  get(id: string): Promise<WalletAddress | undefined>
+  get(id: string, tenantId?: string): Promise<WalletAddress | undefined>
   getByUrl(url: string): Promise<WalletAddress | undefined>
   getOrPollByUrl(url: string): Promise<WalletAddress | undefined>
   getPage(
@@ -116,7 +116,7 @@ export async function createWalletAddressService({
         walletAddressId,
         includeVisibleOnlyAddProps
       ),
-    get: (id) => getWalletAddress(deps, id),
+    get: (id, tenantId) => getWalletAddress(deps, id, tenantId),
     getByUrl: (url) => getWalletAddressByUrl(deps, url),
     getOrPollByUrl: (url) => getOrPollByUrl(deps, url),
     getPage: (pagination?, sortOrder?, tenantId?) =>
@@ -268,12 +268,20 @@ async function updateWalletAddress(
 
 async function getWalletAddress(
   deps: ServiceDependencies,
-  id: string
+  id: string,
+  tenantId?: string
 ): Promise<WalletAddress | undefined> {
-  const walletAdd = await deps.walletAddressCache.get(id)
-  if (walletAdd) return walletAdd
+  const inMem = await deps.walletAddressCache.get(id)
+  if (inMem) {
+    return tenantId && inMem.tenantId !== tenantId ? undefined : inMem
+  }
 
-  const walletAddress = await WalletAddress.query(deps.knex).findById(id)
+  const query = WalletAddress.query(deps.knex)
+  if (tenantId) {
+    query.andWhere({ tenantId })
+  }
+
+  const walletAddress = await query.findById(id)
   if (walletAddress) {
     const asset = await deps.assetService.get(walletAddress.assetId)
     if (asset) walletAddress.asset = asset
@@ -349,11 +357,13 @@ async function getWalletAddressPage(
   sortOrder?: SortOrder,
   tenantId?: string
 ): Promise<WalletAddress[]> {
-  const addresses = await WalletAddress.query(deps.knex).getPage(
-    pagination,
-    sortOrder,
-    tenantId
-  )
+  const query = WalletAddress.query(deps.knex)
+
+  if (tenantId && tenantId.length > 0) {
+    query.where({ tenantId })
+  }
+
+  const addresses = await query.getPage(pagination, sortOrder)
   for (const address of addresses) {
     const asset = await deps.assetService.get(address.assetId)
     if (asset) address.asset = asset

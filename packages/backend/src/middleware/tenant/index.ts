@@ -19,11 +19,6 @@ export async function validateTenantMiddleware(
     onFailValidation,
     next
   } = args
-  if (!tenantIdInput) {
-    ;(context as ForTenantIdContext).forTenantId = context.tenant.id
-    return next()
-  }
-
   const forTenantId = tenantIdToProceed(
     context.isOperator,
     context.tenant.id,
