@@ -29,7 +29,7 @@ BigInt.prototype.toJSON = function (this: bigint) {
 const authLink = setContext((request, { headers }) => {
   if (!process.env.SIGNATURE_SECRET || !process.env.SIGNATURE_VERSION)
     return { headers }
-  const timestamp = Math.round(new Date().getTime() / 1000)
+  const timestamp = Date.now()
   const version = process.env.SIGNATURE_VERSION
 
   const { query, variables, operationName } = request
