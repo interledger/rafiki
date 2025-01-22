@@ -71,9 +71,9 @@ async function canApiSignatureBeProcessed(
   config: IAppConfig
 ): Promise<boolean> {
   const { timestamp } = getSignatureParts(signature)
-  const signatureTime = Number(timestamp) * 1000
+  const signatureTime = Number(timestamp)
   const currentTime = Date.now()
-  const ttlMilliseconds = config.adminApiSignatureTtl * 1000
+  const ttlMilliseconds = config.adminApiSignatureTtlSeconds * 1000
 
   if (currentTime - signatureTime > ttlMilliseconds) return false
 
