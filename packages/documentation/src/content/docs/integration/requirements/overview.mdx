@@ -31,7 +31,7 @@ The main communication channel between you and your Rafiki instance is composed 
 
 [Specify your webhook endpoint and learn how to handle each event](/integration/requirements/webhook-events)
 
-## Expose an exchange rate endpoint <Badge text="Required" variant="danger" />
+## Expose an exchange rate endpoint <Badge text="Conditionally Optional" variant="caution" />
 
 If you plan to support cross-currency transactions, you must specify from where your Rafiki instance will fetch current exchange rates. Exchange rates are calculated as part of a payment's quote, which estimates the full cost of transferring value over the network.
 
@@ -43,9 +43,9 @@ You have the option to charge a sending fee, on top of any estimated network fee
 
 [Define your sending fees](/integration/requirements/sending-fees)
 
-## Peers <Badge text="Conditionally Optional" variant="caution" />
+## Peers <Badge text="Required" variant="danger" />
 
-While you could use Rafiki soley for transfers between accounts on your ledger, you must add one or more peers if you intend to enable Interledger payments on your accounts. A peer is another ASE that you want to connect with via Interledger and is likely running their own Rafiki instance.
+While you could use Rafiki solely for transfers between accounts on your ledger, you must add one or more peers if you intend to enable Interledger payments on your accounts. A peer is another ASE that you want to connect with via Interledger and is likely running their own Rafiki instance.
 
 [Set up peers in your Rafiki instance](/integration/requirements/peers)
 
