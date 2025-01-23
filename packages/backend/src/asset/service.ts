@@ -7,6 +7,7 @@ import { BaseService } from '../shared/baseService'
 import { AccountingService, LiquidityAccountType } from '../accounting/service'
 import { WalletAddress } from '../open_payments/wallet_address/model'
 import { Peer } from '../payment-method/ilp/peer/model'
+import { CacheDataStore } from '../middleware/cache/data-stores'
 
 export interface AssetOptions {
   code: string
@@ -40,21 +41,26 @@ export interface AssetService {
 
 interface ServiceDependencies extends BaseService {
   accountingService: AccountingService
+  assetCache: CacheDataStore<Asset>
 }
 
 export async function createAssetService({
   logger,
   knex,
-  accountingService
+  accountingService,
+  assetCache
 }: ServiceDependencies): Promise<AssetService> {
   const log = logger.child({
     service: 'AssetService'
   })
+
   const deps: ServiceDependencies = {
     logger: log,
     knex,
-    accountingService
+    accountingService,
+    assetCache
   }
+
   return {
     create: (options) => createAsset(deps, options),
     update: (options) => updateAsset(deps, options),
@@ -82,9 +88,11 @@ async function createAsset(
 
     if (deletedAsset) {
       // if found, enable
-      return await Asset.query(deps.knex)
+      const reActivated = await Asset.query(deps.knex)
         .patchAndFetchById(deletedAsset.id, { deletedAt: null })
         .throwIfNotFound()
+      await deps.assetCache.set(reActivated.id, reActivated)
+      return reActivated
     }
 
     // Asset rows include a smallserial 'ledger' column that would have sequence gaps
@@ -100,6 +108,7 @@ async function createAsset(
         withdrawalThreshold,
         liquidityThreshold
       })
+      await deps.assetCache.set(asset.id, asset)
       await deps.accountingService.createLiquidityAndLinkedSettlementAccount(
         asset,
         LiquidityAccountType.ASSET,
@@ -123,9 +132,12 @@ async function updateAsset(
     throw new Error('Knex undefined')
   }
   try {
-    return await Asset.query(deps.knex)
+    const asset = await Asset.query(deps.knex)
       .patchAndFetchById(id, { withdrawalThreshold, liquidityThreshold })
       .throwIfNotFound()
+
+    await deps.assetCache.set(id, asset)
+    return asset
   } catch (err) {
     if (err instanceof NotFoundError) {
       return AssetError.UnknownAsset
@@ -142,6 +154,8 @@ async function deleteAsset(
   if (!deps.knex) {
     throw new Error('Knex undefined')
   }
+
+  await deps.assetCache.delete(id)
   try {
     // return error in case there is a peer or wallet address using the asset
     const peer = await Peer.query(deps.knex).where('assetId', id).first()
@@ -155,7 +169,6 @@ async function deleteAsset(
     if (walletAddress) {
       return AssetError.CannotDeleteInUseAsset
     }
-
     return await Asset.query(deps.knex)
       .patchAndFetchById(id, { deletedAt: deletedAt.toISOString() })
       .throwIfNotFound()
@@ -171,7 +184,13 @@ async function getAsset(
   deps: ServiceDependencies,
   id: string
 ): Promise<void | Asset> {
-  return await Asset.query(deps.knex).whereNull('deletedAt').findById(id)
+  const inMem = await deps.assetCache.get(id)
+  if (inMem) return inMem
+
+  const asset = await Asset.query(deps.knex).whereNull('deletedAt').findById(id)
+  if (asset) await deps.assetCache.set(asset.id, asset)
+
+  return asset
 }
 
 async function getAssetByCodeAndScale(

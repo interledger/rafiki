@@ -19,7 +19,7 @@ Rafiki doesn't hold _user_ account balances. Instead, Rafiki keeps track of the 
 
 For Rafiki to notify you about webhook events, you must expose a webhook endpoint that listens for the events dispatched by Rafiki. These events notify your system of time-sensitive status updates, warnings, and errors so that you can react accordingly.
 
-When an event occurs, the [`backend`](/integration/services/backend-service) service makes a <Badge text="POST" variant="success" size="medium"/> request to your configured webhook endpoint. The `backend` service expects a `200` status in return.
+When an event occurs, the [`backend`](/integration/deployment/services/backend-service) service makes a <Badge text="POST" variant="success" size="medium"/> request to your configured webhook endpoint. The `backend` service expects a `200` status in return.
 
 <div class="overflow-table">
 
@@ -134,6 +134,71 @@ The `id` in the webhook event payload is unique. Your system can use the ID to d
 We provide an <LinkOut href="https://github.com/interledger/rafiki/blob/main/packages/backend/src/openapi/specs/webhooks.yaml">OpenAPI specification</LinkOut> for the webhook events fired by Rafiki.
 
 Additionally, the [local playground](/integration/playground/overview) contains example payloads in the <LinkOut href="https://github.com/interledger/rafiki/tree/main/bruno/collections/Rafiki/Sample%20Webhook%20Events">Bruno collection</LinkOut> that can be used to test your webhook service integration.
+
+## Verify webhook signatures
+
+To protect your endpoint from unauthorized or spoofed requests, Rafiki supports an optional, but highly recommended, webhook signature verification process. By enabling signature verification, you can ensure that webhook requests are genuinely from Rafiki, and have not been tampered with.
+
+Each webhook request includes a `Rafiki-Signature` header with a timestamp, version, and signature digest. If your instance is configured with both the `SIGNATURE_SECRET` (to generate the signature) and the `SIGNATURE_VERSION` (to set the version, defaults to v1) environment variables, you can verify the authenticity of each webhook request using the steps below.
+
+### Extract the timestamp and signature from the header
+
+The `Rafiki-Signature` header in each webhook request has the following format:
+
+<CodeBlock title="Rafiki-Signature header">
+
+```
+Rafiki-Signature: t=<timestamp>, v<version>=<signature_digest>
+```
+
+</CodeBlock>
+
+- `t=<timestamp>`: The UNIX timestamp (in seconds) when the signature was generated.
+- `v<version>=<digest>`: The versioned HMAC SHA-256 signature digest. The default version is `v1`.
+
+### Prepare the signed payload string
+
+To recreate the signed payload string, concatenate the following.
+
+- The timestamp extracted from the header
+- A period (.) character
+- The actual JSON payload from the request body, containing the `id`, `type`, and `data` attributes
+
+This string format is essential for accurate signature validation.
+
+### Generate the expected signature
+
+Use HMAC SHA-256 with the `SIGNATURE_SECRET` environment variable as the key and the signed payload string as the message.
+
+### Compare the signatures
+
+Finally, compare the signature in the header to the expected signature you generated. For security, use a constant-time comparison function to prevent timing attacks.
+
+### Example
+
+Below is an example in JavaScript to verify Rafiki's webhook signature:
+
+<CodeBlock title="Verify webhook signature example">
+
+```js
+function verifyWebhookSignature(request: Request): boolean {
+  const signatureParts = request.headers['Rafiki-Signature'].split(', ')
+  const timestamp = signatureParts[0].split('=')[1]
+  const signatureVersionAndDigest = signatureParts[1].split('=')
+  const signatureVersion = signatureVersionAndDigest[0].replace('v', '')
+  const signatureDigest = signatureVersionAndDigest[1]
+  if (signatureVersion !== config['SIGNATURE_VERSION']) {
+    return false
+  }
+  const payload = `${timestamp}.${canonicalize(request.body)}`
+  const hmac = createHmac('sha256', config['SIGNATURE_SECRET'])
+  hmac.update(payload)
+  const digest = hmac.digest('hex')
+  return digest === signatureDigest
+}
+```
+
+</CodeBlock>
 
 ## Event handling
 

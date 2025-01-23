@@ -98,6 +98,7 @@ import {
 } from './open_payments/wallet_address/middleware'
 
 import { LoggingPlugin } from './graphql/plugin'
+import { LocalPaymentService } from './payment-method/local/service'
 import { GrantService } from './open_payments/grant/service'
 import { AuthServerService } from './open_payments/authServer/service'
 export interface AppContextData {
@@ -254,6 +255,7 @@ export interface AppServices {
   tigerBeetle?: Promise<TigerbeetleClient>
   paymentMethodHandlerService: Promise<PaymentMethodHandlerService>
   ilpPaymentService: Promise<IlpPaymentService>
+  localPaymentService: Promise<LocalPaymentService>
 }
 
 export type AppContainer = IocContract<AppServices>
@@ -373,7 +375,9 @@ export class App {
         },
         next: Koa.Next
       ): Promise<void> => {
-        if (ctx.path !== '/graphql') {
+        if (ctx.path === '/healthz') {
+          ctx.status = 200
+        } else if (ctx.path !== '/graphql') {
           ctx.status = 404
         } else {
           return next()
@@ -383,7 +387,7 @@ export class App {
 
     if (this.config.adminApiSecret) {
       koa.use(async (ctx, next: Koa.Next): Promise<void> => {
-        if (!verifyApiSignature(ctx, this.config)) {
+        if (!(await verifyApiSignature(ctx, this.config))) {
           ctx.throw(401, 'Unauthorized')
         }
         return next()

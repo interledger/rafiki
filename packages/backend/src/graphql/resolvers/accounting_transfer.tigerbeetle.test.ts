@@ -11,6 +11,7 @@ import { Config } from '../../config/app'
 import { truncateTables } from '../../tests/tableManager'
 import {
   AccountingTransferConnection,
+  TransferState,
   TransferType
 } from '../generated/graphql'
 import { v4 as uuid } from 'uuid'
@@ -73,7 +74,7 @@ describe('TigerBeetle: Accounting Transfer', (): void => {
 
     // Top up debit account first:
     const transferAmount = 123
-    const queryLimit = 100_000
+    const queryLimit = 20
     const depositId = uuid()
     const insertedTransfer = await accountingService.createDeposit({
       id: depositId,
@@ -95,6 +96,8 @@ describe('TigerBeetle: Accounting Transfer', (): void => {
                 transferType
                 ledger
                 createdAt
+                state
+                expiresAt
               }
               credits {
                 id
@@ -104,6 +107,8 @@ describe('TigerBeetle: Accounting Transfer', (): void => {
                 transferType
                 ledger
                 createdAt
+                state
+                expiresAt
               }
             }
           }
@@ -129,7 +134,9 @@ describe('TigerBeetle: Accounting Transfer', (): void => {
       creditAccountId: creditAccId,
       amount: `${transferAmount}`,
       transferType: TransferType.Deposit,
-      ledger
+      ledger,
+      state: TransferState.Posted,
+      expiresAt: null
     })
 
     // Credit:
@@ -146,6 +153,8 @@ describe('TigerBeetle: Accounting Transfer', (): void => {
                 transferType
                 ledger
                 createdAt
+                state
+                expiresAt
               }
               credits {
                 id
@@ -155,6 +164,8 @@ describe('TigerBeetle: Accounting Transfer', (): void => {
                 transferType
                 ledger
                 createdAt
+                state
+                expiresAt
               }
             }
           }
@@ -180,7 +191,9 @@ describe('TigerBeetle: Accounting Transfer', (): void => {
       creditAccountId: creditAccId,
       amount: `${transferAmount}`,
       transferType: TransferType.Deposit,
-      ledger
+      ledger,
+      state: TransferState.Posted,
+      expiresAt: null
     })
   })
 })

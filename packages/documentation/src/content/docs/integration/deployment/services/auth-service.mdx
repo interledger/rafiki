@@ -41,7 +41,7 @@ An identity provider (IdP) is a system or service that manages user authenticati
 Integration with an [IdP](/integration/requirements/idp) is required when using Rafiki’s `auth` service because the Open Payments standard requires interactive outgoing payment _grant_ requests. In an interactive request, there must be explicit interaction by an individual (e.g., a client's end-user) to approve or deny the grant. In this case, the grant must be explicitly approved before an outgoing payment is created.
 
 :::note
-Rafiki’s [`frontend`](/integration/services/frontend-service) service requires an IdP for authentication and user management of your [Rafiki Admin](/admin/admin-user-guide) users. Out of the box, Rafiki uses Ory Kratos, a cloud-based user management system. Kratos is for internal use only and **cannot** be used as your customer-facing Open Payments authorization server.
+Rafiki’s [`frontend`](/integration/deployment/services/frontend-service) service requires an IdP for authentication and user management of your [Rafiki Admin](/admin/admin-user-guide) users. Out of the box, Rafiki uses Ory Kratos, a cloud-based user management system. Kratos is for internal use only and **cannot** be used as your customer-facing Open Payments authorization server.
 :::
 
 For more information about interactive grants and how they work with identity providers, review our [Identity Provider](/integration/requirements/idp) page and the <LinkOut href="https://openpayments.dev/introduction/grants/">Grant negotiation and authorization</LinkOut> page in the Open Payments docs.

@@ -6,6 +6,7 @@ import {
 } from '../../../../../accounting/errors'
 import { Transaction, TransferType } from '../../../../../accounting/service'
 import { Config as AppConfig } from '../../../../../config/app'
+import { isConvertError } from '../../../../../rates/service'
 const { CannotReceiveError, InsufficientLiquidityError } = Errors
 
 export function createBalanceMiddleware(): ILPMiddleware {
@@ -20,6 +21,9 @@ export function createBalanceMiddleware(): ILPMiddleware {
     }: ILPContext,
     next: () => Promise<void>
   ): Promise<void> => {
+    const stopTimer = services.telemetry.startTimer('balance_middleware_next', {
+      callName: 'balanceMiddleware:next'
+    })
     const { amount } = request.prepare
     const logger = services.logger.child(
       { module: 'balance-middleware' },
@@ -31,17 +35,17 @@ export function createBalanceMiddleware(): ILPMiddleware {
     // Ignore zero amount packets
     if (amount === '0') {
       await next()
+      stopTimer()
       return
     }
 
     const sourceAmount = BigInt(amount)
-    const destinationAmountOrError = await services.rates.convert({
+    const destinationAmountOrError = await services.rates.convertSource({
       sourceAmount,
       sourceAsset: accounts.incoming.asset,
       destinationAsset: accounts.outgoing.asset
     })
-    if (typeof destinationAmountOrError !== 'bigint') {
-      // ConvertError
+    if (isConvertError(destinationAmountOrError)) {
       logger.error(
         {
           amount,
@@ -55,11 +59,13 @@ export function createBalanceMiddleware(): ILPMiddleware {
         `Exchange rate error: ${destinationAmountOrError}`
       )
     }
+    const { amount: destinationAmount } = destinationAmountOrError
 
-    request.prepare.amount = destinationAmountOrError.toString()
+    request.prepare.amount = destinationAmount.toString()
 
     if (state.unfulfillable) {
       await next()
+      stopTimer()
       return
     }
 
@@ -71,7 +77,7 @@ export function createBalanceMiddleware(): ILPMiddleware {
         sourceAccount: accounts.incoming,
         destinationAccount: accounts.outgoing,
         sourceAmount,
-        destinationAmount: destinationAmountOrError,
+        destinationAmount,
         transferType: TransferType.TRANSFER,
         timeout: AppConfig.tigerBeetleTwoPhaseTimeout
       }
@@ -91,17 +97,24 @@ export function createBalanceMiddleware(): ILPMiddleware {
             ctxThrow(500, destinationAmountOrError.toString())
         }
       } else {
+        stopTimer()
         return trxOrError
       }
     }
 
-    if (state.streamDestination) await next()
+    if (state.streamDestination) {
+      await next()
+      stopTimer()
+    }
 
     if (!state.streamDestination || response.fulfill) {
       // TODO: make this single-phase if streamDestination === true
       const trx = await createPendingTransfer()
 
-      if (!state.streamDestination) await next()
+      if (!state.streamDestination) {
+        await next()
+        stopTimer()
+      }
 
       if (trx) {
         if (response.fulfill) {

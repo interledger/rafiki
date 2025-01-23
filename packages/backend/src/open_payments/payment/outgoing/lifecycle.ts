@@ -76,16 +76,37 @@ export async function handleSending(
     throw LifecycleError.BadState
   }
 
-  const stopTimer = deps.telemetry.startTimer('ilp_pay_time_ms', {
-    description: 'Time to complete an ILP payment',
+  const stopTimer = deps.telemetry.startTimer('pay_time_ms', {
+    description: 'Time to complete a payment',
     callName: 'PaymentMethodHandlerService:pay'
   })
-  await deps.paymentMethodHandlerService.pay('ILP', {
-    receiver,
-    outgoingPayment: payment,
-    finalDebitAmount: maxDebitAmount,
-    finalReceiveAmount: maxReceiveAmount
-  })
+  if (receiver.isLocal) {
+    if (
+      !payment.quote.debitAmountMinusFees ||
+      payment.quote.debitAmountMinusFees <= BigInt(0)
+    ) {
+      deps.logger.error(
+        {
+          debitAmountMinusFees: payment.quote.debitAmountMinusFees
+        },
+        'handleSending: quote.debitAmountMinusFees invalid'
+      )
+      throw LifecycleError.BadState
+    }
+    await deps.paymentMethodHandlerService.pay('LOCAL', {
+      receiver,
+      outgoingPayment: payment,
+      finalDebitAmount: payment.quote.debitAmountMinusFees,
+      finalReceiveAmount: maxReceiveAmount
+    })
+  } else {
+    await deps.paymentMethodHandlerService.pay('ILP', {
+      receiver,
+      outgoingPayment: payment,
+      finalDebitAmount: maxDebitAmount,
+      finalReceiveAmount: maxReceiveAmount
+    })
+  }
   stopTimer()
 
   await Promise.all([
@@ -117,11 +138,7 @@ function getAdjustedAmounts(
   // This is only an approximation of the true amount delivered due to exchange rate variance. Due to connection failures there isn't a reliable way to track that in sync with the amount sent (particularly within ILP payments)
   // eslint-disable-next-line no-case-declarations
   const amountDelivered = BigInt(
-    Math.ceil(
-      Number(alreadySentAmount) *
-        (payment.quote.estimatedExchangeRate ||
-          payment.quote.lowEstimatedExchangeRate.valueOf())
-    )
+    Math.ceil(Number(alreadySentAmount) * payment.quote.estimatedExchangeRate)
   )
   let maxReceiveAmount = payment.receiveAmount.value - amountDelivered
 

@@ -53,6 +53,7 @@ import { withConfigOverride } from '../../../tests/helpers'
 import { TelemetryService } from '../../../telemetry/service'
 import { getPageTests } from '../../../shared/baseModel.test'
 import { Pagination, SortOrder } from '../../../shared/baseModel'
+import { ReceiverService } from '../../receiver/service'
 
 describe('OutgoingPaymentService', (): void => {
   let deps: IocContract<AppServices>
@@ -72,6 +73,8 @@ describe('OutgoingPaymentService', (): void => {
   let amtDelivered: bigint
   let trx: Knex.Transaction
   let config: IAppConfig
+  let receiverService: ReceiverService
+  let receiverGet: typeof receiverService.get
 
   const asset: AssetOptions = {
     scale: 9,
@@ -251,7 +254,8 @@ describe('OutgoingPaymentService', (): void => {
     deps = await initIocContainer({
       ...Config,
       exchangeRatesUrl,
-      enableTelemetry: true
+      enableTelemetry: true,
+      localCacheDuration: 0
     })
     appContainer = await createTestApp(deps)
     outgoingPaymentService = await deps.use('outgoingPaymentService')
@@ -261,6 +265,7 @@ describe('OutgoingPaymentService', (): void => {
     telemetryService = (await deps.use('telemetry'))!
     config = await deps.use('config')
     knex = appContainer.knex
+    receiverService = await deps.use('receiverService')
   })
 
   beforeEach(async (): Promise<void> => {
@@ -290,6 +295,22 @@ describe('OutgoingPaymentService', (): void => {
     receiver = incomingPayment.getUrl(receiverWalletAddress)
 
     amtDelivered = BigInt(0)
+
+    // Make receivers non-local by default
+    receiverGet = receiverService.get
+    jest
+      .spyOn(receiverService, 'get')
+      .mockImplementation(async (url: string) => {
+        // call original instead of receiverService.get to avoid infinite loop
+        const receiver = await receiverGet.call(receiverService, url)
+        if (receiver) {
+          // "as any" to circumvent "readonly" check (compile time only) to allow overriding "isLocal" here
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          ;(receiver.isLocal as any) = false
+          return receiver
+        }
+        return undefined
+      })
   })
 
   afterEach(async (): Promise<void> => {
