@@ -36,6 +36,7 @@ services:
       EXCHANGE_RATES_URL: http://host.docker.internal:8889/rates
       REDIS_URL: redis://shared-redis:6379/2
       USE_TIGERBEETLE: false
+      API_SECRET: iyIgCprjb9uL8wFckR+pLEkJWMB7FJhgkvqhTQR/964=
     volumes:
       - ../private-key.pem:/workspace/private-key.pem
     depends_on:

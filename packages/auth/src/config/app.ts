@@ -58,7 +58,7 @@ export const Config = {
   authServerUrl: envString('AUTH_SERVER_URL'),
   adminApiSecret: process.env.ADMIN_API_SECRET, // optional
   adminApiSignatureVersion: envInt('ADMIN_API_SIGNATURE_VERSION', 1),
-  adminApiSignatureTtl: envInt('ADMIN_API_SIGNATURE_TTL_SECONDS', 30),
+  adminApiSignatureTtlSeconds: envInt('ADMIN_API_SIGNATURE_TTL_SECONDS', 30),
   waitTimeSeconds: envInt('WAIT_SECONDS', 5),
   cookieKey: envString('COOKIE_KEY'),
   interactionCookieSameSite: envEnum(
