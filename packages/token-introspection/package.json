@@ -26,7 +26,7 @@
   },
   "dependencies": {
     "@interledger/open-payments": "6.13.2",
-    "@interledger/openapi": "2.0.1",
+    "@interledger/openapi": "2.0.2",
     "axios": "^1.7.9",
     "pino": "^8.19.0"
   }
