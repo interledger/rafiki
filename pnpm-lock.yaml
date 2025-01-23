@@ -570,8 +570,8 @@ importers:
         specifier: 5.1.8
         version: 5.1.8(typescript@5.6.3)
       astro-graphql-plugin:
-        specifier: ^0.3.0
-        version: 0.3.0(graphql@16.10.0)
+        specifier: ^0.4.0
+        version: 0.4.0(graphql@16.10.0)
       graphql:
         specifier: 16.10.0
         version: 16.10.0
@@ -3596,7 +3596,7 @@ packages:
       '@graphql-hive/gateway-abort-signal-any': 0.0.3(graphql@16.10.0)
       '@graphql-tools/executor-common': 0.0.1(graphql@16.10.0)
       '@graphql-tools/utils': 10.7.2(graphql@16.10.0)
-      '@repeaterjs/repeater': 3.0.4
+      '@repeaterjs/repeater': 3.0.6
       '@whatwg-node/disposablestack': 0.0.5
       '@whatwg-node/fetch': 0.10.3
       extract-files: 11.0.0
@@ -6173,6 +6173,7 @@ packages:
 
   /@repeaterjs/repeater@3.0.4:
     resolution: {integrity: sha512-AW8PKd6iX3vAZ0vA43nOUOnbq/X5ihgU+mSXXqunMkeQADGiqw/PY0JNeYtD5sr0PAy51YPgAPbDoeapv9r8WA==}
+    dev: true
 
   /@repeaterjs/repeater@3.0.6:
     resolution: {integrity: sha512-Javneu5lsuhwNCryN+pXH93VPQ8g0dBX7wItHFgYiwQmzE1sVdg5tWHiOgHywzL2W21XQopa7IwIEnNbmeUJYA==}
@@ -8231,8 +8232,8 @@ packages:
       rehype-expressive-code: 0.40.1
     dev: false
 
-  /astro-graphql-plugin@0.3.0(graphql@16.10.0):
-    resolution: {integrity: sha512-gyg8k7Zd7ju9G83Ev7T9Bo/YuCf3Ok0uBmfeckKwrf2uAOu4XKoQtRxjEM9/fmKea55pAS21QDxzlvjMIxWxZw==}
+  /astro-graphql-plugin@0.4.0(graphql@16.10.0):
+    resolution: {integrity: sha512-+XzX+GGhx6kjN/JwLNNRHghXlSI+aVdfVdL+jRZTRvNuu3AiFtoNyIpMZjOomkPnWhYJIoGmqM7WYIua9jIzeQ==}
     dependencies:
       '@graphql-tools/graphql-file-loader': 8.0.12(graphql@16.10.0)
       '@graphql-tools/json-file-loader': 8.0.11(graphql@16.10.0)
@@ -8240,7 +8241,7 @@ packages:
       '@graphql-tools/url-loader': 8.0.24(graphql@16.10.0)
       fs-extra: 11.3.0
       github-slugger: 2.0.0
-      marked: 12.0.2
+      marked: 15.0.6
     transitivePeerDependencies:
       - '@types/node'
       - bufferutil
@@ -14462,14 +14463,14 @@ packages:
     resolution: {integrity: sha512-Z1NL3Tb1M9wH4XESsCDEksWoKTdlUafKc4pt0GRwjUyXaCFZ+dc3g2erqB6zm3szA2IUSi7VnPI+o/9jnxh9hw==}
     dev: false
 
-  /marked@12.0.2:
-    resolution: {integrity: sha512-qXUm7e/YKFoqFPYPa3Ukg9xlI5cyAtGmyEIzMfW//m6kXwCy2Ps9DYf5ioijFKQ8qyuscrHoY04iJGctu2Kg0Q==}
+  /marked@13.0.3:
+    resolution: {integrity: sha512-rqRix3/TWzE9rIoFGIn8JmsVfhiuC8VIQ8IdX5TfzmeBucdY05/0UlzKaw0eVtpcN/OdVFpBk7CjKGo9iHJ/zA==}
     engines: {node: '>= 18'}
     hasBin: true
     dev: false
 
-  /marked@13.0.3:
-    resolution: {integrity: sha512-rqRix3/TWzE9rIoFGIn8JmsVfhiuC8VIQ8IdX5TfzmeBucdY05/0UlzKaw0eVtpcN/OdVFpBk7CjKGo9iHJ/zA==}
+  /marked@15.0.6:
+    resolution: {integrity: sha512-Y07CUOE+HQXbVDCGl3LXggqJDbXDP2pArc2C1N1RRMN0ONiShoSsIInMd5Gsxupe7fKLpgimTV+HOJ9r7bA+pg==}
     engines: {node: '>= 18'}
     hasBin: true
     dev: false
