@@ -98,7 +98,7 @@ Your Rafiki instance is configured for two assets: EUR and USD.
 
 1. Rafiki receives packets from a peer. These packets are all denominated in EUR, worth €10. 10 EUR move from the peer's liquidity account on your Rafiki instance to your EUR asset liquidity account. Your EUR liquidity increases to 20 (10 + 10).
 
-2. The EUR-to-USD exchange rate is applied, with €10 equating to \$12 USD. Since your starting USD liquidity is 50, your USD asset liquidity account can cover the transfer of \$12 USD to an incoming payment liquidity account. Your USD liquidity decreases to 38 (50 - 12). If your USD liquidity account had less than \$12, the transfer would fail.
+2. The EUR-to-USD exchange rate is applied, with €10 equating to \$12 USD. Since your starting USD liquidity is 50, your USD asset liquidity account can cover the transfer of \$12 USD to an incoming payment liquidity account. Your USD liquidity decreases to 38 (50 - 12).
 
 </Steps>
 
@@ -136,9 +136,7 @@ You should define and adjust each peer's liquidity based on your liquidity risk 
 
 <details>
 <summary>Peer liquidity example</summary>
-You and Cloud Nine Wallet are peers. You’ve agreed to extend Cloud Nine Wallet a line of credit worth \$100.00 USD. This means Cloud Nine Wallet has \$100.00 in their peer liquidity account on your Rafiki instance.
-
-Your Rafiki instance can receive packets that total up to \$100.00 to wallet addresses issued by Cloud Nine Wallet. When the \$100.00 is used up, Cloud Nine Wallet settles with you by sending \$100.00 via the shared settlement mechanism outlined in your peering agreement. When you receive the funds, you reset their liquidity in Rafiki.
+You and Cloud Nine Wallet are peers. You’ve agreed to extend Cloud Nine Wallet a line of credit worth \$100.00 USD. This means Cloud Nine Wallet has \$100.00 in their peer liquidity account on your Rafiki instance. Your Rafiki instance can receive packets that total up to \$100.00 from Cloud Nine Wallet. When the \$100.00 is used up, Cloud Nine Wallet settles with you by sending \$100.00 via the shared settlement mechanism outlined in your peering agreement. When you receive the funds, you reset their liquidity in Rafiki.
 
 </details>
 
@@ -176,11 +174,11 @@ The account isn’t used again after the payment completes, but its record remai
 
 ##### Wallet address liquidity accounts
 
-A wallet address liquidity account contains the value received to a wallet address via either SPSP or Web Monetization. When an incoming payment is created by one of these two methods, a corresponding liquidity account is automatically created. You will have one account per wallet address.
+A wallet address liquidity account contains the value received to a wallet address via SPSP. When an incoming payment is created, a corresponding liquidity account is automatically created. You will have one account per wallet address.
 
 Since Rafiki doesn’t hold funds, you must withdraw the liquidity when the payment completes and credit the funds to the recipient’s account on your ledger. You are notified to withdraw liquidity by listening for the appropriate [webhook event](/integration/requirements/webhook-events#wallet-addresses).
 
-Unlike the incoming and outgoing payment liquidity accounts, the same wallet address liquidity account is used for future incoming SPSP or Web Monetization payments.
+Unlike the incoming and outgoing payment liquidity accounts, the same wallet address liquidity account is used for future incoming SPSP payments.
 
 ### Settlement accounts
 
@@ -208,7 +206,7 @@ A negative balance on a settlement account means you've deposited more funds int
 
 ### TigerBeetle
 
-TigerBeetle is a high-performance distributed financial accounting database used by Rafiki’s backend service to store account balance data at the ILP layer. Both liquidity and settlement accounts in Rafiki correspond to TigerBeetle credit and debit accounts, respectively.
+TigerBeetle is a high-performance distributed financial accounting database used by Rafiki’s backend service to store account balance data. Both liquidity and settlement accounts in Rafiki correspond to TigerBeetle credit and debit accounts, respectively.
 
 TigerBeetle only holds balance data without any additional ILP packet metadata. For detailed information on TigerBeetle, including its consensus mechanism and its limitations, visit the official TigerBeetle <LinkOut href="https://docs.tigerbeetle.com/">documentation</LinkOut> and <LinkOut href="https://tigerbeetle.com/blog/">blog</LinkOut>. For more information about TigerBeetle in a production Rafiki environment, see [Running Rafiki in production](/integration/prod/helm-k8s/#running-rafiki-in-production).
 
