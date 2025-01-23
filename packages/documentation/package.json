@@ -13,7 +13,7 @@
     "@astrojs/starlight": "^0.29.0",
     "@interledger/docs-design-system": "^0.5.2",
     "astro": "4.16.18",
-    "astro-graphql-plugin": "^0.3.0",
+    "astro-graphql-plugin": "^0.4.0",
     "graphql": "16.8.1",
     "mermaid": "^11.4.1",
     "rehype-autolink-headings": "^7.1.0",
