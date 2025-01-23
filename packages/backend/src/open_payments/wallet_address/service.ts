@@ -66,7 +66,7 @@ export interface WalletAddressService {
     includeVisibleOnlyAddProps: boolean
   ): Promise<WalletAddressAdditionalProperty[] | undefined>
   get(id: string, tenantId?: string): Promise<WalletAddress | undefined>
-  getByUrl(url: string): Promise<WalletAddress | undefined>
+  getByUrl(url: string, tenantId?: string): Promise<WalletAddress | undefined>
   getOrPollByUrl(url: string): Promise<WalletAddress | undefined>
   getPage(
     pagination?: Pagination,
@@ -117,7 +117,7 @@ export async function createWalletAddressService({
         includeVisibleOnlyAddProps
       ),
     get: (id, tenantId) => getWalletAddress(deps, id, tenantId),
-    getByUrl: (url) => getWalletAddressByUrl(deps, url),
+    getByUrl: (url, tenantId) => getWalletAddressByUrl(deps, url, tenantId),
     getOrPollByUrl: (url) => getOrPollByUrl(deps, url),
     getPage: (pagination?, sortOrder?, tenantId?) =>
       getWalletAddressPage(deps, pagination, sortOrder, tenantId),
@@ -339,9 +339,14 @@ async function getOrPollByUrl(
 
 async function getWalletAddressByUrl(
   deps: ServiceDependencies,
-  url: string
+  url: string,
+  tenantId?: string
 ): Promise<WalletAddress | undefined> {
-  const walletAddress = await WalletAddress.query(deps.knex).findOne({
+  const query = WalletAddress.query(deps.knex)
+  if (tenantId) {
+    query.andWhere({ tenantId })
+  }
+  const walletAddress = await query.findOne({
     url: url.toLowerCase()
   })
   if (walletAddress) {

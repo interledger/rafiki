@@ -1256,6 +1256,7 @@ export type QueryWalletAddressArgs = {
 
 
 export type QueryWalletAddressByUrlArgs = {
+  tenantId?: InputMaybe<Scalars['String']['input']>;
   url: Scalars['String']['input'];
 };
 
