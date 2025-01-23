@@ -73,9 +73,10 @@ describe('Balance Middleware', function () {
       ctx.response.fulfill = fulfill
     })
     const destinationAmount = BigInt(200)
-    jest
-      .spyOn(rates, 'convert')
-      .mockImplementationOnce(async () => destinationAmount)
+    jest.spyOn(rates, 'convertSource').mockImplementationOnce(async () => ({
+      amount: destinationAmount,
+      scaledExchangeRate: 1
+    }))
 
     await expect(middleware(ctx, next)).resolves.toBeUndefined()
 

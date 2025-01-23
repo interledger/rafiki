@@ -78,6 +78,18 @@
             "deprecationReason": null
           },
           {
+            "name": "expiresAt",
+            "description": "The date and time that the accounting transfer will expire.",
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "id",
             "description": "Unique identifier for the accounting transfer.",
             "args": [],
@@ -103,6 +115,22 @@
               "ofType": {
                 "kind": "SCALAR",
                 "name": "UInt8",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "state",
+            "description": "The state of the accounting transfer.",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "ENUM",
+                "name": "TransferState",
                 "ofType": null
               }
             },
@@ -6163,7 +6191,7 @@
               },
               {
                 "name": "limit",
-                "description": "Limit the number of results returned. If no limit is provided, the default limit of 100,000 is set for TigerBeetle.",
+                "description": "Limit the number of results returned. If no limit is provided, the default limit is 20.",
                 "type": {
                   "kind": "SCALAR",
                   "name": "Int",
@@ -7594,6 +7622,35 @@
         "inputFields": null,
         "interfaces": null,
         "enumValues": null,
+        "possibleTypes": null
+      },
+      {
+        "kind": "ENUM",
+        "name": "TransferState",
+        "description": null,
+        "fields": null,
+        "inputFields": null,
+        "interfaces": null,
+        "enumValues": [
+          {
+            "name": "PENDING",
+            "description": "The accounting transfer is pending",
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "POSTED",
+            "description": "The accounting transfer is posted",
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "VOIDED",
+            "description": "The accounting transfer is voided",
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
         "possibleTypes": null
       },
       {

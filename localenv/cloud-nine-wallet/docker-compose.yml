@@ -80,7 +80,7 @@ services:
       - shared-database
       - shared-redis
     healthcheck:
-      test: ["CMD", "wget", "--header=apollo-require-preflight: true", "http://localhost:3001/graphql?query=%7B__typename%7D", "-O", "/dev/null"]
+      test: ["CMD", "wget", "--spider", "http://localhost:3001/healthz"]
       start_period: 60s
       start_interval: 5s
       interval: 30s

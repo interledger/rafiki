@@ -164,7 +164,7 @@ async function rotateToken(
     const errorMessage =
       error instanceof Error ? error.message : 'Could not rotate token'
     throw new GNAPServerRouteError(
-      400,
+      404,
       GNAPErrorCode.InvalidRotation,
       errorMessage
     )

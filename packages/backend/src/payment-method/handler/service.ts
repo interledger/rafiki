@@ -4,8 +4,11 @@ import { WalletAddress } from '../../open_payments/wallet_address/model'
 import { Receiver } from '../../open_payments/receiver/model'
 import { BaseService } from '../../shared/baseService'
 import { IlpPaymentService } from '../ilp/service'
+import { LocalPaymentService } from '../local/service'
+import { Transaction } from 'objection'
 
 export interface StartQuoteOptions {
+  quoteId?: string
   walletAddress: WalletAddress
   debitAmount?: Amount
   receiveAmount?: Amount
@@ -18,7 +21,6 @@ export interface PaymentQuote {
   debitAmount: Amount
   receiveAmount: Amount
   estimatedExchangeRate: number
-  additionalFields: Record<string, unknown>
 }
 
 export interface PayOptions {
@@ -29,28 +31,34 @@ export interface PayOptions {
 }
 
 export interface PaymentMethodService {
-  getQuote(quoteOptions: StartQuoteOptions): Promise<PaymentQuote>
+  getQuote(
+    quoteOptions: StartQuoteOptions,
+    trx?: Transaction
+  ): Promise<PaymentQuote>
   pay(payOptions: PayOptions): Promise<void>
 }
 
-export type PaymentMethod = 'ILP'
+export type PaymentMethod = 'ILP' | 'LOCAL'
 
 export interface PaymentMethodHandlerService {
   getQuote(
     method: PaymentMethod,
-    quoteOptions: StartQuoteOptions
+    quoteOptions: StartQuoteOptions,
+    trx?: Transaction
   ): Promise<PaymentQuote>
   pay(method: PaymentMethod, payOptions: PayOptions): Promise<void>
 }
 
 interface ServiceDependencies extends BaseService {
   ilpPaymentService: IlpPaymentService
+  localPaymentService: LocalPaymentService
 }
 
 export async function createPaymentMethodHandlerService({
   logger,
   knex,
-  ilpPaymentService
+  ilpPaymentService,
+  localPaymentService
 }: ServiceDependencies): Promise<PaymentMethodHandlerService> {
   const log = logger.child({
     service: 'PaymentMethodHandlerService'
@@ -58,16 +66,18 @@ export async function createPaymentMethodHandlerService({
   const deps: ServiceDependencies = {
     logger: log,
     knex,
-    ilpPaymentService
+    ilpPaymentService,
+    localPaymentService
   }
 
   const paymentMethods: { [key in PaymentMethod]: PaymentMethodService } = {
-    ILP: deps.ilpPaymentService
+    ILP: deps.ilpPaymentService,
+    LOCAL: deps.localPaymentService
   }
 
   return {
-    getQuote: (method, quoteOptions) =>
-      paymentMethods[method].getQuote(quoteOptions),
+    getQuote: (method, quoteOptions, trx) =>
+      paymentMethods[method].getQuote(quoteOptions, trx),
     pay: (method, payOptions) => paymentMethods[method].pay(payOptions)
   }
 }

@@ -139,7 +139,7 @@ type Query {
   accountingTransfers(
     "Unique identifier of the account."
     id: String!
-    "Limit the number of results returned. If no limit is provided, the default limit of 100,000 is set for TigerBeetle."
+    "Limit the number of results returned. If no limit is provided, the default limit is 20."
     limit: Int
   ): AccountingTransferConnection!
 
@@ -1062,6 +1062,19 @@ type AccountingTransfer implements Model {
   ledger: UInt8!
   "The date and time that the accounting transfer was created."
   createdAt: String!
+  "The state of the accounting transfer."
+  state: TransferState!
+  "The date and time that the accounting transfer will expire."
+  expiresAt: String
+}
+
+enum TransferState {
+  "The accounting transfer is pending"
+  PENDING
+  "The accounting transfer is posted"
+  POSTED
+  "The accounting transfer is voided"
+  VOIDED
 }
 
 enum TransferType {

@@ -261,7 +261,7 @@ describe('Ledger Transfer', (): void => {
       const accountTransfers = await getAccountTransfers(
         serviceDeps,
         account.id,
-        100_000,
+        20,
         knex
       )
 
