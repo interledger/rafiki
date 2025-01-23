@@ -1,17 +1,13 @@
 import http from 'k6/http'
 import { fail } from 'k6'
 import { createHMAC } from 'k6/crypto'
-import { canonicalize } from '/dist/json-canonicalize.bundle.js'
+import { canonicalize } from '../dist/json-canonicalize.bundle.js'
 
 export const options = {
   // A number specifying the number of VUs to run concurrently.
   vus: 1,
   // A string specifying the total duration of the test run.
   duration: '600s'
-}
-
-const HEADERS = {
-  'Content-Type': 'application/json'
 }
 
 const CLOUD_NINE_GQL_ENDPOINT = 'http://cloud-nine-wallet-backend:3001/graphql'
@@ -35,6 +31,18 @@ function generateSignedHeaders(requestPayload) {
   }
 }
 
+function request(query) {
+  const headers = generateSignedHeaders(query)
+  const response = http.post(CLOUD_NINE_GQL_ENDPOINT, JSON.stringify(query), {
+    headers
+  })
+
+  if (response.status !== 200) {
+    fail(`GraphQL Request failed`)
+  }
+  return JSON.parse(response.body).data
+}
+
 export function setup() {
   const query = {
     query: `
@@ -51,17 +59,8 @@ export function setup() {
     `
   }
 
-  const c9WalletAddressesRes = http.post(
-    CLOUD_NINE_GQL_ENDPOINT,
-    JSON.stringify(query),
-    { headers: generateSignedHeaders(query) }
-  )
-
-  if (c9WalletAddressesRes.status !== 200) {
-    fail(`GraphQL Request failed to find ${CLOUD_NINE_WALLET_ADDRESS}`)
-  }
-  const c9WalletAddresses = JSON.parse(c9WalletAddressesRes.body).data
-    .walletAddresses.edges
+  const data = request(query)
+  const c9WalletAddresses = data.walletAddresses.edges
   const c9WalletAddress = c9WalletAddresses.find(
     (edge) => edge.node.url === CLOUD_NINE_WALLET_ADDRESS
   ).node
@@ -109,14 +108,8 @@ export default function (data) {
     }
   }
 
-  const createReceiverResponse = http.post(
-    CLOUD_NINE_GQL_ENDPOINT,
-    JSON.stringify(createReceiverPayload),
-    { headers: generateSignedHeaders(createReceiverPayload) }
-  )
-
-  const receiver = JSON.parse(createReceiverResponse.body).data.createReceiver
-    .receiver
+  const createReceiverResponse = request(createReceiverPayload)
+  const receiver = createReceiverResponse.createReceiver.receiver
 
   const createQuotePayload = {
     query: `
@@ -142,13 +135,8 @@ export default function (data) {
     }
   }
 
-  const createQuoteResponse = http.post(
-    CLOUD_NINE_GQL_ENDPOINT,
-    JSON.stringify(createQuotePayload),
-    { headers: generateSignedHeaders(createQuotePayload) }
-  )
-
-  const quote = JSON.parse(createQuoteResponse.body).data.createQuote.quote
+  const createQuoteResponse = request(createQuotePayload)
+  const quote = createQuoteResponse.createQuote.quote
 
   const createOutgoingPaymentPayload = {
     query: `
@@ -168,9 +156,5 @@ export default function (data) {
     }
   }
 
-  http.post(
-    CLOUD_NINE_GQL_ENDPOINT,
-    JSON.stringify(createOutgoingPaymentPayload),
-    { headers: generateSignedHeaders(createOutgoingPaymentPayload) }
-  )
+  request(createOutgoingPaymentPayload)
 }
