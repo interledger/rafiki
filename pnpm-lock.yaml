@@ -199,8 +199,8 @@ importers:
         specifier: ^12.0.2
         version: 12.0.2
       ajv:
-        specifier: ^8.12.0
-        version: 8.12.0
+        specifier: ^8.17.1
+        version: 8.17.1
       axios:
         specifier: ^1.7.9
         version: 1.7.9(debug@4.3.2)
@@ -392,8 +392,8 @@ importers:
         specifier: ^1.25.1
         version: 1.25.1(@opentelemetry/api@1.8.0)
       ajv:
-        specifier: ^8.12.0
-        version: 8.12.0
+        specifier: ^8.17.1
+        version: 8.17.1
       axios:
         specifier: 1.7.9
         version: 1.7.9(debug@4.3.2)
@@ -4918,8 +4918,8 @@ packages:
     resolution: {integrity: sha512-eS5mzfb6sHa0M3YvlYl1ahlTQn7Jng2VF++agS5XeL93ZrFnSaniyARNdLU0r/tJcUQxKLVSCcoKn84mU9X+pg==}
     dependencies:
       '@apidevtools/json-schema-ref-parser': 10.1.0
-      ajv: 8.12.0
-      ajv-formats: 2.1.1(ajv@8.12.0)
+      ajv: 8.17.1
+      ajv-formats: 2.1.1(ajv@8.17.1)
       koa: 2.15.3
       openapi-default-setter: 12.1.3
       openapi-request-coercer: 12.1.3
@@ -4934,8 +4934,8 @@ packages:
     resolution: {integrity: sha512-HOQnALmRtRkGkh63OnFhoCVsK4BKhQosJyoBCe6Cuu+jp8Oj2fAqTNz8ys+h6s30cJcIpk2UBlsj4wZ3pj26Ug==}
     dependencies:
       '@apidevtools/json-schema-ref-parser': 11.7.2
-      ajv: 8.12.0
-      ajv-formats: 2.1.1(ajv@8.12.0)
+      ajv: 8.17.1
+      ajv-formats: 2.1.1(ajv@8.17.1)
       koa: 2.15.3
       openapi-default-setter: 12.1.3
       openapi-request-coercer: 12.1.3
@@ -8493,16 +8493,6 @@ packages:
     resolution: {integrity: sha512-hCOfMzbFx5IDutmWLAt6MZwOUjIfSM9G9FyVxytmE4Rs/5YDPWQrD/+IR1w+FweD9H2oOZEnv36TmkjhNURBVA==}
     dev: true
 
-  /ajv-formats@2.1.1(ajv@8.12.0):
-    resolution: {integrity: sha512-Wx0Kx52hxE7C18hkMEggYlEifqWZtYaRgouJor+WMdPnQyEK13vgEWyVNup7SoeeoLMsr4kf5h6dOW11I15MUA==}
-    peerDependencies:
-      ajv: ^8.0.0
-    peerDependenciesMeta:
-      ajv:
-        optional: true
-    dependencies:
-      ajv: 8.12.0
-
   /ajv-formats@2.1.1(ajv@8.17.1):
     resolution: {integrity: sha512-Wx0Kx52hxE7C18hkMEggYlEifqWZtYaRgouJor+WMdPnQyEK13vgEWyVNup7SoeeoLMsr4kf5h6dOW11I15MUA==}
     peerDependencies:
@@ -8536,14 +8526,6 @@ packages:
       fast-deep-equal: 3.1.3
       fast-json-stable-stringify: 2.1.0
       json-schema-traverse: 0.4.1
-      uri-js: 4.4.1
-
-  /ajv@8.12.0:
-    resolution: {integrity: sha512-sRu1kpcO9yLtYxBKvqfTeh9KzZEwO3STyX1HT+4CaDzC6HpTGYhIhPIzj9XuKU7KYDwnaeh5hcOwjy1QuJzBPA==}
-    dependencies:
-      fast-deep-equal: 3.1.3
-      json-schema-traverse: 1.0.0
-      require-from-string: 2.0.2
       uri-js: 4.4.1
 
   /ajv@8.17.1:
@@ -16941,8 +16923,8 @@ packages:
   /openapi-request-validator@12.1.3:
     resolution: {integrity: sha512-HW1sG00A9Hp2oS5g8CBvtaKvRAc4h5E4ksmuC5EJgmQ+eAUacL7g+WaYCrC7IfoQaZrjxDfeivNZUye/4D8pwA==}
     dependencies:
-      ajv: 8.12.0
-      ajv-formats: 2.1.1(ajv@8.12.0)
+      ajv: 8.17.1
+      ajv-formats: 2.1.1(ajv@8.17.1)
       content-type: 1.0.5
       openapi-jsonschema-parameters: 12.1.3
       openapi-types: 12.1.3
@@ -16951,21 +16933,21 @@ packages:
   /openapi-response-validator@12.1.3:
     resolution: {integrity: sha512-beZNb6r1SXAg1835S30h9XwjE596BYzXQFAEZlYAoO2imfxAu5S7TvNFws5k/MMKMCOFTzBXSjapqEvAzlblrQ==}
     dependencies:
-      ajv: 8.12.0
+      ajv: 8.17.1
       openapi-types: 12.1.3
 
   /openapi-response-validator@9.3.1:
     resolution: {integrity: sha512-2AOzHAbrwdj5DNL3u+BadhfmL3mlc3mmCv6cSAsEjoMncpOOVd95JyMf0j0XUyJigJ8/ILxnhETfg35vt1pGSQ==}
     dependencies:
-      ajv: 8.12.0
+      ajv: 8.17.1
       openapi-types: 9.3.1
     dev: true
 
   /openapi-schema-validator@9.3.1:
     resolution: {integrity: sha512-5wpFKMoEbUcjiqo16jIen3Cb2+oApSnYZpWn8WQdRO2q/dNQZZl8Pz6ESwCriiyU5AK4i5ZI6+7O3bHQr6+6+g==}
     dependencies:
-      ajv: 8.12.0
-      ajv-formats: 2.1.1(ajv@8.12.0)
+      ajv: 8.17.1
+      ajv-formats: 2.1.1(ajv@8.17.1)
       lodash.merge: 4.6.2
       openapi-types: 9.3.1
     dev: true
