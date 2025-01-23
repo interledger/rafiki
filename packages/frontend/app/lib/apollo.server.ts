@@ -25,12 +25,12 @@ BigInt.prototype.toJSON = function (this: bigint) {
 
 async function createAuthLink(request: Request) {
   return setContext(async (gqlRequest, { headers }) => {
-    const timestamp = Math.round(new Date().getTime() / 1000)
-    const version = 1
+    const timestamp = Date.now()
+    const version = process.env.SIGNATURE_VERSION
     const session = await getSession(request.headers.get('cookie'))
     const apiSecret = session.get('apiSecret')
 
-    if (!apiSecret) {
+    if (!apiSecret || !version) {
       return { headers }
     }
 

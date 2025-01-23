@@ -169,6 +169,7 @@ services:
       OPEN_PAYMENTS_URL: https://cloud-nine-wallet-backend/
       ENABLE_INSECURE_MESSAGE_COOKIE: true
       AUTH_ENABLED: false
+      SIGNATURE_VERSION: 1
     depends_on:
       - cloud-nine-backend
 

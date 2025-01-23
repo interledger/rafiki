@@ -137,6 +137,7 @@ services:
       OPEN_PAYMENTS_URL: https://happy-life-bank-backend/
       ENABLE_INSECURE_MESSAGE_COOKIE: true
       AUTH_ENABLED: false
+      SIGNATURE_VERSION: 1
     depends_on:
       - cloud-nine-admin
       - happy-life-backend
