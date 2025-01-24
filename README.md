@@ -30,7 +30,7 @@ Never heard of Interledger before? Or would you like to learn more? Here are som
 - [Interledger Specs](https://interledger.org/rfcs/0027-interledger-protocol-4/)
 - [Interledger Explainer Video](https://twitter.com/Interledger/status/1567916000074678272)
 - [Open Payments](https://openpayments.dev/)
-- [Web monetization](https://webmonetization.org/)
+- [Web Monetization](https://webmonetization.org/)
 
 ## Contributing
 
@@ -38,7 +38,7 @@ Please read the [contribution guidelines](.github/contributing.md) before submit
 
 ## Community Calls
 
-Our Rafiki community calls are open to our community members. We have them every Tuesday at 14:30 GMT, via Google Meet.
+Our Rafiki community calls are open to our community members. We have them every Tuesday at 15:30 GMT, via Google Meet.
 
 **Google Meet joining info**
 
@@ -54,23 +54,43 @@ More phone numbers: https://tel.meet/sms-fwny-ezc?pin=5321780226087
 
 ### Prerequisites
 
-- [Docker](https://docs.docker.com/get-docker/)
-- [NVM](https://github.com/nvm-sh/nvm)
+- [Git](https://git-scm.com/downloads) for version control
+- [Docker](https://docs.docker.com/get-docker/) to run containerized services
+- [Node Version Manager (NVM)](https://github.com/nvm-sh/nvm) to manage Node.js versions
 
 ### Environment Setup
 
+After you have Git, Docker, and NVM installed, run the following commands to continue setting up your local development environment.
+
+Clone the Rafiki repository
+
 ```sh
-# install node from `./.nvmrc`
+git clone https://github.com/interledger/rafiki.git
+cd rafiki
+```
+
+Install Node.js
+
+```sh
 nvm install
 nvm use
+```
 
-# install pnpm
+Install [pnpm](https://pnpm.io/installation) -- a quick and efficient Node.js package manager
+
+```sh
 corepack enable
+```
 
-# if moving from yarn run
+If you were previously using Yarn as a package manager, run this:
+
+```sh
 pnpm clean
+```
 
-# install dependencies
+Install dependencies
+
+```sh
 pnpm i
 ```
 
@@ -80,31 +100,14 @@ The Rafiki local environment is the best way to explore Rafiki locally. The [loc
 
 ### Useful commands
 
-```sh
-# build all the packages in the repo:
-pnpm -r build
-
-# build specific package (e.g. backend):
-pnpm --filter backend build
-
-# generate types from specific package GraphQL schema:
-pnpm --filter backend generate
-
-# run individual tests (e.g. backend)
-pnpm --filter backend test
-
-# run all tests
-pnpm -r --workspace-concurrency=1 test
-
-# format and lint code:
-pnpm format
-
-# check lint and formatting
-pnpm checks
-
-# verify code formatting:
-pnpm check:prettier
-
-# verify lint
-pnpm check:lint
-```
+| Description                                             | Command                                  |
+| ------------------------------------------------------- | ---------------------------------------- |
+| Build all of the packages in the repo                   | `pnpm -r build`                          |
+| Build a specific package (e.g. backend, frontend, etc.) | `pnpm --filter backend build`            |
+| Generate types from specific package GraphQL schema     | `pnpm --filter backend generate`         |
+| Run individual tests (e.g. backend)                     | `pnpm --filter backend test`             |
+| Run all tests                                           | `pnpm -r --workspace-concurrency=1 test` |
+| Format and lint code                                    | `pnpm format`                            |
+| Check lint and formatting                               | `pnpm checks`                            |
+| Verify code formatting                                  | `pnpm check:prettier`                    |
+| Verify lint                                             | `pnpm check:lint`                        |
