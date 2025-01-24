@@ -1251,12 +1251,10 @@ export type QueryReceiverArgs = {
 
 export type QueryWalletAddressArgs = {
   id: Scalars['String']['input'];
-  tenantId?: InputMaybe<Scalars['String']['input']>;
 };
 
 
 export type QueryWalletAddressByUrlArgs = {
-  tenantId?: InputMaybe<Scalars['String']['input']>;
   url: Scalars['String']['input'];
 };
 

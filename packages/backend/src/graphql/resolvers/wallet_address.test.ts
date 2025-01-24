@@ -841,57 +841,6 @@ describe('Wallet Address Resolvers', (): void => {
             }
           ]
         })
-
-        // Attempt to switch tenant:
-        try {
-          expect.assertions(3)
-          await appContainer.apolloClient
-            .query({
-              query: gql`
-                query WalletAddress(
-                  $walletAddressId: String!
-                  $tenantId: String
-                ) {
-                  walletAddress(id: $walletAddressId, tenantId: $tenantId) {
-                    id
-                    liquidity
-                    asset {
-                      code
-                      scale
-                    }
-                    url
-                    publicName
-                    additionalProperties {
-                      key
-                      value
-                      visibleInOpenPayments
-                    }
-                  }
-                }
-              `,
-              variables: {
-                walletAddressId: walletAddress.id,
-                tenantId: 'ae4950b6-3e1b-4e50-ad24-25c065bdd3a9'
-              }
-            })
-            .then((queryTenant): WalletAddress => {
-              if (queryTenant.data) {
-                return queryTenant.data.walletAddress
-              } else {
-                throw new Error('Data was empty')
-              }
-            })
-        } catch (error) {
-          expect(error).toBeInstanceOf(ApolloError)
-          expect((error as ApolloError).graphQLErrors).toContainEqual(
-            expect.objectContaining({
-              message: 'unknown wallet address',
-              extensions: expect.objectContaining({
-                code: GraphQLErrorCode.NotFound
-              })
-            })
-          )
-        }
       }
     )
 
@@ -952,53 +901,6 @@ describe('Wallet Address Resolvers', (): void => {
           publicName: publicName ?? null,
           additionalProperties: []
         })
-
-        expect.assertions(3)
-        try {
-          await appContainer.apolloClient
-            .query({
-              query: gql`
-                query getWalletAddressByUrl($url: String!, $tenantId: String) {
-                  walletAddressByUrl(url: $url, tenantId: $tenantId) {
-                    id
-                    liquidity
-                    asset {
-                      code
-                      scale
-                    }
-                    url
-                    publicName
-                    additionalProperties {
-                      key
-                      value
-                      visibleInOpenPayments
-                    }
-                  }
-                }
-              `,
-              variables: {
-                url: walletAddress.url,
-                tenantId: 'ae4950b6-3e1b-4e50-ad24-25c065bdd3a9'
-              }
-            })
-            .then((query): WalletAddress => {
-              if (query.data) {
-                return query.data.walletAddressByUrl
-              } else {
-                throw new Error('Data was empty')
-              }
-            })
-        } catch (error) {
-          expect(error).toBeInstanceOf(ApolloError)
-          expect((error as ApolloError).graphQLErrors).toContainEqual(
-            expect.objectContaining({
-              message: 'unknown wallet address',
-              extensions: expect.objectContaining({
-                code: GraphQLErrorCode.NotFound
-              })
-            })
-          )
-        }
       }
     )
 

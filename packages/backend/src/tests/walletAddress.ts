@@ -30,12 +30,12 @@ export async function createWalletAddress(
   options: Partial<CreateOptions> = {}
 ): Promise<MockWalletAddress> {
   const walletAddressService = await deps.use('walletAddressService')
+  const tenantIdToUse = options.tenantId || (await createTenant(deps)).id
   const walletAddressOrError = (await walletAddressService.create({
     ...options,
     assetId:
-      options.assetId ||
-      (await createAsset(deps, undefined, options.tenantId)).id,
-    tenantId: options.tenantId || (await createTenant(deps)).id,
+      options.assetId || (await createAsset(deps, undefined, tenantIdToUse)).id,
+    tenantId: tenantIdToUse,
     url: options.url || `https://${faker.internet.domainName()}/.well-known/pay`
   })) as MockWalletAddress
   if (isWalletAddressError(walletAddressOrError)) {

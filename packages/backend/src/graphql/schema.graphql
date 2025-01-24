@@ -53,17 +53,10 @@ type Query {
   walletAddress(
     "Unique identifier of the wallet address."
     id: String!
-    "Unique identifier of the tenant associated with the wallet address. Optional, if not provided, the tenantId will be obtained from the signature."
-    tenantId: String
   ): WalletAddress
 
   "Get a wallet address by its url if it exists"
-  walletAddressByUrl(
-    "Wallet Address URL."
-    url: String!
-    "Unique identifier of the tenant associated with the wallet address. Optional, if not provided, the tenantId will be obtained from the signature."
-    tenantId: String
-  ): WalletAddress
+  walletAddressByUrl("Wallet Address URL." url: String!): WalletAddress
 
   "Fetch a paginated list of wallet addresses."
   walletAddresses(

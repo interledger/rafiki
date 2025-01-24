@@ -23,7 +23,6 @@ import {
   CreateOptions,
   UpdateOptions
 } from '../../open_payments/wallet_address/service'
-import { tenantIdToProceed } from '../../shared/utils'
 import { GraphQLErrorCode } from '../errors'
 
 export const getWalletAddresses: QueryResolvers<TenantedApolloContext>['walletAddresses'] =
@@ -58,26 +57,10 @@ export const getWalletAddresses: QueryResolvers<TenantedApolloContext>['walletAd
 
 export const getWalletAddress: QueryResolvers<TenantedApolloContext>['walletAddress'] =
   async (parent, args, ctx): Promise<ResolversTypes['WalletAddress']> => {
-    const tenantId = tenantIdToProceed(
-      ctx.isOperator,
-      ctx.tenant.id,
-      args.tenantId
-    )
-    if (!tenantId) {
-      throw new GraphQLError(
-        errorToMessage[WalletAddressError.UnknownWalletAddress],
-        {
-          extensions: {
-            code: errorToCode[WalletAddressError.UnknownWalletAddress]
-          }
-        }
-      )
-    }
-
     const walletAddressService = await ctx.container.use('walletAddressService')
     const walletAddress = await walletAddressService.get(
       args.id,
-      ctx.isOperator && !args.tenantId ? undefined : tenantId
+      ctx.isOperator ? undefined : ctx.tenant.id
     )
     if (!walletAddress) {
       throw new GraphQLError(
@@ -98,12 +81,12 @@ export const getWalletAddressByUrl: QueryResolvers<TenantedApolloContext>['walle
     args,
     ctx
   ): Promise<ResolversTypes['WalletAddress'] | null> => {
-    const tenantId = tenantIdToProceed(
-      ctx.isOperator,
-      ctx.tenant.id,
-      args.tenantId
+    const walletAddressService = await ctx.container.use('walletAddressService')
+    const walletAddress = await walletAddressService.getByUrl(
+      args.url,
+      ctx.isOperator ? undefined : ctx.tenant.id
     )
-    if (!tenantId) {
+    if (!walletAddress) {
       throw new GraphQLError(
         errorToMessage[WalletAddressError.UnknownWalletAddress],
         {
@@ -113,13 +96,7 @@ export const getWalletAddressByUrl: QueryResolvers<TenantedApolloContext>['walle
         }
       )
     }
-
-    const walletAddressService = await ctx.container.use('walletAddressService')
-    const walletAddress = await walletAddressService.getByUrl(
-      args.url,
-      ctx.isOperator && !args.tenantId ? undefined : tenantId
-    )
-    return walletAddress ? walletAddressToGraphql(walletAddress) : null
+    return walletAddressToGraphql(walletAddress)
   }
 
 export const createWalletAddress: MutationResolvers<ForTenantIdContext>['createWalletAddress'] =

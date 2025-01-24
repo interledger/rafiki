@@ -243,29 +243,6 @@ export function ensureTrailingSlash(str: string): string {
 }
 
 /**
- * The tenantId to use will be determined as follows:
- * - When an operator and the {tenantId} is present, return {tenantId}
- * - When an operator and {tenantId} is not present, return {signatureTenantId}
- * - When NOT an operator and {tenantId} is present, but does not match {signatureTenantId}, return {undefined}
- * - Otherwise return {signatureTenantId}
- *
- * @param isOperator is operator
- * @param signatureTenantId the signature tenantId
- * @param tenantId the intended tenantId
- */
-export function tenantIdToProceed(
-  isOperator: boolean,
-  signatureTenantId: string,
-  tenantId?: string
-): string | undefined {
-  if (isOperator && tenantId) return tenantId
-  else if (isOperator) return signatureTenantId
-  return tenantId && tenantId !== signatureTenantId
-    ? undefined
-    : signatureTenantId
-}
-
-/**
  * @param url remove the tenant id from the {url}
  */
 export function urlWithoutTenantId(url: string): string {
