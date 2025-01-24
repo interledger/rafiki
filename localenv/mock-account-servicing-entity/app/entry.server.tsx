@@ -30,6 +30,15 @@ async function callWithRetry(fn: () => any, depth = 0): Promise<void> {
 }
 
 if (!global.__seeded) {
+  const tenantId = process.env.OPERATOR_TENANT_ID
+  const apiSecret = process.env.SIGNATURE_SECRET
+
+  if (!tenantId || !apiSecret) {
+    throw new Error(
+      'Must set OPERATOR_TENANT_ID and SIGNATURE_SECRET environment variables'
+    )
+  }
+
   callWithRetry(async () => {
     console.log('setting up from seed...')
     return setupFromSeed(CONFIG, apolloClient, mockAccounts, {
@@ -39,6 +48,19 @@ if (!global.__seeded) {
   })
     .then(() => {
       global.__seeded = true
+      setTimeout(() => {
+        const url = new URL(`http://localhost:${process.env.FRONTEND_PORT}/`)
+        const params = new URLSearchParams({
+          tenantId,
+          apiSecret
+        })
+
+        url.search = params.toString()
+
+        console.log(
+          `Local Dev Setup:\nUse this URL to access the frontend with operator tenant credentials:\n${url}\n`
+        )
+      }, 2000)
     })
     .catch((e) => {
       console.log(

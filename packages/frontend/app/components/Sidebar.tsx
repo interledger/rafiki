@@ -9,6 +9,7 @@ import { Button } from '~/components/ui'
 interface SidebarProps {
   logoutUrl: string
   authEnabled: boolean
+  hasApiCredentials: boolean
 }
 
 const navigation = [
@@ -38,8 +39,16 @@ const navigation = [
   }
 ]
 
-export const Sidebar: FC<SidebarProps> = ({ logoutUrl, authEnabled }) => {
+export const Sidebar: FC<SidebarProps> = ({
+  logoutUrl,
+  authEnabled,
+  hasApiCredentials
+}) => {
   const [sidebarIsOpen, setSidebarIsOpen] = useState(false)
+
+  const navigationToShow = hasApiCredentials
+    ? navigation
+    : navigation.filter(({ name }) => name === 'Home')
 
   return (
     <>
@@ -81,7 +90,7 @@ export const Sidebar: FC<SidebarProps> = ({ logoutUrl, authEnabled }) => {
                 <div className='mt-5 h-0 flex-1 overflow-y-auto'>
                   <nav className='px-2'>
                     <div className='space-y-1'>
-                      {navigation.map(({ name, href }) => (
+                      {navigationToShow.map(({ name, href }) => (
                         <NavLink
                           key={name}
                           to={href}
@@ -140,7 +149,7 @@ export const Sidebar: FC<SidebarProps> = ({ logoutUrl, authEnabled }) => {
           {/* Desktop Navigation */}
           <div className='hidden w-full mt-5 flex-1 flex-col overflow-y-auto md:block'>
             <div className='space-y-2'>
-              {navigation.map(({ name, href }) => (
+              {navigationToShow.map(({ name, href }) => (
                 <NavLink
                   key={name}
                   to={href}

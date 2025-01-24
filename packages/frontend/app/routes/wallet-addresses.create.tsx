@@ -22,7 +22,7 @@ import { type LoaderFunctionArgs } from '@remix-run/node'
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const cookies = request.headers.get('cookie')
   await checkAuthAndRedirect(request.url, cookies)
-  return json({ assets: await loadAssets() })
+  return json({ assets: await loadAssets(request) })
 }
 
 export default function CreateWalletAddressPage() {
@@ -115,7 +115,7 @@ export async function action({ request }: ActionFunctionArgs) {
   const baseUrl = removeTrailingAndLeadingSlash(getOpenPaymentsUrl())
   const path = removeTrailingAndLeadingSlash(result.data.name)
 
-  const response = await createWalletAddress({
+  const response = await createWalletAddress(request, {
     url: `${baseUrl}/${path}`,
     publicName: result.data.publicName,
     assetId: result.data.asset,

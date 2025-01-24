@@ -30,7 +30,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   }
 
   const { type, ...pagination } = result.data
-  const webhooks = await listWebhooks({
+  const webhooks = await listWebhooks(request, {
     ...pagination,
     ...(type ? { filter: { type: { in: type } } } : {})
   })

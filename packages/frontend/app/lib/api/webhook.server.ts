@@ -1,12 +1,16 @@
 import { gql } from '@apollo/client'
-import { apolloClient } from '../apollo.server'
+import { getApolloClient } from '../apollo.server'
 import type {
   QueryWebhookEventsArgs,
   ListWebhookEvents,
   ListWebhookEventsVariables
 } from '~/generated/graphql'
 
-export const listWebhooks = async (args: QueryWebhookEventsArgs) => {
+export const listWebhooks = async (
+  request: Request,
+  args: QueryWebhookEventsArgs
+) => {
+  const apolloClient = await getApolloClient(request)
   const response = await apolloClient.query<
     ListWebhookEvents,
     ListWebhookEventsVariables
