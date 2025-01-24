@@ -152,7 +152,7 @@ type Query {
   "Retrieve a tenant of the instance."
   tenant("Unique identifier of the tenant." id: String!): Tenant
 
-  "Fetch a paginated list of tenants on the instance."
+  "As an operator, fetch a paginated list of tenants on the instance."
   tenants(
     "Forward pagination: Cursor (tenant ID) to start retrieving tenants after this point."
     after: String
@@ -327,7 +327,7 @@ type Mutation {
     input: CancelIncomingPaymentInput!
   ): CancelIncomingPaymentResponse!
 
-  "Create a tenant."
+  "As an operator, create a tenant."
   createTenant(input: CreateTenantInput!): TenantMutationResponse!
 
   "Update a tenant."

@@ -739,7 +739,7 @@ export type Mutation = {
   createQuote: QuoteResponse;
   /** Create an internal or external Open Payments incoming payment. The receiver has a wallet address on either this or another Open Payments resource server. */
   createReceiver: CreateReceiverResponse;
-  /** Create a tenant. */
+  /** As an operator, create a tenant. */
   createTenant: TenantMutationResponse;
   /** Create a new wallet address. */
   createWalletAddress: CreateWalletAddressMutationResponse;
@@ -1191,7 +1191,7 @@ export type Query = {
   receiver?: Maybe<Receiver>;
   /** Retrieve a tenant of the instance. */
   tenant?: Maybe<Tenant>;
-  /** Fetch a paginated list of tenants on the instance. */
+  /** As an operator, fetch a paginated list of tenants on the instance. */
   tenants: TenantsConnection;
   /** Fetch a wallet address by its ID. */
   walletAddress?: Maybe<WalletAddress>;

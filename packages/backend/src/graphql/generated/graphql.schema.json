@@ -4610,7 +4610,7 @@
           },
           {
             "name": "createTenant",
-            "description": "Create a tenant.",
+            "description": "As an operator, create a tenant.",
             "args": [
               {
                 "name": "input",
@@ -7059,7 +7059,7 @@
           },
           {
             "name": "tenants",
-            "description": "Fetch a paginated list of tenants on the instance.",
+            "description": "As an operator, fetch a paginated list of tenants on the instance.",
             "args": [
               {
                 "name": "after",
