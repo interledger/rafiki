@@ -86,17 +86,7 @@ export const getWalletAddressByUrl: QueryResolvers<TenantedApolloContext>['walle
       args.url,
       ctx.isOperator ? undefined : ctx.tenant.id
     )
-    if (!walletAddress) {
-      throw new GraphQLError(
-        errorToMessage[WalletAddressError.UnknownWalletAddress],
-        {
-          extensions: {
-            code: errorToCode[WalletAddressError.UnknownWalletAddress]
-          }
-        }
-      )
-    }
-    return walletAddressToGraphql(walletAddress)
+    return walletAddress ? walletAddressToGraphql(walletAddress) : null
   }
 
 export const createWalletAddress: MutationResolvers<ForTenantIdContext>['createWalletAddress'] =
