@@ -36,12 +36,10 @@ export const getWalletAddresses: QueryResolvers<TenantedApolloContext>['walletAd
     const { tenantId, sortOrder, ...pagination } = args
     const order = sortOrder === 'ASC' ? SortOrder.Asc : SortOrder.Desc
 
-    const tenantForLookup =
-      tenantId && ctx.isOperator ? tenantId : ctx.tenant.id
     const walletAddresses = await walletAddressService.getPage(
       pagination,
       order,
-      tenantForLookup
+      ctx.isOperator ? tenantId : ctx.tenant.id
     )
     const pageInfo = await getPageInfo({
       getPage: (pagination: Pagination, sortOrder?: SortOrder) =>

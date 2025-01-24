@@ -1,10 +1,9 @@
 import assert from 'assert'
 import { MockASE } from '../mock-ase'
-import { parseCookies } from '../utils'
+import { parseCookies, urlWithoutTenantId } from '../utils'
 import { WalletAddress, PendingGrant } from '@interledger/open-payments'
 import { AdminActions, createAdminActions } from './admin'
 import { OpenPaymentsActions, createOpenPaymentsActions } from './open-payments'
-import { urlWithoutTenantId } from '../../../../packages/backend/src/shared/utils'
 
 export interface TestActionsDeps {
   sendingASE: MockASE

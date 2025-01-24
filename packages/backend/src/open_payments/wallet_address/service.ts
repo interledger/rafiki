@@ -170,10 +170,7 @@ async function createWalletAddress(
   }
 
   try {
-    const tenantId = options.tenantId
-      ? options.tenantId
-      : deps.config.operatorTenantId
-    const asset = await deps.assetService.get(options.assetId, tenantId)
+    const asset = await deps.assetService.get(options.assetId, options.tenantId)
     if (!asset) return WalletAddressError.UnknownAsset
 
     // Remove blank key/value pairs:
@@ -277,9 +274,7 @@ async function getWalletAddress(
   }
 
   const query = WalletAddress.query(deps.knex)
-  if (tenantId) {
-    query.andWhere({ tenantId })
-  }
+  if (tenantId) query.andWhere({ tenantId })
 
   const walletAddress = await query.findById(id)
   if (walletAddress) {
@@ -343,9 +338,8 @@ async function getWalletAddressByUrl(
   tenantId?: string
 ): Promise<WalletAddress | undefined> {
   const query = WalletAddress.query(deps.knex)
-  if (tenantId) {
-    query.andWhere({ tenantId })
-  }
+  if (tenantId) query.andWhere({ tenantId })
+
   const walletAddress = await query.findOne({
     url: url.toLowerCase()
   })
@@ -363,10 +357,7 @@ async function getWalletAddressPage(
   tenantId?: string
 ): Promise<WalletAddress[]> {
   const query = WalletAddress.query(deps.knex)
-
-  if (tenantId && tenantId.length > 0) {
-    query.where({ tenantId })
-  }
+  if (tenantId) query.where({ tenantId })
 
   const addresses = await query.getPage(pagination, sortOrder)
   for (const address of addresses) {
