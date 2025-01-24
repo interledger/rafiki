@@ -123,7 +123,7 @@ pnpm localenv:compose down --volumes --rmi all
 
 | Label | Component       | URL                   |
 | ----- | --------------- | --------------------- |
-|       | Postgres Server | http://localhost:5432 |
+| N/A   | Postgres Server | http://localhost:5432 |
 
 > \*Note: In the Local Playground, Kratos and Mail Slurper are disabled by default.
 
@@ -141,10 +141,7 @@ Select an Account Name to view account information, available balance, and a lis
 
 # Debugging
 
-## Using a Chromium browser
-
-- Open `chrome://inspect`
-- Select **Configure** and add the following IPs and ports:
+Debuggers are exposed on the following ports:
 
 | Service                   | IP and Port    |
 | ------------------------- | -------------- |
@@ -153,8 +150,12 @@ Select an Account Name to view account information, available balance, and a lis
 | Happy Life Bank Backend   | 127.0.0.1:9231 |
 | Happy Life Bank Auth      | 127.0.0.1:9232 |
 
-- Start the Docker containers
-- Select **Inspect** on the service to debug
+## Using a Chromium browser
+
+1. Open `chrome://inspect`
+2. Select **Configure** and add the following IPs and ports detailed above
+3. Start the Docker containers
+4. Select **Inspect** on the service to debug
 
 ## Using VS Code
 
@@ -173,7 +174,7 @@ Add this configuration to `.vscode/launch.json`:
 },
 ```
 
-`localRoot` will vary depending on the location of `launch.json` relative to rafiki's root directory.
+`localRoot` will vary depending on the location of `launch.json` relative to Rafiki's root directory.
 
 For more ways to connect debuggers, see the Node docs for debugging: https://nodejs.org/en/learn/getting-started/debugging
 

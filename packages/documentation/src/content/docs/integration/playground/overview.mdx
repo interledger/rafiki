@@ -2,11 +2,13 @@
 title: Overview
 ---
 
-import { LargeImg } from '@interledger/docs-design-system'
-
-import { LinkOut } from '@interledger/docs-design-system'
-
-import { CodeBlock } from '@interledger/docs-design-system'
+import {
+  Mermaid,
+  CodeBlock,
+  LinkOut,
+  Disclosure,
+  LargeImg
+} from '@interledger/docs-design-system'
 
 The Local Playground provides a suite of packages that, together, mock an account servicing entity that has deployed Rafiki. It exposes an <LinkOut href='https://interledger.org/developers/rfcs/simple-payment-setup-protocol/'>SPSP</LinkOut> endpoint, the [Open Payments APIs](/overview/concepts/open-payments) with its required <LinkOut href='https://datatracker.ietf.org/doc/draft-ietf-gnap-core-protocol/'>GNAP</LinkOut> auth endpoints to request grants, a STREAM endpoint for receiving Interledger packets, and the Rafiki Admin app to view and manage each Rafiki instance.
 
@@ -33,11 +35,11 @@ These packages depend on the following databases:
 
 The Local Playground comes with containerized versions of the Rafiki packages and two pre-configured docker-compose files (<LinkOut href="https://github.com/interledger/rafiki/blob/main/localenv/cloud-nine-wallet/docker-compose.yml">Cloud Nine Wallet</LinkOut> and <LinkOut href='https://github.com/interledger/rafiki/blob/main/localenv/happy-life-bank/docker-compose.yml'>Happy Life Bank</LinkOut>) to start two mock account servicing entities with their respective Rafiki `backend` and `auth` servers. They automatically peer, and two to three user accounts are created on both of them.
 
-This environment will set up a playground where you can use the Rafiki Admin APIs and the Open Payments APIs.
+This environment will set up a playground where you can use the GraphQL Admin APIs and the Open Payments APIs.
 
 :::note
 
-The Mock ASE provided in this repository is intended solely for internal use and demonstration purposes. It is not designed to serve as a reference architecture. If you are looking for a reference implementation of an ASE, please refer to the [Test Wallet](https://wallet.interledger-test.dev/).
+The Mock ASE provided in this repository is intended solely for internal use and demonstration purposes. It is not designed to serve as a reference architecture. If you are looking for a reference implementation of an ASE, please refer to the <LinkOut href='https://wallet.interledger-test.dev/'>Test Wallet</LinkOut>.
 :::
 
 ## Running the local environment
@@ -52,7 +54,9 @@ To spin up the Local Playground install the following software on your machine:
 
 Run the following commands from the root of the project.
 
-```sh
+<CodeBlock title="Using TigerBeetle">
+
+```
 ## If you have spun up the environment before, first tear down and remove volumes!
 
 pnpm localenv:compose down --volumes
@@ -63,9 +67,13 @@ pnpm localenv:compose down --volumes
 pnpm localenv:compose up
 ```
 
+</CodeBlock>
+
 If you want to use Postgres as the accounting database instead of TigerBeetle, you must use the `psql` variant of the `localenv:compose` commands as follows:
 
-```sh
+<CodeBlock title="Using Postgres">
+
+```
 ## If you have spun up the environment before, first tear down and remove volumes!
 ## Otherwise start the local environment
 pnpm localenv:compose:psql down --volumes
@@ -74,6 +82,8 @@ pnpm localenv:compose:psql down --volumes
 // start the local environment
 pnpm localenv:compose:psql up
 ```
+
+</CodeBlock>
 
 The local environment consists of a primary and secondary Rafiki instance, each with its docker-compose file (<LinkOut href='https://github.com/interledger/rafiki/blob/main/localenv/cloud-nine-wallet/docker-compose.yml'>Cloud Nine Wallet</LinkOut>, <LinkOut href='https://github.com/interledger/rafiki/blob/main/localenv/cloud-nine-wallet/docker-compose.yml'>Happy Life Bank</LinkOut>). The primary Cloud Nine Wallet docker-compose file (`./cloud-nine-wallet/docker-compose.yml`) includes the primary Rafiki `backend` and `auth` services, as well as the required data stores, which include TigerBeetle (if enabled), Redis, and Postgres. The primary instance contains all of the necessary components so that it can run independently.
 
@@ -215,21 +225,22 @@ pnpm localenv:compose down --volumes --rmi all
 
 The following are the most commonly used commands:
 
-| Command                                        | Description                                                       |
-| ---------------------------------------------- | ----------------------------------------------------------------- |
-| pnpm localenv:compose config                   | Show all merged config (with TigerBeetle)                         |
-| pnpm localenv:compose up                       | Start (with TigerBeetle)                                          |
-| pnpm localenv:compose up -d                    | Start (with TigerBeetle) detached                                 |
-| pnpm localenv:compose down                     | Down (with TigerBeetle)                                           |
-| pnpm localenv:compose down --volumes           | Down and kill volumes (with TigerBeetle)                          |
-| pnpm localenv:compose down --volumes --rmi all | Down, kill volumes (with TigerBeetle) and images                  |
-| pnpm localenv:compose:psql config              | Show all merged config (with PostgreSQL)                          |
-| pnpm localenv:compose build                    | Build all the containers (with TigerBeetle)                       |
-| pnpm localenv:compose:psql up                  | Start (with PostgreSQL)                                           |
-| pnpm localenv:compose:psql down                | Down (with PostgreSQL)                                            |
-| pnpm localenv:compose:psql down --volumes      | Down (with PostgreSQL) and kill volumes                           |
-| pnpm localenv:compose:psql build               | Build all the containers (with PostgreSQL)                        |
-| pnpm localenv:compose:adminauth up             | Start with local admin auth enabled (this is disabled by default) |
+| Description                                                       | Command                                          |
+| ----------------------------------------------------------------- | ------------------------------------------------ |
+| Show all merged config (with Tigerbeetle)                         | `pnpm localenv:compose config`                   |
+| Start (with Tigerbeetle)                                          | `pnpm localenv:compose up`                       |
+| Start (with Tigerbeetle) detached                                 | `pnpm localenv:compose up -d`                    |
+| Down (with Tigerbeetle)                                           | `pnpm localenv:compose down`                     |
+| Down and kill volumes (with TigerBeetle)                          | `pnpm localenv:compose down --volumes`           |
+| Down, kill volumes (with Tigerbeetle) and images                  | `pnpm localenv:compose down --volumes --rmi all` |
+| Show all merged config (with Postgresql)                          | `pnpm localenv:compose:psql config`              |
+| Build all the containers (with Tigerbeetle)                       | `pnpm localenv:compose build`                    |
+| Start (with Postgresql)                                           | `pnpm localenv:compose:psql up`                  |
+| Start (with Postgresql) detached                                  | `pnpm localenv:compose:psql up -d`               |
+| Down (with Postgresql)                                            | `pnpm localenv:compose:psql down`                |
+| Down (with Postgresql) and kill volumes                           | `pnpm localenv:compose:psql down --volumes`      |
+| Build all the containers (with Postgresql)                        | `pnpm localenv:compose:psql build`               |
+| Start with local admin auth enabled (this is disabled by default) | `pnpm localenv:compose:adminauth up `            |
 
 ### Interacting with the Local Playground
 
@@ -238,17 +249,15 @@ The following are the most commonly used commands:
 The Open Payments APIs can be interacted with using the [Bruno collection](https://github.com/interledger/rafiki/tree/main/bruno/collections/Rafiki) ([resource server endpoints](https://github.com/interledger/rafiki/tree/main/bruno/collections/Rafiki/Open%20Payments%20APIs) and [auth server endpoints](https://github.com/interledger/rafiki/tree/main/bruno/collections/Rafiki/Open%20Payments%20Auth%20APIs)).
 To interact with the Open Payments APIs using Bruno, you must:
 
-1. Load the collection into Bruno by selecting "Open Collection"
-2. Navigate to `/rafiki/bruno/collections/Rafiki` on your machine and select "Open"
+1. Load the collection into Bruno by selecting **Open Collection**.
+2. Navigate to `/rafiki/bruno/collections/Rafiki` on your machine and select **Open**.
 3. Furthermore, you need to either load the [Local Environment](https://github.com/interledger/rafiki/tree/main/bruno/collections/Rafiki/environments/Local%20Playground.bru) or the [Remote Test Network Environment](https://github.com/interledger/rafiki/tree/main/bruno/collections/Rafiki/environments/Remote.bru).
 
 :::tip[Troubleshooting Bruno errors]
 
 If you receive the error below while running the Bruno collection, try switching from <LinkOut href='https://docs.usebruno.com/get-started/javascript-sandbox'>Safe Mode to Developer Mode</LinkOut>
 
-```
-Error invoking remote method `send-http-request`: Error : Error: Cannot find module crypto
-```
+``Error invoking remote method `send-http-request`: Error : Error: Cannot find module crypto``
 
 :::
 
@@ -264,7 +273,7 @@ The Examples folder in the Bruno collection includes an [Open Payments](https://
 
 :::note
 
-You have to go through an interaction flow by selecting the `redirect` link in the grant request response. More information about the interaction flow can be found <LinkOut href ='https://openpayments.dev/introduction/grants/'>here</LinkOut>.
+You have to go through an interaction flow by selecting the `redirect` link in the grant request's response. More information about the interaction flow can be found <LinkOut href ='https://openpayments.dev/introduction/grants/'>here</LinkOut>.
 :::
 
 8.  Continues the grant request
@@ -280,7 +289,9 @@ In addition to using Rafiki Admin to interact with the Admin APIs, you can also 
 Every wallet address also serves as an SPSP endpoint. A `GET` request with an `Accept` header `application/spsp4+json` will return an SPSP response with STREAM connection details. The following example uses [http://localhost:3000/accounts/gfranklin](http://localhost:3000/accounts/gfranklin) as the SPSP endpoint.
 
 ```sh
-http GET http://localhost:3000/accounts/gfranklin Host:backend Accept:application/spsp4+json
+GET http://localhost:3000/accounts/gfranklin HTTP/1.1
+Host:backend
+Accept:application/spsp4+json
 
 
 HTTP/1.1 200 OK
