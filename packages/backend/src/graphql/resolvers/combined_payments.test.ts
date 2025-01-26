@@ -50,6 +50,7 @@ describe('Payment', (): void => {
 
   test('Can get payments', async (): Promise<void> => {
     const { id: outWalletAddressId } = await createWalletAddress(deps, {
+      tenantId: Config.operatorTenantId,
       assetId: asset.id
     })
 
@@ -68,6 +69,7 @@ describe('Payment', (): void => {
     })
 
     const { id: inWalletAddressId } = await createWalletAddress(deps, {
+      tenantId: Config.operatorTenantId,
       assetId: asset.id
     })
     const incomingPayment = await createIncomingPayment(deps, {
@@ -146,6 +148,7 @@ describe('Payment', (): void => {
 
   test('Can filter payments by type and wallet address', async (): Promise<void> => {
     const { id: outWalletAddressId } = await createWalletAddress(deps, {
+      tenantId: Config.operatorTenantId,
       assetId: asset.id
     })
 
@@ -168,6 +171,7 @@ describe('Payment', (): void => {
     })
 
     const { id: outWalletAddressId2 } = await createWalletAddress(deps, {
+      tenantId: Config.operatorTenantId,
       assetId: asset.id
     })
     await createOutgoingPayment(deps, {

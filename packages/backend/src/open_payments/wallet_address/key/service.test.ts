@@ -31,7 +31,9 @@ describe('Wallet Address Key Service', (): void => {
   })
 
   beforeEach(async (): Promise<void> => {
-    walletAddress = await createWalletAddress(deps)
+    walletAddress = await createWalletAddress(deps, {
+      tenantId: Config.operatorTenantId
+    })
   })
 
   afterEach(async (): Promise<void> => {

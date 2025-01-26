@@ -42,7 +42,9 @@ describe('Models', (): void => {
     let incomingPayment: IncomingPayment
 
     beforeEach(async (): Promise<void> => {
-      walletAddress = await createWalletAddress(deps)
+      walletAddress = await createWalletAddress(deps, {
+        tenantId: Config.operatorTenantId
+      })
       baseUrl = new URL(walletAddress.url).origin
       incomingPayment = await createIncomingPayment(deps, {
         walletAddressId: walletAddress.id,

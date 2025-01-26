@@ -67,10 +67,12 @@ describe('IlpPaymentService', (): void => {
     })
 
     walletAddressMap['USD'] = await createWalletAddress(deps, {
+      tenantId: Config.operatorTenantId,
       assetId: assetMap['USD'].id
     })
 
     walletAddressMap['EUR'] = await createWalletAddress(deps, {
+      tenantId: Config.operatorTenantId,
       assetId: assetMap['EUR'].id
     })
   })

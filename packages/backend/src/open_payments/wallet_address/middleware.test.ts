@@ -355,7 +355,9 @@ describe('Wallet Address Middleware', (): void => {
     })
 
     test('throws error for deactivated wallet address', async (): Promise<void> => {
-      const walletAddress = await createWalletAddress(deps)
+      const walletAddress = await createWalletAddress(deps, {
+        tenantId: Config.operatorTenantId
+      })
       ctx.walletAddressUrl = walletAddress.url
 
       await walletAddress.$query().patch({ deactivatedAt: new Date() })
@@ -372,7 +374,9 @@ describe('Wallet Address Middleware', (): void => {
     })
 
     test('sets walletAddress on context and calls next', async (): Promise<void> => {
-      const walletAddress = await createWalletAddress(deps)
+      const walletAddress = await createWalletAddress(deps, {
+        tenantId: Config.operatorTenantId
+      })
       ctx.walletAddressUrl = walletAddress.url
 
       await expect(

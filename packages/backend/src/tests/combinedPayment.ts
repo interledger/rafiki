@@ -40,10 +40,14 @@ export async function createCombinedPayment(
   const sendAsset = await createAsset(deps)
   const receiveAsset = await createAsset(deps)
   const sendWalletAddressId = (
-    await createWalletAddress(deps, { assetId: sendAsset.id })
+    await createWalletAddress(deps, {
+      assetId: sendAsset.id,
+      tenantId: sendAsset.tenantId
+    })
   ).id
   const receiveWalletAddress = await createWalletAddress(deps, {
-    assetId: receiveAsset.id
+    assetId: receiveAsset.id,
+    tenantId: sendAsset.tenantId
   })
 
   const type = Math.random() < 0.5 ? PaymentType.Incoming : PaymentType.Outgoing

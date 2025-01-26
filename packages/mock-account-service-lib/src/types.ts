@@ -49,6 +49,7 @@ export interface Config {
   authServerDomain: string
   graphqlUrl: string
   idpSecret: string
+  operatorTenantId: string
 }
 export interface Webhook {
   id: string

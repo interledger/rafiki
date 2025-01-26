@@ -39,6 +39,7 @@ export type WalletAddressAdditionalPropertyInput = Pick<
 >
 
 export interface CreateOptions extends Options {
+  tenantId: string
   url: string
   assetId: string
   additionalProperties?: WalletAddressAdditionalPropertyInput[]
@@ -64,12 +65,13 @@ export interface WalletAddressService {
     id: string,
     includeVisibleOnlyAddProps: boolean
   ): Promise<WalletAddressAdditionalProperty[] | undefined>
-  get(id: string): Promise<WalletAddress | undefined>
-  getByUrl(url: string): Promise<WalletAddress | undefined>
+  get(id: string, tenantId?: string): Promise<WalletAddress | undefined>
+  getByUrl(url: string, tenantId?: string): Promise<WalletAddress | undefined>
   getOrPollByUrl(url: string): Promise<WalletAddress | undefined>
   getPage(
     pagination?: Pagination,
-    sortOrder?: SortOrder
+    sortOrder?: SortOrder,
+    tenantId?: string
   ): Promise<WalletAddress[]>
   processNext(): Promise<string | undefined>
   triggerEvents(limit: number): Promise<number>
@@ -114,11 +116,11 @@ export async function createWalletAddressService({
         walletAddressId,
         includeVisibleOnlyAddProps
       ),
-    get: (id) => getWalletAddress(deps, id),
-    getByUrl: (url) => getWalletAddressByUrl(deps, url),
+    get: (id, tenantId) => getWalletAddress(deps, id, tenantId),
+    getByUrl: (url, tenantId) => getWalletAddressByUrl(deps, url, tenantId),
     getOrPollByUrl: (url) => getOrPollByUrl(deps, url),
-    getPage: (pagination?, sortOrder?) =>
-      getWalletAddressPage(deps, pagination, sortOrder),
+    getPage: (pagination?, sortOrder?, tenantId?) =>
+      getWalletAddressPage(deps, pagination, sortOrder, tenantId),
     processNext: () => processNextWalletAddress(deps),
     triggerEvents: (limit) => triggerWalletAddressEvents(deps, limit)
   }
@@ -168,6 +170,9 @@ async function createWalletAddress(
   }
 
   try {
+    const asset = await deps.assetService.get(options.assetId, options.tenantId)
+    if (!asset) return WalletAddressError.UnknownAsset
+
     // Remove blank key/value pairs:
     const additionalProperties = options.additionalProperties
       ? cleanAdditionalProperties(options.additionalProperties)
@@ -176,13 +181,13 @@ async function createWalletAddress(
     const walletAddress = await WalletAddress.query(
       deps.knex
     ).insertGraphAndFetch({
+      tenantId: options.tenantId,
       url: options.url.toLowerCase(),
       publicName: options.publicName,
-      assetId: options.assetId,
+      assetId: asset.id,
       additionalProperties: additionalProperties
     })
-    const asset = await deps.assetService.get(walletAddress.assetId)
-    if (asset) walletAddress.asset = asset
+    walletAddress.asset = asset
 
     await deps.walletAddressCache.set(walletAddress.id, walletAddress)
     return walletAddress
@@ -260,12 +265,18 @@ async function updateWalletAddress(
 
 async function getWalletAddress(
   deps: ServiceDependencies,
-  id: string
+  id: string,
+  tenantId?: string
 ): Promise<WalletAddress | undefined> {
-  const walletAdd = await deps.walletAddressCache.get(id)
-  if (walletAdd) return walletAdd
+  const inMem = await deps.walletAddressCache.get(id)
+  if (inMem) {
+    return tenantId && inMem.tenantId !== tenantId ? undefined : inMem
+  }
 
-  const walletAddress = await WalletAddress.query(deps.knex).findById(id)
+  const query = WalletAddress.query(deps.knex)
+  if (tenantId) query.andWhere({ tenantId })
+
+  const walletAddress = await query.findById(id)
   if (walletAddress) {
     const asset = await deps.assetService.get(walletAddress.assetId)
     if (asset) walletAddress.asset = asset
@@ -323,9 +334,13 @@ async function getOrPollByUrl(
 
 async function getWalletAddressByUrl(
   deps: ServiceDependencies,
-  url: string
+  url: string,
+  tenantId?: string
 ): Promise<WalletAddress | undefined> {
-  const walletAddress = await WalletAddress.query(deps.knex).findOne({
+  const query = WalletAddress.query(deps.knex)
+  if (tenantId) query.andWhere({ tenantId })
+
+  const walletAddress = await query.findOne({
     url: url.toLowerCase()
   })
   if (walletAddress) {
@@ -338,11 +353,18 @@ async function getWalletAddressByUrl(
 async function getWalletAddressPage(
   deps: ServiceDependencies,
   pagination?: Pagination,
-  sortOrder?: SortOrder
+  sortOrder?: SortOrder,
+  tenantId?: string
 ): Promise<WalletAddress[]> {
-  return await WalletAddress.query(deps.knex)
-    .getPage(pagination, sortOrder)
-    .withGraphFetched('asset')
+  const query = WalletAddress.query(deps.knex)
+  if (tenantId) query.where({ tenantId })
+
+  const addresses = await query.getPage(pagination, sortOrder)
+  for (const address of addresses) {
+    const asset = await deps.assetService.get(address.assetId)
+    if (asset) address.asset = asset
+  }
+  return addresses
 }
 
 // Returns the id of the processed wallet address (if any).
