@@ -1051,6 +1051,9 @@ importers:
       mock-account-service-lib:
         specifier: workspace:*
         version: link:../../packages/mock-account-service-lib
+      uuid:
+        specifier: ^9.0.1
+        version: 9.0.1
       yaml:
         specifier: ^2.7.0
         version: 2.7.0
