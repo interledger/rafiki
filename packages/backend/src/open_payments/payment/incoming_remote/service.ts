@@ -14,6 +14,7 @@ import { BaseService } from '../../../shared/baseService'
 import { Amount, serializeAmount } from '../../amount'
 import { RemoteIncomingPaymentError } from './errors'
 import { isGrantError } from '../../grant/errors'
+import { urlWithoutTenantId } from '../../../shared/utils'
 
 interface CreateRemoteIncomingPaymentArgs {
   walletAddressUrl: string
@@ -111,7 +112,7 @@ async function createIncomingPayment(
     walletAddress.resourceServer ?? new URL(walletAddress.id).origin
 
   const grantOptions = {
-    authServer: walletAddress.authServer,
+    authServer: urlWithoutTenantId(walletAddress.authServer),
     accessType: AccessType.IncomingPayment,
     accessActions: [AccessAction.Create, AccessAction.ReadAll]
   }
@@ -125,7 +126,7 @@ async function createIncomingPayment(
   try {
     return await deps.openPaymentsClient.incomingPayment.create(
       {
-        url: resourceServerUrl,
+        url: urlWithoutTenantId(resourceServerUrl),
         accessToken: grant.accessToken
       },
       {
@@ -197,7 +198,7 @@ async function getIncomingPayment(
   OpenPaymentsIncomingPaymentWithPaymentMethods | RemoteIncomingPaymentError
 > {
   const grantOptions = {
-    authServer: authServerUrl,
+    authServer: urlWithoutTenantId(authServerUrl),
     accessType: AccessType.IncomingPayment,
     accessActions: [AccessAction.ReadAll]
   }
