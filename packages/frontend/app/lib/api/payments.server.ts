@@ -21,10 +21,13 @@ import {
   type GetOutgoingPaymentVariables,
   type GetOutgoingPayment
 } from '~/generated/graphql'
-import { apolloClient } from '../apollo.server'
+import { getApolloClient } from '../apollo.server'
 
-export const getIncomingPayment = async (args: QueryIncomingPaymentArgs) => {
-  await apolloClient.query
+export const getIncomingPayment = async (
+  request: Request,
+  args: QueryIncomingPaymentArgs
+) => {
+  const apolloClient = await getApolloClient(request)
   const response = await apolloClient.query<
     GetIncomingPayment,
     GetIncomingPaymentVariables
@@ -57,7 +60,11 @@ export const getIncomingPayment = async (args: QueryIncomingPaymentArgs) => {
   return response.data.incomingPayment
 }
 
-export const getOutgoingPayment = async (args: QueryOutgoingPaymentArgs) => {
+export const getOutgoingPayment = async (
+  request: Request,
+  args: QueryOutgoingPaymentArgs
+) => {
+  const apolloClient = await getApolloClient(request)
   const response = await apolloClient.query<
     GetOutgoingPayment,
     GetOutgoingPaymentVariables
@@ -96,7 +103,11 @@ export const getOutgoingPayment = async (args: QueryOutgoingPaymentArgs) => {
   return response.data.outgoingPayment
 }
 
-export const listPayments = async (args: QueryPaymentsArgs) => {
+export const listPayments = async (
+  request: Request,
+  args: QueryPaymentsArgs
+) => {
+  const apolloClient = await getApolloClient(request)
   const response = await apolloClient.query<
     ListPaymentsQuery,
     ListPaymentsQueryVariables
@@ -140,8 +151,10 @@ export const listPayments = async (args: QueryPaymentsArgs) => {
 }
 
 export const depositOutgoingPaymentLiquidity = async (
+  request: Request,
   args: DepositOutgoingPaymentLiquidityInput
 ) => {
+  const apolloClient = await getApolloClient(request)
   const response = await apolloClient.mutate<
     DepositOutgoingPaymentLiquidity,
     DepositOutgoingPaymentLiquidityVariables
@@ -164,8 +177,10 @@ export const depositOutgoingPaymentLiquidity = async (
 }
 
 export const createOutgoingPaymentWithdrawal = async (
+  request: Request,
   args: CreateOutgoingPaymentWithdrawalInput
 ) => {
+  const apolloClient = await getApolloClient(request)
   const response = await apolloClient.mutate<
     CreateOutgoingPaymentWithdrawal,
     CreateOutgoingPaymentWithdrawalVariables
@@ -188,8 +203,10 @@ export const createOutgoingPaymentWithdrawal = async (
 }
 
 export const createIncomingPaymentWithdrawal = async (
+  request: Request,
   args: CreateIncomingPaymentWithdrawalInput
 ) => {
+  const apolloClient = await getApolloClient(request)
   const response = await apolloClient.mutate<
     CreateIncomingPaymentWithdrawal,
     CreateIncomingPaymentWithdrawalVariables

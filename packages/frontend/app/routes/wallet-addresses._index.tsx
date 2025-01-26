@@ -20,7 +20,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     throw json(null, { status: 400, statusText: 'Invalid pagination.' })
   }
 
-  const walletAddresses = await listWalletAddresses({
+  const walletAddresses = await listWalletAddresses(request, {
     ...pagination.data
   })
 

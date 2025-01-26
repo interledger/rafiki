@@ -25,7 +25,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
   const cookies = request.headers.get('cookie')
   await checkAuthAndRedirect(request.url, cookies)
 
-  return json({ assets: await loadAssets() })
+  return json({ assets: await loadAssets(request) })
 }
 
 export default function CreatePeerPage() {
@@ -259,7 +259,7 @@ export async function action({ request }: ActionFunctionArgs) {
     return json({ errors }, { status: 400 })
   }
 
-  const response = await createPeer({
+  const response = await createPeer(request, {
     name: result.data.name,
     http: {
       outgoing: {

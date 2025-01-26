@@ -22,6 +22,7 @@ services:
       DISPLAY_NAME: Happy Life Bank
       DISPLAY_ICON: bank-icon.svg
       OPERATOR_TENANT_ID: cf5fd7d3-1eb1-4041-8e43-ba45747e9e5d
+      FRONTEND_PORT: 4010
     volumes:
       - ../happy-life-bank/seed.yml:/workspace/seed.yml
       - ../happy-life-bank/private-key.pem:/workspace/private-key.pem
@@ -137,7 +138,6 @@ services:
       ENABLE_INSECURE_MESSAGE_COOKIE: true
       AUTH_ENABLED: false
       SIGNATURE_VERSION: 1
-      SIGNATURE_SECRET: iyIgCprjb9uL8wFckR+pLEkJWMB7FJhgkvqhTQR/964=
     depends_on:
       - cloud-nine-admin
       - happy-life-backend
