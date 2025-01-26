@@ -293,8 +293,8 @@ importers:
         specifier: ^0.14.2
         version: 0.14.2
       nock:
-        specifier: 14.0.0-beta.19
-        version: 14.0.0-beta.19
+        specifier: 14.0.0
+        version: 14.0.0
       node-mocks-http:
         specifier: ^1.16.2
         version: 1.16.2(@types/node@18.19.64)
@@ -531,8 +531,8 @@ importers:
         specifier: ^0.14.2
         version: 0.14.2
       nock:
-        specifier: 14.0.0-beta.19
-        version: 14.0.0-beta.19
+        specifier: 14.0.0
+        version: 14.0.0
       node-mocks-http:
         specifier: ^1.16.2
         version: 1.16.2(@types/node@18.19.64)
@@ -747,8 +747,8 @@ importers:
         specifier: ^18.7.12
         version: 18.11.9
       nock:
-        specifier: ^13.5.6
-        version: 13.5.6
+        specifier: ^14.0.0
+        version: 14.0.0
       openapi-typescript:
         specifier: ^6.7.5
         version: 6.7.5
@@ -16548,19 +16548,8 @@ packages:
       lower-case: 2.0.2
       tslib: 2.8.1
 
-  /nock@13.5.6:
-    resolution: {integrity: sha512-o2zOYiCpzRqSzPj0Zt/dQ/DqZeYoaQ7TUonc/xUPjCGl9WeHpNbxgVvOquXYAaJzI0M9BXV3HTzG0p8IUAbBTQ==}
-    engines: {node: '>= 10.13'}
-    dependencies:
-      debug: 4.3.7(supports-color@9.4.0)
-      json-stringify-safe: 5.0.1
-      propagate: 2.0.1
-    transitivePeerDependencies:
-      - supports-color
-    dev: true
-
-  /nock@14.0.0-beta.19:
-    resolution: {integrity: sha512-xqWQQZ/Hv01tj5uL7BE4j752hhB2MHP7aaEcTp/iDT1EHsh3TYZOIx4HHFL81yRc8KFx4pqb2P2OtuxKShKhjw==}
+  /nock@14.0.0:
+    resolution: {integrity: sha512-3Z2ZoZoYTR/y2I+NI16+6IzfZFKBX7MrADtoBAm7v/QKqxQUhKw+Dh+847PPS1j/FDutjfIXfrh3CJF74yITWg==}
     engines: {node: '>= 18'}
     dependencies:
       '@mswjs/interceptors': 0.37.3
