@@ -33,22 +33,6 @@ module.exports = {
     }
   },
 
-  tenant_testing: {
-    client: 'postgresql',
-    connection: {
-      database: 'tenant_testing',
-      user: 'postgres',
-      password: 'password'
-    },
-    pool: {
-      min: 2,
-      max: 10
-    },
-    migrations: {
-      tableName: 'knex_migrations'
-    }
-  },
-
   production: {
     client: 'postgresql',
     connection: process.env.DATABASE_URL,
