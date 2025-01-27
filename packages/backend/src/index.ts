@@ -426,6 +426,7 @@ export function initIocContainer(
   })
   container.singleton('remoteIncomingPaymentService', async (deps) => {
     return await createRemoteIncomingPaymentService({
+      config: await deps.use('config'),
       logger: await deps.use('logger'),
       knex: await deps.use('knex'),
       grantService: await deps.use('grantService'),

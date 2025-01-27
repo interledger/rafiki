@@ -328,7 +328,7 @@ describe('Incoming Payment Routes', (): void => {
       await expect(incomingPaymentRoutes.get(ctx)).resolves.toBeUndefined()
       expect(ctx.response).toSatisfyApiSpec()
       expect(ctx.body).toEqual({
-        authServer: config.authServerGrantUrl,
+        authServer: config.authServerGrantUrl + '/' + config.operatorTenantId, // TODO: replace with incoming payment tenant id
         receivedAmount: {
           value: '0',
           assetCode: asset.code,
