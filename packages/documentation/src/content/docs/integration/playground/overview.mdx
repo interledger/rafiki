@@ -52,7 +52,7 @@ To spin up the Local Playground install the following software on your machine:
 
 Run the following commands from the root of the project.
 
-```sh
+```sh wrap
 ## If you have spun up the environment before, first tear down and remove volumes!
 
 pnpm localenv:compose down --volumes
@@ -65,7 +65,7 @@ pnpm localenv:compose up
 
 If you want to use Postgres as the accounting database instead of TigerBeetle, you must use the `psql` variant of the `localenv:compose` commands as follows:
 
-```sh
+```sh wrap
 ## If you have spun up the environment before, first tear down and remove volumes!
 ## Otherwise start the local environment
 pnpm localenv:compose:psql down --volumes
@@ -269,7 +269,7 @@ In addition to using Rafiki Admin to interact with the Admin APIs, you can also 
 
 Every wallet address also serves as an SPSP endpoint. A `GET` request with an `Accept` header `application/spsp4+json` will return an SPSP response with STREAM connection details. The following example uses [http://localhost:3000/accounts/gfranklin](http://localhost:3000/accounts/gfranklin) as the SPSP endpoint.
 
-```sh
+```sh wrap
 http GET http://localhost:3000/accounts/gfranklin Host:backend Accept:application/spsp4+json
 
 
