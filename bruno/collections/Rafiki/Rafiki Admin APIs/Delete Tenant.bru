@@ -1,0 +1,31 @@
+meta {
+  name: Delete Tenant
+  type: graphql
+  seq: 56
+}
+
+post {
+  url: {{RafikiGraphqlHost}}/graphql
+  body: graphql
+  auth: none
+}
+
+body:graphql {
+  mutation DeleteTenant($id: String!) {
+    deleteTenant(id:$id) {
+      success
+    }
+  }
+}
+
+body:graphql:vars {
+  {
+    "id": "{{tenantId}}"
+  }
+}
+
+script:pre-request {
+  const scripts = require('./scripts');
+  
+  scripts.addApiSignatureHeader();
+}
