@@ -305,8 +305,8 @@ importers:
         specifier: ^11.0.0
         version: 11.0.0
       testcontainers:
-        specifier: ^10.16.0
-        version: 10.16.0
+        specifier: ^10.17.2
+        version: 10.17.2
 
   packages/backend:
     dependencies:
@@ -546,8 +546,8 @@ importers:
         specifier: ^2.1.1
         version: 2.1.1
       testcontainers:
-        specifier: ^10.16.0
-        version: 10.16.0
+        specifier: ^10.17.2
+        version: 10.17.2
       tmp:
         specifier: ^0.2.3
         version: 0.2.3
@@ -9456,7 +9456,7 @@ packages:
       fs-minipass: 3.0.3
       glob: 10.3.10
       lru-cache: 7.18.3
-      minipass: 7.0.4
+      minipass: 7.1.2
       minipass-collect: 1.0.2
       minipass-flush: 1.0.5
       minipass-pipeline: 1.2.4
@@ -12297,7 +12297,7 @@ packages:
     resolution: {integrity: sha512-XUBA9XClHbnJWSfBzjkm6RvPsyg3sryZt06BEQoXcF7EK/xpGaQYJgQKDJSUH5SGZ76Y7pFx1QBnXz09rU5Fbw==}
     engines: {node: ^14.17.0 || ^16.13.0 || >=18.0.0}
     dependencies:
-      minipass: 7.0.4
+      minipass: 7.1.2
     dev: true
 
   /fs-readdir-recursive@1.1.0:
@@ -12470,7 +12470,7 @@ packages:
       foreground-child: 3.1.1
       jackspeak: 2.3.6
       minimatch: 9.0.3
-      minipass: 7.0.4
+      minipass: 7.1.2
       path-scurry: 1.10.1
     dev: true
 
@@ -16364,11 +16364,6 @@ packages:
       yallist: 4.0.0
     dev: true
 
-  /minipass@7.0.4:
-    resolution: {integrity: sha512-jYofLM5Dam9279rdkWzqHozUo4ybjdZmCsDHePy5V/PbBcVMiSZR97gmAy45aqi8CK1lG2ECd356FU86avfwUQ==}
-    engines: {node: '>=16 || 14 >=14.17'}
-    dev: true
-
   /minipass@7.1.2:
     resolution: {integrity: sha512-qOOzS1cBTWYF4BH8fVePDBOO9iptMnGUEZwNc/cMWnTV2nVLZ7VoNWEPHkYczZA0pdoA7dl6e7FL659nX9S2aw==}
     engines: {node: '>=16 || 14 >=14.17'}
@@ -17301,7 +17296,7 @@ packages:
     engines: {node: '>=16 || 14 >=14.17'}
     dependencies:
       lru-cache: 10.2.0
-      minipass: 7.0.4
+      minipass: 7.1.2
     dev: true
 
   /path-to-regexp@0.1.10:
@@ -19455,7 +19450,7 @@ packages:
     resolution: {integrity: sha512-bSf16tAFkGeRlUNDjXu8FzaMQt6g2HZJrun7mtMbIPOddxt3GLMSz5VWUWcqTJUPfLEaDIepGxv+bYQW49596A==}
     engines: {node: ^14.17.0 || ^16.13.0 || >=18.0.0}
     dependencies:
-      minipass: 7.0.4
+      minipass: 7.1.2
     dev: true
 
   /stack-utils@2.0.5:
@@ -19985,8 +19980,8 @@ packages:
       minimatch: 3.1.2
     dev: true
 
-  /testcontainers@10.16.0:
-    resolution: {integrity: sha512-oxPLuOtrRWS11A+Yn0+zXB7GkmNarflWqmy6CQJk8KJ75LZs2/zlUXDpizTbPpCGtk4kE2EQYwFZjrE967F8Wg==}
+  /testcontainers@10.17.2:
+    resolution: {integrity: sha512-tnvXQsqwnOUjNENWLllfFmDLQUm24Q0MNL6kbVH35bIKPujEhyG6dOcpU8N5vwA4mD/ZdtwfHel++Z1Tw084uQ==}
     dependencies:
       '@balena/dockerignore': 1.0.2
       '@types/dockerode': 3.3.32
@@ -20002,7 +19997,7 @@ packages:
       ssh-remote-port-forward: 1.0.4
       tar-fs: 3.0.6
       tmp: 0.2.3
-      undici: 5.28.4
+      undici: 5.28.5
     transitivePeerDependencies:
       - supports-color
     dev: true
@@ -20504,8 +20499,8 @@ packages:
   /undici-types@5.26.5:
     resolution: {integrity: sha512-JlCMO+ehdEIKqlFxk6IfVoAUVmgz7cU7zD/h9XZ0qzeosSHmUJVOzSQvvYSYWXkFXC+IfLKSIffhv0sVZup6pA==}
 
-  /undici@5.28.4:
-    resolution: {integrity: sha512-72RFADWFqKmUb2hmmvNODKL3p9hcB6Gt2DOQMis1SEBaV6a4MH8soBvzg+95CYhCKPFedut2JY9bMfrDl9D23g==}
+  /undici@5.28.5:
+    resolution: {integrity: sha512-zICwjrDrcrUE0pyyJc1I2QzBkLM8FINsgOrt6WjA+BgajVq9Nxu2PbFFXUrAggLfDXlZGZBVZYw7WNV5KiBiBA==}
     engines: {node: '>=14.0'}
     dependencies:
       '@fastify/busboy': 2.1.1
