@@ -68,7 +68,7 @@ describe('Tenant Resolvers', (): void => {
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer({
       ...Config,
-      databaseUrl: process.env.TENANT_TEST_DATABASE_URL as string
+      dbSchema: 'tenant_service_test_schema'
     })
     appContainer = await createTestApp(deps)
     config = await deps.use('config')
@@ -136,6 +136,7 @@ describe('Tenant Resolvers', (): void => {
         const tenant = await createTenant(deps)
         const apolloClient = createTenantedApolloClient(appContainer, tenant.id)
         try {
+          expect.assertions(2)
           await apolloClient
             .query({
               query: gql`
@@ -228,6 +229,7 @@ describe('Tenant Resolvers', (): void => {
       )
 
       try {
+        expect.assertions(2)
         await apolloClient
           .query({
             query: gql`
@@ -297,6 +299,7 @@ describe('Tenant Resolvers', (): void => {
         const apolloClient = createTenantedApolloClient(appContainer, tenant.id)
 
         try {
+          expect.assertions(2)
           await apolloClient
             .mutate({
               mutation: gql`
@@ -399,6 +402,7 @@ describe('Tenant Resolvers', (): void => {
         }
         const client = createTenantedApolloClient(appContainer, firstTenant.id)
         try {
+          expect.assertions(2)
           await client
             .mutate({
               mutation: gql`
@@ -475,6 +479,7 @@ describe('Tenant Resolvers', (): void => {
         const client = createTenantedApolloClient(appContainer, secondTenant.id)
 
         try {
+          expect.assertions(2)
           await client
             .mutate({
               mutation: gql`

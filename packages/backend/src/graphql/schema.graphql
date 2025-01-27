@@ -1531,13 +1531,13 @@ type Tenant implements Model {
   "Unique identifier of the tenant."
   id: ID!
   "Contact email of the tenant owner."
-  email: String!
+  email: String
   "Secret used to secure requests made for this tenant."
   apiSecret: String!
   "URL of the tenant's identity provider's consent screen."
-  idpConsentUrl: String!
+  idpConsentUrl: String
   "Secret used to secure requests from the tenant's identity provider."
-  idpSecret: String!
+  idpSecret: String
   "Public name for the tenant."
   publicName: String
   "The date and time that this tenant was created."
@@ -1562,13 +1562,13 @@ type TenantEdge {
 
 input CreateTenantInput {
   "Contact email of the tenant owner."
-  email: String!
+  email: String
   "Secret used to secure requests made for this tenant."
   apiSecret: String!
   "URL of the tenant's identity provider's consent screen."
-  idpConsentUrl: String!
+  idpConsentUrl: String
   "Secret used to secure requests from the tenant's identity provider."
-  idpSecret: String!
+  idpSecret: String
   "Public name for the tenant."
   publicName: String
 }

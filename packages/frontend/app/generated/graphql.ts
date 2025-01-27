@@ -368,11 +368,11 @@ export type CreateTenantInput = {
   /** Secret used to secure requests made for this tenant. */
   apiSecret: Scalars['String']['input'];
   /** Contact email of the tenant owner. */
-  email: Scalars['String']['input'];
+  email?: InputMaybe<Scalars['String']['input']>;
   /** URL of the tenant's identity provider's consent screen. */
-  idpConsentUrl: Scalars['String']['input'];
+  idpConsentUrl?: InputMaybe<Scalars['String']['input']>;
   /** Secret used to secure requests from the tenant's identity provider. */
-  idpSecret: Scalars['String']['input'];
+  idpSecret?: InputMaybe<Scalars['String']['input']>;
   /** Public name for the tenant. */
   publicName?: InputMaybe<Scalars['String']['input']>;
 };
@@ -1444,13 +1444,13 @@ export type Tenant = Model & {
   /** The date and time that this tenant was deleted. */
   deletedAt?: Maybe<Scalars['String']['output']>;
   /** Contact email of the tenant owner. */
-  email: Scalars['String']['output'];
+  email?: Maybe<Scalars['String']['output']>;
   /** Unique identifier of the tenant. */
   id: Scalars['ID']['output'];
   /** URL of the tenant's identity provider's consent screen. */
-  idpConsentUrl: Scalars['String']['output'];
+  idpConsentUrl?: Maybe<Scalars['String']['output']>;
   /** Secret used to secure requests from the tenant's identity provider. */
-  idpSecret: Scalars['String']['output'];
+  idpSecret?: Maybe<Scalars['String']['output']>;
   /** Public name for the tenant. */
   publicName?: Maybe<Scalars['String']['output']>;
 };
@@ -2535,10 +2535,10 @@ export type TenantResolvers<ContextType = any, ParentType extends ResolversParen
   apiSecret?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   deletedAt?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  email?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  email?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  idpConsentUrl?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  idpSecret?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  idpConsentUrl?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  idpSecret?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   publicName?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };

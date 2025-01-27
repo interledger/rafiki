@@ -34,28 +34,12 @@ const setup = async (globalConfig): Promise<void> => {
         POSTGRES_PORT
       )}/testing`
 
-      process.env.TENANT_TEST_DATABASE_URL = `postgresql://postgres:password@localhost:${postgresContainer.getMappedPort(
-        POSTGRES_PORT
-      )}/tenant_testing`
-
       global.__BACKEND_POSTGRES__ = postgresContainer
     }
 
     const db = knex({
       client: 'postgresql',
       connection: process.env.DATABASE_URL,
-      pool: {
-        min: 2,
-        max: 10
-      },
-      migrations: {
-        tableName: 'knex_migrations'
-      }
-    })
-
-    const tenantDb = knex({
-      client: 'postgresql',
-      connection: process.env.TENANT_TEST_DATABASE_URL,
       pool: {
         min: 2,
         max: 10
@@ -75,29 +59,14 @@ const setup = async (globalConfig): Promise<void> => {
       directory: __dirname + '/migrations'
     })
 
-    tenantDb.client.driver.types.setTypeParser(
-      tenantDb.client.driver.types.builtins.INT8,
-      'text',
-      BigInt
-    )
-    await tenantDb.migrate.latest({
-      directory: __dirname + '/migrations'
-    })
-
     for (let i = 1; i <= workers; i++) {
       const workerDatabaseName = `testing_${i}`
-      const tenantWorkerDatabaseName = `tenant_testing_${i}`
 
       await db.raw(`DROP DATABASE IF EXISTS ${workerDatabaseName}`)
-      await tenantDb.raw(`DROP DATABASE IF EXISTS ${tenantWorkerDatabaseName}`)
       await db.raw(`CREATE DATABASE ${workerDatabaseName} TEMPLATE testing`)
-      await tenantDb.raw(
-        `CREATE DATABASE ${tenantWorkerDatabaseName} TEMPLATE tenant_testing`
-      )
     }
 
     global.__BACKEND_KNEX__ = db
-    global.__BACKEND_TENANT_KNEX__ = tenantDb
   }
 
   const setupRedis = async () => {
