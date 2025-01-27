@@ -82,7 +82,7 @@ You can add a liquidity threshold for each asset liquidity account via the [`upd
 
 When a threshold is entered, the [`asset.liquidity_low`](/integration/requirements/webhook-events#asset-liquidity-low) webhook event notifies you if an asset account's liquidity drops below the threshold.
 
-You should define and adjust asset liquidity based on your liquidity risk profile. You can deposit or withdraw asset liquidity as needed through [Rafiki Admin](/admin/admin-user-guide#edit-asset) or by using the [Backend Admin API](/admin/liquidity/asset-liquidity#manage-asset-liquidity-using-the-backend-admin-api). 
+You should define and adjust asset liquidity based on your liquidity risk profile. You can deposit or withdraw asset liquidity as needed through [Rafiki Admin](/admin/admin-user-guide#edit-asset) or by using the [Backend Admin API](/admin/liquidity/asset-liquidity#manage-asset-liquidity-using-the-backend-admin-api).
 
 <details>
 <summary>Asset liquidity example - cross-currency transactions</summary>
@@ -259,14 +259,14 @@ The name two-phase transfer is a reference to the <LinkOut href="https://en.wiki
 
 You can [post and commit](/admin/liquidity/two-phase-transfers#post-and-commit-a-successful-transfer) a successful two-phase transfer and [void and roll back](/admin/liquidity/two-phase-transfers#void-and-roll-back-an-unsuccessful-transfer) an unsuccessful two-phase transfer by using the Backend Admin API.
 
-### Intra-Rafiki transfer examples 
+### Intra-Rafiki transfer examples
 
 Remember that a settlement account will always have a zero or negative balance and a liquidity account will always have a zero or positive balance.
 
-* [Deposits](#deposits)
-* [Withdrawals](#withdrawals)
-* [Payments in the same asset](#payments-in-the-same-asset)
-* [Cross currency payments](#cross-currency-payments)
+- [Deposits](#deposits)
+- [Withdrawals](#withdrawals)
+- [Payments in the same asset](#payments-in-the-same-asset)
+- [Cross currency payments](#cross-currency-payments)
 
 #### Deposits
 
@@ -796,12 +796,12 @@ In these examples, the sender and receiver do not have wallet addresses at the s
 
 Remember that a settlement account will always have a zero or negative balance and a liquidity account will always have a zero or positive balance.
 
-* [Sending connector - same asset](#sending-connector---same-asset)
-* [Sending connector - cross currency](#sending-connector---cross-currency)
-* [Receiving connector - same asset](#receiving-connector---same-asset)
-* [Receiving connector - cross currency](#receiving-connector---cross-currency) 
-* [Connector - same asset](#connector---same-asset)
-* [Connector - cross currency](#connector---cross-currency) 
+- [Sending connector - same asset](#sending-connector---same-asset)
+- [Sending connector - cross currency](#sending-connector---cross-currency)
+- [Receiving connector - same asset](#receiving-connector---same-asset)
+- [Receiving connector - cross currency](#receiving-connector---cross-currency)
+- [Connector - same asset](#connector---same-asset)
+- [Connector - cross currency](#connector---cross-currency)
 
 #### Sending connector - same asset
 

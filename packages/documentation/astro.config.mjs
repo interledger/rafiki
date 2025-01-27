@@ -210,26 +210,26 @@ export default defineConfig({
             },
             {
               label: 'Manage liquidity',
-              collapsed: true, 
+              collapsed: true,
               items: [
                 {
                   label: 'Asset liquidity',
-                  link: '/admin/liquidity/asset-liquidity',
+                  link: '/admin/liquidity/asset-liquidity'
                 },
                 {
                   label: 'Peer liquidity',
-                  link: '/admin/liquidity/peer-liquidity',
+                  link: '/admin/liquidity/peer-liquidity'
                 },
                 {
                   label: 'Payment liquidity',
-                  link: '/admin/liquidity/payment-liquidity',
+                  link: '/admin/liquidity/payment-liquidity'
                 },
                 {
                   label: 'Two-phase transfers',
-                  link: '/admin/liquidity/two-phase-transfers',
-                },
-              ],
-            },
+                  link: '/admin/liquidity/two-phase-transfers'
+                }
+              ]
+            }
           ]
         },
         {
