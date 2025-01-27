@@ -18,23 +18,23 @@
     "@types/node": "^18.7.12",
     "@types/uuid": "^9.0.8",
     "axios": "^1.7.9",
-    "class-variance-authority": "^0.7.0",
+    "class-variance-authority": "^0.7.1",
     "graphql": "^16.8.1",
     "json-canonicalize": "^1.0.6",
     "mock-account-service-lib": "workspace:*",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "uuid": "^9.0.1",
-    "yaml": "^2.6.0",
+    "yaml": "^2.7.0",
     "zod": "^3.22.4"
   },
   "devDependencies": {
     "@remix-run/dev": "^2.6.0",
     "@types/react": "^18.2.73",
     "@types/react-dom": "^18.2.22",
-    "@tailwindcss/forms": "^0.5.9",
+    "@tailwindcss/forms": "^0.5.10",
     "autoprefixer": "^10.4.20",
-    "postcss": "^8.4.47",
+    "postcss": "^8.5.1",
     "tailwindcss": "^3.4.17"
   },
   "engines": {
