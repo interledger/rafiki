@@ -1190,7 +1190,7 @@ export type Query = {
   /** Retrieve an Open Payments incoming payment by receiver ID. The receiver's wallet address can be hosted on this server or a remote Open Payments resource server. */
   receiver?: Maybe<Receiver>;
   /** Retrieve a tenant of the instance. */
-  tenant?: Maybe<Tenant>;
+  tenant: Tenant;
   /** As an operator, fetch a paginated list of tenants on the instance. */
   tenants: TenantsConnection;
   /** Fetch a wallet address by its ID. */
@@ -2470,7 +2470,7 @@ export type QueryResolvers<ContextType = any, ParentType extends ResolversParent
   peers?: Resolver<ResolversTypes['PeersConnection'], ParentType, ContextType, Partial<QueryPeersArgs>>;
   quote?: Resolver<Maybe<ResolversTypes['Quote']>, ParentType, ContextType, RequireFields<QueryQuoteArgs, 'id'>>;
   receiver?: Resolver<Maybe<ResolversTypes['Receiver']>, ParentType, ContextType, RequireFields<QueryReceiverArgs, 'id'>>;
-  tenant?: Resolver<Maybe<ResolversTypes['Tenant']>, ParentType, ContextType, RequireFields<QueryTenantArgs, 'id'>>;
+  tenant?: Resolver<ResolversTypes['Tenant'], ParentType, ContextType, RequireFields<QueryTenantArgs, 'id'>>;
   tenants?: Resolver<ResolversTypes['TenantsConnection'], ParentType, ContextType, Partial<QueryTenantsArgs>>;
   walletAddress?: Resolver<Maybe<ResolversTypes['WalletAddress']>, ParentType, ContextType, RequireFields<QueryWalletAddressArgs, 'id'>>;
   walletAddressByUrl?: Resolver<Maybe<ResolversTypes['WalletAddress']>, ParentType, ContextType, RequireFields<QueryWalletAddressByUrlArgs, 'url'>>;

@@ -150,7 +150,7 @@ type Query {
   ): Receiver
 
   "Retrieve a tenant of the instance."
-  tenant("Unique identifier of the tenant." id: String!): Tenant
+  tenant("Unique identifier of the tenant." id: String!): Tenant!
 
   "As an operator, fetch a paginated list of tenants on the instance."
   tenants(
