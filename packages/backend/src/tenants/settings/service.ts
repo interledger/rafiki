@@ -3,6 +3,7 @@ import { Pagination, SortOrder } from '../../shared/baseModel'
 import { BaseService } from '../../shared/baseService'
 import { TenantSetting } from './model'
 import { TenantService } from '../service'
+import { Knex } from 'knex'
 
 export interface KeyValuePair {
   key: string
@@ -25,9 +26,13 @@ export interface GetOptions {
   key?: string
 }
 
+export interface ExtraOptions {
+  trx?: Knex.Transaction
+}
+
 export interface TenantSettingService {
   get: (options: GetOptions) => Promise<TenantSetting | TenantSetting[]>
-  create: (options: CreateOptions) => Promise<TenantSetting[]>
+  create: (options: CreateOptions, extra?: ExtraOptions) => Promise<TenantSetting[]>
   update: (options: UpdateOptions) => Promise<void>
   delete: (options: GetOptions) => Promise<void>
   getPage: (
@@ -39,7 +44,6 @@ export interface TenantSettingService {
 
 export interface ServiceDependencies extends BaseService {
   knex: TransactionOrKnex
-  tenantService: TenantService
 }
 
 export async function createTenantSettingService(
@@ -52,7 +56,7 @@ export async function createTenantSettingService(
 
   return {
     get: (options: GetOptions) => getTenantSettings(deps, options),
-    create: (options: CreateOptions) => createTenantSetting(deps, options),
+    create: (options: CreateOptions, extra?: ExtraOptions) => createTenantSetting(deps, options, extra),
     update: (options: UpdateOptions) => updateTenantSetting(deps, options),
     delete: (options: GetOptions) => deleteTenantSetting(deps, options),
     getPage: (
@@ -95,14 +99,15 @@ async function updateTenantSetting(
 
 async function createTenantSetting(
   deps: ServiceDependencies,
-  options: CreateOptions
+  options: CreateOptions,
+  extra?: ExtraOptions
 ) {
   const dataToInsert = options.setting.map((s) => ({
     tenantId: options.tenantId,
     ...s
   }))
 
-  return TenantSetting.query(deps.knex).insertAndFetch(dataToInsert)
+  return TenantSetting.query(extra?.trx ?? deps.knex).insertAndFetch(dataToInsert)
 }
 
 async function getTenantSettingPageForTenant(
@@ -111,11 +116,6 @@ async function getTenantSettingPageForTenant(
   pagination?: Pagination,
   sortOrder?: SortOrder
 ): Promise<TenantSetting[]> {
-  const tenant = await deps.tenantService.get(tenantId)
-  if (!tenant) {
-    return []
-  }
-
   return await TenantSetting.query(deps.knex)
     .whereNull('deletedAt')
     .andWhere('tenantId', tenantId)

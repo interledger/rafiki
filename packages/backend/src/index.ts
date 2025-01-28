@@ -235,17 +235,17 @@ export function initIocContainer(
       logger: await deps.use('logger'),
       knex: await deps.use('knex'),
       tenantCache: await deps.use('tenantCache'),
-      authServiceClient: deps.use('authServiceClient')
+      authServiceClient: deps.use('authServiceClient'),
+      tenantSettingService: await deps.use('tenantSettingService')
     })
   })
 
   container.singleton('tenantSettingService', async (deps) => {
-    const [logger, knex, tenantService] = await Promise.all([
+    const [logger, knex] = await Promise.all([
       deps.use('logger'),
       deps.use('knex'),
-      deps.use('tenantService')
     ])
-    return createTenantSettingService({ logger, knex, tenantService })
+    return createTenantSettingService({ logger, knex })
   })
 
   container.singleton('ratesService', async (deps) => {

@@ -87,7 +87,14 @@ describe('TenantSetting Service', (): void => {
     }
 
     beforeEach(async (): Promise<void> => {
-      tenantSetting = await createTenantSetting()
+      await createTenantSetting()
+      tenantSetting = await tenantSettingService.get({ tenantId: tenant.id }) as TenantSetting[]
+    })
+
+    afterEach(async (): Promise<void> => {
+      return tenantSettingService.delete({
+        tenantId: tenant.id
+      })
     })
 
     test('should get tenant setting', async () => {
@@ -96,7 +103,7 @@ describe('TenantSetting Service', (): void => {
         key: tenantSetting[0].key
       })
 
-      expect(dbTenantSetting).toEqual(tenantSetting)
+      expect(dbTenantSetting).toEqual([tenantSetting[0]])
     })
 
     test('should get all tenant settings', async () => {
@@ -105,7 +112,9 @@ describe('TenantSetting Service', (): void => {
         tenantId: tenant.id
       })
 
-      expect(dbTenantSettings).toEqual(tenantSetting.concat(newTenantSetting))
+      const settings = tenantSetting.concat(newTenantSetting)
+
+      expect(dbTenantSettings).toEqual(settings)
     })
 
     test('should not get deleted tenant', async () => {
@@ -197,6 +206,9 @@ describe('TenantSetting Service', (): void => {
   })
 
   describe('pagination', (): void => {
+    beforeEach(async () => {
+      await tenantSettingService.delete({ tenantId: tenant.id })
+    })
     describe('getPage', (): void => {
       getPageTests({
         createModel: () =>
