@@ -243,7 +243,7 @@ export function initIocContainer(
   container.singleton('tenantSettingService', async (deps) => {
     const [logger, knex] = await Promise.all([
       deps.use('logger'),
-      deps.use('knex'),
+      deps.use('knex')
     ])
     return createTenantSettingService({ logger, knex })
   })

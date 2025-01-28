@@ -116,7 +116,10 @@ describe('Tenant Service', (): void => {
         })
       )
 
-      const tenantSettings = await TenantSetting.query().where('tenantId', tenant.id)
+      const tenantSettings = await TenantSetting.query().where(
+        'tenantId',
+        tenant.id
+      )
       expect(tenantSettings.length).toBeGreaterThan(0)
     })
 
