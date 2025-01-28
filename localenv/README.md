@@ -41,12 +41,6 @@ These mock ASEs automatically peer and 2 to 3 user accounts are created on both 
 
 ## Installation steps
 
-If you have spun up the environment before, tear down previous instances
-
-```sh
-pnpm localenv:compose down --volumes
-```
-
 Start the Local Playground
 
 ```sh
@@ -91,49 +85,49 @@ pnpm localenv:compose down --volumes --rmi all
 
 ## Cloud Nine Wallet
 
-| Label | Component                | URL                           |
-| ----- | ------------------------ | ----------------------------- |
-| (a)   | User interface           | http://localhost:3030         |
-| (b)   | Backend Admin API        | http://localhost:3001/graphql |
-| (c)   | Open Payments API        | http://localhost:3000         |
-| (d)   | Auth Admin API           | http://localhost:3003/graphql |
-| (e)   | Open Payments Auth API   | http://localhost:3006         |
-| (f)   | Rafiki Admin application | http://localhost:3010         |
-| (g)   | \*_Kratos API_           | http://localhost:4433         |
+| Label | Component                | URL                             |
+| ----- | ------------------------ | ------------------------------- |
+| (a)   | User interface           | `http://localhost:3030`         |
+| (b)   | Backend Admin API        | `http://localhost:3001/graphql` |
+| (c)   | Open Payments API        | `http://localhost:3000`         |
+| (d)   | Auth Admin API           | `http://localhost:3003/graphql` |
+| (e)   | Open Payments Auth API   | `http://localhost:3006`         |
+| (f)   | Rafiki Admin application | `http://localhost:3010`         |
+| (g)   | \*_Kratos API_           | `http://localhost:4433`         |
 
 ## Happy Life Bank
 
-| Label | Component                | URL                           |
-| ----- | ------------------------ | ----------------------------- |
-| (h)   | User interface           | http://localhost:3031         |
-| (i)   | Backend Admin API        | http://localhost:4001/graphql |
-| (j)   | Open Payments API        | http://localhost:4000         |
-| (k)   | Auth Admin API           | http://localhost:4003/graphql |
-| (l)   | Open Payments Auth API   | http://localhost:4006         |
-| (m)   | Rafiki Admin application | http://localhost:4010         |
-| (n)   | \*_Kratos API_           | http://localhost:4432         |
+| Label | Component                | URL                             |
+| ----- | ------------------------ | ------------------------------- |
+| (h)   | User interface           | `http://localhost:3031`         |
+| (i)   | Backend Admin API        | `http://localhost:4001/graphql` |
+| (j)   | Open Payments API        | `http://localhost:4000`         |
+| (k)   | Auth Admin API           | `http://localhost:4003/graphql` |
+| (l)   | Open Payments Auth API   | `http://localhost:4006`         |
+| (m)   | Rafiki Admin application | `http://localhost:4010`         |
+| (n)   | \*_Kratos API_           | `http://localhost:4432`         |
 
 ## Mail Slurper
 
-| Label | Component   | URL                   |
-| ----- | ----------- | --------------------- |
-| (o)   | \*_Mail UI_ | http://localhost:4436 |
+| Label | Component   | URL                     |
+| ----- | ----------- | ----------------------- |
+| (o)   | \*_Mail UI_ | `http://localhost:4436` |
 
 ## Postgres Server
 
-| Label | Component       | URL                   |
-| ----- | --------------- | --------------------- |
-| N/A   | Postgres Server | http://localhost:5432 |
+| Label | Component       | URL                     |
+| ----- | --------------- | ----------------------- |
+| N/A   | Postgres Server | `http://localhost:5432` |
 
 > \*Note: In the Local Playground, Kratos and Mail Slurper are disabled by default.
 
 ## Exploring Accounts on Mock Account Servicing Entity
 
-Navigate to [`localhost:3030`](http://localhost:3030) to view the accounts on the Cloud Nine Wallet mock ASE.
+Navigate to `localhost:3030` to view the accounts on the Cloud Nine Wallet mock ASE.
 
 ![Mock Account Servicing Entity Accounts](../packages/documentation/public/img/map-accounts.png)
 
-The accounts of the Happy Life Bank mock ASE can be found on [`localhost:3031`](http://localhost:3031).
+The accounts of the Happy Life Bank mock ASE can be found on `localhost:3031`.
 
 Select an Account Name to view account information, available balance, and a list of transactions.
 
@@ -186,8 +180,8 @@ To learn how to interact with the Open Payments APIs, Admin APIs, and SPSP endpo
 
 Manage and view information about Rafiki instances via the Rafiki Admin application. Two instances are pre-configured:
 
-- Cloud Nine Wallet: http://localhost:3010
-- Happy Life Bank: http://localhost:4010
+- Cloud Nine Wallet: `http://localhost:3010`
+- Happy Life Bank: `http://localhost:4010`
 
 Authentication is disabled by default for ease of development, but it can be enabled locally by running:
 
