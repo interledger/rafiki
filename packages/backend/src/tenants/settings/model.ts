@@ -1,4 +1,4 @@
-import { Pojo, QueryContext } from 'objection'
+import { Pojo } from 'objection'
 import { BaseModel } from '../../shared/baseModel'
 import { KeyValuePair } from './service'
 
