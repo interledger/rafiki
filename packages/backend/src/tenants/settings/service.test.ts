@@ -27,9 +27,10 @@ describe('TenantSetting Service', (): void => {
   let tenant: Tenant
   let tenantService: TenantService
   let tenantSettingService: TenantSettingService
+  const dbSchema = 'tenant_settings_service_test_schema'
 
   beforeAll(async (): Promise<void> => {
-    deps = initIocContainer({ ...Config })
+    deps = initIocContainer({ ...Config, dbSchema })
     appContainer = await createTestApp(deps)
 
     knex = await deps.use('knex')
@@ -47,7 +48,7 @@ describe('TenantSetting Service', (): void => {
   })
 
   afterEach(async (): Promise<void> => {
-    await truncateTables(knex, true)
+    await truncateTables(knex, true, dbSchema)
   })
 
   afterAll(async (): Promise<void> => {
