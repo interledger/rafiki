@@ -60,10 +60,10 @@ async function getTenantPage(
 }
 
 interface CreateTenantOptions {
-  email: string
+  email?: string
   apiSecret: string
-  idpSecret: string
-  idpConsentUrl: string
+  idpSecret?: string
+  idpConsentUrl?: string
   publicName?: string
 }
 
