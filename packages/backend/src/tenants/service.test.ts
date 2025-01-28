@@ -16,6 +16,7 @@ import { createTenant } from '../tests/tenant'
 import { CacheDataStore } from '../middleware/cache/data-stores'
 import { AuthServiceClient } from '../auth-service-client/client'
 import { withConfigOverride } from '../tests/helpers'
+import { TenantSetting } from './settings/model'
 
 describe('Tenant Service', (): void => {
   let deps: IocContract<AppServices>
@@ -87,19 +88,6 @@ describe('Tenant Service', (): void => {
       const tenant = await tenantService.get(dbTenant.id)
       expect(tenant).toBeUndefined()
     })
-
-    test('returns undefined if tenant is deleted', async (): Promise<void> => {
-      const dbTenant = await Tenant.query(knex).insertAndFetch({
-        apiSecret: 'test-secret',
-        email: faker.internet.email(),
-        idpConsentUrl: faker.internet.url(),
-        idpSecret: 'test-idp-secret',
-        deletedAt: new Date()
-      })
-
-      const tenant = await tenantService.get(dbTenant.id)
-      expect(tenant).toBeUndefined()
-    })
   })
 
   describe('create', (): void => {
@@ -127,6 +115,12 @@ describe('Tenant Service', (): void => {
           idpConsentUrl: createOptions.idpConsentUrl
         })
       )
+
+      const tenantSettings = await TenantSetting.query().where(
+        'tenantId',
+        tenant.id
+      )
+      expect(tenantSettings.length).toBeGreaterThan(0)
     })
 
     test('tenant creation rolls back if auth tenant create fails', async (): Promise<void> => {
