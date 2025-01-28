@@ -6,7 +6,7 @@ These packages include:
 
 - `backend` (SPSP, Open Payments APIs, GraphQL Admin APIs, STREAM endpoint)
 - `auth` (GNAP auth server)
-- `mock-account-servicing-entity` (mocks an [account servicing entity](https://rafiki.dev/overview/overview)
+- `mock-account-servicing-entity` (mocks an [account servicing entity](https://rafiki.dev/overview/overview))
 - `frontend` (Remix app to expose a UI for Rafiki Admin management via interaction with the `backend` Admin APIs)
 - `kratos` (An identity and user management solution for the `frontend`)
 - `mailslurper` (A SMTP mail server to catch account recovery emails for the `frontend`)
@@ -289,6 +289,6 @@ Keep-Alive: timeout=5
 
 #### TigerBeetle container exits with code 137
 
-This is a known [issue](https://docs.tigerbeetle.com/getting-started/with-docker-compose/#exited-with-code-137) when running TigerBeetle in Docker: the container exits without logs and simply shows error code 137. To fix this, increase the Docker memory limit.
+This is a known [issue](https://docs.tigerbeetle.com/operating/docker#exited-with-code-137) when running TigerBeetle in Docker: the container exits without logs and simply shows error code 137. To fix this, increase the Docker memory limit.
 
 If you are running the local playground in Docker on a Windows machine using WSL, you can increase the memory limit by [configuring](https://learn.microsoft.com/en-us/windows/wsl/wsl-config#example-wslconfig-file) your `.wslconfig` file.
