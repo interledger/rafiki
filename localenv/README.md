@@ -257,7 +257,7 @@ Note that you have to go through an interaction flow by clicking on the `redirec
 
 In order to manage and view information about the Rafiki instance(s) you can use the [Rafiki Admin](https://rafiki.dev/admin/admin-user-guide) UI.
 
-The Admin UI requires a valid API secret and tenant id to make requests to the Admin APIs, which must be submitted via a form on the frontend. For our convenience, we log a link on MASE start that can be used to access the Admin UI and set the credentials automatically. The credentials used pull from the MASE's `SIGNATURE_SECRET` and `OPERATOR_TENANT_ID` environemnt variables.
+The Admin UI requires a valid API secret and tenant id to make requests to the Admin APIs, which must be submitted via a form on the frontend. For our convenience, we log a link on MASE start that can be used to access the Admin UI and set the credentials automatically. The credentials used pull from the MASE's `SIGNATURE_SECRET` and `OPERATOR_TENANT_ID` environment variables.
 
 We have secured access to Rafiki Admin using [Ory Kratos](https://www.ory.sh/docs/kratos/ory-kratos-intro); however, in our local playground setup we've chosen to disable authorization for easier development and testing interactions.
 
