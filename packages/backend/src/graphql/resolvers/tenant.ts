@@ -141,11 +141,11 @@ export const deleteTenant: MutationResolvers<TenantedApolloContext>['deleteTenan
     args,
     ctx
   ): Promise<ResolversTypes['DeleteTenantMutationResponse']> => {
-    const { tenant: contextTenant, isOperator } = ctx
-    if (args.id !== contextTenant.id && !isOperator) {
-      throw new GraphQLError('tenant does not exist', {
+    const { isOperator } = ctx
+    if (!isOperator) {
+      throw new GraphQLError('permission denied', {
         extensions: {
-          code: GraphQLErrorCode.NotFound
+          code: GraphQLErrorCode.Forbidden
         }
       })
     }

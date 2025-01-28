@@ -440,40 +440,30 @@ describe('Tenant Resolvers', (): void => {
     })
 
     describe('Delete', (): void => {
-      test.each`
-        isOperator | description
-        ${true}    | ${'operator'}
-        ${false}   | ${'tenant'}
-      `(
-        'Can delete a tenant as $description',
-        async ({ isOperator }): Promise<void> => {
-          const tenant = await createTenant(deps)
+      test('Can delete a tenant as operator', async (): Promise<void> => {
+        const tenant = await createTenant(deps)
 
-          const client = isOperator
-            ? appContainer.apolloClient
-            : createTenantedApolloClient(appContainer, tenant.id)
-          const mutation = await client
-            .mutate({
-              mutation: gql`
-                mutation DeleteTenant($id: String!) {
-                  deleteTenant(id: $id) {
-                    success
-                  }
+        const mutation = await appContainer.apolloClient
+          .mutate({
+            mutation: gql`
+              mutation DeleteTenant($id: String!) {
+                deleteTenant(id: $id) {
+                  success
                 }
-              `,
-              variables: {
-                id: tenant.id
               }
-            })
-            .then(
-              (query): DeleteTenantMutationResponse => query.data?.deleteTenant
-            )
+            `,
+            variables: {
+              id: tenant.id
+            }
+          })
+          .then(
+            (query): DeleteTenantMutationResponse => query.data?.deleteTenant
+          )
 
-          expect(mutation.success).toBe(true)
-        }
-      )
+        expect(mutation.success).toBe(true)
+      })
 
-      test('Cannot delete other tenant as non-operator', async (): Promise<void> => {
+      test('Cannot delete tenant as non-operator', async (): Promise<void> => {
         const firstTenant = await createTenant(deps)
         const secondTenant = await createTenant(deps)
 
@@ -501,9 +491,9 @@ describe('Tenant Resolvers', (): void => {
           expect(error).toBeInstanceOf(ApolloError)
           expect((error as ApolloError).graphQLErrors).toContainEqual(
             expect.objectContaining({
-              message: 'tenant does not exist',
+              message: 'permission denied',
               extensions: expect.objectContaining({
-                code: GraphQLErrorCode.NotFound
+                code: GraphQLErrorCode.Forbidden
               })
             })
           )
