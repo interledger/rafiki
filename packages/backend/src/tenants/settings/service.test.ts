@@ -88,7 +88,9 @@ describe('TenantSetting Service', (): void => {
 
     beforeEach(async (): Promise<void> => {
       await createTenantSetting()
-      tenantSetting = await tenantSettingService.get({ tenantId: tenant.id }) as TenantSetting[]
+      tenantSetting = (await tenantSettingService.get({
+        tenantId: tenant.id
+      })) as TenantSetting[]
     })
 
     afterEach(async (): Promise<void> => {

@@ -19,7 +19,7 @@ export interface ServiceDependencies extends BaseService {
   knex: TransactionOrKnex
   tenantCache: CacheDataStore<Tenant>
   authServiceClient: AuthServiceClient
-  tenantSettingService: TenantSettingService;
+  tenantSettingService: TenantSettingService
 }
 
 export async function createTenantService(
@@ -91,11 +91,13 @@ async function createTenant(
       idpConsentUrl
     })
 
-
-    await deps.tenantSettingService.create({
-      tenantId: tenant.id,
-      setting: TenantSetting.default(),
-    }, { trx })
+    await deps.tenantSettingService.create(
+      {
+        tenantId: tenant.id,
+        setting: TenantSetting.default()
+      },
+      { trx }
+    )
 
     await trx.commit()
 

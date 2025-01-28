@@ -2,7 +2,6 @@ import { TransactionOrKnex } from 'objection'
 import { Pagination, SortOrder } from '../../shared/baseModel'
 import { BaseService } from '../../shared/baseService'
 import { TenantSetting } from './model'
-import { TenantService } from '../service'
 import { Knex } from 'knex'
 
 export interface KeyValuePair {
@@ -32,7 +31,10 @@ export interface ExtraOptions {
 
 export interface TenantSettingService {
   get: (options: GetOptions) => Promise<TenantSetting | TenantSetting[]>
-  create: (options: CreateOptions, extra?: ExtraOptions) => Promise<TenantSetting[]>
+  create: (
+    options: CreateOptions,
+    extra?: ExtraOptions
+  ) => Promise<TenantSetting[]>
   update: (options: UpdateOptions) => Promise<void>
   delete: (options: GetOptions) => Promise<void>
   getPage: (
@@ -56,7 +58,8 @@ export async function createTenantSettingService(
 
   return {
     get: (options: GetOptions) => getTenantSettings(deps, options),
-    create: (options: CreateOptions, extra?: ExtraOptions) => createTenantSetting(deps, options, extra),
+    create: (options: CreateOptions, extra?: ExtraOptions) =>
+      createTenantSetting(deps, options, extra),
     update: (options: UpdateOptions) => updateTenantSetting(deps, options),
     delete: (options: GetOptions) => deleteTenantSetting(deps, options),
     getPage: (
@@ -107,7 +110,9 @@ async function createTenantSetting(
     ...s
   }))
 
-  return TenantSetting.query(extra?.trx ?? deps.knex).insertAndFetch(dataToInsert)
+  return TenantSetting.query(extra?.trx ?? deps.knex).insertAndFetch(
+    dataToInsert
+  )
 }
 
 async function getTenantSettingPageForTenant(
