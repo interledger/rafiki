@@ -1017,6 +1017,7 @@ describe('Liquidity Resolvers', (): void => {
 
     beforeEach(async (): Promise<void> => {
       walletAddress = await createWalletAddress(deps, {
+        tenantId: Config.operatorTenantId,
         createLiquidityAccount: true
       })
 
@@ -1751,7 +1752,9 @@ describe('Liquidity Resolvers', (): void => {
 
     beforeEach(async (): Promise<void> => {
       tenant = await createTenant(deps)
-      walletAddress = await createWalletAddress(deps)
+      walletAddress = await createWalletAddress(deps, {
+        tenantId: Config.operatorTenantId
+      })
       const walletAddressId = walletAddress.id
       incomingPayment = await createIncomingPayment(deps, {
         walletAddressId,
@@ -2167,7 +2170,9 @@ describe('Liquidity Resolvers', (): void => {
 
     beforeEach(async (): Promise<void> => {
       tenant = await createTenant(deps)
-      walletAddress = await createWalletAddress(deps)
+      walletAddress = await createWalletAddress(deps, {
+        tenantId: Config.operatorTenantId
+      })
       const walletAddressId = walletAddress.id
       incomingPayment = await createIncomingPayment(deps, {
         walletAddressId,

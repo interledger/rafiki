@@ -55,8 +55,12 @@ describe('Incoming Payment Resolver', (): void => {
 
   describe('Wallet address incoming payments', (): void => {
     beforeEach(async (): Promise<void> => {
-      walletAddressId = (await createWalletAddress(deps, { assetId: asset.id }))
-        .id
+      walletAddressId = (
+        await createWalletAddress(deps, {
+          tenantId: Config.operatorTenantId,
+          assetId: asset.id
+        })
+      ).id
     })
 
     getPageTests({
@@ -106,6 +110,7 @@ describe('Incoming Payment Resolver', (): void => {
       async ({ metadata, expiresAt, withAmount }): Promise<void> => {
         const incomingAmount = withAmount ? amount : undefined
         const { id: walletAddressId } = await createWalletAddress(deps, {
+          tenantId: Config.operatorTenantId,
           assetId: asset.id
         })
         const payment = await createIncomingPayment(deps, {
@@ -305,6 +310,7 @@ describe('Incoming Payment Resolver', (): void => {
       }
       beforeEach(async (): Promise<void> => {
         const { id: walletAddressId } = await createWalletAddress(deps, {
+          tenantId: Config.operatorTenantId,
           assetId: asset.id
         })
         payment = await createPayment({ walletAddressId, metadata })
@@ -462,6 +468,7 @@ describe('Incoming Payment Resolver', (): void => {
       async ({ metadata }): Promise<void> => {
         const incomingAmount = amount ? amount : undefined
         const { id: walletAddressId } = await createWalletAddress(deps, {
+          tenantId: Config.operatorTenantId,
           assetId: asset.id
         })
         const payment = await createIncomingPayment(deps, {

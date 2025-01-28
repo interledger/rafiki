@@ -276,12 +276,14 @@ describe('OutgoingPaymentService', (): void => {
     const { id: sendAssetId } = await createAsset(deps, asset)
     assetId = sendAssetId
     const walletAddress = await createWalletAddress(deps, {
+      tenantId: config.operatorTenantId,
       assetId: sendAssetId
     })
     walletAddressId = walletAddress.id
     client = walletAddress.url
     const { id: destinationAssetId } = await createAsset(deps, destinationAsset)
     receiverWalletAddress = await createWalletAddress(deps, {
+      tenantId: config.operatorTenantId,
       assetId: destinationAssetId,
       mockServerPort: appContainer.openPaymentsPort
     })
@@ -417,8 +419,12 @@ describe('OutgoingPaymentService', (): void => {
       let outgoingPayment: OutgoingPayment
       let otherOutgoingPayment: OutgoingPayment
       beforeEach(async (): Promise<void> => {
-        otherSenderWalletAddress = await createWalletAddress(deps, { assetId })
+        otherSenderWalletAddress = await createWalletAddress(deps, {
+          tenantId: config.operatorTenantId,
+          assetId
+        })
         otherReceiverWalletAddress = await createWalletAddress(deps, {
+          tenantId: config.operatorTenantId,
           assetId
         })
         const incomingPayment = await createIncomingPayment(deps, {
@@ -1010,7 +1016,9 @@ describe('OutgoingPaymentService', (): void => {
           validDestination: false,
           method: 'ilp'
         })
-        const walletAddress = await createWalletAddress(deps)
+        const walletAddress = await createWalletAddress(deps, {
+          tenantId: config.operatorTenantId
+        })
         const walletAddressUpdated = await WalletAddress.query(
           knex
         ).patchAndFetchById(walletAddress.id, { deactivatedAt: new Date() })

@@ -27,7 +27,9 @@ describe('Stream Credentials Service', (): void => {
   })
 
   beforeEach(async (): Promise<void> => {
-    const { id: walletAddressId } = await createWalletAddress(deps)
+    const { id: walletAddressId } = await createWalletAddress(deps, {
+      tenantId: Config.operatorTenantId
+    })
     incomingPayment = await createIncomingPayment(deps, {
       walletAddressId
     })

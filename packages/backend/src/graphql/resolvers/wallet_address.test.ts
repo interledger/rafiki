@@ -35,21 +35,27 @@ import {
 import { getPageTests } from './page.test'
 import { WalletAddressAdditionalProperty } from '../../open_payments/wallet_address/additional_property/model'
 import { GraphQLErrorCode } from '../errors'
+import { AssetService } from '../../asset/service'
+import { faker } from '@faker-js/faker'
+import { Tenant } from '../../tenants/model'
 
 describe('Wallet Address Resolvers', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let knex: Knex
   let walletAddressService: WalletAddressService
+  let assetService: AssetService
 
   beforeAll(async (): Promise<void> => {
-    deps = await initIocContainer({
+    deps = initIocContainer({
       ...Config,
-      localCacheDuration: 0
+      localCacheDuration: 0,
+      adminApiSecret: '123' //to force not being an operator.
     })
     appContainer = await createTestApp(deps)
     knex = appContainer.knex
     walletAddressService = await deps.use('walletAddressService')
+    assetService = await deps.use('assetService')
   })
 
   afterEach(async (): Promise<void> => {
@@ -69,6 +75,7 @@ describe('Wallet Address Resolvers', (): void => {
       asset = await createAsset(deps)
       input = {
         assetId: asset.id,
+        tenantId: Config.operatorTenantId,
         url: 'https://alice.me/.well-known/pay'
       }
     })
@@ -306,13 +313,64 @@ describe('Wallet Address Resolvers', (): void => {
         )
       }
     })
+
+    test('bad input data when not allowed to perform cross tenant create', async (): Promise<void> => {
+      const badInputData = {
+        tenantId: 'ae4950b6-3e1b-4e50-ad24-25c065bdd3a9',
+        assetId: input.assetId,
+        url: input.url
+      }
+      try {
+        expect.assertions(2)
+        await appContainer.apolloClient
+          .mutate({
+            mutation: gql`
+              mutation CreateWalletAddress(
+                $badInputData: CreateWalletAddressInput!
+              ) {
+                createWalletAddress(input: $badInputData) {
+                  walletAddress {
+                    id
+                    asset {
+                      code
+                      scale
+                    }
+                  }
+                }
+              }
+            `,
+            variables: {
+              badInputData
+            }
+          })
+          .then((query): CreateWalletAddressMutationResponse => {
+            if (query.data) {
+              return query.data.createWalletAddress
+            } else {
+              throw new Error('Data was empty')
+            }
+          })
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApolloError)
+        expect((error as ApolloError).graphQLErrors).toContainEqual(
+          expect.objectContaining({
+            message: 'Assignment to the specified tenant is not permitted',
+            extensions: expect.objectContaining({
+              code: GraphQLErrorCode.BadUserInput
+            })
+          })
+        )
+      }
+    })
   })
 
   describe('Update Wallet Address', (): void => {
     let walletAddress: WalletAddressModel
 
     beforeEach(async (): Promise<void> => {
-      walletAddress = await createWalletAddress(deps)
+      walletAddress = await createWalletAddress(deps, {
+        tenantId: Config.operatorTenantId
+      })
     })
 
     test('Can update a wallet address', async (): Promise<void> => {
@@ -426,6 +484,7 @@ describe('Wallet Address Resolvers', (): void => {
       })
       test('New additional properties override previous additional properties', async (): Promise<void> => {
         const createOptions = {
+          tenantId: Config.operatorTenantId,
           additionalProperties: [
             {
               fieldKey: 'existingKey',
@@ -492,6 +551,7 @@ describe('Wallet Address Resolvers', (): void => {
       })
       test('Updating with empty additional properties deletes existing', async (): Promise<void> => {
         const createOptions = {
+          tenantId: Config.operatorTenantId,
           additionalProperties: [
             {
               fieldKey: 'existingKey',
@@ -634,6 +694,68 @@ describe('Wallet Address Resolvers', (): void => {
         )
       }
     })
+
+    test('bad input data when not allowed to perform cross tenant update', async (): Promise<void> => {
+      expect.assertions(2)
+      try {
+        const tenantOptions = {
+          apiSecret: 'test-api-secret-new',
+          publicName: 'test tenant new',
+          email: faker.internet.email(),
+          idpConsentUrl: faker.internet.url(),
+          idpSecret: 'test-idp-secret-new'
+        }
+        const newTenant = await Tenant.query(knex).insertAndFetch(tenantOptions)
+        const newAsset = await assetService.create({
+          code: 'USD',
+          scale: 2,
+          tenantId: newTenant!.id
+        })
+        const newWalletAddress = await walletAddressService.create({
+          assetId: (newAsset as Asset).id,
+          tenantId: newTenant!.id,
+          url: 'https://alice.me/.well-known/pay-2'
+        })
+        const id = (newWalletAddress as WalletAddressModel).id
+
+        await appContainer.apolloClient
+          .mutate({
+            mutation: gql`
+              mutation UpdateWalletAddress($input: UpdateWalletAddressInput!) {
+                updateWalletAddress(input: $input) {
+                  walletAddress {
+                    id
+                    status
+                  }
+                }
+              }
+            `,
+            variables: {
+              input: {
+                id,
+                status: WalletAddressStatus.Inactive
+              }
+            }
+          })
+          .then((query): UpdateWalletAddressMutationResponse => {
+            if (query.data) {
+              return query.data.updateWalletAddress
+            } else {
+              throw new Error('Data was empty')
+            }
+          })
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApolloError)
+        expect((error as ApolloError).graphQLErrors).toContainEqual(
+          expect.objectContaining({
+            message: 'Unknown wallet address',
+            extensions: expect.objectContaining({
+              code: GraphQLErrorCode.NotFound
+            })
+          })
+        )
+      }
+    })
   })
 
   describe('Wallet Address Queries', (): void => {
@@ -655,6 +777,7 @@ describe('Wallet Address Resolvers', (): void => {
         const additionalProperties = [walletProp01, walletProp02]
 
         const walletAddress = await createWalletAddress(deps, {
+          tenantId: Config.operatorTenantId,
           publicName,
           createLiquidityAccount: true,
           additionalProperties
@@ -729,6 +852,7 @@ describe('Wallet Address Resolvers', (): void => {
       'Can get a wallet address by its url (publicName: $publicName)',
       async ({ publicName }): Promise<void> => {
         const walletAddress = await createWalletAddress(deps, {
+          tenantId: Config.operatorTenantId,
           publicName,
           createLiquidityAccount: true
         })
@@ -818,14 +942,17 @@ describe('Wallet Address Resolvers', (): void => {
 
     getPageTests({
       getClient: () => appContainer.apolloClient,
-      createModel: () => createWalletAddress(deps),
+      createModel: () =>
+        createWalletAddress(deps, { tenantId: Config.operatorTenantId }),
       pagedQuery: 'walletAddresses'
     })
 
     test('Can get page of wallet addresses', async (): Promise<void> => {
       const walletAddresses: WalletAddressModel[] = []
       for (let i = 0; i < 2; i++) {
-        walletAddresses.push(await createWalletAddress(deps))
+        walletAddresses.push(
+          await createWalletAddress(deps, { tenantId: Config.operatorTenantId })
+        )
       }
       walletAddresses.reverse() // Calling the default getPage will result in descending order
       const query = await appContainer.apolloClient
@@ -874,6 +1001,64 @@ describe('Wallet Address Resolvers', (): void => {
         })
       })
     })
+
+    test('Can get page of wallet addresses with tenantId param', async (): Promise<void> => {
+      const walletAddresses: WalletAddressModel[] = []
+      for (let i = 0; i < 2; i++) {
+        walletAddresses.push(
+          await createWalletAddress(deps, { tenantId: Config.operatorTenantId })
+        )
+      }
+      walletAddresses.reverse() // Calling the default getPage will result in descending order
+      const query = await appContainer.apolloClient
+        .query({
+          query: gql`
+            query WalletAddresses($tenantId: String) {
+              walletAddresses(tenantId: $tenantId) {
+                edges {
+                  node {
+                    id
+                    asset {
+                      code
+                      scale
+                    }
+                    url
+                    publicName
+                  }
+                  cursor
+                }
+              }
+            }
+          `,
+          variables: {
+            tenantId: Config.operatorTenantId
+          }
+        })
+        .then((query): WalletAddressesConnection => {
+          if (query.data) {
+            return query.data.walletAddresses
+          } else {
+            throw new Error('Data was empty')
+          }
+        })
+
+      expect(query.edges).toHaveLength(2)
+      query.edges.forEach((edge, idx) => {
+        const walletAddress = walletAddresses[idx]
+        expect(edge.cursor).toEqual(walletAddress.id)
+        expect(edge.node).toEqual({
+          __typename: 'WalletAddress',
+          id: walletAddress.id,
+          asset: {
+            __typename: 'Asset',
+            code: walletAddress.asset.code,
+            scale: walletAddress.asset.scale
+          },
+          url: walletAddress.url,
+          publicName: walletAddress.publicName
+        })
+      })
+    })
   })
 
   describe('Trigger Wallet Address Events', (): void => {
@@ -889,6 +1074,7 @@ describe('Wallet Address Resolvers', (): void => {
         const withdrawalAmount = BigInt(10)
         for (let i = 0; i < 3; i++) {
           const walletAddress = await createWalletAddress(deps, {
+            tenantId: Config.operatorTenantId,
             createLiquidityAccount: true
           })
           if (i) {

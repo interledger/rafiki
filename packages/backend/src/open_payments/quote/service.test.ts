@@ -99,10 +99,12 @@ describe('QuoteService', (): void => {
       scale: debitAmount.assetScale
     })
     sendingWalletAddress = await createWalletAddress(deps, {
+      tenantId: config.operatorTenantId,
       assetId: sendAssetId
     })
     const { id: destinationAssetId } = await createAsset(deps, destinationAsset)
     receivingWalletAddress = await createWalletAddress(deps, {
+      tenantId: config.operatorTenantId,
       assetId: destinationAssetId,
       mockServerPort: appContainer.openPaymentsPort
     })
@@ -443,7 +445,9 @@ describe('QuoteService', (): void => {
     })
 
     test('fails on inactive wallet address', async () => {
-      const walletAddress = await createWalletAddress(deps)
+      const walletAddress = await createWalletAddress(deps, {
+        tenantId: Config.operatorTenantId
+      })
       const walletAddressUpdated = await WalletAddress.query(
         knex
       ).patchAndFetchById(walletAddress.id, { deactivatedAt: new Date() })
@@ -538,9 +542,11 @@ describe('QuoteService', (): void => {
           scale: 2
         })
         sendingWalletAddress = await createWalletAddress(deps, {
+          tenantId: config.operatorTenantId,
           assetId: asset.id
         })
         receivingWalletAddress = await createWalletAddress(deps, {
+          tenantId: config.operatorTenantId,
           assetId: asset.id
         })
       })
@@ -648,9 +654,11 @@ describe('QuoteService', (): void => {
           scale: 2
         })
         sendingWalletAddress = await createWalletAddress(deps, {
+          tenantId: config.operatorTenantId,
           assetId: sendAsset.id
         })
         receivingWalletAddress = await createWalletAddress(deps, {
+          tenantId: config.operatorTenantId,
           assetId: receiveAsset.id
         })
       })

@@ -48,6 +48,7 @@ describe('Pagination', (): void => {
     beforeEach(async (): Promise<void> => {
       const asset = await createAsset(deps)
       walletAddress = await createWalletAddress(deps, {
+        tenantId: Config.operatorTenantId,
         assetId: asset.id
       })
     })
@@ -87,9 +88,11 @@ describe('Pagination', (): void => {
         tenantId = (await createTenant(deps)).id
         const asset = await createAsset(deps)
         defaultWalletAddress = await createWalletAddress(deps, {
+          tenantId: Config.operatorTenantId,
           assetId: asset.id
         })
         secondaryWalletAddress = await createWalletAddress(deps, {
+          tenantId: Config.operatorTenantId,
           assetId: asset.id
         })
         debitAmount = {

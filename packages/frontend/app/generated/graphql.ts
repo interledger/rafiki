@@ -381,6 +381,8 @@ export type CreateWalletAddressInput = {
   idempotencyKey?: InputMaybe<Scalars['String']['input']>;
   /** Public name associated with the wallet address. This is visible to anyone with the wallet address URL. */
   publicName?: InputMaybe<Scalars['String']['input']>;
+  /** Unique identifier of the tenant associated with the wallet address. This cannot be changed. Optional, if not provided, the tenantId will be obtained from the signature. */
+  tenantId?: InputMaybe<Scalars['ID']['input']>;
   /** Wallet address URL. This cannot be changed. */
   url: Scalars['String']['input'];
 };
@@ -1277,6 +1279,7 @@ export type QueryWalletAddressesArgs = {
   first?: InputMaybe<Scalars['Int']['input']>;
   last?: InputMaybe<Scalars['Int']['input']>;
   sortOrder?: InputMaybe<SortOrder>;
+  tenantId?: InputMaybe<Scalars['String']['input']>;
 };
 
 
@@ -1512,6 +1515,8 @@ export type WalletAddress = Model & {
   quotes?: Maybe<QuoteConnection>;
   /** The current status of the wallet, either active or inactive. */
   status: WalletAddressStatus;
+  /** Tenant ID of the wallet address. */
+  tenantId?: Maybe<Scalars['String']['output']>;
   /** Wallet Address URL. */
   url: Scalars['String']['output'];
   /** List of keys associated with this wallet address */
@@ -2434,6 +2439,7 @@ export type WalletAddressResolvers<ContextType = any, ParentType extends Resolve
   publicName?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   quotes?: Resolver<Maybe<ResolversTypes['QuoteConnection']>, ParentType, ContextType, Partial<WalletAddressQuotesArgs>>;
   status?: Resolver<ResolversTypes['WalletAddressStatus'], ParentType, ContextType>;
+  tenantId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   url?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   walletAddressKeys?: Resolver<Maybe<ResolversTypes['WalletAddressKeyConnection']>, ParentType, ContextType, Partial<WalletAddressWalletAddressKeysArgs>>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;

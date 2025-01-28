@@ -72,14 +72,17 @@ describe('LocalPaymentService', (): void => {
     })
 
     walletAddressMap['USD'] = await createWalletAddress(deps, {
+      tenantId: Config.operatorTenantId,
       assetId: assetMap['USD'].id
     })
 
     walletAddressMap['USD_9'] = await createWalletAddress(deps, {
+      tenantId: Config.operatorTenantId,
       assetId: assetMap['USD_9'].id
     })
 
     walletAddressMap['EUR'] = await createWalletAddress(deps, {
+      tenantId: Config.operatorTenantId,
       assetId: assetMap['EUR'].id
     })
   })

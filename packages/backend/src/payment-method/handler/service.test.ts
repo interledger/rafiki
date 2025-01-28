@@ -49,6 +49,7 @@ describe('PaymentMethodHandlerService', (): void => {
       const tenantId = (await createTenant(deps)).id
       const asset = await createAsset(deps)
       const walletAddress = await createWalletAddress(deps, {
+        tenantId: Config.operatorTenantId,
         assetId: asset.id
       })
 
@@ -79,6 +80,7 @@ describe('PaymentMethodHandlerService', (): void => {
       const tenantId = (await createTenant(deps)).id
       const asset = await createAsset(deps)
       const walletAddress = await createWalletAddress(deps, {
+        tenantId: Config.operatorTenantId,
         assetId: asset.id
       })
 
@@ -111,6 +113,7 @@ describe('PaymentMethodHandlerService', (): void => {
       const tenantId = (await createTenant(deps)).id
       const asset = await createAsset(deps)
       const walletAddress = await createWalletAddress(deps, {
+        tenantId: Config.operatorTenantId,
         assetId: asset.id
       })
       const { receiver, outgoingPayment } =
@@ -147,6 +150,7 @@ describe('PaymentMethodHandlerService', (): void => {
       const tenantId = (await createTenant(deps)).id
       const asset = await createAsset(deps)
       const walletAddress = await createWalletAddress(deps, {
+        tenantId: Config.operatorTenantId,
         assetId: asset.id
       })
       const { receiver, outgoingPayment } =

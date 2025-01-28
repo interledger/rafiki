@@ -84,6 +84,7 @@ describe('Quote Routes', (): void => {
       scale: debitAmount.assetScale
     })
     walletAddress = await createWalletAddress(deps, {
+      tenantId: Config.operatorTenantId,
       assetId
     })
     baseUrl = new URL(walletAddress.url).origin

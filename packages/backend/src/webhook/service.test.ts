@@ -119,8 +119,12 @@ describe('Webhook Service', (): void => {
 
     beforeEach(async (): Promise<void> => {
       tenantId = (await createTenant(deps)).id
-      walletAddressIn = await createWalletAddress(deps)
-      walletAddressOut = await createWalletAddress(deps)
+      walletAddressIn = await createWalletAddress(deps, {
+        tenantId: Config.operatorTenantId
+      })
+      walletAddressOut = await createWalletAddress(deps, {
+        tenantId: Config.operatorTenantId
+      })
       incomingPaymentIds = [
         (
           await createIncomingPayment(deps, {

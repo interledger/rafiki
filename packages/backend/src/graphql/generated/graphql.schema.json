@@ -594,7 +594,7 @@
               },
               {
                 "name": "first",
-                "description": "Foward pagination: Limit the result to the first **n** fees after the `after` cursor.",
+                "description": "Forward pagination: Limit the result to the first **n** fees after the `after` cursor.",
                 "type": {
                   "kind": "SCALAR",
                   "name": "Int",
@@ -2229,6 +2229,18 @@
             "type": {
               "kind": "SCALAR",
               "name": "String",
+              "ofType": null
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "tenantId",
+            "description": "Unique identifier of the tenant associated with the wallet address. This cannot be changed. Optional, if not provided, the tenantId will be obtained from the signature.",
+            "type": {
+              "kind": "SCALAR",
+              "name": "ID",
               "ofType": null
             },
             "defaultValue": null,
@@ -6414,7 +6426,7 @@
               },
               {
                 "name": "first",
-                "description": "Foward pagination: Limit the result to the first **n** assets after the `after` cursor.",
+                "description": "Forward pagination: Limit the result to the first **n** assets after the `after` cursor.",
                 "type": {
                   "kind": "SCALAR",
                   "name": "Int",
@@ -7054,6 +7066,18 @@
                 "type": {
                   "kind": "ENUM",
                   "name": "SortOrder",
+                  "ofType": null
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "tenantId",
+                "description": "Unique identifier of the tenant associated with the wallet address. Optional, if not provided, the tenantId will be obtained from the signature.",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
                   "ofType": null
                 },
                 "defaultValue": null,
@@ -8554,7 +8578,7 @@
               },
               {
                 "name": "first",
-                "description": "Foward pagination: Limit the result to the first **n** quotes after the `after` cursor.",
+                "description": "Forward pagination: Limit the result to the first **n** quotes after the `after` cursor.",
                 "type": {
                   "kind": "SCALAR",
                   "name": "Int",
@@ -8614,6 +8638,18 @@
             "deprecationReason": null
           },
           {
+            "name": "tenantId",
+            "description": "Tenant ID of the wallet address.",
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "url",
             "description": "Wallet Address URL.",
             "args": [],
@@ -8659,7 +8695,7 @@
               },
               {
                 "name": "first",
-                "description": "Foward pagination: Limit the result to the first **n** keys after the `after` cursor.",
+                "description": "Forward pagination: Limit the result to the first **n** keys after the `after` cursor.",
                 "type": {
                   "kind": "SCALAR",
                   "name": "Int",

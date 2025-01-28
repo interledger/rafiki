@@ -81,6 +81,7 @@ describe('Receiver Service', (): void => {
     describe('local incoming payment', () => {
       test('resolves local incoming payment', async () => {
         const walletAddress = await createWalletAddress(deps, {
+          tenantId: Config.operatorTenantId,
           mockServerPort: Config.openPaymentsPort
         })
         const incomingPayment = await createIncomingPayment(deps, {
@@ -289,6 +290,7 @@ describe('Receiver Service', (): void => {
         })
 
         walletAddress = await createWalletAddress(deps, {
+          tenantId: Config.operatorTenantId,
           mockServerPort: Config.openPaymentsPort,
           assetId: asset.id
         })

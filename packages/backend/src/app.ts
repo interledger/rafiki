@@ -70,7 +70,8 @@ import { applyMiddleware } from 'graphql-middleware'
 import { Redis } from 'ioredis'
 import {
   idempotencyGraphQLMiddleware,
-  lockGraphQLMutationMiddleware
+  lockGraphQLMutationMiddleware,
+  setForTenantIdGraphQLMutationMiddleware
 } from './graphql/middleware'
 import { createRedisDataStore } from './middleware/cache/data-stores/redis'
 import { createRedisLock } from './middleware/lock/redis'
@@ -226,6 +227,10 @@ export interface TenantedApolloContext extends ApolloContext {
   isOperator: boolean
 }
 
+export interface ForTenantIdContext extends TenantedApolloContext {
+  forTenantId?: string
+}
+
 export interface AppServices {
   logger: Promise<Logger>
   telemetry: Promise<TelemetryService>
@@ -338,7 +343,8 @@ export class App {
       ),
       idempotencyGraphQLMiddleware(
         createRedisDataStore(redis, this.config.graphQLIdempotencyKeyTtlMs)
-      )
+      ),
+      setForTenantIdGraphQLMutationMiddleware()
     )
 
     // Setup Armor

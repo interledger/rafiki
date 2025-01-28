@@ -38,7 +38,9 @@ describe('Receiver Model', (): void => {
 
   describe('constructor', () => {
     test('creates receiver', async () => {
-      const walletAddress = await createWalletAddress(deps)
+      const walletAddress = await createWalletAddress(deps, {
+        tenantId: Config.operatorTenantId
+      })
       const incomingPayment = await createIncomingPayment(deps, {
         walletAddressId: walletAddress.id
       })
@@ -82,7 +84,9 @@ describe('Receiver Model', (): void => {
     })
 
     test('throws if incoming payment is completed', async () => {
-      const walletAddress = await createWalletAddress(deps)
+      const walletAddress = await createWalletAddress(deps, {
+        tenantId: Config.operatorTenantId
+      })
       const incomingPayment = await createIncomingPayment(deps, {
         walletAddressId: walletAddress.id
       })
@@ -105,7 +109,9 @@ describe('Receiver Model', (): void => {
     })
 
     test('throws if incoming payment is expired', async () => {
-      const walletAddress = await createWalletAddress(deps)
+      const walletAddress = await createWalletAddress(deps, {
+        tenantId: Config.operatorTenantId
+      })
       const incomingPayment = await createIncomingPayment(deps, {
         walletAddressId: walletAddress.id
       })
@@ -125,7 +131,9 @@ describe('Receiver Model', (): void => {
     })
 
     test('throws if stream credentials has invalid ILP address', async () => {
-      const walletAddress = await createWalletAddress(deps)
+      const walletAddress = await createWalletAddress(deps, {
+        tenantId: Config.operatorTenantId
+      })
       const incomingPayment = await createIncomingPayment(deps, {
         walletAddressId: walletAddress.id
       })

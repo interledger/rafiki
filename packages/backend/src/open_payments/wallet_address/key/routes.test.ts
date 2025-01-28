@@ -46,7 +46,9 @@ describe('Wallet Address Keys Routes', (): void => {
 
   describe('get', (): void => {
     test('returns 200 with all keys for a wallet address', async (): Promise<void> => {
-      const walletAddress = await createWalletAddress(deps)
+      const walletAddress = await createWalletAddress(deps, {
+        tenantId: Config.operatorTenantId
+      })
 
       const keyOption = {
         walletAddressId: walletAddress.id,
@@ -69,7 +71,9 @@ describe('Wallet Address Keys Routes', (): void => {
     })
 
     test('returns 200 with empty array if no keys for a wallet address', async (): Promise<void> => {
-      const walletAddress = await createWalletAddress(deps)
+      const walletAddress = await createWalletAddress(deps, {
+        tenantId: Config.operatorTenantId
+      })
 
       const ctx = createContext<WalletAddressUrlContext>({
         headers: { Accept: 'application/json' },
@@ -121,7 +125,9 @@ describe('Wallet Address Keys Routes', (): void => {
     })
 
     test('throws 404 error for inactive wallet address', async (): Promise<void> => {
-      const walletAddress = await createWalletAddress(deps)
+      const walletAddress = await createWalletAddress(deps, {
+        tenantId: Config.operatorTenantId
+      })
 
       await walletAddress.$query().patch({ deactivatedAt: new Date() })
 

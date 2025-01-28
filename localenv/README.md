@@ -121,7 +121,7 @@ The secondary Happy Life Bank docker compose file (`./happy-life-bank/docker-com
 data stores created by the primary Rafiki instance so it can't be run by itself.
 The `pnpm localenv:compose up` command starts both the primary instance and the secondary.
 
-See the `frontend` [README](../packages/frontend/README.md#ory-kratos) for more information regarding the Ory Kratos identity and user management system required for Admin UI.
+See the `frontend` [README](../packages/frontend/README.md#ory-kratos) for more information regarding the Ory Kratos identity and user management system for the Admin UI.
 
 #### Autopeering
 

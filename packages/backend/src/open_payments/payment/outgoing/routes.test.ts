@@ -82,7 +82,10 @@ describe('Outgoing Payment Routes', (): void => {
   beforeEach(async (): Promise<void> => {
     const asset = await createAsset(deps)
     tenant = await createTenant(deps)
-    walletAddress = await createWalletAddress(deps, { assetId: asset.id })
+    walletAddress = await createWalletAddress(deps, {
+      tenantId: Config.operatorTenantId,
+      assetId: asset.id
+    })
     baseUrl = new URL(walletAddress.url).origin
   })
 
