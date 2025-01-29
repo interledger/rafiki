@@ -94,7 +94,7 @@ export const createAssetSchema = z
   .object({
     code: z
       .string()
-      .min(3, { message: 'Code should be atleast 3 characters long' })
+      .min(3, { message: 'Code should be at least 3 characters long' })
       .max(6, { message: 'Maximum length of Code is 6 characters' })
       .regex(/^[a-zA-Z]+$/, { message: 'Code should only contain letters.' })
       .transform((code) => code.toUpperCase()),
@@ -127,3 +127,26 @@ export const updateWalletAddressSchema = z
     status: z.enum([WalletAddressStatus.Active, WalletAddressStatus.Inactive])
   })
   .merge(uuidSchema)
+
+export const updateTenantSchema = z
+  .object({
+    publicName: z.string().optional(),
+    email: z.string().optional(),
+    idpConsentUrl: z.string().optional(),
+    idpSecret: z.string().optional()
+  })
+  .merge(uuidSchema)
+
+export const createTenantSchema = z
+  .object({
+    apiSecret: z
+      .string()
+      .min(3, { message: 'API Secret should be at least 3 characters long' })
+      .max(6, { message: 'Maximum length of API Secret is 255 characters' })
+      .regex(
+        /^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/,
+        { message: 'API Secret should be Base64 encoded.' }
+      )
+  })
+  .merge(updateTenantSchema)
+  .omit({ id: true })

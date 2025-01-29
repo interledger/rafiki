@@ -18,6 +18,10 @@ const navigation = [
     href: '/'
   },
   {
+    name: 'Tenants',
+    href: '/tenants'
+  },
+  {
     name: 'Assets',
     href: '/assets'
   },

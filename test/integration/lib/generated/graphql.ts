@@ -1454,6 +1454,8 @@ export type Tenant = Model & {
   idpConsentUrl?: Maybe<Scalars['String']['output']>;
   /** Secret used to secure requests from the tenant's identity provider. */
   idpSecret?: Maybe<Scalars['String']['output']>;
+  /** Is the tenant an Operator tenant. */
+  isOperator: Scalars['Boolean']['output'];
   /** Public name for the tenant. */
   publicName?: Maybe<Scalars['String']['output']>;
 };
@@ -2544,6 +2546,7 @@ export type TenantResolvers<ContextType = any, ParentType extends ResolversParen
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   idpConsentUrl?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   idpSecret?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  isOperator?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   publicName?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
