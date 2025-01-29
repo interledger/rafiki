@@ -1,7 +1,7 @@
 interface Tenant {
   id: string
-  idpConsentUrl: string
-  idpSecret: string
+  idpConsentUrl?: string
+  idpSecret?: string
 }
 
 export class AuthServiceClientError extends Error {

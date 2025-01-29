@@ -3,6 +3,8 @@ set -e
 
 psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-EOSQL
     DROP DATABASE IF EXISTS TESTING;
+    DROP DATABASE IF EXISTS TENANT_TESTING;
     CREATE DATABASE testing;
+    CREATE DATABASE tenant_testing;
     CREATE DATABASE development;
 EOSQL

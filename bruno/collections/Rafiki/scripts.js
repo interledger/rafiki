@@ -127,6 +127,7 @@ const scripts = {
         signature = this.generateBackendApiSignature(formattedBody)
     }
     req.setHeader('signature', signature)
+    req.setHeader('tenant-id', bru.getEnvVar('senderTenantId'))
   },
 
   addHostHeader: function (hostVarName) {
