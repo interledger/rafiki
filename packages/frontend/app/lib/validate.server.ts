@@ -131,7 +131,12 @@ export const updateWalletAddressSchema = z
 export const updateTenantSchema = z
   .object({
     publicName: z.string().optional(),
-    email: z.string().optional(),
+    email: z
+      .string()
+      .regex(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/, {
+        message: 'Invalid email address.'
+      })
+      .optional(),
     idpConsentUrl: z.string().optional(),
     idpSecret: z.string().optional()
   })

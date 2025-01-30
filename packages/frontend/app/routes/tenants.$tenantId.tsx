@@ -134,7 +134,7 @@ export default function ViewTenantPage() {
                     aria-label='save sensitive information'
                     type='submit'
                     name='intent'
-                    value='general'
+                    value='sensitive'
                   >
                     {currentPageAction ? 'Saving ...' : 'Save'}
                   </Button>
@@ -165,7 +165,7 @@ export default function ViewTenantPage() {
                     aria-label='save ip information'
                     type='submit'
                     name='intent'
-                    value='general'
+                    value='ip'
                   >
                     {currentPageAction ? 'Saving ...' : 'Save'}
                   </Button>
@@ -222,7 +222,9 @@ export async function action({ request }: ActionFunctionArgs) {
   formData.delete('intent')
 
   switch (intent) {
-    case 'general': {
+    case 'general':
+    case 'ip':
+    case 'sensitive': {
       const result = updateTenantSchema.safeParse(Object.fromEntries(formData))
       if (!result.success) {
         actionResponse.errors.general.fieldErrors =

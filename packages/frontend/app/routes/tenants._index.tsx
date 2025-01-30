@@ -46,16 +46,27 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
         }
       }
     }
-    tenantEdges = isOperator ? tenants.edges :
-      tenantEdges.filter(
-        ({ node }) => node.apiSecret === sessionApiSecret)
+    tenantEdges = isOperator
+      ? tenants.edges
+      : tenantEdges.filter(({ node }) => node.apiSecret === sessionApiSecret)
   }
-  return json({ tenantEdges, tenantPageInfo, previousPageUrl, nextPageUrl, isOperator })
+  return json({
+    tenantEdges,
+    tenantPageInfo,
+    previousPageUrl,
+    nextPageUrl,
+    isOperator
+  })
 }
 
 export default function TenantsPage() {
-  const { tenantEdges, tenantPageInfo, previousPageUrl, nextPageUrl, isOperator } =
-    useLoaderData<typeof loader>()
+  const {
+    tenantEdges,
+    tenantPageInfo,
+    previousPageUrl,
+    nextPageUrl,
+    isOperator
+  } = useLoaderData<typeof loader>()
   const navigate = useNavigate()
 
   return (
@@ -82,8 +93,12 @@ export default function TenantsPage() {
               tenantEdges.map((tenant) => (
                 <Table.Row
                   key={tenant.node.id}
-                  className='cursor-pointer'
-                  onClick={() => navigate(`/tenants/${tenant.node.id}`)}
+                  className={tenant.node.deletedAt ? '' : 'cursor-pointer'}
+                  onClick={() =>
+                    tenant.node.deletedAt
+                      ? 'return'
+                      : navigate(`/tenants/${tenant.node.id}`)
+                  }
                 >
                   <Table.Cell>{tenant.node.id}</Table.Cell>
                   <Table.Cell>
