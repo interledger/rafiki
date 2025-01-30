@@ -245,9 +245,7 @@ async function createOutgoingPayment(
     }
   )
   const { walletAddressId } = options
-  const doExtraChecks = !!options.grant?.limits?.receiver
   let quoteId: string
-  let quote: Quote | undefined
 
   if (isCreateFromIncomingPayment(options)) {
     const stopTimerQuote = deps.telemetry.startTimer(
@@ -268,24 +266,10 @@ async function createOutgoingPayment(
 
     if (isQuoteError(quoteOrError)) {
       return quoteErrorToOutgoingPaymentError[quoteOrError]
-    } else {
-      quote = quoteOrError
     }
     quoteId = quoteOrError.id
   } else {
     quoteId = options.quoteId
-    if (doExtraChecks) {
-      quote = await deps.quoteService.get({ id: quoteId })
-    }
-  }
-
-  if (doExtraChecks) {
-    if (!quote) {
-      return OutgoingPaymentError.UnknownQuote
-    }
-    if (quote.receiver !== options.grant?.limits?.receiver) {
-      return OutgoingPaymentError.InvalidReceiver
-    }
   }
 
   const grantId = options.grant?.id
