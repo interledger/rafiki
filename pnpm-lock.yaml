@@ -558,17 +558,17 @@ importers:
   packages/documentation:
     dependencies:
       '@astrojs/markdown-remark':
-        specifier: ^6.0.2
-        version: 6.0.2
+        specifier: ^6.1.0
+        version: 6.1.0
       '@astrojs/starlight':
         specifier: ^0.31.1
-        version: 0.31.1(astro@5.1.8)
+        version: 0.31.1(astro@5.2.0)
       '@interledger/docs-design-system':
         specifier: ^0.6.1
         version: 0.6.1
       astro:
-        specifier: 5.1.8
-        version: 5.1.8(typescript@5.7.3)
+        specifier: 5.2.0
+        version: 5.2.0(typescript@5.7.3)
       astro-graphql-plugin:
         specifier: ^0.4.2
         version: 0.4.2
@@ -1153,8 +1153,8 @@ packages:
     resolution: {integrity: sha512-bL/O7YBxsFt55YHU021oL+xz+B/9HvGNId3F9xURN16aeqDK9juHGktdkCSXz+U4nqFACq6ZFvWomOzhV+zfPw==}
     dev: false
 
-  /@astrojs/internal-helpers@0.4.2:
-    resolution: {integrity: sha512-EdDWkC3JJVcpGpqJAU/5hSk2LKXyG3mNGkzGoAuyK+xoPHbaVdSuIWoN1QTnmK3N/gGfaaAfM8gO2KDCAW7S3w==}
+  /@astrojs/internal-helpers@0.5.0:
+    resolution: {integrity: sha512-CgB5ZaZO1PFG+rbjF3HnA7G6gIBjJ070xb7bUjeu5Gqqufma+t6fpuRWMXnK2iEO3zVyX7e/xplPlqtFKy/lvw==}
     dev: false
 
   /@astrojs/markdown-remark@6.0.2:
@@ -1183,7 +1183,34 @@ packages:
       - supports-color
     dev: false
 
-  /@astrojs/mdx@4.0.7(astro@5.1.8):
+  /@astrojs/markdown-remark@6.1.0:
+    resolution: {integrity: sha512-emZNNSTPGgPc3V399Cazpp5+snogjaF04ocOSQn9vy3Kw/eIC4vTQjXOrWDEoSEy+AwPDZX9bQ4wd3bxhpmGgQ==}
+    dependencies:
+      '@astrojs/prism': 3.2.0
+      github-slugger: 2.0.0
+      hast-util-from-html: 2.0.3
+      hast-util-to-text: 4.0.2
+      import-meta-resolve: 4.1.0
+      js-yaml: 4.1.0
+      mdast-util-definitions: 6.0.0
+      rehype-raw: 7.0.0
+      rehype-stringify: 10.0.1
+      remark-gfm: 4.0.0
+      remark-parse: 11.0.0
+      remark-rehype: 11.1.1
+      remark-smartypants: 3.0.2
+      shiki: 1.29.1
+      smol-toml: 1.3.1
+      unified: 11.0.5
+      unist-util-remove-position: 5.0.0
+      unist-util-visit: 5.0.0
+      unist-util-visit-parents: 6.0.1
+      vfile: 6.0.3
+    transitivePeerDependencies:
+      - supports-color
+    dev: false
+
+  /@astrojs/mdx@4.0.7(astro@5.2.0):
     resolution: {integrity: sha512-d3PopBTbbCoX3QOmSLYXW6YCZ0dkhNaeP9/Liz9BhEekflMc9IvBjbtNFf1WCEatsl4LLGftyDisfMM3F3LGMA==}
     engines: {node: ^18.17.1 || ^20.3.0 || >=22.0.0}
     peerDependencies:
@@ -1192,7 +1219,7 @@ packages:
       '@astrojs/markdown-remark': 6.0.2
       '@mdx-js/mdx': 3.1.0(acorn@8.14.0)
       acorn: 8.14.0
-      astro: 5.1.8(typescript@5.7.3)
+      astro: 5.2.0(typescript@5.7.3)
       es-module-lexer: 1.6.0
       estree-util-visit: 2.0.0
       hast-util-to-html: 9.0.4
@@ -1222,19 +1249,19 @@ packages:
       zod: 3.23.8
     dev: false
 
-  /@astrojs/starlight@0.31.1(astro@5.1.8):
+  /@astrojs/starlight@0.31.1(astro@5.2.0):
     resolution: {integrity: sha512-VIVkHugwgtEqJPiRH8+ouP0UqUfdmpBO9C64R+6QaQ2qmADNkI/BA3/YAJHTBZYlMQQGEEuLJwD9qpaUovi52Q==}
     peerDependencies:
       astro: ^5.1.5
     dependencies:
-      '@astrojs/mdx': 4.0.7(astro@5.1.8)
+      '@astrojs/mdx': 4.0.7(astro@5.2.0)
       '@astrojs/sitemap': 3.2.1
       '@pagefind/default-ui': 1.3.0
       '@types/hast': 3.0.4
       '@types/js-yaml': 4.0.9
       '@types/mdast': 4.0.4
-      astro: 5.1.8(typescript@5.7.3)
-      astro-expressive-code: 0.40.1(astro@5.1.8)
+      astro: 5.2.0(typescript@5.7.3)
+      astro-expressive-code: 0.40.1(astro@5.2.0)
       bcp-47: 2.1.0
       hast-util-from-html: 2.0.3
       hast-util-select: 6.0.2
@@ -1651,7 +1678,6 @@ packages:
     hasBin: true
     dependencies:
       '@babel/types': 7.26.5
-    dev: true
 
   /@babel/plugin-bugfix-firefox-class-in-computed-class-key@7.25.9(@babel/core@7.26.0):
     resolution: {integrity: sha512-ZkRyVkThtxQ/J6nv3JFYv1RYY+JT5BvU0y3k5bWrmuG4woXypRa4PXmm9RhOwodRkYFWqC0C0cqcJ4OqR7kW+g==}
@@ -3012,7 +3038,6 @@ packages:
     dependencies:
       '@babel/helper-string-parser': 7.25.9
       '@babel/helper-validator-identifier': 7.25.9
-    dev: true
 
   /@balena/dockerignore@1.0.2:
     resolution: {integrity: sha512-wMue2Sy4GAVTk6Ic4tJVcnfdau+gx2EnG7S+uAEe+TWJFqE4YoWN4/H8MSLj4eYJKxGg26lZwboEniNiNwZQ6Q==}
@@ -9235,12 +9260,12 @@ packages:
     resolution: {integrity: sha512-sRpyiNrx2dEYIMmUXprS8nlpRg2Drs8m9ElX9vVEXaCB4XEAJhKfs7IcX0IwShjuOAjLR6wzIrgoptz1n19i1A==}
     hasBin: true
 
-  /astro-expressive-code@0.40.1(astro@5.1.8):
+  /astro-expressive-code@0.40.1(astro@5.2.0):
     resolution: {integrity: sha512-dQ47XhgtxuRTiKQrZOJKdebMuxvvTBR89U439EHzLP6KR45IILFlGDihGQp3//1aUjj4nwpbINSzms1heJ7vmQ==}
     peerDependencies:
       astro: ^4.0.0-beta || ^5.0.0-beta || ^3.3.0
     dependencies:
-      astro: 5.1.8(typescript@5.7.3)
+      astro: 5.2.0(typescript@5.7.3)
       rehype-expressive-code: 0.40.1
     dev: false
 
@@ -9253,7 +9278,7 @@ packages:
       '@graphql-tools/url-loader': 8.0.24(graphql@16.10.0)
       '@types/fs-extra': 11.0.4
       '@types/marked': 6.0.0
-      astro: 5.1.8(typescript@5.7.3)
+      astro: 5.2.0(typescript@5.7.3)
       fs-extra: 11.3.0
       github-slugger: 2.0.0
       graphql: 16.10.0
@@ -9295,14 +9320,14 @@ packages:
       - yaml
     dev: false
 
-  /astro@5.1.8(typescript@5.7.3):
-    resolution: {integrity: sha512-7fNNceI/dXqGIkkZQjxhH31alAfgf33cDv34cPLCGFVSHHOpYG0NSrofnxdYf0BvWRlddqkq393UqDM5cJlv1w==}
+  /astro@5.2.0(typescript@5.7.3):
+    resolution: {integrity: sha512-6Y7Ph4aTeIifrJiD/b6JY4IoVTlWRVcA2pN1l7ioYSd+W8NsZL6LRZWWGeGHX7xlOD9ovsoG9duiSaydJ1Ua1Q==}
     engines: {node: ^18.17.1 || ^20.3.0 || >=22.0.0, npm: '>=9.6.5', pnpm: '>=7.1.0'}
     hasBin: true
     dependencies:
       '@astrojs/compiler': 2.10.3
-      '@astrojs/internal-helpers': 0.4.2
-      '@astrojs/markdown-remark': 6.0.2
+      '@astrojs/internal-helpers': 0.5.0
+      '@astrojs/markdown-remark': 6.1.0
       '@astrojs/telemetry': 3.2.0
       '@oslojs/encoding': 1.1.0
       '@rollup/pluginutils': 5.1.4
@@ -9350,8 +9375,8 @@ packages:
       unist-util-visit: 5.0.0
       unstorage: 1.14.4
       vfile: 6.0.3
-      vite: 6.0.10
-      vitefu: 1.0.5(vite@6.0.10)
+      vite: 6.0.11
+      vitefu: 1.0.5(vite@6.0.11)
       which-pm: 3.0.0
       xxhash-wasm: 1.1.0
       yargs-parser: 21.1.1
@@ -15653,8 +15678,8 @@ packages:
   /magicast@0.3.5:
     resolution: {integrity: sha512-L0WhttDl+2BOsybvEOLK7fW3UA0OQ0IQ2d6Zl2x/a6vVRs3bAY0ECOSHHeL5jD+SbOpOCUEi0y1DgHEn9Qn1AQ==}
     dependencies:
-      '@babel/parser': 7.26.2
-      '@babel/types': 7.26.0
+      '@babel/parser': 7.26.5
+      '@babel/types': 7.26.5
       source-map-js: 1.2.1
     dev: false
 
@@ -19909,6 +19934,11 @@ packages:
     engines: {node: '>=8.0.0'}
     dev: false
 
+  /smol-toml@1.3.1:
+    resolution: {integrity: sha512-tEYNll18pPKHroYSmLLrksq233j021G0giwW7P3D24jC54pQ5W5BXMsQ/Mvw1OJCmEYDgY+lrzT+3nNUtoNfXQ==}
+    engines: {node: '>= 18'}
+    dev: false
+
   /snake-case@3.0.4:
     resolution: {integrity: sha512-LAOh4z89bGQvl9pFfNF8V146i7o7/CqFPbqzYgP+yYzDIDeS9HaNFtXABamRW+AQzEVODcvE79ljJ+8a9YSdMg==}
     dependencies:
@@ -20060,7 +20090,7 @@ packages:
     peerDependencies:
       '@astrojs/starlight': '>=0.15.0'
     dependencies:
-      '@astrojs/starlight': 0.31.1(astro@5.1.8)
+      '@astrojs/starlight': 0.31.1(astro@5.2.0)
       '@types/picomatch': 3.0.2
       github-slugger: 2.0.0
       hast-util-from-html: 2.0.3
@@ -21731,8 +21761,8 @@ packages:
       fsevents: 2.3.3
     dev: true
 
-  /vite@6.0.10:
-    resolution: {integrity: sha512-MEszunEcMo6pFsfXN1GhCFQqnE25tWRH0MA4f0Q7uanACi4y1Us+ZGpTMnITwCTnYzB2b9cpmnelTlxgTBmaBA==}
+  /vite@6.0.11:
+    resolution: {integrity: sha512-4VL9mQPKoHy4+FE0NnRE/kbY51TOfaknxAjt3fJbGJxhIpBZiqVzlZDEesWWsuREXHwNdAoOFZ9MkPEVXczHwg==}
     engines: {node: ^18.0.0 || ^20.0.0 || >=22.0.0}
     hasBin: true
     peerDependencies:
@@ -21778,7 +21808,7 @@ packages:
       fsevents: 2.3.3
     dev: false
 
-  /vitefu@1.0.5(vite@6.0.10):
+  /vitefu@1.0.5(vite@6.0.11):
     resolution: {integrity: sha512-h4Vflt9gxODPFNGPwp4zAMZRpZR7eslzwH2c5hn5kNZ5rhnKyRJ50U+yGCdc2IRaBs8O4haIgLNGrV5CrpMsCA==}
     peerDependencies:
       vite: '>=4.5.3'
@@ -21786,7 +21816,7 @@ packages:
       vite:
         optional: true
     dependencies:
-      vite: 6.0.10
+      vite: 6.0.11
     dev: false
 
   /vscode-jsonrpc@8.2.0:
