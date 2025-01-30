@@ -63,6 +63,7 @@ export const createTenant = async (
       mutation CreateTenantMutation($input: CreateTenantInput!) {
         createTenant(input: $input) {
           tenant {
+            id
             publicName
             email
             apiSecret

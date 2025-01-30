@@ -141,8 +141,8 @@ export const createTenantSchema = z
   .object({
     apiSecret: z
       .string()
-      .min(3, { message: 'API Secret should be at least 3 characters long' })
-      .max(6, { message: 'Maximum length of API Secret is 255 characters' })
+      .min(10, { message: 'API Secret should be at least 3 characters long' })
+      .max(255, { message: 'Maximum length of API Secret is 255 characters' })
       .regex(
         /^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/,
         { message: 'API Secret should be Base64 encoded.' }

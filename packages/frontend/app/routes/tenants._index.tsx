@@ -5,6 +5,7 @@ import { Button, Table } from '~/components/ui'
 import { listTenants } from '~/lib/api/tenant.server'
 import { paginationSchema } from '~/lib/validate.server'
 import { checkAuthAndRedirect } from '../lib/kratos_checks.server'
+import { getSession } from '~/lib/session.server'
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const cookies = request.headers.get('cookie')
@@ -19,6 +20,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     throw json(null, { status: 400, statusText: 'Invalid pagination.' })
   }
 
+  let isOperator = false
   const tenants = await listTenants(request, {
     ...pagination.data
   })
@@ -30,11 +32,29 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   if (tenants.pageInfo.hasNextPage)
     nextPageUrl = `/tenants?after=${tenants.pageInfo.endCursor}`
 
-  return json({ tenants, previousPageUrl, nextPageUrl })
+  let tenantEdges = tenants.edges
+  const tenantPageInfo = tenants.pageInfo
+  if (tenantEdges.length) {
+    const session = await getSession(cookies)
+    const sessionApiSecret = session.get('apiSecret')
+    if (sessionApiSecret && sessionApiSecret.length > 0) {
+      for (const edge of tenantEdges) {
+        const edgeNode = edge.node
+        if (edgeNode && sessionApiSecret === edgeNode.apiSecret) {
+          isOperator = edgeNode.isOperator
+          break
+        }
+      }
+    }
+    tenantEdges = isOperator ? tenants.edges :
+      tenantEdges.filter(
+        ({ node }) => node.apiSecret === sessionApiSecret)
+  }
+  return json({ tenantEdges, tenantPageInfo, previousPageUrl, nextPageUrl, isOperator })
 }
 
 export default function TenantsPage() {
-  const { tenants, previousPageUrl, nextPageUrl } =
+  const { tenantEdges, tenantPageInfo, previousPageUrl, nextPageUrl, isOperator } =
     useLoaderData<typeof loader>()
   const navigate = useNavigate()
 
@@ -46,9 +66,11 @@ export default function TenantsPage() {
             <h3 className='text-2xl'>Tenants</h3>
           </div>
           <div className='ml-auto'>
-            <Button aria-label='add new tenant' to='/tenants/create'>
-              Add tenant
-            </Button>
+            {isOperator && (
+              <Button aria-label='add new tenant' to='/tenants/create'>
+                Add tenant
+              </Button>
+            )}
           </div>
         </PageHeader>
         <Table>
@@ -56,8 +78,8 @@ export default function TenantsPage() {
             columns={['ID', 'Public name', 'Email', 'Status', 'Operator']}
           />
           <Table.Body>
-            {tenants.edges.length ? (
-              tenants.edges.map((tenant) => (
+            {tenantEdges.length ? (
+              tenantEdges.map((tenant) => (
                 <Table.Row
                   key={tenant.node.id}
                   className='cursor-pointer'
@@ -110,7 +132,7 @@ export default function TenantsPage() {
         <div className='flex items-center justify-between p-5'>
           <Button
             aria-label='go to previous page'
-            disabled={!tenants.pageInfo.hasPreviousPage}
+            disabled={!tenantPageInfo.hasPreviousPage}
             onClick={() => {
               navigate(previousPageUrl)
             }}
@@ -119,7 +141,7 @@ export default function TenantsPage() {
           </Button>
           <Button
             aria-label='go to next page'
-            disabled={!tenants.pageInfo.hasNextPage}
+            disabled={!tenantPageInfo.hasNextPage}
             onClick={() => {
               navigate(nextPageUrl)
             }}

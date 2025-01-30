@@ -231,10 +231,7 @@ export async function action({ request }: ActionFunctionArgs) {
       }
 
       const response = await updateTenant(request, {
-        ...result.data,
-        ...(result.data.withdrawalThreshold
-          ? { withdrawalThreshold: result.data.withdrawalThreshold }
-          : { withdrawalThreshold: undefined })
+        ...result.data
       })
 
       if (!response?.asset) {
@@ -258,8 +255,8 @@ export async function action({ request }: ActionFunctionArgs) {
         })
       }
 
-      const response = await deleteTenant(request, { id: result.data.id })
-      if (!response?.tenant) {
+      const response = await deleteTenant(request, result.data.id)
+      if (!response) {
         return setMessageAndRedirect({
           session,
           message: {
