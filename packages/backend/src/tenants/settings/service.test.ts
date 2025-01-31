@@ -19,6 +19,7 @@ import {
   TenantSettingService,
   UpdateOptions
 } from './service'
+import { AuthServiceClient } from '../../auth-service-client/client'
 
 describe('TenantSetting Service', (): void => {
   let knex: Knex
@@ -27,6 +28,8 @@ describe('TenantSetting Service', (): void => {
   let tenant: Tenant
   let tenantService: TenantService
   let tenantSettingService: TenantSettingService
+  let authServiceClient: AuthServiceClient
+
   const dbSchema = 'tenant_settings_service_test_schema'
 
   beforeAll(async (): Promise<void> => {
@@ -36,9 +39,14 @@ describe('TenantSetting Service', (): void => {
     knex = await deps.use('knex')
     tenantService = await deps.use('tenantService')
     tenantSettingService = await deps.use('tenantSettingService')
+    authServiceClient = await deps.use('authServiceClient')
   })
 
   beforeEach(async (): Promise<void> => {
+    jest
+      .spyOn(authServiceClient.tenant, 'create')
+      .mockResolvedValueOnce(undefined)
+
     tenant = await tenantService.create({
       apiSecret: faker.string.uuid(),
       email: faker.internet.email(),
