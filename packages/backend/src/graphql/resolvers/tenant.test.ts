@@ -99,7 +99,6 @@ describe('Tenant Resolvers', (): void => {
       ${false}   | ${'tenant'}
     `('whoami query as $description', async ({ isOperator }): Promise<void> => {
       const tenant = await createTenant(deps)
-      console.log('created tenant')
       const client = isOperator
         ? appContainer.apolloClient
         : createTenantedApolloClient(appContainer, tenant.id)
