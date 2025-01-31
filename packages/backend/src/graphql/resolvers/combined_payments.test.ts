@@ -23,7 +23,6 @@ describe('Payment', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let asset: Asset
-  //let tenant: Tenant
 
   beforeAll(async (): Promise<void> => {
     deps = initIocContainer(Config)
@@ -32,7 +31,6 @@ describe('Payment', (): void => {
 
   beforeEach(async (): Promise<void> => {
     asset = await createAsset(deps)
-    //tenant = await createTenant(deps)
   })
 
   afterEach(async (): Promise<void> => {
