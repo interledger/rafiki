@@ -5,12 +5,7 @@ tableOfContents:
 ---
 
 import { Badge, Tabs, TabItem, Steps } from '@astrojs/starlight/components'
-import {
-  Mermaid,
-  CodeBlock,
-  LinkOut,
-  Disclosure
-} from '@interledger/docs-design-system'
+import { Mermaid, CodeBlock, LinkOut } from '@interledger/docs-design-system'
 
 The main communication channel between you and your Rafiki instance is composed of the Backend Admin API and a set of webhook events.
 
@@ -52,7 +47,8 @@ Each webhook event is sent as a JSON payload with the following structure in the
 The `id` in the webhook event payload is unique. Your system can use the ID to determine whether the event has been received previously, preventing duplicate event processing.
 :::
 
-<Disclosure toggleText="Expand for example JSON payloads" client:load>
+<details>
+<summary>Expand for example JSON payloads</summary>
    <Tabs>
       <TabItem label='incomingPaymentCompleted'>
         ```json
@@ -133,7 +129,7 @@ The `id` in the webhook event payload is unique. Your system can use the ID to d
         ```
       </TabItem>
    </Tabs>
-</Disclosure>
+</details>
 
 We provide an <LinkOut href="https://github.com/interledger/rafiki/blob/main/packages/backend/src/openapi/specs/webhooks.yaml">OpenAPI specification</LinkOut> for the webhook events fired by Rafiki.
 
@@ -241,7 +237,8 @@ The first retry is after 10 seconds. Additional retries occur after 20 more seco
 
 #### Incoming payment created
 
-<Disclosure toggleText="Expand for event sequence" client:load>
+<details>
+<summary>Expand for event sequence</summary>
   <Mermaid
     graph={`sequenceDiagram
       participant R as Rafiki
@@ -253,7 +250,7 @@ The first retry is after 10 seconds. Additional retries occur after 20 more seco
 `}
 />
 
-</Disclosure>
+</details>
 
 The `incoming_payment.created` event indicates an incoming payment was created. At this point, the incoming payment has not received any funds.
 
@@ -261,8 +258,8 @@ The incoming payment will either complete or expire.
 
 #### Incoming payment completed
 
-<Disclosure toggleText="Expand for event sequences" client:load>
-
+<details>
+<summary>Expand for event sequences</summary>
 {' '}
 
 <Badge text='Single-phase transfer' variant='tip' size='medium' /> An incoming payment
@@ -299,13 +296,14 @@ of $10 was completed.
 `}
 />
 
-</Disclosure>
+</details>
 
 The `incoming_payment.completed` event indicates the payment completed either automatically or manually, and that any funds received into the incoming payment should be withdrawn and then credited to the recipient's account on your ledger.
 
 #### Incoming payment expired
 
-<Disclosure toggleText="Expand for event sequence" client:load>
+<details>
+<summary>Expand for event sequence</summary>
   \$2.55 was received before the payment expired. The recipient is thus credited with \$2.55.
 
   <Mermaid
@@ -320,7 +318,7 @@ The `incoming_payment.completed` event indicates the payment completed either au
 `}
 />
 
-</Disclosure>
+</details>
 
 The `incoming_payment.expired` event will only fire if funds were received for the incoming payment. The event signals the end of any additional payments.
 
@@ -344,8 +342,8 @@ In some scenarios, a sender may not have specified an `incomingAmount` when the 
 
 #### Outgoing payment created
 
-<Disclosure toggleText="Expand for event sequence" client:load>
-
+<details>
+<summary>Expand for event sequence</summary>
 An outgoing payment for \$12 was created.
 
   <Mermaid
@@ -365,7 +363,7 @@ An outgoing payment for \$12 was created.
 `}
 />
 
-</Disclosure>
+</details>
 
 The `outgoing_payment.created` event indicates an outgoing payment was created and is awaiting liquidity. Verify the sender's account balance and perform any other necessary verifications before funding the payment.
 
@@ -373,8 +371,8 @@ If the sender has insufficient funds or if the payment should otherwise not be f
 
 #### Outgoing payment completed
 
-<Disclosure toggleText="Expand for event sequences" client:load>
-
+<details>
+<summary>Expand for event sequences</summary>
 {' '}
 
 <Badge text='Single-phase transfer' variant='tip' size='medium' /> An outgoing payment
@@ -408,7 +406,7 @@ for \$12 is complete. \$11.50 was sent. You choose to keep \$0.50 as a service f
 `}
 />
 
-</Disclosure>
+</details>
 
 The `outgoing.payment_completed` event indicates that as much as possible has been sent to the recipient against their incoming payment.
 
@@ -416,8 +414,8 @@ If there is excess liquidity in Rafiki due to differences between the sent and r
 
 #### Outgoing payment failed
 
-<Disclosure toggleText="Expand for event sequence" client:load>
-
+<details>
+<summary>Expand for event sequence</summary>
 An outgoing payment for \$12 failed. \$8 was sent successfully.
 
   <Mermaid
@@ -432,7 +430,7 @@ An outgoing payment for \$12 failed. \$8 was sent successfully.
 `}
 />
 
-</Disclosure>
+</details>
 
 The `outgoing_payment.failed` event indicates that an outgoing payment has either partially or completely failed and a retry was unsuccessful. Withdraw any remaining liquidity from the outgoing payment in Rafiki. If the payment failed completely (the `sentAmount` is `0`), remove the hold from your sender's account. If the payment partially failed, remove the hold from your sender's account, then debit the sender's account on your ledger with the amount that was sent successfully. Since there will be a discrepancy between the quoted amount and the actual sent amount, we suggest you refrain from taking a sending fee.
 
@@ -449,8 +447,8 @@ The `outgoing_payment.failed` event indicates that an outgoing payment has eithe
 
 #### Wallet address not found
 
-<Disclosure toggleText="Expand for event sequence" client:load>
-
+<details>
+<summary>Expand for event sequence</summary>
 The wallet address, `https://wallet.example.com/carla_garcia` was requested but does not exist.
 
   <Mermaid
@@ -464,7 +462,7 @@ The wallet address, `https://wallet.example.com/carla_garcia` was requested but 
 `}
 />
 
-</Disclosure>
+</details>
 
 The `wallet_address.not_found` event indicates that a wallet address was requested via the Open Payments <Badge text="GET" variant="note" size="medium"/> wallet address API call, but the address doesn’t exist in your Rafiki instance.
 
@@ -480,8 +478,8 @@ When you receive this event, look up the associated account in your system and c
 
 #### Wallet address Web Monetization
 
-<Disclosure toggleText="Expand for event sequence" client:load>
-
+<details>
+<summary>Expand for event sequence</summary>
 A wallet address received a Web Monetization payment of \$0.33
 
   <Mermaid
@@ -496,7 +494,7 @@ A wallet address received a Web Monetization payment of \$0.33
 `}
 />
 
-</Disclosure>
+</details>
 
 The `wallet_address.web_monetization` event indicates that a wallet address received Web Monetization payments via the ILP STREAM protocol. Withdraw the liquidity from the wallet address in Rafiki and credit the recipient's account on your ledger.
 
@@ -512,8 +510,8 @@ The `wallet_address.web_monetization` event indicates that a wallet address rece
 
 #### Asset liquidity low
 
-<Disclosure toggleText="Expand for event sequence" client:load>
-
+<details>
+<summary>Expand for event sequence</summary>
 Your asset liquidity for USD (asset scale: 2) drops below \$100.00.
 
   <Mermaid
@@ -527,7 +525,7 @@ Your asset liquidity for USD (asset scale: 2) drops below \$100.00.
 `}
 />
 
-</Disclosure>
+</details>
 
 The `asset.liquidity_low` event indicates that an asset's liquidity has dropped below your predefined liquidity threshold. Check if you already have, or can acquire, additional liquidity for that specific asset. If so, deposit it in Rafiki. Cross-currency transfers will fail if you don't increase the asset's liquidity.
 
@@ -543,8 +541,8 @@ The `asset.liquidity_low` event indicates that an asset's liquidity has dropped 
 
 #### Peer liquidity low
 
-<Disclosure toggleText="Expand for event sequence" client:load>
-
+<details>
+<summary>Expand for event sequence</summary>
 The liquidity for your peer, Happy Life Bank, drops below \$100.00 USD.
 
   <Mermaid
@@ -558,6 +556,6 @@ The liquidity for your peer, Happy Life Bank, drops below \$100.00 USD.
 `}
 />
 
-</Disclosure>
+</details>
 
 The `peer.liquidity_low` event indicates that a peer's liquidity has dropped below your predefined liquidity threshold. Decide whether you want to extend the peer's credit line or if your peer must settle before you will extend a new line of credit. If you cannot or do not increase the peer liquidity in Rafiki, transfers to that peer will fail.
