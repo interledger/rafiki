@@ -27,7 +27,6 @@ import { truncateTables } from '../../tests/tableManager'
 import { createOutgoingPaymentWithReceiver } from '../../tests/outgoingPayment'
 import { v4 as uuid } from 'uuid'
 import { IlpQuoteDetails } from './quote-details/model'
-import { createTenant } from '../../tests/tenant'
 
 const nock = (global as unknown as { nock: typeof import('nock') }).nock
 
@@ -58,7 +57,7 @@ describe('IlpPaymentService', (): void => {
   })
 
   beforeEach(async (): Promise<void> => {
-    tenantId = (await createTenant(deps)).id
+    tenantId = Config.operatorTenantId
     assetMap['USD'] = await createAsset(deps, {
       code: 'USD',
       scale: 2
@@ -70,12 +69,12 @@ describe('IlpPaymentService', (): void => {
     })
 
     walletAddressMap['USD'] = await createWalletAddress(deps, {
-      tenantId: Config.operatorTenantId,
+      tenantId,
       assetId: assetMap['USD'].id
     })
 
     walletAddressMap['EUR'] = await createWalletAddress(deps, {
-      tenantId: Config.operatorTenantId,
+      tenantId,
       assetId: assetMap['EUR'].id
     })
   })

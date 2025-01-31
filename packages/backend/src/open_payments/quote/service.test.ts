@@ -35,7 +35,6 @@ import {
   PaymentMethodHandlerErrorCode
 } from '../../payment-method/handler/errors'
 import { Receiver } from '../receiver/model'
-import { createTenant } from '../../tests/tenant'
 
 describe('QuoteService', (): void => {
   let deps: IocContract<AppServices>
@@ -93,18 +92,18 @@ describe('QuoteService', (): void => {
   })
 
   beforeEach(async (): Promise<void> => {
-    tenantId = (await createTenant(deps)).id
+    tenantId = config.operatorTenantId
     const { id: sendAssetId } = await createAsset(deps, {
       code: debitAmount.assetCode,
       scale: debitAmount.assetScale
     })
     sendingWalletAddress = await createWalletAddress(deps, {
-      tenantId: config.operatorTenantId,
+      tenantId,
       assetId: sendAssetId
     })
     const { id: destinationAssetId } = await createAsset(deps, destinationAsset)
     receivingWalletAddress = await createWalletAddress(deps, {
-      tenantId: config.operatorTenantId,
+      tenantId,
       assetId: destinationAssetId,
       mockServerPort: appContainer.openPaymentsPort
     })
@@ -446,7 +445,7 @@ describe('QuoteService', (): void => {
 
     test('fails on inactive wallet address', async () => {
       const walletAddress = await createWalletAddress(deps, {
-        tenantId: Config.operatorTenantId
+        tenantId
       })
       const walletAddressUpdated = await WalletAddress.query(
         knex
@@ -542,11 +541,11 @@ describe('QuoteService', (): void => {
           scale: 2
         })
         sendingWalletAddress = await createWalletAddress(deps, {
-          tenantId: config.operatorTenantId,
+          tenantId,
           assetId: asset.id
         })
         receivingWalletAddress = await createWalletAddress(deps, {
-          tenantId: config.operatorTenantId,
+          tenantId,
           assetId: asset.id
         })
       })
@@ -654,11 +653,11 @@ describe('QuoteService', (): void => {
           scale: 2
         })
         sendingWalletAddress = await createWalletAddress(deps, {
-          tenantId: config.operatorTenantId,
+          tenantId,
           assetId: sendAsset.id
         })
         receivingWalletAddress = await createWalletAddress(deps, {
-          tenantId: config.operatorTenantId,
+          tenantId,
           assetId: receiveAsset.id
         })
       })

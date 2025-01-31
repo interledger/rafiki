@@ -31,8 +31,6 @@ import { createOutgoingPayment } from '../../../tests/outgoingPayment'
 import { createWalletAddress } from '../../../tests/walletAddress'
 import { UnionOmit } from '../../../shared/utils'
 import { OpenPaymentsServerRouteError } from '../../route-errors'
-import { Tenant } from '../../../tenants/model'
-import { createTenant } from '../../../tests/tenant'
 
 describe('Outgoing Payment Routes', (): void => {
   let deps: IocContract<AppServices>
@@ -41,9 +39,9 @@ describe('Outgoing Payment Routes', (): void => {
   let config: IAppConfig
   let outgoingPaymentRoutes: OutgoingPaymentRoutes
   let outgoingPaymentService: OutgoingPaymentService
-  let tenant: Tenant
   let walletAddress: WalletAddress
   let baseUrl: string
+  let tenantId: string
 
   const receivingWalletAddress = `https://wallet.example/${uuid()}`
 
@@ -54,7 +52,7 @@ describe('Outgoing Payment Routes', (): void => {
   }): Promise<OutgoingPayment> => {
     return await createOutgoingPayment(deps, {
       ...options,
-      tenantId: tenant.id,
+      tenantId: Config.operatorTenantId,
       walletAddressId: walletAddress.id,
       method: 'ilp',
       receiver: `${receivingWalletAddress}/incoming-payments/${uuid()}`,
@@ -81,9 +79,9 @@ describe('Outgoing Payment Routes', (): void => {
 
   beforeEach(async (): Promise<void> => {
     const asset = await createAsset(deps)
-    tenant = await createTenant(deps)
+    tenantId = Config.operatorTenantId
     walletAddress = await createWalletAddress(deps, {
-      tenantId: Config.operatorTenantId,
+      tenantId,
       assetId: asset.id
     })
     baseUrl = new URL(walletAddress.url).origin
@@ -158,7 +156,7 @@ describe('Outgoing Payment Routes', (): void => {
           body: options
         },
         params: {
-          tenantId: tenant.id
+          tenantId
         },
         walletAddress,
         client: options.client,
@@ -193,7 +191,7 @@ describe('Outgoing Payment Routes', (): void => {
             CreateOutgoingPaymentBaseOptions,
             'walletAddressId'
           > = {
-            tenantId: tenant.id,
+            tenantId,
             client,
             grant,
             metadata
@@ -224,7 +222,7 @@ describe('Outgoing Payment Routes', (): void => {
           ).resolves.toBeUndefined()
 
           let expectedCreateOptions: CreateOutgoingPaymentBaseOptions = {
-            tenantId: tenant.id,
+            tenantId,
             walletAddressId: walletAddress.id,
             metadata,
             client,
@@ -294,7 +292,7 @@ describe('Outgoing Payment Routes', (): void => {
       'returns error on %s',
       async (error): Promise<void> => {
         const quoteId = uuid()
-        const tenantId = tenant.id
+        const tenantId = Config.operatorTenantId
         const ctx = setup({
           quoteId: `${baseUrl}/${tenantId}/quotes/${quoteId}`
         })

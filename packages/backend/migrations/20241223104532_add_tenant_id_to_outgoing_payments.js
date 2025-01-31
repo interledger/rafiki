@@ -3,10 +3,20 @@
  * @returns { Promise<void> }
  */
 exports.up = function (knex) {
-  return knex.schema.alterTable('outgoingPayments', function (table) {
-    table.uuid('tenantId').notNullable()
-    table.foreign('tenantId').references('tenants.id').onDelete('CASCADE')
-  })
+  return knex.schema
+    .alterTable('outgoingPayments', (table) => {
+      table.uuid('tenantId').references('tenants.id').index()
+    })
+    .then(() => {
+      return knex.raw(
+        `UPDATE "outgoingPayments" SET "tenantId" = (SELECT id from "tenants" LIMIT 1)`
+      )
+    })
+    .then(() => {
+      return knex.schema.alterTable('outgoingPayments', (table) => {
+        table.uuid('tenantId').notNullable().alter()
+      })
+    })
 }
 
 /**
@@ -14,8 +24,9 @@ exports.up = function (knex) {
  * @returns { Promise<void> }
  */
 exports.down = function (knex) {
-  return knex.schema.alterTable('outgoingPayments', function (table) {
-    table.dropForeign('tenantId')
-    table.dropColumn('tenantId')
-  })
+  return Promise.all([
+    knex.schema.alterTable('outgoingPayments', function (table) {
+      table.dropColumn('tenantId')
+    })
+  ])
 }

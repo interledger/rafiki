@@ -587,7 +587,6 @@ export function initIocContainer(
       config: await deps.use('config'),
       logger: await deps.use('logger'),
       knex: await deps.use('knex'),
-      tenantService: await deps.use('tenantService'),
       receiverService: await deps.use('receiverService'),
       feeService: await deps.use('feeService'),
       walletAddressService: await deps.use('walletAddressService'),
@@ -612,7 +611,6 @@ export function initIocContainer(
       config: await deps.use('config'),
       logger: await deps.use('logger'),
       knex: await deps.use('knex'),
-      tenantService: await deps.use('tenantService'),
       accountingService: await deps.use('accountingService'),
       receiverService: await deps.use('receiverService'),
       paymentMethodHandlerService: await deps.use(

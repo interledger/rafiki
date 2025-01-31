@@ -24,7 +24,6 @@ import { IncomingPaymentService } from '../../open_payments/payment/incoming/ser
 import { errorToMessage, TransferError } from '../../accounting/errors'
 import { PaymentMethodHandlerError } from '../handler/errors'
 import { ConvertError } from '../../rates/service'
-import { createTenant } from '../../tests/tenant'
 
 const nock = (global as unknown as { nock: typeof import('nock') }).nock
 
@@ -55,7 +54,7 @@ describe('LocalPaymentService', (): void => {
   })
 
   beforeEach(async (): Promise<void> => {
-    tenantId = (await createTenant(deps)).id
+    tenantId = Config.operatorTenantId
     assetMap['USD'] = await createAsset(deps, {
       code: 'USD',
       scale: 2
@@ -72,17 +71,17 @@ describe('LocalPaymentService', (): void => {
     })
 
     walletAddressMap['USD'] = await createWalletAddress(deps, {
-      tenantId: Config.operatorTenantId,
+      tenantId,
       assetId: assetMap['USD'].id
     })
 
     walletAddressMap['USD_9'] = await createWalletAddress(deps, {
-      tenantId: Config.operatorTenantId,
+      tenantId,
       assetId: assetMap['USD_9'].id
     })
 
     walletAddressMap['EUR'] = await createWalletAddress(deps, {
-      tenantId: Config.operatorTenantId,
+      tenantId,
       assetId: assetMap['EUR'].id
     })
   })

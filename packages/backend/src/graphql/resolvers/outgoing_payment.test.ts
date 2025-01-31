@@ -37,7 +37,6 @@ import {
 } from '../generated/graphql'
 import { faker } from '@faker-js/faker'
 import { GraphQLErrorCode } from '../errors'
-import { createTenant } from '../../tests/tenant'
 
 describe('OutgoingPayment Resolvers', (): void => {
   let deps: IocContract<AppServices>
@@ -100,10 +99,10 @@ describe('OutgoingPayment Resolvers', (): void => {
     let walletAddressId: string
 
     beforeEach(async (): Promise<void> => {
-      tenantId = (await createTenant(deps)).id
+      tenantId = Config.operatorTenantId
       walletAddressId = (
         await createWalletAddress(deps, {
-          tenantId: Config.operatorTenantId,
+          tenantId,
           assetId: asset.id
         })
       ).id
@@ -141,16 +140,16 @@ describe('OutgoingPayment Resolvers', (): void => {
 
       beforeEach(async (): Promise<void> => {
         const firstReceiverWalletAddress = await createWalletAddress(deps, {
-          tenantId: Config.operatorTenantId,
+          tenantId,
           assetId: asset.id
         })
         const secondWalletAddress = await createWalletAddress(deps, {
-          tenantId: Config.operatorTenantId,
+          tenantId,
           assetId: asset.id
         })
 
         const secondReceiverWalletAddress = await createWalletAddress(deps, {
-          tenantId: Config.operatorTenantId,
+          tenantId,
           assetId: asset.id
         })
 
@@ -337,7 +336,7 @@ describe('OutgoingPayment Resolvers', (): void => {
         const grantId = uuid()
 
         const { id: walletAddressId } = await createWalletAddress(deps, {
-          tenantId: Config.operatorTenantId,
+          tenantId,
           assetId: asset.id
         })
 
@@ -380,7 +379,7 @@ describe('OutgoingPayment Resolvers', (): void => {
 
       beforeEach(async (): Promise<void> => {
         const { id: walletAddressId } = await createWalletAddress(deps, {
-          tenantId: Config.operatorTenantId,
+          tenantId,
           assetId: asset.id
         })
         payment = await createPayment({ tenantId, walletAddressId, metadata })
@@ -569,12 +568,12 @@ describe('OutgoingPayment Resolvers', (): void => {
     }
 
     beforeEach(async (): Promise<void> => {
-      tenantId = (await createTenant(deps)).id
+      tenantId = Config.operatorTenantId
     })
 
     test('success (metadata)', async (): Promise<void> => {
       const { id: walletAddressId } = await createWalletAddress(deps, {
-        tenantId: Config.operatorTenantId,
+        tenantId,
         assetId: asset.id
       })
       const payment = await createPayment({
@@ -718,12 +717,12 @@ describe('OutgoingPayment Resolvers', (): void => {
     const mockIncomingPaymentUrl = `https://${faker.internet.domainName()}/incoming-payments/${uuid()}`
 
     beforeEach(async (): Promise<void> => {
-      tenantId = (await createTenant(deps)).id
+      tenantId = Config.operatorTenantId
     })
 
     test('create', async (): Promise<void> => {
       const walletAddress = await createWalletAddress(deps, {
-        tenantId: Config.operatorTenantId,
+        tenantId,
         assetId: asset.id
       })
       const payment = await createPayment({
@@ -880,14 +879,14 @@ describe('OutgoingPayment Resolvers', (): void => {
   describe('Mutation.cancelOutgoingPayment', (): void => {
     let payment: OutgoingPaymentModel
     beforeEach(async () => {
-      const tenant = await createTenant(deps)
+      const tenantId = Config.operatorTenantId
       const walletAddress = await createWalletAddress(deps, {
-        tenantId: Config.operatorTenantId,
+        tenantId,
         assetId: asset.id
       })
 
       payment = await createPayment({
-        tenantId: tenant.id,
+        tenantId,
         walletAddressId: walletAddress.id
       })
     })
@@ -1002,10 +1001,10 @@ describe('OutgoingPayment Resolvers', (): void => {
     let tenantId: string
 
     beforeEach(async (): Promise<void> => {
-      tenantId = (await createTenant(deps)).id
+      tenantId = Config.operatorTenantId
       walletAddressId = (
         await createWalletAddress(deps, {
-          tenantId: Config.operatorTenantId,
+          tenantId,
           assetId: asset.id
         })
       ).id

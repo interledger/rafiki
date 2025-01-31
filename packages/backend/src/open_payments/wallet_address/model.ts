@@ -199,6 +199,7 @@ export interface ListOptions {
   client?: string
   pagination?: Pagination
   sortOrder?: SortOrder
+  tenantId?: string
 }
 
 class SubresourceQueryBuilder<

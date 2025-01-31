@@ -70,13 +70,11 @@ export async function createQuote(
     exchangeRate = 0.5
   }: CreateTestQuoteOptions
 ): Promise<Quote> {
-  const tenantService = await deps.use('tenantService')
-  const tenant = await tenantService.get(tenantId)
-  if (!tenant) {
-    throw new Error(`tenant not found.`)
-  }
   const walletAddressService = await deps.use('walletAddressService')
-  const walletAddress = await walletAddressService.get(walletAddressId)
+  const walletAddress = await walletAddressService.get(
+    walletAddressId,
+    tenantId
+  )
   if (!walletAddress) {
     throw new Error('wallet not found')
   }

@@ -44,8 +44,6 @@ import {
   WalletAddressWithdrawalMutationResponse
 } from '../generated/graphql'
 import { GraphQLErrorCode } from '../errors'
-import { Tenant } from '../../tenants/model'
-import { createTenant } from '../../tests/tenant'
 
 describe('Liquidity Resolvers', (): void => {
   let deps: IocContract<AppServices>
@@ -1745,15 +1743,15 @@ describe('Liquidity Resolvers', (): void => {
   )
 
   describe('Event Liquidity', (): void => {
-    let tenant: Tenant
+    let tenantId: string
     let walletAddress: WalletAddress
     let incomingPayment: IncomingPayment
     let payment: OutgoingPayment
 
     beforeEach(async (): Promise<void> => {
-      tenant = await createTenant(deps)
+      tenantId = Config.operatorTenantId
       walletAddress = await createWalletAddress(deps, {
-        tenantId: Config.operatorTenantId
+        tenantId
       })
       const walletAddressId = walletAddress.id
       incomingPayment = await createIncomingPayment(deps, {
@@ -1766,7 +1764,7 @@ describe('Liquidity Resolvers', (): void => {
         expiresAt: new Date(Date.now() + 60 * 1000)
       })
       payment = await createOutgoingPayment(deps, {
-        tenantId: tenant.id,
+        tenantId,
         walletAddressId,
         method: 'ilp',
         receiver: `${Config.openPaymentsUrl}/incoming-payments/${uuid()}`,
@@ -1817,8 +1815,7 @@ describe('Liquidity Resolvers', (): void => {
                 variables: {
                   input: {
                     eventId,
-                    idempotencyKey: uuid(),
-                    tenantId: tenant.id
+                    idempotencyKey: uuid()
                   }
                 }
               })
@@ -1859,8 +1856,7 @@ describe('Liquidity Resolvers', (): void => {
                   variables: {
                     input: {
                       eventId: uuid(),
-                      idempotencyKey: uuid(),
-                      tenantId: tenant.id
+                      idempotencyKey: uuid()
                     }
                   }
                 })
@@ -1909,8 +1905,7 @@ describe('Liquidity Resolvers', (): void => {
                   variables: {
                     input: {
                       eventId,
-                      idempotencyKey: uuid(),
-                      tenantId: tenant.id
+                      idempotencyKey: uuid()
                     }
                   }
                 })
@@ -2163,13 +2158,11 @@ describe('Liquidity Resolvers', (): void => {
   })
 
   describe('Payment Liquidity', (): void => {
-    let tenant: Tenant
     let walletAddress: WalletAddress
     let incomingPayment: IncomingPayment
     let outgoingPayment: OutgoingPayment
 
     beforeEach(async (): Promise<void> => {
-      tenant = await createTenant(deps)
       walletAddress = await createWalletAddress(deps, {
         tenantId: Config.operatorTenantId
       })
@@ -2184,7 +2177,7 @@ describe('Liquidity Resolvers', (): void => {
         expiresAt: new Date(Date.now() + 60 * 1000)
       })
       outgoingPayment = await createOutgoingPayment(deps, {
-        tenantId: tenant.id,
+        tenantId: Config.operatorTenantId,
         walletAddressId,
         method: 'ilp',
         receiver: `${
@@ -2698,8 +2691,7 @@ describe('Liquidity Resolvers', (): void => {
                 variables: {
                   input: {
                     outgoingPaymentId: outgoingPayment.id,
-                    idempotencyKey: uuid(),
-                    tenantId: tenant.id
+                    idempotencyKey: uuid()
                   }
                 }
               })
@@ -2740,8 +2732,7 @@ describe('Liquidity Resolvers', (): void => {
                   variables: {
                     input: {
                       outgoingPaymentId: uuid(),
-                      idempotencyKey: uuid(),
-                      tenantId: tenant.id
+                      idempotencyKey: uuid()
                     }
                   }
                 })
@@ -2790,8 +2781,7 @@ describe('Liquidity Resolvers', (): void => {
                   variables: {
                     input: {
                       outgoingPaymentId: outgoingPayment.id,
-                      idempotencyKey: uuid(),
-                      tenantId: tenant.id
+                      idempotencyKey: uuid()
                     }
                   }
                 })

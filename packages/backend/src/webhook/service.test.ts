@@ -31,7 +31,6 @@ import {
   WalletAddressEventType
 } from '../open_payments/wallet_address/model'
 import { createOutgoingPayment } from '../tests/outgoingPayment'
-import { createTenant } from '../tests/tenant'
 
 const nock = (global as unknown as { nock: typeof import('nock') }).nock
 
@@ -118,12 +117,12 @@ describe('Webhook Service', (): void => {
     let events: WebhookEvent[] = []
 
     beforeEach(async (): Promise<void> => {
-      tenantId = (await createTenant(deps)).id
+      tenantId = Config.operatorTenantId
       walletAddressIn = await createWalletAddress(deps, {
-        tenantId: Config.operatorTenantId
+        tenantId
       })
       walletAddressOut = await createWalletAddress(deps, {
-        tenantId: Config.operatorTenantId
+        tenantId
       })
       incomingPaymentIds = [
         (

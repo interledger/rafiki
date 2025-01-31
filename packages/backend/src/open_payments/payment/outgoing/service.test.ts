@@ -54,7 +54,6 @@ import { TelemetryService } from '../../../telemetry/service'
 import { getPageTests } from '../../../shared/baseModel.test'
 import { Pagination, SortOrder } from '../../../shared/baseModel'
 import { ReceiverService } from '../../receiver/service'
-import { createTenant } from '../../../tests/tenant'
 
 describe('OutgoingPaymentService', (): void => {
   let deps: IocContract<AppServices>
@@ -271,19 +270,18 @@ describe('OutgoingPaymentService', (): void => {
   })
 
   beforeEach(async (): Promise<void> => {
-    const { id: sendTenantId } = await createTenant(deps)
-    tenantId = sendTenantId
+    tenantId = config.operatorTenantId
     const { id: sendAssetId } = await createAsset(deps, asset)
     assetId = sendAssetId
     const walletAddress = await createWalletAddress(deps, {
-      tenantId: config.operatorTenantId,
+      tenantId,
       assetId: sendAssetId
     })
     walletAddressId = walletAddress.id
     client = walletAddress.url
     const { id: destinationAssetId } = await createAsset(deps, destinationAsset)
     receiverWalletAddress = await createWalletAddress(deps, {
-      tenantId: config.operatorTenantId,
+      tenantId,
       assetId: destinationAssetId,
       mockServerPort: appContainer.openPaymentsPort
     })
@@ -420,11 +418,11 @@ describe('OutgoingPaymentService', (): void => {
       let otherOutgoingPayment: OutgoingPayment
       beforeEach(async (): Promise<void> => {
         otherSenderWalletAddress = await createWalletAddress(deps, {
-          tenantId: config.operatorTenantId,
+          tenantId,
           assetId
         })
         otherReceiverWalletAddress = await createWalletAddress(deps, {
-          tenantId: config.operatorTenantId,
+          tenantId,
           assetId
         })
         const incomingPayment = await createIncomingPayment(deps, {
@@ -1017,7 +1015,7 @@ describe('OutgoingPaymentService', (): void => {
           method: 'ilp'
         })
         const walletAddress = await createWalletAddress(deps, {
-          tenantId: config.operatorTenantId
+          tenantId
         })
         const walletAddressUpdated = await WalletAddress.query(
           knex

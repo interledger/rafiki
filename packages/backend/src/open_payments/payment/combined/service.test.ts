@@ -21,7 +21,6 @@ import {
   createCombinedPayment,
   toCombinedPayment
 } from '../../../tests/combinedPayment'
-import { createTenant } from '../../../tests/tenant'
 
 describe('Combined Payment Service', (): void => {
   let deps: IocContract<AppServices>
@@ -39,10 +38,10 @@ describe('Combined Payment Service', (): void => {
     appContainer = await createTestApp(deps)
     knex = appContainer.knex
     combinedPaymentService = await deps.use('combinedPaymentService')
+    tenantId = Config.operatorTenantId
   })
 
   beforeEach(async (): Promise<void> => {
-    tenantId = (await createTenant(deps)).id
     sendAsset = await createAsset(deps)
     receiveAsset = await createAsset(deps)
     sendWalletAddressId = (

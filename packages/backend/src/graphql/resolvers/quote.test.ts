@@ -22,15 +22,13 @@ import { Quote as QuoteModel } from '../../open_payments/quote/model'
 import { Amount } from '../../open_payments/amount'
 import { CreateQuoteInput, Quote, QuoteResponse } from '../generated/graphql'
 import { GraphQLErrorCode } from '../errors'
-import { Tenant } from '../../tenants/model'
-import { createTenant } from '../../tests/tenant'
 
 describe('Quote Resolvers', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let quoteService: QuoteService
   let asset: Asset
-  let tenant: Tenant
+  let tenantId: string
 
   const receivingWalletAddress = 'http://wallet2.example/bob'
   const receiver = `${receivingWalletAddress}/incoming-payments/${uuid()}`
@@ -42,7 +40,7 @@ describe('Quote Resolvers', (): void => {
   })
 
   beforeEach(async (): Promise<void> => {
-    tenant = await createTenant(deps)
+    tenantId = Config.operatorTenantId
     asset = await createAsset(deps)
   })
 
@@ -60,7 +58,7 @@ describe('Quote Resolvers', (): void => {
     walletAddressId: string
   ): Promise<QuoteModel> => {
     return await createQuote(deps, {
-      tenantId: tenant.id,
+      tenantId,
       walletAddressId,
       receiver,
       debitAmount: {
@@ -76,7 +74,7 @@ describe('Quote Resolvers', (): void => {
   describe('Query.quote', (): void => {
     test('success', async (): Promise<void> => {
       const { id: walletAddressId } = await createWalletAddress(deps, {
-        tenantId: Config.operatorTenantId,
+        tenantId,
         assetId: asset.id
       })
       const quote = await createWalletAddressQuote(walletAddressId)
@@ -84,10 +82,9 @@ describe('Quote Resolvers', (): void => {
       const query = await appContainer.apolloClient
         .query({
           query: gql`
-            query Quote($quoteId: String!, $tenantId: String!) {
-              quote(id: $quoteId, tenantId: $tenantId) {
+            query Quote($quoteId: String!) {
+              quote(id: $quoteId) {
                 id
-                tenantId
                 walletAddressId
                 receiver
                 debitAmount {
@@ -106,15 +103,13 @@ describe('Quote Resolvers', (): void => {
             }
           `,
           variables: {
-            quoteId: quote.id,
-            tenantId: quote.tenantId
+            quoteId: quote.id
           }
         })
         .then((query): Quote => query.data?.quote)
 
       expect(query).toEqual({
         id: quote.id,
-        tenantId: quote.tenantId,
         walletAddressId,
         receiver: quote.receiver,
         debitAmount: {
@@ -142,16 +137,14 @@ describe('Quote Resolvers', (): void => {
       try {
         await appContainer.apolloClient.query({
           query: gql`
-            query Quote($quoteId: String!, $tenantId: String!) {
-              quote(id: $quoteId, tenantId: $tenantId) {
+            query Quote($quoteId: String!) {
+              quote(id: $quoteId) {
                 id
-                tenantId
               }
             }
           `,
           variables: {
-            quoteId: uuid(),
-            tenantId: tenant.id
+            quoteId: uuid()
           }
         })
       } catch (error) {
@@ -188,7 +181,7 @@ describe('Quote Resolvers', (): void => {
         assetScale: asset.scale
       }
       input = {
-        tenantId: tenant.id,
+        tenantId,
         walletAddressId: uuid(),
         receiver,
         debitAmount
@@ -203,10 +196,9 @@ describe('Quote Resolvers', (): void => {
     `('$type', async ({ withAmount, receiveAmount }): Promise<void> => {
       const amount = withAmount ? debitAmount : undefined
       const { id: walletAddressId } = await createWalletAddress(deps, {
-        tenantId: Config.operatorTenantId,
+        tenantId,
         assetId: asset.id
       })
-      const tenantId = tenant.id
       const input = {
         tenantId,
         walletAddressId,
@@ -234,7 +226,6 @@ describe('Quote Resolvers', (): void => {
               createQuote(input: $input) {
                 quote {
                   id
-                  tenantId
                 }
               }
             }
@@ -245,7 +236,6 @@ describe('Quote Resolvers', (): void => {
 
       expect(createSpy).toHaveBeenCalledWith({ ...input, method: 'ilp' })
       expect(query.quote?.id).toBe(quote?.id)
-      expect(query.quote?.tenantId).toBe(quote?.tenantId)
     })
 
     test('unknown walletAddress', async (): Promise<void> => {
@@ -258,7 +248,6 @@ describe('Quote Resolvers', (): void => {
                 createQuote(input: $input) {
                   quote {
                     id
-                    tenantId
                   }
                 }
               }
@@ -293,7 +282,6 @@ describe('Quote Resolvers', (): void => {
                 createQuote(input: $input) {
                   quote {
                     id
-                    tenantId
                   }
                 }
               }
@@ -322,7 +310,7 @@ describe('Quote Resolvers', (): void => {
     beforeEach(async (): Promise<void> => {
       walletAddressId = (
         await createWalletAddress(deps, {
-          tenantId: Config.operatorTenantId,
+          tenantId,
           assetId: asset.id
         })
       ).id

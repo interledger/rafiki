@@ -21,8 +21,6 @@ import {
 import { createAsset, randomAsset } from '../../tests/asset'
 import { createWalletAddress } from '../../tests/walletAddress'
 import { createQuote } from '../../tests/quote'
-import { Tenant } from '../../tenants/model'
-import { createTenant } from '../../tests/tenant'
 
 describe('Quote Routes', (): void => {
   let deps: IocContract<AppServices>
@@ -30,9 +28,9 @@ describe('Quote Routes', (): void => {
   let quoteService: QuoteService
   let config: IAppConfig
   let quoteRoutes: QuoteRoutes
-  let tenant: Tenant
   let walletAddress: WalletAddress
   let baseUrl: string
+  let tenantId: string
 
   const receiver = `https://wallet2.example/incoming-payments/${uuid()}`
   const asset = randomAsset()
@@ -78,13 +76,13 @@ describe('Quote Routes', (): void => {
   })
 
   beforeEach(async (): Promise<void> => {
-    tenant = await createTenant(deps)
+    tenantId = Config.operatorTenantId
     const { id: assetId } = await createAsset(deps, {
       code: debitAmount.assetCode,
       scale: debitAmount.assetScale
     })
     walletAddress = await createWalletAddress(deps, {
-      tenantId: Config.operatorTenantId,
+      tenantId,
       assetId
     })
     baseUrl = new URL(walletAddress.url).origin
@@ -103,7 +101,7 @@ describe('Quote Routes', (): void => {
       getWalletAddress: async () => walletAddress,
       createModel: async ({ client }) =>
         createWalletAddressQuote({
-          tenantId: tenant.id,
+          tenantId,
           walletAddressId: walletAddress.id,
           client
         }),
@@ -139,7 +137,7 @@ describe('Quote Routes', (): void => {
           url: `/quotes`
         },
         params: {
-          tenantId: tenant.id
+          tenantId
         },
         walletAddress,
         client
@@ -206,7 +204,7 @@ describe('Quote Routes', (): void => {
             })
           await expect(quoteRoutes.create(ctx)).resolves.toBeUndefined()
           expect(quoteSpy).toHaveBeenCalledWith({
-            tenantId: tenant.id,
+            tenantId,
             walletAddressId: walletAddress.id,
             receiver,
             debitAmount: options.debitAmount && {
@@ -229,7 +227,7 @@ describe('Quote Routes', (): void => {
           // Pop here to get tenant id?
           assert.ok(quote)
           expect(ctx.response.body).toEqual({
-            id: `${baseUrl}/${tenant.id}/quotes/${quoteId}`,
+            id: `${baseUrl}/${tenantId}/quotes/${quoteId}`,
             walletAddress: walletAddress.url,
             receiver: quote.receiver,
             debitAmount: {
@@ -267,7 +265,7 @@ describe('Quote Routes', (): void => {
           })
         await expect(quoteRoutes.create(ctx)).resolves.toBeUndefined()
         expect(quoteSpy).toHaveBeenCalledWith({
-          tenantId: tenant.id,
+          tenantId,
           walletAddressId: walletAddress.id,
           receiver,
           client,
@@ -281,7 +279,7 @@ describe('Quote Routes', (): void => {
           .pop()
         assert.ok(quote)
         expect(ctx.response.body).toEqual({
-          id: `${baseUrl}/${tenant.id}/quotes/${quoteId}`,
+          id: `${baseUrl}/${tenantId}/quotes/${quoteId}`,
           walletAddress: walletAddress.url,
           receiver: options.receiver,
           debitAmount: {

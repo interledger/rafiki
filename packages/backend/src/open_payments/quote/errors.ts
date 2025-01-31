@@ -2,7 +2,6 @@ import { GraphQLErrorCode } from '../../graphql/errors'
 
 export enum QuoteError {
   UnknownWalletAddress = 'UnknownWalletAddress',
-  InvalidTenant = 'InvalidTenant',
   InvalidAmount = 'InvalidAmount',
   InvalidReceiver = 'InvalidReceiver',
   InactiveWalletAddress = 'InactiveWalletAddress',
@@ -17,7 +16,6 @@ export const errorToHTTPCode: {
   [key in QuoteError]: number
 } = {
   [QuoteError.UnknownWalletAddress]: 404,
-  [QuoteError.InvalidTenant]: 400,
   [QuoteError.InvalidAmount]: 400,
   [QuoteError.InvalidReceiver]: 400,
   [QuoteError.InactiveWalletAddress]: 400,
@@ -28,7 +26,6 @@ export const errorToCode: {
   [key in QuoteError]: GraphQLErrorCode
 } = {
   [QuoteError.UnknownWalletAddress]: GraphQLErrorCode.NotFound,
-  [QuoteError.InvalidTenant]: GraphQLErrorCode.BadUserInput,
   [QuoteError.InvalidAmount]: GraphQLErrorCode.BadUserInput,
   [QuoteError.InvalidReceiver]: GraphQLErrorCode.BadUserInput,
   [QuoteError.InactiveWalletAddress]: GraphQLErrorCode.Inactive,
@@ -39,7 +36,6 @@ export const errorToMessage: {
   [key in QuoteError]: string
 } = {
   [QuoteError.UnknownWalletAddress]: 'unknown wallet address',
-  [QuoteError.InvalidTenant]: 'invalid tenant',
   [QuoteError.InvalidAmount]: 'invalid amount',
   [QuoteError.InvalidReceiver]: 'invalid receiver',
   [QuoteError.InactiveWalletAddress]: 'inactive wallet address',

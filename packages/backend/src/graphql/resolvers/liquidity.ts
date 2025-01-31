@@ -12,7 +12,7 @@ import {
   OutgoingPaymentResolvers,
   PaymentResolvers
 } from '../generated/graphql'
-import { ApolloContext } from '../../app'
+import { ApolloContext, TenantedApolloContext } from '../../app'
 import {
   fundingErrorToMessage,
   fundingErrorToCode,
@@ -350,7 +350,7 @@ export type DepositEventType = OutgoingPaymentDepositType
 const isDepositEventType = (o: any): o is DepositEventType =>
   Object.values(DepositEventType).includes(o)
 
-export const depositEventLiquidity: MutationResolvers<ApolloContext>['depositEventLiquidity'] =
+export const depositEventLiquidity: MutationResolvers<TenantedApolloContext>['depositEventLiquidity'] =
   async (
     parent,
     args,
@@ -377,7 +377,7 @@ export const depositEventLiquidity: MutationResolvers<ApolloContext>['depositEve
     )
     const paymentOrErr = await outgoingPaymentService.fund({
       id: event.data.id,
-      tenantId: args.input.tenantId,
+      tenantId: ctx.tenant.id,
       amount: BigInt(event.data.debitAmount.value),
       transferId: event.id
     })
@@ -435,7 +435,7 @@ export const withdrawEventLiquidity: MutationResolvers<ApolloContext>['withdrawE
     }
   }
 
-export const depositOutgoingPaymentLiquidity: MutationResolvers<ApolloContext>['depositOutgoingPaymentLiquidity'] =
+export const depositOutgoingPaymentLiquidity: MutationResolvers<TenantedApolloContext>['depositOutgoingPaymentLiquidity'] =
   async (
     parent,
     args,
@@ -479,7 +479,7 @@ export const depositOutgoingPaymentLiquidity: MutationResolvers<ApolloContext>['
       })
       const paymentOrErr = await outgoingPaymentService.fund({
         id: outgoingPaymentId,
-        tenantId: args.input.tenantId,
+        tenantId: ctx.tenant.id,
         amount: BigInt(event.data.debitAmount.value),
         transferId: event.id
       })

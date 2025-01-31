@@ -44,7 +44,6 @@ import { Pagination, SortOrder } from '../../../shared/baseModel'
 import { FilterString } from '../../../shared/filters'
 import { IAppConfig } from '../../../config/app'
 import { AssetService } from '../../../asset/service'
-import { TenantService } from '../../../tenants/service'
 
 export interface OutgoingPaymentService
   extends WalletAddressSubresourceService<OutgoingPayment> {
@@ -64,7 +63,6 @@ export interface OutgoingPaymentService
 export interface ServiceDependencies extends BaseService {
   config: IAppConfig
   knex: TransactionOrKnex
-  tenantService: TenantService
   accountingService: AccountingService
   receiverService: ReceiverService
   peerService: PeerService
@@ -103,6 +101,7 @@ interface GetPageOptions {
   pagination?: Pagination
   filter?: OutgoingPaymentFilter
   sortOrder?: SortOrder
+  tenantId?: string
 }
 
 async function getOutgoingPaymentsPage(

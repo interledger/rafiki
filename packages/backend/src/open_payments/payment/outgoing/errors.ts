@@ -25,7 +25,6 @@ export const quoteErrorToOutgoingPaymentError: Record<
   OutgoingPaymentError
 > = {
   [QuoteError.UnknownWalletAddress]: OutgoingPaymentError.UnknownWalletAddress,
-  [QuoteError.InvalidTenant]: OutgoingPaymentError.InvalidQuote,
   [QuoteError.InvalidAmount]: OutgoingPaymentError.InvalidAmount,
   [QuoteError.InvalidReceiver]: OutgoingPaymentError.InvalidReceiver,
   [QuoteError.InactiveWalletAddress]:

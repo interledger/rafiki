@@ -75,7 +75,7 @@ type Query {
   ): WalletAddressesConnection!
 
   "Fetch an Open Payments quote by its ID and tenant ID."
-  quote("Unique identifier of the quote." id: String!, tenantId: String!): Quote
+  quote("Unique identifier of the quote." id: String!): Quote
 
   "Fetch an Open Payments outgoing payment by its ID."
   outgoingPayment(
@@ -97,6 +97,8 @@ type Query {
     sortOrder: SortOrder
     "Filter outgoing payments based on specific criteria such as receiver, wallet address ID, or state."
     filter: OutgoingPaymentFilter
+    "Unique identifier of the tenant associated with the wallet address. Optional, if not provided, the tenantId will be obtained from the signature."
+    tenantId: String
   ): OutgoingPaymentConnection!
 
   "Fetch an Open Payments incoming payment by its ID."
@@ -135,6 +137,8 @@ type Query {
     sortOrder: SortOrder
     "Filter payment events based on specific criteria such as payment type or wallet address ID."
     filter: PaymentFilter
+    "Unique identifier of the tenant associated with the wallet address. Optional, if not provided, the tenantId will be obtained from the signature."
+    tenantId: String
   ): PaymentConnection!
 
   "Fetch a paginated list of accounting transfers for a given account."
@@ -149,8 +153,6 @@ type Query {
   receiver(
     "Unique identifier of the receiver (incoming payment URL)."
     id: String!
-    "Unique identifier of the tenant of the incoming payment that resolves the receiver"
-    tenantId: String!
   ): Receiver
 }
 
@@ -529,8 +531,6 @@ input VoidLiquidityWithdrawalInput {
 input DepositOutgoingPaymentLiquidityInput {
   "Unique identifier of the outgoing payment to deposit liquidity into."
   outgoingPaymentId: String!
-  "Unique identifier of the tenant under which the quote was created."
-  tenantId: String!
   "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency)."
   idempotencyKey: String!
 }
@@ -556,8 +556,6 @@ input CreateOutgoingPaymentWithdrawalInput {
 input DepositEventLiquidityInput {
   "Unique identifier of the event to deposit liquidity into."
   eventId: String!
-  "Unique identifier of the tenant under which the quote was created."
-  tenantId: String!
   "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency)."
   idempotencyKey: String!
 }
@@ -991,6 +989,8 @@ type OutgoingPayment implements BasePayment & Model {
   createdAt: String!
   "Unique identifier of the grant under which the outgoing payment was created."
   grantId: String
+  "Tenant ID of the wallet address."
+  tenantId: String
 }
 
 enum OutgoingPaymentState {
@@ -1142,8 +1142,8 @@ input AmountInput {
 }
 
 input CreateQuoteInput {
-  "Unique identifier of the tenant under which the quote was created."
-  tenantId: String!
+  "Unique identifier of the tenant associated with the wallet address. This cannot be changed. Optional, if not provided, the tenantId will be obtained from the signature."
+  tenantId: ID
   "Unique identifier of the wallet address under which the quote will be created."
   walletAddressId: String!
   "Amount to send (fixed send)."
@@ -1162,8 +1162,8 @@ type QuoteResponse {
 }
 
 input CreateOutgoingPaymentInput {
-  "Unique identifier of the tenant under which the outgoing payment was created."
-  tenantId: String!
+  "Unique identifier of the tenant associated with the wallet address. This cannot be changed. Optional, if not provided, the tenantId will be obtained from the signature."
+  tenantId: ID
   "Unique identifier of the wallet address under which the outgoing payment will be created."
   walletAddressId: String!
   "Unique identifier of the corresponding quote for that outgoing payment."
@@ -1177,15 +1177,15 @@ input CreateOutgoingPaymentInput {
 input CancelOutgoingPaymentInput {
   "Unique identifier of the outgoing payment to cancel."
   id: ID!
-  "Unique identifier of the tenant under which the outgoing payment was created."
-  tenantId: String!
+  "Unique identifier of the tenant associated with the wallet address. This cannot be changed. Optional, if not provided, the tenantId will be obtained from the signature."
+  tenantId: ID
   "Reason why this outgoing payment has been canceled. This value will be publicly visible in the metadata field if this outgoing payment is requested through Open Payments."
   reason: String
 }
 
 input CreateOutgoingPaymentFromIncomingPaymentInput {
-  "Unique identifier of the tenant under which the outgoing payment was created."
-  tenantId: String!
+  "Unique identifier of the tenant associated with the wallet address. This cannot be changed. Optional, if not provided, the tenantId will be obtained from the signature."
+  tenantId: ID
   "Unique identifier of the wallet address under which the outgoing payment will be created."
   walletAddressId: String!
   "Incoming payment URL to create the outgoing payment from."

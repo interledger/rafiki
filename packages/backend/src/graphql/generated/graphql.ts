@@ -188,8 +188,8 @@ export type CancelOutgoingPaymentInput = {
   id: Scalars['ID']['input'];
   /** Reason why this outgoing payment has been canceled. This value will be publicly visible in the metadata field if this outgoing payment is requested through Open Payments. */
   reason?: InputMaybe<Scalars['String']['input']>;
-  /** Unique identifier of the tenant under which the outgoing payment was created. */
-  tenantId: Scalars['String']['input'];
+  /** Unique identifier of the tenant associated with the wallet address. This cannot be changed. Optional, if not provided, the tenantId will be obtained from the signature. */
+  tenantId?: InputMaybe<Scalars['ID']['input']>;
 };
 
 export type CreateAssetInput = {
@@ -272,8 +272,8 @@ export type CreateOutgoingPaymentFromIncomingPaymentInput = {
   incomingPayment: Scalars['String']['input'];
   /** Additional metadata associated with the outgoing payment. */
   metadata?: InputMaybe<Scalars['JSONObject']['input']>;
-  /** Unique identifier of the tenant under which the outgoing payment was created. */
-  tenantId: Scalars['String']['input'];
+  /** Unique identifier of the tenant associated with the wallet address. This cannot be changed. Optional, if not provided, the tenantId will be obtained from the signature. */
+  tenantId?: InputMaybe<Scalars['ID']['input']>;
   /** Unique identifier of the wallet address under which the outgoing payment will be created. */
   walletAddressId: Scalars['String']['input'];
 };
@@ -285,8 +285,8 @@ export type CreateOutgoingPaymentInput = {
   metadata?: InputMaybe<Scalars['JSONObject']['input']>;
   /** Unique identifier of the corresponding quote for that outgoing payment. */
   quoteId: Scalars['String']['input'];
-  /** Unique identifier of the tenant under which the outgoing payment was created. */
-  tenantId: Scalars['String']['input'];
+  /** Unique identifier of the tenant associated with the wallet address. This cannot be changed. Optional, if not provided, the tenantId will be obtained from the signature. */
+  tenantId?: InputMaybe<Scalars['ID']['input']>;
   /** Unique identifier of the wallet address under which the outgoing payment will be created. */
   walletAddressId: Scalars['String']['input'];
 };
@@ -347,8 +347,8 @@ export type CreateQuoteInput = {
   receiveAmount?: InputMaybe<AmountInput>;
   /** Wallet address URL of the receiver. */
   receiver: Scalars['String']['input'];
-  /** Unique identifier of the tenant under which the quote was created. */
-  tenantId: Scalars['String']['input'];
+  /** Unique identifier of the tenant associated with the wallet address. This cannot be changed. Optional, if not provided, the tenantId will be obtained from the signature. */
+  tenantId?: InputMaybe<Scalars['ID']['input']>;
   /** Unique identifier of the wallet address under which the quote will be created. */
   walletAddressId: Scalars['String']['input'];
 };
@@ -466,8 +466,6 @@ export type DepositEventLiquidityInput = {
   eventId: Scalars['String']['input'];
   /** Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency). */
   idempotencyKey: Scalars['String']['input'];
-  /** Unique identifier of the tenant under which the quote was created. */
-  tenantId: Scalars['String']['input'];
 };
 
 export type DepositOutgoingPaymentLiquidityInput = {
@@ -475,8 +473,6 @@ export type DepositOutgoingPaymentLiquidityInput = {
   idempotencyKey: Scalars['String']['input'];
   /** Unique identifier of the outgoing payment to deposit liquidity into. */
   outgoingPaymentId: Scalars['String']['input'];
-  /** Unique identifier of the tenant under which the quote was created. */
-  tenantId: Scalars['String']['input'];
 };
 
 export type DepositPeerLiquidityInput = {
@@ -981,6 +977,8 @@ export type OutgoingPayment = BasePayment & Model & {
   state: OutgoingPaymentState;
   /** Number of attempts made to send an outgoing payment. */
   stateAttempts: Scalars['Int']['output'];
+  /** Tenant ID of the wallet address. */
+  tenantId?: Maybe<Scalars['String']['output']>;
   /** Unique identifier of the wallet address under which the outgoing payment was created. */
   walletAddressId: Scalars['ID']['output'];
 };
@@ -1218,6 +1216,7 @@ export type QueryOutgoingPaymentsArgs = {
   first?: InputMaybe<Scalars['Int']['input']>;
   last?: InputMaybe<Scalars['Int']['input']>;
   sortOrder?: InputMaybe<SortOrder>;
+  tenantId?: InputMaybe<Scalars['String']['input']>;
 };
 
 
@@ -1228,6 +1227,7 @@ export type QueryPaymentsArgs = {
   first?: InputMaybe<Scalars['Int']['input']>;
   last?: InputMaybe<Scalars['Int']['input']>;
   sortOrder?: InputMaybe<SortOrder>;
+  tenantId?: InputMaybe<Scalars['String']['input']>;
 };
 
 
@@ -1253,13 +1253,11 @@ export type QueryPeersArgs = {
 
 export type QueryQuoteArgs = {
   id: Scalars['String']['input'];
-  tenantId: Scalars['String']['input'];
 };
 
 
 export type QueryReceiverArgs = {
   id: Scalars['String']['input'];
-  tenantId: Scalars['String']['input'];
 };
 
 
@@ -2254,6 +2252,7 @@ export type OutgoingPaymentResolvers<ContextType = any, ParentType extends Resol
   sentAmount?: Resolver<ResolversTypes['Amount'], ParentType, ContextType>;
   state?: Resolver<ResolversTypes['OutgoingPaymentState'], ParentType, ContextType>;
   stateAttempts?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
+  tenantId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   walletAddressId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
@@ -2344,8 +2343,8 @@ export type QueryResolvers<ContextType = any, ParentType extends ResolversParent
   peer?: Resolver<Maybe<ResolversTypes['Peer']>, ParentType, ContextType, RequireFields<QueryPeerArgs, 'id'>>;
   peerByAddressAndAsset?: Resolver<Maybe<ResolversTypes['Peer']>, ParentType, ContextType, RequireFields<QueryPeerByAddressAndAssetArgs, 'assetId' | 'staticIlpAddress'>>;
   peers?: Resolver<ResolversTypes['PeersConnection'], ParentType, ContextType, Partial<QueryPeersArgs>>;
-  quote?: Resolver<Maybe<ResolversTypes['Quote']>, ParentType, ContextType, RequireFields<QueryQuoteArgs, 'id' | 'tenantId'>>;
-  receiver?: Resolver<Maybe<ResolversTypes['Receiver']>, ParentType, ContextType, RequireFields<QueryReceiverArgs, 'id' | 'tenantId'>>;
+  quote?: Resolver<Maybe<ResolversTypes['Quote']>, ParentType, ContextType, RequireFields<QueryQuoteArgs, 'id'>>;
+  receiver?: Resolver<Maybe<ResolversTypes['Receiver']>, ParentType, ContextType, RequireFields<QueryReceiverArgs, 'id'>>;
   walletAddress?: Resolver<Maybe<ResolversTypes['WalletAddress']>, ParentType, ContextType, RequireFields<QueryWalletAddressArgs, 'id'>>;
   walletAddressByUrl?: Resolver<Maybe<ResolversTypes['WalletAddress']>, ParentType, ContextType, RequireFields<QueryWalletAddressByUrlArgs, 'url'>>;
   walletAddresses?: Resolver<ResolversTypes['WalletAddressesConnection'], ParentType, ContextType, Partial<QueryWalletAddressesArgs>>;
