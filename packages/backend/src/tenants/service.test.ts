@@ -17,6 +17,7 @@ import { CacheDataStore } from '../middleware/cache/data-stores'
 import { AuthServiceClient } from '../auth-service-client/client'
 import { withConfigOverride } from '../tests/helpers'
 import { TenantSetting } from './settings/model'
+import { TenantSettingService } from './settings/service'
 
 describe('Tenant Service', (): void => {
   let deps: IocContract<AppServices>
@@ -26,6 +27,7 @@ describe('Tenant Service', (): void => {
   let knex: Knex
   const dbSchema = 'tenant_service_test_schema'
   let authServiceClient: AuthServiceClient
+  let tenantSettingsService: TenantSettingService
 
   beforeAll(async (): Promise<void> => {
     deps = initIocContainer({
@@ -37,6 +39,7 @@ describe('Tenant Service', (): void => {
     knex = await deps.use('knex')
     config = await deps.use('config')
     authServiceClient = await deps.use('authServiceClient')
+    tenantSettingsService = await deps.use('tenantSettingService')
   })
 
   afterEach(async (): Promise<void> => {
@@ -88,6 +91,37 @@ describe('Tenant Service', (): void => {
       const tenant = await tenantService.get(dbTenant.id)
       expect(tenant).toBeUndefined()
     })
+
+    test('returns tenant settings', async (): Promise<void> => {
+      const createOptions = {
+        apiSecret: 'test-api-secret',
+        publicName: 'test tenant',
+        email: faker.internet.email(),
+        idpConsentUrl: faker.internet.url(),
+        idpSecret: 'test-idp-secret'
+      }
+
+      jest
+        .spyOn(authServiceClient.tenant, 'create')
+        .mockImplementationOnce(async () => undefined)
+
+      const tenant = await tenantService.create(createOptions)
+
+      const tenantResponseData = await tenantService.get(tenant.id)
+      expect(tenantResponseData?.settings?.length).toBeGreaterThan(0)
+      expect(tenantResponseData?.settings).toEqual([
+        expect.objectContaining({
+          tenantId: tenant.id,
+          key: 'WEBHOOK_TIMEOUT',
+          value: '2000'
+        }),
+        expect.objectContaining({
+          tenantId: tenant.id,
+          key: 'WEBHOOK_MAX_RETRY',
+          value: '10'
+        })
+      ])
+    })
   })
 
   describe('create', (): void => {
@@ -121,6 +155,35 @@ describe('Tenant Service', (): void => {
         tenant.id
       )
       expect(tenantSettings.length).toBeGreaterThan(0)
+    })
+
+    test('should have default settings', async (): Promise<void> => {
+      const createOptions = {
+        apiSecret: 'test-api-secret',
+        publicName: 'test tenant',
+        email: faker.internet.email(),
+        idpConsentUrl: faker.internet.url(),
+        idpSecret: 'test-idp-secret'
+      }
+
+      jest
+        .spyOn(authServiceClient.tenant, 'create')
+        .mockImplementationOnce(async () => undefined)
+
+      const tenant = await tenantService.create(createOptions)
+
+      expect(tenant.settings).toEqual([
+        expect.objectContaining({
+          tenantId: tenant.id,
+          key: 'WEBHOOK_TIMEOUT',
+          value: '2000'
+        }),
+        expect.objectContaining({
+          tenantId: tenant.id,
+          key: 'WEBHOOK_MAX_RETRY',
+          value: '10'
+        })
+      ])
     })
 
     test('tenant creation rolls back if auth tenant create fails', async (): Promise<void> => {
@@ -298,6 +361,11 @@ describe('Tenant Service', (): void => {
         new Date(Date.now()).getTime()
       )
       expect(spy).toHaveBeenCalledWith(tenant.id, dbTenant.deletedAt)
+
+      const settings = (await tenantSettingsService.get({
+        tenantId: tenant.id
+      })) as TenantSetting[]
+      expect(settings.length).toBe(0)
     })
 
     test('Reverts deletion if auth tenant delete fails', async (): Promise<void> => {

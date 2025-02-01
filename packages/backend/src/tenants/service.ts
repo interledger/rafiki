@@ -91,7 +91,7 @@ async function createTenant(
       idpConsentUrl
     })
 
-    await deps.tenantSettingService.create(
+    const settings = await deps.tenantSettingService.create(
       {
         tenantId: tenant.id,
         setting: TenantSetting.default()
@@ -101,6 +101,7 @@ async function createTenant(
 
     await trx.commit()
 
+    tenant.settings = settings
     await deps.tenantCache.set(tenant.id, tenant)
     return tenant
   } catch (err) {
@@ -163,6 +164,13 @@ async function deleteTenant(
   await deps.tenantCache.delete(id)
   try {
     const deletedAt = new Date()
+
+    await deps.tenantSettingService.delete(
+      {
+        tenantId: id
+      },
+      { trx }
+    )
     await Tenant.query(trx).patchAndFetchById(id, {
       deletedAt
     })

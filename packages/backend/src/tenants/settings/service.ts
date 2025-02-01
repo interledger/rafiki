@@ -36,7 +36,7 @@ export interface TenantSettingService {
     extra?: ExtraOptions
   ) => Promise<TenantSetting[]>
   update: (options: UpdateOptions) => Promise<void>
-  delete: (options: GetOptions) => Promise<void>
+  delete: (options: GetOptions, extra?: ExtraOptions) => Promise<void>
   getPage: (
     tenantId: string,
     pagination?: Pagination,
@@ -79,11 +79,14 @@ async function getTenantSettings(
 
 async function deleteTenantSetting(
   deps: ServiceDependencies,
-  options: GetOptions
+  options: GetOptions,
+  extra?: ExtraOptions
 ) {
-  await TenantSetting.query(deps.knex).findOne(options).patch({
-    deletedAt: new Date()
-  })
+  await TenantSetting.query(extra?.trx ?? deps.knex)
+    .findOne(options)
+    .patch({
+      deletedAt: new Date()
+    })
 }
 
 async function updateTenantSetting(
