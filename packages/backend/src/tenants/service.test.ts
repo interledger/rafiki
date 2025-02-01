@@ -111,6 +111,37 @@ describe('Tenant Service', (): void => {
       const tenantDel = await tenantService.get(dbTenant.id, true)
       expect(tenantDel?.deletedAt).toBeDefined()
     })
+
+    test('returns tenant settings', async (): Promise<void> => {
+      const createOptions = {
+        apiSecret: 'test-api-secret',
+        publicName: 'test tenant',
+        email: faker.internet.email(),
+        idpConsentUrl: faker.internet.url(),
+        idpSecret: 'test-idp-secret'
+      }
+
+      jest
+        .spyOn(authServiceClient.tenant, 'create')
+        .mockImplementationOnce(async () => undefined)
+
+      const tenant = await tenantService.create(createOptions)
+
+      const tenantResponseData = await tenantService.get(tenant.id)
+      expect(tenantResponseData?.settings?.length).toBeGreaterThan(0)
+      expect(tenantResponseData?.settings).toEqual([
+        expect.objectContaining({
+          tenantId: tenant.id,
+          key: 'WEBHOOK_TIMEOUT',
+          value: '2000'
+        }),
+        expect.objectContaining({
+          tenantId: tenant.id,
+          key: 'WEBHOOK_MAX_RETRY',
+          value: '10'
+        })
+      ])
+    })
   })
 
   describe('create', (): void => {
