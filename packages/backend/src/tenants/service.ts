@@ -97,7 +97,7 @@ async function createTenant(
       idpConsentUrl
     })
 
-    await deps.tenantSettingService.create(
+    const settings = await deps.tenantSettingService.create(
       {
         tenantId: tenant.id,
         setting: TenantSetting.default()
@@ -107,6 +107,7 @@ async function createTenant(
 
     await trx.commit()
 
+    tenant.settings = settings
     await deps.tenantCache.set(tenant.id, tenant)
     return tenant
   } catch (err) {
