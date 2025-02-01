@@ -25,6 +25,7 @@ export class Tenant extends BaseModel {
   public idpConsentUrl!: string
   public idpSecret!: string
   public publicName?: string
+  public settings?: TenantSetting[]
 
   public deletedAt?: Date
 
