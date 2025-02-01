@@ -121,6 +121,7 @@ async function createTenant(
 
     await trx.commit()
 
+    tenant.settings = settings
     await deps.tenantCache.set(tenant.id, tenant)
     return tenant
   } catch (err) {
