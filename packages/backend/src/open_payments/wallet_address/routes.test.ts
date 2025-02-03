@@ -165,8 +165,8 @@ describe('Wallet Address Routes', (): void => {
         assetCode: walletAddress.asset.code,
         assetScale: walletAddress.asset.scale,
         // Ensure the tenant id is returned for auth and resource server:
-        authServer: `${config.authServerGrantUrl}/${config.operatorTenantId}`,
-        resourceServer: `${config.openPaymentsUrl}/${config.operatorTenantId}`
+        authServer: `${config.authServerGrantUrl}/${walletAddress.tenantId}`,
+        resourceServer: `${config.openPaymentsUrl}/${walletAddress.tenantId}`
       })
     })
   })

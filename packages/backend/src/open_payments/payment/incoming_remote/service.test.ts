@@ -113,7 +113,7 @@ describe('Remote Incoming Payment Service', (): void => {
 
       expect(incomingPayment).toStrictEqual(mockedIncomingPayment)
       expect(grantGetOrCreateSpy).toHaveBeenCalledWith({
-        authServer: walletAddress.authServer + '/' + Config.operatorTenantId, // TODO: replace with wallet address tenant id once wallet addresses are tenanted
+        authServer: walletAddress.authServer,
         accessType: AccessType.IncomingPayment,
         accessActions: [AccessAction.Create, AccessAction.ReadAll]
       })

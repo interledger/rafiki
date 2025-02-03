@@ -84,7 +84,7 @@ async function getIncomingPaymentPublic(
   }
 
   ctx.body = incomingPayment.toPublicOpenPaymentsType(
-    `${deps.config.authServerGrantUrl}/${deps.config.operatorTenantId}` // TODO: update this when tenanted incoming payments added
+    `${deps.config.authServerGrantUrl}/${incomingPayment?.walletAddress?.tenantId}`
   )
 }
 
