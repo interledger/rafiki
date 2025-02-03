@@ -11,6 +11,16 @@ interface CreateOptions {
   idpSecret: string
 }
 
+export function generateTenantInput() {
+  return {
+    email: faker.internet.email(),
+    apiSecret: faker.string.alphanumeric(8),
+    idpConsentUrl: faker.internet.url(),
+    idpSecret: faker.string.alphanumeric(8),
+    publicName: faker.company.name()
+  }
+}
+
 export async function createTenant(
   deps: IocContract<AppServices>,
   options?: CreateOptions
