@@ -292,7 +292,8 @@ describe('OutgoingPaymentService', (): void => {
     ).resolves.toBeUndefined()
 
     incomingPayment = await createIncomingPayment(deps, {
-      walletAddressId: receiverWalletAddress.id
+      walletAddressId: receiverWalletAddress.id,
+      tenantId: Config.operatorTenantId
     })
     receiver = incomingPayment.getUrl(receiverWalletAddress)
 
@@ -419,7 +420,8 @@ describe('OutgoingPaymentService', (): void => {
           assetId
         })
         const incomingPayment = await createIncomingPayment(deps, {
-          walletAddressId: receiverWalletAddress.id
+          walletAddressId: receiverWalletAddress.id,
+          tenantId: Config.operatorTenantId
         })
         otherReceiver = incomingPayment.getUrl(otherReceiverWalletAddress)
 
@@ -1324,7 +1326,8 @@ describe('OutgoingPaymentService', (): void => {
           value: receiveAmount.value,
           assetCode: receiverWalletAddress.asset.code,
           assetScale: receiverWalletAddress.asset.scale
-        }
+        },
+        tenantId: Config.operatorTenantId
       })
       assert.ok(incomingPayment.walletAddress)
 
@@ -1405,7 +1408,8 @@ describe('OutgoingPaymentService', (): void => {
           value: receiveAmount.value * 2n,
           assetCode: receiverWalletAddress.asset.code,
           assetScale: receiverWalletAddress.asset.scale
-        }
+        },
+        tenantId: Config.operatorTenantId
       })
       assert.ok(incomingPayment.walletAddress)
 
@@ -1475,7 +1479,8 @@ describe('OutgoingPaymentService', (): void => {
           value: receiveAmount.value * 2n,
           assetCode: receiverWalletAddress.asset.code,
           assetScale: receiverWalletAddress.asset.scale
-        }
+        },
+        tenantId: Config.operatorTenantId
       })
       assert.ok(incomingPayment.id)
       assert.ok(incomingPayment.createdAt)

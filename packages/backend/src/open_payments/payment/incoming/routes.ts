@@ -70,8 +70,11 @@ async function getIncomingPaymentPublic(
 ) {
   const incomingPayment = await deps.incomingPaymentService.get({
     id: ctx.params.id,
-    client: ctx.accessAction === AccessAction.Read ? ctx.client : undefined
+    client: ctx.accessAction === AccessAction.Read ? ctx.client : undefined,
+    tenantId: ctx.params.tenantId
   })
+
+  console.log('request tenantid ' + ctx.params.tenantId)
 
   if (!incomingPayment) {
     throw new OpenPaymentsServerRouteError(
@@ -94,8 +97,11 @@ async function getIncomingPaymentPrivate(
 ): Promise<void> {
   const incomingPayment = await deps.incomingPaymentService.get({
     id: ctx.params.id,
-    client: ctx.accessAction === AccessAction.Read ? ctx.client : undefined
+    client: ctx.accessAction === AccessAction.Read ? ctx.client : undefined,
+    tenantId: ctx.params.tenantId
   })
+
+  console.log('request tenantid ' + ctx.params.tenantId)
 
   if (!incomingPayment) {
     throw new OpenPaymentsServerRouteError(
@@ -138,7 +144,8 @@ async function createIncomingPayment(
     client: ctx.client,
     metadata: body.metadata,
     expiresAt,
-    incomingAmount: body.incomingAmount && parseAmount(body.incomingAmount)
+    incomingAmount: body.incomingAmount && parseAmount(body.incomingAmount),
+    tenantId: ctx.params.tenantId
   })
 
   if (isIncomingPaymentError(incomingPaymentOrError)) {
@@ -163,7 +170,8 @@ async function completeIncomingPayment(
   ctx: CompleteContext
 ): Promise<void> {
   const incomingPaymentOrError = await deps.incomingPaymentService.complete(
-    ctx.params.id
+    ctx.params.id,
+    ctx.params.tenantId
   )
 
   if (isIncomingPaymentError(incomingPaymentOrError)) {

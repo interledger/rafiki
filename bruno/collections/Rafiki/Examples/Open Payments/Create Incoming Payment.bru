@@ -5,7 +5,7 @@ meta {
 }
 
 post {
-  url: {{receiverOpenPaymentsHost}}/incoming-payments
+  url: {{receiverOpenPaymentsHost}}/{{receiverTenantId}}/incoming-payments
   body: json
   auth: none
 }
@@ -41,7 +41,7 @@ script:pre-request {
 
 script:post-response {
   const body = res.getBody();
-
+  
   if (body?.id) {
     bru.setEnvVar("incomingPaymentId", body.id.split("/").pop());
   }

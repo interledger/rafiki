@@ -48,7 +48,8 @@ describe('Models', (): void => {
       baseUrl = new URL(walletAddress.url).origin
       incomingPayment = await createIncomingPayment(deps, {
         walletAddressId: walletAddress.id,
-        metadata: { description: 'my payment' }
+        metadata: { description: 'my payment' },
+        tenantId: walletAddress.tenantId
       })
     })
 

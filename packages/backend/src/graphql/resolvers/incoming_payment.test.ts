@@ -38,6 +38,7 @@ describe('Incoming Payment Resolver', (): void => {
   let incomingPaymentService: IncomingPaymentService
   let accountingService: AccountingService
   let asset: Asset
+  let tenantId: string
 
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer(Config)
@@ -45,6 +46,7 @@ describe('Incoming Payment Resolver', (): void => {
     incomingPaymentService = await deps.use('incomingPaymentService')
     accountingService = await deps.use('accountingService')
     asset = await createAsset(deps)
+    tenantId = Config.operatorTenantId
   })
 
   afterAll(async (): Promise<void> => {
@@ -78,7 +80,8 @@ describe('Incoming Payment Resolver', (): void => {
           metadata: {
             description: `IncomingPayment`,
             externalRef: '#123'
-          }
+          },
+          tenantId
         }),
       pagedQuery: 'incomingPayments',
       parent: {
@@ -118,7 +121,8 @@ describe('Incoming Payment Resolver', (): void => {
           client,
           metadata,
           expiresAt,
-          incomingAmount
+          incomingAmount,
+          tenantId
         })
 
         const createSpy = jest
@@ -129,7 +133,8 @@ describe('Incoming Payment Resolver', (): void => {
           walletAddressId,
           incomingAmount,
           expiresAt,
-          metadata
+          metadata,
+          tenantId
         }
 
         const query = await appContainer.apolloClient
@@ -201,7 +206,8 @@ describe('Incoming Payment Resolver', (): void => {
         .mockResolvedValueOnce(IncomingPaymentError.UnknownWalletAddress)
 
       const input = {
-        walletAddressId: uuid()
+        walletAddressId: uuid(),
+        tenantId
       }
 
       expect.assertions(3)
@@ -246,7 +252,8 @@ describe('Incoming Payment Resolver', (): void => {
         .mockRejectedValueOnce(new Error('unexpected'))
 
       const input = {
-        walletAddressId: uuid()
+        walletAddressId: uuid(),
+        tenantId
       }
 
       expect.assertions(3)
@@ -299,7 +306,8 @@ describe('Incoming Payment Resolver', (): void => {
           value: BigInt(56),
           assetCode: asset.code,
           assetScale: asset.scale
-        }
+        },
+        tenantId
       })
     }
 
@@ -475,11 +483,13 @@ describe('Incoming Payment Resolver', (): void => {
           walletAddressId,
           metadata,
           expiresAt,
-          incomingAmount
+          incomingAmount,
+          tenantId
         })
         const input = {
           id: payment.id,
-          metadata
+          metadata,
+          tenantId
         }
 
         const createSpy = jest
@@ -529,7 +539,8 @@ describe('Incoming Payment Resolver', (): void => {
 
       const input = {
         id: uuid(),
-        metadata: { description: 'Update metadata', status: 'COMPLETE' }
+        metadata: { description: 'Update metadata', status: 'COMPLETE' },
+        tenantId
       }
 
       expect.assertions(3)
@@ -575,7 +586,8 @@ describe('Incoming Payment Resolver', (): void => {
 
       const input = {
         id: uuid(),
-        metadata: {}
+        metadata: {},
+        tenantId
       }
 
       expect.assertions(3)

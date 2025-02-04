@@ -338,11 +338,15 @@ type AssetEdge {
 input ApproveIncomingPaymentInput {
   "Unique identifier of the incoming payment to be approved. Note: incoming payment must be PENDING."
   id: ID!
+  "The tenant UUID associated with the incoming payment."
+  tenantId: String!
 }
 
 input CancelIncomingPaymentInput {
   "Unique identifier of the incoming payment to be canceled. Note: incoming payment must be PENDING."
   id: ID!
+  "The tenant UUID associated with the incoming payment."
+  tenantId: String!
 }
 
 input CreateAssetInput {
@@ -888,6 +892,8 @@ type IncomingPayment implements BasePayment & Model {
   metadata: JSONObject
   "The date and time that the incoming payment was created."
   createdAt: String!
+  "The tenant UUID associated with the incoming payment. If not provided, it will be obtained from the signature."
+  tenantId: String
 }
 
 type Receiver {
@@ -1193,6 +1199,8 @@ input CreateIncomingPaymentInput {
   incomingAmount: AmountInput
   "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency)."
   idempotencyKey: String
+  "The tenant UUID associated with the incoming payment."
+  tenantId: String
 }
 
 input CreateReceiverInput {
@@ -1213,6 +1221,8 @@ input UpdateIncomingPaymentInput {
   id: ID!
   "The new metadata object to save for the incoming payment. It will overwrite any existing metadata."
   metadata: JSONObject!
+  "The tenant UUID associated with the incoming payment. If not provided, it will be obtained from the signature."
+  tenantId: String
 }
 
 type OutgoingPaymentResponse {

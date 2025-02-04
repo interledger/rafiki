@@ -1,12 +1,12 @@
 meta {
-  name: Complete Incoming Payment
+  name: Get Incoming Payment By Tenant
   type: http
-  seq: 5
+  seq: 6
 }
 
-post {
-  url: {{receiverOpenPaymentsHost}}/{{receiverTenantId}}/incoming-payments/{{incomingPaymentId}}/complete
-  body: json
+get {
+  url: {{receiverOpenPaymentsHost}}/{{receiverTenantId}}/incoming-payments/{{incomingPaymentId}}
+  body: none
   auth: none
 }
 

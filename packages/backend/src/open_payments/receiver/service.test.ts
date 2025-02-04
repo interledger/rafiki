@@ -90,7 +90,8 @@ describe('Receiver Service', (): void => {
             value: BigInt(5),
             assetCode: walletAddress.asset.code,
             assetScale: walletAddress.asset.scale
-          }
+          },
+          tenantId: Config.operatorTenantId
         })
 
         await expect(
@@ -349,7 +350,8 @@ describe('Receiver Service', (): void => {
             walletAddressId: walletAddress.id,
             incomingAmount,
             expiresAt,
-            metadata
+            metadata,
+            tenantId: Config.operatorTenantId
           })
           expect(remoteIncomingPaymentCreateSpy).not.toHaveBeenCalled()
         }

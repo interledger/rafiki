@@ -5,7 +5,7 @@ meta {
 }
 
 post {
-  url: {{RafikiGraphqlHost}}/graphql
+  url: {{RafikiGraphqlHost}}/{{tenantId}}/graphql
   body: graphql
   auth: none
 }
@@ -45,7 +45,8 @@ body:graphql:vars {
       },
       "incomingAmount": null,
       "walletAddressId": "{{walletAddressId}}"
-    }
+    },
+      "tenantId": "{{tenantId}}"
   }
 }
 

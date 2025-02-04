@@ -110,6 +110,7 @@ export class IncomingPayment
 
   private incomingAmountValue?: bigint | null
   private receivedAmountValue?: bigint
+  private readonly tenantId!: string
 
   public get completed(): boolean {
     return this.state === IncomingPaymentState.Completed

@@ -96,6 +96,8 @@ export type AmountInput = {
 export type ApproveIncomingPaymentInput = {
   /** Unique identifier of the incoming payment to be approved. Note: incoming payment must be PENDING. */
   id: Scalars['ID']['input'];
+  /** The tenant UUID associated with the incoming payment. */
+  tenantId: Scalars['String']['input'];
 };
 
 export type ApproveIncomingPaymentResponse = {
@@ -175,6 +177,8 @@ export type BasePayment = {
 export type CancelIncomingPaymentInput = {
   /** Unique identifier of the incoming payment to be canceled. Note: incoming payment must be PENDING. */
   id: Scalars['ID']['input'];
+  /** The tenant UUID associated with the incoming payment. */
+  tenantId: Scalars['String']['input'];
 };
 
 export type CancelIncomingPaymentResponse = {
@@ -225,6 +229,8 @@ export type CreateIncomingPaymentInput = {
   incomingAmount?: InputMaybe<AmountInput>;
   /** Additional metadata associated with the incoming payment. */
   metadata?: InputMaybe<Scalars['JSONObject']['input']>;
+  /** The tenant UUID associated with the incoming payment. */
+  tenantId?: InputMaybe<Scalars['String']['input']>;
   /** Unique identifier of the wallet address under which the incoming payment will be created. */
   walletAddressId: Scalars['String']['input'];
 };
@@ -582,6 +588,8 @@ export type IncomingPayment = BasePayment & Model & {
   receivedAmount: Amount;
   /** State of the incoming payment. */
   state: IncomingPaymentState;
+  /** The tenant UUID associated with the incoming payment. If not provided, it will be obtained from the signature. */
+  tenantId?: Maybe<Scalars['String']['output']>;
   /** Unique identifier of the wallet address under which the incoming payment was created. */
   walletAddressId: Scalars['ID']['output'];
 };
@@ -1426,6 +1434,8 @@ export type UpdateIncomingPaymentInput = {
   id: Scalars['ID']['input'];
   /** The new metadata object to save for the incoming payment. It will overwrite any existing metadata. */
   metadata: Scalars['JSONObject']['input'];
+  /** The tenant UUID associated with the incoming payment. If not provided, it will be obtained from the signature. */
+  tenantId?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type UpdatePeerInput = {
@@ -2141,6 +2151,7 @@ export type IncomingPaymentResolvers<ContextType = any, ParentType extends Resol
   metadata?: Resolver<Maybe<ResolversTypes['JSONObject']>, ParentType, ContextType>;
   receivedAmount?: Resolver<ResolversTypes['Amount'], ParentType, ContextType>;
   state?: Resolver<ResolversTypes['IncomingPaymentState'], ParentType, ContextType>;
+  tenantId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   walletAddressId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };

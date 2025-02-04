@@ -11,19 +11,20 @@ import {
   errorToCode,
   errorToMessage
 } from '../../open_payments/payment/incoming/errors'
-import { ApolloContext } from '../../app'
+import { TenantedApolloContext } from '../../app'
 import { getPageInfo } from '../../shared/pagination'
 import { Pagination, SortOrder } from '../../shared/baseModel'
 import { GraphQLError } from 'graphql'
 import { GraphQLErrorCode } from '../errors'
 
-export const getIncomingPayment: QueryResolvers<ApolloContext>['incomingPayment'] =
+export const getIncomingPayment: QueryResolvers<TenantedApolloContext>['incomingPayment'] =
   async (parent, args, ctx): Promise<ResolversTypes['IncomingPayment']> => {
     const incomingPaymentService = await ctx.container.use(
       'incomingPaymentService'
     )
     const payment = await incomingPaymentService.get({
-      id: args.id
+      id: args.id,
+      tenantId: ctx.tenant.id
     })
     if (!payment) {
       throw new GraphQLError('payment does not exist', {
@@ -35,7 +36,7 @@ export const getIncomingPayment: QueryResolvers<ApolloContext>['incomingPayment'
     return paymentToGraphql(payment)
   }
 
-export const getWalletAddressIncomingPayments: WalletAddressResolvers<ApolloContext>['incomingPayments'] =
+export const getWalletAddressIncomingPayments: WalletAddressResolvers<TenantedApolloContext>['incomingPayments'] =
   async (
     parent,
     args,
@@ -56,14 +57,16 @@ export const getWalletAddressIncomingPayments: WalletAddressResolvers<ApolloCont
     const incomingPayments = await incomingPaymentService.getWalletAddressPage({
       walletAddressId: parent.id,
       pagination,
-      sortOrder: order
+      sortOrder: order,
+      tenantId: ctx.tenant.id
     })
     const pageInfo = await getPageInfo({
       getPage: (pagination: Pagination, sortOrder?: SortOrder) =>
         incomingPaymentService.getWalletAddressPage({
           walletAddressId: parent.id as string,
           pagination,
-          sortOrder
+          sortOrder,
+          tenantId: ctx.tenant.id
         }),
       page: incomingPayments,
       sortOrder: order
@@ -79,7 +82,7 @@ export const getWalletAddressIncomingPayments: WalletAddressResolvers<ApolloCont
       })
     }
   }
-export const createIncomingPayment: MutationResolvers<ApolloContext>['createIncomingPayment'] =
+export const createIncomingPayment: MutationResolvers<TenantedApolloContext>['createIncomingPayment'] =
   async (
     parent,
     args,
@@ -94,7 +97,8 @@ export const createIncomingPayment: MutationResolvers<ApolloContext>['createInco
         ? undefined
         : new Date(args.input.expiresAt),
       incomingAmount: args.input.incomingAmount,
-      metadata: args.input.metadata
+      metadata: args.input.metadata,
+      tenantId: ctx.tenant.id
     })
     if (isIncomingPaymentError(incomingPaymentOrError)) {
       throw new GraphQLError(errorToMessage[incomingPaymentOrError], {
@@ -108,7 +112,7 @@ export const createIncomingPayment: MutationResolvers<ApolloContext>['createInco
       }
   }
 
-export const updateIncomingPayment: MutationResolvers<ApolloContext>['updateIncomingPayment'] =
+export const updateIncomingPayment: MutationResolvers<TenantedApolloContext>['updateIncomingPayment'] =
   async (
     parent,
     args,
@@ -117,9 +121,10 @@ export const updateIncomingPayment: MutationResolvers<ApolloContext>['updateInco
     const incomingPaymentService = await ctx.container.use(
       'incomingPaymentService'
     )
-    const incomingPaymentOrError = await incomingPaymentService.update(
-      args.input
-    )
+    const incomingPaymentOrError = await incomingPaymentService.update({
+      ...args.input,
+      tenantId: ctx.tenant.id
+    })
     if (isIncomingPaymentError(incomingPaymentOrError)) {
       throw new GraphQLError(errorToMessage[incomingPaymentOrError], {
         extensions: {
@@ -132,7 +137,7 @@ export const updateIncomingPayment: MutationResolvers<ApolloContext>['updateInco
       }
   }
 
-export const approveIncomingPayment: MutationResolvers<ApolloContext>['approveIncomingPayment'] =
+export const approveIncomingPayment: MutationResolvers<TenantedApolloContext>['approveIncomingPayment'] =
   async (
     parent,
     args,
@@ -143,7 +148,8 @@ export const approveIncomingPayment: MutationResolvers<ApolloContext>['approveIn
     )
 
     const incomingPaymentOrError = await incomingPaymentService.approve(
-      args.input.id
+      args.input.id,
+      ctx.tenant.id
     )
 
     if (isIncomingPaymentError(incomingPaymentOrError)) {
@@ -159,7 +165,7 @@ export const approveIncomingPayment: MutationResolvers<ApolloContext>['approveIn
     }
   }
 
-export const cancelIncomingPayment: MutationResolvers<ApolloContext>['cancelIncomingPayment'] =
+export const cancelIncomingPayment: MutationResolvers<TenantedApolloContext>['cancelIncomingPayment'] =
   async (
     parent,
     args,
@@ -170,7 +176,8 @@ export const cancelIncomingPayment: MutationResolvers<ApolloContext>['cancelInco
     )
 
     const incomingPaymentOrError = await incomingPaymentService.cancel(
-      args.input.id
+      args.input.id,
+      ctx.tenant.id
     )
 
     if (isIncomingPaymentError(incomingPaymentOrError)) {
