@@ -71,6 +71,7 @@ export default function CreateTenantPage() {
                     label='API secret'
                     placeholder='The API secret. Treat as sensitive information.'
                     error={response?.errors?.fieldErrors.apiSecret}
+                    required
                   />
                 </div>
               </div>

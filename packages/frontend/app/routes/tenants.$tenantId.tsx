@@ -76,7 +76,7 @@ export default function ViewTenantPage() {
     <div className='pt-4 flex flex-col space-y-4'>
       <div className='flex flex-col rounded-md bg-offwhite px-6'>
         <PageHeader className='!justify-end'>
-          <Button aria-label='go back to assets page' to='/tenants'>
+          <Button aria-label='go back to tenants page' to='/tenants'>
             Go to tenants page
           </Button>
         </PageHeader>
@@ -99,8 +99,16 @@ export default function ViewTenantPage() {
                     disabled
                     readOnly
                   />
-                  <Input label='Public Name' value={tenant.publicName} />
-                  <Input label='Email' value={tenant.email} />
+                  <Input
+                    label='Public Name'
+                    defaultValue={tenant.publicName ?? undefined}
+                    error={response?.errors.general.fieldErrors.publicName}
+                  />
+                  <Input
+                    label='Email'
+                    defaultValue={tenant.email ?? undefined}
+                    error={response?.errors.general.fieldErrors.email}
+                  />
                 </div>
                 <div className='flex justify-end p-4'>
                   <Button
@@ -127,7 +135,11 @@ export default function ViewTenantPage() {
               <fieldset disabled={currentPageAction}>
                 <div className='w-full p-4 space-y-3'>
                   <Input type='hidden' name='id' value={tenant.id} />
-                  <Input label='API secret' value={tenant.apiSecret} />
+                  <Input
+                    label='API secret'
+                    defaultValue={tenant.apiSecret ?? undefined}
+                    required
+                  />
                 </div>
                 <div className='flex justify-end p-4'>
                   <Button
@@ -157,8 +169,14 @@ export default function ViewTenantPage() {
               <fieldset disabled={currentPageAction}>
                 <div className='w-full p-4 space-y-3'>
                   <Input type='hidden' name='id' value={tenant.id} />
-                  <Input label='Consent URL' value={tenant.idpConsentUrl} />
-                  <Input label='Secret' value={tenant.idpSecret} />
+                  <Input
+                    label='Consent URL'
+                    defaultValue={tenant.idpConsentUrl ?? undefined}
+                  />
+                  <Input
+                    label='Secret'
+                    defaultValue={tenant.idpSecret ?? undefined}
+                  />
                 </div>
                 <div className='flex justify-end p-4'>
                   <Button
@@ -232,11 +250,15 @@ export async function action({ request }: ActionFunctionArgs) {
         return json({ ...actionResponse }, { status: 400 })
       }
 
+      console.log('JASON::form-data', formData)
+      console.log('JASON::request', result.data)
       const response = await updateTenant(request, {
         ...result.data
       })
 
-      if (!response?.asset) {
+      console.log('JASON::response', response)
+
+      if (!response?.tenant) {
         actionResponse.errors.general.message = [
           'Could not update tenant. Please try again!'
         ]

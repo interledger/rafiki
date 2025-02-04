@@ -142,7 +142,7 @@ export default function ViewAssetPage() {
                 <p className='font-medium'>Withdrawal threshold</p>
                 <p className='mt-1'>
                   {walletAddress.asset.withdrawalThreshold ??
-                    'No withdrawal threshhold'}
+                    'No withdrawal threshold'}
                 </p>
               </div>
             </div>
