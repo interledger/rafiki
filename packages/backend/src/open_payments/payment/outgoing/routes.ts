@@ -54,6 +54,7 @@ async function getOutgoingPayment(
 ): Promise<void> {
   const outgoingPayment = await deps.outgoingPaymentService.get({
     id: ctx.params.id,
+    tenantId: ctx.params.tenantId,
     client: ctx.accessAction === AccessAction.Read ? ctx.client : undefined
   })
 

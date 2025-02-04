@@ -550,7 +550,7 @@ export class App {
     // POST /outgoing-payment
     // Create outgoing payment
     router.post<DefaultState, SignedCollectionContext<OutgoingCreateBody>>(
-      '/outgoing-payments',
+      '/:tenantId/outgoing-payments',
       createValidatorMiddleware<
         ContextType<SignedCollectionContext<OutgoingCreateBody>>
       >(
@@ -601,7 +601,7 @@ export class App {
     // POST /quotes
     // Create quote
     router.post<DefaultState, SignedCollectionContext<QuoteCreateBody>>(
-      '/quotes',
+      '/:tenantId/quotes',
       createValidatorMiddleware<
         ContextType<SignedCollectionContext<QuoteCreateBody>>
       >(
