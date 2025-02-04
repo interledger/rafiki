@@ -23,6 +23,7 @@ import { canSkipInteraction } from './utils'
 import { GNAPErrorCode, GNAPServerRouteError } from '../shared/gnapErrors'
 import { generateRouteLogs } from '../shared/utils'
 import { TenantService } from '../tenant/service'
+import { isTenantWithIdp } from '../tenant/model'
 
 interface ServiceDependencies extends BaseService {
   grantService: GrantService
@@ -192,6 +193,15 @@ async function createPendingGrant(
       400,
       GNAPErrorCode.InvalidRequest,
       "missing required request field 'interact'"
+    )
+  }
+
+  const tenant = await deps.tenantService.get(tenantId)
+  if (!tenant || !isTenantWithIdp(tenant)) {
+    throw new GNAPServerRouteError(
+      400,
+      GNAPErrorCode.InvalidRequest,
+      'invalid tenant'
     )
   }
 

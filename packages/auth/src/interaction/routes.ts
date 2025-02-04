@@ -20,6 +20,7 @@ import { toOpenPaymentsAccess } from '../access/model'
 import { GNAPErrorCode, GNAPServerRouteError } from '../shared/gnapErrors'
 import { generateRouteLogs } from '../shared/utils'
 import { TenantService } from '../tenant/service'
+import { isTenantWithIdp } from '../tenant/model'
 
 interface ServiceDependencies extends BaseService {
   grantService: GrantService
@@ -128,7 +129,7 @@ async function getGrantDetails(
 
   // Tenant should exist as it is a foreign key requirement on grants
   const tenant = await tenantService.get(interaction.grant.tenantId)
-  if (!tenant) {
+  if (!tenant || !isTenantWithIdp(tenant)) {
     throw new GNAPServerRouteError(
       500,
       GNAPErrorCode.InvalidRequest,
@@ -200,6 +201,7 @@ async function startInteraction(
     const grant = await grantService.markPending(interaction.grant.id, trx)
     await trx.commit()
 
+    if (!isTenantWithIdp(grant.tenant)) throw new Error('invalid interaction')
     const { idpConsentUrl } = grant.tenant
 
     ctx.session.nonce = interaction.nonce
@@ -247,10 +249,9 @@ async function handleInteractionChoice(
     )
   }
 
-  // TODO: try to make this called from interaction.grant.tenantId instead of path param
   const tenant = await deps.tenantService.get(interaction.grant.tenantId)
 
-  if (!tenant) {
+  if (!tenant || !isTenantWithIdp(tenant)) {
     throw new GNAPServerRouteError(
       404,
       GNAPErrorCode.UnknownInteraction,

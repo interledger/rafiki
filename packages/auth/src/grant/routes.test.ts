@@ -333,6 +333,35 @@ describe('Grant Routes', (): void => {
         scope.done()
       })
 
+      test('Does not create interactive grant if tenant has no idp', async (): Promise<void> => {
+        const unconfiguredTenant = await Tenant.query().insertAndFetch({
+          idpConsentUrl: undefined,
+          idpSecret: undefined
+        })
+
+        const ctx = createContext<CreateContext>(
+          {
+            headers: {
+              Accept: 'application/json',
+              'Content-Type': 'application/json'
+            },
+            url,
+            method
+          },
+          {
+            tenantId: unconfiguredTenant.id
+          }
+        )
+
+        ctx.request.body = BASE_GRANT_REQUEST
+
+        await expect(grantRoutes.create(ctx)).rejects.toMatchObject({
+          status: 400,
+          code: GNAPErrorCode.InvalidRequest,
+          message: 'invalid tenant'
+        })
+      })
+
       test('Does not create grant if token issuance fails', async (): Promise<void> => {
         jest
           .spyOn(accessTokenService, 'create')

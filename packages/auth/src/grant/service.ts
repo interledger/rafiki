@@ -9,8 +9,8 @@ import {
   GrantFinalization,
   StartMethod,
   FinishMethod,
-  GrantWithTenant,
-  isGrantWithTenant
+  isGrantWithTenant,
+  GrantWithTenant
 } from './model'
 import { AccessRequest } from '../access/types'
 import { AccessService } from '../access/service'

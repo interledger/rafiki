@@ -85,6 +85,34 @@ describe('Interaction Routes', (): void => {
     })
 
     describe('Client - interaction start', (): void => {
+      test('Interaction start fails if tenant has no configured idp', async (): Promise<void> => {
+        const unconfiguredTenant = await Tenant.query().insertAndFetch({
+          idpConsentUrl: undefined,
+          idpSecret: undefined
+        })
+        const grant = await Grant.query().insert(
+          generateBaseGrant({ tenantId: unconfiguredTenant.id })
+        )
+        const interaction = await Interaction.query().insert(
+          generateBaseInteraction(grant)
+        )
+
+        const ctx = createContext<StartContext>(
+          {
+            headers: {
+              Accept: 'application/json',
+              'Content-Type': 'application/json'
+            }
+          },
+          { id: interaction.id, nonce: interaction.nonce }
+        )
+
+        await expect(interactionRoutes.start(ctx)).rejects.toMatchObject({
+          status: 500,
+          code: GNAPErrorCode.RequestDenied,
+          message: 'internal server error'
+        })
+      })
       test('Interaction start fails if interaction is invalid', async (): Promise<void> => {
         const ctx = createContext<StartContext>(
           {
@@ -150,7 +178,7 @@ describe('Interaction Routes', (): void => {
         )
 
         assert.ok(interaction.id)
-
+        assert.ok(tenant.idpConsentUrl)
         const redirectUrl = new URL(tenant.idpConsentUrl)
         redirectUrl.searchParams.set('interactId', interaction.id)
         const redirectSpy = jest.spyOn(ctx, 'redirect')
@@ -713,6 +741,46 @@ describe('Interaction Routes', (): void => {
         await Access.query().insert({
           ...BASE_GRANT_ACCESS,
           grantId: pendingGrant.id
+        })
+      })
+
+      test('cannot accept/reject interaction with unconfigured tenant', async (): Promise<void> => {
+        const unconfiguredTenant = await Tenant.query().insertAndFetch({
+          idpConsentUrl: undefined,
+          idpSecret: undefined
+        })
+
+        const grant = await Grant.query().insert(
+          generateBaseGrant({ tenantId: unconfiguredTenant.id })
+        )
+
+        const interaction = await Interaction.query().insert(
+          generateBaseInteraction(grant)
+        )
+
+        const ctx = createContext<ChooseContext>(
+          {
+            url: `/grant/${interaction.id}/${interaction.nonce}/accept`,
+            method: 'POST',
+            headers: {
+              Accept: 'application/json',
+              'Content-Type': 'application/json',
+              'x-idp-secret': tenant.idpSecret
+            }
+          },
+          {
+            id: interaction.id,
+            nonce: interaction.nonce,
+            choice: InteractionChoices.Accept
+          }
+        )
+
+        await expect(
+          interactionRoutes.acceptOrReject(ctx)
+        ).rejects.toMatchObject({
+          status: 404,
+          code: GNAPErrorCode.UnknownInteraction,
+          message: 'unknown interaction'
         })
       })
 
