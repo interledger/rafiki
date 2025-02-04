@@ -150,6 +150,26 @@ type Query {
     "Unique identifier of the receiver (incoming payment URL)."
     id: String!
   ): Receiver
+
+  "Retrieve a tenant of the instance."
+  tenant("Unique identifier of the tenant." id: String!): Tenant!
+
+  "As an operator, fetch a paginated list of tenants on the instance."
+  tenants(
+    "Forward pagination: Cursor (tenant ID) to start retrieving tenants after this point."
+    after: String
+    "Backward pagination: Cursor (tenant ID) to start retrieving tenants before this point."
+    before: String
+    "Forward pagination: Limit the result to the first **n** tenants after the `after` cursor."
+    first: Int
+    "Backward pagination: Limit the result to the last **n** tenants before the `before` cursor."
+    last: Int
+    "Specify the sort order of tenants based on their creation date, either ascending or descending."
+    sortOrder: SortOrder
+  ): TenantsConnection!
+
+  "Determine if the requester has operator permissions"
+  whoami: WhoamiResponse!
 }
 
 type Mutation {
@@ -308,6 +328,15 @@ type Mutation {
   cancelIncomingPayment(
     input: CancelIncomingPaymentInput!
   ): CancelIncomingPaymentResponse!
+
+  "As an operator, create a tenant."
+  createTenant(input: CreateTenantInput!): TenantMutationResponse!
+
+  "Update a tenant."
+  updateTenant(input: UpdateTenantInput!): TenantMutationResponse!
+
+  "Delete a tenant."
+  deleteTenant(id: String!): DeleteTenantMutationResponse!
 }
 
 type PageInfo {
@@ -319,6 +348,11 @@ type PageInfo {
   hasPreviousPage: Boolean!
   "The cursor used to fetch the next page when paginating backwards."
   startCursor: String
+}
+
+type WhoamiResponse {
+  id: String!
+  isOperator: Boolean!
 }
 
 type AssetsConnection {
@@ -1508,6 +1542,75 @@ type ApproveIncomingPaymentResponse {
 type CancelIncomingPaymentResponse {
   "The incoming payment that was canceled."
   payment: IncomingPayment
+}
+
+type Tenant implements Model {
+  "Unique identifier of the tenant."
+  id: ID!
+  "Contact email of the tenant owner."
+  email: String
+  "Secret used to secure requests made for this tenant."
+  apiSecret: String!
+  "URL of the tenant's identity provider's consent screen."
+  idpConsentUrl: String
+  "Secret used to secure requests from the tenant's identity provider."
+  idpSecret: String
+  "Public name for the tenant."
+  publicName: String
+  "The date and time that this tenant was created."
+  createdAt: String!
+  "The date and time that this tenant was deleted."
+  deletedAt: String
+}
+
+type TenantsConnection {
+  "Information to aid in pagination."
+  pageInfo: PageInfo!
+  "A list of edges representing tenants and cursors for pagination."
+  edges: [TenantEdge!]!
+}
+
+type TenantEdge {
+  "A tenant node in the list."
+  node: Tenant!
+  "A cursor for paginating through the tenants."
+  cursor: String!
+}
+
+input CreateTenantInput {
+  "Contact email of the tenant owner."
+  email: String
+  "Secret used to secure requests made for this tenant."
+  apiSecret: String!
+  "URL of the tenant's identity provider's consent screen."
+  idpConsentUrl: String
+  "Secret used to secure requests from the tenant's identity provider."
+  idpSecret: String
+  "Public name for the tenant."
+  publicName: String
+}
+
+input UpdateTenantInput {
+  "Unique identifier of the tenant."
+  id: ID!
+  "Contact email of the tenant owner."
+  email: String
+  "Secret used to secure requests made for this tenant."
+  apiSecret: String
+  "URL of the tenant's identity provider's consent screen."
+  idpConsentUrl: String
+  "Secret used to secure requests from the tenant's identity provider."
+  idpSecret: String
+  "Public name for the tenant."
+  publicName: String
+}
+
+type TenantMutationResponse {
+  tenant: Tenant!
+}
+
+type DeleteTenantMutationResponse {
+  success: Boolean!
 }
 
 """

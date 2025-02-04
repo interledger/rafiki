@@ -22,8 +22,8 @@ type TenantContext<BodyT = never, QueryT = ParsedUrlQuery> = Exclude<
 
 interface CreateTenantBody {
   id: string
-  idpConsentUrl: string
-  idpSecret: string
+  idpConsentUrl?: string
+  idpSecret?: string
 }
 
 type UpdateTenantBody = Partial<Omit<CreateTenantBody, 'id'>>
@@ -34,8 +34,8 @@ interface TenantParams {
 
 interface TenantResponse {
   id: string
-  idpConsentUrl: string
-  idpSecret: string
+  idpConsentUrl?: string
+  idpSecret?: string
 }
 
 export type GetContext = TenantContext<never, TenantParams>

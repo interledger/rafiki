@@ -1,0 +1,50 @@
+meta {
+  name: Create Tenant
+  type: graphql
+  seq: 54
+}
+
+post {
+  url: {{RafikiGraphqlHost}}/graphql
+  body: graphql
+  auth: none
+}
+
+body:graphql {
+  mutation CreateTenant($input: CreateTenantInput!) {
+    createTenant(input:$input) {
+      tenant {
+        id
+        email
+        apiSecret
+        idpConsentUrl
+        idpSecret
+      }
+    }
+  }
+}
+
+body:graphql:vars {
+  {
+    "input": {
+      "email": "example@example.com",
+      "apiSecret": "test-secret",
+      "idpConsentUrl": "https://example.com/consent",
+      "idpSecret": "test-idp-secret"
+    }
+  }
+}
+
+script:pre-request {
+  const scripts = require('./scripts');
+  
+  scripts.addApiSignatureHeader();
+}
+
+script:post-response {
+  const body = res.getBody();
+  
+  if (body?.data) {
+    bru.setEnvVar("tenantId", body.data.createTenant.tenant?.id);
+  }
+}
