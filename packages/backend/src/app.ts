@@ -577,7 +577,7 @@ export class App {
       DefaultState,
       SignedCollectionContext<never, GetCollectionQuery>
     >(
-      '/outgoing-payments',
+      '/:tenantId/outgoing-payments',
       createValidatorMiddleware<
         ContextType<SignedCollectionContext<never, GetCollectionQuery>>
       >(
@@ -672,7 +672,7 @@ export class App {
     // GET /outgoing-payments/{id}
     // Read outgoing payment
     router.get<DefaultState, SignedSubresourceContext>(
-      '/outgoing-payments/:id',
+      '/:tenantId/outgoing-payments/:id',
       createValidatorMiddleware<ContextType<SignedSubresourceContext>>(
         resourceServerSpec,
         {
@@ -694,7 +694,7 @@ export class App {
     // GET /quotes/{id}
     // Read quote
     router.get<DefaultState, SignedSubresourceContext>(
-      '/quotes/:id',
+      '/:tenantId/quotes/:id',
       createValidatorMiddleware<ContextType<SignedSubresourceContext>>(
         resourceServerSpec,
         {
