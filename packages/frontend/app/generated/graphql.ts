@@ -1454,8 +1454,6 @@ export type Tenant = Model & {
   idpConsentUrl?: Maybe<Scalars['String']['output']>;
   /** Secret used to secure requests from the tenant's identity provider. */
   idpSecret?: Maybe<Scalars['String']['output']>;
-  /** Is the tenant an Operator tenant. */
-  isOperator: Scalars['Boolean']['output'];
   /** Public name for the tenant. */
   publicName?: Maybe<Scalars['String']['output']>;
 };
@@ -2546,7 +2544,6 @@ export type TenantResolvers<ContextType = any, ParentType extends ResolversParen
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   idpConsentUrl?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   idpSecret?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  isOperator?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   publicName?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
@@ -2923,44 +2920,6 @@ export type WithdrawPeerLiquidityVariables = Exact<{
 
 
 export type WithdrawPeerLiquidity = { __typename?: 'Mutation', createPeerLiquidityWithdrawal?: { __typename?: 'LiquidityMutationResponse', success: boolean } | null };
-
-export type ListTenantsQueryVariables = Exact<{
-  after?: InputMaybe<Scalars['String']['input']>;
-  before?: InputMaybe<Scalars['String']['input']>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  last?: InputMaybe<Scalars['Int']['input']>;
-}>;
-
-
-export type ListTenantsQuery = { __typename?: 'Query', tenants: { __typename?: 'TenantsConnection', edges: Array<{ __typename?: 'TenantEdge', node: { __typename?: 'Tenant', id: string, email?: string | null, apiSecret: string, idpConsentUrl?: string | null, idpSecret?: string | null, publicName?: string | null, createdAt: string, deletedAt?: string | null, isOperator: boolean } }>, pageInfo: { __typename?: 'PageInfo', startCursor?: string | null, endCursor?: string | null, hasNextPage: boolean, hasPreviousPage: boolean } } };
-
-export type CreateTenantMutationVariables = Exact<{
-  input: CreateTenantInput;
-}>;
-
-
-export type CreateTenantMutation = { __typename?: 'Mutation', createTenant: { __typename?: 'TenantMutationResponse', tenant: { __typename?: 'Tenant', id: string, publicName?: string | null, email?: string | null, apiSecret: string, idpConsentUrl?: string | null, idpSecret?: string | null } } };
-
-export type UpdateTenantMutationVariables = Exact<{
-  input: UpdateTenantInput;
-}>;
-
-
-export type UpdateTenantMutation = { __typename?: 'Mutation', updateTenant: { __typename?: 'TenantMutationResponse', tenant: { __typename?: 'Tenant', id: string, email?: string | null, apiSecret: string, idpConsentUrl?: string | null, idpSecret?: string | null, publicName?: string | null } } };
-
-export type DeleteTenantMutationVariables = Exact<{
-  id: Scalars['String']['input'];
-}>;
-
-
-export type DeleteTenantMutation = { __typename?: 'Mutation', deleteTenant: { __typename?: 'DeleteTenantMutationResponse', success: boolean } };
-
-export type GetTenantQueryVariables = Exact<{
-  id: Scalars['String']['input'];
-}>;
-
-
-export type GetTenantQuery = { __typename?: 'Query', tenant: { __typename?: 'Tenant', id: string, email?: string | null, apiSecret: string, idpConsentUrl?: string | null, idpSecret?: string | null, publicName?: string | null, createdAt: string, deletedAt?: string | null, isOperator: boolean } };
 
 export type GetWalletAddressQueryVariables = Exact<{
   id: Scalars['String']['input'];
