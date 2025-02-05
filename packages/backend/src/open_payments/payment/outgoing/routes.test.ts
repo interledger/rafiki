@@ -120,7 +120,7 @@ describe('Outgoing Payment Routes', (): void => {
       get: (ctx) => outgoingPaymentRoutes.get(ctx),
       getBody: (outgoingPayment) => {
         return {
-          id: `${baseUrl}/outgoing-payments/${outgoingPayment.id}`,
+          id: `${baseUrl}/${tenantId}/outgoing-payments/${outgoingPayment.id}`,
           walletAddress: walletAddress.url,
           receiver: outgoingPayment.receiver,
           quoteId: outgoingPayment.quote.getUrl(walletAddress),
@@ -251,7 +251,7 @@ describe('Outgoing Payment Routes', (): void => {
             .split('/')
             .pop()
           expect(ctx.response.body).toEqual({
-            id: `${baseUrl}/outgoing-payments/${outgoingPaymentId}`,
+            id: `${baseUrl}/${tenantId}/outgoing-payments/${outgoingPaymentId}`,
             walletAddress: walletAddress.url,
             receiver: payment.receiver,
             quoteId:
