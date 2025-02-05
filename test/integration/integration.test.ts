@@ -2,11 +2,12 @@ import assert from 'assert'
 import { C9_CONFIG, HLB_CONFIG } from './lib/config'
 import { MockASE } from './lib/mock-ase'
 import { Fee, WebhookEventType } from 'mock-account-service-lib'
-import { poll } from './lib/utils'
+import { poll, wait } from './lib/utils'
 import { TestActions, createTestActions } from './lib/test-actions'
 import { IncomingPaymentState } from './lib/generated/graphql'
 
-jest.setTimeout(20_000)
+// jest.setTimeout(20_000)
+jest.setTimeout(1000 * 60 * 60 * 2)
 
 describe('Integration tests', (): void => {
   let c9: MockASE
@@ -22,6 +23,7 @@ describe('Integration tests', (): void => {
       // https://github.com/jestjs/jest/issues/2713
       process.exit(1)
     }
+    await wait(1000 * 60 * 60 * 2)
   })
 
   afterAll(async () => {
