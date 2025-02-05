@@ -5,7 +5,7 @@
   "description": "",
   "scripts": {
     "build:deps": "pnpm --filter mock-account-service-lib build",
-    "testenv:compose": "docker compose -f ./testenv/cloud-nine-wallet/docker-compose.yml -f ./testenv/happy-life-bank/docker-compose.yml -f ./testenv/docker-compose.yml",
+    "testenv:compose": "docker compose -f ../testenv/cloud-nine-wallet/docker-compose.yml -f ../testenv/happy-life-bank/docker-compose.yml -f ../testenv/docker-compose.yml",
     "test": "NODE_OPTIONS=--experimental-vm-modules jest",
     "run-tests": "./scripts/run-tests.sh",
     "hostile": "hostile"
