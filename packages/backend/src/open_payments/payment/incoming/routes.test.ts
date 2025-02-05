@@ -241,6 +241,9 @@ describe('Incoming Payment Routes', (): void => {
         expiresAt
       }): Promise<void> => {
         const ctx = setup<CreateContext<CreateBody>>({
+          params: {
+            tenantId: Config.operatorTenantId
+          },
           reqOpts: {
             body: {
               incomingAmount: incomingAmount ? amount : undefined,
@@ -261,7 +264,8 @@ describe('Incoming Payment Routes', (): void => {
           incomingAmount: incomingAmount ? parseAmount(amount) : undefined,
           metadata,
           expiresAt: expiresAt ? new Date(expiresAt) : undefined,
-          client
+          client,
+          tenantId: Config.operatorTenantId
         })
         expect(ctx.response).toSatisfyApiSpec()
         const incomingPaymentId = (
@@ -317,7 +321,8 @@ describe('Incoming Payment Routes', (): void => {
           url: `/incoming-payments/${incomingPayment.id}/complete`
         },
         params: {
-          id: incomingPayment.id
+          id: incomingPayment.id,
+          tenantId: Config.operatorTenantId
         },
         walletAddress
       })
@@ -362,7 +367,8 @@ describe('Incoming Payment Routes', (): void => {
           url: `/incoming-payments/${incomingPayment.id}`
         },
         params: {
-          id: incomingPayment.id
+          id: incomingPayment.id,
+          tenantId: Config.operatorTenantId
         },
         walletAddress
       })

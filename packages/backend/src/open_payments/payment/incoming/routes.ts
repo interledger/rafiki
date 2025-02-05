@@ -74,8 +74,6 @@ async function getIncomingPaymentPublic(
     tenantId: ctx.params.tenantId
   })
 
-  console.log('request tenantid ' + ctx.params.tenantId)
-
   if (!incomingPayment) {
     throw new OpenPaymentsServerRouteError(
       404,
@@ -100,8 +98,6 @@ async function getIncomingPaymentPrivate(
     client: ctx.accessAction === AccessAction.Read ? ctx.client : undefined,
     tenantId: ctx.params.tenantId
   })
-
-  console.log('request tenantid ' + ctx.params.tenantId)
 
   if (!incomingPayment) {
     throw new OpenPaymentsServerRouteError(

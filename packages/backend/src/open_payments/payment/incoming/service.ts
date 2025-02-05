@@ -140,7 +140,8 @@ async function createIncomingPayment(
     client,
     expiresAt,
     incomingAmount,
-    metadata
+    metadata,
+    tenantId
   }: CreateIncomingPaymentOptions,
   trx?: Knex.Transaction
 ): Promise<IncomingPayment | IncomingPaymentError> {
@@ -181,7 +182,8 @@ async function createIncomingPayment(
     incomingAmount,
     metadata,
     state: IncomingPaymentState.Pending,
-    processAt: expiresAt
+    processAt: expiresAt,
+    tenantId
   })
 
   const asset = await deps.assetService.get(incomingPayment.assetId)

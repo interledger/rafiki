@@ -117,7 +117,7 @@ async function createIncomingPayment(
   try {
     return await deps.openPaymentsClient.incomingPayment.create(
       {
-        url: urlWithoutTenantId(resourceServerUrl),
+        url: resourceServerUrl,
         accessToken: grant.accessToken
       },
       {

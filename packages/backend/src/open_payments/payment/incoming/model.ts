@@ -110,7 +110,7 @@ export class IncomingPayment
 
   private incomingAmountValue?: bigint | null
   private receivedAmountValue?: bigint
-  private readonly tenantId!: string
+  public readonly tenantId!: string
 
   public get completed(): boolean {
     return this.state === IncomingPaymentState.Completed
@@ -143,6 +143,7 @@ export class IncomingPayment
     this.receivedAmountValue = amount.value
   }
 
+  // TODO: add tenant id
   public getUrl(walletAddress: WalletAddress): string {
     const url = new URL(walletAddress.url)
     return `${url.origin}${IncomingPayment.urlPath}/${this.id}`

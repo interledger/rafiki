@@ -496,31 +496,6 @@ export class App {
       validateResponse: process.env.NODE_ENV !== 'production'
     }
 
-    // GET /{tenantId}/incoming-payments/{id}
-    // Read incoming payment by tenantId
-    // router.get<DefaultState, SubresourceContextWithAuthenticatedStatus>(
-    //   '/:tenantId/incoming-payments/:id',
-    //   createValidatorMiddleware<
-    //     ContextType<SubresourceContextWithAuthenticatedStatus>
-    //   >(
-    //     resourceServerSpec,
-    //     {
-    //       path: '/incoming-payments/{id}',
-    //       method: HttpMethod.GET
-    //     },
-    //     validatorMiddlewareOptions
-    //   ),
-    //   getWalletAddressUrlFromIncomingPayment,
-    //   createTokenIntrospectionMiddleware({
-    //     requestType: AccessType.IncomingPayment,
-    //     requestAction: RequestAction.Read,
-    //     canSkipAuthValidation: true
-    //   }),
-    //   authenticatedStatusMiddleware,
-    //   getWalletAddressForSubresource,
-    //   incomingPaymentRoutes.get
-    // )
-
     // POST /incoming-payments
     // Create incoming payment
     router.post<DefaultState, SignedCollectionContext<IncomingCreateBody>>(
@@ -650,7 +625,6 @@ export class App {
     // GET /incoming-payments/{id}
     // Read incoming payment
     router.get<DefaultState, SubresourceContextWithAuthenticatedStatus>(
-      // TODO: check if tenantId can be opt
       ['/incoming-payments/:id', '/:tenantId/incoming-payments/:id'],
       createValidatorMiddleware<
         ContextType<SubresourceContextWithAuthenticatedStatus>

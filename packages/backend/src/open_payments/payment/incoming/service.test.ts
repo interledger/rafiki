@@ -863,11 +863,21 @@ describe('Incoming Payment Service', (): void => {
       ).resolves.toMatchObject({
         id: incomingPayment.id,
         state: IncomingPaymentState.Completed,
-        processAt: now
+        processAt: now,
+        tenantId: Config.operatorTenantId
       })
       await expect(
         incomingPaymentService.get({
           id: incomingPayment.id
+        })
+      ).resolves.toMatchObject({
+        state: IncomingPaymentState.Completed,
+        processAt: now
+      })
+      await expect(
+        incomingPaymentService.get({
+          id: incomingPayment.id,
+          tenantId: Config.operatorTenantId
         })
       ).resolves.toMatchObject({
         state: IncomingPaymentState.Completed,
