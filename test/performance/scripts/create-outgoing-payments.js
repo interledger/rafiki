@@ -7,21 +7,14 @@ export const options = {
   // A number specifying the number of VUs to run concurrently.
   vus: 1,
   // A string specifying the total duration of the test run.
-  duration: '30s'
+  duration: '600s'
 }
-// const CLOUD_NINE_GQL_ENDPOINT =
-//   'http://cloud-nine-wallet-test-backend:3001/graphql'
-// const CLOUD_NINE_WALLET_ADDRESS =
-//   'https://cloud-nine-wallet-test-backend:3000/accounts/gfranklin'
-// const HAPPY_LIFE_BANK_WALLET_ADDRESS =
-//   'https://happy-life-bank-test-backend:4000/accounts/pfry'
 
-const CLOUD_NINE_GQL_ENDPOINT =
-  'http://cloud-nine-wallet-test-backend:3101/graphql'
+const CLOUD_NINE_GQL_ENDPOINT = 'http://cloud-nine-wallet-backend:3001/graphql'
 const CLOUD_NINE_WALLET_ADDRESS =
-  'https://cloud-nine-wallet-test-backend:3100/accounts/gfranklin'
+  'https://cloud-nine-wallet-backend/accounts/gfranklin'
 const HAPPY_LIFE_BANK_WALLET_ADDRESS =
-  'https://happy-life-bank-test-backend:4100/accounts/pfry'
+  'https://happy-life-bank-backend/accounts/pfry'
 const SIGNATURE_SECRET = 'iyIgCprjb9uL8wFckR+pLEkJWMB7FJhgkvqhTQR/964='
 const SIGNATURE_VERSION = '1'
 
