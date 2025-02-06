@@ -169,11 +169,7 @@ export async function createQuote(
     maxPacketAmount: BigInt('9223372036854775807')
   })
 
-  const withGraphFetchedArray = [
-    'asset',
-    'walletAddress',
-    'walletAddress.asset'
-  ]
+  const withGraphFetchedArray = ['asset', 'walletAddress.asset']
   if (withFee) {
     withGraphFetchedArray.push('fee')
   }

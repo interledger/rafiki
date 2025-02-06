@@ -85,7 +85,7 @@ const scripts = {
   generateAuthApiSignature: function (body) {
     const version = bru.getEnvVar('authApiSignatureVersion')
     const secret = bru.getEnvVar('authApiSignatureSecret')
-    const timestamp = Math.round(new Date().getTime() / 1000)
+    const timestamp = Date.now()
     const payload = `${timestamp}.${canonicalize(body)}`
     const hmac = createHmac('sha256', secret)
     hmac.update(payload)
@@ -97,7 +97,7 @@ const scripts = {
   generateBackendApiSignature: function (body) {
     const version = bru.getEnvVar('backendApiSignatureVersion')
     const secret = bru.getEnvVar('backendApiSignatureSecret')
-    const timestamp = Math.round(new Date().getTime() / 1000)
+    const timestamp = Date.now()
     const payload = `${timestamp}.${canonicalize(body)}`
     const hmac = createHmac('sha256', secret)
     hmac.update(payload)
@@ -127,6 +127,7 @@ const scripts = {
         signature = this.generateBackendApiSignature(formattedBody)
     }
     req.setHeader('signature', signature)
+    req.setHeader('tenant-id', bru.getEnvVar('senderTenantId'))
   },
 
   addHostHeader: function (hostVarName) {

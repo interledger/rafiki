@@ -91,7 +91,9 @@ describe('utils', (): void => {
       )
 
       const timestamp = signature.split(', ')[0].split('=')[1]
-      const now = new Date((Number(timestamp) + 60) * 1000)
+      const now = new Date(
+        Number(timestamp) + (Config.adminApiSignatureTtlSeconds + 1) * 1000
+      )
       jest.useFakeTimers({ now })
       const ctx = createContext<AppContext>(
         {
@@ -120,11 +122,7 @@ describe('utils', (): void => {
         Config.adminApiSignatureVersion,
         requestBody
       )
-      const key = `signature:${signature}`
-      const op = redis.multi()
-      op.set(key, signature)
-      op.expire(key, Config.adminApiSignatureTtl * 1000)
-      await op.exec()
+
       const ctx = createContext<AppContext>(
         {
           headers: {
@@ -137,6 +135,13 @@ describe('utils', (): void => {
         appContainer.container
       )
       ctx.request.body = requestBody
+
+      await expect(
+        verifyApiSignature(ctx, {
+          ...Config,
+          adminApiSecret: 'test-secret'
+        })
+      ).resolves.toBe(true)
 
       const verified = await verifyApiSignature(ctx, {
         ...Config,
