@@ -224,7 +224,6 @@ describe('Quote Routes', (): void => {
           )
             .split('/')
             .pop()
-          // Pop here to get tenant id?
           assert.ok(quote)
           expect(ctx.response.body).toEqual({
             id: `${baseUrl}/${tenantId}/quotes/${quoteId}`,

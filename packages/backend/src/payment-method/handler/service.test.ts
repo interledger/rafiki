@@ -54,7 +54,6 @@ describe('PaymentMethodHandlerService', (): void => {
 
       const options: StartQuoteOptions = {
         quoteId: uuid(),
-        tenantId,
         walletAddress,
         receiver: await createReceiver(deps, walletAddress),
         debitAmount: {
@@ -84,7 +83,6 @@ describe('PaymentMethodHandlerService', (): void => {
       })
 
       const options: StartQuoteOptions = {
-        tenantId,
         walletAddress,
         receiver: await createReceiver(deps, walletAddress),
         debitAmount: {

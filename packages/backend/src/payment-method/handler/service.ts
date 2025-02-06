@@ -9,7 +9,6 @@ import { Transaction } from 'objection'
 
 export interface StartQuoteOptions {
   quoteId?: string
-  tenantId?: string
   walletAddress: WalletAddress
   debitAmount?: Amount
   receiveAmount?: Amount

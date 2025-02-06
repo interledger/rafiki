@@ -99,7 +99,6 @@ describe('IlpPaymentService', (): void => {
 
       const options: StartQuoteOptions = {
         quoteId: uuid(),
-        tenantId,
         walletAddress: walletAddressMap['USD'],
         receiver: await createReceiver(deps, walletAddressMap['USD']),
         debitAmount: {
@@ -123,7 +122,6 @@ describe('IlpPaymentService', (): void => {
       const quoteId = uuid()
       const options: StartQuoteOptions = {
         quoteId,
-        tenantId,
         walletAddress: walletAddressMap['USD'],
         receiver: await createReceiver(deps, walletAddressMap['USD']),
         debitAmount: {
@@ -186,7 +184,6 @@ describe('IlpPaymentService', (): void => {
       const quoteId = uuid()
       const options: StartQuoteOptions = {
         quoteId,
-        tenantId,
         walletAddress: walletAddressMap['USD'],
         receiver: await createReceiver(deps, walletAddressMap['USD']),
         debitAmount: {
@@ -305,7 +302,6 @@ describe('IlpPaymentService', (): void => {
 
       const options: StartQuoteOptions = {
         quoteId: uuid(),
-        tenantId,
         walletAddress: walletAddressMap['USD'],
         receiver: await createReceiver(deps, walletAddressMap['USD']),
         debitAmount: {
@@ -344,7 +340,6 @@ describe('IlpPaymentService', (): void => {
 
       const options: StartQuoteOptions = {
         quoteId: uuid(),
-        tenantId,
         walletAddress: walletAddressMap['USD'],
         receiver: await createReceiver(deps, walletAddressMap['USD'], {
           incomingAmount
@@ -406,7 +401,6 @@ describe('IlpPaymentService', (): void => {
 
       const options: StartQuoteOptions = {
         quoteId: uuid(),
-        tenantId,
         walletAddress: walletAddressMap['USD'],
         receiver: await createReceiver(deps, walletAddressMap['USD'])
       }
@@ -437,7 +431,6 @@ describe('IlpPaymentService', (): void => {
 
       const options: StartQuoteOptions = {
         quoteId: uuid(),
-        tenantId,
         walletAddress: walletAddressMap['USD'],
         receiver: await createReceiver(deps, walletAddressMap['USD'], {
           incomingAmount: {
@@ -478,7 +471,6 @@ describe('IlpPaymentService', (): void => {
 
       const options: StartQuoteOptions = {
         quoteId: uuid(),
-        tenantId,
         walletAddress: walletAddressMap['USD'],
         receiver: await createReceiver(deps, walletAddressMap['USD'])
       }
@@ -540,7 +532,6 @@ describe('IlpPaymentService', (): void => {
 
                 const options: StartQuoteOptions = {
                   quoteId: uuid(),
-                  tenantId,
                   walletAddress: sendingWalletAddress,
                   receiver: await createReceiver(deps, receivingWalletAddress),
                   receiveAmount: {
@@ -601,7 +592,6 @@ describe('IlpPaymentService', (): void => {
 
                 const options: StartQuoteOptions = {
                   quoteId: uuid(),
-                  tenantId,
                   walletAddress: sendingWalletAddress,
                   receiver: await createReceiver(deps, receivingWalletAddress),
                   debitAmount: {

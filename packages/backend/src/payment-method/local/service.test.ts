@@ -163,7 +163,6 @@ describe('LocalPaymentService', (): void => {
 
     test('returns all fields correctly', async (): Promise<void> => {
       const options: StartQuoteOptions = {
-        tenantId,
         walletAddress: walletAddressMap['USD'],
         receiver: await createReceiver(deps, walletAddressMap['USD']),
         debitAmount: {
@@ -251,7 +250,6 @@ describe('LocalPaymentService', (): void => {
       }
 
       const options: StartQuoteOptions = {
-        tenantId,
         walletAddress: walletAddressMap['USD'],
         receiver: await createReceiver(deps, walletAddressMap['USD'], {
           incomingAmount
@@ -300,7 +298,6 @@ describe('LocalPaymentService', (): void => {
             const sendingWalletAddress = walletAddressMap[debitAssetCode]
 
             const options: StartQuoteOptions = {
-              tenantId,
               walletAddress: sendingWalletAddress,
               receiver: await createReceiver(deps, receivingWalletAddress),
               receiveAmount: {
@@ -357,7 +354,6 @@ describe('LocalPaymentService', (): void => {
             const sendingWalletAddress = walletAddressMap[debitAssetCode]
 
             const options: StartQuoteOptions = {
-              tenantId,
               walletAddress: sendingWalletAddress,
               receiver: await createReceiver(deps, receivingWalletAddress),
               debitAmount: {
