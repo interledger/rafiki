@@ -1,183 +1,159 @@
 # Local Playground
 
-We have created a suite of packages that, together, mock an account servicing entity that has deployed Rafiki, exposing an [SPSP](https://rafiki.dev/resources/glossary#simple-payment-setup-protocol-spsp) endpoint, the [Open Payments](https://rafiki.dev/overview/concepts/open-payments) APIs with its required [GNAP](https://rafiki.dev/resources/glossary#grant-negotiation-and-authorization-protocol-gnap) auth endpoints to request grants, a STREAM endpoint for receiving Interledger packets, and a UI to view and manage the Rafiki instance.
+The Local Playground, or `localenv` package, provides a suite of tools and packages to simulate an account servicing entity (ASE) deploying Rafiki. It enables developers to test Rafiki functionalities by exposing key services, such as:
 
-These packages include:
+- [SPSP](https://rafiki.dev/resources/glossary#simple-payment-setup-protocol-spsp) endpoint
+- [Open Payments](https://rafiki.dev/overview/concepts/open-payments) APIs with its required [GNAP](https://rafiki.dev/resources/glossary#grant-negotiation-and-authorization-protocol-gnap) auth endpoints to request grants
+- [STREAM](https://rafiki.dev/resources/glossary/#streaming-transport-for-the-real-time-exchange-of-assets-and-messages-stream) endpoint for receiving Interledger packets
+- [Rafiki Admin](https://rafiki.dev/admin/admin-user-guide/) application to view and manage the Rafiki instance
 
-- `backend` (SPSP, Open Payments APIs, GraphQL Admin APIs, STREAM endpoint)
-- `auth` (GNAP auth server)
-- `mock-account-servicing-entity` (mocks an [account servicing entity](https://rafiki.dev/overview/overview)
-- `frontend` (Remix app to expose a UI for Rafiki Admin management via interaction with the `backend` Admin APIs)
-- `kratos` (An identity and user management solution for the `frontend`)
-- `mailslurper` (A SMTP mail server to catch account recovery emails for the `frontend`)
+## Included packages
 
-These packages depend on the following databases:
+| Package name                    | Services                                                                                         |
+| ------------------------------- | ------------------------------------------------------------------------------------------------ |
+| `backend`                       | SPSP, Open Payments APIs, GraphQL Admin APIs, STREAM endpoint                                    |
+| `auth`                          | GNAP auth server                                                                                 |
+| `mock-account-servicing-entity` | Mocks an [account servicing entity](https://rafiki.dev/overview/overview/)                       |
+| `frontend`                      | Remix app to expose a UI for Rafiki admin management via interaction with the Backend Admin APIs |
+
+## Dependencies
+
+The Local Playground also includes the following databases:
 
 - TigerBeetle or Postgres (accounting)
 - Postgres (Open Payments resources, auth resources)
 - Redis (STREAM details, auth sessions)
 
-We provide containerized versions of our packages together with two pre-configured docker-compose files ([Cloud Nine Wallet](./cloud-nine-wallet/docker-compose.yml) and [Happy Life Bank](./happy-life-bank/docker-compose.yml)) to start two Mock Account Servicing Entities with their respective Rafiki backend and auth servers. They automatically peer and 2 to 3 user accounts are created on both of them.
+Two pre-configured docker-compose files are provided:
 
-This environment will set up a playground where you can use the Rafiki Admin APIs and the Open Payments APIs.
+- [Cloud Nine Wallet](./cloud-nine-wallet/docker-compose.yml) A primary mock ASE with a full Rafiki backend
+- [Happy Life Bank](./happy-life-bank/docker-compose.yml) A secondary ASE relying on the primary backend's data stores
 
-## Disclaimer
+These mock ASEs automatically peer and 2 to 3 user accounts are created on both of them.
 
-> **The Mock ASE provided in this repository is intended solely for internal use and demonstration purposes. It is not designed to serve as a reference architecture. If you are looking for a reference implementation of an ASE, please refer to the [Test Wallet](https://github.com/interledger/testnet).**
+# Setting up the Local Playground
 
-## Environment overview
-
-![Docker compose environment](../packages/documentation/public/img/localenv.png)
-
-#### Cloud Nine Wallet
-
-(a) User Interface - accessible at http://localhost:3030
-
-(b) Admin API - accessible at http://localhost:3001/graphql
-
-(c) Open Payments API - accessible at http://localhost:3000
-
-(d) Auth Admin API - accessible at http://localhost:3003/graphql
-
-(e) Open Payments Auth API - accessible at http://localhost:3006
-
-(f) Admin UI - accessible at http://localhost:3010
-
-(g) Kratos API - accessible at http://localhost:4433
-
-#### Happy Life Bank
-
-(h) User Interface - accessible at http://localhost:3031
-
-(i) Admin API - accessible at http://localhost:4001/graphql
-
-(j) Open Payments API - accessible at http://localhost:4000
-
-(k) Auth Admin API - accessible at http://localhost:4003/graphql
-
-(l) Open Payments Auth API - accessible at http://localhost:4006
-
-(m) Admin UI - accessible at http://localhost:4010
-
-(n) Kratos API - accessible at http://localhost:4432
-
-#### Mail Slurper
-
-(o) Mail UI - accessible at http://localhost:4436
-
-#### Database
-
-Postgres Server - accessible at http://localhost:5432
-
-### Exploring Accounts on Mock Account Servicing Entity
-
-Navigate to [`localhost:3030`](http://localhost:3030) to view the accounts on one instance of the Mock Account Servicing Entity called Cloud Nine Wallet.
-
-![Mock Account Servicing Entity Accounts](../packages/documentation/public/img/map-accounts.png)
-
-The accounts of the second instance (Happy Life Bank) can be found on [`localhost:3031`](http://localhost:3031).
-
-When clicking on the Account Name, you can view the account information, the available balance, and see a list of transactions.
-
-![Mock Account Servicing Entity Transactions](../packages/documentation/public/img/map-transactions.png)
-
-## Running the local environment
-
-### Dependencies
+## Prerequisites
 
 - [Rafiki local environment setup](../README.md#environment-setup)
-- [docker](https://docs.docker.com/get-docker/)
+- [Docker](https://docs.docker.com/get-docker/) to run containerized services
 - [Bruno](https://www.usebruno.com/downloads), an open source API client
 
-### Setup
+## Installation steps
 
-The following should be run from the root of the project.
+Start the Local Playground
 
 ```sh
-# If you have spun up the environment before, remember to first tear down and remove volumes!
-
-# start the local environment
 pnpm localenv:compose up
-
-# tear down and remove volumes
-pnpm localenv:compose down --volumes
-
-# tear down, delete database volumes and remove images
-pnpm localenv:compose down --volumes --rmi all
 ```
 
-If you want to use Postgres as the accounting database instead of TigerBeetle, you can use the `psql` variant of the `localenv:compose` commands:
+To use Postgres instead of TigerBeetle as the accounting database, use:
 
 ```sh
 pnpm localenv:compose:psql up
-pnpm localenv:compose:psql down --volumes
 ```
 
-The local environment consists of a primary Rafiki instance and a secondary Rafiki instance, each with
-its own docker compose files ([Cloud Nine Wallet](./cloud-nine-wallet/docker-compose.yml), [Happy Life Bank](./happy-life-bank/docker-compose.yml)).
-The primary Cloud Nine Wallet docker compose file (`./cloud-nine-wallet/docker-compose.yml`) includes the main Rafiki services `backend` and `auth`, as well
-as the required data stores tigerbeetle (if enabled), redis, and postgres, so it can be run on its own.
-The secondary Happy Life Bank docker compose file (`./happy-life-bank/docker-compose.yml`) includes only the Rafiki services, not the data stores. It uses the
-data stores created by the primary Rafiki instance so it can't be run by itself.
-The `pnpm localenv:compose up` command starts both the primary instance and the secondary.
-
-See the `frontend` [README](../packages/frontend/README.md#ory-kratos) for more information regarding the Ory Kratos identity and user management system for the Admin UI.
-
-#### Autopeering
-
-If you want to start one local instance of Rafiki and peer it automatically to [Rafiki.money](https://rafiki.money), you can run the following commands:
+Optional authentication setup - to enable Rafiki Admin authentication locally, run:
 
 ```sh
-# using Tigerbeetle DB
-pnpm localenv:compose:autopeer
-
-# OR using Postgres DB
-pnpm localenv:compose:psql:autopeer
+pnpm localenv:compose:adminauth:up
 ```
 
-Your local Rafiki instance will be automatically peered with the remote [Rafiki.money](https://rafiki.money) instance.
-The required services will be exposed externally using the [localtunnel](https://www.npmjs.com/package/localtunnel) package.
-The exposed ports are 3000(open-payments), 3006(auth server), 3002(ILP connector).
+## Shutting down
 
-To use the Open Payments example in the Bruno collection examples, follow these steps:
-
-1. navigate to http://localhost:3030 to find the list of created wallet addresses (alternatively, run `docker logs rafiki-cloud-nine-mock-ase-1`)
-2. copy the url of one of the wallet addresses
-3. set the url as `senderWalletAddress` variable in the Bruno `Autopeering` environment
-
-Note that you have to go through an additional "login" step by providing you IPv4 address as tunnel password before being able to visit the consent screen for the outgoing payment grant request. You can find out your current IPv4 address by e.g. visiting https://loca.lt/mytunnelpassword (or https://www.whatismyip.com/).
-
-To shut down the connection and to clear the environment, run
+Stop running containers
 
 ```sh
 pnpm localenv:compose down
 ```
 
-This is necessary since on a new run of the scripts (with autopeering or not), the wallet address urls will differ.
+Remove database volumes
 
-### Debugging
+```sh
+pnpm localenv:compose down --volumes
+```
 
-Debuggers for the services are exposed on the following ports:
+Remove volumes and images
 
-| IP and Port    | Services                  |
-| -------------- | ------------------------- |
-| 127.0.0.1:9229 | Cloud Nine Wallet Backend |
-| 127.0.0.1:9230 | Cloud Nine Auth           |
-| 127.0.0.1:9231 | Happy Life Bank Backend   |
-| 127.0.0.1:9232 | Happy Life Bank Auth      |
+```sh
+pnpm localenv:compose down --volumes --rmi all
+```
 
-#### With a chromium browser:
+# Environment components
 
-- go to `chrome://inspect`
-- Click "Configure" and add the IP addresses and ports detailed above
-- start docker containers
-- click "inspect" on the service you want to debug to open the chromium debugger
+![Docker compose environment](../packages/documentation/public/img/localenv.png)
 
-You can either trigger the debugger by adding `debugger` statements in code and restarting, or by adding breakpoints directly in the chromium debugger after starting the docker containers.
+## Cloud Nine Wallet
 
-#### With VS Code:
+| Label | Component                | URL                             |
+| ----- | ------------------------ | ------------------------------- |
+| (a)   | User interface           | `http://localhost:3030`         |
+| (b)   | Backend Admin API        | `http://localhost:3001/graphql` |
+| (c)   | Open Payments API        | `http://localhost:3000`         |
+| (d)   | Auth Admin API           | `http://localhost:3003/graphql` |
+| (e)   | Open Payments Auth API   | `http://localhost:3006`         |
+| (f)   | Rafiki Admin application | `http://localhost:3010`         |
+| (g)   | \*_Kratos API_           | `http://localhost:4433`         |
 
-For debugging with VS Code, you can add this configuration to your `.vscode/launch.json`):
+## Happy Life Bank
+
+| Label | Component                | URL                             |
+| ----- | ------------------------ | ------------------------------- |
+| (h)   | User interface           | `http://localhost:3031`         |
+| (i)   | Backend Admin API        | `http://localhost:4001/graphql` |
+| (j)   | Open Payments API        | `http://localhost:4000`         |
+| (k)   | Auth Admin API           | `http://localhost:4003/graphql` |
+| (l)   | Open Payments Auth API   | `http://localhost:4006`         |
+| (m)   | Rafiki Admin application | `http://localhost:4010`         |
+| (n)   | \*_Kratos API_           | `http://localhost:4432`         |
+
+## Mail Slurper
+
+| Label | Component   | URL                     |
+| ----- | ----------- | ----------------------- |
+| (o)   | \*_Mail UI_ | `http://localhost:4436` |
+
+## Postgres Server
+
+| Label | Component       | URL                     |
+| ----- | --------------- | ----------------------- |
+| N/A   | Postgres Server | `http://localhost:5432` |
+
+> \*Note: In the Local Playground, Kratos and Mail Slurper are disabled by default.
+
+## Exploring Accounts on Mock Account Servicing Entity
+
+Navigate to `localhost:3030` to view the accounts on the Cloud Nine Wallet mock ASE.
+
+![Mock Account Servicing Entity Accounts](../packages/documentation/public/img/map-accounts.png)
+
+The accounts of the Happy Life Bank mock ASE can be found on `localhost:3031`.
+
+Select an Account Name to view account information, available balance, and a list of transactions.
+
+![Mock Account Servicing Entity Transactions](../packages/documentation/public/img/map-transactions.png)
+
+# Debugging
+
+Debuggers are exposed on the following ports:
+
+| Service                   | IP and Port    |
+| ------------------------- | -------------- |
+| Cloud Nine Wallet Backend | 127.0.0.1:9229 |
+| Cloud Nine Auth           | 127.0.0.1:9230 |
+| Happy Life Bank Backend   | 127.0.0.1:9231 |
+| Happy Life Bank Auth      | 127.0.0.1:9232 |
+
+## Using a Chromium browser
+
+1. Open `chrome://inspect`
+2. Select **Configure** and add the following IPs and ports detailed above
+3. Start the Docker containers
+4. Select **Inspect** on the service to debug
+
+## Using VS Code
+
+Add this configuration to `.vscode/launch.json`:
 
 ```json
 {
@@ -192,103 +168,57 @@ For debugging with VS Code, you can add this configuration to your `.vscode/laun
 },
 ```
 
-`localRoot` will vary depending on the location of `launch.json` relative to rafiki's root directory.
+`localRoot` will vary depending on the location of `launch.json` relative to Rafiki's root directory.
 
 For more ways to connect debuggers, see the Node docs for debugging: https://nodejs.org/en/learn/getting-started/debugging
 
-### Shutting down
+## Interacting with the Local Playground
+
+To learn how to interact with the Open Payments APIs, Admin APIs, and SPSP endpoints using tools like Bruno, consult the [Interacting with the Local Playground](https://rafiki.dev/integration/playground/overview/#interacting-with-the-local-playground) section in the Rafiki documentation.
+
+# Rafiki Admin
+
+Manage and view information about Rafiki instances via the Rafiki Admin application. Two instances are pre-configured:
+
+- Cloud Nine Wallet: `http://localhost:3010`
+- Happy Life Bank: `http://localhost:4010`
+
+Authentication is disabled by default for ease of development, but it can be enabled locally by running:
 
 ```sh
-# tear down
-pnpm localenv:compose down
-
-# tear down and delete database volumes
-pnpm localenv:compose down --volumes
-
-# tear down, delete database volumes and remove images
-pnpm localenv:compose down --volumes --rmi all
+pnpm localenv:compose:adminauth up
 ```
 
-### Commands
+For additional details on using the Rafiki Admin application within the Local Playground, including enabling authentication and managing users, see the [Local Playground Rafiki Admin](https://rafiki.dev/integration/playground/overview/#rafiki-admin) documentation.
 
-| Command                                          | Description                                      |
+# Reference
+
+## Useful commands
+
+| Description                                      | Command                                          |
 | ------------------------------------------------ | ------------------------------------------------ |
-| `pnpm localenv:compose config`                   | Show all merged config (with Tigerbeetle)        |
-| `pnpm localenv:compose up`                       | Start (with Tigerbeetle)                         |
-| `pnpm localenv:compose up -d`                    | Start (with Tigerbeetle) detached                |
-| `pnpm localenv:compose down`                     | Down (with Tigerbeetle)                          |
-| `pnpm localenv:compose down --volumes`           | Down and kill volumes (with TigerBeetle)         |
-| `pnpm localenv:compose down --volumes --rmi all` | Down, kill volumes (with Tigerbeetle) and images |
-| `pnpm localenv:compose:psql config`              | Show all merged config (with Postgresql)         |
-| `pnpm localenv:compose build`                    | Build all the containers (with Tigerbeetle)      |
-| `pnpm localenv:compose:psql up`                  | Start (with Postgresql)                          |
-| `pnpm localenv:compose:psql up -d`               | Start (with Postgresql) detached                 |
-| `pnpm localenv:compose:psql down`                | Down (with Postgresql)                           |
-| `pnpm localenv:compose:psql down --volumes`      | Down (with Postgresql) and kill volumes          |
-| `pnpm localenv:compose:psql build`               | Build all the containers (with Postgresql)       |
+| Show all merged config (with Tigerbeetle)        | `pnpm localenv:compose config`                   |
+| Start (with Tigerbeetle)                         | `pnpm localenv:compose up`                       |
+| Start (with Tigerbeetle) detached                | `pnpm localenv:compose up -d`                    |
+| Down (with Tigerbeetle)                          | `pnpm localenv:compose down`                     |
+| Down and kill volumes (with TigerBeetle)         | `pnpm localenv:compose down --volumes`           |
+| Down, kill volumes (with Tigerbeetle) and images | `pnpm localenv:compose down --volumes --rmi all` |
+| Show all merged config (with Postgresql)         | `pnpm localenv:compose:psql config`              |
+| Build all the containers (with Tigerbeetle)      | `pnpm localenv:compose build`                    |
+| Start (with Postgresql)                          | `pnpm localenv:compose:psql up`                  |
+| Start (with Postgresql) detached                 | `pnpm localenv:compose:psql up -d`               |
+| Down (with Postgresql)                           | `pnpm localenv:compose:psql down`                |
+| Down (with Postgresql) and kill volumes          | `pnpm localenv:compose:psql down --volumes`      |
+| Build all the containers (with Postgresql)       | `pnpm localenv:compose:psql build`               |
 
-### Usage
+# Known Issues
 
-#### Bruno & Open Payments APIs
+## TigerBeetle container exits with code 137
 
-The Open Payments APIs can be interacted with using the [Bruno collection](https://github.com/interledger/rafiki/tree/main/bruno/collections/Rafiki) ([resource server endpoints](https://github.com/interledger/rafiki/tree/main/bruno/collections/Rafiki/Open%20Payments%20APIs) and [auth server endpoints](https://github.com/interledger/rafiki/tree/main/bruno/collections/Rafiki/Open%20Payments%20Auth%20APIs)). It requires you to
-
-1. load the collection into Bruno by clicking "Open Collection"
-2. navigating to `/rafiki/bruno/collections/Rafiki` on your machine and clicking "Open"
-3. Furthermore, you need to either load the [Local Environment](https://github.com/interledger/rafiki/tree/main/bruno/collections/Rafiki/environments/Local%20Playground.bru) or the [Remote Environment](https://github.com/interledger/rafiki/tree/main/bruno/collections/Rafiki/environments/Remote.bru).
-
-The Examples folder in the Bruno collection includes an [Open Payments](https://github.com/interledger/rafiki/tree/main/bruno/collections/Rafiki/Examples/Open%20Payments) example that can be executed one by one. It
-
-1. requests the sender's wallet address
-2. requests the receiver's wallet address
-3. requests a grant to create an incoming payment on the receiver's account
-4. creates an incoming payment on receiver's account
-5. requests a grant to create (and read) a quote on the sender's account
-6. creates a quote on the sender's account
-7. requests a grant to create (and read) an outgoing payment on the sender's account
-
-Note that you have to go through an interaction flow by clicking on the `redirect` link in the grant request response.
-
-8. continues the grant request
-9. creates an outgoing payment on the sender's account
-10. fetches the outgoing payment on the sender's account
-
-#### Admin UI
-
-In order to manage and view information about the Rafiki instance(s) you can use the [Rafiki Admin](https://rafiki.dev/admin/admin-user-guide) UI. We have secured access to Rafiki Admin using [Ory Kratos](https://www.ory.sh/docs/kratos/ory-kratos-intro); however, in our local playground setup we've chosen to disable authorization for easier development and testing interactions.
-
-If you'd like to enable authorization locally you can run `pnpm localenv:compose:adminauth up` and check out the setup in the [`admin-auth`](./admin-auth/) subdirectory. Note that, if authorization is enabled, you must register separately for Cloud Nine Wallet's Rafiki Admin and Happy Life Bank's Rafiki Admin, as they are intended to operate as distinct mock account servicing entities. Once you've registered, you can always come back to your Rafiki Admin account by navigating to [`localhost:3010`](http://localhost:3010) (Cloud Nine Wallet) or [`localhost:4010`](http://localhost:4010) (Happy Life Bank) and logging in. Since access to the UI is on an invitation-only basis the registration flow is not publicly available. As such, in order to access Rafiki Admin you can manually add a new user with the invite-user script. Run `docker exec -it <admin-container-name> npm run invite-user -- example@mail.com`, and it will output a link to the terminal. Copy and paste this link in your browser and you will automatically be logged in and directed to the account settings page. The next step is changing your password. We are using a simple email and password authentication method.
-
-#### Admin APIs
-
-In addition to the using the Admin UI for interacting with the Admin APIs, you can also use the Apollo explorer (on [`localhost:3001/graphql`](http://localhost:3001/graphql) and [`localhost:4001/graphql`](http://localhost:4001/graphql), respectively), and also via the [Bruno collection](https://github.com/interledger/rafiki/tree/main/bruno/collections/Rafiki/Rafiki%20Admin%20APIs). The Bruno collection is configured to use the default endpoints of the local environment.
-
-#### SPSP
-
-Every wallet address also serves as an SPSP endpoint. A GET request to e.g. `http://localhost:3000/accounts/gfranklin` with `Accept` header `application/spsp4+json` will return an SPSP response with STREAM connection details.
-
-```http
-http GET http://localhost:3000/accounts/gfranklin Host:backend Accept:application/spsp4+json
-
-HTTP/1.1 200 OK
-Connection: keep-alive
-Content-Length: 220
-Content-Type: application/spsp4+json
-Date: Thu, 23 Feb 2023 13:07:24 GMT
-Keep-Alive: timeout=5
-
-{
-    "destination_account": "test.rafiki.viXmy1OVHgvmQakNjX1C6kQMri92DzHeISEv-5VzTDuFhrpsrkDzsq5OO9Lfa9yed0L2RJGC9hA_IX-zztTtTZ87shCYvsQ",
-    "receipts_enabled": false,
-    "shared_secret": "Rz_vudcg13EPs8ehL2drvZFJS1LJ4Y3EltOI60-lQ78"
-}
-
-```
-
-### Known Issues
-
-#### TigerBeetle container exits with code 137
-
-This is a known [issue](https://docs.tigerbeetle.com/getting-started/with-docker-compose/#exited-with-code-137) when running TigerBeetle in Docker: the container exits without logs and simply shows error code 137. To fix this, increase the Docker memory limit.
+There is a known [issue](https://docs.tigerbeetle.com/getting-started/with-docker-compose/#exited-with-code-137) when running TigerBeetle in Docker. The container exits without logs and simply shows error code 137. To fix this, increase the Docker memory limit.
 
 If you are running the local playground in Docker on a Windows machine using WSL, you can increase the memory limit by [configuring](https://learn.microsoft.com/en-us/windows/wsl/wsl-config#example-wslconfig-file) your `.wslconfig` file.
+
+# Further Documentation
+
+For detailed instructions and advanced configurations, refer to the [Local Playground](https://rafiki.dev/integration/playground/overview/) documentation.

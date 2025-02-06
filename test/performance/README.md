@@ -15,6 +15,12 @@ If the local environment isn't running it may be started by using the command `p
 
 ## Run tests
 
+The performance script relies on a node module which must be bundled before running:
+
+```
+pnpm --filter performance bundle
+```
+
 To run the performance tests (of which there is currently only one):
 
 ```
