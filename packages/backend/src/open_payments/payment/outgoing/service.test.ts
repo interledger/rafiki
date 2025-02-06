@@ -1130,6 +1130,7 @@ describe('OutgoingPaymentService', (): void => {
               receiver
             }
             const quote = await createQuote(deps, {
+              tenantId,
               walletAddressId,
               receiver,
               debitAmount,
