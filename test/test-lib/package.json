@@ -22,6 +22,7 @@
     "@types/node": "^20.14.15",
     "graphql": "^16.8.1",
     "json-canonicalize": "^1.0.6",
+    "koa": "^2.15.3",
     "mock-account-service-lib": "workspace:*",
     "yaml": "^2.7.0"
   }

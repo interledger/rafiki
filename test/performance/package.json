@@ -8,13 +8,16 @@
     "run-tests": "./scripts/run-tests.sh",
     "run-tests-docker": "./scripts/run-tests.sh --docker",
     "hostile": "hostile",
-    "bundle": "webpack"
+    "bundle": "webpack",
+    "testenv:compose": "docker compose -f ../testenv/cloud-nine-wallet/docker-compose.yml -f ../testenv/happy-life-bank/docker-compose.yml -f ../testenv/docker-compose.yml",
+    "start-mases": "node ./scripts/start-mases.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "hostile": "^1.4.0"
+    "hostile": "^1.4.0",
+    "test-lib": "workspace:*"
   },
   "devDependencies": {
     "@babel/core": "^7.26.0",

@@ -1,38 +1,54 @@
 #!/bin/bash
 
-c9_gql_url="http://localhost:3001/graphql"
-c9_wallet_address="http://localhost:3000/"
-hlb_wallet_address="http://localhost:4000/"
+# Defaults to local environment, not running k6 in docker
+ENV_NAME="local"
+DOCKER_MODE=false
 
-# Verify that the localenv backend is live
-if curl -s --head --request GET "$c9_gql_url" | grep "HTTP/1.[01]" > /dev/null; then
-  echo "Localenv is up: $c9_gql_url"
-else
-  echo "Localenv is down: $c9_gql_url"
+# Parse cli args
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+  --docker)
+    DOCKER_MODE=true
+    shift
+    ;;
+  *)
+    ENV_NAME="$1"
+    shift
+    ;;
+  esac
+done
+
+ENV_FILE="config/$ENV_NAME.env"
+if [[ ! -f "$ENV_FILE" ]]; then
+  echo "Error: Config file '$ENV_FILE' not found."
   exit 1
 fi
 
-# Verify that cloud nine mock ase is live
-if curl -s --head --request GET "$c9_wallet_address" | grep "HTTP/1.[01]" > /dev/null; then
-  echo "Cloud Nine Wallet Address is up: $c9_wallet_address"
-else
-  echo "Cloud Nine Wallet Address is down: $c9_wallet_address"
-  exit 1
-fi
+# Load env vars
+set -o allexport
+source "$ENV_FILE"
+set +o allexport
 
-# Verify that happy life bank mock ase is live
-if curl -s --head --request GET "$hlb_wallet_address" | grep "HTTP/1.[01]" > /dev/null; then
-  echo "Happy Life Bank Address is up: $hlb_wallet_address"
-else
-  echo "Happy Life Bank Address is down: $hlb_wallet_address"
-  exit 1
-fi
+check_service() {
+  local url=$1
+  local name=$2
 
-# setup hosts
-addHost() {
+  if curl -s --head --request GET "$url" | grep "HTTP/1.[01]" >/dev/null; then
+    echo "$name is up: $url"
+  else
+    echo "$name is down: $url"
+    exit 1
+  fi
+}
+
+check_service "$C9_GQL_URL" "$ENV_NAME environment"
+check_service "$C9_WALLET_ADDRESS" "Cloud Nine Wallet Address"
+check_service "$HLB_WALLET_ADDRESS" "Happy Life Bank Address"
+
+add_host() {
   local hostname="$1"
-  
-  # check first to avoid sudo prompt if host is already set
+
+  # Check first to avoid unnecessary sudo prompts
   if pnpm --filter performance hostile list | grep -q "127.0.0.1 $hostname"; then
     echo "$hostname already set"
   else
@@ -43,15 +59,17 @@ addHost() {
     fi
   fi
 }
-addHost "cloud-nine-wallet-backend"
-addHost "cloud-nine-wallet-auth"
-addHost "happy-life-bank-backend"
-addHost "happy-life-bank-auth"
+
+# Add hosts from env var. Expects comma seperated values.
+IFS=',' read -ra HOST_ARRAY <<<"$HOSTS"
+for host in "${HOST_ARRAY[@]}"; do
+  add_host "$host"
+done
 
 # run tests
-if [[ $* == *--docker* ]]; then
+if $DOCKER_MODE; then
   pnpm --filter performance test-docker
-else 
+else
   pnpm --filter performance test
 fi
 exit $?
