@@ -166,7 +166,6 @@ async function createQuote(
         paymentMethod,
         {
           quoteId,
-          tenantId: options.tenantId,
           walletAddress,
           receiver,
           receiveAmount: options.receiveAmount,
