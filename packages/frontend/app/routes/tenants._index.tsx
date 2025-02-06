@@ -85,9 +85,7 @@ export default function TenantsPage() {
           </div>
         </PageHeader>
         <Table>
-          <Table.Head
-            columns={['ID', 'Public name', 'Email', 'Status', 'Operator']}
-          />
+          <Table.Head columns={['Public name', 'Email', 'Status']} />
           <Table.Body>
             {tenantEdges.length ? (
               tenantEdges.map((tenant) => (
@@ -100,16 +98,32 @@ export default function TenantsPage() {
                       : navigate(`/tenants/${tenant.node.id}`)
                   }
                 >
-                  <Table.Cell>{tenant.node.id}</Table.Cell>
                   <Table.Cell>
                     <div className='flex flex-col'>
                       {tenant.node.publicName ? (
                         <span className='font-medium'>
-                          {tenant.node.publicName}
+                          {tenant.node.publicName}{' '}
+                          {tenant.node.isOperator && (
+                            <span className='font-medium'> (Operator)</span>
+                          )}
                         </span>
                       ) : (
-                        <span className='text-tealish/80'>No public name</span>
+                        <span className='text-tealish/80'>
+                          No public name{' '}
+                          {tenant.node.isOperator && (
+                            <span
+                              className='font-medium'
+                              title='This tenant is an operator tenant.'
+                            >
+                              {' '}
+                              (Operator)
+                            </span>
+                          )}
+                        </span>
                       )}
+                      <div className='text-tealish/50 text-xs'>
+                        (ID: {tenant.node.id})
+                      </div>
                     </div>
                   </Table.Cell>
                   <Table.Cell>
@@ -124,13 +138,6 @@ export default function TenantsPage() {
                       <Badge color={BadgeColor.Red}>Inactive</Badge>
                     ) : (
                       <Badge color={BadgeColor.Green}>Active</Badge>
-                    )}
-                  </Table.Cell>
-                  <Table.Cell>
-                    {tenant.node.isOperator ? (
-                      <span className='font-medium'>Yes</span>
-                    ) : (
-                      <span className='font-medium'>No</span>
                     )}
                   </Table.Cell>
                 </Table.Row>

@@ -2,10 +2,18 @@ import { gql } from '@apollo/client'
 import type {
   CreateTenantInput,
   CreateTenantMutation,
+  UpdateTenantMutationVariables,
+  UpdateTenantInput,
+  UpdateTenantMutation,
   CreateTenantMutationVariables,
   QueryTenantsArgs,
   ListTenantsQuery,
-  ListTenantsQueryVariables
+  ListTenantsQueryVariables,
+  DeleteTenantMutationVariables,
+  DeleteTenantMutation,
+  QueryTenantArgs,
+  GetTenantQuery,
+  GetTenantQueryVariables
 } from '~/generated/graphql'
 import { getApolloClient } from '../apollo.server'
 

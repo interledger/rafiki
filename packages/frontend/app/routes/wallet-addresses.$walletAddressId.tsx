@@ -43,7 +43,7 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
   return json({ walletAddress })
 }
 
-export default function ViewAssetPage() {
+export default function ViewWalletAddressPage() {
   const { walletAddress } = useLoaderData<typeof loader>()
   const response = useActionData<typeof action>()
   const navigation = useNavigation()

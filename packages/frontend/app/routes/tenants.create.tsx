@@ -1,7 +1,7 @@
 import { json, type ActionFunctionArgs } from '@remix-run/node'
 import { Form, useActionData, useNavigation } from '@remix-run/react'
 import { PageHeader } from '~/components'
-import { Button, ErrorPanel, Input } from '~/components/ui'
+import { Button, ErrorPanel, Input, PasswordInput } from '~/components/ui'
 import { createTenant } from '~/lib/api/tenant.server'
 import { messageStorage, setMessageAndRedirect } from '~/lib/message.server'
 import { createTenantSchema } from '~/lib/validate.server'
@@ -45,7 +45,7 @@ export default function CreateTenantPage() {
                 <div className='w-full p-4 space-y-3'>
                   <Input
                     name='publicName'
-                    label='Public name'
+                    label='Public Name'
                     placeholder='Public name'
                     error={response?.errors?.fieldErrors.publicName}
                   />
@@ -66,9 +66,9 @@ export default function CreateTenantPage() {
               </div>
               <div className='md:col-span-2 bg-white rounded-md shadow-md'>
                 <div className='w-full p-4 space-y-3'>
-                  <Input
+                  <PasswordInput
                     name='apiSecret'
-                    label='API secret'
+                    label='API Secret'
                     placeholder='The API secret. Treat as sensitive information.'
                     error={response?.errors?.fieldErrors.apiSecret}
                     required
@@ -92,7 +92,7 @@ export default function CreateTenantPage() {
                     placeholder='Provide the Identity Provider Consent URL'
                     error={response?.errors?.fieldErrors.idpConsentUrl}
                   />
-                  <Input
+                  <PasswordInput
                     name='idpSecret'
                     label='Secret'
                     placeholder='Provide the Identity Provider Secret'

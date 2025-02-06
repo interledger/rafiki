@@ -7,7 +7,6 @@ import {
   Form,
   Outlet,
   useActionData,
-  useFormAction,
   useLoaderData,
   useNavigation,
   useSubmit
@@ -15,7 +14,7 @@ import {
 import { type FormEvent, useState, useRef } from 'react'
 import { z } from 'zod'
 import { DangerZone, PageHeader } from '~/components'
-import { Button, ErrorPanel, Input } from '~/components/ui'
+import { Button, ErrorPanel, Input, PasswordInput } from '~/components/ui'
 import {
   ConfirmationDialog,
   type ConfirmationDialogRef
@@ -39,10 +38,8 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
   }
 
   const tenant = await getTenantInfo(request, { id: result.data })
-
-  if (!tenant) {
+  if (!tenant)
     throw json(null, { status: 404, statusText: 'Tenant not found.' })
-  }
 
   return json({ tenant })
 }
@@ -51,14 +48,12 @@ export default function ViewTenantPage() {
   const { tenant } = useLoaderData<typeof loader>()
   const response = useActionData<typeof action>()
   const navigation = useNavigation()
-  const formAction = useFormAction()
+  const [formData, setFormData] = useState<FormData>()
+
   const submit = useSubmit()
   const dialogRef = useRef<ConfirmationDialogRef>(null)
 
   const isSubmitting = navigation.state === 'submitting'
-  const currentPageAction = isSubmitting && navigation.formAction === formAction
-
-  const [formData, setFormData] = useState<FormData>()
 
   const submitHandler = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -90,22 +85,25 @@ export default function ViewTenantPage() {
           </div>
           <div className='md:col-span-2 bg-white rounded-md shadow-md'>
             <Form method='post' replace preventScrollReset>
-              <fieldset disabled={currentPageAction}>
+              <fieldset disabled={isSubmitting}>
                 <div className='w-full p-4 space-y-3'>
                   <Input type='hidden' name='id' value={tenant.id} />
                   <Input
                     label='Tenant ID'
+                    name='tenantId'
                     value={tenant.id}
                     disabled
                     readOnly
                   />
                   <Input
                     label='Public Name'
+                    name='publicName'
                     defaultValue={tenant.publicName ?? undefined}
                     error={response?.errors.general.fieldErrors.publicName}
                   />
                   <Input
                     label='Email'
+                    name='email'
                     defaultValue={tenant.email ?? undefined}
                     error={response?.errors.general.fieldErrors.email}
                   />
@@ -117,7 +115,7 @@ export default function ViewTenantPage() {
                     name='intent'
                     value='general'
                   >
-                    {currentPageAction ? 'Saving ...' : 'Save'}
+                    {isSubmitting ? 'Saving ...' : 'Save'}
                   </Button>
                 </div>
               </fieldset>
@@ -132,11 +130,12 @@ export default function ViewTenantPage() {
           </div>
           <div className='md:col-span-2 bg-white rounded-md shadow-md'>
             <Form method='post' replace preventScrollReset>
-              <fieldset disabled={currentPageAction}>
+              <fieldset disabled={isSubmitting}>
                 <div className='w-full p-4 space-y-3'>
                   <Input type='hidden' name='id' value={tenant.id} />
-                  <Input
-                    label='API secret'
+                  <PasswordInput
+                    label='API Secret'
+                    name='apiSecret'
                     defaultValue={tenant.apiSecret ?? undefined}
                     required
                   />
@@ -148,7 +147,7 @@ export default function ViewTenantPage() {
                     name='intent'
                     value='sensitive'
                   >
-                    {currentPageAction ? 'Saving ...' : 'Save'}
+                    {isSubmitting ? 'Saving ...' : 'Save'}
                   </Button>
                 </div>
               </fieldset>
@@ -166,14 +165,16 @@ export default function ViewTenantPage() {
           </div>
           <div className='md:col-span-2 bg-white rounded-md shadow-md'>
             <Form method='post' replace preventScrollReset>
-              <fieldset disabled={currentPageAction}>
+              <fieldset disabled={isSubmitting}>
                 <div className='w-full p-4 space-y-3'>
                   <Input type='hidden' name='id' value={tenant.id} />
                   <Input
+                    name='idpConsentUrl'
                     label='Consent URL'
                     defaultValue={tenant.idpConsentUrl ?? undefined}
                   />
-                  <Input
+                  <PasswordInput
+                    name='idpSecret'
                     label='Secret'
                     defaultValue={tenant.idpSecret ?? undefined}
                   />
@@ -185,7 +186,7 @@ export default function ViewTenantPage() {
                     name='intent'
                     value='ip'
                   >
-                    {currentPageAction ? 'Saving ...' : 'Save'}
+                    {isSubmitting ? 'Saving ...' : 'Save'}
                   </Button>
                 </div>
               </fieldset>
@@ -250,13 +251,9 @@ export async function action({ request }: ActionFunctionArgs) {
         return json({ ...actionResponse }, { status: 400 })
       }
 
-      console.log('JASON::form-data', formData)
-      console.log('JASON::request', result.data)
       const response = await updateTenant(request, {
         ...result.data
       })
-
-      console.log('JASON::response', response)
 
       if (!response?.tenant) {
         actionResponse.errors.general.message = [
