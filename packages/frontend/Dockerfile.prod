@@ -1,5 +1,6 @@
 FROM node:20-alpine3.20 AS base
 
+RUN adduser -D rafiki
 WORKDIR /home/rafiki
 
 # As the Rafiki user, install Corepack and pnpm
@@ -29,6 +30,7 @@ USER root
 RUN chown -v -R rafiki:rafiki /home/rafiki/packages
 
 # As the Rafiki user, install the production dependencies
+USER rafiki
 RUN pnpm clean
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
     pnpm install \
