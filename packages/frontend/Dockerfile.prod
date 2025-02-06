@@ -2,23 +2,33 @@ FROM node:20-alpine3.20 AS base
 
 WORKDIR /home/rafiki
 
-ENV PNPM_HOME="/pnpm"
+# As the Rafiki user, install Corepack and pnpm
+USER rafiki
+RUN mkdir -p /home/rafiki/.local/bin
+ENV PATH="/home/rafiki/.local/bin:$PATH"
+ENV PNPM_HOME="/home/rafiki/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
-
-RUN corepack enable
+RUN corepack enable --install-directory ~/.local/bin
 RUN corepack prepare pnpm@8.7.4 --activate
 
 COPY pnpm-lock.yaml ./
 
+# Fetch the pnpm dependencies, but use a local cache.
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
     pnpm fetch \
     | grep -v "cross-device link not permitted\|Falling back to copying packages from store"
 
 FROM base AS prod-deps
 
+# Copy the package.json files and install the production dependencies
 COPY package.json pnpm-workspace.yaml .npmrc ./
 COPY packages/frontend/package.json ./packages/frontend/package.json
 
+# Chown the copied packages folder back to the Rafiki user
+USER root
+RUN chown -v -R rafiki:rafiki /home/rafiki/packages
+
+# As the Rafiki user, install the production dependencies
 RUN pnpm clean
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
     pnpm install \
@@ -33,6 +43,10 @@ FROM base AS builder
 COPY package.json pnpm-workspace.yaml .npmrc tsconfig.json tsconfig.build.json ./
 COPY packages/frontend ./packages/frontend
 
+USER root
+RUN chown -v -R rafiki:rafiki /home/rafiki/packages
+# As the Rafiki user, install the development dependencies and build the source code
+USER rafiki
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
     pnpm install \
     --recursive \
@@ -41,7 +55,7 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
 RUN pnpm --filter frontend build
 
 FROM node:20-alpine3.20 AS runner
-
+RUN adduser -D rafiki
 WORKDIR /home/rafiki
 
 COPY --from=prod-deps /home/rafiki/node_modules ./node_modules
@@ -50,6 +64,11 @@ COPY --from=prod-deps /home/rafiki/packages/frontend/package.json ./packages/fro
 
 COPY --from=builder /home/rafiki/packages/frontend/build ./packages/frontend/build
 COPY --from=builder /home/rafiki/packages/frontend/public ./packages/frontend/public
+
+USER root
+RUN chown -v -R rafiki:rafiki /home/rafiki/packages
+
+USER rafiki
 
 WORKDIR /home/rafiki/packages/frontend
 CMD ["sh", "./node_modules/.bin/remix-serve", "./build/index.js"]
