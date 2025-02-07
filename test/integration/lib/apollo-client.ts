@@ -53,6 +53,7 @@ export function createApolloClient(
   return new ApolloClient({
     link: ApolloLink.from([createAuthLink(args), httpLink]),
     cache: new InMemoryCache(),
+    link: ApolloLink.from([authLink, httpLink]),
     defaultOptions: {
       query: {
         fetchPolicy: 'no-cache'

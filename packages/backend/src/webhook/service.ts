@@ -230,7 +230,7 @@ export function generateWebhookSignature(
   secret: string,
   version: number
 ): string {
-  const timestamp = Math.round(new Date().getTime() / 1000)
+  const timestamp = Date.now()
 
   const payload = `${timestamp}.${canonicalize({
     id: event.id,

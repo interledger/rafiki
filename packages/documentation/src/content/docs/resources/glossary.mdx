@@ -92,6 +92,8 @@ An Interledger transport layer protocol for sending and receiving authenticated 
 
 ## Wallet address
 
-A secure, unique URL that identifies an Open Payments-enabled account. It acts as an entry point to the Open Payments APIs, facilitating interactions like sending and receiving payments.
+A secure, unique URL that identifies an Open Payments-enabled account. It acts as an entry point to the Open Payments APIs, facilitating interactions like sending and receiving payments. Similar to how an email address serves as a public identifier for an email account, a wallet address is publicly shareable and used to interact with the underlying payment account without compromising its security. Wallet address URLs are treated as case-insensitive, meaning that both lowercase and uppercase variations of the same address will be recognized as identical.
 
-A wallet address is publicly shareable and used to interact with the underlying payment account without compromising its security. Wallet address URLs are treated as case-insensitive, meaning that both lowercase and uppercase variations of the same address will be recognized as identical.
+## Web Monetization
+
+A browser API that allows websites to signal their ability to receive Web Monetization payments from their site visitors. Rafiki supports Web Monetization payment flows natively, enabling seamless integration for websites looking to implement the feature and monetize their content via the Interledger network. For more details, visit the <LinkOut href="https://webmonetization.org/">Web Monetization</LinkOut> website.
