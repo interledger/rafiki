@@ -13,6 +13,7 @@ export const options = {
   duration: '30s'
 }
 
+/* eslint-disable */
 throw new Error() // TODO: rm. testing ci.
 
 const CLOUD_NINE_GQL_ENDPOINT = __ENV.CLOUD_NINE_GQL_ENDPOINT
@@ -64,7 +65,6 @@ export function setup() {
 
   const data = request(query)
   const c9WalletAddresses = data.walletAddresses.edges
-  console.log({ c9WalletAddresses }) // TODO: rm debug
   const c9WalletAddress = c9WalletAddresses.find(
     (edge) => edge.node.url === CLOUD_NINE_WALLET_ADDRESS
   )?.node
