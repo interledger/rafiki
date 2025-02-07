@@ -169,3 +169,18 @@ export const getTenantInfo = async (
   })
   return response.data.tenant
 }
+
+export const whoAmI = async (request: Request) => {
+  const apolloClient = await getApolloClient(request)
+  const response = await apolloClient.query({
+    query: gql`
+      query WhoAmIQuery {
+        whoami {
+          id
+          isOperator
+        }
+      }
+    `
+  })
+  return response.data.whoami
+}

@@ -19,7 +19,7 @@ import {
   ConfirmationDialog,
   type ConfirmationDialogRef
 } from '~/components/ConfirmationDialog'
-import { updateTenant, deleteTenant } from '~/lib/api/tenant.server'
+import { updateTenant, deleteTenant, whoAmI } from '~/lib/api/tenant.server'
 import { messageStorage, setMessageAndRedirect } from '~/lib/message.server'
 import { updateTenantSchema, uuidSchema } from '~/lib/validate.server'
 import type { ZodFieldErrors } from '~/shared/types'
@@ -41,11 +41,14 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
   if (!tenant)
     throw json(null, { status: 404, statusText: 'Tenant not found.' })
 
-  return json({ tenant })
+  const me = await whoAmI(request)
+  const isOperator = me.isOperator
+
+  return json({ tenant, isOperator })
 }
 
 export default function ViewTenantPage() {
-  const { tenant } = useLoaderData<typeof loader>()
+  const { tenant, isOperator } = useLoaderData<typeof loader>()
   const response = useActionData<typeof action>()
   const navigation = useNavigation()
   const [formData, setFormData] = useState<FormData>()
@@ -92,6 +95,12 @@ export default function ViewTenantPage() {
                     label='Tenant ID'
                     name='tenantId'
                     value={tenant.id}
+                    disabled
+                    readOnly
+                  />
+                  <Input
+                    label='Is Operator'
+                    value={tenant.isOperator ? 'Yes' : 'No'}
                     disabled
                     readOnly
                   />
@@ -200,7 +209,12 @@ export default function ViewTenantPage() {
           <Form method='post' onSubmit={submitHandler}>
             <Input type='hidden' name='id' value={tenant.id} />
             <Input type='hidden' name='intent' value='delete' />
-            <Button type='submit' intent='danger' aria-label='delete tenant'>
+            <Button
+              disabled={!isOperator}
+              type='submit'
+              intent='danger'
+              aria-label='delete tenant'
+            >
               Delete tenant
             </Button>
           </Form>

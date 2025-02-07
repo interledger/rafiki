@@ -2,10 +2,9 @@ import { json, type LoaderFunctionArgs } from '@remix-run/node'
 import { useLoaderData, useNavigate } from '@remix-run/react'
 import { Badge, BadgeColor, PageHeader } from '~/components'
 import { Button, Table } from '~/components/ui'
-import { listTenants } from '~/lib/api/tenant.server'
+import { getTenantInfo, listTenants, whoAmI } from '~/lib/api/tenant.server'
 import { paginationSchema } from '~/lib/validate.server'
 import { checkAuthAndRedirect } from '../lib/kratos_checks.server'
-import { getSession } from '~/lib/session.server'
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const cookies = request.headers.get('cookie')
@@ -20,36 +19,31 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     throw json(null, { status: 400, statusText: 'Invalid pagination.' })
   }
 
-  let isOperator = false
-  const tenants = await listTenants(request, {
-    ...pagination.data
-  })
+  const me = await whoAmI(request)
+  const isOperator = me.isOperator
+  const tenants = isOperator
+    ? await listTenants(request, {
+        ...pagination.data
+      })
+    : undefined
 
   let previousPageUrl = '',
     nextPageUrl = ''
-  if (tenants.pageInfo.hasPreviousPage)
-    previousPageUrl = `/tenants?before=${tenants.pageInfo.startCursor}`
-  if (tenants.pageInfo.hasNextPage)
-    nextPageUrl = `/tenants?after=${tenants.pageInfo.endCursor}`
-
-  let tenantEdges = tenants.edges
-  const tenantPageInfo = tenants.pageInfo
-  if (tenantEdges.length) {
-    const session = await getSession(cookies)
-    const sessionApiSecret = session.get('apiSecret')
-    if (sessionApiSecret && sessionApiSecret.length > 0) {
-      for (const edge of tenantEdges) {
-        const edgeNode = edge.node
-        if (edgeNode && sessionApiSecret === edgeNode.apiSecret) {
-          isOperator = edgeNode.isOperator
-          break
-        }
-      }
-    }
-    tenantEdges = isOperator
-      ? tenants.edges
-      : tenantEdges.filter(({ node }) => node.apiSecret === sessionApiSecret)
+  let tenantPageInfo
+  let tenantEdges
+  if (tenants) {
+    if (tenants.pageInfo.hasPreviousPage)
+      previousPageUrl = `/tenants?before=${tenants.pageInfo.startCursor}`
+    if (tenants.pageInfo.hasNextPage)
+      nextPageUrl = `/tenants?after=${tenants.pageInfo.endCursor}`
+    tenantPageInfo = tenants.pageInfo
+    tenantEdges = tenants.edges
+  } else {
+    const tenantInfo = await getTenantInfo(request, { id: me.id })
+    tenantPageInfo = { hasNextPage: false, hasPreviousPage: false }
+    tenantEdges = [{ node: tenantInfo }]
   }
+
   return json({
     tenantEdges,
     tenantPageInfo,
@@ -100,27 +94,22 @@ export default function TenantsPage() {
                 >
                   <Table.Cell>
                     <div className='flex flex-col'>
-                      {tenant.node.publicName ? (
-                        <span className='font-medium'>
-                          {tenant.node.publicName}{' '}
-                          {tenant.node.isOperator && (
-                            <span className='font-medium'> (Operator)</span>
-                          )}
-                        </span>
-                      ) : (
-                        <span className='text-tealish/80'>
-                          No public name{' '}
-                          {tenant.node.isOperator && (
-                            <span
-                              className='font-medium'
-                              title='This tenant is an operator tenant.'
-                            >
-                              {' '}
-                              (Operator)
+                      <div>
+                        <span className='mr-2'>
+                          {tenant.node.publicName ? (
+                            <span className='font-medium'>
+                              {tenant.node.publicName}
+                            </span>
+                          ) : (
+                            <span className='text-tealish/80'>
+                              No public name
                             </span>
                           )}
                         </span>
-                      )}
+                        {tenant.node.isOperator && (
+                          <Badge color={BadgeColor.Yellow}>Operator</Badge>
+                        )}
+                      </div>
                       <div className='text-tealish/50 text-xs'>
                         (ID: {tenant.node.id})
                       </div>
