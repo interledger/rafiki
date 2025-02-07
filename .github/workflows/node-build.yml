@@ -171,7 +171,7 @@ jobs:
         uses: ./.github/workflows/rafiki/env-setup
 
       - name: Set up k6
-        uses: k6io/action-k6@v0.3.0
+        uses: grafana/setup-k6-action@v1
 
       - name: Setup hosts
         run: |
