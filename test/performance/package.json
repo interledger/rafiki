@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "",
   "scripts": {
-    "run-tests:testnev": "./scripts/run-tests.sh test",
+    "run-tests:testenv": "./scripts/run-tests.sh test",
     "run-tests-docker:testenv": "./scripts/run-tests.sh test --docker",
     "run-tests": "./scripts/run-tests.sh local",
     "run-tests-docker": "./scripts/run-tests.sh local --docker",
