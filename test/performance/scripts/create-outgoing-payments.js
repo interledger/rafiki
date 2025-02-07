@@ -13,6 +13,8 @@ export const options = {
   duration: '30s'
 }
 
+throw new Error() // TODO: rm. testing ci.
+
 const CLOUD_NINE_GQL_ENDPOINT = __ENV.CLOUD_NINE_GQL_ENDPOINT
 const CLOUD_NINE_WALLET_ADDRESS = __ENV.CLOUD_NINE_WALLET_ADDRESS
 const HAPPY_LIFE_BANK_WALLET_ADDRESS = __ENV.HAPPY_LIFE_BANK_WALLET_ADDRESS
