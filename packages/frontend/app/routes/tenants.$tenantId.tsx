@@ -143,8 +143,8 @@ export default function ViewTenantPage() {
                 <div className='w-full p-4 space-y-3'>
                   <Input type='hidden' name='id' value={tenant.id} />
                   <PasswordInput
-                    label='API Secret'
                     name='apiSecret'
+                    label='API Secret'
                     defaultValue={tenant.apiSecret ?? undefined}
                     required
                   />
@@ -258,7 +258,8 @@ export async function action({ request }: ActionFunctionArgs) {
     case 'general':
     case 'ip':
     case 'sensitive': {
-      const result = updateTenantSchema.safeParse(Object.fromEntries(formData))
+      const formEntries = Object.fromEntries(formData)
+      const result = updateTenantSchema.safeParse(formEntries)
       if (!result.success) {
         actionResponse.errors.general.fieldErrors =
           result.error.flatten().fieldErrors
@@ -274,6 +275,12 @@ export async function action({ request }: ActionFunctionArgs) {
           'Could not update tenant. Please try again!'
         ]
         return json({ ...actionResponse }, { status: 400 })
+      }
+
+      const me = await whoAmI(request)
+      // We update the apiSecret of the session in case it changed.
+      if (formEntries.apiSecret && me.id === formEntries.id) {
+        session.set('apiSecret', formEntries.apiSecret)
       }
       break
     }
