@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Defaults to local environment, not running k6 in docker
+# Defaults to local environment, system k6
 ENV_NAME="local"
 DOCKER_MODE=false
 
@@ -40,10 +40,10 @@ check_service() {
     exit 1
   fi
 }
-
-check_service "$C9_GQL_URL" "$ENV_NAME environment"
-check_service "$C9_WALLET_ADDRESS" "Cloud Nine Wallet Address"
-check_service "$HLB_WALLET_ADDRESS" "Happy Life Bank Address"
+# ensure docker environment is up
+check_service "http://localhost:$C9_GRAPHQL_PORT/graphql" "Cloud Nine GraphQL API"
+check_service "http://localhost:$C9_OPEN_PAYMENTS_PORT/" "Cloud Nine Wallet Address"
+check_service "http://localhost:$HLB_OPEN_PAYMENTS_PORT/" "Happy Life Bank Address"
 
 add_host() {
   local hostname="$1"
@@ -60,16 +60,35 @@ add_host() {
   fi
 }
 
-# Add hosts from env var. Expects comma seperated values.
-IFS=',' read -ra HOST_ARRAY <<<"$HOSTS"
-for host in "${HOST_ARRAY[@]}"; do
-  add_host "$host"
-done
+add_host $C9_BACKEND_HOST
+add_host $C9_AUTH_HOST
+add_host $HLB_BACKEND_HOST
+add_host $HLB_AUTH_HOST
+
+CLOUD_NINE_GQL_ENDPOINT="http://$C9_BACKEND_HOST:$C9_GRAPHQL_PORT/graphql"
+if [[ "$ENV_NAME" == "local" ]]; then
+  # local env uses default port (80)
+  CLOUD_NINE_WALLET_ADDRESS="https://$C9_BACKEND_HOST/accounts/gfranklin"
+  HAPPY_LIFE_BANK_WALLET_ADDRESS="https://$HLB_BACKEND_HOST/accounts/pfry"
+else
+  CLOUD_NINE_WALLET_ADDRESS="https://$C9_BACKEND_HOST:$C9_OPEN_PAYMENTS_PORT/accounts/gfranklin"
+  HAPPY_LIFE_BANK_WALLET_ADDRESS="https://$HLB_BACKEND_HOST:$HLB_OPEN_PAYMENTS_PORT/accounts/pfry"
+fi
 
 # run tests
 if $DOCKER_MODE; then
-  pnpm --filter performance test-docker
+  docker run --rm --network="$DOCKER_NETWORK" \
+    -v ./scripts:/scripts \
+    -v ./dist:/dist \
+    -e CLOUD_NINE_GQL_ENDPOINT=$CLOUD_NINE_GQL_ENDPOINT \
+    -e CLOUD_NINE_WALLET_ADDRESS=$CLOUD_NINE_WALLET_ADDRESS \
+    -e HAPPY_LIFE_BANK_WALLET_ADDRESS=$HAPPY_LIFE_BANK_WALLET_ADDRESS \
+    -i grafana/k6 run /scripts/create-outgoing-payments.js
 else
-  pnpm --filter performance test
+  k6 run ./scripts/create-outgoing-payments.js \
+    -e CLOUD_NINE_GQL_ENDPOINT=$CLOUD_NINE_GQL_ENDPOINT \
+    -e CLOUD_NINE_WALLET_ADDRESS=$CLOUD_NINE_WALLET_ADDRESS \
+    -e HAPPY_LIFE_BANK_WALLET_ADDRESS=$HAPPY_LIFE_BANK_WALLET_ADDRESS
 fi
+
 exit $?
