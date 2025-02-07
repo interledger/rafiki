@@ -62,6 +62,7 @@ export function setup() {
 
   const data = request(query)
   const c9WalletAddresses = data.walletAddresses.edges
+  console.log({ c9WalletAddress }) // TODO: rm debug
   const c9WalletAddress = c9WalletAddresses.find(
     (edge) => edge.node.url === CLOUD_NINE_WALLET_ADDRESS
   )?.node
