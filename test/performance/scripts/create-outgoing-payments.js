@@ -1,3 +1,6 @@
+// global comment below tells ESLint that __ENV exists, else get "no-undef" error
+/* global __ENV */
+
 import http from 'k6/http'
 import { fail } from 'k6'
 import { createHMAC } from 'k6/crypto'
