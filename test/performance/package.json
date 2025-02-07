@@ -10,7 +10,8 @@
     "hostile": "hostile",
     "bundle": "webpack",
     "testenv:compose": "docker compose -f ../testenv/cloud-nine-wallet/docker-compose.yml -f ../testenv/happy-life-bank/docker-compose.yml -f ../testenv/docker-compose.yml",
-    "start-mases": "node ./scripts/start-mases.js"
+    "start-mases": "node ./scripts/start-mases.js",
+    "build:deps": "pnpm --filter test-lib build:deps && pnpm --filter test-lib build"
   },
   "keywords": [],
   "author": "",

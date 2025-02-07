@@ -179,7 +179,10 @@ jobs:
           echo "127.0.0.1 cloud-nine-wallet-test-auth" | sudo tee -a /etc/hosts
           echo "127.0.0.1 happy-life-bank-test-backend" | sudo tee -a /etc/hosts
           echo "127.0.0.1 happy-life-bank-test-auth" | sudo tee -a /etc/hosts
-      
+
+      - name: Build dependencies
+        run: pnpm --filter performance build:deps
+
       - name: Bundle
         run: pnpm --filter performance bundle
 
