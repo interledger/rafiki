@@ -165,7 +165,7 @@ export const Config = {
 
   adminApiSecret: envString('API_SECRET'),
   adminApiSignatureVersion: envInt('API_SIGNATURE_VERSION', 1),
-  adminApiSignatureTtl: envInt('ADMIN_API_SIGNATURE_TTL_SECONDS', 30),
+  adminApiSignatureTtlSeconds: envInt('ADMIN_API_SIGNATURE_TTL_SECONDS', 30),
 
   keyId: envString('KEY_ID'),
   privateKey: privateKeyFileValue,

@@ -1086,6 +1086,37 @@ describe('OutgoingPaymentService', (): void => {
               outgoingPaymentService.create({ ...options, grant })
             ).resolves.toEqual(OutgoingPaymentError.InsufficientGrant)
           })
+          test('succeeds if grant limit receiver matches payment receiver', async (): Promise<void> => {
+            assert.ok(grant)
+            grant.limits = {
+              ...grant.limits,
+              receiver
+            }
+            const quote = await createQuote(deps, {
+              walletAddressId,
+              receiver,
+              debitAmount,
+              validDestination: false,
+              method: 'ilp'
+            })
+            await expect(
+              outgoingPaymentService.create({
+                ...options,
+                grant,
+                quoteId: quote.id
+              })
+            ).resolves.toBeInstanceOf(OutgoingPayment)
+          })
+          test('fails if grant limit receiver does not match payment receiver', async (): Promise<void> => {
+            assert.ok(grant)
+            grant.limits = {
+              ...grant.limits,
+              receiver: 'http://another.wallet/address'
+            }
+            await expect(
+              outgoingPaymentService.create({ ...options, grant })
+            ).resolves.toEqual(OutgoingPaymentError.InsufficientGrant)
+          })
           test.each`
             limits                                                                         | description
             ${{ debitAmount: { assetCode: 'EUR', assetScale: asset.scale } }}              | ${'debitAmount asset code'}

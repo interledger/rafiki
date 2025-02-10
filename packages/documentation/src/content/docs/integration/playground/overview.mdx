@@ -2,11 +2,13 @@
 title: Overview
 ---
 
-import { LargeImg } from '@interledger/docs-design-system'
-
-import { LinkOut } from '@interledger/docs-design-system'
-
-import { CodeBlock } from '@interledger/docs-design-system'
+import {
+  Mermaid,
+  CodeBlock,
+  LinkOut,
+  Disclosure,
+  LargeImg
+} from '@interledger/docs-design-system'
 
 The Local Playground provides a suite of packages that, together, mock an account servicing entity that has deployed Rafiki. It exposes an <LinkOut href='https://interledger.org/developers/rfcs/simple-payment-setup-protocol/'>SPSP</LinkOut> endpoint, the [Open Payments APIs](/overview/concepts/open-payments) with its required <LinkOut href='https://datatracker.ietf.org/doc/draft-ietf-gnap-core-protocol/'>GNAP</LinkOut> auth endpoints to request grants, a STREAM endpoint for receiving Interledger packets, and the Rafiki Admin app to view and manage each Rafiki instance.
 
@@ -33,11 +35,11 @@ These packages depend on the following databases:
 
 The Local Playground comes with containerized versions of the Rafiki packages and two pre-configured docker-compose files (<LinkOut href="https://github.com/interledger/rafiki/blob/main/localenv/cloud-nine-wallet/docker-compose.yml">Cloud Nine Wallet</LinkOut> and <LinkOut href='https://github.com/interledger/rafiki/blob/main/localenv/happy-life-bank/docker-compose.yml'>Happy Life Bank</LinkOut>) to start two mock account servicing entities with their respective Rafiki `backend` and `auth` servers. They automatically peer, and two to three user accounts are created on both of them.
 
-This environment will set up a playground where you can use the Rafiki Admin APIs and the Open Payments APIs.
+This environment will set up a playground where you can use the GraphQL Admin APIs and the Open Payments APIs.
 
 :::note
 
-The Mock ASE provided in this repository is intended solely for internal use and demonstration purposes. It is not designed to serve as a reference architecture. If you are looking for a reference implementation of an ASE, please refer to the Test Wallet.
+The Mock ASE provided in this repository is intended solely for internal use and demonstration purposes. It is not designed to serve as a reference architecture. If you are looking for a reference implementation of an ASE, please refer to the <LinkOut href='https://wallet.interledger-test.dev/'>Test Wallet</LinkOut>.
 :::
 
 ## Running the local environment
@@ -50,30 +52,33 @@ To spin up the Local Playground install the following software on your machine:
 
 ### Setup
 
-Run the following commands from the root of the project.
+The local environment can be set up using either TigerBeetle or Postgres as the accounting database.
 
-```sh
-## If you have spun up the environment before, first tear down and remove volumes!
+#### Using TigerBeetle
 
-pnpm localenv:compose down --volumes
+This option enables the primary instance (Cloud Nine Wallet) to utilize TigerBeetle for its accounting database. The secondary instance (Happy Life Bank) will always run Postgres as its accounting database.
 
-## Otherwise start the local environment
-## start the local environment
+To run the local environment with TigerBeetle, execute the following command from the root of the project:
 
+<CodeBlock title="Using TigerBeetle">
+
+```
 pnpm localenv:compose up
 ```
 
-If you want to use Postgres as the accounting database instead of TigerBeetle, you must use the `psql` variant of the `localenv:compose` commands as follows:
+</CodeBlock>
 
-```sh
-## If you have spun up the environment before, first tear down and remove volumes!
-## Otherwise start the local environment
-pnpm localenv:compose:psql down --volumes
+#### Using Postgres
 
+If you want the primary instance (Cloud Nine Wallet) to use Postgres as the accounting database instead of TigerBeetle, you must use the `psql` variant of the `localenv:compose` command as follows:
 
-// start the local environment
+<CodeBlock title="Using Postgres">
+
+```
 pnpm localenv:compose:psql up
 ```
+
+</CodeBlock>
 
 The local environment consists of a primary and secondary Rafiki instance, each with its docker-compose file (<LinkOut href='https://github.com/interledger/rafiki/blob/main/localenv/cloud-nine-wallet/docker-compose.yml'>Cloud Nine Wallet</LinkOut>, <LinkOut href='https://github.com/interledger/rafiki/blob/main/localenv/cloud-nine-wallet/docker-compose.yml'>Happy Life Bank</LinkOut>). The primary Cloud Nine Wallet docker-compose file (`./cloud-nine-wallet/docker-compose.yml`) includes the primary Rafiki `backend` and `auth` services, as well as the required data stores, which include TigerBeetle (if enabled), Redis, and Postgres. The primary instance contains all of the necessary components so that it can run independently.
 
@@ -87,46 +92,46 @@ The following components are made available via the Local Playground:
 
 #### Mock account servicing entity 1 - Cloud Nine Wallet
 
-| Label | Component                          | URL                           |
-| ----- | ---------------------------------- | ----------------------------- |
-| a     | User Interface                     | http://localhost:3030         |
-| b     | Backend Admin API                  | http://localhost:3001/graphql |
-| c     | Open Payments API                  | http://localhost:3000         |
-| d     | Auth Admin API                     | http://localhost:3003/graphql |
-| e     | Open Payments Auth API             | http://localhost:3006         |
-| f     | Rafiki Admin UI                    | http://localhost:3010         |
-| g     | Kratos API - _disabled by default_ | http://localhost:4433         |
+| Label | Component                          | URL                             |
+| ----- | ---------------------------------- | ------------------------------- |
+| a     | User Interface                     | `http://localhost:3030`         |
+| b     | Backend Admin API                  | `http://localhost:3001/graphql` |
+| c     | Open Payments API                  | `http://localhost:3000`         |
+| d     | Auth Admin API                     | `http://localhost:3003/graphql` |
+| e     | Open Payments Auth API             | `http://localhost:3006`         |
+| f     | Rafiki Admin UI                    | `http://localhost:3010`         |
+| g     | Kratos API - _disabled by default_ | `http://localhost:4433`         |
 
 #### Mock account servicing entity 2 - Happy Life Bank
 
-| Label | Component                          | URL                           |
-| ----- | ---------------------------------- | ----------------------------- |
-| h     | User Interface                     | http://localhost:3031         |
-| i     | Backend Admin API                  | http://localhost:4001/graphql |
-| j     | Open Payments API                  | http://localhost:4000         |
-| k     | Auth Admin API                     | http://localhost:4003/graphql |
-| l     | Open Payments Auth API             | http://localhost:4006         |
-| m     | Rafiki Admin UI                    | http://localhost:4010         |
-| n     | Kratos API - _disabled by default_ | http://localhost:4432         |
+| Label | Component                          | URL                             |
+| ----- | ---------------------------------- | ------------------------------- |
+| h     | User Interface                     | `http://localhost:3031`         |
+| i     | Backend Admin API                  | `http://localhost:4001/graphql` |
+| j     | Open Payments API                  | `http://localhost:4000`         |
+| k     | Auth Admin API                     | `http://localhost:4003/graphql` |
+| l     | Open Payments Auth API             | `http://localhost:4006`         |
+| m     | Rafiki Admin UI                    | `http://localhost:4010`         |
+| n     | Kratos API - _disabled by default_ | `http://localhost:4432`         |
 
 #### Mail Slurper
 
-| Label | Component                       | URL                   |
-| ----- | ------------------------------- | --------------------- |
-| o     | Mail UI - _disabled by default_ | http://localhost:4436 |
+| Label | Component                       | URL                     |
+| ----- | ------------------------------- | ----------------------- |
+| o     | Mail UI - _disabled by default_ | `http://localhost:4436` |
 
 #### Database
 
-| Component       | URL                   |
-| --------------- | --------------------- |
-| Postgres Server | http://localhost:5432 |
+| Component       | URL                     |
+| --------------- | ----------------------- |
+| Postgres Server | `http://localhost:5432` |
 
 ### Rafiki Admin
 
 Manage and view information about the Rafiki instance(s) through the [Rafiki Admin](/admin/admin-user-guide/) application. Rafiki Admin is a Remix app for querying info and executing mutations against the Rafiki [Backend Admin API](https://rafiki.dev/integration/playground/overview#admin-apis).
 
-- Cloud Nine Wallet - http://localhost:3010
-- Happy Life Bank - http://localhost:4010
+- Cloud Nine Wallet - `http://localhost:3010`
+- Happy Life Bank - `http://localhost:4010`
 
 We have secured access to Rafiki Admin using <LinkOut href='https://www.ory.sh/docs/kratos/ory-kratos-intro'>Ory Kratos</LinkOut>; however, in our local playground setup we've chosen to disable user authentication for easier development and testing interactions.
 
@@ -135,25 +140,25 @@ If you'd like to enable authentication locally you can run `pnpm localenv:compos
 
 Separate registrations/users are required for each mock ASE's Admin app as the ASEs are designed to run as separate mock entities. Visit the Rafiki Admin user guide to learn how to [invite](/admin/admin-user-guide#invite-a-user) and [remove](/admin/admin-user-guide#remove-a-user) users via provided scripts.
 
-After you've registered, you can come back to your Rafiki Admin account by navigating to [`localhost:3010`](http://localhost:3010) (Cloud Nine Wallet) or [`localhost:4010`](http://localhost:4010) (Happy Life Bank) and logging in.
+After you've registered, you can come back to your Rafiki Admin account by navigating to `localhost:3010` (Cloud Nine Wallet) or `localhost:4010` (Happy Life Bank) and logging in.
 
 Follow these steps to reset a user's Rafiki Admin password.
 
-1. Click the forgot password link and enter an email for a registered user.
+1. Select the forgot password link and enter an email for a registered user.
 2. Open [Mail Slurper](http://localhost:4436/) to access the recovery link for the account.
    :::
 
 ### Exploring Accounts on Cloud Nine Wallet
 
-Navigate to [localhost:3030](http://localhost:3030/) to view the accounts on Cloud Nine Wallet.
+Navigate to `localhost:3030` to view the accounts on Cloud Nine Wallet.
 
 :::note
 
-The accounts for Happy Life Bank can be found on [localhost:3031](http://localhost:3031/).
+The accounts for Happy Life Bank can be found on `localhost:3031`.
 
 :::
 
-Click an account name to view a list of transactions.
+Select an account name to view a list of transactions.
 
 ### Debugging
 
@@ -169,9 +174,9 @@ Debuggers for the services are exposed on the following ports:
 #### Debugging with a Chromium browser:
 
 1. Go to chrome://inspect
-2. Click **Configure** and add the IP addresses and ports detailed above
+2. Select **Configure** and add the IP addresses and ports detailed above
 3. Start the docker containers
-4. Click **Inspect** on the service you want to debug to open the Chromium debugger.
+4. Select **Inspect** on the service you want to debug to open the Chromium debugger.
 
 You can either trigger the debugger by adding `debugger` statements in the code and restarting the Docker containers or by adding breakpoints directly to the Chromium debugger after starting the Docker containers.
 
@@ -215,21 +220,28 @@ pnpm localenv:compose down --volumes --rmi all
 
 The following are the most commonly used commands:
 
-| Command                                        | Description                                                       |
-| ---------------------------------------------- | ----------------------------------------------------------------- |
-| pnpm localenv:compose config                   | Show all merged config (with TigerBeetle)                         |
-| pnpm localenv:compose up                       | Start (with TigerBeetle)                                          |
-| pnpm localenv:compose up -d                    | Start (with TigerBeetle) detached                                 |
-| pnpm localenv:compose down                     | Down (with TigerBeetle)                                           |
-| pnpm localenv:compose down --volumes           | Down and kill volumes (with TigerBeetle)                          |
-| pnpm localenv:compose down --volumes --rmi all | Down, kill volumes (with TigerBeetle) and images                  |
-| pnpm localenv:compose:psql config              | Show all merged config (with PostgreSQL)                          |
-| pnpm localenv:compose build                    | Build all the containers (with TigerBeetle)                       |
-| pnpm localenv:compose:psql up                  | Start (with PostgreSQL)                                           |
-| pnpm localenv:compose:psql down                | Down (with PostgreSQL)                                            |
-| pnpm localenv:compose:psql down --volumes      | Down (with PostgreSQL) and kill volumes                           |
-| pnpm localenv:compose:psql build               | Build all the containers (with PostgreSQL)                        |
-| pnpm localenv:compose:adminauth up             | Start with local admin auth enabled (this is disabled by default) |
+| Description                                                       | Command                                          |
+| ----------------------------------------------------------------- | ------------------------------------------------ |
+| Show all merged config (with TigerBeetle)                         | `pnpm localenv:compose config`                   |
+| Start (with TigerBeetle)                                          | `pnpm localenv:compose up`                       |
+| Start (with TigerBeetle) detached                                 | `pnpm localenv:compose up -d`                    |
+| Down (with TigerBeetle)                                           | `pnpm localenv:compose down`                     |
+| Down and kill volumes (with TigerBeetle)                          | `pnpm localenv:compose down --volumes`           |
+| Down, kill volumes (with TigerBeetle) and images                  | `pnpm localenv:compose down --volumes --rmi all` |
+| Show all merged config (with Postgres)                            | `pnpm localenv:compose:psql config`              |
+| Build all the containers (with TigerBeetle)                       | `pnpm localenv:compose build`                    |
+| Start (with Postgres)                                             | `pnpm localenv:compose:psql up`                  |
+| Start (with Postgres) detached                                    | `pnpm localenv:compose:psql up -d`               |
+| Down (with Postgres)                                              | `pnpm localenv:compose:psql down`                |
+| Down (with Postgres) and kill volumes                             | `pnpm localenv:compose:psql down --volumes`      |
+| Build all the containers (with Postgres)                          | `pnpm localenv:compose:psql build`               |
+| Start with local admin auth enabled (this is disabled by default) | `pnpm localenv:compose:adminauth up `            |
+
+:::note[Enabling TigerBeetle]
+
+When enabled, TigerBeetle is only used by the primary instance (Cloud Nine Wallet). The secondary instance (Happy Life Bank) will always run Postgres as its accounting database.
+
+:::
 
 ### Interacting with the Local Playground
 
@@ -238,9 +250,17 @@ The following are the most commonly used commands:
 The Open Payments APIs can be interacted with using the [Bruno collection](https://github.com/interledger/rafiki/tree/main/bruno/collections/Rafiki) ([resource server endpoints](https://github.com/interledger/rafiki/tree/main/bruno/collections/Rafiki/Open%20Payments%20APIs) and [auth server endpoints](https://github.com/interledger/rafiki/tree/main/bruno/collections/Rafiki/Open%20Payments%20Auth%20APIs)).
 To interact with the Open Payments APIs using Bruno, you must:
 
-1. load the collection into Bruno by clicking "Open Collection"
-2. navigating to `/rafiki/bruno/collections/Rafiki` on your machine and clicking "Open"
+1. Load the collection into Bruno by selecting **Open Collection**.
+2. Navigate to `/rafiki/bruno/collections/Rafiki` on your machine and select **Open**.
 3. Furthermore, you need to either load the [Local Environment](https://github.com/interledger/rafiki/tree/main/bruno/collections/Rafiki/environments/Local%20Playground.bru) or the [Remote Test Network Environment](https://github.com/interledger/rafiki/tree/main/bruno/collections/Rafiki/environments/Remote.bru).
+
+:::tip[Troubleshooting Bruno errors]
+
+If you receive the error below while running the Bruno collection, try switching from <LinkOut href='https://docs.usebruno.com/get-started/javascript-sandbox'>Safe Mode to Developer Mode</LinkOut>
+
+``Error invoking remote method `send-http-request`: Error : Error: Cannot find module crypto``
+
+:::
 
 The Examples folder in the Bruno collection includes an [Open Payments](https://github.com/interledger/rafiki/tree/main/bruno/collections/Rafiki/Examples/Open%20Payments) example that can be executed in the following sequence:
 
@@ -254,7 +274,7 @@ The Examples folder in the Bruno collection includes an [Open Payments](https://
 
 :::note
 
-You have to go through an interaction flow by clicking on the `redirect` link in the grant request response. More information about the interaction flow can be found <LinkOut href ='https://openpayments.dev/introduction/grants/'>here</LinkOut>.
+You have to go through an interaction flow by selecting the `redirect` link in the grant request's response. More information about the interaction flow can be found <LinkOut href ='https://openpayments.dev/introduction/grants/'>here</LinkOut>.
 :::
 
 8.  Continues the grant request
@@ -263,14 +283,16 @@ You have to go through an interaction flow by clicking on the `redirect` link in
 
 #### Admin APIs
 
-In addition to using Rafiki Admin to interact with the Admin APIs, you can also use the Apollo Explorer on [localhost:3001/graphql](http://localhost:3001/graphql) and [localhost:4001/graphql](http://localhost:4001/graphql) for Cloud Nine Wallet and Happy Life Bank, respectively, and via the [Bruno collection](https://github.com/interledger/rafiki/tree/main/bruno/collections/Rafiki/Rafiki%20Admin%20APIs). The Bruno collection is configured to use the local environment's default endpoints.
+In addition to using Rafiki Admin to interact with the Admin APIs, you can also use the Apollo Explorer on `localhost:3001/graphql` and `localhost:4001/graphql` for Cloud Nine Wallet and Happy Life Bank, respectively, and via the [Bruno collection](https://github.com/interledger/rafiki/tree/main/bruno/collections/Rafiki/Rafiki%20Admin%20APIs). The Bruno collection is configured to use the local environment's default endpoints.
 
 #### SPSP
 
-Every wallet address also serves as an SPSP endpoint. A `GET` request with an `Accept` header `application/spsp4+json` will return an SPSP response with STREAM connection details. The following example uses [http://localhost:3000/accounts/gfranklin](http://localhost:3000/accounts/gfranklin) as the SPSP endpoint.
+Every wallet address also serves as an SPSP endpoint. A `GET` request with an `Accept` header `application/spsp4+json` will return an SPSP response with STREAM connection details. The following example uses `http://localhost:3000/accounts/gfranklin` as the SPSP endpoint.
 
-```sh
-http GET http://localhost:3000/accounts/gfranklin Host:backend Accept:application/spsp4+json
+```sh wrap
+GET http://localhost:3000/accounts/gfranklin HTTP/1.1
+Host:backend
+Accept:application/spsp4+json
 
 
 HTTP/1.1 200 OK
@@ -282,10 +304,9 @@ Keep-Alive:timeout=5
 
 
 {
-"destination_account":"
-test.rafiki.viXmy1OVHgvmQakNjX1C6kQMri92DzHeISEv-5VzTDuFhrpsrkDzsq5OO9Lfa9yed0L2RJGC9hA_IX-zztTtTZ87shCYvsQ",
-"receipts_enabled":false,
-"shared_secret":"Rz_vudcg13EPs8ehL2drvZFJS1LJ4Y3EltOI60-lQ78"
+  "destination_account": "test.rafiki.viXmy1OVHgvmQakNjX1C6kQM",
+  "receipts_enabled": false,
+  "shared_secret": "Rz_vudcg13EPs8ehL2drvZFJS1LJ4Y3EltOI60-lQ78"
 }
 ```
 
