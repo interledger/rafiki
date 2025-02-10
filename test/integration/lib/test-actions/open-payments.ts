@@ -123,6 +123,7 @@ async function grantRequestIncomingPayment(
 
 type CreateIncomingPaymentOpts = {
   amountValueToSend?: string
+  tenantId?: string
 }
 
 async function createIncomingPayment(
@@ -181,7 +182,10 @@ async function createIncomingPayment(
     })
   )
 
-  return incomingPayment
+  return {
+    ...incomingPayment,
+    id: addTenantToIncomingPaymentId(incomingPayment.id, opts?.tenantId)
+  }
 }
 
 async function grantRequestQuote(
@@ -395,4 +399,20 @@ async function getPublicIncomingPayment(
   expect(incomingPayment.receivedAmount.value).toBe(amountValueToSend)
 
   return incomingPayment
+}
+
+function addTenantToIncomingPaymentId(
+  incomingPaymentId: string,
+  tenantId?: string
+): string {
+  if (!tenantId) return incomingPaymentId
+
+  const params = incomingPaymentId.split('incoming-payments')
+  // Check if id already has tenantId
+  if (params[0].split('/').at(-1) === tenantId) {
+    return incomingPaymentId
+  }
+
+  incomingPaymentId = params[0] + tenantId + '/incoming-payments' + params[1]
+  return incomingPaymentId
 }

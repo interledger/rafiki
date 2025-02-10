@@ -15,14 +15,13 @@ import {
 } from './errors'
 import { isRemoteIncomingPaymentError } from '../payment/incoming_remote/errors'
 import { TelemetryService } from '../../telemetry/service'
-import { Config } from '../../config/app'
 
 interface CreateReceiverArgs {
   walletAddressUrl: string
   expiresAt?: Date
   incomingAmount?: Amount
   metadata?: Record<string, unknown>
-  tenantId?: string
+  tenantId: string
 }
 
 // A receiver is resolved from an incoming payment
@@ -101,12 +100,18 @@ async function createLocalIncomingPayment(
 ): Promise<OpenPaymentsIncomingPaymentWithPaymentMethods | ReceiverError> {
   const { expiresAt, incomingAmount, metadata, tenantId } = args
 
+  if (!tenantId) {
+    const errorMessage = 'Tenant id is required to create an incoming payment'
+    deps.logger.error(errorMessage)
+    throw new Error(errorMessage)
+  }
+
   const incomingPaymentOrError = await deps.incomingPaymentService.create({
     walletAddressId: walletAddress.id,
     expiresAt,
     incomingAmount,
     metadata,
-    tenantId: tenantId ?? Config.operatorTenantId
+    tenantId
   })
 
   if (isIncomingPaymentError(incomingPaymentOrError)) {

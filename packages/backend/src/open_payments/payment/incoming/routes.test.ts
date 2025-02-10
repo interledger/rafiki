@@ -56,7 +56,7 @@ describe('Incoming Payment Routes', (): void => {
     expiresAt = new Date(Date.now() + 30_000)
     asset = await createAsset(deps)
     walletAddress = await createWalletAddress(deps, {
-      tenantId: Config.operatorTenantId,
+      tenantId,
       assetId: asset.id
     })
     baseUrl = new URL(walletAddress.url).origin
@@ -160,7 +160,7 @@ describe('Incoming Payment Routes', (): void => {
     ),
       test('by tenantId', async () => {
         const walletAddress = await createWalletAddress(deps, {
-          tenantId: Config.operatorTenantId
+          tenantId
         })
         const incomingPayment = await createIncomingPayment(deps, {
           walletAddressId: walletAddress.id,
@@ -242,7 +242,7 @@ describe('Incoming Payment Routes', (): void => {
       }): Promise<void> => {
         const ctx = setup<CreateContext<CreateBody>>({
           params: {
-            tenantId: Config.operatorTenantId
+            tenantId
           },
           reqOpts: {
             body: {
@@ -265,7 +265,7 @@ describe('Incoming Payment Routes', (): void => {
           metadata,
           expiresAt: expiresAt ? new Date(expiresAt) : undefined,
           client,
-          tenantId: Config.operatorTenantId
+          tenantId
         })
         expect(ctx.response).toSatisfyApiSpec()
         const incomingPaymentId = (
@@ -322,7 +322,7 @@ describe('Incoming Payment Routes', (): void => {
         },
         params: {
           id: incomingPayment.id,
-          tenantId: Config.operatorTenantId
+          tenantId
         },
         walletAddress
       })
@@ -368,7 +368,7 @@ describe('Incoming Payment Routes', (): void => {
         },
         params: {
           id: incomingPayment.id,
-          tenantId: Config.operatorTenantId
+          tenantId
         },
         walletAddress
       })

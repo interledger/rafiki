@@ -11,7 +11,7 @@ import {
   errorToCode,
   errorToMessage
 } from '../../open_payments/payment/incoming/errors'
-import { TenantedApolloContext } from '../../app'
+import { ForTenantIdContext, TenantedApolloContext } from '../../app'
 import { getPageInfo } from '../../shared/pagination'
 import { Pagination, SortOrder } from '../../shared/baseModel'
 import { GraphQLError } from 'graphql'
@@ -24,7 +24,7 @@ export const getIncomingPayment: QueryResolvers<TenantedApolloContext>['incoming
     )
     const payment = await incomingPaymentService.get({
       id: args.id,
-      tenantId: ctx.tenant.id
+      tenantId: ctx.isOperator ? undefined : ctx.tenant.id
     })
     if (!payment) {
       throw new GraphQLError('payment does not exist', {
@@ -58,7 +58,7 @@ export const getWalletAddressIncomingPayments: WalletAddressResolvers<TenantedAp
       walletAddressId: parent.id,
       pagination,
       sortOrder: order,
-      tenantId: ctx.tenant.id
+      tenantId: ctx.isOperator ? undefined : ctx.tenant.id
     })
     const pageInfo = await getPageInfo({
       getPage: (pagination: Pagination, sortOrder?: SortOrder) =>
@@ -82,7 +82,7 @@ export const getWalletAddressIncomingPayments: WalletAddressResolvers<TenantedAp
       })
     }
   }
-export const createIncomingPayment: MutationResolvers<TenantedApolloContext>['createIncomingPayment'] =
+export const createIncomingPayment: MutationResolvers<ForTenantIdContext>['createIncomingPayment'] =
   async (
     parent,
     args,
@@ -91,6 +91,12 @@ export const createIncomingPayment: MutationResolvers<TenantedApolloContext>['cr
     const incomingPaymentService = await ctx.container.use(
       'incomingPaymentService'
     )
+
+    const tenantId = ctx.forTenantId
+    if (!tenantId) {
+      throw new Error('Missing tenant id to create incoming payment')
+    }
+
     const incomingPaymentOrError = await incomingPaymentService.create({
       walletAddressId: args.input.walletAddressId,
       expiresAt: !args.input.expiresAt
@@ -98,7 +104,7 @@ export const createIncomingPayment: MutationResolvers<TenantedApolloContext>['cr
         : new Date(args.input.expiresAt),
       incomingAmount: args.input.incomingAmount,
       metadata: args.input.metadata,
-      tenantId: ctx.tenant.id
+      tenantId
     })
     if (isIncomingPaymentError(incomingPaymentOrError)) {
       throw new GraphQLError(errorToMessage[incomingPaymentOrError], {

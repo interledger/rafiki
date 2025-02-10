@@ -488,8 +488,7 @@ describe('Incoming Payment Resolver', (): void => {
         })
         const input = {
           id: payment.id,
-          metadata,
-          tenantId
+          metadata
         }
 
         const createSpy = jest
@@ -520,7 +519,7 @@ describe('Incoming Payment Resolver', (): void => {
               query.data?.updateIncomingPayment
           )
 
-        expect(createSpy).toHaveBeenCalledWith(input)
+        expect(createSpy).toHaveBeenCalledWith({ ...input, tenantId })
         expect(query).toEqual({
           __typename: 'IncomingPaymentResponse',
           payment: {
@@ -539,8 +538,7 @@ describe('Incoming Payment Resolver', (): void => {
 
       const input = {
         id: uuid(),
-        metadata: { description: 'Update metadata', status: 'COMPLETE' },
-        tenantId
+        metadata: { description: 'Update metadata', status: 'COMPLETE' }
       }
 
       expect.assertions(3)
@@ -576,7 +574,7 @@ describe('Incoming Payment Resolver', (): void => {
           })
         )
       }
-      expect(createSpy).toHaveBeenCalledWith(input)
+      expect(createSpy).toHaveBeenCalledWith({ ...input, tenantId })
     })
 
     test('Internal server error', async (): Promise<void> => {
@@ -586,8 +584,7 @@ describe('Incoming Payment Resolver', (): void => {
 
       const input = {
         id: uuid(),
-        metadata: {},
-        tenantId
+        metadata: {}
       }
 
       expect.assertions(3)
@@ -623,7 +620,7 @@ describe('Incoming Payment Resolver', (): void => {
           })
         )
       }
-      expect(createSpy).toHaveBeenCalledWith(input)
+      expect(createSpy).toHaveBeenCalledWith({ ...input, tenantId })
     })
   })
 })

@@ -372,15 +372,11 @@ type AssetEdge {
 input ApproveIncomingPaymentInput {
   "Unique identifier of the incoming payment to be approved. Note: incoming payment must be PENDING."
   id: ID!
-  "The tenant UUID associated with the incoming payment."
-  tenantId: String!
 }
 
 input CancelIncomingPaymentInput {
   "Unique identifier of the incoming payment to be canceled. Note: incoming payment must be PENDING."
   id: ID!
-  "The tenant UUID associated with the incoming payment."
-  tenantId: String!
 }
 
 input CreateAssetInput {
@@ -1255,8 +1251,6 @@ input UpdateIncomingPaymentInput {
   id: ID!
   "The new metadata object to save for the incoming payment. It will overwrite any existing metadata."
   metadata: JSONObject!
-  "The tenant UUID associated with the incoming payment. If not provided, it will be obtained from the signature."
-  tenantId: String
 }
 
 type OutgoingPaymentResponse {

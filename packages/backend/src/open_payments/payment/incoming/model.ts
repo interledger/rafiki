@@ -143,7 +143,6 @@ export class IncomingPayment
     this.receivedAmountValue = amount.value
   }
 
-  // TODO: add tenant id
   public getUrl(walletAddress: WalletAddress): string {
     const url = new URL(walletAddress.url)
     return `${url.origin}${IncomingPayment.urlPath}/${this.id}`

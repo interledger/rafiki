@@ -96,8 +96,6 @@ export type AmountInput = {
 export type ApproveIncomingPaymentInput = {
   /** Unique identifier of the incoming payment to be approved. Note: incoming payment must be PENDING. */
   id: Scalars['ID']['input'];
-  /** The tenant UUID associated with the incoming payment. */
-  tenantId: Scalars['String']['input'];
 };
 
 export type ApproveIncomingPaymentResponse = {
@@ -177,8 +175,6 @@ export type BasePayment = {
 export type CancelIncomingPaymentInput = {
   /** Unique identifier of the incoming payment to be canceled. Note: incoming payment must be PENDING. */
   id: Scalars['ID']['input'];
-  /** The tenant UUID associated with the incoming payment. */
-  tenantId: Scalars['String']['input'];
 };
 
 export type CancelIncomingPaymentResponse = {
@@ -1534,8 +1530,6 @@ export type UpdateIncomingPaymentInput = {
   id: Scalars['ID']['input'];
   /** The new metadata object to save for the incoming payment. It will overwrite any existing metadata. */
   metadata: Scalars['JSONObject']['input'];
-  /** The tenant UUID associated with the incoming payment. If not provided, it will be obtained from the signature. */
-  tenantId?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type UpdatePeerInput = {

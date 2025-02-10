@@ -45,6 +45,7 @@ describe('Receiver Service', (): void => {
   let streamCredentialsService: StreamCredentialsService
   let remoteIncomingPaymentService: RemoteIncomingPaymentService
   let serviceDeps: ServiceDependencies
+  let tenantId: string
 
   beforeAll(async (): Promise<void> => {
     deps = initIocContainer(Config)
@@ -66,6 +67,7 @@ describe('Receiver Service', (): void => {
       streamCredentialsService,
       telemetry: await deps.use('telemetry')
     }
+    tenantId = Config.operatorTenantId
   })
 
   afterEach(async (): Promise<void> => {
@@ -316,7 +318,8 @@ describe('Receiver Service', (): void => {
             walletAddressUrl: walletAddress.url,
             incomingAmount,
             expiresAt,
-            metadata
+            metadata,
+            tenantId
           })
 
           assert(receiver instanceof Receiver)
@@ -364,7 +367,8 @@ describe('Receiver Service', (): void => {
 
         await expect(
           receiverService.create({
-            walletAddressUrl: walletAddress.url
+            walletAddressUrl: walletAddress.url,
+            tenantId
           })
         ).resolves.toEqual(ReceiverError.InvalidAmount)
       })
@@ -376,7 +380,8 @@ describe('Receiver Service', (): void => {
 
         await expect(
           receiverService.create({
-            walletAddressUrl: walletAddress.url
+            walletAddressUrl: walletAddress.url,
+            tenantId
           })
         ).rejects.toThrow(
           'Could not get stream credentials for local incoming payment'
@@ -424,7 +429,8 @@ describe('Receiver Service', (): void => {
             walletAddressUrl: walletAddress.id,
             incomingAmount,
             expiresAt,
-            metadata
+            metadata,
+            tenantId
           })
 
           expect(receiver).toEqual({
@@ -460,7 +466,8 @@ describe('Receiver Service', (): void => {
             walletAddressUrl: walletAddress.id,
             incomingAmount,
             expiresAt,
-            metadata
+            metadata,
+            tenantId
           })
           expect(localIncomingPaymentCreateSpy).not.toHaveBeenCalled()
         }
@@ -475,7 +482,8 @@ describe('Receiver Service', (): void => {
 
         await expect(
           receiverService.create({
-            walletAddressUrl: walletAddress.id
+            walletAddressUrl: walletAddress.id,
+            tenantId
           })
         ).resolves.toEqual(ReceiverError.UnknownWalletAddress)
       })
@@ -495,7 +503,8 @@ describe('Receiver Service', (): void => {
 
         await expect(
           receiverService.create({
-            walletAddressUrl: mockedIncomingPayment.walletAddress
+            walletAddressUrl: mockedIncomingPayment.walletAddress,
+            tenantId
           })
         ).rejects.toThrow('Could not create receiver from incoming payment')
         expect(remoteIncomingPaymentServiceCreateSpy).toHaveBeenCalledTimes(1)
