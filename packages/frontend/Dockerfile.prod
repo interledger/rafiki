@@ -52,7 +52,8 @@ COPY --from=builder /home/rafiki/packages/frontend/build ./packages/frontend/bui
 COPY --from=builder /home/rafiki/packages/frontend/public ./packages/frontend/public
 
 USER root
-RUN chown -v -R rafiki:rafiki /home/rafiki/packages
+RUN chown -R :rafiki /home/rafiki/packages
+RUN chmod -R 750 /home/rafiki/packages
 
 USER rafiki
 
