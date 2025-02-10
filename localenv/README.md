@@ -189,7 +189,7 @@ Authentication is disabled by default for ease of development, but it can be ena
 pnpm localenv:compose:adminauth up
 ```
 
-The Admin UI requires a valid API secret and tenant id to make requests to the Admin APIs, which must be submitted via a form on the frontend. For our convenience, we log a link on MASE start that can be used to access the Admin UI and set the credentials automatically. The credentials used pull from the MASE’s `SIGNATURE_SECRET` and `OPERATOR_TENANT_ID` environment variables.
+The Admin UI requires a valid API secret and tenant id to make requests to the Admin APIs, which must be submitted via a form on the frontend. For our convenience, we log a link on Mock Account Servicing Entity (MASE) start that can be used to access the Admin UI and set the credentials automatically. The credentials used pull from the MASE’s `SIGNATURE_SECRET` and `OPERATOR_TENANT_ID` environment variables.
 
 ```
 cloud-nine-mock-ase-1  | Local Dev Setup:
