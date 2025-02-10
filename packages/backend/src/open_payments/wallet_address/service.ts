@@ -359,7 +359,7 @@ async function getWalletAddressPage(
   pagination?: Pagination,
   sortOrder?: SortOrder
 ): Promise<WalletAddress[]> {
-  return await WalletAddress.query(deps.knex)
+  return WalletAddress.query(deps.knex)
     .getPage(pagination, sortOrder)
     .withGraphFetched('asset')
 }

@@ -203,7 +203,7 @@ export const Config = {
   ),
   localCacheDuration: envInt('LOCAL_CACHE_DURATION_MS', 15_000),
   excludedWalletAddressPatterns: envRegExPatterns(
-    'excluded_Wallet_Address_Patterns'
+    'EXCLUDED_WALLET_ADDRESS_PATTERNS'
   )
 }
 
