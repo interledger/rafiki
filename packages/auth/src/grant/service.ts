@@ -39,7 +39,7 @@ export interface GrantService {
     continueToken: string,
     options?: GetByContinueOpts
   ): Promise<Grant | undefined>
-  revokeGrant(grantId: string): Promise<boolean>
+  revokeGrant(grantId: string, tenantId: string): Promise<boolean>
   getPage(
     pagination?: Pagination,
     filter?: GrantFilter,
@@ -132,7 +132,8 @@ export async function createGrantService({
       continueToken: string,
       opts: GetByContinueOpts
     ) => getByContinue(continueId, continueToken, opts),
-    revokeGrant: (grantId) => revokeGrant(deps, grantId),
+    revokeGrant: (grantId: string, tenantId: string) =>
+      revokeGrant(deps, grantId, tenantId),
     getPage: (pagination?, filter?, sortOrder?) =>
       getGrantsPage(deps, pagination, filter, sortOrder),
     updateLastContinuedAt: (id) => updateLastContinuedAt(id),
@@ -187,19 +188,26 @@ async function finalize(id: string, reason: GrantFinalization): Promise<Grant> {
 
 async function revokeGrant(
   deps: ServiceDependencies,
-  grantId: string
+  grantId: string,
+  tenantId?: string
 ): Promise<boolean> {
   const { accessTokenService } = deps
 
   const trx = await deps.knex.transaction()
 
   try {
-    const grant = await Grant.query(trx)
+    const queryBuilder = Grant.query(trx)
       .patchAndFetchById(grantId, {
         state: GrantState.Finalized,
         finalizationReason: GrantFinalization.Revoked
       })
       .first()
+
+    if (tenantId) {
+      queryBuilder.andWhere('tenantId', tenantId)
+    }
+
+    const grant = await queryBuilder
 
     if (!grant) {
       deps.logger.info(

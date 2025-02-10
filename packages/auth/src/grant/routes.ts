@@ -461,7 +461,7 @@ async function revokeGrant(
   deps: ServiceDependencies,
   ctx: RevokeContext
 ): Promise<void> {
-  const { id: continueId } = ctx.params
+  const { id: continueId, tenantId } = ctx.params
   const { grantService, logger } = deps
   const continueToken = (ctx.headers['authorization'] as string)?.split(
     'GNAP '
@@ -482,7 +482,7 @@ async function revokeGrant(
     )
   }
 
-  const revoked = await grantService.revokeGrant(grant.id)
+  const revoked = await grantService.revokeGrant(grant.id, tenantId)
   if (!revoked) {
     throw new GNAPServerRouteError(
       404,
