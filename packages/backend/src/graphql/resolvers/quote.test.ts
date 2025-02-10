@@ -232,7 +232,11 @@ describe('Quote Resolvers', (): void => {
         })
         .then((query): QuoteResponse => query.data?.createQuote)
 
-      expect(createSpy).toHaveBeenCalledWith({ ...input, tenantId, method: 'ilp' })
+      expect(createSpy).toHaveBeenCalledWith({
+        ...input,
+        tenantId,
+        method: 'ilp'
+      })
       expect(query.quote?.id).toBe(quote?.id)
     })
 
@@ -298,7 +302,11 @@ describe('Quote Resolvers', (): void => {
           })
         )
       }
-      expect(createSpy).toHaveBeenCalledWith({ ...input, tenantId, method: 'ilp' })
+      expect(createSpy).toHaveBeenCalledWith({
+        ...input,
+        tenantId,
+        method: 'ilp'
+      })
     })
   })
 
