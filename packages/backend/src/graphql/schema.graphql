@@ -1176,8 +1176,6 @@ input AmountInput {
 }
 
 input CreateQuoteInput {
-  "Unique identifier of the tenant associated with the wallet address. This cannot be changed. Optional, if not provided, the tenantId will be obtained from the signature."
-  tenantId: ID
   "Unique identifier of the wallet address under which the quote will be created."
   walletAddressId: String!
   "Amount to send (fixed send)."
@@ -1196,8 +1194,6 @@ type QuoteResponse {
 }
 
 input CreateOutgoingPaymentInput {
-  "Unique identifier of the tenant associated with the wallet address. This cannot be changed. Optional, if not provided, the tenantId will be obtained from the signature."
-  tenantId: ID
   "Unique identifier of the wallet address under which the outgoing payment will be created."
   walletAddressId: String!
   "Unique identifier of the corresponding quote for that outgoing payment."
@@ -1211,15 +1207,11 @@ input CreateOutgoingPaymentInput {
 input CancelOutgoingPaymentInput {
   "Unique identifier of the outgoing payment to cancel."
   id: ID!
-  "Unique identifier of the tenant associated with the wallet address. This cannot be changed. Optional, if not provided, the tenantId will be obtained from the signature."
-  tenantId: ID
   "Reason why this outgoing payment has been canceled. This value will be publicly visible in the metadata field if this outgoing payment is requested through Open Payments."
   reason: String
 }
 
 input CreateOutgoingPaymentFromIncomingPaymentInput {
-  "Unique identifier of the tenant associated with the wallet address. This cannot be changed. Optional, if not provided, the tenantId will be obtained from the signature."
-  tenantId: ID
   "Unique identifier of the wallet address under which the outgoing payment will be created."
   walletAddressId: String!
   "Incoming payment URL to create the outgoing payment from."

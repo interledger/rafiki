@@ -587,7 +587,6 @@ describe('OutgoingPayment Resolvers', (): void => {
         .mockResolvedValueOnce(payment)
 
       const input = {
-        tenantId: payment.quote.tenantId,
         walletAddressId: payment.walletAddressId,
         quoteId: payment.quote.id
       }
@@ -612,7 +611,7 @@ describe('OutgoingPayment Resolvers', (): void => {
           (query): OutgoingPaymentResponse => query.data?.createOutgoingPayment
         )
 
-      expect(createSpy).toHaveBeenCalledWith(input)
+      expect(createSpy).toHaveBeenCalledWith({...input, tenantId})
       expect(query.payment?.id).toBe(payment.id)
       expect(query.payment?.state).toBe(SchemaPaymentState.Funding)
     })
@@ -623,7 +622,6 @@ describe('OutgoingPayment Resolvers', (): void => {
         .mockResolvedValueOnce(OutgoingPaymentError.UnknownWalletAddress)
 
       const input = {
-        tenantId,
         walletAddressId: uuid(),
         quoteId: uuid()
       }
@@ -661,7 +659,7 @@ describe('OutgoingPayment Resolvers', (): void => {
           })
         )
       }
-      expect(createSpy).toHaveBeenCalledWith(input)
+      expect(createSpy).toHaveBeenCalledWith({...input, tenantId})
     })
 
     test('internal server error', async (): Promise<void> => {
@@ -670,7 +668,6 @@ describe('OutgoingPayment Resolvers', (): void => {
         .mockRejectedValueOnce(new Error('unexpected'))
 
       const input = {
-        tenantId,
         walletAddressId: uuid(),
         quoteId: uuid()
       }
@@ -708,7 +705,7 @@ describe('OutgoingPayment Resolvers', (): void => {
           })
         )
       }
-      expect(createSpy).toHaveBeenCalledWith(input)
+      expect(createSpy).toHaveBeenCalledWith({...input, tenantId})
     })
   })
 
@@ -735,7 +732,6 @@ describe('OutgoingPayment Resolvers', (): void => {
         .mockResolvedValueOnce(payment)
 
       const input = {
-        tenantId: payment.quote.tenantId,
         walletAddressId: payment.walletAddressId,
         incomingPayment: mockIncomingPaymentUrl,
         debitAmount: {
@@ -766,7 +762,7 @@ describe('OutgoingPayment Resolvers', (): void => {
             query.data?.createOutgoingPaymentFromIncomingPayment
         )
 
-      expect(createSpy).toHaveBeenCalledWith(input)
+      expect(createSpy).toHaveBeenCalledWith({...input, tenantId})
       expect(query.payment?.id).toBe(payment.id)
       expect(query.payment?.state).toBe(SchemaPaymentState.Funding)
     })
@@ -777,7 +773,6 @@ describe('OutgoingPayment Resolvers', (): void => {
         .mockResolvedValueOnce(OutgoingPaymentError.UnknownWalletAddress)
 
       const input = {
-        tenantId,
         walletAddressId: uuid(),
         incomingPayment: mockIncomingPaymentUrl,
         debitAmount: {
@@ -820,7 +815,7 @@ describe('OutgoingPayment Resolvers', (): void => {
           })
         )
       }
-      expect(createSpy).toHaveBeenCalledWith(input)
+      expect(createSpy).toHaveBeenCalledWith({...input, tenantId})
     })
 
     test('unknown error', async (): Promise<void> => {
@@ -829,7 +824,6 @@ describe('OutgoingPayment Resolvers', (): void => {
         .mockRejectedValueOnce(new Error('unexpected'))
 
       const input = {
-        tenantId,
         walletAddressId: uuid(),
         incomingPayment: mockIncomingPaymentUrl,
         debitAmount: {
@@ -872,7 +866,7 @@ describe('OutgoingPayment Resolvers', (): void => {
           })
         )
       }
-      expect(createSpy).toHaveBeenCalledWith(input)
+      expect(createSpy).toHaveBeenCalledWith({...input, tenantId})
     })
   })
 
@@ -897,7 +891,6 @@ describe('OutgoingPayment Resolvers', (): void => {
       async (reason): Promise<void> => {
         const input = {
           id: payment.id,
-          tenantId: payment.quote.tenantId,
           reason
         }
 
@@ -932,7 +925,7 @@ describe('OutgoingPayment Resolvers', (): void => {
               query.data?.cancelOutgoingPayment
           )
 
-        expect(cancelSpy).toHaveBeenCalledWith(input)
+        expect(cancelSpy).toHaveBeenCalledWith({...input, tenantId: payment.quote.tenantId})
         expect(mutationResponse.payment).toEqual({
           __typename: 'OutgoingPayment',
           id: input.id,
@@ -955,7 +948,7 @@ describe('OutgoingPayment Resolvers', (): void => {
           .spyOn(outgoingPaymentService, 'cancel')
           .mockResolvedValueOnce(paymentError)
 
-        const input = { id: uuid(), tenantId: payment.quote.tenantId }
+        const input = { id: uuid() }
 
         expect.assertions(3)
         try {
@@ -991,7 +984,7 @@ describe('OutgoingPayment Resolvers', (): void => {
             })
           )
         }
-        expect(cancelSpy).toHaveBeenCalledWith(input)
+        expect(cancelSpy).toHaveBeenCalledWith({...input, tenantId: payment.quote.tenantId})
       }
     )
   })

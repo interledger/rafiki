@@ -181,7 +181,6 @@ describe('Quote Resolvers', (): void => {
         assetScale: asset.scale
       }
       input = {
-        tenantId,
         walletAddressId: uuid(),
         receiver,
         debitAmount
@@ -200,7 +199,6 @@ describe('Quote Resolvers', (): void => {
         assetId: asset.id
       })
       const input = {
-        tenantId,
         walletAddressId,
         debitAmount: amount,
         receiveAmount,
@@ -234,7 +232,7 @@ describe('Quote Resolvers', (): void => {
         })
         .then((query): QuoteResponse => query.data?.createQuote)
 
-      expect(createSpy).toHaveBeenCalledWith({ ...input, method: 'ilp' })
+      expect(createSpy).toHaveBeenCalledWith({ ...input, tenantId, method: 'ilp' })
       expect(query.quote?.id).toBe(quote?.id)
     })
 
@@ -300,7 +298,7 @@ describe('Quote Resolvers', (): void => {
           })
         )
       }
-      expect(createSpy).toHaveBeenCalledWith({ ...input, method: 'ilp' })
+      expect(createSpy).toHaveBeenCalledWith({ ...input, tenantId, method: 'ilp' })
     })
   })
 
