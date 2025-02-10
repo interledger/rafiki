@@ -242,8 +242,12 @@ type Mutation {
   ): CreateWalletAddressKeyMutationResponse
 
   createTenantSettings(
-    input: [CreateTenantSettingsInput!]!
+    input: CreateTenantSettingsInput!
   ): CreateTenantSettingsMutationResponse
+
+  deleteTenantSettings(
+    input: DeleteTenantSettingsInput!
+  ): DeleteTenantSettingsMutationResponse
 
   "Revoke a public key associated with a wallet address. Open Payment requests using this key for request signatures will be denied going forward."
   revokeWalletAddressKey(
@@ -341,6 +345,11 @@ type Mutation {
 
   "Delete a tenant."
   deleteTenant(id: String!): DeleteTenantMutationResponse!
+
+  "Update tenant setting."
+  updateTenantSetting(
+    input: TenantSettingInput!
+  ): UpdateTenantSettingMutationResponse!
 }
 
 type PageInfo {
@@ -635,9 +644,19 @@ input CreateWalletAddressKeyInput {
 }
 
 input CreateTenantSettingsInput {
-  "Key of a new setting."
+  "List of a settings for a tenant."
+  settings: [TenantSettingInput!]!
+}
+
+input DeleteTenantSettingsInput {
+  "Key to delete from tenant settings."
+  key: String
+}
+
+input TenantSettingInput {
+  "Key for this setting."
   key: String!
-  "Value of a new setting."
+  "Value of a setting for this key."
   value: String!
 }
 
@@ -1568,7 +1587,7 @@ type Tenant implements Model {
   "The date and time that this tenant was deleted."
   deletedAt: String
   "List of settings for the tenant."
-  settings (
+  settings(
     "Forward pagination: Cursor (wallet address key ID) to start retrieving settings after this point."
     after: String
     "Backward pagination: Cursor (wallet address key ID) to start retrieving keys before this point."
@@ -1649,7 +1668,15 @@ type TenantMutationResponse {
   tenant: Tenant!
 }
 
+type UpdateTenantSettingMutationResponse {
+  setting: TenantSetting!
+}
+
 type DeleteTenantMutationResponse {
+  success: Boolean!
+}
+
+type DeleteTenantSettingsMutationResponse {
   success: Boolean!
 }
 

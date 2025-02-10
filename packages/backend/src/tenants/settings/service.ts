@@ -82,8 +82,16 @@ async function deleteTenantSetting(
   options: GetOptions,
   extra?: ExtraOptions
 ) {
+  // sanitize
+  const obj: GetOptions = {
+    tenantId: options.tenantId
+  }
+
+  if (options.key) {
+    obj.key = options.key
+  }
   await TenantSetting.query(extra?.trx ?? deps.knex)
-    .findOne(options)
+    .findOne(obj)
     .patch({
       deletedAt: new Date()
     })
@@ -94,7 +102,7 @@ async function updateTenantSetting(
   options: UpdateOptions
 ): Promise<void> {
   await TenantSetting.query(deps.knex)
-    .patch({
+    .patchAndFetch({
       value: options.value
     })
     .whereNull('deletedAt')
