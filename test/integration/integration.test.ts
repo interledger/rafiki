@@ -334,7 +334,6 @@ describe('Integration tests', (): void => {
 
         const receiver = await createReceiver(createReceiverInput)
         const quote = await createQuote({
-          tenantId: c9.config.operatorTenantId,
           walletAddressId: senderWalletAddressId,
           receiver: receiver.id
         })
@@ -386,7 +385,6 @@ describe('Integration tests', (): void => {
         assert(receiver.incomingAmount)
 
         const quote = await createQuote({
-          tenantId: c9.config.operatorTenantId,
           walletAddressId: senderWalletAddressId,
           receiver: receiver.id
         })
@@ -480,7 +478,6 @@ describe('Integration tests', (): void => {
 
         const receiver = await createReceiver(createReceiverInput)
         const quote = await createQuote({
-          tenantId: c9.config.operatorTenantId,
           walletAddressId: senderWalletAddressId,
           receiver: receiver.id
         })
@@ -525,7 +522,6 @@ describe('Integration tests', (): void => {
         const senderWalletAddressId = senderWalletAddress.walletAddressID
 
         const createQuoteInput = {
-          tenantId: c9.config.operatorTenantId,
           walletAddressId: senderWalletAddressId,
           receiver: receiver.id,
           debitAmount: {
@@ -594,7 +590,6 @@ describe('Integration tests', (): void => {
         assert(receiver.incomingAmount)
 
         const quote = await createQuote({
-          tenantId: c9.config.operatorTenantId,
           walletAddressId: senderWalletAddressId,
           receiver: receiver.id
         })
