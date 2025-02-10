@@ -39,7 +39,7 @@ export interface GrantService {
     continueToken: string,
     options?: GetByContinueOpts
   ): Promise<Grant | undefined>
-  revokeGrant(grantId: string, tenantId: string): Promise<boolean>
+  revokeGrant(grantId: string, tenantId?: string): Promise<boolean>
   getPage(
     pagination?: Pagination,
     filter?: GrantFilter,
@@ -132,7 +132,7 @@ export async function createGrantService({
       continueToken: string,
       opts: GetByContinueOpts
     ) => getByContinue(continueId, continueToken, opts),
-    revokeGrant: (grantId: string, tenantId: string) =>
+    revokeGrant: (grantId: string, tenantId?: string) =>
       revokeGrant(deps, grantId, tenantId),
     getPage: (pagination?, filter?, sortOrder?) =>
       getGrantsPage(deps, pagination, filter, sortOrder),
