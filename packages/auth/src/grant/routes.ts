@@ -23,7 +23,7 @@ import { canSkipInteraction } from './utils'
 import { GNAPErrorCode, GNAPServerRouteError } from '../shared/gnapErrors'
 import { generateRouteLogs } from '../shared/utils'
 import { TenantService } from '../tenant/service'
-import { isTenantWithIdp } from '../tenant/model'
+import { Tenant, isTenantWithIdp } from '../tenant/model'
 
 interface ServiceDependencies extends BaseService {
   grantService: GrantService
@@ -136,7 +136,7 @@ async function createGrant(
   if (noInteractionRequired) {
     await createApprovedGrant(deps, tenantId, ctx)
   } else {
-    await createPendingGrant(deps, tenantId, ctx)
+    await createPendingGrant(deps, tenant, ctx)
   }
 }
 
@@ -183,7 +183,7 @@ async function createApprovedGrant(
 
 async function createPendingGrant(
   deps: ServiceDependencies,
-  tenantId: string,
+  tenant: Tenant,
   ctx: CreateContext
 ): Promise<void> {
   const { body } = ctx.request
@@ -196,8 +196,7 @@ async function createPendingGrant(
     )
   }
 
-  const tenant = await deps.tenantService.get(tenantId)
-  if (!tenant || !isTenantWithIdp(tenant)) {
+  if (!isTenantWithIdp(tenant)) {
     throw new GNAPServerRouteError(
       400,
       GNAPErrorCode.InvalidRequest,
@@ -217,7 +216,7 @@ async function createPendingGrant(
   const trx = await Grant.startTransaction()
 
   try {
-    const grant = await grantService.create(body, tenantId, trx)
+    const grant = await grantService.create(body, tenant.id, trx)
     const interaction = await interactionService.create(grant.id, trx)
     await trx.commit()
 

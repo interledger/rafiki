@@ -14,11 +14,7 @@ import { GrantService } from '../grant/service'
 
 export interface InteractionService {
   getInteractionByGrant(grantId: string): Promise<InteractionWithGrant | void>
-  getBySession(
-    id: string,
-    nonce: string,
-    tenantId?: string
-  ): Promise<InteractionWithGrant | void>
+  getBySession(id: string, nonce: string): Promise<InteractionWithGrant | void>
   getByRef(ref: string): Promise<InteractionWithGrant | void>
   create(grantId: string, trx?: Transaction): Promise<Interaction>
   approve(id: string): Promise<Interaction | void>
