@@ -189,6 +189,14 @@ Authentication is disabled by default for ease of development, but it can be ena
 pnpm localenv:compose:adminauth up
 ```
 
+The Admin UI requires a valid API secret and tenant id to make requests to the Admin APIs, which must be submitted via a form on the frontend. For our convenience, we log a link on MASE start that can be used to access the Admin UI and set the credentials automatically. The credentials used pull from the MASE’s `SIGNATURE_SECRET` and `OPERATOR_TENANT_ID` environment variables.
+
+```
+cloud-nine-mock-ase-1  | Local Dev Setup:
+cloud-nine-mock-ase-1  | Use this URL to access the frontend with operator tenant credentials:
+cloud-nine-mock-ase-1  | http://localhost:3010/?tenantId=438fa74a-fa7d-4317-9ced-dde32ece1787&apiSecret=iyIgCprjb9uL8wFckR%2BpLEkJWMB7FJhgkvqhTQR%2F964%3D
+```
+
 For additional details on using the Rafiki Admin application within the Local Playground, including enabling authentication and managing users, see the [Local Playground Rafiki Admin](https://rafiki.dev/integration/playground/overview/#rafiki-admin) documentation.
 
 # Reference
