@@ -1,36 +1,26 @@
 FROM node:20-alpine3.20 AS base
 
-RUN adduser -D rafiki
 WORKDIR /home/rafiki
 
-# As the Rafiki user, install Corepack and pnpm
-USER rafiki
-RUN mkdir -p /home/rafiki/.local/bin
-ENV PATH="/home/rafiki/.local/bin:$PATH"
-ENV PNPM_HOME="/home/rafiki/pnpm"
+ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
-RUN corepack enable --install-directory ~/.local/bin
+
+RUN corepack enable
 RUN corepack prepare pnpm@8.7.4 --activate
 
 COPY pnpm-lock.yaml ./
 
-# Fetch the pnpm dependencies, but use a local cache.
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
     pnpm fetch \
     | grep -v "cross-device link not permitted\|Falling back to copying packages from store"
 
 FROM base AS prod-deps
-# Copy the package.json files and install the production dependencies
+
 COPY package.json pnpm-workspace.yaml .npmrc ./
 COPY packages/auth/knexfile.js ./packages/auth/knexfile.js
 COPY packages/auth/package.json ./packages/auth/package.json
 COPY packages/token-introspection/package.json ./packages/token-introspection/package.json
-# Chown the copied packages folder back to the Rafiki user
-USER root
-RUN chown -v -R rafiki:rafiki /home/rafiki/packages
 
-# As the Rafiki user, install the production dependencies
-USER rafiki
 RUN pnpm clean
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
     pnpm install \
@@ -46,10 +36,6 @@ COPY package.json pnpm-workspace.yaml .npmrc tsconfig.json tsconfig.build.json .
 COPY packages/auth ./packages/auth
 COPY packages/token-introspection ./packages/token-introspection
 
-USER root
-RUN chown -v -R rafiki:rafiki /home/rafiki/packages
-
-USER rafiki
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
     pnpm install \
     --recursive \
@@ -75,7 +61,10 @@ COPY --from=builder /home/rafiki/packages/auth/dist ./packages/auth/dist
 COPY --from=builder /home/rafiki/packages/token-introspection/dist ./packages/token-introspection/dist
 
 USER root
-RUN chown -v -R rafiki:rafiki /home/rafiki/packages
+
+# For additional paranoia, we make it so that the Rafiki user has no write access to the packages
+RUN chown -R :rafiki /home/rafiki/packages
+RUN chmod -R 750 /home/rafiki/packages
 
 USER rafiki
 CMD ["node", "/home/rafiki/packages/auth/dist/index.js"]
