@@ -5,7 +5,7 @@ meta {
 }
 
 post {
-  url: {{senderOpenPaymentsHost}}/{{senderTenantId}}/quotes
+  url: {{senderOpenPaymentsHost}}/quotes
   body: json
   auth: none
 }
@@ -17,7 +17,7 @@ headers {
 body:json {
   {
       "walletAddress": "{{senderWalletAddress}}",
-      "receiver": "{{receiverOpenPaymentsHost}}/{{receiverTenantId}}/incoming-payments/{{incomingPaymentId}}",
+      "receiver": "{{receiverOpenPaymentsHost}}/incoming-payments/{{incomingPaymentId}}",
       "method": "ilp"
   }
 }
