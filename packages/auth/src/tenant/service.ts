@@ -4,8 +4,8 @@ import { Tenant } from './model'
 
 export interface CreateOptions {
   id: string
-  idpConsentUrl: string
-  idpSecret: string
+  idpConsentUrl?: string
+  idpSecret?: string
 }
 
 export interface TenantService {

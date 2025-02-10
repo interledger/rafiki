@@ -9,16 +9,16 @@
     "astro": "astro"
   },
   "dependencies": {
-    "@astrojs/markdown-remark": "^5.3.0",
-    "@astrojs/starlight": "^0.29.0",
-    "@interledger/docs-design-system": "^0.5.2",
-    "astro": "4.16.18",
-    "astro-graphql-plugin": "^0.3.0",
-    "graphql": "16.8.1",
+    "@astrojs/markdown-remark": "^6.1.0",
+    "@astrojs/starlight": "^0.31.1",
+    "@interledger/docs-design-system": "^0.6.1",
+    "astro": "5.2.0",
+    "astro-graphql-plugin": "^0.4.2",
+    "graphql": "16.10.0",
     "mermaid": "^11.4.1",
     "rehype-autolink-headings": "^7.1.0",
     "rehype-mathjax": "^6.0.0",
     "remark-math": "^6.0.0",
-    "starlight-links-validator": "^0.13.2"
+    "starlight-links-validator": "^0.14.1"
   }
 }

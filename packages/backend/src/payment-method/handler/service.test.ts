@@ -47,6 +47,7 @@ describe('PaymentMethodHandlerService', (): void => {
     test('calls ilpPaymentService for ILP payment type', async (): Promise<void> => {
       const asset = await createAsset(deps)
       const walletAddress = await createWalletAddress(deps, {
+        tenantId: Config.operatorTenantId,
         assetId: asset.id
       })
 
@@ -75,6 +76,7 @@ describe('PaymentMethodHandlerService', (): void => {
     test('calls localPaymentService for local payment type', async (): Promise<void> => {
       const asset = await createAsset(deps)
       const walletAddress = await createWalletAddress(deps, {
+        tenantId: Config.operatorTenantId,
         assetId: asset.id
       })
 
@@ -105,6 +107,7 @@ describe('PaymentMethodHandlerService', (): void => {
     test('calls ilpPaymentService for ILP payment type', async (): Promise<void> => {
       const asset = await createAsset(deps)
       const walletAddress = await createWalletAddress(deps, {
+        tenantId: Config.operatorTenantId,
         assetId: asset.id
       })
       const { receiver, outgoingPayment } =
@@ -139,6 +142,7 @@ describe('PaymentMethodHandlerService', (): void => {
     test('calls localPaymentService for local payment type', async (): Promise<void> => {
       const asset = await createAsset(deps)
       const walletAddress = await createWalletAddress(deps, {
+        tenantId: Config.operatorTenantId,
         assetId: asset.id
       })
       const { receiver, outgoingPayment } =

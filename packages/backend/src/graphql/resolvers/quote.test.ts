@@ -71,6 +71,7 @@ describe('Quote Resolvers', (): void => {
   describe('Query.quote', (): void => {
     test('success', async (): Promise<void> => {
       const { id: walletAddressId } = await createWalletAddress(deps, {
+        tenantId: Config.operatorTenantId,
         assetId: asset.id
       })
       const quote = await createWalletAddressQuote(walletAddressId)
@@ -189,6 +190,7 @@ describe('Quote Resolvers', (): void => {
     `('$type', async ({ withAmount, receiveAmount }): Promise<void> => {
       const amount = withAmount ? debitAmount : undefined
       const { id: walletAddressId } = await createWalletAddress(deps, {
+        tenantId: Config.operatorTenantId,
         assetId: asset.id
       })
       const input = {
@@ -300,6 +302,7 @@ describe('Quote Resolvers', (): void => {
     beforeEach(async (): Promise<void> => {
       walletAddressId = (
         await createWalletAddress(deps, {
+          tenantId: Config.operatorTenantId,
           assetId: asset.id
         })
       ).id

@@ -413,7 +413,9 @@ describe('Models', (): void => {
       test.each(deactivatedAtCases)(
         '$description',
         async ({ value, expectedIsActive }) => {
-          const walletAddress = await createWalletAddress(deps)
+          const walletAddress = await createWalletAddress(deps, {
+            tenantId: Config.operatorTenantId
+          })
           if (value) {
             await walletAddress
               .$query(appContainer.knex)

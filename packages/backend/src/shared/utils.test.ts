@@ -9,7 +9,9 @@ import {
   poll,
   requestWithTimeout,
   sleep,
-  getTenantFromApiSignature
+  getTenantFromApiSignature,
+  ensureTrailingSlash,
+  urlWithoutTenantId
 } from './utils'
 import { AppServices, AppContext } from '../app'
 import { TestContainer, createTestApp } from '../tests/app'
@@ -216,7 +218,9 @@ describe('utils', (): void => {
       )
 
       const timestamp = signature.split(', ')[0].split('=')[1]
-      const now = new Date((Number(timestamp) + 60) * 1000)
+      const now = new Date(
+        Number(timestamp) + (Config.adminApiSignatureTtlSeconds + 1) * 1000
+      )
       jest.useFakeTimers({ now })
       const ctx = createContext<AppContext>(
         {
@@ -245,11 +249,6 @@ describe('utils', (): void => {
         Config.adminApiSignatureVersion,
         requestBody
       )
-      const key = `signature:${signature}`
-      const op = redis.multi()
-      op.set(key, signature)
-      op.expire(key, Config.adminApiSignatureTtl * 1000)
-      await op.exec()
       const ctx = createContext<AppContext>(
         {
           headers: {
@@ -262,6 +261,13 @@ describe('utils', (): void => {
         appContainer.container
       )
       ctx.request.body = requestBody
+
+      await expect(
+        verifyApiSignature(ctx, {
+          ...Config,
+          adminApiSecret: 'test-secret'
+        })
+      ).resolves.toBe(true)
 
       const verified = await verifyApiSignature(ctx, {
         ...Config,
@@ -443,5 +449,21 @@ describe('utils', (): void => {
       expect(result).toBeUndefined()
       expect(getSpy).toHaveBeenCalled()
     })
+  })
+
+  test('test ensuring trailing slash', async (): Promise<void> => {
+    const path = '/utils'
+
+    expect(ensureTrailingSlash(path)).toBe(`${path}/`)
+    expect(ensureTrailingSlash(`${path}/`)).toBe(`${path}/`)
+  })
+
+  test('test tenant id stripped from url', async (): Promise<void> => {
+    expect(
+      urlWithoutTenantId(
+        'http://happy-life-bank-test-auth:4106/cf5fd7d3-1eb1-4041-8e43-ba45747e9e5d'
+      )
+    ).toBe('http://happy-life-bank-test-auth:4106')
+    expect(urlWithoutTenantId('http://happy-life')).toBe('http://happy-life')
   })
 })

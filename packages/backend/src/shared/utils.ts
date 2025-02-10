@@ -98,7 +98,7 @@ export async function poll<T>(args: PollArgs<T>): Promise<T> {
 }
 
 /**
- * Omit distrubuted to all types in a union.
+ * Omit distributed to all types in a union.
  * @example
  * type WithoutA = UnionOmit<{ a: number; c: number } | { b: number }, 'a'> // { c: number } | { b: number }
  * const withoutAOK: WithoutA = { c: 1 } // OK
@@ -114,14 +114,10 @@ function getSignatureParts(signature: string) {
   const signatureParts = signature.split(', ')
   const timestamp = signatureParts[0].split('=')[1]
   const signatureVersionAndDigest = signatureParts[1].split('=')
-  const signatureVersion = signatureVersionAndDigest[0].replace('v', '')
-  const signatureDigest = signatureVersionAndDigest[1]
+  const version = signatureVersionAndDigest[0].replace('v', '')
+  const digest = signatureVersionAndDigest[1]
 
-  return {
-    timestamp,
-    version: signatureVersion,
-    digest: signatureDigest
-  }
+  return { timestamp, version, digest }
 }
 
 function verifyApiSignatureDigest(
@@ -155,9 +151,9 @@ async function canApiSignatureBeProcessed(
   config: IAppConfig
 ): Promise<boolean> {
   const { timestamp } = getSignatureParts(signature)
-  const signatureTime = Number(timestamp) * 1000
+  const signatureTime = Number(timestamp)
   const currentTime = Date.now()
-  const ttlMilliseconds = config.adminApiSignatureTtl * 1000
+  const ttlMilliseconds = config.adminApiSignatureTtlSeconds * 1000
 
   if (currentTime - signatureTime > ttlMilliseconds) return false
 
@@ -239,4 +235,17 @@ export async function verifyApiSignature(
     config.adminApiSignatureVersion,
     config.adminApiSecret as string
   )
+}
+
+export function ensureTrailingSlash(str: string): string {
+  if (!str.endsWith('/')) return `${str}/`
+  return str
+}
+
+/**
+ * @param url remove the tenant id from the {url}
+ */
+export function urlWithoutTenantId(url: string): string {
+  if (url.length > 36 && validateId(url.slice(-36))) return url.slice(0, -37)
+  return url
 }

@@ -73,6 +73,7 @@ describe('Webhook Service', (): void => {
   })
 
   afterEach(async (): Promise<void> => {
+    jest.useRealTimers()
     await truncateTables(knex)
   })
 
@@ -116,8 +117,12 @@ describe('Webhook Service', (): void => {
     let events: WebhookEvent[] = []
 
     beforeEach(async (): Promise<void> => {
-      walletAddressIn = await createWalletAddress(deps)
-      walletAddressOut = await createWalletAddress(deps)
+      walletAddressIn = await createWalletAddress(deps, {
+        tenantId: Config.operatorTenantId
+      })
+      walletAddressOut = await createWalletAddress(deps, {
+        tenantId: Config.operatorTenantId
+      })
       incomingPaymentIds = [
         (
           await createIncomingPayment(deps, {
@@ -317,16 +322,6 @@ describe('Webhook Service', (): void => {
     ): Scope {
       return nock(webhookUrl.origin)
         .post(webhookUrl.pathname, function (this: Definition, body) {
-          assert.ok(this.headers)
-          const headers = this.headers as Record<string, ReplyHeaderValue>
-          const signature = headers['rafiki-signature']
-          expect(
-            generateWebhookSignature(
-              body,
-              WEBHOOK_SECRET,
-              Config.signatureVersion
-            )
-          ).toEqual(signature)
           expect(body).toMatchObject({
             id: expectedEvent.id,
             type: expectedEvent.type,
@@ -354,6 +349,32 @@ describe('Webhook Service', (): void => {
         statusCode: 200,
         processAt: null
       })
+    })
+
+    test('Signs webhook event', async (): Promise<void> => {
+      jest.useFakeTimers({
+        now: Date.now(),
+        advanceTimers: true // needed for nock when using fake timers
+      })
+
+      const scope = nock(webhookUrl.origin)
+        .post(webhookUrl.pathname, function (this: Definition, body) {
+          assert.ok(this.headers)
+          const headers = this.headers as Record<string, ReplyHeaderValue>
+          const signature = headers['rafiki-signature']
+          expect(
+            generateWebhookSignature(
+              body,
+              WEBHOOK_SECRET,
+              Config.signatureVersion
+            )
+          ).toEqual(signature)
+          return true
+        })
+        .reply(200)
+
+      await expect(webhookService.processNext()).resolves.toEqual(event.id)
+      scope.done()
     })
 
     test.each([[201], [400], [504]])(

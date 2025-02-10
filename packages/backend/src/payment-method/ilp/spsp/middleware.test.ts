@@ -37,6 +37,7 @@ describe('SPSP Middleware', (): void => {
   beforeEach(async (): Promise<void> => {
     const asset = await createAsset(deps)
     walletAddress = await createWalletAddress(deps, {
+      tenantId: Config.operatorTenantId,
       assetId: asset.id
     })
     ctx = setup<SPSPWalletAddressContext>({

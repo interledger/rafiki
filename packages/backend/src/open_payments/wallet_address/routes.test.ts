@@ -62,6 +62,7 @@ describe('Wallet Address Routes', (): void => {
 
     test('throws 404 error for inactive wallet address', async (): Promise<void> => {
       const walletAddress = await createWalletAddress(deps, {
+        tenantId: Config.operatorTenantId,
         publicName: faker.person.firstName()
       })
 
@@ -102,6 +103,7 @@ describe('Wallet Address Routes', (): void => {
       addPropNotVisibleInOpenPayments.fieldValue = 'it-is-not'
       addPropNotVisibleInOpenPayments.visibleInOpenPayments = false
       const walletAddress = await createWalletAddress(deps, {
+        tenantId: config.operatorTenantId,
         publicName: faker.person.firstName(),
         additionalProperties: [addProp, addPropNotVisibleInOpenPayments]
       })
@@ -118,8 +120,9 @@ describe('Wallet Address Routes', (): void => {
         publicName: walletAddress.publicName,
         assetCode: walletAddress.asset.code,
         assetScale: walletAddress.asset.scale,
-        authServer: config.authServerGrantUrl,
-        resourceServer: config.openPaymentsUrl,
+        // Ensure the tenant id is returned for auth and resource server:
+        authServer: `${config.authServerGrantUrl}/${config.operatorTenantId}`,
+        resourceServer: `${config.openPaymentsUrl}/${config.operatorTenantId}`,
         additionalProperties: {
           [addProp.fieldKey]: addProp.fieldValue
         }
@@ -145,6 +148,7 @@ describe('Wallet Address Routes', (): void => {
 
     test('returns wallet address', async (): Promise<void> => {
       const walletAddress = await createWalletAddress(deps, {
+        tenantId: config.operatorTenantId,
         publicName: faker.person.firstName()
       })
 
@@ -160,8 +164,9 @@ describe('Wallet Address Routes', (): void => {
         publicName: walletAddress.publicName,
         assetCode: walletAddress.asset.code,
         assetScale: walletAddress.asset.scale,
-        authServer: config.authServerGrantUrl,
-        resourceServer: config.openPaymentsUrl
+        // Ensure the tenant id is returned for auth and resource server:
+        authServer: `${config.authServerGrantUrl}/${config.operatorTenantId}`,
+        resourceServer: `${config.openPaymentsUrl}/${config.operatorTenantId}`
       })
     })
   })

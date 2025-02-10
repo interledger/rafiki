@@ -7,7 +7,7 @@ export function generateApiSignature(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   body: any
 ): string {
-  const timestamp = Math.round(new Date().getTime() / 1000)
+  const timestamp = Date.now()
   const payload = `${timestamp}.${canonicalize(body)}`
   const hmac = createHmac('sha256', secret)
   hmac.update(payload)

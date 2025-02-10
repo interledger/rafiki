@@ -5,8 +5,8 @@ export class Tenant extends BaseModel {
     return 'tenants'
   }
 
-  public idpConsentUrl!: string
-  public idpSecret!: string
+  public idpConsentUrl?: string
+  public idpSecret?: string
 
   public deletedAt?: Date
 }

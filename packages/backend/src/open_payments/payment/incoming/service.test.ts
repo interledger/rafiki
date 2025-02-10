@@ -53,7 +53,10 @@ describe('Incoming Payment Service', (): void => {
 
   beforeEach(async (): Promise<void> => {
     asset = await createAsset(deps)
-    const address = await createWalletAddress(deps, { assetId: asset.id })
+    const address = await createWalletAddress(deps, {
+      tenantId: config.operatorTenantId,
+      assetId: asset.id
+    })
     walletAddressId = address.id
     client = address.url
   })

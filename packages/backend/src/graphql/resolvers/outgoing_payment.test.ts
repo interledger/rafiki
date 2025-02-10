@@ -99,6 +99,7 @@ describe('OutgoingPayment Resolvers', (): void => {
     beforeEach(async (): Promise<void> => {
       walletAddressId = (
         await createWalletAddress(deps, {
+          tenantId: Config.operatorTenantId,
           assetId: asset.id
         })
       ).id
@@ -135,13 +136,16 @@ describe('OutgoingPayment Resolvers', (): void => {
 
       beforeEach(async (): Promise<void> => {
         const firstReceiverWalletAddress = await createWalletAddress(deps, {
+          tenantId: Config.operatorTenantId,
           assetId: asset.id
         })
         const secondWalletAddress = await createWalletAddress(deps, {
+          tenantId: Config.operatorTenantId,
           assetId: asset.id
         })
 
         const secondReceiverWalletAddress = await createWalletAddress(deps, {
+          tenantId: Config.operatorTenantId,
           assetId: asset.id
         })
 
@@ -326,6 +330,7 @@ describe('OutgoingPayment Resolvers', (): void => {
         const grantId = uuid()
 
         const { id: walletAddressId } = await createWalletAddress(deps, {
+          tenantId: Config.operatorTenantId,
           assetId: asset.id
         })
 
@@ -365,6 +370,7 @@ describe('OutgoingPayment Resolvers', (): void => {
 
       beforeEach(async (): Promise<void> => {
         const { id: walletAddressId } = await createWalletAddress(deps, {
+          tenantId: Config.operatorTenantId,
           assetId: asset.id
         })
         payment = await createPayment({ walletAddressId, metadata })
@@ -553,6 +559,7 @@ describe('OutgoingPayment Resolvers', (): void => {
 
     test('success (metadata)', async (): Promise<void> => {
       const { id: walletAddressId } = await createWalletAddress(deps, {
+        tenantId: Config.operatorTenantId,
         assetId: asset.id
       })
       const payment = await createPayment({ walletAddressId, metadata })
@@ -689,6 +696,7 @@ describe('OutgoingPayment Resolvers', (): void => {
 
     test('create', async (): Promise<void> => {
       const walletAddress = await createWalletAddress(deps, {
+        tenantId: Config.operatorTenantId,
         assetId: asset.id
       })
       const payment = await createPayment({ walletAddressId: walletAddress.id })
@@ -840,6 +848,7 @@ describe('OutgoingPayment Resolvers', (): void => {
     let payment: OutgoingPaymentModel
     beforeEach(async () => {
       const walletAddress = await createWalletAddress(deps, {
+        tenantId: Config.operatorTenantId,
         assetId: asset.id
       })
 
@@ -956,6 +965,7 @@ describe('OutgoingPayment Resolvers', (): void => {
     beforeEach(async (): Promise<void> => {
       walletAddressId = (
         await createWalletAddress(deps, {
+          tenantId: Config.operatorTenantId,
           assetId: asset.id
         })
       ).id
