@@ -4,6 +4,7 @@
 import http from 'k6/http'
 import { fail } from 'k6'
 import { createHMAC } from 'k6/crypto'
+import { textSummary } from 'https://jslib.k6.io/k6-summary/0.0.2/index.js'
 import { canonicalize } from '../dist/json-canonicalize.bundle.js'
 
 export const options = {
@@ -158,4 +159,29 @@ export default function (data) {
   }
 
   request(createOutgoingPaymentPayload)
+}
+
+export function handleSummary(data) {
+  const requestsPerSecond = data.metrics.http_reqs.values.rate
+  const iterationsPerSecond = data.metrics.iterations.values.rate
+  const failedRequests = data.metrics.http_req_failed.values.passes
+  const failureRate = data.metrics.http_req_failed.values.rate
+  const requests = data.metrics.http_reqs.values.count
+
+  const summaryText = `
+  **Test Configuration**:
+  - VUs: ${options.vus}
+  - Duration: ${options.duration}
+
+  **Test Metrics**:
+  - Requests/s: ${requestsPerSecond.toFixed(2)}
+  - Iterations/s: ${iterationsPerSecond.toFixed(2)}
+  - Failed Requests: ${failureRate.toFixed(2)}% (${failedRequests} of ${requests})
+    `
+
+  return {
+    // Preserve standard output w/ textSummary
+    stdout: textSummary(data),
+    'k6test-summary.txt': summaryText // saves to file
+  }
 }
