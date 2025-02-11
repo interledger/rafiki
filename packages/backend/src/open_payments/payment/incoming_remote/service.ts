@@ -112,7 +112,7 @@ async function createIncomingPayment(
     walletAddress.resourceServer ?? new URL(walletAddress.id).origin
 
   const grantOptions = {
-    authServer: urlWithoutTenantId(walletAddress.authServer),
+    authServer: walletAddress.authServer,
     accessType: AccessType.IncomingPayment,
     accessActions: [AccessAction.Create, AccessAction.ReadAll]
   }
@@ -198,7 +198,7 @@ async function getIncomingPayment(
   OpenPaymentsIncomingPaymentWithPaymentMethods | RemoteIncomingPaymentError
 > {
   const grantOptions = {
-    authServer: urlWithoutTenantId(authServerUrl),
+    authServer: authServerUrl,
     accessType: AccessType.IncomingPayment,
     accessActions: [AccessAction.ReadAll]
   }

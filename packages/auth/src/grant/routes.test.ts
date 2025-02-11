@@ -913,13 +913,13 @@ describe('Grant Routes', (): void => {
         )
 
         ctx.request.body = {
-          interact_ref: undefined
+          interact_ref: interaction.ref
         }
 
         await expect(grantRoutes.continue(ctx)).rejects.toMatchObject({
-          status: 401,
-          code: GNAPErrorCode.InvalidRequest,
-          message: 'missing interaction reference'
+          status: 404,
+          code: GNAPErrorCode.InvalidContinuation,
+          message: 'grant not found'
         })
       })
 

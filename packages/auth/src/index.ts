@@ -255,16 +255,6 @@ export function initIocContainer(
     return new Redis(config.redisUrl, { tls: config.redisTls })
   })
 
-  container.singleton(
-    'tenantService',
-    async (deps: IocContract<AppServices>) => {
-      return createTenantService({
-        logger: await deps.use('logger'),
-        knex: await deps.use('knex')
-      })
-    }
-  )
-
   return container
 }
 
