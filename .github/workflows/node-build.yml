@@ -377,7 +377,7 @@ jobs:
             // GitHub comment size limit handling
             const truncatedSummary = summaryContent.length > 65000 ? summaryContent.slice(-65000) : summaryContent;
 
-            const commentBody = `### Performance Test Results 🚀\n\`\`\`\n${truncatedSummary}\n\`\`\``;
+            const commentBody = `### Performance Test Results 🚀\n${truncatedSummary}`;
 
             const { owner, repo } = context.repo;
             const prNumber = context.payload.pull_request?.number;
