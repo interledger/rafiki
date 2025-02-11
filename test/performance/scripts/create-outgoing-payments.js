@@ -169,11 +169,11 @@ export function handleSummary(data) {
   const requests = data.metrics.http_reqs.values.count
 
   const summaryText = `
-  **Test Configuration**:
+  **Configuration**:
   - VUs: ${options.vus}
   - Duration: ${options.duration}
 
-  **Test Metrics**:
+  **Metrics**:
   - Requests/s: ${requestsPerSecond.toFixed(2)}
   - Iterations/s: ${iterationsPerSecond.toFixed(2)}
   - Failed Requests: ${failureRate.toFixed(2)}% (${failedRequests} of ${requests})
