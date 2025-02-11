@@ -358,61 +358,6 @@ jobs:
         if: always()
         run: cat mases.log
 
-      # - name: Post/Update Performance Test Results as PR Comment
-      #   if: always()
-      #   uses: actions/github-script@v7
-      #   with:
-      #     github-token: ${{ secrets.GITHUB_TOKEN }}
-      #     script: |
-      #       const fs = require('fs');
-      #       const path = './test/performance/k6test-summary.txt';
-      #       let summaryContent = '';
-
-      #       if (fs.existsSync(path)) {
-      #         summaryContent = fs.readFileSync(path, 'utf8');
-      #       } else {
-      #         summaryContent = 'Performance test summary not found.';
-      #       }
-
-      #       // GitHub comment size limit handling
-      #       const truncatedSummary = summaryContent.length > 65000 ? summaryContent.slice(-65000) : summaryContent;
-
-      #       const commentBody = `### Performance Test Results 🚀\n${truncatedSummary}`;
-
-      #       const { owner, repo } = context.repo;
-      #       const prNumber = context.payload.pull_request?.number;
-
-      #       if (prNumber) {
-      #         // Fetch existing comments on the PR
-      #         const comments = await github.rest.issues.listComments({
-      #           owner,
-      #           repo,
-      #           issue_number: prNumber
-      #         });
-
-      #         // Look for an existing comment with the "Performance Test Results" title
-      #         const existingComment = comments.data.find(comment => comment.body.includes('### Performance Test Results'));
-
-      #         if (existingComment) {
-      #           // If a comment exists, update it
-      #           await github.rest.issues.updateComment({
-      #             owner,
-      #             repo,
-      #             comment_id: existingComment.id,
-      #             body: commentBody
-      #           });
-      #         } else {
-      #           // If no comment exists, create a new one
-      #           await github.rest.issues.createComment({
-      #             owner,
-      #             repo,
-      #             issue_number: prNumber,
-      #             body: commentBody
-      #           });
-      #         }
-      #       } else {
-      #         console.log("No PR detected, skipping comment.");
-      #       }
       - name: Post/Update Performance Test Results as PR Comment
         if: always()
         uses: actions/github-script@v7
@@ -432,14 +377,9 @@ jobs:
             // GitHub comment size limit handling
             const truncatedSummary = summaryContent.length > 65000 ? summaryContent.slice(-65000) : summaryContent;
 
-            // Construct GitHub Action log link
-            const runId = context.runId;
-            const repo = context.repo.repo;
-            const owner = context.repo.owner;
-            const jobUrl = `https://github.com/${owner}/${repo}/actions/runs/${runId}`;
+            const commentBody = `### Performance Test Results 🚀\n${truncatedSummary}`;
 
-            const commentBody = `### Performance Test Results 🚀\n${truncatedSummary}\n\n[🔗 View Full Logs]( ${jobUrl} )`;
-
+            const { owner, repo } = context.repo;
             const prNumber = context.payload.pull_request?.number;
 
             if (prNumber) {
