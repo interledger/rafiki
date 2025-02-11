@@ -12,7 +12,7 @@ overrides:
   katex: '>=0.16.21'
   express@<4.19.2: '>=4.19.2'
   jose@>=3.0.0 <=4.15.4: '>=4.15.5'
-  vite@>=4.0.0 <=4.5.2: '>=4.5.3'
+  vite@>=4.0.0 <=4.5.2: '>=4.5.9'
   undici@>=5.0.0: ^5.28.5
   undici@>=6.0.0: ^6.21.1
   tar@<6.2.1: '>=6.2.1'
@@ -22010,7 +22010,7 @@ packages:
   /vitefu@1.0.5(vite@6.0.11):
     resolution: {integrity: sha512-h4Vflt9gxODPFNGPwp4zAMZRpZR7eslzwH2c5hn5kNZ5rhnKyRJ50U+yGCdc2IRaBs8O4haIgLNGrV5CrpMsCA==}
     peerDependencies:
-      vite: '>=4.5.3'
+      vite: '>=4.5.9'
     peerDependenciesMeta:
       vite:
         optional: true
