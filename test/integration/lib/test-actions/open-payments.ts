@@ -17,7 +17,8 @@ import {
   poll,
   pollCondition,
   wait,
-  urlWithoutTenantId
+  urlWithoutTenantId,
+  addTenantToIncomingPaymentId
 } from '../utils'
 import { WebhookEventType } from 'mock-account-service-lib'
 import {
@@ -182,9 +183,11 @@ async function createIncomingPayment(
     })
   )
 
+  if (!opts?.tenantId) return incomingPayment
+
   return {
     ...incomingPayment,
-    id: addTenantToIncomingPaymentId(incomingPayment.id, opts?.tenantId)
+    id: addTenantToIncomingPaymentId(opts.tenantId, incomingPayment.id)
   }
 }
 
@@ -399,20 +402,4 @@ async function getPublicIncomingPayment(
   expect(incomingPayment.receivedAmount.value).toBe(amountValueToSend)
 
   return incomingPayment
-}
-
-function addTenantToIncomingPaymentId(
-  incomingPaymentId: string,
-  tenantId?: string
-): string {
-  if (!tenantId) return incomingPaymentId
-
-  const params = incomingPaymentId.split('incoming-payments')
-  // Check if id already has tenantId
-  if (params[0].split('/').at(-1) === tenantId) {
-    return incomingPaymentId
-  }
-
-  incomingPaymentId = params[0] + tenantId + '/incoming-payments' + params[1]
-  return incomingPaymentId
 }

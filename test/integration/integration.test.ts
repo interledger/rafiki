@@ -333,7 +333,10 @@ describe('Integration tests', (): void => {
             'https://happy-life-bank-test-backend:4100/accounts/pfry'
         }
 
-        const receiver = await createReceiver(createReceiverInput)
+        const receiver = await createReceiver(
+          createReceiverInput,
+          hlb.config.operatorTenantId
+        )
         const quote = await createQuote({
           walletAddressId: senderWalletAddressId,
           receiver: receiver.id
@@ -382,7 +385,10 @@ describe('Integration tests', (): void => {
             'https://happy-life-bank-test-backend:4100/accounts/lars'
         }
 
-        const receiver = await createReceiver(createReceiverInput)
+        const receiver = await createReceiver(
+          createReceiverInput,
+          hlb.config.operatorTenantId
+        )
         assert(receiver.incomingAmount)
 
         const quote = await createQuote({
