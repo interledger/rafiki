@@ -31,7 +31,6 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
   await checkAuthAndRedirect(request.url, cookies)
 
   const tenantId = params.tenantId
-
   const result = z.string().uuid().safeParse(tenantId)
   if (!result.success) {
     throw json(null, { status: 400, statusText: 'Invalid tenant ID.' })
@@ -42,13 +41,11 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
     throw json(null, { status: 404, statusText: 'Tenant not found.' })
 
   const me = await whoAmI(request)
-  const isOperator = me.isOperator
-
-  return json({ tenant, isOperator })
+  return json({ tenant, me })
 }
 
 export default function ViewTenantPage() {
-  const { tenant, isOperator } = useLoaderData<typeof loader>()
+  const { tenant, me } = useLoaderData<typeof loader>()
   const response = useActionData<typeof action>()
   const navigation = useNavigation()
   const [formData, setFormData] = useState<FormData>()
@@ -99,12 +96,6 @@ export default function ViewTenantPage() {
                     readOnly
                   />
                   <Input
-                    label='Is Operator'
-                    value={tenant.isOperator ? 'Yes' : 'No'}
-                    disabled
-                    readOnly
-                  />
-                  <Input
                     label='Public Name'
                     name='publicName'
                     defaultValue={tenant.publicName ?? undefined}
@@ -147,6 +138,7 @@ export default function ViewTenantPage() {
                     label='API Secret'
                     defaultValue={tenant.apiSecret ?? undefined}
                     required
+                    disabled
                   />
                 </div>
                 <div className='flex justify-end p-4'>
@@ -205,20 +197,17 @@ export default function ViewTenantPage() {
         {/* Identity Provider Information - END */}
 
         {/* DELETE TENANT - Danger zone */}
-        <DangerZone title='Delete Tenant'>
-          <Form method='post' onSubmit={submitHandler}>
-            <Input type='hidden' name='id' value={tenant.id} />
-            <Input type='hidden' name='intent' value='delete' />
-            <Button
-              disabled={!isOperator}
-              type='submit'
-              intent='danger'
-              aria-label='delete tenant'
-            >
-              Delete tenant
-            </Button>
-          </Form>
-        </DangerZone>
+        {me.isOperator && me.id !== tenant.id && (
+          <DangerZone title='Delete Tenant'>
+            <Form method='post' onSubmit={submitHandler}>
+              <Input type='hidden' name='id' value={tenant.id} />
+              <Input type='hidden' name='intent' value='delete' />
+              <Button type='submit' intent='danger' aria-label='delete tenant'>
+                Delete tenant
+              </Button>
+            </Form>
+          </DangerZone>
+        )}
       </div>
       <ConfirmationDialog
         ref={dialogRef}

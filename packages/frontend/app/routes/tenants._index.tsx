@@ -49,18 +49,13 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     tenantPageInfo,
     previousPageUrl,
     nextPageUrl,
-    isOperator
+    me
   })
 }
 
 export default function TenantsPage() {
-  const {
-    tenantEdges,
-    tenantPageInfo,
-    previousPageUrl,
-    nextPageUrl,
-    isOperator
-  } = useLoaderData<typeof loader>()
+  const { tenantEdges, tenantPageInfo, previousPageUrl, nextPageUrl, me } =
+    useLoaderData<typeof loader>()
   const navigate = useNavigate()
 
   return (
@@ -71,7 +66,7 @@ export default function TenantsPage() {
             <h3 className='text-2xl'>Tenants</h3>
           </div>
           <div className='ml-auto'>
-            {isOperator && (
+            {me.isOperator && (
               <Button aria-label='add new tenant' to='/tenants/create'>
                 Add tenant
               </Button>
@@ -106,7 +101,7 @@ export default function TenantsPage() {
                             </span>
                           )}
                         </span>
-                        {tenant.node.isOperator && (
+                        {me.isOperator && me.id == tenant.node.id && (
                           <Badge color={BadgeColor.Yellow}>Operator</Badge>
                         )}
                       </div>

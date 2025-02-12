@@ -1,8 +1,13 @@
-import { json, type ActionFunctionArgs } from '@remix-run/node'
-import { Form, useActionData, useNavigation } from '@remix-run/react'
+import { json, type ActionFunctionArgs, redirect } from '@remix-run/node'
+import {
+  Form,
+  useActionData,
+  useLoaderData,
+  useNavigation
+} from '@remix-run/react'
 import { PageHeader } from '~/components'
 import { Button, ErrorPanel, Input, PasswordInput } from '~/components/ui'
-import { createTenant } from '~/lib/api/tenant.server'
+import { createTenant, whoAmI } from '~/lib/api/tenant.server'
 import { messageStorage, setMessageAndRedirect } from '~/lib/message.server'
 import { createTenantSchema } from '~/lib/validate.server'
 import type { ZodFieldErrors } from '~/shared/types'
@@ -12,13 +17,16 @@ import { type LoaderFunctionArgs } from '@remix-run/node'
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const cookies = request.headers.get('cookie')
   await checkAuthAndRedirect(request.url, cookies)
-  return null
+  const me = await whoAmI(request)
+  return json({ me })
 }
 
 export default function CreateTenantPage() {
   const response = useActionData<typeof action>()
   const { state } = useNavigation()
   const isSubmitting = state === 'submitting'
+  const { me } = useLoaderData<typeof loader>()
+  if (!me || !me.isOperator) throw redirect('tenants')
 
   return (
     <div className='pt-4 flex flex-col space-y-4'>
@@ -126,14 +134,22 @@ export async function action({ request }: ActionFunctionArgs) {
 
   const formData = Object.fromEntries(await request.formData())
   const result = createTenantSchema.safeParse(formData)
-
   if (!result.success) {
     errors.fieldErrors = result.error.flatten().fieldErrors
     return json({ errors }, { status: 400 })
   }
+  if (
+    result.data.email &&
+    result.data.email.trim().length > 0 &&
+    !new RegExp(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/).test(
+      result.data.email
+    )
+  ) {
+    errors.message = ['Email is invalid.']
+    return json({ errors }, { status: 400 })
+  }
 
   const response = await createTenant(request, { ...result.data })
-
   if (!response?.tenant) {
     errors.message = ['Could not create tenant. Please try again!']
     return json({ errors }, { status: 400 })

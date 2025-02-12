@@ -1551,8 +1551,6 @@ type Tenant implements Model {
   createdAt: String!
   "The date and time that this tenant was deleted."
   deletedAt: String
-  "Is the tenant an Operator tenant."
-  isOperator: Boolean!
 }
 
 type TenantsConnection {

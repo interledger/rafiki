@@ -1454,8 +1454,6 @@ export type Tenant = Model & {
   idpConsentUrl?: Maybe<Scalars['String']['output']>;
   /** Secret used to secure requests from the tenant's identity provider. */
   idpSecret?: Maybe<Scalars['String']['output']>;
-  /** Is the tenant an Operator tenant. */
-  isOperator: Scalars['Boolean']['output'];
   /** Public name for the tenant. */
   publicName?: Maybe<Scalars['String']['output']>;
 };
@@ -2546,7 +2544,6 @@ export type TenantResolvers<ContextType = any, ParentType extends ResolversParen
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   idpConsentUrl?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   idpSecret?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  isOperator?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   publicName?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
@@ -2932,7 +2929,7 @@ export type ListTenantsQueryVariables = Exact<{
 }>;
 
 
-export type ListTenantsQuery = { __typename?: 'Query', tenants: { __typename?: 'TenantsConnection', edges: Array<{ __typename?: 'TenantEdge', node: { __typename?: 'Tenant', id: string, email?: string | null, apiSecret: string, idpConsentUrl?: string | null, idpSecret?: string | null, publicName?: string | null, createdAt: string, deletedAt?: string | null, isOperator: boolean } }>, pageInfo: { __typename?: 'PageInfo', startCursor?: string | null, endCursor?: string | null, hasNextPage: boolean, hasPreviousPage: boolean } } };
+export type ListTenantsQuery = { __typename?: 'Query', tenants: { __typename?: 'TenantsConnection', edges: Array<{ __typename?: 'TenantEdge', node: { __typename?: 'Tenant', id: string, email?: string | null, apiSecret: string, idpConsentUrl?: string | null, idpSecret?: string | null, publicName?: string | null, createdAt: string, deletedAt?: string | null } }>, pageInfo: { __typename?: 'PageInfo', startCursor?: string | null, endCursor?: string | null, hasNextPage: boolean, hasPreviousPage: boolean } } };
 
 export type CreateTenantMutationVariables = Exact<{
   input: CreateTenantInput;
@@ -2960,7 +2957,7 @@ export type GetTenantQueryVariables = Exact<{
 }>;
 
 
-export type GetTenantQuery = { __typename?: 'Query', tenant: { __typename?: 'Tenant', id: string, email?: string | null, apiSecret: string, idpConsentUrl?: string | null, idpSecret?: string | null, publicName?: string | null, createdAt: string, deletedAt?: string | null, isOperator: boolean } };
+export type GetTenantQuery = { __typename?: 'Query', tenant: { __typename?: 'Tenant', id: string, email?: string | null, apiSecret: string, idpConsentUrl?: string | null, idpSecret?: string | null, publicName?: string | null, createdAt: string, deletedAt?: string | null } };
 
 export type WhoAmIQueryVariables = Exact<{ [key: string]: never; }>;
 

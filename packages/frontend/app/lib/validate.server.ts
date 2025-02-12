@@ -132,19 +132,10 @@ export const updateTenantSchema = z
   .object({
     apiSecret: z
       .string()
-      .min(10, { message: 'API Secret should be at least 3 characters long' })
-      .max(255, { message: 'Maximum length of API Secret is 255 characters' })
-      .regex(
-        /^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/,
-        { message: 'API Secret should be Base64 encoded.' }
-      ),
+      .min(10, { message: 'API Secret should be at least 10 characters long' })
+      .max(255, { message: 'Maximum length of API Secret is 255 characters' }),
     publicName: z.string().optional(),
-    email: z
-      .string()
-      .regex(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/, {
-        message: 'Invalid email address.'
-      })
-      .optional(),
+    email: z.string().optional(),
     idpConsentUrl: z.string().optional(),
     idpSecret: z.string().optional()
   })
