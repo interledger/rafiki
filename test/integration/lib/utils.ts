@@ -87,25 +87,3 @@ export function urlWithoutTenantId(url: string): string {
 function validateId(id: string): boolean {
   return validate(id) && version(id) === 4
 }
-
-/**
- * A helper function to add tenantId to incoming payment id.
- * @param tenantId tenant that must be added
- * @param incomingPaymentId the id of the incoming payment
- * @returns the updated incoming payment
- */
-export function addTenantToIncomingPaymentId(
-  tenantId: string,
-  incomingPaymentId: string
-): string {
-  const params = incomingPaymentId.split('incoming-payments')
-
-  // Check if there is already tenantId in the url
-  const supposedTenantId = params[0].split('/').at(-1)
-  if (supposedTenantId && validateId(supposedTenantId)) {
-    return incomingPaymentId
-  }
-
-  incomingPaymentId = params[0] + tenantId + '/incoming-payments' + params[1]
-  return incomingPaymentId
-}

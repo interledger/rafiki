@@ -156,7 +156,10 @@ async function createIncomingPayment(
   if (incomingAmount && incomingAmount.value <= 0) {
     return IncomingPaymentError.InvalidAmount
   }
-  const walletAddress = await deps.walletAddressService.get(walletAddressId)
+  const walletAddress = await deps.walletAddressService.get(
+    walletAddressId,
+    tenantId
+  )
   if (!walletAddress) {
     return IncomingPaymentError.UnknownWalletAddress
   }
@@ -376,7 +379,12 @@ async function getWalletAddressPage(
   deps: ServiceDependencies,
   options: ListOptions
 ): Promise<IncomingPayment[]> {
-  const page = await IncomingPayment.query(deps.knex).list(options)
+  const pageQuery = IncomingPayment.query(deps.knex)
+
+  if (options.tenantId) pageQuery.where('tenantId', options.tenantId)
+
+  const page = await pageQuery.list(options)
+
   for (const payment of page) {
     const asset = await deps.assetService.get(payment.assetId)
     if (asset) payment.asset = asset

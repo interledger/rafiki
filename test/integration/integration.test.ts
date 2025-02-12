@@ -2,7 +2,7 @@ import assert from 'assert'
 import { C9_CONFIG, HLB_CONFIG } from './lib/config'
 import { MockASE } from './lib/mock-ase'
 import { Fee, WebhookEventType } from 'mock-account-service-lib'
-import { poll } from './lib/utils'
+import { poll, urlWithoutTenantId } from './lib/utils'
 import { TestActions, createTestActions } from './lib/test-actions'
 import { IncomingPaymentState } from './lib/generated/graphql'
 
@@ -333,10 +333,7 @@ describe('Integration tests', (): void => {
             'https://happy-life-bank-test-backend:4100/accounts/pfry'
         }
 
-        const receiver = await createReceiver(
-          createReceiverInput,
-          hlb.config.operatorTenantId
-        )
+        const receiver = await createReceiver(createReceiverInput)
         const quote = await createQuote({
           walletAddressId: senderWalletAddressId,
           receiver: receiver.id
@@ -385,10 +382,7 @@ describe('Integration tests', (): void => {
             'https://happy-life-bank-test-backend:4100/accounts/lars'
         }
 
-        const receiver = await createReceiver(
-          createReceiverInput,
-          hlb.config.operatorTenantId
-        )
+        const receiver = await createReceiver(createReceiverInput)
         assert(receiver.incomingAmount)
 
         const quote = await createQuote({

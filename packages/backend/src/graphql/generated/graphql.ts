@@ -225,8 +225,6 @@ export type CreateIncomingPaymentInput = {
   incomingAmount?: InputMaybe<AmountInput>;
   /** Additional metadata associated with the incoming payment. */
   metadata?: InputMaybe<Scalars['JSONObject']['input']>;
-  /** The tenant UUID associated with the incoming payment. */
-  tenantId?: InputMaybe<Scalars['String']['input']>;
   /** Unique identifier of the wallet address under which the incoming payment will be created. */
   walletAddressId: Scalars['String']['input'];
 };

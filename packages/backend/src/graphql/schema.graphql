@@ -1229,8 +1229,6 @@ input CreateIncomingPaymentInput {
   incomingAmount: AmountInput
   "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency)."
   idempotencyKey: String
-  "The tenant UUID associated with the incoming payment."
-  tenantId: String
 }
 
 input CreateReceiverInput {

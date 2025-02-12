@@ -133,8 +133,7 @@ describe('Incoming Payment Resolver', (): void => {
           walletAddressId,
           incomingAmount,
           expiresAt,
-          metadata,
-          tenantId
+          metadata
         }
 
         const query = await appContainer.apolloClient
@@ -172,7 +171,7 @@ describe('Incoming Payment Resolver', (): void => {
               query.data?.createIncomingPayment
           )
 
-        expect(createSpy).toHaveBeenCalledWith(input)
+        expect(createSpy).toHaveBeenCalledWith({ ...input, tenantId })
         expect(query).toEqual({
           __typename: 'IncomingPaymentResponse',
           payment: {
@@ -206,8 +205,7 @@ describe('Incoming Payment Resolver', (): void => {
         .mockResolvedValueOnce(IncomingPaymentError.UnknownWalletAddress)
 
       const input = {
-        walletAddressId: uuid(),
-        tenantId
+        walletAddressId: uuid()
       }
 
       expect.assertions(3)
@@ -243,7 +241,7 @@ describe('Incoming Payment Resolver', (): void => {
           })
         )
       }
-      expect(createSpy).toHaveBeenCalledWith(input)
+      expect(createSpy).toHaveBeenCalledWith({ ...input, tenantId })
     })
 
     test('Internal server error', async (): Promise<void> => {
@@ -252,8 +250,7 @@ describe('Incoming Payment Resolver', (): void => {
         .mockRejectedValueOnce(new Error('unexpected'))
 
       const input = {
-        walletAddressId: uuid(),
-        tenantId
+        walletAddressId: uuid()
       }
 
       expect.assertions(3)
@@ -289,7 +286,10 @@ describe('Incoming Payment Resolver', (): void => {
           })
         )
       }
-      expect(createSpy).toHaveBeenCalledWith(input)
+      expect(createSpy).toHaveBeenCalledWith({
+        ...input,
+        tenantId
+      })
     })
   })
 

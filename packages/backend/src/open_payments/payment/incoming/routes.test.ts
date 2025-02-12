@@ -213,7 +213,10 @@ describe('Incoming Payment Routes', (): void => {
       async (error): Promise<void> => {
         const ctx = setup<CreateContext<CreateBody>>({
           reqOpts: { body: {} },
-          walletAddress
+          walletAddress,
+          params: {
+            tenantId
+          }
         })
         const createSpy = jest
           .spyOn(incomingPaymentService, 'create')
@@ -223,7 +226,8 @@ describe('Incoming Payment Routes', (): void => {
           status: errorToHTTPCode[error]
         })
         expect(createSpy).toHaveBeenCalledWith({
-          walletAddressId: walletAddress.id
+          walletAddressId: walletAddress.id,
+          tenantId
         })
       }
     )
@@ -275,7 +279,7 @@ describe('Incoming Payment Routes', (): void => {
           .pop()
 
         expect(ctx.response.body).toEqual({
-          id: `${baseUrl}/incoming-payments/${incomingPaymentId}`,
+          id: `${baseUrl}/${tenantId}/incoming-payments/${incomingPaymentId}`,
           walletAddress: walletAddress.url,
           incomingAmount: incomingAmount ? amount : undefined,
           expiresAt: expiresAt || expect.any(String),

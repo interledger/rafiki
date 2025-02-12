@@ -17,8 +17,7 @@ import {
   poll,
   pollCondition,
   wait,
-  urlWithoutTenantId,
-  addTenantToIncomingPaymentId
+  urlWithoutTenantId
 } from '../utils'
 import { WebhookEventType } from 'mock-account-service-lib'
 import {
@@ -183,12 +182,7 @@ async function createIncomingPayment(
     })
   )
 
-  if (!opts?.tenantId) return incomingPayment
-
-  return {
-    ...incomingPayment,
-    id: addTenantToIncomingPaymentId(opts.tenantId, incomingPayment.id)
-  }
+  return incomingPayment
 }
 
 async function grantRequestQuote(

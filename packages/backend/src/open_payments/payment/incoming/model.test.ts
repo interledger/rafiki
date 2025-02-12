@@ -56,7 +56,7 @@ describe('Models', (): void => {
     describe('toOpenPaymentsType', () => {
       test('returns incoming payment', async () => {
         expect(incomingPayment.toOpenPaymentsType(walletAddress)).toEqual({
-          id: `${baseUrl}${IncomingPayment.urlPath}/${incomingPayment.id}`,
+          id: `${baseUrl}/${Config.operatorTenantId}${IncomingPayment.urlPath}/${incomingPayment.id}`,
           walletAddress: walletAddress.url,
           completed: incomingPayment.completed,
           receivedAmount: serializeAmount(incomingPayment.receivedAmount),
@@ -84,7 +84,7 @@ describe('Models', (): void => {
             streamCredentials
           )
         ).toEqual({
-          id: `${baseUrl}${IncomingPayment.urlPath}/${incomingPayment.id}`,
+          id: `${baseUrl}/${Config.operatorTenantId}${IncomingPayment.urlPath}/${incomingPayment.id}`,
           walletAddress: walletAddress.url,
           completed: incomingPayment.completed,
           receivedAmount: serializeAmount(incomingPayment.receivedAmount),
@@ -109,7 +109,7 @@ describe('Models', (): void => {
         expect(
           incomingPayment.toOpenPaymentsTypeWithMethods(walletAddress)
         ).toEqual({
-          id: `${baseUrl}${IncomingPayment.urlPath}/${incomingPayment.id}`,
+          id: `${baseUrl}/${Config.operatorTenantId}${IncomingPayment.urlPath}/${incomingPayment.id}`,
           walletAddress: walletAddress.url,
           completed: incomingPayment.completed,
           receivedAmount: serializeAmount(incomingPayment.receivedAmount),
@@ -140,7 +140,7 @@ describe('Models', (): void => {
               streamCredentials
             )
           ).toEqual({
-            id: `${baseUrl}${IncomingPayment.urlPath}/${incomingPayment.id}`,
+            id: `${baseUrl}/${Config.operatorTenantId}${IncomingPayment.urlPath}/${incomingPayment.id}`,
             walletAddress: walletAddress.url,
             completed: incomingPayment.completed,
             receivedAmount: serializeAmount(incomingPayment.receivedAmount),

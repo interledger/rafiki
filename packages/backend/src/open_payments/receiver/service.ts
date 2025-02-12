@@ -100,12 +100,6 @@ async function createLocalIncomingPayment(
 ): Promise<OpenPaymentsIncomingPaymentWithPaymentMethods | ReceiverError> {
   const { expiresAt, incomingAmount, metadata, tenantId } = args
 
-  if (!tenantId) {
-    const errorMessage = 'Tenant id is required to create an incoming payment'
-    deps.logger.error(errorMessage)
-    throw new Error(errorMessage)
-  }
-
   const incomingPaymentOrError = await deps.incomingPaymentService.create({
     walletAddressId: walletAddress.id,
     expiresAt,

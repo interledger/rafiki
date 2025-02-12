@@ -145,7 +145,7 @@ export class IncomingPayment
 
   public getUrl(walletAddress: WalletAddress): string {
     const url = new URL(walletAddress.url)
-    return `${url.origin}${IncomingPayment.urlPath}/${this.id}`
+    return `${url.origin}/${walletAddress.tenantId}${IncomingPayment.urlPath}/${this.id}`
   }
 
   public async onCredit({

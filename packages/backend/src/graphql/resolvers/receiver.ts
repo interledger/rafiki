@@ -4,7 +4,11 @@ import {
   Receiver as SchemaReceiver,
   QueryResolvers
 } from '../generated/graphql'
-import { ApolloContext, ForTenantIdContext } from '../../app'
+import {
+  ApolloContext,
+  ForTenantIdContext,
+  TenantedApolloContext
+} from '../../app'
 import { Receiver } from '../../open_payments/receiver/model'
 import {
   isReceiverError,
@@ -32,11 +36,11 @@ export const getReceiver: QueryResolvers<ApolloContext>['receiver'] = async (
   return receiverToGraphql(receiver)
 }
 
-export const createReceiver: MutationResolvers<ForTenantIdContext>['createReceiver'] =
+export const createReceiver: MutationResolvers<TenantedApolloContext>['createReceiver'] =
   async (_, args, ctx): Promise<ResolversTypes['CreateReceiverResponse']> => {
     const receiverService = await ctx.container.use('receiverService')
 
-    const tenantId = ctx.forTenantId
+    const tenantId = ctx.tenant.id
     if (!tenantId) {
       throw new Error('Tenant id is required to create a receiver')
     }

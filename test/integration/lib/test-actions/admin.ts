@@ -9,7 +9,7 @@ import {
   CreateQuoteInput
 } from '../generated/graphql'
 import { MockASE } from '../mock-ase'
-import { addTenantToIncomingPaymentId, pollCondition } from '../utils'
+import { pollCondition } from '../utils'
 import { WebhookEventType } from 'mock-account-service-lib'
 
 interface AdminActionsDeps {
@@ -18,10 +18,7 @@ interface AdminActionsDeps {
 }
 
 export interface AdminActions {
-  createReceiver(
-    input: CreateReceiverInput,
-    tenantId?: string
-  ): Promise<Receiver>
+  createReceiver(input: CreateReceiverInput): Promise<Receiver>
   createQuote(input: CreateQuoteInput): Promise<Quote>
   createOutgoingPayment(
     senderWalletAddressId: string,
@@ -36,7 +33,7 @@ export interface AdminActions {
 
 export function createAdminActions(deps: AdminActionsDeps): AdminActions {
   return {
-    createReceiver: (input, tenantId) => createReceiver(deps, input, tenantId),
+    createReceiver: (input) => createReceiver(deps, input),
     createQuote: (input) => createQuote(deps, input),
     createOutgoingPayment: (senderWalletAddressId, quote) =>
       createOutgoingPayment(deps, senderWalletAddressId, quote),
@@ -49,8 +46,7 @@ export function createAdminActions(deps: AdminActionsDeps): AdminActions {
 
 async function createReceiver(
   deps: AdminActionsDeps,
-  input: CreateReceiverInput,
-  tenantId?: string
+  input: CreateReceiverInput
 ): Promise<Receiver> {
   const { receivingASE, sendingASE } = deps
   const handleWebhookEventSpy = jest.spyOn(
@@ -78,12 +74,7 @@ async function createReceiver(
     })
   )
 
-  if (!tenantId) return response.receiver
-
-  return {
-    ...response.receiver,
-    id: addTenantToIncomingPaymentId(tenantId, response.receiver.id)
-  }
+  return response.receiver
 }
 async function createQuote(
   deps: AdminActionsDeps,

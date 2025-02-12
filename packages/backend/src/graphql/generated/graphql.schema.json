@@ -1281,18 +1281,6 @@
             "deprecationReason": null
           },
           {
-            "name": "tenantId",
-            "description": "The tenant UUID associated with the incoming payment.",
-            "type": {
-              "kind": "SCALAR",
-              "name": "String",
-              "ofType": null
-            },
-            "defaultValue": null,
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
             "name": "walletAddressId",
             "description": "Unique identifier of the wallet address under which the incoming payment will be created.",
             "type": {
