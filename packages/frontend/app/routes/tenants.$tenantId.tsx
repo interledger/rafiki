@@ -245,16 +245,6 @@ export async function action({ request }: ActionFunctionArgs) {
         errors.fieldErrors = result.error.flatten().fieldErrors
         return json({ errors }, { status: 400 })
       }
-      if (
-        result.data.email &&
-        result.data.email.trim().length > 0 &&
-        !new RegExp(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/).test(
-          result.data.email
-        )
-      ) {
-        errors.fieldErrors.email = ['Email is invalid.']
-        return json({ errors }, { status: 400 })
-      }
 
       const response = await updateTenant(request, {
         ...result.data

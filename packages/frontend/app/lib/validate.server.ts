@@ -135,7 +135,7 @@ export const updateTenantSchema = z
       .min(10, { message: 'API Secret should be at least 10 characters long' })
       .max(255, { message: 'Maximum length of API Secret is 255 characters' }),
     publicName: z.string().optional(),
-    email: z.string().optional(),
+    email: z.string().email().or(z.literal('')),
     idpConsentUrl: z.string().optional(),
     idpSecret: z.string().optional()
   })
