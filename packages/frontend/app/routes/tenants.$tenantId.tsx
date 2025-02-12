@@ -80,7 +80,7 @@ export default function ViewTenantPage() {
             <p className='text-sm'>
               Created at {new Date(tenant.createdAt).toLocaleString()}
             </p>
-            <ErrorPanel errors={response?.errors?.message} />
+            <ErrorPanel errors={response?.errors.message} />
           </div>
           <div className='md:col-span-2 bg-white rounded-md shadow-md'>
             <Form method='post' replace preventScrollReset>
@@ -243,7 +243,7 @@ export async function action({ request }: ActionFunctionArgs) {
       const result = updateTenantSchema.safeParse(formEntries)
       if (!result.success) {
         errors.fieldErrors = result.error.flatten().fieldErrors
-        return json({ ...errors }, { status: 400 })
+        return json({ errors }, { status: 400 })
       }
       if (
         result.data.email &&
@@ -262,7 +262,7 @@ export async function action({ request }: ActionFunctionArgs) {
 
       if (!response?.tenant) {
         errors.message = ['Could not update tenant. Please try again!']
-        return json({ ...errors }, { status: 400 })
+        return json({ errors }, { status: 400 })
       }
 
       const me = await whoAmI(request)
