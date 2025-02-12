@@ -35,12 +35,14 @@ import {
   PaymentMethodHandlerErrorCode
 } from '../../payment-method/handler/errors'
 import { Receiver } from '../receiver/model'
+import { WalletAddressService } from '../wallet_address/service'
 
 describe('QuoteService', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let quoteService: QuoteService
   let paymentMethodHandlerService: PaymentMethodHandlerService
+  let walletAddressService: WalletAddressService
   let receiverService: ReceiverService
   let knex: Knex
   let sendingWalletAddress: MockWalletAddress
@@ -88,6 +90,7 @@ describe('QuoteService', (): void => {
     config = await deps.use('config')
     quoteService = await deps.use('quoteService')
     paymentMethodHandlerService = await deps.use('paymentMethodHandlerService')
+    walletAddressService = await deps.use('walletAddressService')
     receiverService = await deps.use('receiverService')
   })
 
@@ -430,17 +433,24 @@ describe('QuoteService', (): void => {
         })
       }
     )
-
     test('fails on unknown wallet address', async (): Promise<void> => {
+      const walletAddressId = uuid()
+      jest.spyOn(walletAddressService, 'get').mockResolvedValueOnce(undefined)
+
       await expect(
         quoteService.create({
           tenantId,
-          walletAddressId: uuid(),
+          walletAddressId,
           receiver: `${receivingWalletAddress.url}/incoming-payments/${uuid()}`,
           debitAmount,
           method: 'ilp'
         })
       ).resolves.toEqual(QuoteError.UnknownWalletAddress)
+      expect(walletAddressService.get).toHaveBeenCalledTimes(1)
+      expect(walletAddressService.get).toHaveBeenCalledWith(
+        walletAddressId,
+        tenantId
+      )
     })
 
     test('fails on inactive wallet address', async () => {

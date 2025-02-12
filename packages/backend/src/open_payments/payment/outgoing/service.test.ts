@@ -54,6 +54,7 @@ import { TelemetryService } from '../../../telemetry/service'
 import { getPageTests } from '../../../shared/baseModel.test'
 import { Pagination, SortOrder } from '../../../shared/baseModel'
 import { ReceiverService } from '../../receiver/service'
+import { WalletAddressService } from '../../wallet_address/service'
 
 describe('OutgoingPaymentService', (): void => {
   let deps: IocContract<AppServices>
@@ -62,6 +63,7 @@ describe('OutgoingPaymentService', (): void => {
   let accountingService: AccountingService
   let paymentMethodHandlerService: PaymentMethodHandlerService
   let quoteService: QuoteService
+  let walletAddressService: WalletAddressService
   let telemetryService: TelemetryService
   let knex: Knex
   let assetId: string
@@ -263,6 +265,7 @@ describe('OutgoingPaymentService', (): void => {
     accountingService = await deps.use('accountingService')
     paymentMethodHandlerService = await deps.use('paymentMethodHandlerService')
     quoteService = await deps.use('quoteService')
+    walletAddressService = await deps.use('walletAddressService')
     telemetryService = (await deps.use('telemetry'))!
     config = await deps.use('config')
     knex = appContainer.knex
@@ -900,13 +903,20 @@ describe('OutgoingPaymentService', (): void => {
           validDestination: false,
           method: 'ilp'
         })
+        const unknownWalletAddressId = uuid()
+        jest.spyOn(walletAddressService, 'get').mockResolvedValueOnce(undefined)
         await expect(
           outgoingPaymentService.create({
             tenantId,
-            walletAddressId: uuid(),
+            walletAddressId: unknownWalletAddressId,
             quoteId
           })
         ).resolves.toEqual(OutgoingPaymentError.UnknownWalletAddress)
+        expect(walletAddressService.get).toHaveBeenCalledTimes(1)
+        expect(walletAddressService.get).toHaveBeenCalledWith(
+          unknownWalletAddressId,
+          tenantId
+        )
       })
 
       it('fails to create on unknown quote', async () => {

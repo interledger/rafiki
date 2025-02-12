@@ -450,6 +450,11 @@ async function getWalletAddressPage(
   options: ListOptions
 ): Promise<Quote[]> {
   const quotes = await Quote.query(deps.knex)
+    .modify((query) => {
+      if (options.tenantId) {
+        query.where({ tenantId: options.tenantId })
+      }
+    })
     .list(options)
     .withGraphFetched('fee')
   for (const quote of quotes) {

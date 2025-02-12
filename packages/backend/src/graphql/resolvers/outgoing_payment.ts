@@ -12,7 +12,7 @@ import {
   errorToCode
 } from '../../open_payments/payment/outgoing/errors'
 import { OutgoingPayment } from '../../open_payments/payment/outgoing/model'
-import { ForTenantIdContext, TenantedApolloContext } from '../../app'
+import { TenantedApolloContext } from '../../app'
 import { getPageInfo } from '../../shared/pagination'
 import { Pagination, SortOrder } from '../../shared/baseModel'
 import { GraphQLError } from 'graphql'
@@ -73,7 +73,7 @@ export const getOutgoingPayments: QueryResolvers<TenantedApolloContext>['outgoin
     }
   }
 
-export const cancelOutgoingPayment: MutationResolvers<ForTenantIdContext>['cancelOutgoingPayment'] =
+export const cancelOutgoingPayment: MutationResolvers<TenantedApolloContext>['cancelOutgoingPayment'] =
   async (
     parent,
     args,
@@ -83,7 +83,7 @@ export const cancelOutgoingPayment: MutationResolvers<ForTenantIdContext>['cance
       'outgoingPaymentService'
     )
 
-    const tenantId = ctx.forTenantId
+    const tenantId = ctx.tenant.id
     if (!tenantId)
       throw new GraphQLError(
         `Assignment to the specified tenant is not permitted`,
@@ -112,7 +112,7 @@ export const cancelOutgoingPayment: MutationResolvers<ForTenantIdContext>['cance
     }
   }
 
-export const createOutgoingPayment: MutationResolvers<ForTenantIdContext>['createOutgoingPayment'] =
+export const createOutgoingPayment: MutationResolvers<TenantedApolloContext>['createOutgoingPayment'] =
   async (
     parent,
     args,
@@ -122,7 +122,7 @@ export const createOutgoingPayment: MutationResolvers<ForTenantIdContext>['creat
       'outgoingPaymentService'
     )
 
-    const tenantId = ctx.forTenantId
+    const tenantId = ctx.tenant.id
     if (!tenantId)
       throw new GraphQLError(
         `Assignment to the specified tenant is not permitted`,
@@ -148,7 +148,7 @@ export const createOutgoingPayment: MutationResolvers<ForTenantIdContext>['creat
       }
   }
 
-export const createOutgoingPaymentFromIncomingPayment: MutationResolvers<ForTenantIdContext>['createOutgoingPaymentFromIncomingPayment'] =
+export const createOutgoingPaymentFromIncomingPayment: MutationResolvers<TenantedApolloContext>['createOutgoingPaymentFromIncomingPayment'] =
   async (
     parent,
     args,
@@ -157,7 +157,7 @@ export const createOutgoingPaymentFromIncomingPayment: MutationResolvers<ForTena
     const outgoingPaymentService = await ctx.container.use(
       'outgoingPaymentService'
     )
-    const tenantId = ctx.forTenantId
+    const tenantId = ctx.tenant.id
     if (!tenantId)
       throw new GraphQLError(
         `Assignment to the specified tenant is not permitted`,

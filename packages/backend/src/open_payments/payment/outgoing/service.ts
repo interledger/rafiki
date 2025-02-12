@@ -290,7 +290,10 @@ async function createOutgoingPayment(
           description: 'Time to get wallet address in outgoing payment'
         }
       )
-      const walletAddress = await deps.walletAddressService.get(walletAddressId)
+      const walletAddress = await deps.walletAddressService.get(
+        walletAddressId,
+        tenantId
+      )
       stopTimerWA()
       if (!walletAddress) {
         throw OutgoingPaymentError.UnknownWalletAddress
@@ -694,6 +697,11 @@ async function getWalletAddressPage(
   options: ListOptions
 ): Promise<OutgoingPayment[]> {
   const page = await OutgoingPayment.query(deps.knex)
+    .modify((query) => {
+      if (options.tenantId) {
+        query.where({ tenantId: options.tenantId })
+      }
+    })
     .list(options)
     .withGraphFetched('quote')
   for (const payment of page) {
