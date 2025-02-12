@@ -159,162 +159,6 @@ jobs:
       - name: Run tests
         run: pnpm --filter integration run-tests
 
-  # Performance script options
-  # - use k6 actions for everything. k6 install and k6 run configrued to upload.
-  #   kinda conflicts with how tests are setup to run with run-tests.sh script. 
-  #   Would need to rework or duplucate some stuff in ci (setting env vars, ???)
-  # - just use k6 action to install then run and comment manually in action. 
-  #   - probably not ideal because logic to comment may be a bit complicated and lose all the free stuff 
-  #     we get from uploading to cloud k6 (history? formatting, etc.). Would probably want to save
-  #     results as json to parse for the comment.
-  # - combination... just k6 action to install then run manually (with run-tests.sh) and upload
-  #   run to k6 cloud. 
-  #   - Might be ok... not sure if we lose anything from running with the k6 action configured to upload 
-  #   - enables us to use the run-scripts.sh
-
-  # Install k6 via action, run against this native k6 with run-test.sh, no comment
-  # performance-test:
-  #   runs-on: ubuntu-22.04
-  #   needs: prerequisite
-  #   timeout-minutes: 5
-  #   steps:
-  #     - name: Checkout code
-  #       uses: actions/checkout@v4
-
-  #     - name: Setup environment
-  #       uses: ./.github/workflows/rafiki/env-setup
-
-  #     - name: Set up k6
-  #       uses: grafana/setup-k6-action@v1
-
-  #     - name: Setup hosts
-  #       run: |
-  #         echo "127.0.0.1 cloud-nine-wallet-test-backend" | sudo tee -a /etc/hosts
-  #         echo "127.0.0.1 cloud-nine-wallet-test-auth" | sudo tee -a /etc/hosts
-  #         echo "127.0.0.1 happy-life-bank-test-backend" | sudo tee -a /etc/hosts
-  #         echo "127.0.0.1 happy-life-bank-test-auth" | sudo tee -a /etc/hosts
-
-  #     - name: Build dependencies
-  #       run: pnpm --filter performance build:deps
-
-  #     - name: Bundle
-  #       run: pnpm --filter performance bundle
-
-  #     - name: Start test environment
-  #       run: pnpm --filter performance testenv:compose up --wait --build -d
-
-  #     - name: Start Mock Account Entity Services
-  #       run: nohup pnpm --filter performance start-mases > mases.log 2>&1 &
-
-  #     - name: Run performance tests
-  #       id: perf_test
-  #       run: pnpm --filter performance run-tests:testenv
-  #       continue-on-error: true # Dont fail here, allows showing logs
-
-  #     - name: Print MASE logs
-  #       if: always()
-  #       run: cat mases.log
-
-  #     - name: Fail if performance tests failed
-  #       if: steps.perf_test.outcome == 'failure'
-  #       run: exit 1
-
-# Install k6 via action, run against this native k6 with run-test.sh, manual comment (log only)
-  # performance-test:
-  #   runs-on: ubuntu-22.04
-  #   needs: prerequisite
-  #   timeout-minutes: 5
-  #   steps:
-  #     - name: Checkout code
-  #       uses: actions/checkout@v4
-
-  #     - name: Setup environment
-  #       uses: ./.github/workflows/rafiki/env-setup
-
-  #     - name: Set up k6
-  #       uses: grafana/setup-k6-action@v1
-
-  #     - name: Setup hosts
-  #       run: |
-  #         echo "127.0.0.1 cloud-nine-wallet-test-backend" | sudo tee -a /etc/hosts
-  #         echo "127.0.0.1 cloud-nine-wallet-test-auth" | sudo tee -a /etc/hosts
-  #         echo "127.0.0.1 happy-life-bank-test-backend" | sudo tee -a /etc/hosts
-  #         echo "127.0.0.1 happy-life-bank-test-auth" | sudo tee -a /etc/hosts
-
-  #     - name: Build dependencies
-  #       run: pnpm --filter performance build:deps
-
-  #     - name: Bundle
-  #       run: pnpm --filter performance bundle
-
-  #     - name: Start test environment
-  #       run: pnpm --filter performance testenv:compose up --wait --build -d
-
-  #     - name: Start Mock Account Entity Services
-  #       run: nohup pnpm --filter performance start-mases > mases.log 2>&1 &
-
-  #     - name: Run performance tests
-  #       id: perf_test
-  #       run: |
-  #         pnpm --filter performance run-tests:testenv | tee performance.log
-  #       continue-on-error: true # Dont fail here, allows showing logs
-
-  #     - name: Print MASE logs
-  #       if: always()
-  #       run: cat mases.log
-
-  #     - name: Post/Update Performance Test Logs as PR Comment
-  #       if: always()
-  #       uses: actions/github-script@v7
-  #       with:
-  #         github-token: ${{ secrets.GITHUB_TOKEN }}
-  #         script: |
-  #           const fs = require('fs');
-  #           const logContent = fs.readFileSync('performance.log', 'utf8');
-  #           const truncatedLog = logContent.length > 65000 ? logContent.slice(-65000) : logContent; // GitHub limits comments to ~65KB
-            
-  #           const commentBody = `### Performance Test Results 🚀\n\`\`\`\n${truncatedLog}\n\`\`\``;
-
-  #           const { owner, repo } = context.repo;
-  #           const prNumber = context.payload.pull_request?.number;
-
-  #           if (prNumber) {
-  #             // Fetch existing comments on the PR
-  #             const comments = await github.rest.issues.listComments({
-  #               owner,
-  #               repo,
-  #               issue_number: prNumber
-  #             });
-
-  #             // Look for an existing comment with the "Performance Test Results" title
-  #             const existingComment = comments.data.find(comment => comment.body.includes('### Performance Test Results'));
-
-  #             if (existingComment) {
-  #               // If a comment exists, update it
-  #               await github.rest.issues.updateComment({
-  #                 owner,
-  #                 repo,
-  #                 comment_id: existingComment.id,
-  #                 body: commentBody
-  #               });
-  #             } else {
-  #               // If no comment exists, create a new one
-  #               await github.rest.issues.createComment({
-  #                 owner,
-  #                 repo,
-  #                 issue_number: prNumber,
-  #                 body: commentBody
-  #               });
-  #             }
-  #           } else {
-  #             console.log("No PR detected, skipping comment.");
-  #           }
-
-  #     - name: Fail if performance tests failed
-  #       if: steps.perf_test.outcome == 'failure'
-  #       run: exit 1
-
-# Install k6 via action, run against this native k6 with run-test.sh, manual comment (summary, not logs)
   performance-test:
     runs-on: ubuntu-22.04
     needs: prerequisite
@@ -384,8 +228,9 @@ jobs:
               logContent = 'Performance log not found.';
             }
 
-            // GitHub comment size limit handling (truncate logs if necessary)
-            const maxLogSize = 60000; // 60KB limit
+            // Limit in case large file size to avoid error posting comment (65kb limit)
+            // https://github.com/orgs/community/discussions/41331
+            const maxLogSize = 60000;
             const truncatedLogs = logContent.length > maxLogSize ? `...(truncated)...\n${logContent.slice(-maxLogSize)}` : logContent;
 
 
@@ -395,7 +240,7 @@ jobs:
             ${summaryContent}
 
             <details>
-            <summary>📜 Performance Logs</summary>
+            <summary>📜 Logs</summary>
 
             \`\`\`
             ${truncatedLogs}
@@ -408,18 +253,16 @@ jobs:
             const prNumber = context.payload.pull_request?.number;
 
             if (prNumber) {
-              // Fetch existing comments on the PR
               const comments = await github.rest.issues.listComments({
                 owner,
                 repo,
                 issue_number: prNumber
               });
 
-              // Look for an existing comment with the "Performance Test Results" title
+              // Identify existing comment via title
               const existingComment = comments.data.find(comment => comment.body.includes('🚀 Performance Test Results'));
 
-              if (existingComment) {
-                // If a comment exists, update it
+              if (existingComment) { // upsert comment
                 await github.rest.issues.updateComment({
                   owner,
                   repo,
@@ -427,7 +270,6 @@ jobs:
                   body: commentBody
                 });
               } else {
-                // If no comment exists, create a new one
                 await github.rest.issues.createComment({
                   owner,
                   repo,
