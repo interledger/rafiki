@@ -70,7 +70,7 @@ Liquidity accounts hold either a zero or a positive balance. Rafiki ensures that
 
 Asset liquidity ensures Rafiki has enough liquidity, denominated in a given asset, to handle cross-currency (foreign exchange) transactions.
 
-An asset liquidity account represents the value that Rafiki has available for sending or forwarding ILP packets. You have one asset liquidity account for each asset you transact in. 
+An asset liquidity account represents the value that Rafiki has available for sending or forwarding ILP packets. You have one asset liquidity account for each asset you transact in.
 
 Whenever an outgoing payment/incoming payment is in a different asset than the peering relationship, the liquidity of asset accounts will change depending on the FX direction. Any transaction that would result in a negative balance will fail.
 
