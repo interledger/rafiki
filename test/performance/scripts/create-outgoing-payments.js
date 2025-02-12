@@ -182,6 +182,6 @@ export function handleSummary(data) {
   return {
     // Preserve standard output w/ textSummary
     stdout: textSummary(data, { enableColors: false }),
-    'k6test-summary.txt': summaryText // saves to file
+    'k6-test-summary.txt': summaryText // saves to file
   }
 }

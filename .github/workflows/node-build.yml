@@ -211,7 +211,7 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const fs = require('fs');
-            const summaryPath = './test/performance/k6test-summary.txt';
+            const summaryPath = './test/performance/k6-test-summary.txt';
             const logPath = './performance.log';
             let summaryContent = '';
             let logContent = '';
