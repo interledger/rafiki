@@ -21,7 +21,8 @@ import {
 } from '~/components/ConfirmationDialog'
 import { updateTenant, deleteTenant, whoAmI } from '~/lib/api/tenant.server'
 import { messageStorage, setMessageAndRedirect } from '~/lib/message.server'
-import { createTenantSchema, updateTenantSchema, uuidSchema } from '~/lib/validate.server'
+import type { createTenantSchema } from '~/lib/validate.server'
+import { updateTenantSchema, uuidSchema } from '~/lib/validate.server'
 import type { ZodFieldErrors } from '~/shared/types'
 import { checkAuthAndRedirect } from '../lib/kratos_checks.server'
 import { getTenantInfo } from '~/lib/api/tenant.server'
@@ -86,7 +87,11 @@ export default function ViewTenantPage() {
               <fieldset disabled={isSubmitting}>
                 <div className='w-full p-4 space-y-3'>
                   <Input type='hidden' name='id' value={tenant.id} />
-                  <Input type='hidden' name='apiSecret' value={tenant.apiSecret} />
+                  <Input
+                    type='hidden'
+                    name='apiSecret'
+                    value={tenant.apiSecret}
+                  />
                   <Input
                     label='Tenant ID'
                     name='tenantId'
@@ -134,7 +139,11 @@ export default function ViewTenantPage() {
               <fieldset disabled={isSubmitting}>
                 <div className='w-full p-4 space-y-3'>
                   <Input type='hidden' name='id' value={tenant.id} />
-                  <Input type='hidden' name='apiSecret' value={tenant.apiSecret} />
+                  <Input
+                    type='hidden'
+                    name='apiSecret'
+                    value={tenant.apiSecret}
+                  />
                   <Input
                     name='idpConsentUrl'
                     label='Consent URL'
@@ -252,9 +261,7 @@ export async function action({ request }: ActionFunctionArgs) {
       })
 
       if (!response?.tenant) {
-        errors.message = [
-          'Could not update tenant. Please try again!'
-        ]
+        errors.message = ['Could not update tenant. Please try again!']
         return json({ ...errors }, { status: 400 })
       }
 
