@@ -388,31 +388,12 @@ jobs:
             const maxLogSize = 60000; // 60KB limit
             const truncatedLogs = logContent.length > maxLogSize ? `...(truncated)...\n${logContent.slice(-maxLogSize)}` : logContent;
 
-            // Fetch workflow job details
-            const { owner, repo } = context.repo;
-            const runId = context.runId;
-
-            const jobs = await github.rest.actions.listJobsForWorkflowRun({
-              owner,
-              repo,
-              run_id: runId
-            });
-
-            // Find the job ID for "Run performance tests"
-            const perfTestJob = jobs.data.jobs.find(job => job.name === "Run performance tests");
-
-            let jobUrl = `https://github.com/${owner}/${repo}/actions/runs/${runId}`;
-            if (perfTestJob) {
-              jobUrl += `/job/${perfTestJob.id}`;
-            }
-
 
             const commentBody = `
             ### 🚀 Performance Test Results  
 
             ${summaryContent}
 
-            **[🔗 Run](${jobUrl})**  
             <details>
             <summary>📜 Performance Logs</summary>
 
