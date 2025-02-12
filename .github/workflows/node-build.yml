@@ -404,6 +404,7 @@ jobs:
             </details>
             `;
 
+            const { owner, repo } = context.repo;
             const prNumber = context.payload.pull_request?.number;
 
             if (prNumber) {
