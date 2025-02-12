@@ -1,26 +1,32 @@
 import type { NormalizedCacheObject } from '@apollo/client'
 import {
   ApolloClient,
-  ApolloLink,
+  InMemoryCache,
   createHttpLink,
-  InMemoryCache
+  ApolloLink
 } from '@apollo/client'
-import { createHmac } from 'crypto'
-import { print } from 'graphql/language/printer'
-import { canonicalize } from 'json-canonicalize'
 import { setContext } from '@apollo/client/link/context'
+import { print } from 'graphql/language/printer'
+import { createHmac } from 'crypto'
+import { canonicalize } from 'json-canonicalize'
 
 interface CreateApolloClientArgs {
   graphqlUrl: string
-  signatureSecret: string
-  signatureVersion: string
   operatorTenantId: string
+  signatureSecret?: string
+  signatureVersion?: string
 }
 
-function createAuthLink(args: CreateApolloClientArgs) {
-  return setContext((request, { headers }) => {
-    const timestamp = Math.round(new Date().getTime() / 1000)
-    const version = args.signatureVersion
+export function createApolloClient(
+  args: CreateApolloClientArgs
+): ApolloClient<NormalizedCacheObject> {
+  const httpLink = createHttpLink({
+    uri: args.graphqlUrl
+  })
+
+  const authLink = setContext((request, { headers }) => {
+    if (!args.signatureSecret || !args.signatureVersion) return { headers }
+    const timestamp = Date.now()
 
     const { query, variables, operationName } = request
     const formattedRequest = {
@@ -36,22 +42,13 @@ function createAuthLink(args: CreateApolloClientArgs) {
     return {
       headers: {
         ...headers,
-        signature: `t=${timestamp}, v${version}=${digest}`,
+        signature: `t=${timestamp}, v${args.signatureVersion}=${digest}`,
         'tenant-id': args.operatorTenantId
       }
     }
   })
-}
-
-export function createApolloClient(
-  args: CreateApolloClientArgs
-): ApolloClient<NormalizedCacheObject> {
-  const httpLink = createHttpLink({
-    uri: args.graphqlUrl
-  })
 
   return new ApolloClient({
-    link: ApolloLink.from([createAuthLink(args), httpLink]),
     cache: new InMemoryCache(),
     link: ApolloLink.from([authLink, httpLink]),
     defaultOptions: {

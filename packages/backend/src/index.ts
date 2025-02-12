@@ -177,7 +177,7 @@ export function initIocContainer(
     const authLink = setContext((request, { headers }) => {
       if (!config.authAdminApiSecret || !config.authAdminApiSignatureVersion)
         return { headers }
-      const timestamp = Math.round(new Date().getTime() / 1000)
+      const timestamp = Date.now()
       const version = config.authAdminApiSignatureVersion
 
       const { query, variables, operationName } = request
