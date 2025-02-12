@@ -919,6 +919,32 @@ describe('OutgoingPaymentService', (): void => {
         )
       })
 
+      it('fails to create on unknown tenant id', async () => {
+        const { id: quoteId } = await createQuote(deps, {
+          tenantId,
+          walletAddressId,
+          receiver,
+          debitAmount,
+          validDestination: false,
+          method: 'ilp'
+        })
+
+        const unknownTenandId = uuid()
+        jest.spyOn(walletAddressService, 'get').mockResolvedValueOnce(undefined)
+        await expect(
+          outgoingPaymentService.create({
+            tenantId: unknownTenandId,
+            walletAddressId,
+            quoteId
+          })
+        ).resolves.toEqual(OutgoingPaymentError.UnknownWalletAddress)
+        expect(walletAddressService.get).toHaveBeenCalledTimes(1)
+        expect(walletAddressService.get).toHaveBeenCalledWith(
+          walletAddressId,
+          unknownTenandId
+        )
+      })
+
       it('fails to create on unknown quote', async () => {
         await expect(
           outgoingPaymentService.create({

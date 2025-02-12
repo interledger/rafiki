@@ -706,7 +706,8 @@ async function getWalletAddressPage(
     .withGraphFetched('quote')
   for (const payment of page) {
     payment.walletAddress = await deps.walletAddressService.get(
-      payment.walletAddressId
+      payment.walletAddressId,
+      payment.tenantId
     )
     const asset = await deps.assetService.get(payment.quote.assetId)
     if (asset) payment.quote.asset = asset

@@ -150,7 +150,13 @@ async function listOutgoingPayments(
 ): Promise<void> {
   await listSubresource({
     ctx,
-    getWalletAddressPage: deps.outgoingPaymentService.getWalletAddressPage,
+    getWalletAddressPage: async ({ walletAddressId, pagination, client }) =>
+      deps.outgoingPaymentService.getWalletAddressPage({
+        walletAddressId,
+        pagination,
+        client,
+        tenantId: ctx.params.tenantId
+      }),
     toBody: (payment) => outgoingPaymentToBody(ctx.walletAddress, payment)
   })
 }

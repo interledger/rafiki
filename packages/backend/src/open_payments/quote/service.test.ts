@@ -433,14 +433,17 @@ describe('QuoteService', (): void => {
         })
       }
     )
-    test('fails on unknown wallet address', async (): Promise<void> => {
-      const walletAddressId = uuid()
-      jest.spyOn(walletAddressService, 'get').mockResolvedValueOnce(undefined)
+    test('fails on unknown tenant id', async (): Promise<void> => {
+      const walletAddress = await createWalletAddress(deps, {
+        tenantId
+      })
+      const unknownTenantId = uuid()
 
+      jest.spyOn(walletAddressService, 'get').mockResolvedValueOnce(undefined)
       await expect(
         quoteService.create({
-          tenantId,
-          walletAddressId,
+          tenantId: unknownTenantId,
+          walletAddressId: walletAddress.id,
           receiver: `${receivingWalletAddress.url}/incoming-payments/${uuid()}`,
           debitAmount,
           method: 'ilp'
@@ -448,7 +451,27 @@ describe('QuoteService', (): void => {
       ).resolves.toEqual(QuoteError.UnknownWalletAddress)
       expect(walletAddressService.get).toHaveBeenCalledTimes(1)
       expect(walletAddressService.get).toHaveBeenCalledWith(
-        walletAddressId,
+        walletAddress.id,
+        unknownTenantId
+      )
+    })
+
+    test('fails on unknown wallet address', async (): Promise<void> => {
+      const unknownWalletAddressId = uuid()
+      jest.spyOn(walletAddressService, 'get').mockResolvedValueOnce(undefined)
+
+      await expect(
+        quoteService.create({
+          tenantId,
+          walletAddressId: unknownWalletAddressId,
+          receiver: `${receivingWalletAddress.url}/incoming-payments/${uuid()}`,
+          debitAmount,
+          method: 'ilp'
+        })
+      ).resolves.toEqual(QuoteError.UnknownWalletAddress)
+      expect(walletAddressService.get).toHaveBeenCalledTimes(1)
+      expect(walletAddressService.get).toHaveBeenCalledWith(
+        unknownWalletAddressId,
         tenantId
       )
     })

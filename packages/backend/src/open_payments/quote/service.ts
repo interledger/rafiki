@@ -462,7 +462,8 @@ async function getWalletAddressPage(
     if (asset) quote.asset = asset
 
     quote.walletAddress = await deps.walletAddressService.get(
-      quote.walletAddressId
+      quote.walletAddressId,
+      quote.tenantId
     )
   }
   return quotes
