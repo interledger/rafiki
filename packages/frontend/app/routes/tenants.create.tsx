@@ -145,7 +145,7 @@ export async function action({ request }: ActionFunctionArgs) {
       result.data.email
     )
   ) {
-    errors.message = ['Email is invalid.']
+    errors.fieldErrors.email = ['Email is invalid.']
     return json({ errors }, { status: 400 })
   }
 

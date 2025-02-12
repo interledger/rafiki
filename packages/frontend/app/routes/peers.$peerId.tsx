@@ -43,7 +43,6 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
   }
 
   const peer = await getPeer(request, { id: result.data })
-
   if (!peer) {
     throw json(null, { status: 400, statusText: 'Peer not found.' })
   }
