@@ -28,7 +28,7 @@ script:post-response {
   }
   
   const body = res.getBody()
-
+  
   bru.setEnvVar("receiverAssetCode", body?.assetCode)
   bru.setEnvVar("receiverAssetScale", body?.assetScale)
   

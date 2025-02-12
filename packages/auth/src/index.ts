@@ -139,6 +139,16 @@ export function initIocContainer(
     }
   )
 
+  container.singleton(
+    'tenantService',
+    async (deps: IocContract<AppServices>) => {
+      return createTenantService({
+        logger: await deps.use('logger'),
+        knex: await deps.use('knex')
+      })
+    }
+  )
+
   container.singleton('grantRoutes', async (deps: IocContract<AppServices>) => {
     return createGrantRoutes({
       grantService: await deps.use('grantService'),
@@ -146,6 +156,7 @@ export function initIocContainer(
       accessTokenService: await deps.use('accessTokenService'),
       accessService: await deps.use('accessService'),
       interactionService: await deps.use('interactionService'),
+      tenantService: await deps.use('tenantService'),
       logger: await deps.use('logger'),
       config: await deps.use('config')
     })
@@ -158,6 +169,7 @@ export function initIocContainer(
         accessService: await deps.use('accessService'),
         interactionService: await deps.use('interactionService'),
         grantService: await deps.use('grantService'),
+        tenantService: await deps.use('tenantService'),
         logger: await deps.use('logger'),
         config: await deps.use('config')
       })
@@ -220,16 +232,6 @@ export function initIocContainer(
     const config = await deps.use('config')
     return new Redis(config.redisUrl, { tls: config.redisTls })
   })
-
-  container.singleton(
-    'tenantService',
-    async (deps: IocContract<AppServices>) => {
-      return createTenantService({
-        logger: await deps.use('logger'),
-        knex: await deps.use('knex')
-      })
-    }
-  )
 
   return container
 }

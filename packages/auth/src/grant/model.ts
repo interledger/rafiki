@@ -9,6 +9,7 @@ import {
 } from '@interledger/open-payments'
 import { AccessToken, toOpenPaymentsAccessToken } from '../accessToken/model'
 import { Interaction } from '../interaction/model'
+import { Tenant } from '../tenant/model'
 
 export enum StartMethod {
   Redirect = 'redirect'
@@ -61,6 +62,14 @@ export class Grant extends BaseModel {
         from: 'grants.id',
         to: 'interactions.grantId'
       }
+    },
+    tenant: {
+      relation: Model.HasOneRelation,
+      modelClass: join(__dirname, '../tenant/model'),
+      join: {
+        from: 'grants.tenantId',
+        to: 'tenants.id'
+      }
     }
   })
   public access!: Access[]
@@ -78,6 +87,10 @@ export class Grant extends BaseModel {
   public clientNonce?: string // client-generated nonce for post-interaction hash
 
   public lastContinuedAt!: Date
+
+  public tenantId!: string
+
+  public tenant?: Tenant
 
   public $beforeInsert(context: QueryContext): void {
     super.$beforeInsert(context)
@@ -125,7 +138,7 @@ export function toOpenPaymentPendingGrant(
       access_token: {
         value: grant.continueToken
       },
-      uri: `${authServerUrl}/continue/${grant.continueId}`,
+      uri: `${authServerUrl}/${grant.tenantId}/continue/${grant.continueId}`,
       wait: waitTimeSeconds
     }
   }
@@ -145,7 +158,7 @@ export function toOpenPaymentsGrantContinuation(
       access_token: {
         value: grant.continueToken
       },
-      uri: `${args.authServerUrl}/continue/${grant.continueId}`,
+      uri: `${args.authServerUrl}/${grant.tenantId}/continue/${grant.continueId}`,
       wait: args.waitTimeSeconds
     }
   }
@@ -165,7 +178,7 @@ export function toOpenPaymentsGrant(
       access_token: {
         value: grant.continueToken
       },
-      uri: `${args.authServerUrl}/continue/${grant.continueId}`
+      uri: `${args.authServerUrl}/${grant.tenantId}/continue/${grant.continueId}`
     }
   }
 }
@@ -191,4 +204,12 @@ export function isRevokedGrant(grant: Grant): boolean {
     grant.state === GrantState.Finalized &&
     grant.finalizationReason === GrantFinalization.Revoked
   )
+}
+
+export interface GrantWithTenant extends Grant {
+  tenant: NonNullable<Grant['tenant']>
+}
+
+export function isGrantWithTenant(grant: Grant): grant is GrantWithTenant {
+  return !!grant.tenant
 }

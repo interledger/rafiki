@@ -1,5 +1,5 @@
 import { v4 } from 'uuid'
-import * as crypto from 'crypto'
+import crypto from 'crypto'
 import jestOpenAPI from 'jest-openapi'
 import { IocContract } from '@adonisjs/fold'
 import assert from 'assert'
@@ -26,6 +26,8 @@ import { generateNonce } from '../shared/utils'
 import { GNAPErrorCode } from '../shared/gnapErrors'
 import { generateBaseGrant } from '../tests/grant'
 import { generateBaseInteraction } from '../tests/interaction'
+import { Tenant } from '../tenant/model'
+import { generateTenant } from '../tests/tenant'
 
 const BASE_GRANT_ACCESS = {
   type: AccessType.IncomingPayment,
@@ -39,11 +41,15 @@ describe('Interaction Routes', (): void => {
   let interactionRoutes: InteractionRoutes
   let config: IAppConfig
 
+  let tenant: Tenant
   let grant: Grant
   let interaction: Interaction
 
   beforeEach(async (): Promise<void> => {
-    grant = await Grant.query().insert(generateBaseGrant())
+    tenant = await Tenant.query().insert(generateTenant())
+    grant = await Grant.query().insert(
+      generateBaseGrant({ tenantId: tenant.id })
+    )
 
     await Access.query().insert({
       ...BASE_GRANT_ACCESS,
@@ -79,6 +85,34 @@ describe('Interaction Routes', (): void => {
     })
 
     describe('Client - interaction start', (): void => {
+      test('Interaction start fails if tenant has no configured idp', async (): Promise<void> => {
+        const unconfiguredTenant = await Tenant.query().insertAndFetch({
+          idpConsentUrl: undefined,
+          idpSecret: undefined
+        })
+        const grant = await Grant.query().insert(
+          generateBaseGrant({ tenantId: unconfiguredTenant.id })
+        )
+        const interaction = await Interaction.query().insert(
+          generateBaseInteraction(grant)
+        )
+
+        const ctx = createContext<StartContext>(
+          {
+            headers: {
+              Accept: 'application/json',
+              'Content-Type': 'application/json'
+            }
+          },
+          { id: interaction.id, nonce: interaction.nonce }
+        )
+
+        await expect(interactionRoutes.start(ctx)).rejects.toMatchObject({
+          status: 500,
+          code: GNAPErrorCode.RequestDenied,
+          message: 'internal server error'
+        })
+      })
       test('Interaction start fails if interaction is invalid', async (): Promise<void> => {
         const ctx = createContext<StartContext>(
           {
@@ -100,6 +134,7 @@ describe('Interaction Routes', (): void => {
       test('Interaction start fails if grant is revoked', async (): Promise<void> => {
         const grant = await Grant.query().insert(
           generateBaseGrant({
+            tenantId: tenant.id,
             state: GrantState.Finalized,
             finalizationReason: GrantFinalization.Revoked
           })
@@ -139,12 +174,12 @@ describe('Interaction Routes', (): void => {
             },
             url: `/interact/${interaction.id}/${interaction.nonce}`
           },
-          { id: interaction.id, nonce: interaction.nonce }
+          { id: interaction.id, nonce: interaction.nonce, tenantId: tenant.id }
         )
 
         assert.ok(interaction.id)
-
-        const redirectUrl = new URL(config.identityServerUrl)
+        assert.ok(tenant.idpConsentUrl)
+        const redirectUrl = new URL(tenant.idpConsentUrl)
         redirectUrl.searchParams.set('interactId', interaction.id)
         const redirectSpy = jest.spyOn(ctx, 'redirect')
 
@@ -236,6 +271,7 @@ describe('Interaction Routes', (): void => {
       test('Cannot finish interaction with revoked grant', async (): Promise<void> => {
         const grant = await Grant.query().insert(
           generateBaseGrant({
+            tenantId: tenant.id,
             state: GrantState.Finalized,
             finalizationReason: GrantFinalization.Revoked
           })
@@ -265,10 +301,12 @@ describe('Interaction Routes', (): void => {
 
       describe('Interactions for grant with finish method', (): void => {
         test('Can finish accepted interaction', async (): Promise<void> => {
-          const grant = await Grant.query().insert({
-            ...generateBaseGrant(),
-            state: GrantState.Approved
-          })
+          const grant = await Grant.query().insert(
+            generateBaseGrant({
+              tenantId: tenant.id,
+              state: GrantState.Approved
+            })
+          )
 
           await Access.query().insert({
             ...BASE_GRANT_ACCESS,
@@ -325,7 +363,7 @@ describe('Interaction Routes', (): void => {
 
         test('Can finish rejected interaction', async (): Promise<void> => {
           const grant = await Grant.query().insert({
-            ...generateBaseGrant(),
+            ...generateBaseGrant({ tenantId: tenant.id }),
             state: GrantState.Finalized,
             finalizationReason: GrantFinalization.Rejected
           })
@@ -410,7 +448,7 @@ describe('Interaction Routes', (): void => {
         let grantWithoutFinish: Grant
         beforeEach(async (): Promise<void> => {
           grantWithoutFinish = await Grant.query().insert(
-            generateBaseGrant({ noFinishMethod: true })
+            generateBaseGrant({ noFinishMethod: true, tenantId: tenant.id })
           )
 
           await Access.query().insert({
@@ -448,6 +486,7 @@ describe('Interaction Routes', (): void => {
         test('Can finish rejected interaction', async (): Promise<void> => {
           const grant = await Grant.query().insert({
             ...generateBaseGrant({
+              tenantId: tenant.id,
               noFinishMethod: true
             }),
             state: GrantState.Finalized,
@@ -487,6 +526,7 @@ describe('Interaction Routes', (): void => {
         test('Cannot finish invalid interaction', async (): Promise<void> => {
           const grant = await Grant.query().insert({
             ...generateBaseGrant({
+              tenantId: tenant.id,
               noFinishMethod: true
             }),
             state: GrantState.Finalized,
@@ -527,14 +567,17 @@ describe('Interaction Routes', (): void => {
     })
 
     describe('IDP - Grant details', (): void => {
+      let tenant: Tenant
       let grant: Grant
       let access: Access
       let interaction: Interaction
 
-      beforeAll(async (): Promise<void> => {
-        grant = await Grant.query().insert({
-          ...generateBaseGrant()
-        })
+      beforeEach(async (): Promise<void> => {
+        tenant = await Tenant.query().insert(generateTenant())
+
+        grant = await Grant.query().insert(
+          generateBaseGrant({ tenantId: tenant.id })
+        )
 
         access = await Access.query().insertAndFetch({
           ...BASE_GRANT_ACCESS,
@@ -552,7 +595,7 @@ describe('Interaction Routes', (): void => {
             headers: {
               Accept: 'application/json',
               'Content-Type': 'application/json',
-              'x-idp-secret': Config.identityServerSecret
+              'x-idp-secret': tenant.idpSecret
             },
             url: `/grant/${interaction.id}/${interaction.nonce}`,
             method: 'GET'
@@ -581,7 +624,7 @@ describe('Interaction Routes', (): void => {
             headers: {
               Accept: 'application/json',
               'Content-Type': 'application/json',
-              'x-idp-secret': Config.identityServerSecret
+              'x-idp-secret': tenant.idpSecret
             },
             url: `/grant/${interaction.id}/${interaction.nonce}`,
             method: 'GET'
@@ -596,11 +639,13 @@ describe('Interaction Routes', (): void => {
       })
 
       test('Cannot get grant details for revoked grant', async (): Promise<void> => {
-        const revokedGrant = await Grant.query().insert({
-          ...generateBaseGrant(),
-          state: GrantState.Finalized,
-          finalizationReason: GrantFinalization.Revoked
-        })
+        const revokedGrant = await Grant.query().insert(
+          generateBaseGrant({
+            tenantId: tenant.id,
+            state: GrantState.Finalized,
+            finalizationReason: GrantFinalization.Revoked
+          })
+        )
 
         const interaction = await Interaction.query().insert(
           generateBaseInteraction(revokedGrant)
@@ -610,7 +655,7 @@ describe('Interaction Routes', (): void => {
             headers: {
               Accept: 'application/json',
               'Content-Type': 'application/json',
-              'x-idp-secret': Config.identityServerSecret
+              'x-idp-secret': tenant.idpSecret
             },
             url: `/grant/${interaction.id}/${interaction.nonce}`,
             method: 'GET'
@@ -644,13 +689,34 @@ describe('Interaction Routes', (): void => {
         })
       })
 
+      test('Cannot get grant details with invalid secret', async (): Promise<void> => {
+        const ctx = createContext<GetContext>(
+          {
+            headers: {
+              Accept: 'application/json',
+              'Content-Type': 'application/json',
+              'x-idp-secret': 'wrong-secret'
+            },
+            url: `/grant/${interaction.id}/${interaction.nonce}`,
+            method: 'GET'
+          },
+          { id: interaction.id, nonce: interaction.nonce }
+        )
+
+        await expect(interactionRoutes.details(ctx)).rejects.toMatchObject({
+          status: 401,
+          code: GNAPErrorCode.InvalidRequest,
+          message: 'invalid x-idp-secret'
+        })
+      })
+
       test('Cannot get grant details for nonexistent interaction', async (): Promise<void> => {
         const ctx = createContext<GetContext>(
           {
             headers: {
               Accept: 'application/json',
               'Content-Type': 'application/json',
-              'x-idp-secret': Config.identityServerSecret
+              'x-idp-secret': tenant.idpSecret
             },
             url: `/grant/${interaction.id}/${interaction.nonce}`,
             method: 'GET'
@@ -668,13 +734,53 @@ describe('Interaction Routes', (): void => {
       let pendingGrant: Grant
       beforeEach(async (): Promise<void> => {
         pendingGrant = await Grant.query().insert({
-          ...generateBaseGrant(),
+          ...generateBaseGrant({ tenantId: tenant.id }),
           state: GrantState.Pending
         })
 
         await Access.query().insert({
           ...BASE_GRANT_ACCESS,
           grantId: pendingGrant.id
+        })
+      })
+
+      test('cannot accept/reject interaction with unconfigured tenant', async (): Promise<void> => {
+        const unconfiguredTenant = await Tenant.query().insertAndFetch({
+          idpConsentUrl: undefined,
+          idpSecret: undefined
+        })
+
+        const grant = await Grant.query().insert(
+          generateBaseGrant({ tenantId: unconfiguredTenant.id })
+        )
+
+        const interaction = await Interaction.query().insert(
+          generateBaseInteraction(grant)
+        )
+
+        const ctx = createContext<ChooseContext>(
+          {
+            url: `/grant/${interaction.id}/${interaction.nonce}/accept`,
+            method: 'POST',
+            headers: {
+              Accept: 'application/json',
+              'Content-Type': 'application/json',
+              'x-idp-secret': tenant.idpSecret
+            }
+          },
+          {
+            id: interaction.id,
+            nonce: interaction.nonce,
+            choice: InteractionChoices.Accept
+          }
+        )
+
+        await expect(
+          interactionRoutes.acceptOrReject(ctx)
+        ).rejects.toMatchObject({
+          status: 404,
+          code: GNAPErrorCode.UnknownInteraction,
+          message: 'unknown interaction'
         })
       })
 
@@ -702,6 +808,31 @@ describe('Interaction Routes', (): void => {
         })
       })
 
+      test('cannot accept/reject interacetion with invalid secret', async (): Promise<void> => {
+        const ctx = createContext<ChooseContext>(
+          {
+            headers: {
+              Accept: 'application/json',
+              'Content-Type': 'application/json',
+              'x-idp-secret': 'wrong-secret'
+            }
+          },
+          {
+            id: interaction.id,
+            nonce: interaction.nonce,
+            choice: InteractionChoices.Accept
+          }
+        )
+
+        await expect(
+          interactionRoutes.acceptOrReject(ctx)
+        ).rejects.toMatchObject({
+          status: 401,
+          code: GNAPErrorCode.InvalidInteraction,
+          message: 'invalid x-idp-secret'
+        })
+      })
+
       test('can accept interaction', async (): Promise<void> => {
         const ctx = createContext<ChooseContext>(
           {
@@ -710,7 +841,7 @@ describe('Interaction Routes', (): void => {
             headers: {
               Accept: 'application/json',
               'Content-Type': 'application/json',
-              'x-idp-secret': Config.identityServerSecret
+              'x-idp-secret': tenant.idpSecret
             }
           },
           {
@@ -744,7 +875,7 @@ describe('Interaction Routes', (): void => {
             headers: {
               Accept: 'application/json',
               'Content-Type': 'application/json',
-              'x-idp-secret': Config.identityServerSecret
+              'x-idp-secret': tenant.idpSecret
             }
           },
           { id: interactId, nonce }
@@ -767,7 +898,7 @@ describe('Interaction Routes', (): void => {
             headers: {
               Accept: 'application/json',
               'Content-Type': 'application/json',
-              'x-idp-secret': Config.identityServerSecret
+              'x-idp-secret': tenant.idpSecret
             }
           },
           {
@@ -800,7 +931,7 @@ describe('Interaction Routes', (): void => {
             headers: {
               Accept: 'application/json',
               'Content-Type': 'application/json',
-              'x-idp-secret': Config.identityServerSecret
+              'x-idp-secret': tenant.idpSecret
             }
           },
           {

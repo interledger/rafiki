@@ -22,11 +22,11 @@ script:pre-request {
 
 script:post-response {
   const url = require('url')
-
+  
   if (res.getStatus() !== 200) {
     return
   }
-
+  
   const body = res.getBody()
   bru.setEnvVar("receiverAssetCode", body?.assetCode)
   bru.setEnvVar("receiverAssetScale", body?.assetScale)
