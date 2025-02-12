@@ -13,7 +13,6 @@ import { BaseService } from '../../../shared/baseService'
 import { Amount, serializeAmount } from '../../amount'
 import { RemoteIncomingPaymentError } from './errors'
 import { isGrantError } from '../../grant/errors'
-import { urlWithoutTenantId } from '../../../shared/utils'
 
 interface CreateRemoteIncomingPaymentArgs {
   walletAddressUrl: string

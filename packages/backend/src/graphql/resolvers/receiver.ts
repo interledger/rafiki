@@ -4,11 +4,7 @@ import {
   Receiver as SchemaReceiver,
   QueryResolvers
 } from '../generated/graphql'
-import {
-  ApolloContext,
-  ForTenantIdContext,
-  TenantedApolloContext
-} from '../../app'
+import { ApolloContext, TenantedApolloContext } from '../../app'
 import { Receiver } from '../../open_payments/receiver/model'
 import {
   isReceiverError,
