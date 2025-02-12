@@ -195,7 +195,7 @@ jobs:
       - name: Run performance tests
         id: perf_test
         run: |
-          pnpm --filter performance run-tests:testenv -k --vus 4 --duration 2m | tee performance.log
+          pnpm --filter performance run-tests:testenv -k --vus 6 --duration 1m | tee performance.log
         continue-on-error: true # Don't fail here, allows showing logs
 
       - name: Print MASE logs
