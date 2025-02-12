@@ -99,6 +99,10 @@ Update the variables in the following compose file with values relevant to your 
 You must change the values enclosed within the brackets of the following compose file. Substitute `newest-version` with the latest Rafiki <LinkOut href='https://github.com/interledger/rafiki/releases'>version</LinkOut>.
 :::
 
+:::caution[Running Rafiki behind a proxy]
+If you plan to run your Rafiki instance behind a proxy, you must set the `TRUST_PROXY` variable to `true`
+:::
+
 ```sh
 name: 'my-rafiki'
 services:
