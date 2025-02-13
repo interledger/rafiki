@@ -43,9 +43,7 @@ async function getTenant(
 ): Promise<Tenant | undefined> {
   const inMem = await deps.tenantCache.get(id)
   if (inMem) return inMem
-  const tenant = await Tenant.query(deps.knex)
-    .findById(id)
-    .whereNull('deletedAt')
+  const tenant = await Tenant.query(deps.knex).findById(id)
   if (tenant) await deps.tenantCache.set(tenant.id, tenant)
 
   return tenant
