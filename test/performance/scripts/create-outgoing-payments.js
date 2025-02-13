@@ -12,7 +12,7 @@ export const options = {
   // A number specifying the number of VUs to run concurrently.
   vus: 1,
   // A string specifying the total duration of the test run.
-  duration: '30s'
+  duration: '600s'
 }
 
 const CLOUD_NINE_GQL_ENDPOINT = __ENV.CLOUD_NINE_GQL_ENDPOINT
@@ -139,6 +139,7 @@ export default function (data) {
   }
 
   const createQuoteResponse = request(createQuotePayload)
+  console.log({ createQuoteResponse })
   const quote = createQuoteResponse.createQuote.quote
 
   const createOutgoingPaymentPayload = {
