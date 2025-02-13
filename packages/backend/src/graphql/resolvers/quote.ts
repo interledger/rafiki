@@ -11,7 +11,7 @@ import {
   errorToMessage
 } from '../../open_payments/quote/errors'
 import { Quote } from '../../open_payments/quote/model'
-import { ForTenantIdContext, TenantedApolloContext } from '../../app'
+import { TenantedApolloContext } from '../../app'
 import { getPageInfo } from '../../shared/pagination'
 import { Pagination, SortOrder } from '../../shared/baseModel'
 import { CreateQuoteOptions } from '../../open_payments/quote/service'
@@ -38,10 +38,10 @@ export const getQuote: QueryResolvers<TenantedApolloContext>['quote'] = async (
   return quoteToGraphql(quote)
 }
 
-export const createQuote: MutationResolvers<ForTenantIdContext>['createQuote'] =
+export const createQuote: MutationResolvers<TenantedApolloContext>['createQuote'] =
   async (parent, args, ctx): Promise<ResolversTypes['QuoteResponse']> => {
     const quoteService = await ctx.container.use('quoteService')
-    const tenantId = ctx.forTenantId
+    const tenantId = ctx.tenant.id
     if (!tenantId)
       throw new GraphQLError(
         `Assignment to the specified tenant is not permitted`,
