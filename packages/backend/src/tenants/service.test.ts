@@ -75,7 +75,7 @@ describe('Tenant Service', (): void => {
       expect(tenant).toEqual(createdTenant)
     })
 
-    test('returns undefined if tenant is deleted', async (): Promise<void> => {
+    test('returns deletedAt set if tenant is deleted', async (): Promise<void> => {
       const dbTenant = await Tenant.query(knex).insertAndFetch({
         apiSecret: 'test-secret',
         email: faker.internet.email(),
@@ -85,10 +85,10 @@ describe('Tenant Service', (): void => {
       })
 
       const tenant = await tenantService.get(dbTenant.id)
-      expect(tenant).toBeUndefined()
+      expect(tenant?.deletedAt).toBeDefined()
     })
 
-    test('returns undefined if tenant is deleted', async (): Promise<void> => {
+    test('returns deletedAt set if tenant is deleted', async (): Promise<void> => {
       const dbTenant = await Tenant.query(knex).insertAndFetch({
         apiSecret: 'test-secret',
         email: faker.internet.email(),
@@ -98,7 +98,7 @@ describe('Tenant Service', (): void => {
       })
 
       const tenant = await tenantService.get(dbTenant.id)
-      expect(tenant).toBeUndefined()
+      expect(tenant?.deletedAt).toBeDefined()
     })
   })
 
@@ -409,7 +409,8 @@ describe('Tenant Service', (): void => {
               .mockImplementation(async () => undefined)
             await tenantService.delete(tenant.id)
 
-            await expect(tenantService.get(tenant.id)).resolves.toBeUndefined()
+            const tenantDeleted = await tenantService.get(tenant.id)
+            await expect(tenantDeleted?.deletedAt).toBeDefined()
 
             // Ensure that cache was set for deletion
             expect(spyCacheDelete).toHaveBeenCalledTimes(1)
