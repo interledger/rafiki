@@ -1,6 +1,7 @@
 import http from 'k6/http'
 import { fail } from 'k6'
 import { createHMAC } from 'k6/crypto'
+import { uuidv4 } from 'https://jslib.k6.io/k6-utils/1.4.0/index.js'
 import { canonicalize } from '../dist/json-canonicalize.bundle.js'
 
 export const options = {
@@ -27,7 +28,7 @@ function generateSignedHeaders(requestPayload) {
 
   return {
     'Content-Type': 'application/json',
-    signature: `t=${timestamp}, v${SIGNATURE_VERSION}=${digest}`
+    signature: `t=${timestamp}, v${SIGNATURE_VERSION}=${digest}, n=${uuidv4()}`
   }
 }
 
