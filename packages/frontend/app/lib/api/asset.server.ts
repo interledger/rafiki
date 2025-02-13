@@ -140,12 +140,8 @@ export const listAssets = async (request: Request, args: QueryAssetsArgs) => {
   return response.data.assets
 }
 
-export const createAsset = async (
-  request: Request,
-  args: CreateAssetInput,
-  tenantId?: string
-) => {
-  const apolloClient = await getApolloClient(request, tenantId)
+export const createAsset = async (request: Request, args: CreateAssetInput) => {
+  const apolloClient = await getApolloClient(request)
   const response = await apolloClient.mutate<
     CreateAssetMutation,
     CreateAssetMutationVariables

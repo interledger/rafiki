@@ -394,6 +394,8 @@ input CreateAssetInput {
   liquidityThreshold: UInt64
   "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency)."
   idempotencyKey: String
+  "Unique identifier of the tenant associated with the asset. This cannot be changed. Optional, if not provided, the tenantId will be obtained from the signature."
+  tenantId: ID
 }
 
 input UpdateAssetInput {

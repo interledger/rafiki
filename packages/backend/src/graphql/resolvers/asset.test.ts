@@ -3,7 +3,11 @@ import assert from 'assert'
 import { v4 as uuid } from 'uuid'
 
 import { getPageTests } from './page.test'
-import { createTestApp, TestContainer } from '../../tests/app'
+import {
+  createApolloClient,
+  createTestApp,
+  TestContainer
+} from '../../tests/app'
 import { IocContract } from '@adonisjs/fold'
 import { AppServices } from '../../app'
 import { initIocContainer } from '../..'
@@ -32,6 +36,7 @@ import { isFeeError } from '../../fee/errors'
 import { createFee } from '../../tests/fee'
 import { createAsset } from '../../tests/asset'
 import { GraphQLErrorCode } from '../errors'
+import { createTenant } from '../../tests/tenant'
 
 describe('Asset Resolvers', (): void => {
   let deps: IocContract<AppServices>
@@ -207,6 +212,55 @@ describe('Asset Resolvers', (): void => {
             message: 'unexpected',
             extensions: expect.objectContaining({
               code: GraphQLErrorCode.InternalServerError
+            })
+          })
+        )
+      }
+    })
+
+    test('bad input data when not allowed to perform cross tenant create', async (): Promise<void> => {
+      const otherTenant = await createTenant(deps)
+      const badInputData = {
+        ...randomAsset(),
+        tenantId: uuid()
+      }
+
+      const tenantedApolloClient = await createApolloClient(
+        appContainer.container,
+        appContainer.app,
+        otherTenant.id
+      )
+      try {
+        expect.assertions(2)
+        await tenantedApolloClient
+          .mutate({
+            mutation: gql`
+              mutation CreateAsset($input: CreateAssetInput!) {
+                createAsset(input: $input) {
+                  asset {
+                    id
+                  }
+                }
+              }
+            `,
+            variables: {
+              input: badInputData
+            }
+          })
+          .then((query): AssetMutationResponse => {
+            if (query.data) {
+              return query.data.createAsset
+            } else {
+              throw new Error('Data was empty')
+            }
+          })
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApolloError)
+        expect((error as ApolloError).graphQLErrors).toContainEqual(
+          expect.objectContaining({
+            message: 'Assignment to the specified tenant is not permitted',
+            extensions: expect.objectContaining({
+              code: GraphQLErrorCode.BadUserInput
             })
           })
         )

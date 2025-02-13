@@ -200,6 +200,8 @@ export type CreateAssetInput = {
   liquidityThreshold?: InputMaybe<Scalars['UInt64']['input']>;
   /** Difference in order of magnitude between the standard unit of an asset and its corresponding fractional unit. */
   scale: Scalars['UInt8']['input'];
+  /** Unique identifier of the tenant associated with the asset. This cannot be changed. Optional, if not provided, the tenantId will be obtained from the signature. */
+  tenantId?: InputMaybe<Scalars['String']['input']>;
   /** Minimum amount of liquidity that can be withdrawn from the asset. */
   withdrawalThreshold?: InputMaybe<Scalars['UInt64']['input']>;
 };
