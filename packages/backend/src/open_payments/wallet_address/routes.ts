@@ -52,6 +52,16 @@ export async function getWalletAddress(
     )
   }
 
+  // Redirect to the wallet if the client accepts HTML
+  if (ctx.request.header['accept']?.includes('text/html')) {
+    ctx.set(
+      'Location',
+      `${deps.config.ilpWalletUrl}/${ctx.request.header['host']}${ctx.request.url}`
+    )
+    ctx.status = 307
+    return
+  }
+
   // We always fetch the additional properties, but not the properties that are not exposed to open-payments:
   walletAddress.additionalProperties =
     await deps.walletAddressService.getAdditionalProperties(

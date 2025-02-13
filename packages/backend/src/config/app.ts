@@ -192,6 +192,7 @@ export const Config = {
     'MAX_OUTGOING_PAYMENT_RETRY_ATTEMPTS',
     5
   ),
+  ilpWalletUrl: envString('ILP_WALLET_URL', 'https://interledger.app/me'),
   localCacheDuration: envInt('LOCAL_CACHE_DURATION_MS', 15_000)
 }
 
