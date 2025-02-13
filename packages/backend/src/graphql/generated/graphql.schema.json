@@ -1131,6 +1131,18 @@
             "deprecationReason": null
           },
           {
+            "name": "tenantId",
+            "description": "Unique identifier of the tenant associated with the asset. This cannot be changed. Optional, if not provided, the tenantId will be obtained from the signature.",
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "withdrawalThreshold",
             "description": "Minimum amount of liquidity that can be withdrawn from the asset.",
             "type": {

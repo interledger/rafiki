@@ -23,7 +23,7 @@ BigInt.prototype.toJSON = function (this: bigint) {
   return this.toString()
 }
 
-async function createAuthLink(request: Request, tenantId?: string) {
+async function createAuthLink(request: Request) {
   return setContext(async (gqlRequest, { headers }) => {
     const timestamp = Date.now()
     const version = process.env.SIGNATURE_VERSION
@@ -53,10 +53,9 @@ async function createAuthLink(request: Request, tenantId?: string) {
       }
     }
 
-    const sessionTenantId = session.get('tenantId')
-    if (sessionTenantId || tenantId) {
-      // Use session tenant id if operator does not specify other tenant
-      link.headers['tenant-id'] = tenantId ?? sessionTenantId
+    const tenantId = session.get('tenantId')
+    if (tenantId) {
+      link.headers['tenant-id'] = tenantId
     }
 
     return link
@@ -67,9 +66,9 @@ const httpLink = createHttpLink({
   uri: process.env.GRAPHQL_URL
 })
 
-export async function getApolloClient(request: Request, tenantId?: string) {
+export async function getApolloClient(request: Request) {
   return new ApolloClient({
     cache: new InMemoryCache({}),
-    link: ApolloLink.from([await createAuthLink(request, tenantId), httpLink])
+    link: ApolloLink.from([await createAuthLink(request), httpLink])
   })
 }

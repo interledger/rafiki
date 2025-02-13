@@ -6,7 +6,7 @@ import {
   useNavigation
 } from '@remix-run/react'
 import { PageHeader } from '~/components'
-import { Button, Dropdown, ErrorPanel, Input } from '~/components/ui'
+import { Button, Select, ErrorPanel, Input } from '~/components/ui'
 import { createAsset } from '~/lib/api/asset.server'
 import { messageStorage, setMessageAndRedirect } from '~/lib/message.server'
 import { createAssetSchema } from '~/lib/validate.server'
@@ -81,10 +81,10 @@ export default function CreateAssetPage() {
                     error={response?.errors.fieldErrors.withdrawalThreshold}
                   />
                   {tenants && (
-                    <Dropdown
+                    <Select
                       options={tenants.map((tenant) => ({
-                        label: tenant.node.id,
-                        value: `${tenant.node.id} ${tenant.node.publicName ? `(${tenant.node.publicName})` : ''}`
+                        label: `${tenant.node.id}${tenant.node.publicName ? ` (${tenant.node.publicName})` : ''}`,
+                        value: tenant.node.id
                       }))}
                       name='tenantId'
                       placeholder='Select tenant...'
@@ -130,8 +130,6 @@ export async function action({ request }: ActionFunctionArgs) {
     return json({ errors }, { status: 400 })
   }
 
-  // Make input fields match GraphQL schema
-  delete result.data.tenantId
   const response = await createAsset(request, {
     ...result.data,
     ...(result.data.withdrawalThreshold
