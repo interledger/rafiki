@@ -58,7 +58,7 @@ pnpm --filter performance run-tests-docker
 
 ### Running Against Test Environment
 
-To run the performance tests against the test environment (which does not require manual initialization):
+To run the performance tests against the test environment:
 
 ```sh
 pnpm --filter performance run-tests:testenv
