@@ -1008,7 +1008,7 @@ export type OutgoingPayment = BasePayment & Model & {
   state: OutgoingPaymentState;
   /** Number of attempts made to send an outgoing payment. */
   stateAttempts: Scalars['Int']['output'];
-  /** Tenant ID of the wallet address. */
+  /** Tenant ID of the outgoing payment. */
   tenantId?: Maybe<Scalars['String']['output']>;
   /** Unique identifier of the wallet address under which the outgoing payment was created. */
   walletAddressId: Scalars['ID']['output'];
@@ -1189,7 +1189,7 @@ export type Query = {
   peerByAddressAndAsset?: Maybe<Peer>;
   /** Fetch a paginated list of peers. */
   peers: PeersConnection;
-  /** Fetch an Open Payments quote by its ID and tenant ID. */
+  /** Fetch an Open Payments quote by its ID. */
   quote?: Maybe<Quote>;
   /** Retrieve an Open Payments incoming payment by receiver ID. The receiver's wallet address can be hosted on this server or a remote Open Payments resource server. */
   receiver?: Maybe<Receiver>;

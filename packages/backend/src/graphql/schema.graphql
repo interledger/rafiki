@@ -74,7 +74,7 @@ type Query {
     tenantId: String
   ): WalletAddressesConnection!
 
-  "Fetch an Open Payments quote by its ID and tenant ID."
+  "Fetch an Open Payments quote by its ID."
   quote("Unique identifier of the quote." id: String!): Quote
 
   "Fetch an Open Payments outgoing payment by its ID."
@@ -1023,7 +1023,7 @@ type OutgoingPayment implements BasePayment & Model {
   createdAt: String!
   "Unique identifier of the grant under which the outgoing payment was created."
   grantId: String
-  "Tenant ID of the wallet address."
+  "Tenant ID of the outgoing payment."
   tenantId: String
 }
 

@@ -5507,7 +5507,7 @@
           },
           {
             "name": "tenantId",
-            "description": "Tenant ID of the wallet address.",
+            "description": "Tenant ID of the outgoing payment.",
             "args": [],
             "type": {
               "kind": "SCALAR",
@@ -7008,7 +7008,7 @@
           },
           {
             "name": "quote",
-            "description": "Fetch an Open Payments quote by its ID and tenant ID.",
+            "description": "Fetch an Open Payments quote by its ID.",
             "args": [
               {
                 "name": "id",
