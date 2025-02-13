@@ -58,7 +58,7 @@ export async function getWalletAddress(
       'Location',
       `${deps.config.ilpWalletUrl}/${ctx.request.header['host']}${ctx.request.url}`
     )
-    ctx.status = 307
+    ctx.status = 302
     return
   }
 

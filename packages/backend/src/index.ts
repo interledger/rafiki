@@ -174,7 +174,7 @@ export function initIocContainer(
 
     // TODO: remove this once the wallet address server spec is available
     const walletAddressServerSpec = await createOpenAPI(
-      `https://raw.githubusercontent.com/interledger/open-payments/4043c9d6d938c3e2c2db1fb427ac6778f21f52f7/openapi/wallet-address-server.yaml`
+      `https://raw.githubusercontent.com/interledger/open-payments/7878376a834dbecc490838b98d2a0dc21dc2ae93/openapi/wallet-address-server.yaml`
     )
 
     return {
