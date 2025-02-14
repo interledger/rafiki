@@ -425,7 +425,7 @@ async function approveIncomingPayment(
 ): Promise<IncomingPayment | IncomingPaymentError> {
   return deps.knex.transaction(async (trx) => {
     const payment = await IncomingPayment.query(trx)
-      .get({ id, tenantId })
+      .findOne({ id, tenantId })
       .forUpdate()
 
     if (!payment) return IncomingPaymentError.UnknownPayment
@@ -465,7 +465,7 @@ async function cancelIncomingPayment(
 ): Promise<IncomingPayment | IncomingPaymentError> {
   return deps.knex.transaction(async (trx) => {
     const payment = await IncomingPayment.query(trx)
-      .get({ id, tenantId })
+      .findOne({ id, tenantId })
       .forUpdate()
 
     if (!payment) return IncomingPaymentError.UnknownPayment
@@ -505,7 +505,7 @@ async function completeIncomingPayment(
 ): Promise<IncomingPayment | IncomingPaymentError> {
   return deps.knex.transaction(async (trx) => {
     const payment = await IncomingPayment.query(trx)
-      .get({ id, tenantId })
+      .findOne({ id, tenantId })
       .forUpdate()
     if (!payment) return IncomingPaymentError.UnknownPayment
 

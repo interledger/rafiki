@@ -41,17 +41,17 @@ export async function createOutgoingPayment(
     const walletAddressService = await deps.use('walletAddressService')
     const streamServer = await deps.use('streamServer')
     const streamCredentials = streamServer.generateCredentials()
-
-    const incomingPayment = await createIncomingPayment(deps, {
-      walletAddressId: options.walletAddressId,
-      // TODO: replace
-      tenantId: Config.operatorTenantId
-    })
-    await incomingPayment.$query().delete()
     const walletAddress = await walletAddressService.get(
       options.walletAddressId
     )
     assert(walletAddress)
+
+    const incomingPayment = await createIncomingPayment(deps, {
+      walletAddressId: options.walletAddressId,
+      tenantId: walletAddress.tenantId
+    })
+    await incomingPayment.$query().delete()
+
     jest
       .spyOn(receiverService, 'get')
       .mockResolvedValueOnce(
