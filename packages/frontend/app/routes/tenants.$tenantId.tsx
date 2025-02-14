@@ -79,9 +79,13 @@ export default function ViewTenantPage() {
           <div className='col-span-1 pt-3'>
             <h3 className='text-lg font-medium'>General Information</h3>
             <p className='text-sm'>
-              {tenantDeleted && tenant.deletedAt
-                ? `Deleted at ${new Date(tenant.deletedAt).toLocaleString()}`
-                : `Created at ${new Date(tenant.createdAt).toLocaleString()}`}
+              {`Created at ${new Date(tenant.createdAt).toLocaleString()}`}
+              {tenantDeleted && tenant.deletedAt && (
+                <>
+                  <br />
+                  {`Deleted at ${new Date(tenant.deletedAt).toLocaleString()}`}
+                </>
+              )}
             </p>
             <ErrorPanel errors={response?.errors.message} />
           </div>

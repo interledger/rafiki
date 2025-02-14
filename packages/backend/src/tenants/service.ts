@@ -28,7 +28,7 @@ export async function createTenantService(
   }
 
   return {
-    get: (id: string, includeDeleted: boolean = false) =>
+    get: (id: string, includeDeleted?: boolean) =>
       getTenant(deps, id, includeDeleted),
     create: (options) => createTenant(deps, options),
     update: (options) => updateTenant(deps, options),
@@ -41,7 +41,7 @@ export async function createTenantService(
 async function getTenant(
   deps: ServiceDependencies,
   id: string,
-  includeDeleted: boolean
+  includeDeleted: boolean = false
 ): Promise<Tenant | undefined> {
   const inMem = await deps.tenantCache.get(id)
   if (inMem) {
