@@ -125,6 +125,10 @@ describe('Tenant Service', (): void => {
 
       const tenant = await tenantService.get(dbTenant.id)
       expect(tenant).toBeUndefined()
+
+      // Ensure Operator is able to access tenant even if deleted:
+      const tenantDel = await tenantService.get(dbTenant.id, true)
+      expect(tenantDel?.deletedAt).toBeDefined()
     })
   })
 
