@@ -41,12 +41,13 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
   if (!tenant)
     throw json(null, { status: 404, statusText: 'Tenant not found.' })
 
+  const tenantDeleted = tenant.deletedAt ? tenant.deletedAt.length > 0 : false
   const me = await whoAmI(request)
-  return json({ tenant, me })
+  return json({ tenant, me, tenantDeleted })
 }
 
 export default function ViewTenantPage() {
-  const { tenant, me } = useLoaderData<typeof loader>()
+  const { tenant, me, tenantDeleted } = useLoaderData<typeof loader>()
   const response = useActionData<typeof action>()
   const navigation = useNavigation()
   const [formData, setFormData] = useState<FormData>()
@@ -78,7 +79,13 @@ export default function ViewTenantPage() {
           <div className='col-span-1 pt-3'>
             <h3 className='text-lg font-medium'>General Information</h3>
             <p className='text-sm'>
-              Created at {new Date(tenant.createdAt).toLocaleString()}
+              {`Created at ${new Date(tenant.createdAt).toLocaleString()}`}
+              {tenantDeleted && tenant.deletedAt && (
+                <>
+                  <br />
+                  {`Deleted at ${new Date(tenant.deletedAt).toLocaleString()}`}
+                </>
+              )}
             </p>
             <ErrorPanel errors={response?.errors.message} />
           </div>
@@ -102,25 +109,29 @@ export default function ViewTenantPage() {
                   <Input
                     label='Public Name'
                     name='publicName'
+                    disabled={tenantDeleted}
                     defaultValue={tenant.publicName ?? undefined}
                     error={response?.errors?.fieldErrors.publicName}
                   />
                   <Input
                     label='Email'
                     name='email'
+                    disabled={tenantDeleted}
                     defaultValue={tenant.email ?? undefined}
                     error={response?.errors?.fieldErrors.email}
                   />
                 </div>
                 <div className='flex justify-end p-4'>
-                  <Button
-                    aria-label='save general information'
-                    type='submit'
-                    name='intent'
-                    value='general'
-                  >
-                    {isSubmitting ? 'Saving ...' : 'Save'}
-                  </Button>
+                  {!tenantDeleted && (
+                    <Button
+                      aria-label='save general information'
+                      type='submit'
+                      name='intent'
+                      value='general'
+                    >
+                      {isSubmitting ? 'Saving ...' : 'Save'}
+                    </Button>
+                  )}
                 </div>
               </fieldset>
             </Form>
@@ -147,25 +158,29 @@ export default function ViewTenantPage() {
                   <Input
                     name='idpConsentUrl'
                     label='Consent URL'
+                    disabled={tenantDeleted}
                     defaultValue={tenant.idpConsentUrl ?? undefined}
                     error={response?.errors?.fieldErrors.idpConsentUrl}
                   />
                   <PasswordInput
                     name='idpSecret'
                     label='Secret'
+                    disabled={tenantDeleted}
                     defaultValue={tenant.idpSecret ?? undefined}
                     error={response?.errors?.fieldErrors.idpSecret}
                   />
                 </div>
                 <div className='flex justify-end p-4'>
-                  <Button
-                    aria-label='save ip information'
-                    type='submit'
-                    name='intent'
-                    value='ip'
-                  >
-                    {isSubmitting ? 'Saving ...' : 'Save'}
-                  </Button>
+                  {!tenantDeleted && (
+                    <Button
+                      aria-label='save ip information'
+                      type='submit'
+                      name='intent'
+                      value='ip'
+                    >
+                      {isSubmitting ? 'Saving ...' : 'Save'}
+                    </Button>
+                  )}
                 </div>
               </fieldset>
             </Form>
@@ -197,7 +212,7 @@ export default function ViewTenantPage() {
         </div>
         {/* Sensitive - END */}
         {/* DELETE TENANT - Danger zone */}
-        {me.isOperator && me.id !== tenant.id && (
+        {!tenantDeleted && me.isOperator && me.id !== tenant.id && (
           <DangerZone title='Delete Tenant'>
             <Form method='post' onSubmit={submitHandler}>
               <Input type='hidden' name='id' value={tenant.id} />

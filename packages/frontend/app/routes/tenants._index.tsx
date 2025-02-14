@@ -80,12 +80,8 @@ export default function TenantsPage() {
               tenantEdges.map((tenant) => (
                 <Table.Row
                   key={tenant.node.id}
-                  className={tenant.node.deletedAt ? '' : 'cursor-pointer'}
-                  onClick={() =>
-                    tenant.node.deletedAt
-                      ? 'return'
-                      : navigate(`/tenants/${tenant.node.id}`)
-                  }
+                  className='cursor-pointer'
+                  onClick={() => navigate(`/tenants/${tenant.node.id}`)}
                 >
                   <Table.Cell>
                     <div className='flex flex-col'>
