@@ -61,7 +61,6 @@ import {
 } from './telemetry/service'
 import { createWebhookService } from './webhook/service'
 import { createInMemoryDataStore } from './middleware/cache/data-stores/in-memory'
-import { createOpenAPI } from '@interledger/openapi'
 
 BigInt.prototype.toJSON = function () {
   return this.toString()
@@ -170,12 +169,7 @@ export function initIocContainer(
 
   container.singleton('openApi', async () => {
     const resourceServerSpec = await getResourceServerOpenAPI()
-    // const walletAddressServerSpec = await getWalletAddressServerOpenAPI()
-
-    // TODO: remove this once the wallet address server spec is available
-    const walletAddressServerSpec = await createOpenAPI(
-      `https://raw.githubusercontent.com/interledger/open-payments/7878376a834dbecc490838b98d2a0dc21dc2ae93/openapi/wallet-address-server.yaml`
-    )
+    const walletAddressServerSpec = await getWalletAddressServerOpenAPI()
 
     return {
       resourceServerSpec,

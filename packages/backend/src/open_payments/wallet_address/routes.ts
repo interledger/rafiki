@@ -53,10 +53,13 @@ export async function getWalletAddress(
   }
 
   // Redirect to the wallet if the client accepts HTML
-  if (ctx.request.header['accept']?.includes('text/html')) {
+  if (
+    deps.config.walletAddressRedirectHtmlPage &&
+    ctx.request.header['accept']?.includes('text/html')
+  ) {
     ctx.set(
       'Location',
-      `${deps.config.ilpWalletUrl}/${ctx.request.header['host']}${ctx.request.url}`
+      `${deps.config.walletAddressRedirectHtmlPage}/${ctx.request.header['host']}${ctx.request.url}`
     )
     ctx.status = 302
     return
