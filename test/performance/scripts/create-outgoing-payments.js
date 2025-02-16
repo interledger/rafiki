@@ -10,10 +10,28 @@ import { canonicalize } from '../dist/json-canonicalize.bundle.js'
 
 export const options = {
   // A number specifying the number of VUs to run concurrently.
-  vus: 1,
+  vus: 7,
   // A string specifying the total duration of the test run.
-  duration: '600s'
+  duration: '300s'
+  // iterations: 1
 }
+// After refactoring Outgoing Payment worker to consume from queue (not poll db)
+// 7 vu, 300s
+// # 1
+// http req: 29521 98.337452/s
+// iterations: 9840  32.77804/s
+// # 2
+// http req: 27609  91.974182/s
+// iterations: 9203   30.658061/s
+// # 3
+// http req: 28525  95.051174/s
+// iterations: 9510   31.689278/s
+
+// 9 vu, 300s
+// bombed out
+
+// 8 vu, 300s
+// bombed out
 
 const CLOUD_NINE_GQL_ENDPOINT = __ENV.CLOUD_NINE_GQL_ENDPOINT
 const CLOUD_NINE_WALLET_ADDRESS = __ENV.CLOUD_NINE_WALLET_ADDRESS
@@ -139,7 +157,6 @@ export default function (data) {
   }
 
   const createQuoteResponse = request(createQuotePayload)
-  console.log({ createQuoteResponse })
   const quote = createQuoteResponse.createQuote.quote
 
   const createOutgoingPaymentPayload = {

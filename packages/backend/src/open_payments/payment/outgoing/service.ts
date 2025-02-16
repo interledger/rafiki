@@ -42,8 +42,12 @@ import { QuoteService } from '../../quote/service'
 import { isQuoteError } from '../../quote/errors'
 import { Pagination, SortOrder } from '../../../shared/baseModel'
 import { FilterString } from '../../../shared/filters'
-import { IAppConfig } from '../../../config/app'
+import { Config, IAppConfig } from '../../../config/app'
 import { AssetService } from '../../../asset/service'
+
+import { Queue } from 'bullmq'
+
+const queue = new Queue('OP', { connection: { url: Config.redisUrl } })
 
 export interface OutgoingPaymentService
   extends WalletAddressSubresourceService<OutgoingPayment> {
@@ -57,7 +61,7 @@ export interface OutgoingPaymentService
   fund(
     options: FundOutgoingPaymentOptions
   ): Promise<OutgoingPayment | FundingError>
-  processNext(): Promise<string | undefined>
+  processNext(payment: any): Promise<string | undefined>
 }
 
 export interface ServiceDependencies extends BaseService {
@@ -86,7 +90,7 @@ export async function createOutgoingPaymentService(
     create: (options) => createOutgoingPayment(deps, options),
     cancel: (options) => cancelOutgoingPayment(deps, options),
     fund: (options) => fundPayment(deps, options),
-    processNext: () => worker.processPendingPayment(deps),
+    processNext: (payment) => worker.processPendingPayment(deps, payment),
     getWalletAddressPage: (options) => getWalletAddressPage(deps, options)
   }
 }
@@ -670,8 +674,28 @@ async function fundPayment(
     if (error) {
       return error
     }
-    await payment.$query(trx).patch({ state: OutgoingPaymentState.Sending })
-    return await addSentAmount(deps, payment)
+    const updatedPayment = await payment
+      .$query(trx)
+      .patch({ state: OutgoingPaymentState.Sending })
+
+    const paymentWithSentAmount = await addSentAmount(deps, payment)
+
+    queue.add(
+      'funded',
+      {
+        ...paymentWithSentAmount.toJSON(),
+        state: OutgoingPaymentState.Sending
+      },
+      {
+        attempts: 5, // Retry up to 5 times
+        backoff: {
+          type: 'exponential', // or 'fixed'
+          delay: 3000 // 3-second delay between retries
+        }
+      }
+    )
+
+    return paymentWithSentAmount
   })
 }
 

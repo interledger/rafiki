@@ -12,7 +12,8 @@ export const RETRY_BACKOFF_SECONDS = 10
 
 // Returns the id of the processed payment (if any).
 export async function processPendingPayment(
-  deps_: ServiceDependencies
+  deps_: ServiceDependencies,
+  payment: any
 ): Promise<string | undefined> {
   const tracer = trace.getTracer('outgoing_payment_worker')
 
@@ -25,30 +26,63 @@ export async function processPendingPayment(
           callName: 'OutgoingPaymentWorker:processPendingPayment'
         }
       )
-      const paymentId = await deps_.knex.transaction(async (trx) => {
-        const payment = await getPendingPayment(trx, deps_)
-        if (!payment) return
-
-        await handlePaymentLifecycle(
-          {
-            ...deps_,
-            knex: trx,
-            logger: deps_.logger.child({
-              payment: payment.id,
-              from_state: payment.state
-            })
-          },
-          payment
-        )
-        return payment.id
-      })
+      await handlePaymentLifecycle(
+        {
+          ...deps_,
+          // knex: trx,
+          logger: deps_.logger.child({
+            payment: payment.id,
+            from_state: payment.state
+          })
+        },
+        payment
+      )
 
       stopTimer()
       span.end()
-      return paymentId
+      return payment.id
     }
   )
 }
+
+// export async function processPendingPayment(
+//   deps_: ServiceDependencies
+// ): Promise<string | undefined> {
+//   const tracer = trace.getTracer('outgoing_payment_worker')
+
+//   return tracer.startActiveSpan(
+//     'outgoingPaymentLifecycle',
+//     async (span: Span) => {
+//       const stopTimer = deps_.telemetry.startTimer(
+//         'process_pending_payment_ms',
+//         {
+//           callName: 'OutgoingPaymentWorker:processPendingPayment'
+//         }
+//       )
+//       const paymentId = await deps_.knex.transaction(async (trx) => {
+//         const payment = await getPendingPayment(trx, deps_)
+//         if (!payment) return
+
+//         await handlePaymentLifecycle(
+//           {
+//             ...deps_,
+//             knex: trx,
+//             logger: deps_.logger.child({
+//               payment: payment.id,
+//               from_state: payment.state
+//             })
+//           },
+//           payment
+//         )
+//         return payment.id
+//       })
+
+//       stopTimer()
+//       span.end()
+//       return paymentId
+//     }
+//   )
+// }
 
 // Fetch (and lock) a payment for work.
 async function getPendingPayment(
@@ -80,13 +114,44 @@ async function getPendingPayment(
   return payments[0]
 }
 
+// async function handlePaymentLifecycle(
+//   deps: ServiceDependencies,
+//   payment: OutgoingPayment
+// ): Promise<void> {
+//   if (payment.state !== OutgoingPaymentState.Sending) {
+//     deps.logger.warn('unexpected payment in lifecycle')
+//     return
+//   }
+
+//   const [paymentWalletAddress, quoteAsset] = await Promise.all([
+//     deps.walletAddressService.get(payment.walletAddressId),
+//     deps.assetService.get(payment.quote.assetId)
+//   ])
+
+//   payment.walletAddress = paymentWalletAddress
+//   if (quoteAsset) {
+//     payment.quote.asset = quoteAsset
+//   }
+
+//   const stopTimer = deps.telemetry.startTimer('handle_sending_ms', {
+//     callName: 'OutoingPaymentWorker:handleSending'
+//   })
+//   try {
+//     await lifecycle.handleSending(deps, payment)
+//   } catch (error) {
+//     await onLifecycleError(deps, payment, error as Error | PaymentError)
+//   } finally {
+//     stopTimer()
+//   }
+// }
+
 async function handlePaymentLifecycle(
   deps: ServiceDependencies,
   payment: OutgoingPayment
 ): Promise<void> {
   if (payment.state !== OutgoingPaymentState.Sending) {
     deps.logger.warn('unexpected payment in lifecycle')
-    return
+    throw new Error('unexpected payment in lifecycle')
   }
 
   const [paymentWalletAddress, quoteAsset] = await Promise.all([

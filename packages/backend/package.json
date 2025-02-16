@@ -75,6 +75,7 @@
     "ajv": "^8.12.0",
     "axios": "1.7.9",
     "base64url": "^3.0.1",
+    "bullmq": "^5.41.1",
     "dotenv": "^16.4.7",
     "extensible-error": "^1.0.2",
     "graphql": "^16.8.1",

@@ -101,6 +101,9 @@ import { LoggingPlugin } from './graphql/plugin'
 import { LocalPaymentService } from './payment-method/local/service'
 import { GrantService } from './open_payments/grant/service'
 import { AuthServerService } from './open_payments/authServer/service'
+
+import { Worker } from 'bullmq'
+
 export interface AppContextData {
   logger: Logger
   container: AppContainer
@@ -287,15 +290,26 @@ export class App {
       for (let i = 0; i < this.config.walletAddressWorkers; i++) {
         process.nextTick(() => this.processWalletAddress())
       }
-      for (let i = 0; i < this.config.outgoingPaymentWorkers; i++) {
-        process.nextTick(() => this.processOutgoingPayment())
-      }
+      // for (let i = 0; i < this.config.outgoingPaymentWorkers; i++) {
+      //   process.nextTick(() => this.processOutgoingPayment())
+      // }
       for (let i = 0; i < this.config.incomingPaymentWorkers; i++) {
         process.nextTick(() => this.processIncomingPayment())
       }
       for (let i = 0; i < this.config.webhookWorkers; i++) {
         process.nextTick(() => this.processWebhook())
       }
+
+      const worker = new Worker(
+        'OP',
+        async (job) => {
+          if (job.name === 'funded') {
+            console.log('worker found funded outgoing payment')
+            await this.processOutgoingPayment(job.data)
+          }
+        },
+        { connection: { url: this.config.redisUrl } }
+      )
     }
   }
 
@@ -775,25 +789,35 @@ export class App {
       })
   }
 
-  private async processOutgoingPayment(): Promise<void> {
+  // private async processOutgoingPayment(): Promise<void> {
+  //   if (this.isShuttingDown) return
+  //   const outgoingPaymentService = await this.container.use(
+  //     'outgoingPaymentService'
+  //   )
+  //   return outgoingPaymentService
+  //     .processNext()
+  //     .catch((err) => {
+  //       this.logger.warn({ error: err.message }, 'processOutgoingPayment error')
+  //       return true
+  //     })
+  //     .then((hasMoreWork) => {
+  //       if (hasMoreWork)
+  //         process.nextTick(() => this.processOutgoingPayment())
+  //       else
+  //         setTimeout(
+  //           () => this.processOutgoingPayment(),
+  //           this.config.outgoingPaymentWorkerIdle
+  //         ).unref()
+  //     })
+  // }
+
+  private async processOutgoingPayment(payment: any): Promise<void> {
     if (this.isShuttingDown) return
     const outgoingPaymentService = await this.container.use(
       'outgoingPaymentService'
     )
-    return outgoingPaymentService
-      .processNext()
-      .catch((err) => {
-        this.logger.warn({ error: err.message }, 'processOutgoingPayment error')
-        return true
-      })
-      .then((hasMoreWork) => {
-        if (hasMoreWork) process.nextTick(() => this.processOutgoingPayment())
-        else
-          setTimeout(
-            () => this.processOutgoingPayment(),
-            this.config.outgoingPaymentWorkerIdle
-          ).unref()
-      })
+
+    await outgoingPaymentService.processNext(payment)
   }
 
   private async createKoaServer(): Promise<Koa<Koa.DefaultState, AppContext>> {
