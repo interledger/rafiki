@@ -158,7 +158,8 @@ async function getOutgoingPayment(
     .withGraphFetched('quote')
   if (outgoingPayment) {
     outgoingPayment.walletAddress = await deps.walletAddressService.get(
-      outgoingPayment.walletAddressId
+      outgoingPayment.walletAddressId,
+      options.tenantId
     )
     const asset = await deps.assetService.get(outgoingPayment.quote.assetId)
     if (asset) outgoingPayment.quote.asset = asset
