@@ -57,6 +57,11 @@ async function getQuote(
   options: GetOptions
 ): Promise<Quote | undefined> {
   const quote = await Quote.query(deps.knex)
+    .modify((query) => {
+      if (options.tenantId) {
+        query.where({ tenantId: options.tenantId })
+      }
+    })
     .get(options)
     .withGraphFetched('fee')
   if (quote) {
@@ -64,7 +69,8 @@ async function getQuote(
     if (asset) quote.asset = asset
 
     quote.walletAddress = await deps.walletAddressService.get(
-      quote.walletAddressId
+      quote.walletAddressId,
+      quote.tenantId
     )
   }
   return quote
