@@ -184,7 +184,8 @@ describe('QuoteService', (): void => {
         beforeEach(async (): Promise<void> => {
           incomingPayment = await createIncomingPayment(deps, {
             walletAddressId: receivingWalletAddress.id,
-            incomingAmount
+            incomingAmount,
+            tenantId: Config.operatorTenantId
           })
           options = {
             tenantId,
@@ -391,7 +392,8 @@ describe('QuoteService', (): void => {
         const incomingPayment = await createIncomingPayment(deps, {
           walletAddressId: receivingWalletAddress.id,
           incomingAmount,
-          expiresAt: expiryDate
+          expiresAt: expiryDate,
+          tenantId: Config.operatorTenantId
         })
         const options: CreateQuoteOptions = {
           tenantId,
@@ -547,7 +549,8 @@ describe('QuoteService', (): void => {
       'fails to create $description',
       async ({ debitAmount, receiveAmount }): Promise<void> => {
         const incomingPayment = await createIncomingPayment(deps, {
-          walletAddressId: receivingWalletAddress.id
+          walletAddressId: receivingWalletAddress.id,
+          tenantId: Config.operatorTenantId
         })
         const options: CreateQuoteOptions = {
           tenantId,
@@ -602,7 +605,8 @@ describe('QuoteService', (): void => {
               assetCode: asset.code,
               assetScale: asset.scale,
               value: incomingAmountValue
-            }
+            },
+            tenantId: Config.operatorTenantId
           })
 
           await Fee.query().insertAndFetch({
@@ -645,7 +649,8 @@ describe('QuoteService', (): void => {
             assetCode: asset.code,
             assetScale: asset.scale,
             value: incomingAmountValue
-          }
+          },
+          tenantId: Config.operatorTenantId
         })
 
         const mockedQuote = mockQuote({
@@ -799,7 +804,8 @@ describe('QuoteService', (): void => {
       test('Local receiver uses local payment method', async () => {
         const incomingPayment = await createIncomingPayment(deps, {
           walletAddressId: receivingWalletAddress.id,
-          incomingAmount
+          incomingAmount,
+          tenantId: Config.operatorTenantId
         })
 
         const options: CreateQuoteOptions = {

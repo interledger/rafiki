@@ -123,7 +123,8 @@ describe('Pagination', (): void => {
             const paymentIds: string[] = []
             for (let i = 0; i < num; i++) {
               const payment = await createIncomingPayment(deps, {
-                walletAddressId: defaultWalletAddress.id
+                walletAddressId: defaultWalletAddress.id,
+                tenantId: Config.operatorTenantId
               })
               paymentIds.push(payment.id)
             }

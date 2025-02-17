@@ -342,7 +342,8 @@ describe('IlpPaymentService', (): void => {
         quoteId: uuid(),
         walletAddress: walletAddressMap['USD'],
         receiver: await createReceiver(deps, walletAddressMap['USD'], {
-          incomingAmount
+          incomingAmount,
+          tenantId: Config.operatorTenantId
         })
       }
 
@@ -437,7 +438,8 @@ describe('IlpPaymentService', (): void => {
             assetCode: 'USD',
             assetScale: 2,
             value: 100n
-          }
+          },
+          tenantId: Config.operatorTenantId
         })
       }
 

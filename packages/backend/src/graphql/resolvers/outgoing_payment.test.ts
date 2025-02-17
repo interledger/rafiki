@@ -164,7 +164,8 @@ describe('OutgoingPayment Resolvers', (): void => {
         }
 
         const incomingPayment = await createIncomingPayment(deps, {
-          walletAddressId: firstReceiverWalletAddress.id
+          walletAddressId: firstReceiverWalletAddress.id,
+          tenantId: Config.operatorTenantId
         })
         receiver = incomingPayment.getUrl(firstReceiverWalletAddress)
         firstOutgoingPayment = await createOutgoingPayment(deps, {
@@ -176,7 +177,8 @@ describe('OutgoingPayment Resolvers', (): void => {
         })
 
         const secondIncomingPayment = await createIncomingPayment(deps, {
-          walletAddressId: secondReceiverWalletAddress.id
+          walletAddressId: secondReceiverWalletAddress.id,
+          tenantId: Config.operatorTenantId
         })
         const secondReceiver = secondIncomingPayment.getUrl(secondWalletAddress)
         secondOutgoingPayment = await createOutgoingPayment(deps, {

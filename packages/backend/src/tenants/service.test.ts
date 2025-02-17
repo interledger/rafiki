@@ -75,7 +75,7 @@ describe('Tenant Service', (): void => {
       expect(tenant).toEqual(createdTenant)
     })
 
-    test('returns undefined if tenant is deleted', async (): Promise<void> => {
+    test('returns deletedAt set if tenant is deleted', async (): Promise<void> => {
       const dbTenant = await Tenant.query(knex).insertAndFetch({
         apiSecret: 'test-secret',
         email: faker.internet.email(),
@@ -86,6 +86,10 @@ describe('Tenant Service', (): void => {
 
       const tenant = await tenantService.get(dbTenant.id)
       expect(tenant).toBeUndefined()
+
+      // Ensure Operator is able to access tenant even if deleted:
+      const tenantDel = await tenantService.get(dbTenant.id, true)
+      expect(tenantDel?.deletedAt).toBeDefined()
     })
 
     test('returns undefined if tenant is deleted', async (): Promise<void> => {
@@ -99,6 +103,10 @@ describe('Tenant Service', (): void => {
 
       const tenant = await tenantService.get(dbTenant.id)
       expect(tenant).toBeUndefined()
+
+      // Ensure Operator is able to access tenant even if deleted:
+      const tenantDel = await tenantService.get(dbTenant.id, true)
+      expect(tenantDel?.deletedAt).toBeDefined()
     })
   })
 
@@ -414,6 +422,10 @@ describe('Tenant Service', (): void => {
             // Ensure that cache was set for deletion
             expect(spyCacheDelete).toHaveBeenCalledTimes(1)
             expect(spyCacheDelete).toHaveBeenCalledWith(tenant.id)
+
+            // Ensure Operator is able to access tenant even if deleted:
+            const tenantDel = await tenantService.get(tenant.id, true)
+            expect(tenantDel?.deletedAt).toBeDefined()
           }
         )
       )
