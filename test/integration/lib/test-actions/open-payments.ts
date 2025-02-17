@@ -16,8 +16,7 @@ import {
   UnionOmit,
   poll,
   pollCondition,
-  wait,
-  urlWithoutTenantId
+  wait
 } from '../utils'
 import { WebhookEventType } from 'mock-account-service-lib'
 import {
