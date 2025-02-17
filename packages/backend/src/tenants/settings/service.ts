@@ -128,7 +128,7 @@ async function createTenantSetting(
   if (Object.keys(dataToInsert).length <= 0) {
     return []
   }
-
+  
   return TenantSetting.query(extra?.trx ?? deps.knex).insertAndFetch(
     dataToInsert
   )
