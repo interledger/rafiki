@@ -247,6 +247,7 @@ async function createQuote(
     }
     stopTimerQuote()
 
+<<<<<<< HEAD
     // Calculate fee for fixed receive amount.
     // fixedReceiveFee is calculated if debitAmount is not provided.
     // This is done after retrieving the payment quote because we
@@ -254,6 +255,25 @@ async function createQuote(
     const fixedReceiveFee = !options.debitAmount
       ? sendingFee?.calculate(quote.debitAmount.value) ?? 0n
       : 0n
+=======
+      const createdQuote = await Quote.query(trx)
+        .insertAndFetch({
+          id: quoteId,
+          tenantId: options.tenantId,
+          walletAddressId: options.walletAddressId,
+          assetId: walletAddress.assetId,
+          receiver: options.receiver,
+          debitAmount: quote.debitAmount,
+          receiveAmount: quote.receiveAmount,
+          expiresAt: new Date(0), // expiresAt is patched in finalizeQuote
+          client: options.client,
+          feeId: sendingFee?.id,
+          estimatedExchangeRate: quote.estimatedExchangeRate
+        })
+        .withGraphFetched('fee')
+      const asset = await deps.assetService.get(createdQuote.assetId)
+      if (asset) createdQuote.asset = asset
+>>>>>>> 52b7c181 (feat(backend): tenanted quotes and outgoing payments (#3171))
 
     const unfinalizedQuote: UnfinalizedQuote = {
       id: quoteId,
