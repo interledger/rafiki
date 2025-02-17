@@ -11,11 +11,9 @@ exports.up = function (knex) {
       .index()
       .onDelete('CASCADE')
 
-    table.timestamp('createdAt').index().defaultTo(knex.fn.now())
+    table.timestamp('createdAt').defaultTo(knex.fn.now())
     table.timestamp('updatedAt').defaultTo(knex.fn.now())
     table.timestamp('deletedAt')
-
-    // table.unique(['key', 'tenantId'])
   })
 }
 

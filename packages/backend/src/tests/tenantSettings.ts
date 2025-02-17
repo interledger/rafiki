@@ -14,6 +14,13 @@ export function randomSetting(): KeyValuePair {
   }
 }
 
+export function exchangeRatesSetting(): KeyValuePair {
+  return {
+    key: 'EXCHANGE_RATES_URL',
+    value: faker.internet.url()
+  }
+}
+
 export async function createTenantSettings(
   deps: IocContract<AppServices>,
   options: CreateOptions

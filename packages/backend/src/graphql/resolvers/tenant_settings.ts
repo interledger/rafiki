@@ -67,53 +67,6 @@ export const createTenantSettings: MutationResolvers<TenantedApolloContext>['cre
     }
   }
 
-export const deleteTenantSettings: MutationResolvers<TenantedApolloContext>['deleteTenantSettings'] =
-  async (
-    parent,
-    args,
-    ctx
-  ): Promise<ResolversTypes['DeleteTenantSettingsMutationResponse']> => {
-    const tenantSettingService = await ctx.container.use('tenantSettingService')
-
-    try {
-      await tenantSettingService.delete({
-        tenantId: ctx.tenant.id,
-        key: args.input.key
-      })
-
-      return { success: true }
-    } catch (err) {
-      throw new GraphQLError('failed to delete tenant setting', {
-        extensions: {
-          code: GraphQLErrorCode.InternalServerError
-        }
-      })
-    }
-  }
-
-// export const updateTenantSetting: MutationResolvers<TenantedApolloContext>['updateTenantSetting'] =
-//     async (
-//         parent,
-//         args,
-//         ctx
-//     ): Promise<ResolversTypes['UpdateTenantSettingMutationResponse']> => {
-//         const tenantSettingService = await ctx.container.use('tenantSettingService')
-
-//         try {
-//             await tenantSettingService.update({
-//                 key: args.input.key,
-//                 value: args.input.value,
-//                 tenantId: ctx.tenant.id,
-//             })
-
-//             return {
-//                 setting: tenantSettingsToGraphql({})
-//             }
-//         }catch(err) {
-
-//         }
-//     }
-
 export const tenantSettingsToGraphql = (
   tenantSetting: TenantSetting
 ): SchemaTenantSetting => ({

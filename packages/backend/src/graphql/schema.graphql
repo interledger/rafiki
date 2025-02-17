@@ -245,10 +245,6 @@ type Mutation {
     input: CreateTenantSettingsInput!
   ): CreateTenantSettingsMutationResponse
 
-  deleteTenantSettings(
-    input: DeleteTenantSettingsInput!
-  ): DeleteTenantSettingsMutationResponse
-
   "Revoke a public key associated with a wallet address. Open Payment requests using this key for request signatures will be denied going forward."
   revokeWalletAddressKey(
     input: RevokeWalletAddressKeyInput!
@@ -345,11 +341,6 @@ type Mutation {
 
   "Delete a tenant."
   deleteTenant(id: String!): DeleteTenantMutationResponse!
-
-  "Update tenant setting."
-  updateTenantSetting(
-    input: TenantSettingInput!
-  ): UpdateTenantSettingMutationResponse!
 }
 
 type PageInfo {
@@ -646,11 +637,6 @@ input CreateWalletAddressKeyInput {
 input CreateTenantSettingsInput {
   "List of a settings for a tenant."
   settings: [TenantSettingInput!]!
-}
-
-input DeleteTenantSettingsInput {
-  "Key to delete from tenant settings."
-  key: String
 }
 
 input TenantSettingInput {
@@ -1668,15 +1654,7 @@ type TenantMutationResponse {
   tenant: Tenant!
 }
 
-type UpdateTenantSettingMutationResponse {
-  setting: TenantSetting!
-}
-
 type DeleteTenantMutationResponse {
-  success: Boolean!
-}
-
-type DeleteTenantSettingsMutationResponse {
   success: Boolean!
 }
 

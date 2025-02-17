@@ -11,7 +11,7 @@ import { TenantService } from '../service'
 import { faker } from '@faker-js/faker'
 import { getPageTests } from '../../shared/baseModel.test'
 import { Pagination, SortOrder } from '../../shared/baseModel'
-import { createTenantSettings, randomSetting } from '../../tests/tenantSettings'
+import { createTenantSettings, exchangeRatesSetting, randomSetting } from '../../tests/tenantSettings'
 import { TenantSetting } from './model'
 import {
   CreateOptions,
@@ -47,6 +47,10 @@ describe('TenantSetting Service', (): void => {
       .spyOn(authServiceClient.tenant, 'create')
       .mockResolvedValueOnce(undefined)
 
+    jest
+      .spyOn(authServiceClient.tenant, 'delete')
+      .mockResolvedValueOnce(undefined)
+
     tenant = await tenantService.create({
       apiSecret: faker.string.uuid(),
       email: faker.internet.email(),
@@ -68,7 +72,7 @@ describe('TenantSetting Service', (): void => {
     test('can create a tenant setting', async (): Promise<void> => {
       const createOptions: CreateOptions = {
         tenantId: tenant.id,
-        setting: [randomSetting()]
+        setting: [exchangeRatesSetting()]
       }
 
       const tenantSetting = await tenantSettingService.create(createOptions)
@@ -80,6 +84,17 @@ describe('TenantSetting Service', (): void => {
           value: createOptions.setting[0].value
         })
       ])
+    })
+
+    test('returns empty array if setting key is not allowed', async (): Promise<void> => {
+      const createOptions: CreateOptions = {
+        tenantId: tenant.id,
+        setting: [randomSetting()]
+      }
+
+      const tenantSetting = await tenantSettingService.create(createOptions)
+
+      expect(tenantSetting).toEqual([])
     })
   })
 
@@ -147,7 +162,7 @@ describe('TenantSetting Service', (): void => {
     beforeEach(async () => {
       updateOptions = {
         tenantId: tenant.id,
-        ...randomSetting()
+        ...exchangeRatesSetting()
       }
 
       await tenantSettingService.create({
@@ -175,10 +190,20 @@ describe('TenantSetting Service', (): void => {
   })
 
   describe('delete', (): void => {
+    describe('delete tenant', () => {
+      it('should delete tenant settings if tenant is deleted', async () => {
+        await tenantService.delete(tenant.id)
+        const found = await Tenant.query().findById(tenant.id).withGraphFetched('settings')
+
+        for (const tenantSetting of found?.settings as TenantSetting[]) {
+          expect(found?.deletedAt).toEqual(tenantSetting.deletedAt)
+        }
+      })
+    })
     test('can delete tenant setting key', async (): Promise<void> => {
       const createOptions: CreateOptions = {
         tenantId: tenant.id,
-        setting: [randomSetting()]
+        setting: [exchangeRatesSetting()]
       }
 
       const tenantSetting = await tenantSettingService.create(createOptions)
@@ -191,9 +216,38 @@ describe('TenantSetting Service', (): void => {
         tenantSetting[0].id
       )
       expect(dbTenantSetting?.deletedAt).toBeDefined()
-      expect(dbTenantSetting?.deletedAt?.getTime()).toBeLessThanOrEqual(
-        new Date(Date.now()).getTime()
+      expect(dbTenantSetting?.deletedAt?.getTime()).toBeLessThanOrEqual(Date.now())
+    })
+
+    test('cannot delete already deleted setting', async (): Promise<void> => {
+      const createOptions: CreateOptions = {
+        tenantId: tenant.id,
+        setting: [exchangeRatesSetting()]
+      }
+
+      const tenantSetting = await tenantSettingService.create(createOptions)
+      await tenantSettingService.delete({
+        tenantId: tenantSetting[0].tenantId,
+        key: createOptions.setting[0].key
+      })
+
+      let dbTenantSetting = await TenantSetting.query().findById(
+        tenantSetting[0].id
       )
+      expect(dbTenantSetting?.deletedAt).toBeDefined()
+
+      const originalDeletedAt = dbTenantSetting?.deletedAt;
+      await tenantSettingService.delete({
+        tenantId: tenantSetting[0].tenantId,
+        key: createOptions.setting[0].key
+      })
+
+      dbTenantSetting = await TenantSetting.query().findById(
+        tenantSetting[0].id
+      )
+      expect(dbTenantSetting?.deletedAt).toBeDefined()
+
+      expect(originalDeletedAt?.getTime()).toEqual(dbTenantSetting?.deletedAt?.getTime())
     })
 
     test('can delete all tenant settings', async (): Promise<void> => {
@@ -225,7 +279,7 @@ describe('TenantSetting Service', (): void => {
         createModel: () =>
           createTenantSettings(deps, {
             tenantId: tenant.id,
-            setting: [randomSetting()]
+            setting: [exchangeRatesSetting()]
           }) as Promise<TenantSetting>,
         getPage: (pagination?: Pagination, sortOrder?: SortOrder) =>
           tenantSettingService.getPage(tenant.id, pagination, sortOrder)

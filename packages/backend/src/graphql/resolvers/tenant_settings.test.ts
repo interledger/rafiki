@@ -5,13 +5,9 @@ import { initIocContainer } from '../..'
 import { Config } from '../../config/app'
 import { truncateTables } from '../../tests/tableManager'
 import { createTenant } from '../../tests/tenant'
-import { getPageTests } from './page.test'
-import { createTenantSettings, randomSetting } from '../../tests/tenantSettings'
 import {
   CreateTenantSettingsInput,
   CreateTenantSettingsMutationResponse,
-  DeleteTenantSettingsInput,
-  DeleteTenantSettingsMutationResponse
 } from '../generated/graphql'
 import {
   ApolloClient,
@@ -22,8 +18,7 @@ import {
   gql
 } from '@apollo/client'
 import { setContext } from '@apollo/client/link/context'
-import { Tenant } from '../../tenants/model'
-import { TenantSettingService } from '../../tenants/settings/service'
+import { TenantSettingKeys } from '../../tenants/settings/model'
 
 function createTenantedApolloClient(
   appContainer: TestContainer,
@@ -93,97 +88,10 @@ describe('Tenant Settings Resolvers', (): void => {
     await appContainer.shutdown()
   })
 
-  describe('Delete Tenant Settings', (): void => {
-    let tenant: Tenant
-    let client: ApolloClient<NormalizedCacheObject>
-    let tenantSettingService: TenantSettingService
-    let keys: string[]
-
-    beforeEach(async () => {
-      tenant = await createTenant(deps)
-      client = createTenantedApolloClient(appContainer, tenant.id)
-
-      keys = ['MY_KEY_1_TEST', 'MY_KEY_2_TEST']
-
-      tenantSettingService = await deps.use('tenantSettingService')
-      await tenantSettingService.create({
-        tenantId: tenant.id,
-        setting: keys.map((x) => ({
-          key: x,
-          value: x
-        }))
-      })
-    })
-
-    test('can delete all settings for a tenant', async (): Promise<void> => {
-      const response = await client
-        .mutate({
-          mutation: gql`
-            mutation DeleteTenantSettings($input: DeleteTenantSettingsInput!) {
-              deleteTenantSettings(input: $input) {
-                success
-              }
-            }
-          `,
-          variables: {
-            input: {}
-          }
-        })
-        .then((q): DeleteTenantSettingsMutationResponse => {
-          if (q.data) {
-            return q.data.deleteTenantSettings
-          }
-          throw new Error('Data was empty')
-        })
-
-      expect(response.success).toBeTruthy()
-
-      const data = await tenantSettingService.get({
-        tenantId: tenant.id
-      })
-
-      expect(data).toEqual([])
-    })
-
-    test('can delete tenant setting', async (): Promise<void> => {
-      const workingKey = keys[0]
-      const input: DeleteTenantSettingsInput = {
-        key: workingKey
-      }
-
-      const response = await client
-        .mutate({
-          mutation: gql`
-            mutation DeleteTenantSettings($input: DeleteTenantSettingsInput!) {
-              deleteTenantSettings(input: $input) {
-                success
-              }
-            }
-          `,
-          variables: { input }
-        })
-        .then((q): DeleteTenantSettingsMutationResponse => {
-          if (q.data) {
-            return q.data.deleteTenantSettings
-          }
-          throw new Error('Data was empty')
-        })
-
-      expect(response.success).toBeTruthy()
-
-      const data = await tenantSettingService.get({
-        tenantId: tenant.id,
-        key: workingKey
-      })
-
-      expect(data).toEqual([])
-    })
-  })
-
   describe('Create Tenant Settings', (): void => {
     test('can create tenant setting', async (): Promise<void> => {
       const input: CreateTenantSettingsInput = {
-        settings: [{ key: 'MY_KEY', value: 'MY_VALUE' }]
+        settings: [{ key: TenantSettingKeys.EXCHANGE_RATES_URL.name, value: 'MY_VALUE' }]
       }
 
       const tenant = await createTenant(deps)
@@ -210,26 +118,6 @@ describe('Tenant Settings Resolvers', (): void => {
         })
 
       expect(response.settings.length).toBeGreaterThan(0)
-    })
-  })
-
-  describe('List tenant settings', (): void => {
-    let tenantId: string
-    beforeEach(async (): Promise<void> => {
-      tenantId = (await createTenant(deps)).id
-    })
-    getPageTests({
-      getClient: () => appContainer.apolloClient,
-      createModel: () =>
-        createTenantSettings(deps, {
-          tenantId: tenantId,
-          setting: [randomSetting()]
-        }),
-      pagedQuery: 'settings',
-      parent: {
-        query: 'tenants',
-        getId: () => tenantId
-      }
     })
   })
 })
