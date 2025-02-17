@@ -154,12 +154,17 @@ async function getOutgoingPayment(
   options: GetOptions
 ): Promise<OutgoingPayment | undefined> {
   const outgoingPayment = await OutgoingPayment.query(deps.knex)
+    .modify((query) => {
+      if (options.tenantId) {
+        query.where({ tenantId: options.tenantId })
+      }
+    })
     .get(options)
     .withGraphFetched('quote')
   if (outgoingPayment) {
     outgoingPayment.walletAddress = await deps.walletAddressService.get(
       outgoingPayment.walletAddressId,
-      options.tenantId
+      outgoingPayment.tenantId
     )
     const asset = await deps.assetService.get(outgoingPayment.quote.assetId)
     if (asset) outgoingPayment.quote.asset = asset
