@@ -1,7 +1,7 @@
 import { TransactionOrKnex } from 'objection'
 import { Pagination, SortOrder } from '../../shared/baseModel'
 import { BaseService } from '../../shared/baseService'
-import { TenantSetting } from './model'
+import { TenantSetting, TenantSettingKeys } from './model'
 import { Knex } from 'knex'
 
 export interface KeyValuePair {
@@ -61,7 +61,7 @@ export async function createTenantSettingService(
     create: (options: CreateOptions, extra?: ExtraOptions) =>
       createTenantSetting(deps, options, extra),
     update: (options: UpdateOptions) => updateTenantSetting(deps, options),
-    delete: (options: GetOptions) => deleteTenantSetting(deps, options),
+    delete: (options: GetOptions, extra?: ExtraOptions) => deleteTenantSetting(deps, options, extra),
     getPage: (
       tenantId: string,
       pagination?: Pagination,
@@ -82,7 +82,6 @@ async function deleteTenantSetting(
   options: GetOptions,
   extra?: ExtraOptions
 ) {
-  // sanitize
   const obj: GetOptions = {
     tenantId: options.tenantId
   }
@@ -92,6 +91,7 @@ async function deleteTenantSetting(
   }
   await TenantSetting.query(extra?.trx ?? deps.knex)
     .findOne(obj)
+    .whereNull('deletedAt')
     .patch({
       deletedAt: new Date()
     })
@@ -102,12 +102,11 @@ async function updateTenantSetting(
   options: UpdateOptions
 ): Promise<void> {
   await TenantSetting.query(deps.knex)
-    .patchAndFetch({
-      value: options.value
-    })
+    .patch({ value: options.value })
     .whereNull('deletedAt')
     .andWhere('tenantId', options.tenantId)
     .andWhere('key', options.key)
+    .returning('*')
     .throwIfNotFound()
 }
 
@@ -116,11 +115,18 @@ async function createTenantSetting(
   options: CreateOptions,
   extra?: ExtraOptions
 ) {
-  const dataToInsert = options.setting.map((s) => ({
-    tenantId: options.tenantId,
-    ...s
-  }))
 
+  const dataToInsert = options.setting
+    .filter(setting => Object.keys(TenantSettingKeys).includes(setting.key))
+    .map((s) => ({
+      tenantId: options.tenantId,
+      ...s
+    }))
+
+  if (Object.keys(dataToInsert).length <= 0) {
+    return []
+  }
+  
   return TenantSetting.query(extra?.trx ?? deps.knex).insertAndFetch(
     dataToInsert
   )

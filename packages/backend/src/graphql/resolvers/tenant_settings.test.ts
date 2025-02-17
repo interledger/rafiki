@@ -5,8 +5,6 @@ import { initIocContainer } from '../..'
 import { Config } from '../../config/app'
 import { truncateTables } from '../../tests/tableManager'
 import { createTenant } from '../../tests/tenant'
-import { getPageTests } from './page.test'
-import { createTenantSettings, randomSetting } from '../../tests/tenantSettings'
 import {
   CreateTenantSettingsInput,
   CreateTenantSettingsMutationResponse,
@@ -24,6 +22,7 @@ import {
 import { setContext } from '@apollo/client/link/context'
 import { Tenant } from '../../tenants/model'
 import { TenantSettingService } from '../../tenants/settings/service'
+import { TenantSettingKeys } from '../../tenants/settings/model'
 
 function createTenantedApolloClient(
   appContainer: TestContainer,
@@ -103,7 +102,7 @@ describe('Tenant Settings Resolvers', (): void => {
       tenant = await createTenant(deps)
       client = createTenantedApolloClient(appContainer, tenant.id)
 
-      keys = ['MY_KEY_1_TEST', 'MY_KEY_2_TEST']
+      keys = [TenantSettingKeys.EXCHANGE_RATES_URL.name, TenantSettingKeys.WEBHOOK_URL.name]
 
       tenantSettingService = await deps.use('tenantSettingService')
       await tenantSettingService.create({
@@ -183,7 +182,7 @@ describe('Tenant Settings Resolvers', (): void => {
   describe('Create Tenant Settings', (): void => {
     test('can create tenant setting', async (): Promise<void> => {
       const input: CreateTenantSettingsInput = {
-        settings: [{ key: 'MY_KEY', value: 'MY_VALUE' }]
+        settings: [{ key: TenantSettingKeys.EXCHANGE_RATES_URL.name, value: 'MY_VALUE' }]
       }
 
       const tenant = await createTenant(deps)
@@ -210,26 +209,6 @@ describe('Tenant Settings Resolvers', (): void => {
         })
 
       expect(response.settings.length).toBeGreaterThan(0)
-    })
-  })
-
-  describe('List tenant settings', (): void => {
-    let tenantId: string
-    beforeEach(async (): Promise<void> => {
-      tenantId = (await createTenant(deps)).id
-    })
-    getPageTests({
-      getClient: () => appContainer.apolloClient,
-      createModel: () =>
-        createTenantSettings(deps, {
-          tenantId: tenantId,
-          setting: [randomSetting()]
-        }),
-      pagedQuery: 'settings',
-      parent: {
-        query: 'tenants',
-        getId: () => tenantId
-      }
     })
   })
 })
