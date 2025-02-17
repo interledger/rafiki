@@ -279,6 +279,7 @@ describe('TenantSetting Service', (): void => {
       expect(originalDeletedAt?.getTime()).toEqual(
         dbTenantSetting?.deletedAt?.getTime()
       )
+      expect(dbTenantSetting?.deletedAt).toBeDefined()
     })
 
     test('can delete all tenant settings', async (): Promise<void> => {
