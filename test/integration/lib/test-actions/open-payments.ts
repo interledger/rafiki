@@ -212,7 +212,7 @@ async function createQuote(
   const { sendingASE } = deps
   return await sendingASE.opClient.quote.create(
     {
-      url: urlWithoutTenantId(senderWalletAddress.resourceServer),
+      url: senderWalletAddress.resourceServer,
       accessToken
     },
     {
@@ -322,7 +322,7 @@ async function createOutgoingPayment(
 
   const outgoingPayment = await sendingASE.opClient.outgoingPayment.create(
     {
-      url: urlWithoutTenantId(senderWalletAddress.resourceServer),
+      url: senderWalletAddress.resourceServer,
       accessToken: grantContinue.access_token.value
     },
     {
