@@ -34,7 +34,6 @@ import { OutgoingPayment } from '../payment/outgoing/model'
 import { createOutgoingPayment } from '../../tests/outgoingPayment'
 import { createAsset } from '../../tests/asset'
 import { AssetOptions } from '../../asset/service'
-import { createQuote } from '../../tests/quote'
 
 describe('Wallet Address Middleware', (): void => {
   let deps: IocContract<AppServices>
