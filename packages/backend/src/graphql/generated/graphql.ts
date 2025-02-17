@@ -1010,6 +1010,8 @@ export type OutgoingPayment = BasePayment & Model & {
   state: OutgoingPaymentState;
   /** Number of attempts made to send an outgoing payment. */
   stateAttempts: Scalars['Int']['output'];
+  /** Tenant ID of the outgoing payment. */
+  tenantId?: Maybe<Scalars['String']['output']>;
   /** Unique identifier of the wallet address under which the outgoing payment was created. */
   walletAddressId: Scalars['ID']['output'];
 };
@@ -1253,6 +1255,7 @@ export type QueryOutgoingPaymentsArgs = {
   first?: InputMaybe<Scalars['Int']['input']>;
   last?: InputMaybe<Scalars['Int']['input']>;
   sortOrder?: InputMaybe<SortOrder>;
+  tenantId?: InputMaybe<Scalars['String']['input']>;
 };
 
 
@@ -1263,6 +1266,7 @@ export type QueryPaymentsArgs = {
   first?: InputMaybe<Scalars['Int']['input']>;
   last?: InputMaybe<Scalars['Int']['input']>;
   sortOrder?: InputMaybe<SortOrder>;
+  tenantId?: InputMaybe<Scalars['String']['input']>;
 };
 
 
@@ -1355,6 +1359,8 @@ export type Quote = {
   receiveAmount: Amount;
   /** Wallet address URL of the receiver. */
   receiver: Scalars['String']['output'];
+  /** Unique identifier of the tenant under which the quote was created. */
+  tenantId: Scalars['ID']['output'];
   /** Unique identifier of the wallet address under which the quote was created. */
   walletAddressId: Scalars['ID']['output'];
 };
@@ -2386,6 +2392,7 @@ export type OutgoingPaymentResolvers<ContextType = any, ParentType extends Resol
   sentAmount?: Resolver<ResolversTypes['Amount'], ParentType, ContextType>;
   state?: Resolver<ResolversTypes['OutgoingPaymentState'], ParentType, ContextType>;
   stateAttempts?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
+  tenantId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   walletAddressId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
@@ -2495,6 +2502,7 @@ export type QuoteResolvers<ContextType = any, ParentType extends ResolversParent
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   receiveAmount?: Resolver<ResolversTypes['Amount'], ParentType, ContextType>;
   receiver?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  tenantId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   walletAddressId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };

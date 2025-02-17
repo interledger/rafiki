@@ -1743,13 +1743,15 @@ describe('Liquidity Resolvers', (): void => {
   )
 
   describe('Event Liquidity', (): void => {
+    let tenantId: string
     let walletAddress: WalletAddress
     let incomingPayment: IncomingPayment
     let payment: OutgoingPayment
 
     beforeEach(async (): Promise<void> => {
+      tenantId = Config.operatorTenantId
       walletAddress = await createWalletAddress(deps, {
-        tenantId: Config.operatorTenantId
+        tenantId
       })
       const walletAddressId = walletAddress.id
       incomingPayment = await createIncomingPayment(deps, {
@@ -1763,6 +1765,7 @@ describe('Liquidity Resolvers', (): void => {
         tenantId: Config.operatorTenantId
       })
       payment = await createOutgoingPayment(deps, {
+        tenantId,
         walletAddressId,
         method: 'ilp',
         receiver: `${Config.openPaymentsUrl}/incoming-payments/${uuid()}`,
@@ -2176,6 +2179,7 @@ describe('Liquidity Resolvers', (): void => {
         tenantId: Config.operatorTenantId
       })
       outgoingPayment = await createOutgoingPayment(deps, {
+        tenantId: Config.operatorTenantId,
         walletAddressId,
         method: 'ilp',
         receiver: `${

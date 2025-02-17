@@ -25,6 +25,7 @@ export async function createOutgoingPayment(
   options: CreateTestQuoteAndOutgoingPaymentOptions
 ): Promise<OutgoingPayment> {
   const quoteOptions: CreateTestQuoteOptions = {
+    tenantId: options.tenantId,
     walletAddressId: options.walletAddressId,
     client: options.client,
     receiver: options.receiver,
@@ -88,7 +89,7 @@ interface CreateOutgoingPaymentWithReceiverArgs {
   quoteOptions?: Partial<
     Pick<
       CreateTestQuoteAndOutgoingPaymentOptions,
-      'debitAmount' | 'receiveAmount' | 'exchangeRate'
+      'debitAmount' | 'receiveAmount' | 'exchangeRate' | 'tenantId'
     >
   >
   sendingWalletAddress: WalletAddress
@@ -134,6 +135,7 @@ export async function createOutgoingPaymentWithReceiver(
   )
 
   const outgoingPayment = await createOutgoingPayment(deps, {
+    tenantId: args.sendingWalletAddress.tenantId,
     walletAddressId: args.sendingWalletAddress.id,
     method: args.method,
     receiver: receiver.incomingPayment!.id!,
@@ -144,6 +146,7 @@ export async function createOutgoingPaymentWithReceiver(
     const outgoingPaymentService = await deps.use('outgoingPaymentService')
     await outgoingPaymentService.fund({
       id: outgoingPayment.id,
+      tenantId: args.sendingWalletAddress.tenantId,
       amount: outgoingPayment.debitAmount.value,
       transferId: uuid()
     })

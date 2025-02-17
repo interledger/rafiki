@@ -56,6 +56,7 @@ describe('Payment', (): void => {
 
     const client = 'client-test'
     const outgoingPayment = await createOutgoingPayment(deps, {
+      tenantId: Config.operatorTenantId,
       walletAddressId: outWalletAddressId,
       client: client,
       method: 'ilp',
@@ -165,6 +166,7 @@ describe('Payment', (): void => {
 
     const client = 'client-test-type-wallet-address'
     const outgoingPayment = await createOutgoingPayment(deps, {
+      tenantId: Config.operatorTenantId,
       walletAddressId: outWalletAddressId,
       client: client,
       method: 'ilp',
@@ -176,6 +178,7 @@ describe('Payment', (): void => {
       assetId: asset.id
     })
     await createOutgoingPayment(deps, {
+      tenantId: Config.operatorTenantId,
       walletAddressId: outWalletAddressId2,
       client: client,
       method: 'ilp',

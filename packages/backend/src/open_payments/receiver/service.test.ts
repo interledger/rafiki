@@ -424,7 +424,6 @@ describe('Receiver Service', (): void => {
             incomingPaymentService,
             'create'
           )
-
           const receiver = await receiverService.create({
             walletAddressUrl: walletAddress.id,
             incomingAmount,

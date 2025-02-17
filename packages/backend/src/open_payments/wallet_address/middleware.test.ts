@@ -31,6 +31,9 @@ import { OutgoingPaymentService } from '../payment/outgoing/service'
 import { Quote } from '../quote/model'
 import { IncomingPayment } from '../payment/incoming/model'
 import { OutgoingPayment } from '../payment/outgoing/model'
+import { createOutgoingPayment } from '../../tests/outgoingPayment'
+import { createAsset } from '../../tests/asset'
+import { AssetOptions } from '../../asset/service'
 
 describe('Wallet Address Middleware', (): void => {
   let deps: IocContract<AppServices>
@@ -226,6 +229,58 @@ describe('Wallet Address Middleware', (): void => {
       expect(next).toHaveBeenCalled()
     })
 
+    test('throws error if could not find existing quote for mismatched tenantId', async () => {
+      const tenantId = Config.operatorTenantId
+
+      const asset: AssetOptions = {
+        scale: 9,
+        code: 'USD'
+      }
+      const { id: sendAssetId } = await createAsset(deps, asset)
+      const walletAddress = await createWalletAddress(deps, {
+        tenantId,
+        assetId: sendAssetId
+      })
+
+      const existingQuoteId = (
+        await createOutgoingPayment(deps, {
+          tenantId: Config.operatorTenantId,
+          walletAddressId: walletAddress.id,
+          method: 'ilp',
+          receiver: `${
+            Config.openPaymentsUrl
+          }/${crypto.randomUUID()}/incoming-payments/${crypto.randomUUID()}`,
+          debitAmount: {
+            value: BigInt(456),
+            assetCode: walletAddress.asset.code,
+            assetScale: walletAddress.asset.scale
+          },
+          validDestination: false
+        })
+      ).quote.id
+
+      const ctx: WalletAddressUrlContext = createContext(
+        { headers: { Accept: 'application/json' } },
+        {
+          id: existingQuoteId,
+          tenantId: crypto.randomUUID()
+        }
+      )
+
+      ctx.container = deps
+      const next = jest.fn()
+
+      expect.assertions(3)
+      try {
+        await getWalletAddressUrlFromQuote(ctx, next)
+      } catch (err) {
+        assert(err instanceof OpenPaymentsServerRouteError)
+        expect(err.status).toBe(401)
+        expect(err.message).toBe('Unauthorized')
+        expect(next).not.toHaveBeenCalled()
+      }
+    })
+
     test('throws error if could not find quote', async (): Promise<void> => {
       const ctx: WalletAddressUrlContext = createContext(
         {
@@ -288,6 +343,58 @@ describe('Wallet Address Middleware', (): void => {
 
       expect(ctx.walletAddressUrl).toBe(walletAddressUrl)
       expect(next).toHaveBeenCalled()
+    })
+
+    test('throws error if could not find existing outgoing payment for mismatched tenantId', async () => {
+      const tenantId = Config.operatorTenantId
+
+      const asset: AssetOptions = {
+        scale: 9,
+        code: 'USD'
+      }
+      const { id: sendAssetId } = await createAsset(deps, asset)
+      const walletAddress = await createWalletAddress(deps, {
+        tenantId,
+        assetId: sendAssetId
+      })
+
+      const existingPaymentId = (
+        await createOutgoingPayment(deps, {
+          tenantId: Config.operatorTenantId,
+          walletAddressId: walletAddress.id,
+          method: 'ilp',
+          receiver: `${
+            Config.openPaymentsUrl
+          }/${crypto.randomUUID()}/incoming-payments/${crypto.randomUUID()}`,
+          debitAmount: {
+            value: BigInt(456),
+            assetCode: walletAddress.asset.code,
+            assetScale: walletAddress.asset.scale
+          },
+          validDestination: false
+        })
+      ).id
+
+      const ctx: WalletAddressUrlContext = createContext(
+        { headers: { Accept: 'application/json' } },
+        {
+          id: existingPaymentId,
+          tenantId: crypto.randomUUID()
+        }
+      )
+
+      ctx.container = deps
+      const next = jest.fn()
+
+      expect.assertions(3)
+      try {
+        await getWalletAddressUrlFromOutgoingPayment(ctx, next)
+      } catch (err) {
+        assert(err instanceof OpenPaymentsServerRouteError)
+        expect(err.status).toBe(401)
+        expect(err.message).toBe('Unauthorized')
+        expect(next).not.toHaveBeenCalled()
+      }
     })
 
     test('throws error if could not find outgoing payment', async (): Promise<void> => {

@@ -12,13 +12,7 @@ import {
   isPendingGrant
 } from '@interledger/open-payments'
 import { MockASE } from '../mock-ase'
-import {
-  UnionOmit,
-  poll,
-  pollCondition,
-  wait,
-  urlWithoutTenantId
-} from '../utils'
+import { UnionOmit, poll, pollCondition, wait } from '../utils'
 import { WebhookEventType } from 'mock-account-service-lib'
 import {
   CreateOutgoingPaymentArgs,
@@ -218,7 +212,7 @@ async function createQuote(
   const { sendingASE } = deps
   return await sendingASE.opClient.quote.create(
     {
-      url: urlWithoutTenantId(senderWalletAddress.resourceServer),
+      url: senderWalletAddress.resourceServer,
       accessToken
     },
     {
@@ -326,7 +320,7 @@ async function createOutgoingPayment(
 
   const outgoingPayment = await sendingASE.opClient.outgoingPayment.create(
     {
-      url: urlWithoutTenantId(senderWalletAddress.resourceServer),
+      url: senderWalletAddress.resourceServer,
       accessToken: grantContinue.access_token.value
     },
     {

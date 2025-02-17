@@ -5518,6 +5518,18 @@
             "deprecationReason": null
           },
           {
+            "name": "tenantId",
+            "description": "Tenant ID of the outgoing payment.",
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "walletAddressId",
             "description": "Unique identifier of the wallet address under which the outgoing payment was created.",
             "args": [],
@@ -6728,6 +6740,18 @@
                 "defaultValue": null,
                 "isDeprecated": false,
                 "deprecationReason": null
+              },
+              {
+                "name": "tenantId",
+                "description": "Unique identifier of the tenant associated with the wallet address. Optional, if not provided, the tenantId will be obtained from the signature.",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
               }
             ],
             "type": {
@@ -6812,6 +6836,18 @@
                 "type": {
                   "kind": "ENUM",
                   "name": "SortOrder",
+                  "ofType": null
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "tenantId",
+                "description": "Unique identifier of the tenant associated with the wallet address. Optional, if not provided, the tenantId will be obtained from the signature.",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
                   "ofType": null
                 },
                 "defaultValue": null,
@@ -7515,6 +7551,22 @@
               "ofType": {
                 "kind": "SCALAR",
                 "name": "String",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "tenantId",
+            "description": "Unique identifier of the tenant under which the quote was created.",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "ID",
                 "ofType": null
               }
             },

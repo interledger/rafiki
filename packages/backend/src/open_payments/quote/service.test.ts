@@ -35,12 +35,14 @@ import {
   PaymentMethodHandlerErrorCode
 } from '../../payment-method/handler/errors'
 import { Receiver } from '../receiver/model'
+import { WalletAddressService } from '../wallet_address/service'
 
 describe('QuoteService', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let quoteService: QuoteService
   let paymentMethodHandlerService: PaymentMethodHandlerService
+  let walletAddressService: WalletAddressService
   let receiverService: ReceiverService
   let knex: Knex
   let sendingWalletAddress: MockWalletAddress
@@ -53,6 +55,7 @@ describe('QuoteService', (): void => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     any
   >
+  let tenantId: string
 
   const asset: AssetOptions = {
     scale: 9,
@@ -87,21 +90,23 @@ describe('QuoteService', (): void => {
     config = await deps.use('config')
     quoteService = await deps.use('quoteService')
     paymentMethodHandlerService = await deps.use('paymentMethodHandlerService')
+    walletAddressService = await deps.use('walletAddressService')
     receiverService = await deps.use('receiverService')
   })
 
   beforeEach(async (): Promise<void> => {
+    tenantId = config.operatorTenantId
     const { id: sendAssetId } = await createAsset(deps, {
       code: debitAmount.assetCode,
       scale: debitAmount.assetScale
     })
     sendingWalletAddress = await createWalletAddress(deps, {
-      tenantId: config.operatorTenantId,
+      tenantId,
       assetId: sendAssetId
     })
     const { id: destinationAssetId } = await createAsset(deps, destinationAsset)
     receivingWalletAddress = await createWalletAddress(deps, {
-      tenantId: config.operatorTenantId,
+      tenantId,
       assetId: destinationAssetId,
       mockServerPort: appContainer.openPaymentsPort
     })
@@ -137,6 +142,7 @@ describe('QuoteService', (): void => {
     getTests({
       createModel: ({ client }) =>
         createQuote(deps, {
+          tenantId,
           walletAddressId: sendingWalletAddress.id,
           receiver: `${receivingWalletAddress.url}/incoming-payments/${uuid()}`,
           debitAmount: {
@@ -182,6 +188,7 @@ describe('QuoteService', (): void => {
             tenantId: Config.operatorTenantId
           })
           options = {
+            tenantId,
             walletAddressId: sendingWalletAddress.id,
             receiver: incomingPayment.getUrl(receivingWalletAddress),
             method: 'ilp'
@@ -257,6 +264,7 @@ describe('QuoteService', (): void => {
 
                 await expect(
                   quoteService.get({
+                    tenantId,
                     id: quote.id
                   })
                 ).resolves.toEqual(quote)
@@ -343,6 +351,7 @@ describe('QuoteService', (): void => {
 
                 await expect(
                   quoteService.get({
+                    tenantId,
                     id: quote.id
                   })
                 ).resolves.toEqual(quote)
@@ -387,6 +396,7 @@ describe('QuoteService', (): void => {
           tenantId: Config.operatorTenantId
         })
         const options: CreateQuoteOptions = {
+          tenantId,
           walletAddressId: sendingWalletAddress.id,
           receiver: incomingPayment.getUrl(receivingWalletAddress),
           receiveAmount,
@@ -425,21 +435,52 @@ describe('QuoteService', (): void => {
         })
       }
     )
+    test('fails on unknown tenant id', async (): Promise<void> => {
+      const walletAddress = await createWalletAddress(deps, {
+        tenantId
+      })
+      const unknownTenantId = uuid()
 
-    test('fails on unknown wallet address', async (): Promise<void> => {
+      jest.spyOn(walletAddressService, 'get').mockResolvedValueOnce(undefined)
       await expect(
         quoteService.create({
-          walletAddressId: uuid(),
+          tenantId: unknownTenantId,
+          walletAddressId: walletAddress.id,
           receiver: `${receivingWalletAddress.url}/incoming-payments/${uuid()}`,
           debitAmount,
           method: 'ilp'
         })
       ).resolves.toEqual(QuoteError.UnknownWalletAddress)
+      expect(walletAddressService.get).toHaveBeenCalledTimes(1)
+      expect(walletAddressService.get).toHaveBeenCalledWith(
+        walletAddress.id,
+        unknownTenantId
+      )
+    })
+
+    test('fails on unknown wallet address', async (): Promise<void> => {
+      const unknownWalletAddressId = uuid()
+      jest.spyOn(walletAddressService, 'get').mockResolvedValueOnce(undefined)
+
+      await expect(
+        quoteService.create({
+          tenantId,
+          walletAddressId: unknownWalletAddressId,
+          receiver: `${receivingWalletAddress.url}/incoming-payments/${uuid()}`,
+          debitAmount,
+          method: 'ilp'
+        })
+      ).resolves.toEqual(QuoteError.UnknownWalletAddress)
+      expect(walletAddressService.get).toHaveBeenCalledTimes(1)
+      expect(walletAddressService.get).toHaveBeenCalledWith(
+        unknownWalletAddressId,
+        tenantId
+      )
     })
 
     test('fails on inactive wallet address', async () => {
       const walletAddress = await createWalletAddress(deps, {
-        tenantId: Config.operatorTenantId
+        tenantId
       })
       const walletAddressUpdated = await WalletAddress.query(
         knex
@@ -447,6 +488,7 @@ describe('QuoteService', (): void => {
       assert.ok(!walletAddressUpdated.isActive)
       await expect(
         quoteService.create({
+          tenantId,
           walletAddressId: walletAddress.id,
           receiver: `${receivingWalletAddress.url}/incoming-payments/${uuid()}`,
           debitAmount,
@@ -458,6 +500,7 @@ describe('QuoteService', (): void => {
     test('fails on invalid receiver', async (): Promise<void> => {
       await expect(
         quoteService.create({
+          tenantId,
           walletAddressId: sendingWalletAddress.id,
           receiver: `${receivingWalletAddress.url}/incoming-payments/${uuid()}`,
           debitAmount,
@@ -480,6 +523,7 @@ describe('QuoteService', (): void => {
 
       await expect(
         quoteService.create({
+          tenantId,
           walletAddressId: sendingWalletAddress.id,
           receiver: receiver.incomingPayment!.id,
           method: 'ilp',
@@ -509,6 +553,7 @@ describe('QuoteService', (): void => {
           tenantId: Config.operatorTenantId
         })
         const options: CreateQuoteOptions = {
+          tenantId,
           walletAddressId: sendingWalletAddress.id,
           receiver: incomingPayment.getUrl(receivingWalletAddress),
           method: 'ilp'
@@ -532,11 +577,11 @@ describe('QuoteService', (): void => {
           scale: 2
         })
         sendingWalletAddress = await createWalletAddress(deps, {
-          tenantId: config.operatorTenantId,
+          tenantId,
           assetId: asset.id
         })
         receivingWalletAddress = await createWalletAddress(deps, {
-          tenantId: config.operatorTenantId,
+          tenantId,
           assetId: asset.id
         })
       })
@@ -582,6 +627,7 @@ describe('QuoteService', (): void => {
             .mockResolvedValueOnce(mockedQuote)
 
           const quote = await quoteService.create({
+            tenantId,
             walletAddressId: sendingWalletAddress.id,
             receiver: receiver.incomingPayment!.id,
             method: 'ilp'
@@ -620,6 +666,7 @@ describe('QuoteService', (): void => {
 
         await expect(
           quoteService.create({
+            tenantId,
             walletAddressId: sendingWalletAddress.id,
             receiver: receiver.incomingPayment!.id,
             method: 'ilp'
@@ -644,11 +691,11 @@ describe('QuoteService', (): void => {
           scale: 2
         })
         sendingWalletAddress = await createWalletAddress(deps, {
-          tenantId: config.operatorTenantId,
+          tenantId,
           assetId: sendAsset.id
         })
         receivingWalletAddress = await createWalletAddress(deps, {
-          tenantId: config.operatorTenantId,
+          tenantId,
           assetId: receiveAsset.id
         })
       })
@@ -692,6 +739,7 @@ describe('QuoteService', (): void => {
             .mockResolvedValueOnce(mockedQuote)
 
           const quote = await quoteService.create({
+            tenantId,
             walletAddressId: sendingWalletAddress.id,
             receiver: receiver.incomingPayment!.id,
             debitAmount: {
@@ -735,6 +783,7 @@ describe('QuoteService', (): void => {
 
         await expect(
           quoteService.create({
+            tenantId,
             walletAddressId: sendingWalletAddress.id,
             receiver: receiver.incomingPayment!.id,
             debitAmount: {
@@ -760,6 +809,7 @@ describe('QuoteService', (): void => {
         })
 
         const options: CreateQuoteOptions = {
+          tenantId,
           walletAddressId: sendingWalletAddress.id,
           receiver: incomingPayment.getUrl(receivingWalletAddress),
           method: 'ilp'
@@ -805,6 +855,7 @@ describe('QuoteService', (): void => {
 
         await expect(
           quoteService.get({
+            tenantId,
             id: quote.id
           })
         ).resolves.toEqual(quote)
