@@ -12,12 +12,7 @@ import {
   isPendingGrant
 } from '@interledger/open-payments'
 import { MockASE } from '../mock-ase'
-import {
-  UnionOmit,
-  poll,
-  pollCondition,
-  wait
-} from '../utils'
+import { UnionOmit, poll, pollCondition, wait } from '../utils'
 import { WebhookEventType } from 'mock-account-service-lib'
 import {
   CreateOutgoingPaymentArgs,
