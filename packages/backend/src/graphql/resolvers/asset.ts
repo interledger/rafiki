@@ -91,7 +91,6 @@ export const createAsset: MutationResolvers<ForTenantIdContext>['createAsset'] =
           }
         }
       )
-    ctx.logger.info({ tenantId }, 'tenantId for create asset')
     const assetService = await ctx.container.use('assetService')
     const assetOrError = await assetService.create({
       ...args.input,

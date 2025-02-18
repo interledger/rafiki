@@ -675,7 +675,7 @@ type Asset implements Model {
   ): FeesConnection
   "The date and time when the asset was created."
   createdAt: String!
-  tenantId: String
+  tenantId: ID!
 }
 
 enum SortOrder {
