@@ -124,7 +124,7 @@ export type Asset = Model & {
   scale: Scalars['UInt8']['output'];
   /** The sending fee structure for the asset. */
   sendingFee?: Maybe<Fee>;
-  tenantId?: Maybe<Scalars['String']['output']>;
+  tenantId: Scalars['ID']['output'];
   /** Minimum amount of liquidity that can be withdrawn from the asset. */
   withdrawalThreshold?: Maybe<Scalars['UInt64']['output']>;
 };
@@ -201,7 +201,7 @@ export type CreateAssetInput = {
   /** Difference in order of magnitude between the standard unit of an asset and its corresponding fractional unit. */
   scale: Scalars['UInt8']['input'];
   /** Unique identifier of the tenant associated with the asset. This cannot be changed. Optional, if not provided, the tenantId will be obtained from the signature. */
-  tenantId?: InputMaybe<Scalars['String']['input']>;
+  tenantId?: InputMaybe<Scalars['ID']['input']>;
   /** Minimum amount of liquidity that can be withdrawn from the asset. */
   withdrawalThreshold?: InputMaybe<Scalars['UInt64']['input']>;
 };
@@ -2176,7 +2176,7 @@ export type AssetResolvers<ContextType = any, ParentType extends ResolversParent
   receivingFee?: Resolver<Maybe<ResolversTypes['Fee']>, ParentType, ContextType>;
   scale?: Resolver<ResolversTypes['UInt8'], ParentType, ContextType>;
   sendingFee?: Resolver<Maybe<ResolversTypes['Fee']>, ParentType, ContextType>;
-  tenantId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  tenantId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   withdrawalThreshold?: Resolver<Maybe<ResolversTypes['UInt64']>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
