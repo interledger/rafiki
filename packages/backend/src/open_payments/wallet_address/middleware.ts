@@ -117,3 +117,26 @@ export async function getWalletAddressForSubresource(
 
   await next()
 }
+
+export async function redirectIfBrowserAcceptsHtml(
+  ctx: WalletAddressUrlContext,
+  next: () => Promise<void>
+) {
+  const config = await ctx.container.use('config')
+  const walletAddressPath = ctx.walletAddressUrl.replace('https://', '')
+
+  if (
+    config.walletAddressRedirectHtmlPage &&
+    ctx.request.header['accept']?.includes('text/html')
+  ) {
+    ctx.set(
+      'Location',
+      `${config.walletAddressRedirectHtmlPage}/${walletAddressPath}`
+    )
+    ctx.status = 302
+
+    return
+  }
+
+  await next()
+}
