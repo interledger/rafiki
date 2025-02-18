@@ -28,36 +28,13 @@ export interface TestContainer {
   container: IocContract<AppServices>
 }
 
-export const createTestApp = async (
-  container: IocContract<AppServices>
-): Promise<TestContainer> => {
-  const config = await container.use('config')
-  config.adminPort = 0
-  config.openPaymentsPort = 0
-  config.connectorPort = 0
-  config.autoPeeringServerPort = 0
-  config.openPaymentsUrl = 'https://op.example'
-  config.walletAddressUrl = 'https://wallet.example/.well-known/pay'
+export const createApolloClient = async (
+  container: IocContract<AppServices>,
+  app: App,
+  tenantId?: string
+): Promise<ApolloClient<NormalizedCacheObject>> => {
   const logger = await container.use('logger')
-
-  const app = new App(container)
-  await start(container, app)
-
-  const nock = (global as unknown as { nock: typeof import('nock') }).nock
-
-  // Since wallet addresses MUST use HTTPS, manually mock an HTTPS proxy to the Open Payments / SPSP server
-  nock(config.openPaymentsUrl)
-    .get(/.*/)
-    .matchHeader('Accept', /application\/((ilp-stream|spsp4)\+)?json*./)
-    .reply(200, function (path) {
-      return Axios.get(`http://localhost:${app.getOpenPaymentsPort()}${path}`, {
-        headers: this.req.headers
-      }).then((res) => res.data)
-    })
-    .persist()
-
-  const knex = await container.use('knex')
-
+  const config = await container.use('config')
   const httpLink = createHttpLink({
     uri: `http://localhost:${app.getAdminPort()}/graphql`,
     fetch
@@ -80,14 +57,14 @@ export const createTestApp = async (
     return {
       headers: {
         ...headers,
-        'tenant-id': config.operatorTenantId
+        'tenant-id': tenantId || config.operatorTenantId
       }
     }
   })
 
   const link = ApolloLink.from([errorLink, authLink, httpLink])
 
-  const client = new ApolloClient({
+  return new ApolloClient({
     cache: new InMemoryCache({}),
     link: link,
     defaultOptions: {
@@ -102,6 +79,38 @@ export const createTestApp = async (
       }
     }
   })
+}
+
+export const createTestApp = async (
+  container: IocContract<AppServices>
+): Promise<TestContainer> => {
+  const config = await container.use('config')
+  config.adminPort = 0
+  config.openPaymentsPort = 0
+  config.connectorPort = 0
+  config.autoPeeringServerPort = 0
+  config.openPaymentsUrl = 'https://op.example'
+  config.walletAddressUrl = 'https://wallet.example/.well-known/pay'
+
+  const app = new App(container)
+  await start(container, app)
+
+  const nock = (global as unknown as { nock: typeof import('nock') }).nock
+
+  // Since wallet addresses MUST use HTTPS, manually mock an HTTPS proxy to the Open Payments / SPSP server
+  nock(config.openPaymentsUrl)
+    .get(/.*/)
+    .matchHeader('Accept', /application\/((ilp-stream|spsp4)\+)?json*./)
+    .reply(200, function (path) {
+      return Axios.get(`http://localhost:${app.getOpenPaymentsPort()}${path}`, {
+        headers: this.req.headers
+      }).then((res) => res.data)
+    })
+    .persist()
+
+  const knex = await container.use('knex')
+
+  const client = await createApolloClient(container, app)
 
   return {
     app,

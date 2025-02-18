@@ -123,6 +123,7 @@ export const listAssets = async (request: Request, args: QueryAssetsArgs) => {
               scale
               withdrawalThreshold
               createdAt
+              tenantId
             }
           }
           pageInfo {

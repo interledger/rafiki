@@ -13,9 +13,27 @@ import type {
   DeleteTenantMutation,
   QueryTenantArgs,
   GetTenantQuery,
-  GetTenantQueryVariables
+  GetTenantQueryVariables,
+  WhoAmI,
+  WhoAmIVariables
 } from '~/generated/graphql'
 import { getApolloClient } from '../apollo.server'
+
+export const whoAmI = async (request: Request) => {
+  const apolloClient = await getApolloClient(request)
+  const response = await apolloClient.query<WhoAmI, WhoAmIVariables>({
+    query: gql`
+      query WhoAmI {
+        whoami {
+          id
+          isOperator
+        }
+      }
+    `
+  })
+
+  return response.data.whoami
+}
 
 export const listTenants = async (request: Request, args: QueryTenantsArgs) => {
   const apolloClient = await getApolloClient(request)
@@ -168,17 +186,24 @@ export const getTenantInfo = async (
   return response.data.tenant
 }
 
-export const whoAmI = async (request: Request) => {
-  const apolloClient = await getApolloClient(request)
-  const response = await apolloClient.query({
-    query: gql`
-      query WhoAmIQuery {
-        whoami {
-          id
-          isOperator
-        }
-      }
-    `
-  })
-  return response.data.whoami
+export const loadTenants = async (request: Request) => {
+  let tenants: ListTenantsQuery['tenants']['edges'] = []
+  let hasNextPage = true
+  let after: string | undefined
+
+  while (hasNextPage) {
+    const response = await listTenants(request, { first: 100, after })
+
+    if (!response.edges.length) {
+      return []
+    }
+    if (response.edges) {
+      tenants = [...tenants, ...response.edges]
+    }
+
+    hasNextPage = response.pageInfo.hasNextPage
+    after = response?.pageInfo?.endCursor || tenants[tenants.length - 1].node.id
+  }
+
+  return tenants
 }

@@ -124,6 +124,7 @@ export type Asset = Model & {
   scale: Scalars['UInt8']['output'];
   /** The sending fee structure for the asset. */
   sendingFee?: Maybe<Fee>;
+  tenantId: Scalars['ID']['output'];
   /** Minimum amount of liquidity that can be withdrawn from the asset. */
   withdrawalThreshold?: Maybe<Scalars['UInt64']['output']>;
 };
@@ -199,6 +200,8 @@ export type CreateAssetInput = {
   liquidityThreshold?: InputMaybe<Scalars['UInt64']['input']>;
   /** Difference in order of magnitude between the standard unit of an asset and its corresponding fractional unit. */
   scale: Scalars['UInt8']['input'];
+  /** Unique identifier of the tenant associated with the asset. This cannot be changed. Optional, if not provided, the tenantId will be obtained from the signature. */
+  tenantId?: InputMaybe<Scalars['ID']['input']>;
   /** Minimum amount of liquidity that can be withdrawn from the asset. */
   withdrawalThreshold?: InputMaybe<Scalars['UInt64']['input']>;
 };
@@ -2173,6 +2176,7 @@ export type AssetResolvers<ContextType = any, ParentType extends ResolversParent
   receivingFee?: Resolver<Maybe<ResolversTypes['Fee']>, ParentType, ContextType>;
   scale?: Resolver<ResolversTypes['UInt8'], ParentType, ContextType>;
   sendingFee?: Resolver<Maybe<ResolversTypes['Fee']>, ParentType, ContextType>;
+  tenantId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   withdrawalThreshold?: Resolver<Maybe<ResolversTypes['UInt64']>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
@@ -2790,7 +2794,7 @@ export type ListAssetsQueryVariables = Exact<{
 }>;
 
 
-export type ListAssetsQuery = { __typename?: 'Query', assets: { __typename?: 'AssetsConnection', edges: Array<{ __typename?: 'AssetEdge', node: { __typename?: 'Asset', code: string, id: string, scale: number, withdrawalThreshold?: bigint | null, createdAt: string } }>, pageInfo: { __typename?: 'PageInfo', startCursor?: string | null, endCursor?: string | null, hasNextPage: boolean, hasPreviousPage: boolean } } };
+export type ListAssetsQuery = { __typename?: 'Query', assets: { __typename?: 'AssetsConnection', edges: Array<{ __typename?: 'AssetEdge', node: { __typename?: 'Asset', code: string, id: string, scale: number, withdrawalThreshold?: bigint | null, createdAt: string, tenantId: string } }>, pageInfo: { __typename?: 'PageInfo', startCursor?: string | null, endCursor?: string | null, hasNextPage: boolean, hasPreviousPage: boolean } } };
 
 export type CreateAssetMutationVariables = Exact<{
   input: CreateAssetInput;
@@ -2932,6 +2936,11 @@ export type WithdrawPeerLiquidityVariables = Exact<{
 
 export type WithdrawPeerLiquidity = { __typename?: 'Mutation', createPeerLiquidityWithdrawal?: { __typename?: 'LiquidityMutationResponse', success: boolean } | null };
 
+export type WhoAmIVariables = Exact<{ [key: string]: never; }>;
+
+
+export type WhoAmI = { __typename?: 'Query', whoami: { __typename?: 'WhoamiResponse', id: string, isOperator: boolean } };
+
 export type ListTenantsQueryVariables = Exact<{
   after?: InputMaybe<Scalars['String']['input']>;
   before?: InputMaybe<Scalars['String']['input']>;
@@ -2969,11 +2978,6 @@ export type GetTenantQueryVariables = Exact<{
 
 
 export type GetTenantQuery = { __typename?: 'Query', tenant: { __typename?: 'Tenant', id: string, email?: string | null, apiSecret: string, idpConsentUrl?: string | null, idpSecret?: string | null, publicName?: string | null, createdAt: string, deletedAt?: string | null } };
-
-export type WhoAmIQueryVariables = Exact<{ [key: string]: never; }>;
-
-
-export type WhoAmIQuery = { __typename?: 'Query', whoami: { __typename?: 'WhoamiResponse', id: string, isOperator: boolean } };
 
 export type GetWalletAddressQueryVariables = Exact<{
   id: Scalars['String']['input'];
