@@ -52,19 +52,6 @@ export async function getWalletAddress(
     )
   }
 
-  // Redirect to the wallet if the client accepts HTML
-  if (
-    deps.config.walletAddressRedirectHtmlPage &&
-    ctx.request.header['accept']?.includes('text/html')
-  ) {
-    ctx.set(
-      'Location',
-      `${deps.config.walletAddressRedirectHtmlPage}/${ctx.request.header['host']}${ctx.request.url}`
-    )
-    ctx.status = 302
-    return
-  }
-
   // We always fetch the additional properties, but not the properties that are not exposed to open-payments:
   walletAddress.additionalProperties =
     await deps.walletAddressService.getAdditionalProperties(
