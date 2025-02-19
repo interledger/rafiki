@@ -83,6 +83,10 @@ export default defineConfig({
               collapsed: true,
               items: [
                 {
+                  label: 'Account servicing entity',
+                  link: '/overview/concepts/account-servicing-entity'
+                },
+                {
                   label: 'Accounting',
                   link: '/overview/concepts/accounting'
                 },
