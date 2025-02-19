@@ -181,10 +181,6 @@ export default defineConfig({
                     {
                       label: 'Frontend service',
                       link: '/integration/deployment/services/frontend-service'
-                    },
-                    {
-                      label: 'Token introspection',
-                      link: '/integration/deployment/services/token-introspection'
                     }
                   ]
                 },
