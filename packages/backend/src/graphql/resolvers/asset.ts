@@ -7,7 +7,7 @@ import {
 } from '../generated/graphql'
 import { Asset } from '../../asset/model'
 import { errorToCode, errorToMessage, isAssetError } from '../../asset/errors'
-import { TenantedApolloContext } from '../../app'
+import { ForTenantIdContext, TenantedApolloContext } from '../../app'
 import { getPageInfo } from '../../shared/pagination'
 import { Pagination, SortOrder } from '../../shared/baseModel'
 import { feeToGraphql } from './fee'
@@ -23,14 +23,14 @@ export const getAssets: QueryResolvers<TenantedApolloContext>['assets'] =
     const assets = await assetService.getPage({
       pagination,
       sortOrder: order,
-      tenantId: ctx.tenant.id
+      tenantId: ctx.isOperator ? undefined : ctx.tenant.id
     })
     const pageInfo = await getPageInfo({
       getPage: (pagination: Pagination, sortOrder?: SortOrder) =>
         assetService.getPage({
           pagination,
           sortOrder,
-          tenantId: ctx.tenant.id
+          tenantId: ctx.isOperator ? undefined : ctx.tenant.id
         }),
       page: assets,
       sortOrder: order
@@ -50,7 +50,10 @@ export const getAsset: QueryResolvers<TenantedApolloContext>['asset'] = async (
   ctx
 ): Promise<ResolversTypes['Asset']> => {
   const assetService = await ctx.container.use('assetService')
-  const asset = await assetService.get(args.id, ctx.tenant.id)
+  const asset = await assetService.get(
+    args.id,
+    ctx.isOperator ? undefined : ctx.tenant.id
+  )
   if (!asset) {
     throw new GraphQLError('Asset not found', {
       extensions: {
@@ -72,16 +75,26 @@ export const getAssetByCodeAndScale: QueryResolvers<TenantedApolloContext>['asse
     return asset ? assetToGraphql(asset) : null
   }
 
-export const createAsset: MutationResolvers<TenantedApolloContext>['createAsset'] =
+export const createAsset: MutationResolvers<ForTenantIdContext>['createAsset'] =
   async (
     parent,
     args,
     ctx
   ): Promise<ResolversTypes['AssetMutationResponse']> => {
+    const tenantId = ctx.forTenantId
+    if (!tenantId)
+      throw new GraphQLError(
+        `Assignment to the specified tenant is not permitted`,
+        {
+          extensions: {
+            code: GraphQLErrorCode.BadUserInput
+          }
+        }
+      )
     const assetService = await ctx.container.use('assetService')
     const assetOrError = await assetService.create({
       ...args.input,
-      tenantId: ctx.tenant.id
+      tenantId
     })
     if (isAssetError(assetOrError)) {
       throw new GraphQLError(errorToMessage[assetOrError], {
@@ -203,5 +216,6 @@ export const assetToGraphql = (asset: Asset): SchemaAsset => ({
   scale: asset.scale,
   withdrawalThreshold: asset.withdrawalThreshold,
   liquidityThreshold: asset.liquidityThreshold,
-  createdAt: new Date(+asset.createdAt).toISOString()
+  createdAt: new Date(+asset.createdAt).toISOString(),
+  tenantId: asset.tenantId
 })
