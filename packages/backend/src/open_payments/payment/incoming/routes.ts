@@ -97,7 +97,7 @@ async function getIncomingPaymentPrivate(
     client: ctx.accessAction === AccessAction.Read ? ctx.client : undefined
   })
 
-  if (!incomingPayment || incomingPayment.isExpiredOrComplete()) {
+  if (!incomingPayment) {
     throw new OpenPaymentsServerRouteError(
       404,
       'Incoming payment does not exist',
