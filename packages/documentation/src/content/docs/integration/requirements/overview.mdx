@@ -9,7 +9,7 @@ You must meet the following requirements before you deploy Rafiki to a productio
 
 ## Be an account servicing entity <Badge text="Required" variant="danger" />
 
-An account servicing entity (ASE) is an entity that provides and maintains payment accounts for its customers and is regulated within the jurisdictions it operates. Examples of ASEs include banks, digital wallet providers, and mobile money providers. The [Introducing Rafiki](/overview/overview#more-about-account-servicing-entities) page provides a few examples of an ASE's responsibilities and obligations.
+An account servicing entity (ASE) is an entity that provides and maintains payment accounts for its customers and is regulated within the jurisdictions it operates. Examples of ASEs include banks, digital wallet providers, and mobile money providers. The [account servicing entity](/overview/concepts/account-servicing-entity) page provides examples of an ASE's responsibilities and obligations.
 
 Rafiki should not be used in production by non-regulated entities.
 
@@ -43,11 +43,13 @@ You have the option to charge a sending fee, on top of any estimated network fee
 
 [Define your sending fees](/integration/requirements/sending-fees)
 
-## Peers <Badge text="Required" variant="danger" />
+## Add a peer to enable Interledger payments <Badge text="Conditionally Optional" variant="caution" />
 
-While you could use Rafiki solely for transfers between accounts on your ledger, you must add one or more peers if you intend to enable Interledger payments on your accounts. A peer is another ASE that you want to connect with via Interledger and is likely running their own Rafiki instance.
+You must add one or more peers if you intend to enable Interledger payments on your accounts. A peer is another ASE that you will connect with via Interledger and is likely running their own Rafiki instance.
 
-[Set up peers in your Rafiki instance](/integration/requirements/peers)
+If you are using Rafiki solely for transfers between accounts on your ledger, peers are not required.
+
+[Add peers to your Rafiki instance](/integration/requirements/peers)
 
 ## Integrate with an identity provider (IdP) <Badge text="Conditionally Optional" variant="caution" />
 
