@@ -44,6 +44,7 @@ import { Pagination, SortOrder } from '../../../shared/baseModel'
 import { FilterString } from '../../../shared/filters'
 import { IAppConfig } from '../../../config/app'
 import { AssetService } from '../../../asset/service'
+import { Receiver } from '../../receiver/model'
 
 export interface OutgoingPaymentService
   extends WalletAddressSubresourceService<OutgoingPayment> {
@@ -369,7 +370,7 @@ async function createOutgoingPayment(
       )
       const receiver = await deps.receiverService.get(payment.receiver)
       stopTimerReceiver()
-      if (!receiver) {
+      if (Receiver.isInvalidExpiredOrCompleted(receiver)) {
         throw OutgoingPaymentError.InvalidQuote
       }
       const stopTimerPeer = deps.telemetry.startTimer(

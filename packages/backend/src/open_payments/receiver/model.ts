@@ -35,21 +35,9 @@ export class Receiver {
     incomingPayment: OpenPaymentsIncomingPaymentWithPaymentMethod,
     isLocal: boolean
   ) {
-    if (incomingPayment.completed) {
-      throw new Error('Cannot create receiver from completed incoming payment')
-    }
-
     const expiresAt = incomingPayment.expiresAt
       ? new Date(incomingPayment.expiresAt)
       : undefined
-
-    if (expiresAt && expiresAt.getTime() <= Date.now()) {
-      throw new Error('Cannot create receiver from expired incoming payment')
-    }
-
-    if (!incomingPayment.methods.length) {
-      throw new Error('Missing payment method(s) on incoming payment')
-    }
 
     const incomingAmount = incomingPayment.incomingAmount
       ? parseAmount(incomingPayment.incomingAmount)
@@ -119,5 +107,31 @@ export class Receiver {
       sharedSecret: this.sharedSecret,
       requestCounter: Counter.from(0) as Counter
     }
+  }
+
+  public static isInvalidExpiredOrCompleted(
+    receiver: Receiver | undefined
+  ): receiver is undefined {
+    if (!receiver) {
+      return true
+    }
+    const incomingPayment = receiver.incomingPayment
+    if (incomingPayment.completed) {
+      // throw new Error('Cannot create receiver from completed incoming payment')
+      return true
+    }
+    if (
+      incomingPayment.expiresAt &&
+      incomingPayment.expiresAt.getTime() <= Date.now()
+    ) {
+      // throw new Error('Cannot create receiver from expired incoming payment')
+      return true
+    }
+    if (!incomingPayment.methods.length) {
+      // throw new Error('Missing payment method(s) on incoming payment')
+      return true
+    }
+
+    return false
   }
 }
