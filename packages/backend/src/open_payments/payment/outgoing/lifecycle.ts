@@ -226,7 +226,8 @@ export async function sendWebhookEvent(
     outgoingPaymentId: payment.id,
     type,
     data: payment.toData({ amountSent, balance }),
-    withdrawal
+    withdrawal,
+    tenantId: deps.config.operatorTenantId
   })
   stopTimer()
 }

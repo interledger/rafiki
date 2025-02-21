@@ -199,7 +199,8 @@ async function createIncomingPayment(
   await IncomingPaymentEvent.query(trx || deps.knex).insert({
     incomingPaymentId: incomingPayment.id,
     type: IncomingPaymentEventType.IncomingPaymentCreated,
-    data: incomingPayment.toData(0n)
+    data: incomingPayment.toData(0n),
+    tenantId: deps.config.operatorTenantId
   })
 
   incomingPayment = await addReceivedAmount(deps, incomingPayment, BigInt(0))
@@ -364,7 +365,8 @@ async function handleDeactivated(
         accountId: incomingPayment.id,
         assetId: incomingPayment.assetId,
         amount: amountReceived
-      }
+      },
+      tenantId: deps.config.operatorTenantId
     })
 
     await incomingPayment.$query(deps.knex).patch({
