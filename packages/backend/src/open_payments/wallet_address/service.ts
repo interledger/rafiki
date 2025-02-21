@@ -23,7 +23,7 @@ import {
 } from '../payment/incoming/model'
 import { IAppConfig } from '../../config/app'
 import { Pagination, SortOrder } from '../../shared/baseModel'
-import { WebhookService } from '../../webhook/service'
+import { addWebhookEventToQueue, WebhookService } from '../../webhook/service'
 import { poll } from '../../shared/utils'
 import { WalletAddressAdditionalProperty } from './additional_property/model'
 import { AssetService } from '../../asset/service'
@@ -298,12 +298,20 @@ async function getOrPollByUrl(
   const existingWalletAddress = await getWalletAddressByUrl(deps, url)
   if (existingWalletAddress) return existingWalletAddress
 
-  await WalletAddressEvent.query(deps.knex).insert({
+  const event = await WalletAddressEvent.query(deps.knex).insertAndFetch({
     type: WalletAddressEventType.WalletAddressNotFound,
     data: {
       walletAddressUrl: url
     }
   })
+  addWebhookEventToQueue(event)
+  // queue.add('send', event.toJSON(), {
+  //   attempts: 10,
+  //   backoff: {
+  //     type: 'exponential',
+  //     delay: 3000
+  //   }
+  // })
 
   deps.logger.debug(
     { walletAddressUrl: url },
@@ -428,7 +436,7 @@ async function createWithdrawalEvent(
 
   deps.logger.trace({ amount }, 'creating webhook withdrawal event')
 
-  await WalletAddressEvent.query(deps.knex).insert({
+  const event = await WalletAddressEvent.query(deps.knex).insertAndFetch({
     walletAddressId: walletAddress.id,
     type: WalletAddressEventType.WalletAddressWebMonetization,
     data: walletAddress.toData(amount),
@@ -438,6 +446,15 @@ async function createWithdrawalEvent(
       amount
     }
   })
+
+  addWebhookEventToQueue(event)
+  // queue.add('send', event.toJSON(), {
+  //   attempts: 10,
+  //   backoff: {
+  //     type: 'exponential',
+  //     delay: 3000
+  //   }
+  // })
 
   await walletAddress.$query(deps.knex).patch({
     totalEventsAmount: walletAddress.totalEventsAmount + amount

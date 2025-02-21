@@ -296,15 +296,70 @@ export class App {
       for (let i = 0; i < this.config.incomingPaymentWorkers; i++) {
         process.nextTick(() => this.processIncomingPayment())
       }
-      for (let i = 0; i < this.config.webhookWorkers; i++) {
-        process.nextTick(() => this.processWebhook())
-      }
+      // for (let i = 0; i < this.config.webhookWorkers; i++) {
+      //   process.nextTick(() => this.processWebhook())
+      // }
 
-      const worker = new Worker(
+      // new Worker(
+      //   'webhook',
+      //   async (job) => {
+      //     if (job.name === 'send') {
+      //       // console.log(
+      //       //   'webhook worker found wh',
+      //       //   JSON.stringify(job.data, null, 2)
+      //       // )
+
+      //       await this.processWebhook(job.data)
+      //     }
+      //   },
+      //   { connection: { url: this.config.redisUrl } }
+      // )
+
+      // Ran into problems relating to difference between this
+      // serialized/parsed payment compared to the one we read directly
+      // from the db in the original worker.
+      // const worker = new Worker(
+      //   'OP',
+      //   async (job) => {
+      //     if (job.name === 'funded') {
+      //       console.log(
+      //         'worker found funded outgoing payment',
+      //         JSON.stringify(job.data, null, 2)
+      //       )
+      //       const { data } = job
+
+      //       // Cast all bigints
+      //       data.quote.debitAmount.value = BigInt(data.quote.debitAmount.value)
+      //       data.quote.receiveAmount.value = BigInt(
+      //         data.quote.receiveAmount.value
+      //       )
+      //       data.sentAmountValue = BigInt(data.sentAmountValue)
+      //       data.debitAmount.value = BigInt(data.debitAmount.value)
+      //       data.receiveAmount.value = BigInt(data.receiveAmount.value)
+      //       data.sentAmount.value = BigInt(data.sentAmount.value)
+      //       data.sentAmount.value = BigInt(data.sentAmount.value)
+      //       data.grantSpentDebitAmount.value = BigInt(
+      //         data.grantSpentDebitAmount.value
+      //       )
+      //       data.grantSpentReceiveAmount.value = BigInt(
+      //         data.grantSpentReceiveAmount.value
+      //       )
+
+      //       console.log(
+      //         'data after casting to bigint',
+      //         JSON.stringify(data, null, 2)
+      //       )
+
+      //       await this.processOutgoingPayment(data)
+      //     }
+      //   },
+      //   { connection: { url: this.config.redisUrl } }
+      // )
+
+      new Worker(
         'OP',
         async (job) => {
           if (job.name === 'funded') {
-            console.log('worker found funded outgoing payment')
             await this.processOutgoingPayment(job.data)
           }
         },
@@ -870,21 +925,25 @@ export class App {
       })
   }
 
-  private async processWebhook(): Promise<void> {
+  // private async processWebhook(): Promise<void> {
+  //   const webhookService = await this.container.use('webhookService')
+  //   return webhookService
+  //     .processNext()
+  //     .catch((err) => {
+  //       this.logger.warn({ error: err.message }, 'processWebhook error')
+  //       return true
+  //     })
+  //     .then((hasMoreWork) => {
+  //       if (hasMoreWork) process.nextTick(() => this.processWebhook())
+  //       else
+  //         setTimeout(
+  //           () => this.processWebhook(),
+  //           this.config.webhookWorkerIdle
+  //         ).unref()
+  //     })
+  // }
+  private async processWebhook(webhook: any): Promise<void> {
     const webhookService = await this.container.use('webhookService')
-    return webhookService
-      .processNext()
-      .catch((err) => {
-        this.logger.warn({ error: err.message }, 'processWebhook error')
-        return true
-      })
-      .then((hasMoreWork) => {
-        if (hasMoreWork) process.nextTick(() => this.processWebhook())
-        else
-          setTimeout(
-            () => this.processWebhook(),
-            this.config.webhookWorkerIdle
-          ).unref()
-      })
+    await webhookService.processNext(webhook)
   }
 }

@@ -753,6 +753,24 @@ importers:
         specifier: ^6.7.6
         version: 6.7.6
 
+  packages/webhook-worker:
+    dependencies:
+      axios:
+        specifier: ^1.7.9
+        version: 1.7.9(debug@4.3.2)
+      bullmq:
+        specifier: ^5.41.1
+        version: 5.41.1
+      dotenv:
+        specifier: ^16.4.7
+        version: 16.4.7
+      json-canonicalize:
+        specifier: ^1.0.6
+        version: 1.0.6
+      pino:
+        specifier: ^8.19.0
+        version: 8.19.0
+
   test/integration:
     devDependencies:
       '@interledger/open-payments':

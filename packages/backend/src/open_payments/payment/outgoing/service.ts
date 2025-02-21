@@ -90,6 +90,7 @@ export async function createOutgoingPaymentService(
     create: (options) => createOutgoingPayment(deps, options),
     cancel: (options) => cancelOutgoingPayment(deps, options),
     fund: (options) => fundPayment(deps, options),
+    // fund: (options) => fundPayment2(deps, options),
     processNext: (payment) => worker.processPendingPayment(deps, payment),
     getWalletAddressPage: (options) => getWalletAddressPage(deps, options)
   }
@@ -277,7 +278,9 @@ async function createOutgoingPayment(
 
   const grantId = options.grant?.id
   try {
-    return await OutgoingPayment.transaction(deps.knex, async (trx) => {
+    // TODO: rm deps.knex?
+    return await OutgoingPayment.transaction(async (trx) => {
+      // return await OutgoingPayment.transaction(deps.knex, async (trx) => {
       const stopTimerWA = deps.telemetry.startTimer(
         'outgoing_payment_service_getwalletaddress_time_ms',
         {
@@ -543,14 +546,18 @@ async function validateGrantAndAddSpentAmountsToPayment(
     return false
   }
 
-  await OutgoingPaymentGrant.query(trx || deps.knex)
+  await OutgoingPaymentGrant.query(trx)
+    // || deps.knex unused? although it doesnt seem to make a difference either way
+    // await OutgoingPaymentGrant.query(trx || deps.knex)
     .where('id', grant.id)
     .forNoKeyUpdate()
     .timeout(grantLockTimeoutMs)
 
   if (callback) await new Promise(callback)
 
-  const grantPayments = await OutgoingPayment.query(trx || deps.knex)
+  const grantPayments = await OutgoingPayment.query(trx)
+    // || deps.knex unused? although it doesnt seem to make a difference either way
+    // const grantPayments = await OutgoingPayment.query(trx || deps.knex)
     .where({
       grantId: grant.id
     })
@@ -629,7 +636,147 @@ export interface FundOutgoingPaymentOptions {
   transferId: string
 }
 
+// -removed transction, forUpdate lock, and state update
+//   - should not be necessary since worker no longer needs state to find
+//     op to process.
+// - added queue
 async function fundPayment(
+  deps: ServiceDependencies,
+  { id, amount, transferId }: FundOutgoingPaymentOptions
+): Promise<OutgoingPayment | FundingError> {
+  const stopTimerFund = deps.telemetry.startTimer(
+    'outgoing_payment_service_fund_time_ms',
+    {
+      callName: 'OutgoingPaymentService:fundPayment',
+      description: 'Time to fund an outgoing payment'
+    }
+  )
+  // return await deps.knex.transaction(async (trx) => {
+  const stopTimerGet = deps.telemetry.startTimer(
+    'outgoing_payment_service_fund_get_time_ms',
+    {
+      callName: 'OutgoingPaymentService:fundPayment:get',
+      description: 'Time to get outgoing payment'
+    }
+  )
+  const payment = await OutgoingPayment.query()
+    // const payment = await OutgoingPayment.query(trx)
+    .findById(id)
+    // .forUpdate()
+    .withGraphFetched('quote')
+  stopTimerGet()
+  if (!payment) {
+    stopTimerFund()
+    return FundingError.UnknownPayment
+  }
+
+  const stopTimerAssetGet = deps.telemetry.startTimer(
+    'outgoing_payment_service_fund_asset_get_time_ms',
+    {
+      callName: 'OutgoingPaymentService:fundPayment:getAsset',
+      description: 'Time to get asset for outgoing payment'
+    }
+  )
+  const asset = await deps.assetService.get(payment.quote.assetId)
+  stopTimerAssetGet()
+
+  if (asset) payment.quote.asset = asset
+
+  if (payment.state !== OutgoingPaymentState.Funding) {
+    stopTimerFund()
+    return FundingError.WrongState
+  }
+  if (amount !== payment.debitAmount.value) {
+    stopTimerFund()
+    return FundingError.InvalidAmount
+  }
+
+  const stopTimerCreateLiquidity = deps.telemetry.startTimer(
+    'outgoing_payment_service_fund_create_liquidity_time_ms',
+    {
+      callName: 'OutgoingPaymentService:fundPayment:createLiquidityAccount',
+      description: 'Time to create liquidity account for outgoing payment'
+    }
+  )
+  try {
+    await deps.accountingService.createLiquidityAccount(
+      {
+        id: id,
+        asset: payment.asset
+      },
+      LiquidityAccountType.OUTGOING
+    )
+  } catch (err) {
+    // Don't complain if liquidity account already exists.
+    if (err instanceof AccountAlreadyExistsError) {
+      // Do nothing.
+      console.log('AccountAlreadyExistsError')
+    } else {
+      stopTimerCreateLiquidity()
+      stopTimerFund()
+      throw err
+    }
+  }
+  stopTimerCreateLiquidity()
+
+  const stopTimerCreateDeposit = deps.telemetry.startTimer(
+    'outgoing_payment_service_fund_create_deposit_time_ms',
+    {
+      callName: 'OutgoingPaymentService:fundPayment:createDeposit',
+      description: 'Time to create deposit for outgoing payment'
+    }
+  )
+  const error = await deps.accountingService.createDeposit({
+    id: transferId,
+    account: payment,
+    amount
+  })
+  stopTimerCreateDeposit()
+
+  if (error) {
+    stopTimerFund()
+    return error
+  }
+
+  const stopTimerAddSentAmount = deps.telemetry.startTimer(
+    'outgoing_payment_service_fund_add_sent_amount_time_ms',
+    {
+      callName: 'OutgoingPaymentService:fundPayment:addSentAmount',
+      description: 'Time to add sent amount for outgoing payment'
+    }
+  )
+  const paymentWithSentAmount = await addSentAmount(deps, payment)
+  stopTimerAddSentAmount()
+
+  const paymentForEvent = {
+    ...paymentWithSentAmount.toJSON(),
+    assetId: paymentWithSentAmount.assetId,
+    state: OutgoingPaymentState.Sending,
+    quote: {
+      ...paymentWithSentAmount.quote.toJSON(),
+      assetId: paymentWithSentAmount.quote.assetId,
+      estimatedExchangeRate: paymentWithSentAmount.quote.estimatedExchangeRate
+    }
+  }
+
+  queue.add('funded', paymentForEvent, {
+    attempts: 5, // Retry up to 5 times
+    backoff: {
+      type: 'exponential', // or 'fixed'
+      delay: 3000 // 3-second delay between retries
+    }
+  })
+
+  stopTimerFund()
+
+  return paymentWithSentAmount
+  // })
+}
+
+// - added queue
+// - rm update only
+// seems about the same with removing the trx, forUpdate. guess
+async function fundPayment2(
   deps: ServiceDependencies,
   { id, amount, transferId }: FundOutgoingPaymentOptions
 ): Promise<OutgoingPayment | FundingError> {
@@ -661,6 +808,7 @@ async function fundPayment(
       // Don't complain if liquidity account already exists.
       if (err instanceof AccountAlreadyExistsError) {
         // Do nothing.
+        console.log('AccountAlreadyExistsError')
       } else {
         throw err
       }
@@ -674,28 +822,41 @@ async function fundPayment(
     if (error) {
       return error
     }
-    const updatedPayment = await payment
-      .$query(trx)
-      .patch({ state: OutgoingPaymentState.Sending })
+    // const updatedPayment = await payment
+    //   .$query(trx)
+    //   .patch({ state: OutgoingPaymentState.Sending })
 
     const paymentWithSentAmount = await addSentAmount(deps, payment)
 
-    queue.add(
-      'funded',
-      {
-        ...paymentWithSentAmount.toJSON(),
-        state: OutgoingPaymentState.Sending
-      },
-      {
-        attempts: 5, // Retry up to 5 times
-        backoff: {
-          type: 'exponential', // or 'fixed'
-          delay: 3000 // 3-second delay between retries
-        }
+    // TODO: just publish the event with id?
+    // intended on puttingn the payment data on it and using that,
+    // but had to lookup the payment again by id to ensure it was well formed.
+    // possible in theory to avoid this extra lookup but its nott he bottleneck atm
+    // and the lookup isnt locking like the original worker.
+    const paymentForEvent = {
+      ...paymentWithSentAmount.toJSON(),
+      assetId: paymentWithSentAmount.assetId,
+      state: OutgoingPaymentState.Sending,
+      // not sure why paymentWithSentAmount.toJSON doesnt include the assetId (quote exsits
+      // and paymentWithSentAmount has the assetId. ???)
+      // - because these are viritual feidls!
+      quote: {
+        ...paymentWithSentAmount.quote.toJSON(),
+        assetId: paymentWithSentAmount.quote.assetId,
+        estimatedExchangeRate: paymentWithSentAmount.quote.estimatedExchangeRate
       }
-    )
+    }
+
+    queue.add('funded', paymentForEvent, {
+      attempts: 5, // Retry up to 5 times
+      backoff: {
+        type: 'exponential', // or 'fixed'
+        delay: 3000 // 3-second delay between retries
+      }
+    })
 
     return paymentWithSentAmount
+    // })
   })
 }
 

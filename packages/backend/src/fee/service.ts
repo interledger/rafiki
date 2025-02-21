@@ -73,7 +73,6 @@ async function getLatestFee(
   const cachedFee = await deps.feeCache.get(`${assetId}${type}`)
 
   if (cachedFee) {
-    console.log('found cached fee, returning')
     return cachedFee
   }
 

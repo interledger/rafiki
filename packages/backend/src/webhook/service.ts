@@ -3,7 +3,7 @@ import { createHmac } from 'crypto'
 import { canonicalize } from 'json-canonicalize'
 
 import { WebhookEvent } from './model'
-import { IAppConfig } from '../config/app'
+import { Config, IAppConfig } from '../config/app'
 import { BaseService } from '../shared/baseService'
 import { Pagination, SortOrder } from '../shared/baseModel'
 import { FilterString } from '../shared/filters'
@@ -13,6 +13,34 @@ import { trace, Span } from '@opentelemetry/api'
 // Second retry waits 20 (more) seconds
 // Third retry waits 30 (more) seconds, etc. up to 60 seconds
 export const RETRY_BACKOFF_MS = 10_000
+
+import { Queue } from 'bullmq'
+
+export const queue = new Queue('webhook', {
+  connection: { url: Config.redisUrl }
+})
+
+// to be called anywher we are creating a webhook event
+export const addWebhookEventToQueue = (event: any) => {
+  return queue.add(
+    'send',
+    {
+      id: event.id,
+      type: event.type,
+      data: event.data,
+      targetUrl: Config.webhookUrl,
+      signatureSecret: Config.signatureSecret,
+      signatureVersion: Config.signatureVersion
+    },
+    {
+      attempts: 10,
+      backoff: {
+        type: 'exponential',
+        delay: 3000
+      }
+    }
+  )
+}
 
 interface WebhookEventFilter {
   type?: FilterString
@@ -29,7 +57,8 @@ export interface WebhookService {
   getLatestByResourceId(
     options: WebhookByResourceIdOptions
   ): Promise<WebhookEvent | undefined>
-  processNext(): Promise<string | undefined>
+  // processNext(): Promise<string | undefined>
+  processNext(webhook: WebhookEvent): Promise<string | undefined>
   getPage(options?: GetPageOptions): Promise<WebhookEvent[]>
 }
 
@@ -48,7 +77,9 @@ export async function createWebhookService(
     getEvent: (id) => getWebhookEvent(deps, id),
     getLatestByResourceId: (options) =>
       getLatestWebhookEventByResourceId(deps, options),
-    processNext: () => processNextWebhookEvent(deps),
+    // processNext: () => processNextWebhookEvent(deps),
+    processNext: (webhook: WebhookEvent) =>
+      processNextWebhookEvent(deps, webhook),
     getPage: (options) => getWebhookEventsPage(deps, options)
   }
 }
@@ -116,44 +147,72 @@ async function getLatestWebhookEventByResourceId(
 
 // Fetch (and lock) a webhook event for work.
 // Returns the id of the processed event (if any).
-async function processNextWebhookEvent(
-  deps_: ServiceDependencies
-): Promise<string | undefined> {
-  if (!deps_.knex) {
-    throw new Error('Knex undefined')
-  }
+// async function processNextWebhookEvent(
+//   deps_: ServiceDependencies
+// ): Promise<string | undefined> {
+//   if (!deps_.knex) {
+//     throw new Error('Knex undefined')
+//   }
 
+//   const tracer = trace.getTracer('webhook_worker')
+
+//   return tracer.startActiveSpan(
+//     'processNextWebhookEvent',
+//     async (span: Span) => {
+//       return deps_.knex!.transaction(async (trx) => {
+//         const now = Date.now()
+//         const events = await WebhookEvent.query(trx)
+//           .limit(1)
+//           // Ensure the webhook event cannot be processed concurrently by multiple workers.
+//           .forUpdate()
+//           // If a webhook event is locked, don't wait — just come back for it later.
+//           .skipLocked()
+//           .where('attempts', '<', deps_.config.webhookMaxRetry)
+//           .where('processAt', '<=', new Date(now).toISOString())
+
+//         const event = events[0]
+//         if (!event) return
+
+//         const deps = {
+//           ...deps_,
+//           knex: trx,
+//           logger: deps_.logger.child({
+//             event: event.id
+//           })
+//         }
+
+//         await sendWebhookEvent(deps, event)
+//         span.end()
+//         return event.id
+//       })
+//     }
+//   )
+// }
+
+async function processNextWebhookEvent(
+  deps_: ServiceDependencies,
+  webhook: WebhookEvent
+): Promise<string | undefined> {
   const tracer = trace.getTracer('webhook_worker')
 
   return tracer.startActiveSpan(
     'processNextWebhookEvent',
     async (span: Span) => {
-      return deps_.knex!.transaction(async (trx) => {
-        const now = Date.now()
-        const events = await WebhookEvent.query(trx)
-          .limit(1)
-          // Ensure the webhook event cannot be processed concurrently by multiple workers.
-          .forUpdate()
-          // If a webhook event is locked, don't wait — just come back for it later.
-          .skipLocked()
-          .where('attempts', '<', deps_.config.webhookMaxRetry)
-          .where('processAt', '<=', new Date(now).toISOString())
+      const event = webhook
+      if (!event) return
 
-        const event = events[0]
-        if (!event) return
+      const deps = {
+        ...deps_,
+        logger: deps_.logger.child({
+          event: event.id
+        })
+      }
 
-        const deps = {
-          ...deps_,
-          knex: trx,
-          logger: deps_.logger.child({
-            event: event.id
-          })
-        }
-
-        await sendWebhookEvent(deps, event)
-        span.end()
-        return event.id
-      })
+      await sendWebhookEvent(deps, webhook)
+      span.end()
+      // todo: probably dont need to return? retry controlled by errors instead
+      // of returning this
+      return webhook.id
     }
   )
 }
@@ -192,11 +251,12 @@ async function sendWebhookEvent(
       validateStatus: (status) => status === 200
     })
 
-    await event.$query(deps.knex).patch({
-      attempts: event.attempts + 1,
-      statusCode: 200,
-      processAt: null
-    })
+    // TODO: dont track stateattempts? just return to queue if not succesful (handle w/ queu/worker)
+    // await event.$query(deps.knex).patch({
+    //   attempts: event.attempts + 1,
+    //   statusCode: 200,
+    //   processAt: null
+    // })
   } catch (err) {
     if (isAxiosError(err)) {
       const attempts = event.attempts + 1
@@ -209,13 +269,14 @@ async function sendWebhookEvent(
         'webhook request failed'
       )
 
-      await event.$query(deps.knex).patch({
-        attempts,
-        statusCode: err.response ? err.response.status : undefined,
-        processAt: new Date(
-          Date.now() + Math.min(attempts, 6) * RETRY_BACKOFF_MS
-        )
-      })
+      // await event.$query(deps.knex).patch({
+      //   attempts,
+      //   statusCode: err.response ? err.response.status : undefined,
+      //   processAt: new Date(
+      //     Date.now() + Math.min(attempts, 6) * RETRY_BACKOFF_MS
+      //   )
+      // })
+      throw err
     } else {
       deps.logger.warn({ error: err }, 'error not type AxiosError')
       throw err

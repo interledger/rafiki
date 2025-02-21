@@ -165,5 +165,19 @@ services:
     depends_on:
       - cloud-nine-backend
 
+  webhook-worker:
+    hostname: cloud-nine-webhook-worker
+    build:
+      context: ../..
+      dockerfile: ./packages/webhook-worker/Dockerfile
+    restart: always
+    networks:
+      - rafiki
+    environment:
+      REDIS_URL: redis://shared-redis:6379/0 # use same logical db (/0) as backend
+      WEBHOOK_TIMEOUT: 2000
+    depends_on:
+      - shared-redis
+
 volumes:
   database-data: # named volumes can be managed easier using docker-compose

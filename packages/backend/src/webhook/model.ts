@@ -15,6 +15,7 @@ export class WebhookEvent extends BaseModel {
     return 'webhookEvents'
   }
 
+  // TODO: remove these? db relations were removed.
   static relationMappings = () => ({
     outgoingPayment: {
       relation: BaseModel.BelongsToOneRelation,

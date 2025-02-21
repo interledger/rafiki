@@ -9,6 +9,7 @@ import { ServiceDependencies } from './service'
 import { Receiver } from '../../receiver/model'
 import { TransactionOrKnex } from 'objection'
 import { ValueType } from '@opentelemetry/api'
+import { addWebhookEventToQueue } from '../../../webhook/service'
 
 // "payment" is locked by the "deps.knex" transaction.
 export async function handleSending(
@@ -221,12 +222,23 @@ export async function sendWebhookEvent(
       }
     : undefined
 
-  await OutgoingPaymentEvent.query(trx || deps.knex).insert({
+  const event = await OutgoingPaymentEvent.query(
+    trx || deps.knex
+  ).insertAndFetch({
     outgoingPaymentId: payment.id,
     type,
     data: payment.toData({ amountSent, balance }),
     withdrawal
   })
+
+  addWebhookEventToQueue(event)
+  // queue.add('send', event.toJSON(), {
+  //   attempts: 10,
+  //   backoff: {
+  //     type: 'exponential',
+  //     delay: 3000
+  //   }
+  // })
   stopTimer()
 }
 

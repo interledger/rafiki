@@ -135,6 +135,7 @@ async function createPeer(
   }
 
   try {
+    // TODO: rm deps.knex?
     return await Peer.transaction(deps.knex, async (trx) => {
       const peer = await Peer.query(trx).insertAndFetch({
         assetId: options.assetId,
@@ -224,6 +225,7 @@ async function updatePeer(
   }
 
   try {
+    // TODO: rm deps.knex?
     return await Peer.transaction(deps.knex, async (trx) => {
       if (options.http?.incoming) {
         await deps.httpTokenService.deleteByPeer(options.id, trx)

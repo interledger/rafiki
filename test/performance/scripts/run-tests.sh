@@ -98,9 +98,9 @@ if $DOCKER_MODE; then
     -e CLOUD_NINE_GQL_ENDPOINT=$CLOUD_NINE_GQL_ENDPOINT \
     -e CLOUD_NINE_WALLET_ADDRESS=$CLOUD_NINE_WALLET_ADDRESS \
     -e HAPPY_LIFE_BANK_WALLET_ADDRESS=$HAPPY_LIFE_BANK_WALLET_ADDRESS \
-    -i grafana/k6 run /scripts/create-outgoing-payments.js $K6_ARGS
+    -i grafana/k6 run /scripts/create-local-outgoing-payments.js $K6_ARGS
 else
-  k6 run ./scripts/create-outgoing-payments.js \
+  k6 run ./scripts/create-local-outgoing-payments.js \
     -e CLOUD_NINE_GQL_ENDPOINT=$CLOUD_NINE_GQL_ENDPOINT \
     -e CLOUD_NINE_WALLET_ADDRESS=$CLOUD_NINE_WALLET_ADDRESS \
     -e HAPPY_LIFE_BANK_WALLET_ADDRESS=$HAPPY_LIFE_BANK_WALLET_ADDRESS $K6_ARGS

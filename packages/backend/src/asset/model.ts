@@ -2,6 +2,7 @@ import { QueryContext } from 'objection'
 import { LiquidityAccount, OnDebitOptions } from '../accounting/service'
 import { BaseModel } from '../shared/baseModel'
 import { WebhookEvent } from '../webhook/model'
+import { addWebhookEventToQueue } from '../webhook/service'
 
 export class Asset extends BaseModel implements LiquidityAccount {
   public static get tableName(): string {
@@ -31,7 +32,7 @@ export class Asset extends BaseModel implements LiquidityAccount {
   public async onDebit({ balance }: OnDebitOptions): Promise<Asset> {
     if (this.liquidityThreshold !== null) {
       if (balance <= this.liquidityThreshold) {
-        await AssetEvent.query().insert({
+        const event = await AssetEvent.query().insertAndFetch({
           assetId: this.id,
           type: AssetEventType.LiquidityLow,
           data: {
@@ -45,6 +46,14 @@ export class Asset extends BaseModel implements LiquidityAccount {
             balance
           }
         })
+        addWebhookEventToQueue(event)
+        // queue.add('send', event.toJSON(), {
+        //   attempts: 10,
+        //   backoff: {
+        //     type: 'exponential',
+        //     delay: 3000
+        //   }
+        // })
       }
     }
     return this

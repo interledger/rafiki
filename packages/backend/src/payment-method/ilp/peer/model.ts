@@ -6,6 +6,7 @@ import { HttpToken } from '../peer-http-token/model'
 import { BaseModel } from '../../../shared/baseModel'
 import { WebhookEvent } from '../../../webhook/model'
 import { join } from 'path'
+import { addWebhookEventToQueue, queue } from '../../../webhook/service'
 
 export class Peer
   extends BaseModel
@@ -56,7 +57,7 @@ export class Peer
   public async onDebit({ balance }: OnDebitOptions): Promise<Peer> {
     if (this.liquidityThreshold !== null) {
       if (balance <= this.liquidityThreshold) {
-        await PeerEvent.query().insert({
+        const event = await PeerEvent.query().insertAndFetch({
           peerId: this.id,
           type: PeerEventType.LiquidityLow,
           data: {
@@ -70,6 +71,14 @@ export class Peer
             balance
           }
         })
+        addWebhookEventToQueue(event)
+        // queue.add('send', event.toJSON(), {
+        //   attempts: 10,
+        //   backoff: {
+        //     type: 'exponential',
+        //     delay: 3000
+        //   }
+        // })
       }
     }
     return this

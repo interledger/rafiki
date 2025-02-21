@@ -13,9 +13,18 @@ export const RETRY_BACKOFF_SECONDS = 10
 // Returns the id of the processed payment (if any).
 export async function processPendingPayment(
   deps_: ServiceDependencies,
-  payment: any
+  payment_: any
 ): Promise<string | undefined> {
   const tracer = trace.getTracer('outgoing_payment_worker')
+
+  // TODO: use payment directly if I can serialize/parse correctly.
+  // Get lots of hard to pin-point errors from missing properties
+  // if I try to put the payment in the event then use it directly in the worker
+  const payment = await OutgoingPayment.query()
+    .findById(payment_.id)
+    .withGraphFetched('quote')
+
+  if (!payment) throw new Error('Could not find payment, this shouldnt happen')
 
   return tracer.startActiveSpan(
     'outgoingPaymentLifecycle',
@@ -149,10 +158,13 @@ async function handlePaymentLifecycle(
   deps: ServiceDependencies,
   payment: OutgoingPayment
 ): Promise<void> {
-  if (payment.state !== OutgoingPaymentState.Sending) {
-    deps.logger.warn('unexpected payment in lifecycle')
-    throw new Error('unexpected payment in lifecycle')
-  }
+  // TODO: might need this check in some form but trying without it
+  // because i moved the update to this state in fundPayment and it should
+  // never not (effectively) be in a different state.
+  // if (payment.state !== OutgoingPaymentState.Sending) {
+  //   deps.logger.warn('unexpected payment in lifecycle')
+  //   throw new Error('unexpected payment in lifecycle')
+  // }
 
   const [paymentWalletAddress, quoteAsset] = await Promise.all([
     deps.walletAddressService.get(payment.walletAddressId),

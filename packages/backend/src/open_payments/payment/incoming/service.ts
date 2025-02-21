@@ -19,6 +19,7 @@ import { IncomingPaymentError } from './errors'
 import { IAppConfig } from '../../../config/app'
 import { poll } from '../../../shared/utils'
 import { AssetService } from '../../../asset/service'
+import { addWebhookEventToQueue } from '../../../webhook/service'
 
 export const POSITIVE_SLIPPAGE = BigInt(1)
 // First retry waits 10 seconds
@@ -180,11 +181,22 @@ async function createIncomingPayment(
     incomingPayment.walletAddressId
   )
 
-  await IncomingPaymentEvent.query(trx || deps.knex).insert({
+  const event = await IncomingPaymentEvent.query(
+    trx || deps.knex
+  ).insertAndFetch({
     incomingPaymentId: incomingPayment.id,
     type: IncomingPaymentEventType.IncomingPaymentCreated,
     data: incomingPayment.toData(0n)
   })
+
+  addWebhookEventToQueue(event)
+  // queue.add('send', event.toJSON(), {
+  //   attempts: 10,
+  //   backoff: {
+  //     type: 'exponential',
+  //     delay: 3000
+  //   }
+  // })
 
   incomingPayment = await addReceivedAmount(deps, incomingPayment, BigInt(0))
   if (!deps.config.pollIncomingPaymentCreatedWebhook) {
@@ -340,7 +352,7 @@ async function handleDeactivated(
         : IncomingPaymentEventType.IncomingPaymentCompleted
     deps.logger.trace({ type }, 'creating incoming payment webhook event')
 
-    await IncomingPaymentEvent.query(deps.knex).insert({
+    const event = await IncomingPaymentEvent.query(deps.knex).insertAndFetch({
       incomingPaymentId: incomingPayment.id,
       type,
       data: incomingPayment.toData(amountReceived),
@@ -350,6 +362,15 @@ async function handleDeactivated(
         amount: amountReceived
       }
     })
+
+    addWebhookEventToQueue(event)
+    // queue.add('send', event.toJSON(), {
+    //   attempts: 10,
+    //   backoff: {
+    //     type: 'exponential',
+    //     delay: 3000
+    //   }
+    // })
 
     await incomingPayment.$query(deps.knex).patch({
       processAt: null

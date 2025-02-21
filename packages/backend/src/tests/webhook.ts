@@ -23,5 +23,7 @@ export async function createWebhookEvent(
     data: { field1: faker.string.sample() },
     ...overrides
   }
+  // TODO: this wont work right with my WIP changes because were not pushing to a queue here.
+  // worker polling db doesnt exist anymore
   return await WebhookEvent.query(knex).insert(newEvent)
 }

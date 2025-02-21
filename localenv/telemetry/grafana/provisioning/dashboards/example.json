@@ -64,7 +64,9 @@
         "orientation": "auto",
         "percentChangeColorMode": "standard",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
@@ -72,7 +74,7 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "11.3.1",
+      "pluginVersion": "11.5.1",
       "targets": [
         {
           "datasource": {
@@ -134,7 +136,9 @@
         "orientation": "auto",
         "percentChangeColorMode": "standard",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
@@ -142,7 +146,7 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "11.3.1",
+      "pluginVersion": "11.5.1",
       "targets": [
         {
           "datasource": {
@@ -230,7 +234,9 @@
         "orientation": "auto",
         "percentChangeColorMode": "standard",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
@@ -238,7 +244,7 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "11.3.1",
+      "pluginVersion": "11.5.1",
       "targets": [
         {
           "datasource": {
@@ -334,7 +340,9 @@
         "namePlacement": "auto",
         "orientation": "horizontal",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
@@ -342,7 +350,7 @@
         "sizing": "auto",
         "valueMode": "color"
       },
-      "pluginVersion": "11.3.1",
+      "pluginVersion": "11.5.1",
       "targets": [
         {
           "datasource": {
@@ -407,7 +415,9 @@
         "footer": {
           "countRows": false,
           "fields": "",
-          "reducer": ["sum"],
+          "reducer": [
+            "sum"
+          ],
           "show": false
         },
         "showHeader": true,
@@ -418,7 +428,7 @@
           }
         ]
       },
-      "pluginVersion": "11.3.1",
+      "pluginVersion": "11.5.1",
       "targets": [
         {
           "datasource": {
@@ -436,7 +446,9 @@
               "operator": "=",
               "scope": "resource",
               "tag": "service.name",
-              "value": ["RAFIKI_NETWORK"],
+              "value": [
+                "RAFIKI_NETWORK"
+              ],
               "valueType": "string"
             },
             {
@@ -528,7 +540,7 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 6,
+        "h": 7,
         "w": 12,
         "x": 0,
         "y": 17
@@ -536,17 +548,20 @@
       "id": 10,
       "options": {
         "legend": {
-          "calcs": ["p95"],
+          "calcs": [
+            "p95"
+          ],
           "displayMode": "table",
           "placement": "right",
           "showLegend": true
         },
         "tooltip": {
+          "hideZeros": false,
           "mode": "single",
           "sort": "none"
         }
       },
-      "pluginVersion": "11.3.1",
+      "pluginVersion": "11.5.1",
       "targets": [
         {
           "datasource": {
@@ -674,296 +689,6 @@
         "type": "prometheus",
         "uid": "${PrometheusDS}"
       },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisBorderShow": false,
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "barWidthFactor": 0.6,
-            "drawStyle": "line",
-            "fillOpacity": 0,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "insertNulls": false,
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          },
-          "unit": "ms"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 6,
-        "w": 12,
-        "x": 12,
-        "y": 17
-      },
-      "id": 9,
-      "options": {
-        "legend": {
-          "calcs": ["p95"],
-          "displayMode": "table",
-          "placement": "right",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "pluginVersion": "11.3.1",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${PrometheusDS}"
-          },
-          "editorMode": "code",
-          "expr": "rate(quote_service_create_get_quote_time_ms_sum[$__rate_interval])/rate(quote_service_create_get_quote_time_ms_count[$__rate_interval])",
-          "hide": false,
-          "instant": false,
-          "legendFormat": "{{callName}}",
-          "range": true,
-          "refId": "C"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${PrometheusDS}"
-          },
-          "editorMode": "code",
-          "expr": "rate(ilp_rate_probe_time_ms_sum[$__rate_interval])/rate(ilp_rate_probe_time_ms_count[$__rate_interval])",
-          "hide": false,
-          "instant": false,
-          "legendFormat": "{{callName}}",
-          "range": true,
-          "refId": "F"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${PrometheusDS}"
-          },
-          "editorMode": "code",
-          "expr": "rate(ilp_get_quote_rate_time_ms_sum[$__rate_interval])/rate(ilp_get_quote_rate_time_ms_count[$__rate_interval])",
-          "hide": false,
-          "instant": false,
-          "legendFormat": "{{callName}}",
-          "range": true,
-          "refId": "A"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${PrometheusDS}"
-          },
-          "editorMode": "code",
-          "expr": "rate(ilp_make_ilp_plugin_connect_time_ms_sum[$__rate_interval])/rate(ilp_make_ilp_plugin_connect_time_ms_count[$__rate_interval])",
-          "hide": false,
-          "instant": false,
-          "legendFormat": "{{callName}}",
-          "range": true,
-          "refId": "B"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${PrometheusDS}"
-          },
-          "editorMode": "code",
-          "expr": "rate(ilp_plugin_close_connect_time_ms_sum[$__rate_interval])/rate(ilp_plugin_close_connect_time_ms_count[$__rate_interval])",
-          "hide": false,
-          "instant": false,
-          "legendFormat": "{{callName}}",
-          "range": true,
-          "refId": "D"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${PrometheusDS}"
-          },
-          "editorMode": "code",
-          "expr": "rate(ilp_plugin_disconnect_time_ms_sum[$__rate_interval])/rate(ilp_plugin_disconnect_time_ms_count[$__rate_interval])",
-          "hide": false,
-          "instant": false,
-          "legendFormat": "{{callName}}",
-          "range": true,
-          "refId": "E"
-        }
-      ],
-      "title": "ILP Payment Service getQuote",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "default": false,
-        "type": "prometheus",
-        "uid": "${PrometheusDS}"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisBorderShow": false,
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "barWidthFactor": 0.6,
-            "drawStyle": "line",
-            "fillOpacity": 0,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "insertNulls": false,
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          },
-          "unit": "ms"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 7,
-        "w": 12,
-        "x": 0,
-        "y": 23
-      },
-      "id": 16,
-      "options": {
-        "legend": {
-          "calcs": ["p95"],
-          "displayMode": "table",
-          "placement": "right",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "pluginVersion": "11.3.1",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "editorMode": "code",
-          "expr": "rate(deposit_outgoing_payment_liquidity_ms_sum[$__rate_interval])/rate(deposit_outgoing_payment_liquidity_ms_count[$__rate_interval])",
-          "instant": false,
-          "legendFormat": "{{callName}}",
-          "range": true,
-          "refId": "A"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${PrometheusDS}"
-          },
-          "editorMode": "code",
-          "expr": "rate(fund_payment_ms_sum[$__rate_interval])/rate(fund_payment_ms_count[$__rate_interval])",
-          "hide": false,
-          "instant": false,
-          "legendFormat": "{{callName}}",
-          "range": true,
-          "refId": "C"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${PrometheusDS}"
-          },
-          "editorMode": "code",
-          "expr": "rate(wh_get_latest_ms_sum[$__rate_interval])/rate(wh_get_latest_ms_count[$__rate_interval])",
-          "hide": false,
-          "instant": false,
-          "legendFormat": "{{callName}}",
-          "range": true,
-          "refId": "D"
-        }
-      ],
-      "title": "Deposit Outgoing Payment Liquidity ",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "default": false,
-        "type": "prometheus",
-        "uid": "${PrometheusDS}"
-      },
       "description": "",
       "fieldConfig": {
         "defaults": {
@@ -1025,22 +750,25 @@
         "h": 7,
         "w": 12,
         "x": 12,
-        "y": 23
+        "y": 17
       },
       "id": 14,
       "options": {
         "legend": {
-          "calcs": ["p95"],
+          "calcs": [
+            "p95"
+          ],
           "displayMode": "table",
           "placement": "right",
           "showLegend": true
         },
         "tooltip": {
+          "hideZeros": false,
           "mode": "single",
           "sort": "none"
         }
       },
-      "pluginVersion": "11.3.1",
+      "pluginVersion": "11.5.1",
       "targets": [
         {
           "datasource": {
@@ -1228,22 +956,313 @@
         "h": 7,
         "w": 12,
         "x": 0,
-        "y": 30
+        "y": 24
       },
-      "id": 7,
+      "id": 16,
       "options": {
         "legend": {
-          "calcs": ["p95"],
+          "calcs": [
+            "p95"
+          ],
           "displayMode": "table",
           "placement": "right",
           "showLegend": true
         },
         "tooltip": {
+          "hideZeros": false,
           "mode": "single",
           "sort": "none"
         }
       },
-      "pluginVersion": "11.3.1",
+      "pluginVersion": "11.5.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "editorMode": "code",
+          "expr": "rate(deposit_outgoing_payment_liquidity_ms_sum[$__rate_interval])/rate(deposit_outgoing_payment_liquidity_ms_count[$__rate_interval])",
+          "instant": false,
+          "legendFormat": "{{callName}}",
+          "range": true,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${PrometheusDS}"
+          },
+          "editorMode": "code",
+          "expr": "rate(fund_payment_ms_sum[$__rate_interval])/rate(fund_payment_ms_count[$__rate_interval])",
+          "hide": false,
+          "instant": false,
+          "legendFormat": "{{callName}}",
+          "range": true,
+          "refId": "C"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${PrometheusDS}"
+          },
+          "editorMode": "code",
+          "expr": "rate(wh_get_latest_ms_sum[$__rate_interval])/rate(wh_get_latest_ms_count[$__rate_interval])",
+          "hide": false,
+          "instant": false,
+          "legendFormat": "{{callName}}",
+          "range": true,
+          "refId": "D"
+        }
+      ],
+      "title": "Deposit Outgoing Payment Liquidity ",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 12,
+        "y": 24
+      },
+      "id": 18,
+      "options": {
+        "legend": {
+          "calcs": [
+            "p95"
+          ],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.5.1",
+      "targets": [
+        {
+          "editorMode": "code",
+          "expr": "rate(outgoing_payment_service_fund_time_ms_sum[$__rate_interval])/rate(outgoing_payment_service_fund_time_ms_count[$__rate_interval])",
+          "legendFormat": "{{callName}}",
+          "range": true,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "editorMode": "code",
+          "expr": "rate(outgoing_payment_service_fund_get_time_ms_sum[$__rate_interval])/rate(outgoing_payment_service_fund_get_time_ms_count[$__rate_interval])",
+          "hide": false,
+          "instant": false,
+          "legendFormat": "{{callName}}",
+          "range": true,
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "editorMode": "code",
+          "expr": "rate(outgoing_payment_service_fund_asset_get_time_ms_sum[$__rate_interval])/rate(outgoing_payment_service_fund_asset_get_time_ms_count[$__rate_interval])",
+          "hide": false,
+          "instant": false,
+          "legendFormat": "{{callName}}",
+          "range": true,
+          "refId": "C"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "editorMode": "code",
+          "expr": "rate(outgoing_payment_service_fund_create_liquidity_time_ms_sum[$__rate_interval])/rate(outgoing_payment_service_fund_create_liquidity_time_ms_count[$__rate_interval])",
+          "hide": false,
+          "instant": false,
+          "legendFormat": "{{callName}}",
+          "range": true,
+          "refId": "D"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "editorMode": "code",
+          "expr": "rate(outgoing_payment_service_fund_create_deposit_time_ms_sum[$__rate_interval])/rate(outgoing_payment_service_fund_create_deposit_time_ms_count[$__rate_interval])",
+          "hide": false,
+          "instant": false,
+          "legendFormat": "{{callName}}",
+          "range": true,
+          "refId": "E"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "editorMode": "code",
+          "expr": "rate(outgoing_payment_service_fund_add_sent_amount_time_ms_sum[$__rate_interval])/rate(outgoing_payment_service_fund_add_sent_amount_time_ms_count[$__rate_interval])",
+          "hide": false,
+          "instant": false,
+          "legendFormat": "{{callName}}",
+          "range": true,
+          "refId": "F"
+        }
+      ],
+      "title": "Fund Payment (Outgoing)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "default": false,
+        "type": "prometheus",
+        "uid": "${PrometheusDS}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "ms"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 0,
+        "y": 31
+      },
+      "id": 7,
+      "options": {
+        "legend": {
+          "calcs": [
+            "p95"
+          ],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.5.1",
       "targets": [
         {
           "datasource": {
@@ -1386,6 +1405,276 @@
           },
           "unit": "ms"
         },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 12,
+        "y": 31
+      },
+      "id": 9,
+      "options": {
+        "legend": {
+          "calcs": [
+            "p95"
+          ],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.5.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${PrometheusDS}"
+          },
+          "editorMode": "code",
+          "expr": "rate(quote_service_create_get_quote_time_ms_sum[$__rate_interval])/rate(quote_service_create_get_quote_time_ms_count[$__rate_interval])",
+          "hide": false,
+          "instant": false,
+          "legendFormat": "{{callName}}",
+          "range": true,
+          "refId": "C"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${PrometheusDS}"
+          },
+          "editorMode": "code",
+          "expr": "rate(ilp_rate_probe_time_ms_sum[$__rate_interval])/rate(ilp_rate_probe_time_ms_count[$__rate_interval])",
+          "hide": false,
+          "instant": false,
+          "legendFormat": "{{callName}}",
+          "range": true,
+          "refId": "F"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${PrometheusDS}"
+          },
+          "editorMode": "code",
+          "expr": "rate(ilp_get_quote_rate_time_ms_sum[$__rate_interval])/rate(ilp_get_quote_rate_time_ms_count[$__rate_interval])",
+          "hide": false,
+          "instant": false,
+          "legendFormat": "{{callName}}",
+          "range": true,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${PrometheusDS}"
+          },
+          "editorMode": "code",
+          "expr": "rate(ilp_make_ilp_plugin_connect_time_ms_sum[$__rate_interval])/rate(ilp_make_ilp_plugin_connect_time_ms_count[$__rate_interval])",
+          "hide": false,
+          "instant": false,
+          "legendFormat": "{{callName}}",
+          "range": true,
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${PrometheusDS}"
+          },
+          "editorMode": "code",
+          "expr": "rate(ilp_plugin_close_connect_time_ms_sum[$__rate_interval])/rate(ilp_plugin_close_connect_time_ms_count[$__rate_interval])",
+          "hide": false,
+          "instant": false,
+          "legendFormat": "{{callName}}",
+          "range": true,
+          "refId": "D"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${PrometheusDS}"
+          },
+          "editorMode": "code",
+          "expr": "rate(ilp_plugin_disconnect_time_ms_sum[$__rate_interval])/rate(ilp_plugin_disconnect_time_ms_count[$__rate_interval])",
+          "hide": false,
+          "instant": false,
+          "legendFormat": "{{callName}}",
+          "range": true,
+          "refId": "E"
+        }
+      ],
+      "title": "ILP Payment Service getQuote",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "name": "${PrometheusDS}",
+        "type": "prometheus",
+        "uid": "${PrometheusDS}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 38
+      },
+      "id": 2,
+      "interval": "15s",
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.5.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${PrometheusDS}"
+          },
+          "editorMode": "code",
+          "expr": "sum by (source) (increase(packet_amount_fulfill_total[30s]) * 0.0001)",
+          "hide": false,
+          "instant": false,
+          "interval": "",
+          "legendFormat": "__auto",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Transaction Amount",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "default": false,
+        "type": "prometheus",
+        "uid": "${PrometheusDS}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "ms"
+        },
         "overrides": [
           {
             "__systemRef": "hideSeriesFrom",
@@ -1393,7 +1682,9 @@
               "id": "byNames",
               "options": {
                 "mode": "exclude",
-                "names": ["AccountingService:Postgres:getAccountBalances"],
+                "names": [
+                  "AccountingService:Postgres:getAccountBalances"
+                ],
                 "prefix": "All except:",
                 "readOnly": true
               }
@@ -1415,22 +1706,25 @@
         "h": 7,
         "w": 12,
         "x": 12,
-        "y": 30
+        "y": 38
       },
       "id": 11,
       "options": {
         "legend": {
-          "calcs": ["p95"],
+          "calcs": [
+            "p95"
+          ],
           "displayMode": "table",
           "placement": "right",
           "showLegend": true
         },
         "tooltip": {
+          "hideZeros": false,
           "mode": "single",
           "sort": "none"
         }
       },
-      "pluginVersion": "11.3.1",
+      "pluginVersion": "11.5.1",
       "targets": [
         {
           "datasource": {
@@ -1526,108 +1820,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 37
-      },
-      "id": 2,
-      "interval": "15s",
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "pluginVersion": "11.3.1",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${PrometheusDS}"
-          },
-          "editorMode": "code",
-          "expr": "sum by (source) (increase(packet_amount_fulfill_total[30s]) * 0.0001)",
-          "hide": false,
-          "instant": false,
-          "interval": "",
-          "legendFormat": "__auto",
-          "range": true,
-          "refId": "A"
-        }
-      ],
-      "title": "Transaction Amount",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "name": "${PrometheusDS}",
-        "type": "prometheus",
-        "uid": "${PrometheusDS}"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisBorderShow": false,
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "barWidthFactor": 0.6,
-            "drawStyle": "line",
-            "fillOpacity": 0,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "insertNulls": false,
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 37
+        "y": 46
       },
       "id": 1,
       "interval": "15s",
@@ -1639,11 +1832,12 @@
           "showLegend": true
         },
         "tooltip": {
+          "hideZeros": false,
           "mode": "single",
           "sort": "none"
         }
       },
-      "pluginVersion": "11.3.1",
+      "pluginVersion": "11.5.1",
       "targets": [
         {
           "datasource": {
@@ -1720,6 +1914,6 @@
   "timezone": "browser",
   "title": "Example Dashboard",
   "uid": "fdr58stwkr6yof",
-  "version": 1,
+  "version": 3,
   "weekStart": ""
 }

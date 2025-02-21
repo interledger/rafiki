@@ -1,0 +1,21 @@
+{
+  "name": "webhook-worker",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node dist/worker.js",
+    "build": "tsc"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^1.7.9",
+    "bullmq": "^5.41.1",
+    "dotenv": "^16.4.7",
+    "json-canonicalize": "^1.0.6",
+    "pino": "^8.19.0"
+  }
+}
