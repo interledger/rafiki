@@ -1,4 +1,7 @@
+<<<<<<< HEAD
 import assert from 'assert'
+=======
+>>>>>>> 1245e0341 (feat(backend): tenanted webhooks)
 import { IocContract } from '@adonisjs/fold'
 import { TenantSetting, TenantSettingKeys, formatSettings } from './model'
 import { AppServices } from '../../app'
@@ -66,10 +69,10 @@ describe('TenantSetting Model', (): void => {
         exchangeRateSetting
       ])
       expect(formattedSettings).toMatchObject({
-        exchangeRatesUrl: exchangeRateSetting.value,
-        webhookUrl: webhookUrlSetting.value,
-        webhookMaxRetry: webhookMaxRetrySetting.value,
-        webhookTimeout: webhookTimeoutSetting.value
+        exchangeRatesUrl: exchangeRateSetting,
+        webhookUrl: webhookUrlSetting,
+        webhookMaxRetry: webhookMaxRetrySetting,
+        webhookTimeout: webhookTimeoutSetting
       })
     })
   })
