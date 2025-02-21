@@ -2,7 +2,7 @@
 title: Webhook event types
 ---
 
-Webhooks notify you of specific events that occur within your Rafiki instance allowing you to integrate Interledger payments with your system and business processes. For example, Rafiki will notify you when one of your account holders has received an Interledger payment, at which point you would credit their account on your ledger.
+Webhooks notify you of specific events that occur within your Rafiki instance, allowing you to integrate Interledger payments with your system and business processes. For example, Rafiki can notify you when one of your account holders has received an Interledger payment, at which point you would credit their account on your ledger.
 
 The following is an enumeration of all of Rafiki's [webhook event](/integration/requirements/webhook-events) types along with their descriptions, which you must listen to and handle.
 
@@ -10,7 +10,7 @@ The following is an enumeration of all of Rafiki's [webhook event](/integration/
 
 | Value                                                                                                          | Description                                                                        |
 | -------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
-| [`incoming_payment.created`](/integration/requirements/webhook-events/#incoming-payment-created)               | An incoming payment has been created.                                              |
+| [`incoming_payment.created`](/integration/requirements/webhook-events/#incoming-payment-created)               | An incoming payment was created.                                              |
 | [`incoming_payment.completed`](/integration/requirements/webhook-events/#incoming-payment-completed)           | An incoming payment is complete and will not accept any additional incoming funds. |
 | [`incoming_payment.expired`](/integration/requirements/webhook-events/#incoming-payment-expired)               | An incoming payment expired and will not accept any additional incoming funds.     |
 | [`outgoing_payment.created`](/integration/requirements/webhook-events/#outgoing-payment-created)               | An outgoing payment was created.                                                   |
