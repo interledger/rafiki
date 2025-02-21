@@ -25,7 +25,7 @@ export async function handleSending(
     throw LifecycleError.MissingBalance
   }
 
-  if (Receiver.isInvalidExpiredOrCompleted(receiver)) {
+  if (!Receiver.isActive(receiver)) {
     // Payment is already (unexpectedly) done. Maybe this is a retry and the previous attempt failed to save the state to Postgres. Or the incoming payment could have been paid by a totally different payment in the time since the quote.
     deps.logger.warn(
       {

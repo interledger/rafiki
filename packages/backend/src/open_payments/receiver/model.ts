@@ -109,9 +109,7 @@ export class Receiver {
     }
   }
 
-  public static isInvalidExpiredOrCompleted(
-    receiver: Receiver | undefined
-  ): receiver is undefined {
+  public static isActive(receiver: Receiver | undefined): receiver is Receiver {
     if (!receiver) {
       return true
     }
