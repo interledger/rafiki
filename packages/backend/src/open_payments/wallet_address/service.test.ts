@@ -48,6 +48,10 @@ describe('Open Payments Wallet Address Service', (): void => {
     knex = appContainer.knex
     walletAddressService = await deps.use('walletAddressService')
     accountingService = await deps.use('accountingService')
+    const walletAddresses = await WalletAddress.query(knex).whereRaw(
+      `"walletAddresses"."tenantId" = (SELECT id from "tenants" WHERE id = "walletAddresses"."tenantId")`
+    )
+    console.log('walletAddresses=', walletAddresses)
   })
 
   afterEach(async (): Promise<void> => {

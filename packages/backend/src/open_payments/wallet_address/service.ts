@@ -530,7 +530,11 @@ async function createWithdrawalEvent(
       assetId: walletAddress.assetId,
       amount
     },
+<<<<<<< HEAD
     tenantId: walletAddress.tenantId
+=======
+    tenantId: deps.config.operatorTenantId
+>>>>>>> 1245e0341 (feat(backend): tenanted webhooks)
   })
 
   await walletAddress.$query(deps.knex).patch({

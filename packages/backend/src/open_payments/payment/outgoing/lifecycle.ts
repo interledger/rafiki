@@ -232,7 +232,11 @@ export async function sendWebhookEvent(
     type,
     data: payment.toData({ amountSent, balance }),
     withdrawal,
+<<<<<<< HEAD
     tenantId: payment.tenantId
+=======
+    tenantId: deps.config.operatorTenantId
+>>>>>>> 1245e0341 (feat(backend): tenanted webhooks)
   })
   stopTimer()
 }
