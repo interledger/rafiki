@@ -89,6 +89,99 @@ describe('Tenant Settings Resolvers', (): void => {
     await appContainer.shutdown()
   })
 
+<<<<<<< HEAD
+=======
+  describe('Delete Tenant Settings', (): void => {
+    let tenant: Tenant
+    let client: ApolloClient<NormalizedCacheObject>
+    let tenantSettingService: TenantSettingService
+    let keys: string[]
+
+    beforeEach(async () => {
+      tenant = await createTenant(deps)
+      client = createTenantedApolloClient(appContainer, tenant.id)
+
+      keys = [
+        TenantSettingKeys.EXCHANGE_RATES_URL.name,
+        TenantSettingKeys.WEBHOOK_URL.name
+      ]
+
+      tenantSettingService = await deps.use('tenantSettingService')
+      await tenantSettingService.create({
+        tenantId: tenant.id,
+        setting: keys.map((x) => ({
+          key: x,
+          value: x
+        }))
+      })
+    })
+
+    test('can delete all settings for a tenant', async (): Promise<void> => {
+      const response = await client
+        .mutate({
+          mutation: gql`
+            mutation DeleteTenantSettings($input: DeleteTenantSettingsInput!) {
+              deleteTenantSettings(input: $input) {
+                success
+              }
+            }
+          `,
+          variables: {
+            input: {}
+          }
+        })
+        .then((q): DeleteTenantSettingsMutationResponse => {
+          if (q.data) {
+            return q.data.deleteTenantSettings
+          }
+          throw new Error('Data was empty')
+        })
+
+      expect(response.success).toBeTruthy()
+
+      const data = await tenantSettingService.get({
+        tenantId: tenant.id
+      })
+
+      expect(data).toEqual([])
+    })
+
+    test('can delete tenant setting', async (): Promise<void> => {
+      const workingKey = keys[0]
+      const input: DeleteTenantSettingsInput = {
+        key: workingKey
+      }
+
+      const response = await client
+        .mutate({
+          mutation: gql`
+            mutation DeleteTenantSettings($input: DeleteTenantSettingsInput!) {
+              deleteTenantSettings(input: $input) {
+                success
+              }
+            }
+          `,
+          variables: { input }
+        })
+        .then((q): DeleteTenantSettingsMutationResponse => {
+          if (q.data) {
+            return q.data.deleteTenantSettings
+          }
+          throw new Error('Data was empty')
+        })
+
+      expect(response.success).toBeTruthy()
+
+      const data = await tenantSettingService.get({
+        tenantId: tenant.id,
+        key: workingKey
+      })
+
+      expect(data).toEqual([])
+    })
+  })
+
+>>>>>>> 1245e0341 (feat(backend): tenanted webhooks)
   describe('Create Tenant Settings', (): void => {
     test('can create tenant setting', async (): Promise<void> => {
       const input: CreateTenantSettingsInput = {
