@@ -101,7 +101,10 @@ describe('Tenant Settings Resolvers', (): void => {
       tenant = await createTenant(deps)
       client = createTenantedApolloClient(appContainer, tenant.id)
 
-      keys = [TenantSettingKeys.EXCHANGE_RATES_URL.name, TenantSettingKeys.WEBHOOK_URL.name]
+      keys = [
+        TenantSettingKeys.EXCHANGE_RATES_URL.name,
+        TenantSettingKeys.WEBHOOK_URL.name
+      ]
 
       tenantSettingService = await deps.use('tenantSettingService')
       await tenantSettingService.create({
