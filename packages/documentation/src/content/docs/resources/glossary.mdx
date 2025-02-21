@@ -12,7 +12,7 @@ An entity that provides and maintains a payment account for a payer and/or payee
 
 ## Auth service
 
-A reference implementation of an Open Payments authorization server in Rafiki. The `auth` service manages grant authorization and authentication, allowing clients (e.g., third-party applications) to create payments and quotes. It issues access tokens and validates client access rights through communication with the resource server.
+A reference implementation of an Open Payments authorization server in Rafiki. The `auth` service manages grant authorization and authentication, allowing clients (for example, third-party applications) to create payments and quotes. It issues access tokens and validates client access rights through communication with the resource server.
 
 ## Authorization server
 
@@ -26,7 +26,7 @@ The core service in Rafiki responsible for managing business logic and external 
 
 ## Client
 
-An application or service, such as a mobile or web app, that interacts with the authorization server to obtain grants and access tokens. Clients use tokens to access resource servers and perform actions, such as retriving transaction history and setting up payments, on behalf of a user or system.
+An application or service, such as a mobile or web app, that interacts with the authorization server to obtain grants and access tokens. Clients use tokens to access resource servers and perform actions, such as retrieving transaction history and setting up payments, on behalf of a user or system.
 
 ## Frontend service
 
@@ -46,11 +46,11 @@ A system or service that stores and manages user identity information, authentic
 
 ## Incoming payment
 
-An object created by the recipient’s ASE, on their resource server, that represents a payment being received. The object contains information about the incoming payment, such as the amount, currency, receiver’s wallet address, and payment status. It is used to track and manage payments that are expected to or have been received.
+An object created by the recipient’s ASE, on their resource server, that represents a payment being received. The object contains information about the incoming payment, such as the amount, currency, receiver’s wallet address, and payment status. The object is used to track and manage payments that are expected to be or have been received.
 
 ## Interledger Protocol (ILP)
 
-An open protocol stack designed to facilitate the transfer of value across different currencies, platforms, and payment networks. Rafiki is a reference implementation of the Interledger stack, allowing you to join the Interledger network and quickly enable Interledger functionality on your users’ accounts. For more information, refer to the <LinkOut href="https://interledger.org/developers/get-started/">Interledger specification</LinkOut>.
+An open protocol stack designed to facilitate the transfer of value across different currencies, platforms, and payment networks. Rafiki is a reference implementation of the Interledger stack, allowing you to join the Interledger network and quickly enable Interledger capabilities on your users’ accounts. For more information, refer to the <LinkOut href="https://interledger.org/developers/get-started/">Interledger specification</LinkOut>.
 
 ## ILP packet
 
@@ -66,11 +66,11 @@ An object created by the sender’s ASE, on their resource server, that represen
 
 ## Payment pointer
 
-A type of wallet address that serves as an SPSP endpoint to facilitate sending and receiving ILP packets. Payment pointers can be written out using the `$` shorthand (e.g., `$wallet.example.com/alice`) or as a URL (e.g., `https://wallet.example.com/alice`).
+A type of wallet address that serves as an SPSP endpoint to facilitate sending and receiving ILP packets. Payment pointers can be written out using the `$` shorthand (for example, `$wallet.example.com/alice`) or as a URL (for example, `https://wallet.example.com/alice`).
 
 ## Peer
 
-A counterparty with whom you transact with over the Interledger network. Your Rafiki instance will hold liquidity accounts for each of your peers.
+A counterparty with whom you transact with over the Interledger network. Your Rafiki instance holds liquidity accounts for each of your peers.
 
 ## Quote
 

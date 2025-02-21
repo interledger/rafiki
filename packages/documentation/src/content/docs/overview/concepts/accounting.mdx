@@ -12,7 +12,7 @@ import {
 } from '@interledger/docs-design-system'
 import { Steps } from '@astrojs/starlight/components'
 
-Rafiki uses <LinkOut href="https://en.wikipedia.org/wiki/Double-entry_bookkeeping">double-entry accounting</LinkOut> to record financial transactions. In this method of bookkeeping, a transaction recorded to one account results in an equal and opposite entry to another account. For example, a \$50 credit to one account will result in a \$50 debit from another account.
+Rafiki uses <LinkOut href="https://en.wikipedia.org/wiki/Double-entry_bookkeeping">double-entry accounting</LinkOut> to record financial transactions. In this method of bookkeeping, a transaction recorded to one account results in an equal and opposite entry to another account. For example, a \$50 credit to one account results in a \$50 debit from another account.
 
 Transactions in Rafiki represent Interledger packet interactions, denominated in a given [asset](#assets). Packet interactions can be successful, fail, or be rejected. Rafiki's accounting layer processes the interactions and converts the activities into financial records, which are then written to your [accounting database](#accounting-databases).
 
@@ -40,7 +40,7 @@ To convert an asset’s value into an amount that’s easier to interpret, apply
 
 $\frac{value}{10^{assetScale}}$ = _currencyAmount_
 
-Using the example data from the table above, the formula looks like this:
+Using the example data from the preceding table, the formula looks like this:
 
 $\frac{10000}{10^2} =\$100.00 USD
 
@@ -50,7 +50,7 @@ Rafiki uses a combination of liquidity and settlement accounts to track the amou
 
 ### Liquidity accounts
 
-Liquidity accounts are used to track deposits, withdrawals, and transfers that occur during the course of a transaction. Liquidity accounts are provided for assets, peers, and payments.
+Liquidity accounts track deposits, withdrawals, and transfers that occur during the course of a transaction. Rafiki provides liquidity accounts for assets, peers, and payments.
 
 Liquidity accounts hold either a zero or a positive balance. Rafiki ensures that the total debits to a liquidity account will not exceed the account's total credits.
 
@@ -72,7 +72,7 @@ Asset liquidity ensures Rafiki has enough liquidity, denominated in a given asse
 
 An asset liquidity account represents the value that Rafiki has available for sending or forwarding ILP packets. You have one asset liquidity account for each asset you transact in.
 
-Whenever an outgoing payment/incoming payment is in a different asset than the peering relationship, the liquidity of asset accounts will change depending on the FX direction. Any transaction that would result in a negative balance will fail.
+Whenever an outgoing payment/incoming payment is in a different asset than the peering relationship, the liquidity of asset accounts change depending on the FX direction. Any transaction that would result in a negative balance will fail.
 
 :::note
 If you and your peer transact in the same asset (there's no currency conversion) and you both provide your customers only with wallet addresses denominated in that asset, then there will be no movement into/from the corresponding asset's liquidity account.
@@ -128,7 +128,7 @@ The amount of credit that you extend to a peer, the asset that you transact in, 
 A peering agreement is a legal contract between the parties involved in a peering relationship. It defines terms such as the assets involved and other operational details. It is not configured or managed within Rafiki but is necessary for establishing the terms under which assets are exchanged.
 :::
 
-If a peer’s liquidity is insufficient (e.g., they’ve used up their allotted credit line), payments will not be processed. Your peer should settle with you so that you can reset their liquidity.
+If a peer’s liquidity is insufficient (for example, they’ve used up their allotted credit line), payments will not be processed. Your peer should settle with you so that you can reset their liquidity.
 
 You can add a liquidity threshold for each peer liquidity account via the [`updatePeer`](https://rafiki.dev/apis/graphql/backend/mutations/#updatepeer) mutation's `liquidityThreshold` input argument.
 
@@ -158,7 +158,7 @@ Payment liquidity is the amount that's available because of an incoming or outgo
 
 ##### Incoming payment liquidity accounts
 
-An incoming payment liquidity account represents the value received for an incoming payment. An incoming payment is created via <LinkOut href="https://openpayments.dev/apis/resource-server/operations/create-incoming-payment/">Open Payments</LinkOut>. When the first packet for the incoming payment is received, a corresponding liquidity account is automatically created. You will have one liquidity account per incoming payment.
+An incoming payment liquidity account represents the value received for an incoming payment. Incoming payments are created via <LinkOut href="https://openpayments.dev/apis/resource-server/operations/create-incoming-payment/">Open Payments</LinkOut>. When the first packet for an incoming payment is received, a corresponding liquidity account is automatically created. You will have one liquidity account per incoming payment.
 
 You are notified of created, completed, and expired incoming payments by listening for the appropriate [webhook events](/integration/requirements/webhook-events/#incoming-payments). Since Rafiki doesn't hold funds, anything you receive must be withdrawn and then credited to the recipient's account on your ledger.
 
@@ -180,7 +180,7 @@ A wallet address liquidity account contains the value received to a wallet addre
 
 Since Rafiki doesn’t hold funds, you must withdraw the liquidity when the payment completes and credit the funds to the recipient’s account on your ledger. You are notified to withdraw liquidity by listening for the appropriate [webhook event](/integration/requirements/webhook-events#wallet-addresses).
 
-Unlike the incoming and outgoing payment liquidity accounts, the same wallet address liquidity account is used for future incoming SPSP payments.
+Unlike the incoming and outgoing payment liquidity accounts, the same wallet address liquidity account will be used for future incoming SPSP payments.
 
 ### Settlement accounts
 
@@ -218,7 +218,7 @@ You can choose to use a separate Postgres database for accounting instead of usi
 
 As with the accounts described above, Rafiki performs <LinkOut href="https://en.wikipedia.org/wiki/Double-entry_bookkeeping">double-entry accounting</LinkOut> for transfers, where increasing the total debits of one account increases the total credits of another account by the same amount, and vice versa.
 
-Transfers can be completed in either a single phase or in two phases.
+Transfers can complete in either a single phase or in two phases.
 
 ### Single-phase transfer
 

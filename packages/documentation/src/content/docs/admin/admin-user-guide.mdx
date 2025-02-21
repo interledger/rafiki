@@ -25,7 +25,7 @@ Ory Kratos and Rafiki Admin should be hosted on the same top-level domain. Hosti
 
 ### Login and account management
 
-Access to Rafiki Admin is restricted to ensure that only authorized users can register. This is achieved by using an invitation-only system, where new users are invited by an administrator. The registration flow is not public, so users cannot sign up on their own. Instead, administrators create accounts using the `invite-user` script.
+Access to Rafiki Admin uses an invitation-only system to ensure that only authorized users can register for an account. New users must be invited by an administrator. The registration flow is not public, so users cannot sign up on their own. Instead, administrators create accounts using the `invite-user` script.
 
 #### Invite a user
 
@@ -60,7 +60,7 @@ If sending the link through Slack, ensure you format it as code by placing it in
 
 #### Generate a recovery link
 
-There is an automated account recovery flow which requires an SMTP mail server for sending recovery links to users. Alternatively, an administrator can generate a recovery link using the same `invite-user` script.
+Rafiki Admin provides an automated account recovery flow which requires an SMTP mail server for sending recovery links to users. Alternatively, an administrator can generate a recovery link using the same `invite-user` script.
 
 #### Remove a user
 
@@ -91,7 +91,7 @@ In the [Local Playground](/integration/playground/overview#rafiki-admin), authen
 
 ## Navigation
 
-After logging in, you’ll be greeted by the main landing page with a left-hand navigation menu. This menu provides access to all of the main functionality needed to manage your Rafiki instance.
+After logging in, you’ll be greeted by the main landing page with a left-hand navigation menu. This menu provides access to the main functionality needed to manage your Rafiki instance.
 
 <LargeImg
   src='/img/admin-guide/home.png'
@@ -111,7 +111,7 @@ Each of the following menu items leads to a different page of the Rafiki Admin a
 
 The Peers page allows you to manage peering relationships in your Rafiki instance, including viewing, creating, editing, and deleting peers.
 
-On this page, all configured peers are displayed in a table where you can view the peer name, its ILP address, asset details including the asset type and scale, and the outgoing HTTP endpoint.
+On this page, all configured peers appear in a table where you can view the peer name, its ILP address, asset details including the asset type and scale, and the outgoing HTTP endpoint.
 
 <LargeImg
   src='/img/admin-guide/peers.png'
@@ -143,14 +143,14 @@ After completing these fields, select **Create** to add the new peer.
 
 ### Edit peer
 
-To edit an existing peer, select any peer entry from the table on the main Peers page. This opens the Edit Peer page where you can view and modify peer settings.
+To edit an existing peer, select any peer entry from the table on the main Peers page. This opens the Edit Peer page where you can view and change peer settings.
 
 <LargeImg
   src='/img/admin-guide/edit-peer.png'
   alt='A screenshot of the Rafiki Admin application user interface displaying the "Edit Peer" section. It shows several text fields configured for an existing peer. This page is used to view peer details, edit peer details, and delete a peer.'
 />
 
-While the Edit Peer page shares fields with the Create Peer page, it also includes additional fields and actions specific to managing an existing peer:
+While the Edit Peer page shares fields with the Create Peer page, it also includes fields and actions specific to managing an existing peer:
 
 | Section               | Field/Action       | Description                                                                               |
 | --------------------- | ------------------ | ----------------------------------------------------------------------------------------- |
@@ -160,7 +160,7 @@ While the Edit Peer page shares fields with the Create Peer page, it also includ
 |                       | Deposit Liquidity  | To increase the amount of liquidity available, select **Deposit liquidity**.              |
 |                       | Withdraw Liquidity | To reduce the amount of liquidity available, select **Withdraw liquidity**.               |
 
-After editing any of the above fields in the General Information or HTTP Information sections, select **Save** to commit those changes.
+After editing any of the preceding fields in the General Information or HTTP Information sections, select **Save** to commit those changes.
 
 #### Delete peer
 
@@ -179,7 +179,7 @@ Confirm the deletion by typing "delete peer" into the text field and selecting *
 
 The Assets page allows you to manage assets in your Rafiki instance, including viewing, editing, and creating assets.
 
-On this page, all configured assets are displayed in a table where you can view the asset ID, the asset code, the scale, and the withdrawal threshold.
+On this page, all configured assets appear in a table where you can view the asset ID, the asset code, the scale, and the withdrawal threshold.
 
 <LargeImg
   src='/img/admin-guide/assets.png'
@@ -207,14 +207,14 @@ After completing these fields, select **Create** to add the new asset.
 
 ### Edit asset
 
-To edit an existing asset, select any asset entry from the table on the main Assets page. This opens the Edit Asset page where you can view and modify asset settings.
+To edit an existing asset, select any asset entry from the table on the main Assets page. This opens the Edit Asset page where you can view and change asset settings.
 
 <LargeImg
   src='/img/admin-guide/edit-asset.png'
   alt='A screenshot of the Rafiki Admin application user interface displaying the "Edit Asset" section. It shows several text fields configured for an existing asset. This page is used to view and edit asset details.'
 />
 
-While the Edit Asset page shares fields with the Create Asset page, it also includes additional fields and actions specific to managing an existing asset:
+While the Edit Asset page shares fields with the Create Asset page, it also includes fields and actions specific to managing an existing asset:
 
 | Section               | Field/Action       | Description                                                                                                                                                             |
 | --------------------- | ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -226,13 +226,13 @@ While the Edit Asset page shares fields with the Create Asset page, it also incl
 |                       | Basis Points       | A variable fee per asset. One basis point fee is equal to 0.01% of the total amount, 100 basis points = 1%, 10000 basis points = 100%                                   |
 |                       | Fee history        | To view a list of asset fees over time, select **Fee history**.                                                                                                         |
 
-After editing any of the above fields in the General Information or Sending Fee sections, select **Save** to commit those changes.
+After editing any of the preceding fields in the General Information or Sending Fee sections, select **Save** to commit those changes.
 
 ## Wallet addresses
 
 The Wallet Addresses page allows you to manage the wallet addresses associated with your Rafiki instance, including viewing, editing, and creating wallet addresses.
 
-On this page, all configured wallet addresses are displayed in the table where you can view the address URL, the public name, and the wallet status.
+On this page, all configured wallet addresses appear in the table where you can view the address URL, the public name, and the wallet status.
 
 <LargeImg
   src='/img/admin-guide/wallet-addresses.png'
@@ -258,7 +258,7 @@ Fill out the following fields to create a new wallet address:
 
 :::note[Wallet address requirements]
 
-- At least one asset has to be created prior to creating a new wallet address. Refer to [Create asset](#create-asset) for more information.
+- At least one asset must be created before creating a new wallet address. Refer to [Create asset](#create-asset) for more information.
 - Wallet address URLs are treated as case-insensitive, meaning that both lowercase and uppercase variations of the same address will be recognized as identical.
   :::
 
@@ -266,14 +266,14 @@ After completing this section, select **Create** to add the new wallet address.
 
 ### Edit wallet address
 
-To edit an existing wallet address, select any wallet address entry from the table on the main Wallet Addresses page. This opens the Edit Wallet Address page where you can view and modify wallet address details.
+To edit an existing wallet address, select any wallet address entry from the table on the main Wallet Addresses page. This opens the Edit Wallet Address page where you can view and change wallet address details.
 
 <LargeImg
   src='/img/admin-guide/edit-wallet-address.png'
   alt='A screenshot of the Rafiki Admin application user interface displaying the "Edit Wallet Address" section. It shows several text fields configured for an existing wallet address. This page is used to view and edit wallet address details.'
 />
 
-While the Edit Wallet Address page shares fields with the Create Wallet Address page, it also includes additional fields and actions specific to managing an existing wallet address.
+While the Edit Wallet Address page shares fields with the Create Wallet Address page, it also includes fields and actions specific to managing an existing wallet address.
 
 | Section               | Field/Action         | Description                                                                                 |
 | --------------------- | -------------------- | ------------------------------------------------------------------------------------------- |
@@ -287,7 +287,7 @@ While the Edit Wallet Address page shares fields with the Create Wallet Address 
 | Liquidity Information | Amount               | Current amount of liquidity available for this wallet.                                      |
 |                       | Withdraw             | To withdraw funds from this wallet, select **Withdraw**.                                    |
 
-After editing any of the above fields in the General Information section, select **Save** to commit those changes.
+After editing any of the preceding fields in the General Information section, select **Save** to commit those changes.
 
 :::note[What if I need to edit or delete a wallet address?]
 When managing wallet addresses in Rafiki, there are certain restrictions and limitations to be aware of:
@@ -309,7 +309,7 @@ In both cases, the recommended approach is to create a new wallet address and de
 
 The Webhook Events page allows you to monitor and manage webhook events within your Rafiki instance. Webhook events in Rafiki are the main communication channel between you and your Rafiki instance. See Webhook events for more information about webhook events.
 
-All webhook events that have been triggered are displayed in the table. For each webhook event, you can see the webhook ID, the event type, and the date and time of the event. There is also a field at the top of the page allowing you to filter the table by event type, making it easier to drill down into specific events.
+All triggered webhook events appear in the table. For each webhook event, you can see the webhook ID, the event type, and the date and time of the event. A field at the top of the page allows you to filter the table by event type, making it easier to drill down into specific events.
 
 <LargeImg
   src='/img/admin-guide/webhooks.png'
@@ -322,7 +322,7 @@ To view the webhook event as a JSON representation, select **View data**.
 
 The Payments page allows you to view all incoming and outgoing payments in your Rafiki instance. This allows you to monitor payment activity as well as track the status of payments.
 
-All payments are displayed in the table. For each payment, you can view the unique payment ID, type of payment, state of the payment, and the date and time the payment was created. There is also a field at the top of the page allowing you to filter the table by payment type, making it easier to drill down into specific transactions.
+All payments appear in the table. For each payment, you can view the unique payment ID, type of payment, state of the payment, and the date and time the payment was created. A field at the top of the page allows you to filter the table by payment type, making it easier to drill down into specific transactions.
 
 <LargeImg
   src='/img/admin-guide/payments.png'

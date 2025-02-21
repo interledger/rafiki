@@ -19,7 +19,7 @@ The following transactions support two-phase transfers:
 - Outgoing payment withdrawal
 - Wallet address withdrawal
 
-When a withdraw-liquidity transaction is requested with a timeout greater than `0`, the transaction is processed as a two-phase transfer. A `0` denotes the absence of a timeout.
+When a withdraw-liquidity transaction is requested with a timeout greater than `0`, the transaction processes as a two-phase transfer. A `0` denotes the absence of a timeout.
 
 If the timeout interval passes before the transaction posts or is voided, the transaction expires and the full amount is returned to the original account.
 
