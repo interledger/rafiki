@@ -214,7 +214,7 @@ If a non-200 status is returned, indicating an error, or the request times out, 
 
 | Variable            | Type      | Description                                                                                                     |
 | ------------------- | --------- | --------------------------------------------------------------------------------------------------------------- |
-| `WEBHOOK_TIMEOUT`   | `backend` | The amount of time, in milliseconds, after which a webhook request times out                                |
+| `WEBHOOK_TIMEOUT`   | `backend` | The amount of time, in milliseconds, after which a webhook request times out                                    |
 | `WEBHOOK_MAX_RETRY` | `backend` | The maximum number of retries for a webhook event when a non-200 status is returned or if the request timed out |
 
 </div>
@@ -227,7 +227,7 @@ If a non-200 status is returned, indicating an error, or the request times out, 
 
 | Event type                                                  | Description                                                                       |
 | ----------------------------------------------------------- | --------------------------------------------------------------------------------- |
-| [`incoming_payment.created`](#incoming-payment-created)     | An incoming payment was created                                              |
+| [`incoming_payment.created`](#incoming-payment-created)     | An incoming payment was created                                                   |
 | [`incoming_payment.completed`](#incoming-payment-completed) | An incoming payment is complete and will not accept any additional incoming funds |
 | [`incoming_payment.expired`](#incoming-payment-expired)     | An incoming payment expired and will not accept any additional incoming funds     |
 
