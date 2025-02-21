@@ -313,7 +313,8 @@ async function getOrPollByUrl(
     type: WalletAddressEventType.WalletAddressNotFound,
     data: {
       walletAddressUrl: url
-    }
+    },
+    tenantId: deps.config.operatorTenantId
   })
 
   deps.logger.debug(
@@ -458,7 +459,8 @@ async function createWithdrawalEvent(
       accountId: walletAddress.id,
       assetId: walletAddress.assetId,
       amount
-    }
+    },
+    tenantId: deps.config.operatorTenantId
   })
 
   await walletAddress.$query(deps.knex).patch({

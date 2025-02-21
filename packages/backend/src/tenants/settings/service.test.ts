@@ -278,7 +278,7 @@ describe('TenantSetting Service', (): void => {
       )
       expect(dbTenantSetting?.deletedAt).toBeDefined()
 
-      const originalDeletedAt = dbTenantSetting?.deletedAt;
+      const originalDeletedAt = dbTenantSetting?.deletedAt
       await tenantSettingService.delete({
         tenantId: tenantSetting[0].tenantId,
         key: createOptions.setting[0].key
@@ -289,7 +289,9 @@ describe('TenantSetting Service', (): void => {
       )
       expect(dbTenantSetting?.deletedAt).toBeDefined()
 
-      expect(originalDeletedAt?.getTime()).toEqual(dbTenantSetting?.deletedAt?.getTime())
+      expect(originalDeletedAt?.getTime()).toEqual(
+        dbTenantSetting?.deletedAt?.getTime()
+      )
     })
 
     test('can delete all tenant settings', async (): Promise<void> => {
