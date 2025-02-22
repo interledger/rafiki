@@ -15,6 +15,7 @@ import {
 } from './errors'
 import { isRemoteIncomingPaymentError } from '../payment/incoming_remote/errors'
 import { TelemetryService } from '../../telemetry/service'
+import { Knex } from 'knex'
 
 interface CreateReceiverArgs {
   walletAddressUrl: string
@@ -25,7 +26,7 @@ interface CreateReceiverArgs {
 
 // A receiver is resolved from an incoming payment
 export interface ReceiverService {
-  get(url: string): Promise<Receiver | undefined>
+  get(url: string, trx?: Knex.Transaction): Promise<Receiver | undefined>
   create(args: CreateReceiverArgs): Promise<Receiver | ReceiverError>
 }
 
@@ -52,7 +53,7 @@ export async function createReceiverService(
   }
 
   return {
-    get: (url) => getReceiver(deps, url),
+    get: (url, trx) => getReceiver(deps, url, trx),
     create: (url) => createReceiver(deps, url)
   }
 }
@@ -136,13 +137,14 @@ async function createLocalIncomingPayment(
 
 async function getReceiver(
   deps: ServiceDependencies,
-  url: string
+  url: string,
+  trx?: Knex.Transaction
 ): Promise<Receiver | undefined> {
   const stopTimer = deps.telemetry.startTimer('getReceiver', {
     callName: 'ReceiverService:get'
   })
   try {
-    const localIncomingPayment = await getLocalIncomingPayment(deps, url)
+    const localIncomingPayment = await getLocalIncomingPayment(deps, url, trx)
     if (localIncomingPayment) {
       const receiver = new Receiver(localIncomingPayment, true)
       return receiver
@@ -179,7 +181,8 @@ function parseIncomingPaymentUrl(
 
 export async function getLocalIncomingPayment(
   deps: ServiceDependencies,
-  url: string
+  url: string,
+  trx?: Knex.Transaction
 ): Promise<OpenPaymentsIncomingPaymentWithPaymentMethods | undefined> {
   const urlParseResult = parseIncomingPaymentUrl(url)
   if (!urlParseResult) {
@@ -187,9 +190,12 @@ export async function getLocalIncomingPayment(
     return undefined
   }
 
-  const incomingPayment = await deps.incomingPaymentService.get({
-    id: urlParseResult.id
-  })
+  const incomingPayment = await deps.incomingPaymentService.get(
+    {
+      id: urlParseResult.id
+    },
+    trx
+  )
 
   if (!incomingPayment) {
     return undefined

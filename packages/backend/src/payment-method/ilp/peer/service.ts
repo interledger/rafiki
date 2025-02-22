@@ -22,6 +22,7 @@ import { BaseService } from '../../../shared/baseService'
 import { isValidHttpUrl } from '../../../shared/utils'
 import { v4 as uuid } from 'uuid'
 import { TransferError } from '../../../accounting/errors'
+import { Knex } from 'knex'
 
 export interface HttpOptions {
   incoming?: {
@@ -56,13 +57,18 @@ interface DepositPeerLiquidityArgs {
   peerId: string
 }
 
+interface GetByDestinationAddressOpts {
+  assetId?: string
+  trx?: Knex.Transaction
+}
+
 export interface PeerService {
   get(id: string): Promise<Peer | undefined>
   create(options: CreateOptions): Promise<Peer | PeerError>
   update(options: UpdateOptions): Promise<Peer | PeerError>
   getByDestinationAddress(
     address: string,
-    assetId?: string
+    opts?: GetByDestinationAddressOpts
   ): Promise<Peer | undefined>
   getByIncomingToken(token: string): Promise<Peer | undefined>
   getPage(pagination?: Pagination, sortOrder?: SortOrder): Promise<Peer[]>
@@ -100,8 +106,8 @@ export async function createPeerService({
     get: (id) => getPeer(deps, id),
     create: (options) => createPeer(deps, options),
     update: (options) => updatePeer(deps, options),
-    getByDestinationAddress: (destinationAddress, assetId) =>
-      getPeerByDestinationAddress(deps, destinationAddress, assetId),
+    getByDestinationAddress: (destinationAddress, opts) =>
+      getPeerByDestinationAddress(deps, destinationAddress, opts),
     getByIncomingToken: (token) => getPeerByIncomingToken(deps, token),
     getPage: (pagination?, sortOrder?) =>
       getPeersPage(deps, pagination, sortOrder),
@@ -318,12 +324,13 @@ async function addIncomingHttpTokens({
 async function getPeerByDestinationAddress(
   deps: ServiceDependencies,
   destinationAddress: string,
-  assetId?: string
+  opts: GetByDestinationAddressOpts = {}
 ): Promise<Peer | undefined> {
+  const { assetId, trx } = opts
   // This query does the equivalent of the following regex
   // for `staticIlpAddress`s in the accounts table:
   // new RegExp('^' + staticIlpAddress + '($|\\.)')).test(destinationAddress)
-  const peerQuery = Peer.query(deps.knex)
+  const peerQuery = Peer.query(trx ?? deps.knex)
     .where(
       raw('?', [destinationAddress]),
       'like',
@@ -354,7 +361,7 @@ async function getPeerByDestinationAddress(
 
   const peer = await peerQuery.first()
   if (peer) {
-    const asset = await deps.assetService.get(peer.assetId)
+    const asset = await deps.assetService.get(peer.assetId, trx)
     if (asset) peer.asset = asset
   }
   return peer || undefined

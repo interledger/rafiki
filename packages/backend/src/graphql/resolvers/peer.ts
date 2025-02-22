@@ -63,7 +63,7 @@ export const getPeerByAddressAndAsset: QueryResolvers<ApolloContext>['peerByAddr
     const peerService = await ctx.container.use('peerService')
     const peer = await peerService.getByDestinationAddress(
       args.staticIlpAddress,
-      args.assetId
+      { assetId: args.assetId }
     )
     return peer ? peerToGraphql(peer) : null
   }

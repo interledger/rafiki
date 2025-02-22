@@ -42,6 +42,10 @@ export interface UpdateOptions {
 
 export interface IncomingPaymentService
   extends WalletAddressSubresourceService<IncomingPayment> {
+  get(
+    options: GetOptions,
+    trx?: Knex.Transaction
+  ): Promise<IncomingPayment | undefined>
   create(
     options: CreateIncomingPaymentOptions,
     trx?: Knex.Transaction
@@ -74,7 +78,7 @@ export async function createIncomingPaymentService(
     logger: log
   }
   return {
-    get: (options) => getIncomingPayment(deps, options),
+    get: (options, trx) => getIncomingPayment(deps, options, trx),
     create: (options, trx) => createIncomingPayment(deps, options, trx),
     approve: (id) => approveIncomingPayment(deps, id),
     cancel: (id) => cancelIncomingPayment(deps, id),
@@ -87,18 +91,22 @@ export async function createIncomingPaymentService(
 
 async function getIncomingPayment(
   deps: ServiceDependencies,
-  options: GetOptions
+  options: GetOptions,
+  trx?: Knex.Transaction
 ): Promise<IncomingPayment | undefined> {
-  const incomingPayment = await IncomingPayment.query(deps.knex).get(options)
+  const incomingPayment = await IncomingPayment.query(trx ?? deps.knex).get(
+    options
+  )
   if (incomingPayment) {
-    const asset = await deps.assetService.get(incomingPayment.assetId)
+    const asset = await deps.assetService.get(incomingPayment.assetId, trx)
     if (asset) incomingPayment.asset = asset
 
     incomingPayment.walletAddress = await deps.walletAddressService.get(
-      incomingPayment.walletAddressId
+      incomingPayment.walletAddressId,
+      trx
     )
 
-    return await addReceivedAmount(deps, incomingPayment)
+    return await addReceivedAmount(deps, incomingPayment, { trx })
   } else return
 }
 
@@ -198,7 +206,9 @@ async function createIncomingPayment(
   //   }
   // })
 
-  incomingPayment = await addReceivedAmount(deps, incomingPayment, BigInt(0))
+  incomingPayment = await addReceivedAmount(deps, incomingPayment, {
+    value: BigInt(0)
+  })
   if (!deps.config.pollIncomingPaymentCreatedWebhook) {
     return incomingPayment
   }
@@ -522,13 +532,19 @@ async function completeIncomingPayment(
   })
 }
 
+interface AddReceiveAmountOpts {
+  value?: bigint
+  trx?: Knex.Transaction
+}
+
 async function addReceivedAmount(
   deps: ServiceDependencies,
   payment: IncomingPayment,
-  value?: bigint
+  opts: AddReceiveAmountOpts = {}
 ): Promise<IncomingPayment> {
+  const { value, trx } = opts
   const received =
-    value ?? (await deps.accountingService.getTotalReceived(payment.id))
+    value ?? (await deps.accountingService.getTotalReceived(payment.id, trx))
 
   payment.receivedAmount = {
     value: received || BigInt(0),

@@ -299,7 +299,6 @@ export class App {
       // for (let i = 0; i < this.config.webhookWorkers; i++) {
       //   process.nextTick(() => this.processWebhook())
       // }
-
       // new Worker(
       //   'webhook',
       //   async (job) => {
@@ -308,13 +307,11 @@ export class App {
       //       //   'webhook worker found wh',
       //       //   JSON.stringify(job.data, null, 2)
       //       // )
-
       //       await this.processWebhook(job.data)
       //     }
       //   },
       //   { connection: { url: this.config.redisUrl } }
       // )
-
       // Ran into problems relating to difference between this
       // serialized/parsed payment compared to the one we read directly
       // from the db in the original worker.
@@ -327,7 +324,6 @@ export class App {
       //         JSON.stringify(job.data, null, 2)
       //       )
       //       const { data } = job
-
       //       // Cast all bigints
       //       data.quote.debitAmount.value = BigInt(data.quote.debitAmount.value)
       //       data.quote.receiveAmount.value = BigInt(
@@ -344,18 +340,15 @@ export class App {
       //       data.grantSpentReceiveAmount.value = BigInt(
       //         data.grantSpentReceiveAmount.value
       //       )
-
       //       console.log(
       //         'data after casting to bigint',
       //         JSON.stringify(data, null, 2)
       //       )
-
       //       await this.processOutgoingPayment(data)
       //     }
       //   },
       //   { connection: { url: this.config.redisUrl } }
       // )
-
       new Worker(
         'OP',
         async (job) => {

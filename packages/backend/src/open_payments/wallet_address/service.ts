@@ -28,6 +28,7 @@ import { poll } from '../../shared/utils'
 import { WalletAddressAdditionalProperty } from './additional_property/model'
 import { AssetService } from '../../asset/service'
 import { CacheDataStore } from '../../middleware/cache/data-stores'
+import { Knex } from 'knex'
 
 interface Options {
   publicName?: string
@@ -64,7 +65,7 @@ export interface WalletAddressService {
     id: string,
     includeVisibleOnlyAddProps: boolean
   ): Promise<WalletAddressAdditionalProperty[] | undefined>
-  get(id: string): Promise<WalletAddress | undefined>
+  get(id: string, trx?: Knex.Transaction): Promise<WalletAddress | undefined>
   getByUrl(url: string): Promise<WalletAddress | undefined>
   getOrPollByUrl(url: string): Promise<WalletAddress | undefined>
   getPage(
@@ -260,12 +261,13 @@ async function updateWalletAddress(
 
 async function getWalletAddress(
   deps: ServiceDependencies,
-  id: string
+  id: string,
+  trx?: Knex.Transaction
 ): Promise<WalletAddress | undefined> {
   const walletAdd = await deps.walletAddressCache.get(id)
   if (walletAdd) return walletAdd
 
-  const walletAddress = await WalletAddress.query(deps.knex).findById(id)
+  const walletAddress = await WalletAddress.query(trx ?? deps.knex).findById(id)
   if (walletAddress) {
     const asset = await deps.assetService.get(walletAddress.assetId)
     if (asset) walletAddress.asset = asset

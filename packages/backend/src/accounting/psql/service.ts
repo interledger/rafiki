@@ -35,6 +35,7 @@ import {
 } from './ledger-transfer'
 import { LedgerTransfer, LedgerTransferType } from './ledger-transfer/model'
 import { TelemetryService } from '../../telemetry/service'
+import { Knex } from 'knex'
 
 export interface ServiceDependencies extends BaseService {
   knex: TransactionOrKnex
@@ -63,7 +64,8 @@ export function createAccountingService(
     getTotalSent: (accountRef) => getAccountTotalSent(deps, accountRef),
     getAccountsTotalSent: (accountRefs) =>
       getAccountsTotalSent(deps, accountRefs),
-    getTotalReceived: (accountRef) => getAccountTotalReceived(deps, accountRef),
+    getTotalReceived: (accountRef, trx) =>
+      getAccountTotalReceived(deps, accountRef, trx),
     getAccountsTotalReceived: (accountRefs) =>
       getAccountsTotalReceived(deps, accountRefs),
     getSettlementBalance: (ledger) => getSettlementBalance(deps, ledger),
@@ -176,15 +178,16 @@ export async function getAccountsTotalSent(
 
 export async function getAccountTotalReceived(
   deps: ServiceDependencies,
-  accountRef: string
+  accountRef: string,
+  trx?: Knex.Transaction
 ): Promise<bigint | undefined> {
-  const account = await getLiquidityAccount(deps, accountRef)
+  const account = await getLiquidityAccount(deps, accountRef, trx)
 
   if (!account) {
     return
   }
 
-  return (await getAccountBalances(deps, account)).creditsPosted
+  return (await getAccountBalances(deps, account, trx)).creditsPosted
 }
 
 export async function getAccountsTotalReceived(

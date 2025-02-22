@@ -8,6 +8,7 @@ import { AccountingService, LiquidityAccountType } from '../accounting/service'
 import { WalletAddress } from '../open_payments/wallet_address/model'
 import { Peer } from '../payment-method/ilp/peer/model'
 import { CacheDataStore } from '../middleware/cache/data-stores'
+import { Knex } from 'knex'
 
 export interface AssetOptions {
   code: string
@@ -33,7 +34,7 @@ export interface AssetService {
   create(options: CreateOptions): Promise<Asset | AssetError>
   update(options: UpdateOptions): Promise<Asset | AssetError>
   delete(options: DeleteOptions): Promise<Asset | AssetError>
-  get(id: string): Promise<void | Asset>
+  get(id: string, trx?: Knex.Transaction): Promise<void | Asset>
   getByCodeAndScale(code: string, scale: number): Promise<void | Asset>
   getPage(pagination?: Pagination, sortOrder?: SortOrder): Promise<Asset[]>
   getAll(): Promise<Asset[]>
@@ -182,12 +183,15 @@ async function deleteAsset(
 
 async function getAsset(
   deps: ServiceDependencies,
-  id: string
+  id: string,
+  trx?: Knex.Transaction
 ): Promise<void | Asset> {
   const inMem = await deps.assetCache.get(id)
   if (inMem) return inMem
 
-  const asset = await Asset.query(deps.knex).whereNull('deletedAt').findById(id)
+  const asset = await Asset.query(trx ?? deps.knex)
+    .whereNull('deletedAt')
+    .findById(id)
   if (asset) await deps.assetCache.set(asset.id, asset)
 
   return asset

@@ -332,10 +332,7 @@ async function createQuote(
     )
     stopTimerFee()
 
-    // Big change...
-    // Changed from await Quote.transaction(deps.knex, async (trx) => {
-    // seemed to unblock some hanging connection
-    await Quote.transaction(async (trx) => {
+    return await Quote.transaction(async (trx) => {
       const stopTimerQuoteTrx = deps.telemetry.startTimer(
         'quote_service_create_get_quote_time_ms',
         {
@@ -350,6 +347,10 @@ async function createQuote(
           description: 'Time to getQuote'
         }
       )
+
+      // TODO: rm getQuote from this trx and change to return IlpQuoteDetails
+      // instead to take the connector network calls out of th trx?
+
       const quote = await deps.paymentMethodHandlerService.getQuote(
         paymentMethod,
         {
@@ -398,38 +399,18 @@ async function createQuote(
           description: 'Time to insert quote'
         }
       )
-      await Quote.query(trx).insert({
+      const createdQuote = await Quote.query(trx).insertAndFetch({
         ...unfinalizedQuote,
         ...patchOptions
       })
+      createdQuote.asset = walletAddress.asset
+      createdQuote.walletAddress = walletAddress
+      if (sendingFee) createdQuote.fee = sendingFee
 
       stopQuoteCreate()
       stopTimerQuoteTrx()
+      return createdQuote
     })
-
-    // TODO: move back to insertAndFetch? dont think this ended up being much of a factor
-    // but idea was to move out of the transaction.
-    const createdQuote = await Quote.query(deps.knex).findById(quoteId)
-
-    // todo: real error handling
-    if (!createdQuote) {
-      throw new Error('Quote not found')
-    }
-
-    createdQuote.asset = walletAddress.asset
-
-    // const asset = await deps.assetService.get(createdQuote.assetId)
-    // if (asset) createdQuote.asset = asset
-
-    if (sendingFee) createdQuote.fee = sendingFee
-
-    // createdQuote.walletAddress = await deps.walletAddressService.get(
-    //   createdQuote.walletAddressId
-    // )
-
-    createdQuote.walletAddress = walletAddress
-
-    return createdQuote
   } catch (err) {
     if (isQuoteError(err)) {
       return err

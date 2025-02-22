@@ -288,7 +288,7 @@ async function updatePeer(
 ): Promise<Peer | PeerError> {
   const peer = await deps.peerService.getByDestinationAddress(
     args.staticIlpAddress,
-    args.assetId
+    { assetId: args.assetId }
   )
 
   if (!peer) {

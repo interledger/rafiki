@@ -1,6 +1,7 @@
 import { TransactionOrKnex } from 'objection'
 import { BaseService } from '../shared/baseService'
 import { TransferError, isTransferError } from './errors'
+import { Knex } from 'knex'
 
 export enum LiquidityAccountType {
   ASSET = 'ASSET',
@@ -106,7 +107,10 @@ export interface AccountingService {
   getBalance(id: string): Promise<bigint | undefined>
   getTotalSent(id: string): Promise<bigint | undefined>
   getAccountsTotalSent(ids: string[]): Promise<(bigint | undefined)[]>
-  getTotalReceived(id: string): Promise<bigint | undefined>
+  getTotalReceived(
+    id: string,
+    trx?: Knex.Transaction
+  ): Promise<bigint | undefined>
   getAccountsTotalReceived(ids: string[]): Promise<(bigint | undefined)[]>
   getSettlementBalance(ledger: number): Promise<bigint | undefined>
   createTransfer(options: TransferOptions): Promise<Transaction | TransferError>
