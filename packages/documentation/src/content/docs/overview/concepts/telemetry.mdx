@@ -20,9 +20,9 @@ Our goals are to:
 
 ### Privacy and optionality
 
-Privacy is a paramount concern for the Interleger Foundation. Rafiki’s telemetry feature is designed to provide valuable network insights without violating privacy or aiding malicious ASEs. Review the [Privacy](#privacy) section below for more information.
+Privacy is a paramount concern for the Interledger Foundation. Rafiki’s telemetry feature is designed to provide valuable network insights without violating privacy or aiding malicious ASEs. Review the [Privacy](#privacy) section below for more information.
 
-The telemetry functionality is currently enabled by default on test (non-livenet) environments, i.e. any environment that is not dealing with real money. When active, the functionality transmits metrics to the testnet collector. You can opt in to sharing your metrics with a livenet collector when operating in a production livenet environment (with real money). Regardless of environment, you can also opt-out of telemetry completely. Review the [telemetry environment variables](#telemetry-environment-variables) for more information.
+The telemetry feature is currently enabled by default on test environments (environments not dealing with real money). When active, the feature transmits metrics to the testnet collector. You can opt in to sharing your metrics with a livenet collector when operating in a production livenet environment (with real money). Regardless of environment, you can also opt-out of telemetry completely. Review the [telemetry environment variables](#telemetry-environment-variables) for more information.
 
 ### Architecture
 
@@ -106,7 +106,7 @@ To handle outliers, a clipping technique is implemented, capping the buckets. An
 
 ### Laplacian distribution
 
-The Laplacian distribution is often used in differential privacy due to its double exponential decay property. This property ensures that a small change in the data will not significantly affect the probability distribution of the output, providing a strong privacy guarantee.
+The Laplacian distribution is often used in differential privacy due to its double exponential decay property. This property ensures that a small change in the data does not significantly affect the probability distribution of the output, providing a strong privacy guarantee.
 
 To achieve local differential privacy (LDP), noise is selected from the Laplacian distribution and added to the rounded values. The noise is generated based on a privacy parameter, which is calculated using the sensitivity of the function.
 
@@ -114,7 +114,7 @@ The sensitivity of a function in differential privacy is the maximum amount that
 
 The privacy parameter is computed as one-tenth of the sensitivity. This parameter controls the trade-off between privacy and utility: a smaller privacy parameter means more privacy but less utility, and a larger privacy parameter means less privacy but more utility.
 
-The noise, selected from the Laplacian distribution, is then generated using this privacy parameter and added to the rounded value. If the resulting value is zero, it is set to half the bucket size to ensure that the noise does not completely obscure the transaction value.
+The noise, selected from the Laplacian distribution, is then generated using this privacy parameter and added to the rounded value. If the resulting value is zero, the value is set to half the bucket size to ensure that the noise does not completely obscure the transaction value.
 
 ### Currency conversion
 
@@ -177,13 +177,13 @@ When the `ENABLE_TELEMETRY` variable is `true`, the following are required.
 
 <div class="overflow-table">
 
-| Variable name                    | Type    | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
-| -------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `ENABLE_TELEMETRY`               | Boolean | Enables the telemetry service on Rafiki. Defaults to `true`.                                                                                                                                                                                                                                                                                                                                                                                                                                                |
-| `LIVENET`                        | Boolean | Determines where to send metrics. Defaults to `false`, resulting in metrics being sent to the testnet OTEL Collector. <p>Set to `true` on production environments dealing with real money.</p>                                                                                                                                                                                                                                                                                                              |
-| `OPEN_TELEMETRY_COLLECTOR_URLS`  | String  | A CSV of URLs for OTEL Collectors (e.g., `http://otel-collector-NLB-e3172ff9d2f4bc8a.elb.eu-west-2.amazonaws.com:4317,http://happy-life-otel-collector:4317`).                                                                                                                                                                                                                                                                                                                                              |
-| `OPEN_TELEMETRY_EXPORT_INTERVAL` | Number  | Indicates, in milliseconds, how often the instrumented Rafiki instance should send metrics. Defaults to`15000`.                                                                                                                                                                                                                                                                                                                                                                                             |
-| `TELEMETRY_EXCHANGE_RATES_URL`   | String  | <p>Defines the endpoint Rafiki will query for exchange rates. Used as a fallback if/when [exchange rates](/integration/requirements/exchange-rates) aren’t provided.</p><p>When set, the response format of the external exchange rates API should be of type `rates`, as is expected by the rate service.</p><p>Defaults to `https://telemetry-exchange-rates.s3.amazonaws.com/exchange-rates-usd.json`, which points to a public S3 that has the previously mentioned required format, updated daily.</p> |
+| Variable name                    | Type    | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| -------------------------------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ENABLE_TELEMETRY`               | Boolean | Enables the telemetry service on Rafiki. Defaults to `true`.                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| `LIVENET`                        | Boolean | Determines where to send metrics. Defaults to `false`, resulting in metrics being sent to the testnet OTEL Collector. <p>Set to `true` on production environments dealing with real money.</p>                                                                                                                                                                                                                                                                                                           |
+| `OPEN_TELEMETRY_COLLECTOR_URLS`  | String  | A CSV of URLs for OTEL Collectors (e.g., `http://otel-collector-NLB-e3172ff9d2f4bc8a.elb.eu-west-2.amazonaws.com:4317,http://happy-life-otel-collector:4317`).                                                                                                                                                                                                                                                                                                                                           |
+| `OPEN_TELEMETRY_EXPORT_INTERVAL` | Number  | Indicates, in milliseconds, how often the instrumented Rafiki instance should send metrics. Defaults to`15000`.                                                                                                                                                                                                                                                                                                                                                                                          |
+| `TELEMETRY_EXCHANGE_RATES_URL`   | String  | <p>Defines the endpoint Rafiki queries for exchange rates. Used as a fallback if/when [exchange rates](/integration/requirements/exchange-rates) aren’t provided.</p><p>When set, the response format of the external exchange rates API should be of type `rates`, as is expected by the rate service.</p><p>Defaults to `https://telemetry-exchange-rates.s3.amazonaws.com/exchange-rates-usd.json`, which points to a public S3 that has the previously mentioned required format, updated daily.</p> |
 
 </div>
 
@@ -191,7 +191,7 @@ When the `ENABLE_TELEMETRY` variable is `true`, the following are required.
 
 Below is an example of a Docker OTEL Collector image and configuration that integrates with Rafiki and sends data to a Prometheus remote write endpoint.
 
-The configuration can be tested in our [Local Playground](/integration/playground/overview) by providing the environment variables in the table above to `happy-life-backend` in the <LinkOut href="https://github.com/interledger/rafiki/blob/main/localenv/happy-life-bank/docker-compose.yml">`docker-compose.yml`</LinkOut> file.
+You can test the configuration in our [Local Playground](/integration/playground/overview) by providing the environment variables in the preceding table to `happy-life-backend` in the <LinkOut href="https://github.com/interledger/rafiki/blob/main/localenv/happy-life-bank/docker-compose.yml">`docker-compose.yml`</LinkOut> file.
 
 #### Docker Compose config
 
@@ -215,7 +215,7 @@ happy-life-otel-collector:
 
 #### OTEL Collector config
 
-Supplemental documentation can be found in <LinkOut href="https://opentelemetry.io/docs/collector/configuration/">OTEL’s Collector Configuration</LinkOut> documentation.
+Supplemental documentation is available in <LinkOut href="https://opentelemetry.io/docs/collector/configuration/">OTEL’s Collector Configuration</LinkOut> documentation.
 
 ```yaml wrap
 # Serves as example for the configuration of a local OpenTelemetry Collector that sends metrics to an AWS Managed Prometheus Workspace
