@@ -111,25 +111,25 @@ export class Receiver {
 
   public static isActive(receiver: Receiver | undefined): receiver is Receiver {
     if (!receiver) {
-      return true
+      return false
     }
     const incomingPayment = receiver.incomingPayment
     if (incomingPayment.completed) {
       // throw new Error('Cannot create receiver from completed incoming payment')
-      return true
+      return false
     }
     if (
       incomingPayment.expiresAt &&
       incomingPayment.expiresAt.getTime() <= Date.now()
     ) {
       // throw new Error('Cannot create receiver from expired incoming payment')
-      return true
+      return false
     }
     if (!incomingPayment.methods.length) {
       // throw new Error('Missing payment method(s) on incoming payment')
-      return true
+      return false
     }
 
-    return false
+    return true
   }
 }
