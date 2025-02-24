@@ -460,7 +460,7 @@ async function createWithdrawalEvent(
       assetId: walletAddress.assetId,
       amount
     },
-    tenantId: deps.config.operatorTenantId
+    tenantId: walletAddress.tenantId
   })
 
   await walletAddress.$query(deps.knex).patch({
