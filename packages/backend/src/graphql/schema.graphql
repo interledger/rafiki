@@ -97,6 +97,8 @@ type Query {
     sortOrder: SortOrder
     "Filter outgoing payments based on specific criteria such as receiver, wallet address ID, or state."
     filter: OutgoingPaymentFilter
+    "Unique identifier of the tenant associated with the wallet address. Optional, if not provided, the tenantId will be obtained from the signature."
+    tenantId: String
   ): OutgoingPaymentConnection!
 
   "Fetch an Open Payments incoming payment by its ID."
@@ -135,6 +137,8 @@ type Query {
     sortOrder: SortOrder
     "Filter payment events based on specific criteria such as payment type or wallet address ID."
     filter: PaymentFilter
+    "Unique identifier of the tenant associated with the wallet address. Optional, if not provided, the tenantId will be obtained from the signature."
+    tenantId: String
   ): PaymentConnection!
 
   "Fetch a paginated list of accounting transfers for a given account."
@@ -394,6 +398,8 @@ input CreateAssetInput {
   liquidityThreshold: UInt64
   "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency)."
   idempotencyKey: String
+  "Unique identifier of the tenant associated with the asset. This cannot be changed. Optional, if not provided, the tenantId will be obtained from the signature."
+  tenantId: ID
 }
 
 input UpdateAssetInput {
@@ -685,6 +691,7 @@ type Asset implements Model {
   ): FeesConnection
   "The date and time when the asset was created."
   createdAt: String!
+  tenantId: ID!
 }
 
 enum SortOrder {
@@ -938,6 +945,8 @@ type IncomingPayment implements BasePayment & Model {
   metadata: JSONObject
   "The date and time that the incoming payment was created."
   createdAt: String!
+  "The tenant UUID associated with the incoming payment. If not provided, it will be obtained from the signature."
+  tenantId: String
 }
 
 type Receiver {
@@ -1035,6 +1044,8 @@ type OutgoingPayment implements BasePayment & Model {
   createdAt: String!
   "Unique identifier of the grant under which the outgoing payment was created."
   grantId: String
+  "Tenant ID of the outgoing payment."
+  tenantId: String
 }
 
 enum OutgoingPaymentState {
@@ -1158,6 +1169,8 @@ type QuoteEdge {
 type Quote {
   "Unique identifier of the quote."
   id: ID!
+  "Unique identifier of the tenant under which the quote was created."
+  tenantId: ID!
   "Unique identifier of the wallet address under which the quote was created."
   walletAddressId: ID!
   "Wallet address URL of the receiver."

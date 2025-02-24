@@ -43,7 +43,7 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
   return json({ walletAddress })
 }
 
-export default function ViewAssetPage() {
+export default function ViewWalletAddressPage() {
   const { walletAddress } = useLoaderData<typeof loader>()
   const response = useActionData<typeof action>()
   const navigation = useNavigation()
@@ -142,7 +142,7 @@ export default function ViewAssetPage() {
                 <p className='font-medium'>Withdrawal threshold</p>
                 <p className='mt-1'>
                   {walletAddress.asset.withdrawalThreshold ??
-                    'No withdrawal threshhold'}
+                    'No withdrawal threshold'}
                 </p>
               </div>
             </div>

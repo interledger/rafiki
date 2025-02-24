@@ -54,9 +54,11 @@ export async function createCombinedPayment(
   const payment =
     type === PaymentType.Incoming
       ? await createIncomingPayment(deps, {
-          walletAddressId: receiveWalletAddress.id
+          walletAddressId: receiveWalletAddress.id,
+          tenantId: receiveWalletAddress.tenantId
         })
       : await createOutgoingPayment(deps, {
+          tenantId: Config.operatorTenantId,
           walletAddressId: sendWalletAddressId,
           method: 'ilp',
           receiver: `${Config.openPaymentsUrl}/${uuid()}`,

@@ -12,13 +12,7 @@ import {
   isPendingGrant
 } from '@interledger/open-payments'
 import { MockASE } from '../mock-ase'
-import {
-  UnionOmit,
-  poll,
-  pollCondition,
-  wait,
-  urlWithoutTenantId
-} from '../utils'
+import { UnionOmit, poll, pollCondition, wait } from '../utils'
 import { WebhookEventType } from 'mock-account-service-lib'
 import {
   CreateOutgoingPaymentArgs,
@@ -104,7 +98,7 @@ async function grantRequestIncomingPayment(
 
   const grant = await sendingASE.opClient.grant.request(
     {
-      url: urlWithoutTenantId(receiverWalletAddress.authServer)
+      url: receiverWalletAddress.authServer
     },
     {
       access_token: {
@@ -123,6 +117,7 @@ async function grantRequestIncomingPayment(
 
 type CreateIncomingPaymentOpts = {
   amountValueToSend?: string
+  tenantId?: string
 }
 
 async function createIncomingPayment(
@@ -158,7 +153,7 @@ async function createIncomingPayment(
 
   const incomingPayment = await sendingASE.opClient.incomingPayment.create(
     {
-      url: urlWithoutTenantId(receiverWalletAddress.resourceServer),
+      url: receiverWalletAddress.resourceServer,
       accessToken
     },
     createInput
@@ -191,7 +186,7 @@ async function grantRequestQuote(
   const { sendingASE } = deps
   const grant = await sendingASE.opClient.grant.request(
     {
-      url: urlWithoutTenantId(senderWalletAddress.authServer)
+      url: senderWalletAddress.authServer
     },
     {
       access_token: {
@@ -217,7 +212,7 @@ async function createQuote(
   const { sendingASE } = deps
   return await sendingASE.opClient.quote.create(
     {
-      url: urlWithoutTenantId(senderWalletAddress.resourceServer),
+      url: senderWalletAddress.resourceServer,
       accessToken
     },
     {
@@ -241,7 +236,7 @@ async function grantRequestOutgoingPayment(
   const { receivingASE } = deps
   const grant = await receivingASE.opClient.grant.request(
     {
-      url: urlWithoutTenantId(senderWalletAddress.authServer)
+      url: senderWalletAddress.authServer
     },
     {
       access_token: {
@@ -325,7 +320,7 @@ async function createOutgoingPayment(
 
   const outgoingPayment = await sendingASE.opClient.outgoingPayment.create(
     {
-      url: urlWithoutTenantId(senderWalletAddress.resourceServer),
+      url: senderWalletAddress.resourceServer,
       accessToken: grantContinue.access_token.value
     },
     {

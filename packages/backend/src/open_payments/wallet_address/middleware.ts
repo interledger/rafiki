@@ -43,7 +43,8 @@ export async function getWalletAddressUrlFromIncomingPayment(
     'incomingPaymentService'
   )
   const incomingPayment = await incomingPaymentService.get({
-    id: ctx.params.id
+    id: ctx.params.id,
+    tenantId: ctx.params.tenantId
   })
 
   if (!incomingPayment?.walletAddress) {
@@ -65,7 +66,8 @@ export async function getWalletAddressUrlFromOutgoingPayment(
     'outgoingPaymentService'
   )
   const outgoingPayment = await outgoingPaymentService.get({
-    id: ctx.params.id
+    id: ctx.params.id,
+    tenantId: ctx.params.tenantId
   })
 
   if (!outgoingPayment?.walletAddress) {
@@ -85,7 +87,8 @@ export async function getWalletAddressUrlFromQuote(
 ) {
   const quoteService = await ctx.container.use('quoteService')
   const quote = await quoteService.get({
-    id: ctx.params.id
+    id: ctx.params.id,
+    tenantId: ctx.params.tenantId
   })
 
   if (!quote?.walletAddress) {

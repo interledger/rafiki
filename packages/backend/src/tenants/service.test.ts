@@ -79,6 +79,23 @@ describe('Tenant Service', (): void => {
       expect(tenant).toEqual(createdTenant)
     })
 
+    test('returns deletedAt set if tenant is deleted', async (): Promise<void> => {
+      const dbTenant = await Tenant.query(knex).insertAndFetch({
+        apiSecret: 'test-secret',
+        email: faker.internet.email(),
+        idpConsentUrl: faker.internet.url(),
+        idpSecret: 'test-idp-secret',
+        deletedAt: new Date()
+      })
+
+      const tenant = await tenantService.get(dbTenant.id)
+      expect(tenant).toBeUndefined()
+
+      // Ensure Operator is able to access tenant even if deleted:
+      const tenantDel = await tenantService.get(dbTenant.id, true)
+      expect(tenantDel?.deletedAt).toBeDefined()
+    })
+
     test('returns undefined if tenant is deleted', async (): Promise<void> => {
       const dbTenant = await Tenant.query(knex).insertAndFetch({
         apiSecret: 'test-secret',
@@ -90,37 +107,10 @@ describe('Tenant Service', (): void => {
 
       const tenant = await tenantService.get(dbTenant.id)
       expect(tenant).toBeUndefined()
-    })
 
-    test('returns tenant settings', async (): Promise<void> => {
-      const createOptions = {
-        apiSecret: 'test-api-secret',
-        publicName: 'test tenant',
-        email: faker.internet.email(),
-        idpConsentUrl: faker.internet.url(),
-        idpSecret: 'test-idp-secret'
-      }
-
-      jest
-        .spyOn(authServiceClient.tenant, 'create')
-        .mockImplementationOnce(async () => undefined)
-
-      const tenant = await tenantService.create(createOptions)
-
-      const tenantResponseData = await tenantService.get(tenant.id)
-      expect(tenantResponseData?.settings?.length).toBeGreaterThan(0)
-      expect(tenantResponseData?.settings).toEqual([
-        expect.objectContaining({
-          tenantId: tenant.id,
-          key: 'WEBHOOK_TIMEOUT',
-          value: '2000'
-        }),
-        expect.objectContaining({
-          tenantId: tenant.id,
-          key: 'WEBHOOK_MAX_RETRY',
-          value: '10'
-        })
-      ])
+      // Ensure Operator is able to access tenant even if deleted:
+      const tenantDel = await tenantService.get(dbTenant.id, true)
+      expect(tenantDel?.deletedAt).toBeDefined()
     })
   })
 
@@ -155,35 +145,6 @@ describe('Tenant Service', (): void => {
         tenant.id
       )
       expect(tenantSettings.length).toBeGreaterThan(0)
-    })
-
-    test('should have default settings', async (): Promise<void> => {
-      const createOptions = {
-        apiSecret: 'test-api-secret',
-        publicName: 'test tenant',
-        email: faker.internet.email(),
-        idpConsentUrl: faker.internet.url(),
-        idpSecret: 'test-idp-secret'
-      }
-
-      jest
-        .spyOn(authServiceClient.tenant, 'create')
-        .mockImplementationOnce(async () => undefined)
-
-      const tenant = await tenantService.create(createOptions)
-
-      expect(tenant.settings).toEqual([
-        expect.objectContaining({
-          tenantId: tenant.id,
-          key: 'WEBHOOK_TIMEOUT',
-          value: '2000'
-        }),
-        expect.objectContaining({
-          tenantId: tenant.id,
-          key: 'WEBHOOK_MAX_RETRY',
-          value: '10'
-        })
-      ])
     })
 
     test('tenant creation rolls back if auth tenant create fails', async (): Promise<void> => {
@@ -476,6 +437,10 @@ describe('Tenant Service', (): void => {
             // Ensure that cache was set for deletion
             expect(spyCacheDelete).toHaveBeenCalledTimes(1)
             expect(spyCacheDelete).toHaveBeenCalledWith(tenant.id)
+
+            // Ensure Operator is able to access tenant even if deleted:
+            const tenantDel = await tenantService.get(tenant.id, true)
+            expect(tenantDel?.deletedAt).toBeDefined()
           }
         )
       )

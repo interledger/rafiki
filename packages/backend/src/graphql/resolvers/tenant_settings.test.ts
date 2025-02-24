@@ -7,7 +7,7 @@ import { truncateTables } from '../../tests/tableManager'
 import { createTenant } from '../../tests/tenant'
 import {
   CreateTenantSettingsInput,
-  CreateTenantSettingsMutationResponse,
+  CreateTenantSettingsMutationResponse
 } from '../generated/graphql'
 import {
   ApolloClient,
@@ -91,7 +91,9 @@ describe('Tenant Settings Resolvers', (): void => {
   describe('Create Tenant Settings', (): void => {
     test('can create tenant setting', async (): Promise<void> => {
       const input: CreateTenantSettingsInput = {
-        settings: [{ key: TenantSettingKeys.EXCHANGE_RATES_URL.name, value: 'MY_VALUE' }]
+        settings: [
+          { key: TenantSettingKeys.EXCHANGE_RATES_URL.name, value: 'MY_VALUE' }
+        ]
       }
 
       const tenant = await createTenant(deps)

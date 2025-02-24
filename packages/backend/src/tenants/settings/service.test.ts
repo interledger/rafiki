@@ -11,7 +11,11 @@ import { TenantService } from '../service'
 import { faker } from '@faker-js/faker'
 import { getPageTests } from '../../shared/baseModel.test'
 import { Pagination, SortOrder } from '../../shared/baseModel'
-import { createTenantSettings, exchangeRatesSetting, randomSetting } from '../../tests/tenantSettings'
+import {
+  createTenantSettings,
+  exchangeRatesSetting,
+  randomSetting
+} from '../../tests/tenantSettings'
 import { TenantSetting } from './model'
 import {
   CreateOptions,
@@ -193,7 +197,9 @@ describe('TenantSetting Service', (): void => {
     describe('delete tenant', () => {
       it('should delete tenant settings if tenant is deleted', async () => {
         await tenantService.delete(tenant.id)
-        const found = await Tenant.query().findById(tenant.id).withGraphFetched('settings')
+        const found = await Tenant.query()
+          .findById(tenant.id)
+          .withGraphFetched('settings')
 
         for (const tenantSetting of found?.settings as TenantSetting[]) {
           expect(found?.deletedAt).toEqual(tenantSetting.deletedAt)
@@ -216,7 +222,9 @@ describe('TenantSetting Service', (): void => {
         tenantSetting[0].id
       )
       expect(dbTenantSetting?.deletedAt).toBeDefined()
-      expect(dbTenantSetting?.deletedAt?.getTime()).toBeLessThanOrEqual(Date.now())
+      expect(dbTenantSetting?.deletedAt?.getTime()).toBeLessThanOrEqual(
+        Date.now()
+      )
     })
 
     test('cannot delete already deleted setting', async (): Promise<void> => {
@@ -236,7 +244,7 @@ describe('TenantSetting Service', (): void => {
       )
       expect(dbTenantSetting?.deletedAt).toBeDefined()
 
-      const originalDeletedAt = dbTenantSetting?.deletedAt;
+      const originalDeletedAt = dbTenantSetting?.deletedAt
       await tenantSettingService.delete({
         tenantId: tenantSetting[0].tenantId,
         key: createOptions.setting[0].key
@@ -247,7 +255,9 @@ describe('TenantSetting Service', (): void => {
       )
       expect(dbTenantSetting?.deletedAt).toBeDefined()
 
-      expect(originalDeletedAt?.getTime()).toEqual(dbTenantSetting?.deletedAt?.getTime())
+      expect(originalDeletedAt?.getTime()).toEqual(
+        dbTenantSetting?.deletedAt?.getTime()
+      )
     })
 
     test('can delete all tenant settings', async (): Promise<void> => {

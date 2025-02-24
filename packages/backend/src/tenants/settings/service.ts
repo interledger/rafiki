@@ -62,7 +62,8 @@ export async function createTenantSettingService(
     create: (options: CreateOptions, extra?: ExtraOptions) =>
       createTenantSetting(deps, options, extra),
     update: (options: UpdateOptions) => updateTenantSetting(deps, options),
-    delete: (options: GetOptions, extra?: ExtraOptions) => deleteTenantSetting(deps, options, extra),
+    delete: (options: GetOptions, extra?: ExtraOptions) =>
+      deleteTenantSetting(deps, options, extra),
     getPage: (
       tenantId: string,
       pagination?: Pagination,
@@ -117,9 +118,8 @@ async function createTenantSetting(
   options: CreateOptions,
   extra?: ExtraOptions
 ) {
-
   const dataToInsert = options.setting
-    .filter(setting => Object.keys(TenantSettingKeys).includes(setting.key))
+    .filter((setting) => Object.keys(TenantSettingKeys).includes(setting.key))
     .map((s) => ({
       tenantId: options.tenantId,
       ...s
@@ -128,7 +128,7 @@ async function createTenantSetting(
   if (Object.keys(dataToInsert).length <= 0) {
     return []
   }
-  
+
   return TenantSetting.query(extra?.trx ?? deps.knex).insertAndFetch(
     dataToInsert
   )

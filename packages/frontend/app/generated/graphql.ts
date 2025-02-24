@@ -124,6 +124,7 @@ export type Asset = Model & {
   scale: Scalars['UInt8']['output'];
   /** The sending fee structure for the asset. */
   sendingFee?: Maybe<Fee>;
+  tenantId: Scalars['ID']['output'];
   /** Minimum amount of liquidity that can be withdrawn from the asset. */
   withdrawalThreshold?: Maybe<Scalars['UInt64']['output']>;
 };
@@ -199,6 +200,8 @@ export type CreateAssetInput = {
   liquidityThreshold?: InputMaybe<Scalars['UInt64']['input']>;
   /** Difference in order of magnitude between the standard unit of an asset and its corresponding fractional unit. */
   scale: Scalars['UInt8']['input'];
+  /** Unique identifier of the tenant associated with the asset. This cannot be changed. Optional, if not provided, the tenantId will be obtained from the signature. */
+  tenantId?: InputMaybe<Scalars['ID']['input']>;
   /** Minimum amount of liquidity that can be withdrawn from the asset. */
   withdrawalThreshold?: InputMaybe<Scalars['UInt64']['input']>;
 };
@@ -611,6 +614,8 @@ export type IncomingPayment = BasePayment & Model & {
   receivedAmount: Amount;
   /** State of the incoming payment. */
   state: IncomingPaymentState;
+  /** The tenant UUID associated with the incoming payment. If not provided, it will be obtained from the signature. */
+  tenantId?: Maybe<Scalars['String']['output']>;
   /** Unique identifier of the wallet address under which the incoming payment was created. */
   walletAddressId: Scalars['ID']['output'];
 };
@@ -1025,6 +1030,8 @@ export type OutgoingPayment = BasePayment & Model & {
   state: OutgoingPaymentState;
   /** Number of attempts made to send an outgoing payment. */
   stateAttempts: Scalars['Int']['output'];
+  /** Tenant ID of the outgoing payment. */
+  tenantId?: Maybe<Scalars['String']['output']>;
   /** Unique identifier of the wallet address under which the outgoing payment was created. */
   walletAddressId: Scalars['ID']['output'];
 };
@@ -1268,6 +1275,7 @@ export type QueryOutgoingPaymentsArgs = {
   first?: InputMaybe<Scalars['Int']['input']>;
   last?: InputMaybe<Scalars['Int']['input']>;
   sortOrder?: InputMaybe<SortOrder>;
+  tenantId?: InputMaybe<Scalars['String']['input']>;
 };
 
 
@@ -1278,6 +1286,7 @@ export type QueryPaymentsArgs = {
   first?: InputMaybe<Scalars['Int']['input']>;
   last?: InputMaybe<Scalars['Int']['input']>;
   sortOrder?: InputMaybe<SortOrder>;
+  tenantId?: InputMaybe<Scalars['String']['input']>;
 };
 
 
@@ -1370,6 +1379,8 @@ export type Quote = {
   receiveAmount: Amount;
   /** Wallet address URL of the receiver. */
   receiver: Scalars['String']['output'];
+  /** Unique identifier of the tenant under which the quote was created. */
+  tenantId: Scalars['ID']['output'];
   /** Unique identifier of the wallet address under which the quote was created. */
   walletAddressId: Scalars['ID']['output'];
 };
@@ -2236,6 +2247,7 @@ export type AssetResolvers<ContextType = any, ParentType extends ResolversParent
   receivingFee?: Resolver<Maybe<ResolversTypes['Fee']>, ParentType, ContextType>;
   scale?: Resolver<ResolversTypes['UInt8'], ParentType, ContextType>;
   sendingFee?: Resolver<Maybe<ResolversTypes['Fee']>, ParentType, ContextType>;
+  tenantId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   withdrawalThreshold?: Resolver<Maybe<ResolversTypes['UInt64']>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
@@ -2359,6 +2371,7 @@ export type IncomingPaymentResolvers<ContextType = any, ParentType extends Resol
   metadata?: Resolver<Maybe<ResolversTypes['JSONObject']>, ParentType, ContextType>;
   receivedAmount?: Resolver<ResolversTypes['Amount'], ParentType, ContextType>;
   state?: Resolver<ResolversTypes['IncomingPaymentState'], ParentType, ContextType>;
+  tenantId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   walletAddressId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
@@ -2460,6 +2473,7 @@ export type OutgoingPaymentResolvers<ContextType = any, ParentType extends Resol
   sentAmount?: Resolver<ResolversTypes['Amount'], ParentType, ContextType>;
   state?: Resolver<ResolversTypes['OutgoingPaymentState'], ParentType, ContextType>;
   stateAttempts?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
+  tenantId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   walletAddressId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
@@ -2569,6 +2583,7 @@ export type QuoteResolvers<ContextType = any, ParentType extends ResolversParent
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   receiveAmount?: Resolver<ResolversTypes['Amount'], ParentType, ContextType>;
   receiver?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  tenantId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   walletAddressId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
@@ -2879,7 +2894,7 @@ export type ListAssetsQueryVariables = Exact<{
 }>;
 
 
-export type ListAssetsQuery = { __typename?: 'Query', assets: { __typename?: 'AssetsConnection', edges: Array<{ __typename?: 'AssetEdge', node: { __typename?: 'Asset', code: string, id: string, scale: number, withdrawalThreshold?: bigint | null, createdAt: string } }>, pageInfo: { __typename?: 'PageInfo', startCursor?: string | null, endCursor?: string | null, hasNextPage: boolean, hasPreviousPage: boolean } } };
+export type ListAssetsQuery = { __typename?: 'Query', assets: { __typename?: 'AssetsConnection', edges: Array<{ __typename?: 'AssetEdge', node: { __typename?: 'Asset', code: string, id: string, scale: number, withdrawalThreshold?: bigint | null, createdAt: string, tenantId: string } }>, pageInfo: { __typename?: 'PageInfo', startCursor?: string | null, endCursor?: string | null, hasNextPage: boolean, hasPreviousPage: boolean } } };
 
 export type CreateAssetMutationVariables = Exact<{
   input: CreateAssetInput;
@@ -3020,6 +3035,49 @@ export type WithdrawPeerLiquidityVariables = Exact<{
 
 
 export type WithdrawPeerLiquidity = { __typename?: 'Mutation', createPeerLiquidityWithdrawal?: { __typename?: 'LiquidityMutationResponse', success: boolean } | null };
+
+export type WhoAmIVariables = Exact<{ [key: string]: never; }>;
+
+
+export type WhoAmI = { __typename?: 'Query', whoami: { __typename?: 'WhoamiResponse', id: string, isOperator: boolean } };
+
+export type ListTenantsQueryVariables = Exact<{
+  after?: InputMaybe<Scalars['String']['input']>;
+  before?: InputMaybe<Scalars['String']['input']>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+}>;
+
+
+export type ListTenantsQuery = { __typename?: 'Query', tenants: { __typename?: 'TenantsConnection', edges: Array<{ __typename?: 'TenantEdge', node: { __typename?: 'Tenant', id: string, email?: string | null, apiSecret: string, idpConsentUrl?: string | null, idpSecret?: string | null, publicName?: string | null, createdAt: string, deletedAt?: string | null } }>, pageInfo: { __typename?: 'PageInfo', startCursor?: string | null, endCursor?: string | null, hasNextPage: boolean, hasPreviousPage: boolean } } };
+
+export type CreateTenantMutationVariables = Exact<{
+  input: CreateTenantInput;
+}>;
+
+
+export type CreateTenantMutation = { __typename?: 'Mutation', createTenant: { __typename?: 'TenantMutationResponse', tenant: { __typename?: 'Tenant', id: string, publicName?: string | null, email?: string | null, apiSecret: string, idpConsentUrl?: string | null, idpSecret?: string | null } } };
+
+export type UpdateTenantMutationVariables = Exact<{
+  input: UpdateTenantInput;
+}>;
+
+
+export type UpdateTenantMutation = { __typename?: 'Mutation', updateTenant: { __typename?: 'TenantMutationResponse', tenant: { __typename?: 'Tenant', id: string, email?: string | null, apiSecret: string, idpConsentUrl?: string | null, idpSecret?: string | null, publicName?: string | null } } };
+
+export type DeleteTenantMutationVariables = Exact<{
+  id: Scalars['String']['input'];
+}>;
+
+
+export type DeleteTenantMutation = { __typename?: 'Mutation', deleteTenant: { __typename?: 'DeleteTenantMutationResponse', success: boolean } };
+
+export type GetTenantQueryVariables = Exact<{
+  id: Scalars['String']['input'];
+}>;
+
+
+export type GetTenantQuery = { __typename?: 'Query', tenant: { __typename?: 'Tenant', id: string, email?: string | null, apiSecret: string, idpConsentUrl?: string | null, idpSecret?: string | null, publicName?: string | null, createdAt: string, deletedAt?: string | null } };
 
 export type GetWalletAddressQueryVariables = Exact<{
   id: Scalars['String']['input'];

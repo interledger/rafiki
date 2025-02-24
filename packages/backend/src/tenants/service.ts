@@ -8,7 +8,7 @@ import { TenantSettingService } from './settings/service'
 import { TenantSetting } from './settings/model'
 
 export interface TenantService {
-  get: (id: string) => Promise<Tenant | undefined>
+  get: (id: string, includeDeleted?: boolean) => Promise<Tenant | undefined>
   create: (options: CreateTenantOptions) => Promise<Tenant>
   update: (options: UpdateTenantOptions) => Promise<Tenant>
   delete: (id: string) => Promise<void>
@@ -31,7 +31,8 @@ export async function createTenantService(
   }
 
   return {
-    get: (id: string) => getTenant(deps, id),
+    get: (id: string, includeDeleted?: boolean) =>
+      getTenant(deps, id, includeDeleted),
     create: (options) => createTenant(deps, options),
     update: (options) => updateTenant(deps, options),
     delete: (id) => deleteTenant(deps, id),
@@ -42,13 +43,18 @@ export async function createTenantService(
 
 async function getTenant(
   deps: ServiceDependencies,
-  id: string
+  id: string,
+  includeDeleted: boolean = false
 ): Promise<Tenant | undefined> {
   const inMem = await deps.tenantCache.get(id)
-  if (inMem) return inMem
-  const tenant = await Tenant.query(deps.knex)
-    .findById(id)
-    .whereNull('deletedAt')
+  if (inMem) {
+    if (!includeDeleted && inMem.deletedAt) return undefined
+    return inMem
+  }
+  let query = Tenant.query(deps.knex)
+  if (!includeDeleted) query = query.whereNull('deletedAt')
+
+  const tenant = await query.findById(id)
   if (tenant) await deps.tenantCache.set(tenant.id, tenant)
 
   return tenant

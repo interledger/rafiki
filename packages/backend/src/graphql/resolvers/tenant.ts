@@ -40,7 +40,7 @@ export const getTenant: QueryResolvers<TenantedApolloContext>['tenant'] =
     }
 
     const tenantService = await ctx.container.use('tenantService')
-    const tenant = await tenantService.get(args.id)
+    const tenant = await tenantService.get(args.id, isOperator)
     if (!tenant) {
       throw new GraphQLError('tenant does not exist', {
         extensions: {

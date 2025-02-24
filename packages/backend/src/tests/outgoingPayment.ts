@@ -13,6 +13,7 @@ import { CreateIncomingPaymentOptions } from '../open_payments/payment/incoming/
 import { IncomingPayment } from '../open_payments/payment/incoming/model'
 import { createIncomingPayment } from './incomingPayment'
 import assert from 'assert'
+import { Config } from '../config/app'
 
 export type CreateTestQuoteAndOutgoingPaymentOptions = Omit<
   CreateOutgoingPaymentOptions & CreateTestQuoteOptions,
@@ -24,6 +25,7 @@ export async function createOutgoingPayment(
   options: CreateTestQuoteAndOutgoingPaymentOptions
 ): Promise<OutgoingPayment> {
   const quoteOptions: CreateTestQuoteOptions = {
+    tenantId: options.tenantId,
     walletAddressId: options.walletAddressId,
     client: options.client,
     receiver: options.receiver,
@@ -40,15 +42,17 @@ export async function createOutgoingPayment(
     const walletAddressService = await deps.use('walletAddressService')
     const streamServer = await deps.use('streamServer')
     const streamCredentials = streamServer.generateCredentials()
-
-    const incomingPayment = await createIncomingPayment(deps, {
-      walletAddressId: options.walletAddressId
-    })
-    await incomingPayment.$query().delete()
     const walletAddress = await walletAddressService.get(
       options.walletAddressId
     )
     assert(walletAddress)
+
+    const incomingPayment = await createIncomingPayment(deps, {
+      walletAddressId: options.walletAddressId,
+      tenantId: walletAddress.tenantId
+    })
+    await incomingPayment.$query().delete()
+
     jest
       .spyOn(receiverService, 'get')
       .mockResolvedValueOnce(
@@ -85,7 +89,7 @@ interface CreateOutgoingPaymentWithReceiverArgs {
   quoteOptions?: Partial<
     Pick<
       CreateTestQuoteAndOutgoingPaymentOptions,
-      'debitAmount' | 'receiveAmount' | 'exchangeRate'
+      'debitAmount' | 'receiveAmount' | 'exchangeRate' | 'tenantId'
     >
   >
   sendingWalletAddress: WalletAddress
@@ -115,7 +119,8 @@ export async function createOutgoingPaymentWithReceiver(
 
   const incomingPayment = await createIncomingPayment(deps, {
     ...args.incomingPaymentOptions,
-    walletAddressId: args.receivingWalletAddress.id
+    walletAddressId: args.receivingWalletAddress.id,
+    tenantId: Config.operatorTenantId
   })
 
   const streamCredentialsService = await deps.use('streamCredentialsService')
@@ -130,6 +135,7 @@ export async function createOutgoingPaymentWithReceiver(
   )
 
   const outgoingPayment = await createOutgoingPayment(deps, {
+    tenantId: args.sendingWalletAddress.tenantId,
     walletAddressId: args.sendingWalletAddress.id,
     method: args.method,
     receiver: receiver.incomingPayment!.id!,
@@ -140,6 +146,7 @@ export async function createOutgoingPaymentWithReceiver(
     const outgoingPaymentService = await deps.use('outgoingPaymentService')
     await outgoingPaymentService.fund({
       id: outgoingPayment.id,
+      tenantId: args.sendingWalletAddress.tenantId,
       amount: outgoingPayment.debitAmount.value,
       transferId: uuid()
     })

@@ -1,4 +1,3 @@
-import { GraphQLError } from 'graphql'
 import { TenantedApolloContext } from '../../app'
 import { Pagination } from '../../shared/baseModel'
 import { getPageInfo } from '../../shared/pagination'
@@ -10,7 +9,6 @@ import {
   TenantSetting as SchemaTenantSetting,
   MutationResolvers
 } from '../generated/graphql'
-import { GraphQLErrorCode } from '../errors'
 
 export const getTenantSettings: TenantResolvers<TenantedApolloContext>['settings'] =
   async (
