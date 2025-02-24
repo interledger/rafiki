@@ -5,17 +5,9 @@ import { uuidv4 } from 'https://jslib.k6.io/k6-utils/1.4.0/index.js'
 import { canonicalize } from '../dist/json-canonicalize.bundle.js'
 
 export const options = {
-  vus: 50,
+  vus: 25,
   duration: '120s'
-  // vus: 1,
-  // iterations: 1
 }
-
-// const CLOUD_NINE_GQL_ENDPOINT = 'http://cloud-nine-wallet-backend:3001/graphql'
-// const CLOUD_NINE_WALLET_ADDRESS =
-//   'https://cloud-nine-wallet-backend/accounts/gfranklin'
-// const HAPPY_LIFE_BANK_WALLET_ADDRESS =
-//   'https://happy-life-bank-backend/accounts/pfry'
 
 const GQL_ENDPOINT = 'http://cloud-nine-wallet-backend:3001/graphql'
 const SENDER_WALLET_ADDRESS =
