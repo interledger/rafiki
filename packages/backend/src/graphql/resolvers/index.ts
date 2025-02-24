@@ -85,11 +85,7 @@ import {
   getTenant,
   getTenants
 } from './tenant'
-import {
-  createTenantSettings,
-  deleteTenantSettings,
-  getTenantSettings
-} from './tenant_settings'
+import { createTenantSettings, getTenantSettings } from './tenant_settings'
 
 export const resolvers: Resolvers = {
   UInt8: GraphQLUInt8,
