@@ -22,6 +22,7 @@ export interface FeeService {
     sortOrder?: SortOrder
   ): Promise<Fee[]>
   getLatestFee(assetId: string, type: FeeType): Promise<Fee | undefined>
+  get(id: string): Promise<Fee | undefined>
 }
 
 interface ServiceDependencies extends BaseService {
@@ -48,7 +49,8 @@ export async function createFeeService({
       sortOrder = SortOrder.Desc
     ) => getFeesPage(deps, assetId, pagination, sortOrder),
     getLatestFee: (assetId: string, type: FeeType) =>
-      getLatestFee(deps, assetId, type)
+      getLatestFee(deps, assetId, type),
+    get: (id: string) => getById(deps, id)
   }
 }
 
@@ -63,6 +65,23 @@ async function getFeesPage(
     .getPage(pagination, sortOrder)
 
   return await query
+}
+
+async function getById(
+  deps: ServiceDependencies,
+  id: string
+): Promise<Fee | undefined> {
+  const cachedFee = await deps.feeCache.get(id)
+
+  if (cachedFee) {
+    return cachedFee
+  }
+
+  const fee = await Fee.query(deps.knex).findById(id)
+
+  if (fee) await deps.feeCache.set(id, fee)
+
+  return fee
 }
 
 async function getLatestFee(

@@ -57,9 +57,7 @@ async function getQuote(
   deps: ServiceDependencies,
   options: GetOptions
 ): Promise<Quote | undefined> {
-  const quote = await Quote.query(deps.knex)
-    .get(options)
-    .withGraphFetched('fee')
+  const quote = await Quote.query(deps.knex).get(options)
   if (quote) {
     const asset = await deps.assetService.get(quote.assetId)
     if (asset) quote.asset = asset
@@ -67,6 +65,10 @@ async function getQuote(
     quote.walletAddress = await deps.walletAddressService.get(
       quote.walletAddressId
     )
+
+    if (quote.feeId) {
+      quote.fee = await deps.feeService.get(quote.feeId)
+    }
   }
   return quote
 }
@@ -187,26 +189,26 @@ async function createQuote(
       )
       stopTimerFee()
 
-      const createdQuote = await Quote.query(trx)
-        .insertAndFetch({
-          id: quoteId,
-          walletAddressId: options.walletAddressId,
-          assetId: walletAddress.assetId,
-          receiver: options.receiver,
-          debitAmount: quote.debitAmount,
-          receiveAmount: quote.receiveAmount,
-          expiresAt: new Date(0), // expiresAt is patched in finalizeQuote
-          client: options.client,
-          feeId: sendingFee?.id,
-          estimatedExchangeRate: quote.estimatedExchangeRate
-        })
-        .withGraphFetched('fee')
+      const createdQuote = await Quote.query(trx).insertAndFetch({
+        id: quoteId,
+        walletAddressId: options.walletAddressId,
+        assetId: walletAddress.assetId,
+        receiver: options.receiver,
+        debitAmount: quote.debitAmount,
+        receiveAmount: quote.receiveAmount,
+        expiresAt: new Date(0), // expiresAt is patched in finalizeQuote
+        client: options.client,
+        feeId: sendingFee?.id,
+        estimatedExchangeRate: quote.estimatedExchangeRate
+      })
       const asset = await deps.assetService.get(createdQuote.assetId)
       if (asset) createdQuote.asset = asset
 
       createdQuote.walletAddress = await deps.walletAddressService.get(
         createdQuote.walletAddressId
       )
+
+      createdQuote.fee = sendingFee
 
       stopQuoteCreate()
 
