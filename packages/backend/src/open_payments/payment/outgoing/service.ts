@@ -160,6 +160,10 @@ async function getOutgoingPayment(
     outgoingPayment.walletAddress = await deps.walletAddressService.get(
       outgoingPayment.walletAddressId
     )
+    outgoingPayment.quote.walletAddress = await deps.walletAddressService.get(
+      outgoingPayment.quote.walletAddressId
+    )
+
     const asset = await deps.assetService.get(outgoingPayment.quote.assetId)
     if (asset) outgoingPayment.quote.asset = asset
 
@@ -384,9 +388,6 @@ async function createOutgoingPayment(
             grantId
           })
           payment.walletAddress = walletAddress
-          // payment.walletAddress = await deps.walletAddressService.get(
-          //   payment.walletAddressId
-          // ) // TODO: why cant I do payment.walletAddress = walletAddress?
           payment.quote = quote
           if (asset) payment.quote.asset = asset
 
@@ -729,6 +730,9 @@ async function getWalletAddressPage(
   for (const payment of page) {
     payment.walletAddress = await deps.walletAddressService.get(
       payment.walletAddressId
+    )
+    payment.quote.walletAddress = await deps.walletAddressService.get(
+      payment.quote.walletAddressId
     )
     const asset = await deps.assetService.get(payment.quote.assetId)
     if (asset) payment.quote.asset = asset
