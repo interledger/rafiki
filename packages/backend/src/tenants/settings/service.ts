@@ -129,17 +129,11 @@ async function createTenantSetting(
     return []
   }
 
-<<<<<<< HEAD
   return TenantSetting.query(extra?.trx ?? deps.knex)
     .insert(dataToUpsert)
     .onConflict(['tenantId', 'key'])
     .merge()
     .returning('*')
-=======
-  return TenantSetting.query(extra?.trx ?? deps.knex).insertAndFetch(
-    dataToInsert
-  )
->>>>>>> 1245e0341 (feat(backend): tenanted webhooks)
 }
 
 async function getTenantSettingPageForTenant(
