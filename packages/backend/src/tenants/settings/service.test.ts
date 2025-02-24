@@ -279,45 +279,8 @@ describe('TenantSetting Service', (): void => {
       expect(originalDeletedAt?.getTime()).toEqual(
         dbTenantSetting?.deletedAt?.getTime()
       )
-      expect(dbTenantSetting?.deletedAt).toBeDefined()
     })
 
-<<<<<<< HEAD
-=======
-    test('cannot delete already deleted setting', async (): Promise<void> => {
-      const createOptions: CreateOptions = {
-        tenantId: tenant.id,
-        setting: [exchangeRatesSetting()]
-      }
-
-      const tenantSetting = await tenantSettingService.create(createOptions)
-      await tenantSettingService.delete({
-        tenantId: tenantSetting[0].tenantId,
-        key: createOptions.setting[0].key
-      })
-
-      let dbTenantSetting = await TenantSetting.query().findById(
-        tenantSetting[0].id
-      )
-      expect(dbTenantSetting?.deletedAt).toBeDefined()
-
-      const originalDeletedAt = dbTenantSetting?.deletedAt
-      await tenantSettingService.delete({
-        tenantId: tenantSetting[0].tenantId,
-        key: createOptions.setting[0].key
-      })
-
-      dbTenantSetting = await TenantSetting.query().findById(
-        tenantSetting[0].id
-      )
-      expect(dbTenantSetting?.deletedAt).toBeDefined()
-
-      expect(originalDeletedAt?.getTime()).toEqual(
-        dbTenantSetting?.deletedAt?.getTime()
-      )
-    })
-
->>>>>>> 1245e0341 (feat(backend): tenanted webhooks)
     test('can delete all tenant settings', async (): Promise<void> => {
       for (let i = 0; i < 10; i++) {
         const createOptions: CreateOptions = {
