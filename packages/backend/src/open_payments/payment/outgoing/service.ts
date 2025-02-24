@@ -62,7 +62,7 @@ export interface OutgoingPaymentService
   fund(
     options: FundOutgoingPaymentOptions
   ): Promise<OutgoingPayment | FundingError>
-  processNext(payment: any): Promise<string | undefined>
+  processNext(payment: { id: string }): Promise<string | undefined>
 }
 
 export interface ServiceDependencies extends BaseService {
@@ -686,132 +686,151 @@ async function fundPayment(
   deps: ServiceDependencies,
   { id, amount, transferId }: FundOutgoingPaymentOptions
 ): Promise<OutgoingPayment | FundingError> {
-  const stopTimerFund = deps.telemetry.startTimer(
-    'outgoing_payment_service_fund_time_ms',
-    {
-      callName: 'OutgoingPaymentService:fundPayment',
-      description: 'Time to fund an outgoing payment'
+  const tracer = trace.getTracer('outgoing_payment_service_fund')
+
+  return tracer.startActiveSpan(
+    'outgoingPaymentService.fundPayment',
+    async (span: Span) => {
+      try {
+        const stopTimerFund = deps.telemetry.startTimer(
+          'outgoing_payment_service_fund_time_ms',
+          {
+            callName: 'OutgoingPaymentService:fundPayment',
+            description: 'Time to fund an outgoing payment'
+          }
+        )
+        // return await deps.knex.transaction(async (trx) => {
+        const stopTimerGet = deps.telemetry.startTimer(
+          'outgoing_payment_service_fund_get_time_ms',
+          {
+            callName: 'OutgoingPaymentService:fundPayment:get',
+            description: 'Time to get outgoing payment'
+          }
+        )
+        const payment = await OutgoingPayment.query()
+          // const payment = await OutgoingPayment.query(trx)
+          .findById(id)
+          // .forUpdate()
+          .withGraphFetched('quote')
+        stopTimerGet()
+        if (!payment) {
+          stopTimerFund()
+          return FundingError.UnknownPayment
+        }
+
+        const stopTimerAssetGet = deps.telemetry.startTimer(
+          'outgoing_payment_service_fund_asset_get_time_ms',
+          {
+            callName: 'OutgoingPaymentService:fundPayment:getAsset',
+            description: 'Time to get asset for outgoing payment'
+          }
+        )
+        const asset = await deps.assetService.get(payment.quote.assetId)
+        stopTimerAssetGet()
+
+        if (asset) payment.quote.asset = asset
+
+        if (payment.state !== OutgoingPaymentState.Funding) {
+          stopTimerFund()
+          return FundingError.WrongState
+        }
+        if (amount !== payment.debitAmount.value) {
+          stopTimerFund()
+          return FundingError.InvalidAmount
+        }
+
+        const stopTimerCreateLiquidity = deps.telemetry.startTimer(
+          'outgoing_payment_service_fund_create_liquidity_time_ms',
+          {
+            callName:
+              'OutgoingPaymentService:fundPayment:createLiquidityAccount',
+            description: 'Time to create liquidity account for outgoing payment'
+          }
+        )
+        try {
+          await deps.accountingService.createLiquidityAccount(
+            {
+              id: id,
+              asset: payment.asset
+            },
+            LiquidityAccountType.OUTGOING
+          )
+        } catch (err) {
+          // Don't complain if liquidity account already exists.
+          if (err instanceof AccountAlreadyExistsError) {
+            // Do nothing.
+            console.log('AccountAlreadyExistsError')
+          } else {
+            stopTimerCreateLiquidity()
+            stopTimerFund()
+            throw err
+          }
+        }
+        stopTimerCreateLiquidity()
+
+        const stopTimerCreateDeposit = deps.telemetry.startTimer(
+          'outgoing_payment_service_fund_create_deposit_time_ms',
+          {
+            callName: 'OutgoingPaymentService:fundPayment:createDeposit',
+            description: 'Time to create deposit for outgoing payment'
+          }
+        )
+        const error = await deps.accountingService.createDeposit({
+          id: transferId,
+          account: payment,
+          amount
+        })
+        stopTimerCreateDeposit()
+
+        if (error) {
+          stopTimerFund()
+          return error
+        }
+
+        const stopTimerAddSentAmount = deps.telemetry.startTimer(
+          'outgoing_payment_service_fund_add_sent_amount_time_ms',
+          {
+            callName: 'OutgoingPaymentService:fundPayment:addSentAmount',
+            description: 'Time to add sent amount for outgoing payment'
+          }
+        )
+        const paymentWithSentAmount = await addSentAmount(deps, payment)
+        stopTimerAddSentAmount()
+
+        // const paymentForEvent = {
+        //   ...paymentWithSentAmount.toJSON(),
+        //   assetId: paymentWithSentAmount.assetId,
+        //   state: OutgoingPaymentState.Sending,
+        //   quote: {
+        //     ...paymentWithSentAmount.quote.toJSON(),
+        //     assetId: paymentWithSentAmount.quote.assetId,
+        //     estimatedExchangeRate:
+        //       paymentWithSentAmount.quote.estimatedExchangeRate
+        //   }
+        // }
+
+        queue.add(
+          'funded',
+          { id: paymentWithSentAmount.id },
+          {
+            attempts: 5, // Retry up to 5 times
+            backoff: {
+              type: 'exponential', // or 'fixed'
+              delay: 3000 // 3-second delay between retries
+            }
+          }
+        )
+
+        stopTimerFund()
+
+        return paymentWithSentAmount
+      } catch (err) {
+        throw err
+      } finally {
+        span.end()
+      }
     }
   )
-  // return await deps.knex.transaction(async (trx) => {
-  const stopTimerGet = deps.telemetry.startTimer(
-    'outgoing_payment_service_fund_get_time_ms',
-    {
-      callName: 'OutgoingPaymentService:fundPayment:get',
-      description: 'Time to get outgoing payment'
-    }
-  )
-  const payment = await OutgoingPayment.query()
-    // const payment = await OutgoingPayment.query(trx)
-    .findById(id)
-    // .forUpdate()
-    .withGraphFetched('quote')
-  stopTimerGet()
-  if (!payment) {
-    stopTimerFund()
-    return FundingError.UnknownPayment
-  }
-
-  const stopTimerAssetGet = deps.telemetry.startTimer(
-    'outgoing_payment_service_fund_asset_get_time_ms',
-    {
-      callName: 'OutgoingPaymentService:fundPayment:getAsset',
-      description: 'Time to get asset for outgoing payment'
-    }
-  )
-  const asset = await deps.assetService.get(payment.quote.assetId)
-  stopTimerAssetGet()
-
-  if (asset) payment.quote.asset = asset
-
-  if (payment.state !== OutgoingPaymentState.Funding) {
-    stopTimerFund()
-    return FundingError.WrongState
-  }
-  if (amount !== payment.debitAmount.value) {
-    stopTimerFund()
-    return FundingError.InvalidAmount
-  }
-
-  const stopTimerCreateLiquidity = deps.telemetry.startTimer(
-    'outgoing_payment_service_fund_create_liquidity_time_ms',
-    {
-      callName: 'OutgoingPaymentService:fundPayment:createLiquidityAccount',
-      description: 'Time to create liquidity account for outgoing payment'
-    }
-  )
-  try {
-    await deps.accountingService.createLiquidityAccount(
-      {
-        id: id,
-        asset: payment.asset
-      },
-      LiquidityAccountType.OUTGOING
-    )
-  } catch (err) {
-    // Don't complain if liquidity account already exists.
-    if (err instanceof AccountAlreadyExistsError) {
-      // Do nothing.
-      console.log('AccountAlreadyExistsError')
-    } else {
-      stopTimerCreateLiquidity()
-      stopTimerFund()
-      throw err
-    }
-  }
-  stopTimerCreateLiquidity()
-
-  const stopTimerCreateDeposit = deps.telemetry.startTimer(
-    'outgoing_payment_service_fund_create_deposit_time_ms',
-    {
-      callName: 'OutgoingPaymentService:fundPayment:createDeposit',
-      description: 'Time to create deposit for outgoing payment'
-    }
-  )
-  const error = await deps.accountingService.createDeposit({
-    id: transferId,
-    account: payment,
-    amount
-  })
-  stopTimerCreateDeposit()
-
-  if (error) {
-    stopTimerFund()
-    return error
-  }
-
-  const stopTimerAddSentAmount = deps.telemetry.startTimer(
-    'outgoing_payment_service_fund_add_sent_amount_time_ms',
-    {
-      callName: 'OutgoingPaymentService:fundPayment:addSentAmount',
-      description: 'Time to add sent amount for outgoing payment'
-    }
-  )
-  const paymentWithSentAmount = await addSentAmount(deps, payment)
-  stopTimerAddSentAmount()
-
-  const paymentForEvent = {
-    ...paymentWithSentAmount.toJSON(),
-    assetId: paymentWithSentAmount.assetId,
-    state: OutgoingPaymentState.Sending,
-    quote: {
-      ...paymentWithSentAmount.quote.toJSON(),
-      assetId: paymentWithSentAmount.quote.assetId,
-      estimatedExchangeRate: paymentWithSentAmount.quote.estimatedExchangeRate
-    }
-  }
-
-  queue.add('funded', paymentForEvent, {
-    attempts: 5, // Retry up to 5 times
-    backoff: {
-      type: 'exponential', // or 'fixed'
-      delay: 3000 // 3-second delay between retries
-    }
-  })
-
-  stopTimerFund()
-
-  return paymentWithSentAmount
   // })
 }
 

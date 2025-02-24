@@ -84,12 +84,17 @@ export function initIocContainer(
     logger.info({ msg: 'creating knex' })
     const db = knex({
       client: 'postgresql',
+      // debug: true,
       connection: config.databaseUrl,
       // https://knexjs.org/guide/#pool
       pool: {
-        min: 0,
+        min: 2,
         max: 10
       },
+      // pool: {
+      //   min: 1,
+      //   max: 1
+      // },
       migrations: {
         directory: './',
         tableName: 'knex_migrations'

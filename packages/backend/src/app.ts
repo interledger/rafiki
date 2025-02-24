@@ -859,7 +859,7 @@ export class App {
   //     })
   // }
 
-  private async processOutgoingPayment(payment: any): Promise<void> {
+  private async processOutgoingPayment(payment: { id: string }): Promise<void> {
     if (this.isShuttingDown) return
     const outgoingPaymentService = await this.container.use(
       'outgoingPaymentService'

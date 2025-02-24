@@ -9,10 +9,9 @@ import { textSummary } from 'https://jslib.k6.io/k6-summary/0.0.2/index.js'
 import { canonicalize } from '../dist/json-canonicalize.bundle.js'
 
 export const options = {
-  // A number specifying the number of VUs to run concurrently.
-  vus: 100,
-  // A string specifying the total duration of the test run.
-  duration: '300s'
+  vus: 500,
+  duration: '120s'
+  // vus: 1,
   // iterations: 1
 }
 
@@ -153,25 +152,25 @@ export default function (data) {
   const createQuoteResponse = request(createQuotePayload)
   const quote = createQuoteResponse.createQuote.quote
 
-  // const createOutgoingPaymentPayload = {
-  //   query: `
-  //     mutation CreateOutgoingPayment($input: CreateOutgoingPaymentInput!) {
-  //       createOutgoingPayment(input: $input) {
-  //         payment {
-  //           id
-  //         }
-  //       }
-  //     }
-  //   `,
-  //   variables: {
-  //     input: {
-  //       walletAddressId: c9WalletAddress.id,
-  //       quoteId: quote.id
-  //     }
-  //   }
-  // }
+  const createOutgoingPaymentPayload = {
+    query: `
+      mutation CreateOutgoingPayment($input: CreateOutgoingPaymentInput!) {
+        createOutgoingPayment(input: $input) {
+          payment {
+            id
+          }
+        }
+      }
+    `,
+    variables: {
+      input: {
+        walletAddressId: c9WalletAddress.id,
+        quoteId: quote.id
+      }
+    }
+  }
 
-  // request(createOutgoingPaymentPayload)
+  request(createOutgoingPaymentPayload)
 }
 
 export function handleSummary(data) {

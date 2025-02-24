@@ -13,12 +13,12 @@ export const RETRY_BACKOFF_SECONDS = 10
 // Returns the id of the processed payment (if any).
 export async function processPendingPayment(
   deps_: ServiceDependencies,
-  payment_: any
+  payment_: { id: string }
 ): Promise<string | undefined> {
   const tracer = trace.getTracer('outgoing_payment_worker')
 
   // TODO: use payment directly if I can serialize/parse correctly.
-  // Get lots of hard to pin-point errors from missing properties
+  // Get lots of hard to identify errors from missing properties
   // if I try to put the payment in the event then use it directly in the worker
   const payment = await OutgoingPayment.query()
     .findById(payment_.id)
@@ -49,6 +49,7 @@ export async function processPendingPayment(
 
       stopTimer()
       span.end()
+      // TODO: dont really need this return?
       return payment.id
     }
   )

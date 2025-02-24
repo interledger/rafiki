@@ -11,7 +11,6 @@ import { TransactionOrKnex } from 'objection'
 import { ValueType } from '@opentelemetry/api'
 import { addWebhookEventToQueue } from '../../../webhook/service'
 
-// "payment" is locked by the "deps.knex" transaction.
 export async function handleSending(
   deps: ServiceDependencies,
   payment: OutgoingPayment
