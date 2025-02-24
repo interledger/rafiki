@@ -419,7 +419,8 @@ export function initIocContainer(
     const knex = await deps.use('knex')
     return await createFeeService({
       logger: logger,
-      knex: knex
+      knex: knex,
+      feeCache: createInMemoryDataStore(config.localCacheDuration)
     })
   })
 
