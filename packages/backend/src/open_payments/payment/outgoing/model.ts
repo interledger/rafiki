@@ -133,8 +133,6 @@ export class OutgoingPayment
 
   public tenantId!: string
 
-  public tenantId!: string
-
   static get relationMappings() {
     return {
       ...super.relationMappings,
