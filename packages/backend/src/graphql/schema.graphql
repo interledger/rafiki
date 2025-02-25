@@ -1650,6 +1650,8 @@ input CreateTenantInput {
   idpSecret: String
   "Public name for the tenant."
   publicName: String
+  "Initial settings for tenant."
+  settings: [TenantSettingInput!]
 }
 
 input UpdateTenantInput {
