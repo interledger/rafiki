@@ -15,7 +15,7 @@ import { createTenant } from '../tests/tenant'
 import { CacheDataStore } from '../middleware/cache/data-stores'
 import { AuthServiceClient } from '../auth-service-client/client'
 import { withConfigOverride } from '../tests/helpers'
-import { TenantSetting } from './settings/model'
+import { TenantSetting, TenantSettingKeys } from './settings/model'
 import { TenantSettingService } from './settings/service'
 import { isTenantError, TenantError } from './errors'
 
@@ -144,6 +144,32 @@ describe('Tenant Service', (): void => {
         tenant.id
       )
       expect(tenantSettings.length).toBeGreaterThan(0)
+    })
+
+    test('can create a tenant with a setting', async () => {
+      const walletAddressUrl = 'https://example.com'
+      const createOptions = {
+        apiSecret: 'test-api-secret',
+        publicName: 'test tenant',
+        email: faker.internet.email(),
+        idpConsentUrl: faker.internet.url(),
+        idpSecret: 'test-idp-secret',
+        settings: [
+          { key: TenantSettingKeys.WALLET_ADDRESS_URL.name, value: walletAddressUrl }
+        ]
+      }
+
+      jest
+        .spyOn(authServiceClient.tenant, 'create')
+        .mockImplementationOnce(async () => undefined)
+
+      const tenant = await tenantService.create(createOptions)
+      const tenantSetting = await TenantSetting.query()
+        .where('tenantId', tenant.id)
+        .andWhere('key', TenantSettingKeys.WALLET_ADDRESS_URL.name)
+
+      expect(tenantSetting.length).toBe(1)
+      expect(tenantSetting[0].value).toEqual(walletAddressUrl)
     })
 
     test('tenant creation rolls back if auth tenant create fails', async (): Promise<void> => {
