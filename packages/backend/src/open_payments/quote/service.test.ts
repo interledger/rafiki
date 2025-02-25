@@ -123,6 +123,7 @@ describe('QuoteService', (): void => {
 
   afterEach(async (): Promise<void> => {
     jest.restoreAllMocks()
+    jest.useRealTimers()
 
     await truncateTables(knex)
   })
@@ -221,6 +222,10 @@ describe('QuoteService', (): void => {
                   .spyOn(paymentMethodHandlerService, 'getQuote')
                   .mockResolvedValueOnce(mockedQuote)
 
+                jest.useFakeTimers()
+                const now = Date.now()
+                jest.spyOn(global.Date, 'now').mockImplementation(() => now)
+
                 const quote = await quoteService.create({
                   ...options,
                   client
@@ -235,8 +240,7 @@ describe('QuoteService', (): void => {
                     receiver: expect.anything(),
                     receiveAmount: options.receiveAmount,
                     debitAmount: options.debitAmount
-                  }),
-                  expect.anything()
+                  })
                 )
 
                 expect(quote).toMatchObject({
@@ -246,9 +250,7 @@ describe('QuoteService', (): void => {
                   receiveAmount: receiveAmount || mockedQuote.receiveAmount,
                   createdAt: expect.any(Date),
                   updatedAt: expect.any(Date),
-                  expiresAt: new Date(
-                    quote.createdAt.getTime() + config.quoteLifespan
-                  ),
+                  expiresAt: new Date(now + config.quoteLifespan),
                   client: client || null
                 })
 
@@ -320,6 +322,10 @@ describe('QuoteService', (): void => {
                   .spyOn(paymentMethodHandlerService, 'getQuote')
                   .mockResolvedValueOnce(mockedQuote)
 
+                jest.useFakeTimers()
+                const now = Date.now()
+                jest.spyOn(global.Date, 'now').mockImplementation(() => now)
+
                 const quote = await quoteService.create({
                   ...options,
                   client
@@ -332,9 +338,7 @@ describe('QuoteService', (): void => {
                   receiveAmount: incomingAmount,
                   createdAt: expect.any(Date),
                   updatedAt: expect.any(Date),
-                  expiresAt: new Date(
-                    quote.createdAt.getTime() + config.quoteLifespan
-                  ),
+                  expiresAt: new Date(new Date(now + config.quoteLifespan)),
                   client: client || null
                 })
 
@@ -764,6 +768,10 @@ describe('QuoteService', (): void => {
           .spyOn(paymentMethodHandlerService, 'getQuote')
           .mockResolvedValueOnce(mockedQuote)
 
+        jest.useFakeTimers()
+        const now = Date.now()
+        jest.spyOn(global.Date, 'now').mockImplementation(() => now)
+
         const quote = await quoteService.create(options)
         assert.ok(!isQuoteError(quote))
 
@@ -775,8 +783,7 @@ describe('QuoteService', (): void => {
             receiver: expect.anything(),
             receiveAmount: options.receiveAmount,
             debitAmount: options.debitAmount
-          }),
-          expect.anything()
+          })
         )
 
         expect(quote).toMatchObject({
@@ -786,7 +793,7 @@ describe('QuoteService', (): void => {
           receiveAmount: mockedQuote.receiveAmount,
           createdAt: expect.any(Date),
           updatedAt: expect.any(Date),
-          expiresAt: new Date(quote.createdAt.getTime() + config.quoteLifespan)
+          expiresAt: new Date(now + config.quoteLifespan)
         })
 
         await expect(
