@@ -6,7 +6,8 @@ export const TenantSettingKeys = {
   EXCHANGE_RATES_URL: { name: 'EXCHANGE_RATES_URL' },
   WEBHOOK_URL: { name: 'WEBHOOK_URL' },
   WEBHOOK_TIMEOUT: { name: 'WEBHOOK_TIMEOUT', default: 2000 },
-  WEBHOOK_MAX_RETRY: { name: 'WEBHOOK_MAX_RETRY', default: 10 }
+  WEBHOOK_MAX_RETRY: { name: 'WEBHOOK_MAX_RETRY', default: 10 },
+  WALLET_ADDRESS_URL: { name: 'WALLET_ADDRESS_URL' }
 }
 
 export class TenantSetting extends BaseModel {
