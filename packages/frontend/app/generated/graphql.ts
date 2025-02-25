@@ -378,6 +378,8 @@ export type CreateTenantInput = {
   idpSecret?: InputMaybe<Scalars['String']['input']>;
   /** Public name for the tenant. */
   publicName?: InputMaybe<Scalars['String']['input']>;
+  /** Initial settings for tenant. */
+  settings?: InputMaybe<Array<TenantSettingInput>>;
 };
 
 export type CreateTenantSettingsInput = {
