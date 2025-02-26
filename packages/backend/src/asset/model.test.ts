@@ -54,7 +54,7 @@ describe('Models', (): void => {
       `(
         'creates webhook event if balance=$balance <= liquidityThreshold',
         async ({ balance }): Promise<void> => {
-          await asset.onDebit({ balance })
+          await asset.onDebit({ balance, tenantId: asset.tenantId }) // TODO: remove once tenanted peers are in
           const event = (
             await AssetEvent.query(knex).where(
               'type',
@@ -77,7 +77,7 @@ describe('Models', (): void => {
         }
       )
       test('does not create webhook event if balance > liquidityThreshold', async (): Promise<void> => {
-        await asset.onDebit({ balance: BigInt(110) })
+        await asset.onDebit({ balance: BigInt(110), tenantId: asset.tenantId }) // TODO: remove once tenanted peers are in
         await expect(
           AssetEvent.query(knex).where('type', AssetEventType.LiquidityLow)
         ).resolves.toEqual([])
