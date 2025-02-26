@@ -1,6 +1,7 @@
 import { TransactionOrKnex } from 'objection'
 import { BaseService } from '../shared/baseService'
 import { TransferError, isTransferError } from './errors'
+import { IAppConfig } from '../config/app'
 
 export enum LiquidityAccountType {
   ASSET = 'ASSET',
@@ -44,6 +45,7 @@ export interface OnCreditOptions {
 
 export interface OnDebitOptions {
   balance: bigint
+  tenantId: string
 }
 
 export interface BaseTransfer {
@@ -134,6 +136,7 @@ export interface TransferToCreate {
 
 export interface BaseAccountingServiceDependencies extends BaseService {
   withdrawalThrottleDelay?: number
+  config: IAppConfig // TODO: Remove when peers are tenanted
 }
 
 interface CreateAccountToAccountTransferArgs {
@@ -201,8 +204,10 @@ export async function createAccountToAccountTransfer(
       const balance = await getAccountBalance(account.id)
       if (balance === undefined) throw new Error('undefined account balance')
 
+      const { config } = deps
       await account.onDebit({
-        balance
+        balance,
+        tenantId: config.operatorTenantId
       })
     }
   }

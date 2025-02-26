@@ -44,7 +44,8 @@ export class Asset extends BaseModel implements LiquidityAccount {
             },
             liquidityThreshold: this.liquidityThreshold,
             balance
-          }
+          },
+          tenantId: this.tenantId
         })
       }
     }
