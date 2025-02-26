@@ -324,7 +324,8 @@ describe('Incoming Payment Service', (): void => {
       const incomingPayment = await incomingPaymentService.create({
         walletAddressId,
         ...options,
-        incomingAmount: options.incomingAmount ? amount : undefined
+        incomingAmount: options.incomingAmount ? amount : undefined,
+        tenantId: Config.operatorTenantId
       })
       assert.ok(!isIncomingPaymentError(incomingPayment))
       expect(incomingPayment).toMatchObject({
