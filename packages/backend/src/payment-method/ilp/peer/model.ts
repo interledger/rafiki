@@ -53,7 +53,7 @@ export class Peer
 
   public name?: string
 
-  public async onDebit({ balance }: OnDebitOptions): Promise<Peer> {
+  public async onDebit({ balance, tenantId }: OnDebitOptions): Promise<Peer> {
     if (this.liquidityThreshold !== null) {
       if (balance <= this.liquidityThreshold) {
         await PeerEvent.query().insert({
@@ -68,7 +68,8 @@ export class Peer
             },
             liquidityThreshold: this.liquidityThreshold,
             balance
-          }
+          },
+          tenantId // TODO: update when peers are tenanted
         })
       }
     }

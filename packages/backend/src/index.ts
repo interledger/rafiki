@@ -357,6 +357,7 @@ export function initIocContainer(
       return createTigerbeetleAccountingService({
         logger,
         knex,
+        config,
         tigerBeetle,
         withdrawalThrottleDelay: config.withdrawalThrottleDelay,
         telemetry
@@ -366,6 +367,7 @@ export function initIocContainer(
     return createPsqlAccountingService({
       logger,
       knex,
+      config,
       withdrawalThrottleDelay: config.withdrawalThrottleDelay,
       telemetry
     })
@@ -395,6 +397,7 @@ export function initIocContainer(
   })
   container.singleton('webhookService', async (deps) => {
     return createWebhookService({
+      tenantSettingService: await deps.use('tenantSettingService'),
       config: await deps.use('config'),
       knex: await deps.use('knex'),
       logger: await deps.use('logger')
