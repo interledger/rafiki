@@ -1796,7 +1796,8 @@ describe('Liquidity Resolvers', (): void => {
               data: payment.toData({
                 amountSent: BigInt(0),
                 balance: BigInt(0)
-              })
+              }),
+              tenantId: Config.operatorTenantId
             })
           })
 
@@ -1956,6 +1957,7 @@ describe('Liquidity Resolvers', (): void => {
       incomingPaymentId?: string
       outgoingPaymentId?: string
       walletAddressId?: string
+      tenantId?: string
     }
 
     const isIncomingPaymentEventType = (
@@ -2011,7 +2013,8 @@ describe('Liquidity Resolvers', (): void => {
                 accountId: liquidityAccount.id,
                 assetId: liquidityAccount.asset.id,
                 amount
-              }
+              },
+              tenantId: Config.operatorTenantId
             }
 
             if (resourceId) {
@@ -2230,7 +2233,8 @@ describe('Liquidity Resolvers', (): void => {
               accountId: incomingPayment.id,
               assetId: incomingPayment.asset.id,
               amount
-            }
+            },
+            tenantId: Config.operatorTenantId
           })
 
           const response = await appContainer.apolloClient
@@ -2278,7 +2282,8 @@ describe('Liquidity Resolvers', (): void => {
               accountId: incomingPayment.id,
               assetId: incomingPayment.asset.id,
               amount
-            }
+            },
+            tenantId: Config.operatorTenantId
           })
           let error
           try {
@@ -2376,7 +2381,8 @@ describe('Liquidity Resolvers', (): void => {
               accountId: incomingPayment.id,
               assetId: incomingPayment.asset.id,
               amount
-            }
+            },
+            tenantId: Config.operatorTenantId
           })
           await expect(
             accountingService.createWithdrawal({
@@ -2463,7 +2469,8 @@ describe('Liquidity Resolvers', (): void => {
               accountId: outgoingPayment.id,
               assetId: outgoingPayment.asset.id,
               amount
-            }
+            },
+            tenantId: Config.operatorTenantId
           })
 
           const response = await appContainer.apolloClient
@@ -2604,7 +2611,8 @@ describe('Liquidity Resolvers', (): void => {
               accountId: outgoingPayment.id,
               assetId: outgoingPayment.asset.id,
               amount
-            }
+            },
+            tenantId: Config.operatorTenantId
           })
           await expect(
             accountingService.createWithdrawal({
@@ -2673,7 +2681,8 @@ describe('Liquidity Resolvers', (): void => {
               data: outgoingPayment.toData({
                 amountSent: BigInt(0),
                 balance: BigInt(0)
-              })
+              }),
+              tenantId: Config.operatorTenantId
             })
           })
 
