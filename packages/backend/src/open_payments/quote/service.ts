@@ -305,6 +305,10 @@ interface CalculateQuoteAmountsWithFeesResult {
   debitAmountMinusFees: bigint
 }
 
+/**
+ * Calculate fixed-send quote amounts: debitAmount is locked,
+ * subtract fees (considering the exchange rate) from the receiveAmount.
+ */
 function calculateFixedSendQuoteAmounts(
   deps: ServiceDependencies,
   quote: UnfinalizedQuote,

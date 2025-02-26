@@ -332,29 +332,7 @@ async function createOutgoingPayment(
         )
         stopTimerPeer()
 
-        // TODO: Fixes use of trx. To avoid deadlock.
-        // Deadlock happened when we tried to open a new connection inside
-        // an Objection transaction block while at max connections already.
-        // This deadlocks because transaction waits for callback to finish,
-        // and query in callback waits for connection (ie the transaction
-        // to finish). Deadlock.
-
-        // Must either:
-        // - move non-trx db calls OUT of the transaction
-        // - or use the trx in each db call
-        //
-        // Moving out is good but we need to make sure we can safely do that and not introduce data
-        // inconsistency. I gnerally opted for passing the trx in and not moving stuff out. Felt
-        // like it was safer and more straightforward fix. However, we should move anything we
-        // SAFELY can out of the transaction.
-
-        // Moved several things outside transaction... shoudl double check its OK.
-        // IE, we have the quote id, cant we fetch it before inserting the outgoing payment?
-        // Also unblocks fetching otehr stuff like peer, asset.
-
-        // *** 1. Begin transaction. fast
         const payment = await OutgoingPayment.transaction(async (trx) => {
-          // return await OutgoingPayment.transaction(deps.knex, async (trx) => {
           if (grantId) {
             const stopTimerGrant = deps.telemetry.startTimer(
               'outgoing_payment_service_insertgrant_time_ms',
