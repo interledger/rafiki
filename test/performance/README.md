@@ -29,7 +29,7 @@ This package contains a script that will determine the performance of Rafiki by 
   and a process for the Mock Account Servicing Entities:
 
   ```sh
-  pnpm --filter perfromance start-mases
+  pnpm --filter performance start-mases
   ```
 
 ## Run Tests
