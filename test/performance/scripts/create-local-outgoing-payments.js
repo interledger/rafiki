@@ -60,14 +60,20 @@ export function setup() {
 
   const data = request(query)
   const c9WalletAddresses = data.walletAddresses.edges
-  const c9WalletAddress = c9WalletAddresses.find(
+  const senderWalletAddress = c9WalletAddresses.find(
     (edge) => edge.node.url === SENDER_WALLET_ADDRESS
   ).node
-  if (!c9WalletAddress) {
+  if (!senderWalletAddress) {
     fail(`could not find wallet address: ${SENDER_WALLET_ADDRESS}`)
   }
+  const receiverWalletAddress = c9WalletAddresses.find(
+    (edge) => edge.node.url === RECEIVER_WALLET_ADDRESS
+  ).node
+  if (!receiverWalletAddress) {
+    fail(`could not find wallet address: ${RECEIVER_WALLET_ADDRESS}`)
+  }
 
-  return { data: { c9WalletAddress } }
+  return { senderWalletAddress, receiverWalletAddress }
 }
 
 // The function that defines VU logic.
@@ -76,15 +82,13 @@ export function setup() {
 // about authoring k6 scripts.
 //
 export default function (data) {
-  const {
-    data: { c9WalletAddress }
-  } = data
+  const { senderWalletAddress, receiverWalletAddress } = data
 
-  const createReceiverPayload = {
+  const createIncomingPaymentPayload = {
     query: `
-      mutation CreateReceiver($input: CreateReceiverInput!) {
-        createReceiver(input: $input) {
-          receiver {
+      mutation CreateIncomingPayment($input: CreateIncomingPaymentInput!) {
+        createIncomingPayment(input: $input) {
+          payment {
             id
           }
         }
@@ -93,22 +97,19 @@ export default function (data) {
     variables: {
       input: {
         expiresAt: null,
-        metadata: {
-          description: 'Hello my friend',
-          externalRef: null
-        },
         incomingAmount: {
           assetCode: 'USD',
           assetScale: 2,
           value: 1002
         },
-        walletAddressUrl: RECEIVER_WALLET_ADDRESS
+        walletAddressId: receiverWalletAddress.id
       }
     }
   }
 
-  const createReceiverResponse = request(createReceiverPayload)
-  const receiver = createReceiverResponse.createReceiver.receiver
+  const createIncomingPaymentResponse = request(createIncomingPaymentPayload)
+  const incomingPayment =
+    createIncomingPaymentResponse.createIncomingPayment.payment
 
   const createQuotePayload = {
     query: `
@@ -122,9 +123,9 @@ export default function (data) {
       `,
     variables: {
       input: {
-        walletAddressId: c9WalletAddress.id,
+        walletAddressId: senderWalletAddress.id,
         receiveAmount: null,
-        receiver: receiver.id,
+        receiver: `https://cloud-nine-wallet-backend/incoming-payments/${incomingPayment.id}`,
         debitAmount: {
           assetCode: 'USD',
           assetScale: 2,
@@ -149,7 +150,7 @@ export default function (data) {
     `,
     variables: {
       input: {
-        walletAddressId: c9WalletAddress.id,
+        walletAddressId: senderWalletAddress.id,
         quoteId: quote.id
       }
     }
