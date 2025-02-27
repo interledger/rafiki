@@ -15,7 +15,7 @@ export async function startTigerBeetleContainer(clusterId?: number): Promise<{
   const tigerBeetleClusterId = clusterId || Config.tigerBeetleClusterId
   const { name: tigerBeetleDir } = tmp.dirSync({ unsafeCleanup: true })
   const tigerBeetleFile = `cluster_${tigerBeetleClusterId}_replica_0_test.tigerbeetle`
-  const tigerBeetleContainerVersion = 'ghcr.io/tigerbeetle/tigerbeetle:0.15.4'
+  const tigerBeetleContainerVersion = 'ghcr.io/tigerbeetle/tigerbeetle:0.16.29'
 
   const tbContFormat = await new GenericContainer(tigerBeetleContainerVersion)
     .withExposedPorts(TIGERBEETLE_PORT)
