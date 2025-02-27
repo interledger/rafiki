@@ -171,7 +171,7 @@ export async function createQuote(
   }
   const withGraphFetchedExpression = `[${withGraphFetchedArray.join(', ')}]`
 
-  return Quote.query()
+  const quote = await Quote.query()
     .insertAndFetch({
       id: quoteId,
       walletAddressId,
@@ -185,4 +185,7 @@ export async function createQuote(
       client
     })
     .withGraphFetched(withGraphFetchedExpression)
+  quote.fee = quote.fee ?? undefined
+
+  return quote
 }
