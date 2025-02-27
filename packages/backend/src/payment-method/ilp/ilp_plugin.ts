@@ -24,7 +24,9 @@ export class OutgoingIlpPlugin implements IlpPlugin {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-empty-function
-  async connect(): Promise<void> {}
+  async connect(): Promise<void> {
+    console.log('connecting plugin')
+  }
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   async disconnect(): Promise<void> {}
   isConnected(): boolean {

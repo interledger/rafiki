@@ -3,9 +3,13 @@
   "compilerOptions": {
     "lib": ["ESNext"],
     "outDir": "./dist",
-    "rootDir": "./src"
+    "rootDir": "./src",
+    // "paths": {"pay":["../pay"]}
   },
   "include": ["src/**/*"],
+  "references": [{
+    "path": "../pay"
+  }],
   "ts-node": {
     "swc": true
   }

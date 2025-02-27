@@ -20,6 +20,7 @@ COPY package.json pnpm-workspace.yaml .npmrc ./
 COPY packages/backend/knexfile.js ./packages/backend/knexfile.js
 COPY packages/backend/package.json ./packages/backend/package.json
 COPY packages/token-introspection/package.json ./packages/token-introspection/package.json
+COPY packages/pay/package.json ./packages/pay/package.json
 
 RUN pnpm clean
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
@@ -35,13 +36,20 @@ FROM base AS builder
 COPY package.json pnpm-workspace.yaml .npmrc tsconfig.json tsconfig.build.json ./
 COPY packages/backend ./packages/backend
 COPY packages/token-introspection ./packages/token-introspection
+COPY packages/pay ./packages/pay
 
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
     pnpm install \
     --recursive \
     --offline \
     --frozen-lockfile
+
+RUN pnpm --filter pay build
 RUN pnpm --filter backend build
+
+RUN ls -l
+RUN ls -l ./packages/pay/
+RUN ls -l ./packages/pay/dist
 
 FROM node:20-alpine3.20 AS runner
 
@@ -52,11 +60,14 @@ COPY --from=prod-deps /home/rafiki/packages/backend/node_modules ./packages/back
 COPY --from=prod-deps /home/rafiki/packages/backend/package.json ./packages/backend/package.json
 COPY --from=prod-deps /home/rafiki/packages/token-introspection/node_modules ./packages/token-introspection/node_modules
 COPY --from=prod-deps /home/rafiki/packages/token-introspection/package.json ./packages/token-introspection/package.json
+COPY --from=prod-deps /home/rafiki/packages/pay/node_modules ./packages/pay/node_modules
+COPY --from=prod-deps /home/rafiki/packages/pay/package.json ./packages/pay/package.json
 COPY --from=prod-deps /home/rafiki/packages/backend/knexfile.js ./packages/backend/knexfile.js
 
 COPY --from=builder /home/rafiki/packages/backend/migrations/ ./packages/backend/migrations
 COPY --from=builder /home/rafiki/packages/backend/dist ./packages/backend/dist
 COPY --from=builder /home/rafiki/packages/token-introspection/dist ./packages/token-introspection/dist
+COPY --from=builder /home/rafiki/packages/pay/dist ./packages/pay/dist
 COPY --from=builder /home/rafiki/packages/backend/knexfile.js ./packages/backend/knexfile.js
 
 CMD ["node", "-r", "/home/rafiki/packages/backend/dist/telemetry/index.js", "/home/rafiki/packages/backend/dist/index.js"]

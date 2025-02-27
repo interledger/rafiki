@@ -8,6 +8,9 @@
     },
     {
       "path": "packages/backend"
+    },
+    {
+      "path": "packages/pay"
     }
   ],
   "files": [],

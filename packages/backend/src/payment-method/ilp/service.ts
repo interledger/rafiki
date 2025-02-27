@@ -7,7 +7,7 @@ import {
 } from '../handler/service'
 import { RatesService } from '../../rates/service'
 import { IlpPlugin, IlpPluginOptions } from './ilp_plugin'
-import * as Pay from '@interledger/pay'
+import * as Pay from 'pay'
 import { convertRatesToIlpPrices } from './rates'
 import { IAppConfig } from '../../config/app'
 import {

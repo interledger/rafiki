@@ -1,5 +1,5 @@
 import { IocContract } from '@adonisjs/fold'
-import * as Pay from '@interledger/pay'
+import * as Pay from 'pay'
 
 import { randomAsset } from './asset'
 import { AppServices } from '../app'

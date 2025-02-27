@@ -1,4 +1,4 @@
-import { Counter, ResolvedPayment } from '@interledger/pay'
+import { Counter, ResolvedPayment } from 'pay'
 import base64url from 'base64url'
 
 import { Amount, parseAmount } from '../amount'

@@ -1,5 +1,5 @@
 import { BaseModel } from '../../../shared/baseModel'
-import * as Pay from '@interledger/pay'
+import * as Pay from 'pay'
 
 export class IlpQuoteDetails extends BaseModel {
   public static readonly tableName = 'ilpQuoteDetails'

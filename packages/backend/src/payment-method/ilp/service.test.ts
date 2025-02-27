@@ -10,8 +10,7 @@ import { Asset } from '../../asset/model'
 import { withConfigOverride } from '../../tests/helpers'
 import { StartQuoteOptions } from '../handler/service'
 import { WalletAddress } from '../../open_payments/wallet_address/model'
-import * as Pay from '@interledger/pay'
-import { Ratio, Int, PaymentType } from '@interledger/pay'
+import * as Pay from 'pay'
 import assert from 'assert'
 
 import { createReceiver } from '../../tests/receiver'
@@ -127,16 +126,16 @@ describe('IlpPaymentService', (): void => {
         }
       }
 
-      const highEstimatedExchangeRate = Ratio.of(Int.ONE, Int.TWO)
-      const lowEstimatedExchangeRate = Ratio.from(0.5)
-      const minExchangeRate = Ratio.from(0.5)
+      const highEstimatedExchangeRate = Pay.Ratio.of(Pay.Int.ONE, Pay.Int.TWO)
+      const lowEstimatedExchangeRate = Pay.Ratio.from(0.5)
+      const minExchangeRate = Pay.Ratio.from(0.5)
 
       assert(highEstimatedExchangeRate)
       assert(lowEstimatedExchangeRate)
       assert(minExchangeRate)
 
       const mockIlpQuote = {
-        paymentType: PaymentType.FixedDelivery,
+        paymentType: Pay.PaymentType.FixedDelivery,
         maxSourceAmount: BigInt(500),
         minDeliveryAmount: BigInt(400),
         highEstimatedExchangeRate,
@@ -189,16 +188,19 @@ describe('IlpPaymentService', (): void => {
         }
       }
 
-      const highEstimatedExchangeRate = Ratio.of(Int.MAX_U64, Int.ONE)
-      const lowEstimatedExchangeRate = Ratio.from(10 ** 20)
-      const minExchangeRate = Ratio.from(0.5)
+      const highEstimatedExchangeRate = Pay.Ratio.of(
+        Pay.Int.MAX_U64,
+        Pay.Int.ONE
+      )
+      const lowEstimatedExchangeRate = Pay.Ratio.from(10 ** 20)
+      const minExchangeRate = Pay.Ratio.from(0.5)
 
       assert(highEstimatedExchangeRate)
       assert(lowEstimatedExchangeRate)
       assert(minExchangeRate)
 
       const mockIlpQuote = {
-        paymentType: PaymentType.FixedDelivery,
+        paymentType: Pay.PaymentType.FixedDelivery,
         maxSourceAmount: BigInt(500),
         minDeliveryAmount: BigInt(400),
         highEstimatedExchangeRate,

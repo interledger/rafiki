@@ -1,7 +1,7 @@
 import { ApolloError, gql } from '@apollo/client'
-import { PaymentError } from '@interledger/pay'
+import { PaymentError } from 'pay'
 import { v4 as uuid } from 'uuid'
-import * as Pay from '@interledger/pay'
+import * as Pay from 'pay'
 
 import { getPageTests } from './page.test'
 import { createTestApp, TestContainer } from '../../tests/app'
