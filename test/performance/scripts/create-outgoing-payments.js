@@ -139,7 +139,6 @@ export default function (data) {
   }
 
   const createQuoteResponse = request(createQuotePayload)
-  console.log({ createQuoteResponse })
   const quote = createQuoteResponse.createQuote.quote
 
   const createOutgoingPaymentPayload = {
