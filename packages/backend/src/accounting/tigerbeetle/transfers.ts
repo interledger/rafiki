@@ -178,7 +178,11 @@ export async function getAccountTransfers(
     timestamp_min: 0n,
     timestamp_max: 0n,
     limit,
-    flags: AccountFilterFlags.credits | AccountFilterFlags.debits
+    flags: AccountFilterFlags.credits | AccountFilterFlags.debits,
+    code: 0, //disabled
+    user_data_32: 0, //disabled
+    user_data_64: 0n, //disabled
+    user_data_128: 0n //disabled
   }
   const tbAccountTransfers: TbTransfer[] =
     await deps.tigerBeetle.getAccountTransfers(filter)
