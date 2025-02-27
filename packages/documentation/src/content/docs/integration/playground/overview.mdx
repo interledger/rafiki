@@ -227,14 +227,14 @@ The following are the most commonly used commands:
 | Start (with TigerBeetle)                                          | `pnpm localenv:compose up`                       |
 | Start (with TigerBeetle) detached                                 | `pnpm localenv:compose up -d`                    |
 | Down (with TigerBeetle)                                           | `pnpm localenv:compose down`                     |
-| Down and kill volumes (with TigerBeetle)                          | `pnpm localenv:compose down --volumes`           |
-| Down, kill volumes (with TigerBeetle) and images                  | `pnpm localenv:compose down --volumes --rmi all` |
+| Down and remove volumes (with TigerBeetle)                        | `pnpm localenv:compose down --volumes`           |
+| Down and remove volumes (with TigerBeetle) and images             | `pnpm localenv:compose down --volumes --rmi all` |
 | Show all merged config (with Postgres)                            | `pnpm localenv:compose:psql config`              |
 | Build all the containers (with TigerBeetle)                       | `pnpm localenv:compose build`                    |
 | Start (with Postgres)                                             | `pnpm localenv:compose:psql up`                  |
 | Start (with Postgres) detached                                    | `pnpm localenv:compose:psql up -d`               |
 | Down (with Postgres)                                              | `pnpm localenv:compose:psql down`                |
-| Down (with Postgres) and kill volumes                             | `pnpm localenv:compose:psql down --volumes`      |
+| Down (with Postgres) and remove volumes                           | `pnpm localenv:compose:psql down --volumes`      |
 | Build all the containers (with Postgres)                          | `pnpm localenv:compose:psql build`               |
 | Start with local admin auth enabled (this is disabled by default) | `pnpm localenv:compose:adminauth up `            |
 
@@ -350,7 +350,6 @@ Every wallet address also serves as an SPSP endpoint. A `GET` request with an `A
 GET http://localhost:3000/accounts/gfranklin HTTP/1.1
 Host:backend
 Accept:application/spsp4+json
-
 
 HTTP/1.1 200 OK
 Connection:keep-alive

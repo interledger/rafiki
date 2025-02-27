@@ -83,6 +83,10 @@ export default defineConfig({
               collapsed: true,
               items: [
                 {
+                  label: 'Account servicing entity',
+                  link: '/overview/concepts/account-servicing-entity'
+                },
+                {
                   label: 'Accounting',
                   link: '/overview/concepts/accounting'
                 },
@@ -181,10 +185,6 @@ export default defineConfig({
                     {
                       label: 'Frontend service',
                       link: '/integration/deployment/services/frontend-service'
-                    },
-                    {
-                      label: 'Token introspection',
-                      link: '/integration/deployment/services/token-introspection'
                     }
                   ]
                 },
@@ -210,7 +210,25 @@ export default defineConfig({
             },
             {
               label: 'Manage liquidity',
-              link: '/admin/manage-liquidity'
+              collapsed: true,
+              items: [
+                {
+                  label: 'Asset liquidity',
+                  link: '/admin/liquidity/asset-liquidity'
+                },
+                {
+                  label: 'Peer liquidity',
+                  link: '/admin/liquidity/peer-liquidity'
+                },
+                {
+                  label: 'Payment liquidity',
+                  link: '/admin/liquidity/payment-liquidity'
+                },
+                {
+                  label: 'Two-phase transfers',
+                  link: '/admin/liquidity/two-phase-transfers'
+                }
+              ]
             }
           ]
         },
