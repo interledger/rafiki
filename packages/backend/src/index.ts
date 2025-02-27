@@ -514,7 +514,8 @@ export function initIocContainer(
       walletAddressService: await deps.use('walletAddressService'),
       quoteService: await deps.use('quoteService'),
       assetService: await deps.use('assetService'),
-      telemetry: await deps.use('telemetry')
+      telemetry: await deps.use('telemetry'),
+      feeService: await deps.use('feeService')
     })
   })
 

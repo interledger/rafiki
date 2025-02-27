@@ -45,6 +45,7 @@ import { FilterString } from '../../../shared/filters'
 import { IAppConfig } from '../../../config/app'
 import { AssetService } from '../../../asset/service'
 import { Span, trace } from '@opentelemetry/api'
+import { FeeService } from '../../../fee/service'
 
 export interface OutgoingPaymentService
   extends WalletAddressSubresourceService<OutgoingPayment> {
@@ -72,6 +73,7 @@ export interface ServiceDependencies extends BaseService {
   quoteService: QuoteService
   assetService: AssetService
   telemetry: TelemetryService
+  feeService: FeeService
 }
 
 export async function createOutgoingPaymentService(
@@ -304,6 +306,9 @@ async function createOutgoingPayment(
         if (!quote) {
           return OutgoingPaymentError.UnknownQuote
         }
+        if (quote.feeId) {
+          quote.fee = await deps.feeService.get(quote.feeId)
+        }
 
         const asset = await deps.assetService.get(quote.assetId)
 
@@ -467,7 +472,6 @@ async function createOutgoingPayment(
             'Could not create outgoing payment: grant locked'
           )
         }
-        console.log('error when creating op', { err })
         throw err
       } finally {
         stopTimerOP()
