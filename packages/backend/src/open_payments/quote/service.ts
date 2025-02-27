@@ -460,7 +460,6 @@ async function getWalletAddressPage(
   options: ListOptions
 ): Promise<Quote[]> {
   const quotes = await Quote.query(deps.knex).list(options)
-  // .withGraphFetched('fee')
   for (const quote of quotes) {
     const asset = await deps.assetService.get(quote.assetId)
     if (asset) quote.asset = asset
