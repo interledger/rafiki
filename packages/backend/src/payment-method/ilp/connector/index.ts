@@ -94,21 +94,6 @@ export async function createConnectorService({
   )
 }
 
-function handleIncomingPackets(middlewares: ILPMiddleware[]): ILPMiddleware {
-  return compose([
-    createIncomingErrorHandlerMiddleware(ilpAddress),
-    createStreamAddressMiddleware(),
-    createAccountMiddleware(ilpAddress),
-    createIncomingMaxPacketAmountMiddleware(),
-    createIncomingRateLimitMiddleware({}),
-    createIncomingThroughputMiddleware(),
-    createIldcpMiddleware(ilpAddress),
-
-    // Local pay
-    createBalanceMiddleware()
-  ])
-}
-
 // Adapted from koa-compose
 function compose(middlewares: ILPMiddleware[]): ILPMiddleware {
   return function (ctx: ILPContext, next: () => Promise<void>): Promise<void> {
