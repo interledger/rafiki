@@ -122,6 +122,17 @@ export const updateTenant: MutationResolvers<TenantedApolloContext>['updateTenan
       })
     }
 
+    if (isOperator && 'apiSecret' in args.input) {
+      throw new GraphQLError(
+        'Operator cannot update apiSecret over admin api',
+        {
+          extensions: {
+            code: GraphQLErrorCode.BadUserInput
+          }
+        }
+      )
+    }
+
     const tenantService = await ctx.container.use('tenantService')
     try {
       const updatedTenant = await tenantService.update(args.input)
