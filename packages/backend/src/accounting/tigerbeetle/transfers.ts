@@ -19,6 +19,14 @@ type TransfersError = {
 }
 
 export type TransferUserData128 = string | number | bigint
+/**
+ * See: https://docs.tigerbeetle.com/reference/transfer/#amount
+ * The maximum value for amount in TigerBeetle is (2^128 - 1), which is the maximum value that can fit in an unsigned 128-bit integer.
+ * However, JavaScript and TypeScript do not support native 128-bit integers. Instead, you can represent this number using BigInt, which supports arbitrarily large integers.
+ * In Zig, amount is: [u128]
+ */
+const TB_AMOUNT_MAX = BigInt((2n ** 128n) - 1n)
+const TB_AMOUNT_MIN = 0n
 
 interface TransferOptions {
   transferRef?: TransferUserData128
@@ -103,9 +111,15 @@ export async function createTransfers(
       if (transfer.postId) {
         tbTransfer.flags |= TransferFlags.post_pending_transfer
         tbTransfer.pending_id = toTigerBeetleId(transfer.postId)
+        // We only support setting the posting transfer amount to match the pending transfer:
+        // https://docs.tigerbeetle.com/reference/transfer/#amount
+        tbTransfer.amount = TB_AMOUNT_MAX
       } else if (transfer.voidId) {
         tbTransfer.flags |= TransferFlags.void_pending_transfer
         tbTransfer.pending_id = toTigerBeetleId(transfer.voidId)
+        // We only support setting the void transfer amount to match the pending transfer:
+        // https://docs.tigerbeetle.com/reference/transfer/#amount
+        tbTransfer.amount = TB_AMOUNT_MIN
       }
     }
 
