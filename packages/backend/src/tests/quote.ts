@@ -87,7 +87,7 @@ export async function createQuote(
   if (validDestination) {
     const receiverService = await deps.use('receiverService')
     const receiver = await receiverService.get(receiverUrl)
-    if (!Receiver.isActive(receiver)) {
+    if (!receiver || !receiver.isActive()) {
       throw new Error('receiver not found')
     }
     if (!receiver.incomingAmount && !receiveAmount && !debitAmount) {

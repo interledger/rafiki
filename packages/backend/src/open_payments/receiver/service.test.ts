@@ -251,7 +251,7 @@ describe('Receiver Service', (): void => {
         expect(remoteIncomingPaymentServiceGetSpy).toHaveBeenCalledTimes(1)
       })
 
-      test('returns undefined if error getting receiver from remote incoming payment', async () => {
+      test('gets receiver from completed remote incoming payment', async () => {
         const mockedIncomingPayment = mockIncomingPaymentWithPaymentMethods({
           completed: true // cannot get receiver with a completed incoming payment
         })
@@ -266,7 +266,36 @@ describe('Receiver Service', (): void => {
 
         await expect(
           receiverService.get(mockedIncomingPayment.id)
-        ).resolves.toBeUndefined()
+        ).resolves.toEqual({
+          assetCode: mockedIncomingPayment.receivedAmount.assetCode,
+          assetScale: mockedIncomingPayment.receivedAmount.assetScale,
+          ilpAddress: mockedIncomingPayment.methods[0].ilpAddress,
+          sharedSecret: expect.any(Buffer),
+          incomingPayment: {
+            id: mockedIncomingPayment.id,
+            walletAddress: mockedIncomingPayment.walletAddress,
+            incomingAmount: mockedIncomingPayment.incomingAmount
+              ? parseAmount(mockedIncomingPayment.incomingAmount)
+              : undefined,
+            receivedAmount: parseAmount(mockedIncomingPayment.receivedAmount),
+            completed: mockedIncomingPayment.completed,
+            metadata: mockedIncomingPayment.metadata,
+            expiresAt: mockedIncomingPayment.expiresAt
+              ? new Date(mockedIncomingPayment.expiresAt)
+              : undefined,
+            createdAt: new Date(mockedIncomingPayment.createdAt),
+            updatedAt: new Date(mockedIncomingPayment.updatedAt),
+            methods: [
+              {
+                type: 'ilp',
+                ilpAddress: expect.any(String),
+                sharedSecret: expect.any(String)
+              }
+            ]
+          },
+          isLocal: false
+        })
+
         expect(localIncomingPaymentServiceGetSpy).toHaveBeenCalledTimes(1)
         expect(remoteIncomingPaymentServiceGetSpy).toHaveBeenCalledTimes(1)
       })

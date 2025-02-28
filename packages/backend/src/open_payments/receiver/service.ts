@@ -75,7 +75,13 @@ async function createReceiver(
   }
 
   try {
-    return new Receiver(incomingPaymentOrError, isLocal)
+    const receiver = new Receiver(incomingPaymentOrError, isLocal)
+
+    if (!receiver.isActive()) {
+      throw new Error('Receiver is not active')
+    }
+
+    return receiver
   } catch (error) {
     const errorMessage = 'Could not create receiver from incoming payment'
     deps.logger.error(

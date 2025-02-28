@@ -45,7 +45,7 @@ export class Receiver {
     const receivedAmount = parseAmount(incomingPayment.receivedAmount)
 
     // TODO: handle multiple payment methods
-    const ilpMethod = incomingPayment.methods.find(
+    const ilpMethod = incomingPayment.methods?.find(
       (method) => method.type === 'ilp'
     )
     if (!ilpMethod) {
@@ -109,24 +109,19 @@ export class Receiver {
     }
   }
 
-  public static isActive(receiver: Receiver | undefined): receiver is Receiver {
-    if (!receiver) {
-      return false
-    }
-    const incomingPayment = receiver.incomingPayment
+  public isActive(): boolean {
+    const incomingPayment = this.incomingPayment
+
     if (incomingPayment.completed) {
-      // throw new Error('Cannot create receiver from completed incoming payment')
       return false
     }
     if (
       incomingPayment.expiresAt &&
       incomingPayment.expiresAt.getTime() <= Date.now()
     ) {
-      // throw new Error('Cannot create receiver from expired incoming payment')
       return false
     }
     if (!incomingPayment.methods.length) {
-      // throw new Error('Missing payment method(s) on incoming payment')
       return false
     }
 
