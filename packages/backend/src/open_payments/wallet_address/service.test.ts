@@ -60,10 +60,11 @@ describe('Open Payments Wallet Address Service', (): void => {
   })
 
   describe('Create or Get Wallet Address3', (): void => {
+    let tenantId: string;
     let options: CreateOptions
 
     beforeEach(async (): Promise<void> => {
-      const { id: tenantId } = await createTenant(deps)
+      tenantId = (await createTenant(deps)).id
       const { id: assetId } = await createAsset(deps, undefined, tenantId)
 
       await createTenantSettings(deps, {
@@ -98,6 +99,30 @@ describe('Open Payments Wallet Address Service', (): void => {
         ).resolves.toEqual(walletAddress)
       }
     )
+
+    test.each`
+    setting                       | address                           | generated
+    ${'https://alice.me/ilp'}     | ${'https://alice.me/ilp/test'}    | ${'https://alice.me/ilp/test'}
+    ${'https://alice.me/ilp'}     | ${'test'}                         | ${'https://alice.me/ilp/test'}
+    ${'https://alice.me/ilp'}     | ${'/test'}                         | ${'https://alice.me/ilp/test'}
+    ${'https://alice.me/ilp/'}    | ${'test'}                         | ${'https://alice.me/ilp/test'}
+    ${'https://alice.me/ilp/'}    | ${'/test'}                         | ${'https://alice.me/ilp/test'}
+    `('should create address $generated with address $address and setting $setting', async ({ setting, address, generated }): Promise<void> => {
+      await createTenantSettings(deps, {
+        tenantId: tenantId,
+        setting: [
+          { key: TenantSettingKeys.WALLET_ADDRESS_URL.name, value: setting }
+        ]
+      })
+
+      const walletAddress = await walletAddressService.create({
+        ...options,
+        address
+      })
+
+      assert.ok(!isWalletAddressError(walletAddress))
+      expect(walletAddress.address).toEqual(generated)
+    })
 
     test('Cannot create wallet address with unknown asset', async (): Promise<void> => {
       await expect(

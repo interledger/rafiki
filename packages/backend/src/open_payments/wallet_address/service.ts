@@ -28,6 +28,8 @@ import { poll } from '../../shared/utils'
 import { WalletAddressAdditionalProperty } from './additional_property/model'
 import { AssetService } from '../../asset/service'
 import { CacheDataStore } from '../../middleware/cache/data-stores'
+import { TenantSetting, TenantSettingKeys } from '../../tenants/settings/model'
+import { TenantSettingService } from '../../tenants/settings/service'
 
 interface Options {
   publicName?: string
@@ -84,6 +86,7 @@ interface ServiceDependencies extends BaseService {
   webhookService: WebhookService
   assetService: AssetService
   walletAddressCache: CacheDataStore<WalletAddress>
+  tenantSettingService: TenantSettingService
 }
 
 export async function createWalletAddressService({
@@ -93,7 +96,8 @@ export async function createWalletAddressService({
   accountingService,
   webhookService,
   assetService,
-  walletAddressCache
+  walletAddressCache,
+  tenantSettingService
 }: ServiceDependencies): Promise<WalletAddressService> {
   const log = logger.child({
     service: 'WalletAddressService'
@@ -105,7 +109,8 @@ export async function createWalletAddressService({
     accountingService,
     webhookService,
     assetService,
-    walletAddressCache
+    walletAddressCache,
+    tenantSettingService
   }
   return {
     create: (options) => createWalletAddress(deps, options),
@@ -165,7 +170,53 @@ async function createWalletAddress(
   deps: ServiceDependencies,
   options: CreateOptions
 ): Promise<WalletAddress | WalletAddressError> {
-  if (!isValidWalletAddressUrl(options.address)) {
+  const found = await deps.tenantSettingService.get({
+    tenantId: options.tenantId,
+    key: TenantSettingKeys.WALLET_ADDRESS_URL.name
+  }) as TenantSetting[];
+
+  if (!found || found.length === 0) {
+    return WalletAddressError.WalletAddressSettingNotFound;
+  }
+
+  const tenantWalletAddressUrl = new URL(found[0].value);
+  
+  let tenantBaseUrl = tenantWalletAddressUrl.toString();
+  if (!tenantWalletAddressUrl.pathname.endsWith('/')) {
+    tenantBaseUrl = tenantWalletAddressUrl.origin + tenantWalletAddressUrl.pathname + '/'
+  }
+
+  const isValidUrl = (str: string): boolean => {
+    try {
+      new URL(str);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
+  let finalWalletAddressUrl: string;
+  if (isValidUrl(options.address)) {
+    // in case that client provided full url, verify that it starts with the tenant's URL
+    const walletAddressUrl = new URL(options.address);
+    if (!walletAddressUrl.href.startsWith(tenantWalletAddressUrl.href)) {
+      return WalletAddressError.InvalidUrl;
+    }
+    finalWalletAddressUrl = walletAddressUrl.toString()
+  } else {
+    // in case that client provided just the path / wallet address name, construct the address using the wallet address url from tenant setting
+    try {
+      let relativePath = options.address
+      if (relativePath.startsWith('/')) {
+        relativePath = relativePath.substring(1)
+      }
+      finalWalletAddressUrl = tenantBaseUrl + relativePath
+    } catch (err) {
+      return WalletAddressError.InvalidUrl;
+    }
+  }
+  
+  if (!isValidWalletAddressUrl(finalWalletAddressUrl)) {
     return WalletAddressError.InvalidUrl
   }
 
@@ -182,7 +233,7 @@ async function createWalletAddress(
       deps.knex
     ).insertGraphAndFetch({
       tenantId: options.tenantId,
-      address: options.address.toLowerCase(),
+      address: finalWalletAddressUrl.toLowerCase(),
       publicName: options.publicName,
       assetId: asset.id,
       additionalProperties: additionalProperties
