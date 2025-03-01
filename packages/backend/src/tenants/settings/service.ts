@@ -129,12 +129,11 @@ async function createTenantSetting(
     return []
   }
 
-  return TenantSetting
-    .query(extra?.trx ?? deps.knex)
+  return TenantSetting.query(extra?.trx ?? deps.knex)
     .insert(dataToUpsert)
     .onConflict(['tenantId', 'key'])
     .merge()
-    .returning('*');
+    .returning('*')
 }
 
 async function getTenantSettingPageForTenant(
