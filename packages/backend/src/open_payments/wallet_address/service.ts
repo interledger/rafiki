@@ -40,7 +40,7 @@ export type WalletAddressAdditionalPropertyInput = Pick<
 
 export interface CreateOptions extends Options {
   tenantId: string
-  url: string
+  address: string
   assetId: string
   additionalProperties?: WalletAddressAdditionalPropertyInput[]
 }
@@ -165,7 +165,7 @@ async function createWalletAddress(
   deps: ServiceDependencies,
   options: CreateOptions
 ): Promise<WalletAddress | WalletAddressError> {
-  if (!isValidWalletAddressUrl(options.url)) {
+  if (!isValidWalletAddressUrl(options.address)) {
     return WalletAddressError.InvalidUrl
   }
 
@@ -182,7 +182,7 @@ async function createWalletAddress(
       deps.knex
     ).insertGraphAndFetch({
       tenantId: options.tenantId,
-      url: options.url.toLowerCase(),
+      address: options.address.toLowerCase(),
       publicName: options.publicName,
       assetId: asset.id,
       additionalProperties: additionalProperties
@@ -341,7 +341,7 @@ async function getWalletAddressByUrl(
   if (tenantId) query.andWhere({ tenantId })
 
   const walletAddress = await query.findOne({
-    url: url.toLowerCase()
+    address: url.toLowerCase()
   })
   if (walletAddress) {
     const asset = await deps.assetService.get(walletAddress.assetId)

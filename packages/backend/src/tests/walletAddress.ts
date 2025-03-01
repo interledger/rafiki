@@ -36,7 +36,7 @@ export async function createWalletAddress(
     assetId:
       options.assetId || (await createAsset(deps, undefined, tenantIdToUse)).id,
     tenantId: tenantIdToUse,
-    url: options.url || `https://${faker.internet.domainName()}/.well-known/pay`
+    address: options.address || `https://${faker.internet.domainName()}/.well-known/pay`
   })) as MockWalletAddress
   if (isWalletAddressError(walletAddressOrError)) {
     throw new Error(walletAddressOrError)
@@ -52,7 +52,7 @@ export async function createWalletAddress(
     )
   }
   if (options.mockServerPort) {
-    const url = new URL(walletAddressOrError.url)
+    const url = new URL(walletAddressOrError.address)
     walletAddressOrError.scope = nock(url.origin)
       .get((uri) => uri.startsWith(url.pathname))
       .matchHeader('Accept', /application\/((ilp-stream|spsp4)\+)?json*./)

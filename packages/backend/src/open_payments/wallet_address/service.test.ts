@@ -27,6 +27,8 @@ import { sleep } from '../../shared/utils'
 import { withConfigOverride } from '../../tests/helpers'
 import { WalletAddressAdditionalProperty } from './additional_property/model'
 import { CacheDataStore } from '../../middleware/cache/data-stores'
+import { createTenantSettings } from '../../tests/tenantSettings'
+import { TenantSettingKeys } from '../../tenants/settings/model'
 
 describe('Open Payments Wallet Address Service', (): void => {
   let deps: IocContract<AppServices>
@@ -57,14 +59,22 @@ describe('Open Payments Wallet Address Service', (): void => {
     await appContainer.shutdown()
   })
 
-  describe('Create or Get Wallet Address', (): void => {
+  describe('Create or Get Wallet Address3', (): void => {
     let options: CreateOptions
 
     beforeEach(async (): Promise<void> => {
       const { id: tenantId } = await createTenant(deps)
       const { id: assetId } = await createAsset(deps, undefined, tenantId)
+
+      await createTenantSettings(deps, {
+        tenantId: tenantId,
+        setting: [
+          { key: TenantSettingKeys.WALLET_ADDRESS_URL.name, value: 'https://alice.me' }
+        ]
+      })
+
       options = {
-        url: 'https://alice.me/.well-known/pay',
+        address: 'https://alice.me/.well-known/pay',
         assetId,
         tenantId
       }
@@ -110,7 +120,7 @@ describe('Open Payments Wallet Address Service', (): void => {
         await expect(
           walletAddressService.create({
             ...options,
-            url
+            address: url
           })
         ).resolves.toEqual(WalletAddressError.InvalidUrl)
       }
@@ -119,17 +129,17 @@ describe('Open Payments Wallet Address Service', (): void => {
     test.each(FORBIDDEN_PATHS.map((path) => [path]))(
       'Wallet address cannot be created with forbidden url path (%s)',
       async (path): Promise<void> => {
-        const url = `https://alice.me${path}`
+        const address = `https://alice.me${path}`
         await expect(
           walletAddressService.create({
             ...options,
-            url
+            address
           })
         ).resolves.toEqual(WalletAddressError.InvalidUrl)
         await expect(
           walletAddressService.create({
             ...options,
-            url: `${url}/more/path`
+            address: `${address}/more/path`
           })
         ).resolves.toEqual(WalletAddressError.InvalidUrl)
       }
@@ -144,26 +154,26 @@ describe('Open Payments Wallet Address Service', (): void => {
     })
 
     test('Creating wallet address with case insensitiveness', async (): Promise<void> => {
-      const url = 'https://Alice.me/pay'
+      const address = 'https://Alice.me/pay'
       await expect(
         walletAddressService.create({
           ...options,
-          url
+          address
         })
-      ).resolves.toMatchObject({ url: url.toLowerCase() })
+      ).resolves.toMatchObject({ address: address.toLowerCase() })
     })
 
     test('Wallet address cannot be created if the url is duplicated', async (): Promise<void> => {
-      const url = 'https://Alice.me/pay'
+      const address = 'https://Alice.me/pay'
       const wallet = walletAddressService.create({
         ...options,
-        url
+        address
       })
       assert.ok(!isWalletAddressError(wallet))
       await expect(
         walletAddressService.create({
           ...options,
-          url
+          address
         })
       ).resolves.toEqual(WalletAddressError.DuplicateWalletAddress)
     })
@@ -443,15 +453,15 @@ describe('Open Payments Wallet Address Service', (): void => {
         tenantId: Config.operatorTenantId
       })
       await expect(
-        walletAddressService.getByUrl(walletAddress.url)
+        walletAddressService.getByUrl(walletAddress.address)
       ).resolves.toEqual(walletAddress)
 
       await expect(
-        walletAddressService.getByUrl(walletAddress.url + '/path')
+        walletAddressService.getByUrl(walletAddress.address + '/path')
       ).resolves.toBeUndefined()
 
       await expect(
-        walletAddressService.getByUrl('prefix+' + walletAddress.url)
+        walletAddressService.getByUrl('prefix+' + walletAddress.address)
       ).resolves.toBeUndefined()
     })
 
@@ -476,7 +486,7 @@ describe('Open Payments Wallet Address Service', (): void => {
           tenantId: Config.operatorTenantId
         })
         await expect(
-          walletAddressService.getOrPollByUrl(walletAddress.url)
+          walletAddressService.getOrPollByUrl(walletAddress.address)
         ).resolves.toEqual(walletAddress)
       })
     })
@@ -521,7 +531,7 @@ describe('Open Payments Wallet Address Service', (): void => {
                   await sleep(5)
                   return createWalletAddress(deps, {
                     tenantId: Config.operatorTenantId,
-                    url: walletAddressUrl
+                    address: walletAddressUrl
                   })
                 })()
               ])
@@ -905,7 +915,7 @@ describe('Open Payments Wallet Address Service using Cache', (): void => {
           walletAddress.id,
           expect.objectContaining({
             id: walletAddress.id,
-            url: walletAddress.url
+            address: walletAddress.address
           })
         )
 
