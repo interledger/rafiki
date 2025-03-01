@@ -118,20 +118,23 @@ async function createTenantSetting(
   options: CreateOptions,
   extra?: ExtraOptions
 ) {
-  const dataToInsert = options.setting
+  const dataToUpsert = options.setting
     .filter((setting) => Object.keys(TenantSettingKeys).includes(setting.key))
     .map((s) => ({
       tenantId: options.tenantId,
       ...s
     }))
 
-  if (Object.keys(dataToInsert).length <= 0) {
+  if (Object.keys(dataToUpsert).length <= 0) {
     return []
   }
 
-  return TenantSetting.query(extra?.trx ?? deps.knex).insertAndFetch(
-    dataToInsert
-  )
+  return TenantSetting
+    .query(extra?.trx ?? deps.knex)
+    .insert(dataToUpsert)
+    .onConflict(['tenantId', 'key'])
+    .merge()
+    .returning('*');
 }
 
 async function getTenantSettingPageForTenant(
