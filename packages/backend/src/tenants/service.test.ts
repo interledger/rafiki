@@ -156,7 +156,10 @@ describe('Tenant Service', (): void => {
         idpConsentUrl: faker.internet.url(),
         idpSecret: 'test-idp-secret',
         settings: [
-          { key: TenantSettingKeys.WALLET_ADDRESS_URL.name, value: walletAddressUrl }
+          {
+            key: TenantSettingKeys.WALLET_ADDRESS_URL.name,
+            value: walletAddressUrl
+          }
         ]
       }
 

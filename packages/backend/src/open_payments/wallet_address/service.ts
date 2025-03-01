@@ -170,37 +170,38 @@ async function createWalletAddress(
   deps: ServiceDependencies,
   options: CreateOptions
 ): Promise<WalletAddress | WalletAddressError> {
-  const found = await deps.tenantSettingService.get({
+  const found = (await deps.tenantSettingService.get({
     tenantId: options.tenantId,
     key: TenantSettingKeys.WALLET_ADDRESS_URL.name
-  }) as TenantSetting[];
+  })) as TenantSetting[]
 
   if (!found || found.length === 0) {
-    return WalletAddressError.WalletAddressSettingNotFound;
+    return WalletAddressError.WalletAddressSettingNotFound
   }
 
-  const tenantWalletAddressUrl = new URL(found[0].value);
-  
-  let tenantBaseUrl = tenantWalletAddressUrl.toString();
+  const tenantWalletAddressUrl = new URL(found[0].value)
+
+  let tenantBaseUrl = tenantWalletAddressUrl.toString()
   if (!tenantWalletAddressUrl.pathname.endsWith('/')) {
-    tenantBaseUrl = tenantWalletAddressUrl.origin + tenantWalletAddressUrl.pathname + '/'
+    tenantBaseUrl =
+      tenantWalletAddressUrl.origin + tenantWalletAddressUrl.pathname + '/'
   }
 
   const isValidUrl = (str: string): boolean => {
     try {
-      new URL(str);
-      return true;
+      new URL(str)
+      return true
     } catch {
-      return false;
+      return false
     }
-  };
+  }
 
-  let finalWalletAddressUrl: string;
+  let finalWalletAddressUrl: string
   if (isValidUrl(options.address)) {
     // in case that client provided full url, verify that it starts with the tenant's URL
-    const walletAddressUrl = new URL(options.address);
+    const walletAddressUrl = new URL(options.address)
     if (!walletAddressUrl.href.startsWith(tenantWalletAddressUrl.href)) {
-      return WalletAddressError.InvalidUrl;
+      return WalletAddressError.InvalidUrl
     }
     finalWalletAddressUrl = walletAddressUrl.toString()
   } else {
@@ -212,10 +213,10 @@ async function createWalletAddress(
       }
       finalWalletAddressUrl = tenantBaseUrl + relativePath
     } catch (err) {
-      return WalletAddressError.InvalidUrl;
+      return WalletAddressError.InvalidUrl
     }
   }
-  
+
   if (!isValidWalletAddressUrl(finalWalletAddressUrl)) {
     return WalletAddressError.InvalidUrl
   }

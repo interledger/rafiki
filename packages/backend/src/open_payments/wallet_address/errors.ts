@@ -5,7 +5,7 @@ export enum WalletAddressError {
   UnknownAsset = 'UnknownAsset',
   UnknownWalletAddress = 'UnknownWalletAddress',
   DuplicateWalletAddress = 'DuplicateWalletAddress',
-  WalletAddressSettingNotFound = 'WalletAddressSettingNotFound',
+  WalletAddressSettingNotFound = 'WalletAddressSettingNotFound'
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types

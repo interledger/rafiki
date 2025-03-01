@@ -3,9 +3,9 @@
  * @returns { Promise<void> }
  */
 exports.up = function (knex) {
-    return knex.schema.alterTable('walletAddresses', (table) => {
-        table.renameColumn('url', 'address')
-    })
+  return knex.schema.alterTable('walletAddresses', (table) => {
+    table.renameColumn('url', 'address')
+  })
 }
 
 /**
@@ -13,7 +13,7 @@ exports.up = function (knex) {
  * @returns { Promise<void> }
  */
 exports.down = function (knex) {
-    return knex.schema.alterTable('walletAddresses', (table) => {
-        table.renameColumn('address', 'url')
-    })
+  return knex.schema.alterTable('walletAddresses', (table) => {
+    table.renameColumn('address', 'url')
+  })
 }

@@ -84,7 +84,8 @@ async function createTenant(
 ): Promise<Tenant> {
   const trx = await deps.knex.transaction()
   try {
-    const { email, apiSecret, publicName, idpSecret, idpConsentUrl, settings } = options
+    const { email, apiSecret, publicName, idpSecret, idpConsentUrl, settings } =
+      options
     const tenant = await Tenant.query(trx).insertAndFetch({
       email,
       publicName,
@@ -99,13 +100,18 @@ async function createTenant(
       idpConsentUrl
     })
 
-    const createInitialTenantSettingsOptions = { tenantId: tenant.id, setting: TenantSetting.default() } ;
-    if (settings) {
-      createInitialTenantSettingsOptions.setting = createInitialTenantSettingsOptions.setting.concat(settings)
+    const createInitialTenantSettingsOptions = {
+      tenantId: tenant.id,
+      setting: TenantSetting.default()
     }
-    
-    await deps.tenantSettingService.create(createInitialTenantSettingsOptions, { trx }
-)
+    if (settings) {
+      createInitialTenantSettingsOptions.setting =
+        createInitialTenantSettingsOptions.setting.concat(settings)
+    }
+
+    await deps.tenantSettingService.create(createInitialTenantSettingsOptions, {
+      trx
+    })
 
     await trx.commit()
 

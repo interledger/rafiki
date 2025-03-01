@@ -60,7 +60,7 @@ describe('Open Payments Wallet Address Service', (): void => {
   })
 
   describe('Create or Get Wallet Address3', (): void => {
-    let tenantId: string;
+    let tenantId: string
     let options: CreateOptions
 
     beforeEach(async (): Promise<void> => {
@@ -70,7 +70,10 @@ describe('Open Payments Wallet Address Service', (): void => {
       await createTenantSettings(deps, {
         tenantId: tenantId,
         setting: [
-          { key: TenantSettingKeys.WALLET_ADDRESS_URL.name, value: 'https://alice.me' }
+          {
+            key: TenantSettingKeys.WALLET_ADDRESS_URL.name,
+            value: 'https://alice.me'
+          }
         ]
       })
 
@@ -101,28 +104,31 @@ describe('Open Payments Wallet Address Service', (): void => {
     )
 
     test.each`
-    setting                       | address                           | generated
-    ${'https://alice.me/ilp'}     | ${'https://alice.me/ilp/test'}    | ${'https://alice.me/ilp/test'}
-    ${'https://alice.me/ilp'}     | ${'test'}                         | ${'https://alice.me/ilp/test'}
-    ${'https://alice.me/ilp'}     | ${'/test'}                         | ${'https://alice.me/ilp/test'}
-    ${'https://alice.me/ilp/'}    | ${'test'}                         | ${'https://alice.me/ilp/test'}
-    ${'https://alice.me/ilp/'}    | ${'/test'}                         | ${'https://alice.me/ilp/test'}
-    `('should create address $generated with address $address and setting $setting', async ({ setting, address, generated }): Promise<void> => {
-      await createTenantSettings(deps, {
-        tenantId: tenantId,
-        setting: [
-          { key: TenantSettingKeys.WALLET_ADDRESS_URL.name, value: setting }
-        ]
-      })
+      setting                    | address                        | generated
+      ${'https://alice.me/ilp'}  | ${'https://alice.me/ilp/test'} | ${'https://alice.me/ilp/test'}
+      ${'https://alice.me/ilp'}  | ${'test'}                      | ${'https://alice.me/ilp/test'}
+      ${'https://alice.me/ilp'}  | ${'/test'}                     | ${'https://alice.me/ilp/test'}
+      ${'https://alice.me/ilp/'} | ${'test'}                      | ${'https://alice.me/ilp/test'}
+      ${'https://alice.me/ilp/'} | ${'/test'}                     | ${'https://alice.me/ilp/test'}
+    `(
+      'should create address $generated with address $address and setting $setting',
+      async ({ setting, address, generated }): Promise<void> => {
+        await createTenantSettings(deps, {
+          tenantId: tenantId,
+          setting: [
+            { key: TenantSettingKeys.WALLET_ADDRESS_URL.name, value: setting }
+          ]
+        })
 
-      const walletAddress = await walletAddressService.create({
-        ...options,
-        address
-      })
+        const walletAddress = await walletAddressService.create({
+          ...options,
+          address
+        })
 
-      assert.ok(!isWalletAddressError(walletAddress))
-      expect(walletAddress.address).toEqual(generated)
-    })
+        assert.ok(!isWalletAddressError(walletAddress))
+        expect(walletAddress.address).toEqual(generated)
+      }
+    )
 
     test('Cannot create wallet address with unknown asset', async (): Promise<void> => {
       await expect(
