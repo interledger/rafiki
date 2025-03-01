@@ -36,7 +36,9 @@ export async function createWalletAddress(
     assetId:
       options.assetId || (await createAsset(deps, undefined, tenantIdToUse)).id,
     tenantId: tenantIdToUse,
-    address: options.address || `https://${faker.internet.domainName()}/.well-known/pay`
+    address:
+      options.address ||
+      `https://${faker.internet.domainName()}/.well-known/pay`
   })) as MockWalletAddress
   if (isWalletAddressError(walletAddressOrError)) {
     throw new Error(walletAddressOrError)

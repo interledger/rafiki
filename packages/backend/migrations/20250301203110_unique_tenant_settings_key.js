@@ -3,9 +3,9 @@
  * @returns { Promise<void> }
  */
 exports.up = function (knex) {
-    return knex.schema.alterTable('tenantSettings', function(table) {
-        table.unique(['tenantId', 'key']);
-    });
+  return knex.schema.alterTable('tenantSettings', function (table) {
+    table.unique(['tenantId', 'key'])
+  })
 }
 
 /**
@@ -13,7 +13,7 @@ exports.up = function (knex) {
  * @returns { Promise<void> }
  */
 exports.down = function (knex) {
-    return knex.schema.alterTable('tenantSettings', function(table) {
-        table.dropUnique(['tenantId', 'key']);
-    });
+  return knex.schema.alterTable('tenantSettings', function (table) {
+    table.dropUnique(['tenantId', 'key'])
+  })
 }
