@@ -162,7 +162,7 @@ export async function action({ request }: ActionFunctionArgs) {
   const path = removeTrailingAndLeadingSlash(result.data.name)
 
   const response = await createWalletAddress(request, {
-    url: `${baseUrl}/${path}`,
+    address: `${baseUrl}/${path}`,
     publicName: result.data.publicName,
     assetId: result.data.asset,
     tenantId: result.data.tenantId,
