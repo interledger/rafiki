@@ -85,7 +85,7 @@ describe('Quote Routes', (): void => {
       tenantId,
       assetId
     })
-    baseUrl = new URL(walletAddress.url).origin
+    baseUrl = new URL(walletAddress.address).origin
   })
 
   afterEach(async (): Promise<void> => {
