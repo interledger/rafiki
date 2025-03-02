@@ -152,7 +152,7 @@ export async function setupFromSeed(
       await mockAccounts.setWalletAddress(
         account.id,
         walletAddress.id,
-        walletAddress.url
+        walletAddress.address
       )
 
       await createWalletAddressKey({
