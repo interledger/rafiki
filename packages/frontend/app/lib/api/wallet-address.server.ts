@@ -29,7 +29,7 @@ export const getWalletAddress = async (
       query GetWalletAddressQuery($id: String!) {
         walletAddress(id: $id) {
           id
-          url
+          address
           publicName
           status
           createdAt
@@ -77,7 +77,7 @@ export const listWalletAddresses = async (
               id
               publicName
               status
-              url
+              address
             }
           }
           pageInfo {

@@ -396,6 +396,8 @@ export type CreateTenantSettingsMutationResponse = {
 export type CreateWalletAddressInput = {
   /** Additional properties associated with the wallet address. */
   additionalProperties?: InputMaybe<Array<AdditionalPropertyInput>>;
+  /** Wallet address. This cannot be changed. */
+  address: Scalars['String']['input'];
   /** Unique identifier of the asset associated with the wallet address. This cannot be changed. */
   assetId: Scalars['String']['input'];
   /** Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency). */
@@ -404,8 +406,6 @@ export type CreateWalletAddressInput = {
   publicName?: InputMaybe<Scalars['String']['input']>;
   /** Unique identifier of the tenant associated with the wallet address. This cannot be changed. Optional, if not provided, the tenantId will be obtained from the signature. */
   tenantId?: InputMaybe<Scalars['ID']['input']>;
-  /** Wallet address URL. This cannot be changed. */
-  url: Scalars['String']['input'];
 };
 
 export type CreateWalletAddressKeyInput = {
@@ -1671,6 +1671,8 @@ export type WalletAddress = Model & {
   __typename?: 'WalletAddress';
   /** Additional properties associated with the wallet address. */
   additionalProperties?: Maybe<Array<Maybe<AdditionalProperty>>>;
+  /** Wallet Address. */
+  address: Scalars['String']['output'];
   /** Asset of the wallet address. */
   asset: Asset;
   /** The date and time when the wallet address was created. */
@@ -1691,8 +1693,6 @@ export type WalletAddress = Model & {
   status: WalletAddressStatus;
   /** Tenant ID of the wallet address. */
   tenantId?: Maybe<Scalars['String']['output']>;
-  /** Wallet Address URL. */
-  url: Scalars['String']['output'];
   /** List of keys associated with this wallet address */
   walletAddressKeys?: Maybe<WalletAddressKeyConnection>;
 };
@@ -2707,6 +2707,7 @@ export type UpdateWalletAddressMutationResponseResolvers<ContextType = any, Pare
 
 export type WalletAddressResolvers<ContextType = any, ParentType extends ResolversParentTypes['WalletAddress'] = ResolversParentTypes['WalletAddress']> = {
   additionalProperties?: Resolver<Maybe<Array<Maybe<ResolversTypes['AdditionalProperty']>>>, ParentType, ContextType>;
+  address?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   asset?: Resolver<ResolversTypes['Asset'], ParentType, ContextType>;
   createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
@@ -2717,7 +2718,6 @@ export type WalletAddressResolvers<ContextType = any, ParentType extends Resolve
   quotes?: Resolver<Maybe<ResolversTypes['QuoteConnection']>, ParentType, ContextType, Partial<WalletAddressQuotesArgs>>;
   status?: Resolver<ResolversTypes['WalletAddressStatus'], ParentType, ContextType>;
   tenantId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  url?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   walletAddressKeys?: Resolver<Maybe<ResolversTypes['WalletAddressKeyConnection']>, ParentType, ContextType, Partial<WalletAddressWalletAddressKeysArgs>>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };

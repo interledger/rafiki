@@ -122,7 +122,7 @@ export const createWalletAddress: MutationResolvers<ForTenantIdContext>['createW
       tenantId,
       additionalProperties: addProps,
       publicName: args.input.publicName,
-      url: args.input.url
+      address: args.input.address
     }
 
     const walletAddressOrError = await walletAddressService.create(options)
@@ -206,7 +206,7 @@ export function walletAddressToGraphql(
 ): SchemaWalletAddress {
   return {
     id: walletAddress.id,
-    url: walletAddress.url,
+    address: walletAddress.address,
     asset: assetToGraphql(walletAddress.asset),
     publicName: walletAddress.publicName ?? undefined,
     createdAt: new Date(+walletAddress.createdAt).toISOString(),

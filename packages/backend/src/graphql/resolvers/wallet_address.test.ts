@@ -789,7 +789,7 @@ describe('Wallet Address Resolvers', (): void => {
         const newWalletAddress = await walletAddressService.create({
           assetId: (newAsset as Asset).id,
           tenantId: newTenant!.id,
-          url: 'https://alice.me/.well-known/pay-2'
+          address: 'https://alice.me/.well-known/pay-2'
         })
         const id = (newWalletAddress as WalletAddressModel).id
 
@@ -899,7 +899,7 @@ describe('Wallet Address Resolvers', (): void => {
             code: walletAddress.asset.code,
             scale: walletAddress.asset.scale
           },
-          url: walletAddress.url,
+          address: walletAddress.address,
           publicName: publicName ?? null,
           additionalProperties: [
             {
@@ -931,7 +931,7 @@ describe('Wallet Address Resolvers', (): void => {
           publicName,
           createLiquidityAccount: true
         })
-        const args = { url: walletAddress.url }
+        const args = { url: walletAddress.address }
         const query = await appContainer.apolloClient
           .query({
             query: gql`
@@ -943,7 +943,7 @@ describe('Wallet Address Resolvers', (): void => {
                     code
                     scale
                   }
-                  url
+                  address
                   publicName
                   additionalProperties {
                     key
@@ -972,7 +972,7 @@ describe('Wallet Address Resolvers', (): void => {
             code: walletAddress.asset.code,
             scale: walletAddress.asset.scale
           },
-          url: walletAddress.url,
+          address: walletAddress.address,
           publicName: publicName ?? null,
           additionalProperties: []
         })
@@ -1042,7 +1042,7 @@ describe('Wallet Address Resolvers', (): void => {
                       code
                       scale
                     }
-                    url
+                    address
                     publicName
                   }
                   cursor
@@ -1071,7 +1071,7 @@ describe('Wallet Address Resolvers', (): void => {
             code: walletAddress.asset.code,
             scale: walletAddress.asset.scale
           },
-          url: walletAddress.url,
+          address: walletAddress.address,
           publicName: walletAddress.publicName
         })
       })
@@ -1097,7 +1097,7 @@ describe('Wallet Address Resolvers', (): void => {
                       code
                       scale
                     }
-                    url
+                    address
                     publicName
                   }
                   cursor
@@ -1129,7 +1129,7 @@ describe('Wallet Address Resolvers', (): void => {
             code: walletAddress.asset.code,
             scale: walletAddress.asset.scale
           },
-          url: walletAddress.url,
+          address: walletAddress.address,
           publicName: walletAddress.publicName
         })
       })

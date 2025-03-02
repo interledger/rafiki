@@ -796,8 +796,8 @@ type WalletAddress implements Model {
   "Current amount of liquidity available for this wallet address."
   liquidity: UInt64
 
-  "Wallet Address URL."
-  url: String!
+  "Wallet Address."
+  address: String!
 
   "Public name associated with the wallet address. This is visible to anyone with the wallet address URL."
   publicName: String
@@ -1302,8 +1302,8 @@ input CreateWalletAddressInput {
   tenantId: ID
   "Unique identifier of the asset associated with the wallet address. This cannot be changed."
   assetId: String!
-  "Wallet address URL. This cannot be changed."
-  url: String!
+  "Wallet address. This cannot be changed."
+  address: String!
   "Public name associated with the wallet address. This is visible to anyone with the wallet address URL."
   publicName: String
   "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency)."
