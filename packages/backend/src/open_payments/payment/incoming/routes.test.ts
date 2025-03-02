@@ -59,7 +59,7 @@ describe('Incoming Payment Routes', (): void => {
       tenantId,
       assetId: asset.id
     })
-    baseUrl = new URL(walletAddress.url).origin
+    baseUrl = new URL(walletAddress.address).origin
     incomingAmount = {
       value: BigInt('123'),
       assetScale: asset.scale,
@@ -97,7 +97,7 @@ describe('Incoming Payment Routes', (): void => {
         const response: Partial<OpenPaymentsIncomingPaymentWithPaymentMethods> =
           {
             id: incomingPayment.getUrl(walletAddress),
-            walletAddress: walletAddress.url,
+            walletAddress: walletAddress.address,
             completed: false,
             incomingAmount:
               incomingPayment.incomingAmount &&
@@ -280,7 +280,7 @@ describe('Incoming Payment Routes', (): void => {
 
         expect(ctx.response.body).toEqual({
           id: `${baseUrl}/${tenantId}/incoming-payments/${incomingPaymentId}`,
-          walletAddress: walletAddress.url,
+          walletAddress: walletAddress.address,
           incomingAmount: incomingAmount ? amount : undefined,
           expiresAt: expiresAt || expect.any(String),
           createdAt: expect.any(String),
@@ -335,7 +335,7 @@ describe('Incoming Payment Routes', (): void => {
       expect(ctx.response).toSatisfyApiSpec()
       expect(ctx.body).toEqual({
         id: incomingPayment.getUrl(walletAddress),
-        walletAddress: walletAddress.url,
+        walletAddress: walletAddress.address,
         incomingAmount: {
           value: '123',
           assetCode: asset.code,

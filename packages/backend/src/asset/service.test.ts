@@ -326,7 +326,7 @@ describe('Asset Service', (): void => {
 
       // make sure there is at least 1 wallet address using asset
       const walletAddress = walletAddressService.create({
-        url: 'https://alice.me/.well-known/pay',
+        address: 'https://alice.me/.well-known/pay',
         tenantId: Config.operatorTenantId,
         assetId: newAssetId
       })

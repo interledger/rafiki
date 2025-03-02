@@ -142,7 +142,7 @@ describe('Wallet Address Middleware', (): void => {
       jest.spyOn(incomingPaymentService, 'get').mockResolvedValueOnce({
         id: incomingPaymentId,
         walletAddress: {
-          url: walletAddressUrl
+          address: walletAddressUrl
         }
       } as IncomingPayment)
 
@@ -203,7 +203,7 @@ describe('Wallet Address Middleware', (): void => {
       jest.spyOn(quoteService, 'get').mockResolvedValueOnce({
         id: quoteId,
         walletAddress: {
-          url: walletAddressUrl
+          address: walletAddressUrl
         }
       } as Quote)
 
@@ -319,7 +319,7 @@ describe('Wallet Address Middleware', (): void => {
       jest.spyOn(outgoingPaymentService, 'get').mockResolvedValueOnce({
         id: outgoingPaymentId,
         walletAddress: {
-          url: walletAddressUrl
+          address: walletAddressUrl
         }
       } as OutgoingPayment)
 
@@ -465,7 +465,7 @@ describe('Wallet Address Middleware', (): void => {
       const walletAddress = await createWalletAddress(deps, {
         tenantId: Config.operatorTenantId
       })
-      ctx.walletAddressUrl = walletAddress.url
+      ctx.walletAddressUrl = walletAddress.address
 
       await walletAddress.$query().patch({ deactivatedAt: new Date() })
 
@@ -484,7 +484,7 @@ describe('Wallet Address Middleware', (): void => {
       const walletAddress = await createWalletAddress(deps, {
         tenantId: Config.operatorTenantId
       })
-      ctx.walletAddressUrl = walletAddress.url
+      ctx.walletAddressUrl = walletAddress.address
 
       await expect(
         getWalletAddressForSubresource(ctx, next)

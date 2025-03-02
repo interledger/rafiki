@@ -76,7 +76,7 @@ describe('Wallet Address Resolvers', (): void => {
       input = {
         assetId: asset.id,
         tenantId: Config.operatorTenantId,
-        url: 'https://alice.me/.well-known/pay'
+        address: 'https://alice.me/.well-known/pay'
       }
     })
 
@@ -121,7 +121,7 @@ describe('Wallet Address Resolvers', (): void => {
         expect(response.walletAddress).toEqual({
           __typename: 'WalletAddress',
           id: response.walletAddress.id,
-          url: input.url,
+          address: input.address,
           asset: {
             __typename: 'Asset',
             code: asset.code,
@@ -192,7 +192,7 @@ describe('Wallet Address Resolvers', (): void => {
       expect(response.walletAddress).toEqual({
         __typename: 'WalletAddress',
         id: response.walletAddress.id,
-        url: input.url,
+        address: input.address,
         asset: {
           __typename: 'Asset',
           code: asset.code,
@@ -318,7 +318,7 @@ describe('Wallet Address Resolvers', (): void => {
       const badInputData = {
         tenantId: 'ae4950b6-3e1b-4e50-ad24-25c065bdd3a9',
         assetId: input.assetId,
-        url: input.url
+        address: input.address
       }
       try {
         expect.assertions(2)
