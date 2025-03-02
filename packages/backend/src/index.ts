@@ -412,7 +412,8 @@ export function initIocContainer(
       accountingService: await deps.use('accountingService'),
       webhookService: await deps.use('webhookService'),
       assetService: await deps.use('assetService'),
-      walletAddressCache: await deps.use('walletAddressCache')
+      walletAddressCache: await deps.use('walletAddressCache'),
+      tenantSettingService: await deps.use('tenantSettingService')
     })
   })
   container.singleton('spspRoutes', async (deps) => {

@@ -76,7 +76,7 @@ describe('Wallet Address Resolvers', (): void => {
       input = {
         assetId: asset.id,
         tenantId: Config.operatorTenantId,
-        url: 'https://alice.me/.well-known/pay'
+        address: 'https://alice.me/.well-known/pay'
       }
     })
 
@@ -121,7 +121,7 @@ describe('Wallet Address Resolvers', (): void => {
         expect(response.walletAddress).toEqual({
           __typename: 'WalletAddress',
           id: response.walletAddress.id,
-          url: input.url,
+          address: input.address,
           asset: {
             __typename: 'Asset',
             code: asset.code,
@@ -192,7 +192,7 @@ describe('Wallet Address Resolvers', (): void => {
       expect(response.walletAddress).toEqual({
         __typename: 'WalletAddress',
         id: response.walletAddress.id,
-        url: input.url,
+        address: input.address,
         asset: {
           __typename: 'Asset',
           code: asset.code,
@@ -318,7 +318,7 @@ describe('Wallet Address Resolvers', (): void => {
       const badInputData = {
         tenantId: 'ae4950b6-3e1b-4e50-ad24-25c065bdd3a9',
         assetId: input.assetId,
-        url: input.url
+        address: input.address
       }
       try {
         expect.assertions(2)
@@ -714,7 +714,7 @@ describe('Wallet Address Resolvers', (): void => {
         const newWalletAddress = await walletAddressService.create({
           assetId: (newAsset as Asset).id,
           tenantId: newTenant!.id,
-          url: 'https://alice.me/.well-known/pay-2'
+          address: 'https://alice.me/.well-known/pay-2'
         })
         const id = (newWalletAddress as WalletAddressModel).id
 
@@ -824,7 +824,7 @@ describe('Wallet Address Resolvers', (): void => {
             code: walletAddress.asset.code,
             scale: walletAddress.asset.scale
           },
-          url: walletAddress.url,
+          address: walletAddress.address,
           publicName: publicName ?? null,
           additionalProperties: [
             {
@@ -856,7 +856,7 @@ describe('Wallet Address Resolvers', (): void => {
           publicName,
           createLiquidityAccount: true
         })
-        const args = { url: walletAddress.url }
+        const args = { url: walletAddress.address }
         const query = await appContainer.apolloClient
           .query({
             query: gql`
@@ -868,7 +868,7 @@ describe('Wallet Address Resolvers', (): void => {
                     code
                     scale
                   }
-                  url
+                  address
                   publicName
                   additionalProperties {
                     key
@@ -897,7 +897,7 @@ describe('Wallet Address Resolvers', (): void => {
             code: walletAddress.asset.code,
             scale: walletAddress.asset.scale
           },
-          url: walletAddress.url,
+          address: walletAddress.address,
           publicName: publicName ?? null,
           additionalProperties: []
         })
@@ -967,7 +967,7 @@ describe('Wallet Address Resolvers', (): void => {
                       code
                       scale
                     }
-                    url
+                    address
                     publicName
                   }
                   cursor
@@ -996,7 +996,7 @@ describe('Wallet Address Resolvers', (): void => {
             code: walletAddress.asset.code,
             scale: walletAddress.asset.scale
           },
-          url: walletAddress.url,
+          address: walletAddress.address,
           publicName: walletAddress.publicName
         })
       })
@@ -1022,7 +1022,7 @@ describe('Wallet Address Resolvers', (): void => {
                       code
                       scale
                     }
-                    url
+                    address
                     publicName
                   }
                   cursor
@@ -1054,7 +1054,7 @@ describe('Wallet Address Resolvers', (): void => {
             code: walletAddress.asset.code,
             scale: walletAddress.asset.scale
           },
-          url: walletAddress.url,
+          address: walletAddress.address,
           publicName: walletAddress.publicName
         })
       })

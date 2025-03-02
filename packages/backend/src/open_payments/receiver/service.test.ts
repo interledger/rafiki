@@ -105,7 +105,7 @@ describe('Receiver Service', (): void => {
           sharedSecret: expect.any(Buffer),
           incomingPayment: {
             id: incomingPayment.getUrl(walletAddress),
-            walletAddress: walletAddress.url,
+            walletAddress: walletAddress.address,
             incomingAmount: incomingPayment.incomingAmount,
             receivedAmount: incomingPayment.receivedAmount,
             completed: false,
@@ -315,7 +315,7 @@ describe('Receiver Service', (): void => {
             'create'
           )
           const receiver = await receiverService.create({
-            walletAddressUrl: walletAddress.url,
+            walletAddressUrl: walletAddress.address,
             incomingAmount,
             expiresAt,
             metadata,
@@ -367,7 +367,7 @@ describe('Receiver Service', (): void => {
 
         await expect(
           receiverService.create({
-            walletAddressUrl: walletAddress.url,
+            walletAddressUrl: walletAddress.address,
             tenantId
           })
         ).resolves.toEqual(ReceiverError.InvalidAmount)
@@ -380,7 +380,7 @@ describe('Receiver Service', (): void => {
 
         await expect(
           receiverService.create({
-            walletAddressUrl: walletAddress.url,
+            walletAddressUrl: walletAddress.address,
             tenantId
           })
         ).rejects.toThrow(

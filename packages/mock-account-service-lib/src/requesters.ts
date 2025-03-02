@@ -341,7 +341,7 @@ export async function createWalletAddress(
   `
   const createWalletAddressInput: CreateWalletAddressInput = {
     assetId,
-    url: accountUrl,
+    address: accountUrl,
     publicName: accountName,
     additionalProperties: []
   }
