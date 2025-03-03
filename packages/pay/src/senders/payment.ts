@@ -4,8 +4,7 @@ import {
   StreamMaxMoneyFrame,
   FrameType,
   StreamMoneyFrame,
-  StreamReceiptFrame,
-  StreamDataFrame
+  StreamReceiptFrame
 } from 'ilp-protocol-stream/dist/src/packet'
 import { MaxPacketAmountController } from '../controllers/max-packet'
 import { ExchangeRateController } from '../controllers/exchange-rate'

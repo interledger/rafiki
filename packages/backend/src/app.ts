@@ -42,7 +42,7 @@ import {
 import { WalletAddressKeyRoutes } from './open_payments/wallet_address/key/routes'
 import { WalletAddressRoutes } from './open_payments/wallet_address/routes'
 import { IncomingPaymentService } from './open_payments/payment/incoming/service'
-import { StreamServer } from '@interledger/stream-receiver'
+import { StreamServer } from 'stream-receiver'
 import { WebhookService } from './webhook/service'
 import {
   QuoteRoutes,

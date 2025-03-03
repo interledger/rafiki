@@ -13,7 +13,7 @@ import {
   getResourceServerOpenAPI,
   getWalletAddressServerOpenAPI
 } from '@interledger/open-payments'
-import { StreamServer } from '@interledger/stream-receiver'
+import { StreamServer } from 'stream-receiver'
 import axios from 'axios'
 import { createAccountingService as createPsqlAccountingService } from './accounting/psql/service'
 import { createAccountingService as createTigerbeetleAccountingService } from './accounting/tigerbeetle/service'

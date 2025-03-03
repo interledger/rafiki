@@ -10,7 +10,7 @@ import { AssetOptions } from '../../../asset/service'
 import { Config } from '../../../config/app'
 
 import { IocContract } from '@adonisjs/fold'
-import { StreamServer } from '@interledger/stream-receiver'
+import { StreamServer } from 'stream-receiver'
 import { randomAsset } from '../../../tests/asset'
 import { createContext } from '../../../tests/context'
 import { truncateTables } from '../../../tests/tableManager'
