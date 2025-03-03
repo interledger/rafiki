@@ -42,13 +42,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/gnap-error'
+                $ref: '#/components/schemas/error-unknown-interaction'
         '500':
           description: Internal Server Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/gnap-error'
+                $ref: './auth-server.yaml#/components/schemas/error-request-denied'
       operationId: get-interact
       parameters:
         - schema:
@@ -102,13 +102,15 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/gnap-error'
+                oneOf:
+                  - $ref: './auth-server.yaml#/components/schemas/error-invalid-request'
+                  - $ref: '#/components/schemas/error-invalid-interaction'
         '404':
           description: Not Found
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/gnap-error'
+                $ref: '#/components/schemas/error-unknown-interaction'
       description: "To finish the user interaction for grant approval, this endpoint redirects the user to the client's finish url."
       parameters:
         - schema:
@@ -157,13 +159,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/gnap-error'
+                $ref: './auth-server.yaml#/components/schemas/error-invalid-request'
         '404':
           description: Not Found
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/gnap-error'
+                $ref: '#/components/schemas/error-unknown-interaction'
       operationId: get-grant
       description: |
         This endpoint is called by the identity provider to get the grant details associated with the `interactId` on the front-channel. The identity provider will display the details to the user to either accept or deny.
@@ -194,19 +196,19 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/gnap-error'
+                $ref: '#/components/schemas/error-invalid-interaction'
         '401':
           description: Unauthorized
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/gnap-error'
+                $ref: '#/components/schemas/error-invalid-interaction'
         '404':
           description: Not Found
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/gnap-error'
+                $ref: '#/components/schemas/error-unknown-interaction'
       description: The Identity Provider uses this endpoint to submit the user's choice regarding accepting or rejecting a grant to Authorization Server.
       parameters:
         - schema:
@@ -234,7 +236,7 @@ paths:
         - back-channel
 components:
   schemas:
-    gnap-error:
+    error-unknown-interaction:
       type: object
       properties:
         error:
@@ -245,15 +247,19 @@ components:
             code:
               type: string
               enum:
-                - invalid_request
-                - invalid_client
-                - invalid_interaction
-                - invalid_rotation
-                - invalid_continuation
-                - user_denied
-                - request_denied
                 - unknown_interaction
-                - too_fast
+    error-invalid-interaction:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            description:
+              type: string
+            code:
+              type: string
+              enum:
+                - invalid_interaction
   securitySchemes:
     GNAP:
       name: Authorization
