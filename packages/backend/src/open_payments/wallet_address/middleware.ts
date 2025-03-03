@@ -123,18 +123,19 @@ export async function redirectIfBrowserAcceptsHtml(
   next: () => Promise<void>
 ) {
   const config = await ctx.container.use('config')
-  const walletAddressPath = ctx.walletAddressUrl.replace('https://', '')
 
   if (
     config.walletAddressRedirectHtmlPage &&
     ctx.request.header['accept']?.includes('text/html')
   ) {
-    ctx.set(
-      'Location',
-      `${config.walletAddressRedirectHtmlPage}/${walletAddressPath}`
+    const walletAddressPath = ctx.walletAddressUrl.replace('https://', '')
+    const redirectHtmlPage = config.walletAddressRedirectHtmlPage.replace(
+      /\/+$/,
+      ''
     )
-    ctx.status = 302
 
+    ctx.set('Location', `${redirectHtmlPage}/${walletAddressPath}`)
+    ctx.status = 302
     return
   }
 
