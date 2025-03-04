@@ -253,7 +253,8 @@ export function initIocContainer(
     return createRatesService({
       logger: await deps.use('logger'),
       exchangeRatesUrl: config.exchangeRatesUrl,
-      exchangeRatesLifetime: config.exchangeRatesLifetime
+      exchangeRatesLifetime: config.exchangeRatesLifetime,
+      tenantSettingService: await deps.use('tenantSettingService')
     })
   })
 
@@ -261,7 +262,9 @@ export function initIocContainer(
     return createRatesService({
       logger: await deps.use('logger'),
       exchangeRatesUrl: config.telemetryExchangeRatesUrl,
-      exchangeRatesLifetime: config.telemetryExchangeRatesLifetime
+      exchangeRatesLifetime: config.telemetryExchangeRatesLifetime,
+      //TODO maybe not use this for the internal rates service?
+      tenantSettingService: await deps.use('tenantSettingService')
     })
   })
 
