@@ -771,7 +771,6 @@ export const start = async (
 
   // Update Operator Tenant from config
   const tenantService = await container.use('tenantService')
-  console.log({ tenantService })
   await tenantService.updateOperatorApiSecretFromConfig()
 
   await app.boot()
