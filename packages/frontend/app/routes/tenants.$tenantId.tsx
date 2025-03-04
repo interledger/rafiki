@@ -12,7 +12,8 @@ import {
   useSubmit
 } from '@remix-run/react'
 import { type FormEvent, useState, useRef } from 'react'
-import { z, ZodSchema } from 'zod'
+import type { ZodSchema } from 'zod'
+import { z } from 'zod'
 import { DangerZone, PageHeader } from '~/components'
 import { Button, ErrorPanel, Input, PasswordInput } from '~/components/ui'
 import {
@@ -30,6 +31,7 @@ import {
 import type { ZodFieldErrors } from '~/shared/types'
 import { checkAuthAndRedirect } from '../lib/kratos_checks.server'
 import { getTenantInfo } from '~/lib/api/tenant.server'
+import type { UpdateTenantInput } from '~/generated/graphql'
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
   const cookies = request.headers.get('cookie')
@@ -281,9 +283,9 @@ export async function action({ request }: ActionFunctionArgs) {
   const intent = formData.get('intent')
   formData.delete('intent')
 
-  async function handleUpdateFormSubmit(
+  async function handleUpdateFormSubmit<T extends UpdateTenantInput>(
     errorKey: keyof typeof actionResponse.errors,
-    schema: ZodSchema<any>
+    schema: ZodSchema<T>
   ) {
     const formEntries = Object.fromEntries(formData)
     const result = schema.safeParse(formEntries)
