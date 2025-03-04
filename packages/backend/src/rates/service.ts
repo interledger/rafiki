@@ -165,7 +165,7 @@ class RatesServiceImpl implements RatesService {
                     errorStatus: err.status
                   }
                 : { err }),
-              baseAssetCode,
+              baseAssetCode
             },
             errorMessage
           )
