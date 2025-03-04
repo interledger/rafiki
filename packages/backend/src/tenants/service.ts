@@ -6,6 +6,8 @@ import { CacheDataStore } from '../middleware/cache/data-stores'
 import type { AuthServiceClient } from '../auth-service-client/client'
 import { TenantSettingService } from './settings/service'
 import { TenantSetting } from './settings/model'
+import type { IAppConfig } from '../config/app'
+import { TenantError } from './errors'
 
 export interface TenantService {
   get: (id: string, includeDeleted?: boolean) => Promise<Tenant | undefined>
@@ -13,13 +15,14 @@ export interface TenantService {
   update: (options: UpdateTenantOptions) => Promise<Tenant>
   delete: (id: string) => Promise<void>
   getPage: (pagination?: Pagination, sortOrder?: SortOrder) => Promise<Tenant[]>
+  updateOperatorApiSecretFromConfig: () => Promise<undefined | TenantError>
 }
-
 export interface ServiceDependencies extends BaseService {
   knex: TransactionOrKnex
   tenantCache: CacheDataStore<Tenant>
   authServiceClient: AuthServiceClient
   tenantSettingService: TenantSettingService
+  config: IAppConfig
 }
 
 export async function createTenantService(
@@ -37,7 +40,9 @@ export async function createTenantService(
     update: (options) => updateTenant(deps, options),
     delete: (id) => deleteTenant(deps, id),
     getPage: (pagination, sortOrder) =>
-      getTenantPage(deps, pagination, sortOrder)
+      getTenantPage(deps, pagination, sortOrder),
+    updateOperatorApiSecretFromConfig: () =>
+      updateOperatorApiSecretFromConfig(deps)
   }
 }
 
@@ -184,5 +189,25 @@ async function deleteTenant(
   } catch (err) {
     await trx.rollback()
     throw err
+  }
+}
+
+async function updateOperatorApiSecretFromConfig(
+  deps: ServiceDependencies
+): Promise<undefined | TenantError> {
+  const { adminApiSecret, operatorTenantId } = deps.config
+
+  const tenant = await Tenant.query(deps.knex)
+    .findById(operatorTenantId)
+    .whereNull('deletedAt')
+    .first()
+
+  if (!tenant) {
+    return TenantError.TenantNotFound
+  }
+  if (tenant.apiSecret !== adminApiSecret) {
+    await Tenant.query(deps.knex)
+      .patch({ apiSecret: adminApiSecret })
+      .where('id', operatorTenantId)
   }
 }

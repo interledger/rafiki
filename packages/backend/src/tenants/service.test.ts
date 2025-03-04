@@ -1,7 +1,6 @@
 import assert from 'assert'
 import { faker } from '@faker-js/faker'
 import { IocContract } from '@adonisjs/fold'
-import nock from 'nock'
 import { Knex } from 'knex'
 import { AppServices } from '../app'
 import { initIocContainer } from '..'
@@ -18,6 +17,7 @@ import { AuthServiceClient } from '../auth-service-client/client'
 import { withConfigOverride } from '../tests/helpers'
 import { TenantSetting } from './settings/model'
 import { TenantSettingService } from './settings/service'
+import { isTenantError, TenantError } from './errors'
 
 describe('Tenant Service', (): void => {
   let deps: IocContract<AppServices>
@@ -47,7 +47,6 @@ describe('Tenant Service', (): void => {
   })
 
   afterAll(async (): Promise<void> => {
-    nock.cleanAll()
     await appContainer.shutdown()
   })
 
@@ -445,5 +444,91 @@ describe('Tenant Service', (): void => {
         )
       )
     })
+  })
+})
+
+describe('Tenant Service (no tenant truncate)', (): void => {
+  let deps: IocContract<AppServices>
+  let config: IAppConfig
+  let appContainer: TestContainer
+  let tenantService: TenantService
+  let knex: Knex
+  let updateSpyWasCalled: boolean
+  const dbSchema = 'tenant_service_test_schema2'
+
+  beforeAll(async (): Promise<void> => {
+    deps = initIocContainer({
+      ...Config,
+      dbSchema
+    })
+    knex = await deps.use('knex')
+    config = await deps.use('config')
+    tenantService = await deps.use('tenantService')
+
+    const updateOperatorSecretSpy = jest.spyOn(
+      tenantService,
+      'updateOperatorApiSecretFromConfig'
+    )
+    appContainer = await createTestApp(deps)
+    updateSpyWasCalled = updateOperatorSecretSpy.mock.calls.length > 0
+  })
+
+  afterEach(async (): Promise<void> => {
+    await truncateTables(knex, false, dbSchema)
+  })
+
+  afterAll(async (): Promise<void> => {
+    await appContainer.shutdown()
+  })
+  describe('updateOperatorApiSecretFromConfig', () => {
+    test('called on application start', async (): Promise<void> => {
+      expect(updateSpyWasCalled).toBe(true)
+    })
+
+    test('updates secret if changed', async (): Promise<void> => {
+      // Setup operator with different secret than the config.
+      // As-if the api secret was set from a different config value originally.
+      const initialApiSecret = '123'
+      assert(initialApiSecret !== config.adminApiSecret)
+      const tenant = await Tenant.query(knex).patchAndFetchById(
+        config.operatorTenantId,
+        { apiSecret: initialApiSecret }
+      )
+      assert(tenant)
+      expect(tenant.apiSecret).toBe(initialApiSecret)
+
+      const error = await tenantService.updateOperatorApiSecretFromConfig()
+      expect(error).toBe(undefined)
+
+      const updated = await Tenant.query(knex).findById(tenant.id)
+      assert(updated)
+      expect(updated.apiSecret).toBe(config.adminApiSecret)
+    })
+    test('does not update if secret hasnt changed', async (): Promise<void> => {
+      const tenant = await Tenant.query(knex).findById(config.operatorTenantId)
+      assert(tenant)
+      assert(tenant.apiSecret === config.adminApiSecret)
+
+      const error = await tenantService.updateOperatorApiSecretFromConfig()
+
+      expect(error).toBe(undefined)
+
+      const updated = await Tenant.query(knex).findById(tenant.id)
+      assert(updated)
+      expect(updated.updatedAt).toStrictEqual(tenant.updatedAt)
+    })
+    test(
+      'throws error if operator tenant not found',
+      withConfigOverride(
+        () => config,
+        { operatorTenantId: crypto.randomUUID() },
+        async (): Promise<void> => {
+          const error = await tenantService.updateOperatorApiSecretFromConfig()
+
+          expect(isTenantError(error)).toBe(true)
+          expect(error).toEqual(TenantError.TenantNotFound)
+        }
+      )
+    )
   })
 })
