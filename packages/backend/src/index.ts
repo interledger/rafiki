@@ -771,7 +771,8 @@ export const start = async (
 
   // Update Operator Tenant from config
   const tenantService = await container.use('tenantService')
-  await tenantService.updateOperatorApiSecretFromConfig()
+  const error = await tenantService.updateOperatorApiSecretFromConfig()
+  if (error) throw error
 
   await app.boot()
   await app.startAdminServer(config.adminPort)
