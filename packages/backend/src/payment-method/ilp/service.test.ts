@@ -27,6 +27,11 @@ import { truncateTables } from '../../tests/tableManager'
 import { createOutgoingPaymentWithReceiver } from '../../tests/outgoingPayment'
 import { v4 as uuid } from 'uuid'
 import { IlpQuoteDetails } from './quote-details/model'
+import { CreateOptions } from '../../tenants/settings/service'
+import {
+  createTenantSettings,
+  exchangeRatesSetting
+} from '../../tests/tenantSettings'
 
 const nock = (global as unknown as { nock: typeof import('nock') }).nock
 
@@ -38,7 +43,9 @@ describe('IlpPaymentService', (): void => {
   let config: IAppConfig
   let tenantId: string
 
+  //TODO tests for both default and tenanted exchange rates
   const exchangeRatesUrl = 'https://example-rates.com'
+  let tenantExchangeRatesUrl: string
 
   const assetMap: Record<string, Asset> = {}
   const walletAddressMap: Record<string, WalletAddress> = {}
@@ -77,6 +84,14 @@ describe('IlpPaymentService', (): void => {
       tenantId,
       assetId: assetMap['EUR'].id
     })
+
+    const createOptions: CreateOptions = {
+      tenantId,
+      setting: [exchangeRatesSetting()]
+    }
+
+    const tenantSetting = createTenantSettings(deps, createOptions)
+    tenantExchangeRatesUrl = (await tenantSetting).value
   })
 
   afterEach(async (): Promise<void> => {
@@ -95,7 +110,7 @@ describe('IlpPaymentService', (): void => {
 
   describe('getQuote', (): void => {
     test('calls rates service with correct base asset', async (): Promise<void> => {
-      const ratesScope = mockRatesApi(exchangeRatesUrl, () => ({}))
+      const ratesScope = mockRatesApi(tenantExchangeRatesUrl, () => ({}))
 
       const options: StartQuoteOptions = {
         quoteId: uuid(),
@@ -113,12 +128,12 @@ describe('IlpPaymentService', (): void => {
 
       await ilpPaymentService.getQuote(options)
 
-      expect(ratesServiceSpy).toHaveBeenCalledWith('USD')
+      expect(ratesServiceSpy).toHaveBeenCalledWith('USD', tenantId)
       ratesScope.done()
     })
 
     test('inserts ilpQuoteDetails', async (): Promise<void> => {
-      const ratesScope = mockRatesApi(exchangeRatesUrl, () => ({}))
+      const ratesScope = mockRatesApi(tenantExchangeRatesUrl, () => ({}))
       const quoteId = uuid()
       const options: StartQuoteOptions = {
         quoteId,
@@ -180,7 +195,7 @@ describe('IlpPaymentService', (): void => {
     })
 
     test('creates a quote with large exchange rate amounts', async (): Promise<void> => {
-      const ratesScope = mockRatesApi(exchangeRatesUrl, () => ({}))
+      const ratesScope = mockRatesApi(tenantExchangeRatesUrl, () => ({}))
       const quoteId = uuid()
       const options: StartQuoteOptions = {
         quoteId,
@@ -298,7 +313,7 @@ describe('IlpPaymentService', (): void => {
     })
 
     test('returns all fields correctly', async (): Promise<void> => {
-      const ratesScope = mockRatesApi(exchangeRatesUrl, () => ({}))
+      const ratesScope = mockRatesApi(tenantExchangeRatesUrl, () => ({}))
 
       const options: StartQuoteOptions = {
         quoteId: uuid(),
@@ -330,7 +345,7 @@ describe('IlpPaymentService', (): void => {
     })
 
     test('uses receiver.incomingAmount if receiveAmount is not provided', async (): Promise<void> => {
-      const ratesScope = mockRatesApi(exchangeRatesUrl, () => ({}))
+      const ratesScope = mockRatesApi(tenantExchangeRatesUrl, () => ({}))
 
       const incomingAmount = {
         assetCode: 'USD',
@@ -370,7 +385,7 @@ describe('IlpPaymentService', (): void => {
         () => config,
         { slippage: 101 },
         async () => {
-          mockRatesApi(exchangeRatesUrl, () => ({}))
+          mockRatesApi(tenantExchangeRatesUrl, () => ({}))
 
           expect.assertions(4)
           try {
@@ -398,7 +413,7 @@ describe('IlpPaymentService', (): void => {
       )())
 
     test('throws if quote returns invalid maxSourceAmount', async (): Promise<void> => {
-      const ratesScope = mockRatesApi(exchangeRatesUrl, () => ({}))
+      const ratesScope = mockRatesApi(tenantExchangeRatesUrl, () => ({}))
 
       const options: StartQuoteOptions = {
         quoteId: uuid(),
@@ -428,7 +443,7 @@ describe('IlpPaymentService', (): void => {
     })
 
     test('throws if quote returns invalid minDeliveryAmount', async (): Promise<void> => {
-      const ratesScope = mockRatesApi(exchangeRatesUrl, () => ({}))
+      const ratesScope = mockRatesApi(tenantExchangeRatesUrl, () => ({}))
 
       const options: StartQuoteOptions = {
         quoteId: uuid(),
@@ -469,7 +484,7 @@ describe('IlpPaymentService', (): void => {
     })
 
     test('throws if quote returns with a non-positive estimated delivery amount', async (): Promise<void> => {
-      const ratesScope = mockRatesApi(exchangeRatesUrl, () => ({}))
+      const ratesScope = mockRatesApi(tenantExchangeRatesUrl, () => ({}))
 
       const options: StartQuoteOptions = {
         quoteId: uuid(),
@@ -524,7 +539,7 @@ describe('IlpPaymentService', (): void => {
               () => config,
               { slippage },
               async () => {
-                const ratesScope = mockRatesApi(exchangeRatesUrl, () => ({
+                const ratesScope = mockRatesApi(tenantExchangeRatesUrl, () => ({
                   [incomingAssetCode]: exchangeRate
                 }))
 
@@ -584,7 +599,7 @@ describe('IlpPaymentService', (): void => {
               () => config,
               { slippage },
               async () => {
-                const ratesScope = mockRatesApi(exchangeRatesUrl, () => ({
+                const ratesScope = mockRatesApi(tenantExchangeRatesUrl, () => ({
                   [incomingAssetCode]: exchangeRate
                 }))
 
