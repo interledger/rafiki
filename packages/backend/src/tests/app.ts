@@ -14,7 +14,6 @@ import { start, gracefulShutdown } from '..'
 import { onError } from '@apollo/client/link/error'
 
 import { App, AppServices } from '../app'
-import { Tenant } from '../tenants/model'
 
 export const testAccessToken = 'test-app-access'
 
@@ -83,8 +82,7 @@ export const createApolloClient = async (
 }
 
 export const createTestApp = async (
-  container: IocContract<AppServices>,
-  caller?: string
+  container: IocContract<AppServices>
 ): Promise<TestContainer> => {
   const config = await container.use('config')
   config.adminPort = 0
@@ -93,17 +91,6 @@ export const createTestApp = async (
   config.autoPeeringServerPort = 0
   config.openPaymentsUrl = 'https://op.example'
   config.walletAddressUrl = 'https://wallet.example/.well-known/pay'
-
-  const knex = await container.use('knex')
-
-  // if (caller) {
-  // It seems that the `start` method throws an error sometimes because
-  // it cant find a tenant (by config.operatorTenantId). See TenantNotFund error
-  // on tenant service, tenant resolver, tenant settings.
-  // Not sure why - truncateTables that truncates tenants? then they arent there for next test?
-  // - is that how it works? I think we should never truncate tenants then. or if we do, re-add them if we do.
-  // console.log(caller, { tenants: await Tenant.query(knex) })
-  // }
 
   const app = new App(container)
   await start(container, app)
@@ -120,6 +107,8 @@ export const createTestApp = async (
       }).then((res) => res.data)
     })
     .persist()
+
+  const knex = await container.use('knex')
 
   const client = await createApolloClient(container, app)
 
