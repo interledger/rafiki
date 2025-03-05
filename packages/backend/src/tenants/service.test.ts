@@ -17,7 +17,7 @@ import { AuthServiceClient } from '../auth-service-client/client'
 import { withConfigOverride } from '../tests/helpers'
 import { TenantSetting } from './settings/model'
 import { TenantSettingService } from './settings/service'
-import { isTenantError, TenantError } from './errors'
+// import { isTenantError, TenantError } from './errors'
 
 describe('Tenant Service', (): void => {
   let deps: IocContract<AppServices>
