@@ -34,16 +34,11 @@ describe('Tenant Service', (): void => {
       ...Config,
       dbSchema
     })
-    config = await deps.use('config')
-    console.log({ config })
-    try {
-      appContainer = await createTestApp(deps)
-    } catch (err) {
-      console.error(err)
-      throw err
-    }
-    tenantService = await deps.use('tenantService')
     knex = await deps.use('knex')
+    config = await deps.use('config')
+    console.log({ config, tenants: await Tenant.query(knex) })
+    appContainer = await createTestApp(deps)
+    tenantService = await deps.use('tenantService')
     authServiceClient = await deps.use('authServiceClient')
     tenantSettingsService = await deps.use('tenantSettingService')
   })
