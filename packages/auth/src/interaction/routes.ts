@@ -420,7 +420,38 @@ async function finishInteraction(
   const { interactionService } = deps
   const sessionNonce = ctx.session.nonce
 
-  // TODO: redirect with this error in query string
+  const interaction = await interactionService.getBySession(interactId, nonce)
+
+  if (!interaction) {
+    throw new GNAPServerRouteError(
+      404,
+      GNAPErrorCode.UnknownInteraction,
+      'unknown interaction'
+    )
+  }
+  if (
+    isInteractionExpired(interaction) &&
+    isFinishableGrant(interaction.grant)
+  ) {
+    const clientRedirectUri = new URL(interaction.grant.finishUri as string)
+    clientRedirectUri.searchParams.set(
+      'result',
+      GNAPErrorCode.InvalidInteraction
+    )
+
+    ctx.redirect(clientRedirectUri.toString())
+    return
+  } else if (
+    isInteractionExpired(interaction) &&
+    !isFinishableGrant(interaction.grant)
+  ) {
+    throw new GNAPServerRouteError(
+      401,
+      GNAPErrorCode.InvalidInteraction,
+      'interaction expired'
+    )
+  }
+
   if (sessionNonce !== nonce) {
     throw new GNAPServerRouteError(
       401,
@@ -429,10 +460,22 @@ async function finishInteraction(
     )
   }
 
-  const interaction = await interactionService.getBySession(interactId, nonce)
+  if (
+    isRevokedGrant(interaction.grant) &&
+    isFinishableGrant(interaction.grant)
+  ) {
+    const clientRedirectUri = new URL(interaction.grant.finishUri as string)
+    clientRedirectUri.searchParams.set(
+      'result',
+      GNAPErrorCode.UnknownInteraction
+    )
 
-  // TODO: redirect with this error in query string
-  if (!interaction || isRevokedGrant(interaction.grant)) {
+    ctx.redirect(clientRedirectUri.toString())
+    return
+  } else if (
+    isRevokedGrant(interaction.grant) &&
+    !isFinishableGrant(interaction.grant)
+  ) {
     throw new GNAPServerRouteError(
       404,
       GNAPErrorCode.UnknownInteraction,

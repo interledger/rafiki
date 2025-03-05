@@ -65,6 +65,7 @@ describe('Interaction Routes', (): void => {
   })
 
   afterEach(async (): Promise<void> => {
+    jest.useRealTimers()
     await truncateTables(appContainer.knex)
   })
 
@@ -233,36 +234,6 @@ describe('Interaction Routes', (): void => {
         })
       })
 
-      test('Cannot finish interaction with revoked grant', async (): Promise<void> => {
-        const grant = await Grant.query().insert(
-          generateBaseGrant({
-            state: GrantState.Finalized,
-            finalizationReason: GrantFinalization.Revoked
-          })
-        )
-
-        const interaction = await Interaction.query().insert(
-          generateBaseInteraction(grant)
-        )
-
-        const ctx = createContext<FinishContext>(
-          {
-            headers: {
-              Accept: 'application/json',
-              'Content-Type': 'application/json'
-            },
-            session: { nonce: interaction.nonce }
-          },
-          { id: interaction.id, nonce: interaction.nonce }
-        )
-
-        await expect(interactionRoutes.finish(ctx)).rejects.toMatchObject({
-          status: 404,
-          code: GNAPErrorCode.UnknownInteraction,
-          message: 'unknown interaction'
-        })
-      })
-
       describe('Interactions for grant with finish method', (): void => {
         test('Can finish accepted interaction', async (): Promise<void> => {
           const grant = await Grant.query().insert({
@@ -404,6 +375,79 @@ describe('Interaction Routes', (): void => {
           expect(ctx.status).toBe(302)
           expect(redirectSpy).toHaveBeenCalledWith(clientRedirectUri.toString())
         })
+
+        test('Cannot finish interaction with revoked grant', async (): Promise<void> => {
+          const grant = await Grant.query().insert(
+            generateBaseGrant({
+              state: GrantState.Finalized,
+              finalizationReason: GrantFinalization.Revoked
+            })
+          )
+
+          assert.ok(grant.finishUri)
+          const clientRedirectUri = new URL(grant.finishUri)
+          clientRedirectUri.searchParams.set(
+            'result',
+            GNAPErrorCode.UnknownInteraction
+          )
+
+          const interaction = await Interaction.query().insert(
+            generateBaseInteraction(grant)
+          )
+
+          const ctx = createContext<FinishContext>(
+            {
+              headers: {
+                Accept: 'application/json',
+                'Content-Type': 'application/json'
+              },
+              session: { nonce: interaction.nonce },
+              url: `/interact/${interaction.id}/${interaction.nonce}/finish`
+            },
+            { id: interaction.id, nonce: interaction.nonce }
+          )
+
+          const redirectSpy = jest.spyOn(ctx, 'redirect')
+
+          await expect(interactionRoutes.finish(ctx)).resolves.toBeUndefined()
+          expect(ctx.response).toSatisfyApiSpec()
+          expect(ctx.status).toBe(302)
+          expect(redirectSpy).toHaveBeenCalledWith(clientRedirectUri.toString())
+        })
+
+        test('Cannot finish expired interaction', async (): Promise<void> => {
+          assert.ok(grant.finishUri)
+          const clientRedirectUri = new URL(grant.finishUri)
+          clientRedirectUri.searchParams.set(
+            'result',
+            GNAPErrorCode.InvalidInteraction
+          )
+          const interactionCreatedDate = new Date(interaction.createdAt)
+          const now = new Date(
+            interactionCreatedDate.getTime() +
+              (interaction.expiresIn + 1) * 1000
+          )
+          jest.useFakeTimers({ now })
+
+          const ctx = createContext<FinishContext>(
+            {
+              headers: {
+                Accept: 'application/json',
+                'Content-Type': 'application/json'
+              },
+              session: { nonce: interaction.nonce },
+              url: `/interact/${interaction.id}/${interaction.nonce}/finish`
+            },
+            { id: interaction.id, nonce: interaction.nonce }
+          )
+
+          const redirectSpy = jest.spyOn(ctx, 'redirect')
+
+          await expect(interactionRoutes.finish(ctx)).resolves.toBeUndefined()
+          expect(ctx.response).toSatisfyApiSpec()
+          expect(ctx.status).toBe(302)
+          expect(redirectSpy).toHaveBeenCalledWith(clientRedirectUri.toString())
+        })
       })
 
       describe('Interactions for grant without finish method', (): void => {
@@ -521,6 +565,70 @@ describe('Interaction Routes', (): void => {
             status: 401,
             code: GNAPErrorCode.InvalidInteraction,
             message: 'interaction is not active'
+          })
+        })
+
+        test('Cannot finish interaction with revoked grant', async (): Promise<void> => {
+          const grant = await Grant.query().insert(
+            generateBaseGrant({
+              noFinishMethod: true,
+              state: GrantState.Finalized,
+              finalizationReason: GrantFinalization.Revoked
+            })
+          )
+
+          const interaction = await Interaction.query().insert(
+            generateBaseInteraction(grant)
+          )
+
+          const ctx = createContext<FinishContext>(
+            {
+              headers: {
+                Accept: 'application/json',
+                'Content-Type': 'application/json'
+              },
+              session: { nonce: interaction.nonce },
+              url: `/interact/${interaction.id}/${interaction.nonce}/finish`
+            },
+            { id: interaction.id, nonce: interaction.nonce }
+          )
+
+          await expect(interactionRoutes.finish(ctx)).rejects.toMatchObject({
+            status: 404,
+            code: GNAPErrorCode.UnknownInteraction,
+            message: 'unknown interaction'
+          })
+        })
+
+        test('Cannot finish expired interaction', async (): Promise<void> => {
+          const interaction = await Interaction.query().insert(
+            generateBaseInteraction(grantWithoutFinish, {
+              state: InteractionState.Approved
+            })
+          )
+          const interactionCreatedDate = new Date(interaction.createdAt)
+          const now = new Date(
+            interactionCreatedDate.getTime() +
+              (interaction.expiresIn + 1) * 1000
+          )
+          jest.useFakeTimers({ now })
+
+          const ctx = createContext<FinishContext>(
+            {
+              headers: {
+                Accept: 'application/json',
+                'Content-Type': 'application/json'
+              },
+              session: { nonce: interaction.nonce },
+              url: `/interact/${interaction.id}/${interaction.nonce}/finish`
+            },
+            { id: interaction.id, nonce: interaction.nonce }
+          )
+
+          await expect(interactionRoutes.finish(ctx)).rejects.toMatchObject({
+            status: 401,
+            code: GNAPErrorCode.InvalidInteraction,
+            message: 'interaction expired'
           })
         })
       })
