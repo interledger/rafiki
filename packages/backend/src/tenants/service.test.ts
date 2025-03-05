@@ -38,7 +38,7 @@ describe('Tenant Service', (): void => {
     knex = await deps.use('knex')
     config = await deps.use('config')
     console.log({ config })
-    appContainer = await createTestApp(deps, 'tenantService test')
+    appContainer = await createTestApp(deps)
     tenantService = await deps.use('tenantService')
     authServiceClient = await deps.use('authServiceClient')
     tenantSettingsService = await deps.use('tenantSettingService')

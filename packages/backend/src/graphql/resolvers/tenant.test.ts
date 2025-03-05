@@ -73,7 +73,7 @@ describe('Tenant Resolvers', (): void => {
     })
     config = await deps.use('config')
     console.log({ config })
-    appContainer = await createTestApp(deps, 'tenantService resolver test')
+    appContainer = await createTestApp(deps)
     const authServiceClient = await deps.use('authServiceClient')
     jest
       .spyOn(authServiceClient.tenant, 'create')
