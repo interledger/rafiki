@@ -97,7 +97,12 @@ export const createTestApp = async (
   const knex = await container.use('knex')
 
   if (caller) {
-    console.log(caller, { tenants: Tenant.query(knex) })
+    // It seems that the `start` method throws an error sometimes because
+    // it cant find a tenant (by config.operatorTenantId). See TenantNotFund error
+    // on tenant service, tenant resolver, tenant settings.
+    // Not sure why - truncateTables that truncates tenants? then they arent there for next test?
+    // - is that how it works? I think we should never truncate tenants then. or if we do, re-add them if we do.
+    console.log(caller, { tenants: await Tenant.query(knex) })
   }
 
   const app = new App(container)
