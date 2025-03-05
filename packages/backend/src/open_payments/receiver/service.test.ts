@@ -253,7 +253,7 @@ describe('Receiver Service', (): void => {
 
       test('gets receiver from completed remote incoming payment', async () => {
         const mockedIncomingPayment = mockIncomingPaymentWithPaymentMethods({
-          completed: true // cannot get receiver with a completed incoming payment
+          completed: true
         })
 
         const localIncomingPaymentServiceGetSpy = jest
