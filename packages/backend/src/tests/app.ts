@@ -14,6 +14,7 @@ import { start, gracefulShutdown } from '..'
 import { onError } from '@apollo/client/link/error'
 
 import { App, AppServices } from '../app'
+import { Tenant } from '../tenants/model'
 
 export const testAccessToken = 'test-app-access'
 
@@ -82,7 +83,8 @@ export const createApolloClient = async (
 }
 
 export const createTestApp = async (
-  container: IocContract<AppServices>
+  container: IocContract<AppServices>,
+  caller?: string
 ): Promise<TestContainer> => {
   const config = await container.use('config')
   config.adminPort = 0
@@ -109,6 +111,8 @@ export const createTestApp = async (
     .persist()
 
   const knex = await container.use('knex')
+
+  console.log(caller, { tenants: Tenant.query(knex) })
 
   const client = await createApolloClient(container, app)
 

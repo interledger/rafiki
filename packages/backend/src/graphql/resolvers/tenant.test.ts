@@ -70,8 +70,9 @@ describe('Tenant Resolvers', (): void => {
       ...Config,
       dbSchema: 'tenant_service_test_schema'
     })
-    appContainer = await createTestApp(deps)
     config = await deps.use('config')
+    console.log({ config })
+    appContainer = await createTestApp(deps, 'tenantService resolver test')
     const authServiceClient = await deps.use('authServiceClient')
     jest
       .spyOn(authServiceClient.tenant, 'create')
