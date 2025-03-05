@@ -72,7 +72,6 @@ describe('Tenant Resolvers', (): void => {
       dbSchema
     })
     config = await deps.use('config')
-    console.log({ config })
     appContainer = await createTestApp(deps)
     const authServiceClient = await deps.use('authServiceClient')
     jest
@@ -87,7 +86,7 @@ describe('Tenant Resolvers', (): void => {
   })
 
   afterEach(async (): Promise<void> => {
-    await truncateTables(appContainer.knex, true, dbSchema) // pass in schema?
+    await truncateTables(deps, { truncateTenants: true })
   })
   afterAll(async (): Promise<void> => {
     await appContainer.apolloClient.stop()
@@ -348,7 +347,7 @@ describe('Tenant Resolvers', (): void => {
       })
 
       afterEach(async (): Promise<void> => {
-        await truncateTables(appContainer.knex)
+        await truncateTables(deps)
       })
 
       test('can update a tenant as operator', async (): Promise<void> => {

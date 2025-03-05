@@ -1,4 +1,6 @@
+import { IocContract } from '@adonisjs/fold'
 import { Knex } from 'knex'
+import { AppServices } from '../app'
 
 export async function truncateTable(
   knex: Knex,
@@ -9,10 +11,15 @@ export async function truncateTable(
 }
 
 export async function truncateTables(
-  knex: Knex,
-  truncateTenants = false,
-  dbSchema?: string
+  deps: IocContract<AppServices>,
+  options?: { truncateTenants?: boolean }
 ): Promise<void> {
+  const knex = await deps.use('knex')
+  const config = await deps.use('config')
+  const dbSchema = config.dbSchema ?? 'public'
+
+  const truncateTenants = options?.truncateTenants ?? false
+
   const ignoreTables = [
     'knex_migrations',
     'knex_migrations_lock',

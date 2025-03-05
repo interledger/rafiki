@@ -37,7 +37,6 @@ describe('Tenant Service', (): void => {
     })
     knex = await deps.use('knex')
     config = await deps.use('config')
-    console.log({ config })
     appContainer = await createTestApp(deps)
     tenantService = await deps.use('tenantService')
     authServiceClient = await deps.use('authServiceClient')
@@ -45,7 +44,7 @@ describe('Tenant Service', (): void => {
   })
 
   afterEach(async (): Promise<void> => {
-    await truncateTables(knex, true, dbSchema)
+    await truncateTables(deps, { truncateTenants: true })
   })
 
   afterAll(async (): Promise<void> => {

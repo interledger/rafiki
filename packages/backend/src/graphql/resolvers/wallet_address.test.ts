@@ -63,7 +63,7 @@ describe('Wallet Address Resolvers', (): void => {
   })
 
   afterEach(async (): Promise<void> => {
-    await truncateTables(knex)
+    await truncateTables(deps)
   })
 
   afterAll(async (): Promise<void> => {

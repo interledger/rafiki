@@ -50,7 +50,7 @@ describe('Incoming Payment Resolver', (): void => {
   })
 
   afterAll(async (): Promise<void> => {
-    await truncateTables(appContainer.knex)
+    await truncateTables(deps)
     await appContainer.apolloClient.stop()
     await appContainer.shutdown()
   })

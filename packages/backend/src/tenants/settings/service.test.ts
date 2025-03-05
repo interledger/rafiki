@@ -5,7 +5,6 @@ import { Config } from '../../config/app'
 import { createTestApp, TestContainer } from '../../tests/app'
 import nock from 'nock'
 import { truncateTables } from '../../tests/tableManager'
-import { Knex } from 'knex'
 import { Tenant } from '../model'
 import { TenantService } from '../service'
 import { faker } from '@faker-js/faker'
@@ -26,7 +25,6 @@ import {
 import { AuthServiceClient } from '../../auth-service-client/client'
 
 describe('TenantSetting Service', (): void => {
-  let knex: Knex
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let tenant: Tenant
@@ -40,7 +38,6 @@ describe('TenantSetting Service', (): void => {
     deps = initIocContainer({ ...Config, dbSchema })
     appContainer = await createTestApp(deps)
 
-    knex = await deps.use('knex')
     tenantService = await deps.use('tenantService')
     tenantSettingService = await deps.use('tenantSettingService')
     authServiceClient = await deps.use('authServiceClient')
@@ -64,7 +61,7 @@ describe('TenantSetting Service', (): void => {
   })
 
   afterEach(async (): Promise<void> => {
-    await truncateTables(knex, true, dbSchema)
+    await truncateTables(deps, { truncateTenants: true })
   })
 
   afterAll(async (): Promise<void> => {

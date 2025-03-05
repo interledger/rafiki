@@ -36,7 +36,7 @@ describe('PaymentMethodHandlerService', (): void => {
 
   afterEach(async (): Promise<void> => {
     jest.restoreAllMocks()
-    await truncateTables(appContainer.knex)
+    await truncateTables(deps)
   })
 
   afterAll(async (): Promise<void> => {

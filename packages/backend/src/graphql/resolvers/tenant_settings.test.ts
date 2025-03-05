@@ -81,7 +81,7 @@ describe('Tenant Settings Resolvers', (): void => {
   })
 
   afterEach(async (): Promise<void> => {
-    await truncateTables(appContainer.knex, true, dbSchema) // TODO: pass in schema?
+    await truncateTables(deps, { truncateTenants: true })
   })
 
   afterAll(async (): Promise<void> => {

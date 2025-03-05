@@ -4,7 +4,6 @@ import { TestContainer, createTestApp } from '../../../tests/app'
 import { initIocContainer } from '../../..'
 import { Config } from '../../../config/app'
 import { CombinedPaymentService } from './service'
-import { Knex } from 'knex'
 import { truncateTables } from '../../../tests/tableManager'
 import { getPageTests } from '../../../shared/baseModel.test'
 import { createOutgoingPayment } from '../../../tests/outgoingPayment'
@@ -25,7 +24,6 @@ import {
 describe('Combined Payment Service', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
-  let knex: Knex
   let combinedPaymentService: CombinedPaymentService
   let tenantId: string
   let sendAsset: Asset
@@ -36,7 +34,6 @@ describe('Combined Payment Service', (): void => {
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer(Config)
     appContainer = await createTestApp(deps)
-    knex = appContainer.knex
     combinedPaymentService = await deps.use('combinedPaymentService')
     tenantId = Config.operatorTenantId
   })
@@ -57,7 +54,7 @@ describe('Combined Payment Service', (): void => {
   })
 
   afterEach(async (): Promise<void> => {
-    await truncateTables(knex)
+    await truncateTables(deps)
   })
 
   afterAll(async (): Promise<void> => {
