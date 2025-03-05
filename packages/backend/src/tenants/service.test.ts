@@ -17,6 +17,7 @@ import { AuthServiceClient } from '../auth-service-client/client'
 import { withConfigOverride } from '../tests/helpers'
 import { TenantSetting } from './settings/model'
 import { TenantSettingService } from './settings/service'
+import nock from 'nock'
 // import { isTenantError, TenantError } from './errors'
 
 describe('Tenant Service', (): void => {
@@ -48,6 +49,7 @@ describe('Tenant Service', (): void => {
   })
 
   afterAll(async (): Promise<void> => {
+    nock.cleanAll() // TODO: rm?
     await appContainer.shutdown()
   })
 
