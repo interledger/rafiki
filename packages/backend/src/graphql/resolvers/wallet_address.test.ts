@@ -25,7 +25,7 @@ import {
   WalletAddressEventType
 } from '../../open_payments/wallet_address/model'
 import { WalletAddressService } from '../../open_payments/wallet_address/service'
-import { createAsset, randomAsset } from '../../tests/asset'
+import { createAsset } from '../../tests/asset'
 import { createWalletAddress } from '../../tests/walletAddress'
 import {
   CreateWalletAddressInput,

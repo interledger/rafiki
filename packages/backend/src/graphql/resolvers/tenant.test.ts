@@ -351,6 +351,7 @@ describe('Tenant Resolvers', (): void => {
 
       test('can update a tenant as operator', async (): Promise<void> => {
         // operator cant update apiSecret
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { apiSecret, ...input } = generateTenantInput()
         const updateInput = {
           ...input,
