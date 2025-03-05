@@ -64,11 +64,12 @@ describe('Tenant Resolvers', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let config: IAppConfig
+  const dbSchema = 'tenant_resolver_test_schema'
 
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer({
       ...Config,
-      dbSchema: 'tenant_service_test_schema'
+      dbSchema
     })
     config = await deps.use('config')
     console.log({ config })
@@ -86,7 +87,7 @@ describe('Tenant Resolvers', (): void => {
   })
 
   afterEach(async (): Promise<void> => {
-    await truncateTables(appContainer.knex, true)
+    await truncateTables(appContainer.knex, true, dbSchema) // pass in schema?
   })
   afterAll(async (): Promise<void> => {
     await appContainer.apolloClient.stop()

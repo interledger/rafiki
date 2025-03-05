@@ -59,11 +59,12 @@ function createTenantedApolloClient(
 describe('Tenant Settings Resolvers', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
+  const dbSchema = 'tenant_settings_resolver_test_schema'
 
   beforeAll(async (): Promise<void> => {
     deps = initIocContainer({
       ...Config,
-      dbSchema: 'tenant_settings_service_test_schema'
+      dbSchema
     })
     appContainer = await createTestApp(deps)
 
@@ -80,7 +81,7 @@ describe('Tenant Settings Resolvers', (): void => {
   })
 
   afterEach(async (): Promise<void> => {
-    await truncateTables(appContainer.knex, true)
+    await truncateTables(appContainer.knex, true, dbSchema) // TODO: pass in schema?
   })
 
   afterAll(async (): Promise<void> => {
