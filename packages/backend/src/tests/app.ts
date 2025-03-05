@@ -94,6 +94,12 @@ export const createTestApp = async (
   config.openPaymentsUrl = 'https://op.example'
   config.walletAddressUrl = 'https://wallet.example/.well-known/pay'
 
+  const knex = await container.use('knex')
+
+  if (caller) {
+    console.log(caller, { tenants: Tenant.query(knex) })
+  }
+
   const app = new App(container)
   await start(container, app)
 
@@ -109,10 +115,6 @@ export const createTestApp = async (
       }).then((res) => res.data)
     })
     .persist()
-
-  const knex = await container.use('knex')
-
-  console.log(caller, { tenants: Tenant.query(knex) })
 
   const client = await createApolloClient(container, app)
 
