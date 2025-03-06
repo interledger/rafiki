@@ -190,7 +190,7 @@ jobs:
         run: pnpm --filter performance testenv:compose up --wait --build -d
 
       - name: Start Mock Account Entity Services
-        run: nohup pnpm --filter performance start-mases > mases.log 2>&1 &
+        run: pnpm --filter performance start-mases > mases.log 2>&1 &
 
       - name: Run performance tests
         id: perf_test
