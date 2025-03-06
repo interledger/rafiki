@@ -187,6 +187,10 @@ export class OutgoingPayment
     if (this.peerId) {
       data.peerId = this.peerId
     }
+
+    if (this.grantId) {
+      data.grantId = this.grantId
+    }
     return data
   }
 
@@ -274,6 +278,7 @@ export type PaymentData = Omit<OutgoingPaymentResponse, 'failed'> & {
   stateAttempts: number
   balance: string
   peerId?: string
+  grantId?: string
 }
 
 export const isOutgoingPaymentEventType = (
