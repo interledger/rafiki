@@ -210,14 +210,6 @@ export async function getLocalIncomingPayment(
 
   const streamCredentials = deps.streamCredentialsService.get(incomingPayment)
 
-  if (!streamCredentials) {
-    const errorMessage =
-      'Could not get stream credentials for local incoming payment'
-    deps.logger.error({ incomingPaymentId: incomingPayment.id }, errorMessage)
-
-    throw new Error(errorMessage)
-  }
-
   return incomingPayment.toOpenPaymentsTypeWithMethods(
     incomingPayment.walletAddress,
     streamCredentials
