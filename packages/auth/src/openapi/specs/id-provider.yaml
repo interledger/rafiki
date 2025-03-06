@@ -37,12 +37,18 @@ paths:
               schema:
                 type: string
               description: Interaction id
-        '401':
+        '400':
           description: Unauthorized
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/error-unknown-interaction'
+        '403':
+          description: Invalid Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error-invalid-interaction'
         '500':
           description: Internal Server Error
           content:
@@ -192,17 +198,21 @@ paths:
         '202':
           description: Accepted
         '400':
-          description: Not Found
+          description: Bad Request
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/error-invalid-interaction'
+                oneOf:
+                  - $ref: '#/components/schemas/error-invalid-interaction'
+                  - $ref: './auth-server.yaml#/components/schemas/error-invalid-request'
         '401':
           description: Unauthorized
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/error-invalid-interaction'
+                oneOf:
+                  - $ref: '#/components/schemas/error-invalid-interaction'
+                  - $ref: '#/components/schemas/error-user-denied'
         '404':
           description: Not Found
           content:
@@ -260,6 +270,18 @@ components:
               type: string
               enum:
                 - invalid_interaction
+    error-user-denied:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            description:
+              type: string
+            code:
+              type: string
+              enum:
+                - user_denied
   securitySchemes:
     GNAP:
       name: Authorization
