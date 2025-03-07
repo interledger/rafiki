@@ -200,7 +200,6 @@ async function updateOperatorApiSecretFromConfig(
   const tenant = await Tenant.query(deps.knex)
     .findById(operatorTenantId)
     .whereNull('deletedAt')
-    .first()
 
   if (!tenant) {
     return TenantError.TenantNotFound
