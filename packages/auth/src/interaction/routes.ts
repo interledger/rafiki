@@ -168,15 +168,22 @@ async function startInteraction(
   const { config, interactionService, grantService, logger } = deps
   const interaction = await interactionService.getBySession(interactId, nonce)
 
+  if (!interaction) {
+    throw new GNAPServerRouteError(
+      400,
+      GNAPErrorCode.UnknownInteraction,
+      'unknown interaction'
+    )
+  }
+
   if (
-    !interaction ||
     interaction.state !== InteractionState.Pending ||
     isRevokedGrant(interaction.grant)
   ) {
     throw new GNAPServerRouteError(
-      401,
-      GNAPErrorCode.UnknownInteraction,
-      'unknown interaction'
+      403,
+      GNAPErrorCode.InvalidInteraction,
+      'invalid interaction'
     )
   }
 
