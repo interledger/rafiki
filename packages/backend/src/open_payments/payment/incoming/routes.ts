@@ -107,7 +107,9 @@ async function getIncomingPaymentPrivate(
     )
   }
 
-  const streamCredentials = deps.streamCredentialsService.get(incomingPayment)
+  const streamCredentials = incomingPayment.isExpiredOrComplete()
+    ? undefined
+    : deps.streamCredentialsService.get(incomingPayment)
 
   ctx.body = incomingPayment.toOpenPaymentsTypeWithMethods(
     ctx.walletAddress,

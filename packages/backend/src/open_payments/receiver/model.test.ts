@@ -81,49 +81,6 @@ describe('Receiver Model', (): void => {
       })
     })
 
-    test('throws if incoming payment is completed', async () => {
-      const walletAddress = await createWalletAddress(deps)
-      const incomingPayment = await createIncomingPayment(deps, {
-        walletAddressId: walletAddress.id
-      })
-
-      incomingPayment.state = IncomingPaymentState.Completed
-      const streamCredentials: IlpStreamCredentials = {
-        ilpAddress: 'test.ilp' as IlpAddress,
-        sharedSecret: Buffer.from('')
-      }
-
-      const openPaymentsIncomingPayment =
-        incomingPayment.toOpenPaymentsTypeWithMethods(
-          walletAddress,
-          streamCredentials
-        )
-
-      expect(() => new Receiver(openPaymentsIncomingPayment, false)).toThrow(
-        'Cannot create receiver from completed incoming payment'
-      )
-    })
-
-    test('throws if incoming payment is expired', async () => {
-      const walletAddress = await createWalletAddress(deps)
-      const incomingPayment = await createIncomingPayment(deps, {
-        walletAddressId: walletAddress.id
-      })
-
-      incomingPayment.expiresAt = new Date(Date.now() - 1)
-      const streamCredentials = streamCredentialsService.get(incomingPayment)
-      assert(streamCredentials)
-      const openPaymentsIncomingPayment =
-        incomingPayment.toOpenPaymentsTypeWithMethods(
-          walletAddress,
-          streamCredentials
-        )
-
-      expect(() => new Receiver(openPaymentsIncomingPayment, false)).toThrow(
-        'Cannot create receiver from expired incoming payment'
-      )
-    })
-
     test('throws if stream credentials has invalid ILP address', async () => {
       const walletAddress = await createWalletAddress(deps)
       const incomingPayment = await createIncomingPayment(deps, {
@@ -143,6 +100,51 @@ describe('Receiver Model', (): void => {
       expect(() => new Receiver(openPaymentsIncomingPayment, false)).toThrow(
         'Invalid ILP address on ilp payment method'
       )
+    })
+  })
+
+  describe('isActive', () => {
+    test('returns false if incoming payment is completed', async () => {
+      const walletAddress = await createWalletAddress(deps)
+      const incomingPayment = await createIncomingPayment(deps, {
+        walletAddressId: walletAddress.id
+      })
+
+      incomingPayment.state = IncomingPaymentState.Completed
+      const streamCredentials: IlpStreamCredentials = {
+        ilpAddress: 'test.ilp' as IlpAddress,
+        sharedSecret: Buffer.from('')
+      }
+
+      const openPaymentsIncomingPayment =
+        incomingPayment.toOpenPaymentsTypeWithMethods(
+          walletAddress,
+          streamCredentials
+        )
+
+      const receiver = new Receiver(openPaymentsIncomingPayment, false)
+
+      expect(receiver.isActive()).toEqual(false)
+    })
+
+    test('returns false if incoming payment is expired', async () => {
+      const walletAddress = await createWalletAddress(deps)
+      const incomingPayment = await createIncomingPayment(deps, {
+        walletAddressId: walletAddress.id
+      })
+
+      incomingPayment.expiresAt = new Date(Date.now() - 1)
+      const streamCredentials = streamCredentialsService.get(incomingPayment)
+      assert(streamCredentials)
+      const openPaymentsIncomingPayment =
+        incomingPayment.toOpenPaymentsTypeWithMethods(
+          walletAddress,
+          streamCredentials
+        )
+
+      const receiver = new Receiver(openPaymentsIncomingPayment, false)
+
+      expect(receiver.isActive()).toEqual(false)
     })
   })
 })
