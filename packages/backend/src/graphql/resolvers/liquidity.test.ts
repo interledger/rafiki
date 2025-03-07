@@ -60,7 +60,7 @@ describe('Liquidity Resolvers', (): void => {
   })
 
   afterAll(async (): Promise<void> => {
-    await truncateTables(knex)
+    await truncateTables(deps)
     await appContainer.apolloClient.stop()
     await appContainer.shutdown()
   })

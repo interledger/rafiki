@@ -3,7 +3,11 @@ import { gql, ApolloError } from '@apollo/client'
 import { Knex } from 'knex'
 import { v4 as uuid } from 'uuid'
 
-import { createTestApp, TestContainer } from '../../tests/app'
+import {
+  createApolloClient,
+  createTestApp,
+  TestContainer
+} from '../../tests/app'
 import { IocContract } from '@adonisjs/fold'
 import { AppServices } from '../../app'
 import { Asset } from '../../asset/model'
@@ -38,6 +42,7 @@ import { GraphQLErrorCode } from '../errors'
 import { AssetService } from '../../asset/service'
 import { faker } from '@faker-js/faker'
 import { Tenant } from '../../tenants/model'
+import { createTenant } from '../../tests/tenant'
 
 describe('Wallet Address Resolvers', (): void => {
   let deps: IocContract<AppServices>
@@ -49,8 +54,7 @@ describe('Wallet Address Resolvers', (): void => {
   beforeAll(async (): Promise<void> => {
     deps = initIocContainer({
       ...Config,
-      localCacheDuration: 0,
-      adminApiSecret: '123' //to force not being an operator.
+      localCacheDuration: 0
     })
     appContainer = await createTestApp(deps)
     knex = appContainer.knex
@@ -59,7 +63,7 @@ describe('Wallet Address Resolvers', (): void => {
   })
 
   afterEach(async (): Promise<void> => {
-    await truncateTables(knex)
+    await truncateTables(deps)
   })
 
   afterAll(async (): Promise<void> => {
@@ -315,14 +319,22 @@ describe('Wallet Address Resolvers', (): void => {
     })
 
     test('bad input data when not allowed to perform cross tenant create', async (): Promise<void> => {
+      // Make request as non-operator.
+      const nonOperatorTenant = await createTenant(deps)
+      const tenantedApolloClient = await createApolloClient(
+        appContainer.container,
+        appContainer.app,
+        nonOperatorTenant.id
+      )
+
       const badInputData = {
-        tenantId: 'ae4950b6-3e1b-4e50-ad24-25c065bdd3a9',
+        tenantId: uuid(), // some tenant other than requestor
         assetId: input.assetId,
         url: input.url
       }
       try {
         expect.assertions(2)
-        await appContainer.apolloClient
+        await tenantedApolloClient
           .mutate({
             mutation: gql`
               mutation CreateWalletAddress(
@@ -361,6 +373,69 @@ describe('Wallet Address Resolvers', (): void => {
           })
         )
       }
+    })
+
+    test('Operator can perform cross tenant create', async (): Promise<void> => {
+      // Setup non-tenant operator and form request for it from operator
+      const nonOperatorTenant = await createTenant(deps)
+      const asset = await createAsset(
+        deps,
+        {
+          code: 'xyz',
+          scale: 2
+        },
+        nonOperatorTenant.id
+      )
+      const input = {
+        tenantId: nonOperatorTenant.id,
+        assetId: asset.id,
+        url: 'https://bob.me/.well-known/pay'
+      }
+      const response = await appContainer.apolloClient // operator client
+        .mutate({
+          mutation: gql`
+            mutation CreateWalletAddress($input: CreateWalletAddressInput!) {
+              createWalletAddress(input: $input) {
+                walletAddress {
+                  id
+                  asset {
+                    code
+                    scale
+                  }
+                  url
+                }
+              }
+            }
+          `,
+          variables: {
+            input
+          }
+        })
+        .then((query): CreateWalletAddressMutationResponse => {
+          if (query.data) {
+            return query.data.createWalletAddress
+          } else {
+            throw new Error('Data was empty')
+          }
+        })
+
+      assert.ok(response.walletAddress)
+      expect(response.walletAddress).toEqual({
+        __typename: 'WalletAddress',
+        id: response.walletAddress.id,
+        url: input.url,
+        asset: {
+          __typename: 'Asset',
+          code: asset.code,
+          scale: asset.scale
+        }
+      })
+      await expect(
+        walletAddressService.get(response.walletAddress.id)
+      ).resolves.toMatchObject({
+        id: response.walletAddress.id,
+        asset
+      })
     })
   })
 

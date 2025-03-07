@@ -39,7 +39,7 @@ describe('Balances', (): void => {
 
   afterEach(async (): Promise<void> => {
     jest.useRealTimers()
-    await truncateTables(knex)
+    await truncateTables(deps)
   })
 
   afterAll(async (): Promise<void> => {

@@ -317,7 +317,7 @@ describe('utils', (): void => {
 
     afterEach(async (): Promise<void> => {
       await redis.flushall()
-      await truncateTables(appContainer.knex)
+      await truncateTables(deps)
     })
 
     afterAll(async (): Promise<void> => {

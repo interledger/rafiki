@@ -130,20 +130,32 @@ export const updateWalletAddressSchema = z
   })
   .merge(uuidSchema)
 
-export const updateTenantSchema = z
+export const updateTenantGeneralSchema = z
+  .object({
+    publicName: z.string().optional(),
+    email: z.string().email().or(z.literal(''))
+  })
+  .merge(uuidSchema)
+
+export const updateTenantIpSchema = z
+  .object({
+    idpSecret: z.string().optional(),
+    idpConsentUrl: z.string().optional()
+  })
+  .merge(uuidSchema)
+
+export const updateTenantSensitiveSchema = z
   .object({
     apiSecret: z
       .string()
       .min(10, { message: 'API Secret should be at least 10 characters long' })
-      .max(255, { message: 'Maximum length of API Secret is 255 characters' }),
-    publicName: z.string().optional(),
-    email: z.string().email().or(z.literal('')),
-    idpConsentUrl: z.string().optional(),
-    idpSecret: z.string().optional()
+      .max(255, { message: 'Maximum length of API Secret is 255 characters' })
   })
   .merge(uuidSchema)
 
 export const createTenantSchema = z
   .object({})
-  .merge(updateTenantSchema)
+  .merge(updateTenantGeneralSchema)
+  .merge(updateTenantIpSchema)
+  .merge(updateTenantSensitiveSchema)
   .omit({ id: true })
