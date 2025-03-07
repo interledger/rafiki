@@ -176,15 +176,25 @@ async function startInteraction(
     )
   }
 
-  if (
+  const isInvalidInteraction =
     interaction.state !== InteractionState.Pending ||
     isRevokedGrant(interaction.grant)
-  ) {
+  if (isInvalidInteraction && !isFinishableGrant(interaction.grant)) {
     throw new GNAPServerRouteError(
       403,
       GNAPErrorCode.InvalidInteraction,
       'invalid interaction'
     )
+  } else if (isInvalidInteraction && isFinishableGrant(interaction.grant)) {
+    const clientRedirectUri = new URL(interaction.grant.finishUri)
+    clientRedirectUri.searchParams.set(
+      'result',
+      GNAPErrorCode.InvalidInteraction
+    )
+    clientRedirectUri.searchParams.set('message', 'invalid interaction')
+
+    ctx.redirect(clientRedirectUri.toString())
+    return
   }
 
   const trx = await Interaction.startTransaction()
@@ -211,11 +221,18 @@ async function startInteraction(
     ctx.redirect(interactionUrl.toString())
   } catch (err) {
     await trx.rollback()
-    throw new GNAPServerRouteError(
-      500,
-      GNAPErrorCode.RequestDenied,
-      'internal server error'
-    )
+    if (isFinishableGrant(interaction.grant)) {
+      const clientRedirectUri = new URL(interaction.grant.finishUri)
+      clientRedirectUri.searchParams.set('result', GNAPErrorCode.RequestDenied)
+      clientRedirectUri.searchParams.set('message', 'internal server error')
+      ctx.redirect(clientRedirectUri.toString())
+    } else {
+      throw new GNAPServerRouteError(
+        500,
+        GNAPErrorCode.RequestDenied,
+        'internal server error'
+      )
+    }
   }
 }
 
@@ -438,6 +455,7 @@ async function finishInteraction(
       'result',
       GNAPErrorCode.InvalidInteraction
     )
+    clientRedirectUri.searchParams.set('message', 'interaction expired')
 
     ctx.redirect(clientRedirectUri.toString())
     return
@@ -469,6 +487,7 @@ async function finishInteraction(
       'result',
       GNAPErrorCode.UnknownInteraction
     )
+    clientRedirectUri.searchParams.set('message', 'unknown interaction')
 
     ctx.redirect(clientRedirectUri.toString())
     return
