@@ -48,7 +48,6 @@ describe('Tenant Service', (): void => {
   })
 
   afterAll(async (): Promise<void> => {
-    nock.cleanAll() // TODO: rm?
     await appContainer.shutdown()
   })
 
