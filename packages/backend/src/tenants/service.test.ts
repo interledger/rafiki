@@ -17,7 +17,6 @@ import { AuthServiceClient } from '../auth-service-client/client'
 import { withConfigOverride } from '../tests/helpers'
 import { TenantSetting } from './settings/model'
 import { TenantSettingService } from './settings/service'
-import nock from 'nock'
 import { isTenantError, TenantError } from './errors'
 
 describe('Tenant Service', (): void => {
@@ -454,6 +453,7 @@ describe('Tenant Service (no tenant truncate)', (): void => {
   let appContainer: TestContainer
   let tenantService: TenantService
   let knex: Knex
+  let tenantCache: CacheDataStore<Tenant>
   let updateSpyWasCalled: boolean
   const dbSchema = 'tenant_service_test_schema2'
 
@@ -465,6 +465,7 @@ describe('Tenant Service (no tenant truncate)', (): void => {
     knex = await deps.use('knex')
     config = await deps.use('config')
     tenantService = await deps.use('tenantService')
+    tenantCache = await deps.use('tenantCache')
 
     const updateOperatorSecretSpy = jest.spyOn(
       tenantService,
@@ -504,6 +505,10 @@ describe('Tenant Service (no tenant truncate)', (): void => {
       const updated = await Tenant.query(knex).findById(tenant.id)
       assert(updated)
       expect(updated.apiSecret).toBe(config.adminApiSecret)
+
+      const cacheUpdated = await tenantCache.get(tenant.id)
+      assert(cacheUpdated)
+      expect(cacheUpdated.apiSecret).toBe(config.adminApiSecret)
     })
     test('does not update if secret hasnt changed', async (): Promise<void> => {
       const tenant = await Tenant.query(knex).findById(config.operatorTenantId)

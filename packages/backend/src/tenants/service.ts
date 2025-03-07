@@ -205,8 +205,7 @@ async function updateOperatorApiSecretFromConfig(
     return TenantError.TenantNotFound
   }
   if (tenant.apiSecret !== adminApiSecret) {
-    await Tenant.query(deps.knex)
-      .patch({ apiSecret: adminApiSecret })
-      .where('id', operatorTenantId)
+    await tenant.$query(deps.knex).patch({ apiSecret: adminApiSecret })
+    await deps.tenantCache.set(operatorTenantId, tenant)
   }
 }
