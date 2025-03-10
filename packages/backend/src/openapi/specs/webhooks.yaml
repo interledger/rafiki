@@ -250,6 +250,9 @@ components:
             peerId:
               type: string
               format: uuid
+            grantId:
+              type: string
+              format: uuid
       additionalProperties: false
     walletAddressNotFound:
       required:
