@@ -5,7 +5,8 @@ import {
   getWalletAddressUrlFromIncomingPayment,
   getWalletAddressUrlFromQuote,
   getWalletAddressUrlFromOutgoingPayment,
-  getWalletAddressUrlFromPath
+  getWalletAddressUrlFromPath,
+  redirectIfBrowserAcceptsHtml
 } from './middleware'
 import { Config } from '../../config/app'
 import { IocContract } from '@adonisjs/fold'
@@ -380,6 +381,87 @@ describe('Wallet Address Middleware', (): void => {
       ).resolves.toBeUndefined()
       expect(next).toHaveBeenCalled()
       expect(ctx.walletAddress).toEqual(walletAddress)
+    })
+  })
+
+  describe('redirectWalletAddress', () => {
+    let ctx: WalletAddressContext
+    let next: jest.MockedFunction<() => Promise<void>>
+    const walletAddressPath = 'ilp.wallet/test'
+    const walletAddressUrl = `https://${walletAddressPath}`
+    const walletAddressRedirectHtmlPage = 'https://ilp.dev'
+
+    beforeEach((): void => {
+      ctx = createContext({}, {})
+
+      next = jest.fn()
+    })
+
+    test('redirects to wallet address url', async (): Promise<void> => {
+      ctx.container = initIocContainer({
+        ...Config,
+        walletAddressRedirectHtmlPage
+      })
+      ctx.walletAddressUrl = walletAddressUrl
+      ctx.request.headers.accept = 'text/html'
+
+      await expect(
+        redirectIfBrowserAcceptsHtml(ctx, next)
+      ).resolves.toBeUndefined()
+
+      expect(ctx.response.status).toBe(302)
+      expect(ctx.response.get('Location')).toBe(
+        `${walletAddressRedirectHtmlPage}/${walletAddressPath}`
+      )
+      expect(next).not.toHaveBeenCalled()
+    })
+
+    test('no redirect to wallet address url if env is not set', async (): Promise<void> => {
+      ctx.container = initIocContainer({
+        ...Config,
+        walletAddressRedirectHtmlPage: undefined
+      })
+      ctx.walletAddressUrl = walletAddressUrl
+      ctx.request.headers.accept = 'text/html'
+
+      await expect(
+        redirectIfBrowserAcceptsHtml(ctx, next)
+      ).resolves.toBeUndefined()
+
+      expect(next).toHaveBeenCalled()
+    })
+
+    test('no redirect to wallet address url if accept is not text/html', async (): Promise<void> => {
+      ctx.container = initIocContainer({
+        ...Config,
+        walletAddressRedirectHtmlPage
+      })
+      ctx.walletAddressUrl = walletAddressUrl
+
+      await expect(
+        redirectIfBrowserAcceptsHtml(ctx, next)
+      ).resolves.toBeUndefined()
+
+      expect(next).toHaveBeenCalled()
+    })
+
+    it('should trim trailing slashes from redirectHtmlPage', async (): Promise<void> => {
+      ctx.container = initIocContainer({
+        ...Config,
+        walletAddressRedirectHtmlPage: 'https://ilp.dev/'
+      })
+      ctx.walletAddressUrl = `${walletAddressUrl}`
+      ctx.request.headers.accept = 'text/html'
+
+      await expect(
+        redirectIfBrowserAcceptsHtml(ctx, next)
+      ).resolves.toBeUndefined()
+
+      expect(ctx.response.status).toBe(302)
+      expect(ctx.response.get('Location')).toBe(
+        `${walletAddressRedirectHtmlPage}/${walletAddressPath}`
+      )
+      expect(next).not.toHaveBeenCalled()
     })
   })
 })
