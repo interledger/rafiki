@@ -444,5 +444,24 @@ describe('Wallet Address Middleware', (): void => {
 
       expect(next).toHaveBeenCalled()
     })
+
+    it('should trim trailing slashes from redirectHtmlPage', async (): Promise<void> => {
+      ctx.container = initIocContainer({
+        ...Config,
+        walletAddressRedirectHtmlPage: 'https://ilp.dev/'
+      })
+      ctx.walletAddressUrl = `${walletAddressUrl}`
+      ctx.request.headers.accept = 'text/html'
+
+      await expect(
+        redirectIfBrowserAcceptsHtml(ctx, next)
+      ).resolves.toBeUndefined()
+
+      expect(ctx.response.status).toBe(302)
+      expect(ctx.response.get('Location')).toBe(
+        `${walletAddressRedirectHtmlPage}/${walletAddressPath}`
+      )
+      expect(next).not.toHaveBeenCalled()
+    })
   })
 })
