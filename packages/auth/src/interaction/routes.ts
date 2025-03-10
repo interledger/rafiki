@@ -176,16 +176,16 @@ async function startInteraction(
     )
   }
 
-  const isInvalidInteraction =
-    interaction.state !== InteractionState.Pending ||
-    isRevokedGrant(interaction.grant)
-  if (isInvalidInteraction && !isFinishableGrant(interaction.grant)) {
+  const isValidInteraction =
+    interaction.state === InteractionState.Pending &&
+    !isRevokedGrant(interaction.grant)
+  if (!isValidInteraction && !isFinishableGrant(interaction.grant)) {
     throw new GNAPServerRouteError(
       403,
       GNAPErrorCode.InvalidInteraction,
       'invalid interaction'
     )
-  } else if (isInvalidInteraction && isFinishableGrant(interaction.grant)) {
+  } else if (!isValidInteraction && isFinishableGrant(interaction.grant)) {
     const clientRedirectUri = new URL(interaction.grant.finishUri)
     clientRedirectUri.searchParams.set(
       'result',
