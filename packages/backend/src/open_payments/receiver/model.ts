@@ -35,21 +35,9 @@ export class Receiver {
     incomingPayment: OpenPaymentsIncomingPaymentWithPaymentMethod,
     isLocal: boolean
   ) {
-    if (incomingPayment.completed) {
-      throw new Error('Cannot create receiver from completed incoming payment')
-    }
-
     const expiresAt = incomingPayment.expiresAt
       ? new Date(incomingPayment.expiresAt)
       : undefined
-
-    if (expiresAt && expiresAt.getTime() <= Date.now()) {
-      throw new Error('Cannot create receiver from expired incoming payment')
-    }
-
-    if (!incomingPayment.methods.length) {
-      throw new Error('Missing payment method(s) on incoming payment')
-    }
 
     const incomingAmount = incomingPayment.incomingAmount
       ? parseAmount(incomingPayment.incomingAmount)
@@ -57,7 +45,7 @@ export class Receiver {
     const receivedAmount = parseAmount(incomingPayment.receivedAmount)
 
     // TODO: handle multiple payment methods
-    const ilpMethod = incomingPayment.methods.find(
+    const ilpMethod = incomingPayment.methods?.find(
       (method) => method.type === 'ilp'
     )
     if (!ilpMethod) {
@@ -119,5 +107,24 @@ export class Receiver {
       sharedSecret: this.sharedSecret,
       requestCounter: Counter.from(0) as Counter
     }
+  }
+
+  public isActive(): boolean {
+    const incomingPayment = this.incomingPayment
+
+    if (incomingPayment.completed) {
+      return false
+    }
+    if (
+      incomingPayment.expiresAt &&
+      incomingPayment.expiresAt.getTime() <= Date.now()
+    ) {
+      return false
+    }
+    if (!incomingPayment.methods.length) {
+      return false
+    }
+
+    return true
   }
 }

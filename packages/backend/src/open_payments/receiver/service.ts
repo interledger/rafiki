@@ -75,7 +75,13 @@ async function createReceiver(
   }
 
   try {
-    return new Receiver(incomingPaymentOrError, isLocal)
+    const receiver = new Receiver(incomingPaymentOrError, isLocal)
+
+    if (!receiver.isActive()) {
+      throw new Error('Receiver is not active')
+    }
+
+    return receiver
   } catch (error) {
     const errorMessage = 'Could not create receiver from incoming payment'
     deps.logger.error(
@@ -203,14 +209,6 @@ export async function getLocalIncomingPayment(
   }
 
   const streamCredentials = deps.streamCredentialsService.get(incomingPayment)
-
-  if (!streamCredentials) {
-    const errorMessage =
-      'Could not get stream credentials for local incoming payment'
-    deps.logger.error({ incomingPaymentId: incomingPayment.id }, errorMessage)
-
-    throw new Error(errorMessage)
-  }
 
   return incomingPayment.toOpenPaymentsTypeWithMethods(
     incomingPayment.walletAddress,
