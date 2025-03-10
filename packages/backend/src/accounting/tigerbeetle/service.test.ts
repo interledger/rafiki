@@ -472,7 +472,7 @@ describe('TigerBeetle Accounting Service', (): void => {
           } else {
             await expect(
               accountingService.getBalance(sourceAccount.asset.id)
-            ).resolves.toEqual(BigInt(0))
+            ).resolves.toEqual(0n)
 
             await expect(
               accountingService.getBalance(destinationAccount.asset.id)
@@ -481,7 +481,7 @@ describe('TigerBeetle Accounting Service', (): void => {
 
           await expect(
             accountingService.getBalance(destinationAccount.id)
-          ).resolves.toEqual(BigInt(0))
+          ).resolves.toEqual(0n)
 
           if (post) {
             await expect(trxOrError.post()).resolves.toBeUndefined()

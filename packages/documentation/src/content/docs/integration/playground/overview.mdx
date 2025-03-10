@@ -4,6 +4,7 @@ title: Overview
 
 import {
   Mermaid,
+  MermaidWrapper,
   CodeBlock,
   LinkOut,
   Disclosure,
@@ -226,14 +227,14 @@ The following are the most commonly used commands:
 | Start (with TigerBeetle)                                          | `pnpm localenv:compose up`                       |
 | Start (with TigerBeetle) detached                                 | `pnpm localenv:compose up -d`                    |
 | Down (with TigerBeetle)                                           | `pnpm localenv:compose down`                     |
-| Down and kill volumes (with TigerBeetle)                          | `pnpm localenv:compose down --volumes`           |
-| Down, kill volumes (with TigerBeetle) and images                  | `pnpm localenv:compose down --volumes --rmi all` |
+| Down and remove volumes (with TigerBeetle)                        | `pnpm localenv:compose down --volumes`           |
+| Down and remove volumes (with TigerBeetle) and images             | `pnpm localenv:compose down --volumes --rmi all` |
 | Show all merged config (with Postgres)                            | `pnpm localenv:compose:psql config`              |
 | Build all the containers (with TigerBeetle)                       | `pnpm localenv:compose build`                    |
 | Start (with Postgres)                                             | `pnpm localenv:compose:psql up`                  |
 | Start (with Postgres) detached                                    | `pnpm localenv:compose:psql up -d`               |
 | Down (with Postgres)                                              | `pnpm localenv:compose:psql down`                |
-| Down (with Postgres) and kill volumes                             | `pnpm localenv:compose:psql down --volumes`      |
+| Down (with Postgres) and remove volumes                           | `pnpm localenv:compose:psql down --volumes`      |
 | Build all the containers (with Postgres)                          | `pnpm localenv:compose:psql build`               |
 | Start with local admin auth enabled (this is disabled by default) | `pnpm localenv:compose:adminauth up `            |
 
@@ -264,6 +265,62 @@ If you receive the error below while running the Bruno collection, try switching
 
 The Examples folder in the Bruno collection includes an [Open Payments](https://github.com/interledger/rafiki/tree/main/bruno/collections/Rafiki/Examples/Open%20Payments) example that can be executed in the following sequence:
 
+<MermaidWrapper client:load>
+
+<Mermaid
+  graph={`sequenceDiagram
+    participant B as Bruno Client
+    participant SW as Sender Wallet
+    participant RW as Receiver Wallet
+    participant AS as Auth Server
+    participant IdP as Identity Provider
+
+    B->>SW: 1. GET wallet address
+    SW-->>B: 200 OK (authServer URL)
+
+    B->>RW: 2. GET wallet address
+    RW-->>B: 200 OK (authServer URL)
+
+    Note over B,AS: Non-interactive grant
+    B->>AS: 3. POST grant request (incoming-payment)
+    AS-->>B: 200 OK (accessToken)
+
+    B->>RW: 4. POST /incoming-payments
+    RW-->>B: 201 Created (incomingPaymentId)
+
+    Note over B,AS: Non-interactive grant
+    B->>AS: 5. POST grant request (quote)
+    AS-->>B: 200 OK (accessToken)
+
+    B->>SW: 6. POST /quotes
+    SW-->>B: 201 Created (quoteId)
+
+    Note over B,AS: Interactive grant required
+    B->>AS: 7. POST grant request (outgoing-payment)
+    AS-->>B: 200 OK (redirect_uri)
+
+    rect rgb(240, 240, 240)
+        Note over B,AS: Interactive Authorization<br/>User interaction required for outgoing payment grants
+        B->>IdP: Redirect for user consent
+        IdP-->>B: User consents
+        B->>AS: 8. POST /continue/{continueId}
+    end
+
+    AS-->>B: 200 OK (accessToken)
+
+    B->>SW: 9. POST /outgoing-payments
+    SW-->>B: 201 Created (outgoingPaymentId)
+
+    B->>SW: 10. GET /outgoing-payments/{outgoingPaymentId}
+    SW-->>B: 200 OK
+
+`}
+/>
+
+</MermaidWrapper>
+
+The sequence of steps outlined below corresponds to the interactions depicted in the diagram above:
+
 1.  Requests the sender's wallet address
 2.  Requests the receiver's wallet address
 3.  Requests a grant to create an incoming payment on the receiver's account
@@ -293,7 +350,6 @@ Every wallet address also serves as an SPSP endpoint. A `GET` request with an `A
 GET http://localhost:3000/accounts/gfranklin HTTP/1.1
 Host:backend
 Accept:application/spsp4+json
-
 
 HTTP/1.1 200 OK
 Connection:keep-alive

@@ -91,7 +91,7 @@ describe('Interaction Routes', (): void => {
         )
 
         await expect(interactionRoutes.start(ctx)).rejects.toMatchObject({
-          status: 401,
+          status: 400,
           code: GNAPErrorCode.UnknownInteraction,
           message: 'unknown interaction'
         })
@@ -120,9 +120,9 @@ describe('Interaction Routes', (): void => {
         )
 
         await expect(interactionRoutes.start(ctx)).rejects.toMatchObject({
-          status: 401,
-          code: GNAPErrorCode.UnknownInteraction,
-          message: 'unknown interaction'
+          status: 403,
+          code: GNAPErrorCode.InvalidInteraction,
+          message: 'invalid interaction'
         })
       })
 

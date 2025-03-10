@@ -17,12 +17,11 @@ export const parseBool = (str: string) => {
 }
 
 export function getOpenPaymentsUrl() {
-  if (!process.env.OPEN_PAYMENTS_URL) {
+  const env = typeof window === 'undefined' ? process.env : window.ENV
+
+  if (!env?.OPEN_PAYMENTS_URL) {
     throw new Error('Environment variable OPEN_PAYMENTS_URL is missing')
   }
-  if (typeof window === 'undefined') {
-    return process.env.OPEN_PAYMENTS_URL
-  }
 
-  return window.ENV.OPEN_PAYMENTS_URL
+  return env.OPEN_PAYMENTS_URL
 }
