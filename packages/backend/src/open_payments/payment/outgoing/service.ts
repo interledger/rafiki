@@ -25,7 +25,11 @@ import {
 } from '../../../accounting/service'
 import { PeerService } from '../../../payment-method/ilp/peer/service'
 import { ReceiverService } from '../../receiver/service'
-import { GetOptions, ListOptions } from '../../wallet_address/model'
+import {
+  GetOptions,
+  ListOptions,
+  WalletAddress
+} from '../../wallet_address/model'
 import {
   WalletAddressService,
   WalletAddressSubresourceService
@@ -37,13 +41,17 @@ import { knex } from 'knex'
 import { AccountAlreadyExistsError } from '../../../accounting/errors'
 import { PaymentMethodHandlerService } from '../../../payment-method/handler/service'
 import { TelemetryService } from '../../../telemetry/service'
-import { Amount } from '../../amount'
+import { Amount, serializeAmount } from '../../amount'
 import { QuoteService } from '../../quote/service'
 import { isQuoteError } from '../../quote/errors'
 import { Pagination, SortOrder } from '../../../shared/baseModel'
 import { FilterString } from '../../../shared/filters'
 import { IAppConfig } from '../../../config/app'
 import { AssetService } from '../../../asset/service'
+import {
+  OutgoingPayment as OpenPaymentsOutgoingPayment,
+  OutgoingPaymentWithSpentAmounts
+} from '@interledger/open-payments'
 
 export interface OutgoingPaymentService
   extends WalletAddressSubresourceService<OutgoingPayment> {
@@ -57,6 +65,15 @@ export interface OutgoingPaymentService
   fund(
     options: FundOutgoingPaymentOptions
   ): Promise<OutgoingPayment | FundingError>
+  toOpenPaymentsType(
+    payment: OutgoingPayment,
+    walletAddress: WalletAddress
+  ): OpenPaymentsOutgoingPayment
+  toOpenPaymentsWithSpentAmountsType(
+    payment: OutgoingPayment,
+    walletAddress: WalletAddress
+  ): OutgoingPaymentWithSpentAmounts
+  getOpenPaymentsUrl(payment: OutgoingPayment): string
   processNext(): Promise<string | undefined>
 }
 
@@ -87,7 +104,12 @@ export async function createOutgoingPaymentService(
     cancel: (options) => cancelOutgoingPayment(deps, options),
     fund: (options) => fundPayment(deps, options),
     processNext: () => worker.processPendingPayment(deps),
-    getWalletAddressPage: (options) => getWalletAddressPage(deps, options)
+    getWalletAddressPage: (options) => getWalletAddressPage(deps, options),
+    toOpenPaymentsType: (payment, walletAddress) =>
+      toOpenPaymentsType(deps, payment, walletAddress),
+    toOpenPaymentsWithSpentAmountsType: (payment, walletAddress) =>
+      toOpenPaymentsWithSpentAmountsType(deps, payment, walletAddress),
+    getOpenPaymentsUrl: (payment) => getUrl(deps, payment)
   }
 }
 
@@ -746,4 +768,40 @@ function validateSentAmount(
     errorMessage
   )
   throw new Error(errorMessage)
+}
+
+function toOpenPaymentsType(
+  deps: ServiceDependencies,
+  payment: OutgoingPayment,
+  walletAddress: WalletAddress
+): OpenPaymentsOutgoingPayment {
+  return {
+    id: getUrl(deps, payment),
+    walletAddress: walletAddress.url,
+    quoteId: deps.quoteService.getOpenPaymentsUrl(payment.quote) ?? undefined,
+    receiveAmount: serializeAmount(payment.receiveAmount),
+    debitAmount: serializeAmount(payment.debitAmount),
+    sentAmount: serializeAmount(payment.sentAmount),
+    receiver: payment.receiver,
+    failed: payment.failed,
+    metadata: payment.metadata ?? undefined,
+    createdAt: payment.createdAt.toISOString(),
+    updatedAt: payment.updatedAt.toISOString()
+  }
+}
+
+function toOpenPaymentsWithSpentAmountsType(
+  deps: ServiceDependencies,
+  payment: OutgoingPayment,
+  walletAddress: WalletAddress
+): OutgoingPaymentWithSpentAmounts {
+  return {
+    ...toOpenPaymentsType(deps, payment, walletAddress),
+    grantSpentReceiveAmount: serializeAmount(payment.grantSpentReceiveAmount),
+    grantSpentDebitAmount: serializeAmount(payment.grantSpentDebitAmount)
+  }
+}
+
+function getUrl(deps: ServiceDependencies, payment: OutgoingPayment): string {
+  return `${deps.config.openPaymentsUrl}${OutgoingPayment.urlPath}/${payment.id}`
 }

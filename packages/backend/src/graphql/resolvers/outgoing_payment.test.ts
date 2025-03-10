@@ -37,12 +37,14 @@ import {
 } from '../generated/graphql'
 import { faker } from '@faker-js/faker'
 import { GraphQLErrorCode } from '../errors'
+import { IncomingPaymentService } from '../../open_payments/payment/incoming/service'
 
 describe('OutgoingPayment Resolvers', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let accountingService: AccountingService
   let outgoingPaymentService: OutgoingPaymentService
+  let incomingPaymentService: IncomingPaymentService
   let asset: Asset
 
   beforeAll(async (): Promise<void> => {
@@ -50,6 +52,7 @@ describe('OutgoingPayment Resolvers', (): void => {
     appContainer = await createTestApp(deps)
     accountingService = await deps.use('accountingService')
     outgoingPaymentService = await deps.use('outgoingPaymentService')
+    incomingPaymentService = await deps.use('incomingPaymentService')
   })
 
   beforeEach(async (): Promise<void> => {
@@ -158,7 +161,7 @@ describe('OutgoingPayment Resolvers', (): void => {
         const incomingPayment = await createIncomingPayment(deps, {
           walletAddressId: firstReceiverWalletAddress.id
         })
-        receiver = incomingPayment.getUrl(firstReceiverWalletAddress)
+        receiver = incomingPaymentService.getOpenPaymentsUrl(incomingPayment)
         firstOutgoingPayment = await createOutgoingPayment(deps, {
           walletAddressId,
           receiver,
@@ -169,7 +172,9 @@ describe('OutgoingPayment Resolvers', (): void => {
         const secondIncomingPayment = await createIncomingPayment(deps, {
           walletAddressId: secondReceiverWalletAddress.id
         })
-        const secondReceiver = secondIncomingPayment.getUrl(secondWalletAddress)
+        const secondReceiver = incomingPaymentService.getOpenPaymentsUrl(
+          secondIncomingPayment
+        )
         secondOutgoingPayment = await createOutgoingPayment(deps, {
           walletAddressId: secondWalletAddress.id,
           receiver: secondReceiver,

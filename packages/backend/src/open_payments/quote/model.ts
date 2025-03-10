@@ -1,11 +1,7 @@
 import { Model, Pojo } from 'objection'
-import { Amount, serializeAmount } from '../amount'
-import {
-  WalletAddress,
-  WalletAddressSubresource
-} from '../wallet_address/model'
+import { Amount } from '../amount'
+import { WalletAddressSubresource } from '../wallet_address/model'
 import { Asset } from '../../asset/model'
-import { Quote as OpenPaymentsQuote } from '@interledger/open-payments'
 import { Fee } from '../../fee/model'
 
 export class Quote extends WalletAddressSubresource {
@@ -53,11 +49,6 @@ export class Quote extends WalletAddressSubresource {
   public receiver!: string
 
   private debitAmountValue!: bigint
-
-  public getUrl(walletAddress: WalletAddress): string {
-    const url = new URL(walletAddress.url)
-    return `${url.origin}${Quote.urlPath}/${this.id}`
-  }
 
   public get debitAmount(): Amount {
     return {
@@ -117,19 +108,6 @@ export class Quote extends WalletAddressSubresource {
       },
       createdAt: json.createdAt,
       expiresAt: json.expiresAt.toISOString()
-    }
-  }
-
-  public toOpenPaymentsType(walletAddress: WalletAddress): OpenPaymentsQuote {
-    return {
-      id: this.getUrl(walletAddress),
-      walletAddress: walletAddress.url,
-      receiveAmount: serializeAmount(this.receiveAmount),
-      debitAmount: serializeAmount(this.debitAmount),
-      receiver: this.receiver,
-      expiresAt: this.expiresAt.toISOString(),
-      createdAt: this.createdAt.toISOString(),
-      method: this.method
     }
   }
 }
