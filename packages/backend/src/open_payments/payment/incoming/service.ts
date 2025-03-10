@@ -8,17 +8,26 @@ import { AccountingService } from '../../../accounting/service'
 import { BaseService } from '../../../shared/baseService'
 import { Knex } from 'knex'
 import { TransactionOrKnex } from 'objection'
-import { GetOptions, ListOptions } from '../../wallet_address/model'
+import {
+  GetOptions,
+  ListOptions,
+  WalletAddress
+} from '../../wallet_address/model'
 import {
   WalletAddressService,
   WalletAddressSubresourceService
 } from '../../wallet_address/service'
-
-import { Amount } from '../../amount'
+import { Amount, serializeAmount } from '../../amount'
 import { IncomingPaymentError } from './errors'
 import { IAppConfig } from '../../../config/app'
 import { poll } from '../../../shared/utils'
 import { AssetService } from '../../../asset/service'
+import {
+  IncomingPayment as OpenPaymentsIncomingPayment,
+  IncomingPaymentWithPaymentMethods as OpenPaymentsIncomingPaymentWithPaymentMethod
+} from '@interledger/open-payments'
+import { IlpStreamCredentials } from '../../../payment-method/ilp/stream-credentials/service'
+import base64url from 'base64url'
 
 export const POSITIVE_SLIPPAGE = BigInt(1)
 // First retry waits 10 seconds
@@ -52,6 +61,23 @@ export interface IncomingPaymentService
   update(
     options: UpdateOptions
   ): Promise<IncomingPayment | IncomingPaymentError>
+  toOpenPaymentsType(
+    payment: IncomingPayment,
+    walletAddress: WalletAddress
+  ): OpenPaymentsIncomingPayment
+  toOpenPaymentsTypeWithMethods(
+    payment: IncomingPayment,
+    walletAddress: WalletAddress,
+    ilpStreamCredentials?: IlpStreamCredentials
+  ): OpenPaymentsIncomingPaymentWithPaymentMethod
+  toPublicOpenPaymentsType(
+    payment: IncomingPayment,
+    authServerUrl: string
+  ): {
+    receivedAmount: OpenPaymentsIncomingPayment['receivedAmount']
+    authServer: string
+  }
+  getOpenPaymentsUrl(payment: IncomingPayment): string
 }
 
 export interface ServiceDependencies extends BaseService {
@@ -80,7 +106,23 @@ export async function createIncomingPaymentService(
     complete: (id) => completeIncomingPayment(deps, id),
     getWalletAddressPage: (options) => getWalletAddressPage(deps, options),
     processNext: () => processNextIncomingPayment(deps),
-    update: (options) => updateIncomingPayment(deps, options)
+    update: (options) => updateIncomingPayment(deps, options),
+    toOpenPaymentsType: (payment, walletAddress) =>
+      toOpenPaymentsType(deps, payment, walletAddress),
+    toOpenPaymentsTypeWithMethods: (
+      payment,
+      walletAddress,
+      ilpStreamCredentials
+    ) =>
+      toOpenPaymentsTypeWithMethods(
+        deps,
+        payment,
+        walletAddress,
+        ilpStreamCredentials
+      ),
+    toPublicOpenPaymentsType: (payment, authServerUrl) =>
+      toPublicOpenPaymentsType(deps, payment, authServerUrl),
+    getOpenPaymentsUrl: (payment) => getUrl(deps, payment)
   }
 }
 
@@ -89,16 +131,18 @@ async function getIncomingPayment(
   options: GetOptions
 ): Promise<IncomingPayment | undefined> {
   const incomingPayment = await IncomingPayment.query(deps.knex).get(options)
-  if (incomingPayment) {
-    const asset = await deps.assetService.get(incomingPayment.assetId)
-    if (asset) incomingPayment.asset = asset
+  if (!incomingPayment) {
+    return
+  }
 
-    incomingPayment.walletAddress = await deps.walletAddressService.get(
-      incomingPayment.walletAddressId
-    )
+  const asset = await deps.assetService.get(incomingPayment.assetId)
+  if (asset) incomingPayment.asset = asset
 
-    return await addReceivedAmount(deps, incomingPayment)
-  } else return
+  incomingPayment.walletAddress = await deps.walletAddressService.get(
+    incomingPayment.walletAddressId
+  )
+
+  return await addReceivedAmount(deps, incomingPayment)
 }
 
 async function updateIncomingPayment(
@@ -516,4 +560,63 @@ async function addReceivedAmount(
   }
 
   return payment
+}
+
+function toOpenPaymentsType(
+  deps: ServiceDependencies,
+  payment: IncomingPayment,
+  walletAddress: WalletAddress
+): OpenPaymentsIncomingPayment {
+  return {
+    id: getUrl(deps, payment),
+    walletAddress: walletAddress.url,
+    incomingAmount: payment.incomingAmount
+      ? serializeAmount(payment.incomingAmount)
+      : undefined,
+    receivedAmount: serializeAmount(payment.receivedAmount),
+    completed: payment.completed,
+    metadata: payment.metadata ?? undefined,
+    createdAt: payment.createdAt.toISOString(),
+    updatedAt: payment.updatedAt.toISOString(),
+    expiresAt: payment.expiresAt.toISOString()
+  }
+}
+
+function toOpenPaymentsTypeWithMethods(
+  deps: ServiceDependencies,
+  payment: IncomingPayment,
+  walletAddress: WalletAddress,
+  ilpStreamCredentials?: IlpStreamCredentials
+): OpenPaymentsIncomingPaymentWithPaymentMethod {
+  return {
+    ...toOpenPaymentsType(deps, payment, walletAddress),
+    methods:
+      payment.isExpiredOrComplete() || !ilpStreamCredentials
+        ? []
+        : [
+            {
+              type: 'ilp',
+              ilpAddress: ilpStreamCredentials.ilpAddress,
+              sharedSecret: base64url(ilpStreamCredentials.sharedSecret)
+            }
+          ]
+  }
+}
+
+function toPublicOpenPaymentsType(
+  deps: ServiceDependencies,
+  payment: IncomingPayment,
+  authServerUrl: string
+): {
+  receivedAmount: OpenPaymentsIncomingPayment['receivedAmount']
+  authServer: string
+} {
+  return {
+    receivedAmount: serializeAmount(payment.receivedAmount),
+    authServer: authServerUrl
+  }
+}
+
+function getUrl(deps: ServiceDependencies, payment: IncomingPayment): string {
+  return `${deps.config.openPaymentsUrl}${IncomingPayment.urlPath}/${payment.id}`
 }

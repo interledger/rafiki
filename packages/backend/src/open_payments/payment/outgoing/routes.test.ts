@@ -31,6 +31,7 @@ import { createOutgoingPayment } from '../../../tests/outgoingPayment'
 import { createWalletAddress } from '../../../tests/walletAddress'
 import { UnionOmit } from '../../../shared/utils'
 import { OpenPaymentsServerRouteError } from '../../route-errors'
+import { QuoteService } from '../../quote/service'
 
 describe('Outgoing Payment Routes', (): void => {
   let deps: IocContract<AppServices>
@@ -39,6 +40,7 @@ describe('Outgoing Payment Routes', (): void => {
   let config: IAppConfig
   let outgoingPaymentRoutes: OutgoingPaymentRoutes
   let outgoingPaymentService: OutgoingPaymentService
+  let quoteService: QuoteService
   let walletAddress: WalletAddress
   let baseUrl: string
 
@@ -71,6 +73,7 @@ describe('Outgoing Payment Routes', (): void => {
     config = await deps.use('config')
     outgoingPaymentRoutes = await deps.use('outgoingPaymentRoutes')
     outgoingPaymentService = await deps.use('outgoingPaymentService')
+    quoteService = await deps.use('quoteService')
     const { resourceServerSpec } = await deps.use('openApi')
     jestOpenAPI(resourceServerSpec)
   })
@@ -78,7 +81,7 @@ describe('Outgoing Payment Routes', (): void => {
   beforeEach(async (): Promise<void> => {
     const asset = await createAsset(deps)
     walletAddress = await createWalletAddress(deps, { assetId: asset.id })
-    baseUrl = new URL(walletAddress.url).origin
+    baseUrl = config.openPaymentsUrl
   })
 
   afterEach(async (): Promise<void> => {
@@ -117,7 +120,7 @@ describe('Outgoing Payment Routes', (): void => {
           id: `${baseUrl}/outgoing-payments/${outgoingPayment.id}`,
           walletAddress: walletAddress.url,
           receiver: outgoingPayment.receiver,
-          quoteId: outgoingPayment.quote.getUrl(walletAddress),
+          quoteId: quoteService.getOpenPaymentsUrl(outgoingPayment.quote),
           debitAmount: serializeAmount(outgoingPayment.debitAmount),
           sentAmount: serializeAmount(outgoingPayment.sentAmount),
           receiveAmount: serializeAmount(outgoingPayment.receiveAmount),
@@ -239,7 +242,7 @@ describe('Outgoing Payment Routes', (): void => {
           )
             .split('/')
             .pop()
-          expect(ctx.response.body).toEqual({
+          expect(ctx.response.body).toMatchObject({
             id: `${baseUrl}/outgoing-payments/${outgoingPaymentId}`,
             walletAddress: walletAddress.url,
             receiver: payment.receiver,

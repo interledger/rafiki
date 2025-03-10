@@ -1,20 +1,11 @@
 import { Model, QueryContext } from 'objection'
 
-import { Amount, AmountJSON, serializeAmount } from '../../amount'
-import { IlpStreamCredentials } from '../../../payment-method/ilp/stream-credentials/service'
-import {
-  WalletAddress,
-  WalletAddressSubresource
-} from '../../wallet_address/model'
+import { Amount, AmountJSON } from '../../amount'
+import { WalletAddressSubresource } from '../../wallet_address/model'
 import { Asset } from '../../../asset/model'
 import { LiquidityAccount, OnCreditOptions } from '../../../accounting/service'
 import { ConnectorAccount } from '../../../payment-method/ilp/connector/core/rafiki'
 import { WebhookEvent } from '../../../webhook/model'
-import {
-  IncomingPayment as OpenPaymentsIncomingPayment,
-  IncomingPaymentWithPaymentMethods as OpenPaymentsIncomingPaymentWithPaymentMethod
-} from '@interledger/open-payments'
-import base64url from 'base64url'
 
 export enum IncomingPaymentEventType {
   IncomingPaymentCreated = 'incoming_payment.created',
@@ -142,11 +133,6 @@ export class IncomingPayment
     this.receivedAmountValue = amount.value
   }
 
-  public getUrl(walletAddress: WalletAddress): string {
-    const url = new URL(walletAddress.url)
-    return `${url.origin}${IncomingPayment.urlPath}/${this.id}`
-  }
-
   public async onCredit({
     totalReceived
   }: OnCreditOptions): Promise<IncomingPayment> {
@@ -217,52 +203,5 @@ export class IncomingPayment
     }
 
     return data
-  }
-
-  public toOpenPaymentsType(
-    walletAddress: WalletAddress
-  ): OpenPaymentsIncomingPayment {
-    return {
-      id: this.getUrl(walletAddress),
-      walletAddress: walletAddress.url,
-      incomingAmount: this.incomingAmount
-        ? serializeAmount(this.incomingAmount)
-        : undefined,
-      receivedAmount: serializeAmount(this.receivedAmount),
-      completed: this.completed,
-      metadata: this.metadata ?? undefined,
-      createdAt: this.createdAt.toISOString(),
-      updatedAt: this.updatedAt.toISOString(),
-      expiresAt: this.expiresAt.toISOString()
-    }
-  }
-
-  public toOpenPaymentsTypeWithMethods(
-    walletAddress: WalletAddress,
-    ilpStreamCredentials?: IlpStreamCredentials
-  ): OpenPaymentsIncomingPaymentWithPaymentMethod {
-    return {
-      ...this.toOpenPaymentsType(walletAddress),
-      methods:
-        this.isExpiredOrComplete() || !ilpStreamCredentials
-          ? []
-          : [
-              {
-                type: 'ilp',
-                ilpAddress: ilpStreamCredentials.ilpAddress,
-                sharedSecret: base64url(ilpStreamCredentials.sharedSecret)
-              }
-            ]
-    }
-  }
-
-  public toPublicOpenPaymentsType(authServerUrl: string): {
-    receivedAmount: OpenPaymentsIncomingPayment['receivedAmount']
-    authServer: string
-  } {
-    return {
-      receivedAmount: serializeAmount(this.receivedAmount),
-      authServer: authServerUrl
-    }
   }
 }
