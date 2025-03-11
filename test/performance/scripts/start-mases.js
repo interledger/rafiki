@@ -1,7 +1,9 @@
+/* eslint-disable */
 const { MockASE, C9_CONFIG, HLB_CONFIG } = require('test-lib')
 
 ;(async () => {
   try {
+    throw new Error('testing ci')
     await MockASE.create(C9_CONFIG)
     console.debug('Created Cloud Nine Mock ASE')
     await MockASE.create(HLB_CONFIG)
