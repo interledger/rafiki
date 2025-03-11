@@ -205,13 +205,6 @@ jobs:
             echo "Performance tests passed."
           fi
 
-      # - name: Print MASE logs
-      #   if: failure()
-      #   run: |
-      #     echo "Run performance tests errored."
-      #     cat mases.log
-      #     exit 1
-
       - name: Post/Update Performance Test Results as PR Comment
         if: always()
         uses: actions/github-script@v7
@@ -290,13 +283,6 @@ jobs:
             } else {
               console.log("No PR detected, skipping comment.");
             }
-
-      # - name: Fail if performance tests failed
-      #   if: steps.perf_test.outcome == 'failure'
-      #   run: exit 1
-
-
-
 
   node-build:
     runs-on: ubuntu-latest
