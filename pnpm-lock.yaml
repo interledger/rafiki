@@ -179,8 +179,8 @@ importers:
         specifier: 2.0.2
         version: 2.0.2
       '@interledger/open-payments':
-        specifier: 6.13.2
-        version: 6.13.2
+        specifier: 6.14.0
+        version: 6.14.0
       '@interledger/openapi':
         specifier: 2.0.2
         version: 2.0.2
@@ -5116,6 +5116,20 @@ packages:
       uuid: 9.0.1
     transitivePeerDependencies:
       - supports-color
+
+  /@interledger/open-payments@6.14.0:
+    resolution: {integrity: sha512-8eAcpGfOS3knmi5pmiXsJovrOHVMR4rOW4L2nhqEDBxWkPZdVBOn77Rb5WfOAaJgQUTKE2G+sg+UvNJWHy09Ag==}
+    dependencies:
+      '@interledger/http-signature-utils': 2.0.2
+      '@interledger/openapi': 2.0.2
+      base64url: 3.0.1
+      http-message-signatures: 0.1.2
+      ky: 1.3.0
+      pino: 8.19.0
+      uuid: 9.0.1
+    transitivePeerDependencies:
+      - supports-color
+    dev: false
 
   /@interledger/openapi@2.0.2:
     resolution: {integrity: sha512-HOQnALmRtRkGkh63OnFhoCVsK4BKhQosJyoBCe6Cuu+jp8Oj2fAqTNz8ys+h6s30cJcIpk2UBlsj4wZ3pj26Ug==}
