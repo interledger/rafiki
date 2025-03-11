@@ -190,15 +190,7 @@ jobs:
         run: pnpm --filter performance testenv:compose up --wait --build -d
 
       - name: Start Mock Account Entity Services
-        run: |
-          pnpm --filter performance start-mases > mases.log 2>&1 &
-          MASES_PID=$!
-          sleep 5
-          if ! ps -p $MASES_PID > /dev/null; then
-            echo "Mock Account Entity Services failed to start. Check logs:"
-            cat mases.log
-            exit 1
-          fi
+        run: pnpm --filter performance start-mases > mases.log 2>&1 &
 
       - name: Run performance tests
         id: perf_test
