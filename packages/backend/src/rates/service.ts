@@ -38,13 +38,10 @@ export interface RatesService {
 }
 
 interface ServiceDependencies extends BaseService {
-  //TODO make this mandatory?
-  // If `url` is not set, the connector cannot convert between currencies.
-  exchangeRatesUrl?: string
   // Duration (milliseconds) that the fetched rates are valid.
   exchangeRatesLifetime: number
-  // If `tenantSettingService` is not used, `exchangeRatesUrl`will be used.
-  tenantSettingService?: TenantSettingService
+  // Used for getting the exchange rates URL from db.
+  tenantSettingService: TenantSettingService
 }
 
 export enum ConvertError {
@@ -222,8 +219,8 @@ class RatesServiceImpl implements RatesService {
   private async getExchangeRatesUrl(
     tenantId?: string
   ): Promise<string | undefined> {
-    if (!tenantId || !this.deps.tenantSettingService) {
-      return this.deps.exchangeRatesUrl
+    if (!tenantId) {
+      return undefined
     }
 
     const urlCacheKey = `${this.URL_CACHE_PREFIX}${tenantId}`
@@ -242,7 +239,6 @@ class RatesServiceImpl implements RatesService {
         ? exchangeUrlSetting[0].value
         : exchangeUrlSetting.value
 
-      //TODO Maybe not throw if url not found in settings and fallback to default instead?
       if (!tenantExchangeRatesUrl) {
         throw new Error('No exchange rates URL found')
       }

@@ -23,8 +23,6 @@ describe('Rates service', function () {
   let apiRequestCount = 0
   const exchangeRatesLifetime = 100
 
-  //TODO tests for both default and tenanted exchange rates
-  const defaultExchangeRatesUrl = 'http://example-rates.com'
   let tenantExchangeRatesUrl: string
 
   const exampleRates = {
@@ -45,7 +43,6 @@ describe('Rates service', function () {
   beforeAll(async (): Promise<void> => {
     deps = initIocContainer({
       ...Config,
-      exchangeRatesUrl: defaultExchangeRatesUrl,
       exchangeRatesLifetime
     })
     tenantId = Config.operatorTenantId

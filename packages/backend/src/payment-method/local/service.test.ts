@@ -40,8 +40,6 @@ describe('LocalPaymentService', (): void => {
   let incomingPaymentService: IncomingPaymentService
   let tenantId: string
 
-  //TODO tests for both default and tenanted exchange rates
-  const exchangeRatesUrl = 'https://example-rates.com'
   let tenantExchangeRatesUrl: string
 
   const assetMap: Record<string, Asset> = {}
@@ -50,7 +48,6 @@ describe('LocalPaymentService', (): void => {
   beforeAll(async (): Promise<void> => {
     deps = initIocContainer({
       ...Config,
-      exchangeRatesUrl,
       exchangeRatesLifetime: 0
     })
     appContainer = await createTestApp(deps)

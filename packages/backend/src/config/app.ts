@@ -115,7 +115,6 @@ export const Config = {
     5
   ),
 
-  exchangeRatesUrl: process.env.EXCHANGE_RATES_URL, // optional
   exchangeRatesLifetime: +(process.env.EXCHANGE_RATES_LIFETIME || 15_000),
 
   slippage: envFloat('SLIPPAGE', 0.01),
