@@ -1,3 +1,4 @@
+/* eslint-disable */
 const { MockASE, C9_CONFIG, HLB_CONFIG } = require('test-lib')
 
 ;(async () => {
