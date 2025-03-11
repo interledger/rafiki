@@ -48,6 +48,8 @@ check_service() {
   local url=$1
   local name=$2
 
+  exit 1
+
   if curl -s --head --request GET "$url" | grep "HTTP/1.[01]" >/dev/null; then
     echo "$name is up: $url"
   else
