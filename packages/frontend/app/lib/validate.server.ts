@@ -137,7 +137,7 @@ export const updateTenantGeneralSchema = z
   })
   .merge(uuidSchema)
 
-export const updateTenantIpSchema = z
+export const updateTenantIdpSchema = z
   .object({
     idpSecret: z.string().optional(),
     idpConsentUrl: z.string().optional()
@@ -156,6 +156,6 @@ export const updateTenantSensitiveSchema = z
 export const createTenantSchema = z
   .object({})
   .merge(updateTenantGeneralSchema)
-  .merge(updateTenantIpSchema)
+  .merge(updateTenantIdpSchema)
   .merge(updateTenantSensitiveSchema)
   .omit({ id: true })

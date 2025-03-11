@@ -24,7 +24,7 @@ import { updateTenant, deleteTenant, whoAmI } from '~/lib/api/tenant.server'
 import { messageStorage, setMessageAndRedirect } from '~/lib/message.server'
 import {
   updateTenantGeneralSchema,
-  updateTenantIpSchema,
+  updateTenantIdpSchema,
   updateTenantSensitiveSchema,
   uuidSchema
 } from '~/lib/validate.server'
@@ -253,7 +253,7 @@ export async function action({ request }: ActionFunctionArgs) {
         message: string[]
       }
       ip: {
-        fieldErrors: ZodFieldErrors<typeof updateTenantIpSchema>
+        fieldErrors: ZodFieldErrors<typeof updateTenantIdpSchema>
         message: string[]
       }
       sensitive: {
@@ -318,7 +318,7 @@ export async function action({ request }: ActionFunctionArgs) {
       break
     }
     case 'ip': {
-      const result = await handleUpdateFormSubmit(intent, updateTenantIpSchema)
+      const result = await handleUpdateFormSubmit(intent, updateTenantIdpSchema)
       if (!('formEntries' in result)) return result
       break
     }
