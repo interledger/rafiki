@@ -20,7 +20,7 @@
     "@remix-run/node": "^2.15.3",
     "@remix-run/react": "^2.15.3",
     "@remix-run/serve": "^2.15.3",
-    "axios": "^1.7.9",
+    "axios": "^1.8.2",
     "class-variance-authority": "^0.7.1",
     "graphql": "^16.8.1",
     "ilp-packet": "3.1.4-alpha.2",
