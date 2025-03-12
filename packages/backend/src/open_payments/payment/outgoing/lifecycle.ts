@@ -117,6 +117,7 @@ export async function handleSending(
       'transaction_fee_amounts',
       payment.sentAmount,
       payment.receiveAmount,
+      payment.tenantId,
       {
         description: 'Amount sent through the network as fees',
         valueType: ValueType.DOUBLE

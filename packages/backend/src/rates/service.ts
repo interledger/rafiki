@@ -11,6 +11,7 @@ import { createInMemoryDataStore } from '../middleware/cache/data-stores/in-memo
 import { CacheDataStore } from '../middleware/cache/data-stores'
 import { TenantSettingService } from '../tenants/settings/service'
 import { TenantSettingKeys } from '../tenants/settings/model'
+import { Config as AppConfig } from '../config/app'
 
 const REQUEST_TIMEOUT = 5_000 // millseconds
 
@@ -76,7 +77,7 @@ class RatesServiceImpl implements RatesService {
     convertFn: (
       opts: T & { exchangeRate: number }
     ) => ConvertResults | ConvertError,
-    tenantId?: string
+    tenantId: string
   ): Promise<ConvertResults | ConvertError> {
     const { sourceAsset, destinationAsset } = opts
     const sameCode = sourceAsset.code === destinationAsset.code
@@ -108,46 +109,54 @@ class RatesServiceImpl implements RatesService {
     opts: RateConvertSourceOpts,
     tenantId?: string
   ): Promise<ConvertResults | ConvertError> {
-    return this.convert(opts, convertSource, tenantId)
+    return this.convert(
+      opts,
+      convertSource,
+      tenantId ?? AppConfig.operatorTenantId
+    )
   }
 
   async convertDestination(
     opts: RateConvertDestinationOpts,
     tenantId?: string
   ): Promise<ConvertResults | ConvertError> {
-    return this.convert(opts, convertDestination, tenantId)
+    return this.convert(
+      opts,
+      convertDestination,
+      tenantId ?? AppConfig.operatorTenantId
+    )
   }
 
   async rates(baseAssetCode: string, tenantId?: string): Promise<Rates> {
-    return this.getRates(baseAssetCode, tenantId)
+    return this.getRates(baseAssetCode, tenantId ?? AppConfig.operatorTenantId)
   }
 
   private async getRates(
     baseAssetCode: string,
-    tenantId?: string
+    tenantId: string
   ): Promise<Rates> {
-    const cacheKey = tenantId ? `${tenantId}:${baseAssetCode}` : baseAssetCode
-    const cachedRate = await this.cache.get(cacheKey)
+    const ratesCacheKey = `${tenantId}:${baseAssetCode}`
+    const cachedRate = await this.cache.get(ratesCacheKey)
 
     if (cachedRate) {
       return JSON.parse(cachedRate)
     }
 
-    return await this.fetchNewRatesAndCache(baseAssetCode, cacheKey, tenantId)
+    return await this.fetchNewRatesAndCache(baseAssetCode, tenantId)
   }
 
   private async fetchNewRatesAndCache(
     baseAssetCode: string,
-    cacheKey: string,
-    tenantId?: string
+    tenantId: string
   ): Promise<Rates> {
-    if (this.inProgressRequests[cacheKey] === undefined) {
-      this.inProgressRequests[cacheKey] = this.fetchNewRates(
+    const ratesCacheKey = `${tenantId}:${baseAssetCode}`
+    if (this.inProgressRequests[ratesCacheKey] === undefined) {
+      this.inProgressRequests[ratesCacheKey] = this.fetchNewRates(
         baseAssetCode,
         tenantId
       )
         .then(async (rates) => {
-          await this.cache.set(cacheKey, JSON.stringify(rates))
+          await this.cache.set(ratesCacheKey, JSON.stringify(rates))
           return rates
         })
         .catch((err) => {
@@ -170,16 +179,16 @@ class RatesServiceImpl implements RatesService {
           throw new Error(errorMessage)
         })
         .finally(() => {
-          delete this.inProgressRequests[cacheKey]
+          delete this.inProgressRequests[ratesCacheKey]
         })
     }
 
-    return this.inProgressRequests[cacheKey]
+    return this.inProgressRequests[ratesCacheKey]
   }
 
   private async fetchNewRates(
     baseAssetCode: string,
-    tenantId?: string
+    tenantId: string
   ): Promise<Rates> {
     let url
     try {
@@ -217,12 +226,8 @@ class RatesServiceImpl implements RatesService {
   }
 
   private async getExchangeRatesUrl(
-    tenantId?: string
+    tenantId: string
   ): Promise<string | undefined> {
-    if (!tenantId) {
-      return undefined
-    }
-
     const urlCacheKey = `${this.URL_CACHE_PREFIX}${tenantId}`
     const cachedUrl = await this.cache.get(urlCacheKey)
     if (cachedUrl) {
@@ -239,9 +244,6 @@ class RatesServiceImpl implements RatesService {
         ? exchangeUrlSetting[0].value
         : exchangeUrlSetting.value
 
-      if (!tenantExchangeRatesUrl) {
-        throw new Error('No exchange rates URL found')
-      }
       await this.cache.set(urlCacheKey, tenantExchangeRatesUrl)
 
       return tenantExchangeRatesUrl

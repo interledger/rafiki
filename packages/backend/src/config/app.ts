@@ -67,10 +67,6 @@ export const Config = {
         ]
   ),
   openTelemetryExportInterval: envInt('OPEN_TELEMETRY_EXPORT_INTERVAL', 15000),
-  telemetryExchangeRatesUrl: envString(
-    'TELEMETRY_EXCHANGE_RATES_URL',
-    'https://telemetry-exchange-rates.s3.amazonaws.com/exchange-rates-usd.json'
-  ),
   telemetryExchangeRatesLifetime: envInt(
     'TELEMETRY_EXCHANGE_RATES_LIFETIME',
     86_400_000
