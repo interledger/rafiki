@@ -21,7 +21,7 @@ You must set up Rafiki to support at least one asset. An asset in Rafiki represe
 
 ## Associate each user-facing payment account with a wallet address <Badge text="Required" variant="danger" />
 
-A wallet address is a publicly shareable standardized ID for a payment account. Each payment account belonging to your users (e.g., customers) must have at least one associated wallet address for the account to be able to send and/or receive payments via Open Payments and Interledger.
+A wallet address is a publicly shareable standardized ID for a payment account. Each payment account belonging to your users (for example, your customers) must have at least one associated wallet address for the account to be able to send and/or receive payments via Open Payments and Interledger.
 
 [Set up your wallet addresses](/integration/requirements/wallet-addresses)
 
@@ -45,7 +45,7 @@ You have the option to charge a sending fee, on top of any estimated network fee
 
 ## Add a peer to enable Interledger payments <Badge text="Conditionally Optional" variant="caution" />
 
-You must add one or more peers if you intend to enable Interledger payments on your accounts. A peer is another ASE that you will connect with via Interledger and is likely running their own Rafiki instance.
+You must add one or more peers if you intend to enable Interledger payments on your accounts. A peer is another ASE that you connect with via Interledger and is likely running their own Rafiki instance.
 
 If you are using Rafiki solely for transfers between accounts on your ledger, peers are not required.
 
@@ -55,7 +55,7 @@ If you are using Rafiki solely for transfers between accounts on your ledger, pe
 
 An identity provider (IdP) is a system or service that stores and manages user identity information, authentication, and consent. Examples of IdPs include OpenID Connect and Okta.
 
-Integration with an IdP is required if you plan to use the authorization server provided through Rafiki's auth service. The authorization server requires consent to be collected via an interactive grant before an outgoing payment request is issued. The purpose of the IdP is to handle the authentication and consent required to authorize the interactive grant request.
+You must integrate with an IdP if you plan to use the authorization server provided through Rafiki's auth service. The authorization server requires consent be collected via an interactive grant before an outgoing payment request is issued. The purpose of the IdP is to handle the authentication and consent required to authorize the interactive grant request.
 
 [Integrate Rafiki with your IdP](/integration/requirements/idp)
 
@@ -63,7 +63,7 @@ Integration with an IdP is required if you plan to use the authorization server 
 
 Ensure you've completed the following tasks before you deploy Rafiki to a production environment and join the Interledger network.
 
-- [ ] You are a licensed financial account servicing entity within the jurisdiction(s) you operate in
+- [ ] You are a licensed financial account servicing entity within the jurisdictions you operate in
 - [ ] You have added at least one asset, either through the Backend Admin API or the Rafiki Admin app
 - [ ] You have implemented a strategy for creating wallet addresses for your account holders
 - [ ] You have set up your webhook endpoint and understand how to handle each webhook event

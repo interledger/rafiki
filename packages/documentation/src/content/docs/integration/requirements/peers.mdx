@@ -4,9 +4,9 @@ title: Peers
 
 import { CodeBlock, LinkOut } from '@interledger/docs-design-system'
 
-To join the Interledger network and be able to send and receive payments, you must add one or more peer(s) to your Rafiki instance. Peering establishes the connections needed for your Rafiki instance to interact with another account servicing entity (ASE). The purpose of this guide is to help you set up and manage peers.
+To join the Interledger network and be able to send and receive payments, you must add one or more peers to your Rafiki instance. Peering establishes the connections needed for your Rafiki instance to interact with another account servicing entity (ASE). The purpose of this guide is to help you set up and manage peers.
 
-While this guide focuses on the conceptual and technical steps of adding and managing peers via the Backend Admin API, the Rafiki Admin application offers the same functionality in a user-friendly interface.
+While this guide focuses on the conceptual and technical steps of adding and managing peers via the Backend Admin API, the Rafiki Admin application offers the same capabilities in a user-friendly interface.
 
 Refer to the [Rafiki Admin user guide](/admin/admin-user-guide#peers) for detailed instructions and examples of creating and managing peers through the application.
 
@@ -31,7 +31,7 @@ Before adding a peer, you and the account servicing entity you intend to peer wi
 
 ### Optional settings
 
-- Deposit an `initialLiquidity` for your peer. Liquidity can also be deposited later using the `depositPeerLiquidity` mutation.
+- Deposit an `initialLiquidity` for your peer. You can deposit liquidity later using the `depositPeerLiquidity` mutation.
 - Define a `maxPacketAmount` value, which specifies the maximum packet size you are willing to accept from the peer. Your peer's `maxPacketAmount` value does not need to match, as this value is independently set by each ASE. If omitted, payments will not be broken into smaller packets.
 
 ## Set up peering in Rafiki
@@ -40,7 +40,7 @@ The basic workflow of setting up a peering relationship starts with adding the a
 
 ### Add an asset
 
-As mentioned in the prerequisites, an asset must be added to your Rafiki instance before creating a peering relationship. To learn how to add an asset, refer to [Assets](/integration/requirements/assets/).
+As mentioned in the prerequisites, you must add an asset to your Rafiki instance before creating a peering relationship. To learn how to add an asset, refer to [Assets](/integration/requirements/assets/).
 
 ### Add a peer
 
@@ -85,7 +85,7 @@ mutation CreatePeer($input: CreatePeerInput!) {
   		"outgoing": {"endpoint": "ilp.othergreatwallet.com", "authToken": "theirtoken"}
 	  },
 	"assetId": "INSERT_ASSET_ID",
-	"initialLiquidity": <optionally, an intial amount of liquity to provision. Liquidity can also be deposited via the `DepositPeerLiquidity` mutation>
+	"initialLiquidity": <optionally, an initial amount of liquidity to provision. Liquidity can also be deposited via the `DepositPeerLiquidity` mutation>
   }
 }
 ```
@@ -141,7 +141,7 @@ Once a peer has been added to your Rafiki instance, there is minimal ongoing man
 <summary>How to edit a peer</summary>
 Occasionally, you may need to adjust peering configurations or address any changes communicated by the peer. Some examples include updating new endpoints or tokens, technical settings like the maximum packet amount, or peer liquidity thresholds.
 
-In this example we are going to update the peer we just created. Rather than change any of the peering details, we can add some optional details that we didn't include when we created the peer. We will define the `maxPacketAmount` and the `liquidityThreshold`.
+In this example we will update the peer we just created. Rather than change any of the peering details, we can add some optional details that we didn't include when we created the peer. We will define the `maxPacketAmount` and the `liquidityThreshold`.
 
 #### `updatePeer`
 
@@ -188,11 +188,11 @@ The input object for the update operation only requires that the `id` is present
 
 <div class="overflow-table">
 
-| Variable             | Description                                                                                            | Required |
-| -------------------- | ------------------------------------------------------------------------------------------------------ | -------- |
-| `id`                 | The ID of the peer you wish to update.                                                                 | Y        |
-| `maxPacketAmount`    | Maximum packet size you are willing to accept from the peer.                                           | N        |
-| `liquidityThreshold` | A webhook event will notify the Account Servicing Entity if peer liquidity falls below this new value. | N        |
+| Variable             | Description                                                                                         | Required |
+| -------------------- | --------------------------------------------------------------------------------------------------- | -------- |
+| `id`                 | The ID of the peer you wish to update.                                                              | Y        |
+| `maxPacketAmount`    | Maximum packet size you are willing to accept from the peer.                                        | N        |
+| `liquidityThreshold` | A webhook event notifies the account servicing entity if peer liquidity falls below this new value. | N        |
 
 </div>
 
@@ -229,9 +229,9 @@ The input object for the update operation only requires that the `id` is present
 
 <details>
 <summary>How to delete a peer</summary>
-Deleting a peer is an action that removes a peer from your Rafiki instance. There are specific rules and considerations to keep in mind before initating this irreversible operation.
+Deleting a peer is an action that removes a peer from your Rafiki instance. There are specific rules and considerations to keep in mind before starting this irreversible operation.
 
-A peer can only be deleted if no payments have been made to or received from that peer. This ensures that historical payment records are preserved. If you attempt to delete a peer with payment history, the backend will throw an error, preventing the deletion.
+You can only delete a peer if no payments were sent to or received from that peer. This ensures that historical payment records are preserved. If you attempt to delete a peer with payment history, the backend throws an error, preventing the deletion.
 
 Deleting a peer is useful in situations where there were configuration errors when the peer was first created like an incorrect auth token or ILP address.
 
