@@ -190,27 +190,8 @@ class RatesServiceImpl implements RatesService {
     baseAssetCode: string,
     tenantId: string
   ): Promise<Rates> {
-    let url
-    try {
-      url = await this.getExchangeRatesUrl(tenantId)
-    } catch (err) {
-      const errorMessage = 'Could not get url for exchange rates'
+    const url = await this.getExchangeRatesUrl(tenantId)
 
-      this.deps.logger.error(
-        {
-          ...(isAxiosError(err)
-            ? {
-                errorMessage: err.message,
-                errorCode: err.code,
-                errorStatus: err.status
-              }
-            : { err })
-        },
-        errorMessage
-      )
-
-      throw new Error(errorMessage)
-    }
     if (!url) {
       return { base: baseAssetCode, rates: {} }
     }
@@ -248,7 +229,10 @@ class RatesServiceImpl implements RatesService {
 
       return tenantExchangeRatesUrl
     } catch (error) {
-      this.deps.logger.error({ error }, 'Failed to get exchange rates URL')
+      this.deps.logger.error(
+        { error },
+        'Failed to get exchange rates URL from database'
+      )
     }
   }
 
