@@ -277,7 +277,7 @@ export async function handleWalletAddressNotFound(wh: Webhook) {
   await mockAccounts.setWalletAddress(
     account.id,
     walletAddress.id,
-    walletAddress.url
+    walletAddress.address
   )
 }
 

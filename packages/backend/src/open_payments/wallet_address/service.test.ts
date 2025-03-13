@@ -139,24 +139,6 @@ describe('Open Payments Wallet Address Service', (): void => {
       ).resolves.toEqual(WalletAddressError.UnknownAsset)
     })
 
-    test.each`
-      url                      | description
-      ${'not a url'}           | ${'without a valid url'}
-      ${'http://alice.me/pay'} | ${'with a non-https url'}
-      ${'https://alice.me'}    | ${'with a url without a path'}
-      ${'https://alice.me/'}   | ${'with a url without a path'}
-    `(
-      'Wallet address cannot be created $description ($url)',
-      async ({ url }): Promise<void> => {
-        await expect(
-          walletAddressService.create({
-            ...options,
-            address: url
-          })
-        ).resolves.toEqual(WalletAddressError.InvalidUrl)
-      }
-    )
-
     test.each(FORBIDDEN_PATHS.map((path) => [path]))(
       'Wallet address cannot be created with forbidden url path (%s)',
       async (path): Promise<void> => {

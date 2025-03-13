@@ -45,7 +45,7 @@ describe('Models', (): void => {
       walletAddress = await createWalletAddress(deps, {
         tenantId: Config.operatorTenantId
       })
-      baseUrl = new URL(walletAddress.url).origin
+      baseUrl = new URL(walletAddress.address).origin
       incomingPayment = await createIncomingPayment(deps, {
         walletAddressId: walletAddress.id,
         metadata: { description: 'my payment' },
@@ -57,7 +57,7 @@ describe('Models', (): void => {
       test('returns incoming payment', async () => {
         expect(incomingPayment.toOpenPaymentsType(walletAddress)).toEqual({
           id: `${baseUrl}/${Config.operatorTenantId}${IncomingPayment.urlPath}/${incomingPayment.id}`,
-          walletAddress: walletAddress.url,
+          walletAddress: walletAddress.address,
           completed: incomingPayment.completed,
           receivedAmount: serializeAmount(incomingPayment.receivedAmount),
           incomingAmount: incomingPayment.incomingAmount
@@ -85,7 +85,7 @@ describe('Models', (): void => {
           )
         ).toEqual({
           id: `${baseUrl}/${Config.operatorTenantId}${IncomingPayment.urlPath}/${incomingPayment.id}`,
-          walletAddress: walletAddress.url,
+          walletAddress: walletAddress.address,
           completed: incomingPayment.completed,
           receivedAmount: serializeAmount(incomingPayment.receivedAmount),
           incomingAmount: incomingPayment.incomingAmount
@@ -110,7 +110,7 @@ describe('Models', (): void => {
           incomingPayment.toOpenPaymentsTypeWithMethods(walletAddress)
         ).toEqual({
           id: `${baseUrl}/${Config.operatorTenantId}${IncomingPayment.urlPath}/${incomingPayment.id}`,
-          walletAddress: walletAddress.url,
+          walletAddress: walletAddress.address,
           completed: incomingPayment.completed,
           receivedAmount: serializeAmount(incomingPayment.receivedAmount),
           incomingAmount: incomingPayment.incomingAmount
@@ -141,7 +141,7 @@ describe('Models', (): void => {
             )
           ).toEqual({
             id: `${baseUrl}/${Config.operatorTenantId}${IncomingPayment.urlPath}/${incomingPayment.id}`,
-            walletAddress: walletAddress.url,
+            walletAddress: walletAddress.address,
             completed: incomingPayment.completed,
             receivedAmount: serializeAmount(incomingPayment.receivedAmount),
             incomingAmount: incomingPayment.incomingAmount

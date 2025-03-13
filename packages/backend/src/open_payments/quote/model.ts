@@ -66,7 +66,7 @@ export class Quote extends WalletAddressSubresource {
   private debitAmountValue!: bigint
 
   public getUrl(walletAddress: WalletAddress): string {
-    const url = new URL(walletAddress.url)
+    const url = new URL(walletAddress.address)
     return `${url.origin}/${this.tenantId}${Quote.urlPath}/${this.id}`
   }
 
@@ -134,7 +134,7 @@ export class Quote extends WalletAddressSubresource {
   public toOpenPaymentsType(walletAddress: WalletAddress): OpenPaymentsQuote {
     return {
       id: this.getUrl(walletAddress),
-      walletAddress: walletAddress.url,
+      walletAddress: walletAddress.address,
       receiveAmount: serializeAmount(this.receiveAmount),
       debitAmount: serializeAmount(this.debitAmount),
       receiver: this.receiver,

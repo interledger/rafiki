@@ -84,7 +84,7 @@ describe('Outgoing Payment Routes', (): void => {
       tenantId,
       assetId: asset.id
     })
-    baseUrl = new URL(walletAddress.url).origin
+    baseUrl = new URL(walletAddress.address).origin
   })
 
   afterEach(async (): Promise<void> => {
@@ -121,7 +121,7 @@ describe('Outgoing Payment Routes', (): void => {
       getBody: (outgoingPayment) => {
         return {
           id: `${baseUrl}/${tenantId}/outgoing-payments/${outgoingPayment.id}`,
-          walletAddress: walletAddress.url,
+          walletAddress: walletAddress.address,
           receiver: outgoingPayment.receiver,
           quoteId: outgoingPayment.quote.getUrl(walletAddress),
           debitAmount: serializeAmount(outgoingPayment.debitAmount),
@@ -252,7 +252,7 @@ describe('Outgoing Payment Routes', (): void => {
             .pop()
           expect(ctx.response.body).toEqual({
             id: `${baseUrl}/${tenantId}/outgoing-payments/${outgoingPaymentId}`,
-            walletAddress: walletAddress.url,
+            walletAddress: walletAddress.address,
             receiver: payment.receiver,
             quoteId:
               'quoteId' in options ? options.quoteId : expect.any(String),

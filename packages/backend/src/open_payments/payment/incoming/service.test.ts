@@ -60,7 +60,7 @@ describe('Incoming Payment Service', (): void => {
       assetId: asset.id
     })
     walletAddressId = address.id
-    client = address.url
+    client = address.address
   })
 
   afterEach(async (): Promise<void> => {
