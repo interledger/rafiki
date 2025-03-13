@@ -54,7 +54,7 @@ export async function getWalletAddressUrlFromIncomingPayment(
     })
   }
 
-  ctx.walletAddressUrl = incomingPayment.walletAddress.url
+  ctx.walletAddressUrl = incomingPayment.walletAddress.address
   await next()
 }
 
@@ -77,7 +77,7 @@ export async function getWalletAddressUrlFromOutgoingPayment(
     })
   }
 
-  ctx.walletAddressUrl = outgoingPayment.walletAddress.url
+  ctx.walletAddressUrl = outgoingPayment.walletAddress.address
   await next()
 }
 
@@ -98,7 +98,7 @@ export async function getWalletAddressUrlFromQuote(
     })
   }
 
-  ctx.walletAddressUrl = quote.walletAddress.url
+  ctx.walletAddressUrl = quote.walletAddress.address
   await next()
 }
 

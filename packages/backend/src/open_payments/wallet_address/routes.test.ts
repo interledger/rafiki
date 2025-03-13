@@ -71,7 +71,7 @@ describe('Wallet Address Routes', (): void => {
       const ctx = createContext<WalletAddressUrlContext>({
         headers: { Accept: 'application/json' }
       })
-      ctx.walletAddressUrl = walletAddress.url
+      ctx.walletAddressUrl = walletAddress.address
 
       const getOrPollByUrlSpy = jest.spyOn(
         walletAddressService,
@@ -112,11 +112,11 @@ describe('Wallet Address Routes', (): void => {
         headers: { Accept: 'application/json' },
         url: '/'
       })
-      ctx.walletAddressUrl = walletAddress.url
+      ctx.walletAddressUrl = walletAddress.address
       await expect(walletAddressRoutes.get(ctx)).resolves.toBeUndefined()
       expect(ctx.response).toSatisfyApiSpec()
       expect(ctx.body).toEqual({
-        id: walletAddress.url,
+        id: walletAddress.address,
         publicName: walletAddress.publicName,
         assetCode: walletAddress.asset.code,
         assetScale: walletAddress.asset.scale,
@@ -156,11 +156,11 @@ describe('Wallet Address Routes', (): void => {
         headers: { Accept: 'application/json' },
         url: '/'
       })
-      ctx.walletAddressUrl = walletAddress.url
+      ctx.walletAddressUrl = walletAddress.address
       await expect(walletAddressRoutes.get(ctx)).resolves.toBeUndefined()
       expect(ctx.response).toSatisfyApiSpec()
       expect(ctx.body).toEqual({
-        id: walletAddress.url,
+        id: walletAddress.address,
         publicName: walletAddress.publicName,
         assetCode: walletAddress.asset.code,
         assetScale: walletAddress.asset.scale,

@@ -42,6 +42,8 @@ import { GraphQLErrorCode } from '../errors'
 import { AssetService } from '../../asset/service'
 import { faker } from '@faker-js/faker'
 import { Tenant } from '../../tenants/model'
+import { createTenantSettings } from '../../tests/tenantSettings'
+import { TenantSettingKeys } from '../../tenants/settings/model'
 import { createTenant } from '../../tests/tenant'
 
 describe('Wallet Address Resolvers', (): void => {
@@ -71,6 +73,18 @@ describe('Wallet Address Resolvers', (): void => {
     await appContainer.shutdown()
   })
 
+  beforeEach(async () => {
+    await createTenantSettings(deps, {
+      tenantId: Config.operatorTenantId,
+      setting: [
+        {
+          key: TenantSettingKeys.WALLET_ADDRESS_URL.name,
+          value: 'https://alice.me'
+        }
+      ]
+    })
+  })
+
   describe('Create Wallet Address', (): void => {
     let asset: Asset
     let input: CreateWalletAddressInput
@@ -80,7 +94,7 @@ describe('Wallet Address Resolvers', (): void => {
       input = {
         assetId: asset.id,
         tenantId: Config.operatorTenantId,
-        url: 'https://alice.me/.well-known/pay'
+        address: 'https://alice.me/.well-known/pay'
       }
     })
 
@@ -103,7 +117,7 @@ describe('Wallet Address Resolvers', (): void => {
                       code
                       scale
                     }
-                    url
+                    address
                     publicName
                   }
                 }
@@ -125,7 +139,7 @@ describe('Wallet Address Resolvers', (): void => {
         expect(response.walletAddress).toEqual({
           __typename: 'WalletAddress',
           id: response.walletAddress.id,
-          url: input.url,
+          address: input.address,
           asset: {
             __typename: 'Asset',
             code: asset.code,
@@ -169,7 +183,7 @@ describe('Wallet Address Resolvers', (): void => {
                     code
                     scale
                   }
-                  url
+                  address
                   publicName
                   additionalProperties {
                     key
@@ -196,7 +210,7 @@ describe('Wallet Address Resolvers', (): void => {
       expect(response.walletAddress).toEqual({
         __typename: 'WalletAddress',
         id: response.walletAddress.id,
-        url: input.url,
+        address: input.address,
         asset: {
           __typename: 'Asset',
           code: asset.code,
@@ -330,7 +344,7 @@ describe('Wallet Address Resolvers', (): void => {
       const badInputData = {
         tenantId: uuid(), // some tenant other than requestor
         assetId: input.assetId,
-        url: input.url
+        address: input.address
       }
       try {
         expect.assertions(2)
@@ -786,6 +800,17 @@ describe('Wallet Address Resolvers', (): void => {
           scale: 2,
           tenantId: newTenant!.id
         })
+
+        await createTenantSettings(deps, {
+          tenantId: newTenant.id,
+          setting: [
+            {
+              key: TenantSettingKeys.WALLET_ADDRESS_URL.name,
+              value: 'https://alice.me'
+            }
+          ]
+        })
+
         const newWalletAddress = await walletAddressService.create({
           assetId: (newAsset as Asset).id,
           tenantId: newTenant!.id,
@@ -852,10 +877,10 @@ describe('Wallet Address Resolvers', (): void => {
         const additionalProperties = [walletProp01, walletProp02]
 
         const walletAddress = await createWalletAddress(deps, {
-          tenantId: Config.operatorTenantId,
           publicName,
           createLiquidityAccount: true,
-          additionalProperties
+          additionalProperties,
+          tenantId: Config.operatorTenantId
         })
         const query = await appContainer.apolloClient
           .query({
@@ -868,7 +893,7 @@ describe('Wallet Address Resolvers', (): void => {
                     code
                     scale
                   }
-                  url
+                  address
                   publicName
                   additionalProperties {
                     key
