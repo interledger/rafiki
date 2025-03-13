@@ -84,33 +84,28 @@ async function introspect(
     .whereNull('revokedAt')
     .withGraphFetched('grant.access')
 
-  const foundAccess: Access[] = []
   if (!token) return
-  if (isTokenExpired(token)) {
-    return undefined
-  } else {
-    if (!token.grant || isRevokedGrant(token.grant)) {
-      return undefined
-    }
-    if (access) {
-      for (const accessItem of access) {
-        const { access: grantAccess } = token.grant
-        const foundAccessItem = grantAccess.find((grantAccessItem) =>
-          compareRequestAndGrantAccessItems(
-            accessItem,
-            toOpenPaymentsAccess(grantAccessItem)
-          )
+  if (isTokenExpired(token)) return
+  if (!token.grant || isRevokedGrant(token.grant)) return
+
+  const foundAccess: Access[] = []
+
+  if (access) {
+    for (const accessItem of access) {
+      const { access: grantAccess } = token.grant
+      const foundAccessItem = grantAccess.find((grantAccessItem) =>
+        compareRequestAndGrantAccessItems(
+          accessItem,
+          toOpenPaymentsAccess(grantAccessItem)
         )
-        if (!foundAccessItem) {
-          return undefined
-        } else {
-          foundAccess.push(foundAccessItem)
-        }
+      )
+      if (foundAccessItem) {
+        foundAccess.push(foundAccessItem)
       }
     }
-
-    return { grant: token.grant, access: foundAccess }
   }
+
+  return { grant: token.grant, access: foundAccess }
 }
 
 async function revoke(
@@ -138,7 +133,6 @@ async function revokeByGrantId(
     })
     .where('grantId', grantId)
 }
-
 async function createAccessToken(
   deps: ServiceDependencies,
   grantId: string,
