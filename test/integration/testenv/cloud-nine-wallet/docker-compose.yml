@@ -38,7 +38,6 @@ services:
       ILP_CONNECTOR_URL: http://cloud-nine-wallet-test-backend:3102
       STREAM_SECRET: BjPXtnd00G2mRQwP/8ZpwyZASOch5sUXT5o0iR5b5wU=
       WEBHOOK_URL: http://host.docker.internal:8888/webhooks
-      EXCHANGE_RATES_URL: http://host.docker.internal:8888/rates
       REDIS_URL: redis://shared-redis:6379/0
       USE_TIGERBEETLE: false
       OPERATOR_TENANT_ID: 438fa74a-fa7d-4317-9ced-dde32ece1787
