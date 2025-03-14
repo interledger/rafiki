@@ -43,7 +43,7 @@
     "@types/react": "^18.2.73",
     "@types/react-dom": "^18.2.22",
     "@types/uuid": "^9.0.8",
-    "autoprefixer": "^10.4.20",
+    "autoprefixer": "^10.4.21",
     "eslint": "^8.57.1",
     "eslint-plugin-jsx-a11y": "^6.10.2",
     "eslint-plugin-react": "^7.37.4",
