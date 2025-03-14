@@ -7,11 +7,10 @@
     "dist/**/*"
   ],
   "scripts": {
-    "build": "pnpm clean && tsc --build tsconfig.json && pnpm copy-files",
+    "build": "pnpm clean && pnpm generate:types && tsc --build tsconfig.json",
     "clean": "rm -fr dist/",
-    "copy-files": "mkdir -p ./dist/openapi/specs && cp -r ./src/openapi/specs/*.yaml ./dist/openapi/specs/",
     "copy-op-schemas": "cp ./node_modules/@interledger/open-payments/dist/openapi/specs/auth-server.yaml ./node_modules/@interledger/open-payments/dist/openapi/specs/schemas.yaml ./src/openapi/specs/",
-    "generate:types": "openapi-typescript ../../openapi/token-introspection.yaml --output src/openapi/generated/types.ts -t",
+    "generate:types": "openapi-typescript ./src/openapi/specs/token-introspection.yaml --output src/openapi/generated/types.ts -t",
     "postinstall": "pnpm copy-op-schemas",
     "prepack": "pnpm build",
     "test": "jest --passWithNoTests",

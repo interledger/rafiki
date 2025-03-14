@@ -1,5 +1,4 @@
-import { HttpMethod, ResponseValidator } from '@interledger/openapi'
-import { BaseDeps, RouteDeps } from '.'
+import { BaseDeps } from '.'
 import { IntrospectArgs, TokenInfo } from '../types'
 
 export interface IntrospectionRoutes {
@@ -7,56 +6,23 @@ export interface IntrospectionRoutes {
 }
 
 export const createIntrospectionRoutes = (
-  deps: RouteDeps
+  deps: BaseDeps
 ): IntrospectionRoutes => {
-  const { axiosInstance, openApi, logger } = deps
-
-  const introspectOpenApiValidator = openApi.createResponseValidator<TokenInfo>(
-    {
-      path: '/',
-      method: HttpMethod.POST
-    }
-  )
+  const { axiosInstance, logger } = deps
 
   return {
     introspect: (args: IntrospectArgs) =>
-      introspectToken(
-        { axiosInstance, logger },
-        args,
-        introspectOpenApiValidator
-      )
+      introspectToken({ axiosInstance, logger }, args)
   }
 }
 
-export const introspectToken = async (
-  deps: BaseDeps,
-  args: IntrospectArgs,
-  validateOpenApiResponse: ResponseValidator<TokenInfo>
-) => {
+export const introspectToken = async (deps: BaseDeps, args: IntrospectArgs) => {
   const { axiosInstance, logger } = deps
 
   try {
-    const { data, status } = await axiosInstance.request<TokenInfo>({
+    const { data } = await axiosInstance.request<TokenInfo>({
       data: args
     })
-
-    try {
-      validateOpenApiResponse({
-        status,
-        body: data
-      })
-    } catch (error) {
-      const errorMessage = 'Failed to validate OpenApi response'
-      logger.error(
-        {
-          data: JSON.stringify(data),
-          validationError: error instanceof Error && error.message
-        },
-        errorMessage
-      )
-
-      throw new Error(errorMessage)
-    }
 
     return data
   } catch (error) {
