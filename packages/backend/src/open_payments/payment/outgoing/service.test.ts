@@ -930,7 +930,7 @@ describe('OutgoingPaymentService', (): void => {
           method: 'ilp'
         })
         await quote.$query(knex).patch({
-          expiresAt: new Date()
+          expiresAt: new Date(Date.now() - 1000)
         })
         await expect(
           outgoingPaymentService.create({
