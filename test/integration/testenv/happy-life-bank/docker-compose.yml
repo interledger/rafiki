@@ -36,7 +36,6 @@ services:
       ILP_CONNECTOR_URL: http://happy-life-bank-test-backend:4102
       STREAM_SECRET: BjPXtnd00G2mRQwP/8ZpwyZASOch5sUXT5o0iR5b5wU=
       WEBHOOK_URL: http://host.docker.internal:8889/webhooks
-      EXCHANGE_RATES_URL: http://host.docker.internal:8889/rates
       REDIS_URL: redis://shared-redis:6379/2
       USE_TIGERBEETLE: false
       OPERATOR_TENANT_ID: cf5fd7d3-1eb1-4041-8e43-ba45747e9e5d

@@ -6,7 +6,9 @@ import {
   OutgoingPaymentState,
   CreateReceiverInput,
   IncomingPayment,
-  CreateQuoteInput
+  CreateQuoteInput,
+  CreateTenantSettingsInput,
+  TenantSetting
 } from '../generated/graphql'
 import { MockASE } from '../mock-ase'
 import { pollCondition } from '../utils'
@@ -18,6 +20,10 @@ interface AdminActionsDeps {
 }
 
 export interface AdminActions {
+  createTenantSettings(
+    input: CreateTenantSettingsInput,
+    aseType: 'sending' | 'receiving'
+  ): Promise<TenantSetting | TenantSetting[]>
   createReceiver(input: CreateReceiverInput): Promise<Receiver>
   createQuote(input: CreateQuoteInput): Promise<Quote>
   createOutgoingPayment(
@@ -33,6 +39,8 @@ export interface AdminActions {
 
 export function createAdminActions(deps: AdminActionsDeps): AdminActions {
   return {
+    createTenantSettings: (input, aseType) =>
+      createTenantSettings(deps, input, aseType),
     createReceiver: (input) => createReceiver(deps, input),
     createQuote: (input) => createQuote(deps, input),
     createOutgoingPayment: (senderWalletAddressId, quote) =>
@@ -42,6 +50,20 @@ export function createAdminActions(deps: AdminActionsDeps): AdminActions {
     getOutgoingPayment: (outgoingPaymentId, amountValueToSend) =>
       getOutgoingPayment(deps, outgoingPaymentId, amountValueToSend)
   }
+}
+
+async function createTenantSettings(
+  deps: AdminActionsDeps,
+  input: CreateTenantSettingsInput,
+  aseType: 'sending' | 'receiving'
+): Promise<TenantSetting | TenantSetting[]> {
+  const { sendingASE, receivingASE } = deps
+  const ase = aseType === 'sending' ? sendingASE : receivingASE
+  const response = await ase.adminClient.createTenantSettings(input)
+
+  assert(response.settings)
+
+  return response.settings
 }
 
 async function createReceiver(

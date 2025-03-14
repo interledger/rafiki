@@ -50,6 +50,7 @@ export async function incrementAmount(
         assetCode: code,
         assetScale: scale
       },
+      undefined,
       {
         description: 'Amount sent through the network',
         valueType: ValueType.DOUBLE
