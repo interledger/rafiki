@@ -45,7 +45,7 @@ export class AdminClient {
         return data.createTenantSettings
       })
   }
-  
+
   async createReceiver(
     input: CreateReceiverInput
   ): Promise<CreateReceiverResponse> {
