@@ -1,6 +1,8 @@
 import type { NormalizedCacheObject } from '@apollo/client'
 import { ApolloClient, gql } from '@apollo/client'
 import {
+  CreateTenantSettingsInput,
+  CreateTenantSettingsMutationResponse,
   CreateOutgoingPaymentInput,
   CreateQuoteInput,
   CreateReceiverInput,
@@ -22,6 +24,28 @@ export class AdminClient {
     this.apolloClient = apolloClient
   }
 
+  async createTenantSettings(
+    input: CreateTenantSettingsInput
+  ): Promise<CreateTenantSettingsMutationResponse> {
+    return await this.apolloClient
+      .mutate({
+        mutation: gql`
+          mutation CreateTenantSettings($input: CreateTenantSettingsInput!) {
+            createTenantSettings(input: $input) {
+              settings {
+                key
+                value
+              }
+            }
+          }
+        `,
+        variables: { input }
+      })
+      .then(({ data }): CreateTenantSettingsMutationResponse => {
+        return data.createTenantSettings
+      })
+  }
+  
   async createReceiver(
     input: CreateReceiverInput
   ): Promise<CreateReceiverResponse> {

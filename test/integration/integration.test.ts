@@ -71,6 +71,28 @@ describe('Integration tests', (): void => {
 
       beforeAll(async () => {
         testActions = createTestActions({ sendingASE: c9, receivingASE: hlb })
+
+        const c9Settings = {
+          settings: [
+            { key: 'EXCHANGE_RATES_URL', value: c9.config.seed.rates_url }
+          ]
+        }
+        const c9TenantSettings = await testActions.admin.createTenantSettings(
+          c9Settings,
+          'sending'
+        )
+        assert(c9TenantSettings)
+
+        const hlbSettings = {
+          settings: [
+            { key: 'EXCHANGE_RATES_URL', value: hlb.config.seed.rates_url }
+          ]
+        }
+        const hlbTenantSettings = await testActions.admin.createTenantSettings(
+          hlbSettings,
+          'receiving'
+        )
+        assert(hlbTenantSettings)
       })
 
       test('Open Payments with Continuation via Polling', async (): Promise<void> => {
