@@ -115,10 +115,7 @@ export function createTokenIntrospectionMiddleware({
       }
 
       if (tokenInfo.access.length !== 1) {
-        throw new OpenPaymentsServerRouteError(
-          403,
-          'Token info access does not match request access'
-        )
+        throw new OpenPaymentsServerRouteError(403, 'Insufficient Grant')
       }
 
       const access = tokenInfo.access[0]
