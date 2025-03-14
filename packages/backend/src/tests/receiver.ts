@@ -17,9 +17,11 @@ export async function createReceiver(
   })
 
   const streamCredentialsService = await deps.use('streamCredentialsService')
+  const incomingPaymentService = await deps.use('incomingPaymentService')
 
   return new Receiver(
-    incomingPayment.toOpenPaymentsTypeWithMethods(
+    incomingPaymentService.toOpenPaymentsTypeWithMethods(
+      incomingPayment,
       walletAddress,
       streamCredentialsService.get(incomingPayment)!
     ),

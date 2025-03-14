@@ -67,7 +67,7 @@ async function getOutgoingPayment(
     )
   }
 
-  ctx.body = outgoingPaymentToBody(ctx.walletAddress, outgoingPayment)
+  ctx.body = outgoingPaymentToBody(deps, ctx.walletAddress, outgoingPayment)
 }
 
 type CreateBodyBase = {
@@ -137,7 +137,8 @@ async function createOutgoingPayment(
   }
 
   ctx.status = 201
-  ctx.body = outgoingPaymentOrError.toOpenPaymentsWithSpentAmountsType(
+  ctx.body = deps.outgoingPaymentService.toOpenPaymentsWithSpentAmountsType(
+    outgoingPaymentOrError,
     ctx.walletAddress
   )
 }
@@ -149,13 +150,17 @@ async function listOutgoingPayments(
   await listSubresource({
     ctx,
     getWalletAddressPage: deps.outgoingPaymentService.getWalletAddressPage,
-    toBody: (payment) => outgoingPaymentToBody(ctx.walletAddress, payment)
+    toBody: (payment) => outgoingPaymentToBody(deps, ctx.walletAddress, payment)
   })
 }
 
 function outgoingPaymentToBody(
+  deps: ServiceDependencies,
   walletAddress: WalletAddress,
   outgoingPayment: OutgoingPayment
 ): OpenPaymentsOutgoingPayment {
-  return outgoingPayment.toOpenPaymentsType(walletAddress)
+  return deps.outgoingPaymentService.toOpenPaymentsType(
+    outgoingPayment,
+    walletAddress
+  )
 }
