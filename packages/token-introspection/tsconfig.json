@@ -1,6 +1,7 @@
 {
   "extends": "../../tsconfig.build.json",
   "compilerOptions": {
+    "composite": true,
     "lib": ["ES2020"],
     "outDir": "./dist",
     "rootDir": "./src",
