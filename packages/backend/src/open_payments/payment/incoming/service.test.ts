@@ -1053,7 +1053,7 @@ describe('Incoming Payment Service', (): void => {
     })
 
     test.each([IncomingPaymentState.Completed, IncomingPaymentState.Expired])(
-      'returns incoming payment with empty methods if payment state is %s',
+      'returns incoming payment with methods if payment state is %s',
       async (paymentState): Promise<void> => {
         incomingPayment.state = paymentState
 
@@ -1068,7 +1068,7 @@ describe('Incoming Payment Service', (): void => {
             incomingPayment.walletAddress!,
             streamCredentials
           )
-        ).toEqual({
+        ).toMatchObject({
           id: `${config.openPaymentsUrl}${IncomingPayment.urlPath}/${incomingPayment.id}`,
           walletAddress: incomingPayment.walletAddress!.url,
           completed: incomingPayment.completed,
@@ -1080,7 +1080,7 @@ describe('Incoming Payment Service', (): void => {
           metadata: incomingPayment.metadata ?? undefined,
           updatedAt: incomingPayment.updatedAt.toISOString(),
           createdAt: incomingPayment.createdAt.toISOString(),
-          methods: []
+          methods: [expect.any(Object)]
         })
       }
     )

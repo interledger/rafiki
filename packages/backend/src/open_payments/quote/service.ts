@@ -261,7 +261,7 @@ export async function resolveReceiver(
   options: CreateQuoteOptions
 ): Promise<Receiver> {
   const receiver = await deps.receiverService.get(options.receiver)
-  if (!receiver) {
+  if (!receiver || !receiver.isActive()) {
     deps.logger.info(
       { receiver: options.receiver },
       'Could not create quote. Receiver not found'

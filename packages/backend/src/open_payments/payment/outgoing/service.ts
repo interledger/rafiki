@@ -391,7 +391,7 @@ async function createOutgoingPayment(
       )
       const receiver = await deps.receiverService.get(payment.receiver)
       stopTimerReceiver()
-      if (!receiver) {
+      if (!receiver || !receiver.isActive()) {
         throw OutgoingPaymentError.InvalidQuote
       }
       const stopTimerPeer = deps.telemetry.startTimer(

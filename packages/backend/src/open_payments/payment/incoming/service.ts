@@ -590,16 +590,15 @@ function toOpenPaymentsTypeWithMethods(
 ): OpenPaymentsIncomingPaymentWithPaymentMethod {
   return {
     ...toOpenPaymentsType(deps, payment, walletAddress),
-    methods:
-      payment.isExpiredOrComplete() || !ilpStreamCredentials
-        ? []
-        : [
-            {
-              type: 'ilp',
-              ilpAddress: ilpStreamCredentials.ilpAddress,
-              sharedSecret: base64url(ilpStreamCredentials.sharedSecret)
-            }
-          ]
+    methods: !ilpStreamCredentials
+      ? []
+      : [
+          {
+            type: 'ilp',
+            ilpAddress: ilpStreamCredentials.ilpAddress,
+            sharedSecret: base64url(ilpStreamCredentials.sharedSecret)
+          }
+        ]
   }
 }
 
