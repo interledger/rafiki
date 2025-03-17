@@ -61,8 +61,7 @@ describe('Wallet Address Resolvers', (): void => {
   beforeAll(async (): Promise<void> => {
     deps = initIocContainer({
       ...Config,
-      localCacheDuration: 0,
-      adminApiSecret: '123' //to force not being an operator.
+      localCacheDuration: 0
     })
     appContainer = await createTestApp(deps)
     knex = appContainer.knex
