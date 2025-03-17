@@ -143,7 +143,7 @@ export default function ViewTenantPage() {
             <h3 className='text-lg font-medium'>
               Identity Provider Information
             </h3>
-            <ErrorPanel errors={response?.errors?.ip.message} />
+            <ErrorPanel errors={response?.errors?.idp.message} />
           </div>
           <div className='md:col-span-2 bg-white rounded-md shadow-md'>
             <Form method='post' replace preventScrollReset>
@@ -155,23 +155,23 @@ export default function ViewTenantPage() {
                     label='Consent URL'
                     disabled={tenantDeleted}
                     defaultValue={tenant.idpConsentUrl ?? undefined}
-                    error={response?.errors?.ip.fieldErrors.idpConsentUrl}
+                    error={response?.errors?.idp.fieldErrors.idpConsentUrl}
                   />
                   <PasswordInput
                     name='idpSecret'
                     label='Secret'
                     disabled={tenantDeleted}
                     defaultValue={tenant.idpSecret ?? undefined}
-                    error={response?.errors?.ip.fieldErrors.idpSecret}
+                    error={response?.errors?.idp.fieldErrors.idpSecret}
                   />
                 </div>
                 <div className='flex justify-end p-4'>
                   {!tenantDeleted && (
                     <Button
-                      aria-label='save ip information'
+                      aria-label='save idp information'
                       type='submit'
                       name='intent'
-                      value='ip'
+                      value='idp'
                     >
                       {isSubmitting ? 'Saving ...' : 'Save'}
                     </Button>
@@ -252,7 +252,7 @@ export async function action({ request }: ActionFunctionArgs) {
         fieldErrors: ZodFieldErrors<typeof updateTenantGeneralSchema>
         message: string[]
       }
-      ip: {
+      idp: {
         fieldErrors: ZodFieldErrors<typeof updateTenantIdpSchema>
         message: string[]
       }
@@ -267,7 +267,7 @@ export async function action({ request }: ActionFunctionArgs) {
         fieldErrors: {},
         message: []
       },
-      ip: {
+      idp: {
         fieldErrors: {},
         message: []
       },
@@ -317,7 +317,7 @@ export async function action({ request }: ActionFunctionArgs) {
       if (!('formEntries' in result)) return result
       break
     }
-    case 'ip': {
+    case 'idp': {
       const result = await handleUpdateFormSubmit(intent, updateTenantIdpSchema)
       if (!('formEntries' in result)) return result
       break
