@@ -106,7 +106,7 @@ importers:
         specifier: ^0.7.1
         version: 0.7.1
       graphql:
-        specifier: ^16.8.1
+        specifier: ^16.10.0
         version: 16.10.0
       json-canonicalize:
         specifier: ^1.0.6
@@ -200,7 +200,7 @@ importers:
         specifier: ^16.4.7
         version: 16.4.7
       graphql:
-        specifier: ^16.8.1
+        specifier: ^16.10.0
         version: 16.10.0
       ioredis:
         specifier: ^5.3.2
@@ -399,7 +399,7 @@ importers:
         specifier: ^1.0.2
         version: 1.0.2
       graphql:
-        specifier: ^16.8.1
+        specifier: ^16.10.0
         version: 16.10.0
       graphql-middleware:
         specifier: ^6.1.35
@@ -613,7 +613,7 @@ importers:
         specifier: ^0.7.1
         version: 0.7.1
       graphql:
-        specifier: ^16.8.1
+        specifier: ^16.10.0
         version: 16.10.0
       ilp-packet:
         specifier: 3.1.4-alpha.2
@@ -701,7 +701,7 @@ importers:
         specifier: 2.0.2
         version: 2.0.2
       graphql:
-        specifier: ^16.8.1
+        specifier: ^16.10.0
         version: 16.10.0
       pino:
         specifier: ^8.19.0
@@ -821,7 +821,7 @@ importers:
         specifier: ^20.14.15
         version: 20.14.15
       graphql:
-        specifier: ^16.8.1
+        specifier: ^16.10.0
         version: 16.10.0
       json-canonicalize:
         specifier: ^1.0.6
