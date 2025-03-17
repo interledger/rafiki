@@ -29,7 +29,7 @@ describe('Receiver Model', (): void => {
 
   afterEach(async (): Promise<void> => {
     jest.useRealTimers()
-    await truncateTables(appContainer.knex)
+    await truncateTables(deps)
   })
 
   afterAll(async (): Promise<void> => {

@@ -131,7 +131,7 @@ describe('QuoteService', (): void => {
   afterEach(async (): Promise<void> => {
     jest.restoreAllMocks()
 
-    await truncateTables(knex)
+    await truncateTables(deps)
   })
 
   afterAll(async (): Promise<void> => {

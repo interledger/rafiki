@@ -64,14 +64,15 @@ describe('Tenant Resolvers', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let config: IAppConfig
+  const dbSchema = 'tenant_resolver_test_schema'
 
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer({
       ...Config,
-      dbSchema: 'tenant_service_test_schema'
+      dbSchema
     })
-    appContainer = await createTestApp(deps)
     config = await deps.use('config')
+    appContainer = await createTestApp(deps)
     const authServiceClient = await deps.use('authServiceClient')
     jest
       .spyOn(authServiceClient.tenant, 'create')
@@ -85,7 +86,7 @@ describe('Tenant Resolvers', (): void => {
   })
 
   afterEach(async (): Promise<void> => {
-    await truncateTables(appContainer.knex, true)
+    await truncateTables(deps, { truncateTenants: true })
   })
   afterAll(async (): Promise<void> => {
     await appContainer.apolloClient.stop()
@@ -346,25 +347,91 @@ describe('Tenant Resolvers', (): void => {
       })
 
       afterEach(async (): Promise<void> => {
-        await truncateTables(appContainer.knex)
+        await truncateTables(deps)
       })
 
-      test.each`
-        isOperator | description
-        ${true}    | ${'operator'}
-        ${false}   | ${'tenant'}
-      `(
-        'can update a tenant as $description',
-        async ({ isOperator }): Promise<void> => {
-          const client = isOperator
-            ? appContainer.apolloClient
-            : tenantedApolloClient
-          const updateInput = {
-            ...generateTenantInput(),
-            id: tenant.id
-          }
+      test('can update a tenant as operator', async (): Promise<void> => {
+        // operator cant update apiSecret
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { apiSecret, ...input } = generateTenantInput()
+        const updateInput = {
+          ...input,
+          id: tenant.id
+        }
 
-          const mutation = await client
+        const mutation = await appContainer.apolloClient
+          .mutate({
+            mutation: gql`
+              mutation UpdateTenant($input: UpdateTenantInput!) {
+                updateTenant(input: $input) {
+                  tenant {
+                    id
+                    email
+                    apiSecret
+                    idpConsentUrl
+                    idpSecret
+                    publicName
+                  }
+                }
+              }
+            `,
+            variables: {
+              input: updateInput
+            }
+          })
+          .then((query): TenantMutationResponse => query.data?.updateTenant)
+
+        expect(mutation.tenant).toEqual({
+          ...updateInput,
+          __typename: 'Tenant',
+          apiSecret: expect.any(String)
+        })
+      })
+
+      test('can update a tenant as tenant', async (): Promise<void> => {
+        const updateInput = {
+          ...generateTenantInput(),
+          id: tenant.id
+        }
+
+        const mutation = await tenantedApolloClient
+          .mutate({
+            mutation: gql`
+              mutation UpdateTenant($input: UpdateTenantInput!) {
+                updateTenant(input: $input) {
+                  tenant {
+                    id
+                    email
+                    apiSecret
+                    idpConsentUrl
+                    idpSecret
+                    publicName
+                  }
+                }
+              }
+            `,
+            variables: {
+              input: updateInput
+            }
+          })
+          .then((query): TenantMutationResponse => query.data?.updateTenant)
+
+        expect(mutation.tenant).toEqual({
+          ...updateInput,
+          __typename: 'Tenant'
+        })
+      })
+
+      test('Cannot update API secret as operator', async (): Promise<void> => {
+        const updateInput = {
+          ...generateTenantInput(),
+          id: tenant.id,
+          apiSecret: 'newApiSecretValue'
+        }
+
+        try {
+          expect.assertions(2)
+          await appContainer.apolloClient
             .mutate({
               mutation: gql`
                 mutation UpdateTenant($input: UpdateTenantInput!) {
@@ -385,13 +452,19 @@ describe('Tenant Resolvers', (): void => {
               }
             })
             .then((query): TenantMutationResponse => query.data?.updateTenant)
-
-          expect(mutation.tenant).toEqual({
-            ...updateInput,
-            __typename: 'Tenant'
-          })
+        } catch (error) {
+          expect(error).toBeInstanceOf(ApolloError)
+          expect((error as ApolloError).graphQLErrors).toContainEqual(
+            expect.objectContaining({
+              message: 'Operator cannot update apiSecret over admin api',
+              extensions: expect.objectContaining({
+                code: GraphQLErrorCode.BadUserInput
+              })
+            })
+          )
         }
-      )
+      })
+
       test('Cannot update other tenant as non-operator', async (): Promise<void> => {
         const firstTenant = await createTenant(deps)
         const secondTenant = await createTenant(deps)
