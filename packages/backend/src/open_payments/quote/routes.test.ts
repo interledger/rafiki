@@ -79,7 +79,7 @@ describe('Quote Routes', (): void => {
     walletAddress = await createWalletAddress(deps, {
       assetId
     })
-    baseUrl = new URL(walletAddress.url).origin
+    baseUrl = config.openPaymentsUrl
   })
 
   afterEach(async (): Promise<void> => {

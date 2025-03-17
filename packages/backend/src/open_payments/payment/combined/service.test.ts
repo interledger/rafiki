@@ -21,6 +21,7 @@ import {
   createCombinedPayment,
   toCombinedPayment
 } from '../../../tests/combinedPayment'
+import { IncomingPaymentService } from '../incoming/service'
 
 describe('Combined Payment Service', (): void => {
   let deps: IocContract<AppServices>
@@ -31,12 +32,14 @@ describe('Combined Payment Service', (): void => {
   let sendWalletAddressId: string
   let receiveAsset: Asset
   let receiveWalletAddress: MockWalletAddress
+  let incomingPaymentService: IncomingPaymentService
 
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer(Config)
     appContainer = await createTestApp(deps)
     knex = appContainer.knex
     combinedPaymentService = await deps.use('combinedPaymentService')
+    incomingPaymentService = await deps.use('incomingPaymentService')
   })
 
   beforeEach(async (): Promise<void> => {
@@ -62,7 +65,8 @@ describe('Combined Payment Service', (): void => {
     const incomingPayment = await createIncomingPayment(deps, {
       walletAddressId: receiveWalletAddress.id
     })
-    const receiverUrl = incomingPayment.getUrl(receiveWalletAddress)
+    const receiverUrl =
+      incomingPaymentService.getOpenPaymentsUrl(incomingPayment)
 
     const outgoingPayment = await createOutgoingPayment(deps, {
       walletAddressId: sendWalletAddressId,

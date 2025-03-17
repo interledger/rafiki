@@ -47,7 +47,7 @@ async function getQuote(
     })
   }
 
-  ctx.body = quoteToBody(ctx.walletAddress, quote)
+  ctx.body = quoteToBody(deps, ctx.walletAddress, quote)
 }
 
 interface CreateBodyBase {
@@ -102,12 +102,13 @@ async function createQuote(
   }
 
   ctx.status = 201
-  ctx.body = quoteToBody(ctx.walletAddress, quoteOrErr)
+  ctx.body = quoteToBody(deps, ctx.walletAddress, quoteOrErr)
 }
 
 function quoteToBody(
+  deps: ServiceDependencies,
   walletAddress: WalletAddress,
   quote: Quote
 ): OpenPaymentsQuote {
-  return quote.toOpenPaymentsType(walletAddress)
+  return deps.quoteService.toOpenPaymentsType(quote, walletAddress)
 }

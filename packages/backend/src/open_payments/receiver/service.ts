@@ -134,7 +134,8 @@ async function createLocalIncomingPayment(
     throw new Error(errorMessage)
   }
 
-  return incomingPaymentOrError.toOpenPaymentsTypeWithMethods(
+  return deps.incomingPaymentService.toOpenPaymentsTypeWithMethods(
+    incomingPaymentOrError,
     walletAddress,
     streamCredentials
   )
@@ -210,7 +211,8 @@ export async function getLocalIncomingPayment(
 
   const streamCredentials = deps.streamCredentialsService.get(incomingPayment)
 
-  return incomingPayment.toOpenPaymentsTypeWithMethods(
+  return deps.incomingPaymentService.toOpenPaymentsTypeWithMethods(
+    incomingPayment,
     incomingPayment.walletAddress,
     streamCredentials
   )

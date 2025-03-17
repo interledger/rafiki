@@ -33,8 +33,6 @@ import assert from 'assert'
 import { Receiver } from './model'
 import { IncomingPayment } from '../payment/incoming/model'
 import { StreamCredentialsService } from '../../payment-method/ilp/stream-credentials/service'
-import { WalletAddress } from '../wallet_address/model'
-import { Asset } from '../../asset/model'
 
 describe('Receiver Service', (): void => {
   let deps: IocContract<AppServices>
@@ -94,14 +92,16 @@ describe('Receiver Service', (): void => {
         })
 
         await expect(
-          receiverService.get(incomingPayment.getUrl(walletAddress))
+          receiverService.get(
+            incomingPaymentService.getOpenPaymentsUrl(incomingPayment)
+          )
         ).resolves.toEqual({
           assetCode: incomingPayment.receivedAmount.assetCode,
           assetScale: incomingPayment.receivedAmount.assetScale,
           ilpAddress: expect.any(String),
           sharedSecret: expect.any(Buffer),
           incomingPayment: {
-            id: incomingPayment.getUrl(walletAddress),
+            id: incomingPaymentService.getOpenPaymentsUrl(incomingPayment),
             walletAddress: walletAddress.url,
             incomingAmount: incomingPayment.incomingAmount,
             receivedAmount: incomingPayment.receivedAmount,
@@ -166,18 +166,10 @@ describe('Receiver Service', (): void => {
         })
 
         test('returns object without methods if stream credentials could not be generated', async () => {
-          const incomingPayment = new IncomingPayment()
-          incomingPayment.id = uuid()
-          incomingPayment.createdAt = new Date()
-          incomingPayment.updatedAt = new Date()
-          incomingPayment.expiresAt = new Date(Date.now() + 30_000)
-          incomingPayment.walletAddress = new WalletAddress()
-          incomingPayment.walletAddress.url =
-            'https://example.com/wallet-address'
-          incomingPayment.asset = {
-            code: 'USD',
-            scale: 2
-          } as Asset
+          const walletAddress = await createWalletAddress(deps)
+          const incomingPayment = await createIncomingPayment(deps, {
+            walletAddressId: walletAddress.id
+          })
 
           jest
             .spyOn(incomingPaymentService, 'get')
@@ -193,8 +185,7 @@ describe('Receiver Service', (): void => {
               `https://example.com/incoming-payments/${incomingPayment.id}`
             )
           ).resolves.toMatchObject({
-            id: `https://example.com/incoming-payments/${incomingPayment.id}`,
-            walletAddress: incomingPayment.walletAddress.url
+            methods: []
           })
         })
       })
