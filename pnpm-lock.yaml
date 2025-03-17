@@ -10,7 +10,7 @@ overrides:
   katex: '>=0.16.21'
   jose: '>=4.15.5'
   undici@>=5.0.0: ^5.28.5
-  undici@>=6.0.0: ^6.21.1
+  undici@>=6.0.0: ^6.21.2
   tar@<6.2.1: '>=6.2.1'
   braces@<3.0.3: '>=3.0.3'
   dset@<3.1.4: '>=3.1.4'
@@ -6653,7 +6653,7 @@ packages:
       source-map-support: 0.5.21
       stream-slice: 0.1.2
       typescript: 5.4.3
-      undici: 6.21.1
+      undici: 6.21.2
 
   /@remix-run/node@2.15.3(typescript@5.7.3):
     resolution: {integrity: sha512-TYfS6BPhbABBpSRZ6WBA4qIWSwWvJhRVQGXCHUtgOwkuW863rcFmjh9g2Xj/IHyTmbOYPdcjHsIgZ9el4CHOKQ==}
@@ -6671,7 +6671,7 @@ packages:
       source-map-support: 0.5.21
       stream-slice: 0.1.2
       typescript: 5.7.3
-      undici: 6.21.1
+      undici: 6.21.2
 
   /@remix-run/react@2.15.3(react-dom@18.2.0)(react@18.2.0)(typescript@5.4.3):
     resolution: {integrity: sha512-AynCltIk8KLlxV9a+4dORtEMNtF5wJAzBNBZLJMdw3FCJNQZRYQSen8rDnIovOOiz9UNZ2SmBTFERiFMKS16jw==}
@@ -20505,8 +20505,8 @@ packages:
       '@fastify/busboy': 2.1.1
     dev: true
 
-  /undici@6.21.1:
-    resolution: {integrity: sha512-q/1rj5D0/zayJB2FraXdaWxbhWiNKDvu8naDT2dl1yTlvJp4BLtOcp2a5BvgGNQpYYJzau7tf1WgKv3b+7mqpQ==}
+  /undici@6.21.2:
+    resolution: {integrity: sha512-uROZWze0R0itiAKVPsYhFov9LxrPMHLMEQFszeI2gCN6bnIIZ8twzBCJcN2LJrBBLfrP0t1FW0g+JmKVl8Vk1g==}
     engines: {node: '>=18.17'}
 
   /unenv@1.10.0:
