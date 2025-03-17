@@ -46,6 +46,7 @@ accounts:
     path: accounts/lrossi
     brunoEnvVar: lrossiWalletAddressId
     assetCode: EUR
+rates_url: 'http://host.docker.internal:8888/rates'
 rates:
   EUR:
     MXN: 18.78

@@ -176,7 +176,12 @@ describe('Connector Core Telemetry', () => {
       telemetryService
     )
 
-    expect(incrementCounterSpy).toHaveBeenCalledWith(name, amount, attributes)
+    expect(incrementCounterSpy).toHaveBeenCalledWith(
+      name,
+      amount,
+      undefined,
+      attributes
+    )
   })
 
   it('incrementAmount should not increment when the prepare is unfulfillable', () => {

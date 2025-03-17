@@ -1,6 +1,5 @@
 import { Counter, Histogram, MetricOptions, metrics } from '@opentelemetry/api'
 import { MeterProvider } from '@opentelemetry/sdk-metrics'
-
 import { RatesService, isConvertError } from '../rates/service'
 import { ConvertSourceOptions } from '../rates/util'
 import { BaseService } from '../shared/baseService'
@@ -16,6 +15,7 @@ export interface TelemetryService {
   incrementCounterWithTransactionAmount(
     name: string,
     amount: { value: bigint; assetCode: string; assetScale: number },
+    tenantId?: string,
     attributes?: Record<string, unknown>,
     preservePrivacy?: boolean
   ): Promise<void>
@@ -23,6 +23,7 @@ export interface TelemetryService {
     name: string,
     amountSource: { value: bigint; assetCode: string; assetScale: number },
     amountDestination: { value: bigint; assetCode: string; assetScale: number },
+    tenantId?: string,
     attributes?: Record<string, unknown>
   ): Promise<void>
   recordHistogram(
@@ -113,30 +114,37 @@ export class TelemetryServiceImpl implements TelemetryService {
     name: string,
     amountSource: { value: bigint; assetCode: string; assetScale: number },
     amountDestination: { value: bigint; assetCode: string; assetScale: number },
+    tenantId?: string,
     attributes: Record<string, unknown> = {}
   ): Promise<void> {
     if (!amountSource.value || !amountDestination.value) return
 
-    const convertedSource = await this.convertAmount({
-      sourceAmount: amountSource.value,
-      sourceAsset: {
-        code: amountSource.assetCode,
-        scale: amountSource.assetScale
-      }
-    })
+    const convertedSource = await this.convertAmount(
+      {
+        sourceAmount: amountSource.value,
+        sourceAsset: {
+          code: amountSource.assetCode,
+          scale: amountSource.assetScale
+        }
+      },
+      tenantId
+    )
     if (isConvertError(convertedSource)) {
       this.deps.logger.error(
         `Unable to convert source amount: ${convertedSource}`
       )
       return
     }
-    const convertedDestination = await this.convertAmount({
-      sourceAmount: amountDestination.value,
-      sourceAsset: {
-        code: amountDestination.assetCode,
-        scale: amountDestination.assetScale
-      }
-    })
+    const convertedDestination = await this.convertAmount(
+      {
+        sourceAmount: amountDestination.value,
+        sourceAsset: {
+          code: amountDestination.assetCode,
+          scale: amountDestination.assetScale
+        }
+      },
+      tenantId
+    )
     if (isConvertError(convertedDestination)) {
       this.deps.logger.error(
         `Unable to convert destination amount: ${convertedSource}`
@@ -159,15 +167,19 @@ export class TelemetryServiceImpl implements TelemetryService {
   public async incrementCounterWithTransactionAmount(
     name: string,
     amount: { value: bigint; assetCode: string; assetScale: number },
+    tenantId?: string,
     attributes: Record<string, unknown> = {},
     preservePrivacy = true
   ): Promise<void> {
     const { value, assetCode, assetScale } = amount
     try {
-      const converted = await this.convertAmount({
-        sourceAmount: value,
-        sourceAsset: { code: assetCode, scale: assetScale }
-      })
+      const converted = await this.convertAmount(
+        {
+          sourceAmount: value,
+          sourceAsset: { code: assetCode, scale: assetScale }
+        },
+        tenantId
+      )
       if (isConvertError(converted)) {
         this.deps.logger.error(`Unable to convert amount: ${converted}`)
         return
@@ -195,17 +207,21 @@ export class TelemetryServiceImpl implements TelemetryService {
   }
 
   private async convertAmount(
-    convertOptions: Pick<ConvertSourceOptions, 'sourceAmount' | 'sourceAsset'>
+    convertOptions: Pick<ConvertSourceOptions, 'sourceAmount' | 'sourceAsset'>,
+    tenantId?: string
   ) {
     const destinationAsset = {
       code: this.deps.baseAssetCode,
       scale: this.deps.baseScale
     }
 
-    let converted = await this.aseRatesService.convertSource({
-      ...convertOptions,
-      destinationAsset
-    })
+    let converted = await this.aseRatesService.convertSource(
+      {
+        ...convertOptions,
+        destinationAsset
+      },
+      tenantId
+    )
     if (isConvertError(converted)) {
       this.deps.logger.error(
         `Unable to convert amount from provided rates: ${converted}`
@@ -263,6 +279,7 @@ export class NoopTelemetryServiceImpl implements TelemetryService {
     name: string,
     amountSource: { value: bigint; assetCode: string; assetScale: number },
     amountDestination: { value: bigint; assetCode: string; assetScale: number },
+    tenantId?: string,
     attributes?: Record<string, unknown>
   ): Promise<void> {
     // do nothing
@@ -271,6 +288,7 @@ export class NoopTelemetryServiceImpl implements TelemetryService {
   public async incrementCounterWithTransactionAmount(
     name: string,
     amount: { value: bigint; assetCode: string; assetScale: number },
+    tenantId?: string,
     attributes: Record<string, unknown> = {},
     preservePrivacy = true
   ): Promise<void> {

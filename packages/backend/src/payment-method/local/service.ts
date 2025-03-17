@@ -67,14 +67,15 @@ async function getQuote(
   let exchangeRate: number
 
   const convert = async (
-    opts: RateConvertSourceOpts | RateConvertDestinationOpts
+    opts: RateConvertSourceOpts | RateConvertDestinationOpts,
+    tenantId?: string
   ): Promise<ConvertResults | ConvertError> => {
     let convertResults: ConvertResults | ConvertError
     try {
       convertResults =
         'sourceAmount' in opts
-          ? await deps.ratesService.convertSource(opts)
-          : await deps.ratesService.convertDestination(opts)
+          ? await deps.ratesService.convertSource(opts, tenantId)
+          : await deps.ratesService.convertDestination(opts, tenantId)
     } catch (err) {
       deps.logger.error(
         { opts, err },
@@ -93,17 +94,20 @@ async function getQuote(
 
   if (debitAmount) {
     debitAmountValue = debitAmount.value
-    const convertResults = await convert({
-      sourceAmount: debitAmountValue,
-      sourceAsset: {
-        code: walletAddress.asset.code,
-        scale: walletAddress.asset.scale
+    const convertResults = await convert(
+      {
+        sourceAmount: debitAmountValue,
+        sourceAsset: {
+          code: walletAddress.asset.code,
+          scale: walletAddress.asset.scale
+        },
+        destinationAsset: {
+          code: receiver.assetCode,
+          scale: receiver.assetScale
+        }
       },
-      destinationAsset: {
-        code: receiver.assetCode,
-        scale: receiver.assetScale
-      }
-    })
+      options.walletAddress.tenantId
+    )
     if (isConvertError(convertResults)) {
       throw new PaymentMethodHandlerError(
         'Received error during local quoting',
@@ -117,17 +121,20 @@ async function getQuote(
     exchangeRate = convertResults.scaledExchangeRate
   } else if (receiveAmount) {
     receiveAmountValue = receiveAmount.value
-    const convertResults = await convert({
-      destinationAmount: receiveAmountValue,
-      sourceAsset: {
-        code: walletAddress.asset.code,
-        scale: walletAddress.asset.scale
+    const convertResults = await convert(
+      {
+        destinationAmount: receiveAmountValue,
+        sourceAsset: {
+          code: walletAddress.asset.code,
+          scale: walletAddress.asset.scale
+        },
+        destinationAsset: {
+          code: receiveAmount.assetCode,
+          scale: receiveAmount.assetScale
+        }
       },
-      destinationAsset: {
-        code: receiveAmount.assetCode,
-        scale: receiveAmount.assetScale
-      }
-    })
+      options.walletAddress.tenantId
+    )
     if (isConvertError(convertResults)) {
       throw new PaymentMethodHandlerError(
         'Received error during local quoting',
@@ -141,17 +148,20 @@ async function getQuote(
     exchangeRate = convertResults.scaledExchangeRate
   } else if (receiver.incomingAmount) {
     receiveAmountValue = receiver.incomingAmount.value
-    const convertResults = await convert({
-      destinationAmount: receiveAmountValue,
-      sourceAsset: {
-        code: walletAddress.asset.code,
-        scale: walletAddress.asset.scale
+    const convertResults = await convert(
+      {
+        destinationAmount: receiveAmountValue,
+        sourceAsset: {
+          code: walletAddress.asset.code,
+          scale: walletAddress.asset.scale
+        },
+        destinationAsset: {
+          code: receiver.incomingAmount.assetCode,
+          scale: receiver.incomingAmount.assetScale
+        }
       },
-      destinationAsset: {
-        code: receiver.incomingAmount.assetCode,
-        scale: receiver.incomingAmount.assetScale
-      }
-    })
+      options.walletAddress.tenantId
+    )
     if (isConvertError(convertResults)) {
       throw new PaymentMethodHandlerError(
         'Received error during local quoting',
