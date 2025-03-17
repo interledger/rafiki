@@ -33,8 +33,6 @@ import assert from 'assert'
 import { Receiver } from './model'
 import { IncomingPayment } from '../payment/incoming/model'
 import { StreamCredentialsService } from '../../payment-method/ilp/stream-credentials/service'
-import { WalletAddress } from '../wallet_address/model'
-import { Asset } from '../../asset/model'
 
 describe('Receiver Service', (): void => {
   let deps: IocContract<AppServices>
