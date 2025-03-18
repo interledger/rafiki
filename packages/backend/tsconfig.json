@@ -3,8 +3,8 @@
   "compilerOptions": {
     "lib": ["ESNext"],
     "outDir": "./dist",
-    "rootDir": "./src",
-    "declaration": true
+    "rootDir": "./src"
+    // "declaration": true
   },
   "include": ["src/**/*"],
   "ts-node": {
