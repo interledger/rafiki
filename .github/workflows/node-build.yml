@@ -28,7 +28,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/workflows/rafiki/env-setup
-      - run: pnpm --filter backend build:deps
       - run: NODE_OPTIONS="--max-old-space-size=4096" pnpm --filter backend test:ci
       - name: AsyncAPI extension
         run: |
@@ -54,7 +53,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/workflows/rafiki/env-setup
-      - run: pnpm --filter auth build:deps
       - run: pnpm --filter auth test
       - name: AsyncAPI extension
         run: |
