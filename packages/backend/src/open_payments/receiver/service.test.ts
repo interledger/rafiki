@@ -12,7 +12,7 @@ import {
   ServiceDependencies
 } from './service'
 import { createTestApp, TestContainer } from '../../tests/app'
-import { Config } from '../../config/app'
+import { Config, IAppConfig } from '../../config/app'
 import { initIocContainer } from '../..'
 import { AppServices } from '../../app'
 import { createIncomingPayment } from '../../tests/incomingPayment'
@@ -36,6 +36,7 @@ import { StreamCredentialsService } from '../../payment-method/ilp/stream-creden
 
 describe('Receiver Service', (): void => {
   let deps: IocContract<AppServices>
+  let config: IAppConfig
   let appContainer: TestContainer
   let receiverService: ReceiverService
   let incomingPaymentService: IncomingPaymentService
@@ -47,6 +48,7 @@ describe('Receiver Service', (): void => {
 
   beforeAll(async (): Promise<void> => {
     deps = initIocContainer(Config)
+    config = await deps.use('config')
     appContainer = await createTestApp(deps)
     receiverService = await deps.use('receiverService')
     incomingPaymentService = await deps.use('incomingPaymentService')
@@ -58,6 +60,7 @@ describe('Receiver Service', (): void => {
     knex = appContainer.knex
     serviceDeps = {
       knex,
+      config,
       logger: await deps.use('logger'),
       incomingPaymentService,
       remoteIncomingPaymentService,
@@ -92,16 +95,14 @@ describe('Receiver Service', (): void => {
         })
 
         await expect(
-          receiverService.get(
-            incomingPaymentService.getOpenPaymentsUrl(incomingPayment)
-          )
+          receiverService.get(incomingPayment.getUrl(config.openPaymentsUrl))
         ).resolves.toEqual({
           assetCode: incomingPayment.receivedAmount.assetCode,
           assetScale: incomingPayment.receivedAmount.assetScale,
           ilpAddress: expect.any(String),
           sharedSecret: expect.any(Buffer),
           incomingPayment: {
-            id: incomingPaymentService.getOpenPaymentsUrl(incomingPayment),
+            id: incomingPayment.getUrl(config.openPaymentsUrl),
             walletAddress: walletAddress.url,
             incomingAmount: incomingPayment.incomingAmount,
             receivedAmount: incomingPayment.receivedAmount,

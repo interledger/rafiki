@@ -2,7 +2,7 @@ import { IocContract } from '@adonisjs/fold'
 import { AppServices } from '../../../app'
 import { TestContainer, createTestApp } from '../../../tests/app'
 import { initIocContainer } from '../../..'
-import { Config } from '../../../config/app'
+import { Config, IAppConfig } from '../../../config/app'
 import { CombinedPaymentService } from './service'
 import { Knex } from 'knex'
 import { truncateTables } from '../../../tests/tableManager'
@@ -21,10 +21,10 @@ import {
   createCombinedPayment,
   toCombinedPayment
 } from '../../../tests/combinedPayment'
-import { IncomingPaymentService } from '../incoming/service'
 
 describe('Combined Payment Service', (): void => {
   let deps: IocContract<AppServices>
+  let config: IAppConfig
   let appContainer: TestContainer
   let knex: Knex
   let combinedPaymentService: CombinedPaymentService
@@ -32,14 +32,13 @@ describe('Combined Payment Service', (): void => {
   let sendWalletAddressId: string
   let receiveAsset: Asset
   let receiveWalletAddress: MockWalletAddress
-  let incomingPaymentService: IncomingPaymentService
 
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer(Config)
+    config = await deps.use('config')
     appContainer = await createTestApp(deps)
     knex = appContainer.knex
     combinedPaymentService = await deps.use('combinedPaymentService')
-    incomingPaymentService = await deps.use('incomingPaymentService')
   })
 
   beforeEach(async (): Promise<void> => {
@@ -65,8 +64,7 @@ describe('Combined Payment Service', (): void => {
     const incomingPayment = await createIncomingPayment(deps, {
       walletAddressId: receiveWalletAddress.id
     })
-    const receiverUrl =
-      incomingPaymentService.getOpenPaymentsUrl(incomingPayment)
+    const receiverUrl = incomingPayment.getUrl(config.openPaymentsUrl)
 
     const outgoingPayment = await createOutgoingPayment(deps, {
       walletAddressId: sendWalletAddressId,

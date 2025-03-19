@@ -1,6 +1,6 @@
 import { IocContract } from '@adonisjs/fold'
 import { createTestApp, TestContainer } from '../../tests/app'
-import { Config } from '../../config/app'
+import { Config, IAppConfig } from '../../config/app'
 import { initIocContainer } from '../..'
 import { AppServices } from '../../app'
 import { createIncomingPayment } from '../../tests/incomingPayment'
@@ -15,19 +15,18 @@ import { IncomingPaymentState } from '../payment/incoming/model'
 import assert from 'assert'
 import base64url from 'base64url'
 import { IlpAddress } from 'ilp-packet'
-import { IncomingPaymentService } from '../payment/incoming/service'
 
 describe('Receiver Model', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let streamCredentialsService: StreamCredentialsService
-  let incomingPaymentService: IncomingPaymentService
+  let config: IAppConfig
 
   beforeAll(async (): Promise<void> => {
     deps = initIocContainer(Config)
     appContainer = await createTestApp(deps)
     streamCredentialsService = await deps.use('streamCredentialsService')
-    incomingPaymentService = await deps.use('incomingPaymentService')
+    config = await deps.use('config')
   })
 
   afterEach(async (): Promise<void> => {
@@ -51,8 +50,8 @@ describe('Receiver Model', (): void => {
       assert(streamCredentials)
 
       const receiver = new Receiver(
-        incomingPaymentService.toOpenPaymentsTypeWithMethods(
-          incomingPayment,
+        incomingPayment.toOpenPaymentsTypeWithMethods(
+          config.openPaymentsUrl,
           walletAddress,
           streamCredentials
         ),
@@ -65,7 +64,7 @@ describe('Receiver Model', (): void => {
         ilpAddress: expect.any(String),
         sharedSecret: expect.any(Buffer),
         incomingPayment: {
-          id: incomingPaymentService.getOpenPaymentsUrl(incomingPayment),
+          id: incomingPayment.getUrl(config.openPaymentsUrl),
           walletAddress: walletAddress.url,
           updatedAt: incomingPayment.updatedAt,
           createdAt: incomingPayment.createdAt,
@@ -98,8 +97,8 @@ describe('Receiver Model', (): void => {
       }
 
       const openPaymentsIncomingPayment =
-        incomingPaymentService.toOpenPaymentsTypeWithMethods(
-          incomingPayment,
+        incomingPayment.toOpenPaymentsTypeWithMethods(
+          config.openPaymentsUrl,
           walletAddress,
           streamCredentials
         )
@@ -119,8 +118,8 @@ describe('Receiver Model', (): void => {
       const streamCredentials = streamCredentialsService.get(incomingPayment)
       assert(streamCredentials)
       const openPaymentsIncomingPayment =
-        incomingPaymentService.toOpenPaymentsTypeWithMethods(
-          incomingPayment,
+        incomingPayment.toOpenPaymentsTypeWithMethods(
+          config.openPaymentsUrl,
           walletAddress,
           streamCredentials
         )
@@ -141,8 +140,8 @@ describe('Receiver Model', (): void => {
       ;(streamCredentials.ilpAddress as string) = 'not base 64 encoded'
 
       const openPaymentsIncomingPayment =
-        incomingPaymentService.toOpenPaymentsTypeWithMethods(
-          incomingPayment,
+        incomingPayment.toOpenPaymentsTypeWithMethods(
+          config.openPaymentsUrl,
           walletAddress,
           streamCredentials
         )
@@ -167,8 +166,8 @@ describe('Receiver Model', (): void => {
       }
 
       const openPaymentsIncomingPayment =
-        incomingPaymentService.toOpenPaymentsTypeWithMethods(
-          incomingPayment,
+        incomingPayment.toOpenPaymentsTypeWithMethods(
+          config.openPaymentsUrl,
           walletAddress,
           streamCredentials
         )
@@ -188,8 +187,8 @@ describe('Receiver Model', (): void => {
       const streamCredentials = streamCredentialsService.get(incomingPayment)
       assert(streamCredentials)
       const openPaymentsIncomingPayment =
-        incomingPaymentService.toOpenPaymentsTypeWithMethods(
-          incomingPayment,
+        incomingPayment.toOpenPaymentsTypeWithMethods(
+          config.openPaymentsUrl,
           walletAddress,
           streamCredentials
         )

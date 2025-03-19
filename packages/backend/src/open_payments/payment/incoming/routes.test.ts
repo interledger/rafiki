@@ -92,7 +92,7 @@ describe('Incoming Payment Routes', (): void => {
       getBody: (incomingPayment, list) => {
         const response: Partial<OpenPaymentsIncomingPaymentWithPaymentMethods> =
           {
-            id: incomingPaymentService.getOpenPaymentsUrl(incomingPayment),
+            id: incomingPayment.getUrl(config.openPaymentsUrl),
             walletAddress: walletAddress.url,
             completed: false,
             incomingAmount:
@@ -280,7 +280,7 @@ describe('Incoming Payment Routes', (): void => {
       await expect(incomingPaymentRoutes.complete(ctx)).resolves.toBeUndefined()
       expect(ctx.response).toSatisfyApiSpec()
       expect(ctx.body).toEqual({
-        id: incomingPaymentService.getOpenPaymentsUrl(incomingPayment),
+        id: incomingPayment.getUrl(config.openPaymentsUrl),
         walletAddress: walletAddress.url,
         incomingAmount: {
           value: '123',

@@ -957,8 +957,8 @@ describe('Incoming Payment Service', (): void => {
 
     test('returns incoming payment', async () => {
       expect(
-        incomingPaymentService.toOpenPaymentsType(
-          incomingPayment,
+        incomingPayment.toOpenPaymentsType(
+          config.openPaymentsUrl,
           incomingPayment.walletAddress!
         )
       ).toEqual({
@@ -1003,8 +1003,8 @@ describe('Incoming Payment Service', (): void => {
       }
 
       expect(
-        incomingPaymentService.toOpenPaymentsTypeWithMethods(
-          incomingPayment,
+        incomingPayment.toOpenPaymentsTypeWithMethods(
+          config.openPaymentsUrl,
           incomingPayment.walletAddress!,
           streamCredentials
         )
@@ -1032,8 +1032,8 @@ describe('Incoming Payment Service', (): void => {
 
     test('returns incoming payment with empty methods when stream credentials are undefined', async () => {
       expect(
-        incomingPaymentService.toOpenPaymentsTypeWithMethods(
-          incomingPayment,
+        incomingPayment.toOpenPaymentsTypeWithMethods(
+          config.openPaymentsUrl,
           incomingPayment.walletAddress!
         )
       ).toEqual({
@@ -1063,8 +1063,8 @@ describe('Incoming Payment Service', (): void => {
         }
 
         expect(
-          incomingPaymentService.toOpenPaymentsTypeWithMethods(
-            incomingPayment,
+          incomingPayment.toOpenPaymentsTypeWithMethods(
+            config.openPaymentsUrl,
             incomingPayment.walletAddress!,
             streamCredentials
           )

@@ -31,7 +31,6 @@ import { createOutgoingPayment } from '../../../tests/outgoingPayment'
 import { createWalletAddress } from '../../../tests/walletAddress'
 import { UnionOmit } from '../../../shared/utils'
 import { OpenPaymentsServerRouteError } from '../../route-errors'
-import { QuoteService } from '../../quote/service'
 
 describe('Outgoing Payment Routes', (): void => {
   let deps: IocContract<AppServices>
@@ -40,7 +39,6 @@ describe('Outgoing Payment Routes', (): void => {
   let config: IAppConfig
   let outgoingPaymentRoutes: OutgoingPaymentRoutes
   let outgoingPaymentService: OutgoingPaymentService
-  let quoteService: QuoteService
   let walletAddress: WalletAddress
   let baseUrl: string
 
@@ -73,7 +71,6 @@ describe('Outgoing Payment Routes', (): void => {
     config = await deps.use('config')
     outgoingPaymentRoutes = await deps.use('outgoingPaymentRoutes')
     outgoingPaymentService = await deps.use('outgoingPaymentService')
-    quoteService = await deps.use('quoteService')
     const { resourceServerSpec } = await deps.use('openApi')
     jestOpenAPI(resourceServerSpec)
   })
@@ -120,7 +117,7 @@ describe('Outgoing Payment Routes', (): void => {
           id: `${baseUrl}/outgoing-payments/${outgoingPayment.id}`,
           walletAddress: walletAddress.url,
           receiver: outgoingPayment.receiver,
-          quoteId: quoteService.getOpenPaymentsUrl(outgoingPayment.quote),
+          quoteId: outgoingPayment.quote.getUrl(config.openPaymentsUrl),
           debitAmount: serializeAmount(outgoingPayment.debitAmount),
           sentAmount: serializeAmount(outgoingPayment.sentAmount),
           receiveAmount: serializeAmount(outgoingPayment.receiveAmount),

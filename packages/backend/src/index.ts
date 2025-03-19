@@ -359,6 +359,7 @@ export function initIocContainer(
   container.singleton('receiverService', async (deps) => {
     return await createReceiverService({
       logger: await deps.use('logger'),
+      config: await deps.use('config'),
       streamCredentialsService: await deps.use('streamCredentialsService'),
       incomingPaymentService: await deps.use('incomingPaymentService'),
       walletAddressService: await deps.use('walletAddressService'),

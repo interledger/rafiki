@@ -110,5 +110,5 @@ function quoteToBody(
   walletAddress: WalletAddress,
   quote: Quote
 ): OpenPaymentsQuote {
-  return deps.quoteService.toOpenPaymentsType(quote, walletAddress)
+  return quote.toOpenPaymentsType(deps.config.openPaymentsUrl, walletAddress)
 }

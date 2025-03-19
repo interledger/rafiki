@@ -4,10 +4,17 @@ import { DbErrors } from 'objection-db-errors'
 import { LiquidityAccount } from '../../../accounting/service'
 import { Asset } from '../../../asset/model'
 import { ConnectorAccount } from '../../../payment-method/ilp/connector/core/rafiki'
-import { WalletAddressSubresource } from '../../wallet_address/model'
+import {
+  WalletAddressSubresource,
+  WalletAddress
+} from '../../wallet_address/model'
 import { Quote } from '../../quote/model'
-import { Amount, AmountJSON } from '../../amount'
+import { Amount, AmountJSON, serializeAmount } from '../../amount'
 import { WebhookEvent } from '../../../webhook/model'
+import {
+  OutgoingPayment as OpenPaymentsOutgoingPayment,
+  OutgoingPaymentWithSpentAmounts
+} from '@interledger/open-payments'
 
 export class OutgoingPaymentGrant extends DbErrors(Model) {
   public static get modelPaths(): string[] {
@@ -99,6 +106,10 @@ export class OutgoingPayment
     return this.quote.assetId
   }
 
+  public getUrl(resourceServerUrl: string): string {
+    return `${resourceServerUrl}${OutgoingPayment.urlPath}/${this.id}`
+  }
+
   public get asset(): Asset {
     return this.quote.asset
   }
@@ -180,6 +191,36 @@ export class OutgoingPayment
       data.grantId = this.grantId
     }
     return data
+  }
+
+  public toOpenPaymentsType(
+    resourceServerUrl: string,
+    walletAddress: WalletAddress
+  ): OpenPaymentsOutgoingPayment {
+    return {
+      id: this.getUrl(resourceServerUrl),
+      walletAddress: walletAddress.url,
+      quoteId: this.quote?.getUrl(resourceServerUrl) ?? undefined,
+      receiveAmount: serializeAmount(this.receiveAmount),
+      debitAmount: serializeAmount(this.debitAmount),
+      sentAmount: serializeAmount(this.sentAmount),
+      receiver: this.receiver,
+      failed: this.failed,
+      metadata: this.metadata ?? undefined,
+      createdAt: this.createdAt.toISOString(),
+      updatedAt: this.updatedAt.toISOString()
+    }
+  }
+
+  public toOpenPaymentsWithSpentAmountsType(
+    resourceServerUrl: string,
+    walletAddress: WalletAddress
+  ): OutgoingPaymentWithSpentAmounts {
+    return {
+      ...this.toOpenPaymentsType(resourceServerUrl, walletAddress),
+      grantSpentReceiveAmount: serializeAmount(this.grantSpentReceiveAmount),
+      grantSpentDebitAmount: serializeAmount(this.grantSpentDebitAmount)
+    }
   }
 }
 

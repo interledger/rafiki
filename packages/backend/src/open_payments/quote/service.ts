@@ -3,10 +3,10 @@ import { TransactionOrKnex } from 'objection'
 import { BaseService } from '../../shared/baseService'
 import { QuoteError, isQuoteError } from './errors'
 import { Quote } from './model'
-import { Amount, serializeAmount } from '../amount'
+import { Amount } from '../amount'
 import { ReceiverService } from '../receiver/service'
 import { Receiver } from '../receiver/model'
-import { GetOptions, ListOptions, WalletAddress } from '../wallet_address/model'
+import { GetOptions, ListOptions } from '../wallet_address/model'
 import {
   WalletAddressService,
   WalletAddressSubresourceService
@@ -22,15 +22,9 @@ import {
 import { v4 as uuid } from 'uuid'
 import { TelemetryService } from '../../telemetry/service'
 import { AssetService } from '../../asset/service'
-import { Quote as OpenPaymentsQuote } from '@interledger/open-payments'
 
 export interface QuoteService extends WalletAddressSubresourceService<Quote> {
   create(options: CreateQuoteOptions): Promise<Quote | QuoteError>
-  toOpenPaymentsType(
-    quote: Quote,
-    walletAddress: WalletAddress
-  ): OpenPaymentsQuote
-  getOpenPaymentsUrl(quote: Quote): string
 }
 
 export interface ServiceDependencies extends BaseService {
@@ -54,10 +48,7 @@ export async function createQuoteService(
   return {
     get: (options) => getQuote(deps, options),
     create: (options: CreateQuoteOptions) => createQuote(deps, options),
-    getWalletAddressPage: (options) => getWalletAddressPage(deps, options),
-    toOpenPaymentsType: (quote, walletAddress) =>
-      toOpenPaymentsType(deps, quote, walletAddress),
-    getOpenPaymentsUrl: (quote) => getUrl(deps, quote)
+    getWalletAddressPage: (options) => getWalletAddressPage(deps, options)
   }
 }
 
@@ -467,25 +458,4 @@ async function getWalletAddressPage(
     )
   }
   return quotes
-}
-
-function toOpenPaymentsType(
-  deps: ServiceDependencies,
-  quote: Quote,
-  walletAddress: WalletAddress
-): OpenPaymentsQuote {
-  return {
-    id: getUrl(deps, quote),
-    walletAddress: walletAddress.url,
-    receiveAmount: serializeAmount(quote.receiveAmount),
-    debitAmount: serializeAmount(quote.debitAmount),
-    receiver: quote.receiver,
-    expiresAt: quote.expiresAt.toISOString(),
-    createdAt: quote.createdAt.toISOString(),
-    method: quote.method
-  }
-}
-
-function getUrl(deps: ServiceDependencies, quote: Quote): string {
-  return `${deps.config.openPaymentsUrl}${Quote.urlPath}/${quote.id}`
 }

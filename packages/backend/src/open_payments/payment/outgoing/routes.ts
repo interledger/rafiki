@@ -137,8 +137,8 @@ async function createOutgoingPayment(
   }
 
   ctx.status = 201
-  ctx.body = deps.outgoingPaymentService.toOpenPaymentsWithSpentAmountsType(
-    outgoingPaymentOrError,
+  ctx.body = outgoingPaymentOrError.toOpenPaymentsWithSpentAmountsType(
+    deps.config.openPaymentsUrl,
     ctx.walletAddress
   )
 }
@@ -159,8 +159,8 @@ function outgoingPaymentToBody(
   walletAddress: WalletAddress,
   outgoingPayment: OutgoingPayment
 ): OpenPaymentsOutgoingPayment {
-  return deps.outgoingPaymentService.toOpenPaymentsType(
-    outgoingPayment,
+  return outgoingPayment.toOpenPaymentsType(
+    deps.config.openPaymentsUrl,
     walletAddress
   )
 }

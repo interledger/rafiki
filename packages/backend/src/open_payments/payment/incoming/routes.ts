@@ -83,8 +83,7 @@ async function getIncomingPaymentPublic(
     )
   }
 
-  ctx.body = deps.incomingPaymentService.toPublicOpenPaymentsType(
-    incomingPayment,
+  ctx.body = incomingPayment.toPublicOpenPaymentsType(
     deps.config.authServerGrantUrl
   )
 }
@@ -112,8 +111,8 @@ async function getIncomingPaymentPrivate(
     ? undefined
     : deps.streamCredentialsService.get(incomingPayment)
 
-  ctx.body = deps.incomingPaymentService.toOpenPaymentsTypeWithMethods(
-    incomingPayment,
+  ctx.body = incomingPayment.toOpenPaymentsTypeWithMethods(
+    deps.config.openPaymentsUrl,
     ctx.walletAddress,
     streamCredentials
   )
@@ -156,8 +155,8 @@ async function createIncomingPayment(
   const streamCredentials = deps.streamCredentialsService.get(
     incomingPaymentOrError
   )
-  ctx.body = deps.incomingPaymentService.toOpenPaymentsTypeWithMethods(
-    incomingPaymentOrError,
+  ctx.body = incomingPaymentOrError.toOpenPaymentsTypeWithMethods(
+    deps.config.openPaymentsUrl,
     ctx.walletAddress,
     streamCredentials
   )
@@ -178,8 +177,8 @@ async function completeIncomingPayment(
     )
   }
 
-  ctx.body = deps.incomingPaymentService.toOpenPaymentsType(
-    incomingPaymentOrError,
+  ctx.body = incomingPaymentOrError.toOpenPaymentsType(
+    deps.config.openPaymentsUrl,
     ctx.walletAddress
   )
 }
@@ -192,6 +191,6 @@ async function listIncomingPayments(
     ctx,
     getWalletAddressPage: deps.incomingPaymentService.getWalletAddressPage,
     toBody: (payment) =>
-      deps.incomingPaymentService.toOpenPaymentsType(payment, ctx.walletAddress)
+      payment.toOpenPaymentsType(deps.config.openPaymentsUrl, ctx.walletAddress)
   })
 }
