@@ -357,11 +357,7 @@ function calculateFixedSendQuoteAmounts(
   }
 }
 
-function calculateExpiry(
-  deps: ServiceDependencies,
-  quote: UnfinalizedQuote,
-  receiver: Receiver
-): Date {
+function calculateExpiry(deps: ServiceDependencies, receiver: Receiver): Date {
   const quoteExpiry = new Date(Date.now() + deps.config.quoteLifespan)
 
   const incomingPaymentExpiresEarlier =
