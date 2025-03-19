@@ -445,7 +445,7 @@ async function finalizeQuote(
     debitAmountMinusFees,
     debitAmountValue,
     receiveAmountValue,
-    expiresAt: calculateExpiry(deps, quote, receiver)
+    expiresAt: calculateExpiry(deps, receiver)
   }
 
   return patchOptions
