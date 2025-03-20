@@ -22,13 +22,11 @@ import { createIncomingPayment } from '../../../tests/incomingPayment'
 import { createWalletAddress } from '../../../tests/walletAddress'
 import { truncateTables } from '../../../tests/tableManager'
 import { IncomingPaymentError, isIncomingPaymentError } from './errors'
-import { Amount, serializeAmount } from '../../amount'
+import { Amount } from '../../amount'
 import { getTests } from '../../wallet_address/model.test'
 import { WalletAddress } from '../../wallet_address/model'
 import { withConfigOverride } from '../../../tests/helpers'
 import { sleep } from '../../../shared/utils'
-import { IlpStreamCredentials } from '../../../payment-method/ilp/stream-credentials/service'
-import { IlpAddress } from 'ilp-packet'
 
 describe('Incoming Payment Service', (): void => {
   let deps: IocContract<AppServices>
@@ -934,155 +932,5 @@ describe('Incoming Payment Service', (): void => {
         state: IncomingPaymentState.Completed
       })
     })
-  })
-
-  describe('toOpenPaymentsType', () => {
-    let incomingPayment: IncomingPayment
-
-    beforeEach(async (): Promise<void> => {
-      incomingPayment = await createIncomingPayment(deps, {
-        walletAddressId,
-        incomingAmount: {
-          value: BigInt(123),
-          assetCode: asset.code,
-          assetScale: asset.scale
-        },
-        expiresAt: new Date(Date.now() + 30_000),
-        metadata: {
-          description: 'Test incoming payment',
-          externalRef: '#123'
-        }
-      })
-    })
-
-    test('returns incoming payment', async () => {
-      expect(
-        incomingPayment.toOpenPaymentsType(
-          config.openPaymentsUrl,
-          incomingPayment.walletAddress!
-        )
-      ).toEqual({
-        id: `${config.openPaymentsUrl}${IncomingPayment.urlPath}/${incomingPayment.id}`,
-        walletAddress: incomingPayment.walletAddress!.url,
-        completed: incomingPayment.completed,
-        receivedAmount: serializeAmount(incomingPayment.receivedAmount),
-        incomingAmount: incomingPayment.incomingAmount
-          ? serializeAmount(incomingPayment.incomingAmount)
-          : undefined,
-        expiresAt: incomingPayment.expiresAt.toISOString(),
-        metadata: incomingPayment.metadata ?? undefined,
-        updatedAt: incomingPayment.updatedAt.toISOString(),
-        createdAt: incomingPayment.createdAt.toISOString()
-      })
-    })
-  })
-
-  describe('toOpenPaymentsTypeWithMethods', () => {
-    let incomingPayment: IncomingPayment
-
-    beforeEach(async (): Promise<void> => {
-      incomingPayment = await createIncomingPayment(deps, {
-        walletAddressId,
-        incomingAmount: {
-          value: BigInt(123),
-          assetCode: asset.code,
-          assetScale: asset.scale
-        },
-        expiresAt: new Date(Date.now() + 30_000),
-        metadata: {
-          description: 'Test incoming payment',
-          externalRef: '#123'
-        }
-      })
-    })
-
-    test('returns incoming payment with payment methods', async () => {
-      const streamCredentials: IlpStreamCredentials = {
-        ilpAddress: 'test.ilp' as IlpAddress,
-        sharedSecret: Buffer.from('')
-      }
-
-      expect(
-        incomingPayment.toOpenPaymentsTypeWithMethods(
-          config.openPaymentsUrl,
-          incomingPayment.walletAddress!,
-          streamCredentials
-        )
-      ).toEqual({
-        id: `${config.openPaymentsUrl}${IncomingPayment.urlPath}/${incomingPayment.id}`,
-        walletAddress: incomingPayment.walletAddress!.url,
-        completed: incomingPayment.completed,
-        receivedAmount: serializeAmount(incomingPayment.receivedAmount),
-        incomingAmount: incomingPayment.incomingAmount
-          ? serializeAmount(incomingPayment.incomingAmount)
-          : undefined,
-        expiresAt: incomingPayment.expiresAt.toISOString(),
-        metadata: incomingPayment.metadata ?? undefined,
-        updatedAt: incomingPayment.updatedAt.toISOString(),
-        createdAt: incomingPayment.createdAt.toISOString(),
-        methods: [
-          {
-            type: 'ilp',
-            ilpAddress: 'test.ilp',
-            sharedSecret: expect.any(String)
-          }
-        ]
-      })
-    })
-
-    test('returns incoming payment with empty methods when stream credentials are undefined', async () => {
-      expect(
-        incomingPayment.toOpenPaymentsTypeWithMethods(
-          config.openPaymentsUrl,
-          incomingPayment.walletAddress!
-        )
-      ).toEqual({
-        id: `${config.openPaymentsUrl}${IncomingPayment.urlPath}/${incomingPayment.id}`,
-        walletAddress: incomingPayment.walletAddress!.url,
-        completed: incomingPayment.completed,
-        receivedAmount: serializeAmount(incomingPayment.receivedAmount),
-        incomingAmount: incomingPayment.incomingAmount
-          ? serializeAmount(incomingPayment.incomingAmount)
-          : undefined,
-        expiresAt: incomingPayment.expiresAt.toISOString(),
-        metadata: incomingPayment.metadata ?? undefined,
-        updatedAt: incomingPayment.updatedAt.toISOString(),
-        createdAt: incomingPayment.createdAt.toISOString(),
-        methods: []
-      })
-    })
-
-    test.each([IncomingPaymentState.Completed, IncomingPaymentState.Expired])(
-      'returns incoming payment with methods if payment state is %s',
-      async (paymentState): Promise<void> => {
-        incomingPayment.state = paymentState
-
-        const streamCredentials: IlpStreamCredentials = {
-          ilpAddress: 'test.ilp' as IlpAddress,
-          sharedSecret: Buffer.from('')
-        }
-
-        expect(
-          incomingPayment.toOpenPaymentsTypeWithMethods(
-            config.openPaymentsUrl,
-            incomingPayment.walletAddress!,
-            streamCredentials
-          )
-        ).toMatchObject({
-          id: `${config.openPaymentsUrl}${IncomingPayment.urlPath}/${incomingPayment.id}`,
-          walletAddress: incomingPayment.walletAddress!.url,
-          completed: incomingPayment.completed,
-          receivedAmount: serializeAmount(incomingPayment.receivedAmount),
-          incomingAmount: incomingPayment.incomingAmount
-            ? serializeAmount(incomingPayment.incomingAmount)
-            : undefined,
-          expiresAt: incomingPayment.expiresAt.toISOString(),
-          metadata: incomingPayment.metadata ?? undefined,
-          updatedAt: incomingPayment.updatedAt.toISOString(),
-          createdAt: incomingPayment.createdAt.toISOString(),
-          methods: [expect.any(Object)]
-        })
-      }
-    )
   })
 })

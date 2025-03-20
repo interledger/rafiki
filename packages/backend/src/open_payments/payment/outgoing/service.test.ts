@@ -251,7 +251,7 @@ describe('OutgoingPaymentService', (): void => {
       XRP: exchangeRate
     }))
 
-    deps = initIocContainer({
+    deps = await initIocContainer({
       ...Config,
       exchangeRatesUrl,
       enableTelemetry: true,
@@ -403,11 +403,15 @@ describe('OutgoingPaymentService', (): void => {
 
     describe('filters', () => {
       let otherSenderWalletAddress: WalletAddress
+      let otherReceiverWalletAddress: WalletAddress
       let otherReceiver: string
       let outgoingPayment: OutgoingPayment
       let otherOutgoingPayment: OutgoingPayment
       beforeEach(async (): Promise<void> => {
         otherSenderWalletAddress = await createWalletAddress(deps, { assetId })
+        otherReceiverWalletAddress = await createWalletAddress(deps, {
+          assetId
+        })
         const incomingPayment = await createIncomingPayment(deps, {
           walletAddressId: receiverWalletAddress.id
         })
