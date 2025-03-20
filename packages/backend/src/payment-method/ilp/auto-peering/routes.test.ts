@@ -55,7 +55,8 @@ describe('Auto Peering Routes', (): void => {
         staticIlpAddress: config.ilpAddress,
         ilpConnectorUrl: config.ilpConnectorUrl,
         httpToken: expect.any(String),
-        name: config.instanceName
+        name: config.instanceName,
+        tenantId: config.operatorTenantId
       })
     })
 

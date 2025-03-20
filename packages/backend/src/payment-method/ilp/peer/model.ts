@@ -53,6 +53,8 @@ export class Peer
 
   public name?: string
 
+  public readonly tenantId!: string
+
   public async onDebit({ balance }: OnDebitOptions): Promise<Peer> {
     if (this.liquidityThreshold !== null) {
       if (balance <= this.liquidityThreshold) {

@@ -22,6 +22,7 @@ import { BaseService } from '../../../shared/baseService'
 import { isValidHttpUrl } from '../../../shared/utils'
 import { v4 as uuid } from 'uuid'
 import { TransferError } from '../../../accounting/errors'
+import { Config } from '../../../config/app'
 
 export interface HttpOptions {
   incoming?: {
@@ -44,24 +45,28 @@ export type Options = {
 
 export type CreateOptions = Options & {
   assetId: string
+  tenantId?: string
 }
 
 export type UpdateOptions = Partial<Options> & {
   id: string
+  tenantId: string
 }
 
 interface DepositPeerLiquidityArgs {
   amount: bigint
   transferId?: string
   peerId: string
+  tenantId: string
 }
 
 export interface PeerService {
-  get(id: string): Promise<Peer | undefined>
+  get(id: string, tenantId?: string): Promise<Peer | undefined>
   create(options: CreateOptions): Promise<Peer | PeerError>
   update(options: UpdateOptions): Promise<Peer | PeerError>
   getByDestinationAddress(
     address: string,
+    tenantId?: string,
     assetId?: string
   ): Promise<Peer | undefined>
   getByIncomingToken(token: string): Promise<Peer | undefined>
@@ -69,7 +74,7 @@ export interface PeerService {
   depositLiquidity(
     args: DepositPeerLiquidityArgs
   ): Promise<void | PeerError.UnknownPeer | TransferError>
-  delete(id: string): Promise<Peer | undefined>
+  delete(id: string, tenantId: string): Promise<Peer | undefined>
 }
 
 interface ServiceDependencies extends BaseService {
@@ -97,24 +102,25 @@ export async function createPeerService({
     httpTokenService
   }
   return {
-    get: (id) => getPeer(deps, id),
+    get: (id, tenantId) => getPeer(deps, id, tenantId),
     create: (options) => createPeer(deps, options),
     update: (options) => updatePeer(deps, options),
-    getByDestinationAddress: (destinationAddress, assetId) =>
-      getPeerByDestinationAddress(deps, destinationAddress, assetId),
+    getByDestinationAddress: (destinationAddress, tenantId, assetId) =>
+      getPeerByDestinationAddress(deps, destinationAddress, tenantId, assetId),
     getByIncomingToken: (token) => getPeerByIncomingToken(deps, token),
     getPage: (pagination?, sortOrder?) =>
       getPeersPage(deps, pagination, sortOrder),
     depositLiquidity: (args) => depositLiquidityById(deps, args),
-    delete: (id) => deletePeer(deps, id)
+    delete: (id, tenantId) => deletePeer(deps, id, tenantId)
   }
 }
 
 async function getPeer(
   deps: ServiceDependencies,
-  id: string
+  id: string,
+  tenantId?: string
 ): Promise<Peer | undefined> {
-  const peer = await Peer.query(deps.knex).findById(id)
+  const peer = await Peer.query(deps.knex).findOne({ id, tenantId })
   if (peer) {
     const asset = await deps.assetService.get(peer.assetId)
     if (asset) peer.asset = asset
@@ -142,7 +148,8 @@ async function createPeer(
         maxPacketAmount: options.maxPacketAmount,
         staticIlpAddress: options.staticIlpAddress,
         name: options.name,
-        liquidityThreshold: options.liquidityThreshold
+        liquidityThreshold: options.liquidityThreshold,
+        tenantId: options.tenantId ?? Config.operatorTenantId
       })
       const asset = await deps.assetService.get(peer.assetId)
       if (asset) peer.asset = asset
@@ -259,9 +266,9 @@ async function depositLiquidityById(
   deps: ServiceDependencies,
   args: DepositPeerLiquidityArgs
 ): Promise<void | PeerError.UnknownPeer | TransferError> {
-  const { peerId, amount, transferId } = args
+  const { peerId, amount, transferId, tenantId } = args
 
-  const peer = await getPeer(deps, peerId)
+  const peer = await getPeer(deps, peerId, tenantId)
   if (!peer) {
     return PeerError.UnknownPeer
   }
@@ -316,6 +323,7 @@ async function addIncomingHttpTokens({
 async function getPeerByDestinationAddress(
   deps: ServiceDependencies,
   destinationAddress: string,
+  tenantId?: string,
   assetId?: string
 ): Promise<Peer | undefined> {
   // This query does the equivalent of the following regex
@@ -348,6 +356,10 @@ async function getPeerByDestinationAddress(
 
   if (assetId) {
     peerQuery.andWhere('assetId', assetId)
+  }
+
+  if (tenantId) {
+    peerQuery.andWhere('tenantId', tenantId)
   }
 
   const peer = await peerQuery.first()
@@ -395,9 +407,15 @@ async function getPeersPage(
 
 async function deletePeer(
   deps: ServiceDependencies,
-  id: string
+  id: string,
+  tenantId: string
 ): Promise<Peer | undefined> {
-  const peer = await Peer.query(deps.knex).deleteById(id).returning('*').first()
+  const peer = await Peer.query(deps.knex)
+    .delete()
+    .where('id', id)
+    .andWhere('tenantId', tenantId)
+    .returning('*')
+    .first()
   if (peer) {
     const asset = await deps.assetService.get(peer.assetId)
     if (asset) peer.asset = asset

@@ -12,7 +12,11 @@ import {
   OutgoingPaymentResolvers,
   PaymentResolvers
 } from '../generated/graphql'
-import { ApolloContext, TenantedApolloContext } from '../../app'
+import {
+  ApolloContext,
+  ForTenantIdContext,
+  TenantedApolloContext
+} from '../../app'
 import {
   fundingErrorToMessage,
   fundingErrorToCode,
@@ -83,7 +87,7 @@ const getPeerOrAssetLiquidity = async (
   return liquidity
 }
 
-export const depositPeerLiquidity: MutationResolvers<ApolloContext>['depositPeerLiquidity'] =
+export const depositPeerLiquidity: MutationResolvers<TenantedApolloContext>['depositPeerLiquidity'] =
   async (
     parent,
     args,
@@ -100,7 +104,8 @@ export const depositPeerLiquidity: MutationResolvers<ApolloContext>['depositPeer
     const peerOrError = await peerService.depositLiquidity({
       transferId: args.input.id,
       peerId: args.input.peerId,
-      amount: args.input.amount
+      amount: args.input.amount,
+      tenantId: ctx.tenant.id
     })
 
     if (peerOrError === PeerError.UnknownPeer) {
@@ -162,7 +167,7 @@ export const depositAssetLiquidity: MutationResolvers<ApolloContext>['depositAss
     }
   }
 
-export const createPeerLiquidityWithdrawal: MutationResolvers<ApolloContext>['createPeerLiquidityWithdrawal'] =
+export const createPeerLiquidityWithdrawal: MutationResolvers<ForTenantIdContext>['createPeerLiquidityWithdrawal'] =
   async (
     parent,
     args,
@@ -177,7 +182,7 @@ export const createPeerLiquidityWithdrawal: MutationResolvers<ApolloContext>['cr
       })
     }
     const peerService = await ctx.container.use('peerService')
-    const peer = await peerService.get(peerId)
+    const peer = await peerService.get(peerId, ctx.forTenantId)
     if (!peer) {
       throw new GraphQLError(errorToMessage[LiquidityError.UnknownPeer], {
         extensions: {

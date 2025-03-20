@@ -14,6 +14,7 @@ export interface PeeringDetails {
   ilpConnectorUrl: string
   httpToken: string
   name: string
+  tenantId: string
 }
 
 export interface InitiatePeeringRequestArgs {
@@ -23,6 +24,7 @@ export interface InitiatePeeringRequestArgs {
   maxPacketAmount?: bigint
   liquidityToDeposit?: bigint
   liquidityThreshold?: bigint
+  tenantId: string
 }
 
 export interface PeeringRequestArgs {
@@ -32,6 +34,7 @@ export interface PeeringRequestArgs {
   httpToken: string
   maxPacketAmount?: number
   name?: string
+  tenantId: string
 }
 
 interface UpdatePeerArgs {
@@ -42,6 +45,7 @@ interface UpdatePeerArgs {
   outgoingHttpToken: string
   maxPacketAmount?: number
   name?: string
+  tenantId: string
 }
 
 interface DepositLiquidityArgs {
@@ -101,7 +105,8 @@ async function initiatePeeringRequest(
     asset: { code: asset.code, scale: asset.scale },
     httpToken: outgoingHttpToken,
     maxPacketAmount: Number(args.maxPacketAmount),
-    name: deps.config.instanceName
+    name: deps.config.instanceName,
+    tenantId: args.tenantId
   })
 
   if (isAutoPeeringError(peeringDetailsOrError)) {
@@ -122,7 +127,8 @@ async function initiatePeeringRequest(
         authToken: outgoingHttpToken,
         endpoint: peeringDetailsOrError.ilpConnectorUrl
       }
-    }
+    },
+    tenantId: args.tenantId
   })
 
   const isDuplicatePeer =
@@ -139,7 +145,8 @@ async function initiatePeeringRequest(
         assetId: asset.id,
         outgoingHttpToken,
         incomingHttpToken: peeringDetailsOrError.httpToken,
-        ilpConnectorUrl: peeringDetailsOrError.ilpConnectorUrl
+        ilpConnectorUrl: peeringDetailsOrError.ilpConnectorUrl,
+        tenantId: args.tenantId
       })
     : createdPeerOrError
 
@@ -161,7 +168,8 @@ async function depositLiquidity(
 ): Promise<Peer | AutoPeeringError.LiquidityError> {
   const transferOrPeerError = await deps.peerService.depositLiquidity({
     peerId: args.peer.id,
-    amount: args.amount
+    amount: args.amount,
+    tenantId: args.peer.tenantId
   })
 
   if (
@@ -262,7 +270,8 @@ async function acceptPeeringRequest(
         assetId: asset.id,
         outgoingHttpToken,
         incomingHttpToken: args.httpToken,
-        ilpConnectorUrl: args.ilpConnectorUrl
+        ilpConnectorUrl: args.ilpConnectorUrl,
+        tenantId: args.tenantId
       })
     : createdPeerOrError
 
@@ -278,7 +287,8 @@ async function acceptPeeringRequest(
     ilpConnectorUrl: deps.config.ilpConnectorUrl,
     staticIlpAddress: deps.config.ilpAddress,
     httpToken: peerOrError.http.outgoing.authToken,
-    name: deps.config.instanceName
+    name: deps.config.instanceName,
+    tenantId: peerOrError.tenantId
   }
 }
 
@@ -288,6 +298,7 @@ async function updatePeer(
 ): Promise<Peer | PeerError> {
   const peer = await deps.peerService.getByDestinationAddress(
     args.staticIlpAddress,
+    args.tenantId,
     args.assetId
   )
 
@@ -308,7 +319,8 @@ async function updatePeer(
         authToken: args.outgoingHttpToken,
         endpoint: args.ilpConnectorUrl
       }
-    }
+    },
+    tenantId: args.tenantId
   })
 }
 
