@@ -22,7 +22,8 @@ export async function createPeer(
         endpoint: faker.internet.url({ appendSlash: false })
       }
     },
-    staticIlpAddress: options.staticIlpAddress || 'test.' + uuid()
+    staticIlpAddress: options.staticIlpAddress || 'test.' + uuid(),
+    tenantId: options.tenantId
   }
   if (options.http?.incoming) {
     peerOptions.http.incoming = options.http.incoming
