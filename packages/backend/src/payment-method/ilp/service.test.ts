@@ -308,19 +308,22 @@ describe('IlpPaymentService', (): void => {
       }
 
       await expect(ilpPaymentService.getQuote(options)).resolves.toEqual({
-        receiver: options.receiver,
-        walletAddress: options.walletAddress,
-        debitAmount: {
-          assetCode: 'USD',
-          assetScale: 2,
-          value: 100n
-        },
-        receiveAmount: {
-          assetCode: 'USD',
-          assetScale: 2,
-          value: 99n
-        },
-        estimatedExchangeRate: expect.any(Number)
+        quote: {
+          receiver: options.receiver,
+          walletAddress: options.walletAddress,
+          debitAmount: {
+            assetCode: 'USD',
+            assetScale: 2,
+            value: 100n
+          },
+          receiveAmount: {
+            assetCode: 'USD',
+            assetScale: 2,
+            value: 99n
+          },
+          estimatedExchangeRate: expect.any(Number)
+        }
+        // TODO: additionalFields expects? this should probably error
       })
       ratesScope.done()
     })
@@ -345,10 +348,12 @@ describe('IlpPaymentService', (): void => {
       const ilpStartQuoteSpy = jest.spyOn(Pay, 'startQuote')
 
       await expect(ilpPaymentService.getQuote(options)).resolves.toMatchObject({
-        receiveAmount: {
-          assetCode: 'USD',
-          assetScale: 2,
-          value: incomingAmount?.value
+        quote: {
+          receiveAmount: {
+            assetCode: 'USD',
+            assetScale: 2,
+            value: incomingAmount?.value
+          }
         }
       })
 
@@ -537,7 +542,8 @@ describe('IlpPaymentService', (): void => {
                   }
                 }
 
-                const quote = await ilpPaymentService.getQuote(options)
+                // TODO: expects for additionalDetails?
+                const { quote } = await ilpPaymentService.getQuote(options)
 
                 expect(quote).toMatchObject({
                   debitAmount: {
@@ -597,7 +603,8 @@ describe('IlpPaymentService', (): void => {
                   }
                 }
 
-                const quote = await ilpPaymentService.getQuote(options)
+                // TODO: expects for additionalFields?
+                const { quote } = await ilpPaymentService.getQuote(options)
 
                 expect(quote).toMatchObject({
                   debitAmount: {

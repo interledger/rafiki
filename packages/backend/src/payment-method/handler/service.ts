@@ -31,10 +31,14 @@ export interface PayOptions {
 }
 
 export interface PaymentMethodService {
-  getQuote(
-    quoteOptions: StartQuoteOptions,
-    trx?: Transaction
-  ): Promise<PaymentQuote>
+  getQuote(quoteOptions: StartQuoteOptions): Promise<{
+    quote: PaymentQuote
+    additionalDetails?: Record<string, any>
+  }>
+  saveAdditionalQuoteDetails?(
+    trx: Transaction,
+    additionalDetails: Record<string, any>
+  ): Promise<void>
   pay(payOptions: PayOptions): Promise<void>
 }
 
@@ -43,9 +47,13 @@ export type PaymentMethod = 'ILP' | 'LOCAL'
 export interface PaymentMethodHandlerService {
   getQuote(
     method: PaymentMethod,
-    quoteOptions: StartQuoteOptions,
-    trx?: Transaction
-  ): Promise<PaymentQuote>
+    quoteOptions: StartQuoteOptions
+  ): Promise<{ quote: PaymentQuote; additionalDetails?: Record<string, any> }>
+  saveAdditionalQuoteDetails(
+    method: PaymentMethod,
+    trx: Transaction,
+    additionalDetails: Record<string, any>
+  ): Promise<void>
   pay(method: PaymentMethod, payOptions: PayOptions): Promise<void>
 }
 
@@ -76,8 +84,17 @@ export async function createPaymentMethodHandlerService({
   }
 
   return {
-    getQuote: (method, quoteOptions, trx) =>
-      paymentMethods[method].getQuote(quoteOptions, trx),
+    getQuote: (method, quoteOptions) =>
+      paymentMethods[method].getQuote(quoteOptions),
+
+    saveAdditionalQuoteDetails: (method, trx, additionalDetails) => {
+      const service = paymentMethods[method]
+      if (service.saveAdditionalQuoteDetails) {
+        return service.saveAdditionalQuoteDetails(trx, additionalDetails)
+      }
+      return Promise.resolve()
+    },
+
     pay: (method, payOptions) => paymentMethods[method].pay(payOptions)
   }
 }

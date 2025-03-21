@@ -168,19 +168,21 @@ describe('LocalPaymentService', (): void => {
       }
 
       await expect(localPaymentService.getQuote(options)).resolves.toEqual({
-        receiver: options.receiver,
-        walletAddress: options.walletAddress,
-        debitAmount: {
-          assetCode: 'USD',
-          assetScale: 2,
-          value: 100n
-        },
-        receiveAmount: {
-          assetCode: 'USD',
-          assetScale: 2,
-          value: 100n
-        },
-        estimatedExchangeRate: 1
+        quote: {
+          receiver: options.receiver,
+          walletAddress: options.walletAddress,
+          debitAmount: {
+            assetCode: 'USD',
+            assetScale: 2,
+            value: 100n
+          },
+          receiveAmount: {
+            assetCode: 'USD',
+            assetScale: 2,
+            value: 100n
+          },
+          estimatedExchangeRate: 1
+        }
       })
     })
 
@@ -254,10 +256,12 @@ describe('LocalPaymentService', (): void => {
       await expect(
         localPaymentService.getQuote(options)
       ).resolves.toMatchObject({
-        receiveAmount: {
-          assetCode: 'USD',
-          assetScale: 2,
-          value: incomingAmount.value
+        quote: {
+          receiveAmount: {
+            assetCode: 'USD',
+            assetScale: 2,
+            value: incomingAmount.value
+          }
         }
       })
     })
@@ -302,7 +306,8 @@ describe('LocalPaymentService', (): void => {
               }
             }
 
-            const quote = await localPaymentService.getQuote(options)
+            // TODO: expect additionalDetails to be undefined?
+            const { quote } = await localPaymentService.getQuote(options)
 
             expect(quote).toMatchObject({
               debitAmount: {
@@ -358,7 +363,8 @@ describe('LocalPaymentService', (): void => {
               }
             }
 
-            const quote = await localPaymentService.getQuote(options)
+            // TODO: expect additionalDetails to be undefined?
+            const { quote } = await localPaymentService.getQuote(options)
 
             expect(quote).toMatchObject({
               debitAmount: {
