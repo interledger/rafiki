@@ -45,6 +45,7 @@ export interface CreateOptions extends Options {
   address: string
   assetId: string
   additionalProperties?: WalletAddressAdditionalPropertyInput[]
+  isOperator?: boolean
 }
 
 type Status = 'ACTIVE' | 'INACTIVE'
@@ -170,16 +171,20 @@ async function createWalletAddress(
   deps: ServiceDependencies,
   options: CreateOptions
 ): Promise<WalletAddress | WalletAddressError> {
+  let tenantWalletAddressUrl = new URL(deps.config.openPaymentsUrl)
+
   const found = (await deps.tenantSettingService.get({
     tenantId: options.tenantId,
     key: TenantSettingKeys.WALLET_ADDRESS_URL.name
   })) as TenantSetting[]
 
   if (!found || found.length === 0) {
-    return WalletAddressError.WalletAddressSettingNotFound
+    if (!options.isOperator) {
+      return WalletAddressError.WalletAddressSettingNotFound
+    }
+  } else {
+    tenantWalletAddressUrl = new URL(found[0].value)
   }
-
-  const tenantWalletAddressUrl = new URL(found[0].value)
 
   let tenantBaseUrl = tenantWalletAddressUrl.toString()
   if (!tenantWalletAddressUrl.pathname.endsWith('/')) {
