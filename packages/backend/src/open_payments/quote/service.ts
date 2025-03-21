@@ -177,10 +177,6 @@ async function createQuote(
       }
     )
 
-    // TODO: should getQuote happen inside trx? wasnt in main (was inside but not using trx).
-    // If so, in the getQuote method, need to not only pass into IlpQuoteDetails but also connector.
-    // Probably should have IlpQuoteDetails usingt he trx but not sure about the rest (just
-    // including the IlpQuoteDetails insert would prly require refactor to to that here)
     const quote = await deps.paymentMethodHandlerService.getQuote(
       paymentMethod,
       {
