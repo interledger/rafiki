@@ -52,15 +52,14 @@ export async function createLocalPaymentService(
 
   return {
     getQuote: (quoteOptions) => getQuote(deps, quoteOptions),
-    pay: (payOptions) => pay(deps, payOptions),
-    saveAdditionalQuoteDetails: async (trx, additionalDetails) => {} // not utilized
+    pay: (payOptions) => pay(deps, payOptions)
   }
 }
 
 async function getQuote(
   deps: ServiceDependencies,
   options: StartQuoteOptions
-): Promise<{ quote: PaymentQuote; additionalDetails?: Record<string, any> }> {
+): Promise<PaymentQuote> {
   const { receiver, debitAmount, receiveAmount, walletAddress } = options
 
   let debitAmountValue: bigint
@@ -188,20 +187,18 @@ async function getQuote(
   }
 
   return {
-    quote: {
-      receiver: options.receiver,
-      walletAddress: options.walletAddress,
-      estimatedExchangeRate: exchangeRate,
-      debitAmount: {
-        value: debitAmountValue,
-        assetCode: options.walletAddress.asset.code,
-        assetScale: options.walletAddress.asset.scale
-      },
-      receiveAmount: {
-        value: receiveAmountValue,
-        assetCode: options.receiver.assetCode,
-        assetScale: options.receiver.assetScale
-      }
+    receiver: options.receiver,
+    walletAddress: options.walletAddress,
+    estimatedExchangeRate: exchangeRate,
+    debitAmount: {
+      value: debitAmountValue,
+      assetCode: options.walletAddress.asset.code,
+      assetScale: options.walletAddress.asset.scale
+    },
+    receiveAmount: {
+      value: receiveAmountValue,
+      assetCode: options.receiver.assetCode,
+      assetScale: options.receiver.assetScale
     }
   }
 }

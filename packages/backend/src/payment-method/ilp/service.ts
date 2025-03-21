@@ -38,17 +38,16 @@ export async function createIlpPaymentService(
   }
 
   return {
-    getQuote: (quoteOptions) => getQuote(deps, quoteOptions),
-    saveAdditionalQuoteDetails: (trx, additionalDetails) =>
-      saveAdditionalDetails(deps, trx, additionalDetails),
+    getQuote: (quoteOptions, trx) => getQuote(deps, quoteOptions, trx),
     pay: (payOptions) => pay(deps, payOptions)
   }
 }
 
 async function getQuote(
   deps: ServiceDependencies,
-  options: StartQuoteOptions
-): Promise<{ quote: PaymentQuote; additionalDetails: Record<string, any> }> {
+  options: StartQuoteOptions,
+  trx?: Transaction
+): Promise<PaymentQuote> {
   if (!options.quoteId) {
     throw new PaymentMethodHandlerError('Received error during ILP quoting', {
       description: 'quoteId is required for ILP quotes',
@@ -183,32 +182,31 @@ async function getQuote(
       })
     }
 
+    await IlpQuoteDetails.query(trx ?? deps.knex).insert({
+      quoteId: options.quoteId,
+      lowEstimatedExchangeRate: ilpQuote.lowEstimatedExchangeRate,
+      highEstimatedExchangeRate: ilpQuote.highEstimatedExchangeRate,
+      minExchangeRate: ilpQuote.minExchangeRate,
+      maxPacketAmount:
+        // Cap at MAX_INT64 because of postgres type limits
+        MAX_INT64 < ilpQuote.maxPacketAmount
+          ? MAX_INT64
+          : ilpQuote.maxPacketAmount
+    })
+
     return {
-      quote: {
-        receiver: options.receiver,
-        walletAddress: options.walletAddress,
-        estimatedExchangeRate: ilpQuote.lowEstimatedExchangeRate.valueOf(),
-        debitAmount: {
-          value: ilpQuote.maxSourceAmount,
-          assetCode: options.walletAddress.asset.code,
-          assetScale: options.walletAddress.asset.scale
-        },
-        receiveAmount: {
-          value: ilpQuote.minDeliveryAmount,
-          assetCode: options.receiver.assetCode,
-          assetScale: options.receiver.assetScale
-        }
+      receiver: options.receiver,
+      walletAddress: options.walletAddress,
+      estimatedExchangeRate: ilpQuote.lowEstimatedExchangeRate.valueOf(),
+      debitAmount: {
+        value: ilpQuote.maxSourceAmount,
+        assetCode: options.walletAddress.asset.code,
+        assetScale: options.walletAddress.asset.scale
       },
-      additionalDetails: {
-        quoteId: options.quoteId,
-        lowEstimatedExchangeRate: ilpQuote.lowEstimatedExchangeRate,
-        highEstimatedExchangeRate: ilpQuote.highEstimatedExchangeRate,
-        minExchangeRate: ilpQuote.minExchangeRate,
-        maxPacketAmount:
-          // Cap at MAX_INT64 because of postgres type limits
-          MAX_INT64 < ilpQuote.maxPacketAmount
-            ? MAX_INT64
-            : ilpQuote.maxPacketAmount
+      receiveAmount: {
+        value: ilpQuote.minDeliveryAmount,
+        assetCode: options.receiver.assetCode,
+        assetScale: options.receiver.assetScale
       }
     }
   } finally {
@@ -251,24 +249,6 @@ async function getQuote(
       stopTimerDisconnect()
     }
   }
-}
-
-async function saveAdditionalDetails(
-  deps: ServiceDependencies,
-  trx: Transaction,
-  additionalDetails: Record<string, any>
-): Promise<void> {
-  await IlpQuoteDetails.query(trx).insert({
-    quoteId: additionalDetails.quoteId,
-    lowEstimatedExchangeRate: additionalDetails.lowEstimatedExchangeRate,
-    highEstimatedExchangeRate: additionalDetails.highEstimatedExchangeRate,
-    minExchangeRate: additionalDetails.minExchangeRate,
-    maxPacketAmount:
-      // Cap at MAX_INT64 because of postgres type limits
-      MAX_INT64 < additionalDetails.maxPacketAmount
-        ? MAX_INT64
-        : additionalDetails.maxPacketAmount
-  })
 }
 
 async function pay(

@@ -177,14 +177,20 @@ async function createQuote(
       }
     )
 
-    const { quote, additionalDetails } =
-      await deps.paymentMethodHandlerService.getQuote(paymentMethod, {
+    // TODO: should getQuote happen inside trx? wasnt in main (was inside but not using trx).
+    // If so, in the getQuote method, need to not only pass into IlpQuoteDetails but also connector.
+    // Probably should have IlpQuoteDetails usingt he trx but not sure about the rest (just
+    // including the IlpQuoteDetails insert would prly require refactor to to that here)
+    const quote = await deps.paymentMethodHandlerService.getQuote(
+      paymentMethod,
+      {
         quoteId,
         walletAddress,
         receiver,
         receiveAmount: options.receiveAmount,
         debitAmount: options.debitAmount
-      })
+      }
+    )
     stopTimerQuote()
 
     const unfinalizedQuote: UnfinalizedQuote = {
@@ -222,19 +228,9 @@ async function createQuote(
         description: 'Time to insert quote'
       }
     )
-    const createdQuote = await Quote.transaction(async (trx) => {
-      const createdQuote = await Quote.query(trx).insertAndFetch({
-        ...unfinalizedQuote,
-        ...finalQuoteOptions
-      })
-      if (additionalDetails) {
-        await deps.paymentMethodHandlerService.saveAdditionalQuoteDetails(
-          paymentMethod,
-          trx,
-          additionalDetails
-        )
-      }
-      return createdQuote
+    const createdQuote = await Quote.query(deps.knex).insertAndFetch({
+      ...unfinalizedQuote,
+      ...finalQuoteOptions
     })
     createdQuote.asset = walletAddress.asset
     createdQuote.walletAddress = walletAddress
