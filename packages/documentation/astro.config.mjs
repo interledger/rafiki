@@ -99,6 +99,10 @@ export default defineConfig({
                   link: '/overview/concepts/open-payments'
                 },
                 {
+                  label: 'Payment pointers and wallet addresses',
+                  link: '/overview/concepts/payment-pointers'
+                },
+                {
                   label: 'Telemetry',
                   link: '/overview/concepts/telemetry'
                 }

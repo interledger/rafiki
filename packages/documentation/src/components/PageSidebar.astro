@@ -4,6 +4,7 @@ import Default from '@astrojs/starlight/components/PageSidebar.astro';
 
 const removeOverview = [
  'resources/glossary',
+ 'overview/concepts/payment-pointers',
 ]
 const noOverview = removeOverview.includes(Astro.props.slug);
 const toc = noOverview && Astro.props.toc !== undefined
