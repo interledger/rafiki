@@ -37,8 +37,24 @@ paths:
               schema:
                 type: string
               description: Interaction id
-        '401':
+        '400':
           description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error-unknown-interaction'
+        '403':
+          description: Invalid Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error-invalid-interaction'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: './auth-server.yaml#/components/schemas/error-request-denied'
       operationId: get-interact
       parameters:
         - schema:
@@ -89,9 +105,19 @@ paths:
               description: Client finish endpoint
         '401':
           description: Unauthorized
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: './auth-server.yaml#/components/schemas/error-invalid-request'
+                  - $ref: '#/components/schemas/error-invalid-interaction'
         '404':
           description: Not Found
-      description: "This endpoint is called by the identity provider to end the user interaction and redirect the user to the client's finish URL."
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error-unknown-interaction'
+      description: "To finish the user interaction for grant approval, this endpoint redirects the user to the client's finish url."
       parameters:
         - schema:
             type: string
@@ -136,8 +162,16 @@ paths:
                     type: string
         '401':
           description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: './auth-server.yaml#/components/schemas/error-invalid-request'
         '404':
           description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error-unknown-interaction'
       operationId: get-grant
       description: |
         This endpoint is called by the identity provider to get the grant details associated with the `interactId` on the front-channel. The identity provider will display the details to the user to either accept or deny.
@@ -164,12 +198,28 @@ paths:
         '202':
           description: Accepted
         '400':
-          description: Not Found
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/error-invalid-interaction'
+                  - $ref: './auth-server.yaml#/components/schemas/error-invalid-request'
         '401':
           description: Unauthorized
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/error-invalid-interaction'
+                  - $ref: '#/components/schemas/error-user-denied'
         '404':
           description: Not Found
-      description: This endpoint is called by the identity provider to communicate the user's choice (acceptance or rejection) to the authorization server.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error-unknown-interaction'
+      description: The Identity Provider uses this endpoint to submit the user's choice regarding accepting or rejecting a grant to Authorization Server.
       parameters:
         - schema:
             type: string
@@ -195,7 +245,43 @@ paths:
       tags:
         - back-channel
 components:
-  schemas: {}
+  schemas:
+    error-unknown-interaction:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            description:
+              type: string
+            code:
+              type: string
+              enum:
+                - unknown_interaction
+    error-invalid-interaction:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            description:
+              type: string
+            code:
+              type: string
+              enum:
+                - invalid_interaction
+    error-user-denied:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            description:
+              type: string
+            code:
+              type: string
+              enum:
+                - user_denied
   securitySchemes:
     GNAP:
       name: Authorization

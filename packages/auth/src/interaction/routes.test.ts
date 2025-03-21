@@ -65,6 +65,8 @@ describe('Interaction Routes', (): void => {
   })
 
   afterEach(async (): Promise<void> => {
+    jest.restoreAllMocks()
+    jest.useRealTimers()
     await truncateTables(appContainer.knex)
   })
 
@@ -91,40 +93,125 @@ describe('Interaction Routes', (): void => {
         )
 
         await expect(interactionRoutes.start(ctx)).rejects.toMatchObject({
-          status: 401,
+          status: 400,
           code: GNAPErrorCode.UnknownInteraction,
           message: 'unknown interaction'
         })
       })
 
-      test('Interaction start fails if grant is revoked', async (): Promise<void> => {
-        const grant = await Grant.query().insert(
-          generateBaseGrant({
-            state: GrantState.Finalized,
-            finalizationReason: GrantFinalization.Revoked
-          })
-        )
+      test.each`
+        isFinishableGrant | description
+        ${true}           | ${'finishable'}
+        ${false}          | ${'unfinishable'}
+      `(
+        'Interaction start fails if $description grant is revoked',
+        async ({ isFinishableGrant }): Promise<void> => {
+          const grant = await Grant.query().insert(
+            generateBaseGrant({
+              noFinishMethod: !isFinishableGrant,
+              state: GrantState.Finalized,
+              finalizationReason: GrantFinalization.Revoked
+            })
+          )
 
-        const interaction = await Interaction.query().insert(
-          generateBaseInteraction(grant)
-        )
+          const interaction = await Interaction.query().insert(
+            generateBaseInteraction(grant)
+          )
 
-        const ctx = createContext<StartContext>(
-          {
-            headers: {
-              Accept: 'application/json',
-              'Content-Type': 'application/json'
-            }
-          },
-          { id: interaction.id, nonce: interaction.nonce }
-        )
+          const ctx = createContext<StartContext>(
+            {
+              headers: {
+                Accept: 'application/json',
+                'Content-Type': 'application/json'
+              },
+              url: `/interact/${interaction.id}/${interaction.nonce}`
+            },
+            { id: interaction.id, nonce: interaction.nonce }
+          )
 
-        await expect(interactionRoutes.start(ctx)).rejects.toMatchObject({
-          status: 401,
-          code: GNAPErrorCode.UnknownInteraction,
-          message: 'unknown interaction'
-        })
-      })
+          if (isFinishableGrant) {
+            const redirectSpy = jest.spyOn(ctx, 'redirect')
+            await expect(interactionRoutes.start(ctx)).resolves.toBeUndefined()
+            expect(ctx.status).toBe(302)
+            expect(ctx.response).toSatisfyApiSpec()
+
+            assert.ok(grant.finishUri)
+            const redirectUrl = new URL(grant.finishUri)
+            redirectUrl.searchParams.set(
+              'result',
+              GNAPErrorCode.InvalidInteraction
+            )
+            redirectUrl.searchParams.set('message', 'invalid interaction')
+            expect(redirectSpy).toHaveBeenCalledWith(redirectUrl.toString())
+          } else {
+            await expect(interactionRoutes.start(ctx)).rejects.toMatchObject({
+              status: 403,
+              code: GNAPErrorCode.InvalidInteraction,
+              message: 'invalid interaction'
+            })
+          }
+        }
+      )
+
+      test.each`
+        isFinishableGrant | description
+        ${true}           | ${'finishable'}
+        ${false}          | ${'unfinishable'}
+      `(
+        'handles unexpected error for $description grant',
+        async ({ isFinishableGrant }): Promise<void> => {
+          const grant = await Grant.query().insertAndFetch(
+            generateBaseGrant({
+              noFinishMethod: !isFinishableGrant
+            })
+          )
+
+          const interaction = await Interaction.query()
+            .insertAndFetch(generateBaseInteraction(grant))
+            .withGraphFetched('grant')
+
+          const ctx = createContext<StartContext>(
+            {
+              headers: {
+                Accept: 'application/json',
+                'Content-Type': 'application/json'
+              },
+              query: {
+                clientName: 'Test Client',
+                clientUri: 'https://example.com'
+              },
+              url: `/interact/${interaction.id}/${interaction.nonce}`
+            },
+            { id: interaction.id, nonce: interaction.nonce }
+          )
+
+          const grantService = await deps.use('grantService')
+          const markPendingSpy = jest
+            .spyOn(grantService, 'markPending')
+            .mockRejectedValueOnce(new Error('unexpected'))
+
+          if (isFinishableGrant) {
+            const redirectSpy = jest.spyOn(ctx, 'redirect')
+            await expect(interactionRoutes.start(ctx)).resolves.toBeUndefined()
+            expect(ctx.status).toBe(302)
+            expect(ctx.response).toSatisfyApiSpec()
+
+            assert.ok(interaction.grant?.finishUri)
+            const redirectUrl = new URL(interaction.grant.finishUri)
+            redirectUrl.searchParams.set('result', GNAPErrorCode.RequestDenied)
+            redirectUrl.searchParams.set('message', 'internal server error')
+            expect(redirectSpy).toHaveBeenCalledWith(redirectUrl.toString())
+          } else {
+            await expect(interactionRoutes.start(ctx)).rejects.toMatchObject({
+              status: 500,
+              code: GNAPErrorCode.RequestDenied,
+              message: 'internal server error'
+            })
+          }
+
+          expect(markPendingSpy).toHaveBeenCalled()
+        }
+      )
 
       test('Can start an interaction', async (): Promise<void> => {
         const ctx = createContext<StartContext>(
@@ -224,36 +311,6 @@ describe('Interaction Routes', (): void => {
             session: { nonce: interaction.nonce }
           },
           { id: fakeInteractId, nonce: interaction.nonce }
-        )
-
-        await expect(interactionRoutes.finish(ctx)).rejects.toMatchObject({
-          status: 404,
-          code: GNAPErrorCode.UnknownInteraction,
-          message: 'unknown interaction'
-        })
-      })
-
-      test('Cannot finish interaction with revoked grant', async (): Promise<void> => {
-        const grant = await Grant.query().insert(
-          generateBaseGrant({
-            state: GrantState.Finalized,
-            finalizationReason: GrantFinalization.Revoked
-          })
-        )
-
-        const interaction = await Interaction.query().insert(
-          generateBaseInteraction(grant)
-        )
-
-        const ctx = createContext<FinishContext>(
-          {
-            headers: {
-              Accept: 'application/json',
-              'Content-Type': 'application/json'
-            },
-            session: { nonce: interaction.nonce }
-          },
-          { id: interaction.id, nonce: interaction.nonce }
         )
 
         await expect(interactionRoutes.finish(ctx)).rejects.toMatchObject({
@@ -404,6 +461,81 @@ describe('Interaction Routes', (): void => {
           expect(ctx.status).toBe(302)
           expect(redirectSpy).toHaveBeenCalledWith(clientRedirectUri.toString())
         })
+
+        test('Cannot finish interaction with revoked grant', async (): Promise<void> => {
+          const grant = await Grant.query().insert(
+            generateBaseGrant({
+              state: GrantState.Finalized,
+              finalizationReason: GrantFinalization.Revoked
+            })
+          )
+
+          assert.ok(grant.finishUri)
+          const clientRedirectUri = new URL(grant.finishUri)
+          clientRedirectUri.searchParams.set(
+            'result',
+            GNAPErrorCode.UnknownInteraction
+          )
+          clientRedirectUri.searchParams.set('message', 'unknown interaction')
+
+          const interaction = await Interaction.query().insert(
+            generateBaseInteraction(grant)
+          )
+
+          const ctx = createContext<FinishContext>(
+            {
+              headers: {
+                Accept: 'application/json',
+                'Content-Type': 'application/json'
+              },
+              session: { nonce: interaction.nonce },
+              url: `/interact/${interaction.id}/${interaction.nonce}/finish`
+            },
+            { id: interaction.id, nonce: interaction.nonce }
+          )
+
+          const redirectSpy = jest.spyOn(ctx, 'redirect')
+
+          await expect(interactionRoutes.finish(ctx)).resolves.toBeUndefined()
+          expect(ctx.response).toSatisfyApiSpec()
+          expect(ctx.status).toBe(302)
+          expect(redirectSpy).toHaveBeenCalledWith(clientRedirectUri.toString())
+        })
+
+        test('Cannot finish expired interaction', async (): Promise<void> => {
+          assert.ok(grant.finishUri)
+          const clientRedirectUri = new URL(grant.finishUri)
+          clientRedirectUri.searchParams.set(
+            'result',
+            GNAPErrorCode.InvalidInteraction
+          )
+          clientRedirectUri.searchParams.set('message', 'interaction expired')
+          const interactionCreatedDate = new Date(interaction.createdAt)
+          const now = new Date(
+            interactionCreatedDate.getTime() +
+              (interaction.expiresIn + 1) * 1000
+          )
+          jest.useFakeTimers({ now })
+
+          const ctx = createContext<FinishContext>(
+            {
+              headers: {
+                Accept: 'application/json',
+                'Content-Type': 'application/json'
+              },
+              session: { nonce: interaction.nonce },
+              url: `/interact/${interaction.id}/${interaction.nonce}/finish`
+            },
+            { id: interaction.id, nonce: interaction.nonce }
+          )
+
+          const redirectSpy = jest.spyOn(ctx, 'redirect')
+
+          await expect(interactionRoutes.finish(ctx)).resolves.toBeUndefined()
+          expect(ctx.response).toSatisfyApiSpec()
+          expect(ctx.status).toBe(302)
+          expect(redirectSpy).toHaveBeenCalledWith(clientRedirectUri.toString())
+        })
       })
 
       describe('Interactions for grant without finish method', (): void => {
@@ -521,6 +653,70 @@ describe('Interaction Routes', (): void => {
             status: 401,
             code: GNAPErrorCode.InvalidInteraction,
             message: 'interaction is not active'
+          })
+        })
+
+        test('Cannot finish interaction with revoked grant', async (): Promise<void> => {
+          const grant = await Grant.query().insert(
+            generateBaseGrant({
+              noFinishMethod: true,
+              state: GrantState.Finalized,
+              finalizationReason: GrantFinalization.Revoked
+            })
+          )
+
+          const interaction = await Interaction.query().insert(
+            generateBaseInteraction(grant)
+          )
+
+          const ctx = createContext<FinishContext>(
+            {
+              headers: {
+                Accept: 'application/json',
+                'Content-Type': 'application/json'
+              },
+              session: { nonce: interaction.nonce },
+              url: `/interact/${interaction.id}/${interaction.nonce}/finish`
+            },
+            { id: interaction.id, nonce: interaction.nonce }
+          )
+
+          await expect(interactionRoutes.finish(ctx)).rejects.toMatchObject({
+            status: 404,
+            code: GNAPErrorCode.UnknownInteraction,
+            message: 'unknown interaction'
+          })
+        })
+
+        test('Cannot finish expired interaction', async (): Promise<void> => {
+          const interaction = await Interaction.query().insert(
+            generateBaseInteraction(grantWithoutFinish, {
+              state: InteractionState.Approved
+            })
+          )
+          const interactionCreatedDate = new Date(interaction.createdAt)
+          const now = new Date(
+            interactionCreatedDate.getTime() +
+              (interaction.expiresIn + 1) * 1000
+          )
+          jest.useFakeTimers({ now })
+
+          const ctx = createContext<FinishContext>(
+            {
+              headers: {
+                Accept: 'application/json',
+                'Content-Type': 'application/json'
+              },
+              session: { nonce: interaction.nonce },
+              url: `/interact/${interaction.id}/${interaction.nonce}/finish`
+            },
+            { id: interaction.id, nonce: interaction.nonce }
+          )
+
+          await expect(interactionRoutes.finish(ctx)).rejects.toMatchObject({
+            status: 401,
+            code: GNAPErrorCode.InvalidInteraction,
+            message: 'interaction expired'
           })
         })
       })
