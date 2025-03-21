@@ -107,6 +107,7 @@ export const createWalletAddress: MutationResolvers<ForTenantIdContext>['createW
       })
 
     const tenantId = ctx.forTenantId
+
     if (!tenantId)
       throw new GraphQLError(
         `Assignment to the specified tenant is not permitted`,
@@ -122,7 +123,8 @@ export const createWalletAddress: MutationResolvers<ForTenantIdContext>['createW
       tenantId,
       additionalProperties: addProps,
       publicName: args.input.publicName,
-      address: args.input.address
+      address: args.input.address,
+      isOperator: ctx.isOperator
     }
 
     const walletAddressOrError = await walletAddressService.create(options)

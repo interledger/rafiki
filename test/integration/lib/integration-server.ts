@@ -141,7 +141,7 @@ export class WebhookEventHandler {
     await this.accounts.setWalletAddress(
       account.id,
       walletAddress.id,
-      walletAddress.url
+      walletAddress.address
     )
   }
 

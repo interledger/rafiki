@@ -333,12 +333,13 @@ export async function createWalletAddress(
       createWalletAddress(input: $input) {
         walletAddress {
           id
-          url
+          address
           publicName
         }
       }
     }
   `
+
   const createWalletAddressInput: CreateWalletAddressInput = {
     assetId,
     address: accountUrl,
@@ -485,7 +486,7 @@ async function getWalletAddressByURL(
       walletAddressByUrl(url: $url) {
         id
         liquidity
-        url
+        address
         publicName
         asset {
           id
