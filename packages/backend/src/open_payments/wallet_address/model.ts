@@ -56,7 +56,7 @@ export class WalletAddress
   public keys?: WalletAddressKey[]
   public additionalProperties?: WalletAddressAdditionalProperty[]
 
-  public url!: string
+  public address!: string
   public publicName?: string
 
   public readonly assetId!: string
@@ -124,7 +124,7 @@ export class WalletAddress
     resourceServer: string
   }): OpenPaymentsWalletAddress {
     const returnVal: OpenPaymentsWalletAddress = {
-      id: this.url,
+      id: this.address,
       publicName: this.publicName,
       assetCode: this.asset.code,
       assetScale: this.asset.scale,
