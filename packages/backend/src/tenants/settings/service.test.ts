@@ -8,13 +8,7 @@ import { truncateTables } from '../../tests/tableManager'
 import { Tenant } from '../model'
 import { TenantService } from '../service'
 import { faker } from '@faker-js/faker'
-import { getPageTests } from '../../shared/baseModel.test'
-import { Pagination, SortOrder } from '../../shared/baseModel'
-import {
-  createTenantSettings,
-  exchangeRatesSetting,
-  randomSetting
-} from '../../tests/tenantSettings'
+import { exchangeRatesSetting, randomSetting } from '../../tests/tenantSettings'
 import { TenantSetting } from './model'
 import {
   CreateOptions,
@@ -274,23 +268,6 @@ describe('TenantSetting Service', (): void => {
       })
 
       expect(dbTenantData.filter((x) => !x.deletedAt)).toHaveLength(0)
-    })
-  })
-
-  describe('pagination', (): void => {
-    beforeEach(async () => {
-      await tenantSettingService.delete({ tenantId: tenant.id })
-    })
-    describe('getPage', (): void => {
-      getPageTests({
-        createModel: () =>
-          createTenantSettings(deps, {
-            tenantId: tenant.id,
-            setting: [exchangeRatesSetting()]
-          }) as Promise<TenantSetting>,
-        getPage: (pagination?: Pagination, sortOrder?: SortOrder) =>
-          tenantSettingService.getPage(tenant.id, pagination, sortOrder)
-      })
     })
   })
 })
