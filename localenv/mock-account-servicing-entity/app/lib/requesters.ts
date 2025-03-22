@@ -88,7 +88,7 @@ export async function createWalletAddress(
       createWalletAddress(input: $input) {
         walletAddress {
           id
-          url
+          address
           publicName
         }
       }
