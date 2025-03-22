@@ -400,10 +400,20 @@ describe('Wallet Address Resolvers', (): void => {
         },
         nonOperatorTenant.id
       )
+      await createTenantSettings(deps, {
+        tenantId: nonOperatorTenant.id,
+        setting: [
+          {
+            key: TenantSettingKeys.WALLET_ADDRESS_URL.name,
+            value: 'https://bob.me'
+          }
+        ]
+      })
+
       const input = {
         tenantId: nonOperatorTenant.id,
         assetId: asset.id,
-        url: 'https://bob.me/.well-known/pay'
+        address: 'https://bob.me/.well-known/pay'
       }
       const response = await appContainer.apolloClient // operator client
         .mutate({
@@ -416,7 +426,7 @@ describe('Wallet Address Resolvers', (): void => {
                     code
                     scale
                   }
-                  url
+                  address
                 }
               }
             }
@@ -437,7 +447,7 @@ describe('Wallet Address Resolvers', (): void => {
       expect(response.walletAddress).toEqual({
         __typename: 'WalletAddress',
         id: response.walletAddress.id,
-        url: input.url,
+        address: input.address,
         asset: {
           __typename: 'Asset',
           code: asset.code,
