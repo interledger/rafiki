@@ -5,7 +5,7 @@ meta {
 }
 
 post {
-  url: {{RafikiGraphqlHost}}/graphql
+  address: {{RafikiGraphqlHost}}/graphql
   body: graphql
   auth: none
 }
@@ -17,7 +17,7 @@ body:graphql {
         id
         createdAt
         publicName
-        url
+        address
         status
         asset {
           code
