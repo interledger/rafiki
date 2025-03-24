@@ -12,11 +12,7 @@ import {
   errorToMessage,
   PeerError
 } from '../../payment-method/ilp/peer/errors'
-import {
-  ApolloContext,
-  ForTenantIdContext,
-  TenantedApolloContext
-} from '../../app'
+import { ForTenantIdContext, TenantedApolloContext } from '../../app'
 import { getPageInfo } from '../../shared/pagination'
 import { Pagination, SortOrder } from '../../shared/baseModel'
 import { GraphQLError } from 'graphql'

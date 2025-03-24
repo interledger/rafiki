@@ -12,11 +12,7 @@ import {
   OutgoingPaymentResolvers,
   PaymentResolvers
 } from '../generated/graphql'
-import {
-  ApolloContext,
-  ForTenantIdContext,
-  TenantedApolloContext
-} from '../../app'
+import { ApolloContext, TenantedApolloContext } from '../../app'
 import {
   fundingErrorToMessage,
   fundingErrorToCode,

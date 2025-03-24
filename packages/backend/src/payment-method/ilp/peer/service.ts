@@ -22,7 +22,6 @@ import { BaseService } from '../../../shared/baseService'
 import { isValidHttpUrl } from '../../../shared/utils'
 import { v4 as uuid } from 'uuid'
 import { TransferError } from '../../../accounting/errors'
-import { Config } from '../../../config/app'
 
 export interface HttpOptions {
   incoming?: {
