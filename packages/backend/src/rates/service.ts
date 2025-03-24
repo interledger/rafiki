@@ -39,6 +39,10 @@ export interface RatesService {
 }
 
 interface ServiceDependencies extends BaseService {
+  // Default exchange rates `url` of the operator.
+  // If tenant doesn't set a specific url in the db, this one will be used.
+  // In case neither tenant nor operator doesn't set an exchange url, the connector cannot convert between currencies.
+  operatorExchangeRatesUrl?: string
   // Duration (milliseconds) that the fetched rates are valid.
   exchangeRatesLifetime: number
   // Used for getting the exchange rates URL from db.
@@ -220,6 +224,10 @@ class RatesServiceImpl implements RatesService {
         tenantId,
         key: TenantSettingKeys.EXCHANGE_RATES_URL.name
       })
+
+      if (!exchangeUrlSetting) {
+        return this.deps.operatorExchangeRatesUrl
+      }
 
       const tenantExchangeRatesUrl = Array.isArray(exchangeUrlSetting)
         ? exchangeUrlSetting[0].value
