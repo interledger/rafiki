@@ -21,6 +21,8 @@ import { isWalletAddressError } from '../open_payments/wallet_address/errors'
 import { PeerService } from '../payment-method/ilp/peer/service'
 import { isPeerError } from '../payment-method/ilp/peer/errors'
 import { CacheDataStore } from '../middleware/cache/data-stores'
+import { createTenantSettings } from '../tests/tenantSettings'
+import { TenantSettingKeys } from '../tenants/settings/model'
 
 describe('Asset Service', (): void => {
   let deps: IocContract<AppServices>
@@ -43,6 +45,18 @@ describe('Asset Service', (): void => {
 
   afterAll(async (): Promise<void> => {
     await appContainer.shutdown()
+  })
+
+  beforeEach(async () => {
+    await createTenantSettings(deps, {
+      tenantId: Config.operatorTenantId,
+      setting: [
+        {
+          key: TenantSettingKeys.WALLET_ADDRESS_URL.name,
+          value: 'https://alice.me'
+        }
+      ]
+    })
   })
 
   describe('create', (): void => {
@@ -325,8 +339,8 @@ describe('Asset Service', (): void => {
       const newAssetId = newAsset.id
 
       // make sure there is at least 1 wallet address using asset
-      const walletAddress = walletAddressService.create({
-        url: 'https://alice.me/.well-known/pay',
+      const walletAddress = await walletAddressService.create({
+        address: 'https://alice.me/.well-known/pay',
         tenantId: Config.operatorTenantId,
         assetId: newAssetId
       })
