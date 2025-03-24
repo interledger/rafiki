@@ -45,12 +45,11 @@ export type Options = {
 
 export type CreateOptions = Options & {
   assetId: string
-  tenantId?: string
 }
 
 export type UpdateOptions = Partial<Options> & {
   id: string
-  tenantId: string
+  tenantId?: string
 }
 
 interface DepositPeerLiquidityArgs {
@@ -70,7 +69,11 @@ export interface PeerService {
     assetId?: string
   ): Promise<Peer | undefined>
   getByIncomingToken(token: string): Promise<Peer | undefined>
-  getPage(pagination?: Pagination, sortOrder?: SortOrder): Promise<Peer[]>
+  getPage(
+    pagination?: Pagination,
+    sortOrder?: SortOrder,
+    tenantId?: string
+  ): Promise<Peer[]>
   depositLiquidity(
     args: DepositPeerLiquidityArgs
   ): Promise<void | PeerError.UnknownPeer | TransferError>
@@ -108,8 +111,8 @@ export async function createPeerService({
     getByDestinationAddress: (destinationAddress, tenantId, assetId) =>
       getPeerByDestinationAddress(deps, destinationAddress, tenantId, assetId),
     getByIncomingToken: (token) => getPeerByIncomingToken(deps, token),
-    getPage: (pagination?, sortOrder?) =>
-      getPeersPage(deps, pagination, sortOrder),
+    getPage: (pagination?, sortOrder?, tenantId?) =>
+      getPeersPage(deps, pagination, sortOrder, tenantId),
     depositLiquidity: (args) => depositLiquidityById(deps, args),
     delete: (id, tenantId) => deletePeer(deps, id, tenantId)
   }
@@ -140,6 +143,11 @@ async function createPeer(
     return PeerError.InvalidHTTPEndpoint
   }
 
+  const asset = await deps.assetService.get(options.assetId)
+  if (!asset) {
+    return PeerError.UnknownAsset
+  }
+
   try {
     return await Peer.transaction(deps.knex, async (trx) => {
       const peer = await Peer.query(trx).insertAndFetch({
@@ -149,10 +157,9 @@ async function createPeer(
         staticIlpAddress: options.staticIlpAddress,
         name: options.name,
         liquidityThreshold: options.liquidityThreshold,
-        tenantId: options.tenantId ?? Config.operatorTenantId
+        tenantId: asset.tenantId
       })
-      const asset = await deps.assetService.get(peer.assetId)
-      if (asset) peer.asset = asset
+      peer.asset = asset
 
       if (options.http?.incoming) {
         const err = await addIncomingHttpTokens({
@@ -395,9 +402,15 @@ async function getPeerByIncomingToken(
 async function getPeersPage(
   deps: ServiceDependencies,
   pagination?: Pagination,
-  sortOrder?: SortOrder
+  sortOrder?: SortOrder,
+  tenantId?: string
 ): Promise<Peer[]> {
-  const peers = await Peer.query(deps.knex).getPage(pagination, sortOrder)
+  let query = Peer.query(deps.knex)
+  if (tenantId) {
+    query = query.where('tenantId', tenantId)
+  }
+
+  const peers = await query.getPage(pagination, sortOrder)
   for (const peer of peers) {
     const asset = await deps.assetService.get(peer.assetId)
     if (asset) peer.asset = asset

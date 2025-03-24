@@ -167,7 +167,7 @@ export const depositAssetLiquidity: MutationResolvers<ApolloContext>['depositAss
     }
   }
 
-export const createPeerLiquidityWithdrawal: MutationResolvers<ForTenantIdContext>['createPeerLiquidityWithdrawal'] =
+export const createPeerLiquidityWithdrawal: MutationResolvers<TenantedApolloContext>['createPeerLiquidityWithdrawal'] =
   async (
     parent,
     args,
@@ -182,7 +182,7 @@ export const createPeerLiquidityWithdrawal: MutationResolvers<ForTenantIdContext
       })
     }
     const peerService = await ctx.container.use('peerService')
-    const peer = await peerService.get(peerId, ctx.forTenantId)
+    const peer = await peerService.get(peerId, ctx.tenant.id)
     if (!peer) {
       throw new GraphQLError(errorToMessage[LiquidityError.UnknownPeer], {
         extensions: {

@@ -21,18 +21,22 @@ import { getPageInfo } from '../../shared/pagination'
 import { Pagination, SortOrder } from '../../shared/baseModel'
 import { GraphQLError } from 'graphql'
 
-export const getPeers: QueryResolvers<ApolloContext>['peers'] = async (
+export const getPeers: QueryResolvers<TenantedApolloContext>['peers'] = async (
   parent,
   args,
   ctx
 ): Promise<ResolversTypes['PeersConnection']> => {
   const peerService = await ctx.container.use('peerService')
   const { sortOrder, ...pagination } = args
+  const tenantId = ctx.isOperator ? undefined : ctx.tenant.id
   const order = sortOrder === 'ASC' ? SortOrder.Asc : SortOrder.Desc
-  const peers = await peerService.getPage(pagination, order)
+  const peers = await peerService.getPage(pagination, order, tenantId)
   const pageInfo = await getPageInfo({
-    getPage: (pagination: Pagination, sortOrder?: SortOrder) =>
-      peerService.getPage(pagination, sortOrder),
+    getPage: (
+      pagination: Pagination,
+      sortOrder?: SortOrder,
+      tenantId?: string
+    ) => peerService.getPage(pagination, sortOrder, tenantId),
     page: peers,
     sortOrder: order
   })
@@ -80,10 +84,7 @@ export const createPeer: MutationResolvers<ForTenantIdContext>['createPeer'] =
     ctx
   ): Promise<ResolversTypes['CreatePeerMutationResponse']> => {
     const peerService = await ctx.container.use('peerService')
-    const peerOrError = await peerService.create({
-      ...args.input,
-      tenantId: ctx.forTenantId
-    })
+    const peerOrError = await peerService.create(args.input)
     if (isPeerError(peerOrError)) {
       throw new GraphQLError(errorToMessage[peerOrError], {
         extensions: {
@@ -105,7 +106,7 @@ export const updatePeer: MutationResolvers<TenantedApolloContext>['updatePeer'] 
     const peerService = await ctx.container.use('peerService')
     const peerOrError = await peerService.update({
       ...args.input,
-      tenantId: ctx.tenant.id
+      tenantId: ctx.isOperator ? undefined : ctx.tenant.id
     })
     if (isPeerError(peerOrError)) {
       throw new GraphQLError(errorToMessage[peerOrError], {

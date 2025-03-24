@@ -41,7 +41,6 @@ describe('Peer Service', (): void => {
     staticIlpAddress: 'test.' + uuid(),
     name: faker.person.fullName(),
     liquidityThreshold: BigInt(10000),
-    tenantId,
     ...override
   })
 
@@ -459,8 +458,11 @@ describe('Peer Service', (): void => {
   describe('Peer pagination', (): void => {
     getPageTests({
       createModel: () => createPeer(deps, { assetId: asset.id }),
-      getPage: (pagination?: Pagination, sortOrder?: SortOrder) =>
-        peerService.getPage(pagination, sortOrder)
+      getPage: (
+        pagination?: Pagination,
+        sortOrder?: SortOrder,
+        tenantId?: string
+      ) => peerService.getPage(pagination, sortOrder, tenantId)
     })
   })
 
