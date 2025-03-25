@@ -116,7 +116,10 @@ export const Config = {
   ),
 
   exchangeRatesLifetime: +(process.env.EXCHANGE_RATES_LIFETIME || 15_000),
-  operatorExchangeRatesUrl: process.env.EXCHANGE_RATES_URL, // optional
+  operatorExchangeRatesUrl:
+    process.env.NODE_ENV === 'test'
+      ? envString('EXCHANGE_RATES_URL', 'http://example.com/rates')
+      : process.env.EXCHANGE_RATES_URL, // optional
   slippage: envFloat('SLIPPAGE', 0.01),
   quoteLifespan: envInt('QUOTE_LIFESPAN', 5 * 60_000), // milliseconds
 

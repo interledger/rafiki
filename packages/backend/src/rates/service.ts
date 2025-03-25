@@ -225,13 +225,13 @@ class RatesServiceImpl implements RatesService {
         key: TenantSettingKeys.EXCHANGE_RATES_URL.name
       })
 
-      if (!exchangeUrlSetting) {
+      const tenantExchangeRatesUrl = Array.isArray(exchangeUrlSetting)
+        ? exchangeUrlSetting[0]?.value
+        : exchangeUrlSetting?.value
+
+      if (!tenantExchangeRatesUrl) {
         return this.deps.operatorExchangeRatesUrl
       }
-
-      const tenantExchangeRatesUrl = Array.isArray(exchangeUrlSetting)
-        ? exchangeUrlSetting[0].value
-        : exchangeUrlSetting.value
 
       await this.cache.set(urlCacheKey, tenantExchangeRatesUrl)
 

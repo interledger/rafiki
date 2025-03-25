@@ -331,10 +331,13 @@ export function initIocContainer(
   container.singleton('assetService', async (deps) => {
     const logger = await deps.use('logger')
     const knex = await deps.use('knex')
+    const config = await deps.use('config')
     return await createAssetService({
+      config: config,
       logger: logger,
       knex: knex,
       accountingService: await deps.use('accountingService'),
+      tenantSettingService: await deps.use('tenantSettingService'),
       assetCache: await deps.use('assetCache')
     })
   })
