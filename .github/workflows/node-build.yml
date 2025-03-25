@@ -28,6 +28,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/workflows/rafiki/env-setup
+      - name: Debug PNPM Store and Links
+        run: |
+          pnpm store status
+          ls -la node_modules/token-introspection || echo "token-introspection not found in root node_modules"
+          ls -la packages/backend/node_modules/token-introspection || echo "token-introspection not found in backend node_modules"
+          pnpm list token-introspection
       - run: NODE_OPTIONS="--max-old-space-size=4096" pnpm --filter backend test:ci
       - name: AsyncAPI extension
         run: |
