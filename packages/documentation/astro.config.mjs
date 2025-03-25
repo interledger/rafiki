@@ -31,7 +31,7 @@ export default defineConfig({
       description:
         'Rafiki is open source software that allows an Account Servicing Entity to enable Interledger functionality on its users’ accounts.',
       customCss: [
-        './node_modules/@interledger/docs-design-system/src/styles/orange-theme.css',
+        './node_modules/@interledger/docs-design-system/src/styles/teal-theme.css',
         './node_modules/@interledger/docs-design-system/src/styles/ilf-docs.css',
         './src/styles/rafiki.css'
       ],
