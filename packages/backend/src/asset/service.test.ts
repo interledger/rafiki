@@ -9,8 +9,8 @@ import { Pagination, SortOrder } from '../shared/baseModel'
 import { getPageTests } from '../shared/baseModel.test'
 import { createTestApp, TestContainer } from '../tests/app'
 import { createAsset, randomAsset } from '../tests/asset'
-import { truncateTables } from '../tests/tableManager'
-import { Config } from '../config/app'
+import { truncateTable, truncateTables } from '../tests/tableManager'
+import { Config, IAppConfig } from '../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../'
 import { AppServices } from '../app'
@@ -21,6 +21,11 @@ import { isWalletAddressError } from '../open_payments/wallet_address/errors'
 import { PeerService } from '../payment-method/ilp/peer/service'
 import { isPeerError } from '../payment-method/ilp/peer/errors'
 import { CacheDataStore } from '../middleware/cache/data-stores'
+import {
+  CreateOptions,
+  TenantSettingService
+} from '../tenants/settings/service'
+import { exchangeRatesSetting } from '../tests/tenantSettings'
 
 describe('Asset Service', (): void => {
   let deps: IocContract<AppServices>
@@ -28,13 +33,34 @@ describe('Asset Service', (): void => {
   let assetService: AssetService
   let peerService: PeerService
   let walletAddressService: WalletAddressService
+  let tenantSettingService: TenantSettingService
+  let config: IAppConfig
 
   beforeAll(async (): Promise<void> => {
     deps = initIocContainer(Config)
     appContainer = await createTestApp(deps)
+    config = await deps.use('config')
     assetService = await deps.use('assetService')
     walletAddressService = await deps.use('walletAddressService')
+    tenantSettingService = await deps.use('tenantSettingService')
     peerService = await deps.use('peerService')
+  })
+
+  beforeEach(async (): Promise<void> => {
+    const createOptions: CreateOptions = {
+      tenantId: Config.operatorTenantId,
+      setting: [exchangeRatesSetting()]
+    }
+
+    const tenantSetting = await tenantSettingService.create(createOptions)
+
+    expect(tenantSetting).toEqual([
+      expect.objectContaining({
+        tenantId: Config.operatorTenantId,
+        key: createOptions.setting[0].key,
+        value: createOptions.setting[0].value
+      })
+    ])
   })
 
   afterEach(async (): Promise<void> => {
@@ -122,6 +148,25 @@ describe('Asset Service', (): void => {
       await expect(assetService.create(options)).resolves.toMatchObject(options)
       await expect(assetService.create(options)).resolves.toEqual(
         AssetError.DuplicateAsset
+      )
+    })
+
+    test('Cannot create more than one asset if no exchange rates URL is set', async (): Promise<void> => {
+      await truncateTable(appContainer.knex, 'tenantSettings')
+      config.operatorExchangeRatesUrl = undefined
+      const firstAssetOptions = {
+        ...randomAsset(),
+        tenantId: Config.operatorTenantId
+      }
+      await expect(
+        assetService.create(firstAssetOptions)
+      ).resolves.toMatchObject(firstAssetOptions)
+      const secondAssetOptions = {
+        ...randomAsset(),
+        tenantId: Config.operatorTenantId
+      }
+      await expect(assetService.create(secondAssetOptions)).resolves.toEqual(
+        AssetError.NoRatesForAsset
       )
     })
 

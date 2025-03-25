@@ -64,7 +64,10 @@ async function getQuote(
 
   let rates
   try {
-    rates = await deps.ratesService.rates(options.walletAddress.asset.code)
+    rates = await deps.ratesService.rates(
+      options.walletAddress.asset.code,
+      options.walletAddress.tenantId
+    )
   } catch (_err) {
     throw new PaymentMethodHandlerError('Received error during ILP quoting', {
       description: 'Could not get rates from service',
