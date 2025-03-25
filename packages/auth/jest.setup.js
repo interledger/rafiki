@@ -7,6 +7,9 @@ const POSTGRES_PORT = 5432
 const REDIS_PORT = 6379
 
 module.exports = async (globalConfig) => {
+  console.log('auth module resolution for ti')
+  console.log(require.resolve('token-introspection'))
+
   const workers = globalConfig.maxWorkers
 
   if (!process.env.AUTH_DATABASE_URL) {

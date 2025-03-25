@@ -5,6 +5,9 @@ const POSTGRES_PORT = 5432
 const REDIS_PORT = 6379
 
 const setup = async (globalConfig): Promise<void> => {
+  console.log('backend module resolution for ti')
+  console.log(require.resolve('token-introspection'))
+
   const workers = globalConfig.maxWorkers
 
   const setupDatabase = async () => {
