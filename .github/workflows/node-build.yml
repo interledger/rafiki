@@ -31,7 +31,7 @@ jobs:
       - name: Debug PNPM Store and Links
         run: |
           pnpm list token-introspection
-      - run: pnpm --filter backend build:deps
+      - run: pnpm --filter token-introspection build
       - name: Debug PNPM Store and Links
         run: |
           pnpm list token-introspection
