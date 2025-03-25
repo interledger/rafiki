@@ -31,7 +31,10 @@ jobs:
       - name: Debug PNPM Store and Links
         run: |
           pnpm list token-introspection
-      - run: pnpm --filter auth build:deps
+      - run: pnpm --filter backend build:deps
+      - name: Debug PNPM Store and Links
+        run: |
+          pnpm list token-introspection
       - run: NODE_OPTIONS="--max-old-space-size=4096" pnpm --filter backend test:ci
       - name: AsyncAPI extension
         run: |
