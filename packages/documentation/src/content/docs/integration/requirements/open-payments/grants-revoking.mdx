@@ -1,0 +1,90 @@
+---
+title: Viewing and revoking grants
+---
+
+import { Badge } from '@astrojs/starlight/components'
+import { Mermaid, CodeBlock, LinkOut } from '@interledger/docs-design-system'
+
+Grants are the mechanism in Open Payments by which your account holders give permission to a client application to access their accounts and send payments on their behalf. Providing your account holders the ability to view and review grants is not a requirement to implement and operate Rafiki. However, giving your account holders the ability to view and revoke grants is critical to providing them an optimal user experience.
+
+## View grants
+
+Use the `Grants` GraphQL query to look up all grants associated with a wallet address.
+
+<CodeBlock title='Grants query'>
+
+```graphql
+query Grants($input: ) {
+  Grants(input: $input) {
+
+  }
+}
+```
+
+</CodeBlock>
+
+#### Example
+
+<CodeBlock title="Example JSON request">
+
+```json
+{
+  "input": {}
+}
+```
+
+</CodeBlock>
+
+<CodeBlock title='Grants'>
+
+```graphql
+
+```
+
+</CodeBlock>
+
+#### Example
+
+<CodeBlock title="Example JSON request">
+
+```json
+
+```
+
+</CodeBlock>
+
+## Revoke a grant
+
+Use the `revokeGrant` GraphQL mutation to revoke a particular grant.
+
+<CodeBlock title='revokeGrant mutation'>
+
+```graphql
+mutation RevokeGrant($input: RevokeGrantInput!) {
+  revokeGrant(input: $input) {
+    RevokeGrantInput {
+      grantId
+    }
+  }
+}
+```
+
+</CodeBlock>
+
+#### Example
+
+<CodeBlock title="Example JSON request">
+
+```json
+
+```
+
+</CodeBlock>
+
+<CodeBlock title='Example JSON response'>
+
+```json
+{}
+```
+
+</CodeBlock>
