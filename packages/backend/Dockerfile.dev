@@ -30,5 +30,6 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
     --recursive \
     --offline \
     --frozen-lockfile
+RUN pnpm --filter backend build:deps
 
 CMD pnpm --filter backend dev
