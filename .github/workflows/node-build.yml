@@ -28,6 +28,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/workflows/rafiki/env-setup
+      - run : pnpm --filter token-introspection build
       - run: NODE_OPTIONS="--max-old-space-size=4096" pnpm --filter backend test:ci
       - name: AsyncAPI extension
         run: |
