@@ -3,6 +3,7 @@ title: Peers
 ---
 
 import { CodeBlock, LinkOut } from '@interledger/docs-design-system'
+import { Badge } from '@astrojs/starlight/components'
 
 To join the Interledger network and be able to send and receive payments, you must add one or more peers to your Rafiki instance. Peering establishes the connections needed for your Rafiki instance to interact with another account servicing entity (ASE). The purpose of this guide is to help you set up and manage peers.
 
@@ -14,7 +15,7 @@ Refer to the [Rafiki Admin user guide](/admin/admin-user-guide#peers) for detail
 Whether you are using the Backend Admin API or the Rafiki Admin application, the underlying configurations and requirements remain the same. Choose the interface that best suits your individual workflow.
 :::
 
-## Prerequisites
+## Perform prerequisites
 
 :::note
 Peering is not required unless you want to participate in transactions with another ASE on the Interledger network. For foundational peering concepts, refer to the Peers section of [Interledger Concepts](/overview/concepts/interledger/#peers).
@@ -22,17 +23,39 @@ Peering is not required unless you want to participate in transactions with anot
 
 Before adding a peer, you and the account servicing entity you intend to peer with must both:
 
-- Run an implementation of an [Interledger connector](/integration/deployment/services/backend-service#interledger-connector) (ideally Rafiki).
-- Agree on an [asset](/overview/concepts/accounting#assets) for the peering relationship. You can set up multiple peering relationships with the same peer based on different assets. At least one asset shared by you and your peer must be added to your Rafiki instance prior to setting up the peering relationship. For more information, refer to [Assets](/integration/requirements/assets/).
-- Exchange static <LinkOut href="https://interledger.org/developers/rfcs/ilp-addresses/">Interledger (ILP) addresses</LinkOut> with your peer. Your ILP address is self-assigned during Rafiki setup and stored locally as the `ILP_ADDRESS` environment variable for the `backend` service.
-- Communicate a connection endpoint for the other peer to send packets to.
-- Exchange `auth` tokens for the connection endpoint.
-- Agree on a settlement mechanism (a means of paying one another for the successful forwarding and delivery of packets), which is outside the scope of Interledger and Rafiki.
+### Run an Interledger connector
 
-### Optional settings
+While you and your peer may run any implementation of an [Interledger connector](/integration/deployment/services/backend-service#interledger-connector) such as the <LinkOut href="https://github.com/interledger/interledgerjs">TypeScript implementation</LinkOut>, it is recommended to use Rafiki.
 
-- Deposit an `initialLiquidity` for your peer. You can deposit liquidity later using the `depositPeerLiquidity` mutation.
-- Define a `maxPacketAmount` value, which specifies the maximum packet size you are willing to accept from the peer. Your peer's `maxPacketAmount` value does not need to match, as this value is independently set by each ASE. If omitted, payments will not be broken into smaller packets.
+### Agree on an asset
+
+Both you and your peer must agree on an [asset](/overview/concepts/accounting#assets) for the peering relationship. You can set up multiple peering relationships with the same peer based on different assets. At least one asset shared by you and your peer must be added to your Rafiki instance prior to setting up the peering relationship. For more information, refer to [Assets](/integration/requirements/assets/).
+
+### Exchange static Interledger (ILP) addresses
+
+Your <LinkOut href="https://interledger.org/developers/rfcs/ilp-addresses/">ILP address</LinkOut> is self-assigned during Rafiki setup and stored locally as the `ILP_ADDRESS` environment variable for the `backend` service.
+
+### Communicate a connection endpoint
+
+The connection endpoint will be a url that the other peer will send packets to.
+
+### Exchange auth tokens for the connection endpoint
+
+Incoming `authtokens` allow you to authenticate that packets sent from your peer originated from your peer's Interledger connector and were not tampered en route. The outgoing `authtoken` allows your peer to authenticate that received packets originated from your Interledger connector and were not tampered with en route. The use of auth tokens is not required when [autopeering with the Test Network](/integration/playground/autopeering).
+
+### Agree on a settlement mechanism
+
+The settlement mechanism you both agree to use is what facilitates the transfer of actual funds between you and your peer. Neither Interledger nor Rafiki provide a settlement mechanism.
+
+## Perform optional prerequisites
+
+### Deposit an initial liquidity for your peer
+
+While you may deposit an `initiaLiquidity` for your peer, you can deposit liquidity later using the `depositPeerLiquidity` mutation.
+
+### Define a maxPacketAmout value
+
+The `maxPacketAmount` specifies the maximum packet size you are willing to accept from the peer. Your peer's `maxPacketAmount` value does not need to match, as this value is independently set by each ASE. If omitted, payments will not be broken into smaller packets.
 
 ## Set up peering in Rafiki
 

@@ -3,6 +3,7 @@ import { BaseService } from '../shared/baseService'
 import { FeeError } from './errors'
 import { Fee, FeeType } from './model'
 import { Pagination, SortOrder } from '../shared/baseModel'
+import { CacheDataStore } from '../middleware/cache/data-stores'
 
 export interface CreateOptions {
   assetId: string
@@ -21,19 +22,24 @@ export interface FeeService {
     sortOrder?: SortOrder
   ): Promise<Fee[]>
   getLatestFee(assetId: string, type: FeeType): Promise<Fee | undefined>
+  get(id: string): Promise<Fee | undefined>
 }
 
-type ServiceDependencies = BaseService
+interface ServiceDependencies extends BaseService {
+  feeCache: CacheDataStore<Fee>
+}
 
 export async function createFeeService({
   logger,
-  knex
+  knex,
+  feeCache
 }: ServiceDependencies): Promise<FeeService> {
   const deps: ServiceDependencies = {
     logger: logger.child({
       service: 'FeeService'
     }),
-    knex
+    knex,
+    feeCache
   }
   return {
     create: (options: CreateOptions) => createFee(deps, options),
@@ -43,7 +49,8 @@ export async function createFeeService({
       sortOrder = SortOrder.Desc
     ) => getFeesPage(deps, assetId, pagination, sortOrder),
     getLatestFee: (assetId: string, type: FeeType) =>
-      getLatestFee(deps, assetId, type)
+      getLatestFee(deps, assetId, type),
+    get: (id: string) => getById(deps, id)
   }
 }
 
@@ -60,15 +67,42 @@ async function getFeesPage(
   return await query
 }
 
+async function getById(
+  deps: ServiceDependencies,
+  id: string
+): Promise<Fee | undefined> {
+  const cachedFee = await deps.feeCache.get(id)
+
+  if (cachedFee) {
+    return cachedFee
+  }
+
+  const fee = await Fee.query(deps.knex).findById(id)
+
+  if (fee) await deps.feeCache.set(id, fee)
+
+  return fee
+}
+
 async function getLatestFee(
   deps: ServiceDependencies,
   assetId: string,
   type: FeeType
 ): Promise<Fee | undefined> {
-  return await Fee.query(deps.knex)
+  const cachedFee = await deps.feeCache.get(`${assetId}${type}`)
+
+  if (cachedFee) {
+    return cachedFee
+  }
+
+  const latestFee = await Fee.query(deps.knex)
     .where({ assetId, type })
     .orderBy('createdAt', 'desc')
     .first()
+
+  if (latestFee) await deps.feeCache.set(`${assetId}${type}`, latestFee)
+
+  return latestFee
 }
 
 async function createFee(
@@ -86,12 +120,15 @@ async function createFee(
   }
 
   try {
-    return await Fee.query(deps.knex).insertAndFetch({
+    const fee = await Fee.query(deps.knex).insertAndFetch({
       assetId: assetId,
       type: type,
       basisPointFee: basisPoints,
       fixedFee: fixed
     })
+
+    await deps.feeCache.set(`${assetId}${type}`, fee)
+    return fee
   } catch (error) {
     if (error instanceof ForeignKeyViolationError) {
       return FeeError.UnknownAsset
