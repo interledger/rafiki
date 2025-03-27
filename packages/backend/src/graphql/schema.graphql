@@ -47,6 +47,8 @@ type Query {
     last: Int
     "Specify the sort order of peers based on their creation date, either ascending or descending."
     sortOrder: SortOrder
+    "Unique identifier of the tenant associated with the peer."
+    tenantId: ID
   ): PeersConnection!
 
   "Fetch a wallet address by its ID."

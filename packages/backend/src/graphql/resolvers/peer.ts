@@ -24,7 +24,7 @@ export const getPeers: QueryResolvers<TenantedApolloContext>['peers'] = async (
 ): Promise<ResolversTypes['PeersConnection']> => {
   const peerService = await ctx.container.use('peerService')
   const { sortOrder, ...pagination } = args
-  const tenantId = ctx.isOperator ? undefined : ctx.tenant.id
+  const tenantId = ctx.isOperator ? args.tenantId : ctx.tenant.id
   const order = sortOrder === 'ASC' ? SortOrder.Asc : SortOrder.Desc
   const peers = await peerService.getPage(pagination, order, tenantId)
   const pageInfo = await getPageInfo({

@@ -41,6 +41,7 @@ describe('Peer Service', (): void => {
     staticIlpAddress: 'test.' + uuid(),
     name: faker.person.fullName(),
     liquidityThreshold: BigInt(10000),
+    tenantId: Config.operatorTenantId,
     ...override
   })
 

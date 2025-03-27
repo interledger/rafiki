@@ -84,7 +84,8 @@ describe('Auto Peering Service', (): void => {
             authToken: expect.any(String),
             endpoint: args.ilpConnectorUrl
           }
-        }
+        },
+        tenantId
       })
     })
 
@@ -250,8 +251,7 @@ describe('Auto Peering Service', (): void => {
             ilpConnectorUrl: config.ilpConnectorUrl,
             maxPacketAmount: Number(args.maxPacketAmount),
             name: config.instanceName,
-            staticIlpAddress: config.ilpAddress,
-            tenantId
+            staticIlpAddress: config.ilpAddress
           })
           return body
         })
@@ -277,7 +277,8 @@ describe('Auto Peering Service', (): void => {
         },
         maxPacketAmount: args.maxPacketAmount,
         name: peerDetails.name,
-        liquidityThreshold: args.liquidityThreshold
+        liquidityThreshold: args.liquidityThreshold,
+        tenantId
       })
 
       scope.done()
@@ -314,8 +315,7 @@ describe('Auto Peering Service', (): void => {
             ilpConnectorUrl: config.ilpConnectorUrl,
             maxPacketAmount: Number(args.maxPacketAmount),
             name: config.instanceName,
-            staticIlpAddress: config.ilpAddress,
-            tenantId
+            staticIlpAddress: config.ilpAddress
           })
           return body
         })
@@ -363,8 +363,7 @@ describe('Auto Peering Service', (): void => {
             ilpConnectorUrl: config.ilpConnectorUrl,
             maxPacketAmount: Number(args.maxPacketAmount),
             name: config.instanceName,
-            staticIlpAddress: config.ilpAddress,
-            tenantId
+            staticIlpAddress: config.ilpAddress
           })
           return body
         })
@@ -416,7 +415,8 @@ describe('Auto Peering Service', (): void => {
           }
         },
         maxPacketAmount: args.maxPacketAmount,
-        name: args.name
+        name: args.name,
+        tenantId
       })
 
       scope.done()

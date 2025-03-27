@@ -44,6 +44,7 @@ export type Options = {
 
 export type CreateOptions = Options & {
   assetId: string
+  tenantId?: string
 }
 
 export type UpdateOptions = Partial<Options> & {
@@ -142,7 +143,7 @@ async function createPeer(
     return PeerError.InvalidHTTPEndpoint
   }
 
-  const asset = await deps.assetService.get(options.assetId)
+  const asset = await deps.assetService.get(options.assetId, options.tenantId)
   if (!asset) {
     return PeerError.UnknownAsset
   }

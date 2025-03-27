@@ -1,5 +1,5 @@
 import { AssetService } from '../../../asset/service'
-import { Config, IAppConfig } from '../../../config/app'
+import { IAppConfig } from '../../../config/app'
 import { isPeerError, PeerError } from '../peer/errors'
 import { PeerService } from '../peer/service'
 import { BaseService } from '../../../shared/baseService'
@@ -34,7 +34,7 @@ export interface PeeringRequestArgs {
   httpToken: string
   maxPacketAmount?: number
   name?: string
-  tenantId: string
+  tenantId?: string
 }
 
 interface UpdatePeerArgs {
@@ -105,8 +105,7 @@ async function initiatePeeringRequest(
     asset: { code: asset.code, scale: asset.scale },
     httpToken: outgoingHttpToken,
     maxPacketAmount: Number(args.maxPacketAmount),
-    name: deps.config.instanceName,
-    tenantId: Config.operatorTenantId
+    name: deps.config.instanceName
   })
 
   if (isAutoPeeringError(peeringDetailsOrError)) {
@@ -127,7 +126,8 @@ async function initiatePeeringRequest(
         authToken: outgoingHttpToken,
         endpoint: peeringDetailsOrError.ilpConnectorUrl
       }
-    }
+    },
+    tenantId: args.tenantId
   })
 
   const isDuplicatePeer =
@@ -254,7 +254,8 @@ async function acceptPeeringRequest(
         authToken: outgoingHttpToken
       }
     },
-    initialLiquidity: BigInt(Number.MAX_SAFE_INTEGER)
+    initialLiquidity: BigInt(Number.MAX_SAFE_INTEGER),
+    tenantId: deps.config.operatorTenantId
   })
 
   const isDuplicatePeeringRequest =
@@ -270,7 +271,7 @@ async function acceptPeeringRequest(
         outgoingHttpToken,
         incomingHttpToken: args.httpToken,
         ilpConnectorUrl: args.ilpConnectorUrl,
-        tenantId: args.tenantId
+        tenantId: deps.config.operatorTenantId
       })
     : createdPeerOrError
 

@@ -10,7 +10,6 @@ interface PeeringRequestArgs {
   httpToken: string
   maxPacketAmount?: number
   name?: string
-  tenantId: string
 }
 
 export type PeerRequestContext = Exclude<AppContext, 'request'> & {
