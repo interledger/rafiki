@@ -33,9 +33,6 @@ function getStreamCredentials(
   deps: ServiceDependencies,
   payment: IncomingPayment
 ): IlpStreamCredentials | undefined {
-  if (payment.isExpiredOrComplete()) {
-    return undefined
-  }
   const credentials = deps.streamServer.generateCredentials({
     paymentTag: payment.id,
     asset: {

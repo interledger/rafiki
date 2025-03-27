@@ -22,7 +22,7 @@ export class Quote extends WalletAddressSubresource {
 
   public estimatedExchangeRate!: number
   public feeId?: string
-  public fee?: Fee
+  public fee?: Fee | null
 
   public debitAmountMinusFees?: bigint
 

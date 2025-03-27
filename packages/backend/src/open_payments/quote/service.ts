@@ -14,7 +14,7 @@ import {
 import { PaymentMethodHandlerService } from '../../payment-method/handler/service'
 import { IAppConfig } from '../../config/app'
 import { FeeService } from '../../fee/service'
-import { FeeType } from '../../fee/model'
+import { Fee, FeeType } from '../../fee/model'
 import {
   PaymentMethodHandlerError,
   PaymentMethodHandlerErrorCode
@@ -56,9 +56,7 @@ async function getQuote(
   deps: ServiceDependencies,
   options: GetOptions
 ): Promise<Quote | undefined> {
-  const quote = await Quote.query(deps.knex)
-    .get(options)
-    .withGraphFetched('fee')
+  const quote = await Quote.query(deps.knex).get(options)
   if (quote) {
     const asset = await deps.assetService.get(quote.assetId)
     if (asset) quote.asset = asset
@@ -90,6 +88,19 @@ interface QuoteOptionsWithReceiveAmount extends QuoteOptionsBase {
 export type CreateQuoteOptions =
   | QuoteOptionsWithDebitAmount
   | QuoteOptionsWithReceiveAmount
+
+interface UnfinalizedQuote {
+  id: string
+  walletAddressId: string
+  assetId: string
+  receiver: string
+  debitAmount: Amount
+  receiveAmount: Amount
+  client: string | undefined
+  feeId: string | undefined
+  fee: Fee | undefined
+  estimatedExchangeRate: number
+}
 
 async function createQuote(
   deps: ServiceDependencies,
@@ -145,89 +156,84 @@ async function createQuote(
     const paymentMethod = receiver.isLocal ? 'LOCAL' : 'ILP'
     const quoteId = uuid()
 
-    return await Quote.transaction(deps.knex, async (trx) => {
-      const stopQuoteCreate = deps.telemetry.startTimer(
-        'quote_service_create_insert_time_ms',
-        {
-          callName: 'QuoteModel.insert',
-          description: 'Time to insert quote'
-        }
-      )
-      const stopTimerQuote = deps.telemetry.startTimer(
-        'quote_service_create_get_quote_time_ms',
-        {
-          callName: 'PaymentMethodHandlerService:getQuote',
-          description: 'Time to getQuote'
-        }
-      )
-      const quote = await deps.paymentMethodHandlerService.getQuote(
-        paymentMethod,
-        {
-          quoteId,
-          walletAddress,
-          receiver,
-          receiveAmount: options.receiveAmount,
-          debitAmount: options.debitAmount
-        },
-        trx
-      )
-      stopTimerQuote()
+    const stopTimerFee = deps.telemetry.startTimer(
+      'quote_service_create_get_latest_fee_time_ms',
+      {
+        callName: 'FeeService:getLatestFee',
+        description: 'Time to getLatestFee'
+      }
+    )
+    const sendingFee = await deps.feeService.getLatestFee(
+      walletAddress.assetId,
+      FeeType.Sending
+    )
+    stopTimerFee()
 
-      const stopTimerFee = deps.telemetry.startTimer(
-        'quote_service_create_get_latest_fee_time_ms',
-        {
-          callName: 'FeeService:getLatestFee',
-          description: 'Time to getLatestFee'
-        }
-      )
-      const sendingFee = await deps.feeService.getLatestFee(
-        walletAddress.assetId,
-        FeeType.Sending
-      )
-      stopTimerFee()
+    const stopTimerQuote = deps.telemetry.startTimer(
+      'quote_service_create_get_quote_time_ms',
+      {
+        callName: 'PaymentMethodHandlerService:getQuote',
+        description: 'Time to getQuote'
+      }
+    )
 
-      const createdQuote = await Quote.query(trx)
-        .insertAndFetch({
-          id: quoteId,
-          walletAddressId: options.walletAddressId,
-          assetId: walletAddress.assetId,
-          receiver: options.receiver,
-          debitAmount: quote.debitAmount,
-          receiveAmount: quote.receiveAmount,
-          expiresAt: new Date(0), // expiresAt is patched in finalizeQuote
-          client: options.client,
-          feeId: sendingFee?.id,
-          estimatedExchangeRate: quote.estimatedExchangeRate
-        })
-        .withGraphFetched('fee')
-      const asset = await deps.assetService.get(createdQuote.assetId)
-      if (asset) createdQuote.asset = asset
+    const quote = await deps.paymentMethodHandlerService.getQuote(
+      paymentMethod,
+      {
+        quoteId,
+        walletAddress,
+        receiver,
+        receiveAmount: options.receiveAmount,
+        debitAmount: options.debitAmount
+      }
+    )
+    stopTimerQuote()
 
-      createdQuote.walletAddress = await deps.walletAddressService.get(
-        createdQuote.walletAddressId
-      )
+    const unfinalizedQuote: UnfinalizedQuote = {
+      id: quoteId,
+      walletAddressId: options.walletAddressId,
+      assetId: walletAddress.assetId,
+      receiver: options.receiver,
+      debitAmount: quote.debitAmount,
+      receiveAmount: quote.receiveAmount,
+      client: options.client,
+      feeId: sendingFee?.id,
+      fee: sendingFee,
+      estimatedExchangeRate: quote.estimatedExchangeRate
+    }
 
-      stopQuoteCreate()
+    const stopFinalize = deps.telemetry.startTimer(
+      'quote_service_finalize_quote_ms',
+      {
+        callName: 'QuoteService:finalizedQuote',
+        description: 'Time to finalize quote'
+      }
+    )
+    const finalQuoteOptions = await finalizeQuote(
+      deps,
+      options,
+      unfinalizedQuote,
+      receiver
+    )
+    stopFinalize()
 
-      const stopFinalize = deps.telemetry.startTimer(
-        'quote_service_finalize_quote_ms',
-        {
-          callName: 'QuoteService:finalizedQuote',
-          description: 'Time to finalize quote'
-        }
-      )
-      const finalizedQuote = await finalizeQuote(
-        {
-          ...deps,
-          knex: trx
-        },
-        options,
-        createdQuote,
-        receiver
-      )
-      stopFinalize()
-      return finalizedQuote
+    const stopQuoteCreate = deps.telemetry.startTimer(
+      'quote_service_create_insert_time_ms',
+      {
+        callName: 'QuoteModel.insert',
+        description: 'Time to insert quote'
+      }
+    )
+    const createdQuote = await Quote.query(deps.knex).insertAndFetch({
+      ...unfinalizedQuote,
+      ...finalQuoteOptions
     })
+    createdQuote.asset = walletAddress.asset
+    createdQuote.walletAddress = walletAddress
+    createdQuote.fee = sendingFee
+
+    stopQuoteCreate()
+    return createdQuote
   } catch (err) {
     if (isQuoteError(err)) {
       return err
@@ -252,7 +258,7 @@ export async function resolveReceiver(
   options: CreateQuoteOptions
 ): Promise<Receiver> {
   const receiver = await deps.receiverService.get(options.receiver)
-  if (!receiver) {
+  if (!receiver || !receiver.isActive()) {
     deps.logger.info(
       { receiver: options.receiver },
       'Could not create quote. Receiver not found'
@@ -298,7 +304,7 @@ interface CalculateQuoteAmountsWithFeesResult {
  */
 function calculateFixedSendQuoteAmounts(
   deps: ServiceDependencies,
-  quote: Quote,
+  quote: UnfinalizedQuote,
   maxReceiveAmountValue: bigint
 ): CalculateQuoteAmountsWithFeesResult {
   // TODO: derive fee from debitAmount instead? Current behavior/tests may be wrong with basis point fees.
@@ -347,13 +353,32 @@ function calculateFixedSendQuoteAmounts(
   }
 }
 
+function calculateExpiry(deps: ServiceDependencies, receiver: Receiver): Date {
+  const quoteExpiry = new Date(Date.now() + deps.config.quoteLifespan)
+
+  const incomingPaymentExpiresEarlier =
+    receiver.incomingPayment?.expiresAt &&
+    receiver.incomingPayment.expiresAt.getTime() < quoteExpiry.getTime()
+
+  return incomingPaymentExpiresEarlier
+    ? receiver.incomingPayment!.expiresAt!
+    : quoteExpiry
+}
+
+interface QuotePatchOptions {
+  debitAmountMinusFees: bigint
+  debitAmountValue: bigint
+  receiveAmountValue: bigint
+  expiresAt: Date
+}
+
 /**
  * Calculate fixed-delivery quote amounts: receiveAmount is locked,
  * add fees to the the debitAmount.
  */
 function calculateFixedDeliveryQuoteAmounts(
   deps: ServiceDependencies,
-  quote: Quote
+  quote: UnfinalizedQuote
 ): CalculateQuoteAmountsWithFeesResult {
   const fees = quote.fee?.calculate(quote.debitAmount.value) ?? BigInt(0)
 
@@ -379,30 +404,12 @@ function calculateFixedDeliveryQuoteAmounts(
   }
 }
 
-function calculateExpiry(
-  deps: ServiceDependencies,
-  quote: Quote,
-  receiver: Receiver
-): Date {
-  const quoteExpiry = new Date(
-    quote.createdAt.getTime() + deps.config.quoteLifespan
-  )
-
-  const incomingPaymentExpiresEarlier =
-    receiver.incomingPayment?.expiresAt &&
-    receiver.incomingPayment.expiresAt.getTime() < quoteExpiry.getTime()
-
-  return incomingPaymentExpiresEarlier
-    ? receiver.incomingPayment!.expiresAt!
-    : quoteExpiry
-}
-
 async function finalizeQuote(
   deps: ServiceDependencies,
   options: CreateQuoteOptions,
-  quote: Quote,
+  quote: UnfinalizedQuote,
   receiver: Receiver
-): Promise<Quote> {
+): Promise<QuotePatchOptions> {
   let maxReceiveAmountValue: bigint | undefined
 
   if (options.debitAmount) {
@@ -434,21 +441,17 @@ async function finalizeQuote(
     debitAmountMinusFees,
     debitAmountValue,
     receiveAmountValue,
-    expiresAt: calculateExpiry(deps, quote, receiver)
+    expiresAt: calculateExpiry(deps, receiver)
   }
 
-  await quote.$query(deps.knex).patch(patchOptions)
-
-  return quote
+  return patchOptions
 }
 
 async function getWalletAddressPage(
   deps: ServiceDependencies,
   options: ListOptions
 ): Promise<Quote[]> {
-  const quotes = await Quote.query(deps.knex)
-    .list(options)
-    .withGraphFetched('fee')
+  const quotes = await Quote.query(deps.knex).list(options)
   for (const quote of quotes) {
     const asset = await deps.assetService.get(quote.assetId)
     if (asset) quote.asset = asset

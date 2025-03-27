@@ -122,7 +122,7 @@ describe('Models', (): void => {
       })
 
       test.each([IncomingPaymentState.Completed, IncomingPaymentState.Expired])(
-        'returns incoming payment with empty methods if payment state is %s',
+        'returns incoming payment with existing methods if payment state is %s',
         async (paymentState): Promise<void> => {
           incomingPayment.state = paymentState
 
@@ -148,7 +148,13 @@ describe('Models', (): void => {
             metadata: incomingPayment.metadata ?? undefined,
             updatedAt: incomingPayment.updatedAt.toISOString(),
             createdAt: incomingPayment.createdAt.toISOString(),
-            methods: []
+            methods: [
+              expect.objectContaining({
+                type: 'ilp',
+                ilpAddress: streamCredentials.ilpAddress,
+                sharedSecret: expect.any(String)
+              })
+            ]
           })
         }
       )

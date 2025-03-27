@@ -1,23 +1,19 @@
-// global comment below tells ESLint that __ENV exists, else get "no-undef" error
-/* global __ENV */
-
 import http from 'k6/http'
 import { fail } from 'k6'
 import { createHMAC } from 'k6/crypto'
 import { uuidv4 } from 'https://jslib.k6.io/k6-utils/1.4.0/index.js'
-import { textSummary } from 'https://jslib.k6.io/k6-summary/0.0.2/index.js'
 import { canonicalize } from '../dist/json-canonicalize.bundle.js'
 
 export const options = {
-  // A number specifying the number of VUs to run concurrently.
-  vus: 1,
-  // A string specifying the total duration of the test run.
-  duration: '600s'
+  vus: 25,
+  duration: '120s'
 }
 
-const CLOUD_NINE_GQL_ENDPOINT = __ENV.CLOUD_NINE_GQL_ENDPOINT
-const CLOUD_NINE_WALLET_ADDRESS = __ENV.CLOUD_NINE_WALLET_ADDRESS
-const HAPPY_LIFE_BANK_WALLET_ADDRESS = __ENV.HAPPY_LIFE_BANK_WALLET_ADDRESS
+const GQL_ENDPOINT = 'http://cloud-nine-wallet-backend:3001/graphql'
+const SENDER_WALLET_ADDRESS =
+  'https://cloud-nine-wallet-backend/accounts/gfranklin'
+const RECEIVER_WALLET_ADDRESS =
+  'https://cloud-nine-wallet-backend/accounts/bhamchest'
 const SIGNATURE_SECRET = 'iyIgCprjb9uL8wFckR+pLEkJWMB7FJhgkvqhTQR/964='
 const SIGNATURE_VERSION = '1'
 
@@ -36,7 +32,7 @@ function generateSignedHeaders(requestPayload) {
 
 function request(query) {
   const headers = generateSignedHeaders(query)
-  const response = http.post(CLOUD_NINE_GQL_ENDPOINT, JSON.stringify(query), {
+  const response = http.post(GQL_ENDPOINT, JSON.stringify(query), {
     headers
   })
 
@@ -64,14 +60,20 @@ export function setup() {
 
   const data = request(query)
   const c9WalletAddresses = data.walletAddresses.edges
-  const c9WalletAddress = c9WalletAddresses.find(
-    (edge) => edge.node.url === CLOUD_NINE_WALLET_ADDRESS
-  )?.node
-  if (!c9WalletAddress) {
-    fail(`could not find wallet address: ${CLOUD_NINE_WALLET_ADDRESS}`)
+  const senderWalletAddress = c9WalletAddresses.find(
+    (edge) => edge.node.url === SENDER_WALLET_ADDRESS
+  ).node
+  if (!senderWalletAddress) {
+    fail(`could not find wallet address: ${SENDER_WALLET_ADDRESS}`)
+  }
+  const receiverWalletAddress = c9WalletAddresses.find(
+    (edge) => edge.node.url === RECEIVER_WALLET_ADDRESS
+  ).node
+  if (!receiverWalletAddress) {
+    fail(`could not find wallet address: ${RECEIVER_WALLET_ADDRESS}`)
   }
 
-  return { data: { c9WalletAddress } }
+  return { senderWalletAddress, receiverWalletAddress }
 }
 
 // The function that defines VU logic.
@@ -80,15 +82,13 @@ export function setup() {
 // about authoring k6 scripts.
 //
 export default function (data) {
-  const {
-    data: { c9WalletAddress }
-  } = data
+  const { senderWalletAddress, receiverWalletAddress } = data
 
-  const createReceiverPayload = {
+  const createIncomingPaymentPayload = {
     query: `
-      mutation CreateReceiver($input: CreateReceiverInput!) {
-        createReceiver(input: $input) {
-          receiver {
+      mutation CreateIncomingPayment($input: CreateIncomingPaymentInput!) {
+        createIncomingPayment(input: $input) {
+          payment {
             id
           }
         }
@@ -97,22 +97,19 @@ export default function (data) {
     variables: {
       input: {
         expiresAt: null,
-        metadata: {
-          description: 'Hello my friend',
-          externalRef: null
-        },
         incomingAmount: {
           assetCode: 'USD',
           assetScale: 2,
           value: 1002
         },
-        walletAddressUrl: HAPPY_LIFE_BANK_WALLET_ADDRESS
+        walletAddressId: receiverWalletAddress.id
       }
     }
   }
 
-  const createReceiverResponse = request(createReceiverPayload)
-  const receiver = createReceiverResponse.createReceiver.receiver
+  const createIncomingPaymentResponse = request(createIncomingPaymentPayload)
+  const incomingPayment =
+    createIncomingPaymentResponse.createIncomingPayment.payment
 
   const createQuotePayload = {
     query: `
@@ -126,9 +123,9 @@ export default function (data) {
       `,
     variables: {
       input: {
-        walletAddressId: c9WalletAddress.id,
+        walletAddressId: senderWalletAddress.id,
         receiveAmount: null,
-        receiver: receiver.id,
+        receiver: `https://cloud-nine-wallet-backend/incoming-payments/${incomingPayment.id}`,
         debitAmount: {
           assetCode: 'USD',
           assetScale: 2,
@@ -153,36 +150,11 @@ export default function (data) {
     `,
     variables: {
       input: {
-        walletAddressId: c9WalletAddress.id,
+        walletAddressId: senderWalletAddress.id,
         quoteId: quote.id
       }
     }
   }
 
   request(createOutgoingPaymentPayload)
-}
-
-export function handleSummary(data) {
-  const requestsPerSecond = data.metrics.http_reqs.values.rate
-  const iterationsPerSecond = data.metrics.iterations.values.rate
-  const failedRequests = data.metrics.http_req_failed.values.passes
-  const failureRate = data.metrics.http_req_failed.values.rate
-  const requests = data.metrics.http_reqs.values.count
-
-  const summaryText = `
-  **Test Configuration**:
-  - VUs: ${options.vus}
-  - Duration: ${options.duration}
-
-  **Test Metrics**:
-  - Requests/s: ${requestsPerSecond.toFixed(2)}
-  - Iterations/s: ${iterationsPerSecond.toFixed(2)}
-  - Failed Requests: ${failureRate.toFixed(2)}% (${failedRequests} of ${requests})
-    `
-
-  return {
-    // Preserve standard output w/ textSummary
-    stdout: textSummary(data, { enableColors: false }),
-    'k6-test-summary.txt': summaryText // saves to file
-  }
 }
