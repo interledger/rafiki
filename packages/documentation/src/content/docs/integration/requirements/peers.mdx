@@ -21,7 +21,7 @@ Whether you are using the Backend Admin API or the Rafiki Admin application, the
 Peering is not required unless you want to participate in transactions with another ASE on the Interledger network. For foundational peering concepts, refer to the Peers section of [Interledger Concepts](/overview/concepts/interledger/#peers).
 :::
 
-Before adding a peer, you and the account servicing entity you intend to peer with must both:
+Before adding a peer, you, and the account servicing entity you intend to peer with must both:
 
 ### Run an Interledger connector
 
@@ -39,13 +39,13 @@ Your <LinkOut href="https://interledger.org/developers/rfcs/ilp-addresses/">ILP 
 
 The connection endpoint will be a url that the other peer will send packets to.
 
-### Exchange auth tokens for the connection endpoint.
+### Exchange auth tokens for the connection endpoint
 
-Incoming `authtokens` allow you to authenticate that packets sent from your peer originated from your peer's Interledger connector and were not tampered en route. The outgoing `authtoken` allows your peer to authenticate that packets received originated from your Interledger connector and were not tampered with en route. The use of auth tokens is not required when [autopeering with the Test Network](/integration/playground/autopeering).
+Incoming `authtokens` allow you to authenticate that packets sent from your peer originated from your peer's Interledger connector and were not tampered en route. The outgoing `authtoken` allows your peer to authenticate that received packets originated from your Interledger connector and were not tampered with en route. The use of auth tokens is not required when [autopeering with the Test Network](/integration/playground/autopeering).
 
 ### Agree on a settlement mechanism
 
-A settlement mechanism is a means of paying one another for the successful forwarding and delivery of packets, which is outside the scope of Interledger and Rafiki.
+The settlement mechanism you both agree to use is what facilitates the transfer of actual funds between you and your peer. Neither Interledger nor Rafiki provide a settlement mechanism.
 
 ## Perform optional prerequisites
 
