@@ -55,6 +55,7 @@ export class Quote extends WalletAddressSubresource {
   private debitAmountValue!: bigint
 
   public getUrl(resourceServerUrl: string): string {
+    resourceServerUrl = resourceServerUrl.replace(/\/+$/, '')
     return `${resourceServerUrl}${Quote.urlPath}/${this.id}`
   }
 

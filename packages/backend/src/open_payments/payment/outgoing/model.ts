@@ -107,6 +107,7 @@ export class OutgoingPayment
   }
 
   public getUrl(resourceServerUrl: string): string {
+    resourceServerUrl = resourceServerUrl.replace(/\/+$/, '')
     return `${resourceServerUrl}${OutgoingPayment.urlPath}/${this.id}`
   }
 
