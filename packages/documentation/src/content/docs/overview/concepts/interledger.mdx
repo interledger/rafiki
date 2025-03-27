@@ -18,7 +18,7 @@ Each packet represents a conditional IOU which affects financial accounting bala
 
 Interledger itself is a network of computers that enables sending payment messages across payment networks. Each computer on the network is a node.
 
-For two nodes on the Interledger network to exchange ILP packets with one another, the two nodes must be peers. There are a number of [requirements](/integration/requirements/peers#prerequisites) that both you and your potential peer must meet to form a peering relationship.
+For two nodes on the Interledger network to exchange ILP packets with one another, the two nodes must be peers. There are a number of [requirements](/integration/requirements/peers#perform-prerequisites) that both you and your potential peer must meet to form a peering relationship.
 
 Since the purpose of peering is to facilitate payments, which often involves extending lines of credit, your peer should be someone you trust. We strongly recommend you and your potential peer define your expectations and outline your agreements in a legally binding document peering with one another.
 
@@ -42,11 +42,13 @@ In the image below, the sender node (A) and the receiver node (C) share a common
 
 In reality, there can be multiple connectors between a sender node and a receiver node. As more nodes that support different assets peer with one another, the easier it becomes for payments to traverse the Interledger network.
 
-## Payment pointers
+## Payment pointer
 
-Rafiki assigns each of your customers’ accounts with a payment pointer. Payment pointers are a type of wallet address for accounts within the Interledger network. They’re similar to email addresses in that they’re used to determine which account to send a payment from and which account to deliver the payment to.
+A payment pointer is a type of wallet address that serves as an SPSP endpoint to facilitate sending and receiving ILP packets. Rafiki will assign each of your customers' accounts with a payment pointer.
 
-Every payment pointer serves as a Simple Payment Setup Protocol (SPSP) endpoint and must resolve to an HTTPS URL. Payment pointers can be written out using the `$` shorthand (for example, `$wallet.example.com/alice`) or as a URL (for example, `https://wallet.example.com/alice`).
+Payment pointers must resolve to an HTTPS URL and can be written out using the `$` shorthand (for example, `$wallet.example.com/alice`) or as a URL (for example, `https://wallet.example.com/alice`).
+
+See [Payment pointers and wallet addresses](/overview/concepts/payment-pointers) for more information.
 
 ## Simple Payment Setup Protocol (SPSP)
 
