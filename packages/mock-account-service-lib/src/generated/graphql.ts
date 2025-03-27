@@ -1162,6 +1162,8 @@ export type Peer = Model & {
   name?: Maybe<Scalars['String']['output']>;
   /** ILP address of the peer. */
   staticIlpAddress: Scalars['String']['output'];
+  /** Unique identifier of the tenant associated with the peer. */
+  tenantId: Scalars['ID']['output'];
 };
 
 export type PeerEdge = {
@@ -1307,6 +1309,7 @@ export type QueryPeersArgs = {
   first?: InputMaybe<Scalars['Int']['input']>;
   last?: InputMaybe<Scalars['Int']['input']>;
   sortOrder?: InputMaybe<SortOrder>;
+  tenantId?: InputMaybe<Scalars['ID']['input']>;
 };
 
 
@@ -2537,6 +2540,7 @@ export type PeerResolvers<ContextType = any, ParentType extends ResolversParentT
   maxPacketAmount?: Resolver<Maybe<ResolversTypes['UInt64']>, ParentType, ContextType>;
   name?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   staticIlpAddress?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  tenantId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
