@@ -114,10 +114,14 @@ export function createTokenIntrospectionMiddleware({
         throw new OpenPaymentsServerRouteError(403, 'Inactive Token')
       }
 
+      if (tokenInfo.access.length === 0) {
+        throw new OpenPaymentsServerRouteError(403, 'Insufficient Grant')
+      }
+
       if (tokenInfo.access.length !== 1) {
         throw new OpenPaymentsServerRouteError(
-          403,
-          'Token info access does not match request access'
+          500,
+          'Unexpected number of access items'
         )
       }
 

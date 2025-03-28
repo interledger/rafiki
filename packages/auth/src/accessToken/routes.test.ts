@@ -326,7 +326,7 @@ describe('Access Token Routes', (): void => {
       })
     })
 
-    test('Cannot introspect token with incorrect access', async (): Promise<void> => {
+    test('Has empty access for token with incorrect access', async (): Promise<void> => {
       const ctx = createContext<IntrospectContext>(
         {
           headers: {
@@ -356,8 +356,11 @@ describe('Access Token Routes', (): void => {
         'application/json; charset=utf-8'
       )
 
-      expect(ctx.body).toEqual({
-        active: false
+      expect(ctx.body).toMatchObject({
+        active: true,
+        access: [],
+        client: grant.client,
+        grant: grant.id
       })
     })
   })
