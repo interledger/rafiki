@@ -1,6 +1,6 @@
 import { IocContract } from '@adonisjs/fold'
 import { createTestApp, TestContainer } from '../../tests/app'
-import { Config } from '../../config/app'
+import { Config, IAppConfig } from '../../config/app'
 import { initIocContainer } from '../..'
 import { AppServices } from '../../app'
 import { createIncomingPayment } from '../../tests/incomingPayment'
@@ -20,11 +20,13 @@ describe('Receiver Model', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let streamCredentialsService: StreamCredentialsService
+  let config: IAppConfig
 
   beforeAll(async (): Promise<void> => {
     deps = initIocContainer(Config)
     appContainer = await createTestApp(deps)
     streamCredentialsService = await deps.use('streamCredentialsService')
+    config = await deps.use('config')
   })
 
   afterEach(async (): Promise<void> => {
@@ -49,6 +51,7 @@ describe('Receiver Model', (): void => {
 
       const receiver = new Receiver(
         incomingPayment.toOpenPaymentsTypeWithMethods(
+          config.openPaymentsUrl,
           walletAddress,
           streamCredentials
         ),
@@ -61,7 +64,7 @@ describe('Receiver Model', (): void => {
         ilpAddress: expect.any(String),
         sharedSecret: expect.any(Buffer),
         incomingPayment: {
-          id: incomingPayment.getUrl(walletAddress),
+          id: incomingPayment.getUrl(config.openPaymentsUrl),
           walletAddress: walletAddress.url,
           updatedAt: incomingPayment.updatedAt,
           createdAt: incomingPayment.createdAt,
@@ -81,6 +84,51 @@ describe('Receiver Model', (): void => {
       })
     })
 
+    test('doesnt throw if incoming payment is completed', async () => {
+      const walletAddress = await createWalletAddress(deps)
+      const incomingPayment = await createIncomingPayment(deps, {
+        walletAddressId: walletAddress.id
+      })
+
+      incomingPayment.state = IncomingPaymentState.Completed
+      const streamCredentials: IlpStreamCredentials = {
+        ilpAddress: 'test.ilp' as IlpAddress,
+        sharedSecret: Buffer.from('')
+      }
+
+      const openPaymentsIncomingPayment =
+        incomingPayment.toOpenPaymentsTypeWithMethods(
+          config.openPaymentsUrl,
+          walletAddress,
+          streamCredentials
+        )
+
+      expect(
+        () => new Receiver(openPaymentsIncomingPayment, false)
+      ).not.toThrow()
+    })
+
+    test('doesnt throw if incoming payment is expired', async () => {
+      const walletAddress = await createWalletAddress(deps)
+      const incomingPayment = await createIncomingPayment(deps, {
+        walletAddressId: walletAddress.id
+      })
+
+      incomingPayment.expiresAt = new Date(Date.now() - 1)
+      const streamCredentials = streamCredentialsService.get(incomingPayment)
+      assert(streamCredentials)
+      const openPaymentsIncomingPayment =
+        incomingPayment.toOpenPaymentsTypeWithMethods(
+          config.openPaymentsUrl,
+          walletAddress,
+          streamCredentials
+        )
+
+      expect(
+        () => new Receiver(openPaymentsIncomingPayment, false)
+      ).not.toThrow()
+    })
+
     test('throws if stream credentials has invalid ILP address', async () => {
       const walletAddress = await createWalletAddress(deps)
       const incomingPayment = await createIncomingPayment(deps, {
@@ -93,6 +141,7 @@ describe('Receiver Model', (): void => {
 
       const openPaymentsIncomingPayment =
         incomingPayment.toOpenPaymentsTypeWithMethods(
+          config.openPaymentsUrl,
           walletAddress,
           streamCredentials
         )
@@ -118,6 +167,7 @@ describe('Receiver Model', (): void => {
 
       const openPaymentsIncomingPayment =
         incomingPayment.toOpenPaymentsTypeWithMethods(
+          config.openPaymentsUrl,
           walletAddress,
           streamCredentials
         )
@@ -138,6 +188,7 @@ describe('Receiver Model', (): void => {
       assert(streamCredentials)
       const openPaymentsIncomingPayment =
         incomingPayment.toOpenPaymentsTypeWithMethods(
+          config.openPaymentsUrl,
           walletAddress,
           streamCredentials
         )

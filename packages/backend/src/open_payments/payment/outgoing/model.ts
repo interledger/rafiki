@@ -106,9 +106,9 @@ export class OutgoingPayment
     return this.quote.assetId
   }
 
-  public getUrl(walletAddress: WalletAddress): string {
-    const url = new URL(walletAddress.url)
-    return `${url.origin}${OutgoingPayment.urlPath}/${this.id}`
+  public getUrl(resourceServerUrl: string): string {
+    resourceServerUrl = resourceServerUrl.replace(/\/+$/, '')
+    return `${resourceServerUrl}${OutgoingPayment.urlPath}/${this.id}`
   }
 
   public get asset(): Asset {
@@ -195,12 +195,13 @@ export class OutgoingPayment
   }
 
   public toOpenPaymentsType(
+    resourceServerUrl: string,
     walletAddress: WalletAddress
   ): OpenPaymentsOutgoingPayment {
     return {
-      id: this.getUrl(walletAddress),
+      id: this.getUrl(resourceServerUrl),
       walletAddress: walletAddress.url,
-      quoteId: this.quote?.getUrl(walletAddress) ?? undefined,
+      quoteId: this.quote?.getUrl(resourceServerUrl) ?? undefined,
       receiveAmount: serializeAmount(this.receiveAmount),
       debitAmount: serializeAmount(this.debitAmount),
       sentAmount: serializeAmount(this.sentAmount),
@@ -213,10 +214,11 @@ export class OutgoingPayment
   }
 
   public toOpenPaymentsWithSpentAmountsType(
+    resourceServerUrl: string,
     walletAddress: WalletAddress
   ): OutgoingPaymentWithSpentAmounts {
     return {
-      ...this.toOpenPaymentsType(walletAddress),
+      ...this.toOpenPaymentsType(resourceServerUrl, walletAddress),
       grantSpentReceiveAmount: serializeAmount(this.grantSpentReceiveAmount),
       grantSpentDebitAmount: serializeAmount(this.grantSpentDebitAmount)
     }

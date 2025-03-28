@@ -15,6 +15,7 @@ import {
 } from './errors'
 import { isRemoteIncomingPaymentError } from '../payment/incoming_remote/errors'
 import { TelemetryService } from '../../telemetry/service'
+import { IAppConfig } from '../../config/app'
 
 interface CreateReceiverArgs {
   walletAddressUrl: string
@@ -30,6 +31,7 @@ export interface ReceiverService {
 }
 
 export interface ServiceDependencies extends BaseService {
+  config: IAppConfig
   streamCredentialsService: StreamCredentialsService
   incomingPaymentService: IncomingPaymentService
   walletAddressService: WalletAddressService
@@ -135,6 +137,7 @@ async function createLocalIncomingPayment(
   }
 
   return incomingPaymentOrError.toOpenPaymentsTypeWithMethods(
+    deps.config.openPaymentsUrl,
     walletAddress,
     streamCredentials
   )
@@ -211,6 +214,7 @@ export async function getLocalIncomingPayment(
   const streamCredentials = deps.streamCredentialsService.get(incomingPayment)
 
   return incomingPayment.toOpenPaymentsTypeWithMethods(
+    deps.config.openPaymentsUrl,
     incomingPayment.walletAddress,
     streamCredentials
   )

@@ -112,6 +112,7 @@ async function getIncomingPaymentPrivate(
     : deps.streamCredentialsService.get(incomingPayment)
 
   ctx.body = incomingPayment.toOpenPaymentsTypeWithMethods(
+    deps.config.openPaymentsUrl,
     ctx.walletAddress,
     streamCredentials
   )
@@ -155,6 +156,7 @@ async function createIncomingPayment(
     incomingPaymentOrError
   )
   ctx.body = incomingPaymentOrError.toOpenPaymentsTypeWithMethods(
+    deps.config.openPaymentsUrl,
     ctx.walletAddress,
     streamCredentials
   )
@@ -175,7 +177,10 @@ async function completeIncomingPayment(
     )
   }
 
-  ctx.body = incomingPaymentOrError.toOpenPaymentsType(ctx.walletAddress)
+  ctx.body = incomingPaymentOrError.toOpenPaymentsType(
+    deps.config.openPaymentsUrl,
+    ctx.walletAddress
+  )
 }
 
 async function listIncomingPayments(
@@ -185,6 +190,7 @@ async function listIncomingPayments(
   await listSubresource({
     ctx,
     getWalletAddressPage: deps.incomingPaymentService.getWalletAddressPage,
-    toBody: (payment) => payment.toOpenPaymentsType(ctx.walletAddress)
+    toBody: (payment) =>
+      payment.toOpenPaymentsType(deps.config.openPaymentsUrl, ctx.walletAddress)
   })
 }
