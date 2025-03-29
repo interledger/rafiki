@@ -104,6 +104,66 @@ describe('Open Payments Wallet Address Service', (): void => {
     )
 
     test.each`
+      isOperator            | tenantSettingUrl
+      ${false}              | ${undefined}
+      ${true}               | ${undefined}
+      ${true}               | ${'https://alice.me'}
+    `(
+      'operator - $isOperator with tenantSettingUrl - $tenantSettingUrl', 
+      async({ isOperator, tenantSettingUrl }): Promise<void> => {
+        const config = await deps.use('config')
+        const address = "test"
+        const tempTenant = await createTenant(deps)
+        const { id: tempAssetId } = await createAsset(deps, undefined, tempTenant.id)
+
+        let expected: string = WalletAddressError.WalletAddressSettingNotFound;
+        if (tenantSettingUrl) {
+          await createTenantSettings(deps, {
+            tenantId: tempTenant.id,
+            setting: [
+              {
+                key: TenantSettingKeys.WALLET_ADDRESS_URL.name,
+                value: tenantSettingUrl
+              }
+            ]
+          })
+          expected = `${tenantSettingUrl}/${address}`
+        } else {
+          if (isOperator) {
+            expected = `https://op.example/${address}`
+          }
+        }
+
+        const created = await walletAddressService.create({
+          ...options,
+          address,
+          isOperator,
+          assetId: tempAssetId,
+          tenantId: tempTenant.id
+        })
+
+        if (isWalletAddressError(expected)) {
+          expect(created).toEqual(expected)
+        } else {
+          assert.ok(!isWalletAddressError(created))
+          expect(created.address).toEqual(expected)
+        }
+      }
+    )
+
+    test('should return error without tenant settings if caller is not an operator', async () => {
+      const tempTenant = await createTenant(deps)
+      
+      expect(
+        await walletAddressService.create({
+          ...options,
+          tenantId: tempTenant.id
+        })
+      ).toEqual(WalletAddressError.WalletAddressSettingNotFound)
+
+    })
+
+    test.each`
       setting                    | address                        | generated
       ${'https://alice.me/ilp'}  | ${'https://alice.me/ilp/test'} | ${'https://alice.me/ilp/test'}
       ${'https://alice.me/ilp'}  | ${'test'}                      | ${'https://alice.me/ilp/test'}
