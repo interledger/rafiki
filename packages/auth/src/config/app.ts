@@ -78,7 +78,16 @@ export const Config = {
     process.env.REDIS_TLS_CA_FILE_PATH,
     process.env.REDIS_TLS_KEY_FILE_PATH,
     process.env.REDIS_TLS_CERT_FILE_PATH
-  )
+  ),
+
+  signatureSecret: process.env.SIGNATURE_SECRET, // optional
+  signatureVersion: envInt('SIGNATURE_VERSION', 1),
+
+  webhookUrl: process.env.WEBHOOK_URL, // optional
+  webhookWorkers: envInt('WEBHOOK_WORKERS', 1),
+  webhookWorkerIdle: envInt('WEBHOOK_WORKER_IDLE', 200), // milliseconds
+  webhookTimeout: envInt('WEBHOOK_TIMEOUT', 2000), // milliseconds
+  webhookMaxRetry: envInt('WEBHOOK_MAX_RETRY', 10)
 }
 
 function parseRedisTlsConfig(

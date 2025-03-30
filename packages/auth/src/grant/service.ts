@@ -8,7 +8,9 @@ import {
   GrantState,
   GrantFinalization,
   StartMethod,
-  FinishMethod
+  FinishMethod,
+  GrantEvent,
+  GrantEventType
 } from './model'
 import { AccessRequest } from '../access/types'
 import { AccessService } from '../access/service'
@@ -198,7 +200,18 @@ async function revokeGrant(
       return false
     }
 
-    await accessTokenService.revokeByGrantId(grant.id, trx)
+    const revokedAt = await accessTokenService.revokeByGrantId(grant.id, trx)
+
+    if (deps.config.webhookUrl) {
+      await GrantEvent.query(trx).insert({
+        type: GrantEventType.GrantRevoked,
+        grantId: grant.id,
+        data: {
+          id: grant.id,
+          revokedAt: revokedAt.toISOString()
+        }
+      })
+    }
 
     await trx.commit()
     return true

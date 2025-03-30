@@ -29,11 +29,12 @@ describe('Grant Service', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let grantService: GrantService
-  let trx: Knex.Transaction
+  let knex: Knex
 
   beforeAll(async (): Promise<void> => {
     deps = initIocContainer(Config)
     appContainer = await createTestApp(deps)
+    knex = appContainer.knex
 
     grantService = await deps.use('grantService')
   })
@@ -140,7 +141,7 @@ describe('Grant Service', (): void => {
         })
 
         await expect(
-          Access.query(trx)
+          Access.query(knex)
             .where({
               grantId: grant.id
             })
@@ -179,7 +180,7 @@ describe('Grant Service', (): void => {
           })
 
           await expect(
-            Access.query(trx)
+            Access.query(knex)
               .where({
                 grantId: grant.id
               })
@@ -348,7 +349,7 @@ describe('Grant Service', (): void => {
       test('Can revoke a grant', async (): Promise<void> => {
         await expect(grantService.revokeGrant(grant.id)).resolves.toEqual(true)
 
-        const revokedGrant = await Grant.query(trx).findById(grant.id)
+        const revokedGrant = await Grant.query(knex).findById(grant.id)
         expect(revokedGrant?.state).toEqual(GrantState.Finalized)
         expect(revokedGrant?.finalizationReason).toEqual(
           GrantFinalization.Revoked
@@ -391,10 +392,10 @@ describe('Grant Service', (): void => {
         const timeoutMs = 50
 
         const lock = async (): Promise<void> => {
-          return await Grant.transaction(async (trx) => {
-            await grantService.lock(grant.id, trx, timeoutMs)
+          return await Grant.transaction(async (knex) => {
+            await grantService.lock(grant.id, knex, timeoutMs)
             await new Promise((resolve) => setTimeout(resolve, timeoutMs + 10))
-            await Grant.query(trx).findById(grant.id)
+            await Grant.query(knex).findById(grant.id)
           })
         }
         await expect(Promise.all([lock(), lock()])).rejects.toThrowError(
