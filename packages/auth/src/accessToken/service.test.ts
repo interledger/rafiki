@@ -26,6 +26,7 @@ describe('Access Token Service', (): void => {
   let appContainer: TestContainer
   let knex: Knex
   let accessTokenService: AccessTokenService
+  const testDate = new Date('2025-01-01')
 
   beforeAll(async (): Promise<void> => {
     deps = initIocContainer(Config)
@@ -306,9 +307,12 @@ describe('Access Token Service', (): void => {
     describe('Revoke by grant id', (): void => {
       test('Can revoke un-expired token', async (): Promise<void> => {
         await token.$query(knex).patch({ expiresIn: 1000000 })
+        jest.useFakeTimers()
+        jest.setSystemTime(testDate)
+
         await expect(
           accessTokenService.revokeByGrantId(grant.id)
-        ).resolves.toEqual(1)
+        ).resolves.toEqual(testDate)
         await expect(
           AccessToken.query(knex).findById(token.id)
         ).resolves.toEqual({
@@ -319,9 +323,12 @@ describe('Access Token Service', (): void => {
       })
       test('Can revoke even if token has already expired', async (): Promise<void> => {
         await token.$query(knex).patch({ expiresIn: -1 })
+        jest.useFakeTimers()
+        jest.setSystemTime(testDate)
+
         await expect(
           accessTokenService.revokeByGrantId(grant.id)
-        ).resolves.toEqual(1)
+        ).resolves.toEqual(testDate)
         await expect(
           AccessToken.query(knex).findById(token.id)
         ).resolves.toEqual({
@@ -332,9 +339,12 @@ describe('Access Token Service', (): void => {
       })
       test('Can revoke even if token has already been revoked', async (): Promise<void> => {
         await token.$query(knex).delete()
+        jest.useFakeTimers()
+        jest.setSystemTime(testDate)
+
         await expect(
           accessTokenService.revokeByGrantId(grant.id)
-        ).resolves.toEqual(0)
+        ).resolves.toEqual(testDate)
         await expect(
           AccessToken.query(knex).findById(token.id)
         ).resolves.toBeUndefined()
@@ -342,10 +352,12 @@ describe('Access Token Service', (): void => {
 
       test('Cannot revoke rotated access token', async (): Promise<void> => {
         await accessTokenService.rotate(token.id)
+        jest.useFakeTimers()
+        jest.setSystemTime(testDate)
 
         await expect(
           accessTokenService.revokeByGrantId(token.id)
-        ).resolves.toEqual(0)
+        ).resolves.toEqual(testDate)
       })
     })
   })
