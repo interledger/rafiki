@@ -9,7 +9,6 @@ import {
 } from '@interledger/open-payments'
 import { AccessToken, toOpenPaymentsAccessToken } from '../accessToken/model'
 import { Interaction } from '../interaction/model'
-import { WebhookEvent } from '../webhook/model'
 
 export enum StartMethod {
   Redirect = 'redirect'
@@ -42,6 +41,7 @@ export class Grant extends BaseModel {
     accessTokens: {
       relation: Model.HasManyRelation,
       modelClass: join(__dirname, '../accessToken/model'),
+      modelPaths: '',
       join: {
         from: 'grants.id',
         to: 'accessTokens.grantId'
@@ -192,31 +192,4 @@ export function isRevokedGrant(grant: Grant): boolean {
     grant.state === GrantState.Finalized &&
     grant.finalizationReason === GrantFinalization.Revoked
   )
-}
-
-export enum GrantEventType {
-  GrantRevoked = 'grant.revoked'
-}
-
-export enum GrantEventError {
-  GrantIdRequired = 'Grant ID is required for grant events'
-}
-
-export interface GrantResponse {
-  id: string
-  revokedAt: string
-}
-
-export type GrantData = GrantResponse & WebhookEvent['data']
-export class GrantEvent extends WebhookEvent {
-  public type!: GrantEventType
-  public data!: GrantData
-
-  public $beforeInsert(context: QueryContext): void {
-    super.$beforeInsert(context)
-
-    if (!this.grantId) {
-      throw new Error(GrantEventError.GrantIdRequired)
-    }
-  }
 }
