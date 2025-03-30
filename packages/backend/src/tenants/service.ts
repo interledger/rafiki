@@ -109,6 +109,7 @@ async function createTenant(
       tenantId: tenant.id,
       setting: TenantSetting.default()
     }
+
     if (settings) {
       createInitialTenantSettingsOptions.setting =
         createInitialTenantSettingsOptions.setting.concat(settings)

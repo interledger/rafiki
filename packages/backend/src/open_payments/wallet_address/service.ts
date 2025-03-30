@@ -236,7 +236,7 @@ async function createWalletAddress(
   const finalWalletAddressUrl = await createWalletAddressUrl(deps, options)
 
   if (isWalletAddressError(finalWalletAddressUrl)) {
-    return finalWalletAddressUrl;
+    return finalWalletAddressUrl
   }
 
   try {

@@ -104,19 +104,22 @@ describe('Open Payments Wallet Address Service', (): void => {
     )
 
     test.each`
-      isOperator            | tenantSettingUrl
-      ${false}              | ${undefined}
-      ${true}               | ${undefined}
-      ${true}               | ${'https://alice.me'}
+      isOperator | tenantSettingUrl
+      ${false}   | ${undefined}
+      ${true}    | ${undefined}
+      ${true}    | ${'https://alice.me'}
     `(
-      'operator - $isOperator with tenantSettingUrl - $tenantSettingUrl', 
-      async({ isOperator, tenantSettingUrl }): Promise<void> => {
-        const config = await deps.use('config')
-        const address = "test"
+      'operator - $isOperator with tenantSettingUrl - $tenantSettingUrl',
+      async ({ isOperator, tenantSettingUrl }): Promise<void> => {
+        const address = 'test'
         const tempTenant = await createTenant(deps)
-        const { id: tempAssetId } = await createAsset(deps, undefined, tempTenant.id)
+        const { id: tempAssetId } = await createAsset(
+          deps,
+          undefined,
+          tempTenant.id
+        )
 
-        let expected: string = WalletAddressError.WalletAddressSettingNotFound;
+        let expected: string = WalletAddressError.WalletAddressSettingNotFound
         if (tenantSettingUrl) {
           await createTenantSettings(deps, {
             tenantId: tempTenant.id,
@@ -153,14 +156,13 @@ describe('Open Payments Wallet Address Service', (): void => {
 
     test('should return error without tenant settings if caller is not an operator', async () => {
       const tempTenant = await createTenant(deps)
-      
+
       expect(
         await walletAddressService.create({
           ...options,
           tenantId: tempTenant.id
         })
       ).toEqual(WalletAddressError.WalletAddressSettingNotFound)
-
     })
 
     test.each`
