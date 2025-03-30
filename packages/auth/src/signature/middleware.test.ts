@@ -43,10 +43,12 @@ describe('Signature Service', (): void => {
   const CLIENT = faker.internet.url({ appendSlash: false })
   let testKeys: TestKeys
   let testClientKey: JWK
+  let knex: Knex
 
   beforeAll(async (): Promise<void> => {
     deps = initIocContainer(Config)
     appContainer = await createTestApp(deps)
+    knex = appContainer.knex
     testKeys = generateTestKeys()
     testClientKey = testKeys.publicKey
   })
@@ -60,7 +62,6 @@ describe('Signature Service', (): void => {
     let grant: Grant
     let interaction: Interaction
     let token: AccessToken
-    let trx: Knex.Transaction
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let next: () => Promise<any>
     let managementId: string
@@ -112,15 +113,15 @@ describe('Signature Service', (): void => {
     })
 
     beforeEach(async (): Promise<void> => {
-      grant = await Grant.query(trx).insertAndFetch(generateBaseGrant())
-      await Access.query(trx).insertAndFetch({
+      grant = await Grant.query(knex).insertAndFetch(generateBaseGrant())
+      await Access.query(knex).insertAndFetch({
         grantId: grant.id,
         ...BASE_ACCESS
       })
-      interaction = await Interaction.query(trx).insertAndFetch(
+      interaction = await Interaction.query(knex).insertAndFetch(
         generateBaseInteraction(grant)
       )
-      token = await AccessToken.query(trx).insertAndFetch({
+      token = await AccessToken.query(knex).insertAndFetch({
         grantId: grant.id,
         ...BASE_TOKEN
       })

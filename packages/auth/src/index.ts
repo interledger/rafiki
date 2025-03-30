@@ -21,6 +21,7 @@ import {
 import { createInteractionService } from './interaction/service'
 import { getTokenIntrospectionOpenAPI } from 'token-introspection'
 import { Redis } from 'ioredis'
+import { createWebhookService } from './webhook/service'
 
 const container = initIocContainer(Config)
 const app = new App(container)
@@ -207,6 +208,14 @@ export function initIocContainer(
   container.singleton('redis', async (deps): Promise<Redis> => {
     const config = await deps.use('config')
     return new Redis(config.redisUrl, { tls: config.redisTls })
+  })
+
+  container.singleton('webhookService', async (deps) => {
+    return createWebhookService({
+      config: await deps.use('config'),
+      knex: await deps.use('knex'),
+      logger: await deps.use('logger')
+    })
   })
 
   return container
