@@ -54,6 +54,7 @@ import { Redis } from 'ioredis'
 import { LoggingPlugin } from './graphql/plugin'
 import { gnapServerErrorMiddleware } from './shared/gnapErrors'
 import { verifyApiSignature } from './shared/utils'
+import { WebhookService } from './webhook/service'
 
 export interface AppContextData extends DefaultContext {
   logger: Logger
@@ -102,6 +103,7 @@ export interface AppServices {
   grantRoutes: Promise<GrantRoutes>
   interactionRoutes: Promise<InteractionRoutes>
   redis: Promise<Redis>
+  webhookService: Promise<WebhookService>
 }
 
 export type AppContainer = IocContract<AppServices>
@@ -141,6 +143,13 @@ export class App {
     if (this.config.env !== 'test') {
       for (let i = 0; i < this.config.databaseCleanupWorkers; i++) {
         process.nextTick(() => this.processDatabaseCleanup())
+      }
+
+      // if webhookUrl is not set, webhook events are not saved or processed
+      if (this.config.webhookUrl) {
+        for (let i = 0; i < this.config.webhookWorkers; i++) {
+          process.nextTick(() => this.processWebhook())
+        }
       }
     }
   }
@@ -567,5 +576,23 @@ export class App {
         }
       }
     }
+  }
+
+  private async processWebhook(): Promise<void> {
+    const webhookService = await this.container.use('webhookService')
+    return webhookService
+      .processNext()
+      .catch((err) => {
+        this.logger.warn({ error: err.message }, 'processWebhook error')
+        return true
+      })
+      .then((hasMoreWork) => {
+        if (hasMoreWork) process.nextTick(() => this.processWebhook())
+        else
+          setTimeout(
+            () => this.processWebhook(),
+            this.config.webhookWorkerIdle
+          ).unref()
+      })
   }
 }
