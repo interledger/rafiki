@@ -20,7 +20,7 @@ import { AppServices } from '../app'
 import { getPageTests } from '../shared/baseModel.test'
 import { Pagination, SortOrder } from '../shared/baseModel'
 import { createWebhookEvent } from '../tests/webhook'
-import { GrantEventType } from '../grant/model'
+import { GrantEventType } from '../grant/event.model'
 
 describe('Webhook Service', (): void => {
   let deps: IocContract<AppServices>
