@@ -6,7 +6,7 @@ import {
 } from 'objection'
 import { URL } from 'url'
 
-import { WalletAddressError } from './errors'
+import { isWalletAddressError, WalletAddressError } from './errors'
 import {
   WalletAddress,
   WalletAddressEvent,
@@ -167,10 +167,10 @@ function cleanAdditionalProperties(
     .filter((prop) => prop.fieldKey.length > 0 && prop.fieldValue.length > 0)
 }
 
-async function createWalletAddress(
+async function createWalletAddressUrl(
   deps: ServiceDependencies,
   options: CreateOptions
-): Promise<WalletAddress | WalletAddressError> {
+): Promise<string | WalletAddressError> {
   let tenantWalletAddressUrl = new URL(deps.config.openPaymentsUrl)
 
   const found = (await deps.tenantSettingService.get({
@@ -224,6 +224,19 @@ async function createWalletAddress(
 
   if (!isValidWalletAddressUrl(finalWalletAddressUrl)) {
     return WalletAddressError.InvalidUrl
+  }
+
+  return finalWalletAddressUrl
+}
+
+async function createWalletAddress(
+  deps: ServiceDependencies,
+  options: CreateOptions
+): Promise<WalletAddress | WalletAddressError> {
+  const finalWalletAddressUrl = await createWalletAddressUrl(deps, options)
+
+  if (isWalletAddressError(finalWalletAddressUrl)) {
+    return finalWalletAddressUrl;
   }
 
   try {
