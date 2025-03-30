@@ -8,9 +8,7 @@ import {
   GrantState,
   GrantFinalization,
   StartMethod,
-  FinishMethod,
-  GrantEvent,
-  GrantEventType
+  FinishMethod
 } from './model'
 import { AccessRequest } from '../access/types'
 import { AccessService } from '../access/service'
@@ -19,6 +17,7 @@ import { FilterString } from '../shared/filters'
 import { AccessTokenService } from '../accessToken/service'
 import { canSkipInteraction } from './utils'
 import { IAppConfig } from '../config/app'
+import { GrantEvent, GrantEventType } from './event.model'
 
 interface GrantFilter {
   identifier?: FilterString
