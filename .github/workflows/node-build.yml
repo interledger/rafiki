@@ -54,7 +54,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/workflows/rafiki/env-setup
-      - run: pnpm --filter backend build:deps
+      - run: pnpm --filter auth build:deps
       - run: pnpm --filter auth test
       - name: AsyncAPI extension
         run: |

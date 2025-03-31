@@ -9,10 +9,5 @@
   "include": ["src/**/*"],
   "ts-node": {
     "swc": true
-  },
-  "references": [
-    {
-      "path": "../token-introspection"
-    }
-  ]
+  }
 }

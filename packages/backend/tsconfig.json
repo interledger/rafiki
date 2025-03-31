@@ -3,16 +3,10 @@
   "compilerOptions": {
     "lib": ["ESNext"],
     "outDir": "./dist",
-    "rootDir": "./src",
-    "declaration": true
+    "rootDir": "./src"
   },
   "include": ["src/**/*"],
   "ts-node": {
     "swc": true
-  },
-  "references": [
-    {
-      "path": "../token-introspection"
-    }
-  ]
+  }
 }

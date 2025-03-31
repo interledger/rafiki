@@ -8,10 +8,10 @@
   ],
   "scripts": {
     "build": "pnpm clean && pnpm generate:types && tsc --build tsconfig.json",
-    "clean": "rm -fr dist/",
+    "clean": "rm -fr dist/ tsconfig.tsbuildinfo",
     "copy-op-schemas": "cp ./node_modules/@interledger/open-payments/dist/openapi/specs/auth-server.yaml ./node_modules/@interledger/open-payments/dist/openapi/specs/schemas.yaml ./src/openapi/specs/",
     "generate:types": "openapi-typescript ./src/openapi/specs/token-introspection.yaml --output src/openapi/generated/types.ts -t",
-    "postinstall": "pwd && pnpm copy-op-schemas",
+    "postinstall": "pnpm copy-op-schemas",
     "prepack": "pnpm build",
     "test": "jest --passWithNoTests",
     "test:cov": "pnpm test -- --coverage",
