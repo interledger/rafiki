@@ -130,7 +130,7 @@ async function revokeByGrantId(
   const revokedAt = new Date()
   await AccessToken.query(trx || deps.knex)
     .patch({
-      revokedAt: new Date()
+      revokedAt
     })
     .where('grantId', grantId)
 
