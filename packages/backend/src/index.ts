@@ -365,7 +365,6 @@ export function initIocContainer(
       return createTigerbeetleAccountingService({
         logger,
         knex,
-        config,
         tigerBeetle,
         withdrawalThrottleDelay: config.withdrawalThrottleDelay,
         telemetry
@@ -375,7 +374,6 @@ export function initIocContainer(
     return createPsqlAccountingService({
       logger,
       knex,
-      config,
       withdrawalThrottleDelay: config.withdrawalThrottleDelay,
       telemetry
     })
