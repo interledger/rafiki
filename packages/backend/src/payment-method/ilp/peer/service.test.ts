@@ -164,6 +164,11 @@ describe('Peer Service', (): void => {
       ).resolves.toEqual(PeerError.UnknownAsset)
     })
 
+    test('Cannot fetch a peer with incorrect tenantId', async (): Promise<void> => {
+      const peer = await createPeer(deps)
+      await expect(peerService.get(peer.id, uuid())).resolves.toBeUndefined()
+    })
+
     test('Cannot create a peer with duplicate incoming tokens', async (): Promise<void> => {
       const incomingToken = faker.string.sample(32)
 
@@ -221,6 +226,13 @@ describe('Peer Service', (): void => {
       await expect(peerService.create(options)).resolves.toEqual(
         PeerError.DuplicatePeer
       )
+    })
+
+    test('Cannot create a peer with incorrect tenantId', async (): Promise<void> => {
+      const options = randomPeer()
+      await expect(
+        peerService.create({ ...options, tenantId: uuid() })
+      ).resolves.toEqual(PeerError.UnknownAsset)
     })
   })
 
