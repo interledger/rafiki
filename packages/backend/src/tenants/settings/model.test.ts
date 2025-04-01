@@ -28,7 +28,7 @@ describe('TenantSetting Model', (): void => {
     })
 
     afterAll(async (): Promise<void> => {
-      await truncateTables(appContainer.knex)
+      await truncateTables(appContainer.container)
       await appContainer.shutdown()
     })
     test('can format tenant settings', async (): Promise<void> => {
