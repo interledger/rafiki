@@ -71,7 +71,7 @@ export class Peer
             liquidityThreshold: this.liquidityThreshold,
             balance
           },
-          tenantId // TODO: update when peers are tenanted
+          tenantId: this.tenantId
         })
       }
     }

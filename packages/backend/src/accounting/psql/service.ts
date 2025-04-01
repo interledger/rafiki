@@ -35,13 +35,11 @@ import {
 } from './ledger-transfer'
 import { LedgerTransfer, LedgerTransferType } from './ledger-transfer/model'
 import { TelemetryService } from '../../telemetry/service'
-import { IAppConfig } from '../../config/app'
 
 export interface ServiceDependencies extends BaseService {
   knex: TransactionOrKnex
   telemetry: TelemetryService
   withdrawalThrottleDelay?: number
-  config: IAppConfig // TODO: remove when peers are tenanted
 }
 
 export function createAccountingService(
