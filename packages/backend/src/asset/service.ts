@@ -119,10 +119,7 @@ async function createAsset(
         key: TenantSettingKeys.EXCHANGE_RATES_URL.name
       })
 
-      const tenantExchangeRatesUrl = Array.isArray(exchangeUrlSetting)
-        ? exchangeUrlSetting[0]?.value
-        : exchangeUrlSetting?.value
-
+      const tenantExchangeRatesUrl = exchangeUrlSetting[0]?.value
       if (!tenantExchangeRatesUrl && !deps.config.operatorExchangeRatesUrl) {
         return AssetError.NoRatesForAsset
       }

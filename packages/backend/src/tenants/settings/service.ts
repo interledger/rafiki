@@ -31,7 +31,7 @@ export interface ExtraOptions {
 }
 
 export interface TenantSettingService {
-  get: (options: GetOptions) => Promise<TenantSetting | TenantSetting[]>
+  get: (options: GetOptions) => Promise<TenantSetting[]>
   create: (
     options: CreateOptions,
     extra?: ExtraOptions
@@ -75,7 +75,7 @@ export async function createTenantSettingService(
 async function getTenantSettings(
   deps: ServiceDependencies,
   options: GetOptions
-): Promise<TenantSetting | TenantSetting[]> {
+): Promise<TenantSetting[]> {
   return TenantSetting.query(deps.knex).whereNull('deletedAt').andWhere(options)
 }
 

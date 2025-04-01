@@ -159,35 +159,32 @@ class RatesServiceImpl implements RatesService {
         baseAssetCode,
         tenantId
       )
-        .then(async (rates) => {
-          await this.cache.set(ratesCacheKey, JSON.stringify(rates))
-          return rates
-        })
-        .catch((err) => {
-          const errorMessage = 'Could not fetch rates'
-
-          this.deps.logger.error(
-            {
-              ...(isAxiosError(err)
-                ? {
-                    errorMessage: err.message,
-                    errorCode: err.code,
-                    errorStatus: err.status
-                  }
-                : { err }),
-              baseAssetCode
-            },
-            errorMessage
-          )
-
-          throw new Error(errorMessage)
-        })
-        .finally(() => {
-          delete this.inProgressRequests[ratesCacheKey]
-        })
     }
+    try {
+      const rates = await this.inProgressRequests[ratesCacheKey]
+      await this.cache.set(ratesCacheKey, JSON.stringify(rates))
+      return rates
+    } catch (err) {
+      const errorMessage = 'Could not fetch rates'
 
-    return this.inProgressRequests[ratesCacheKey]
+      this.deps.logger.error(
+        {
+          ...(isAxiosError(err)
+            ? {
+                errorMessage: err.message,
+                errorCode: err.code,
+                errorStatus: err.status
+              }
+            : { err }),
+          baseAssetCode
+        },
+        errorMessage
+      )
+
+      throw new Error(errorMessage)
+    } finally {
+      delete this.inProgressRequests[ratesCacheKey]
+    }
   }
 
   private async fetchNewRates(
@@ -225,10 +222,7 @@ class RatesServiceImpl implements RatesService {
         key: TenantSettingKeys.EXCHANGE_RATES_URL.name
       })
 
-      const tenantExchangeRatesUrl = Array.isArray(exchangeUrlSetting)
-        ? exchangeUrlSetting[0]?.value
-        : exchangeUrlSetting?.value
-
+      const tenantExchangeRatesUrl = exchangeUrlSetting[0]?.value
       if (!tenantExchangeRatesUrl) {
         return this.deps.operatorExchangeRatesUrl
       }

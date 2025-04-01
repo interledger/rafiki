@@ -71,19 +71,6 @@ describe('Integration tests', (): void => {
 
       beforeAll(async () => {
         testActions = createTestActions({ sendingASE: c9, receivingASE: hlb })
-
-        // Only create tenant settings for the 'sending' tenant
-        // 'Receiving' tenant will use operator's exchange URL
-        const c9Settings = {
-          settings: [
-            { key: 'EXCHANGE_RATES_URL', value: c9.config.seed.rates_url }
-          ]
-        }
-        const c9TenantSettings = await testActions.admin.createTenantSettings(
-          c9Settings,
-          'sending'
-        )
-        assert(c9TenantSettings)
       })
 
       test('Open Payments with Continuation via Polling', async (): Promise<void> => {
