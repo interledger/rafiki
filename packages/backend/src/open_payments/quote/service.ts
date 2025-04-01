@@ -169,6 +169,11 @@ async function createQuote(
     )
     stopTimerFee()
 
+    // Calculate fee when debitAmount is set
+    const fixedDebitFee = options.debitAmount
+      ? sendingFee?.calculate(options.debitAmount.value) ?? 0n
+      : 0n
+
     const stopTimerQuote = deps.telemetry.startTimer(
       'quote_service_create_get_quote_time_ms',
       {
@@ -176,7 +181,6 @@ async function createQuote(
         description: 'Time to getQuote'
       }
     )
-
     const quote = await deps.paymentMethodHandlerService.getQuote(
       paymentMethod,
       {
@@ -185,9 +189,19 @@ async function createQuote(
         receiver,
         receiveAmount: options.receiveAmount,
         debitAmount: options.debitAmount
+          ? {
+              ...options.debitAmount,
+              value: options.debitAmount.value - fixedDebitFee
+            }
+          : undefined
       }
     )
     stopTimerQuote()
+
+    // Calculate fee when receiveAmount is set
+    const fixedReceiveFee = !options.debitAmount
+      ? sendingFee?.calculate(quote.debitAmount.value) ?? 0n
+      : 0n
 
     const unfinalizedQuote: UnfinalizedQuote = {
       id: quoteId,
@@ -213,7 +227,8 @@ async function createQuote(
       deps,
       options,
       unfinalizedQuote,
-      receiver
+      receiver,
+      fixedDebitFee + fixedReceiveFee
     )
     stopFinalize()
 
@@ -305,22 +320,17 @@ interface CalculateQuoteAmountsWithFeesResult {
 function calculateFixedSendQuoteAmounts(
   deps: ServiceDependencies,
   quote: UnfinalizedQuote,
-  maxReceiveAmountValue: bigint
+  maxReceiveAmountValue: bigint,
+  fees: bigint
 ): CalculateQuoteAmountsWithFeesResult {
-  // TODO: derive fee from debitAmount instead? Current behavior/tests may be wrong with basis point fees.
-  const fees = quote.fee?.calculate(quote.receiveAmount.value) ?? BigInt(0)
-
   const { estimatedExchangeRate } = quote
-
-  const exchangeAdjustedFees = BigInt(
-    Math.ceil(Number(fees) * estimatedExchangeRate)
-  )
-  const receiveAmountValue =
-    BigInt(quote.receiveAmount.value) - exchangeAdjustedFees
+  const receiveAmountValue = BigInt(quote.receiveAmount.value)
+  const debitAmountMinusFees = BigInt(quote.debitAmount.value)
+  const debitAmountValue = BigInt(quote.debitAmount.value) + fees
 
   if (receiveAmountValue <= BigInt(0)) {
     deps.logger.info(
-      { fees, exchangeAdjustedFees, estimatedExchangeRate, receiveAmountValue },
+      { fees, estimatedExchangeRate, receiveAmountValue },
       'Negative receive amount when calculating quote amount'
     )
     throw QuoteError.NonPositiveReceiveAmount
@@ -330,24 +340,19 @@ function calculateFixedSendQuoteAmounts(
     throw QuoteError.InvalidAmount
   }
 
-  const debitAmountMinusFees =
-    quote.debitAmount.value -
-    (quote.fee?.calculate(quote.debitAmount.value) ?? 0n)
-
   deps.logger.debug(
     {
       'quote.receiveAmount.value': quote.receiveAmount.value,
-      debitAmountValue: quote.debitAmount.value,
+      debitAmountValue,
       debitAmountMinusFees,
       receiveAmountValue,
-      fees,
-      exchangeAdjustedFees
+      fees
     },
     'Calculated fixed-send quote amount with fees'
   )
 
   return {
-    debitAmountValue: quote.debitAmount.value,
+    debitAmountValue,
     debitAmountMinusFees,
     receiveAmountValue
   }
@@ -378,11 +383,12 @@ interface QuotePatchOptions {
  */
 function calculateFixedDeliveryQuoteAmounts(
   deps: ServiceDependencies,
-  quote: UnfinalizedQuote
+  quote: UnfinalizedQuote,
+  fees: bigint
 ): CalculateQuoteAmountsWithFeesResult {
-  const fees = quote.fee?.calculate(quote.debitAmount.value) ?? BigInt(0)
-
   const debitAmountValue = BigInt(quote.debitAmount.value) + fees
+  const debitAmountMinusFees = BigInt(quote.debitAmount.value)
+  const receiveAmountValue = BigInt(quote.receiveAmount.value)
 
   if (debitAmountValue <= BigInt(0)) {
     deps.logger.info(
@@ -393,14 +399,14 @@ function calculateFixedDeliveryQuoteAmounts(
   }
 
   deps.logger.debug(
-    { debitAmountValue, receiveAmountValue: quote.receiveAmount.value, fees },
+    { debitAmountValue, receiveAmountValue, fees: fees },
     `Calculated fixed-delivery quote amount with fees`
   )
 
   return {
     debitAmountValue,
-    debitAmountMinusFees: quote.debitAmount.value,
-    receiveAmountValue: quote.receiveAmount.value
+    debitAmountMinusFees,
+    receiveAmountValue
   }
 }
 
@@ -408,7 +414,8 @@ async function finalizeQuote(
   deps: ServiceDependencies,
   options: CreateQuoteOptions,
   quote: UnfinalizedQuote,
-  receiver: Receiver
+  receiver: Receiver,
+  fees: bigint
 ): Promise<QuotePatchOptions> {
   let maxReceiveAmountValue: bigint | undefined
 
@@ -417,6 +424,7 @@ async function finalizeQuote(
       receiver.incomingAmount && receiver.receivedAmount
         ? receiver.incomingAmount.value - receiver.receivedAmount.value
         : undefined
+
     maxReceiveAmountValue =
       receivingPaymentValue && receivingPaymentValue < quote.receiveAmount.value
         ? receivingPaymentValue
@@ -434,8 +442,8 @@ async function finalizeQuote(
 
   const { debitAmountValue, debitAmountMinusFees, receiveAmountValue } =
     maxReceiveAmountValue
-      ? calculateFixedSendQuoteAmounts(deps, quote, maxReceiveAmountValue)
-      : calculateFixedDeliveryQuoteAmounts(deps, quote)
+      ? calculateFixedSendQuoteAmounts(deps, quote, maxReceiveAmountValue, fees)
+      : calculateFixedDeliveryQuoteAmounts(deps, quote, fees)
 
   const patchOptions = {
     debitAmountMinusFees,
