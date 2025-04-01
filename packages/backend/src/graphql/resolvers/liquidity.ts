@@ -101,7 +101,7 @@ export const depositPeerLiquidity: MutationResolvers<TenantedApolloContext>['dep
       transferId: args.input.id,
       peerId: args.input.peerId,
       amount: args.input.amount,
-      tenantId: ctx.tenant.id
+      tenantId: ctx.isOperator ? undefined : ctx.tenant.id
     })
 
     if (peerOrError === PeerError.UnknownPeer) {
@@ -178,7 +178,10 @@ export const createPeerLiquidityWithdrawal: MutationResolvers<TenantedApolloCont
       })
     }
     const peerService = await ctx.container.use('peerService')
-    const peer = await peerService.get(peerId, ctx.tenant.id)
+    const peer = await peerService.get(
+      peerId,
+      ctx.isOperator ? undefined : ctx.tenant.id
+    )
     if (!peer) {
       throw new GraphQLError(errorToMessage[LiquidityError.UnknownPeer], {
         extensions: {

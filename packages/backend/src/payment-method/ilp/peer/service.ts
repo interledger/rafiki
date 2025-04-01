@@ -56,7 +56,7 @@ interface DepositPeerLiquidityArgs {
   amount: bigint
   transferId?: string
   peerId: string
-  tenantId: string
+  tenantId?: string
 }
 
 export interface PeerService {
@@ -123,7 +123,11 @@ async function getPeer(
   id: string,
   tenantId?: string
 ): Promise<Peer | undefined> {
-  const peer = await Peer.query(deps.knex).findOne({ id, tenantId })
+  let query = Peer.query(deps.knex)
+  if (tenantId) {
+    query = query.where('tenantId', tenantId)
+  }
+  const peer = await query.findOne({ id })
   if (peer) {
     const asset = await deps.assetService.get(peer.assetId)
     if (asset) peer.asset = asset
