@@ -74,7 +74,7 @@ describe('Models', (): void => {
       `(
         'creates webhook event if balance=$balance <= liquidityThreshold',
         async ({ balance }): Promise<void> => {
-          await peer.onDebit({ balance, tenantId: Config.operatorTenantId })
+          await peer.onDebit({ balance })
           const event = (
             await PeerEvent.query(knex).where(
               'type',
