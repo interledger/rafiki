@@ -8,6 +8,9 @@ import { AccountingService, LiquidityAccountType } from '../accounting/service'
 import { WalletAddress } from '../open_payments/wallet_address/model'
 import { Peer } from '../payment-method/ilp/peer/model'
 import { CacheDataStore } from '../middleware/cache/data-stores'
+import { TenantSettingService } from '../tenants/settings/service'
+import { TenantSettingKeys } from '../tenants/settings/model'
+import { IAppConfig } from '../config/app'
 
 export interface AssetOptions {
   code: string
@@ -56,14 +59,18 @@ export interface AssetService {
 }
 
 interface ServiceDependencies extends BaseService {
+  config: IAppConfig
   accountingService: AccountingService
+  tenantSettingService: TenantSettingService
   assetCache: CacheDataStore<Asset>
 }
 
 export async function createAssetService({
+  config,
   logger,
   knex,
   accountingService,
+  tenantSettingService,
   assetCache
 }: ServiceDependencies): Promise<AssetService> {
   const log = logger.child({
@@ -71,9 +78,11 @@ export async function createAssetService({
   })
 
   const deps: ServiceDependencies = {
+    config,
     logger: log,
     knex,
     accountingService,
+    tenantSettingService,
     assetCache
   }
 
@@ -99,13 +108,27 @@ async function createAsset(
   }: CreateOptions
 ): Promise<Asset | AssetError> {
   try {
-    // check if exists but deleted | by code-scale
-    const deletedAsset = await Asset.query(deps.knex)
-      .whereNotNull('deletedAt')
-      .where('code', code)
-      .andWhere('scale', scale)
+    const assets = await Asset.query(deps.knex)
       .andWhere('tenantId', tenantId)
-      .first()
+      .select('*')
+
+    const sameCodeAssets = assets.find((asset) => asset.code === code)
+    if (!sameCodeAssets && assets.length > 0) {
+      const exchangeUrlSetting = await deps.tenantSettingService.get({
+        tenantId,
+        key: TenantSettingKeys.EXCHANGE_RATES_URL.name
+      })
+
+      const tenantExchangeRatesUrl = exchangeUrlSetting[0]?.value
+      if (!tenantExchangeRatesUrl && !deps.config.operatorExchangeRatesUrl) {
+        return AssetError.NoRatesForAsset
+      }
+    }
+
+    const deletedAsset = assets.find(
+      (asset) =>
+        asset.deletedAt !== null && asset.code === code && asset.scale === scale
+    )
 
     if (deletedAsset) {
       // if found, enable

@@ -24,6 +24,11 @@ import { IncomingPaymentService } from '../../open_payments/payment/incoming/ser
 import { errorToMessage, TransferError } from '../../accounting/errors'
 import { PaymentMethodHandlerError } from '../handler/errors'
 import { ConvertError } from '../../rates/service'
+import {
+  createTenantSettings,
+  exchangeRatesSetting
+} from '../../tests/tenantSettings'
+import { CreateOptions } from '../../tenants/settings/service'
 
 const nock = (global as unknown as { nock: typeof import('nock') }).nock
 
@@ -35,7 +40,7 @@ describe('LocalPaymentService', (): void => {
   let incomingPaymentService: IncomingPaymentService
   let tenantId: string
 
-  const exchangeRatesUrl = 'https://example-rates.com'
+  let tenantExchangeRatesUrl: string
 
   const assetMap: Record<string, Asset> = {}
   const walletAddressMap: Record<string, WalletAddress> = {}
@@ -43,7 +48,6 @@ describe('LocalPaymentService', (): void => {
   beforeAll(async (): Promise<void> => {
     deps = initIocContainer({
       ...Config,
-      exchangeRatesUrl,
       exchangeRatesLifetime: 0
     })
     appContainer = await createTestApp(deps)
@@ -84,6 +88,14 @@ describe('LocalPaymentService', (): void => {
       tenantId,
       assetId: assetMap['EUR'].id
     })
+
+    const createOptions: CreateOptions = {
+      tenantId,
+      setting: [exchangeRatesSetting()]
+    }
+
+    const tenantSetting = createTenantSettings(deps, createOptions)
+    tenantExchangeRatesUrl = (await tenantSetting).value
   })
 
   afterEach(async (): Promise<void> => {
@@ -290,7 +302,7 @@ describe('LocalPaymentService', (): void => {
             let ratesScope
 
             if (incomingAssetCode !== debitAssetCode) {
-              ratesScope = mockRatesApi(exchangeRatesUrl, () => ({
+              ratesScope = mockRatesApi(tenantExchangeRatesUrl, () => ({
                 [incomingAssetCode]: exchangeRate
               }))
             }
@@ -346,7 +358,7 @@ describe('LocalPaymentService', (): void => {
             let ratesScope
 
             if (debitAssetCode !== incomingAssetCode) {
-              ratesScope = mockRatesApi(exchangeRatesUrl, () => ({
+              ratesScope = mockRatesApi(tenantExchangeRatesUrl, () => ({
                 [incomingAssetCode]: exchangeRate
               }))
             }

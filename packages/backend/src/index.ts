@@ -253,16 +253,20 @@ export function initIocContainer(
     const config = await deps.use('config')
     return createRatesService({
       logger: await deps.use('logger'),
-      exchangeRatesUrl: config.exchangeRatesUrl,
-      exchangeRatesLifetime: config.exchangeRatesLifetime
+      operatorTenantId: config.operatorTenantId,
+      operatorExchangeRatesUrl: config.operatorExchangeRatesUrl,
+      exchangeRatesLifetime: config.exchangeRatesLifetime,
+      tenantSettingService: await deps.use('tenantSettingService')
     })
   })
 
   container.singleton('internalRatesService', async (deps) => {
     return createRatesService({
       logger: await deps.use('logger'),
-      exchangeRatesUrl: config.telemetryExchangeRatesUrl,
-      exchangeRatesLifetime: config.telemetryExchangeRatesLifetime
+      operatorTenantId: config.operatorTenantId,
+      operatorExchangeRatesUrl: config.telemetryExchangeRatesUrl,
+      exchangeRatesLifetime: config.telemetryExchangeRatesLifetime,
+      tenantSettingService: await deps.use('tenantSettingService')
     })
   })
 
@@ -330,10 +334,13 @@ export function initIocContainer(
   container.singleton('assetService', async (deps) => {
     const logger = await deps.use('logger')
     const knex = await deps.use('knex')
+    const config = await deps.use('config')
     return await createAssetService({
+      config: config,
       logger: logger,
       knex: knex,
       accountingService: await deps.use('accountingService'),
+      tenantSettingService: await deps.use('tenantSettingService'),
       assetCache: await deps.use('assetCache')
     })
   })

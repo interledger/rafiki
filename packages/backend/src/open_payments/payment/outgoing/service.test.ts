@@ -55,6 +55,11 @@ import { getPageTests } from '../../../shared/baseModel.test'
 import { Pagination, SortOrder } from '../../../shared/baseModel'
 import { ReceiverService } from '../../receiver/service'
 import { WalletAddressService } from '../../wallet_address/service'
+import { CreateOptions } from '../../../tenants/settings/service'
+import {
+  createTenantSettings,
+  exchangeRatesSetting
+} from '../../../tests/tenantSettings'
 
 describe('OutgoingPaymentService', (): void => {
   let deps: IocContract<AppServices>
@@ -248,15 +253,8 @@ describe('OutgoingPaymentService', (): void => {
   }
 
   beforeAll(async (): Promise<void> => {
-    const exchangeRatesUrl = 'https://test.rates'
-
-    mockRatesApi(exchangeRatesUrl, () => ({
-      XRP: exchangeRate
-    }))
-
     deps = await initIocContainer({
       ...Config,
-      exchangeRatesUrl,
       enableTelemetry: true,
       localCacheDuration: 0
     })
@@ -274,6 +272,16 @@ describe('OutgoingPaymentService', (): void => {
 
   beforeEach(async (): Promise<void> => {
     tenantId = config.operatorTenantId
+    const createOptions: CreateOptions = {
+      tenantId,
+      setting: [exchangeRatesSetting()]
+    }
+    const tenantSetting = createTenantSettings(deps, createOptions)
+    const tenantExchangeRatesUrl = (await tenantSetting).value
+    mockRatesApi(tenantExchangeRatesUrl, () => ({
+      XRP: exchangeRate
+    }))
+
     const { id: sendAssetId } = await createAsset(deps, asset)
     assetId = sendAssetId
     const walletAddress = await createWalletAddress(deps, {
