@@ -201,17 +201,13 @@ async function sendWebhookEvent(
       )
     }
 
-    await axios.post(
-      settings?.webhookUrl?.value ?? deps.config.webhookUrl,
-      body,
-      {
-        timeout: settings?.webhookTimeout?.value
-          ? Number(settings?.webhookTimeout?.value)
-          : deps.config.webhookTimeout,
-        headers: requestHeaders,
-        validateStatus: (status) => status === 200
-      }
-    )
+    await axios.post(settings?.webhookUrl ?? deps.config.webhookUrl, body, {
+      timeout: Number(settings?.webhookTimeout)
+        ? Number(settings?.webhookTimeout)
+        : deps.config.webhookTimeout,
+      headers: requestHeaders,
+      validateStatus: (status) => status === 200
+    })
 
     await event.$query(deps.knex).patch({
       attempts: event.attempts + 1,
