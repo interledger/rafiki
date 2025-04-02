@@ -66,10 +66,10 @@ describe('TenantSetting Model', (): void => {
         exchangeRateSetting
       ])
       expect(formattedSettings).toMatchObject({
-        exchangeRatesUrl: exchangeRateSetting,
-        webhookUrl: webhookUrlSetting,
-        webhookMaxRetry: webhookMaxRetrySetting,
-        webhookTimeout: webhookTimeoutSetting
+        exchangeRatesUrl: exchangeRateSetting.value,
+        webhookUrl: webhookUrlSetting.value,
+        webhookMaxRetry: webhookMaxRetrySetting.value,
+        webhookTimeout: webhookTimeoutSetting.value
       })
     })
   })
