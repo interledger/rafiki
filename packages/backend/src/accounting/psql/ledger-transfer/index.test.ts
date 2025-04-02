@@ -22,15 +22,18 @@ import {
 } from '.'
 import { ServiceDependencies } from '../service'
 import { TransferError } from '../../errors'
+import { AppServices } from '../../../app'
+import { IocContract } from '@adonisjs/fold'
 
 describe('Ledger Transfer', (): void => {
+  let deps: IocContract<AppServices>
   let serviceDeps: ServiceDependencies
   let appContainer: TestContainer
   let knex: Knex
   let asset: Asset
 
   beforeAll(async (): Promise<void> => {
-    const deps = initIocContainer({ ...Config, useTigerBeetle: false })
+    deps = initIocContainer({ ...Config, useTigerBeetle: false })
     appContainer = await createTestApp(deps)
     serviceDeps = {
       logger: await deps.use('logger'),
@@ -65,7 +68,7 @@ describe('Ledger Transfer', (): void => {
 
   afterEach(async (): Promise<void> => {
     jest.useRealTimers()
-    await truncateTables(knex)
+    await truncateTables(deps)
   })
 
   afterAll(async (): Promise<void> => {

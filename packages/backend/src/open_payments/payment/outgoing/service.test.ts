@@ -332,7 +332,7 @@ describe('OutgoingPaymentService', (): void => {
   afterEach(async (): Promise<void> => {
     jest.restoreAllMocks()
     receiverWalletAddress.scope?.persist(false)
-    await truncateTables(knex)
+    await truncateTables(deps)
   })
 
   afterAll(async (): Promise<void> => {

@@ -236,7 +236,8 @@ export function initIocContainer(
       knex: await deps.use('knex'),
       tenantCache: await deps.use('tenantCache'),
       authServiceClient: deps.use('authServiceClient'),
-      tenantSettingService: await deps.use('tenantSettingService')
+      tenantSettingService: await deps.use('tenantSettingService'),
+      config: await deps.use('config')
     })
   })
 
@@ -772,6 +773,11 @@ export const start = async (
   }
 
   Model.knex(knex)
+
+  // Update Operator Tenant from config
+  const tenantService = await container.use('tenantService')
+  const error = await tenantService.updateOperatorApiSecretFromConfig()
+  if (error) throw error
 
   await app.boot()
   await app.startAdminServer(config.adminPort)
