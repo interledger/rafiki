@@ -91,6 +91,36 @@ describe('TenantSetting Service', (): void => {
 
       expect(tenantSetting).toEqual([])
     })
+
+    test('should update existing tenant settings on conflict - upsert', async (): Promise<void> => {
+      const initialOptions: CreateOptions = {
+        tenantId: tenant.id,
+        setting: [exchangeRatesSetting()]
+      }
+
+      await tenantSettingService.create(initialOptions)
+
+      const newValue = faker.internet.url()
+      const updatedOptions: CreateOptions = {
+        tenantId: tenant.id,
+        setting: [
+          {
+            key: initialOptions.setting[0].key,
+            value: newValue
+          }
+        ]
+      }
+
+      await tenantSettingService.create(updatedOptions)
+      const result = (await tenantSettingService.get({
+        tenantId: tenant.id,
+        key: initialOptions.setting[0].key
+      })) as TenantSetting[]
+
+      expect(result).toHaveLength(1)
+      expect(result[0].key).toEqual(initialOptions.setting[0].key)
+      expect(result[0].value).toEqual(newValue)
+    })
   })
 
   describe('get', () => {
