@@ -61,20 +61,16 @@ const TENANT_KEY_MAPPING = {
 
 export type FormattedTenantSettings = Record<
   (typeof TENANT_KEY_MAPPING)[keyof typeof TENANT_KEY_MAPPING],
-  Omit<TenantSetting, 'key'>
+  TenantSetting['value']
 >
 
 export const formatSettings = (
-  settings: TenantSetting | TenantSetting[]
+  settings: TenantSetting[]
 ): Partial<FormattedTenantSettings> => {
   const settingsObj: Partial<FormattedTenantSettings> = {}
-  if (Symbol.iterator in settings) {
-    for (const setting of settings) {
-      const { key } = setting
-      settingsObj[TENANT_KEY_MAPPING[key]] = setting
-    }
-  } else {
-    settingsObj[TENANT_KEY_MAPPING[settings.key]] = settings
+  for (const setting of settings) {
+    const { key } = setting
+    settingsObj[TENANT_KEY_MAPPING[key]] = setting.value
   }
   return settingsObj
 }
