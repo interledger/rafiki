@@ -51,7 +51,6 @@ accounts:
     id: 60257507-3191-4507-9d77-9071fd6b3c30
     initialBalance: 150000
     assetCode: MXN
-rates_url: 'http://host.docker.internal:8889/rates'
 rates:
   EUR:
     MXN: 18.78

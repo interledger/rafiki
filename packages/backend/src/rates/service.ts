@@ -11,7 +11,6 @@ import { createInMemoryDataStore } from '../middleware/cache/data-stores/in-memo
 import { CacheDataStore } from '../middleware/cache/data-stores'
 import { TenantSettingService } from '../tenants/settings/service'
 import { TenantSettingKeys } from '../tenants/settings/model'
-import { Config as AppConfig } from '../config/app'
 
 const REQUEST_TIMEOUT = 5_000 // millseconds
 
@@ -39,6 +38,7 @@ export interface RatesService {
 }
 
 interface ServiceDependencies extends BaseService {
+  readonly operatorTenantId: string
   // Default exchange rates `url` of the operator.
   // If tenant doesn't set a specific url in the db, this one will be used.
   // In case neither tenant nor operator doesn't set an exchange url, the connector cannot convert between currencies.
@@ -116,7 +116,7 @@ class RatesServiceImpl implements RatesService {
     return this.convert(
       opts,
       convertSource,
-      tenantId ?? AppConfig.operatorTenantId
+      tenantId ?? this.deps.operatorTenantId
     )
   }
 
@@ -127,12 +127,12 @@ class RatesServiceImpl implements RatesService {
     return this.convert(
       opts,
       convertDestination,
-      tenantId ?? AppConfig.operatorTenantId
+      tenantId ?? this.deps.operatorTenantId
     )
   }
 
   async rates(baseAssetCode: string, tenantId?: string): Promise<Rates> {
-    return this.getRates(baseAssetCode, tenantId ?? AppConfig.operatorTenantId)
+    return this.getRates(baseAssetCode, tenantId ?? this.deps.operatorTenantId)
   }
 
   private async getRates(

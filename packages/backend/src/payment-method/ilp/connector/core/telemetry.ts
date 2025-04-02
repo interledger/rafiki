@@ -39,7 +39,8 @@ export async function incrementAmount(
   response: IlpResponse,
   code: string,
   scale: number,
-  telemetry: TelemetryService
+  telemetry: TelemetryService,
+  tenantId?: string
 ): Promise<void> {
   if (!unfulfillable && Number(prepareAmount) && response.fulfill) {
     const value = BigInt(prepareAmount)
@@ -50,7 +51,7 @@ export async function incrementAmount(
         assetCode: code,
         assetScale: scale
       },
-      undefined,
+      tenantId,
       {
         description: 'Amount sent through the network',
         valueType: ValueType.DOUBLE

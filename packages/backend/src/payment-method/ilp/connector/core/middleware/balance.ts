@@ -40,13 +40,17 @@ export function createBalanceMiddleware(): ILPMiddleware {
     }
 
     const sourceAmount = BigInt(amount)
+    const token = accounts.outgoing.http?.outgoing.authToken
+    const peer = token
+      ? await services.peers.getByIncomingToken(token)
+      : undefined
     const destinationAmountOrError = await services.rates.convertSource(
       {
         sourceAmount,
         sourceAsset: accounts.incoming.asset,
         destinationAsset: accounts.outgoing.asset
       },
-      AppConfig.operatorTenantId //TODO when tenanted peers gets merged, this will replaced by: services.peers.get(accounts.incoming.id).tenantId
+      peer?.tenantId
     )
     if (isConvertError(destinationAmountOrError)) {
       logger.error(

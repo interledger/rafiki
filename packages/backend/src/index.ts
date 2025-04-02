@@ -253,6 +253,7 @@ export function initIocContainer(
     const config = await deps.use('config')
     return createRatesService({
       logger: await deps.use('logger'),
+      operatorTenantId: config.operatorTenantId,
       operatorExchangeRatesUrl: config.operatorExchangeRatesUrl,
       exchangeRatesLifetime: config.exchangeRatesLifetime,
       tenantSettingService: await deps.use('tenantSettingService')
@@ -262,6 +263,7 @@ export function initIocContainer(
   container.singleton('internalRatesService', async (deps) => {
     return createRatesService({
       logger: await deps.use('logger'),
+      operatorTenantId: config.operatorTenantId,
       operatorExchangeRatesUrl: config.telemetryExchangeRatesUrl,
       exchangeRatesLifetime: config.telemetryExchangeRatesLifetime,
       tenantSettingService: await deps.use('tenantSettingService')

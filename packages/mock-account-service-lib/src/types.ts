@@ -38,7 +38,6 @@ export interface SeedInstance {
   peers: Array<Peering>
   accounts: Array<Account>
   fees: Array<Fee>
-  rates_url: string
   rates: Record<string, Record<string, number>>
 }
 

@@ -193,6 +193,14 @@ export class Rafiki<T = any> {
     if (!response.rawReply) throw new Error('error generating reply')
 
     const { code, scale } = sourceAccount.asset
+    const ilpAddress = sourceAccount.staticIlpAddress
+    const tenantId = ilpAddress
+      ? (
+          await this.publicServer.context.services.peers.getByDestinationAddress(
+            ilpAddress
+          )
+        )?.tenantId
+      : undefined
     incrementFulfillOrRejectPacketCount(
       unfulfillable,
       prepare.amount,
@@ -205,7 +213,8 @@ export class Rafiki<T = any> {
       response,
       code,
       scale,
-      telemetry
+      telemetry,
+      tenantId
     )
     return response.rawReply
   }
