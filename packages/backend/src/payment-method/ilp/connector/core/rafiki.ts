@@ -36,6 +36,7 @@ import {
 //   ../../peer/model
 export interface ConnectorAccount extends LiquidityAccount {
   asset: LiquidityAccount['asset'] & AssetOptions
+  tenantId: string
 }
 
 export interface IncomingAccount extends ConnectorAccount {
@@ -193,14 +194,6 @@ export class Rafiki<T = any> {
     if (!response.rawReply) throw new Error('error generating reply')
 
     const { code, scale } = sourceAccount.asset
-    const ilpAddress = sourceAccount.staticIlpAddress
-    const tenantId = ilpAddress
-      ? (
-          await this.publicServer.context.services.peers.getByDestinationAddress(
-            ilpAddress
-          )
-        )?.tenantId
-      : undefined
     incrementFulfillOrRejectPacketCount(
       unfulfillable,
       prepare.amount,
@@ -214,7 +207,7 @@ export class Rafiki<T = any> {
       code,
       scale,
       telemetry,
-      tenantId
+      sourceAccount.tenantId
     )
     return response.rawReply
   }
