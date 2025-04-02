@@ -164,7 +164,31 @@ async function processNextWebhookEvent(
         })
         const formattedSettings = formatSettings(settings)
 
-        await sendWebhookEvent(deps, event, formattedSettings)
+        // await sendWebhookEvent(deps, event, formattedSettings)
+
+        // if (event.tenantId !== deps_.config.operatorTenantId) {
+        //   const operatorSettings = await deps_.tenantSettingService.get({
+        //     tenantId: deps_.config.operatorTenantId
+        //   })
+        //   const formattedOperatorSettings = formatSettings(operatorSettings)
+        //   await sendWebhookEvent(deps, event, formattedOperatorSettings)
+        // }
+
+        if (event.tenantId !== deps_.config.operatorTenantId) {
+          const operatorSettings = await deps_.tenantSettingService.get({
+            tenantId: deps_.config.operatorTenantId
+          })
+          const formattedOperatorSettings = formatSettings(operatorSettings)
+          await sendWebhookEvent(
+            deps,
+            event,
+            formattedSettings,
+            formattedOperatorSettings
+          )
+        } else {
+          await sendWebhookEvent(deps, event, formattedSettings)
+        }
+
         span.end()
         return event.id
       })
@@ -180,11 +204,8 @@ type WebhookHeaders = {
 async function sendWebhookEvent(
   deps: ServiceDependencies,
   event: WebhookEvent,
-<<<<<<< HEAD
-  settings: Partial<FormattedTenantSettings>
-=======
-  settings?: Partial<FormattedTenantSettings>
->>>>>>> 1245e0341 (feat(backend): tenanted webhooks)
+  settings: Partial<FormattedTenantSettings>,
+  operatorSettings?: Partial<FormattedTenantSettings>
 ): Promise<void> {
   try {
     const requestHeaders: WebhookHeaders = {
@@ -205,27 +226,24 @@ async function sendWebhookEvent(
       )
     }
 
-<<<<<<< HEAD
-    await axios.post(settings?.webhookUrl ?? deps.config.webhookUrl, body, {
-      timeout: Number(settings?.webhookTimeout)
-        ? Number(settings?.webhookTimeout)
-        : deps.config.webhookTimeout,
-      headers: requestHeaders,
-      validateStatus: (status) => status === 200
-    })
-=======
-    await axios.post(
-      settings?.webhookUrl?.value ?? deps.config.webhookUrl,
-      body,
-      {
-        timeout: settings?.webhookTimeout?.value
-          ? Number(settings?.webhookTimeout?.value)
+    await Promise.all([
+      axios.post(settings?.webhookUrl ?? deps.config.webhookUrl, body, {
+        timeout: settings?.webhookTimeout
+          ? Number(settings?.webhookTimeout)
           : deps.config.webhookTimeout,
         headers: requestHeaders,
         validateStatus: (status) => status === 200
-      }
-    )
->>>>>>> 1245e0341 (feat(backend): tenanted webhooks)
+      }),
+      operatorSettings?.webhookUrl
+        ? axios.post(operatorSettings?.webhookUrl, body, {
+            timeout: operatorSettings?.webhookTimeout
+              ? Number(operatorSettings?.webhookTimeout)
+              : deps.config.webhookTimeout,
+            headers: requestHeaders,
+            validateStatus: (status) => status === 200
+          })
+        : null
+    ])
 
     await event.$query(deps.knex).patch({
       attempts: event.attempts + 1,
