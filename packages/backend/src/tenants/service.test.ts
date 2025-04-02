@@ -146,7 +146,6 @@ describe('Tenant Service', (): void => {
       expect(tenantSettings.length).toBeGreaterThan(0)
     })
 
-<<<<<<< HEAD
     test('can create a tenant with a setting', async () => {
       const walletAddressUrl = 'https://example.com'
       const createOptions = {
@@ -176,8 +175,6 @@ describe('Tenant Service', (): void => {
       expect(tenantSetting[0].value).toEqual(walletAddressUrl)
     })
 
-=======
->>>>>>> 1fa35ba66 (chore: fix some rebasing issues)
     test('tenant creation rolls back if auth tenant create fails', async (): Promise<void> => {
       const createOptions = {
         apiSecret: 'test-api-secret',

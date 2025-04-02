@@ -33,6 +33,7 @@ import {
 import { createOutgoingPayment } from '../tests/outgoingPayment'
 import { TenantSetting, TenantSettingKeys } from '../tenants/settings/model'
 import { faker } from '@faker-js/faker'
+import { createTenant } from '../tests/tenant'
 
 const nock = (global as unknown as { nock: typeof import('nock') }).nock
 
@@ -564,6 +565,54 @@ describe('Webhook Service', (): void => {
       })
 
       scope.done()
+    })
+
+    test('Also sends webhook to operator if tenant is primary recipient', async (): Promise<void> => {
+      const tenant = await createTenant(deps)
+      const tenantWebhookUrl = faker.internet.url()
+      await TenantSetting.query(knex).insertAndFetch({
+        tenantId: tenant.id,
+        key: TenantSettingKeys.WEBHOOK_URL.name,
+        value: tenantWebhookUrl
+      })
+
+      const operatorWebhookUrl = faker.internet.url()
+      await TenantSetting.query(knex).insertAndFetch({
+        tenantId: Config.operatorTenantId,
+        key: TenantSettingKeys.WEBHOOK_URL.name,
+        value: operatorWebhookUrl
+      })
+
+      const tenantedEvent = await WebhookEvent.query(knex).patchAndFetchById(
+        event.id,
+        {
+          tenantId: tenant.id
+        }
+      )
+
+      const tenantScope = mockWebhookServer(
+        200,
+        tenantedEvent,
+        new URL(tenantWebhookUrl)
+      )
+      const operatorScope = mockWebhookServer(
+        200,
+        tenantedEvent,
+        new URL(operatorWebhookUrl)
+      )
+      await expect(webhookService.processNext()).resolves.toEqual(
+        tenantedEvent.id
+      )
+      await expect(
+        webhookService.getEvent(tenantedEvent.id)
+      ).resolves.toMatchObject({
+        attempts: 1,
+        statusCode: 200,
+        processAt: null
+      })
+
+      tenantScope.done()
+      operatorScope.done()
     })
   })
 })
