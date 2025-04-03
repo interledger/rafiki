@@ -83,7 +83,11 @@ export const Config = {
   signatureSecret: process.env.SIGNATURE_SECRET, // optional
   signatureVersion: envInt('SIGNATURE_VERSION', 1),
 
-  webhookUrl: process.env.WEBHOOK_URL, // optional
+  webhookEnabled: envBool('WEBHOOK_ENABLED', false),
+  webhookUrl:
+    process.env.WEBHOOK_ENABLED === 'true'
+      ? envString('WEBHOOK_URL')
+      : undefined, //  required only when WEBHOOK_ENABLED is true
   webhookWorkers: envInt('WEBHOOK_WORKERS', 1),
   webhookWorkerIdle: envInt('WEBHOOK_WORKER_IDLE', 200), // milliseconds
   webhookTimeout: envInt('WEBHOOK_TIMEOUT', 2000), // milliseconds

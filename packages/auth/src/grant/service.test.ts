@@ -24,6 +24,7 @@ import { AccessToken } from '../accessToken/model'
 import { Interaction, InteractionState } from '../interaction/model'
 import { Pagination, SortOrder } from '../shared/baseModel'
 import { getPageTests } from '../shared/baseModel.test'
+import { WebhookEvent } from '../webhook/model'
 
 describe('Grant Service', (): void => {
   let deps: IocContract<AppServices>
@@ -366,10 +367,50 @@ describe('Grant Service', (): void => {
             updatedAt: expect.any(Date)
           }
         ])
+        expect(
+          WebhookEvent.query().where({ grantId: grant.id })
+        ).resolves.toHaveLength(1)
       })
 
       test('Can "revoke" unknown grant', async (): Promise<void> => {
         await expect(grantService.revokeGrant(v4())).resolves.toEqual(false)
+      })
+
+      describe('revoke with webhook disabled', (): void => {
+        beforeAll(async (): Promise<void> => {
+          Config.webhookEnabled = false
+        })
+
+        afterAll(async (): Promise<void> => {
+          Config.webhookEnabled = true
+        })
+
+        test('Can revoke a grant and not save webhook event', async (): Promise<void> => {
+          await expect(grantService.revokeGrant(grant.id)).resolves.toEqual(
+            true
+          )
+
+          const revokedGrant = await Grant.query(knex).findById(grant.id)
+          expect(revokedGrant?.state).toEqual(GrantState.Finalized)
+          expect(revokedGrant?.finalizationReason).toEqual(
+            GrantFinalization.Revoked
+          )
+          expect(Access.query().where({ grantId: grant.id })).resolves.toEqual([
+            { ...access, limits: null }
+          ])
+          expect(
+            AccessToken.query().where({ grantId: grant.id })
+          ).resolves.toEqual([
+            {
+              ...accessToken,
+              revokedAt: expect.any(Date),
+              updatedAt: expect.any(Date)
+            }
+          ])
+          expect(
+            WebhookEvent.query().where({ grantId: grant.id })
+          ).resolves.toHaveLength(0)
+        })
       })
     })
 

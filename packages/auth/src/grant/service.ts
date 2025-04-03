@@ -201,7 +201,7 @@ async function revokeGrant(
 
     const revokedAt = await accessTokenService.revokeByGrantId(grant.id, trx)
 
-    if (deps.config.webhookUrl) {
+    if (deps.config.webhookEnabled) {
       await GrantEvent.query(trx).insert({
         type: GrantEventType.GrantRevoked,
         grantId: grant.id,
