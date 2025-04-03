@@ -4,4 +4,5 @@ process.env.IDENTITY_SERVER_SECRET =
   '2pEcn2kkCclbOHQiGNEwhJ0rucATZhrA807HTm2rNXE='
 process.env.AUTH_SERVER_URL = 'http://localhost:3006'
 process.env.IDENTITY_SERVER_URL = 'http://localhost:3030/mock-idp/'
+process.env.WEBHOOK_ENABLED = 'true'
 process.env.WEBHOOK_URL = 'http://127.0.0.1:4001/webhook'

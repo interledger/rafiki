@@ -146,7 +146,7 @@ export class App {
       }
 
       // if webhookUrl is not set, webhook events are not saved or processed
-      if (this.config.webhookUrl) {
+      if (this.config.webhookEnabled) {
         for (let i = 0; i < this.config.webhookWorkers; i++) {
           process.nextTick(() => this.processWebhook())
         }
