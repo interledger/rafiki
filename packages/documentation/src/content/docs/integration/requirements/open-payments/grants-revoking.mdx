@@ -2,7 +2,7 @@
 title: Viewing and revoking grants
 ---
 
-import { Badge } from '@astrojs/starlight/components'
+import { Badge, Tabs, TabItem } from '@astrojs/starlight/components'
 import { Mermaid, CodeBlock, LinkOut } from '@interledger/docs-design-system'
 
 Grants are the mechanism in Open Payments by which your account holders give permission to a client application to access their accounts and send payments on their behalf. Providing your account holders the ability to view and revoke grants is not required to implement and operate Rafiki, but allowing them to do so is critical to providing an optimal user experience.
@@ -11,59 +11,65 @@ Grants are the mechanism in Open Payments by which your account holders give per
 
 Use the `Grants` GraphQL query to look up all grants associated with a wallet address.
 
-<CodeBlock title='Grants query'>
-
+<Tabs>
+<TabItem label='Operation'>
 ```graphql
-query Grants($after: String, $before: String, $first: Int, $last: Int, $filter: GrantFilter) 
-{
-    grants(after: $after, before: $before, first: $first, last: $last, filter: $filter) {
-        edges {
-            cursor
-            node {
-              	id
-                client
-                createdAt
-                state
-                access {
-                    createdAt
-                    id
-                    identifier
-                    limits {
-                        interval
-                        receiveAmount {
-                            assetScale
-                            value
-                            assetCode
-                        }
-                        receiver
-                        debitAmount {
-                            assetCode
-                            assetScale
-                            value
-                        }
-                    }
-                    actions
-                    type
-                }
-
+query Grants(
+  $after: String
+  $before: String
+  $first: Int
+  $last: Int
+  $filter: GrantFilter
+) {
+  grants(
+    after: $after
+    before: $before
+    first: $first
+    last: $last
+    filter: $filter
+  ) {
+    edges {
+      cursor
+      node {
+        id
+        client
+        createdAt
+        state
+        access {
+          createdAt
+          id
+          identifier
+          limits {
+            interval
+            receiveAmount {
+              assetScale
+              value
+              assetCode
             }
+            receiver
+            debitAmount {
+              assetCode
+              assetScale
+              value
+            }
+          }
+          actions
+          type
         }
-        pageInfo {
-            endCursor
-            hasNextPage
-            hasPreviousPage
-            startCursor
-        }
+      }
     }
+    pageInfo {
+      endCursor
+      hasNextPage
+      hasPreviousPage
+      startCursor
+    }
+  }
 }
 ```
+</TabItem>
 
-</CodeBlock>
-
-#### Example
-
-<CodeBlock title="Example JSON request">
-
+<TabItem label='Arguments'>
 ```json
 {
   "input": {
@@ -82,11 +88,9 @@ query Grants($after: String, $before: String, $first: Int, $last: Int, $filter: 
 }
 }
 ```
+</TabItem>
 
-</CodeBlock>
-
-<CodeBlock title='Example JSON response'>
-
+<TabItem label='Response'>
 ```json
 {
   "data": {
@@ -138,27 +142,16 @@ query Grants($after: String, $before: String, $first: Int, $last: Int, $filter: 
     }
   }
 }
-
 ```
-
-</CodeBlock>
-
-#### Example
-
-<CodeBlock title="Example JSON request">
-
-```json
-
-```
-
-</CodeBlock>
+</TabItem>
+</Tabs>
 
 ## Revoke a grant
 
 Use the `revokeGrant` GraphQL mutation to revoke a particular grant.
 
-<CodeBlock title='revokeGrant mutation'>
-
+<Tabs>
+<TabItem label='Operation'>
 ```graphql
 mutation revokeGrant($input: RevokeGrantInput!) {
     revokeGrant(input: $input) {
@@ -166,13 +159,9 @@ mutation revokeGrant($input: RevokeGrantInput!) {
     }
 }
 ```
+</TabItem>
 
-</CodeBlock>
-
-#### Example
-
-<CodeBlock title="Example JSON request">
-
+<TabItem label='Arguments'>
 ```json
 {
     "input": {
@@ -180,11 +169,9 @@ mutation revokeGrant($input: RevokeGrantInput!) {
     }
 }
 ```
+</TabItem>
 
-</CodeBlock>
-
-<CodeBlock title='Example JSON response'>
-
+<TabItem label='Response'>
 ```json
 {
   "data": {
@@ -194,5 +181,5 @@ mutation revokeGrant($input: RevokeGrantInput!) {
   }
 }
 ```
-
-</CodeBlock>
+</TabItem>
+</Tabs>
