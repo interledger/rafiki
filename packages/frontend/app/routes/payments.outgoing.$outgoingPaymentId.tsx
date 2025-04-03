@@ -73,7 +73,8 @@ export default function ViewOutgoingPaymentPage() {
           <div className='col-span-1 pt-3'>
             <h3 className='text-lg font-medium'>General Information</h3>
             <p className='text-sm mb-2'>
-              Created at {new Date(outgoingPayment.createdAt).toLocaleString()}{' '}
+              Created at{' '}
+              {new Date(outgoingPayment.createdAt).toLocaleString()}{' '}
             </p>
           </div>
           <div className='md:col-span-2 bg-white rounded-md shadow-md'>
