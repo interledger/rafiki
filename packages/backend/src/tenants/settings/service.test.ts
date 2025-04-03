@@ -300,4 +300,75 @@ describe('TenantSetting Service', (): void => {
       expect(dbTenantData.filter((x) => !x.deletedAt)).toHaveLength(0)
     })
   })
+
+  describe('getTenantSettings', () => {
+    let tenantSetting: TenantSetting[]
+
+    beforeEach(async (): Promise<void> => {
+      const createOptions: CreateOptions = {
+        tenantId: tenant.id,
+        setting: [exchangeRatesSetting()]
+      }
+
+      tenantSetting = await tenantSettingService.create(createOptions)
+    })
+
+    afterEach(async (): Promise<void> => {
+      await tenantSettingService.delete({ tenantId: tenant.id })
+    })
+
+    test('should retrieve tenant settings by tenantId', async (): Promise<void> => {
+      const result = await tenantSettingService.get({
+        tenantId: tenant.id
+      })
+
+      expect(result).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            tenantId: tenant.id,
+            key: tenantSetting[0].key,
+            value: tenantSetting[0].value
+          })
+        ])
+      )
+    })
+
+    test('should retrieve tenant settings by tenantId and key', async (): Promise<void> => {
+      const result = await tenantSettingService.get({
+        tenantId: tenant.id,
+        key: tenantSetting[0].key
+      })
+
+      expect(result).toEqual([
+        expect.objectContaining({
+          tenantId: tenant.id,
+          key: tenantSetting[0].key,
+          value: tenantSetting[0].value
+        })
+      ])
+    })
+
+    test('should return an empty array if no settings match', async (): Promise<void> => {
+      const result = await tenantSettingService.get({
+        tenantId: tenant.id,
+        key: 'nonexistent-key'
+      })
+
+      expect(result).toEqual([])
+    })
+
+    test('should not retrieve deleted tenant settings', async (): Promise<void> => {
+      await tenantSettingService.delete({
+        tenantId: tenant.id,
+        key: tenantSetting[0].key
+      })
+
+      const result = await tenantSettingService.get({
+        tenantId: tenant.id,
+        key: tenantSetting[0].key
+      })
+
+      expect(result).toEqual([])
+    })
+  })
 })

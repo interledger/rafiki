@@ -1,21 +1,14 @@
 import { TenantedApolloContext } from '../../app'
-import { Pagination } from '../../shared/baseModel'
-import { getPageInfo } from '../../shared/pagination'
 import { TenantSetting } from '../../tenants/settings/model'
 import {
   ResolversTypes,
-  SortOrder,
   TenantResolvers,
   TenantSetting as SchemaTenantSetting,
   MutationResolvers
 } from '../generated/graphql'
 
 export const getTenantSettings: TenantResolvers<TenantedApolloContext>['settings'] =
-  async (
-    parent,
-    args,
-    ctx
-  ): Promise<ResolversTypes['TenantSettingsConnection']> => {
+  async (parent, args, ctx): Promise<ResolversTypes['TenantSetting'][]> => {
     if (!parent.id) {
       throw new Error('missing tenant id')
     }
@@ -24,27 +17,11 @@ export const getTenantSettings: TenantResolvers<TenantedApolloContext>['settings
       'tenantSettingService'
     )
 
-    const { sortOrder, ...pagination } = args
-    const order = sortOrder === 'ASC' ? SortOrder.Asc : SortOrder.Desc
+    const tenantSettings = (await tenantSettingsService.get({
+      tenantId: parent.id
+    })) as TenantSetting[]
 
-    const tenantSettings = await tenantSettingsService.getPage(
-      parent.id,
-      pagination,
-      order
-    )
-    const pageInfo = await getPageInfo({
-      getPage: (pagination_?: Pagination, sortOrder_?: SortOrder) =>
-        tenantSettingsService.getPage(parent.id!, pagination_, sortOrder_),
-      page: tenantSettings
-    })
-
-    return {
-      pageInfo,
-      edges: tenantSettings.map((ts: TenantSetting) => ({
-        cursor: ts.id,
-        node: tenantSettingsToGraphql(ts)
-      }))
-    }
+    return tenantSettings.map((x) => tenantSettingsToGraphql(x))
   }
 
 export const createTenantSettings: MutationResolvers<TenantedApolloContext>['createTenantSettings'] =
