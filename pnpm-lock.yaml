@@ -435,8 +435,8 @@ importers:
         specifier: ^4.17.21
         version: 4.17.21
       luxon:
-        specifier: ^3.4.4
-        version: 3.4.4
+        specifier: ^3.6.1
+        version: 3.6.1
       objection:
         specifier: ^3.1.5
         version: 3.1.5(knex@3.1.0)
@@ -499,8 +499,8 @@ importers:
         specifier: ^4.17.15
         version: 4.17.15
       '@types/luxon':
-        specifier: ^3.4.2
-        version: 3.4.2
+        specifier: ^3.6.2
+        version: 3.6.2
       '@types/rosie':
         specifier: ^0.0.45
         version: 0.0.45
@@ -7739,8 +7739,8 @@ packages:
   /@types/long@4.0.2:
     resolution: {integrity: sha512-MqTGEo5bj5t157U6fA/BiDynNkn0YknVdh48CMPkTSpFTVmvao5UQmm7uEF6xBEo7qIMAlY/JSleYaE6VOdpaA==}
 
-  /@types/luxon@3.4.2:
-    resolution: {integrity: sha512-TifLZlFudklWlMBfhubvgqTXRzLDI5pCbGa4P8a3wPyUQSW+1xQ5eDsreP9DWHX3tjq1ke96uYG/nwundroWcA==}
+  /@types/luxon@3.6.2:
+    resolution: {integrity: sha512-R/BdP7OxEMc44l2Ex5lSXHoIXTB2JLNa3y2QISIbr58U/YcsffyQrYW//hZSdrfxrjRZj3GcUoxMPGdO8gSYuw==}
     dev: true
 
   /@types/marked@6.0.0:
@@ -15209,8 +15209,8 @@ packages:
     resolution: {integrity: sha512-jumlc0BIUrS3qJGgIkWZsyfAM7NCWiBcCDhnd+3NNM5KbBmLTgHVfWBcg6W+rLUsIpzpERPsvwUP7CckAQSOoA==}
     engines: {node: '>=12'}
 
-  /luxon@3.4.4:
-    resolution: {integrity: sha512-zobTr7akeGHnv7eBOXcRgMeCP6+uyYsczwmeRCauvpvaAltgNyTbLH/+VaEAPUeWBT+1GuNmz4wC/6jtQzbbVA==}
+  /luxon@3.6.1:
+    resolution: {integrity: sha512-tJLxrKJhO2ukZ5z0gyjY1zPh3Rh88Ej9P7jNrZiHMUXHae1yvI2imgOZtL1TO8TW6biMMKfTtAOoEJANgtWBMQ==}
     engines: {node: '>=12'}
     dev: false
 
@@ -18035,6 +18035,7 @@ packages:
 
   /queue-tick@1.0.1:
     resolution: {integrity: sha512-kJt5qhMxoszgU/62PLP1CJytzd2NKetjSRnyuj31fDd3Rlcz3fzlFdFLD1SItunPwyqEOkca6GbV612BWfaBag==}
+    requiresBuild: true
     dev: true
 
   /quick-format-unescaped@4.0.4:
