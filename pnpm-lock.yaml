@@ -580,8 +580,8 @@ importers:
         specifier: ^6.0.0
         version: 6.0.0
       starlight-links-validator:
-        specifier: ^0.14.3
-        version: 0.14.3(@astrojs/starlight@0.31.1)
+        specifier: ^0.15.0
+        version: 0.15.0(@astrojs/starlight@0.31.1)
 
   packages/frontend:
     dependencies:
@@ -13117,7 +13117,7 @@ packages:
       estree-util-is-identifier-name: 3.0.0
       hast-util-whitespace: 3.0.0
       mdast-util-mdx-expression: 2.0.0
-      mdast-util-mdx-jsx: 3.1.2
+      mdast-util-mdx-jsx: 3.2.0
       mdast-util-mdxjs-esm: 2.0.1
       property-information: 6.1.1
       space-separated-tokens: 2.0.1
@@ -13155,7 +13155,7 @@ packages:
       estree-util-is-identifier-name: 3.0.0
       hast-util-whitespace: 3.0.0
       mdast-util-mdx-expression: 2.0.0
-      mdast-util-mdx-jsx: 3.1.2
+      mdast-util-mdx-jsx: 3.2.0
       mdast-util-mdxjs-esm: 2.0.1
       property-information: 6.1.1
       space-separated-tokens: 2.0.1
@@ -15523,26 +15523,6 @@ packages:
       - supports-color
     dev: true
 
-  /mdast-util-mdx-jsx@3.1.2:
-    resolution: {integrity: sha512-eKMQDeywY2wlHc97k5eD8VC+9ASMjN8ItEZQNGwJ6E0XWKiW/Z0V5/H8pvoXUf+y+Mj0VIgeRRbujBmFn4FTyA==}
-    dependencies:
-      '@types/estree-jsx': 1.0.0
-      '@types/hast': 3.0.4
-      '@types/mdast': 4.0.4
-      '@types/unist': 3.0.3
-      ccount: 2.0.1
-      devlop: 1.1.0
-      mdast-util-from-markdown: 2.0.2
-      mdast-util-to-markdown: 2.1.0
-      parse-entities: 4.0.0
-      stringify-entities: 4.0.3
-      unist-util-remove-position: 5.0.0
-      unist-util-stringify-position: 4.0.0
-      vfile-message: 4.0.2
-    transitivePeerDependencies:
-      - supports-color
-    dev: false
-
   /mdast-util-mdx-jsx@3.2.0:
     resolution: {integrity: sha512-lj/z8v0r6ZtsN/cGNNtemmmfoLAFZnjMbNyLzBafjzikOM+glrjNHPlf6lQDOTccj9n5b0PPihEBbhneMyGs1Q==}
     dependencies:
@@ -15579,7 +15559,7 @@ packages:
     dependencies:
       mdast-util-from-markdown: 2.0.2
       mdast-util-mdx-expression: 2.0.0
-      mdast-util-mdx-jsx: 3.1.2
+      mdast-util-mdx-jsx: 3.2.0
       mdast-util-mdxjs-esm: 2.0.1
       mdast-util-to-markdown: 2.1.0
     transitivePeerDependencies:
@@ -18035,6 +18015,7 @@ packages:
 
   /queue-tick@1.0.1:
     resolution: {integrity: sha512-kJt5qhMxoszgU/62PLP1CJytzd2NKetjSRnyuj31fDd3Rlcz3fzlFdFLD1SItunPwyqEOkca6GbV612BWfaBag==}
+    requiresBuild: true
     dev: true
 
   /quick-format-unescaped@4.0.4:
@@ -19451,11 +19432,11 @@ packages:
     resolution: {integrity: sha512-qoRRSyROncaz1z0mvYqIE4lCd9p2R90i6GxW3uZv5ucSu8tU7B5HXUP1gG8pVZsYNVaXjk8ClXHPttLyxAL48A==}
     dev: false
 
-  /starlight-links-validator@0.14.3(@astrojs/starlight@0.31.1):
-    resolution: {integrity: sha512-2CvQs0ZdIVExrEQ1bn0r2aFx4n+VSOb6vDWK+gTNb5N1c+nXJ7VjUbEsQhj+9Lb7XgY6Nxqz9JXUM9364hJ3ZA==}
+  /starlight-links-validator@0.15.0(@astrojs/starlight@0.31.1):
+    resolution: {integrity: sha512-NZeb9WF5Skdz1dQnALFtxU2sQW9mSMqudDUG7B2w3NCe4xDAwKEdBOOSn7hfJtzziFWksZXobvUgEBhR4S5eXA==}
     engines: {node: '>=18.17.1'}
     peerDependencies:
-      '@astrojs/starlight': '>=0.15.0'
+      '@astrojs/starlight': '>=0.32.0'
     dependencies:
       '@astrojs/starlight': 0.31.1(astro@5.2.0)
       '@types/picomatch': 3.0.2
