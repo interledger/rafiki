@@ -17,6 +17,7 @@ import { FilterString } from '../shared/filters'
 import { AccessTokenService } from '../accessToken/service'
 import { canSkipInteraction } from './utils'
 import { IAppConfig } from '../config/app'
+import { GrantEvent, GrantEventType } from './event.model'
 
 interface GrantFilter {
   identifier?: FilterString
@@ -198,7 +199,18 @@ async function revokeGrant(
       return false
     }
 
-    await accessTokenService.revokeByGrantId(grant.id, trx)
+    const revokedAt = await accessTokenService.revokeByGrantId(grant.id, trx)
+
+    if (deps.config.webhookEnabled) {
+      await GrantEvent.query(trx).insert({
+        type: GrantEventType.GrantRevoked,
+        grantId: grant.id,
+        data: {
+          id: grant.id,
+          revokedAt: revokedAt.toISOString()
+        }
+      })
+    }
 
     await trx.commit()
     return true
