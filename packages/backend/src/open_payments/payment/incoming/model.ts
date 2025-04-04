@@ -142,9 +142,9 @@ export class IncomingPayment
     this.receivedAmountValue = amount.value
   }
 
-  public getUrl(walletAddress: WalletAddress): string {
-    const url = new URL(walletAddress.url)
-    return `${url.origin}${IncomingPayment.urlPath}/${this.id}`
+  public getUrl(resourceServerUrl: string): string {
+    resourceServerUrl = resourceServerUrl.replace(/\/+$/, '')
+    return `${resourceServerUrl}${IncomingPayment.urlPath}/${this.id}`
   }
 
   public async onCredit({
@@ -220,10 +220,11 @@ export class IncomingPayment
   }
 
   public toOpenPaymentsType(
+    resourceServerUrl: string,
     walletAddress: WalletAddress
   ): OpenPaymentsIncomingPayment {
     return {
-      id: this.getUrl(walletAddress),
+      id: this.getUrl(resourceServerUrl),
       walletAddress: walletAddress.url,
       incomingAmount: this.incomingAmount
         ? serializeAmount(this.incomingAmount)
@@ -238,11 +239,12 @@ export class IncomingPayment
   }
 
   public toOpenPaymentsTypeWithMethods(
+    resourceServerUrl: string,
     walletAddress: WalletAddress,
     ilpStreamCredentials?: IlpStreamCredentials
   ): OpenPaymentsIncomingPaymentWithPaymentMethod {
     return {
-      ...this.toOpenPaymentsType(walletAddress),
+      ...this.toOpenPaymentsType(resourceServerUrl, walletAddress),
       methods: !ilpStreamCredentials
         ? []
         : [

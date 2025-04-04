@@ -8,7 +8,7 @@ import { createTestApp, TestContainer } from '../../tests/app'
 import { IocContract } from '@adonisjs/fold'
 import { AppServices } from '../../app'
 import { initIocContainer } from '../..'
-import { Config } from '../../config/app'
+import { Config, IAppConfig } from '../../config/app'
 import { createAsset } from '../../tests/asset'
 import { createIncomingPayment } from '../../tests/incomingPayment'
 import {
@@ -40,6 +40,7 @@ import { GraphQLErrorCode } from '../errors'
 
 describe('OutgoingPayment Resolvers', (): void => {
   let deps: IocContract<AppServices>
+  let config: IAppConfig
   let appContainer: TestContainer
   let accountingService: AccountingService
   let outgoingPaymentService: OutgoingPaymentService
@@ -47,6 +48,7 @@ describe('OutgoingPayment Resolvers', (): void => {
 
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer(Config)
+    config = await deps.use('config')
     appContainer = await createTestApp(deps)
     accountingService = await deps.use('accountingService')
     outgoingPaymentService = await deps.use('outgoingPaymentService')
@@ -158,7 +160,7 @@ describe('OutgoingPayment Resolvers', (): void => {
         const incomingPayment = await createIncomingPayment(deps, {
           walletAddressId: firstReceiverWalletAddress.id
         })
-        receiver = incomingPayment.getUrl(firstReceiverWalletAddress)
+        receiver = incomingPayment.getUrl(config.openPaymentsUrl)
         firstOutgoingPayment = await createOutgoingPayment(deps, {
           walletAddressId,
           receiver,
@@ -169,7 +171,9 @@ describe('OutgoingPayment Resolvers', (): void => {
         const secondIncomingPayment = await createIncomingPayment(deps, {
           walletAddressId: secondReceiverWalletAddress.id
         })
-        const secondReceiver = secondIncomingPayment.getUrl(secondWalletAddress)
+        const secondReceiver = secondIncomingPayment.getUrl(
+          config.openPaymentsUrl
+        )
         secondOutgoingPayment = await createOutgoingPayment(deps, {
           walletAddressId: secondWalletAddress.id,
           receiver: secondReceiver,

@@ -292,7 +292,7 @@ describe('OutgoingPaymentService', (): void => {
     incomingPayment = await createIncomingPayment(deps, {
       walletAddressId: receiverWalletAddress.id
     })
-    receiver = incomingPayment.getUrl(receiverWalletAddress)
+    receiver = incomingPayment.getUrl(config.openPaymentsUrl)
 
     amtDelivered = BigInt(0)
 
@@ -403,19 +403,15 @@ describe('OutgoingPaymentService', (): void => {
 
     describe('filters', () => {
       let otherSenderWalletAddress: WalletAddress
-      let otherReceiverWalletAddress: WalletAddress
       let otherReceiver: string
       let outgoingPayment: OutgoingPayment
       let otherOutgoingPayment: OutgoingPayment
       beforeEach(async (): Promise<void> => {
         otherSenderWalletAddress = await createWalletAddress(deps, { assetId })
-        otherReceiverWalletAddress = await createWalletAddress(deps, {
-          assetId
-        })
         const incomingPayment = await createIncomingPayment(deps, {
           walletAddressId: receiverWalletAddress.id
         })
-        otherReceiver = incomingPayment.getUrl(otherReceiverWalletAddress)
+        otherReceiver = incomingPayment.getUrl(config.openPaymentsUrl)
 
         outgoingPayment = await createOutgoingPayment(deps, {
           walletAddressId,
@@ -620,6 +616,7 @@ describe('OutgoingPaymentService', (): void => {
     test('create from incoming payment', async () => {
       const walletAddressId = receiverWalletAddress.id
       const incomingPaymentUrl = incomingPayment.toOpenPaymentsTypeWithMethods(
+        config.openPaymentsUrl,
         receiverWalletAddress
       ).id
       const debitAmount = {
@@ -674,6 +671,7 @@ describe('OutgoingPaymentService', (): void => {
             walletAddressId: receiverWalletAddress.id,
             debitAmount,
             incomingPayment: incomingPayment.toOpenPaymentsTypeWithMethods(
+              config.openPaymentsUrl,
               receiverWalletAddress
             ).id,
             grant
@@ -719,6 +717,7 @@ describe('OutgoingPaymentService', (): void => {
             walletAddressId: receiverWalletAddress.id,
             debitAmount,
             incomingPayment: incomingPayment.toOpenPaymentsTypeWithMethods(
+              config.openPaymentsUrl,
               receiverWalletAddress
             ).id,
             grant
@@ -739,6 +738,7 @@ describe('OutgoingPaymentService', (): void => {
     test('fails to create quote from incoming payment', async () => {
       const walletAddressId = receiverWalletAddress.id
       const incomingPaymentUrl = incomingPayment.toOpenPaymentsTypeWithMethods(
+        config.openPaymentsUrl,
         receiverWalletAddress
       ).id
       const debitAmount = {
@@ -1352,7 +1352,7 @@ describe('OutgoingPaymentService', (): void => {
       assert.ok(incomingPayment.walletAddress)
 
       const createdPayment = await setup({
-        receiver: incomingPayment.getUrl(incomingPayment.walletAddress),
+        receiver: incomingPayment.getUrl(config.openPaymentsUrl),
         receiveAmount,
         method: 'ilp'
       })
@@ -1433,7 +1433,7 @@ describe('OutgoingPaymentService', (): void => {
       assert.ok(incomingPayment.walletAddress)
 
       const createdPayment = await setup({
-        receiver: incomingPayment.getUrl(incomingPayment.walletAddress),
+        receiver: incomingPayment.getUrl(config.openPaymentsUrl),
         receiveAmount,
         method: 'ilp'
       })
@@ -1521,7 +1521,7 @@ describe('OutgoingPaymentService', (): void => {
       assert.ok(incomingPayment.receivedAmount?.assetScale)
 
       const createdPayment = await setup({
-        receiver: incomingPayment.getUrl(incomingPayment.walletAddress),
+        receiver: incomingPayment.getUrl(config.openPaymentsUrl),
         receiveAmount,
         method: 'ilp'
       })

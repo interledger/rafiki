@@ -181,7 +181,7 @@ describe('QuoteService', (): void => {
           })
           options = {
             walletAddressId: sendingWalletAddress.id,
-            receiver: incomingPayment.getUrl(receivingWalletAddress),
+            receiver: incomingPayment.getUrl(config.openPaymentsUrl),
             method: 'ilp'
           }
           if (debitAmount) options.debitAmount = debitAmount
@@ -205,7 +205,7 @@ describe('QuoteService', (): void => {
               async ({ client }): Promise<void> => {
                 const mockedQuote = mockQuote({
                   receiver: (await receiverService.get(
-                    incomingPayment.getUrl(receivingWalletAddress)
+                    incomingPayment.getUrl(config.openPaymentsUrl)
                   ))!,
                   walletAddress: sendingWalletAddress,
                   exchangeRate: 0.5,
@@ -266,7 +266,7 @@ describe('QuoteService', (): void => {
               test('fails if receiveAmount exceeds receiver.incomingAmount', async (): Promise<void> => {
                 const mockedQuote = mockQuote({
                   receiver: (await receiverService.get(
-                    incomingPayment.getUrl(receivingWalletAddress)
+                    incomingPayment.getUrl(config.openPaymentsUrl)
                   ))!,
                   walletAddress: sendingWalletAddress,
                   exchangeRate: 0.5,
@@ -305,7 +305,7 @@ describe('QuoteService', (): void => {
               async ({ client }): Promise<void> => {
                 const mockedQuote = mockQuote({
                   receiver: (await receiverService.get(
-                    incomingPayment.getUrl(receivingWalletAddress)
+                    incomingPayment.getUrl(config.openPaymentsUrl)
                   ))!,
                   walletAddress: sendingWalletAddress,
                   exchangeRate: 0.5,
@@ -388,14 +388,14 @@ describe('QuoteService', (): void => {
         })
         const options: CreateQuoteOptions = {
           walletAddressId: sendingWalletAddress.id,
-          receiver: incomingPayment.getUrl(receivingWalletAddress),
+          receiver: incomingPayment.getUrl(config.openPaymentsUrl),
           receiveAmount,
           method: 'ilp'
         }
 
         const mockedQuote = mockQuote({
           receiver: (await receiverService.get(
-            incomingPayment.getUrl(receivingWalletAddress)
+            incomingPayment.getUrl(config.openPaymentsUrl)
           ))!,
           walletAddress: sendingWalletAddress,
           receiveAmountValue: receiveAmount.value,
@@ -509,7 +509,7 @@ describe('QuoteService', (): void => {
         })
         const options: CreateQuoteOptions = {
           walletAddressId: sendingWalletAddress.id,
-          receiver: incomingPayment.getUrl(receivingWalletAddress),
+          receiver: incomingPayment.getUrl(config.openPaymentsUrl),
           method: 'ilp'
         }
         if (debitAmount) options.debitAmount = debitAmount
@@ -753,13 +753,13 @@ describe('QuoteService', (): void => {
 
         const options: CreateQuoteOptions = {
           walletAddressId: sendingWalletAddress.id,
-          receiver: incomingPayment.getUrl(receivingWalletAddress),
+          receiver: incomingPayment.getUrl(config.openPaymentsUrl),
           method: 'ilp'
         }
 
         const mockedQuote = mockQuote({
           receiver: (await receiverService.get(
-            incomingPayment.getUrl(receivingWalletAddress)
+            incomingPayment.getUrl(config.openPaymentsUrl)
           ))!,
           walletAddress: sendingWalletAddress,
           exchangeRate: 0.5,

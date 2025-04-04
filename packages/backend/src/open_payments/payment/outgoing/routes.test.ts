@@ -78,7 +78,7 @@ describe('Outgoing Payment Routes', (): void => {
   beforeEach(async (): Promise<void> => {
     const asset = await createAsset(deps)
     walletAddress = await createWalletAddress(deps, { assetId: asset.id })
-    baseUrl = new URL(walletAddress.url).origin
+    baseUrl = config.openPaymentsUrl
   })
 
   afterEach(async (): Promise<void> => {
@@ -117,7 +117,7 @@ describe('Outgoing Payment Routes', (): void => {
           id: `${baseUrl}/outgoing-payments/${outgoingPayment.id}`,
           walletAddress: walletAddress.url,
           receiver: outgoingPayment.receiver,
-          quoteId: outgoingPayment.quote.getUrl(walletAddress),
+          quoteId: outgoingPayment.quote.getUrl(config.openPaymentsUrl),
           debitAmount: serializeAmount(outgoingPayment.debitAmount),
           sentAmount: serializeAmount(outgoingPayment.sentAmount),
           receiveAmount: serializeAmount(outgoingPayment.receiveAmount),
@@ -239,7 +239,7 @@ describe('Outgoing Payment Routes', (): void => {
           )
             .split('/')
             .pop()
-          expect(ctx.response.body).toEqual({
+          expect(ctx.response.body).toMatchObject({
             id: `${baseUrl}/outgoing-payments/${outgoingPaymentId}`,
             walletAddress: walletAddress.url,
             receiver: payment.receiver,

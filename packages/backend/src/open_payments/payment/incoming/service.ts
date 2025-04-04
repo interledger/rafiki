@@ -13,7 +13,6 @@ import {
   WalletAddressService,
   WalletAddressSubresourceService
 } from '../../wallet_address/service'
-
 import { Amount } from '../../amount'
 import { IncomingPaymentError } from './errors'
 import { IAppConfig } from '../../../config/app'
@@ -89,16 +88,18 @@ async function getIncomingPayment(
   options: GetOptions
 ): Promise<IncomingPayment | undefined> {
   const incomingPayment = await IncomingPayment.query(deps.knex).get(options)
-  if (incomingPayment) {
-    const asset = await deps.assetService.get(incomingPayment.assetId)
-    if (asset) incomingPayment.asset = asset
+  if (!incomingPayment) {
+    return
+  }
 
-    incomingPayment.walletAddress = await deps.walletAddressService.get(
-      incomingPayment.walletAddressId
-    )
+  const asset = await deps.assetService.get(incomingPayment.assetId)
+  if (asset) incomingPayment.asset = asset
 
-    return await addReceivedAmount(deps, incomingPayment)
-  } else return
+  incomingPayment.walletAddress = await deps.walletAddressService.get(
+    incomingPayment.walletAddressId
+  )
+
+  return await addReceivedAmount(deps, incomingPayment)
 }
 
 async function updateIncomingPayment(
