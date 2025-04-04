@@ -4,6 +4,7 @@ title: Wallet address keys
 
 import { LinkOut } from '@interledger/docs-design-system'
 import { CodeBlock } from '@interledger/docs-design-system'
+import { Tabs, TabItem } from '@astrojs/starlight/components'
 
 Creating a public-private key pair for each wallet address is not required when integrating with Rafiki.
 
@@ -13,8 +14,8 @@ You only need to create key pairs for wallet addresses if you want to allow your
 
 Use the `createWalletAddressKey` GraphQL mutation to create a key pair and associate it with a wallet address.
 
-<CodeBlock title='createWalletAddressKey mutation'>
-
+<Tabs>
+<TabItem label='Operation'>
 ```graphql
 mutation CreateWalletAddressKey($input: CreateWalletAddressKeyInput!) {
   createWalletAddressKey(input: $input) {
@@ -37,12 +38,9 @@ mutation CreateWalletAddressKey($input: CreateWalletAddressKeyInput!) {
   }
 }
 ```
+</TabItem>
 
-</CodeBlock>
-
-#### Example
-
-<CodeBlock title="Example JSON request">
+<TabItem label='Arguments'>
 
 ```json
 {
@@ -58,8 +56,6 @@ mutation CreateWalletAddressKey($input: CreateWalletAddressKeyInput!) {
   }
 }
 ```
-
-</CodeBlock>
 
 The request is a standard request to create a JSON Web Key (JWK), which is a JSON data structure that represents a cryptographic key. <LinkOut href='https://datatracker.ietf.org/doc/html/rfc7517#section-4'>Section 4</LinkOut> of the JWK specification describes the format and associated parameters `kty`, `alg`, and `kid`. <LinkOut href='https://datatracker.ietf.org/doc/html/rfc7518#section-6'>Section 6</LinkOut> of the JSON Web Algorithms (JWA) specification describes the cryptographic algorithm for the keys and associated parameters `kty`, `crv`, and `x`.
 
@@ -77,7 +73,9 @@ Open Payments <LinkOut href="https://openpayments.dev/apis/wallet-address-server
 
 Additionally, the request must contain the `walletAddressId` of the wallet address that the key pair will be associated with.
 
-<CodeBlock title='Example JSON response'>
+</TabItem>
+
+<TabItem label = 'Response'>
 
 ```json
 {
@@ -104,13 +102,15 @@ Additionally, the request must contain the `walletAddressId` of the wallet addre
 }
 ```
 
-</CodeBlock>
+</TabItem>
+</Tabs>
 
 ## Revoke a wallet address key
 
 Use the `revokeWalletAddressKey` GraphQL mutation to revoke a public key associated with a wallet address. Open Payments requests using this key for request signatures will be denied going forward.
 
-<CodeBlock title='revokeWalletAddressKey mutation'>
+<Tabs>
+<TabItem label = 'Operation'>
 
 ```graphql
 mutation RevokeWalletAddressKey($input: RevokeWalletAddressKeyInput!) {
@@ -125,12 +125,9 @@ mutation RevokeWalletAddressKey($input: RevokeWalletAddressKeyInput!) {
 }
 ```
 
-</CodeBlock>
+</TabItem>
 
-#### Example
-
-<CodeBlock title="Example JSON request">
-
+<TabItem label = 'Arguments'>
 ```json
 {
   "input": {
@@ -138,10 +135,9 @@ mutation RevokeWalletAddressKey($input: RevokeWalletAddressKeyInput!) {
   }
 }
 ```
+</TabItem>
 
-</CodeBlock>
-
-<CodeBlock title='Example JSON response'>
+<TabItem label = 'Response'>
 
 ```json
 {
@@ -158,4 +154,5 @@ mutation RevokeWalletAddressKey($input: RevokeWalletAddressKeyInput!) {
 }
 ```
 
-</CodeBlock>
+</TabItem>
+</Tabs>
