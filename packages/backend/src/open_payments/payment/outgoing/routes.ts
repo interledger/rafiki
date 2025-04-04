@@ -19,7 +19,7 @@ import {
 } from '@interledger/open-payments'
 import { WalletAddress } from '../../wallet_address/model'
 import { OpenPaymentsServerRouteError } from '../../route-errors'
-import { Amount } from '../../amount'
+import { AmountJSON, parseAmount } from '../../amount'
 
 interface ServiceDependencies {
   config: IAppConfig
@@ -81,7 +81,7 @@ type CreateBodyFromQuote = CreateBodyBase & {
 
 type CreateBodyFromIncomingPayment = CreateBodyBase & {
   incomingPayment: string
-  debitAmount: Amount
+  debitAmount: AmountJSON
 }
 
 function isCreateFromIncomingPayment(
@@ -109,7 +109,7 @@ async function createOutgoingPayment(
     options = {
       ...baseOptions,
       incomingPayment: body.incomingPayment,
-      debitAmount: body.debitAmount
+      debitAmount: parseAmount(body.debitAmount)
     }
   } else {
     const quoteUrlParts = body.quoteId.split('/')

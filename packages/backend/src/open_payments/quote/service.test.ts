@@ -652,8 +652,8 @@ describe('QuoteService', (): void => {
         ${200n}          | ${0}     | ${0}          | ${1.0}       | ${200n}                    | ${'no fees, equal exchange rate'}
         ${200n}          | ${20}    | ${0}          | ${0.5}       | ${90n}                     | ${'fixed fee'}
         ${200n}          | ${101n}  | ${0}          | ${1.0}       | ${99n}                     | ${'fixed fee larger than receiveAmount, equal exchange rate'}
-        ${200n}          | ${0}     | ${200}        | ${0.5}       | ${99n}                     | ${'basis point fee'}
-        ${200n}          | ${20}    | ${200}        | ${0.5}       | ${89n}                     | ${'fixed and basis point fee'}
+        ${200n}          | ${0}     | ${200}        | ${0.5}       | ${98n}                     | ${'basis point fee'}
+        ${200n}          | ${20}    | ${200}        | ${0.5}       | ${88n}                     | ${'fixed and basis point fee'}
         ${200n}          | ${20}    | ${200}        | ${0.455}     | ${80n}                     | ${'fixed and basis point fee with floating exchange rate'}
       `(
         '$description',
@@ -666,7 +666,7 @@ describe('QuoteService', (): void => {
         }): Promise<void> => {
           const receiver = await createReceiver(deps, receivingWalletAddress)
 
-          await Fee.query().insertAndFetch({
+          const sendingFee = await Fee.query().insertAndFetch({
             assetId: sendAsset.id,
             type: FeeType.Sending,
             fixedFee,
@@ -676,7 +676,8 @@ describe('QuoteService', (): void => {
           const mockedQuote = mockQuote({
             receiver,
             walletAddress: sendingWalletAddress,
-            debitAmountValue,
+            debitAmountValue:
+              debitAmountValue - sendingFee.calculate(debitAmountValue),
             exchangeRate
           })
 
@@ -708,7 +709,7 @@ describe('QuoteService', (): void => {
         const receiver = await createReceiver(deps, receivingWalletAddress)
         const debitAmountValue = 100n
 
-        await Fee.query().insertAndFetch({
+        const fee = await Fee.query().insertAndFetch({
           assetId: sendAsset.id,
           type: FeeType.Sending,
           fixedFee: debitAmountValue + 1n,
@@ -718,7 +719,7 @@ describe('QuoteService', (): void => {
         const mockedQuote = mockQuote({
           receiver,
           walletAddress: sendingWalletAddress,
-          debitAmountValue: debitAmountValue,
+          debitAmountValue: debitAmountValue - fee.calculate(debitAmountValue),
           exchangeRate: 1.0
         })
 
