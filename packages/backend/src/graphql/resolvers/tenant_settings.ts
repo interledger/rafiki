@@ -17,9 +17,9 @@ export const getTenantSettings: TenantResolvers<TenantedApolloContext>['settings
       'tenantSettingService'
     )
 
-    const tenantSettings = (await tenantSettingsService.get({
+    const tenantSettings = await tenantSettingsService.get({
       tenantId: parent.id
-    })) as TenantSetting[]
+    })
 
     return tenantSettings.map((x) => tenantSettingsToGraphql(x))
   }
