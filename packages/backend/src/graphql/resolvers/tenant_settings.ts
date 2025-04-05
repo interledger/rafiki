@@ -21,7 +21,7 @@ export const getTenantSettings: TenantResolvers<TenantedApolloContext>['settings
       tenantId: parent.id
     })
 
-    return tenantSettings.map((x) => tenantSettingsToGraphql(x))
+    return tenantSettingsToGraphql(tenantSettings)
   }
 
 export const createTenantSettings: MutationResolvers<TenantedApolloContext>['createTenantSettings'] =
@@ -38,13 +38,22 @@ export const createTenantSettings: MutationResolvers<TenantedApolloContext>['cre
     })
 
     return {
-      settings: tenantSettings.map((x) => tenantSettingsToGraphql(x))
+      settings: tenantSettingsToGraphql(tenantSettings)
     }
   }
 
-export const tenantSettingsToGraphql = (
+const tenantSettingToGraphql = (
   tenantSetting: TenantSetting
 ): SchemaTenantSetting => ({
   key: tenantSetting.key,
   value: tenantSetting.value
 })
+
+export const tenantSettingsToGraphql = (
+  tenantSettings?: TenantSetting[]
+): SchemaTenantSetting[] => {
+  if (!tenantSettings) {
+    return []
+  }
+  return tenantSettings.map((x) => tenantSettingToGraphql(x))
+}
