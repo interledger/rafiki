@@ -147,8 +147,22 @@ export default defineConfig({
                   link: '/integration/requirements/sending-fees'
                 },
                 {
-                  label: 'Identity provider (IdP)',
-                  link: '/integration/requirements/idp'
+                  label: 'Open Payments',
+                  collapsed: true,
+                  items: [
+                    {
+                      label: 'Identity provider (IdP)',
+                      link: '/integration/requirements/open-payments/idp'
+                    },
+                    {
+                      label: 'Managing wallet address keys',
+                      link: '/integration/requirements/open-payments/wallet-keys'
+                    },
+                    {
+                      label: 'Viewing and revoking grants',
+                      link: '/integration/requirements/open-payments/grants-revoking'
+                    }
+                  ]
                 }
               ]
             },
