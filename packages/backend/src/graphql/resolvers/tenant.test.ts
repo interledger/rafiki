@@ -10,55 +10,17 @@ import {
 } from '../generated/graphql'
 import { initIocContainer } from '../..'
 import { Config, IAppConfig } from '../../config/app'
-import { createTenant, generateTenantInput } from '../../tests/tenant'
+import {
+  createTenant,
+  createTenantedApolloClient,
+  generateTenantInput
+} from '../../tests/tenant'
 import { ApolloError, gql, NormalizedCacheObject } from '@apollo/client'
 import { getPageTests } from './page.test'
 import { truncateTables } from '../../tests/tableManager'
-import {
-  createHttpLink,
-  ApolloLink,
-  ApolloClient,
-  InMemoryCache
-} from '@apollo/client'
-import { setContext } from '@apollo/client/link/context'
+import { ApolloClient } from '@apollo/client'
 import { GraphQLErrorCode } from '../errors'
 import { Tenant as TenantModel } from '../../tenants/model'
-
-function createTenantedApolloClient(
-  appContainer: TestContainer,
-  tenantId: string
-): ApolloClient<NormalizedCacheObject> {
-  const httpLink = createHttpLink({
-    uri: `http://localhost:${appContainer.app.getAdminPort()}/graphql`,
-    fetch
-  })
-  const authLink = setContext((_, { headers }) => {
-    return {
-      headers: {
-        ...headers,
-        'tenant-id': tenantId
-      }
-    }
-  })
-
-  const link = ApolloLink.from([authLink, httpLink])
-
-  return new ApolloClient({
-    cache: new InMemoryCache({}),
-    link: link,
-    defaultOptions: {
-      query: {
-        fetchPolicy: 'no-cache'
-      },
-      mutate: {
-        fetchPolicy: 'no-cache'
-      },
-      watchQuery: {
-        fetchPolicy: 'no-cache'
-      }
-    }
-  })
-}
 
 describe('Tenant Resolvers', (): void => {
   let deps: IocContract<AppServices>

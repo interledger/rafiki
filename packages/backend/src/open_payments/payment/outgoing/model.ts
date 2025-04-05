@@ -108,7 +108,7 @@ export class OutgoingPayment
   }
 
   public getUrl(walletAddress: WalletAddress): string {
-    const url = new URL(walletAddress.url)
+    const url = new URL(walletAddress.address)
     return `${url.origin}/${this.tenantId}${OutgoingPayment.urlPath}/${this.id}`
   }
 
@@ -206,7 +206,7 @@ export class OutgoingPayment
   ): OpenPaymentsOutgoingPayment {
     return {
       id: this.getUrl(walletAddress),
-      walletAddress: walletAddress.url,
+      walletAddress: walletAddress.address,
       quoteId: this.quote?.getUrl(walletAddress) ?? undefined,
       receiveAmount: serializeAmount(this.receiveAmount),
       debitAmount: serializeAmount(this.debitAmount),

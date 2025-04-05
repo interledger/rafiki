@@ -1,6 +1,6 @@
 import { IocContract } from '@adonisjs/fold'
 import { AppServices } from '../app'
-import { TenantSetting } from '../tenants/settings/model'
+import { TenantSetting, TenantSettingKeys } from '../tenants/settings/model'
 import { CreateOptions, KeyValuePair } from '../tenants/settings/service'
 import { faker } from '@faker-js/faker'
 import { isTenantSettingError } from '../tenants/settings/errors'
@@ -16,7 +16,7 @@ export function randomSetting(): KeyValuePair {
 
 export function exchangeRatesSetting(): KeyValuePair {
   return {
-    key: 'EXCHANGE_RATES_URL',
+    key: TenantSettingKeys.EXCHANGE_RATES_URL.name,
     value: faker.internet.url()
   }
 }

@@ -8,6 +8,7 @@ import { TenantSettingService } from './settings/service'
 import { TenantSetting } from './settings/model'
 import type { IAppConfig } from '../config/app'
 import { TenantError } from './errors'
+import { TenantSettingInput } from '../graphql/generated/graphql'
 
 export interface TenantService {
   get: (id: string, includeDeleted?: boolean) => Promise<Tenant | undefined>
@@ -79,6 +80,7 @@ interface CreateTenantOptions {
   idpSecret?: string
   idpConsentUrl?: string
   publicName?: string
+  settings?: TenantSettingInput[]
 }
 
 async function createTenant(
@@ -87,7 +89,8 @@ async function createTenant(
 ): Promise<Tenant> {
   const trx = await deps.knex.transaction()
   try {
-    const { email, apiSecret, publicName, idpSecret, idpConsentUrl } = options
+    const { email, apiSecret, publicName, idpSecret, idpConsentUrl, settings } =
+      options
     const tenant = await Tenant.query(trx).insertAndFetch({
       email,
       publicName,
@@ -102,13 +105,19 @@ async function createTenant(
       idpConsentUrl
     })
 
-    await deps.tenantSettingService.create(
-      {
-        tenantId: tenant.id,
-        setting: TenantSetting.default()
-      },
-      { trx }
-    )
+    const createInitialTenantSettingsOptions = {
+      tenantId: tenant.id,
+      setting: TenantSetting.default()
+    }
+
+    if (settings) {
+      createInitialTenantSettingsOptions.setting =
+        createInitialTenantSettingsOptions.setting.concat(settings)
+    }
+
+    await deps.tenantSettingService.create(createInitialTenantSettingsOptions, {
+      trx
+    })
 
     await trx.commit()
 

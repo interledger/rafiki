@@ -144,7 +144,7 @@ describe('QuoteService', (): void => {
         createQuote(deps, {
           tenantId,
           walletAddressId: sendingWalletAddress.id,
-          receiver: `${receivingWalletAddress.url}/incoming-payments/${uuid()}`,
+          receiver: `${receivingWalletAddress.address}/incoming-payments/${uuid()}`,
           debitAmount: {
             value: BigInt(56),
             assetCode: asset.code,
@@ -446,7 +446,7 @@ describe('QuoteService', (): void => {
         quoteService.create({
           tenantId: unknownTenantId,
           walletAddressId: walletAddress.id,
-          receiver: `${receivingWalletAddress.url}/incoming-payments/${uuid()}`,
+          receiver: `${receivingWalletAddress.address}/incoming-payments/${uuid()}`,
           debitAmount,
           method: 'ilp'
         })
@@ -466,7 +466,7 @@ describe('QuoteService', (): void => {
         quoteService.create({
           tenantId,
           walletAddressId: unknownWalletAddressId,
-          receiver: `${receivingWalletAddress.url}/incoming-payments/${uuid()}`,
+          receiver: `${receivingWalletAddress.address}/incoming-payments/${uuid()}`,
           debitAmount,
           method: 'ilp'
         })
@@ -490,7 +490,7 @@ describe('QuoteService', (): void => {
         quoteService.create({
           tenantId,
           walletAddressId: walletAddress.id,
-          receiver: `${receivingWalletAddress.url}/incoming-payments/${uuid()}`,
+          receiver: `${receivingWalletAddress.address}/incoming-payments/${uuid()}`,
           debitAmount,
           method: 'ilp'
         })
@@ -502,7 +502,7 @@ describe('QuoteService', (): void => {
         quoteService.create({
           tenantId,
           walletAddressId: sendingWalletAddress.id,
-          receiver: `${receivingWalletAddress.url}/incoming-payments/${uuid()}`,
+          receiver: `${receivingWalletAddress.address}/incoming-payments/${uuid()}`,
           debitAmount,
           method: 'ilp'
         })

@@ -289,7 +289,7 @@ describe('OutgoingPaymentService', (): void => {
       assetId: sendAssetId
     })
     walletAddressId = walletAddress.id
-    client = walletAddress.url
+    client = walletAddress.address
     const { id: destinationAssetId } = await createAsset(deps, destinationAsset)
     receiverWalletAddress = await createWalletAddress(deps, {
       tenantId,

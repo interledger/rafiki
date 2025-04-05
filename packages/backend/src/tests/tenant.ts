@@ -2,6 +2,15 @@ import { IocContract } from '@adonisjs/fold'
 import { faker } from '@faker-js/faker'
 import { AppServices } from '../app'
 import { Tenant } from '../tenants/model'
+import {
+  ApolloClient,
+  ApolloLink,
+  createHttpLink,
+  InMemoryCache,
+  NormalizedCacheObject
+} from '@apollo/client'
+import { setContext } from '@apollo/client/link/context'
+import { TestContainer } from './app'
 
 interface CreateOptions {
   email: string
@@ -9,6 +18,42 @@ interface CreateOptions {
   apiSecret: string
   idpConsentUrl: string
   idpSecret: string
+}
+
+export function createTenantedApolloClient(
+  appContainer: TestContainer,
+  tenantId: string
+): ApolloClient<NormalizedCacheObject> {
+  const httpLink = createHttpLink({
+    uri: `http://localhost:${appContainer.app.getAdminPort()}/graphql`,
+    fetch
+  })
+  const authLink = setContext((_, { headers }) => {
+    return {
+      headers: {
+        ...headers,
+        'tenant-id': tenantId
+      }
+    }
+  })
+
+  const link = ApolloLink.from([authLink, httpLink])
+
+  return new ApolloClient({
+    cache: new InMemoryCache({}),
+    link: link,
+    defaultOptions: {
+      query: {
+        fetchPolicy: 'no-cache'
+      },
+      mutate: {
+        fetchPolicy: 'no-cache'
+      },
+      watchQuery: {
+        fetchPolicy: 'no-cache'
+      }
+    }
+  })
 }
 
 export function generateTenantInput() {

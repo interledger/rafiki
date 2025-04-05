@@ -12,6 +12,8 @@ import { isWalletAddressError } from '../open_payments/wallet_address/errors'
 import { WalletAddress } from '../open_payments/wallet_address/model'
 import { CreateOptions as BaseCreateOptions } from '../open_payments/wallet_address/service'
 import { LiquidityAccountType } from '../accounting/service'
+import { createTenantSettings } from './tenantSettings'
+import { TenantSettingKeys } from '../tenants/settings/model'
 
 const nock = (global as unknown as { nock: typeof import('nock') }).nock
 
@@ -31,12 +33,25 @@ export async function createWalletAddress(
 ): Promise<MockWalletAddress> {
   const walletAddressService = await deps.use('walletAddressService')
   const tenantIdToUse = options.tenantId || (await createTenant(deps)).id
+
+  const baseWalletAddressUrl = new URL(
+    options.address || `https://${faker.internet.domainName()}`
+  )
+  await createTenantSettings(deps, {
+    tenantId: tenantIdToUse,
+    setting: [
+      {
+        key: TenantSettingKeys.WALLET_ADDRESS_URL.name,
+        value: baseWalletAddressUrl.origin
+      }
+    ]
+  })
   const walletAddressOrError = (await walletAddressService.create({
     ...options,
     assetId:
       options.assetId || (await createAsset(deps, undefined, tenantIdToUse)).id,
     tenantId: tenantIdToUse,
-    url: options.url || `https://${faker.internet.domainName()}/.well-known/pay`
+    address: options.address || `${baseWalletAddressUrl.origin}/.well-known/pay`
   })) as MockWalletAddress
   if (isWalletAddressError(walletAddressOrError)) {
     throw new Error(walletAddressOrError)
@@ -52,7 +67,7 @@ export async function createWalletAddress(
     )
   }
   if (options.mockServerPort) {
-    const url = new URL(walletAddressOrError.url)
+    const url = new URL(walletAddressOrError.address)
     walletAddressOrError.scope = nock(url.origin)
       .get((uri) => uri.startsWith(url.pathname))
       .matchHeader('Accept', /application\/((ilp-stream|spsp4)\+)?json*./)
