@@ -173,10 +173,10 @@ async function createWalletAddressUrl(
 ): Promise<string | WalletAddressError> {
   let tenantWalletAddressUrl = new URL(deps.config.openPaymentsUrl)
 
-  const found = (await deps.tenantSettingService.get({
+  const found = await deps.tenantSettingService.get({
     tenantId: options.tenantId,
     key: TenantSettingKeys.WALLET_ADDRESS_URL.name
-  })) as TenantSetting[]
+  })
 
   if (!found || found.length === 0) {
     if (!options.isOperator) {
