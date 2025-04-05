@@ -1590,7 +1590,7 @@ type Tenant implements Model {
   "The date and time that this tenant was deleted."
   deletedAt: String
   "List of settings for the tenant."
-  settings: [TenantSetting!]
+  settings: [TenantSetting!]!
 }
 
 type TenantsConnection {
