@@ -165,6 +165,14 @@ describe('Open Payments Wallet Address Service', (): void => {
       ).toEqual(WalletAddressError.WalletAddressSettingNotFound)
     })
 
+    test('should return InvalidUrl error if wallet address URL does not start with tenant wallet address URL', async (): Promise<void> => {
+      const result = await walletAddressService.create({
+        ...options,
+        address: 'https://bob.me/.well-known/pay'
+      })
+      expect(result).toEqual(WalletAddressError.InvalidUrl)
+    })
+
     test.each`
       setting                    | address                        | generated
       ${'https://alice.me/ilp'}  | ${'https://alice.me/ilp/test'} | ${'https://alice.me/ilp/test'}

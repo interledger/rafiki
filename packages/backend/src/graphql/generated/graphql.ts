@@ -1490,7 +1490,7 @@ export type Tenant = Model & {
   /** Public name for the tenant. */
   publicName?: Maybe<Scalars['String']['output']>;
   /** List of settings for the tenant. */
-  settings?: Maybe<Array<TenantSetting>>;
+  settings: Array<TenantSetting>;
 };
 
 export type TenantEdge = {
@@ -2614,7 +2614,7 @@ export type TenantResolvers<ContextType = any, ParentType extends ResolversParen
   idpConsentUrl?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   idpSecret?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   publicName?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  settings?: Resolver<Maybe<Array<ResolversTypes['TenantSetting']>>, ParentType, ContextType>;
+  settings?: Resolver<Array<ResolversTypes['TenantSetting']>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 

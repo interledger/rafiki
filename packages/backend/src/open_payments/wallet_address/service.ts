@@ -28,7 +28,7 @@ import { poll } from '../../shared/utils'
 import { WalletAddressAdditionalProperty } from './additional_property/model'
 import { AssetService } from '../../asset/service'
 import { CacheDataStore } from '../../middleware/cache/data-stores'
-import { TenantSetting, TenantSettingKeys } from '../../tenants/settings/model'
+import { TenantSettingKeys } from '../../tenants/settings/model'
 import { TenantSettingService } from '../../tenants/settings/service'
 
 interface Options {
