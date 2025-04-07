@@ -324,9 +324,9 @@ function calculateFixedSendQuoteAmounts(
   fees: bigint
 ): CalculateQuoteAmountsWithFeesResult {
   const { estimatedExchangeRate } = quote
-  const receiveAmountValue = BigInt(quote.receiveAmount.value)
-  const debitAmountMinusFees = BigInt(quote.debitAmount.value)
-  const debitAmountValue = BigInt(quote.debitAmount.value) + fees
+  const receiveAmountValue = quote.receiveAmount.value
+  const debitAmountMinusFees = quote.debitAmount.value
+  const debitAmountValue = quote.debitAmount.value + fees
 
   if (receiveAmountValue <= BigInt(0)) {
     deps.logger.info(
