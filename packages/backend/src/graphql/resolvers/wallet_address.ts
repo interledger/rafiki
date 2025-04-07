@@ -107,6 +107,7 @@ export const createWalletAddress: MutationResolvers<ForTenantIdContext>['createW
       })
 
     const tenantId = ctx.forTenantId
+
     if (!tenantId)
       throw new GraphQLError(
         `Assignment to the specified tenant is not permitted`,

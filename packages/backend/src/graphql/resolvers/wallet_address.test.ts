@@ -891,7 +891,6 @@ describe('Wallet Address Resolvers', (): void => {
         const additionalProperties = [walletProp01, walletProp02]
 
         const walletAddress = await createWalletAddress(deps, {
-          tenantId: Config.operatorTenantId,
           publicName,
           createLiquidityAccount: true,
           additionalProperties,
