@@ -25,7 +25,7 @@ export async function createWallet({
   await mockAccounts.setWalletAddress(
     accountId,
     walletAddress.id,
-    walletAddress.url
+    walletAddress.address
   )
 
   await createWalletAddressKey({

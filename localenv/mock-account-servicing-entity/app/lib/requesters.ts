@@ -88,7 +88,7 @@ export async function createWalletAddress(
       createWalletAddress(input: $input) {
         walletAddress {
           id
-          url
+          address
           publicName
         }
       }
@@ -96,7 +96,7 @@ export async function createWalletAddress(
   `
   const createWalletAddressInput: CreateWalletAddressInput = {
     assetId,
-    url: accountUrl,
+    address: accountUrl,
     publicName: accountName,
     additionalProperties: []
   }

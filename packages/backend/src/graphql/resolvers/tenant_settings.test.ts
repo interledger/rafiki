@@ -85,7 +85,7 @@ describe('Tenant Settings Resolvers', (): void => {
   })
 
   afterAll(async (): Promise<void> => {
-    await appContainer.apolloClient.stop()
+    appContainer.apolloClient.stop()
     await appContainer.shutdown()
   })
 
@@ -121,6 +121,49 @@ describe('Tenant Settings Resolvers', (): void => {
         })
 
       expect(response.settings.length).toBeGreaterThan(0)
+    })
+  })
+
+  describe('Get Tenant Settings', (): void => {
+    test('can get tenant settings', async (): Promise<void> => {
+      const tenant = await createTenant(deps)
+      const client = createTenantedApolloClient(appContainer, tenant.id)
+
+      // Query the settings
+      const response = await client
+        .query({
+          query: gql`
+            query GetTenantSettings($id: String!) {
+              tenant(id: $id) {
+                settings {
+                  key
+                  value
+                }
+              }
+            }
+          `,
+          variables: { id: tenant.id }
+        })
+        .then((query): { key: string; value: string }[] => {
+          if (query.data && query.data.tenant) {
+            return query.data.tenant.settings
+          }
+          throw new Error('Data was empty')
+        })
+
+      expect(response.length).toBeGreaterThan(0)
+      expect(response).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            key: TenantSettingKeys.WEBHOOK_MAX_RETRY.name,
+            value: String(TenantSettingKeys.WEBHOOK_MAX_RETRY.default)
+          }),
+          expect.objectContaining({
+            key: TenantSettingKeys.WEBHOOK_TIMEOUT.name,
+            value: String(TenantSettingKeys.WEBHOOK_TIMEOUT.default)
+          })
+        ])
+      )
     })
   })
 })

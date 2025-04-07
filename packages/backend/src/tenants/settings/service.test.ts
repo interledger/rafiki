@@ -8,13 +8,7 @@ import { truncateTables } from '../../tests/tableManager'
 import { Tenant } from '../model'
 import { TenantService } from '../service'
 import { faker } from '@faker-js/faker'
-import { getPageTests } from '../../shared/baseModel.test'
-import { Pagination, SortOrder } from '../../shared/baseModel'
-import {
-  createTenantSettings,
-  exchangeRatesSetting,
-  randomSetting
-} from '../../tests/tenantSettings'
+import { exchangeRatesSetting, randomSetting } from '../../tests/tenantSettings'
 import { TenantSetting } from './model'
 import {
   CreateOptions,
@@ -96,6 +90,36 @@ describe('TenantSetting Service', (): void => {
       const tenantSetting = await tenantSettingService.create(createOptions)
 
       expect(tenantSetting).toEqual([])
+    })
+
+    test('should update existing tenant settings on conflict - upsert', async (): Promise<void> => {
+      const initialOptions: CreateOptions = {
+        tenantId: tenant.id,
+        setting: [exchangeRatesSetting()]
+      }
+
+      await tenantSettingService.create(initialOptions)
+
+      const newValue = faker.internet.url()
+      const updatedOptions: CreateOptions = {
+        tenantId: tenant.id,
+        setting: [
+          {
+            key: initialOptions.setting[0].key,
+            value: newValue
+          }
+        ]
+      }
+
+      await tenantSettingService.create(updatedOptions)
+      const result = (await tenantSettingService.get({
+        tenantId: tenant.id,
+        key: initialOptions.setting[0].key
+      })) as TenantSetting[]
+
+      expect(result).toHaveLength(1)
+      expect(result[0].key).toEqual(initialOptions.setting[0].key)
+      expect(result[0].value).toEqual(newValue)
     })
   })
 
@@ -277,20 +301,74 @@ describe('TenantSetting Service', (): void => {
     })
   })
 
-  describe('pagination', (): void => {
-    beforeEach(async () => {
+  describe('getTenantSettings', () => {
+    let tenantSetting: TenantSetting[]
+
+    beforeEach(async (): Promise<void> => {
+      const createOptions: CreateOptions = {
+        tenantId: tenant.id,
+        setting: [exchangeRatesSetting()]
+      }
+
+      tenantSetting = await tenantSettingService.create(createOptions)
+    })
+
+    afterEach(async (): Promise<void> => {
       await tenantSettingService.delete({ tenantId: tenant.id })
     })
-    describe('getPage', (): void => {
-      getPageTests({
-        createModel: () =>
-          createTenantSettings(deps, {
-            tenantId: tenant.id,
-            setting: [exchangeRatesSetting()]
-          }) as Promise<TenantSetting>,
-        getPage: (pagination?: Pagination, sortOrder?: SortOrder) =>
-          tenantSettingService.getPage(tenant.id, pagination, sortOrder)
+
+    test('should retrieve tenant settings by tenantId', async (): Promise<void> => {
+      const result = await tenantSettingService.get({
+        tenantId: tenant.id
       })
+
+      expect(result).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            tenantId: tenant.id,
+            key: tenantSetting[0].key,
+            value: tenantSetting[0].value
+          })
+        ])
+      )
+    })
+
+    test('should retrieve tenant settings by tenantId and key', async (): Promise<void> => {
+      const result = await tenantSettingService.get({
+        tenantId: tenant.id,
+        key: tenantSetting[0].key
+      })
+
+      expect(result).toEqual([
+        expect.objectContaining({
+          tenantId: tenant.id,
+          key: tenantSetting[0].key,
+          value: tenantSetting[0].value
+        })
+      ])
+    })
+
+    test('should return an empty array if no settings match', async (): Promise<void> => {
+      const result = await tenantSettingService.get({
+        tenantId: tenant.id,
+        key: 'nonexistent-key'
+      })
+
+      expect(result).toEqual([])
+    })
+
+    test('should not retrieve deleted tenant settings', async (): Promise<void> => {
+      await tenantSettingService.delete({
+        tenantId: tenant.id,
+        key: tenantSetting[0].key
+      })
+
+      const result = await tenantSettingService.get({
+        tenantId: tenant.id,
+        key: tenantSetting[0].key
+      })
+
+      expect(result).toEqual([])
     })
   })
 })

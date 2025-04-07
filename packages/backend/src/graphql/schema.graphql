@@ -796,8 +796,8 @@ type WalletAddress implements Model {
   "Current amount of liquidity available for this wallet address."
   liquidity: UInt64
 
-  "Wallet Address URL."
-  url: String!
+  "Wallet Address."
+  address: String!
 
   "Public name associated with the wallet address. This is visible to anyone with the wallet address URL."
   publicName: String
@@ -1302,8 +1302,8 @@ input CreateWalletAddressInput {
   tenantId: ID
   "Unique identifier of the asset associated with the wallet address. This cannot be changed."
   assetId: String!
-  "Wallet address URL. This cannot be changed."
-  url: String!
+  "Wallet address. This cannot be changed."
+  address: String!
   "Public name associated with the wallet address. This is visible to anyone with the wallet address URL."
   publicName: String
   "Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency)."
@@ -1590,32 +1590,7 @@ type Tenant implements Model {
   "The date and time that this tenant was deleted."
   deletedAt: String
   "List of settings for the tenant."
-  settings(
-    "Forward pagination: Cursor (wallet address key ID) to start retrieving settings after this point."
-    after: String
-    "Backward pagination: Cursor (wallet address key ID) to start retrieving keys before this point."
-    before: String
-    "Forward pagination: Limit the result to the first **n** keys after the `after` cursor."
-    first: Int
-    "Backward pagination: Limit the result to the last **n** keys before the `before` cursor."
-    last: Int
-    "Specify the sort order of keys based on their creation data, either ascending or descending."
-    sortOrder: SortOrder
-  ): TenantSettingsConnection
-}
-
-type TenantSettingsConnection {
-  "Information to aid in pagination."
-  pageInfo: PageInfo!
-  "A list of edges representing tenant settings and cursors for pagination."
-  edges: [TenantSettingEdge!]!
-}
-
-type TenantSettingEdge {
-  "A tenant setting node in the list."
-  node: TenantSetting!
-  "A cursor for paginating through the tenants."
-  cursor: String!
+  settings: [TenantSetting!]!
 }
 
 type TenantsConnection {
@@ -1650,6 +1625,8 @@ input CreateTenantInput {
   idpSecret: String
   "Public name for the tenant."
   publicName: String
+  "Initial settings for tenant."
+  settings: [TenantSettingInput!]
 }
 
 input UpdateTenantInput {

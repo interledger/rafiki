@@ -85,7 +85,7 @@ describe('Quote Routes', (): void => {
       tenantId,
       assetId
     })
-    baseUrl = new URL(walletAddress.url).origin
+    baseUrl = new URL(walletAddress.address).origin
   })
 
   afterEach(async (): Promise<void> => {
@@ -109,7 +109,7 @@ describe('Quote Routes', (): void => {
       getBody: (quote) => {
         return {
           id: `${baseUrl}/${quote.tenantId}/quotes/${quote.id}`,
-          walletAddress: walletAddress.url,
+          walletAddress: walletAddress.address,
           receiver: quote.receiver,
           debitAmount: serializeAmount(quote.debitAmount),
           receiveAmount: serializeAmount(quote.receiveAmount),
@@ -145,7 +145,7 @@ describe('Quote Routes', (): void => {
 
     test('returns error on invalid debitAmount asset', async (): Promise<void> => {
       options = {
-        walletAddress: walletAddress.url,
+        walletAddress: walletAddress.address,
         receiver,
         debitAmount: {
           ...debitAmount,
@@ -174,7 +174,7 @@ describe('Quote Routes', (): void => {
         '$description',
         async ({ debitAmount, receiveAmount }): Promise<void> => {
           options = {
-            walletAddress: walletAddress.url,
+            walletAddress: walletAddress.address,
             receiver,
             method: 'ilp'
           }
@@ -227,7 +227,7 @@ describe('Quote Routes', (): void => {
           assert.ok(quote)
           expect(ctx.response.body).toEqual({
             id: `${baseUrl}/${tenantId}/quotes/${quoteId}`,
-            walletAddress: walletAddress.url,
+            walletAddress: walletAddress.address,
             receiver: quote.receiver,
             debitAmount: {
               ...quote.debitAmount,
@@ -246,7 +246,7 @@ describe('Quote Routes', (): void => {
 
       test('receiver.incomingAmount', async (): Promise<void> => {
         options = {
-          walletAddress: walletAddress.url,
+          walletAddress: walletAddress.address,
           receiver,
           method: 'ilp'
         }
@@ -279,7 +279,7 @@ describe('Quote Routes', (): void => {
         assert.ok(quote)
         expect(ctx.response.body).toEqual({
           id: `${baseUrl}/${tenantId}/quotes/${quoteId}`,
-          walletAddress: walletAddress.url,
+          walletAddress: walletAddress.address,
           receiver: options.receiver,
           debitAmount: {
             ...quote.debitAmount,

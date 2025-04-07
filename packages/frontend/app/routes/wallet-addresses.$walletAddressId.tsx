@@ -86,7 +86,7 @@ export default function ViewWalletAddressPage() {
                   />
                   <Input
                     label='URL'
-                    value={walletAddress.url}
+                    value={walletAddress.address}
                     disabled
                     readOnly
                   />

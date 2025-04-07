@@ -378,6 +378,8 @@ export type CreateTenantInput = {
   idpSecret?: InputMaybe<Scalars['String']['input']>;
   /** Public name for the tenant. */
   publicName?: InputMaybe<Scalars['String']['input']>;
+  /** Initial settings for tenant. */
+  settings?: InputMaybe<Array<TenantSettingInput>>;
 };
 
 export type CreateTenantSettingsInput = {
@@ -394,6 +396,8 @@ export type CreateTenantSettingsMutationResponse = {
 export type CreateWalletAddressInput = {
   /** Additional properties associated with the wallet address. */
   additionalProperties?: InputMaybe<Array<AdditionalPropertyInput>>;
+  /** Wallet address. This cannot be changed. */
+  address: Scalars['String']['input'];
   /** Unique identifier of the asset associated with the wallet address. This cannot be changed. */
   assetId: Scalars['String']['input'];
   /** Unique key to ensure duplicate or retried requests are processed only once. For more information, refer to [idempotency](https://rafiki.dev/apis/graphql/admin-api-overview/#idempotency). */
@@ -402,8 +406,6 @@ export type CreateWalletAddressInput = {
   publicName?: InputMaybe<Scalars['String']['input']>;
   /** Unique identifier of the tenant associated with the wallet address. This cannot be changed. Optional, if not provided, the tenantId will be obtained from the signature. */
   tenantId?: InputMaybe<Scalars['ID']['input']>;
-  /** Wallet address URL. This cannot be changed. */
-  url: Scalars['String']['input'];
 };
 
 export type CreateWalletAddressKeyInput = {
@@ -1488,16 +1490,7 @@ export type Tenant = Model & {
   /** Public name for the tenant. */
   publicName?: Maybe<Scalars['String']['output']>;
   /** List of settings for the tenant. */
-  settings?: Maybe<TenantSettingsConnection>;
-};
-
-
-export type TenantSettingsArgs = {
-  after?: InputMaybe<Scalars['String']['input']>;
-  before?: InputMaybe<Scalars['String']['input']>;
-  first?: InputMaybe<Scalars['Int']['input']>;
-  last?: InputMaybe<Scalars['Int']['input']>;
-  sortOrder?: InputMaybe<SortOrder>;
+  settings: Array<TenantSetting>;
 };
 
 export type TenantEdge = {
@@ -1521,27 +1514,11 @@ export type TenantSetting = {
   value: Scalars['String']['output'];
 };
 
-export type TenantSettingEdge = {
-  __typename?: 'TenantSettingEdge';
-  /** A cursor for paginating through the tenants. */
-  cursor: Scalars['String']['output'];
-  /** A tenant setting node in the list. */
-  node: TenantSetting;
-};
-
 export type TenantSettingInput = {
   /** Key for this setting. */
   key: Scalars['String']['input'];
   /** Value of a setting for this key. */
   value: Scalars['String']['input'];
-};
-
-export type TenantSettingsConnection = {
-  __typename?: 'TenantSettingsConnection';
-  /** A list of edges representing tenant settings and cursors for pagination. */
-  edges: Array<TenantSettingEdge>;
-  /** Information to aid in pagination. */
-  pageInfo: PageInfo;
 };
 
 export type TenantsConnection = {
@@ -1669,6 +1646,8 @@ export type WalletAddress = Model & {
   __typename?: 'WalletAddress';
   /** Additional properties associated with the wallet address. */
   additionalProperties?: Maybe<Array<Maybe<AdditionalProperty>>>;
+  /** Wallet Address. */
+  address: Scalars['String']['output'];
   /** Asset of the wallet address. */
   asset: Asset;
   /** The date and time when the wallet address was created. */
@@ -1689,8 +1668,6 @@ export type WalletAddress = Model & {
   status: WalletAddressStatus;
   /** Tenant ID of the wallet address. */
   tenantId?: Maybe<Scalars['String']['output']>;
-  /** Wallet Address URL. */
-  url: Scalars['String']['output'];
   /** List of keys associated with this wallet address */
   walletAddressKeys?: Maybe<WalletAddressKeyConnection>;
 };
@@ -2032,9 +2009,7 @@ export type ResolversTypes = {
   TenantEdge: ResolverTypeWrapper<Partial<TenantEdge>>;
   TenantMutationResponse: ResolverTypeWrapper<Partial<TenantMutationResponse>>;
   TenantSetting: ResolverTypeWrapper<Partial<TenantSetting>>;
-  TenantSettingEdge: ResolverTypeWrapper<Partial<TenantSettingEdge>>;
   TenantSettingInput: ResolverTypeWrapper<Partial<TenantSettingInput>>;
-  TenantSettingsConnection: ResolverTypeWrapper<Partial<TenantSettingsConnection>>;
   TenantsConnection: ResolverTypeWrapper<Partial<TenantsConnection>>;
   TransferState: ResolverTypeWrapper<Partial<TransferState>>;
   TransferType: ResolverTypeWrapper<Partial<TransferType>>;
@@ -2170,9 +2145,7 @@ export type ResolversParentTypes = {
   TenantEdge: Partial<TenantEdge>;
   TenantMutationResponse: Partial<TenantMutationResponse>;
   TenantSetting: Partial<TenantSetting>;
-  TenantSettingEdge: Partial<TenantSettingEdge>;
   TenantSettingInput: Partial<TenantSettingInput>;
-  TenantSettingsConnection: Partial<TenantSettingsConnection>;
   TenantsConnection: Partial<TenantsConnection>;
   TriggerWalletAddressEventsInput: Partial<TriggerWalletAddressEventsInput>;
   TriggerWalletAddressEventsMutationResponse: Partial<TriggerWalletAddressEventsMutationResponse>;
@@ -2641,7 +2614,7 @@ export type TenantResolvers<ContextType = any, ParentType extends ResolversParen
   idpConsentUrl?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   idpSecret?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   publicName?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  settings?: Resolver<Maybe<ResolversTypes['TenantSettingsConnection']>, ParentType, ContextType, Partial<TenantSettingsArgs>>;
+  settings?: Resolver<Array<ResolversTypes['TenantSetting']>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -2659,18 +2632,6 @@ export type TenantMutationResponseResolvers<ContextType = any, ParentType extend
 export type TenantSettingResolvers<ContextType = any, ParentType extends ResolversParentTypes['TenantSetting'] = ResolversParentTypes['TenantSetting']> = {
   key?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   value?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type TenantSettingEdgeResolvers<ContextType = any, ParentType extends ResolversParentTypes['TenantSettingEdge'] = ResolversParentTypes['TenantSettingEdge']> = {
-  cursor?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  node?: Resolver<ResolversTypes['TenantSetting'], ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
-
-export type TenantSettingsConnectionResolvers<ContextType = any, ParentType extends ResolversParentTypes['TenantSettingsConnection'] = ResolversParentTypes['TenantSettingsConnection']> = {
-  edges?: Resolver<Array<ResolversTypes['TenantSettingEdge']>, ParentType, ContextType>;
-  pageInfo?: Resolver<ResolversTypes['PageInfo'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -2705,6 +2666,7 @@ export type UpdateWalletAddressMutationResponseResolvers<ContextType = any, Pare
 
 export type WalletAddressResolvers<ContextType = any, ParentType extends ResolversParentTypes['WalletAddress'] = ResolversParentTypes['WalletAddress']> = {
   additionalProperties?: Resolver<Maybe<Array<Maybe<ResolversTypes['AdditionalProperty']>>>, ParentType, ContextType>;
+  address?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   asset?: Resolver<ResolversTypes['Asset'], ParentType, ContextType>;
   createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
@@ -2715,7 +2677,6 @@ export type WalletAddressResolvers<ContextType = any, ParentType extends Resolve
   quotes?: Resolver<Maybe<ResolversTypes['QuoteConnection']>, ParentType, ContextType, Partial<WalletAddressQuotesArgs>>;
   status?: Resolver<ResolversTypes['WalletAddressStatus'], ParentType, ContextType>;
   tenantId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  url?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   walletAddressKeys?: Resolver<Maybe<ResolversTypes['WalletAddressKeyConnection']>, ParentType, ContextType, Partial<WalletAddressWalletAddressKeysArgs>>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
@@ -2849,8 +2810,6 @@ export type Resolvers<ContextType = any> = {
   TenantEdge?: TenantEdgeResolvers<ContextType>;
   TenantMutationResponse?: TenantMutationResponseResolvers<ContextType>;
   TenantSetting?: TenantSettingResolvers<ContextType>;
-  TenantSettingEdge?: TenantSettingEdgeResolvers<ContextType>;
-  TenantSettingsConnection?: TenantSettingsConnectionResolvers<ContextType>;
   TenantsConnection?: TenantsConnectionResolvers<ContextType>;
   TriggerWalletAddressEventsMutationResponse?: TriggerWalletAddressEventsMutationResponseResolvers<ContextType>;
   UInt8?: GraphQLScalarType;
@@ -3088,7 +3047,7 @@ export type GetWalletAddressQueryVariables = Exact<{
 }>;
 
 
-export type GetWalletAddressQuery = { __typename?: 'Query', walletAddress?: { __typename?: 'WalletAddress', id: string, url: string, publicName?: string | null, status: WalletAddressStatus, createdAt: string, liquidity?: bigint | null, asset: { __typename?: 'Asset', id: string, code: string, scale: number, withdrawalThreshold?: bigint | null } } | null };
+export type GetWalletAddressQuery = { __typename?: 'Query', walletAddress?: { __typename?: 'WalletAddress', id: string, address: string, publicName?: string | null, status: WalletAddressStatus, createdAt: string, liquidity?: bigint | null, asset: { __typename?: 'Asset', id: string, code: string, scale: number, withdrawalThreshold?: bigint | null } } | null };
 
 export type ListWalletAddresssQueryVariables = Exact<{
   after?: InputMaybe<Scalars['String']['input']>;
@@ -3098,7 +3057,7 @@ export type ListWalletAddresssQueryVariables = Exact<{
 }>;
 
 
-export type ListWalletAddresssQuery = { __typename?: 'Query', walletAddresses: { __typename?: 'WalletAddressesConnection', edges: Array<{ __typename?: 'WalletAddressEdge', cursor: string, node: { __typename?: 'WalletAddress', id: string, publicName?: string | null, status: WalletAddressStatus, url: string } }>, pageInfo: { __typename?: 'PageInfo', startCursor?: string | null, endCursor?: string | null, hasNextPage: boolean, hasPreviousPage: boolean } } };
+export type ListWalletAddresssQuery = { __typename?: 'Query', walletAddresses: { __typename?: 'WalletAddressesConnection', edges: Array<{ __typename?: 'WalletAddressEdge', cursor: string, node: { __typename?: 'WalletAddress', id: string, publicName?: string | null, status: WalletAddressStatus, address: string } }>, pageInfo: { __typename?: 'PageInfo', startCursor?: string | null, endCursor?: string | null, hasNextPage: boolean, hasPreviousPage: boolean } } };
 
 export type UpdateWalletAddressMutationVariables = Exact<{
   input: UpdateWalletAddressInput;

@@ -10,6 +10,7 @@ import { GraphQLErrorCode } from '../errors'
 import { Tenant } from '../../tenants/model'
 import { Pagination, SortOrder } from '../../shared/baseModel'
 import { getPageInfo } from '../../shared/pagination'
+import { tenantSettingsToGraphql } from './tenant_settings'
 
 export const whoami: QueryResolvers<TenantedApolloContext>['whoami'] = async (
   parent,
@@ -182,6 +183,7 @@ export function tenantToGraphQl(tenant: Tenant): SchemaTenant {
     idpConsentUrl: tenant.idpConsentUrl,
     idpSecret: tenant.idpSecret,
     publicName: tenant.publicName,
+    settings: tenantSettingsToGraphql(tenant.settings),
     createdAt: new Date(+tenant.createdAt).toISOString(),
     deletedAt: tenant.deletedAt
       ? new Date(+tenant.deletedAt).toISOString()

@@ -66,9 +66,9 @@ describe('Pagination', (): void => {
             first,
             last,
             cursor,
-            'wallet-address': walletAddress.url
+            'wallet-address': walletAddress.address
           })
-        ).toEqual({ ...result, walletAddress: walletAddress.url })
+        ).toEqual({ ...result, walletAddress: walletAddress.address })
       }
     )
   })
@@ -144,7 +144,7 @@ describe('Pagination', (): void => {
                   pagination
                 }),
               page,
-              walletAddress: defaultWalletAddress.url
+              walletAddress: defaultWalletAddress.address
             })
             expect(pageInfo).toEqual({
               startCursor: paymentIds[start],
@@ -179,7 +179,7 @@ describe('Pagination', (): void => {
               const payment = await createOutgoingPayment(deps, {
                 tenantId,
                 walletAddressId: defaultWalletAddress.id,
-                receiver: secondaryWalletAddress.url,
+                receiver: secondaryWalletAddress.address,
                 method: 'ilp',
                 debitAmount,
                 validDestination: false
@@ -202,7 +202,7 @@ describe('Pagination', (): void => {
                   pagination
                 }),
               page,
-              walletAddress: defaultWalletAddress.url
+              walletAddress: defaultWalletAddress.address
             })
             expect(pageInfo).toEqual({
               startCursor: paymentIds[start],
@@ -237,7 +237,7 @@ describe('Pagination', (): void => {
               const quote = await createQuote(deps, {
                 tenantId,
                 walletAddressId: defaultWalletAddress.id,
-                receiver: secondaryWalletAddress.url,
+                receiver: secondaryWalletAddress.address,
                 debitAmount,
                 validDestination: false,
                 method: 'ilp'
@@ -260,7 +260,7 @@ describe('Pagination', (): void => {
                   pagination
                 }),
               page,
-              walletAddress: defaultWalletAddress.url
+              walletAddress: defaultWalletAddress.address
             })
             expect(pageInfo).toEqual({
               startCursor: quoteIds[start],
