@@ -386,9 +386,9 @@ function calculateFixedDeliveryQuoteAmounts(
   quote: UnfinalizedQuote,
   fees: bigint
 ): CalculateQuoteAmountsWithFeesResult {
-  const debitAmountValue = BigInt(quote.debitAmount.value) + fees
-  const debitAmountMinusFees = BigInt(quote.debitAmount.value)
-  const receiveAmountValue = BigInt(quote.receiveAmount.value)
+  const debitAmountValue = quote.debitAmount.value + fees
+  const debitAmountMinusFees = quote.debitAmount.value
+  const receiveAmountValue = quote.receiveAmount.value
 
   if (debitAmountValue <= BigInt(0)) {
     deps.logger.info(
