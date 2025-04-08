@@ -67,8 +67,7 @@ export default defineConfig({
         src: './public/img/icon.svg'
       },
       social: {
-        github:
-          'https://github.com/interledger/rafiki/tree/main/packages/documentation'
+        github: 'https://github.com/interledger/rafiki/tree/main'
       },
       sidebar: [
         {
