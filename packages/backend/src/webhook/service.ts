@@ -180,7 +180,7 @@ type WebhookHeaders = {
 async function sendWebhookEvent(
   deps: ServiceDependencies,
   event: WebhookEvent,
-  settings?: Partial<FormattedTenantSettings>
+  settings: Partial<FormattedTenantSettings>
 ): Promise<void> {
   try {
     const requestHeaders: WebhookHeaders = {

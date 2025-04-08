@@ -57,7 +57,7 @@ const TENANT_KEY_MAPPING = {
   [TenantSettingKeys.WEBHOOK_MAX_RETRY.name]: 'webhookMaxRetry',
   [TenantSettingKeys.WEBHOOK_TIMEOUT.name]: 'webhookTimeout',
   [TenantSettingKeys.WEBHOOK_URL.name]: 'webhookUrl'
-}
+} as const
 
 export type FormattedTenantSettings = Record<
   (typeof TENANT_KEY_MAPPING)[keyof typeof TENANT_KEY_MAPPING],
