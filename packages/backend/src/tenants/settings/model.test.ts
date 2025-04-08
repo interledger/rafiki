@@ -1,3 +1,4 @@
+import assert from 'assert'
 import { IocContract } from '@adonisjs/fold'
 import { TenantSetting, TenantSettingKeys, formatSettings } from './model'
 import { AppServices } from '../../app'
@@ -39,19 +40,18 @@ describe('TenantSetting Model', (): void => {
         value: faker.internet.url()
       })
 
-      const webhookMaxRetrySetting = await TenantSetting.query().insertAndFetch(
-        {
-          tenantId: tenant.id,
-          key: TenantSettingKeys.WEBHOOK_MAX_RETRY.name,
-          value: '10'
-        }
-      )
-
-      const webhookTimeoutSetting = await TenantSetting.query().insertAndFetch({
+      const webhookMaxRetrySetting = await TenantSetting.query().findOne({
         tenantId: tenant.id,
-        key: TenantSettingKeys.WEBHOOK_TIMEOUT.name,
-        value: '2000'
+        key: TenantSettingKeys.WEBHOOK_MAX_RETRY.name,
+        value: '10'
       })
+      assert.ok(webhookMaxRetrySetting)
+
+      const webhookTimeoutSetting = await TenantSetting.query().findOne({
+        tenantId: tenant.id,
+        key: TenantSettingKeys.WEBHOOK_TIMEOUT.name
+      })
+      assert.ok(webhookTimeoutSetting)
 
       const exchangeRateSetting = await TenantSetting.query().insertAndFetch({
         tenantId: tenant.id,
