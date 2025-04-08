@@ -51,3 +51,26 @@ export class TenantSetting extends BaseModel {
     return settings
   }
 }
+
+const TENANT_KEY_MAPPING = {
+  [TenantSettingKeys.EXCHANGE_RATES_URL.name]: 'exchangeRatesUrl',
+  [TenantSettingKeys.WEBHOOK_MAX_RETRY.name]: 'webhookMaxRetry',
+  [TenantSettingKeys.WEBHOOK_TIMEOUT.name]: 'webhookTimeout',
+  [TenantSettingKeys.WEBHOOK_URL.name]: 'webhookUrl'
+} as const
+
+export type FormattedTenantSettings = Record<
+  (typeof TENANT_KEY_MAPPING)[keyof typeof TENANT_KEY_MAPPING],
+  TenantSetting['value']
+>
+
+export const formatSettings = (
+  settings: TenantSetting[]
+): Partial<FormattedTenantSettings> => {
+  const settingsObj: Partial<FormattedTenantSettings> = {}
+  for (const setting of settings) {
+    const { key } = setting
+    settingsObj[TENANT_KEY_MAPPING[key]] = setting.value
+  }
+  return settingsObj
+}

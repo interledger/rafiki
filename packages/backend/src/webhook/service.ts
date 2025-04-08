@@ -8,6 +8,12 @@ import { BaseService } from '../shared/baseService'
 import { Pagination, SortOrder } from '../shared/baseModel'
 import { FilterString } from '../shared/filters'
 import { trace, Span } from '@opentelemetry/api'
+import {
+  formatSettings,
+  FormattedTenantSettings,
+  TenantSettingKeys
+} from '../tenants/settings/model'
+import { TenantSettingService } from '../tenants/settings/service'
 
 // First retry waits 10 seconds
 // Second retry waits 20 (more) seconds
@@ -35,6 +41,7 @@ export interface WebhookService {
 
 interface ServiceDependencies extends BaseService {
   config: IAppConfig
+  tenantSettingService: TenantSettingService
 }
 
 export async function createWebhookService(
@@ -136,7 +143,9 @@ async function processNextWebhookEvent(
           .forUpdate()
           // If a webhook event is locked, don't wait — just come back for it later.
           .skipLocked()
-          .where('attempts', '<', deps_.config.webhookMaxRetry)
+          .whereRaw(
+            `attempts < coalesce((select value from "tenantSettings" where "tenantId" = "webhookEvents"."tenantId" and key = '${TenantSettingKeys.WEBHOOK_MAX_RETRY.name}')::integer, ${deps_.config.webhookMaxRetry})`
+          )
           .where('processAt', '<=', new Date(now).toISOString())
 
         const event = events[0]
@@ -150,7 +159,12 @@ async function processNextWebhookEvent(
           })
         }
 
-        await sendWebhookEvent(deps, event)
+        const settings = await deps_.tenantSettingService.get({
+          tenantId: event.tenantId
+        })
+        const formattedSettings = formatSettings(settings)
+
+        await sendWebhookEvent(deps, event, formattedSettings)
         span.end()
         return event.id
       })
@@ -165,7 +179,8 @@ type WebhookHeaders = {
 
 async function sendWebhookEvent(
   deps: ServiceDependencies,
-  event: WebhookEvent
+  event: WebhookEvent,
+  settings: Partial<FormattedTenantSettings>
 ): Promise<void> {
   try {
     const requestHeaders: WebhookHeaders = {
@@ -186,8 +201,10 @@ async function sendWebhookEvent(
       )
     }
 
-    await axios.post(deps.config.webhookUrl, body, {
-      timeout: deps.config.webhookTimeout,
+    await axios.post(settings?.webhookUrl ?? deps.config.webhookUrl, body, {
+      timeout: Number(settings?.webhookTimeout)
+        ? Number(settings?.webhookTimeout)
+        : deps.config.webhookTimeout,
       headers: requestHeaders,
       validateStatus: (status) => status === 200
     })
