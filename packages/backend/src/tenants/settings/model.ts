@@ -57,7 +57,6 @@ const TENANT_KEY_MAPPING = {
   [TenantSettingKeys.WEBHOOK_MAX_RETRY.name]: 'webhookMaxRetry',
   [TenantSettingKeys.WEBHOOK_TIMEOUT.name]: 'webhookTimeout',
   [TenantSettingKeys.WEBHOOK_URL.name]: 'webhookUrl'
-<<<<<<< HEAD
 } as const
 
 export type FormattedTenantSettings = Record<
@@ -72,26 +71,6 @@ export const formatSettings = (
   for (const setting of settings) {
     const { key } = setting
     settingsObj[TENANT_KEY_MAPPING[key]] = setting.value
-=======
-}
-
-export type FormattedTenantSettings = Record<
-  (typeof TENANT_KEY_MAPPING)[keyof typeof TENANT_KEY_MAPPING],
-  Omit<TenantSetting, 'key'>
->
-
-export const formatSettings = (
-  settings: TenantSetting | TenantSetting[]
-): Partial<FormattedTenantSettings> => {
-  const settingsObj: Partial<FormattedTenantSettings> = {}
-  if (Symbol.iterator in settings) {
-    for (const setting of settings) {
-      const { key } = setting
-      settingsObj[TENANT_KEY_MAPPING[key]] = setting
-    }
-  } else {
-    settingsObj[TENANT_KEY_MAPPING[settings.key]] = settings
->>>>>>> 1245e0341 (feat(backend): tenanted webhooks)
   }
   return settingsObj
 }

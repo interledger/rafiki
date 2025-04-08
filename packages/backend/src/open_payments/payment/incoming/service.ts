@@ -201,11 +201,7 @@ async function createIncomingPayment(
     incomingPaymentId: incomingPayment.id,
     type: IncomingPaymentEventType.IncomingPaymentCreated,
     data: incomingPayment.toData(0n),
-<<<<<<< HEAD
     tenantId: incomingPayment.tenantId
-=======
-    tenantId: deps.config.operatorTenantId
->>>>>>> 1245e0341 (feat(backend): tenanted webhooks)
   })
 
   incomingPayment = await addReceivedAmount(deps, incomingPayment, BigInt(0))
@@ -371,11 +367,7 @@ async function handleDeactivated(
         assetId: incomingPayment.assetId,
         amount: amountReceived
       },
-<<<<<<< HEAD
       tenantId: incomingPayment.tenantId
-=======
-      tenantId: deps.config.operatorTenantId
->>>>>>> 1245e0341 (feat(backend): tenanted webhooks)
     })
 
     await incomingPayment.$query(deps.knex).patch({
