@@ -1,7 +1,10 @@
 ---
 title: Wallet addresses
+tableOfContents:
+  maxHeadingLevel: 4
 ---
 
+import { Tabs, TabItem } from '@astrojs/starlight/components'
 import { LinkOut } from '@interledger/docs-design-system'
 import { CodeBlock } from '@interledger/docs-design-system'
 
@@ -28,98 +31,79 @@ Writing your own script that loops through your list of account is one way to ba
 
 Ensure your script calls the `createWalletAddress` GraphQL mutation.
 
-<CodeBlock title="createWalletAddress mutation">
-
-```graphql
-mutation CreateWalletAddress($input: CreateWalletAddressInput!) {
-  createWalletAddress(input: $input) {
-    code
-    success
-    message
-    walletAddress {
-      id
-      createdAt
-      publicName
-      url
-      asset {
+<Tabs>
+  <TabItem label="Operation">
+    ```graphql
+    mutation CreateWalletAddress($input: CreateWalletAddressInput!) {
+      createWalletAddress(input: $input) {
         code
-        id
-        scale
-      }
-    }
-  }
-}
-```
-
-</CodeBlock>
-
-We strongly recommend you store at least the `walletAddress.id` in your internal database to be able to reference the account and wallet address later.
-
-#### Example
-
-<CodeBlock title="Example JSON request">
-
-```json
-{
-  "input": {
-    "assetId": "0ddc0b7d-1822-4213-948e-915dda58850b",
-    "publicName": "Sarah Marshall",
-    "url": "https://example.wallet.com/sarah",
-    "additionalProperties": [
-      {
-        "key": "iban",
-        "value": "NL93 8601 1117 947",
-        "visibleInOpenPayments": false
-      },
-      {
-        "key": "nickname",
-        "value": "S Mar",
-        "visibleInOpenPayments": true
-      }
-    ]
-  }
-}
-```
-
-</CodeBlock>
-
-<div class="overflow-table">
-
-| Variable               | Description                                                                                                                                       |
-| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `assetId`              | The unique ID of the asset, assigned by Rafiki when the asset was created, that the wallet address's underlying payment account is denominated in |
-| `publicName`           | The public name associated with the wallet address                                                                                                |
-| `url`                  | The wallet address's case-insensitive URL                                                                                                         |
-| `additionalProperties` | Optional [additional properties](/apis/graphql/backend/inputobjects/#additionalpropertyinput) associated with the wallet address                  |
-
-</div>
-
-<CodeBlock title="Example JSON response">
-
-```json
-{
-  "data": {
-    "createWalletAddress": {
-      "code": "200",
-      "success": true,
-      "message": "Created wallet address",
-      "walletAddress": {
-        "id": "695e7546-1803-4b45-96b6-6a53f4082018",
-        "createdAt": "2023-03-03T09:07:01.107Z",
-        "publicName": "Sarah Marshall",
-        "url": "https://example.wallet.com/sarah",
-        "asset": {
-          "id": "0ddc0b7d-1822-4213-948e-915dda58850b",
-          "code": "USD",
-          "scale": 2
+        success
+        message
+        walletAddress {
+          id
+          createdAt
+          publicName
+          url
+          asset {
+            code
+            id
+            scale
+          }
         }
       }
     }
-  }
-}
-```
-
-</CodeBlock>
+    ```
+    We strongly recommend you store at least the `walletAddress.id` in your internal database to be able to reference the account and wallet address later.
+  </TabItem>
+  <TabItem label="Arguments">
+    ```json
+    {
+      "input": {
+        "assetId": "0ddc0b7d-1822-4213-948e-915dda58850b",
+        "publicName": "Sarah Marshall",
+        "url": "https://example.wallet.com/sarah",
+        "additionalProperties": [
+          {
+            "key": "iban",
+            "value": "NL93 8601 1117 947",
+            "visibleInOpenPayments": false
+          },
+          {
+            "key": "nickname",
+            "value": "S Mar",
+            "visibleInOpenPayments": true
+          }
+        ]
+      }
+    }
+    ```
+    For more information about this mutation's input object, see [`CreateWalletAddressInput`](https://rafiki.dev/apis/graphql/backend/inputobjects/#createwalletaddressinput).
+  </TabItem>
+  <TabItem label="Response">
+    ```json
+    {
+      "data": {
+        "createWalletAddress": {
+          "code": "200",
+          "success": true,
+          "message": "Created wallet address",
+          "walletAddress": {
+            "id": "695e7546-1803-4b45-96b6-6a53f4082018",
+            "createdAt": "2023-03-03T09:07:01.107Z",
+            "publicName": "Sarah Marshall",
+            "url": "https://example.wallet.com/sarah",
+            "asset": {
+              "id": "0ddc0b7d-1822-4213-948e-915dda58850b",
+              "code": "USD",
+              "scale": 2
+            }
+          }
+        }
+      }
+    }
+    ```
+  </TabItem>
+</Tabs>
 
 ### Create wallet addresses in response to a webhook event
 
