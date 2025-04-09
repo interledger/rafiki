@@ -169,7 +169,10 @@ async function createQuote(
     )
     stopTimerFee()
 
-    // Calculate fee when debitAmount is set
+    // Calculate fee for fixed debit amount
+    // This is done before retrieving the payment quote because we need to
+    // subtract the fee from the debit amount. The fee is added later
+    // to the debit amount in the finalizeQuote function.
     const fixedDebitFee = options.debitAmount
       ? sendingFee?.calculate(options.debitAmount.value) ?? 0n
       : 0n
@@ -198,7 +201,10 @@ async function createQuote(
     )
     stopTimerQuote()
 
-    // Calculate fee when receiveAmount is set
+    // Calculate fee for fixed receive amount.
+    // fixedReceiveFee is calculated if debitAmount is not provided.
+    // This is done retrieving the payment quote because we
+    // don't know the peer's exchange rate in advance.
     const fixedReceiveFee = !options.debitAmount
       ? sendingFee?.calculate(quote.debitAmount.value) ?? 0n
       : 0n
@@ -228,7 +234,7 @@ async function createQuote(
       options,
       unfinalizedQuote,
       receiver,
-      fixedDebitFee + fixedReceiveFee
+      fixedDebitFee || fixedReceiveFee
     )
     stopFinalize()
 
@@ -314,8 +320,8 @@ interface CalculateQuoteAmountsWithFeesResult {
 }
 
 /**
- * Calculate fixed-send quote amounts: debitAmount is locked,
- * subtract fees (considering the exchange rate) from the receiveAmount.
+ * Calculate fixed-send quote amounts: debitAmount from the unfinalized quote
+ * does not include fees, here we add the fees to the debitAmount.
  */
 function calculateFixedSendQuoteAmounts(
   deps: ServiceDependencies,
@@ -415,7 +421,7 @@ async function finalizeQuote(
   options: CreateQuoteOptions,
   quote: UnfinalizedQuote,
   receiver: Receiver,
-  fees: bigint
+  sendingFees: bigint
 ): Promise<QuotePatchOptions> {
   let maxReceiveAmountValue: bigint | undefined
 
@@ -442,8 +448,13 @@ async function finalizeQuote(
 
   const { debitAmountValue, debitAmountMinusFees, receiveAmountValue } =
     maxReceiveAmountValue
-      ? calculateFixedSendQuoteAmounts(deps, quote, maxReceiveAmountValue, fees)
-      : calculateFixedDeliveryQuoteAmounts(deps, quote, fees)
+      ? calculateFixedSendQuoteAmounts(
+          deps,
+          quote,
+          maxReceiveAmountValue,
+          sendingFees
+        )
+      : calculateFixedDeliveryQuoteAmounts(deps, quote, sendingFees)
 
   const patchOptions = {
     debitAmountMinusFees,
