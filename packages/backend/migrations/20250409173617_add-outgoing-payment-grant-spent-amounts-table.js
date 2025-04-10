@@ -21,8 +21,8 @@ exports.up = function (knex) {
       table.bigInteger('intervalDebitAmountValue').nullable()
       table.bigInteger('grantTotalDebitAmountValue').notNullable()
       table.string('paymentState').notNullable()
-      table.string('intervalStart').nullable()
-      table.string('intervalEnd').nullable()
+      table.timestamp('intervalStart').nullable()
+      table.timestamp('intervalEnd').nullable()
       table.timestamp('createdAt').defaultTo(knex.fn.now())
     })
     .then(() => {
