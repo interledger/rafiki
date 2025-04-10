@@ -5,7 +5,10 @@
     "outDir": "./dist",
     "rootDir": "./src"
   },
-  "include": ["src/**/*"],
+  "include": [
+    "src/**/*",
+    "migrations/20250410162417_add_interval_op_grant_table.js"
+  ],
   "ts-node": {
     "swc": true
   }
