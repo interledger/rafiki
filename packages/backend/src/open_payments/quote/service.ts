@@ -203,7 +203,7 @@ async function createQuote(
 
     // Calculate fee for fixed receive amount.
     // fixedReceiveFee is calculated if debitAmount is not provided.
-    // This is done retrieving the payment quote because we
+    // This is done after retrieving the payment quote because we
     // don't know the peer's exchange rate in advance.
     const fixedReceiveFee = !options.debitAmount
       ? sendingFee?.calculate(quote.debitAmount.value) ?? 0n
