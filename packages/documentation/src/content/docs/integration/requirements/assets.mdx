@@ -1,72 +1,61 @@
 ---
 title: Assets
+tableOfContents:
+  maxHeadingLevel: 4
 ---
 
+import { Tabs, TabItem } from '@astrojs/starlight/components'
 import { Badge } from '@astrojs/starlight/components'
 import { Mermaid, CodeBlock, LinkOut } from '@interledger/docs-design-system'
 
 An asset represents an item of value that can be transferred via the Interledger Protocol. Assets in Rafiki can be added through the Backend Admin API or the [Rafiki Admin](/admin/admin-user-guide/#assets) application.
 
-## Add an asset using the `CreateAsset` GraphQL mutation
+## Add an asset
 
-<CodeBlock title='CreateAsset mutation'>
-
-```graphql
-mutation CreateAsset($input: CreateAssetInput!) {
-  createAsset(input: $input) {
-    code
-    success
-    message
-    asset {
-      id
-      code
-      scale
+<Tabs>
+  <TabItem label="Operation">
+    ```graphql
+    mutation CreateAsset($input: CreateAssetInput!) {
+      createAsset(input: $input) {
+        code
+        success
+        message
+        asset {
+          id
+          code
+          scale
+        }
+      }
     }
-  }
-}
-```
-
-</CodeBlock>
-
-### Example
-
-To add US dollars, for example, as an asset type to your Rafiki instance, call the `CreateAsset` mutation and pass the `input` parameters for the asset `code`, represented by its <LinkOut href="https://en.wikipedia.org/wiki/ISO_4217">ISO 4217 currency code</LinkOut> (USD), and `scale` variables as follows:
-
-<CodeBlock title='Example JSON request'>
-
-```json
-{
-  "input": {
-    "code": "USD",
-    "scale": 2
-  }
-}
-```
-
-</CodeBlock>
-
-| Variable | Description                                                                       |
-| -------- | --------------------------------------------------------------------------------- |
-| `code`   | The asset code, generally an ISO 4217 currency code where available.              |
-| `scale`  | Difference in order of magnitude between the standard unit and a fractional unit. |
-
-<CodeBlock title='Example JSON response'>
-
-```json
-{
-  "data": {
-    "createAsset": {
-      "code": "200",
-      "success": true,
-      "message": "Created Asset",
-      "asset": {
-        "id": "b3dffeda-1e0e-47d4-82a3-69b1a622eeb9",
+    ```
+  </TabItem>
+  <TabItem label="Variables">
+    ```json
+    {
+      "input": {
         "code": "USD",
         "scale": 2
       }
     }
-  }
-}
-```
-
-</CodeBlock>
+    ```
+    For more information about this mutation's input object, see [`CreateAssetInput`](/apis/graphql/backend/inputobjects/#createassetinput).
+  </TabItem>
+  <TabItem label="Response">
+    ```json
+    {
+      "data": {
+        "createAsset": {
+          "code": "200",
+          "success": true,
+          "message": "Created Asset",
+          "asset": {
+            "id": "b3dffeda-1e0e-47d4-82a3-69b1a622eeb9",
+            "code": "USD",
+            "scale": 2
+          }
+        }
+      }
+    }
+    ```
+  </TabItem>
+</Tabs>
