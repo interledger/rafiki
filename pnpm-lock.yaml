@@ -38,8 +38,8 @@ importers:
         specifier: ^7.3.1
         version: 7.5.0(eslint@8.57.1)(typescript@5.4.3)
       dotenv:
-        specifier: ^16.4.7
-        version: 16.4.7
+        specifier: ^16.5.0
+        version: 16.5.0
       eslint:
         specifier: ^8.57.1
         version: 8.57.1
@@ -198,8 +198,8 @@ importers:
         specifier: ^1.8.2
         version: 1.8.2(debug@4.3.2)
       dotenv:
-        specifier: ^16.4.7
-        version: 16.4.7
+        specifier: ^16.5.0
+        version: 16.5.0
       graphql:
         specifier: ^16.8.1
         version: 16.10.0
@@ -394,8 +394,8 @@ importers:
         specifier: ^3.0.1
         version: 3.0.1
       dotenv:
-        specifier: ^16.4.7
-        version: 16.4.7
+        specifier: ^16.5.0
+        version: 16.5.0
       extensible-error:
         specifier: ^1.0.2
         version: 1.0.2
@@ -3146,6 +3146,7 @@ packages:
   /@envelop/instrumentation@1.0.0:
     resolution: {integrity: sha512-cxgkB66RQB95H3X27jlnxCRNTmPuSTgmBAq6/4n2Dtv4hsk4yz8FadA1ggmd0uZzvKqWD6CR+WFgTjhDqg7eyw==}
     engines: {node: '>=18.0.0'}
+    requiresBuild: true
     dependencies:
       '@whatwg-node/promise-helpers': 1.3.0
       tslib: 2.8.1
@@ -3162,6 +3163,7 @@ packages:
   /@envelop/types@5.2.1:
     resolution: {integrity: sha512-CsFmA3u3c2QoLDTfEpGr4t25fjMU31nyvse7IzWTvb0ZycuPjMjb0fjlheh+PbhBYb9YLugnT2uY6Mwcg1o+Zg==}
     engines: {node: '>=18.0.0'}
+    requiresBuild: true
     dependencies:
       '@whatwg-node/promise-helpers': 1.3.0
       tslib: 2.8.1
@@ -4563,7 +4565,7 @@ packages:
       '@whatwg-node/fetch': 0.9.8
       chalk: 4.1.2
       debug: 4.4.0(supports-color@9.4.0)
-      dotenv: 16.4.7
+      dotenv: 16.5.0
       graphql: 16.10.0
       graphql-request: 6.1.0(graphql@16.10.0)
       http-proxy-agent: 7.0.0
@@ -6419,7 +6421,7 @@ packages:
       chalk: 4.1.2
       chokidar: 3.6.0
       cross-spawn: 7.0.6
-      dotenv: 16.4.7
+      dotenv: 16.5.0
       es-module-lexer: 1.6.0
       esbuild: 0.17.6
       esbuild-plugins-node-modules-polyfill: 1.6.1(esbuild@0.17.6)
@@ -7739,7 +7741,6 @@ packages:
     resolution: {integrity: sha512-wq0cICSkRLVaf3UGLMGItu/PtdY7oaXaI/RVU+xliKVOtRna3PRY57ZDfztpDL0n11vfymMUnXv8QwYCO7L1wg==}
     dependencies:
       undici-types: 5.26.5
-    dev: true
 
   /@types/node@20.14.15:
     resolution: {integrity: sha512-Fz1xDMCF/B00/tYSVMlmK7hVeLh7jE5f3B7X1/hmV0MJBwE27KlS7EvD/Yp+z1lm8mVhwV5w+n8jOZG8AfTlKw==}
@@ -8510,6 +8511,7 @@ packages:
   /@whatwg-node/promise-helpers@1.3.0:
     resolution: {integrity: sha512-486CouizxHXucj8Ky153DDragfkMcHtVEToF5Pn/fInhUUSiCmt9Q4JVBa6UK5q4RammFBtGQ4C9qhGlXU9YbA==}
     engines: {node: '>=16.0.0'}
+    requiresBuild: true
     dependencies:
       tslib: 2.8.1
 
@@ -9055,7 +9057,7 @@ packages:
       unist-util-visit: 5.0.0
       unstorage: 1.15.0
       vfile: 6.0.3
-      vite: 6.2.5(@types/node@18.11.9)(yaml@2.7.0)
+      vite: 6.2.5(@types/node@20.12.7)(yaml@2.7.0)
       vitefu: 1.0.6(vite@6.2.5)
       xxhash-wasm: 1.1.0
       yargs-parser: 21.1.1
@@ -9154,7 +9156,7 @@ packages:
       unist-util-visit: 5.0.0
       unstorage: 1.15.0
       vfile: 6.0.3
-      vite: 6.2.5(@types/node@18.11.9)(yaml@2.7.0)
+      vite: 6.2.5(@types/node@20.12.7)(yaml@2.7.0)
       vitefu: 1.0.6(vite@6.2.5)
       xxhash-wasm: 1.1.0
       yargs-parser: 21.1.1
@@ -11082,6 +11084,11 @@ packages:
 
   /dotenv@16.4.7:
     resolution: {integrity: sha512-47qPchRCykZC03FhkYAhrvwU4xDBFIj1QPqaarj6mdM/hgUzfPHcpkHJOn3mJAufFeeAxAzeGsr5X0M4k6fLZQ==}
+    engines: {node: '>=12'}
+    dev: true
+
+  /dotenv@16.5.0:
+    resolution: {integrity: sha512-m/C+AwOAr9/W1UOIZUo232ejMNnJAJtYQjUbHoNTBNTJSvqzzDh7vnrei3o3r3m9blf6ZoDkvcw0VmozNRFJxg==}
     engines: {node: '>=12'}
 
   /dset@3.1.4:
@@ -21149,6 +21156,7 @@ packages:
       yaml: 2.7.0
     optionalDependencies:
       fsevents: 2.3.3
+    dev: true
 
   /vite@6.2.5(@types/node@20.12.7)(yaml@2.7.0):
     resolution: {integrity: sha512-j023J/hCAa4pRIUH6J9HemwYfjB5llR2Ps0CWeikOtdR8+pAURAk0DoJC5/mm9kd+UgdnIy7d6HE4EAvlYhPhA==}
@@ -21197,7 +21205,6 @@ packages:
       yaml: 2.7.0
     optionalDependencies:
       fsevents: 2.3.3
-    dev: true
 
   /vitefu@1.0.6(vite@6.2.5):
     resolution: {integrity: sha512-+Rex1GlappUyNN6UfwbVZne/9cYC4+R2XDk9xkNXBKMw6HQagdX9PgZ8V2v1WUSK1wfBLp7qbI1+XSNIlB1xmA==}
@@ -21207,7 +21214,7 @@ packages:
       vite:
         optional: true
     dependencies:
-      vite: 6.2.5(@types/node@18.11.9)(yaml@2.7.0)
+      vite: 6.2.5(@types/node@20.12.7)(yaml@2.7.0)
     dev: false
 
   /vscode-jsonrpc@8.2.0:
