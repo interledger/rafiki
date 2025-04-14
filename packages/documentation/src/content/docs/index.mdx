@@ -3,7 +3,7 @@ title: Hello from Rafiki
 description: Rafiki is open source software that provides an efficient solution for an Account Servicing Entity to enable Interledger functionality on its users' accounts.
 template: splash
 hero:
-  tagline: Rafiki is open source software that provides an efficient solution for an Account Servicing Entity to enable Interledger functionality on its users' accounts.
+  tagline: Rafiki is open source software that provides an efficient solution for an account servicing entity (ASE) to enable Interledger functionality on its users' accounts.
   actions:
     - text: Read Rafiki docs
       link: /overview/overview
@@ -13,9 +13,20 @@ hero:
         data-umami-event: Landing page - Rafiki docs
 ---
 
-import { Card, CardGrid } from '@astrojs/starlight/components'
+import { Card, CardGrid, LinkCard } from '@astrojs/starlight/components'
 
 <CardGrid>
+  <a class='card-link' href='/integration/playground/overview'>
+    <Card title='Try it out!' icon='document'>
+      Test Rafiki by running two mock ASEs that automatically peer with one
+      another.
+    </Card>
+  </a>
+  <a class='card-link' href='/integration/requirements/overview'>
+    <Card title='Integration requirements' icon='document'>
+      Review the requirements for deploying Rafiki to a production environment.
+    </Card>
+  </a>
   <a class='card-link' href='/apis/graphql/backend/mutations/'>
     <Card title='View Backend API schema' icon='document'>
       Discover what's in our Backend GraphQL schema.
@@ -24,11 +35,6 @@ import { Card, CardGrid } from '@astrojs/starlight/components'
   <a class='card-link' href='/apis/graphql/auth/mutations/'>
     <Card title='View Auth API schema' icon='document'>
       Discover what's in our Auth GraphQL schema.
-    </Card>
-  </a>
-  <a class='card-link' href='https://github.com/interledger/rafiki'>
-    <Card title='Build it on Github' icon='external'>
-      The Interledger isn't going to build itself
     </Card>
   </a>
 </CardGrid>
