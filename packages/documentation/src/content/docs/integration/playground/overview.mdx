@@ -269,11 +269,11 @@ The Examples folder in the Bruno collection includes an [Open Payments](https://
 
 <Mermaid
   graph={`sequenceDiagram
-    participant B as Bruno Client
-    participant SW as Sender Wallet
-    participant RW as Receiver Wallet
-    participant AS as Auth Server
-    participant IdP as Identity Provider
+    participant B as Bruno client
+    participant SW as Sender's wallet
+    participant RW as Recipient's wallet
+    participant AS as Authorization server
+    participant IdP as Identity provider
 
     B->>SW: 1. GET wallet address
     SW-->>B: 200 OK (authServer URL)
@@ -281,26 +281,26 @@ The Examples folder in the Bruno collection includes an [Open Payments](https://
     B->>RW: 2. GET wallet address
     RW-->>B: 200 OK (authServer URL)
 
-    Note over B,AS: Non-interactive grant
+    Note over B,AS: Non-interactive grant for incoming payment resource
     B->>AS: 3. POST grant request (incoming-payment)
     AS-->>B: 200 OK (accessToken)
 
     B->>RW: 4. POST /incoming-payments
     RW-->>B: 201 Created (incomingPaymentId)
 
-    Note over B,AS: Non-interactive grant
+    Note over B,AS: Non-interactive grant for quote resource
     B->>AS: 5. POST grant request (quote)
     AS-->>B: 200 OK (accessToken)
 
     B->>SW: 6. POST /quotes
     SW-->>B: 201 Created (quoteId)
 
-    Note over B,AS: Interactive grant required
+    Note over B,AS: Interactive grant required for outgoing payment resource
     B->>AS: 7. POST grant request (outgoing-payment)
     AS-->>B: 200 OK (redirect_uri)
 
     rect rgb(240, 240, 240)
-        Note over B,AS: Interactive Authorization<br/>User interaction required for outgoing payment grants
+        Note over B,AS: Interactive authorization<br/>User interaction required to obtain consent
         B->>IdP: Redirect for user consent
         IdP-->>B: User consents
         B->>AS: 8. POST /continue/{continueId}

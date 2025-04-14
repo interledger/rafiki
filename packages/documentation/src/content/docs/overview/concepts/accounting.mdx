@@ -250,7 +250,7 @@ A two-phase transfer moves funds in two stages.
 <Mermaid
   graph={`sequenceDiagram
     Rafiki->>ASE: Fires webhook event when incoming payment completes
-    ASE->>Rafiki: Withdraws payment amount from incoming payment liquidity account (reserve funds pending)
+    ASE->>Rafiki: Withdraws payment amount from incoming payment<br />liquidity account (reserve funds pending)
     ASE->>ASE: Credits the recipient's account by the payment amount
     ASE->>Rafiki: Resolve funds (post)
     Rafiki->>Rafiki: Two-phase transfer complete
