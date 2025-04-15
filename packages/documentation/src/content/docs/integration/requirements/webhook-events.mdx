@@ -269,7 +269,8 @@ of $10 was completed.
       participant ASE as Account servicing entity
 
       R->>ASE: Fires incoming_payment.completed event to webhook endpoint,<br/>receivedAmount: $10
-      ASE->>R: Backend Admin API call: CreateIncomingPaymentWithdrawal
+      ASE->>R: Backend Admin API call: createIncomingPaymentWithdrawal
+      R-->>ASE: success: true
       ASE->>ASE: Credit recipient's account with $10
 
 `}
@@ -286,9 +287,11 @@ of $10 was completed.
       participant ASE as Account servicing entity
 
       R->>ASE: Fires incoming_payment.completed event to webhook endpoint,<br/>receivedAmount: $10
-      ASE->>R: Backend Admin API call: CreateIncomingPaymentWithdrawal
+      ASE->>R: Backend Admin API call: createIncomingPaymentWithdrawal
+      R-->>ASE: success: true
       ASE->>ASE: Credit recipient's account with $10
-      ASE->>R: Backend Admin API call: PostLiquidityWithdrawal
+      ASE->>R: Backend Admin API call: postLiquidityWithdrawal
+      R-->>ASE: success: true
       R->>R: Two-phase transfer completed
 
 `}
@@ -310,7 +313,8 @@ The `incoming_payment.completed` event indicates the payment completed either au
       participant ASE as Account servicing entity
 
       R->>ASE: Fires incoming_payment.expired event to webhook endpoint,<br/>receivedAmount: $2.55
-      ASE->>R: Backend Admin API call: CreateIncomingPaymentWithdrawal
+      ASE->>R: Backend Admin API call: createIncomingPaymentWithdrawal
+      R-->>ASE: success: true
       ASE->>ASE: Credit recipient's account with $2.55
 
 `}
@@ -353,9 +357,11 @@ An outgoing payment for \$12 was created.
       ASE->>ASE: Checks that sender's account has sufficient funds
       alt Account has sufficient funds
         ASE->>ASE: Put hold of $12 on sender's account
-        ASE->>R: Backend Admin API call: DepositOutgoingPaymentLiquidity
+        ASE->>R: Backend Admin API call: depositOutgoingPaymentLiquidity
+        R-->>ASE: success: true
       else Account has insufficient funds
-        ASE->>R: Backend Admin API call: CancelOutgoingPayment,<br/>reason: Insufficient funds
+        ASE->>R: Backend Admin API call: cancelOutgoingPayment,<br/>Reason: insufficient funds
+        R-->>ASE: success: true
       end
 
 `}
@@ -382,7 +388,8 @@ for \$12 is complete. \$11.50 was sent. You choose to keep \$0.50 as a service f
       participant ASE as Account servicing entity
 
       R->>ASE: Fires outgoing_payment.completed event to webhook endpoint,<br/>debitAmount: $12, sentAmount: $11.50
-      ASE->>R: Backend Admin API call: CreateOutgoingPaymentWithdrawal
+      ASE->>R: Backend Admin API call: createOutgoingPaymentWithdrawal
+      R-->>ASE: success: true
       ASE->>ASE: Remove hold and deduct $12 from sender's account,<br/>credit your account with $0.50
 
 `}
@@ -396,9 +403,11 @@ for \$12 is complete. \$11.50 was sent. You choose to keep \$0.50 as a service f
       participant ASE as Account servicing entity
 
       R->>ASE: Fires outgoing_payment.completed event to webhook endpoint,<br/>debitAmount: $12, sentAmount: $11.50
-      ASE->>R: Backend Admin API call: CreateOutgoingPaymentWithdrawal
+      ASE->>R: Backend Admin API call: createOutgoingPaymentWithdrawal
+      R-->>ASE: success: true
       ASE->>ASE: Remove hold and deduct $12 from sender's account,<br/>credit your account with $0.50
-      ASE->>R: Backend Admin API call: PostLiquidityWithdrawal
+      ASE->>R: Backend Admin API call: postLiquidityWithdrawal
+      R-->>ASE: success: true
       R->>R: Two-phase transfer complete
 
 `}
@@ -422,7 +431,8 @@ An outgoing payment for \$12 failed. \$8 was sent successfully.
       participant ASE as Account servicing entity
 
       R->>ASE: Fires outgoing_payment.failed event to webhook endpoint,<br/>debitAmount: $12, sentAmount: $8
-      ASE->>R: Backend Admin API call: CreateOutgoingPaymentWithdrawal
+      ASE->>R: Backend Admin API call: createOutgoingPaymentWithdrawal
+      R-->>ASE: success: true
       ASE->>ASE: Remove hold and deduct $8 from the sender's account
 
 `}
@@ -455,7 +465,8 @@ The wallet address, `https://wallet.example.com/carla_garcia` was requested but 
       participant ASE as Account servicing entity
 
       R->>ASE: Fires wallet_address.not_found event to webhook endpoint,<br/>wallet address: https://wallet.example.com/carla_garcia
-      ASE->>R: Backend Admin API call: CreateWalletAddress,<br/>url: https://wallet.example.com/carla_garcia,<br/>public name: Carla Eva Garcia
+      ASE->>R: Backend Admin API call: createWalletAddress,<br/>url: https://wallet.example.com/carla_garcia,<br/>public name: Carla Eva Garcia
+      R-->>ASE: success: true
 
 `}
 />
@@ -486,7 +497,8 @@ A wallet address received a Web Monetization payment of \$0.33
       participant ASE as Account servicing entity
 
       R->>ASE: Fires wallet_address.web_monetization event to webhook endpoint,<br/>receivedAmount: $0.33
-      ASE->>R: Backend Admin API call: CreateWalletAddressWithdrawal
+      ASE->>R: Backend Admin API call: createWalletAddressWithdrawal
+      R-->>ASE: success: true
       ASE->>ASE: Credit recipient's account with $0.33
 
 `}
@@ -518,7 +530,8 @@ Your asset liquidity for USD (asset scale: 2) drops below \$100.00.
       participant ASE as Account servicing entity
 
       R->>ASE: Fires asset.liquidity_low event to webhook endpoint,<br/>asset: USD (scale: 2, id: "abc")
-      ASE->>R: Backend Admin API call: DepositAssetLiquidity
+      ASE->>R: Backend Admin API call: depositAssetLiquidity
+      R-->>ASE: success: true
 
 `}
 />
@@ -549,7 +562,8 @@ The liquidity for your peer, Happy Life Bank, drops below \$100.00 USD.
       participant ASE as Account servicing entity
 
       R->>ASE: Fires peer.liquidity_low event to webhook endpoint,<br/>peer: Happy Life Bank (asset: "USD", scale: 2, id: "abc")
-      ASE->>R: Backend Admin API call: DepositPeerLiquidity
+      ASE->>R: Backend Admin API call: depositPeerLiquidity
+      R-->>ASE: success: true
 
 `}
 />
