@@ -254,6 +254,30 @@ export default defineConfig({
           ]
         },
         {
+          label: 'APIs',
+          collapsed: true,
+          items: [
+            {
+              label: 'GraphQL Admin APIs',
+              link: '/apis/graphql/admin-api-overview'
+            },
+            {
+              label: 'Backend Admin API',
+              collapsed: true,
+              autogenerate: {
+                directory: 'apis/graphql/backend'
+              }
+            },
+            {
+              label: 'Auth Admin API',
+              collapsed: true,
+              autogenerate: {
+                directory: 'apis/graphql/auth'
+              }
+            }
+          ]
+        },
+        {
           label: 'Resources',
           collapsed: true,
           items: [
@@ -280,30 +304,6 @@ export default defineConfig({
             {
               label: 'Get involved',
               link: '/resources/get-involved'
-            }
-          ]
-        },
-        {
-          label: 'APIs',
-          collapsed: true,
-          items: [
-            {
-              label: 'GraphQL Admin APIs',
-              link: '/apis/graphql/admin-api-overview'
-            },
-            {
-              label: 'Backend Admin API',
-              collapsed: true,
-              autogenerate: {
-                directory: 'apis/graphql/backend'
-              }
-            },
-            {
-              label: 'Auth Admin API',
-              collapsed: true,
-              autogenerate: {
-                directory: 'apis/graphql/auth'
-              }
             }
           ]
         }
