@@ -70,7 +70,8 @@ export class Peer
             },
             liquidityThreshold: this.liquidityThreshold,
             balance
-          }
+          },
+          tenantId: this.tenantId
         })
       }
     }

@@ -58,7 +58,8 @@ describe('Models', (): void => {
           maxPacketAmount: BigInt(100),
           staticIlpAddress: 'test.' + uuid(),
           name: faker.person.fullName(),
-          liquidityThreshold: BigInt(100)
+          liquidityThreshold: BigInt(100),
+          tenantId: Config.operatorTenantId
         }
         const peerOrError = await peerService.create(options)
         if (!isPeerError(peerOrError)) {
@@ -91,12 +92,15 @@ describe('Models', (): void => {
               },
               liquidityThreshold: peer.liquidityThreshold?.toString(),
               balance: balance.toString()
-            }
+            },
+            tenantId: Config.operatorTenantId
           })
         }
       )
       test('does not create webhook event if balance > liquidityThreshold', async (): Promise<void> => {
-        await peer.onDebit({ balance: BigInt(110) })
+        await peer.onDebit({
+          balance: BigInt(110)
+        })
         await expect(
           PeerEvent.query(knex).where('type', PeerEventType.LiquidityLow)
         ).resolves.toEqual([])

@@ -64,6 +64,7 @@ export class WebhookEvent extends BaseModel {
   public statusCode?: number
   public processAt!: Date | null
   public depositAccountId?: string
+  public tenantId!: string
 
   public readonly outgoingPaymentId?: string
   public readonly incomingPaymentId?: string
