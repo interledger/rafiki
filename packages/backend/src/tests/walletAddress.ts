@@ -49,7 +49,8 @@ export async function createWalletAddress(
   const walletAddressOrError = (await walletAddressService.create({
     ...options,
     assetId:
-      options.assetId || (await createAsset(deps, undefined, tenantIdToUse)).id,
+      options.assetId ||
+      (await createAsset(deps, { tenantId: tenantIdToUse })).id,
     tenantId: tenantIdToUse,
     address: options.address || `${baseWalletAddressUrl.origin}/.well-known/pay`
   })) as MockWalletAddress

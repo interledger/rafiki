@@ -60,6 +60,7 @@ import {
   createTenantSettings,
   exchangeRatesSetting
 } from '../../../tests/tenantSettings'
+import { createTenant } from '../../../tests/tenant'
 
 describe('OutgoingPaymentService', (): void => {
   let deps: IocContract<AppServices>
@@ -240,12 +241,25 @@ describe('OutgoingPaymentService', (): void => {
       ).resolves.toEqual(incomingPaymentReceived)
     }
     if (withdrawAmount !== undefined && withdrawAmount > 0) {
-      await expect(
-        OutgoingPaymentEvent.query(knex).where({
+      const events = await OutgoingPaymentEvent.query(knex)
+        .where({
           withdrawalAccountId: payment.id,
           withdrawalAmount: withdrawAmount
         })
-      ).resolves.toHaveLength(1)
+        .withGraphFetched('webhooks')
+      expect(events).toHaveLength(1)
+
+      expect(events[0].webhooks).toHaveLength(1)
+      expect(events[0].webhooks).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            id: expect.any(String),
+            recipientTenantId: payment.tenantId,
+            eventId: events[0].id,
+            processAt: expect.any(Date)
+          })
+        ])
+      )
     }
     if (client !== undefined) {
       expect(payment.client).toEqual(client)
@@ -282,7 +296,7 @@ describe('OutgoingPaymentService', (): void => {
       XRP: exchangeRate
     }))
 
-    const { id: sendAssetId } = await createAsset(deps, asset)
+    const { id: sendAssetId } = await createAsset(deps, { assetOptions: asset })
     assetId = sendAssetId
     const walletAddress = await createWalletAddress(deps, {
       tenantId,
@@ -290,7 +304,9 @@ describe('OutgoingPaymentService', (): void => {
     })
     walletAddressId = walletAddress.id
     client = walletAddress.address
-    const { id: destinationAssetId } = await createAsset(deps, destinationAsset)
+    const { id: destinationAssetId } = await createAsset(deps, {
+      assetOptions: destinationAsset
+    })
     receiverWalletAddress = await createWalletAddress(deps, {
       tenantId,
       assetId: destinationAssetId,
@@ -1432,6 +1448,71 @@ describe('OutgoingPaymentService', (): void => {
       return payment
     }
 
+    test('webhook event creates corresponding operator webhook', async (): Promise<void> => {
+      const tenant = await createTenant(deps)
+      const asset = await createAsset(deps, { tenantId: tenant.id })
+      const receiveAmount = {
+        value: BigInt(123),
+        assetCode: asset.code,
+        assetScale: asset.scale
+      }
+      receiverWalletAddress = await createWalletAddress(deps, {
+        tenantId: tenant.id,
+        assetId: asset.id
+      })
+      incomingPayment = await createIncomingPayment(deps, {
+        walletAddressId: receiverWalletAddress.id,
+        incomingAmount: {
+          value: receiveAmount.value,
+          assetCode: receiverWalletAddress.asset.code,
+          assetScale: receiverWalletAddress.asset.scale
+        },
+        tenantId: tenant.id
+      })
+      assert.ok(incomingPayment.walletAddress)
+
+      const createdPayment = await createOutgoingPayment(deps, {
+        walletAddressId: receiverWalletAddress.id,
+        client,
+        tenantId: tenant.id,
+        receiver: incomingPayment.getUrl(incomingPayment.walletAddress),
+        receiveAmount,
+        method: 'ilp'
+      })
+
+      await expect(
+        outgoingPaymentService.fund({
+          id: createdPayment.id,
+          tenantId: tenant.id,
+          amount: createdPayment.debitAmount.value,
+          transferId: uuid()
+        })
+      ).resolves.toMatchObject({
+        state: OutgoingPaymentState.Sending
+      })
+
+      const events = await OutgoingPaymentEvent.query(knex)
+        .where({
+          outgoingPaymentId: createdPayment.id
+        })
+        .withGraphFetched('webhooks')
+
+      expect(events).toHaveLength(1)
+      expect(events[0].webhooks).toHaveLength(2)
+      expect(events[0].webhooks).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            recipientTenantId: config.operatorTenantId,
+            eventId: events[0].id
+          }),
+          expect.objectContaining({
+            recipientTenantId: config.operatorTenantId,
+            eventId: events[0].id
+          })
+        ])
+      )
+    })
+
     test('Telemetry Transaction Counter increments for COMPLETED transactions', async (): Promise<void> => {
       const incrementTrxCounterSpy = jest
         .spyOn(telemetryService!, 'incrementCounter')
@@ -1867,8 +1948,10 @@ describe('OutgoingPaymentService', (): void => {
       )
 
       const { id: assetId } = await createAsset(deps, {
-        code: asset.code,
-        scale: asset.scale + 1
+        assetOptions: {
+          code: asset.code,
+          scale: asset.scale + 1
+        }
       })
 
       await OutgoingPayment.relatedQuery('walletAddress').for(paymentId).patch({
@@ -1924,6 +2007,7 @@ describe('OutgoingPaymentService', (): void => {
         LifecycleError.QuoteExpired
       )
     })
+    test('webhook event creates additional operator webhook if tenant is recipient', async (): Promise<void> => {})
   })
 
   describe('fund', (): void => {

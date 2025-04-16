@@ -97,14 +97,18 @@ describe('QuoteService', (): void => {
   beforeEach(async (): Promise<void> => {
     tenantId = config.operatorTenantId
     const { id: sendAssetId } = await createAsset(deps, {
-      code: debitAmount.assetCode,
-      scale: debitAmount.assetScale
+      assetOptions: {
+        code: debitAmount.assetCode,
+        scale: debitAmount.assetScale
+      }
     })
     sendingWalletAddress = await createWalletAddress(deps, {
       tenantId,
       assetId: sendAssetId
     })
-    const { id: destinationAssetId } = await createAsset(deps, destinationAsset)
+    const { id: destinationAssetId } = await createAsset(deps, {
+      assetOptions: destinationAsset
+    })
     receivingWalletAddress = await createWalletAddress(deps, {
       tenantId,
       assetId: destinationAssetId,
@@ -579,8 +583,10 @@ describe('QuoteService', (): void => {
 
       beforeEach(async (): Promise<void> => {
         asset = await createAsset(deps, {
-          code: 'USD',
-          scale: 2
+          assetOptions: {
+            code: 'USD',
+            scale: 2
+          }
         })
         sendingWalletAddress = await createWalletAddress(deps, {
           tenantId,
@@ -689,12 +695,16 @@ describe('QuoteService', (): void => {
 
       beforeEach(async (): Promise<void> => {
         sendAsset = await createAsset(deps, {
-          code: 'USD',
-          scale: 2
+          assetOptions: {
+            code: 'USD',
+            scale: 2
+          }
         })
         receiveAsset = await createAsset(deps, {
-          code: 'XRP',
-          scale: 2
+          assetOptions: {
+            code: 'XRP',
+            scale: 2
+          }
         })
         sendingWalletAddress = await createWalletAddress(deps, {
           tenantId,

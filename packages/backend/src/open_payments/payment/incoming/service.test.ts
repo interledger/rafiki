@@ -27,6 +27,7 @@ import { getTests } from '../../wallet_address/model.test'
 import { WalletAddress } from '../../wallet_address/model'
 import { withConfigOverride } from '../../../tests/helpers'
 import { sleep } from '../../../shared/utils'
+import { createTenant } from '../../../tests/tenant'
 
 describe('Incoming Payment Service', (): void => {
   let deps: IocContract<AppServices>
@@ -311,9 +312,9 @@ describe('Incoming Payment Service', (): void => {
     })
 
     test.each`
-      client                                        | incomingAmount | expiresAt                        | metadata
-      ${undefined}                                  | ${false}       | ${undefined}                     | ${undefined}
-      ${faker.internet.url({ appendSlash: false })} | ${true}        | ${new Date(Date.now() + 30_000)} | ${{ description: 'Test incoming payment', externalRef: '#123', items: [1, 2, 3] }}
+      isOperator | client                                        | incomingAmount | expiresAt                        | metadata
+      ${false}   | ${undefined}                                  | ${false}       | ${undefined}                     | ${undefined}
+      ${true}    | ${faker.internet.url({ appendSlash: false })} | ${true}        | ${new Date(Date.now() + 30_000)} | ${{ description: 'Test incoming payment', externalRef: '#123', items: [1, 2, 3] }}
     `('An incoming payment can be created', async (options): Promise<void> => {
       await expect(
         IncomingPaymentEvent.query(knex).where({
@@ -321,25 +322,70 @@ describe('Incoming Payment Service', (): void => {
         })
       ).resolves.toHaveLength(0)
       options.client = client
+      const tenantId = options.isOperator
+        ? Config.operatorTenantId
+        : (await createTenant(deps)).id
+      const testAsset = options.isOperator
+        ? asset
+        : await createAsset(deps, { tenantId })
+
       const incomingPayment = await incomingPaymentService.create({
-        walletAddressId,
+        walletAddressId: options.isOperator
+          ? walletAddressId
+          : (
+              await createWalletAddress(deps, {
+                tenantId,
+                assetId: testAsset.id
+              })
+            ).id,
         ...options,
         incomingAmount: options.incomingAmount ? amount : undefined,
-        tenantId: Config.operatorTenantId
+        tenantId
       })
       assert.ok(!isIncomingPaymentError(incomingPayment))
       expect(incomingPayment).toMatchObject({
         id: incomingPayment.id,
         client,
-        asset,
+        asset: testAsset,
         processAt: new Date(incomingPayment.expiresAt.getTime()),
         metadata: options.metadata ?? null
       })
-      await expect(
-        IncomingPaymentEvent.query(knex).where({
+      const events = await IncomingPaymentEvent.query(knex)
+        .where({
           type: IncomingPaymentEventType.IncomingPaymentCreated
         })
-      ).resolves.toHaveLength(1)
+        .withGraphFetched('webhooks')
+      expect(events).toHaveLength(1)
+      assert.ok(events[0].webhooks)
+      if (options.isOperator) {
+        expect(events[0].webhooks).toHaveLength(1)
+        expect(events[0].webhooks[0]).toMatchObject(
+          expect.objectContaining({
+            eventId: events[0].id,
+            recipientTenantId: events[0].tenantId,
+            attempts: 0,
+            processAt: expect.any(Date)
+          })
+        )
+      } else {
+        expect(events[0].webhooks).toHaveLength(2)
+        expect(events[0].webhooks).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              eventId: events[0].id,
+              recipientTenantId: events[0].tenantId,
+              attempts: 0,
+              processAt: expect.any(Date)
+            }),
+            expect.objectContaining({
+              eventId: events[0].id,
+              recipientTenantId: Config.operatorTenantId,
+              attempts: 0,
+              processAt: expect.any(Date)
+            })
+          ])
+        )
+      }
     })
 
     test('Cannot create incoming payment for nonexistent wallet address', async (): Promise<void> => {
@@ -812,14 +858,25 @@ describe('Incoming Payment Service', (): void => {
           await expect(incomingPaymentService.processNext()).resolves.toBe(
             incomingPayment.id
           )
-          await expect(
-            IncomingPaymentEvent.query(knex).where({
+          const events = await IncomingPaymentEvent.query(knex)
+            .where({
               incomingPaymentId: incomingPayment.id,
               type: eventType,
               withdrawalAccountId: incomingPayment.id,
               withdrawalAmount: amountReceived
             })
-          ).resolves.toHaveLength(1)
+            .withGraphFetched('webhooks')
+          expect(events).toHaveLength(1)
+          assert.ok(events[0].webhooks)
+          expect(events[0].webhooks).toHaveLength(1)
+          expect(events[0].webhooks[0]).toMatchObject(
+            expect.objectContaining({
+              eventId: events[0].id,
+              recipientTenantId: events[0].tenantId,
+              attempts: 0,
+              processAt: expect.any(Date)
+            })
+          )
           await expect(
             incomingPaymentService.get({
               id: incomingPayment.id

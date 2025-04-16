@@ -227,12 +227,17 @@ export async function sendWebhookEvent(
       }
     : undefined
 
-  await OutgoingPaymentEvent.query(trx || deps.knex).insert({
+  const webhooks = [{ recipientTenantId: payment.tenantId }]
+  if (payment.tenantId !== deps.config.operatorTenantId) {
+    webhooks.push({ recipientTenantId: deps.config.operatorTenantId })
+  }
+  await OutgoingPaymentEvent.query(trx || deps.knex).insertGraph({
     outgoingPaymentId: payment.id,
     type,
     data: payment.toData({ amountSent, balance }),
     withdrawal,
-    tenantId: payment.tenantId
+    tenantId: payment.tenantId,
+    webhooks
   })
   stopTimer()
 }

@@ -5,6 +5,7 @@ import { Knex } from 'knex'
 import { v4 as uuid } from 'uuid'
 
 import { WebhookEvent } from './model'
+import { Webhook } from './hook/model'
 import {
   WebhookService,
   generateWebhookSignature,
@@ -33,7 +34,6 @@ import {
 import { createOutgoingPayment } from '../tests/outgoingPayment'
 import { TenantSetting, TenantSettingKeys } from '../tenants/settings/model'
 import { faker } from '@faker-js/faker'
-import { createTenant } from '../tests/tenant'
 
 const nock = (global as unknown as { nock: typeof import('nock') }).nock
 
@@ -319,6 +319,7 @@ describe('Webhook Service', (): void => {
   })
 
   describe('processNext', (): void => {
+    let webhook: Webhook
     beforeEach(async (): Promise<void> => {
       event = await WebhookEvent.query(knex).insertAndFetch({
         id: uuid(),
@@ -330,6 +331,13 @@ describe('Webhook Service', (): void => {
         },
         tenantId: Config.operatorTenantId
       })
+
+      webhook = await Webhook.query(knex)
+        .insertAndFetch({
+          recipientTenantId: Config.operatorTenantId,
+          eventId: event.id
+        })
+        .withGraphFetched('event')
     })
 
     function mockWebhookServer(
@@ -353,10 +361,12 @@ describe('Webhook Service', (): void => {
     }
 
     test('Does not process events not scheduled to be sent', async (): Promise<void> => {
-      await event.$query(knex).patch({
+      await webhook.$query(knex).patch({
         processAt: new Date(Date.now() + 30_000)
       })
-      await expect(webhookService.getEvent(event.id)).resolves.toEqual(event)
+      await expect(webhookService.getWebhook(webhook.id)).resolves.toEqual(
+        webhook
+      )
       await expect(webhookService.processNext()).resolves.toBeUndefined()
     })
 
@@ -380,9 +390,11 @@ describe('Webhook Service', (): void => {
           event,
           setting ? new URL(setting.value) : undefined
         )
-        await expect(webhookService.processNext()).resolves.toEqual(event.id)
+        await expect(webhookService.processNext()).resolves.toEqual(webhook.id)
         scope.done()
-        await expect(webhookService.getEvent(event.id)).resolves.toMatchObject({
+        await expect(
+          webhookService.getWebhook(webhook.id)
+        ).resolves.toMatchObject({
           attempts: 1,
           statusCode: 200,
           processAt: null
@@ -412,7 +424,7 @@ describe('Webhook Service', (): void => {
         })
         .reply(200)
 
-      await expect(webhookService.processNext()).resolves.toEqual(event.id)
+      await expect(webhookService.processNext()).resolves.toEqual(webhook.id)
       scope.done()
     })
 
@@ -420,15 +432,15 @@ describe('Webhook Service', (): void => {
       'Schedules retry if request fails (%i)',
       async (status): Promise<void> => {
         const scope = mockWebhookServer(status)
-        await expect(webhookService.processNext()).resolves.toEqual(event.id)
+        await expect(webhookService.processNext()).resolves.toEqual(webhook.id)
         scope.done()
-        const updatedEvent = await webhookService.getEvent(event.id)
-        assert.ok(updatedEvent?.processAt)
-        expect(updatedEvent).toMatchObject({
+        const updatedWebhook = await webhookService.getWebhook(webhook.id)
+        assert.ok(updatedWebhook?.processAt)
+        expect(updatedWebhook).toMatchObject({
           attempts: 1,
           statusCode: status
         })
-        expect(updatedEvent.processAt.getTime()).toBeGreaterThanOrEqual(
+        expect(updatedWebhook.processAt.getTime()).toBeGreaterThanOrEqual(
           event.createdAt.getTime() + RETRY_BACKOFF_MS
         )
       }
@@ -456,15 +468,15 @@ describe('Webhook Service', (): void => {
             setting ? Number(setting.value) + 1 : Config.webhookTimeout + 1
           )
           .reply(200)
-        await expect(webhookService.processNext()).resolves.toEqual(event.id)
+        await expect(webhookService.processNext()).resolves.toEqual(webhook.id)
         scope.done()
-        const updatedEvent = await webhookService.getEvent(event.id)
-        assert.ok(updatedEvent?.processAt)
-        expect(updatedEvent).toMatchObject({
+        const updatedWebhook = await webhookService.getWebhook(webhook.id)
+        assert.ok(updatedWebhook?.processAt)
+        expect(updatedWebhook).toMatchObject({
           attempts: 1,
           statusCode: null
         })
-        expect(updatedEvent.processAt.getTime()).toBeGreaterThanOrEqual(
+        expect(updatedWebhook.processAt.getTime()).toBeGreaterThanOrEqual(
           event.createdAt.getTime() + RETRY_BACKOFF_MS
         )
       }
@@ -491,7 +503,7 @@ describe('Webhook Service', (): void => {
           .reply(200, () => {
             requests++
           })
-        await event.$query(knex).patch({
+        await webhook.$query(knex).patch({
           attempts: setting ? Number(setting.value) : Config.webhookMaxRetry
         })
         await expect(webhookService.getEvent(event.id)).resolves.toEqual(event)
@@ -515,7 +527,7 @@ describe('Webhook Service', (): void => {
             value: '5'
           })
         }
-        await event.$query(knex).patch({
+        await webhook.$query(knex).patch({
           attempts: setting ? Number(setting.value) : Config.webhookMaxRetry
         })
 
@@ -531,15 +543,29 @@ describe('Webhook Service', (): void => {
         })
         const scope = mockWebhookServer(200, nextEvent)
 
+        const nextWebhook = await Webhook.query(knex)
+          .insertAndFetch({
+            recipientTenantId: Config.operatorTenantId,
+            eventId: nextEvent.id
+          })
+          .withGraphFetched('event')
+
         await expect(webhookService.getEvent(event.id)).resolves.toEqual(event)
         await expect(webhookService.getEvent(nextEvent.id)).resolves.toEqual(
           nextEvent
         )
 
-        await expect(webhookService.processNext()).resolves.toBe(nextEvent.id)
+        await expect(webhookService.getWebhook(webhook.id)).resolves.toEqual(
+          webhook
+        )
+        await expect(
+          webhookService.getWebhook(nextWebhook.id)
+        ).resolves.toEqual(nextWebhook)
+
+        await expect(webhookService.processNext()).resolves.toBe(nextWebhook.id)
         scope.done()
         await expect(
-          webhookService.getEvent(nextEvent.id)
+          webhookService.getWebhook(nextWebhook.id)
         ).resolves.toMatchObject({
           attempts: 1,
           statusCode: 200,
@@ -557,62 +583,16 @@ describe('Webhook Service', (): void => {
       })
 
       const scope = mockWebhookServer(200, event, new URL(tenantWebhookUrl))
-      await expect(webhookService.processNext()).resolves.toEqual(event.id)
-      await expect(webhookService.getEvent(event.id)).resolves.toMatchObject({
-        attempts: 1,
-        statusCode: 200,
-        processAt: null
-      })
-
-      scope.done()
-    })
-
-    test('Also sends webhook to operator if tenant is primary recipient', async (): Promise<void> => {
-      const tenant = await createTenant(deps)
-      const tenantWebhookUrl = faker.internet.url()
-      await TenantSetting.query(knex).insertAndFetch({
-        tenantId: tenant.id,
-        key: TenantSettingKeys.WEBHOOK_URL.name,
-        value: tenantWebhookUrl
-      })
-
-      const operatorWebhookUrl = faker.internet.url()
-      await TenantSetting.query(knex).insertAndFetch({
-        tenantId: Config.operatorTenantId,
-        key: TenantSettingKeys.WEBHOOK_URL.name,
-        value: operatorWebhookUrl
-      })
-
-      const tenantedEvent = await WebhookEvent.query(knex).patchAndFetchById(
-        event.id,
-        {
-          tenantId: tenant.id
-        }
-      )
-
-      const tenantScope = mockWebhookServer(
-        200,
-        tenantedEvent,
-        new URL(tenantWebhookUrl)
-      )
-      const operatorScope = mockWebhookServer(
-        200,
-        tenantedEvent,
-        new URL(operatorWebhookUrl)
-      )
-      await expect(webhookService.processNext()).resolves.toEqual(
-        tenantedEvent.id
-      )
+      await expect(webhookService.processNext()).resolves.toEqual(webhook.id)
       await expect(
-        webhookService.getEvent(tenantedEvent.id)
+        webhookService.getWebhook(webhook.id)
       ).resolves.toMatchObject({
         attempts: 1,
         statusCode: 200,
         processAt: null
       })
 
-      tenantScope.done()
-      operatorScope.done()
+      scope.done()
     })
   })
 })

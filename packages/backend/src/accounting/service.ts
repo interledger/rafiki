@@ -1,6 +1,7 @@
 import { TransactionOrKnex } from 'objection'
 import { BaseService } from '../shared/baseService'
 import { TransferError, isTransferError } from './errors'
+import { IAppConfig } from '../config/app'
 
 export enum LiquidityAccountType {
   ASSET = 'ASSET',
@@ -27,14 +28,20 @@ export interface LiquidityAccountAsset {
   code?: string
   scale?: number
   ledger: number
-  onDebit?: (options: OnDebitOptions) => Promise<LiquidityAccount>
+  onDebit?: (
+    options: OnDebitOptions,
+    config: IAppConfig
+  ) => Promise<LiquidityAccount>
 }
 
 export interface LiquidityAccount {
   id: string
   asset: LiquidityAccountAsset
   onCredit?: (options: OnCreditOptions) => Promise<LiquidityAccount>
-  onDebit?: (options: OnDebitOptions) => Promise<LiquidityAccount>
+  onDebit?: (
+    options: OnDebitOptions,
+    config: IAppConfig
+  ) => Promise<LiquidityAccount>
 }
 
 export interface OnCreditOptions {
@@ -133,6 +140,7 @@ export interface TransferToCreate {
 }
 
 export interface BaseAccountingServiceDependencies extends BaseService {
+  config: IAppConfig
   withdrawalThrottleDelay?: number
 }
 
@@ -195,15 +203,19 @@ export async function createAccountToAccountTransfer(
   }
 
   const onDebit = async (
-    account: LiquidityAccount | LiquidityAccount['asset']
+    account: LiquidityAccount | LiquidityAccount['asset'],
+    config: IAppConfig
   ) => {
     if (account.onDebit) {
       const balance = await getAccountBalance(account.id)
       if (balance === undefined) throw new Error('undefined account balance')
 
-      await account.onDebit({
-        balance
-      })
+      await account.onDebit(
+        {
+          balance
+        },
+        config
+      )
     }
   }
 
@@ -213,8 +225,8 @@ export async function createAccountToAccountTransfer(
       if (error) return error
 
       await Promise.all([
-        onDebit(sourceAccount),
-        onDebit(destinationAccount.asset)
+        onDebit(sourceAccount, deps.config),
+        onDebit(destinationAccount.asset, deps.config)
       ])
 
       if (destinationAccount.onCredit) {

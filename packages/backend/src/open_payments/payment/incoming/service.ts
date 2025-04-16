@@ -197,11 +197,16 @@ async function createIncomingPayment(
     incomingPayment.walletAddressId
   )
 
-  await IncomingPaymentEvent.query(trx || deps.knex).insert({
+  const webhooks = [{ recipientTenantId: incomingPayment.tenantId }]
+  if (incomingPayment.tenantId !== deps.config.operatorTenantId) {
+    webhooks.push({ recipientTenantId: deps.config.operatorTenantId })
+  }
+  await IncomingPaymentEvent.query(trx || deps.knex).insertGraphAndFetch({
     incomingPaymentId: incomingPayment.id,
     type: IncomingPaymentEventType.IncomingPaymentCreated,
     data: incomingPayment.toData(0n),
-    tenantId: incomingPayment.tenantId
+    tenantId: incomingPayment.tenantId,
+    webhooks
   })
 
   incomingPayment = await addReceivedAmount(deps, incomingPayment, BigInt(0))
@@ -358,7 +363,11 @@ async function handleDeactivated(
         : IncomingPaymentEventType.IncomingPaymentCompleted
     deps.logger.trace({ type }, 'creating incoming payment webhook event')
 
-    await IncomingPaymentEvent.query(deps.knex).insert({
+    const webhooks = [{ recipientTenantId: incomingPayment.tenantId }]
+    if (incomingPayment.tenantId !== deps.config.operatorTenantId) {
+      webhooks.push({ recipientTenantId: deps.config.operatorTenantId })
+    }
+    await IncomingPaymentEvent.query(deps.knex).insertGraph({
       incomingPaymentId: incomingPayment.id,
       type,
       data: incomingPayment.toData(amountReceived),
@@ -367,7 +376,8 @@ async function handleDeactivated(
         assetId: incomingPayment.assetId,
         amount: amountReceived
       },
-      tenantId: incomingPayment.tenantId
+      tenantId: incomingPayment.tenantId,
+      webhooks
     })
 
     await incomingPayment.$query(deps.knex).patch({
