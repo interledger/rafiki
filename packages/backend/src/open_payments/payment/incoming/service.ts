@@ -201,7 +201,7 @@ async function createIncomingPayment(
   if (incomingPayment.tenantId !== deps.config.operatorTenantId) {
     webhooks.push({ recipientTenantId: deps.config.operatorTenantId })
   }
-  await IncomingPaymentEvent.query(trx || deps.knex).insertGraphAndFetch({
+  await IncomingPaymentEvent.query(trx || deps.knex).insertGraph({
     incomingPaymentId: incomingPayment.id,
     type: IncomingPaymentEventType.IncomingPaymentCreated,
     data: incomingPayment.toData(0n),

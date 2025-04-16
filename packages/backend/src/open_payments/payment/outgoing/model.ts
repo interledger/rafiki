@@ -10,7 +10,7 @@ import {
 } from '../../wallet_address/model'
 import { Quote } from '../../quote/model'
 import { Amount, AmountJSON, serializeAmount } from '../../amount'
-import { WebhookEvent } from '../../../webhook/model'
+import { WebhookEvent } from '../../../webhook/event/model'
 import {
   OutgoingPayment as OpenPaymentsOutgoingPayment,
   OutgoingPaymentWithSpentAmounts

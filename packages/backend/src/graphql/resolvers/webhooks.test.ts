@@ -8,7 +8,7 @@ import { Config } from '../../config/app'
 import { truncateTables } from '../../tests/tableManager'
 import { WebhookEventsConnection } from '../generated/graphql'
 import { createWebhookEvent, webhookEventTypes } from '../../tests/webhook'
-import { WebhookEvent } from '../../webhook/model'
+import { WebhookEvent } from '../../webhook/event/model'
 
 describe('Webhook Events Query', (): void => {
   let deps: IocContract<AppServices>

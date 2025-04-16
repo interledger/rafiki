@@ -322,8 +322,10 @@ describe('Receiver Service', (): void => {
 
       beforeEach(async () => {
         const asset = await createAsset(deps, {
-          code: 'USD',
-          scale: 2
+          assetOptions: {
+            code: 'USD',
+            scale: 2
+          }
         })
 
         walletAddress = await createWalletAddress(deps, {

@@ -80,7 +80,6 @@ describe('OutgoingPaymentService', (): void => {
   let receiver: string
   let client: string
   let amtDelivered: bigint
-  let trx: Knex.Transaction
   let config: IAppConfig
   let receiverService: ReceiverService
   let receiverGet: typeof receiverService.get
@@ -517,9 +516,12 @@ describe('OutgoingPaymentService', (): void => {
       })
 
       test('can filter by state', async (): Promise<void> => {
-        await OutgoingPayment.query(trx).patchAndFetchById(outgoingPayment.id, {
-          state: OutgoingPaymentState.Completed
-        })
+        await OutgoingPayment.query(knex).patchAndFetchById(
+          outgoingPayment.id,
+          {
+            state: OutgoingPaymentState.Completed
+          }
+        )
 
         const page = await outgoingPaymentService.getPage({
           filter: {
@@ -1143,7 +1145,7 @@ describe('OutgoingPaymentService', (): void => {
               })
             )
           }
-          const payments = await OutgoingPayment.query(trx)
+          const payments = await OutgoingPayment.query(knex)
           expect(payments.length).toEqual(1)
           expect([quotes[0].id, quotes[1].id]).toContain(payments[0].id)
         })
@@ -1307,7 +1309,7 @@ describe('OutgoingPaymentService', (): void => {
               assert.ok(firstPayment)
               if (failed) {
                 await firstPayment
-                  .$query(trx)
+                  .$query(knex)
                   .patch({ state: OutgoingPaymentState.Failed })
 
                 jest
@@ -1395,7 +1397,7 @@ describe('OutgoingPaymentService', (): void => {
                 assert.ok(firstPayment)
                 if (failed) {
                   await firstPayment
-                    .$query(trx)
+                    .$query(knex)
                     .patch({ state: OutgoingPaymentState.Failed })
                   if (half) {
                     jest
