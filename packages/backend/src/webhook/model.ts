@@ -7,6 +7,7 @@ import { IncomingPayment } from '../open_payments/payment/incoming/model'
 import { WalletAddress } from '../open_payments/wallet_address/model'
 import { Asset } from '../asset/model'
 import { Peer } from '../payment-method/ilp/peer/model'
+import { Webhook } from './hook/model'
 
 const fieldPrefixes = ['withdrawal']
 
@@ -16,6 +17,14 @@ export class WebhookEvent extends BaseModel {
   }
 
   static relationMappings = () => ({
+    webhooks: {
+      relation: BaseModel.HasManyRelation,
+      modelClass: join(__dirname, './hook/model'),
+      join: {
+        from: 'webhookEvents.id',
+        to: 'webhooks.eventId'
+      }
+    },
     outgoingPayment: {
       relation: BaseModel.BelongsToOneRelation,
       modelClass: join(__dirname, '../open_payments/payment/outgoing/model'),
@@ -60,9 +69,6 @@ export class WebhookEvent extends BaseModel {
 
   public type!: string
   public data!: Record<string, unknown>
-  public attempts!: number
-  public statusCode?: number
-  public processAt!: Date | null
   public depositAccountId?: string
   public tenantId!: string
 
@@ -77,6 +83,8 @@ export class WebhookEvent extends BaseModel {
   public walletAddress?: WalletAddress
   public asset?: Asset
   public peer?: Peer
+
+  public webhooks?: Webhook[]
 
   public withdrawal?: {
     accountId: string

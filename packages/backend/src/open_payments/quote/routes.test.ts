@@ -78,8 +78,10 @@ describe('Quote Routes', (): void => {
   beforeEach(async (): Promise<void> => {
     tenantId = Config.operatorTenantId
     const { id: assetId } = await createAsset(deps, {
-      code: debitAmount.assetCode,
-      scale: debitAmount.assetScale
+      assetOptions: {
+        code: debitAmount.assetCode,
+        scale: debitAmount.assetScale
+      }
     })
     walletAddress = await createWalletAddress(deps, {
       tenantId,
