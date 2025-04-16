@@ -60,18 +60,24 @@ describe('LocalPaymentService', (): void => {
   beforeEach(async (): Promise<void> => {
     tenantId = Config.operatorTenantId
     assetMap['USD'] = await createAsset(deps, {
-      code: 'USD',
-      scale: 2
+      assetOptions: {
+        code: 'USD',
+        scale: 2
+      }
     })
 
     assetMap['USD_9'] = await createAsset(deps, {
-      code: 'USD_9',
-      scale: 9
+      assetOptions: {
+        code: 'USD_9',
+        scale: 9
+      }
     })
 
     assetMap['EUR'] = await createAsset(deps, {
-      code: 'EUR',
-      scale: 2
+      assetOptions: {
+        code: 'EUR',
+        scale: 2
+      }
     })
 
     walletAddressMap['USD'] = await createWalletAddress(deps, {

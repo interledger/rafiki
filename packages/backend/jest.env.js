@@ -1,4 +1,4 @@
-process.env.LOG_LEVEL = 'info'
+process.env.LOG_LEVEL = 'silent'
 process.env.INSTANCE_NAME = 'Rafiki'
 process.env.KEY_ID = 'myKey'
 process.env.OPEN_PAYMENTS_URL = 'http://127.0.0.1:3000'

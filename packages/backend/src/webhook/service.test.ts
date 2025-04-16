@@ -4,8 +4,8 @@ import { URL } from 'url'
 import { Knex } from 'knex'
 import { v4 as uuid } from 'uuid'
 
-import { WebhookEvent } from './model'
-import { Webhook } from './hook/model'
+import { WebhookEvent } from './event/model'
+import { Webhook } from './model'
 import {
   WebhookService,
   generateWebhookSignature,
@@ -394,11 +394,13 @@ describe('Webhook Service', (): void => {
         scope.done()
         await expect(
           webhookService.getWebhook(webhook.id)
-        ).resolves.toMatchObject({
-          attempts: 1,
-          statusCode: 200,
-          processAt: null
-        })
+        ).resolves.toMatchObject(
+          expect.objectContaining({
+            attempts: 1,
+            statusCode: 200,
+            processAt: null
+          })
+        )
       }
     )
 

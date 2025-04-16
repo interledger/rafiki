@@ -363,6 +363,7 @@ export function initIocContainer(
       })
       const tigerBeetle = await deps.use('tigerBeetle')!
       return createTigerbeetleAccountingService({
+        config,
         logger,
         knex,
         tigerBeetle,

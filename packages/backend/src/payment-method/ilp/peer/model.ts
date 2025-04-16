@@ -4,7 +4,7 @@ import { Asset } from '../../../asset/model'
 import { ConnectorAccount } from '../connector/core/rafiki'
 import { HttpToken } from '../peer-http-token/model'
 import { BaseModel } from '../../../shared/baseModel'
-import { WebhookEvent } from '../../../webhook/model'
+import { WebhookEvent } from '../../../webhook/event/model'
 import { join } from 'path'
 import { IAppConfig } from '../../../config/app'
 

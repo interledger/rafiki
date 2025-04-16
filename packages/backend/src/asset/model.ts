@@ -1,7 +1,7 @@
 import { QueryContext } from 'objection'
 import { LiquidityAccount, OnDebitOptions } from '../accounting/service'
 import { BaseModel } from '../shared/baseModel'
-import { WebhookEvent } from '../webhook/model'
+import { WebhookEvent } from '../webhook/event/model'
 import { IAppConfig } from '../config/app'
 
 export class Asset extends BaseModel implements LiquidityAccount {
