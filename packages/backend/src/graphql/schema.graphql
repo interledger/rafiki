@@ -1394,6 +1394,8 @@ type WalletAddressWithdrawal {
 type WebhookEvent implements Model {
   "Unique identifier of the webhook event."
   id: ID!
+  "Tenant of the webhook event."
+  tenantId: ID!
   "Type of webhook event."
   type: String!
   "Stringified JSON data for the webhook event."
