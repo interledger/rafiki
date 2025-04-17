@@ -26,6 +26,7 @@ describe('Balances', (): void => {
     deps = initIocContainer({ ...Config, useTigerBeetle: false })
     appContainer = await createTestApp(deps)
     serviceDeps = {
+      config: await deps.use('config'),
       logger: await deps.use('logger'),
       knex: await deps.use('knex'),
       telemetry: await deps.use('telemetry')

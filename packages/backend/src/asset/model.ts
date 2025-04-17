@@ -1,7 +1,8 @@
 import { QueryContext } from 'objection'
 import { LiquidityAccount, OnDebitOptions } from '../accounting/service'
 import { BaseModel } from '../shared/baseModel'
-import { WebhookEvent } from '../webhook/model'
+import { WebhookEvent } from '../webhook/event/model'
+import { IAppConfig } from '../config/app'
 
 export class Asset extends BaseModel implements LiquidityAccount {
   public static get tableName(): string {
@@ -29,10 +30,17 @@ export class Asset extends BaseModel implements LiquidityAccount {
     }
   }
 
-  public async onDebit({ balance }: OnDebitOptions): Promise<Asset> {
+  public async onDebit(
+    { balance }: OnDebitOptions,
+    config: IAppConfig
+  ): Promise<Asset> {
     if (this.liquidityThreshold !== null) {
       if (balance <= this.liquidityThreshold) {
-        await AssetEvent.query().insert({
+        const webhooks = [{ recipientTenantId: this.tenantId }]
+        if (this.tenantId !== config.operatorTenantId) {
+          webhooks.push({ recipientTenantId: config.operatorTenantId })
+        }
+        await AssetEvent.query().insertGraph({
           assetId: this.id,
           type: AssetEventType.LiquidityLow,
           data: {
@@ -45,7 +53,8 @@ export class Asset extends BaseModel implements LiquidityAccount {
             liquidityThreshold: this.liquidityThreshold,
             balance
           },
-          tenantId: this.tenantId
+          tenantId: this.tenantId,
+          webhooks
         })
       }
     }

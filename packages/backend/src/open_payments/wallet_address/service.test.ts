@@ -65,7 +65,7 @@ describe('Open Payments Wallet Address Service', (): void => {
 
     beforeEach(async (): Promise<void> => {
       tenantId = (await createTenant(deps)).id
-      const { id: assetId } = await createAsset(deps, undefined, tenantId)
+      const { id: assetId } = await createAsset(deps, { tenantId })
 
       await createTenantSettings(deps, {
         tenantId: tenantId,
@@ -113,11 +113,9 @@ describe('Open Payments Wallet Address Service', (): void => {
       async ({ isOperator, tenantSettingUrl }): Promise<void> => {
         const address = 'test'
         const tempTenant = await createTenant(deps)
-        const { id: tempAssetId } = await createAsset(
-          deps,
-          undefined,
-          tempTenant.id
-        )
+        const { id: tempAssetId } = await createAsset(deps, {
+          tenantId: tempTenant.id
+        })
 
         let expected: string = WalletAddressError.WalletAddressSettingNotFound
         if (tenantSettingUrl) {
@@ -588,12 +586,21 @@ describe('Open Payments Wallet Address Service', (): void => {
 
             const walletAddressNotFoundEvents = await WalletAddressEvent.query(
               knex
-            ).where({
-              type: WalletAddressEventType.WalletAddressNotFound
-            })
+            )
+              .where({
+                type: WalletAddressEventType.WalletAddressNotFound
+              })
+              .withGraphFetched('webhooks')
 
             expect(walletAddressNotFoundEvents[0]).toMatchObject({
-              data: { walletAddressUrl }
+              data: { walletAddressUrl },
+              webhooks: [
+                expect.objectContaining({
+                  recipientTenantId: config.operatorTenantId,
+                  eventId: walletAddressNotFoundEvents[0].id,
+                  processAt: expect.any(Date)
+                })
+              ]
             })
           }
         )
@@ -782,6 +789,50 @@ describe('Open Payments Wallet Address Service', (): void => {
       })
     })
 
+    test('creates corresponding operator webhook if withdrawal event is for tenant', async (): Promise<void> => {
+      const tenant = await createTenant(deps)
+      const walletAddress = await createWalletAddress(deps, {
+        tenantId: tenant.id,
+        createLiquidityAccount: true
+      })
+
+      accountingService.createDeposit({
+        id: uuid(),
+        account: walletAddress,
+        amount: BigInt(10)
+      })
+
+      await walletAddress.$query(knex).patch({
+        processAt: new Date(),
+        totalEventsAmount: BigInt(0)
+      })
+      await expect(walletAddressService.processNext()).resolves.toBe(
+        walletAddress.id
+      )
+
+      const events = await WalletAddressEvent.query(knex)
+        .where({
+          type: WalletAddressEventType.WalletAddressWebMonetization,
+          withdrawalAccountId: walletAddress.id,
+          withdrawalAssetId: walletAddress.assetId,
+          withdrawalAmount: BigInt(10)
+        })
+        .withGraphFetched('webhooks')
+      expect(events).toHaveLength(1)
+      expect(events[0].webhooks).toEqual([
+        expect.objectContaining({
+          recipientTenantId: walletAddress.tenantId,
+          eventId: events[0].id,
+          processAt: expect.any(Date)
+        }),
+        expect.objectContaining({
+          recipientTenantId: config.operatorTenantId,
+          eventId: events[0].id,
+          processAt: expect.any(Date)
+        })
+      ])
+    })
+
     test.each`
       processAt                        | description
       ${null}                          | ${'not scheduled'}
@@ -830,14 +881,22 @@ describe('Open Payments Wallet Address Service', (): void => {
           processAt: null,
           totalEventsAmount: totalEventsAmount + withdrawalAmount
         })
-        await expect(
-          WalletAddressEvent.query(knex).where({
+        const events = await WalletAddressEvent.query(knex)
+          .where({
             type: WalletAddressEventType.WalletAddressWebMonetization,
             withdrawalAccountId: walletAddress.id,
             withdrawalAssetId: walletAddress.assetId,
             withdrawalAmount
           })
-        ).resolves.toHaveLength(1)
+          .withGraphFetched('webhooks')
+        expect(events).toHaveLength(1)
+        expect(events[0].webhooks).toEqual([
+          expect.objectContaining({
+            recipientTenantId: walletAddress.tenantId,
+            eventId: events[0].id,
+            processAt: expect.any(Date)
+          })
+        ])
       }
     )
   })

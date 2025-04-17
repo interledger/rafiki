@@ -132,7 +132,12 @@ export default function WebhookEventsPage() {
                     <Table.Cell>
                       <Button
                         aria-label='view webhook data'
-                        state={{ data: webhook.node.data }}
+                        state={{
+                          data: {
+                            ...webhook.node.data,
+                            tenantId: webhook.node.tenantId
+                          }
+                        }}
                         to={`/webhook-events/data${
                           searchParams ? `?${searchParams}` : null
                         }`}

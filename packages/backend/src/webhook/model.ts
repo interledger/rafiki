@@ -1,116 +1,49 @@
-import { Pojo } from 'objection'
+import { join } from 'path'
 
 import { BaseModel } from '../shared/baseModel'
-import { join } from 'path'
-import { OutgoingPayment } from '../open_payments/payment/outgoing/model'
-import { IncomingPayment } from '../open_payments/payment/incoming/model'
-import { WalletAddress } from '../open_payments/wallet_address/model'
-import { Asset } from '../asset/model'
-import { Peer } from '../payment-method/ilp/peer/model'
+import { WebhookEvent } from './event/model'
+import { Tenant } from '../tenants/model'
 
-const fieldPrefixes = ['withdrawal']
-
-export class WebhookEvent extends BaseModel {
+export class Webhook extends BaseModel {
   public static get tableName(): string {
-    return 'webhookEvents'
+    return 'webhooks'
   }
 
   static relationMappings = () => ({
-    outgoingPayment: {
+    event: {
       relation: BaseModel.BelongsToOneRelation,
-      modelClass: join(__dirname, '../open_payments/payment/outgoing/model'),
+      modelClass: join(__dirname, './event/model'),
       join: {
-        from: 'webhookEvents.outgoingPaymentId',
-        to: 'outgoingPayments.id'
+        from: 'webhooks.eventId',
+        to: 'webhookEvents.id'
       }
     },
-    incomingPayment: {
+    tenant: {
       relation: BaseModel.BelongsToOneRelation,
-      modelClass: join(__dirname, '../open_payments/payment/incoming/model'),
+      modelClass: join(__dirname, '../../tenants/model'),
       join: {
-        from: 'webhookEvents.incomingPaymentId',
-        to: 'incomingPayments.id'
-      }
-    },
-    walletAddress: {
-      relation: BaseModel.BelongsToOneRelation,
-      modelClass: join(__dirname, '../open_payments/wallet_address/model'),
-      join: {
-        from: 'webhookEvents.walletAddressId',
-        to: 'walletAddresses.id'
-      }
-    },
-    asset: {
-      relation: BaseModel.BelongsToOneRelation,
-      modelClass: join(__dirname),
-      join: {
-        from: 'webhookEvents.assetId',
-        to: 'assets.id'
-      }
-    },
-    peer: {
-      relation: BaseModel.BelongsToOneRelation,
-      modelClass: join(__dirname, '../payment-method/ilp/peer/model'),
-      join: {
-        from: 'webhookEvents.peerId',
-        to: 'peer.id'
+        from: 'webhooks.recipientTenantId',
+        to: 'tenants.id'
       }
     }
   })
 
-  public type!: string
-  public data!: Record<string, unknown>
+  public eventId!: string
   public attempts!: number
   public statusCode?: number
   public processAt!: Date | null
-  public depositAccountId?: string
-  public tenantId!: string
+  public recipientTenantId!: string
 
-  public readonly outgoingPaymentId?: string
-  public readonly incomingPaymentId?: string
-  public readonly walletAddressId?: string
-  public readonly assetId?: string
-  public readonly peerId?: string
+  public event?: WebhookEvent
+  public tenant?: Tenant
+}
 
-  public outgoingPayment?: OutgoingPayment
-  public incomingPayment?: IncomingPayment
-  public walletAddress?: WalletAddress
-  public asset?: Asset
-  public peer?: Peer
+export interface WebhookWithEvent extends Webhook {
+  event: NonNullable<Webhook['event']>
+}
 
-  public withdrawal?: {
-    accountId: string
-    assetId: string
-    amount: bigint
-  }
-
-  $formatDatabaseJson(json: Pojo): Pojo {
-    // transforms WebhookEvent.withdrawal to db fields. eg. withdrawal.accountId => withdrawalAccountId
-    for (const prefix of fieldPrefixes) {
-      if (!json[prefix]) continue
-      for (const key in json[prefix]) {
-        json[prefix + key.charAt(0).toUpperCase() + key.slice(1)] =
-          json[prefix][key]
-      }
-      delete json[prefix]
-    }
-    return super.$formatDatabaseJson(json)
-  }
-
-  $parseDatabaseJson(json: Pojo): Pojo {
-    // transforms withdrawal db fields to WebhookEvent.withdrawal. eg. withdrawalAccountId => withdrawal.accountId
-    json = super.$parseDatabaseJson(json)
-    for (const key in json) {
-      const prefix = fieldPrefixes.find((prefix) => key.startsWith(prefix))
-      if (!prefix) continue
-      if (json[key] !== null) {
-        if (!json[prefix]) json[prefix] = {}
-        json[prefix][
-          key.charAt(prefix.length).toLowerCase() + key.slice(prefix.length + 1)
-        ] = json[key]
-      }
-      delete json[key]
-    }
-    return json
-  }
+export function isWebhookWithEvent(
+  webhook: Webhook
+): webhook is WebhookWithEvent {
+  return !!webhook.event
 }

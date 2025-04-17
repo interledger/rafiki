@@ -392,14 +392,13 @@ describe('Wallet Address Resolvers', (): void => {
     test('Operator can perform cross tenant create', async (): Promise<void> => {
       // Setup non-tenant operator and form request for it from operator
       const nonOperatorTenant = await createTenant(deps)
-      const asset = await createAsset(
-        deps,
-        {
+      const asset = await createAsset(deps, {
+        assetOptions: {
           code: 'xyz',
           scale: 2
         },
-        nonOperatorTenant.id
-      )
+        tenantId: nonOperatorTenant.id
+      })
       await createTenantSettings(deps, {
         tenantId: nonOperatorTenant.id,
         setting: [

@@ -1,7 +1,7 @@
 import { Knex } from 'knex'
 
 import { AssetService } from './service'
-import { Config } from '../config/app'
+import { Config, IAppConfig } from '../config/app'
 import { createTestApp, TestContainer } from '../tests/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../'
@@ -10,6 +10,7 @@ import { randomAsset } from '../tests/asset'
 import { truncateTables } from '../tests/tableManager'
 import { Asset, AssetEvent, AssetEventError, AssetEventType } from './model'
 import { isAssetError } from './errors'
+import { createTenant } from '../tests/tenant'
 
 describe('Models', (): void => {
   let deps: IocContract<AppServices>
@@ -35,7 +36,9 @@ describe('Models', (): void => {
   describe('Asset Model', (): void => {
     describe('onDebit', (): void => {
       let asset: Asset
+      let config: IAppConfig
       beforeEach(async (): Promise<void> => {
+        config = await deps.use('config')
         const options = {
           ...randomAsset(),
           tenantId: Config.operatorTenantId,
@@ -54,13 +57,13 @@ describe('Models', (): void => {
       `(
         'creates webhook event if balance=$balance <= liquidityThreshold',
         async ({ balance }): Promise<void> => {
-          await asset.onDebit({ balance })
+          await asset.onDebit({ balance }, config)
           const event = (
-            await AssetEvent.query(knex).where(
-              'type',
-              AssetEventType.LiquidityLow
-            )
+            await AssetEvent.query(knex)
+              .where('type', AssetEventType.LiquidityLow)
+              .withGraphFetched('webhooks')
           )[0]
+          expect(event.webhooks).toHaveLength(1)
           expect(event).toMatchObject({
             type: AssetEventType.LiquidityLow,
             data: {
@@ -72,15 +75,77 @@ describe('Models', (): void => {
               },
               liquidityThreshold: asset.liquidityThreshold?.toString(),
               balance: balance.toString()
-            }
+            },
+            webhooks: expect.arrayContaining([
+              expect.objectContaining({
+                id: expect.any(String),
+                eventId: event.id,
+                recipientTenantId: Config.operatorTenantId,
+                processAt: expect.any(Date),
+                attempts: 0
+              })
+            ])
           })
         }
       )
       test('does not create webhook event if balance > liquidityThreshold', async (): Promise<void> => {
-        await asset.onDebit({ balance: BigInt(110) })
+        await asset.onDebit({ balance: BigInt(110) }, config)
         await expect(
           AssetEvent.query(knex).where('type', AssetEventType.LiquidityLow)
         ).resolves.toEqual([])
+      })
+      test('creates corresponding webhook for operator if asset belongs to tenant', async (): Promise<void> => {
+        const tenant = await createTenant(deps)
+        const tenantAssetOptions = {
+          ...randomAsset(),
+          tenantId: tenant.id,
+          liquidityThreshold: BigInt(100)
+        }
+
+        let tenantAsset: Asset
+        const assetOrError = await assetService.create(tenantAssetOptions)
+        if (!isAssetError(assetOrError)) {
+          tenantAsset = assetOrError
+        } else {
+          throw assetOrError
+        }
+
+        await tenantAsset.onDebit({ balance: BigInt(50) }, config)
+        const event = (
+          await AssetEvent.query(knex)
+            .where('type', AssetEventType.LiquidityLow)
+            .withGraphFetched('webhooks')
+        )[0]
+        expect(event.webhooks).toHaveLength(2)
+        expect(event).toMatchObject({
+          type: AssetEventType.LiquidityLow,
+          data: {
+            id: tenantAsset.id,
+            asset: {
+              id: tenantAsset.id,
+              code: tenantAsset.code,
+              scale: tenantAsset.scale
+            },
+            liquidityThreshold: tenantAsset.liquidityThreshold?.toString(),
+            balance: '50'
+          },
+          webhooks: expect.arrayContaining([
+            expect.objectContaining({
+              id: expect.any(String),
+              eventId: event.id,
+              recipientTenantId: Config.operatorTenantId,
+              processAt: expect.any(Date),
+              attempts: 0
+            }),
+            expect.objectContaining({
+              id: expect.any(String),
+              eventId: event.id,
+              recipientTenantId: tenant.id,
+              processAt: expect.any(Date),
+              attempts: 0
+            })
+          ])
+        })
       })
     })
   })

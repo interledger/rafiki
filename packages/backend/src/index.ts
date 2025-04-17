@@ -363,6 +363,7 @@ export function initIocContainer(
       })
       const tigerBeetle = await deps.use('tigerBeetle')!
       return createTigerbeetleAccountingService({
+        config,
         logger,
         knex,
         tigerBeetle,
@@ -375,7 +376,8 @@ export function initIocContainer(
       logger,
       knex,
       withdrawalThrottleDelay: config.withdrawalThrottleDelay,
-      telemetry
+      telemetry,
+      config
     })
   })
   container.singleton('peerService', async (deps) => {
