@@ -10191,6 +10191,22 @@
             "deprecationReason": null
           },
           {
+            "name": "tenantId",
+            "description": "Tenant of the webhook event.",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "ID",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "type",
             "description": "Type of webhook event.",
             "args": [],
