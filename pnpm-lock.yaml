@@ -191,6 +191,9 @@ importers:
       '@koa/router':
         specifier: ^12.0.2
         version: 12.0.2
+      '@opentelemetry/api':
+        specifier: ^1.8.0
+        version: 1.8.0
       ajv:
         specifier: ^8.12.0
         version: 8.12.0

@@ -19,7 +19,7 @@ describe('Access Service', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let accessService: AccessService
-  let trx: Knex.Transaction
+  let knex: Knex
   let grant: Grant
 
   const generateBaseGrant = () => ({
@@ -34,17 +34,18 @@ describe('Access Service', (): void => {
   })
 
   beforeEach(async (): Promise<void> => {
-    grant = await Grant.query(trx).insertAndFetch(generateBaseGrant())
+    grant = await Grant.query(knex).insertAndFetch(generateBaseGrant())
   })
 
   beforeAll(async (): Promise<void> => {
     deps = initIocContainer(Config)
     appContainer = await createTestApp(deps)
     accessService = await deps.use('accessService')
+    knex = appContainer.knex
   })
 
   afterEach(async (): Promise<void> => {
-    await truncateTables(appContainer.knex)
+    await truncateTables(knex)
   })
 
   afterAll(async (): Promise<void> => {
@@ -108,7 +109,7 @@ describe('Access Service', (): void => {
         actions: [AccessAction.Create, AccessAction.Read, AccessAction.List]
       }
 
-      const access = await Access.query(trx).insert([
+      const access = await Access.query(knex).insert([
         {
           grantId: grant.id,
           type: incomingPaymentAccess.type,
