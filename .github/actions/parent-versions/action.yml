@@ -1,4 +1,4 @@
-name: Version hierachy calculator
+name: Version hierarchy calculator
 
 inputs:
   version:
