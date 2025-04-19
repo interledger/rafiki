@@ -1,0 +1,59 @@
+name: Version hierachy calculator
+
+inputs:
+  version:
+    description: "Version we are tagging as, for example v1.2.3 or v1.2.3-rc1, but it can also be 'nightly' in which case no hierarchy will be generated"
+    required: true
+  generateRelease:
+    description: "Set to true if the image has a hierarchy, this will trigger the tagging of the parent versions."
+    required: true
+    default: false
+
+outputs:
+  has_hierarchy:
+    description: "Whether this version has a parent hierarchy"
+    value: ${{ steps.calc.outputs.has_hierarchy }}
+  version:
+    description: "Same version string as provided as input, here for convenience"
+    value: ${{ inputs.version }}
+  major_parent:
+    description: "The major parent tag (e.g. v1 or v1-rc1), empty string if no hierarchy"
+    value: ${{ steps.calc.outputs.major_parent }}
+  minor_parent:
+    description: "The minor parent tag (e.g. v1.2 or v1.2-rc1), empty string if no hierarchy"
+    value: ${{ steps.calc.outputs.minor_parent }}
+runs:
+  using: "composite"
+  steps:
+    - name: Calculate version hierarchy
+      id: calc
+      shell: bash
+      run: |
+        # if we aren't generating a release, we don't need to do anything
+        if [[ "${{ inputs.generateRelease }}" != 'true' ]]; then
+          echo "has_hierarchy=false" >> $GITHUB_OUTPUT
+          echo "major_parent="   >> $GITHUB_OUTPUT
+          echo "minor_parent="   >> $GITHUB_OUTPUT
+          exit 0
+        fi
+
+        # strip leading 'v'
+        version="${{ inputs.version }}"
+        raw="${version#v}"
+        # extract parts
+        major_num="${raw%%.*}"
+        minor_num="$(echo "$raw" | cut -d'.' -f2)"
+        pre_release="$(echo "$raw" | grep -oP '(?<=-).*' || echo "")"
+
+        # build parents
+        minor_label="v${major_num}.${minor_num}"
+        major_label="v${major_num}"
+        if [[ -n "$pre_release" ]]; then
+          minor_label+="-$pre_release"
+          major_label+="-$pre_release"
+        fi
+
+        # emit outputs
+        echo "has_hierarchy=true"     >> $GITHUB_OUTPUT
+        echo "major_parent=$major_label" >> $GITHUB_OUTPUT
+        echo "minor_parent=$minor_label" >> $GITHUB_OUTPUT
