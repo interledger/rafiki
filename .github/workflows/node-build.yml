@@ -211,6 +211,20 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
+            const pr = context.payload.pull_request;
+            if (!pr) {
+              console.log("No PR detected, skipping comment.");
+              return;
+            }
+
+            const sourceOwner = pr.head.repo.owner.login;
+            const targetOwner = pr.base.repo.owner.login;
+
+            if (sourceOwner !== targetOwner) {
+              console.log("PR is from a fork, skipping automatic comment for security reasons.");
+              return;
+            }
+
             const fs = require('fs');
             const summaryPath = './test/performance/k6-test-summary.txt';
             const logPath = './performance.log';
@@ -235,7 +249,6 @@ jobs:
             // https://github.com/orgs/community/discussions/41331
             const maxLogSize = 60000;
             const truncatedLogs = logContent.length > maxLogSize ? `...(truncated)...\n${logContent.slice(-maxLogSize)}` : logContent;
-
 
             const commentBody = `
             ### 🚀 Performance Test Results  
