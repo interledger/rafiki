@@ -3,8 +3,8 @@ title: Rafiki Admin application user guide
 ---
 
 import { LinkOut } from '@interledger/docs-design-system'
-
 import { LargeImg } from '@interledger/docs-design-system'
+import KratosWarn from '/src/partials/kratos-warning.mdx'
 
 The Rafiki Admin application provides tools to manage peers, assets, wallet addresses, webhooks, payments, and account settings. It functions as an interface to the Rafiki [backend service](/integration/deployment/services/backend-service/) and all actions performed, such as fetching data or executing commands, are passed to the Rafiki `backend` service. The purpose of this document is to help you navigate and use the Rafiki Admin application effectively.
 
@@ -78,16 +78,7 @@ Kratos also enhances security with features like built-in breach detection, secu
 
 Ory Kratos provides frontend components (such as forms and buttons) for identity management flows like login, and account settings. These components are not fixed in design; they are fetched via API calls which allows us to match the identity management components with Rafiki Admin's overall look and feel.
 
-:::danger[Disabling authentication]
-
-Rafiki Admin provides access to sensitive data like peering relationships and wallet addresses. Authentication is enabled by default to restrict access to authorized users only.
-
-In the [Local Playground](/integration/playground/overview#rafiki-admin), authentication is disabled by default to simplify local development and testing. To disable it in other environments, set the environment variable `AUTH_ENABLED` to `false`. This should be done with **extreme caution** and only in specific scenarios:
-
-- Secure, non-production environments like the Local Playground for local development and testing.
-- Internal systems where Rafiki Admin is not exposed externally and other access controls (firewalls, local-only access) ensure that the system is secured.
-
-:::
+<KratosWarn />
 
 ## Navigation
 
