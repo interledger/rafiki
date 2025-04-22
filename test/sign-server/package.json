@@ -1,0 +1,27 @@
+{
+  "name": "sign-server",
+  "description": "",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "tsx src/index.ts",
+    "docker:up": "docker compose -f ./docker/docker-compose.yaml down --volumes && docker compose -f ./docker/docker-compose.yaml up --build",
+    "test": "node --import tsx --test test/*.test.ts",
+    "build": "pnpm clean && tsc --build tsconfig.json",
+    "clean": "rm -rf dist"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@interledger/http-signature-utils": "2.0.2",
+    "fastify": "^5.2.1",
+    "pino": "^9.6.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/pg": "^8.11.11",
+    "typescript": "^5.0.0",
+    "tsx": "^4.19.3"
+  }
+}

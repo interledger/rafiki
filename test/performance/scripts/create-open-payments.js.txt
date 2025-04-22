@@ -1,0 +1,363 @@
+// global comment below tells ESLint that __ENV exists, else get "no-undef" error
+/* global __ENV */
+
+import http from 'k6/http'
+import { fail } from 'k6'
+import { uuidv4 } from 'https://jslib.k6.io/k6-utils/1.4.0/index.js'
+import { textSummary } from 'https://jslib.k6.io/k6-summary/0.0.2/index.js'
+import { canonicalize } from '../dist/json-canonicalize.bundle.js'
+import { check } from 'k6'
+import encoding from 'k6/encoding'
+import { createHMAC, createHash, hmac } from 'k6/crypto'
+
+import nacl from '../dist/tweetnacl.bundle.js'
+import util from '../dist/tweetnacl-util.bundle.js'
+
+export const options = {
+  // A number specifying the number of VUs to run concurrently.
+  vus: 1,
+  // A string specifying the total duration of the test run.
+  duration: '1s'
+}
+
+//************ TWEET NACL TEST ************************
+
+function signEd25519(message, secretKey) {
+  /*
+  const messageUint8 = nacl.util.decodeUTF8(message);
+  const signature = nacl.sign.detached(messageUint8, secretKey);
+  return nacl.util.encodeBase64(signature);
+   */
+  const secretKeyFromSeed = nacl.sign.keyPair.fromSeed(secretKey)
+
+  const messageUint8 = util.decodeUTF8(message)
+  console.log('messageUint8: ' + messageUint8)
+  const signature = nacl.sign.detached(messageUint8, secretKeyFromSeed)
+  console.log('sig: ' + signature)
+  const signatureBase64 = nacl.util.encodeBase64(signature)
+  console.log('signatureBase64: ' + signatureBase64)
+  return signatureBase64
+}
+
+//************ CRYPTO STUFF TO GEN SIG ************************
+export function loadBase64Key(base64Key) {
+  /*const privateKey = Buffer.from(base64Key, 'base64').toString('utf-8')
+  const key = crypto.createPrivateKey(privateKey)
+  if (isKeyEd25519(key)) {
+    return key
+  }*/
+  const privateKeyDecoded = encoding.b64decode(base64Key)
+  //const privateKey = encoding.bytesToString(privateKeyPem)
+  console.log('Private key loaded (PEM format):')
+  //console.log(privateKeyDecoded)
+  // NOTE: k6 does not support Ed25519 checks
+  return privateKeyDecoded
+}
+
+function createContentDigestHeaderLcl(payload) {
+  const hash = createHash('sha512')
+  hash.update(payload)
+  const digest = hash.digest('base64')
+  return `sha-512=:${digest}:`
+}
+
+function requestSigHeaders(key, keyId, url, method, headers, body) {
+  /*const response = fetch(bru.getEnvVar('https://kxu5d4mr4blcthphxomjlc4xk40rvdsx.lambda-url.eu-central-1.on.aws/'), {
+    method: 'post',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      keyId: 'keyid-97a3a431-8ee1-48fc-ac85-70e2f5eba8e5',
+      base64Key: 'LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tCk1DNENBUUF3QlFZREsyVndCQ0lFSUVxZXptY1BoT0U4Ymt3TitqUXJwcGZSWXpHSWRGVFZXUUdUSEpJS3B6ODgKLS0tLS1FTkQgUFJJVkFURSBLRVktLS0tLQo=',
+      request: {
+        url,
+        method,
+        headers,
+        body: JSON.stringify(body)
+      }
+    })
+  })
+  return response.json()*/
+  /*
+  const contentDigest = createContentDigestHeader(
+    //TODO JSON.stringify(JSON.parse(body)),
+    JSON.stringify(body),
+    ['sha-512']
+  )*/
+  const contentDigest = createContentDigestHeaderLcl(JSON.stringify(body))
+
+  // Rest:
+  const components = ['@method', '@target-uri']
+  //if (request.headers['Authorization'] || request.headers['authorization']) {
+  components.push('authorization')
+  //}
+  //if (request.body) {
+  components.push('content-digest', 'content-length', 'content-type')
+  //}
+  console.log('right before signing using ' + keyId)
+
+  // TODO Do NOT WORK: const signingKey = createSigner(key, 'ed25519', keyId)
+  console.log('key!' + signingKey)
+
+  /*
+  const methods = Object.getOwnPropertyNames(
+    Object.getPrototypeOf(httpbis)
+  ).filter((prop) => typeof httpbis[prop] === 'function')
+  console.log('COOOMSD')
+  console.log(methods)
+   */
+
+  /* TODO Do NOT WORK
+  const headersSigned = signingKey.sign(
+    {
+      method: method,
+      url: url,
+      headers: headers
+    },
+    {
+      //key: signingKey,
+      name: 'sig1',
+      params: ['keyid', 'created'],
+      fields: components
+    }
+  )*/
+
+  /* TODO Do NOT WORK
+  const { headersSigned } = httpbis.signMessage(
+    {
+      key: signingKey,
+      name: 'sig1',
+      params: ['keyid', 'created'],
+      fields: components
+    },
+    {
+      method: method,
+      url: url,
+      headers: headers
+    }
+  )*/
+
+  console.log('singed!   ' + headersSigned)
+  return {
+    contentDigest,
+    signature: headersSigned['Signature'],
+    signatureInput: headersSigned['Signature-Input']
+  }
+}
+
+/**
+ * Canonicalize the signature base string.
+ * For example: "@method: POST\n@path: /resource\ncontent-type: application/json"
+ */
+function createSignatureBase(components, values) {
+  return components
+    .map((component) => {
+      const lower = component.toLowerCase()
+      const value = values[lower]
+      return `${lower}: ${value}`
+    })
+    .join('\n')
+}
+
+/**
+ * Generate the Signature and Signature-Input headers
+ * @param {Object} params
+ * @param {string[]} params.components - e.g. ['@method', '@path', 'content-type']
+ * @param {Object} params.componentValues - values for each covered component
+ * @param {string} params.secret - HMAC secret key
+ * @param {string} [params.keyid] - key ID
+ */
+export function hmacSign({
+  components,
+  componentValues,
+  secret,
+  keyid = 'my-key'
+}) {
+  const baseString = createSignatureBase(components, componentValues)
+
+  const signature = hmac('sha256', secret, baseString, 'base64')
+
+  const signatureInput = `sig1=(${components.join(' ')});keyid="${keyid}";alg="hmac-sha256"`
+
+  return {
+    Signature: `sig1=:${signature}:`,
+    'Signature-Input': signatureInput
+  }
+}
+
+//*************************************************************
+
+const CLOUD_NINE_GQL_ENDPOINT = __ENV.CLOUD_NINE_GQL_ENDPOINT
+const CLOUD_NINE_WALLET_ADDRESS = __ENV.CLOUD_NINE_WALLET_ADDRESS
+const HAPPY_LIFE_BANK_WALLET_ADDRESS = __ENV.HAPPY_LIFE_BANK_WALLET_ADDRESS
+const SIGNATURE_SECRET = 'iyIgCprjb9uL8wFckR+pLEkJWMB7FJhgkvqhTQR/964='
+const SIGNATURE_VERSION = '1'
+
+function generateSignedHeaders(requestPayload) {
+  const timestamp = Date.now()
+  const payload = `${timestamp}.${canonicalize(requestPayload)}`
+  const hmac = createHMAC('sha256', SIGNATURE_SECRET)
+  hmac.update(payload)
+  const digest = hmac.digest('hex')
+
+  return {
+    'Content-Type': 'application/json',
+    signature: `t=${timestamp}, v${SIGNATURE_VERSION}=${digest}, n=${uuidv4()}`
+  }
+}
+
+function requestGet(url, host) {
+  //const headers = generateSignedHeaders(data)
+  const response = http.get(url, {
+    host: host
+  })
+  return response
+}
+
+function requestPostWithSignatureHeaders(key, keyId, url, data, headers) {
+  const signatureHeaders = requestSigHeaders(
+    key,
+    keyId,
+    url,
+    'POST',
+    headers,
+    data
+  )
+  const response = http.post(url, JSON.stringify(data), {
+    signatureHeaders
+  })
+
+  return JSON.parse(response.body).data
+}
+
+export function setup() {
+  /*
+  const sigHeader = createSignatureHeaders(
+    {},
+    'LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tCk1DNENBUUF3QlFZREsyVndCQ0lFSUVxZXptY1BoT0U4Ymt3TitqUXJwcGZSWXpHSWRGVFZXUUdUSEpJS3B6ODgKLS0tLS1FTkQgUFJJVkFURSBLRVktLS0tLQo=',
+    'keyid-97a3a431-8ee1-48fc-ac85-70e2f5eba8e5'
+  )
+  console.log(`Signature Headers: ${JSON.stringify(sigHeader, null, 2)}`)
+   */
+
+  /*
+  const opClient = createAuthenticatedClient({
+    privateKey: `LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tCk1DNENBUUF3QlFZREsyVndCQ0lFSUVxZXptY1BoT0U4Ymt3TitqUXJwcGZSWXpHSWRGVFZXUUdUSEpJS3B6ODgKLS0tLS1FTkQgUFJJVkFURSBLRVktLS0tLQo=`,
+    keyId: `keyid-97a3a431-8ee1-48fc-ac85-70e2f5eba8e5`,
+    walletAddressUrl: `http://localhost:4000/accounts/pfry`,
+    useHttp: true
+  })
+
+  const sender = opClient.walletAddress.get({
+    url: `https://cloud-nine-wallet-backend/accounts/gfranklin`
+  })
+  console.log(sender)*/
+
+  const responseSender = requestGet(
+    'http://localhost:3000/accounts/gfranklin',
+    'cloud-nine-wallet-backend'
+  )
+  console.log('looking at sender response' + responseSender)
+  //console.log('sender lookup response' + JSON.stringify(responseSender, null, 2))
+  check(responseSender, {
+    'get sender wallet address': (r) => r.status === 200
+  })
+  //TODO const data = JSON.parse(response.body).data
+  console.log('parsing sender')
+  const senderWalletData = JSON.parse(responseSender.body)
+  console.log(senderWalletData)
+
+  console.log('getting receiver wallet address bro')
+  const responseReceiver = requestGet(
+    'http://localhost:4000/accounts/asmith',
+    'happy-life-bank-backend'
+  )
+  console.log(
+    'receiver lookup response' + JSON.stringify(responseReceiver, null, 2)
+  )
+  check(responseReceiver, {
+    'get receiver wallet address': (r) => r.status === 200
+  })
+  const receiverWalletData = JSON.parse(responseReceiver.body)
+  console.log(receiverWalletData)
+
+  if (!receiverWalletData || !senderWalletData) {
+    fail(
+      `could not find wallet address: ${receiverWalletData}||${senderWalletData}`
+    )
+  }
+
+  const clientPrivateKeyB64 =
+    'LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tCk1DNENBUUF3QlFZREsyVndCQ0lFSUVxZXptY1BoT0U4Ymt3TitqUXJwcGZSWXpHSWRGVFZXUUdUSEpJS3B6ODgKLS0tLS1FTkQgUFJJVkFURSBLRVktLS0tLQo='
+  const clientPrivateKey = loadBase64Key(clientPrivateKeyB64)
+  const keyId = 'keyid-97a3a431-8ee1-48fc-ac85-70e2f5eba8e5'
+
+  return {
+    data: { receiverWalletData, senderWalletData, clientPrivateKey, keyId }
+  }
+}
+
+// The function that defines VU logic.
+//
+// See https://grafana.com/docs/k6/latest/examples/get-started-with-k6/ to learn more
+// about authoring k6 scripts.
+//
+export default function (data) {
+  const {
+    data: { receiverWalletData, senderWalletData, clientPrivateKey, keyId }
+  } = data
+
+  //console.log(`receiverWalletData : ${JSON.stringify(receiverWalletData, null, 2)}`)
+  //console.log(`senderWalletData : ${JSON.stringify(senderWalletData, null, 2)}`)
+
+  const receiverOpenPaymentsAuthHost = 'http://localhost:4006/'
+  const clientWalletAddress = 'https://happy-life-bank-backend/accounts/pfry'
+
+  // 3. Grant Request Incoming Payment:
+  const rspGrantReqInPay = requestPostWithSignatureHeaders(
+    clientPrivateKey,
+    keyId,
+    receiverOpenPaymentsAuthHost,
+    {
+      access_token: {
+        access: [
+          {
+            type: 'incoming-payment',
+            actions: ['create', 'read', 'list', 'complete']
+          }
+        ]
+      },
+      client: clientWalletAddress
+    },
+    {} // No headers
+  )
+  check(rspGrantReqInPay, {
+    'grant request incoming payment': (r) => r.status === 200
+  })
+  const rspGrantReqInPayData = JSON.parse(rspGrantReqInPay.body)
+  console.log(`grant : ${JSON.stringify(rspGrantReqInPayData, null, 2)}`)
+}
+
+export function handleSummary(data) {
+  const requestsPerSecond = data.metrics.http_reqs.values.rate
+  const iterationsPerSecond = data.metrics.iterations.values.rate
+  const failedRequests = data.metrics.http_req_failed.values.passes
+  const failureRate = data.metrics.http_req_failed.values.rate
+  const requests = data.metrics.http_reqs.values.count
+
+  const summaryText = `
+  **Test Configuration**:
+  - VUs: ${options.vus}
+  - Duration: ${options.duration}
+
+  **Test Metrics**:
+  - Requests/s: ${requestsPerSecond.toFixed(2)}
+  - Iterations/s: ${iterationsPerSecond.toFixed(2)}
+  - Failed Requests: ${failureRate.toFixed(2)}% (${failedRequests} of ${requests})
+    `
+
+  return {
+    // Preserve standard output w/ textSummary
+    stdout: textSummary(data, { enableColors: false }),
+    'k6-test-summary.txt': summaryText // saves to file
+  }
+}

@@ -1,0 +1,12 @@
+### Payment with 3DS data
+POST http://localhost:3000/http-sign
+Content-Type: application/json
+
+{
+  "keyId": "keyid-97a3a431-8ee1-48fc-ac85-70e2f5eba8e5",
+  "base64Key": "LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tCk1DNENBUUF3QlFZREsyVndCQ0lFSUVxZXptY1BoT0U4Ymt3TitqUXJwcGZSWXpHSWRGVFZXUUdUSEpJS3B6ODgKLS0tLS1FTkQgUFJJVkFURSBLRVktLS0tLQo=",
+  "url": "http://localhost:4006/",
+  "method": "POST",
+  "headers": [],
+  "body": "{\"access_token\": {\"access\": [{\"type\": \"incoming-payment\", \"actions\": [\"create\", \"read\", \"list\", \"complete\"]}]},\"client\": \"http://localhost:4000/accounts/pfry\"}"
+}

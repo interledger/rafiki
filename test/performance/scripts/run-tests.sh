@@ -3,12 +3,15 @@
 # Defaults to local environment, system k6
 ENV_NAME="local"
 DOCKER_MODE=false
+OPEN_PAYMENTS_TEST=false
+SCRIPT_NAME=create-outgoing-payments.js
 K6_ARGS=""
 
 # Flags:
-# -e, --environment  : Set the environment (e.g., local, test)
-# -d, --docker       : Use docker to run k6
-# -k, --k6args       : Pass all following arguments to k6 (e.g., --out cloud --vus 10)
+# -e, --environment   : Set the environment (e.g., local, test)
+# -o, --open-payments : Run the open payments test suite
+# -d, --docker        : Use docker to run k6
+# -k, --k6args        : Pass all following arguments to k6 (e.g., --out cloud --vus 10)
 
 # parse cli args
 while [[ $# -gt 0 ]]; do
@@ -25,6 +28,10 @@ while [[ $# -gt 0 ]]; do
     shift
     K6_ARGS="$@"
     break
+    ;;
+  -o | --open-payments)
+    OPEN_PAYMENTS_TEST=true
+    shift
     ;;
   *)
     echo "Unknown argument: $1"
@@ -90,7 +97,12 @@ else
   HAPPY_LIFE_BANK_WALLET_ADDRESS="https://$HLB_BACKEND_HOST:$HLB_OPEN_PAYMENTS_PORT/accounts/pfry"
 fi
 
-# run tests
+# set the correct script:
+if $OPEN_PAYMENTS_TEST; then
+  SCRIPT_NAME=create-open-payments.js
+fi
+
+# run tests:
 if $DOCKER_MODE; then
   docker run --rm --network="$DOCKER_NETWORK" \
     -v ./scripts:/scripts \
@@ -98,9 +110,9 @@ if $DOCKER_MODE; then
     -e CLOUD_NINE_GQL_ENDPOINT=$CLOUD_NINE_GQL_ENDPOINT \
     -e CLOUD_NINE_WALLET_ADDRESS=$CLOUD_NINE_WALLET_ADDRESS \
     -e HAPPY_LIFE_BANK_WALLET_ADDRESS=$HAPPY_LIFE_BANK_WALLET_ADDRESS \
-    -i grafana/k6 run /scripts/create-outgoing-payments.js $K6_ARGS
+    -i grafana/k6 run "/scripts/$SCRIPT_NAME" $K6_ARGS
 else
-  k6 run ./scripts/create-outgoing-payments.js \
+  k6 run "./scripts/$SCRIPT_NAME" \
     -e CLOUD_NINE_GQL_ENDPOINT=$CLOUD_NINE_GQL_ENDPOINT \
     -e CLOUD_NINE_WALLET_ADDRESS=$CLOUD_NINE_WALLET_ADDRESS \
     -e HAPPY_LIFE_BANK_WALLET_ADDRESS=$HAPPY_LIFE_BANK_WALLET_ADDRESS $K6_ARGS
