@@ -114,6 +114,20 @@ export default defineConfig({
           ]
         },
         {
+          label: 'Deploy Rafiki',
+          collapsed: true,
+          items: [
+            {
+              label: 'Docker Compose',
+              link: '/integration/deployment/docker-compose'
+            },
+            {
+              label: 'Helm and Kubernetes',
+              link: '/integration/deployment/helm-k8s'
+            }
+          ]
+        },
+        {
           label: 'Integration',
           collapsed: true,
           items: [
@@ -170,6 +184,24 @@ export default defineConfig({
               ]
             },
             {
+              label: 'Services',
+              collapsed: true,
+              items: [
+                {
+                  label: 'Auth service',
+                  link: '/integration/deployment/services/auth-service'
+                },
+                {
+                  label: 'Backend service',
+                  link: '/integration/deployment/services/backend-service'
+                },
+                {
+                  label: 'Frontend service',
+                  link: '/integration/deployment/services/frontend-service'
+                }
+              ]
+            },
+            {
               label: 'Test locally',
               collapsed: true,
               items: [
@@ -184,38 +216,6 @@ export default defineConfig({
                 {
                   label: 'Test network',
                   link: '/integration/playground/testnet'
-                }
-              ]
-            },
-            {
-              label: 'Deployment',
-              collapsed: true,
-              items: [
-                {
-                  label: 'Services',
-                  collapsed: true,
-                  items: [
-                    {
-                      label: 'Auth service',
-                      link: '/integration/deployment/services/auth-service'
-                    },
-                    {
-                      label: 'Backend service',
-                      link: '/integration/deployment/services/backend-service'
-                    },
-                    {
-                      label: 'Frontend service',
-                      link: '/integration/deployment/services/frontend-service'
-                    }
-                  ]
-                },
-                {
-                  label: 'Docker Compose',
-                  link: '/integration/deployment/docker-compose'
-                },
-                {
-                  label: 'Helm and Kubernetes',
-                  link: '/integration/deployment/helm-k8s'
                 }
               ]
             }
@@ -254,6 +254,30 @@ export default defineConfig({
           ]
         },
         {
+          label: 'APIs',
+          collapsed: true,
+          items: [
+            {
+              label: 'GraphQL Admin APIs',
+              link: '/apis/graphql/admin-api-overview'
+            },
+            {
+              label: 'Backend Admin API',
+              collapsed: true,
+              autogenerate: {
+                directory: 'apis/graphql/backend'
+              }
+            },
+            {
+              label: 'Auth Admin API',
+              collapsed: true,
+              autogenerate: {
+                directory: 'apis/graphql/auth'
+              }
+            }
+          ]
+        },
+        {
           label: 'Resources',
           collapsed: true,
           items: [
@@ -280,30 +304,6 @@ export default defineConfig({
             {
               label: 'Get involved',
               link: '/resources/get-involved'
-            }
-          ]
-        },
-        {
-          label: 'APIs',
-          collapsed: true,
-          items: [
-            {
-              label: 'GraphQL Admin APIs',
-              link: '/apis/graphql/admin-api-overview'
-            },
-            {
-              label: 'Backend Admin API',
-              collapsed: true,
-              autogenerate: {
-                directory: 'apis/graphql/backend'
-              }
-            },
-            {
-              label: 'Auth Admin API',
-              collapsed: true,
-              autogenerate: {
-                directory: 'apis/graphql/auth'
-              }
             }
           ]
         }

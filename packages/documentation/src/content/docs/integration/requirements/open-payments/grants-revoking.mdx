@@ -3,7 +3,7 @@ title: Viewing and revoking grants
 ---
 
 import { Badge, Tabs, TabItem } from '@astrojs/starlight/components'
-import { Mermaid, CodeBlock, LinkOut } from '@interledger/docs-design-system'
+import { CodeBlock, LinkOut } from '@interledger/docs-design-system'
 
 Grants are the mechanism in Open Payments by which your account holders give permission to a client application to access their accounts and send payments on their behalf. Providing your account holders the ability to view and revoke grants is not required to implement and operate Rafiki, but allowing them to do so is critical to providing an optimal user experience.
 
@@ -69,7 +69,7 @@ query Grants(
 ```
 </TabItem>
 
-<TabItem label='Arguments'>
+<TabItem label="Variables">
 ```json
 {
   "input": {
@@ -88,6 +88,7 @@ query Grants(
 }
 }
 ```
+For more information about this query's variables, see [`grants`](/apis/graphql/auth/queries/#grants).
 </TabItem>
 
 <TabItem label='Response'>
@@ -161,7 +162,7 @@ mutation revokeGrant($input: RevokeGrantInput!) {
 ```
 </TabItem>
 
-<TabItem label='Arguments'>
+<TabItem label="Variables">
 ```json
 {
     "input": {
@@ -169,6 +170,7 @@ mutation revokeGrant($input: RevokeGrantInput!) {
     }
 }
 ```
+For more information about this mutation's input object, see [`RevokeGrantInput`](/apis/graphql/auth/inputobjects/#revokegrantinput).
 </TabItem>
 
 <TabItem label='Response'>

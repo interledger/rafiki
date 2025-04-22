@@ -47,7 +47,7 @@ export function mockQuote(
       value:
         'receiveAmountValue' in args
           ? args.receiveAmountValue
-          : BigInt(Math.ceil(Number(args.debitAmountValue) * exchangeRate))
+          : BigInt(Math.floor(Number(args.debitAmountValue) * exchangeRate))
     },
     estimatedExchangeRate: exchangeRate,
     ...overrides
