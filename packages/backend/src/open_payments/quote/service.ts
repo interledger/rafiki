@@ -1,7 +1,7 @@
 import { TransactionOrKnex } from 'objection'
 
 import { BaseService } from '../../shared/baseService'
-import { QuoteError, isQuoteError } from './errors'
+import { QuoteError, QuoteErrorType, isQuoteError } from './errors'
 import { Quote } from './model'
 import { Amount } from '../amount'
 import { ReceiverService } from '../receiver/service'
@@ -112,18 +112,18 @@ async function createQuote(
   })
   if (options.debitAmount && options.receiveAmount) {
     stopTimer()
-    return QuoteError.InvalidAmount
+    return new QuoteError(QuoteErrorType.InvalidAmount)
   }
   const walletAddress = await deps.walletAddressService.get(
     options.walletAddressId
   )
   if (!walletAddress) {
     stopTimer()
-    return QuoteError.UnknownWalletAddress
+    return new QuoteError(QuoteErrorType.UnknownWalletAddress)
   }
   if (!walletAddress.isActive) {
     stopTimer()
-    return QuoteError.InactiveWalletAddress
+    return new QuoteError(QuoteErrorType.InactiveWalletAddress)
   }
   if (options.debitAmount) {
     if (
@@ -132,13 +132,13 @@ async function createQuote(
       options.debitAmount.assetScale !== walletAddress.asset.scale
     ) {
       stopTimer()
-      return QuoteError.InvalidAmount
+      return new QuoteError(QuoteErrorType.InvalidAmount)
     }
   }
   if (options.receiveAmount) {
     if (options.receiveAmount.value <= BigInt(0)) {
       stopTimer()
-      return QuoteError.InvalidAmount
+      return new QuoteError(QuoteErrorType.InvalidAmount)
     }
   }
 
@@ -264,7 +264,10 @@ async function createQuote(
       err instanceof PaymentMethodHandlerError &&
       err.code === PaymentMethodHandlerErrorCode.QuoteNonPositiveReceiveAmount
     ) {
-      return QuoteError.NonPositiveReceiveAmount
+      return new QuoteError(
+        QuoteErrorType.NonPositiveReceiveAmount,
+        err.details
+      )
     }
 
     deps.logger.error({ err }, 'error creating a quote')
@@ -284,20 +287,20 @@ export async function resolveReceiver(
       { receiver: options.receiver },
       'Could not create quote. Receiver not found'
     )
-    throw QuoteError.InvalidReceiver
+    throw new QuoteError(QuoteErrorType.InvalidReceiver)
   }
   if (options.receiveAmount) {
     if (
       options.receiveAmount.assetScale !== receiver.assetScale ||
       options.receiveAmount.assetCode !== receiver.assetCode
     ) {
-      throw QuoteError.InvalidAmount
+      throw new QuoteError(QuoteErrorType.InvalidAmount)
     }
     if (receiver.incomingAmount && receiver.receivedAmount) {
       const receivingPaymentValue =
         receiver.incomingAmount.value - receiver.receivedAmount.value
       if (receivingPaymentValue < options.receiveAmount.value) {
-        throw QuoteError.InvalidAmount
+        throw new QuoteError(QuoteErrorType.InvalidAmount)
       }
     }
   } else if (!options.debitAmount && !receiver.incomingAmount) {
@@ -308,7 +311,7 @@ export async function resolveReceiver(
       },
       'Could not create quote. debitAmount or incomingAmount required.'
     )
-    throw QuoteError.InvalidReceiver
+    throw new QuoteError(QuoteErrorType.InvalidReceiver)
   }
   return receiver
 }
@@ -339,11 +342,11 @@ function calculateFixedSendQuoteAmounts(
       { fees, estimatedExchangeRate, receiveAmountValue },
       'Negative receive amount when calculating quote amount'
     )
-    throw QuoteError.NonPositiveReceiveAmount
+    throw new QuoteError(QuoteErrorType.NonPositiveReceiveAmount)
   }
 
   if (receiveAmountValue > maxReceiveAmountValue) {
-    throw QuoteError.InvalidAmount
+    throw new QuoteError(QuoteErrorType.InvalidAmount)
   }
 
   deps.logger.debug(
@@ -401,7 +404,7 @@ function calculateFixedDeliveryQuoteAmounts(
       { fees, debitAmountValue },
       'Received negative debitAmount receive amount when calculating quote amount'
     )
-    throw QuoteError.InvalidAmount
+    throw new QuoteError(QuoteErrorType.InvalidAmount)
   }
 
   deps.logger.debug(

@@ -158,7 +158,7 @@ async function getQuote(
     // maxSourceAmount that won't be able to fulfill even a single unit of the receiving asset.
     // e.g. if maxSourceAmount is 4 and the high estimated exchange rate is 0.2, 4 * 0.2 = 0.8
     // where 0.8 < 1, meaning the payment for this quote won't be able to deliver a single unit of value,
-    // even with the most favourable exchange rate. We throw here since we don't want any payments
+    // even with the most favorable exchange rate. We throw here since we don't want any payments
     // to be created against this quote. This allows us to fail early.
     const estimatedReceiveAmount =
       Number(ilpQuote.maxSourceAmount) *
@@ -178,7 +178,14 @@ async function getQuote(
       throw new PaymentMethodHandlerError('Received error during ILP quoting', {
         description: errorDescription,
         retryable: false,
-        code: PaymentMethodHandlerErrorCode.QuoteNonPositiveReceiveAmount
+        code: PaymentMethodHandlerErrorCode.QuoteNonPositiveReceiveAmount,
+        details: {
+          minSendAmount: {
+            assetScale: options.walletAddress.asset.scale,
+            assetCode: options.walletAddress.asset.code,
+            value: 1 / ilpQuote.highEstimatedExchangeRate.valueOf()
+          }
+        }
       })
     }
 
