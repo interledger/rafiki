@@ -31,7 +31,7 @@ When an event occurs, the [`backend`](/integration/deployment/services/backend-s
 
 ## Webhook event request body
 
-Each webhook event is sent as a JSON payload with the following structure in the request body. The parameters within the `data` object will vary depending on the event.
+Each webhook event is sent as a JSON payload with the following structure in the request body. The parameters within the `data` object vary depending on the event.
 
 <div class="overflow-table">
 
@@ -44,7 +44,7 @@ Each webhook event is sent as a JSON payload with the following structure in the
 </div>
 
 :::tip[Duplicate events]
-The `id` in the webhook event payload is unique. Your system can use the ID to determine whether the event has been received previously, preventing duplicate event processing.
+The `id` in the webhook event payload is unique. Your system can use the ID to determine whether the event has was previously received, preventing duplicate event processing.
 :::
 
 <details>
@@ -133,7 +133,7 @@ The `id` in the webhook event payload is unique. Your system can use the ID to d
 
 We provide an <LinkOut href="https://github.com/interledger/rafiki/blob/main/packages/backend/src/openapi/specs/webhooks.yaml">OpenAPI specification</LinkOut> for the webhook events fired by Rafiki.
 
-Additionally, the [local playground](/integration/playground/overview) contains example payloads in the <LinkOut href="https://github.com/interledger/rafiki/tree/main/bruno/collections/Rafiki/Sample%20Webhook%20Events">Bruno collection</LinkOut> that can be used to test your webhook service integration.
+Additionally, the [Local Playground](/integration/playground/overview) contains example payloads in the <LinkOut href="https://github.com/interledger/rafiki/tree/main/bruno/collections/Rafiki/Sample%20Webhook%20Events">Bruno collection</LinkOut> you can use to test your webhook service integration.
 
 ## Verify webhook signatures
 
@@ -208,15 +208,13 @@ If requests to credit/debit user accounts are lengthy processes, we recommend us
 
 ### Error handling
 
-If a non-200 status is returned, indicating an error, or the request times out, Rafiki will retry the webhook request at increasing intervals until a `200` status is returned. You can configure
-
-The first retry is after 10 seconds. Additional retries occur after 20 more seconds, then after 30 more seconds, and so on.
+If a non-200 status is returned, indicating an error, or the request times out, Rafiki retries the webhook request at increasing intervals until a `200` status is returned. The first retry occurs after 10 seconds. Additional retries occur after 20 more seconds, then after 30 more seconds, and so on.
 
 <div class="overflow-table">
 
 | Variable            | Type      | Description                                                                                                     |
 | ------------------- | --------- | --------------------------------------------------------------------------------------------------------------- |
-| `WEBHOOK_TIMEOUT`   | `backend` | The amount of time, in milliseconds, after which a webhook request will time out                                |
+| `WEBHOOK_TIMEOUT`   | `backend` | The amount of time, in milliseconds, after which a webhook request times out                                    |
 | `WEBHOOK_MAX_RETRY` | `backend` | The maximum number of retries for a webhook event when a non-200 status is returned or if the request timed out |
 
 </div>
@@ -229,7 +227,7 @@ The first retry is after 10 seconds. Additional retries occur after 20 more seco
 
 | Event type                                                  | Description                                                                       |
 | ----------------------------------------------------------- | --------------------------------------------------------------------------------- |
-| [`incoming_payment.created`](#incoming-payment-created)     | An incoming payment has been created                                              |
+| [`incoming_payment.created`](#incoming-payment-created)     | An incoming payment was created                                                   |
 | [`incoming_payment.completed`](#incoming-payment-completed) | An incoming payment is complete and will not accept any additional incoming funds |
 | [`incoming_payment.expired`](#incoming-payment-expired)     | An incoming payment expired and will not accept any additional incoming funds     |
 
@@ -254,7 +252,7 @@ The first retry is after 10 seconds. Additional retries occur after 20 more seco
 
 The `incoming_payment.created` event indicates an incoming payment was created. At this point, the incoming payment has not received any funds.
 
-The incoming payment will either complete or expire.
+The incoming payment either completes or expires.
 
 #### Incoming payment completed
 
@@ -271,7 +269,8 @@ of $10 was completed.
       participant ASE as Account servicing entity
 
       R->>ASE: Fires incoming_payment.completed event to webhook endpoint,<br/>receivedAmount: $10
-      ASE->>R: Backend Admin API call: CreateIncomingPaymentWithdrawal
+      ASE->>R: Backend Admin API call: createIncomingPaymentWithdrawal
+      R-->>ASE: success: true
       ASE->>ASE: Credit recipient's account with $10
 
 `}
@@ -288,9 +287,11 @@ of $10 was completed.
       participant ASE as Account servicing entity
 
       R->>ASE: Fires incoming_payment.completed event to webhook endpoint,<br/>receivedAmount: $10
-      ASE->>R: Backend Admin API call: CreateIncomingPaymentWithdrawal
+      ASE->>R: Backend Admin API call: createIncomingPaymentWithdrawal
+      R-->>ASE: success: true
       ASE->>ASE: Credit recipient's account with $10
-      ASE->>R: Backend Admin API call: PostLiquidityWithdrawal
+      ASE->>R: Backend Admin API call: postLiquidityWithdrawal
+      R-->>ASE: success: true
       R->>R: Two-phase transfer completed
 
 `}
@@ -312,7 +313,8 @@ The `incoming_payment.completed` event indicates the payment completed either au
       participant ASE as Account servicing entity
 
       R->>ASE: Fires incoming_payment.expired event to webhook endpoint,<br/>receivedAmount: $2.55
-      ASE->>R: Backend Admin API call: CreateIncomingPaymentWithdrawal
+      ASE->>R: Backend Admin API call: createIncomingPaymentWithdrawal
+      R-->>ASE: success: true
       ASE->>ASE: Credit recipient's account with $2.55
 
 `}
@@ -355,9 +357,11 @@ An outgoing payment for \$12 was created.
       ASE->>ASE: Checks that sender's account has sufficient funds
       alt Account has sufficient funds
         ASE->>ASE: Put hold of $12 on sender's account
-        ASE->>R: Backend Admin API call: DepositOutgoingPaymentLiquidity
+        ASE->>R: Backend Admin API call: depositOutgoingPaymentLiquidity
+        R-->>ASE: success: true
       else Account has insufficient funds
-        ASE->>R: Backend Admin API call: CancelOutgoingPayment,<br/>reason: Insufficient funds
+        ASE->>R: Backend Admin API call: cancelOutgoingPayment,<br/>Reason: insufficient funds
+        R-->>ASE: success: true
       end
 
 `}
@@ -384,7 +388,8 @@ for \$12 is complete. \$11.50 was sent. You choose to keep \$0.50 as a service f
       participant ASE as Account servicing entity
 
       R->>ASE: Fires outgoing_payment.completed event to webhook endpoint,<br/>debitAmount: $12, sentAmount: $11.50
-      ASE->>R: Backend Admin API call: CreateOutgoingPaymentWithdrawal
+      ASE->>R: Backend Admin API call: createOutgoingPaymentWithdrawal
+      R-->>ASE: success: true
       ASE->>ASE: Remove hold and deduct $12 from sender's account,<br/>credit your account with $0.50
 
 `}
@@ -398,9 +403,11 @@ for \$12 is complete. \$11.50 was sent. You choose to keep \$0.50 as a service f
       participant ASE as Account servicing entity
 
       R->>ASE: Fires outgoing_payment.completed event to webhook endpoint,<br/>debitAmount: $12, sentAmount: $11.50
-      ASE->>R: Backend Admin API call: CreateOutgoingPaymentWithdrawal
+      ASE->>R: Backend Admin API call: createOutgoingPaymentWithdrawal
+      R-->>ASE: success: true
       ASE->>ASE: Remove hold and deduct $12 from sender's account,<br/>credit your account with $0.50
-      ASE->>R: Backend Admin API call: PostLiquidityWithdrawal
+      ASE->>R: Backend Admin API call: postLiquidityWithdrawal
+      R-->>ASE: success: true
       R->>R: Two-phase transfer complete
 
 `}
@@ -424,7 +431,8 @@ An outgoing payment for \$12 failed. \$8 was sent successfully.
       participant ASE as Account servicing entity
 
       R->>ASE: Fires outgoing_payment.failed event to webhook endpoint,<br/>debitAmount: $12, sentAmount: $8
-      ASE->>R: Backend Admin API call: CreateOutgoingPaymentWithdrawal
+      ASE->>R: Backend Admin API call: createOutgoingPaymentWithdrawal
+      R-->>ASE: success: true
       ASE->>ASE: Remove hold and deduct $8 from the sender's account
 
 `}
@@ -457,7 +465,8 @@ The wallet address, `https://wallet.example.com/carla_garcia` was requested but 
       participant ASE as Account servicing entity
 
       R->>ASE: Fires wallet_address.not_found event to webhook endpoint,<br/>wallet address: https://wallet.example.com/carla_garcia
-      ASE->>R: Backend Admin API call: CreateWalletAddress,<br/>url: https://wallet.example.com/carla_garcia,<br/>public name: Carla Eva Garcia
+      ASE->>R: Backend Admin API call: createWalletAddress,<br/>url: https://wallet.example.com/carla_garcia,<br/>public name: Carla Eva Garcia
+      R-->>ASE: success: true
 
 `}
 />
@@ -488,7 +497,8 @@ A wallet address received a Web Monetization payment of \$0.33
       participant ASE as Account servicing entity
 
       R->>ASE: Fires wallet_address.web_monetization event to webhook endpoint,<br/>receivedAmount: $0.33
-      ASE->>R: Backend Admin API call: CreateWalletAddressWithdrawal
+      ASE->>R: Backend Admin API call: createWalletAddressWithdrawal
+      R-->>ASE: success: true
       ASE->>ASE: Credit recipient's account with $0.33
 
 `}
@@ -520,7 +530,8 @@ Your asset liquidity for USD (asset scale: 2) drops below \$100.00.
       participant ASE as Account servicing entity
 
       R->>ASE: Fires asset.liquidity_low event to webhook endpoint,<br/>asset: USD (scale: 2, id: "abc")
-      ASE->>R: Backend Admin API call: DepositAssetLiquidity
+      ASE->>R: Backend Admin API call: depositAssetLiquidity
+      R-->>ASE: success: true
 
 `}
 />
@@ -551,7 +562,8 @@ The liquidity for your peer, Happy Life Bank, drops below \$100.00 USD.
       participant ASE as Account servicing entity
 
       R->>ASE: Fires peer.liquidity_low event to webhook endpoint,<br/>peer: Happy Life Bank (asset: "USD", scale: 2, id: "abc")
-      ASE->>R: Backend Admin API call: DepositPeerLiquidity
+      ASE->>R: Backend Admin API call: depositPeerLiquidity
+      R-->>ASE: success: true
 
 `}
 />

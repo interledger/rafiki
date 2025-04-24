@@ -308,7 +308,7 @@ describe('OutgoingPaymentService', (): void => {
       walletAddressId: receiverWalletAddress.id,
       tenantId: Config.operatorTenantId
     })
-    receiver = incomingPayment.getUrl(receiverWalletAddress)
+    receiver = incomingPayment.getUrl(config.openPaymentsUrl)
 
     amtDelivered = BigInt(0)
 
@@ -424,7 +424,6 @@ describe('OutgoingPaymentService', (): void => {
 
     describe('filters', () => {
       let otherSenderWalletAddress: WalletAddress
-      let otherReceiverWalletAddress: WalletAddress
       let otherReceiver: string
       let outgoingPayment: OutgoingPayment
       let otherOutgoingPayment: OutgoingPayment
@@ -433,15 +432,11 @@ describe('OutgoingPaymentService', (): void => {
           tenantId,
           assetId
         })
-        otherReceiverWalletAddress = await createWalletAddress(deps, {
-          tenantId,
-          assetId
-        })
         const incomingPayment = await createIncomingPayment(deps, {
           walletAddressId: receiverWalletAddress.id,
           tenantId: Config.operatorTenantId
         })
-        otherReceiver = incomingPayment.getUrl(otherReceiverWalletAddress)
+        otherReceiver = incomingPayment.getUrl(config.openPaymentsUrl)
 
         outgoingPayment = await createOutgoingPayment(deps, {
           tenantId,
@@ -653,6 +648,7 @@ describe('OutgoingPaymentService', (): void => {
     test('create from incoming payment', async () => {
       const walletAddressId = receiverWalletAddress.id
       const incomingPaymentUrl = incomingPayment.toOpenPaymentsTypeWithMethods(
+        config.openPaymentsUrl,
         receiverWalletAddress
       ).id
       const debitAmount = {
@@ -710,6 +706,7 @@ describe('OutgoingPaymentService', (): void => {
             walletAddressId: receiverWalletAddress.id,
             debitAmount,
             incomingPayment: incomingPayment.toOpenPaymentsTypeWithMethods(
+              config.openPaymentsUrl,
               receiverWalletAddress
             ).id,
             grant
@@ -756,6 +753,7 @@ describe('OutgoingPaymentService', (): void => {
             walletAddressId: receiverWalletAddress.id,
             debitAmount,
             incomingPayment: incomingPayment.toOpenPaymentsTypeWithMethods(
+              config.openPaymentsUrl,
               receiverWalletAddress
             ).id,
             grant
@@ -776,6 +774,7 @@ describe('OutgoingPaymentService', (): void => {
     test('fails to create quote from incoming payment', async () => {
       const walletAddressId = receiverWalletAddress.id
       const incomingPaymentUrl = incomingPayment.toOpenPaymentsTypeWithMethods(
+        config.openPaymentsUrl,
         receiverWalletAddress
       ).id
       const debitAmount = {
@@ -1012,7 +1011,7 @@ describe('OutgoingPaymentService', (): void => {
           method: 'ilp'
         })
         await quote.$query(knex).patch({
-          expiresAt: new Date()
+          expiresAt: new Date(Date.now() - 1000)
         })
         await expect(
           outgoingPaymentService.create({
@@ -1451,7 +1450,7 @@ describe('OutgoingPaymentService', (): void => {
 
       const createdPayment = await setup({
         tenantId,
-        receiver: incomingPayment.getUrl(incomingPayment.walletAddress),
+        receiver: incomingPayment.getUrl(config.openPaymentsUrl),
         receiveAmount,
         method: 'ilp'
       })
@@ -1535,7 +1534,7 @@ describe('OutgoingPaymentService', (): void => {
 
       const createdPayment = await setup({
         tenantId,
-        receiver: incomingPayment.getUrl(incomingPayment.walletAddress),
+        receiver: incomingPayment.getUrl(config.openPaymentsUrl),
         receiveAmount,
         method: 'ilp'
       })
@@ -1626,7 +1625,7 @@ describe('OutgoingPaymentService', (): void => {
 
       const createdPayment = await setup({
         tenantId,
-        receiver: incomingPayment.getUrl(incomingPayment.walletAddress),
+        receiver: incomingPayment.getUrl(config.openPaymentsUrl),
         receiveAmount,
         method: 'ilp'
       })
@@ -1903,6 +1902,26 @@ describe('OutgoingPaymentService', (): void => {
         createdPayment.id,
         OutgoingPaymentState.Failed,
         LifecycleError.DestinationAssetConflict
+      )
+    })
+
+    test('QuoteExpired (current time is greater than the payment quote expiration time)', async (): Promise<void> => {
+      const createdPayment = await setup({
+        tenantId,
+        receiver,
+        debitAmount,
+        method: 'ilp'
+      })
+
+      // Test case for `expiresAt` in the past (greater than current time)
+      await createdPayment.quote.$query(knex).patch({
+        expiresAt: new Date(Date.now() - 60 * 60 * 1000) // 1 hour ago
+      })
+
+      await processNext(
+        createdPayment.id,
+        OutgoingPaymentState.Failed,
+        LifecycleError.QuoteExpired
       )
     })
   })

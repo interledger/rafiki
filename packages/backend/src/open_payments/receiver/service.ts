@@ -15,6 +15,7 @@ import {
 } from './errors'
 import { isRemoteIncomingPaymentError } from '../payment/incoming_remote/errors'
 import { TelemetryService } from '../../telemetry/service'
+import { IAppConfig } from '../../config/app'
 
 interface CreateReceiverArgs {
   walletAddressUrl: string
@@ -31,6 +32,7 @@ export interface ReceiverService {
 }
 
 export interface ServiceDependencies extends BaseService {
+  config: IAppConfig
   streamCredentialsService: StreamCredentialsService
   incomingPaymentService: IncomingPaymentService
   walletAddressService: WalletAddressService
@@ -76,7 +78,13 @@ async function createReceiver(
   }
 
   try {
-    return new Receiver(incomingPaymentOrError, isLocal)
+    const receiver = new Receiver(incomingPaymentOrError, isLocal)
+
+    if (!receiver.isActive()) {
+      throw new Error('Receiver is not active')
+    }
+
+    return receiver
   } catch (error) {
     const errorMessage = 'Could not create receiver from incoming payment'
     deps.logger.error(
@@ -131,6 +139,7 @@ async function createLocalIncomingPayment(
   }
 
   return incomingPaymentOrError.toOpenPaymentsTypeWithMethods(
+    deps.config.openPaymentsUrl,
     walletAddress,
     streamCredentials
   )
@@ -206,15 +215,8 @@ export async function getLocalIncomingPayment(
 
   const streamCredentials = deps.streamCredentialsService.get(incomingPayment)
 
-  if (!streamCredentials) {
-    const errorMessage =
-      'Could not get stream credentials for local incoming payment'
-    deps.logger.error({ incomingPaymentId: incomingPayment.id }, errorMessage)
-
-    throw new Error(errorMessage)
-  }
-
   return incomingPayment.toOpenPaymentsTypeWithMethods(
+    deps.config.openPaymentsUrl,
     incomingPayment.walletAddress,
     streamCredentials
   )

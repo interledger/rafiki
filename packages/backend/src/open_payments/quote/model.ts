@@ -23,7 +23,7 @@ export class Quote extends WalletAddressSubresource {
 
   public estimatedExchangeRate!: number
   public feeId?: string
-  public fee?: Fee
+  public fee?: Fee | null
 
   public debitAmountMinusFees?: bigint
 
@@ -65,9 +65,9 @@ export class Quote extends WalletAddressSubresource {
 
   private debitAmountValue!: bigint
 
-  public getUrl(walletAddress: WalletAddress): string {
-    const url = new URL(walletAddress.address)
-    return `${url.origin}/${this.tenantId}${Quote.urlPath}/${this.id}`
+  public getUrl(resourceServerUrl: string): string {
+    resourceServerUrl = resourceServerUrl.replace(/\/+$/, '')
+    return `${resourceServerUrl}/${this.tenantId}${Quote.urlPath}/${this.id}`
   }
 
   public get debitAmount(): Amount {
@@ -131,9 +131,12 @@ export class Quote extends WalletAddressSubresource {
     }
   }
 
-  public toOpenPaymentsType(walletAddress: WalletAddress): OpenPaymentsQuote {
+  public toOpenPaymentsType(
+    resourceServerUrl: string,
+    walletAddress: WalletAddress
+  ): OpenPaymentsQuote {
     return {
-      id: this.getUrl(walletAddress),
+      id: this.getUrl(resourceServerUrl),
       walletAddress: walletAddress.address,
       receiveAmount: serializeAmount(this.receiveAmount),
       debitAmount: serializeAmount(this.debitAmount),

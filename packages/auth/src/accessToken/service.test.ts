@@ -239,14 +239,14 @@ describe('Access Token Service', (): void => {
       ).resolves.toBeUndefined()
     })
 
-    test('Cannot introspect token with incorrect access', async (): Promise<void> => {
+    test('Can introspect token with incorrect access, but returns empty access field', async (): Promise<void> => {
       const access: AccessItem = {
         ...outgoingPaymentAccess,
         actions: ['list']
       }
       await expect(
         accessTokenService.introspect(accessToken.value, [access])
-      ).resolves.toBeUndefined()
+      ).resolves.toMatchObject({ grant, access: [] })
     })
   })
 

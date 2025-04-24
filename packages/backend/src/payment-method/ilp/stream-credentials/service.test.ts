@@ -59,14 +59,19 @@ describe('Stream Credentials Service', (): void => {
       ${IncomingPaymentState.Completed}
       ${IncomingPaymentState.Expired}
     `(
-      `returns undefined for $state incoming payment`,
+      `returns stream credentials for $state incoming payment`,
       async ({ state }): Promise<void> => {
         await incomingPayment.$query(knex).patch({
           state,
           expiresAt:
             state === IncomingPaymentState.Expired ? new Date() : undefined
         })
-        expect(streamCredentialsService.get(incomingPayment)).toBeUndefined()
+        expect(streamCredentialsService.get(incomingPayment)).toMatchObject({
+          ilpAddress: expect.stringMatching(
+            /^test\.rafiki\.[a-zA-Z0-9_-]{95}$/
+          ),
+          sharedSecret: expect.any(Buffer)
+        })
       }
     )
   })

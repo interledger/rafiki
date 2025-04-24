@@ -31,7 +31,7 @@ export default defineConfig({
       description:
         'Rafiki is open source software that allows an Account Servicing Entity to enable Interledger functionality on its users’ accounts.',
       customCss: [
-        './node_modules/@interledger/docs-design-system/src/styles/orange-theme.css',
+        './node_modules/@interledger/docs-design-system/src/styles/teal-theme.css',
         './node_modules/@interledger/docs-design-system/src/styles/ilf-docs.css',
         './src/styles/rafiki.css'
       ],
@@ -66,10 +66,13 @@ export default defineConfig({
       logo: {
         src: './public/img/icon.svg'
       },
-      social: {
-        github:
-          'https://github.com/interledger/rafiki/tree/main/packages/documentation'
-      },
+      social: [
+        {
+          icon: 'github',
+          label: 'GitHub',
+          href: 'https://github.com/interledger/rafiki/tree/main'
+        }
+      ],
       sidebar: [
         {
           label: 'Overview',
@@ -83,6 +86,10 @@ export default defineConfig({
               collapsed: true,
               items: [
                 {
+                  label: 'Account servicing entity',
+                  link: '/overview/concepts/account-servicing-entity'
+                },
+                {
                   label: 'Accounting',
                   link: '/overview/concepts/accounting'
                 },
@@ -95,10 +102,28 @@ export default defineConfig({
                   link: '/overview/concepts/open-payments'
                 },
                 {
+                  label: 'Payment pointers and wallet addresses',
+                  link: '/overview/concepts/payment-pointers'
+                },
+                {
                   label: 'Telemetry',
                   link: '/overview/concepts/telemetry'
                 }
               ]
+            }
+          ]
+        },
+        {
+          label: 'Deploy Rafiki',
+          collapsed: true,
+          items: [
+            {
+              label: 'Docker Compose',
+              link: '/integration/deployment/docker-compose'
+            },
+            {
+              label: 'Helm and Kubernetes',
+              link: '/integration/deployment/helm-k8s'
             }
           ]
         },
@@ -139,8 +164,40 @@ export default defineConfig({
                   link: '/integration/requirements/sending-fees'
                 },
                 {
-                  label: 'Identity provider (IdP)',
-                  link: '/integration/requirements/idp'
+                  label: 'Open Payments',
+                  collapsed: true,
+                  items: [
+                    {
+                      label: 'Identity provider (IdP)',
+                      link: '/integration/requirements/open-payments/idp'
+                    },
+                    {
+                      label: 'Managing wallet address keys',
+                      link: '/integration/requirements/open-payments/wallet-keys'
+                    },
+                    {
+                      label: 'Viewing and revoking grants',
+                      link: '/integration/requirements/open-payments/grants-revoking'
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              label: 'Services',
+              collapsed: true,
+              items: [
+                {
+                  label: 'Auth service',
+                  link: '/integration/deployment/services/auth-service'
+                },
+                {
+                  label: 'Backend service',
+                  link: '/integration/deployment/services/backend-service'
+                },
+                {
+                  label: 'Frontend service',
+                  link: '/integration/deployment/services/frontend-service'
                 }
               ]
             },
@@ -161,42 +218,6 @@ export default defineConfig({
                   link: '/integration/playground/testnet'
                 }
               ]
-            },
-            {
-              label: 'Deployment',
-              collapsed: true,
-              items: [
-                {
-                  label: 'Services',
-                  collapsed: true,
-                  items: [
-                    {
-                      label: 'Auth service',
-                      link: '/integration/deployment/services/auth-service'
-                    },
-                    {
-                      label: 'Backend service',
-                      link: '/integration/deployment/services/backend-service'
-                    },
-                    {
-                      label: 'Frontend service',
-                      link: '/integration/deployment/services/frontend-service'
-                    },
-                    {
-                      label: 'Token introspection',
-                      link: '/integration/deployment/services/token-introspection'
-                    }
-                  ]
-                },
-                {
-                  label: 'Docker Compose',
-                  link: '/integration/deployment/docker-compose'
-                },
-                {
-                  label: 'Helm and Kubernetes',
-                  link: '/integration/deployment/helm-k8s'
-                }
-              ]
             }
           ]
         },
@@ -210,7 +231,49 @@ export default defineConfig({
             },
             {
               label: 'Manage liquidity',
-              link: '/admin/manage-liquidity'
+              collapsed: true,
+              items: [
+                {
+                  label: 'Asset liquidity',
+                  link: '/admin/liquidity/asset-liquidity'
+                },
+                {
+                  label: 'Peer liquidity',
+                  link: '/admin/liquidity/peer-liquidity'
+                },
+                {
+                  label: 'Payment liquidity',
+                  link: '/admin/liquidity/payment-liquidity'
+                },
+                {
+                  label: 'Two-phase transfers',
+                  link: '/admin/liquidity/two-phase-transfers'
+                }
+              ]
+            }
+          ]
+        },
+        {
+          label: 'APIs',
+          collapsed: true,
+          items: [
+            {
+              label: 'GraphQL Admin APIs',
+              link: '/apis/graphql/admin-api-overview'
+            },
+            {
+              label: 'Backend Admin API',
+              collapsed: true,
+              autogenerate: {
+                directory: 'apis/graphql/backend'
+              }
+            },
+            {
+              label: 'Auth Admin API',
+              collapsed: true,
+              autogenerate: {
+                directory: 'apis/graphql/auth'
+              }
             }
           ]
         },
@@ -241,30 +304,6 @@ export default defineConfig({
             {
               label: 'Get involved',
               link: '/resources/get-involved'
-            }
-          ]
-        },
-        {
-          label: 'APIs',
-          collapsed: true,
-          items: [
-            {
-              label: 'GraphQL Admin APIs',
-              link: '/apis/graphql/admin-api-overview'
-            },
-            {
-              label: 'Backend Admin API',
-              collapsed: true,
-              autogenerate: {
-                directory: 'apis/graphql/backend'
-              }
-            },
-            {
-              label: 'Auth Admin API',
-              collapsed: true,
-              autogenerate: {
-                directory: 'apis/graphql/auth'
-              }
             }
           ]
         }

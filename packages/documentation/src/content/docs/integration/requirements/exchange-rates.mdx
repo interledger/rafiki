@@ -3,13 +3,13 @@ title: Exchange rates
 ---
 
 import { Badge } from '@astrojs/starlight/components'
-import { Mermaid, CodeBlock, LinkOut } from '@interledger/docs-design-system'
+import { CodeBlock, LinkOut } from '@interledger/docs-design-system'
 
 If you plan to support cross-currency transactions, you must specify from where your Rafiki instance will fetch current exchange rates.
 
-Every Interledger payment is preceded by a rate probe. This probe provides a quote that estimates the full cost of transferring value over the network. For a rate probe involving a cross-currency transaction to be successful, Rafiki needs to know the exchange rates for each currency that makes up the transaction.
+A rate probe precedes every Interledger payment. The probe provides a quote that estimates the full cost of transferring value over the network. For a rate probe involving a cross-currency transaction to be successful, Rafiki needs to know the exchange rates for each currency that makes up the transaction.
 
-Often, it's the receiving ASE that provides the exchange rates for each ILP packet. For example, let's say you and your peer transact in USD. Your peer also supports MXN. If a USD payment from from your side was addressed to a wallet address set up for MXN on your peer's side, then your peer would provide the USD to MXN exchange rate.
+Often, it's the receiving ASE that provides the exchange rates for each ILP packet. For example, say you and your peer transact in USD. Your peer also supports MXN. If a USD payment from your side is addressed to a wallet address set up for MXN on your peer's side, then your peer would provide the USD to MXN exchange rate.
 
 ## Specify your exchange rates endpoint
 

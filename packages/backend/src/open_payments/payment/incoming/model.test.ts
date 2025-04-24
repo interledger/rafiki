@@ -1,6 +1,6 @@
 import { IocContract } from '@adonisjs/fold'
 import { createTestApp, TestContainer } from '../../../tests/app'
-import { Config } from '../../../config/app'
+import { Config, IAppConfig } from '../../../config/app'
 import { initIocContainer } from '../../..'
 import { AppServices } from '../../../app'
 import { createIncomingPayment } from '../../../tests/incomingPayment'
@@ -21,10 +21,12 @@ import { WalletAddress } from '../../wallet_address/model'
 describe('Models', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
+  let config: IAppConfig
 
   beforeAll(async (): Promise<void> => {
     deps = initIocContainer(Config)
     appContainer = await createTestApp(deps)
+    config = await deps.use('config')
   })
 
   afterEach(async (): Promise<void> => {
@@ -45,7 +47,7 @@ describe('Models', (): void => {
       walletAddress = await createWalletAddress(deps, {
         tenantId: Config.operatorTenantId
       })
-      baseUrl = new URL(walletAddress.address).origin
+      baseUrl = config.openPaymentsUrl
       incomingPayment = await createIncomingPayment(deps, {
         walletAddressId: walletAddress.id,
         metadata: { description: 'my payment' },
@@ -55,8 +57,13 @@ describe('Models', (): void => {
 
     describe('toOpenPaymentsType', () => {
       test('returns incoming payment', async () => {
-        expect(incomingPayment.toOpenPaymentsType(walletAddress)).toEqual({
-          id: `${baseUrl}/${Config.operatorTenantId}${IncomingPayment.urlPath}/${incomingPayment.id}`,
+        expect(
+          incomingPayment.toOpenPaymentsType(
+            config.openPaymentsUrl,
+            walletAddress
+          )
+        ).toEqual({
+          id: `${baseUrl}/${Config.operatorTenantId}/${IncomingPayment.urlPath}/${incomingPayment.id}`,
           walletAddress: walletAddress.address,
           completed: incomingPayment.completed,
           receivedAmount: serializeAmount(incomingPayment.receivedAmount),
@@ -80,6 +87,7 @@ describe('Models', (): void => {
 
         expect(
           incomingPayment.toOpenPaymentsTypeWithMethods(
+            config.openPaymentsUrl,
             walletAddress,
             streamCredentials
           )
@@ -107,7 +115,10 @@ describe('Models', (): void => {
 
       test('returns incoming payment with empty methods when stream credentials are undefined', async () => {
         expect(
-          incomingPayment.toOpenPaymentsTypeWithMethods(walletAddress)
+          incomingPayment.toOpenPaymentsTypeWithMethods(
+            config.openPaymentsUrl,
+            walletAddress
+          )
         ).toEqual({
           id: `${baseUrl}/${Config.operatorTenantId}${IncomingPayment.urlPath}/${incomingPayment.id}`,
           walletAddress: walletAddress.address,
@@ -125,7 +136,7 @@ describe('Models', (): void => {
       })
 
       test.each([IncomingPaymentState.Completed, IncomingPaymentState.Expired])(
-        'returns incoming payment with empty methods if payment state is %s',
+        'returns incoming payment with existing methods if payment state is %s',
         async (paymentState): Promise<void> => {
           incomingPayment.state = paymentState
 
@@ -136,10 +147,11 @@ describe('Models', (): void => {
 
           expect(
             incomingPayment.toOpenPaymentsTypeWithMethods(
+              config.openPaymentsUrl,
               walletAddress,
               streamCredentials
             )
-          ).toEqual({
+          ).toMatchObject({
             id: `${baseUrl}/${Config.operatorTenantId}${IncomingPayment.urlPath}/${incomingPayment.id}`,
             walletAddress: walletAddress.address,
             completed: incomingPayment.completed,
@@ -151,7 +163,13 @@ describe('Models', (): void => {
             metadata: incomingPayment.metadata ?? undefined,
             updatedAt: incomingPayment.updatedAt.toISOString(),
             createdAt: incomingPayment.createdAt.toISOString(),
-            methods: []
+            methods: [
+              expect.objectContaining({
+                type: 'ilp',
+                ilpAddress: streamCredentials.ilpAddress,
+                sharedSecret: expect.any(String)
+              })
+            ]
           })
         }
       )

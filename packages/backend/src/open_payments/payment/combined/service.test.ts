@@ -2,7 +2,7 @@ import { IocContract } from '@adonisjs/fold'
 import { AppServices } from '../../../app'
 import { TestContainer, createTestApp } from '../../../tests/app'
 import { initIocContainer } from '../../..'
-import { Config } from '../../../config/app'
+import { Config, IAppConfig } from '../../../config/app'
 import { CombinedPaymentService } from './service'
 import { truncateTables } from '../../../tests/tableManager'
 import { getPageTests } from '../../../shared/baseModel.test'
@@ -23,6 +23,7 @@ import {
 
 describe('Combined Payment Service', (): void => {
   let deps: IocContract<AppServices>
+  let config: IAppConfig
   let appContainer: TestContainer
   let combinedPaymentService: CombinedPaymentService
   let tenantId: string
@@ -33,6 +34,7 @@ describe('Combined Payment Service', (): void => {
 
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer(Config)
+    config = await deps.use('config')
     appContainer = await createTestApp(deps)
     combinedPaymentService = await deps.use('combinedPaymentService')
     tenantId = Config.operatorTenantId
@@ -66,7 +68,7 @@ describe('Combined Payment Service', (): void => {
       walletAddressId: receiveWalletAddress.id,
       tenantId: Config.operatorTenantId
     })
-    const receiverUrl = incomingPayment.getUrl(receiveWalletAddress)
+    const receiverUrl = incomingPayment.getUrl(config.openPaymentsUrl)
 
     const outgoingPayment = await createOutgoingPayment(deps, {
       tenantId,

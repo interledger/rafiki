@@ -19,7 +19,7 @@ import {
 } from '@interledger/open-payments'
 import { WalletAddress } from '../../wallet_address/model'
 import { OpenPaymentsServerRouteError } from '../../route-errors'
-import { Amount } from '../../amount'
+import { AmountJSON, parseAmount } from '../../amount'
 
 interface ServiceDependencies {
   config: IAppConfig
@@ -68,7 +68,7 @@ async function getOutgoingPayment(
     )
   }
 
-  ctx.body = outgoingPaymentToBody(ctx.walletAddress, outgoingPayment)
+  ctx.body = outgoingPaymentToBody(deps, ctx.walletAddress, outgoingPayment)
 }
 
 type CreateBodyBase = {
@@ -82,7 +82,7 @@ type CreateBodyFromQuote = CreateBodyBase & {
 
 type CreateBodyFromIncomingPayment = CreateBodyBase & {
   incomingPayment: string
-  debitAmount: Amount
+  debitAmount: AmountJSON
 }
 
 function isCreateFromIncomingPayment(
@@ -111,7 +111,7 @@ async function createOutgoingPayment(
     options = {
       ...baseOptions,
       incomingPayment: body.incomingPayment,
-      debitAmount: body.debitAmount
+      debitAmount: parseAmount(body.debitAmount)
     }
   } else {
     const quoteUrlParts = body.quoteId.split('/')
@@ -140,6 +140,7 @@ async function createOutgoingPayment(
 
   ctx.status = 201
   ctx.body = outgoingPaymentOrError.toOpenPaymentsWithSpentAmountsType(
+    deps.config.openPaymentsUrl,
     ctx.walletAddress
   )
 }
@@ -157,13 +158,17 @@ async function listOutgoingPayments(
         client,
         tenantId: ctx.params.tenantId
       }),
-    toBody: (payment) => outgoingPaymentToBody(ctx.walletAddress, payment)
+    toBody: (payment) => outgoingPaymentToBody(deps, ctx.walletAddress, payment)
   })
 }
 
 function outgoingPaymentToBody(
+  deps: ServiceDependencies,
   walletAddress: WalletAddress,
   outgoingPayment: OutgoingPayment
 ): OpenPaymentsOutgoingPayment {
-  return outgoingPayment.toOpenPaymentsType(walletAddress)
+  return outgoingPayment.toOpenPaymentsType(
+    deps.config.openPaymentsUrl,
+    walletAddress
+  )
 }

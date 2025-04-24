@@ -22,12 +22,12 @@
   "devDependencies": {
     "@types/node": "^18.7.12",
     "nock": "^13.5.6",
-    "openapi-typescript": "^6.7.5"
+    "openapi-typescript": "^6.7.6"
   },
   "dependencies": {
     "@interledger/open-payments": "6.13.2",
-    "@interledger/openapi": "2.0.1",
-    "axios": "^1.7.9",
+    "@interledger/openapi": "2.0.2",
+    "axios": "^1.8.2",
     "pino": "^8.19.0"
   }
 }

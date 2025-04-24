@@ -12,7 +12,7 @@ import {
   ServiceDependencies
 } from './service'
 import { createTestApp, TestContainer } from '../../tests/app'
-import { Config } from '../../config/app'
+import { Config, IAppConfig } from '../../config/app'
 import { initIocContainer } from '../..'
 import { AppServices } from '../../app'
 import { createIncomingPayment } from '../../tests/incomingPayment'
@@ -33,10 +33,10 @@ import assert from 'assert'
 import { Receiver } from './model'
 import { IncomingPayment } from '../payment/incoming/model'
 import { StreamCredentialsService } from '../../payment-method/ilp/stream-credentials/service'
-import { WalletAddress } from '../wallet_address/model'
 
 describe('Receiver Service', (): void => {
   let deps: IocContract<AppServices>
+  let config: IAppConfig
   let appContainer: TestContainer
   let receiverService: ReceiverService
   let incomingPaymentService: IncomingPaymentService
@@ -49,6 +49,7 @@ describe('Receiver Service', (): void => {
 
   beforeAll(async (): Promise<void> => {
     deps = initIocContainer(Config)
+    config = await deps.use('config')
     appContainer = await createTestApp(deps)
     receiverService = await deps.use('receiverService')
     incomingPaymentService = await deps.use('incomingPaymentService')
@@ -60,6 +61,7 @@ describe('Receiver Service', (): void => {
     knex = appContainer.knex
     serviceDeps = {
       knex,
+      config,
       logger: await deps.use('logger'),
       incomingPaymentService,
       remoteIncomingPaymentService,
@@ -97,14 +99,14 @@ describe('Receiver Service', (): void => {
         })
 
         await expect(
-          receiverService.get(incomingPayment.getUrl(walletAddress))
+          receiverService.get(incomingPayment.getUrl(config.openPaymentsUrl))
         ).resolves.toEqual({
           assetCode: incomingPayment.receivedAmount.assetCode,
           assetScale: incomingPayment.receivedAmount.assetScale,
           ilpAddress: expect.any(String),
           sharedSecret: expect.any(Buffer),
           incomingPayment: {
-            id: incomingPayment.getUrl(walletAddress),
+            id: incomingPayment.getUrl(config.openPaymentsUrl),
             walletAddress: walletAddress.address,
             incomingAmount: incomingPayment.incomingAmount,
             receivedAmount: incomingPayment.receivedAmount,
@@ -168,13 +170,16 @@ describe('Receiver Service', (): void => {
           )
         })
 
-        test('throws error if stream credentials could not be generated', async () => {
-          jest.spyOn(incomingPaymentService, 'get').mockResolvedValueOnce({
-            id: uuid(),
-            walletAddress: {
-              id: 'https://example.com/wallet-address'
-            } as WalletAddress
-          } as IncomingPayment)
+        test('returns object without methods if stream credentials could not be generated', async () => {
+          const walletAddress = await createWalletAddress(deps)
+          const incomingPayment = await createIncomingPayment(deps, {
+            walletAddressId: walletAddress.id,
+            tenantId: Config.operatorTenantId
+          })
+
+          jest
+            .spyOn(incomingPaymentService, 'get')
+            .mockResolvedValueOnce(incomingPayment)
 
           jest
             .spyOn(streamCredentialsService, 'get')
@@ -183,11 +188,11 @@ describe('Receiver Service', (): void => {
           await expect(
             getLocalIncomingPayment(
               serviceDeps,
-              `https://example.com/incoming-payments/${uuid()}`
+              `https://example.com/incoming-payments/${incomingPayment.id}`
             )
-          ).rejects.toThrow(
-            'Could not get stream credentials for local incoming payment'
-          )
+          ).resolves.toMatchObject({
+            methods: []
+          })
         })
       })
     })
@@ -255,9 +260,9 @@ describe('Receiver Service', (): void => {
         expect(remoteIncomingPaymentServiceGetSpy).toHaveBeenCalledTimes(1)
       })
 
-      test('returns undefined if error getting receiver from remote incoming payment', async () => {
+      test('gets receiver from completed remote incoming payment', async () => {
         const mockedIncomingPayment = mockIncomingPaymentWithPaymentMethods({
-          completed: true // cannot get receiver with a completed incoming payment
+          completed: true
         })
 
         const localIncomingPaymentServiceGetSpy = jest
@@ -270,7 +275,36 @@ describe('Receiver Service', (): void => {
 
         await expect(
           receiverService.get(mockedIncomingPayment.id)
-        ).resolves.toBeUndefined()
+        ).resolves.toEqual({
+          assetCode: mockedIncomingPayment.receivedAmount.assetCode,
+          assetScale: mockedIncomingPayment.receivedAmount.assetScale,
+          ilpAddress: mockedIncomingPayment.methods[0].ilpAddress,
+          sharedSecret: expect.any(Buffer),
+          incomingPayment: {
+            id: mockedIncomingPayment.id,
+            walletAddress: mockedIncomingPayment.walletAddress,
+            incomingAmount: mockedIncomingPayment.incomingAmount
+              ? parseAmount(mockedIncomingPayment.incomingAmount)
+              : undefined,
+            receivedAmount: parseAmount(mockedIncomingPayment.receivedAmount),
+            completed: mockedIncomingPayment.completed,
+            metadata: mockedIncomingPayment.metadata,
+            expiresAt: mockedIncomingPayment.expiresAt
+              ? new Date(mockedIncomingPayment.expiresAt)
+              : undefined,
+            createdAt: new Date(mockedIncomingPayment.createdAt),
+            updatedAt: new Date(mockedIncomingPayment.updatedAt),
+            methods: [
+              {
+                type: 'ilp',
+                ilpAddress: expect.any(String),
+                sharedSecret: expect.any(String)
+              }
+            ]
+          },
+          isLocal: false
+        })
+
         expect(localIncomingPaymentServiceGetSpy).toHaveBeenCalledTimes(1)
         expect(remoteIncomingPaymentServiceGetSpy).toHaveBeenCalledTimes(1)
       })

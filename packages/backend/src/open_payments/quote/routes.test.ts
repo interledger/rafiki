@@ -85,7 +85,7 @@ describe('Quote Routes', (): void => {
       tenantId,
       assetId
     })
-    baseUrl = new URL(walletAddress.address).origin
+    baseUrl = config.openPaymentsUrl
   })
 
   afterEach(async (): Promise<void> => {

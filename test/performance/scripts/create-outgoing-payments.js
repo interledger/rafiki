@@ -1,6 +1,11 @@
+// global comment below tells ESLint that __ENV exists, else get "no-undef" error
+/* global __ENV */
+
 import http from 'k6/http'
 import { fail } from 'k6'
 import { createHMAC } from 'k6/crypto'
+import { uuidv4 } from 'https://jslib.k6.io/k6-utils/1.4.0/index.js'
+import { textSummary } from 'https://jslib.k6.io/k6-summary/0.0.2/index.js'
 import { canonicalize } from '../dist/json-canonicalize.bundle.js'
 
 export const options = {
@@ -10,11 +15,9 @@ export const options = {
   duration: '600s'
 }
 
-const CLOUD_NINE_GQL_ENDPOINT = 'http://cloud-nine-wallet-backend:3001/graphql'
-const CLOUD_NINE_WALLET_ADDRESS =
-  'https://cloud-nine-wallet-backend/accounts/gfranklin'
-const HAPPY_LIFE_BANK_WALLET_ADDRESS =
-  'https://happy-life-bank-backend/accounts/pfry'
+const CLOUD_NINE_GQL_ENDPOINT = __ENV.CLOUD_NINE_GQL_ENDPOINT
+const CLOUD_NINE_WALLET_ADDRESS = __ENV.CLOUD_NINE_WALLET_ADDRESS
+const HAPPY_LIFE_BANK_WALLET_ADDRESS = __ENV.HAPPY_LIFE_BANK_WALLET_ADDRESS
 const SIGNATURE_SECRET = 'iyIgCprjb9uL8wFckR+pLEkJWMB7FJhgkvqhTQR/964='
 const SIGNATURE_VERSION = '1'
 
@@ -27,7 +30,7 @@ function generateSignedHeaders(requestPayload) {
 
   return {
     'Content-Type': 'application/json',
-    signature: `t=${timestamp}, v${SIGNATURE_VERSION}=${digest}`
+    signature: `t=${timestamp}, v${SIGNATURE_VERSION}=${digest}, n=${uuidv4()}`
   }
 }
 
@@ -63,7 +66,7 @@ export function setup() {
   const c9WalletAddresses = data.walletAddresses.edges
   const c9WalletAddress = c9WalletAddresses.find(
     (edge) => edge.node.url === CLOUD_NINE_WALLET_ADDRESS
-  ).node
+  )?.node
   if (!c9WalletAddress) {
     fail(`could not find wallet address: ${CLOUD_NINE_WALLET_ADDRESS}`)
   }
@@ -157,4 +160,29 @@ export default function (data) {
   }
 
   request(createOutgoingPaymentPayload)
+}
+
+export function handleSummary(data) {
+  const requestsPerSecond = data.metrics.http_reqs.values.rate
+  const iterationsPerSecond = data.metrics.iterations.values.rate
+  const failedRequests = data.metrics.http_req_failed.values.passes
+  const failureRate = data.metrics.http_req_failed.values.rate
+  const requests = data.metrics.http_reqs.values.count
+
+  const summaryText = `
+  **Test Configuration**:
+  - VUs: ${options.vus}
+  - Duration: ${options.duration}
+
+  **Test Metrics**:
+  - Requests/s: ${requestsPerSecond.toFixed(2)}
+  - Iterations/s: ${iterationsPerSecond.toFixed(2)}
+  - Failed Requests: ${failureRate.toFixed(2)}% (${failedRequests} of ${requests})
+    `
+
+  return {
+    // Preserve standard output w/ textSummary
+    stdout: textSummary(data, { enableColors: false }),
+    'k6-test-summary.txt': summaryText // saves to file
+  }
 }

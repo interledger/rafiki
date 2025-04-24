@@ -17,6 +17,11 @@ export async function handleSending(
 ): Promise<void> {
   if (!payment.quote) throw LifecycleError.MissingQuote
 
+  // Check if the current time is greater than or equal to when the Quote should be expiring
+  if (Date.now() >= payment.quote.expiresAt.getTime()) {
+    throw LifecycleError.QuoteExpired
+  }
+
   const receiver = await deps.receiverService.get(payment.receiver)
 
   // TODO: Query TigerBeetle transfers by code to distinguish sending debits from withdrawals
@@ -25,7 +30,7 @@ export async function handleSending(
     throw LifecycleError.MissingBalance
   }
 
-  if (!receiver) {
+  if (!receiver || !receiver.isActive()) {
     // Payment is already (unexpectedly) done. Maybe this is a retry and the previous attempt failed to save the state to Postgres. Or the incoming payment could have been paid by a totally different payment in the time since the quote.
     deps.logger.warn(
       {

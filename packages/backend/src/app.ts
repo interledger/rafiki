@@ -94,7 +94,8 @@ import {
   getWalletAddressUrlFromQuote,
   getWalletAddressUrlFromRequestBody,
   getWalletAddressForSubresource,
-  getWalletAddressUrlFromPath
+  getWalletAddressUrlFromPath,
+  redirectIfBrowserAcceptsHtml
 } from './open_payments/wallet_address/middleware'
 
 import { LoggingPlugin } from './graphql/plugin'
@@ -734,6 +735,7 @@ export class App {
     router.get(
       WALLET_ADDRESS_PATH,
       getWalletAddressUrlFromPath,
+      redirectIfBrowserAcceptsHtml,
       createSpspMiddleware(this.config.enableSpspPaymentPointers),
       createValidatorMiddleware(
         walletAddressServerSpec,

@@ -130,6 +130,7 @@ describe('QuoteService', (): void => {
 
   afterEach(async (): Promise<void> => {
     jest.restoreAllMocks()
+    jest.useRealTimers()
 
     await truncateTables(deps)
   })
@@ -190,7 +191,7 @@ describe('QuoteService', (): void => {
           options = {
             tenantId,
             walletAddressId: sendingWalletAddress.id,
-            receiver: incomingPayment.getUrl(receivingWalletAddress),
+            receiver: incomingPayment.getUrl(config.openPaymentsUrl),
             method: 'ilp'
           }
           if (debitAmount) options.debitAmount = debitAmount
@@ -214,7 +215,7 @@ describe('QuoteService', (): void => {
               async ({ client }): Promise<void> => {
                 const mockedQuote = mockQuote({
                   receiver: (await receiverService.get(
-                    incomingPayment.getUrl(receivingWalletAddress)
+                    incomingPayment.getUrl(config.openPaymentsUrl)
                   ))!,
                   walletAddress: sendingWalletAddress,
                   exchangeRate: 0.5,
@@ -231,6 +232,10 @@ describe('QuoteService', (): void => {
                   .spyOn(paymentMethodHandlerService, 'getQuote')
                   .mockResolvedValueOnce(mockedQuote)
 
+                jest.useFakeTimers()
+                const now = Date.now()
+                jest.spyOn(global.Date, 'now').mockImplementation(() => now)
+
                 const quote = await quoteService.create({
                   ...options,
                   client
@@ -245,8 +250,7 @@ describe('QuoteService', (): void => {
                     receiver: expect.anything(),
                     receiveAmount: options.receiveAmount,
                     debitAmount: options.debitAmount
-                  }),
-                  expect.anything()
+                  })
                 )
 
                 expect(quote).toMatchObject({
@@ -256,9 +260,7 @@ describe('QuoteService', (): void => {
                   receiveAmount: receiveAmount || mockedQuote.receiveAmount,
                   createdAt: expect.any(Date),
                   updatedAt: expect.any(Date),
-                  expiresAt: new Date(
-                    quote.createdAt.getTime() + config.quoteLifespan
-                  ),
+                  expiresAt: new Date(now + config.quoteLifespan),
                   client: client || null
                 })
 
@@ -275,7 +277,7 @@ describe('QuoteService', (): void => {
               test('fails if receiveAmount exceeds receiver.incomingAmount', async (): Promise<void> => {
                 const mockedQuote = mockQuote({
                   receiver: (await receiverService.get(
-                    incomingPayment.getUrl(receivingWalletAddress)
+                    incomingPayment.getUrl(config.openPaymentsUrl)
                   ))!,
                   walletAddress: sendingWalletAddress,
                   exchangeRate: 0.5,
@@ -314,7 +316,7 @@ describe('QuoteService', (): void => {
               async ({ client }): Promise<void> => {
                 const mockedQuote = mockQuote({
                   receiver: (await receiverService.get(
-                    incomingPayment.getUrl(receivingWalletAddress)
+                    incomingPayment.getUrl(config.openPaymentsUrl)
                   ))!,
                   walletAddress: sendingWalletAddress,
                   exchangeRate: 0.5,
@@ -331,6 +333,10 @@ describe('QuoteService', (): void => {
                   .spyOn(paymentMethodHandlerService, 'getQuote')
                   .mockResolvedValueOnce(mockedQuote)
 
+                jest.useFakeTimers()
+                const now = Date.now()
+                jest.spyOn(global.Date, 'now').mockImplementation(() => now)
+
                 const quote = await quoteService.create({
                   ...options,
                   client
@@ -343,9 +349,7 @@ describe('QuoteService', (): void => {
                   receiveAmount: incomingAmount,
                   createdAt: expect.any(Date),
                   updatedAt: expect.any(Date),
-                  expiresAt: new Date(
-                    quote.createdAt.getTime() + config.quoteLifespan
-                  ),
+                  expiresAt: new Date(new Date(now + config.quoteLifespan)),
                   client: client || null
                 })
 
@@ -385,7 +389,7 @@ describe('QuoteService', (): void => {
     test.each`
       expiryDate                                                            | description
       ${new Date(new Date().getTime() + Config.quoteLifespan - 2 * 60_000)} | ${"the incoming payment's expirataion date"}
-      ${new Date(new Date().getTime() + Config.quoteLifespan + 2 * 60_000)} | ${"the quotation's creation date plus its lifespan"}
+      ${new Date(new Date().getTime() + Config.quoteLifespan + 2 * 60_000)} | ${"the quote's creation date plus its lifespan"}
     `(
       'sets expiry date to $description',
       async ({ expiryDate }): Promise<void> => {
@@ -398,14 +402,14 @@ describe('QuoteService', (): void => {
         const options: CreateQuoteOptions = {
           tenantId,
           walletAddressId: sendingWalletAddress.id,
-          receiver: incomingPayment.getUrl(receivingWalletAddress),
+          receiver: incomingPayment.getUrl(config.openPaymentsUrl),
           receiveAmount,
           method: 'ilp'
         }
 
         const mockedQuote = mockQuote({
           receiver: (await receiverService.get(
-            incomingPayment.getUrl(receivingWalletAddress)
+            incomingPayment.getUrl(config.openPaymentsUrl)
           ))!,
           walletAddress: sendingWalletAddress,
           receiveAmountValue: receiveAmount.value,
@@ -416,11 +420,13 @@ describe('QuoteService', (): void => {
           .spyOn(paymentMethodHandlerService, 'getQuote')
           .mockResolvedValueOnce(mockedQuote)
 
+        jest.useFakeTimers()
+        const now = Date.now()
+        jest.spyOn(global.Date, 'now').mockImplementation(() => now)
+
         const quote = await quoteService.create(options)
         assert.ok(!isQuoteError(quote))
-        const maxExpiration = new Date(
-          quote.createdAt.getTime() + config.quoteLifespan
-        )
+        const maxExpiration = new Date(now + config.quoteLifespan)
         expect(quote).toMatchObject({
           walletAddressId: sendingWalletAddress.id,
           receiver: options.receiver,
@@ -555,7 +561,7 @@ describe('QuoteService', (): void => {
         const options: CreateQuoteOptions = {
           tenantId,
           walletAddressId: sendingWalletAddress.id,
-          receiver: incomingPayment.getUrl(receivingWalletAddress),
+          receiver: incomingPayment.getUrl(config.openPaymentsUrl),
           method: 'ilp'
         }
         if (debitAmount) options.debitAmount = debitAmount
@@ -706,8 +712,8 @@ describe('QuoteService', (): void => {
         ${200n}          | ${0}     | ${0}          | ${1.0}       | ${200n}                    | ${'no fees, equal exchange rate'}
         ${200n}          | ${20}    | ${0}          | ${0.5}       | ${90n}                     | ${'fixed fee'}
         ${200n}          | ${101n}  | ${0}          | ${1.0}       | ${99n}                     | ${'fixed fee larger than receiveAmount, equal exchange rate'}
-        ${200n}          | ${0}     | ${200}        | ${0.5}       | ${99n}                     | ${'basis point fee'}
-        ${200n}          | ${20}    | ${200}        | ${0.5}       | ${89n}                     | ${'fixed and basis point fee'}
+        ${200n}          | ${0}     | ${200}        | ${0.5}       | ${98n}                     | ${'basis point fee'}
+        ${200n}          | ${20}    | ${200}        | ${0.5}       | ${88n}                     | ${'fixed and basis point fee'}
         ${200n}          | ${20}    | ${200}        | ${0.455}     | ${80n}                     | ${'fixed and basis point fee with floating exchange rate'}
       `(
         '$description',
@@ -720,7 +726,7 @@ describe('QuoteService', (): void => {
         }): Promise<void> => {
           const receiver = await createReceiver(deps, receivingWalletAddress)
 
-          await Fee.query().insertAndFetch({
+          const sendingFee = await Fee.query().insertAndFetch({
             assetId: sendAsset.id,
             type: FeeType.Sending,
             fixedFee,
@@ -730,7 +736,8 @@ describe('QuoteService', (): void => {
           const mockedQuote = mockQuote({
             receiver,
             walletAddress: sendingWalletAddress,
-            debitAmountValue,
+            debitAmountValue:
+              debitAmountValue - sendingFee.calculate(debitAmountValue),
             exchangeRate
           })
 
@@ -763,7 +770,7 @@ describe('QuoteService', (): void => {
         const receiver = await createReceiver(deps, receivingWalletAddress)
         const debitAmountValue = 100n
 
-        await Fee.query().insertAndFetch({
+        const fee = await Fee.query().insertAndFetch({
           assetId: sendAsset.id,
           type: FeeType.Sending,
           fixedFee: debitAmountValue + 1n,
@@ -773,7 +780,7 @@ describe('QuoteService', (): void => {
         const mockedQuote = mockQuote({
           receiver,
           walletAddress: sendingWalletAddress,
-          debitAmountValue: debitAmountValue,
+          debitAmountValue: debitAmountValue - fee.calculate(debitAmountValue),
           exchangeRate: 1.0
         })
 
@@ -811,13 +818,13 @@ describe('QuoteService', (): void => {
         const options: CreateQuoteOptions = {
           tenantId,
           walletAddressId: sendingWalletAddress.id,
-          receiver: incomingPayment.getUrl(receivingWalletAddress),
+          receiver: incomingPayment.getUrl(config.openPaymentsUrl),
           method: 'ilp'
         }
 
         const mockedQuote = mockQuote({
           receiver: (await receiverService.get(
-            incomingPayment.getUrl(receivingWalletAddress)
+            incomingPayment.getUrl(config.openPaymentsUrl)
           ))!,
           walletAddress: sendingWalletAddress,
           exchangeRate: 0.5,
@@ -827,6 +834,10 @@ describe('QuoteService', (): void => {
         const getQuoteSpy = jest
           .spyOn(paymentMethodHandlerService, 'getQuote')
           .mockResolvedValueOnce(mockedQuote)
+
+        jest.useFakeTimers()
+        const now = Date.now()
+        jest.spyOn(global.Date, 'now').mockImplementation(() => now)
 
         const quote = await quoteService.create(options)
         assert.ok(!isQuoteError(quote))
@@ -839,8 +850,7 @@ describe('QuoteService', (): void => {
             receiver: expect.anything(),
             receiveAmount: options.receiveAmount,
             debitAmount: options.debitAmount
-          }),
-          expect.anything()
+          })
         )
 
         expect(quote).toMatchObject({
@@ -850,7 +860,7 @@ describe('QuoteService', (): void => {
           receiveAmount: mockedQuote.receiveAmount,
           createdAt: expect.any(Date),
           updatedAt: expect.any(Date),
-          expiresAt: new Date(quote.createdAt.getTime() + config.quoteLifespan)
+          expiresAt: new Date(now + config.quoteLifespan)
         })
 
         await expect(

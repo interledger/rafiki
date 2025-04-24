@@ -4,7 +4,7 @@ title: Interledger
 
 import { LinkOut } from '@interledger/docs-design-system'
 
-Building and maintaining your own connector to participate on the Interledger network can be a time consuming and complex undertaking. As a reference implementation of the Interledger stack, Rafiki gives you all the tools you need to quickly and easily join the network and enable Interledger functionality on your users’ accounts.
+Building and maintaining your own connector to participate on the Interledger network can be a time consuming and complex undertaking. As a reference implementation of the Interledger stack, Rafiki gives you all the tools you need to quickly and easily join the network and enable Interledger capabilities on your users’ accounts.
 
 ## Packets
 
@@ -12,15 +12,15 @@ At the core of Interledger is the Interledger Protocol (ILP). It’s a request/r
 
 These packets of data carry information about a payment. Typically, information about a single aggregate payment from sender to receiver is split into multiple ILP packets.
 
-Each packet represents a conditional IOU which affects financial accounting balances between peers. Amounts are adjusted based on the sender's asset, the receiver's asset, and Rafiki's configured [exchange rates service](/integration/requirements/exchange-rates). Then, the amounts are used to update account liquidities in your accounting database (TigerBeetle or Postgres).
+Each packet represents a conditional IOU which affects financial accounting balances between peers. Amounts adjust based on the sender's asset, the receiver's asset, and Rafiki's configured [exchange rates service](/integration/requirements/exchange-rates). Then, the amounts are used to update account liquidity in your accounting database (TigerBeetle or Postgres).
 
 ## Peers
 
-Interledger itself is a network of computers that enables sending payment messages across payment networks. Each computer on the network is called a node.
+Interledger itself is a network of computers that enables sending payment messages across payment networks. Each computer on the network is a node.
 
-For two nodes on the Interledger network to exchange ILP packets with one another, the two nodes must be peers. There are a number of [requirements](/integration/requirements/peers#prerequisites) that both you and your potential peer must meet in order to form a peering relationship.
+For two nodes on the Interledger network to exchange ILP packets with one another, the two nodes must be peers. There are a number of [requirements](/integration/requirements/peers#perform-prerequisites) that both you and your potential peer must meet to form a peering relationship.
 
-Since the purpose of peering is to facilitate payments, which often involves extending lines of credit, your peer should be someone you trust. We strongly recommend you and your potential peer define your expectations and outline your agreements in a legally-binding document peering with one another.
+Since the purpose of peering is to facilitate payments, which often involves extending lines of credit, your peer should be someone you trust. We strongly recommend you and your potential peer define your expectations and outline your agreements in a legally binding document peering with one another.
 
 ## Connectors
 
@@ -30,7 +30,7 @@ Each node on the Interledger network can take on the role of sender, connector, 
 - Connector - An intermediary between a sender and receiver that forwards ILP packets. Connectors can facilitate payments to or from anyone they’re peered with.
 - Receiver - The final recipient of the ILP packets and, as such, the payment.
 
-If the sender and receiver nodes are peers, then the payment flow is straightforward and no intermediary connector nodes are needed. However, if the sender and receiver aren’t peers, then the payment must be routed through one or more connectors. Rafiki’s [backend service](/integration/deployment/services/backend-service#interledger-connector) includes an Interledger connector for sending and receiving ILP packets.
+If the sender and receiver nodes are peers, then the payment flow is straightforward and no intermediary connector nodes are needed. However, if the sender and receiver aren’t peers, then the payment must route through one or more connectors. Rafiki’s [backend service](/integration/deployment/services/backend-service#interledger-connector) includes an Interledger connector for sending and receiving ILP packets.
 
 In the image below, the sender node (A) and the receiver node (C) share a common peer (B). In payments from the sender to the receiver, node B performs the role of connector to facilitate payments between the two.
 
@@ -42,11 +42,13 @@ In the image below, the sender node (A) and the receiver node (C) share a common
 
 In reality, there can be multiple connectors between a sender node and a receiver node. As more nodes that support different assets peer with one another, the easier it becomes for payments to traverse the Interledger network.
 
-## Payment pointers
+## Payment pointer
 
-Rafiki assigns each of your customers’ accounts with a payment pointer. Payment pointers are a type of wallet address for accounts within the Interledger network. They’re similar to email addresses in that they’re used to determine which account to send a payment from and which account to deliver the payment to.
+A payment pointer is a type of wallet address that serves as an SPSP endpoint to facilitate sending and receiving ILP packets. Rafiki will assign each of your customers' accounts with a payment pointer.
 
-Every payment pointer serves as a Simple Payment Setup Protocol (SPSP) endpoint and must resolve to an HTTPS URL. Payment pointers can be written out using the `$` shorthand (e.g., `$wallet.example.com/alice`) or as a URL (e.g., `https://wallet.example.com/alice`).
+Payment pointers must resolve to an HTTPS URL and can be written out using the `$` shorthand (for example, `$wallet.example.com/alice`) or as a URL (for example, `https://wallet.example.com/alice`).
+
+See [Payment pointers and wallet addresses](/overview/concepts/payment-pointers) for more information.
 
 ## Simple Payment Setup Protocol (SPSP)
 
@@ -68,4 +70,4 @@ A critical function of STREAM is to determine the path exchange rate and handle 
 
 In a STREAM connection, a <LinkOut href="https://interledger.org/developers/rfcs/stream-receipts/">receipt</LinkOut> can be generated by the party receiving funds for every fulfilled ILP packet. Each receipt contains a progressively higher amount, representing the total amount received over the STREAM connection.
 
-Rafiki’s Interledger connector keeps track of the total amount received for a STREAM connection in Redis in order to support STREAM receipts.
+Rafiki’s Interledger connector keeps track of the total amount received for a STREAM connection in Redis to support STREAM receipts.

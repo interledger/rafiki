@@ -20,7 +20,7 @@ The following are required when using the `backend` service.
 - A Postgres database, separate from the `auth` service’s database, for Open Payments resources
 - TigerBeetle or a separate Postgres database for accounting liquidity
   :::note
-  You can use the same database instance of Postgres for the `backend` service, `auth` service, and accounting liquidities (if not using TigerBeetle). However, separate database schemas are required within the Rafiki instance to maintain boundaries between the objects being managed.
+  You can use the same database instance of Postgres for the `backend` service, `auth` service, and accounting liquidity (if not using TigerBeetle). However, separate database schemas are required within the Rafiki instance to maintain boundaries between the managed objects.
   :::
 
 You must also set the environment variables for the `backend` service.
@@ -39,19 +39,19 @@ Some of the responsibilities of a connector include:
 
 - Authenticating packets against ILP account credentials.
 - Forwarding packets to a sender or receiver.
-- Rejecting a packet for any number of reasons, including expiration, insufficient liquidity, rate limit exceeded, or if the amount exceeds the `maxPacketAmount` [agreed to](/integration/requirements/peers#prerequisites) by the connector and its peer.
+- Rejecting a packet for any number of reasons, including expiration, insufficient liquidity, rate limit exceeded, or if the amount exceeds the `maxPacketAmount` [agreed to](/integration/requirements/peers#perform-prerequisites) by the connector and its peer.
 - Converting currencies.
 - Fulfilling packets with an internal STREAM server.
 
 The `backend` service includes an HTTP server listening on the configured `CONNECTOR_PORT`. Your connector can receive incoming packets via HTTP and/or direct calls from within the `backend` service. An incoming packet is only accepted if it's from a configured peer and accompanied by your peer’s incoming HTTP `authToken`.
 
-Similarly, if a packet's destination address corresponds to a peer, your connector will forward the packet to your peer over HTTP, along with your peer's outgoing HTTP `authToken`.
+Similarly, if a packet's destination address corresponds to a peer, your connector forwards the packet to your peer over HTTP, along with your peer's outgoing HTTP `authToken`.
 
 :::note[Auth tokens]
-You and your peer should have exchanged incoming and outgoing auth tokens as part of establishing your [peering relationship](/integration/requirements/peers#prerequisites).
+You and your peer should have exchanged incoming and outgoing auth tokens as part of establishing your [peering relationship](/integration/requirements/peers#perform-prerequisites).
 :::
 
-A packet can either continue on to your peer via HTTP or terminate at your Rafiki instance's STREAM server. If the packet terminates at your STREAM server, your connector will attempt to extract and decode the payment tag from the packet's destination address. When your connector successfully matches the tag with a locally managed wallet address or incoming payment, the connector will not forward the packet. Instead, it will credit the corresponding balance and track the total amount received in Redis to support STREAM receipts. Packets addressed to a wallet address happen via SPSP.
+A packet can either continue on to your peer via HTTP or end at your Rafiki instance's STREAM server. If the packet terminates at your STREAM server, your connector attempts to extract and decode the payment tag from the packet's destination address. When your connector successfully matches the tag with a locally managed wallet address or incoming payment, the connector does not forward the packet. Instead, it credits the corresponding balance and track the total amount received in Redis to support STREAM receipts. Packets addressed to a wallet address happen via SPSP.
 
 ## GraphQL Backend Admin API
 

@@ -283,6 +283,71 @@ describe('Auth Middleware', (): void => {
     expect(next).not.toHaveBeenCalled()
   })
 
+  test('rejects with 403 for token with insufficient access', async (): Promise<void> => {
+    const introspectSpy = jest
+      .spyOn(tokenIntrospectionClient, 'introspect')
+      .mockResolvedValueOnce({
+        active: true,
+        grant: uuid(),
+        client: faker.internet.url({ appendSlash: false }),
+        access: []
+      })
+
+    await expect(middleware(ctx, next)).rejects.toMatchObject({
+      status: 403,
+      message: 'Insufficient Grant'
+    })
+    expect(introspectSpy).toHaveBeenCalledWith({
+      access_token: token,
+      access: [
+        {
+          type: type,
+          actions: [action],
+          identifier: ctx.walletAddressUrl
+        }
+      ]
+    })
+    expect(next).not.toHaveBeenCalled()
+  })
+
+  test('rejects with 500 for token with access.length > 1', async (): Promise<void> => {
+    const introspectSpy = jest
+      .spyOn(tokenIntrospectionClient, 'introspect')
+      .mockResolvedValueOnce({
+        active: true,
+        grant: uuid(),
+        client: faker.internet.url({ appendSlash: false }),
+        access: [
+          {
+            type: type,
+            actions: [action],
+            identifier: ctx.walletAddressUrl
+          },
+          {
+            type: type,
+            actions: [action],
+            identifier: ctx.walletAddressUrl
+          }
+        ]
+      })
+
+    await expect(middleware(ctx, next)).rejects.toMatchObject({
+      status: 500,
+      message: 'Unexpected number of access items'
+    })
+    expect(introspectSpy).toHaveBeenCalledWith({
+      access_token: token,
+      access: [
+        {
+          type: type,
+          actions: [action],
+          identifier: ctx.walletAddressUrl
+        }
+      ]
+    })
+    expect(next).not.toHaveBeenCalled()
+  })
+
   enum IdentifierOption {
     Matching = 'matching',
     Conflicting = 'conflicting',

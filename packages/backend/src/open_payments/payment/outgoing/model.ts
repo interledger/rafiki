@@ -107,9 +107,9 @@ export class OutgoingPayment
     return this.quote.assetId
   }
 
-  public getUrl(walletAddress: WalletAddress): string {
-    const url = new URL(walletAddress.address)
-    return `${url.origin}/${this.tenantId}${OutgoingPayment.urlPath}/${this.id}`
+  public getUrl(resourceServerUrl: string): string {
+    resourceServerUrl = resourceServerUrl.replace(/\/+$/, '')
+    return `${resourceServerUrl}/${this.tenantId}${OutgoingPayment.urlPath}/${this.id}`
   }
 
   public get asset(): Asset {
@@ -198,16 +198,21 @@ export class OutgoingPayment
     if (this.peerId) {
       data.peerId = this.peerId
     }
+
+    if (this.grantId) {
+      data.grantId = this.grantId
+    }
     return data
   }
 
   public toOpenPaymentsType(
+    resourceServerUrl: string,
     walletAddress: WalletAddress
   ): OpenPaymentsOutgoingPayment {
     return {
-      id: this.getUrl(walletAddress),
+      id: this.getUrl(resourceServerUrl),
       walletAddress: walletAddress.address,
-      quoteId: this.quote?.getUrl(walletAddress) ?? undefined,
+      quoteId: this.quote?.getUrl(resourceServerUrl) ?? undefined,
       receiveAmount: serializeAmount(this.receiveAmount),
       debitAmount: serializeAmount(this.debitAmount),
       sentAmount: serializeAmount(this.sentAmount),
@@ -220,10 +225,11 @@ export class OutgoingPayment
   }
 
   public toOpenPaymentsWithSpentAmountsType(
+    resourceServerUrl: string,
     walletAddress: WalletAddress
   ): OutgoingPaymentWithSpentAmounts {
     return {
-      ...this.toOpenPaymentsType(walletAddress),
+      ...this.toOpenPaymentsType(resourceServerUrl, walletAddress),
       grantSpentReceiveAmount: serializeAmount(this.grantSpentReceiveAmount),
       grantSpentDebitAmount: serializeAmount(this.grantSpentDebitAmount)
     }
@@ -285,6 +291,7 @@ export type PaymentData = Omit<OutgoingPaymentResponse, 'failed'> & {
   stateAttempts: number
   balance: string
   peerId?: string
+  grantId?: string
 }
 
 export const isOutgoingPaymentEventType = (
