@@ -20,25 +20,6 @@ While Docker Compose could serve as a production deployment, it is an environmen
 
 ## Prerequisites
 
-### Domain and subdomains setup
-
-We will map the [Open Payments resource server](/integration/deployment/services/backend-service#open-payments) to your domain, and the [ILP connector](/integration/deployment/services/backend-service#interledger-connector), [Open Payments auth server](/integration/deployment/services/auth-service), and [Admin UI](/integration/deployment/services/frontend-service) to subdomains. Using the DNS host of your choice, set up your domain and subdomains according to the following recommended convention:
-
-<div class="overflow-table">
-
-| service                       | function                                                                    | URL          | example            |
-| ----------------------------- | --------------------------------------------------------------------------- | ------------ | ------------------ |
-| Open Payments resource server | Exposes the Open Payments APIs                                              | DOMAIN       | myrafiki.com       |
-| ILP connector                 | Exposes an ILP connector to send and receive ILP packets between peers      | ilp.DOMAIN   | ilp.myrafiki.com   |
-| Open Payments auth server     | Exposes a reference implementation of an Open Payments authorization server | auth.DOMAIN  | auth.myrafiki.com  |
-| Admin UI                      | Exposes an Admin UI to manage Rafiki                                        | admin.DOMAIN | admin.myrafiki.com |
-
-</div>
-
-:::note
-The example domain and subdomain values are for demonstration purposes only. You must use the actual domain names that you set up with your DNS host.  
-:::
-
 ### Deploy VM and install Docker
 
 Deploy a general purpose VM with the following minimum specifications:
@@ -84,24 +65,26 @@ crontab -e
 0 3 * * * certbot renew
 ```
 
-### Update DNS records
+### Domain and DNS configuration
 
-Next update the DNS records (A records) to point to the static external IP address of the virtual machine:
+Map the [Open Payments resource server](/integration/deployment/services/backend-service#open-payments) to your domain, and the [ILP connector](/integration/deployment/services/backend-service#interledger-connector), [Open Payments auth server](/integration/deployment/services/auth-service), and [Admin UI](/integration/deployment/services/frontend-service) to subdomains. Using the DNS host of your choice, set up your domain and subdomains according to the following recommended convention:
 
 <div class="overflow-table">
 
-| service                       | URL          | example            |
-| ----------------------------- | ------------ | ------------------ |
-| Open Payments resource server | DOMAIN       | myrafiki.com       |
-| ILP Connector                 | ilp.DOMAIN   | ilp.myrafiki.com   |
-| Open Payments auth server     | auth.DOMAIN  | auth.myrafiki.com  |
-| Admin UI                      | admin.DOMAIN | admin.myrafiki.com |
+| Service                       | Exposes                                                           | URL          | Example            |
+| ----------------------------- | ----------------------------------------------------------------- | ------------ | ------------------ |
+| Open Payments resource server | Open Payments APIs                                                | DOMAIN       | myrafiki.com       |
+| ILP connector                 | ILP connector to send and receive ILP packets between peers       | ilp.DOMAIN   | ilp.myrafiki.com   |
+| Open Payments auth server     | Reference implementation of an Open Payments authorization server | auth.DOMAIN  | auth.myrafiki.com  |
+| Admin UI                      | Admin UI to manage Rafiki                                         | admin.DOMAIN | admin.myrafiki.com |
 
 </div>
 
 :::note
 The example domain and subdomain values are for demonstration purposes only. You must use the actual domain names that you set up with your DNS host.  
 :::
+
+Next, update the DNS records (A records) to point to the static external IP address of the virtual machine according to the table above.
 
 ## Configure Compose file
 
@@ -504,7 +487,7 @@ Create Nginx configuration files for every exposed domain:
 
 <div class="overflow-table">
 
-| service                       | URL          | example            | Nginx config file                                               |
+| Service                       | URL          | Example            | Nginx config file                                               |
 | ----------------------------- | ------------ | ------------------ | --------------------------------------------------------------- |
 | Open Payments resource server | DOMAIN       | myrafiki.com       | /etc/nginx/sites-available/open_payments_resource_server.config |
 | ILP connector                 | ilp.DOMAIN   | ilp.myrafiki.com   | /etc/nginx/sites-available/ilp.config                           |
