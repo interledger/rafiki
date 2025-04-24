@@ -1477,7 +1477,7 @@ describe('OutgoingPaymentService', (): void => {
         walletAddressId: receiverWalletAddress.id,
         client,
         tenantId: tenant.id,
-        receiver: incomingPayment.getUrl(incomingPayment.walletAddress),
+        receiver: incomingPayment.getUrl(Config.openPaymentsUrl),
         receiveAmount,
         method: 'ilp'
       })
@@ -2009,7 +2009,6 @@ describe('OutgoingPaymentService', (): void => {
         LifecycleError.QuoteExpired
       )
     })
-    test('webhook event creates additional operator webhook if tenant is recipient', async (): Promise<void> => {})
   })
 
   describe('fund', (): void => {
