@@ -1,7 +1,10 @@
 ---
 title: Peers
+tableOfContents:
+  maxHeadingLevel: 4
 ---
 
+import { Tabs, TabItem } from '@astrojs/starlight/components'
 import { CodeBlock, LinkOut } from '@interledger/docs-design-system'
 import { Badge } from '@astrojs/starlight/components'
 
@@ -67,92 +70,67 @@ As mentioned in the prerequisites, you must add an asset to your Rafiki instance
 
 ### Add a peer
 
-After adding an asset, add a peer using the `createPeer` GraphQL mutation.
-
-#### `createPeer`
-
-<CodeBlock title="Example createPeer Mutation">
-
-```graphql
-mutation CreatePeer($input: CreatePeerInput!) {
-  createPeer(input: $input) {
-    code
-    success
-    message
-    peer {
-      id
-      asset {
+<Tabs>
+  <TabItem label="Operation">
+    ```graphql
+    mutation CreatePeer($input: CreatePeerInput!) {
+      createPeer(input: $input) {
         code
-        scale
+        success
+        message
+        peer {
+          id
+          asset {
+            code
+            scale
+          }
+          staticIlpAddress
+          name
+        }
       }
-      staticIlpAddress
-      name
     }
-  }
-}
-```
-
-</CodeBlock>
-
-##### Example
-
-<CodeBlock title='Example JSON request'>
-
-```json
-{
-  "input": {
-	"staticIlpAddress": "g.othergreatwallet",
-	"name": "The Other Great Wallet"
-	"http": {
-  		"incoming": {"authTokens": ["mytoken"]},
-  		"outgoing": {"endpoint": "ilp.othergreatwallet.com", "authToken": "theirtoken"}
-	  },
-	"assetId": "INSERT_ASSET_ID",
-	"initialLiquidity": <optionally, an initial amount of liquidity to provision. Liquidity can also be deposited via the `DepositPeerLiquidity` mutation>
-  }
-}
-```
-
-</CodeBlock>
-
-<div class="overflow-table">
-
-| Variable                   | Description                                                                                                                 | Required |
-| -------------------------- | --------------------------------------------------------------------------------------------------------------------------- | -------- |
-| `assetID`                  | The ID of the asset that you and your peer will use to ultimately settle your net obligations outside of Interledger.       | Y        |
-| `staticILPaddress`         | Your peer’s static ILP address (the example uses `g.othergreatwallet`)                                                      | Y        |
-| `name`                     | Your peer’s name (the example uses “The Other Great Wallet”)                                                                | Y        |
-| `http.incoming.authTokens` | An array of auth tokens accepted by your Rafiki instance for authenticating incoming packets from your peer.                | Y        |
-| `http.outgoing.endpoint`   | Your peer’s connector endpoint. By default it is on local port 0.0.0.0:3002                                                 | Y        |
-| `http.outgoing.authToken`  | The auth token presented to your peer for authenticating outgoing packets from your Rafiki instance.                        | Y        |
-| `initialLiquidity`         | Initial amount of liquidity to deposit for peer. Liquidity can also be deposited using the `DepositPeerLiquidity` mutation. | N        |
-
-</div>
-
-<CodeBlock title="Example JSON response">
-
-```json
-{
-  "data": {
-    "createPeer": {
-      "code": "200",
-      "success": true,
-      "message": "Created ILP Peer",
-      "peer": {
-        "id": "480ef339-7842-4501-a905-923fc1339cef",
-        "asset": {
-          "code": "USD",
-          "scale": 2
+    ```
+  </TabItem>
+  <TabItem label="Variables">
+    ```json wrap
+    {
+      "input": {
+      "staticIlpAddress": "g.othergreatwallet",
+      "name": "The Other Great Wallet"
+      "http": {
+          "incoming": {"authTokens": ["mytoken"]},
+          "outgoing": {"endpoint": "ilp.othergreatwallet.com", "authToken": "theirtoken"}
         },
-        "staticIlpAddress": "g.othergreatwallet",
-        "name": "The Other Great Wallet"
+      "assetId": "INSERT_ASSET_ID",
+      "initialLiquidity": <optionally, an initial amount of liquidity to provision. Liquidity can also be deposited via the `DepositPeerLiquidity` mutation>
       }
     }
-  }
-}
-```
-
-</CodeBlock>
+    ```
+    For more information about this mutation's input object, see [`CreatePeerInput`](/apis/graphql/backend/inputobjects/#createpeerinput).
+  </TabItem>
+  <TabItem label="Response">
+    ```json
+    {
+      "data": {
+        "createPeer": {
+          "code": "200",
+          "success": true,
+          "message": "Created ILP Peer",
+          "peer": {
+            "id": "480ef339-7842-4501-a905-923fc1339cef",
+            "asset": {
+              "code": "USD",
+              "scale": 2
+            },
+            "staticIlpAddress": "g.othergreatwallet",
+            "name": "The Other Great Wallet"
+          }
+        }
+      }
+    }
+    ```
+  </TabItem>
+</Tabs>
 
 ## Manage peers
 
@@ -160,98 +138,73 @@ Once a peer has been added to your Rafiki instance, there is minimal ongoing man
 
 ### Edit a peer
 
-<details>
-<summary>How to edit a peer</summary>
 Occasionally, you may need to adjust peering configurations or address any changes communicated by the peer. Some examples include updating new endpoints or tokens, technical settings like the maximum packet amount, or peer liquidity thresholds.
 
 In this example we will update the peer we just created. Rather than change any of the peering details, we can add some optional details that we didn't include when we created the peer. We will define the `maxPacketAmount` and the `liquidityThreshold`.
 
-#### `updatePeer`
-
-<CodeBlock title="Example updatePeer Mutation">
-
-```graphql
-mutation UpdatePeer($input: UpdatePeerInput!) {
-  updatePeer(input: $input) {
-    peer {
-      id
-      name
-      http {
-        outgoing {
-          authToken
-          endpoint
+<Tabs>
+  <TabItem label="Operation">
+    ```graphql
+    mutation UpdatePeer($input: UpdatePeerInput!) {
+      updatePeer(input: $input) {
+        peer {
+          id
+          name
+          http {
+            outgoing {
+              authToken
+              endpoint
+            }
+          }
+          maxPacketAmount
+          liquidityThreshold
         }
       }
-      maxPacketAmount
-      liquidityThreshold
     }
-  }
-}
-```
-
-</CodeBlock>
-
-##### Example
-
-The input object for the update operation only requires that the `id` is present. All other variables are optional. For this example we will include the required `id` variable, as well as the optional variables of the fields we wish to update. In this case, `maxPacketAmount` and `liquidityThreshold`.
-
-<CodeBlock title='Example JSON request'>
-
-```json
-{
-  "input": {
-    "id": "480ef339-7842-4501-a905-923fc1339cef",
-    "maxPacketAmount": 1000,
-    "liquidityThreshold": 100
-  }
-}
-```
-
-</CodeBlock>
-
-<div class="overflow-table">
-
-| Variable             | Description                                                                                         | Required |
-| -------------------- | --------------------------------------------------------------------------------------------------- | -------- |
-| `id`                 | The ID of the peer you wish to update.                                                              | Y        |
-| `maxPacketAmount`    | Maximum packet size you are willing to accept from the peer.                                        | N        |
-| `liquidityThreshold` | A webhook event notifies the account servicing entity if peer liquidity falls below this new value. | N        |
-
-</div>
-
-<CodeBlock title="Example JSON response">
-
-```json
-{
-  "data": {
-    "updatePeer": {
-      "code": "200",
-      "success": true,
-      "message": "Updated ILP Peer",
-      "peer": {
+    ```
+  </TabItem>
+  <TabItem label="Variables">
+  The input object for the update operation only requires that the `id` is present. All other variables are optional. For this example we will include the required `id` variable, as well as the optional variables of the fields we wish to update. In this case, `maxPacketAmount` and `liquidityThreshold`.. 
+    ```json
+    {
+      "input": {
         "id": "480ef339-7842-4501-a905-923fc1339cef",
-        "name": "The Other Great Wallet",
-        "http": {
-          "outgoing": {
-            "authToken": "test",
-            "endpoint": "http://peering-test:3002"
-          }
-        },
         "maxPacketAmount": 1000,
         "liquidityThreshold": 100
       }
     }
-  }
-}
-```
-
-</CodeBlock>
-</details>
+    ```
+    For more information about this mutation's input object, see [`UpdatePeerInput`](/apis/graphql/backend/inputobjects/#updatepeerinput).
+  </TabItem>
+  <TabItem label="Response">
+    ```json
+    {
+      "data": {
+        "updatePeer": {
+          "code": "200",
+          "success": true,
+          "message": "Updated ILP Peer",
+          "peer": {
+            "id": "480ef339-7842-4501-a905-923fc1339cef",
+            "name": "The Other Great Wallet",
+            "http": {
+              "outgoing": {
+                "authToken": "test",
+                "endpoint": "http://peering-test:3002"
+              }
+            },
+            "maxPacketAmount": 1000,
+            "liquidityThreshold": 100
+          }
+        }
+      }
+    }
+    ```
+  </TabItem>
+</Tabs>
 
 ### Delete a peer
 
-<details>
-<summary>How to delete a peer</summary>
 Deleting a peer is an action that removes a peer from your Rafiki instance. There are specific rules and considerations to keep in mind before starting this irreversible operation.
 
 You can only delete a peer if no payments were sent to or received from that peer. This ensures that historical payment records are preserved. If you attempt to delete a peer with payment history, the backend throws an error, preventing the deletion.
@@ -262,53 +215,35 @@ Deleting a peer is useful in situations where there were configuration errors wh
 Deleting a peer is permanent and cannot be reversed. If you delete a peer in error, you must create another new peer.
 :::
 
-#### `deletePeer`
-
-<CodeBlock title="Example deletePeer Mutation">
-
-```graphql
-mutation DeletePeer($input: DeletePeerInput!) {
-  deletePeer(input: $input) {
-    success
-  }
-}
-```
-
-</CodeBlock>
-
-##### Example
-
-<CodeBlock title='Example JSON request'>
-
-```json
-{
-  "input": {
-    "id": "480ef339-7842-4501-a905-923fc1339cef"
-  }
-}
-```
-
-</CodeBlock>
-
-<div class="overflow-table">
-
-| Variable | Description                            | Required |
-| -------- | -------------------------------------- | -------- |
-| `id`     | The ID of the peer you wish to delete. | Y        |
-
-</div>
-
-<CodeBlock title="Example JSON response">
-
-```json
-{
-  "data": {
-    "deletePeer": {
-      "success": true
+<Tabs>
+  <TabItem label="Operation">
+    ```graphql
+    mutation DeletePeer($input: DeletePeerInput!) {
+      deletePeer(input: $input) {
+        success
+      }
     }
-  }
-}
-```
-
-</CodeBlock>
-</details>
+    ```
+  </TabItem>
+  <TabItem label="Variables">
+    ```json
+    {
+      "input": {
+        "id": "480ef339-7842-4501-a905-923fc1339cef"
+      }
+    }
+    ```
+    For more information about this mutation's input object, see [`DeletePeerInput`](/apis/graphql/backend/inputobjects/#deletepeerinput).
+  </TabItem>
+  <TabItem label="Response">
+    ```json
+    {
+      "data": {
+        "deletePeer": {
+          "success": true
+        }
+      }
+    }
+    ```
+  </TabItem>
+</Tabs>
