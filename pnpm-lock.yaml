@@ -211,7 +211,7 @@ importers:
         version: 1.0.6
       knex:
         specifier: ^3.1.0
-        version: 3.1.0(pg@8.11.3)
+        version: 3.1.0(pg@8.15.6)
       koa:
         specifier: ^2.15.4
         version: 2.16.0
@@ -228,8 +228,8 @@ importers:
         specifier: ^1.1.2
         version: 1.1.2(objection@3.1.5)
       pg:
-        specifier: ^8.11.3
-        version: 8.11.3
+        specifier: ^8.15.6
+        version: 8.15.6
       pino:
         specifier: ^8.19.0
         version: 8.19.0
@@ -425,7 +425,7 @@ importers:
         version: 1.0.6
       knex:
         specifier: ^3.1.0
-        version: 3.1.0(pg@8.11.3)
+        version: 3.1.0(pg@8.15.6)
       koa:
         specifier: ^2.15.4
         version: 2.16.0
@@ -448,8 +448,8 @@ importers:
         specifier: 5.1.3-alpha.2
         version: 5.1.3-alpha.2
       pg:
-        specifier: ^8.11.3
-        version: 8.11.3
+        specifier: ^8.15.6
+        version: 8.15.6
       pino:
         specifier: ^8.19.0
         version: 8.19.0
@@ -3146,6 +3146,7 @@ packages:
   /@envelop/instrumentation@1.0.0:
     resolution: {integrity: sha512-cxgkB66RQB95H3X27jlnxCRNTmPuSTgmBAq6/4n2Dtv4hsk4yz8FadA1ggmd0uZzvKqWD6CR+WFgTjhDqg7eyw==}
     engines: {node: '>=18.0.0'}
+    requiresBuild: true
     dependencies:
       '@whatwg-node/promise-helpers': 1.3.0
       tslib: 2.8.1
@@ -3162,6 +3163,7 @@ packages:
   /@envelop/types@5.2.1:
     resolution: {integrity: sha512-CsFmA3u3c2QoLDTfEpGr4t25fjMU31nyvse7IzWTvb0ZycuPjMjb0fjlheh+PbhBYb9YLugnT2uY6Mwcg1o+Zg==}
     engines: {node: '>=18.0.0'}
+    requiresBuild: true
     dependencies:
       '@whatwg-node/promise-helpers': 1.3.0
       tslib: 2.8.1
@@ -7739,7 +7741,6 @@ packages:
     resolution: {integrity: sha512-wq0cICSkRLVaf3UGLMGItu/PtdY7oaXaI/RVU+xliKVOtRna3PRY57ZDfztpDL0n11vfymMUnXv8QwYCO7L1wg==}
     dependencies:
       undici-types: 5.26.5
-    dev: true
 
   /@types/node@20.14.15:
     resolution: {integrity: sha512-Fz1xDMCF/B00/tYSVMlmK7hVeLh7jE5f3B7X1/hmV0MJBwE27KlS7EvD/Yp+z1lm8mVhwV5w+n8jOZG8AfTlKw==}
@@ -8510,6 +8511,7 @@ packages:
   /@whatwg-node/promise-helpers@1.3.0:
     resolution: {integrity: sha512-486CouizxHXucj8Ky153DDragfkMcHtVEToF5Pn/fInhUUSiCmt9Q4JVBa6UK5q4RammFBtGQ4C9qhGlXU9YbA==}
     engines: {node: '>=16.0.0'}
+    requiresBuild: true
     dependencies:
       tslib: 2.8.1
 
@@ -9055,7 +9057,7 @@ packages:
       unist-util-visit: 5.0.0
       unstorage: 1.15.0
       vfile: 6.0.3
-      vite: 6.2.5(@types/node@18.11.9)(yaml@2.7.0)
+      vite: 6.2.5(@types/node@20.12.7)(yaml@2.7.0)
       vitefu: 1.0.6(vite@6.2.5)
       xxhash-wasm: 1.1.0
       yargs-parser: 21.1.1
@@ -9154,7 +9156,7 @@ packages:
       unist-util-visit: 5.0.0
       unstorage: 1.15.0
       vfile: 6.0.3
-      vite: 6.2.5(@types/node@18.11.9)(yaml@2.7.0)
+      vite: 6.2.5(@types/node@20.12.7)(yaml@2.7.0)
       vitefu: 1.0.6(vite@6.2.5)
       xxhash-wasm: 1.1.0
       yargs-parser: 21.1.1
@@ -9640,11 +9642,6 @@ packages:
 
   /buffer-from@1.1.2:
     resolution: {integrity: sha512-E+XQCRwSbaaiChtv6k6Dwgc+bx+Bs6vuKJHHl5kox/BaKbhiXzqQOwK4cO22yElGp2OCmjwVhT3HmxgyPGnJfQ==}
-
-  /buffer-writer@2.0.0:
-    resolution: {integrity: sha512-a7ZpuTZU1TRtnwyCNW3I5dc0wWNC3VR9S++Ewyk2HHZdrO3CQJqSpd+95Us590V6AL7JqUAH2IwZ/398PmNFgw==}
-    engines: {node: '>=4'}
-    dev: false
 
   /buffer@5.7.1:
     resolution: {integrity: sha512-EHcyIPBQ4BSGlvjB16k5KgAJ27CIsHY/2JBmCRReo48y9rQ3MaUzWX3KVlBa4U7MyX02HdVj0K7C3WaB3ju7FQ==}
@@ -14761,7 +14758,7 @@ packages:
     engines: {node: '>= 8'}
     dev: false
 
-  /knex@3.1.0(pg@8.11.3):
+  /knex@3.1.0(pg@8.15.6):
     resolution: {integrity: sha512-GLoII6hR0c4ti243gMs5/1Rb3B+AjwMOfjYm97pu0FOQa7JH56hgBxYf5WK2525ceSbBY1cjeZ9yk99GPMB6Kw==}
     engines: {node: '>=16'}
     hasBin: true
@@ -14798,7 +14795,7 @@ packages:
       getopts: 2.3.0
       interpret: 2.2.0
       lodash: 4.17.21
-      pg: 8.11.3
+      pg: 8.15.6
       pg-connection-string: 2.6.2
       rechoir: 0.8.0
       resolve-from: 5.0.0
@@ -16891,7 +16888,7 @@ packages:
       ajv: 8.17.1
       ajv-formats: 2.1.1(ajv@8.17.1)
       db-errors: 0.2.3
-      knex: 3.1.0(pg@8.11.3)
+      knex: 3.1.0(pg@8.15.6)
     dev: false
 
   /oer-utils@5.1.3-alpha.2:
@@ -17189,10 +17186,6 @@ packages:
     resolution: {integrity: sha512-Y8f9qUlBzW8qauJjd/eu6jlpJZsuPJm2ZAV0cDVd420o4EdpH5RPdoCv+60/TdJflGatr4sDfpAL6ArWZbM5tA==}
     dev: false
 
-  /packet-reader@1.0.0:
-    resolution: {integrity: sha512-HAKu/fG3HpHFO0AA8WE8q2g+gBJaZ9MG7fcKk+IJPLTGAD6Psw4443l+9DGRbOIh3/aXr7Phy0TjilYivJo5XQ==}
-    dev: false
-
   /pagefind@1.3.0:
     resolution: {integrity: sha512-8KPLGT5g9s+olKMRTU9LFekLizkVIu9tes90O1/aigJ0T5LmyPqTzGJrETnSw3meSYg58YH7JTzhTTW/3z6VAw==}
     hasBin: true
@@ -17372,8 +17365,8 @@ packages:
       is-reference: 3.0.0
     dev: true
 
-  /pg-cloudflare@1.1.1:
-    resolution: {integrity: sha512-xWPagP/4B6BgFO+EKz3JONXv3YDgvkbVrGw2mTo3D6tVDQRh1e7cqVGvyR3BE+eQgAvx1XhW/iEASj4/jCWl3Q==}
+  /pg-cloudflare@1.2.5:
+    resolution: {integrity: sha512-OOX22Vt0vOSRrdoUPKJ8Wi2OpE/o/h9T8X1s4qSkCedbNah9ei2W2765be8iMVxQUsvgT7zIAT2eIa9fs5+vtg==}
     requiresBuild: true
     dev: false
     optional: true
@@ -17382,21 +17375,29 @@ packages:
     resolution: {integrity: sha512-ch6OwaeaPYcova4kKZ15sbJ2hKb/VP48ZD2gE7i1J+L4MspCtBMAx8nMgz7bksc7IojCIIWuEhHibSMFH8m8oA==}
     dev: false
 
+  /pg-connection-string@2.8.5:
+    resolution: {integrity: sha512-Ni8FuZ8yAF+sWZzojvtLE2b03cqjO5jNULcHFfM9ZZ0/JXrgom5pBREbtnAw7oxsxJqHw9Nz/XWORUEL3/IFow==}
+    dev: false
+
   /pg-int8@1.0.1:
     resolution: {integrity: sha512-WCtabS6t3c8SkpDBUlb1kjOs7l66xsGdKpIPZsg4wR+B3+u9UAum2odSsF9tnvxg80h4ZxLWMy4pRjOsFIqQpw==}
     engines: {node: '>=4.0.0'}
     dev: false
 
-  /pg-pool@3.6.1(pg@8.11.3):
-    resolution: {integrity: sha512-jizsIzhkIitxCGfPRzJn1ZdcosIt3pz9Sh3V01fm1vZnbnCMgmGl5wvGGdNN2EL9Rmb0EcFoCkixH4Pu+sP9Og==}
+  /pg-pool@3.9.6(pg@8.15.6):
+    resolution: {integrity: sha512-rFen0G7adh1YmgvrmE5IPIqbb+IgEzENUm+tzm6MLLDSlPRoZVhzU1WdML9PV2W5GOdRA9qBKURlbt1OsXOsPw==}
     peerDependencies:
       pg: '>=8.0'
     dependencies:
-      pg: 8.11.3
+      pg: 8.15.6
     dev: false
 
   /pg-protocol@1.6.0:
     resolution: {integrity: sha512-M+PDm637OY5WM307051+bsDia5Xej6d9IR4GwJse1qA1DIhiKlksvrneZOYQq42OM+spubpcNYEo2FcKQrDk+Q==}
+    dev: false
+
+  /pg-protocol@1.9.5:
+    resolution: {integrity: sha512-DYTWtWpfd5FOro3UnAfwvhD8jh59r2ig8bPtc9H8Ds7MscE/9NYruUQWFAOuraRl29jwcT2kyMFQ3MxeaVjUhg==}
     dev: false
 
   /pg-types@2.2.0:
@@ -17410,8 +17411,8 @@ packages:
       postgres-interval: 1.2.0
     dev: false
 
-  /pg@8.11.3:
-    resolution: {integrity: sha512-+9iuvG8QfaaUrrph+kpF24cXkH1YOOUeArRNYIxq1viYHZagBxrTno7cecY1Fa44tJeZvaoG+Djpkc3JwehN5g==}
+  /pg@8.15.6:
+    resolution: {integrity: sha512-yvao7YI3GdmmrslNVsZgx9PfntfWrnXwtR+K/DjI0I/sTKif4Z623um+sjVZ1hk5670B+ODjvHDAckKdjmPTsg==}
     engines: {node: '>= 8.0.0'}
     peerDependencies:
       pg-native: '>=3.0.1'
@@ -17419,15 +17420,13 @@ packages:
       pg-native:
         optional: true
     dependencies:
-      buffer-writer: 2.0.0
-      packet-reader: 1.0.0
-      pg-connection-string: 2.6.2
-      pg-pool: 3.6.1(pg@8.11.3)
-      pg-protocol: 1.6.0
+      pg-connection-string: 2.8.5
+      pg-pool: 3.9.6(pg@8.15.6)
+      pg-protocol: 1.9.5
       pg-types: 2.2.0
       pgpass: 1.0.5
     optionalDependencies:
-      pg-cloudflare: 1.1.1
+      pg-cloudflare: 1.2.5
     dev: false
 
   /pgpass@1.0.5:
@@ -21149,6 +21148,7 @@ packages:
       yaml: 2.7.0
     optionalDependencies:
       fsevents: 2.3.3
+    dev: true
 
   /vite@6.2.5(@types/node@20.12.7)(yaml@2.7.0):
     resolution: {integrity: sha512-j023J/hCAa4pRIUH6J9HemwYfjB5llR2Ps0CWeikOtdR8+pAURAk0DoJC5/mm9kd+UgdnIy7d6HE4EAvlYhPhA==}
@@ -21197,7 +21197,6 @@ packages:
       yaml: 2.7.0
     optionalDependencies:
       fsevents: 2.3.3
-    dev: true
 
   /vitefu@1.0.6(vite@6.2.5):
     resolution: {integrity: sha512-+Rex1GlappUyNN6UfwbVZne/9cYC4+R2XDk9xkNXBKMw6HQagdX9PgZ8V2v1WUSK1wfBLp7qbI1+XSNIlB1xmA==}
@@ -21207,7 +21206,7 @@ packages:
       vite:
         optional: true
     dependencies:
-      vite: 6.2.5(@types/node@18.11.9)(yaml@2.7.0)
+      vite: 6.2.5(@types/node@20.12.7)(yaml@2.7.0)
     dev: false
 
   /vscode-jsonrpc@8.2.0:
