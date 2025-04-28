@@ -1,35 +1,24 @@
 ---
 title: Docker Compose
+tableOfContents:
+  maxHeadingLevel: 4
 ---
 
 import { LinkOut } from '@interledger/docs-design-system'
+import BackEnv from '/src/partials/backend-variables-docker-compose.mdx'
+import AuthEnv from '/src/partials/auth-variables-docker-compose.mdx'
+import FrontEnv from '/src/partials/frontend-variables-docker-compose.mdx'
+import KratosWarn from '/src/partials/kratos-warning.mdx'
 
 This guide is an example of deploying Rafiki using Docker Compose with Nginx as a reverse proxy on a virtual machine (VM) in a cloud environment. This guide also uses <LinkOut href='https://certbot.eff.org/'>Certbot</LinkOut> to generate <LinkOut href='https://letsencrypt.org/'>Let’s Encrypt TLS certificates</LinkOut> to secure exposed ports using HTTPS.
+
+From <LinkOut href='https://docs.docker.com/compose/'>Docker's documentation</LinkOut>, Docker Compose is a tool for defining and running multi-container applications using a single YAML file. It simplifies the process of configuring and running multiple services.
 
 :::note
 While Docker Compose could serve as a production deployment, it is an environment best suited for development and testing. For more information, refer to Docker's <LinkOut href='https://docs.docker.com/compose/intro/features-uses/#common-use-cases-of-docker-compose'>documentation</LinkOut> on common use cases.
 :::
 
 ## Prerequisites
-
-### Domain and subdomains setup
-
-We will map the [Open Payments resource server](/integration/deployment/services/backend-service#open-payments) to your domain, and the [ILP connector](/integration/deployment/services/backend-service#interledger-connector), [Open Payments auth server](/integration/deployment/services/auth-service), and [Admin UI](/integration/deployment/services/frontend-service) to subdomains. Using the DNS host of your choice, set up your domain and subdomains according to the following recommended convention:
-
-<div class="overflow-table">
-
-| service                       | function                                                                    | URL          | example            |
-| ----------------------------- | --------------------------------------------------------------------------- | ------------ | ------------------ |
-| Open Payments resource server | Exposes the Open Payments APIs                                              | DOMAIN       | myrafiki.com       |
-| ILP connector                 | Exposes an ILP connector to send and receive ILP packets between peers      | ilp.DOMAIN   | ilp.myrafiki.com   |
-| Open Payments auth server     | Exposes a reference implementation of an Open Payments authorization server | auth.DOMAIN  | auth.myrafiki.com  |
-| Admin UI                      | Exposes an Admin UI to manage Rafiki                                        | admin.DOMAIN | admin.myrafiki.com |
-
-</div>
-
-:::note
-The example domain and subdomain values are for demonstration purposes only. You must use the actual domain names that you set up with your DNS host.  
-:::
 
 ### Deploy VM and install Docker
 
@@ -76,18 +65,18 @@ crontab -e
 0 3 * * * certbot renew
 ```
 
-### Update DNS records
+### Domain and DNS configuration
 
-Next update the DNS records (A records) to point to the static external IP address of the virtual machine:
+Map the [Open Payments resource server](/integration/deployment/services/backend-service#open-payments) to your domain, and the [ILP connector](/integration/deployment/services/backend-service#interledger-connector), [Open Payments auth server](/integration/deployment/services/auth-service), and [Admin UI](/integration/deployment/services/frontend-service) to subdomains. Using the DNS host of your choice, set up your domain and subdomains according to the following recommended convention:
 
 <div class="overflow-table">
 
-| service                       | URL          | example            |
-| ----------------------------- | ------------ | ------------------ |
-| Open Payments resource server | DOMAIN       | myrafiki.com       |
-| ILP Connector                 | ilp.DOMAIN   | ilp.myrafiki.com   |
-| Open Payments auth server     | auth.DOMAIN  | auth.myrafiki.com  |
-| Admin UI                      | admin.DOMAIN | admin.myrafiki.com |
+| Service                       | Exposes                                                           | URL          | Example            |
+| ----------------------------- | ----------------------------------------------------------------- | ------------ | ------------------ |
+| Open Payments resource server | Open Payments APIs                                                | DOMAIN       | myrafiki.com       |
+| ILP connector                 | ILP connector to send and receive ILP packets between peers       | ilp.DOMAIN   | ilp.myrafiki.com   |
+| Open Payments auth server     | Reference implementation of an Open Payments authorization server | auth.DOMAIN  | auth.myrafiki.com  |
+| Admin UI                      | Admin UI to manage Rafiki                                         | admin.DOMAIN | admin.myrafiki.com |
 
 </div>
 
@@ -95,18 +84,269 @@ Next update the DNS records (A records) to point to the static external IP addre
 The example domain and subdomain values are for demonstration purposes only. You must use the actual domain names that you set up with your DNS host.  
 :::
 
-## Configure compose file
+Next, update the DNS records (A records) to point to the static external IP address of the virtual machine according to the table above.
 
-Update the variables in the following compose file with values relevant to your environment and system. Refer to the [environment variables page](/resources/environment-variables/) for details.
+## Configure Compose file
 
-:::note[Update compose file]
-You must change the values enclosed within the brackets of the following compose file. Substitute `newest-version` with the latest Rafiki <LinkOut href='https://github.com/interledger/rafiki/releases'>version</LinkOut>.
+The Docker Compose file is a YAML configuration file used to define the services, networks, and volumes that make up a multi-container application. In this section, we'll explore the Compose file by breaking it down into the individual Rafiki services.
+
+:::note[Update Compose file]
+Before using the Compose file, you must update the variables with values relevant to your environment. Specifically, change the values enclosed within the brackets and substitute `newest-version` with the latest Rafiki <LinkOut href='https://github.com/interledger/rafiki/releases'>version</LinkOut>.
 :::
+
+### Docker Compose example
+
+While the actual Compose file is a single YAML file containing all of the services, this page will guide you through each service one by one. For each service, we'll look at the relevant configuration details along with the corresponding environment variables.
+
+#### Auth service
+
+The Rafiki `auth` service is responsible for handling authentication and authorization for your application. It connects to a Postgres database to store auth-related resources and a Redis database for storing session data. See [Auth service](/integration/deployment/services/auth-service/) for more information.
+
+Ports exposed:
+
+- 3003 (`ADMIN_PORT`) is used for the Auth Admin API
+- 3006 (`AUTH_PORT`) is used for the Open Payments authorization server
+
+Make sure to configure the `AUTH_DATABASE_URL` and `REDIS_URL` environment variables to point to your database instances.
 
 :::caution[Running Rafiki behind a proxy]
 If you plan to run your Rafiki instance behind a proxy, you must set the `TRUST_PROXY` variable to `true`
 :::
 
+```sh
+rafiki-auth:
+    image: ghcr.io/interledger/rafiki-auth:<newest-version>
+    container_name: rafiki-auth
+    environment:
+      AUTH_DATABASE_URL: {postgresql://postgres:password@localhost:5432/auth_development}
+      AUTH_SERVER_URL: {https://auth.myrafiki.com}
+      ADMIN_PORT: 3003
+      AUTH_PORT: 3006
+      INTROSPECTION_PORT: 3007
+      INTERACTION_PORT: 3009
+      COOKIE_KEY: {...}
+      IDENTITY_SERVER_SECRET: {...}
+      IDENTITY_SERVER_URL: {https://idp.mysystem.com}
+      REDIS_URL: {redis://127.0.0.1:6379}
+      TRUST_PROXY: true
+    depends_on:
+      - postgres
+    networks:
+      - rafiki
+    ports:
+      - '3003:3003'
+      - '3006:3006'
+      - '3007:3007'
+      - '3009:3009'
+    restart: always
+```
+
+##### Environment variables
+
+<AuthEnv />
+
+#### Backend service
+
+The Rafiki `backend` service handles business logic and external communication. It exposes the Open Payments APIs and an Interledger connector for sending and receiving packets. It connects to a Redis database for caching, a Postgres database for Open Payments resources, and TigerBeetle for accounting liquidity. See [Backend service](/integration/deployment/services/backend-service) for more information.
+
+:::note[TigerBeetle or Postgres for accounting database]
+TigerBeetle is recommended, but if you would rather use Postgres as an accounting database make sure to set `USE_TIGERBEETLE` to false.
+:::
+
+Ports exposed:
+
+- 3000 (`OPEN_PAYMENTS_PORT`) is used for the Open Payments resource server
+- 3001 (`ADMIN_PORT`) is used for the Backend Admin API
+- 3002 (`CONNECTOR_PORT`) is used for the ILP connector to send and receive ILP packets
+
+Make sure to configure the `DATABASE_URL` and `REDIS_URL` environment variables to point to your database instances.
+
+```sh
+rafiki-backend:
+    image: ghcr.io/interledger/rafiki-backend:<newest-version>
+    container_name: rafiki-backend
+    depends_on:
+      - postgres
+      - redis
+    environment:
+      AUTH_SERVER_GRANT_URL: {https://auth.myrafiki.com}
+      AUTH_SERVER_INTROSPECTION_URL: {https://auth.myrafiki.com/3007}
+      DATABASE_URL: {postgresql://postgres:password@localhost:5432/development}
+      ILP_ADDRESS: {test.myrafiki}
+      ADMIN_PORT: 3001
+      CONNECTOR_PORT: 3002
+      OPEN_PAYMENTS_PORT: 3000
+      OPEN_PAYMENTS_URL: {https://myrafiki.com}
+      REDIS_URL: {redis://127.0.0.1:6379}
+      WALLET_ADDRESS_URL: {https://myrafiki.com/rafiki-instance}
+      WEBHOOK_URL: {https://mysystem.com/webhooks}
+      EXCHANGE_RATES_URL: {https://mysystem.com/rates}
+      ILP_CONNECTOR_URL: {https://ilp.myrafiki.com}
+      INSTANCE_NAME: {'My ASE name'}
+      TRUST_PROXY: true
+      KEY_ID: ...
+      USE_TIGERBEETLE: true
+      TIGERBEETLE_CLUSTER_ID: 0
+      TIGERBEETLE_REPLICA_ADDRESSES: 10.5.0.50:4342
+    networks:
+      - rafiki
+    ports:
+      - '3000:3000'
+      - '3001:3001'
+      - '3002:3002'
+    privileged: true
+    restart: always
+    volumes:
+      - ../temp/:/workspace/temp/
+```
+
+##### Environment variables
+
+<BackEnv />
+
+#### Frontend service
+
+The Rafiki `frontend` service provides an internal admin interface for managing your Rafiki instance. It communicates with the Backend Admin API to facilitate administrative tasks. See [Frontend service](/integration/deployment/services/frontend-service) for more information.
+
+Ports exposed:
+
+- 3005 (`PORT`) is used to host the Rafiki Admin app
+
+Make sure to configure the `GRAPHQL_URL` and `OPEN_PAYMENTS_URL` environment variables to point to the appropriate endpoints.
+
+```sh
+rafiki-frontend:
+    image: ghcr.io/interledger/rafiki-frontend:<newest-version>
+    container_name: rafiki-frontend
+    depends_on:
+      - rafiki-backend
+    environment:
+      PORT: 3005
+      GRAPHQL_URL: {https://myrafiki.com:3001}
+      OPEN_PAYMENTS_URL: {https://myrafiki.com}
+      KRATOS_CONTAINER_PUBLIC_URL: {http://kratos:4433}
+      KRATOS_BROWSER_PUBLIC_URL: {https://admin.myrafiki.com/kratos}
+      KRATOS_ADMIN_URL: {http://kratos:4434/admin}
+    networks:
+      - rafiki
+    restart: always
+    privileged: true
+    ports:
+      - '3005:3005'
+```
+
+##### Environment variables
+
+<FrontEnv />
+
+#### TigerBeetle
+
+TigerBeetle is a high-performance database designed to handle double-entry/double-ledger accounting. It is recommended for managing liquidity and settlement accounts due to its speed and efficiency. See [Accounting](/overview/concepts/accounting/#tigerbeetle) for more information.
+
+To use TigerBeetle, make sure that `USE_TIGERBEETLE` is set to true in the backend service environment variables.
+
+```sh
+tigerbeetle:
+    image: ghcr.io/tigerbeetle/tigerbeetle:0.16.29
+    privileged: true
+    volumes:
+      - tigerbeetle-data:/var/lib/tigerbeetle
+    networks:
+      rafiki:
+        ipv4_address: 10.5.0.50
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        set -ex
+        DATA_FILE=/var/lib/tigerbeetle/cluster_0_replica_0.tigerbeetle
+        set +e
+        ls $$DATA_FILE
+        DATA_FILE_EXISTS="$$?"
+        set -e
+        echo $$DATA_FILE_EXISTS
+        if [ "$$DATA_FILE_EXISTS" != 0 ]; then
+          ./tigerbeetle format --cluster=0 --replica=0 --replica-count=1 $$DATA_FILE;
+        fi
+        hostname -i
+        ls /var/lib/tigerbeetle
+        ./tigerbeetle start --addresses=0.0.0.0:4342 $$DATA_FILE
+```
+
+#### Postgres
+
+The Postgres service is a relational database management system used to store and manage application data. Both the `auth` and `backend` services rely on Postgres databases.
+
+```sh
+postgres:
+    image: 'postgres:16'
+    container_name: postgres
+    environment:
+      POSTGRES_USER: ...
+      POSTGRES_PASSWORD: ...
+    networks:
+      - rafiki
+    restart: unless-stopped
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+      - ../dbinit.sql:/docker-entrypoint-initdb.d/init.sql
+```
+
+#### Redis
+
+The Redis service is used for caching and session management across the application. Both the `auth` and `backend` services rely on Redis databases.
+
+```sh
+redis:
+    image: 'redis:7'
+    restart: unless-stopped
+    networks:
+      - rafiki
+```
+
+#### Kratos
+
+The Kratos service is an identity and user management solution used by Rafiki's `frontend` service for handling authentication and user management tasks.
+
+<KratosWarn />
+
+```sh
+kratos:
+    image: 'oryd/kratos:v1.2.0'
+    privileged: true
+    ports:
+      - '4433:4433'
+    volumes:
+      - ../entrypoint.sh:/entrypoint.sh
+      - ../identity.schema.json:/etc/config/kratos/identity.schema.json
+      - ./kratos.yml:/etc/config/kratos/kratos.yml
+    entrypoint: ['/entrypoint.sh']
+    networks:
+      - rafiki
+```
+
+#### Networks and volumes
+
+In Docker Compose, networks and volumes are necessary for enabling communication between services and persisting data storage for containers.
+
+```sh
+networks:
+  testnet:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 10.5.0.0/24
+          gateway: 10.5.0.1
+
+volumes:
+  pg-data:
+  tigerbeetle-data:
+```
+
+#### Complete Docker Compose example
+
+<details>
+<summary>Click to expand</summary>
 ```sh
 name: 'my-rafiki'
 services:
@@ -136,133 +376,110 @@ services:
       - '3009:3009'
     restart: always
 
-  rafiki-backend:
-    image: ghcr.io/interledger/rafiki-backend:<newest-version>
-    container_name: rafiki-backend
-    depends_on:
-      - postgres
-      - redis
-    environment:
-      AUTH_SERVER_GRANT_URL: {https://auth.myrafiki.com}
-      AUTH_SERVER_INTROSPECTION_URL: {https://auth.myrafiki.com/3007}
-      DATABASE_URL: {postgresql://...}
-      ILP_ADDRESS: {test.myrafiki}
-      ADMIN_PORT: 3001
-      CONNECTOR_PORT: 3002
-      OPEN_PAYMENTS_PORT: 3000
-      OPEN_PAYMENTS_URL: {https://myrafiki.com}
-      REDIS_URL: {redis://...}
-      WALLET_ADDRESS_URL: {https://myrafiki.com/rafiki-instance}
-      WEBHOOK_URL: {https://mysystem.com/webhooks}
-      EXCHANGE_RATES_URL: {https://mysystem.com/rates}
-      ILP_CONNECTOR_URL: {https://ilp.myrafiki.com}
-      INSTANCE_NAME: {'My ASE name'}
-      TRUST_PROXY: true
-      KEY_ID: ...
-      USE_TIGERBEETLE: true
-      TIGERBEETLE_CLUSTER_ID: 0
-      TIGERBEETLE_REPLICA_ADDRESSES: 10.5.0.50:4342
-    networks:
-      - rafiki
-    ports:
-      - '3000:3000'
-      - '3001:3001'
-      - '3002:3002'
-    privileged: true
-    restart: always
-    volumes:
-      - ../temp/:/workspace/temp/
+rafiki-backend:
+image: ghcr.io/interledger/rafiki-backend:<newest-version>
+container_name: rafiki-backend
+depends_on: - postgres - redis
+environment:
+AUTH_SERVER_GRANT_URL: {https://auth.myrafiki.com}
+AUTH_SERVER_INTROSPECTION_URL: {https://auth.myrafiki.com/3007}
+DATABASE_URL: {postgresql://...}
+ILP_ADDRESS: {test.myrafiki}
+ADMIN_PORT: 3001
+CONNECTOR_PORT: 3002
+OPEN_PAYMENTS_PORT: 3000
+OPEN_PAYMENTS_URL: {https://myrafiki.com}
+REDIS_URL: {redis://...}
+WALLET_ADDRESS_URL: {https://myrafiki.com/rafiki-instance}
+WEBHOOK_URL: {https://mysystem.com/webhooks}
+EXCHANGE_RATES_URL: {https://mysystem.com/rates}
+ILP_CONNECTOR_URL: {https://ilp.myrafiki.com}
+INSTANCE_NAME: {'My ASE name'}
+TRUST_PROXY: true
+KEY_ID: ...
+USE_TIGERBEETLE: true
+TIGERBEETLE_CLUSTER_ID: 0
+TIGERBEETLE_REPLICA_ADDRESSES: 10.5.0.50:4342
+networks: - rafiki
+ports: - '3000:3000' - '3001:3001' - '3002:3002'
+privileged: true
+restart: always
+volumes: - ../temp/:/workspace/temp/
 
-  rafiki-frontend:
-    image: ghcr.io/interledger/rafiki-frontend:<newest-version>
-    container_name: rafiki-frontend
-    depends_on:
-      - rafiki-backend
-    environment:
-      PORT: 3005
-      GRAPHQL_URL: {https://myrafiki.com:3001}
-      OPEN_PAYMENTS_URL: {https://myrafiki.com}
-      KRATOS_CONTAINER_PUBLIC_URL: {http://kratos:4433}
-      KRATOS_BROWSER_PUBLIC_URL: {https://admin.myrafiki.com/kratos}
-      KRATOS_ADMIN_URL: {http://kratos:4434/admin}
-    networks:
-      - rafiki
-    restart: always
-    privileged: true
-    ports:
-      - '3005:3005'
+rafiki-frontend:
+image: ghcr.io/interledger/rafiki-frontend:<newest-version>
+container_name: rafiki-frontend
+depends_on: - rafiki-backend
+environment:
+PORT: 3005
+GRAPHQL_URL: {https://myrafiki.com:3001}
+OPEN_PAYMENTS_URL: {https://myrafiki.com}
+KRATOS_CONTAINER_PUBLIC_URL: {http://kratos:4433}
+KRATOS_BROWSER_PUBLIC_URL: {https://admin.myrafiki.com/kratos}
+KRATOS_ADMIN_URL: {http://kratos:4434/admin}
+networks: - rafiki
+restart: always
+privileged: true
+ports: - '3005:3005'
 
-  tigerbeetle:
-    image: ghcr.io/tigerbeetle/tigerbeetle:0.16.29
-    privileged: true
-    volumes:
-      - tigerbeetle-data:/var/lib/tigerbeetle
-    networks:
-      rafiki:
-        ipv4_address: 10.5.0.50
-    entrypoint:
-      - /bin/sh
-      - -c
-      - |
-        set -ex
-        DATA_FILE=/var/lib/tigerbeetle/cluster_0_replica_0.tigerbeetle
-        set +e
-        ls $$DATA_FILE
+tigerbeetle:
+image: ghcr.io/tigerbeetle/tigerbeetle:0.16.29
+privileged: true
+volumes: - tigerbeetle-data:/var/lib/tigerbeetle
+networks:
+rafiki:
+ipv4_address: 10.5.0.50
+entrypoint: - /bin/sh - -c - |
+set -ex
+DATA_FILE=/var/lib/tigerbeetle/cluster_0_replica_0.tigerbeetle
+set +e
+ls $$DATA_FILE
         DATA_FILE_EXISTS="$$?"
-        set -e
-        echo $$DATA_FILE_EXISTS
+set -e
+echo $$DATA_FILE_EXISTS
         if [ "$$DATA_FILE_EXISTS" != 0 ]; then
-          ./tigerbeetle format --cluster=0 --replica=0 --replica-count=1 $$DATA_FILE;
+./tigerbeetle format --cluster=0 --replica=0 --replica-count=1 $$DATA_FILE;
         fi
         hostname -i
         ls /var/lib/tigerbeetle
         ./tigerbeetle start --addresses=0.0.0.0:4342 $$DATA_FILE
 
-  postgres:
-    image: 'postgres:16'
-    container_name: postgres
-    environment:
-      POSTGRES_USER: ...
-      POSTGRES_PASSWORD: ...
-    networks:
-      - rafiki
-    restart: unless-stopped
-    volumes:
-      - pg-data:/var/lib/postgresql/data
-      - ../dbinit.sql:/docker-entrypoint-initdb.d/init.sql
+postgres:
+image: 'postgres:16'
+container_name: postgres
+environment:
+POSTGRES_USER: ...
+POSTGRES_PASSWORD: ...
+networks: - rafiki
+restart: unless-stopped
+volumes: - pg-data:/var/lib/postgresql/data - ../dbinit.sql:/docker-entrypoint-initdb.d/init.sql
 
-  redis:
-    image: 'redis:7'
-    restart: unless-stopped
-    networks:
-      - rafiki
+redis:
+image: 'redis:7'
+restart: unless-stopped
+networks: - rafiki
 
-  kratos:
-    image: 'oryd/kratos:v1.2.0'
-    privileged: true
-    ports:
-      - '4433:4433'
-    volumes:
-      - ../entrypoint.sh:/entrypoint.sh
-      - ../identity.schema.json:/etc/config/kratos/identity.schema.json
-      - ./kratos.yml:/etc/config/kratos/kratos.yml
-    entrypoint: ['/entrypoint.sh']
-    networks:
-      - rafiki
+kratos:
+image: 'oryd/kratos:v1.2.0'
+privileged: true
+ports: - '4433:4433'
+volumes: - ../entrypoint.sh:/entrypoint.sh - ../identity.schema.json:/etc/config/kratos/identity.schema.json - ./kratos.yml:/etc/config/kratos/kratos.yml
+entrypoint: ['/entrypoint.sh']
+networks: - rafiki
 
 networks:
-  testnet:
-    driver: bridge
-    ipam:
-      config:
-        - subnet: 10.5.0.0/24
-          gateway: 10.5.0.1
+testnet:
+driver: bridge
+ipam:
+config: - subnet: 10.5.0.0/24
+gateway: 10.5.0.1
 
 volumes:
-  pg-data:
-  tigerbeetle-data:
+pg-data:
+tigerbeetle-data:
 
-```
+````
+</details>
 
 ## Create Nginx config files
 
@@ -270,7 +487,7 @@ Create Nginx configuration files for every exposed domain:
 
 <div class="overflow-table">
 
-| service                       | URL          | example            | Nginx config file                                               |
+| Service                       | URL          | Example            | Nginx config file                                               |
 | ----------------------------- | ------------ | ------------------ | --------------------------------------------------------------- |
 | Open Payments resource server | DOMAIN       | myrafiki.com       | /etc/nginx/sites-available/open_payments_resource_server.config |
 | ILP connector                 | ilp.DOMAIN   | ilp.myrafiki.com   | /etc/nginx/sites-available/ilp.config                           |
@@ -280,7 +497,7 @@ Create Nginx configuration files for every exposed domain:
 </div>
 
 :::note
-The example domain and subdomain values are for demonstration purposes only. You must use the actual domain names that you set up with your DNS host.  
+The example domain and subdomain values are for demonstration purposes only. You must use the actual domain names that you set up with your DNS host.
 :::
 
 ### Open Payments resource server (`backend` package)
@@ -326,7 +543,7 @@ server {
 
     return 404;
 }
-```
+````
 
 ### ILP connector (`backend` package)
 
