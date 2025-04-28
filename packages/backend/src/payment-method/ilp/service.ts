@@ -54,6 +54,7 @@ async function getQuote(
       retryable: false
     })
   }
+
   const stopTimerRates = deps.telemetry.startTimer(
     'ilp_get_quote_rate_time_ms',
     {
@@ -61,7 +62,6 @@ async function getQuote(
       description: 'Time to get rates'
     }
   )
-
   let rates
   try {
     rates = await deps.ratesService.rates(options.walletAddress.asset.code)
@@ -111,6 +111,26 @@ async function getQuote(
     } else {
       quoteOptions.amountToDeliver =
         options.receiveAmount?.value || options.receiver.incomingAmount?.value
+    }
+
+    // Probing quote to get the exchange rate
+    if (options.debitAmount && quoteOptions.amountToSend === 0n) {
+      const ilpQuote = await Pay.startQuote({
+        ...quoteOptions,
+        amountToSend: 1n,
+        slippage: deps.config.slippage,
+        prices: convertRatesToIlpPrices(rates)
+      })
+      throw new PaymentMethodHandlerError('Received error during ILP quoting', {
+        description: 'Minimum delivery amount of ILP quote is non-positive',
+        retryable: false,
+        code: PaymentMethodHandlerErrorCode.QuoteNonPositiveReceiveAmount,
+        details: {
+          minSendAmount: BigInt(
+            Math.ceil(1 / ilpQuote.highEstimatedExchangeRate.valueOf())
+          )
+        }
+      })
     }
 
     let ilpQuote: Pay.Quote | undefined
@@ -180,11 +200,9 @@ async function getQuote(
         retryable: false,
         code: PaymentMethodHandlerErrorCode.QuoteNonPositiveReceiveAmount,
         details: {
-          minSendAmount: {
-            assetScale: options.walletAddress.asset.scale,
-            assetCode: options.walletAddress.asset.code,
-            value: 1 / ilpQuote.highEstimatedExchangeRate.valueOf()
-          }
+          minSendAmount: BigInt(
+            Math.ceil(1 / ilpQuote.highEstimatedExchangeRate.valueOf())
+          )
         }
       })
     }

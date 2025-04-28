@@ -15,7 +15,7 @@ import { truncateTables } from '../../tests/tableManager'
 import {
   errorToMessage,
   errorToCode,
-  QuoteErrorType
+  QuoteErrorCode
 } from '../../open_payments/quote/errors'
 import { QuoteService } from '../../open_payments/quote/service'
 import { Quote as QuoteModel } from '../../open_payments/quote/model'
@@ -249,9 +249,9 @@ describe('Quote Resolvers', (): void => {
         expect(error).toBeInstanceOf(ApolloError)
         expect((error as ApolloError).graphQLErrors).toContainEqual(
           expect.objectContaining({
-            message: errorToMessage[QuoteErrorType.UnknownWalletAddress],
+            message: errorToMessage[QuoteErrorCode.UnknownWalletAddress],
             extensions: expect.objectContaining({
-              code: errorToCode[QuoteErrorType.UnknownWalletAddress]
+              code: errorToCode[QuoteErrorCode.UnknownWalletAddress]
             })
           })
         )

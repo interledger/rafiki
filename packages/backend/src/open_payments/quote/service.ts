@@ -1,7 +1,7 @@
 import { TransactionOrKnex } from 'objection'
 
 import { BaseService } from '../../shared/baseService'
-import { QuoteError, QuoteErrorType, isQuoteError } from './errors'
+import { QuoteError, QuoteErrorCode, isQuoteError } from './errors'
 import { Quote } from './model'
 import { Amount } from '../amount'
 import { ReceiverService } from '../receiver/service'
@@ -11,7 +11,10 @@ import {
   WalletAddressService,
   WalletAddressSubresourceService
 } from '../wallet_address/service'
-import { PaymentMethodHandlerService } from '../../payment-method/handler/service'
+import {
+  PaymentMethodHandlerService,
+  PaymentQuote
+} from '../../payment-method/handler/service'
 import { IAppConfig } from '../../config/app'
 import { FeeService } from '../../fee/service'
 import { Fee, FeeType } from '../../fee/model'
@@ -112,18 +115,18 @@ async function createQuote(
   })
   if (options.debitAmount && options.receiveAmount) {
     stopTimer()
-    return new QuoteError(QuoteErrorType.InvalidAmount)
+    return new QuoteError(QuoteErrorCode.InvalidAmount)
   }
   const walletAddress = await deps.walletAddressService.get(
     options.walletAddressId
   )
   if (!walletAddress) {
     stopTimer()
-    return new QuoteError(QuoteErrorType.UnknownWalletAddress)
+    return new QuoteError(QuoteErrorCode.UnknownWalletAddress)
   }
   if (!walletAddress.isActive) {
     stopTimer()
-    return new QuoteError(QuoteErrorType.InactiveWalletAddress)
+    return new QuoteError(QuoteErrorCode.InactiveWalletAddress)
   }
   if (options.debitAmount) {
     if (
@@ -132,13 +135,13 @@ async function createQuote(
       options.debitAmount.assetScale !== walletAddress.asset.scale
     ) {
       stopTimer()
-      return new QuoteError(QuoteErrorType.InvalidAmount)
+      return new QuoteError(QuoteErrorCode.InvalidAmount)
     }
   }
   if (options.receiveAmount) {
     if (options.receiveAmount.value <= BigInt(0)) {
       stopTimer()
-      return new QuoteError(QuoteErrorType.InvalidAmount)
+      return new QuoteError(QuoteErrorCode.InvalidAmount)
     }
   }
 
@@ -173,9 +176,15 @@ async function createQuote(
     // This is done before retrieving the payment quote because we need to
     // subtract the fee from the debit amount. The fee is added later
     // to the debit amount in the finalizeQuote function.
-    const fixedDebitFee = options.debitAmount
-      ? sendingFee?.calculate(options.debitAmount.value) ?? 0n
-      : 0n
+    let fixedDebitFee = 0n
+    let quoteDebitAmount = options.debitAmount?.value ?? 0n
+    if (options.debitAmount) {
+      fixedDebitFee = sendingFee?.calculate(options.debitAmount.value) ?? 0n
+      quoteDebitAmount = options.debitAmount.value - fixedDebitFee
+      if (quoteDebitAmount <= 0n) {
+        quoteDebitAmount = 0n
+      }
+    }
 
     const stopTimerQuote = deps.telemetry.startTimer(
       'quote_service_create_get_quote_time_ms',
@@ -184,9 +193,9 @@ async function createQuote(
         description: 'Time to getQuote'
       }
     )
-    const quote = await deps.paymentMethodHandlerService.getQuote(
-      paymentMethod,
-      {
+    let quote: PaymentQuote
+    try {
+      quote = await deps.paymentMethodHandlerService.getQuote(paymentMethod, {
         quoteId,
         walletAddress,
         receiver,
@@ -194,11 +203,38 @@ async function createQuote(
         debitAmount: options.debitAmount
           ? {
               ...options.debitAmount,
-              value: options.debitAmount.value - fixedDebitFee
+              value: quoteDebitAmount
             }
           : undefined
+      })
+    } catch (err) {
+      if (
+        err instanceof PaymentMethodHandlerError &&
+        err.code === PaymentMethodHandlerErrorCode.QuoteNonPositiveReceiveAmount
+      ) {
+        let details = undefined
+
+        if (err.details?.minSendAmount) {
+          details = {
+            minSendAmount: {
+              value: 0n,
+              assetCode: walletAddress.asset.code,
+              assetScale: walletAddress.asset.scale
+            }
+          }
+          const quoteMinSendAmount = err.details.minSendAmount as bigint
+          const fixedFee = sendingFee?.fixedFee ?? 0n
+
+          details.minSendAmount.value =
+            quoteMinSendAmount +
+            (sendingFee?.calculate(fixedFee + quoteMinSendAmount) ?? 0n)
+        }
+
+        stopTimer()
+        return new QuoteError(QuoteErrorCode.NonPositiveReceiveAmount, details)
       }
-    )
+      throw err
+    }
     stopTimerQuote()
 
     // Calculate fee for fixed receive amount.
@@ -259,17 +295,6 @@ async function createQuote(
     if (isQuoteError(err)) {
       return err
     }
-
-    if (
-      err instanceof PaymentMethodHandlerError &&
-      err.code === PaymentMethodHandlerErrorCode.QuoteNonPositiveReceiveAmount
-    ) {
-      return new QuoteError(
-        QuoteErrorType.NonPositiveReceiveAmount,
-        err.details
-      )
-    }
-
     deps.logger.error({ err }, 'error creating a quote')
     throw err
   } finally {
@@ -287,20 +312,20 @@ export async function resolveReceiver(
       { receiver: options.receiver },
       'Could not create quote. Receiver not found'
     )
-    throw new QuoteError(QuoteErrorType.InvalidReceiver)
+    throw new QuoteError(QuoteErrorCode.InvalidReceiver)
   }
   if (options.receiveAmount) {
     if (
       options.receiveAmount.assetScale !== receiver.assetScale ||
       options.receiveAmount.assetCode !== receiver.assetCode
     ) {
-      throw new QuoteError(QuoteErrorType.InvalidAmount)
+      throw new QuoteError(QuoteErrorCode.InvalidAmount)
     }
     if (receiver.incomingAmount && receiver.receivedAmount) {
       const receivingPaymentValue =
         receiver.incomingAmount.value - receiver.receivedAmount.value
       if (receivingPaymentValue < options.receiveAmount.value) {
-        throw new QuoteError(QuoteErrorType.InvalidAmount)
+        throw new QuoteError(QuoteErrorCode.InvalidAmount)
       }
     }
   } else if (!options.debitAmount && !receiver.incomingAmount) {
@@ -311,7 +336,7 @@ export async function resolveReceiver(
       },
       'Could not create quote. debitAmount or incomingAmount required.'
     )
-    throw new QuoteError(QuoteErrorType.InvalidReceiver)
+    throw new QuoteError(QuoteErrorCode.InvalidReceiver)
   }
   return receiver
 }
@@ -342,11 +367,11 @@ function calculateFixedSendQuoteAmounts(
       { fees, estimatedExchangeRate, receiveAmountValue },
       'Negative receive amount when calculating quote amount'
     )
-    throw new QuoteError(QuoteErrorType.NonPositiveReceiveAmount)
+    throw new QuoteError(QuoteErrorCode.NonPositiveReceiveAmount)
   }
 
   if (receiveAmountValue > maxReceiveAmountValue) {
-    throw new QuoteError(QuoteErrorType.InvalidAmount)
+    throw new QuoteError(QuoteErrorCode.InvalidAmount)
   }
 
   deps.logger.debug(
@@ -404,7 +429,7 @@ function calculateFixedDeliveryQuoteAmounts(
       { fees, debitAmountValue },
       'Received negative debitAmount receive amount when calculating quote amount'
     )
-    throw new QuoteError(QuoteErrorType.InvalidAmount)
+    throw new QuoteError(QuoteErrorCode.InvalidAmount)
   }
 
   deps.logger.debug(

@@ -3,7 +3,7 @@ import { faker } from '@faker-js/faker'
 import { Knex } from 'knex'
 import { v4 as uuid } from 'uuid'
 
-import { QuoteErrorType, isQuoteError } from './errors'
+import { QuoteErrorCode, isQuoteError } from './errors'
 import { QuoteService, CreateQuoteOptions } from './service'
 import { createTestApp, TestContainer } from '../../tests/app'
 import { IAppConfig, Config } from '../../config/app'
@@ -191,7 +191,7 @@ describe('QuoteService', (): void => {
         if (!debitAmount && !receiveAmount && !incomingAmount) {
           test('fails without receiver.incomingAmount', async (): Promise<void> => {
             await expect(quoteService.create(options)).resolves.toMatchObject({
-              type: QuoteErrorType.InvalidReceiver
+              type: QuoteErrorCode.InvalidReceiver
             })
           })
         } else {
@@ -293,7 +293,7 @@ describe('QuoteService', (): void => {
                 await expect(
                   quoteService.create(options)
                 ).resolves.toMatchObject({
-                  type: QuoteErrorType.InvalidAmount
+                  type: QuoteErrorCode.InvalidAmount
                 })
               })
             }
@@ -358,7 +358,7 @@ describe('QuoteService', (): void => {
             ${IncomingPaymentState.Completed}
             ${IncomingPaymentState.Expired}
           `(
-            `returns ${QuoteErrorType.InvalidReceiver} on $state receiver`,
+            `returns ${QuoteErrorCode.InvalidReceiver} on $state receiver`,
             async ({ state }): Promise<void> => {
               await incomingPayment.$query(knex).patch({
                 state,
@@ -368,7 +368,7 @@ describe('QuoteService', (): void => {
                     : undefined
               })
               await expect(quoteService.create(options)).resolves.toMatchObject(
-                { type: QuoteErrorType.InvalidReceiver }
+                { type: QuoteErrorCode.InvalidReceiver }
               )
             }
           )
@@ -438,7 +438,7 @@ describe('QuoteService', (): void => {
           debitAmount,
           method: 'ilp'
         })
-      ).resolves.toMatchObject({ type: QuoteErrorType.UnknownWalletAddress })
+      ).resolves.toMatchObject({ type: QuoteErrorCode.UnknownWalletAddress })
     })
 
     test('fails on inactive wallet address', async () => {
@@ -454,7 +454,7 @@ describe('QuoteService', (): void => {
           debitAmount,
           method: 'ilp'
         })
-      ).resolves.toMatchObject({ type: QuoteErrorType.InactiveWalletAddress })
+      ).resolves.toMatchObject({ type: QuoteErrorCode.InactiveWalletAddress })
     })
 
     test('fails on invalid receiver', async (): Promise<void> => {
@@ -465,7 +465,7 @@ describe('QuoteService', (): void => {
           debitAmount,
           method: 'ilp'
         })
-      ).resolves.toMatchObject({ type: QuoteErrorType.InvalidReceiver })
+      ).resolves.toMatchObject({ type: QuoteErrorCode.InvalidReceiver })
     })
 
     test('fails on non-positive receive amount from quote', async (): Promise<void> => {
@@ -492,7 +492,7 @@ describe('QuoteService', (): void => {
           }
         })
       ).resolves.toMatchObject({
-        type: QuoteErrorType.NonPositiveReceiveAmount
+        type: QuoteErrorCode.NonPositiveReceiveAmount
       })
     })
 
@@ -519,7 +519,7 @@ describe('QuoteService', (): void => {
         if (debitAmount) options.debitAmount = debitAmount
         if (receiveAmount) options.receiveAmount = receiveAmount
         await expect(quoteService.create(options)).resolves.toMatchObject({
-          type: QuoteErrorType.InvalidAmount
+          type: QuoteErrorCode.InvalidAmount
         })
       }
     )
@@ -623,7 +623,7 @@ describe('QuoteService', (): void => {
             receiver: receiver.incomingPayment!.id,
             method: 'ilp'
           })
-        ).resolves.toMatchObject({ type: QuoteErrorType.InvalidAmount })
+        ).resolves.toMatchObject({ type: QuoteErrorCode.InvalidAmount })
       })
     })
 
@@ -743,7 +743,7 @@ describe('QuoteService', (): void => {
             method: 'ilp'
           })
         ).resolves.toMatchObject({
-          type: QuoteErrorType.NonPositiveReceiveAmount
+          type: QuoteErrorCode.NonPositiveReceiveAmount
         })
       })
     })
