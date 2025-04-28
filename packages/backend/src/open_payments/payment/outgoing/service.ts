@@ -499,6 +499,7 @@ async function createOutgoingPayment(
 //   we either need to insert without the grantId and update the payment later or jsut insert the payment later.
 //   - we use the insrted payment for a fair number of things. not sure its realstic to move the insert.
 //   - could update the payment at the end with grantid (meh).
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 async function createOutgoingPayment_WIP(
   deps: ServiceDependencies,
   options: CreateOutgoingPaymentOptions
