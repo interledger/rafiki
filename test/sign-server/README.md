@@ -1,17 +1,10 @@
-Prepare correct Node.
+# Sign-Server:
+
+The `sign-server` is build as part of the root project build.
+
+## Start Sign-Server.
 
 ```shell
-nvm install
-nvm use
-```
-
-Build and start POC.
-
-```shell
-corepack enable
-# Install & Build:
-pnpm i
-pnpm build
-# Run (port 3000):
+# Run (port 5001):
 pnpm dev
 ```
