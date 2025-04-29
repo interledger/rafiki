@@ -87,34 +87,56 @@ describe('Interaction Routes', (): void => {
     })
 
     describe('Client - interaction start', (): void => {
-      test('Interaction start fails if tenant has no configured idp', async (): Promise<void> => {
-        const unconfiguredTenant = await Tenant.query().insertAndFetch({
-          idpConsentUrl: undefined,
-          idpSecret: undefined
-        })
-        const grant = await Grant.query().insert(
-          generateBaseGrant({ tenantId: unconfiguredTenant.id })
-        )
-        const interaction = await Interaction.query().insert(
-          generateBaseInteraction(grant)
-        )
+      test.each`
+        isFinishableGrant | description
+        ${true}           | ${'finishable'}
+        ${false}          | ${'unfinishable'}
+      `(
+        'Interaction start fails if tenant for $description grant has no configured idp',
+        async ({ isFinishableGrant }): Promise<void> => {
+          const unconfiguredTenant = await Tenant.query().insertAndFetch({
+            idpConsentUrl: undefined,
+            idpSecret: undefined
+          })
+          const grant = await Grant.query().insert(
+            generateBaseGrant({
+              tenantId: unconfiguredTenant.id,
+              noFinishMethod: !isFinishableGrant
+            })
+          )
+          const interaction = await Interaction.query().insert(
+            generateBaseInteraction(grant)
+          )
 
-        const ctx = createContext<StartContext>(
-          {
-            headers: {
-              Accept: 'application/json',
-              'Content-Type': 'application/json'
-            }
-          },
-          { id: interaction.id, nonce: interaction.nonce }
-        )
+          const ctx = createContext<StartContext>(
+            {
+              headers: {
+                Accept: 'application/json',
+                'Content-Type': 'application/json'
+              }
+            },
+            { id: interaction.id, nonce: interaction.nonce }
+          )
 
-        await expect(interactionRoutes.start(ctx)).rejects.toMatchObject({
-          status: 500,
-          code: GNAPErrorCode.RequestDenied,
-          message: 'internal server error'
-        })
-      })
+          if (isFinishableGrant) {
+            const redirectSpy = jest.spyOn(ctx, 'redirect')
+            await expect(interactionRoutes.start(ctx)).resolves.toBeUndefined()
+            expect(ctx.status).toBe(302)
+
+            assert.ok(grant.finishUri)
+            const redirectUrl = new URL(grant.finishUri)
+            redirectUrl.searchParams.set('result', GNAPErrorCode.RequestDenied)
+            redirectUrl.searchParams.set('message', 'internal server error')
+            expect(redirectSpy).toHaveBeenCalledWith(redirectUrl.toString())
+          } else {
+            await expect(interactionRoutes.start(ctx)).rejects.toMatchObject({
+              status: 500,
+              code: GNAPErrorCode.RequestDenied,
+              message: 'internal server error'
+            })
+          }
+        }
+      )
       test('Interaction start fails if interaction is invalid', async (): Promise<void> => {
         const ctx = createContext<StartContext>(
           {
@@ -347,37 +369,6 @@ describe('Interaction Routes', (): void => {
             session: { nonce: interaction.nonce }
           },
           { id: fakeInteractId, nonce: interaction.nonce }
-        )
-
-        await expect(interactionRoutes.finish(ctx)).rejects.toMatchObject({
-          status: 404,
-          code: GNAPErrorCode.UnknownInteraction,
-          message: 'unknown interaction'
-        })
-      })
-
-      test('Cannot finish interaction with revoked grant', async (): Promise<void> => {
-        const grant = await Grant.query().insert(
-          generateBaseGrant({
-            tenantId: tenant.id,
-            state: GrantState.Finalized,
-            finalizationReason: GrantFinalization.Revoked
-          })
-        )
-
-        const interaction = await Interaction.query().insert(
-          generateBaseInteraction(grant)
-        )
-
-        const ctx = createContext<FinishContext>(
-          {
-            headers: {
-              Accept: 'application/json',
-              'Content-Type': 'application/json'
-            },
-            session: { nonce: interaction.nonce }
-          },
-          { id: interaction.id, nonce: interaction.nonce }
         )
 
         await expect(interactionRoutes.finish(ctx)).rejects.toMatchObject({

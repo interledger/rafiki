@@ -381,6 +381,7 @@ async function createOutgoingPayment(
 
           const payment = await OutgoingPayment.query(trx).insertAndFetch({
             id: quoteId,
+            tenantId,
             walletAddressId: walletAddressId,
             client: options.client,
             metadata: options.metadata,
