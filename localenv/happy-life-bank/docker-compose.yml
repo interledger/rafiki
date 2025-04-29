@@ -69,7 +69,7 @@ services:
       API_SECRET: iyIgCprjb9uL8wFckR+pLEkJWMB7FJhgkvqhTQR/964=
       WEBHOOK_URL: http://happy-life-bank/webhooks
       EXCHANGE_RATES_URL: http://happy-life-bank/rates
-      OPEN_PAYMENTS_URL: ${HAPPY_LIFE_BANK_OPEN_PAYMENTS_URL:-http://happy-life-bank-backend}
+      OPEN_PAYMENTS_URL: ${HAPPY_LIFE_BANK_OPEN_PAYMENTS_URL:-https://happy-life-bank-backend}
       REDIS_URL: redis://shared-redis:6379/2
       WALLET_ADDRESS_URL: ${HAPPY_LIFE_BANK_WALLET_ADDRESS_URL:-https://happy-life-bank-backend/.well-known/pay}
       ENABLE_TELEMETRY: true
