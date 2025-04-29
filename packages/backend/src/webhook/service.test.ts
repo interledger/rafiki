@@ -364,9 +364,7 @@ describe('Webhook Service', (): void => {
       await webhook.$query(knex).patch({
         processAt: new Date(Date.now() + 30_000)
       })
-      await expect(webhookService.getWebhook(webhook.id)).resolves.toEqual(
-        webhook
-      )
+      await expect(webhookService.getEvent(event.id)).resolves.toEqual(event)
       await expect(webhookService.processNext()).resolves.toBeUndefined()
     })
 
@@ -392,9 +390,8 @@ describe('Webhook Service', (): void => {
         )
         await expect(webhookService.processNext()).resolves.toEqual(webhook.id)
         scope.done()
-        await expect(
-          webhookService.getWebhook(webhook.id)
-        ).resolves.toMatchObject(
+        const dbWebhook = await Webhook.query().findById(webhook.id)
+        await expect(dbWebhook).toMatchObject(
           expect.objectContaining({
             attempts: 1,
             statusCode: 200,

@@ -2172,6 +2172,7 @@
         "kind": "INPUT_OBJECT",
         "name": "CreateTenantInput",
         "description": null,
+        "isOneOf": false,
         "fields": null,
         "inputFields": [
           {
@@ -2267,6 +2268,7 @@
         "kind": "INPUT_OBJECT",
         "name": "CreateTenantSettingsInput",
         "description": null,
+        "isOneOf": false,
         "fields": null,
         "inputFields": [
           {
@@ -2302,6 +2304,7 @@
         "kind": "OBJECT",
         "name": "CreateTenantSettingsMutationResponse",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "settings",
@@ -2767,6 +2770,7 @@
         "kind": "OBJECT",
         "name": "DeleteTenantMutationResponse",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "success",
@@ -8327,6 +8331,7 @@
         "kind": "OBJECT",
         "name": "Tenant",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "apiSecret",
@@ -8476,6 +8481,7 @@
         "kind": "OBJECT",
         "name": "TenantEdge",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "cursor",
@@ -8519,6 +8525,7 @@
         "kind": "OBJECT",
         "name": "TenantMutationResponse",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "tenant",
@@ -8546,6 +8553,7 @@
         "kind": "OBJECT",
         "name": "TenantSetting",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "key",
@@ -8589,6 +8597,7 @@
         "kind": "INPUT_OBJECT",
         "name": "TenantSettingInput",
         "description": null,
+        "isOneOf": false,
         "fields": null,
         "inputFields": [
           {
@@ -8632,6 +8641,7 @@
         "kind": "OBJECT",
         "name": "TenantsConnection",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "edges",
@@ -9061,6 +9071,7 @@
         "kind": "INPUT_OBJECT",
         "name": "UpdateTenantInput",
         "description": null,
+        "isOneOf": false,
         "fields": null,
         "inputFields": [
           {
@@ -10358,6 +10369,7 @@
         "kind": "OBJECT",
         "name": "WhoamiResponse",
         "description": null,
+        "isOneOf": null,
         "fields": [
           {
             "name": "id",

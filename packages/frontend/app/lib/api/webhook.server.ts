@@ -51,7 +51,6 @@ export const listWebhooks = async (
     `,
     variables: args
   })
-  console.log('response.data.webhookEvents=', response.data.webhookEvents)
 
   return response.data.webhookEvents
 }
