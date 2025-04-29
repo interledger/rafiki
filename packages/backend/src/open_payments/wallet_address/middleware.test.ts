@@ -54,6 +54,7 @@ describe('Wallet Address Middleware', (): void => {
   })
 
   afterEach(async (): Promise<void> => {
+    jest.restoreAllMocks()
     await truncateTables(deps)
   })
 
@@ -312,7 +313,7 @@ describe('Wallet Address Middleware', (): void => {
     })
   })
 
-  describe('getWalletAddressUrlFromOutgoingPayment', () => {
+  describe('getWalletAddressUrlFromOutgoingPayment', (): void => {
     test('sets walletAddressUrl', async (): Promise<void> => {
       const walletAddressUrl = 'https://example.com/test'
       const outgoingPaymentId = crypto.randomUUID()
@@ -346,7 +347,7 @@ describe('Wallet Address Middleware', (): void => {
       expect(next).toHaveBeenCalled()
     })
 
-    test('throws error if could not find existing outgoing payment for mismatched tenantId', async () => {
+    test('throws error if could not find existing outgoing payment for mismatched tenantId', async (): Promise<void> => {
       const tenantId = Config.operatorTenantId
 
       const asset: AssetOptions = {

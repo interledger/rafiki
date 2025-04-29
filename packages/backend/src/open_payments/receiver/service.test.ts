@@ -174,7 +174,7 @@ describe('Receiver Service', (): void => {
           const walletAddress = await createWalletAddress(deps)
           const incomingPayment = await createIncomingPayment(deps, {
             walletAddressId: walletAddress.id,
-            tenantId: Config.operatorTenantId
+            tenantId: walletAddress.tenantId
           })
 
           jest

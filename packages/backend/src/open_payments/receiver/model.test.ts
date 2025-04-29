@@ -169,7 +169,7 @@ describe('Receiver Model', (): void => {
       const walletAddress = await createWalletAddress(deps)
       const incomingPayment = await createIncomingPayment(deps, {
         walletAddressId: walletAddress.id,
-        tenantId: Config.operatorTenantId
+        tenantId: walletAddress.tenantId
       })
 
       incomingPayment.state = IncomingPaymentState.Completed
@@ -194,7 +194,7 @@ describe('Receiver Model', (): void => {
       const walletAddress = await createWalletAddress(deps)
       const incomingPayment = await createIncomingPayment(deps, {
         walletAddressId: walletAddress.id,
-        tenantId: Config.operatorTenantId
+        tenantId: walletAddress.tenantId
       })
 
       incomingPayment.expiresAt = new Date(Date.now() - 1)
