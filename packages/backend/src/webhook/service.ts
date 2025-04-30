@@ -33,7 +33,6 @@ interface GetPageOptions {
 
 export interface WebhookService {
   getEvent(id: string): Promise<WebhookEvent | undefined>
-  getWebhook(id: string): Promise<Webhook | undefined>
   getLatestByResourceId(
     options: WebhookByResourceIdOptions
   ): Promise<WebhookEvent | undefined>
@@ -55,25 +54,11 @@ export async function createWebhookService(
   const deps = { ...deps_, logger }
   return {
     getEvent: (id) => getWebhookEvent(deps, id),
-    getWebhook: (id) => getWebhook(deps, id),
     getLatestByResourceId: (options) =>
       getLatestWebhookEventByResourceId(deps, options),
-    processNext: () => processNextWebhookEvent(deps),
+    processNext: () => processNextWebhook(deps),
     getPage: (options) => getWebhookEventsPage(deps, options)
   }
-}
-
-async function getWebhook(
-  deps: ServiceDependencies,
-  id: string
-): Promise<WebhookWithEvent | undefined> {
-  const webhook = await Webhook.query(deps.knex)
-    .findById(id)
-    .withGraphFetched('event')
-
-  if (!webhook || !isWebhookWithEvent(webhook)) return undefined
-
-  return webhook
 }
 
 async function getWebhookEvent(
@@ -137,9 +122,9 @@ async function getLatestWebhookEventByResourceId(
   return await query.first()
 }
 
-// Fetch (and lock) a webhook event for work.
-// Returns the id of the processed event (if any).
-async function processNextWebhookEvent(
+// Fetch (and lock) a webhook for work.
+// Returns the id of the processed webhook (if any).
+async function processNextWebhook(
   deps_: ServiceDependencies
 ): Promise<string | undefined> {
   if (!deps_.knex) {
@@ -180,7 +165,7 @@ async function processNextWebhookEvent(
       })
       const formattedSettings = formatSettings(settings)
 
-      await sendWebhookEvent(deps, webhook, formattedSettings)
+      await sendWebhook(deps, webhook, formattedSettings)
 
       span.end()
       return webhook.id
@@ -193,7 +178,7 @@ type WebhookHeaders = {
   'Rafiki-Signature'?: string
 }
 
-async function sendWebhookEvent(
+async function sendWebhook(
   deps: ServiceDependencies,
   webhook: WebhookWithEvent,
   settings: Partial<FormattedTenantSettings>,

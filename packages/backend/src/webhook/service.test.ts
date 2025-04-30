@@ -433,7 +433,7 @@ describe('Webhook Service', (): void => {
         const scope = mockWebhookServer(status)
         await expect(webhookService.processNext()).resolves.toEqual(webhook.id)
         scope.done()
-        const updatedWebhook = await webhookService.getWebhook(webhook.id)
+        const updatedWebhook = await Webhook.query(knex).findById(webhook.id)
         assert.ok(updatedWebhook?.processAt)
         expect(updatedWebhook).toMatchObject({
           attempts: 1,
@@ -469,7 +469,7 @@ describe('Webhook Service', (): void => {
           .reply(200)
         await expect(webhookService.processNext()).resolves.toEqual(webhook.id)
         scope.done()
-        const updatedWebhook = await webhookService.getWebhook(webhook.id)
+        const updatedWebhook = await Webhook.query(knex).findById(webhook.id)
         assert.ok(updatedWebhook?.processAt)
         expect(updatedWebhook).toMatchObject({
           attempts: 1,
@@ -554,17 +554,17 @@ describe('Webhook Service', (): void => {
           nextEvent
         )
 
-        await expect(webhookService.getWebhook(webhook.id)).resolves.toEqual(
-          webhook
-        )
         await expect(
-          webhookService.getWebhook(nextWebhook.id)
+          Webhook.query(knex).findById(webhook.id).withGraphFetched('event')
+        ).resolves.toEqual(webhook)
+        await expect(
+          Webhook.query(knex).findById(nextWebhook.id).withGraphFetched('event')
         ).resolves.toEqual(nextWebhook)
 
         await expect(webhookService.processNext()).resolves.toBe(nextWebhook.id)
         scope.done()
         await expect(
-          webhookService.getWebhook(nextWebhook.id)
+          Webhook.query(knex).findById(nextWebhook.id)
         ).resolves.toMatchObject({
           attempts: 1,
           statusCode: 200,
@@ -584,7 +584,7 @@ describe('Webhook Service', (): void => {
       const scope = mockWebhookServer(200, event, new URL(tenantWebhookUrl))
       await expect(webhookService.processNext()).resolves.toEqual(webhook.id)
       await expect(
-        webhookService.getWebhook(webhook.id)
+        Webhook.query(knex).findById(webhook.id)
       ).resolves.toMatchObject({
         attempts: 1,
         statusCode: 200,
