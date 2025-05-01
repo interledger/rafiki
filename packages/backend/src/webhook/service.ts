@@ -177,7 +177,7 @@ async function processNextWebhook(
         const settings = await deps_.tenantSettingService.get({
           tenantId: webhook.recipientTenantId
         })
-        const formattedSettings = formatSettings(settings)
+      }
 
         await sendWebhook(deps, webhook, formattedSettings)
       }
