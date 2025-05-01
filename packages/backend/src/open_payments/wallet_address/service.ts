@@ -379,12 +379,13 @@ async function getOrPollByUrl(
   const existingWalletAddress = await getWalletAddressByUrl(deps, url)
   if (existingWalletAddress) return existingWalletAddress
 
-  await WalletAddressEvent.query(deps.knex).insert({
+  await WalletAddressEvent.query(deps.knex).insertGraph({
     type: WalletAddressEventType.WalletAddressNotFound,
     data: {
       walletAddressUrl: url
     },
-    tenantId: deps.config.operatorTenantId
+    tenantId: deps.config.operatorTenantId,
+    webhooks: [{ recipientTenantId: deps.config.operatorTenantId }]
   })
 
   deps.logger.debug(
@@ -521,7 +522,11 @@ async function createWithdrawalEvent(
 
   deps.logger.trace({ amount }, 'creating webhook withdrawal event')
 
-  await WalletAddressEvent.query(deps.knex).insert({
+  const webhooks = [{ recipientTenantId: walletAddress.tenantId }]
+  if (walletAddress.tenantId !== deps.config.operatorTenantId) {
+    webhooks.push({ recipientTenantId: deps.config.operatorTenantId })
+  }
+  await WalletAddressEvent.query(deps.knex).insertGraph({
     walletAddressId: walletAddress.id,
     type: WalletAddressEventType.WalletAddressWebMonetization,
     data: walletAddress.toData(amount),
@@ -530,7 +535,8 @@ async function createWithdrawalEvent(
       assetId: walletAddress.assetId,
       amount
     },
-    tenantId: walletAddress.tenantId
+    tenantId: walletAddress.tenantId,
+    webhooks
   })
 
   await walletAddress.$query(deps.knex).patch({

@@ -38,7 +38,7 @@ import { createOutgoingPayment } from '../../tests/outgoingPayment'
 import { createWalletAddress } from '../../tests/walletAddress'
 import { createPeer } from '../../tests/peer'
 import { truncateTables } from '../../tests/tableManager'
-import { WebhookEvent } from '../../webhook/model'
+import { WebhookEvent } from '../../webhook/event/model'
 import {
   LiquidityMutationResponse,
   WalletAddressWithdrawalMutationResponse

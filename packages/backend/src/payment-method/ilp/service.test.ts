@@ -63,13 +63,17 @@ describe('IlpPaymentService', (): void => {
   beforeEach(async (): Promise<void> => {
     tenantId = Config.operatorTenantId
     assetMap['USD'] = await createAsset(deps, {
-      code: 'USD',
-      scale: 2
+      assetOptions: {
+        code: 'USD',
+        scale: 2
+      }
     })
 
     assetMap['EUR'] = await createAsset(deps, {
-      code: 'EUR',
-      scale: 2
+      assetOptions: {
+        code: 'EUR',
+        scale: 2
+      }
     })
 
     walletAddressMap['USD'] = await createWalletAddress(deps, {
@@ -492,7 +496,7 @@ describe('IlpPaymentService', (): void => {
       jest.spyOn(Pay, 'startQuote').mockResolvedValueOnce({
         maxSourceAmount: 10n,
         highEstimatedExchangeRate: Pay.Ratio.from(0.099)
-      } as Pay.Quote)
+      } as unknown as Pay.Quote)
 
       expect.assertions(5)
       try {

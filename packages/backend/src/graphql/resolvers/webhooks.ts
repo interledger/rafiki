@@ -5,7 +5,7 @@ import {
   WebhookEvent as SchemaWebhookEvent
 } from '../generated/graphql'
 import { getPageInfo } from '../../shared/pagination'
-import { WebhookEvent } from '../../webhook/model'
+import { WebhookEvent } from '../../webhook/event/model'
 import { Pagination, SortOrder } from '../../shared/baseModel'
 
 export const getWebhookEvents: QueryResolvers<ApolloContext>['webhookEvents'] =
@@ -45,5 +45,6 @@ export const webhookEventToGraphql = (
   id: webhookEvent.id,
   type: webhookEvent.type,
   data: webhookEvent.data,
+  tenantId: webhookEvent.tenantId,
   createdAt: new Date(webhookEvent.createdAt).toISOString()
 })

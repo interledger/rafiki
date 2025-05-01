@@ -1785,6 +1785,8 @@ export type WebhookEvent = Model & {
   data: Scalars['JSONObject']['output'];
   /** Unique identifier of the webhook event. */
   id: Scalars['ID']['output'];
+  /** Tenant of the webhook event. */
+  tenantId: Scalars['ID']['output'];
   /** Type of webhook event. */
   type: Scalars['String']['output'];
 };
@@ -2730,6 +2732,7 @@ export type WebhookEventResolvers<ContextType = any, ParentType extends Resolver
   createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   data?: Resolver<ResolversTypes['JSONObject'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  tenantId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   type?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };

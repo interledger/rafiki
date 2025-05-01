@@ -238,7 +238,9 @@ describe('Wallet Address Middleware', (): void => {
         scale: 9,
         code: 'USD'
       }
-      const { id: sendAssetId } = await createAsset(deps, asset)
+      const { id: sendAssetId } = await createAsset(deps, {
+        assetOptions: asset
+      })
       const walletAddress = await createWalletAddress(deps, {
         tenantId,
         assetId: sendAssetId
@@ -354,7 +356,9 @@ describe('Wallet Address Middleware', (): void => {
         scale: 9,
         code: 'USD'
       }
-      const { id: sendAssetId } = await createAsset(deps, asset)
+      const { id: sendAssetId } = await createAsset(deps, {
+        assetOptions: asset
+      })
       const walletAddress = await createWalletAddress(deps, {
         tenantId,
         assetId: sendAssetId
