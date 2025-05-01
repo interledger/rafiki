@@ -181,8 +181,7 @@ type WebhookHeaders = {
 async function sendWebhook(
   deps: ServiceDependencies,
   webhook: WebhookWithEvent,
-  settings: Partial<FormattedTenantSettings>,
-  operatorSettings?: Partial<FormattedTenantSettings>
+  settings: Partial<FormattedTenantSettings>
 ): Promise<void> {
   try {
     const requestHeaders: WebhookHeaders = {
@@ -203,24 +202,13 @@ async function sendWebhook(
       )
     }
 
-    await Promise.all([
-      axios.post(settings?.webhookUrl ?? deps.config.webhookUrl, body, {
-        timeout: settings?.webhookTimeout
-          ? Number(settings?.webhookTimeout)
-          : deps.config.webhookTimeout,
-        headers: requestHeaders,
-        validateStatus: (status) => status === 200
-      }),
-      operatorSettings?.webhookUrl
-        ? axios.post(operatorSettings?.webhookUrl, body, {
-            timeout: operatorSettings?.webhookTimeout
-              ? Number(operatorSettings?.webhookTimeout)
-              : deps.config.webhookTimeout,
-            headers: requestHeaders,
-            validateStatus: (status) => status === 200
-          })
-        : null
-    ])
+    await axios.post(settings?.webhookUrl ?? deps.config.webhookUrl, body, {
+      timeout: settings?.webhookTimeout
+        ? Number(settings?.webhookTimeout)
+        : deps.config.webhookTimeout,
+      headers: requestHeaders,
+      validateStatus: (status) => status === 200
+    })
 
     await webhook.$query(deps.knex).patch({
       attempts: webhook.attempts + 1,
