@@ -67,7 +67,7 @@ title: PIN/SRED Key Exchange and IPEK
 ---
 erDiagram
     "ILF 🏦" ||--|| "SRED/PIN BDK 🔑" : "generates"
-    "SRED/PIN BDK 🔑" ||--}| "IPEK 🔑" : "ILF generates (based on BDK)"
+    "SRED/PIN BDK 🔑" ||--}| "IPEK 🔑" : "generates (based on BDK)"
     "Terminal 📱" ||--|| "IPEK 🔑" : "imports (under TMK)"
 ```
 
@@ -91,7 +91,7 @@ erDiagram
     "Private Key 🔑" ||--|| "Card 💳" : "loaded onto (securely during issuing)"
 ```
 
-## Terms
+## Glossary of Terms
 Terms of definition related to ASE, Card issuer and terminal manufacturers.
 
 | Term        | Description                                                                                                                                                                                                                                                                 |
