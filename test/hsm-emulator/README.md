@@ -35,8 +35,8 @@ title: ZMK Exchange
 ---
 erDiagram
     "ILF 🏦" ||--}| "ZMK 🔑" : generates
-    "KaiOS 📱" ||--|| "ZMK 🔑" : imports (3x clear components)
-    "Austria Card 💳" ||--|| "ZMK 🔑" : imports (3x clear components)
+    "KaiOS 📱" ||--|| "ZMK 🔑" : "imports (3x clear components)"
+    "Austria Card 💳" ||--|| "ZMK 🔑" : "imports (3x clear components)"
 ```
 
 ### 1.2. TMK - Terminal Master Key
