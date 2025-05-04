@@ -1,0 +1,381 @@
+// Removed the Node shebang and switched to k6 imports:
+import http from 'k6/http'
+import { check, group, sleep } from 'k6'
+const fetch = require('node-fetch')
+
+export const options = {
+  // A number specifying the number of VUs to run concurrently.
+  vus: 1,
+  // A string specifying the total duration of the test run.
+  duration: '600s'
+}
+
+// Since k6 doesn't provide crypto.randomUUID, you could create a small helper:
+function randomUUID() {
+  // A quick hack for demonstration (not guaranteed collision-free at scale!).
+  // If you need truly unique IDs, consider using a more robust method or library.
+  return 'xxxxyxxx'.replace(/[xy]/g, function (c) {
+    const r = (Math.random() * 16) | 0
+    const v = c === 'x' ? r : (r & 0x3) | 0x8
+    return v.toString(16)
+  })
+}
+
+//TODO START
+function resolveTemplateVariables(txt) {
+  const VARIABLE_NAME_REGEX = /{{([A-Za-z]\w+)}}/g
+
+  return txt.replace(
+    VARIABLE_NAME_REGEX,
+    (_, key) => bru.getVar(key) || bru.getEnvVar(key)
+  )
+}
+
+function sanitizeUrl(url) {
+  return this.resolveTemplateVariables(url).replace(
+    /localhost:([3,4])000/g,
+    (_, key) =>
+      key === '3' ? bru.getEnvVar('host3000') : bru.getEnvVar('host4000')
+  )
+}
+
+function sanitizeBody(reqBody, httpMethod) {
+  let requestBody = reqBody
+  if (!(httpMethod === 'POST' && requestBody)) return undefined
+  if (typeof requestBody === 'object') {
+    requestBody = JSON.stringify(requestBody)
+  }
+  return JSON.parse(
+    this.resolveTemplateVariables(requestBody).replace(
+      /http:\/\/localhost:([3,4])000/g,
+      (_, key) =>
+        key === '3'
+          ? 'https://' + bru.getEnvVar('host3000')
+          : 'https://' + bru.getEnvVar('host4000')
+    )
+  )
+}
+
+function sanitizeHeaders(headers) {
+  return JSON.parse(this.resolveTemplateVariables(JSON.stringify(headers)))
+}
+
+async function requestSigHeaders(url, method, headers, body) {
+  //bru.getEnvVar('signatureUrl')
+  const response = await fetch(
+    'https://kxu5d4mr4blcthphxomjlc4xk40rvdsx.lambda-url.eu-central-1.on.aws/',
+    {
+      method: 'post',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        keyId: 'keyid-97a3a431-8ee1-48fc-ac85-70e2f5eba8e5', //bru.getEnvVar('clientKeyId')
+        base64Key:
+          'LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tCk1DNENBUUF3QlFZREsyVndCQ0lFSUVxZXptY1BoT0U4Ymt3TitqUXJwcGZSWXpHSWRGVFZXUUdUSEpJS3B6ODgKLS0tLS1FTkQgUFJJVkFURSBLRVktLS0tLQo=', //bru.getEnvVar('clientPrivateKey')
+        request: {
+          url,
+          method,
+          headers,
+          body: JSON.stringify(body)
+        }
+      })
+    }
+  )
+  return await response.json()
+}
+
+function setHeaders(headers) {
+  for (let [key, value] of Object.entries(headers)) {
+    req.setHeader(key, value)
+  }
+}
+
+async function addSignatureHeaders(
+  urlParam,
+  headerParam,
+  bodyParam,
+  httpMethodParam
+) {
+  const url = sanitizeUrl(urlParam)
+  const headers = sanitizeHeaders(headerParam)
+  const body = sanitizeBody(bodyParam, httpMethodParam)
+  //TODO http.post(url, payload, params)
+  req.setBody(body)
+  const signatureHeaders = await requestSigHeaders(
+    url,
+    req.getMethod(),
+    headers,
+    body
+  )
+  this.setHeaders(signatureHeaders)
+
+  //TODO rework...
+  http.post(url, body, {
+    headers: {
+      Authorization: 'Bearer ...',
+      'Content-Type': 'application/json'
+      // any other headers you need
+    }
+  })
+}
+//TODO END
+
+// Grant operations
+function grantRequestIncomingPayment(receiverWalletAddress) {
+  const url = `${receiverWalletAddress.authServer}/`
+  const payload = JSON.stringify({
+    access_token: {
+      access: [
+        {
+          type: 'incoming-payment',
+          actions: ['create', 'read', 'list', 'complete']
+        }
+      ]
+    }
+  })
+
+  const params = {
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  }
+
+  const response = http.post(url, payload, params)
+  check(response, {
+    'incoming payment grant created': (r) => r.status === 200
+  })
+  return response.json()
+}
+
+function grantRequestQuote(senderWalletAddress) {
+  const url = `${senderWalletAddress.authServer}/`
+  const payload = JSON.stringify({
+    access_token: {
+      access: [
+        {
+          type: 'quote',
+          actions: ['read', 'create']
+        }
+      ]
+    }
+  })
+
+  const params = {
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  }
+
+  const response = http.post(url, payload, params)
+  check(response, {
+    'quote grant created': (r) => r.status === 200
+  })
+  return response.json()
+}
+
+function grantRequestOutgoingPayment(senderWalletAddress, limits) {
+  const url = `${senderWalletAddress.authServer}/`
+  const payload = JSON.stringify({
+    access_token: {
+      access: [
+        {
+          type: 'outgoing-payment',
+          actions: ['create', 'read', 'list'],
+          identifier: senderWalletAddress.id,
+          limits
+        }
+      ]
+    },
+    interact: {
+      start: ['redirect']
+    }
+  })
+
+  const params = {
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  }
+
+  const response = http.post(url, payload, params)
+  check(response, {
+    'outgoing payment grant created': (r) => r.status === 200
+  })
+  return response.json()
+}
+
+function refreshGrantToken(grant) {
+  const url = `${grant.id}`
+  const params = {
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${grant.access_token.value}`
+    }
+  }
+
+  const response = http.post(url, null, params)
+  check(response, {
+    'token refreshed successfully': (r) => r.status === 200
+  })
+  return response.json()
+}
+
+function createIncomingPayment(
+  accessToken,
+  receiverWalletAddress,
+  amountValueToSend
+) {
+  const url = `${receiverWalletAddress.resourceServer}/incoming-payments`
+  const payload = JSON.stringify({
+    walletAddress: receiverWalletAddress.id,
+    amount: {
+      value: amountValueToSend,
+      assetCode: receiverWalletAddress.asset.code,
+      assetScale: receiverWalletAddress.asset.scale
+    }
+  })
+
+  const params = {
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${accessToken}`
+    }
+  }
+
+  const response = http.post(url, payload, params)
+  check(response, {
+    'incoming payment created': (r) => r.status === 201 || r.status === 200
+  })
+  return response.json()
+}
+
+function createQuote(accessToken, senderWalletAddress, incomingPayment) {
+  const url = `${senderWalletAddress.resourceServer}/quotes`
+  const payload = JSON.stringify({
+    walletAddress: senderWalletAddress.id,
+    incomingPayment: incomingPayment.id
+  })
+
+  const params = {
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${accessToken}`
+    }
+  }
+
+  const response = http.post(url, payload, params)
+  check(response, {
+    'quote created': (r) => r.status === 201 || r.status === 200
+  })
+  return response.json()
+}
+
+function createOutgoingPayment(accessToken, senderWalletAddress, quote) {
+  const url = `${senderWalletAddress.resourceServer}/outgoing-payments`
+  const payload = JSON.stringify({
+    walletAddress: senderWalletAddress.id,
+    quoteId: quote.id
+  })
+
+  const params = {
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${accessToken}`
+    }
+  }
+
+  const response = http.post(url, payload, params)
+  check(response, {
+    'outgoing payment created': (r) => r.status === 201 || r.status === 200
+  })
+  return response.json()
+}
+
+export function setup() {
+  // Get wallet addresses
+  const receiverWalletAddress = {
+    id: 'https://happy-life-bank-test-backend:4100/accounts/pfry',
+    authServer: 'https://happy-life-bank-test-backend:4100',
+    resourceServer: 'https://happy-life-bank-test-backend:4100',
+    asset: {
+      code: 'USD',
+      scale: 2
+    }
+  }
+  const senderWalletAddress = {
+    id: 'https://cloud-nine-wallet-test-backend:3100/accounts/gfranklin',
+    authServer: 'https://cloud-nine-wallet-test-backend:3100',
+    resourceServer: 'https://cloud-nine-wallet-test-backend:3100',
+    asset: {
+      code: 'USD',
+      scale: 2
+    }
+  }
+
+  // Request grants
+  const incomingPaymentGrant = grantRequestIncomingPayment(
+    receiverWalletAddress
+  )
+  const quoteGrant = grantRequestQuote(senderWalletAddress)
+
+  return {
+    receiverWalletAddress,
+    senderWalletAddress,
+    incomingPaymentGrant,
+    quoteGrant,
+    startTime: Date.now()
+  }
+}
+
+export default function (data) {
+  const {
+    receiverWalletAddress,
+    senderWalletAddress,
+    incomingPaymentGrant,
+    quoteGrant,
+    startTime
+  } = data
+
+  // Create incoming payment
+  const incomingPayment = createIncomingPayment(
+    incomingPaymentGrant.access_token.value,
+    receiverWalletAddress,
+    '100'
+  )
+  console.log('Created incoming payment:', JSON.stringify(incomingPayment))
+
+  // Create quote
+  const quote = createQuote(
+    quoteGrant.access_token.value,
+    senderWalletAddress,
+    incomingPayment
+  )
+  console.log('Created quote:', JSON.stringify(quote))
+
+  // Request outgoing payment grant
+  const outgoingPaymentGrant = grantRequestOutgoingPayment(
+    senderWalletAddress,
+    {
+      debitAmount: quote.debitAmount,
+      receiveAmount: quote.receiveAmount
+    }
+  )
+
+  // Check if we need to refresh the token (every 10 minutes)
+  if (Date.now() - startTime > 10 * 60 * 1000) {
+    console.log('Refreshing token...')
+    const refreshedGrant = refreshGrantToken(outgoingPaymentGrant)
+    outgoingPaymentGrant.access_token.value = refreshedGrant.access_token.value
+  }
+
+  // Create outgoing payment
+  const outgoingPayment = createOutgoingPayment(
+    outgoingPaymentGrant.access_token.value,
+    senderWalletAddress,
+    quote
+  )
+  console.log('Created outgoing payment:', JSON.stringify(outgoingPayment))
+
+  // Wait briefly, to mimic pacing
+  sleep(1)
+  console.log('Open Payments performance flow complete.')
+}
