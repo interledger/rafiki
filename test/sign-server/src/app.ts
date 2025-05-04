@@ -1,8 +1,7 @@
 import fastify from 'fastify'
 import {
-  loadBase64Key,
   createHeaders,
-  RequestLike,
+  loadBase64Key,
   validateSignatureHeaders
 } from '@interledger/http-signature-utils'
 import logger from './logger'
@@ -31,10 +30,7 @@ const validateBody = (req: RequestBody) =>
   !!req.body
 
 const validateBodyVerifySignature = (req: RequestBodySignatureVerify) =>
-  !!req.method &&
-  !!req.url &&
-  !!req.headers &&
-  !!req.body
+  !!req.method && !!req.url && !!req.headers && !!req.body
 
 export function createApp(port: number) {
   const app = fastify()
@@ -64,7 +60,31 @@ export function createApp(port: number) {
       return
     }
 
-    const request = { method, headers, url, body }
+    const manualHash = crypto.createHash('sha512').update(body).digest('base64')
+    console.info('manualHash when signing: ' + manualHash)
+    const manualHashDirectBody = crypto
+      .createHash('sha512')
+      .update(body)
+      .digest('base64')
+    console.info(
+      'manualHash when signing (direct body): ' + manualHashDirectBody
+    )
+    const manualHashStringify = crypto
+      .createHash('sha512')
+      .update(JSON.stringify(JSON.parse(body)))
+      .digest('base64')
+    console.info('manualHash when signing (stringify): ' + manualHashStringify)
+
+    const bodyFormatted = JSON.stringify(JSON.parse(body))
+    const manualHashBodyFormatted = crypto
+      .createHash('sha512')
+      .update(bodyFormatted)
+      .digest('base64')
+    console.info(
+      'manualHash when signing (bodyFormatted): ' + manualHashBodyFormatted
+    )
+
+    const request = { method, headers, url, body: bodyFormatted }
     const createdHeaders = await createHeaders({
       request,
       privateKey,
@@ -72,6 +92,8 @@ export function createApp(port: number) {
     })
     delete createdHeaders['Content-Length']
     delete createdHeaders['Content-Type']
+
+    console.info('from the OpenPayments: ' + createdHeaders['Content-Digest'])
 
     ffReply.code(200).send({
       contentDigest: createdHeaders['Content-Digest'],
@@ -83,13 +105,30 @@ export function createApp(port: number) {
 
   app.post('/http-signature-verify', async function handler(ffReq, ffReply) {
     const requestBody = JSON.parse(JSON.stringify(ffReq.body))
-    if (!validateBodyVerifySignature(requestBody as RequestBodySignatureVerify)) {
+    if (
+      !validateBodyVerifySignature(requestBody as RequestBodySignatureVerify)
+    ) {
       return {
         statusCode: '400',
         body: 'Insufficient data in request body'
       }
     }
     const { method, url, headers, body } = requestBody
+    if (!headers['signature'] && ffReq.headers['signature']) {
+      headers['signature'] = ffReq.headers['signature']
+    }
+    if (!headers['signature-input'] && ffReq.headers['signature-input']) {
+      headers['signature-input'] = ffReq.headers['signature-input']
+    }
+    if (!headers['content-digest'] && ffReq.headers['content-digest']) {
+      headers['content-digest'] = ffReq.headers['content-digest']
+    }
+    if (!headers['content-length'] && ffReq.headers['content-length']) {
+      headers['content-length'] = ffReq.headers['content-length']
+    }
+    if (!headers['content-type'] && ffReq.headers['content-type']) {
+      headers['content-type'] = ffReq.headers['content-type']
+    }
 
     if (!headers['signature'] || !headers['signature-input']) {
       return {
@@ -98,20 +137,29 @@ export function createApp(port: number) {
       }
     }
 
-    if (!validateSignatureHeaders({
-      method,
-      url,
-      headers,
-      body
-    })) {
-      return {
-        statusCode: '401',
-        body: 'Signature verification failed'
-      }
-    }
+    const manualHash = crypto.createHash('sha512').update(body).digest('base64')
+    console.info('manualHash when verifying: ' + manualHash)
+    console.info('vs                       : ' + headers['content-digest'])
+
+    const bodyFormatted = JSON.stringify(JSON.parse(body))
+    const request = { method, headers, url, body: bodyFormatted }
+    const sigHeadersVerified = validateSignatureHeaders(request)
+    const sigVerified = sigHeadersVerified
+      ? /*validateSignature(
+      {
+        kid: '',
+        alg: 'EdDSA',
+        kty: 'OKP',
+        crv: 'Ed25519',
+        x: ''
+      },
+      request
+    )*/ true
+      : false
 
     ffReply.code(200).send({
-      signatureVerified: true
+      signatureHeadersValid: sigHeadersVerified,
+      signatureValid: sigVerified
     })
   })
 

@@ -34,7 +34,6 @@ const RECEIVER_HOST = 'happy-life-bank-backend'
 const RECEIVER_AUTH_HOST_URL = 'http://localhost:4006'
 const RECEIVER_BACKEND_HOST_URL = 'http://localhost:4000'
 
-
 // Client:
 const CLIENT_PRIVATE_KEY_B64 =
   'LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tCk1DNENBUUF3QlFZREsyVndCQ0lFSUVxZXptY1BoT0U4Ymt3TitqUXJwcGZSWXpHSWRGVFZXUUdUSEpJS3B6ODgKLS0tLS1FTkQgUFJJVkFURSBLRVktLS0tLQo='
@@ -79,7 +78,7 @@ function requestSigHeadersOpenPayments(key, keyId, url, method, headers, body) {
 
   return {
     'content-digest': jsonRsp.contentDigest,
-    'signature': jsonRsp.signature,
+    signature: jsonRsp.signature,
     'signature-input': jsonRsp.signatureInput /* + ';alg="ed25519"'*/
   }
 }
@@ -145,7 +144,9 @@ export default function (data) {
     data: { receiverWalletData, senderWalletData, clientPrivateKeyB64, keyId }
   } = data
 
-  console.log(`receiverWalletData : ${JSON.stringify(receiverWalletData, null, 2)}`)
+  console.log(
+    `receiverWalletData : ${JSON.stringify(receiverWalletData, null, 2)}`
+  )
   console.log(`senderWalletData : ${JSON.stringify(senderWalletData, null, 2)}`)
 
   // 3. Grant Request Incoming Payment:
@@ -170,12 +171,15 @@ export default function (data) {
     'grant request incoming payment': (r) => r.status === 200
   })
   const rspGrantReqInPayData = JSON.parse(rspGrantReqInPay.body)
-  console.log(`grant incoming-payment: ${JSON.stringify(rspGrantReqInPayData, null, 2)}`)
+  console.log(
+    `grant incoming-payment: ${JSON.stringify(rspGrantReqInPayData, null, 2)}`
+  )
 
-  if (!rspGrantReqInPayData.access_token || !rspGrantReqInPayData.access_token.value) {
-    fail(
-      `could not issue grant for incoming payment: ${rspGrantReqInPay.body}`
-    )
+  if (
+    !rspGrantReqInPayData.access_token ||
+    !rspGrantReqInPayData.access_token.value
+  ) {
+    fail(`could not issue grant for incoming payment: ${rspGrantReqInPay.body}`)
     return
   }
 
@@ -187,21 +191,23 @@ export default function (data) {
   const inPaymentHeaders = {}
   inPaymentHeaders['Authorization'] = `GNAP ${inPaymentAccessToken}`
 
-  const tomorrow = (new Date(new Date().setDate(new Date().getDate() + 1))).toISOString()
+  const tomorrow = new Date(
+    new Date().setDate(new Date().getDate() + 1)
+  ).toISOString()
   const rspInPay = postWithSignatureHeaders(
     clientPrivateKeyB64,
     keyId,
     RECEIVER_BACKEND_HOST_URL,
     {
-      "walletAddress": RECEIVER_WALLET_ADDRESS,
-      "incomingAmount": {
-        "value": "100",
-        "assetCode": receiverWalletData.assetCode,
-        "assetScale": receiverWalletData.assetScale
+      walletAddress: RECEIVER_WALLET_ADDRESS,
+      incomingAmount: {
+        value: '100',
+        assetCode: receiverWalletData.assetCode,
+        assetScale: receiverWalletData.assetScale
       },
-      "expiresAt": tomorrow,
-      "metadata": {
-        "description": "Free Money!"
+      expiresAt: tomorrow,
+      metadata: {
+        description: 'Free Money!'
       }
     },
     inPaymentHeaders
@@ -209,7 +215,7 @@ export default function (data) {
   check(rspInPay, {
     'incoming payment': (r) => r.status === 200
   })
-  const incomingPaymentId = rspInPay.id.split("/").pop()
+  const incomingPaymentId = rspInPay.id.split('/').pop()
 
   // 5. Grant Request Quote:
   const rspGrantReqQuote = postWithSignatureHeaders(
@@ -244,14 +250,14 @@ export default function (data) {
     keyId,
     SENDER_BACKEND_HOST_URL,
     {
-      "walletAddress": SENDER_WALLET_ADDRESS,
-      "receiver": `${SENDER_BACKEND_HOST_URL}/incoming-payments/${incomingPaymentId}`,
-      "method": "ilp"
+      walletAddress: SENDER_WALLET_ADDRESS,
+      receiver: `${SENDER_BACKEND_HOST_URL}/incoming-payments/${incomingPaymentId}`,
+      method: 'ilp'
     },
     quoteHeaders
   )
   check(rspQuote, {
-    'quote': (r) => r.status === 200
+    quote: (r) => r.status === 200
   })
 
   // 7. Grant Request Outgoing Payment:
@@ -263,23 +269,19 @@ export default function (data) {
       access_token: {
         access: [
           {
-            "type": "outgoing-payment",
-            "actions": [
-              "create", "read", "list"
-            ],
-            "identifier": "{{senderWalletAddress}}",
-            "limits": {
-              "debitAmount": "{{quoteDebitAmount}}",
-              "receiveAmount": "{{quoteReceiveAmount}}"
+            type: 'outgoing-payment',
+            actions: ['create', 'read', 'list'],
+            identifier: '{{senderWalletAddress}}',
+            limits: {
+              debitAmount: '{{quoteDebitAmount}}',
+              receiveAmount: '{{quoteReceiveAmount}}'
             }
           }
         ]
       },
       client: CLIENT_WALLET_ADDRESS,
-      "interact": {
-        "start": [
-          "redirect"
-        ]
+      interact: {
+        start: ['redirect']
       }
     },
     {} // No headers
@@ -288,18 +290,15 @@ export default function (data) {
     'grant request outgoing payment': (r) => r.status === 200
   })
   const rspGrantReqOutPaymentData = JSON.parse(rspGrantReqOutPayment.body)
-  console.log(`grant outgoing payment: ${JSON.stringify(rspGrantReqOutPaymentData, null, 2)}`)
+  console.log(
+    `grant outgoing payment: ${JSON.stringify(rspGrantReqOutPaymentData, null, 2)}`
+  )
 
   const redirectUrl = rspGrantReqOutPaymentData.interact.redirect
-
+  console.log(`The redirect url is: ${redirectUrl}`)
   //TODO accept
 
   //TODO Continuation request.
-
-
-
-
-
 }
 
 export function handleSummary(data) {
