@@ -5,7 +5,7 @@ meta {
 }
 
 post {
-  address: {{RafikiGraphqlHost}}/graphql
+  url: {{RafikiGraphqlHost}}/graphql
   body: graphql
   auth: none
 }
@@ -40,7 +40,7 @@ body:graphql:vars {
   {
     "input": {
       "assetId": "{{assetId}}",
-      "url": "https://{{senderOpenPaymentsHost}}/timon/{{randomId}}",
+      "address": "https://cloud-nine-wallet-backend/timon/{{randomId}}",
       "publicName": "Timon",
       "additionalProperties": [
         {"key" :  "iban", "value":  "NL93 8601 1117 947", "visibleInOpenPayments":  true},

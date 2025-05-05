@@ -15,7 +15,7 @@ headers {
 }
 
 body:graphql {
-  mutation CreateTenantSettings($input: [CreateTenantSettingsInput!]!) {
+  mutation CreateTenantSettings($input: CreateTenantSettingsInput!) {
     createTenantSettings(input:$input) {
       settings {
         key
@@ -27,12 +27,14 @@ body:graphql {
 
 body:graphql:vars {
   {
-    "input": [
-      {
-        "key": "MY_KEY",
-        "value": "MY_VALUE"
-      }
-    ]
+    "input": {
+      "settings": [
+        {
+          "key": "MY_KEY",
+          "value": "MY_VALUE"
+        }
+      ]
+    }
   }
   
 }
