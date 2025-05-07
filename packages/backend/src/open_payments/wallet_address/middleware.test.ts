@@ -389,6 +389,7 @@ describe('Wallet Address Middleware', (): void => {
     let next: jest.MockedFunction<() => Promise<void>>
     const walletAddressPath = 'ilp.wallet/test'
     const walletAddressUrl = `https://${walletAddressPath}`
+    const walletAddressUrlEncoded = encodeURIComponent(walletAddressUrl)
     const walletAddressRedirectHtmlPage = 'https://ilp.dev'
 
     beforeEach((): void => {
@@ -411,7 +412,7 @@ describe('Wallet Address Middleware', (): void => {
 
       expect(ctx.response.status).toBe(302)
       expect(ctx.response.get('Location')).toBe(
-        `${walletAddressRedirectHtmlPage}/${walletAddressPath}`
+        `${walletAddressRedirectHtmlPage}/${walletAddressUrlEncoded}`
       )
       expect(next).not.toHaveBeenCalled()
     })
@@ -459,7 +460,7 @@ describe('Wallet Address Middleware', (): void => {
 
       expect(ctx.response.status).toBe(302)
       expect(ctx.response.get('Location')).toBe(
-        `${walletAddressRedirectHtmlPage}/${walletAddressPath}`
+        `${walletAddressRedirectHtmlPage}/${walletAddressUrlEncoded}`
       )
       expect(next).not.toHaveBeenCalled()
     })
