@@ -113,7 +113,7 @@ async function getQuote(
         options.receiveAmount?.value || options.receiver.incomingAmount?.value
     }
 
-    // Probing quote to get the exchange rate
+    // Probing quote to get the exchange rate even if amountToSend is less than 0 because of fees
     if (options.debitAmount && quoteOptions.amountToSend === 0n) {
       const ilpQuote = await Pay.startQuote({
         ...quoteOptions,
