@@ -43,6 +43,7 @@ export interface TenantSettingService {
     pagination?: Pagination,
     sortOrder?: SortOrder
   ) => Promise<TenantSetting[]>
+  getSettingsByPrefix: (prefix: string) => Promise<TenantSetting[]>
 }
 
 export interface ServiceDependencies extends BaseService {
@@ -68,7 +69,9 @@ export async function createTenantSettingService(
       tenantId: string,
       pagination?: Pagination,
       sortOrder?: SortOrder
-    ) => getTenantSettingPageForTenant(deps, tenantId, pagination, sortOrder)
+    ) => getTenantSettingPageForTenant(deps, tenantId, pagination, sortOrder),
+    getSettingsByPrefix: (prefix: string) =>
+      getWalletAddressSettingsByPrefix(deps, prefix)
   }
 }
 
@@ -146,4 +149,15 @@ async function getTenantSettingPageForTenant(
     .whereNull('deletedAt')
     .andWhere('tenantId', tenantId)
     .getPage(pagination, sortOrder)
+}
+
+async function getWalletAddressSettingsByPrefix(
+  deps: ServiceDependencies,
+  prefix: string
+): Promise<TenantSetting[]> {
+  return await TenantSetting.query(deps.knex)
+    .whereILike('value', `${prefix}%`)
+    .andWhere({
+      key: TenantSettingKeys.WALLET_ADDRESS_URL.name
+    })
 }

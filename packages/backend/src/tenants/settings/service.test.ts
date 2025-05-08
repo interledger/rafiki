@@ -9,7 +9,7 @@ import { Tenant } from '../model'
 import { TenantService } from '../service'
 import { faker } from '@faker-js/faker'
 import { exchangeRatesSetting, randomSetting } from '../../tests/tenantSettings'
-import { TenantSetting } from './model'
+import { TenantSetting, TenantSettingKeys } from './model'
 import {
   CreateOptions,
   GetOptions,
@@ -17,6 +17,8 @@ import {
   UpdateOptions
 } from './service'
 import { AuthServiceClient } from '../../auth-service-client/client'
+import { v4 as uuid } from 'uuid'
+import { createTenant } from '../../tests/tenant'
 
 describe('TenantSetting Service', (): void => {
   let deps: IocContract<AppServices>
@@ -369,6 +371,39 @@ describe('TenantSetting Service', (): void => {
       })
 
       expect(result).toEqual([])
+    })
+  })
+
+  describe('get settings by value', (): void => {
+    test('can get settings by wallet address prefix setting', async (): Promise<void> => {
+      const secondTenant = await createTenant(deps)
+      const baseUrl = `https://${faker.internet.domainName()}/${uuid()}`
+      const settings = (
+        await Promise.all([
+          tenantSettingService.create({
+            tenantId: tenant.id,
+            setting: [
+              {
+                key: TenantSettingKeys.WALLET_ADDRESS_URL.name,
+                value: `${baseUrl}/${uuid()}`
+              }
+            ]
+          }),
+          tenantSettingService.create({
+            tenantId: secondTenant.id,
+            setting: [
+              {
+                key: TenantSettingKeys.WALLET_ADDRESS_URL.name,
+                value: `${baseUrl}/${uuid()}`
+              }
+            ]
+          })
+        ])
+      ).flat()
+
+      const retrievedSettings =
+        await tenantSettingService.getSettingsByPrefix(baseUrl)
+      expect(retrievedSettings).toEqual(settings)
     })
   })
 })

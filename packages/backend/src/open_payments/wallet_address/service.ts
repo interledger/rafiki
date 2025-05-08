@@ -379,13 +379,25 @@ async function getOrPollByUrl(
   const existingWalletAddress = await getWalletAddressByUrl(deps, url)
   if (existingWalletAddress) return existingWalletAddress
 
+  let containsOperatorTenant = false
+  const webhookRecipients = (
+    await deps.tenantSettingService.getSettingsByPrefix(url)
+  ).map((tenantSetting) => {
+    if (tenantSetting.tenantId === deps.config.operatorTenantId)
+      containsOperatorTenant = true
+    return { recipientTenantId: tenantSetting.tenantId }
+  })
+
+  if (!containsOperatorTenant)
+    webhookRecipients.push({ recipientTenantId: deps.config.operatorTenantId })
+
   await WalletAddressEvent.query(deps.knex).insertGraph({
     type: WalletAddressEventType.WalletAddressNotFound,
     data: {
       walletAddressUrl: url
     },
     tenantId: deps.config.operatorTenantId,
-    webhooks: [{ recipientTenantId: deps.config.operatorTenantId }]
+    webhooks: webhookRecipients
   })
 
   deps.logger.debug(
