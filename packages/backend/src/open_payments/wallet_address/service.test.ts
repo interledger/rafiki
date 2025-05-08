@@ -59,7 +59,7 @@ describe('Open Payments Wallet Address Service', (): void => {
     await appContainer.shutdown()
   })
 
-  describe('Create or Get Wallet Address3', (): void => {
+  describe('Create or Get Wallet Address', (): void => {
     let tenantId: string
     let options: CreateOptions
 
@@ -606,6 +606,53 @@ describe('Open Payments Wallet Address Service', (): void => {
         )
       )
 
+      test('creates wallet address not found event for tenant with matching prefix', async (): Promise<void> => {
+        withConfigOverride(
+          () => config,
+          { walletAddressLookupTimeoutMs: 0 },
+          async (): Promise<void> => {
+            const walletAddressUrl = `https://${faker.internet.domainName()}/.well-known/pay`
+            await expect(
+              walletAddressService.getOrPollByUrl(walletAddressUrl)
+            ).resolves.toBeUndefined()
+
+            const tenant = await createTenant(deps)
+            await createTenantSettings(deps, {
+              tenantId: tenant.id,
+              setting: [
+                {
+                  key: TenantSettingKeys.WALLET_ADDRESS_URL.name,
+                  value: new URL(walletAddressUrl).origin
+                }
+              ]
+            })
+
+            const walletAddressNotFoundEvents = await WalletAddressEvent.query(
+              knex
+            )
+              .where({
+                type: WalletAddressEventType.WalletAddressNotFound
+              })
+              .withGraphFetched('webhooks')
+
+            expect(walletAddressNotFoundEvents).toMatchObject({
+              data: { walletAddressUrl },
+              webhooks: [
+                expect.objectContaining({
+                  recipientTenantId: config.operatorTenantId,
+                  eventId: walletAddressNotFoundEvents[0].id,
+                  processAt: expect.any(Date)
+                }),
+                expect.objectContaining({
+                  recipientTenantId: tenant.id,
+                  eventId: walletAddressNotFoundEvents[0].id,
+                  processAt: expect.any(Date)
+                })
+              ]
+            })
+          }
+        )
+      })
       test(
         'polls for wallet address',
         withConfigOverride(
