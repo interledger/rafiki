@@ -12,7 +12,7 @@
     "@astrojs/markdown-remark": "^6.3.1",
     "@astrojs/starlight": "^0.33.0",
     "@interledger/docs-design-system": "^0.6.2",
-    "astro": "5.6.1",
+    "astro": "5.7.12",
     "astro-graphql-plugin": "^0.4.2",
     "graphql": "16.10.0",
     "mermaid": "^11.6.0",
