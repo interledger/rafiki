@@ -655,7 +655,7 @@ describe('QuoteService', (): void => {
         ${200n}          | ${0}     | ${0}          | ${0.5}       | ${100n}                    | ${'no fees'}
         ${200n}          | ${0}     | ${0}          | ${1.0}       | ${200n}                    | ${'no fees, equal exchange rate'}
         ${200n}          | ${20}    | ${0}          | ${0.5}       | ${90n}                     | ${'fixed fee'}
-        ${200n}          | ${101n}  | ${0}          | ${1.0}       | ${99n}                     | ${'fixed fee larger than receiveAmount, equal exchange rate'}
+        ${200n}          | ${101}   | ${0}          | ${1.0}       | ${99n}                     | ${'fixed fee larger than receiveAmount, equal exchange rate'}
         ${200n}          | ${0}     | ${200}        | ${0.5}       | ${98n}                     | ${'basis point fee'}
         ${200n}          | ${20}    | ${200}        | ${0.5}       | ${88n}                     | ${'fixed and basis point fee'}
         ${200n}          | ${20}    | ${200}        | ${0.455}     | ${80n}                     | ${'fixed and basis point fee with floating exchange rate'}
@@ -705,6 +705,72 @@ describe('QuoteService', (): void => {
             assetCode: receiveAsset.code,
             assetScale: receiveAsset.scale,
             value: expectedReceiveAmountValue
+          })
+        }
+      )
+
+      test.each`
+        debitAmountValue | fixedFee | basisPointFee | exchangeRate | expectedMinSendAmountValue | description
+        ${1n}            | ${0}     | ${0}          | ${0.01}      | ${100n}                    | ${'debit < 100 + no fee'}
+        ${99n}           | ${0}     | ${0}          | ${0.01}      | ${100n}                    | ${'debit < 100 + no fee'}
+        ${100n}          | ${50}    | ${0}          | ${0.01}      | ${150n}                    | ${'debit < 100 + fixed fee'}
+        ${149n}          | ${50}    | ${0}          | ${0.01}      | ${150n}                    | ${'debit < 100 + fixed fee'}
+        ${101n}          | ${0}     | ${200}        | ${0.01}      | ${103n}                    | ${'debit < 100 + 2% fee'}
+        ${1n}            | ${50}    | ${200}        | ${0.01}      | ${154n}                    | ${'debit < 100 + mixed fee'}
+        ${100n}          | ${50}    | ${200}        | ${0.01}      | ${154n}                    | ${'debit < 100 + mixed fee'}
+        ${152n}          | ${50}    | ${2000}       | ${0.01}      | ${188n}                    | ${'debit < 100 + mixed fee'}
+      `(
+        'returns minSendAmount $expectedMinSendAmountValue for $description',
+        async ({
+          debitAmountValue,
+          fixedFee,
+          basisPointFee,
+          expectedMinSendAmountValue,
+          exchangeRate
+        }): Promise<void> => {
+          const receiver = await createReceiver(deps, receivingWalletAddress)
+
+          await Fee.query().insertAndFetch({
+            assetId: sendAsset.id,
+            type: FeeType.Sending,
+            fixedFee,
+            basisPointFee
+          })
+
+          const mockRejectQuote = new PaymentMethodHandlerError(
+            'Failed getting quote',
+            {
+              description:
+                'Minimum delivery amount of ILP quote is non-positive',
+              retryable: false,
+              code: PaymentMethodHandlerErrorCode.QuoteNonPositiveReceiveAmount,
+              details: {
+                minSendAmount: BigInt(Math.ceil(1 / exchangeRate))
+              }
+            }
+          )
+
+          jest
+            .spyOn(paymentMethodHandlerService, 'getQuote')
+            .mockRejectedValueOnce(mockRejectQuote)
+
+          await expect(
+            quoteService.create({
+              walletAddressId: sendingWalletAddress.id,
+              receiver: receiver.incomingPayment!.id,
+              debitAmount: {
+                value: debitAmountValue,
+                assetCode: sendAsset.code,
+                assetScale: sendAsset.scale
+              },
+              method: 'ilp'
+            })
+          ).resolves.toMatchObject({
+            details: {
+              minSendAmount: {
+                value: expectedMinSendAmountValue
+              }
+            }
           })
         }
       )

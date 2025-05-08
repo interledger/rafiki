@@ -126,9 +126,7 @@ async function getQuote(
         retryable: false,
         code: PaymentMethodHandlerErrorCode.QuoteNonPositiveReceiveAmount,
         details: {
-          minSendAmount: BigInt(
-            Math.ceil(1 / ilpQuote.highEstimatedExchangeRate.valueOf())
-          )
+          minSendAmount: BigInt(ilpQuote.highEstimatedExchangeRate.b.valueOf())
         }
       })
     }
@@ -200,9 +198,7 @@ async function getQuote(
         retryable: false,
         code: PaymentMethodHandlerErrorCode.QuoteNonPositiveReceiveAmount,
         details: {
-          minSendAmount: BigInt(
-            Math.ceil(1 / ilpQuote.highEstimatedExchangeRate.valueOf())
-          )
+          minSendAmount: BigInt(ilpQuote.highEstimatedExchangeRate.b.valueOf())
         }
       })
     }

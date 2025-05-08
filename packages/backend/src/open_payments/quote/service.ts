@@ -224,10 +224,13 @@ async function createQuote(
           }
           const quoteMinSendAmount = err.details.minSendAmount as bigint
           const fixedFee = sendingFee?.fixedFee ?? 0n
+          const feePercentage = (sendingFee?.basisPointFee ?? 0) / 10_000
 
-          details.minSendAmount.value =
-            quoteMinSendAmount +
-            (sendingFee?.calculate(fixedFee + quoteMinSendAmount) ?? 0n)
+          details.minSendAmount.value = BigInt(
+            Math.ceil(
+              Number(quoteMinSendAmount + fixedFee) / (1 - feePercentage)
+            )
+          )
         }
 
         stopTimer()
