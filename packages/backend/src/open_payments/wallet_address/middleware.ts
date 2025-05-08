@@ -128,13 +128,12 @@ export async function redirectIfBrowserAcceptsHtml(
     config.walletAddressRedirectHtmlPage &&
     ctx.request.header['accept']?.includes('text/html')
   ) {
-    const walletAddressPath = ctx.walletAddressUrl.replace('https://', '')
-    const redirectHtmlPage = config.walletAddressRedirectHtmlPage.replace(
-      /\/+$/,
-      ''
+    const redirectLocation = config.walletAddressRedirectHtmlPage.replace(
+      '%s',
+      encodeURIComponent(ctx.walletAddressUrl)
     )
 
-    ctx.set('Location', `${redirectHtmlPage}/${walletAddressPath}`)
+    ctx.set('Location', redirectLocation)
     ctx.status = 302
     return
   }

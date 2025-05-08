@@ -389,7 +389,7 @@ describe('Wallet Address Middleware', (): void => {
     let next: jest.MockedFunction<() => Promise<void>>
     const walletAddressPath = 'ilp.wallet/test'
     const walletAddressUrl = `https://${walletAddressPath}`
-    const walletAddressRedirectHtmlPage = 'https://ilp.dev'
+    const walletAddressRedirectHtmlPage = 'https://ilp.dev/?dest=%s'
 
     beforeEach((): void => {
       ctx = createContext({}, {})
@@ -411,12 +411,12 @@ describe('Wallet Address Middleware', (): void => {
 
       expect(ctx.response.status).toBe(302)
       expect(ctx.response.get('Location')).toBe(
-        `${walletAddressRedirectHtmlPage}/${walletAddressPath}`
+        `https://ilp.dev/?dest=${encodeURIComponent(walletAddressUrl)}`
       )
       expect(next).not.toHaveBeenCalled()
     })
 
-    test('no redirect to wallet address url if env is not set', async (): Promise<void> => {
+    test(`doesn't redirect to wallet address url if env is not set`, async (): Promise<void> => {
       ctx.container = initIocContainer({
         ...Config,
         walletAddressRedirectHtmlPage: undefined
@@ -431,7 +431,7 @@ describe('Wallet Address Middleware', (): void => {
       expect(next).toHaveBeenCalled()
     })
 
-    test('no redirect to wallet address url if accept is not text/html', async (): Promise<void> => {
+    test(`doesn't redirect to wallet address url if accept is not text/html`, async (): Promise<void> => {
       ctx.container = initIocContainer({
         ...Config,
         walletAddressRedirectHtmlPage
@@ -445,12 +445,12 @@ describe('Wallet Address Middleware', (): void => {
       expect(next).toHaveBeenCalled()
     })
 
-    it('should trim trailing slashes from redirectHtmlPage', async (): Promise<void> => {
+    it(`doesn't replace %s twice in the redirect location`, async () => {
       ctx.container = initIocContainer({
         ...Config,
-        walletAddressRedirectHtmlPage: 'https://ilp.dev/'
+        walletAddressRedirectHtmlPage: 'https://ilp.dev/?dest=%s&test=%s'
       })
-      ctx.walletAddressUrl = `${walletAddressUrl}`
+      ctx.walletAddressUrl = walletAddressUrl
       ctx.request.headers.accept = 'text/html'
 
       await expect(
@@ -459,7 +459,7 @@ describe('Wallet Address Middleware', (): void => {
 
       expect(ctx.response.status).toBe(302)
       expect(ctx.response.get('Location')).toBe(
-        `${walletAddressRedirectHtmlPage}/${walletAddressPath}`
+        `https://ilp.dev/?dest=${encodeURIComponent(walletAddressUrl)}&test=%s`
       )
       expect(next).not.toHaveBeenCalled()
     })
