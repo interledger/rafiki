@@ -223,13 +223,10 @@ async function createQuote(
             }
           }
           const quoteMinSendAmount = err.details.minSendAmount as bigint
-          const fixedFee = sendingFee?.fixedFee ?? 0n
-          const feePercentage = (sendingFee?.basisPointFee ?? 0) / 10_000
 
-          details.minSendAmount.value = BigInt(
-            Math.ceil(
-              Number(quoteMinSendAmount + fixedFee) / (1 - feePercentage)
-            )
+          details.minSendAmount.value = calculateMinSendAmount(
+            quoteMinSendAmount,
+            sendingFee
           )
         }
 
@@ -511,4 +508,23 @@ async function getWalletAddressPage(
     )
   }
   return quotes
+}
+
+function calculateMinSendAmount(
+  quoteMinSendAmount: bigint,
+  sendingFee: Fee | undefined
+): bigint {
+  if (!sendingFee) {
+    return quoteMinSendAmount
+  }
+  const fixedFee = sendingFee.fixedFee ?? 0n
+  // if the fee is 0%, the invertedPercentageFee is 1
+  // if the fee is 100%, the invertedPercentageFee is 0, which is not allowed
+  // We make sure the fee is between 0 and 1
+  const invertedPercentageFee =
+    1 - Math.min(Math.max((sendingFee.basisPointFee ?? 0) / 10_000, 0), 1)
+
+  return BigInt(
+    Math.ceil(Number(quoteMinSendAmount + fixedFee) / invertedPercentageFee)
+  )
 }
