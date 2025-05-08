@@ -203,7 +203,7 @@ function importTMK(
 function generateCardKey(
   lmk: string,
   tr31ZmkUnderLmk: string,
-  keySize: number = 2048,
+  //keySize: number = 2048,
   passphrase: string = 'your-secure-passphrase'
 ): {
   tr31CardKeyUnderLmk: string
@@ -211,8 +211,10 @@ function generateCardKey(
   publicKey: string
   kcv: string
 } {
-  const { publicKey, privateKey } = generateKeyPairSync('rsa', {
-    modulusLength: keySize, // Key size in bits
+  // EllipticCurve: prime256v1
+  const { publicKey, privateKey } = generateKeyPairSync('ec', {
+    //modulusLength: keySize, // Key size in bits (RSA/DSA)
+    namedCurve: 'prime256v1',
     publicKeyEncoding: {
       type: 'spki', // Recommended for public keys
       format: 'pem' //pem for string, der for buffer.
@@ -225,7 +227,9 @@ function generateCardKey(
     }
   })
 
-  logger.info(`Private key size is ${privateKey.length} bytes.`)
+  logger.info(
+    `Private key size is ${privateKey.length} bytes, and public key size is ${publicKey.length} bytes`
+  )
 
   const tr31CardKeyUnderLmk = createTR31KeyBlockUnder(
     Tr31Intent.LMK,
