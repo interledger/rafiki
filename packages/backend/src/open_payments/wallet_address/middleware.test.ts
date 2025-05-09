@@ -389,7 +389,7 @@ describe('Wallet Address Middleware', (): void => {
     let next: jest.MockedFunction<() => Promise<void>>
     const walletAddressPath = 'ilp.wallet/test'
     const walletAddressUrl = `https://${walletAddressPath}`
-    const walletAddressRedirectHtmlPage = 'https://ilp.dev/?dest=%s'
+    const walletAddressRedirectHtmlPage = 'https://ilp.dev/?dest=%wp'
 
     beforeEach((): void => {
       ctx = createContext({}, {})
@@ -397,7 +397,67 @@ describe('Wallet Address Middleware', (): void => {
       next = jest.fn()
     })
 
-    test('redirects to wallet address url', async (): Promise<void> => {
+    test('redirects to wallet path with %wp', async (): Promise<void> => {
+      ctx.container = initIocContainer({
+        ...Config,
+        walletAddressRedirectHtmlPage
+      })
+      ctx.walletAddressUrl = walletAddressUrl
+      ctx.request.headers.accept = 'text/html'
+
+      await expect(
+        redirectIfBrowserAcceptsHtml(ctx, next)
+      ).resolves.toBeUndefined()
+
+      expect(ctx.response.status).toBe(302)
+      expect(ctx.response.get('Location')).toBe(
+        `https://ilp.dev/?dest=${walletAddressPath}`
+      )
+      expect(next).not.toHaveBeenCalled()
+    })
+
+    test('redirects to encoded wallet path with %ewp', async (): Promise<void> => {
+      const walletAddressRedirectHtmlPage = 'https://ilp.dev/?dest=%ewp'
+      ctx.container = initIocContainer({
+        ...Config,
+        walletAddressRedirectHtmlPage
+      })
+      ctx.walletAddressUrl = walletAddressUrl
+      ctx.request.headers.accept = 'text/html'
+
+      await expect(
+        redirectIfBrowserAcceptsHtml(ctx, next)
+      ).resolves.toBeUndefined()
+
+      expect(ctx.response.status).toBe(302)
+      expect(ctx.response.get('Location')).toBe(
+        `https://ilp.dev/?dest=${encodeURIComponent(walletAddressPath)}`
+      )
+      expect(next).not.toHaveBeenCalled()
+    })
+
+    test('redirects to wallet address with %wa', async (): Promise<void> => {
+      const walletAddressRedirectHtmlPage = 'https://ilp.dev/?dest=%wa'
+      ctx.container = initIocContainer({
+        ...Config,
+        walletAddressRedirectHtmlPage
+      })
+      ctx.walletAddressUrl = walletAddressUrl
+      ctx.request.headers.accept = 'text/html'
+
+      await expect(
+        redirectIfBrowserAcceptsHtml(ctx, next)
+      ).resolves.toBeUndefined()
+
+      expect(ctx.response.status).toBe(302)
+      expect(ctx.response.get('Location')).toBe(
+        `https://ilp.dev/?dest=${walletAddressUrl}`
+      )
+      expect(next).not.toHaveBeenCalled()
+    })
+
+    test('redirects to encoded wallet address with %ewa', async (): Promise<void> => {
+      const walletAddressRedirectHtmlPage = 'https://ilp.dev/?dest=%ewa'
       ctx.container = initIocContainer({
         ...Config,
         walletAddressRedirectHtmlPage
@@ -434,7 +494,7 @@ describe('Wallet Address Middleware', (): void => {
     test(`doesn't redirect to wallet address url if accept is not text/html`, async (): Promise<void> => {
       ctx.container = initIocContainer({
         ...Config,
-        walletAddressRedirectHtmlPage
+        walletAddressRedirectHtmlPage: 'https://ilp.dev/?dest=%wp'
       })
       ctx.walletAddressUrl = walletAddressUrl
 
@@ -445,10 +505,10 @@ describe('Wallet Address Middleware', (): void => {
       expect(next).toHaveBeenCalled()
     })
 
-    it(`doesn't replace %s twice in the redirect location`, async () => {
+    it(`doesn't replace twice in the redirect location`, async () => {
       ctx.container = initIocContainer({
         ...Config,
-        walletAddressRedirectHtmlPage: 'https://ilp.dev/?dest=%s&test=%s'
+        walletAddressRedirectHtmlPage: 'https://ilp.dev/?dest=%wp&test=%wp'
       })
       ctx.walletAddressUrl = walletAddressUrl
       ctx.request.headers.accept = 'text/html'
@@ -459,7 +519,7 @@ describe('Wallet Address Middleware', (): void => {
 
       expect(ctx.response.status).toBe(302)
       expect(ctx.response.get('Location')).toBe(
-        `https://ilp.dev/?dest=${encodeURIComponent(walletAddressUrl)}&test=%s`
+        `https://ilp.dev/?dest=${walletAddressPath}&test=%wp`
       )
       expect(next).not.toHaveBeenCalled()
     })

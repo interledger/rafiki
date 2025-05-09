@@ -123,14 +123,25 @@ export async function redirectIfBrowserAcceptsHtml(
   next: () => Promise<void>
 ) {
   const config = await ctx.container.use('config')
+  const prefix = 'https://'
 
   if (
     config.walletAddressRedirectHtmlPage &&
     ctx.request.header['accept']?.includes('text/html')
   ) {
-    const redirectLocation = config.walletAddressRedirectHtmlPage.replace(
-      '%s',
-      encodeURIComponent(ctx.walletAddressUrl)
+    const fullWalletAddressUrl = ctx.walletAddressUrl
+
+    const redirectLocation = [
+      { id: '%wa', fn: (s: string) => s },
+      { id: '%ewa', fn: (s: string) => encodeURIComponent(s) },
+      { id: '%wp', fn: (s: string) => s.replace(prefix, '') },
+      {
+        id: '%ewp',
+        fn: (s: string) => encodeURIComponent(s.replace(prefix, ''))
+      }
+    ].reduce(
+      (acc, { id, fn }) => acc.replace(id, fn(fullWalletAddressUrl)),
+      config.walletAddressRedirectHtmlPage
     )
 
     ctx.set('Location', redirectLocation)
