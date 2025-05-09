@@ -6,7 +6,8 @@ import {
   OutgoingPaymentState,
   CreateReceiverInput,
   IncomingPayment,
-  CreateQuoteInput
+  CreateQuoteInput,
+  CreateOutgoingPaymentFromIncomingPaymentInput
 } from 'test-lib/dist/generated/graphql'
 import type { MockASE } from 'test-lib'
 import { pollCondition } from '../utils'
@@ -24,6 +25,9 @@ export interface AdminActions {
     senderWalletAddressId: string,
     quote: Quote
   ): Promise<OutgoingPayment>
+  createOutgoingPaymentFromIncomingPayment(
+    input: CreateOutgoingPaymentFromIncomingPaymentInput
+  ): Promise<OutgoingPayment>
   getIncomingPayment(incomingPaymentId: string): Promise<IncomingPayment>
   getOutgoingPayment(
     outgoingPaymentId: string,
@@ -37,6 +41,8 @@ export function createAdminActions(deps: AdminActionsDeps): AdminActions {
     createQuote: (input) => createQuote(deps, input),
     createOutgoingPayment: (senderWalletAddressId, quote) =>
       createOutgoingPayment(deps, senderWalletAddressId, quote),
+    createOutgoingPaymentFromIncomingPayment: (input) =>
+      createOutgoingPaymentFromIncomingPayment(deps, input),
     getIncomingPayment: (incomingPaymentId) =>
       getIncomingPayment(deps, incomingPaymentId),
     getOutgoingPayment: (outgoingPaymentId, amountValueToSend) =>
@@ -60,7 +66,9 @@ async function createReceiver(
   await pollCondition(
     () => {
       return handleWebhookEventSpy.mock.calls.some(
-        (call) => call[0]?.type === WebhookEventType.IncomingPaymentCreated
+        (call) =>
+          call[0]?.type === WebhookEventType.IncomingPaymentCreated &&
+          call[0].data.id === response.receiver?.id.split('/').slice(-1)[0]
       )
     },
     5,
@@ -93,10 +101,6 @@ async function createOutgoingPayment(
   quote: Quote
 ): Promise<OutgoingPayment> {
   const { sendingASE } = deps
-  const handleWebhookEventSpy = jest.spyOn(
-    sendingASE.integrationServer.webhookEventHandler,
-    'handleWebhookEvent'
-  )
 
   const response = await sendingASE.adminClient.createOutgoingPayment({
     walletAddressId: senderWalletAddressId,
@@ -105,36 +109,27 @@ async function createOutgoingPayment(
 
   assert(response.payment)
 
-  await pollCondition(
-    () => {
-      return (
-        handleWebhookEventSpy.mock.calls.some(
-          (call) => call[0]?.type === WebhookEventType.OutgoingPaymentCreated
-        ) &&
-        handleWebhookEventSpy.mock.calls.some(
-          (call) => call[0]?.type === WebhookEventType.OutgoingPaymentCompleted
-        )
-      )
-    },
-    5,
-    0.5
-  )
-
-  expect(handleWebhookEventSpy).toHaveBeenCalledWith(
-    expect.objectContaining({
-      type: WebhookEventType.OutgoingPaymentCreated,
-      data: expect.any(Object)
-    })
-  )
-  expect(handleWebhookEventSpy).toHaveBeenCalledWith(
-    expect.objectContaining({
-      type: WebhookEventType.OutgoingPaymentCompleted,
-      data: expect.any(Object)
-    })
-  )
+  await waitForOutgoingPaymentCompletion(deps, response.payment.id)
 
   return response.payment
 }
+
+async function createOutgoingPaymentFromIncomingPayment(
+  deps: AdminActionsDeps,
+  input: CreateOutgoingPaymentFromIncomingPaymentInput
+): Promise<OutgoingPayment> {
+  const { sendingASE } = deps
+
+  const response =
+    await sendingASE.adminClient.createOutgoingPaymentFromIncomingPayment(input)
+
+  assert(response.payment)
+
+  await waitForOutgoingPaymentCompletion(deps, response.payment.id)
+
+  return response.payment
+}
+
 async function getOutgoingPayment(
   deps: AdminActionsDeps,
   outgoingPaymentId: string,
@@ -164,4 +159,34 @@ async function getIncomingPayment(
   payment.receivedAmount.value = BigInt(payment.receivedAmount.value)
 
   return payment
+}
+
+async function waitForOutgoingPaymentCompletion(
+  deps: AdminActionsDeps,
+  outgoingPaymentId: string
+): Promise<void> {
+  const { sendingASE } = deps
+  const handleWebhookEventSpy = jest.spyOn(
+    sendingASE.integrationServer.webhookEventHandler,
+    'handleWebhookEvent'
+  )
+
+  await pollCondition(
+    () => {
+      return (
+        handleWebhookEventSpy.mock.calls.some(
+          (call) =>
+            call[0]?.type === WebhookEventType.OutgoingPaymentCreated &&
+            call[0].data.id === outgoingPaymentId
+        ) &&
+        handleWebhookEventSpy.mock.calls.some(
+          (call) =>
+            call[0]?.type === WebhookEventType.OutgoingPaymentCompleted &&
+            call[0].data.id === outgoingPaymentId
+        )
+      )
+    },
+    5,
+    0.5
+  )
 }

@@ -50,7 +50,6 @@ async function consentInteraction(
   const { interactId, nonce, cookie } = await _startAndAcceptInteraction(
     deps,
     outgoingPaymentGrant,
-    senderWalletAddress,
     idpSecret
   )
 
@@ -77,7 +76,6 @@ async function consentInteractionWithInteractRef(
   const { interactId, nonce, cookie } = await _startAndAcceptInteraction(
     deps,
     outgoingPaymentGrant,
-    senderWalletAddress,
     idpSecret
   )
 
@@ -108,7 +106,6 @@ async function consentInteractionWithInteractRef(
 async function _startAndAcceptInteraction(
   deps: TestActionsDeps,
   outgoingPaymentGrant: PendingGrant,
-  senderWalletAddress: WalletAddress,
   idpSecret: string
 ): Promise<{ nonce: string; interactId: string; cookie: string }> {
   const { redirect: startInteractionUrl } = outgoingPaymentGrant.interact

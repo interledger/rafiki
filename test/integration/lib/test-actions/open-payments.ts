@@ -224,7 +224,9 @@ async function createQuote(
 
 type InteractFinish = NonNullable<GrantRequest['interact']>['finish']
 type Amount = { value: string; assetCode: string; assetScale: number }
-type GrantRequestPaymentLimits = { debitAmount: Amount; receiveAmount: Amount }
+type GrantRequestPaymentLimits =
+  | { debitAmount: Amount; receiveAmount?: never }
+  | { debitAmount?: never; receiveAmount: Amount }
 
 async function grantRequestOutgoingPayment(
   deps: OpenPaymentsActionsDeps,
@@ -378,7 +380,7 @@ async function getOutgoingPayment(
 async function getPublicIncomingPayment(
   deps: OpenPaymentsActionsDeps,
   url: string,
-  amountValueToSend: string
+  expectedReceiveAmount: string
 ): Promise<PublicIncomingPayment> {
   const { receivingASE } = deps
   const incomingPayment = await receivingASE.opClient.incomingPayment.getPublic(
@@ -386,7 +388,7 @@ async function getPublicIncomingPayment(
   )
 
   assert(incomingPayment.receivedAmount)
-  expect(incomingPayment.receivedAmount.value).toBe(amountValueToSend)
+  expect(incomingPayment.receivedAmount.value).toBe(expectedReceiveAmount)
 
   return incomingPayment
 }

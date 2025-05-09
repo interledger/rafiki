@@ -69,19 +69,20 @@ rates:
     EUR: 0.006
     MXN: 0.12
 fees:
-  - fixed: 100
-    basisPoints: 200
+  - fixed: 0
+    basisPoints: 0
     asset: USD
     scale: 2
-  - fixed: 100
-    basisPoints: 200
+  - fixed: 0
+    basisPoints: 0
     asset: EUR
     scale: 2
-  - fixed: 100
-    basisPoints: 200
+  - fixed: 0
+    basisPoints: 0
     asset: MXN
     scale: 2
-  - fixed: 1
-    basisPoints: 200
+  - fixed: 0
+    basisPoints: 0
     asset: JPY
     scale: 0
+
