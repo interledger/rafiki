@@ -226,9 +226,9 @@ async function pay(
       retryable: false
     })
   }
-  if (incomingPayment.state !== IncomingPaymentState.Pending) {
+  if (incomingPayment.isExpiredOrComplete()) {
     throw new PaymentMethodHandlerError('Bad Incoming Payment State', {
-      description: `Incoming Payment state should be ${IncomingPaymentState.Pending}`,
+      description: `Incoming Payment cannot be expired or completed`,
       retryable: false
     })
   }
