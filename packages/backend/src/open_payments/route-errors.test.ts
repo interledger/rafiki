@@ -31,7 +31,7 @@ describe('openPaymentServerErrorMiddleware', (): void => {
     ctx.container = deps
   })
 
-  test('handles OpenPaymentsServerRouteError error', async (): Promise<void> => {
+  test('handles OpenPaymentsServerRouteError simple error', async (): Promise<void> => {
     const error = new OpenPaymentsServerRouteError(401, 'Some error')
     const next = jest.fn().mockImplementationOnce(() => {
       throw error
@@ -41,12 +41,46 @@ describe('openPaymentServerErrorMiddleware', (): void => {
 
     await expect(
       openPaymentsServerErrorMiddleware(ctx, next)
-    ).rejects.toMatchObject({
-      status: error.status,
-      message: error.message
+    ).resolves.toBeUndefined()
+
+    expect(ctx.response.body).toMatchObject({
+      error: {
+        code: `${error.status}`,
+        description: error.message
+      }
+    })
+    expect(ctx.response.status).toBe(error.status)
+    expect(ctx.response.type).toBe('application/json')
+    expect(ctxThrowSpy).toHaveBeenCalledTimes(0)
+    expect(next).toHaveBeenCalledTimes(1)
+  })
+
+  test('handles OpenPaymentsServerRouteError detailed error', async (): Promise<void> => {
+    const error = new OpenPaymentsServerRouteError(401, 'Some detailed error', {
+      optional: 'details'
+    })
+    const next = jest.fn().mockImplementationOnce(() => {
+      throw error
     })
 
-    expect(ctxThrowSpy).toHaveBeenCalledWith(error.status, error.message)
+    const ctxThrowSpy = jest.spyOn(ctx, 'throw')
+
+    await expect(
+      openPaymentsServerErrorMiddleware(ctx, next)
+    ).resolves.toBeUndefined()
+
+    expect(ctx.response.body).toMatchObject({
+      error: {
+        code: `${error.status}`,
+        description: error.message,
+        details: {
+          optional: 'details'
+        }
+      }
+    })
+    expect(ctx.response.status).toBe(error.status)
+    expect(ctx.response.type).toBe('application/json')
+    expect(ctxThrowSpy).toHaveBeenCalledTimes(0)
     expect(next).toHaveBeenCalledTimes(1)
   })
 
@@ -60,12 +94,17 @@ describe('openPaymentServerErrorMiddleware', (): void => {
 
     await expect(
       openPaymentsServerErrorMiddleware(ctx, next)
-    ).rejects.toMatchObject({
-      status: error.status,
-      message: error.message
-    })
+    ).resolves.toBeUndefined()
 
-    expect(ctxThrowSpy).toHaveBeenCalledWith(error.status, error.message)
+    expect(ctx.response.body).toMatchObject({
+      error: {
+        code: `${error.status}`,
+        description: error.message
+      }
+    })
+    expect(ctx.response.status).toBe(error.status)
+    expect(ctx.response.type).toBe('application/json')
+    expect(ctxThrowSpy).toHaveBeenCalledTimes(0)
     expect(next).toHaveBeenCalledTimes(1)
   })
 
@@ -79,12 +118,17 @@ describe('openPaymentServerErrorMiddleware', (): void => {
 
     await expect(
       openPaymentsServerErrorMiddleware(ctx, next)
-    ).rejects.toMatchObject({
-      status: error.status,
-      message: error.message
-    })
+    ).resolves.toBeUndefined()
 
-    expect(ctxThrowSpy).toHaveBeenCalledWith(error.status, error.message)
+    expect(ctx.response.body).toMatchObject({
+      error: {
+        code: `${error.status}`,
+        description: error.message
+      }
+    })
+    expect(ctx.response.status).toBe(error.status)
+    expect(ctx.response.type).toBe('application/json')
+    expect(ctxThrowSpy).toHaveBeenCalledTimes(0)
     expect(next).toHaveBeenCalledTimes(1)
   })
 
