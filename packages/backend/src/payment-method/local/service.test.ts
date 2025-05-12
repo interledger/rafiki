@@ -466,8 +466,8 @@ describe('LocalPaymentService', (): void => {
       }
     })
 
-    test('throws error if incoming payment state is not pending', async (): Promise<void> => {
-      const { receiver, outgoingPayment } =
+    test('throws error if incoming payment is completed', async (): Promise<void> => {
+      const { receiver, outgoingPayment, incomingPayment } =
         await createOutgoingPaymentWithReceiver(deps, {
           sendingWalletAddress: walletAddressMap['USD'],
           receivingWalletAddress: walletAddressMap['USD'],
@@ -481,9 +481,11 @@ describe('LocalPaymentService', (): void => {
           }
         })
 
-      jest.spyOn(incomingPaymentService, 'get').mockResolvedValueOnce({
-        state: IncomingPaymentState.Processing
-      } as IncomingPayment)
+      incomingPayment.state = IncomingPaymentState.Completed
+
+      jest
+        .spyOn(incomingPaymentService, 'get')
+        .mockResolvedValueOnce(incomingPayment)
 
       expect.assertions(4)
       try {
@@ -499,7 +501,47 @@ describe('LocalPaymentService', (): void => {
           'Bad Incoming Payment State'
         )
         expect((err as PaymentMethodHandlerError).description).toBe(
-          `Incoming Payment state should be ${IncomingPaymentState.Pending}`
+          'Incoming Payment cannot be expired or completed'
+        )
+        expect((err as PaymentMethodHandlerError).retryable).toBe(false)
+      }
+    })
+
+    test('throws error if incoming payment is expired', async (): Promise<void> => {
+      const { receiver, outgoingPayment, incomingPayment } =
+        await createOutgoingPaymentWithReceiver(deps, {
+          sendingWalletAddress: walletAddressMap['USD'],
+          receivingWalletAddress: walletAddressMap['USD'],
+          method: 'ilp',
+          quoteOptions: {
+            debitAmount: {
+              value: 100n,
+              assetScale: walletAddressMap['USD'].asset.scale,
+              assetCode: walletAddressMap['USD'].asset.code
+            }
+          }
+        })
+
+      incomingPayment.state = IncomingPaymentState.Expired
+      jest
+        .spyOn(incomingPaymentService, 'get')
+        .mockResolvedValueOnce(incomingPayment)
+
+      expect.assertions(4)
+      try {
+        await localPaymentService.pay({
+          receiver,
+          outgoingPayment,
+          finalDebitAmount: 100n,
+          finalReceiveAmount: 100n
+        })
+      } catch (err) {
+        expect(err).toBeInstanceOf(PaymentMethodHandlerError)
+        expect((err as PaymentMethodHandlerError).message).toBe(
+          'Bad Incoming Payment State'
+        )
+        expect((err as PaymentMethodHandlerError).description).toBe(
+          'Incoming Payment cannot be expired or completed'
         )
         expect((err as PaymentMethodHandlerError).retryable).toBe(false)
       }
