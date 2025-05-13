@@ -69,7 +69,6 @@ describe('Models', (): void => {
             : undefined,
           expiresAt: incomingPayment.expiresAt.toISOString(),
           metadata: incomingPayment.metadata ?? undefined,
-          updatedAt: incomingPayment.updatedAt.toISOString(),
           createdAt: incomingPayment.createdAt.toISOString()
         })
       })
@@ -98,7 +97,6 @@ describe('Models', (): void => {
             : undefined,
           expiresAt: incomingPayment.expiresAt.toISOString(),
           metadata: incomingPayment.metadata ?? undefined,
-          updatedAt: incomingPayment.updatedAt.toISOString(),
           createdAt: incomingPayment.createdAt.toISOString(),
           methods: [
             {
@@ -126,7 +124,6 @@ describe('Models', (): void => {
             : undefined,
           expiresAt: incomingPayment.expiresAt.toISOString(),
           metadata: incomingPayment.metadata ?? undefined,
-          updatedAt: incomingPayment.updatedAt.toISOString(),
           createdAt: incomingPayment.createdAt.toISOString(),
           methods: []
         })
@@ -158,7 +155,6 @@ describe('Models', (): void => {
               : undefined,
             expiresAt: incomingPayment.expiresAt.toISOString(),
             metadata: incomingPayment.metadata ?? undefined,
-            updatedAt: incomingPayment.updatedAt.toISOString(),
             createdAt: incomingPayment.createdAt.toISOString(),
             methods: [
               expect.objectContaining({
