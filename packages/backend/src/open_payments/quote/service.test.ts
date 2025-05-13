@@ -818,6 +818,7 @@ describe('QuoteService', (): void => {
       beforeEach(() => {
         receiverGetSpy.mockRestore()
       })
+
       test('Local receiver uses local payment method', async () => {
         const incomingPayment = await createIncomingPayment(deps, {
           walletAddressId: receivingWalletAddress.id,

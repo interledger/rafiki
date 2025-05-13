@@ -47,7 +47,7 @@ export async function openPaymentsServerErrorMiddleware(
       ctx.status = err.status
       ctx.body = {
         error: {
-          code: err.status,
+          code: `${err.status}`,
           description: err.message,
           details: err.details
         }
