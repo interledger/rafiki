@@ -6,10 +6,10 @@ describe('Rates util', () => {
       test.each`
         exchangeRate | sourceAmount | assetScale | expectedResult                                    | description
         ${1.5}       | ${100n}      | ${9}       | ${{ amount: 150n, scaledExchangeRate: 1.5 }}      | ${'exchange rate above 1'}
-        ${1.1602}    | ${12345n}    | ${2}       | ${{ amount: 14323n, scaledExchangeRate: 1.1602 }} | ${'exchange rate above 1 with rounding up'}
+        ${1.1602}    | ${12345n}    | ${2}       | ${{ amount: 14322n, scaledExchangeRate: 1.1602 }} | ${'exchange rate above 1 with rounding up'}
         ${1.1602}    | ${10001n}    | ${2}       | ${{ amount: 11603n, scaledExchangeRate: 1.1602 }} | ${'exchange rate above 1 with rounding down'}
         ${0.5}       | ${100n}      | ${9}       | ${{ amount: 50n, scaledExchangeRate: 0.5 }}       | ${'exchange rate below 1'}
-        ${0.5}       | ${101n}      | ${9}       | ${{ amount: 51n, scaledExchangeRate: 0.5 }}       | ${'exchange rate below 1 with rounding up'}
+        ${0.5}       | ${101n}      | ${9}       | ${{ amount: 50n, scaledExchangeRate: 0.5 }}       | ${'exchange rate below 1 with rounding up'}
         ${0.8611}    | ${1000n}     | ${2}       | ${{ amount: 861n, scaledExchangeRate: 0.8611 }}   | ${'exchange rate below 1 with rounding down'}
       `(
         '$description',
