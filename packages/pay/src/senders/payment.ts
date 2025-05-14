@@ -61,6 +61,7 @@ export class PaymentSender extends StreamSender<PaymentProgress> {
 
   /** Payment execution and minimum rates */
   private readonly quote: IntQuote
+  private readonly kycData?: string
 
   /** Callback to pass updates as packets are sent and received */
   private readonly progressHandler?: (status: PaymentProgress) => void
@@ -72,6 +73,7 @@ export class PaymentSender extends StreamSender<PaymentProgress> {
 
   constructor({
     plugin,
+    kycData,
     destination,
     quote,
     progressHandler
@@ -80,6 +82,7 @@ export class PaymentSender extends StreamSender<PaymentProgress> {
     const { requestCounter } = destination
 
     this.quote = quote
+    this.kycData = kycData
     this.progressHandler = progressHandler
 
     this.maxPacketController = new MaxPacketAmountController(
@@ -184,13 +187,16 @@ export class PaymentSender extends StreamSender<PaymentProgress> {
       .setMinDestinationAmount(minDestinationAmount)
       .enableFulfillment()
       .addFrames(new StreamMoneyFrame(PaymentSender.DEFAULT_STREAM_ID, 1))
-    // .addFrames(
-    //   new StreamDataFrame(
-    //     PaymentSender.DEFAULT_STREAM_ID,
-    //     1,
-    //     Buffer.from('hey hey heeeyy')
-    //   )
-    // )
+
+    if (this.kycData) {
+      request.addFrames(
+        new StreamDataFrame(
+          PaymentSender.DEFAULT_STREAM_ID,
+          1,
+          Buffer.from(this.kycData)
+        )
+      )
+    }
 
     return SendState.Send((reply) => {
       // Delivered amount must be *at least* the minimum acceptable amount we told the receiver

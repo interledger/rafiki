@@ -109,6 +109,7 @@ export type IntQuote = Omit<
 
 /** Options before immediately executing payment */
 export interface PayOptions {
+  kycData?: string
   /** Plugin to send ILP packets over the network */
   plugin: Plugin
   /** Destination details of the payment to establish connection with recipient */

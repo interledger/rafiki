@@ -17,6 +17,7 @@ import {
 import { TelemetryService } from '../../telemetry/service'
 import { IlpQuoteDetails } from './quote-details/model'
 import { Transaction } from 'objection'
+import { fi } from '@faker-js/faker'
 
 const MAX_INT64 = BigInt('9223372036854775807')
 
@@ -308,9 +309,19 @@ async function pay(
   })
 
   const destination = receiver.toResolvedPayment()
+  const kycData = {
+    //sample kyc data
+    firstName: 'John',
+    lastName: 'Doe'
+  }
 
   try {
-    const receipt = await Pay.pay({ plugin, destination, quote })
+    const receipt = await Pay.pay({
+      plugin,
+      destination,
+      quote,
+      kycData: JSON.stringify(kycData)
+    })
 
     if (receipt.error) {
       throw receipt.error
