@@ -380,6 +380,7 @@ export function initIocContainer(
   container.singleton('connectorApp', async (deps) => {
     const config = await deps.use('config')
     return await createConnectorService({
+      config: config,
       logger: await deps.use('logger'),
       redis: await deps.use('redis'),
       accountingService: await deps.use('accountingService'),

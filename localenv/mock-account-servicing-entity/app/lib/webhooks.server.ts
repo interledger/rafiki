@@ -129,6 +129,48 @@ export async function handleOutgoingPaymentCreated(wh: Webhook) {
   return
 }
 
+export async function handleConfirmPacket(wh: Webhook) {
+  const packetId = wh.data.packetId as string
+  const amount = parseAmount(wh.data.amount as AmountJSON)
+  const wa = wh.data.walletAddressId as string
+  const acc = await mockAccounts.getByWalletAddressId(wa)
+
+  if (!acc) {
+    throw new Error('No account found for wallet address')
+  }
+
+  await mockAccounts.credit(acc.id, amount.value, false)
+
+  if (!acc) {
+    throw new Error('No account found for wallet address')
+  }
+
+  await apolloClient
+    .mutate({
+      mutation: gql`
+        mutation ConfirmPreparePacket($input: ConfirmPreparePacketInput!) {
+          confirmPreparePacket(input: $input) {
+            id
+          }
+        }
+      `,
+      variables: {
+        input: {
+          id: packetId
+        }
+      }
+    })
+    .then((query): LiquidityMutationResponse => {
+      if (query.data) {
+        return query.data.confirmPreparePacket
+      } else {
+        throw new Error('Data was empty')
+      }
+    })
+
+  return
+}
+
 export async function handleIncomingPaymentCompletedExpired(wh: Webhook) {
   if (
     wh.type !== WebhookEventType.IncomingPaymentCompleted &&

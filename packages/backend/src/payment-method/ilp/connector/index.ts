@@ -28,8 +28,10 @@ import {
   createStreamController
 } from './core'
 import { TelemetryService } from '../../../telemetry/service'
+import { IAppConfig } from '../../../config/app'
 
 interface ServiceDependencies extends BaseService {
+  config: IAppConfig
   redis: Redis
   ratesService: RatesService
   accountingService: AccountingService
@@ -43,6 +45,7 @@ interface ServiceDependencies extends BaseService {
 
 export async function createConnectorService({
   logger,
+  config,
   redis,
   ratesService,
   accountingService,
@@ -56,6 +59,7 @@ export async function createConnectorService({
   return createApp(
     {
       //router: router,
+      config,
       logger: logger.child({
         service: 'ConnectorService'
       }),

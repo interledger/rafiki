@@ -250,6 +250,11 @@ type Mutation {
     input: CancelOutgoingPaymentInput!
   ): OutgoingPaymentResponse!
 
+    "Cancel an outgoing payment."
+  confirmPreparePacket(
+    input: ConfirmPreparePacketInput!
+  ): ConfirmPreparePacketResponse!
+
   "Create an Open Payments outgoing payment from an incoming payment."
   createOutgoingPaymentFromIncomingPayment(
     input: CreateOutgoingPaymentFromIncomingPaymentInput!
@@ -1164,6 +1169,10 @@ input CancelOutgoingPaymentInput {
   reason: String
 }
 
+input ConfirmPreparePacketInput {
+  id: ID!
+}
+
 input CreateOutgoingPaymentFromIncomingPaymentInput {
   "Unique identifier of the wallet address under which the outgoing payment will be created."
   walletAddressId: String!
@@ -1213,6 +1222,11 @@ input UpdateIncomingPaymentInput {
 type OutgoingPaymentResponse {
   "The outgoing payment object returned in the response."
   payment: OutgoingPayment
+}
+
+type ConfirmPreparePacketResponse {
+  "The outgoing payment object returned in the response."
+  id: ID
 }
 
 type IncomingPaymentResponse {

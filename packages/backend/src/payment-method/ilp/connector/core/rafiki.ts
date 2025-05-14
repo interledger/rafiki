@@ -26,6 +26,7 @@ import {
   incrementFulfillOrRejectPacketCount,
   incrementAmount
 } from './telemetry'
+import { IAppConfig } from '../../../../config/app'
 
 // Model classes that represent an Interledger sender, receiver, or
 // connector SHOULD implement this ConnectorAccount interface.
@@ -62,6 +63,7 @@ export interface TransferOptions {
 
 export interface RafikiServices {
   //router: Router
+  config: IAppConfig
   accounting: AccountingService
   telemetry: TelemetryService
   walletAddresses: WalletAddressService
@@ -122,6 +124,9 @@ export class Rafiki<T = any> {
     const { redis, streamServer } = this
     // Set global context that exposes services
     this.publicServer.context.services = {
+      get config(): IAppConfig {
+        return config.config
+      },
       get incomingPayments(): IncomingPaymentService {
         return config.incomingPayments
       },

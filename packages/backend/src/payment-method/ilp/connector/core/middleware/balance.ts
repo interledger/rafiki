@@ -7,6 +7,8 @@ import {
 import { Transaction, TransferType } from '../../../../../accounting/service'
 import { Config as AppConfig } from '../../../../../config/app'
 import { isConvertError } from '../../../../../rates/service'
+import { poll } from '../../../../../shared/utils'
+import { IncomingPayment } from '../../../../../open_payments/payment/incoming/model'
 const { CannotReceiveError, InsufficientLiquidityError } = Errors
 
 export function createBalanceMiddleware(): ILPMiddleware {
@@ -114,6 +116,42 @@ export function createBalanceMiddleware(): ILPMiddleware {
       if (!state.streamDestination) {
         await next()
         stopTimer()
+      }
+
+      if (
+        services.streamServer.decodePaymentTag(request.prepare.destination) // XXX mark this earlier in the middleware pipeline
+      ) {
+        const packetId = crypto.randomUUID()
+        const body = {
+          id: packetId,
+          type: 'prepare_packet.received',
+          data: {
+            packetId,
+            amount: {
+              value: destinationAmount,
+              assetCode: accounts.outgoing.asset.code,
+              assetScale: accounts.outgoing.asset.scale
+            },
+            walletAddressId: (accounts.outgoing as IncomingPayment)
+              .walletAddressId
+          }
+        }
+
+        await fetch(services.config.webhookUrl, {
+          method: 'POST',
+          body: JSON.stringify(body),
+          headers: {
+            'content-type': 'application/json'
+          }
+        })
+
+        const res = await poll({
+          request: async () => services.redis.get(packetId),
+          pollingFrequencyMs: 10,
+          timeoutMs: 5000
+        })
+
+        console.log(res)
       }
 
       if (trx) {
