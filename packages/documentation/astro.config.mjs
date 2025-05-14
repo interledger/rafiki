@@ -5,6 +5,7 @@ import remarkMath from 'remark-math'
 import rehypeMathjax from 'rehype-mathjax'
 import GraphQL from 'astro-graphql-plugin'
 import starlightLinksValidator from 'starlight-links-validator'
+import starlightFullViewMode from 'starlight-fullview-mode'
 import { rehypeHeadingIds } from '@astrojs/markdown-remark'
 import rehypeAutolinkHeadings from 'rehype-autolink-headings'
 
@@ -315,7 +316,8 @@ export default defineConfig({
       plugins: [
         starlightLinksValidator({
           errorOnLocalLinks: false
-        })
+        }),
+        starlightFullViewMode()
       ]
     }),
     GraphQL({
