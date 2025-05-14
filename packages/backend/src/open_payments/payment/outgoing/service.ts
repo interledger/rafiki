@@ -521,7 +521,7 @@ function validateAccessLimits(
 //   )
 // }
 
-type IntervalClassification = 'past' | 'current' | 'future' | 'unrestricted'
+type IntervalClassification = 'previous' | 'current' | 'next' | 'unrestricted'
 
 function classifyPaymentInterval({
   limits,
@@ -541,9 +541,9 @@ function classifyPaymentInterval({
   const end = interval.end?.toMillis() ?? Infinity
 
   if (createdTime < start) {
-    return 'future'
+    return 'next'
   } else if (createdTime >= end) {
-    return 'past'
+    return 'previous'
   } else {
     return 'current'
   }
@@ -790,7 +790,7 @@ async function validateGrantAndAddSpentAmountsToPayment(
         assetCode: startingSpendAmounts.debitAmountCode,
         assetScale: startingSpendAmounts.debitAmountScale,
         value:
-          intervalStatus === 'future'
+          intervalStatus === 'next'
             ? 0n
             : startingSpendAmounts.intervalDebitAmountValue
       }
@@ -798,7 +798,7 @@ async function validateGrantAndAddSpentAmountsToPayment(
         assetCode: startingSpendAmounts.receiveAmountCode,
         assetScale: startingSpendAmounts.receiveAmountScale,
         value:
-          intervalStatus === 'future'
+          intervalStatus === 'next'
             ? 0n
             : startingSpendAmounts.intervalReceiveAmountValue
       }
