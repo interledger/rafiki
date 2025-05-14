@@ -24,7 +24,6 @@ export async function action({ request }: ActionFunctionArgs) {
   try {
     switch (wh.type) {
       case 'prepare_packet.received' as WebhookEventType:
-        await handleConfirmPacket(wh)
         break
       case WebhookEventType.OutgoingPaymentCreated:
         await handleOutgoingPaymentCreated(wh)

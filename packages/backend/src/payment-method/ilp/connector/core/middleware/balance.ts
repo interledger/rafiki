@@ -144,14 +144,6 @@ export function createBalanceMiddleware(): ILPMiddleware {
             'content-type': 'application/json'
           }
         })
-
-        const res = await poll({
-          request: async () => services.redis.get(packetId),
-          pollingFrequencyMs: 10,
-          timeoutMs: 5000
-        })
-
-        console.log(res)
       }
 
       if (trx) {
