@@ -640,6 +640,7 @@ async function validateGrantAndAddSpentAmountsToPayment(
     .first()
 
   let newSpentAmounts: SpentAmounts | SpentAmountsWithIntervals
+  const hasInterval = !!paymentLimits.paymentInterval
 
   if (isExistingGrant && !latestSpentAmounts) {
     // Legacy path: calculate spent amounts from historical payments
@@ -651,8 +652,6 @@ async function validateGrantAndAddSpentAmountsToPayment(
         id: payment.id
       })
       .withGraphFetched('quote')
-
-    const hasInterval = !!paymentLimits.paymentInterval
 
     newSpentAmounts = {
       sent: {
@@ -752,7 +751,6 @@ async function validateGrantAndAddSpentAmountsToPayment(
       payment
     })
 
-    const hasInterval = !!paymentLimits.paymentInterval
     const startingSpendAmounts = latestSpentAmounts ?? {
       debitAmountCode: payment.asset.code,
       debitAmountScale: payment.asset.scale,
@@ -805,42 +803,26 @@ async function validateGrantAndAddSpentAmountsToPayment(
     }
   }
 
-  const grantSpentDebitAmount =
-    newSpentAmounts.intervalSent !== null
-      ? (newSpentAmounts.intervalSent as {
-          value: bigint
-          assetCode: string
-          assetScale: number
-        })
-      : newSpentAmounts.sent
+  // determine which spent amounts (total or interval) to use for checking if
+  // payment exceeds grant limits and for assigning to the payment's grant spent amounts
+  const activeSpent = getActiveSpentAmounts(newSpentAmounts)
 
-  const grantSpentReceiveAmount =
-    newSpentAmounts.intervalReceived !== null
-      ? (newSpentAmounts.intervalReceived as {
-          value: bigint
-          assetCode: string
-          assetScale: number
-        })
-      : newSpentAmounts.received
-
-  // spent amounts exclude current payment
-  // Store the spent amounts BEFORE adding the current payment
-  payment.grantSpentDebitAmount = grantSpentDebitAmount
-  payment.grantSpentReceiveAmount = grantSpentReceiveAmount
+  // spent amounts exclude current payment - store the
+  // amounts BEFORE adding the current payment
+  payment.grantSpentDebitAmount = activeSpent.debit
+  payment.grantSpentReceiveAmount = activeSpent.receive
 
   // fail if payment exceeds limits
   if (
     (paymentLimits.debitAmount &&
-      paymentLimits.debitAmount.value - newSpentAmounts.sent.value <
+      paymentLimits.debitAmount.value - activeSpent.debit.value <
         payment.debitAmount.value) ||
     (paymentLimits.receiveAmount &&
-      paymentLimits.receiveAmount.value - newSpentAmounts.received.value <
+      paymentLimits.receiveAmount.value - activeSpent.receive.value <
         payment.receiveAmount.value)
   ) {
     return false
   }
-
-  // TODO: check interval amounts like above ^
 
   newSpentAmounts.sent.value += payment.debitAmount.value
   newSpentAmounts.received.value += payment.receiveAmount.value
@@ -873,6 +855,17 @@ async function validateGrantAndAddSpentAmountsToPayment(
   })
 
   return true
+}
+
+function getActiveSpentAmounts(
+  newSpent: SpentAmounts | SpentAmountsWithIntervals
+) {
+  const useInterval =
+    newSpent.intervalSent !== null && newSpent.intervalReceived !== null
+  return {
+    debit: useInterval ? newSpent.intervalSent! : newSpent.sent,
+    receive: useInterval ? newSpent.intervalReceived! : newSpent.received
+  }
 }
 
 export interface FundOutgoingPaymentOptions {
