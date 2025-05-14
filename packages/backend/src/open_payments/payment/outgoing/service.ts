@@ -505,21 +505,21 @@ function validateAccessLimits(
   }
 }
 
-function validatePaymentInterval({
-  limits,
-  payment
-}: {
-  limits: PaymentLimits
-  payment: OutgoingPayment
-}): boolean {
-  return (
-    !limits.paymentInterval ||
-    (limits.paymentInterval.start !== null &&
-      limits.paymentInterval.start.toMillis() <= payment.createdAt.getTime() &&
-      limits.paymentInterval.end !== null &&
-      payment.createdAt.getTime() < limits.paymentInterval.end.toMillis())
-  )
-}
+// function validatePaymentInterval({
+//   limits,
+//   payment
+// }: {
+//   limits: PaymentLimits
+//   payment: OutgoingPayment
+// }): boolean {
+//   return (
+//     !limits.paymentInterval ||
+//     (limits.paymentInterval.start !== null &&
+//       limits.paymentInterval.start.toMillis() <= payment.createdAt.getTime() &&
+//       limits.paymentInterval.end !== null &&
+//       payment.createdAt.getTime() < limits.paymentInterval.end.toMillis())
+//   )
+// }
 
 type IntervalClassification = 'past' | 'current' | 'future' | 'unrestricted'
 
