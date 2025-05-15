@@ -481,4 +481,175 @@ export class StreamServer {
           .buildReject(IlpError.F99_APPLICATION_ERROR)
     }
   }
+
+  /**
+   * Validate and decrypt the destination ILP address of an incoming ILP Prepare:
+   * ensure it's addressed to the server and decode encrypted metadata to attribute and handle the payment.
+   */
+  generateReply(prepare: IlpPrepare): IncomingMoney | IlpReply {
+    const connectionId = sha256(
+      Buffer.from(prepare.destination, 'ascii')
+    ).toString('hex')
+    const log = createLogger(`ilp-receiver:${connectionId.slice(0, 6)}`)
+    const reply = new ReplyBuilder().setIlpAddress(this.serverAddress)
+
+    // Ensure the packet is addressed to us
+    const localSegment = this.extractLocalAddressSegment(prepare.destination)
+    if (!localSegment) {
+      log.trace(
+        'got packet not addressed to the receiver. destination=%s',
+        prepare.destination
+      )
+      return reply.buildReject(IlpError.F02_UNREACHABLE)
+    }
+
+    const token = Buffer.from(localSegment, 'base64')
+    const connectionDetails = this.decryptToken(token)
+    if (!connectionDetails) {
+      log.trace(
+        'invalid connection token: cannot attribute incoming packet. token=%s',
+        localSegment
+      )
+      return reply.buildReject(IlpError.F06_UNEXPECTED_PAYMENT)
+    }
+    const { paymentTag, receiptSetup, asset } = connectionDetails
+
+    log.debug('got incoming Prepare. amount: %s', prepare.amount)
+
+    const sharedSecret = hmac(this.sharedSecretKeyGen, token)
+    const encryptionKey = hmac(sharedSecret, StreamServer.ENCRYPTION_KEY_STRING)
+    let streamRequest: Packet
+    try {
+      streamRequest = Packet._deserializeUnencrypted(
+        decrypt(encryptionKey, prepare.data)
+      )
+    } catch (_) {
+      log.trace('rejecting with F06: failed to decrypt STREAM data') // Inauthentic, could be anyone
+      return reply.buildReject(IlpError.F06_UNEXPECTED_PAYMENT)
+    }
+
+    if (+streamRequest.ilpPacketType !== IlpPacketType.Prepare) {
+      log.warn('rejecting with F00: invalid STREAM packet type') // Sender violated protocol, or intermediaries swapped valid STREAM packets
+      return reply.buildReject(IlpError.F00_BAD_REQUEST) // Client should not retry, but don't include STREAM data since the request was inauthentic
+    }
+
+    log.debug(
+      'got authentic STREAM request. sequence: %s, min destination amount: %s',
+      streamRequest.sequence,
+      streamRequest.prepareAmount
+    )
+    log.trace('STREAM request frames: %o', streamRequest.frames)
+
+    reply
+      .setEncryptionKey(encryptionKey)
+      .setSequence(streamRequest.sequence)
+      .setReceivedAmount(prepare.amount)
+
+    const closeFrame = streamRequest.frames.find(
+      (frame): frame is ConnectionCloseFrame =>
+        frame.type === FrameType.ConnectionClose
+    )
+    if (closeFrame) {
+      log.trace(
+        'client closed connection, rejecting with F99. code="%s" message="%s"',
+        ErrorCode[closeFrame.errorCode],
+        closeFrame.errorMessage
+      )
+      // Echo connection closes from the client
+      return reply
+        .addFrames(new ConnectionCloseFrame(ErrorCode.NoError, ''))
+        .buildReject(IlpError.F99_APPLICATION_ERROR)
+    }
+
+    const isNewConnection = streamRequest.frames.some(
+      (frame) => frame.type === FrameType.ConnectionNewAddress
+    )
+    if (isNewConnection && asset) {
+      log.trace(
+        'got new client address, replying with asset details: %s %s',
+        asset.code,
+        asset.scale
+      )
+      reply.addFrames(new ConnectionAssetDetailsFrame(asset.code, asset.scale))
+    }
+
+    /**
+     * Why no `StreamMaxMoney` frame in the reply?
+     * - Limits on how much money can be received should probably be negotiated
+     *   at the application layer instead of STREAM. The API consumer can optionally
+     *   limit the amount received by declining incoming money, and by default, STREAM
+     *   senders assume there's no limit on the remote maximum
+     * - `ilp-protocol-stream` sender does not publicly expose the remote amount
+     *   received on each individual stream (it's only tracked for backpressure),
+     *   so it's unnecessary to reply with the total received on a per-stream basis
+     */
+
+    const receivedAmount = Long.fromString(prepare.amount, true)
+    const didReceiveMinimum = receivedAmount.greaterThanOrEqual(
+      streamRequest.prepareAmount
+    )
+    if (!didReceiveMinimum) {
+      return reply.buildReject(IlpError.F99_APPLICATION_ERROR)
+    }
+
+    const fulfillmentKey = hmac(
+      sharedSecret,
+      StreamServer.FULFILLMENT_GENERATION_STRING
+    )
+    const fulfillment = hmac(fulfillmentKey, prepare.data)
+    const isFulfillable = sha256(fulfillment).equals(prepare.executionCondition)
+    if (!isFulfillable) {
+      return reply.buildReject(IlpError.F99_APPLICATION_ERROR)
+    } else if (receivedAmount.isZero()) {
+      /**
+       * `ilp-protocol-stream` as a client sometimes handles replies differently if they're sent back in an
+       *  ILP Fulfill vs an ILP Reject, so 0 amount packets should be fulfilled.
+       *
+       * For example, replying to a `StreamClose` frame with an F99 Reject in Node 10 results in an infinite loop,
+       * since `ilp-protocol-stream` re-queues the frame and tries again. Replying with an ILP Fulfill prevents
+       * this (no money is received since the amount is 0). This issue does not occur in Node 12 (?).
+       *
+       * https://github.com/interledgerjs/ilp-protocol-stream/blob/7ad483f5fd1a1d1e4dc58d7eef6a437594646260/src/connection.ts#L1499-L1505
+       */
+      return reply.buildFulfill(fulfillment)
+    }
+
+    return {
+      connectionId,
+      data: streamRequest.frames
+        .find(
+          (frame): frame is StreamDataFrame =>
+            frame.type === FrameType.StreamData
+        )
+        ?.data.toString(),
+      paymentTag,
+
+      setTotalReceived: (totalReceived: LongValue) => {
+        if (receiptSetup) {
+          /**
+           * Even if we receive money over multiple streams with different stream IDs, we only generate
+           * STREAM receipts for streamId=1. There should be no effect for the sender or verifier,
+           * since the total amount credited to this receipt nonce will still be the same.
+           *
+           * Per RFC, client MUST open streams starting with streamId=1.
+           */
+          const receipt = createReceipt({
+            ...receiptSetup,
+            totalReceived,
+            streamId: 1
+          })
+          reply.addFrames(new StreamReceiptFrame(1, receipt))
+        }
+      },
+
+      accept: () => reply.buildFulfill(fulfillment),
+
+      temporaryDecline: () => reply.buildReject(IlpError.T00_INTERNAL_ERROR),
+
+      finalDecline: () =>
+        reply
+          .addFrames(new ConnectionCloseFrame(ErrorCode.NoError, ''))
+          .buildReject(IlpError.F99_APPLICATION_ERROR)
+    }
+  }
 }
