@@ -4,11 +4,13 @@
     "lib": ["ESNext"],
     "outDir": "./dist",
     "rootDir": "./src",
-    // "paths": {"pay":["../pay"]}
   },
   "include": ["src/**/*"],
   "references": [{
-    "path": "../pay"
+    "path": "../pay",
+    
+  }, {
+    "path": "../stream-receiver",
   }],
   "ts-node": {
     "swc": true

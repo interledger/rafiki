@@ -336,9 +336,6 @@ importers:
       '@interledger/openapi':
         specifier: 2.0.2
         version: 2.0.2
-      '@interledger/stream-receiver':
-        specifier: ^0.3.3-alpha.3
-        version: 0.3.3-alpha.3
       '@koa/cors':
         specifier: ^5.0.0
         version: 5.0.0
@@ -456,6 +453,9 @@ importers:
       raw-body:
         specifier: ^2.5.2
         version: 2.5.2
+      stream-receiver:
+        specifier: workspace:*
+        version: link:../stream-receiver
       tigerbeetle-node:
         specifier: 0.16.29
         version: 0.16.29
@@ -775,6 +775,30 @@ importers:
       testcontainers:
         specifier: 9.8.0
         version: 9.8.0
+
+  packages/stream-receiver:
+    dependencies:
+      '@types/long':
+        specifier: ^4.0.2
+        version: 4.0.2
+      ilp-logger:
+        specifier: ^1.4.5-alpha.2
+        version: 1.4.5-alpha.2
+      ilp-packet:
+        specifier: ^3.1.4-alpha.2
+        version: 3.1.4-alpha.2
+      ilp-protocol-ildcp:
+        specifier: 2.2.4-alpha.2
+        version: 2.2.4-alpha.2
+      ilp-protocol-stream:
+        specifier: ^2.7.2-alpha.2
+        version: 2.7.2-alpha.2
+      long:
+        specifier: ^4.0.0
+        version: 4.0.0
+      oer-utils:
+        specifier: ^5.1.3-alpha.2
+        version: 5.1.3-alpha.2
 
   packages/token-introspection:
     dependencies:
@@ -5099,6 +5123,7 @@ packages:
       oer-utils: 5.1.3-alpha.2
     transitivePeerDependencies:
       - supports-color
+    dev: true
 
   /@ioredis/commands@1.2.0:
     resolution: {integrity: sha512-Sx1pU8EM64o2BrqNpEO1CNLtKQwyhuXuqyfH7oGKCk+1a33d2r5saW8zNwm3j6BTExtjrv2BxTgzzkMwts6vGg==}
@@ -7491,11 +7516,6 @@ packages:
     dependencies:
       '@types/ms': 0.7.34
 
-  /@types/debug@4.1.7:
-    resolution: {integrity: sha512-9AonUzyTjXXhEOa0DnqpzZi6VHlqKMswga9EXjpXnnqxwLtdvPPtlO8evrI5D9S6asFRCQ6v+wpiUKbw+vKqyg==}
-    dependencies:
-      '@types/ms': 0.7.31
-
   /@types/docker-modem@3.0.6:
     resolution: {integrity: sha512-yKpAGEuKRSS8wwx0joknWxsmLha78wNMe9R2S3UNsVOkZded8UqOrV8KoeDXoXsjndxwyF3eIhyClGbO1SEhEg==}
     dependencies:
@@ -7754,9 +7774,6 @@ packages:
 
   /@types/mime@3.0.4:
     resolution: {integrity: sha512-iJt33IQnVRkqeqC7PzBHPTC6fDlRNRW8vjrgqtScAhrmMwe8c4Eo7+fUGTa+XdWrpEgpyKWMYmi2dIwMAYRzPw==}
-
-  /@types/ms@0.7.31:
-    resolution: {integrity: sha512-iiUgKzV9AuaEkZqkOLDIvlQiL6ltuZd9tGcW3gwpnX8JbuiuhFlEGmmFXEXkN50Cvq7Os88IY2v0dkDqXYWVgA==}
 
   /@types/ms@0.7.34:
     resolution: {integrity: sha512-nG96G3Wp6acyAgJqGasjODb+acrI7KltPiRxzHPXnP3NgI28bpQDRv53olbqGXbfcgF5aiiHmO3xpwEpS5Ld9g==}
@@ -13683,7 +13700,7 @@ packages:
   /ilp-logger@1.4.4:
     resolution: {integrity: sha512-R7F+SH6Aiipuqoq63gtzy6/HVIfcCK1rEmq8bE8NLSufXJPRoXszNs6RpypQi9HJcZvTcIUPFE15bS/HI+T+/A==}
     dependencies:
-      '@types/debug': 4.1.7
+      '@types/debug': 4.1.12
       debug: 4.4.0(supports-color@7.2.0)
       supports-color: 7.2.0
 
