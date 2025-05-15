@@ -33,7 +33,8 @@ import {
   OutgoingPaymentState,
   PaymentData,
   OutgoingPaymentEvent,
-  OutgoingPaymentEventType
+  OutgoingPaymentEventType,
+  OutgoingPaymentGrantSpentAmounts
 } from './model'
 import { RETRY_BACKOFF_SECONDS } from './worker'
 import { IncomingPayment, IncomingPaymentState } from '../incoming/model'
@@ -71,7 +72,6 @@ describe('OutgoingPaymentService', (): void => {
   let receiver: string
   let client: string
   let amtDelivered: bigint
-  let trx: Knex.Transaction
   let config: IAppConfig
   let receiverService: ReceiverService
   let receiverGet: typeof receiverService.get
@@ -474,9 +474,12 @@ describe('OutgoingPaymentService', (): void => {
       })
 
       test('can filter by state', async (): Promise<void> => {
-        await OutgoingPayment.query(trx).patchAndFetchById(outgoingPayment.id, {
-          state: OutgoingPaymentState.Completed
-        })
+        await OutgoingPayment.query(knex).patchAndFetchById(
+          outgoingPayment.id,
+          {
+            state: OutgoingPaymentState.Completed
+          }
+        )
 
         const page = await outgoingPaymentService.getPage({
           filter: {
@@ -640,6 +643,9 @@ describe('OutgoingPaymentService', (): void => {
         debitAmount,
         method: 'ilp'
       })
+      await expect(
+        OutgoingPaymentGrantSpentAmounts.query(knex)
+      ).resolves.toEqual([])
     })
 
     test(
@@ -723,12 +729,43 @@ describe('OutgoingPaymentService', (): void => {
             grant
           }
 
+          // Must account for interledger/pay off-by-one issue (even with 0 slippage/fees)
+          const adjustedReceiveAmountValue = debitAmount.value - 1n
+
           for (let i = 0; i < 3; i++) {
             const payment = await outgoingPaymentService.create(options)
             assert.ok(!isOutgoingPaymentError(payment))
+
             expect(payment.grantSpentReceiveAmount?.value ?? 0n).toBe(
-              // Must account for interledger/pay off-by-one issue (even with 0 slippage/fees)
-              BigInt((debitAmount.value - BigInt(1)) * BigInt(i))
+              adjustedReceiveAmountValue * BigInt(i)
+            )
+
+            const spentAmounts = await OutgoingPaymentGrantSpentAmounts.query(
+              knex
+            )
+              .where({ outgoingPaymentId: payment.id })
+              .first()
+            assert(spentAmounts)
+
+            expect(spentAmounts).toEqual(
+              expect.objectContaining({
+                grantId: grant.id,
+                outgoingPaymentId: payment.id,
+                debitAmountCode: debitAmount.assetCode,
+                debitAmountScale: debitAmount.assetScale,
+                paymentDebitAmountValue: debitAmount.value,
+                grantTotalDebitAmountValue: debitAmount.value * BigInt(i + 1),
+                receiveAmountCode: debitAmount.assetCode,
+                receiveAmountScale: debitAmount.assetScale,
+                paymentReceiveAmountValue: adjustedReceiveAmountValue,
+                grantTotalReceiveAmountValue:
+                  adjustedReceiveAmountValue * BigInt(i + 1),
+                intervalDebitAmountValue: null,
+                intervalReceiveAmountValue: null,
+                intervalStart: null,
+                intervalEnd: null,
+                paymentState: 'FUNDING'
+              })
             )
           }
         }
@@ -1037,7 +1074,7 @@ describe('OutgoingPaymentService', (): void => {
               })
             )
           }
-          const payments = await OutgoingPayment.query(trx)
+          const payments = await OutgoingPayment.query(knex)
           expect(payments.length).toEqual(1)
           expect([quotes[0].id, quotes[1].id]).toContain(payments[0].id)
         })
@@ -1197,7 +1234,7 @@ describe('OutgoingPaymentService', (): void => {
               assert.ok(firstPayment)
               if (failed) {
                 await firstPayment
-                  .$query(trx)
+                  .$query(knex)
                   .patch({ state: OutgoingPaymentState.Failed })
 
                 jest
@@ -1284,7 +1321,7 @@ describe('OutgoingPaymentService', (): void => {
                 assert.ok(firstPayment)
                 if (failed) {
                   await firstPayment
-                    .$query(trx)
+                    .$query(knex)
                     .patch({ state: OutgoingPaymentState.Failed })
                   if (half) {
                     jest
