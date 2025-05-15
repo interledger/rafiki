@@ -1,7 +1,7 @@
 meta {
   name: Create Incoming Payment
   type: http
-  seq: 4
+  seq: 3
 }
 
 post {
@@ -41,7 +41,7 @@ script:pre-request {
 
 script:post-response {
   const body = res.getBody();
-
+  
   if (body?.id) {
     bru.setEnvVar("incomingPaymentId", body.id.split("/").pop());
   }

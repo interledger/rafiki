@@ -1,23 +1,20 @@
 meta {
-  name: Wallet Address Not Found
+  name: Wallet Address Not Found copy
   type: http
-  seq: 7
+  seq: 11
 }
 
 post {
-  url: cnp-svc.pch.dev.pch.land/webhooks
+  url: {{cloudNineWalletWebhookUrl}}
   body: json
   auth: none
 }
 
 body:json {
   {
-    "id": "0fecfc42-8dcd-4aa1-af81-f4396cb7e39a",
+    "id": "{{uuid}}",
     "type": "prepare_packet.received",
     "data": {
-      "data": {
-  
-      
       "peerName": "Cloud Nine Wallet",
       "packetId": "0fecfc42-8dcd-4aa1-af81-f4396cb7e39a",
       "kycData": {
@@ -36,8 +33,9 @@ body:json {
           }
         }
       },
-      "incomingPaymentMetadata": {
-        "description": "remittance"
+      "incomingPayment": {
+        "id": "{{uuid}}",
+        "metadata": {}
       },
       "sourceAmount": {
         "value": "1172",
@@ -49,8 +47,7 @@ body:json {
         "assetCode": "MXN",
         "assetScale": 2
       },
-      "walletAddressId": "9514564561"
-    }
+      "walletAddressId": "9513333333"
     }
   }
 }
