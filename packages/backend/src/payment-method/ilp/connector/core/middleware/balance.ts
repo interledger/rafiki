@@ -7,8 +7,8 @@ import {
 import { Transaction, TransferType } from '../../../../../accounting/service'
 import { Config as AppConfig } from '../../../../../config/app'
 import { isConvertError } from '../../../../../rates/service'
-import { poll } from '../../../../../shared/utils'
 import { IncomingPayment } from '../../../../../open_payments/payment/incoming/model'
+import { Peer } from '../../../peer/model'
 const { CannotReceiveError, InsufficientLiquidityError } = Errors
 
 export function createBalanceMiddleware(): ILPMiddleware {
@@ -37,6 +37,7 @@ export function createBalanceMiddleware(): ILPMiddleware {
     // Ignore zero amount packets
     if (amount === '0') {
       await next()
+
       stopTimer()
       return
     }
@@ -113,37 +114,58 @@ export function createBalanceMiddleware(): ILPMiddleware {
       // TODO: make this single-phase if streamDestination === true
       const trx = await createPendingTransfer()
 
-      if (!state.streamDestination) {
-        await next()
-        stopTimer()
-      }
-
-      if (
-        services.streamServer.decodePaymentTag(request.prepare.destination) // XXX mark this earlier in the middleware pipeline
-      ) {
+      if (state.streamDestination) {
         const packetId = crypto.randomUUID()
+        const incomingPayment = accounts.outgoing as IncomingPayment
+
+        const kycData = services.streamServer.generateReply(request.prepare)
+          .data as string
+
+        const walletAddress = await services.walletAddresses.get(
+          incomingPayment.walletAddressId
+        )!
+
         const body = {
           id: packetId,
           type: 'prepare_packet.received',
           data: {
-            packetId,
-            amount: {
-              value: destinationAmount,
-              assetCode: accounts.outgoing.asset.code,
-              assetScale: accounts.outgoing.asset.scale
-            },
-            walletAddressId: (accounts.outgoing as IncomingPayment)
-              .walletAddressId
+            data: {
+              peerName: (accounts.incoming as Peer).name as string,
+              packetId,
+              kycData: kycData ? JSON.parse(kycData) : undefined,
+              incomingPaymentMetadata: (accounts.outgoing as IncomingPayment)
+                .metadata,
+              sourceAmount: {
+                value: sourceAmount,
+                assetCode: accounts.incoming.asset.code,
+                assetScale: accounts.incoming.asset.scale
+              },
+              destinationAmount: {
+                value: destinationAmount,
+                assetCode: accounts.outgoing.asset.code,
+                assetScale: accounts.outgoing.asset.scale
+              },
+              walletAddressId: walletAddress!.url.split('/').pop()
+            }
           }
         }
 
-        await fetch(services.config.webhookUrl, {
+        const res = await fetch(services.config.webhookUrl, {
           method: 'POST',
           body: JSON.stringify(body),
           headers: {
             'content-type': 'application/json'
           }
         })
+
+        if (!res.ok) {
+          //
+        }
+      }
+
+      if (!state.streamDestination) {
+        await next()
+        stopTimer()
       }
 
       if (trx) {
