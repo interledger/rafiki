@@ -1,4 +1,4 @@
-import { StreamServer } from '@interledger/stream-receiver'
+import { StreamServer } from 'stream-receiver'
 import { Redis } from 'ioredis'
 
 import { AccountingService } from '../../../accounting/service'

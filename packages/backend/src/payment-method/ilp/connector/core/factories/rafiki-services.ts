@@ -1,7 +1,7 @@
 import * as crypto from 'crypto'
 import { Factory } from 'rosie'
 import { Redis } from 'ioredis'
-import { StreamServer } from '@interledger/stream-receiver'
+import { StreamServer } from 'stream-receiver'
 import { RafikiServices } from '../rafiki'
 import { MockAccountingService } from '../test/mocks/accounting-service'
 import { TestLoggerFactory } from './test-logger'

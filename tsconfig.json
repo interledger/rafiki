@@ -11,6 +11,9 @@
     },
     {
       "path": "packages/pay"
+    },
+    {
+      "path": "packages/stream-receiver"
     }
   ],
   "files": [],

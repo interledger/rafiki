@@ -1,7 +1,7 @@
 import { BaseService } from '../../../shared/baseService'
 import { SPSPContext } from '../../../app'
 import base64url from 'base64url'
-import { StreamServer } from '@interledger/stream-receiver'
+import { StreamServer } from 'stream-receiver'
 import { SPSPRouteError } from './middleware'
 
 export const SPSP_CONTENT_TYPE_V4 = 'application/spsp4+json'

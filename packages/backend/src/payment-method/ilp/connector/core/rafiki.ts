@@ -1,6 +1,6 @@
 import * as http from 'http'
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { StreamServer } from '@interledger/stream-receiver'
+import { StreamServer } from 'stream-receiver'
 import { Errors } from 'ilp-packet'
 import { Redis } from 'ioredis'
 import Koa, { Middleware } from 'koa'
