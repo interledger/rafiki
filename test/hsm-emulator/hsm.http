@@ -99,3 +99,18 @@ content-type: application/json
   client.global.set("cardkey_kcv", response.body.kcv);
 %}
 
+
+### 7. import Card PrivateKey @ AustriaCard:
+POST http://localhost:5002/hsm-austria-card/import-card-key
+content-type: application/json
+
+{
+  "tr31ZmkUnderLmk": "{{zmk_tr31_lmk_austria_card}}",
+  "tr31CardKeyUnderZmk": "{{cardkey_tr31_zmk}}",
+  "kcv": "{{cardkey_kcv}}"
+}
+
+
+> {%
+  client.global.set("cardkey_tr31_lmk_austria_card", response.body.tr31CardKeyUnderLmk);
+%}

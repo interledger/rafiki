@@ -200,6 +200,48 @@ function importTMK(
   }
 }
 
+function importCardKey(
+  lmkHex: string,
+  tr31ZmkUnderLmk: string,
+  tr31CardKeyUnderZmk: string,
+  kcv?: string
+): {
+  tr31CardKeyUnderLmk: string
+  kcv: string
+} {
+  // 1. Obtain the clear ZMK key from the ZMK under LMK:
+  const clearZmkKey = extractClearKeyFromTR31KeyBlock(
+    Tr31Intent.LMK,
+    lmkHex,
+    tr31ZmkUnderLmk
+  )
+
+  // 2. Obtain the clear Card key:
+  const clearCardKey = extractClearKeyFromTR31KeyBlock(
+    Tr31Intent.ZMK,
+    clearZmkKey.clearKeyHex,
+    tr31CardKeyUnderZmk
+  )
+  if (kcv && kcv !== clearCardKey.kcv) {
+    throw new Error(
+      `Expected KCV '${kcv}' but got '${clearCardKey.kcv}' instead.`
+    )
+  }
+
+  const cardKeyUnderLmk = createTR31KeyBlockUnder(
+    Tr31Intent.LMK,
+    lmkHex,
+    KeyUsage.DEK,
+    'T',
+    clearCardKey.clearKey
+  )
+
+  return {
+    kcv: clearCardKey.kcv,
+    tr31CardKeyUnderLmk: cardKeyUnderLmk.tr31Block.toString('ascii')
+  }
+}
+
 function generateCardKey(
   lmk: string,
   tr31ZmkUnderLmk: string,
@@ -252,14 +294,13 @@ function generateCardKey(
     privateKey
   )
 
-  //TODO Test:
   const pvtKey = extractClearKeyFromTR31KeyBlock(
     Tr31Intent.LMK,
     lmk,
     tr31CardKeyUnderLmk.tr31Block.toString('ascii')
   )
 
-  logger.info(`Private key [BACK] size is ${pvtKey.clearKey.length} bytes.`)
+  logger.debug(`Private key [BACK] size is ${pvtKey.clearKey.length} bytes.`)
 
   return {
     tr31CardKeyUnderLmk: tr31CardKeyUnderLmk.tr31Block.toString('ascii'),
@@ -329,11 +370,7 @@ function decryptWithAES256(
 
   const key = Buffer.from(aesKeyHex, 'hex')
   const decipher = createDecipheriv('aes-256-cbc', key, iv)
-  const decrypted = Buffer.concat([
-    decipher.update(ciphertext),
-    decipher.final()
-  ])
-  return decrypted
+  return Buffer.concat([decipher.update(ciphertext), decipher.final()])
 }
 
 function decryptWith3DES(
@@ -455,6 +492,7 @@ export {
   generateTMK,
   importTMK,
   generateCardKey,
+  importCardKey,
   AES_ILF_LMK_HEX,
   AES_KAI_LMK_HEX,
   AES_AUSTRIA_CARD_LMK_HEX,

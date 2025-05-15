@@ -11,7 +11,8 @@ import {
   import3DESKeyFromComponents,
   KeyUsage,
   Tr31Intent,
-  generateCardKey
+  generateCardKey,
+  importCardKey
 } from './card-hsm'
 
 export function createApp(port: number) {
@@ -156,18 +157,25 @@ export function createApp(port: number) {
   )
 
   app.post(
-    '/hsm-kai-os/generate-and-export-tmk',
+    '/hsm-austria-card/import-card-key',
     async function handler(ffReq, ffReply) {
-      /*const genClearTMK = generate3DESKeyFromComponents()
+      const requestBody = JSON.parse(JSON.stringify(ffReq.body))
+      const { tr31ZmkUnderLmk, tr31CardKeyUnderZmk, kcv } = requestBody
 
-    const zmkUnderLmk = 'TR31'
-    const zmkClear =
+      const tr31CardKeyUnderLmk = importCardKey(
+        AES_AUSTRIA_CARD_LMK_HEX,
+        tr31ZmkUnderLmk,
+        tr31CardKeyUnderZmk,
+        kcv
+      )
 
-    const { iv, tr31Block } = createTR31KeyBlock(AES_LMK_HEX, 'ZMK', 'T', genCleanZmkKey.finalKeyBuffer);
-    */
-      //TODO 2. Encrypt the final ZMK key under LMK
+      logger.info(
+        `ILF imported CardKey '${tr31CardKeyUnderLmk.tr31CardKeyUnderLmk}' with KCV: ${tr31CardKeyUnderLmk.kcv}`
+      )
+
       ffReply.code(200).send({
-        signatureVerified: true
+        tr31CardKeyUnderLmk: tr31CardKeyUnderLmk.tr31CardKeyUnderLmk,
+        kcv: tr31CardKeyUnderLmk.kcv
       })
     }
   )
