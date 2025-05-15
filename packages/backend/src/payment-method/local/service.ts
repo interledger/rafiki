@@ -30,7 +30,6 @@ import {
   TransferError
 } from '../../accounting/errors'
 import { IncomingPaymentService } from '../../open_payments/payment/incoming/service'
-import { IncomingPaymentState } from '../../open_payments/payment/incoming/model'
 import { ConvertResults } from '../../rates/util'
 
 export interface LocalPaymentService extends PaymentMethodService {}
@@ -226,9 +225,9 @@ async function pay(
       retryable: false
     })
   }
-  if (incomingPayment.state !== IncomingPaymentState.Pending) {
+  if (incomingPayment.isExpiredOrComplete()) {
     throw new PaymentMethodHandlerError('Bad Incoming Payment State', {
-      description: `Incoming Payment state should be ${IncomingPaymentState.Pending}`,
+      description: `Incoming Payment cannot be expired or completed`,
       retryable: false
     })
   }
