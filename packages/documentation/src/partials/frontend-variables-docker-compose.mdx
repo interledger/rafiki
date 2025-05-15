@@ -1,0 +1,20 @@
+import { LinkOut } from '@interledger/docs-design-system'
+
+<div class="overflow-table">
+
+| Variable                         | Required | Description                                                                                                                                                                                                          |
+| -------------------------------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GRAPHQL_URL`                    | Y        | URL for Rafiki’s GraphQL Auth Admin API.                                                                                                                                                                             |
+| `OPEN_PAYMENTS_URL`              | Y        | Your Open Payments API endpoint.                                                                                                                                                                                     |
+| `PORT`                           | Y        | Port from which to host the Rafiki Remix app.                                                                                                                                                                        |
+| `AUTH_ENABLED`                   | N        | When `true`, only authenticated users can be granted access to Rafiki Admin by an administrator.                                                                                                                     |
+| `ENABLE_INSECURE_MESSAGE_COOKIE` | N        | When set to `true`, `t`, or `1`, cookie will be transmitted over insecure HTTP connection. Insecure message cookies are required for flash messages to work over HTTP.                                               |
+| `KRATOS_ADMIN_URL`               | N        | The admin endpoint/container address for Kratos.                                                                                                                                                                     |
+| `KRATOS_BROWSER_PUBLIC_URL`      | N        | The URL for you to access the Kratos Docker container from a browser outside of the Docker network. This is used for calls from a browser (what you see in the Rafiki Admin UI) to the Kratos server on the backend. |
+| `KRATOS_CONTAINER_PUBLIC_URL`    | N        | The URL for you to access the Kratos Docker container from within the Docker network. This is used for backend calls to Kratos.                                                                                      |
+| `LOG_LEVEL`                      | N        | <LinkOut href="https://getpino.io/#/docs/api?id=levels">Pino log level</LinkOut>.                                                                                                                                    |
+| `NODE_ENV`                       | N        | The type of node environment: `development`, `test`, or `production`.                                                                                                                                                |
+| `SIGNATURE_SECRET`               | N        | The signature secret used to authenticate requests to the Backend Admin API.                                                                                                                                         |
+| `SIGNATURE_VERSION`              | N        | The signature version number used to authenticate requests to the Backend Admin API.                                                                                                                                 |
+
+</div>
