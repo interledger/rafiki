@@ -1,0 +1,36 @@
+meta {
+  name: HSM ILF - Generate ZMK
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{hsmEmulatorHost}}/hsm-ilf/generate-zmk
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {}
+}
+
+script:post-response {
+  const body = res.getBody();
+  
+  if (body?.component1) bru.setEnvVar("zmk_component1", body.component1);
+  if (body?.component2) bru.setEnvVar("zmk_component2", body.component2);
+  if (body?.component3) bru.setEnvVar("zmk_component3", body.component3);
+  if (body?.kcv) bru.setEnvVar("zmk_kcv", body.kcv);
+  if (body?.tr31Block) bru.setEnvVar("zmk_tr31_lmk_ilf", body.tr31Block);
+  
+}
+
+tests {
+  test("Status code is 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+}

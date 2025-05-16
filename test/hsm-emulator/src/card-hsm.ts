@@ -1,6 +1,11 @@
-import { randomBytes, createCipheriv, createDecipheriv } from 'crypto'
+import {
+  randomBytes,
+  createCipheriv,
+  createDecipheriv,
+  createHash,
+  generateKeyPairSync
+} from 'crypto'
 import logger from './logger'
-import { generateKeyPairSync } from 'node:crypto'
 
 /**
  * The AES Local Master Key for the ILF HSM.
@@ -16,18 +21,20 @@ const AES_KAI_LMK_HEX =
  * The AES Local Master Key for the Austria Card HSM.
  */
 const AES_AUSTRIA_CARD_LMK_HEX =
-  'eeeeddccbbaa99887766554433221100ffeeddccbbaa99887766554433222211'
+  '11112233445566778899aabbccddeeff00112233446666778899aabbccddeeff'
 
 enum KeyUsage {
   ZMK,
   TMK,
   DEK,
-  BDK
+  BDK,
+  IPK
 }
 
 enum Tr31Intent {
   LMK,
-  ZMK
+  ZMK,
+  TMK
 }
 
 // XOR two buffers
@@ -158,6 +165,121 @@ function generateTMK(
   }
 }
 
+function generateBDK(
+  lmk: string,
+  tr31ZmkUnderLmk: string
+): {
+  tr31BdkUnderLmk: string
+  tr31BdkUnderZmk: string
+  kcv: string
+} {
+  const { clearKeyHex } = extractClearKeyFromTR31KeyBlock(
+    Tr31Intent.LMK,
+    lmk,
+    tr31ZmkUnderLmk
+  )
+
+  const bdkRaw = randomBytes(24)
+  const bdkKCV = obtainKCVFrom3DESKey(bdkRaw)
+
+  const tr31BdkUnderLmk = createTR31KeyBlockUnder(
+    Tr31Intent.LMK,
+    lmk,
+    KeyUsage.BDK,
+    'T',
+    bdkRaw
+  )
+  const tr31BdkUnderZmk = createTR31KeyBlockUnder(
+    Tr31Intent.ZMK,
+    clearKeyHex, //ZMK
+    KeyUsage.BDK,
+    'T',
+    bdkRaw
+  )
+
+  return {
+    tr31BdkUnderLmk: tr31BdkUnderLmk.tr31Block.toString('ascii'),
+    tr31BdkUnderZmk: tr31BdkUnderZmk.tr31Block.toString('ascii'),
+    kcv: bdkKCV
+  }
+}
+
+function deriveIPEK(
+  lmkHex: string,
+  tr31BdkUnderLmk: string,
+  tr31TmkUnderLmk: string,
+  ksnHex: string
+): {
+  tr31IpekUnderLmk: string
+  tr31IpekUnderTmk: string
+  kcv: string
+} {
+  // 1. Obtain the clear BDK key from the LMK:
+  const clearBdkKey = extractClearKeyFromTR31KeyBlock(
+    Tr31Intent.LMK,
+    lmkHex,
+    tr31BdkUnderLmk
+  )
+
+  const ksn = Buffer.from(ksnHex, 'hex')
+  const bdk = clearBdkKey.clearKey
+  if (bdk.length !== 24 || ksn.length !== 10) {
+    throw new Error('BDK must be 24 bytes and KSN must be 10 bytes')
+  }
+
+  // Step 1: Mask the KSN (clear rightmost 21 bits)
+  const ksnMasked = Buffer.from(ksn)
+  ksnMasked[7] &= 0xe0
+  ksnMasked[8] = 0x00
+  ksnMasked[9] = 0x00
+
+  // Step 2: Encrypt ksnMasked with original BDK (Key 1)
+  const cipher1 = createCipheriv('des-ede3', bdk, null)
+  let left = cipher1.update(ksnMasked.subarray(0, 8))
+  left = Buffer.concat([left, cipher1.final()])
+
+  // Step 3: XOR BDK with mask
+  const mask = Buffer.from(
+    'C0C0C0C000000000C0C0C0C000000000C0C0C0C000000000',
+    'hex'
+  )
+  const bdkMasked = xorBuffers(bdk, mask)
+
+  // Step 4: Encrypt ksnMasked with masked BDK (Key 2)
+  const cipher2 = createCipheriv('des-ede3', bdkMasked, null)
+  let right = cipher2.update(ksnMasked.subarray(0, 8))
+  right = Buffer.concat([right, cipher2.final()])
+
+  // Step 5: IPEK is 16-byte concat of both halves:
+  const ipekClear = Buffer.concat([left, right])
+  const tr31IpekUnderLmk = createTR31KeyBlockUnder(
+    Tr31Intent.LMK,
+    lmkHex,
+    KeyUsage.IPK,
+    'T',
+    ipekClear
+  )
+
+  const clearTmkKey = extractClearKeyFromTR31KeyBlock(
+    Tr31Intent.LMK,
+    lmkHex,
+    tr31TmkUnderLmk
+  )
+
+  const tr31IpekUnderTmk = createTR31KeyBlockUnder(
+    Tr31Intent.TMK,
+    clearTmkKey.clearKeyHex, // TMK
+    KeyUsage.IPK,
+    'T',
+    ipekClear
+  )
+  return {
+    tr31IpekUnderLmk: tr31IpekUnderLmk.tr31Block.toString('ascii'),
+    tr31IpekUnderTmk: tr31IpekUnderTmk.tr31Block.toString('ascii'),
+    kcv: tr31IpekUnderTmk.kcv
+  }
+}
+
 function importTMK(
   lmkHex: string,
   tr31ZmkUnderLmk: string,
@@ -215,7 +337,6 @@ function importCardKey(
     lmkHex,
     tr31ZmkUnderLmk
   )
-
   // 2. Obtain the clear Card key:
   const clearCardKey = extractClearKeyFromTR31KeyBlock(
     Tr31Intent.ZMK,
@@ -244,9 +365,7 @@ function importCardKey(
 
 function generateCardKey(
   lmk: string,
-  tr31ZmkUnderLmk: string,
-  //keySize: number = 2048,
-  passphrase: string = 'your-secure-passphrase'
+  tr31ZmkUnderLmk: string
 ): {
   tr31CardKeyUnderLmk: string
   tr31CardKeyUnderZmk: string
@@ -263,9 +382,10 @@ function generateCardKey(
     },
     privateKeyEncoding: {
       type: 'pkcs8', // Recommended for private keys
-      format: 'der',
-      cipher: 'aes-256-cbc', // Optional encryption
-      passphrase // Optional passphrase
+      format: 'der'
+      // We do not want encryption, as we make use of AES already.
+      //cipher: 'aes-256-cbc', // Optional encryption
+      //passphrase // Optional passphrase
     }
   })
 
@@ -281,23 +401,32 @@ function generateCardKey(
     privateKey
   )
 
-  const { clearKeyHex } = extractClearKeyFromTR31KeyBlock(
+  const clearPvtKcv = sha512Last3Bytes(privateKey)
+  const clearZmkKeyHex = extractClearKeyFromTR31KeyBlock(
     Tr31Intent.LMK,
     lmk,
     tr31ZmkUnderLmk
-  )
+  ).clearKeyHex
   const tr31CardKeyUnderZmk = createTR31KeyBlockUnder(
     Tr31Intent.ZMK,
-    clearKeyHex, //ZMK
+    clearZmkKeyHex, //ZMK
     KeyUsage.DEK,
     'T',
     privateKey
   )
 
+  if (tr31CardKeyUnderZmk.kcv !== clearPvtKcv) {
+    throw new Error(
+      `PvtKey under ZMK failure. Expected KCV '${clearPvtKcv}' but got '${tr31CardKeyUnderZmk.kcv}'.`
+    )
+  }
+
+  const tr31CardKeyUnderLmkAscii =
+    tr31CardKeyUnderLmk.tr31Block.toString('ascii')
   const pvtKey = extractClearKeyFromTR31KeyBlock(
     Tr31Intent.LMK,
     lmk,
-    tr31CardKeyUnderLmk.tr31Block.toString('ascii')
+    tr31CardKeyUnderLmkAscii
   )
 
   logger.debug(`Private key [BACK] size is ${pvtKey.clearKey.length} bytes.`)
@@ -306,19 +435,24 @@ function generateCardKey(
     tr31CardKeyUnderLmk: tr31CardKeyUnderLmk.tr31Block.toString('ascii'),
     tr31CardKeyUnderZmk: tr31CardKeyUnderZmk.tr31Block.toString('ascii'),
     publicKey,
-    kcv: 'XXXXXX'
+    kcv: clearPvtKcv
   }
 }
 
-function obtainKCVFrom3DESKey(key: Buffer): string {
+function obtainKCVFrom3DESKey(key: Buffer | Uint8Array): string {
   const data = Buffer.alloc(8, 0x00) // 8 bytes of zeros
   const cipher = createCipheriv('des-ede3', key, null)
   const encrypted = Buffer.concat([cipher.update(data), cipher.final()])
-  return encrypted.slice(0, 3).toString('hex').toUpperCase() // First 3 bytes
+  return encrypted.subarray(0, 3).toString('hex').toUpperCase() // First 3 bytes
+}
+
+function sha512Last3Bytes(input: Buffer | Uint8Array): string {
+  const hexSha = createHash('sha512').update(input).digest('hex')
+  return hexSha.slice(-6).toUpperCase()
 }
 
 function encryptWithAES256(
-  plaintext: Buffer,
+  plaintext: Buffer | Uint8Array,
   aesKeyHex: string,
   zeroIv: boolean = true
 ): { iv: Buffer; ciphertext: Buffer; ciphertextHex: string } {
@@ -339,7 +473,7 @@ function encryptWithAES256(
 }
 
 function encryptWith3DES(
-  plaintext: Buffer,
+  plaintext: Buffer | Uint8Array,
   keyHex: string,
   zeroIv: boolean = true
 ): { iv: Buffer; ciphertext: Buffer; ciphertextHex: string } {
@@ -370,6 +504,18 @@ function decryptWithAES256(
 
   const key = Buffer.from(aesKeyHex, 'hex')
   const decipher = createDecipheriv('aes-256-cbc', key, iv)
+  logger.info(
+    'decipher.decryptWithAES256: ' +
+      ciphertext.length +
+      ' <-> ' +
+      key.length +
+      ' <-> ' +
+      iv.length +
+      ' | ' +
+      key +
+      ' | ' +
+      ciphertext
+  )
   return Buffer.concat([decipher.update(ciphertext), decipher.final()])
 }
 
@@ -390,25 +536,36 @@ function decryptWith3DES(
 function createTR31KeyBlockUnder(
   intent: Tr31Intent,
   kekHex: string, // 32-byte AES key (hex-encoded)
-  keyUsage: KeyUsage, // 3 chars, e.g., 'EK' for Encryption Key
+  keyUsage: KeyUsage, // 3 chars, e.g., 'DEK' for Encryption Key
   keyType: string, // 1 char, e.g., 'T' for TDEA, 'A' for AES
-  key: Buffer, // Key material (e.g., 24 bytes for 3DES)
+  key: Buffer | Uint8Array, // Key material (e.g., 24 bytes for 3DES)
   zeroIv: boolean = true
-): { iv: Buffer; tr31Block: Buffer } {
+): { iv: Buffer; tr31Block: Buffer; kcv: string } {
   if (intent == Tr31Intent.LMK && kekHex.length !== 64)
-    throw new Error('KEK (LMK) must be 64 hex chars (32 bytes)')
-  else if (intent == Tr31Intent.ZMK && kekHex.length !== 48)
-    throw new Error('KEK (ZMK) must be 48 hex chars (24 bytes)')
+    throw new Error(
+      `KEK (LMK) must be 64 hex chars (32 bytes), currently ${kekHex.length}`
+    )
+  //AES
+  else if (
+    (intent == Tr31Intent.ZMK || intent == Tr31Intent.TMK) &&
+    kekHex.length !== 48
+  )
+    throw new Error(
+      `KEK (ZMK) must be 48 hex chars (24 bytes), currently ${kekHex.length}`
+    ) //3DES
+
+  const kcv = isKeyUsageForNon3DS(keyUsage)
+    ? sha512Last3Bytes(key)
+    : obtainKCVFrom3DESKey(key)
 
   // for data, we convert to ASCII-HEX:
-  if (keyUsage === KeyUsage.DEK) key = Buffer.from(key.toString('hex'))
+  if (isKeyUsageForNon3DS(keyUsage)) key = Buffer.from(key.toString('hex'))
 
   // Encrypt using AES-256-CBC
   const encryptedKey =
     intent == Tr31Intent.LMK
       ? encryptWithAES256(key, kekHex, zeroIv)
       : encryptWith3DES(key, kekHex, zeroIv)
-
   const encryptedKeyHex = encryptedKey.ciphertextHex.toUpperCase()
 
   // TR-31 Header – 16 bytes (simplified)
@@ -433,7 +590,6 @@ function createTR31KeyBlockUnder(
     length +
     reserved2
   const header = Buffer.from(headerStr, 'ascii') // total 16 bytes
-  const kcv = keyUsage === KeyUsage.DEK ? 'XXXXXX' : obtainKCVFrom3DESKey(key)
 
   // Combine header and key
   const tr31Block = Buffer.concat([
@@ -444,7 +600,17 @@ function createTR31KeyBlockUnder(
 
   return {
     iv: encryptedKey.iv,
-    tr31Block
+    tr31Block,
+    kcv
+  }
+}
+
+function isKeyUsageForNon3DS(keyUsage: KeyUsage): boolean {
+  switch (keyUsage) {
+    case (KeyUsage.DEK, KeyUsage.IPK):
+      return true
+    default:
+      return false
   }
 }
 
@@ -465,12 +631,13 @@ function extractClearKeyFromTR31KeyBlock(
     intent === Tr31Intent.LMK
       ? decryptWithAES256(tr31EncKeyPortion, kekHex, Buffer.alloc(16))
       : decryptWith3DES(tr31EncKeyPortion, kekHex, Buffer.alloc(8))
-  if (usage == KeyUsage.DEK)
+  if (isKeyUsageForNon3DS(usage))
     clearKey = Buffer.from(clearKey.toString('ascii'), 'hex')
 
   const tr31Kcv = tr31.slice(-6)
-  const kcvComputed =
-    usage == KeyUsage.DEK ? 'XXXXXX' : obtainKCVFrom3DESKey(clearKey)
+  const kcvComputed = isKeyUsageForNon3DS(usage)
+    ? sha512Last3Bytes(clearKey)
+    : obtainKCVFrom3DESKey(clearKey)
   if (kcvComputed !== tr31Kcv) {
     throw new Error(
       `Expected KCV '${tr31Kcv}' but got '${kcvComputed}'. Please confirm correct KEK is used.`
@@ -490,6 +657,8 @@ export {
   obtainKCVFrom3DESKey,
   createTR31KeyBlockUnder,
   generateTMK,
+  generateBDK,
+  deriveIPEK,
   importTMK,
   generateCardKey,
   importCardKey,

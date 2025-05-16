@@ -1,0 +1,36 @@
+meta {
+  name: HSM AustriaCard - Import Card PrivateKey
+  type: http
+  seq: 9
+}
+
+post {
+  url: {{hsmEmulatorHost}}/hsm-austria-card/import-card-key
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "tr31ZmkUnderLmk": "{{zmk_tr31_lmk_austria_card}}",
+    "tr31CardKeyUnderZmk": "{{cardkey_tr31_zmk}}",
+    "kcv": "{{cardkey_kcv}}"
+  }
+}
+
+script:post-response {
+  const body = res.getBody();
+  
+  if (body?.tr31CardKeyUnderLmk) bru.setEnvVar("cardkey_tr31_lmk_austria_card", body.tr31CardKeyUnderLmk);
+  
+}
+
+tests {
+  test("Status code is 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+}

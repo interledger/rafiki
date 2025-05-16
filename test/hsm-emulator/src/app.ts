@@ -8,6 +8,8 @@ import {
   importTMK,
   generate3DESKeyFromComponents,
   generateTMK,
+  generateBDK,
+  deriveIPEK,
   import3DESKeyFromComponents,
   KeyUsage,
   Tr31Intent,
@@ -40,6 +42,43 @@ export function createApp(port: number) {
       component3: genCleanZmkKey.component3, // DANGER! Sent to custodian 3.
       finalKey: genCleanZmkKey.finalKey, // FATAL! Never in the clear. XOR of key elements.
       kcv: genCleanZmkKey.kcv // This allows all parties to verify the integrity of the key.
+    })
+  })
+
+  app.post('/hsm-ilf/generate-bdk', async function handler(ffReq, ffReply) {
+    const requestBody = JSON.parse(JSON.stringify(ffReq.body))
+    const { zmkUnderLmk } = requestBody
+
+    const genBdkKey = generateBDK(AES_ILF_LMK_HEX, zmkUnderLmk)
+
+    logger.info(
+      `ILF generated BDK '${genBdkKey.tr31BdkUnderZmk}|${genBdkKey.tr31BdkUnderZmk}' with KCV: ${genBdkKey.kcv}`
+    )
+
+    ffReply.code(200).send({
+      tr31BdkUnderLmk: genBdkKey.tr31BdkUnderLmk,
+      tr31BdkUnderZmk: genBdkKey.tr31BdkUnderZmk,
+      kcv: genBdkKey.kcv
+    })
+  })
+
+  app.post('/hsm-ilf/derive-ipek', async function handler(ffReq, ffReply) {
+    const requestBody = JSON.parse(JSON.stringify(ffReq.body))
+    const { tr31BdkUnderLmk, tr31TmkUnderLmk, ksnHex } = requestBody
+    const ipek = deriveIPEK(
+      AES_ILF_LMK_HEX,
+      tr31BdkUnderLmk,
+      tr31TmkUnderLmk,
+      ksnHex
+    )
+    logger.info(
+      `ILF generated IPEK '${ipek.tr31IpekUnderLmk}|${ipek.tr31IpekUnderTmk}' with KCV: ${ipek.kcv}`
+    )
+
+    ffReply.code(200).send({
+      tr31IpekUnderLmk: ipek.tr31IpekUnderLmk,
+      tr31IpekUnderTmk: ipek.tr31IpekUnderTmk,
+      kcv: ipek.kcv
     })
   })
 
