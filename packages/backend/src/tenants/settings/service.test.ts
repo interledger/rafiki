@@ -9,7 +9,7 @@ import { Tenant } from '../model'
 import { TenantService } from '../service'
 import { faker } from '@faker-js/faker'
 import { exchangeRatesSetting, randomSetting } from '../../tests/tenantSettings'
-import { TenantSetting } from './model'
+import { TenantSetting, TenantSettingKeys } from './model'
 import {
   CreateOptions,
   GetOptions,
@@ -121,6 +121,32 @@ describe('TenantSetting Service', (): void => {
       expect(result[0].key).toEqual(initialOptions.setting[0].key)
       expect(result[0].value).toEqual(newValue)
     })
+
+    test.each`
+      key
+      ${TenantSettingKeys.EXCHANGE_RATES_URL.name}
+      ${TenantSettingKeys.WEBHOOK_MAX_RETRY.name}
+      ${TenantSettingKeys.WEBHOOK_TIMEOUT.name}
+      ${TenantSettingKeys.WEBHOOK_URL.name}
+      ${TenantSettingKeys.WALLET_ADDRESS_URL.name}
+    `(
+      'cannot use invalid setting value for $key',
+      async ({ key }): Promise<void> => {
+        const invalidSettingOption: CreateOptions = {
+          tenantId: tenant.id,
+          setting: [
+            {
+              key,
+              value: 'invalid_value'
+            }
+          ]
+        }
+
+        await expect(
+          tenantSettingService.create(invalidSettingOption)
+        ).rejects.toThrow('Invalid value for one or more tenant settings')
+      }
+    )
   })
 
   describe('get', () => {
@@ -199,7 +225,7 @@ describe('TenantSetting Service', (): void => {
     test('can update own setting', async () => {
       const newValues = {
         ...updateOptions,
-        value: 'test'
+        value: faker.internet.url()
       }
       await tenantSettingService.update(newValues)
 
@@ -212,6 +238,28 @@ describe('TenantSetting Service', (): void => {
         expect.arrayContaining([expect.objectContaining(newValues)])
       )
     })
+
+    test.each`
+      key
+      ${TenantSettingKeys.EXCHANGE_RATES_URL.name}
+      ${TenantSettingKeys.WEBHOOK_MAX_RETRY.name}
+      ${TenantSettingKeys.WEBHOOK_TIMEOUT.name}
+      ${TenantSettingKeys.WEBHOOK_URL.name}
+      ${TenantSettingKeys.WALLET_ADDRESS_URL.name}
+    `(
+      'cannot use invalid setting value for $key',
+      async ({ key }): Promise<void> => {
+        const invalidSettingOption: UpdateOptions = {
+          tenantId: tenant.id,
+          key,
+          value: 'invalid_value'
+        }
+
+        await expect(
+          tenantSettingService.update(invalidSettingOption)
+        ).rejects.toThrow('Invalid value for tenant setting')
+      }
+    )
   })
 
   describe('delete', (): void => {

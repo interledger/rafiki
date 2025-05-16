@@ -1,7 +1,11 @@
 import { TransactionOrKnex } from 'objection'
 import { Pagination, SortOrder } from '../../shared/baseModel'
 import { BaseService } from '../../shared/baseService'
-import { TenantSetting, TenantSettingKeys } from './model'
+import {
+  TENANT_SETTING_VALIDATORS,
+  TenantSetting,
+  TenantSettingKeys
+} from './model'
 import { Knex } from 'knex'
 
 export interface KeyValuePair {
@@ -104,6 +108,12 @@ async function updateTenantSetting(
   deps: ServiceDependencies,
   options: UpdateOptions
 ): Promise<void> {
+  if (
+    Object.keys(TENANT_SETTING_VALIDATORS).includes(options.key) &&
+    !TENANT_SETTING_VALIDATORS[options.key](options.value)
+  ) {
+    throw new Error('Invalid value for tenant setting')
+  }
   await TenantSetting.query(deps.knex)
     .patch({ value: options.value })
     .whereNull('deletedAt')
@@ -118,6 +128,15 @@ async function createTenantSetting(
   options: CreateOptions,
   extra?: ExtraOptions
 ) {
+  options.setting.map((setting) => {
+    if (
+      Object.keys(TENANT_SETTING_VALIDATORS).includes(setting.key) &&
+      !TENANT_SETTING_VALIDATORS[setting.key](setting.value)
+    ) {
+      throw new Error('Invalid value for one or more tenant settings')
+    }
+  })
+
   const dataToUpsert = options.setting
     .filter((setting) => Object.keys(TenantSettingKeys).includes(setting.key))
     .map((s) => ({
