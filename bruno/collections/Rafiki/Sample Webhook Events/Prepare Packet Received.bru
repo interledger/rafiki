@@ -1,5 +1,5 @@
 meta {
-  name: Wallet Address Not Found copy
+  name: Prepare Packet Received
   type: http
   seq: 11
 }
@@ -16,7 +16,10 @@ body:json {
     "type": "prepare_packet.received",
     "data": {
       "peerName": "Cloud Nine Wallet",
-      "packetId": "0fecfc42-8dcd-4aa1-af81-f4396cb7e39a",
+      "packet": {
+        "id":"",
+        "receivedAt":""
+      },
       "kycData": {
         "sender": {
           "firstName": "Grace",
@@ -35,7 +38,8 @@ body:json {
       },
       "incomingPayment": {
         "id": "{{uuid}}",
-        "metadata": {}
+        "metadata": {},
+        "createdAt":""
       },
       "sourceAmount": {
         "value": "1172",
@@ -46,8 +50,11 @@ body:json {
         "value": "20006",
         "assetCode": "MXN",
         "assetScale": 2
-      },
-      "walletAddressId": "9513333333"
+      }, 
+      "walletAddress": {
+        "id":"",
+        "url":""
+      }
     }
   }
 }
