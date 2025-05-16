@@ -56,7 +56,8 @@ const TENANT_KEY_MAPPING = {
   [TenantSettingKeys.EXCHANGE_RATES_URL.name]: 'exchangeRatesUrl',
   [TenantSettingKeys.WEBHOOK_MAX_RETRY.name]: 'webhookMaxRetry',
   [TenantSettingKeys.WEBHOOK_TIMEOUT.name]: 'webhookTimeout',
-  [TenantSettingKeys.WEBHOOK_URL.name]: 'webhookUrl'
+  [TenantSettingKeys.WEBHOOK_URL.name]: 'webhookUrl',
+  [TenantSettingKeys.WALLET_ADDRESS_URL.name]: 'walletAddressUrl'
 } as const
 
 export type FormattedTenantSettings = Record<
@@ -73,4 +74,24 @@ export const formatSettings = (
     settingsObj[TENANT_KEY_MAPPING[key]] = setting.value
   }
   return settingsObj
+}
+
+const validateUrlTenantSetting = (url: string): boolean => {
+  try {
+    return !!new URL(url)
+  } catch (err) {
+    return false
+  }
+}
+
+const validateNumberTenantSetting = (numberString: string): boolean => {
+  return !!(Number(numberString) && Number(numberString) > 0)
+}
+
+export const TENANT_SETTING_VALIDATORS = {
+  [TenantSettingKeys.EXCHANGE_RATES_URL.name]: validateUrlTenantSetting,
+  [TenantSettingKeys.WEBHOOK_MAX_RETRY.name]: validateNumberTenantSetting,
+  [TenantSettingKeys.WEBHOOK_TIMEOUT.name]: validateNumberTenantSetting,
+  [TenantSettingKeys.WEBHOOK_URL.name]: validateUrlTenantSetting,
+  [TenantSettingKeys.WALLET_ADDRESS_URL.name]: validateUrlTenantSetting
 }
