@@ -7,8 +7,10 @@ inputs:
     required: true
   package:
     required: true
+    description: "Package we are building, for example, 'rafiki-auth' or 'rafiki-backend'."
   platform_name:
     required: true
+    description: "Platform we are building for, for example, 'amd64' or 'arm64'."
   gh_token:
     description: "GitHub token to use for authentication."
     required: true
