@@ -206,7 +206,7 @@ jobs:
           pnpm --filter performance run-tests:testenv -k -q --vus 4 --duration 1m | tee performance.log
 
       - name: Post/Update Performance Test Results as PR Comment
-        if: always()
+        if: ${{ github.event_name == 'pull_request' }}
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
