@@ -28,7 +28,7 @@ runs:
         # If the version is 'nightly' or some other unstructured string, we don't want to create a hierarchy
         if ! [[ ${{ inputs.version }} =~ ^v[[:digit:]]+\.[[:digit:]]+\.[[:digit:]]+ ]];
         then
-          echo "has_hierarchy=true"     >> $GITHUB_OUTPUT
+          echo "has_hierarchy=false"     >> $GITHUB_OUTPUT
           echo "major_parent=" >> $GITHUB_OUTPUT
           echo "minor_parent=" >> $GITHUB_OUTPUT
           exit 0
