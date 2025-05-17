@@ -27,7 +27,6 @@ runs:
       uses: ./.github/actions/parent-versions
       with:
         version: ${{ inputs.version }}
-        generateRelease: true
     - name: Fetch docker image from cache
       uses: actions/cache/restore@v4
       with:
