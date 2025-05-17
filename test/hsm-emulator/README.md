@@ -12,7 +12,7 @@ developers to validate HSM-integrated workflows without requiring access to a ph
 
 The parties involved in the HSM emulator include:
 
-- **ILF** - The ILF will be the activing ASE (Accont Serving Entity)
+- **ILF** - The ILF will be the acting ASE (Account Serving Entity)
 - **KaiOS** - The POS manufacturer
 - **Austria Card** - The card issuer
 
