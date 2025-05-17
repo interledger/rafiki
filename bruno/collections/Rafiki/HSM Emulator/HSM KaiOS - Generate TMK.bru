@@ -1,0 +1,38 @@
+meta {
+  name: HSM KaiOS - Generate TMK
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{hsmEmulatorHost}}/hsm-kai/generate-tmk
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "terminalSerial": "KAISN0000111",
+    "zmkUnderLmk": "{{zmk_tr31_lmk_kai}}"
+  }
+}
+
+script:post-response {
+  const body = res.getBody();
+  
+  if (body?.tr31TmkUnderLmk) bru.setEnvVar("tmk_tr31_lmk_kai", body.tr31TmkUnderLmk);
+  if (body?.tr31TmkUnderZmk) bru.setEnvVar("tmk_tr31_zmk", body.tr31TmkUnderZmk);
+  if (body?.terminalSerial) bru.setEnvVar("tmk_serial", body.terminalSerial);
+  if (body?.kcv) bru.setEnvVar("tmk_kcv", body.kcv);
+  
+}
+
+tests {
+  test("Status code is 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+}
