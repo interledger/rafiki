@@ -405,5 +405,35 @@ describe('TenantSetting Service', (): void => {
         await tenantSettingService.getSettingsByPrefix(baseUrl)
       expect(retrievedSettings).toEqual(settings)
     })
+
+    test('does not retrieve tenants if no wallet address prefix matches', async (): Promise<void> => {
+      const secondTenant = await createTenant(deps)
+      const baseUrl = `https://${faker.internet.domainName()}/${uuid()}`
+      await Promise.all([
+        tenantSettingService.create({
+          tenantId: tenant.id,
+          setting: [
+            {
+              key: TenantSettingKeys.WALLET_ADDRESS_URL.name,
+              value: `${baseUrl}/${uuid()}`
+            }
+          ]
+        }),
+        tenantSettingService.create({
+          tenantId: secondTenant.id,
+          setting: [
+            {
+              key: TenantSettingKeys.WALLET_ADDRESS_URL.name,
+              value: `${baseUrl}/${uuid()}`
+            }
+          ]
+        })
+      ])
+
+      const retrievedSettings = await tenantSettingService.getSettingsByPrefix(
+        faker.internet.url()
+      )
+      expect(retrievedSettings).toHaveLength(0)
+    })
   })
 })
