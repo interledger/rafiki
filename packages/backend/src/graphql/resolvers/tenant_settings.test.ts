@@ -19,6 +19,7 @@ import {
 } from '@apollo/client'
 import { setContext } from '@apollo/client/link/context'
 import { TenantSettingKeys } from '../../tenants/settings/model'
+import { faker } from '@faker-js/faker'
 
 function createTenantedApolloClient(
   appContainer: TestContainer,
@@ -93,7 +94,10 @@ describe('Tenant Settings Resolvers', (): void => {
     test('can create tenant setting', async (): Promise<void> => {
       const input: CreateTenantSettingsInput = {
         settings: [
-          { key: TenantSettingKeys.EXCHANGE_RATES_URL.name, value: 'MY_VALUE' }
+          {
+            key: TenantSettingKeys.EXCHANGE_RATES_URL.name,
+            value: faker.internet.url()
+          }
         ]
       }
 
