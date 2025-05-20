@@ -53,8 +53,8 @@ importers:
         specifier: ^2.0.2
         version: 2.0.2
       npm-run-all2:
-        specifier: ^6.2.6
-        version: 6.2.6
+        specifier: ^8.0.3
+        version: 8.0.3
       prettier:
         specifier: ^3.2.5
         version: 3.2.5
@@ -7739,7 +7739,6 @@ packages:
     resolution: {integrity: sha512-wq0cICSkRLVaf3UGLMGItu/PtdY7oaXaI/RVU+xliKVOtRna3PRY57ZDfztpDL0n11vfymMUnXv8QwYCO7L1wg==}
     dependencies:
       undici-types: 5.26.5
-    dev: true
 
   /@types/node@20.14.15:
     resolution: {integrity: sha512-Fz1xDMCF/B00/tYSVMlmK7hVeLh7jE5f3B7X1/hmV0MJBwE27KlS7EvD/Yp+z1lm8mVhwV5w+n8jOZG8AfTlKw==}
@@ -9055,7 +9054,7 @@ packages:
       unist-util-visit: 5.0.0
       unstorage: 1.15.0
       vfile: 6.0.3
-      vite: 6.2.5(@types/node@18.11.9)(yaml@2.7.0)
+      vite: 6.2.5(@types/node@20.12.7)(yaml@2.7.0)
       vitefu: 1.0.6(vite@6.2.5)
       xxhash-wasm: 1.1.0
       yargs-parser: 21.1.1
@@ -9154,7 +9153,7 @@ packages:
       unist-util-visit: 5.0.0
       unstorage: 1.15.0
       vfile: 6.0.3
-      vite: 6.2.5(@types/node@18.11.9)(yaml@2.7.0)
+      vite: 6.2.5(@types/node@20.12.7)(yaml@2.7.0)
       vitefu: 1.0.6(vite@6.2.5)
       xxhash-wasm: 1.1.0
       yargs-parser: 21.1.1
@@ -12683,7 +12682,7 @@ packages:
     dependencies:
       foreground-child: 3.1.1
       jackspeak: 2.3.6
-      minimatch: 9.0.3
+      minimatch: 9.0.5
       minipass: 7.1.2
       path-scurry: 1.10.1
     dev: true
@@ -14049,6 +14048,11 @@ packages:
     resolution: {integrity: sha512-RHxMLp9lnKHGHRng9QFhRCMbYAcVpn69smSGcq3f36xjgVVWThj4qqLbTLlq7Ssj8B+fIQ1EuCEGI2lKsyQeIw==}
     dev: true
 
+  /isexe@3.1.1:
+    resolution: {integrity: sha512-LpB/54B+/2J5hqQ7imZHfdU31OlgQqx7ZicVlkm9kzg9/w8GKLEcFfJl/t7DCEDueOyBAD6zCCwTO6Fzs0NoEQ==}
+    engines: {node: '>=16'}
+    dev: true
+
   /isobject@3.0.1:
     resolution: {integrity: sha512-WhB9zCku7EGTj/HQQRz5aUQEUeoQZH2bWcltRErOpymJ4boYE6wL9Tbr23krRPSZ+C5zqNSrSw+Cc7sZZ4b7vg==}
     engines: {node: '>=0.10.0'}
@@ -14666,6 +14670,11 @@ packages:
   /json-parse-even-better-errors@3.0.1:
     resolution: {integrity: sha512-aatBvbL26wVUCLmbWdCpeu9iF5wOyWpagiKkInA+kfws3sWdBrTnsvN2CKcyCYyUrc7rebNBlK6+kteg7ksecg==}
     engines: {node: ^14.17.0 || ^16.13.0 || >=18.0.0}
+    dev: true
+
+  /json-parse-even-better-errors@4.0.0:
+    resolution: {integrity: sha512-lR4MXjGNgkJc7tkQ97kb2nuEMnNCyU//XYVH0MKTGcXEiSudQ5MKGKen3C5QubYy0vmq+JGitUg92uuywGEwIA==}
+    engines: {node: ^18.17.0 || >=20.5.0}
     dev: true
 
   /json-schema-traverse@0.4.1:
@@ -16349,6 +16358,13 @@ packages:
     hasBin: true
     dev: true
 
+  /minimatch@10.0.1:
+    resolution: {integrity: sha512-ethXTt3SGGR+95gudmqJ1eNhRO7eGEGIgYA9vnPatK4/etz2MEVDno5GMCibdMTuBMyElzIlgxMna3K94XDIDQ==}
+    engines: {node: 20 || >=22}
+    dependencies:
+      brace-expansion: 2.0.1
+    dev: true
+
   /minimatch@3.1.2:
     resolution: {integrity: sha512-J7p63hRiAjw1NDEww1W7i37+ByIrOWO5XQQAzZ3VOcL0PNybwpfmV/N05zFAzwQ9USyEcX6t3UO+K5aqBQOIHw==}
     dependencies:
@@ -16741,6 +16757,11 @@ packages:
     engines: {node: ^14.17.0 || ^16.13.0 || >=18.0.0}
     dev: true
 
+  /npm-normalize-package-bin@4.0.0:
+    resolution: {integrity: sha512-TZKxPvItzai9kN9H/TkmCtx/ZN/hvr3vUycjlfmH0ootY9yFBzNOpiXAdIn1Iteqsvk4lQn6B5PTrt+n6h8k/w==}
+    engines: {node: ^18.17.0 || >=20.5.0}
+    dev: true
+
   /npm-package-arg@10.1.0:
     resolution: {integrity: sha512-uFyyCEmgBfZTtrKk/5xDfHp6+MdrqGotX/VoOyEEl3mBwiEE5FlBaePanazJSVMPT7vKepcjYBY2ztg9A3yPIA==}
     engines: {node: ^14.17.0 || ^16.13.0 || >=18.0.0}
@@ -16761,19 +16782,19 @@ packages:
       semver: 7.6.3
     dev: true
 
-  /npm-run-all2@6.2.6:
-    resolution: {integrity: sha512-tkyb4pc0Zb0oOswCb5tORPk9MvVL6gcDq1cMItQHmsbVk1skk7YF6cH+UU2GxeNLHMuk6wFEOSmEmJ2cnAK1jg==}
-    engines: {node: ^14.18.0 || ^16.13.0 || >=18.0.0, npm: '>= 8'}
+  /npm-run-all2@8.0.3:
+    resolution: {integrity: sha512-0mAycidMUMThrLt8AT3LGtOMgfLaMg6/4oUKHTKMU0jDSIsdKBsKp98H8zBFcJylQC4CtOB140UUFbOlFyE9gA==}
+    engines: {node: ^20.5.0 || >=22.0.0, npm: '>= 10'}
     hasBin: true
     dependencies:
       ansi-styles: 6.2.1
       cross-spawn: 7.0.6
       memorystream: 0.3.1
-      minimatch: 9.0.3
+      minimatch: 10.0.1
       pidtree: 0.6.0
-      read-package-json-fast: 3.0.2
+      read-package-json-fast: 4.0.0
       shell-quote: 1.8.0
-      which: 3.0.1
+      which: 5.0.0
     dev: true
 
   /npm-run-path@4.0.1:
@@ -18050,12 +18071,12 @@ packages:
       pify: 2.3.0
     dev: true
 
-  /read-package-json-fast@3.0.2:
-    resolution: {integrity: sha512-0J+Msgym3vrLOUB3hzQCuZHII0xkNGCtz/HJH9xZshwv9DbDwkw1KaE3gx/e2J5rpEY5rtOy6cyhKOPrkP7FZw==}
-    engines: {node: ^14.17.0 || ^16.13.0 || >=18.0.0}
+  /read-package-json-fast@4.0.0:
+    resolution: {integrity: sha512-qpt8EwugBWDw2cgE2W+/3oxC+KTez2uSVR8JU9Q36TXPAGCaozfQUs59v4j4GFpWTaw0i6hAZSvOmu1J0uOEUg==}
+    engines: {node: ^18.17.0 || >=20.5.0}
     dependencies:
-      json-parse-even-better-errors: 3.0.1
-      npm-normalize-package-bin: 3.0.1
+      json-parse-even-better-errors: 4.0.0
+      npm-normalize-package-bin: 4.0.0
     dev: true
 
   /readable-stream@2.3.7:
@@ -21149,6 +21170,7 @@ packages:
       yaml: 2.7.0
     optionalDependencies:
       fsevents: 2.3.3
+    dev: true
 
   /vite@6.2.5(@types/node@20.12.7)(yaml@2.7.0):
     resolution: {integrity: sha512-j023J/hCAa4pRIUH6J9HemwYfjB5llR2Ps0CWeikOtdR8+pAURAk0DoJC5/mm9kd+UgdnIy7d6HE4EAvlYhPhA==}
@@ -21197,7 +21219,6 @@ packages:
       yaml: 2.7.0
     optionalDependencies:
       fsevents: 2.3.3
-    dev: true
 
   /vitefu@1.0.6(vite@6.2.5):
     resolution: {integrity: sha512-+Rex1GlappUyNN6UfwbVZne/9cYC4+R2XDk9xkNXBKMw6HQagdX9PgZ8V2v1WUSK1wfBLp7qbI1+XSNIlB1xmA==}
@@ -21207,7 +21228,7 @@ packages:
       vite:
         optional: true
     dependencies:
-      vite: 6.2.5(@types/node@18.11.9)(yaml@2.7.0)
+      vite: 6.2.5(@types/node@20.12.7)(yaml@2.7.0)
     dev: false
 
   /vscode-jsonrpc@8.2.0:
@@ -21482,6 +21503,14 @@ packages:
     hasBin: true
     dependencies:
       isexe: 2.0.0
+    dev: true
+
+  /which@5.0.0:
+    resolution: {integrity: sha512-JEdGzHwwkrbWoGOlIHqQ5gtprKGOenpDHpxE9zVR1bWbOtYRyPPHMe9FaP6x61CmNaTThSkb0DAJte5jD+DmzQ==}
+    engines: {node: ^18.17.0 || >=20.5.0}
+    hasBin: true
+    dependencies:
+      isexe: 3.1.1
     dev: true
 
   /wicked-good-xpath@1.3.0:
