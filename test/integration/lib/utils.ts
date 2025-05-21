@@ -1,3 +1,5 @@
+import { validate, version } from 'uuid'
+
 export function wait(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
@@ -62,7 +64,7 @@ export function parseCookies(response: Response) {
 }
 
 /**
- * Omit distrubuted to all types in a union.
+ * Omit distributed to all types in a union.
  * @example
  * type WithoutA = UnionOmit<{ a: number; c: number } | { b: number }, 'a'> // { c: number } | { b: number }
  * const withoutAOK: WithoutA = { c: 1 } // OK
@@ -73,3 +75,15 @@ export function parseCookies(response: Response) {
 export type UnionOmit<T, K extends keyof any> = T extends any
   ? Omit<T, K>
   : never
+
+/**
+ * @param url remove the tenant id from the {url}
+ */
+export function urlWithoutTenantId(url: string): string {
+  if (url.length > 36 && validateId(url.slice(-36))) return url.slice(0, -37)
+  return url
+}
+
+function validateId(id: string): boolean {
+  return validate(id) && version(id) === 4
+}

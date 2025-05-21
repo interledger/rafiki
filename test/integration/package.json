@@ -18,6 +18,8 @@
     "@types/node": "^20.14.15",
     "hostile": "^1.4.0",
     "mock-account-service-lib": "workspace:*",
+    "yaml": "^2.7.0",
+    "uuid": "^9.0.1",
     "test-lib": "workspace:*"
   }
 }

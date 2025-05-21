@@ -9,7 +9,7 @@ import {
 import { Asset } from '../../../asset/model'
 import { LiquidityAccount, OnCreditOptions } from '../../../accounting/service'
 import { ConnectorAccount } from '../../../payment-method/ilp/connector/core/rafiki'
-import { WebhookEvent } from '../../../webhook/model'
+import { WebhookEvent } from '../../../webhook/event/model'
 import {
   IncomingPayment as OpenPaymentsIncomingPayment,
   IncomingPaymentWithPaymentMethods as OpenPaymentsIncomingPaymentWithPaymentMethod
@@ -110,6 +110,7 @@ export class IncomingPayment
 
   private incomingAmountValue?: bigint | null
   private receivedAmountValue?: bigint
+  public readonly tenantId!: string
 
   public get completed(): boolean {
     return this.state === IncomingPaymentState.Completed
@@ -144,7 +145,7 @@ export class IncomingPayment
 
   public getUrl(resourceServerUrl: string): string {
     resourceServerUrl = resourceServerUrl.replace(/\/+$/, '')
-    return `${resourceServerUrl}${IncomingPayment.urlPath}/${this.id}`
+    return `${resourceServerUrl}/${this.tenantId}${IncomingPayment.urlPath}/${this.id}`
   }
 
   public async onCredit({
@@ -225,7 +226,7 @@ export class IncomingPayment
   ): OpenPaymentsIncomingPayment {
     return {
       id: this.getUrl(resourceServerUrl),
-      walletAddress: walletAddress.url,
+      walletAddress: walletAddress.address,
       incomingAmount: this.incomingAmount
         ? serializeAmount(this.incomingAmount)
         : undefined,

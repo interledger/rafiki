@@ -31,11 +31,13 @@ export interface CreateIncomingPaymentOptions {
   expiresAt?: Date
   incomingAmount?: Amount
   metadata?: Record<string, unknown>
+  tenantId: string
 }
 
 export interface UpdateOptions {
   id: string
   metadata: Record<string, unknown>
+  tenantId: string
 }
 
 export interface IncomingPaymentService
@@ -44,9 +46,18 @@ export interface IncomingPaymentService
     options: CreateIncomingPaymentOptions,
     trx?: Knex.Transaction
   ): Promise<IncomingPayment | IncomingPaymentError>
-  approve(id: string): Promise<IncomingPayment | IncomingPaymentError>
-  cancel(id: string): Promise<IncomingPayment | IncomingPaymentError>
-  complete(id: string): Promise<IncomingPayment | IncomingPaymentError>
+  approve(
+    id: string,
+    tenantId: string
+  ): Promise<IncomingPayment | IncomingPaymentError>
+  cancel(
+    id: string,
+    tenantId: string
+  ): Promise<IncomingPayment | IncomingPaymentError>
+  complete(
+    id: string,
+    tenantId: string
+  ): Promise<IncomingPayment | IncomingPaymentError>
   processNext(): Promise<string | undefined>
   update(
     options: UpdateOptions
@@ -74,9 +85,9 @@ export async function createIncomingPaymentService(
   return {
     get: (options) => getIncomingPayment(deps, options),
     create: (options, trx) => createIncomingPayment(deps, options, trx),
-    approve: (id) => approveIncomingPayment(deps, id),
-    cancel: (id) => cancelIncomingPayment(deps, id),
-    complete: (id) => completeIncomingPayment(deps, id),
+    approve: (id, tenantId) => approveIncomingPayment(deps, id, tenantId),
+    cancel: (id, tenantId) => cancelIncomingPayment(deps, id, tenantId),
+    complete: (id, tenantId) => completeIncomingPayment(deps, id, tenantId),
     getWalletAddressPage: (options) => getWalletAddressPage(deps, options),
     processNext: () => processNextIncomingPayment(deps),
     update: (options) => updateIncomingPayment(deps, options)
@@ -108,7 +119,7 @@ async function updateIncomingPayment(
 ): Promise<IncomingPayment | IncomingPaymentError> {
   const incomingPayment = await IncomingPayment.query(
     deps.knex
-  ).patchAndFetchById(options.id, { metadata: options.metadata })
+  ).patchAndFetchById(options.id, options)
   if (incomingPayment) {
     const asset = await deps.assetService.get(incomingPayment.assetId)
     if (asset) incomingPayment.asset = asset
@@ -130,7 +141,8 @@ async function createIncomingPayment(
     client,
     expiresAt,
     incomingAmount,
-    metadata
+    metadata,
+    tenantId
   }: CreateIncomingPaymentOptions,
   trx?: Knex.Transaction
 ): Promise<IncomingPayment | IncomingPaymentError> {
@@ -145,7 +157,10 @@ async function createIncomingPayment(
   if (incomingAmount && incomingAmount.value <= 0) {
     return IncomingPaymentError.InvalidAmount
   }
-  const walletAddress = await deps.walletAddressService.get(walletAddressId)
+  const walletAddress = await deps.walletAddressService.get(
+    walletAddressId,
+    tenantId
+  )
   if (!walletAddress) {
     return IncomingPaymentError.UnknownWalletAddress
   }
@@ -171,7 +186,8 @@ async function createIncomingPayment(
     incomingAmount,
     metadata,
     state: IncomingPaymentState.Pending,
-    processAt: expiresAt
+    processAt: expiresAt,
+    tenantId
   })
 
   const asset = await deps.assetService.get(incomingPayment.assetId)
@@ -181,10 +197,16 @@ async function createIncomingPayment(
     incomingPayment.walletAddressId
   )
 
-  await IncomingPaymentEvent.query(trx || deps.knex).insert({
+  const webhooks = [{ recipientTenantId: incomingPayment.tenantId }]
+  if (incomingPayment.tenantId !== deps.config.operatorTenantId) {
+    webhooks.push({ recipientTenantId: deps.config.operatorTenantId })
+  }
+  await IncomingPaymentEvent.query(trx || deps.knex).insertGraph({
     incomingPaymentId: incomingPayment.id,
     type: IncomingPaymentEventType.IncomingPaymentCreated,
-    data: incomingPayment.toData(0n)
+    data: incomingPayment.toData(0n),
+    tenantId: incomingPayment.tenantId,
+    webhooks
   })
 
   incomingPayment = await addReceivedAmount(deps, incomingPayment, BigInt(0))
@@ -341,7 +363,11 @@ async function handleDeactivated(
         : IncomingPaymentEventType.IncomingPaymentCompleted
     deps.logger.trace({ type }, 'creating incoming payment webhook event')
 
-    await IncomingPaymentEvent.query(deps.knex).insert({
+    const webhooks = [{ recipientTenantId: incomingPayment.tenantId }]
+    if (incomingPayment.tenantId !== deps.config.operatorTenantId) {
+      webhooks.push({ recipientTenantId: deps.config.operatorTenantId })
+    }
+    await IncomingPaymentEvent.query(deps.knex).insertGraph({
       incomingPaymentId: incomingPayment.id,
       type,
       data: incomingPayment.toData(amountReceived),
@@ -349,7 +375,9 @@ async function handleDeactivated(
         accountId: incomingPayment.id,
         assetId: incomingPayment.assetId,
         amount: amountReceived
-      }
+      },
+      tenantId: incomingPayment.tenantId,
+      webhooks
     })
 
     await incomingPayment.$query(deps.knex).patch({
@@ -364,7 +392,12 @@ async function getWalletAddressPage(
   deps: ServiceDependencies,
   options: ListOptions
 ): Promise<IncomingPayment[]> {
-  const page = await IncomingPayment.query(deps.knex).list(options)
+  const pageQuery = IncomingPayment.query(deps.knex)
+
+  if (options.tenantId) pageQuery.where('tenantId', options.tenantId)
+
+  const page = await pageQuery.list(options)
+
   for (const payment of page) {
     const asset = await deps.assetService.get(payment.assetId)
     if (asset) payment.asset = asset
@@ -400,10 +433,13 @@ async function getWalletAddressPage(
 
 async function approveIncomingPayment(
   deps: ServiceDependencies,
-  id: string
+  id: string,
+  tenantId: string
 ): Promise<IncomingPayment | IncomingPaymentError> {
   return deps.knex.transaction(async (trx) => {
-    const payment = await IncomingPayment.query(trx).findById(id).forUpdate()
+    const payment = await IncomingPayment.query(trx)
+      .findOne({ id, tenantId })
+      .forUpdate()
 
     if (!payment) return IncomingPaymentError.UnknownPayment
 
@@ -437,10 +473,13 @@ async function approveIncomingPayment(
 
 async function cancelIncomingPayment(
   deps: ServiceDependencies,
-  id: string
+  id: string,
+  tenantId: string
 ): Promise<IncomingPayment | IncomingPaymentError> {
   return deps.knex.transaction(async (trx) => {
-    const payment = await IncomingPayment.query(trx).findById(id).forUpdate()
+    const payment = await IncomingPayment.query(trx)
+      .findOne({ id, tenantId })
+      .forUpdate()
 
     if (!payment) return IncomingPaymentError.UnknownPayment
 
@@ -474,10 +513,13 @@ async function cancelIncomingPayment(
 
 async function completeIncomingPayment(
   deps: ServiceDependencies,
-  id: string
+  id: string,
+  tenantId: string
 ): Promise<IncomingPayment | IncomingPaymentError> {
   return deps.knex.transaction(async (trx) => {
-    const payment = await IncomingPayment.query(trx).findById(id).forUpdate()
+    const payment = await IncomingPayment.query(trx)
+      .findOne({ id, tenantId })
+      .forUpdate()
     if (!payment) return IncomingPaymentError.UnknownPayment
 
     const asset = await deps.assetService.get(payment.assetId)

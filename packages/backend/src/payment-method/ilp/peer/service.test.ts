@@ -24,6 +24,7 @@ describe('Peer Service', (): void => {
   let peerService: PeerService
   let accountingService: AccountingService
   let asset: Asset
+  let tenantId: string
 
   const randomPeer = (override?: Partial<CreateOptions>): CreateOptions => ({
     assetId: asset.id,
@@ -40,6 +41,7 @@ describe('Peer Service', (): void => {
     staticIlpAddress: 'test.' + uuid(),
     name: faker.person.fullName(),
     liquidityThreshold: BigInt(10000),
+    tenantId: Config.operatorTenantId,
     ...override
   })
 
@@ -48,6 +50,7 @@ describe('Peer Service', (): void => {
     appContainer = await createTestApp(deps)
     peerService = await deps.use('peerService')
     accountingService = await deps.use('accountingService')
+    tenantId = Config.operatorTenantId
   })
 
   beforeEach(async (): Promise<void> => {
@@ -55,7 +58,7 @@ describe('Peer Service', (): void => {
   })
 
   afterEach(async (): Promise<void> => {
-    await truncateTables(appContainer.knex)
+    await truncateTables(deps)
   })
 
   afterAll(async (): Promise<void> => {
@@ -93,7 +96,7 @@ describe('Peer Service', (): void => {
           name: options.name,
           liquidityThreshold: liquidityThreshold || null
         })
-        const retrievedPeer = await peerService.get(peer.id)
+        const retrievedPeer = await peerService.get(peer.id, peer.tenantId)
         if (!retrievedPeer) throw new Error('peer not found')
         expect(retrievedPeer).toEqual(peer)
       }
@@ -112,7 +115,7 @@ describe('Peer Service', (): void => {
         staticIlpAddress: options.staticIlpAddress,
         name: options.name
       })
-      const retrievedPeer = await peerService.get(peer.id)
+      const retrievedPeer = await peerService.get(peer.id, peer.tenantId)
       if (!retrievedPeer) throw new Error('peer not found')
       expect(retrievedPeer).toEqual(peer)
     })
@@ -148,7 +151,7 @@ describe('Peer Service', (): void => {
     })
 
     test('Cannot fetch a bogus peer', async (): Promise<void> => {
-      await expect(peerService.get(uuid())).resolves.toBeUndefined()
+      await expect(peerService.get(uuid(), tenantId)).resolves.toBeUndefined()
     })
 
     test('Cannot create a peer with unknown asset', async (): Promise<void> => {
@@ -159,6 +162,11 @@ describe('Peer Service', (): void => {
           assetId: uuid()
         })
       ).resolves.toEqual(PeerError.UnknownAsset)
+    })
+
+    test('Cannot fetch a peer with incorrect tenantId', async (): Promise<void> => {
+      const peer = await createPeer(deps)
+      await expect(peerService.get(peer.id, uuid())).resolves.toBeUndefined()
     })
 
     test('Cannot create a peer with duplicate incoming tokens', async (): Promise<void> => {
@@ -219,6 +227,13 @@ describe('Peer Service', (): void => {
         PeerError.DuplicatePeer
       )
     })
+
+    test('Cannot create a peer with incorrect tenantId', async (): Promise<void> => {
+      const options = randomPeer()
+      await expect(
+        peerService.create({ ...options, tenantId: uuid() })
+      ).resolves.toEqual(PeerError.UnknownAsset)
+    })
   })
 
   describe('Update Peer', (): void => {
@@ -237,7 +252,8 @@ describe('Peer Service', (): void => {
           maxPacketAmount,
           staticIlpAddress,
           name,
-          liquidityThreshold
+          liquidityThreshold,
+          tenantId: peer.tenantId
         }
 
         const peerOrError = await peerService.update(updateOptions)
@@ -255,14 +271,17 @@ describe('Peer Service', (): void => {
           liquidityThreshold: updateOptions.liquidityThreshold || null
         }
         expect(peerOrError).toMatchObject(expectedPeer)
-        await expect(peerService.get(peer.id)).resolves.toEqual(peerOrError)
+        await expect(peerService.get(peer.id, peer.tenantId)).resolves.toEqual(
+          peerOrError
+        )
       }
     )
 
     test('Cannot update nonexistent peer', async (): Promise<void> => {
       const updateOptions: UpdateOptions = {
         id: uuid(),
-        maxPacketAmount: BigInt(2)
+        maxPacketAmount: BigInt(2),
+        tenantId: Config.operatorTenantId
       }
 
       await expect(peerService.update(updateOptions)).resolves.toEqual(
@@ -288,12 +307,15 @@ describe('Peer Service', (): void => {
             authTokens: [incomingToken]
           },
           outgoing: peer.http.outgoing
-        }
+        },
+        tenantId: peer.tenantId
       }
       await expect(peerService.update(updateOptions)).resolves.toEqual(
         PeerError.DuplicateIncomingToken
       )
-      await expect(peerService.get(peer.id)).resolves.toEqual(peer)
+      await expect(peerService.get(peer.id, peer.tenantId)).resolves.toEqual(
+        peer
+      )
     })
 
     test('Returns error for duplicate incoming tokens', async (): Promise<void> => {
@@ -306,25 +328,31 @@ describe('Peer Service', (): void => {
             authTokens: [incomingToken, incomingToken]
           },
           outgoing: peer.http.outgoing
-        }
+        },
+        tenantId: peer.tenantId
       }
 
       await expect(peerService.update(updateOptions)).resolves.toEqual(
         PeerError.DuplicateIncomingToken
       )
-      await expect(peerService.get(peer.id)).resolves.toEqual(peer)
+      await expect(peerService.get(peer.id, peer.tenantId)).resolves.toEqual(
+        peer
+      )
     })
 
     test('Returns error for invalid static ILP address', async (): Promise<void> => {
       const peer = await createPeer(deps)
       const updateOptions: UpdateOptions = {
         id: peer.id,
-        staticIlpAddress: 'test.hello!'
+        staticIlpAddress: 'test.hello!',
+        tenantId: peer.tenantId
       }
       await expect(peerService.update(updateOptions)).resolves.toEqual(
         PeerError.InvalidStaticIlpAddress
       )
-      await expect(peerService.get(peer.id)).resolves.toEqual(peer)
+      await expect(peerService.get(peer.id, peer.tenantId)).resolves.toEqual(
+        peer
+      )
     })
 
     test('Returns error for invalid HTTP endpoint', async (): Promise<void> => {
@@ -336,12 +364,15 @@ describe('Peer Service', (): void => {
             ...peer.http.outgoing,
             endpoint: 'http://.com'
           }
-        }
+        },
+        tenantId: peer.tenantId
       }
       await expect(peerService.update(updateOptions)).resolves.toEqual(
         PeerError.InvalidHTTPEndpoint
       )
-      await expect(peerService.get(peer.id)).resolves.toEqual(peer)
+      await expect(peerService.get(peer.id, peer.tenantId)).resolves.toEqual(
+        peer
+      )
     })
   })
 
@@ -349,21 +380,27 @@ describe('Peer Service', (): void => {
     test('Can retrieve peer by ILP address', async (): Promise<void> => {
       const peer = await createPeer(deps)
       await expect(
-        peerService.getByDestinationAddress(peer.staticIlpAddress)
+        peerService.getByDestinationAddress(peer.staticIlpAddress, tenantId)
       ).resolves.toEqual(peer)
 
       await expect(
-        peerService.getByDestinationAddress(peer.staticIlpAddress + '.suffix')
+        peerService.getByDestinationAddress(
+          peer.staticIlpAddress + '.suffix',
+          tenantId
+        )
       ).resolves.toEqual(peer)
 
       await expect(
-        peerService.getByDestinationAddress(peer.staticIlpAddress + 'suffix')
+        peerService.getByDestinationAddress(
+          peer.staticIlpAddress + 'suffix',
+          tenantId
+        )
       ).resolves.toBeUndefined()
     })
 
     test('Returns undefined if no account exists with address', async (): Promise<void> => {
       await expect(
-        peerService.getByDestinationAddress('test.nope')
+        peerService.getByDestinationAddress('test.nope', tenantId)
       ).resolves.toBeUndefined()
     })
 
@@ -372,7 +409,10 @@ describe('Peer Service', (): void => {
         staticIlpAddress: 'test.rafiki_with_wildcards'
       })
       await expect(
-        peerService.getByDestinationAddress('test.rafiki-with-wildcards')
+        peerService.getByDestinationAddress(
+          'test.rafiki-with-wildcards',
+          tenantId
+        )
       ).resolves.toBeUndefined()
     })
 
@@ -391,10 +431,14 @@ describe('Peer Service', (): void => {
       })
 
       await expect(
-        peerService.getByDestinationAddress('test.rafiki')
+        peerService.getByDestinationAddress('test.rafiki', tenantId)
       ).resolves.toEqual(peer)
       await expect(
-        peerService.getByDestinationAddress('test.rafiki', secondAsset.id)
+        peerService.getByDestinationAddress(
+          'test.rafiki',
+          tenantId,
+          secondAsset.id
+        )
       ).resolves.toEqual(peerWithSecondAsset)
     })
   })
@@ -427,8 +471,11 @@ describe('Peer Service', (): void => {
   describe('Peer pagination', (): void => {
     getPageTests({
       createModel: () => createPeer(deps, { assetId: asset.id }),
-      getPage: (pagination?: Pagination, sortOrder?: SortOrder) =>
-        peerService.getPage(pagination, sortOrder)
+      getPage: (
+        pagination?: Pagination,
+        sortOrder?: SortOrder,
+        tenantId?: string
+      ) => peerService.getPage(pagination, sortOrder, tenantId)
     })
   })
 
@@ -436,18 +483,26 @@ describe('Peer Service', (): void => {
     test('Can delete peer', async (): Promise<void> => {
       const peer = await createPeer(deps)
 
-      await expect(peerService.delete(peer.id)).resolves.toEqual(peer)
+      await expect(peerService.delete(peer.id, peer.tenantId)).resolves.toEqual(
+        peer
+      )
     })
 
     test('Returns undefined if no peer exists by id', async (): Promise<void> => {
-      await expect(peerService.delete(uuid())).resolves.toBeUndefined()
+      await expect(
+        peerService.delete(uuid(), tenantId)
+      ).resolves.toBeUndefined()
     })
 
     test('Returns undefined for already deleted peer', async (): Promise<void> => {
       const peer = await createPeer(deps)
 
-      await expect(peerService.delete(peer.id)).resolves.toEqual(peer)
-      await expect(peerService.delete(peer.id)).resolves.toBeUndefined()
+      await expect(peerService.delete(peer.id, peer.tenantId)).resolves.toEqual(
+        peer
+      )
+      await expect(
+        peerService.delete(peer.id, peer.tenantId)
+      ).resolves.toBeUndefined()
     })
   })
 
@@ -458,7 +513,11 @@ describe('Peer Service', (): void => {
       const liquidity = 100n
 
       await expect(
-        peerService.depositLiquidity({ peerId: peer.id, amount: liquidity })
+        peerService.depositLiquidity({
+          peerId: peer.id,
+          amount: liquidity,
+          tenantId: peer.tenantId
+        })
       ).resolves.toBeUndefined()
 
       await expect(accountingService.getBalance(peer.id)).resolves.toBe(
@@ -473,7 +532,8 @@ describe('Peer Service', (): void => {
         peerService.depositLiquidity({
           peerId: peer.id,
           amount: 100n,
-          transferId: ''
+          transferId: '',
+          tenantId: peer.tenantId
         })
       ).resolves.toBe(TransferError.InvalidId)
 
@@ -484,7 +544,8 @@ describe('Peer Service', (): void => {
       await expect(
         peerService.depositLiquidity({
           peerId: uuid(),
-          amount: 100n
+          amount: 100n,
+          tenantId
         })
       ).resolves.toBe(PeerError.UnknownPeer)
     })

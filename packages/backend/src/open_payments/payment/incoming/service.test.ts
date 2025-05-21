@@ -27,6 +27,7 @@ import { getTests } from '../../wallet_address/model.test'
 import { WalletAddress } from '../../wallet_address/model'
 import { withConfigOverride } from '../../../tests/helpers'
 import { sleep } from '../../../shared/utils'
+import { createTenant } from '../../../tests/tenant'
 
 describe('Incoming Payment Service', (): void => {
   let deps: IocContract<AppServices>
@@ -38,6 +39,7 @@ describe('Incoming Payment Service', (): void => {
   let accountingService: AccountingService
   let asset: Asset
   let config: IAppConfig
+  let tenantId: string
 
   beforeAll(async (): Promise<void> => {
     deps = initIocContainer({
@@ -49,18 +51,22 @@ describe('Incoming Payment Service', (): void => {
     knex = appContainer.knex
     incomingPaymentService = await deps.use('incomingPaymentService')
     config = await deps.use('config')
+    tenantId = Config.operatorTenantId
   })
 
   beforeEach(async (): Promise<void> => {
     asset = await createAsset(deps)
-    const address = await createWalletAddress(deps, { assetId: asset.id })
+    const address = await createWalletAddress(deps, {
+      tenantId: config.operatorTenantId,
+      assetId: asset.id
+    })
     walletAddressId = address.id
-    client = address.url
+    client = address.address
   })
 
   afterEach(async (): Promise<void> => {
     jest.useRealTimers()
-    await truncateTables(knex)
+    await truncateTables(deps)
   })
 
   afterAll(async (): Promise<void> => {
@@ -101,7 +107,8 @@ describe('Incoming Payment Service', (): void => {
       const options = {
         client: faker.internet.url({ appendSlash: false }),
         incomingAmount: true,
-        expiresAt: new Date(Date.now() + 30_000)
+        expiresAt: new Date(Date.now() + 30_000),
+        tenantId
       }
 
       return incomingPaymentService.create({
@@ -171,9 +178,9 @@ describe('Incoming Payment Service', (): void => {
 
     describe('approveIncomingPayment', (): void => {
       it('should return UnknownPayment error if payment does not exist', async (): Promise<void> => {
-        expect(incomingPaymentService.approve(uuid())).resolves.toBe(
-          IncomingPaymentError.UnknownPayment
-        )
+        expect(
+          incomingPaymentService.approve(uuid(), Config.operatorTenantId)
+        ).resolves.toBe(IncomingPaymentError.UnknownPayment)
       })
 
       it('should not approve already cancelled incoming payment', async (): Promise<void> => {
@@ -185,7 +192,8 @@ describe('Incoming Payment Service', (): void => {
           .patch({ cancelledAt: new Date() })
 
         const response = await incomingPaymentService.approve(
-          incomingPayment.id
+          incomingPayment.id,
+          Config.operatorTenantId
         )
         expect(response).toBe(IncomingPaymentError.AlreadyActioned)
       })
@@ -200,7 +208,8 @@ describe('Incoming Payment Service', (): void => {
           .patch({ approvedAt })
 
         const approvedPayment = await incomingPaymentService.approve(
-          incomingPayment.id
+          incomingPayment.id,
+          Config.operatorTenantId
         )
         assert.ok(!isIncomingPaymentError(approvedPayment))
 
@@ -218,7 +227,8 @@ describe('Incoming Payment Service', (): void => {
           .patch({ state: IncomingPaymentState.Pending })
 
         const approvedIncomingPayment = await incomingPaymentService.approve(
-          incomingPayment.id
+          incomingPayment.id,
+          Config.operatorTenantId
         )
         assert.ok(!isIncomingPaymentError(approvedIncomingPayment))
         expect(approvedIncomingPayment.id).toBe(incomingPayment.id)
@@ -230,9 +240,9 @@ describe('Incoming Payment Service', (): void => {
 
     describe('cancelIncomingPayment', (): void => {
       it('should return UnknownPayment error if payment does not exist', async (): Promise<void> => {
-        expect(incomingPaymentService.cancel(uuid())).resolves.toBe(
-          IncomingPaymentError.UnknownPayment
-        )
+        expect(
+          incomingPaymentService.cancel(uuid(), Config.operatorTenantId)
+        ).resolves.toBe(IncomingPaymentError.UnknownPayment)
       })
 
       it('should not cancel already approved incoming payment', async (): Promise<void> => {
@@ -243,7 +253,10 @@ describe('Incoming Payment Service', (): void => {
           .findOne({ id: incomingPayment.id })
           .patch({ approvedAt: new Date() })
 
-        const response = await incomingPaymentService.cancel(incomingPayment.id)
+        const response = await incomingPaymentService.cancel(
+          incomingPayment.id,
+          Config.operatorTenantId
+        )
         expect(response).toBe(IncomingPaymentError.AlreadyActioned)
       })
 
@@ -257,7 +270,8 @@ describe('Incoming Payment Service', (): void => {
           .patch({ cancelledAt })
 
         const cancelledPayment = await incomingPaymentService.cancel(
-          incomingPayment.id
+          incomingPayment.id,
+          Config.operatorTenantId
         )
         assert.ok(!isIncomingPaymentError(cancelledPayment))
 
@@ -275,7 +289,8 @@ describe('Incoming Payment Service', (): void => {
           .patch({ state: IncomingPaymentState.Pending })
 
         const canceledIncomingPayment = await incomingPaymentService.cancel(
-          incomingPayment.id
+          incomingPayment.id,
+          Config.operatorTenantId
         )
         assert.ok(!isIncomingPaymentError(canceledIncomingPayment))
         expect(canceledIncomingPayment.id).toBe(incomingPayment.id)
@@ -297,9 +312,9 @@ describe('Incoming Payment Service', (): void => {
     })
 
     test.each`
-      client                                        | incomingAmount | expiresAt                        | metadata
-      ${undefined}                                  | ${false}       | ${undefined}                     | ${undefined}
-      ${faker.internet.url({ appendSlash: false })} | ${true}        | ${new Date(Date.now() + 30_000)} | ${{ description: 'Test incoming payment', externalRef: '#123', items: [1, 2, 3] }}
+      isOperator | client                                        | incomingAmount | expiresAt                        | metadata
+      ${false}   | ${undefined}                                  | ${false}       | ${undefined}                     | ${undefined}
+      ${true}    | ${faker.internet.url({ appendSlash: false })} | ${true}        | ${new Date(Date.now() + 30_000)} | ${{ description: 'Test incoming payment', externalRef: '#123', items: [1, 2, 3] }}
     `('An incoming payment can be created', async (options): Promise<void> => {
       await expect(
         IncomingPaymentEvent.query(knex).where({
@@ -307,24 +322,70 @@ describe('Incoming Payment Service', (): void => {
         })
       ).resolves.toHaveLength(0)
       options.client = client
+      const tenantId = options.isOperator
+        ? Config.operatorTenantId
+        : (await createTenant(deps)).id
+      const testAsset = options.isOperator
+        ? asset
+        : await createAsset(deps, { tenantId })
+
       const incomingPayment = await incomingPaymentService.create({
-        walletAddressId,
+        walletAddressId: options.isOperator
+          ? walletAddressId
+          : (
+              await createWalletAddress(deps, {
+                tenantId,
+                assetId: testAsset.id
+              })
+            ).id,
         ...options,
-        incomingAmount: options.incomingAmount ? amount : undefined
+        incomingAmount: options.incomingAmount ? amount : undefined,
+        tenantId
       })
       assert.ok(!isIncomingPaymentError(incomingPayment))
       expect(incomingPayment).toMatchObject({
         id: incomingPayment.id,
         client,
-        asset,
+        asset: testAsset,
         processAt: new Date(incomingPayment.expiresAt.getTime()),
         metadata: options.metadata ?? null
       })
-      await expect(
-        IncomingPaymentEvent.query(knex).where({
+      const events = await IncomingPaymentEvent.query(knex)
+        .where({
           type: IncomingPaymentEventType.IncomingPaymentCreated
         })
-      ).resolves.toHaveLength(1)
+        .withGraphFetched('webhooks')
+      expect(events).toHaveLength(1)
+      assert.ok(events[0].webhooks)
+      if (options.isOperator) {
+        expect(events[0].webhooks).toHaveLength(1)
+        expect(events[0].webhooks[0]).toMatchObject(
+          expect.objectContaining({
+            eventId: events[0].id,
+            recipientTenantId: events[0].tenantId,
+            attempts: 0,
+            processAt: expect.any(Date)
+          })
+        )
+      } else {
+        expect(events[0].webhooks).toHaveLength(2)
+        expect(events[0].webhooks).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              eventId: events[0].id,
+              recipientTenantId: events[0].tenantId,
+              attempts: 0,
+              processAt: expect.any(Date)
+            }),
+            expect.objectContaining({
+              eventId: events[0].id,
+              recipientTenantId: Config.operatorTenantId,
+              attempts: 0,
+              processAt: expect.any(Date)
+            })
+          ])
+        )
+      }
     })
 
     test('Cannot create incoming payment for nonexistent wallet address', async (): Promise<void> => {
@@ -340,7 +401,8 @@ describe('Incoming Payment Service', (): void => {
           metadata: {
             description: 'Test incoming payment',
             externalRef: '#123'
-          }
+          },
+          tenantId
         })
       ).resolves.toBe(IncomingPaymentError.UnknownWalletAddress)
     })
@@ -362,7 +424,8 @@ describe('Incoming Payment Service', (): void => {
           metadata: {
             description: 'Test incoming payment',
             externalRef: '#123'
-          }
+          },
+          tenantId
         })
       ).resolves.toBe(IncomingPaymentError.InvalidAmount)
       await expect(
@@ -377,7 +440,8 @@ describe('Incoming Payment Service', (): void => {
           metadata: {
             description: 'Test incoming payment',
             externalRef: '#123'
-          }
+          },
+          tenantId
         })
       ).resolves.toBe(IncomingPaymentError.InvalidAmount)
     })
@@ -395,7 +459,8 @@ describe('Incoming Payment Service', (): void => {
           metadata: {
             description: 'Test incoming payment',
             externalRef: '#123'
-          }
+          },
+          tenantId
         })
       ).resolves.toBe(IncomingPaymentError.InvalidAmount)
       await expect(
@@ -410,7 +475,8 @@ describe('Incoming Payment Service', (): void => {
           metadata: {
             description: 'Test incoming payment',
             externalRef: '#123'
-          }
+          },
+          tenantId
         })
       ).resolves.toBe(IncomingPaymentError.InvalidAmount)
     })
@@ -428,7 +494,8 @@ describe('Incoming Payment Service', (): void => {
           metadata: {
             description: 'Test incoming payment',
             externalRef: '#123'
-          }
+          },
+          tenantId
         })
       ).resolves.toBe(IncomingPaymentError.InvalidExpiry)
     })
@@ -451,7 +518,8 @@ describe('Incoming Payment Service', (): void => {
           metadata: {
             description: 'Test incoming payment',
             externalRef: '#123'
-          }
+          },
+          tenantId
         })
       ).resolves.toBe(IncomingPaymentError.InactiveWalletAddress)
     })
@@ -471,7 +539,8 @@ describe('Incoming Payment Service', (): void => {
           metadata: {
             description: 'Test incoming payment',
             externalRef: '#123'
-          }
+          },
+          tenantId
         })
       ).resolves.toBe(IncomingPaymentError.InvalidExpiry)
     })
@@ -488,7 +557,8 @@ describe('Incoming Payment Service', (): void => {
       }
       payment = (await incomingPaymentService.create({
         walletAddressId,
-        incomingAmount: amount
+        incomingAmount: amount,
+        tenantId
       })) as IncomingPayment
       assert.ok(!isIncomingPaymentError(payment))
     })
@@ -502,6 +572,7 @@ describe('Incoming Payment Service', (): void => {
       async ({ metadata }): Promise<void> => {
         const incomingPayment = await incomingPaymentService.update({
           id: payment.id,
+          tenantId: Config.operatorTenantId,
           metadata
         })
         assert.ok(!isIncomingPaymentError(incomingPayment))
@@ -516,6 +587,7 @@ describe('Incoming Payment Service', (): void => {
       await expect(
         incomingPaymentService.update({
           id: uuid(),
+          tenantId: Config.operatorTenantId,
           metadata: {
             description: 'Test incoming payment',
             externalRef: '#123'
@@ -540,7 +612,8 @@ describe('Incoming Payment Service', (): void => {
           metadata: {
             description: 'Test incoming payment',
             externalRef: '#123'
-          }
+          },
+          tenantId
         }),
       get: (options) => incomingPaymentService.get(options),
       list: (options) => incomingPaymentService.getWalletAddressPage(options)
@@ -562,7 +635,8 @@ describe('Incoming Payment Service', (): void => {
         metadata: {
           description: 'Test incoming payment',
           externalRef: '#123'
-        }
+        },
+        tenantId
       })
       assert.ok(!isIncomingPaymentError(incomingPaymentOrError))
       incomingPayment = incomingPaymentOrError
@@ -625,7 +699,8 @@ describe('Incoming Payment Service', (): void => {
         metadata: {
           description: 'Test incoming payment',
           externalRef: '#123'
-        }
+        },
+        tenantId
       })
       assert.ok(!isIncomingPaymentError(incomingPaymentOrError))
       const incomingPaymentId = incomingPaymentOrError.id
@@ -654,7 +729,8 @@ describe('Incoming Payment Service', (): void => {
           metadata: {
             description: 'Test incoming payment',
             externalRef: '#123'
-          }
+          },
+          tenantId
         })
         await expect(
           accountingService.createDeposit({
@@ -691,7 +767,8 @@ describe('Incoming Payment Service', (): void => {
           metadata: {
             description: 'Test incoming payment',
             externalRef: '#123'
-          }
+          },
+          tenantId
         })
         jest.useFakeTimers()
         jest.setSystemTime(incomingPayment.expiresAt)
@@ -728,7 +805,8 @@ describe('Incoming Payment Service', (): void => {
             metadata: {
               description: 'Test incoming payment',
               externalRef: '#123'
-            }
+            },
+            tenantId
           })
           await expect(
             accountingService.createDeposit({
@@ -780,14 +858,25 @@ describe('Incoming Payment Service', (): void => {
           await expect(incomingPaymentService.processNext()).resolves.toBe(
             incomingPayment.id
           )
-          await expect(
-            IncomingPaymentEvent.query(knex).where({
+          const events = await IncomingPaymentEvent.query(knex)
+            .where({
               incomingPaymentId: incomingPayment.id,
               type: eventType,
               withdrawalAccountId: incomingPayment.id,
               withdrawalAmount: amountReceived
             })
-          ).resolves.toHaveLength(1)
+            .withGraphFetched('webhooks')
+          expect(events).toHaveLength(1)
+          assert.ok(events[0].webhooks)
+          expect(events[0].webhooks).toHaveLength(1)
+          expect(events[0].webhooks[0]).toMatchObject(
+            expect.objectContaining({
+              eventId: events[0].id,
+              recipientTenantId: events[0].tenantId,
+              attempts: 0,
+              processAt: expect.any(Date)
+            })
+          )
           await expect(
             incomingPaymentService.get({
               id: incomingPayment.id
@@ -816,7 +905,8 @@ describe('Incoming Payment Service', (): void => {
         metadata: {
           description: 'Test incoming payment',
           externalRef: '#123'
-        }
+        },
+        tenantId
       })
     })
     test('updates state of pending incoming payment to complete', async (): Promise<void> => {
@@ -824,11 +914,15 @@ describe('Incoming Payment Service', (): void => {
       jest.useFakeTimers({ now })
 
       await expect(
-        incomingPaymentService.complete(incomingPayment.id)
+        incomingPaymentService.complete(
+          incomingPayment.id,
+          Config.operatorTenantId
+        )
       ).resolves.toMatchObject({
         id: incomingPayment.id,
         state: IncomingPaymentState.Completed,
-        processAt: now
+        processAt: now,
+        tenantId: Config.operatorTenantId
       })
       await expect(
         incomingPaymentService.get({
@@ -838,12 +932,21 @@ describe('Incoming Payment Service', (): void => {
         state: IncomingPaymentState.Completed,
         processAt: now
       })
+      await expect(
+        incomingPaymentService.get({
+          id: incomingPayment.id,
+          tenantId: Config.operatorTenantId
+        })
+      ).resolves.toMatchObject({
+        state: IncomingPaymentState.Completed,
+        processAt: now
+      })
     })
 
     test('fails to complete unknown payment', async (): Promise<void> => {
-      await expect(incomingPaymentService.complete(uuid())).resolves.toEqual(
-        IncomingPaymentError.UnknownPayment
-      )
+      await expect(
+        incomingPaymentService.complete(uuid(), Config.operatorTenantId)
+      ).resolves.toEqual(IncomingPaymentError.UnknownPayment)
     })
 
     test('updates state of processing incoming payment to complete', async (): Promise<void> => {
@@ -861,7 +964,10 @@ describe('Incoming Payment Service', (): void => {
         state: IncomingPaymentState.Processing
       })
       await expect(
-        incomingPaymentService.complete(incomingPayment.id)
+        incomingPaymentService.complete(
+          incomingPayment.id,
+          Config.operatorTenantId
+        )
       ).resolves.toMatchObject({
         id: incomingPayment.id,
         state: IncomingPaymentState.Completed,
@@ -899,7 +1005,10 @@ describe('Incoming Payment Service', (): void => {
         state: IncomingPaymentState.Expired
       })
       await expect(
-        incomingPaymentService.complete(incomingPayment.id)
+        incomingPaymentService.complete(
+          incomingPayment.id,
+          Config.operatorTenantId
+        )
       ).resolves.toBe(IncomingPaymentError.WrongState)
       await expect(
         incomingPaymentService.get({
@@ -922,7 +1031,10 @@ describe('Incoming Payment Service', (): void => {
         state: IncomingPaymentState.Completed
       })
       await expect(
-        incomingPaymentService.complete(incomingPayment.id)
+        incomingPaymentService.complete(
+          incomingPayment.id,
+          Config.operatorTenantId
+        )
       ).resolves.toBe(IncomingPaymentError.WrongState)
       await expect(
         incomingPaymentService.get({

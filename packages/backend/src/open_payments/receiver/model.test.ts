@@ -31,7 +31,7 @@ describe('Receiver Model', (): void => {
 
   afterEach(async (): Promise<void> => {
     jest.useRealTimers()
-    await truncateTables(appContainer.knex)
+    await truncateTables(deps)
   })
 
   afterAll(async (): Promise<void> => {
@@ -40,9 +40,12 @@ describe('Receiver Model', (): void => {
 
   describe('constructor', () => {
     test('creates receiver', async () => {
-      const walletAddress = await createWalletAddress(deps)
+      const walletAddress = await createWalletAddress(deps, {
+        tenantId: Config.operatorTenantId
+      })
       const incomingPayment = await createIncomingPayment(deps, {
-        walletAddressId: walletAddress.id
+        walletAddressId: walletAddress.id,
+        tenantId: Config.operatorTenantId
       })
       const isLocal = true
 
@@ -65,7 +68,7 @@ describe('Receiver Model', (): void => {
         sharedSecret: expect.any(Buffer),
         incomingPayment: {
           id: incomingPayment.getUrl(config.openPaymentsUrl),
-          walletAddress: walletAddress.url,
+          walletAddress: walletAddress.address,
           updatedAt: incomingPayment.updatedAt,
           createdAt: incomingPayment.createdAt,
           completed: incomingPayment.completed,
@@ -85,9 +88,12 @@ describe('Receiver Model', (): void => {
     })
 
     test('doesnt throw if incoming payment is completed', async () => {
-      const walletAddress = await createWalletAddress(deps)
+      const walletAddress = await createWalletAddress(deps, {
+        tenantId: Config.operatorTenantId
+      })
       const incomingPayment = await createIncomingPayment(deps, {
-        walletAddressId: walletAddress.id
+        walletAddressId: walletAddress.id,
+        tenantId: Config.operatorTenantId
       })
 
       incomingPayment.state = IncomingPaymentState.Completed
@@ -109,9 +115,12 @@ describe('Receiver Model', (): void => {
     })
 
     test('doesnt throw if incoming payment is expired', async () => {
-      const walletAddress = await createWalletAddress(deps)
+      const walletAddress = await createWalletAddress(deps, {
+        tenantId: Config.operatorTenantId
+      })
       const incomingPayment = await createIncomingPayment(deps, {
-        walletAddressId: walletAddress.id
+        walletAddressId: walletAddress.id,
+        tenantId: Config.operatorTenantId
       })
 
       incomingPayment.expiresAt = new Date(Date.now() - 1)
@@ -130,9 +139,12 @@ describe('Receiver Model', (): void => {
     })
 
     test('throws if stream credentials has invalid ILP address', async () => {
-      const walletAddress = await createWalletAddress(deps)
+      const walletAddress = await createWalletAddress(deps, {
+        tenantId: Config.operatorTenantId
+      })
       const incomingPayment = await createIncomingPayment(deps, {
-        walletAddressId: walletAddress.id
+        walletAddressId: walletAddress.id,
+        tenantId: Config.operatorTenantId
       })
 
       const streamCredentials = streamCredentialsService.get(incomingPayment)
@@ -156,7 +168,8 @@ describe('Receiver Model', (): void => {
     test('returns false if incoming payment is completed', async () => {
       const walletAddress = await createWalletAddress(deps)
       const incomingPayment = await createIncomingPayment(deps, {
-        walletAddressId: walletAddress.id
+        walletAddressId: walletAddress.id,
+        tenantId: walletAddress.tenantId
       })
 
       incomingPayment.state = IncomingPaymentState.Completed
@@ -180,7 +193,8 @@ describe('Receiver Model', (): void => {
     test('returns false if incoming payment is expired', async () => {
       const walletAddress = await createWalletAddress(deps)
       const incomingPayment = await createIncomingPayment(deps, {
-        walletAddressId: walletAddress.id
+        walletAddressId: walletAddress.id,
+        tenantId: walletAddress.tenantId
       })
 
       incomingPayment.expiresAt = new Date(Date.now() - 1)

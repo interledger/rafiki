@@ -48,7 +48,7 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
     throw json(null, { status: 400, statusText: 'Invalid asset ID.' })
   }
 
-  const asset = await getAssetInfo({ id: result.data })
+  const asset = await getAssetInfo(request, { id: result.data })
 
   if (!asset) {
     throw json(null, { status: 404, statusText: 'Asset not found.' })
@@ -296,7 +296,7 @@ export async function action({ request }: ActionFunctionArgs) {
         return json({ ...actionResponse }, { status: 400 })
       }
 
-      const response = await updateAsset({
+      const response = await updateAsset(request, {
         ...result.data,
         ...(result.data.withdrawalThreshold
           ? { withdrawalThreshold: result.data.withdrawalThreshold }
@@ -320,7 +320,7 @@ export async function action({ request }: ActionFunctionArgs) {
         return json({ ...actionResponse }, { status: 400 })
       }
 
-      const response = await setFee({
+      const response = await setFee(request, {
         assetId: result.data.assetId,
         type: FeeType.Sending,
         fee: {
@@ -351,7 +351,7 @@ export async function action({ request }: ActionFunctionArgs) {
         })
       }
 
-      const response = await deleteAsset({ id: result.data.id })
+      const response = await deleteAsset(request, { id: result.data.id })
       if (!response?.asset) {
         return setMessageAndRedirect({
           session,

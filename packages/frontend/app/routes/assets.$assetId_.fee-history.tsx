@@ -23,7 +23,7 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
     throw json(null, { status: 400, statusText: 'Invalid pagination.' })
   }
 
-  const asset = await getAssetWithFees({
+  const asset = await getAssetWithFees(request, {
     ...pagination.data,
     id: assetId
   })

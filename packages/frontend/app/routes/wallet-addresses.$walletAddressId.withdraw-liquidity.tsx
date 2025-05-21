@@ -43,7 +43,7 @@ export async function action({ request, params }: ActionFunctionArgs) {
     })
   }
 
-  const response = await createWalletAddressWithdrawal({
+  const response = await createWalletAddressWithdrawal(request, {
     id: v4(),
     walletAddressId,
     idempotencyKey: v4(),
