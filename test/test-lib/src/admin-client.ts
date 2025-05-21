@@ -1,6 +1,7 @@
 import type { NormalizedCacheObject } from '@apollo/client'
 import { ApolloClient, gql } from '@apollo/client'
 import {
+  CreateOutgoingPaymentFromIncomingPaymentInput,
   CreateOutgoingPaymentInput,
   CreateQuoteInput,
   CreateReceiverInput,
@@ -132,6 +133,51 @@ export class AdminClient {
       })
       .then(({ data }): OutgoingPaymentResponse => {
         return data.createOutgoingPayment
+      })
+  }
+
+  async createOutgoingPaymentFromIncomingPayment(
+    input: CreateOutgoingPaymentFromIncomingPaymentInput
+  ): Promise<OutgoingPaymentResponse> {
+    return await this.apolloClient
+      .mutate({
+        mutation: gql`
+          mutation CreateOutgoingPaymentFromIncomingPayment(
+            $input: CreateOutgoingPaymentFromIncomingPaymentInput!
+          ) {
+            createOutgoingPaymentFromIncomingPayment(input: $input) {
+              payment {
+                createdAt
+                error
+                metadata
+                id
+                walletAddressId
+                receiveAmount {
+                  assetCode
+                  assetScale
+                  value
+                }
+                receiver
+                debitAmount {
+                  assetCode
+                  assetScale
+                  value
+                }
+                sentAmount {
+                  assetCode
+                  assetScale
+                  value
+                }
+                state
+                stateAttempts
+              }
+            }
+          }
+        `,
+        variables: { input }
+      })
+      .then(({ data }): OutgoingPaymentResponse => {
+        return data.createOutgoingPaymentFromIncomingPayment
       })
   }
 

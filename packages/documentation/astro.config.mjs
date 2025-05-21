@@ -94,6 +94,10 @@ export default defineConfig({
                   link: '/overview/concepts/accounting'
                 },
                 {
+                  label: 'Clearing and settlement',
+                  link: '/overview/concepts/clearing-settlement'
+                },
+                {
                   label: 'Interledger',
                   link: '/overview/concepts/interledger'
                 },

@@ -119,21 +119,25 @@ async function onLifecycleError(
   const error = typeof err === 'string' ? err : err.message
   const stateAttempts = payment.stateAttempts + 1
 
+  const errorDescription =
+    err instanceof PaymentMethodHandlerError ? err.description : undefined
+
+  const errLog = {
+    state: payment.state,
+    error,
+    stateAttempts,
+    errorDescription
+  }
+
   if (
     stateAttempts < deps.config.maxOutgoingPaymentRetryAttempts &&
     isRetryableError(err)
   ) {
-    deps.logger.warn(
-      { state: payment.state, error, stateAttempts },
-      'payment lifecycle failed; retrying'
-    )
+    deps.logger.warn(errLog, 'payment lifecycle failed; retrying')
     await payment.$query(deps.knex).patch({ stateAttempts })
   } else {
     // Too many attempts or non-retryable error; fail payment.
-    deps.logger.warn(
-      { state: payment.state, error, stateAttempts },
-      'payment lifecycle failed'
-    )
+    deps.logger.warn(errLog, 'payment lifecycle failed')
     await lifecycle.handleFailed(deps, payment, error)
   }
 }

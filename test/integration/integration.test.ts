@@ -1,6 +1,6 @@
 import assert from 'assert'
 import { MockASE, C9_CONFIG, HLB_CONFIG } from 'test-lib'
-import { Fee, WebhookEventType } from 'mock-account-service-lib'
+import { WebhookEventType } from 'mock-account-service-lib'
 import { poll } from './lib/utils'
 import { TestActions, createTestActions } from './lib/test-actions'
 import { IncomingPaymentState } from 'test-lib/dist/generated/graphql'
@@ -126,7 +126,6 @@ describe('Integration tests', (): void => {
         const outgoingPaymentGrant = await grantRequestOutgoingPayment(
           senderWalletAddress,
           {
-            debitAmount: quote.debitAmount,
             receiveAmount: quote.receiveAmount
           }
         )
@@ -202,10 +201,7 @@ describe('Integration tests', (): void => {
         )
         const outgoingPaymentGrant = await grantRequestOutgoingPayment(
           senderWalletAddress,
-          {
-            debitAmount: quote.debitAmount,
-            receiveAmount: quote.receiveAmount
-          },
+          { receiveAmount: quote.receiveAmount },
           {
             method: 'redirect',
             uri: 'https://example.com',
@@ -238,14 +234,15 @@ describe('Integration tests', (): void => {
 
         await getPublicIncomingPayment(incomingPayment.id, amountValueToSend)
       })
-      test('Open Payments without Quote', async (): Promise<void> => {
+      test('Open Payments Multiple Outgoing Payments into Incoming Payment', async (): Promise<void> => {
         const {
           grantRequestIncomingPayment,
           createIncomingPayment,
           grantRequestOutgoingPayment,
           pollGrantContinue,
           createOutgoingPayment,
-          getOutgoingPayment
+          getOutgoingPayment,
+          getPublicIncomingPayment
         } = testActions.openPayments
         const { consentInteraction } = testActions
 
@@ -264,11 +261,7 @@ describe('Integration tests', (): void => {
         })
         expect(senderWalletAddress.id).toBe(senderWalletAddressUrl)
 
-        const debitAmount = {
-          assetCode: senderWalletAddress.assetCode,
-          assetScale: senderWalletAddress.assetScale,
-          value: '500'
-        }
+        const grantValue = 100n
 
         const incomingPaymentGrant = await grantRequestIncomingPayment(
           receiverWalletAddress
@@ -282,13 +275,23 @@ describe('Integration tests', (): void => {
         const outgoingPaymentGrant = await grantRequestOutgoingPayment(
           senderWalletAddress,
           {
-            debitAmount,
-            receiveAmount: debitAmount
+            debitAmount: {
+              assetCode: senderWalletAddress.assetCode,
+              assetScale: senderWalletAddress.assetScale,
+              value: String(grantValue)
+            }
           }
         )
         await consentInteraction(outgoingPaymentGrant, senderWalletAddress)
         const grantContinue = await pollGrantContinue(outgoingPaymentGrant)
-        const outgoingPayment = await createOutgoingPayment(
+
+        const debitAmount = {
+          assetCode: senderWalletAddress.assetCode,
+          assetScale: senderWalletAddress.assetScale,
+          value: '50'
+        }
+
+        const outgoingPayment1 = await createOutgoingPayment(
           senderWalletAddress,
           grantContinue,
           {
@@ -297,12 +300,32 @@ describe('Integration tests', (): void => {
           }
         )
 
-        const outgoingPayment_ = await getOutgoingPayment(
-          outgoingPayment.id,
-          grantContinue
+        await poll(
+          async () => getOutgoingPayment(outgoingPayment1.id, grantContinue),
+          (responseData) => BigInt(responseData.sentAmount.value) > 0n,
+          5,
+          0.5
         )
 
-        expect(outgoingPayment_.debitAmount).toMatchObject(debitAmount)
+        expect(outgoingPayment1.debitAmount).toMatchObject(debitAmount)
+
+        const outgoingPayment2 = await createOutgoingPayment(
+          senderWalletAddress,
+          grantContinue,
+          {
+            incomingPayment: incomingPayment.id,
+            debitAmount
+          }
+        )
+
+        await poll(
+          async () => getOutgoingPayment(outgoingPayment2.id, grantContinue),
+          (responseData) => BigInt(responseData.sentAmount.value) > 0n,
+          5,
+          0.5
+        )
+
+        await getPublicIncomingPayment(incomingPayment.id, '98') // adjusted for ILP slippage
       })
       test('Peer to Peer', async (): Promise<void> => {
         const {
@@ -400,7 +423,6 @@ describe('Integration tests', (): void => {
         const receiverAssetCode = receiver.incomingAmount.assetCode
         const exchangeRate =
           hlb.config.seed.rates[senderAssetCode][receiverAssetCode]
-        const fee = c9.config.seed.fees.find((fee: Fee) => fee.asset === 'USD')
 
         // Expected amounts depend on the configuration of asset codes, scale, exchange rate, and fees.
         assert(receiverAssetCode === 'EUR')
@@ -410,11 +432,6 @@ describe('Integration tests', (): void => {
         )
         assert(senderWalletAddress.assetScale === 2)
         assert(exchangeRate === 0.91)
-        assert(fee)
-        assert(fee.fixed === 100)
-        assert(fee.basisPoints === 200)
-        assert(fee.asset === 'USD')
-        assert(fee.scale === 2)
         expect(completedOutgoingPayment.receiveAmount).toMatchObject({
           assetCode: 'EUR',
           assetScale: 2,
@@ -423,7 +440,7 @@ describe('Integration tests', (): void => {
         expect(completedOutgoingPayment.debitAmount).toMatchObject({
           assetCode: 'USD',
           assetScale: 2,
-          value: 668n
+          value: 556n // with ILP slippage
         })
         expect(completedOutgoingPayment.sentAmount).toMatchObject({
           assetCode: 'USD',
@@ -605,7 +622,6 @@ describe('Integration tests', (): void => {
         const receiverAssetCode = receiver.incomingAmount.assetCode
         const exchangeRate =
           c9.config.seed.rates[senderAssetCode][receiverAssetCode]
-        const fee = c9.config.seed.fees.find((fee: Fee) => fee.asset === 'USD')
 
         // Expected amounts depend on the configuration of asset codes, scale, exchange rate, and fees.
         assert(receiverAssetCode === 'EUR')
@@ -615,11 +631,6 @@ describe('Integration tests', (): void => {
         )
         assert(senderWalletAddress.assetScale === 2)
         assert(exchangeRate === 0.91)
-        assert(fee)
-        assert(fee.fixed === 100)
-        assert(fee.basisPoints === 200)
-        assert(fee.asset === 'USD')
-        assert(fee.scale === 2)
         expect(completedOutgoingPayment.receiveAmount).toMatchObject({
           assetCode: 'EUR',
           assetScale: 2,
@@ -628,7 +639,7 @@ describe('Integration tests', (): void => {
         expect(completedOutgoingPayment.debitAmount).toMatchObject({
           assetCode: 'USD',
           assetScale: 2,
-          value: 661n
+          value: 550n
         })
         expect(completedOutgoingPayment.sentAmount).toMatchObject({
           assetCode: 'USD',
@@ -644,6 +655,55 @@ describe('Integration tests', (): void => {
           value: 500n
         })
         expect(incomingPayment.state).toBe(IncomingPaymentState.Completed)
+      })
+
+      test('Peer to Peer - Multiple Outgoing Payments into Incoming Payment', async (): Promise<void> => {
+        const {
+          createReceiver,
+          createOutgoingPaymentFromIncomingPayment,
+          getIncomingPayment
+        } = testActions.admin
+
+        const senderWalletAddress = await c9.accounts.getByWalletAddressUrl(
+          'https://cloud-nine-wallet-test-backend:3100/accounts/gfranklin'
+        )
+        assert(senderWalletAddress?.walletAddressID)
+
+        const senderWalletAddressId = senderWalletAddress.walletAddressID
+        const createReceiverInput = {
+          metadata: {
+            description: 'For lunch!'
+          },
+          walletAddressUrl:
+            'https://cloud-nine-wallet-test-backend:3100/accounts/bhamchest'
+        }
+
+        const value = '500'
+        const receiver = await createReceiver(createReceiverInput)
+
+        await createOutgoingPaymentFromIncomingPayment({
+          incomingPayment: receiver.id,
+          walletAddressId: senderWalletAddressId,
+          debitAmount: {
+            assetCode: 'USD',
+            assetScale: 2,
+            value: value as unknown as bigint
+          }
+        })
+        await createOutgoingPaymentFromIncomingPayment({
+          incomingPayment: receiver.id,
+          walletAddressId: senderWalletAddressId,
+          debitAmount: {
+            assetCode: 'USD',
+            assetScale: 2,
+            value: value as unknown as bigint
+          }
+        })
+
+        const incomingPaymentId = receiver.id.split('/').slice(-1)[0]
+        const incomingPayment = await getIncomingPayment(incomingPaymentId)
+        expect(incomingPayment.receivedAmount.value).toBe(BigInt(value) * 2n)
+        expect(incomingPayment.state).toBe(IncomingPaymentState.Processing)
       })
     })
   })
