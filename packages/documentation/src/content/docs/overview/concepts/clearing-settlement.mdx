@@ -1,0 +1,29 @@
+---
+title: Clearing and settlement
+---
+
+## Clearing
+
+When a payment is made over traditional banking rails, the money doesn’t move instantly. First, there are checks to confirm that the money exists and can be transferred. Clearing networks are responsible for exchanging messages between ASEs to facilitate these checks. This process is called clearing. When a payment successfully clears, it means the payer’s ASE has an obligation to the payee’s ASE.
+
+The [Interledger Protocol (ILP)](/overview/concepts/interledger) is not a traditional clearing network, but does function in a similar way.
+
+- ASEs that implement the protocol must become [peers](/integration/requirements/peers) to transact with one another. This is comparable to traditional banking, where ASEs must use the same clearing network. An ASE can't use Interledger to transact with another ASE unless they have both implemented the protocol and have peered with one another.
+- Peered ASEs exchange ILP packets, which are packets of value that contain transaction information. ILP packets are akin to the messages exchanged during the traditional clearing process.
+- The successful exchange of ILP packets between peers creates obligations between them that must be settled. The receipt of a fulfilled ILP packet is basically a conditional IOU&mdash;a promise to pay&mdash;that affects the financial accounting balances between the peers.
+
+You can read more about clearing as it relates to ILP in the [Interledger developer docs](https://interledger.org/developers/rfcs/peering-clearing-settling/).
+
+Conceptually, Rafiki sits at the clearing level, but isn't a clearing network. It's software that makes implementing the Interledger protocol faster and easier. Rafiki uses ILP to [track liquidity](/overview/concepts/accounting) between assets, payments, and peers. An ASE must still connect Rafiki to their existing backend system and internal ledger for authentication, fetching exchange rates, and managing liquidity itself. For example, if an incoming payment completes in Rafiki, the ASE’s backend must credit the recipient’s account on their own system, however that might look.
+
+In any case, no movement of actual money has occurred yet.
+
+## Settlement
+
+In traditional banking, settlement is the fulfillment of an obligation between ASEs. It turns the promise of payment into a real payment by moving actual money. This occurs over a shared settlement network, such as Fedwire in the United States.
+
+When a payer’s ASE settles with the payee’s ASE, there’s a high chance that the ASE isn’t physically handing over cash. There’s more likely to be an intermediary, like a reserve bank or central bank, that maintains accounts for both ASEs. The intermediary moves funds from one account to the other, crediting and debiting the accounts as necessary.
+
+With Interledger, the concept of settlement is not that different. Each [peer](/integration/requirements/peers) must agree on a settlement system to use to fulfill their obligations with one another. However, ILP itself is not a settlement system. This means peers must have some other way to fulfill their obligations and exchange value. Examples can include using a real-time gross settlement system like Fedwire, an automated clearing house (ACH) network, a money transfer service, or some other payment channel. You can read more about settling as it relates to ILP in the [Interledger developer docs](https://interledger.org/developers/rfcs/settlement-engines/).
+
+Rafiki is also not a settlement system. It [keeps track of liquidity](/overview/concepts/accounting) through the use of liquidity and settlement accounts. Liquidity accounts track deposit, withdrawal, and transfer amounts. Settlement accounts track the availability of funds, denominated in a single asset. A negative balance means funds are available. The closer a settlement account’s balance is to zero, the more likely it is that one peer needs to settle with the other over their agreed-upon settlement system.

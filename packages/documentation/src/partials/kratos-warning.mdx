@@ -1,0 +1,10 @@
+:::danger[Disabling authentication]
+
+Rafiki Admin provides access to sensitive data like peering relationships and wallet addresses. Authentication is enabled by default to restrict access to authorized users only.
+
+In the [Local Playground](/integration/playground/overview#rafiki-admin), authentication is disabled by default to simplify local development and testing. To disable it in other environments, set the environment variable `AUTH_ENABLED` to `false`. This should be done with **extreme caution** and only in specific scenarios:
+
+- Secure, non-production environments like the Local Playground for local development and testing.
+- Internal systems where Rafiki Admin is not exposed externally and other access controls (firewalls, local-only access) ensure that the system is secured.
+
+:::
