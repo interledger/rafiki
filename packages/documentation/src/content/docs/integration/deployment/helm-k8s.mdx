@@ -638,7 +638,7 @@ kubectl get ingress
 
 ## Common issues
 
-### Database connection errors
+#### Database connection errors
 
 1. Check if PostgreSQL pods are running:
    ```
@@ -650,7 +650,7 @@ kubectl get ingress
    ```
 3. Verify that the database passwords match those in your `values.yaml`
 
-### Tigerbeetle initialization failures
+#### Tigerbeetle initialization failures
 
 1.  Check Tigerbeetle logs:
     ```
@@ -662,7 +662,7 @@ kubectl get ingress
     ```
 3.  Verify that the cluster ID is consistent across all components
 
-### Ingress issues
+#### Ingress issues
 
 1.  Verify NGINX Ingress Controller is running:
     ```
@@ -682,7 +682,7 @@ kubectl get ingress
     kubectl get secrets
     ```
 
-### TLS certificate problems
+#### TLS certificate problems
 
 1.  If using cert-manager, check if certificates are properly issued:
     ```
@@ -697,7 +697,7 @@ kubectl get ingress
     kubectl logs -n cert-manager deploy/cert-manager
     ```
 
-### Service unavailable
+#### Service unavailable
 
 1.  Check if services are running:
     ```
@@ -712,7 +712,7 @@ kubectl get ingress
     kubectl top pods
     ```
 
-### Connectivity between components
+#### Connectivity between components
 
 1.  Ensure all required services are running:
     ```
