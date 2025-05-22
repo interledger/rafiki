@@ -20,18 +20,19 @@ Rafiki uses the following key components:
 ## Prerequisites
 
 :::caution[Recommended software version]
-We recommended use of the latest vendor supported version for each of the software dependencies listed in this section.
+We recommended using the latest vendor supported version for each of the software dependencies listed in this section.
 :::
 
 Before you begin, ensure you have the following:
 
-- [Kubernetes](https://kubernetes.io/) cluster deployed
-- [kubectl](https://kubernetes.io/docs/tasks/tools/) installed and configured
-- [Helm](https://helm.sh/docs/intro/install/) installed
+- <LinkOut href='https://kubernetes.io/'>Kubernetes</LinkOut> cluster deployed
+- <LinkOut href='https://kubernetes.io/docs/tasks/tools/'>kubectl</LinkOut> installed
+  and configured
+- <LinkOut href='https://helm.sh/docs/intro/install/'>Helm</LinkOut> installed
 
-## Installing Rafiki using Helm
+## Install Rafiki using Helm
 
-### 1. Add the Interledger Helm repository
+#### Add the Interledger Helm repository
 
 Add the official Interledger Helm repository which contains the Rafiki charts:
 
@@ -40,7 +41,7 @@ helm repo add interledger https://interledger.github.io/charts
 helm repo update
 ```
 
-### 2. Create yaml file
+#### Create yaml file
 
 Create a `values.yaml` file to customize your Rafiki deployment. Below is a template that you can use, but must be configured for your specific environment.
 
@@ -324,7 +325,7 @@ Save this file as `values.yaml` in your working directory.
 
 </details>
 
-### 3. Configure environment variables
+#### Configure environment variables
 
 Each Rafiki service can be configured via environment variables. Below are the main environment variables for each service:
 
@@ -375,7 +376,7 @@ Ports exposed:
 <FrontEnv />
 </details>
 
-### 4. Install Rafiki
+#### Install Rafiki
 
 Install Rafiki using the following command:
 
@@ -392,7 +393,7 @@ kubectl create namespace rafiki
 helm install rafiki interledger/rafiki -f values.yaml -n rafiki
 ```
 
-### 5. Verify the deployment
+#### Verify the deployment
 
 Check the status of your deployment with the following commands:
 
@@ -407,11 +408,11 @@ kubectl get pods
 kubectl get services
 ```
 
-## Configuring ingress with NGINX Ingress Controller
+## Configure ingress with NGINX Ingress Controller
 
 To expose Rafiki services outside the cluster using NGINX Ingress Controller:
 
-### 1. Install NGINX Ingress Controller
+#### Install NGINX Ingress Controller
 
 If you don't already have NGINX Ingress Controller installed, you can install it using Helm:
 
@@ -431,14 +432,14 @@ Wait for the Load Balancer to be provisioned:
 kubectl get services -w nginx-ingress-ingress-nginx-controller
 ```
 
-### 2. Configure DNS
+#### Configure DNS
 
 Once the Load Balancer has an external IP or hostname assigned, create DNS records:
 
 - `auth.example.com` pointing to the Load Balancer IP/hostname
 - `backend.example.com` pointing to the Load Balancer IP/hostname
 
-### 3. Configure Rafiki with ingress
+#### Configure Rafiki with ingress
 
 Create or update your `values.yaml` file with the following ingress configuration:
 
@@ -482,7 +483,7 @@ ingress:
           - backend.example.com
 ```
 
-### 4. Apply the configuration
+#### Apply the configuration
 
 Apply your updated configuration:
 
@@ -490,9 +491,9 @@ Apply your updated configuration:
 helm upgrade rafiki interledger/rafiki -f values.yaml
 ```
 
-### 5. Verify Ingress configuration
+#### Verify ingress configuration
 
-Check if your Ingress resources were created correctly:
+Check if your ingress resources were created correctly:
 
 ```bash
 kubectl get ingress
@@ -502,7 +503,7 @@ You should find entries for the auth server and backend API ingress resources.
 
 ## Port forwarding
 
-If you don't want to use Ingress to access Rafiki services, you can use port forwarding to directly access the services:
+If you don't want to use ingress to access Rafiki services, you can use port forwarding to directly access the services:
 
 | Service     | Port-Forward Command                                     |
 | ----------- | -------------------------------------------------------- |
@@ -573,7 +574,7 @@ components:
   # Configure other components similarly
 ```
 
-## Upgrading Rafiki
+## Upgrade Rafiki
 
 To upgrade your Rafiki deployment to a newer version:
 
@@ -585,7 +586,7 @@ helm repo update
 helm upgrade rafiki interledger/rafiki -f values.yaml
 ```
 
-## Uninstalling Rafiki
+## Uninstall Rafiki
 
 To uninstall Rafiki from your cluster:
 
@@ -593,7 +594,7 @@ To uninstall Rafiki from your cluster:
 helm uninstall rafiki
 ```
 
-Note that this won't delete [Persistent Volume Claims (PVC)](https://kubernetes.io/docs/concepts/storage/persistent-volumes/) created by the PostgreSQL and Redis deployments. If you want to delete them as well:
+Note that this won't delete <LinkOut href='https://kubernetes.io/docs/concepts/storage/persistent-volumes/'>Persistent Volume Claims (PVC)</LinkOut> created by the PostgreSQL and Redis deployments. If you want to delete them as well:
 
 ```bash
 kubectl delete pvc -l app.kubernetes.io/instance=rafiki
@@ -601,7 +602,7 @@ kubectl delete pvc -l app.kubernetes.io/instance=rafiki
 
 ## Troubleshooting
 
-### Checking pod logs
+### Check pod logs
 
 If a component isn't working correctly, you can check its logs:
 
@@ -613,7 +614,7 @@ kubectl get pods
 kubectl logs pod/rafiki-auth-server-0
 ```
 
-### Checking resources and logs
+### Check resources and logs
 
 ```bash
 # List pods and their status
@@ -631,50 +632,98 @@ kubectl get services
 # Check Persistent Volume Claims
 kubectl get pvc
 
-# Check Ingress resources
+# Check ingress resources
 kubectl get ingress
 ```
 
-## Common Issues
+## Common issues
 
 ### Database connection errors
 
-1. Check if PostgreSQL pods are running: `kubectl get pods -l app.kubernetes.io/name=postgresql`
-2. Check PostgreSQL logs: `kubectl logs pod/rafiki-postgresql-0`
-3. Verify that the database passwords match those in your values.yaml
+1. Check if PostgreSQL pods are running:
+   ```
+   kubectl get pods -l app.kubernetes.io/name=postgresql
+   ```
+2. Check PostgreSQL logs:
+   ```
+   kubectl logs pod/rafiki-postgresql-0
+   ```
+3. Verify that the database passwords match those in your `values.yaml`
 
 ### Tigerbeetle initialization failures
 
-1.  Check Tigerbeetle logs: `kubectl logs pod/tigerbeetle-0`
-2.  Ensure that the PVC for Tigerbeetle has been created correctly `kubectl get pvc -l app.kubernetes.io/name=tigerbeetle`
+1.  Check Tigerbeetle logs:
+    ```
+    kubectl logs pod/tigerbeetle-0
+    ```
+2.  Ensure that the PVC for Tigerbeetle has been created correctly
+    ```
+    kubectl get pvc -l app.kubernetes.io/name=tigerbeetle
+    ```
 3.  Verify that the cluster ID is consistent across all components
 
 ### Ingress issues
 
-1.  Verify NGINX Ingress Controller is running: `kubectl get pods -n ingress-nginx`
+1.  Verify NGINX Ingress Controller is running:
+    ```
+    kubectl get pods -n ingress-nginx
+    ```
 2.  Check if your DNS records are correctly pointing to the ingress controller's external IP
-3.  Check the Ingress resource: `kubectl get ingress`
-4.  Check Ingress controller logs: `kubectl logs -n ingress-nginx deploy/nginx-ingress-ingress-nginx-controller`
-5.  Verify that TLS secrets exist if HTTPS is enabled: `kubectl get secrets`
+3.  Check the ingress resource:
+    ```
+    kubectl get ingress
+    ```
+4.  Check ingress controller logs:
+    ```
+    kubectl logs -n ingress-nginx deploy/nginx-ingress-ingress-nginx-controller
+    ```
+5.  Verify that TLS secrets exist if HTTPS is enabled:
+    ```
+    kubectl get secrets
+    ```
 
 ### TLS certificate problems
 
-1.  If using cert-manager, check if certificates are properly issued: `kubectl get certificates`
-2.  Check certificate status: `kubectl describe certificate [certificate-name]`
-3.  Check cert-manager logs: `kubectl logs -n cert-manager deploy/cert-manager`
+1.  If using cert-manager, check if certificates are properly issued:
+    ```
+    kubectl get certificates
+    ```
+2.  Check certificate status:
+    ```
+    kubectl describe certificate [certificate-name]
+    ```
+3.  Check cert-manager logs:
+    ```
+    kubectl logs -n cert-manager deploy/cert-manager
+    ```
 
 ### Service unavailable
 
-1.  Check if services are running: `kubectl get services`
-2.  Verify pod health: `kubectl describe pod [pod-name]`
-3.  Check for resource constraints: `kubectl top pods`
+1.  Check if services are running:
+    ```
+    kubectl get services
+    ```
+2.  Verify pod health:
+    ```
+    kubectl describe pod [pod-name]
+    ```
+3.  Check for resource constraints:
+    ```
+    kubectl top pods
+    ```
 
 ### Connectivity between components
 
-1.  Ensure all required services are running: `kubectl get services`
-2.  Verify service endpoints: `kubectl get endpoints`
+1.  Ensure all required services are running:
+    ```
+    kubectl get services
+    ```
+2.  Verify service endpoints:
+    ```
+    kubectl get endpoints
+    ```
 3.  Test connectivity between pods using temporary debugging pods:
-    ```bash
+    ```
     kubectl run -it --rm debug --image=busybox -- sh
     # Inside the pod
     wget -q -O- http://rafiki-auth-server:3000/health
@@ -684,12 +733,12 @@ kubectl get ingress
 
 When deploying Rafiki in production, consider the following security practices:
 
-- **Use Secure Passwords**: Replace all default passwords with strong, unique passwords
+- **Use secure passwords**: Replace all default passwords with strong, unique passwords
 - **Enable TLS**: Use HTTPS for all external communications
-- **Network Policies**: Implement Kubernetes Network Policies to restrict traffic between pods
-- **RBAC**: Use Kubernetes Role-Based Access Control to limit access to your cluster
-- **Secrets Management**: Consider using a secrets management solution
-- **Regular Updates**: Keep your Rafiki deployment updated
+- **Implement network policies**: Use Kubernetes network policies to restrict traffic between pods
+- **Use RBAC**: Use Kubernetes Role-Based Access Control to limit access to your cluster
+- **Use secrets management**: Consider using a secrets management solution
+- **Perform regular updates**: Keep your Rafiki deployment updated
 
 ## Backup and recovery
 
@@ -728,11 +777,13 @@ spec:
 EOF
 ```
 
-Note: The above example assumes you have a [Container Storage Interface (CSI)](https://kubernetes.io/docs/concepts/storage/volumes/#csi) driver capable of volume snapshots. Adjust the `volumeSnapshotClassName` according to your cluster setup.
+:::note
+The above example assumes you have a <LinkOut href='https://kubernetes.io/docs/concepts/storage/volumes/#csi'>Container Storage Interface (CSI)</LinkOut> driver capable of volume snapshots. Adjust the `volumeSnapshotClassName` according to your cluster setup.
+:::
 
-### Database restoration
+### Database recovery
 
-#### PostgreSQL restoration
+#### PostgreSQL recovery
 
 To restore from a PostgreSQL backup:
 
@@ -744,7 +795,7 @@ kubectl port-forward svc/rafiki-postgresql 5432:5432
 psql -h localhost -U rafiki -d rafiki < rafiki_pg_backup.sql
 ```
 
-#### Tigerbeetle Restoration
+#### Tigerbeetle recovery
 
 To restore Tigerbeetle from a snapshot:
 
@@ -771,7 +822,7 @@ EOF
 kubectl patch statefulset tigerbeetle -p '{"spec":{"template":{"spec":{"volumes":[{"name":"data","persistentVolumeClaim":{"claimName":"tigerbeetle-data-restored"}}]}}}}'
 ```
 
-## High Availability Configuration
+## High availability configuration
 
 For production environments requiring high availability:
 
