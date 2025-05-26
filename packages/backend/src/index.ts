@@ -61,6 +61,7 @@ import {
 } from './telemetry/service'
 import { createWebhookService } from './webhook/service'
 import { createInMemoryDataStore } from './middleware/cache/data-stores/in-memory'
+import { createRouterService } from './payment-method/ilp/connector/ilp-routing/service'
 
 BigInt.prototype.toJSON = function () {
   return this.toString()
@@ -377,6 +378,15 @@ export function initIocContainer(
     })
   })
 
+  container.singleton('routerService', async (deps) => {
+    const config = await deps.use('config')
+    return await createRouterService({
+      logger: await deps.use('logger'),
+      staticIlpAddress: config.ilpAddress,
+      peerService: await deps.use('peerService')
+    })
+  })
+
   container.singleton('connectorApp', async (deps) => {
     const config = await deps.use('config')
     return await createConnectorService({
@@ -389,7 +399,8 @@ export function initIocContainer(
       ratesService: await deps.use('ratesService'),
       streamServer: await deps.use('streamServer'),
       ilpAddress: config.ilpAddress,
-      telemetry: await deps.use('telemetry')
+      telemetry: await deps.use('telemetry'),
+      routerService: await deps.use('routerService')
     })
   })
 

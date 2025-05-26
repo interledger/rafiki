@@ -9,6 +9,8 @@ interface Asset {
 
 export interface Peering {
   liquidityThreshold: number
+  incomingToken: string
+  outgoingToken: string
   peerUrl: string
   peerIlpAddress: string
   initialLiquidity: string

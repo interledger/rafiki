@@ -29,7 +29,7 @@ services:
       # matches pfry key id
       KEY_ID: keyid-97a3a431-8ee1-48fc-ac85-70e2f5eba8e5
       PRIVATE_KEY_FILE: /workspace/private-key.pem
-      ILP_ADDRESS: test.happy-life-bank-test
+      ILP_ADDRESS: test.happy-life-bank
       ILP_CONNECTOR_URL: http://happy-life-bank-test-backend:4102
       STREAM_SECRET: BjPXtnd00G2mRQwP/8ZpwyZASOch5sUXT5o0iR5b5wU=
       WEBHOOK_URL: http://host.docker.internal:8889/webhooks

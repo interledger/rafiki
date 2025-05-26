@@ -26,6 +26,7 @@ import {
   incrementFulfillOrRejectPacketCount,
   incrementAmount
 } from './telemetry'
+import { RouterService } from '../ilp-routing/service'
 
 // Model classes that represent an Interledger sender, receiver, or
 // connector SHOULD implement this ConnectorAccount interface.
@@ -61,7 +62,7 @@ export interface TransferOptions {
 }
 
 export interface RafikiServices {
-  //router: Router
+  router: RouterService
   accounting: AccountingService
   telemetry: TelemetryService
   walletAddresses: WalletAddressService
@@ -98,6 +99,7 @@ export type ILPContext<T = any> = {
   request: {
     prepare: ZeroCopyIlpPrepare
     rawPrepare: Buffer
+    nextHop?: string
   }
   response: IlpResponse
   throw: (status: number, msg: string) => never
@@ -145,6 +147,9 @@ export class Rafiki<T = any> {
       },
       get telemetry(): TelemetryService {
         return config.telemetry
+      },
+      get router(): RouterService {
+        return config.router
       },
       logger
     }

@@ -18,42 +18,47 @@ assets:
 peeringAsset: 'USD'
 peers:
   - initialLiquidity: '1000000000000'
+    peerUrl: http://cloud-nine-wallet-backend:3002
+    peerIlpAddress: test.cloud-nine-wallet
+    incomingToken: cloud-to-global
+    outgoingToken: global-to-cloud
+    liquidityThreshold: 1000000
+  - initialLiquidity: '1000000000000'
     peerUrl: http://us-treasury-backend:3002
     peerIlpAddress: test.us-treasury
-    incomingToken: treasury-to-happy
-    outgoingToken: happy-to-treasury
+    incomingToken: treasury-to-global
+    outgoingToken: global-to-treasury
     liquidityThreshold: 1000000
 accounts:
-  - name: 'Philip Fry'
-    path: accounts/pfry
-    id: 97a3a431-8ee1-48fc-ac85-70e2f5eba8e5
-    initialBalance: 1
-    brunoEnvVar: pfryWalletAddress
+  - name: 'John Doe'
+    path: accounts/jdoe
+    id: 77a3a431-8ee1-48fc-ac85-70e2f5eba8e6
+    initialBalance: 1000000
+    brunoEnvVar: jdoeWalletAddress
     assetCode: USD
-  - name: 'PlanEx Corp'
-    id: a455cc54-b583-455b-836a-e5275c5c05b7
-    initialBalance: 2000000
-    path: accounts/planex
-    brunoEnvVar: planexWalletAddress
-    assetCode: USD
-  - name: 'Alice Smith'
-    path: accounts/asmith
-    id: f47ac10b-58cc-4372-a567-0e02b2c3d479
+  - name: 'Global Corp'
+    id: 4455cc54-b583-455b-836a-e5275c5c05b8
     initialBalance: 5000000
-    brunoEnvVar: asmithWalletAddress
-    skipWalletAddressCreation: true
+    path: accounts/gcorp
+    brunoEnvVar: gcorpWalletAddress
     assetCode: USD
-  - name: 'Lars'
-    path: accounts/lars
-    id: fd4ecbc9-205d-4ecd-a030-507d6ce2bde6
-    initialBalance: 50000000
-    brunoEnvVar: larsWalletAddress
+  - name: 'Jane Smith'
+    path: accounts/jsmith
+    id: 447ac10b-58cc-4372-a567-0e02b2c3d480
+    initialBalance: 2000000
+    brunoEnvVar: jsmithWalletAddress
+    assetCode: USD
+  - name: 'Maria Garcia'
+    path: accounts/mgarcia
+    id: dd4ecbc9-205d-4ecd-a030-507d6ce2bde7
+    initialBalance: 3000000
+    brunoEnvVar: mgarciaWalletAddress
     assetCode: EUR
-  - name: 'David'
-    path: accounts/david
-    id: 60257507-3191-4507-9d77-9071fd6b3c30
-    initialBalance: 1500000000
-    brunoEnvVar: davidWalletAddress
+  - name: 'Carlos Rodriguez'
+    path: accounts/crodriguez
+    id: 90257507-3191-4507-9d77-9071fd6b3c31
+    initialBalance: 4000000
+    brunoEnvVar: crodriguezWalletAddress
     assetCode: MXN
 rates:
   EUR:
@@ -88,4 +93,4 @@ fees:
   - fixed: 1
     basisPoints: 200
     asset: JPY
-    scale: 0
+    scale: 0 
