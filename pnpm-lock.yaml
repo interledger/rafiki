@@ -180,8 +180,8 @@ importers:
         specifier: 2.0.2
         version: 2.0.2
       '@interledger/open-payments':
-        specifier: 6.14.0
-        version: 6.14.0
+        specifier: 7.0.0
+        version: 7.0.0
       '@interledger/openapi':
         specifier: 2.0.2
         version: 2.0.2
@@ -749,8 +749,8 @@ importers:
   test/integration:
     devDependencies:
       '@interledger/open-payments':
-        specifier: 6.13.2
-        version: 6.13.2
+        specifier: 7.0.0
+        version: 7.0.0
       '@types/node':
         specifier: ^20.14.15
         version: 20.14.15
@@ -807,8 +807,8 @@ importers:
         specifier: 2.0.2
         version: 2.0.2
       '@interledger/open-payments':
-        specifier: 6.13.2
-        version: 6.13.2
+        specifier: 7.0.0
+        version: 7.0.0
       '@koa/bodyparser':
         specifier: ^5.1.1
         version: 5.1.1(koa@2.15.3)
@@ -4996,23 +4996,9 @@ packages:
       httpbis-digest-headers: 1.0.0
       jose: 5.4.0
       uuid: 9.0.1
-    dev: false
 
   /@interledger/open-payments@6.13.2:
     resolution: {integrity: sha512-siAnS+Rp+SEZtm+YSWVHWCA4EJB7a6pKBZ9SR61UV1kgrzVzVHAZ8HA0cNTteLEEdFuW1xqVv8zqz27lxdvLgA==}
-    dependencies:
-      '@interledger/http-signature-utils': 2.0.2
-      '@interledger/openapi': 2.0.2
-      base64url: 3.0.1
-      http-message-signatures: 0.1.2
-      ky: 1.3.0
-      pino: 8.19.0
-      uuid: 9.0.1
-    transitivePeerDependencies:
-      - supports-color
-
-  /@interledger/open-payments@6.14.0:
-    resolution: {integrity: sha512-8eAcpGfOS3knmi5pmiXsJovrOHVMR4rOW4L2nhqEDBxWkPZdVBOn77Rb5WfOAaJgQUTKE2G+sg+UvNJWHy09Ag==}
     dependencies:
       '@interledger/http-signature-utils': 2.0.2
       '@interledger/openapi': 2.0.2
@@ -5037,7 +5023,6 @@ packages:
       uuid: 9.0.1
     transitivePeerDependencies:
       - supports-color
-    dev: false
 
   /@interledger/openapi@2.0.2:
     resolution: {integrity: sha512-HOQnALmRtRkGkh63OnFhoCVsK4BKhQosJyoBCe6Cuu+jp8Oj2fAqTNz8ys+h6s30cJcIpk2UBlsj4wZ3pj26Ug==}
@@ -5053,6 +5038,7 @@ packages:
       openapi-types: 12.1.3
     transitivePeerDependencies:
       - supports-color
+    dev: false
 
   /@interledger/openapi@2.0.3:
     resolution: {integrity: sha512-5wGncgpc/WVHd+RNE9oZHzdNdZK8UjaOqLmMnPm6kyNfXBtcZmDOumE00jEYa4BOXbaIm82qB4zD/dLc46AjRA==}
@@ -5068,7 +5054,6 @@ packages:
       openapi-types: 12.1.3
     transitivePeerDependencies:
       - supports-color
-    dev: false
 
   /@interledger/pay@0.4.0-alpha.9:
     resolution: {integrity: sha512-ScT+hsAFBjpSy68VncSa6wW+VidgviKQE9W9lyiOBCrXfnrwrTdycEXWOG9ShoAYXpA3/FG/dYO9eImAPO5Pzg==}
