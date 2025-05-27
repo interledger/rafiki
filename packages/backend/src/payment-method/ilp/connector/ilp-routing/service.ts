@@ -1,95 +1,133 @@
+import { CacheDataStore } from '../../../../middleware/cache/data-stores'
 import { BaseService } from '../../../../shared/baseService'
+import { IAppConfig } from '../../../../config/app'
 import { PeerService } from '../../peer/service'
+import { validate as uuidValidate, version as uuidVersion } from 'uuid'
+
+export interface StaticRoute {
+  destination: string
+  nextHopAddress: string
+}
 
 export interface RouterService extends BaseService {
-  addStaticRoute(prefix: string, peerId: string): void
-  removeStaticRoute(prefix: string, peerId: string): void
-  getNextHop(destination: string): string | undefined
-  removeRoutesForPeer(peerId: string): void
+  addStaticRoute(prefix: string, peerId: string): Promise<void>
+  removeStaticRoute(prefix: string, peerId: string): Promise<void>
+  getNextHop(destination: string): Promise<string | undefined>
+  removeRoutesForPeer(peerId: string): Promise<void>
   getOwnAddress(): string
 }
 
 export interface RouterServiceDependencies extends BaseService {
   staticIlpAddress: string
-  peerService: PeerService //TODO Just for testing things
+  staticRoutes: CacheDataStore<string>
+  config: IAppConfig
+  peerService: PeerService
+}
+
+
+// Format: "destination1:peer1StaticIlpAddress,destination2:peer2StaticIlpAddress"
+async function parseStaticRoutes(deps: RouterServiceDependencies, envValue: string | undefined): Promise<Array<{ destination: string; peerId: string }> | undefined> {
+  if (!envValue) {
+    return []
+  }
+  const routes = envValue.split(',')
+  return Promise.all(routes.map(async route => {
+    const [destination, peerStaticIlpAddress] = route.split(':')
+    if (!destination || !peerStaticIlpAddress) {
+      throw new Error(`Invalid static route format: ${route}. Expected format: destination:peerId`)
+    }
+    const peer = await deps.peerService.getByDestinationAddress(peerStaticIlpAddress)
+    if (!peer) {
+      deps.logger.debug(`Peer not found for address ${peerStaticIlpAddress}`)
+      //throw new Error(`Peer not found for address ${peerStaticIlpAddress}`)
+    }
+    // We are using the peerStaticIlpAddress as a fallback for the peerId if the peer is not found
+    // This is because the peerId is not always available when the service is created
+    // This is a temporary solution to avoid errors when the service is created
+    return { destination, peerId: peer ? peer.id : peerStaticIlpAddress }
+  }))
 }
 
 export async function createRouterService({
   logger,
+  peerService,
   staticIlpAddress,
-  peerService
+  staticRoutes,
+  config
 }: RouterServiceDependencies): Promise<RouterService> {
-  //TODO Use these in the future for dynamic routing with longest prefix matching
-  //const router = new Router()
-  //const routeManager = new RouteManager(router)
   const log = logger.child({ service: 'RouterService' })
-  
-  //router.setOwnAddress(ilpAddress)
   const ownAddress = staticIlpAddress
   log.debug({ ownAddress }, 'ownAddress')
 
-  // Static route map: destiination -> peerId
-  // Should we also have routes in db in peers table/tenant settings table?
-  const staticRoutes: Map<string, string> = new Map()
-  
-  //TODO Remove this once we have a way to store static routes
-  if (ownAddress === 'test.cloud-nine-wallet') {
-    // Forward all happy-life-bank traffic to global-bank
-    const peer = await peerService.getByDestinationAddress('test.global-bank')
-    if(peer) {
-      staticRoutes.set('test.happy-life-bank', peer.id)
-      log.info('Hardcoded static route: happy-life-bank -> global-bank')
-    }
-  } else if (ownAddress === 'test.global-bank') {
-    // Forward all happy-life-bank traffic to us-treasury
-    const peer = await peerService.getByDestinationAddress('test.us-treasury')
-    if(peer) {
-      staticRoutes.set('test.happy-life-bank', peer.id)
-    }
-    log.info('Hardcoded static route: happy-life-bank -> us-treasury')
-  }
-
-  const service: RouterService = {
+  const deps: RouterServiceDependencies = {
     logger: log,
-    
-    // Example: addStaticRoute('test.happy-life-bank', '5ed1e6aa-7090-4a59-87d2-79201944fe65')
-    addStaticRoute(destination: string, peerId: string) {
-      staticRoutes.set(destination, peerId)
-      log.debug({ prefix: destination, peerId }, 'added static route')
-    },
-    
-    // TODO Update this to also be able to remove the route based on longest prefix match?
-    removeStaticRoute(destination: string, peerId: string) {
-      staticRoutes.delete(destination)
-      log.debug({ staticIlpAddress: destination, peerId }, 'removed static route')
-    },
-    
-    getNextHop(destination: string): string | undefined {
-      const segments = destination.split('.')
-      for (let i = segments.length; i > 0; i--) {
-        const prefix = segments.slice(0, i).join('.')
-        if (staticRoutes.has(prefix)) {
-          const peerId = staticRoutes.get(prefix)
-          log.debug({ destination, prefix, peerId }, 'static route found')
-          return peerId
-        }
-      }
-      log.debug({ destination }, 'no static route found')
-      return undefined
-    },
-    
-    removeRoutesForPeer(peerId: string) {
-      for (const [destination, id] of staticRoutes.entries()) {
-        if (id === peerId) {
-          staticRoutes.delete(destination)
-          log.debug({ prefix: destination, peerId }, 'removed static route on peer removal')
-        }
-      }
-    },
+    staticIlpAddress,
+    staticRoutes,
+    peerService,
+    config
+  }
 
-    getOwnAddress(): string {
-      return ownAddress
+  // If not possible to add all routes due to peers not being created yet, routes will be added when next hop is needed.
+  const routes = await parseStaticRoutes(deps, config.staticRoutes)
+  if (routes) {
+    for (const route of routes) {
+      await addStaticRoute(deps, route.destination, route.peerId)
     }
   }
-  return service
+
+  async function addStaticRoute(deps: RouterServiceDependencies, destination: string, peerId: string | undefined) {
+    if (!peerId) {
+      deps.logger.debug({ destination }, 'no peerId found for destination')
+      return
+    }
+    deps.staticRoutes.set(destination, peerId)
+    deps.logger.debug({ prefix: destination, peerId }, 'added static route')
+  }
+
+  //TODO This might also need longest prefix matching depending on what we use as destination i.e. full address or just static address
+  async function removeStaticRoute(deps: RouterServiceDependencies, destination: string, peerId: string) {
+    deps.staticRoutes.delete(destination)
+    deps.logger.debug({ staticIlpAddress: destination, peerId }, 'removed static route')
+  }
+
+  async function getNextHop(deps: RouterServiceDependencies, destination: string): Promise<string | undefined> {
+    const segments = destination.split('.')
+    for (let i = segments.length; i > 0; i--) {
+      const prefix = segments.slice(0, i).join('.')
+      const result = await deps.staticRoutes.get(prefix)
+      // This is a temporary solution, will be removed
+      if (result) {
+        if(uuidValidate(result)) {
+          deps.logger.debug({ destination, prefix, peerId: result }, 'static route found')
+          return result
+        }
+        const peer = await deps.peerService.getByDestinationAddress(prefix)
+        if (peer) {
+          deps.staticRoutes.set(destination, peer.id)
+          deps.logger.debug({ destination, prefix, peerId: peer.id }, 'added static route')
+          return peer.id
+        }
+      }
+    }
+    deps.logger.debug({ destination }, 'no static route found')
+    return undefined
+  }
+
+  async function removeRoutesForPeer(deps: RouterServiceDependencies, peerId: string) {
+    //TODO Same as on removeStaticRoute
+    deps.logger.debug({ peerId }, 'removing routes for peer')
+  }
+
+  function getOwnAddress(deps: RouterServiceDependencies): string {
+    return deps.staticIlpAddress
+  }
+
+  return {
+    logger: log,
+    addStaticRoute: (destination, peerId) => addStaticRoute(deps, destination, peerId),
+    removeStaticRoute: (destination, peerId) => removeStaticRoute(deps, destination, peerId),
+    getNextHop: (destination) => getNextHop(deps, destination),
+    removeRoutesForPeer: (peerId) => removeRoutesForPeer(deps, peerId),
+    getOwnAddress: () => getOwnAddress(deps)
+  }
 } 

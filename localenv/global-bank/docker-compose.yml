@@ -69,6 +69,7 @@ services:
       WALLET_ADDRESS_URL: ${GLOBAL_BANK_WALLET_ADDRESS_URL:-https://global-bank-backend/.well-known/pay}
       ENABLE_TELEMETRY: true
       KEY_ID: 53f2d913-e98a-40b9-b270-372d0547f23e
+      STATIC_ROUTES:
     depends_on:
       - happy-life-backend
     healthcheck:

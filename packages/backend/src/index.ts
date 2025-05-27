@@ -377,12 +377,17 @@ export function initIocContainer(
       knex: await deps.use('knex')
     })
   })
+  container.singleton('staticRoutesStore', async () => {
+    return createInMemoryDataStore(Number.MAX_SAFE_INTEGER)
+  })
 
   container.singleton('routerService', async (deps) => {
     const config = await deps.use('config')
     return await createRouterService({
       logger: await deps.use('logger'),
       staticIlpAddress: config.ilpAddress,
+      staticRoutes: await deps.use('staticRoutesStore'),
+      config,
       peerService: await deps.use('peerService')
     })
   })

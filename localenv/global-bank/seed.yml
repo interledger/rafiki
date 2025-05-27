@@ -24,10 +24,10 @@ peers:
     outgoingToken: global-to-cloud
     liquidityThreshold: 1000000
   - initialLiquidity: '1000000000000'
-    peerUrl: http://us-treasury-backend:3002
-    peerIlpAddress: test.us-treasury
-    incomingToken: treasury-to-global
-    outgoingToken: global-to-treasury
+    peerUrl: http://happy-life-bank-backend:3002
+    peerIlpAddress: test.happy-life-bank
+    incomingToken: happy-to-global
+    outgoingToken: global-to-happy
     liquidityThreshold: 1000000
 accounts:
   - name: 'John Doe'

@@ -25,7 +25,7 @@ export function createRoutingMiddleware({
       return
     }
 
-    const nextHop = routerService.getNextHop(destination)
+    const nextHop = await routerService.getNextHop(destination)
     if (nextHop) {
       logger.debug({ destination }, 'found next hop')
       request.nextHop = nextHop
