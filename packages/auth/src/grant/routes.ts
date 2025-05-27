@@ -22,12 +22,14 @@ import { InteractionService } from '../interaction/service'
 import { canSkipInteraction } from './utils'
 import { GNAPErrorCode, GNAPServerRouteError } from '../shared/gnapErrors'
 import { generateRouteLogs } from '../shared/utils'
+import { SubjectService } from '../subject/service'
 
 interface ServiceDependencies extends BaseService {
   grantService: GrantService
   clientService: ClientService
   accessTokenService: AccessTokenService
   accessService: AccessService
+  subjectService: SubjectService
   interactionService: InteractionService
   config: IAppConfig
 }
@@ -71,6 +73,7 @@ export function createGrantRoutes({
   clientService,
   accessTokenService,
   accessService,
+  subjectService,
   interactionService,
   logger,
   config
@@ -93,6 +96,7 @@ export function createGrantRoutes({
     clientService,
     accessTokenService,
     accessService,
+    subjectService,
     interactionService,
     logger: log,
     config
@@ -147,6 +151,7 @@ async function createApprovedGrant(
     )
   }
   const access = await deps.accessService.getByGrant(grant.id)
+  const subjects = await deps.subjectService.getByGrant(grant.id)
   ctx.status = 200
 
   logger.debug(
@@ -161,7 +166,8 @@ async function createApprovedGrant(
     grant,
     { authServerUrl: config.authServerUrl },
     accessToken,
-    access
+    access,
+    subjects
   )
 }
 
@@ -247,8 +253,14 @@ async function pollGrantContinuation(
   continueId: string,
   continueToken: string
 ): Promise<void> {
-  const { config, grantService, accessService, accessTokenService, logger } =
-    deps
+  const {
+    config,
+    grantService,
+    accessService,
+    subjectService,
+    accessTokenService,
+    logger
+  } = deps
 
   const grant = await grantService.getByContinue(continueId, continueToken)
   if (!grant) {
@@ -309,6 +321,7 @@ async function pollGrantContinuation(
   } else {
     const accessToken = await accessTokenService.create(grant.id)
     const access = await accessService.getByGrant(grant.id)
+    const subjects = await subjectService.getByGrant(grant.id)
     await grantService.finalize(grant.id, GrantFinalization.Issued)
     ctx.status = 200
     ctx.body = toOpenPaymentsGrant(
@@ -317,7 +330,8 @@ async function pollGrantContinuation(
         authServerUrl: config.authServerUrl
       },
       accessToken,
-      access
+      access,
+      subjects
     )
 
     logger.debug(
@@ -332,7 +346,7 @@ async function pollGrantContinuation(
   }
 }
 
-/* 
+/*
   GNAP indicates that a grant may be continued even if it didn't require interaction.
   Rafiki only needs to continue a grant if it required an interaction, noninteractive grants immediately issue an access token without needing continuation
   so continuation only expects interactive grants to be continued.
@@ -346,6 +360,7 @@ async function continueGrant(
     accessTokenService,
     grantService,
     accessService,
+    subjectService,
     interactionService,
     logger
   } = deps
@@ -411,6 +426,7 @@ async function continueGrant(
 
     const accessToken = await accessTokenService.create(grant.id)
     const access = await accessService.getByGrant(grant.id)
+    const subjects = await subjectService.getByGrant(grant.id)
     await grantService.finalize(grant.id, GrantFinalization.Issued)
 
     // TODO: add "continue" to response if additional grant request steps are added
@@ -418,7 +434,8 @@ async function continueGrant(
       interaction.grant,
       { authServerUrl: config.authServerUrl },
       accessToken,
-      access
+      access,
+      subjects
     )
 
     logger.debug(
