@@ -654,7 +654,6 @@ describe('Open Payments Wallet Address Service', (): void => {
           }
         )
       )
-
       test(
         'polls for wallet address',
         withConfigOverride(
